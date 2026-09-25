@@ -82,6 +82,12 @@ test("negated tracking words mean untracked, not tracked", () => {
   assert.equal(cls("Non-Tracked Letter").service, "untracked");
   assert.equal(cls("Standard Letter - no tracking").service, "untracked");
   assert.equal(cls("Untracked").service, "untracked");
+  // The first CA run: a negation the words above missed, and Quebec's French names.
+  assert.equal(cls("Small Bubble Mailer (This Option Does Not Come With Tracking or Insurance)").service, "untracked");
+  assert.equal(cls("Enveloppe sans suivi").service, "untracked");
+  assert.equal(cls("Postes Canada Accéléré").service, "tracked");
+  assert.equal(cls("Lettre - Tracking").service, "tracked");
+  assert.equal(cls("CARD SINGLES ONLY - 100 MAX SINGLES - TRACKED - BUBBLE ENVELOPE (UPS/FEDEX/CANPOS)").service, "tracked");
 });
 
 test("an explicit 'tracked' beats a letter word; letter words alone mean untracked", () => {
@@ -102,6 +108,13 @@ test("parcel/courier names mean tracked; bare names stay unknown", () => {
   assert.equal(cls("Standard").service, "unknown");
   assert.equal(cls("ChitChats Select").service, "unknown");
   assert.equal(cls("Free Shipping").service, "unknown");
+  // The first EU run's parcel services, named in Dutch and Spanish.
+  assert.equal(cls("PostNL – Brievenbuspakje").service, "tracked");
+  assert.equal(cls("PostNL – Thuisbezorgd (verzekerd)").service, "tracked");
+  assert.equal(cls("Correos - PAQ Premium").service, "tracked");
+  assert.equal(cls("Correos-Paq Light Internacional").service, "tracked");
+  assert.equal(cls("Standard Internazionale").service, "unknown");
+  assert.equal(cls("Estándar 0-5kg").service, "unknown");
 });
 
 test("express flag", () => {
@@ -195,6 +208,17 @@ test("candidateTier: in-stock singles in, playsets as fallback, slabs/sealed/out
   // …but a single from one of those products is still a single.
   assert.equal(candidateTier({ ...base, productTitle: "Tibbers (Proving Grounds) - NM" }), 0);
   assert.equal(candidateTier({ ...base, productTitle: "Vault Guardian 012/221 (Spiritforged) - NM" }), 0);
+  // The first UK run: a pre-release kit, playmats, dice and an event entry
+  // sat in stores' Riftbound collections and went into probe carts.
+  assert.equal(candidateTier({ ...base, productTitle: "Riftbound: League of Legends TCG - Unleashed - Pre-release Kit" }), null);
+  assert.equal(candidateTier({ ...base, productTitle: "League of Legends - Riftbound Playmats - Volibear" }), null);
+  assert.equal(candidateTier({ ...base, productTitle: "Mystery Dice Set – Random 7-Piece Polyhedral Dice with Dice Bag" }), null);
+  assert.equal(candidateTier({ ...base, productTitle: "Events - Riftbound: Summoner Skirmish August - Saturday 3/10/2026" }), null);
+  assert.equal(candidateTier({ ...base, productTitle: "Riftbound: Single Card - Ahri, Inquisitive (V.1 - Epic) 119" }), 0);
+  // The first EU run: El Duelista's Spanish-titled playmats and sleeves.
+  assert.equal(candidateTier({ ...base, productTitle: "Tapete UVS Games Riftbound: Unleashed — Master Yi, Wuju Master", variantTitle: "English / Normal" }), null);
+  assert.equal(candidateTier({ ...base, productTitle: "Fundas Riftbound Spiritforged (100) – Spirit Blossom Teemo", variantTitle: "English / Normal" }), null);
+  assert.equal(candidateTier({ ...base, productTitle: "Mind Rune (V.2) VEN-R03a Showcase Near Mint Englisch Foil" }), 0);
 });
 
 test("count scenarios take the cheapest distinct singles, playsets only when singles run out", () => {

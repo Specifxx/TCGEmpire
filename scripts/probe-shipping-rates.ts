@@ -405,13 +405,35 @@ async function runScenario(
   // read-back above is the truth; the messages are kept for the record.
   if (addErrors.length) result.notes = addErrors;
   onCart(result);
+  // A quote for an address the store does not ship to can POISON the cart: on
+  // the first EU run Trinket Mage (a German store) quoted Berlin €5.99 on a
+  // fresh cart, but once the same cart had been asked for Madrid (no rates),
+  // every later address — Berlin included — came back empty. Since the address
+  // order is fixed, one unserved address would blank every address after it.
+  // So after any address that is not "ok", the next one is quoted on a FRESH
+  // cart holding the same lines (one extra add; no cost when every address is
+  // served).
+  let quoteJar = jar;
+  let dirty = false;
+  const sameLines = cart.lines.map((l) => ({ id: l.id, quantity: l.quantity }));
   for (const a of addresses) {
     try {
-      result.byAddress[a.id] = await shippingRatesFor(client, jar, iso, a, cart.currency);
+      if (dirty) {
+        quoteJar = new CookieJar();
+        const err = await addLines(client, quoteJar, iso, sameLines);
+        if (err) {
+          result.byAddress[a.id] = { status: "error", rates: [], error: `fresh cart for this address: ${err}` };
+          continue; // the next address retries a fresh cart too
+        }
+        (result.notes ??= []).push(`${a.id} quoted on a fresh cart after an earlier address returned no rates`);
+        dirty = false;
+      }
+      result.byAddress[a.id] = await shippingRatesFor(client, quoteJar, iso, a, cart.currency);
     } catch (e) {
       if (e instanceof StoreCapError) throw e;
       result.byAddress[a.id] = { status: "error", rates: [], error: (e as Error).message };
     }
+    if (result.byAddress[a.id].status !== "ok") dirty = true;
   }
   return result;
 }

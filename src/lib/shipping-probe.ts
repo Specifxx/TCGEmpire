@@ -134,15 +134,27 @@ export interface CartLine {
 const MULTI = /\b(playset|lot|lots|bundle|joblot|job lot|x\s*\d+|\d+\s*x|set of|complete set|full set|bulk)\b/i;
 // Never in a probe cart: a slab or sealed product ships as a parcel whatever
 // the store charges for a card, so it would measure the wrong thing.
-const NOT_A_CARD = /\b(psa|bgs|cgc|beckett|graded|slab|booster|display|box|pack|sleeves?|playmat|deck\s*box|binder|pre-?order)\b/i;
+const NOT_A_CARD = /\b(psa|bgs|cgc|beckett|graded|slab|booster|display|box|pack|sleeves?|playmats?|deck\s*box|binder|pre-?order|dice|tickets?)\b/i;
+// The same, in the languages EU stores title accessories in. The first EU run
+// put El Duelista's "Tapete UVS Games Riftbound…" playmats and "Fundas
+// Riftbound… (100)" sleeves (its accesorios-riftbound collection) into the
+// €20/€50/€100 rungs, and the cross-border quote rose €16.00 → €18.99 with them.
+const NOT_A_CARD_EU = /\b(tapetes?|fundas?|tappetin[oi]|bustine|spielmatten?|h(ü|ue)llen|tapis|protège-cartes)\b/i;
+// A store's "riftbound" collection can hold event entries next to its cards
+// (the first UK run: Roll n Play's "Events - Riftbound: Summoner Skirmish
+// August - Saturday 3/10/2026", which ships nothing and whose date reads as a
+// collector number to SINGLE_TELL). Tested against the product title alone.
+const EVENT_LISTING = /^\s*events?\b|\b(entry\s*fee|tournament\s*entry)\b/i;
 // Sealed products whose titles carry none of the words above (kept in step with
 // SEALED_TITLE in sealed-import.ts by hand). The first full AU run put Mint
 // Collectables' "Vendetta Vault" ($65) and "Proving Grounds" ($140) into its
 // $100/$150 rungs — the sitemap fallback found its sealed collection — and the
 // Vault cart quoted $20 postage: a parcel, not a card. A title with a collector
 // number, a condition or a parenthesised set name is a single even so
-// ("Tibbers (Proving Grounds) - NM").
-const SEALED_NAME = /champion\s*deck|showdown\s*decks?|starter\s*(deck|set)|proving\s*grounds|\bvault\b|precon|pre-?rift|event\s*kit|\btin\b/i;
+// ("Tibbers (Proving Grounds) - NM"). The first UK run put Total Cards'
+// "Unleashed - Pre-release Kit" (£49.95) into its £50/£150 rungs, and those
+// carts lost every letter option to a tracked parcel.
+const SEALED_NAME = /champion\s*deck|showdown\s*decks?|starter\s*(deck|set)|proving\s*grounds|\bvault\b|precon|pre-?rift|(event|pre-?release)\s*kits?|\btin\b/i;
 const SINGLE_TELL = /\/\s*\d{2,3}\b|\b(nm|lp|mp|hp)\b|near\s*mint|lightly\s*played|\([^)]*\b(origins|spirit\s*forged|unleashed|vendetta|radiance|proving\s*grounds)\b[^)]*\)/i;
 
 /**
@@ -159,7 +171,7 @@ export function candidateTier(v: {
 }): 0 | 1 | null {
   if (!v.available || !(v.priceCents > 0) || v.requiresShipping === false) return null;
   const text = `${v.productTitle} ${v.variantTitle ?? ""}`;
-  if (NOT_A_CARD.test(text)) return null;
+  if (NOT_A_CARD.test(text) || NOT_A_CARD_EU.test(text) || EVENT_LISTING.test(v.productTitle)) return null;
   if (SEALED_NAME.test(text) && !SINGLE_TELL.test(text)) return null;
   return MULTI.test(text) ? 1 : 0;
 }
@@ -267,10 +279,20 @@ export interface ProbeRate extends RateClass {
 }
 
 // Negated forms first: "untracked" and "non-tracked" both CONTAIN "tracked".
-const UNTRACKED_EXPLICIT = /\bun-?tracked\b|\bnon[- ]?tracked\b|\bno[- ]tracking\b|\bwithout tracking\b|\bnot tracked\b/i;
+// The first CA run: Invasion Inc's "Small Bubble Mailer (This Option Does Not
+// Come With Tracking or Insurance)" read as TRACKED on its "Tracking", and
+// Boutique La Pioche's French "Enveloppe sans suivi" (envelope, no tracking)
+// as unknown; "Accéléré" is Postes Canada's name for Expedited Parcel.
+const UNTRACKED_EXPLICIT = /\bun-?tracked\b|\bnon[- ]?tracked\b|\bno[- ]tracking\b|\bwithout tracking\b|\bnot tracked\b|\bnot (?:come with |include |includes |have )?tracking\b|\bsans suivi\b/i;
 const TRACKED_EXPLICIT = /\btracked\b|\btracking\b|\bsignature\b|\bregistered\b/i;
 const UNTRACKED_HINT = /\bletter\b|lettermail|\bpwe\b|plain white envelope|\benvelope\b|\bstamp(ed)?\b|\b(normal|regular|ordinary|basic|economy) mail\b|\b(1st|2nd|first|second) class\b(?!.*\b(package|parcel)\b)/i;
-const TRACKED_HINT = /\bparcel\b|\bpackage\b|\bstandard post\b|\bexpress\b|xpresspost|\bcourier\b|\bpriority\b|ground advantage|\bground\b|\bexpedited\b|\bups\b|\bfedex\b|\bdhl\b|\bstarshipit\b|\bsendle\b|\baramex\b|\bninja ?van\b|\bevri\b|\bhermes\b|\bdpd\b|\bparcelforce\b|\bcouriers please\b|\bstar ?track\b|\bpurolator\b|\bcanpar\b|\bj&t\b/i;
+// The first EU run's parcel services, in their own languages: PostNL's
+// "Brievenbuspakje" (letterbox parcel, track & trace) and "Thuisbezorgd
+// (verzekerd)" (home delivery, insured), Correos' "PAQ Premium" / "Paq Light
+// Internacional". All read as unknown before. The run found no untracked
+// letter option at any of the twelve EU stores.
+const TRACKED_HINT_EU = /\bpaq\b|\bpaquete\b|\b(klein)?paket\b|\bpakket\b|brievenbuspakje|thuisbezorgd|\bverzekerd\b|\bpacco\b|\bcolis(simo)?\b/i;
+const TRACKED_HINT = /\bparcel\b|\bpackage\b|\bstandard post\b|\bexpress\b|xpresspost|\bcourier\b|\bpriority\b|ground advantage|\bground\b|\bexpedited\b|\bups\b|\bfedex\b|\bdhl\b|\bstarshipit\b|\bsendle\b|\baramex\b|\bninja ?van\b|\bevri\b|\bhermes\b|\bdpd\b|\bparcelforce\b|\bcouriers please\b|\bstar ?track\b|\bpurolator\b|\bcanpar\b|\bj&t\b|\bacc[eé]l[eé]r[eé]/i;
 const EXPRESS = /\bexpress\b|xpresspost|\bnext[- ]?day\b|\bovernight\b|\bsame[- ]?day\b|special delivery|\bpriority\b|\b24\s*h(ou)?r?s?\b|\btracked\s*24\b|\b24\s*tracked\b/i;
 const PICKUP = /\bpick[- ]?up\b|\bpickup\b|click\s*(&|and|\+|n|'n')\s*collect|\bcollect(ion)?\b|\bin[- ]store\b|\blocal delivery\b|\bhand deliver/i;
 
@@ -289,7 +311,7 @@ export function classifyRate(name: string): RateClass {
   if (UNTRACKED_EXPLICIT.test(n)) service = "untracked";
   else if (TRACKED_EXPLICIT.test(n)) service = "tracked";
   else if (UNTRACKED_HINT.test(n)) service = "untracked";
-  else if (TRACKED_HINT.test(n)) service = "tracked";
+  else if (TRACKED_HINT.test(n) || TRACKED_HINT_EU.test(n)) service = "tracked";
   return { service, express, pickup };
 }
 
