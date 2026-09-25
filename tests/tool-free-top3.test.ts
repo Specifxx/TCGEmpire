@@ -42,19 +42,26 @@ test("access is derived once: Premium full, signed-in free top3, signed out none
   );
 });
 
-test("Deal Finder: every view queries at full size for Premium, three rows for free, nothing signed out", () => {
+test("Deal Finder: the list queries at full size for members, three rows for free, nothing signed out", () => {
+  // One list since 2026-09-25 (the flip, cheapest-on-eBay and cross-region
+  // tabs were cut or folded in), so one full call and one preview call.
   const src = code(DEAL_FINDER);
-  for (const fn of ["getArbitrage", "getEbayCheapest", "getCrossRegionGaps", "getArbitrageVsTcgplayer"]) {
-    const calls = [...src.matchAll(new RegExp(`await ${fn}\\(([^;]*?)\\)\\s*\\n?\\s*(?::|;)`, "g"))].map((m) => m[1]);
-    assert.equal(calls.length, 2, `${fn}: expected one full call and one preview call, found ${calls.length}`);
-    assert.ok(calls.some((c) => /PAGE_SIZE/.test(c)), `${fn}: the full call uses PAGE_SIZE`);
-    const preview = calls.find((c) => /FREE_PREVIEW_ROWS/.test(c));
-    assert.ok(preview, `${fn}: the free call must be sized FREE_PREVIEW_ROWS, not PAGE_SIZE`);
-    assert.ok(!/PAGE_SIZE/.test(preview!), `${fn}: the free call must not fetch a full page`);
-    assert.match(preview!, /(page: 1|, 1,)/, `${fn}: the free call is pinned to page 1`);
-  }
-  // The signed-out branch of every view resolves to null — no query.
-  assert.equal((src.match(/: null;/g) ?? []).length, 4, "all four views skip the query when signed out");
+  const calls = [...src.matchAll(/await getArbitrageVsTcgplayer\(([^;]*?)\)\s*\n?\s*(?::|;)/g)].map((m) => m[1]);
+  assert.equal(calls.length, 2, `expected one full call and one preview call, found ${calls.length}`);
+  assert.ok(calls.some((c) => /PAGE_SIZE/.test(c)), "the full call uses PAGE_SIZE");
+  const preview = calls.find((c) => /FREE_PREVIEW_ROWS/.test(c));
+  assert.ok(preview, "the free call must be sized FREE_PREVIEW_ROWS, not PAGE_SIZE");
+  assert.ok(!/PAGE_SIZE/.test(preview!), "the free call must not fetch a full page");
+  assert.match(preview!, /page: 1/, "the free call is pinned to page 1");
+  assert.ok(!/onlyCardIds/.test(preview!), "a free account's ?mine= never reaches the query");
+  // The signed-out branch resolves to null — no query — and the "Prices as
+  // of" aggregate is skipped for it too.
+  assert.match(
+    src,
+    /access === "full"\s*\?\s*await getArbitrageVsTcgplayer\([^;]*\)\s*:\s*access === "top3"\s*\?\s*await getArbitrageVsTcgplayer\([^;]*\)\s*:\s*null;/,
+    "signed out skips the query",
+  );
+  assert.match(src, /access === "none" \? Promise\.resolve\(null\) : getPricesAsOf\(country\)/);
   assert.ok(!/TEASER_SIZE/.test(src), "the old six-row teaser must not come back");
 });
 
@@ -62,13 +69,15 @@ test("Deal Finder: the locked states take no rows, so they cannot leak any", () 
   const src = code(DEAL_FINDER);
   assert.match(src, /function LockedPreview\(\) \{/, "the signed-out lock takes no props at all");
   assert.match(src, /function MorePremium\(\{ more, unit \}: \{ more: number; unit: string \}\)/, "the free-account panel takes a count, never rows");
-  assert.equal((src.match(/<LockedPreview \/>/g) ?? []).length, 4, "all four views use it");
+  assert.equal((src.match(/<LockedPreview \/>/g) ?? []).length, 1, "the one list uses it");
   assert.ok(!/function LockedTable/.test(src), "LockedTable wrapped the real table — it must stay gone");
   assert.ok(!/tbody_tr[^\n]*blur|tr:not\(:first-child\)/.test(src), "rows must never be 'hidden' behind CSS");
-  // Filters, sorting and pagination are Premium-only; a free account's
+  // Filters, sorting and pagination are for members; a free account's
   // ?buy=/?sort=/?page= are ignored by the preview query.
-  assert.equal((src.match(/access === "full" && \(/g) ?? []).length, 3, "the three filter bars are Premium-only");
-  assert.equal((src.match(/access === "full" \? \(\s*<Pager/g) ?? []).length, 4, "pagination is Premium-only");
+  assert.equal((src.match(/access === "full" && \(/g) ?? []).length, 1, "the filter bar is members-only");
+  assert.equal((src.match(/access === "full" \? \(\s*<Pager/g) ?? []).length, 1, "pagination is members-only");
+  // Both gates sell the tier that unlocks the list.
+  assert.equal((src.match(/<PremiumButton surface="gate:deal-finder" tier="plus"/g) ?? []).length, 2, "both gates open the dialog on Plus");
 });
 
 test("Rising Cards: one render site, fed only the slice the visitor is entitled to", () => {

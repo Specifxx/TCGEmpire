@@ -13,13 +13,14 @@ import { useQuickView } from "@/components/QuickView";
 import { useMe } from "@/lib/use-me";
 import { cardImageAlt } from "@/lib/image-alt";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
+import { PremiumButton } from "@/components/PremiumButton";
 
 // Homepage "Today's Top Deals". Up to four columns, one per signal (the grid
 // itself only declares as many columns as actually have data — see GRID_COLS
-// below). Each PREMIUM column (arbitrage savings, rising cards) reveals only
-// its single best pick — matching its own /tools page's gate — then a clearly-
-// locked teaser funnelling to the full Premium tool, when there's really more
-// behind it, ONLY for a visitor who isn't already a Premium subscriber (see
+// below). Each gated column (Biggest savings, Rising cards — full lists on the
+// Plus tier) reveals only its single best pick, then a clearly-locked teaser
+// whose button opens the Plus offer, when there's really more
+// behind it, ONLY for a visitor who isn't already a paying member (see
 // useMe() below — this used to gate on `def.premium` alone, which locked the
 // column for every visitor including paying subscribers, since nothing here
 // ever read their actual entitlement). The free columns (price drops, cheapest
@@ -32,8 +33,6 @@ import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 // signals read as "study this table," not "here's a deal." Rising Cards is
 // today's actual fourth column, added back deliberately — see lib/top-deals.ts's
 // header comment for why that call was reversed for this specific signal.
-// Value Finder (/tools/value-finder) still serves the undervalued signal on
-// its own dedicated page with room to explain it, unaffected by either change.
 type ColumnDef = {
   key: DealColumnKey;
   label: string;
@@ -45,6 +44,8 @@ type ColumnDef = {
   // perType (4) for this feed regardless of how many deals actually exist.
   // Undefined for free columns (nothing gates them).
   totalKey?: "savingsVsMarketTotal" | "risingCardsTotal";
+  // Attribution for the unlock button (lib/premium-surface.ts), gated columns only.
+  surface?: string;
   // One-line explainer under the heading, for the two columns whose name alone
   // does not say what is being compared or ranked (2026-09-23, owner request).
   // "Rising" is phrased as a ranking by our signals, never a promise — the tool
@@ -53,10 +54,10 @@ type ColumnDef = {
 };
 
 const COLUMNS: ColumnDef[] = [
-  { key: "savingsVsMarket", label: "Biggest savings", sub: "Underpriced cards vs the TCGplayer market price", premium: true, allHref: "/tools/deal-finder", allLabel: "All opportunities", totalKey: "savingsVsMarketTotal" },
+  { key: "savingsVsMarket", label: "Biggest savings", sub: "Cards selling below the TCGplayer market price", premium: true, allHref: "/tools/deal-finder", allLabel: "All deals", totalKey: "savingsVsMarketTotal", surface: "gate:home-deals" },
   { key: "priceDrops", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
   { key: "cheapestSealed", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
-  { key: "risingCards", label: "Rising cards", sub: "Cards our signals rank most likely to rise in price", premium: true, allHref: "/tools/rising", allLabel: "All rising cards", totalKey: "risingCardsTotal" },
+  { key: "risingCards", label: "Rising cards", sub: "Cards our signals rank most likely to rise in price", premium: true, allHref: "/tools/rising", allLabel: "All rising cards", totalKey: "risingCardsTotal", surface: "gate:home-rising" },
 ];
 
 // Budget tiers — "rounded to natural values per market" (not FX-converted at
@@ -206,18 +207,23 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
   );
 }
 
-// A deliberate "locked" state for the rest of a Premium column's deals — NOT a
+// A deliberate "locked" state for the rest of a gated column's deals — NOT a
 // loading skeleton (there's nothing pending; the data exists, it's just gated).
 // One clear panel with a lock icon and an unlock CTA, sized to fill the same
 // vertical space the blurred placeholder rows used to, so this column still
 // matches its free-column neighbours' height without faking extra "rows".
-function LockedTeaser({ count, href }: { count: number; href: string }) {
+//
+// The CTA is the Plus-level gate (2026-09-25): both gated columns are full
+// lists on the cheaper tier, so it opens the dialog on Plus (tier="plus") and
+// names the tier the column's own chip names — it used to say "with Premium"
+// under a "Plus" chip, and link to the tool page rather than the offer.
+function LockedTeaser({ count, surface, tierName }: { count: number; surface: string; tierName: string }) {
   return (
     <li className="flex flex-1 flex-col items-center justify-center gap-1.5 px-3 py-6 text-center">
       <NavIcon name="lock" className="h-5 w-5 text-gold" />
-      <Link href={href} className="text-xs font-bold text-gold hover:underline">
-        Unlock {count} more with Premium →
-      </Link>
+      <PremiumButton surface={surface} tier="plus" className="text-xs font-bold text-gold hover:underline">
+        Unlock {count} more with {tierName} →
+      </PremiumButton>
     </li>
   );
 }
@@ -377,7 +383,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
                 {shown.map((deal, i) => (
                   <DealRow key={i} deal={deal} currency={currency} country={country} />
                 ))}
-                {locked > 0 && <LockedTeaser count={locked} href={def.allHref} />}
+                {locked > 0 && <LockedTeaser count={locked} surface={def.surface ?? "gate:home"} tierName={premiumPlus ? "Plus" : "Premium"} />}
               </ul>
 
               <Link

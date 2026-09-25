@@ -36,9 +36,9 @@ const SELF_CACHED = [
   "getCachedRisingCards",
   "getCachedTopDeals",
   "getTopDeals",
-  "getEbayCheapest",
-  "getArbitrage",
   "getArbitrageVsTcgplayer",
+  "getTcgDealRanks",
+  "getPricesAsOf",
   "getCrossRegionGaps",
   "getSealedGroups",
   "getPreorderGroups",
@@ -209,13 +209,17 @@ test("cachedOrDirect detects nesting at runtime and logs every compute", () => {
   assert.match(src, /\[egress-guard:cache-miss\]/, "every real compute must be logged so cadence is measurable from the function logs");
 });
 
-test("the arbitrage aggregates behind the eBay deals feed are shared-cached", () => {
-  // minByCard / minByCardAndRetailer are full-market groupBys (~1,400 rows each)
-  // that used to run on every getEbayCheapest / getArbitrage call — including
-  // every request to the force-dynamic /premium and /tools/deal-finder pages.
+test("the arbitrage aggregates behind the Deal Finder list are shared-cached", () => {
+  // minByCard is a full-market groupBy (~1,400 rows) that used to run on every
+  // ranking call — including every request to the force-dynamic /premium and
+  // /tools/deal-finder pages. The eBay and TCGplayer row pulls and the
+  // "Prices as of" aggregate are day-cached the same way. (The flip tab's
+  // per-retailer groupBy went with the tab on 2026-09-25.)
   const src = read("src/lib/arbitrage.ts");
   assert.match(src, /\["arb-min-by-card"/, "minByCard must go through cachedOrDirect");
-  assert.match(src, /\["arb-min-by-card-retailer"/, "minByCardAndRetailer must go through cachedOrDirect");
+  assert.match(src, /\["arb-ebay-rows"/, "the eBay row pull must go through cachedOrDirect");
+  assert.match(src, /\["arb-tcg-us-rows-v2"/, "the TCGplayer row pull must go through cachedOrDirect");
+  assert.match(src, /\["arb-prices-as-of"/, "the prices-as-of aggregate must go through cachedOrDirect");
 });
 
 test("sealed groups are shared across lambdas, not only memoised per instance", () => {

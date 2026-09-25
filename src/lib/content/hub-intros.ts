@@ -77,7 +77,7 @@ export const HUB_INTROS: Record<string, HubIntro> = {
   "/tools/best-basket": {
     paragraphs: [
       "The cheapest card is rarely the cheapest order. Postage is charged per store, so a shopping list split across five shops to save a few cents on each card routinely costs more delivered than buying the whole list from two. This works out which combination of stores actually costs least.",
-      "Give it the cards you want and it prices every viable split across the stores that stock them, including each store's postage, and ranks the results by what you would actually pay at the door. Usually the answer is not the split with the cheapest individual cards.",
+      "Give it the cards you want and it searches store combinations for the lowest total including postage, and shows the best one-store and two-store orders beside it, so you can see what splitting the order actually saves. Usually the answer is not the split with the cheapest individual cards.",
       "Postage figures are our own per-store estimates for a single-card order, documented on each store's page, not rates quoted by the shop. Confirm at checkout — a store running free shipping over a threshold can change the answer.",
     ],
   },
@@ -90,9 +90,9 @@ export const HUB_INTROS: Record<string, HubIntro> = {
   },
   "/tools/deal-finder": {
     paragraphs: [
-      "The same card, at a materially different price, in two places we track at the same time. Deal Finder surfaces those gaps: cards where one store's live listing is well below the going rate elsewhere, ranked by how much you would save.",
-      "Every opportunity is computed from live listings rather than a reference price, so a gap here is one you could act on right now — while the listing lasts. That is also the caveat: the cheap side of a gap is usually one seller with one copy, and it goes when someone buys it.",
-      "Delivered cost is what the ranking uses, not sticker price, because a saving smaller than the postage to collect it is not a saving. Nothing here is investment advice; card prices fall as readily as they rise.",
+      "Deal Finder lists the Riftbound cards a store or an eBay seller in your market is selling for less than TCGplayer's market price. For each card it takes the cheapest in-stock copy we track, compares it against TCGplayer's US market price, converted into your currency, and ranks the list by how far below that price it sits — in money, or as a percentage.",
+      "Store prices are the item price only: store postage isn't included, because most shops quote it at checkout. eBay rows include stated postage and are marked delivered; where a seller states none, the row says postage is extra and, like a store price, is ranked on the item price alone. In the United States a card only makes the list when it is also cheaper than TCGplayer's own cheapest listing, so it never sends you to a store TCGplayer already beats.",
+      "TCGplayer's market price is a reference built from recent US sales, not a price you can check out at, and outside the US it moves with the exchange rate shown above the list. A big gap is a reason to look, not a guarantee: the cheap copy is often one seller's only one. Open the card to see every store before you buy. Nothing here is investment advice.",
     ],
   },
 };

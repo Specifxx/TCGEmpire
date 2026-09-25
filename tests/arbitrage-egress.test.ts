@@ -11,7 +11,8 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // session's Neon network-transfer review found: a plain `prisma.card.findMany`
 // with no `take`, re-run on every single request to /tools/deal-finder's
 // cross-region tab (that page is `force-dynamic` with no ISR/unstable_cache
-// anywhere above it). It, and the file's eBay/TCGplayer-US pulls, were first
+// anywhere above it). The tab was cut on 2026-09-25; /market/records reads the
+// same loader, so the shape below still matters. It, and the file's eBay/TCGplayer-US pulls, were first
 // bounded by a per-instance globalThis memo, then (2026-08-24) moved to the
 // SHARED Next data cache via cachedOrDirect — day-keyed and CONTENT_TAG-busted,
 // so one pull per home market per day is shared across every lambda instance
@@ -20,7 +21,7 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
 const ARBITRAGE = "src/lib/arbitrage.ts";
 
-test("the deal-finder cross-region tab has no PAGE-level caching layer of its own", () => {
+test("the Deal Finder page has no PAGE-level caching layer of its own", () => {
   // The bounding now lives inside the lib (cachedOrDirect), not on the page. This
   // still pins that the page itself stays force-dynamic with no unstable_cache —
   // if that changes, the two cache layers interact and this should be revisited.

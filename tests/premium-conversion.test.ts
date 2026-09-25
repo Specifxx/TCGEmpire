@@ -59,17 +59,21 @@ test("premiumZeroToday() carries the real currency symbol, not a hardcoded dolla
 // Live value-proof data plumbing.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("getEbayCheapest's result carries a savingsTotalCents aggregate on every return path", () => {
+test("the Deal Finder list's result carries a savingsTotalCents aggregate on every return path", () => {
+  // getEbayCheapest carried this until the "Cheapest on eBay" tab became the
+  // eBay-only preset of the one Deal Finder list (2026-09-25); the homepage
+  // feed and the proof line read it from getArbitrageVsTcgplayer since 09-21.
   const src = read("src/lib/arbitrage.ts");
-  assert.match(src, /savingsTotalCents: number;/, "EbayDealPage must declare the field");
-  const fnAt = src.indexOf("export async function getEbayCheapest");
+  assert.match(src, /savingsTotalCents\?: number;/, "ArbPage must declare the field");
+  const fnAt = src.indexOf("export async function getArbitrageVsTcgplayer");
   assert.ok(fnAt >= 0);
-  const body = src.slice(fnAt, src.indexOf("\nexport async function getArbitrage"));
-  assert.match(body, /const savingsTotalCents = rows\.reduce/, "must be computed as a real sum over every qualifying row");
+  const body = src.slice(fnAt, src.indexOf("\nexport async function getPricesAsOf"));
+  // Computed once, over every qualifying row (after the "only my cards"
+  // filter), in pageRanked — never from the page slice.
+  assert.match(src, /const savingsTotalCents = filtered\.reduce/, "must be computed as a real sum over every qualifying row");
   // Every PAGE-LEVEL return statement (the ones carrying `total`) must also
   // carry savingsTotalCents — a missing one would silently ship `undefined`
-  // on that path. Narrowed to `total` returns so this doesn't also match the
-  // unrelated per-row object built inside the `.map()` callback below.
+  // on that path.
   const returns = body.match(/return \{[^}]*\btotal\b[^}]*\};/g) ?? [];
   assert.ok(returns.length >= 3, "expected multiple return points to check");
   for (const r of returns) {
@@ -77,10 +81,10 @@ test("getEbayCheapest's result carries a savingsTotalCents aggregate on every re
   }
 });
 
-test("TopDeals carries savingsVsMarketCents, sourced from getEbayCheapest's own aggregate", () => {
+test("TopDeals carries savingsVsMarketCents, sourced from the Deal Finder list's own aggregate", () => {
   const src = read("src/lib/top-deals.ts");
   assert.match(src, /savingsVsMarketCents: number;/, "TopDeals type must declare the field");
-  assert.match(src, /savingsVsMarketCents: savings\.savingsTotalCents/, "must be threaded from the same getEbayCheapest call, not re-derived");
+  assert.match(src, /savingsVsMarketCents: savings\.savingsTotalCents/, "must be threaded from the same getArbitrageVsTcgplayer call, not re-derived");
 });
 
 test("the proof route's reader of savingsVsMarketCents falls back to 0 for a stale cached object", () => {

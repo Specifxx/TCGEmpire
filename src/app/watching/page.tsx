@@ -48,11 +48,11 @@ export default async function WatchingPage() {
   if (!user) redirect("/login?next=/watching");
 
   // What Deal Finder and Rising Cards say about THIS account's watched cards —
-  // free accounts only, and only when there is something specific to say
+  // a Plus upsell for a free account, a link into the list for a member
   // (lib/premium-nudge.ts). Never fails the page.
   const nudge =
-    !isPremium(user) && premiumCheckoutEnabled() ? await getPremiumNudge(user.id, getCountry()).catch(() => null) : null;
-  const nudgeCopy = nudge ? watchedNudgeCopy(nudge, "watched") : null;
+    isPremium(user) || premiumCheckoutEnabled() ? await getPremiumNudge(user.id, getCountry()).catch(() => null) : null;
+  const nudgeCopy = nudge ? watchedNudgeCopy(nudge, "watched", isPremium(user) ? "member" : "free") : null;
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -73,7 +73,7 @@ export default async function WatchingPage() {
         </p>
       </div>
 
-      {nudgeCopy && <PremiumNudgeCard {...nudgeCopy} surface="nudge:watchlist" className="mb-5" />}
+      {nudgeCopy && <PremiumNudgeCard {...nudgeCopy} member={isPremium(user)} surface="nudge:watchlist" className="mb-5" />}
 
       <Watchlist />
     </div>
