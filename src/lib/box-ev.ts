@@ -30,7 +30,8 @@
 
 import { isCrystalRose, isOvernumbered, isSignature, isUltimate, RARITY_KEYS } from "./constants";
 import { printingKind } from "./content/card-narrative";
-import { PACKS_PER_BOX, PULL_RATES } from "./pack-composition";
+import { EPIC_UPGRADE_PER_RARE_SLOT, PACK_SLOTS, PACKS_PER_BOX, PULL_RATES } from "./pack-composition";
+import { headlineOffer, type SealedOffer } from "./sealed-offers";
 
 // ── Pools ────────────────────────────────────────────────────────────────────
 // A "pool" is a set of cards one pack slot can produce. Base rarities plus the
@@ -213,13 +214,22 @@ export function poolStatsFromPools(
 //
 // PROVENANCE, because this matters more than the numbers themselves.
 //
-// BASE RATES come from the magicalmeta.ink community pull-rate guide for
-// Riftbound: Origins — observed box/case data, not a guess.
+// BASE RATES are Riot's slot counts (lib/pack-composition.ts, corroborated by
+// the magicalmeta.ink community pull-rate guide's observed box/case data).
+//
+// RARE + EPIC = THE TWO RARE-OR-BETTER SLOTS, NOT 2 + 0.25 (2026-09-25). Riot:
+// "an Epic replaces a card in the rare slot". This used to count Rare at the
+// full 2 slots AND Epic at 0.25 on top, i.e. 2.25 cards out of two slots, about
+// six phantom rares per 24-pack box. The pack simulator already dealt it the
+// right way (each rare slot upgrades to Epic at EPIC_UPGRADE_PER_RARE_SLOT), and
+// tests/pack-composition.test.ts now pins Rare + Epic to the slot count, so the
+// two pages quote the same pack.
+const slotCount = (key: string) => PACK_SLOTS.find((s) => s.key === key)?.count ?? 0;
 export const DEFAULT_BASE_RATES: Record<string, number> = {
-  Common: 7,
-  Uncommon: 3,
-  Rare: 2,
-  Epic: 0.25, // ~1 in 4 packs
+  Common: slotCount("common"),
+  Uncommon: slotCount("uncommon"),
+  Rare: slotCount("rare") * (1 - EPIC_UPGRADE_PER_RARE_SLOT), // 1.75
+  Epic: slotCount("rare") * EPIC_UPGRADE_PER_RARE_SLOT, // 0.25, ~1 in 4 packs
 };
 
 export const DEFAULT_PACKS = PACKS_PER_BOX;
@@ -283,7 +293,7 @@ export const SPECIAL_POOLS = ["Showcase"] as const;
 /**
  * Expected cards per pack for every pool.
  *
- * Base pools take their community rate. AltArt/Overnumbered/Signature take
+ * Base pools take their slot-count rate. AltArt/Overnumbered/Signature take
  * Riot's own published rate, unaffected by how many cards of that pool this
  * set happens to have. Showcase alone is still estimated: `specialsPerBox` per
  * box, divided by `packs`. A pool with no cards in this set gets 0 rather than
@@ -382,7 +392,14 @@ export function computeEv(opts: {
   };
 }
 
-/** Verdict shown against the box price. Thresholds match the original tool. */
+/**
+ * Verdict shown against the box price. `ratio` is EV ÷ price, so below 1 the
+ * PRICE is above the EV.
+ *
+ * The tone thresholds match the colour the calculator paints the ratio and the
+ * bar with (green from 1.00, gold from 0.85). The verdict used to turn green only
+ * at 1.10, so 1.00–1.09 showed a green percentage over a gold "break-even" line.
+ */
 export function verdictFor(ratio: number | null) {
   if (ratio == null) return null;
   if (ratio >= 1.1) {
@@ -392,12 +409,53 @@ export function verdictFor(ratio: number | null) {
       text: "EV-positive at that price — opening beats buying singles on raw value (variance still applies).",
     };
   }
+  if (ratio >= 1) {
+    return { tone: "up" as const, emoji: "⚖️", text: "Just above break-even — the pulls are worth about what you'd pay, on average." };
+  }
   if (ratio >= 0.85) {
     return { tone: "flat" as const, emoji: "⚖️", text: "Roughly break-even — open it for the fun, not the value." };
   }
+  // "Well below EV" read as "the price is well below EV", i.e. a bargain: the
+  // opposite of what this branch means (2026-09-25 audit).
   return {
     tone: "down" as const,
     emoji: "✋",
-    text: "Well below EV — buying the singles you want is cheaper than ripping packs.",
+    text: "Price is well above EV — buying the singles you want is cheaper than ripping packs.",
   };
+}
+
+// ── Which sets have a box to open ────────────────────────────────────────────
+// Origins: Proving Grounds (OGS) is a 24-card preconstructed, ready-to-play
+// product with no booster packs, so "expected value per box of 24 random packs"
+// describes a product that does not exist. It used to be offered anyway because
+// it is a released set with cards (2026-09-25 audit). Kept here rather than as a
+// flag on SETS so the one tool that needs it owns the list.
+export const NO_BOOSTER_SETS: ReadonlySet<string> = new Set(["OGS"]);
+
+// ── The box price to start from ──────────────────────────────────────────────
+// The calculator used to make you type a box price the site already tracks on
+// /sealed. The cheapest OPEN offer (in stock and read within the staleness
+// window, lib/sealed-offers.ts) for a set's Booster Box now fills the field.
+
+export interface BoxOfferListing extends SealedOffer {
+  retailer: string;
+  retailerName: string;
+  url: string;
+}
+
+/** The cheapest open Booster Box offer per set code, from one market's sealed groups. Pure. */
+export function cheapestBoxOffers(
+  groups: readonly { productType: string; setCode: string | null; listings: readonly BoxOfferListing[] }[],
+  setCodes: ReadonlySet<string>,
+  now: number = Date.now(),
+): Map<string, BoxOfferListing> {
+  const out = new Map<string, BoxOfferListing>();
+  for (const g of groups) {
+    if (g.productType !== "Booster Box" || !g.setCode || !setCodes.has(g.setCode)) continue;
+    const best = headlineOffer(g.listings, now);
+    if (!best) continue;
+    const cur = out.get(g.setCode);
+    if (!cur || best.priceCents < cur.priceCents) out.set(g.setCode, best);
+  }
+  return out;
 }

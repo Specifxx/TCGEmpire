@@ -27,6 +27,9 @@
  * (see lib/tcgplayer.ts); this file exists so this rule cannot.
  */
 
+/** Copies one collection row can hold — the write routes' zod `max` and the UI's + button. */
+export const QUANTITY_CAP = 999;
+
 /** The shape any caller needs — a Prisma row satisfies it structurally. */
 export interface CostBasisRow {
   quantity: number;
@@ -71,4 +74,55 @@ export function costAfterQuantityChange(row: CostBasisRow, newQuantity: number):
   if (!row.costBasisIsTotal) return row.costBasisCents;
   if (row.quantity <= 0 || newQuantity <= 0) return row.costBasisCents;
   return Math.round((row.costBasisCents / row.quantity) * newQuantity);
+}
+
+/** What an add says about the copies it adds. Nothing at all is the common case. */
+export interface CostAdd {
+  /** Copies being added (≥ 1). */
+  quantity: number;
+  /** What the owner says the added copies cost: per copy, or in total with the flag. */
+  costBasisCents?: number | null;
+  costBasisIsTotal?: boolean;
+}
+
+/**
+ * The cost fields a row should carry after `add` lands on it — or on nothing,
+ * when `existing` is null and the add creates the row.
+ *
+ * Every "add to my cards" path (QuickView, My Collection's search, the welcome
+ * checklist, the paste import) increments a row's quantity. They used to leave
+ * the cost untouched, which is right for a per-copy figure and wrong for a total:
+ * the new copies were treated as FREE, and the P&L reported a gain on money never
+ * made. PATCH already rescaled through costAfterQuantityChange; this makes the
+ * add paths agree with it. Reported by the 2026-09-25 audit.
+ *
+ * The rule is "an add never invents or erases money":
+ *   • no cost given → per-copy stays as it is; a total scales with the count
+ *     (costAfterQuantityChange); nothing recorded stays nothing recorded;
+ *   • a cost given, but the copies already there have none → the row's total is
+ *     unknown, so it stays null rather than becoming "the new copies' cost";
+ *   • a cost given on top of a known outlay → the two outlays are summed, and
+ *     the row records a total — unless both sides are the same per-copy price,
+ *     which is left per-copy.
+ */
+export function costAfterAdd(
+  existing: CostBasisRow | null,
+  add: CostAdd,
+): { costBasisCents: number | null; costBasisIsTotal: boolean } {
+  const given = add.costBasisCents ?? null;
+  if (!existing) {
+    return { costBasisCents: given, costBasisIsTotal: given != null && add.costBasisIsTotal === true };
+  }
+  const newQuantity = existing.quantity + add.quantity;
+  const isTotal = existing.costBasisIsTotal === true;
+  if (given == null) {
+    return { costBasisCents: costAfterQuantityChange(existing, newQuantity), costBasisIsTotal: isTotal };
+  }
+  const prior = investedCents(existing);
+  if (prior == null) return { costBasisCents: null, costBasisIsTotal: isTotal };
+  if (add.costBasisIsTotal !== true && !isTotal && existing.costBasisCents === given) {
+    return { costBasisCents: given, costBasisIsTotal: false };
+  }
+  const addedOutlay = add.costBasisIsTotal === true ? given : investedCents({ quantity: add.quantity, costBasisCents: given });
+  return { costBasisCents: prior + (addedOutlay ?? 0), costBasisIsTotal: true };
 }

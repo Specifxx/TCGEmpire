@@ -10,7 +10,21 @@ import { sealedImageAlt } from "@/lib/image-alt";
 // tile is a button that opens the quick-view popup in place (no navigation). Images
 // come from arbitrary store/eBay CDNs, so a plain lazy <img> is used rather than
 // next/image (which would need every host allow-listed).
-export function SealedTile({ group, currency }: { group: SealedGroup; currency: string }) {
+//
+// `soldOutEverywhere` is computed by /sealed on the server from the same
+// getSealedGroups() read (lib/sealed-offers.ts soldOutEverywhere): every store we
+// track lists the product and says sold out on a fresh read. Without it, a tile
+// with no open offer only knows it can't be bought right now, which includes
+// stores we haven't read lately, so it says that and not "sold out".
+export function SealedTile({
+  group,
+  currency,
+  soldOutEverywhere = false,
+}: {
+  group: SealedGroup;
+  currency: string;
+  soldOutEverywhere?: boolean;
+}) {
   const g = group;
   const soldOut = g.lowestPriceCents == null;
   const { open } = useSealedQuickView();
@@ -40,7 +54,7 @@ export function SealedTile({ group, currency }: { group: SealedGroup; currency: 
         </span>
         {soldOut && (
           <span className="absolute right-2 top-2 chip bg-rose-500/15 text-[10px] font-semibold text-rose-300">
-            Sold out
+            {soldOutEverywhere ? "Sold out" : "Unavailable"}
           </span>
         )}
       </div>
@@ -50,6 +64,14 @@ export function SealedTile({ group, currency }: { group: SealedGroup; currency: 
           {g.name}
         </h3>
         {g.setCode && <p className="text-xs text-slate-500">{g.setCode}</p>}
+
+        {/* The one sealed signal that needs no price history: nobody we track
+            can sell it to you today, on a fresh read from every one of them. */}
+        {soldOutEverywhere && (
+          <span className="chip w-fit bg-rose-500/15 text-[10px] font-semibold text-rose-300">
+            Sold out at every store we track
+          </span>
+        )}
 
         {/* Availability-at-MSRP signal (A4) — the buy signal Riftbound buyers scan for. */}
         {!soldOut && g.msrpCents != null && (

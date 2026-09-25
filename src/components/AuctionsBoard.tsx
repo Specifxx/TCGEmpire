@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, timeAgo } from "@/lib/format";
 import { ebayImg, ebaySrcSet } from "@/lib/ebay";
 import type { AuctionRow } from "@/lib/ebay-auctions";
 
@@ -232,6 +232,15 @@ function AuctionTile({
             measured at 393px before this was changed. Stacking costs one short
             line and can never clip at any column count. */}
         <div className="mt-auto pt-1">
+          {/* "Bid at last check", never "current bid": the sweep runs every 4
+              hours and the page is cached for 30 minutes, so this can be ~4.5h
+              old — worst in the final hour, when bidding moves fastest. The age
+              is client-only (`remaining` is null until mounted), the same
+              hydration rule as the countdown. */}
+          <span className="block text-[10px] text-slate-500">
+            Bid at last check
+            {remaining != null && row.checkedAt ? <> · {timeAgo(row.checkedAt)}</> : null}
+          </span>
           <span className="block text-[10px] text-slate-500">
             {row.bidCount} {row.bidCount === 1 ? "bid" : "bids"}
           </span>

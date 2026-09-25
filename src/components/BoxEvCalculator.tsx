@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatMoney } from "@/lib/format";
-import { convertUsdCents, USD_TO } from "@/lib/fx";
+import { convertUsdCents, gbpCentsToEur, USD_TO } from "@/lib/fx";
 import { useCountry } from "@/components/CountryProvider";
 import { CardImage } from "@/components/CardImage";
+import { OutboundLink } from "@/components/OutboundLink";
 import {
   computeEv,
   derivedRates,
@@ -13,18 +14,26 @@ import {
   oneInPacks,
   poolStatsFromPools,
   verdictFor,
+  DEFAULT_BASE_RATES,
   DEFAULT_PACKS,
   DEFAULT_SPECIALS_PER_BOX,
   SPECIAL_POOLS,
   POOL_LABEL,
   type PoolKey,
 } from "@/lib/box-ev";
+import { PACK_SLOTS } from "@/lib/pack-composition";
 
 const isEstimatedPool = (p: PoolKey) => (SPECIAL_POOLS as readonly string[]).includes(p);
 
+// The provenance note quotes the numbers the defaults are built from, never a
+// typed copy of them (lib/box-ev.ts DEFAULT_BASE_RATES).
+const slots = (key: string) => PACK_SLOTS.find((s) => s.key === key)?.count ?? 0;
+const EPIC_ONE_IN_PACKS = Math.round(1 / DEFAULT_BASE_RATES.Epic);
+
 // Box EV explorer. RiftCompare supplies the half nobody else has — a real market
 // price for every card in the set, including the chase prints — and the player
-// supplies the pack structure, because Riot has never published pull rates.
+// can tune the pack structure, which comes from Riot's published pack contents
+// and pull-rate table (lib/pack-composition.ts) except for Showcase.
 //
 // EVERYTHING ARRIVES IN USD and is converted once, here, for display. The server
 // render is country-agnostic (that is what lets the page be ISR-cached), and
@@ -61,16 +70,39 @@ export interface BoxEvSet {
   pools: BoxEvPool[];
 }
 
-export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
-  const { currency } = useCountry();
+/** The cheapest in-stock Booster Box a tracked store has, in that market's own currency. */
+export interface BoxEvOffer {
+  priceCents: number;
+  retailer: string;
+  retailerName: string;
+  /** Affiliate-tagged on the server. */
+  href: string;
+}
+
+/** setCode → market → offer. Only sets and markets with an open box offer appear. */
+export type BoxEvOffers = Record<string, Partial<Record<string, BoxEvOffer>>>;
+
+export function BoxEvCalculator({ sets, offers = {} }: { sets: BoxEvSet[]; offers?: BoxEvOffers }) {
+  const { country, currency, isEurDisplay, fmt } = useCountry();
   const [setCode, setSetCode] = useState(sets[0]?.setCode ?? "");
   const [packs, setPacks] = useState(DEFAULT_PACKS);
   const [specialsPerBox, setSpecialsPerBox] = useState(DEFAULT_SPECIALS_PER_BOX);
-  const [boxPrice, setBoxPrice] = useState("");
+  // null = "use the cheapest box we track" (see `offer` below); a string is what
+  // the visitor typed, which wins until they switch set.
+  const [typedPrice, setTypedPrice] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Partial<Record<PoolKey, number>>>({});
   const [showRates, setShowRates] = useState(false);
 
   const set = sets.find((s) => s.setCode === setCode) ?? sets[0];
+
+  // The price field starts at the cheapest in-stock Booster Box for this set in
+  // the visitor's market, from /sealed's own data. Offers are in the market's
+  // native currency; `fmt` and the EUR display follow the rest of the site (a UK
+  // market shown in EUR converts GBP to EUR for display, as /sealed does).
+  const offer = set ? offers[set.setCode]?.[country] ?? null : null;
+  const offerDisplayCents = offer ? (isEurDisplay ? gbpCentsToEur(offer.priceCents) : offer.priceCents) : null;
+  const boxPrice = typedPrice ?? (offerDisplayCents != null ? (offerDisplayCents / 100).toFixed(2) : "");
+  const usingOffer = typedPrice == null && offer != null;
 
   // Local display helpers. `fx` is the multiplier actually applied, printed in
   // the disclosure so the conversion is auditable rather than a black box.
@@ -172,7 +204,13 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
         <div className="grid gap-3 p-5 sm:grid-cols-3">
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-slate-400">Set</span>
-            <select value={setCode} onChange={(e) => setSetCode(e.target.value)} className="input">
+            <select
+              value={setCode}
+              // A price typed for one set's box is not a price for another's:
+              // switching set goes back to that set's cheapest tracked box.
+              onChange={(e) => { setSetCode(e.target.value); setTypedPrice(null); }}
+              className="input"
+            >
               {sets.map((s) => (
                 <option key={s.setCode} value={s.setCode}>{s.setName} ({s.setCode})</option>
               ))}
@@ -190,12 +228,39 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
             <span className="mb-1 block text-xs font-medium text-slate-400">Box price ({currency})</span>
             <input
               type="number" min="0" step="0.01" value={boxPrice}
-              onChange={(e) => setBoxPrice(e.target.value)}
+              onChange={(e) => setTypedPrice(e.target.value)}
               placeholder="what you'd pay"
               className="input"
             />
           </label>
         </div>
+        {offer && (
+          <p className="-mt-2 px-5 pb-5 text-xs text-slate-500">
+            {usingOffer ? "Filled in with the" : "The"} cheapest in-stock {set.setName} booster box we track:{" "}
+            <OutboundLink
+              href={offer.href}
+              retailer={offer.retailer}
+              country={country}
+              kind="sealed"
+              pageType="box_ev"
+              inStock
+              className="font-semibold text-brand-400 hover:underline"
+            >
+              {fmt(offer.priceCents)} at {offer.retailerName} →
+            </OutboundLink>{" "}
+            · <Link href={`/sealed?type=Booster%20Box&set=${set.setCode}`} className="text-slate-400 hover:underline">compare boxes</Link>
+            {usingOffer ? (
+              " · type your own price to override it."
+            ) : (
+              <>
+                {" · "}
+                <button type="button" onClick={() => setTypedPrice(null)} className="text-slate-400 hover:underline">
+                  use this price
+                </button>
+              </>
+            )}
+          </p>
+        )}
       </div>
 
       {/* ── Where the value sits ─────────────────────────────────────────────
@@ -284,7 +349,10 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
         {showRates && (
           <div className="mt-4 border-t border-ink-800 pt-4">
             <p className="text-[11px] leading-relaxed text-slate-500">
-              The base rarity rates come from a community pull-rate guide built on observed box and case data.{" "}
+              The base rarity rates are Riot&apos;s published pack contents: {slots("common")} common,{" "}
+              {slots("uncommon")} uncommon and {slots("rare")} rare-or-better cards per pack, where an Epic replaces a
+              rare about one pack in {EPIC_ONE_IN_PACKS} — so {DEFAULT_BASE_RATES.Rare} Rare and {DEFAULT_BASE_RATES.Epic}{" "}
+              Epic per pack. A community pull-rate guide built on observed box and case data agrees.{" "}
               <strong className="text-gold">Alt Art, Over-numbered and Signature are Riot&apos;s own published
               rates</strong>, and a set&apos;s <strong className="text-gold">Ultimate</strong> (Unleashed: Baron
               Nashor) pulls at the Signature rate — all from the same pull-rate table the{" "}

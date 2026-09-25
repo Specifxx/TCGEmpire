@@ -116,6 +116,23 @@ export const AUCTION_MARKETS: Country[] = COUNTRY_LIST.map((c) => c.code);
  *  read on an indexed page — egress rule 3 in lib/db.ts. */
 export const AUCTION_ROW_CAP = 120;
 
+/**
+ * The eBay site front each market's board is swept from, as the page names it.
+ *
+ * EU IS EBAY SPAIN. eBay has no pan-European marketplace, so lib/ebay.ts maps the
+ * EU market to EBAY_ES (see its EBAY_MARKETPLACE note). The page used to say
+ * "eBay Europe (EU)" from the market's own label, a marketplace that does not
+ * exist (2026-09-25 audit).
+ */
+export const EBAY_SITE_LABEL: Record<Country, string> = {
+  AU: "eBay Australia",
+  US: "eBay US",
+  UK: "eBay UK",
+  SG: "eBay Singapore",
+  CA: "eBay Canada",
+  EU: "eBay Spain",
+};
+
 export interface AuctionRow {
   itemId: string;
   title: string;
@@ -131,6 +148,14 @@ export interface AuctionRow {
   condition: string | null;
   grader: string | null;
   grade: number | null;
+  /**
+   * ISO time the sweep last wrote this lot (its `updatedAt`), i.e. when the bid
+   * shown was read. The sweep runs every 4 hours and the board is cached for 30
+   * minutes, so the bid can be ~4.5 hours old, most of all in the final hour when
+   * bidding moves fastest; the board says so next to it. Absent on a row from a
+   * cache entry written before this field existed.
+   */
+  checkedAt?: string | null;
 }
 
 // ── Importer ─────────────────────────────────────────────────────────────────
@@ -309,13 +334,19 @@ export function getLiveAuctions(market: Country): Promise<AuctionRow[]> {
             condition: true,
             grader: true,
             grade: true,
+            // When the bid was read: the board labels it "Bid at last check".
+            updatedAt: true,
           },
         })
         // Fails open: a missing table (the model is new — a deploy pushes the
         // schema, see scripts/build-db-push.sh) or a DB blip renders the empty
         // state, never a 500 on an indexed page.
         .catch(() => []);
-      return rows.map((r) => ({ ...r, endsAt: r.endsAt.toISOString() }));
+      return rows.map(({ updatedAt, ...r }) => ({
+        ...r,
+        endsAt: r.endsAt.toISOString(),
+        checkedAt: updatedAt.toISOString(),
+      }));
     },
     [`ebay-auctions-${market}`],
     { revalidate: 1800, tags: [CONTENT_TAG] },

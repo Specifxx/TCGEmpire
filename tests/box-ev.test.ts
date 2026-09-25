@@ -203,7 +203,8 @@ test("base rates are untouched by the special-slot split", () => {
   });
   assert.equal(rates.Common, 7);
   assert.equal(rates.Uncommon, 3);
-  assert.equal(rates.Rare, 2);
+  // 1.75, not 2: an Epic replaces a rare in its slot (tests/pack-composition.test.ts).
+  assert.equal(rates.Rare, 1.75);
   assert.equal(rates.Epic, 0.25);
 });
 

@@ -9,6 +9,7 @@ import {
   AUCTION_ROW_CAP,
   AUCTION_WINDOW_HOURS,
   AUCTION_MIN_USD_CENTS,
+  EBAY_SITE_LABEL,
 } from "@/lib/ebay-auctions";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
@@ -30,7 +31,7 @@ export const revalidate = 1800;
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Chase Auctions Closing Today | RiftCompare" },
   description:
-    "High-value Riftbound auctions on eBay closing within 24 hours — every lot already bid past US$500, sorted by ending soonest, with current bid, bid count and a live countdown.",
+    "High-value Riftbound auctions on eBay closing within 24 hours — every lot already bid past US$500, sorted by ending soonest, with the bid at our last check, bid count and a live countdown.",
   keywords: [
     "Riftbound auctions",
     "Riftbound eBay auctions",
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
   alternates: pageAlternates("/auctions"),
   openGraph: {
     title: "Live Riftbound eBay Auctions — Ending Soonest",
-    description: "Current bid, bid count and a live countdown on every live Riftbound auction.",
+    description: "The bid at our last check, bid count and a live countdown on every live Riftbound auction.",
     url: `${SITE_URL}/auctions`,
   },
 };
@@ -55,7 +56,8 @@ function parseMarket(v?: string): Country {
 export default async function AuctionsPage({ searchParams }: { searchParams: { market?: string } }) {
   const market = parseMarket(searchParams.market);
   const rows = await getLiveAuctions(market);
-  const info = COUNTRIES[market];
+  // The eBay site front, not the market's label: EU is eBay Spain (EBAY_SITE_LABEL).
+  const site = EBAY_SITE_LABEL[market];
   const minUsd = Math.round(AUCTION_MIN_USD_CENTS / 100);
 
   const breadcrumbLd = {
@@ -73,7 +75,7 @@ export default async function AuctionsPage({ searchParams }: { searchParams: { m
   const listLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `Riftbound eBay auctions closing within ${AUCTION_WINDOW_HOURS}h (${info.label})`,
+    name: `Riftbound auctions on ${site} closing within ${AUCTION_WINDOW_HOURS}h`,
     url: `${SITE_URL}/auctions`,
     numberOfItems: rows.length,
     itemListElement: rows.slice(0, 25).map((r, i) => ({
@@ -102,11 +104,12 @@ export default async function AuctionsPage({ searchParams }: { searchParams: { m
           <MarketSwitcher value={market} basePath="/auctions" label="Choose the eBay market to show auctions from" />
         </div>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          The high-value end of <strong className="text-slate-200">eBay {info.label}</strong> — Riftbound lots
-          already bid past <strong className="text-slate-200">US${minUsd}</strong> and closing within{" "}
-          <strong className="text-slate-200">{AUCTION_WINDOW_HOURS} hours</strong>, soonest first. Current bid, how
-          many bids it has drawn, and a countdown that ticks in real time. Graded slabs and raw singles together;
-          filter to either below.
+          The high-value end of <strong className="text-slate-200">{site}</strong>
+          {market === "EU" && <> (eBay has no single European site, so our EU market uses ebay.es)</>} — Riftbound
+          lots already bid past <strong className="text-slate-200">US${minUsd}</strong> and closing within{" "}
+          <strong className="text-slate-200">{AUCTION_WINDOW_HOURS} hours</strong>, soonest first. The bid at our
+          last check (and how long ago that was), how many bids it had drawn, and a countdown that ticks in real
+          time. Graded slabs and raw singles together; filter to either below.
         </p>
       </div>
 
@@ -137,7 +140,9 @@ export default async function AuctionsPage({ searchParams }: { searchParams: { m
           are never converted: an exchange rate applied when we imported the lot would already be wrong by the
           time you read it. The countdown runs in your browser off eBay&rsquo;s stated end time, so it stays
           accurate to the second even though the page itself is cached. A lot that closes while you have the page
-          open drops off the board rather than sitting there looking live.
+          open drops off the board rather than sitting there looking live. The bid is different: it is what the
+          lot stood at when we last swept it, every four hours, so each tile says how long ago that was. Bidding
+          moves fastest in the final hour, so open the listing for the live figure.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-slate-400">
           Two honest limits. This shows up to {AUCTION_ROW_CAP} lots per market, so a very busy day can have a

@@ -3,7 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { CONDITION_KEYS } from "@/lib/constants";
-import { investedCents } from "@/lib/collection-cost";
+import { QUANTITY_CAP } from "@/lib/collection-cost";
+import { addCopies, collectionRowStore } from "@/lib/collection-add";
 
 export const dynamic = "force-dynamic";
 
@@ -60,40 +61,35 @@ export async function POST(req: Request) {
     const card = await prisma.card.findUnique({ where: { id: d.cardId }, select: { id: true } });
     if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
 
-    // ADDING COPIES TO A ROW THAT RECORDS A TOTAL HAS TO ADD THE MONEY TOO.
-    // `costBasisCents: d.costBasisCents` would REPLACE the row's whole outlay
-    // with this add's, so buying a third copy for $25 would erase the $40 paid
-    // for the first two. Read the row first and sum instead — but only on the
-    // rare path where a total is actually in play, so the ordinary "add to my
-    // cards" click still costs exactly one query.
-    const wantsTotal = d.costBasisIsTotal === true && d.costBasisCents != null;
-    const existing = wantsTotal
-      ? await prisma.collectionCard.findUnique({
-          where: { userId_cardId_condition_isFoil: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil } },
-          select: { quantity: true, costBasisCents: true, costBasisIsTotal: true },
-        })
-      : null;
-    const priorPaid = existing ? investedCents(existing) : null;
-
-    const item = await prisma.collectionCard.upsert({
-      where: { userId_cardId_condition_isFoil: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil } },
-      create: {
-        userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil,
-        quantity: d.quantity, note: d.note ?? null,
-        costBasisCents: d.costBasisCents ?? null, costBasisIsTotal: d.costBasisIsTotal ?? false,
-      },
-      update: {
-        quantity: { increment: d.quantity },
-        ...(d.note ? { note: d.note } : {}),
-        ...(wantsTotal
-          ? { costBasisCents: (priorPaid ?? 0) + d.costBasisCents!, costBasisIsTotal: true }
-          : {
-              ...(d.costBasisCents !== undefined ? { costBasisCents: d.costBasisCents } : {}),
-              ...(d.costBasisIsTotal !== undefined ? { costBasisIsTotal: d.costBasisIsTotal } : {}),
-            }),
-      },
-    });
-    return NextResponse.json({ ok: true, item });
+    // ADDING COPIES HAS TO KEEP THE ROW'S COST HONEST AND NEVER LOSE A COPY
+    // (lib/collection-add.ts, lib/collection-cost.ts). A row that records a
+    // TOTAL is an outlay for a specific count: bumping the count and leaving the
+    // money alone made the new copies free, and the P&L reported a gain nobody
+    // made. Every UI add (QuickView, My Collection's search, the welcome
+    // checklist) sends no cost at all, so this is the common path, not a rare
+    // one. A total the caller does send is summed with what was already paid,
+    // never written over it, and a row whose earlier copies have no recorded
+    // cost stays unknown rather than becoming a cost of zero. addCopies reads
+    // the row (one indexed single-row read on its unique key, three narrow
+    // columns) and writes one guarded increment, so two overlapping adds both
+    // count; the 999 cap holds for the row, not just for one add.
+    const store = collectionRowStore(
+      prisma,
+      { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil },
+      d.note,
+    );
+    const res = await addCopies(store, { quantity: d.quantity, costBasisCents: d.costBasisCents, costBasisIsTotal: d.costBasisIsTotal });
+    if (res.status === "full") {
+      // Not "✓ Added": nothing changed, and the UI has to be able to say so.
+      return NextResponse.json(
+        { error: `You already have ${QUANTITY_CAP} of this card in this condition — the most one entry holds.`, full: true },
+        { status: 409 },
+      );
+    }
+    if (res.status === "busy") {
+      return NextResponse.json({ error: "That card was being updated at the same time — please try again." }, { status: 409 });
+    }
+    return NextResponse.json({ ok: true, added: res.added });
   } catch {
     return NextResponse.json({ error: "Couldn't save that right now — please try again." }, { status: 500 });
   }

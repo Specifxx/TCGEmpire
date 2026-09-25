@@ -45,13 +45,28 @@ test("a pack is Riot's published 14 cards, slot for slot", () => {
 
 test("the simulator and the box-EV calculator model the same pack", () => {
   // THE DRIFT THIS FILE EXISTS FOR. box-ev's DEFAULT_BASE_RATES are expected
-  // cards per pack; for the three fixed slots that is just the slot count, and
-  // the two must agree or the site is quoting two different packs on two pages
-  // that link to each other.
+  // cards per pack; for the common and uncommon slots that is just the slot
+  // count, and the two must agree or the site is quoting two different packs on
+  // two pages that link to each other.
   const bySlot = Object.fromEntries(PACK_SLOTS.map((s) => [s.key, s.count]));
   assert.equal(DEFAULT_BASE_RATES.Common, bySlot.common, "box-ev and pack-composition disagree on commons");
   assert.equal(DEFAULT_BASE_RATES.Uncommon, bySlot.uncommon, "…on uncommons");
-  assert.equal(DEFAULT_BASE_RATES.Rare, bySlot.rare, "…on rare-or-better slots");
+});
+
+test("Rare + Epic fill exactly the two rare-or-better slots — an Epic REPLACES a rare", () => {
+  // This test used to pin DEFAULT_BASE_RATES.Rare to the full slot count (2)
+  // while Epic sat at 0.25 on top: 2.25 cards out of two slots, about six
+  // phantom rares in every 24-pack box (2026-09-25 audit). Riot: an Epic
+  // replaces a card in the rare slot, and the simulator deals it that way.
+  const rareSlots = PACK_SLOTS.find((s) => s.key === "rare")?.count ?? 0;
+  assert.ok(
+    Math.abs(DEFAULT_BASE_RATES.Rare + DEFAULT_BASE_RATES.Epic - rareSlots) < 1e-9,
+    `Rare ${DEFAULT_BASE_RATES.Rare} + Epic ${DEFAULT_BASE_RATES.Epic} must equal the ${rareSlots} rare-or-better slots`,
+  );
+  assert.equal(DEFAULT_BASE_RATES.Rare, 1.75);
+  // The Epic share is the simulator's own per-slot upgrade, not a separate estimate.
+  assert.ok(Math.abs(DEFAULT_BASE_RATES.Epic - EPIC_UPGRADE_PER_RARE_SLOT * rareSlots) < 1e-9);
+  assert.ok(Math.abs(DEFAULT_BASE_RATES.Epic - 0.25) < 1e-9, "Riot's ≈1 Epic in 4 packs");
 });
 
 test("the Epic upgrade reproduces Riot's ≈1 in 4 packs", () => {

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useCountry } from "@/components/CountryProvider";
 import { formatMoney } from "@/lib/format";
+import { computeFees, parseRate, type CommissionBase } from "@/lib/selling-fees";
 
 // A net-proceeds calculator for selling Riftbound singles on a marketplace like
 // TCGplayer or eBay. DELIBERATELY has no baked-in "current" commission or
@@ -19,31 +20,40 @@ import { formatMoney } from "@/lib/format";
 
 type Marketplace = "tcgplayer" | "ebay" | "custom";
 
-const PRESETS: Record<Marketplace, { label: string; commissionHint: string; processingPct: string; fixedFee: string }> = {
+// `commissionBase`: what the marketplace charges its commission ON (see
+// lib/selling-fees.ts). eBay's final value fee is on the total the buyer pays,
+// shipping included; TCGplayer's commission is on the item price.
+const PRESETS: Record<
+  Marketplace,
+  { label: string; commissionHint: string; processingPct: string; fixedFee: string; commissionBase: CommissionBase }
+> = {
   tcgplayer: {
     label: "TCGplayer",
-    commissionHint: "Tiered by seller plan — check your Seller Portal for your exact rate",
+    commissionHint: "Tiered by seller plan — check your Seller Portal for your exact rate. Charged on the item price.",
     processingPct: "2.9",
     fixedFee: "0.30",
+    commissionBase: "item",
   },
   ebay: {
     label: "eBay",
-    commissionHint: "Commonly around 13.25% for trading cards — confirm your current rate",
+    commissionHint:
+      "Commonly around 13.25% for trading cards — confirm your current rate. Charged on the item price plus the shipping you charge.",
     processingPct: "0",
     fixedFee: "0.30",
+    commissionBase: "itemPlusShipping",
   },
   custom: {
     label: "Another marketplace",
-    commissionHint: "Enter the marketplace's commission percentage",
+    commissionHint: "Enter the marketplace's commission percentage. Applied to the item price.",
     processingPct: "0",
     fixedFee: "0",
+    commissionBase: "item",
   },
 };
 
-function parseNum(v: string): number {
-  const n = parseFloat(v);
-  return Number.isFinite(n) ? n : 0;
-}
+// Blank or junk counts as 0 for the amounts; the commission alone stays null
+// when blank, because "not entered yet" and "0%" must read differently.
+const amount = (v: string) => parseRate(v) ?? 0;
 
 export function FeeCalculator() {
   const { currency } = useCountry();
@@ -67,18 +77,19 @@ export function FeeCalculator() {
     setCommissionPct("");
   };
 
-  const calc = useMemo(() => {
-    const price = parseNum(itemPrice);
-    const shipCharged = parseNum(shippingCharged);
-    const shipCost = parseNum(shippingCost);
-    const commission = (parseNum(commissionPct) / 100) * price;
-    const processing = (parseNum(processingPct) / 100) * (price + shipCharged) + parseNum(fixedFee);
-    const totalCollected = price + shipCharged;
-    const totalFees = commission + processing;
-    const net = totalCollected - totalFees - shipCost;
-    const effectiveFeePct = price > 0 ? ((totalFees + shipCost) / price) * 100 : 0;
-    return { price, shipCharged, shipCost, commission, processing, totalCollected, totalFees, net, effectiveFeePct };
-  }, [itemPrice, shippingCharged, shippingCost, commissionPct, processingPct, fixedFee]);
+  const calc = useMemo(
+    () =>
+      computeFees({
+        price: amount(itemPrice),
+        shipCharged: amount(shippingCharged),
+        shipCost: amount(shippingCost),
+        commissionPct: parseRate(commissionPct),
+        processingPct: amount(processingPct),
+        fixedFee: amount(fixedFee),
+        commissionBase: preset.commissionBase,
+      }),
+    [itemPrice, shippingCharged, shippingCost, commissionPct, processingPct, fixedFee, preset.commissionBase],
+  );
 
   // Through formatMoney like every other price on the site (2026-09-23). The
   // hand-rolled `${"$" | "AUD "}${n.toFixed(2)}` printed "$-1.49" for the fee
@@ -194,18 +205,33 @@ export function FeeCalculator() {
       <div className="card-surface overflow-hidden">
         <div className="border-b border-ink-800 bg-ink-900/60 p-5">
           <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Your net payout</div>
-          {/* text-4xl below sm: at text-5xl "US$1,443.35" measured 302px against 246px
+          {/* NO NET FIGURE UNTIL THE COMMISSION IS ENTERED (2026-09-25). Commission
+              starts blank on purpose (see the note at the top), and the headline
+              used to print the net anyway with it counted as 0: US$38.71 on a $40
+              TCGplayer sale, and "5.7% went to fees", both missing the largest fee.
+              text-4xl below sm: at text-5xl "US$1,443.35" measured 302px against 246px
               of room at 320 (286 at 360), and this card is overflow-hidden, so the
               payout was clipped (2026-09-23). text-4xl is ~224px. */}
-          <div className="num font-display text-4xl font-extrabold leading-none text-white sm:text-5xl">{money(calc.net)}</div>
-          <div className="mt-1 text-xs text-slate-500">
-            {calc.effectiveFeePct.toFixed(1)}% of the sale price went to fees and your own shipping cost
-          </div>
+          {calc.complete ? (
+            <>
+              <div className="num font-display text-4xl font-extrabold leading-none text-white sm:text-5xl">{money(calc.net)}</div>
+              <div className="mt-1 text-xs text-slate-500">
+                {calc.effectiveFeePct.toFixed(1)}% of the sale price went to fees and your own shipping cost
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="font-display text-2xl font-extrabold leading-tight text-white sm:text-3xl">Enter your commission</div>
+              <div className="mt-1 text-xs text-slate-500">
+                The payout leaves out the marketplace&apos;s largest fee until you add your {preset.label} commission rate above.
+              </div>
+            </>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-px bg-ink-800 sm:grid-cols-4">
           {[
             ["Collected", calc.totalCollected],
-            ["Commission", -calc.commission],
+            ["Commission", calc.complete ? -calc.commission : null],
             ["Processing", -calc.processing],
             ["Your shipping", -calc.shipCost],
           ].map(([label, value]) => (
@@ -214,7 +240,7 @@ export function FeeCalculator() {
               {/* text-base until md: "US$1,501.00" is 116px at text-lg, wider than the
                   111px tile at 320 and the 115px four-column tile at 640. At text-base
                   it's 106px; from md the tiles are 147px+ (2026-09-23). */}
-              <div className="num mt-1 text-base font-bold text-white md:text-lg">{money(value as number)}</div>
+              <div className="num mt-1 text-base font-bold text-white md:text-lg">{value == null ? "—" : money(value as number)}</div>
             </div>
           ))}
         </div>

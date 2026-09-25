@@ -69,3 +69,16 @@ export function offerStockLabel(state: OfferStock, preorder: boolean): string {
   if (state === "soldout") return "Sold out";
   return "Unknown";
 }
+
+/**
+ * True when EVERY store we track lists this product and says it is sold out,
+ * on a fresh read: /sealed's "Sold out at every store we track" badge.
+ *
+ * Stricter than "no open offer": a row we haven't read inside OFFER_STALE_H is
+ * "unknown", not sold out, so one stale store keeps the badge off. That is what
+ * lets the badge say "every store" and mean it. No listings at all is not "sold
+ * out everywhere" either: it is "we don't track it here".
+ */
+export function soldOutEverywhere(offers: readonly SealedOffer[], now: number = Date.now()): boolean {
+  return offers.length > 0 && offers.every((o) => offerStock(o, now) === "soldout");
+}

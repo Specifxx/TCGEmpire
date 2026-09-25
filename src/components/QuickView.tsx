@@ -13,6 +13,7 @@ import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { TcgMarketPrice } from "./TcgMarketPrice";
 import { CardmarketPrice } from "./CardmarketPrice";
 import { cardHref } from "@/lib/card-url";
+import { QUANTITY_CAP } from "@/lib/collection-cost";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, outboundRel, isPaidLink } from "@/lib/affiliate";
@@ -143,7 +144,7 @@ function QuickViewModal({
   const [graded, setGraded] = useState<GradedRow[]>([]);
   const [ebayCheckedAt, setEbayCheckedAt] = useState<string | null>(null);
   const [history, setHistory] = useState<PricePoint[] | null>(null);
-  const [coll, setColl] = useState<"idle" | "saving" | "added" | "signin" | "error">("idle");
+  const [coll, setColl] = useState<"idle" | "saving" | "added" | "full" | "signin" | "error">("idle");
   const [collFoil, setCollFoil] = useState(false);
   // Which eBay tab the visitor has picked, null until they pick one. Controlled
   // for the same reason EbayCardPanelLive is — see that file's header: `graded`
@@ -165,6 +166,8 @@ function QuickViewModal({
         body: JSON.stringify({ cardId: card.id, isFoil: collFoil }),
       });
       if (res.status === 401) return setColl("signin");
+      // Already at the per-row cap: nothing was added, so don't say it was.
+      if (res.status === 409 && (await res.json().catch(() => null))?.full) return setColl("full");
       if (!res.ok) return setColl("error");
       setColl("added");
       trackEvent("collection_add", { card_id: card.id, is_foil: collFoil });
@@ -431,9 +434,9 @@ function QuickViewModal({
                   {/* btn-ghost, not btn-primary: the in-stock retailer buy buttons
                       above are the page's only primary (filled) CTA — this is a
                       secondary action and shouldn't compete with them visually. */}
-                  <button onClick={addToCollection} disabled={coll === "saving"} aria-busy={coll === "saving"} className="btn-ghost flex-1 justify-center gap-1.5 text-sm">
+                  <button onClick={addToCollection} disabled={coll === "saving" || coll === "full"} aria-busy={coll === "saving"} className="btn-ghost flex-1 justify-center gap-1.5 text-sm">
                     {coll === "saving" && <Spinner size="sm" />}
-                    {coll === "saving" ? "Adding…" : coll === "error" ? "Try again" : "＋ Add to collection"}
+                    {coll === "saving" ? "Adding…" : coll === "error" ? "Try again" : coll === "full" ? `You already have ${QUANTITY_CAP}` : "＋ Add to collection"}
                   </button>
                   {/* The shared .btn base (2026-09-23) so the toggle gets the
                       same 44px / 48px-on-touch floor as the "Add to collection"
@@ -441,7 +444,11 @@ function QuickViewModal({
                       Its own px-3 and colour utilities still win over .btn;
                       aria-pressed says which state it is in. */}
                   <button
-                    onClick={() => setCollFoil((f) => !f)}
+                    onClick={() => {
+                      setCollFoil((f) => !f);
+                      // The cap is per row, and foil is a different row.
+                      if (coll === "full") setColl("idle");
+                    }}
                     title="Mark as foil"
                     aria-pressed={collFoil}
                     className={`btn shrink-0 px-3 ${collFoil ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-ink-800 text-slate-400 hover:text-slate-200"}`}
