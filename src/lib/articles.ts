@@ -203,6 +203,162 @@ export interface Article {
 // read it, so one bump when a wave lands updates every one of them.
 
 export const ARTICLES: Article[] = [
+  // K'SANTE'S RIFTBOUND DEBUT (2026-09-25). K'Sante had NO card anywhere in the
+  // game — riftbound-heartsteel-cards built a whole section on that absence and
+  // predicted Radiance would end it. It has: his Legend (Pride of Nazumah,
+  // 172/167 over-numbered) and his signature spell (Ntofo Strikes, 146/167) both
+  // surfaced as Preview Season opened. Both cards are in the catalogue
+  // (prisma/manual-cards.json, filed under Calm = the first/top gem per the
+  // dual-domain convention). DELIBERATELY does NOT bump radiance.ts's confirmed
+  // Legend count: that file is sourced from Riot/riftbound.gg, not a leak image,
+  // so K'Sante stays "sighted" until an official confirmation lands — same bar
+  // the Neeko and 22-Sept Seraphine photos cleared. Owns the K'Sante reveal
+  // intent (docs/seo-keyword-map.md); title omits "Radiance" to clear the
+  // radiance+spoiler title guard. Inbound link from the tracker's reveal log.
+  {
+    slug: "riftbound-ksante-radiance-spoiler",
+    category: "blog",
+    title: "Riftbound K'Sante Spoiler: Pride of Nazumah",
+    excerpt:
+      "K'Sante's first Riftbound cards have surfaced: Pride of Nazumah, his Radiance Legend, and signature spell Ntofo Strikes — what both cards do, and why.",
+    author: "RiftCompare",
+    date: "2026-09-25",
+    readMins: 10,
+    tags: ["radiance", "news", "spoilers", "ksante", "deckbuilding"],
+    hero: {
+      src: "/radiance-spoilers/ksante-pride-of-nazumah.jpg",
+      alt: "Riftbound Radiance spoiler — K'Sante's Legend, Pride of Nazumah, a Calm/Body Legend numbered RAD 172/167, art by Valentine Tran",
+    },
+    shop: [
+      { label: "Radiance pre-orders", query: "Riftbound Radiance" },
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+    ],
+    // Both K'Sante cards are in the catalogue (manual-cards.json); the gallery
+    // resolves them from the DB the same way the Neeko and Seraphine posts do.
+    embeds: [
+      {
+        title: "K'Sante's first two Riftbound cards, in our database",
+        note: "Added from the reveal images on 25 September 2026. The art is the de-captioned reveal crop until Radiance's official card images land; every other field is read off the card.",
+        slugs: ["pride-of-nazumah-rad-172-167", "ntofo-strikes-rad-146-167"],
+      },
+    ],
+    summary: [
+      "**K'Sante's first Riftbound card ever is [Pride of Nazumah](/card/pride-of-nazumah-rad-172-167)** — his Radiance Legend, a Calm/Body build-around. He is the one League champion who had **no Riftbound card of any kind** until now.",
+      "**What the Legend does:** pay 1 energy and exhaust it to give a friendly unit *\"I have Assault equal to my Shield\"* for the turn — it turns a wall into a threat.",
+      "**His signature spell, [Ntofo Strikes](/card/ntofo-strikes-rad-146-167), does the same trick faster:** give a unit Shield 2, then deal damage equal to its Shield to an enemy. Defense converted straight into offense.",
+      "**This is the debut [our HEARTSTEEL post](/blog/riftbound-heartsteel-cards) said had to happen.** K'Sante's absence was the clearest gap in the band's line-up; Radiance closes it.",
+      "**Nothing is buyable yet** — Radiance releases **23 October 2026**. The Legend is an over-numbered 172/167 chase; both cards are on [the set hub](/sets/radiance) with live prices from release day.",
+    ],
+    faq: [
+      {
+        q: "Does K'Sante have a Riftbound card now?",
+        a: "Yes. K'Sante's first Riftbound cards — his Legend, Pride of Nazumah (RAD 172/167), and his signature spell, Ntofo Strikes (RAD 146/167) — surfaced on 25 September 2026 as Radiance Preview Season opened. Before this he was the one HEARTSTEEL member, and one of very few League champions in the set's orbit, with no Riftbound card of any kind. He is not tournament-legal until Radiance releases on 23 October 2026.",
+      },
+      {
+        q: "What does Pride of Nazumah do in Riftbound?",
+        a: "It is K'Sante's Legend — the identity card a K'Sante deck is built around. Its ability: pay 1 energy and exhaust it to give a friendly unit \"I have Assault equal to my Shield\" until end of turn. In other words it takes a unit's Shield — a defensive stat — and mirrors it as Assault, letting a heavily-shielded blocker hit back. It is a Calm/Body Legend, numbered 172/167.",
+      },
+      {
+        q: "What does Ntofo Strikes do?",
+        a: "Ntofo Strikes is K'Sante's signature spell, an Action costing 2 energy: give a friendly unit Shield 2 this turn, then deal damage equal to that unit's Shield to an enemy unit. It is the same idea as the Legend — Shield becomes damage — but it packages the Shield and the payoff into one card. Its flavor line, \"Sometimes a warden must become a warrior,\" is the whole archetype in seven words.",
+      },
+      {
+        q: "What domain is K'Sante in Riftbound?",
+        a: "His cards show two domain gems: Calm (the green sprout, on top) and Body (the orange emblem below). Both cards are Calm/Body. On RiftCompare each card is filed under the first of its two domains — Calm — the same one-domain convention the catalogue uses for every two-domain Legend; the second domain, Body, is the endurance/shield side that carries his whole game plan.",
+      },
+      {
+        q: "Is the 172/167 Pride of Nazumah a chase card?",
+        a: "Yes. Radiance's base numbered run is 167 cards, so a card numbered 172/167 sits above the base set — where Showcase and chase treatments are numbered in every Riftbound set. The 172/167 Pride of Nazumah is the premium printing; an ordinary in-set printing at a lower number is expected but has not been shown yet.",
+      },
+      {
+        q: "When can I buy K'Sante's Radiance cards?",
+        a: "Not yet. Radiance releases worldwide on 23 October 2026, and there is no Radiance secondary market before then. K'Sante is not in the Seraphine vs. Evelynn Showdown Decks, so boosters are the route to his cards; sealed and pre-order prices are compared daily on our Radiance pre-order page.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Every Radiance card as it's revealed →",
+      blurb: "The set hub fills in through Preview Season and switches on live price comparison across every store we track on release day.",
+    },
+    body: `**K'Sante just went from zero Riftbound cards to two.** For a champion this popular, that first number is the surprising one: until 25 September, K'Sante — the Pride of Nazumah, one of League's marquee tanks and a member of the HEARTSTEEL line-up — did not exist in this game in any form. Not a scarce printing, not an old one. Nothing. As Preview Season opened, that changed twice over: his Legend, **Pride of Nazumah**, and his signature spell, **Ntofo Strikes**, both surfaced.
+
+We flagged this one coming. When HEARTSTEEL's "LIVE MY LIFE" video put band-art Riftbound cards on a table for five of its six members, the [write-up we did on those cards](/blog/riftbound-heartsteel-cards) kept returning to the same gap: K'Sante was the one member with no card at all, so if Radiance carried HEARTSTEEL in any complete form, his first-ever card *had* to be in it. That was, in our words at the time, "a specific, falsifiable thing to watch for." It has now come off the list.
+
+## What surfaced
+
+Two cards, read straight off the reveal images. First the Legend:
+
+| | |
+| --- | --- |
+| **Name** | Pride of Nazumah |
+| **Card type** | Legend · K'Sante |
+| **Set** | Radiance (RAD) |
+| **Collector number** | 172/167 (over-numbered) |
+| **Domains** | Calm and Body |
+| **Artist** | Valentine Tran (©2026 RGI) |
+
+> **1, Exhaust:** Give a friendly unit *"I have Assault equal to my Shield"* this turn.
+
+And the signature spell:
+
+| | |
+| --- | --- |
+| **Name** | Ntofo Strikes |
+| **Card type** | Signature Spell · K'Sante |
+| **Set** | Radiance (RAD) |
+| **Energy cost** | 2 |
+| **Collector number** | 146/167 |
+| **Domains** | Calm and Body |
+| **Artist** | Polar Engine Studio (©2026 RGI) |
+
+> **Action** *(Play on your turn or in showdowns.)* Give a friendly unit Shield 2 this turn, then deal damage equal to its Shield to an enemy unit.
+> *"Sometimes a warden must become a warrior." — K'Sante*
+
+[[embed:0]]
+
+## One idea, printed twice: Shield is a weapon
+
+Read the two cards together and the archetype is impossible to miss. Both of them do the same thing — **they turn Shield, a defensive stat, into offense** — and the flavor text says so out loud: *sometimes a warden must become a warrior.* That is K'Sante's entire kit in League compressed into a design line, and Riftbound has built his cards around it rather than around a raw statline.
+
+**Pride of Nazumah** is the engine. For one energy and a tap of the Legend, it hands a friendly unit *"I have Assault equal to my Shield"* for the turn. Assault is damage a unit deals when it attacks; Shield is the buffer that keeps a unit alive. Stapling one to the other means the sturdiest wall on your board — the unit nobody wanted to attack into — suddenly swings for as much as it was soaking. And because it is an activated ability on your Legend, it comes back every single turn. That is the kind of repeatable value that decides what a deck is *for*.
+
+**Ntofo Strikes** is the same trick in spell form, and faster. Two energy gives a unit Shield 2 and then throws that Shield at an enemy as damage — a two-for-one that both protects your board and removes a piece of theirs, in one card, at instant speed (it is an Action, playable in showdowns). The reminder text spells out why the Shield 2 matters beyond the ping: *a unit with Shield has +1 Might for each instance of Shield while it's a defender*, so the same card that deals the damage also makes the shielded unit tougher to attack into afterward.
+
+Put the Legend and the spell in the same deck and you can see the shape of it: build a board of durable, shielded units, then convert that durability into reach whenever you need it — a chip of damage from the spell, a big swing from the Legend. It is a defensive deck with an offensive button, which is exactly the fantasy a K'Sante player wants — the wall that decides, on its own terms, when to stop being a wall. Whether that is strong enough to define a Radiance archetype is a question for real cards and a real format; the intent, though, could not be clearer.
+
+## Calm and Body — resilience with teeth
+
+K'Sante's cards carry two domain gems: **Calm** (the green sprout) and **Body** (the orange emblem). It is a fitting pair. [Calm](/domains/calm) is the domain of growth and resilience; [Body](/domains/body) is endurance and physical power. Between them they describe a champion who wins by outlasting you and then, once he has, hitting back — which is precisely what the two cards do.
+
+On RiftCompare each card is filed under the first of its two domains, Calm, the same way every two-domain Legend in the catalogue is stored; the Body half is the shield-and-endurance side that actually carries the game plan. When you are building, treat him as a card that wants both rune types available, not one.
+
+## Why the debut itself is the story
+
+It is easy to skip past, so it is worth sitting on: **this is a champion's entire arrival in the game.** Most Radiance reveals are a new card for a champion who already has several. K'Sante had none. That makes Pride of Nazumah his equivalent of a first impression — the printing that establishes how the game reads him — and it is a good one, because it commits to a real identity (Shield-to-offense) rather than a generic beater.
+
+It also lands his debut inside a skin line's gravity. K'Sante's higher-profile appearance this autumn was in the [HEARTSTEEL "LIVE MY LIFE" stills](/blog/riftbound-heartsteel-cards), where a band-art K'Sante card sat on the table alongside Kayn, Ezreal, Aphelios and Sett. That HEARTSTEEL printing is a cosmetic treatment; **Pride of Nazumah is the base card underneath it** — his normal art, his Legend frame, the version an ordinary Radiance booster can produce. The two are different objects, and if you are collecting, the difference between "the HEARTSTEEL K'Sante" and "the base K'Sante Legend" is the sort of thing that will matter to prices.
+
+## What we are not claiming
+
+The usual line between what is on the card and what would be a guess:
+
+- **We are treating this as a sighting, not an official confirmation.** The cards appear in reveal footage as Preview Season opens, which is strong — but our [confirmed-facts page](/blog/riftbound-radiance-what-we-know) still counts the Legends Riot has formally named, and K'Sante was not among that group. His cards being visible is logged on the [spoiler tracker](/blog/riftbound-radiance-spoilers); the official count moves when Riot's own reveal does.
+- **The 146/167 number on Ntofo Strikes was read under a video caption** that sat across the bottom of that card, so treat it as read-with-care rather than pristine. The Legend's 172/167 is clean.
+- **Ntofo Strikes' rarity is not legible** — the gem that shows it was behind the same caption. Its base-run number tells us it is an in-set card, not an over-numbered chase like the Legend, but the exact tier waits for a clean image.
+- **The ordinary in-set Pride of Nazumah has not been seen.** 172/167 is the over-numbered Showcase treatment; a base-numbered printing at or below 167 is expected and simply has not surfaced.
+
+## What this means if you are buying
+
+The same rules as every pre-release card, because they are the ones that keep money in your pocket.
+
+**Do not buy a K'Sante single yet.** There is no Radiance secondary market — the set does not release until **23 October 2026**. Anything sold as a Pride of Nazumah today is a pre-sale against a card nobody can deliver.
+
+**Know where he is — and is not.** The set's beginner product, the Showdown Decks, is *Seraphine vs. Evelynn*; K'Sante is not in it. That makes **boosters** the route to his cards, which is worth knowing before you buy a precon expecting to open a K'Sante deck. Sealed and pre-order prices are what actually move now, and we compare [Radiance pre-order prices](/radiance-preorders) across every tracked store, cheapest first, in your own currency, with the [sealed comparison](/sealed) covering displays and the Vault.
+
+**When singles land, read the number before the name.** With a 172/167 over-number already shown and a base printing still to come, "Pride of Nazumah" will shortly mean more than one object at more than one price — and a HEARTSTEEL-art K'Sante is a third. The collector number is what tells them apart, and it is the first thing our matcher reads off a listing. Every K'Sante card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
+
+For the running list of everything shown so far — official reveals and sightings kept clearly apart — the [Radiance spoiler tracker](/blog/riftbound-radiance-spoilers) is updated the morning after each drop, and [what's confirmed about Radiance](/blog/riftbound-radiance-what-we-know) holds the dates, products and prices.`,
+  },
   // SERAPHINE'S RADIANCE LEGEND (2026-09-22). The genuinely new thing here is
   // "Starry-Eyed Songstress" — Seraphine's LEGEND card — pictured in print three
   // days before Preview Season. This is the one Legend this site explicitly
@@ -955,6 +1111,8 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
 
+**25 September — K'Sante's first Riftbound cards.** As Preview Season opened, K'Sante — the one HEARTSTEEL member with no Riftbound card at all — got two: his Legend *Pride of Nazumah* (Calm/Body, RAD · 172/167 over-numbered) and his signature spell *Ntofo Strikes* (RAD · 146/167), both built on turning Shield into offense. It is his entire debut in the game — the reveal [our HEARTSTEEL post](/blog/riftbound-heartsteel-cards) said Radiance would have to carry. Logged here as a sighting from reveal footage, not yet an official Legend confirmation; both cards are in the database. Full breakdown: **[the K'Sante spoiler write-up](/blog/riftbound-ksante-radiance-spoiler)**.
+
 **24 September — Seraphine's Legend, officially revealed.** Riot posted *Starry-Eyed Songstress* and its over-numbered 174/167 printing on the Riftbound Instagram, confirming the photographed card below. It is Mind and Order. Both printings are now on the site: [151/167](/card/seraphine-starry-eyed-songstress-rad-151-167) and [174/167](/card/seraphine-starry-eyed-songstress-rad-174-167).
 
 **22 September — Seraphine's Legend, photographed in print.** *Starry-Eyed Songstress* — Seraphine's Legend card, not her unit — surfaced as a physical card numbered RAD · 151/167, with an over-numbered 174/167 chase printing shown in a card-artist feature. Its ability: as an additional cost to play a spell, exhaust Seraphine and three friendly units to reduce that spell's cost by 2. It is the first Seraphine Legend seen in print, and the printed wording matches the anonymous September text this page declined to quote — so the two now corroborate each other. It is logged here as a photographed card, the same bar Neeko cleared, not as an official reveal. Full breakdown: **[the Seraphine spoiler write-up](/blog/riftbound-seraphine-radiance-spoiler)**.
@@ -985,7 +1143,7 @@ Radiance brings **nine new champion Legends**, pinned down from two directions: 
 | **Ziggs** | Confirmed | Named in the announcement; nothing shown |
 | **Jarvan IV** | Confirmed | Named in the announcement; nothing shown |
 | **Orianna** | Confirmed | Added at PAX West; nothing shown |
-| Three more | Unrevealed | — |
+| Three more | Unrevealed | K'Sante's first cards have surfaced (see the 25 Sep log and the [write-up](/blog/riftbound-ksante-radiance-spoiler)) but Riot has not formally confirmed him |
 
 All six named champions are League of Legends champions without an existing Riftbound Legend, so each is a debut rather than a reprint. Riot has not said whether that holds for the last three. When a Legend is revealed and imported it appears in the gallery above and on the **[Radiance set page](/sets/radiance)**, where each confirmed champion already has an anchor that resolves to their cards the moment they exist.
 
@@ -5046,7 +5204,7 @@ For everything else that is genuinely confirmed about the set — dates, product
       },
       {
         q: "Does K'Sante have a Riftbound card?",
-        a: "Not as of 18 September 2026 — he has no card in the game at all. He has been reported as coming in Radiance off a Riftbound Championship post, so if that holds, Radiance would be his Riftbound debut and his first card would arrive carrying a skin-line art rather than a base splash.",
+        a: "Not as of 18 September 2026, when this was written — he had no card in the game at all. That has since changed: on 25 September, as Radiance Preview Season opened, K'Sante's first cards surfaced — his Legend Pride of Nazumah and his signature spell Ntofo Strikes — making Radiance his Riftbound debut exactly as the reporting suggested. See the [K'Sante spoiler write-up](/blog/riftbound-ksante-radiance-spoiler) for what they do.",
       },
       {
         q: "Will the HEARTSTEEL cards be in Riftbound: Radiance?",
@@ -5127,7 +5285,7 @@ Two things fall straight out of that table, and neither has shown up in the cove
 
 **Kayn is the only HEARTSTEEL champion with a card and no alternate printing at all.** Every other member who has a card already has at least one Showcase version; Sett and Yone have signature prints on top. [Kayn, Unleashed](/champions/kayn) has exactly one print and has never had a variant. A HEARTSTEEL Kayn would be the first alternate art this card has ever received — which is precisely the profile that spikes hardest and corrects hardest.
 
-**K'Sante has no Riftbound card whatsoever.** He is not under-printed; he is absent from the game entirely — which makes the gold-bordered K'Sante card in the video stills the most genuinely new thing in them. He is also the one HEARTSTEEL member separately reported as confirmed for Radiance, off a Riftbound Championship post whose Top 8 art the community read as HEARTSTEEL. Put those together and Radiance looks like K'Sante's **Riftbound debut**, with his first card in the game arriving in a skin line rather than a base splash. Seraphine is in the same position — a confirmed Radiance legend with no card in the game today.
+**K'Sante has no Riftbound card whatsoever.** He is not under-printed; he is absent from the game entirely — which makes the gold-bordered K'Sante card in the video stills the most genuinely new thing in them. He is also the one HEARTSTEEL member separately reported as confirmed for Radiance, off a Riftbound Championship post whose Top 8 art the community read as HEARTSTEEL. Put those together and Radiance looks like K'Sante's **Riftbound debut**, with his first card in the game arriving in a skin line rather than a base splash. Seraphine is in the same position — a confirmed Radiance legend with no card in the game today. **Update, 25 September 2026:** it played out exactly this way — [K'Sante's first Riftbound cards have surfaced](/blog/riftbound-ksante-radiance-spoiler), a Legend (*Pride of Nazumah*) and a signature spell, as Preview Season opened.
 
 [[shop]]
 

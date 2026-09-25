@@ -1044,6 +1044,48 @@
     "avif": "/r2-source.avif",
     "avifBytes": 11241
   },
+  "/radiance-spoilers/ksante-ntofo-strikes.jpg": {
+    "src": "/radiance-spoilers/ksante-ntofo-strikes.jpg",
+    "width": 952,
+    "height": 1298,
+    "bytes": 118595,
+    "webp": "/radiance-spoilers/ksante-ntofo-strikes.webp",
+    "webpBytes": 84626,
+    "avif": "/radiance-spoilers/ksante-ntofo-strikes.avif",
+    "avifBytes": 58441,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/radiance-spoilers/ksante-ntofo-strikes-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/radiance-spoilers/ksante-ntofo-strikes-768w.webp"
+      }
+    ],
+    "fingerprint": "a5e3246903d51fcd"
+  },
+  "/radiance-spoilers/ksante-pride-of-nazumah.jpg": {
+    "src": "/radiance-spoilers/ksante-pride-of-nazumah.jpg",
+    "width": 952,
+    "height": 1400,
+    "bytes": 116506,
+    "webp": "/radiance-spoilers/ksante-pride-of-nazumah.webp",
+    "webpBytes": 79572,
+    "avif": "/radiance-spoilers/ksante-pride-of-nazumah.avif",
+    "avifBytes": 55791,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/radiance-spoilers/ksante-pride-of-nazumah-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/radiance-spoilers/ksante-pride-of-nazumah-768w.webp"
+      }
+    ],
+    "fingerprint": "e23446eb1faa1c4a"
+  },
   "/radiance-spoilers/neeko-blending-in.jpg": {
     "src": "/radiance-spoilers/neeko-blending-in.jpg",
     "width": 744,
