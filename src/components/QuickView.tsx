@@ -30,6 +30,7 @@ import { Dialog } from "./ui/Dialog";
 import { Spinner } from "./ui/Skeleton";
 import { pushRecentCard } from "@/lib/recently-viewed";
 import { cardImageSrc } from "@/lib/card-image-url";
+import { PriceDropAlertCta } from "./PriceDropAlertCta";
 
 interface RetailerPrice {
   id: string;
@@ -48,7 +49,15 @@ interface RetailerPrice {
 const Ctx = createContext<{ open: (card: CardTileData) => void }>({ open: () => {} });
 export const useQuickView = () => useContext(Ctx);
 
-export function QuickViewProvider({ children }: { children: React.ReactNode }) {
+// `providers` comes from the root layout's enabledProviders(), which reads env
+// only (no cookies), so passing it down keeps the layout static.
+export function QuickViewProvider({
+  children,
+  providers = [],
+}: {
+  children: React.ReactNode;
+  providers?: ("google" | "discord")[];
+}) {
   const [card, setCard] = useState<CardTileData | null>(null);
   const pushedRef = useRef(false);
   // The last card shown, kept around through a close so the panel still has
@@ -113,13 +122,21 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
             collection state, prices and chart instead of leaking them across
             cards) — displayCard, not card, so the key stays stable through
             the close animation instead of unmounting mid-fade. */}
-        {displayCard && <QuickViewModal key={displayCard.id} card={displayCard} onClose={close} />}
+        {displayCard && <QuickViewModal key={displayCard.id} card={displayCard} onClose={close} providers={providers} />}
       </Dialog>
     </Ctx.Provider>
   );
 }
 
-function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => void }) {
+function QuickViewModal({
+  card,
+  onClose,
+  providers,
+}: {
+  card: CardTileData;
+  onClose: () => void;
+  providers: ("google" | "discord")[];
+}) {
   const [prices, setPrices] = useState<RetailerPrice[] | null>(null);
   const [adListings, setAdListings] = useState<AdListing[]>([]);
   const [graded, setGraded] = useState<GradedRow[]>([]);
@@ -387,6 +404,15 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
             {/* One disclosure for the whole panel — every tab is affiliate-tagged
                 and each inner component is rendered `bare` for that reason. */}
             <AffiliateDisclosure partner="ebay" tight />
+
+            {/* The card page's one-click price-drop alert, compact (2026-09-25).
+                Most card taps open this modal, not the card page, and on phones
+                the heart above is an unlabelled icon that opens a second modal.
+                Below the eBay tabs on purpose so the commission path keeps its
+                place; ghost buttons only (see the collection row's comment).
+                OAuth returns to the card page, where SignupWelcome completes
+                the stashed watch. The heart stays. */}
+            <PriceDropAlertCta compact placement="quickview_alert" cardId={card.id} cardPath={href} providers={providers} />
 
             {/* Add to collection — track & value your whole collection in your profile */}
             <div className="mt-3 flex items-center gap-2">

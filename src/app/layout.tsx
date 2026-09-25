@@ -348,7 +348,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PremiumProvider>
         <PremiumDialogProvider>
         <CountryProvider initial={DEFAULT_COUNTRY}>
-          <QuickViewProvider>
+          <QuickViewProvider providers={enabledProviders()}>
           <SealedQuickViewProvider>
             <CommandLauncherProvider>
               <MegaMenuProvider>

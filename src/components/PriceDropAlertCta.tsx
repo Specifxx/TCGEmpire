@@ -20,14 +20,25 @@ import { trackAuthStart, trackSignupCta } from "@/lib/growth-events";
 // mechanism PriceAlertModal already used — with ?next= bringing the visitor
 // back to this card. Email-only alerts stay available as the secondary option
 // (the existing modal's email form, via "price-alert-open").
+//
+// `compact` is QuickView's variant (2026-09-25): a CardTile tap opens QuickView
+// rather than the card page, so most card views never reach the full-size box.
+// One row, and every button in it is ghost or brand-coloured, never
+// btn-primary: QuickView's retailer buy buttons are that panel's only filled
+// CTA (see the "Add to collection" comment there). `placement` keeps the two
+// surfaces separable in User.signupSource and the auth_start funnel.
 export function PriceDropAlertCta({
   cardId,
   cardPath,
   providers,
+  placement = "card_alert",
+  compact = false,
 }: {
   cardId: string;
   cardPath: string;
   providers: ("google" | "discord")[];
+  placement?: "card_alert" | "quickview_alert";
+  compact?: boolean;
 }) {
   const { user, loaded } = useMe();
   const { watched, watch } = useWatchlist();
@@ -41,16 +52,69 @@ export function PriceDropAlertCta({
     } catch {
       /* private mode — the account is still created; the alert is one more click */
     }
-    markSignupSource("card_alert");
-    trackSignupCta("card_alert");
-    trackAuthStart(provider, "card_alert");
+    markSignupSource(placement);
+    trackSignupCta(placement);
+    trackAuthStart(provider, placement);
   };
   const oauthHref = (provider: "google" | "discord") =>
     `/api/auth/oauth/${provider}?next=${encodeURIComponent(cardPath)}`;
   const emailInstead = () => window.dispatchEvent(new CustomEvent("price-alert-open", { detail: { cardId } }));
+  const enable = async () => {
+    setBusy(true);
+    try {
+      await watch(cardId, country);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   // Reserve the height until the session is known, so the price block does not jump.
-  if (!loaded) return <div aria-hidden className="mt-3 h-[4.5rem]" />;
+  if (!loaded) return <div aria-hidden className={compact ? "mt-3 h-12" : "mt-3 h-[4.5rem]"} />;
+
+  if (compact) {
+    return (
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="text-sm font-semibold text-white">Price-drop alert:</span>
+        {user ? (
+          <button
+            type="button"
+            disabled={busy || watching}
+            onClick={enable}
+            className={watching ? "btn border border-gold/50 bg-gold/15 text-sm text-gold" : "btn-ghost text-sm"}
+          >
+            {watching ? "✓ Price-drop alert on" : "Email me when it drops"}
+          </button>
+        ) : (
+          <>
+            {providers.includes("google") && (
+              <a href={oauthHref("google")} rel="nofollow" onClick={() => stashAndStart("google")} className="btn-ghost text-sm">
+                Continue with Google
+              </a>
+            )}
+            {providers.includes("discord") && (
+              <a
+                href={oauthHref("discord")}
+                rel="nofollow"
+                onClick={() => stashAndStart("discord")}
+                className="btn border-0 bg-[#5865F2] px-3 text-xs text-[#ffffff] hover:brightness-110"
+              >
+                Discord
+              </a>
+            )}
+            {providers.length === 0 ? (
+              <button type="button" onClick={emailInstead} className="btn-ghost text-sm">
+                Email me when it drops
+              </button>
+            ) : (
+              <button type="button" onClick={emailInstead} className="tap-link text-xs text-slate-400 underline-offset-2 hover:text-white hover:underline">
+                or email me
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
 
   if (user) {
     return (
@@ -58,14 +122,7 @@ export function PriceDropAlertCta({
         <button
           type="button"
           disabled={busy || watching}
-          onClick={async () => {
-            setBusy(true);
-            try {
-              await watch(cardId, country);
-            } finally {
-              setBusy(false);
-            }
-          }}
+          onClick={enable}
           className={watching ? "btn border border-gold/50 bg-gold/15 text-gold" : "btn-primary"}
         >
           {watching ? "✓ Price-drop alert on" : "Get a price-drop alert"}

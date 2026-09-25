@@ -54,6 +54,10 @@ export const SIGNUP_SOURCES = new Set([
   "quickview", // QuickView's "Sign in to track your collection"
   "shared_collection", // a shared binder's "Start your collection"
   "feedback",
+  // The same one-click alert, compact, inside QuickView (2026-09-25), where a
+  // CardTile tap lands. Its own value so it can be weighed against QuickView's
+  // buy_click rather than blended into card_alert.
+  "quickview_alert",
   "other",
 ]);
 
