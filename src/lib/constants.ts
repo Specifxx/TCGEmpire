@@ -282,6 +282,15 @@ export interface SetInfo {
   comingSoon?: boolean;
   sealedAvailable?: boolean;
   totalCards?: number;
+  /**
+   * Riot's ANNOUNCED card count, Showcase printings included, when it differs
+   * from the printed `totalCards` run (Radiance: "180 cards (66 Showcase)"
+   * against a printed x/167). It is the denominator a reader checks a reveal
+   * count against — /sets/<slug>'s pre-release title ("N of 180 So Far") and
+   * the hub's "N of 180 revealed" counter both read it, so they cannot
+   * disagree. Never used for price-import matching; that is `totalCards`.
+   */
+  announcedCards?: number;
   recentlyReleased?: boolean;
   releasedOn?: string;
   /**
@@ -342,6 +351,7 @@ export const SETS: SetInfo[] = [
     // loudly if this is wrong — a listing's "x/167" has to route to RAD or it
     // gets priced as an Origins card.
     totalCards: 167,
+    announcedCards: 180,
     comingSoon: true,
     releasedOn: "2026-10-23",
     hubReady: true,

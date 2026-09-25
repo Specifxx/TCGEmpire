@@ -71,6 +71,21 @@ test("set pages: 'Card List: All N Cards + Prices' leads, and the grid is not pu
   for (const [name, n] of [["Unleashed", 219], ["Origins", 298], ["Vendetta", 166], ["Spiritforged", 221]] as const) {
     assert.ok(`Riftbound ${name} Card List: All ${n} Cards + Prices`.length <= 60, name);
   }
+  // ...for RELEASED sets only. A preview set with cards (Radiance through
+  // Preview Season) claims neither completeness nor prices: the counted rung
+  // lives in the non-preview arm of the ladder, and the preview arm and its
+  // descriptions say neither "All N Cards" nor "+ Prices" nor "live prices
+  // compared" (DECISIONS.md, "Radiance snippets: reveals, not 'All N Cards'").
+  const ladder = src.slice(src.indexOf("const fullTitles = preview"), src.indexOf("const fullTitle ="));
+  const previewArm = ladder.slice(0, ladder.indexOf("    : ["));
+  const releasedArm = ladder.slice(ladder.indexOf("    : ["));
+  assert.match(src, /const preview = isPreorderSetCode\(set\.code\) && cardCount > 0;/);
+  assert.match(previewArm, /Card List: \$\{revealLabel\} So Far/);
+  assert.doesNotMatch(previewArm, /All \$\{|\+ Prices|Price Guide|Revealed|Spoilers/);
+  assert.match(releasedArm, /Card List: All \$\{cardCount\} Cards \+ Prices/);
+  const previewDesc = src.slice(src.indexOf("const previewDescCandidates"), src.indexOf("const descCandidates"));
+  assert.ok(previewDesc.length > 0);
+  assert.doesNotMatch(previewDesc, /compared across stores|Updated daily|complete/);
   const grid = src.indexOf("{totalInSet === 0 ? (");
   const intro = src.indexOf("{intro.length > 0 && (");
   assert.ok(grid > 0 && intro > grid, "the data-derived intro renders under the grid");

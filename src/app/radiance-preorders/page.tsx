@@ -77,9 +77,15 @@ const FAQS = [
 ];
 
 export const metadata: Metadata = {
-  title: { absolute: "Riftbound Radiance Pre-Order Prices Compared — Every Store | RiftCompare" },
+  // "BOOSTER BOX" IN THE TITLE (2026-09-25). docs/seo-keyword-map.md gives this
+  // page `radiance booster box price`, it ranks 13.8 for it, and the phrase was
+  // in neither the 72-character title nor the 204-character description —
+  // both past Google's truncation. No price in the title: the page renders in
+  // the visitor's currency, so an AU or UK searcher would see a US$ figure the
+  // page then does not show. No store count (tests/no-store-count-in-titles).
+  title: { absolute: "Riftbound Radiance Booster Box Pre-Order Prices" },
   description:
-    "Compare Riftbound: Radiance pre-order prices across every tracked store — booster boxes, packs, the Vault Bundle, Showdown Decks and event kits, cheapest first, in your currency. Releases 23 October 2026.",
+    "Radiance booster box, Vault Bundle and pack pre-order prices from every tracked store, in your currency, refreshed daily. Out 23 October 2026.",
   keywords: [
     "Riftbound Radiance preorder",
     "Riftbound Radiance pre-order price",
@@ -219,7 +225,7 @@ export default async function RadiancePreordersPage() {
           on the list the release-day email (lib/release-day.ts) goes to. Same
           gate and copy as the hub and the radiance-tagged articles. */}
       {isBeforeRadianceRelease() && (
-        <div className="mt-6 max-w-lg">
+        <div id="notify" className="mt-6 max-w-lg scroll-mt-header">
           <NewsletterSignup
             siteName="RiftCompare"
             variant="card"
@@ -314,9 +320,21 @@ export default async function RadiancePreordersPage() {
           </ul>
           <p className="mt-4 text-sm leading-relaxed text-slate-400">
             We do not forecast prices here and we will not tell you the number is going up. What this page can tell
-            you is what every tracked store is charging right now, in your currency, refreshed daily — and{" "}
-            <Link href="/alerts" className="text-brand-300 underline-offset-2 hover:underline">a price alert</Link>{" "}
-            will email you if one of them drops.
+            you is what every tracked store is charging right now, in your currency, refreshed daily
+            {/* Not "a price alert will email you if one drops" (the copy until
+                2026-09-25): PriceAlert.cardId is required, so no sealed
+                product can be watched. The release-day email above is real. */}
+            {isBeforeRadianceRelease() ? (
+              <>
+                , and{" "}
+                <a href="#notify" className="text-brand-300 underline-offset-2 hover:underline">we&apos;ll email you</a>{" "}
+                the day Radiance prices go live. Revealed cards can be watched one by one from{" "}
+                <Link href="/sets/radiance" className="text-brand-300 underline-offset-2 hover:underline">the Radiance
+                card list</Link>.
+              </>
+            ) : (
+              "."
+            )}
           </p>
         </section>
       )}

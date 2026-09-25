@@ -27,7 +27,8 @@ import { getCountry } from "@/lib/get-country";
 import { priceField, COUNTRIES } from "@/lib/country";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
-import { SETS, setBySlug } from "@/lib/constants";
+import { SETS, isPreorderSetCode, setBySlug } from "@/lib/constants";
+import { getSetRevealCount } from "@/lib/set-reveal-count";
 import { preordersHrefForSet } from "@/lib/release-calendar";
 import { RadianceHub } from "@/components/sets/RadianceHub";
 import { RadiancePreorderCta } from "@/components/RadiancePreorderCta";
@@ -177,12 +178,31 @@ export async function generateMetadata({
   // parentheses where Google's truncation took it ("unleashed card list": 904
   // impressions at 1.2%). The price-guide rung stays next, for set names too
   // long for this one.
-  const fullTitles = [
-    ...(cardCount > 0 ? [`Riftbound ${set.name} Card List: All ${cardCount} Cards + Prices`] : []),
-    ...(cardCount > 0 ? [`Riftbound ${set.name} Card List & Price Guide (All ${cardCount} Cards)`] : []),
-    `Riftbound ${set.name} Card List & Price Guide`,
-    ...titleCandidates.map((t) => `${t} | RiftCompare`),
-  ];
+  //
+  // PREVIEW SEASON (2026-09-25): the counted rung above is a claim of
+  // completeness and of prices, and a set still revealing cards has neither.
+  // /sets/radiance served "Card List: All 3 Cards + Prices" for a 180-card set
+  // with no singles prices, on the page that owns "radiance card list". While
+  // isPreorderSetCode() holds and cards exist, the title counts reveals against
+  // the announced total instead — "Card List" still leads, and it never says
+  // "Revealed" or "Spoilers", which docs/seo-keyword-map.md gives to the
+  // /blog/riftbound-radiance-spoilers tracker. Released sets keep the ladder.
+  const preview = isPreorderSetCode(set.code) && cardCount > 0;
+  const revealed = preview ? await getSetRevealCount(set.code) : null;
+  const announced = set.announcedCards ?? set.totalCards;
+  const revealLabel = revealed && revealed > 0 && announced ? `${revealed} of ${announced}` : null;
+  const fullTitles = preview
+    ? [
+        ...(revealLabel ? [`Riftbound ${set.name} Card List: ${revealLabel} So Far`] : []),
+        `Riftbound ${set.name} Card List So Far`,
+        `${set.name} Card List So Far`,
+      ]
+    : [
+        ...(cardCount > 0 ? [`Riftbound ${set.name} Card List: All ${cardCount} Cards + Prices`] : []),
+        ...(cardCount > 0 ? [`Riftbound ${set.name} Card List & Price Guide (All ${cardCount} Cards)`] : []),
+        `Riftbound ${set.name} Card List & Price Guide`,
+        ...titleCandidates.map((t) => `${t} | RiftCompare`),
+      ];
   const fullTitle = fullTitles.find((t) => t.length <= 60) ?? fullTitles[fullTitles.length - 1];
   // PRE-RELEASE BRANCH: cardCount === 0 (not < 1 — a -1 lookup failure keeps the
   // normal "complete card list" copy, matching the fail-open bias above, rather
@@ -205,8 +225,23 @@ export async function generateMetadata({
         timeZone: "UTC",
       })
     : null;
-  const descCandidates =
-    cardCount === 0
+  // Preview season (the same `preview` gate as the title): describe what is
+  // on the page today — the reveals, with their rarity, domain and text — and
+  // put the prices on the date they actually start, not in the present tense.
+  // The dated rung is 151 characters at "180 of 180" for Radiance, so it fits
+  // 155 for the whole season.
+  const previewDescCandidates = [
+    ...(revealLabel && releaseDateLabel
+      ? [`Every Riftbound ${set.name} card revealed so far (${revealLabel}) with rarity, domain and card text, added as reveals land. Live prices from ${releaseDateLabel}.`]
+      : []),
+    ...(revealLabel
+      ? [`Every Riftbound ${set.name} card revealed so far (${revealLabel}) with rarity, domain and card text, added as official reveals land.`]
+      : []),
+    `Every Riftbound ${set.name} card revealed so far, with rarity, domain and card text, added as official reveals land.`,
+  ];
+  const descCandidates = preview
+    ? previewDescCandidates
+    : cardCount === 0
       ? [
           releaseDateLabel
             ? `Riftbound ${set.name} releases ${releaseDateLabel} — this page will list every card with live prices from launch day.`
