@@ -30,6 +30,7 @@ export function TrialPriceBlock({
   trialDays,
   size = "lg",
   tier = "premium",
+  introEligible = true,
 }: {
   plan: "monthly" | "annual";
   trialDays: number;
@@ -45,6 +46,9 @@ export function TrialPriceBlock({
   // PREMIUM_PRICE_AMOUNT/PREMIUM_ANNUAL_AMOUNT constants and the zero-arg
   // helpers directly, unchanged.
   tier?: PremiumTierKey;
+  // Would checkout attach the half-price intro for this viewer (never paid)?
+  // The caller passes the session flag — same rule as checkout (2026-09-25).
+  introEligible?: boolean;
 }) {
   const big = size === "lg" ? "text-4xl" : size === "sm" ? "text-3xl" : "text-2xl";
   const dayPhrase = `${trialDays}-day`;
@@ -53,7 +57,7 @@ export function TrialPriceBlock({
   const monthlyAmount = tier === "plus" ? tierMonthlyAmount("plus") : PREMIUM_PRICE_AMOUNT;
   const annualAmount = tier === "plus" ? tierAnnualAmount("plus") : PREMIUM_ANNUAL_AMOUNT;
   // Monthly plans open at half price for INTRO_MONTHS months (lib/site.ts).
-  const intro = plan === "monthly" && introOfferEnabled();
+  const intro = plan === "monthly" && introOfferEnabled() && introEligible;
 
   return (
     <div className="text-center">

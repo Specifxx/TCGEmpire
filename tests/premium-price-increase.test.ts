@@ -369,8 +369,10 @@ test("PremiumSlideIn always shows a price too; the trial-eligible branch is a ba
   const trialBranch = block.slice(trialBranchAt, elseAt);
   const nonTrialBranch = block.slice(elseAt);
   assert.match(trialBranch, /premiumZeroToday\(\)/, "trial-eligible branch must use the shared $0-today helper");
-  assert.match(trialBranch, /introOfferEnabled\(\) &&[\s\S]*tierIntroMonthlyAmount\(\)/, "the intro price is stated beside the $0, from the shared helper");
+  assert.match(trialBranch, /introOfferEnabled\(\) && introEligible &&[\s\S]*tierIntroMonthlyAmount\(\)/, "the intro price is stated beside the $0, from the shared helper");
   assert.ok(!/premiumFromLine\(\)/.test(trialBranch), "trial-eligible branch must NOT also state the recurring price — bare $0 today, by design");
-  assert.match(nonTrialBranch, /premiumFromLine\(\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
+  // introFromLine (2026-09-25): the real recurring price, with the half-price
+  // months for a viewer checkout would give them to (a cancelled trialist).
+  assert.match(nonTrialBranch, /introFromLine\("premium", introEligible\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
   assert.match(nonTrialBranch, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
 });

@@ -12318,3 +12318,56 @@ and 10-15:
 - at least 1 of the 4 cancellers still in trial should be kept (baseline 0,
   but 0 is the expected base case for a plain "keep" prompt);
 - no cancelling trial should get a "will be charged" email.
+
+## Plus is ad-free again; the intro is quoted only where checkout gives it — 2026-09-25
+
+**Ad-free moves back to every paid tier (owner's call).** It went
+Premium-only on 2026-09-14 to give the $9.99 tier a broad reason to exist.
+With the half-price intro, Plus at $2.49/mo is now the entry tier, and "no
+ads" is the benefit a first-time payer understands without a tour.
+`/api/me`'s `adFree` is now `isPremium(user)` (any paid tier). It stays a
+separate flag from `premium`, so the line can move again without touching
+the ad placements. Tier table, pricing cards, /premium copy and the
+explainer article all say Plus is ad-free.
+
+**Fixes from the adversarial review of the intro batch**, before it ships:
+
+- **A tier switch mid-intro could add half-price invoices forever.**
+  `introMonthsRemaining` rounded the time left UP and the replacement
+  coupon's months start at the switch. Most switches bought a 4th
+  half-price invoice, and a switch just before the end bought another
+  month each time. Replaced by `introRenewalsRemaining(current_period_end,
+  discount.end)`: it counts the discounted renewals still owed. A fresh
+  n-month coupon applied now covers exactly those n, because the next
+  renewal is always under a month away. Chained switches can't extend it.
+- **The intro was quoted to people checkout won't give it to, and not
+  quoted to people it will.** A churned payer saw $4.99 and was billed
+  $9.99. A cancelled trialist (the segment the offer targets) was shown
+  $9.99 on the dialog, every gate button and the slide-in, then billed
+  $4.99. The new `introEligibleFor(user)` applies checkout's own
+  never-paid rule. It is memoised per Stripe customer for 10 minutes, so
+  `/api/me` doesn't call Stripe on every page view. It feeds
+  `me.introEligible`, `/premium` (cards, hero, small print), the dialog,
+  `PremiumButton`, the slide-in and the checkout-recovery email.
+  `introFromLine()` is `premiumFromLine()` with the intro months in it.
+- **A deleted or stale coupon 500'd checkout.** `ensureIntroCoupon` caches
+  coupon ids per instance. Checkout now retries once without `discounts`
+  when Stripe rejects the coupon, and drops the cache. **Deleting the
+  coupon in Stripe is still not a kill switch:** a cold instance quietly
+  re-creates it. The kill switch is `NEXT_PUBLIC_PREMIUM_INTRO_OFFER=0`
+  **plus a production build**; `NEXT_PUBLIC_` values are inlined at build,
+  server code included.
+- **The trial-cancel report counted lapsed payers as trial cancels.**
+  Stripe keeps `cancel_at_period_end` on a subscription that paid,
+  cancelled later and lapsed. The classifier now reads that flag as a
+  trial cancel only while the status is still `trialing`. Otherwise it
+  relies on the cancel click falling before the trial end.
+
+**Checked and already right:** the reminder copy says "a day or two
+before". The 48h window with one daily run delivers 24–48h ahead, so
+"the day before" findings were against the earlier commit.
+
+**Left as is:** the one-off premium-offer campaign email still quotes the
+list price. It under-sells, never over-charges, and only runs by hand. The
+Upgrade/Downgrade buttons of a subscriber mid-intro still quote list prices
+while the coupon is swapped to the new tier (it bills less than shown).

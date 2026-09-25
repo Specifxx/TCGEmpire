@@ -9323,7 +9323,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     summary: [
       "**RiftCompare now has two paid tiers: Plus at $4.99/mo and Premium at $9.99/mo** (each with an annual option at roughly a 33% saving) — both with a 3-day free trial, the first 3 months at half price on a monthly plan, and cancel-anytime billing through Stripe.",
-      "**Plus unlocks the full lists** — Deal Finder, Rising Cards and Rising Sealed. **Premium adds an ad-free site and the four pro tools on top**: the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder. The Condition Impact Calculator is free with any account, no subscription needed.",
+      "**Plus is ad-free and unlocks the full lists** — Deal Finder, Rising Cards and Rising Sealed. **Premium adds the four pro tools on top**: the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder. The Condition Impact Calculator is free with any account, no subscription needed.",
       "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
       "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
@@ -9364,7 +9364,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "Does Premium remove ads on RiftCompare?",
-        a: "Yes — every page is completely ad-free the moment you're Premium. It's automatic; there's nothing to switch on separately.",
+        a: "Yes — every page is completely ad-free the moment you're on Plus or Premium. It's automatic; there's nothing to switch on separately.",
       },
     ],
     itemList: {
@@ -9417,9 +9417,9 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Bulk Pricer | — | — | ✓ |
 | Best Basket — cheapest store split, postage included | — | — | ✓ |
 | Demand Finder | — | — | ✓ |
-| Ad-free experience | — | — | ✓ |
+| Ad-free experience | — | ✓ | ✓ |
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the top three of Deal Finder and Rising Cards); Plus adds the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds the pro screeners and an ad-free site on top of everything Plus includes.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the top three of Deal Finder and Rising Cards); Plus adds an ad-free site and the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds the pro screeners on top of everything Plus includes.
 
 ## The 5 tools you only get with Premium
 

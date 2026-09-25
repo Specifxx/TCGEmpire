@@ -212,6 +212,18 @@ export function introPriceLine(tier: PremiumTierKey = "premium"): string {
   return `${tierIntroMonthlyAmount(tier)}/mo for your first ${INTRO_MONTHS} months, then ${monthlyAmountFor(tier)}/mo`;
 }
 
+/**
+ * premiumFromLine() for someone checkout will give the intro to: "from $6.67/mo
+ * billed yearly, or $4.99/mo for your first 3 months, then $9.99/mo
+ * month-to-month". Callers decide eligibility (lib/premium.ts introEligibleFor);
+ * the kill switch is honoured here too.
+ */
+export function introFromLine(tier: PremiumTierKey = "premium", eligible = true): string {
+  if (!eligible || !introOfferEnabled()) return premiumFromLine(tier);
+  const effective = premiumEffectiveMonthly(tier);
+  return effective ? `from ${effective}/mo billed yearly, or ${introPriceLine(tier)} month-to-month` : introPriceLine(tier);
+}
+
 // ── Announced price increase ────────────────────────────────────────────────
 // History: $9.99/mo → $14.99/mo (2026-09-06, "the decided cutover price"; see
 // this file's git history for the full account of the originally-announced-but-

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { analyticsUserId } from "@/lib/ga-user-id";
 import { enabledProviders } from "@/lib/oauth";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, premiumPlusEnabled, plusAnnualEnabled, premiumTierOf, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, premiumPlusEnabled, plusAnnualEnabled, premiumTierOf, PREMIUM_TRIAL_DAYS, introEligibleFor } from "@/lib/premium";
 
 // Session endpoint for the client-side chrome (UserMenu, wishlist sync,
 // premium ad-hiding).
@@ -33,11 +33,11 @@ export async function GET() {
       // signed out, which is what clears the id on the client.
       analyticsId: user ? analyticsUserId(user.id) : null,
       premium: isPremium(user),
-      // Whether to hide ads. Deliberately NOT the same flag as `premium`:
-      // ad-free is a Premium-tier entitlement (2026-09-14), while `premium`
-      // still means "entitled at all" and gates the Plus-level features.
-      // Grandfathered Plus accounts read true here through premiumTierFloor.
-      adFree: isPremium(user, "premium"),
+      // Whether to hide ads. Every paid tier is ad-free again (owner's call,
+      // 2026-09-25 — DECISIONS.md, "Plus is ad-free again"); it was
+      // Premium-only from 2026-09-14. Kept as its own flag so the tier line
+      // can move again without touching every ad placement.
+      adFree: isPremium(user),
       // Which paid tier ("plus" | "premium"), or null if not entitled at all —
       // for surfaces that need to NAME the tier rather than just gate on it.
       tier: premiumTierOf(user),
@@ -48,6 +48,9 @@ export async function GET() {
       premiumPlus: premiumPlusEnabled(),
       trialEligible: !!user && !isPremium(user) && premiumTrialEnabled() && !user.trialStartedAt,
       trialDays: PREMIUM_TRIAL_DAYS,
+      // Would checkout give this viewer the half-price first months (monthly
+      // plans)? Same never-paid rule as checkout; false for current payers.
+      introEligible: !isPremium(user) && (await introEligibleFor(user)),
       premiumAnnual: premiumAnnualEnabled(),
       plusAnnual: plusAnnualEnabled(),
       // Which OAuth buttons to render. Env-derived, no session in it — here so a

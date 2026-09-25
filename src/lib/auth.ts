@@ -61,6 +61,9 @@ export interface SessionUser {
   premiumTierFloor: string | null;
   // When this account first started a free trial (null = never → trial-eligible).
   trialStartedAt: Date | null;
+  // The Stripe customer behind the account, if any: the half-price intro is
+  // for customers who have never paid (lib/premium.ts introEligibleFor).
+  stripeCustomerId: string | null;
   // The market (AU/US/UK/SG/CA) this account browses/prices in — see the
   // schema comment on User.preferredCountry. Raw/untyped here (auth.ts stays
   // decoupled from lib/country.ts); consumers normalize with normalizeCountry().
@@ -142,7 +145,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       select: {
         id: true, email: true, displayName: true, avatarUrl: true, emailVerified: true,
         balanceCents: true, isAdmin: true, premiumUntil: true, premiumTier: true,
-        premiumTierFloor: true, trialStartedAt: true, preferredCountry: true,
+        premiumTierFloor: true, trialStartedAt: true, preferredCountry: true, stripeCustomerId: true,
         lastActiveAt: true, activeDays: true,
       },
     });
@@ -164,6 +167,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       premiumTier: user.premiumTier,
       premiumTierFloor: user.premiumTierFloor,
       trialStartedAt: user.trialStartedAt,
+      stripeCustomerId: user.stripeCustomerId,
       preferredCountry: user.preferredCountry,
     };
   } catch {

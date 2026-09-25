@@ -27,6 +27,10 @@ import {
   premiumEffectiveMonthly,
   tierMonthlyAmount,
   tierAnnualAmount,
+  tierIntroMonthlyAmount,
+  introOfferEnabled,
+  introPriceLine,
+  INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
 
@@ -68,7 +72,7 @@ export function PremiumDialogProvider({ children }: { children: React.ReactNode 
 }
 
 function PremiumDialog({ onClose }: { onClose: () => void }) {
-  const { user, premium, tier, premiumCheckout, premiumPlus, trialEligible, trialDays, premiumAnnual, plusAnnual, providers, loaded } = useMe();
+  const { user, premium, tier, premiumCheckout, premiumPlus, trialEligible, trialDays, introEligible, premiumAnnual, plusAnnual, providers, loaded } = useMe();
   // Where the visitor was when the wall interrupted them — carried through
   // sign-in and Stripe so /premium/welcome can put them back on it.
   const pathname = usePathname();
@@ -203,7 +207,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                   omission, and a card IS required to start. */}
               {showTrial ? (
                 <div className="mb-3">
-                  <TrialPriceBlock plan={activePlan} trialDays={trialDays} tier={sellTier} />
+                  <TrialPriceBlock plan={activePlan} trialDays={trialDays} tier={sellTier} introEligible={introEligible} />
                 </div>
               ) : activePlan === "annual" ? (
                 <div className="mb-3">
@@ -215,6 +219,13 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                     <span className="num text-3xl font-extrabold text-white">{sellTier === "plus" ? tierMonthlyAmount("plus") : PREMIUM_PRICE_AMOUNT}</span>
                     <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
                   </div>
+                  {/* A cancelled trialist has no trial left but has never paid, so
+                      checkout still halves their first months — say so here. */}
+                  {introEligible && introOfferEnabled() && (
+                    <p className="mt-1 text-[11px] font-semibold text-brand-400" data-intro-offer>
+                      First {INTRO_MONTHS} months {tierIntroMonthlyAmount(sellTier)}/mo — half price
+                    </p>
+                  )}
                   {/* One tap from the smaller monthly number to the one that
                       actually sells Premium — the effective annual rate. Only
                       rendered when there's an annual plan to switch to. */}
@@ -381,6 +392,8 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                     const priceAfter =
                       activePlan === "annual"
                         ? `${tierAnnualAmount(sellTier)}/yr`
+                        : introEligible && introOfferEnabled()
+                        ? introPriceLine(sellTier)
                         : sellTier === "plus"
                         ? `${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD}`
                         : PREMIUM_PRICE_LABEL || "billed monthly";

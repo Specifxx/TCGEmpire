@@ -48,6 +48,7 @@ export function PremiumPricingCards({
   trialEligible,
   trialAvailable,
   trialDays,
+  introEligible = true,
 }: {
   plusLive: boolean;
   plusAnnualLive: boolean;
@@ -57,6 +58,8 @@ export function PremiumPricingCards({
   trialEligible: boolean;
   trialAvailable: boolean;
   trialDays: number;
+  /** Would checkout attach the half-price intro (never paid)? lib/premium.ts introEligibleFor. */
+  introEligible?: boolean;
 }) {
   const anyAnnualLive = annualLive || (plusLive && plusAnnualLive);
   // Annual by default (2026-09-11, owner: "so the prices look cheaper at
@@ -145,7 +148,7 @@ export function PremiumPricingCards({
         {plusLive && (
           <PaidTierCard
             tier="plus"
-            tagline="The full lists, unlocked"
+            tagline="Ad-free, with the full lists"
             features={PLUS_FEATURES}
             cycle={cycle}
             annualLiveForTier={plusAnnualLive}
@@ -154,6 +157,7 @@ export function PremiumPricingCards({
             trialEligible={trialEligible}
             trialAvailable={trialAvailable}
             trialDays={trialDays}
+            introEligible={introEligible}
           />
         )}
 
@@ -169,6 +173,7 @@ export function PremiumPricingCards({
           trialEligible={trialEligible}
           trialAvailable={trialAvailable}
           trialDays={trialDays}
+          introEligible={introEligible}
         />
       </div>
     </div>
@@ -184,11 +189,11 @@ const FREE_FEATURES = [
 // "N-day" is a placeholder, substituted for the real PREMIUM_TRIAL_DAYS value
 // by PaidTierCard below — this file can't import the server-only constant
 // directly, and the real count arrives as the `trialDays` prop instead.
-const PLUS_FEATURES = ["Everything free", "Full Deal Finder, Rising Cards & Rising Sealed lists", "N-day free trial"];
+const PLUS_FEATURES = ["Everything free", "Ad-free browsing", "Full Deal Finder, Rising Cards & Rising Sealed lists", "N-day free trial"];
 // Two different lists depending on whether Plus exists to build on top of —
 // same reasoning TIER_COMPARISON's own header gives for keeping one row set
 // rather than two near-duplicate copies of the feature list.
-const PREMIUM_FEATURES_ON_PLUS = ["Everything in Plus", "Ad-free browsing", "Value Finder screener", "Bulk Pricer", "Best Basket optimiser", "Demand Finder", "N-day free trial"];
+const PREMIUM_FEATURES_ON_PLUS = ["Everything in Plus (ad-free, full lists)", "Value Finder screener", "Bulk Pricer", "Best Basket optimiser", "Demand Finder", "N-day free trial"];
 const PREMIUM_FEATURES_STANDALONE = [
   "Everything free",
   "Ad-free browsing",
@@ -244,6 +249,7 @@ function PaidTierCard({
   trialEligible,
   trialAvailable,
   trialDays,
+  introEligible,
 }: {
   tier: PremiumTierKey;
   tagline: string;
@@ -256,6 +262,7 @@ function PaidTierCard({
   trialEligible: boolean;
   trialAvailable: boolean;
   trialDays: number;
+  introEligible: boolean;
 }) {
   // A tier whose OWN annual price isn't configured falls back to monthly
   // display even if the global toggle is on "annual" — priceIdFor() already
@@ -269,7 +276,7 @@ function PaidTierCard({
   // Intro offer (lib/site.ts): monthly only. The headline stays the REAL
   // recurring price (rule 2 above); the intro is its own line under it, and
   // the small print quotes the whole schedule.
-  const intro = effectiveCycle === "monthly" && introOfferEnabled();
+  const intro = effectiveCycle === "monthly" && introOfferEnabled() && introEligible;
   const priceLabel =
     effectiveCycle === "annual" ? `${annualAmount}/yr` : intro ? introPriceLine(tier) : `${monthlyAmount}/${PREMIUM_PRICE_PERIOD}`;
   const features_ = features.map((f) => f.replace("N-day", `${trialDays}-day`));

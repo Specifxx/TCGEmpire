@@ -101,14 +101,17 @@ longer lands on its entry.
   Keep (`/api/premium/resume`); plan switches stay hidden mid-trial until
   verified on a Stripe test clock.
   [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215), [2026-09-23](../DECISIONS.md#L10924)
-- **Tiers:** Plus, $4.99/mo or $39.99/yr, has the full lists (Deal Finder,
-  Rising Cards, Rising Sealed). Premium, $9.99/mo or $79.99/yr, adds Value
-  Finder, Bulk Pricer, Best Basket, Demand Finder and **ad-free**. The intro
-  price is an amount-off coupon created by `ensureIntroCoupon`; its display
-  and charge share `introAmountOffCents`. [2026-09-11](../DECISIONS.md#L4428),
-  [2026-09-24](../DECISIONS.md#L12120)
+- **Tiers:** Plus, $4.99/mo or $39.99/yr, is **ad-free** and has the full
+  lists (Deal Finder, Rising Cards, Rising Sealed). Premium, $9.99/mo or
+  $79.99/yr, adds Value Finder, Bulk Pricer, Best Basket and Demand Finder.
+  The intro price is an amount-off coupon created by `ensureIntroCoupon`;
+  its display and charge share `introAmountOffCents`, and it is quoted only
+  where `introEligibleFor` says checkout will give it. A tier switch keeps
+  exactly the discounted renewals left (`introRenewalsRemaining`).
+  [2026-09-11](../DECISIONS.md#L4428), [2026-09-24](../DECISIONS.md#L12120),
+  [2026-09-25](../DECISIONS.md#L12322)
 - **Gates:** `isPremium(user)` defaults to the Plus minimum; ads read
-  `adFree` (Premium). Tier comes from the Stripe price (`tierFromPriceId`);
+  `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`);
   a `premiumTierFloor` only raises a paid tier, never grants one. Never reuse
   a Price across tiers. [2026-09-11](../DECISIONS.md#L4774),
   [2026-09-14](../DECISIONS.md#L6038)

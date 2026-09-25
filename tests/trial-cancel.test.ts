@@ -30,6 +30,14 @@ test("ended-in-trial, converted, churned later, still trialing, payment failed",
     classifyTrial({ ...base, status: "canceled", canceledAtMs: trialEnd + 5 * 24 * H, endedAtMs: trialEnd + 30 * 24 * H }, NOW + 40 * 24 * H).outcome,
     "churned_after_paying",
   );
+  assert.equal(
+    classifyTrial(
+      { ...base, status: "canceled", cancelAtPeriodEnd: true, canceledAtMs: trialEnd + 5 * 24 * H, endedAtMs: trialEnd + 30 * 24 * H },
+      NOW + 40 * 24 * H,
+    ).outcome,
+    "churned_after_paying",
+    "paid, cancelled at period end, lapsed: Stripe keeps cancel_at_period_end — not a trial cancel",
+  );
   assert.equal(classifyTrial({ ...base, trialEndMs: NOW + 24 * H }, NOW).outcome, "in_trial");
   assert.equal(classifyTrial({ ...base, status: "canceled", reason: "payment_failed", canceledAtMs: trialEnd }, NOW).outcome, "payment_failed");
 });

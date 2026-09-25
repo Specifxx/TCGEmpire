@@ -13,7 +13,7 @@ import {
   premiumPriceIncreaseAnnounced,
   premiumLockInTail,
   premiumZeroToday,
-  premiumFromLine,
+  introFromLine,
   introOfferEnabled,
   tierIntroMonthlyAmount,
   INTRO_MONTHS,
@@ -167,7 +167,7 @@ async function fetchPersonalCopy(): Promise<{ heading: string; line: string } | 
 }
 
 export function PremiumSlideIn() {
-  const { user, premium, premiumCheckout, premiumPlus, trialEligible, trialDays, loaded } = useMe();
+  const { user, premium, premiumCheckout, premiumPlus, trialEligible, trialDays, introEligible, loaded } = useMe();
   const { country } = useCountry();
   const router = useRouter();
   const pathname = usePathname();
@@ -473,13 +473,13 @@ export function PremiumSlideIn() {
                 <>
                   <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span>
                   {/* The intro offer (lib/site.ts), stated where the $0 is. */}
-                  {introOfferEnabled() && (
+                  {introOfferEnabled() && introEligible && (
                     <> · then {tierIntroMonthlyAmount()}/mo for {INTRO_MONTHS} months (half price)</>
                   )}
                 </>
               ) : (
                 <>
-                  <span className="font-bold text-white">{premiumFromLine()}</span> · {premiumLockInTail()}
+                  <span className="font-bold text-white">{introFromLine("premium", introEligible)}</span> · {premiumLockInTail()}
                 </>
               )}
             </p>

@@ -13,6 +13,7 @@ import {
   getPremiumSubscriptionDetails,
   subscriptionChargeLine,
   hasEverPaid,
+  introEligibleFor,
   PREMIUM_TRIAL_DAYS,
 } from "@/lib/premium";
 import { PremiumPricingCards } from "@/components/PremiumPricingCards";
@@ -30,7 +31,7 @@ import {
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
   premiumLockInHeadline,
-  premiumFromLine,
+  introFromLine,
   introOfferEnabled,
   introPriceLine,
   introAmountOffCents,
@@ -109,7 +110,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Ad-free everywhere",
-    body: "No ads on any page while you're Premium — automatic, nothing to switch on.",
+    body: "No ads on any page while you're on Plus or Premium — automatic, nothing to switch on.",
     href: null,
     cta: null,
     tier: "plus",
@@ -133,7 +134,7 @@ const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", mon
 const FAQ: { q: string; a: string }[] = [
   {
     q: "What's free vs what needs Plus or Premium?",
-    a: `Price comparison, the deck builder, trade calculator, box EV and a free account's alerts, watchlist and portfolio are free for everyone. ${premiumPlusEnabled() ? `Plus (${tierMonthlyAmount("plus")}/mo) adds the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds an ad-free site and the four pro tools on top — Bulk Pricer, Best Basket, Value Finder and Demand Finder.` : "Premium adds the Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Rising Sealed, Demand Finder, the full Deal Finder list and an ad-free site."}`,
+    a: `Price comparison, the deck builder, trade calculator, box EV and a free account's alerts, watchlist and portfolio are free for everyone. ${premiumPlusEnabled() ? `Plus (${tierMonthlyAmount("plus")}/mo) adds an ad-free site and the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds the four pro tools on top — Bulk Pricer, Best Basket, Value Finder and Demand Finder.` : "Premium adds the Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Rising Sealed, Demand Finder, the full Deal Finder list and an ad-free site."}`,
   },
   {
     q: `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
@@ -149,7 +150,7 @@ const FAQ: { q: string; a: string }[] = [
     : []),
   {
     q: "What happens when the trial ends?",
-    a: `If you haven't cancelled, the card on file is charged and your subscription continues automatically at whichever plan you chose — ${premiumFromLine()}. You'll get an email reminder before it converts.`,
+    a: `If you haven't cancelled, the card on file is charged and your subscription continues automatically at whichever plan you chose — ${introFromLine()}${introOfferEnabled() ? " (the half-price months are for new subscribers)" : ""}. We email you a day or two before it converts.`,
   },
   {
     q: "How do I cancel?",
@@ -224,6 +225,8 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
     if (line) keepOffer = { line, from: fmtDate(subDetails.currentPeriodEnd) };
   }
   const currentTier = premiumTierOf(user);
+  // The half-price intro, quoted only to viewers checkout would give it to.
+  const introEligible = !already && (await introEligibleFor(dbUser));
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -286,9 +289,9 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
             ? "Everything you've unlocked is below — jump straight into any of it. Thanks for supporting RiftCompare."
-            : `RiftCompare is free to search and free to use. ${plusLive ? "Plus and Premium fund" : "Premium funds"} the servers and the price data behind it. ${plusLive ? "Plus unlocks the full deal lists; Premium adds ad-free browsing and" : "Premium adds ad-free browsing and"} the tools that work out the cheapest way to buy what you want${
+            : `RiftCompare is free to search and free to use. ${plusLive ? "Plus and Premium fund" : "Premium funds"} the servers and the price data behind it. ${plusLive ? "Plus goes ad-free and unlocks the full deal lists; Premium adds" : "Premium adds ad-free browsing and"} the tools that work out the cheapest way to buy what you want${
                 premiumTrialEnabled() ? ` — every plan starts with a ${PREMIUM_TRIAL_DAYS}-day free trial` : ""
-              }${introOfferEnabled() ? `, and monthly plans are half price for the first ${INTRO_MONTHS} months` : ""}.`}
+              }${introEligible ? `, and monthly plans are half price for the first ${INTRO_MONTHS} months` : ""}.`}
         </p>
       </div>
 
@@ -340,6 +343,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
             trialEligible={trialEligible}
             trialAvailable={trialAvailable}
             trialDays={PREMIUM_TRIAL_DAYS}
+            introEligible={introEligible}
           />
           </div>
 
@@ -530,7 +534,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
             The free trial needs a card and converts to the plan you picked
             {plusLive ? <> — {tierMonthlyAmount("plus")}/{PREMIUM_PRICE_PERIOD} for Plus, {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for Premium</> : <> ({PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD})</>}
             {" "}after {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} unless you cancel first
-            {introOfferEnabled() ? <> — at half price for the first {INTRO_MONTHS} months on a monthly plan</> : null}. We email
+            {introEligible ? <> — at half price for the first {INTRO_MONTHS} months on a monthly plan</> : null}. We email
             you a day or two before you&apos;re charged.{" "}
           </>
         ) : (

@@ -32,17 +32,20 @@ const code = (p: string) =>
 // fail.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the tier table says ad-free is Premium-only", () => {
+// 2026-09-25: ad-free is back on EVERY paid tier (owner's call — DECISIONS.md,
+// "Plus is ad-free again"). The flag stays separate from `premium` so the line
+// can move again without touching the ad placements.
+test("the tier table says ad-free is on both paid tiers", () => {
   const row = TIER_COMPARISON.find((r) => r.feature === "Ad-free experience");
   assert.ok(row, "expected an Ad-free experience row — the feature string is matched verbatim by DIALOG_OMIT_FEATURES and by three other tests");
   assert.equal(row!.account, false);
-  assert.equal(row!.plus, false, "Plus must no longer include ad-free");
+  assert.equal(row!.plus, true, "Plus includes ad-free again");
   assert.equal(row!.premium, true);
 });
 
-test("the ad components gate on adFree, which is computed at the premium minimum", () => {
+test("the ad components gate on adFree, which is computed at the plus minimum", () => {
   const me = code("src/app/api/me/route.ts");
-  assert.match(me, /adFree: isPremium\(user, "premium"\)/, "/api/me must publish adFree at the premium minimum");
+  assert.match(me, /adFree: isPremium\(user\)/, "/api/me must publish adFree for every paid tier");
   assert.match(me, /premium: isPremium\(user\)/, "`premium` must stay at the default (plus) minimum — other gates depend on it");
 
   const useMe = code("src/lib/use-me.ts");
@@ -54,22 +57,13 @@ test("the ad components gate on adFree, which is computed at the premium minimum
   assert.ok(!/const \{ premium \} = useMe\(\)/.test(provider), "reading `premium` here would give ad-free back to every Plus account");
 });
 
-test("no surface still sells ad-free as a Plus benefit", () => {
-  for (const f of [
-    "src/components/PremiumPricingCards.tsx",
-    "src/app/premium/page.tsx",
-    "src/app/dashboard/page.tsx",
-  ]) {
-    const src = code(f);
-    assert.ok(!/Ad-free &amp; the full lists|Ad-free & the full lists/.test(src), `${f}: the Plus tagline must not claim ad-free`);
-    assert.ok(!/Plus adds the full lists and no ads/.test(src), `${f}: the comparison subhead must not put no-ads in Plus`);
-  }
-  // Plus's own feature list must not list it; Premium's must.
+test("both paid tiers' feature lists sell ad-free", () => {
   const cards = code("src/components/PremiumPricingCards.tsx");
   const plusList = cards.slice(cards.indexOf("const PLUS_FEATURES"), cards.indexOf("const PREMIUM_FEATURES_ON_PLUS"));
-  assert.ok(!/Ad-free/.test(plusList), "PLUS_FEATURES must not advertise ad-free");
+  assert.match(plusList, /Ad-free browsing/, "PLUS_FEATURES must advertise ad-free");
   const premiumLists = cards.slice(cards.indexOf("const PREMIUM_FEATURES_ON_PLUS"), cards.indexOf("function FreeCard"));
   assert.match(premiumLists, /Ad-free browsing/, "Premium's feature lists must advertise ad-free");
+  assert.ok(!/Premium adds an ad-free site/.test(code("src/app/premium/page.tsx")), "/premium must not sell ad-free as Premium-only");
 });
 
 test("the grandfather script is idempotent, floors rather than rewrites the billed tier, and prints no PII", () => {

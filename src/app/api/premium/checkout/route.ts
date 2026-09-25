@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, priceIdFor, ensureIntroCoupon, hasEverPaid, type PremiumTier } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, priceIdFor, ensureIntroCoupon, forgetIntroCoupons, hasEverPaid, type PremiumTier } from "@/lib/premium";
 import { introOfferEnabled, introPriceLine, tierMonthlyAmount, tierAnnualAmount } from "@/lib/site";
 import { parseCheckoutSelection, sanitizeBackPath } from "@/lib/premium-start";
 import { SITE_URL } from "@/lib/site";
@@ -84,17 +85,21 @@ export async function POST(req: Request) {
     });
   }
 
-  // Beside Stripe's own pay button, for a trial: nothing today, the reminder,
-  // then exactly what it becomes (2026-09-24). Built from the same helpers as
-  // /premium and /premium/start so the three can never disagree. No dates:
-  // trial_end is fixed only when Checkout completes (the welcome page shows
-  // the dated version, read from the subscription).
-  const afterTrial =
-    plan === "annual" ? `${tierAnnualAmount(tier)}/year` : introCoupon ? introPriceLine(tier) : `${tierMonthlyAmount(tier)}/mo`;
-  const trialMessage = `Nothing is charged today. We'll email you a day or two before your ${PREMIUM_TRIAL_DAYS}-day trial ends. Then it's ${afterTrial} unless you cancel from your account page.`;
+  // The session parameters for a given intro coupon (or none). A function so a
+  // coupon Stripe rejects — deleted in the dashboard while a warm instance
+  // still caches its id — can be retried once at full price instead of
+  // failing the whole checkout (review, 2026-09-25).
+  const sessionParams = (coupon: string | null): Stripe.Checkout.SessionCreateParams => {
+    // Beside Stripe's own pay button, for a trial: nothing today, the reminder,
+    // then exactly what it becomes (2026-09-24). Built from the same helpers as
+    // /premium and /premium/start so the three can never disagree. No dates:
+    // trial_end is fixed only when Checkout completes (the welcome page shows
+    // the dated version, read from the subscription).
+    const afterTrial =
+      plan === "annual" ? `${tierAnnualAmount(tier)}/year` : coupon ? introPriceLine(tier) : `${tierMonthlyAmount(tier)}/mo`;
+    const trialMessage = `Nothing is charged today. We'll email you a day or two before your ${PREMIUM_TRIAL_DAYS}-day trial ends. Then it's ${afterTrial} unless you cancel from your account page.`;
 
-  try {
-    const session = await stripe().checkout.sessions.create({
+    return {
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
       // Reuse the Stripe customer when we have one, so renewals stay linked.
@@ -102,7 +107,7 @@ export async function POST(req: Request) {
         ? { customer: dbUser.stripeCustomerId }
         : { customer_email: dbUser?.email }),
       client_reference_id: user.id,
-      metadata: { kind: "premium", userId: user.id, trial: trialEligible ? "1" : "0", intro: introCoupon ? "1" : "0", tier, ...surfaceMeta },
+      metadata: { kind: "premium", userId: user.id, trial: trialEligible ? "1" : "0", intro: coupon ? "1" : "0", tier, ...surfaceMeta },
       subscription_data: {
         // Stamped here too (not just on the session) because session metadata
         // does NOT propagate to the subscription object — renewals and the
@@ -110,7 +115,7 @@ export async function POST(req: Request) {
         // `surface` rides on the SUBSCRIPTION too, which is the object the
         // funnel report lists — so a trial, and whether it converted, can be
         // attributed to the surface that started it.
-        metadata: { userId: user.id, tier, intro: introCoupon ? "1" : "0", ...surfaceMeta },
+        metadata: { userId: user.id, tier, intro: coupon ? "1" : "0", ...surfaceMeta },
         // PREMIUM_TRIAL_DAYS free trial for first-timers, same length on both plans
         // (annual just converts to the yearly price after it ends). A card is still
         // required up front (payment_method_collection below), so the trial
@@ -137,8 +142,21 @@ export async function POST(req: Request) {
       // Stripe refuses `discounts` together with allow_promotion_codes, so a
       // checkout carrying the intro offer takes no second code; everyone else
       // can still enter one.
-      ...(introCoupon ? { discounts: [{ coupon: introCoupon }] } : { allow_promotion_codes: true }),
-    });
+      ...(coupon ? { discounts: [{ coupon }] } : { allow_promotion_codes: true }),
+    };
+  };
+
+  try {
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe().checkout.sessions.create(sessionParams(introCoupon));
+    } catch (e) {
+      const param = (e as { param?: string }).param ?? "";
+      if (!introCoupon || !param.startsWith("discounts")) throw e;
+      console.error("intro coupon rejected by Stripe — retrying checkout at full price:", e);
+      forgetIntroCoupons();
+      session = await stripe().checkout.sessions.create(sessionParams(null));
+    }
     return NextResponse.json({ url: session.url });
   } catch (e) {
     console.error("premium checkout failed:", e);

@@ -63,13 +63,11 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Bulk Pricer — price a whole list at once", account: false, plus: false, premium: true },
   { feature: "Best Basket — cheapest store split, postage included", account: false, plus: false, premium: true },
   { feature: "Demand Finder — most searched & viewed cards", account: false, plus: false, premium: true },
-  // Ad-free moved Plus → Premium on 2026-09-14. Plus kept the two things it
-  // shares with Premium (the full Deal Finder and Rising Cards lists) AND
-  // ad-free, which left Premium differentiated only by four bulk/screener
-  // tools most visitors have no use for — a $4.99 card that ticked every
-  // broadly-appealing box sitting immediately left of a $9.99 one. Existing
-  // Plus subscribers keep ad-free via premiumTierFloor (see DECISIONS.md).
-  { feature: "Ad-free experience", account: false, plus: false, premium: true },
+  // Ad-free moved Plus → Premium on 2026-09-14 and back to every paid tier on
+  // 2026-09-25 (owner's call — DECISIONS.md, "Plus is ad-free again"): with
+  // the half-price intro, $2.49/mo Plus is the entry tier, and "no ads" is
+  // the most broadly understood reason to pay anything at all.
+  { feature: "Ad-free experience", account: false, plus: true, premium: true },
 ];
 
 export function TierCell({ v, dialog = false }: { v: boolean | string; dialog?: boolean }) {

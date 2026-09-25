@@ -2,7 +2,7 @@
 
 import { usePremiumDialog } from "./PremiumDialog";
 import { useMe } from "@/lib/use-me";
-import { PREMIUM_PRICE_LABEL, premiumZeroToday } from "@/lib/site";
+import { PREMIUM_PRICE_LABEL, premiumZeroToday, introOfferEnabled, tierIntroMonthlyAmount, INTRO_MONTHS } from "@/lib/site";
 
 // Opens the site-wide Premium dialog (one click to subscribe / start the trial),
 // so gated features don't have to send the user off to /premium. Defaults to a
@@ -26,7 +26,7 @@ export function PremiumButton({
   surface?: string;
 }) {
   const { open } = usePremiumDialog();
-  const { premium, tier, trialEligible, trialDays } = useMe();
+  const { premium, tier, trialEligible, trialDays, introEligible } = useMe();
   // A Plus subscriber hitting a Premium-only gate is already paying — the
   // pitch is an upgrade, not a first subscription, and it names the real
   // recurring price rather than a trial (they've already had theirs).
@@ -41,6 +41,12 @@ export function PremiumButton({
         ) : trialEligible && trialDays > 0 ? (
           <>
             Start free trial<span className="font-semibold opacity-80"> · {premiumZeroToday()}</span>
+          </>
+        ) : introEligible && introOfferEnabled() ? (
+          // No trial left (e.g. a cancelled trialist) but never paid, so
+          // checkout halves the first months — quote that, not the list price.
+          <>
+            Upgrade now<span className="font-semibold opacity-80"> · {tierIntroMonthlyAmount()}/mo for {INTRO_MONTHS} months</span>
           </>
         ) : (
           <>

@@ -120,7 +120,7 @@ test("every tier table says Top 3 for the free account", () => {
   assert.deepEqual(cellsFor("Deal Finder"), ["Top 3", "Full list", "Full list"]);
   assert.deepEqual(cellsFor("Rising Cards"), ["Top 3", "Full list", "Full list"]);
   assert.equal(cellsFor("Rising Sealed")[0], "Top pick", "Rising Sealed keeps its own single free pick");
-  assert.deepEqual(cellsFor("Ad-free experience"), ["—", "—", "✓"], "ad-free is Premium-only");
+  assert.deepEqual(cellsFor("Ad-free experience"), ["—", "✓", "✓"], "ad-free is on both paid tiers (2026-09-25)");
 });
 
 // Promises that were true at some point and are not now: "Premium only" (09-22

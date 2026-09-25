@@ -17,7 +17,7 @@ import { stripe, stripeEnabled } from "./stripe";
 import { sendTrialEndingEmail, sendTrialEndingNoChargeEmail, sendCheckoutRecoveryEmail } from "./email";
 import { notify } from "./notifications";
 import { formatMoney } from "./format";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumFromLine, INTRO_MONTHS, introAmountOffCents, introOfferEnabled } from "./site";
+import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, introFromLine, INTRO_MONTHS, introAmountOffCents, introOfferEnabled } from "./site";
 
 // The portfolio's PriceHistory read, day-scoped per (exact card set, market). The
 // wishlist itself is fetched fresh above (edits reflect instantly); only the heavy
@@ -153,11 +153,15 @@ export function isIntroCouponId(id: string | null | undefined): boolean {
 }
 
 const introCouponCache = new Map<string, string>();
+/** Drop cached coupon ids — after Stripe rejects one (checkout retries at full price). */
+export function forgetIntroCoupons(): void {
+  introCouponCache.clear();
+}
 
 /**
  * The intro coupon for a monthly price, created if missing. Returns its id.
  * `months` is INTRO_MONTHS at checkout; a tier switch mid-intro asks for the
- * months REMAINING (introDiscountsForPriceChange), so switching never restarts
+ * renewals REMAINING (introDiscountsForPriceChange), so switching never restarts
  * the half-price window.
  */
 export async function ensureIntroCoupon(tier: PremiumTier, priceId: string, months: number = INTRO_MONTHS): Promise<string> {
@@ -204,8 +208,9 @@ export async function ensureIntroCoupon(tier: PremiumTier, priceId: string, mont
  * off on the $4.99 Plus price bills $0. Stripe computes the change's prorations
  * against the discounts passed in the SAME call, so the swap and the price
  * change go together.
- *   - monthly target: the target tier's intro coupon for the months REMAINING
- *     in the window (never a fresh three);
+ *   - monthly target: the target tier's intro coupon for the discounted
+ *     RENEWALS remaining (introRenewalsRemaining — never a fresh three, never
+ *     one extra);
  *   - annual target, or a window already over: no intro — cleared.
  */
 export async function introDiscountsForPriceChange(
@@ -216,18 +221,32 @@ export async function introDiscountsForPriceChange(
 ): Promise<Stripe.Emptyable<Stripe.SubscriptionUpdateParams.Discount[]> | undefined> {
   const d = sub.discount;
   if (!d || !isIntroCouponId(d.coupon?.id)) return undefined;
-  const months = introMonthsRemaining(d.end, now);
-  if (months <= 0) return "";
+  const months = introRenewalsRemaining(sub.current_period_end, d.end);
+  if (months <= 0 || (d.end != null && d.end * 1000 <= now)) return "";
   const price = await stripe().prices.retrieve(targetPriceId);
   if (price.recurring?.interval !== "month") return "";
   return [{ coupon: await ensureIntroCoupon(targetTier, targetPriceId, months) }];
 }
 
-/** Whole months left in an intro window ending at `endSec` (unix seconds), rounded up. Pure. */
-export function introMonthsRemaining(endSec: number | null | undefined, now: number = Date.now()): number {
-  if (!endSec) return 0;
-  const left = endSec * 1000 - now;
-  return left <= 0 ? 0 : Math.min(INTRO_MONTHS, Math.ceil(left / (30.44 * 86_400_000)));
+/**
+ * How many discounted renewals the intro still owes: monthly renewal dates,
+ * starting at the next one (`periodEndSec`), that fall strictly before the
+ * discount's end. Pure. Counting RENEWALS, not rounding the time left, is what
+ * keeps a tier switch exact: the next renewal is always less than a month
+ * away, so a fresh n-month coupon applied now covers exactly those n renewals
+ * and not the one after. Rounding the time up (the first version) gave a
+ * fourth half-price invoice on most switches, and chained switches kept the
+ * intro going forever. Review of the intro offer, 2026-09-25.
+ */
+export function introRenewalsRemaining(periodEndSec: number | null | undefined, introEndSec: number | null | undefined): number {
+  if (!periodEndSec || !introEndSec) return 0;
+  let n = 0;
+  const t = new Date(periodEndSec * 1000);
+  while (t.getTime() / 1000 < introEndSec && n < INTRO_MONTHS) {
+    n++;
+    t.setUTCMonth(t.getUTCMonth() + 1);
+  }
+  return n;
 }
 
 /**
@@ -245,6 +264,27 @@ export async function hasEverPaid(stripeCustomerId: string | null | undefined): 
   } catch {
     return false;
   }
+}
+
+/**
+ * Would checkout attach the half-price intro for this viewer? The SAME rule
+ * api/premium/checkout applies (never paid), so no surface quotes $4.99 to
+ * someone Stripe will bill $9.99, or $9.99 to a cancelled trialist it will
+ * bill $4.99 (review, 2026-09-25). Signed out, or no Stripe customer yet:
+ * eligible, no API call. Otherwise one invoices.list, memoised per customer
+ * for 10 minutes so /api/me doesn't call Stripe on every page view.
+ */
+const everPaidMemo = new Map<string, { paid: boolean; at: number }>();
+export async function introEligibleFor(user: { stripeCustomerId?: string | null } | null, now: number = Date.now()): Promise<boolean> {
+  if (!introOfferEnabled()) return false;
+  const id = user?.stripeCustomerId;
+  if (!id) return true;
+  const hit = everPaidMemo.get(id);
+  if (hit && now - hit.at < 10 * 60_000) return !hit.paid;
+  const paid = await hasEverPaid(id);
+  if (everPaidMemo.size > 5000) everPaidMemo.clear();
+  everPaidMemo.set(id, { paid, at: now });
+  return !paid;
 }
 
 // The reminder half of the trial precondition above. Stripe's own
@@ -396,7 +436,7 @@ export async function runCheckoutRecovery(): Promise<number> {
       // abandoned may have been superseded by a later, successful one.
       OR: [{ premiumUntil: null }, { premiumUntil: { lt: new Date() } }],
     },
-    select: { id: true, email: true, trialStartedAt: true },
+    select: { id: true, email: true, trialStartedAt: true, stripeCustomerId: true },
     take: 200,
   });
   if (!candidates.length) return 0;
@@ -407,7 +447,10 @@ export async function runCheckoutRecovery(): Promise<number> {
       // Only offer the trial framing if this account genuinely hasn't used one
       // yet — otherwise state the plain price, never a trial that no longer applies.
       const trialDays = premiumTrialEnabled() && !u.trialStartedAt ? PREMIUM_TRIAL_DAYS : 0;
-      if (await sendCheckoutRecoveryEmail(u.email, trialDays, premiumFromLine())) {
+      // The price line checkout would really charge: the half-price intro for
+      // anyone who has never paid (almost every abandoner), else the list price.
+      const fromLine = introFromLine("premium", await introEligibleFor(u));
+      if (await sendCheckoutRecoveryEmail(u.email, trialDays, fromLine)) {
         sent++;
         void notify(u.id, "checkout_recovery", "Still thinking it over?", "Your Premium checkout is right where you left it.", "/premium").catch(() => {});
       }

@@ -64,8 +64,12 @@ export function classifyTrial(r: TrialRow, now: number): TrialClassification {
   const hoursToCancel = cancelMs != null ? Math.max(0, (cancelMs - r.trialStartMs) / 3_600_000) : null;
   const afterReminder = cancelMs != null && r.reminderSentMs != null ? cancelMs >= r.reminderSentMs : cancelMs != null && r.matchedUser ? false : null;
   const trialOver = r.trialEndMs != null && r.trialEndMs <= now;
+  // Still trialing with renewal off, or the cancel click (canceled_at)
+  // landed before the trial ended. NOT "canceled + cancel_at_period_end":
+  // Stripe keeps that flag on a subscription that paid, cancelled later and
+  // lapsed, which read every half-price payer who left as a trial cancel.
   const cancelledBeforeTrialEnd =
-    (r.cancelAtPeriodEnd && (r.status === "trialing" || r.status === "canceled")) ||
+    (r.cancelAtPeriodEnd && r.status === "trialing") ||
     (cancelMs != null && r.trialEndMs != null && cancelMs <= r.trialEndMs);
 
   if (r.reason === "payment_failed" || r.status === "incomplete_expired" || r.status === "unpaid") {
