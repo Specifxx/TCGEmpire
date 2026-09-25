@@ -99,7 +99,7 @@ jobs:
       # wherever this file assigns it (here, a step-level env, inline in a
       # script), to be the service.
       DATABASE_URL: postgresql://postgres:ci@localhost:5432/tcg_ci
-      RM3: postgresql://postgres:ci@localhost:5432/tcg_ci
+      RM4: postgresql://postgres:ci@localhost:5432/tcg_ci
       HISTORY_DATABASE_URL_3: postgresql://postgres:ci@localhost:5432/tcg_ci
       NEXT_TELEMETRY_DISABLED: 1
 

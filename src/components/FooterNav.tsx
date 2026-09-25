@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FOOTER_GROUPS, type NavGroupLink } from "./nav-groups";
-import { HomeFooterToggle } from "./HomeFooterToggle";
+import { FooterSiteMapDetails } from "./HomeFooterToggle";
 
 // A link that leaves the site (currently just Discord) can't go through
 // next/link's client-side router the way an internal path can — it needs a
@@ -64,87 +64,32 @@ function FooterLink({ l, className }: { l: NavGroupLink; className: string }) {
 // permanently spending the height on visitors who came here to search, not
 // to browse a directory. Every other route keeps the original, always-
 // expanded desktop grid unchanged.
+// ONE copy of the links (2026-09-25). This used to render FOOTER_GROUPS three
+// times — a homepage accordion, a mobile accordion set and a desktop grid, two
+// hidden by CSS — which put ~177 anchors (~26 KB of HTML, plus the same again in
+// the RSC payload) on every page, and every ISR write and origin transfer paid
+// for it. Now a single grid sits in one <details>; FooterSiteMapDetails opens it
+// on every route except "/", which keeps the homepage's collapsed "Full site map"
+// described above. Closed or open, every link is in the server HTML.
 export function FooterNav() {
   return (
-    <>
-      <HomeFooterToggle match="home">
-        <nav aria-label="Site map" className="mb-6 border-b border-ink-800 pb-2 text-left">
-          <details className="group py-3">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wide text-slate-300 [&::-webkit-details-marker]:hidden">
-              Full site map
-              <svg
-                className="h-3.5 w-3.5 shrink-0 text-slate-500 transition-transform group-open:rotate-180"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                aria-hidden="true"
-              >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </summary>
-            <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-              {FOOTER_GROUPS.map((group) => (
-                <div key={group.title}>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{group.title}</div>
-                  <ul className="tap-list space-y-1">
-                    {group.links.map((l) => (
-                      <li key={l.href}>
-                        <FooterLink l={l} className="tap-link text-xs text-slate-400 hover:text-brand-400" />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+    <nav aria-label="Site map" className="mb-6 border-b border-ink-800 pb-2 text-left">
+      <FooterSiteMapDetails>
+        <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+          {FOOTER_GROUPS.map((group) => (
+            <div key={group.title}>
+              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{group.title}</div>
+              <ul className="tap-list space-y-1">
+                {group.links.map((l) => (
+                  <li key={l.href}>
+                    <FooterLink l={l} className="tap-link text-xs text-slate-400 hover:text-brand-400" />
+                  </li>
+                ))}
+              </ul>
             </div>
-          </details>
-        </nav>
-      </HomeFooterToggle>
-
-      <HomeFooterToggle match="other">
-        <nav aria-label="Site map" className="mb-6 border-b border-ink-800 pb-2 sm:pb-6">
-          <div className="divide-y divide-ink-800 text-left sm:hidden">
-            {FOOTER_GROUPS.map((group) => (
-              <details key={group.title} className="group py-3">
-                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wide text-slate-300 sm:min-h-0 [&::-webkit-details-marker]:hidden">
-                  {group.title}
-                  <svg
-                    className="h-3.5 w-3.5 shrink-0 text-slate-500 transition-transform group-open:rotate-180"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  >
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </summary>
-                <ul className="tap-list mt-3 space-y-2">
-                  {group.links.map((l) => (
-                    <li key={l.href}>
-                      <FooterLink l={l} className="tap-link text-xs text-slate-400 hover:text-brand-400" />
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            ))}
-          </div>
-
-          <div className="hidden text-left sm:grid sm:grid-cols-4 sm:gap-x-6 sm:gap-y-4">
-            {FOOTER_GROUPS.map((group) => (
-              <div key={group.title}>
-                <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{group.title}</div>
-                <ul className="tap-list space-y-1">
-                  {group.links.map((l) => (
-                    <li key={l.href}>
-                      <FooterLink l={l} className="tap-link text-xs text-slate-400 hover:text-brand-400" />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </nav>
-      </HomeFooterToggle>
-    </>
+          ))}
+        </div>
+      </FooterSiteMapDetails>
+    </nav>
   );
 }

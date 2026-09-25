@@ -7,6 +7,19 @@
     }
   },
   "ignoreCommand": "bash scripts/vercel-ignore-build.sh",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.riftcompare.com"
+        }
+      ],
+      "destination": "https://riftcompare.com/:path*",
+      "permanent": true
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron/price-alerts",

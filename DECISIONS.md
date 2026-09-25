@@ -12634,6 +12634,58 @@ Separately, `/api/trade-roast` accepted only `["AUD","NZD","USD","GBP"]`. A CA, 
 - A signed-interaction unit test of the route itself. The repo has no route-level harness, route.ts can't export helpers, and /movers needs `getPriceMovers` (database). The test pins the footer template at source level and asserts that `COUNTRIES[DEFAULT_COUNTRY].label + " market"` is "United States market".
 - The `bot` OAuth scope. The registration script's header mentions it as optional, but it is not needed for HTTP interactions and would ask server admins for more than the bot uses.
 
+## Operational database cut over from RM3 to RM4; migrations drop target-only tables first — 2026-09-25
+
+**Why.** RM3 was approaching its 5 GB monthly transfer allowance three days after becoming the operational database on 2026-09-22.
+
+**What.**
+
+- RM4 is a recycled project. `probe-databases` found it reachable and far behind RM3 on every table (User 159, Card 1412), so the stale data it held was overwritten.
+- The first two `migrate-main-db-rm3-to-rm4` runs failed on Card alone (source 1434, target 1412). RM4 still had a legacy `EbayAuction` table (replaced by `EbayAuctionListing` in the schema long ago) with an FK onto Card. That table is not in RM3, so it is not in the dump, so `pg_restore --clean` never drops it. Its FK blocked `DROP TABLE "Card"`, and the restore then hit "already exists" and a COPY into the old column layout.
+- Fix: before the restore, the step drops every public table on the target that the source does not have. It compares the table lists rather than naming `EbayAuction`, because any recycled project can carry a different leftover. The step's existing guard still blocks a run whose target is the live database unless `overwrite_live_db` is set.
+- The third run matched on all 42 tables. A final re-sync straight before the flip matched too (Card 1434, User 386).
+- `OPERATIONAL_VARS` is now `["RM4"]`. `scripts/build-db-push.sh`, every workflow's `DATABASE_URL`/`DB_SOURCE_NAME` default, the `RM4:` env forwards in maintenance.yml and the ci-build service variable all follow.
+- The same pass fixed `migrate-main-db-rm12-to-rm3`: it had RM3 as both source and target, so it could only stop at its own same-database guard.
+- The owner asked for this to go live immediately, so the flip commit carries `[deploy]`.
+
+**Rollback.** One commit. RM3 still holds the data and still responds, so setting `OPERATIONAL_VARS` back to `["RM3"]` restores it. Anything written to RM4 in the meantime is not in RM3.
+
+**Still open.** A rested project gives time back; it does not reduce the burn. Run `audit-egress` against RM4 a few hours after the cutover. The build needs `RM4` set in Vercel for Production and Preview.
+
+## Vercel cost cuts: no per-request middleware, no wasted morning purge, sampled Speed Insights — 2026-09-25
+
+**Why.** The owner reported the $20 credit used up with 15 days left in the cycle. The largest items were Observability Events $7.17, ISR Writes $4.97, Fluid Active CPU $3.47, Fast Origin Transfer $2.35, Function Invocations $1.26, Web Analytics $1.25 and Speed Insights $0.65.
+
+**Measured.** A card page is ~415 KB of HTML plus ~197 KB of RSC payload, so one regeneration is ~75 ISR write units (8 KB each). `revalidateContent()` purges all ~1,434 `/card/[id]` pages, and crawlers regenerate nearly all of them. The purge ran after both daily imports (07:00, 19:00 UTC), and the 08:00 release wipes the ISR cache again. That is about three full waves a day, roughly 300k write units, plus the CPU and origin transfer to render them.
+
+**What.**
+
+- **`src/middleware.ts` is gone.** Its matcher covered every request except `_next/static` and `_next/image`: cached page hits, every `/public` file (card art, images) and RSC prefetches. Every one was a function invocation, CPU time and an observability event, only to compare the Host header for the www→apex redirect. That redirect is now a `vercel.json` `redirects` entry with a `host` condition. It is still permanent (308), still keeps the query string and still covers every path, and it runs in Vercel's router, not a function. `tests/canonical-host.test.ts` now pins the `vercel.json` rule and the absence of middleware.
+- **The 07:00 import skips its purge when a release follows.** If the newest commit on main lacks `[deploy]`, production-deploy.yml will build at 08:00 and wipe the ISR cache anyway, so pages regenerated in between would be thrown away. On a quiet day (main's head is already a release) the purge still runs. The worst case is card prices one hour behind the import on release days. The 19:00 purge is unchanged.
+- **Speed Insights `sampleRate={0.1}`.** Core Web Vitals trends need a sample, not every page view.
+
+**Not changed in code.**
+
+- **Observability Events ($7.17).** This is Vercel's Observability Plus add-on, billed per event. Removing middleware cuts the event count, but the add-on itself is a dashboard switch: Settings → Observability. It isn't needed for the logs and function metrics the free tier already shows.
+- **Web Analytics.** Page views and the existing `track()` calls stay. They are the only traffic data the site has.
+- **Card page size.** About half the HTML is the inline RSC payload Next embeds. Shrinking it needs a card-page refactor (fewer retailer rows serialised to the client), which is a separate change.
+- **The 5-minute keep-warm.** About 580 tiny invocations a day, per the 2026-09-11 decision.
+
+## Card pages slimmed: one footer site map, six similar cards, cached 404 rail — 2026-09-25
+
+**Why.** Most visitors use the quick-view popup, not the card page. The card pages are mostly read by crawlers, and each ISR regeneration writes the whole page, ~415 KB of HTML plus ~197 KB of RSC payload (~75 ISR write units), across ~1,434 cards (see "Vercel cost cuts" above).
+
+**What.**
+
+- **The footer site map renders once.** FooterNav emitted FOOTER_GROUPS three times (a homepage accordion, a mobile accordion set and a desktop grid, two hidden by CSS). That was ~177 anchors and ~26 KB of HTML, plus the same again in the RSC payload, on every page. It is now one grid inside one `<details>` (`FooterSiteMapDetails`). It is open everywhere except "/", as the homepage's collapsed "Full site map" was, and it collapses after mount below 640 px, as the per-group accordions did. Measured locally: 11.7 KB and 71 links. Every link is still a server-rendered anchor, open or closed, and `tests/internal-linking.test.ts` still passes.
+- **Similar cards: 12 → 6.** Each tile costs ~2.6 KB of HTML plus its props in the RSC payload. The page still links out to ~20 cards through the similar, cheaper, champion and other-printings rails.
+- **Rail tiles go through `trimTileArtFallback()`**, which drops energyCost/might/artSeed when the card has real art, as the list pages already do.
+- **The root not-found's "popular cards" query is cached** (`cachedOrDirect`, 86400, CONTENT_TAG). Next renders the root not-found into every page's tree, so an uncached query there ran on every ISR regeneration of every card page.
+
+**Not done.**
+
+- The remaining per-page overhead is Next's client-reference rows: ~56 client components, each listing its chunks with Vercel Skew Protection's `?dpl=` suffix, about 68 KB of the RSC payload (~30 KB of it `?dpl=`). Turning Skew Protection off in the Vercel dashboard removes the suffix. It costs the protection against a deploy breaking open tabs, so that is the owner's choice. Fewer layout-level client components would cut the rest.
+
 ## Postage is measured from each store's checkout, not guessed — 2026-09-25
 
 **Why.** Malik, in Adelaide, used Best Basket. It showed "+ $2.00 post" for a store, and the store's checkout charged $20. He guessed the reason was that he isn't in Sydney or Melbourne. The $2 was a hand-typed guess in retailers.ts, like all 171 postage figures.

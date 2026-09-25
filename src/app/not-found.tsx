@@ -8,6 +8,8 @@ import { cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { getArticles } from "@/lib/articles";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
+import { cachedOrDirect } from "@/lib/price-history";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 
 // Branded 404, served with a REAL 404 status (Next's not-found convention) so
 // search engines drop dead URLs instead of accumulating soft-404s.
@@ -55,14 +57,19 @@ export const revalidate = 3600;
 export default async function NotFound() {
   const liveSets = SETS.filter((s) => !s.comingSoon);
 
-  const popular = await prisma.card
-    .findMany({
-      where: { lowestPriceCentsUs: { not: null } },
-      orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }, { lowestPriceCentsUs: "desc" }],
-      take: 6,
-      select: cardTileSelect(DEFAULT_COUNTRY),
-    })
-    .catch(() => []);
+  // Cached (2026-09-25): the root not-found is rendered into EVERY page's tree,
+  // so an uncached query here ran on each ISR regeneration of every card page.
+  const popular = await cachedOrDirect(
+    () =>
+      prisma.card.findMany({
+        where: { lowestPriceCentsUs: { not: null } },
+        orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }, { lowestPriceCentsUs: "desc" }],
+        take: 6,
+        select: cardTileSelect(DEFAULT_COUNTRY),
+      }),
+    ["not-found-popular"],
+    { revalidate: 86400, tags: [CONTENT_TAG] },
+  ).catch(() => []);
 
   const guides = getArticles("guide").slice(0, 4);
 

@@ -57,12 +57,12 @@ longer lands on its entry.
 
 ## Databases
 
-- **Live names** (since 2026-09-22; `src/lib/db-chains.ts` is the source of
-  truth): operational `RM3`, one variable, never a chain, because
+- **Live names** (since 2026-09-25; `src/lib/db-chains.ts` is the source of
+  truth): operational `RM4`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
   History: `HISTORY_DATABASE_URL_3`, then `_2`, then `DATABASE_URL`
   (terminal). Never rotate onto `DATABASE_URL`.
-  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455)
+  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637)
 - **Migrating:** verify the target live first (a recycled project must trail
   the source on every metric; a new one must be empty). Use a named
   `maintenance.yml` task: it guards SOURCE≠TARGET, dumps before truncating,
@@ -274,12 +274,12 @@ longer lands on its entry.
   cities at the dearer, US/CA "Elsewhere" as a floor ("from"). An unmeasured
   store is charged at least its market's highest measured one-card rate and
   labelled "est.". `shipping-rates.yml` re-measures monthly and never
-  commits. [2026-09-25](../DECISIONS.md#L12637),
-  [2026-09-25](../DECISIONS.md#L12751), [2026-09-25](../DECISIONS.md#L12779)
+  commits. [2026-09-25](../DECISIONS.md#L12689),
+  [2026-09-25](../DECISIONS.md#L12803), [2026-09-25](../DECISIONS.md#L12831)
 - **Auto-renew is on by default** with no in-site off button; switching off
   stays in the Stripe portal. The paid-renewal reminder is built on
   `feedback/auto-renew` and held for Stripe test-mode testing.
-  [2026-09-25](../DECISIONS.md#L12779)
+  [2026-09-25](../DECISIONS.md#L12831)
 
 ## Removed, declined, kept
 
