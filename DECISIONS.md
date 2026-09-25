@@ -13595,3 +13595,44 @@ new cases: a lower low re-held (free and Plus), one sold-out daily read then
 back (no email), the eBay-seeded legacy reset, the 20h windows under jitter,
 the 80h-old CardTrader row (`unknown`), `listingCondition`, "Good", and a
 target at the shown price stored as fired.
+
+## K'Sante's Riftbound debut: cards catalogued, but the Legend count held — 2026-09-25
+
+K'Sante's first two cards surfaced as Preview Season opened: his Legend *Pride of
+Nazumah* (172/167 over-numbered) and signature spell *Ntofo Strikes* (146/167).
+New post `riftbound-ksante-radiance-spoiler`, both cards added to
+`prisma/manual-cards.json`, plus a tracker reveal-log entry and a dated update to
+the HEARTSTEEL post (which had predicted exactly this and stated, correctly at
+the time, that K'Sante had no card at all). Three non-obvious calls:
+
+**Both cards WERE catalogued — unlike the first Seraphine leak.** The earlier
+Seraphine post deliberately kept its cards out of the DB because the Legend's
+domain and rarity could not be read. Here they can: both K'Sante cards show two
+domain gems (green Calm sprout over orange Body emblem), and `domain` holds the
+FIRST — Calm — which is exactly the one-domain convention the Seraphine rows
+(added later, Mind-over-Order filed Mind) document for every two-domain Legend.
+Pride of Nazumah's 172/167 is over-numbered, so `fix-altart-rarity.ts` makes it
+Showcase on its own. The one soft field is Ntofo Strikes' rarity: its gem sat
+behind a video caption, so it is a documented "Rare" estimate, flagged in the
+row's `_note` for correction when a clean image lands.
+
+**The confirmed-Legend count did NOT move.** Adding K'Sante to
+`RADIANCE_LEGENDS_CONFIRMED` would have been wrong twice over: `radiance.ts` is
+sourced from Riot/riftbound.gg, not a leak image, and
+`tests/radiance-facts-agree.test.ts` would then force K'Sante into every article
+line that enumerates the confirmed Legends and every "N champion Legends" count —
+a large, error-prone cascade off a sighting. So K'Sante is logged as a sighting
+(the same bar the Neeko and 22-Sept Seraphine photos cleared), the count stays
+six-confirmed / three-unrevealed, and the tracker's Legends table notes his cards
+surfaced without reclassifying him. The count moves when Riot's own reveal does.
+
+**The captioned image was de-captioned by cropping, not inpainting.** Ntofo
+Strikes' only image carried a gameplay subtitle ("Then I'll play Ntofo Strikes.")
+across its lower third. Reconstructing the flavor line and collector strip behind
+it would be fabrication, so the card was cropped to end above the caption — every
+rule stays legible, and nothing under the caption was invented. The collector
+number and rarity that the caption hid are recorded from what was readable and
+flagged as read-with-care.
+
+No `[deploy]` marker: ordinary content, rides the daily 08:00 UTC release unless
+asked to ship now.

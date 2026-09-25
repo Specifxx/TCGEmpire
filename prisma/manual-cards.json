@@ -3,6 +3,41 @@
     "_note": "BACKSTOP for cards RiftScribe genuinely lacks (e.g. TCGplayer Organized-Play / promotional printings). Most 'missing' cards are just prod being behind the snapshot — run `npm run cards:sync` FIRST. Only add a card here if it's still missing after that. `externalId` must be unique and stable (use it for promos so they never clobber the base card). imageUrl from a TCGplayer product URL tcgplayer.com/product/<ID>/... = https://tcgplayer-cdn.tcgplayer.com/product/<ID>_in_1000x1000.jpg . Any FILL_ME = skipped. Run: `npm run cards:manual` (DRY_RUN=1 to preview)."
   },
   {
+    "_note": "RADIANCE K'SANTE SPOILER, added 2026-09-25 from leak card images — the FIRST K'Sante cards in any Riftbound set (his game debut, which /blog/riftbound-heartsteel-cards predicted). Two cards: Pride of Nazumah (Legend, 172/167 — OVER-NUMBERED, so fix-altart-rarity.ts keeps it Showcase) and Ntofo Strikes (a Signature Spell -> type 'Spell', 146/167 base run, energy 2). EVERY field is READ OFF THE CARDS except as noted. DOMAIN: both cards are DUAL Calm/Body (green sprout gem = Calm on top, orange emblem gem = Body below, matching lib/constants DOMAINS colors; the banners run green->orange). The schema and tests/manual-cards.test.ts require ONE DomainKey, so `domain` holds the FIRST/top gem = Calm — the same one-domain convention every two-domain Legend in the catalogue uses (documented on the Seraphine rows below: Mind-over-Order is filed Mind; Ahri, Nine-Tailed Fox = Calm). If the official primary turns out to be Body, flip both. RARITY: Ntofo Strikes' rarity gem was hidden behind a video caption in the only image, so 'Rare' is a best estimate for a champion signature spell — VERIFY when a clean image or the automated import lands; its 146/167 number was read under that caption too. IMAGES are de-captioned crops of the leak (public/radiance-spoilers/ksante-*.jpg); REPLACE with the RiftScribe CDN art once the automated import carries these — `npm run cards:sync` will NOT overwrite a manual row."
+  },
+  {
+    "externalId": "spoiler-rad-172-ksante-pride-of-nazumah",
+    "name": "Pride of Nazumah",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "172/167",
+    "domain": "Calm",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "[1], [Exhaust]: Give a friendly unit \"I have Assault equal to my Shield\" this turn.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/ksante-pride-of-nazumah.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/ksante-pride-of-nazumah.jpg"
+  },
+  {
+    "externalId": "spoiler-rad-146-ntofo-strikes",
+    "name": "Ntofo Strikes",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "146/167",
+    "domain": "Calm",
+    "type": "Spell",
+    "rarity": "Rare",
+    "isPromo": false,
+    "energyCost": 2,
+    "might": null,
+    "description": "Action (Play on your turn or in showdowns.) Give a friendly unit Shield 2 this turn, then deal damage equal to its Shield to an enemy unit. (A unit with Shield has +1 [S] for each instance of Shield while it's a defender.)",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/ksante-ntofo-strikes.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/ksante-ntofo-strikes.jpg"
+  },
+  {
     "externalId": "promo-ogn-151-lee-sin-centered-op",
     "name": "Lee Sin, Centered",
     "setCode": "OGN",
