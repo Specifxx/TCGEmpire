@@ -283,9 +283,11 @@ export default async function AdminRisingPage({
       <section className="mt-8 rounded-xl border border-ink-800 bg-ink-900/40 p-5 text-sm leading-relaxed text-slate-400">
         <h2 className="text-base font-bold text-white">How the score works</h2>
         <p className="mt-2">
-          For the {analysis.qualifying} most‑searched priced cards with enough price history, each of
-          six signals is turned into a cross‑sectional z‑score and combined into a weighted sum, then
-          shown as a 0–100 percentile:
+          For the {analysis.universeSize} most‑searched priced cards, each of six signals is turned into a
+          cross‑sectional z‑score and combined into a weighted sum, then shown as a 0–100 percentile. The
+          three price‑timing signals (room, momentum, volatility) are z‑scored only among the{" "}
+          {analysis.qualifying} with ≥{analysis.minPointsRequired} clean weekly points; every other card gets a
+          neutral 0 for them:
         </p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
           <li><strong className="text-slate-300">Demand</strong> — search volume (log). The purest attention signal.</li>

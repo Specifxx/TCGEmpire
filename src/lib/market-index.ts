@@ -55,9 +55,9 @@ import { pickPrice, priceField, DEFAULT_COUNTRY, COUNTRIES, type Country } from 
 import { CONTENT_TAG } from "./revalidate-content";
 import { sydneyWeekKey, historySource, dropBreakWindow, METHODOLOGY_BREAKS, type PricePoint } from "./price-history";
 
-// Defined in price-history.ts since 2026-09-25, where every per-card comparison
-// can reach it too (dropBreakWindow); re-exported so existing imports from here
-// keep working.
+// Moved out of this file on 2026-09-25 (lib/methodology-breaks.ts, re-exported
+// by price-history.ts) so every per-card comparison can reach it too
+// (dropBreakWindow); re-exported here so existing imports keep working.
 export { METHODOLOGY_BREAKS };
 
 export const INDEX_SIZE = 200;
@@ -224,7 +224,7 @@ const pctChange = (now: number, then: number | undefined): number | null =>
 // thin or growing basket from jumping the level; a coverage floor on top of
 // that only decided how much real history to hide, not whether the level was
 // trustworthy.
-// METHODOLOGY BREAKS (the list lives in price-history.ts; see its note). A
+// METHODOLOGY BREAKS (the list lives in methodology-breaks.ts; see its note). A
 // step whose END falls inside a window is charted flat: the level carries
 // across unchanged and the prices re-base, exactly as an index provider chains
 // over a methodology change. Chain-linking makes this necessary rather than

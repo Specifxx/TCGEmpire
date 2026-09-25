@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
-import { getCachedRisingCards, parseRiseScope, type RisePick, type RiseScope } from "@/lib/rise-predictor";
+import { getCachedRisingCards, parseRiseScope, growthSpanLabel, type RisePick, type RiseScope } from "@/lib/rise-predictor";
 import { recentMethodologyBreak } from "@/lib/price-history";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRIES, COUNTRY_LIST } from "@/lib/country";
@@ -103,9 +103,12 @@ function Searches({ p }: { p: RisePick }) {
   return (
     <span className="flex flex-col items-end">
       <span className="num text-slate-200">{p.searchPerDay >= 10 ? Math.round(p.searchPerDay) : p.searchPerDay.toFixed(1)}</span>
-      {p.searchGrowthPct != null && (
+      {/* Growth over the span the card's demand snapshots really cover (it
+          said "/ 3 wk" for every card, including ones first snapshotted days
+          ago); null below a week, where a percentage is noise. */}
+      {p.searchGrowthPct != null && p.searchGrowthDays != null && (
         <span className={`num text-[11px] ${p.searchGrowthPct > 0 ? "text-up" : "text-slate-500"}`}>
-          {p.searchGrowthPct > 0 ? "+" : ""}{Math.round(p.searchGrowthPct)}% / 3 wk
+          {p.searchGrowthPct > 0 ? "+" : ""}{Math.round(p.searchGrowthPct)}% in {growthSpanLabel(p.searchGrowthDays, true)}
         </span>
       )}
     </span>

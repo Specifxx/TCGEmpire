@@ -60,9 +60,11 @@ test("rise-predictor no longer casts a raw PriceHistory.country at all — GLOBA
   assert.ok(!/\(r\.country as Country\)/.test(src), "must not cast PriceHistory.country to Country — there is no per-country row left to read");
   assert.ok(!/raw in COUNTRIES/.test(src), "the per-country guard has nothing left to guard — GLOBAL_HISTORY_COUNTRY is filtered at the query, not validated in app code");
   assert.ok(!/KNOWN_COUNTRIES/.test(src), "KNOWN_COUNTRIES was only ever needed to constrain a per-country query that no longer exists");
+  // (Since 2026-09-25 the one weekly read covers every card, no id list, from
+  // the current pricing basis — tests/rising-cards.test.ts pins the window.)
   assert.match(
     src,
-    /where:\s*\{\s*cardId:\s*\{\s*in:\s*ids\s*\},\s*day:\s*\{\s*gte:\s*cutoff\s*\},\s*country:\s*GLOBAL_HISTORY_COUNTRY\s*\}/,
+    /where:\s*\{\s*country:\s*GLOBAL_HISTORY_COUNTRY,\s*day:\s*\{\s*gte:\s*riseHistoryStart\(Date\.now\(\)\)\s*\}\s*\}/,
     "every scope (GLOBAL included) must filter to the single GLOBAL sentinel at the database"
   );
 });

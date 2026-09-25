@@ -180,6 +180,36 @@ test("postage-dominated cheap cards get the postage advice", () => {
   assert.match(t, /larger order/);
 });
 
+// ── never across a pricing-methodology break (2026-09-25) ────────────────────
+// On 2026-09-23 the US TCGplayer price we track moved from TCGplayer's market
+// price to the cheapest English listing (lib/methodology-breaks.ts), a median
+// 25% lower. The chart still draws every point; the trajectory paragraph must
+// not read that step as the card falling, or call it the cheapest ever.
+const weekly = (fromUtc: number, values: number[]) =>
+  values.map((v, i) => ({ t: fromUtc + i * 7 * 86_400_000, v }));
+
+test("the trajectory never compares a price from before the 09-23 re-basing with one after it", () => {
+  // Ten weeks at ~1300 on the old basis, then the switch-day snapshot and four
+  // weeks at ~1000 on the new one.
+  const old = weekly(Date.UTC(2026, 6, 15), [1300, 1310, 1290, 1300, 1305, 1300, 1295, 1300, 1310, 1300]);
+  const fresh = weekly(Date.UTC(2026, 8, 23), [1000, 1000, 990, 1000, 995]);
+  const t = text(card({ history: { points: [...old, ...fresh] } }));
+  assert.doesNotMatch(t, /down (2\d|3\d)% over the last/, "the basis step is not a fall");
+  assert.doesNotMatch(t, /cheapest we have recorded it\./, "not 'the cheapest ever' on a series cut by the break");
+  assert.doesNotMatch(t, /ever cost/);
+  // With enough points after it, the paragraph speaks — about that stretch only.
+  assert.match(t, /flat over the last week/);
+  assert.match(t, /Across 21 days of prices since 30 Sept? 2026 /, "and names where that stretch starts");
+});
+
+test("with fewer than four points on the new basis the trajectory stays quiet", () => {
+  const old = weekly(Date.UTC(2026, 6, 15), [1300, 1310, 1290, 1300, 1305, 1300]);
+  const fresh = weekly(Date.UTC(2026, 8, 23), [1000, 980, 990]);
+  const t = text(card({ history: { points: [...old, ...fresh] } }));
+  assert.doesNotMatch(t, /over the last (week|month|quarter)/);
+  assert.doesNotMatch(t, /tracked range|range since/);
+});
+
 test("a flat price gets its own paragraph, not a limp 0% move", () => {
   const t = text(card({ history: { points: days(120, 1000, 0) } }));
   assert.match(t, /barely moved/);

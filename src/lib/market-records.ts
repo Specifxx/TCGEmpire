@@ -28,7 +28,7 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { cardTileSelect, withStoreCounts } from "./cards";
 import { DEFAULT_COUNTRY, type Country } from "./country";
-import { cachedOrDirect, sydneyWeekKey, STALE_HISTORY_MS, historySource, dropBreakWindow } from "./price-history";
+import { cachedOrDirect, sydneyWeekKey, STALE_HISTORY_MS, historySource, dropBreakWindow, currentBasisStart } from "./price-history";
 import { HISTORY_TAG } from "./revalidate-content";
 import type { CardTileData } from "@/components/CardTile";
 
@@ -53,15 +53,26 @@ export type RecordRow = {
 export type AllTimeRecords = {
   /** Highest prices ever recorded, biggest first — the "records board". */
   peaks: RecordRow[];
-  /** Cards sitting furthest below their own all-time high — the value angle. */
+  /**
+   * Cards sitting furthest below their own high ON THE CURRENT PRICING BASIS —
+   * the value angle. All-time only when `currentSince` is null.
+   */
   offPeak: RecordRow[];
-  /** Cards at (or within a whisker of) their all-time low. */
+  /** Cards at (or within a whisker of) their low on the current pricing basis. */
   atLow: RecordRow[];
+  /**
+   * ISO date the current pricing basis starts (lib/methodology-breaks.ts
+   * currentBasisStart), or null when no methodology break has happened. The
+   * off-peak and at-low boards measure only from here, and it never ages out
+   * (dropBreakWindow always restarts at it), so a page must say "since <date>"
+   * above those two boards, never "all-time".
+   */
+  currentSince: string | null;
   /** ISO date of the freshest point behind these numbers. */
   asOf: string | null;
 };
 
-const EMPTY: AllTimeRecords = { peaks: [], offPeak: [], atLow: [], asOf: null };
+const EMPTY: AllTimeRecords = { peaks: [], offPeak: [], atLow: [], currentSince: null, asOf: null };
 
 /**
  * Minimum distinct days of history before a card can hold a "record".
@@ -85,9 +96,44 @@ const MIN_CENTS = 300;
 const MAX_OFF_PEAK_PCT = 90;
 /** Within this of the all-time low counts as "at" it — prices wobble by cents. */
 const AT_LOW_TOLERANCE_PCT = 2;
+/**
+ * The at-low board needs a real range to be at the bottom OF: the card's high on
+ * the same basis must sit at least this far above its low. Without it a card
+ * that has not moved for MIN_DAYS weekly snapshots is "at its low" by
+ * definition (peak = trough = now), and the board fills with flat bulk cards.
+ * Same threshold the off-peak board uses for "well under its high".
+ */
+const AT_LOW_MIN_RANGE_PCT = 5;
 
 /** How many rows each board shows. */
 export const RECORDS_LIST_SIZE = 10;
+
+/**
+ * The two boards that compare today's price with a record, from rows already
+ * restricted to the current pricing basis. Pure, so the thresholds are tested
+ * directly (tests/methodology-breaks.test.ts).
+ *   • off-peak: more than 5% under its high (and not so far under that it is
+ *     a bad scraped row — MAX_OFF_PEAK_PCT), biggest gap first;
+ *   • at-low: within AT_LOW_TOLERANCE_PCT of its low AND with a real range
+ *     above that low (AT_LOW_MIN_RANGE_PCT), priciest first — so a card that
+ *     simply has not moved is not "at its low".
+ */
+export function pickCurrentBoards(current: RecordRow[], limit: number): { offPeak: RecordRow[]; atLow: RecordRow[] } {
+  const offPeak = current
+    .filter((r) => r.offPeakPct > 5 && r.offPeakPct <= MAX_OFF_PEAK_PCT)
+    .sort((a, b) => b.offPeakPct - a.offPeakPct)
+    .slice(0, limit);
+  const atLow = current
+    .filter(
+      (r) =>
+        r.troughCents > 0 &&
+        r.peakCents >= r.troughCents * (1 + AT_LOW_MIN_RANGE_PCT / 100) &&
+        r.nowCents <= r.troughCents * (1 + AT_LOW_TOLERANCE_PCT / 100),
+    )
+    .sort((a, b) => b.peakCents - a.peakCents)
+    .slice(0, limit);
+  return { offPeak, atLow };
+}
 
 const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -191,11 +237,16 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
     //     the series whatever basis it was recorded on, and a re-basing that
     //     LOWERED prices (2026-09-23) cannot fake a new high.
     //   • `current` — the two boards that COMPARE today's price with a record
-    //     ("off their peak", "at all-time lows"). Those only use points on the
+    //     ("off their peak", "at their low"). Those only use points on the
     //     current pricing basis (dropBreakWindow): measured across the 09-23
     //     TCGplayer switch, every affected card read as 25% off its peak and at
     //     a fresh all-time low. A card needs MIN_DAYS points on the current
-    //     basis before it can appear on them again.
+    //     basis before it can appear on them again, and a series that never
+    //     reached the basis start (dropBreakWindow leaves those untouched) is
+    //     left off: its "now" predates the basis, so "since <date>" would be
+    //     false for it. Both boards are therefore records SINCE `basisStart`,
+    //     not all-time — `currentSince` tells the page so.
+    const basisStart = currentBasisStart(Date.now());
     const allTime: RecordRow[] = [];
     const current: RecordRow[] = [];
     for (const c of shortlist.values()) {
@@ -216,6 +267,7 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
 
       const seg = dropBreakWindow(seriesById.get(c.cardId) ?? []);
       if (seg.length < MIN_DAYS) continue;
+      if (basisStart != null && seg[0].t < basisStart) continue;
       let segPeak = seg[0];
       let segTrough = seg[0];
       for (const p of seg) {
@@ -238,16 +290,9 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
     if (!allTime.length) return EMPTY;
 
     const peaks = [...allTime].sort((a, b) => b.peakCents - a.peakCents).slice(0, limit);
-    const offPeak = current
-      .filter((r) => r.offPeakPct > 5 && r.offPeakPct <= MAX_OFF_PEAK_PCT)
-      .sort((a, b) => b.offPeakPct - a.offPeakPct)
-      .slice(0, limit);
-    const atLow = current
-      .filter((r) => r.troughCents > 0 && r.nowCents <= r.troughCents * (1 + AT_LOW_TOLERANCE_PCT / 100))
-      .sort((a, b) => b.peakCents - a.peakCents)
-      .slice(0, limit);
+    const { offPeak, atLow } = pickCurrentBoards(current, limit);
 
-    return { peaks, offPeak, atLow, asOf: isoDay(freshest) };
+    return { peaks, offPeak, atLow, currentSince: basisStart != null ? isoDay(new Date(basisStart)) : null, asOf: isoDay(freshest) };
   } catch {
     // A records board is decoration on top of the market page. It must never be
     // the reason /market/records 500s — same policy as every other history read.

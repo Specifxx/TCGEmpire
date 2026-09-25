@@ -8,20 +8,23 @@ import { cardImageAlt } from "@/lib/image-alt";
 import {
   generateRisingSubtitle,
   hotListName,
+  isLegacySnapshot,
+  rankedFromCount,
   snapshotDateLabel,
+  weekMove,
   type RisingSnapshotData,
   type RisingSnapshotPick,
 } from "@/lib/rising-snapshot";
 
 export const dynamic = "force-dynamic";
 
-// The PUBLIC face of a minted RiftCompare Hot 40 snapshot. No account, no Premium, no
+// The PUBLIC face of a minted RiftCompare Hot 40 snapshot. No account, no subscription, no
 // paywall of any kind — that is the entire point of the feature (owner,
 // 2026-09-22: "a special link for public users to view a snapshot of the rising
 // cards at the time of generation so they don't need premium").
 //
 // NOINDEX, and not as an afterthought. This is a capability URL: unguessable
-// token, shared deliberately. Indexing it would (a) put a Premium tool's output
+// token, shared deliberately. Indexing it would (a) put a paid (Plus) tool's output
 // in the search results the Premium page itself competes for, and (b) make the
 // "special link" meaningless, since the whole value is that the holder was
 // given it. robots.ts does not cover /rising/*, so the page declares it here.
@@ -83,7 +86,11 @@ function Pct({ v }: { v: number | null }) {
   );
 }
 
-function Row({ p, rank }: { p: RisingSnapshotPick; rank: number }) {
+// TWO PAYLOAD SHAPES — see lib/rising-snapshot.ts. A legacy snapshot keeps the
+// columns it was minted with (its 7- and 30-day moves were real); a v2 one
+// shows "vs last week" (a dash when nothing was comparable, never 0.0%) and the
+// 16-week spark, and has no 30-day column.
+function Row({ p, rank, legacy }: { p: RisingSnapshotPick; rank: number; legacy: boolean }) {
   return (
     <tr className="align-middle">
       <td className="num px-3 py-2 text-slate-500">{rank}</td>
@@ -107,14 +114,15 @@ function Row({ p, rank }: { p: RisingSnapshotPick; rank: number }) {
             <span className="num block text-[11px] text-slate-500">
               {p.setCode} · {p.collectorNumber}
             </span>
+            {p.reason && <span className="block text-[11px] leading-snug text-slate-400">{p.reason}</span>}
           </span>
         </Link>
       </td>
       <td className="num px-3 py-2 text-right text-white">
         {p.priceCents != null ? formatMoney(p.priceCents, p.currency) : "—"}
       </td>
-      <td className="num px-3 py-2 text-right"><Pct v={p.trend7} /></td>
-      <td className="num px-3 py-2 text-right"><Pct v={p.trend30} /></td>
+      <td className="num px-3 py-2 text-right"><Pct v={weekMove(p)} /></td>
+      {legacy && <td className="num px-3 py-2 text-right"><Pct v={p.trend30} /></td>}
       <td className="px-3 py-2"><Spark values={p.spark} /></td>
       <td className="num px-3 py-2 text-right text-slate-300">{p.listings}</td>
       <td className="num px-3 py-2 text-right font-bold text-white">{p.score}</td>
@@ -130,6 +138,8 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
 
   const data = snap.data as unknown as RisingSnapshotData;
   const taken = new Date(snap.createdAt);
+  const legacy = isLegacySnapshot(data);
+  const rankedFrom = rankedFromCount(data);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -155,8 +165,9 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
           <div>
             <p className="font-semibold text-white">No cards were ranked in this run</p>
             <p className="mx-auto mt-1 max-w-lg">
-              Ranking needs {data.minPointsRequired} days of price history per card. This snapshot was taken before
-              enough had built up.
+              {legacy
+                ? `Ranking needed ${data.minPointsRequired} days of price history per card. This snapshot was taken before enough had built up.`
+                : "No card in this market had both search activity and a live price when this snapshot was taken."}
             </p>
           </div>
         </div>
@@ -168,24 +179,36 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
                 <th className="px-3 py-2 font-semibold">#</th>
                 <th className="px-3 py-2 font-semibold">Card</th>
                 <th className="px-3 py-2 text-right font-semibold">Price</th>
-                <th className="px-3 py-2 text-right font-semibold">7d</th>
-                <th className="px-3 py-2 text-right font-semibold">30d</th>
-                <th className="px-3 py-2 font-semibold">Trend</th>
+                <th className="px-3 py-2 text-right font-semibold">vs last week</th>
+                {legacy && <th className="px-3 py-2 text-right font-semibold">30 days</th>}
+                <th className="px-3 py-2 font-semibold">{legacy ? "Trend" : "16 wk"}</th>
                 <th className="px-3 py-2 text-right font-semibold">Listings</th>
                 <th className="px-3 py-2 text-right font-semibold">Score</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-800">
               {data.picks.map((p, i) => (
-                <Row key={p.id} p={p} rank={i + 1} />
+                <Row key={p.id} p={p} rank={i + 1} legacy={legacy} />
               ))}
             </tbody>
           </table>
           <p className="p-3 text-[11px] leading-relaxed text-slate-600">
-            Score is a 0–100 percentile of a weighted composite (demand, velocity, room to run, scarcity, momentum,
-            volatility) across the {data.qualifying.toLocaleString()} most-searched priced cards of{" "}
-            {data.universeSize.toLocaleString()} scanned. A research signal, not financial advice — always check the
-            card&apos;s own price history before buying.
+            {legacy ? (
+              <>
+                Score is a 0–100 percentile of a weighted composite (demand, velocity, room to run, scarcity, momentum,
+                volatility) across the {rankedFrom.toLocaleString()} most-searched priced cards of{" "}
+                {data.universeSize.toLocaleString()} scanned.
+              </>
+            ) : (
+              <>
+                Score is a 0–100 percentile of a weighted composite (demand, velocity, room to run, scarcity, momentum,
+                volatility) across the {rankedFrom.toLocaleString()} most-searched priced cards.{" "}
+                {data.qualifying < rankedFrom &&
+                  `${data.qualifying.toLocaleString()} of them had the ${data.minPointsRequired} weekly prices the price-timing signals need; the rest were ranked on demand and stores in stock alone. `}
+                &ldquo;vs last week&rdquo; and the 16-week line follow the cheapest tracked price across AU/US/UK/SG, converted.
+              </>
+            )}{" "}
+            A research signal, not financial advice — always check the card&apos;s own price history before buying.
           </p>
         </div>
       )}
@@ -196,8 +219,9 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
       <div className="mt-8 rounded-xl border border-gold/35 bg-gold/[0.07] px-5 py-4">
         <p className="text-sm font-bold text-white">These numbers stopped moving when this snapshot was taken.</p>
         <p className="mt-1 text-sm leading-relaxed text-slate-300">
-          The live screener re-ranks every day as prices and search demand change. Free to browse every price on
-          RiftCompare; the daily screener is part of Premium.
+          Rising Cards re-ranks every day as search demand and stock change; price history updates weekly. Every price
+          on RiftCompare is free to browse, a free account shows the top three picks, and the full list is part of
+          Plus, which also removes ads from every page.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link href="/tools/rising" className="btn-primary text-sm">See today&apos;s rising cards →</Link>

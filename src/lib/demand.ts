@@ -12,14 +12,14 @@
 // Card.searchCount / Card.viewCount are cumulative running totals with no
 // per-event log (see lib/demand-snapshot.ts's own header), so "top cards in
 // the last 7 days" is a SUBTRACTION against a daily snapshot, not a filter —
-// getDemandWindow() does that diffing; this module ranks, hydrates and caches.
+// getDemandWindowOrThrow() does that diffing; this module ranks, hydrates and caches.
 // The counters themselves are guarded against inflation in lib/card-views.ts.
 import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { CONTENT_TAG } from "./revalidate-content";
 import { sydneyDayKey } from "./price-history";
-import { getDemandWindow } from "./demand-snapshot";
+import { getDemandWindowOrThrow } from "./demand-snapshot";
 
 // Generous cap computed once per (window, day) and sliced for every caller —
 // the /movers strip shows ten — so a shorter list never pays for a second scan.
@@ -101,12 +101,15 @@ async function computeAllTime(limit: number): Promise<DemandResult> {
 // Runs INSIDE unstable_cache, so it must throw rather than return an empty
 // result: unstable_cache stores whatever the callback returns, and an empty
 // result from one database blip used to sit in the cache for the rest of the
-// day. getTopDemand catches outside the cache instead.
+// day. getTopDemand catches outside the cache instead. That goes for the window
+// read too, hence getDemandWindowOrThrow: the guarded getDemandWindow turns a
+// failure into an empty window, which the fallback below would then cache as an
+// all-time ranking with windowUsable:false — the /movers strip gone for the day.
 async function computeTopDemand(days: number | null, limit: number): Promise<DemandResult> {
   try {
     if (days == null) return await computeAllTime(limit);
 
-    const win = await getDemandWindow(days);
+    const win = await getDemandWindowOrThrow(days);
     const usable = win.baselineDay != null && win.rows.length > 0;
     if (!usable) {
       // Same fallback the admin page makes: a window was asked for but no

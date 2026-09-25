@@ -25,6 +25,24 @@ import { COUNTRIES } from "./country";
 // above it overclaimed. The strongest word used is "leads", which is a fact
 // about rank order.
 
+// ── TWO PAYLOAD SHAPES (2026-09-25) ─────────────────────────────────────────
+// The frozen `data` column outlives the code that wrote it, so every reader
+// here must handle both:
+//   • LEGACY (no `version`): minted before the 2026-09-25 Rising Cards rebuild.
+//     Only cards with enough price history were ranked, so `qualifying` WAS the
+//     ranked set; `trend7` / `trend30` were real 7- and 30-day moves and the
+//     spark a 30-day line.
+//   • VERSION 2: every searched, priced card is ranked (`universeSize` is the
+//     ranked set); `qualifying` is only the cards with enough clean weekly
+//     prices for the price-timing signals — 0 for weeks after a methodology
+//     break while 40 picks are still ranked. The week-on-week move is
+//     `vsLastWeekPct` and may be null (no comparable point: "—", never "0.0%");
+//     there is no 30-day move, and the spark is 16 weeks of weekly prices.
+//     `trend7` / `trend30` are still written, for any old reader, but nothing
+//     here reads them on a v2 payload.
+// weekMove / rankedFromCount / isLegacySnapshot below are the only places the
+// difference is decided.
+
 /** One card, flattened to what the public snapshot page draws. */
 export interface RisingSnapshotPick {
   id: string;
@@ -36,12 +54,20 @@ export interface RisingSnapshotPick {
   score: number;
   priceCents: number | null;
   currency: string;
+  /** Legacy payloads' 7-day move. On v2 payloads, vsLastWeekPct ?? 0 — read weekMove() instead. */
   trend7: number;
+  /** Legacy payloads' 30-day move. Meaningless on v2 payloads (0 without price signals). */
   trend30: number;
   posPct: number;
   listings: number;
   spark: number[];
   confidence: RisePick["confidence"];
+  /** v2: today's price vs the clean weekly point nearest a week ago; null when there is none. */
+  vsLastWeekPct?: number | null;
+  /** v2: whether posPct means anything (enough clean weekly prices). Legacy picks always had it. */
+  priceSignals?: boolean;
+  /** v2: the pick's one-line reason, as the live tool showed it. */
+  reason?: string;
 }
 
 /** Everything the public page renders. Frozen at mint time; never recomputed. */
@@ -52,8 +78,30 @@ export interface RisingSnapshotData {
   picks: RisingSnapshotPick[];
   /** Context the page shows so a reader can judge the sample, not just the list. */
   universeSize: number;
+  /** Legacy: the ranked set. v2: cards with enough clean weekly prices for the price-timing signals. */
   qualifying: number;
   minPointsRequired: number;
+  /** 2 for payloads minted from the 2026-09-25 ranking; absent on older ones. */
+  version?: 2;
+}
+
+/** True for a payload minted before the 2026-09-25 rebuild (see TWO PAYLOAD SHAPES). */
+export function isLegacySnapshot(data: Pick<RisingSnapshotData, "version">): boolean {
+  return data.version !== 2;
+}
+
+/**
+ * A pick's week-on-week move, or null when it has none. Legacy picks carry only
+ * trend7 (a real 7-day move); v2 picks carry vsLastWeekPct, where null means
+ * "nothing comparable a week ago" and must render as a dash, not 0.0%.
+ */
+export function weekMove(p: Pick<RisingSnapshotPick, "trend7" | "vsLastWeekPct">): number | null {
+  return p.vsLastWeekPct !== undefined ? p.vsLastWeekPct : p.trend7;
+}
+
+/** How many cards the list was ranked from: the ranked set, whichever payload shape. */
+export function rankedFromCount(data: RisingSnapshotData): number {
+  return isLegacySnapshot(data) ? data.qualifying : data.universeSize;
 }
 
 // THE LIST HAS A NAME (owner, 2026-09-22: "we should call it the riftcompare
@@ -92,7 +140,7 @@ export function snapshotDateLabel(d: Date): string {
  * Angles, in order of how much they actually tell a reader — the first one the
  * data supports wins:
  *
- *   1. A REAL MOVE ALREADY UNDERWAY. The top pick is up ≥5% over 7 days: that
+ *   1. A REAL MOVE ALREADY UNDERWAY. The top pick is up ≥5% on a week ago: that
  *      is the most concrete thing any run can say, so it leads.
  *   2. A SET-UP, NOT A MOVE. The top pick sits in the bottom third of its own
  *      range (posPct ≤ 0.33) — the screener's actual thesis ("hasn't re-rated
@@ -121,18 +169,22 @@ export function generateRisingTitle(data: RisingSnapshotData, now = new Date()):
 
   const plural = n === 1 ? "card" : "cards";
 
-  // 1. The top pick is already moving.
-  if (top.trend7 >= 5) {
-    return `${name}: ${top.displayName} is up ${top.trend7.toFixed(1)}% this week (${market}, ${date})`;
+  // 1. The top pick is already moving. (weekMove: null is "no comparable
+  // point", which is not a move of any size.)
+  const topMove = weekMove(top);
+  if (topMove != null && topMove >= 5) {
+    return `${name}: ${top.displayName} is up ${topMove.toFixed(1)}% this week (${market}, ${date})`;
   }
 
   // 2. The top pick is cheap against its own range — the screener's own thesis.
-  if (top.posPct <= 0.33) {
+  // Only when the pick HAS a range: a v2 pick without price signals carries a
+  // neutral 0.5, which says nothing.
+  if (top.priceSignals !== false && top.posPct <= 0.33) {
     return `${name}: ${top.displayName} leads ${n} Riftbound ${plural} near their range low (${market}, ${date})`;
   }
 
   // 3. No single leader, but breadth.
-  const upCount = data.picks.filter((p) => p.trend7 > 0).length;
+  const upCount = data.picks.filter((p) => (weekMove(p) ?? 0) > 0).length;
   if (upCount >= Math.ceil(n / 2) && upCount >= 3) {
     return `${name}: ${upCount} of ${n} cards gained ground this week (${market}, ${date})`;
   }
@@ -143,10 +195,14 @@ export function generateRisingTitle(data: RisingSnapshotData, now = new Date()):
 
 /** The one-line standfirst under the title. Same honesty rules. */
 export function generateRisingSubtitle(data: RisingSnapshotData): string {
+  // The RANKED set, not `qualifying`: on a v2 payload that is only the cards
+  // with price signals, 0 for weeks after a break, and "Ranked from the 0
+  // most-searched priced cards" above a 40-row table is the kind of false
+  // number this file exists to prevent.
   return (
-    `Ranked from the ${data.qualifying.toLocaleString()} most-searched priced cards in ` +
+    `Ranked from the ${rankedFromCount(data).toLocaleString()} most-searched priced cards in ` +
     `${MARKET_LABEL(data.scope)}, by demand and price-timing signals. ` +
-    `A snapshot taken at one moment — the live screener moves daily.`
+    `A snapshot taken at one moment — the live list re-ranks daily.`
   );
 }
 
@@ -174,9 +230,13 @@ export function toSnapshotData(analysis: RiseAnalysis, scope: RiseScope, now = n
       listings: p.listings,
       spark: p.spark,
       confidence: p.confidence,
+      vsLastWeekPct: p.vsLastWeekPct,
+      priceSignals: p.priceSignals,
+      reason: p.reason,
     })),
     universeSize: analysis.universeSize,
     qualifying: analysis.qualifying,
     minPointsRequired: analysis.minPointsRequired,
+    version: 2,
   };
 }

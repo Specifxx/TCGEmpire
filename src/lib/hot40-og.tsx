@@ -1,7 +1,7 @@
 import React from "react";
 import { formatMoney } from "@/lib/format";
 import { cardImageForOg } from "@/lib/card-image-url";
-import { hotListName, type RisingSnapshotPick } from "@/lib/rising-snapshot";
+import { hotListName, weekMove, type RisingSnapshotPick } from "@/lib/rising-snapshot";
 
 // The Hot 40 share image's composition, as a pure function of the frozen data.
 //
@@ -17,11 +17,20 @@ export const HOT40_SIZE = { width: 1200, height: 630 };
 
 const GREEN = "#34d17e";
 const ROSE = "#fb7185";
+const SLATE = "#94a3b8";
 
 /** "+8.2%" / "−1.4%" — the sign is explicit so a reader never has to infer it. */
 function delta(v: number): string {
   return `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(1)}%`;
 }
+
+// THE MOVE IS weekMove(), NOT trend7 (2026-09-25). On a payload minted from the
+// rebuilt ranking, a pick with nothing comparable a week ago has a NULL move —
+// and trend7 carries it as 0, which this image used to print as a green
+// "+0.0% 7d" (and "+0.0% 30d") on the social card. Null draws a dash in grey.
+// A 30-day figure is drawn only for a legacy payload, where it was real; the
+// rebuilt ranking has no 30-day move.
+const moveColor = (m: number | null) => (m == null ? SLATE : m >= 0 ? GREEN : ROSE);
 
 /** Satori has no ellipsis, so long names are cut here rather than overflowing. */
 function clip(s: string, max: number): string {
@@ -33,9 +42,9 @@ function clip(s: string, max: number): string {
 const artOf = (p: RisingSnapshotPick | undefined): string | null =>
   p ? cardImageForOg({ imageThumbUrl: p.imageThumbUrl }) : null;
 
-/** One of the two runner-up rows: rank, art, name, 7-day move. */
+/** One of the two runner-up rows: rank, art, name, week-on-week move. */
 function Runner({ p, rank }: { p: RisingSnapshotPick; rank: number }) {
-  const up = p.trend7 >= 0;
+  const m = weekMove(p);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
       <div style={{ display: "flex", width: 22, fontSize: 24, fontWeight: 800, color: "#64748b" }}>{String(rank)}</div>
@@ -48,7 +57,7 @@ function Runner({ p, rank }: { p: RisingSnapshotPick; rank: number }) {
       <div style={{ display: "flex", flex: 1, fontSize: 26, fontWeight: 600, color: "#cbd5e1" }}>
         {clip(p.displayName, 24)}
       </div>
-      <div style={{ display: "flex", fontSize: 26, fontWeight: 800, color: up ? GREEN : ROSE }}>{delta(p.trend7)}</div>
+      <div style={{ display: "flex", fontSize: 26, fontWeight: 800, color: moveColor(m) }}>{m == null ? "—" : delta(m)}</div>
     </div>
   );
 }
@@ -63,7 +72,8 @@ export function Hot40Image({ picks, dateLabel }: { picks: RisingSnapshotPick[]; 
   const runners = picks.slice(1, 3);
   const name = picks.length > 0 ? hotListName(picks.length) : "RiftCompare Hot 40";
   const art = artOf(top);
-  const up = (top?.trend7 ?? 0) >= 0;
+  const topMove = top ? weekMove(top) : null;
+  const legacy = top ? top.vsLastWeekPct === undefined : false;
 
   return (
 
@@ -107,29 +117,34 @@ export function Hot40Image({ picks, dateLabel }: { picks: RisingSnapshotPick[]; 
             </div>
           </div>
 
-          {/* #1's numbers: price, the 7-day move, and the 30-day move. */}
+          {/* #1's numbers: price and the week-on-week move (plus the 30-day
+              move on a legacy payload, where it was measured). */}
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 16 }}>
             {top.priceCents != null && (
               <div style={{ display: "flex", fontSize: 30, fontWeight: 700, color: "#e2e8f0" }}>
                 {formatMoney(top.priceCents, top.currency)}
               </div>
             )}
-            <div
-              style={{
-                display: "flex",
-                padding: "5px 13px",
-                borderRadius: 999,
-                background: up ? "rgba(52,209,126,0.14)" : "rgba(251,113,133,0.14)",
-                color: up ? GREEN : ROSE,
-                fontSize: 26,
-                fontWeight: 800,
-              }}
-            >
-              {`${delta(top.trend7)} 7d`}
-            </div>
-            <div style={{ display: "flex", fontSize: 24, fontWeight: 600, color: "#94a3b8" }}>
-              {`${delta(top.trend30)} 30d`}
-            </div>
+            {topMove != null && (
+              <div
+                style={{
+                  display: "flex",
+                  padding: "5px 13px",
+                  borderRadius: 999,
+                  background: topMove >= 0 ? "rgba(52,209,126,0.14)" : "rgba(251,113,133,0.14)",
+                  color: moveColor(topMove),
+                  fontSize: 26,
+                  fontWeight: 800,
+                }}
+              >
+                {`${delta(topMove)} vs last week`}
+              </div>
+            )}
+            {legacy && (
+              <div style={{ display: "flex", fontSize: 24, fontWeight: 600, color: SLATE }}>
+                {`${delta(top.trend30)} 30 days`}
+              </div>
+            )}
           </div>
 
           {runners.length > 0 && (

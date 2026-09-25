@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { COUNTRY_LIST } from "../src/lib/country";
 import { usdCentsToCountry } from "../src/lib/fx";
-import { parseRiseScope, assembleRisingCards, RISE_SCOPES, type RiseInputs, type RiseHistory } from "../src/lib/rise-predictor";
+import { parseRiseScope, assembleRisingCards, riseHistoryStart, growthSpanLabel, RISE_SCOPES, type RiseInputs, type RiseHistory } from "../src/lib/rise-predictor";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Rising Cards, fixed (2026-09-25 lineup change; DECISIONS.md). What these pin:
@@ -159,7 +159,7 @@ test("without clean history a card is ranked on demand and supply — neutral, n
     assert.deepEqual([p.components.room, p.components.momentum, p.components.volatility], [0, 0, 0]);
     assert.equal(p.posPct, 0.5, "neutral, so nothing downstream reads it as 'near its low'");
     assert.equal(p.confidence, "Low");
-    assert.match(p.reason, /^Price history rebuilding, ranked on demand and supply · /);
+    assert.match(p.reason, /^Not enough weekly prices yet to judge its range, ranked on demand and supply · /);
     assert.match(p.reason, /2 stores in stock in US$/);
   }
   assert.equal(a.failed, false);
@@ -182,6 +182,73 @@ test("the one-line reason names searches, growth and stock in plain words", () =
   const by = new Map(a.picks.map((p) => [p.id, p.reason]));
   assert.match(by.get("x")!, /searches \+42% in 3 weeks · no store has it in stock$/);
   assert.match(by.get("y")!, /2 searches a day · 1 store in stock$/);
+});
+
+test("search growth is quoted over the span the snapshots really cover, and not at all over a few days", () => {
+  // getDemandVelocity measures growth over whatever snapshots a card has (up
+  // to 21 days). The reason used to say "in 3 weeks" for every card — including
+  // one first snapshotted two days ago, whose small base makes any growth huge.
+  const now = Date.UTC(2026, 8, 25, 12);
+  const a = assembleRisingCards(
+    "GLOBAL",
+    inputs([card("nine", { lowestPriceCentsUs: 1000 }), card("two", { lowestPriceCentsUs: 1000 })], {
+      supply: { nine: 1, two: 1 },
+      velocity: {
+        nine: { searchPerDay: 4, viewPerDay: 1, searchGrowthPct: 30, spanDays: 9, points: 9 },
+        two: { searchPerDay: 50, viewPerDay: 1, searchGrowthPct: 400, spanDays: 2, points: 3 },
+      },
+    }),
+    history({}),
+    now,
+  );
+  const by = new Map(a.picks.map((p) => [p.id, p]));
+  assert.match(by.get("nine")!.reason, /searches \+30% in 9 days · /);
+  assert.equal(by.get("nine")!.searchGrowthDays, 9);
+  assert.doesNotMatch(by.get("two")!.reason, /%/, "two days of snapshots is too short to quote a growth percentage");
+  assert.match(by.get("two")!.reason, /50 searches a day/);
+  assert.equal(by.get("two")!.searchGrowthPct, null);
+  assert.equal(by.get("two")!.searchPerDay, 50, "the rate itself still counts");
+  assert.deepEqual([growthSpanLabel(21), growthSpanLabel(7), growthSpanLabel(9), growthSpanLabel(14, true), growthSpanLabel(10, true)], ["3 weeks", "1 week", "9 days", "2 wk", "10 d"]);
+  assert.doesNotMatch(read(PAGE), /% \/ 3 wk/, "the Searches cell no longer assumes three weeks");
+  assert.match(read(PAGE), /growthSpanLabel\(p\.searchGrowthDays, true\)/);
+});
+
+test("a card with no loaded history is never described as 'rebuilding' — and the load is a superset of every universe", () => {
+  // The first cut loaded history for the 600 most-searched cards only; a
+  // thinner market's top 400 reaches further down the search order, and those
+  // cards were told "Price history rebuilding" when their history simply had
+  // not been read. The load now has no card list at all (see the egress test
+  // below); the reason says only what is true in every case.
+  const now = Date.UTC(2026, 10, 18, 12);
+  const deep: [number, number][] = [[eday(9, 30), 1200], [eday(10, 7), 1150], [eday(10, 14), 1100], [eday(10, 21), 1100], [eday(10, 28), 1050], [eday(11, 4), 1000]];
+  const a = assembleRisingCards(
+    "SG",
+    inputs([card("deep", { lowestPriceCentsSg: 1400 }), card("absent", { lowestPriceCentsSg: 1400 })], { supply: { deep: 1, absent: 1 } }),
+    history({ deep }),
+    now,
+  );
+  const by = new Map(a.picks.map((p) => [p.id, p]));
+  assert.equal(by.get("deep")!.priceSignals, true);
+  const absent = by.get("absent")!;
+  assert.equal(absent.priceSignals, false);
+  assert.equal(absent.historyPoints, 0);
+  assert.doesNotMatch(absent.reason, /rebuild/i, "nothing says history exists that was not read");
+  assert.match(absent.reason, /^Not enough weekly prices yet to judge its range, ranked on demand and supply/);
+  assert.doesNotMatch(code(LIB), /Price history rebuilding/);
+});
+
+test("the weekly history load starts at the current pricing basis, floored at 120 days", () => {
+  const D = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d);
+  // Inside 120 days of the 09-23 break: every older point would be dropped by
+  // dropBreakWindow in the assembly, so it is never read.
+  assert.equal(riseHistoryStart(D(2026, 10, 20)).getTime(), D(2026, 9, 24), "starts at the break's settled day");
+  assert.equal(riseHistoryStart(D(2026, 9, 25)).getTime(), D(2026, 9, 24));
+  // Long after it, the ordinary 120-day window.
+  const later = D(2027, 6, 1);
+  assert.equal(riseHistoryStart(later).getTime(), later - 120 * DAY);
+  // Before any break opened, the ordinary window too.
+  const before = D(2026, 9, 10);
+  assert.equal(riseHistoryStart(before).getTime(), before - 120 * DAY);
 });
 
 test("an empty universe is an empty analysis, not a failure", () => {
@@ -241,7 +308,14 @@ test("history is read by one week-keyed, scope-independent loader; the daily loa
   const historyFn = /async function computeRiseHistory\([\s\S]*?\n\}/.exec(src)?.[0] ?? "";
   assert.match(historyFn, /dbHistory\.priceHistory\.findMany/, "…and it lives in the weekly loader");
   assert.match(historyFn, /collapseToWeekly\(/, "legacy daily rows are collapsed to weekly before caching");
-  assert.match(historyFn, /take: HISTORY_SCAN/, "bounded by a card cap, not the catalogue");
+  // A SUPERSET OF EVERY SCOPE'S UNIVERSE BY CONSTRUCTION: no card list at all
+  // (the first cut read the 600 most-searched cards, which a thinner market's
+  // top 400 outruns). Bounded instead by the window — the current pricing
+  // basis, at most 120 days — times the catalogue, with a newest-first row cap
+  // as a circuit breaker.
+  assert.match(historyFn, /where: \{ country: GLOBAL_HISTORY_COUNTRY, day: \{ gte: riseHistoryStart\(Date\.now\(\)\) \} \}/);
+  assert.doesNotMatch(historyFn.replace(/\/\/[^\n]*/g, ""), /cardId: \{ in|prisma\.card\.|HISTORY_SCAN/, "no card list: nothing a universe card can fall outside of");
+  assert.match(historyFn, /orderBy: \{ day: "desc" \},\s*take: HISTORY_ROW_CAP/, "a cap, if it ever bites, trims the oldest weeks");
 });
 
 test("the assembly is uncached and calls both loaders directly — never nested", () => {

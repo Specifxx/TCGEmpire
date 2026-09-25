@@ -6,9 +6,19 @@ import { prisma } from "./db";
 // them. This mirrors PriceHistory: written once per Australia/Sydney day by the
 // importer, a same-day re-run replaces the day's rows.
 //
-// Every function here is guarded: until the DemandSnapshot table exists in prod (it
-// ships on the next `prisma db push` deploy) and a few days have accrued, reads
-// return empty and the predictor simply omits the velocity component.
+// THE READERS THROW (2026-09-25): getDemandVelocityOrThrow,
+// getDemandWindowOrThrow, demandSnapshotDaysOrThrow. They used to be guarded —
+// return an empty Map / 0 / empty window on any error — which is a trap for a
+// caller running INSIDE an unstable_cache callback, and both real callers do:
+// unstable_cache stores whatever the callback returns, so one database blip was
+// cached for the rest of the day as "no demand". Rising Cards silently lost its
+// velocity component (and /admin/rising said "warming up — 0 days"), and the
+// /movers "Most searched this week" strip vanished. computeRiseInputs
+// (lib/rise-predictor.ts) and computeTopDemand (lib/demand.ts) now let the
+// error reject their cache callback and catch OUTSIDE it;
+// tests/demand-snapshot-errors.test.ts pins both. The one reader with a caller
+// that only DISPLAYS demand (the /admin/demand leaderboard, uncached) keeps a
+// guarded form, getDemandWindow.
 
 // Calendar day (date-only) in Australia/Sydney — same bucketing as PriceHistory.
 function sydneyDay(d = new Date()): Date {
@@ -46,44 +56,41 @@ export interface DemandVelocity {
   points: number; // snapshots available for this card
 }
 
-// Per-card demand velocity from the last `days` of snapshots. Guarded → empty Map
-// (and the predictor treats every card's velocity as absent) if the table doesn't
-// exist yet or nothing has accrued. A card needs ≥2 snapshots spanning ≥1 day.
-export async function getDemandVelocity(cardIds: string[], days = 21): Promise<Map<string, DemandVelocity>> {
+// Per-card demand velocity from the last `days` of snapshots. A card needs ≥2
+// snapshots spanning ≥1 day. `spanDays` is the span the card actually has, up
+// to `days` — quote it with any growth figure rather than assuming the window.
+// Throws on a failed read (see the header).
+export async function getDemandVelocityOrThrow(cardIds: string[], days = 21): Promise<Map<string, DemandVelocity>> {
   const out = new Map<string, DemandVelocity>();
   if (!cardIds.length) return out;
-  try {
-    const cutoff = sydneyDay(new Date(Date.now() - days * 86400_000));
-    const rows = await prisma.demandSnapshot.findMany({
-      where: { cardId: { in: cardIds }, day: { gte: cutoff } },
-      orderBy: { day: "asc" },
-      select: { cardId: true, day: true, searchCount: true, viewCount: true },
+  const cutoff = sydneyDay(new Date(Date.now() - days * 86400_000));
+  const rows = await prisma.demandSnapshot.findMany({
+    where: { cardId: { in: cardIds }, day: { gte: cutoff } },
+    orderBy: { day: "asc" },
+    select: { cardId: true, day: true, searchCount: true, viewCount: true },
+  });
+  const byCard = new Map<string, { t: number; s: number; v: number }[]>();
+  for (const r of rows) {
+    (byCard.get(r.cardId) ?? byCard.set(r.cardId, []).get(r.cardId)!).push({
+      t: r.day.getTime(),
+      s: r.searchCount,
+      v: r.viewCount,
     });
-    const byCard = new Map<string, { t: number; s: number; v: number }[]>();
-    for (const r of rows) {
-      (byCard.get(r.cardId) ?? byCard.set(r.cardId, []).get(r.cardId)!).push({
-        t: r.day.getTime(),
-        s: r.searchCount,
-        v: r.viewCount,
-      });
-    }
-    for (const [cardId, pts] of byCard) {
-      if (pts.length < 2) continue;
-      const first = pts[0];
-      const last = pts[pts.length - 1];
-      const spanDays = (last.t - first.t) / 86400_000;
-      if (spanDays < 1) continue;
-      const searchGrowthPct = first.s > 0 ? Math.round(((last.s - first.s) / first.s) * 1000) / 10 : null;
-      out.set(cardId, {
-        searchPerDay: Math.round(((last.s - first.s) / spanDays) * 100) / 100,
-        viewPerDay: Math.round(((last.v - first.v) / spanDays) * 100) / 100,
-        searchGrowthPct,
-        spanDays: Math.round(spanDays),
-        points: pts.length,
-      });
-    }
-  } catch (e) {
-    console.warn("getDemandVelocity skipped:", (e as Error).message);
+  }
+  for (const [cardId, pts] of byCard) {
+    if (pts.length < 2) continue;
+    const first = pts[0];
+    const last = pts[pts.length - 1];
+    const spanDays = (last.t - first.t) / 86400_000;
+    if (spanDays < 1) continue;
+    const searchGrowthPct = first.s > 0 ? Math.round(((last.s - first.s) / first.s) * 1000) / 10 : null;
+    out.set(cardId, {
+      searchPerDay: Math.round(((last.s - first.s) / spanDays) * 100) / 100,
+      viewPerDay: Math.round(((last.v - first.v) / spanDays) * 100) / 100,
+      searchGrowthPct,
+      spanDays: Math.round(spanDays),
+      points: pts.length,
+    });
   }
   return out;
 }
@@ -115,60 +122,68 @@ export interface DemandWindowResult {
 // so diffing EVERY card costs a few hundred KB and avoids the trap of ranking a
 // window by cumulative totals (a card huge all-time but flat this week would
 // otherwise crowd out a genuinely spiking one).
-export async function getDemandWindow(days: number): Promise<DemandWindowResult> {
+//
+// Throws on a failed read; getDemandWindow below is the guarded form (the
+// admin leaderboard uses it).
+export async function getDemandWindowOrThrow(days: number): Promise<DemandWindowResult> {
   const empty: DemandWindowResult = { rows: [], baselineDay: null, coveredDays: null, totalDays: 0 };
+  const totalDays = await demandSnapshotDaysOrThrow();
+  if (totalDays === 0) return empty;
+
+  // The most recent snapshot at or before the window's start. Snapshots are
+  // daily, so a 24h window resolves to "since yesterday's snapshot" — daily is
+  // the finest resolution this data supports, by construction.
+  const cutoff = sydneyDay(new Date(Date.now() - days * 86400_000));
+  const baseline = await prisma.demandSnapshot.findFirst({
+    where: { day: { lte: cutoff } },
+    orderBy: { day: "desc" },
+    select: { day: true },
+  });
+  // No snapshot that old — the requested window predates our history entirely.
+  if (!baseline) return { ...empty, totalDays };
+
+  const [baseRows, live] = await Promise.all([
+    prisma.demandSnapshot.findMany({
+      where: { day: baseline.day },
+      select: { cardId: true, searchCount: true, viewCount: true },
+    }),
+    prisma.card.findMany({
+      where: { OR: [{ searchCount: { gt: 0 } }, { viewCount: { gt: 0 } }] },
+      select: { id: true, searchCount: true, viewCount: true },
+    }),
+  ]);
+
+  const base = new Map(baseRows.map((r) => [r.cardId, r]));
+  const rows: DemandWindowRow[] = [];
+  for (const c of live) {
+    const b = base.get(c.id);
+    // A card with no baseline row is NEW since the window opened, so all of its
+    // current total accrued inside the window. Math.max guards the theoretical
+    // case of a counter being reset backwards.
+    const searches = Math.max(0, c.searchCount - (b?.searchCount ?? 0));
+    const views = Math.max(0, c.viewCount - (b?.viewCount ?? 0));
+    if (searches > 0 || views > 0) rows.push({ cardId: c.id, searches, views });
+  }
+
+  const coveredDays = Math.max(
+    0,
+    Math.round((Date.now() - baseline.day.getTime()) / 86400_000)
+  );
+  return { rows, baselineDay: baseline.day, coveredDays, totalDays };
+}
+
+/** Guarded getDemandWindowOrThrow: an empty window on error. Never call it inside a cache callback. */
+export async function getDemandWindow(days: number): Promise<DemandWindowResult> {
   try {
-    const totalDays = await demandSnapshotDays();
-    if (totalDays === 0) return empty;
-
-    // The most recent snapshot at or before the window's start. Snapshots are
-    // daily, so a 24h window resolves to "since yesterday's snapshot" — daily is
-    // the finest resolution this data supports, by construction.
-    const cutoff = sydneyDay(new Date(Date.now() - days * 86400_000));
-    const baseline = await prisma.demandSnapshot.findFirst({
-      where: { day: { lte: cutoff } },
-      orderBy: { day: "desc" },
-      select: { day: true },
-    });
-    // No snapshot that old — the requested window predates our history entirely.
-    if (!baseline) return { ...empty, totalDays };
-
-    const [baseRows, live] = await Promise.all([
-      prisma.demandSnapshot.findMany({
-        where: { day: baseline.day },
-        select: { cardId: true, searchCount: true, viewCount: true },
-      }),
-      prisma.card.findMany({
-        where: { OR: [{ searchCount: { gt: 0 } }, { viewCount: { gt: 0 } }] },
-        select: { id: true, searchCount: true, viewCount: true },
-      }),
-    ]);
-
-    const base = new Map(baseRows.map((r) => [r.cardId, r]));
-    const rows: DemandWindowRow[] = [];
-    for (const c of live) {
-      const b = base.get(c.id);
-      // A card with no baseline row is NEW since the window opened, so all of its
-      // current total accrued inside the window. Math.max guards the theoretical
-      // case of a counter being reset backwards.
-      const searches = Math.max(0, c.searchCount - (b?.searchCount ?? 0));
-      const views = Math.max(0, c.viewCount - (b?.viewCount ?? 0));
-      if (searches > 0 || views > 0) rows.push({ cardId: c.id, searches, views });
-    }
-
-    const coveredDays = Math.max(
-      0,
-      Math.round((Date.now() - baseline.day.getTime()) / 86400_000)
-    );
-    return { rows, baselineDay: baseline.day, coveredDays, totalDays };
+    return await getDemandWindowOrThrow(days);
   } catch (e) {
     console.warn("getDemandWindow skipped:", (e as Error).message);
-    return empty;
+    return { rows: [], baselineDay: null, coveredDays: null, totalDays: 0 };
   }
 }
 
 // How many distinct snapshot days exist at all (drives the "velocity active" status
-// in the admin tool). 0 until the table ships / accrues. Guarded.
+// in the admin tool). Throws on a failed read (see the header).
 //
 // COUNT(DISTINCT day) IS DELIBERATE — THIS FUNCTION RETURNS ONE INTEGER AND MUST
 // COST ONE INTEGER.
@@ -190,7 +205,7 @@ export async function getDemandWindow(days: number): Promise<DemandWindowResult>
 // importer writes one row per card per day forever, so the same call costs
 // ~4.7 MB after a month and keeps climbing.
 //
-// getRisingCards() awaits this on every miss, and that runs behind /tools/rising
+// Rising Cards (computeRiseInputs) awaits this on every miss, and that runs behind /tools/rising
 // (force-dynamic), /admin/rising and getTopDeals() — i.e. the homepage and every
 // region home.
 //
@@ -200,13 +215,10 @@ export async function getDemandWindow(days: number): Promise<DemandWindowResult>
 // this one does the same with COUNT(DISTINCT). If you need "the days themselves"
 // rather than how many, write GROUP BY day — never client-side distinct over a
 // table that grows daily.
-export async function demandSnapshotDays(): Promise<number> {
-  try {
-    const [row] = await prisma.$queryRaw<{ days: bigint }[]>`
-      SELECT COUNT(DISTINCT day) AS days FROM "DemandSnapshot"
-    `;
-    return Number(row?.days ?? 0);
-  } catch {
-    return 0;
-  }
+export async function demandSnapshotDaysOrThrow(): Promise<number> {
+  const [row] = await prisma.$queryRaw<{ days: bigint }[]>`
+    SELECT COUNT(DISTINCT day) AS days FROM "DemandSnapshot"
+  `;
+  return Number(row?.days ?? 0);
 }
+

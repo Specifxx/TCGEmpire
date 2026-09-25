@@ -11,13 +11,14 @@ import {
   sydneyWeekKey,
   collapseToWeekly,
   dropBreakWindow,
+  currentBasisStart,
   globalLowUsd,
   type PricePoint,
 } from "./price-history";
 import { CONTENT_TAG, HISTORY_TAG } from "./revalidate-content";
 import { usdCentsToCountry } from "./fx";
 import { cardDisplayName } from "./card-name";
-import { getDemandVelocity, demandSnapshotDays, type DemandVelocity } from "./demand-snapshot";
+import { getDemandVelocityOrThrow, demandSnapshotDaysOrThrow, type DemandVelocity } from "./demand-snapshot";
 import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats";
 
 // ── Rise predictor ────────────────────────────────────────────────────────────
@@ -40,12 +41,20 @@ import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats
 //
 // ── THE EGRESS SHAPE (2026-09-25) ────────────────────────────────────────────
 // Two self-caching loaders and an UNCACHED assembly:
-//   • getRiseHistory() — week-keyed, HISTORY_TAG, scope-independent. The GLOBAL
-//     weekly series for the HISTORY_SCAN most-searched priced cards, collapsed
-//     to one point per week before it is cached. PriceHistory only changes
-//     weekly and every market reads the same GLOBAL series, so this is read
-//     about once a week instead of once per scope per import purge (7 scopes ×
-//     ~3 purges a day re-read the same ~37k rows before).
+//   • getRiseHistory() — week-keyed, HISTORY_TAG, scope-independent. EVERY
+//     card's GLOBAL series since riseHistoryStart() (the current pricing basis,
+//     floored at HISTORY_DAYS), collapsed to one point per week before it is
+//     cached. No card list, so it is a superset of every scope's universe by
+//     construction: a card missing from it has no history in the window, never
+//     "history we did not load" (the first cut read only the 600 most-searched
+//     cards, and a thinner market's top 400 reaches further down the search
+//     order than that). Starting at the basis costs nothing the assembly would
+//     keep — dropBreakWindow discards every older point once today's live
+//     price is appended — and keeps the read small: ~1,400 cards × at most
+//     ~18 weekly points, about a week apart. PriceHistory only changes weekly
+//     and every market reads the same GLOBAL series, so this is read about
+//     once a week instead of once per scope per import purge (7 scopes × ~3
+//     purges a day re-read the same ~37k rows before).
 //   • getRiseInputs(scope) — day-keyed, CONTENT_TAG: the cheap operational
 //     inputs that do change daily (the scope's universe and live prices, supply,
 //     demand velocity).
@@ -56,7 +65,11 @@ import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats
 //     self-cached for exactly that reason.
 // Errors are thrown INSIDE the loaders, so unstable_cache never stores a
 // failure, and caught OUTSIDE them here, with a short per-instance memo so an
-// outage cannot turn every request into a retry against the database.
+// outage cannot turn every request into a retry against the database. That
+// includes the demand-snapshot reads (the *OrThrow readers): the guarded forms
+// they replaced returned an empty Map / 0 on error, which the day-keyed cache
+// then kept — velocity silently out of the ranking, and the admin page
+// reporting "warming up", until the next purge.
 
 // Scope: a single market, or GLOBAL. Demand (search/view) is market-agnostic; so
 // is price history (every market reads the one GLOBAL series). A single-market
@@ -82,8 +95,15 @@ export function parseRiseScope(value: string | null | undefined, fallback: RiseS
 }
 
 const SCAN = 400; // universe per scope: most-searched cards priced in it
-const HISTORY_SCAN = 600; // scope-independent history universe (covers every scope's top 400 in practice)
 const HISTORY_DAYS = 120;
+// Circuit breaker on the weekly history read, not a real limit: ~1,400 cards ×
+// at most ~18 weekly points is ~25k rows. Newest-first, so if it ever bites it
+// trims the OLDEST weeks rather than the ones the assembly compares.
+const HISTORY_ROW_CAP = 60_000;
+// A search-growth percentage over fewer days of demand snapshots is noise on a
+// small base (a card first snapshotted two days ago can read "+300%"), so the
+// growth figure is only quoted once its span reaches this.
+const GROWTH_MIN_DAYS = 7;
 const SPARK_DAYS = 16 * 7; // the "16 wk" sparkline
 const MIN_POINTS = 5; // clean weekly points (live price included) needed to trust the price-timing signals
 const BACKTEST_LAG_DAYS = 14;
@@ -131,7 +151,10 @@ export interface RisePick {
   volatilityPct: number;
   listings: number; // in-stock store listings (scope market, or every market for GLOBAL); reference rows excluded
   searchPerDay: number | null;
+  /** Growth of all-time searches over `searchGrowthDays`; null below GROWTH_MIN_DAYS of snapshots. */
   searchGrowthPct: number | null;
+  /** The real span behind searchGrowthPct, in days — what "in N weeks/days" says. */
+  searchGrowthDays: number | null;
   historyPoints: number;
   spark: number[]; // clean weekly series + today, last 16 weeks, in `currency`
   reason: string; // one plain-English line: why this card ranks where it does
@@ -284,35 +307,42 @@ export function getRiseHistory(): Promise<RiseHistory> {
   });
 }
 
+// The first day the weekly history load reads: the start of the current pricing
+// basis (lib/methodology-breaks.ts currentBasisStart), floored at HISTORY_DAYS
+// back. Every older point would be discarded by dropBreakWindow in the assembly
+// anyway — today's live price, always on the current basis, is appended before
+// the drop — so reading it would be pure egress. Exported for tests.
+export function riseHistoryStart(now: number): Date {
+  const floor = now - HISTORY_DAYS * DAY_MS;
+  const basis = currentBasisStart(now);
+  return new Date(basis != null && basis > floor ? basis : floor);
+}
+
 async function computeRiseHistory(): Promise<RiseHistory> {
   // No try/catch: a failure must reach getCachedRisingCards, not be cached.
-  const top = await prisma.card.findMany({
-    where: { searchCount: { gt: 0 }, ...pricedIn("GLOBAL") },
-    orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
-    take: HISTORY_SCAN,
-    select: { id: true },
-  });
-  const ids = top.map((c) => c.id);
-  const series: RiseHistory["series"] = {};
-  const history: RiseHistory = { series };
-  if (!ids.length) return history;
-
-  // PriceHistory lives in the split-off history database (lib/db-history.ts).
-  // Every scope reads this one GLOBAL series (historySource() maps every market
-  // to it), converted per scope at assembly time.
-  const cutoff = new Date(Date.now() - HISTORY_DAYS * DAY_MS);
+  //
+  // EVERY card's GLOBAL series in the window — no card list, deliberately (see
+  // the header): a superset of every scope's universe by construction. Served
+  // by the (country, day) index. PriceHistory lives in the split-off history
+  // database (lib/db-history.ts); every scope reads this one GLOBAL series
+  // (historySource() maps every market to it), converted at assembly time.
   const rows = await dbHistory.priceHistory.findMany({
-    where: { cardId: { in: ids }, day: { gte: cutoff }, country: GLOBAL_HISTORY_COUNTRY },
-    orderBy: { day: "asc" },
+    where: { country: GLOBAL_HISTORY_COUNTRY, day: { gte: riseHistoryStart(Date.now()) } },
+    orderBy: { day: "desc" },
+    take: HISTORY_ROW_CAP,
     select: { cardId: true, day: true, lowestPriceCents: true },
   });
+  const series: RiseHistory["series"] = {};
+  const history: RiseHistory = { series };
   const byCard = new Map<string, { day: Date; lowestPriceCents: number }[]>();
   for (const r of rows) (byCard.get(r.cardId) ?? byCard.set(r.cardId, []).get(r.cardId)!).push(r);
 
-  // One point per week BEFORE caching: the GLOBAL series still carries legacy
-  // daily rows from before 2026-08-31, which both bloated this entry and made
-  // the old "30d" sparkline mostly August. Stored as [epochDay, cents] to keep
-  // the entry small (~600 cards × ≤18 points).
+  // One point per week BEFORE caching (collapseToWeekly also restores oldest-
+  // first order): legacy daily rows from before 2026-08-31 still sit in the
+  // GLOBAL series whenever the window reaches back that far, and made the old
+  // "30d" sparkline mostly August. Stored as [epochDay, cents] to keep the
+  // entry small (~1,400 cards × ≤18 points ≈ 350 KB, well inside the ~1.2 MB
+  // unstable_cache budget in lib/db.ts).
   for (const [cardId, list] of byCard) {
     series[cardId] = collapseToWeekly(list).map((r) => [Math.round(r.day.getTime() / DAY_MS), r.lowestPriceCents]);
   }
@@ -382,8 +412,10 @@ async function computeRiseInputs(scope: RiseScope): Promise<RiseInputs> {
       },
       _count: { _all: true },
     }),
-    getDemandVelocity(ids),
-    demandSnapshotDays(),
+    // The *OrThrow variants: a failed read must reject this cache callback,
+    // not be stored for the day as "no velocity" (see the header).
+    getDemandVelocityOrThrow(ids),
+    demandSnapshotDaysOrThrow(),
   ]);
   const inputs: RiseInputs = {
     universe,
@@ -536,7 +568,11 @@ export function assembleRisingCards(scope: RiseScope, inputs: RiseInputs, histor
       volatilityPct: r.volatilityPct,
       listings: r.listings,
       searchPerDay: r.velocity?.searchPerDay ?? null,
-      searchGrowthPct: r.velocity?.searchGrowthPct ?? null,
+      // Growth is quoted with its real span, and only once that span means
+      // something — getDemandVelocityOrThrow measures over whatever snapshots a card
+      // has, up to 21 days, not a fixed three weeks.
+      searchGrowthPct: r.velocity && r.velocity.spanDays >= GROWTH_MIN_DAYS ? r.velocity.searchGrowthPct : null,
+      searchGrowthDays: r.velocity && r.velocity.spanDays >= GROWTH_MIN_DAYS ? r.velocity.spanDays : null,
       historyPoints: pts,
       // GLOBAL's series is raw USD — convert to bm's currency so the sparkline
       // matches priceCents/currency. Last 16 weeks only, spaced as recorded.
@@ -574,10 +610,17 @@ export function assembleRisingCards(scope: RiseScope, inputs: RiseInputs, histor
 
 // One plain line per pick, built only from fields on the row — the page shows
 // it under the card name in place of the old unlabelled z-score bars.
+//
+// Without price signals the line says only what is true in every case: too few
+// weekly prices to judge its range. It used to say "Price history rebuilding",
+// which is right for a card re-accruing points after the 09-23 break but false
+// for a card with no recorded history at all (new, or never priced in the four
+// GLOBAL markets) — and was once printed for cards whose history simply had
+// not been loaded.
 export function riseReason(p: RisePick, scope: RiseScope): string {
   const parts: string[] = [];
   if (!p.priceSignals) {
-    parts.push("Price history rebuilding, ranked on demand and supply");
+    parts.push("Not enough weekly prices yet to judge its range, ranked on demand and supply");
   } else if (p.posPct <= 0.25) {
     parts.push(`Near the low of its ${p.rangeWeeks}-week range`);
   } else if (p.posPct >= 0.75) {
@@ -586,14 +629,27 @@ export function riseReason(p: RisePick, scope: RiseScope): string {
     parts.push(`Mid-range over ${p.rangeWeeks} weeks`);
   }
   if (p.overheated && p.vsLastWeekPct != null) parts.push(`already up ${Math.round(p.vsLastWeekPct)}% on last week`);
-  if (p.searchGrowthPct != null && p.searchGrowthPct >= 5) parts.push(`searches +${Math.round(p.searchGrowthPct)}% in 3 weeks`);
-  else if (p.searchPerDay != null && p.searchPerDay >= 1) parts.push(`${formatRate(p.searchPerDay)} searches a day`);
-  else parts.push(`${p.searchCount.toLocaleString("en-US")} searches all-time`);
+  if (p.searchGrowthPct != null && p.searchGrowthDays != null && p.searchGrowthPct >= 5) {
+    parts.push(`searches +${Math.round(p.searchGrowthPct)}% in ${growthSpanLabel(p.searchGrowthDays)}`);
+  } else if (p.searchPerDay != null && p.searchPerDay >= 1) {
+    parts.push(`${formatRate(p.searchPerDay)} searches a day`);
+  } else {
+    parts.push(`${p.searchCount.toLocaleString("en-US")} searches all-time`);
+  }
   const where = scope === "GLOBAL" ? "" : ` in ${scope}`;
   if (p.listings === 0) parts.push(`no store has it in stock${where}`);
   else parts.push(`${p.listings} ${p.listings === 1 ? "store" : "stores"} in stock${where}`);
   const line = parts.join(" · ");
   return line.charAt(0).toUpperCase() + line.slice(1);
+}
+
+/** "3 weeks", "1 week", "9 days" — the real span behind a search-growth figure. */
+export function growthSpanLabel(days: number, short = false): string {
+  if (days >= 7 && days % 7 === 0) {
+    const w = days / 7;
+    return short ? `${w} wk` : `${w} ${w === 1 ? "week" : "weeks"}`;
+  }
+  return short ? `${days} d` : `${days} ${days === 1 ? "day" : "days"}`;
 }
 
 function formatRate(n: number): string {
