@@ -454,6 +454,21 @@ export function isPreorderSetCode(code: string | null | undefined, now: Date = n
   return Number.isNaN(released) || released > now.getTime();
 }
 
+/**
+ * Does /sets/<slug> have something worth linking to? Every released set does; a
+ * comingSoon set only once it carries `hubReady` (a real content hub, indexable
+ * with zero cards — see the flag's own comment).
+ *
+ * The card page used `!comingSoon` for this, which predates hubReady: every
+ * revealed Radiance card linked its breadcrumb, "View all" and gallery link to
+ * /browse, and dropped the set crumb from its BreadcrumbList, while
+ * /sets/radiance was an indexable hub owning "riftbound radiance card list".
+ * A future set with no hub yet still falls back, as before.
+ */
+export function hasSetHub(s: SetInfo): boolean {
+  return !s.comingSoon || !!s.hubReady;
+}
+
 export interface RarityInfo {
   key: string;
   label: string;
