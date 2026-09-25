@@ -12633,3 +12633,156 @@ Separately, `/api/trade-roast` accepted only `["AUD","NZD","USD","GBP"]`. A CA, 
 
 - A signed-interaction unit test of the route itself. The repo has no route-level harness, route.ts can't export helpers, and /movers needs `getPriceMovers` (database). The test pins the footer template at source level and asserts that `COUNTRIES[DEFAULT_COUNTRY].label + " market"` is "United States market".
 - The `bot` OAuth scope. The registration script's header mentions it as optional, but it is not needed for HTTP interactions and would ask server admins for more than the bot uses.
+
+## Postage is measured from each store's checkout, not guessed — 2026-09-25
+
+**Why.** Malik, in Adelaide, used Best Basket. It showed "+ $2.00 post" for a store, and the store's checkout charged $20. He guessed the reason was that he isn't in Sydney or Melbourne. The $2 was a hand-typed guess in retailers.ts, like all 171 postage figures.
+
+On 2026-09-25 `scripts/probe-shipping-rates.ts` asked every store's own Shopify checkout for rates:
+- **Carts:** 1 card, 10 cards, and few-card carts at about 20, 50, 100 and 150 in the market currency.
+- **Addresses:** all 8 AU capitals, 4 cities each in the US, UK and CA, 4 eurozone countries, and Singapore.
+
+Findings, market by market:
+- **Obsession Gaming.** The most likely store: "Standard" $20.00 is its only rate, from a $0.10 card to 15 cards at $150.03, to every capital, never free. Its guess was $2.00 and "free over $50".
+- **AU zone pricing.** No AU store charges by state. All 27 measured stores quoted all eight capitals identically, so Adelaide was not the cause.
+- **AU guesses.**
+  - The one-card guess was too low at 25 of 27 stores (median real rate $8.00).
+  - Not one guessed free-over threshold was right. Only Ozzie ($100.98) and Spindown ($133.25) go free within about $150.
+  - 17 stores carried the same "est. $2.00 · free over $50" boilerplate.
+- **US.**
+  - The median one-card rate is $6.29 against a $2.50 guess.
+  - About 22 guessed free-over-$35–60 thresholds are not honoured at $150.
+  - 5 "US" stores are Canadian, and cgrealm does not ship to the US.
+  - larrysgamestore is pickup-only.
+- **UK.**
+  - 15 stores used the "est. £1.50 · free over £30" placeholder.
+  - 13 of 21 cost at least £3.20 for one card.
+  - evolutiontcg is collection-only.
+- **CA.**
+  - 50 of 54 stores were guessed at C$2.99, free over C$75.
+  - 31 of 52 price by zone. West-coast Expedited Parcel runs C$14–29.
+  - 39 showed no free shipping up to about C$150.
+- **EU.**
+  - The €4.95 placeholder is a domestic number. Cross-border rates are €14–18.
+  - Three stores post only to their home country.
+  - No store offers a letter.
+- **SG.** Every store that ships costs more than its guess. Free postage at GOAT (S$80) and TEFUDA (S$30) is a checkout discount that `/cart/shipping_rates.json` cannot see.
+
+**What.**
+- `scripts/build-shipping-rates.ts` condenses the raw probe files into `src/lib/shipping-rates.json`:
+  - About 71 KB, one store per line, byte-identical on a rebuild.
+  - Per store, the carts measured ([subtotal, cards]).
+  - Per group of addresses quoted identically, and for each cart: the cheapest non-letter rate and the cheapest untracked letter, with the store's own names.
+  - Pickup is dropped, and rates in another currency are dropped, never converted.
+  - The raw files are not committed; the workflow's artifact holds them.
+- `SHIPPING_OVERRIDES` (lib/shipping-snapshot.ts) holds what the endpoint cannot see, each with its evidence:
+  - Stores that do not post, with the reason.
+  - Checkout-only stores, which stay on the estimate.
+  - Hand-checked minimum orders.
+  - Storefront-API free-shipping discounts.
+  - Roll n Play's threshold, taken from the first UK run.
+- `lib/shipping.ts` `shippingFor(store, {subtotalCents, items}, {region, trackedOnly})` errs dearer everywhere:
+  - **Letters.** An untracked letter applies only to orders no bigger than one it was seen on, in both value and card count.
+  - **Between measured carts.** The price is the dearest of three: the nearest cart with at least as many cards, the nearest with at least as much value, and every smaller cart.
+  - **Free postage.** It needs a measured threshold: a paid cart, then a free cart with no more cards, with everything above free. It applies from the first free cart (Ozzie $100.98, not "about $100"). Maine Phase's "Standard" is $0 for 1–3 cards only, so it does not count.
+  - **Region unknown.** The highest regional rate is used, and the quote says "up to" when regions differ.
+  - **Unmeasured stores.** They fall back to the retailers.ts flat guess, labelled "est.". The guessed free-over threshold is never applied, because no AU guess survived measurement.
+- Best Basket and portfolio replacement cost use the model through `basketStoresFor()`:
+  - The optimiser prices each store's order by subtotal and card count.
+  - It adds a move that empties a whole store. Moving one card at a time cannot save a store's postage until its last card goes.
+  - Stores that do not post to the buyer are left out and listed.
+  - A minimum order is counted as extra spend in the total.
+- UI:
+  - A region picker, remembered in localStorage and shared with the portfolio panel.
+  - A "Tracked postage only" toggle, off by default because letters are already limited to measured order sizes.
+  - Each store line shows the store's rate name, "untracked letter $X also offered", or "est.".
+  - The footer gives the measured date and says the store's checkout is final.
+  - For AU the picker says every store charges all eight capitals the same.
+- Store pages and /stores/tracked show the measured rates and date, the letter's limits, the free threshold or none, regional differences and where the store does not post. retailers.ts `shippingFlatCents`/`freeOverCents`/`shippingNote` are documented as the estimate fallback only.
+- Classifier: an express letter (Express Post envelope), Signed For, Special Delivery and Smartpac count as tracked.
+- `.github/workflows/shipping-rates.yml` runs one market per job, or all, two at a time:
+  - It is dispatch-only. Shopify's default robots.txt disallows /cart, and the probe is a one-off measurement, not a crawl.
+  - It probes and rebuilds against the checked-in snapshot.
+  - It writes store-by-store changes to the run summary and uploads the raw JSON plus a rebuilt snapshot.
+  - It never commits and never touches the database.
+
+**Left out.**
+- `/cart/shipping_rates.json` cannot see free shipping applied as a checkout discount. Only the two SG stores were checked through the Storefront API, so a discount-based "free over $X" elsewhere reads as "never free". That errs dearer.
+- Timetwister's sub-€5 small-order fee is not modelled.
+- Card-page rows still show store postage as "at checkout".
+- Data fixes are left for their own entries:
+  - chonkycollectibles is a Toronto store filed as SG.
+  - The 5 Canadian stores sit in the US market.
+  - The larrysgamestore and evolutiontcg listings are still imported.
+  - Final Boss's configured handle returns 0 products.
+
+## Postage review: letters get a floor, estimates a floor, US buyers first — 2026-09-25
+
+**Why.** A review of the measured-postage model (088ed353) found 13 places where it still showed less than a checkout would charge, or claimed more than it knew. The owner also asked for US buyers, the biggest market, to be catered for first-class.
+
+**What changed in the model (lib/shipping.ts):**
+- **Letters.** A letter also has a floor when a smaller cart was quoted postage without it. Mecha Games' C$0.50 cart was quoted C$3.49; it now pays the C$19.99 it was charged.
+- **Pricing between carts.** Only the biggest carts the order contains count, and a smaller cart the order contains is never used as the count or value comparison. As a result, all 4,060 measured points quote exactly the measured rate, apart from the goattcg and tefuda checkout discounts. The review's own fix for this still left Danireon at US$15.59 against a measured US$12.52.
+- **$0 carts.** A $0 cart counts only for orders with at least as many cards and no more value (Maine Phase).
+- **Beyond the largest measured order.** Postage is at least the largest cart's figure and shows as "from". Where postage was already rising with card count, the optimiser also counts the observed step. Reported totals use the quoted figure.
+- **Unmeasured stores.** They are charged max(guess, the market's highest measured one-card tracked rate), excluding stores that post from another country. The guesses ran low at 25 of 27 AU and 35 of 39 US stores.
+- **Tracked only.** An untracked-only store is left out, with its reason.
+- **Free-postage hint.** It includes a letter's free threshold.
+- **Errored zones.** A zone where every quote errored counts as unmeasured, not "does not post".
+- **Unknown region.** A region with no rate is reported separately and is no longer folded into "up to".
+
+**US first:**
+- Census regions, each named with the city measured ("Northeast (measured to New York)").
+- An "Elsewhere … — not measured" option in the US, CA and EU.
+- Region preselected from x-vercel-ip-country / x-vercel-ip-country-region; the buyer's own pick is remembered and wins.
+- USPS's hyphenated "First-Class Mail" is read as an untracked letter.
+- The four Canadian stores listed in the US market carry an import-charges note.
+
+**Builder and workflow:**
+- The builder replaces a whole market only on a full run. A partial run is dated by the market's oldest store.
+- shipping-rates.yml now also runs monthly (17 3 2 * *) for every market. It still never commits. Its summary flags stores that newly don't post and one-card moves over 50%.
+
+**Not done:**
+- Postage still doesn't always rise with card count: Always Games at $75 quotes C$23.11 for 4 cards but C$20.00 for 5. It never goes below a cart the order contains.
+- US regions are priced to one city each, so Grognard's New York gap excludes it for the whole Northeast.
+
+Ships at the next scheduled release (no [deploy] marker on purpose).
+
+## US postage: in-between states priced at the dearer city, remote regions are a floor, and the US gaps post nowhere — 2026-09-25
+
+The first geo preselection put every Census-South state on Dallas. DC, Maryland and Delaware were quoted Dallas prices although New York is the nearby measured address: One Stop TCG ($55, 1 card) $11.25 against the $14.55 its checkout charges New York. That is the Malik direction. US carriers price by distance from wherever the store posts from, so a state between two measured cities is now priced at the DEARER of them. US regions:
+- Northeast: New York
+- South Atlantic: the dearer of New York and Dallas
+- Midwest (IL IN MI OH WI): Chicago
+- Plains (IA KS MN MO NE ND SD): the dearer of Chicago and Dallas
+- South (AL KY MS TN AR LA OK TX): Dallas
+- California: San Francisco
+- Mountain & Northwest: the dearer of San Francisco and Dallas
+
+A state about one zone from its city stays on it (Ohio or Alabama from a West-coast store). Pricing it at the city on the other side would overcharge the much bigger population next to the measured address. `tests/shipping-us.test.ts` checks every lower-48 state against every measured US store and cart.
+
+"Elsewhere" in the US and Canada (Alaska, Hawaii, territories, the north) is REMOTE: the dearest measured rate is a floor there and reads "from". The EU's Elsewhere is not remote, because it can be cheaper. A free quote to an unmeasured region reads "est. free". A bigger-than-measured order with the region unknown reads "est.", not "from".
+
+Picker labels are names only. On a 360–390px phone the select clipped "Northeast (measured to New York)", and the "measured to" qualifier was the part lost. What the chosen region is priced to is shown under the picker.
+
+US gaps, 2026-09-25: none of the 4 stores the US run could not measure can post to a US buyer today.
+- cgrealm is Canada-only (Shopify zone CA).
+- larrysgamestore is pickup-only (per its site banner; its shipping policy still describes shipping).
+- atomilicollectables has no shipping zone at all.
+- punkouter quoted nothing, even in its own checkout ("Shipping not available").
+All four are no-post, not "checkout-only".
+
+No US store applies an automatic shipping discount (Storefront API, ~$50 and ~$150 carts). For the four Canadian stores listed as US, checkout rounds US postage up (Shopify Markets rounding, up to +US$0.98) beyond what shipping_rates.json reports. This is now the `checkoutRounding` override: whole dollar for danireon, npcollectibles and hobbiesville; next x.50 for mythicstore. Three of those stores leave import duty to the buyer. `rateService` records tracking that a rate's own description or the store's policy settles: mythicstore's "Canada Post Standard" is an untracked envelope ("No tracking"); onestoptcg's "Standard" is tracked. knightandday is free from $75 (its banner), not $80.50.
+
+The builder's `--add-carts` merges a threshold re-probe's carts into the full run's. Without it, the later input replaces the store, which is right for a re-run that corrects a bad one.
+
+## Monthly postage re-measure; auto-renew stays on; renewal reminder held — 2026-09-25
+
+**Monthly probe (owner's choice).** Asked whether to refresh measured postage, the owner chose "automatic monthly". `shipping-rates.yml` now also runs on the 2nd of each month at 03:17 UTC. It uses the probe's politeness caps and never commits: it uploads the rebuilt snapshot and a before/after table flagging stores that newly don't post and one-card moves over 50%, for a person to check and commit. This supersedes the "dispatch-only" line in the first postage entry. Shopify's default robots.txt disallows `/cart` on almost every store. The owner accepted one low-volume monthly quote read per store, which is the same quote any shopper's cart sees; products.json reads still follow robots.txt as the importer does.
+
+**Auto-renew stays ON by default (owner, 2026-09-25).** Malik's other point was that he turns auto-renew off everywhere and renews when he needs to. The owner's answer: keep auto-renew as the default, with no "Turn off auto-renew" button, no welcome-page line and no FAQ entry. Those were built on `feedback/auto-renew` (3055b916) and are not merged. Switching off stays in the Stripe billing portal as before.
+
+**Renewal reminder: built, held.** The same branch has a reminder for paid subscriptions whose auto-renew is off, sent two days before the end with a one-click renew. It is held until it has been tested in Stripe test mode ("postage now, reminder later"). Before it merges, three review fixes are needed:
+- the cron guard fails closed;
+- the Keep button and the email quote one price, using one `renewalTerms()`;
+- the email's dates state UTC or the market's time zone.

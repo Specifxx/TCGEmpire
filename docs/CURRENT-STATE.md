@@ -264,6 +264,22 @@ longer lands on its entry.
   market when it was created) gets one "now in stock" email when the card
   lists, inside the weekly per-address cap and at most 40 new digests a run.
   [2026-09-25](../DECISIONS.md#L12574)
+- **Postage is measured, never guessed:** Best Basket, portfolio
+  replacement cost and store pages price delivery with `shippingFor()`
+  (lib/shipping.ts) from `src/lib/shipping-rates.json`, built by
+  `scripts/build-shipping-rates.ts` from the checkout probe (never edit it by
+  hand). A letter applies only within the value and card count it was seen
+  on; free postage only from a measured threshold; an unknown region is
+  priced at the highest regional rate, a US region between two measured
+  cities at the dearer, US/CA "Elsewhere" as a floor ("from"). An unmeasured
+  store is charged at least its market's highest measured one-card rate and
+  labelled "est.". `shipping-rates.yml` re-measures monthly and never
+  commits. [2026-09-25](../DECISIONS.md#L12637),
+  [2026-09-25](../DECISIONS.md#L12751), [2026-09-25](../DECISIONS.md#L12779)
+- **Auto-renew is on by default** with no in-site off button; switching off
+  stays in the Stripe portal. The paid-renewal reminder is built on
+  `feedback/auto-renew` and held for Stripe test-mode testing.
+  [2026-09-25](../DECISIONS.md#L12779)
 
 ## Removed, declined, kept
 
