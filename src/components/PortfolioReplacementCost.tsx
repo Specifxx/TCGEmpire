@@ -6,6 +6,9 @@ import { formatMoney } from "@/lib/format";
 import { trackEvent } from "@/lib/analytics";
 import type { BasketPlan, BasketPreview } from "@/lib/basket";
 import { PremiumButton } from "./PremiumButton";
+import { effectiveRegion, readPostagePrefs } from "@/lib/postage-prefs";
+import { freePrefix, joinList, planPostageNotes, postagePrefix } from "@/lib/postage-display";
+import { useCountry } from "./CountryProvider";
 
 // "What would it cost to buy this collection again?" — the delivered answer.
 //
@@ -32,24 +35,47 @@ interface Result extends BasketPreview {
   valuedCents: number;
   pricedHoldings: number;
   skippedHoldings: number;
+  shipping?: {
+    regionLabel: string | null; // "the Northeast", "elsewhere in the US"
+    regionUnmeasured?: boolean; // "Elsewhere": priced at the highest measured rate
+    trackedOnly: boolean;
+    measuredAt: string | null;
+    measuredTo?: string[];
+  };
 }
 
-export function PortfolioReplacementCost({ currency }: { currency: string }) {
+export function PortfolioReplacementCost({ currency, geoRegion = null }: { currency: string; geoRegion?: string | null }) {
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The region came from the visitor's location, not their own pick: say so
+  // where it is used. US state-level IP location is unreliable on mobile
+  // carriers and VPNs, and a wrong guess shows a lower regional figure.
+  const [guessed, setGuessed] = useState(false);
+  const { country } = useCountry();
 
   async function run() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/portfolio/replacement");
+      // Delivery is priced the way Best Basket prices it: each store's measured
+      // checkout rate, for the region the buyer picked there (remembered in
+      // this browser), else the one their location suggests; neither = each
+      // store's highest regional rate. The route drops a key not in the market.
+      const prefs = readPostagePrefs(country);
+      const region = effectiveRegion(prefs, geoRegion, () => true);
+      const q = new URLSearchParams();
+      const wasGuessed = !prefs.regionChosen && !!region;
+      if (region) q.set("region", region);
+      if (prefs.trackedOnly) q.set("tracked", "1");
+      const res = await fetch(`/api/portfolio/replacement${q.toString() ? `?${q}` : ""}`);
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         setError(data?.error ?? "Couldn't price your collection just now. Try again in a moment.");
         return;
       }
       setResult(data as Result);
+      setGuessed(wasGuessed);
       trackEvent("portfolio_replacement_priced", { holdings: (data as Result).pricedHoldings });
     } catch {
       setError("Couldn't reach the pricing service. Try again in a moment.");
@@ -97,7 +123,7 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
       {result && (
         <div className="mt-3 space-y-4">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Stat label="Cards" value={formatMoney(result.totalCents - result.shippingCents, currency)} />
+            <Stat label="Cards" value={formatMoney(result.totalCents - result.shippingCents - result.topUpCents, currency)} />
             <Stat label="Delivery" value={formatMoney(result.shippingCents, currency)} />
             <Stat label="Total delivered" value={formatMoney(result.totalCents, currency)} cls="text-gold" />
             <Stat
@@ -110,7 +136,16 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
           <p className="text-sm text-slate-400">
             Re-buying the {result.covered} cop{result.covered === 1 ? "y" : "ies"} in stock today would take{" "}
             <strong className="text-slate-200">{result.storeCount} store{result.storeCount === 1 ? "" : "s"}</strong> and{" "}
-            <strong className="text-slate-200">{formatMoney(result.shippingCents, currency)}</strong> of postage.
+            <strong className="text-slate-200">{formatMoney(result.shippingCents, currency)}</strong> of postage
+            {result.topUpCents > 0 && <> plus {formatMoney(result.topUpCents, currency)} to reach a store&apos;s minimum order</>}
+            {(() => {
+              // The same notes either way: Premium's from its plan, everyone
+              // else's from the route (store counts only, no store names).
+              const regionPicked = !!result.shipping?.regionLabel && !result.shipping?.regionUnmeasured;
+              const notes = plan ? planPostageNotes(plan, regionPicked, !!result.shipping?.regionUnmeasured) : (result.postageNotes ?? []);
+              return notes.length ? ` (${notes.join("; ")})` : "";
+            })()}
+            .
             {result.savedCents > 0 && (
               <>
                 {" "}
@@ -137,8 +172,15 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
                       <td className="py-1.5 font-semibold text-white">{s.name}</td>
                       <td className="py-1.5 text-right">{s.lines.reduce((n, l) => n + l.qty, 0)}</td>
                       <td className="py-1.5 text-right">{formatMoney(s.subtotalCents, currency)}</td>
-                      <td className="py-1.5 text-right">
-                        {s.freeShipping ? <span className="text-brand-400">Free</span> : formatMoney(s.shippingCents, currency)}
+                      <td className="py-1.5 text-right" title={s.postage?.label}>
+                        {s.freeShipping ? (
+                          <span className="text-brand-400">{s.postage?.unmeasuredRegion ? `${freePrefix(s.postage)}free` : "Free"}</span>
+                        ) : (
+                          <>
+                            {postagePrefix(s.postage)}
+                            {formatMoney(s.shippingCents, currency)}
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -174,11 +216,29 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
             <p>
               The split across stores is the best one the optimiser finds, not a proof of the cheapest possible — consolidating orders
               against free-shipping thresholds has no fast exact answer, so it lands close rather than provably first. Store listings
-              only: eBay is left out because its postage is quoted per listing and isn&apos;t comparable with a store&apos;s flat rate.
+              only: eBay is left out because its postage is quoted per listing and isn&apos;t comparable with a store&apos;s per-order rate.
+              Delivery is priced from the nearest order sizes each store&apos;s checkout quoted
+              {result.shipping?.measuredAt ? `, measured ${result.shipping.measuredAt}` : ""}
+              {result.shipping?.regionLabel && !result.shipping.regionUnmeasured
+                ? ` for delivery to ${result.shipping.regionLabel}${guessed ? " (guessed from your location — pick yours in Best Basket)" : ""}`
+                : ` — the highest rate we measured${result.shipping?.measuredTo?.length ? ` (to ${joinList(result.shipping.measuredTo)})` : ""}${
+                    result.shipping?.regionUnmeasured
+                      ? `, since we haven't measured delivery ${result.shipping.regionLabel}${guessed ? " (guessed from your location — pick yours in Best Basket)" : ""}`
+                      : " (pick your region in Best Basket)"
+                  }`}
+              ; &ldquo;est.&rdquo; means not measured (the store, or to your region), &ldquo;from&rdquo; means at least that
+              — an order bigger than any we measured, or a region further than any address we measured — and a store&apos;s
+              checkout is final.
+              {plan && plan.excludedStores.length > 0 && (
+                <>
+                  {" "}
+                  Left out: {plan.excludedStores.map((x) => `${x.name} (${x.reason})`).join("; ")}.
+                </>
+              )}
               {outOfStock > 0 && (
                 <>
                   {" "}
-                  {outOfStock} cop{outOfStock === 1 ? "y is" : "ies are"} not in stock at any tracked store right now and{" "}
+                  {outOfStock} cop{outOfStock === 1 ? "y is" : "ies are"} not in stock at any tracked store that posts to you right now and{" "}
                   {outOfStock === 1 ? "is" : "are"} left out of the total.
                 </>
               )}

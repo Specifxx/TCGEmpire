@@ -53,7 +53,8 @@ test("the basket API tiers its answer server-side, not in the page", () => {
   assert.match(src, /if \(!user\) return NextResponse\.json\(/, "must still reject signed-out callers");
   assert.match(src, /const full = isPremium\(user, "premium"\)/);
   assert.match(src, /if \(!full\) \{\s*const preview = basketPreview\(optimizeBasket\(/, "non-Premium gets the preview aggregate only");
-  assert.match(src, /res: NextResponse\.json\(preview, /);
+  // The aggregate plus where delivery was priced to — never the plan.
+  assert.match(src, /res: NextResponse\.json\(\{ \.\.\.preview, shipping \}, /);
 });
 
 test("Best Basket renders its heading and intro for everyone, above the sign-in split", () => {

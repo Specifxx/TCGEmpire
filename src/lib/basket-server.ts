@@ -13,23 +13,18 @@
 // callers answer 503 instead.
 
 import { prisma } from "./db";
-import { RETAILERS } from "./retailers";
 import { pickPrice, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
-import type { BasketCard, BasketStores } from "./basket";
+import type { BasketCard } from "./basket";
 
-// Stores serving this market. eBay (and TCGplayer) are not in RETAILERS and are
-// excluded on purpose — their postage is quoted per listing and isn't
-// comparable with a store's flat rate.
-export function marketStores(country: Country): { allowed: string[]; stores: BasketStores } {
-  const list = Object.values(RETAILERS).filter((r) => (r.country ?? "AU") === country);
-  return {
-    allowed: list.map((r) => r.key),
-    stores: Object.fromEntries(
-      list.map((r) => [r.key, { name: r.name, ship: { shippingFlatCents: r.shippingFlatCents, freeOverCents: r.freeOverCents } }])
-    ),
-  };
-}
+// The stores themselves — which serve this market, and what each charges to
+// post an order — are not a read: lib/shipping.ts basketStoresFor() builds
+// them from RETAILERS and the measured postage snapshot, bound to the buyer's
+// region and tracked-only choice. eBay (and TCGplayer) are not in RETAILERS and
+// are excluded on purpose — their postage is quoted per listing and isn't
+// comparable with a store's per-order rate. Both routes pass that map's keys
+// as `allowed` below, stores that do not post to the buyer included, so the
+// optimiser can say which of them stocked a card and why it left them out.
 
 // In-stock listings for these cards at this market's stores, reduced to the
 // cheapest per (card, store) — the optimiser wants one row per store, not

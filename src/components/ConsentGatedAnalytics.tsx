@@ -17,7 +17,8 @@ export function ConsentGatedAnalytics() {
   return (
     <>
       <Analytics />
-      <SpeedInsights />
+      {/* Billed per event; a 10% sample is plenty for Core Web Vitals trends. */}
+      <SpeedInsights sampleRate={0.1} />
     </>
   );
 }

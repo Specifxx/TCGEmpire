@@ -10,12 +10,21 @@ import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { faqPage } from "@/lib/jsonld";
 import { BestBasket, type BasketSource } from "@/components/BestBasket";
+import { headers } from "next/headers";
+import {
+  formatMeasuredDate,
+  marketHasZonePricing,
+  marketMeasuredAt,
+  marketMeasuredPlaces,
+  regionFromGeo,
+  regionOptionsFor,
+} from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
 const TITLE = "Best Basket — Cheapest Way to Buy a Riftbound Deck | RiftCompare";
 const DESCRIPTION =
-  "Paste a Riftbound decklist, or send your watchlist or binder, and get the cheapest delivered way to buy it across stores — postage and free-shipping thresholds included. Premium shows the store-by-store plan beside the best one-store and two-store orders.";
+  "Paste a Riftbound decklist, or send your watchlist or binder, and get the cheapest delivered way to buy it across stores — each store's measured postage included. Premium shows the store-by-store plan beside the best one-store and two-store orders.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -34,7 +43,7 @@ const FAQS = [
   },
   {
     q: "Does it account for shipping?",
-    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket searches store combinations for the lowest total including each store's postage and free-shipping threshold. With Premium it also shows the best one-store and two-store orders beside it.",
+    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket searches store combinations for the lowest total including each store's postage, and with Premium it also shows the best one-store and two-store orders beside it. The postage is each store's own checkout rate, measured for orders of different sizes and values to addresses across your market (in the US: New York, Chicago, Dallas and San Francisco): the store's rate name, whether its name says it's tracked, where a cheap untracked letter stops being offered, and the order value where postage goes free, if it ever does. It starts from your region and prices it at the address we measured there, or at the dearer of the two either side of it; leave it unset and it uses each store's highest. An order bigger than any we measured is marked 'from', a store we haven't measured yet is marked as an estimate, and the store's own checkout is always final.",
   },
   {
     q: "What can I paste in?",
@@ -42,7 +51,7 @@ const FAQS = [
   },
   {
     q: "Is the cheapest split guaranteed to be the cheapest possible?",
-    a: "It's the cheapest the search finds, not a proof — with free-shipping thresholds there's no fast exact answer. It is never dearer than buying each card's cheapest copy separately, or than the single-store and two-store orders shown beside it so you can compare. The single-store order is the cheapest one store offers; the two-store order is the cheapest split the search finds, shown only when it beats buying everything from one store.",
+    a: "It's the cheapest the search finds, not a proof — with free-shipping thresholds there's no fast exact answer. It is never dearer than buying each card's cheapest copy separately, or than the single-store and two-store orders shown beside it so you can compare. The single-store order is the cheapest one store offers; the two-store order is the cheapest split the search finds, shown only when it beats buying everything from one store. One exception: where an order is bigger than any the store's checkout was measured on and its postage was still rising with size, the search allows for it to keep rising, so an order resting on that store's 'from' figure can show a slightly lower total than the one it picks.",
   },
   {
     q: "Do I need Premium just to price a list, not buy it?",
@@ -92,6 +101,14 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
   const initialSource: BasketSource =
     searchParams.source === "watchlist" || searchParams.source === "binder" ? searchParams.source : "deck";
   const handedIn = initialSource !== "deck" || !!initialList?.trim();
+  // Postage choices for the picker: this market's regions, whether any store
+  // here prices by region at all, and when the rates were measured.
+  const regions = regionOptionsFor(country);
+  const measuredAt = formatMeasuredDate(marketMeasuredAt(country)) || null;
+  // The visitor's region from Vercel's geo headers (this page is already
+  // dynamic, so reading them costs no caching): the picker starts there.
+  const h = headers();
+  const geoRegion = regionFromGeo(country, h.get("x-vercel-ip-country"), h.get("x-vercel-ip-country-region"));
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -118,7 +135,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
               applicationCategory: "UtilitiesApplication",
               operatingSystem: "Web",
               description:
-                "Find the cheapest delivered way to buy a whole Riftbound deck or card list across stores — postage and free-shipping thresholds included.",
+                "Find the cheapest delivered way to buy a whole Riftbound deck or card list across stores — each store's measured postage included.",
             },
             faqPage(FAQS),
           ]),
@@ -135,9 +152,9 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           The cheapest way to actually <strong className="text-slate-200">buy</strong> a whole deck or card list — not just the
           lowest price per card, but the lowest <strong className="text-slate-200">delivered total</strong> across {info.adjective}{" "}
-          stores once postage and free-shipping thresholds are counted. Buying each card from its cheapest store usually spreads your
-          order over a dozen stores and buries you in postage; this searches for a better split. With Premium it shows that split
-          store by store, beside the best one-store and two-store orders.
+          stores once each store&apos;s real postage is counted — measured from its own checkout, not guessed. Buying each card from
+          its cheapest store usually spreads your order over a dozen stores and buries you in postage; this searches for a better
+          split. With Premium it shows that split store by store, beside the best one-store and two-store orders.
         </p>
       </div>
 
@@ -148,6 +165,12 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           initialSource={initialSource}
           initialSkipOwned={searchParams.skipOwned === "1"}
           autoRun={premium && handedIn}
+          market={country}
+          regions={regions}
+          zonePriced={marketHasZonePricing(country)}
+          measuredAt={measuredAt}
+          measuredTo={marketMeasuredPlaces(country)}
+          geoRegion={geoRegion}
         />
       ) : (
         <div className="card-surface p-6 text-center">

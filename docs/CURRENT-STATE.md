@@ -57,12 +57,12 @@ longer lands on its entry.
 
 ## Databases
 
-- **Live names** (since 2026-09-22; `src/lib/db-chains.ts` is the source of
-  truth): operational `RM3`, one variable, never a chain, because
+- **Live names** (since 2026-09-25; `src/lib/db-chains.ts` is the source of
+  truth): operational `RM4`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
   History: `HISTORY_DATABASE_URL_3`, then `_2`, then `DATABASE_URL`
   (terminal). Never rotate onto `DATABASE_URL`.
-  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455)
+  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637)
 - **Migrating:** verify the target live first (a recycled project must trail
   the source on every metric; a new one must be empty). Use a named
   `maintenance.yml` task: it guards SOURCE≠TARGET, dumps before truncating,
@@ -264,6 +264,22 @@ longer lands on its entry.
   market when it was created) gets one "now in stock" email when the card
   lists, inside the weekly per-address cap and at most 40 new digests a run.
   [2026-09-25](../DECISIONS.md#L12574)
+- **Postage is measured, never guessed:** Best Basket, portfolio
+  replacement cost and store pages price delivery with `shippingFor()`
+  (lib/shipping.ts) from `src/lib/shipping-rates.json`, built by
+  `scripts/build-shipping-rates.ts` from the checkout probe (never edit it by
+  hand). A letter applies only within the value and card count it was seen
+  on; free postage only from a measured threshold; an unknown region is
+  priced at the highest regional rate, a US region between two measured
+  cities at the dearer, US/CA "Elsewhere" as a floor ("from"). An unmeasured
+  store is charged at least its market's highest measured one-card rate and
+  labelled "est.". `shipping-rates.yml` re-measures monthly and never
+  commits. [2026-09-25](../DECISIONS.md#L12689),
+  [2026-09-25](../DECISIONS.md#L12803), [2026-09-25](../DECISIONS.md#L12831)
+- **Auto-renew is on by default** with no in-site off button; switching off
+  stays in the Stripe portal. The paid-renewal reminder is built on
+  `feedback/auto-renew` and held for Stripe test-mode testing.
+  [2026-09-25](../DECISIONS.md#L12831)
 
 ## Removed, declined, kept
 

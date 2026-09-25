@@ -9,8 +9,9 @@ import { parseDeckList, resolveDeckLines, DECK_LINE_CAP } from "@/lib/deck";
 import { clampQty, parseBasketRequest, type BasketRequest } from "@/lib/basket-request";
 import { rateLimit, refundRateLimit, tooManyRequests } from "@/lib/rate-limit";
 import type { Country } from "@/lib/country";
-import { basketPreview, optimizeBasket, planBasket, type BasketCard } from "@/lib/basket";
-import { loadBinderHoldings, loadOwnedQty, loadStoreListings, loadWatchlistCardIds, marketStores } from "@/lib/basket-server";
+import { basketPreview, optimizeBasket, planBasket, type BasketCard, type PreviewRegion } from "@/lib/basket";
+import { loadBinderHoldings, loadOwnedQty, loadStoreListings, loadWatchlistCardIds } from "@/lib/basket-server";
+import { basketStoresFor, postageContextFor, postageOptionsFrom, type PostageOptions } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,17 @@ export const dynamic = "force-dynamic";
 // when a list runs past the cap; nothing past it is priced or counted. The
 // watchlist (take 200) and the binder (its 200 most valuable cards, reported
 // as skippedHoldings) are capped at their reads.
+//
+// POSTAGE. Each store's MEASURED checkout rate (lib/shipping.ts), for the
+// buyer's region (?region=, a SHIPPING_REGIONS key; absent = the highest
+// regional figure) and, with ?tracked=1, never an untracked letter. It was a
+// hand-typed flat guess per store until an Adelaide customer was shown $2 here
+// and charged $20 at the store (2026-09-25). A store that does not post to the
+// buyer is left out of the plan, and Premium's plan names it and says why.
+// Every response carries `shipping` (postageContextFor: the region priced, the
+// measured date and addresses — nothing about any store), and the preview's
+// postageNotes say why a total is less certain than it looks (estimated
+// postage, an order bigger than any measured) in store COUNTS only.
 //
 // RATE LIMITS. Premium: 30 an hour. Without Premium: 5 TOTALS a day — a run
 // that comes back without one (a 400 such as an empty watchlist, a 503, a list
@@ -83,7 +95,10 @@ export async function POST(req: Request) {
     );
   }
 
-  const out = await buildBasket(user.id, full, parseBasketRequest(await req.json().catch(() => null)), getCountry());
+  const country = getCountry();
+  const params = new URL(req.url).searchParams;
+  const postageOpts = postageOptionsFrom(country, params.get("region"), params.get("tracked"));
+  const out = await buildBasket(user.id, full, parseBasketRequest(await req.json().catch(() => null)), country, postageOpts);
   // Only a run that came back with a total counts against the free five.
   if (!full && !out.priced) refundRateLimit(`basket:${user.id}`);
   return out.res;
@@ -91,7 +106,13 @@ export async function POST(req: Request) {
 
 const fail = (error: string, status: number): Outcome => ({ res: NextResponse.json({ error }, { status }), priced: false });
 
-async function buildBasket(userId: string, full: boolean, { source, skipOwned, text, picked }: BasketRequest, country: Country): Promise<Outcome> {
+async function buildBasket(
+  userId: string,
+  full: boolean,
+  { source, skipOwned, text, picked }: BasketRequest,
+  country: Country,
+  postageOpts: PostageOptions
+): Promise<Outcome> {
   try {
     // 1. What was asked for → cardId → qty (+ what we know about each card).
     const wanted = new Map<string, number>();
@@ -164,10 +185,11 @@ async function buildBasket(userId: string, full: boolean, { source, skipOwned, t
       for (const id of missing) if (!info.has(id)) wanted.delete(id);
     }
 
-    // 4. In-stock listings at this market's stores. Throws rather than
-    // pricing a failed read as "nothing in stock".
-    const { allowed, stores } = marketStores(country);
-    const listings = await loadStoreListings([...wanted.keys()], country, allowed);
+    // 4. This market's stores, each with its measured postage for this buyer,
+    // and their in-stock listings. The read throws rather than pricing a
+    // failed read as "nothing in stock".
+    const stores = basketStoresFor(country, postageOpts);
+    const listings = await loadStoreListings([...wanted.keys()], country, Object.keys(stores));
     const basketCards: BasketCard[] = [...wanted].map(([cardId, qty]) => {
       const c = info.get(cardId)!;
       return {
@@ -184,17 +206,19 @@ async function buildBasket(userId: string, full: boolean, { source, skipOwned, t
     // 5. The answer, tiered. A run that priced nothing (no line matched, or
     // nothing matched is in stock) still answers — the page lists the lines —
     // but doesn't count as a total.
+    const shipping = postageContextFor(country, postageOpts);
+    const region: PreviewRegion = { picked: !!shipping.region && !shipping.regionUnmeasured, unmeasured: shipping.regionUnmeasured };
     if (!full) {
-      const preview = basketPreview(optimizeBasket(basketCards, stores), unmatched);
+      const preview = basketPreview(optimizeBasket(basketCards, stores), unmatched, region);
       return {
-        res: NextResponse.json(preview, { headers: { "Cache-Control": "no-store" } }),
+        res: NextResponse.json({ ...preview, shipping }, { headers: { "Cache-Control": "no-store" } }),
         priced: preview.covered > 0,
       };
     }
     const { plan, alternatives } = planBasket(basketCards, stores, { loc: "/tools/best-basket" });
     return {
       res: NextResponse.json(
-        { ...basketPreview(plan, unmatched), plan, alternatives, fuzzy, skippedOwned, skippedHoldings, source },
+        { ...basketPreview(plan, unmatched, region), plan, alternatives, fuzzy, skippedOwned, skippedHoldings, source, shipping },
         { headers: { "Cache-Control": "no-store" } }
       ),
       priced: plan.coveredCopies > 0,

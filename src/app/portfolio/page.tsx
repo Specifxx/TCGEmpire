@@ -7,6 +7,8 @@ import { getPortfolio, isPremium, premiumCheckoutEnabled, premiumTierOf, PORTFOL
 import { getPremiumNudge, nudgeCopy } from "@/lib/premium-nudge";
 import { PremiumNudgeCard } from "@/components/PremiumNudgeCard";
 import { getCountry } from "@/lib/get-country";
+import { headers } from "next/headers";
+import { regionFromGeo } from "@/lib/shipping";
 import { COUNTRIES } from "@/lib/country";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { formatMoney } from "@/lib/format";
@@ -125,6 +127,10 @@ export default async function PortfolioPage() {
   if (!user) redirect("/login?next=/portfolio");
 
   const country = getCountry();
+  // The delivery region the visitor's location suggests, for the replacement-
+  // cost panel (this page is already dynamic, so reading headers costs nothing).
+  const h = headers();
+  const geoRegion = regionFromGeo(country, h.get("x-vercel-ip-country"), h.get("x-vercel-ip-country-region"));
   const info = COUNTRIES[country];
   const portfolio = await getPortfolio(user.id, country);
   const premium = isPremium(user); // session user carries premiumUntil + isAdmin
@@ -249,7 +255,8 @@ export default async function PortfolioPage() {
               Sits directly under the headline because it answers the question the
               headline raises: that number prices each card at the cheapest listing
               in the market and says nothing about getting them to your door. */}
-          {pro && <PortfolioReplacementCost currency={info.currency} />}
+          {/* geoRegion: the visitor's region, used until they pick one in Best Basket. */}
+          {pro && <PortfolioReplacementCost currency={info.currency} geoRegion={geoRegion} />}
 
           {/* Cost basis vs. today, and how that tracks the market. Free via
               PORTFOLIO_FREE; the blurred Premium gate that sat in the else-branch

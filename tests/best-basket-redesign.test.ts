@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { basketPreview, optimizeBasket, planBasket, singleStartCount, type BasketCard, type BasketStores } from "../src/lib/basket";
+import { basketPreview, optimizeBasket, planBasket, singleStartCount, type BasketCard, type BasketStore, type BasketStores } from "../src/lib/basket";
+import type { PostageCart, PostageQuote } from "../src/lib/shipping";
 import { clampQty, parseBasketRequest } from "../src/lib/basket-request";
 import { rateLimit, refundRateLimit } from "../src/lib/rate-limit";
 
@@ -25,12 +26,38 @@ const L = (retailer: string, priceCents: number, condition: string | null = null
   condition,
 });
 const card = (id: string, qty: number, listings: ReturnType<typeof L>[]): BasketCard => ({ cardId: id, name: id, slug: null, qty, listings });
-const flat = (shippingFlatCents: number, freeOverCents = 0) => ({ shippingFlatCents, freeOverCents });
+// A store as lib/shipping.ts quotes a measured flat-rate one: one rate per
+// ORDER whatever its size, free from a measured threshold (0 = never), and —
+// as shippingFor does — that threshold reported as freeFromCents while the
+// order is below it. These tests were written for the flat {shippingFlatCents,
+// freeOverCents} model that postage functions replaced (2026-09-25); this
+// function behaves exactly as that model did, so every total below still holds.
+const flat =
+  (cents: number, freeOverCents = 0) =>
+  (cart: PostageCart): PostageQuote => {
+    const free = freeOverCents > 0 && cart.subtotalCents >= freeOverCents;
+    return {
+      cents: free ? 0 : cents,
+      label: "Standard",
+      tracked: true,
+      basis: "measured",
+      free,
+      upTo: false,
+      ...(freeOverCents > 0 && !free ? { freeFromCents: freeOverCents } : {}),
+    };
+  };
+const store = (name: string, cents: number, freeOverCents = 0): BasketStore => ({ name, postage: flat(cents, freeOverCents) });
+// What an order at store k really costs on top of its cards, from the store's
+// own postage function: quote + any top-up to a minimum order.
+const landed = (stores: BasketStores, k: string, sub: number, items: number) => {
+  const q = stores[k].postage({ subtotalCents: sub, items });
+  return q.cents + (q.minOrderCents && sub < q.minOrderCents ? q.minOrderCents - sub : 0);
+};
 
 test("consolidates two cards off a store: 4 cards / 2 stores costs $9.40 from one store, not $14.00 from two", () => {
   // The old hill-climb moved one card at a time, so it could never empty a
   // store holding two — it returned the naive $14.00 split with no "save" box.
-  const stores: BasketStores = { a: { name: "A", ship: flat(500) }, b: { name: "B", ship: flat(500) } };
+  const stores: BasketStores = { a: store("A", 500), b: store("B", 500) };
   const cards = [
     card("1", 1, [L("a", 100), L("b", 120)]),
     card("2", 1, [L("a", 100), L("b", 120)]),
@@ -53,8 +80,8 @@ test("consolidates two cards off a store: 4 cards / 2 stores costs $9.40 from on
 // Twelve cards over six small stores ($1.50 flat postage), plus one hub store
 // stocking all twelve at +3% ($3.95, free over $50). From the 2026-09-25 audit.
 function hubCase(smallFreeOver: number) {
-  const stores: BasketStores = { hub: { name: "Hub", ship: flat(395, 5000) } };
-  for (let s = 0; s < 6; s++) stores["s" + s] = { name: "S" + s, ship: flat(150, smallFreeOver) };
+  const stores: BasketStores = { hub: store("Hub", 395, 5000) };
+  for (let s = 0; s < 6; s++) stores["s" + s] = store("S" + s, 150, smallFreeOver);
   const base = [450, 300, 800, 120, 220, 650, 90, 400, 250, 180, 700, 330];
   const cards = base.map((p, i) => card(String(i), 1 + (i % 3), [L("s" + (i % 6), p), L("hub", Math.round(p * 1.03))]));
   const hubTotal = base.reduce((s, p, i) => s + Math.round(p * 1.03) * (1 + (i % 3)), 0);
@@ -88,10 +115,10 @@ test("the audit's own hub list: never six orders, never dearer than the one-stor
 });
 
 test("100-store fan-out: every card 1c cheaper at its own store still buys from the one hub, $105 not $400", () => {
-  const stores: BasketStores = { h: { name: "H", ship: flat(300) } };
+  const stores: BasketStores = { h: store("H", 300) };
   const cards: BasketCard[] = [];
   for (let i = 0; i < 100; i++) {
-    stores["s" + i] = { name: "S" + i, ship: flat(300) };
+    stores["s" + i] = store("S" + i, 300);
     cards.push(card(String(i), 1, [L("s" + i, 100), L("h", 102)]));
   }
   const t0 = Date.now();
@@ -103,7 +130,7 @@ test("100-store fan-out: every card 1c cheaper at its own store still buys from 
 });
 
 test("postage is charged once per store, and the parts add up", () => {
-  const stores: BasketStores = { a: { name: "A", ship: flat(1200) }, b: { name: "B", ship: flat(1200) } };
+  const stores: BasketStores = { a: store("A", 1200), b: store("B", 1200) };
   const plan = optimizeBasket([card("one", 1, [L("a", 1000), L("b", 1100)]), card("two", 1, [L("a", 1100), L("b", 1000)])], stores);
   assert.equal(plan.itemsCents + plan.shippingCents, plan.totalCents);
   assert.equal(plan.totalCents, 3300);
@@ -112,7 +139,7 @@ test("postage is charged once per store, and the parts add up", () => {
 
 test("free-shipping thresholds are crossed when it pays, and reported per store", () => {
   // Case from the audit: reachable only by moving two cards at once.
-  const stores: BasketStores = { a: { name: "A", ship: flat(395, 5000) }, b: { name: "B", ship: flat(395, 5000) } };
+  const stores: BasketStores = { a: store("A", 395, 5000), b: store("B", 395, 5000) };
   const cards = [
     card("1", 1, [L("a", 2000), L("b", 2050)]),
     card("2", 1, [L("a", 2000), L("b", 2050)]),
@@ -123,8 +150,11 @@ test("free-shipping thresholds are crossed when it pays, and reported per store"
   assert.equal(plan.totalCents, 6100);
   assert.equal(plan.storeCount, 1);
   assert.equal(plan.stores[0].freeShipping, true);
-  assert.equal(plan.stores[0].freeOverCents, 5000, "the threshold travels with the plan, for the page");
-  assert.equal(plan.stores[0].shippingFlatCents, 395);
+  // The store's quote travels with the plan, for the page: the rate it was
+  // priced at, for the cards it actually posts.
+  assert.equal(plan.stores[0].postage.free, true);
+  assert.equal(plan.stores[0].postage.label, "Standard");
+  assert.equal(plan.stores[0].items, 4);
 });
 
 // Review, 2026-09-25: the only way to the cheapest order is to move TWO cards
@@ -134,10 +164,10 @@ test("free-shipping thresholds are crossed when it pays, and reported per store"
 // list for $77.54.
 test("threshold fill: two cards moved together to clear a store's free postage", () => {
   const stores: BasketStores = {
-    s0: { name: "S0", ship: flat(400, 2200) },
-    s1: { name: "S1", ship: flat(600, 3200) },
-    s2: { name: "S2", ship: flat(600, 3600) },
-    s3: { name: "S3", ship: flat(600, 3300) },
+    s0: store("S0", 400, 2200),
+    s1: store("S1", 600, 3200),
+    s2: store("S2", 600, 3600),
+    s3: store("S3", 600, 3300),
   };
   const cards = [
     card("c0", 2, [L("s2", 708), L("s3", 675)]),
@@ -164,10 +194,10 @@ test("threshold fill: two cards moved together to clear a store's free postage",
 // store beats any split, rather than showing either.
 test("the two-store card searches every pair's real splits, and shows one only when it beats one store", () => {
   const stores: BasketStores = {
-    s0: { name: "S0", ship: flat(100) },
-    s1: { name: "S1", ship: flat(1200) },
-    s2: { name: "S2", ship: flat(300, 2000) },
-    s3: { name: "S3", ship: flat(800) },
+    s0: store("S0", 100),
+    s1: store("S1", 1200),
+    s2: store("S2", 300, 2000),
+    s3: store("S3", 800),
   };
   const cards = [
     card("c0", 4, [L("s1", 2156), L("s2", 1256), L("s3", 1857)]),
@@ -192,17 +222,16 @@ function bruteTwoStores(cards: BasketCard[], stores: BasketStores): number {
       const rec = (i: number, pick: { retailer: string; priceCents: number }[]) => {
         if (i === cards.length) {
           const sub: Record<string, number> = {};
+          const pcs: Record<string, number> = {};
           let items = 0;
           pick.forEach((l, j) => {
             items += l.priceCents * cards[j].qty;
             sub[l.retailer] = (sub[l.retailer] ?? 0) + l.priceCents * cards[j].qty;
+            pcs[l.retailer] = (pcs[l.retailer] ?? 0) + cards[j].qty;
           });
           if (Object.keys(sub).length !== 2) return;
           let ship = 0;
-          for (const [k, v] of Object.entries(sub)) {
-            const st = stores[k].ship;
-            if (!(st.freeOverCents > 0 && v >= st.freeOverCents)) ship += st.shippingFlatCents;
-          }
+          for (const [k, v] of Object.entries(sub)) ship += landed(stores, k, v, pcs[k]);
           best = Math.min(best, items + ship);
           return;
         }
@@ -224,7 +253,7 @@ test("the plan is never dearer than the naive split or either alternative — an
     const m = 2 + Math.floor(rnd() * 4);
     const n = 1 + Math.floor(rnd() * 6);
     const stores: BasketStores = {};
-    for (let s = 0; s < m; s++) stores["s" + s] = { name: "S" + s, ship: flat(Math.floor(rnd() * 800), rnd() < 0.5 ? 0 : 500 + Math.floor(rnd() * 3000)) };
+    for (let s = 0; s < m; s++) stores["s" + s] = store("S" + s, Math.floor(rnd() * 800), rnd() < 0.5 ? 0 : 500 + Math.floor(rnd() * 3000));
     const cards: BasketCard[] = [];
     for (let i = 0; i < n; i++) {
       let ls = Object.keys(stores)
@@ -237,17 +266,16 @@ test("the plan is never dearer than the naive split or either alternative — an
     const rec = (i: number, assign: string[]) => {
       if (i === n) {
         const sub: Record<string, number> = {};
+        const pcs: Record<string, number> = {};
         let items = 0;
         assign.forEach((k, j) => {
           const p = cards[j].listings.find((l) => l.retailer === k)!.priceCents * cards[j].qty;
           items += p;
           sub[k] = (sub[k] ?? 0) + p;
+          pcs[k] = (pcs[k] ?? 0) + cards[j].qty;
         });
         let ship = 0;
-        for (const [k, v] of Object.entries(sub)) {
-          const st = stores[k].ship;
-          if (!(st.freeOverCents > 0 && v >= st.freeOverCents)) ship += st.shippingFlatCents;
-        }
+        for (const [k, v] of Object.entries(sub)) ship += landed(stores, k, v, pcs[k]);
         best = Math.min(best, items + ship);
         return;
       }
@@ -284,7 +312,7 @@ test("wider lists with free-postage thresholds: every answer is consistent and n
     const n = 2 + Math.floor(rnd() * 6);
     const stores: BasketStores = {};
     for (let s = 0; s < m; s++) {
-      stores["s" + s] = { name: "S" + s, ship: flat([200, 400, 600, 900][Math.floor(rnd() * 4)], rnd() < 0.8 ? (10 + Math.floor(rnd() * 31)) * 100 : 0) };
+      stores["s" + s] = store("S" + s, [200, 400, 600, 900][Math.floor(rnd() * 4)], rnd() < 0.8 ? (10 + Math.floor(rnd() * 31)) * 100 : 0);
     }
     const cards: BasketCard[] = [];
     for (let i = 0; i < n; i++) {
@@ -298,8 +326,7 @@ test("wider lists with free-postage thresholds: every answer is consistent and n
     const { plan, alternatives } = planBasket(cards, stores);
     const recomputed = plan.stores.reduce((t, g) => {
       const sub = g.lines.reduce((x, l) => x + l.unitCents * l.qty, 0);
-      const sh = stores[g.key].ship;
-      return t + sub + (sh.freeOverCents > 0 && sub >= sh.freeOverCents ? 0 : sh.shippingFlatCents);
+      return t + sub + landed(stores, g.key, sub, g.lines.reduce((x, l) => x + l.qty, 0));
     }, 0);
     assert.equal(recomputed, plan.totalCents, `trial ${trial}: the parts add up`);
     assert.ok(plan.totalCents <= plan.naiveTotalCents);
@@ -316,7 +343,7 @@ test("wider lists with free-postage thresholds: every answer is consistent and n
 });
 
 test("alternatives are null when no single store / no pair stocks the whole list", () => {
-  const stores: BasketStores = { a: { name: "A", ship: flat(100) }, b: { name: "B", ship: flat(100) }, c: { name: "C", ship: flat(100) } };
+  const stores: BasketStores = { a: store("A", 100), b: store("B", 100), c: store("C", 100) };
   const { alternatives } = planBasket([card("1", 1, [L("a", 100)]), card("2", 1, [L("b", 100)]), card("3", 1, [L("c", 100)])], stores);
   assert.equal(alternatives.singleStore, null);
   assert.equal(alternatives.twoStores, null);
@@ -327,7 +354,7 @@ test("alternatives are null when no single store / no pair stocks the whole list
 // every store stocks (review, 2026-09-25): when every covering pair collapses
 // onto one store, that is not "no pair", and the page must say which it is.
 test("no two-store card for a one-card list — and it says why, not 'no pair stocks it'", () => {
-  const stores: BasketStores = { a: { name: "A", ship: flat(100) }, b: { name: "B", ship: flat(100) }, c: { name: "C", ship: flat(100) } };
+  const stores: BasketStores = { a: store("A", 100), b: store("B", 100), c: store("C", 100) };
   const { plan, alternatives } = planBasket([card("solo", 2, [L("a", 150), L("b", 160), L("c", 170)])], stores);
   assert.equal(alternatives.singleStore?.totalCents, 400);
   assert.equal(plan.totalCents, 400);
@@ -336,7 +363,7 @@ test("no two-store card for a one-card list — and it says why, not 'no pair st
 });
 
 test("when one store is cheapest on every card, the two-store card says one store beats any split", () => {
-  const stores: BasketStores = { a: { name: "A", ship: flat(300) }, b: { name: "B", ship: flat(300) } };
+  const stores: BasketStores = { a: store("A", 300), b: store("B", 300) };
   const cards = [card("1", 1, [L("a", 100), L("b", 130)]), card("2", 1, [L("a", 200), L("b", 210)]), card("3", 1, [L("a", 300), L("b", 390)])];
   const { plan, alternatives } = planBasket(cards, stores);
   assert.equal(alternatives.singleStore?.stores[0].key, "a");
@@ -346,7 +373,7 @@ test("when one store is cheapest on every card, the two-store card says one stor
 });
 
 test("a real two-store order is still returned, with no reason attached", () => {
-  const stores: BasketStores = { a: { name: "A", ship: flat(100) }, b: { name: "B", ship: flat(100) } };
+  const stores: BasketStores = { a: store("A", 100), b: store("B", 100) };
   const { alternatives } = planBasket([card("1", 1, [L("a", 100), L("b", 900)]), card("2", 1, [L("a", 900), L("b", 100)])], stores);
   assert.equal(alternatives.twoStores?.storeCount, 2);
   assert.equal(alternatives.twoStoresNone, null);
@@ -362,7 +389,7 @@ test("single-store starts: every candidate store for a deck-sized list, a budget
 });
 
 test("a card no tracked store stocks is left out of the total and listed, never priced at $0", () => {
-  const stores: BasketStores = { a: { name: "A", ship: flat(500) } };
+  const stores: BasketStores = { a: store("A", 500) };
   const plan = optimizeBasket([card("have", 1, [L("a", 700)]), card("gone", 2, [])], stores);
   assert.equal(plan.itemsCents, 700);
   assert.deepEqual(plan.unbuyable, [{ name: "gone", qty: 2 }]);
@@ -371,7 +398,7 @@ test("a card no tracked store stocks is left out of the total and listed, never 
 });
 
 test("every plan line carries the listing's condition and a link", () => {
-  const stores: BasketStores = { a: { name: "A", ship: flat(500) } };
+  const stores: BasketStores = { a: store("A", 500) };
   const plan = optimizeBasket([card("x", 2, [L("a", 300, "Lightly Played")])], stores, { loc: "/tools/best-basket" });
   const line = plan.stores[0].lines[0];
   assert.equal(line.condition, "Lightly Played");
@@ -380,16 +407,18 @@ test("every plan line carries the listing's condition and a link", () => {
 });
 
 test("the non-Premium preview is the aggregate only — no store names, lines or URLs", () => {
-  const stores: BasketStores = { a: { name: "Secret Store", ship: flat(500) }, b: { name: "Other Store", ship: flat(500) } };
+  const stores: BasketStores = { a: store("Secret Store", 500), b: store("Other Store", 500) };
   const plan = optimizeBasket([card("1", 2, [L("a", 100), L("b", 120)]), card("2", 1, [L("b", 100)]), card("3", 1, [])], stores);
   const preview = basketPreview(plan, [{ raw: "1 Not A Card", qty: 1 }]);
   assert.deepEqual(Object.keys(preview).sort(), [
     "covered",
     "naiveTotalCents",
+    "postageNotes",
     "requested",
     "savedCents",
     "shippingCents",
     "storeCount",
+    "topUpCents",
     "totalCents",
     "unmatched",
   ]);
@@ -398,6 +427,121 @@ test("the non-Premium preview is the aggregate only — no store names, lines or
   assert.equal(preview.covered, 3);
   assert.equal(preview.requested, 5, "covered + unbuyable + unmatched copies");
   assert.equal(preview.totalCents, plan.totalCents);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The search on measured postage (merged 2026-09-25): every cost it weighs is
+// the store's own postage(cart) — subtotal AND card count — plus any top-up,
+// a store that does not post to the buyer is never in any plan, and the risk
+// allowance past the measured sizes steers the search without being reported.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Mana-Market-shaped: an untracked letter up to `maxCards`, a parcel above.
+const letterThenParcel =
+  (letter: number, maxCards: number, parcel: number) =>
+  (cart: PostageCart): PostageQuote =>
+    cart.items <= maxCards
+      ? { cents: letter, label: "Letter", tracked: false, basis: "measured", free: false, upTo: false }
+      : { cents: parcel, label: "Parcel", tracked: true, basis: "measured", free: false, upTo: false };
+
+test("postage is priced on the order's card count, not just its subtotal", () => {
+  const asked: PostageCart[] = [];
+  const letter = letterThenParcel(100, 3, 1200);
+  const stores: BasketStores = {
+    l: { name: "Letter store", postage: (c) => (asked.push(c), letter(c)) },
+    p: store("Parcel store", 400),
+  };
+  // Five copies, 10c cheaper each at the letter store — whose $1 letter stops at three cards.
+  const cards = [card("x", 2, [L("l", 100), L("p", 110)]), card("y", 3, [L("l", 100), L("p", 110)])];
+  const { plan, alternatives } = planBasket(cards, stores);
+  assert.equal(plan.naiveTotalCents, 500 + 1200, "all five at the letter store post as a parcel");
+  assert.equal(plan.totalCents, 550 + 400);
+  assert.deepEqual(plan.stores.map((g) => g.key), ["p"]);
+  assert.equal(alternatives.singleStore?.totalCents, 950);
+  assert.ok(asked.some((c) => c.items === 5 && c.subtotalCents === 500), "the whole order was priced as five cards");
+  assert.ok(asked.every((c) => Number.isInteger(c.items) && c.items >= 1), "never a line count or a zero-card order");
+});
+
+test("a store that does not post to the buyer is in no plan, and is listed with its reason", () => {
+  const stores: BasketStores = {
+    far: { name: "Far Store", postage: flat(0), unavailable: "Quoted no postage to Spain (measured)" },
+    a: store("A", 500),
+    b: store("B", 500),
+  };
+  const cards = [card("1", 1, [L("far", 10), L("a", 300), L("b", 320)]), card("2", 1, [L("far", 10), L("b", 300)]), card("3", 1, [L("far", 10)])];
+  const { plan, alternatives } = planBasket(cards, stores);
+  for (const p of [plan, alternatives.singleStore, alternatives.twoStores]) {
+    if (p) assert.ok(!p.stores.some((g) => g.key === "far"), "never priced at a store that cannot deliver");
+  }
+  assert.deepEqual(plan.excludedStores, [{ key: "far", name: "Far Store", reason: "Quoted no postage to Spain (measured)" }]);
+  assert.deepEqual(plan.unbuyable, [{ name: "3", qty: 1 }], "a card only it stocks is unbuyable here");
+  assert.equal(plan.totalCents, 300 + 320 + 500, "both cards from B, one postage");
+  assert.equal(basketPreview(plan).requested, 3);
+});
+
+test("a minimum order's top-up is counted in the plan, the alternatives and the preview alike", () => {
+  // A store that quotes nothing under $5 (the Dice Saloon shape): a $3 card
+  // there costs $3 + postage + $2 of top-up.
+  const min =
+    (cents: number, minOrderCents: number) =>
+    (cart: PostageCart): PostageQuote => ({
+      cents,
+      label: "Standard",
+      tracked: true,
+      basis: "measured",
+      free: false,
+      upTo: false,
+      ...(cart.subtotalCents < minOrderCents ? { minOrderCents } : {}),
+    });
+  const stores: BasketStores = { m: { name: "Min", postage: min(350, 500) }, o: store("Other", 700) };
+  const cards = [card("x", 1, [L("m", 300), L("o", 320)])];
+  const { plan, alternatives } = planBasket(cards, stores);
+  assert.equal(plan.stores[0].key, "m");
+  assert.equal(plan.topUpCents, 200);
+  assert.equal(plan.stores[0].topUpCents, 200);
+  assert.equal(plan.totalCents, 300 + 350 + 200);
+  assert.equal(plan.itemsCents + plan.shippingCents + plan.topUpCents, plan.totalCents);
+  assert.equal(alternatives.singleStore?.totalCents, 850);
+  const preview = basketPreview(plan);
+  assert.equal(preview.topUpCents, 200, "the preview's total includes it, so it says how much");
+  assert.equal(preview.totalCents - preview.shippingCents - preview.topUpCents, 300, "and the cards are what is left");
+  // Two cards clear the minimum: no top-up, and the search sees that.
+  const two = optimizeBasket([card("x", 1, [L("m", 300), L("o", 320)]), card("y", 1, [L("m", 300), L("o", 320)])], stores);
+  assert.equal(two.topUpCents, 0);
+  assert.equal(two.totalCents, 600 + 350);
+});
+
+test("rising postage past the measured sizes steers the search, and is not in the reported totals", () => {
+  // Card Hub's shape (tests/shipping.test.ts): $12 at the biggest cart measured,
+  // rising $6 per further 10 cards. 60 cards 10c cheaper there look $4 cheaper
+  // on the measured figure alone.
+  const risky = (cart: PostageCart): PostageQuote => ({
+    cents: 1200,
+    label: "Tracked Letter",
+    tracked: true,
+    basis: "measured",
+    free: false,
+    upTo: false,
+    ...(cart.items > 10 ? { beyondMeasured: true, riskCents: 600 * Math.ceil((cart.items - 10) / 10) } : {}),
+  });
+  const stores: BasketStores = { hub: { name: "Hub", postage: risky }, obs: store("Obsession", 2000) };
+  const cards = Array.from({ length: 60 }, (_, i) => card("c" + i, 1, [L("hub", 50), L("obs", 60)]));
+  const { plan, alternatives } = planBasket(cards, stores);
+  assert.deepEqual(plan.stores.map((g) => g.key), ["obs"]);
+  assert.equal(plan.totalCents, 3600 + 2000, "the reported total is the quote");
+  assert.equal(plan.naiveTotalCents, 3000 + 1200, "and so is the naive split's: its risk is not reported either");
+  assert.equal(plan.savedCents, 0, "never a negative saving");
+  assert.equal(alternatives.singleStore?.stores[0].key, "obs", "the one-store order is chosen the same way");
+  // The page says why, rather than calling this the cheapest way.
+  assert.match(read("src/components/BestBasket.tsx"), /plan\.naiveTotalCents < plan\.totalCents \? \(\s*<RiskyNaive/);
+});
+
+test("the preview's postage notes name no store, and say when the total rests on estimates", () => {
+  const est = (): PostageQuote => ({ cents: 900, label: "Estimate — not measured", tracked: null, basis: "estimate", free: false, upTo: false });
+  const plan = optimizeBasket([card("x", 1, [L("e", 500)])], { e: { name: "Secret Guess Store", postage: est } });
+  const preview = basketPreview(plan, [], { picked: true, unmeasured: false });
+  assert.deepEqual(preview.postageNotes, ["includes estimated postage for 1 store"]);
+  assert.ok(!JSON.stringify(preview).includes("Secret Guess Store"));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -428,8 +572,9 @@ test("the basket route withholds the plan from non-Premium callers", () => {
   const at = code.indexOf("if (!full) {\n      const preview");
   assert.ok(at > 0);
   const branch = code.slice(at, code.indexOf("const { plan, alternatives }", at));
-  assert.match(branch, /const preview = basketPreview\(optimizeBasket\(basketCards, stores\), unmatched\)/);
-  assert.match(branch, /NextResponse\.json\(preview, /);
+  assert.match(branch, /const preview = basketPreview\(optimizeBasket\(basketCards, stores\), unmatched, region\)/);
+  // The aggregate, plus where delivery was priced to (no store in it).
+  assert.match(branch, /NextResponse\.json\(\{ \.\.\.preview, shipping \}, /);
   assert.doesNotMatch(branch, /plan|alternatives|fuzzy/, "the preview branch returns nothing but the aggregate");
   // The full plan's store links carry the page for the affiliate sub-id.
   assert.match(code, /planBasket\(basketCards, stores, \{ loc: "\/tools\/best-basket" \}\)/);
@@ -553,7 +698,8 @@ test("picked cards: clamped 1-99 on the server and resolved by exact id, never b
   // Bare ids (picker, watchlist) get their names by id lookup only.
   const at = code.indexOf("const missing = [...wanted.keys()].filter((id) => !info.has(id))");
   assert.ok(at > 0);
-  const byId = code.slice(at, code.indexOf("marketStores(country)", at));
+  const byId = code.slice(at, code.indexOf("basketStoresFor(country, postageOpts)", at));
+  assert.ok(byId.length > 0);
   assert.match(byId, /where: \{ id: \{ in: missing \} \}/);
   assert.doesNotMatch(byId, /nameNormalized|resolveDeckLines/, "a chosen printing is never re-resolved by name");
   // The page sends picks as ids, not as text.

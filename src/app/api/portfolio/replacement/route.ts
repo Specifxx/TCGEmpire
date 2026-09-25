@@ -4,7 +4,8 @@ import { isPremium, PORTFOLIO_FREE } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { basketPreview, optimizeBasket, type BasketCard } from "@/lib/basket";
-import { loadBinderHoldings, loadStoreListings, marketStores } from "@/lib/basket-server";
+import { loadBinderHoldings, loadStoreListings } from "@/lib/basket-server";
+import { basketStoresFor, postageContextFor, postageOptionsFrom } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,8 @@ export const dynamic = "force-dynamic";
 // ── Why it reuses the Best-Basket optimiser ──────────────────────────────────
 // Postage is charged PER ORDER, not per card. Adding a shipping fee to each
 // card's price would be wrong in the other direction — buy eight cards from one
-// store and you pay postage once, and most stores ship free over a threshold.
+// store and you pay postage once (priced for that order's size, measured), and
+// a few stores post free past a measured threshold.
 // lib/basket.ts already minimises exactly that (consolidate onto fewer stores vs.
 // chase each cheapest listing), so this hands the collection to the same solver
 // the Best Basket tool uses rather than inventing a second, worse answer. The
@@ -50,7 +52,7 @@ export const dynamic = "force-dynamic";
 // in-stock only, one market, an explicit `select`, MAX_HOLDINGS as the cap —
 // and, since 2026-09-25, a per-user rate limit.
 
-export async function GET() {
+export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
   // The same gate the rest of /portfolio uses, so this panel cannot end up
@@ -64,16 +66,26 @@ export async function GET() {
 
   const full = isPremium(user, "premium");
   const country = getCountry();
+  // The same postage model as Best Basket: each store's MEASURED checkout rate
+  // (lib/shipping.ts) for the buyer's region — ?region=, remembered by the
+  // panel from the Best Basket picker; absent = the highest regional figure —
+  // and ?tracked=1 to skip untracked letters.
+  const params = new URL(req.url).searchParams;
+  const postageOpts = postageOptionsFrom(country, params.get("region"), params.get("tracked"));
 
   try {
     const { wanted, skipped, empty } = await loadBinderHoldings(user.id, country);
     if (empty) return NextResponse.json({ error: "Nothing in your collection yet." }, { status: 400 });
 
-    const { allowed, stores } = marketStores(country);
+    // Stores serving this market, each with its measured postage for this
+    // buyer. eBay is not in RETAILERS and is excluded on purpose — its
+    // per-item postage is quoted per listing and is not comparable with a
+    // store's per-order rate, which is the same call /api/basket makes.
+    const stores = basketStoresFor(country, postageOpts);
     const listings = await loadStoreListings(
       wanted.map((w) => w.cardId),
       country,
-      allowed
+      Object.keys(stores)
     );
     const basketCards: BasketCard[] = wanted.map((w) => ({
       cardId: w.cardId,
@@ -86,9 +98,11 @@ export async function GET() {
     }));
 
     const plan = optimizeBasket(basketCards, stores, { loc: "/portfolio" });
+    const shipping = postageContextFor(country, postageOpts);
 
     return NextResponse.json({
-      ...basketPreview(plan),
+      // Everyone: the aggregate, and its postage notes (store counts only).
+      ...basketPreview(plan, [], { picked: !!shipping.region && !shipping.regionUnmeasured, unmeasured: shipping.regionUnmeasured }),
       // Premium only: the store-by-store plan behind the total.
       ...(full ? { plan } : {}),
       // What the SAME cards contribute to the headline "Collection value", so the
@@ -97,6 +111,7 @@ export async function GET() {
       valuedCents: wanted.reduce((s, w) => s + w.valueCents, 0),
       pricedHoldings: wanted.length,
       skippedHoldings: skipped,
+      shipping,
     });
   } catch (e) {
     console.error("[portfolio/replacement] query failed", e);

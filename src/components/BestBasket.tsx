@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { OutboundLink } from "./OutboundLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
@@ -13,14 +13,24 @@ import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
 import { parseDeckList, DECK_LINE_CAP } from "@/lib/deck";
 import { CardSearch, type SearchCard } from "./CardSearch";
-import type { BasketAlternatives, BasketPlan, BasketPreview, TwoStoresNone } from "@/lib/basket";
+import type { BasketAlternatives, BasketPlan, BasketPreview, BasketStoreGroup, TwoStoresNone } from "@/lib/basket";
 import { trackEvent } from "@/lib/analytics";
+import { effectiveRegion, readPostagePrefs, writePostagePrefs } from "@/lib/postage-prefs";
+import { freePrefix, joinList, planPostageNotes, postageLineBits, postagePrefix, trackedTag } from "@/lib/postage-display";
 
 export type BasketSource = "deck" | "watchlist" | "binder";
 
 interface PickedLine {
   card: SearchCard;
   qty: number;
+}
+
+export interface BasketRegionOption {
+  key: string;
+  label: string; // the picker's text, a name short enough for a phone: "Northeast", "Elsewhere (not measured)"
+  phrase: string; // in a sentence: "the Northeast"
+  pricedTo: string; // under the picker: "priced to New York, the one address we measured there"
+  unmeasured?: boolean; // "Elsewhere (not measured)"
 }
 
 // What /api/basket returns to Premium: the preview numbers plus the plans.
@@ -49,18 +59,45 @@ const TABS: { key: BasketSource; label: string }[] = [
 // condition and a tracked link. Anyone else signed in gets a click-only preview
 // of their own real numbers (the route withholds the store lines; see
 // api/basket/route.ts), and nothing runs until they click.
+//
+// POSTAGE (2026-09-25): each store's own checkout rate for the order it would
+// get, measured — not a flat guess. The buyer picks where it is going; the
+// picker starts from their location (geoRegion, from Vercel's geo headers —
+// a US visitor in Ohio starts on "Midwest", priced to Chicago; one in Maryland
+// on "South Atlantic", priced at the dearer of New York and Dallas), and their
+// own pick is remembered in this browser. Unset, every store is priced at its
+// HIGHEST regional rate and says "up to"; "Elsewhere (not measured)" is priced
+// the same way and marked "est." — "from" in the US and Canada, where it means
+// Alaska, Hawaii or the north and costs more. The buyer can rule out untracked
+// letters. Each store line names the store's own rate, says when a cheaper
+// untracked letter was skipped, marks an order bigger than any measured
+// "from", and marks any store still on an estimate "est.". See lib/shipping.ts
+// and lib/postage-display.ts. A changed delivery choice re-prices Premium's
+// plan on screen; a preview is cleared instead (a re-run is one of the five).
 export function BestBasket({
   full,
   initialList,
   initialSource = "deck",
   initialSkipOwned = false,
   autoRun = false,
+  market,
+  regions,
+  zonePriced,
+  measuredAt,
+  measuredTo,
+  geoRegion,
 }: {
   full: boolean;
   initialList?: string;
   initialSource?: BasketSource;
   initialSkipOwned?: boolean;
   autoRun?: boolean;
+  market: string;
+  regions: BasketRegionOption[];
+  zonePriced: boolean;
+  measuredAt: string | null; // "25 Sep 2026"
+  measuredTo: string[]; // the addresses the market was measured to: ["New York", "San Francisco", …]
+  geoRegion: string | null; // the region the visitor's location suggests (a regions[] key), or null
 }) {
   const { country, fmt } = useCountry();
   const [tab, setTab] = useState<BasketSource>(initialSource);
@@ -74,6 +111,31 @@ export function BestBasket({
   // Bumped by every run and every input change: a response that comes back
   // for an older request is dropped, not shown under inputs it doesn't match.
   const reqSeq = useRef(0);
+
+  // Delivery. The server knows the visitor's location, so the first render
+  // already shows their region; a remembered choice replaces it after mount.
+  const validRegion = (k: string) => regions.some((r) => r.key === k);
+  const geo = geoRegion && validRegion(geoRegion) ? geoRegion : null;
+  const [region, setRegion] = useState<string | null>(geo);
+  const [regionGuessed, setRegionGuessed] = useState(!!geo);
+  const [trackedOnly, setTrackedOnly] = useState(false);
+  // What run() prices with — set in the same tick as a change, so a run
+  // started by that change (or by the auto-run below, in the same commit as
+  // the prefs load) never reads the choice from before it.
+  const delivery = useRef<{ region: string | null; trackedOnly: boolean }>({ region: geo, trackedOnly: false });
+
+  // Remembered choices load after mount (localStorage is not readable on the
+  // server); an unknown region prices at each store's highest regional rate.
+  // Declared before the auto-run effect, which relies on it having run.
+  useEffect(() => {
+    const p = readPostagePrefs(market);
+    const r = effectiveRegion(p, geoRegion, validRegion);
+    setRegion(r);
+    setRegionGuessed(!p.regionChosen && !!geoRegion && validRegion(geoRegion));
+    setTrackedOnly(p.trackedOnly);
+    delivery.current = { region: r, trackedOnly: p.trackedOnly };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [market, regions, geoRegion]);
 
   // Any change to what's being asked for clears the old answer, so a plan on
   // screen always belongs to the inputs above it — including an answer still
@@ -108,8 +170,11 @@ export function BestBasket({
     setError(null);
     setResult(null);
     setShown("split");
+    const q = new URLSearchParams();
+    if (delivery.current.region) q.set("region", delivery.current.region);
+    if (delivery.current.trackedOnly) q.set("tracked", "1");
     try {
-      const res = await fetch("/api/basket", {
+      const res = await fetch(`/api/basket${q.toString() ? `?${q}` : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -176,6 +241,25 @@ export function BestBasket({
     touched();
     setPicked((prev) => prev.filter((p) => p.card.id !== cardId));
   }
+
+  // A changed delivery choice: Premium's plan on screen (or on its way) is
+  // re-priced for it; a free preview is cleared, since re-running it would
+  // spend one of the day's five.
+  function changePostage(nextRegion: string | null, nextTracked: boolean) {
+    setRegion(nextRegion);
+    setRegionGuessed(false);
+    setTrackedOnly(nextTracked);
+    delivery.current = { region: nextRegion, trackedOnly: nextTracked };
+    writePostagePrefs(market, { region: nextRegion, trackedOnly: nextTracked });
+    if (full && (result || loading)) void run();
+    else touched();
+  }
+  const regionOpt = regions.find((r) => r.key === region) ?? null;
+  // A MEASURED region the buyer is pricing for ("the Northeast"); "Elsewhere"
+  // is priced like an unknown region and says so.
+  const regionLabel = regionOpt && !regionOpt.unmeasured ? regionOpt.phrase : null;
+  const places = joinList(measuredTo);
+  const postageView: PostageView = { regionLabel, regionOpt, measuredAt, places };
 
   const canRun = tab !== "deck" || pasteText.trim().length > 0 || picked.length > 0;
   const adjective = COUNTRIES[country].adjective;
@@ -285,6 +369,45 @@ export function BestBasket({
           {tab === "binder" && <span className="text-xs">(not for the binder itself)</span>}
         </label>
 
+        {/* Delivery: where it is going, and whether untracked letters count. */}
+        <div className="mt-4 flex flex-wrap items-end gap-x-4 gap-y-2 rounded-lg border border-ink-800 p-2.5">
+          <label className="flex flex-col gap-1 text-xs font-medium text-slate-400">
+            Deliver to
+            {/* sm:text-sm: .input is 16px below sm so iOS doesn't zoom the page on focus. */}
+            <select
+              value={region ?? ""}
+              onChange={(e) => changePostage(e.target.value || null, trackedOnly)}
+              className="input py-1 sm:text-sm"
+              aria-label="Delivery region"
+            >
+              <option value="">Not sure (highest rate)</option>
+              {regions.map((r) => (
+                <option key={r.key} value={r.key}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex min-h-11 items-center gap-2 text-xs text-slate-300 sm:[@media(pointer:fine)]:min-h-0">
+            <input
+              type="checkbox"
+              checked={trackedOnly}
+              onChange={(e) => changePostage(region, e.target.checked)}
+              className="h-4 w-4 accent-brand-500"
+            />
+            Tracked postage only
+          </label>
+          <p className="basis-full text-[11px] leading-snug text-slate-500">
+            {regionGuessed && regionOpt ? `Picked from your location: ${regionOpt.phrase}. Change it if that's wrong. ` : ""}
+            {regionOpt && (zonePriced || regionOpt.unmeasured) ? `${regionOpt.unmeasured ? "Elsewhere" : regionOpt.label}: ${regionOpt.pricedTo}. ` : ""}
+            {zonePriced
+              ? `Some stores charge more to some regions — pick yours. We measured delivery to ${places || "a few addresses"}; a region between two of them is priced at the dearer.`
+              : `Every store we measured charges the same to every ${market === "AU" ? "state and territory (all eight capitals)" : `address we tried${places ? ` (${places})` : ""}`}, so this changes nothing yet.`}{" "}
+            An untracked letter is only counted for orders no bigger than the ones the store offered it on. &ldquo;Tracked
+            postage only&rdquo; leaves those letters out; a rate whose name doesn&apos;t say is marked &ldquo;tracking not stated&rdquo;.
+          </p>
+        </div>
+
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button type="button" onClick={() => void run()} disabled={loading || !canRun} className="btn-primary text-sm disabled:opacity-50">
             {loading ? "Working it out…" : full ? "🧺 Find the cheapest basket" : "See my total"}
@@ -302,10 +425,19 @@ export function BestBasket({
         )}
       </div>
 
-      {result && !isFull(result) && <PreviewCard r={result} fmt={fmt} adjective={adjective} overCap={overCap} />}
+      {result && !isFull(result) && <PreviewCard r={result} fmt={fmt} adjective={adjective} overCap={overCap} postage={postageView} />}
 
       {result && isFull(result) && (
-        <FullResultView r={result} shown={shown} setShown={setShown} fmt={fmt} country={country} adjective={adjective} overCap={overCap} />
+        <FullResultView
+          r={result}
+          shown={shown}
+          setShown={setShown}
+          fmt={fmt}
+          country={country}
+          adjective={adjective}
+          overCap={overCap}
+          postage={postageView}
+        />
       )}
     </div>
   );
@@ -313,6 +445,14 @@ export function BestBasket({
 
 function plural(n: number, one: string, many: string) {
   return n === 1 ? one : many;
+}
+
+// The delivery choice a result was priced for, for the copy around it.
+interface PostageView {
+  regionLabel: string | null; // a MEASURED region: "the Northeast"
+  regionOpt: BasketRegionOption | null;
+  measuredAt: string | null;
+  places: string; // "New York, Chicago, Dallas and San Francisco"
 }
 
 // best_basket_build's `lines` and `matched` are LINES — list entries and how
@@ -360,7 +500,19 @@ function NothingPriced({ r, adjective }: { r: BasketPreview; adjective: string }
 }
 
 // The free preview: the user's own real numbers and nothing else.
-function PreviewCard({ r, fmt, adjective, overCap }: { r: BasketPreview; fmt: (c: number) => string; adjective: string; overCap: boolean }) {
+function PreviewCard({
+  r,
+  fmt,
+  adjective,
+  overCap,
+  postage,
+}: {
+  r: BasketPreview;
+  fmt: (c: number) => string;
+  adjective: string;
+  overCap: boolean;
+  postage: PostageView;
+}) {
   if (r.covered === 0) {
     return (
       <div className="card-surface p-5 text-sm text-slate-300">
@@ -381,6 +533,11 @@ function PreviewCard({ r, fmt, adjective, overCap }: { r: BasketPreview; fmt: (c
             Your list: {fmt(r.totalCents)} delivered from {stores}, {fmt(r.savedCents)} less than buying each card&apos;s cheapest copy
             separately. Premium shows which store to buy each card from.
           </>
+        ) : r.naiveTotalCents < r.totalCents ? (
+          <>
+            Your list: {fmt(r.totalCents)} delivered from {stores}. <RiskyNaive naiveCents={r.naiveTotalCents} fmt={fmt} /> Premium
+            shows which store to buy each card from.
+          </>
         ) : (
           <>
             Your list: {fmt(r.totalCents)} delivered from {stores}. Buying each card&apos;s cheapest copy is already the cheapest way for
@@ -388,13 +545,34 @@ function PreviewCard({ r, fmt, adjective, overCap }: { r: BasketPreview; fmt: (c
           </>
         )}
       </p>
+      <p className="mt-1 text-xs text-slate-500">
+        {fmt(r.totalCents - r.shippingCents - r.topUpCents)} cards + {fmt(r.shippingCents)} postage
+        {r.topUpCents > 0 && <> + {fmt(r.topUpCents)} to reach a minimum order</>}
+        {postage.regionLabel ? ` · delivered to ${postage.regionLabel}` : ""}
+      </p>
+      {r.postageNotes.length > 0 && <p className="mt-0.5 text-xs text-amber-300/80">{r.postageNotes.join(" · ")}</p>}
       <Coverage r={r} />
       {overCap && <ResultCapNote />}
       <UnmatchedList unmatched={r.unmatched} />
       <div className="mt-4">
         <PremiumButton surface="gate:basket-preview" />
       </div>
+      <PostageFooter postage={postage} className="mt-4 text-left" />
     </div>
+  );
+}
+
+// The chosen plan can REPORT more than buying each card's cheapest copy only
+// one way: the search allows for postage that was still rising past the
+// biggest order a store's checkout was measured on (lib/basket.ts), and the
+// naive split leans on such a store's "from" figure. Say so rather than claim
+// the plan is cheapest.
+function RiskyNaive({ naiveCents, fmt }: { naiveCents: number; fmt: (c: number) => string }) {
+  return (
+    <>
+      Buying each card&apos;s cheapest copy shows {fmt(naiveCents)}, but that puts a bigger order on a store than its checkout was
+      measured on, where postage was still rising with size — this total doesn&apos;t count on that store&apos;s &ldquo;from&rdquo; figure.
+    </>
   );
 }
 
@@ -447,6 +625,7 @@ function FullResultView({
   country,
   adjective,
   overCap,
+  postage,
 }: {
   r: FullResult;
   shown: PlanKey;
@@ -455,6 +634,7 @@ function FullResultView({
   country: string;
   adjective: string;
   overCap: boolean;
+  postage: PostageView;
 }) {
   const { plan, alternatives } = r;
   if (plan.storeCount === 0) {
@@ -464,6 +644,7 @@ function FullResultView({
         {overCap && <ResultCapNote />}
         <UnmatchedList unmatched={r.unmatched} />
         <Unbuyable plan={plan} country={country} />
+        <LeftOut plan={plan} />
       </div>
     );
   }
@@ -509,6 +690,8 @@ function FullResultView({
               cheapest copy separately ({fmt(plan.naiveTotalCents)} across {plan.naiveStoreCount}{" "}
               {plural(plan.naiveStoreCount, "store", "stores")}).
             </>
+          ) : plan.naiveTotalCents < plan.totalCents ? (
+            <RiskyNaive naiveCents={plan.naiveTotalCents} fmt={fmt} />
           ) : (
             <>Buying each card&apos;s cheapest copy is already the cheapest way for this list.</>
           )}
@@ -547,30 +730,37 @@ function FullResultView({
         </div>
       )}
 
-      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">
-        {shown === "single" ? "Best single store" : shown === "two" ? "Best two stores" : "Cheapest split"}: {view.storeCount}{" "}
-        {plural(view.storeCount, "order", "orders")}
-      </h2>
+      <div>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">
+          {shown === "single" ? "Best single store" : shown === "two" ? "Best two stores" : "Cheapest split"}: {view.storeCount}{" "}
+          {plural(view.storeCount, "order", "orders")}
+        </h2>
+        <p className="mt-0.5 text-xs text-slate-500">
+          {fmt(view.itemsCents)} cards + {fmt(view.shippingCents)} postage
+          {view.topUpCents > 0 && <> + {fmt(view.topUpCents)} to reach a minimum order</>} = {fmt(view.totalCents)}
+          {postage.regionLabel ? ` · delivered to ${postage.regionLabel}` : ""}
+        </p>
+        <PlanNotes plan={view} regionLabel={postage.regionLabel} regionOpt={postage.regionOpt} />
+      </div>
       {view.stores.map((s) => (
         <div key={s.key} className="card-surface overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-700 px-4 py-2.5">
-            <h3 className="text-sm font-bold text-white">{s.name}</h3>
-            <span className="text-xs text-slate-400">
-              {fmt(s.subtotalCents)}
-              {s.freeShipping ? (
-                <span className="ml-1 text-brand-400">+ free postage</span>
-              ) : (
-                <span className="ml-1 text-slate-500">+ {fmt(s.shippingCents)} postage</span>
-              )}
-            </span>
+          <div className="border-b border-ink-700 px-4 py-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-bold text-white">{s.name}</h3>
+              <span className="text-xs text-slate-400">
+                {fmt(s.subtotalCents)}
+                {s.freeShipping ? (
+                  <span className="ml-1 text-brand-400">+ {freePrefix(s.postage)}free postage</span>
+                ) : (
+                  <span className="ml-1 text-slate-500">
+                    + {postagePrefix(s.postage)}
+                    {fmt(s.shippingCents)} postage
+                  </span>
+                )}
+              </span>
+            </div>
+            <PostageLine group={s} fmt={fmt} />
           </div>
-          {s.freeOverCents > 0 && (
-            <p className="border-b border-ink-800 px-4 py-1.5 text-[11px] text-slate-500">
-              {s.freeShipping
-                ? `Free postage over ${fmt(s.freeOverCents)} — this order clears it.`
-                : `Free postage over ${fmt(s.freeOverCents)} — ${fmt(s.freeOverCents - s.subtotalCents)} away.`}
-            </p>
-          )}
           <ul className="divide-y divide-ink-800">
             {s.lines.map((l, i) => (
               <li key={i} className="flex items-center gap-3 px-4 py-2 text-sm">
@@ -606,12 +796,95 @@ function FullResultView({
       ))}
 
       <Unbuyable plan={plan} country={country} />
+      <LeftOut plan={plan} />
 
-      <p className="text-center text-[11px] text-slate-600">
-        Postage uses each store&apos;s typical single-card rate and free-shipping threshold (estimates), and a store may hold fewer
-        copies than you need. Always confirm at checkout.
-      </p>
+      <PostageFooter postage={postage} className="text-center">
+        {" "}A store may also hold fewer copies than you need.
+      </PostageFooter>
     </>
+  );
+}
+
+// The notes under a plan's total — each a reason it is less certain than it
+// looks (lib/postage-display.ts).
+function PlanNotes({
+  plan,
+  regionLabel,
+  regionOpt,
+}: {
+  plan: BasketPlan;
+  regionLabel: string | null;
+  regionOpt: BasketRegionOption | null;
+}) {
+  const notes = planPostageNotes(plan, !!regionLabel, !!regionOpt?.unmeasured);
+  return notes.length ? <p className="mt-0.5 text-xs text-amber-300/80">{notes.join(" · ")}</p> : null;
+}
+
+// Stores that stock a card on the list but were left out, each with its own
+// reason. Neutral: a store is left out because it quoted no postage to the
+// buyer's region, it offers only untracked postage under "Tracked postage
+// only", or it posts nowhere we measured — and "doesn't post to you" was wrong
+// for two of those.
+function LeftOut({ plan }: { plan: BasketPlan }) {
+  if (!plan.excludedStores.length) return null;
+  return (
+    <div className="card-surface p-4 text-xs text-slate-400">
+      <p className="font-semibold text-slate-300">Left out of this plan:</p>
+      <ul className="mt-1 space-y-0.5">
+        {plan.excludedStores.map((x) => (
+          <li key={x.key}>
+            <span className="text-slate-300">{x.name}</span> — {x.reason}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// Where every postage figure comes from, under every kind of answer.
+function PostageFooter({ postage, className, children }: { postage: PostageView; className: string; children?: ReactNode }) {
+  const { regionLabel, regionOpt, measuredAt, places } = postage;
+  return (
+    <p className={`text-[11px] leading-relaxed text-slate-600 ${className}`}>
+      Postage is priced from the nearest order sizes each store&apos;s checkout quoted
+      {measuredAt ? `, measured ${measuredAt}` : ""}
+      {regionLabel
+        ? ` for delivery to ${regionLabel}`
+        : ` — the highest rate we measured${places ? ` (to ${places})` : ""}${
+            regionOpt?.unmeasured ? `, since we haven't measured delivery ${regionOpt.phrase}` : ", until you pick your region"
+          }`}
+      . Stores marked <span className="text-slate-400">est.</span> haven&apos;t been measured yet (or not to your region);{" "}
+      <span className="text-slate-400">from</span> means postage is at least that — an order bigger than any we measured, or a
+      region further than any address we measured. Stores change their rates: the store&apos;s own checkout is final.
+      {children}
+    </p>
+  );
+}
+
+// The line under each store's name: its own rate name, and what else a buyer
+// should know about it — a skipped untracked letter, a free-postage threshold
+// within reach, a minimum order, an order bigger than any we measured, a store
+// posting from abroad (lib/postage-display.ts).
+function PostageLine({ group, fmt }: { group: BasketStoreGroup; fmt: (c: number) => string }) {
+  const p = group.postage;
+  if (p.basis === "estimate") {
+    return (
+      <p className="mt-0.5 text-[11px] text-amber-300/80">
+        est. {fmt(p.cents)} — this store&apos;s postage hasn&apos;t been measured yet, so it&apos;s priced at the dearer of our guess
+        and the dearest one-card rate of the stores we checked here; check at checkout.
+      </p>
+    );
+  }
+  const kind = trackedTag(p);
+  const bits = postageLineBits(group, fmt);
+  return (
+    <p className="mt-0.5 text-[11px] text-slate-500">
+      <span className="text-slate-400">
+        {p.label} ({kind}) {p.free ? `${freePrefix(p)}free` : `${postagePrefix(p)}${fmt(p.cents)}`}
+      </span>
+      {p.note ? ` · ${p.note}` : ""}
+      {bits.length > 0 && <> · {bits.join(" · ")}</>}
+    </p>
   );
 }
 
@@ -659,13 +932,16 @@ function PlanCard({
       <div className="mt-1 font-display text-2xl font-extrabold text-white">{fmt(plan.totalCents)}</div>
       <div className="text-[11px] text-slate-500">
         {fmt(plan.itemsCents)} cards + {plan.shippingCents > 0 ? `${fmt(plan.shippingCents)} postage` : "free postage"}
+        {plan.topUpCents > 0 ? ` + ${fmt(plan.topUpCents)} to a minimum order` : ""}
       </div>
       <div className="text-[11px] text-slate-500">
         {plan.storeCount} {plural(plan.storeCount, "order", "orders")}
         {plan.storeCount <= 2 ? `: ${plan.stores.map((s) => s.name).join(" + ")}` : ""}
       </div>
-      <div className={`mt-1 text-[11px] font-semibold ${extra > 0 ? "text-slate-400" : "text-brand-400"}`}>
-        {extra > 0 ? `+${fmt(extra)} vs the cheapest split` : "Cheapest"}
+      {/* Below the headline only by leaning on a store's "from" postage past
+          its measured sizes (see RiskyNaive): said, not crowned. */}
+      <div className={`mt-1 text-[11px] font-semibold ${extra !== 0 ? "text-slate-400" : "text-brand-400"}`}>
+        {extra > 0 ? `+${fmt(extra)} vs the cheapest split` : extra < 0 ? `${fmt(-extra)} less on "from" postage` : "Cheapest"}
       </div>
     </button>
   );

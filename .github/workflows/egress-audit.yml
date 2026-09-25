@@ -68,8 +68,8 @@ jobs:
     # Two sequential samples of up to ~20 minutes each, plus setup.
     timeout-minutes: 55
     env:
-      DATABASE_URL: ${{ secrets.RM3 || vars.RM3 }}
-      DB_SOURCE_NAME: ${{ (secrets.RM3 || vars.RM3) && 'RM3' || 'UNSET' }}
+      DATABASE_URL: ${{ secrets.RM4 || vars.RM4 }}
+      DB_SOURCE_NAME: ${{ (secrets.RM4 || vars.RM4) && 'RM4' || 'UNSET' }}
       HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
       RH10: ${{ secrets.RH10 || vars.RH10 }}
       # Empty on a scheduled run (no inputs); the steps default it to 20 in the
