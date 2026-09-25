@@ -7,6 +7,9 @@
 import { isFallbackRetailer } from "./constants";
 import { COUNTRIES, type Country } from "./country";
 
+// lib/tcgplayer.ts TCG_US.retailer — not imported: that module is server-only.
+const TCGPLAYER_US_LISTING_RETAILER = "tcgplayer";
+
 // A serialized retailerPrice row, enriched server-side with everything the client
 // needs (affiliate buy URL, shipping-policy URL, effective shipping) so the client
 // bundle needs no retailer/affiliate tables.
@@ -90,7 +93,11 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
     .map((p) => ({ ...p, delivered: p.priceCents + (p.ship ?? 0) }))
     .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
   const prices = all.filter((p) => p.inStock);
-  const outOfStock = all.filter((p) => !p.inStock);
+  // The US "tcgplayer" row out of stock is not a sold-out listing: with no
+  // Near-Mint listing, lib/tcgplayer.ts tcgQuote writes it at TCGplayer's
+  // MARKET AGGREGATE. Shown here it read as a store's "last known price"; the
+  // labelled market block (lib/tcg-reference.ts) quotes that figure instead.
+  const outOfStock = all.filter((p) => !p.inStock && p.retailer !== TCGPLAYER_US_LISTING_RETAILER);
   return {
     market: country,
     currency: COUNTRIES[country].currency,

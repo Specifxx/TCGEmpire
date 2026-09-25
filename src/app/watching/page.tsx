@@ -73,9 +73,9 @@ export default async function WatchingPage() {
             price is the cheapest in-stock Near Mint copy at a store we track,
             never eBay; "watching from" is PriceAlert.startPriceCents (older
             watches show their last-checked price, labelled as such); the free
-            email is the weekly digest — a new low at least 5% and 50 cents
-            under the price we last emailed (for 30 days, then the last price
-            seen), a first listing (labelled pre-order before release) or a
+            email is the weekly digest — a new low at least 5% and 50 minor
+            units under the price we last emailed (for 30 days, then the drop
+            anchor: where the price stood before the slide), a first listing (labelled pre-order before release) or a
             restock; the paid triggers — a target (Plus: PLUS_TARGET_ALERT_LIMIT
             cards, Premium: any), a card at least 15% below TCGplayer market,
             and restocks — send after each price update, without the weekly

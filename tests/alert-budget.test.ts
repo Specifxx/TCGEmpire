@@ -1,13 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ALERT_DAILY_BUDGET, ALL_RUN_SHARE, FIRST_CONTACT_SEND_CAP, alertDailyBudget } from "../src/lib/price-alerts";
-import { daysAgo, harness, hoursAgo, owned, plus, row } from "./helpers/alert-harness";
+import { ALERT_BUDGET_WINDOW_MS, ALERT_DAILY_BUDGET, ALL_RUN_SHARE, FIRST_CONTACT_SEND_CAP, alertDailyBudget } from "../src/lib/price-alerts";
+import { NOW, daysAgo, harness, hoursAgo, owned, plus, row } from "./helpers/alert-harness";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE SHARED ALERT BUDGET (2026-09-25). Resend's 100/day also carries
 // verification, reset, welcome, trial and release-day mail. Every alert run
 // together may email at most ALERT_DAILY_BUDGET distinct addresses per rolling
-// 24h (env-overridable), counted from lastNotifiedAt with one small query; the
+// ALERT_BUDGET_WINDOW_MS, 20h (env-overridable), counted from lastNotifiedAt with one small query; the
 // free run may use at most ALL_RUN_SHARE. Digests open in priority order
 // (target > restock > below-market > drop > listed/pre-order), and anything
 // over budget is deferred with its baseline held.
@@ -70,14 +70,34 @@ test("the first-contact cap still applies inside the budget", async () => {
   assert.equal(s.budgetDeferred, 0);
 });
 
-test("the budget count is one GROUP BY email over the last 24h, capped", async () => {
+test("the budget count is one GROUP BY email over the last 20h (under the 24h run period), capped", async () => {
+  assert.equal(ALERT_BUDGET_WINDOW_MS, 20 * 3600_000);
   const h = harness([row("a", { lastPriceCents: 1000, price: 800 })]);
   await h.run();
   assert.equal(h.budgetQueries.length, 1);
   const q = h.budgetQueries[0] as { by: string[]; where: { lastNotifiedAt: { gte: Date } }; take: number };
   assert.deepEqual(q.by, ["email"]);
-  assert.deepEqual(q.where.lastNotifiedAt.gte, hoursAgo(24));
+  assert.deepEqual(q.where.lastNotifiedAt.gte, hoursAgo(20));
   assert.equal(q.take, 1000);
+});
+
+test("yesterday's same-slot recipients never count against today's free run, whatever the jitter", async () => {
+  // 70 addresses with news. Yesterday's free run emailed 35 of them; today's
+  // run starts 3 minutes EARLIER than yesterday's (import-duration jitter).
+  // With a 24h window those 35 still counted and only 15 went out.
+  const rows = Array.from({ length: 70 }, (_, i) =>
+    row(`j${i}`, {
+      lastPriceCents: 1000,
+      price: 800,
+      lastNotifiedAt: i < 35 ? new Date(NOW.getTime() - 24 * 3600_000 + 3 * 60_000) : null,
+      lowestEmailedCents: i < 35 ? 1100 : null,
+    }),
+  );
+  // Weekly cap aside (those 35 are inside their week), the budget must not bind.
+  const h = harness(rows, { dailyBudget: 50 });
+  const s = await h.run();
+  assert.equal(s.budgetDeferred, 0, "a 24h window counted them and deferred 20 on budget");
+  assert.equal(h.sent.length, FIRST_CONTACT_SEND_CAP, "only the first-contact cap binds");
 });
 
 test("snoozed watches are not emailed but their baselines advance; legacy markets are skipped", async () => {

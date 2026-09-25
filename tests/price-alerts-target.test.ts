@@ -56,11 +56,15 @@ test("shouldRearmTarget: the price back above the target, or sold out, re-arms a
   assert.equal(shouldRearmTarget({ current: 1500, targetCents: 1000, targetEmailedCents: null }), false, "already armed");
 });
 
-test("the paid cooldown is 24h per card", () => {
-  assert.equal(PAID_COOLDOWN_MS, 24 * 3600_000);
-  assert.equal(inPaidCooldown(hoursAgo(23), NOW), true);
-  assert.equal(inPaidCooldown(hoursAgo(24), NOW), false);
+test("the paid cooldown is 20h per card — under the 24h between same-slot runs", () => {
+  assert.equal(PAID_COOLDOWN_MS, 20 * 3600_000);
+  assert.equal(inPaidCooldown(hoursAgo(19), NOW), true);
+  assert.equal(inPaidCooldown(hoursAgo(20), NOW), false);
   assert.equal(inPaidCooldown(null, NOW), false);
+  // A 12h-later run is still inside it; yesterday's same slot, a few minutes
+  // late or early by import jitter, never is (it was, at exactly 24h).
+  assert.equal(inPaidCooldown(hoursAgo(12), NOW), true);
+  assert.equal(inPaidCooldown(new Date(NOW.getTime() - 24 * 3600_000 + 4 * 60_000), NOW), false);
 });
 
 test("belowMarketSignal: scored from the alert price, at least 15% under, and material", () => {
@@ -179,7 +183,7 @@ test("a hit with the price unmoved is still recorded, and never re-sends", async
   assert.equal(first.sent.length, 1);
   assert.equal(first.writeFor("a")!.targetEmailedCents, 900);
   const second = harness([
-    owned("a", plus, { targetCents: 1000, lastPriceCents: 900, lowestEmailedCents: 900, targetEmailedCents: 900, lastNotifiedAt: daysAgo(2), price: 900 }),
+    owned("a", plus, { targetCents: 1000, lastPriceCents: 900, lowestEmailedCents: 900, targetEmailedCents: 900, dropAnchorCents: 900, lastNotifiedAt: daysAgo(2), price: 900 }),
   ]);
   const s = await second.run();
   assert.equal(second.sent.length, 0);

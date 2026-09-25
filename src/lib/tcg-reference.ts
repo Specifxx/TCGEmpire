@@ -33,6 +33,11 @@ export interface TcgRefRow {
   country: string;
   priceCents: number;
   isFoil: boolean;
+  // Absent counts as in stock (older callers and fixtures). The US "tcgplayer"
+  // row is written OUT of stock at the market aggregate when TCGplayer has no
+  // Near-Mint listing (lib/tcgplayer.ts tcgQuote); that row is not a buyable
+  // listing, so it must not count as "shown natively".
+  inStock?: boolean;
 }
 
 /**
@@ -45,8 +50,10 @@ export interface TcgRefRow {
  * wraps it itself. Everything upstream of that difference is shared.
  *
  * Null in three cases, all of them correct:
- *   • TCGplayer is already a buyable row in this market (the US) — the block
- *     would restate a price the comparison table is showing.
+ *   • TCGplayer is already a buyable, IN-STOCK row in this market (the US) —
+ *     the block would restate a price the comparison table is showing. With
+ *     no live US listing the block shows instead (review, 2026-09-25): the
+ *     only figure left is the market aggregate, and it must carry that label.
  *   • There is no `tcgplayer` USD row for the card at all.
  *   • Intl is disabled, so the API hard-filtered the response to one country and
  *     the USD row never reached the client. Falls out of the case above for
@@ -57,7 +64,7 @@ export function tcgReferenceRows<T extends TcgRefRow>(
   country: string,
 ): { std: T | null; foil: T | null } | null {
   const shownNatively = rows.some(
-    (r) => r.retailer.startsWith("tcgplayer") && r.country === country && !isFallbackRetailer(r.retailer),
+    (r) => r.retailer.startsWith("tcgplayer") && r.country === country && !isFallbackRetailer(r.retailer) && r.inStock !== false,
   );
   if (shownNatively) return null;
   // The single USD market price. Since 2026-09-23 that is the US reference row

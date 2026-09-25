@@ -13390,3 +13390,208 @@ totals. The /watching intro names the new triggers, snooze and pause.
 **Not built:** per-watch filters; `RetailerPrice.preorder` title detection;
 an un-snooze control (a snooze lapses after 30 days, and the stop link
 remains); `SealedWatch` (owner: later).
+
+## Price alerts: review fixes — 2026-09-25
+
+A verification review of the two entries above found bugs that would have
+sent false or duplicate alerts, one open redirect, and a workflow gate that
+could drop a day's alerts. Owner decisions unchanged: core now, sealed watches
+later (no `SealedWatch`), eBay never triggers an alert, tier split unchanged.
+Everything below is in `lib/price-alerts.ts` unless named.
+
+**Outlier hold, both bounds.** `confirmsPendingLow` checked only an upper bound
+(`current ≤ pending × 1.05`). So an even LOWER price on the run after a hold
+(the one-off bogus low the hold exists for) counted as confirmed, was emailed
+at once, and became `lowestEmailedCents`/`targetEmailedCents`, muting real
+alerts on the card for 30 days. It is now ±5% (`ceil(pending × 0.95)` to
+`floor(pending × 1.05)`). A figure under the band clears the pending low and
+is judged afresh, which holds it again at the new figure.
+
+**A slow slide adds up: the drop anchor.** With no live watermark the
+reference was the previous run's price, so every sub-5% step was "not
+material", the baseline still advanced, and a card could lose half its price
+in 3% daily steps without one email. New nullable `PriceAlert.dropAnchorCents`:
+it starts from the last price, follows the price UP (a rise ends the slide),
+holds on the way down, and is reset to the price we email. With no live
+watermark a drop is measured from it (`alertReference` basis `"anchor"`, the
+email says "down from where it stood before this slide"). `lastPriceCents`
+still advances every run, so a sawtooth can't queue. A deferred or held item
+keeps its anchor with the rest of its baseline. The watermark still wins while
+live. We chose an anchor that tracks the high over one that tracks the low
+because "the lowest price since the last email" is just the last price in a
+steady decline.
+
+**New watches start from the alert price.** Both creation paths
+(`/api/alerts/subscribe`, the watchlist POST) seeded `lastPriceCents` and
+`startPriceCents` from `pickPrice()`, i.e. `Card.lowestPriceCents*` with eBay,
+played and stale copies. A card only eBay listed then read as sold out on the
+first run. A free watcher later got "Back in stock … $<eBay> before it sold
+out" plus "You started watching at $<eBay> · Near Mint". A Plus watcher got
+nothing when a store listed it within 20h, and "now listed" could never fire.
+Both routes now read `computeAlertPrices` (one bounded `slim` query: no URL or
+postage columns; the subscribe route reads only cards the address does not
+already watch, and hands the same map to the confirmation). They seed through
+`alertBaselineSeed`: the price when `priced`, else null, so the first store
+listing fires "now listed"/"pre-order". `dropAnchorCents` is seeded too.
+A failed read returns 503 and saves nothing, because a guessed baseline is
+what caused this. **Existing rows** seeded the old way are handled in the run
+rather than by a one-off script. A row with a baseline, no `dropAnchorCents`
+(never confirmed by a priced run of the alert price), no `soldOutAt`, whose
+pair is `soldout` on the alert price but priced on the Card, is reset to
+`lastPriceCents: null` (and `startPriceCents: null` when it equals that
+figure). It is not stamped sold out, and the summary counts it as
+`legacyReset`. This replaces the earlier entry's "a later store listing will
+email 'back in stock': mostly true, and expected".
+
+**Partial feed outages are `unknown`.** The `unknown` state covered only
+"every eligible row is stale". If the cheapest store's feed went stale while
+a dearer store was fresh, the alert price jumped to the dearer store and
+raised `lastPriceCents` (and re-armed a fired target). The cheap store's
+recovery at its unchanged price then read as a new low. `alertPriceFromRows`
+now returns `unknown` when a stale (36-72h) eligible row from a retailer with
+no fresh copy is cheaper than every fresh copy. A stale row that is dearer
+can't lower the price, so that stays `priced`. **Outages past 72h:** a pair
+with nothing eligible inside 72h was `soldout`, so a CardTrader token expiry
+or a TCGplayer coverage-guard skip (both keep their old rows) longer than
+three days stamped every watch sold out and emailed "back in stock" on
+recovery. `computeAlertPrices` now makes one more bounded read, only for the
+pairs that came out `soldout`: in-stock eligible rows from 72h to 14 days old
+(`ALERT_OUTAGE_MAX_MS`). Any hit makes the pair `unknown`. Every source
+deletes and re-inserts its rows on a successful import, so an old in-stock row
+means its feed is failing. A Shopify store's rows are deleted after 72h of
+failure (`STORE_ROWS_MAX_AGE_H`), so a store outage longer than that can still
+read as sold out. Fixing that needs a per-retailer last-success record, which
+is not built.
+
+**A restock needs two sold-out runs.** Free rows are evaluated once a day, so
+a single out-of-stock read at 07:00 (a missed scrape, or a restock the 19:00
+import already saw) was 24h old by the next run and cleared
+`RESTOCK_MIN_SOLDOUT_MS` (20h) on its own. New nullable
+`PriceAlert.soldOutRuns`, capped at 2: set to 1 when `soldOutAt` is stamped
+and 2 on the next sold-out run, cleared with `soldOutAt`. `isRestock` needs
+both 20h and `RESTOCK_MIN_SOLDOUT_RUNS` = 2. For entitled rows the 20h guard
+already needed a second observation, so nothing changes for them. We chose
+two observations over a write-only pass for free rows at 19:00 because the
+paid run's read is narrowed to entitled rows, and widening it would double
+the heaviest read.
+
+**Windows under the run period.** `PAID_COOLDOWN_MS` and the budget window
+were both exactly 24h, the same as the gap between same-slot runs. A few
+minutes of import-duration jitter then decided whether a trigger due at the
+next 07:xx run went out or waited to 19:xx, and whether the free run's budget
+share was 35 or 15. Both are now 20h (`PAID_COOLDOWN_MS`,
+`ALERT_BUDGET_WINDOW_MS`). A 12h-later run is still inside both; yesterday's
+same slot never is. The shared budget still spans one UTC day's two slots.
+
+**What a digest can't show isn't recorded as told.** A digest renders 10 full
+rows and 30 one-line rows. The rest became "and N more on your watchlist",
+which links to a page with no prices, yet the run wrote `lastNotifiedAt` and
+the watermarks for them. So a later alert quoted "the price we last emailed
+you" that we never emailed, and a hidden target stayed silent. The run now
+takes the items `renderedAlertItems` (the email's own order and cut) will show.
+It holds the rest like a deferral (baseline kept, nothing written, counted as
+`overflow`) so they re-detect next run. The line now reads "N more cards with
+news will come in your next alert email".
+
+**One-tap targets never re-fire at the price shown.** "Set target at <this
+price>" set a target the price already met. "Lower target 10%" was 90% of the
+old target, which could still be above a price already more than 10% under
+it. `applyTargetPrice` clears `targetEmailedCents` on any change, so both
+guaranteed a duplicate "hit your target" at the next paid run, with nothing
+changed. Now:
+- the set-at-this-price link is gone (the action still verifies for links
+  already sent);
+- the one target link is 10% under the LOWER of target and price;
+- `performAlertAction` passes the row's `lastPriceCents` as `seedFiredAtCents`,
+  so a target at or above the current alert price is stored already fired
+  there and re-fires only 10% further down.
+
+The watchlist's own PATCH is unchanged: a typed target re-arms.
+
+**Below-market never uses a cloned promo row.** `tcgMarketFor` read
+`tcgplayer_market`/`tcgplayer` rows with no `derived` filter, and
+`buildTcgplayerRows` clones the base card's product into promos that have no
+match of their own, reference rows included. So a promo worth $12 was scored
+against its base printing's $40 market, and the email quoted that $40 as "N%
+under TCGplayer market". Both `tcgMarketFor` and Deal Finder's
+`getTcgUsRowsMemoized` now filter `derived` null/false. The cache key is
+bumped to `arb-tcg-us-rows-v3`.
+
+**Condition gaps.**
+- `alertConditionRank` and `conditionRank` read Cardmarket's "Good" (and
+  "Very Good", "GD") as rank 2. It used to tie with NM, win on price in the
+  importer, and then count as NM.
+- The Shopify row write now records a played/damaged label from the PRODUCT
+  title when the variant names no condition (`listingCondition`; only the
+  unambiguous phrases the matcher already strips, since a product title is
+  mostly a card name).
+- The per-store dedupe prefers better condition before price, so a store's
+  separate "Heavily Played" product can't displace its NM one by being
+  cheaper.
+
+**TCGplayer's aggregate is labelled as one.** With no NM listing, the US
+`tcgplayer` row is written out of stock at the market aggregate (previous
+entry). The card page then showed it in "last known prices" and suppressed
+the labelled market block, because `tcgReferenceRows` counted it as shown
+natively regardless of stock. Now `shownNatively` requires `inStock` (an
+optional `TcgRefRow` field; absent counts as in stock), and `computeMarket`
+leaves the out-of-stock `tcgplayer` row out of `outOfStock`/`lastSeen`. The
+importer is unchanged: `tcgplayer_market` already holds the figure.
+
+**Open redirect in `/api/market`.** `sanitizeNextPath` passed `/\evil.com`
+and `/<TAB>/evil.com`, which the WHATWG parser resolves off-origin, and the
+new route turned that into a server-side 307 on the domain the alert emails
+teach people to trust. `sanitizeNextPath` now rejects backslashes and
+control/space characters and re-checks the parsed origin. That protects the
+login `?next=` callers too. The route re-checks `dest.origin === url.origin`
+before redirecting.
+
+**Workflow gates** (`refresh-prices.yml`):
+- Both alert steps' `if:` had no status function, so GitHub prepended an
+  implicit `success() &&`. A failed sealed import (the step between, which
+  exits 1) silently dropped the day's only free digest and the paid run. Both
+  now start with `!cancelled() &&`, so only the price import's own outcome
+  gates them.
+- The free step could never run from `workflow_dispatch`
+  (`github.event.schedule` is empty there), despite its comment. A new
+  boolean input `free_alerts` (default off, so a routine manual re-import
+  doesn't fire a second free run) now allows it. That is the recovery path
+  for a missed 07:00 run.
+- Skipping alerts after a push re-import did not suppress matching-fix
+  "drops": only the alert run writes baselines, so the next scheduled run
+  emailed them anyway. A push re-import now calls
+  `/api/cron/price-alerts/baseline` (its own path, like `/paid`, because the
+  deployed parent route ignores queries). It runs `runPriceAlerts({},
+  { baselineOnly: true })`: every priced watch moves to the new price
+  (`lastPriceCents`, anchor, `soldOutAt`, pending lows, target re-arms), with
+  no hold, no send and no watermark. A watch with no price yet is left alone,
+  so a card a matcher fix newly prices still gets "now listed".
+
+**Copy.** The confirmation no longer calls an unstated-condition copy Near
+Mint. It prints the lead copy's condition as the store states it
+(`AlertConfirmationCard.condition`). Its cadence line quotes the minimum drop
+in the market's currency (`formatMoney(DROP_MIN_CENTS, …)`; mixed markets get
+"50 cents or pence, in your market's currency"). `DROP_MIN_*` moved to
+`lib/alert-thresholds.ts` so the email can quote them without an import
+cycle, and `price-alerts.ts` re-exports them. The /alerts FAQ, the
+/alerts/action page and /watching say "Near Mint (or unstated-condition)",
+"50 cents or pence", "where it stood before it started falling", and describe
+the single target link.
+
+**Schema** (additive, nullable, no backfill): `PriceAlert.dropAnchorCents`,
+`PriceAlert.soldOutRuns`.
+
+**Importer files touched:** `src/lib/price-import.ts` only (the Shopify row's
+condition label and per-store dedupe). `lib/condition.ts` is not on the
+workflow's push list, but its "Good" rank changes import results on the next
+scheduled import. No `lib/tcgplayer.ts` or `lib/ebay*.ts` change.
+
+**Tests.** `tests/alert-review-fixes.test.ts` covers the slow slide (20 daily
+runs at −3%, with and without an expired watermark), the partial-outage
+double run (free and Plus), digest overflow, the baseline pass, `tcgMarketFor`'s
+derived filter, the TCGplayer reference block, and the redirect. The
+outlier-hold, restock, budget, target, action and alert-price tests gain the
+new cases: a lower low re-held (free and Plus), one sold-out daily read then
+back (no email), the eBay-seeded legacy reset, the 20h windows under jitter,
+the 80h-old CardTrader row (`unknown`), `listingCondition`, "Good", and a
+target at the shown price stored as fired.

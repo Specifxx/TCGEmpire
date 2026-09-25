@@ -14,6 +14,9 @@ import { sanitizeNextPath } from "@/lib/next-param";
 //
 // No database, no session. `to` must be a same-origin, non-API path
 // (sanitizeNextPath); anything else goes home. An unknown market is ignored.
+// The resolved target is re-checked against this request's own origin before
+// the redirect (an open redirect on the domain the alert emails teach people
+// to trust would be a phishing primitive; review, 2026-09-25).
 export const dynamic = "force-dynamic";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
@@ -22,7 +25,9 @@ export function GET(req: Request) {
   const url = new URL(req.url);
   const to = sanitizeNextPath(url.searchParams.get("to")) ?? "/";
   const m = (url.searchParams.get("m") ?? "").toUpperCase();
-  const res = NextResponse.redirect(new URL(to, url.origin), 307);
+  let dest = new URL(to, url.origin);
+  if (dest.origin !== url.origin || dest.pathname.startsWith("/api")) dest = new URL("/", url.origin);
+  const res = NextResponse.redirect(dest, 307);
   res.headers.set("Cache-Control", "no-store");
   const live = INTL_ENABLED && Object.prototype.hasOwnProperty.call(COUNTRIES, m) && COUNTRY_LIST.some((c) => c.code === m);
   if (live) {

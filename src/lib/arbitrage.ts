@@ -191,12 +191,18 @@ function getTcgUsRowsMemoized(): Promise<TcgUsRow[]> {
     async () =>
       mergeTcgUsRows(
         await prisma.retailerPrice.findMany({
-          where: { retailer: { in: [...TCG_US_MARKET_READ_KEYS] }, country: "US", inStock: true },
+          // Never a DERIVED row: buildTcgplayerRows clones the BASE card's
+          // product into a promo with no TCGplayer match of its own, market
+          // rows included, so a promo was scored against its base printing's
+          // price (review, 2026-09-25). No own row → no reference, no deal.
+          where: { retailer: { in: [...TCG_US_MARKET_READ_KEYS] }, country: "US", inStock: true, OR: [{ derived: null }, { derived: false }] },
           select: { cardId: true, priceCents: true, url: true, retailer: true },
           take: 10000, // ~3.5x the catalogue across both keys — see invariant above
         }),
       ),
-    ["arb-tcg-us-rows-v2", sydneyDayKey()],
+    // -v3: the derived filter changes the cached value; a pre-deploy entry
+    // would otherwise keep serving cloned promo rows until it expired.
+    ["arb-tcg-us-rows-v3", sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   );
 }
@@ -253,7 +259,16 @@ export async function tcgMarketFor(
   const out = new Map<string, TcgMarketRef>();
   if (!ids.length) return out;
   const rows = await db.retailerPrice.findMany({
-    where: { retailer: { in: [...TCG_US_MARKET_READ_KEYS] }, country: "US", inStock: true, cardId: { in: ids } },
+    // Never a DERIVED (cloned-from-the-base-card) row: a promo with only
+    // cloned rows has no market reference, so the below-market trigger stays
+    // off for it instead of quoting another product's price.
+    where: {
+      retailer: { in: [...TCG_US_MARKET_READ_KEYS] },
+      country: "US",
+      inStock: true,
+      cardId: { in: ids },
+      OR: [{ derived: null }, { derived: false }],
+    },
     select: { cardId: true, priceCents: true, url: true, retailer: true },
     take: ids.length * 8, // ≤ 2 keys × foil/non-foil per card; generous
   });

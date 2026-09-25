@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { cardTileSelect } from "@/lib/cards";
 import { getCountry } from "@/lib/get-country";
-import { pickPrice, type Country } from "@/lib/country";
+import { alertBaselineSeed, alertPairKey, computeAlertPrices } from "@/lib/alert-price";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The ACCOUNT-scoped half of price watches.
@@ -116,21 +116,20 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   const { cardId, market } = parsed.data;
 
-  // Capture today's lowest price as the baseline, so we alert on FUTURE drops
-  // rather than on the price they are already looking at.
-  const card = await prisma.card.findUnique({
-    where: { id: cardId },
-    select: {
-      id: true,
-      lowestPriceCents: true,
-      lowestPriceCentsUs: true,
-      lowestPriceCentsUk: true,
-      lowestPriceCentsSg: true,
-      lowestPriceCentsCa: true,
-      lowestPriceCentsEu: true,
-    },
-  });
+  const card = await prisma.card.findUnique({ where: { id: cardId }, select: { id: true } });
   if (!card) return NextResponse.json({ error: "No matching card" }, { status: 400 });
+
+  // THE BASELINE, for a new row: today's ALERT PRICE for this (card, market),
+  // null when no store has it — the same seed as /api/alerts/subscribe
+  // (alertBaselineSeed; never the eBay-inclusive Card price). One card, one
+  // bounded slim query. A failed read saves nothing.
+  let seed: ReturnType<typeof alertBaselineSeed>;
+  try {
+    const prices = await computeAlertPrices(prisma, [{ cardId: card.id, market }], new Date(), { slim: true });
+    seed = alertBaselineSeed(prices.get(alertPairKey(market, card.id)));
+  } catch {
+    return NextResponse.json({ error: "Couldn't read today's price. Please try again." }, { status: 503 });
+  }
 
   // Reuse this address's existing unsubscribe token, so one emailed link still
   // covers every row for the address — account-owned or not.
@@ -143,10 +142,9 @@ export async function POST(req: Request) {
   // the same person created anonymously before signing in. It stamps ownership
   // and deliberately touches nothing else — rewriting lastPriceCents would reset
   // the baseline and swallow the very drop the watch exists to catch.
-  // startPriceCents is written in the create branch ONLY — it is "the price
-  // when you started watching", so adopting an older anonymous row keeps that
-  // row's own start.
-  const price = pickPrice(card, market as Country);
+  // The seed (lastPriceCents, startPriceCents, dropAnchorCents) is written in
+  // the create branch ONLY — startPriceCents is "the price when you started
+  // watching", so adopting an older anonymous row keeps that row's own start.
   const item = await prisma.priceAlert.upsert({
     where: { email_cardId_market: { email: user.email, cardId: card.id, market } },
     update: { userId: user.id },
@@ -156,8 +154,7 @@ export async function POST(req: Request) {
       cardId: card.id,
       market,
       unsubToken: existing?.unsubToken ?? randomUUID(),
-      lastPriceCents: price,
-      startPriceCents: price,
+      ...seed,
     },
   });
 

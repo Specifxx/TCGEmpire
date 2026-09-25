@@ -53,7 +53,9 @@ export type Row = {
   targetEmailedCents: number | null;
   startPriceCents: number | null;
   soldOutAt: Date | null;
+  soldOutRuns: number | null;
   pendingLowCents: number | null;
+  dropAnchorCents: number | null;
   snoozedUntil: Date | null;
   createdAt: Date;
   unsubToken: string;
@@ -75,6 +77,9 @@ export type RowOpts = Partial<Omit<Row, "card">> & {
 // earlier `now`.
 export function row(id: string, over: RowOpts = {}): Row & { _price: number | null } {
   const { price, us, cardId = `card-${id}`, setCode = "VEN", cardPrice = null, ...rest } = over;
+  // A row given soldOutAt has been SEEN sold out by two runs unless the test
+  // says otherwise (soldOutRuns: 1) — the restock rule's second condition.
+  if (rest.soldOutAt != null && rest.soldOutRuns === undefined) rest.soldOutRuns = 2;
   const market = rest.market ?? "US";
   const card: Card = {
     id: cardId,
@@ -101,7 +106,9 @@ export function row(id: string, over: RowOpts = {}): Row & { _price: number | nu
     targetEmailedCents: null,
     startPriceCents: null,
     soldOutAt: null,
+    soldOutRuns: null,
     pendingLowCents: null,
+    dropAnchorCents: null,
     snoozedUntil: null,
     createdAt: daysAgo(30),
     unsubToken: `tok-${id}`,
@@ -147,7 +154,7 @@ export interface HarnessOpts {
 
 type Where = {
   inStock?: boolean;
-  lastSeen?: { gte: Date };
+  lastSeen?: { gte: Date; lt?: Date };
   OR?: { country: string; cardId: { in: string[] } }[];
 };
 
@@ -189,12 +196,13 @@ export function harness(rows: (Row & { _price?: number | null })[], opts: Harnes
         if (opts.priceQueryFails) throw new Error("db down");
         const w = args.where;
         const gte = w.lastSeen?.gte.getTime() ?? 0;
+        const lt = w.lastSeen?.lt?.getTime() ?? Infinity;
         // Filters the pair, stock and age as Postgres would; the RETAILER
         // filters are left to the code, so eBay/reference exclusion is proven
         // in code too, not only in the query.
         return listings
           .filter((l) => (w.inStock ? l.inStock : true))
-          .filter((l) => l.lastSeen.getTime() >= gte)
+          .filter((l) => l.lastSeen.getTime() >= gte && l.lastSeen.getTime() < lt)
           .filter((l) => (w.OR ?? []).some((o) => o.country === l.country && o.cardId.in.includes(l.cardId)))
           .sort((a, b) => a.priceCents - b.priceCents)
           .slice(0, args.take ?? Infinity);
@@ -237,6 +245,8 @@ export function harness(rows: (Row & { _price?: number | null })[], opts: Harnes
     tcgCalls,
     muteQueries,
     run: (scope?: AlertScope) => runPriceAlerts(deps, scope ? { scope } : {}),
+    // The push re-import's pass: baselines only, nothing sent.
+    runBaseline: () => runPriceAlerts(deps, { baselineOnly: true }),
   };
 }
 

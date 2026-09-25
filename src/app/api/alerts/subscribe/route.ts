@@ -4,9 +4,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit";
-import { pickPrice, type Country } from "@/lib/country";
+import type { Country } from "@/lib/country";
 import { sendAlertConfirmationEmail } from "@/lib/email";
 import { claimConfirmationSlot, confirmationCards } from "@/lib/alert-confirmations";
+import { alertBaselineSeed, alertPairKey, computeAlertPrices, type AlertPrice } from "@/lib/alert-price";
 
 export const dynamic = "force-dynamic";
 
@@ -44,8 +45,7 @@ export async function POST(req: Request) {
   const me = await getCurrentUser();
   const userId = me && me.email === email ? me.id : null;
 
-  // Only watch cards that actually exist; capture today's lowest price as the
-  // baseline so we alert on FUTURE drops, not on the price they're already at.
+  // Only watch cards that actually exist.
   const cards = await prisma.card.findMany({
     where: { id: { in: Array.from(new Set(cardIds)) } },
     select: {
@@ -55,12 +55,6 @@ export async function POST(req: Request) {
       slug: true,
       setCode: true,
       collectorNumber: true,
-      lowestPriceCents: true,
-      lowestPriceCentsUs: true,
-      lowestPriceCentsUk: true,
-      lowestPriceCentsSg: true,
-      lowestPriceCentsCa: true,
-      lowestPriceCentsEu: true,
     },
   });
   if (cards.length === 0) {
@@ -76,22 +70,45 @@ export async function POST(req: Request) {
   });
   const unsubToken = existing?.unsubToken ?? randomUUID();
 
+  // THE BASELINE: today's ALERT PRICE (lib/alert-price.ts — cheapest in-stock
+  // Near-Mint or unstated copy at a store, never eBay), the figure every
+  // trigger compares, so we alert on FUTURE moves; null when no store has it,
+  // so its first listing fires "now listed" (alertBaselineSeed). Read only for
+  // cards this address does not already watch here — re-hearting a watched
+  // card, the common case, costs one tiny id read — in ONE bounded query
+  // (slim: no URLs). A failed read saves nothing: a guessed baseline is what
+  // sent the eBay-priced "back in stock" emails.
+  const already = existing
+    ? await prisma.priceAlert.findMany({
+        where: { email, market, cardId: { in: cards.map((c) => c.id) } },
+        select: { cardId: true },
+        take: 500,
+      })
+    : [];
+  const watched = new Set(already.map((r) => r.cardId));
+  const fresh = cards.filter((c) => !watched.has(c.id));
+  let prices: Map<string, AlertPrice>;
+  try {
+    prices = fresh.length
+      ? await computeAlertPrices(prisma, fresh.map((c) => ({ cardId: c.id, market })), new Date(), { slim: true })
+      : new Map();
+  } catch {
+    return NextResponse.json({ error: "Couldn't read today's prices. Please try again." }, { status: 503 });
+  }
+
   // createMany + skipDuplicates means re-subscribing an already-watched card is a
   // harmless no-op and never clobbers its tracked baseline. startPriceCents is
-  // the "watching from" figure: written here, once, and never by the cron.
+  // the "watching from" figure: written here, once — only by the cron's
+  // one-time reset of a pre-alert-price baseline after that.
   const result = await prisma.priceAlert.createMany({
-    data: cards.map((c) => {
-      const price = pickPrice(c, market as Country);
-      return {
-        email,
-        userId,
-        cardId: c.id,
-        market,
-        unsubToken,
-        lastPriceCents: price,
-        startPriceCents: price,
-      };
-    }),
+    data: fresh.map((c) => ({
+      email,
+      userId,
+      cardId: c.id,
+      market,
+      unsubToken,
+      ...alertBaselineSeed(prices.get(alertPairKey(market, c.id))),
+    })),
     skipDuplicates: true,
   });
 
@@ -115,7 +132,7 @@ export async function POST(req: Request) {
     // pause and List-Unsubscribe links. `userId == null` means this watch has
     // no account behind it — those recipients (and only those) get the
     // create-a-free-account block in the confirmation.
-    void confirmationCards(prisma, cards, market as Country)
+    void confirmationCards(prisma, cards, market as Country, new Date(), prices)
       .then((list) => sendAlertConfirmationEmail(email, list, total, unsubToken, userId == null))
       .catch(() => false);
   }

@@ -275,33 +275,46 @@ longer lands on its entry.
   digest per address per week, except Plus/Premium target, below-market and
   restock alerts, which run after both daily imports (refresh-prices.yml's
   `/price-alerts/paid` step). The free `all` run is a refresh-prices.yml step
-  straight after the 07:00 import (no vercel.json cron), and both run only
-  after a successful, non-push import. Every alert email names up to three
+  straight after the 07:00 import (no vercel.json cron), or a manual run with
+  `free_alerts` ticked. Both are gated `!cancelled() && steps.import.outcome ==
+  'success'` and never run on push; a push re-import runs the no-email
+  `/price-alerts/baseline` pass instead. Every alert email names up to three
   stores with postage and a delivered total only where postage is known
   ("item price, postage extra" otherwise), is fluid (max-width 520px), and
-  sends a plain-text part plus List-Unsubscribe one-click headers.
+  sends a plain-text part plus List-Unsubscribe one-click headers. Items past
+  the 40 a digest renders are held for the next email, never recorded as told.
   [2026-09-15](../DECISIONS.md#L6531),
   [2026-09-21](../DECISIONS.md#L9752), [2026-09-25](../DECISIONS.md#L12842),
-  [2026-09-25](../DECISIONS.md#L13128), [2026-09-25](../DECISIONS.md#L13258)
+  [2026-09-25](../DECISIONS.md#L13128), [2026-09-25](../DECISIONS.md#L13258),
+  [2026-09-25](../DECISIONS.md#L13394)
 - **Alert emails pause, never delete, by default:** the footer, the inbox
   one-click and /watching write `AlertMute` (per address; the run skips it,
   baselines advance); deleting every watch is a separate explicit button.
-  Per-card one-tap links (stop, snooze 30 days, Plus/Premium set or lower a
-  target) are HMAC-signed (`lib/alert-actions.ts`, key derived from
-  `AUTH_SECRET`) and act only on a POST from the `/alerts/action`
-  confirmation page, never on GET. [2026-09-25](../DECISIONS.md#L13258)
+  Per-card one-tap links (stop, snooze 30 days, Plus/Premium one target 10%
+  under the lower of target and price) are HMAC-signed
+  (`lib/alert-actions.ts`, key derived from `AUTH_SECRET`) and act only on a
+  POST from the `/alerts/action` confirmation page, never on GET. A one-tap
+  target at or above the current alert price is stored already fired there.
+  `sanitizeNextPath` rejects backslashes and control characters, and
+  `/api/market` re-checks the redirect's origin.
+  [2026-09-25](../DECISIONS.md#L13258), [2026-09-25](../DECISIONS.md#L13394)
 - **Alerts read the alert price, never Card.lowestPriceCents\*:** the
   cheapest in-stock Near Mint (or unstated) copy seen within 36h at a store,
   CardTrader or TCGplayer US's listing (`lib/alert-price.ts`). No eBay (no
-  opt-in), no reference or `derived` rows; only-stale rows are `unknown`,
-  never sold out. A drop must be ≥5% and ≥50 minor units of the reference:
-  the price last emailed while under 30 days old, else the last price. No
-  reminders. A low >40% under the last price is held one run. Targets re-arm
-  above the line or on sell-out and re-fire only 10% further down; paid
-  triggers have a 24h per-card cooldown; below-market needs ≥15% under
-  TCGplayer market (`tcgMarketFor`, direct). `ALERT_DAILY_BUDGET` 50
-  addresses per 24h (env-overridable), the free run at most 35.
-  [2026-09-25](../DECISIONS.md#L13128)
+  opt-in), no reference or `derived` rows. `unknown`, never sold out, when
+  only stale rows claim stock, when a stale store is cheaper than every fresh
+  copy, or when an in-stock row up to 14 days old survives a failing feed. A
+  drop must be ≥5% and ≥50 minor units of the reference: the price last
+  emailed while under 30 days old, else the drop anchor (`dropAnchorCents`,
+  the price before the slide), else the last price. No reminders. A low >40%
+  under the last price is held one run and confirmed only within ±5%.
+  Targets re-arm above the line or on sell-out and re-fire only 10% further
+  down; paid triggers have a 20h per-card cooldown; below-market needs ≥15%
+  under TCGplayer market (`tcgMarketFor`, direct, never a `derived` row).
+  `ALERT_DAILY_BUDGET` 50 addresses per 20h window (env-overridable), the
+  free run at most 35. New watches are seeded from the alert price
+  (`alertBaselineSeed`, null when not priced), never `pickPrice`.
+  [2026-09-25](../DECISIONS.md#L13128), [2026-09-25](../DECISIONS.md#L13394)
 - **Methodology breaks:** `METHODOLOGY_BREAKS` and `dropBreakWindow` live in
   `lib/price-history.ts`; every per-card PriceHistory reader uses them
   (`tests/methodology-breaks.test.ts`), and the Index and portfolio are
@@ -321,9 +334,11 @@ longer lands on its entry.
   price in that market when it was created) gets one "now listed" email when
   the card lists — "open for pre-order" while its set is unreleased, which
   never becomes the drop reference. A watch that sold out (`soldOutAt`) for
-  20h+ gets "back in stock". Both sit inside the weekly per-address cap and
-  at most 25 new digests a run. [2026-09-25](../DECISIONS.md#L12574),
-  [2026-09-25](../DECISIONS.md#L13128)
+  20h+ and was seen sold out by two runs (`soldOutRuns`) gets "back in
+  stock"; a pre-2026-09-25 Card-price baseline that reads sold out is reset
+  to no price instead. Both sit inside the weekly per-address cap and at
+  most 25 new digests a run. [2026-09-25](../DECISIONS.md#L12574),
+  [2026-09-25](../DECISIONS.md#L13128), [2026-09-25](../DECISIONS.md#L13394)
 - **Postage is measured, never guessed:** Best Basket, portfolio
   replacement cost and store pages price delivery with `shippingFor()`
   (lib/shipping.ts) from `src/lib/shipping-rates.json`, built by

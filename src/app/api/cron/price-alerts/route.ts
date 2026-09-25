@@ -13,6 +13,8 @@ import { runPriceAlerts, type AlertScope } from "@/lib/price-alerts";
 //     runs after each price import call ./paid/route.ts instead — the
 //     pre-lineup deployment of THIS route ignores the query, so a workflow
 //     calling it here before the deploy would have run "all" (see there).
+//   • after a push-triggered re-import the workflow calls ./baseline/route.ts
+//     instead: baselines move to the new prices, nothing is sent.
 // Any other scope value is treated as "all", the pre-lineup behaviour.
 export const dynamic = "force-dynamic";
 export const maxDuration = 120; // seconds

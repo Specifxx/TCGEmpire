@@ -1,7 +1,15 @@
 import { prisma } from "./db";
 import { COUNTRIES, currencyOf, pickPrice, type Country } from "./country";
 import { cardHref } from "./card-url";
-import { ALERT_KIND_PRIORITY, sendPriceDropEmail as sendPriceDropEmailImpl, sortAlertItems, type AlertKind, type AlertStore, type PriceDropItem } from "./email";
+import {
+  ALERT_KIND_PRIORITY,
+  renderedAlertItems,
+  sendPriceDropEmail as sendPriceDropEmailImpl,
+  sortAlertItems,
+  type AlertKind,
+  type AlertStore,
+  type PriceDropItem,
+} from "./email";
 import { alertActionLinks } from "./alert-actions";
 import { pausedAddresses } from "./alert-mute";
 import { SITE_URL } from "./site";
@@ -17,6 +25,7 @@ import { alertPairKey, computeAlertPrices, type AlertOffer, type AlertPrice } fr
 import { RETAILERS } from "./retailers";
 import { shippingFor } from "./shipping";
 import { formatMoney } from "./format";
+import { DROP_MIN_CENTS, DROP_MIN_PCT } from "./alert-thresholds";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PRICE ALERTS — what fires, and when (rules as of 2026-09-25, DECISIONS.md
@@ -33,9 +42,11 @@ import { formatMoney } from "./format";
 //   • NEW LOW    a drop since the last price that is MATERIAL (isMaterialDrop:
 //                ≥5% and ≥50 minor units) against the reference — the price we
 //                last emailed while that is under WATERMARK_TTL_MS (30 days)
-//                old, else the last price.
-//   • RESTOCK    sold out (soldOutAt) for RESTOCK_MIN_SOLDOUT_MS or more, now
-//                priced again.
+//                old, else the DROP ANCHOR: the price before the current slide
+//                (dropAnchorCents; it rises with the price and resets to what
+//                we email), so a slow decline in sub-5% steps still fires.
+//   • RESTOCK    sold out (soldOutAt) for RESTOCK_MIN_SOLDOUT_MS or more and
+//                seen sold out by two runs (soldOutRuns), now priced again.
 //   • LISTED     never priced when watched, priced now — labelled PRE-ORDER
 //                while the card's set has not released (isPreorderSetCode).
 //   At most one digest per address per week; no reminders.
@@ -47,11 +58,16 @@ import { formatMoney } from "./format";
 //   • BELOW MKT  the alert price ≥15% under TCGplayer market (read directly,
 //                scoreVsTcg) and material against the reference.
 //   • RESTOCK    as above.
-//   Each with a 24h per-card cooldown.
+//   Each with a per-card cooldown (PAID_COOLDOWN_MS, 20h — under the 24h
+//   between same-slot runs, so import-duration jitter never decides it).
 // EVERY price trigger: a new low more than 40% under the last price is held
-// for one run (pendingLowCents) and fires only if it is still there.
-// EVERY run shares ALERT_DAILY_BUDGET distinct addresses per rolling 24h (the
-// free run at most ALL_RUN_SHARE of them), opened in priority order.
+// for one run (pendingLowCents) and fires only if the price is still within
+// ±5% of it; a lower figure is held again.
+// EVERY run shares ALERT_DAILY_BUDGET distinct addresses per rolling
+// ALERT_BUDGET_WINDOW_MS (20h; the free run at most ALL_RUN_SHARE of them),
+// opened in priority order. A digest renders at most ALERT_EMAIL_FULL_ROWS +
+// ALERT_EMAIL_COMPACT_ROWS items; the rest are held for the next one.
+// A push re-import runs `baselineOnly`: baselines move, nothing is sent.
 
 export interface AlertRunSummary {
   alerts: number; // rows examined
@@ -63,18 +79,20 @@ export interface AlertRunSummary {
   belowMarket: number; // entitled watches ≥ BELOW_MARKET_MIN_PCT under TCGplayer market, material vs the reference
   suppressed: number; // drops NOT emailed: not material against the reference — anti-spam
   outlierHeld: number; // new lows > OUTLIER_DROP_PCT under the last price, held for one run
-  cooldown: number; // paid triggers skipped inside their 24h per-card cooldown (baseline held)
+  cooldown: number; // paid triggers skipped inside their PAID_COOLDOWN_MS per-card cooldown (baseline held)
   snoozed: number; // triggers not emailed because the watch is snoozed (baselines still advance)
   paused: number; // triggers not emailed because the ADDRESS paused alert emails (AlertMute; baselines still advance)
   deferred: number; // worth sending, held for the weekly cap, a per-run cap or the daily budget
   budgetDeferred: number; // …of which by ALERT_DAILY_BUDGET
   soldOut: number; // watches that went sold out this run (soldOutAt set)
-  unknown: number; // watches whose only eligible rows are stale — nothing decided
+  unknown: number; // watches whose price a failing feed leaves undecidable (lib/alert-price.ts "unknown") — nothing decided
   ebayOnly: number; // sold out on the alert price but priced on the Card (eBay, played or stale copies only)
   legacyMarket: number; // rows whose market is not a supported one (legacy NZ) — skipped
   emails: number; // recipients emailed
   updated: number; // rows written
-  held: number; // rows whose baseline was deliberately NOT moved (deferred, cooldown, failed send)
+  held: number; // rows whose baseline was deliberately NOT moved (deferred, cooldown, failed send, digest overflow)
+  overflow: number; // items past what one digest renders, held for the next email
+  legacyReset: number; // rows seeded from the Card price (eBay-inclusive) reset to "no price" instead of stamped sold out
 }
 
 // Which rows one run looks at.
@@ -88,10 +106,9 @@ export type AlertScope = "paid" | "all";
 
 // ── Thresholds (named so DECISIONS.md can quote and tune them) ───────────────
 
-/** A drop must be at least this % of the reference… */
-export const DROP_MIN_PCT = 5;
-/** …and at least this many minor units (cents, pence) of the market's currency. */
-export const DROP_MIN_CENTS = 50;
+// DROP_MIN_PCT (5) and DROP_MIN_CENTS (50 minor units) live in
+// lib/alert-thresholds.ts so the confirmation email can quote them.
+export { DROP_MIN_CENTS, DROP_MIN_PCT };
 /** The "price we last emailed you" watermark counts for this long after the email. */
 export const WATERMARK_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 /** A new low more than this % under the last price is held one run. */
@@ -100,12 +117,24 @@ export const OUTLIER_DROP_PCT = 40;
 export const OUTLIER_CONFIRM_PCT = 5;
 /** After a target fires, it fires again only this % further down. */
 export const TARGET_REFIRE_STEP_PCT = 10;
-/** Paid triggers (target, below-market, restock) email one card at most once per 24h. */
-export const PAID_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+/**
+ * Paid triggers (target, below-market, restock) email one card at most once
+ * per this window. 20h, not 24h (review, 2026-09-25): the runs are 12h and 24h
+ * apart, so a window EQUAL to the run period made the outcome hinge on a few
+ * minutes of import-duration jitter — a trigger due at the next 07:xx run was
+ * held to 19:xx whenever that run started a little earlier than yesterday's.
+ */
+export const PAID_COOLDOWN_MS = 20 * 60 * 60 * 1000;
 /** Below-market fires only this far under TCGplayer market. */
 export const BELOW_MARKET_MIN_PCT = 15;
 /** A sell-out shorter than this (one missed scrape, a quick restock) is not news. */
 export const RESTOCK_MIN_SOLDOUT_MS = 20 * 60 * 60 * 1000;
+/**
+ * …and it must have been SEEN sold out by at least this many runs. Free rows
+ * are evaluated once a day, so a single out-of-stock read was always ≥24h old
+ * by the next run and cleared the 20h guard on its own (review, 2026-09-25).
+ */
+export const RESTOCK_MIN_SOLDOUT_RUNS = 2;
 
 // AT MOST ONE FREE DIGEST PER ADDRESS PER WEEK (owner call, 2026-09-21: "can we
 // make price drop emails less frequent? like once every week"). A SECOND,
@@ -118,13 +147,19 @@ export const MIN_DIGEST_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 
 // THE SHARED ALERT BUDGET. Resend's 100/day is also what verification, reset,
 // welcome, trial and release-day mail use, so every alert run together may
-// email at most this many DISTINCT addresses per rolling 24h — counted from
+// email at most this many DISTINCT addresses per ALERT_BUDGET_WINDOW_MS — counted from
 // PriceAlert.lastNotifiedAt with one small query, because a paid run cannot
 // see the free run's rows. Override with the ALERT_DAILY_BUDGET env var (lower
 // it for release week). The free run may use at most ALL_RUN_SHARE, so the
 // paid triggers always keep room.
 export const ALERT_DAILY_BUDGET = 50;
 export const ALL_RUN_SHARE = 35;
+// The budget's window: 20h, not 24h, for the same reason as PAID_COOLDOWN_MS —
+// yesterday's same-slot run must never fall a minute inside or outside it by
+// jitter (it swung the free run's share between 35 and 15). Every run still
+// sees the other slot's recipients (12h apart), so any UTC day's two slots
+// share one budget.
+export const ALERT_BUDGET_WINDOW_MS = 20 * 60 * 60 * 1000;
 export function alertDailyBudget(env: Record<string, string | undefined> = process.env): number {
   const v = Number.parseInt(env.ALERT_DAILY_BUDGET ?? "", 10);
   return Number.isFinite(v) && v >= 0 ? v : ALERT_DAILY_BUDGET;
@@ -167,17 +202,37 @@ export function liveWatermark(opts: { lowestEmailedCents: number | null; lastNot
 
 /**
  * What a move is measured from — and what an email's "what changed" line
- * quotes: the price we last emailed while that is live, else the last price.
+ * quotes: the price we last emailed while that is live, else the DROP ANCHOR
+ * (the price before the current slide, dropAnchorCents) when it is above the
+ * last price, else the last price.
+ *
+ * Why an anchor (review, 2026-09-25): measured from the last price, every
+ * sub-5% step of a steady decline was "not material" and the baseline still
+ * advanced, so a card could lose half its price in small daily steps without
+ * one email. The anchor only rises with the price and resets to what we email.
  */
 export function alertReference(opts: {
   prev: number | null;
   lowestEmailedCents: number | null;
   lastNotifiedAt: Date | null;
   now: Date;
-}): { cents: number | null; basis: "emailed" | "last" | null } {
+  anchorCents?: number | null;
+}): { cents: number | null; basis: "emailed" | "anchor" | "last" | null } {
   const live = liveWatermark(opts);
   if (live != null) return { cents: live, basis: "emailed" };
-  return opts.prev != null ? { cents: opts.prev, basis: "last" } : { cents: null, basis: null };
+  if (opts.prev == null) return { cents: null, basis: null };
+  if (opts.anchorCents != null && opts.anchorCents > opts.prev) return { cents: opts.anchorCents, basis: "anchor" };
+  return { cents: opts.prev, basis: "last" };
+}
+
+/**
+ * The drop anchor after a run that saw `current` and sent nothing about it:
+ * it starts from the last price, follows the price UP (a recovery ends the
+ * slide) and otherwise holds. The run resets it to the emailed price on a send.
+ */
+export function nextDropAnchor(opts: { anchorCents: number | null; prev: number | null; current: number }): number {
+  const start = opts.anchorCents ?? opts.prev ?? opts.current;
+  return Math.max(start, opts.current);
 }
 
 /** Is this ADDRESS inside its weekly quiet window? */
@@ -200,7 +255,8 @@ export function isFirstPrice(prev: number | null, current: number | null): boole
 /**
  * The free new-low rule: a drop since the last price, material against the
  * reference (see alertReference). A price sawtoothing back to a figure we
- * already sent stays quiet; a one-cent "new low" never sends.
+ * already sent stays quiet; a one-cent "new low" never sends; a slow slide
+ * fires once it adds up to a material fall from its anchor.
  */
 export function shouldEmailDrop(opts: {
   current: number;
@@ -208,6 +264,7 @@ export function shouldEmailDrop(opts: {
   lowestEmailedCents: number | null;
   lastNotifiedAt: Date | null;
   now: Date;
+  anchorCents?: number | null;
 }): boolean {
   const { current, prev } = opts;
   if (prev == null || current >= prev) return false;
@@ -250,6 +307,7 @@ export function belowMarketSignal(opts: {
   lowestEmailedCents: number | null;
   lastNotifiedAt: Date | null;
   now: Date;
+  anchorCents?: number | null;
   tcg: TcgMarketRef | null | undefined;
 }): { marketCents: number; marketUsdCents: number; belowCents: number; belowPct: number } | null {
   const { country, current, tcg } = opts;
@@ -266,14 +324,26 @@ export function isOutlierLow(prev: number | null, current: number): boolean {
   return prev != null && current < (prev * (100 - OUTLIER_DROP_PCT)) / 100;
 }
 
-/** On the run after a hold: is the price still at (or within OUTLIER_CONFIRM_PCT of) the held low? */
+/**
+ * On the run after a hold: is the price still at the held low, within
+ * ±OUTLIER_CONFIRM_PCT of it? BOTH bounds (review, 2026-09-25): with only an
+ * upper bound, an even LOWER figure the next run — the one-off bogus low the
+ * hold exists to catch — counted as "confirmed" and was emailed at once, and
+ * became the watermark that muted real alerts for 30 days. A price under the
+ * band is not a confirmation; the run clears the pending low and judges it
+ * afresh, which holds it again at the new figure.
+ */
 export function confirmsPendingLow(pendingLowCents: number, current: number): boolean {
-  return current <= Math.floor((pendingLowCents * (100 + OUTLIER_CONFIRM_PCT)) / 100);
+  const lower = Math.ceil((pendingLowCents * (100 - OUTLIER_CONFIRM_PCT)) / 100);
+  const upper = Math.floor((pendingLowCents * (100 + OUTLIER_CONFIRM_PCT)) / 100);
+  return current >= lower && current <= upper;
 }
 
-/** Sold out long enough, and priced again: "back in stock". */
-export function isRestock(opts: { prev: number | null; soldOutAt: Date | null; now: Date }): boolean {
-  return opts.prev != null && opts.soldOutAt != null && opts.now.getTime() - opts.soldOutAt.getTime() >= RESTOCK_MIN_SOLDOUT_MS;
+/** Sold out long enough, seen so by enough runs, and priced again: "back in stock". */
+export function isRestock(opts: { prev: number | null; soldOutAt: Date | null; soldOutRuns?: number | null; now: Date }): boolean {
+  if (opts.prev == null || opts.soldOutAt == null) return false;
+  if ((opts.soldOutRuns ?? 1) < RESTOCK_MIN_SOLDOUT_RUNS) return false;
+  return opts.now.getTime() - opts.soldOutAt.getTime() >= RESTOCK_MIN_SOLDOUT_MS;
 }
 
 /**
@@ -326,20 +396,35 @@ export interface AlertRunDeps {
 
 export interface AlertRunOptions {
   scope?: AlertScope;
+  // BASELINES ONLY, NO EMAIL — after a push-triggered re-import
+  // (/api/cron/price-alerts/baseline). A push re-import follows a matcher
+  // change, so its price moves are matching fixes, not market news; skipping
+  // the alert run alone did not absorb them, because only this run writes the
+  // baselines and the next scheduled run then emailed them. Every watch with a
+  // price moves to the new alert price (lastPriceCents, soldOutAt, the drop
+  // anchor, pending lows, target re-arms); nothing is sent, no watermark or
+  // lastNotifiedAt is written. A watch with NO price yet is left alone, so a
+  // card a matcher fix newly prices still gets its "now listed" notice.
+  // Always scope "all".
+  baselineOnly?: boolean;
 }
 
 type Patch = {
-  lastPriceCents?: number;
+  lastPriceCents?: number | null;
+  startPriceCents?: number | null;
   soldOutAt?: Date | null;
+  soldOutRuns?: number | null;
   pendingLowCents?: number | null;
   targetEmailedCents?: number | null;
+  dropAnchorCents?: number | null;
 };
 
 export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOptions = {}): Promise<AlertRunSummary> {
   const db = deps.db ?? prisma;
   const sendPriceDropEmail = deps.sendPriceDropEmail ?? sendPriceDropEmailImpl;
   const loadTcgMarket = deps.tcgMarket ?? ((c: Country, ids: string[]) => tcgMarketFor(c, ids, db));
-  const scope: AlertScope = opts.scope ?? "all";
+  const baselineOnly = opts.baselineOnly === true;
+  const scope: AlertScope = baselineOnly ? "all" : opts.scope ?? "all";
   const now = deps.now ?? new Date();
 
   // "all" reads EVERY row, unfiltered — anonymous watchers are emailed exactly
@@ -374,10 +459,13 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
       lastNotifiedAt: true,
       targetCents: true,
       targetEmailedCents: true,
-      // Read for the email's "you started watching at" line; never written here.
+      // Read for the email's "you started watching at" line. Written here only
+      // by the one-time reset of a pre-alert-price (Card-price) baseline.
       startPriceCents: true,
       soldOutAt: true,
+      soldOutRuns: true,
       pendingLowCents: true,
+      dropAnchorCents: true,
       snoozedUntil: true,
       createdAt: true,
       unsubToken: true,
@@ -427,6 +515,8 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
     emails: 0,
     updated: 0,
     held: 0,
+    overflow: 0,
+    legacyReset: 0,
   };
 
   // ENTITLEMENT, once per row. A lapsed subscription is simply not entitled:
@@ -474,7 +564,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
   // trigger off for this run.
   const tcgIdsByMarket = new Map<Country, Set<string>>();
   for (const a of rows) {
-    if (!entitled.get(a.id) || priceOf(a)?.state !== "priced") continue;
+    if (baselineOnly || !entitled.get(a.id) || priceOf(a)?.state !== "priced") continue;
     const ids = tcgIdsByMarket.get(a.market) ?? new Set<string>();
     ids.add(a.card.id);
     tcgIdsByMarket.set(a.market, ids);
@@ -484,16 +574,19 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
     tcgByMarket.set(market, await loadTcgMarket(market, [...ids]).catch(() => new Map<string, TcgMarketRef>()));
   }
 
-  // THE DAILY BUDGET: distinct addresses emailed in the last 24h, by any run.
+  // THE DAILY BUDGET: distinct addresses emailed in the last
+  // ALERT_BUDGET_WINDOW_MS, by any run. (A baseline pass sends nothing.)
   const budget = deps.dailyBudget ?? alertDailyBudget();
   // A GROUP BY in Postgres, not findMany's `distinct` (which Prisma dedupes
   // client-side after reading every row — tests/prisma-client-side-distinct).
-  const recent = await db.priceAlert.groupBy({
-    by: ["email"],
-    where: { lastNotifiedAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) } },
-    orderBy: { email: "asc" },
-    take: 1000,
-  });
+  const recent = baselineOnly
+    ? []
+    : await db.priceAlert.groupBy({
+        by: ["email"],
+        where: { lastNotifiedAt: { gte: new Date(now.getTime() - ALERT_BUDGET_WINDOW_MS) } },
+        orderBy: { email: "asc" },
+        take: 1000,
+      });
   const recentAddresses = new Set(recent.map((r) => r.email));
   const remaining = Math.max(0, budget - recentAddresses.size);
   const runBudget = scope === "all" ? Math.min(ALL_RUN_SHARE, remaining) : remaining;
@@ -592,34 +685,68 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
     const ap = priceOf(a);
     const prev = a.lastPriceCents;
     if (!ap || ap.state === "unknown") {
-      // Only stale rows claim stock: a failing feed, not a sell-out. Decide
-      // nothing and write nothing until a fresh import says which it is.
+      // A failing feed claims stock (or claims a cheaper price than every
+      // fresh copy): not a sell-out, not a price. Decide nothing and write
+      // nothing until a fresh import says which it is.
       summary.unknown++;
       return;
     }
 
     if (ap.state === "soldout") {
-      if (pickPrice(a.card, a.market) != null) summary.ebayOnly++;
-      if (prev != null && a.soldOutAt == null) {
-        patch(always, a.id, { soldOutAt: now });
-        summary.soldOut++;
-      }
+      const cardPriced = pickPrice(a.card, a.market) != null;
+      if (cardPriced) summary.ebayOnly++;
       if (a.pendingLowCents != null) patch(always, a.id, { pendingLowCents: null });
       if (shouldRearmTarget({ current: null, targetCents: a.targetCents, targetEmailedCents: a.targetEmailedCents })) {
         patch(always, a.id, { targetEmailedCents: null });
+      }
+      // A LEGACY BASELINE: seeded from Card.lowestPriceCents* (eBay, played
+      // and stale copies included) and never yet confirmed by a priced run of
+      // the alert price (dropAnchorCents is written on every priced run, and
+      // at creation since 2026-09-25). No store has ever had it at that
+      // figure, so it is not a sell-out: reset to "no price", and the first
+      // store listing fires "now listed" — not "back in stock … $eBay before
+      // it sold out". A start price equal to that figure goes too, so the
+      // email never says "you started watching at" an eBay price.
+      if (prev != null && a.dropAnchorCents == null && a.soldOutAt == null && cardPriced) {
+        patch(always, a.id, { lastPriceCents: null, ...(a.startPriceCents === prev ? { startPriceCents: null } : {}) });
+        summary.legacyReset++;
+        return;
+      }
+      if (prev != null && a.soldOutAt == null) {
+        patch(always, a.id, { soldOutAt: now, soldOutRuns: 1 });
+        summary.soldOut++;
+      } else if (a.soldOutAt != null && (a.soldOutRuns ?? 1) < RESTOCK_MIN_SOLDOUT_RUNS) {
+        // Seen sold out again: now it counts as a real sell-out.
+        patch(always, a.id, { soldOutRuns: RESTOCK_MIN_SOLDOUT_RUNS });
       }
       return;
     }
 
     const current = ap.priceCents!;
+
+    if (baselineOnly) {
+      // No email, no hold: every priced watch moves to the new price. A watch
+      // with no price yet keeps prev null, so "now listed" still fires.
+      if (prev == null) return;
+      if (shouldRearmTarget({ current, targetCents: a.targetCents, targetEmailedCents: a.targetEmailedCents })) {
+        patch(always, a.id, { targetEmailedCents: null });
+      }
+      if (prev !== current) patch(always, a.id, { lastPriceCents: current });
+      if (a.dropAnchorCents !== current) patch(always, a.id, { dropAnchorCents: current });
+      if (a.pendingLowCents != null) patch(always, a.id, { pendingLowCents: null });
+      if (a.soldOutAt != null) patch(always, a.id, { soldOutAt: null, soldOutRuns: null });
+      return;
+    }
+
     if (shouldRearmTarget({ current, targetCents: a.targetCents, targetEmailedCents: a.targetEmailedCents })) {
       patch(always, a.id, { targetEmailedCents: null });
     }
 
-    // OUTLIER HOLD. A held low is confirmed when the price is still at it; a
-    // confirmed low skips the check once (and its clear rides the baseline, so
-    // a deferral keeps it confirmable); an unconfirmed one is cleared and the
-    // price is judged afresh — which may hold it again at the new figure.
+    // OUTLIER HOLD. A held low is confirmed when the price is still at it
+    // (±OUTLIER_CONFIRM_PCT); a confirmed low skips the check once (and its
+    // clear rides the baseline, so a deferral keeps it confirmable); an
+    // unconfirmed one — higher OR lower — is cleared and the price is judged
+    // afresh, which holds a still-implausible figure again.
     let confirmed = false;
     if (a.pendingLowCents != null) {
       if (confirmsPendingLow(a.pendingLowCents, current)) {
@@ -636,30 +763,28 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
       return;
     }
 
-    // Back from a sell-out: news after RESTOCK_MIN_SOLDOUT_MS, otherwise the
-    // marker is just cleared (one missed scrape is not a restock).
-    const restock = isRestock({ prev, soldOutAt: a.soldOutAt, now });
+    // Back from a sell-out: news after RESTOCK_MIN_SOLDOUT_MS and two sold-out
+    // runs, otherwise the marker is just cleared (one missed scrape is not a
+    // restock).
+    const restock = isRestock({ prev, soldOutAt: a.soldOutAt, soldOutRuns: a.soldOutRuns, now });
     if (a.soldOutAt != null) {
-      if (restock) patch(base, a.id, { soldOutAt: null });
-      else patch(always, a.id, { soldOutAt: null });
+      if (restock) patch(base, a.id, { soldOutAt: null, soldOutRuns: null });
+      else patch(always, a.id, { soldOutAt: null, soldOutRuns: null });
     }
     if (prev !== current) patch(base, a.id, { lastPriceCents: current });
+    // The drop anchor rides the baseline too: a held item keeps it. A send
+    // resets it to the emailed price (the persist step below).
+    const anchor = nextDropAnchor({ anchorCents: a.dropAnchorCents, prev, current });
+    if (anchor !== a.dropAnchorCents) patch(base, a.id, { dropAnchorCents: anchor });
 
-    const ref = alertReference({ prev, lowestEmailedCents: a.lowestEmailedCents, lastNotifiedAt: a.lastNotifiedAt, now });
+    const refOpts = { prev, lowestEmailedCents: a.lowestEmailedCents, lastNotifiedAt: a.lastNotifiedAt, now, anchorCents: a.dropAnchorCents };
+    const ref = alertReference(refOpts);
     let cand: Candidate | null = null;
 
     // PAID TRIGGERS first, for entitled rows.
     if (entitled.get(a.id)) {
       const target = honouredTarget.get(a.id) ?? null;
-      const below = belowMarketSignal({
-        country: a.market,
-        current,
-        prev,
-        lowestEmailedCents: a.lowestEmailedCents,
-        lastNotifiedAt: a.lastNotifiedAt,
-        now,
-        tcg: tcgByMarket.get(a.market)?.get(a.card.id),
-      });
+      const below = belowMarketSignal({ ...refOpts, country: a.market, current, tcg: tcgByMarket.get(a.market)?.get(a.card.id) });
       let item: PriceDropItem | null = null;
       if (shouldEmailTarget({ current, targetCents: target, targetEmailedCents: a.targetEmailedCents })) {
         summary.targets++;
@@ -673,8 +798,8 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
       }
       if (item) {
         if (inPaidCooldown(a.lastNotifiedAt, now)) {
-          // Emailed about this card in the last 24h: hold the baseline so the
-          // trigger re-detects on the next run instead of being lost.
+          // Emailed about this card inside PAID_COOLDOWN_MS: hold the baseline
+          // so the trigger re-detects on the next run instead of being lost.
           summary.cooldown++;
           heldIds.add(a.id);
           return;
@@ -696,11 +821,12 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
         cand = { a, item: buildItem(a, ap, kind, { cents: prev, basis: "before_soldout" }, { soldOutAt: a.soldOutAt }), paid: false, cap: "first", order };
       } else if (prev != null && current < prev) {
         summary.drops++;
-        if (shouldEmailDrop({ current, prev, lowestEmailedCents: a.lowestEmailedCents, lastNotifiedAt: a.lastNotifiedAt, now })) {
+        if (shouldEmailDrop({ ...refOpts, current })) {
           cand = { a, item: buildItem(a, ap, "drop", ref), paid: false, cap: "drop", order };
         } else {
-          // Real, but not material against what they were last told: quiet.
-          // Its baseline still advances — a sawtooth must not queue forever.
+          // Real, but not material against its reference: quiet. The last
+          // price still advances — a sawtooth must not queue forever — but
+          // the drop ANCHOR holds, so a slow slide adds up to an email.
           summary.suppressed++;
         }
       }
@@ -723,7 +849,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
   // advance — so resuming never releases a backlog of stale news. A failed
   // read throws: emailing someone who asked for no email is worse than a run
   // that retries at the next import.
-  const pausedSet = await pausedAddresses(db, [...new Set(candidates.map((c) => c.a.email))]);
+  const pausedSet = candidates.length ? await pausedAddresses(db, [...new Set(candidates.map((c) => c.a.email))]) : new Set<string>();
   if (pausedSet.size) {
     for (let i = candidates.length - 1; i >= 0; i--) {
       if (!pausedSet.has(candidates[i]!.a.email)) continue;
@@ -793,6 +919,27 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
     heldIds.add(c.a.id);
   }
 
+  // ── What one digest can show ───────────────────────────────────────────────
+  // An email renders at most ALERT_EMAIL_FULL_ROWS + ALERT_EMAIL_COMPACT_ROWS
+  // items (lib/email.ts renderedAlertItems, the same order it renders them
+  // in); the rest become "and N more in your next alert email". Those are NOT
+  // told: they are held exactly like deferred items — baseline kept, no
+  // lastNotifiedAt or watermark written — so they re-detect next run, instead
+  // of a later alert quoting "the price we last emailed you" that never was.
+  const overflowIds = new Set<string>();
+  for (const bucket of byEmail.values()) {
+    const shown = new Set(renderedAlertItems(bucket.items));
+    for (const item of bucket.items) {
+      if (shown.has(item)) continue;
+      overflowIds.add(item.alertId);
+      summary.overflow++;
+    }
+  }
+  for (const id of overflowIds) {
+    notifiedIds.delete(id);
+    heldIds.add(id);
+  }
+
   // ── Send one digest per address ────────────────────────────────────────────
   // Sequential to stay gentle on the provider's rate limits.
   const failedEmails = new Set<string>();
@@ -815,7 +962,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
   // A failed digest's alerts are held exactly like deferred ones: the next run
   // must still see the move, or the alert the subscriber asked for is gone.
   const itemById = new Map<string, PriceDropItem>();
-  for (const b of byEmail.values()) for (const i of b.items) itemById.set(i.alertId, i);
+  for (const b of byEmail.values()) for (const i of b.items) if (notifiedIds.has(i.alertId)) itemById.set(i.alertId, i);
   for (const a of rows) {
     if (failedEmails.has(a.email) && notifiedIds.has(a.id)) heldIds.add(a.id);
   }
@@ -833,6 +980,8 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
       data.lastNotifiedAt = now;
       if (item.kind !== "preorder") data.lowestEmailedCents = item.currentCents;
       if (item.kind === "target") data.targetEmailedCents = item.currentCents;
+      // The slide we just told them about is over: the next one starts here.
+      data.dropAnchorCents = item.currentCents;
     }
     if (Object.keys(data).length) writes.push({ id: a.id, data });
   }

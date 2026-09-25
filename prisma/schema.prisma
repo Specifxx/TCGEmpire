@@ -827,8 +827,10 @@ model PriceAlert {
   // which the free drop rule and the below-market trigger keep reading as
   // "the lowest price we've ever emailed you". null = armed / never fired.
   targetEmailedCents Int?
-  // The price when the watch was CREATED, written once and never touched by the
-  // cron — "watching from $X" on /watching. lastPriceCents can't serve: the
+  // The price when the watch was CREATED, written once — "watching from $X" on
+  // /watching. Since 2026-09-25 it is the ALERT price (lib/alert-price.ts
+  // alertBaselineSeed), null when no store had the card; the cron touches it
+  // only to null an older eBay-inclusive Card-price seed that no store matched. lastPriceCents can't serve: the
   // cron advances it on every move, so after one run it read as today's price
   // and the watchlist delta sat near 0%. null for rows created before this
   // column existed (and for a card unpriced at watch time); readers fall back
@@ -848,9 +850,25 @@ model PriceAlert {
   // least RESTOCK_MIN_SOLDOUT_MS after it sends "back in stock" and clears it.
   // Additive/nullable: `prisma db push` adds it with no backfill.
   soldOutAt          DateTime?
+  // How many consecutive alert runs have seen this watch sold out, capped at
+  // 2 (review, 2026-09-25). "Back in stock" needs two: free rows are evaluated
+  // once a day, so one out-of-stock read at 07:00 (a missed scrape, or a
+  // restock the 19:00 import already saw) was otherwise 24h old by the next
+  // run and cleared RESTOCK_MIN_SOLDOUT_MS on its own. null with soldOutAt set
+  // reads as 1. Additive/nullable, no backfill.
+  soldOutRuns        Int?
+  // THE DROP ANCHOR (review, 2026-09-25): what a free new low is measured
+  // from while no emailed watermark is live — the price before the current
+  // slide. It moves UP with the price (a rise resets it), never down on its
+  // own, and is reset to the price we email. Measuring from the last price
+  // instead let a card lose half its value in sub-5% daily steps without one
+  // email. null until the first run of the new rule (it then starts from the
+  // last price). Additive/nullable, no backfill.
+  dropAnchorCents    Int?
   // OUTLIER HOLD. A new low more than 40% under the last price is written here
-  // instead of being emailed; the next run fires only if the price is still at
-  // or near it (lib/price-alerts.ts OUTLIER_*), then clears it either way.
+  // instead of being emailed; the next run fires only if the price is still
+  // within ±5% of it (lib/price-alerts.ts OUTLIER_*), then clears it either
+  // way — a LOWER figure is held again, never confirmed.
   pendingLowCents    Int?
   // Per-card snooze from the email's one-tap "Snooze 30 days" link
   // (lib/alert-actions.ts): a row with snoozedUntil in the future is not

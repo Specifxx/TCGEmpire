@@ -14,8 +14,15 @@ import type { prisma } from "./db";
 //   • stop         — stop watching this card (deletes that one PriceAlert row)
 //   • snooze       — no email about this card for 30 days (snoozedUntil; every
 //                    trigger in lib/price-alerts.ts honours it)
-//   • target-set   — Plus/Premium: set the target at the price in the email
-//   • target-down  — Plus/Premium: lower the target 10% (value precomputed)
+//   • target-down  — Plus/Premium: a target 10% under the LOWER of the current
+//                    target and the price in the email (value precomputed)
+//   • target-set   — verified and applied for links already sent, but no
+//                    longer offered (review, 2026-09-25): "set target at this
+//                    price" set a target the price already met, so the next
+//                    paid run re-sent "hit your target" with nothing changed.
+// Either target action that lands at or above the watch's current alert price
+// is stored already FIRED at that price (targetEmailedCents), so it re-fires
+// only on a real further drop, never on the price the member was looking at.
 // A free account's row gets a "Set a target with Plus" link instead, and the
 // server refuses a target for it anyway (applyTargetPrice → 403).
 //
@@ -112,9 +119,15 @@ export function alertActionUrl(token: string): string {
   return `${SITE_URL}/alerts/action?t=${encodeURIComponent(token)}`;
 }
 
-/** The target a "Lower target 10%" link sets: 10% under the target, or under the price when there is none. */
+/**
+ * The target a one-tap target link sets: 10% under the LOWER of the current
+ * target and the price in the email. 10% under the target alone re-armed a
+ * target the price was already under (target $15, price $12 → $13.50), which
+ * fired again at the next paid run with nothing changed.
+ */
 export function loweredTargetCents(targetCents: number | null, currentCents: number): number {
-  return clampTargetCents(Math.floor(((targetCents ?? currentCents) * (100 - TARGET_DOWN_PCT)) / 100));
+  const from = targetCents == null ? currentCents : Math.min(targetCents, currentCents);
+  return clampTargetCents(Math.floor((from * (100 - TARGET_DOWN_PCT)) / 100));
 }
 
 // The links one email row carries. `canTarget` = the row's account is entitled
@@ -123,7 +136,6 @@ export function loweredTargetCents(targetCents: number | null, currentCents: num
 export interface AlertActionLinks {
   stop: string;
   snooze: string;
-  targetSet: { url: string; cents: number } | null;
   targetDown: { url: string; cents: number } | null;
   upsell: string | null;
   // The row's own target when it has one ("Lower target" vs "Set target").
@@ -143,8 +155,6 @@ export function alertActionLinks(opts: {
   return {
     stop: url("stop"),
     snooze: url("snooze"),
-    // "Set target at this price" is pointless when that IS the target already.
-    targetSet: canTarget && targetCents !== currentCents ? { url: url("target-set", currentCents), cents: currentCents } : null,
     targetDown: canTarget ? { url: url("target-down", down), cents: down } : null,
     upsell: canTarget ? null : `${SITE_URL}/premium?src=alert-email&utm_source=email&utm_medium=email&utm_campaign=price-alert-target-upsell`,
     hasTarget: targetCents != null,
@@ -183,6 +193,7 @@ export async function performAlertAction(db: AlertActionDb, token: string | null
       cardId: true,
       market: true,
       userId: true,
+      lastPriceCents: true,
       user: { select: { id: true, email: true, isAdmin: true, premiumUntil: true, premiumTier: true, premiumTierFloor: true } },
     },
   });
@@ -206,7 +217,10 @@ export async function performAlertAction(db: AlertActionDb, token: string | null
   }
   const user: EntitlementUser & { id: string } = { ...row.user, id: row.userId, isAdmin: row.user.isAdmin || isAdminEmail(row.user.email) };
   if (!isPremium(user)) return { status: 403, outcome: "not-plus", body: { error: "Target prices are part of Plus." } };
-  const res = await applyTargetPrice(db, user, row.cardId, { market: row.market, targetCents: v.value });
+  // Stored already fired at the current alert price when the new target is at
+  // or above it (applyTargetPrice seedFiredAtCents): the member tapped this
+  // while looking at that price, so it is not news at the next run.
+  const res = await applyTargetPrice(db, user, row.cardId, { market: row.market, targetCents: v.value }, { seedFiredAtCents: row.lastPriceCents ?? null });
   const outcome: AlertActionOutcome =
     res.status === 200 ? "ok" : res.status === 409 ? "limit" : res.status === 403 ? "not-plus" : res.status === 404 ? "gone" : "invalid";
   return { status: res.status, outcome, body: { ...res.body, action: v.action } };

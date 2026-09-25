@@ -4,6 +4,7 @@ import { currencyOf, type Country } from "./country";
 import { issueNoun } from "./price-report";
 import { RADIANCE_RELEASE_DATE } from "./sets/radiance";
 import type { AlertActionLinks } from "./alert-actions";
+import { DROP_MIN_CENTS, DROP_MIN_PCT } from "./alert-thresholds";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -232,11 +233,12 @@ export interface PriceDropItem extends AlertCard {
   currency: string; // ISO 4217, currencyOf(market)
   currentCents: number; // the alert price now
   // What changed is measured from: the price we last emailed while that is
-  // under 30 days old ("emailed"), else the last price seen ("last"); for a
-  // restock the price before it sold out ("before_soldout"); null for
-  // listed/preorder.
+  // under 30 days old ("emailed"), else the price before the current slide
+  // when that is above the last price ("anchor"), else the last price seen
+  // ("last"); for a restock the price before it sold out ("before_soldout");
+  // null for listed/preorder.
   referenceCents: number | null;
-  referenceBasis: "emailed" | "last" | "before_soldout" | null;
+  referenceBasis: "emailed" | "anchor" | "last" | "before_soldout" | null;
   startPriceCents: number | null; // "you started watching at"
   change: { cents: number; pct: number } | null; // referenceCents − currentCents (positive = cheaper), whole %
   condition: string | null; // the alert price's own condition (NM or unstated)
@@ -280,6 +282,15 @@ function savingCents(i: PriceDropItem): number {
   if (i.kind === "below_market" && i.tcgMarket) return i.tcgMarket.belowCents;
   if (i.kind === "target" && i.targetCents != null) return Math.max(0, i.targetCents - i.currentCents);
   return i.change && i.change.cents > 0 ? i.change.cents : 0;
+}
+
+/**
+ * The items one digest actually renders (full rows, then one-line rows), in
+ * render order. lib/price-alerts.ts holds everything past this for the next
+ * email, so nothing is recorded as told that the member never saw.
+ */
+export function renderedAlertItems(items: PriceDropItem[]): PriceDropItem[] {
+  return sortAlertItems(items).slice(0, ALERT_EMAIL_FULL_ROWS + ALERT_EMAIL_COMPACT_ROWS);
 }
 
 /** Importance order: kind priority, then the biggest saving, then as given. */
@@ -431,7 +442,12 @@ export function alertHeadline(item: PriceDropItem): { html: string; text: string
       if (item.referenceCents == null) return { html: `Now ${nowHtml}`, text: `Now ${now}` };
       const from = m(item.referenceCents);
       const gain = save != null ? ` · save ${m(save)}${pct != null ? ` (−${pct}%)` : ""}` : "";
-      const basis = item.referenceBasis === "emailed" ? "the price we last emailed you" : "the last price we saw";
+      const basis =
+        item.referenceBasis === "emailed"
+          ? "the price we last emailed you"
+          : item.referenceBasis === "anchor"
+            ? "where it stood before this slide"
+            : "the last price we saw";
       return {
         html: `<span style="color:#6b7585;text-decoration:line-through">${from}</span> → ${nowHtml}${gain}<div style="font-size:12px;color:#6b7585;margin-top:2px">Down from ${basis}</div>`,
         text: `${from} → ${now}${gain} (down from ${basis})`,
@@ -457,8 +473,10 @@ function actionItems(item: PriceDropItem): { label: string; url: string }[] {
     { label: "Stop watching", url: a.stop },
     { label: "Snooze 30 days", url: a.snooze },
   ];
-  if (a.targetSet) out.push({ label: `Set target at ${formatMoney(a.targetSet.cents, cur)}`, url: a.targetSet.url });
-  if (a.targetDown) out.push({ label: `${a.hasTarget ? "Lower target 10%" : "Target 10% lower"} (${formatMoney(a.targetDown.cents, cur)})`, url: a.targetDown.url });
+  if (a.targetDown) {
+    const x = formatMoney(a.targetDown.cents, cur);
+    out.push({ label: a.hasTarget ? `Lower target to ${x}` : `Target 10% under this price (${x})`, url: a.targetDown.url });
+  }
   if (a.upsell) out.push({ label: "Set a target price with Plus", url: a.upsell });
   return out;
 }
@@ -612,7 +630,9 @@ export function buildPriceDropEmail(items: PriceDropItem[], unsubToken: string, 
   // A paid digest also links Deal Finder filtered to the member's own watchlist.
   const paid = sorted.some((i) => i.kind === "target" || i.kind === "below_market");
   const dealFinder = `${SITE_URL}/tools/deal-finder?mine=watch&${utm(campaign)}`;
-  const moreLine = hidden > 0 ? `and ${hidden} more on your watchlist` : "";
+  // Items past the rows above are NOT recorded as emailed (lib/price-alerts.ts
+  // holds them), so they arrive in the next alert email.
+  const moreLine = hidden > 0 ? `${hidden} more card${hidden === 1 ? "" : "s"} with news will come in your next alert email` : "";
   const inner = `
     ${intro ? `<tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">${intro}</td></tr>` : ""}
     <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%">${full.map((i) => dropRow(i, campaign)).join("")}${compact.map((i) => compactRow(i, campaign)).join("")}</table>
@@ -664,6 +684,9 @@ export interface AlertConfirmationCard {
   market: Country;
   priceCents: number | null; // today's alert price; null = not in stock at a store
   storeName: string | null;
+  // That copy's condition as the store states it: Near Mint, or null when
+  // the store states none (the alert price admits both; review, 2026-09-25).
+  condition?: string | null;
 }
 
 /** Cards listed by name in the confirmation; the rest are counted. */
@@ -674,10 +697,17 @@ export function buildAlertConfirmationEmail(cards: AlertConfirmationCard[], tota
   const links = alertAddressLinks(unsubToken, anonymous, campaign);
   const shown = cards.slice(0, CONFIRMATION_CARD_ROWS);
   const rest = Math.max(0, total - shown.length);
+  // The alert price admits Near Mint AND unstated-condition copies, so the
+  // condition is printed as the store states it, never assumed.
   const priceText = (c: AlertConfirmationCard) =>
     c.priceCents != null
-      ? `cheapest Near Mint now ${formatMoney(c.priceCents, currencyOf(c.market))}${c.storeName ? ` at ${c.storeName}` : ""}`
+      ? `cheapest now ${formatMoney(c.priceCents, currencyOf(c.market))}${c.storeName ? ` at ${c.storeName}` : ""} · ${c.condition ?? "Condition not stated by the store"}`
       : "not in stock at a store yet: we'll email you when it is";
+  // The minimum drop in the watched market's own minor unit (50 cents, 50
+  // pence…); a mix of markets gets the neutral wording.
+  const markets = [...new Set(shown.map((c) => c.market))];
+  const minDrop =
+    markets.length === 1 ? formatMoney(DROP_MIN_CENTS, currencyOf(markets[0]!)) : `${DROP_MIN_CENTS} cents or pence, in your market's currency`;
   const rows = shown
     .map(
       (c) => `<tr><td style="padding:8px 0;border-bottom:1px solid #233047;font-size:13px;line-height:1.5;color:#b8c0cc">
@@ -687,7 +717,7 @@ export function buildAlertConfirmationEmail(cards: AlertConfirmationCard[], tota
     )
     .join("");
   const cadence =
-    "At most one email a week for free alerts: when a card falls at least 5% (and at least 50 cents) to a new low, when it's first listed or opens for pre-order, and when it's back in stock. Each email names the stores and their postage. Plus and Premium target, below-market and restock alerts can arrive after each price update.";
+    `At most one email a week for free alerts: when a card falls at least ${DROP_MIN_PCT}% (and at least ${minDrop}) to a new low, when it's first listed or opens for pre-order, and when it's back in stock. Each email names the stores and their postage. Plus and Premium target, below-market and restock alerts can arrive after each price update.`;
   const count = total === 1 ? "this card" : `these ${total} cards`;
   const inner = `
     <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">You're all set. We're watching ${count}:</td></tr>

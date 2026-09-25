@@ -26,6 +26,10 @@ on:
         description: "Force an eBay refresh even if it ran in the last 20h"
         type: boolean
         default: false
+      free_alerts:
+        description: "Also run the FREE daily alert digest after this import (use only to recover a missed 07:00 run)"
+        type: boolean
+        default: false
   # Re-import (and recompute stored prices) whenever price/matching logic changes.
   push:
     branches: [main]
@@ -230,12 +234,20 @@ jobs:
         # Until 2026-09-25 this was vercel.json's 18:30 UTC cron, which read a
         # price 11.5h old and fired 30 minutes before the next import.
         #
-        # Gated like the paid step: only after an import that SUCCEEDED (a
-        # half-written import compares a partial RetailerPrice table) and was
-        # scheduled or manual, never push-triggered — a push re-import follows
-        # a matcher change, and its "drops" are matching fixes, not market
-        # moves. The route already exists, so this can land before any deploy.
-        if: steps.import.outcome == 'success' && github.event_name != 'push' && github.event.schedule == '0 7 * * *'
+        # Gated on the PRICE IMPORT'S OWN OUTCOME: only after an import that
+        # SUCCEEDED (a half-written import compares a partial RetailerPrice
+        # table). `!cancelled()` replaces the implicit `success()` GitHub
+        # prepends to a condition with no status function, so a failed SEALED
+        # import (the step between, which exits 1 on error) no longer drops the
+        # day's only free digest; a manual cancel still stops it.
+        #
+        # Runs after the 07:00 scheduled import, or after a MANUAL run with the
+        # free_alerts input ticked — the recovery path when the 07:00 run failed
+        # or GitHub dropped it. Opt-in, so a routine manual re-import never fires
+        # a second free run the same day. Never push-triggered: a push re-import
+        # follows a matcher change, and its "drops" are matching fixes, not
+        # market moves — the baseline step below absorbs them instead.
+        if: ${{ !cancelled() && steps.import.outcome == 'success' && github.event_name != 'push' && (github.event.schedule == '0 7 * * *' || (github.event_name == 'workflow_dispatch' && inputs.free_alerts)) }}
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: "https://riftcompare.com"
@@ -258,9 +270,10 @@ jobs:
         # Its own path, NOT ?scope=paid on the parent route: the pre-lineup
         # parent route ignored the query, so the query form ran a full "all"
         # run after every import. Non-fatal: a missed paid run is caught by
-        # the next import's, and must never red a successful import. Same gate
-        # as the free step (successful, non-push import).
-        if: steps.import.outcome == 'success' && github.event_name != 'push'
+        # the next import's, and must never red a successful import. Gated on
+        # the price import's own outcome (successful, non-push); `!cancelled()`
+        # keeps a failed sealed import from suppressing it, as the free step.
+        if: ${{ !cancelled() && steps.import.outcome == 'success' && github.event_name != 'push' }}
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: "https://riftcompare.com"
@@ -270,4 +283,31 @@ jobs:
             exit 0
           fi
           curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts/paid" -H "Authorization: Bearer $CRON_SECRET" || true
+          echo
+
+      - name: Alert baselines after a push re-import (no email)
+        # A push re-import follows a matcher change, so the price moves it
+        # writes are matching fixes, not market news. Skipping the alert runs
+        # alone did not stop them: PriceAlert baselines are written only by the
+        # alert run, so the next scheduled run compared against the pre-push
+        # lastPriceCents and emailed every matching fix anyway. This pass
+        # advances every watch's baseline (lastPriceCents, soldOutAt, the drop
+        # anchor, pending lows) to the new prices and sends nothing
+        # (lib/price-alerts.ts `baselineOnly`). A watch with no price yet is
+        # left alone, so a card a matcher fix newly prices still gets its
+        # "now listed" notice at the next scheduled run.
+        #
+        # Its own path (/baseline), like /paid: the deployed parent route
+        # ignores unknown queries, so a query form would run a full "all" run
+        # with emails until the next deploy. This path 404s until then.
+        if: ${{ !cancelled() && steps.import.outcome == 'success' && github.event_name == 'push' }}
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret — skipping the alert baseline pass."
+            exit 0
+          fi
+          curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts/baseline" -H "Authorization: Bearer $CRON_SECRET" || true
           echo

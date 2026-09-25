@@ -223,7 +223,7 @@ test("the arbitrage aggregates behind the Deal Finder list are shared-cached", (
   const src = read("src/lib/arbitrage.ts");
   assert.match(src, /\["arb-min-by-card"/, "minByCard must go through cachedOrDirect");
   assert.match(src, /\["arb-ebay-rows"/, "the eBay row pull must go through cachedOrDirect");
-  assert.match(src, /\["arb-tcg-us-rows-v2"/, "the TCGplayer row pull must go through cachedOrDirect");
+  assert.match(src, /\["arb-tcg-us-rows-v3"/, "the TCGplayer row pull must go through cachedOrDirect");
   assert.match(src, /\["arb-prices-as-of"/, "the prices-as-of aggregate must go through cachedOrDirect");
 });
 

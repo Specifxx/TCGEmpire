@@ -45,11 +45,19 @@ test("'watching from' is the start price, in the watch's own currency; the delta
   assert.doesNotMatch(code("src/lib/price-alerts.ts"), /data\.startPriceCents|startPriceCents\s*=[^=]/);
 });
 
-test("both creation paths write startPriceCents once; re-watching never rewrites it", () => {
+test("both creation paths seed from the ALERT PRICE once; re-watching never rewrites it", () => {
+  // Never the eBay-inclusive Card price (review, 2026-09-25): a card only eBay
+  // listed was read as sold out on the first run and its first store listing
+  // emailed "back in stock … $<eBay> before it sold out". alertBaselineSeed's
+  // own behaviour is pinned in tests/alert-price.test.ts.
   const sub = code("src/app/api/alerts/subscribe/route.ts");
-  assert.match(sub, /lastPriceCents: price,\s*startPriceCents: price,/);
+  assert.match(sub, /computeAlertPrices\(prisma, fresh\.map\(\(c\) => \(\{ cardId: c\.id, market \}\)\), new Date\(\), \{ slim: true \}\)/);
+  assert.match(sub, /\.\.\.alertBaselineSeed\(prices\.get\(alertPairKey\(market, c\.id\)\)\)/);
+  assert.doesNotMatch(sub, /pickPrice|lowestPriceCents/);
   const wl = code("src/app/api/alerts/watchlist/route.ts");
-  assert.match(wl, /create: \{[\s\S]*lastPriceCents: price,\s*startPriceCents: price,/);
+  assert.match(wl, /seed = alertBaselineSeed\(prices\.get\(alertPairKey\(market, card\.id\)\)\)/);
+  assert.match(wl, /create: \{[\s\S]*\.\.\.seed,/);
+  assert.doesNotMatch(wl, /pickPrice/);
   const update = /update:\s*\{([^}]*)\}/.exec(wl)?.[1] ?? "";
   assert.ok(!update.includes("startPriceCents"), "adopting a row keeps its own start price");
 });
@@ -150,11 +158,33 @@ test("alert runs follow a SUCCESSFUL, non-push import: free once a day after 07:
   const paid = wf.indexOf("- name: Paid price alerts");
   assert.ok(revalidate > 0 && freeRun > revalidate && paid > freeRun, "revalidate, then the free run, then the paid run");
   const freeStep = wf.slice(freeRun, paid);
-  assert.match(freeStep, /if: steps\.import\.outcome == 'success' && github\.event_name != 'push' && github\.event\.schedule == '0 7 \* \* \*'/);
+  // `!cancelled()` first: a condition with no status function gets an implicit
+  // `success() &&`, so a failed SEALED import (the step between) silently
+  // dropped both alert runs. Only the price import's own outcome gates them.
+  // The free run: the 07:00 schedule, or a manual run that opts in.
+  assert.match(
+    freeStep,
+    /if: \$\{\{ !cancelled\(\) && steps\.import\.outcome == 'success' && github\.event_name != 'push' && \(github\.event\.schedule == '0 7 \* \* \*' \|\| \(github\.event_name == 'workflow_dispatch' && inputs\.free_alerts\)\) \}\}/,
+  );
+  assert.match(wf, /free_alerts:\n\s*description: [^\n]+\n\s*type: boolean\n\s*default: false/);
   assert.match(freeStep, /curl -s --max-time 120 "\$SITE_URL\/api\/cron\/price-alerts" -H "Authorization: Bearer \$CRON_SECRET" \|\| true/);
-  const step = wf.slice(paid);
-  assert.match(step, /if: steps\.import\.outcome == 'success' && github\.event_name != 'push'\n/);
+  const baseline = wf.indexOf("- name: Alert baselines after a push re-import");
+  assert.ok(baseline > paid, "the baseline pass follows the alert steps");
+  const step = wf.slice(paid, baseline);
+  assert.match(step, /if: \$\{\{ !cancelled\(\) && steps\.import\.outcome == 'success' && github\.event_name != 'push' \}\}\n/);
   assert.doesNotMatch(wf.slice(freeRun), /if: always\(\)/, "no alert run after a failed import");
+  for (const cond of wf.slice(freeRun).match(/^\s*if: [^\n]*/gm) ?? []) {
+    assert.match(cond, /!cancelled\(\) && steps\.import\.outcome == 'success'/, cond);
+  }
+  // A push re-import runs the BASELINE pass (its own path: the deployed parent
+  // route ignores queries), so matching-fix "drops" are absorbed, not emailed later.
+  const baseStep = wf.slice(baseline);
+  assert.match(baseStep, /if: \$\{\{ !cancelled\(\) && steps\.import\.outcome == 'success' && github\.event_name == 'push' \}\}/);
+  assert.match(baseStep, /curl -s --max-time 120 "\$SITE_URL\/api\/cron\/price-alerts\/baseline" -H "Authorization: Bearer \$CRON_SECRET" \|\| true/);
+  const baseRoute = read("src/app/api/cron/price-alerts/baseline/route.ts");
+  assert.match(baseRoute, /auth !== `Bearer \$\{secret\}`/);
+  assert.match(baseRoute, /runPriceAlerts\(\{\}, \{ baselineOnly: true \}\)/);
+  assert.doesNotMatch(baseRoute, /searchParams/);
   assert.match(step, /CRON_SECRET: \$\{\{ secrets\.CRON_SECRET \}\}/);
   // Its own path: the workflow is live as soon as it lands on main, the route
   // only after the next deploy, and the old parent route ignored ?scope=paid

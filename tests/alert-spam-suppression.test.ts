@@ -100,7 +100,7 @@ test("one bogus low no longer locks a watch out for two months (F1)", async () =
 });
 
 test("no reminders: a price sitting still never re-emails, however long", async () => {
-  const h = harness([row("a", { lastPriceCents: 950, lowestEmailedCents: 950, lastNotifiedAt: daysAgo(90), price: 950 })]);
+  const h = harness([row("a", { lastPriceCents: 950, lowestEmailedCents: 950, dropAnchorCents: 950, lastNotifiedAt: daysAgo(90), price: 950 })]);
   const s = await h.run();
   assert.equal(h.sent.length, 0);
   assert.equal(s.drops + s.suppressed, 0);

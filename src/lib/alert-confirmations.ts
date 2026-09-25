@@ -2,7 +2,7 @@ import type { prisma } from "./db";
 import type { Country } from "./country";
 import { SITE_URL } from "./site";
 import { cardHref } from "./card-url";
-import { alertPairKey, computeAlertPrices, type AlertPriceDb } from "./alert-price";
+import { alertPairKey, computeAlertPrices, type AlertPrice, type AlertPriceDb } from "./alert-price";
 import { CONFIRMATION_CARD_ROWS, type AlertConfirmationCard } from "./email";
 
 // THE GLOBAL DAILY CAP ON WATCH-CONFIRMATION EMAILS (/api/alerts/subscribe).
@@ -61,9 +61,10 @@ export async function claimConfirmationSlot(db: ConfirmationDb, now: Date = new 
 
 // ── What the confirmation lists ──────────────────────────────────────────────
 // The confirmation names the cards being watched, each with TODAY'S ALERT
-// PRICE (lib/alert-price.ts: cheapest in-stock Near Mint copy at a store, no
-// eBay) — the same figure the alerts compare, so the first alert's "was" and
-// this email agree. One bounded query for at most CONFIRMATION_CARD_ROWS cards;
+// PRICE (lib/alert-price.ts: cheapest in-stock Near Mint or unstated-condition
+// copy at a store, no eBay) and that copy's condition — the same figure the
+// alerts compare and the new watch is seeded from (the subscribe route passes
+// its own read as `known`), so the first alert's "was" and this email agree. One bounded query for at most CONFIRMATION_CARD_ROWS cards;
 // only ever reached by a confirmation that is about to be sent (the daily cap
 // above has already been claimed).
 export async function confirmationCards(
@@ -71,9 +72,16 @@ export async function confirmationCards(
   cards: readonly { id: string; name: string; slug: string | null; setCode: string; collectorNumber: string }[],
   market: Country,
   now: Date = new Date(),
+  // The subscribe route already read these prices to seed the new watches;
+  // passing them keeps the email and the baseline on the same read.
+  known?: Map<string, AlertPrice> | null,
 ): Promise<AlertConfirmationCard[]> {
   const shown = cards.slice(0, CONFIRMATION_CARD_ROWS);
-  const prices = await computeAlertPrices(db, shown.map((c) => ({ cardId: c.id, market })), now).catch(() => null);
+  const missing = shown.filter((c) => !known?.has(alertPairKey(market, c.id)));
+  const read = missing.length
+    ? await computeAlertPrices(db, missing.map((c) => ({ cardId: c.id, market })), now, { slim: true }).catch(() => null)
+    : null;
+  const prices = { get: (k: string) => known?.get(k) ?? read?.get(k) };
   return shown.map((c) => {
     const p = prices?.get(alertPairKey(market, c.id));
     const priced = p?.state === "priced";
@@ -85,6 +93,7 @@ export async function confirmationCards(
       market,
       priceCents: priced ? p!.priceCents : null,
       storeName: priced ? p!.stores[0]?.name ?? null : null,
+      condition: priced ? p!.condition : null,
     };
   });
 }

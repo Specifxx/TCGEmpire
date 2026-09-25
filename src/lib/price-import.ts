@@ -16,7 +16,7 @@ import { refreshTcgplayerPrices } from "./tcgplayer";
 import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { refreshCardTraderPrices } from "./cardtrader";
-import { conditionRank } from "./condition";
+import { conditionRank, listingCondition } from "./condition";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO, convertCents } from "./fx";
@@ -1764,12 +1764,20 @@ export async function importPrices(): Promise<ImportSummary> {
         return parseFloat(a.price) <= parseFloat(b.price) ? a : b;
       });
       const priceCents = Math.round(parseFloat(best.price) * 100);
+      // The variant's label, or a played/damaged label from the PRODUCT title
+      // when the variant names none (lib/condition.ts listingCondition).
+      const condition = listingCondition(p.title, best.title);
       const prev = rows.get(cardId);
       // Keep the best listing per store+card: in-stock beats out-of-stock, then
-      // cheaper beats dearer.
+      // better condition, then cheaper beats dearer — a store's separate
+      // "Heavily Played" product must not displace its NM one by being cheaper.
       if (prev) {
         if (prev.inStock && !inStock) continue;
-        if (prev.inStock === inStock && prev.priceCents <= priceCents) continue;
+        if (prev.inStock === inStock) {
+          const pr = conditionRank(prev.condition ?? "");
+          const r = conditionRank(condition ?? "");
+          if (pr < r || (pr === r && prev.priceCents <= priceCents)) continue;
+        }
       }
       rows.set(cardId, {
         cardId,
@@ -1777,7 +1785,7 @@ export async function importPrices(): Promise<ImportSummary> {
         retailerName: store.name,
         title: p.title,
         url: productUrl(store.base, p),
-        condition: best.title && best.title !== "Default Title" ? best.title : null,
+        condition,
         isFoil: /foil/i.test(p.title),
         priceCents,
         // Derived from the market registry, not a hand-maintained ternary chain —

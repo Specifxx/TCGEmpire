@@ -44,6 +44,11 @@ export async function applyTargetPrice(
   user: EntitlementUser & { id: string },
   cardId: string,
   rawBody: unknown,
+  // The one-tap email actions (lib/alert-actions.ts) pass the watch's current
+  // alert price: a changed target AT OR ABOVE it is stored as already fired
+  // at that price instead of armed, so it re-fires only on a further drop.
+  // The watchlist's own PATCH passes nothing — a target typed there re-arms.
+  opts: { seedFiredAtCents?: number | null } = {},
 ): Promise<TargetResult> {
   if (!isPremium(user)) {
     return { status: 403, body: { error: "Target prices are part of Plus." } };
@@ -94,9 +99,11 @@ export async function applyTargetPrice(
   // clearing it here made the next ordinary drop ($40 → $38) go out as a "new
   // low" above a price already sent, and outlived a lapse into free rules.
   const changed = targetCents !== current.targetCents;
+  const seed = opts.seedFiredAtCents;
+  const firedAt = targetCents != null && seed != null && targetCents >= seed ? seed : null;
   const res = await db.priceAlert.updateMany({
     where: { userId: user.id, cardId, market },
-    data: changed ? { targetCents, targetEmailedCents: null } : { targetCents },
+    data: changed ? { targetCents, targetEmailedCents: firedAt } : { targetCents },
   });
   if (res.count === 0) return { status: 404, body: { error: "Not found" } };
 

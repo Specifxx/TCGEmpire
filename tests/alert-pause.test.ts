@@ -31,7 +31,8 @@ test("a paused address gets no email from any trigger; its baselines still advan
   assert.equal(s.paused, 2);
   assert.equal(s.emails, 1);
   // Baselines advance like a snooze — resuming never releases stale news.
-  assert.deepEqual(h.writeFor("a"), { lastPriceCents: 800 });
+  // The drop anchor holds at the pre-slide price (seeded here on the rule's first run).
+  assert.deepEqual(h.writeFor("a"), { lastPriceCents: 800, dropAnchorCents: 1000 });
   assert.equal(h.writeFor("b")!.lastPriceCents, 850);
   assert.equal(h.writeFor("b")!.lastNotifiedAt, undefined);
   assert.equal(h.writeFor("c")!.lastNotifiedAt instanceof Date, true);
@@ -72,7 +73,7 @@ test("the digest gets the address's token and anonymity for its links", async ()
   assert.ok(a.items[0]!.actions!.upsell);
   const b = h.sent.find((x) => x.to === "b@example.com")!.items[0]!;
   assert.equal(b.actions!.upsell, null);
-  assert.ok(b.actions!.targetSet);
+  assert.ok(b.actions!.targetDown);
 });
 
 test("pausedAddresses is scoped and capped", async () => {

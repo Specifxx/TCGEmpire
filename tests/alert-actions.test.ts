@@ -74,20 +74,19 @@ test("expired and malformed tokens are refused", () => {
   assert.throws(() => signAlertAction({ alertId: "has.dot", action: "stop" }));
 });
 
-test("links: a paid row gets target links (the target down 10%), a free row the Plus link", () => {
-  assert.equal(loweredTargetCents(2000, 1840), 1800);
+test("links: a paid row gets one target link, 10% under the LOWER of target and price; a free row the Plus link", () => {
+  assert.equal(loweredTargetCents(2000, 1840), 1656, "the price is already under the target: 10% under the price");
+  assert.equal(loweredTargetCents(1500, 1840), 1350, "the target is under the price: 10% under the target");
   assert.equal(loweredTargetCents(null, 1840), 1656);
   const paid = alertActionLinks({ alertId: "r", currentCents: 1840, targetCents: 2000, canTarget: true, now: NOW });
-  assert.equal(paid.targetSet?.cents, 1840);
-  assert.equal(paid.targetDown?.cents, 1800);
+  assert.equal(paid.targetDown?.cents, 1656);
+  assert.ok(paid.targetDown!.cents < 1840, "never a target the price the member is looking at already meets");
+  assert.equal("targetSet" in paid, false, "'Set target at this price' set a target the price already met");
   assert.equal(paid.upsell, null);
   assert.equal(paid.hasTarget, true);
   const v = verifyAlertAction(new URL(paid.targetDown!.url).searchParams.get("t"), NOW);
-  assert.ok(v.ok && v.action === "target-down" && v.value === 1800);
-  // "Set target at this price" is dropped when it already is the target.
-  assert.equal(alertActionLinks({ alertId: "r", currentCents: 1840, targetCents: 1840, canTarget: true, now: NOW }).targetSet, null);
+  assert.ok(v.ok && v.action === "target-down" && v.value === 1656);
   const free = alertActionLinks({ alertId: "r", currentCents: 1840, targetCents: null, canTarget: false, now: NOW });
-  assert.equal(free.targetSet, null);
   assert.equal(free.targetDown, null);
   assert.match(free.upsell!, /\/premium\?src=alert-email/);
   for (const u of [free.stop, free.snooze]) assert.match(u, /\/alerts\/action\?t=/);
@@ -102,6 +101,7 @@ type StubRow = {
   userId: string | null;
   targetCents: number | null;
   targetEmailedCents: number | null;
+  lastPriceCents?: number | null;
   snoozedUntil: Date | null;
   user: { id: string; email: string; isAdmin: boolean; premiumUntil: Date | null; premiumTier: string; premiumTierFloor: string | null } | null;
 };
@@ -228,6 +228,35 @@ test("the Plus target limit is enforced server-side; Premium is unlimited", asyn
   const ok = await performAlertAction(prem.db, tok("target-set", 1840), NOW);
   assert.equal(ok.status, 200);
   assert.equal(prem.rows.find((x) => x.id === "row1")!.targetCents, 1840);
+});
+
+test("a one-tap target at or above the current alert price is stored already FIRED there, never re-sent as is", async () => {
+  // The email showed 1399; a target at 1399 (an old "Set target at this
+  // price" link) used to re-arm, and the next paid run re-sent "hit your
+  // target" with nothing changed. Now it re-fires only on a further drop.
+  const at = stub([watch({ userId: "u1", user: account("plus"), targetCents: 1500, lastPriceCents: 1399 })]);
+  assert.equal((await performAlertAction(at.db, tok("target-set", 1399), NOW)).status, 200);
+  assert.equal(at.rows[0]!.targetCents, 1399);
+  assert.equal(at.rows[0]!.targetEmailedCents, 1399, "fired at the price the member was looking at");
+  // The price fell after the email: the new target is above it — same rule.
+  const fell = stub([watch({ userId: "u1", user: account("plus"), targetCents: 1500, lastPriceCents: 1200 })]);
+  await performAlertAction(fell.db, tok("target-down", 1350), NOW);
+  assert.equal(fell.rows[0]!.targetEmailedCents, 1200);
+  // A target under the price arms normally.
+  const under = stub([watch({ userId: "u1", user: account("plus"), targetCents: null, lastPriceCents: 1840 })]);
+  await performAlertAction(under.db, tok("target-down", 1656), NOW);
+  assert.equal(under.rows[0]!.targetEmailedCents, null);
+});
+
+test("…and the run then stays quiet until a real further drop", async () => {
+  const { harness, owned, plus, daysAgo } = await import("./helpers/alert-harness");
+  const state = { targetCents: 1399, targetEmailedCents: 1399, lastPriceCents: 1399, dropAnchorCents: 1399, lastNotifiedAt: daysAgo(2) };
+  const same = harness([owned("a", plus, { ...state, price: 1399 })]);
+  await same.run("paid");
+  assert.equal(same.sent.length, 0, "no duplicate 'hit your target'");
+  const lower = harness([owned("a", plus, { ...state, price: 1250 })]);
+  await lower.run("paid");
+  assert.equal(lower.items()[0]?.kind, "target", "10% further down fires");
 });
 
 // ── The route and the page ───────────────────────────────────────────────────

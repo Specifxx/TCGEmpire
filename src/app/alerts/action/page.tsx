@@ -119,7 +119,7 @@ export default async function AlertActionPage({ searchParams }: { searchParams: 
       return (
         <Shell title="Target saved">
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
-            We&apos;ll email you when the cheapest Near Mint copy of <strong className="text-white">{cardName}</strong> is at or
+            We&apos;ll email you when the cheapest Near Mint (or unstated-condition) store copy of <strong className="text-white">{cardName}</strong> is at or
             under <strong className="text-white">{money(row?.targetCents ?? v.value)}</strong>, checked after every price update.
           </p>
           <Link href="/watching" className="btn-ghost mt-4">
@@ -210,12 +210,12 @@ export default async function AlertActionPage({ searchParams }: { searchParams: 
     },
     "target-set": {
       title: `Set your target at ${money(v.value)}?`,
-      body: `We'll email you when the cheapest Near Mint copy of ${cardName} (${market}) is at or under ${money(v.value)}.${row.targetCents != null ? ` Your current target is ${money(row.targetCents)}.` : ""}`,
+      body: `We'll email you when the cheapest Near Mint (or unstated-condition) store copy of ${cardName} (${market}) is at or under ${money(v.value)}.${row.targetCents != null ? ` Your current target is ${money(row.targetCents)}.` : ""}`,
       button: `Set target at ${money(v.value)}`,
     },
     "target-down": {
       title: `Lower your target to ${money(v.value)}?`,
-      body: `We'll email you when the cheapest Near Mint copy of ${cardName} (${market}) is at or under ${money(v.value)}.${row.targetCents != null ? ` Your current target is ${money(row.targetCents)}.` : ""}`,
+      body: `We'll email you when the cheapest Near Mint (or unstated-condition) store copy of ${cardName} (${market}) is at or under ${money(v.value)}.${row.targetCents != null ? ` Your current target is ${money(row.targetCents)}.` : ""}`,
       button: `Set target at ${money(v.value)}`,
     },
   };

@@ -157,14 +157,14 @@ test("stores: up to three, and postage only as known — est., up to, free, or '
 
 test("actions: paid rows get target links, free rows the Plus link — and every link is signed per row", () => {
   const paid = dropRow(VARIANTS.target!);
-  assert.match(paid, /Set target at A\$18\.40/);
-  assert.match(paid, /Lower target 10% \(A\$18\.00\)/, "10% under the current A$20.00 target");
+  assert.doesNotMatch(paid, /Set target at/, "a target at the price shown would re-fire at the next run");
+  assert.match(paid, /Lower target to A\$16\.56/, "10% under the A$18.40 price, which is already under the A$20.00 target");
   assert.doesNotMatch(paid, /with Plus/);
   const noTarget = dropRow(VARIANTS.below_market!);
-  assert.match(noTarget, /Target 10% lower \(A\$16\.56\)/, "no target yet: 10% under the price");
+  assert.match(noTarget, /Target 10% under this price \(A\$16\.56\)/, "no target yet: 10% under the price");
   const free = dropRow(VARIANTS.drop!);
   assert.match(free, /Set a target price with Plus/);
-  assert.doesNotMatch(free, /Set target at|Lower target/);
+  assert.doesNotMatch(free, /Set target at|Lower target|Target 10%/);
   for (const m of free.matchAll(/href="([^"]*alerts\/action\?t=[^"]*)"/g)) {
     assert.ok(m[1]!.startsWith(`${SITE_URL}/alerts/action?t=`), "actions land on the confirmation page, never act on GET");
   }
@@ -290,14 +290,18 @@ test("scraped strings are escaped", () => {
 
 test("the confirmation names the cards, their market and today's price, and states the cadence", () => {
   const cards = [
-    { name: "Jinx, Loose Cannon", setCode: "OGN", collectorNumber: "030", url: `${SITE_URL}/card/jinx`, market: "AU" as const, priceCents: 1840, storeName: "Cherry" },
+    { name: "Jinx, Loose Cannon", setCode: "OGN", collectorNumber: "030", url: `${SITE_URL}/card/jinx`, market: "AU" as const, priceCents: 1840, storeName: "Cherry", condition: null },
     { name: "Ahri", setCode: "OGN", collectorNumber: "001", url: `${SITE_URL}/card/ahri`, market: "AU" as const, priceCents: null, storeName: null },
   ];
   const email = buildAlertConfirmationEmail(cards, 12, "tok", true);
   assert.equal(email.subject, "You're watching 12 cards on RiftCompare");
   for (const part of [email.html, email.text]) {
     assert.match(part, /Jinx, Loose Cannon/);
-    assert.match(part, /cheapest Near Mint now A\$18\.40 at Cherry/);
+    // The alert price admits unstated-condition copies: never called Near Mint unless the store says so.
+    assert.match(part, /cheapest now A\$18\.40 at Cherry · Condition not stated by the store/);
+    assert.doesNotMatch(part, /cheapest Near Mint/);
+    // The minimum drop in the market's own currency, not a hard-coded "50 cents".
+    assert.match(part, /falls at least 5% \(and at least A\$0\.50\) to a new low/);
     assert.match(part, /not in stock at a store yet/);
     assert.match(part, /and 10 more\./);
     assert.match(part, /At most one email a week for free alerts/);
@@ -308,4 +312,10 @@ test("the confirmation names the cards, their market and today's price, and stat
   assert.equal(email.headers["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
   assert.doesNotMatch(email.html, /width="520"/);
   assert.equal(buildAlertConfirmationEmail([cards[0]!], 1, "tok").subject, "You're watching Jinx, Loose Cannon on RiftCompare");
+  // A stated condition is printed as the store states it; a UK watch says pence.
+  const uk = buildAlertConfirmationEmail([{ ...cards[0]!, market: "UK" as const, condition: "Near Mint" }], 1, "tok");
+  assert.match(uk.text, /cheapest now £18\.40 at Cherry · Near Mint/);
+  assert.match(uk.text, /at least £0\.50\)/);
+  const mixed = buildAlertConfirmationEmail([cards[0]!, { ...cards[1]!, market: "US" as const }], 2, "tok");
+  assert.match(mixed.text, /at least 50 cents or pence, in your market's currency/);
 });
