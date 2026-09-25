@@ -3320,6 +3320,8 @@ jobs:
           echo "pg_restore exit code: $RC — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
           echo "-- restore.log (first 40 lines) --"; head -40 restore.log
           echo "-- restore.log (last 20 lines) --"; tail -20 restore.log
+          echo "-- restore.log: every line mentioning Card (diagnostic, 2026-09-25) --"
+          grep -i card restore.log || echo "(no Card-related lines in restore.log)"
 
           echo "== Target inventory after restore =="
           psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
