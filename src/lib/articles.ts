@@ -400,6 +400,7 @@ For the running list of everything Riot has genuinely shown — kept strictly se
       "What's in Riot's US$70 Secret Garden Bundle, every 2026 event where you can still buy one, and the supply map behind its Europe-vs-US price gap.",
     author: "RiftCompare",
     date: "2026-09-12",
+    updated: "2026-09-25", // Deal Finder's cross-region view was cut; the gap line points at /market/records
     readMins: 8,
     tags: ["news", "collecting", "sealed", "prices"],
     shop: [
@@ -515,7 +516,7 @@ Not a question this site will answer for you, but here is the honest framing.
 
 At US$88 you are paying an 18 dollar premium over the booth price for three exclusive promos, five tokens, sleeves and three boosters — that is close to reasonable on components alone. At €175 you are paying roughly 2.5x the box price, mostly for the fact that nobody near you has one yet, and there are four events on the calendar designed to change that.
 
-If you want the box because you like the art, the American market is where to buy it, and the [deal finder](/tools/deal-finder) is built for exactly that kind of cross-region gap. If you want it because you are speculating on the print run, the thing to understand is that Riot has told you there is leftover stock and that it intends to keep handing it out.
+If you want the box because you like the art, the American market is where to buy it — and the free [cross-market gaps board](/market/records#gaps) tracks the same kind of geography gap on single cards. If you want it because you are speculating on the print run, the thing to understand is that Riot has told you there is leftover stock and that it intends to keep handing it out.
 
 And if you simply want the cards to play with, remember what they are: alternate arts of cards already in the catalogue. The ordinary printings are [in our database](/browse) at ordinary prices.
 
@@ -6760,7 +6761,7 @@ Buying from outside the eurozone? RiftCompare also covers **[Australia](/blog/bu
       "10 Riftbound price sites ranked: TCGplayer, Cardmarket, Bilgewater Market and more, scored on store coverage, delivered cost and reference pricing.",
     author: "RiftCompare",
     date: "2026-08-24",
-    updated: "2026-08-24",
+    updated: "2026-09-25", // FAQ + body: the 2026-09-25 lineup (no value screener)
     readMins: 13,
     tags: ["price comparison", "comparison", "tcgplayer", "cardmarket", "best sites", "tools", "buying guide"],
     faq: [
@@ -6838,7 +6839,7 @@ Five criteria, all checkable in a couple of minutes on any of these sites:
 
 **[RiftCompare](/browse)** compares live prices from **independent stores across six real markets** — Australia, the US, the UK, Singapore, Canada and the EU — each priced natively in its own currency, plus eBay and TCGplayer reference pricing where a market has thin local coverage. Every comparison ranks by **total delivered cost** (price plus shipping, with free-shipping thresholds factored in automatically), and every match is by **exact printing** — a Signature or Overnumbered chase card is never confused with the base print.
 
-That combination — independent stores, delivered cost, exact printing, six real markets — is the actual gap every other name on this list has in at least one place. None of them clear all five criteria at once. It's also completely free, with no signup required to compare, and it's the only one on this list that adds a deal finder, a value screener, a whole-deck pricer (Best Basket), price-drop alerts and a weekly price-movers digest on top of the comparison itself.
+That combination — independent stores, delivered cost, exact printing, six real markets — is the actual gap every other name on this list has in at least one place. None of them clear all five criteria at once. It's also completely free, with no signup required to compare, and it's the only one on this list that adds a deal finder, a whole-deck pricer (Best Basket), price-drop alerts and a weekly price-movers digest on top of the comparison itself.
 
 ### 2. TCGplayer
 

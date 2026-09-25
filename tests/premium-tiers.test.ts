@@ -320,6 +320,57 @@ test("billingStateFor reads Stripe once per paying customer, and never for anyon
   forgetBillingState();
 });
 
+test("billingStateFor never holds /api/me on Stripe, and never pins a failed read for ten minutes", async () => {
+  forgetBillingState();
+  // An empty read (no live subscription, or a failed call — the helper
+  // reports both as null) is kept for a minute, not the full window.
+  let reads = 0;
+  const empty = async () => {
+    reads++;
+    return null;
+  };
+  assert.deepEqual(await billingStateFor({ stripeCustomerId: "cus_2" }, true, 0, empty), { trialing: false, interval: null });
+  await billingStateFor({ stripeCustomerId: "cus_2" }, true, 30_000, empty);
+  assert.equal(reads, 1, "an empty read is still memoised briefly");
+  await billingStateFor({ stripeCustomerId: "cus_2" }, true, 61_000, empty);
+  assert.equal(reads, 2, "…but re-read after a minute, not ten");
+
+  // A thrown read degrades to NONE rather than failing the whole response.
+  const boom = async () => {
+    throw new Error("stripe down");
+  };
+  assert.deepEqual(await billingStateFor({ stripeCustomerId: "cus_3" }, true, 0, boom), { trialing: false, interval: null });
+
+  // A slow read answers NONE inside the time box, shares one call between
+  // concurrent requests, and is memoised once it lands.
+  let release!: () => void;
+  let slowReads = 0;
+  const slow = () => {
+    slowReads++;
+    return new Promise<{ status: "trialing"; interval: "month" }>((r) => {
+      release = () => r({ status: "trialing", interval: "month" });
+    });
+  };
+  const [a, b] = await Promise.all([
+    billingStateFor({ stripeCustomerId: "cus_4" }, true, 0, slow, 20),
+    billingStateFor({ stripeCustomerId: "cus_4" }, true, 0, slow, 20),
+  ]);
+  assert.deepEqual(a, { trialing: false, interval: null }, "timed out: answered without Stripe");
+  assert.deepEqual(b, a);
+  assert.equal(slowReads, 1, "concurrent requests share the one in-flight read");
+  release();
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(await billingStateFor({ stripeCustomerId: "cus_4" }, true, 1_000, slow, 20), { trialing: true, interval: "month" });
+  assert.equal(slowReads, 1, "the late answer was memoised");
+  forgetBillingState();
+});
+
+test("/api/me reads billing state for Plus viewers only — Premium never waits on Stripe for adFree", () => {
+  const src = read("src/app/api/me/route.ts");
+  assert.match(src, /billingStateFor\(user, premiumTierOf\(user\) === "plus"\)/);
+  assert.doesNotMatch(src, /billingStateFor\(user, isPremium\(user\)\)/);
+});
+
 test("Plus's display prices and helpers are real and match the decided figures", () => {
   assert.equal(PLUS_PRICE_AMOUNT, "$4.99");
   assert.equal(PLUS_ANNUAL_AMOUNT, "$39.99");

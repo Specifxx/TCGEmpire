@@ -132,7 +132,9 @@ test("every tier table says Top 3 for the free account", () => {
 // to 09-23), "the #1 pick" / "top result only" (before 09-22). The article
 // carried the last two for a day after they stopped being true.
 // "single best result" (the tools-index FAQ and its FAQPage JSON-LD, until 2026-09-25).
-const STALE = /Premium only|#1 pick|top result only|Free shows only the top pick|only the top pick|single best result/i;
+// "single best row" / "single-best-pick" (three SEO-pack articles and the
+// price-comparison-sites FAQ, all emitted as FAQPage JSON-LD, until 2026-09-25).
+const STALE = /Premium only|#1 pick|top result only|Free shows only the top pick|only the top pick|single best result|single best row|single-best-pick/i;
 
 test("nothing still describes the old access for these two tools", () => {
   const premiumPage = read("src/app/premium/page.tsx");
@@ -157,6 +159,28 @@ test("nothing still describes the old access for these two tools", () => {
   for (const f of ["src/components/PremiumSlideIn.tsx", "src/app/tools/page.tsx", DEAL_FINDER, RISING]) {
     assert.ok(!STALE.test(code(f)), `${f} still describes old access in user-visible text`);
   }
+});
+
+test("no article still sells old access or a retired tool — body, summary and FAQ (FAQPage JSON-LD) alike", () => {
+  // The 2026-09-25 lineup review found three SEO-pack articles still promising
+  // "the full deal and value-finder lists rather than the single best row",
+  // two of them in FAQ answers that ArticleView emits as FAQPage schema. The
+  // removal sweep only looked for the retired URLs, and this file's scan only
+  // looked at the Premium explainer, so the prose survived both.
+  //
+  // Selling phrases, not names: the Premium explainer rightly says what
+  // happened to the Value Finder, and that must stay allowed.
+  const RETIRED =
+    /value[- ]finder (lists?|screener)|value screener|demand finder leaderboard|full (deal|opportunity) list rather than|deal[- ]finder\]?(\([^)]*\))?[^.]{0,60}cross-region/i;
+  const offenders: string[] = [];
+  for (const a of getArticles()) {
+    const texts = [a.body, ...(a.summary ?? []), ...(a.faq ?? []).flatMap((f) => [f.q, f.a])];
+    for (const t of texts) {
+      const m = t.match(STALE) ?? t.match(RETIRED);
+      if (m) offenders.push(`${a.slug}: "${m[0]}"`);
+    }
+  }
+  assert.deepEqual(offenders, [], `articles still describing old access or a retired tool:\n${offenders.join("\n")}`);
 });
 
 test("gating the tables did not leave Deal Finder thin", () => {

@@ -17,10 +17,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const user = await getCurrentUser();
-  // Trial / billing interval of a PAYING viewer's own subscription — one
-  // memoised Stripe read per customer (lib/billing-state.ts); nothing for
-  // anyone else.
-  const billing = await billingStateFor(user, isPremium(user));
+  // Trial / billing interval of a PLUS viewer's own subscription — one
+  // memoised, time-boxed Stripe read per customer (lib/billing-state.ts). Only
+  // the Plus → Premium upgrade offers read these, so Premium, free and
+  // signed-out viewers cost no Stripe call and never wait on one for adFree.
+  const billing = await billingStateFor(user, premiumTierOf(user) === "plus");
   return NextResponse.json(
     {
       user: user
@@ -48,7 +49,8 @@ export async function GET() {
       tier: premiumTierOf(user),
       // Mid-trial, a plan switch isn't offered (the switch routes handle paid
       // subscriptions only), and an upgrade quote uses the subscriber's own
-      // billing interval — annual subscribers stay annual.
+      // billing interval — annual subscribers stay annual. Plus viewers only;
+      // false / null for everyone else.
       trialing: billing.trialing,
       interval: billing.interval,
       // Premium upsell state for the client (the one-click Premium dialog).
