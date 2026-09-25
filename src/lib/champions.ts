@@ -25,7 +25,9 @@
 //
 // ADDING A CHAMPION: only when cards for them actually exist. Check with
 //   SELECT DISTINCT split_part(name, ',', 1) FROM "Card" WHERE name LIKE '%,%';
-// and add the observed prefix — do not pre-empt a release.
+// and add the observed prefix — do not pre-empt a release. The maintenance task
+// `audit-champion-coverage` runs that query and lists every prefix missing from
+// this file, so a newly revealed champion is flagged rather than forgotten.
 
 export interface Champion {
   slug: string;
@@ -38,23 +40,25 @@ export interface Champion {
 // Observed prefixes from the live card corpus, minus the two defects above.
 // Order is alphabetical by canonical name for the index page.
 const RAW: [name: string, extraPrefixes?: string[]][] = [
-  ["Ahri"], ["Akali"], ["Akshan"], ["Anivia"], ["Annie"], ["Aphelios"], ["Ashe"], ["Azir"],
-  ["Bard"], ["Blitzcrank"], ["Caitlyn"], ["Darius"], ["Diana"], ["Dr. Mundo"],
-  ["Draven"], ["Ekko"], ["Evelynn"], ["Ezreal"], ["Fiora"], ["Fizz"], ["Galio"],
-  ["Garen"], ["Heimerdinger"], ["Hwei"], ["Irelia"], ["Ivern"], ["Janna"], ["Jax"],
-  ["Jayce"], ["Jhin"], ["Jinx"], ["Kai'Sa"], ["Karma"], ["Karthus"], ["Katarina"],
-  ["Kayn"], ["Kennen"], ["Kha'Zix"], ["Kog'Maw"], ["LeBlanc"], ["Lee Sin"], ["Leona"],
-  ["Lillia"], ["Lucian"], ["Lux"], ["Malzahar"],
+  ["Ahri"], ["Akali"], ["Akshan"], ["Ambessa"], ["Anivia"], ["Annie"], ["Aphelios"],
+  ["Ashe"], ["Azir"], ["Bard"], ["Blitzcrank"], ["Caitlyn"], ["Darius"], ["Diana"],
+  ["Dr. Mundo"], ["Draven"], ["Ekko"], ["Evelynn"], ["Ezreal"], ["Fiora"], ["Fizz"],
+  ["Galio"], ["Gangplank"], ["Garen"], ["Heimerdinger"], ["Hwei"], ["Illaoi"],
+  ["Irelia"], ["Ivern"], ["Janna"], ["Jax"], ["Jayce"], ["Jhin"], ["Jinx"], ["Kai'Sa"],
+  ["Karma"], ["Karthus"], ["Katarina"], ["Kayle"], ["Kayn"], ["Kennen"], ["Kha'Zix"],
+  ["Kog'Maw"], ["LeBlanc"], ["Lee Sin"], ["Leona"], ["Lillia"], ["Lucian"], ["Lux"],
+  ["Malzahar"],
   // The three-way split documented above. "Master Yi" is canonical; "Yi" is how
   // the Unit printings are named; "Master" is the seed.ts bug's output.
   ["Master Yi", ["Yi", "Master"]],
   ["Mel"],
-  ["Miss Fortune"], ["Nami"], ["Nidalee"], ["Nilah"], ["Nocturne"], ["Ornn"],
-  ["Poppy"], ["Pyke"], ["Qiyana"], ["Rek'Sai"], ["Rell"], ["Renata Glasc"],
-  ["Renekton"], ["Rengar"], ["Rumble"], ["Sett"], ["Shen"], ["Sivir"], ["Sona"], ["Soraka"],
-  ["Syndra"], ["Taric"], ["Teemo"], ["Tryndamere"], ["Twisted Fate"], ["Udyr"],
-  ["Vayne"], ["Vex"], ["Vi"], ["Viktor"], ["Volibear"], ["Warwick"], ["Xerath"],
-  ["Xin Zhao"], ["Yasuo"], ["Yone"], ["Yuumi"], ["Zed"], ["Zilean"],
+  ["Miss Fortune"], ["Morgana"], ["Nami"], ["Nasus"], ["Nidalee"], ["Nilah"],
+  ["Nocturne"], ["Ornn"], ["Poppy"], ["Pyke"], ["Qiyana"], ["Rek'Sai"], ["Rell"],
+  ["Renata Glasc"], ["Renekton"], ["Rengar"], ["Riven"], ["Rumble"], ["Seraphine"],
+  ["Sett"], ["Shen"], ["Sivir"], ["Sona"], ["Soraka"], ["Swain"], ["Syndra"], ["Taric"],
+  ["Teemo"], ["Tryndamere"], ["Twisted Fate"], ["Udyr"], ["Vayne"], ["Vex"], ["Vi"],
+  ["Viktor"], ["Volibear"], ["Warwick"], ["Xerath"], ["Xin Zhao"], ["Yasuo"], ["Yone"],
+  ["Yuumi"], ["Zed"], ["Zilean"],
 ];
 
 // Slug: lowercase, non-alphanumerics collapsed to "-". Chosen so the apostrophe
