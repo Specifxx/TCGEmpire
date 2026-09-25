@@ -205,3 +205,24 @@ jobs:
             "$SITE_URL/api/revalidate" -H "Authorization: Bearer $CRON_SECRET" || true)
           echo "revalidate -> HTTP ${code:-000}"
           [ "$code" = "200" ] || echo "Non-200/failed (pages still refresh on their 24h TTL); not failing the run."
+
+      - name: Paid price alerts (targets + below-market)
+        # Plus/Premium target-price and below-market alerts, checked right after
+        # every price update (07:xx and 19:xx UTC) rather than once a day.
+        # ?scope=paid runs ONLY watches owned by an entitled account
+        # (lib/price-alerts.ts AlertScope); free and anonymous watches stay on
+        # vercel.json's daily 18:30 run and its weekly per-address cap. The
+        # route is GET with the same Bearer CRON_SECRET as the Vercel cron.
+        # Non-fatal like the revalidation above: a missed paid run is caught by
+        # the next import's, and must never red a successful import.
+        if: always()
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret — skipping the paid alert run."
+            exit 0
+          fi
+          curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts?scope=paid" -H "Authorization: Bearer $CRON_SECRET" || true
+          echo

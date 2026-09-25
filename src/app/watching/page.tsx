@@ -50,6 +50,7 @@ export default async function WatchingPage() {
   // What Deal Finder and Rising Cards say about THIS account's watched cards —
   // free accounts only, and only when there is something specific to say
   // (lib/premium-nudge.ts). Never fails the page.
+  const member = isPremium(user);
   const nudge =
     !isPremium(user) && premiumCheckoutEnabled() ? await getPremiumNudge(user.id, getCountry()).catch(() => null) : null;
   const nudgeCopy = nudge ? watchedNudgeCopy(nudge, "watched") : null;
@@ -66,10 +67,18 @@ export default async function WatchingPage() {
           <NavIcon name="heart" className="h-6 w-6 shrink-0 text-brand-400" />
           My watchlist
         </h1>
+        {/* Matches the code: "watching from" is PriceAlert.startPriceCents
+            (older watches show their last-checked price, labelled as such);
+            the free email is the weekly new-low digest (lib/price-alerts.ts);
+            a Plus target fires on its own, after each price update. */}
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Every card you&apos;re tracking, with the price it was at when you started. We email{" "}
-          <strong className="text-slate-200">{user.email}</strong> whenever one of them drops below that
-          figure — tap the heart on any card to stop watching it.
+          <strong className="text-slate-200">{user.email}</strong> when one hits a new low, naming the
+          cheapest store — at most one email a week.{" "}
+          {member
+            ? "Set your own price on any card below and we email you as soon as it's met."
+            : "With Plus, set your own price on any card and hear as soon as it's met."}{" "}
+          Tap the heart on any card to stop watching it.
         </p>
       </div>
 

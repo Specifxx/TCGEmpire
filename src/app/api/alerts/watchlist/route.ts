@@ -26,9 +26,27 @@ export const dynamic = "force-dynamic";
 
 // GET — every card this account watches, newest first, in cardTileSelect() shape
 // so the client can hand each row straight to <CardTile/>.
-export async function GET() {
+//
+// ?ids=1 — card ids only. lib/use-watchlist.ts calls this on EVERY signed-in
+// page view (the header's watch control and every tile's heart), and all it
+// builds is a Set of card ids; the full shape below carries a card tile plus a
+// per-card RetailerPrice _count subquery for each of up to 500 rows. Only the
+// watchlist itself (Watchlist.tsx: /watching and the drawer) needs that.
+export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
+
+  if (new URL(req.url).searchParams.get("ids") === "1") {
+    const ids = await prisma.priceAlert
+      .findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 500,
+        select: { cardId: true },
+      })
+      .catch(() => []);
+    return NextResponse.json({ items: ids }, { headers: { "Cache-Control": "no-store" } });
+  }
 
   const country = getCountry();
   const items = await prisma.priceAlert
@@ -44,6 +62,12 @@ export async function GET() {
         cardId: true,
         market: true,
         lastPriceCents: true,
+        // "Watching from": the price at creation (null on rows older than the
+        // column — the client falls back to lastPriceCents).
+        startPriceCents: true,
+        // The member's "notify me at" price, for the row's target field and
+        // the "N of 25 used" count.
+        targetCents: true,
         createdAt: true,
         card: { select: cardTileSelect(country) },
       },
@@ -97,6 +121,10 @@ export async function POST(req: Request) {
   // the same person created anonymously before signing in. It stamps ownership
   // and deliberately touches nothing else — rewriting lastPriceCents would reset
   // the baseline and swallow the very drop the watch exists to catch.
+  // startPriceCents is written in the create branch ONLY — it is "the price
+  // when you started watching", so adopting an older anonymous row keeps that
+  // row's own start.
+  const price = pickPrice(card, market as Country);
   const item = await prisma.priceAlert.upsert({
     where: { email_cardId_market: { email: user.email, cardId: card.id, market } },
     update: { userId: user.id },
@@ -106,7 +134,8 @@ export async function POST(req: Request) {
       cardId: card.id,
       market,
       unsubToken: existing?.unsubToken ?? randomUUID(),
-      lastPriceCents: pickPrice(card, market as Country),
+      lastPriceCents: price,
+      startPriceCents: price,
     },
   });
 

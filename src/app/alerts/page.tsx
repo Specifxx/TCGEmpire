@@ -6,6 +6,7 @@ import { AnswerBox } from "@/components/AnswerBox";
 import { AlertsSignupCta } from "@/components/AlertsSignupCta";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
+import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
 
 // Watchlists & price alerts had no page of their own. The FEATURE shipped long
 // ago — PriceWatchButton on every card tile, PriceAlertModal on the card page,
@@ -14,6 +15,13 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 // /browse (wrong) or didn't link at all. This is that destination: an
 // explainer that also happens to be the landing page for "riftbound price
 // alert" style queries, which nothing on the site was answering.
+//
+// EVERY SENTENCE HERE DESCRIBES CODE THAT RUNS (lib/price-alerts.ts). The
+// trigger is Card.lowestPriceCents* — an ITEM price, no postage — so nothing
+// here may say "shipping included" (it did, three times, until 2026-09-25).
+// Free alerts are the weekly new-low digest; the Plus target price is its own
+// trigger, checked after each price update. The Plus limit is quoted from
+// lib/alert-limits.ts, the constant the route enforces.
 
 export const revalidate = 86400;
 
@@ -22,7 +30,7 @@ const CANONICAL = "/alerts";
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Price Alerts & Watchlists | RiftCompare" },
   description:
-    "Track any Riftbound card and get emailed the moment its price drops to a new low. How RiftCompare watchlists and price alerts work, what they cost, and how to set one up.",
+    "Track any Riftbound card and get emailed when its price hits a new low, with the cheapest store named. How RiftCompare watchlists and price alerts work, what they cost, and how to set one up.",
   alternates: pageAlternates(CANONICAL),
   keywords: [
     "riftbound price alert",
@@ -32,7 +40,7 @@ export const metadata: Metadata = {
   ],
   openGraph: pageOpenGraph({
     title: "Riftbound Price Alerts & Watchlists",
-    description: "Track any Riftbound card and get emailed the moment its price drops to a new low — free, across every store we track.",
+    description: "Track any Riftbound card and get emailed when its price hits a new low — free, across every store we track.",
     url: CANONICAL,
   }),
 };
@@ -40,7 +48,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "How do I set a price alert for a Riftbound card?",
-    a: "Open the card's page or its quick view and tap the watch button — there's no price to enter. We remember the lowest live price at the moment you start watching, and email you the first time it drops below that. If no store has the card yet, there's nothing to drop below — we email you when it's first in stock instead.",
+    a: "Open the card's page or its quick view and tap the watch button — a free alert needs no price. We remember the lowest live price at the moment you start watching, and email you the first time it drops below that. If no store has the card yet, there's nothing to drop below — we email you when it's first in stock instead. Plus members can also type their own price on any watched card.",
   },
   {
     q: "Can I watch a card with no price yet?",
@@ -48,19 +56,19 @@ const FAQS = [
   },
   {
     q: "Do price alerts cost anything?",
-    a: "No. Watchlists and price alerts are free and need only an account so we have somewhere to send the notification.",
+    a: "No. Watchlists and new-low alerts are free and need only an account so we have somewhere to send the notification. Setting your own target price on a card is part of Plus, which is also ad-free.",
   },
   {
     q: "Which price triggers the alert?",
-    a: "A new low: the lowest live in-stock price across every store tracked for your market, including shipping, falling below the lowest we've ever emailed you for that card. If it stays cheap without dropping further, you'll get at most one reminder every couple of months rather than nothing at all.",
+    a: "A new low: the lowest live in-stock price across every store tracked for your market falling below the lowest we've ever emailed you for that card. That is the item price — postage is on top, and differs by store — so every alert names the store and links the listing, where you can see the delivered total before you buy. If it stays cheap without dropping further, you'll get at most one reminder every couple of months rather than nothing at all.",
   },
   {
     q: "How often will I actually get emailed?",
-    a: "At most once a week, whatever happens to prices in between. Every card you watch is still checked daily, but if you'd already had a price-drop email in the last 7 days, the next one waits and folds any further drops into it instead of sending a separate email for each. First-time watchers aren't affected — your very first alert on a card arrives as soon as it drops.",
+    a: "At most one email a week, only when a card hits a new low. Every card you watch is still checked daily, but if you'd already had an alert email in the last 7 days, the next one waits and folds any further drops into it instead of sending a separate email for each. If you haven't had one in the last 7 days, the next new low is sent straight away. A Plus target price is the exception: it's emailed as soon as it's met.",
   },
   {
     q: "How often are prices checked?",
-    a: "Alerts are evaluated after each scheduled price import, so a drop is picked up on the next import rather than instantly. Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions.",
+    a: "Prices are imported twice a day. New-low alerts are checked at least once a day, after an import; Plus target prices are checked after both. A drop is picked up on the next check rather than instantly — Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions.",
   },
   {
     q: "Can I track cards I already own instead?",
@@ -88,15 +96,15 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
     body: <>Tap the watch button on the card tile or card page. The card joins your list with its current lowest price.</>,
   },
   {
-    title: "There's no number to set",
+    title: "No number to set",
     body: (
       <>
-        We remember the lowest live price the moment you start watching — that's the baseline, not a target you
-        pick. Check{" "}
+        We remember the lowest live price the moment you start watching — that&apos;s the baseline for free alerts. Check{" "}
         <Link href="/movers" className="text-brand-400 underline">
           the daily movers
         </Link>{" "}
-        if you want to know whether now is a spike before you start.
+        if you want to know whether now is a spike before you start. (Plus members can also set a price of their
+        own — see below.)
       </>
     ),
   },
@@ -104,10 +112,10 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
     title: "Let it come to you",
     body: (
       <>
-        You'll be emailed the first time the lowest live total — shipping included — drops below that baseline, and
-        at most a reminder every couple of months if it stays cheap without dropping further. Emails are capped at
-        once a week either way — further drops in the same week land in that digest instead of a new email. No
-        refreshing, no five tabs.
+        You&apos;ll be emailed the first time the lowest live price drops below that baseline — the item price, with
+        the cheapest store named and linked so you can check postage — and at most a reminder every couple of
+        months if it stays cheap without dropping further. At most one email a week, only when a card hits a new
+        low: further drops in the same week land in that digest instead of a new email. No refreshing, no five tabs.
       </>
     ),
   },
@@ -119,7 +127,7 @@ export default function AlertsPage() {
       name: "Riftbound Price Alerts & Watchlists",
       href: CANONICAL,
       description:
-        "Track any Riftbound card and get emailed the moment its price drops to a new low, across every store RiftCompare tracks.",
+        "Track any Riftbound card and get emailed when its price hits a new low, across every store RiftCompare tracks.",
     }),
     faqPage(FAQS)
   );
@@ -134,9 +142,10 @@ export default function AlertsPage() {
       <AnswerBox>
         <p>
           A watchlist is a list of Riftbound cards you want; a price alert is an email the first time one drops to a
-          new low since you started watching. Both are free — there's no price to set. The trigger is the lowest
-          live in-stock price across every store we track for your market — shipping included — so an alert means
-          the card is genuinely buyable at that number, not that one listing looks cheap before postage.
+          new low since you started watching — at most one email a week. Both are free, with no price to set. The
+          trigger is the lowest live in-stock price across every store we track for your market. That is the item
+          price, before postage, so every alert names the store and links the listing: you see the delivered
+          total there before you buy.
         </p>
       </AnswerBox>
 
@@ -155,13 +164,31 @@ export default function AlertsPage() {
         ))}
       </ol>
 
+      <h2 className="mt-10 text-xl font-extrabold text-white">Your own target price, with Plus</h2>
+      <div className="card-surface mt-3 p-4 text-sm leading-relaxed text-slate-300">
+        <p>
+          Know what you&apos;d pay? Plus members can type a price on any watched card — &ldquo;Notify me at&rdquo; —
+          on up to {PLUS_TARGET_ALERT_LIMIT} cards, or every card on Premium. After each of the two daily price
+          updates we check every store we track in that card&apos;s market, and when the lowest in-stock price is at
+          or below your number we email you straight away, without the weekly wait: the card, the price, the store
+          and a link to the listing. It fires once per new low, not every day the price sits there.
+        </p>
+        <p className="mt-2">
+          Plus is ad-free, too.{" "}
+          <Link href="/premium" className="text-brand-400 underline">
+            See Plus
+          </Link>
+          .
+        </p>
+      </div>
+
       <h2 className="mt-10 text-xl font-extrabold text-white">Watchlist, portfolio or alert?</h2>
       <div className="mt-3 overflow-x-auto rounded-xl border border-ink-700">
         <table className="w-full min-w-[30rem] border-collapse text-left text-sm">
           <thead>
             <tr className="bg-ink-850">
               <th scope="col" className="border-b border-ink-700 px-3 py-2 font-semibold text-white">Feature</th>
-              <th scope="col" className="border-b border-ink-700 px-3 py-2 font-semibold text-white">What it's for</th>
+              <th scope="col" className="border-b border-ink-700 px-3 py-2 font-semibold text-white">What it&apos;s for</th>
               <th scope="col" className="border-b border-ink-700 px-3 py-2 font-semibold text-white">Where</th>
             </tr>
           </thead>
@@ -177,6 +204,11 @@ export default function AlertsPage() {
               <td className="border-b border-ink-800 px-3 py-2 font-semibold text-white">Price alert</td>
               <td className="border-b border-ink-800 px-3 py-2 text-slate-300">Being emailed when one hits a new low</td>
               <td className="border-b border-ink-800 px-3 py-2 text-slate-300">The watch button — no price to set</td>
+            </tr>
+            <tr className="odd:bg-ink-900/40">
+              <td className="border-b border-ink-800 px-3 py-2 font-semibold text-white">Target price (Plus)</td>
+              <td className="border-b border-ink-800 px-3 py-2 text-slate-300">Being emailed when a card reaches the price you set</td>
+              <td className="border-b border-ink-800 px-3 py-2 text-slate-300">&ldquo;Notify me at&rdquo; on your watchlist</td>
             </tr>
             <tr className="odd:bg-ink-900/40">
               <td className="border-b border-ink-800 px-3 py-2 font-semibold text-white">Portfolio</td>

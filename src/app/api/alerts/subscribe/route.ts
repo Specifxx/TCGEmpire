@@ -63,7 +63,8 @@ export async function POST(req: Request) {
   }
 
   // Reuse this email's existing unsubscribe token if it already has alerts, so a
-  // single link can unsubscribe every card for the address.
+  // single link can unsubscribe every card for the address. Also the "is this a
+  // new address?" check the confirmation email below keys on.
   const existing = await prisma.priceAlert.findFirst({
     where: { email },
     select: { unsubToken: true },
@@ -71,26 +72,40 @@ export async function POST(req: Request) {
   const unsubToken = existing?.unsubToken ?? randomUUID();
 
   // createMany + skipDuplicates means re-subscribing an already-watched card is a
-  // harmless no-op and never clobbers its tracked baseline.
+  // harmless no-op and never clobbers its tracked baseline. startPriceCents is
+  // the "watching from" figure: written here, once, and never by the cron.
   const result = await prisma.priceAlert.createMany({
-    data: cards.map((c) => ({
-      email,
-      userId,
-      cardId: c.id,
-      market,
-      unsubToken,
-      lastPriceCents: pickPrice(c, market as Country),
-    })),
+    data: cards.map((c) => {
+      const price = pickPrice(c, market as Country);
+      return {
+        email,
+        userId,
+        cardId: c.id,
+        market,
+        unsubToken,
+        lastPriceCents: price,
+        startPriceCents: price,
+      };
+    }),
     skipDuplicates: true,
   });
 
   // Total cards this email now watches in this market (for the confirmation copy).
   const total = await prisma.priceAlert.count({ where: { email, market } });
 
-  // Confirmation email (no-ops gracefully if email isn't configured). Only send
-  // when this request actually added a new watch, to avoid re-confirming on every
-  // repeat heart-click.
-  if (result.count > 0) {
+  // Confirmation email (no-ops gracefully if email isn't configured). Sent only
+  // to an address with NO earlier PriceAlert row (`existing`, read above) —
+  // a returning address already had its confirmation, and re-confirming on
+  // every new card was one email per heart-click. And only while under a
+  // GLOBAL daily cap: this route takes any address with no double opt-in, and
+  // Resend's 100/day quota is shared with verification, password-reset and the
+  // alert digests themselves, so ~100 posted addresses used to be able to
+  // starve all of them. rateLimit() can't be that cap — it is per serverless
+  // instance — so the database counts: anonymous watch rows created in the
+  // last 24h (this request's included). Rows, not addresses, so it errs toward
+  // sending fewer; normal traffic is a few a day. A capped confirmation costs
+  // nothing but the courtesy email — the watch itself is saved either way.
+  if (result.count > 0 && !existing && (await confirmationsUnderDailyCap())) {
     const unsubUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
     // Don't block the response on the network round-trip. `userId == null`
     // means this watch has no account behind it — those recipients (and only
@@ -99,4 +114,16 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ ok: true, added: result.count, watching: total });
+}
+
+// See the confirmation comment in POST. Not exported (a route file may export
+// only its handlers and route config), and fails CLOSED: a count that errors
+// sends nothing.
+const CONFIRMATION_DAILY_CAP = 30;
+async function confirmationsUnderDailyCap(): Promise<boolean> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const recent = await prisma.priceAlert
+    .count({ where: { userId: null, createdAt: { gte: since } } })
+    .catch(() => Number.POSITIVE_INFINITY);
+  return recent <= CONFIRMATION_DAILY_CAP;
 }

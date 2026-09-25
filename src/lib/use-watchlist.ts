@@ -38,10 +38,16 @@ function load(): Promise<Set<string> | null> {
     // crawl). A signed-in visitor's request now waits one /api/me round trip.
     // If /api/me fails, fetchMe resolves signed-out and the button takes the
     // anonymous flow, the same as a 401 did.
+    //
+    // IDS ONLY (?ids=1, 2026-09-25). This runs on every signed-in page view and
+    // builds nothing but a Set of card ids, yet it used to pull the watchlist's
+    // full payload — a card tile and a per-card store-count subquery for each of
+    // up to 500 rows. The full shape is Watchlist.tsx's own fetch (/watching and
+    // the drawer), which still asks for it.
     inflight = fetchMe()
       .then((me) =>
         me.user
-          ? fetch("/api/alerts/watchlist", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null))
+          ? fetch("/api/alerts/watchlist?ids=1", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null))
           : null,
       )
       // null (signed out per /api/me, or a 401 if the session lapsed in

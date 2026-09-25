@@ -317,13 +317,20 @@ test("Watchlist, MyCollection and NotificationBell render their empty/error stat
   }
 });
 
-test("no price-alert surface still promises a target price shouldEmailDrop doesn't implement", () => {
+test("price-alert surfaces describe only the triggers lib/price-alerts.ts runs", () => {
+  // Until 2026-09-25 this asserted that NO target price existed (it was
+  // backlog), so no page could promise one. The Plus target price shipped with
+  // the premium lineup; the rule is unchanged — copy may describe it because
+  // the cron now runs it, and only as a Plus feature.
   const priceAlerts = read("src/lib/price-alerts.ts");
-  assert.doesNotMatch(priceAlerts, /targetCents/, "no target-price column exists yet — see DECISIONS.md backlog");
-  for (const rel of ["src/app/alerts/page.tsx", "src/components/AdSlot.tsx"]) {
-    const src = readCode(rel);
-    assert.doesNotMatch(src, /target price|hits your (target|price)|reaches your price|set your price/i, `${rel} must not describe a mechanism the code doesn't run`);
-  }
+  assert.match(priceAlerts, /export function shouldEmailTarget\(/, "the target trigger the copy describes must exist");
+  assert.match(priceAlerts, /targetCents: true/, "…and the cron must read the column");
+  const alerts = readCode("src/app/alerts/page.tsx");
+  assert.match(alerts, /Your own target price, with Plus/, "/alerts may describe target prices only as the Plus feature they are");
+  // The trigger is Card.lowestPriceCents*, an item price: never "shipping included".
+  assert.doesNotMatch(alerts, /shipping included|including shipping/i);
+  // An ad has no business promising an alert mechanism at all.
+  assert.doesNotMatch(readCode("src/components/AdSlot.tsx"), /target price|hits your (target|price)|reaches your price|set your price/i);
 });
 
 test("WelcomeChecklist is never a modal and keys eligibility off the rc_welcome_at stamp, not a live ?welcome param", () => {

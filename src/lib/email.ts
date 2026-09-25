@@ -156,13 +156,33 @@ export interface AlertCard {
   url: string; // absolute card-page link
 }
 
+// The listing behind an alert's price (lib/price-alerts.ts cheapestStores):
+// the store that set it, that row's own price and an affiliate-wrapped link to
+// the exact listing. shippingCents is null unless the store states postage —
+// and the copy then says "postage extra", never "delivered".
+export interface AlertStore {
+  name: string;
+  url: string;
+  priceCents: number;
+  shippingCents: number | null;
+  condition: string | null;
+}
+
 export interface PriceDropItem extends AlertCard {
   // "listed" = the card's FIRST price in this market (lib/price-alerts.ts
   // isFirstPrice): there is no old price to strike through, so oldCents is null.
-  kind?: "drop" | "listed";
+  // "target" = a Plus/Premium watch at or below its own target price, and
+  // "under-market" = a Plus/Premium watch that entered Deal Finder's
+  // cheaper-than-TCGplayer-market ranking at a new low (2026-09-25 lineup).
+  kind?: "drop" | "listed" | "target" | "under-market";
+  cardId?: string;
   oldCents: number | null;
   newCents: number;
   market: Country;
+  // The member's target, on a "target" item.
+  targetCents?: number | null;
+  // The cheapest in-stock listing at this price, when the lookup found one.
+  store?: AlertStore | null;
 }
 
 // Footer with an unsubscribe link, appended to every alert email so recipients
@@ -208,6 +228,31 @@ export function emailShell(heading: string, inner: string, footer: string): stri
     </table></td></tr></table></body></html>`;
 }
 
+// What the store line says about postage. The alert price is an ITEM price
+// (Card.lowestPriceCents* has no shipping in it), so unless the store states
+// postage for that listing the copy says so plainly — never "delivered".
+export function postageNote(store: Pick<AlertStore, "shippingCents">, currency: string): string {
+  if (store.shippingCents == null) return "item price, postage extra";
+  if (store.shippingCents === 0) return "free postage";
+  return `+ ${formatMoney(store.shippingCents, currency)} postage`;
+}
+
+// The line under an alert naming the store behind the price and linking the
+// exact listing, so the reader can check it before paying. Shows that listing's
+// own price. Empty when the lookup found no row (the card link still works).
+export function storeLine(item: PriceDropItem): string {
+  const store = item.store;
+  if (!store) return "";
+  const cur = currencyOf(item.market);
+  // Scraped strings, so escaped (escapeHtml is hoisted from further down).
+  const condition = store.condition ? ` (${escapeHtml(store.condition)})` : "";
+  return `
+    <div style="margin-top:6px;font-size:13px;color:#b8c0cc">
+      Cheapest at <strong style="color:#fff">${escapeHtml(store.name)}</strong>: ${formatMoney(store.priceCents, cur)}${condition} · ${postageNote(store, cur)}
+      &nbsp;<a href="${escapeHtml(store.url)}" style="color:#34d17e;font-weight:700;text-decoration:none">View listing →</a>
+    </div>`;
+}
+
 // One row in the price-drop table. A first listing ("listed") has no old price,
 // so it reads "Now in stock · from X" — no strikethrough, no percentage.
 export function dropRow(item: PriceDropItem): string {
@@ -215,21 +260,41 @@ export function dropRow(item: PriceDropItem): string {
   const head = `<tr><td style="padding:12px 0;border-bottom:1px solid #233047">
     <a href="${item.url}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${item.name}</a>
     <div style="font-size:12px;color:#6b7585;margin-top:2px">${item.setCode} · ${item.collectorNumber}</div>`;
+  const tail = `${storeLine(item)}
+  </td></tr>`;
+  const now = `<span style="color:#34d17e;font-weight:700">${formatMoney(item.newCents, cur)}</span>`;
+  if (item.kind === "target") {
+    const target = item.targetCents != null ? ` of ${formatMoney(item.targetCents, cur)}` : "";
+    return `${head}
+    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
+      Hit your target${target} · now ${now}
+    </div>${tail}`;
+  }
+  if (item.kind === "under-market") {
+    return `${head}
+    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
+      Cheaper than TCGplayer market · now ${now}
+    </div>${tail}`;
+  }
   if (item.kind === "listed" || item.oldCents == null) {
     return `${head}
     <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
-      Now in stock · from <span style="color:#34d17e;font-weight:700">${formatMoney(item.newCents, cur)}</span>
-    </div>
-  </td></tr>`;
+      Now in stock · from ${now}
+    </div>${tail}`;
   }
   const pct = item.oldCents > 0 ? Math.round(((item.oldCents - item.newCents) / item.oldCents) * 100) : 0;
   return `${head}
     <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
       <span style="color:#6b7585;text-decoration:line-through">${formatMoney(item.oldCents, cur)}</span>
-      &nbsp;→&nbsp;<span style="color:#34d17e;font-weight:700">${formatMoney(item.newCents, cur)}</span>
+      &nbsp;→&nbsp;${now}
       ${pct > 0 ? `&nbsp;<span style="background:#13351f;color:#34d17e;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px">-${pct}%</span>` : ""}
-    </div>
-  </td></tr>`;
+    </div>${tail}`;
+}
+
+// The price an alert quotes: the named listing's own price when the store
+// lookup found one, else the card's lowest price in that market.
+function alertPrice(item: PriceDropItem): string {
+  return formatMoney(item.store?.priceCents ?? item.newCents, currencyOf(item.market));
 }
 
 // Heading, intro and subject for a price-alert digest. Three shapes: every item
@@ -237,6 +302,32 @@ export function dropRow(item: PriceDropItem): string {
 // stock"), or a mix of both. Pure and exported so the copy is unit-tested.
 export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro: string; subject: string } {
   const count = items.length;
+  // A paid trigger leads the subject, because it is what the member asked for:
+  // "{Card} hit your target: {price} at {store}". The price is the named
+  // listing's own price when the store lookup found it.
+  const more = count > 1 ? ` (+${count - 1} more)` : "";
+  const target = items.find((i) => i.kind === "target");
+  if (target) {
+    return {
+      heading: count === 1 ? "A card you're watching hit your target" : `Price news on ${count} cards you're watching`,
+      intro:
+        count === 1
+          ? "A card you're watching is at or below the price you set:"
+          : "A card you're watching is at or below the price you set, and there's news on others:",
+      subject: `${target.name} hit your target: ${alertPrice(target)}${target.store ? ` at ${target.store.name}` : ""}${more}`,
+    };
+  }
+  const under = items.find((i) => i.kind === "under-market");
+  if (under) {
+    return {
+      heading: count === 1 ? "A card you're watching is below TCGplayer market" : `Price news on ${count} cards you're watching`,
+      intro:
+        count === 1
+          ? "A card you're watching is selling below TCGplayer's market price, at a new low:"
+          : "A card you're watching is selling below TCGplayer's market price, and there's news on others:",
+      subject: `${under.name} is below TCGplayer market: ${alertPrice(under)}${under.store ? ` at ${under.store.name}` : ""}${more}`,
+    };
+  }
   const listed = items.filter((i) => i.kind === "listed" || i.oldCents == null).length;
   const first = items[0]!;
   const firstPrice = formatMoney(first.newCents, currencyOf(first.market));
@@ -269,10 +360,16 @@ export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro:
 // meaningless (and the CTA is pure noise) for someone already signed up.
 export async function sendPriceDropEmail(to: string, items: PriceDropItem[], unsubUrl: string, anonymous = false): Promise<boolean> {
   const { heading, intro, subject } = priceDropCopy(items);
+  // A paid alert (target / below-market) links to Deal Finder filtered to the
+  // member's own watchlist; everyone else keeps the card database button.
+  const paid = items.some((i) => i.kind === "target" || i.kind === "under-market");
+  const button = paid
+    ? { href: `${SITE_URL}/tools/deal-finder?mine=watch`, label: "Your watched cards in Deal Finder" }
+    : { href: `${SITE_URL}/browse`, label: "Card database" };
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${intro}</td></tr>
     <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(dropRow).join("")}</table></td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Card database</a></td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${button.href}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${button.label}</a></td></tr>
     ${anonymous ? accountCtaBlock("price-drop", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
   return sendEmail(to, subject, emailShell(heading, inner, alertFooter(unsubUrl)));
 }
@@ -282,8 +379,8 @@ export async function sendPriceDropEmail(to: string, items: PriceDropItem[], uns
 export async function sendAlertConfirmationEmail(to: string, cardCount: number, unsubUrl: string, anonymous = false): Promise<boolean> {
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You're all set — we'll email you whenever the price drops on
-      ${cardCount === 1 ? "the card" : `any of the ${cardCount} cards`} on your wishlist. We check prices once a day.
+      You're all set — we'll email you when ${cardCount === 1 ? "the card" : `any of the ${cardCount} cards`} on
+      your wishlist hits a new low, naming the cheapest store and linking the listing. At most one email a week.
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Card database</a></td></tr>
     ${anonymous ? accountCtaBlock("alert-confirm", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
