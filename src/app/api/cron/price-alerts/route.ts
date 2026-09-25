@@ -3,8 +3,11 @@ import { runPriceAlerts, type AlertScope } from "@/lib/price-alerts";
 
 // Wishlist price-alert check. Two callers, both with the
 // Authorization: Bearer <CRON_SECRET> header:
-//   • Vercel Cron (vercel.json), once a day, no query → scope "all": every
-//     watch, free and anonymous included, under the weekly per-address cap.
+//   • .github/workflows/refresh-prices.yml, straight after the 07:00 UTC
+//     import (and only when it succeeded and was not push-triggered), no
+//     query → scope "all": every watch, free and anonymous included, under
+//     the weekly per-address cap. Until 2026-09-25 this was a vercel.json
+//     cron at 18:30 UTC, 11.5h after the import it read.
 //   • ?scope=paid → only watches owned by a Plus/Premium account
 //     (lib/price-alerts.ts AlertScope), for a manual run. The scheduled paid
 //     runs after each price import call ./paid/route.ts instead — the

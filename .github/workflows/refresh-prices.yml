@@ -98,6 +98,8 @@ jobs:
             exit 1
           fi
       - name: Import prices
+        # id: the alert steps below run only when THIS step succeeded.
+        id: import
         env:
           DATABASE_URL: ${{ secrets.RM4 || vars.RM4 }}
           # RM10 is the only operational variable now (2026-09-14 cutover — see
@@ -220,23 +222,45 @@ jobs:
           echo "revalidate -> HTTP ${code:-000}"
           [ "$code" = "200" ] || echo "Non-200/failed (pages still refresh on their 24h TTL); not failing the run."
 
-      - name: Paid price alerts (targets + below-market)
-        # Plus/Premium target-price and below-market alerts, checked right after
-        # every price update (07:xx and 19:xx UTC) rather than once a day.
-        # /api/cron/price-alerts/paid runs ONLY watches owned by an entitled
-        # account (lib/price-alerts.ts AlertScope "paid"); free and anonymous
-        # watches stay on vercel.json's daily 18:30 run and its weekly
-        # per-address cap. GET, with the same Bearer CRON_SECRET as the Vercel
-        # cron.
+      - name: Free price alerts (daily digest)
+        # The daily "all" run: every watch, free and anonymous included, under
+        # the weekly per-address cap (lib/price-alerts.ts AlertScope "all").
+        # Straight after the 07:00 UTC import only — once a day, so the weekly
+        # cap and the shared ALERT_DAILY_BUDGET behave exactly as designed.
+        # Until 2026-09-25 this was vercel.json's 18:30 UTC cron, which read a
+        # price 11.5h old and fired 30 minutes before the next import.
         #
-        # Its own path, NOT ?scope=paid on the parent route: this file is live
-        # the moment it lands on main, the route only at the next 08:00 UTC
-        # deploy, and the pre-lineup parent route ignores the query — so the
-        # query form ran a full "all" run (free digests, first-price notices)
-        # after every import until the deploy. This path 404s harmlessly until
-        # then. Non-fatal like the revalidation above: a missed paid run is
-        # caught by the next import's, and must never red a successful import.
-        if: always()
+        # Gated like the paid step: only after an import that SUCCEEDED (a
+        # half-written import compares a partial RetailerPrice table) and was
+        # scheduled or manual, never push-triggered — a push re-import follows
+        # a matcher change, and its "drops" are matching fixes, not market
+        # moves. The route already exists, so this can land before any deploy.
+        if: steps.import.outcome == 'success' && github.event_name != 'push' && github.event.schedule == '0 7 * * *'
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret — skipping the free alert run."
+            exit 0
+          fi
+          curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts" -H "Authorization: Bearer $CRON_SECRET" || true
+          echo
+
+      - name: Paid price alerts (targets + below-market)
+        # Plus/Premium target-price, below-market and restock alerts, checked
+        # right after every price update (07:xx and 19:xx UTC) rather than once
+        # a day. /api/cron/price-alerts/paid runs ONLY watches owned by an
+        # entitled account (lib/price-alerts.ts AlertScope "paid"). At 07:00 it
+        # follows the free run above, which already evaluated entitled rows, so
+        # it finds only what is new. GET, with the same Bearer CRON_SECRET.
+        #
+        # Its own path, NOT ?scope=paid on the parent route: the pre-lineup
+        # parent route ignored the query, so the query form ran a full "all"
+        # run after every import. Non-fatal: a missed paid run is caught by
+        # the next import's, and must never red a successful import. Same gate
+        # as the free step (successful, non-push import).
+        if: steps.import.outcome == 'success' && github.event_name != 'push'
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: "https://riftcompare.com"

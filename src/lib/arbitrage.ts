@@ -227,6 +227,42 @@ export function scoreVsTcg(
   return { belowCents, belowPct };
 }
 
+/** TCGplayer's market figures for one card, as the price-alert run reads them. */
+export interface TcgMarketRef {
+  marketCents: number; // TCGplayer US MARKET price, converted into the market's currency
+  marketUsdCents: number; // the same figure before conversion
+  lowUsdCents: number | null; // TCGplayer's own cheapest listing (US only matters — see scoreVsTcg)
+}
+
+/**
+ * TCGplayer's market price for JUST these cards, read directly — for the
+ * below-market price alert (lib/price-alerts.ts), which re-scores each watched
+ * card's alert price with scoreVsTcg instead of trusting the day-cached Deal
+ * Finder ranking (built on a different price set, eBay included, and possibly
+ * from the previous import). Uncached on purpose and scoped: a handful of
+ * candidate cards × the two TCG_US_MARKET_READ_KEYS rows each, four columns,
+ * capped. Called once per market from the cron, never inside an unstable_cache
+ * (src/lib/db.ts rule 6). Throws on a failed read; the caller decides.
+ */
+export async function tcgMarketFor(
+  country: Country,
+  cardIds: readonly string[],
+  db: Pick<typeof prisma, "retailerPrice"> = prisma,
+): Promise<Map<string, TcgMarketRef>> {
+  const ids = [...new Set(cardIds)];
+  const out = new Map<string, TcgMarketRef>();
+  if (!ids.length) return out;
+  const rows = await db.retailerPrice.findMany({
+    where: { retailer: { in: [...TCG_US_MARKET_READ_KEYS] }, country: "US", inStock: true, cardId: { in: ids } },
+    select: { cardId: true, priceCents: true, url: true, retailer: true },
+    take: ids.length * 8, // ≤ 2 keys × foil/non-foil per card; generous
+  });
+  for (const r of mergeTcgUsRows(rows)) {
+    out.set(r.cardId, { marketCents: usdCentsToCountry(r.priceCents, country), marketUsdCents: r.priceCents, lowUsdCents: r.lowCents });
+  }
+  return out;
+}
+
 // ── Sources ──────────────────────────────────────────────────────────────────
 // "saving" = most below market (money); "pct" = biggest % below market. The
 // pre-2026-09-25 URL values ("profit", "margin") are still accepted by the page.

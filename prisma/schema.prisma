@@ -798,15 +798,16 @@ model PriceAlert {
   // column entirely, and only the account-scoped watchlist routes filter on it.
   userId             String?
   cardId             String
-  market             String    @default("AU") // AU | NZ | US | UK | SG | CA
+  market             String    @default("AU") // AU | US | UK | SG | CA | EU (legacy NZ rows are skipped by the alert run)
   // Last lowest price observed for this card+market (the baseline a drop is
   // measured against). null until the card first has a price in this market.
   lastPriceCents     Int?
-  // Lowest price we have ever EMAILED this subscriber for this card+market — the
-  // anti-spam watermark. A drop only sends a fresh email when it beats this value
-  // (a genuinely new low), or when REMINDER_INTERVAL_MS (≈2 months) has passed
-  // since lastNotifiedAt, so a price that keeps sawtoothing back down to a figure
-  // we already sent does not re-spam the subscriber. null until the first email;
+  // Lowest price we have EMAILED this subscriber for this card+market — the
+  // anti-spam watermark. While it is live (lastNotifiedAt under
+  // WATERMARK_TTL_MS, 30 days, old) a drop must beat it by a material amount
+  // (isMaterialDrop), so a price that keeps sawtoothing back down to a figure
+  // we already sent does not re-spam the subscriber; after that it lapses and
+  // drops are measured from lastPriceCents again. null until the first email;
   // additive/nullable so `prisma db push` adds it with no backfill. Distinct from
   // lastPriceCents, which keeps tracking every move so a drop can still be DETECTED
   // against the most recent price even while emails are being suppressed.
@@ -837,8 +838,24 @@ model PriceAlert {
   // email's rows, so one link can remove every alert for that address).
   unsubToken         String
   createdAt          DateTime  @default(now())
-  // When we last emailed this subscriber about a drop on this card.
+  // When we last emailed this subscriber about this card (any trigger). Also
+  // the clock for the 30-day watermark TTL (lib/price-alerts.ts
+  // WATERMARK_TTL_MS) and the paid triggers' 24h per-card cooldown.
   lastNotifiedAt     DateTime?
+  // RESTOCK (2026-09-25 alerts rework). Set by the alert run when a watch with
+  // a baseline sees its alert price go SOLD OUT (lib/alert-price.ts state
+  // "soldout" — never "unknown", which is a feed outage). A later priced run at
+  // least RESTOCK_MIN_SOLDOUT_MS after it sends "back in stock" and clears it.
+  // Additive/nullable: `prisma db push` adds it with no backfill.
+  soldOutAt          DateTime?
+  // OUTLIER HOLD. A new low more than 40% under the last price is written here
+  // instead of being emailed; the next run fires only if the price is still at
+  // or near it (lib/price-alerts.ts OUTLIER_*), then clears it either way.
+  pendingLowCents    Int?
+  // Per-card snooze from the email's one-tap links (next stage): a row with
+  // snoozedUntil in the future is not emailed, but its baselines still advance
+  // so nothing backs up behind the snooze.
+  snoozedUntil       DateTime?
 
   card Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
   // Cascade, matching every other User relation in this schema. A price watch is
@@ -873,6 +890,13 @@ model RetailerPrice {
   currency      String   @default("AUD")
   inStock       Boolean  @default(true)
   lastSeen      DateTime @default(now())
+  // TRUE for a row COPIED from another card rather than priced for this one:
+  // lib/tcgplayer.ts clones a base card's TCGplayer listing into a promo
+  // printing that has no match of its own (display coverage). The site still
+  // shows it; lib/alert-price.ts never lets it trigger or name an alert.
+  // Nullable (null = a real row) so the deploy's `prisma db push` needs no
+  // backfill.
+  derived       Boolean?
 
   // Market: "AU" (Australian stores + eBay AU, AUD) or "NZ" (NZ stores, NZD).
   country String @default("AU")

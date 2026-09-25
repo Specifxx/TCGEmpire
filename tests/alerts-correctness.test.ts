@@ -38,8 +38,10 @@ test("'watching from' is the start price, in the watch's own currency; the delta
   assert.equal(watchBaseline({ market: "US", startPriceCents: null, lastPriceCents: 700 }, "US", 700).label, "at the last check");
   assert.equal(watchBaseline({ market: "US", startPriceCents: null, lastPriceCents: null }, "US", 700).text, null);
   assert.equal(watchBaseline({ market: "US", startPriceCents: 1000, lastPriceCents: 1000 }, "US", null).delta, null, "no current price, no fake 0%");
-  // The cron never writes the start price.
-  assert.doesNotMatch(read("src/lib/price-alerts.ts"), /startPriceCents/);
+  // The cron READS the start price (the email's "you started watching at")
+  // but never writes it — tests/price-alerts-first-price.test.ts checks its
+  // writes; here, no assignment to it anywhere in the source.
+  assert.doesNotMatch(code("src/lib/price-alerts.ts"), /data\.startPriceCents|startPriceCents\s*=[^=]/);
 });
 
 test("both creation paths write startPriceCents once; re-watching never rewrites it", () => {
@@ -134,13 +136,22 @@ test("/alerts: no shipping claim, the real weekly cadence, and a Plus section qu
   assert.match(page, /Can I watch a card with no price yet\?/);
 });
 
-test("paid runs follow each price import: a non-fatal GET, on a path the pre-deploy site doesn't have", () => {
+test("alert runs follow a SUCCESSFUL, non-push import: free once a day after 07:00, paid after both", () => {
   const wf = read(".github/workflows/refresh-prices.yml");
+  // The import step is addressable, and both alert steps gate on it (2026-09-25):
+  // a failed import leaves RetailerPrice half-rewritten, and a push re-import
+  // follows a matcher change whose "drops" are matching fixes.
+  assert.match(wf, /- name: Import prices\n(\s*#[^\n]*\n)*\s*id: import\n/);
   const revalidate = wf.indexOf("- name: Revalidate site pages");
+  const freeRun = wf.indexOf("- name: Free price alerts");
   const paid = wf.indexOf("- name: Paid price alerts");
-  assert.ok(revalidate > 0 && paid > revalidate, "the paid run comes after the revalidation step");
+  assert.ok(revalidate > 0 && freeRun > revalidate && paid > freeRun, "revalidate, then the free run, then the paid run");
+  const freeStep = wf.slice(freeRun, paid);
+  assert.match(freeStep, /if: steps\.import\.outcome == 'success' && github\.event_name != 'push' && github\.event\.schedule == '0 7 \* \* \*'/);
+  assert.match(freeStep, /curl -s --max-time 120 "\$SITE_URL\/api\/cron\/price-alerts" -H "Authorization: Bearer \$CRON_SECRET" \|\| true/);
   const step = wf.slice(paid);
-  assert.match(step, /if: always\(\)/);
+  assert.match(step, /if: steps\.import\.outcome == 'success' && github\.event_name != 'push'\n/);
+  assert.doesNotMatch(wf.slice(freeRun), /if: always\(\)/, "no alert run after a failed import");
   assert.match(step, /CRON_SECRET: \$\{\{ secrets\.CRON_SECRET \}\}/);
   // Its own path: the workflow is live as soon as it lands on main, the route
   // only after the next deploy, and the old parent route ignored ?scope=paid
@@ -158,9 +169,10 @@ test("paid runs follow each price import: a non-fatal GET, on a path the pre-dep
   assert.match(route, /auth !== `Bearer \$\{secret\}`/);
   assert.match(route, /searchParams\.get\("scope"\) === "paid" \? "paid" : "all"/);
   assert.match(route, /runPriceAlerts\(\{\}, \{ scope \}\)/);
-  // vercel.json keeps its single daily run — the 'all' run.
+  // vercel.json no longer runs alerts: its 18:30 UTC run read a price 11.5h
+  // old, 30 minutes before the next import. The workflow owns both runs.
   const crons = JSON.parse(read("vercel.json")).crons as { path: string }[];
-  assert.deepEqual(crons.filter((c) => c.path.startsWith("/api/cron/price-alerts")).map((c) => c.path), ["/api/cron/price-alerts"]);
+  assert.deepEqual(crons.filter((c) => c.path.startsWith("/api/cron/price-alerts")), []);
 });
 
 test("the target field: market currency, PATCH on blur, Plus count; free sees it disabled beside the Plus gate", () => {

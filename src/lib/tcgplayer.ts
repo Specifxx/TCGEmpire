@@ -424,6 +424,34 @@ export const TCG_AU: TcgMarket = { retailer: TCGPLAYER_AU_RETAILER, country: "AU
 // TCGplayer row — see the note on CA_FALLBACK_RETAILERS in constants.ts.
 export const TCG_CA: TcgMarket = { retailer: TCGPLAYER_CA_RETAILER, country: "CA", currency: "CAD", fx: USD_TO.CAD, basis: "market" };
 
+/**
+ * What one product's row quotes for one market, and whether anyone can buy at it.
+ *
+ * basis "listing" (the ONE buyable row, US "tcgplayer"): the cheapest English
+ * NM listing, with that listing's own shipping. With NO such listing the row
+ * still carries the market aggregate — the card page and the coverage count
+ * keep a figure — but it is written inStock: FALSE (2026-09-25). Written
+ * in-stock, the aggregate set lowestPriceCentsUs and fired US "now in stock"
+ * and drop alerts at a price nobody could check out at; the market figure
+ * itself lives in the tcgplayer_market reference row.
+ *
+ * basis "market" (every reference row): the aggregate, falling back to the
+ * listing only for a (usually brand-new) product with no market price yet.
+ */
+export function tcgQuote(
+  mkt: Pick<TcgMarket, "basis" | "fx">,
+  market: number | null,
+  listing: Pick<TcgListing, "price" | "shippingPrice"> | null,
+): { price: number | null; shippingCents: number | null; inStock: boolean } {
+  const useListing = mkt.basis === "listing" ? listing != null : market == null && listing != null;
+  const price = useListing ? listing!.price : market;
+  const shippingCents =
+    useListing && listing!.shippingPrice != null && listing!.shippingPrice >= 0
+      ? Math.round(listing!.shippingPrice * 100 * mkt.fx)
+      : null;
+  return { price, shippingCents, inStock: mkt.basis === "listing" ? useListing : true };
+}
+
 // Match products to cards and build RetailerPrice rows (no DB writes — caller
 // decides). Exported separately so a dry-run can inspect the match quality.
 export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: TcgProduct[]): Promise<TcgMatchResult> {
@@ -483,7 +511,7 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
   // What each row then quotes depends on `mkt.basis` — see TcgMarket. Both numbers
   // are computed here from the same product so the listing row and the market row
   // for one card always describe the same TCGplayer product.
-  const best = new Map<string, { market: number; price: number; shippingCents: number | null; p: TcgProduct }>();
+  const best = new Map<string, { market: number; price: number; shippingCents: number | null; inStock: boolean; derived?: true; p: TcgProduct }>();
 
   for (const p of items) {
     if (isNonEnglishProduct(p)) continue; // drop obvious foreign-language products
@@ -503,16 +531,7 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
       byExternal.get(`tcg-${p.productId}`) ??
       (setlessSet && num ? bySetlessNum.get(`${setlessSet}|${numKey(num)}`) : undefined);
     const market = p.marketPrice && p.marketPrice > 0 ? p.marketPrice : null;
-    const listing = cheapestEnglishNm(p);
-    // basis "listing": the price a buyer pays today, with that listing's own
-    // shipping. basis "market": the aggregate, falling back to the listing only
-    // for a (usually brand-new) product with no market price yet.
-    const useListing = mkt.basis === "listing" ? listing != null : market == null && listing != null;
-    const price = useListing ? listing!.price : market;
-    const shippingCents =
-      useListing && listing!.shippingPrice != null && listing!.shippingPrice >= 0
-        ? Math.round(listing!.shippingPrice * 100 * mkt.fx)
-        : null;
+    const { price, shippingCents, inStock } = tcgQuote(mkt, market, cheapestEnglishNm(p));
     if (!cardId) {
       if (price && price > 0 && unmatchedSamples.length < 25) {
         unmatchedSamples.push(`${p.productName} ${numStr ?? "?"} $${price}`);
@@ -524,7 +543,7 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
     const prev = best.get(key);
     // When collector numbers collide, the higher market price is the English print.
     const marketForCompare = market ?? price;
-    if (!prev || marketForCompare > prev.market) best.set(key, { market: marketForCompare, price, shippingCents, p });
+    if (!prev || marketForCompare > prev.market) best.set(key, { market: marketForCompare, price, shippingCents, inStock, p });
   }
 
   // Best-effort fallback: a promo card that got no price of its own above (no
@@ -545,7 +564,9 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
       const promoSlot = `${promoId}|${foil}`;
       if (best.has(promoSlot)) continue; // already has its own verified price
       const baseBest = best.get(`${baseCardId}|${foil}`);
-      if (baseBest) best.set(promoSlot, baseBest);
+      // derived: the site shows the clone, but it is the BASE card's price and
+      // link, so the alert run must never fire or name a store on it.
+      if (baseBest) best.set(promoSlot, { ...baseBest, derived: true });
     }
   }
 
@@ -567,7 +588,8 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
       shippingCents: b.shippingCents,
       currency: mkt.currency,
       country: mkt.country,
-      inStock: true,
+      inStock: b.inStock,
+      ...(b.derived ? { derived: true } : {}),
     });
   }
   return { total: items.length, matched: rows.length, rows, unmatchedSamples };

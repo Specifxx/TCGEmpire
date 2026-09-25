@@ -48,11 +48,11 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "How do I set a price alert for a Riftbound card?",
-    a: `Open the card's page or its quick view and tap the watch button — a free alert needs no price. We check the lowest live price once a day. Your first email comes the first time it falls from one check to the next; after that, you only hear when it falls below the lowest price we've already emailed you. If no store has the card yet, there's nothing to drop — we email you when it's first in stock instead. Plus members can also type their own price on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards (every card on Premium).`,
+    a: `Open the card's page or its quick view and tap the watch button — a free alert needs no price. We check the cheapest Near Mint copy at the stores we track once a day, after the morning price update. You hear when it falls by at least 5% (and at least 50 cents) from the price we last emailed you — or, if we haven't emailed you about that card in the last 30 days, from the day before. If no store has the card yet, we email you when it's first listed instead, and if it sells out we email you when it's back. Plus members can also type their own price on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards (every card on Premium).`,
   },
   {
     q: "Can I watch a card with no price yet?",
-    a: "Yes — useful for newly revealed cards no store has listed. Watch it as normal and we'll email you when it's first in stock in your market, with the lowest price it listed at. From then on it works like any other alert: you hear about drops below that price. The weekly email cap still applies, so if you've had an alert email in the last 7 days the in-stock notice waits for the next one.",
+    a: "Yes — useful for newly revealed cards no store has listed. Watch it as normal and we'll email you when it's first listed in your market, with the lowest price it listed at. Before the set's release date that email says it's open for pre-order, with the date it ships — never 'in stock'. From then on it works like any other alert: you hear about real drops below that price. The weekly email cap still applies, so if you've had an alert email in the last 7 days the notice waits for the next one.",
   },
   {
     q: "Do price alerts cost anything?",
@@ -60,15 +60,15 @@ const FAQS = [
   },
   {
     q: "Which price triggers the alert?",
-    a: "A new low: the lowest live in-stock price across every store tracked for your market falling since our last daily check and, once we've emailed you about that card, below the lowest price we've emailed you. That is the item price — postage is on top, and differs by store — so every alert names the store and links the listing, where you can see the delivered total before you buy. If it stays cheap without dropping further, you'll get at most one reminder every couple of months rather than nothing at all.",
+    a: "The cheapest Near Mint copy in stock at a store we track for your market (or CardTrader, or a real TCGplayer listing in the US), seen by our last price update. eBay listings never trigger an alert, and neither do played copies or a store whose feed has gone quiet. A drop has to be at least 5% and at least 50 cents below the price we last emailed you (or, after 30 days, below the day before), so a few cents of drift never sends an email. A new low more than 40% under the day before is checked again at the next price update before we send it, because a price that far off is usually a listing error. That is the item price — postage is on top — so every alert names the stores and links the listings. There are no reminders: a price that just sits still doesn't email you again.",
   },
   {
     q: "How often will I actually get emailed?",
-    a: "At most one email a week, only when a card hits a new low. Every card you watch is still checked daily, but if you'd already had an alert email in the last 7 days, the next one waits and folds any further drops into it instead of sending a separate email for each. If you haven't had one in the last 7 days, the next new low is sent straight away. Plus has two exceptions, emailed as soon as they happen: your own target price being met, and a watched card dropping below TCGplayer market at a new low. Either one also carries any other new lows on your watchlist, in the same email.",
+    a: "At most one email a week, only when a card hits a new low, is first listed or is back in stock. Every card you watch is still checked daily, but if you'd already had an alert email in the last 7 days, the next one waits for the following week. It waits with the price it found: if the price has recovered by then, there's nothing to tell you and no email goes. If you haven't had one in the last 7 days, the next one is sent straight away. Plus has two exceptions, emailed as soon as they happen: your own target price being met, and a watched card dropping below TCGplayer market at a new low (at least 15% under). Either one also carries any other new lows on your watchlist, in the same email.",
   },
   {
     q: "How often are prices checked?",
-    a: "Prices are imported twice a day. New-low alerts are checked at least once a day, after an import; Plus target-price and below-market alerts are checked after both. A drop is picked up on the next check rather than instantly — Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions.",
+    a: "Prices are imported twice a day. New-low alerts are checked once a day, straight after the morning import; Plus target-price, below-market and back-in-stock alerts are checked after both. A drop is picked up on the next check rather than instantly — Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions.",
   },
   {
     q: "Can I track cards I already own instead?",
@@ -112,11 +112,11 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
     title: "Let it come to you",
     body: (
       <>
-        You&apos;ll be emailed when it hits a new low — a drop since our last check, and below anything we&apos;ve
-        already emailed you — the item price, with
-        the cheapest store named and linked so you can check postage — and at most a reminder every couple of
-        months if it stays cheap without dropping further. At most one email a week, only when a card hits a new
-        low: further drops in the same week land in that digest instead of a new email. No refreshing, no five tabs.
+        You&apos;ll be emailed when it hits a new low — at least 5% below the price we last told you — the item
+        price of the cheapest Near Mint copy, with the store named and linked so you can check postage. Sold out
+        and back again? You hear about that too. At most one email a week, only when a card hits a new low: a
+        further drop in the same week waits for the next email instead of sending its own. No refreshing, no five
+        tabs.
       </>
     ),
   },
@@ -144,9 +144,9 @@ export default function AlertsPage() {
         <p>
           A watchlist is a list of Riftbound cards you want; a price alert is an email when one drops to a new low — at
           most one email a week. Both are free, with no price to set. The
-          trigger is the lowest live in-stock price across every store we track for your market. That is the item
-          price, before postage, so every alert names the store and links the listing: you see the delivered
-          total there before you buy.
+          trigger is the cheapest Near Mint copy in stock at the stores we track for your market — never an eBay
+          listing or a played copy. That is the item price, before postage, so every alert names the store and
+          links the listing: you see the delivered total there before you buy.
         </p>
       </AnswerBox>
 
@@ -172,14 +172,15 @@ export default function AlertsPage() {
           on up to {PLUS_TARGET_ALERT_LIMIT} cards, or every card on Premium. After each of the two daily price
           updates we check every store we track in that card&apos;s market, and when the lowest in-stock price is at
           or below your number we email you straight away, without the weekly wait: the card, the price, the store
-          and a link to the listing. It fires once per new low, not every day the price sits there.
+          and a link to the listing. It fires once, then again only if the price falls another 10% — or if it goes
+          back above your number and comes down again. Never more than one email a day about the same card.
         </p>
         <p className="mt-2">
           Members also hear when a watched card drops below TCGplayer market at a store we track — the same list{" "}
           <Link href="/tools/deal-finder" className="text-brand-400 underline">
             Deal Finder
           </Link>{" "}
-          ranks — at a new low, with no target to set. Either paid alert carries any other new lows on your watchlist
+          ranks — at a new low, at least 15% under market, with no target to set. Either paid alert carries any other new lows on your watchlist
           along in the same email, so you never wait a week behind an email that is going out anyway.
         </p>
         <p className="mt-2">

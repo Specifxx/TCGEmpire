@@ -1,119 +1,80 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { addressInCooldown, MIN_DIGEST_INTERVAL_MS, shouldEmailDrop } from "../src/lib/price-alerts";
-
-const ROOT = process.cwd();
-const stripComments = (src: string) =>
-  src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
-const src = stripComments(readFileSync(join(ROOT, "src/lib/price-alerts.ts"), "utf8"));
+import { addressInCooldown, MIN_DIGEST_INTERVAL_MS } from "../src/lib/price-alerts";
+import { applyWrites, daysAgo, harness, NOW, owned, plus, row } from "./helpers/alert-harness";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// "Can we make price drop emails less frequent? like once every week."
+// "Can we make price drop emails less frequent? like once every week." (owner,
+// 2026-09-21 — kept by the 2026-09-25 rework.)
 //
-// Before this, shouldEmailDrop() sent a new all-time low IMMEDIATELY and always
-// — correct per card, and collectively spam: somebody watching a dozen cards in
-// a falling market could receive a digest every single day, each one
-// individually justified.
-//
-// The cap is a SECOND, independent gate, and keeping the two separate is the
-// whole design:
-//   • shouldEmailDrop()   — is this drop worth telling someone about? Per CARD.
-//   • addressInCooldown() — may we tell them anything yet?         Per ADDRESS.
-//
-// The thing that makes it safe is that a capped drop is DEFERRED, not dropped.
-// Its baseline is held back, so it re-detects on every subsequent run until the
-// window opens and lands in the next digest — reporting the fall from the
-// pre-drop price rather than from one day's step. Without the hold, the baseline
-// would advance past a drop nobody was ever told about, which is exactly the
-// silent failure tests/alert-baseline-hold.test.ts exists to prevent.
+// Two independent gates, both still in force:
+//   • is this worth telling someone at all? Per CARD (isMaterialDrop & co.).
+//   • may we tell them anything yet?         Per ADDRESS (addressInCooldown).
+// A capped item is DEFERRED with its baseline held, so it re-detects next run.
+// What changed on 2026-09-25: if the price recovers before the window opens,
+// the held low is NOT reported — the /alerts FAQ now says so instead of
+// promising "deferred, not lost".
 // ─────────────────────────────────────────────────────────────────────────────
 
-const NOW = new Date("2026-09-21T18:30:00Z");
-const daysAgo = (n: number) => new Date(NOW.getTime() - n * 24 * 60 * 60 * 1000);
-
-test("the cap is one week", () => {
+test("the cap is one week, inclusive at the boundary", () => {
   assert.equal(MIN_DIGEST_INTERVAL_MS / (24 * 60 * 60 * 1000), 7);
-});
-
-test("a subscriber who has never been emailed is not in cooldown", () => {
-  // The first drop a new watcher ever gets must arrive at once — a week's
-  // silence after signing up would read as the feature being broken.
-  assert.equal(addressInCooldown({ lastEmailedAt: null, now: NOW }), false);
-});
-
-test("emailed inside the last week → quiet; a week or more ago → allowed", () => {
-  for (const d of [0, 1, 3, 6]) {
-    assert.equal(addressInCooldown({ lastEmailedAt: daysAgo(d), now: NOW }), true, `${d} days ago must stay quiet`);
-  }
-  for (const d of [7, 8, 30]) {
-    assert.equal(addressInCooldown({ lastEmailedAt: daysAgo(d), now: NOW }), false, `${d} days ago must be allowed`);
-  }
-});
-
-test("the boundary is inclusive — exactly one week later sends", () => {
+  assert.equal(addressInCooldown({ lastEmailedAt: null, now: NOW }), false, "never emailed: no cooldown");
+  for (const d of [0, 1, 3, 6]) assert.equal(addressInCooldown({ lastEmailedAt: daysAgo(d), now: NOW }), true, `${d} days`);
+  for (const d of [7, 8, 30]) assert.equal(addressInCooldown({ lastEmailedAt: daysAgo(d), now: NOW }), false, `${d} days`);
   const at = new Date(NOW.getTime() - MIN_DIGEST_INTERVAL_MS);
   assert.equal(addressInCooldown({ lastEmailedAt: at, now: NOW }), false);
   assert.equal(addressInCooldown({ lastEmailedAt: new Date(at.getTime() + 1), now: NOW }), true);
 });
 
-test("the cap does NOT replace the per-card policy — both still gate a send", () => {
-  // A new all-time low is still 'worth sending' on its own terms; the cap is what
-  // decides when. Collapsing the two would lose the distinction between "this
-  // drop is not interesting" and "this drop is interesting but can wait".
-  assert.equal(
-    shouldEmailDrop({ current: 700, lowestEmailedCents: 800, lastNotifiedAt: daysAgo(1), now: NOW }),
-    true,
-    "a new low is still worth sending — the ADDRESS cooldown is what defers it",
-  );
-  assert.match(src, /shouldEmailDrop\(\{/, "the per-card gate must still be called");
-  assert.match(src, /quiet\(a\.email\)/, "…and the per-address gate applied after it");
+test("a material drop inside the week is deferred: no email, no watermark, baseline held", async () => {
+  const h = harness([row("a", { lastPriceCents: 1000, lowestEmailedCents: 1100, lastNotifiedAt: daysAgo(2), price: 800 })]);
+  const s = await h.run();
+  assert.equal(h.sent.length, 0);
+  assert.equal(s.drops, 1);
+  assert.equal(s.deferred, 1);
+  assert.equal(s.suppressed, 0, "deferred ('later') is counted apart from suppressed ('never')");
+  assert.equal(s.held, 1);
+  assert.equal(h.writes.length, 0, "lastPriceCents stays 1000, so the drop re-detects");
+  // Once the week is up, the same drop sends — measured from the price we last emailed.
+  const later = harness([row("a", { lastPriceCents: 1000, lowestEmailedCents: 1100, lastNotifiedAt: daysAgo(8), price: 800 })]);
+  await later.run();
+  assert.equal(later.sent.length, 1);
+  assert.equal(later.items()[0]!.referenceCents, 1100);
+  assert.equal(later.items()[0]!.referenceBasis, "emailed");
 });
 
-test("a deferred drop holds its baseline, so it is postponed and not lost", () => {
-  // The single most important property here. If the baseline advanced, the next
-  // run would compare the new low against itself, see no drop, and the email
-  // would never arrive at all.
-  assert.match(src, /deferredIds\.add\(a\.id\)/, "a capped drop must be recorded");
-  assert.match(
-    src,
-    /const heldIds = new Set<string>\(deferredIds\)/,
-    "deferred alerts must seed the held set — that is what stops the baseline advancing",
-  );
-  // And the pre-existing reason for holding (a failed digest) must survive.
-  assert.match(src, /failedEmails\.has\(a\.email\) && notifiedSet\.has\(a\.id\)/);
+test("a held low that recovers before the window opens is not reported (F3, now documented)", async () => {
+  let rows = [row("a", { lastPriceCents: 1000, lowestEmailedCents: 1000, lastNotifiedAt: daysAgo(2), price: 800 })];
+  const h1 = harness(rows);
+  await h1.run();
+  assert.equal(h1.sent.length, 0);
+  rows = applyWrites(rows, h1.writes);
+  const h2 = harness(rows.map((r) => ({ ...r, lastNotifiedAt: daysAgo(8), _price: 1000 })));
+  const s = await h2.run();
+  assert.equal(h2.sent.length, 0, "back at $10: nothing to send");
+  assert.equal(s.deferred, 0);
 });
 
-test("a deferred drop does not stamp lastNotifiedAt or the watermark", () => {
-  // Both are written only for alerts in dueNotifiedSet, built from notifiedIds.
-  // The two arms are mutually exclusive branches of one if/else-if/else — an id
-  // added to deferredIds is added there INSTEAD of being pushed to notifiedIds,
-  // never both — so asserting that directly is the real guarantee.
-  assert.match(
-    src,
-    /else if \(quiet\(a\.email\)\) \{[\s\S]*?deferredIds\.add\(a\.id\);[\s\S]*?\} else \{[\s\S]*?notifiedIds\.push\(a\.id\);/,
-    "deferral and notification must be exclusive branches, not both reachable for the same alert",
-  );
-  assert.match(src, /if \(dueNotifiedSet\.has\(u\.id\)\)/);
+test("two cards dropping the same day share one digest, not two", async () => {
+  const h = harness([
+    row("x", { email: "fan@example.com", lastPriceCents: 1000, price: 800 }),
+    row("y", { email: "fan@example.com", lastPriceCents: 2000, price: 1500 }),
+  ]);
+  const s = await h.run();
+  assert.equal(h.sent.length, 1);
+  assert.equal(h.sent[0]!.items.length, 2);
+  assert.equal(s.deferred, 0);
 });
 
-test("two cards dropping the same day share one digest, not two", () => {
-  // byEmail already grouped them, but the cooldown map has to learn about the
-  // send within the same run or a later row for the same address could open a
-  // second one.
-  assert.match(
-    src,
-    /lastEmailedByAddress\.set\(a\.email, now\.getTime\(\)\)/,
-    "queueing a digest must start this address's cooldown for the rest of the run",
-  );
-});
-
-test("the run reports deferrals separately from suppressions", () => {
-  // They mean opposite things: `suppressed` is "we decided not to tell them",
-  // `deferred` is "we will tell them, later". One number for both would hide a
-  // backlog building up behind the cap.
-  assert.match(src, /deferred:\s*number/, "AlertRunSummary needs a `deferred` field");
-  assert.match(src, /summary\.deferred\+\+/, "the run must populate it");
-  assert.match(src, /summary\.suppressed\+\+/, "and still count true suppressions apart from it");
+test("a paid alert opens a digest and the same address's capped drop rides along", async () => {
+  const email = "member@example.com";
+  const h = harness([
+    owned("drop", plus, { email, userId: "u-m", lastPriceCents: 1000, lowestEmailedCents: 1000, lastNotifiedAt: daysAgo(3), price: 800 }),
+    owned("hit", plus, { email, userId: "u-m", targetCents: 500, lastPriceCents: 700, lastNotifiedAt: daysAgo(3), price: 480 }),
+  ]);
+  const s = await h.run();
+  assert.equal(h.sent.length, 1);
+  assert.deepEqual(h.sent[0]!.items.map((i) => i.kind), ["target", "drop"], "the target leads; the drop joins");
+  assert.equal(s.deferred, 0);
+  assert.deepEqual(h.writeFor("drop")!.lastNotifiedAt, NOW);
 });

@@ -16,6 +16,7 @@ import { refreshTcgplayerPrices } from "./tcgplayer";
 import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { refreshCardTraderPrices } from "./cardtrader";
+import { conditionRank } from "./condition";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO, convertCents } from "./fx";
@@ -175,15 +176,7 @@ const PROMO_WORDS = /\b(promo|promotional|pre-?release|gg\s*ez|organi[sz]ed\s*pl
 // which is LOWER than the Near-Mint price shoppers see on the product page (a card
 // showed $33 when the store's NM price was $45). Rank by condition so we record the
 // best available condition — matching the headline price on the listing.
-function conditionRank(variantTitle: string): number {
-  const t = (variantTitle || "").toLowerCase();
-  if (/near\s*mint|\bnm\b|mint/.test(t)) return 0;
-  if (/light(ly)?\s*play|\blp\b/.test(t)) return 1;
-  if (/moderate(ly)?\s*play|\bmp\b/.test(t)) return 2;
-  if (/heav(ily)?\s*play|\bhp\b/.test(t)) return 3;
-  if (/damaged|\bdmg\b|\bdamage\b/.test(t)) return 4;
-  return 0; // no condition in the title (e.g. "Default Title") → treat as standard/NM
-}
+// conditionRank lives in lib/condition.ts, beside the alert run's stricter rank.
 
 // Realistic browser User-Agent + a From: contact header — see scrape-http.ts for
 // why this isn't an identifying bot UA (some stores, e.g. Mint Collectables, serve
@@ -327,12 +320,31 @@ async function fetchCollection(
   return { products: all, failed };
 }
 
-// Best-condition (then cheapest) price among a product's variants. NOTE: the
-// individual /products/<handle>.json endpoint does NOT reliably report `available`
-// (it's often null there), so this only derives the PRICE — availability is taken
-// from the collection feed, which does report it correctly.
-function bestVariantPrice(variants: ShopifyVariant[]): { priceCents: number } | null {
-  const priced = variants.filter((v) => parseFloat(v.price) > 0);
+// Best-condition (then cheapest) price among a product's variants, and that
+// variant's condition label — written TOGETHER, so a corrected price can never
+// sit beside another variant's label (2026-09-25: the verify pass rewrote a
+// played copy's row to a sold-out NM variant's price and left "Heavily Played"
+// on it). NOTE: the individual /products/<handle>.json endpoint does NOT
+// reliably report `available` (it's often null there), so a variant is skipped
+// only when it says `available: false` outright — unknown counts as available —
+// and availability itself is never flipped from here (the collection feed,
+// which reports it correctly, owns it).
+//
+// `sameConditionAs` (the verify pass): only variants of the SAME condition rank
+// as the row being verified are considered. With availability unknown, the
+// best-condition variant may be a sold-out NM copy while the feed recorded the
+// in-stock played one — re-pricing the row to it would make a played listing
+// read as an NM one at the NM price. No variant of that rank → null, and the
+// feed's price stands. Exported for tests/price-verify.test.ts.
+export function bestVariantPrice(
+  variants: ShopifyVariant[],
+  sameConditionAs?: { condition: string | null },
+): { priceCents: number; condition: string | null } | null {
+  let priced = variants.filter((v) => parseFloat(v.price) > 0 && (v.available as boolean | null | undefined) !== false);
+  if (sameConditionAs) {
+    const rank = conditionRank(sameConditionAs.condition ?? "");
+    priced = priced.filter((v) => conditionRank(v.title) === rank);
+  }
   if (!priced.length) return null;
   const best = priced.reduce((a, b) => {
     const ra = conditionRank(a.title);
@@ -340,7 +352,11 @@ function bestVariantPrice(variants: ShopifyVariant[]): { priceCents: number } | 
     if (ra !== rb) return ra < rb ? a : b;
     return parseFloat(a.price) <= parseFloat(b.price) ? a : b;
   });
-  return { priceCents: Math.round(parseFloat(best.price) * 100) };
+  return {
+    priceCents: Math.round(parseFloat(best.price) * 100),
+    // The same rule the feed write uses below.
+    condition: best.title && best.title !== "Default Title" ? best.title : null,
+  };
 }
 
 // Re-verify each card's CHEAPEST in-stock store listing against its authoritative
@@ -350,11 +366,11 @@ function bestVariantPrice(variants: ShopifyVariant[]): { priceCents: number } | 
 async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
   const rows = await prisma.retailerPrice.findMany({
     where: { inStock: true, NOT: { retailer: { startsWith: "ebay" } }, ...(onlyCountry ? { country: onlyCountry } : {}) },
-    select: { id: true, cardId: true, priceCents: true, url: true, country: true },
+    select: { id: true, cardId: true, priceCents: true, url: true, country: true, condition: true },
     orderBy: { priceCents: "asc" },
   });
   // Cheapest in-stock listing per card PER MARKET, verified separately.
-  const cheapest = new Map<string, { id: string; priceCents: number; url: string; country: string }>();
+  const cheapest = new Map<string, { id: string; priceCents: number; url: string; country: string; condition: string | null }>();
   for (const r of rows) {
     const k = `${r.cardId}|${r.country}`;
     if (!cheapest.has(k)) cheapest.set(k, r);
@@ -364,7 +380,7 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
   // Fetch a product's authoritative price. Uses the CLEAN product.json URL (no
   // cache-bust query param — that returned a stale/blocked response from the runner;
   // the plain URL returns the live price) with a browser UA, and one retry.
-  async function fetchProductPrice(url: string, country: string): Promise<{ priceCents: number } | null> {
+  async function fetchProductPrice(url: string, country: string, condition: string | null): Promise<{ priceCents: number; condition: string | null } | null> {
     // `${url}.json` is a SHOPIFY convention. A WooCommerce product URL is a
     // WordPress permalink (/producto/<slug>/ …) with no .json sibling, so this
     // would spend two requests per listing to get two 404s and return null —
@@ -387,7 +403,7 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
         const data = (await res.json()) as { product?: { variants?: ShopifyVariant[] } };
         const variants = data.product?.variants;
         if (!variants?.length) return null;
-        return bestVariantPrice(variants);
+        return bestVariantPrice(variants, { condition });
       } catch {
         /* retry */
       }
@@ -401,14 +417,14 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
     await Promise.all(
       targets.slice(i, i + BATCH).map(async (t) => {
         try {
-          const v = await fetchProductPrice(t.url, t.country);
+          const v = await fetchProductPrice(t.url, t.country, t.condition);
           if (!v) return;
           // Only correct the PRICE — never flip availability from this endpoint
           // (its `available` is unreliable). Guard against absurd values too.
-          if (v.priceCents !== t.priceCents && v.priceCents > 0) {
+          if ((v.priceCents !== t.priceCents || v.condition !== t.condition) && v.priceCents > 0) {
             await prisma.retailerPrice.update({
               where: { id: t.id },
-              data: { priceCents: v.priceCents },
+              data: { priceCents: v.priceCents, condition: v.condition },
             });
             corrected++;
           }

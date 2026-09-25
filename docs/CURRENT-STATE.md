@@ -272,13 +272,27 @@ longer lands on its entry.
   images need PNG (`cardImageForOg`). [2026-09-13](../DECISIONS.md#L5750),
   [2026-09-22](../DECISIONS.md#L10857)
 - **Portfolio value never includes shipping.** Price-drop emails: at most one
-  digest per address per week, except Plus/Premium target and below-market
-  alerts, which run after both daily imports (`?scope=paid` from
-  refresh-prices.yml; vercel.json's daily run is the free `all` run) under
-  `PAID_SEND_CAP`. Every alert email names the store behind the price and
-  says "item price, postage extra" unless postage is known.
-  [2026-09-15](../DECISIONS.md#L6531),
-  [2026-09-21](../DECISIONS.md#L9752), [2026-09-25](../DECISIONS.md#L12842)
+  digest per address per week, except Plus/Premium target, below-market and
+  restock alerts, which run after both daily imports (refresh-prices.yml's
+  `/price-alerts/paid` step). The free `all` run is a refresh-prices.yml step
+  straight after the 07:00 import (no vercel.json cron), and both run only
+  after a successful, non-push import. Every alert email names the store
+  behind the price and says "item price, postage extra" unless postage is
+  known. [2026-09-15](../DECISIONS.md#L6531),
+  [2026-09-21](../DECISIONS.md#L9752), [2026-09-25](../DECISIONS.md#L12842),
+  [2026-09-25](../DECISIONS.md#L13128)
+- **Alerts read the alert price, never Card.lowestPriceCents\*:** the
+  cheapest in-stock Near Mint (or unstated) copy seen within 36h at a store,
+  CardTrader or TCGplayer US's listing (`lib/alert-price.ts`). No eBay (no
+  opt-in), no reference or `derived` rows; only-stale rows are `unknown`,
+  never sold out. A drop must be ≥5% and ≥50 minor units of the reference:
+  the price last emailed while under 30 days old, else the last price. No
+  reminders. A low >40% under the last price is held one run. Targets re-arm
+  above the line or on sell-out and re-fire only 10% further down; paid
+  triggers have a 24h per-card cooldown; below-market needs ≥15% under
+  TCGplayer market (`tcgMarketFor`, direct). `ALERT_DAILY_BUDGET` 50
+  addresses per 24h (env-overridable), the free run at most 35.
+  [2026-09-25](../DECISIONS.md#L13128)
 - **Methodology breaks:** `METHODOLOGY_BREAKS` and `dropBreakWindow` live in
   `lib/price-history.ts`; every per-card PriceHistory reader uses them
   (`tests/methodology-breaks.test.ts`), and the Index and portfolio are
@@ -294,10 +308,13 @@ longer lands on its entry.
   sync-cards never writes the column. Core bracket-marker keywords are
   unscoped; Empower/Flow/Burn and the plain-word predicates stay on Vendetta.
   [2026-09-25](../DECISIONS.md#L12375)
-- **First-listing alerts:** a watch with a null baseline (no price in that
-  market when it was created) gets one "now in stock" email when the card
-  lists, inside the weekly per-address cap and at most 40 new digests a run.
-  [2026-09-25](../DECISIONS.md#L12574)
+- **First-listing and restock alerts:** a watch with a null baseline (no
+  price in that market when it was created) gets one "now listed" email when
+  the card lists — "open for pre-order" while its set is unreleased, which
+  never becomes the drop reference. A watch that sold out (`soldOutAt`) for
+  20h+ gets "back in stock". Both sit inside the weekly per-address cap and
+  at most 25 new digests a run. [2026-09-25](../DECISIONS.md#L12574),
+  [2026-09-25](../DECISIONS.md#L13128)
 - **Postage is measured, never guessed:** Best Basket, portfolio
   replacement cost and store pages price delivery with `shippingFor()`
   (lib/shipping.ts) from `src/lib/shipping-rates.json`, built by
@@ -324,11 +341,12 @@ longer lands on its entry.
   eBay auction pass. [2026-09-17](../DECISIONS.md#L7959),
   [2026-09-21](../DECISIONS.md#L9560), [2026-09-16](../DECISIONS.md#L6683)
 - **Declined:** a locked popup ✕; guest checkout (deferred); a Radiance post blitz or paid ads; a static rule-2
-  egress test; redefining a "real" price drop; a static landscape header or
+  egress test; a static landscape header or
   a 44px desktop switcher. [2026-09-14](../DECISIONS.md#L6134),
   [2026-09-13](../DECISIONS.md#L5890), [2026-09-16](../DECISIONS.md#L6598),
   [2026-09-21](../DECISIONS.md#L9560), [2026-09-14](../DECISIONS.md#L6263),
-  [2026-09-21](../DECISIONS.md#L9752), [2026-09-23](../DECISIONS.md#L11201)
+  [2026-09-23](../DECISIONS.md#L11201). (A minimum "real drop" threshold, once
+  declined, was set on [2026-09-25](../DECISIONS.md#L13128).)
 - **Kept on purpose:** Premium's nav prominence; the client-only
   `ssr: false` overlays. [2026-09-16](../DECISIONS.md#L6834),
   [2026-09-22](../DECISIONS.md#L10328)

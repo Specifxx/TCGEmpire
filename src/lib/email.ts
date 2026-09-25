@@ -156,33 +156,71 @@ export interface AlertCard {
   url: string; // absolute card-page link
 }
 
-// The listing behind an alert's price (lib/price-alerts.ts cheapestStores):
-// the store that set it, that row's own price and an affiliate-wrapped link to
-// the exact listing. shippingCents is null unless the store states postage —
-// and the copy then says "postage extra", never "delivered".
+// ── The alert item (lib/price-alerts.ts builds it, 2026-09-25 rework) ──────
+// Every figure comes from the ALERT PRICE (lib/alert-price.ts): the cheapest
+// in-stock Near-Mint-or-unstated copy at a real store, CardTrader or TCGplayer
+// US listing, seen within 36h, never eBay. So the headline price and the
+// stores named under it are the same rows, and the condition is always NM or
+// unstated.
+
+export type AlertKind = "drop" | "target" | "below_market" | "restock" | "listed" | "preorder";
+
+// One store behind an alert, cheapest first (up to 3 per item). `url` is the
+// exact listing, affiliate-wrapped with loc /email-alert-<kind>.
 export interface AlertStore {
+  retailer: string; // retailer key
   name: string;
   url: string;
-  priceCents: number;
-  shippingCents: number | null;
+  priceCents: number; // this listing's own item price
   condition: string | null;
+  // Postage for ONE card from this store to the watcher's market:
+  //   "listing"  — stated on the listing itself (TCGplayer, CardTrader…)
+  //   "measured" — shippingFor(): measured at the store's own checkout
+  //   "estimate" — shippingFor(): unmeasured store, its market's floor ("est.")
+  //   null       — nothing known: the copy says "postage extra", never "delivered"
+  postageCents: number | null;
+  postageBasis: "listing" | "measured" | "estimate" | null;
+  postageUpTo: boolean; // measured, region unknown: the dearest regional rate
+  deliveredCents: number | null; // priceCents + postageCents when postage is known
+}
+
+// Below-market context: TCGplayer US market, converted, and the gap.
+export interface AlertTcgMarket {
+  marketCents: number; // in the watch's currency
+  marketUsdCents: number; // before conversion
+  belowCents: number;
+  belowPct: number; // one decimal, % of market (lib/arbitrage.ts belowTcgPct)
 }
 
 export interface PriceDropItem extends AlertCard {
-  // "listed" = the card's FIRST price in this market (lib/price-alerts.ts
-  // isFirstPrice): there is no old price to strike through, so oldCents is null.
-  // "target" = a Plus/Premium watch at or below its own target price, and
-  // "under-market" = a Plus/Premium watch that entered Deal Finder's
-  // cheaper-than-TCGplayer-market ranking at a new low (2026-09-25 lineup).
-  kind?: "drop" | "listed" | "target" | "under-market";
-  cardId?: string;
-  oldCents: number | null;
-  newCents: number;
+  //   drop         — a material new low against the reference
+  //   target       — a Plus/Premium watch at or under its own target
+  //   below_market — a Plus/Premium watch ≥15% under TCGplayer market
+  //   restock      — back in stock after being sold out ≥20h
+  //   listed       — its first price in this market (no reference)
+  //   preorder     — listed or restocked while the set is unreleased
+  kind: AlertKind;
+  alertId: string; // PriceAlert.id — what the per-card action links sign
+  cardId: string;
   market: Country;
-  // The member's target, on a "target" item.
-  targetCents?: number | null;
-  // The cheapest in-stock listing at this price, when the lookup found one.
-  store?: AlertStore | null;
+  currency: string; // ISO 4217, currencyOf(market)
+  currentCents: number; // the alert price now
+  // What changed is measured from: the price we last emailed while that is
+  // under 30 days old ("emailed"), else the last price seen ("last"); for a
+  // restock the price before it sold out ("before_soldout"); null for
+  // listed/preorder.
+  referenceCents: number | null;
+  referenceBasis: "emailed" | "last" | "before_soldout" | null;
+  startPriceCents: number | null; // "you started watching at"
+  change: { cents: number; pct: number } | null; // referenceCents − currentCents (positive = cheaper), whole %
+  condition: string | null; // the alert price's own condition (NM or unstated)
+  stores: AlertStore[];
+  checkedAt: Date; // when the import last saw the lead listing
+  targetCents: number | null; // on a target item
+  tcgMarket: AlertTcgMarket | null; // on a below_market item
+  soldOutAt: Date | null; // on a restock item: when it sold out
+  preorder: boolean; // the card's set has not released yet
+  releasedOn: string | null; // ISO date the set ships, when preorder
 }
 
 // Footer with an unsubscribe link, appended to every alert email so recipients
@@ -228,22 +266,24 @@ export function emailShell(heading: string, inner: string, footer: string): stri
     </table></td></tr></table></body></html>`;
 }
 
-// What the store line says about postage. The alert price is an ITEM price
-// (Card.lowestPriceCents* has no shipping in it), so unless the store states
-// postage for that listing the copy says so plainly — never "delivered".
-export function postageNote(store: Pick<AlertStore, "shippingCents">, currency: string): string {
-  if (store.shippingCents == null) return "item price, postage extra";
-  if (store.shippingCents === 0) return "free postage";
-  return `+ ${formatMoney(store.shippingCents, currency)} postage`;
+// What the store line says about postage for one card. Only a figure the
+// listing states or shippingFor() measured is quoted plainly; an unmeasured
+// store's floor is marked "est."; nothing known says so, never "delivered".
+export function postageNote(store: Pick<AlertStore, "postageCents" | "postageBasis" | "postageUpTo">, currency: string): string {
+  if (store.postageCents == null || store.postageBasis == null) return "item price, postage extra";
+  if (store.postageCents === 0) return "free postage";
+  const money = formatMoney(store.postageCents, currency);
+  if (store.postageBasis === "estimate") return `+ ${money} postage (est.)`;
+  return `+ ${store.postageUpTo ? "up to " : ""}${money} postage`;
 }
 
 // The line under an alert naming the store behind the price and linking the
-// exact listing, so the reader can check it before paying. Shows that listing's
-// own price. Empty when the lookup found no row (the card link still works).
+// exact listing. Shows that listing's own price. (The email stage lists up to
+// three; this names the cheapest.)
 export function storeLine(item: PriceDropItem): string {
-  const store = item.store;
+  const store = item.stores[0];
   if (!store) return "";
-  const cur = currencyOf(item.market);
+  const cur = item.currency;
   // Scraped strings, so escaped (escapeHtml is hoisted from further down).
   const condition = store.condition ? ` (${escapeHtml(store.condition)})` : "";
   return `
@@ -253,59 +293,58 @@ export function storeLine(item: PriceDropItem): string {
     </div>`;
 }
 
-// One row in the price-drop table. A first listing ("listed") has no old price,
-// so it reads "Now in stock · from X" — no strikethrough, no percentage.
+// One row in the alert table.
 export function dropRow(item: PriceDropItem): string {
-  const cur = currencyOf(item.market);
+  const cur = item.currency;
   const head = `<tr><td style="padding:12px 0;border-bottom:1px solid #233047">
     <a href="${item.url}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${item.name}</a>
     <div style="font-size:12px;color:#6b7585;margin-top:2px">${item.setCode} · ${item.collectorNumber}</div>`;
   const tail = `${storeLine(item)}
   </td></tr>`;
-  const now = `<span style="color:#34d17e;font-weight:700">${formatMoney(item.newCents, cur)}</span>`;
+  const now = `<span style="color:#34d17e;font-weight:700">${formatMoney(item.currentCents, cur)}</span>`;
+  const line = (text: string) => `${head}
+    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
+      ${text}
+    </div>${tail}`;
   if (item.kind === "target") {
     const target = item.targetCents != null ? ` of ${formatMoney(item.targetCents, cur)}` : "";
-    return `${head}
-    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
-      Hit your target${target} · now ${now}
-    </div>${tail}`;
+    return line(`Hit your target${target} · now ${now}`);
   }
-  if (item.kind === "under-market") {
-    return `${head}
-    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
-      Cheaper than TCGplayer market · now ${now}
-    </div>${tail}`;
+  if (item.kind === "below_market") {
+    const m = item.tcgMarket;
+    const gap = m ? ` ≈ ${formatMoney(m.marketCents, cur)} · ${Math.round(m.belowPct)}% under` : "";
+    return line(`Cheaper than TCGplayer market${gap} · now ${now}`);
   }
-  if (item.kind === "listed" || item.oldCents == null) {
-    return `${head}
-    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
-      Now in stock · from ${now}
-    </div>${tail}`;
+  if (item.kind === "restock") return line(`Back in stock · now ${now}`);
+  if (item.kind === "preorder") {
+    const ships = item.releasedOn ? ` · ships ~${escapeHtml(item.releasedOn)}` : "";
+    return line(`Open for pre-order · from ${now}${ships}`);
   }
-  const pct = item.oldCents > 0 ? Math.round(((item.oldCents - item.newCents) / item.oldCents) * 100) : 0;
+  if (item.kind === "listed" || item.referenceCents == null) return line(`Now in stock · from ${now}`);
+  const pct = item.change?.pct ?? 0;
   return `${head}
     <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
-      <span style="color:#6b7585;text-decoration:line-through">${formatMoney(item.oldCents, cur)}</span>
+      <span style="color:#6b7585;text-decoration:line-through">${formatMoney(item.referenceCents, cur)}</span>
       &nbsp;→&nbsp;${now}
       ${pct > 0 ? `&nbsp;<span style="background:#13351f;color:#34d17e;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px">-${pct}%</span>` : ""}
     </div>${tail}`;
 }
 
-// The price an alert quotes: the named listing's own price when the store
-// lookup found one, else the card's lowest price in that market.
+// The price an alert quotes: the lead listing's own price (the alert price is
+// that listing's price by construction).
 function alertPrice(item: PriceDropItem): string {
-  return formatMoney(item.store?.priceCents ?? item.newCents, currencyOf(item.market));
+  return formatMoney(item.stores[0]?.priceCents ?? item.currentCents, item.currency);
 }
 
-// Heading, intro and subject for a price-alert digest. Three shapes: every item
-// a drop (the original copy, unchanged), every item a first listing ("now in
-// stock"), or a mix of both. Pure and exported so the copy is unit-tested.
+const isListing = (i: PriceDropItem) => i.kind === "listed" || i.kind === "preorder";
+
+// Heading, intro and subject for a price-alert digest, led by the highest-
+// priority item (target > restock > below-market > drop > listed/pre-order).
+// Pure and exported so the copy is unit-tested. The email stage rebuilds this.
 export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro: string; subject: string } {
   const count = items.length;
-  // A paid trigger leads the subject, because it is what the member asked for:
-  // "{Card} hit your target: {price} at {store}". The price is the named
-  // listing's own price when the store lookup found it.
   const more = count > 1 ? ` (+${count - 1} more)` : "";
+  const at = (i: PriceDropItem) => (i.stores[0] ? ` at ${i.stores[0].name}` : "");
   const target = items.find((i) => i.kind === "target");
   if (target) {
     return {
@@ -314,23 +353,32 @@ export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro:
         count === 1
           ? "A card you're watching is at or below the price you set:"
           : "A card you're watching is at or below the price you set, and there's news on others:",
-      subject: `${target.name} hit your target: ${alertPrice(target)}${target.store ? ` at ${target.store.name}` : ""}${more}`,
+      subject: `${target.name} hit your target: ${alertPrice(target)}${at(target)}${more}`,
     };
   }
-  const under = items.find((i) => i.kind === "under-market");
+  const restock = items.find((i) => i.kind === "restock");
+  if (restock) {
+    return {
+      heading: count === 1 ? "A card you're watching is back in stock" : `Price news on ${count} cards you're watching`,
+      intro: count === 1 ? "A card you're watching is back in stock:" : "A card you're watching is back in stock, and there's news on others:",
+      subject: `${restock.name} is back in stock: ${alertPrice(restock)}${at(restock)}${more}`,
+    };
+  }
+  const under = items.find((i) => i.kind === "below_market");
   if (under) {
+    const pct = under.tcgMarket ? `, ${Math.round(under.tcgMarket.belowPct)}% under TCGplayer market` : " below TCGplayer market";
     return {
       heading: count === 1 ? "A card you're watching is below TCGplayer market" : `Price news on ${count} cards you're watching`,
       intro:
         count === 1
-          ? "A card you're watching is selling below TCGplayer's market price, at a new low:"
+          ? "A card you're watching is selling below TCGplayer's market price:"
           : "A card you're watching is selling below TCGplayer's market price, and there's news on others:",
-      subject: `${under.name} is below TCGplayer market: ${alertPrice(under)}${under.store ? ` at ${under.store.name}` : ""}${more}`,
+      subject: `${under.name} ${alertPrice(under)}${at(under)}${pct}${more}`,
     };
   }
-  const listed = items.filter((i) => i.kind === "listed" || i.oldCents == null).length;
+  const listed = items.filter(isListing).length;
   const first = items[0]!;
-  const firstPrice = formatMoney(first.newCents, currencyOf(first.market));
+  const firstPrice = formatMoney(first.currentCents, first.currency);
   if (listed === 0) {
     return {
       heading: count === 1 ? "A wishlist card just got cheaper" : `${count} wishlist cards just got cheaper`,
@@ -339,6 +387,13 @@ export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro:
     };
   }
   if (listed === count) {
+    if (items.every((i) => i.kind === "preorder")) {
+      return {
+        heading: count === 1 ? "A card you're watching is open for pre-order" : `${count} cards you're watching are open for pre-order`,
+        intro: `${count === 1 ? "A card you're watching is" : "Cards you're watching are"} open for pre-order — they ship when the set releases:`,
+        subject: count === 1 ? `${first.name} is open for pre-order from ${firstPrice}` : `${count} of your wishlist cards are open for pre-order`,
+      };
+    }
     return {
       heading: count === 1 ? "A card you're watching is now in stock" : `${count} cards you're watching are now in stock`,
       intro: `${count === 1 ? "A card you're watching is" : "Cards you're watching are"} now in stock:`,
@@ -347,13 +402,12 @@ export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro:
   }
   return {
     heading: `Price news on ${count} wishlist cards`,
-    intro: "Some cards you're watching got cheaper, and some are now in stock:",
+    intro: "Some cards you're watching got cheaper, and some are now listed:",
     subject: `Price drops and new listings on ${count} of your wishlist cards`,
   };
 }
 
-// The daily "a card on your wishlist got cheaper" email. Lists every card that
-// dropped (or first listed — see priceDropCopy) since the last check in one message.
+// The "a card on your wishlist has price news" email. One digest per address.
 // `anonymous` = this address has no linked account (PriceAlert.userId is null).
 // Only THOSE recipients get the account CTA — its "your existing alerts come
 // with you" promise is claimAlertsForUser's adopt-by-email behavior, which is
@@ -362,7 +416,7 @@ export async function sendPriceDropEmail(to: string, items: PriceDropItem[], uns
   const { heading, intro, subject } = priceDropCopy(items);
   // A paid alert (target / below-market) links to Deal Finder filtered to the
   // member's own watchlist; everyone else keeps the card database button.
-  const paid = items.some((i) => i.kind === "target" || i.kind === "under-market");
+  const paid = items.some((i) => i.kind === "target" || i.kind === "below_market");
   const button = paid
     ? { href: `${SITE_URL}/tools/deal-finder?mine=watch`, label: "Your watched cards in Deal Finder" }
     : { href: `${SITE_URL}/browse`, label: "Card database" };

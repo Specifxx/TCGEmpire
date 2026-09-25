@@ -249,7 +249,7 @@ test("a promo card with no price of its own is recorded for the base-sibling fal
 test("the fallback pass runs strictly after `best` is fully resolved, and before rows are built", () => {
   const src = readCode("src/lib/tcgplayer.ts");
   const itemsLoopAt = src.indexOf("for (const p of items)");
-  const bestSetAt = src.indexOf("if (!prev || marketForCompare > prev.market) best.set(key, { market: marketForCompare, price, shippingCents, p });");
+  const bestSetAt = src.indexOf("if (!prev || marketForCompare > prev.market) best.set(key, { market: marketForCompare, price, shippingCents, inStock, p });");
   const fallbackLoopAt = src.indexOf("for (const { cardId: promoId, key, setless } of promoFallbackKeys)");
   const rowsAt = src.indexOf("const rows: Prisma.RetailerPriceCreateManyInput[] = [];");
   assert.ok(itemsLoopAt >= 0 && bestSetAt >= 0 && fallbackLoopAt >= 0 && rowsAt >= 0);

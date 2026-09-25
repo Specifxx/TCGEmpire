@@ -13124,3 +13124,133 @@ overall, and each browser counts a card once per kind per day
 morning's release. A permanent redirect can be cached by a browser, so a
 visitor who followed it today may keep landing on /movers from that browser
 until its cache clears; new visitors and crawlers get the page.
+
+## Price alerts fire on the price you would pay — 2026-09-25
+
+The alerts audit (five reviews: signals, trigger rules, the emails, coverage,
+and how comparable trackers work) found the alerts firing on prices nobody
+could buy at. Owner decisions the same day: build the core now; sealed
+watches later (no `SealedWatch` yet); **eBay rows never trigger an alert, with
+no opt-in**; the tier split unchanged. This entry is the signals-and-triggers
+half. The email redesign and the one-tap action links build on the item shape
+it produces.
+
+**One structural change: the alert price.** Every trigger used to read
+`Card.lowestPriceCents*`, the minimum over every in-stock non-reference row.
+That minimum included eBay (and `ebay_ca`, US listings converted at a
+hand-set FX rate), played and damaged store copies, rows from a store whose
+feed had been failing for up to 72h, TCGplayer's market aggregate written as
+an in-stock US listing, and promo rows cloned from the base card. Each one
+fired real emails. `lib/alert-price.ts` gives alerts their own price: the
+cheapest in-stock copy that is **Near Mint or states no condition**
+(`alertConditionRank`, new in `lib/condition.ts`), **seen within 36h**, at a
+real store, CardTrader or TCGplayer US's listing row. It excludes every eBay
+key, `ALL_FALLBACK_RETAILERS` and `derived` rows. It also has a **state**:
+`priced`, `soldout`, or `unknown`. `unknown` means only 36-72h-old rows claim
+stock, and it is never read as sold out. It costs one bounded query over the
+watched (card, market) pairs (grouped by market, in-stock rows from the last
+72h, eleven narrow columns, `take` capped). That is roughly 0.5 MB a run, well
+under 1% of the operational project's allowance. The same rows supply up to
+three stores per item, so the price and the stores named under it always
+agree. `cheapestStores()` is gone. The alert set is a subset of the Card-price
+set, so on the first run after the switch baselines can only rise, which sends
+nothing. A pair whose only price was eBay goes to `soldout`, and a later store
+listing will email "back in stock": mostly true, and expected.
+
+**The rules** (`lib/price-alerts.ts`, all named constants):
+- **Minimum meaningful move** (`isMaterialDrop`): at least 5% AND at least 50
+  minor units of the reference. This settles the threshold question the
+  2026-09-21 entry left open. In simulation, a Plus target drifting 15 cents
+  across seven imports sent seven emails. It now sends one.
+- **The reference** is the price we last emailed while that is under 30 days
+  old (`WATERMARK_TTL_MS`), else the last price. **The 60-day reminder is
+  removed.** It fired on a 1-cent dip at any level, and never for a price that
+  simply stayed low. The TTL bounds a poisoned watermark to 30 days with no
+  admin tool, and it ends the permanent below-market lockout. Every email
+  (except a pre-order) sets `lowestEmailedCents` to the price it quoted. The
+  column name is historical: for drops the value only falls, but a restock or
+  target email at a higher price becomes the new reference, because that is
+  what the watcher was last told.
+- **Outlier hold**: a new low more than 40% under the last price is written
+  to `pendingLowCents` and nothing is sent. The next run fires only if the
+  price is still within 5% of it, and clears it either way. This applies to
+  drops, targets and below-market. It costs one run. A confirmed low that is
+  then deferred keeps its pending value, so it stays confirmable.
+- **Targets re-arm** (Keepa's model): a run that sees the price above the
+  target, or sold out, sets `targetEmailedCents` to null. Once fired, a target
+  fires again only 10% further down. Every paid trigger has a **24h per-card
+  cooldown** on `lastNotifiedAt`, and a trigger inside it holds its baseline
+  rather than being lost.
+- **Below-market is re-scored from the alert price** against TCGplayer market,
+  read directly for just the candidate cards (`arbitrage.ts tcgMarketFor`,
+  uncached and scoped). It uses Deal Finder's own `scoreVsTcg`, needs at least
+  15% below, and must be material against the reference. The day-cached
+  `getTcgDealRanks` map (a different price set, eBay included, possibly from
+  the previous import) is no longer read by the cron. The item carries the
+  market figure and the gap.
+- **Back in stock** (`soldOutAt`): `soldout` with a baseline stamps it; priced
+  again 20h or more later sends "restock" and clears it; back sooner just
+  clears it. `unknown` never sets or clears it. Free restocks sit behind the
+  weekly cap and `FIRST_PRICE_SEND_CAP`; entitled ones go out after each
+  import.
+- **Pre-orders are labelled, never "in stock"**: a listed or restocked card
+  whose set has not released (`isPreorderSetCode`) is a `preorder` item
+  carrying `releasedOn`. It never becomes the drop reference. This had to
+  ship before Pre-Rift (16 Oct). Title-level pre-order flags for released sets
+  (`RetailerPrice.preorder`) are a follow-up.
+- **Legacy markets** (NZ rows) are skipped and counted, not priced as AU.
+- **Snoozed** rows (`snoozedUntil`, added now for the next stage's links) are
+  not emailed, but their baselines still advance.
+
+**Cadence and quota.** The weekly per-address cap (2026-09-21) stays. The FAQ
+now says plainly that a held low which recovers before the window opens is
+not reported, instead of "deferred, not lost", which F3 showed was untrue.
+`ALERT_DAILY_BUDGET` = 50 distinct addresses per rolling 24h across all alert
+runs, counted with one `groupBy(email)` over `lastNotifiedAt` (not findMany
+`distinct`, which Prisma dedupes client-side). The env var of the same name
+overrides it; lower it for release week. The free run may use at most
+`ALL_RUN_SHARE` = 35. Digests open in priority order: target > restock >
+below-market > drop > listed/pre-order. A deferred item whose address got a
+digest anyway joins it for free. `FIRST_PRICE_SEND_CAP` drops from 40 to 25.
+`FIRST_CONTACT_SEND_CAP` (20) and `PAID_SEND_CAP` (30) are unchanged. The
+summary gains `restocks`, `preorders`, `outlierHeld`, `cooldown`, `snoozed`,
+`budgetDeferred`, `soldOut`, `unknown`, `ebayOnly` and `legacyMarket`.
+`ebayOnly` counts pairs priced on the Card but sold out on the alert price.
+Measure it on the first production runs before anyone considers an eBay
+opt-in, which the owner has declined for now.
+
+**Scheduling.** The free "all" run moves from vercel.json's 18:30 UTC cron
+(11.5h after the import it read, 30 minutes before the next) to a
+refresh-prices.yml step straight after the 07:00 import. The cron entry is
+removed; nothing else in vercel.json changes. Both alert steps now require
+`steps.import.outcome == 'success' && github.event_name != 'push'`. Until now
+the paid run fired `always()`: after a failed, half-written import, and after
+push-triggered re-imports whose "drops" were matching fixes. The paid
+`/price-alerts/paid` step still follows both imports. The workflow change takes
+effect when it lands, against the route already deployed. For the one day
+before the next release both schedules run, and the weekly cap makes that
+harmless.
+
+**Importer must-fixes** (files touched: `src/lib/tcgplayer.ts`,
+`src/lib/price-import.ts`; editing them triggers a full re-import on push,
+which is accepted for S2):
+- `tcgQuote()`: a basis-"listing" market (the US `tcgplayer` row) with no
+  English NM listing still carries the market figure, but is written
+  **`inStock: false`**. This also corrects the site's US "from" price for
+  such cards.
+- Cloned promo rows are written `derived: true` (new nullable
+  `RetailerPrice.derived`). The site still shows them; alerts ignore them.
+- The verify pass's `bestVariantPrice` skips variants that say
+  `available: false`, stays within the row's own condition rank (product.json
+  often reports availability as null, and the best-condition variant is then
+  often the sold-out NM one), and writes the condition together with the
+  price. `conditionRank` moved to `lib/condition.ts`, unchanged.
+
+**Schema** (additive, nullable, no backfill): `PriceAlert.soldOutAt`,
+`pendingLowCents`, `snoozedUntil`; `RetailerPrice.derived`.
+
+**Tests.** `tests/helpers/alert-harness.ts` runs the real `runPriceAlerts`
+against a stub that serves prices as RetailerPrice rows. New tests:
+alert-price, alert-outlier-hold, price-alerts-restock, alert-budget,
+price-verify and tcgplayer-listing-fallback. The regex-over-source tests in
+alert-baseline-hold and alert-weekly-cadence became behavioural tests.
