@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { basketPreview, optimizeBasket, planBasket, type BasketCard, type BasketStores } from "../src/lib/basket";
+import { basketPreview, optimizeBasket, planBasket, singleStartCount, type BasketCard, type BasketStores } from "../src/lib/basket";
+import { rateLimit, refundRateLimit } from "../src/lib/rate-limit";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -179,6 +180,45 @@ test("alternatives are null when no single store / no pair stocks the whole list
   const { alternatives } = planBasket([card("1", 1, [L("a", 100)]), card("2", 1, [L("b", 100)]), card("3", 1, [L("c", 100)])], stores);
   assert.equal(alternatives.singleStore, null);
   assert.equal(alternatives.twoStores, null);
+  assert.equal(alternatives.twoStoresNone, "no-pair");
+});
+
+// "No two stores between them stock every card" was shown for lists that
+// every store stocks (review, 2026-09-25): when every covering pair collapses
+// onto one store, that is not "no pair", and the page must say which it is.
+test("no two-store card for a one-card list — and it says why, not 'no pair stocks it'", () => {
+  const stores: BasketStores = { a: { name: "A", ship: flat(100) }, b: { name: "B", ship: flat(100) }, c: { name: "C", ship: flat(100) } };
+  const { plan, alternatives } = planBasket([card("solo", 2, [L("a", 150), L("b", 160), L("c", 170)])], stores);
+  assert.equal(alternatives.singleStore?.totalCents, 400);
+  assert.equal(plan.totalCents, 400);
+  assert.equal(alternatives.twoStores, null);
+  assert.equal(alternatives.twoStoresNone, "one-card");
+});
+
+test("when one store is cheapest on every card, the two-store card says one store beats any split", () => {
+  const stores: BasketStores = { a: { name: "A", ship: flat(300) }, b: { name: "B", ship: flat(300) } };
+  const cards = [card("1", 1, [L("a", 100), L("b", 130)]), card("2", 1, [L("a", 200), L("b", 210)]), card("3", 1, [L("a", 300), L("b", 390)])];
+  const { plan, alternatives } = planBasket(cards, stores);
+  assert.equal(alternatives.singleStore?.stores[0].key, "a");
+  assert.equal(plan.totalCents, 900);
+  assert.equal(alternatives.twoStores, null);
+  assert.equal(alternatives.twoStoresNone, "one-store-cheaper");
+});
+
+test("a real two-store order is still returned, with no reason attached", () => {
+  const stores: BasketStores = { a: { name: "A", ship: flat(100) }, b: { name: "B", ship: flat(100) } };
+  const { alternatives } = planBasket([card("1", 1, [L("a", 100), L("b", 900)]), card("2", 1, [L("a", 900), L("b", 100)])], stores);
+  assert.equal(alternatives.twoStores?.storeCount, 2);
+  assert.equal(alternatives.twoStoresNone, null);
+});
+
+test("single-store starts: every candidate store for a deck-sized list, a budget's worth (never under ten) for the biggest", () => {
+  assert.equal(singleStartCount(60, 54), 54, "a 60-card deck across the biggest market starts from every store");
+  assert.equal(singleStartCount(40, 28), 28);
+  assert.equal(singleStartCount(3, 5), 5, "never more starts than stores");
+  const big = singleStartCount(200, 55);
+  assert.ok(big >= 10 && big < 55, `200 cards x 55 stores is budgeted (got ${big})`);
+  assert.equal(singleStartCount(200, 400), 10, "never fewer than ten");
 });
 
 test("a card no tracked store stocks is left out of the total and listed, never priced at $0", () => {
@@ -245,10 +285,11 @@ const READS = "src/lib/basket-server.ts";
 test("the basket route withholds the plan from non-Premium callers", () => {
   const code = readCode(ROUTE);
   assert.match(code, /const full = isPremium\(user, "premium"\)/);
-  const at = code.indexOf("if (!full) {");
+  const at = code.indexOf("if (!full) {\n      const preview");
   assert.ok(at > 0);
-  const branch = code.slice(at, code.indexOf("}", code.indexOf("});", at)) + 1);
-  assert.match(branch, /basketPreview\(optimizeBasket\(basketCards, stores\), unmatched\)/);
+  const branch = code.slice(at, code.indexOf("const { plan, alternatives }", at));
+  assert.match(branch, /const preview = basketPreview\(optimizeBasket\(basketCards, stores\), unmatched\)/);
+  assert.match(branch, /NextResponse\.json\(preview, /);
   assert.doesNotMatch(branch, /plan|alternatives|fuzzy/, "the preview branch returns nothing but the aggregate");
   // The full plan's store links carry the page for the affiliate sub-id.
   assert.match(code, /planBasket\(basketCards, stores, \{ loc: "\/tools\/best-basket" \}\)/);
@@ -256,7 +297,7 @@ test("the basket route withholds the plan from non-Premium callers", () => {
 
 test("a failed read answers 503, never a $0.00 plan", () => {
   const code = readCode(ROUTE);
-  assert.match(code, /status: 503/);
+  assert.match(code, /\} catch \(e\) \{[^}]*return fail\("Store prices are unavailable[^;]*, 503\);/);
   assert.doesNotMatch(code, /\.catch\(\(\) => \[\]\)/);
   assert.doesNotMatch(readCode(READS), /\.catch\(/, "the shared reads must throw, not swallow");
 });
@@ -270,6 +311,52 @@ test("rate limits: 5 a day free, 30 an hour Premium, keyed by user", () => {
   // …checked before any database read.
   assert.ok(code.indexOf("rateLimit(") < code.indexOf("loadWatchlistCardIds("));
   assert.match(readCode("src/app/api/deck/price/route.ts"), /rateLimit\(`deck-price:\$\{clientIp\(req\)\}`/);
+});
+
+test("a free run that returns no total hands its daily slot back; attempts are capped separately", () => {
+  const code = readCode(ROUTE);
+  // Every free attempt counts against an hourly cap that is never refunded —
+  // that is what bounds the reads a refunded run can cause.
+  assert.match(code, /rateLimit\(`basket-try:\$\{user\.id\}`, 20, HOUR\)/);
+  assert.ok(code.indexOf("basket-try:") < code.indexOf("`basket:${user.id}`, 5, DAY"));
+  assert.match(code, /if \(!full && !out\.priced\) refundRateLimit\(`basket:\$\{user\.id\}`\)/);
+  // Every 400 and the 503 go through fail(), which is never "priced"…
+  assert.match(code, /const fail = \(error: string, status: number\): Outcome => \(\{ res: NextResponse\.json\(\{ error \}, \{ status \}\), priced: false \}\)/);
+  assert.doesNotMatch(code.slice(code.indexOf("async function buildBasket")), /status: 400|status: 503/, "no bare error response that would keep the slot");
+  for (const status of ["400", "503"]) assert.match(code, new RegExp(`fail\\([^;]*, ${status}\\)`));
+  // …and an answer only counts when it priced at least one copy.
+  assert.match(code, /priced: preview\.covered > 0/);
+  assert.match(code, /priced: plan\.coveredCopies > 0/);
+});
+
+test("refundRateLimit gives one call back inside the window", () => {
+  const key = `test-refund:${Date.now()}`;
+  assert.ok(rateLimit(key, 1, 60_000).ok);
+  assert.equal(rateLimit(key, 1, 60_000).ok, false, "the second call is over the limit");
+  refundRateLimit(key); // the over-limit call
+  refundRateLimit(key); // and the first
+  assert.ok(rateLimit(key, 1, 60_000).ok, "a refunded slot can be used again");
+  refundRateLimit(`never-used:${Date.now()}`); // a no-op, not a throw
+});
+
+test("list size: at most 200 lines, picked cards first, and the page says when a list runs past it", () => {
+  const code = readCode(ROUTE);
+  assert.match(code, /parseDeckList\(text, \{ plainNames: true \}\)\.slice\(0, Math\.max\(0, DECK_LINE_CAP - picked\.length\)\)/);
+  assert.doesNotMatch(code, /\.slice\(DECK_LINE_CAP\)\) wanted\.delete/, "no silent trim of the matched cards");
+  const ui = read("src/components/BestBasket.tsx");
+  assert.match(ui, /const listLines = tab === "deck" \? picked\.length \+ pastedLines : 0;/);
+  assert.match(ui, /parseDeckList\(pasteText, \{ plainNames: true \}\)/, "counted the way the route counts");
+  assert.match(ui, /\{overCap && <CapNote/, "said before the run");
+  assert.ok((ui.match(/overCap && <ResultCapNote \/>/g) ?? []).length >= 3, "and beside every kind of answer");
+});
+
+test("the binder's quantities are priced as held, like the portfolio's replacement panel", () => {
+  const code = readCode(ROUTE);
+  const binder = code.slice(code.indexOf('} else if (source === "binder") {'), code.indexOf("skippedHoldings = binder.skipped"));
+  assert.ok(binder.length > 0);
+  assert.match(binder, /wanted\.set\(h\.cardId, h\.qty\)/);
+  assert.doesNotMatch(binder, /add\(|clampQty/, "no 99-copy clamp on the binder");
+  assert.match(readCode("src/app/api/portfolio/replacement/route.ts"), /qty: w\.qty,/);
 });
 
 test("watchlist, binder and owned reads are per-user, selected and capped", () => {
@@ -299,8 +386,8 @@ test("nothing in Best Basket is cached: every answer is per user", () => {
 
 test("skipOwned subtracts owned copies (and doesn't apply to the binder itself)", () => {
   const code = readCode(ROUTE);
-  assert.match(code, /const skipOwned = body\?\.skipOwned === true && source !== "binder"/);
-  assert.match(code, /loadOwnedQty\(user\.id, \[\.\.\.wanted\.keys\(\)\]\)/);
+  assert.match(code, /const skipOwned = body\.skipOwned === true && source !== "binder"/);
+  assert.match(code, /loadOwnedQty\(userId, \[\.\.\.wanted\.keys\(\)\]\)/);
 });
 
 test("the page: auto-run only for Premium, a sign-in prompt signed out, honest copy", () => {
@@ -324,7 +411,27 @@ test("the UI: tracked store links, the free preview's own-numbers copy, and its 
   for (const t of ["Paste a list", "My watchlist", "My binder"]) assert.ok(ui.includes(t), `tab "${t}"`);
   for (const t of ["Cheapest split", "Best single store", "Best two stores"]) assert.ok(ui.includes(t), `plan card "${t}"`);
   assert.match(ui, /l\.condition \?\? "Condition not stated"/, "condition on every line");
-  // Changing an input clears the answer on screen.
+  // Changing an input clears the answer on screen…
   assert.match(ui, /function touched\(\) \{\s*setResult\(null\);/);
   assert.match(ui, /<QtyInput/);
+  // …including one still in flight: a response for older inputs is dropped.
+  const touched = ui.slice(ui.indexOf("function touched()"), ui.indexOf("\n  }", ui.indexOf("function touched()")));
+  assert.match(touched, /reqSeq\.current\+\+/);
+  const run = ui.slice(ui.indexOf("async function run()"), ui.indexOf("setResult(built)"));
+  assert.match(run, /const seq = \+\+reqSeq\.current;/);
+  assert.match(run, /if \(seq !== reqSeq\.current\) return;/);
+  // …and a market switch (router.refresh() keeps client state) clears it too.
+  assert.match(ui, /shownCountry\.current = country;\s*touched\(\);/);
+  assert.match(ui, /\}, \[country\]\);/);
+});
+
+test("the UI: every 'nothing priced' and 'no two-store order' case says which it is", () => {
+  const ui = read("src/components/BestBasket.tsx");
+  assert.match(ui, /None of these lines matched a card\./);
+  assert.match(ui, /<NothingPriced r=\{r\} adjective=\{adjective\} \/>/);
+  assert.match(ui, /empty=\{TWO_STORES_NONE\[alternatives\.twoStoresNone \?\? "no-pair"\]\}/);
+  for (const k of ['"no-pair"', '"one-card"', '"one-store-cheaper"']) assert.ok(ui.includes(`${k}:`), `copy for ${k}`);
+  // Copy for everyone without Premium — Plus members included — not "free accounts".
+  assert.doesNotMatch(ui, /Free accounts/);
+  assert.doesNotMatch(readCode(ROUTE), /Free accounts/);
 });

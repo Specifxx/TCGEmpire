@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Best Basket — Cheapest Way to Buy a Riftbound Deck | RiftCompare";
 const DESCRIPTION =
-  "Paste a Riftbound decklist, or send your watchlist or binder, and get the cheapest delivered way to buy it across stores — postage and free-shipping thresholds included, beside the best one-store and two-store orders.";
+  "Paste a Riftbound decklist, or send your watchlist or binder, and get the cheapest delivered way to buy it across stores — postage and free-shipping thresholds included. Premium shows the store-by-store plan beside the best one-store and two-store orders.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -30,15 +30,15 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "Is Best Basket free?",
-    a: "Partly. Any free account can see its own delivered total — what the list costs delivered, from how many stores, and how much less that is than buying each card's cheapest copy separately — up to 5 times a day. The store-by-store plan, with the best one-store and two-store orders beside it and a link for every card, is a RiftCompare Premium tool.",
+    a: "Partly. Any signed-in account can see its own delivered total — what the list costs delivered, from how many stores, and how much less that is than buying each card's cheapest copy separately — up to 5 times a day. The store-by-store plan, with the best one-store and two-store orders beside it and a link for every card, is a RiftCompare Premium tool.",
   },
   {
     q: "Does it account for shipping?",
-    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket searches store combinations for the lowest total including each store's postage and free-shipping threshold, and shows the best one-store and two-store orders beside it.",
+    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket searches store combinations for the lowest total including each store's postage and free-shipping threshold. With Premium it also shows the best one-store and two-store orders beside it.",
   },
   {
     q: "What can I paste in?",
-    a: "Any decklist or card list, one card per line — with quantities (\"3 Jinx, Loose Cannon\") or plain names. A set code like (OGN-251) picks that exact printing. Section headers are skipped, and any line we can't match is listed back to you rather than dropped. Signed in, you can also price your watchlist or your binder, and tick \"Skip copies I already own\".",
+    a: "Any decklist or card list, one card per line — with quantities (\"3 Jinx, Loose Cannon\") or plain names. A set code like (OGN-251) picks that exact printing. Section headers are skipped, and any line we can't match is listed back to you rather than dropped. A list is priced up to its first 200 lines, and the page tells you when yours runs past that. Signed in, you can also price your watchlist or your binder, and tick \"Skip copies I already own\".",
   },
   {
     q: "Is the cheapest split guaranteed to be the cheapest possible?",
@@ -136,8 +136,8 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           The cheapest way to actually <strong className="text-slate-200">buy</strong> a whole deck or card list — not just the
           lowest price per card, but the lowest <strong className="text-slate-200">delivered total</strong> across {info.adjective}{" "}
           stores once postage and free-shipping thresholds are counted. Buying each card from its cheapest store usually spreads your
-          order over a dozen stores and buries you in postage; this searches for a better split, and shows the best one-store and
-          two-store orders beside it.
+          order over a dozen stores and buries you in postage; this searches for a better split. With Premium it shows that split
+          store by store, beside the best one-store and two-store orders.
         </p>
       </div>
 

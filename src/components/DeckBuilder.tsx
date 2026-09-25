@@ -64,6 +64,9 @@ interface DeckBuilderCard {
   isPromo: boolean;
   rarity: string;
   imageThumbUrl: string | null;
+  // Full-size art for the preview pane — from /api/deck/price; a card added
+  // by search doesn't carry it and the preview falls back to the thumbnail.
+  imageUrl?: string | null;
   lowestPriceCents: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { OutboundLink } from "./OutboundLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
@@ -11,8 +11,9 @@ import { ebaySearchUrl } from "@/lib/affiliate";
 import { COUNTRIES } from "@/lib/country";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
+import { parseDeckList, DECK_LINE_CAP } from "@/lib/deck";
 import { CardSearch, type SearchCard } from "./CardSearch";
-import type { BasketAlternatives, BasketPlan, BasketPreview } from "@/lib/basket";
+import type { BasketAlternatives, BasketPlan, BasketPreview, TwoStoresNone } from "@/lib/basket";
 import { trackEvent } from "@/lib/analytics";
 
 export type BasketSource = "deck" | "watchlist" | "binder";
@@ -70,15 +71,39 @@ export function BestBasket({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [shown, setShown] = useState<PlanKey>("split");
+  // Bumped by every run and every input change: a response that comes back
+  // for an older request is dropped, not shown under inputs it doesn't match.
+  const reqSeq = useRef(0);
 
   // Any change to what's being asked for clears the old answer, so a plan on
-  // screen always belongs to the inputs above it.
+  // screen always belongs to the inputs above it — including an answer still
+  // on its way for the inputs as they were.
   function touched() {
     setResult(null);
     setError(null);
+    reqSeq.current++;
+    setLoading(false);
   }
 
+  // A market switch (CountryProvider's router.refresh() keeps this state) makes
+  // any plan on screen another market's: its cents would be formatted in the
+  // new currency, with the old market's store links.
+  const shownCountry = useRef(country);
+  useEffect(() => {
+    if (shownCountry.current === country) return;
+    shownCountry.current = country;
+    touched();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country]);
+
+  // Lines as the route counts them (picked cards first, then pasted lines,
+  // DECK_LINE_CAP in all), so the page can say when a list runs past the cap.
+  const pastedLines = useMemo(() => (tab === "deck" ? parseDeckList(pasteText, { plainNames: true }).length : 0), [tab, pasteText]);
+  const listLines = tab === "deck" ? picked.length + pastedLines : 0;
+  const overCap = listLines > DECK_LINE_CAP;
+
   async function run() {
+    const seq = ++reqSeq.current;
     setLoading(true);
     setError(null);
     setResult(null);
@@ -94,24 +119,26 @@ export function BestBasket({
         }),
       });
       const d = await res.json().catch(() => null);
+      if (seq !== reqSeq.current) return; // the inputs changed while it ran
       if (!res.ok || !d) {
         setError(d?.error ?? "Something went wrong — try again.");
         return;
       }
       const built = d as Result;
       setResult(built);
+      const size = listSize(built, tab, Math.min(listLines, DECK_LINE_CAP));
       trackEvent("best_basket_build", {
         source: tab,
         market: country,
-        lines: built.requested,
-        matched: built.covered,
+        lines: size.lines,
+        matched: size.matched,
         stores: built.storeCount,
         savedCents: built.savedCents,
       });
     } catch {
-      setError("Network error — try again.");
+      if (seq === reqSeq.current) setError("Network error — try again.");
     } finally {
-      setLoading(false);
+      if (seq === reqSeq.current) setLoading(false);
     }
   }
 
@@ -193,6 +220,7 @@ export function BestBasket({
               placeholder={"3 Jinx, Loose Cannon\n2 Vayne, Hunter (OGN-038)\nYasuo, the Unforgiven"}
               className="input font-mono sm:text-sm"
             />
+            {overCap && <CapNote lines={listLines} picked={picked.length} />}
 
             <label className="mb-1 mt-4 block text-xs font-medium text-slate-400">…or search for a card and add it</label>
             <CardSearch placeholder="e.g. Jinx, Loose Cannon" onPick={addCard} />
@@ -263,7 +291,7 @@ export function BestBasket({
           </button>
           {!full && (
             <span className="text-xs text-slate-500">
-              Free accounts see their own delivered total, 5 times a day. Premium shows which store to buy each card from.
+              Without Premium you see your own delivered total, 5 times a day. Premium shows which store to buy each card from.
             </span>
           )}
         </div>
@@ -274,10 +302,10 @@ export function BestBasket({
         )}
       </div>
 
-      {result && !isFull(result) && <PreviewCard r={result} fmt={fmt} adjective={adjective} />}
+      {result && !isFull(result) && <PreviewCard r={result} fmt={fmt} adjective={adjective} overCap={overCap} />}
 
       {result && isFull(result) && (
-        <FullResultView r={result} shown={shown} setShown={setShown} fmt={fmt} country={country} adjective={adjective} />
+        <FullResultView r={result} shown={shown} setShown={setShown} fmt={fmt} country={country} adjective={adjective} overCap={overCap} />
       )}
     </div>
   );
@@ -287,13 +315,58 @@ function plural(n: number, one: string, many: string) {
   return n === 1 ? one : many;
 }
 
+// best_basket_build's `lines` and `matched` are LINES — list entries and how
+// many of them matched a card — not the copy counts `requested`/`covered`
+// carry. A paste is counted here as the route counts it; a watchlist is one
+// copy per card, so its copies are its lines; Premium's plan has the card
+// counts for the binder. The free binder preview has no line count (its copies
+// are the quantities held), so the event leaves them out rather than guess.
+function listSize(r: Result, tab: BasketSource, pricedLines: number): { lines?: number; matched?: number } {
+  if (tab === "deck") return { lines: pricedLines, matched: pricedLines - r.unmatched.length };
+  if (tab === "watchlist") return { lines: r.requested, matched: r.requested };
+  if (isFull(r)) {
+    const cards = r.plan.matchedCards + r.plan.unbuyable.length;
+    return { lines: cards, matched: cards };
+  }
+  return {};
+}
+
+// Past the line cap, said before the run (it costs one of the five) and again
+// beside the answer.
+function CapNote({ lines, picked }: { lines: number; picked: number }) {
+  return (
+    <p className="mt-2 text-xs text-amber-300">
+      This list has {lines} lines. Only the first {DECK_LINE_CAP} are priced
+      {picked > 0 ? " (cards added by search first, then the pasted lines)" : ""}; the rest aren&apos;t in the total or the counts.
+    </p>
+  );
+}
+
+// Nothing to price: say which of the two reasons it is. Every line unmatched
+// is not the same as "out of stock", and the preview used to say the latter
+// for both.
+function NothingPriced({ r, adjective }: { r: BasketPreview; adjective: string }) {
+  const unmatchedCopies = r.unmatched.reduce((n, u) => n + u.qty, 0);
+  const noneMatched = r.unmatched.length > 0 && r.requested === unmatchedCopies;
+  return (
+    <p>
+      {noneMatched
+        ? "None of these lines matched a card."
+        : r.unmatched.length > 0
+          ? `None of the cards we matched is in stock at a tracked ${adjective} store right now.`
+          : `None of these cards is in stock at a tracked ${adjective} store right now.`}
+    </p>
+  );
+}
+
 // The free preview: the user's own real numbers and nothing else.
-function PreviewCard({ r, fmt, adjective }: { r: BasketPreview; fmt: (c: number) => string; adjective: string }) {
+function PreviewCard({ r, fmt, adjective, overCap }: { r: BasketPreview; fmt: (c: number) => string; adjective: string; overCap: boolean }) {
   if (r.covered === 0) {
     return (
       <div className="card-surface p-5 text-sm text-slate-300">
-        <p>None of these cards is in stock at a tracked {adjective} store right now.</p>
+        <NothingPriced r={r} adjective={adjective} />
         <UnmatchedList unmatched={r.unmatched} />
+        {overCap && <ResultCapNote />}
       </div>
     );
   }
@@ -316,11 +389,20 @@ function PreviewCard({ r, fmt, adjective }: { r: BasketPreview; fmt: (c: number)
         )}
       </p>
       <Coverage r={r} />
+      {overCap && <ResultCapNote />}
       <UnmatchedList unmatched={r.unmatched} />
       <div className="mt-4">
         <PremiumButton surface="gate:basket-preview" />
       </div>
     </div>
+  );
+}
+
+function ResultCapNote() {
+  return (
+    <p className="mt-1 text-xs text-amber-300">
+      Only the first {DECK_LINE_CAP} lines of this list are priced — the lines past that aren&apos;t in the total or the counts.
+    </p>
   );
 }
 
@@ -364,6 +446,7 @@ function FullResultView({
   fmt,
   country,
   adjective,
+  overCap,
 }: {
   r: FullResult;
   shown: PlanKey;
@@ -371,12 +454,14 @@ function FullResultView({
   fmt: (c: number) => string;
   country: string;
   adjective: string;
+  overCap: boolean;
 }) {
   const { plan, alternatives } = r;
   if (plan.storeCount === 0) {
     return (
       <div className="card-surface p-5 text-sm text-slate-300">
-        <p>None of these cards is in stock at a tracked {adjective} store right now.</p>
+        <NothingPriced r={r} adjective={adjective} />
+        {overCap && <ResultCapNote />}
         <UnmatchedList unmatched={r.unmatched} />
         <Unbuyable plan={plan} country={country} />
       </div>
@@ -414,7 +499,7 @@ function FullResultView({
             active={shown === "two"}
             onShow={() => setShown("two")}
             fmt={fmt}
-            empty="No two stores between them stock every card."
+            empty={TWO_STORES_NONE[alternatives.twoStoresNone ?? "no-pair"]}
           />
         </div>
         <p className="mt-4 text-sm text-slate-300">
@@ -429,6 +514,7 @@ function FullResultView({
           )}
         </p>
         <Coverage r={r} />
+        {overCap && <ResultCapNote />}
         {r.skippedOwned > 0 && (
           <p className="mt-1 text-xs text-slate-500">
             Skipped {r.skippedOwned} {plural(r.skippedOwned, "copy", "copies")} you already own.
@@ -528,6 +614,13 @@ function FullResultView({
     </>
   );
 }
+
+// Why there's no two-store card — three different situations (lib/basket.ts).
+const TWO_STORES_NONE: Record<TwoStoresNone, string> = {
+  "no-pair": "No two stores between them stock every card.",
+  "one-card": "There's only one card on this list, so there's nothing to split.",
+  "one-store-cheaper": "No two-store split beats buying the whole list from one store — see Best single store.",
+};
 
 function PlanCard({
   title,

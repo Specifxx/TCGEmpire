@@ -99,7 +99,8 @@ test("best_basket_build fires once a basket is actually built, with the fields t
   const body = src.slice(start, end);
   const at = body.indexOf('trackEvent("best_basket_build", {');
   assert.ok(at > -1, "run() must fire best_basket_build");
-  for (const field of ["source: tab", "market: country", "lines: built.requested", "matched: built.covered", "stores: built.storeCount", "savedCents: built.savedCents"]) {
+  // lines/matched are LINE counts (listSize), not the copy counts requested/covered carry.
+  for (const field of ["source: tab", "market: country", "lines: size.lines", "matched: size.matched", "stores: built.storeCount", "savedCents: built.savedCents"]) {
     assert.ok(body.slice(at).includes(field), `best_basket_build must carry ${field}`);
   }
   // Only once the result is known-good (res.ok was checked and returned early).

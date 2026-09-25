@@ -157,7 +157,9 @@ test("/api/deck/price uses the shared resolver, rate-limits per IP and ships onl
   assert.match(src, /parseDeckList\(text, \{ plainNames: true \}\)/);
   assert.match(src, /rateLimit\(`deck-price:\$\{clientIp\(req\)\}`/);
   const select = src.slice(src.indexOf("const cardSelect"), src.indexOf("} as const"));
-  assert.doesNotMatch(select, /imageUrl:/, "the full-size image URL isn't used by the client");
+  assert.match(select, /imageUrl: true/, "the preview pane shows the full-size art (cardImageSrc(preview, { full: true }))");
+  const code = src.replace(/(^|[^:])\/\/.*$/gm, "$1");
+  assert.doesNotMatch(code, /unitPriceCents|lineCents/, "the client prices lines from the card's own per-market prices");
   assert.match(src, /card: card \? withoutKey\(card\) : null/, "nameNormalized is resolution-only");
   assert.match(src, /status: 503/);
 });

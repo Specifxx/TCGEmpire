@@ -41,6 +41,16 @@ export function rateLimit(key: string, limit: number, windowMs: number): RateLim
   return { ok: true, retryAfter: 0 };
 }
 
+// Give back one call to a key: for a request that took a slot but turned out
+// not to deliver what the limit meters. Best Basket's free "5 totals a day"
+// counts only runs that came back with a total, so a 400 (empty watchlist), a
+// 503 or a list where nothing matched hands its slot back (2026-09-25). A no-op
+// once the window has reset.
+export function refundRateLimit(key: string): void {
+  const b = buckets.get(key);
+  if (b && b.resetAt > Date.now() && b.count > 0) b.count--;
+}
+
 // Best-effort client IP. Vercel sets x-forwarded-for; fall back to x-real-ip.
 export function clientIp(req: Request): string {
   const xff = req.headers.get("x-forwarded-for");

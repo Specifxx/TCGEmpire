@@ -16,25 +16,33 @@
 //     at +3%: six orders for $109.20 when one order was $104.80;
 //   • 100 cards each 1c cheaper at its own store than at one hub store: $400
 //     instead of $105.
-// (Reproduced in the 2026-09-25 audit; pinned in tests/best-basket-optimiser.)
+// (Reproduced in the 2026-09-25 audit; pinned in tests/best-basket-redesign.)
 //
 // The problem is uncapacitated facility location with a threshold twist, so
 // this uses that problem's standard local search. The state is the set of OPEN
 // stores; each card goes to its cheapest open store (a card no open store
 // stocks force-opens its own cheapest store). Moves are ADD a store, DROP a
 // store and SWAP one open store for a closed one, taking the best improving move
-// until none helps, from several starts: the naive split, and each single store
-// ranked by how much of the list it stocks. The old single-card move survives as
-// the final polish, which is what crosses free-shipping thresholds. With ten or
-// fewer candidate stores every open set is also tried outright.
+// until none helps, from several starts: the naive split, and single stores
+// ranked by how much of the list they stock. The old single-card move survives
+// as the final polish, which is what crosses free-shipping thresholds. With ten
+// or fewer candidate stores every open set is also tried outright.
+//
+// How many single-store starts: EVERY candidate store for a deck-sized list,
+// and a work budget's worth — never fewer than ten, best-covering first — for
+// the biggest ones (see START_BUDGET). That is the one departure from "a start
+// from each single store": at the 200-line cap it keeps a request near half a
+// second instead of ~1.4 s, and on the benchmark it was measured on it cost
+// nothing (the capped and uncapped searches returned the same totals).
 //
 // Exact minimisation is NP-hard, so the answer is the best this search finds,
 // not a proof. What it guarantees: the plan is never dearer than the naive
 // split, the best single-store order or the best two-store order, and the last
 // two are returned beside it so the page can show them. Against brute force on
 // 3,000 random lists of up to 6 cards and 5 stores it found the optimum every
-// time. Pure CPU and deterministic: tens of milliseconds for a deck, ~300 ms in
-// a synthetic worst case (200 cards, each stocked by half of 55 stores).
+// time. Pure CPU and deterministic: tens to a couple of hundred milliseconds
+// for a deck, about half a second in a synthetic worst case (200 cards, each
+// stocked by half of 55 stores).
 
 import { affiliateUrl } from "./affiliate";
 
@@ -113,10 +121,22 @@ export interface BasketAlternatives {
   // when no single store does.
   singleStore: BasketPlan | null;
   // The cheapest order split across exactly TWO stores that between them stock
-  // every buyable card; null when no pair does (or when every covering pair
-  // collapses onto one store, which singleStore already reports).
+  // every buyable card. Null in three different situations, which the page
+  // words differently — see twoStoresNone.
   twoStores: BasketPlan | null;
+  // Why twoStores is null (null when it isn't, or when alternatives weren't
+  // asked for):
+  //   "no-pair"           no two stores between them stock every card;
+  //   "one-card"          the list is a single card, so there is nothing to split;
+  //   "one-store-cheaper" pairs do stock it all, but for every pair, moving the
+  //                       whole order onto one of the two was cheaper than any
+  //                       split — so singleStore (never null here) is the answer.
+  // Telling these apart matters: "no two stores stock every card" was once
+  // shown for a one-card list stocked everywhere (review, 2026-09-25).
+  twoStoresNone: TwoStoresNone | null;
 }
+
+export type TwoStoresNone = "no-pair" | "one-card" | "one-store-cheaper";
 
 export interface BasketResult {
   plan: BasketPlan;
@@ -419,10 +439,19 @@ function better(a: State, b: State | null): boolean {
   return storesUsed(a) < storesUsed(b);
 }
 
-// How many single-store starts to try, best-covering first. A store that
-// stocks little of the list starts from nearly the naive split anyway, and
-// the visited set below cuts those walks short.
-const MAX_SINGLE_STARTS = 10;
+// How many single-store starts to try, best-covering first: as many as fit in
+// this budget of card × store cells, and never fewer than ten. 200,000 means
+// every store for anything up to ~60 cards across the biggest market's 54
+// stores (a deck, typically), and ~18 of them for a 200-card list. A store that
+// stocks little of the list starts from nearly the naive split anyway, and the
+// visited set below cuts those walks short. Measured on synthetic lists of 15-200
+// cards over 24-55 stores (2026-09-25): the same totals as starting from every
+// store, in under half the time at the 200-card end.
+const START_BUDGET = 200_000;
+const MIN_SINGLE_STARTS = 10;
+export function singleStartCount(n: number, m: number): number {
+  return Math.min(m, Math.max(MIN_SINGLE_STARTS, Math.floor(START_BUDGET / Math.max(1, n * m))));
+}
 // Up to this many candidate stores (1,023 open sets) the search also tries
 // every open set outright. Most lists in the smaller markets land here.
 const EXHAUSTIVE_MAX_STORES = 10;
@@ -454,7 +483,7 @@ function solve(M: Model, naive: State): State {
       return { s, cover: M.cardsAt[s].length, items };
     })
     .sort((x, y) => y.cover - x.cover || x.items - y.items || x.s - y.s)
-    .slice(0, MAX_SINGLE_STARTS);
+    .slice(0, singleStartCount(M.n, M.m));
   for (const { s } of ranked) {
     const open = new Uint8Array(M.m);
     open[s] = 1;
@@ -500,8 +529,10 @@ function bestSingleStore(M: Model): State | null {
   return best;
 }
 
-function bestTwoStores(M: Model): State | null {
+// The best genuine two-store order, or why there is none.
+function bestTwoStores(M: Model): { best: State | null; none: TwoStoresNone | null } {
   let best: State | null = null;
+  let anyPair = false;
   for (let a = 0; a < M.m; a++) {
     for (let b = a + 1; b < M.m; b++) {
       const assign = new Int32Array(M.n);
@@ -516,16 +547,20 @@ function bestTwoStores(M: Model): State | null {
         assign[i] = ub < ua ? b : a;
       }
       if (!covers) continue;
+      anyPair = true;
       const st = stateFrom(M, assign);
       const allowed = new Uint8Array(M.m);
       allowed[a] = 1;
       allowed[b] = 1;
       polish(M, st, allowed);
-      if (st.cnt[a] === 0 || st.cnt[b] === 0) continue; // collapsed to one store
+      // Collapsed onto one store: that's a one-store order (singleStore's
+      // territory), not a two-store one.
+      if (st.cnt[a] === 0 || st.cnt[b] === 0) continue;
       if (better(st, best)) best = st;
     }
   }
-  return best;
+  if (best) return { best, none: null };
+  return { best: null, none: !anyPair ? "no-pair" : M.n === 1 ? "one-card" : "one-store-cheaper" };
 }
 
 // The full answer: the cheapest plan found plus the one- and two-store orders.
@@ -648,7 +683,7 @@ function solveBasket(cards: BasketCard[], stores: BasketStores, opts: BasketOpti
   };
 
   if (n === 0) {
-    return { plan: build(naive), alternatives: { singleStore: null, twoStores: null } };
+    return { plan: build(naive), alternatives: { singleStore: null, twoStores: null, twoStoresNone: null } };
   }
 
   let best = solve(M, naive);
@@ -656,12 +691,16 @@ function solveBasket(cards: BasketCard[], stores: BasketStores, opts: BasketOpti
   // must never be dearer than either — take the cheapest of them all.
   const single = bestSingleStore(M);
   const two = withAlternatives || M.m <= 60 ? bestTwoStores(M) : null;
-  for (const alt of [single, two]) if (alt && better(alt, best)) best = alt;
+  for (const alt of [single, two?.best ?? null]) if (alt && better(alt, best)) best = alt;
 
   return {
     plan: build(best),
     alternatives: withAlternatives
-      ? { singleStore: single ? build(single) : null, twoStores: two ? build(two) : null }
-      : { singleStore: null, twoStores: null },
+      ? {
+          singleStore: single ? build(single) : null,
+          twoStores: two?.best ? build(two.best) : null,
+          twoStoresNone: two?.none ?? null,
+        }
+      : { singleStore: null, twoStores: null, twoStoresNone: null },
   };
 }
