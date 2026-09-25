@@ -12651,3 +12651,22 @@ Separately, `/api/trade-roast` accepted only `["AUD","NZD","USD","GBP"]`. A CA, 
 **Rollback.** One commit. RM3 still holds the data and still responds, so setting `OPERATIONAL_VARS` back to `["RM3"]` restores it. Anything written to RM4 in the meantime is not in RM3.
 
 **Still open.** A rested project gives time back; it does not reduce the burn. Run `audit-egress` against RM4 a few hours after the cutover. The build needs `RM4` set in Vercel for Production and Preview.
+
+## Vercel cost cuts: no per-request middleware, no wasted morning purge, sampled Speed Insights — 2026-09-25
+
+**Why.** The owner reported the $20 credit used up with 15 days left in the cycle. The largest items were Observability Events $7.17, ISR Writes $4.97, Fluid Active CPU $3.47, Fast Origin Transfer $2.35, Function Invocations $1.26, Web Analytics $1.25 and Speed Insights $0.65.
+
+**Measured.** A card page is ~415 KB of HTML plus ~197 KB of RSC payload, so one regeneration is ~75 ISR write units (8 KB each). `revalidateContent()` purges all ~1,434 `/card/[id]` pages, and crawlers regenerate nearly all of them. The purge ran after both daily imports (07:00, 19:00 UTC), and the 08:00 release wipes the ISR cache again. That is about three full waves a day, roughly 300k write units, plus the CPU and origin transfer to render them.
+
+**What.**
+
+- **`src/middleware.ts` is gone.** Its matcher covered every request except `_next/static` and `_next/image`: cached page hits, every `/public` file (card art, images) and RSC prefetches. Every one was a function invocation, CPU time and an observability event, only to compare the Host header for the www→apex redirect. That redirect is now a `vercel.json` `redirects` entry with a `host` condition. It is still permanent (308), still keeps the query string and still covers every path, and it runs in Vercel's router, not a function. `tests/canonical-host.test.ts` now pins the `vercel.json` rule and the absence of middleware.
+- **The 07:00 import skips its purge when a release follows.** If the newest commit on main lacks `[deploy]`, production-deploy.yml will build at 08:00 and wipe the ISR cache anyway, so pages regenerated in between would be thrown away. On a quiet day (main's head is already a release) the purge still runs. The worst case is card prices one hour behind the import on release days. The 19:00 purge is unchanged.
+- **Speed Insights `sampleRate={0.1}`.** Core Web Vitals trends need a sample, not every page view.
+
+**Not changed in code.**
+
+- **Observability Events ($7.17).** This is Vercel's Observability Plus add-on, billed per event. Removing middleware cuts the event count, but the add-on itself is a dashboard switch: Settings → Observability. It isn't needed for the logs and function metrics the free tier already shows.
+- **Web Analytics.** Page views and the existing `track()` calls stay. They are the only traffic data the site has.
+- **Card page size.** About half the HTML is the inline RSC payload Next embeds. Shrinking it needs a card-page refactor (fewer retailer rows serialised to the client), which is a separate change.
+- **The 5-minute keep-warm.** About 580 tiny invocations a day, per the 2026-09-11 decision.
