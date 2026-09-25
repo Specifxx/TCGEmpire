@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMe, invalidateMe } from "@/lib/use-me";
@@ -43,7 +43,13 @@ import {
 // "gate:portfolio" … (lib/premium-surface.ts) — so the click beacon, and the
 // checkout it may lead to, can be attributed. No argument = "dialog", the
 // pre-2026-09-23 catch-all, kept for any caller that has no better name.
-const PremiumDialogContext = createContext<{ open: (surface?: string) => void }>({ open: () => {} });
+//
+// `opts.tier` (2026-09-25) preselects the tier being SOLD. A wall whose tool
+// Plus already unlocks (Deal Finder, Rising Cards, target-price alerts) passes
+// "plus", so the dialog opens on the $4.99 answer that fits instead of the
+// $9.99 one that merely includes it. Omitted = "premium", as before.
+export type PremiumDialogOpenOpts = { tier?: PremiumTierKey };
+const PremiumDialogContext = createContext<{ open: (surface?: string, opts?: PremiumDialogOpenOpts) => void }>({ open: () => {} });
 export function usePremiumDialog() {
   return useContext(PremiumDialogContext);
 }
@@ -53,7 +59,9 @@ const GOLD_BTN =
 
 export function PremiumDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const open = useCallback((surface?: string) => {
+  const [initialTier, setInitialTier] = useState<PremiumTierKey>("premium");
+  const open = useCallback((surface?: string, opts?: PremiumDialogOpenOpts) => {
+    setInitialTier(opts?.tier === "plus" ? "plus" : "premium");
     setIsOpen(true);
     // Fire-and-forget premium-interest beacon (who clicked Premium, and from
     // which surface). The shared helper is keepalive, swallows failures, and
@@ -65,13 +73,13 @@ export function PremiumDialogProvider({ children }: { children: React.ReactNode 
     <PremiumDialogContext.Provider value={{ open }}>
       {children}
       <Dialog open={isOpen} onClose={close} size="xl" z="modal" labelledBy="premium-dialog-title">
-        <PremiumDialog onClose={close} />
+        <PremiumDialog onClose={close} initialTier={initialTier} />
       </Dialog>
     </PremiumDialogContext.Provider>
   );
 }
 
-function PremiumDialog({ onClose }: { onClose: () => void }) {
+function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialTier: PremiumTierKey }) {
   const { user, premium, tier, premiumCheckout, premiumPlus, trialEligible, trialDays, introEligible, premiumAnnual, plusAnnual, providers, loaded } = useMe();
   // Where the visitor was when the wall interrupted them — carried through
   // sign-in and Stripe so /premium/welcome can put them back on it.
@@ -79,7 +87,14 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
   // Which tier is being SOLD — only meaningful while shopping (below). Defaults
   // to "premium" so every render before Plus existed, and every render with
   // Plus unconfigured, behaves exactly as before.
-  const [sellTier, setSellTier] = useState<PremiumTierKey>("premium");
+  // The Dialog unmounts its children while closed, so this initial value is
+  // re-read on every open — a Plus-level wall opens on Plus. /api/me may still
+  // be loading here, so the effect below falls back to Premium once it says
+  // Plus isn't configured (checkout would sell Premium anyway).
+  const [sellTier, setSellTier] = useState<PremiumTierKey>(initialTier);
+  useEffect(() => {
+    if (loaded && !premiumPlus) setSellTier("premium");
+  }, [loaded, premiumPlus]);
   const savePct = annualSavingPct(sellTier);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
