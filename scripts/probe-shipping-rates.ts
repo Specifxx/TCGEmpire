@@ -43,6 +43,9 @@
 //   npx tsx scripts/probe-shipping-rates.ts --store=cardgoblin --out=/tmp/uk.json   (market from the store)
 // Options: --ladder=20,30,50,100,150  --concurrency=6  --delay-ms=700
 //          --max-requests=220  --max-minutes=12
+// Then condense the output into the snapshot the site reads:
+//   npx tsx scripts/build-shipping-rates.ts shipping-au.json   (→ src/lib/shipping-rates.json)
+// or dispatch .github/workflows/shipping-rates.yml, which runs both per market.
 export {}; // module scope — avoids global-name collisions with other probe scripts
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";

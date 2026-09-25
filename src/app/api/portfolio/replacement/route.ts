@@ -6,8 +6,8 @@ import { getCountry } from "@/lib/get-country";
 import { pickPrice } from "@/lib/country";
 import { cardTileSelect } from "@/lib/cards";
 import { CONDITION_MULTIPLIER } from "@/lib/constants";
-import { RETAILERS } from "@/lib/retailers";
 import { optimizeBasket, type BasketCard } from "@/lib/basket";
+import { basketStoresFor, formatMeasuredDate, marketMeasuredAt, postageOptionsFrom, regionFor } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +50,7 @@ export const dynamic = "force-dynamic";
 // silently pricing part of it.
 const MAX_HOLDINGS = 200;
 
-export async function GET() {
+export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
   // The same gate the rest of /portfolio uses, so this panel cannot end up
@@ -61,6 +61,12 @@ export async function GET() {
   }
 
   const country = getCountry();
+  // The same postage model as Best Basket: each store's MEASURED checkout rate
+  // (lib/shipping.ts) for the buyer's region — ?region=, remembered by the
+  // panel from the Best Basket picker; absent = the highest regional figure —
+  // and ?tracked=1 to skip untracked letters.
+  const params = new URL(req.url).searchParams;
+  const postageOpts = postageOptionsFrom(country, params.get("region"), params.get("tracked"));
 
   const rows = await prisma.collectionCard.findMany({
     where: { userId: user.id },
@@ -104,12 +110,9 @@ export async function GET() {
 
   // Stores serving this market. eBay is not in RETAILERS and is excluded on
   // purpose — its per-item postage is quoted per listing and is not comparable
-  // with a store's flat rate, which is the same call /api/basket makes.
-  const marketStores = Object.values(RETAILERS).filter((r) => (r.country ?? "AU") === country);
-  const allowed = marketStores.map((r) => r.key);
-  const storesMap = Object.fromEntries(
-    marketStores.map((r) => [r.key, { name: r.name, ship: { shippingFlatCents: r.shippingFlatCents, freeOverCents: r.freeOverCents } }])
-  );
+  // with a store's per-order rate, which is the same call /api/basket makes.
+  const storesMap = basketStoresFor(country, postageOpts);
+  const allowed = Object.keys(storesMap);
 
   const listings = await prisma.retailerPrice
     .findMany({
@@ -151,5 +154,11 @@ export async function GET() {
     valuedCents: wanted.reduce((s, w) => s + w.valueCents, 0),
     pricedHoldings: wanted.length,
     skippedHoldings: skipped,
+    shipping: {
+      region: regionFor(country, postageOpts.region)?.key ?? null,
+      regionLabel: regionFor(country, postageOpts.region)?.label ?? null,
+      trackedOnly: !!postageOpts.trackedOnly,
+      measuredAt: formatMeasuredDate(marketMeasuredAt(country)) || null,
+    },
   });
 }

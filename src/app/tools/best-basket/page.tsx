@@ -11,6 +11,7 @@ import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { faqPage } from "@/lib/jsonld";
 import { BestBasket } from "@/components/BestBasket";
+import { SHIPPING_REGIONS, formatMeasuredDate, marketHasZonePricing, marketMeasuredAt } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,7 @@ const FAQS = [
   },
   {
     q: "Does it account for shipping?",
-    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket prices every viable split across the stores that stock your list, including each store's shipping cost and free-shipping thresholds, and ranks results by what you'd actually pay delivered.",
+    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket prices every viable split across the stores that stock your list and ranks results by what you'd actually pay delivered. The postage is each store's own checkout rate, measured for orders of different sizes and values to addresses across your market: the store's rate name, whether it's tracked, where a cheap untracked letter stops being offered, and the order value where postage goes free, if it ever does. Tell it where you are for exact regional rates, or leave it unset and it uses each store's highest. A store we haven't measured yet is marked as an estimate, and the store's own checkout is always final.",
   },
   {
     q: "What can I paste in?",
@@ -71,6 +72,10 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
   // immediately with no extra round trip. (The meta-deck pages used the same
   // handoff until they were removed on 2026-09-12.)
   const initialList = searchParams.list ? decodeList(searchParams.list) : undefined;
+  // Postage choices for the picker: this market's regions, whether any store
+  // here prices by region at all, and when the rates were measured.
+  const regions = (SHIPPING_REGIONS[country] ?? []).map((r) => ({ key: r.key, label: r.label }));
+  const measuredAt = formatMeasuredDate(marketMeasuredAt(country)) || null;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -113,13 +118,21 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           The cheapest way to actually <strong className="text-slate-200">buy</strong> a whole deck or wishlist — not just the
           lowest price per card, but the lowest <strong className="text-slate-200">landed total</strong> across {info.adjective}{" "}
-          stores once postage and free-shipping thresholds are factored in. Buying each card from its cheapest store usually
-          spreads your order over a dozen stores and buries you in postage; this finds the smarter split.
+          stores once each store&apos;s real postage is factored in — measured from its own checkout, not guessed. Buying each
+          card from its cheapest store usually spreads your order over a dozen stores and buries you in postage; this finds
+          the smarter split.
         </p>
       </div>
 
       {premium ? (
-        <BestBasket currency={info.currency} initialList={initialList} />
+        <BestBasket
+          currency={info.currency}
+          initialList={initialList}
+          market={country}
+          regions={regions}
+          zonePriced={marketHasZonePricing(country)}
+          measuredAt={measuredAt}
+        />
       ) : (
         <div className="card-surface p-6 text-center">
           <h2 className="text-lg font-extrabold text-white">Go Premium to use Best Basket</h2>

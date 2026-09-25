@@ -78,7 +78,7 @@ export const HUB_INTROS: Record<string, HubIntro> = {
     paragraphs: [
       "The cheapest card is rarely the cheapest order. Postage is charged per store, so a shopping list split across five shops to save a few cents on each card routinely costs more delivered than buying the whole list from two. This works out which combination of stores actually costs least.",
       "Give it the cards you want and it prices every viable split across the stores that stock them, including each store's postage, and ranks the results by what you would actually pay at the door. Usually the answer is not the split with the cheapest individual cards.",
-      "Postage figures are our own per-store estimates for a single-card order, documented on each store's page, not rates quoted by the shop. Confirm at checkout — a store running free shipping over a threshold can change the answer.",
+      "Postage is each store's own checkout rate, measured for orders of different sizes and values to addresses across your market — the rate's own name, whether it is tracked, where a cheap untracked letter stops being offered, and where postage goes free. Set your region for exact rates; otherwise each store is priced at its highest. A store we have not measured yet is marked as an estimate, and the store's checkout is always final.",
     ],
   },
   "/tools/demand": {

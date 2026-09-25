@@ -117,6 +117,23 @@ test("parcel/courier names mean tracked; bare names stay unknown", () => {
   assert.equal(cls("Estándar 0-5kg").service, "unknown");
 });
 
+test("express letters, Signed For, Special Delivery and Smartpac are tracked services", () => {
+  // The first AU run: Fluke & Box's "Express Letter" is Australia Post's
+  // tracked Express Post envelope, not a buyer's-risk letter.
+  assert.deepEqual(cls("AU Domestic Express Letter"), { service: "tracked", express: true, pickup: false });
+  // The first UK run: Royal Mail's signature services and Special Delivery.
+  assert.equal(cls("Royal Mail 1st Class Signed For - Letter").service, "tracked");
+  assert.equal(cls("Royal Mail 48 Signed Letter").service, "tracked");
+  assert.equal(cls("Signed For").service, "tracked");
+  assert.equal(cls("Royal Mail Special Delivery Guaranteed by 1pm").service, "tracked");
+  // The SG run: SingPost's tracked Smartpac.
+  assert.equal(cls("Singpost Smartpac").service, "tracked");
+  // Unchanged: plain letters, and an explicit "no tracking" even when express.
+  assert.equal(cls("Royal Mail 2nd Class").service, "untracked");
+  assert.equal(cls("Small Letter Sized").service, "untracked");
+  assert.equal(cls("Express Letter (no tracking)").service, "untracked");
+});
+
 test("express flag", () => {
   assert.equal(cls("Express").express, true);
   assert.equal(cls("Canada Post Xpresspost").express, true);

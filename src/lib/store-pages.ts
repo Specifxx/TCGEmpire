@@ -15,11 +15,12 @@
 //     an address is a hollow entity claim, and inventing one is out of the
 //     question. If verified address/phone/hours are ever collected, upgrade the
 //     schema type then — not before.
-//   * shippingFlatCents / freeOverCents are declared ESTIMATES by retailers.ts's
-//     own header ("Shipping figures are ESTIMATES for the typical 'single card'
-//     postage at each store"). They are rendered with an explicit "estimate"
-//     label and never as a store's published rate. Where a real policy page
-//     exists we link it instead, which is what shippingPolicyUrl() is for.
+//   * Postage is MEASURED from each store's own checkout (lib/shipping.ts,
+//     since 2026-09-25) and shown with the date it was measured. retailers.ts's
+//     shippingFlatCents / freeOverCents are guesses kept only as the labelled
+//     "est." fallback for a store the probe could not measure — never shown as
+//     a store's rate. Where a real policy page exists we link it as well, which
+//     is what shippingPolicyUrl() is for.
 //
 // Everything genuinely factual on these pages — inventory count, price range,
 // cheapest current singles — comes from live RetailerPrice rows, which is real

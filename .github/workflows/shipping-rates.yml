@@ -1,0 +1,80 @@
+name: Shipping rates probe
+
+# Re-measures what each tracked store's OWN checkout charges for postage, so
+# the snapshot Best Basket, the portfolio's replacement cost and the store
+# pages price delivery from (src/lib/shipping-rates.json) can be refreshed.
+#
+# Why it exists: on 2026-09-25 an Adelaide customer was shown $2 postage in Best
+# Basket for a store that charges $20 — every figure was a hand-typed guess.
+# scripts/probe-shipping-rates.ts builds anonymous Shopify carts (1 card, 10
+# cards, and few-card carts at 20/50/100/150 in the market currency) and asks
+# /cart/shipping_rates.json for every rate at representative addresses. It
+# never checks out, never touches the database, and writes one JSON file.
+#
+# What this does NOT do: commit. Each market's job uploads the raw probe file
+# and a rebuilt snapshot (the checked-in one with this market replaced) as an
+# artifact, and writes the store-by-store changes to the run summary. To take a
+# refresh: download the artifact, then either copy shipping-rates.<M>.json over
+# src/lib/shipping-rates.json, or run
+#   npx tsx scripts/build-shipping-rates.ts shipping-<M>.json
+# locally, and commit it (read the summary first — a store that suddenly
+# "does not post" is worth a manual check before it drops out of Best Basket).
+#
+# DISPATCH ONLY, deliberately no schedule. Shopify's default robots.txt
+# disallows /cart for every store; the probe reads /cart as a one-off,
+# low-volume measurement of the quote any shopper sees, not a crawl, and a
+# standing cron would turn it into one. Run it when rates are suspected stale
+# (a store's own complaint, a reader report, or every month or two).
+#
+# max-parallel 2: the first EU run hit HTTP 429s on every store at the same
+# moment the CA run was going — Shopify throttles carts per IP.
+
+on:
+  workflow_dispatch:
+    inputs:
+      market:
+        description: "Market to probe (all = one job per market)"
+        type: choice
+        required: true
+        default: AU
+        options: [AU, US, UK, CA, EU, SG, all]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        market: ${{ inputs.market == 'all' && fromJSON('["AU","US","UK","CA","EU","SG"]') || fromJSON(format('["{0}"]', inputs.market)) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Probe ${{ matrix.market }} checkouts
+        run: npx tsx scripts/probe-shipping-rates.ts --market=${{ matrix.market }} --out=shipping-${{ matrix.market }}.json
+
+      - name: Compare with the checked-in snapshot
+        run: |
+          npx tsx scripts/build-shipping-rates.ts shipping-${{ matrix.market }}.json \
+            --base=src/lib/shipping-rates.json \
+            --out=shipping-rates.${{ matrix.market }}.json \
+            --summary="$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shipping-${{ matrix.market }}
+          path: |
+            shipping-${{ matrix.market }}.json
+            shipping-rates.${{ matrix.market }}.json
+          if-no-files-found: warn
+          retention-days: 30

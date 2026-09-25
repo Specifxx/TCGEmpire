@@ -5,6 +5,8 @@ import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { trackEvent } from "@/lib/analytics";
 import type { BasketPlan } from "@/lib/basket";
+import { readPostagePrefs } from "@/lib/postage-prefs";
+import { useCountry } from "./CountryProvider";
 
 // "What would it cost to buy this collection again?" — the delivered answer.
 //
@@ -24,18 +26,27 @@ interface Result {
   valuedCents: number;
   pricedHoldings: number;
   skippedHoldings: number;
+  shipping?: { regionLabel: string | null; trackedOnly: boolean; measuredAt: string | null };
 }
 
 export function PortfolioReplacementCost({ currency }: { currency: string }) {
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { country } = useCountry();
 
   async function run() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/portfolio/replacement");
+      // Delivery is priced the way Best Basket prices it: each store's measured
+      // checkout rate, for the region the buyer picked there (remembered in
+      // this browser); none picked = each store's highest regional rate.
+      const prefs = readPostagePrefs(country);
+      const q = new URLSearchParams();
+      if (prefs.region) q.set("region", prefs.region);
+      if (prefs.trackedOnly) q.set("tracked", "1");
+      const res = await fetch(`/api/portfolio/replacement${q.toString() ? `?${q}` : ""}`);
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         setError(data?.error ?? "Couldn't price your collection just now. Try again in a moment.");
@@ -128,8 +139,15 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
                       <td className="py-1.5 font-semibold text-white">{s.name}</td>
                       <td className="py-1.5 text-right">{s.lines.reduce((n, l) => n + l.qty, 0)}</td>
                       <td className="py-1.5 text-right">{formatMoney(s.subtotalCents, currency)}</td>
-                      <td className="py-1.5 text-right">
-                        {s.freeShipping ? <span className="text-brand-400">Free</span> : formatMoney(s.shippingCents, currency)}
+                      <td className="py-1.5 text-right" title={s.postage?.label}>
+                        {s.freeShipping ? (
+                          <span className="text-brand-400">Free</span>
+                        ) : (
+                          <>
+                            {s.postage?.basis === "estimate" ? "est. " : s.postage?.upTo ? "up to " : ""}
+                            {formatMoney(s.shippingCents, currency)}
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -148,7 +166,19 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
             <p>
               The split across stores is the best one the optimiser finds, not a proof of the cheapest possible — consolidating orders
               against free-shipping thresholds has no fast exact answer, so it lands close rather than provably first. Store listings
-              only: eBay is left out because its postage is quoted per listing and isn&apos;t comparable with a store&apos;s flat rate.
+              only: eBay is left out because its postage is quoted per listing and isn&apos;t comparable with a store&apos;s per-order rate.
+              Delivery is each store&apos;s own checkout rate for an order that size
+              {result.shipping?.measuredAt ? `, measured ${result.shipping.measuredAt}` : ""}
+              {result.shipping?.regionLabel
+                ? ` for delivery to ${result.shipping.regionLabel}`
+                : " — the highest rate any region pays (pick your region in Best Basket for exact rates)"}
+              ; stores marked est. haven&apos;t been measured, and a store&apos;s checkout is final.
+              {plan.excludedStores.length > 0 && (
+                <>
+                  {" "}
+                  Left out because they don&apos;t post to you: {plan.excludedStores.map((x) => x.name).join(", ")}.
+                </>
+              )}
               {plan.unbuyable.length > 0 && (
                 <>
                   {" "}

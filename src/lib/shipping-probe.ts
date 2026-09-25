@@ -284,7 +284,10 @@ export interface ProbeRate extends RateClass {
 // Boutique La Pioche's French "Enveloppe sans suivi" (envelope, no tracking)
 // as unknown; "Accéléré" is Postes Canada's name for Expedited Parcel.
 const UNTRACKED_EXPLICIT = /\bun-?tracked\b|\bnon[- ]?tracked\b|\bno[- ]tracking\b|\bwithout tracking\b|\bnot tracked\b|\bnot (?:come with |include |includes |have )?tracking\b|\bsans suivi\b/i;
-const TRACKED_EXPLICIT = /\btracked\b|\btracking\b|\bsignature\b|\bregistered\b/i;
+// "Signed For" (Royal Mail) is a signature-on-delivery service, not a
+// buyer's-risk letter: the first UK run read "1st Class Signed For - Letter"
+// and "48 Signed Letter" as untracked on their "Letter".
+const TRACKED_EXPLICIT = /\btracked\b|\btracking\b|\bsignature\b|\bregistered\b|\bsigned\b/i;
 const UNTRACKED_HINT = /\bletter\b|lettermail|\bpwe\b|plain white envelope|\benvelope\b|\bstamp(ed)?\b|\b(normal|regular|ordinary|basic|economy) mail\b|\b(1st|2nd|first|second) class\b(?!.*\b(package|parcel)\b)/i;
 // The first EU run's parcel services, in their own languages: PostNL's
 // "Brievenbuspakje" (letterbox parcel, track & trace) and "Thuisbezorgd
@@ -292,7 +295,7 @@ const UNTRACKED_HINT = /\bletter\b|lettermail|\bpwe\b|plain white envelope|\benv
 // Internacional". All read as unknown before. The run found no untracked
 // letter option at any of the twelve EU stores.
 const TRACKED_HINT_EU = /\bpaq\b|\bpaquete\b|\b(klein)?paket\b|\bpakket\b|brievenbuspakje|thuisbezorgd|\bverzekerd\b|\bpacco\b|\bcolis(simo)?\b/i;
-const TRACKED_HINT = /\bparcel\b|\bpackage\b|\bstandard post\b|\bexpress\b|xpresspost|\bcourier\b|\bpriority\b|ground advantage|\bground\b|\bexpedited\b|\bups\b|\bfedex\b|\bdhl\b|\bstarshipit\b|\bsendle\b|\baramex\b|\bninja ?van\b|\bevri\b|\bhermes\b|\bdpd\b|\bparcelforce\b|\bcouriers please\b|\bstar ?track\b|\bpurolator\b|\bcanpar\b|\bj&t\b|\bacc[eé]l[eé]r[eé]/i;
+const TRACKED_HINT = /\bparcel\b|\bpackage\b|\bstandard post\b|\bexpress\b|xpresspost|\bcourier\b|\bpriority\b|ground advantage|\bground\b|\bexpedited\b|\bups\b|\bfedex\b|\bdhl\b|\bstarshipit\b|\bsendle\b|\baramex\b|\bninja ?van\b|\bevri\b|\bhermes\b|\bdpd\b|\bparcelforce\b|\bcouriers please\b|\bstar ?track\b|\bpurolator\b|\bcanpar\b|\bj&t\b|\bacc[eé]l[eé]r[eé]|special delivery|\bsmartpac\b/i;
 const EXPRESS = /\bexpress\b|xpresspost|\bnext[- ]?day\b|\bovernight\b|\bsame[- ]?day\b|special delivery|\bpriority\b|\b24\s*h(ou)?r?s?\b|\btracked\s*24\b|\b24\s*tracked\b/i;
 const PICKUP = /\bpick[- ]?up\b|\bpickup\b|click\s*(&|and|\+|n|'n')\s*collect|\bcollect(ion)?\b|\bin[- ]store\b|\blocal delivery\b|\bhand deliver/i;
 
@@ -310,6 +313,10 @@ export function classifyRate(name: string): RateClass {
   let service: ServiceClass = "unknown";
   if (UNTRACKED_EXPLICIT.test(n)) service = "untracked";
   else if (TRACKED_EXPLICIT.test(n)) service = "tracked";
+  // An EXPRESS letter is a tracked service (Australia Post's Express Post
+  // envelope, Royal Mail Special Delivery): the first AU run read Fluke &
+  // Box's "AU Domestic Express Letter" as untracked on its "Letter".
+  else if (express && UNTRACKED_HINT.test(n)) service = "tracked";
   else if (UNTRACKED_HINT.test(n)) service = "untracked";
   else if (TRACKED_HINT.test(n) || TRACKED_HINT_EU.test(n)) service = "tracked";
   return { service, express, pickup };

@@ -6,6 +6,7 @@ import { COUNTRIES, type Country } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { storeSlug } from "@/lib/store-pages";
 import { pageAlternates } from "@/lib/seo";
+import { shippingNoteFor } from "@/lib/shipping";
 
 export const revalidate = 86400;
 
@@ -125,7 +126,9 @@ export default function TrackedStoresPage() {
                 className="card-surface flex flex-col gap-1 p-4 transition-colors hover:border-brand-500"
               >
                 <span className="font-semibold text-white">{s.name}</span>
-                <span className="text-xs text-slate-500">{s.shippingNote}</span>
+                {/* Measured postage with its date, or a labelled estimate (lib/shipping.ts) —
+                    no longer retailers.ts's hand-typed shippingNote. */}
+                <span className="text-xs text-slate-500">{shippingNoteFor(s.key)}</span>
                 <span className="mt-1 text-xs text-brand-400">See live prices &amp; stock →</span>
               </Link>
             ))}

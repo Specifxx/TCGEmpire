@@ -60,7 +60,7 @@ const FAQS = [
   },
   {
     q: "Do you include postage in the pre-order comparison?",
-    a: "The prices shown are the store's listed item price. Our per-store postage estimates are documented on each store's own page, and the Best Basket tool factors postage in when you are buying several things at once.",
+    a: "The prices shown are the store's listed item price. Each store's page lists its postage as measured from its own checkout (singles orders), and the Best Basket tool factors those rates in when you are buying several cards at once. A sealed box usually ships as a parcel, so check the store's checkout for it.",
   },
   {
     q: "What is the difference between the Radiance Vault and the Vault Bundle?",

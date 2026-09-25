@@ -1,18 +1,27 @@
 // Central config for the Australian retailers we compare. Used by both the price
 // importer (scripts/import-prices.ts via src/lib/price-import.ts) and the UI.
 //
-// Shipping figures are ESTIMATES for the typical "single card" postage at each
-// store (tracked/letter), with a free-shipping threshold. Adjust these to match
-// each retailer's real published rates.
+// POSTAGE: the shippingFlatCents / freeOverCents / shippingNote below are
+// hand-typed GUESSES and are no longer what the site shows. Since 2026-09-25
+// every store's postage is MEASURED from its own checkout
+// (scripts/probe-shipping-rates.ts → src/lib/shipping-rates.json, read through
+// src/lib/shipping.ts), after an Adelaide customer was shown $2 in Best Basket
+// for a store that charges $20. The one-card guess was too low at 25 of the 27
+// AU stores measured, and not one guessed AU free-over threshold was right.
+// They remain only as the labelled ("est.") fallback for a store the probe
+// could not measure, and freeOverCents is not applied even then. Do not read
+// these fields for display or pricing; call shippingFor() / shippingNoteFor().
 
 export interface RetailerInfo {
   key: string;
   name: string;
   base: string; // origin, no trailing slash
   collections: string[]; // Shopify collection handles holding Riftbound singles
-  shippingFlatCents: number; // estimated postage for a single card
-  freeOverCents: number; // order total at/above which shipping is free
-  shippingNote: string;
+  // GUESSES, kept only as the "est." fallback for a store with no measured
+  // postage (lib/shipping.ts). Measured stores never use them.
+  shippingFlatCents: number; // guessed postage per order — charged, labelled "est.", for an unmeasured store
+  freeOverCents: number; // guessed free-shipping threshold — recorded, NEVER applied (no AU guess survived measurement)
+  shippingNote: string; // the guess as text — not displayed; the probe compares against it
   // Market the store serves. Omitted = "AU" (the original Australian stores).
   // US/UK/SG/CA stores are scraped with ?country=US/GB/SG/CA and priced in
   // USD/GBP/SGD/CAD.
@@ -2330,19 +2339,9 @@ export function retailerCountry(retailerKey: string): NonNullable<RetailerInfo["
   return RETAILERS[retailerKey]?.country ?? "AU";
 }
 
-// Estimated flat postage for a single card. We always show a shipping estimate
-// (never "free" — we can't confirm free shipping, and we don't want everything
-// marked "unknown" either). null only if the retailer isn't configured.
-export function shippingCents(retailerKey: string): number | null {
-  const r = RETAILERS[retailerKey];
-  if (!r) return null;
-  return r.shippingFlatCents;
-}
-
-// Estimated delivered cost (item + estimated shipping).
-export function deliveredCents(retailerKey: string, priceCents: number): number {
-  return priceCents + (shippingCents(retailerKey) ?? 0);
-}
+// (shippingCents()/deliveredCents() — a store's guessed flat postage — were
+// removed 2026-09-25 with nothing calling them: postage is measured now, see
+// lib/shipping.ts's shippingFor().)
 
 // The shipping cost for a single listing — returned ONLY when we genuinely know it.
 // eBay's Browse API gives a real per-listing figure (including 0 = seller states

@@ -7,6 +7,7 @@ import { COUNTRIES, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { shippingPolicyUrl } from "@/lib/retailers";
 import { STORE_PAGES, storeBySlug, storePageName, STORE_THIN_THRESHOLD } from "@/lib/store-pages";
+import { formatMeasuredDate, shippingSummary, type StoreShippingSummary } from "@/lib/shipping";
 import { storeBadgeHtml } from "@/lib/store-badge";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { cardHref } from "@/lib/card-url";
@@ -217,32 +218,11 @@ export default async function StorePage({ params }: { params: { slug: string } }
 
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Shipping</h2>
-        {/* retailers.ts declares its own shipping figures ESTIMATES, so they are
-            labelled as such and never presented as the store's published rate.
-            Where a real policy page exists we send people to it instead. */}
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          {store.shippingNote ? `${store.shippingNote}. ` : ""}
-          Our comparison uses an estimated {formatMoney(store.shippingFlatCents, info.currency)} postage for a single
-          card at {store.name} when ranking delivered cost. That is our own estimate for typical single-card
-          postage, not a rate quoted by the store —{" "}
-          {policyUrl ? (
-            <>
-              check{" "}
-              {/* rel includes "sponsored": this is a commercial link to a retailer
-                  we may earn from. Google's guidance is to mark ANY link placed
-                  for a commercial relationship, not only ones carrying a tracking
-                  parameter — and an unmarked commercial link on 121 store pages is
-                  exactly the shape a reviewer reads as an undisclosed affiliate
-                  network. */}
-              <a href={policyUrl} target="_blank" rel="sponsored nofollow noopener noreferrer" className="text-brand-400 hover:underline">
-                their shipping policy
-              </a>{" "}
-              for the current published rate.
-            </>
-          ) : (
-            <>confirm the current rate at checkout.</>
-          )}
-        </p>
+        {/* MEASURED from the store's own checkout (lib/shipping.ts), not the
+            hand-typed guesses this section showed until 2026-09-25 — an
+            Adelaide customer was shown $2 for a store that charges $20. A
+            store not measured yet says so and its estimate is labelled one. */}
+        <StoreShipping summary={shippingSummary(store.key)} storeName={store.name} policyUrl={policyUrl} />
         <div className="mt-4 flex flex-wrap gap-2">
           <a
             href={store.base}
@@ -319,6 +299,99 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
     <div className="card-surface p-4">
       <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
       <div className={`num mt-1 text-lg font-bold ${accent ? "text-accent" : "text-white"}`}>{value}</div>
+    </div>
+  );
+}
+
+// The Shipping section's body: the store's measured rates (its own names), the
+// cheap letter's measured limits, the free-postage threshold if one was found,
+// and region differences — or a plainly labelled estimate for a store the probe
+// could not measure.
+function StoreShipping({ summary: s, storeName, policyUrl }: { summary: StoreShippingSummary; storeName: string; policyUrl: string | null }) {
+  const m = (c: number) => formatMoney(c, s.currency);
+  const range = (lo: number, hi: number) => (lo === hi ? m(hi) : `${m(lo)}–${m(hi)}`);
+  const policy = policyUrl ? (
+    <>
+      {" "}
+      Their{" "}
+      {/* rel includes "sponsored": a commercial link to a retailer we may earn
+          from (Google's guidance covers any link placed for a commercial
+          relationship, not only tracked ones). */}
+      <a href={policyUrl} target="_blank" rel="sponsored nofollow noopener noreferrer" className="text-brand-400 hover:underline">
+        shipping policy
+      </a>{" "}
+      has the full terms.
+    </>
+  ) : null;
+
+  if (s.basis === "estimate") {
+    return (
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+        We haven&apos;t measured {storeName}&apos;s postage yet{s.note ? ` — ${s.note.replace(/^Not measured: /, "")}` : ""}.
+        {s.estimateCents != null && (
+          <> Best Basket uses an estimated {m(s.estimateCents)} per order for it, marked &ldquo;est.&rdquo; — our guess, not a rate the store quoted.</>
+        )}{" "}
+        Confirm the real rate at checkout.{policy}
+      </p>
+    );
+  }
+  if (s.basis === "no-post") {
+    return (
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+        {storeName} doesn&apos;t post orders to the addresses we checked{s.note ? `: ${s.note}` : ""}
+        {s.measuredAt ? ` (checked ${formatMeasuredDate(s.measuredAt)})` : ""}. Best Basket leaves it out.{policy}
+      </p>
+    );
+  }
+  return (
+    <div className="mt-2 max-w-3xl space-y-2 text-sm leading-relaxed text-slate-400">
+      <p>
+        Measured from {storeName}&apos;s own checkout on {formatMeasuredDate(s.measuredAt)}, for singles orders of different sizes
+        and values:
+      </p>
+      <ul className="list-disc space-y-1 pl-5">
+        {s.std && (
+          <li>
+            <strong className="text-slate-200">{s.std.label}</strong>
+            {s.std.tracked ? " (tracked)" : ""}: {s.std.maxCents === 0 ? "free" : m(s.std.maxCents)} for one card
+            {s.regions ? ` where it costs most — ${range(s.std.minCents, s.std.maxCents)} depending on where it's going` : ""}.
+          </li>
+        )}
+        {s.letter && (
+          <li>
+            Untracked: <strong className="text-slate-200">{s.letter.label}</strong> {range(s.letter.minCents, s.letter.maxCents)} —
+            offered on orders we tried up to {s.letter.maxItems} card{s.letter.maxItems === 1 ? "" : "s"} and {m(s.letter.maxValueCents)}.
+            Best Basket only counts it for orders within that.
+          </li>
+        )}
+        {s.free && (
+          <li>
+            {s.free.fromCents != null ? (
+              <>
+                Free postage from {m(s.free.fromCents)}
+                {s.free.note ? ` (${s.free.note})` : s.free.paidAtCents != null ? ` (an order of ${m(s.free.paidAtCents)} still paid)` : ""}.
+              </>
+            ) : (
+              <>No free-postage threshold on any order we tried, up to {m(s.free.upToCents)}.</>
+            )}
+          </li>
+        )}
+        {s.minOrderCents != null && <li>No postage offered on orders under {m(s.minOrderCents)}.</li>}
+        {s.regions && (
+          <li>
+            By region, one card:{" "}
+            {s.regions
+              .map((r) => `${r.label.replace(/ \(priced to .*\)$/, "")} ${r.cents == null ? "—" : m(r.cents)}${r.label2 && r.label2 !== s.std?.label ? ` (${r.label2})` : ""}`)
+              .join(" · ")}
+            .
+          </li>
+        )}
+        {s.notServed && s.notServed.length > 0 && <li>Doesn&apos;t post to: {s.notServed.join(", ")}.</li>}
+      </ul>
+      <p className="text-xs text-slate-500">
+        Best Basket prices {storeName} with these rates for your order&apos;s size and region. Stores change their rates, so the
+        store&apos;s own checkout is final.{policy}
+      </p>
     </div>
   );
 }

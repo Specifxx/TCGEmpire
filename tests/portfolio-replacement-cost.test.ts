@@ -3,6 +3,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { optimizeBasket, type BasketCard } from "../src/lib/basket";
+import type { PostageCart, PostageQuote } from "../src/lib/shipping";
+
+// A store charging one rate per ORDER, free from a threshold (0 = never) — the
+// shape a measured flat-rate store has in lib/shipping.ts.
+const flat = (cents: number, freeOverCents = 0) => (cart: PostageCart): PostageQuote => {
+  const free = freeOverCents > 0 && cart.subtotalCents >= freeOverCents;
+  return { cents: free ? 0 : cents, label: "Flat", tracked: true, basis: "measured", free, upTo: false };
+};
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -33,8 +41,8 @@ test("postage is charged once per store, not once per card — the whole reason 
   // postage. Buying each from its own cheapest shop is two lots of postage;
   // consolidating onto one store pays a little more per card and one postage.
   const stores = {
-    a: { name: "Store A", ship: { shippingFlatCents: 1200, freeOverCents: 0 } },
-    b: { name: "Store B", ship: { shippingFlatCents: 1200, freeOverCents: 0 } },
+    a: { name: "Store A", postage: flat(1200) },
+    b: { name: "Store B", postage: flat(1200) },
   };
   const cards: BasketCard[] = [
     {
@@ -71,8 +79,8 @@ test("postage is charged once per store, not once per card — the whole reason 
 
 test("a free-shipping threshold is honoured when a single move can reach it", () => {
   const stores = {
-    a: { name: "Store A", ship: { shippingFlatCents: 1500, freeOverCents: 0 } },
-    b: { name: "Store B", ship: { shippingFlatCents: 900, freeOverCents: 2000 } },
+    a: { name: "Store A", postage: flat(1500) },
+    b: { name: "Store B", postage: flat(900, 2000) },
   };
   const plan = optimizeBasket(
     [
@@ -98,7 +106,7 @@ test("a free-shipping threshold is honoured when a single move can reach it", ()
 });
 
 test("a card no tracked store stocks is left out of the total rather than guessed at", () => {
-  const stores = { a: { name: "Store A", ship: { shippingFlatCents: 500, freeOverCents: 0 } } };
+  const stores = { a: { name: "Store A", postage: flat(500) } };
   const plan = optimizeBasket(
     [
       { cardId: "have", name: "Have", slug: null, qty: 1, listings: [{ retailer: "a", retailerName: "Store A", priceCents: 700, url: "u" }] },
@@ -121,7 +129,7 @@ test("the headline collection value is untouched — no postage is folded into g
 
 test("the heavy listing read runs on demand, never on every portfolio render", () => {
   const panel = readCode(PANEL);
-  assert.match(panel, /fetch\("\/api\/portfolio\/replacement"\)/, "the panel must call the route itself");
+  assert.match(panel, /fetch\(`\/api\/portfolio\/replacement/, "the panel must call the route itself");
   assert.doesNotMatch(panel, /useEffect/, "no fetch-on-mount — this must cost nothing until someone asks for it");
   assert.match(panel, /onClick=\{run\}/, "it is a button");
   // The page renders the panel; it must NOT compute the plan server-side.

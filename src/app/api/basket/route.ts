@@ -7,8 +7,8 @@ import { getCountry } from "@/lib/get-country";
 import { priceField } from "@/lib/country";
 import { normalizeSearch } from "@/lib/format";
 import { parseDeckList } from "@/lib/deck";
-import { RETAILERS } from "@/lib/retailers";
 import { optimizeBasket, type BasketCard } from "@/lib/basket";
+import { basketStoresFor, formatMeasuredDate, marketMeasuredAt, postageOptionsFrom, regionFor } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +20,12 @@ export const dynamic = "force-dynamic";
 // or a pasted decklist (the advanced/paste fallback) — pull every in-stock STORE
 // listing in the viewer's market (eBay excluded — its per-item postage isn't
 // comparable), and return the cheapest landed plan.
+//
+// Postage is each store's MEASURED checkout rate (lib/shipping.ts), for the
+// buyer's region (?region=, a SHIPPING_REGIONS key; absent = the highest
+// regional figure) and, with ?tracked=1, never an untracked letter. It was a
+// hand-typed flat guess per store until an Adelaide customer was shown $2 here
+// and charged $20 at the store (2026-09-25).
 
 // A basket line the client already resolved to an exact printing (via the
 // CardSearch autocomplete) — bypasses name-based resolution entirely, so a
@@ -37,6 +43,8 @@ export async function POST(req: Request) {
 
   const country = getCountry();
   const body = await req.json().catch(() => null);
+  const params = new URL(req.url).searchParams;
+  const postageOpts = postageOptionsFrom(country, params.get("region"), params.get("tracked"));
   const text: string = typeof body?.text === "string" ? body.text : "";
   const pickedLines: PickedLine[] = Array.isArray(body?.lines)
     ? body.lines
@@ -81,12 +89,10 @@ export async function POST(req: Request) {
     if (!wanted.length) return NextResponse.json({ error: "No matching cards found." }, { status: 400 });
   }
 
-  // 2. Stores serving this market (eBay isn't in RETAILERS, so it's excluded).
-  const marketStores = Object.values(RETAILERS).filter((r) => (r.country ?? "AU") === country);
-  const allowed = new Set(marketStores.map((r) => r.key));
-  const storesMap = Object.fromEntries(
-    marketStores.map((r) => [r.key, { name: r.name, ship: { shippingFlatCents: r.shippingFlatCents, freeOverCents: r.freeOverCents } }])
-  );
+  // 2. Stores serving this market (eBay isn't in RETAILERS, so it's excluded),
+  //    each with its measured postage for this buyer.
+  const storesMap = basketStoresFor(country, postageOpts);
+  const allowed = new Set(Object.keys(storesMap));
 
   // 3. In-stock listings for the wanted cards at those stores.
   const cardIds = wanted.map((w) => w.cardId);
@@ -121,5 +127,15 @@ export async function POST(req: Request) {
   }));
 
   const plan = optimizeBasket(basketCards, storesMap);
-  return NextResponse.json({ plan, totalRequested: wanted.length });
+  const region = regionFor(country, postageOpts.region);
+  return NextResponse.json({
+    plan,
+    totalRequested: wanted.length,
+    shipping: {
+      region: region?.key ?? null,
+      regionLabel: region?.label ?? null,
+      trackedOnly: !!postageOpts.trackedOnly,
+      measuredAt: formatMeasuredDate(marketMeasuredAt(country)) || null,
+    },
+  });
 }

@@ -10,12 +10,18 @@ import { pickPrice } from "@/lib/country";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
 import { CardSearch, type SearchCard } from "./CardSearch";
-import type { BasketPlan } from "@/lib/basket";
+import type { BasketPlan, BasketStoreGroup } from "@/lib/basket";
 import { trackEvent } from "@/lib/analytics";
+import { readPostagePrefs, writePostagePrefs } from "@/lib/postage-prefs";
 
 interface PickedLine {
   card: SearchCard;
   qty: number;
+}
+
+export interface BasketRegionOption {
+  key: string;
+  label: string;
 }
 
 // The Best-Basket tool UI. Primary flow: search for a card, pick the exact
@@ -23,7 +29,29 @@ interface PickedLine {
 // decklist is kept as a secondary "advanced" option for anyone who already
 // has a list in TCGplayer Mass-Entry format (deck import links, etc.) rather
 // than picking cards one at a time.
-export function BestBasket({ currency, initialList }: { currency: string; initialList?: string }) {
+//
+// POSTAGE (2026-09-25): each store's own checkout rate for the order it would
+// get, measured — not a flat guess. The buyer picks where it is going (the
+// region is remembered in this browser; unset, every store is priced at its
+// HIGHEST regional rate and says "up to") and can rule out untracked letters.
+// Each store line names the store's own rate ("Singles Tracked (3-7 Days)"),
+// says when a cheaper untracked letter was skipped, and marks any store still
+// on an estimate "est.". See lib/shipping.ts.
+export function BestBasket({
+  currency,
+  initialList,
+  market,
+  regions,
+  zonePriced,
+  measuredAt,
+}: {
+  currency: string;
+  initialList?: string;
+  market: string;
+  regions: BasketRegionOption[];
+  zonePriced: boolean;
+  measuredAt: string | null; // "25 Sep 2026"
+}) {
   const { country } = useCountry();
   const [picked, setPicked] = useState<PickedLine[]>([]);
   const [showPaste, setShowPaste] = useState(false);
@@ -31,18 +59,43 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<BasketPlan | null>(null);
+  const [region, setRegion] = useState<string | null>(null);
+  const [trackedOnly, setTrackedOnly] = useState(false);
+  const lastRun = useRef<{ kind: "lines"; lines: { cardId: string; qty: number }[] } | { kind: "text"; text: string } | null>(null);
+  // Only the latest request's answer is shown: a delivery change re-prices
+  // while an earlier request may still be in flight.
+  const runSeq = useRef(0);
 
-  async function runLines(lines: { cardId: string; qty: number }[]) {
+  // Remembered choices load after mount (localStorage is not readable on the
+  // server); an unknown region prices at each store's highest regional rate.
+  useEffect(() => {
+    const p = readPostagePrefs(market);
+    if (p.region && regions.some((r) => r.key === p.region)) setRegion(p.region);
+    setTrackedOnly(p.trackedOnly);
+  }, [market, regions]);
+
+  const postageQuery = (r: string | null, t: boolean) => {
+    const q = new URLSearchParams();
+    if (r) q.set("region", r);
+    if (t) q.set("tracked", "1");
+    const s = q.toString();
+    return s ? `?${s}` : "";
+  };
+
+  async function runLines(lines: { cardId: string; qty: number }[], r = region, t = trackedOnly) {
+    lastRun.current = { kind: "lines", lines };
+    const seq = ++runSeq.current;
     setLoading(true);
     setError(null);
     setPlan(null);
     try {
-      const res = await fetch("/api/basket", {
+      const res = await fetch(`/api/basket${postageQuery(r, t)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lines }),
       });
       const d = await res.json();
+      if (seq !== runSeq.current) return;
       if (!res.ok) {
         setError(d.error ?? "Something went wrong");
         return;
@@ -51,23 +104,26 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
       setPlan(built);
       trackEvent("best_basket_build", { card_count: built.matchedCards, total_price: built.totalCents / 100, region: country });
     } catch {
-      setError("Network error — try again.");
+      if (seq === runSeq.current) setError("Network error — try again.");
     } finally {
-      setLoading(false);
+      if (seq === runSeq.current) setLoading(false);
     }
   }
 
-  async function runPasted(listText: string) {
+  async function runPasted(listText: string, r = region, t = trackedOnly) {
+    lastRun.current = { kind: "text", text: listText };
+    const seq = ++runSeq.current;
     setLoading(true);
     setError(null);
     setPlan(null);
     try {
-      const res = await fetch("/api/basket", {
+      const res = await fetch(`/api/basket${postageQuery(r, t)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: listText }),
       });
       const d = await res.json();
+      if (seq !== runSeq.current) return;
       if (!res.ok) {
         setError(d.error ?? "Something went wrong");
         return;
@@ -76,9 +132,9 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
       setPlan(built);
       trackEvent("best_basket_build", { card_count: built.matchedCards, total_price: built.totalCents / 100, region: country });
     } catch {
-      setError("Network error — try again.");
+      if (seq === runSeq.current) setError("Network error — try again.");
     } finally {
-      setLoading(false);
+      if (seq === runSeq.current) setLoading(false);
     }
   }
 
@@ -92,9 +148,24 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
     if (autoRan.current || !initialList?.trim()) return;
     autoRan.current = true;
     setShowPaste(true);
-    void runPasted(initialList);
+    // The remembered region is read here too: this runs in the same commit as
+    // the prefs effect above, before its state update lands.
+    const p = readPostagePrefs(market);
+    void runPasted(initialList, p.region && regions.some((r) => r.key === p.region) ? p.region : null, p.trackedOnly);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // A changed delivery choice re-prices the basket already on screen.
+  function changePostage(nextRegion: string | null, nextTracked: boolean) {
+    setRegion(nextRegion);
+    setTrackedOnly(nextTracked);
+    writePostagePrefs(market, { region: nextRegion, trackedOnly: nextTracked });
+    const last = lastRun.current;
+    if (!last) return; // nothing priced yet: the choice applies to the next run
+    if (last.kind === "lines") void runLines(last.lines, nextRegion, nextTracked);
+    else void runPasted(last.text, nextRegion, nextTracked);
+  }
+  const regionLabel = regions.find((r) => r.key === region)?.label ?? null;
 
   const fmt = (c: number) => formatMoney(c, currency);
 
@@ -166,6 +237,42 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
           </ul>
         )}
 
+        {/* Delivery: where it is going, and whether untracked letters count. */}
+        <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2 rounded-lg border border-ink-800 p-2.5">
+          <label className="flex flex-col gap-1 text-xs font-medium text-slate-400">
+            Deliver to
+            {/* sm:text-sm: .input is 16px below sm so iOS doesn't zoom the page on focus. */}
+            <select
+              value={region ?? ""}
+              onChange={(e) => changePostage(e.target.value || null, trackedOnly)}
+              className="input py-1 sm:text-sm"
+              aria-label="Delivery region"
+            >
+              <option value="">Not sure — price the highest rate</option>
+              {regions.map((r) => (
+                <option key={r.key} value={r.key}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex min-h-11 items-center gap-2 text-xs text-slate-300 sm:[@media(pointer:fine)]:min-h-0">
+            <input
+              type="checkbox"
+              checked={trackedOnly}
+              onChange={(e) => changePostage(region, e.target.checked)}
+              className="h-4 w-4 accent-brand-500"
+            />
+            Tracked postage only
+          </label>
+          <p className="basis-full text-[11px] leading-snug text-slate-500">
+            {zonePriced
+              ? "Some stores charge more to some regions — pick yours for exact rates."
+              : `Every store we measured charges the same to every ${market === "AU" ? "state and territory (all eight capitals)" : "address we tried"}, so this changes nothing yet.`}{" "}
+            An untracked letter is only counted for orders no bigger than the ones the store offered it on.
+          </p>
+        </div>
+
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             onClick={() => void runLines(picked.map((p) => ({ cardId: p.card.id, qty: p.qty })))}
@@ -213,7 +320,10 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
                 <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Cheapest landed total</div>
                 <div className="font-display text-4xl font-extrabold text-white">{fmt(plan.totalCents)}</div>
                 <div className="mt-0.5 text-xs text-slate-500">
-                  {fmt(plan.itemsCents)} cards + {fmt(plan.shippingCents)} postage · {plan.storeCount} {plan.storeCount === 1 ? "store" : "stores"} · {plan.matchedCards} cards matched
+                  {fmt(plan.itemsCents)} cards + {fmt(plan.shippingCents)} postage
+                  {plan.topUpCents > 0 && <> + {fmt(plan.topUpCents)} to reach a minimum order</>} · {plan.storeCount}{" "}
+                  {plan.storeCount === 1 ? "store" : "stores"} · {plan.matchedCards} cards matched
+                  {regionLabel ? ` · delivered to ${regionLabel}` : ""}
                 </div>
               </div>
               {plan.savedCents > 0 && (
@@ -229,12 +339,22 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
           {/* Per-store shopping lists */}
           {plan.stores.map((s) => (
             <div key={s.key} className="card-surface overflow-hidden">
-              <div className="flex items-center justify-between border-b border-ink-700 px-4 py-2.5">
-                <h3 className="text-sm font-bold text-white">{s.name}</h3>
-                <span className="text-xs text-slate-400">
-                  {fmt(s.subtotalCents)}
-                  {s.freeShipping ? <span className="ml-1 text-brand-400">+ free post</span> : <span className="ml-1 text-slate-500">+ {fmt(s.shippingCents)} post</span>}
-                </span>
+              <div className="border-b border-ink-700 px-4 py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-bold text-white">{s.name}</h3>
+                  <span className="shrink-0 text-xs text-slate-400">
+                    {fmt(s.subtotalCents)}
+                    {s.freeShipping ? (
+                      <span className="ml-1 text-brand-400">+ free post</span>
+                    ) : (
+                      <span className="ml-1 text-slate-500">
+                        + {s.postage.basis === "estimate" ? "est. " : s.postage.upTo ? "up to " : ""}
+                        {fmt(s.shippingCents)} post
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <PostageLine group={s} fmt={fmt} />
               </div>
               <ul className="divide-y divide-ink-800">
                 {s.lines.map((l, i) => (
@@ -280,11 +400,66 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
             </div>
           )}
 
-          <p className="text-center text-[11px] text-slate-600">
-            Postage uses each store&apos;s typical single-card rate and free-shipping threshold (estimates). Always confirm at checkout.
+          {plan.excludedStores.length > 0 && (
+            <div className="card-surface p-4 text-xs text-slate-400">
+              <p className="font-semibold text-slate-300">
+                Left out — {plan.excludedStores.length === 1 ? "this store doesn't" : "these stores don't"} post{" "}
+                {regionLabel ? `to ${regionLabel}` : "to you"}:
+              </p>
+              <ul className="mt-1 space-y-0.5">
+                {plan.excludedStores.map((x) => (
+                  <li key={x.key}>
+                    <span className="text-slate-300">{x.name}</span> — {x.reason}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <p className="text-center text-[11px] leading-relaxed text-slate-600">
+            Postage is each store&apos;s own checkout rate for an order this size
+            {measuredAt ? `, measured ${measuredAt}` : ""}
+            {regionLabel ? ` for delivery to ${regionLabel}` : " — the highest rate any region pays, until you pick yours"}.
+            Stores marked <span className="text-slate-400">est.</span> haven&apos;t been measured yet. Stores change their rates:
+            the store&apos;s own checkout is final.
           </p>
         </>
       )}
     </div>
+  );
+}
+
+// The line under each store's name: its own rate name, and what else a buyer
+// should know about it — a skipped untracked letter, a free-postage threshold
+// within reach, a minimum order, an order bigger than any we measured.
+function PostageLine({ group, fmt }: { group: BasketStoreGroup; fmt: (c: number) => string }) {
+  const p = group.postage;
+  if (p.basis === "estimate") {
+    return (
+      <p className="mt-0.5 text-[11px] text-amber-300/80">
+        est. {fmt(p.cents)} — this store&apos;s postage hasn&apos;t been measured yet; check at checkout.
+      </p>
+    );
+  }
+  const kind = p.tracked === true ? "tracked" : p.tracked === false ? "untracked letter" : null;
+  const bits: string[] = [];
+  if (p.otherOption && p.otherOption.tracked === false && p.tracked !== false) {
+    bits.push(`untracked letter ${fmt(p.otherOption.cents)} also offered`);
+  } else if (p.otherOption && p.tracked === false) {
+    bits.push(`tracked: ${p.otherOption.label} ${fmt(p.otherOption.cents)}`);
+  }
+  if (p.freeFromCents != null && !p.free) bits.push(`free postage from ${fmt(p.freeFromCents)}`);
+  if (group.topUpCents > 0 && p.minOrderCents) bits.push(`no postage under ${fmt(p.minOrderCents)} — ${fmt(group.topUpCents)} to add`);
+  if (p.notServed?.length) bits.push(`doesn't post to ${p.notServed.join(", ")}`);
+  if (p.beyondMeasured) bits.push("a bigger order than any we measured here — confirm at checkout");
+  return (
+    <p className="mt-0.5 text-[11px] text-slate-500">
+      <span className="text-slate-400">
+        {p.label}
+        {kind ? ` (${kind})` : ""} {p.free ? "free" : `${p.upTo ? "up to " : ""}${fmt(p.cents)}`}
+      </span>
+      {p.note ? ` · ${p.note}` : ""}
+      {bits.length > 0 && <> · {bits.join(" · ")}</>}
+    </p>
   );
 }
