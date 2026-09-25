@@ -6,6 +6,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { trackEvent } from "@/lib/analytics";
+import { sendCardView, type CardViewKind } from "@/lib/card-views";
 import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
@@ -422,8 +423,14 @@ export function SearchBar({
     };
   }, [open]);
 
-  function trackCardView(card: Result) {
-    fetch(`/api/card/${card.slug ?? card.id}/view?source=search`, { method: "POST", keepalive: true }).catch(() => {});
+  // A pick from typed results counts as a SEARCH (the demand signal Rising
+  // Cards and the /movers "Most searched" strip rank on); a click on a Trending
+  // row counts as a VIEW. Trending is the top cards by all-time searches, so
+  // counting those clicks as searches fed the list back into itself
+  // (2026-09-25). Both go out at most once per card per day in this browser
+  // (lib/card-views.ts).
+  function trackCardView(card: Result, kind: CardViewKind) {
+    sendCardView(card.slug ?? card.id, kind, card.id);
   }
 
   // Shared by both the card-result and trending rows (same underlying
@@ -449,7 +456,7 @@ export function SearchBar({
   // chips) already opens the modal for exactly this reason — search is the
   // one surface that had drifted from that pattern.
   function activateCardLike(card: Result, rank: number, resultType: "card" | "trending", newTab: boolean) {
-    trackCardView(card);
+    trackCardView(card, resultType === "trending" ? "view" : "search");
     trackEvent("search_suggestion_selected", { suggestion_rank: rank, result_type: resultType, query: value.trim(), card_id: card.id, variant });
     if (newTab) {
       window.open(cardHref(card), "_blank", "noopener");
@@ -773,7 +780,7 @@ export function SearchBar({
                       prefetch={false}
                       onClick={(e) => {
                         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
-                          trackCardView(c);
+                          trackCardView(c, "view");
                           trackEvent("search_suggestion_selected", { suggestion_rank: i + 1, result_type: "trending", query: trimmed, card_id: c.id, variant });
                           return;
                         }
@@ -875,7 +882,7 @@ export function SearchBar({
                         // A search-result click is the key demand signal (drives eBay
                         // priority) — record it however they open the card.
                         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
-                          trackCardView(r);
+                          trackCardView(r, "search");
                           trackEvent("search_suggestion_selected", { suggestion_rank: i + 1, result_type: "card", query: trimmed, card_id: r.id, variant });
                           return;
                         }

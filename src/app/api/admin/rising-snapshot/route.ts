@@ -61,12 +61,25 @@ export async function POST(req: Request) {
   // and the nested-cache rule: getCachedRisingCards caches itself, so it is
   // called directly and never wrapped).
   const analysis = await getCachedRisingCards(scope);
+
+  // A FAILED LOAD IS NEVER MINTED (2026-09-25). getCachedRisingCards returns an
+  // empty analysis flagged `failed` when a loader threw; frozen, that would be a
+  // permanent public page saying nothing ranked "before enough had built up" —
+  // a database blip published as a fact about the market. Refuse, and say why;
+  // the failure is not cached, so a retry in a few minutes can succeed.
+  if (analysis.failed) {
+    return NextResponse.json(
+      { error: "Rising Cards failed to load, so nothing was minted. Try again in a few minutes." },
+      { status: 409 },
+    );
+  }
+
   const now = new Date();
   const data = toSnapshotData(analysis, scope, now);
 
-  // An empty run is still mintable, deliberately. The screener legitimately has
-  // nothing to show while price history is still building, and a link that says
-  // so honestly is more useful than a 400 that leaves the admin guessing whether
+  // An empty run is still mintable, deliberately. A market with no searched,
+  // priced cards legitimately has nothing to rank, and a link that says so
+  // honestly is more useful than a 400 that leaves the admin guessing whether
   // the feature broke. generateRisingTitle has a branch for exactly this.
   const snapshot = await prisma.risingSnapshot.create({
     data: {

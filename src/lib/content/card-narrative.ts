@@ -1,5 +1,9 @@
 import { formatMoney } from "@/lib/format";
 import { shortCardName } from "@/lib/card-name";
+// From the dependency-free module, NOT lib/price-history (which re-exports it):
+// this file is reachable from a client bundle (lib/box-ev.ts → BoxEvCalculator),
+// and price-history pulls in Prisma.
+import { dropBreakWindow } from "@/lib/methodology-breaks";
 import {
   hasNoRetailChannel,
   noRetailChannelProduct,
@@ -467,9 +471,25 @@ function crossMarket(c: NarrativeInput): string | null {
 // Real windows against real recorded points. Every window is only quoted when
 // enough days exist to fill it, so a two-week-old card gets the 7-day line and
 // nothing else rather than a fabricated 90-day trend.
+//
+// Only points on the CURRENT pricing basis (dropBreakWindow, 2026-09-25): every
+// sentence here compares two points — 7/30/90-day moves, the tracked high/low,
+// the median — and across the 09-23 TCGplayer re-basing each affected card read
+// "down 25% over the last week … the bottom of its tracked range — the cheapest
+// we have recorded it" on the site's highest-traffic template. The chart above
+// still draws every recorded point; this paragraph just stays quiet until
+// enough new-basis points exist. coverageNotes keeps reading the raw series:
+// "we have only just started recording" is about recording, not comparing.
 function trajectory(c: NarrativeInput): string | null {
-  const pts = c.history.points;
+  const pts = dropBreakWindow(c.history.points);
   if (pts.length < 4) return null;
+  // When the break cut older points away, "ever" and "tracked" would claim more
+  // than the compared series holds, so the range sentences name its start.
+  const cutAt =
+    pts.length < c.history.points.length
+      ? new Date(pts[0].t).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })
+      : null;
+  const rangeName = cutAt ? `its range since ${cutAt}` : "its tracked range";
 
   const now = pts[pts.length - 1];
   const spanDays = Math.round((now.t - pts[0].t) / 86_400_000);
@@ -502,7 +522,7 @@ function trajectory(c: NarrativeInput): string | null {
   const allFlat = moves.every((m) => m.startsWith("flat"));
   if (allFlat) {
     return (
-      `Across ${spanDays} days of tracked history ${c.name} has barely moved — ${moves.join(", ")} — holding around ` +
+      `Across ${spanDays} days of ${cutAt ? `prices since ${cutAt}` : "tracked history"} ${c.name} has barely moved — ${moves.join(", ")} — holding around ` +
       `${formatMoney(cur, cy)} in ${c.baseline.place}. A stable price like this usually means supply and demand are ` +
       `matched: there is no urgency to buy today, and equally no reason to expect a better price by waiting.`
     );
@@ -516,9 +536,9 @@ function trajectory(c: NarrativeInput): string | null {
     const fromHigh = pct(cur, hi);
     const fromLow = pct(cur, lo);
     if (fromHigh >= -3) {
-      s += ` That puts it at the top of its tracked range (${formatMoney(lo, cy)}–${formatMoney(hi, cy)}) — buying now means paying about as much as it has ever cost.`;
+      s += ` That puts it at the top of ${rangeName} (${formatMoney(lo, cy)}–${formatMoney(hi, cy)}) — buying now means paying about as much as it has ${cutAt ? `cost since ${cutAt}` : "ever cost"}.`;
     } else if (fromLow <= 3) {
-      s += ` That is the bottom of its tracked range (${formatMoney(lo, cy)}–${formatMoney(hi, cy)}) — the cheapest we have recorded it.`;
+      s += ` That is the bottom of ${rangeName} (${formatMoney(lo, cy)}–${formatMoney(hi, cy)}) — the cheapest we have recorded it${cutAt ? ` since ${cutAt}` : ""}.`;
     } else {
       s += ` It has traded between ${formatMoney(lo, cy)} and ${formatMoney(hi, cy)} over that period, so today sits ${Math.abs(fromHigh)}% below the high and ${fromLow}% above the low.`;
     }

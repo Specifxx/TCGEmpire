@@ -87,7 +87,9 @@ test("the nudge's reads are user-scoped and capped, and call the self-caching lo
   assert.match(src, /collectionCard\.findMany\(\{ where: \{ userId \}, select: \{ cardId: true \}, orderBy: \{ createdAt: "desc" \}, take \}\)/);
   assert.match(src, /export const USER_CARD_ID_CAPS = \{ watch: 500, own: 1000 \} as const;/);
   assert.match(src, /getTcgDealRanks\(country, defaultTcgBuyKeys\(country\)\)/);
-  assert.match(src, /getCachedRisingCards\("GLOBAL"\)/);
+  // Ranked in the viewer's own market — the list /tools/rising shows them, free
+  // top 3 included (2026-09-25; it was Global while the tool was).
+  assert.match(src, /getCachedRisingCards\(country\)/);
   assert.doesNotMatch(src, /unstable_cache|cachedOrDirect/, "never wrap the self-caching loaders (src/lib/db.ts rule 6)");
   assert.match(src, /if \(!watched\.size && !owned\.size\) return null;/, "no cards of theirs, no ranking work at all");
 });

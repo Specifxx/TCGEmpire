@@ -43,6 +43,11 @@ const SELF_CACHED = [
   "getSealedGroups",
   "getPreorderGroups",
   "getHomeStats",
+  // 2026-09-25: Rising Cards' two loaders (getCachedRisingCards is now an
+  // uncached assembly over these) and the /movers "Most searched" strip's.
+  "getRiseHistory",
+  "getRiseInputs",
+  "getTopDemand",
 ];
 
 function walk(dir: string, out: string[] = []): string[] {

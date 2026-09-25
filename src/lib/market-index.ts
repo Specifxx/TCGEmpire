@@ -53,7 +53,12 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, DEFAULT_COUNTRY, COUNTRIES, type Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
-import { sydneyWeekKey, historySource, type PricePoint } from "./price-history";
+import { sydneyWeekKey, historySource, dropBreakWindow, METHODOLOGY_BREAKS, type PricePoint } from "./price-history";
+
+// Moved out of this file on 2026-09-25 (lib/methodology-breaks.ts, re-exported
+// by price-history.ts) so every per-card comparison can reach it too
+// (dropBreakWindow); re-exported here so existing imports keep working.
+export { METHODOLOGY_BREAKS };
 
 export const INDEX_SIZE = 200;
 // Circuit breaker, not a real limit today (see the file header): at today's
@@ -111,6 +116,9 @@ export type MarketIndex = {
   d1: number | null; // % vs the previous tracked snapshot ("Latest" in the UI, not "1 day")
   d7: number | null;
   d30: number | null;
+  // ~a quarter back — the /market tile that replaced "Latest", which always
+  // matched "7 days" once snapshots were a week apart.
+  d90: number | null;
   sinceStart: number | null; // % vs base (= latest - 100)
   startDay: string; // ISO day the series starts (the base-100 day)
   constituents: IndexConstituent[];
@@ -216,31 +224,13 @@ const pctChange = (now: number, then: number | undefined): number | null =>
 // thin or growing basket from jumping the level; a coverage floor on top of
 // that only decided how much real history to hide, not whether the level was
 // trustworthy.
-// METHODOLOGY BREAKS — windows in which a step's price change is known to come
-// from a change in how prices are SOURCED rather than from the market moving.
-// A step whose END falls inside a window is charted flat: the level carries
+// METHODOLOGY BREAKS (the list lives in methodology-breaks.ts; see its note). A
+// step whose END falls inside a window is charted flat: the level carries
 // across unchanged and the prices re-base, exactly as an index provider chains
 // over a methodology change. Chain-linking makes this necessary rather than
 // cosmetic — an unneutralised basis step would be multiplied into every point
-// after it, permanently.
-//
-// 2026-09-23: the US TCGplayer row switched from TCGplayer's market price to
-// the cheapest English Near-Mint listing (lib/tcgplayer.ts), sampled at a median
-// 25% below market. For many cards that row IS the US low, and PriceHistory
-// records each card's low across markets, so the first snapshot on the new
-// basis would otherwise read as a market-wide drop. The window is eight days,
-// not one, because PriceHistory writes at most weekly per card and it cannot be
-// known from the date alone whether a snapshot written on the switch day came
-// before or after the deploy — so every step ending in that span is flattened.
-// The cost is at most about one week of genuine movement shown flat.
-export const METHODOLOGY_BREAKS: readonly { from: number; to: number; why: string }[] = [
-  {
-    from: Date.UTC(2026, 8, 23),
-    to: Date.UTC(2026, 9, 1),
-    why: "US TCGplayer row: market price -> cheapest English NM listing",
-  },
-];
-
+// after it, permanently. The cost is at most about one week of genuine movement
+// shown flat.
 export function chainLinkSeries(
   days: number[],
   byCard: Map<string, Map<number, number>>,
@@ -376,8 +366,12 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
     const series = byCard.get(c.id);
     let d7: number | null = null;
     let d1: number | null = null;
-    if (series && series.size >= 2) {
-      const ts = [...series.keys()].sort((a, b) => a - b);
+    // Only points on the current pricing basis (dropBreakWindow): a constituent's
+    // own 7-day move measured across the 2026-09-23 re-basing is the methodology
+    // change, and it skewed "Top fallers" and the declining breadth count while
+    // the level itself carried flat.
+    const ts = series ? dropBreakWindow([...series.keys()].map((t) => ({ t }))).map((p) => p.t).sort((a, b) => a - b) : [];
+    if (series && ts.length >= 2) {
       const lastT = ts[ts.length - 1];
       let thenT = ts[0];
       for (const t of ts) if (t <= lastT - 7 * 86400_000) thenT = t;
@@ -411,6 +405,7 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
     d1: pctChange(latest, points[points.length - 2]?.v),
     d7: pctChange(latest, at(7)),
     d30: pctChange(latest, at(30)),
+    d90: pctChange(latest, at(90)),
     sinceStart: pctChange(latest, points[0].v),
     startDay: new Date(points[0].t).toISOString().slice(0, 10),
     constituents,

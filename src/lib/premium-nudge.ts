@@ -39,7 +39,7 @@ const RISING_LIST = 40; // the ranked list Rising Cards shows in full
 export interface NudgeCounts {
   deals: number; // cards in Deal Finder's default view
   dealsFree: number; // …of which in the free top 3
-  rising: number; // cards among Rising Cards' ranked picks (Global)
+  rising: number; // cards among Rising Cards' ranked picks in the viewer's market
   risingFree: number; // …of which in the free top 3
 }
 export interface PremiumNudge {
@@ -113,7 +113,11 @@ export async function getPremiumNudge(userId: string, country: Country): Promise
 
   const [dealRank, rising] = await Promise.all([
     getTcgDealRanks(country, defaultTcgBuyKeys(country)),
-    getCachedRisingCards("GLOBAL").catch(() => null),
+    // The viewer's OWN market (2026-09-25): that is the list /tools/rising opens
+    // on and the one a free account's top 3 comes from, so "in your free top 3"
+    // and the locked example below are true of what they will actually see.
+    // Global ranked a different list. Same cache entry the homepage column warms.
+    getCachedRisingCards(country).catch(() => null),
   ]);
   const picks = rising?.picks.slice(0, RISING_LIST) ?? [];
   const risingRank = new Map(picks.map((p, i) => [p.id, i + 1]));

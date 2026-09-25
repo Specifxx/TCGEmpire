@@ -17,6 +17,7 @@ import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
 import { convertCents } from "./fx";
 import type { CardTileData } from "@/components/CardTile";
 import { HISTORY_TAG } from "./revalidate-content";
+import { dropBreakWindow } from "./methodology-breaks";
 
 // The one PriceHistory.country value every snapshot is written under since
 // 2026-09-05 (see price-import.ts's snapshot write) — the day's lowest price
@@ -203,6 +204,53 @@ export function sydneyWeekKey(d = new Date()): string {
 
 export type PricePoint = { t: number; v: number };
 
+// ── METHODOLOGY BREAKS ────────────────────────────────────────────────────────
+// The list and the helpers live in lib/methodology-breaks.ts, a module with no
+// imports, and are re-exported here: price-history is where every PriceHistory
+// reader already imports from, but it pulls in Prisma, and a comparing reader
+// that is also reachable from a client bundle (lib/content/card-narrative.ts,
+// via lib/box-ev.ts → BoxEvCalculator) must be able to import dropBreakWindow
+// without dragging the database client into the browser. One list either way.
+export {
+  METHODOLOGY_BREAKS,
+  dropBreakWindow,
+  recentMethodologyBreak,
+  currentBasisStart,
+  type MethodologyBreak,
+} from "./methodology-breaks";
+
+// The GLOBAL series' own rule, applied to a card's LIVE prices: the cheapest of
+// its AU, US, UK and SG lows, each converted to USD cents. price-import.ts writes
+// exactly this figure (from the same real-listing lows it stores on Card) as the
+// weekly PriceHistory point, so a live point built here sits on the same basis
+// as the history it is appended to. CA and EU are left out for the same reason
+// the writer leaves them out. null when the card has no price in any of the four.
+//
+// price-import.ts keeps its own copy of the loop on purpose: editing an importer
+// file starts a full price import through refresh-prices.yml's push trigger
+// (docs/CURRENT-STATE.md, "Left alone on purpose"). tests/methodology-breaks.test.ts
+// pins the two to the same four markets.
+export const GLOBAL_LOW_MARKETS: readonly Country[] = ["AU", "US", "UK", "SG"];
+export function globalLowUsd(card: {
+  lowestPriceCents: number | null;
+  lowestPriceCentsUs?: number | null;
+  lowestPriceCentsUk?: number | null;
+  lowestPriceCentsSg?: number | null;
+}): number | null {
+  const candidates: number[] = [];
+  const byMarket: Record<string, number | null | undefined> = {
+    AU: card.lowestPriceCents,
+    US: card.lowestPriceCentsUs,
+    UK: card.lowestPriceCentsUk,
+    SG: card.lowestPriceCentsSg,
+  };
+  for (const market of GLOBAL_LOW_MARKETS) {
+    const cents = byMarket[market];
+    if (cents != null) candidates.push(convertCents(cents, currencyOf(market), "USD"));
+  }
+  return candidates.length ? Math.min(...candidates) : null;
+}
+
 // Circuit breaker on the per-card history read — a single card's own row
 // count within 2 years is cheap regardless (at most ~730 rows even if every
 // day had one), so this isn't a real limit today; it just keeps the read
@@ -374,7 +422,12 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
   const SEVEN = 7 * 86400_000;
   type Stat = { cardId: string; points: PricePoint[]; now: number; ref7: number; high: number; pct7: number; discount: number };
   const stats: Stat[] = [];
-  for (const [cardId, pts] of series) {
+  for (const [cardId, raw] of series) {
+    // Never compare across a methodology break (see dropBreakWindow): the
+    // 2026-09-23 TCGplayer re-basing printed as a market-wide crash here, and
+    // as "best value" for three weeks, since the recent high came from before
+    // it. A card with fewer than two points on the current basis sits out.
+    const pts = dropBreakWindow(raw);
     if (pts.length < 2) continue;
     const now = pts[pts.length - 1].v;
     if (now < MIN_CENTS) continue;
@@ -481,7 +534,10 @@ async function computeRecentlyUpdated(country: Country, limit: number): Promise<
     const OUTLIER_SPIKE = 300;
     type Stat = { cardId: string; prev: number; now: number; pct: number };
     const stats: Stat[] = [];
-    for (const [cardId, pts] of series) {
+    for (const [cardId, raw] of series) {
+      // Same rule as computePriceMovers: the previous point must be on the same
+      // pricing basis as the latest, or the "move" is the methodology change.
+      const pts = dropBreakWindow(raw.map((p) => ({ t: p.day, v: p.v }))).map((p) => ({ day: p.t, v: p.v }));
       if (pts.length < 2) continue;
       const last = pts[pts.length - 1];
       // Only cards actually touched in the LATEST snapshot qualify — a card whose

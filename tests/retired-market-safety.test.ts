@@ -60,24 +60,31 @@ test("rise-predictor no longer casts a raw PriceHistory.country at all — GLOBA
   assert.ok(!/\(r\.country as Country\)/.test(src), "must not cast PriceHistory.country to Country — there is no per-country row left to read");
   assert.ok(!/raw in COUNTRIES/.test(src), "the per-country guard has nothing left to guard — GLOBAL_HISTORY_COUNTRY is filtered at the query, not validated in app code");
   assert.ok(!/KNOWN_COUNTRIES/.test(src), "KNOWN_COUNTRIES was only ever needed to constrain a per-country query that no longer exists");
+  // (Since 2026-09-25 the one weekly read covers every card, no id list, from
+  // the current pricing basis — tests/rising-cards.test.ts pins the window.)
   assert.match(
     src,
-    /where:\s*\{\s*cardId:\s*\{\s*in:\s*ids\s*\},\s*day:\s*\{\s*gte:\s*cutoff\s*\},\s*country:\s*GLOBAL_HISTORY_COUNTRY\s*\}/,
+    /where:\s*\{\s*country:\s*GLOBAL_HISTORY_COUNTRY,\s*day:\s*\{\s*gte:\s*riseHistoryStart\(Date\.now\(\)\)\s*\}\s*\}/,
     "every scope (GLOBAL included) must filter to the single GLOBAL sentinel at the database"
   );
 });
 
-test("getRisingCards degrades to an empty analysis instead of throwing", () => {
+test("getCachedRisingCards degrades to a flagged empty analysis instead of throwing — and never caches the failure", () => {
   const src = read(RISE);
-  // Every other PriceHistory reader (price-history.ts, market-index.ts,
-  // screener.ts) already does this; rise-predictor being the exception is the
-  // only reason a data bug became an outage rather than an empty screener.
-  assert.match(
-    src,
-    /export async function getRisingCards[\s\S]*?try \{[\s\S]*?return await computeRisingCards\(scope\)[\s\S]*?\} catch[\s\S]*?return emptyAnalysis\(scope\)/,
-    "getRisingCards must wrap the computation and fall back to emptyAnalysis"
-  );
-  assert.match(src, /console\.error\(/, "the swallowed error must still be logged, or a persistently empty screener is undiagnosable");
+  // A data bug must cost availability of the screener, not the page (the
+  // 2026-08-20 incident). Since 2026-09-25 the catch sits OUTSIDE the caches:
+  // until then getRisingCards caught inside the unstable_cache callback, so one
+  // failed read was stored as an empty analysis for the rest of the day and the
+  // page told paying members "No price history yet".
+  const entry = /export function getCachedRisingCards\([\s\S]*?\n\}/.exec(src)?.[0] ?? "";
+  assert.match(entry, /\.catch\(/, "the assembly must catch");
+  assert.match(entry, /emptyAnalysis\(scope, true\)/, "…and return the empty shape flagged failed:true, so the page says 'temporarily unavailable'");
+  assert.match(entry, /console\.error\(/, "the swallowed error must still be logged, or a persistently empty screener is undiagnosable");
+  for (const loader of ["computeRiseHistory", "computeRiseInputs"]) {
+    const body = (new RegExp(`async function ${loader}\\([\\s\\S]*?\\n\\}`).exec(src)?.[0] ?? "").replace(/\/\/[^\n]*/g, "");
+    assert.ok(body, `expected ${loader}`);
+    assert.doesNotMatch(body, /\bcatch\b/, `${loader} runs inside unstable_cache and must throw, not return a cached empty result`);
+  }
 });
 
 test("rise-predictor covers every live market, not just the original three", () => {
@@ -94,13 +101,17 @@ test("rise-predictor covers every live market, not just the original three", () 
 
   // The universe select must request every price column UniverseCard declares —
   // an unselected column arrives as undefined and silently renders as "—",
-  // and the `as UniverseCard[]` cast hides that from the compiler.
-  const fn = src.match(/async function computeRisingCards[\s\S]*?\}\)\) as UniverseCard\[\];/);
-  assert.ok(fn, "expected computeRisingCards' universe query");
+  // and the `as UniverseCard[]` cast hides that from the compiler. (The query
+  // moved to computeRiseInputs, and the GLOBAL priced-OR clause to pricedIn(),
+  // with the 2026-09-25 loader split.)
+  const fn = src.match(/async function computeRiseInputs[\s\S]*?\}\)\) as UniverseCard\[\];/);
+  assert.ok(fn, "expected computeRiseInputs' universe query");
+  const priced = src.match(/function pricedIn\([\s\S]*?\n\}/);
+  assert.ok(priced, "expected pricedIn()");
   for (const c of codes) {
     if (c === "AU") continue; // AU is the bare `lowestPriceCents` column
     const field = `lowestPriceCents${c.charAt(0)}${c.slice(1).toLowerCase()}`;
     assert.ok(fn![0].includes(`${field}: true`), `universe select is missing ${field}`);
-    assert.ok(fn![0].includes(`{ ${field}: { not: null } }`), `GLOBAL priced-OR clause is missing ${field}`);
+    assert.ok(priced![0].includes(`{ ${field}: { not: null } }`), `GLOBAL priced-OR clause is missing ${field}`);
   }
 });

@@ -276,6 +276,10 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
     .slice(0, GAPS_SHOWN);
 
   const asOf = prettyDay(records.asOf);
+  // The off-peak and at-low boards compare today's price only with prices on
+  // the CURRENT pricing basis (lib/market-records.ts, 2026-09-25), so they are
+  // records since the basis started, not all-time — and they say so.
+  const since = prettyDay(records.currentSince);
   const hasRecords = records.peaks.length > 0 || records.offPeak.length > 0 || records.atLow.length > 0;
   const hasAnything = hasRecords || gaps.length > 0;
 
@@ -283,7 +287,7 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
     ...(gaps.length ? [{ id: "gaps", label: "Price gaps" }] : []),
     ...(records.peaks.length ? [{ id: "highs", label: "All-time highs" }] : []),
     ...(records.offPeak.length ? [{ id: "off-peak", label: "Off their peak" }] : []),
-    ...(records.atLow.length ? [{ id: "lows", label: "At all-time lows" }] : []),
+    ...(records.atLow.length ? [{ id: "lows", label: since ? "At their lows" : "At all-time lows" }] : []),
   ];
 
   const FAQS = [
@@ -392,8 +396,12 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
           <Reveal>
             <RecordsBoard
               id="off-peak"
-              heading="Furthest below their all-time high"
-              blurb="Cards trading well under their own record. The buyable version of a records board — every one of these is in stock now."
+              heading={since ? `Furthest below their high since ${since}` : "Furthest below their all-time high"}
+              blurb={
+                since
+                  ? `Cards trading well under their own highest price since ${since}, when the way we source one of our prices changed — earlier prices are not compared with later ones. The buyable version of a records board — every one of these is in stock now.`
+                  : "Cards trading well under their own record. The buyable version of a records board — every one of these is in stock now."
+              }
               rows={records.offPeak}
               currency={currency}
               metric={(r) => ({
@@ -407,8 +415,12 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
           <Reveal>
             <RecordsBoard
               id="lows"
-              heading="At their all-time low"
-              blurb="Cards sitting at, or within a couple of percent of, the cheapest we have ever recorded them."
+              heading={since ? `At their lowest since ${since}` : "At their all-time low"}
+              blurb={
+                since
+                  ? `Cards sitting at, or within a couple of percent of, the cheapest we have recorded them since ${since}, after coming down from a higher price in that time.`
+                  : "Cards sitting at, or within a couple of percent of, the cheapest we have ever recorded them."
+              }
               rows={records.atLow}
               currency={currency}
               metric={(r) => ({

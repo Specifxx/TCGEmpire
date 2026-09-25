@@ -108,6 +108,12 @@ test("no surviving 'daily'/'1 day'/'30-day' label claims the index moves faster 
     ["src/app/llm/market/route.ts", /`- Change: 1d /],
     ["src/app/llms-full.txt/route.ts", /`- Change: 1d /],
     ["src/app/api/v1/index.json/route.ts", /\bA daily\b/],
+    // /movers reads the same weekly series (2026-09-25): its hero, metadata and
+    // FAQ answers — emitted as FAQPage JSON-LD — said "daily" until then.
+    ["src/app/movers/page.tsx", /\bdaily\b/i],
+    // The "Latest" tile always equalled "7 days" once snapshots were a week
+    // apart; /market shows 90 days instead.
+    ["src/app/market/page.tsx", /label="Latest"/],
   ];
   for (const [path, pattern] of checks) {
     assert.doesNotMatch(codeOnly(read(path)), pattern, `${path} still matches ${pattern}`);

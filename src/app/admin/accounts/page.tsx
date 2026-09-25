@@ -143,7 +143,7 @@ export default async function AccountsAdminPage({
       //
       // COUNT(DISTINCT ...), not findMany({ distinct }): Prisma dedupes in the
       // CLIENT, so that form selects every matching row and ships it here just to
-      // read .length. See the note on demandSnapshotDays() in lib/demand-snapshot.ts
+      // read .length. See the note on demandSnapshotDaysOrThrow() in lib/demand-snapshot.ts
       // — same bug, and it was the largest row-returning statement on the database.
       // Only the count is ever rendered, so only the count is fetched.
       prisma.$queryRaw<{ n: bigint }[]>`

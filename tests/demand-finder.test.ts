@@ -75,5 +75,7 @@ test("lib/demand.ts's windowed query fetches tile data only for the ranked ids, 
   // union of ranked ids, never every card getDemandWindow returned.
   const src = read(LIB);
   const fn = src.slice(src.indexOf("async function computeTopDemand"), src.length);
-  assert.match(fn, /fetchTiles\(unionIds, country\)/, "tile data must be fetched only for the union of ranked ids");
+  // No country argument since 2026-09-25: the select is narrow and market-free,
+  // so one cached ranking serves every market (lib/demand.ts DEMAND_CARD_SELECT).
+  assert.match(fn, /fetchTiles\(unionIds\)/, "tile data must be fetched only for the union of ranked ids");
 });

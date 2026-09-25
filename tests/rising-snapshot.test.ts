@@ -8,9 +8,14 @@ import {
   generateRisingSubtitle,
   hotListName,
   snapshotDateLabel,
+  toSnapshotData,
+  weekMove,
+  rankedFromCount,
   type RisingSnapshotData,
   type RisingSnapshotPick,
 } from "../src/lib/rising-snapshot";
+import { Hot40Image } from "../src/lib/hot40-og";
+import type { RiseAnalysis, RisePick } from "../src/lib/rise-predictor";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -130,6 +135,112 @@ test("the subtitle states the sample and that the numbers are frozen", () => {
   assert.match(s, /snapshot taken at one moment/i);
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Version-2 payloads (2026-09-25). The rebuilt ranking changed what three fields
+// mean: `qualifying` is only the cards with price signals (0 for weeks after a
+// methodology break, while 40 picks are still ranked), `trend7` is
+// vsLastWeekPct ?? 0 and `trend30` is 0 without price signals. A snapshot
+// minted from it must not publish "Ranked from the 0 most-searched priced
+// cards", a column of 0.0% or a green "+0.0% 7d" on the social card.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function risePick(over: Partial<RisePick> = {}): RisePick {
+  return {
+    id: "c1", slug: "jinx", displayName: "Jinx, Loose Cannon", setCode: "OGN", collectorNumber: "042",
+    imageThumbUrl: null, score: 91,
+    components: { demand: 1, velocity: 0, room: 0, scarcity: 0.5, momentum: 0, volatility: 0 },
+    priceCents: 1299, currency: "USD", basisMarket: "US", searchCount: 500, viewCount: 50,
+    priceSignals: false, vsLastWeekPct: null, trend7: 0, trend30: 0, posPct: 0.5, rangeWeeks: 0,
+    volatilityPct: 0, listings: 3, searchPerDay: null, searchGrowthPct: null, searchGrowthDays: null,
+    historyPoints: 1, spark: [1299], reason: "Not enough weekly prices yet to judge its range, ranked on demand and supply · 3 stores in stock in US",
+    confidence: "Low", overheated: false, ...over,
+  };
+}
+function analysis(picks: RisePick[], over: Partial<RiseAnalysis> = {}): RiseAnalysis {
+  return {
+    picks, universeSize: 400, qualifying: 0, withAnyHistory: 380, deepestSeries: 2, minPointsRequired: 5,
+    demandPriceSpearman: 0.3, velocityActive: true, snapshotDays: 30, backtest: null,
+    generatedAt: AT.toISOString(), scope: "US", failed: false, ...over,
+  };
+}
+const fortyV2 = () => toSnapshotData(analysis(Array.from({ length: 40 }, (_, i) => risePick({ id: `c${i}` }))), "US", AT);
+
+test("a v2 payload carries the week move as nullable and says which shape it is", () => {
+  const d = toSnapshotData(analysis([risePick(), risePick({ id: "c2", vsLastWeekPct: 6.5, trend7: 6.5, priceSignals: true, posPct: 0.2 })]), "US", AT);
+  assert.equal(d.version, 2);
+  assert.equal(d.picks[0].vsLastWeekPct, null, "no comparable point is null, not 0");
+  assert.equal(weekMove(d.picks[0]), null);
+  assert.equal(weekMove(d.picks[1]), 6.5);
+  assert.equal(d.picks[0].priceSignals, false);
+  assert.match(d.picks[0].reason ?? "", /^Not enough weekly prices/);
+  // A legacy pick (no vsLastWeekPct key at all) still reads its real 7-day move.
+  assert.equal(weekMove(pick({ trend7: 3.2 })), 3.2);
+});
+
+test("a v2 subtitle counts the RANKED set, not the cards with price signals", () => {
+  const d = fortyV2();
+  assert.equal(d.qualifying, 0, "fixture: weeks after a break, nothing has price signals yet");
+  assert.equal(rankedFromCount(d), 400);
+  assert.match(generateRisingSubtitle(d), /Ranked from the 400 most-searched priced cards/);
+  assert.doesNotMatch(generateRisingSubtitle(d), /from the 0 /);
+  // A legacy payload's `qualifying` WAS its ranked set, and still reads so.
+  assert.match(generateRisingSubtitle(data([pick()])), /180 most-searched priced cards/);
+});
+
+test("a v2 title never reads a missing move or a neutral range position as a finding", () => {
+  // Every pick: no comparable week-ago point (null) and no price signals
+  // (neutral posPct 0.5). Neither the "is up" nor the "near their range low"
+  // angle may fire; nor may a neutral 0.5 be pushed under the 0.33 line.
+  const d = fortyV2();
+  const t = generateRisingTitle(d, AT);
+  assert.match(t, /^RiftCompare Hot 40: Jinx, Loose Cannon tops the US ranking \(/, "the always-true fallback");
+  const noSignalsLow = toSnapshotData(analysis([risePick({ posPct: 0.1, priceSignals: false })]), "US", AT);
+  assert.doesNotMatch(generateRisingTitle(noSignalsLow, AT), /range low/, "a pick without price signals has no range to be low in");
+});
+
+test("the social card draws a dash, not a green +0.0%, when there is no week move", () => {
+  const texts = (node: unknown): string[] => {
+    if (node == null || typeof node === "boolean") return [];
+    if (typeof node === "string" || typeof node === "number") return [String(node)];
+    if (Array.isArray(node)) return node.flatMap(texts);
+    const el = node as { type?: unknown; props?: { children?: unknown } };
+    if (typeof el.type === "function") return texts((el.type as (p: unknown) => unknown)(el.props));
+    return texts(el.props?.children);
+  };
+  const v2 = texts(Hot40Image({ picks: fortyV2().picks, dateLabel: "25 September 2026" })).join(" | ");
+  assert.doesNotMatch(v2, /0\.0%/, `no invented zero move: ${v2}`);
+  assert.doesNotMatch(v2, /\b7d\b|\b30d\b|30 days/, "the retired labels are gone from a v2 card");
+  assert.match(v2, /—/, "runners with no move show a dash");
+  const moving = toSnapshotData(analysis([risePick({ vsLastWeekPct: 8.2, trend7: 8.2 }), risePick({ id: "b" })]), "US", AT);
+  assert.match(texts(Hot40Image({ picks: moving.picks, dateLabel: null })).join(" | "), /\+8\.2% vs last week/);
+  // A legacy payload keeps the 30-day figure it measured.
+  const legacy = texts(Hot40Image({ picks: [pick({ trend7: 18.4, trend30: 26.1 })], dateLabel: null })).join(" | ");
+  assert.match(legacy, /\+18\.4% vs last week/);
+  assert.match(legacy, /\+26\.1% 30 days/);
+});
+
+test("the public page reads both payload shapes, and sells Plus, not Premium", () => {
+  const src = read("src/app/rising/[token]/page.tsx");
+  assert.match(src, /const legacy = isLegacySnapshot\(data\);/);
+  assert.match(src, /<Pct v=\{weekMove\(p\)\} \/>/, "the week move renders null as a dash");
+  assert.match(src, /\{legacy && <td className="num px-3 py-2 text-right"><Pct v=\{p\.trend30\} \/><\/td>\}/, "a 30-day column only where one was measured");
+  assert.match(src, />vs last week</);
+  assert.match(src, /\{legacy \? "Trend" : "16 wk"\}/);
+  assert.doesNotMatch(src, />7d<|>30d</);
+  assert.match(src, /const rankedFrom = rankedFromCount\(data\);/);
+  assert.doesNotMatch(src, /\{data\.qualifying\.toLocaleString\(\)\} most-searched/, "the footer counts the ranked set");
+  assert.doesNotMatch(src, /part of Premium/);
+  assert.match(src, /part of[\s\S]{0,12}Plus, which also removes ads from every page/, "a surface that describes Plus says it is ad-free");
+});
+
+test("a failed load is refused, never frozen into a public snapshot", () => {
+  const src = read("src/app/api/admin/rising-snapshot/route.ts");
+  const failed = src.indexOf("if (analysis.failed)");
+  assert.ok(failed > 0, "the mint route checks analysis.failed");
+  assert.ok(failed < src.indexOf("prisma.risingSnapshot.create"), "…before anything is written");
+  assert.match(src.slice(failed, failed + 400), /status: 409/);
+});
+
 test("the date label is spelled out, not an ISO string", () => {
   assert.equal(snapshotDateLabel(new Date("2026-09-22T00:00:00Z")), "22 September 2026");
 });
@@ -197,10 +308,12 @@ test("a shared link unfurls with the top three and their deltas, from the frozen
   assert.match(art, /const runners = picks\.slice\(1, 3\)/, "ranks 2 and 3, and no further");
   assert.match(art, /rank=\{i \+ 2\}/, "the runners are numbered from 2");
 
-  // Delta figures: 7d and 30d on the leader, 7d on each runner.
-  assert.match(art, /delta\(top\.trend7\)/);
-  assert.match(art, /delta\(top\.trend30\)/);
-  assert.match(art, /delta\(p\.trend7\)/, "each runner shows its own 7-day move");
+  // Delta figures: the week-on-week move on the leader and on each runner
+  // (weekMove — null draws a dash, never "+0.0%"; see the v2 test below), and
+  // the 30-day move on the leader only for a legacy payload, where it was real.
+  assert.match(art, /const topMove = top \? weekMove\(top\) : null;/);
+  assert.match(art, /const m = weekMove\(p\);/, "each runner shows its own week-on-week move");
+  assert.match(art, /\{legacy && \(/);
   assert.match(art, /v >= 0 \? "\+" : "−"/, "the sign is explicit, never inferred");
 
   // THE FORMAT TRAP. cardImageSrc serves our WebP mirror, which satori cannot

@@ -119,9 +119,11 @@ test("rise-predictor.ts's GLOBAL scope reads the same shared series as every sin
   // longer needs).
   const code = codeOnly(read("src/lib/rise-predictor.ts"));
   assert.match(code, /import\s*\{[^}]*GLOBAL_HISTORY_COUNTRY[^}]*\}\s*from\s*"\.\/price-history"/);
+  // (2026-09-25: one scope-independent weekly read of every card, from the
+  // current pricing basis — no id list; tests/rising-cards.test.ts pins it.)
   assert.match(
     code,
-    /where:\s*\{\s*cardId:\s*\{\s*in:\s*ids\s*\},\s*day:\s*\{\s*gte:\s*cutoff\s*\},\s*country:\s*GLOBAL_HISTORY_COUNTRY\s*\}/,
+    /where:\s*\{\s*country:\s*GLOBAL_HISTORY_COUNTRY,\s*day:\s*\{\s*gte:\s*riseHistoryStart\(Date\.now\(\)\)\s*\}\s*\}/,
     "every scope must filter to the single GLOBAL sentinel, unconditionally — no more scope-dependent country filter"
   );
 });

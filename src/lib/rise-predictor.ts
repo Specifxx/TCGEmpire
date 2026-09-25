@@ -1,36 +1,82 @@
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
-import { priceField, pickPrice, currencyOf, type Country } from "./country";
-import { computeSignals, type Signals } from "./ai-insight";
-import { historySource, GLOBAL_HISTORY_COUNTRY, cachedOrDirect, sydneyDayKey, type PricePoint } from "./price-history";
-import { CONTENT_TAG } from "./revalidate-content";
+import { priceField, pickPrice, currencyOf, COUNTRY_LIST, type Country } from "./country";
+import { ALL_FALLBACK_RETAILERS } from "./constants";
+import { computeSignals } from "./ai-insight";
+import {
+  historySource,
+  GLOBAL_HISTORY_COUNTRY,
+  cachedOrDirect,
+  sydneyDayKey,
+  sydneyWeekKey,
+  collapseToWeekly,
+  dropBreakWindow,
+  currentBasisStart,
+  globalLowUsd,
+  type PricePoint,
+} from "./price-history";
+import { CONTENT_TAG, HISTORY_TAG } from "./revalidate-content";
 import { usdCentsToCountry } from "./fx";
 import { cardDisplayName } from "./card-name";
-import { getDemandVelocity, demandSnapshotDays } from "./demand-snapshot";
+import { getDemandVelocityOrThrow, demandSnapshotDaysOrThrow, type DemandVelocity } from "./demand-snapshot";
 import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats";
 
 // ── Rise predictor ────────────────────────────────────────────────────────────
-// Ranks cards most likely to RISE in price soon, from demand + price-timing signals.
-// Thesis: attention (search demand) leads price, so a card with high/rising demand
-// that HASN'T re-rated yet (sitting near its range low, thin supply, not already
-// spiking) has asymmetric upside. Every input is a real, quoted data field; the
-// output score is a transparent weighted sum of cross-sectional z-scores (no black
-// box), and the price-timing half is validated by a lookahead-free backtest.
+// Ranks cards by demand + price-timing signals: search interest that is high or
+// rising on a card whose price has not re-rated yet (low in its own recent
+// range, thin supply, not already spiking). Every input is a real, quoted data
+// field and the score is a transparent weighted sum of cross-sectional z-scores.
 //
-// HONEST LIMITS (surfaced in the UI): (1) demand VELOCITY needs DemandSnapshot rows
-// to accrue — until then that component is 0 and only demand LEVEL is used. (2) The
-// backtest validates the price-timing signal only (demand isn't historically
-// reconstructable). (3) Thin price history ⇒ low confidence. Not financial advice.
+// HONEST LIMITS (surfaced in the UI): (1) demand VELOCITY needs DemandSnapshot
+// rows to accrue — until then that component is 0 and only demand LEVEL is used.
+// (2) Price history is written WEEKLY, so the price-timing half moves once a
+// week; today's live price is appended as the newest point so the displayed
+// price and "vs last week" describe the same number. (3) Price-timing signals
+// need MIN_POINTS clean weekly points, counted from the last methodology break
+// (dropBreakWindow in price-history.ts): until a card has them it is ranked on
+// demand and supply alone, and says so. (4) No track record is published yet,
+// so nothing on the page may call the ranking "backtested" or "validated" — the
+// admin page's lookahead-free backtest covers only the room-to-run component.
+// Not financial advice.
+//
+// ── THE EGRESS SHAPE (2026-09-25) ────────────────────────────────────────────
+// Two self-caching loaders and an UNCACHED assembly:
+//   • getRiseHistory() — week-keyed, HISTORY_TAG, scope-independent. EVERY
+//     card's GLOBAL series since riseHistoryStart() (the current pricing basis,
+//     floored at HISTORY_DAYS), collapsed to one point per week before it is
+//     cached. No card list, so it is a superset of every scope's universe by
+//     construction: a card missing from it has no history in the window, never
+//     "history we did not load" (the first cut read only the 600 most-searched
+//     cards, and a thinner market's top 400 reaches further down the search
+//     order than that). Starting at the basis costs nothing the assembly would
+//     keep — dropBreakWindow discards every older point once today's live
+//     price is appended — and keeps the read small: ~1,400 cards × at most
+//     ~18 weekly points, about a week apart. PriceHistory only changes weekly
+//     and every market reads the same GLOBAL series, so this is read about
+//     once a week instead of once per scope per import purge (7 scopes × ~3
+//     purges a day re-read the same ~37k rows before).
+//   • getRiseInputs(scope) — day-keyed, CONTENT_TAG: the cheap operational
+//     inputs that do change daily (the scope's universe and live prices, supply,
+//     demand velocity).
+//   • getCachedRisingCards(scope) — awaits both and computes in-process
+//     (assembleRisingCards, pure). It is not itself cached, so neither loader is
+//     ever called from inside another cache callback (egress rule 6). Nothing may
+//     wrap it in a cache either: tests/nested-cache.test.ts lists it as
+//     self-cached for exactly that reason.
+// Errors are thrown INSIDE the loaders, so unstable_cache never stores a
+// failure, and caught OUTSIDE them here, with a short per-instance memo so an
+// outage cannot turn every request into a retry against the database. That
+// includes the demand-snapshot reads (the *OrThrow readers): the guarded forms
+// they replaced returned an empty Map / 0 on error, which the day-keyed cache
+// then kept — velocity silently out of the ranking, and the admin page
+// reporting "warming up", until the next purge.
 
-// Scope: a single market, or GLOBAL. Demand (search/view) is already market-agnostic;
-// so is price history now (see historySource() in price-history.ts) — every market
-// reads the same GLOBAL series, so a single-market scope's "market" only ever
-// decides which currency the stored USD figure converts to, never which rows get
-// read. GLOBAL's price-timing signals (trend7/posPct/volatility) are percentages —
-// currency-neutral regardless — and its total cross-market supply is unaffected by
-// any of this. The DISPLAYED price and currency use that card's basis market: its
-// own live per-market price, not the (now currency-agnostic) history series.
+// Scope: a single market, or GLOBAL. Demand (search/view) is market-agnostic; so
+// is price history (every market reads the one GLOBAL series). A single-market
+// scope decides the universe (cards priced there), the supply count and the
+// currency; GLOBAL uses every market and shows each card's basis-market price.
 export type RiseScope = Country | "GLOBAL";
+
 // Reference order for a GLOBAL card's displayed price. Must cover EVERY market in
 // COUNTRIES: a card priced only in a market missing from this list falls through
 // to the "AU" default and renders AU's price (or a dash) under an AU label, which
@@ -38,13 +84,34 @@ export type RiseScope = Country | "GLOBAL";
 // their launches; EU was added with its own on 2026-08-23.
 const MARKET_PREF: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
 
-const SCAN = 400; // universe: most-searched priced cards
+// Every scope a URL may ask for. The tool and /admin/rising both parse through
+// here, so a market in the switcher can never silently fall back to Global
+// again (SG, CA and EU did until 2026-09-25 — the parser only knew AU/US/UK).
+export const RISE_SCOPES: readonly RiseScope[] = ["GLOBAL", ...COUNTRY_LIST.map((c) => c.code)];
+
+export function parseRiseScope(value: string | null | undefined, fallback: RiseScope): RiseScope {
+  const v = (value ?? "").trim().toUpperCase();
+  return RISE_SCOPES.find((s) => s === v) ?? fallback;
+}
+
+const SCAN = 400; // universe per scope: most-searched cards priced in it
 const HISTORY_DAYS = 120;
-const MIN_POINTS = 5; // price points needed to trust the signals
+// Circuit breaker on the weekly history read, not a real limit: ~1,400 cards ×
+// at most ~18 weekly points is ~25k rows. Newest-first, so if it ever bites it
+// trims the OLDEST weeks rather than the ones the assembly compares.
+const HISTORY_ROW_CAP = 60_000;
+// A search-growth percentage over fewer days of demand snapshots is noise on a
+// small base (a card first snapshotted two days ago can read "+300%"), so the
+// growth figure is only quoted once its span reaches this.
+const GROWTH_MIN_DAYS = 7;
+const SPARK_DAYS = 16 * 7; // the "16 wk" sparkline
+const MIN_POINTS = 5; // clean weekly points (live price included) needed to trust the price-timing signals
 const BACKTEST_LAG_DAYS = 14;
-const OVERHEAT_PCT = 35; // 7-day gain above this = likely already spiked
+const OVERHEAT_PCT = 35; // up more than this vs last week = likely already spiked
 const MIN_BACKTEST_N = 20;
 const DISPLAY = 40;
+const DAY_MS = 86400_000;
+const FAILURE_MEMO_MS = 5 * 60_000;
 
 // Component weights (transparent, tunable). Demand + room-to-run dominate; velocity
 // is the strongest signal WHEN it exists; volatility is a small "will it move" tilt.
@@ -53,10 +120,10 @@ const W = { demand: 1.0, velocity: 1.4, room: 1.1, scarcity: 0.7, momentum: 0.5,
 export interface RiseComponents {
   demand: number; // z: attention level (searchCount)
   velocity: number; // z: rising searches/day (0 until snapshots accrue)
-  room: number; // z: room to run (near range low)
+  room: number; // z: room to run (near range low); 0 without price signals
   scarcity: number; // z: thin supply
-  momentum: number; // z: emerging (not overheated) 7-day momentum
-  volatility: number; // z: day-to-day movement
+  momentum: number; // z: emerging (not overheated) week-on-week momentum; 0 without price signals
+  volatility: number; // z: week-to-week movement; 0 without price signals
 }
 
 export interface RisePick {
@@ -69,19 +136,28 @@ export interface RisePick {
   score: number; // 0–100 percentile of the composite
   components: RiseComponents;
   priceCents: number | null;
-  currency: string; // currency of the displayed price (the card's basis market)
-  basisMarket: Country; // market whose price series drove this card's timing signals
+  currency: string; // currency of priceCents — the card's basis market, NOT the scope's for GLOBAL
+  basisMarket: Country; // market whose live price is displayed
   searchCount: number;
   viewCount: number;
-  trend7: number;
-  trend30: number;
-  posPct: number; // 0 = at range low, 1 = at high
+  /** True when the card has MIN_POINTS clean weekly points, so posPct / momentum / volatility mean something. */
+  priceSignals: boolean;
+  /** Today's price vs the clean weekly point nearest a week ago; null when there is none on the current basis. */
+  vsLastWeekPct: number | null;
+  trend7: number; // = vsLastWeekPct ?? 0 (kept for the frozen Hot 40 snapshots)
+  trend30: number; // 0 without price signals
+  posPct: number; // 0 = at range low, 1 = at high; 0.5 (neutral) without price signals
+  rangeWeeks: number; // weeks the clean series spans — what "its range" means
   volatilityPct: number;
-  listings: number;
+  listings: number; // in-stock store listings (scope market, or every market for GLOBAL); reference rows excluded
   searchPerDay: number | null;
+  /** Growth of all-time searches over `searchGrowthDays`; null below GROWTH_MIN_DAYS of snapshots. */
   searchGrowthPct: number | null;
+  /** The real span behind searchGrowthPct, in days — what "in N weeks/days" says. */
+  searchGrowthDays: number | null;
   historyPoints: number;
-  spark: number[]; // recent price series for a mini chart
+  spark: number[]; // clean weekly series + today, last 16 weeks, in `currency`
+  reason: string; // one plain-English line: why this card ranks where it does
   confidence: "High" | "Medium" | "Low";
   overheated: boolean;
 }
@@ -98,22 +174,17 @@ export interface RiseBacktest {
 export interface RiseAnalysis {
   picks: RisePick[];
   universeSize: number;
-  /** Cards with at least MIN_POINTS price points — i.e. enough to score. */
+  /** Cards with at least MIN_POINTS clean price points — enough to score price timing. */
   qualifying: number;
-  // ── Why the tool is dark, when it is ─────────────────────────────────────
-  // `qualifying` alone cannot distinguish the two very different states
-  // "the importer isn't recording anything" and "it is recording fine, there
-  // just aren't enough days yet". The admin page was reporting the first while
-  // the truth was the second: 400 cards each had price history, but only 3
-  // points apiece against a MIN_POINTS of 5, so every card was filtered out and
-  // the UI rendered "0 with price history" — which was simply false, and sent
-  // the reader looking for a broken importer that was working perfectly.
-  //
-  // These two make the real state legible: how many cards have ANY history at
-  // all, and how deep the best series actually is.
+  // ── Why the price half is dark, when it is ───────────────────────────────
+  // `qualifying` alone cannot distinguish "the importer isn't recording
+  // anything" from "it is recording fine, there just aren't enough weeks yet"
+  // (the admin page once reported the first while the truth was the second).
+  // These two make the real state legible: how many cards have ANY recorded
+  // history at all, and how deep the best clean series actually is.
   withAnyHistory: number;
   deepestSeries: number;
-  /** Points a card needs before it can be scored (MIN_POINTS). */
+  /** Points a card needs before its price-timing signals count (MIN_POINTS). */
   minPointsRequired: number;
   demandPriceSpearman: number; // rank-corr of demand vs price (context for divergence)
   velocityActive: boolean;
@@ -121,6 +192,8 @@ export interface RiseAnalysis {
   backtest: RiseBacktest | null;
   generatedAt: string;
   scope: RiseScope;
+  /** True when this is the "temporarily unavailable" fallback after a failed load — never "no history yet". */
+  failed: boolean;
 }
 
 type UniverseCard = {
@@ -143,16 +216,23 @@ type UniverseCard = {
   lowestPriceCentsEu: number | null;
 };
 
+/** The day-keyed operational half, per scope. Plain objects: it round-trips through JSON in the data cache. */
+export type RiseInputs = {
+  universe: UniverseCard[];
+  supply: Record<string, number>;
+  velocity: Record<string, DemandVelocity>;
+  snapshotDays: number;
+};
+
+/** The week-keyed history half, scope-independent: cardId → [epochDay, GLOBAL USD cents][] (oldest first, one per week). */
+export type RiseHistory = { series: Record<string, [number, number][]> };
+
 // Lookahead-free backtest of the reconstructable price-timing signal ("room to run"
 // = 1 − position-in-range at T−lag) vs realised forward return over the lag. Only
-// price data up to T−lag is used to build the historical signal.
-//
-// Exported: this validates price-timing alone (it never touches demand), so it is
-// exactly as valid for sealed-rise-predictor.ts's own products as it is for cards
-// — reused there directly rather than re-implemented, keyed by groupKey instead of
-// cardId (the map key is an opaque id either way).
+// price data up to T−lag is used to build the historical signal. Admin-only: it is
+// directional evidence for ONE component, not a track record for the ranking.
 export function backtest(seriesById: Map<string, PricePoint[]>): RiseBacktest | null {
-  const lagMs = BACKTEST_LAG_DAYS * 86400_000;
+  const lagMs = BACKTEST_LAG_DAYS * DAY_MS;
   const sig: number[] = [];
   const fwd: number[] = [];
   for (const points of seriesById.values()) {
@@ -187,59 +267,98 @@ export function backtest(seriesById: Map<string, PricePoint[]>): RiseBacktest | 
 }
 
 // The "nothing to show" result. Shared so the empty-universe path and the
-// failure path below can't drift apart.
-function emptyAnalysis(scope: RiseScope): RiseAnalysis {
+// failure path can't drift apart; `failed` is what tells the page which one.
+function emptyAnalysis(scope: RiseScope, failed = false): RiseAnalysis {
   return {
     picks: [], universeSize: 0, qualifying: 0,
     withAnyHistory: 0, deepestSeries: 0, minPointsRequired: MIN_POINTS,
     demandPriceSpearman: 0, velocityActive: false, snapshotDays: 0,
-    backtest: null, generatedAt: new Date().toISOString(), scope,
+    backtest: null, generatedAt: new Date().toISOString(), scope, failed,
   };
 }
 
-// NEVER let a data anomaly 500 the page. Every other reader of PriceHistory in
-// this codebase already degrades to an empty result on failure
-// (computePriceMovers in price-history.ts, screener.ts); this
-// module was the one that didn't, which is the only reason a single bad country
-// string became a hard 500 on /tools/rising instead of an empty screener. The
-// page renders its "no price history yet" branch from this shape, so an outage
-// here now costs freshness, not availability.
-//
-// The throw is logged, not swallowed silently — a persistently empty screener
-// with a stack trace in the function logs is diagnosable; one without isn't.
-export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
-  try {
-    return await computeRisingCards(scope);
-  } catch (err) {
-    console.error(`[rise-predictor] getRisingCards(${scope}) failed — serving an empty analysis:`, err);
-    return emptyAnalysis(scope);
-  }
+// Where a failed load is remembered, per scope, so an outage costs one attempt
+// per FAILURE_MEMO_MS per instance rather than one per request. Per-instance
+// memory on serverless — a soft cap, which is all this needs to be.
+const failedUntil = new Map<RiseScope, number>();
+
+// THE ONE entry point — /tools/rising, /admin/rising, the homepage deals feed,
+// the admin Hot 40 snapshot and the premium nudge all read this, so a visit to
+// any of them warms the loaders for the rest. Not a cache itself (see the header):
+// never wrap it in one, and never call it from inside an unstable_cache callback.
+export function getCachedRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
+  if ((failedUntil.get(scope) ?? 0) > Date.now()) return Promise.resolve(emptyAnalysis(scope, true));
+  return Promise.all([getRiseHistory(), getRiseInputs(scope)])
+    .then(([history, inputs]) => assembleRisingCards(scope, inputs, history, Date.now()))
+    .catch((err) => {
+      // Logged, not swallowed silently: a persistently unavailable screener with
+      // a stack trace in the function logs is diagnosable; one without isn't.
+      console.error(`[rise-predictor] getCachedRisingCards(${scope}) failed — serving "temporarily unavailable":`, err);
+      failedUntil.set(scope, Date.now() + FAILURE_MEMO_MS);
+      return emptyAnalysis(scope, true);
+    });
 }
 
-// THE ONE cached entry point for the scan above — /tools/rising, /admin/rising
-// and the homepage deals feed all read this, so a visit to any of them warms
-// the others. Day-keyed with a 48h TTL: freshness is import-driven (CONTENT_TAG
-// is purged after every price import), the TTL is only the fallback.
-//
-// It used to be three separate unstable_cache wrappers at the call sites, two
-// of them under different keys for the same scan, and one of them NESTED inside
-// getCachedTopDeals' own cache — which, in Next.js 14.2, disables the inner
-// cache entirely (see the note on cachedOrDirect in lib/price-history.ts). The
-// first egress audit of the history project found this scan — 400 cards × the
-// whole GLOBAL series, plus the DemandSnapshot window — running 37 times in
-// twenty minutes. Nothing may wrap getRisingCards in a cache anywhere else;
-// tests/nested-cache.test.ts enforces that.
-export function getCachedRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
-  return cachedOrDirect(() => getRisingCards(scope), ["rising-cards-public", scope, sydneyDayKey()], {
-    revalidate: 172800,
+// ── Loader 1: scope-independent weekly history ───────────────────────────────
+export function getRiseHistory(): Promise<RiseHistory> {
+  return cachedOrDirect(() => computeRiseHistory(), ["rc-rise-history", sydneyWeekKey()], {
+    revalidate: 8 * 86400, // one week + a day of slack; the week key is what refreshes it
+    tags: [HISTORY_TAG],
+  });
+}
+
+// The first day the weekly history load reads: the start of the current pricing
+// basis (lib/methodology-breaks.ts currentBasisStart), floored at HISTORY_DAYS
+// back. Every older point would be discarded by dropBreakWindow in the assembly
+// anyway — today's live price, always on the current basis, is appended before
+// the drop — so reading it would be pure egress. Exported for tests.
+export function riseHistoryStart(now: number): Date {
+  const floor = now - HISTORY_DAYS * DAY_MS;
+  const basis = currentBasisStart(now);
+  return new Date(basis != null && basis > floor ? basis : floor);
+}
+
+async function computeRiseHistory(): Promise<RiseHistory> {
+  // No try/catch: a failure must reach getCachedRisingCards, not be cached.
+  //
+  // EVERY card's GLOBAL series in the window — no card list, deliberately (see
+  // the header): a superset of every scope's universe by construction. Served
+  // by the (country, day) index. PriceHistory lives in the split-off history
+  // database (lib/db-history.ts); every scope reads this one GLOBAL series
+  // (historySource() maps every market to it), converted at assembly time.
+  const rows = await dbHistory.priceHistory.findMany({
+    where: { country: GLOBAL_HISTORY_COUNTRY, day: { gte: riseHistoryStart(Date.now()) } },
+    orderBy: { day: "desc" },
+    take: HISTORY_ROW_CAP,
+    select: { cardId: true, day: true, lowestPriceCents: true },
+  });
+  const series: RiseHistory["series"] = {};
+  const history: RiseHistory = { series };
+  const byCard = new Map<string, { day: Date; lowestPriceCents: number }[]>();
+  for (const r of rows) (byCard.get(r.cardId) ?? byCard.set(r.cardId, []).get(r.cardId)!).push(r);
+
+  // One point per week BEFORE caching (collapseToWeekly also restores oldest-
+  // first order): legacy daily rows from before 2026-08-31 still sit in the
+  // GLOBAL series whenever the window reaches back that far, and made the old
+  // "30d" sparkline mostly August. Stored as [epochDay, cents] to keep the
+  // entry small (~1,400 cards × ≤18 points ≈ 350 KB, well inside the ~1.2 MB
+  // unstable_cache budget in lib/db.ts).
+  for (const [cardId, list] of byCard) {
+    series[cardId] = collapseToWeekly(list).map((r) => [Math.round(r.day.getTime() / DAY_MS), r.lowestPriceCents]);
+  }
+  return history;
+}
+
+// ── Loader 2: the day-keyed operational inputs, per scope ────────────────────
+export function getRiseInputs(scope: RiseScope): Promise<RiseInputs> {
+  return cachedOrDirect(() => computeRiseInputs(scope), ["rc-rise-inputs", scope, sydneyDayKey()], {
+    revalidate: 172800, // freshness is import-driven (CONTENT_TAG); the TTL is only the fallback
     tags: [CONTENT_TAG],
   });
 }
 
-async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
-  const isGlobal = scope === "GLOBAL";
-  // Universe: most-searched cards priced in the scope market (any market for GLOBAL).
-  const priced = isGlobal
+function pricedIn(scope: RiseScope) {
+  return scope === "GLOBAL"
     ? {
         // Every priced market, not just the original three — a card priced ONLY
         // in SG/CA is still a real, rankable card, and omitting those columns
@@ -254,9 +373,12 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
         ],
       }
     : { [priceField(scope)]: { not: null } };
+}
 
+async function computeRiseInputs(scope: RiseScope): Promise<RiseInputs> {
+  // No try/catch here either — see computeRiseHistory.
   const universe = (await prisma.card.findMany({
-    where: { searchCount: { gt: 0 }, ...priced },
+    where: { searchCount: { gt: 0 }, ...pricedIn(scope) },
     orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
     take: SCAN,
     select: {
@@ -273,110 +395,129 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
   })) as UniverseCard[];
 
   const ids = universe.map((c) => c.id);
-  if (!ids.length) return emptyAnalysis(scope);
+  const none: RiseInputs = { universe: [], supply: {}, velocity: {}, snapshotDays: 0 };
+  if (!ids.length) return none;
 
-  // Bulk fetch — never per-card.
-  //
-  // Every scope reads the SAME rows now: historySource() maps every market to
-  // the one GLOBAL series (see price-history.ts), so there is no longer a
-  // per-market row set to filter to or pick the best of. What differs between
-  // scopes is only how the stored USD figure gets converted afterward —
-  // GLOBAL defers that until each card's own basis market is known (see
-  // basisMarketOf below); a single market converts up front via
-  // historySource(scope).convert, same as every other single-market reader.
-  const cutoff = new Date(Date.now() - HISTORY_DAYS * 86400_000);
-  const [histRows, supplyRows, velocity, snapshotDays] = await Promise.all([
-    // PriceHistory lives in the split-off history database (see lib/db-history.ts)
-    // — every other reader of this table (price-history.ts, screener.ts) already
-    // goes through dbHistory; this one was still reading the
-    // OPERATIONAL client, landing a 400-card × 120-day pull on the database
-    // that's actually strained. Fixed to match the established pattern.
-    dbHistory.priceHistory.findMany({
-      where: { cardId: { in: ids }, day: { gte: cutoff }, country: GLOBAL_HISTORY_COUNTRY },
-      orderBy: { day: "asc" },
-      select: { cardId: true, day: true, lowestPriceCents: true },
-    }),
+  // Bulk reads — never per-card. Supply counts real stores only: a converted
+  // reference row (TCGplayer AU/UK/SG, Cardmarket, tcgplayer_market) is not a
+  // listing anyone can buy, the same exclusion the "N stores" tile label makes.
+  const [supplyRows, velocity, snapshotDays] = await Promise.all([
     prisma.retailerPrice.groupBy({
       by: ["cardId"],
-      where: { cardId: { in: ids }, inStock: true, ...(isGlobal ? {} : { country: scope }) },
+      where: {
+        cardId: { in: ids },
+        inStock: true,
+        retailer: { notIn: [...ALL_FALLBACK_RETAILERS] },
+        ...(scope === "GLOBAL" ? {} : { country: scope }),
+      },
       _count: { _all: true },
     }),
-    getDemandVelocity(ids),
-    demandSnapshotDays(),
+    // The *OrThrow variants: a failed read must reject this cache callback,
+    // not be stored for the day as "no velocity" (see the header).
+    getDemandVelocityOrThrow(ids),
+    demandSnapshotDaysOrThrow(),
   ]);
+  const inputs: RiseInputs = {
+    universe,
+    supply: Object.fromEntries(supplyRows.map((r) => [r.cardId, r._count._all])),
+    velocity: Object.fromEntries(velocity),
+    snapshotDays,
+  };
+  return inputs;
+}
 
-  // Price series per card, one series each (there is only one series now,
-  // period). GLOBAL leaves the stored USD figure unconverted here — the
-  // display market (bm) is decided per-card below from each card's own live
-  // price fields, not from this series, so there's nothing to convert TO yet.
-  // computeSignals() below is percentage-based, so raw USD scores identically
-  // to any other currency; spark converts once bm is known (see the `built`
-  // loop further down). A single market converts up front since its currency
-  // is fixed for the whole query.
+// ── The assembly: pure, in-process, uncached ────────────────────────────────
+// Exported for tests (tests/rising-cards.test.ts drives it with synthetic
+// inputs — no database).
+export function assembleRisingCards(scope: RiseScope, inputs: RiseInputs, history: RiseHistory, now: number): RiseAnalysis {
+  const isGlobal = scope === "GLOBAL";
+  const { universe } = inputs;
+  if (!universe.length) return emptyAnalysis(scope);
+
+  // GLOBAL keeps the stored USD figure (signals are percentages, and the spark
+  // converts once each card's basis market is known); a single market converts
+  // up front, like every other single-market reader of the series.
+  const convert = isGlobal ? (usd: number) => usd : historySource(scope).convert;
+
+  // Clean series per card: its recorded weekly GLOBAL lows, plus today's live
+  // GLOBAL low (the same cheapest-of-AU/US/UK/SG rule the weekly snapshot uses,
+  // so the two sit on one basis), minus every point from before the latest
+  // methodology break. Only cards with at least one RECORDED point are in the
+  // map, so withAnyHistory still means "has price history".
   const seriesById = new Map<string, PricePoint[]>();
-  if (isGlobal) {
-    for (const r of histRows) {
-      (seriesById.get(r.cardId) ?? seriesById.set(r.cardId, []).get(r.cardId)!).push({ t: r.day.getTime(), v: r.lowestPriceCents });
-    }
-  } else {
-    const { convert } = historySource(scope);
-    for (const r of histRows) {
-      (seriesById.get(r.cardId) ?? seriesById.set(r.cardId, []).get(r.cardId)!).push({ t: r.day.getTime(), v: convert(r.lowestPriceCents) });
-    }
-  }
-  const supplyById = new Map<string, number>(supplyRows.map((r) => [r.cardId, r._count._all]));
-  const velocityActive = velocity.size > 0;
-
-  // Market for a card's displayed price: `scope` for a single market, else
-  // (GLOBAL) the first market that actually has a live price. There is no
-  // longer a per-market history series to prefer one basis over another —
-  // every card shares the same GLOBAL series (see historySource()) — so this
-  // is purely a function of the card's own live price fields now.
-  const basisMarketOf = (card: UniverseCard): Country =>
-    isGlobal ? MARKET_PREF.find((c) => pickPrice(card, c) != null) ?? "AU" : scope;
-
-  // Qualifying set: enough price history to trust the signals.
-  type Row = { card: UniverseCard; s: Signals; points: PricePoint[]; listings: number };
-  const rows: Row[] = [];
   for (const card of universe) {
-    const points = seriesById.get(card.id);
-    if (!points || points.length < MIN_POINTS) continue;
-    rows.push({ card, s: computeSignals(points), points, listings: supplyById.get(card.id) ?? 0 });
+    const recorded = history.series[card.id];
+    if (!recorded?.length) continue;
+    const pts: PricePoint[] = recorded.map(([day, usd]) => ({ t: day * DAY_MS, v: convert(usd) }));
+    const live = globalLowUsd(card);
+    if (live != null && now > pts[pts.length - 1].t) pts.push({ t: now, v: convert(live) });
+    seriesById.set(card.id, dropBreakWindow(pts));
   }
-  const qualifying = rows.length;
-  // Diagnostics (see RiseAnalysis): distinguishes "no data arriving" from
-  // "data arriving, not deep enough yet". seriesById only contains cards that
-  // returned at least one PriceHistory row.
   const withAnyHistory = seriesById.size;
   let deepestSeries = 0;
   for (const pts of seriesById.values()) if (pts.length > deepestSeries) deepestSeries = pts.length;
 
-  if (!qualifying) {
-    return {
-      picks: [], universeSize: universe.length, qualifying: 0,
-      withAnyHistory, deepestSeries, minPointsRequired: MIN_POINTS,
-      demandPriceSpearman: 0, velocityActive, snapshotDays,
-      backtest: backtest(seriesById), generatedAt: new Date().toISOString(), scope,
+  // Market for a card's displayed price: `scope` for a single market, else
+  // (GLOBAL) the first market in MARKET_PREF that has a live price.
+  const basisMarketOf = (card: UniverseCard): Country =>
+    isGlobal ? MARKET_PREF.find((c) => pickPrice(card, c) != null) ?? "AU" : scope;
+
+  type Row = {
+    card: UniverseCard;
+    points: PricePoint[];
+    priceSignals: boolean;
+    vsLastWeek: number | null;
+    trend30: number;
+    posPct: number;
+    volatilityPct: number;
+    listings: number;
+    velocity: DemandVelocity | undefined;
+  };
+  const rows: Row[] = universe.map((card) => {
+    const points = seriesById.get(card.id) ?? [];
+    const priceSignals = points.length >= MIN_POINTS;
+    const s = points.length >= 2 ? computeSignals(points) : null;
+    // "vs last week" needs a clean point roughly a week back — not merely any
+    // older point (a series restarted by a break can be two points a day apart).
+    const hasWeekAgo = points.length >= 2 && points[points.length - 1].t - points[0].t >= 5 * DAY_MS;
+    const row: Row = {
+      card,
+      points,
+      priceSignals,
+      vsLastWeek: s && hasWeekAgo ? s.trend7 : null,
+      trend30: s && priceSignals ? s.trend30 : 0,
+      posPct: s && priceSignals ? s.posPct : 0.5,
+      volatilityPct: s && priceSignals ? s.volatilityPct : 0,
+      listings: inputs.supply[card.id] ?? 0,
+      velocity: inputs.velocity[card.id],
     };
-  }
+    return row;
+  });
+  const qualifying = rows.filter((r) => r.priceSignals).length;
+  const velocityActive = Object.keys(inputs.velocity).length > 0;
 
-  // Feature vectors → cross-sectional z-scores (fair comparison across cards).
-  const demandRaw = rows.map((r) => Math.log1p(r.card.searchCount));
-  const velRaw = rows.map((r) => velocity.get(r.card.id)?.searchPerDay ?? 0);
-  const roomRaw = rows.map((r) => 1 - r.s.posPct); // near low = more room
-  const scarcityRaw = rows.map((r) => -Math.log1p(r.listings)); // fewer listings = higher
-  const momRaw = rows.map((r) => clamp(r.s.trend7, -20, OVERHEAT_PCT)); // reward emerging, cap the overheated
-  const volRaw = rows.map((r) => r.s.volatilityPct);
-
-  const zd = zScores(demandRaw);
-  const zvel = velocityActive ? zScores(velRaw) : rows.map(() => 0);
-  const zroom = zScores(roomRaw);
-  const zscar = zScores(scarcityRaw);
-  const zmom = zScores(momRaw);
-  const zvol = zScores(volRaw);
+  // Feature vectors → cross-sectional z-scores. Demand, velocity and supply
+  // cover the whole universe. The price-timing features are z-scored among the
+  // cards that HAVE price signals only; every other card gets a neutral 0 for
+  // them — the same way velocity sits at 0 until snapshots accrue — so a card
+  // is never rewarded or punished for history it does not have.
+  const zd = zScores(rows.map((r) => Math.log1p(r.card.searchCount)));
+  const zvel = velocityActive ? zScores(rows.map((r) => r.velocity?.searchPerDay ?? 0)) : rows.map(() => 0);
+  const zscar = zScores(rows.map((r) => -Math.log1p(r.listings))); // fewer listings = higher
+  const priced = rows.map((r, i) => (r.priceSignals ? i : -1)).filter((i) => i >= 0);
+  const subsetZ = (f: (r: Row) => number): number[] => {
+    const out = rows.map(() => 0);
+    const z = zScores(priced.map((i) => f(rows[i])));
+    priced.forEach((i, k) => (out[i] = z[k]));
+    return out;
+  };
+  const zroom = subsetZ((r) => 1 - r.posPct); // near low = more room
+  const zmom = subsetZ((r) => clamp(r.vsLastWeek ?? 0, -20, OVERHEAT_PCT)); // reward emerging, cap the overheated
+  const zvol = subsetZ((r) => r.volatilityPct);
 
   const rawScore = rows.map((r, i) => {
-    const overheatPenalty = r.s.trend7 > OVERHEAT_PCT ? (r.s.trend7 - OVERHEAT_PCT) / 15 : 0;
+    const up = r.vsLastWeek ?? 0;
+    const overheatPenalty = up > OVERHEAT_PCT ? (up - OVERHEAT_PCT) / 15 : 0;
     return (
       W.demand * zd[i] +
       W.velocity * zvel[i] +
@@ -388,13 +529,15 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
     );
   });
   const score100 = percentileRanks(rawScore);
+  const round2 = (x: number) => Math.round(x * 100) / 100;
 
-  const built: { pick: RisePick; raw: number }[] = rows.map((r, i) => {
-    const vel = velocity.get(r.card.id);
+  const built = rows.map((r, i) => {
     const pts = r.points.length;
     const bm = basisMarketOf(r.card);
+    const rangeWeeks = pts >= 2 ? Math.max(1, Math.round((r.points[pts - 1].t - r.points[0].t) / (7 * DAY_MS))) : 0;
     const confidence: RisePick["confidence"] =
-      pts >= 14 && r.listings >= 3 ? "High" : pts >= 7 ? "Medium" : "Low";
+      r.priceSignals && pts >= 8 && r.listings >= 3 ? "High" : r.priceSignals ? "Medium" : "Low";
+    const overheated = (r.vsLastWeek ?? 0) > OVERHEAT_PCT;
     const pick: RisePick = {
       id: r.card.id,
       slug: r.card.slug,
@@ -404,40 +547,49 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
       imageThumbUrl: r.card.imageThumbUrl,
       score: score100[i],
       components: {
-        demand: Math.round(zd[i] * 100) / 100,
-        velocity: Math.round(zvel[i] * 100) / 100,
-        room: Math.round(zroom[i] * 100) / 100,
-        scarcity: Math.round(zscar[i] * 100) / 100,
-        momentum: Math.round(zmom[i] * 100) / 100,
-        volatility: Math.round(zvol[i] * 100) / 100,
+        demand: round2(zd[i]),
+        velocity: round2(zvel[i]),
+        room: round2(zroom[i]),
+        scarcity: round2(zscar[i]),
+        momentum: round2(zmom[i]),
+        volatility: round2(zvol[i]),
       },
       priceCents: pickPrice(r.card, bm),
       currency: currencyOf(bm),
       basisMarket: bm,
       searchCount: r.card.searchCount,
       viewCount: r.card.viewCount,
-      trend7: r.s.trend7,
-      trend30: r.s.trend30,
-      posPct: r.s.posPct,
-      volatilityPct: r.s.volatilityPct,
+      priceSignals: r.priceSignals,
+      vsLastWeekPct: r.vsLastWeek,
+      trend7: r.vsLastWeek ?? 0,
+      trend30: r.trend30,
+      posPct: r.posPct,
+      rangeWeeks,
+      volatilityPct: r.volatilityPct,
       listings: r.listings,
-      searchPerDay: vel?.searchPerDay ?? null,
-      searchGrowthPct: vel?.searchGrowthPct ?? null,
+      searchPerDay: r.velocity?.searchPerDay ?? null,
+      // Growth is quoted with its real span, and only once that span means
+      // something — getDemandVelocityOrThrow measures over whatever snapshots a card
+      // has, up to 21 days, not a fixed three weeks.
+      searchGrowthPct: r.velocity && r.velocity.spanDays >= GROWTH_MIN_DAYS ? r.velocity.searchGrowthPct : null,
+      searchGrowthDays: r.velocity && r.velocity.spanDays >= GROWTH_MIN_DAYS ? r.velocity.spanDays : null,
       historyPoints: pts,
-      // GLOBAL's series is stored in raw USD (see seriesById above) — convert
-      // to bm's currency here so the sparkline matches priceCents/currency,
-      // the same currency every other reader of `points` already assumes.
-      spark: r.points.slice(-30).map((p) => (isGlobal ? usdCentsToCountry(p.v, bm) : p.v)),
+      // GLOBAL's series is raw USD — convert to bm's currency so the sparkline
+      // matches priceCents/currency. Last 16 weeks only, spaced as recorded.
+      spark: r.points.filter((p) => p.t >= now - SPARK_DAYS * DAY_MS).map((p) => (isGlobal ? usdCentsToCountry(p.v, bm) : p.v)),
+      reason: "",
       confidence,
-      overheated: r.s.trend7 > OVERHEAT_PCT,
+      overheated,
     };
+    pick.reason = riseReason(pick, scope);
     return { pick, raw: rawScore[i] };
   });
   const picks: RisePick[] = built.sort((a, b) => b.raw - a.raw).slice(0, DISPLAY).map((b) => b.pick);
 
   // Context: how correlated demand rank is with price rank (positive is normal; the
   // picks are the high-demand / low-price residuals the score surfaces).
-  const demandPriceSpearman = Math.round(spearman(rows.map((r) => r.card.searchCount), rows.map((r) => pickPrice(r.card, basisMarketOf(r.card)) ?? 0)) * 100) / 100;
+  const demandPriceSpearman =
+    Math.round(spearman(rows.map((r) => r.card.searchCount), rows.map((r) => pickPrice(r.card, basisMarketOf(r.card)) ?? 0)) * 100) / 100;
 
   return {
     picks,
@@ -448,9 +600,58 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
     minPointsRequired: MIN_POINTS,
     demandPriceSpearman,
     velocityActive,
-    snapshotDays,
+    snapshotDays: inputs.snapshotDays,
     backtest: backtest(seriesById),
-    generatedAt: new Date().toISOString(),
+    generatedAt: new Date(now).toISOString(),
     scope,
+    failed: false,
   };
+}
+
+// One plain line per pick, built only from fields on the row — the page shows
+// it under the card name in place of the old unlabelled z-score bars.
+//
+// Without price signals the line says only what is true in every case: too few
+// weekly prices to judge its range. It used to say "Price history rebuilding",
+// which is right for a card re-accruing points after the 09-23 break but false
+// for a card with no recorded history at all (new, or never priced in the four
+// GLOBAL markets) — and was once printed for cards whose history simply had
+// not been loaded.
+export function riseReason(p: RisePick, scope: RiseScope): string {
+  const parts: string[] = [];
+  if (!p.priceSignals) {
+    parts.push("Not enough weekly prices yet to judge its range, ranked on demand and supply");
+  } else if (p.posPct <= 0.25) {
+    parts.push(`Near the low of its ${p.rangeWeeks}-week range`);
+  } else if (p.posPct >= 0.75) {
+    parts.push(`Near the high of its ${p.rangeWeeks}-week range`);
+  } else {
+    parts.push(`Mid-range over ${p.rangeWeeks} weeks`);
+  }
+  if (p.overheated && p.vsLastWeekPct != null) parts.push(`already up ${Math.round(p.vsLastWeekPct)}% on last week`);
+  if (p.searchGrowthPct != null && p.searchGrowthDays != null && p.searchGrowthPct >= 5) {
+    parts.push(`searches +${Math.round(p.searchGrowthPct)}% in ${growthSpanLabel(p.searchGrowthDays)}`);
+  } else if (p.searchPerDay != null && p.searchPerDay >= 1) {
+    parts.push(`${formatRate(p.searchPerDay)} searches a day`);
+  } else {
+    parts.push(`${p.searchCount.toLocaleString("en-US")} searches all-time`);
+  }
+  const where = scope === "GLOBAL" ? "" : ` in ${scope}`;
+  if (p.listings === 0) parts.push(`no store has it in stock${where}`);
+  else parts.push(`${p.listings} ${p.listings === 1 ? "store" : "stores"} in stock${where}`);
+  const line = parts.join(" · ");
+  return line.charAt(0).toUpperCase() + line.slice(1);
+}
+
+/** "3 weeks", "1 week", "9 days" — the real span behind a search-growth figure. */
+export function growthSpanLabel(days: number, short = false): string {
+  if (days >= 7 && days % 7 === 0) {
+    const w = days / 7;
+    return short ? `${w} wk` : `${w} ${w === 1 ? "week" : "weeks"}`;
+  }
+  return short ? `${days} d` : `${days} ${days === 1 ? "day" : "days"}`;
+}
+
+function formatRate(n: number): string {
+  return n >= 10 ? String(Math.round(n)) : n.toFixed(1).replace(/\.0$/, "");
 }
