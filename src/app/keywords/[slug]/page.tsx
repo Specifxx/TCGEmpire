@@ -59,13 +59,22 @@ export default async function KeywordPage({ params }: { params: { slug: string }
 
   // Every card actually printed with this keyword — same predicate the matching
   // guide's browseCta/embed already use (description contains the bracket marker,
-  // scoped to the set that introduced it), so this list is never invented.
-  const cards = await prisma.card.findMany({
-    where: { setCode: kw.set, description: { contains: kw.rulesContain } },
-    orderBy: [{ rarity: "asc" }, { collectorNumber: "asc" }],
-    take: 24,
-    select: cardTileSelect(DEFAULT_COUNTRY),
-  });
+  // set-scoped only where lib/keywords.ts says so), so this list is never invented.
+  //
+  // 48 tiles and one count, not "every row": with rules text backfilled for all
+  // five sets a core keyword like Action prints on 100+ cards, and the full list
+  // is one click away on /browse. The count keeps the heading honest about what
+  // the grid leaves out. Both run once per slug per day (revalidate below).
+  const where = { ...(kw.set ? { setCode: kw.set } : {}), description: { contains: kw.rulesContain } };
+  const [cards, total] = await Promise.all([
+    prisma.card.findMany({
+      where,
+      orderBy: [{ rarity: "asc" }, { collectorNumber: "asc" }],
+      take: 48,
+      select: cardTileSelect(DEFAULT_COUNTRY),
+    }),
+    prisma.card.count({ where }),
+  ]);
 
   const related = kw.relatedKeywords.map((s) => keywordBySlug(s)).filter((k): k is NonNullable<typeof k> => !!k);
   const guideTitle = getArticle(kw.guideSlug)?.title ?? `Riftbound ${kw.name} Explained`;
@@ -155,9 +164,16 @@ export default async function KeywordPage({ params }: { params: { slug: string }
       {cards.length > 0 && (
         <section>
           <div className="mb-4 flex items-end justify-between gap-3">
-            <h2 className="text-xl font-extrabold text-white">Every {kw.name} card</h2>
+            <h2 className="text-xl font-extrabold text-white">
+              Every {kw.name} card
+              {total > cards.length && (
+                <span className="ml-2 text-sm font-semibold text-slate-400">
+                  {cards.length} of {total}
+                </span>
+              )}
+            </h2>
             <Link
-              href={`/browse?rules=${encodeURIComponent(kw.rulesContain)}&rulesSet=${kw.set}`}
+              href={`/browse?rules=${encodeURIComponent(kw.rulesContain)}${kw.set ? `&rulesSet=${kw.set}` : ""}`}
               className="btn-ghost text-xs shrink-0"
             >
               Browse &amp; sort by price →

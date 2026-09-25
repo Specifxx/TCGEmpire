@@ -76,14 +76,14 @@ test("no duplicate slugs, names, or rulesContain markers within one set", () => 
   }
   // rulesContain CAN legitimately repeat across different sets (e.g. two
   // keywords scoped to different sets could share a marker in theory) — but
-  // every entry here is scoped to the same set (VEN, see the KeywordEntry.set
-  // comment), so within that one set every marker must be unique, or two
-  // keyword pages would show each other's cards.
+  // entries are either scoped to VEN or unscoped (see the KeywordEntry.set
+  // comment), and an unscoped marker also matches every VEN card, so no marker
+  // may repeat at all, or two keyword pages would show each other's cards.
   const byMarkerInSet = new Map<string, string>();
   for (const k of KEYWORDS) {
-    const key = `${k.set}|${k.rulesContain}`;
+    const key = k.rulesContain;
     const clash = byMarkerInSet.get(key);
-    assert.ok(!clash, `${k.name} and ${clash} share the marker "${k.rulesContain}" in set ${k.set} — their "every card" lists would overlap or collide`);
+    assert.ok(!clash, `${k.name} and ${clash} share the marker "${k.rulesContain}" — their "every card" lists would overlap or collide`);
     byMarkerInSet.set(key, k.name);
   }
 });
@@ -100,4 +100,17 @@ test("sections and FAQs read as our own prose, not a copy-pasted rules citation"
       assert.doesNotMatch(s.body, RULE_NUMBER, `${k.name}'s "${s.heading}" section looks like it still has a raw rule citation in it`);
     }
   }
+});
+
+test("only bracket markers go unscoped; plain-word predicates stay on Vendetta", () => {
+  // A plain word ("Buff", "Add ") matches wherever it is printed, and those
+  // predicates were only ever verified against Vendetta. A bracket marker is the
+  // printed keyword itself, so it may match the whole backfilled catalogue.
+  for (const k of KEYWORDS) {
+    if (!k.rulesContain.startsWith("[")) assert.equal(k.set, "VEN", `${k.name} matches a plain word and must stay VEN-scoped`);
+  }
+  for (const slug of ["empower", "flow", "burn"]) {
+    assert.equal(KEYWORDS.find((k) => k.slug === slug)?.set, "VEN", `${slug} is a Vendetta mechanic whose guide lists Vendetta cards only`);
+  }
+  assert.ok(KEYWORDS.filter((k) => !k.set).length >= 20, "the core bracket keywords are unscoped");
 });

@@ -223,8 +223,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // fact to state, and padding one in would be the fabrication this avoids.
   //
   // TWO BUGS FIXED HERE (see cardMetaDescription): the printing phrase used to
-  // be emitted ONLY in the no-rules-text branch, so the ~90% of cards that do
-  // print rules text never named their printing in words; and `printingKind`
+  // be emitted ONLY in the no-rules-text branch, so every card with stored
+  // rules text never named its printing in words (Vendetta alone until
+  // scripts/backfill-card-text.ts, which fills Origins, Proving Grounds,
+  // Spiritforged and Unleashed; nearly every card after it); and `printingKind`
   // was handed the raw `card`, whose metadata query selects nothing that
   // Signature/Overnumbered/Crystal Rose are derived from, so it answered "base"
   // for all three. printingFieldsFrom() is now the single derivation.

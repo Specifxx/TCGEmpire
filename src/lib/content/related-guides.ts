@@ -54,7 +54,8 @@ export function mechanicGuideForCard(c: CardForGuides): { slug: string; name: st
   const text = c.description ?? "";
   if (!text) return null;
   for (const k of KEYWORDS) {
-    if (k.set !== c.setCode) continue;
+    // An unscoped entry is a core keyword printed in every set (lib/keywords.ts).
+    if (k.set && k.set !== c.setCode) continue;
     if (text.includes(k.rulesContain)) return { slug: k.guideSlug, name: k.name };
   }
   return null;

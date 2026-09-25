@@ -217,12 +217,19 @@ export interface CardDescriptionInput {
  *
  * THE SAME BLIND SPOT, TWICE. `statBit` ("Calm legend · Rare") and the printing
  * phrase were both built for every card and then used only in the branch for
- * cards that print NO rules text. Since ~90% of the catalogue does print rules
- * text, the overwhelming majority of descriptions named neither the card's
- * domain, nor its type, nor its rarity, nor which printing it was — the snippet
- * for a Signature Legend read exactly like the snippet for a common spell. The
+ * cards that print NO rules text. Nearly every card prints some (1,162 of the
+ * gallery's 1,189 on 2026-09-25; runes and a few vanilla units don't), so once
+ * a set's text is stored the overwhelming majority of its descriptions named
+ * neither the card's domain, nor its type, nor its rarity, nor which printing
+ * it was — the snippet for a Signature Legend read exactly like the snippet
+ * for a common spell. The
  * structured data carried all four fields the whole time, which is backwards:
  * the visible snippet is the thing a person reads before deciding to click.
+ *
+ * STORED rules text is a separate question. Until 2026-09-25 `Card.description`
+ * was filled only for Vendetta (and later gallery-imported sets): the four sets
+ * RiftScribe catalogued had none, so about two-thirds of card pages took the
+ * no-text branch. scripts/backfill-card-text.ts fills them from Riot's gallery.
  *
  * Both branches now carry both facts. The order is deliberate and unchanged in
  * spirit: what the card IS, then what it DOES, then what it COSTS.
