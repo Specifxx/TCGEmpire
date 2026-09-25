@@ -49,6 +49,13 @@ export interface ArticleEmbed {
   // Render the gallery with a client-side filter bar (domain/rarity/type + search
   // + a "most recently added" sort). Best paired with setAll on a large set.
   filterable?: boolean;
+  // Filterable galleries only. `defaultSort` picks the sort the page opens on
+  // ("recent" = newest import first, for a spoiler tracker whose returning
+  // visitors came for today's reveals, not card 001). `initialCount` visually
+  // collapses the grid to that many tiles behind a "Show all" button — every
+  // tile is still server-rendered, so crawlers see every card and link.
+  defaultSort?: "number" | "recent";
+  initialCount?: number;
   // Rules-text query: cards whose ability text contains this string (optionally
   // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
   rulesContain?: string;
@@ -886,16 +893,20 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       label: "Radiance set page →",
       blurb: "The full card list as it fills in, with live prices on every card from release day.",
     },
-    // Self-populating: every non-promo RAD card in the database, collector order,
-    // with the filter bar's "most recently added" sort = newest reveal. One card
-    // today (Neeko); the gallery grows as the official-gallery importer lands
-    // each day's reveals, so the page is never a stale checklist.
+    // Self-populating: every non-promo RAD card in the database, grown by the
+    // official-gallery importer twice a day, so the page is never a stale
+    // checklist. Opens NEWEST-FIRST and collapsed to 24 tiles (2026-09-25): in
+    // collector order a returning visitor saw card 001 first, and by mid-October
+    // ~85 phone rows of tiles pushed the reveal log and both CTAs off the page.
+    // Every tile is still in the HTML (FilterableCardGallery hides, never slices).
     embeds: [
       {
         title: "Every Radiance card revealed so far",
-        note: "Straight from our live database, in collector-number order — filter by domain, rarity or type, or sort by most recently added to see the newest reveals first. Tap any card for its page and, from release day, its live prices across every store we track.",
+        note: "Straight from our live database, newest reveals first — filter by domain, rarity or type, or switch to collector-number order. Tap any card for its page and, from release day, its live prices across every store we track.",
         setAll: "RAD",
         filterable: true,
+        defaultSort: "recent",
+        initialCount: 24,
         take: 400,
       },
     ],
@@ -1395,9 +1406,18 @@ Radiance releases **23 October 2026**.`,
   // its header) and docs/seo-keyword-map.md's "do not draft [a keyword page]
   // without a verified source" require wording verified against Riot's own Core
   // Rules PDF, which doesn't exist yet for an unreleased set. `keywords.ts`
-  // entries are also technically unverifiable right now: `rulesContain` depends on
-  // a real catalogued card row, and none of these three have one. Promote any of
-  // this to keywords.ts only once Riot (not a demo-table photo) confirms it.
+  // entries are also technically unverifiable until a real catalogued card row
+  // exists. Promote any of this to keywords.ts only once Riot (not a demo-table
+  // photo) confirms it.
+  //
+  // GALLERIES THAT FILL THEMSELVES (2026-09-25). The roundup and each guide carry
+  // positioned `rulesContain` galleries scoped to RAD. Until an official reveal
+  // with the keyword is imported (twice a day from 25 Sep) EmbedGallery renders
+  // nothing, so the page reads exactly as before; the first matching card makes a
+  // gallery appear under its mechanic's section. The marker is the BRACKETED
+  // prefix ("[Deploy", like "[Shield"/"[Level" in keywords.ts), never the bare
+  // word: the circulating Kai'Sa text uses plain "Disarm" for an unrelated effect,
+  // and it must not land in the Disarm gallery. Titles and snippets unchanged.
   {
     slug: "riftbound-radiance-leaked-mechanics",
     category: "blog",
@@ -1461,6 +1481,29 @@ Radiance releases **23 October 2026**.`,
       label: "See everything actually confirmed about Radiance →",
       blurb: "Release date, card count and confirmed champions — kept separate from leaks and speculation, updated the moment Riot confirms more.",
     },
+    embeds: [
+      {
+        title: "Radiance cards with Deploy",
+        note: "Official Radiance cards whose printed text carries Deploy. Fills in as reveals are imported.",
+        rulesContain: "[Deploy",
+        rulesSet: "RAD",
+        take: 8,
+      },
+      {
+        title: "Radiance cards with Showoff",
+        note: "Official Radiance cards whose printed text carries Showoff. Fills in as reveals are imported.",
+        rulesContain: "[Showoff",
+        rulesSet: "RAD",
+        take: 8,
+      },
+      {
+        title: "Radiance cards with Disarm",
+        note: "Official Radiance cards whose printed text carries Disarm. Fills in as reveals are imported.",
+        rulesContain: "[Disarm",
+        rulesSet: "RAD",
+        take: 8,
+      },
+    ],
     body: `**Three unreleased Riftbound: Radiance mechanics have leaked from Riot's own demo table at PAX West** — Deploy, Showoff and Disarm — photographed and shared publicly by Riftbound content creator AskJoshy. This isn't a Riot announcement and it isn't a baseless rumour either: it's a photo of physical reference material Riot itself put in front of players at a public convention, months ahead of **[Radiance's confirmed 23 October 2026 release](/blog/riftbound-radiance-what-we-know)**. Here's exactly what the photo shows, what each keyword appears to do, and — just as importantly — what still isn't known.
 
 ## Where this leak actually comes from
@@ -1479,11 +1522,15 @@ As leaked, **Deploy is a Gear keyword tied to one specific battlefield.** You do
 
 That's a real design tension, not a minor drawback. **[Hunt](/keywords/hunt)** already rewards holding a battlefield with XP, and **[Ganking](/keywords/ganking)** already lets a unit reposition from one battlefield to another. A Deploy card raises the stakes on a fight you're already having: hold the battlefield and you get an ongoing benefit on top of whatever else is happening there; lose it and you're down a whole card, not just a bonus. If the leak holds up, Deploy decks will likely want ways to actually defend a battlefield once they've committed a Gear to it — which points toward the same defensive combat keywords (**[Tank](/keywords/tank)**, **[Shield](/keywords/shield)**, **[Backline](/keywords/backline)**) covered in the **[combat keywords guide](/guides/riftbound-combat-keywords-explained)**.
 
+[[embed:0]]
+
 ## Showoff: a payoff that depends on what you reveal
 
 > "As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off."
 
 Showoff, as leaked, is a **modal, reveal-based effect** — you play the card, then either show a card from your hand or point at a friendly card already in play that fits some printed condition, and the effect scales with what you showed. That's meaningfully different from Riftbound's existing reveal mechanic, **[Vision](/keywords/vision)**, which looks at the top of your own deck rather than your hand or board. Showoff instead seems to reward deckbuilding around a specific type, domain, or stat line the card is checking for — but without a single confirmed Showoff card yet, its actual power level is impossible to judge. A card that wants you to reveal an Epic-rarity Unit is a completely different build-around than one checking for the biggest Might on your board, and the leak doesn't tell us which.
+
+[[embed:1]]
 
 ## Disarm: reportedly Assault's mirror image
 
@@ -1492,6 +1539,8 @@ Showoff, as leaked, is a **modal, reveal-based effect** — you play the card, t
 This is the mechanic AskJoshy's own caption calls out directly, framing it as **"the inverse of Assault."** That comparison holds up against the actual rules text: **[Assault](/keywords/assault)** gives the attacking unit **+X Might** for the duration of combat. Disarm, as leaked, instead takes Might **away from an enemy unit** when this unit attacks — a debuff aimed at the opponent's board rather than a buff to your own stats.
 
 The caption also suggests Disarm "can pair well with direct damage spells like Falling Star" — a real card already in the game: **[Falling Star](/browse?q=Falling%20Star)** is a Fury-domain Spell from the original Origins set. The logic checks out even without knowing Disarm's exact numbers: shrink a blocker's Might first, and a fixed amount of direct damage goes a lot further toward actually killing it. If Disarm decks end up leaning on that kind of stacked-damage plan, it would put them in the same lane as Fury's existing direct-damage tools rather than introducing a brand-new archetype from scratch.
+
+[[embed:2]]
 
 ## Deploy, Showoff and Disarm at a glance
 
@@ -1572,6 +1621,15 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
       label: "See the full Radiance mechanics leak →",
       blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
     },
+    embeds: [
+      {
+        title: "Radiance cards with Deploy",
+        note: "Official Radiance cards whose printed text carries Deploy. Fills in as reveals are imported.",
+        rulesContain: "[Deploy",
+        rulesSet: "RAD",
+        take: 8,
+      },
+    ],
     body: `*Status, 12 September 2026: still unconfirmed by Riot. Preview Season now opens on 25 September at the Regional Qualifier: Los Angeles — the first point at which this can be confirmed, reworded or contradicted by an official card.*
 
 **Deploy is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what would need to happen before we'd treat any of it as settled.
@@ -1585,6 +1643,8 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
 3. **Lose the battlefield, lose the card.** If an opponent takes control of the battlefield the Gear is deployed to, the card is killed outright — not just deactivated.
 
 That third step is the part worth sitting with. Most of Riftbound's existing Gear interacts with a unit via **[Equip](/keywords/equip)**, which stays attached and functional regardless of what's happening on the board around it. Deploy, as leaked, ties the card's *survival* to board state — a meaningfully riskier trade for whatever benefit it grants.
+
+[[embed:0]]
 
 ## What kind of benefit might Deploy actually grant?
 
@@ -1661,6 +1721,15 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
       label: "See the full Radiance mechanics leak →",
       blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
     },
+    embeds: [
+      {
+        title: "Radiance cards with Showoff",
+        note: "Official Radiance cards whose printed text carries Showoff. Fills in as reveals are imported.",
+        rulesContain: "[Showoff",
+        rulesSet: "RAD",
+        take: 8,
+      },
+    ],
     body: `*Status, 12 September 2026: still unconfirmed by Riot. Preview Season now opens on 25 September at the Regional Qualifier: Los Angeles — the first point at which this can be confirmed, reworded or contradicted by an official card.*
 
 **Showoff is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what's still missing before it can be judged properly.
@@ -1672,6 +1741,8 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
 1. **Play the card.** Showoff triggers as part of playing it, not later.
 2. **Choose one of two options**: reveal a card from your hand, or point at a friendly card already in play — either way, the chosen card has to meet whatever criteria is printed on the Showoff card itself.
 3. **The effect changes based on what you showed.** This is a modal, scaling bonus rather than one fixed outcome — the leak's own wording ("the card's effect will change") rules out a flat, single-mode effect.
+
+[[embed:0]]
 
 ## Showoff vs Vision: two different kinds of "look and get value"
 
@@ -1747,6 +1818,15 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
       label: "See the full Radiance mechanics leak →",
       blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
     },
+    embeds: [
+      {
+        title: "Radiance cards with Disarm",
+        note: "Official Radiance cards whose printed text carries Disarm. Fills in as reveals are imported.",
+        rulesContain: "[Disarm",
+        rulesSet: "RAD",
+        take: 8,
+      },
+    ],
     body: `*Status, 12 September 2026: still unconfirmed by Riot. Preview Season now opens on 25 September at the Regional Qualifier: Los Angeles — the first point at which this can be confirmed, reworded or contradicted by an official card.*
 
 **Disarm is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how it reportedly compares to an existing keyword, and what's still unknown.
@@ -1758,6 +1838,8 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
 1. **Trigger condition: the Disarm unit attacks.** The effect is tied to attacking, not to being played or to any other timing.
 2. **Effect: it lowers an enemy unit's Might** present at that battlefield.
 3. **It reads as a repeatable, built-in unit ability**, not a one-time removal spell — the leaked wording describes something the unit does every time it attacks, not a single-use effect.
+
+[[embed:0]]
 
 ## Disarm vs Assault: the same combat moment, opposite target
 
@@ -5340,20 +5422,29 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     ],
     // Same filter the embed below uses (rules text contains "[Empower]", scoped to
     // VEN) — so the CTA and the embed always show the identical set of cards.
+    //
+    // "See all 52": /browse?rules=[Empower]&rulesSet=VEN listed 52 printings on
+    // 25 Sep 2026 against the gallery's 24, so the CTA names the full count.
+    // Vendetta is released, so the number only moves with a new VEN printing.
     browseCta: {
       href: "/browse?rules=%5BEmpower%5D&rulesSet=VEN",
-      label: "Browse every Empower card →",
+      label: "See all 52 Empower cards →",
       blurb: "Every Vendetta card with the Empower keyword, filterable and sortable, with live prices across every store we track.",
     },
-    // Auto-collects every officially revealed VEN card whose rules text carries
-    // [Empower] — real cards, real images, tap → card page. Grows through spoilers.
-    embed: {
-      title: "Every Empower card in Vendetta",
-      note: "Every Vendetta card with the Empower keyword — tap a card for its page and live prices across every store we track.",
-      rulesContain: "[Empower]",
-      rulesSet: "VEN",
-      take: 12,
-    },
+    // Auto-collects VEN cards whose rules text carries [Empower] — real cards,
+    // real images, tap → card page. POSITIONED right after "How the Empower
+    // mechanic works" and 24 deep, like /keywords/empower (2026-09-25): as the
+    // legacy `embed` it rendered after the whole body, capped at 12, under a
+    // title that now promises "Every Card".
+    embeds: [
+      {
+        title: "Every Empower card in Vendetta",
+        note: "Vendetta cards with the Empower keyword — tap a card for its page and live prices across every store we track. The full list is linked at the end of this guide.",
+        rulesContain: "[Empower]",
+        rulesSet: "VEN",
+        take: 24,
+      },
+    ],
     // Zoomed crop of a real Empower card's rules text (resolved from the DB — the
     // first officially imported [Empower] card), so the guide can point at the
     // printed line itself instead of describing it in the abstract.
@@ -5384,6 +5475,8 @@ Think of it as a two-stage card: stage one gets a body on the board; stage two, 
 4. **Repeat where allowed.** Some Empower cards are designed to keep scaling, rewarding a long game.
 
 Because the payoff is deferred, Empower changes your *sequencing* more than your *shopping list*: the skill is knowing which turn to hold up energy for the upgrade instead of over-committing your hand.
+
+[[embed:0]]
 
 ## What Empower looks like on the card
 
@@ -5446,13 +5539,17 @@ Empower cards are live with real prices on the **[Vendetta set page](/sets/vende
       label: "Browse every Flow card →",
       blurb: "Every Vendetta card with the Flow keyword, filterable and sortable, with live prices across every store we track.",
     },
-    embed: {
-      title: "Every Flow card in Vendetta",
-      note: "Every officially revealed Vendetta card with the Flow keyword — tap a card for its page.",
-      rulesContain: "[Flow]",
-      rulesSet: "VEN",
-      take: 12,
-    },
+    // Positioned after "How the Flow mechanic works" and 24 deep (2026-09-25),
+    // same reasoning as the Empower guide. /keywords/flow listed 18, all of them.
+    embeds: [
+      {
+        title: "Every Flow card in Vendetta",
+        note: "Every officially revealed Vendetta card with the Flow keyword — tap a card for its page.",
+        rulesContain: "[Flow]",
+        rulesSet: "VEN",
+        take: 24,
+      },
+    ],
     // Zoomed crop of a real Flow card's rules text (resolves from the DB — the
     // first officially imported [Flow] card; renders nothing until one exists).
     closeups: [
@@ -5490,6 +5587,8 @@ Here's the actual printed text on a revealed Vendetta card — the **[Flow]** ke
 - **Your trash is a second hand.** Cards you have already spent are still live resources, so you effectively draw from two places at once.
 - **It punishes removal.** Killing your unit does not really answer it if you can replay it — Flow decks are miserable to grind down.
 - **It rewards knowledge.** Flow favours players who track what is in the trash and sequence replays for maximum value.
+
+[[embed:0]]
 
 ## Building a Flow deck
 
