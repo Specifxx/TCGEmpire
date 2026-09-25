@@ -106,10 +106,13 @@ export default function SellingFeesPage() {
       <section className="card-surface mt-6 p-5">
         <h2 className="font-bold text-white">How the math works</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Marketplace commission is charged on the item price only. Payment processing is a separate charge — a
-          percentage plus a small fixed fee — applied to the item price <strong className="text-slate-200">plus</strong>{" "}
-          the shipping you charge the buyer, which is why a cheap card with expensive shipping still loses a real
-          share of that shipping revenue to fees. Your own actual shipping cost (the mailer and postage you pay) comes
+          TCGplayer&apos;s marketplace commission is charged on the item price. eBay&apos;s final value fee is
+          charged on the <strong className="text-slate-200">whole order, shipping included</strong>, so the eBay tab
+          applies your commission to the item price plus the shipping you charge. Payment processing is a separate
+          charge — a percentage plus a small fixed fee — applied to the item price{" "}
+          <strong className="text-slate-200">plus</strong> the shipping you charge the buyer, which is why a cheap
+          card with expensive shipping still loses a real share of that shipping revenue to fees. Until you enter
+          your commission the calculator shows no payout, because the figure would be missing the biggest fee. Your own actual shipping cost (the mailer and postage you pay) comes
           out separately at the end. See{" "}
           <Link href="/blog/tcgplayer-fees" className="text-brand-400 hover:underline">how TCGplayer fees stack, in full</Link>{" "}
           for the worked example this tool is based on.

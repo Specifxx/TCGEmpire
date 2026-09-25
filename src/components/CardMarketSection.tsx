@@ -15,6 +15,7 @@ import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
 import { normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
 import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { isPaidLink } from "@/lib/affiliate";
+import { playedDiscounts, playedDiscountText } from "@/lib/played-discount";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
 // the AU baseline (no cookie reads server-side — that's what makes the route
@@ -319,6 +320,11 @@ export function CardPriceComparison({
     return [...byRetailer.values()];
   }, [prices, outOfStock]);
   const ebay = m.hasEbay ? null : ebaySearch[country] ?? null;
+  // "LP · 22% under the cheapest NM here" on each played in-stock row that has
+  // an NM copy of the same finish in this market (lib/played-discount.ts). What
+  // was worth keeping from the retired Condition Impact Calculator, from this
+  // card's own listings: the rows already in `prices`, so no new query.
+  const played = useMemo(() => playedDiscounts(prices), [prices]);
   // ONE combined, price-ranked list — foil and non-foil listings are NOT split
   // into separate views. A [Standard][Foil][Graded] toggle briefly lived here
   // on a like-for-like-comparison argument; it was removed because the cost
@@ -478,6 +484,17 @@ export function CardPriceComparison({
                       ) : (
                         p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>
                       );
+                    })()}
+                    {(() => {
+                      const d = played.get(p.id);
+                      return d ? (
+                        <span
+                          className={d.pctUnder > 0 ? "text-slate-300" : "text-gold"}
+                          title={`Compared with the cheapest in-stock Near Mint${p.isFoil ? " foil" : ""} copy in this list (${fmt(d.cheapestNmCents)}). A typical ${d.grade} discount is about ${d.typicalPct}%.`}
+                        >
+                          {playedDiscountText(d)}
+                        </span>
+                      ) : null;
                     })()}
                     <span className="text-brand-400">● In stock</span>
                     <span>

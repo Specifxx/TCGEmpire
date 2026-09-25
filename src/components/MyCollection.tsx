@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
-import { CONDITIONS, CONDITION_KEYS } from "@/lib/constants";
+import { CONDITIONS, CONDITION_KEYS, CONDITION_MULTIPLIER } from "@/lib/constants";
 import { useCountry } from "./CountryProvider";
 import { cardImageAlt } from "@/lib/image-alt";
 import { trackEvent } from "@/lib/analytics";
@@ -39,11 +40,47 @@ type Item = {
   card: CollCard;
 };
 
+// A copy's value: the live lowest price × the condition multiplier, rounded per
+// copy — the exact rule lib/premium.ts's getPortfolio values the /portfolio
+// headline and holdings grid with. This list used to skip the multiplier, so its
+// "worth ~" total and row values disagreed with the headline above it by up to
+// 60% for any played copy, on the same page (2026-09-25 audit).
+function unitValue(market: number | null, condition: string): number | null {
+  return market != null ? Math.round(market * (CONDITION_MULTIPLIER[condition] ?? 1)) : null;
+}
+
+// How long to wait after the last edit before re-rendering the page around this
+// list. A burst of +/− clicks becomes one server render (one getPortfolio read).
+const PAGE_REFRESH_DEBOUNCE_MS = 1500;
+
 // "My Collection" — a personal, valued list of cards the user owns. Separate from
 // the wishlist (want) and decks (play). Populated by the "Add to collection" button
 // in the card pop-up. Shows the live value of the whole collection.
-export function MyCollection() {
+//
+// `refreshPage`: set on /portfolio, whose headline value, holdings grid and
+// "Since you bought" panel are server-rendered from the same rows this list
+// edits. Without it an edit here left them stale until a manual reload (typing a
+// "paid" price never reached the P&L). /profile has nothing server-rendered that
+// depends on the collection, so it leaves this off.
+export function MyCollection({ refreshPage = false }: { refreshPage?: boolean } = {}) {
   const { fmt, price } = useCountry();
+  const router = useRouter();
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const changed = useCallback(() => {
+    if (!refreshPage) return;
+    if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    refreshTimer.current = setTimeout(() => {
+      refreshTimer.current = null;
+      router.refresh();
+    }, PAGE_REFRESH_DEBOUNCE_MS);
+  }, [refreshPage, router]);
+  // Leaving the page cancels a pending refresh; there is nothing left to update.
+  useEffect(() => {
+    const timer = refreshTimer;
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
   const [items, setItems] = useState<Item[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -72,8 +109,8 @@ export function MyCollection() {
     let total = 0, value = 0, priced = false;
     for (const it of items) {
       total += it.quantity;
-      const p = price(it.card);
-      if (p != null) { value += p * it.quantity; priced = true; }
+      const unit = unitValue(price(it.card), it.condition);
+      if (unit != null) { value += unit * it.quantity; priced = true; }
     }
     return { distinct: items.length, total, value, priced };
   }, [items, price]);
@@ -87,6 +124,7 @@ export function MyCollection() {
         body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
+      if (res.ok) changed();
       if (data.merged) {
         const fresh = await fetch("/api/collection").then((r) => r.json()).catch(() => null);
         if (fresh?.items) setItems(fresh.items);
@@ -106,18 +144,20 @@ export function MyCollection() {
   async function remove(id: string) {
     setBusy(id);
     try {
-      await fetch(`/api/collection/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/collection/${id}`, { method: "DELETE" });
       setItems((prev) => (prev ? prev.filter((x) => x.id !== id) : prev));
+      if (res.ok) changed();
     } finally {
       setBusy(null);
     }
   }
 
-  // Re-pull the collection after an add/import.
+  // Re-pull the collection after an add/import (and the page around it).
   const refresh = useCallback(async () => {
     const fresh = await fetch("/api/collection").then((r) => r.json()).catch(() => null);
     if (fresh?.items) setItems(fresh.items);
-  }, []);
+    changed();
+  }, [changed]);
 
   return (
     <div id="collection" className="card-surface mt-5 scroll-mt-header p-5">
@@ -169,7 +209,7 @@ export function MyCollection() {
       {items != null && items.length > 0 && (
         <ul className="mt-4 divide-y divide-ink-800">
           {items.map((it) => {
-            const unit = price(it.card);
+            const unit = unitValue(price(it.card), it.condition);
             const cond = CONDITIONS[it.condition];
             return (
               <li key={it.id} className="flex items-center gap-3 py-3">

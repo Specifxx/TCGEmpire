@@ -10,12 +10,10 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { formatMoney } from "@/lib/format";
-import { IndexChart } from "@/components/IndexChart";
 import { PriceChart } from "@/components/PriceChart";
 import { MyCollection } from "@/components/MyCollection";
 import { CollectionShare } from "@/components/CollectionShare";
 import { HoldingsGrid } from "@/components/HoldingsGrid";
-import { PremiumButton } from "@/components/PremiumButton";
 import { PortfolioReplacementCost } from "@/components/PortfolioReplacementCost";
 import { PortfolioQuickAdd } from "@/components/PortfolioQuickAdd";
 import { NavIcon } from "@/components/NavIcon";
@@ -133,9 +131,10 @@ export default async function PortfolioPage() {
   // value-history chart, P&L panel and CSV export so re-gating is one flag.
   // ADSENSE REVIEW MODE also lifts the gate here. This page is noindex (it is a
   // personal account view), but "noindex" is not "unreachable" — an AdSense
-  // reviewer following links from the header lands on it, and blurred panels
-  // read as a paywall wherever they appear. The two blurred Premium previews
-  // below render as real content while the flag is on.
+  // reviewer following links from the header lands on it. With the flag off a
+  // gated panel simply doesn't render: the blurred Premium previews that used to
+  // stand in for it were deleted (2026-09-25) because their copy was false, so
+  // re-gating means writing a new, true pitch first.
   const pro = premium || PORTFOLIO_FREE || ADSENSE_REVIEW_MODE;
   // Which of the cards they OWN are Rising Cards picks right now — free
   // accounts with a collection only (lib/premium-nudge.ts). Never fails the page.
@@ -186,45 +185,39 @@ export default async function PortfolioPage() {
                   {portfolio.unpricedCount > 0 && <> · {portfolio.unpricedCount} awaiting a live price</>}
                 </p>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <Delta label="1 day" pct={portfolio.d1} />
+              {/* No "1 day" chip: PriceHistory is written weekly, so the previous
+                  snapshot is a week back and that chip was the 7-day move under
+                  another label. */}
+              <div className="grid grid-cols-2 gap-2">
                 <Delta label="7 days" pct={portfolio.d7} />
                 <Delta label="30 days" pct={portfolio.d30} />
               </div>
             </div>
 
-            {/* Value-over-time (free for now via PORTFOLIO_FREE). */}
-            <div className="mt-4">
-              {pro ? (
-                portfolio.series.length >= 2 ? (
-                  <PriceChart points={portfolio.series} currency={info.currency} />
+            {/* Value-over-time (free via PORTFOLIO_FREE). The blurred "Premium
+                feature" gate that used to sit in the else-branch is gone: it could
+                only render with PORTFOLIO_FREE off, and it advertised "daily
+                history" and "unlimited price alerts" — history is weekly and alerts
+                were never paid. Re-gating would need new copy anyway. */}
+            {pro && (
+              <div className="mt-4">
+                {portfolio.series.length >= 2 ? (
+                  <>
+                    <PriceChart points={portfolio.series} currency={info.currency} />
+                    <p className="mt-2 text-[11px] text-slate-500">
+                      Your cards at each weekly price snapshot. A card starts counting toward a move once it has
+                      a price at both ends of a week, so a newly priced card never shows up as a gain, and a change
+                      in how we source prices (TCGplayer&apos;s, on 23 Sep 2026) is held flat, as on the{" "}
+                      <Link href="/market" className="text-brand-400 hover:underline">RiftCompare Index</Link>.
+                    </p>
+                  </>
                 ) : (
                   <p className="text-sm text-slate-500">
-                    Your value history starts charting after a couple of daily price snapshots — check back tomorrow.
+                    Your value history starts charting after the next weekly snapshot.
                   </p>
-                )
-              ) : (
-                <div className="relative overflow-hidden rounded-xl border border-ink-700">
-                  <div className="pointer-events-none select-none opacity-30 blur-[2px]">
-                    {portfolio.series.length >= 2 ? (
-                      <IndexChart points={portfolio.series.map((p) => ({ t: p.t, v: p.v / 100 }))} />
-                    ) : (
-                      <div className="h-40" />
-                    )}
-                  </div>
-                  <div className="absolute inset-0 grid place-items-center bg-ink-950/40 p-4 text-center">
-                    <div>
-                      <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-white">
-                        <NavIcon name="chart" className="h-4 w-4 text-gold" />
-                        Value-over-time is a Premium feature
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">Daily history, CSV export, unlimited price alerts and an ad-free site.</p>
-                      <div className="mt-3"><PremiumButton surface="gate:portfolio" /></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {pro && (
               <div className="mt-3 text-right">
@@ -256,50 +249,27 @@ export default async function PortfolioPage() {
               in the market and says nothing about getting them to your door. */}
           {pro && <PortfolioReplacementCost currency={info.currency} />}
 
-          {/* Cost basis vs. today, and how that tracks the market. */}
-          <section className="card-surface p-5">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-1.5 text-lg font-extrabold text-white">
-                <NavIcon name="chart" className="h-5 w-5 text-brand-400" />
-                Since you bought
-              </h2>
-            </div>
-            {pro ? (
-              portfolio.pnl ? (
+          {/* Cost basis vs. today, and how that tracks the market. Free via
+              PORTFOLIO_FREE; the blurred Premium gate that sat in the else-branch
+              could never render and is gone (see the chart note above). */}
+          {pro && (
+            <section className="card-surface p-5">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="flex items-center gap-1.5 text-lg font-extrabold text-white">
+                  <NavIcon name="chart" className="h-5 w-5 text-brand-400" />
+                  Since you bought
+                </h2>
+              </div>
+              {portfolio.pnl ? (
                 <PnlView pnl={portfolio.pnl} index={portfolio.index} d7={portfolio.d7} d30={portfolio.d30} currency={info.currency} />
               ) : (
                 <p className="mt-2 text-sm text-slate-400">
                   Record what you paid for a card (the <strong className="text-slate-200">paid</strong> field in My Collection below) and
                   how it&apos;s done since — plus how that tracks the wider market — appears here.
                 </p>
-              )
-            ) : (
-              <div className="relative mt-3 overflow-hidden rounded-xl border border-ink-700">
-                <div aria-hidden className="pointer-events-none select-none p-1 opacity-30 blur-[3px]">
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {["You paid", "Worth now", "Up / down", "Change"].map((l) => (
-                      <div key={l} className="rounded-lg bg-ink-900 px-3 py-2">
-                        <div className="text-[10px] uppercase tracking-wide text-slate-500">{l}</div>
-                        <div className="text-base font-extrabold text-white">{formatMoney(12345, info.currency)}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="absolute inset-0 grid place-items-center bg-ink-950/40 p-4 text-center">
-                  <div>
-                    <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-white">
-                      <NavIcon name="lock" className="h-4 w-4 text-gold" />
-                      Seeing how your cards have done is a Premium feature
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Record what you paid, see your real gains, and track your collection against the market.
-                    </p>
-                    <Link href="/premium" className="btn-primary mt-3 text-sm">See Premium →</Link>
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
+              )}
+            </section>
+          )}
 
           {/* Your cards — a visual showcase, dearest first. */}
           <section>
@@ -320,7 +290,10 @@ export default async function PortfolioPage() {
       {/* Add & edit your collection: quantity, condition, foil and what you paid
           (the "paid" price powers the profit/loss above). Handles its own empty
           state and "add a card" guidance, so it shows for new users too. */}
-      <MyCollection />
+      {/* refreshPage: an edit re-renders this server page (debounced), so the
+          headline, the holdings grid and "Since you bought" follow the edit
+          instead of waiting for a manual reload. */}
+      <MyCollection refreshPage />
 
       {/* Below the collection editor on purpose: sharing is something you do
           once the binder is worth showing, not the first thing you meet. */}

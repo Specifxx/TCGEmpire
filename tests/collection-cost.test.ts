@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { investedCents, unitCostCents, costAfterQuantityChange } from "../src/lib/collection-cost";
+import { investedCents, unitCostCents, costAfterQuantityChange, costAfterAdd } from "../src/lib/collection-cost";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const readCode = (p: string) =>
@@ -105,21 +105,69 @@ test("the portfolio sums what was PAID, not a re-derived per-unit product", () =
   assert.match(src, /holdings\.some\(\(h\) => h\.investedCents != null\)/);
 });
 
-test("adding copies to a row that records a total ADDS the money", () => {
-  // `costBasisCents: <new value>` in the upsert's update branch would REPLACE
-  // the row's whole outlay — buying a third copy for $25 would erase the $40
-  // paid for the first two.
-  const src = readCode("src/app/api/collection/route.ts");
-  assert.match(src, /investedCents/, "the POST route must read the existing outlay before adding to it");
-  assert.match(
-    src,
-    /costBasisCents: \(priorPaid \?\? 0\) \+ d\.costBasisCents!/,
-    "a total-mode add must sum with what was already paid, not overwrite it",
+// ── Adding copies (2026-09-25) ───────────────────────────────────────────────
+// Every "add to my cards" path (QuickView, My Collection's search, the welcome
+// checklist, the paste import) sends no cost and used to bump the quantity with
+// the cost untouched. For a row that records a TOTAL, that made the new copies
+// free and the P&L reported a gain nobody made. PATCH already rescaled; the add
+// paths now go through costAfterAdd and agree with it. Behavioural, replacing a
+// regex that pinned `(priorPaid ?? 0) + d.costBasisCents!`, which itself turned
+// an unknown earlier cost into a cost of zero.
+
+test("adding copies with no cost rescales a total — the new copies are not free", () => {
+  // Two copies for $40 total; add one with no price → $60 for three (the average).
+  assert.deepEqual(costAfterAdd(row(2, 4_000, true), { quantity: 1 }), { costBasisCents: 6_000, costBasisIsTotal: true });
+  // It is exactly what PATCH does when the quantity is edited in place.
+  assert.equal(costAfterAdd(row(2, 4_000, true), { quantity: 2 }).costBasisCents, costAfterQuantityChange(row(2, 4_000, true), 4));
+  // A per-copy price is unchanged: one copy still cost what it cost.
+  assert.deepEqual(costAfterAdd(row(2, 2_000), { quantity: 3 }), { costBasisCents: 2_000, costBasisIsTotal: false });
+  // And the invested figure the P&L reads grows with the copies in both cases.
+  const after = { quantity: 3, ...costAfterAdd(row(2, 4_000, true), { quantity: 1 }) };
+  assert.equal(investedCents(after), 6_000);
+});
+
+test("a row with no recorded cost stays unknown — never a cost of zero", () => {
+  // No cost on either side.
+  assert.deepEqual(costAfterAdd(row(2, null, true), { quantity: 1 }), { costBasisCents: null, costBasisIsTotal: true });
+  assert.deepEqual(costAfterAdd(row(2, null), { quantity: 1 }), { costBasisCents: null, costBasisIsTotal: false });
+  // A cost for the NEW copies only: the row's total is still unknown, so it
+  // must not become "what the new copies cost" (the old `priorPaid ?? 0`).
+  assert.equal(costAfterAdd(row(2, null, true), { quantity: 1, costBasisCents: 2_500, costBasisIsTotal: true }).costBasisCents, null);
+  assert.equal(costAfterAdd(row(2, null), { quantity: 1, costBasisCents: 2_500 }).costBasisCents, null);
+});
+
+test("a total sent with the add is summed with what was already paid, never written over it", () => {
+  // Arise: $40 for the first two, then a third for $25 → $65 across three.
+  assert.deepEqual(
+    costAfterAdd(row(2, 4_000, true), { quantity: 1, costBasisCents: 2_500, costBasisIsTotal: true }),
+    { costBasisCents: 6_500, costBasisIsTotal: true },
   );
-  // The extra read is on the rare path only — an ordinary "add to my cards"
-  // click must still be one query.
-  assert.match(src, /const wantsTotal = d\.costBasisIsTotal === true && d\.costBasisCents != null/);
-  assert.match(src, /const existing = wantsTotal\s*\n?\s*\?/);
+  // A per-copy row absorbing a total becomes a total of both outlays.
+  assert.deepEqual(
+    costAfterAdd(row(2, 2_000), { quantity: 1, costBasisCents: 2_500, costBasisIsTotal: true }),
+    { costBasisCents: 6_500, costBasisIsTotal: true },
+  );
+  // Same per-copy price on both sides stays per-copy; a different one sums.
+  assert.deepEqual(costAfterAdd(row(2, 2_000), { quantity: 1, costBasisCents: 2_000 }), { costBasisCents: 2_000, costBasisIsTotal: false });
+  assert.deepEqual(costAfterAdd(row(2, 2_000), { quantity: 1, costBasisCents: 2_500 }), { costBasisCents: 6_500, costBasisIsTotal: true });
+});
+
+test("a brand-new row takes the add's own cost, or none", () => {
+  assert.deepEqual(costAfterAdd(null, { quantity: 1 }), { costBasisCents: null, costBasisIsTotal: false });
+  assert.deepEqual(costAfterAdd(null, { quantity: 2, costBasisCents: 5_000, costBasisIsTotal: true }), { costBasisCents: 5_000, costBasisIsTotal: true });
+  assert.deepEqual(costAfterAdd(null, { quantity: 2, costBasisCents: 2_500 }), { costBasisCents: 2_500, costBasisIsTotal: false });
+});
+
+test("both add routes go through costAfterAdd, reading the row with one narrow capped query", () => {
+  const post = readCode("src/app/api/collection/route.ts");
+  assert.match(post, /costAfterAdd\(existing,/, "POST must derive the cost from the existing row");
+  assert.match(post, /collectionCard\.findUnique\(\{\s*where: key,\s*select: \{ quantity: true, costBasisCents: true, costBasisIsTotal: true \}/);
+  assert.doesNotMatch(post, /priorPaid \?\? 0/, "an unknown earlier cost is not zero");
+  const imp = readCode("src/app/api/collection/import/route.ts");
+  assert.match(imp, /costAfterAdd\(existing,/, "the paste import must rescale too");
+  // One read for the whole import, not one per line.
+  assert.match(imp, /collectionCard\.findMany\(\{[\s\S]*?take: ids\.length/);
+  assert.doesNotMatch(imp, /update: \{ quantity: \{ increment: qty \} \}/, "the old free-copies update");
 });
 
 test("merging two rows merges what was paid for them", () => {

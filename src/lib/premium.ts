@@ -11,7 +11,8 @@ import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
 import { investedCents, unitCostCents } from "./collection-cost";
 import { sydneyWeekKey, historySource, cachedOrDirect } from "./price-history";
-import { getMarketIndex } from "./market-index";
+import { getMarketIndex, METHODOLOGY_BREAKS } from "./market-index";
+import { portfolioPerformance } from "./portfolio-performance";
 import { HISTORY_TAG } from "./revalidate-content";
 import { stripe, stripeEnabled } from "./stripe";
 import { sendTrialEndingEmail, sendTrialEndingNoChargeEmail, sendCheckoutRecoveryEmail } from "./email";
@@ -828,8 +829,11 @@ export interface Portfolio {
   pricedCount: number; // holdings rows with a live price
   unpricedCount: number;
   holdings: Holding[]; // dearest first
-  series: PricePoint[]; // total collection value per day (premium feature)
-  d1: number | null; // % move of the total vs yesterday
+  // Value per weekly snapshot, like-for-like: a card's first price and a
+  // methodology break never put a step in it (lib/portfolio-performance.ts).
+  series: PricePoint[];
+  // % moves over the same like-for-like steps. There is no d1: PriceHistory is
+  // weekly, so the previous snapshot is a week back and "1 day" was d7 relabelled.
   d7: number | null;
   d30: number | null;
   pnl: PnL | null; // null when no cost basis is recorded anywhere
@@ -840,12 +844,9 @@ export interface Portfolio {
 
 const condMult = (condition: string) => CONDITION_MULTIPLIER[condition] ?? 1;
 
-const pctChange = (now: number, then: number | undefined): number | null =>
-  then == null || then === 0 ? null : Math.round(((now - then) / then) * 1000) / 10;
-
 // Value the user's collection in their market: current totals for everyone, plus
-// a daily value-over-time series rebuilt from PriceHistory (carry-forward per
-// card, weighted by owned quantity × condition).
+// a weekly value-over-time series rebuilt from PriceHistory (carry-forward per
+// card, weighted by owned quantity × condition; see lib/portfolio-performance.ts).
 export async function getPortfolio(userId: string, country: Country, windowDays = 90): Promise<Portfolio> {
   const rows = await prisma.collectionCard.findMany({
     where: { userId },
@@ -868,21 +869,16 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
   // deltas, not the whole portfolio page.
   const hist = cardIds.length ? await portfolioHistory(cardIds, country, windowDays).catch(() => []) : [];
 
-  // Per-card daily price map + the card's own 7d move.
+  // Per-card price map, one point per snapshot (weekly since the egress fix).
   const byCard = new Map<string, Map<number, number>>();
-  const daySet = new Set<number>();
   for (const h of hist) {
     const t = h.day.getTime();
-    daySet.add(t);
     (byCard.get(h.cardId) ?? byCard.set(h.cardId, new Map()).get(h.cardId)!).set(t, h.lowestPriceCents);
   }
+  // Each card's own week-over-week move, break-aware like the total below.
   const d7ByCard = new Map<string, number | null>();
-  for (const [cardId, series] of byCard) {
-    const ts = [...series.keys()].sort((a, b) => a - b);
-    const last = ts[ts.length - 1];
-    let then = ts[0];
-    for (const t of ts) if (t <= last - 7 * 86400_000) then = t;
-    d7ByCard.set(cardId, then === last ? null : pctChange(series.get(last)!, series.get(then)));
+  for (const cardId of byCard.keys()) {
+    d7ByCard.set(cardId, portfolioPerformance([{ cardId, quantity: 1, multiplier: 1 }], byCard, METHODOLOGY_BREAKS).change(7));
   }
 
   const holdings: Holding[] = validRows
@@ -942,29 +938,16 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
       })()
     : null;
 
-  // Daily total series (carry-forward per card so gaps don't crater the line).
-  const days = [...daySet].sort((a, b) => a - b);
-  const carried = new Map<string, number>();
-  const series: PricePoint[] = [];
-  for (const t of days) {
-    let total = 0;
-    for (const r of validRows) {
-      const p = byCard.get(r.cardId)?.get(t) ?? carried.get(`${r.id}`);
-      if (p == null) continue;
-      carried.set(`${r.id}`, byCard.get(r.cardId)?.get(t) ?? p);
-      total += Math.round(p * condMult(r.condition)) * r.quantity;
-    }
-    if (total > 0) series.push({ t, v: total });
-  }
-
-  const latest = series[series.length - 1]?.v ?? 0;
-  const at = (daysBack: number): number | undefined => {
-    if (!series.length) return undefined;
-    const target = series[series.length - 1].t - daysBack * 86400_000;
-    let best: PricePoint | undefined;
-    for (const p of series) if (p.t <= target) best = p;
-    return best?.v;
-  };
+  // Value series and the 7/30-day moves (carry-forward per card so gaps don't
+  // crater the line). Like-for-like: a step only compares holdings priced at both
+  // of its ends, so a newly priced card (Radiance from 23 Oct) never reads as a
+  // gain, and a step ending inside a methodology break (the 2026-09-23 TCGplayer
+  // re-basing) is flat, exactly as on the Index this is benchmarked against.
+  const perf = portfolioPerformance(
+    validRows.map((r) => ({ cardId: r.cardId, quantity: r.quantity, multiplier: condMult(r.condition) })),
+    byCard,
+    METHODOLOGY_BREAKS,
+  );
 
   // Market benchmark for the same windows (best-effort — never block the page).
   const idx = await getMarketIndex(country).catch(() => null);
@@ -975,10 +958,9 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
     pricedCount: holdings.filter((h) => h.unitCents != null).length,
     unpricedCount: holdings.filter((h) => h.unitCents == null).length,
     holdings,
-    series,
-    d1: pctChange(latest, series[series.length - 2]?.v),
-    d7: pctChange(latest, at(7)),
-    d30: pctChange(latest, at(30)),
+    series: perf.series,
+    d7: perf.change(7),
+    d30: perf.change(30),
     pnl,
     index,
   };

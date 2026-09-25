@@ -286,7 +286,9 @@ test("the embed badge validates ?market against the full country registry, not a
 
 test("getPortfolio computes the RiftCompare Index benchmark, and the page renders it", () => {
   const lib = codeOnly(read("src/lib/premium.ts"));
-  assert.match(lib, /import \{ getMarketIndex \} from "\.\/market-index"/);
+  // METHODOLOGY_BREAKS comes from the same module since 2026-09-25: the portfolio
+  // holds break steps flat exactly as the Index it is benchmarked against does.
+  assert.match(lib, /import \{ getMarketIndex(, METHODOLOGY_BREAKS)? \} from "\.\/market-index"/);
   assert.match(lib, /index:\s*\{\s*d7:\s*number \| null;\s*d30:\s*number \| null\s*\}\s*\|\s*null/, "Portfolio must carry the index benchmark field");
   assert.match(lib, /getMarketIndex\(country\)\.catch\(\(\) => null\)/, "must be best-effort — never block the portfolio on the index");
 

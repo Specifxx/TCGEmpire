@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { parseDeckList } from "@/lib/deck";
 import { normalizeSearch } from "@/lib/format";
+import { costAfterAdd, QUANTITY_CAP } from "@/lib/collection-cost";
 
 export const dynamic = "force-dynamic";
 
@@ -42,13 +43,35 @@ export async function POST(req: Request) {
     qtyByCard.set(cardId, (qtyByCard.get(cardId) ?? 0) + l.qty);
   }
 
+  // Rows this import lands on, read once: every line is NM/non-foil, so these
+  // are the upsert keys below. One capped query (≤ 300 ids), three narrow
+  // columns — the same cost rule as the single-card POST (lib/collection-cost.ts,
+  // costAfterAdd): adding copies to a row that records a TOTAL scales that total
+  // with the count instead of treating the new copies as free, a row with no
+  // recorded cost stays unknown, and the row never passes the 999 cap.
+  const ids = [...qtyByCard.keys()];
+  // No `.catch(() => [])`: an empty answer here would silently take the old
+  // "new copies are free" path. A failed read fails the import instead.
+  const existingRows = ids.length
+    ? await prisma.collectionCard.findMany({
+        where: { userId: user.id, cardId: { in: ids }, condition: "NM", isFoil: false },
+        select: { cardId: true, quantity: true, costBasisCents: true, costBasisIsTotal: true },
+        take: ids.length,
+      })
+    : [];
+  const existingBy = new Map(existingRows.map((r) => [r.cardId, r]));
+
   let added = 0;
   for (const [cardId, qty] of qtyByCard) {
+    const existing = existingBy.get(cardId) ?? null;
+    const addQty = existing ? Math.max(0, Math.min(qty, QUANTITY_CAP - existing.quantity)) : Math.min(QUANTITY_CAP, qty);
     await prisma.collectionCard
       .upsert({
         where: { userId_cardId_condition_isFoil: { userId: user.id, cardId, condition: "NM", isFoil: false } },
-        create: { userId: user.id, cardId, condition: "NM", isFoil: false, quantity: Math.min(999, qty) },
-        update: { quantity: { increment: qty } },
+        create: { userId: user.id, cardId, condition: "NM", isFoil: false, quantity: addQty },
+        update: existing
+          ? { quantity: existing.quantity + addQty, ...costAfterAdd(existing, { quantity: addQty }) }
+          : { quantity: { increment: addQty } },
       })
       .then(() => { added++; })
       .catch(() => {});

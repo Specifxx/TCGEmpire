@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatMoney } from "@/lib/format";
-import { convertUsdCents, USD_TO } from "@/lib/fx";
+import { convertUsdCents, gbpCentsToEur, USD_TO } from "@/lib/fx";
 import { useCountry } from "@/components/CountryProvider";
 import { CardImage } from "@/components/CardImage";
+import { OutboundLink } from "@/components/OutboundLink";
 import {
   computeEv,
   derivedRates,
@@ -61,16 +62,39 @@ export interface BoxEvSet {
   pools: BoxEvPool[];
 }
 
-export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
-  const { currency } = useCountry();
+/** The cheapest in-stock Booster Box a tracked store has, in that market's own currency. */
+export interface BoxEvOffer {
+  priceCents: number;
+  retailer: string;
+  retailerName: string;
+  /** Affiliate-tagged on the server. */
+  href: string;
+}
+
+/** setCode → market → offer. Only sets and markets with an open box offer appear. */
+export type BoxEvOffers = Record<string, Partial<Record<string, BoxEvOffer>>>;
+
+export function BoxEvCalculator({ sets, offers = {} }: { sets: BoxEvSet[]; offers?: BoxEvOffers }) {
+  const { country, currency, isEurDisplay, fmt } = useCountry();
   const [setCode, setSetCode] = useState(sets[0]?.setCode ?? "");
   const [packs, setPacks] = useState(DEFAULT_PACKS);
   const [specialsPerBox, setSpecialsPerBox] = useState(DEFAULT_SPECIALS_PER_BOX);
-  const [boxPrice, setBoxPrice] = useState("");
+  // null = "use the cheapest box we track" (see `offer` below); a string is what
+  // the visitor typed, which wins until they switch set.
+  const [typedPrice, setTypedPrice] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Partial<Record<PoolKey, number>>>({});
   const [showRates, setShowRates] = useState(false);
 
   const set = sets.find((s) => s.setCode === setCode) ?? sets[0];
+
+  // The price field starts at the cheapest in-stock Booster Box for this set in
+  // the visitor's market, from /sealed's own data. Offers are in the market's
+  // native currency; `fmt` and the EUR display follow the rest of the site (a UK
+  // market shown in EUR converts GBP to EUR for display, as /sealed does).
+  const offer = set ? offers[set.setCode]?.[country] ?? null : null;
+  const offerDisplayCents = offer ? (isEurDisplay ? gbpCentsToEur(offer.priceCents) : offer.priceCents) : null;
+  const boxPrice = typedPrice ?? (offerDisplayCents != null ? (offerDisplayCents / 100).toFixed(2) : "");
+  const usingOffer = typedPrice == null && offer != null;
 
   // Local display helpers. `fx` is the multiplier actually applied, printed in
   // the disclosure so the conversion is auditable rather than a black box.
@@ -172,7 +196,13 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
         <div className="grid gap-3 p-5 sm:grid-cols-3">
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-slate-400">Set</span>
-            <select value={setCode} onChange={(e) => setSetCode(e.target.value)} className="input">
+            <select
+              value={setCode}
+              // A price typed for one set's box is not a price for another's:
+              // switching set goes back to that set's cheapest tracked box.
+              onChange={(e) => { setSetCode(e.target.value); setTypedPrice(null); }}
+              className="input"
+            >
               {sets.map((s) => (
                 <option key={s.setCode} value={s.setCode}>{s.setName} ({s.setCode})</option>
               ))}
@@ -190,12 +220,39 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
             <span className="mb-1 block text-xs font-medium text-slate-400">Box price ({currency})</span>
             <input
               type="number" min="0" step="0.01" value={boxPrice}
-              onChange={(e) => setBoxPrice(e.target.value)}
+              onChange={(e) => setTypedPrice(e.target.value)}
               placeholder="what you'd pay"
               className="input"
             />
           </label>
         </div>
+        {offer && (
+          <p className="-mt-2 px-5 pb-5 text-xs text-slate-500">
+            {usingOffer ? "Filled in with the" : "The"} cheapest in-stock {set.setName} booster box we track:{" "}
+            <OutboundLink
+              href={offer.href}
+              retailer={offer.retailer}
+              country={country}
+              kind="sealed"
+              pageType="box_ev"
+              inStock
+              className="font-semibold text-brand-400 hover:underline"
+            >
+              {fmt(offer.priceCents)} at {offer.retailerName} →
+            </OutboundLink>{" "}
+            · <Link href={`/sealed?type=Booster%20Box&set=${set.setCode}`} className="text-slate-400 hover:underline">compare boxes</Link>
+            {usingOffer ? (
+              " · type your own price to override it."
+            ) : (
+              <>
+                {" · "}
+                <button type="button" onClick={() => setTypedPrice(null)} className="text-slate-400 hover:underline">
+                  use this price
+                </button>
+              </>
+            )}
+          </p>
+        )}
       </div>
 
       {/* ── Where the value sits ─────────────────────────────────────────────

@@ -26,11 +26,13 @@ test("getPortfolio filters out rows whose Card relation didn't resolve, before u
 
   assert.match(fn, /const validRows\s*=\s*rows\.filter\(\(r\)\s*=>\s*r\.card\s*!=\s*null\)/, "must filter rows with a missing card before use");
 
-  // Every downstream consumer (cardIds, the holdings map, the daily-series
-  // loop) must read the FILTERED list, not the raw one — filtering rows and
-  // then still mapping over the original `rows` would defeat the guard.
+  // Every downstream consumer (cardIds, the holdings map, the value series)
+  // must read the FILTERED list, not the raw one — filtering rows and then
+  // still mapping over the original `rows` would defeat the guard.
   assert.doesNotMatch(fn, /\brows\.map\(/, "the holdings map must not iterate the unfiltered rows");
-  assert.doesNotMatch(fn, /for \(const r of rows\)/, "the daily-series loop must not iterate the unfiltered rows");
+  assert.doesNotMatch(fn, /for \(const r of rows\)/, "the value series must not iterate the unfiltered rows");
   assert.match(fn, /validRows\.map\(/, "the holdings map must iterate validRows");
-  assert.match(fn, /for \(const r of validRows\)/, "the daily-series loop must iterate validRows");
+  // The series moved into lib/portfolio-performance.ts (2026-09-25); what it is
+  // handed must still be the filtered rows.
+  assert.match(fn, /portfolioPerformance\(\s*validRows\.map\(/, "the value series must be built from validRows");
 });

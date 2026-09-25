@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { CONDITION_KEYS } from "@/lib/constants";
-import { investedCents } from "@/lib/collection-cost";
+import { costAfterAdd, QUANTITY_CAP } from "@/lib/collection-cost";
 
 export const dynamic = "force-dynamic";
 
@@ -60,38 +60,40 @@ export async function POST(req: Request) {
     const card = await prisma.card.findUnique({ where: { id: d.cardId }, select: { id: true } });
     if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
 
-    // ADDING COPIES TO A ROW THAT RECORDS A TOTAL HAS TO ADD THE MONEY TOO.
-    // `costBasisCents: d.costBasisCents` would REPLACE the row's whole outlay
-    // with this add's, so buying a third copy for $25 would erase the $40 paid
-    // for the first two. Read the row first and sum instead — but only on the
-    // rare path where a total is actually in play, so the ordinary "add to my
-    // cards" click still costs exactly one query.
-    const wantsTotal = d.costBasisIsTotal === true && d.costBasisCents != null;
-    const existing = wantsTotal
-      ? await prisma.collectionCard.findUnique({
-          where: { userId_cardId_condition_isFoil: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil } },
-          select: { quantity: true, costBasisCents: true, costBasisIsTotal: true },
-        })
-      : null;
-    const priorPaid = existing ? investedCents(existing) : null;
+    // ADDING COPIES HAS TO KEEP THE ROW'S COST HONEST (lib/collection-cost.ts,
+    // costAfterAdd). A row that records a TOTAL is an outlay for a specific
+    // count: bumping the count and leaving the money alone made the new copies
+    // free, and the P&L reported a gain nobody made. Every UI add (QuickView,
+    // My Collection's search, the welcome checklist) sends no cost at all, so
+    // this is the common path, not a rare one. A total the caller does send is
+    // summed with what was already paid, never written over it (buying a third
+    // copy for $25 must not erase the $40 paid for the first two), and a row
+    // whose earlier copies have no recorded cost stays unknown rather than
+    // becoming a cost of zero.
+    //
+    // That needs the row first: one indexed single-row read on the upsert's own
+    // unique key, three narrow columns.
+    const key = { userId_cardId_condition_isFoil: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil } };
+    const existing = await prisma.collectionCard.findUnique({
+      where: key,
+      select: { quantity: true, costBasisCents: true, costBasisIsTotal: true },
+    });
+    // The 999 cap holds for the row, not just for one add.
+    const added = existing ? Math.max(0, Math.min(d.quantity, QUANTITY_CAP - existing.quantity)) : d.quantity;
+    const cost = costAfterAdd(existing, { quantity: added, costBasisCents: d.costBasisCents, costBasisIsTotal: d.costBasisIsTotal });
 
     const item = await prisma.collectionCard.upsert({
-      where: { userId_cardId_condition_isFoil: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil } },
+      where: key,
       create: {
         userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil,
         quantity: d.quantity, note: d.note ?? null,
-        costBasisCents: d.costBasisCents ?? null, costBasisIsTotal: d.costBasisIsTotal ?? false,
+        ...cost,
       },
-      update: {
-        quantity: { increment: d.quantity },
-        ...(d.note ? { note: d.note } : {}),
-        ...(wantsTotal
-          ? { costBasisCents: (priorPaid ?? 0) + d.costBasisCents!, costBasisIsTotal: true }
-          : {
-              ...(d.costBasisCents !== undefined ? { costBasisCents: d.costBasisCents } : {}),
-              ...(d.costBasisIsTotal !== undefined ? { costBasisIsTotal: d.costBasisIsTotal } : {}),
-            }),
-      },
+      // `existing` null here means another request created the row between the
+      // read and this write: count the copies and leave its cost to that request.
+      update: existing
+        ? { quantity: existing.quantity + added, ...(d.note ? { note: d.note } : {}), ...cost }
+        : { quantity: { increment: d.quantity }, ...(d.note ? { note: d.note } : {}) },
     });
     return NextResponse.json({ ok: true, item });
   } catch {

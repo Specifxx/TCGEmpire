@@ -5,8 +5,11 @@ import { cachedOrDirect } from "@/lib/price-history";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
-import { BoxEvCalculator, type BoxEvSet, type PullCard } from "@/components/BoxEvCalculator";
-import { poolOf, POOL_ORDER, type PoolKey } from "@/lib/box-ev";
+import { COUNTRY_LIST } from "@/lib/country";
+import { getSealedGroups } from "@/lib/sealed-import";
+import { affiliateUrl } from "@/lib/affiliate";
+import { BoxEvCalculator, type BoxEvOffers, type BoxEvSet, type PullCard } from "@/components/BoxEvCalculator";
+import { cheapestBoxOffers, NO_BOOSTER_SETS, poolOf, POOL_ORDER, type PoolKey } from "@/lib/box-ev";
 import { pageAlternates } from "@/lib/seo";
 import { AdSlot } from "@/components/AdSlot";
 import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "@/lib/tcg-market-rows";
@@ -162,7 +165,8 @@ export default async function BoxEvPage() {
     pools.set(pool, cell);
   }
 
-  const sets: BoxEvSet[] = SETS.filter((s) => !s.comingSoon && bySet.has(s.code)).map((s) => {
+  // NO_BOOSTER_SETS: Proving Grounds is a preconstructed deck, not 24 packs.
+  const sets: BoxEvSet[] = SETS.filter((s) => !s.comingSoon && !NO_BOOSTER_SETS.has(s.code) && bySet.has(s.code)).map((s) => {
     const pools = bySet.get(s.code)!;
     return {
       setCode: s.code,
@@ -181,6 +185,33 @@ export default async function BoxEvPage() {
       }),
     };
   });
+
+  // The cheapest in-stock Booster Box per set, per market, to start the price
+  // field from (the calculator picks the visitor's market after mount).
+  //
+  // getSealedGroups CACHES ITSELF (a per-market memo plus cachedOrDirect), so it
+  // is called here, at the top level of the page, and NEVER inside
+  // getBoxEvData's cachedOrDirect callback: Next.js skips the cache read of
+  // anything nested in another unstable_cache, and it would re-pull the sealed
+  // table on every outer miss (egress rule 6 in lib/db.ts,
+  // tests/nested-cache.test.ts). Its TTL (2 days) is above this page's 1-day
+  // revalidate, so it cannot drag the page's cadence down (rule 5). Only about
+  // thirty small objects (sets × markets) reach the client.
+  const boxSetCodes = new Set(sets.map((s) => s.setCode));
+  const boxOffers: BoxEvOffers = {};
+  const byMarket = await Promise.all(
+    COUNTRY_LIST.map(async ({ code }) => [code, await getSealedGroups(code).catch(() => [])] as const),
+  );
+  for (const [market, groups] of byMarket) {
+    for (const [setCode, o] of cheapestBoxOffers(groups, boxSetCodes)) {
+      (boxOffers[setCode] ??= {})[market] = {
+        priceCents: o.priceCents,
+        retailer: o.retailer,
+        retailerName: o.retailerName,
+        href: affiliateUrl(o.url, o.retailer, `${SITE_URL}/tools/box-ev`),
+      };
+    }
+  }
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -236,7 +267,7 @@ export default async function BoxEvPage() {
           </div>
         </div>
       ) : (
-        <BoxEvCalculator sets={sets} />
+        <BoxEvCalculator sets={sets} offers={boxOffers} />
       )}
 
       <AdSlot className="mt-6" height={100} />

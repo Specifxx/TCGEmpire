@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSealedGroups } from "@/lib/sealed-import";
+import { soldOutEverywhere } from "@/lib/sealed-offers";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { gbpCentsToEur } from "@/lib/fx";
@@ -141,6 +142,13 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
         return av - bv || a[1] - b[1];
       })
       .map(([g]) => g);
+
+  // "Sold out at every store we track" (free, 2026-09-25): every store listing
+  // the product in this market says sold out on a fresh read. Computed from the
+  // getSealedGroups() result already read at the top of this page, never from a
+  // second loader nested in another cache (egress rule 6), and it needs no price
+  // history, unlike the Rising Sealed trend it replaces.
+  const soldOutKeys = new Set(all.filter((g) => soldOutEverywhere(g.listings)).map((g) => g.groupKey));
 
   // Show the "Vendetta is here" callout only on the unfiltered view, and only when
   // Vendetta sealed actually exists in the feed.
@@ -295,7 +303,12 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
           ) : (
             <Reveal stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
               {displayGroups.map((g) => (
-                <SealedTile key={g.groupKey} group={g} currency={displayCurrency} />
+                <SealedTile
+                  key={g.groupKey}
+                  group={g}
+                  currency={displayCurrency}
+                  soldOutEverywhere={soldOutKeys.has(g.groupKey)}
+                />
               ))}
             </Reveal>
           )}
