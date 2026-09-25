@@ -64,7 +64,7 @@ test("rise-predictor no longer casts a raw PriceHistory.country at all — GLOBA
   // the current pricing basis — tests/rising-cards.test.ts pins the window.)
   assert.match(
     src,
-    /where:\s*\{\s*country:\s*GLOBAL_HISTORY_COUNTRY,\s*day:\s*\{\s*gte:\s*riseHistoryStart\(Date\.now\(\)\)\s*\}\s*\}/,
+    /WHERE "country" = \$\{GLOBAL_HISTORY_COUNTRY\} AND "day" >= \$\{since\}[\s\S]{0,200}const since = riseHistoryStart\(Date\.now\(\)\)|const since = riseHistoryStart\(Date\.now\(\)\);[\s\S]{0,400}WHERE "country" = \$\{GLOBAL_HISTORY_COUNTRY\} AND "day" >= \$\{since\}/,
     "every scope (GLOBAL included) must filter to the single GLOBAL sentinel at the database"
   );
 });

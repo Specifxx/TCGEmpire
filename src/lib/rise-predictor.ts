@@ -94,8 +94,7 @@ export function parseRiseScope(value: string | null | undefined, fallback: RiseS
 const SCAN = 400; // universe per scope: most-searched cards priced in it
 const HISTORY_DAYS = 120;
 // Circuit breaker on the weekly history read, not a real limit: ~1,400 cards ×
-// at most ~18 weekly points is ~25k rows. Newest-first, so if it ever bites it
-// trims the OLDEST weeks rather than the ones the assembly compares.
+// at most ~18 weekly points is ~25k rows after the SQL-side weekly collapse.
 const HISTORY_ROW_CAP = 60_000;
 // A search-growth percentage over fewer days of demand snapshots is noise on a
 // small base (a card first snapshotted two days ago can read "+300%"), so the
@@ -321,12 +320,24 @@ async function computeRiseHistory(): Promise<RiseHistory> {
   // by the (country, day) index. PriceHistory lives in the split-off history
   // database (lib/db-history.ts); every scope reads this one GLOBAL series
   // (historySource() maps every market to it), converted at assembly time.
-  const rows = await dbHistory.priceHistory.findMany({
-    where: { country: GLOBAL_HISTORY_COUNTRY, day: { gte: riseHistoryStart(Date.now()) } },
-    orderBy: { day: "desc" },
-    take: HISTORY_ROW_CAP,
-    select: { cardId: true, day: true, lowestPriceCents: true },
-  });
+  //
+  // Weekly-collapsed IN THE DATABASE (2026-09-25). Once the window went back to
+  // the full HISTORY_DAYS it reaches the legacy DAILY rows from before
+  // 2026-08-31, so a plain findMany shipped ~60k raw rows (HISTORY_ROW_CAP) to
+  // every cold build worker at once — and the production build that shipped it
+  // timed out at static generation. DISTINCT ON keeps each card's cheapest row
+  // per ISO week, so the wire carries ~1,400 cards × ≤18 weeks (~25k narrow
+  // rows); collapseToWeekly below re-buckets to Sydney weeks, which can only
+  // merge rows further. Served by the (country, day) index.
+  const since = riseHistoryStart(Date.now());
+  const rows = await dbHistory.$queryRaw<{ cardId: string; day: Date; lowestPriceCents: number }[]>`
+    SELECT DISTINCT ON ("cardId", date_trunc('week', "day"))
+           "cardId", "day", "lowestPriceCents"
+    FROM "PriceHistory"
+    WHERE "country" = ${GLOBAL_HISTORY_COUNTRY} AND "day" >= ${since}
+    ORDER BY "cardId", date_trunc('week', "day"), "lowestPriceCents" ASC
+    LIMIT ${HISTORY_ROW_CAP}
+  `;
   const series: RiseHistory["series"] = {};
   const history: RiseHistory = { series };
   const byCard = new Map<string, { day: Date; lowestPriceCents: number }[]>();

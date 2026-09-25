@@ -306,19 +306,23 @@ test("history is read by one week-keyed, scope-independent loader; the daily loa
   assert.match(inputsLoader, /tags: \[CONTENT_TAG\]/);
   assert.match(inputsLoader, /revalidate: 172800/);
 
-  const reads = [...src.matchAll(/dbHistory\.\w+\.\w+\(/g)];
+  const reads = [...src.matchAll(/dbHistory\.(?:\w+\.\w+\(|\$queryRaw)/g)];
   assert.equal(reads.length, 1, "exactly one history read in the file");
   const historyFn = /async function computeRiseHistory\([\s\S]*?\n\}/.exec(src)?.[0] ?? "";
-  assert.match(historyFn, /dbHistory\.priceHistory\.findMany/, "…and it lives in the weekly loader");
+  assert.match(historyFn, /dbHistory\.\$queryRaw/, "…and it lives in the weekly loader");
+  // Weekly-collapsed in SQL: the 120-day window reaches the legacy DAILY rows,
+  // and shipping them raw to every cold build worker timed the 09-25 build out.
+  assert.match(historyFn, /SELECT DISTINCT ON \("cardId", date_trunc\('week', "day"\)\)/);
   assert.match(historyFn, /collapseToWeekly\(/, "legacy daily rows are collapsed to weekly before caching");
   // A SUPERSET OF EVERY SCOPE'S UNIVERSE BY CONSTRUCTION: no card list at all
   // (the first cut read the 600 most-searched cards, which a thinner market's
   // top 400 outruns). Bounded instead by the window — the current pricing
   // basis, at most 120 days — times the catalogue, with a newest-first row cap
   // as a circuit breaker.
-  assert.match(historyFn, /where: \{ country: GLOBAL_HISTORY_COUNTRY, day: \{ gte: riseHistoryStart\(Date\.now\(\)\) \} \}/);
+  assert.match(historyFn, /const since = riseHistoryStart\(Date\.now\(\)\);/);
+  assert.match(historyFn, /WHERE "country" = \$\{GLOBAL_HISTORY_COUNTRY\} AND "day" >= \$\{since\}/);
   assert.doesNotMatch(historyFn.replace(/\/\/[^\n]*/g, ""), /cardId: \{ in|prisma\.card\.|HISTORY_SCAN/, "no card list: nothing a universe card can fall outside of");
-  assert.match(historyFn, /orderBy: \{ day: "desc" \},\s*take: HISTORY_ROW_CAP/, "a cap, if it ever bites, trims the oldest weeks");
+  assert.match(historyFn, /LIMIT \$\{HISTORY_ROW_CAP\}/, "a row cap as a circuit breaker");
 });
 
 test("the assembly is uncached and calls both loaders directly — never nested", () => {

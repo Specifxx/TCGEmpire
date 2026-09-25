@@ -123,7 +123,7 @@ test("rise-predictor.ts's GLOBAL scope reads the same shared series as every sin
   // current pricing basis — no id list; tests/rising-cards.test.ts pins it.)
   assert.match(
     code,
-    /where:\s*\{\s*country:\s*GLOBAL_HISTORY_COUNTRY,\s*day:\s*\{\s*gte:\s*riseHistoryStart\(Date\.now\(\)\)\s*\}\s*\}/,
+    /WHERE "country" = \$\{GLOBAL_HISTORY_COUNTRY\} AND "day" >= \$\{since\}[\s\S]{0,200}const since = riseHistoryStart\(Date\.now\(\)\)|const since = riseHistoryStart\(Date\.now\(\)\);[\s\S]{0,400}WHERE "country" = \$\{GLOBAL_HISTORY_COUNTRY\} AND "day" >= \$\{since\}/,
     "every scope must filter to the single GLOBAL sentinel, unconditionally — no more scope-dependent country filter"
   );
 });
