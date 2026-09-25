@@ -59,7 +59,7 @@ test("/login converts ?src= into stashed attribution without inflating the click
   // The landing stashes the cookie silently (stashSignupSource = no event) and
   // the provider CLICK attributes to the campaign over the generic default.
   assert.match(form, /stashSignupSource\(src\)/);
-  assert.match(form, /const placement = source \?\? urlSrc \?\? "login";\s*markSignupSource\(placement\);/);
+  assert.match(form, /const placement = source \?\? urlSrc \?\? readSignupSource\(\) \?\? "login";\s*markSignupSource\(placement\);/);
   const lib = read("src/lib/signup-source.ts");
   assert.match(lib, /export function stashSignupSource/);
   // stashSignupSource must not fire the click event.

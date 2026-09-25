@@ -45,6 +45,15 @@ export const SIGNUP_SOURCES = new Set([
   "card_alert",
   "article_intro",
   "article_end",
+  // 2026-09-25: the /login links that carried no source at all, so their
+  // sign-ups recorded as "login". Each rides the link as ?src=, which AuthForm
+  // stashes on landing (tests/login-links-attributed.test.ts keeps it so).
+  "games", // the games hub and each game's save-your-score prompt
+  "tool_gate", // "Sign in free" on the gated tools (Value Finder, Demand, …)
+  "watchlist_drawer",
+  "quickview", // QuickView's "Sign in to track your collection"
+  "shared_collection", // a shared binder's "Start your collection"
+  "feedback",
   "other",
 ]);
 

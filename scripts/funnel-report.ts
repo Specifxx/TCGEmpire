@@ -79,7 +79,7 @@ async function main() {
   const since = new Date(firstWeek);
   const users = await prisma.user.findMany({
     where: { AND: [NOT_SEED_WHERE, { createdAt: { gte: since } }] },
-    select: { createdAt: true, signupSource: true },
+    select: { id: true, createdAt: true, signupSource: true },
   });
   for (const u of users) bump(u.createdAt.getTime(), (r) => r.accounts++);
 
@@ -174,6 +174,9 @@ async function main() {
   console.log("  · 2026-09-13  signupSource values premium_cta / premium_dialog first");
   console.log("                existed; before that those signups recorded as 'login'.");
   console.log("  · 2026-08-20..22 a database recovery lost writes — that week is thin.");
+  console.log("  · 2026-09-25  header / navbar / home / alerts_page / article_* signups");
+  console.log("                stopped being overwritten to 'login' by /login's own");
+  console.log("                button, and ~15 untagged /login links got a source.");
   console.log("Trials are bucketed by the week they STARTED and counted as converted in");
   console.log("that same cohort, so recent weeks understate conversion until they mature.\n");
   if (stripeNote) console.log(`${stripeNote}\n`);
@@ -210,6 +213,8 @@ async function main() {
     console.log(`  ${String(n).padStart(5)}  ${k}`);
   }
 
+  await printActivation(users, now);
+
   // ── Which surfaces produce Premium interest, checkouts and trials ─────────
   // Every Premium CTA has recorded its own surface since 2026-09-23 (see
   // lib/premium-surface.ts). Before that the slide-in and every nav link were
@@ -217,6 +222,52 @@ async function main() {
   // that date can only be read in those two buckets.
   if (surfaceNote) console.log(`\n${surfaceNote}`);
   printSurfaceTables(clicks, subRows, since.getTime(), now);
+}
+
+// ── Activation by signup source ─────────────────────────────────────────────
+// A source that produces accounts nobody uses is not a win, so each source is
+// also read by how many of its accounts did the thing an account is FOR within
+// 7 days: a price watch or a card in the collection. Only accounts at least 7
+// days old are judged (a newer one has not had its chance yet).
+//
+// Bounded reads: the ids are this window's signups (tens a week), and each
+// groupBy returns at most one row per id — never the alert or collection table.
+// A watch claimed from before the account existed (the alert modal's pending
+// watch) has an earlier createdAt and counts, which is the intent: that visitor
+// signed up to keep it.
+async function printActivation(users: { id: string; createdAt: Date; signupSource: string | null }[], nowMs: number) {
+  const matured = users.filter((u) => u.createdAt.getTime() <= nowMs - WEEK);
+  console.log(`\nActivation by signup source — a watch or a collected card within 7 days`);
+  console.log(`(accounts at least 7 days old: ${matured.length}):`);
+  if (!matured.length) {
+    console.log("  (none yet)");
+    return;
+  }
+  const ids = matured.map((u) => u.id);
+  const [watches, cards] = await Promise.all([
+    prisma.priceAlert.groupBy({ by: ["userId"], where: { userId: { in: ids } }, _min: { createdAt: true } }),
+    prisma.collectionCard.groupBy({ by: ["userId"], where: { userId: { in: ids } }, _min: { createdAt: true } }),
+  ]);
+  const firstAct = new Map<string, number>();
+  for (const r of [...watches, ...cards]) {
+    const t = r._min.createdAt?.getTime();
+    if (r.userId == null || t == null) continue;
+    firstAct.set(r.userId, Math.min(firstAct.get(r.userId) ?? Infinity, t));
+  }
+  const bySource = new Map<string, { n: number; active: number }>();
+  for (const u of matured) {
+    const k = u.signupSource ?? "(untracked)";
+    const row = bySource.get(k) ?? { n: 0, active: 0 };
+    row.n++;
+    const t = firstAct.get(u.id);
+    if (t != null && t <= u.createdAt.getTime() + WEEK) row.active++;
+    bySource.set(k, row);
+  }
+  console.log(`  ${"accts".padStart(5)} ${"active".padStart(6)} ${"rate".padStart(5)}  source`);
+  for (const [k, v] of [...bySource.entries()].sort((a, b) => b[1].n - a[1].n)) {
+    const pct = `${Math.round((100 * v.active) / v.n)}%`;
+    console.log(`  ${String(v.n).padStart(5)} ${String(v.active).padStart(6)} ${pct.padStart(5)}  ${k}`);
+  }
 }
 
 function printSurfaceTables(clicks: ClickRow[], subs: SurfaceSub[], sinceMs: number, nowMs: number) {

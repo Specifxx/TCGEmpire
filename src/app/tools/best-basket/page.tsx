@@ -132,7 +132,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
               <PremiumButton surface="gate:best-basket" />
             ) : (
               <Link
-                href={`/login?next=${encodeURIComponent(searchParams.list ? `/tools/best-basket?list=${searchParams.list}` : "/tools/best-basket")}`}
+                href={`/login?next=${encodeURIComponent(searchParams.list ? `/tools/best-basket?list=${searchParams.list}` : "/tools/best-basket")}&src=tool_gate`}
                 // nofollow, same reason as every other dynamic ?next= target (see
                 // components/UserMenu.tsx) — with a list= present this mints one more
                 // unique, crawler-inert /login?next=... URL per pasted decklist. No

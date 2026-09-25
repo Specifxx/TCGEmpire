@@ -36,3 +36,18 @@ export function stashSignupSource(source: string): void {
     /* non-browser / privacy mode */
   }
 }
+
+// The source a recent click already stashed, or null. Standalone /login's
+// AuthForm falls back to this before its generic "login" default: the header,
+// homepage, alerts-page and article CTAs mark their source on click and THEN
+// navigate to /login, whose provider click used to overwrite that cookie with
+// "login" — so none of those surfaces could reach User.signupSource (fixed
+// 2026-09-25). Whitelisted through parseSignupSource like every other read.
+export function readSignupSource(): string | null {
+  try {
+    const m = document.cookie.match(new RegExp(`(?:^|;\\s*)${SIGNUP_SOURCE_COOKIE}=([^;]*)`));
+    return parseSignupSource(m ? decodeURIComponent(m[1]) : null);
+  } catch {
+    return null;
+  }
+}

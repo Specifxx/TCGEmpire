@@ -123,7 +123,7 @@ export default async function BulkPricerPage({ searchParams }: { searchParams: {
             collection in one paste.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            {user ? <PremiumButton surface="gate:bulk-pricer" /> : <Link href="/login?next=/bulk-pricer" className="btn-primary text-sm">Sign in free</Link>}
+            {user ? <PremiumButton surface="gate:bulk-pricer" /> : <Link href="/login?next=/bulk-pricer&src=tool_gate" className="btn-primary text-sm">Sign in free</Link>}
             <Link href="/tools" className="btn-ghost text-sm">Browse free tools</Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">

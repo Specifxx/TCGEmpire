@@ -14,7 +14,7 @@ import { useMe } from "@/lib/use-me";
 // homepage's caching story is unchanged — no user state is baked into server
 // HTML. Perks mirror the popup's PERKS list; one primary CTA, `home` source.
 const PERKS: [string, string][] = [
-  ["Price alerts", "get an email when a card hits your price"],
+  ["Price alerts", "get an email when a card you watch gets cheaper"],
   ["Binder", "keep your collection in one place, priced live"],
   ["Watchlist", "save cards and jump back anytime"],
 ];
@@ -43,7 +43,7 @@ export function AccountStrip() {
           </ul>
         </div>
         <Link
-          href="/login"
+          href="/login?next=/"
           rel="nofollow"
           onClick={() => markSignupSource("home")}
           className="btn-primary shrink-0 whitespace-nowrap"

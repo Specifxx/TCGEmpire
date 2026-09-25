@@ -391,7 +391,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
             {/* Add to collection — track & value your whole collection in your profile */}
             <div className="mt-3 flex items-center gap-2">
               {coll === "signin" ? (
-                <a href="/login?next=/profile" className="btn-ghost flex-1 justify-center text-sm">Sign in to track your collection</a>
+                <a href={`/login?next=${encodeURIComponent(cardHref(card))}&src=quickview`} className="btn-ghost flex-1 justify-center text-sm">Sign in to track your collection</a>
               ) : coll === "added" ? (
                 <div className="flex flex-1 items-center justify-between rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-2 text-sm">
                   <span className="font-semibold text-brand-300">✓ Added to your collection</span>

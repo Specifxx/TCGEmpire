@@ -169,7 +169,7 @@ test("AuthForm's provider buttons attribute their clicks, defaulting to the logi
   const src = read("src/components/AuthForm.tsx");
   // Since Phase 2 a ?src= landing (urlSrc) outranks the generic default but
   // never outranks an explicit source prop from the mounting surface.
-  assert.match(src, /const placement = source \?\? urlSrc \?\? "login";\s*markSignupSource\(placement\);/);
+  assert.match(src, /const placement = source \?\? urlSrc \?\? readSignupSource\(\) \?\? "login";\s*markSignupSource\(placement\);/);
   // …and auth_start{provider,placement} (2026-09-24), which is why the handler
   // now takes the provider.
   assert.match(src, /trackAuthStart\(provider, placement\)/);

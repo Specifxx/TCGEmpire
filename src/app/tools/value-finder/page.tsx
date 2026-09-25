@@ -166,7 +166,7 @@ export default async function ValueFinderPage() {
                   {user ? (
                     <PremiumButton surface="gate:value-finder" />
                   ) : (
-                    <Link href="/login?next=/tools/value-finder" className="btn-primary text-sm">Sign in free</Link>
+                    <Link href="/login?next=/tools/value-finder&src=tool_gate" className="btn-primary text-sm">Sign in free</Link>
                   )}
                   <Link href="/browse" className="btn-ghost text-sm">Search the database →</Link>
                 </div>
