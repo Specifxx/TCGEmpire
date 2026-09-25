@@ -157,7 +157,10 @@ export interface AlertCard {
 }
 
 export interface PriceDropItem extends AlertCard {
-  oldCents: number;
+  // "listed" = the card's FIRST price in this market (lib/price-alerts.ts
+  // isFirstPrice): there is no old price to strike through, so oldCents is null.
+  kind?: "drop" | "listed";
+  oldCents: number | null;
   newCents: number;
   market: Country;
 }
@@ -205,13 +208,22 @@ export function emailShell(heading: string, inner: string, footer: string): stri
     </table></td></tr></table></body></html>`;
 }
 
-// One row in the price-drop table.
-function dropRow(item: PriceDropItem): string {
+// One row in the price-drop table. A first listing ("listed") has no old price,
+// so it reads "Now in stock · from X" — no strikethrough, no percentage.
+export function dropRow(item: PriceDropItem): string {
   const cur = currencyOf(item.market);
-  const pct = item.oldCents > 0 ? Math.round(((item.oldCents - item.newCents) / item.oldCents) * 100) : 0;
-  return `<tr><td style="padding:12px 0;border-bottom:1px solid #233047">
+  const head = `<tr><td style="padding:12px 0;border-bottom:1px solid #233047">
     <a href="${item.url}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${item.name}</a>
-    <div style="font-size:12px;color:#6b7585;margin-top:2px">${item.setCode} · ${item.collectorNumber}</div>
+    <div style="font-size:12px;color:#6b7585;margin-top:2px">${item.setCode} · ${item.collectorNumber}</div>`;
+  if (item.kind === "listed" || item.oldCents == null) {
+    return `${head}
+    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
+      Now in stock · from <span style="color:#34d17e;font-weight:700">${formatMoney(item.newCents, cur)}</span>
+    </div>
+  </td></tr>`;
+  }
+  const pct = item.oldCents > 0 ? Math.round(((item.oldCents - item.newCents) / item.oldCents) * 100) : 0;
+  return `${head}
     <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
       <span style="color:#6b7585;text-decoration:line-through">${formatMoney(item.oldCents, cur)}</span>
       &nbsp;→&nbsp;<span style="color:#34d17e;font-weight:700">${formatMoney(item.newCents, cur)}</span>
@@ -220,22 +232,48 @@ function dropRow(item: PriceDropItem): string {
   </td></tr>`;
 }
 
+// Heading, intro and subject for a price-alert digest. Three shapes: every item
+// a drop (the original copy, unchanged), every item a first listing ("now in
+// stock"), or a mix of both. Pure and exported so the copy is unit-tested.
+export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro: string; subject: string } {
+  const count = items.length;
+  const listed = items.filter((i) => i.kind === "listed" || i.oldCents == null).length;
+  const first = items[0]!;
+  const firstPrice = formatMoney(first.newCents, currencyOf(first.market));
+  if (listed === 0) {
+    return {
+      heading: count === 1 ? "A wishlist card just got cheaper" : `${count} wishlist cards just got cheaper`,
+      intro: `Good news — ${count === 1 ? "a card you're watching" : "some cards you're watching"} dropped in price:`,
+      subject: count === 1 ? `Price drop: ${first.name} is now ${firstPrice}` : `Price drops on ${count} of your wishlist cards`,
+    };
+  }
+  if (listed === count) {
+    return {
+      heading: count === 1 ? "A card you're watching is now in stock" : `${count} cards you're watching are now in stock`,
+      intro: `${count === 1 ? "A card you're watching has" : "Cards you're watching have"} just been listed by a store for the first time:`,
+      subject: count === 1 ? `${first.name} is now in stock from ${firstPrice}` : `${count} of your wishlist cards are now in stock`,
+    };
+  }
+  return {
+    heading: `Price news on ${count} wishlist cards`,
+    intro: "Some cards you're watching got cheaper, and some are in stock for the first time:",
+    subject: `Price drops and new listings on ${count} of your wishlist cards`,
+  };
+}
+
 // The daily "a card on your wishlist got cheaper" email. Lists every card that
-// dropped since the last check in one message.
+// dropped (or first listed — see priceDropCopy) since the last check in one message.
 // `anonymous` = this address has no linked account (PriceAlert.userId is null).
 // Only THOSE recipients get the account CTA — its "your existing alerts come
 // with you" promise is claimAlertsForUser's adopt-by-email behavior, which is
 // meaningless (and the CTA is pure noise) for someone already signed up.
 export async function sendPriceDropEmail(to: string, items: PriceDropItem[], unsubUrl: string, anonymous = false): Promise<boolean> {
-  const count = items.length;
-  const heading = count === 1 ? "A wishlist card just got cheaper" : `${count} wishlist cards just got cheaper`;
-  const intro = `Good news — ${count === 1 ? "a card you're watching" : "some cards you're watching"} dropped in price:`;
+  const { heading, intro, subject } = priceDropCopy(items);
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${intro}</td></tr>
     <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(dropRow).join("")}</table></td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Card database</a></td></tr>
     ${anonymous ? accountCtaBlock("price-drop", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
-  const subject = count === 1 ? `Price drop: ${items[0]!.name} is now ${formatMoney(items[0]!.newCents, currencyOf(items[0]!.market))}` : `Price drops on ${count} of your wishlist cards`;
   return sendEmail(to, subject, emailShell(heading, inner, alertFooter(unsubUrl)));
 }
 

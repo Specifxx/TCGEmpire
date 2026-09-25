@@ -40,7 +40,11 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "How do I set a price alert for a Riftbound card?",
-    a: "Open the card's page or its quick view and tap the watch button — there's no price to enter. We remember the lowest live price at the moment you start watching, and email you the first time it drops below that.",
+    a: "Open the card's page or its quick view and tap the watch button — there's no price to enter. We remember the lowest live price at the moment you start watching, and email you the first time it drops below that. If no store has the card yet, there's nothing to drop below — we email you when it's first in stock instead.",
+  },
+  {
+    q: "Can I watch a card with no price yet?",
+    a: "Yes — useful for newly revealed cards no store has listed. Watch it as normal and we'll email you when it's first in stock in your market, with the lowest price it listed at. From then on it works like any other alert: you hear about drops below that price. The weekly email cap still applies, so if you've had an alert email in the last 7 days the in-stock notice waits for the next one.",
   },
   {
     q: "Do price alerts cost anything?",
