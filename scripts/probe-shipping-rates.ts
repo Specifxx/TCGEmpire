@@ -480,6 +480,13 @@ async function probeStore(store: RetailerInfo, market: ProbeMarket, specs: Scena
       out.error = "no in-stock Riftbound singles found";
       return out;
     }
+    // Settle the canonical host BEFORE the first cart. Shopify serves a POST
+    // /cart/add.js on the apex but 301s the GET /cart.js to www
+    // ("canonical_host_redirection"), and fetch drops a hand-set Cookie header
+    // on a cross-origin redirect — so S1's read-back saw an empty cart, topped
+    // up, and measured TWO cards (first AU run: turnordergames, generalgames,
+    // plenty, trollaustraliamelb). One throwaway GET moves `client.origin` first.
+    await client.fetch(`/cart.js?country=${iso}`, { jar: new CookieJar() });
     const prior: { id: string; key: string }[] = [];
     for (const spec of specs) {
       let s: ProbeScenarioResult;
