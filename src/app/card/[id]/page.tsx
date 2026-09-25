@@ -24,7 +24,8 @@ import { cardTileSelect } from "@/lib/cards";
 import { cardImageSrc } from "@/lib/card-image-url";
 import { AdSlot } from "@/components/AdSlot";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY, isoCountry, priceField, type Country } from "@/lib/country";
-import { setByCode } from "@/lib/constants";
+import { setByCode, hasSetHub, isPreorderSetCode } from "@/lib/constants";
+import { preordersHrefForSet, releaseDateLabel, spoilersHrefForSet } from "@/lib/release-calendar";
 import { domainSlug } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
@@ -202,9 +203,16 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // twice, further down the page.
   const textBit = card.description ? clampText(card.description, 70) : null;
   const statBit = `${card.domain} ${card.type.toLowerCase()} · ${card.rarity}`;
+  // Unpriced: a revealed-but-unreleased card has nothing to compare YET, and
+  // "compare live prices" on it was a promise the page could not keep — say
+  // what it is and when prices arrive. Otherwise all six markets, not the four
+  // this listed before CA and EU launched.
+  const unreleasedOn = isPreorderSetCode(card.setCode) ? releaseDateLabel(setByCode(card.setCode)?.releasedOn) : null;
   const priceBit = hasPrice
     ? `Live prices from ${fmtBaselineMoney(lowestCents!)} across ${stores} ${stores === 1 ? "store" : "stores"}, updated daily.`
-    : `Compare live prices across AU, US, UK & SG stores, updated daily.`;
+    : unreleasedOn
+      ? `Revealed for Riftbound ${card.setName}; live prices from ${unreleasedOn}.`
+      : `Compare live prices across US, UK, EU, AU, CA & SG stores, updated daily.`;
   // WHICH PRINTING THIS IS, in words rather than only in a collector number.
   //
   // 234 card pages — 17% of the template — were flagged as near-duplicate
@@ -589,7 +597,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // getting the long-tail card pages crawled and indexed — and earns breadcrumb
   // rich results in Google.
   const setInfo = setInfoForLd;
-  const setUrl = setInfo && !setInfo.comingSoon ? `/sets/${setInfo.slug}` : "/browse";
+  // hasSetHub, not !comingSoon: a pre-release set with a real hub (Radiance)
+  // gets its set crumb and set links like a released one.
+  const setUrl = setInfo && hasSetHub(setInfo) ? `/sets/${setInfo.slug}` : "/browse";
   // The set crumb is DROPPED when the set has no page of its own — a collector
   // product like T1S is not in SETS, so `setUrl` falls back to /browse and the
   // trail would list the same URL twice under two different names. Two crumbs
@@ -597,6 +607,12 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // a duplicate in them. (Only visible now that these pages are indexed — while
   // they carried noindex nothing was reading this.)
   const hasSetPage = setUrl !== "/browse";
+  // Pre-release links, each null once it retires on its own date rule (the
+  // tracker on the street date, pre-orders on the pre-order rule) — so nothing
+  // here names a set, and a released set's page renders exactly as before.
+  const preview = isPreorderSetCode(card.setCode);
+  const spoilersHref = spoilersHrefForSet(card.setCode);
+  const preordersHref = preordersHrefForSet(card.setCode);
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -1023,6 +1039,30 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 (2026-09-24 growth pass): one-click OAuth that creates the
                 account and the alert together; email-only stays secondary. */}
             <PriceDropAlertCta cardId={card.id} cardPath={cardHref(card)} providers={enabledProviders()} />
+
+            {/* A revealed card from an unreleased set has no price to compare
+                yet; what its visitor came for is the rest of the reveal
+                season. The tracker owns "<set> spoilers" and no card page
+                linked to it (2026-09-25 growth pass). */}
+            {preview && (spoilersHref || hasSetPage || preordersHref) && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {spoilersHref && (
+                  <Link href={spoilersHref} className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
+                    {card.setName} spoiler tracker →
+                  </Link>
+                )}
+                {hasSetPage && (
+                  <Link href={setUrl} className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
+                    {card.setName} set guide →
+                  </Link>
+                )}
+                {preordersHref && (
+                  <Link href={preordersHref} className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
+                    {card.setName} pre-orders →
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── PRICE COMPARISON LEADS, ABOVE THE FOLD ─────────────────────────
@@ -1091,7 +1131,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   </Link>
                 )}
                 <Link href={setUrl} className="btn-ghost text-xs">
-                  Browse priced {card.setName} cards →
+                  {setInfo?.comingSoon && hasSetPage ? `Every ${card.setName} card revealed so far →` : `Browse priced ${card.setName} cards →`}
                 </Link>
                 <Link href={`/domains/${domainSlug(card.domain)}`} className="btn-ghost text-xs">
                   Priced {card.domain} cards →
@@ -1334,9 +1374,18 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <Link href="/bulk-pricer" className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
                 Bulk price a list →
               </Link>
+              {/* NOT hasSetHub: /sealed?set=<code> is empty for a pre-order set
+                  (getSealedGroups leaves pre-orders out), so an unreleased set
+                  links its pre-order comparison instead — and nothing once that
+                  retires, until release flips comingSoon off. */}
               {setInfo && !setInfo.comingSoon && (
                 <Link href={`/sealed?set=${card.setCode}`} className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
                   Sealed {card.setName} products →
+                </Link>
+              )}
+              {setInfo?.comingSoon && preordersHref && (
+                <Link href={preordersHref} className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
+                  {card.setName} pre-orders →
                 </Link>
               )}
             </div>
@@ -1452,7 +1501,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 {/* Also the card catalogue's main internal link INTO the gallery:
                     ~1,000 card pages each pointing at it is the strongest crawl
                     signal available to a brand-new landing page. */}
-                {setInfo && !setInfo.comingSoon ? (
+                {setInfo && hasSetHub(setInfo) ? (
                   <Link href={`/sets/${setInfo.slug}/gallery`} className="text-brand-300 underline-offset-2 hover:underline">
                     browse the full {card.setName} card gallery
                   </Link>
@@ -1577,7 +1626,7 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
         ? `The cheapest live price for ${card.name} (${card.setCode} ${card.collectorNumber}) is currently ${formatMoney(lowest, currency)} across ${stores} ${stores === 1 ? "store" : "stores"} in ${place}; every other market we cover is compared on this page too. Prices update daily.`
         : noRetailChannel
         ? `There is no retail price for ${card.name} (${card.setCode} ${card.collectorNumber}). ${card.setName} is distributed by drawing rather than sold through shops, so no store we track lists it — the only price it can have is a resale price, and this page shows one as soon as a copy changes hands somewhere we can see it.`
-        : `We don't have a live price for ${card.name} right now. Prices refresh daily across AU, US, UK and SG stores — check back soon for the cheapest place to buy it.`,
+        : `We don't have a live price for ${card.name} right now. Prices refresh daily across US, UK, EU, AU, CA and SG stores — check back soon for the cheapest place to buy it.`,
     },
     // Sits directly under "How much does it cost?" because it is the same
     // question asked by someone who does not live in the market that answer was
