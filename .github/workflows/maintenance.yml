@@ -5221,6 +5221,18 @@ jobs:
             scratch/*-dump.json
           if-no-files-found: ignore
 
+      # Read-only tail: how many imported cards carry the leaked Radiance mechanics
+      # (Deploy / Showoff / Disarm), bracketed vs plain word, into the run summary —
+      # the leak roundup's and guides' self-filling galleries match the bracketed
+      # marker, so this says when they start rendering (and flags a print format
+      # they would miss). Six COUNT queries; continue-on-error so it can never red
+      # an import. Lives here, not in radiance-reveals.yml: that workflow only
+      # dispatches this task and has no checkout or database of its own.
+      - name: Count leaked-keyword cards (read-only)
+        if: inputs.task == 'set-pipeline' && success()
+        continue-on-error: true
+        run: npx tsx scripts/check-leaked-keywords.ts --set RAD
+
       # ── Make new cards DISCOVERABLE immediately ────────────────────────────────
       # Every task above that can ADD or CHANGE a card used to end here, having
       # written to the DB and told nobody. The sitemap children are ISR'd with a 24h

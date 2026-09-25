@@ -10,6 +10,12 @@ import { normalizeSearch } from "@/lib/format";
 // crawlers still see every card + link; this only shows/hides in the browser.
 // Filter options are derived from the cards actually present, so empty facets never
 // appear. A "Recently added" sort uses createdAt (= when the reveal was imported).
+//
+// `initialCount` COLLAPSES, it never slices (2026-09-25): tiles past it get the
+// `hidden` class until "Show all" is pressed or a filter/search is active, so the
+// server HTML still carries every card link. `defaultSort` "recent" is safe to
+// render on the server: createdAt is serialised as an ISO string and the sort is
+// deterministic, so the client's first render matches it (no hydration mismatch).
 type GalleryCard = CardTileData & { createdAt?: string | null };
 
 type Sort = "number" | "recent";
@@ -33,13 +39,22 @@ function facetOf(cards: GalleryCard[], key: "domain" | "rarity" | "type") {
   return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 }
 
-export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
+export function FilterableCardGallery({
+  cards,
+  defaultSort,
+  initialCount,
+}: {
+  cards: GalleryCard[];
+  defaultSort?: Sort;
+  initialCount?: number;
+}) {
   const [q, setQ] = useState("");
   const [domain, setDomain] = useState<string | null>(null);
   const [rarity, setRarity] = useState<string | null>(null);
   const [type, setType] = useState<string | null>(null);
-  const [sort, setSort] = useState<Sort>("number");
+  const [sort, setSort] = useState<Sort>(defaultSort ?? "number");
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const hasDates = cards.some((c) => c.createdAt);
 
@@ -72,6 +87,9 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
 
   const activeCount = (domain ? 1 : 0) + (rarity ? 1 : 0) + (type ? 1 : 0);
   const clearAll = () => { setDomain(null); setRarity(null); setType(null); setQ(""); };
+  // Collapse only the unfiltered view: a search or facet is already a narrowing,
+  // and hiding some of its matches behind a second click would read as a bug.
+  const collapsed = !expanded && initialCount != null && activeCount === 0 && !q && shown.length > initialCount;
 
   return (
     <div className="mt-4">
@@ -146,11 +164,24 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
       {shown.length === 0 ? (
         <p className="mt-4 rounded-xl border border-ink-700 bg-ink-850 p-6 text-center text-sm text-slate-400">No cards match those filters.</p>
       ) : (
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {shown.map((c) => (
-            <CardTile key={c.id} card={c} />
-          ))}
-        </div>
+        <>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {/* `contents` keeps a visible tile a direct grid item; `hidden` keeps a
+                collapsed one in the DOM (and the server HTML) but out of layout. */}
+            {shown.map((c, i) => (
+              <div key={c.id} className={collapsed && i >= (initialCount ?? Infinity) ? "hidden" : "contents"}>
+                <CardTile card={c} />
+              </div>
+            ))}
+          </div>
+          {collapsed && (
+            <div className="mt-4 flex justify-center">
+              <button type="button" onClick={() => setExpanded(true)} className="btn-ghost min-h-11 text-sm">
+                Show all <span className="num">{shown.length}</span> cards
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

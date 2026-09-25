@@ -18,6 +18,10 @@ name: Radiance reveals import
 # release week (2026-10-25), then every scheduled run exits at the date gate.
 # Twice daily — reveals go out on US daytime, so 18:30 UTC catches the day's
 # cards and 02:30 UTC catches anything shown late in the Pacific evening.
+#
+# Each dispatched set-pipeline run ends with a read-only count of imported cards
+# carrying the leaked Deploy / Showoff / Disarm markers, in THAT run's summary
+# (scripts/check-leaked-keywords.ts) — this job has no checkout or database.
 
 on:
   schedule:

@@ -185,7 +185,7 @@ function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileDa
         <h2 className="text-xl font-extrabold text-white">{embed.title}</h2>
         {embed.note && <p className="mt-1 text-sm text-slate-400">{embed.note}</p>}
         {embed.filterable ? (
-          <FilterableCardGallery cards={cards} />
+          <FilterableCardGallery cards={cards} defaultSort={embed.defaultSort} initialCount={embed.initialCount} />
         ) : (
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {cards.map((c) => (
