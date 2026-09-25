@@ -18,7 +18,13 @@ import { PremiumButton } from "./PremiumButton";
 //     clears the target. A typo is clamped on blur to what the route accepts
 //     (lib/target-price.ts), so the saved number is always the one on screen.
 //     Plus shows "N of 25 used" (lib/alert-limits.ts, the same constant the
-//     route enforces).
+//     route enforces): from the parent when it has the rows (the watchlist),
+//     otherwise fetched once (GET /api/alerts/watchlist?targets=1 — the modal),
+//     so the at-limit state shows before a save rather than as a 409 after it.
+//   • A target the account holds beyond its tier's limit (a Premium member
+//     who moved to Plus) is stored but not emailed on: the parent passes
+//     active={false} (lib/target-price.ts honouredTargetIds, the cron's own
+//     rule) and the field says so instead of promising an email.
 //   • A free account sees the same field DISABLED with the Plus gate beside it
 //     — the feature is visible where it would be used, never a dead end.
 //   • Signed out: nothing (the parents only render it for accounts).
@@ -28,6 +34,7 @@ export function TargetPriceField({
   market,
   initialCents,
   used,
+  active = true,
   onSaved,
   onUpgradeClick,
   className,
@@ -38,6 +45,8 @@ export function TargetPriceField({
   initialCents: number | null;
   /** How many of this account's watches carry a target, when the parent knows. */
   used?: number;
+  /** false: this watch's target is over the account's limit, so the cron skips it. */
+  active?: boolean;
   onSaved?: (targetCents: number | null, used: number | null) => void;
   /** The gate's button was pressed — a parent modal closes itself first. */
   onUpgradeClick?: () => void;
@@ -58,10 +67,28 @@ export function TargetPriceField({
     if (used != null) setUsedNow(used);
   }, [used]);
 
-  if (!loaded || !user) return null;
-
   const limit = targetAlertLimit(tier);
   const finiteLimit = Number.isFinite(limit) ? limit : null;
+
+  // No count from the parent (the alert modal): ask for it, once, and only
+  // when there is a count to show — a Plus member. Free accounts see the gate
+  // and Premium has no limit, so neither costs a request.
+  const needCount = used === undefined && loaded && !!user && premium && finiteLimit != null;
+  useEffect(() => {
+    if (!needCount) return;
+    let cancelled = false;
+    fetch("/api/alerts/watchlist?targets=1", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { used?: number | null } | null) => {
+        if (!cancelled && typeof d?.used === "number") setUsedNow(d.used);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [needCount]);
+
+  if (!loaded || !user) return null;
   // A Plus member at the limit, on a watch with no target yet: the field would
   // only 409, so say so and offer the tier that lifts it.
   const atLimit = premium && finiteLimit != null && usedNow != null && usedNow >= finiteLimit && saved == null;
@@ -171,8 +198,10 @@ export function TargetPriceField({
                   ? "Target cleared."
                   : `Saved. We'll email you, naming the store, when it's ${formatMoney(saved, currency)} or less.`
                 : saved == null
-                  ? "Leave empty for new-low alerts only."
-                  : "We email you, naming the store, when it's at or below this."}
+                  ? "Leave empty for new-low and below-market alerts only."
+                  : !active
+                    ? "Not active: over your Plus limit. Clear another target to switch this one on."
+                    : "We email you, naming the store, when it's at or below this."}
             {finiteLimit != null && usedNow != null && (
               <span className="num"> · {usedNow} of {finiteLimit} used</span>
             )}

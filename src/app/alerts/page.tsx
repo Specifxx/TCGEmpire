@@ -48,7 +48,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "How do I set a price alert for a Riftbound card?",
-    a: "Open the card's page or its quick view and tap the watch button — a free alert needs no price. We remember the lowest live price at the moment you start watching, and email you the first time it drops below that. If no store has the card yet, there's nothing to drop below — we email you when it's first in stock instead. Plus members can also type their own price on any watched card.",
+    a: `Open the card's page or its quick view and tap the watch button — a free alert needs no price. We remember the lowest live price at the moment you start watching, and email you the first time it drops below that. If no store has the card yet, there's nothing to drop below — we email you when it's first in stock instead. Plus members can also type their own price on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards (every card on Premium).`,
   },
   {
     q: "Can I watch a card with no price yet?",
@@ -64,11 +64,11 @@ const FAQS = [
   },
   {
     q: "How often will I actually get emailed?",
-    a: "At most one email a week, only when a card hits a new low. Every card you watch is still checked daily, but if you'd already had an alert email in the last 7 days, the next one waits and folds any further drops into it instead of sending a separate email for each. If you haven't had one in the last 7 days, the next new low is sent straight away. A Plus target price is the exception: it's emailed as soon as it's met.",
+    a: "At most one email a week, only when a card hits a new low. Every card you watch is still checked daily, but if you'd already had an alert email in the last 7 days, the next one waits and folds any further drops into it instead of sending a separate email for each. If you haven't had one in the last 7 days, the next new low is sent straight away. Plus has two exceptions, emailed as soon as they happen: your own target price being met, and a watched card dropping below TCGplayer market at a new low. Either one also carries any other new lows on your watchlist, in the same email.",
   },
   {
     q: "How often are prices checked?",
-    a: "Prices are imported twice a day. New-low alerts are checked at least once a day, after an import; Plus target prices are checked after both. A drop is picked up on the next check rather than instantly — Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions.",
+    a: "Prices are imported twice a day. New-low alerts are checked at least once a day, after an import; Plus target-price and below-market alerts are checked after both. A drop is picked up on the next check rather than instantly — Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions.",
   },
   {
     q: "Can I track cards I already own instead?",
@@ -172,6 +172,14 @@ export default function AlertsPage() {
           updates we check every store we track in that card&apos;s market, and when the lowest in-stock price is at
           or below your number we email you straight away, without the weekly wait: the card, the price, the store
           and a link to the listing. It fires once per new low, not every day the price sits there.
+        </p>
+        <p className="mt-2">
+          Members also hear when a watched card drops below TCGplayer market at a store we track — the same list{" "}
+          <Link href="/tools/deal-finder" className="text-brand-400 underline">
+            Deal Finder
+          </Link>{" "}
+          ranks — at a new low, with no target to set. Either paid alert carries any other new lows on your watchlist
+          along in the same email, so you never wait a week behind an email that is going out anyway.
         </p>
         <p className="mt-2">
           Plus is ad-free, too.{" "}

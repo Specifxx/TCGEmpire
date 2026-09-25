@@ -21,7 +21,8 @@ import { PLUS_TARGET_ALERT_LIMIT } from "../src/lib/alert-limits";
 // A member types "Notify me at $X" on a watched card. After each price update
 // the cron emails them, naming the store, when the card's lowest in-stock price
 // in that market is at or below X — with no weekly wait, but only once per new
-// low (the lowestEmailedCents watermark the free alerts already keep). A lapsed
+// low (the target's own watermark, targetEmailedCents, which a changed target
+// resets; the free alerts' lowestEmailedCents is never reset). A lapsed
 // subscription ignores its targets and the watch behaves as a free one. Free
 // and anonymous watches are untouched.
 //
@@ -50,6 +51,8 @@ type Row = {
   lowestEmailedCents: number | null;
   lastNotifiedAt: Date | null;
   targetCents: number | null;
+  targetEmailedCents: number | null;
+  createdAt: Date;
   unsubToken: string;
   userId: string | null;
   user: User | null;
@@ -78,6 +81,8 @@ function row(id: string, over: Partial<Row> & { us?: number | null; cardId?: str
     lowestEmailedCents: null,
     lastNotifiedAt: null,
     targetCents: null,
+    targetEmailedCents: null,
+    createdAt: daysAgo(30),
     unsubToken: `tok-${id}`,
     userId: null,
     user: null,
@@ -206,8 +211,45 @@ test("an entitled target hit bypasses the weekly cooldown and writes the waterma
   assert.equal(summary.deferred, 0);
   assert.equal(summary.drops, 0, "a target hit is counted as a target, not also as a drop");
   assert.equal(h.writes.length, 1);
-  assert.equal(h.writes[0]!.data.lowestEmailedCents, 950);
+  assert.equal(h.writes[0]!.data.lowestEmailedCents, 950, "a target email is a price we told them: the shared watermark moves too");
+  assert.equal(h.writes[0]!.data.targetEmailedCents, 950, "and the target's own watermark is seeded");
   assert.deepEqual(h.writes[0]!.data.lastNotifiedAt, NOW);
+});
+
+test("setting a target never resets the free rules: an old low still gates plain drops (review 2026-09-25)", async () => {
+  // Emailed at $3 a month ago; the card is $40; a $30 target was just set
+  // (PATCH armed targetEmailedCents = null and left lowestEmailedCents = 300).
+  const state = { targetCents: 3000, targetEmailedCents: null, lowestEmailedCents: 300, lastNotifiedAt: daysAgo(30), lastPriceCents: 4000 };
+  // $40 → $38: above the target, and not below the $3 already sent. Quiet.
+  const drift = harness([owned("a", plus, { ...state, us: 3800 })]);
+  const s1 = await drift.run();
+  assert.equal(drift.sent.length, 0, "no 'Price drop: now $38' above a price already emailed");
+  assert.equal(s1.drops, 1);
+  assert.equal(s1.suppressed, 1);
+  assert.equal(drift.writes[0]!.data.lowestEmailedCents, undefined, "the shared watermark is untouched");
+  // $40 → $29: the target is met, and it is armed — it sends.
+  const hit = harness([owned("a", plus, { ...state, us: 2900 })]);
+  await hit.run();
+  assert.equal(hit.sent.length, 1);
+  assert.equal(hit.sent[0]!.items[0]!.kind, "target");
+  assert.equal(hit.writes[0]!.data.targetEmailedCents, 2900);
+  assert.equal(hit.writes[0]!.data.lowestEmailedCents, 300, "min(300, 2900): the old low stands");
+  // The same account lapsed: the target is inert and the $3 still gates drops.
+  const lapsedRun = harness([owned("a", lapsed, { ...state, us: 2900 })]);
+  const s3 = await lapsedRun.run();
+  assert.equal(lapsedRun.sent.length, 0);
+  assert.equal(s3.suppressed, 1);
+});
+
+test("after a target fires, it re-sends only below its own last email — whatever the shared watermark says", async () => {
+  const after = { targetCents: 3000, targetEmailedCents: 2900, lowestEmailedCents: 300, lastNotifiedAt: daysAgo(1), lastPriceCents: 3100 };
+  const back = harness([owned("a", plus, { ...after, us: 2950 })]);
+  assert.equal((await back.run()).targets, 0, "back under the target, but not below $29: quiet");
+  assert.equal(back.sent.length, 0);
+  const lower = harness([owned("a", plus, { ...after, us: 2800 })]);
+  await lower.run();
+  assert.equal(lower.sent.length, 1, "below $29 (though far above the $3 drop low): a new low under the target");
+  assert.equal(lower.writes[0]!.data.targetEmailedCents, 2800);
 });
 
 test("a lapsed subscription ignores its target: the watch runs the free drop rules", async () => {
@@ -241,7 +283,8 @@ test("the same price never re-sends, and a hit with the price unmoved is still r
   assert.equal(first.writes.length, 1, "a fired paid alert is written even though the price did not move");
   assert.equal(first.writes[0]!.data.lowestEmailedCents, 900);
   // Run 2: the state run 1 wrote, same price → nothing.
-  const second = harness([owned("a", plus, { targetCents: 1000, lastPriceCents: 900, lowestEmailedCents: 900, lastNotifiedAt: NOW, us: 900 })]);
+  assert.equal(first.writes[0]!.data.targetEmailedCents, 900);
+  const second = harness([owned("a", plus, { targetCents: 1000, lastPriceCents: 900, lowestEmailedCents: 900, targetEmailedCents: 900, lastNotifiedAt: NOW, us: 900 })]);
   const summary = await second.run();
   assert.equal(second.sent.length, 0);
   assert.equal(summary.targets, 0);
@@ -289,14 +332,20 @@ test("PAID_SEND_CAP defers the overflow of new digests, baselines held", async (
 });
 
 test("a Plus account's targets beyond its limit are not honoured; Premium has no limit", async () => {
+  // Newest first, as a findMany might return them: the OLDEST watches keep
+  // their targets regardless of row order (honouredTargetIds, which the
+  // watchlist uses to mark the rest "Not active").
   const many = (user: User) =>
     Array.from({ length: PLUS_TARGET_ALERT_LIMIT + 2 }, (_, i) =>
-      row(`t${i}`, { email: "member@example.com", userId: "u-member", user, targetCents: 1000, lastPriceCents: 900, us: 900 }),
+      row(`t${i}`, { email: "member@example.com", userId: "u-member", user, targetCents: 1000, lastPriceCents: 900, us: 900, createdAt: daysAgo(i) }),
     );
   const p = harness(many(plus));
   const sp = await p.run();
   assert.equal(sp.targets, PLUS_TARGET_ALERT_LIMIT);
   assert.equal(p.sent.length, 1, "one digest per address");
+  const hitIds = new Set(p.sent[0]!.items.map((i) => i.cardId));
+  assert.ok(!hitIds.has("card-t0") && !hitIds.has("card-t1"), "the two newest watches are the ones left out");
+  assert.ok(hitIds.has(`card-t${PLUS_TARGET_ALERT_LIMIT + 1}`), "the oldest is honoured");
   const q = harness(many(premium));
   const sq = await q.run();
   assert.equal(sq.targets, PLUS_TARGET_ALERT_LIMIT + 2);

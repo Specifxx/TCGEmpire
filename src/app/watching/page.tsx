@@ -6,7 +6,8 @@ import { Watchlist } from "@/components/Watchlist";
 import { NavIcon } from "@/components/NavIcon";
 import { PremiumNudgeCard } from "@/components/PremiumNudgeCard";
 import { getPremiumNudge, nudgeCopy as watchedNudgeCopy } from "@/lib/premium-nudge";
-import { isPremium, premiumCheckoutEnabled } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTierOf } from "@/lib/premium";
+import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
 import { getCountry } from "@/lib/get-country";
 
 // getCurrentUser() reads cookies(), so this route can never be cached. Declared
@@ -51,6 +52,7 @@ export default async function WatchingPage() {
   // free accounts only, and only when there is something specific to say
   // (lib/premium-nudge.ts). Never fails the page.
   const member = isPremium(user);
+  const onPlus = member && premiumTierOf(user) === "plus";
   const nudge =
     !isPremium(user) && premiumCheckoutEnabled() ? await getPremiumNudge(user.id, getCountry()).catch(() => null) : null;
   const nudgeCopy = nudge ? watchedNudgeCopy(nudge, "watched") : null;
@@ -70,14 +72,25 @@ export default async function WatchingPage() {
         {/* Matches the code: "watching from" is PriceAlert.startPriceCents
             (older watches show their last-checked price, labelled as such);
             the free email is the weekly new-low digest (lib/price-alerts.ts);
-            a Plus target fires on its own, after each price update. */}
+            the paid triggers — a target (Plus: PLUS_TARGET_ALERT_LIMIT cards,
+            Premium: any) and a new low below TCGplayer market — send after
+            each price update, without the weekly wait. Plus is described as
+            ad-free wherever it is described (lineup marketing rule). */}
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Every card you&apos;re tracking, with the price it was at when you started. We email{" "}
           <strong className="text-slate-200">{user.email}</strong> when one hits a new low, naming the
           cheapest store — at most one email a week.{" "}
-          {member
-            ? "Set your own price on any card below and we email you as soon as it's met."
-            : "With Plus, set your own price on any card and hear as soon as it's met."}{" "}
+          {member ? (
+            <>
+              Set your own price on {onPlus ? `up to ${PLUS_TARGET_ALERT_LIMIT} cards` : "any card"} below and we
+              email you as soon as it&apos;s met — and when a card drops below TCGplayer market at a new low.
+            </>
+          ) : (
+            <>
+              With Plus (ad-free), set your own price on up to {PLUS_TARGET_ALERT_LIMIT} cards and hear as soon as
+              it&apos;s met, and when one drops below TCGplayer market.
+            </>
+          )}{" "}
           Tap the heart on any card to stop watching it.
         </p>
       </div>

@@ -813,6 +813,13 @@ model PriceAlert {
   // PATCH /api/alerts/watchlist/[cardId], which enforces targetAlertLimit.
   // Additive/nullable so the deploy's `prisma db push` needs no backfill.
   targetCents        Int?
+  // The TARGET trigger's own watermark: the lowest price emailed under the
+  // target since it was last set. PATCH resets it to null whenever the target
+  // changes (the target is "armed" again), so an old low from before the
+  // target existed can't silence it — without ever touching lowestEmailedCents,
+  // which the free drop rule and the below-market trigger keep reading as
+  // "the lowest price we've ever emailed you". null = armed / never fired.
+  targetEmailedCents Int?
   // The price when the watch was CREATED, written once and never touched by the
   // cron — "watching from $X" on /watching. lastPriceCents can't serve: the
   // cron advances it on every move, so after one run it read as today's price

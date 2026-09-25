@@ -5,10 +5,11 @@ import { runPriceAlerts, type AlertScope } from "@/lib/price-alerts";
 // Authorization: Bearer <CRON_SECRET> header:
 //   • Vercel Cron (vercel.json), once a day, no query → scope "all": every
 //     watch, free and anonymous included, under the weekly per-address cap.
-//   • .github/workflows/refresh-prices.yml, right after each of the two daily
-//     price imports, with ?scope=paid → only watches owned by a Plus/Premium
-//     account, so target-price and below-market alerts follow every price
-//     update (lib/price-alerts.ts AlertScope).
+//   • ?scope=paid → only watches owned by a Plus/Premium account
+//     (lib/price-alerts.ts AlertScope), for a manual run. The scheduled paid
+//     runs after each price import call ./paid/route.ts instead — the
+//     pre-lineup deployment of THIS route ignores the query, so a workflow
+//     calling it here before the deploy would have run "all" (see there).
 // Any other scope value is treated as "all", the pre-lineup behaviour.
 export const dynamic = "force-dynamic";
 export const maxDuration = 120; // seconds

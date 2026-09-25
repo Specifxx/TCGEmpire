@@ -9,6 +9,9 @@ import { TargetPriceField } from "./TargetPriceField";
 import { VariantBadge, OvernumberedBadge, SignatureBadge, CrystalRoseBadge, UltimateBadge } from "./Badge";
 import { useCountry } from "./CountryProvider";
 import { useWatchlist } from "@/lib/use-watchlist";
+import { useMe } from "@/lib/use-me";
+import { targetAlertLimit } from "@/lib/alert-limits";
+import { honouredTargetIds } from "@/lib/target-price";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { watchBaseline } from "@/lib/watch-baseline";
@@ -66,6 +69,8 @@ export function Watchlist({
 } = {}) {
   const { country, price } = useCountry();
   const { watched } = useWatchlist();
+  // The same shared /api/me the target fields read — no extra request.
+  const { premium, tier } = useMe();
   const [items, setItems] = useState<WatchItem[] | null>(null);
 
   useEffect(() => {
@@ -116,6 +121,12 @@ export function Watchlist({
   // Targets in use across the whole watchlist, every market — the same count
   // the PATCH route enforces the Plus limit on. Updated in place on each save.
   const targetsUsed = visible.filter((it) => it.targetCents != null).length;
+  // Which of those targets the cron actually emails on: all of them, unless the
+  // account holds more than its tier allows (a Premium member now on Plus) —
+  // then the oldest watches' targets, by the cron's own rule. Recomputed on
+  // every save, so clearing one switches the next one on here at once.
+  const honoured = honouredTargetIds(visible, premium ? targetAlertLimit(tier) : 0);
+  const targetActive = (it: WatchItem) => it.targetCents == null || honoured.has(it.id);
   const onTargetSaved = (id: string, cents: number | null) =>
     setItems((prev) => (prev ? prev.map((it) => (it.id === id ? { ...it, targetCents: cents } : it)) : prev));
 
@@ -124,7 +135,7 @@ export function Watchlist({
       <EmptyState
         icon="heart"
         title="Nothing on watch yet"
-        body="Tap the heart on any card and we'll email you the moment it gets cheaper — no need to keep checking back."
+        body="Tap the heart on any card and we'll email you when it hits a new low, naming the cheapest store — at most one email a week."
         primary={{ href: "/browse", label: "Card database →" }}
       />
     );
@@ -159,6 +170,7 @@ export function Watchlist({
               item={it}
               onNavigate={onNavigate}
               targetsUsed={targetsUsed}
+              targetActive={targetActive(it)}
               onTargetSaved={(cents) => onTargetSaved(it.id, cents)}
             />
           ))}
@@ -191,6 +203,7 @@ export function Watchlist({
                 market={it.market}
                 initialCents={it.targetCents}
                 used={targetsUsed}
+                active={targetActive(it)}
                 onSaved={(cents) => onTargetSaved(it.id, cents)}
                 className="mt-2"
               />
@@ -215,11 +228,13 @@ function WatchRow({
   item,
   onNavigate,
   targetsUsed,
+  targetActive,
   onTargetSaved,
 }: {
   item: WatchItem;
   onNavigate?: () => void;
   targetsUsed: number;
+  targetActive: boolean;
   onTargetSaved: (cents: number | null) => void;
 }) {
   const { country, fmt, price } = useCountry();
@@ -307,6 +322,7 @@ function WatchRow({
         market={item.market}
         initialCents={item.targetCents}
         used={targetsUsed}
+        active={targetActive}
         onSaved={(cents) => onTargetSaved(cents)}
         className="mt-3 border-t border-ink-800 pt-3"
       />

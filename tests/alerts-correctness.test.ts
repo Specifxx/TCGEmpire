@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { watchBaseline } from "../src/lib/watch-baseline";
+import { CONFIRMATION_DAILY_CAP, claimConfirmationSlot, confirmationKey, type ConfirmationDb } from "../src/lib/alert-confirmations";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Alert correctness, shipped with the 2026-09-25 premium lineup: the numbers
@@ -50,21 +51,62 @@ test("both creation paths write startPriceCents once; re-watching never rewrites
   assert.ok(!update.includes("startPriceCents"), "adopting a row keeps its own start price");
 });
 
-test("anonymous confirmations: new addresses only, under a global daily cap", () => {
+test("confirmations: new addresses only, and the route claims a slot only when it is about to send", () => {
   const sub = code("src/app/api/alerts/subscribe/route.ts");
-  assert.match(sub, /if \(result\.count > 0 && !existing && \(await confirmationsUnderDailyCap\(\)\)\)/);
-  // Global = the database, not the per-instance rate limiter.
-  const cap = sub.slice(sub.indexOf("async function confirmationsUnderDailyCap"));
-  assert.match(cap, /prisma\.priceAlert\s*\.count\(\{ where: \{ userId: null, createdAt: \{ gte: since \} \} \}\)/);
-  assert.match(sub, /const CONFIRMATION_DAILY_CAP = 30;/);
-  assert.match(cap, /\.catch\(\(\) => Number\.POSITIVE_INFINITY\)/, "a failed count sends nothing");
-  // Route files may export only handlers and config.
-  assert.doesNotMatch(sub, /export const CONFIRMATION_DAILY_CAP/);
+  // The slot is claimed LAST in the condition, so a returning address (no
+  // confirmation) or a no-op re-watch never spends one.
+  assert.match(sub, /if \(result\.count > 0 && !existing && \(await claimConfirmationSlot\(prisma\)\)\)/);
+  // Not the old proxy: anonymous rows created in 24h counted heart clicks by
+  // returning watchers and missed signed-in confirmations.
+  assert.doesNotMatch(sub, /createdAt: \{ gte: since \}/);
+  assert.doesNotMatch(sub, /CONFIRMATION_DAILY_CAP/, "route files export only handlers; the cap lives in the lib");
   // The confirmation no longer promises an email on every drop.
   const email = read("src/lib/email.ts");
   const conf = email.slice(email.indexOf("export async function sendAlertConfirmationEmail"), email.indexOf("// ─── Weekly newsletter digest"));
   assert.doesNotMatch(conf, /whenever the price drops/);
   assert.match(conf, /At most one email a week/);
+});
+
+// A Counter table in memory, with the same upsert-increment semantics.
+function counterStub(opts: { fail?: boolean } = {}) {
+  const rows = new Map<string, number>();
+  const calls: Record<string, unknown>[] = [];
+  const db = {
+    counter: {
+      upsert: async (args: { where: { key: string }; create: { value: number }; update: { value: { increment: number } } }) => {
+        calls.push(args as unknown as Record<string, unknown>);
+        if (opts.fail) throw new Error("db down");
+        const cur = rows.get(args.where.key);
+        const value = cur == null ? args.create.value : cur + args.update.value.increment;
+        rows.set(args.where.key, value);
+        return { value };
+      },
+    },
+  };
+  return { db: db as unknown as ConfirmationDb, rows, calls };
+}
+
+test("the daily cap counts confirmations sent — one slot per call, per UTC day — and fails closed", async () => {
+  const day = new Date("2026-09-25T10:00:00Z");
+  const c = counterStub();
+  const results: boolean[] = [];
+  for (let i = 0; i < CONFIRMATION_DAILY_CAP + 2; i++) results.push(await claimConfirmationSlot(c.db, day));
+  assert.equal(CONFIRMATION_DAILY_CAP, 30);
+  assert.equal(results.filter(Boolean).length, CONFIRMATION_DAILY_CAP, "exactly the cap is sent");
+  assert.deepEqual(results.slice(-2), [false, false]);
+  assert.equal(c.rows.get(confirmationKey(day)), CONFIRMATION_DAILY_CAP + 2);
+  assert.equal(confirmationKey(day), "alert-confirm:2026-09-25");
+  // The next UTC day starts again.
+  assert.equal(await claimConfirmationSlot(c.db, new Date("2026-09-26T00:00:01Z")), true);
+  // One atomic upsert-increment on the key, never a read-then-write.
+  assert.deepEqual(c.calls[0], {
+    where: { key: "alert-confirm:2026-09-25" },
+    create: { key: "alert-confirm:2026-09-25", value: 1 },
+    update: { value: { increment: 1 } },
+    select: { value: true },
+  });
+  // A failing count sends nothing.
+  assert.equal(await claimConfirmationSlot(counterStub({ fail: true }).db, day), false);
 });
 
 test("the header watchlist fetch is ids-only; the watchlist itself keeps the full payload", () => {
@@ -92,7 +134,7 @@ test("/alerts: no shipping claim, the real weekly cadence, and a Plus section qu
   assert.match(page, /Can I watch a card with no price yet\?/);
 });
 
-test("paid runs follow each price import: a non-fatal GET with the cron secret", () => {
+test("paid runs follow each price import: a non-fatal GET, on a path the pre-deploy site doesn't have", () => {
   const wf = read(".github/workflows/refresh-prices.yml");
   const revalidate = wf.indexOf("- name: Revalidate site pages");
   const paid = wf.indexOf("- name: Paid price alerts");
@@ -100,8 +142,17 @@ test("paid runs follow each price import: a non-fatal GET with the cron secret",
   const step = wf.slice(paid);
   assert.match(step, /if: always\(\)/);
   assert.match(step, /CRON_SECRET: \$\{\{ secrets\.CRON_SECRET \}\}/);
-  assert.match(step, /curl -s --max-time 120 "\$SITE_URL\/api\/cron\/price-alerts\?scope=paid" -H "Authorization: Bearer \$CRON_SECRET" \|\| true/);
-  // The route is GET, authenticates that header, and maps the query to the scope.
+  // Its own path: the workflow is live as soon as it lands on main, the route
+  // only after the next deploy, and the old parent route ignored ?scope=paid
+  // (a full "all" run after every import). A new path 404s until then.
+  assert.match(step, /curl -s --max-time 120 "\$SITE_URL\/api\/cron\/price-alerts\/paid" -H "Authorization: Bearer \$CRON_SECRET" \|\| true/);
+  for (const curl of step.match(/curl [^\n]*/g) ?? []) assert.doesNotMatch(curl, /scope=paid/);
+  const paidRoute = read("src/app/api/cron/price-alerts/paid/route.ts");
+  assert.match(paidRoute, /export async function GET\(req: Request\)/);
+  assert.match(paidRoute, /auth !== `Bearer \$\{secret\}`/);
+  assert.match(paidRoute, /runPriceAlerts\(\{\}, \{ scope: "paid" \}\)/);
+  assert.doesNotMatch(paidRoute, /searchParams/, "this path can only ever run 'paid'");
+  // The parent route is GET, authenticates that header, and still maps the query (manual runs).
   const route = read("src/app/api/cron/price-alerts/route.ts");
   assert.match(route, /export async function GET\(req: Request\)/);
   assert.match(route, /auth !== `Bearer \$\{secret\}`/);
@@ -136,4 +187,22 @@ test("the watchlist hands itself to Best Basket", () => {
   const wl = read("src/components/Watchlist.tsx");
   assert.match(wl, /href="\/tools\/best-basket\?source=watchlist"/);
   assert.match(wl, /Price my watchlist, delivered →/);
+});
+
+test("Plus copy on /watching and the watchlist: ad-free, the real limit, the below-market trigger, the real cadence", () => {
+  const page = code("src/app/watching/page.tsx");
+  assert.match(page, /With Plus \(ad-free\), set your own price on up to \{PLUS_TARGET_ALERT_LIMIT\} cards/);
+  assert.doesNotMatch(page, /on any card and hear/, "Plus is capped, not 'any card'");
+  assert.match(page, /onPlus \? `up to \$\{PLUS_TARGET_ALERT_LIMIT\} cards` : "any card"/);
+  assert.match(page, /below TCGplayer market/);
+  const wl = code("src/components/Watchlist.tsx");
+  assert.doesNotMatch(wl, /the moment it gets cheaper/);
+  assert.match(wl, /when it hits a new low, naming the cheapest store — at most one email a week/);
+  const alerts = code("src/app/alerts/page.tsx");
+  assert.match(alerts, /Plus has two exceptions/);
+  assert.match(alerts, /below TCGplayer market at a new low/);
+  assert.match(alerts, /carries any other new lows/);
+  assert.doesNotMatch(alerts, /own price on any watched card/);
+  const field = code("src/components/TargetPriceField.tsx");
+  assert.match(field, /new-low and below-market alerts/);
 });

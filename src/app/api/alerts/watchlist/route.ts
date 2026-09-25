@@ -48,6 +48,18 @@ export async function GET(req: Request) {
     return NextResponse.json({ items: ids }, { headers: { "Cache-Control": "no-store" } });
   }
 
+  // ?targets=1 — how many of this account's watches carry a target price, and
+  // nothing else: the "N of 25 used" count for a target field rendered away
+  // from the watchlist (PriceAlertModal), which has no rows to count. One
+  // indexed count, no rows returned. null on a failed count: the field then
+  // shows no count rather than a wrong one.
+  if (new URL(req.url).searchParams.get("targets") === "1") {
+    const used = await prisma.priceAlert
+      .count({ where: { userId: user.id, targetCents: { not: null } } })
+      .catch(() => null);
+    return NextResponse.json({ used }, { headers: { "Cache-Control": "no-store" } });
+  }
+
   const country = getCountry();
   const items = await prisma.priceAlert
     .findMany({

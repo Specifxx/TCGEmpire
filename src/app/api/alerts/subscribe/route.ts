@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { pickPrice, type Country } from "@/lib/country";
 import { sendAlertConfirmationEmail } from "@/lib/email";
+import { claimConfirmationSlot } from "@/lib/alert-confirmations";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -97,15 +98,12 @@ export async function POST(req: Request) {
   // to an address with NO earlier PriceAlert row (`existing`, read above) —
   // a returning address already had its confirmation, and re-confirming on
   // every new card was one email per heart-click. And only while under a
-  // GLOBAL daily cap: this route takes any address with no double opt-in, and
-  // Resend's 100/day quota is shared with verification, password-reset and the
-  // alert digests themselves, so ~100 posted addresses used to be able to
-  // starve all of them. rateLimit() can't be that cap — it is per serverless
-  // instance — so the database counts: anonymous watch rows created in the
-  // last 24h (this request's included). Rows, not addresses, so it errs toward
-  // sending fewer; normal traffic is a few a day. A capped confirmation costs
-  // nothing but the courtesy email — the watch itself is saved either way.
-  if (result.count > 0 && !existing && (await confirmationsUnderDailyCap())) {
+  // GLOBAL daily cap on confirmations actually sent (lib/alert-confirmations.ts:
+  // Resend's 100/day quota is shared, and this route has no double opt-in).
+  // The slot is claimed last, so only a confirmation that is about to go out
+  // is counted. A capped confirmation costs nothing but the courtesy email —
+  // the watch itself is saved either way.
+  if (result.count > 0 && !existing && (await claimConfirmationSlot(prisma))) {
     const unsubUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
     // Don't block the response on the network round-trip. `userId == null`
     // means this watch has no account behind it — those recipients (and only
@@ -114,16 +112,4 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ ok: true, added: result.count, watching: total });
-}
-
-// See the confirmation comment in POST. Not exported (a route file may export
-// only its handlers and route config), and fails CLOSED: a count that errors
-// sends nothing.
-const CONFIRMATION_DAILY_CAP = 30;
-async function confirmationsUnderDailyCap(): Promise<boolean> {
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const recent = await prisma.priceAlert
-    .count({ where: { userId: null, createdAt: { gte: since } } })
-    .catch(() => Number.POSITIVE_INFINITY);
-  return recent <= CONFIRMATION_DAILY_CAP;
 }
