@@ -26,7 +26,9 @@ function ogModules(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) ogModules(p, out);
-    else if (/^(opengraph|twitter)-image\.tsx$/.test(name)) out.push(p);
+    // lib/*-og.tsx holds compositions an image route renders (hot40-og,
+    // card-og), moved out so they can be drawn from a fixture — same rule.
+    else if (/^(opengraph|twitter)-image\.tsx$/.test(name) || /^lib\/.*-og\.tsx$/.test(p.slice(ROOT.length + 1))) out.push(p);
   }
   return out;
 }
@@ -103,6 +105,7 @@ for (const file of FILES) {
     );
   });
 
+  if (!/(opengraph|twitter)-image\.tsx$/.test(file)) continue;
   test(`${rel}: exports the metadata next/og requires`, () => {
     const text = readFileSync(file, "utf8");
     assert.match(text, /export const size\s*=/, "must export size");

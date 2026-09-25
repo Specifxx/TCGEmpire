@@ -3,6 +3,15 @@
 // Shared by the calculator (instant, free) and the optional LLM "roast" endpoint.
 import { formatMoney } from "./format";
 
+// Every currency the trade calculator can show, i.e. what /api/trade-roast must
+// accept. It lives here rather than in the route because a Next route file may
+// only export its handlers. The route's enum was ["AUD","NZD","USD","GBP"] until
+// 2026-09-25, so a CA, SG or EU visitor (and a UK visitor shown EUR) got a 400
+// and "Roast this trade" silently did nothing. tests/card-og-price.test.ts
+// checks every COUNTRIES[*].currency is listed. NZD stays: retired markets'
+// cookies can still send it, and formatMoney handles it via its "$" fallback.
+export const TRADE_CURRENCIES = ["AUD", "USD", "GBP", "CAD", "EUR", "SGD", "NZD"] as const;
+
 export type TradeTone = "donation" | "fair" | "robbed" | "winning";
 export type TradeVerdict = { tone: TradeTone; line: string };
 

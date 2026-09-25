@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { llmText, aiEnabled } from "@/lib/ai-insight";
-import { tradeGremlin } from "@/lib/trade-gremlin";
+import { tradeGremlin, TRADE_CURRENCIES } from "@/lib/trade-gremlin";
 import { formatMoney } from "@/lib/format";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 
@@ -10,8 +10,9 @@ export const dynamic = "force-dynamic";
 const schema = z.object({
   giveCents: z.number().int().min(0).max(100_000_00),
   getCents: z.number().int().min(0).max(100_000_00),
-  // Strict enum — an arbitrary string would make Intl throw inside formatMoney.
-  currency: z.enum(["AUD", "NZD", "USD", "GBP"]).default("AUD"),
+  // Strict enum — an arbitrary string must never reach the model prompt. Every
+  // market's currency is listed; see TRADE_CURRENCIES.
+  currency: z.enum(TRADE_CURRENCIES).default("AUD"),
   yours: z.array(z.string().max(80)).max(40).default([]),
   theirs: z.array(z.string().max(80)).max(40).default([]),
 });
