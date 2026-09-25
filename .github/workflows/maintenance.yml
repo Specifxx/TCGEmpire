@@ -3277,6 +3277,26 @@ jobs:
             echo "  target $T: $N"
           done
 
+          # DROP EVERY TABLE ON THE TARGET THAT ISN'T IN THE SOURCE'S SCHEMA
+          # (2026-09-25). A recycled project like RM4 can carry schema debris
+          # from its old life -- e.g. a legacy "EbayAuction" table (superseded
+          # by EbayAuctionListing) with an FK onto Card. Because that table
+          # doesn't exist in the SOURCE, it's absent from the pg_dump's TOC
+          # entirely, so `pg_restore --clean` never emits a DROP for it or its
+          # FK, which blocks `DROP TABLE Card` (dependent constraint), which
+          # cascades into "relation already exists" and stale-schema COPY
+          # failures. Drop target-only tables up front so restore always
+          # starts from a schema that's a subset of the source's.
+          echo "== Dropping target-only tables absent from the source's schema (stale debris from RM4's old schema) =="
+          SOURCE_TABLES=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT tablename FROM pg_tables WHERE schemaname='public'")
+          TARGET_TABLES=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT tablename FROM pg_tables WHERE schemaname='public'" 2>/dev/null || true)
+          for T in $TARGET_TABLES; do
+            if ! grep -qxF "$T" <<<"$SOURCE_TABLES"; then
+              echo "  dropping public.\"$T\" (target-only, not in source) CASCADE"
+              psql "$TARGET_DATABASE_URL" -c "DROP TABLE IF EXISTS public.\"$T\" CASCADE;"
+            fi
+          done
+
           echo "== Source table sizes (from catalog — negligible transfer) =="
           psql "$SOURCE_DATABASE_URL" -P pager=off -c "
             SELECT relname AS table,
