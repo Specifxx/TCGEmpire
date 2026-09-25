@@ -20,7 +20,7 @@ import { cardCredentials, cardDisplayName, cardSearchName, shortCardName } from 
 import { cardTitle, cardMetaDescription } from "@/lib/card-seo";
 import { aliasesForSlug } from "@/lib/content/card-aliases";
 import { CardTile } from "@/components/CardTile";
-import { cardTileSelect } from "@/lib/cards";
+import { cardTileSelect, trimTileArtFallback } from "@/lib/cards";
 import { cardImageSrc } from "@/lib/card-image-url";
 import { AdSlot } from "@/components/AdSlot";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY, isoCountry, priceField, type Country } from "@/lib/country";
@@ -649,11 +649,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const basePriceCents = basePrinting ? (basePrinting[priceField(DEFAULT_COUNTRY)] as number | null) : null;
 
   // Similar cards — more from the same set, same domain first. This is the single
-  // biggest internal-linking lever: every long-tail card page links out to ~12
+  // biggest internal-linking lever: every long-tail card page links out to ~6
   // sibling card pages, which is what gets them crawled and indexed. Priced cards
   // first (more useful, and they're the ones people search). Falls back to other
   // cards in the set when a domain is thin, so the row is never near-empty.
-  const SIMILAR_TAKE = 12;
+  // 6, not 12 (2026-09-25): each tile is ~2.6 KB of HTML plus its props in the
+  // RSC payload, and every one is re-written on each ISR regeneration. Six
+  // siblings plus the cheaper/champion/printing rails still link out to ~20 cards.
+  const SIMILAR_TAKE = 6;
   const similarSelect = cardTileSelect(DEFAULT_COUNTRY);
   const similarOrder = [
     { lowestPriceCents: { sort: "desc" as const, nulls: "last" as const } },
@@ -666,7 +669,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     select: similarSelect,
   });
   let similar = sameDomain;
-  if (similar.length < 6) {
+  if (similar.length < SIMILAR_TAKE) {
     const seen = new Set(similar.map((c) => c.id));
     const fill = await prisma.card.findMany({
       where: { setCode: card.setCode, id: { notIn: [card.id, ...seen] } },
@@ -1472,7 +1475,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {printings.map((c) => (
-              <CardTile key={c.id} card={c} />
+              <CardTile key={c.id} card={trimTileArtFallback(c)} />
             ))}
           </div>
         </section>
@@ -1491,7 +1494,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {cheaperAlternatives.map((c) => (
-              <CardTile key={c.id} card={c} />
+              <CardTile key={c.id} card={trimTileArtFallback(c)} />
             ))}
           </div>
         </section>
@@ -1527,7 +1530,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {similar.map((c) => (
-              <CardTile key={c.id} card={c} />
+              <CardTile key={c.id} card={trimTileArtFallback(c)} />
             ))}
           </div>
         </section>
@@ -1548,7 +1551,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {championCards.map((c) => (
-              <CardTile key={c.id} card={c} />
+              <CardTile key={c.id} card={trimTileArtFallback(c)} />
             ))}
           </div>
         </section>

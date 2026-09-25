@@ -12670,3 +12670,18 @@ Separately, `/api/trade-roast` accepted only `["AUD","NZD","USD","GBP"]`. A CA, 
 - **Web Analytics.** Page views and the existing `track()` calls stay. They are the only traffic data the site has.
 - **Card page size.** About half the HTML is the inline RSC payload Next embeds. Shrinking it needs a card-page refactor (fewer retailer rows serialised to the client), which is a separate change.
 - **The 5-minute keep-warm.** About 580 tiny invocations a day, per the 2026-09-11 decision.
+
+## Card pages slimmed: one footer site map, six similar cards, cached 404 rail — 2026-09-25
+
+**Why.** Most visitors use the quick-view popup, not the card page. The card pages are mostly read by crawlers, and each ISR regeneration writes the whole page, ~415 KB of HTML plus ~197 KB of RSC payload (~75 ISR write units), across ~1,434 cards (see "Vercel cost cuts" above).
+
+**What.**
+
+- **The footer site map renders once.** FooterNav emitted FOOTER_GROUPS three times (a homepage accordion, a mobile accordion set and a desktop grid, two hidden by CSS). That was ~177 anchors and ~26 KB of HTML, plus the same again in the RSC payload, on every page. It is now one grid inside one `<details>` (`FooterSiteMapDetails`). It is open everywhere except "/", as the homepage's collapsed "Full site map" was, and it collapses after mount below 640 px, as the per-group accordions did. Measured locally: 11.7 KB and 71 links. Every link is still a server-rendered anchor, open or closed, and `tests/internal-linking.test.ts` still passes.
+- **Similar cards: 12 → 6.** Each tile costs ~2.6 KB of HTML plus its props in the RSC payload. The page still links out to ~20 cards through the similar, cheaper, champion and other-printings rails.
+- **Rail tiles go through `trimTileArtFallback()`**, which drops energyCost/might/artSeed when the card has real art, as the list pages already do.
+- **The root not-found's "popular cards" query is cached** (`cachedOrDirect`, 86400, CONTENT_TAG). Next renders the root not-found into every page's tree, so an uncached query there ran on every ISR regeneration of every card page.
+
+**Not done.**
+
+- The remaining per-page overhead is Next's client-reference rows: ~56 client components, each listing its chunks with Vercel Skew Protection's `?dpl=` suffix, about 68 KB of the RSC payload (~30 KB of it `?dpl=`). Turning Skew Protection off in the Vercel dashboard removes the suffix. It costs the protection against a deploy breaking open tabs, so that is the owner's choice. Fewer layout-level client components would cut the rest.
