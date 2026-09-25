@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { pickPrice, type Country } from "@/lib/country";
 import { sendAlertConfirmationEmail } from "@/lib/email";
+import { claimConfirmationSlot } from "@/lib/alert-confirmations";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,8 @@ export async function POST(req: Request) {
   }
 
   // Reuse this email's existing unsubscribe token if it already has alerts, so a
-  // single link can unsubscribe every card for the address.
+  // single link can unsubscribe every card for the address. Also the "is this a
+  // new address?" check the confirmation email below keys on.
   const existing = await prisma.priceAlert.findFirst({
     where: { email },
     select: { unsubToken: true },
@@ -71,26 +73,37 @@ export async function POST(req: Request) {
   const unsubToken = existing?.unsubToken ?? randomUUID();
 
   // createMany + skipDuplicates means re-subscribing an already-watched card is a
-  // harmless no-op and never clobbers its tracked baseline.
+  // harmless no-op and never clobbers its tracked baseline. startPriceCents is
+  // the "watching from" figure: written here, once, and never by the cron.
   const result = await prisma.priceAlert.createMany({
-    data: cards.map((c) => ({
-      email,
-      userId,
-      cardId: c.id,
-      market,
-      unsubToken,
-      lastPriceCents: pickPrice(c, market as Country),
-    })),
+    data: cards.map((c) => {
+      const price = pickPrice(c, market as Country);
+      return {
+        email,
+        userId,
+        cardId: c.id,
+        market,
+        unsubToken,
+        lastPriceCents: price,
+        startPriceCents: price,
+      };
+    }),
     skipDuplicates: true,
   });
 
   // Total cards this email now watches in this market (for the confirmation copy).
   const total = await prisma.priceAlert.count({ where: { email, market } });
 
-  // Confirmation email (no-ops gracefully if email isn't configured). Only send
-  // when this request actually added a new watch, to avoid re-confirming on every
-  // repeat heart-click.
-  if (result.count > 0) {
+  // Confirmation email (no-ops gracefully if email isn't configured). Sent only
+  // to an address with NO earlier PriceAlert row (`existing`, read above) —
+  // a returning address already had its confirmation, and re-confirming on
+  // every new card was one email per heart-click. And only while under a
+  // GLOBAL daily cap on confirmations actually sent (lib/alert-confirmations.ts:
+  // Resend's 100/day quota is shared, and this route has no double opt-in).
+  // The slot is claimed last, so only a confirmation that is about to go out
+  // is counted. A capped confirmation costs nothing but the courtesy email —
+  // the watch itself is saved either way.
+  if (result.count > 0 && !existing && (await claimConfirmationSlot(prisma))) {
     const unsubUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
     // Don't block the response on the network round-trip. `userId == null`
     // means this watch has no account behind it — those recipients (and only

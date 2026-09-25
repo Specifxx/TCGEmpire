@@ -10,6 +10,7 @@ import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
 import { useMe } from "@/lib/use-me";
 import { useCountry } from "./CountryProvider";
 import { AuthForm } from "./AuthForm";
+import { TargetPriceField } from "./TargetPriceField";
 import { Dialog } from "./ui/Dialog";
 import { Toast } from "./ui/Toast";
 import { Spinner } from "./ui/Skeleton";
@@ -49,6 +50,9 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [pendingCardId, setPendingCardId] = useState<string | null>(null);
+  // The market and address the watch was just created with — the success
+  // phase's target field saves against exactly that (card, market) row.
+  const [subscribed, setSubscribed] = useState<{ email: string; market: string } | null>(null);
   // Lightweight toast for the silent (already-subscribed) path. `accountLink`
   // adds a low-key "manage in a free account" line — the ONLY account pitch a
   // habitual anonymous watcher ever sees, since this path never opens a modal.
@@ -144,6 +148,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
     const r = await subscribe(addr, pendingCardId);
     setSubmitting(false);
     if (r.ok) {
+      setSubscribed({ email: addr.toLowerCase(), market: country });
       try {
         localStorage.setItem(EMAIL_KEY, addr.toLowerCase());
       } catch {
@@ -283,9 +288,25 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                 </div>
                 <h2 id="price-alert-title" className="font-display text-xl font-bold text-white">You&apos;re all set</h2>
                 <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-slate-300">
-                  We&apos;re watching this card&apos;s price. We&apos;ll email you the moment it drops. Check your
-                  inbox for a confirmation.
+                  We&apos;re watching this card&apos;s price. We&apos;ll email you when it hits a new low, naming
+                  the cheapest store — at most one email a week.
                 </p>
+                {/* The Plus target price, on the watch just created. Only for a
+                    signed-in account subscribing its OWN address: the subscribe
+                    route links the row to the account only then, and the
+                    target is saved on that account's row. Free accounts see
+                    the field disabled beside the Plus gate, which closes this
+                    modal before opening the upgrade dialog. */}
+                {user && pendingCardId && subscribed && subscribed.email === user.email.toLowerCase() && (
+                  <TargetPriceField
+                    cardId={pendingCardId}
+                    cardName="this card"
+                    market={subscribed.market}
+                    initialCents={null}
+                    onUpgradeClick={() => setOpen(false)}
+                    className="mx-auto mt-4 max-w-xs rounded-lg border border-ink-700 p-3 text-left"
+                  />
+                )}
                 <button onClick={() => setOpen(false)} className="btn-primary mt-4 w-full">
                   Done
                 </button>

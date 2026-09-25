@@ -1,20 +1,39 @@
 import { prisma } from "./db";
 import { pickPrice, type Country } from "./country";
 import { cardHref } from "./card-url";
-import { sendPriceDropEmail as sendPriceDropEmailImpl, type PriceDropItem } from "./email";
+import { sendPriceDropEmail as sendPriceDropEmailImpl, type AlertStore, type PriceDropItem } from "./email";
 import { SITE_URL } from "./site";
 import { notify } from "./notifications";
+import { isPremium, premiumTierOf, type EntitlementUser } from "./premium";
+import { targetAlertLimit } from "./alert-limits";
+import { defaultTcgBuyKeys, getTcgDealRanks } from "./arbitrage";
+import { ALL_FALLBACK_RETAILERS } from "./constants";
+import { honouredTargetIds } from "./target-price";
+import { affiliateUrl } from "./affiliate";
 
 export interface AlertRunSummary {
   alerts: number; // rows examined
   drops: number; // individual card price drops found
   listed: number; // watched cards that got their FIRST price in the alert's market
+  targets: number; // entitled watches at or below their own target price, worth telling (sent or deferred)
+  belowMarket: number; // entitled watches that entered Deal Finder's below-TCGplayer-market ranking at a new low
   suppressed: number; // drops NOT emailed (not a new low, and no reminder due) — anti-spam
-  deferred: number; // drops/first listings worth sending, held for the weekly cap (or FIRST_PRICE_SEND_CAP) — they WILL send later
+  deferred: number; // drops/first listings/paid alerts worth sending, held for the weekly cap (or a per-run send cap) — they WILL send later
   emails: number; // recipients emailed
-  updated: number; // baselines moved (up or down)
+  updated: number; // baseline rows written (a moved price, or an emailed alert's watermark)
   held: number; // baselines deliberately NOT moved (failed digest, or deferred above)
 }
+
+// Which rows one run looks at (2026-09-25 premium lineup).
+//   • "all"  — every watch, anonymous included: the daily vercel.json run, and
+//              exactly the pre-lineup behaviour when nobody has a target.
+//   • "paid" — only watches owned by an entitled account (Plus, Premium,
+//              admin): the extra runs refresh-prices.yml fires right after each
+//              of the two daily imports, so a target is checked after every
+//              price update instead of once a day. Free and anonymous rows are
+//              never touched by a paid run — their baselines, weekly cap and
+//              FIRST_PRICE_SEND_CAP belong to the "all" run alone.
+export type AlertScope = "paid" | "all";
 
 // How long after the last email a repeat drop notification is allowed even when
 // the price is NOT a new low — a gentle "still cheap" nudge rather than spam.
@@ -34,6 +53,11 @@ export const REMINDER_INTERVAL_MS = 60 * 24 * 60 * 60 * 1000; // ≈ 2 months
 // tracks baselines, and a weekly-only job would compare against a week-old price
 // and miss everything that fell and recovered in between. A cap also keeps the
 // first email to a new subscriber immediate — their cooldown has not started.
+//
+// The paid triggers (a target price, the below-market ranking) are exempt: a
+// member who names a price asked to hear the moment it is met, and each of
+// them still fires at most once per new low (its own watermark — see
+// shouldEmailTarget and isBelowMarketNewLow).
 export const MIN_DIGEST_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 
 // Is this ADDRESS inside its quiet window? Pure and exported for the same reason
@@ -74,6 +98,15 @@ export function isFirstPrice(prev: number | null, current: number | null): boole
 // not counted.
 export const FIRST_PRICE_SEND_CAP = 40;
 
+// Most NEW digests the paid triggers (target, below-market) may open in one
+// run. The same Resend quota, and the paid triggers skip the weekly cap, so a
+// release day (or a bug) must not be able to spend it on one run. About ten
+// paying accounts exist today; 30 is far above a normal run and far below the
+// quota. Overflow is deferred (baseline held) and re-detects next run, which
+// for a paid watch is at most ~12 hours away. Joining a digest already queued
+// for that address costs nothing and is not counted.
+export const PAID_SEND_CAP = 30;
+
 // Given a genuine drop (current < the last-seen baseline), decide whether to
 // actually EMAIL it. Pure and exported so the anti-spam policy is unit-tested
 // directly rather than inferred from the cron's side effects.
@@ -94,6 +127,53 @@ export function shouldEmailDrop(opts: {
   return isNewLow || dueForReminder;
 }
 
+// THE TARGET-PRICE TRIGGER ("Notify me at $X", Plus and Premium). Fires when the
+// card's lowest in-stock price in the watch's market is AT OR BELOW the target
+// and that price is news to this watcher: nothing emailed under this target
+// yet, or below the lowest price we emailed under it, or the ≈2-month reminder
+// is due. So a price that sits under the target sends once, not every run, and
+// a sawtooth back to a price already sent stays quiet.
+//
+// Pure and exported, like shouldEmailDrop, so the policy is tested directly.
+// `lowestEmailedCents` here is the TARGET's own watermark — the cron passes
+// PriceAlert.targetEmailedCents, never the shared lowestEmailedCents. Setting
+// or changing a target resets that one column (PATCH /api/alerts/watchlist/
+// [cardId]), so an old low from before the target existed can't silence it,
+// while the free drop rule and the below-market trigger keep their own
+// "lowest we've ever emailed you" untouched.
+export function shouldEmailTarget(opts: {
+  current: number;
+  targetCents: number | null;
+  lowestEmailedCents: number | null;
+  lastNotifiedAt: Date | null;
+  now: Date;
+}): boolean {
+  const { current, targetCents, lowestEmailedCents, lastNotifiedAt, now } = opts;
+  if (targetCents == null || current > targetCents) return false;
+  return shouldEmailDrop({ current, lowestEmailedCents, lastNotifiedAt, now });
+}
+
+// THE BELOW-MARKET TRIGGER (Plus and Premium). The card is in Deal Finder's
+// "cheaper than TCGplayer market" ranking right now; this decides whether that
+// is NEWS. Only at a new low: below the lowest price we have emailed this
+// watcher, or — never emailed — a real drop since the last run (or the card's
+// first price in this market). A card that has sat in the ranking at the same
+// price since the watch began never fires; one that falls further does, once.
+// No reminder: this is a bonus trigger, and the target is the promise.
+export function isBelowMarketNewLow(opts: {
+  current: number;
+  prev: number | null;
+  lowestEmailedCents: number | null;
+}): boolean {
+  const { current, prev, lowestEmailedCents } = opts;
+  if (lowestEmailedCents != null) return current < lowestEmailedCents;
+  return prev == null || current < prev;
+}
+
+// Rows the store lookup may return per fired card. The lookup is ONE query for
+// every fired card, capped at this many rows each (see cheapestStores).
+export const STORE_ROWS_PER_CARD = 8;
+
 // Walk every wishlist price-drop subscription, compare each card's current lowest
 // price (for the subscriber's market) against the last value we recorded, and:
 //   • when it FELL → queue the subscriber for a notification email,
@@ -104,18 +184,47 @@ export function shouldEmailDrop(opts: {
 // Designed to run daily, right after the price importer refreshes lowest prices.
 //
 // `deps` exists only so tests can run the whole thing against a stub client and
-// sender (tests/price-alerts-first-price.test.ts); the cron passes nothing.
-// notify() is not injectable — test rows carry no userId, so it never runs.
+// sender (tests/price-alerts-first-price.test.ts, tests/price-alerts-target.test.ts);
+// the cron passes nothing. notify() itself is not injectable (tests/design-
+// system.test.ts pins its import and call shape); `notifyUsers: false` switches
+// the in-app mirror off instead, for tests whose rows carry a userId — the paid
+// triggers need an account — so a test can never write a Notification row.
 export interface AlertRunDeps {
-  db?: Pick<typeof prisma, "priceAlert" | "$transaction">;
+  db?: Pick<typeof prisma, "priceAlert" | "retailerPrice" | "$transaction">;
   sendPriceDropEmail?: typeof sendPriceDropEmailImpl;
   now?: Date;
+  notifyUsers?: boolean;
+  // Deal Finder's below-TCGplayer-market ranking for one market (card id →
+  // rank). Defaults to lib/arbitrage.ts getTcgDealRanks over the default buy
+  // side — the same call the premium nudge makes.
+  dealRanks?: (country: Country) => Promise<Map<string, number>>;
 }
 
-export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunSummary> {
+export interface AlertRunOptions {
+  scope?: AlertScope;
+}
+
+export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOptions = {}): Promise<AlertRunSummary> {
   const db = deps.db ?? prisma;
   const sendPriceDropEmail = deps.sendPriceDropEmail ?? sendPriceDropEmailImpl;
+  const dealRanks = deps.dealRanks ?? ((c: Country) => getTcgDealRanks(c, defaultTcgBuyKeys(c)));
+  const scope: AlertScope = opts.scope ?? "all";
+  const now = deps.now ?? new Date();
+
+  // "all" reads EVERY row, unfiltered — anonymous watchers are emailed exactly
+  // like account-owned ones (tests/watchlist.test.ts). "paid" narrows the read
+  // to rows whose account is inside a paid period, or is an admin; isPremium()
+  // below stays the real check (a tier floor etc.), this only trims the read.
+  const paidOnly = scope === "paid"
+    ? { user: { is: { OR: [{ isAdmin: true }, { premiumUntil: { gt: now } }] } } }
+    : undefined;
   const alerts = await db.priceAlert.findMany({
+    where: paidOnly,
+    // Oldest watch first, so a run's processing order (and which paid digests
+    // PAID_SEND_CAP defers) is stable between runs. Which over-limit targets
+    // are honoured does not depend on it: honouredTargetIds sorts for itself.
+    // ~200 rows: the sort is free.
+    orderBy: { createdAt: "asc" },
     select: {
       id: true,
       email: true,
@@ -125,10 +234,18 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
       // shouldEmailDrop() below to decide whether a fresh drop is worth sending.
       lowestEmailedCents: true,
       lastNotifiedAt: true,
+      // The member's own "notify me at" price — honoured only while entitled —
+      // and the target's own watermark (see shouldEmailTarget).
+      targetCents: true,
+      targetEmailedCents: true,
+      // For honouredTargetIds: which targets an over-limit account keeps live.
+      createdAt: true,
       unsubToken: true,
       // Whether this watch belongs to an account — decides if the drop email
       // carries the "create a free account" block (anonymous watchers only).
       userId: true,
+      // Entitlement, for the paid triggers: the fields isPremium() reads.
+      user: { select: { isAdmin: true, premiumUntil: true, premiumTier: true, premiumTierFloor: true } },
       card: {
         select: {
           id: true,
@@ -151,8 +268,56 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
     },
   });
 
-  const summary: AlertRunSummary = { alerts: alerts.length, drops: 0, listed: 0, suppressed: 0, deferred: 0, emails: 0, updated: 0, held: 0 };
-  const now = deps.now ?? new Date();
+  const summary: AlertRunSummary = {
+    alerts: alerts.length,
+    drops: 0,
+    listed: 0,
+    targets: 0,
+    belowMarket: 0,
+    suppressed: 0,
+    deferred: 0,
+    emails: 0,
+    updated: 0,
+    held: 0,
+  };
+
+  // ENTITLEMENT, once per row. A lapsed subscription (premiumUntil in the past)
+  // is simply not entitled: its targets are ignored and the watch runs the free
+  // rules below — the value stays stored, so it comes back on resubscribing.
+  const entitled = new Map<string, boolean>();
+  // The target each entitled row may use: none when it has none, or when its
+  // account holds more targets than targetAlertLimit(tier) and this is not one
+  // of the oldest (honouredTargetIds — the same rule the watchlist shows).
+  const honouredTarget = new Map<string, number>();
+  const targetRowsByUser = new Map<string, { user: EntitlementUser; rows: (typeof alerts)[number][] }>();
+  for (const a of alerts) {
+    // Through the PriceAlert → User relation; an anonymous row has no user and
+    // is never paid.
+    const user: EntitlementUser | null = a.user ?? null;
+    const ok = a.userId != null && user != null && isPremium(user);
+    entitled.set(a.id, ok);
+    if (!ok || a.targetCents == null) continue;
+    const group = targetRowsByUser.get(a.userId!) ?? { user: user!, rows: [] };
+    group.rows.push(a);
+    targetRowsByUser.set(a.userId!, group);
+  }
+  for (const { user, rows } of targetRowsByUser.values()) {
+    const live = honouredTargetIds(rows, targetAlertLimit(premiumTierOf(user)));
+    for (const a of rows) if (live.has(a.id)) honouredTarget.set(a.id, a.targetCents!);
+  }
+  const inScope = (a: (typeof alerts)[number]) => scope === "all" || entitled.get(a.id) === true;
+
+  // The below-market ranking, once per market that HAS an entitled watch — at
+  // most six calls, each a hit on arbitrage's day caches (the homepage, Deal
+  // Finder and the nudge keep them warm). Called directly from the cron, never
+  // inside an unstable_cache (db.ts rule 6, tests/nested-cache.test.ts). An
+  // empty map (TCGplayer feed down, any error) just switches this trigger off.
+  const ranksByMarket = new Map<Country, Map<string, number>>();
+  for (const a of alerts) {
+    const market = a.market as Country;
+    if (!entitled.get(a.id) || ranksByMarket.has(market)) continue;
+    ranksByMarket.set(market, await dealRanks(market).catch(() => new Map<string, number>()));
+  }
 
   // When each ADDRESS was last emailed, across every card it watches — the input
   // to the weekly cap. lastNotifiedAt is stored per alert row, so the address's
@@ -190,8 +355,14 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
   // For each alert we DID email, the lowest-emailed watermark to persist
   // (min of its old watermark and the price we just sent).
   const notifiedLowest = new Map<string, number>();
+  // For each alert emailed by its TARGET, the target's own watermark to persist
+  // (min of targetEmailedCents and the price sent) — written alongside the
+  // shared one, which a target email also advances: it is a price we told them.
+  const notifiedTargetLowest = new Map<string, number>();
   // New digests opened by first-price notices this run (FIRST_PRICE_SEND_CAP).
   let listedDigests = 0;
+  // New digests opened by the paid triggers this run (PAID_SEND_CAP).
+  let paidDigests = 0;
 
   const queue = (a: (typeof alerts)[number], item: PriceDropItem) => {
     const bucket = byEmail.get(a.email) ?? { token: a.unsubToken, items: [], anonymous: true, userId: null };
@@ -210,13 +381,72 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
     lastEmailedByAddress.set(a.email, now.getTime());
   };
 
+  const itemFor = (a: (typeof alerts)[number], market: Country, kind: NonNullable<PriceDropItem["kind"]>, oldCents: number | null, newCents: number): PriceDropItem => ({
+    kind,
+    cardId: a.card.id,
+    name: a.card.name,
+    setCode: a.card.setCode,
+    collectorNumber: a.card.collectorNumber,
+    url: `${SITE_URL}${cardHref(a.card)}`,
+    oldCents,
+    newCents,
+    market,
+  });
+
+  // PASS 1 — THE PAID TRIGGERS, for entitled rows only, and before any free
+  // rule runs. Two passes rather than one so the digest an address gets never
+  // depends on row order: a paid alert opens (or joins) the digest first, and
+  // that address's weekly-capped drops then join it in pass 2 instead of being
+  // deferred a week behind an email that is going out anyway.
+  const paidFired = new Set<string>();
   for (const a of alerts) {
+    if (!entitled.get(a.id)) continue;
+    const market = a.market as Country;
+    const current = pickPrice(a.card, market);
+    if (current == null) continue;
+    const prev = a.lastPriceCents;
+    const target = honouredTarget.get(a.id) ?? null;
+
+    let item: PriceDropItem | null = null;
+    // The target reads its OWN watermark (targetEmailedCents), so a changed
+    // target is armed again without disturbing the shared one.
+    if (shouldEmailTarget({ current, targetCents: target, lowestEmailedCents: a.targetEmailedCents, lastNotifiedAt: a.lastNotifiedAt, now })) {
+      summary.targets++;
+      item = { ...itemFor(a, market, "target", prev, current), targetCents: target };
+    } else if (ranksByMarket.get(market)?.has(a.card.id) && isBelowMarketNewLow({ current, prev, lowestEmailedCents: a.lowestEmailedCents })) {
+      summary.belowMarket++;
+      item = itemFor(a, market, "under-market", prev, current);
+    }
+    if (!item) continue;
+    paidFired.add(a.id);
+    // No weekly cap for the paid triggers; only the per-run send cap, which
+    // defers (baseline held) exactly like a capped drop.
+    if (!byEmail.has(a.email) && paidDigests >= PAID_SEND_CAP) {
+      summary.deferred++;
+      deferredIds.add(a.id);
+      continue;
+    }
+    if (!byEmail.has(a.email)) paidDigests++;
+    notifiedIds.push(a.id);
+    notifiedLowest.set(a.id, a.lowestEmailedCents == null ? current : Math.min(a.lowestEmailedCents, current));
+    if (item.kind === "target") {
+      notifiedTargetLowest.set(a.id, a.targetEmailedCents == null ? current : Math.min(a.targetEmailedCents, current));
+    }
+    queue(a, item);
+  }
+
+  // PASS 2 — THE FREE RULES, unchanged, for every row in scope that no paid
+  // trigger took; and the baseline bookkeeping for every row in scope.
+  for (const a of alerts) {
+    if (!inScope(a)) continue;
     const market = a.market as Country;
     const current = pickPrice(a.card, market);
     if (current == null) continue; // no price in this market yet — nothing to compare
 
     const prev = a.lastPriceCents;
-    if (isFirstPrice(prev, current)) {
+    if (paidFired.has(a.id)) {
+      // Decided in pass 1.
+    } else if (isFirstPrice(prev, current)) {
       // Never priced in this market before, priced now: the "now in stock" notice
       // (see isFirstPrice). Same address cooldown as a drop, plus the per-run send
       // cap; either one holds the baseline at null so the next run finds it again.
@@ -230,16 +460,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
         // The first price seeds the lowest-emailed watermark, so a later drop is a
         // "new low" only below what we just told them.
         notifiedLowest.set(a.id, a.lowestEmailedCents == null ? current : Math.min(a.lowestEmailedCents, current));
-        queue(a, {
-          kind: "listed",
-          name: a.card.name,
-          setCode: a.card.setCode,
-          collectorNumber: a.card.collectorNumber,
-          url: `${SITE_URL}${cardHref(a.card)}`,
-          oldCents: null,
-          newCents: current,
-          market,
-        });
+        queue(a, itemFor(a, market, "listed", null, current));
       }
     } else if (prev != null && current < prev) {
       // A genuine drop from the last price we saw. Whether we actually EMAIL it
@@ -259,23 +480,27 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
       } else {
         notifiedIds.push(a.id);
         notifiedLowest.set(a.id, a.lowestEmailedCents == null ? current : Math.min(a.lowestEmailedCents, current));
-        queue(a, {
-          kind: "drop",
-          name: a.card.name,
-          setCode: a.card.setCode,
-          collectorNumber: a.card.collectorNumber,
-          url: `${SITE_URL}${cardHref(a.card)}`,
-          oldCents: prev,
-          newCents: current,
-          market,
-        });
+        queue(a, itemFor(a, market, "drop", prev, current));
       }
     }
 
     // Advance the baseline whenever the price moved (up or down, or first time),
     // even for a suppressed drop — so the NEXT drop is still measured against the
-    // most recent price, not a stale one.
-    if (prev !== current) updates.push({ id: a.id, price: current });
+    // most recent price, not a stale one. A paid alert can fire with the price
+    // unmoved (a reminder, or a target set under today's price), so a fired
+    // paid row is written too: its watermark and lastNotifiedAt ride on this
+    // write, and without it the same alert would re-send every run.
+    if (prev !== current || paidFired.has(a.id)) updates.push({ id: a.id, price: current });
+  }
+
+  // THE STORE BEHIND EACH EMAILED PRICE — every alert email, free drops too,
+  // names the store and links the exact listing, so the reader can check it
+  // before paying. One capped query for every card in every digest.
+  const firedItems = [...byEmail.values()].flatMap((b) => b.items);
+  const stores = await cheapestStores(db, firedItems);
+  for (const item of firedItems) {
+    const store = item.cardId ? stores.get(storeKey(item.market, item.cardId)) : undefined;
+    if (store) item.store = store;
   }
 
   // Send one digest per email. Sequential to stay gentle on the email provider's
@@ -289,11 +514,8 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
       // In-app mirror of the email, for the account's own bell — only when
       // the watch is actually linked to one (anonymous watchers have nowhere
       // in-app to see it).
-      if (userId) {
-        const allListed = items.every((i) => i.kind === "listed");
-        const title = allListed
-          ? items.length === 1 ? `${items[0].name} is now in stock` : `${items.length} watched cards are now in stock`
-          : items.length === 1 ? `${items[0].name} just dropped` : `${items.length} watched cards just dropped`;
+      if (userId && deps.notifyUsers !== false) {
+        const title = notificationTitle(items);
         void notify(userId, "price_drop", title, "Check your watchlist for the new price.", "/watching").catch(() => {});
       }
     } else failedEmails.add(email);
@@ -313,7 +535,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
   // Two reasons a baseline is held back, and they mean the same thing: this drop
   // has not reached the subscriber yet, so the next run must still see it.
   //   • its digest failed to send, or
-  //   • the weekly cap (or, for a first price, FIRST_PRICE_SEND_CAP) deferred it.
+  //   • the weekly cap (or FIRST_PRICE_SEND_CAP / PAID_SEND_CAP) deferred it.
   const heldIds = new Set<string>(deferredIds);
   if (failedEmails.size) {
     for (const a of alerts) {
@@ -322,8 +544,9 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
   }
   const dueUpdates = heldIds.size ? updates.filter((u) => !heldIds.has(u.id)) : updates;
   // The emailed-and-sent alerts (notified minus any held for a failed digest).
-  // Every one of these is also in dueUpdates — a drop moved its baseline — so its
-  // watermark/notified-at can be written in the same per-row update below.
+  // Every one of these is also in dueUpdates — a drop moved its baseline, and a
+  // fired paid row is pushed even unmoved — so its watermark/notified-at can be
+  // written in the same per-row update below.
   const dueNotifiedSet = new Set(heldIds.size ? notifiedIds.filter((id) => !heldIds.has(id)) : notifiedIds);
 
   summary.updated = dueUpdates.length;
@@ -336,12 +559,14 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
         // write, so the anti-spam state can never drift from the baseline it was
         // decided against. A held (failed-send) drop is already excluded from
         // dueUpdates, so it keeps its old watermark and re-fires next run.
-        const data: { lastPriceCents: number; lowestEmailedCents?: number; lastNotifiedAt?: Date } = {
+        const data: { lastPriceCents: number; lowestEmailedCents?: number; targetEmailedCents?: number; lastNotifiedAt?: Date } = {
           lastPriceCents: u.price,
         };
         if (dueNotifiedSet.has(u.id)) {
           data.lowestEmailedCents = notifiedLowest.get(u.id)!;
           data.lastNotifiedAt = now;
+          const targetLowest = notifiedTargetLowest.get(u.id);
+          if (targetLowest != null) data.targetEmailedCents = targetLowest;
         }
         return db.priceAlert.update({ where: { id: u.id }, data });
       })
@@ -349,4 +574,68 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}): Promise<AlertRunS
   }
 
   return summary;
+}
+
+// The in-app notification's title for one digest.
+function notificationTitle(items: PriceDropItem[]): string {
+  const one = items.length === 1 ? items[0]! : null;
+  if (items.some((i) => i.kind === "target")) {
+    return one ? `${one.name} hit your target price` : `${items.length} watched cards have price news`;
+  }
+  if (items.every((i) => i.kind === "listed")) {
+    return one ? `${one.name} is now in stock` : `${items.length} watched cards are now in stock`;
+  }
+  return one ? `${one.name} just dropped` : `${items.length} watched cards just dropped`;
+}
+
+const storeKey = (market: string, cardId: string) => `${market}:${cardId}`;
+
+// The listing behind each emailed price: ONE query for every fired card, capped
+// at STORE_ROWS_PER_CARD rows per card, reduced to the cheapest per (market,
+// card). Each card's clause is bounded by the price we are about to email —
+// Card.lowestPriceCents* is exactly the minimum over these same rows (in stock,
+// no reference/fallback retailer), so the row at that price is the store that
+// set it — which also keeps a card with dozens of cheap listings from eating
+// another card's share of the cap. Shows that row's own price (and condition,
+// and postage when the store states it). A row the import has since moved
+// simply isn't found, and the email falls back to the card page link. Never
+// throws: the store line is a courtesy, the alert is the point.
+async function cheapestStores(
+  db: Pick<typeof prisma, "retailerPrice">,
+  items: PriceDropItem[],
+): Promise<Map<string, AlertStore>> {
+  const wanted = new Map<string, { cardId: string; country: string; priceCents: { lte: number } }>();
+  for (const i of items) {
+    if (!i.cardId) continue;
+    const k = storeKey(i.market, i.cardId);
+    if (!wanted.has(k)) wanted.set(k, { cardId: i.cardId, country: i.market, priceCents: { lte: i.newCents } });
+  }
+  const out = new Map<string, AlertStore>();
+  if (!wanted.size) return out;
+  try {
+    const rows = await db.retailerPrice.findMany({
+      where: {
+        inStock: true,
+        retailer: { notIn: [...ALL_FALLBACK_RETAILERS] },
+        OR: [...wanted.values()],
+      },
+      select: { cardId: true, country: true, retailer: true, retailerName: true, priceCents: true, shippingCents: true, condition: true, url: true },
+      orderBy: { priceCents: "asc" },
+      take: wanted.size * STORE_ROWS_PER_CARD,
+    });
+    for (const r of rows) {
+      const k = storeKey(r.country, r.cardId);
+      if (out.has(k) || !wanted.has(k)) continue;
+      out.set(k, {
+        name: r.retailerName,
+        url: affiliateUrl(r.url, r.retailer, "/watching"),
+        priceCents: r.priceCents,
+        shippingCents: r.shippingCents ?? null,
+        condition: r.condition ?? null,
+      });
+    }
+  } catch {
+    /* no store lines this run — the digest still goes, linking the card page */
+  }
+  return out;
 }

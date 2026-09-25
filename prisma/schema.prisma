@@ -805,6 +805,28 @@ model PriceAlert {
   // lastPriceCents, which keeps tracking every move so a drop can still be DETECTED
   // against the most recent price even while emails are being suppressed.
   lowestEmailedCents Int?
+  // The paid "Notify me at $X" target (2026-09-25 premium lineup), in the
+  // watch's own market currency. null = no target: a plain watch, which is all
+  // a free account ever has. Honoured by runPriceAlerts only while the owning
+  // account is entitled (isPremium) — a lapsed subscription keeps the value but
+  // the watch behaves as a free one until it resubscribes. Written only by
+  // PATCH /api/alerts/watchlist/[cardId], which enforces targetAlertLimit.
+  // Additive/nullable so the deploy's `prisma db push` needs no backfill.
+  targetCents        Int?
+  // The TARGET trigger's own watermark: the lowest price emailed under the
+  // target since it was last set. PATCH resets it to null whenever the target
+  // changes (the target is "armed" again), so an old low from before the
+  // target existed can't silence it — without ever touching lowestEmailedCents,
+  // which the free drop rule and the below-market trigger keep reading as
+  // "the lowest price we've ever emailed you". null = armed / never fired.
+  targetEmailedCents Int?
+  // The price when the watch was CREATED, written once and never touched by the
+  // cron — "watching from $X" on /watching. lastPriceCents can't serve: the
+  // cron advances it on every move, so after one run it read as today's price
+  // and the watchlist delta sat near 0%. null for rows created before this
+  // column existed (and for a card unpriced at watch time); readers fall back
+  // to lastPriceCents. Additive/nullable, no backfill script.
+  startPriceCents    Int?
   // Per-email secret powering one-click unsubscribe (shared across all of an
   // email's rows, so one link can remove every alert for that address).
   unsubToken         String
