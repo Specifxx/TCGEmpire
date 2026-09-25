@@ -2,7 +2,9 @@
  * READ-ONLY: why is Rising Sealed still "building"? (2026-09-24)
  *
  * Rising Sealed scores a product only once it has MIN_POINTS weekly snapshots
- * in SealedPriceHistory (lib/sealed-rise-predictor.ts). This reports, for the
+ * in SealedPriceHistory (the predictor and /tools/rising-sealed were retired on
+ * 2026-09-25; the table is still written, for a future per-product chart once
+ * there are enough weekly points). This reports, for the
  * live history project AND every other history project still reachable:
  * row counts, distinct snapshot days, per-market series depth, and how many of
  * the stored groupKeys still match a live SealedListing groupKey — a series

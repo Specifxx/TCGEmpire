@@ -108,7 +108,7 @@ export function TcgplayerAd({
   className?: string;
   disclosure?: boolean;
 }) {
-  if (usePremium()) return null; // ad-free for Premium subscribers
+  if (usePremium()) return null; // ad-free for every paid tier, Plus included
   const dims = (v: Variant) => ({ w: ADS[v].w, h: ADS[v].h });
   const desk = dims(size);
   const mid = dims("leaderboard");

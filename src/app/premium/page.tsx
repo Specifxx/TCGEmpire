@@ -28,6 +28,7 @@ import {
   PREMIUM_NEXT_PRICE_AMOUNT,
   TIER_NAMES,
   tierMonthlyAmount,
+  tierAnnualAmount,
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
   premiumLockInHeadline,
@@ -39,6 +40,7 @@ import {
   INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
+import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { faqPage, ldJson } from "@/lib/jsonld";
@@ -49,74 +51,70 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "RiftCompare Premium — never overpay for a Riftbound card",
-  description: "RiftCompare Premium finds the cheapest way to buy what you actually want: Best Basket splits a whole decklist across stores with postage included, the Bulk Pricer costs a want-list in one paste, and the full Deal Finder and Value Finder lists show where a card is going cheap. Price comparison is free for everyone, and a free account adds alerts and your portfolio.",
+  description: "RiftCompare Plus and Premium: no ads, every card below TCGplayer market, target-price alerts that name the store, and Best Basket — the cheapest delivered order for a whole list across your country's stores, skipping cards you already own. Price comparison is free for everyone, and a free account adds alerts and your portfolio.",
   alternates: pageAlternates("/premium"),
 };
 
-// Detailed feature cards (all real Premium features). `tier` names the
-// CHEAPEST tier that actually includes it — "plus" for the full-list tools
-// (also included in Premium), "premium" for the four pro tools. Shown as a
-// small caption only once Plus is actually live (see the render below); with
-// Plus dark every card reads as Premium-only, same as before the split.
+// Detailed feature cards — THE 2026-09-25 LINEUP, and only it: every card is a
+// row of TIER_COMPARISON in buyer's words. `tier` names the CHEAPEST tier that
+// actually includes it — "plus" for ad-free, target alerts and the full lists
+// (also in Premium), "premium" for the list tools. Shown as a small caption
+// only once Plus is actually live (see the render below); with Plus dark every
+// card reads as Premium's, same as before the split.
 const FEATURES: { title: string; body: string; href: string | null; cta: string | null; tier: PremiumTierKey }[] = [
   {
-    title: "Bulk Pricer",
-    body: "Paste an entire want-list, trade pile or collection and price every card at once, each matched to its cheapest live store price with a running total.",
-    href: "/bulk-pricer",
-    cta: "Open Bulk Pricer",
-    tier: "premium",
-  },
-  {
-    title: "Best Basket",
-    body: "Paste a decklist or use your wishlist and get the cheapest way to actually buy the whole thing — the store split with the lowest landed cost once postage and free-shipping thresholds are factored in.",
-    href: "/tools/best-basket",
-    cta: "Open Best Basket",
-    tier: "premium",
-  },
-  {
-    title: "Value Finder screener",
-    body: "Every card trading below its own 30-day average right now, ranked by discount — so you can tell at a glance whether a card you want is cheap by its own standards or just cheap-looking.",
-    href: "/tools/value-finder",
-    cta: "Open Value Finder",
-    tier: "premium",
-  },
-  {
-    title: "Rising Cards",
-    body: "Cards ranked by demand and price-timing signals, so you know whether the one on your want-list is better bought now than left for later. Transparent scoring, backtested, and not financial advice. Free accounts see the top three; Premium shows every pick.",
-    href: "/tools/rising",
-    cta: "Open Rising Cards",
+    title: "No ads, anywhere",
+    body: "Plus and Premium remove every ad on every page, on the website and in the app, from the moment you subscribe. Automatic, nothing to switch on.",
+    href: null,
+    cta: null,
     tier: "plus",
   },
   {
-    title: "Rising Sealed",
-    body: "Booster boxes, packs and bundles ranked by price-timing and supply signals — near their own recent low, thin in-stock, not already spiking. Useful for timing a box you were going to open anyway; not financial advice. Free shows only the top pick.",
-    href: "/tools/rising-sealed",
-    cta: "Open Rising Sealed",
+    title: "Target-price alerts",
+    body: `Tell us what you'd pay for a card on your watchlist. After every price update we check every tracked store in your country, and when it's there we email you the store and a link to the listing. Up to ${PLUS_TARGET_ALERT_LIMIT} cards on Plus, unlimited on Premium. Free accounts keep the weekly new-low email.`,
+    href: "/watching",
+    cta: "Open your watchlist",
     tier: "plus",
-  },
-  {
-    title: "Demand Finder",
-    body: "The cards RiftCompare visitors are actually searching for and opening right now — raw demand by real traffic, windowed to 7 days, 30 days or all time. No price-timing filter, just the unblended number.",
-    href: "/tools/demand",
-    cta: "Open Demand Finder",
-    tier: "premium",
   },
   {
     title: "Deal Finder",
-    body: "The full list of cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market — plus, if you're selling, the cards worth more on eBay than in stores. All sources, sortable, updated daily. Free accounts see the top three; Premium shows every deal.",
+    body: "Every card cheaper than TCGplayer's market price at a real store, with a store filter, an eBay-only view and sorting. Narrow it to only the cards on your watchlist or in your binder to see which of yours are cheap right now. Free accounts see the top three.",
     href: "/tools/deal-finder",
     cta: "Open Deal Finder",
     tier: "plus",
   },
   {
-    title: "Ad-free everywhere",
-    body: "No ads on any page while you're on Plus or Premium — automatic, nothing to switch on.",
-    href: null,
-    cta: null,
+    title: "Rising Cards",
+    body: "Cards ranked by demand and price-timing signals, so you know whether the one on your want-list is better bought now than left for later. Transparent scoring, and not financial advice. Free accounts see the top three.",
+    href: "/tools/rising",
+    cta: "Open Rising Cards",
     tier: "plus",
+  },
+  {
+    title: "Best Basket and Buy this list",
+    body: "Send a decklist, your watchlist or your binder, tick “skip copies I already own”, and get the cheapest delivered order across your country's stores, with postage and free-shipping thresholds counted, shown beside the best one-store and two-store orders. Every signed-in account sees its own total first; Premium shows which store to buy each card from.",
+    href: "/tools/best-basket",
+    cta: "Open Best Basket",
+    tier: "premium",
+  },
+  {
+    title: "Your binder's replacement plan",
+    body: "Your portfolio's delivered replacement cost is free for every account. Premium adds the store-by-store plan behind it: which store to buy each card from to replace the lot, postage included.",
+    href: "/portfolio",
+    cta: "Open your portfolio",
+    tier: "premium",
   },
 ];
 
+
+// The Product JSON-LD's per-tier descriptions: each names only what that tier
+// really gets (TIER_COMPARISON's rows), so a rich result can't credit Plus
+// with Premium's list tools or leave its ad-free benefit out.
+const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, and the full Deal Finder and Rising Cards lists.`;
+const PREMIUM_OFFER_DESCRIPTION =
+  "Premium: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck, watchlist or binder, and unlimited target-price alerts.";
+const PREMIUM_STANDALONE_DESCRIPTION =
+  "No ads on any page, target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan and Buy this list.";
 
 // "6 Sep 2026" — same convention admin/premium/page.tsx already uses for this
 // exact field, so a user's own account page and the admin's view of the same
@@ -134,12 +132,24 @@ const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", mon
 const FAQ: { q: string; a: string }[] = [
   {
     q: "What's free vs what needs Plus or Premium?",
-    a: `Price comparison, the deck builder, trade calculator, box EV and a free account's alerts, watchlist and portfolio are free for everyone. ${premiumPlusEnabled() ? `Plus (${tierMonthlyAmount("plus")}/mo) adds an ad-free site and the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds the four pro tools on top — Bulk Pricer, Best Basket, Value Finder and Demand Finder.` : "Premium adds the Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Rising Sealed, Demand Finder, the full Deal Finder list and an ad-free site."}`,
+    a: `Price comparison, the card database, the deck and list pricer, trade calculator and box EV are free for everyone. A free account adds a watchlist with weekly new-low emails, your portfolio (including its delivered replacement cost), the top three of Deal Finder and Rising Cards, and your own Best Basket total. ${
+      premiumPlusEnabled()
+        ? `Plus (${tierMonthlyAmount("plus")}/mo) removes every ad and adds target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, the full Deal Finder (filterable to only your cards) and the full Rising Cards list. Premium (${tierMonthlyAmount("premium")}/mo) adds Best Basket's store-by-store plan, Buy this list for your deck, watchlist or binder, unlimited target alerts, and the plan behind your replacement cost.`
+        : `Premium (${tierMonthlyAmount("premium")}/mo) removes every ad and adds target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan and Buy this list.`
+    }`,
   },
-  {
-    q: `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
-    a: `Start the trial and every Premium tool unlocks immediately. A card is required to start, and nothing is charged until the trial ends — ${PREMIUM_TRIAL_DAYS} days later you're billed ${introOfferEnabled() ? `${introPriceLine()} on the monthly plan` : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`} (or the annual rate, if you chose that plan) unless you cancel first. We email you a day or two before the first charge.`,
-  },
+  ...(premiumTrialEnabled()
+    ? [
+        {
+          q: `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
+          a: `Start the trial and everything in the plan you picked unlocks immediately. A card is required to start, and nothing is charged until the trial ends — ${PREMIUM_TRIAL_DAYS} days later you're billed ${
+            introOfferEnabled()
+              ? `${premiumPlusEnabled() ? `${introPriceLine("plus")} for Plus or ` : ""}${introPriceLine("premium")}${premiumPlusEnabled() ? " for Premium" : ""} on the monthly plan`
+              : `${premiumPlusEnabled() ? `${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} for Plus or ` : ""}${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}${premiumPlusEnabled() ? " for Premium" : ""}`
+          } (or the annual rate, if you chose that plan) unless you cancel first. Cancel during the trial and you are never charged. We email you a day or two before the first charge.`,
+        },
+      ]
+    : []),
   ...(introOfferEnabled()
     ? [
         {
@@ -154,7 +164,11 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How do I cancel?",
-    a: "From this page, use \"Manage subscription\" to open Stripe's billing portal and cancel in a couple of clicks — no email or phone call needed. You keep access until the end of the period you already paid for (or, during a trial, until it ends).",
+    a: "From this page, use \"Manage subscription\" to open Stripe's billing portal and cancel in a couple of clicks — no email or phone call needed. You keep access until the end of the period you already paid for (or, during a trial, until it ends — and a trial cancelled before it ends is never charged).",
+  },
+  {
+    q: "Is Plus really ad-free?",
+    a: `Yes. Plus and Premium both remove every ad on every page, on the website and in the app, from the moment you subscribe — the free trial included. It is the first thing Plus does${premiumPlusEnabled() ? `, and at ${tierMonthlyAmount("plus")}/mo it is the cheapest way to browse RiftCompare without ads` : ""}.`,
   },
   {
     q: "Does my price ever go up?",
@@ -162,17 +176,17 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Monthly or annual — what's the difference?",
-    a: `Same tools either way. Monthly is ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} with no commitment; annual is ${PREMIUM_ANNUAL_AMOUNT}/yr, billed once a year, which works out cheaper per month. Switch from monthly to annual anytime from your account.`,
+    a: `Same features either way. Monthly is ${premiumPlusEnabled() ? `${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} for Plus or ` : ""}${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}${premiumPlusEnabled() ? " for Premium" : ""} with no commitment; annual is ${premiumPlusEnabled() ? `${tierAnnualAmount("plus")}/yr or ` : ""}${PREMIUM_ANNUAL_AMOUNT}/yr, billed once a year, which works out cheaper per month. Switch from monthly to annual anytime from your account once your first payment has gone through.`,
   },
   {
-    q: "Is Premium worth it?",
-    a: "Depends entirely on how much you buy. Best Basket is the honest test: it shows the unoptimised total next to its own, so the saving on a single deck order is a number you can check rather than a claim we make. On a full deck that difference is often more than a month of Premium. See the live numbers above for what Deal Finder is showing right now. If you only buy the occasional single card, the free tier is genuinely all you need — that's deliberate.",
+    q: "Which plan is worth it?",
+    a: "Depends entirely on how you buy. Plus is for someone who buys singles regularly: it takes the ads away, shows every card below TCGplayer market, and emails you the store when a card you watch reaches the price you set. Premium is for buying a whole deck or filling a binder: Best Basket shows the cheapest delivered order next to the best single-store order, so the saving on your own list is a number you can check (every signed-in account sees its own total before paying) rather than a claim we make. If you only buy the occasional single card, the free account is genuinely all you need — that's deliberate.",
   },
   ...(premiumPlusEnabled()
     ? [
         {
           q: "Can I upgrade from Plus to Premium later?",
-          a: `Yes — one click from this page, any time. You're only charged the prorated difference for the rest of your current billing period; the four pro tools unlock immediately.`,
+          a: "Yes — one click from this page once your first payment has gone through (plan changes aren't available during the free trial). You're only charged the prorated difference for the rest of your current billing period, on the same monthly or annual cycle, and Best Basket's store-by-store plan and Buy this list unlock immediately.",
         },
       ]
     : []),
@@ -239,16 +253,20 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
             {
               "@context": "https://schema.org",
               "@type": "Product",
-              name: "RiftCompare Premium",
-              description: "The Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Demand Finder, the full Deal Finder list and an ad-free RiftCompare.",
+              name: plusLive ? "RiftCompare Plus and Premium" : "RiftCompare Premium",
+              description: plusLive ? `${PLUS_OFFER_DESCRIPTION} ${PREMIUM_OFFER_DESCRIPTION}` : PREMIUM_STANDALONE_DESCRIPTION,
               brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
-              // One Offer per live tier — an array with Premium alone reads the
-              // same as the old single Offer object once Plus is unconfigured.
+              // One Offer per live tier, each describing only what THAT tier
+              // gets — the old single description listed the Premium tools and
+              // ad-free together, which read as though Plus had neither. An
+              // array with Premium alone reads the same as the old single
+              // Offer object once Plus is unconfigured.
               offers: plusLive
                 ? [
                     {
                       "@type": "Offer",
                       name: "RiftCompare Plus",
+                      description: PLUS_OFFER_DESCRIPTION,
                       price: plusPriceNumeric,
                       priceCurrency: "USD",
                       url: `${SITE_URL}/premium`,
@@ -257,6 +275,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
                     {
                       "@type": "Offer",
                       name: "RiftCompare Premium",
+                      description: PREMIUM_OFFER_DESCRIPTION,
                       price: priceNumeric,
                       priceCurrency: "USD",
                       url: `${SITE_URL}/premium`,
@@ -265,6 +284,8 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
                   ]
                 : {
                     "@type": "Offer",
+                    name: "RiftCompare Premium",
+                    description: PREMIUM_STANDALONE_DESCRIPTION,
                     price: priceNumeric,
                     priceCurrency: "USD",
                     url: `${SITE_URL}/premium`,
@@ -286,11 +307,22 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">
           {already ? `You're ${TIER_NAMES[currentTier ?? "premium"]}` : "Never overpay for a Riftbound card"}
         </h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
+        {/* The 2026-09-25 subline: one sentence per tier, what each is FOR.
+            The trial clause reads trialAvailable (this viewer can really
+            start one), not premiumTrialEnabled(): a returning trialist was
+            being promised a second trial here that checkout won't give. */}
+        {!already && (
+          <p className="mx-auto mt-3 max-w-xl text-base font-semibold leading-relaxed text-slate-200">
+            {plusLive
+              ? "Plus watches your cards and shows every deal. Premium buys your whole list for less."
+              : "Premium watches your cards, shows every deal and buys your whole list for less."}
+          </p>
+        )}
+        <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
             ? "Everything you've unlocked is below — jump straight into any of it. Thanks for supporting RiftCompare."
-            : `RiftCompare is free to search and free to use. ${plusLive ? "Plus and Premium fund" : "Premium funds"} the servers and the price data behind it. ${plusLive ? "Plus goes ad-free and unlocks the full deal lists; Premium adds" : "Premium adds ad-free browsing and"} the tools that work out the cheapest way to buy what you want${
-                premiumTrialEnabled() ? ` — every plan starts with a ${PREMIUM_TRIAL_DAYS}-day free trial` : ""
+            : `Price comparison stays free for everyone, and ${plusLive ? "both paid plans are" : "Premium is"} ad-free. ${plusLive ? "Plus and Premium fund" : "Premium funds"} the servers and the price data behind the site${
+                trialAvailable ? ` — every plan starts with a ${PREMIUM_TRIAL_DAYS}-day free trial` : ""
               }${introEligible ? `, and monthly plans are half price for the first ${INTRO_MONTHS} months` : ""}.`}
         </p>
       </div>
@@ -412,6 +444,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
                 interval={subDetails.interval}
                 plusLive={plusLive && !user.premiumTierFloor}
                 annualAvailable={subDetails.tier === "plus" ? plusAnnualLive : annualLive}
+                targetAnnualAvailable={(currentTier ?? subDetails.tier) === "plus" ? annualLive : plusAnnualLive}
                 canManageBilling={checkoutLive}
                 trialing={subDetails.status === "trialing"}
                 keep={keepOffer}
@@ -430,25 +463,17 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         </div>
       )}
 
-      {/* Member quick links — only what this member can actually open. The four
-          pro tools are dropped for a Plus member rather than left to bounce them
-          into an upsell wall from their own membership page; the upgrade path is
-          the SubscriptionActions card above, which states the price. */}
+      {/* Member quick links — only what this member can actually open. Best
+          Basket's plan is dropped for a Plus member rather than left to bounce
+          them into an upsell wall from their own membership page; the upgrade
+          path is the SubscriptionActions card above, which states the price. */}
       {already && (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm">
           <Link href="/dashboard" className="btn-primary">◆ Your dashboard</Link>
-          {currentTier !== "plus" && (
-            <>
-              <Link href="/bulk-pricer" className="btn-ghost">Bulk Pricer</Link>
-              <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>
-              <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
-              <Link href="/tools/demand" className="btn-ghost">Demand Finder</Link>
-            </>
-          )}
-          <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>
-          <Link href="/tools/rising-sealed" className="btn-ghost">Rising Sealed</Link>
           <Link href="/tools/deal-finder" className="btn-ghost">Deal Finder</Link>
-          <Link href="/tools/condition-calculator" className="btn-ghost">Condition Calculator</Link>
+          <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>
+          <Link href="/watching" className="btn-ghost">Watchlist &amp; target alerts</Link>
+          {currentTier !== "plus" && <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>}
           <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
           {checkoutLive && <ManageSubscriptionButton />}
         </div>
@@ -459,8 +484,8 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <h2 className="mb-1 text-center text-lg font-extrabold text-white">Feature comparison</h2>
         <p className="mb-3 text-center text-xs text-slate-500">
           {plusLive
-            ? "See exactly what you get with each tier — Plus adds the full lists, Premium adds no ads and the pro screeners on top."
-            : "See exactly what you get with each tier — Premium adds the list-pricing tools and the pro screeners."}
+            ? "See exactly what you get with each tier — Plus goes ad-free and unlocks the full lists; Premium adds the list tools on top."
+            : "See exactly what you get with each tier — Premium goes ad-free and adds the full lists and the list tools."}
         </p>
         <div className="card-surface p-1">
           <TierComparisonTable showPlus={plusLive} tinted />
@@ -470,7 +495,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
             <Link href="/login?next=/premium" className="text-brand-400 hover:underline">
               Create a free account
             </Link>{" "}
-            to unlock the middle column — no card required.
+            to unlock the Free account column — no card required.
           </p>
         )}
       </div>

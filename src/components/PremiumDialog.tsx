@@ -13,6 +13,7 @@ import { Dialog } from "./ui/Dialog";
 import { Spinner } from "./ui/Skeleton";
 import { TrialPriceBlock } from "./TrialPriceBlock";
 import { TierComparisonTable } from "./TierComparisonTable";
+import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
 import {
   PREMIUM_PRICE_LABEL,
   PREMIUM_PRICE_AMOUNT,
@@ -80,7 +81,7 @@ export function PremiumDialogProvider({ children }: { children: React.ReactNode 
 }
 
 function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialTier: PremiumTierKey }) {
-  const { user, premium, tier, premiumCheckout, premiumPlus, trialEligible, trialDays, introEligible, premiumAnnual, plusAnnual, providers, loaded } = useMe();
+  const { user, premium, tier, trialing, interval, premiumCheckout, premiumPlus, trialEligible, trialDays, introEligible, premiumAnnual, plusAnnual, providers, loaded } = useMe();
   // Where the visitor was when the wall interrupted them — carried through
   // sign-in and Stripe so /premium/welcome can put them back on it.
   const pathname = usePathname();
@@ -287,7 +288,9 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
         <div className="px-5 py-5">
           <h2 id="premium-dialog-title" className="text-lg font-extrabold text-white">Never overpay for a Riftbound card</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Get the cheapest way to buy a whole list, and go ad-free. The portfolio tracker and price comparison stay free.
+            {premiumPlus
+              ? "Plus and Premium are ad-free. Plus shows every deal and emails you the store when a card you watch hits your price; Premium buys your whole list for less. Price comparison and the portfolio tracker stay free."
+              : "Premium is ad-free, shows every deal, and buys your whole list for less. Price comparison and the portfolio tracker stay free."}
           </p>
 
           {/* Only for someone who could still act on it — already-Premium
@@ -336,16 +339,33 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
               // that flag says Plus is currently SELLABLE, and if the Plus
               // price ids are ever unset or rotated, existing Plus accounts
               // don't stop existing — they'd just fall through to "You're
-              // Premium" while still locked out of these four tools. The
+              // Premium" while still locked out of the list tools. The
               // upgrade button below handles its own unavailability.
+              //
+              // NOT MID-TRIAL (2026-09-25): /api/premium/upgrade selects only
+              // ACTIVE subscriptions, so a Plus trialist pressing this got an
+              // error. They are told when it opens instead. The quoted price
+              // follows the subscriber's own interval — the route keeps it, so
+              // an annual Plus member is billed Premium's yearly price.
               <div className="text-center">
                 <p className="text-sm font-semibold text-gold">✓ You&apos;re on Plus</p>
                 <p className="mt-1 text-xs text-slate-400">
-                  Upgrade to Premium for the four list tools — Best Basket, Bulk Pricer, Value Finder and Demand Finder.
+                  Premium adds Best Basket&apos;s store-by-store plan, Buy this list for your deck, watchlist or binder,
+                  and unlimited target alerts.
                 </p>
-                <button onClick={upgradeTier} disabled={busy} className={`${GOLD_BTN} mt-3`}>
-                  {busy ? "Upgrading…" : `Upgrade to Premium — ${PREMIUM_PRICE_LABEL} →`}
-                </button>
+                {trialing ? (
+                  <p className="mt-3 rounded-lg border border-ink-700 px-3 py-2 text-xs text-slate-300">
+                    Plan changes open once your free trial has converted — upgrade from{" "}
+                    <Link href="/premium" onClick={onClose} className="font-semibold text-gold hover:underline">
+                      your membership page
+                    </Link>{" "}
+                    then.
+                  </p>
+                ) : (
+                  <button onClick={upgradeTier} disabled={busy} className={`${GOLD_BTN} mt-3`}>
+                    {busy ? "Upgrading…" : `Upgrade to Premium — ${planSwitchPriceLabel("premium", interval, premiumAnnual)} →`}
+                  </button>
+                )}
                 {error && <p role="alert" className="mt-2 text-center text-xs text-rose-400">{error}</p>}
               </div>
             ) : premium ? (

@@ -13,13 +13,17 @@ import {
 } from "../src/lib/premium";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT, annualSavingPct, premiumFromLine } from "../src/lib/site";
+import { PLUS_TARGET_ALERT_LIMIT, targetAlertLimit } from "../src/lib/alert-limits";
+import { planSwitchPriceLabel } from "../src/lib/plan-switch-price";
+import { billingStateFor, forgetBillingState } from "../src/lib/billing-state";
+import { DASHBOARD_TOOLS, dashboardToolOpens } from "../src/lib/dashboard-tools";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Premium went two-tier on 2026-09-11: Plus ($4.99/mo, ad-free + the full
-// lists) and Premium ($9.99/mo, Plus + the four pro tools). This file guards
+// Premium went two-tier on 2026-09-11: Plus ($4.99/mo) and Premium ($9.99/mo).
+// Since the 2026-09-25 lineup Plus is ad-free + the full lists + target alerts, and Premium adds the list tools. This file guards
 // the parts of that split most likely to break silently — tier resolution
 // from a Stripe price id, the entitlement check's `min` argument, and the
 // places a wrong tier means either overcharging or over-granting access.
@@ -181,41 +185,190 @@ test("comp grants only write the tier when creating access, never when extending
   assert.match(body, /\.\.\.\(hadActive \? \{\} : \{ premiumTier: tier \}\)/, "the tier write must be skipped when extending an already-active period");
 });
 
-test("TIER_COMPARISON's plus column agrees with the real server gates", () => {
-  // For every row where Plus and Premium genuinely differ (a flat premium-only
-  // tool), the page it names must gate on isPremium(user, "premium") — and for
-  // every row where Plus already matches Premium (the full-list tools), the
-  // page must NOT require the "premium" minimum.
-  const proToolPages: Record<string, string> = {
-    "Value Finder screener": "src/app/tools/value-finder/page.tsx",
-    "Bulk Pricer — price a whole list at once": "src/app/bulk-pricer/page.tsx",
-    "Best Basket — cheapest store split, postage included": "src/app/tools/best-basket/page.tsx",
-    "Demand Finder — most searched & viewed cards": "src/app/tools/demand/page.tsx",
-  };
-  for (const [feature, file] of Object.entries(proToolPages)) {
-    const row = TIER_COMPARISON.find((r) => r.feature === feature);
-    assert.ok(row, `expected a TIER_COMPARISON row for "${feature}"`);
-    assert.equal(row!.plus, false, `"${feature}" must be marked plus:false — it's a pro-tool row`);
-    assert.equal(row!.premium, true, `"${feature}" must be marked premium:true`);
-    const src = read(file);
-    assert.match(src, /isPremium\(user,\s*"premium"\)/, `${file} must gate on isPremium(user, "premium")`);
+test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free last", () => {
+  assert.deepEqual(
+    TIER_COMPARISON.map((r) => r.feature),
+    [
+      "Compare prices across every store + eBay",
+      "Full card database, charts & search",
+      "Deck & list pricer, trade calculator & box EV",
+      "RiftCompare Index & weekly price movers",
+      "Watchlist & new-low email alerts",
+      "Portfolio — value, P&L, CSV & replacement cost",
+      "Deal Finder",
+      "Rising Cards",
+      "Target-price alerts after every price update",
+      "Best Basket — cheapest delivered order for a list",
+      "Buy this list — deck, watchlist or binder, skipping cards you own",
+      "Ad-free experience",
+    ],
+  );
+  // The retired tools are gone rather than ticked for everyone.
+  for (const gone of [/Value Finder/, /Bulk Pricer/, /Demand Finder/, /Rising Sealed/, /Condition/]) {
+    assert.ok(!TIER_COMPARISON.some((r) => gone.test(r.feature)), `${gone} must not be a TIER_COMPARISON row`);
   }
+  // No paid tier ever gets LESS than a free account, and Premium never less than Plus.
+  const rank = (v: boolean | string) => (v === false ? 0 : 1);
+  for (const r of TIER_COMPARISON) {
+    assert.ok(rank(r.plus) >= rank(r.account) && rank(r.premium) >= rank(r.plus), `${r.feature}: a higher tier shows less`);
+  }
+});
 
-  const listToolPages: Record<string, string> = {
+test("TIER_COMPARISON's paid columns agree with the real gates", () => {
+  const row = (feature: string) => {
+    const r = TIER_COMPARISON.find((x) => x.feature === feature);
+    assert.ok(r, `expected a TIER_COMPARISON row for "${feature}"`);
+    return r!;
+  };
+
+  // The full lists: any paid tier, so the pages must NOT require the premium
+  // minimum, and a free account's cell is the top-3 preview the pages query.
+  for (const [feature, file] of Object.entries({
     "Deal Finder": "src/app/tools/deal-finder/page.tsx",
     "Rising Cards": "src/app/tools/rising/page.tsx",
-  };
-  for (const [feature, file] of Object.entries(listToolPages)) {
-    const row = TIER_COMPARISON.find((r) => r.feature === feature);
-    assert.ok(row, `expected a TIER_COMPARISON row for "${feature}"`);
-    assert.equal(row!.plus, "Full list", `"${feature}" must give Plus the full list too`);
-    const src = read(file);
-    assert.doesNotMatch(src, /isPremium\(user,\s*"premium"\)/, `${file} must not require the premium minimum — Plus gets the full list here`);
+  })) {
+    const r = row(feature);
+    assert.equal(r.account, "Top 3");
+    assert.equal(r.plus, r.premium, `${feature}: Plus gets the same list as Premium`);
+    assert.match(String(r.plus), /^Full list/);
+    assert.doesNotMatch(read(file), /isPremium\(user,\s*"premium"\)/, `${file} must not require the premium minimum — Plus gets the full list here`);
   }
 
-  // The basket API 403 is the one non-page pro-tool gate.
-  const basketApi = read("src/app/api/basket/route.ts");
-  assert.match(basketApi, /isPremium\(user,\s*"premium"\)/, "the Best Basket API must also require the premium minimum, matching the page");
+  // Target alerts: the quoted ceiling IS the enforced one.
+  const targets = row("Target-price alerts after every price update");
+  assert.equal(targets.account, false);
+  assert.equal(targets.plus, `Up to ${PLUS_TARGET_ALERT_LIMIT}`);
+  assert.equal(targets.premium, "Unlimited");
+  assert.equal(targetAlertLimit(null), 0, "a free account sets no target");
+  assert.equal(targetAlertLimit("plus"), PLUS_TARGET_ALERT_LIMIT);
+  assert.equal(targetAlertLimit("premium"), Number.POSITIVE_INFINITY);
+
+  // Best Basket and Buy this list: the per-store plan and the deck/watchlist/
+  // binder hand-off are Premium's, gated on the premium minimum in the API.
+  const basket = row("Best Basket — cheapest delivered order for a list");
+  assert.equal(basket.plus, basket.account, "Plus sees the same own-list total as a free account");
+  assert.equal(basket.premium, "Store-by-store plan");
+  const buy = row("Buy this list — deck, watchlist or binder, skipping cards you own");
+  assert.deepEqual([buy.account, buy.plus, buy.premium], [false, false, true]);
+  assert.match(read("src/app/api/basket/route.ts"), /isPremium\(user,\s*"premium"\)/, "the Best Basket API must require the premium minimum for the plan");
+
+  // Ad-free: every paid tier, exactly what /api/me publishes.
+  assert.deepEqual(
+    [row("Ad-free experience").account, row("Ad-free experience").plus, row("Ad-free experience").premium],
+    [false, true, true],
+  );
+  assert.match(read("src/app/api/me/route.ts"), /adFree: isPremium\(user\)/);
+});
+
+test("the retired tools' URLs redirect permanently to the free page carrying their useful part", () => {
+  const cfg = read("next.config.js");
+  for (const [source, destination] of [
+    ["/tools/condition-calculator", "/guides/riftbound-card-condition-guide"],
+    ["/tools/value-finder", "/movers"],
+    ["/tools/demand", "/movers#most-searched"],
+    ["/tools/rising-sealed", "/sealed"],
+    ["/bulk-pricer", "/deck"],
+  ]) {
+    assert.ok(
+      cfg.includes(`{ source: "${source}", destination: "${destination}", permanent: true }`),
+      `${source} must 301 to ${destination}`,
+    );
+  }
+});
+
+test("a plan switch quotes the price the route will charge, in the subscriber's own interval", () => {
+  // The upgrade/downgrade routes keep the subscription's interval
+  // (priceIdFor(target, interval)), so an annual member moving tiers is billed
+  // the target tier's YEARLY price.
+  assert.equal(planSwitchPriceLabel("premium", "year"), "$79.99/yr");
+  assert.equal(planSwitchPriceLabel("plus", "year"), "$39.99/yr");
+  assert.equal(planSwitchPriceLabel("premium", "month"), "$9.99/month");
+  assert.equal(planSwitchPriceLabel("premium", null), "$9.99/month", "unknown interval: the monthly price, the checkout default");
+  assert.equal(planSwitchPriceLabel("premium", "year", false), "$9.99/month", "no annual price for the target: priceIdFor falls back to monthly, and so does the quote");
+  for (const f of ["src/components/SubscriptionActions.tsx", "src/components/PremiumDialog.tsx", "src/components/PremiumButton.tsx", "src/app/dashboard/page.tsx"]) {
+    assert.match(read(f), /planSwitchPriceLabel\("premium", /, `${f} must quote the upgrade through planSwitchPriceLabel`);
+  }
+});
+
+test("a Plus trialist is never offered an upgrade the route would refuse", () => {
+  // /api/premium/upgrade lists only ACTIVE subscriptions; mid-trial it errors.
+  assert.match(read("src/app/api/me/route.ts"), /trialing: billing\.trialing,/);
+  assert.match(read("src/lib/use-me.ts"), /trialing: !!d\.trialing,/);
+  const dialog = read("src/components/PremiumDialog.tsx");
+  const plusBranch = dialog.slice(dialog.indexOf(") : premium && tier === \"plus\" ? ("), dialog.indexOf(") : premium ? ("));
+  assert.match(plusBranch, /\{trialing \? \(/, "the dialog's Plus branch must check the trial first");
+  assert.ok(plusBranch.indexOf("{trialing ? (") < plusBranch.indexOf("onClick={upgradeTier}"), "the upgrade button is the NOT-trialing arm");
+  assert.match(read("src/components/PremiumButton.tsx"), /const upgradeLater = isPlusUpgrade && trialing;/);
+  assert.match(read("src/app/dashboard/page.tsx"), /isPlus && premiumPlusEnabled\(\) && !billing\.trialing/);
+});
+
+test("billingStateFor reads Stripe once per paying customer, and never for anyone else", async () => {
+  forgetBillingState();
+  let reads = 0;
+  const read_ = async () => {
+    reads++;
+    return { status: "trialing" as const, interval: "year" as const };
+  };
+  assert.deepEqual(await billingStateFor(null, true, 0, read_), { trialing: false, interval: null });
+  assert.deepEqual(await billingStateFor({ stripeCustomerId: "cus_1" }, false, 0, read_), { trialing: false, interval: null }, "a free account costs no Stripe read");
+  assert.equal(reads, 0);
+  assert.deepEqual(await billingStateFor({ stripeCustomerId: "cus_1" }, true, 0, read_), { trialing: true, interval: "year" });
+  await billingStateFor({ stripeCustomerId: "cus_1" }, true, 60_000, read_);
+  assert.equal(reads, 1, "memoised inside the 10-minute window");
+  await billingStateFor({ stripeCustomerId: "cus_1" }, true, 11 * 60_000, read_);
+  assert.equal(reads, 2, "re-read once the window has passed");
+  forgetBillingState();
+});
+
+test("billingStateFor never holds /api/me on Stripe, and never pins a failed read for ten minutes", async () => {
+  forgetBillingState();
+  // An empty read (no live subscription, or a failed call — the helper
+  // reports both as null) is kept for a minute, not the full window.
+  let reads = 0;
+  const empty = async () => {
+    reads++;
+    return null;
+  };
+  assert.deepEqual(await billingStateFor({ stripeCustomerId: "cus_2" }, true, 0, empty), { trialing: false, interval: null });
+  await billingStateFor({ stripeCustomerId: "cus_2" }, true, 30_000, empty);
+  assert.equal(reads, 1, "an empty read is still memoised briefly");
+  await billingStateFor({ stripeCustomerId: "cus_2" }, true, 61_000, empty);
+  assert.equal(reads, 2, "…but re-read after a minute, not ten");
+
+  // A thrown read degrades to NONE rather than failing the whole response.
+  const boom = async () => {
+    throw new Error("stripe down");
+  };
+  assert.deepEqual(await billingStateFor({ stripeCustomerId: "cus_3" }, true, 0, boom), { trialing: false, interval: null });
+
+  // A slow read answers NONE inside the time box, shares one call between
+  // concurrent requests, and is memoised once it lands.
+  let release!: () => void;
+  let slowReads = 0;
+  const slow = () => {
+    slowReads++;
+    return new Promise<{ status: "trialing"; interval: "month" }>((r) => {
+      release = () => r({ status: "trialing", interval: "month" });
+    });
+  };
+  const [a, b] = await Promise.all([
+    billingStateFor({ stripeCustomerId: "cus_4" }, true, 0, slow, 20),
+    billingStateFor({ stripeCustomerId: "cus_4" }, true, 0, slow, 20),
+  ]);
+  assert.deepEqual(a, { trialing: false, interval: null }, "timed out: answered without Stripe");
+  assert.deepEqual(b, a);
+  assert.equal(slowReads, 1, "concurrent requests share the one in-flight read");
+  release();
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(await billingStateFor({ stripeCustomerId: "cus_4" }, true, 1_000, slow, 20), { trialing: true, interval: "month" });
+  assert.equal(slowReads, 1, "the late answer was memoised");
+  forgetBillingState();
+});
+
+test("/api/me reads billing state for Plus viewers only — Premium never waits on Stripe for adFree", () => {
+  const src = read("src/app/api/me/route.ts");
+  assert.match(src, /billingStateFor\(user, premiumTierOf\(user\) === "plus"\)/);
+  assert.doesNotMatch(src, /billingStateFor\(user, isPremium\(user\)\)/);
 });
 
 test("Plus's display prices and helpers are real and match the decided figures", () => {
@@ -297,37 +450,48 @@ test("grantPremiumDays and grantPremiumMonths accept an optional tier, defaultin
 // they can't open, and must be able to move between tiers from inside the app.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the dashboard's tool list tags each tool with the tier that can actually open it", () => {
-  // Every "premium" entry here must be a page that gates on the premium
-  // minimum, and every "plus" entry one that doesn't — otherwise the dashboard
-  // either dangles a tool that bounces a Plus member to /premium, or hides one
-  // they've paid for. This is the same invariant TIER_COMPARISON carries, read
-  // from the other end.
-  const src = read("src/app/dashboard/page.tsx");
-  const toolsAt = src.indexOf("const TOOLS");
-  assert.ok(toolsAt >= 0);
-  const tools = src.slice(toolsAt, src.indexOf("];", toolsAt));
+test("the dashboard's tool list tags each tool with the tier that opens it in full, and its free taste", () => {
+  // Every tag must match the tool's real gate — otherwise the dashboard either
+  // dangles a tool that bounces a member to /premium, or hides one they've
+  // paid for. The same invariant TIER_COMPARISON carries, read from the other
+  // end. 2026-09-25 lineup: the Bulk Pricer, Value Finder, Rising Sealed,
+  // Demand Finder and Condition Calculator entries are gone.
+  const byTitle = Object.fromEntries(DASHBOARD_TOOLS.map((t) => [t.title, t]));
+  assert.deepEqual(Object.keys(byTitle), ["Deal Finder", "Rising Cards", "Best Basket", "Watchlist & target alerts", "Portfolio"]);
+  assert.equal(byTitle["Deal Finder"].tier, "plus");
+  assert.equal(byTitle["Rising Cards"].tier, "plus");
+  assert.equal(byTitle["Best Basket"].tier, "premium");
+  assert.equal(byTitle["Watchlist & target alerts"].tier, "free");
+  assert.equal(byTitle["Portfolio"].tier, "free");
 
-  const expected: Record<string, "plus" | "premium"> = {
-    "Bulk Pricer": "premium",
-    "Best Basket": "premium",
-    "Value Finder": "premium",
-    "Demand Finder": "premium",
-    "Rising Cards": "plus",
-    "Rising Sealed": "plus",
-    "Deal Finder": "plus",
-    "Condition Calculator": "plus",
-  };
-  for (const [title, tier] of Object.entries(expected)) {
-    const line = tools.split("\n").find((l) => l.includes(`title: "${title}"`));
-    assert.ok(line, `expected a dashboard entry for ${title}`);
-    assert.match(line!, new RegExp(`tier:\\s*"${tier}"`), `${title} must be tagged ${tier} on the dashboard`);
+  // The free taste each paid tool offers is exactly TIER_COMPARISON's free cell.
+  const cell = (feature: string) => TIER_COMPARISON.find((r) => r.feature === feature)!.account;
+  assert.equal(cell("Deal Finder"), "Top 3");
+  assert.equal(byTitle["Deal Finder"].freeTaste, "Top 3 free");
+  assert.equal(byTitle["Rising Cards"].freeTaste, "Top 3 free");
+  assert.equal(cell("Best Basket — cheapest delivered order for a list"), "Your total");
+  assert.equal(byTitle["Best Basket"].freeTaste, "See your total free");
+
+  // Who opens what, in full.
+  for (const [viewer, opens] of [
+    [null, ["Watchlist & target alerts", "Portfolio"]],
+    ["plus", ["Deal Finder", "Rising Cards", "Watchlist & target alerts", "Portfolio"]],
+    ["premium", ["Deal Finder", "Rising Cards", "Best Basket", "Watchlist & target alerts", "Portfolio"]],
+  ] as const) {
+    assert.deepEqual(
+      DASHBOARD_TOOLS.filter((t) => dashboardToolOpens(t.tier, viewer)).map((t) => t.title),
+      opens,
+      `viewer ${viewer ?? "free"}`,
+    );
   }
 
-  // …and the filter that uses those tags must be tier-driven, not a blanket
-  // "show everything to anyone who paid".
-  assert.match(src, /TOOLS\.filter\(/, "the dashboard must filter its tools by tier");
+  // Every paid tool has a free taste, so nothing renders as a lock for any
+  // signed-in account — and the page reads the member's real tier.
+  assert.ok(DASHBOARD_TOOLS.every((t) => t.tier === "free" || t.freeTaste), "a paid tool without a free taste would be a lock");
+  const src = read("src/app/dashboard/page.tsx");
   assert.match(src, /premiumTierOf\(user\)/, "the dashboard must read the member's real tier");
+  assert.match(src, /dashboardToolOpens\(t\.tier, tier\)/);
+  assert.match(src, /\{t\.freeTaste\} →/, "a free taste renders as an open link labelled with what it is");
 });
 
 test("the dashboard never calls a Plus member Premium", () => {
@@ -344,8 +508,10 @@ test("the dashboard never calls a Plus member Premium", () => {
   assert.ok(footer.length > 0, "fixture check: expected the closing footer paragraph");
   assert.match(footer, /\{tierName\}/, "the closing footer must name the member's real tier");
   assert.ok(!/\bPremium\b/.test(footer.slice(0, 400)), "the footer must not hard-code a tier name");
-  // The Premium-only tools are shown to Plus as locked, not as links.
-  assert.match(src, /lockedTools/, "Premium-only tools must be rendered separately for Plus, not hidden or linked");
+  // The chip: Plus names its headline benefit, and Free never wears gold
+  // (gold marks Premium — CURRENT-STATE, Navigation & chrome).
+  assert.match(src, /\{isPlus \? "Plus · ad-free" : tierName\}/);
+  assert.match(src, /isFree \? "bg-ink-700 text-slate-300" : isPlus \? "bg-slate-500\/15 text-slate-200" : "bg-gold\/15 text-gold"/);
 });
 
 test("the downgrade route credits rather than charges, and mirrors the upgrade route's tier guard", () => {

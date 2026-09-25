@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
-import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_NAME, SITE_URL, TIER_NAMES, INTRO_MONTHS, introOfferEnabled } from "@/lib/site";
+import { PREMIUM_TRIAL_DAYS } from "@/lib/premium";
 import { staticPageDateLabel } from "@/lib/static-page-dates";
 import { pageAlternates } from "@/lib/seo";
 
@@ -130,11 +131,48 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">8. Premium subscriptions</h2>
+          {/* Rewritten 2026-09-25 to name both paid tiers and the trial and
+              intro rules checkout actually applies (lib/premium.ts: the
+              card-gated trial, hasEverPaid / introEligibleFor, the lock-in).
+              The trial length and intro months come from the same constants
+              checkout reads, never typed here. */}
+          <h2 className="text-lg font-bold text-white">8. Plus and Premium subscriptions</h2>
           <p>
-            Where offered, {SITE_NAME} Premium is billed on a recurring basis through our payment
-            provider. You can cancel at any time; access continues until the end of the paid period.
-            Fees already paid are non-refundable except where required by law.
+            {SITE_NAME} offers two paid plans, {TIER_NAMES.plus} and {TIER_NAMES.premium}, each billed monthly or
+            yearly on a recurring basis through our payment provider, Stripe, at the price shown before you
+            confirm. The features each plan includes are listed on the{" "}
+            <Link href="/premium" className="text-brand-400 hover:underline">Premium page</Link>.
+          </p>
+          {PREMIUM_TRIAL_DAYS > 0 && (
+            <p>
+              <strong className="text-white">Free trial.</strong> Where a free trial is offered it lasts{" "}
+              {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"}, is limited to one per account, and
+              requires a payment card to start. Unless you cancel before it ends, the trial converts automatically
+              into the plan you chose and your card is charged on the day it ends. If you cancel during the trial,
+              you are not charged. We email you a day or two before the trial ends.
+            </p>
+          )}
+          {introOfferEnabled() && (
+            <p>
+              <strong className="text-white">Introductory price.</strong> If your account has never paid for a
+              subscription, a monthly plan&apos;s first {INTRO_MONTHS} invoices are charged at half the normal
+              monthly price, applied automatically at checkout; the normal monthly price applies from the invoice
+              after that. Annual plans are not discounted. Switching between {TIER_NAMES.plus} and{" "}
+              {TIER_NAMES.premium} keeps only the half-price invoices you had left.
+            </p>
+          )}
+          <p>
+            <strong className="text-white">Your price.</strong> The price you subscribe at does not rise for as
+            long as your subscription stays active; we do not move existing subscribers onto a new price. If a
+            subscription ends and you subscribe again later, the price at that time applies.
+          </p>
+          <p>
+            <strong className="text-white">Changing or cancelling.</strong> You can cancel at any time from your
+            account; access continues until the end of the period already paid for (or, during a trial, until the
+            trial ends). Once a subscription is paid, moving from {TIER_NAMES.plus} to {TIER_NAMES.premium} bills
+            the prorated difference straight away, and moving down credits the unused part of the period against
+            your next invoice; plan changes are not available during a free trial. Fees already paid are
+            non-refundable except where required by law.
           </p>
         </section>
 

@@ -4,6 +4,7 @@ import { useCountry } from "./CountryProvider";
 import { OutboundLink } from "./OutboundLink";
 import { EbayBuyCta } from "./EbayBuyCta";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
+import { usePremium } from "./PremiumProvider";
 import { formatMoney } from "@/lib/format";
 
 export interface AdListing {
@@ -60,12 +61,19 @@ export function EbayAdCarouselLive({
   bare?: boolean;
 }) {
   const { country } = useCountry();
+  // AD-FREE MEANS THIS TOO (2026-09-25). This carousel is labelled "Ad" and
+  // is the first thing under a card's prices, so a Plus buyer's first card
+  // page showed "Ad · live listings on eBay" — the leak in "no ads on any
+  // page". A paying viewer gets the plain eBay buy-path instead (the same
+  // non-ad CTA the no-listings case uses, no "Ad" label), which keeps the
+  // card's eBay route without the advert. Matches EbayPicksLive.
+  const adFree = usePremium();
   const items = listings
     .filter((l) => l.country === country)
     .sort((a, b) => a.rank - b.rank)
     .slice(0, compact ? 4 : undefined);
 
-  if (items.length === 0) {
+  if (adFree || items.length === 0) {
     // bare carries through: QuickView renders this bare under its own
     // disclosure, and dropping the flag here stacked two identical EPN lines
     // 50px apart (2026-09-23).

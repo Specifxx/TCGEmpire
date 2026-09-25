@@ -69,10 +69,9 @@ export const NAV_GROUPS: NavGroup[] = [
       // still carry every intent that should land here.
       { href: "/radiance-preorders", label: "Radiance pre-orders", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
       { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"] },
-      { href: "/movers", label: "Daily Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"] },
+      { href: "/movers", label: "Weekly Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "most searched", "popular cards"] },
       { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"] },
       { href: "/stores/tracked", label: "Stores we track", keywords: ["stores", "shops", "retailers", "which stores"] },
-      { href: "/bulk-pricer", label: "Bulk Pricer", keywords: ["bulk", "price a list", "paste a list", "collection value"] },
     ],
   },
   {
@@ -121,7 +120,10 @@ export const NAV_GROUPS: NavGroup[] = [
       // hand-typed lists in prisma/meta-decks.json presented as the metagame —
       // removed, with /decks/* redirecting here (DECISIONS.md, "Meta decks:
       // removed").
-      { href: "/deck", label: "Deck Builder", keywords: ["build a deck", "deck price", "brew", "deck cost", "decklist", "meta", "decks"] },
+      // "& Pricer" since 2026-09-25: the Bulk Pricer folded into /deck
+      // (/bulk-pricer 301s here), so this is the list-pricing page too — and
+      // the label is what a bare "prices" query in ⌘K ranks on.
+      { href: "/deck", label: "Deck Builder & Pricer", keywords: ["build a deck", "deck price", "brew", "deck cost", "decklist", "meta", "decks", "bulk", "price a list", "paste a list", "bulk price checker"] },
       { href: "/trade", label: "Trade Calculator", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
     ],
   },
@@ -147,13 +149,9 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Deals & value",
     icon: "deals",
     links: [
-      { href: "/tools/deal-finder", label: "Deal Finder", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced"] },
-      { href: "/tools/value-finder", label: "Value Finder", keywords: ["value", "best value", "worth", "undervalued"] },
+      { href: "/tools/deal-finder", label: "Deal Finder", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced", "undervalued", "best value"] },
       { href: "/tools/rising", label: "Rising Cards", keywords: ["rising", "hot", "momentum", "spiking", "going up"] },
-      { href: "/tools/rising-sealed", label: "Rising Sealed", keywords: ["rising sealed", "booster box", "sealed momentum", "sealed going up"] },
-      { href: "/tools/demand", label: "Demand Finder", keywords: ["demand", "trending", "most searched", "most viewed", "popular cards", "what to buy"] },
       { href: "/tools/best-basket", label: "Best Basket", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"] },
-      { href: "/tools/condition-calculator", label: "Condition Calculator", keywords: ["condition", "nm", "lp", "mp", "hp", "damaged", "grading", "value calculator"] },
       { href: "/tools/box-ev", label: "Box EV Calc", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
       { href: "/tools/selling-fees", label: "Selling Fee Calc", keywords: ["tcgplayer fees", "ebay fees", "selling fees", "net proceeds", "marketplace commission"] },
       { href: "/tools", label: "All Tools", keywords: ["tools", "calculators", "utilities"] },
@@ -344,16 +342,16 @@ export const FOOTER_GROUPS: NavGroup[] = [
     title: "Cards & collection",
     links: [...(byTitle["The card database"] ?? []), ...(byTitle["Your collection"] ?? [])],
   },
+  // Games sit with the tools since 2026-09-25: the premium lineup took four
+  // tools out of "Deals & value", which left that column at 8 links against
+  // Learn's 17, past the 2x spread above. Moving the three footer games across
+  // (the other seven are hideInFooter) rebalances to 10 / 13 / 11 / 14.
   {
-    title: "Deals & decks",
-    links: [...(byTitle["Deals & value"] ?? []), ...(byTitle["Decks"] ?? [])],
+    title: "Tools, decks & games",
+    links: [...(byTitle["Deals & value"] ?? []), ...(byTitle["Decks"] ?? []), ...(byTitle["Games"] ?? [])],
   },
   {
-    title: "Learn & play",
-    links: [
-      ...(byTitle["Games"] ?? []),
-      ...(byTitle["Guides & News"] ?? []),
-      ...(byTitle["Help"] ?? []),
-    ],
+    title: "Learn & help",
+    links: [...(byTitle["Guides & News"] ?? []), ...(byTitle["Help"] ?? [])],
   },
 ];

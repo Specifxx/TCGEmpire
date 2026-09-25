@@ -51,7 +51,7 @@ const BASE = argOf("--url", "http://localhost:3111").replace(/\/$/, "");
 // where it was not looking, not because of what it was not measuring.
 const PATHS = (
   process.env.MOBILE_CHECK_PATHS ??
-  "/,/browse,/sets,/guides,/blog,/about,/privacy,/editorial-policy,/movers,/market,/marketplace,/cards/rarity/rare,/tools/deal-finder,/tools/value-finder"
+  "/,/browse,/sets,/guides,/blog,/about,/privacy,/editorial-policy,/movers,/market,/marketplace,/cards/rarity/rare,/tools/deal-finder,/tools/rising"
 )
   .split(",")
   .map((s) => s.trim())

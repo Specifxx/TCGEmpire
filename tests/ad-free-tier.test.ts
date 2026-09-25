@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 
@@ -13,28 +13,22 @@ const code = (p: string) =>
     .replace(/^\s*\/\/.*$/gm, "");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AD-FREE IS A PREMIUM ENTITLEMENT (2026-09-14). See DECISIONS.md.
+// AD-FREE IS ON EVERY PAID TIER — Plus included (2026-09-25). See DECISIONS.md,
+// "Plus is ad-free again" and "Premium lineup: fewer tools, each one worth
+// paying for".
 //
-// Plus at $4.99 included ad-free AND the full Deal Finder list — the two things
-// the site sells hardest — which left Premium at $9.99 differentiated only by
-// four bulk/screener tools most visitors have no use for. With the pricing page
-// defaulting to annual, a reader saw $3.33 immediately left of $6.67 and the
-// cheaper card ticked every broadly-appealing box.
+// History: ad-free moved from Plus to Premium on 2026-09-14, to give the $9.99
+// tier a broad reason to exist (nobody who had bought Plus lost it:
+// premiumTierFloor raised them at read time, scripts/grandfather-plus-adfree.ts).
+// With the half-price intro, Plus is the entry tier and "no ads on any page" is
+// its headline, so ad-free is back on both paid tiers and every surface that
+// describes Plus must say so.
 //
-// Moving ad-free up is the smallest change that gives the higher tier a reason
-// to exist. Nobody who already bought Plus loses it: premiumTierFloor raises
-// their tier at read time (scripts/grandfather-plus-adfree.ts).
-//
-// The trap this file exists to catch: `premium` and `adFree` are now DIFFERENT
-// questions. `isPremium(user)` defaults to min "plus" and is still what gates
-// the Plus-level features. Wiring the ad components back to `premium` would
-// silently hand ad-free to every Plus account again, and nothing else would
-// fail.
+// `premium` and `adFree` stay DIFFERENT flags even though they agree today:
+// `isPremium(user)` (min "plus") gates the Plus-level features, and `adFree`
+// is what the ad placements read, so the ad-free line can move again in
+// /api/me alone without touching a single placement.
 // ─────────────────────────────────────────────────────────────────────────────
-
-// 2026-09-25: ad-free is back on EVERY paid tier (owner's call — DECISIONS.md,
-// "Plus is ad-free again"). The flag stays separate from `premium` so the line
-// can move again without touching the ad placements.
 test("the tier table says ad-free is on both paid tiers", () => {
   const row = TIER_COMPARISON.find((r) => r.feature === "Ad-free experience");
   assert.ok(row, "expected an Ad-free experience row — the feature string is matched verbatim by DIALOG_OMIT_FEATURES and by three other tests");
@@ -57,13 +51,69 @@ test("the ad components gate on adFree, which is computed at the plus minimum", 
   assert.ok(!/const \{ premium \} = useMe\(\)/.test(provider), "reading `premium` here would give ad-free back to every Plus account");
 });
 
-test("both paid tiers' feature lists sell ad-free", () => {
+test("both paid tiers' feature lists sell ad-free, and Plus LEADS with it", () => {
   const cards = code("src/components/PremiumPricingCards.tsx");
   const plusList = cards.slice(cards.indexOf("const PLUS_FEATURES"), cards.indexOf("const PREMIUM_FEATURES_ON_PLUS"));
-  assert.match(plusList, /Ad-free browsing/, "PLUS_FEATURES must advertise ad-free");
+  // 2026-09-25 lineup: "No ads on any page" is Plus's first bullet, the benefit
+  // a first-time payer understands without a tour.
+  assert.match(plusList, /const PLUS_FEATURES = \[\s*"No ads on any page",/, "PLUS_FEATURES must lead with ad-free");
   const premiumLists = cards.slice(cards.indexOf("const PREMIUM_FEATURES_ON_PLUS"), cards.indexOf("function FreeCard"));
-  assert.match(premiumLists, /Ad-free browsing/, "Premium's feature lists must advertise ad-free");
+  const onPlus = premiumLists.slice(0, premiumLists.indexOf("const PREMIUM_FEATURES_STANDALONE"));
+  const standalone = premiumLists.slice(premiumLists.indexOf("const PREMIUM_FEATURES_STANDALONE"));
+  assert.match(onPlus, /no ads/i, "Premium-on-Plus must say it keeps Plus's ad-free");
+  assert.match(standalone, /No ads on any page/, "standalone Premium must advertise ad-free");
   assert.ok(!/Premium adds an ad-free site/.test(code("src/app/premium/page.tsx")), "/premium must not sell ad-free as Premium-only");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NO SURFACE MAY SELL AD-FREE AS PREMIUM-ONLY (2026-09-25). The /premium
+// caption said "Premium adds no ads" for a day after Plus went ad-free again,
+// because each surface was checked by hand. This sweeps every component and
+// page, the articles and the email templates, with comments stripped (the
+// history of the 09-14 move is recorded in comments on purpose).
+// ─────────────────────────────────────────────────────────────────────────────
+const PREMIUM_ONLY_AD_FREE = /Premium adds (no ads|an ad-free|ad-free)|ad-free for Premium/i;
+
+function tsxFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
+    const rel = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) out.push(...tsxFiles(rel));
+    else if (entry.name.endsWith(".tsx")) out.push(rel);
+  }
+  return out;
+}
+
+test("nothing sells ad-free as a Premium-only benefit", () => {
+  const files = [...tsxFiles("src"), "src/lib/articles.ts", "src/lib/email.ts"];
+  assert.ok(files.length > 100, `fixture check: expected the whole src tree, found ${files.length} files`);
+  const offenders = files.filter((f) => PREMIUM_ONLY_AD_FREE.test(code(f)));
+  assert.deepEqual(offenders, [], `these files say ad-free is Premium-only: ${offenders.join(", ")}`);
+  // The regex must actually catch the shapes it was written for.
+  for (const bad of ["Premium adds no ads", "Premium adds an ad-free site", "Premium adds ad-free browsing", "ad-free for Premium members"]) {
+    assert.match(bad, PREMIUM_ONLY_AD_FREE, bad);
+  }
+});
+
+test("the ad placements that leaked to paying members now read adFree", () => {
+  // The card page's eBay carousel is labelled "Ad" and rendered for everyone;
+  // a Plus buyer's first card page showed it (2026-09-25).
+  const carousel = code("src/components/EbayAdCarouselLive.tsx");
+  assert.match(carousel, /const adFree = usePremium\(\)/, "the carousel must read the ad-free flag");
+  assert.match(carousel, /if \(adFree \|\| items\.length === 0\) \{/, "an ad-free viewer gets the plain buy-path");
+  const fallbackAt = carousel.indexOf("if (adFree || items.length === 0) {");
+  assert.match(carousel.slice(fallbackAt, fallbackAt + 400), /<EbayBuyCta /, "…the non-ad EbayBuyCta, as EbayPicksLive does");
+  assert.doesNotMatch(read("src/components/EbayBuyCta.tsx"), /Ad ·/, "the fallback CTA itself carries no 'Ad' label");
+
+  // The native app's AdMob banner was shown unconditionally.
+  const shell = code("src/components/NativeShell.tsx");
+  const meAt = shell.indexOf("await fetchMe()");
+  const showAt = shell.indexOf("AdMob.showBanner(");
+  assert.ok(meAt > 0 && showAt > meAt, "the session must be read before the banner is shown");
+  assert.match(shell.slice(meAt, showAt), /if \(me\.adFree\) \{[\s\S]*?return;/, "an ad-free viewer never gets the banner");
+  assert.match(shell, /AdMob\.hideBanner\(\)/, "a banner left from before sign-in is taken down");
+  assert.match(shell, /ME_INVALIDATED_EVENT/, "and it comes down when the session changes in place (a purchase activating)");
+  assert.match(code("src/lib/use-me.ts"), /window\.dispatchEvent\(new Event\(ME_INVALIDATED_EVENT\)\)/);
 });
 
 test("the grandfather script is idempotent, floors rather than rewrites the billed tier, and prints no PII", () => {

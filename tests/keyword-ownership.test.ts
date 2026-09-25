@@ -190,12 +190,17 @@ test("the price-check MINI-GAME no longer reads as the site's answer to the quer
   );
 });
 
-test("/bulk-pricer keeps the BULK price-check query, and doesn't claim the single-card one", () => {
-  // "Bulk Riftbound Card Price Checker" is a genuinely different job (many cards
-  // at once, Premium-gated) and stays as it is — this asserts the split holds
-  // rather than that the page changed.
-  const src = read("src/app/bulk-pricer/page.tsx");
-  assert.match(src, /const TITLE = "Bulk Riftbound Card Price Checker"/, "bulk pricer keeps its own title");
+test("the BULK price-check query moved to /deck with the Bulk Pricer, and doesn't claim the single-card one", () => {
+  // "Bulk Riftbound Card Price Checker" is a genuinely different job (many
+  // cards at once). It was the Premium /bulk-pricer's until 2026-09-25, when
+  // that page folded into the free /deck list pricer and began 301ing there;
+  // the query follows it rather than being orphaned by the redirect.
+  assert.match(read("next.config.js"), /\{ source: "\/bulk-pricer", destination: "\/deck", permanent: true \}/);
+  const deckNav = /\{ href: "\/deck", label: "[^"]+", keywords: \[([^\]]+)\]/.exec(read("src/components/nav-groups.ts"))?.[1] ?? "";
+  assert.match(deckNav, /"bulk price checker"/, "the /deck nav entry carries the bulk query");
+  const map = read(MAP);
+  assert.match(map, /`bulk price checker`\) belongs to `\/deck`/, "the keyword map names the new owner");
+  assert.doesNotMatch(read(HOME).replace(/\/\/[^\n]*/g, ""), /bulk price check/i, "the homepage keeps the single-card query only");
 });
 
 // ── The map itself ──────────────────────────────────────────────────────────

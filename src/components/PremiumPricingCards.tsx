@@ -16,6 +16,7 @@ import {
   INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
+import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
 
 // The /premium pricing section, rebuilt 2026-09-11 to match the layout at
 // mtgstocks.com/go-premium (owner: "copy their formatting and pillars") —
@@ -148,7 +149,7 @@ export function PremiumPricingCards({
         {plusLive && (
           <PaidTierCard
             tier="plus"
-            tagline="Ad-free, with the full lists"
+            tagline="No ads, every deal, and target alerts"
             features={PLUS_FEATURES}
             cycle={cycle}
             annualLiveForTier={plusAnnualLive}
@@ -163,7 +164,7 @@ export function PremiumPricingCards({
 
         <PaidTierCard
           tier="premium"
-          tagline={plusLive ? "Everything, including the pro tools" : "The full toolkit"}
+          tagline={plusLive ? "Buy your whole list for less" : "The full toolkit"}
           features={plusLive ? PREMIUM_FEATURES_ON_PLUS : PREMIUM_FEATURES_STANDALONE}
           highlight
           cycle={cycle}
@@ -180,25 +181,47 @@ export function PremiumPricingCards({
   );
 }
 
+// THE 2026-09-25 LINEUP — the same entitlements as TIER_COMPARISON's rows,
+// in buyer's words. Plus LEADS with "No ads on any page": it is the benefit a
+// first-time payer understands without a tour, and every surface that
+// describes Plus must say so (tests/ad-free-tier.test.ts).
 const FREE_FEATURES = [
   "Unlimited price comparisons",
-  "Deck builder, trade calculator & box EV",
-  "Price alerts",
-  "Portfolio tracker",
+  "Deck & list pricer, trade calculator & box EV",
+  "Watchlist with weekly new-low emails",
+  "Portfolio, including its delivered replacement cost",
+  "Top 3 of Deal Finder & Rising Cards",
+  "Best Basket: your own list's delivered total",
 ];
 // "N-day" is a placeholder, substituted for the real PREMIUM_TRIAL_DAYS value
 // by PaidTierCard below — this file can't import the server-only constant
-// directly, and the real count arrives as the `trialDays` prop instead.
-const PLUS_FEATURES = ["Everything free", "Ad-free browsing", "Full Deal Finder, Rising Cards & Rising Sealed lists", "N-day free trial"];
+// directly, and the real count arrives as the `trialDays` prop instead. The
+// row is dropped entirely when this viewer can't start a trial (TRIAL_ROW).
+const TRIAL_ROW = "N-day free trial";
+const PLUS_FEATURES = [
+  "No ads on any page",
+  `Target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, naming the store`,
+  "Every card below TCGplayer market, filtered to the cards you watch or own",
+  "The full Rising Cards list",
+  "N-day free trial",
+];
 // Two different lists depending on whether Plus exists to build on top of —
 // same reasoning TIER_COMPARISON's own header gives for keeping one row set
 // rather than two near-duplicate copies of the feature list.
-const PREMIUM_FEATURES_ON_PLUS = ["Everything in Plus (ad-free, full lists)", "Value Finder screener", "Bulk Pricer", "Best Basket optimiser", "Demand Finder", "N-day free trial"];
+const PREMIUM_FEATURES_ON_PLUS = [
+  "Everything in Plus, including no ads",
+  "Best Basket: the cheapest delivered order, beside the best one-store and two-store orders",
+  "Buy straight from your deck, watchlist or binder, skipping what you own",
+  "Unlimited target-price alerts",
+  "The store-by-store plan behind your binder's replacement cost",
+  "N-day free trial",
+];
 const PREMIUM_FEATURES_STANDALONE = [
   "Everything free",
-  "Ad-free browsing",
-  "Full Deal Finder, Rising Cards & Rising Sealed lists",
-  "Value Finder, Bulk Pricer, Best Basket & Demand Finder",
+  "No ads on any page",
+  "Every card below TCGplayer market, and the full Rising Cards list",
+  "Unlimited target-price alerts",
+  "Best Basket and Buy this list: your whole list, delivered for less",
   "N-day free trial",
 ];
 
@@ -279,7 +302,11 @@ function PaidTierCard({
   const intro = effectiveCycle === "monthly" && introOfferEnabled() && introEligible;
   const priceLabel =
     effectiveCycle === "annual" ? `${annualAmount}/yr` : intro ? introPriceLine(tier) : `${monthlyAmount}/${PREMIUM_PRICE_PERIOD}`;
-  const features_ = features.map((f) => f.replace("N-day", `${trialDays}-day`));
+  // The trial row is a claim about THIS viewer: someone who already used
+  // their trial (or with trials switched off) must not be promised one.
+  const features_ = features
+    .filter((f) => f !== TRIAL_ROW || (trialAvailable && trialDays > 0))
+    .map((f) => f.replace("N-day", `${trialDays}-day`));
 
   return (
     <div

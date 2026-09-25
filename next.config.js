@@ -177,6 +177,26 @@ const nextConfig = {
       // (2026-09-23). They exist only to keep old inbound links off a 404.
       { source: "/sell", destination: "/", permanent: true },
       { source: "/wanted", destination: "/", permanent: true },
+      // THE 2026-09-25 PREMIUM LINEUP (DECISIONS.md, "Premium lineup: fewer
+      // tools, each one worth paying for"). Five tools left the paid tiers, each
+      // to the FREE page that now carries its useful part, so no member loses a
+      // capability and no inbound link 404s:
+      //   • Condition Impact Calculator — card-independent (NM→LP was always
+      //     −15%, whatever the card). Its explanation lives in the condition
+      //     guide, a category "guide" article served under /guides/.
+      //   • Value Finder — its "going cheap" intent is /movers'.
+      //   • Demand Finder — a free "Most searched this week" strip on /movers.
+      //   • Rising Sealed — too few sealed history points to rank honestly;
+      //     /sealed carries prices and the sold-out badge.
+      //   • Bulk Pricer — a paywall over the same list pricing the free /deck
+      //     already does; its paste/plain-name/quantity handling moved there.
+      // tests/lineup-removals.test.ts pins each entry and that no internal link
+      // still points at a source.
+      { source: "/tools/condition-calculator", destination: "/guides/riftbound-card-condition-guide", permanent: true },
+      { source: "/tools/value-finder", destination: "/movers", permanent: true },
+      { source: "/tools/demand", destination: "/movers#most-searched", permanent: true },
+      { source: "/tools/rising-sealed", destination: "/sealed", permanent: true },
+      { source: "/bulk-pricer", destination: "/deck", permanent: true },
       // These three shipped as guides and were moved to the blog shortly after.
       // Both routes assert the article's category (app/guides/[slug]/page.tsx
       // notFound()s when it isn't "guide"), so the old paths became hard 404s the

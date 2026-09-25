@@ -83,7 +83,7 @@ export function FeedbackForm({ days }: { days: number }) {
         <h2 className="mt-3 text-lg font-bold text-brand-200">Thank you — this genuinely helps.</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
           {state.granted
-            ? `Your ${dayLabel} of ${rewardName} is now active.${tier === "plus" ? "" : " Enjoy the pro tools!"}`
+            ? `Your ${dayLabel} of ${rewardName} is now active.${tier === "plus" ? "" : " Enjoy Best Basket's store-by-store plan!"}`
             : premium
             ? `You're already ${rewardName} — but your feedback still means a lot.`
             : user

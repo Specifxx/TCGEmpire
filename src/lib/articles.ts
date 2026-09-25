@@ -7,7 +7,22 @@ import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
+import { PLUS_TARGET_ALERT_LIMIT } from "./alert-limits";
+import { TIER_COMPARISON } from "../components/TierComparisonTable";
 
+// The Premium explainer's comparison table, rendered from TIER_COMPARISON
+// itself (2026-09-25) — the same rows /premium and the upgrade dialog show, so
+// the article can no longer describe a lineup the site has moved past (it
+// carried the retired Value Finder / Rising Sealed rows until this). A
+// function declaration so it is hoisted above the ARTICLES literal.
+function premiumTierTableMarkdown(): string {
+  const cell = (v: boolean | string) => (v === true ? "✓" : v === false ? "—" : v);
+  return [
+    "| Feature | Free account | Plus | Premium |",
+    "| --- | --- | --- | --- |",
+    ...TIER_COMPARISON.map((r) => `| ${r.feature} | ${cell(r.account)} | ${cell(r.plus)} | ${cell(r.premium)} |`),
+  ].join("\n");
+}
 
 export type ArticleCategory = "blog" | "guide";
 
@@ -385,6 +400,7 @@ For the running list of everything Riot has genuinely shown — kept strictly se
       "What's in Riot's US$70 Secret Garden Bundle, every 2026 event where you can still buy one, and the supply map behind its Europe-vs-US price gap.",
     author: "RiftCompare",
     date: "2026-09-12",
+    updated: "2026-09-25", // Deal Finder's cross-region view was cut; the gap line points at /market/records
     readMins: 8,
     tags: ["news", "collecting", "sealed", "prices"],
     shop: [
@@ -500,7 +516,7 @@ Not a question this site will answer for you, but here is the honest framing.
 
 At US$88 you are paying an 18 dollar premium over the booth price for three exclusive promos, five tokens, sleeves and three boosters — that is close to reasonable on components alone. At €175 you are paying roughly 2.5x the box price, mostly for the fact that nobody near you has one yet, and there are four events on the calendar designed to change that.
 
-If you want the box because you like the art, the American market is where to buy it, and the [deal finder](/tools/deal-finder) is built for exactly that kind of cross-region gap. If you want it because you are speculating on the print run, the thing to understand is that Riot has told you there is leftover stock and that it intends to keep handing it out.
+If you want the box because you like the art, the American market is where to buy it — and the free [cross-market gaps board](/market/records#gaps) tracks the same kind of geography gap on single cards. If you want it because you are speculating on the print run, the thing to understand is that Riot has told you there is leftover stock and that it intends to keep handing it out.
 
 And if you simply want the cards to play with, remember what they are: alternate arts of cards already in the catalogue. The ordinary printings are [in our database](/browse) at ordinary prices.
 
@@ -2152,10 +2168,13 @@ We will update this page when any of the following happens, and not before: Riot
         take: 24,
       },
     ],
+    // Pointed at the Demand Finder leaderboard until that left Premium
+    // (2026-09-25); its free successor is the "Most searched this week" strip
+    // on /movers, which /tools/demand now 301s to.
     browseCta: {
-      href: "/tools/demand",
-      label: "See the full demand leaderboard →",
-      blurb: "The most searched and most viewed cards on RiftCompare, by real traffic — raw demand, not a derived score — with every card priced in your own market.",
+      href: "/movers#most-searched",
+      label: "See this week's most-searched cards →",
+      blurb: "The cards players searched for most on RiftCompare this week, beside the week's biggest price moves — every card priced in your own market.",
     },
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound TCG single cards" },
@@ -2413,14 +2432,14 @@ Either way, the smart move is the same: compare prices before you spend. That's 
       },
       {
         q: "Does card condition affect Riftbound card prices?",
-        a: "Yes — prices on RiftCompare assume Near Mint (NM) as the benchmark condition. As cards pick up whitening, scratches, dents or bends they drop through Lightly Played, Moderately Played, Heavily Played and Damaged, and each step down means a lower price, so the figure you see in the [database](/browse) is the Near Mint one.",
+        a: "Yes — Near Mint (NM) is the benchmark condition. As cards pick up whitening, scratches, dents or bends they drop through Lightly Played, Moderately Played, Heavily Played and Damaged, and each step down means a lower price. The figure you see in the [database](/browse) is the cheapest copy in stock, which is usually Near Mint; when a store only has a played copy left, that listing shows its condition.",
       },
     ],
     body: `A Riftbound card's condition is a big part of its value — a Near Mint copy can be worth far more than a played one. Here's how to protect your cards properly, whether you're holding a chase card or just keeping a deck tidy.
 
 ## Why condition matters
 
-Prices on RiftCompare assume **Near Mint (NM)** — the benchmark condition. As cards pick up whitening, scratches, dents or bends they drop through Lightly Played, Moderately Played, Heavily Played and Damaged, and each step down means a lower price. Protecting a card is the cheapest way to protect its value.
+**Near Mint (NM)** is the benchmark condition. As cards pick up whitening, scratches, dents or bends they drop through Lightly Played, Moderately Played, Heavily Played and Damaged, and each step down means a lower price. Protecting a card is the cheapest way to protect its value.
 
 ## The basics: sleeves
 
@@ -3635,6 +3654,7 @@ Want to try these ideas out before committing? **[Price the final deck](/deck)**
       "Buying each card at its own cheapest store means paying postage a dozen times. Best Basket finds the store split that is cheapest delivered.",
     author: "RiftCompare",
     date: "2026-08-24",
+    updated: "2026-09-25", // free own-list total; Premium store-by-store plan; watchlist/binder in; no "every viable split"
     readMins: 6,
     tags: ["best basket", "deckbuilding", "buying", "guide", "shipping"],
     hero: {
@@ -3644,17 +3664,17 @@ Want to try these ideas out before committing? **[Price the final deck](/deck)**
     summary: [
       "**The naive way to buy a deck — each card from whichever store has it cheapest — is usually NOT the cheapest way once shipping is counted.** A 40-card list priced that way can easily spread across a dozen stores, each charging its own postage.",
       "**Best Basket solves a different problem**: not \"what's the cheapest price per card\" but \"what's the cheapest way to buy the WHOLE list\", factoring in every store's shipping cost and free-shipping threshold.",
-      "**It's a RiftCompare Premium tool**, and shows you the naive-split cost right alongside its optimised one, so the saving is a number you can check, not a claim.",
+      "**Every signed-in account sees its own list's delivered total**, with the naive per-card-cheapest cost right alongside it, so the saving is a number you can check, not a claim. Premium shows which store to buy each card from.",
       "Just pricing a list, not buying it yet? **[The free deck pricer](/deck)** needs no account at all.",
     ],
     browseCta: {
       href: "/tools/best-basket",
       label: "Try Best Basket →",
-      blurb: "Paste a decklist or use your wishlist and see the cheapest way to buy the whole thing.",
+      blurb: "Paste a decklist, or send your watchlist or binder, and see the cheapest way to buy the whole thing.",
     },
     body: `Price a 40-card Riftbound deck the obvious way — open each card, buy it from whichever store is cheapest — and you'll usually end up with an order spread across eight, ten, sometimes fifteen different stores. Each one charges its own shipping. The "cheapest" card-by-card total quietly stops being the cheapest total once postage lands on top of it a dozen times.
 
-**[Best Basket](/tools/best-basket)** exists to fix exactly that. It's a RiftCompare Premium tool that takes a full decklist and works out the cheapest way to buy *all of it*, not the cheapest way to buy each card in isolation.
+**[Best Basket](/tools/best-basket)** exists to fix exactly that. It takes a full decklist and works out the cheapest way to buy *all of it*, not the cheapest way to buy each card in isolation. Any signed-in account sees the delivered total for its own list; RiftCompare Premium shows the store-by-store plan.
 
 ## The problem, concretely
 
@@ -3664,17 +3684,17 @@ Consolidate the same list into, say, 3 or 4 stores instead, and you often come o
 
 ## How Best Basket actually works
 
-1. **Give it a list.** Paste any decklist in standard list format, or point it at your own wishlist/watchlist from your account. If you got here from a deck page, your list is often already pre-filled.
-2. **It prices every viable store split** — not just the single cheapest store for each card, but combinations of stores that carry enough of the list to be worth consolidating into, each with its real shipping cost and free-shipping threshold applied.
-3. **It shows you the comparison, not just the answer.** The result names the store split, the total delivered cost, and — right alongside it — what the "naive" per-card-cheapest approach would have cost and how many stores it would have needed. You can see the saving, not just be told one exists.
-4. **You check out at each store yourself.** Best Basket tells you where to buy; it doesn't process the order. Every store in the plan gets a direct link.
+1. **Give it a list.** Paste any decklist in standard list format, or send your watchlist or binder in from your account — and tick **Skip copies I already own** to leave out what's already in your portfolio. If you got here from a deck page, your list is often already pre-filled.
+2. **It searches combinations of stores** — not just the single cheapest store for each card, but sets of stores that carry enough of the list to be worth consolidating into, each with its real shipping cost and free-shipping threshold applied — and shows the best one-store and two-store orders beside the cheapest split. Any line it can't match or find in stock is listed, not dropped.
+3. **It shows you the comparison, not just the answer.** The result gives the total delivered cost and — right alongside it — what the "naive" per-card-cheapest approach would have cost and how many stores it would have needed. You can see the saving, not just be told one exists.
+4. **You check out at each store yourself.** Best Basket tells you where to buy; it doesn't process the order. Every store in the Premium plan gets a direct link.
 
 ## Best Basket vs. the free deck pricer
 
 RiftCompare has two related tools, and it's worth knowing which one you actually want:
 
 - **[The deck pricer](/deck)** — free, no account needed. Prices every card in a list at its own cheapest store and adds it up. Good for a quick "what's this deck worth" check.
-- **[Best Basket](/tools/best-basket)** — a Premium tool. Solves the harder, more useful question: what's the cheapest way to actually *buy* the list, once you stop pretending shipping is free.
+- **[Best Basket](/tools/best-basket)** — your own list's delivered total with a free account, the store-by-store plan with Premium. Solves the harder, more useful question: what's the cheapest way to actually *buy* the list, once you stop pretending shipping is free.
 
 If you're pricing a list out of curiosity, the deck pricer is enough. If you're actually about to place an order, Best Basket is the one that saves you real money.
 
@@ -3690,10 +3710,10 @@ It matters least for a single chase card or a short shopping list of two or thre
 
 **[Open Best Basket](/tools/best-basket)**, paste in a decklist — your own, or one copied from a published tournament report — and see the store split for yourself. If you'd rather just price a list with no account, **[the deck pricer](/deck)** does that part for free.`,
     faq: [
-      { q: "Is Best Basket free?", a: "No — Best Basket is a RiftCompare Premium tool. Upgrade and it's included alongside the Bulk Pricer, Value Finder, Rising Cards and the full Deal Finder list." },
-      { q: "Does Best Basket account for shipping?", a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket prices every viable split across the stores that stock your list, including each store's shipping cost and free-shipping thresholds, and ranks results by what you'd actually pay delivered." },
-      { q: "What can I paste into Best Basket?", a: "Any decklist in standard list format, or your own wishlist/watchlist from your RiftCompare account. It matches by card name and set/collector number where given." },
-      { q: "Do I need Premium just to price a list, not buy it?", a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices. Premium is only needed for Best Basket's store-split optimisation." },
+      { q: "Is Best Basket free?", a: "Partly. Any signed-in account can run it on its own list and see the delivered total, how many stores it takes and the saving against buying each card's cheapest copy separately. Which store to buy each card from is part of RiftCompare Premium, along with Buy this list and everything in Plus." },
+      { q: "Does Best Basket account for shipping?", a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket searches combinations of the stores that stock your list, counting each store's shipping cost and free-shipping threshold, and shows the cheapest delivered order beside the best one-store and two-store orders." },
+      { q: "What can I paste into Best Basket?", a: "Any decklist in standard list format, or your watchlist or binder sent in from your RiftCompare account. It matches by set and collector number where given, then by card name, and lists any line it can't match." },
+      { q: "Do I need Premium just to price a list, not buy it?", a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices, and any signed-in account sees Best Basket's delivered total for its own list. Premium is only needed for the store-by-store plan." },
       { q: "How much can Best Basket actually save on a full deck?", a: "It depends on the list and current stock, which is why the tool shows the real comparison rather than a fixed percentage: the naive per-card-cheapest total and store count, right next to its optimised split. Savings are largest on full 40-card lists heavy on cheap commons, where postage is a large share of each card's price." },
     ],
   },
@@ -6741,7 +6761,7 @@ Buying from outside the eurozone? RiftCompare also covers **[Australia](/blog/bu
       "10 Riftbound price sites ranked: TCGplayer, Cardmarket, Bilgewater Market and more, scored on store coverage, delivered cost and reference pricing.",
     author: "RiftCompare",
     date: "2026-08-24",
-    updated: "2026-08-24",
+    updated: "2026-09-25", // FAQ + body: the 2026-09-25 lineup (no value screener)
     readMins: 13,
     tags: ["price comparison", "comparison", "tcgplayer", "cardmarket", "best sites", "tools", "buying guide"],
     faq: [
@@ -6767,7 +6787,7 @@ Buying from outside the eurozone? RiftCompare also covers **[Australia](/blog/bu
       },
       {
         q: "Is RiftCompare free to use?",
-        a: "Yes, entirely. The card database, price comparison, price-drop alerts and the weekly price-movers digest are free with no account needed. Premium adds the full deal-finder and value-finder lists on top of the free single-best-pick view.",
+        a: "Yes, entirely. The card database, price comparison, price-drop alerts and the weekly price-movers digest are free with no account needed. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows the full lists with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list.",
       },
     ],
     hero: {
@@ -6819,7 +6839,7 @@ Five criteria, all checkable in a couple of minutes on any of these sites:
 
 **[RiftCompare](/browse)** compares live prices from **independent stores across six real markets** — Australia, the US, the UK, Singapore, Canada and the EU — each priced natively in its own currency, plus eBay and TCGplayer reference pricing where a market has thin local coverage. Every comparison ranks by **total delivered cost** (price plus shipping, with free-shipping thresholds factored in automatically), and every match is by **exact printing** — a Signature or Overnumbered chase card is never confused with the base print.
 
-That combination — independent stores, delivered cost, exact printing, six real markets — is the actual gap every other name on this list has in at least one place. None of them clear all five criteria at once. It's also completely free, with no signup required to compare, and it's the only one on this list that adds a deal finder, a value screener, a whole-deck pricer (Best Basket), price-drop alerts and a weekly price-movers digest on top of the comparison itself.
+That combination — independent stores, delivered cost, exact printing, six real markets — is the actual gap every other name on this list has in at least one place. None of them clear all five criteria at once. It's also completely free, with no signup required to compare, and it's the only one on this list that adds a deal finder, a whole-deck pricer (Best Basket), price-drop alerts and a weekly price-movers digest on top of the comparison itself.
 
 ### 2. TCGplayer
 
@@ -7280,7 +7300,7 @@ We deliberately won't answer that for you, and you should be sceptical of anyone
 
 On that last point, our position is straightforward: we report what the market is doing, including when it's falling. We don't publish price predictions or tell people what to speculate on. If you want the market data behind a decision, it's all on the site for free.
 
-For a worked example of a card that moved on play rather than scarcity — an Epic that went from US$4 to US$34 in five weeks — see **[Astral Heron: why its price is rising](/blog/astral-heron-riftbound-price-rising-how-to-play)**. The tools that catch a move early, Value Finder and Rising Cards, are laid out in **[RiftCompare Premium explained](/blog/riftcompare-premium-explained)**.
+For a worked example of a card that moved on play rather than scarcity — an Epic that went from US$4 to US$34 in five weeks — see **[Astral Heron: why its price is rising](/blog/astral-heron-riftbound-price-rising-how-to-play)**. Rising Cards, which ranks cards by demand and price-timing signals, is laid out in **[RiftCompare Premium explained](/blog/riftcompare-premium-explained)**.
 `,
     faq: [
       { q: "Why are Riftbound cards so expensive?", a: "Usually it's limited supply meeting concentrated demand — a card that's needed in strong decks, or a chase print that appears rarely per box. Price also varies by market depending on local stock and import costs, so \"expensive\" can mean something different depending where you're buying." },
@@ -8364,7 +8384,7 @@ Because our catalogue stores each card's printed energy cost, we can also show w
 
 A few practical takeaways from the numbers:
 
-- **A complete base set is 221 cards**, and 183 of them are Common, Uncommon or Rare. Given how evenly those three tiers are printed, the bulk of a Spirit Forged set is inexpensive to finish with singles — the cost is concentrated in the 38 Epics and the Showcase tier. Drop your want list into the [bulk pricer](/bulk-pricer) and it will total the whole thing at the cheapest live price per card.
+- **A complete base set is 221 cards**, and 183 of them are Common, Uncommon or Rare. Given how evenly those three tiers are printed, the bulk of a Spirit Forged set is inexpensive to finish with singles — the cost is concentrated in the 38 Epics and the Showcase tier. Paste your want list into the [deck builder](/deck) and it will total the whole thing at the cheapest live price per card.
 - **The Showcase tier is really three different things**, and they price very differently: a Showcase of a base-set card, an over-numbered Showcase reprint from Origins, and a Signature. Check which one you're looking at — the collector number tells you — before comparing two listings. The [Signature printings](/cards/printing/signature) and [over-numbered printings](/cards/printing/overnumbered) pages list every one across all sets.
 - **Gear is the set's signature contribution.** With 42 Gear cards, Spirit Forged has more equipment than any other single dimension of the set would suggest, and it's the set to check first when a deck's Gear slots need filling — the [Gear card list](/cards/type/gear) covers every set, sortable by price.
 - **Prices move when new sets land.** Radiance is the next set to release, and set launches are exactly when an older set's staples get re-evaluated. The [price movers page](/movers) shows what's shifting day to day, and a [price alert](/alerts) on a card you're watching tells you the moment it moves.
@@ -8536,7 +8556,7 @@ That top end is a big part of why Unleashed shows up in the [most expensive Rift
 
 ## What this means if you're collecting or buying
 
-- **A complete base set is 219 cards, 183 of them Common, Uncommon or Rare.** Those three tiers are printed evenly, so finishing them with singles is cheap; the cost of a full set is concentrated in the 36 Epics and the Showcase tier. The [bulk pricer](/bulk-pricer) will total a whole want list at the cheapest live price per card.
+- **A complete base set is 219 cards, 183 of them Common, Uncommon or Rare.** Those three tiers are printed evenly, so finishing them with singles is cheap; the cost of a full set is concentrated in the 36 Epics and the Showcase tier. Paste a whole want list into the [deck builder](/deck) and it will total it at the cheapest live price per card.
 - **Know which Showcase you're buying.** A Showcase of a base card, an over-numbered Poro reprint and a Signature Legend are three different products with very different prices, and only the collector number distinguishes them on a listing. The [rarity and printings guide](/guides/understanding-riftbound-card-rarity) walks through each.
 - **The Signatures are champion cards here.** Twelve signed Legends, one per champion, at 226★ through 237★ — if you're going to chase one, the champion hubs above show every printing of that champion side by side so you can see what the signed version costs relative to the base and Showcase.
 - **Unleashed is Unit-heavy and top-heavy.** If you're buying for a deck rather than a binder, this is the set for big bodies and Epic Units; if you need Gear, look at Spirit Forged first. The [Unit card list](/cards/type/unit) and the [Epic card list](/cards/rarity/epic) both cover every set, sortable by price.
@@ -8558,6 +8578,9 @@ We've done the same breakdown for [Origins](/guides/whats-in-the-riftbound-origi
       "Lightly Played is worth roughly 85% of a Near Mint copy, Damaged about 40%. What all five condition grades mean, and why the grade is the seller's call.",
     author: "RiftCompare",
     date: "2026-08-13",
+    // 25 Sep 2026: corrected "prices on RiftCompare assume Near Mint" — a price
+    // here is the cheapest in-stock copy, which can be a played one.
+    updated: "2026-09-25",
     readMins: 6,
     tags: ["condition", "grading", "guide", "collecting", "buying"],
     hero: {
@@ -8566,7 +8589,7 @@ We've done the same breakdown for [Origins](/guides/whats-in-the-riftbound-origi
     },
     summary: [
       "**Five condition tiers, standard across the TCG hobby**: Near Mint, Lightly Played, Moderately Played, Heavily Played, Damaged — Riftbound cards use the same scale as every other trading card game.",
-      "**Prices on RiftCompare assume Near Mint** unless a listing says otherwise — that's the benchmark every store's headline price is quoted against.",
+      "**Near Mint is the benchmark grade**, but a price on RiftCompare is each store's cheapest copy in stock — usually Near Mint, and when only a played copy is left, that listing shows its condition.",
       "**Condition is a real price multiplier, not a vague discount**: a Lightly Played card is worth roughly 85% of the same card Near Mint; Damaged drops to around 40%.",
       "Grading is always the seller's judgement call — the same card can get graded differently by two different stores, so check listing photos on anything but a cheap common.",
     ],
@@ -8611,7 +8634,7 @@ Riftbound singles use the same five-tier condition scale as most other modern tr
 | **HP** | Heavily Played | Significant wear — creasing, heavier whitening, rounded or damaged corners. Still whole and playable. |
 | **DMG** | Damaged | Structural damage: tears, water damage, heavy creasing, writing, or anything beyond cosmetic wear. |
 
-**Near Mint is the benchmark.** Unless a listing explicitly says otherwise, assume a quoted price is for a Near Mint copy — that's the condition every price comparison on RiftCompare, and effectively every store's headline price, is quoted against.
+**Near Mint is the benchmark.** Most stores quote their headline price for a Near Mint copy. RiftCompare compares each store's cheapest copy in stock, which is usually Near Mint; when a store's Near Mint copy has sold out and only a played one is left, that is the price shown, and the listing states its condition — so check it before you pay.
 
 ## Why condition changes what you should pay
 
@@ -9406,52 +9429,58 @@ We built the price tracking, the price history, and the alerts specifically beca
 `,
   },
   {
+    // Rewritten 2026-09-25 for the new lineup (DECISIONS.md, "Premium lineup:
+    // fewer tools, each one worth paying for"). The comparison table is built
+    // from TIER_COMPARISON itself (premiumTierTableMarkdown), so this article
+    // can no longer drift from /premium and the upsell dialog; the prices and
+    // saving are still re-derived from lib/site.ts by
+    // tests/premium-price-increase.test.ts.
     slug: "riftcompare-premium-explained",
     category: "blog",
     title: "RiftCompare Premium: Every Feature Explained",
     excerpt:
-      "Everything RiftCompare Premium includes — Value Finder, Rising Cards, the full Deal Finder and Bulk Pricer — with pricing, screenshots and honest FAQs.",
+      "Everything RiftCompare Plus and Premium include: no ads, target-price alerts, every deal and Best Basket — with pricing and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
-    updated: "2026-09-24",
-    readMins: 11,
-    tags: ["premium", "pricing", "tools", "value finder", "deal finder"],
+    updated: "2026-09-25",
+    readMins: 9,
+    tags: ["premium", "pricing", "tools", "deal finder", "best basket"],
     hero: {
       src: "/blog/riftcompare-premium-explained.png",
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
     },
     summary: [
-      "**RiftCompare now has two paid tiers: Plus at $4.99/mo and Premium at $9.99/mo** (each with an annual option at roughly a 33% saving) — both with a 3-day free trial, the first 3 months at half price on a monthly plan, and cancel-anytime billing through Stripe.",
-      "**Plus is ad-free and unlocks the full lists** — Deal Finder, Rising Cards and Rising Sealed. **Premium adds the four pro tools on top**: the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder. The Condition Impact Calculator is free with any account, no subscription needed.",
-      "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
-      "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
+      "**RiftCompare has two paid tiers: Plus at $4.99/mo and Premium at $9.99/mo** (each with an annual option at roughly a 33% saving) — both with a 3-day free trial, the first 3 months at half price on a monthly plan, and cancel-anytime billing through Stripe.",
+      `**Plus is no ads, every deal, and target alerts**: no ads on any page, the full Deal Finder (which you can narrow to only the cards you watch or own) and Rising Cards lists, and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards that email you the store when a card hits your price.`,
+      "**Premium buys your whole list for less**: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck, your watchlist or your binder (skipping copies you already own), and unlimited target alerts.",
+      "**Price comparison itself stays free for everyone**, and a free account keeps a watchlist with weekly new-low emails, your portfolio, the top 3 of each deal list and your own Best Basket total.",
       "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
     browseCta: {
       href: "/premium",
-      label: "See RiftCompare Premium →",
-      blurb: "Full pricing, the live feature list, and the tier comparison table — updated as we ship new tools.",
+      label: "See RiftCompare Plus and Premium →",
+      blurb: "Full pricing, the live feature list, and the tier comparison table.",
     },
     faq: [
       {
         q: "How much does RiftCompare Premium cost?",
-        a: "Premium is $9.99/month, or $79.99/year if you pay annually (about $6.67/month, a 33% saving versus paying monthly — $119.88 over a year). There's also a cheaper Plus tier at $4.99/month (or $39.99/year) with the full lists and an ad-free site — see below for the split. Both tiers start with a 3-day free trial; a card is required up front and it auto-converts unless you cancel first. On a monthly plan the first 3 months are then half price — $4.99/month for Premium, $2.49/month for Plus — before the normal price.",
+        a: "Premium is $9.99/month, or $79.99/year if you pay annually (about $6.67/month, a 33% saving versus paying monthly — $119.88 over a year). There's also a cheaper Plus tier at $4.99/month (or $39.99/year), which is ad-free and has the full deal lists and target alerts — see below for the split. Both tiers start with a 3-day free trial; a card is required up front and it auto-converts unless you cancel first. On a monthly plan the first 3 months are then half price — $4.99/month for Premium, $2.49/month for Plus — before the normal price.",
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
-        a: "Four tools you can't otherwise use at all — the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder — plus everything Plus already includes: the full Rising Cards, Rising Sealed and Deal Finder lists, and a completely ad-free site. The Condition Impact Calculator isn't in that list — it's free with any account.",
+        a: `Everything in Plus — no ads on any page, the full Deal Finder and Rising Cards lists, and target-price alerts — plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck, your watchlist or your binder, unlimited target alerts (Plus has ${PLUS_TARGET_ALERT_LIMIT}), and the store-by-store plan behind your portfolio's replacement cost.`,
       },
       {
         q: "Is price comparison free without Premium?",
-        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Plus and Premium are exclusively about the list tools and pro screeners covered above, and an ad-free site.",
+        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder and list pricer, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Plus and Premium are about no ads, the full deal lists, target alerts and the list tools covered above.",
       },
       {
         q: "What's the difference between a free account, Plus and Premium?",
-        a: "A free account (no card, just an email) adds price alerts and your portfolio tracker (value history, cost-basis P&L, CSV export) on top of the fully-free tier. Plus adds the full Rising Cards, Rising Sealed and Deal Finder lists and an ad-free site. Premium is the tier above that — it adds the Bulk Pricer, Best Basket, Value Finder and Demand Finder on top of everything Plus includes.",
+        a: `A free account (no card, just an email) adds a watchlist with weekly new-low emails, your portfolio (value history, cost-basis P&L, CSV export and its delivered replacement cost), the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus removes every ad and adds the full Deal Finder and Rising Cards lists, the "only my cards" filter and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards. Premium adds Best Basket's store-by-store plan, Buy this list and unlimited target alerts on top of everything in Plus.`,
       },
       {
         q: "Is there a free trial?",
-        a: "Yes — 3 days, on both tiers, on both the monthly and annual plan. It needs a card up front and converts automatically after 3 days unless you cancel before then; we email you a day or two before the first charge. On a monthly plan the first 3 months are then half price ($2.49/mo for Plus, $4.99/mo for Premium) before the normal price.",
+        a: "Yes — 3 days, on both tiers, on both the monthly and annual plan. It needs a card up front and converts automatically after 3 days unless you cancel before then; cancel during the trial and you're never charged. We email you a day or two before the first charge. On a monthly plan the first 3 months are then half price ($2.49/mo for Plus, $4.99/mo for Premium) before the normal price.",
       },
       {
         q: "Can I get RiftCompare Premium for free?",
@@ -9459,31 +9488,32 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "Can I cancel RiftCompare Premium anytime?",
-        a: "Yes. Cancel anytime from your account and your benefits run through to the end of the period you already paid for — there's no lock-in and no penalty. If you resubscribe later, note that your price is locked in for as long as you stay subscribed, so it never rises even as new tools get added.",
+        a: "Yes. Cancel anytime from your account and your benefits run through to the end of the period you already paid for — there's no lock-in and no penalty. While you stay subscribed your price is locked in, so it never rises even as new features are added.",
       },
       {
-        q: "Does Premium remove ads on RiftCompare?",
-        a: "Yes — every page is completely ad-free the moment you're on Plus or Premium. It's automatic; there's nothing to switch on separately.",
+        q: "Does Plus remove ads on RiftCompare?",
+        a: "Yes — Plus and Premium both do. Every page is ad-free, on the website and in the app, the moment you're on either paid plan, the free trial included. It's automatic; there's nothing to switch on separately.",
+      },
+      {
+        q: "What happened to the Value Finder, Demand Finder, Bulk Pricer, Rising Sealed and Condition Calculator?",
+        a: "They left the paid tiers on 25 September 2026, and their old links now go to the free pages that carry what was useful in them: paste-a-list pricing is part of the free deck builder, the most-searched cards are on the price movers page, sealed products keep their live prices on the sealed page, and the condition guide explains what each grade does to a price.",
       },
     ],
     itemList: {
-      name: "What's included with RiftCompare Premium",
+      name: "What's included with RiftCompare Plus and Premium",
       items: [
-        { name: "Bulk Pricer", description: "Price an entire want-list or collection at once, each card matched to its cheapest live store price.", url: "/bulk-pricer" },
-        { name: "Best Basket", description: "The cheapest way to actually buy a whole decklist — the store split with the lowest landed cost, postage included.", url: "/tools/best-basket" },
-        { name: "Value Finder screener", description: "Every card trading below its own 30-day average right now, ranked by discount.", url: "/tools/value-finder" },
+        { name: "Ad-free site", description: "No ads on any page, on the website and in the app — Plus and Premium.", url: "/premium" },
+        { name: "Deal Finder", description: "Every card cheaper than TCGplayer's market price at a real store, filterable to only the cards you watch or own.", url: "/tools/deal-finder" },
+        { name: "Target-price alerts", description: "Set the price you'd pay on a watched card; after every price update we email you the store when it's there.", url: "/watching" },
         { name: "Rising Cards", description: "Cards ranked by demand and price-timing signals, with the full signal breakdown behind each score.", url: "/tools/rising" },
-        { name: "Deal Finder", description: "Every cross-store, cross-region and eBay pricing gap we track, sortable and updated daily.", url: "/tools/deal-finder" },
-        { name: "Ad-free site", description: "No ads on any page, sitewide, automatically.", url: "/premium" },
+        { name: "Best Basket", description: "The cheapest delivered order for a whole list across your country's stores, postage included (Premium).", url: "/tools/best-basket" },
       ],
     },
-    body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV, the Index and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
+    body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder and list pricer, the trade calculator, box EV, the Index and weekly price movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Plus or Premium**, with nothing rounded up or left vague.
 
-Short version: RiftCompare now has two paid tiers. Plus is $4.99/mo (or $39.99/yr) and unlocks the full Deal Finder, Rising Cards and Rising Sealed lists plus an ad-free site. Premium is $9.99/mo (or $79.99/yr) and adds four more tools on top — the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
+Short version: **Plus** is $4.99/mo (or $39.99/yr) — no ads on any page, every deal, and an email naming the store when a card you watch hits your price. **Premium** is $9.99/mo (or $79.99/yr) — everything in Plus, and it buys your whole list for less: the cheapest delivered order across your country's stores, skipping the cards you already own.
 
 ## How much does RiftCompare Plus / Premium cost?
-
-![The RiftCompare Premium pricing card, plus the full list of what's included](/blog/premium/00-pricing-cards.png)
 
 | Plan | Price | Works out to | Trial |
 | --- | --- | --- | --- |
@@ -9492,80 +9522,59 @@ Short version: RiftCompare now has two paid tiers. Plus is $4.99/mo (or $39.99/y
 | Premium, monthly | $9.99/month (**$4.99/month for the first 3 months**) | $9.99/month | 3 days free |
 | Premium, annual | $79.99/year | ≈ $6.67/month (**33% off**, vs $119.88/yr paying monthly) | 3 days free |
 
-Both tiers run through Stripe, need a card up front for the trial, and auto-convert after 3 days unless you cancel first — we email you a day or two before the first charge. New subscribers on a monthly plan pay half price for their first 3 months, applied automatically at checkout. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added since launch. You can upgrade from Plus to Premium at any time, prorated, from the /premium page.
+Both tiers run through Stripe, need a card up front for the trial, and auto-convert after 3 days unless you cancel first — cancel during the trial and nothing is charged, and we email you a day or two before the first charge. New subscribers on a monthly plan pay half price for their first 3 months, applied automatically at checkout. Subscribe once and **your price is locked in** for as long as you stay subscribed. You can move from Plus to Premium, prorated, from the /premium page once your first payment has gone through (plan changes aren't available during the trial).
 
 Cancellation is genuinely no-friction: cancel anytime, and your benefits simply run to the end of the period you already paid for.
 
 ## What's free, what needs a free account, and what needs Plus or Premium
 
-Everything below is real, current, and reflects exactly what each tier gets — not a marketing simplification.
+This is the same table the /premium page and the upgrade dialog show, generated from the same list — not a marketing simplification.
 
-| Feature | Free account | Plus | Premium |
-| --- | --- | --- | --- |
-| Compare prices across every store + eBay | ✓ | ✓ | ✓ |
-| Full card database, search & browse | ✓ | ✓ | ✓ |
-| Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ |
-| RiftCompare Index & daily movers | ✓ | ✓ | ✓ |
-| Condition Impact Calculator | ✓ | ✓ | ✓ |
-| Price alerts | ✓ | ✓ | ✓ |
-| Portfolio tracker — history, P&L, CSV export | ✓ | ✓ | ✓ |
-| Deal Finder | Top 3 | Full list | Full list |
-| Rising Cards | Top 3 | Full list | Full list |
-| Rising Sealed | Top pick | Full list | Full list |
-| Value Finder screener | — | — | ✓ |
-| Bulk Pricer | — | — | ✓ |
-| Best Basket — cheapest store split, postage included | — | — | ✓ |
-| Demand Finder | — | — | ✓ |
-| Ad-free experience | — | ✓ | ✓ |
+${premiumTierTableMarkdown()}
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the top three of Deal Finder and Rising Cards); Plus adds an ad-free site and the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds the pro screeners on top of everything Plus includes.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every collector eventually wants (a watchlist, a portfolio, the top three of each deal list and your own Best Basket total); Plus takes the ads away, shows every deal and watches your cards for the price you set; Premium adds the tools for buying a whole list.
 
-## The 5 tools you only get with Premium
+## What Plus adds
 
-### 1. Value Finder screener
+### 1. No ads on any page
 
-![The Value Finder tool — a screener for Riftbound cards trading below their own 30-day average price](/blog/premium/03-value-finder.png)
+Plus and Premium both remove every ad on every page — card pages, set lists, guides and the app — from the moment you subscribe, the free trial included. There's nothing to switch on. It's the first thing Plus does because it's the benefit that needs no explaining.
 
-Value Finder scans every card in the database and surfaces the ones trading **below their own 30-day average right now**, ranked by how far below their usual price they sit — not just by today's dip. It answers one question: is the price I'm looking at today a good one? The cards here aren't necessarily cheap in absolute terms, they're cheap *relative to their own recent history*, which is a meaningfully different (and harder to eyeball) signal than "biggest % drop today."
+### 2. Deal Finder — every card below TCGplayer market
 
-This is Premium-only outright — a free account doesn't get even a teaser of it.
+Deal Finder lists every Riftbound card that a real store or eBay is selling for less than TCGplayer's US market price, converted into your currency and ranked by how far below it sits. Filter it to the stores you actually buy from, or switch to eBay only. With Plus you can also narrow it to **only the cards on your watchlist or in your binder** — the quickest way to see whether anything you actually want is cheap right now.
 
-### 2. Rising Cards — the full list
+TCGplayer's market price is a US sales-based reference, so treat it as a yardstick rather than a guarantee, and check the listing before you pay; store prices are the item price, with postage added at checkout. A free account sees the top three deals; Plus and Premium get the full, sortable list.
+
+### 3. Target-price alerts
+
+Every account can watch a card and get a weekly email when it hits a new low. Plus adds the price **you** set: tell us what you'd pay for a watched card, and after every price update we check every tracked store in your country and email you the store and a link to the listing when it's there, with no weekly cap. The email quotes the item price and says when postage is extra. Plus covers up to ${PLUS_TARGET_ALERT_LIMIT} cards at a time; Premium has no limit.
+
+### 4. Rising Cards — the full list
 
 ![The Rising Cards tool, showing its market toggle and demand/price-timing methodology](/blog/premium/04-rising-cards.png)
 
-Rising Cards ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. The scoring is transparent (not a black box) and backtested. A free account sees the top three picks, each with its full signal breakdown; Premium unlocks the full ranked list plus the per-market toggle (switch between Global and each country RiftCompare tracks).
+Rising Cards ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. The scoring is transparent, and it is a signal, not a prediction or financial advice. A free account sees the top three picks, each with its full signal breakdown; Plus unlocks the full ranked list for every market RiftCompare tracks.
 
-### 3. Deal Finder — all four views, full list
+## What Premium adds on top
 
-![The Deal Finder tool, with its four tabs: Worth more on eBay, Underpriced vs TCGplayer, Cheapest on eBay, and Cross-region](/blog/premium/05-deal-finder.png)
+### 5. Best Basket — the cheapest delivered order for a list
 
-Deal Finder is the one built around price gaps — the same card, priced meaningfully differently in two places RiftCompare tracks at the same time. Two of its views are about buying it cheaper and two are about what it would fetch if you sold it. It has four separate views:
+Best Basket answers the question that matters when you're buying more than one card: **what's the cheapest way to actually buy the whole list**, postage included? Send it a decklist, your watchlist or the cards your binder is missing, and it searches combinations of your country's stores for the lowest delivered total — each store's postage and free-shipping threshold counted — and shows the best one-store and two-store orders beside it, because sometimes one parcel is worth a little more. Cards it can't match or can't find in stock are listed, never silently dropped.
 
-- **Worth more on eBay** — cards that sell for more on eBay than the cheapest tracked store currently charges (useful if you're deciding whether to sell)
-- **Underpriced vs TCGplayer** — cards cheaper elsewhere than TCGplayer's own listing
-- **Cheapest on eBay** — the reverse: cards where eBay is currently the cheapest place to buy
-- **Cross-region** — cards priced meaningfully cheaper in a different market RiftCompare tracks
+Any signed-in account sees its own list's delivered total, how many stores it takes and the saving against buying each card's cheapest copy separately. Premium shows which store to buy each card from, with the links. It helps most outside the US, where the stores RiftCompare tracks each charge their own postage; in the US, TCGplayer's own cart optimiser already covers much of the same ground.
 
-Every gap is computed from **live listings, not a reference price**, and ranked by delivered cost (price plus estimated shipping) rather than sticker price alone — a $2 saving that costs $5 more to ship isn't a real saving, and Deal Finder already knows that. A free account sees the top three deals in each view; Premium gets the full, sortable, filterable list across all four views.
+### 6. Buy this list
 
-### 4. Bulk Pricer
+Send a list from the deck builder, your whole watchlist or your binder straight into Best Basket and tick **Skip copies I already own**: it subtracts what's in your portfolio before it optimises, so you never re-buy a card you already have.
 
-Paste an entire want-list, trade pile or full collection, and Bulk Pricer matches **every card to its cheapest live store price at once**, with a running total. If you've ever priced out a stack of 40 cards one search at a time, this is the tool that turns it into one paste.
+### 7. The plan behind your replacement cost
 
-(The **Condition Impact Calculator** — value a card across NM/LP/MP/HP/DMG — is free for everyone, so it's not counted among the five tools here.)
+Every account's portfolio shows what it would cost to replace your collection, delivered. Premium adds the store-by-store plan behind that number.
 
-### 5. Best Basket
+## What changed on 25 September 2026
 
-Bulk Pricer answers "what does this list cost"; Best Basket answers the harder, more useful question — **what's the cheapest way to actually buy the whole thing**. Paste a decklist or point it at your own wishlist, and it prices every viable split across the stores that carry your list, each with its real shipping cost and free-shipping threshold applied, then shows you the delivered total next to what the naive per-card-cheapest approach would have cost.
-
-The two tools solve genuinely different problems: Bulk Pricer is about knowing a value, Best Basket is about actually placing the order for the least money once postage stops being pretend-free.
-
-## Everything, at a glance
-
-![RiftCompare Premium's member dashboard: quick links to every unlocked tool](/blog/premium/01-premium-header.png)
-
-![The full tier comparison table and every Premium feature card, side by side](/blog/premium/02-feature-cards-bottom.png)
+The Value Finder, Demand Finder, Rising Sealed, the Bulk Pricer and the Condition Impact Calculator used to be listed here. They've left the paid tiers, and their old links now go to the free pages that carry what was useful in them: paste-a-list pricing is part of the free [deck builder](/deck), the most-searched cards are on [price movers](/movers), sealed products keep their live prices on [sealed](/sealed), and the [condition guide](/guides/riftbound-card-condition-guide) explains what each grade does to a price. Each was either unreliable with the price history we have, free elsewhere on the site already, or the same answer for every card. Fewer tools, each one worth paying for.
 
 ## Two free ways to get Premium without paying
 
@@ -9578,10 +9587,10 @@ Neither of these requires ever entering a payment method. If Premium turns out t
 
 ## Who should actually pay for it
 
-Being straightforward here, since the point of this post is accuracy over hype: if you only ever check a handful of card prices before buying, the free tier already does that job completely — you'd be paying for tools you won't open. Premium earns its price for three kinds of RiftCompare users specifically:
+Being straightforward here, since the point of this post is accuracy over hype: if you only ever check a handful of card prices before buying, the free account already does that job completely — you'd be paying for features you won't use. The two paid tiers are for two kinds of buyer:
 
-1. **People buying more than one card at a time** — Best Basket and the Bulk Pricer turn a want-list into a single cheapest order; Value Finder and Rising Cards tell you whether today's price on any of it is a good one.
-2. **Anyone pricing or buying a whole list at a time** — the Bulk Pricer turns a tedious, repetitive pricing task into one paste, and Best Basket does the equivalent for actually buying the list at the lowest landed cost.
+1. **Plus is for buying singles regularly** — it takes the ads away, shows every card below TCGplayer market, and tells you the store when a card you watch reaches your price.
+2. **Premium is for buying a whole deck or filling a binder** — Best Basket and Buy this list turn a list into the cheapest delivered order across your country's stores, skipping what you already own.
 
 If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts and a portfolio tracker — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
 `,
@@ -10666,7 +10675,7 @@ The last point is the one that saves the most money, and it is a sorting problem
 
 **Most of a Riftbound collection is not worth protecting individually.** Commons and uncommons are worth pennies and belong in a bulk storage box. The value sits in a small number of cards — Showcase treatments, signature prints, chase rarities — and those are the ones that justify a one-touch, a top-loader, or a slot in a binder page rather than a box.
 
-To find which of yours are which, **[the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards)** shows where the top of the market sits, and **[the bulk pricer](/bulk-pricer)** will value a list of cards at once so you can sort by what they are actually worth rather than by what feels rare. For anything you are considering grading, **[condition](/guides/riftbound-card-condition-guide)** matters more than protection after the fact — a card that is already lightly played will not grade well no matter how well you store it from today.
+To find which of yours are which, **[the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards)** shows where the top of the market sits, and **[the deck builder](/deck)** will price a pasted list of cards at once so you can sort by what they are actually worth rather than by what feels rare. For anything you are considering grading, **[condition](/guides/riftbound-card-condition-guide)** matters more than protection after the fact — a card that is already lightly played will not grade well no matter how well you store it from today.
 
 [[shop]]
 
@@ -10857,7 +10866,8 @@ If you are on the other side of that gap — buying where it is cheap to sell wh
   // worth" / "riftbound collection value" / "value my riftbound cards" — an
   // intent NOTHING on the site owned before this (grep for "collection worth"
   // returned zero hits across articles and routes), despite /portfolio and
-  // /bulk-pricer both existing to answer it. Category "guide": evergreen.
+  // the list pricer (/deck, which absorbed /bulk-pricer on 2026-09-25) both
+  // existing to answer it. Category "guide": evergreen.
   //
   // Deliberately a VALUATION guide, not a price-checker page: the keyword map's
   // "price-modifier long-tails" section rules out targeting "riftbound card
@@ -10871,6 +10881,7 @@ If you are on the other side of that gap — buying where it is cheap to sell wh
       "Your collection has three values and only one is what you would receive. Bulk pricing, condition, market choice, and the traps that inflate it.",
     author: "RiftCompare",
     date: "2026-09-12",
+    updated: "2026-09-25", // the Bulk Pricer and condition calculator links now go to /deck and the condition guide
     readMins: 10,
     tags: ["collection", "valuation", "selling", "portfolio", "prices", "guide"],
     hero: {
@@ -10882,12 +10893,12 @@ If you are on the other side of that gap — buying where it is cheap to sell wh
       "**Most of the count is worth almost nothing.** In any TCG collection the value concentrates in a small handful of cards — price those properly and bulk the rest rather than the reverse.",
       "**Condition is a multiplier, not a footnote.** The same card at played condition can be worth a fraction of its near-mint listing.",
       "**Which market you sell in changes the number**, because the six markets we track price independently in their own currencies.",
-      "**Price the whole thing at once** with the bulk pricer instead of looking cards up one at a time — that is where valuations go wrong and where hours disappear.",
+      "**Price the whole thing at once** with the list pricer in the deck builder instead of looking cards up one at a time — that is where valuations go wrong and where hours disappear.",
     ],
     faq: [
       {
         q: "How do I find out how much my Riftbound collection is worth?",
-        a: "Paste your card list into [the bulk pricer](/bulk-pricer) and it values every card at once against live store prices in your market. That gives you market value. To get to what you would actually receive, apply the condition and sale-channel adjustments described in this guide — typically a substantial discount to the listed total.",
+        a: "Paste your card list into [the deck builder](/deck) and it values every card at once against live store prices in your market. That gives you market value. To get to what you would actually receive, apply the condition and sale-channel adjustments described in this guide — typically a substantial discount to the listed total.",
       },
       {
         q: "Is my collection worth what the listed prices add up to?",
@@ -10895,7 +10906,7 @@ If you are on the other side of that gap — buying where it is cheap to sell wh
       },
       {
         q: "Does card condition really change the value that much?",
-        a: "Yes. Condition is the largest single adjustment for most collections, because cards that were played rather than stored are rarely near-mint and the discount steepens as condition drops. Our [condition guide](/guides/riftbound-card-condition-guide) covers how the grades are actually assessed; the [condition calculator](/tools/condition-calculator) applies the adjustment to a price.",
+        a: "Yes. Condition is the largest single adjustment for most collections, because cards that were played rather than stored are rarely near-mint and the discount steepens as condition drops. Our [condition guide](/guides/riftbound-card-condition-guide) covers how the grades are actually assessed and the typical discount for each one, so you can apply the adjustment rather than guess it.",
       },
       {
         q: "Are my commons and uncommons worth anything?",
@@ -10911,7 +10922,7 @@ If you are on the other side of that gap — buying where it is cheap to sell wh
       },
     ],
     browseCta: {
-      href: "/bulk-pricer",
+      href: "/deck",
       label: "Value your collection now",
       blurb: "Paste a card list and price the whole thing at once against live store prices in your market.",
     },
@@ -10933,7 +10944,7 @@ Which number you want depends entirely on why you are asking. The rest of this g
 
 The instinct is to look up cards individually. Do not do this. A thousand-card collection at thirty seconds a card is eight hours, and the result is less accurate than the alternative because prices will have moved by the time you finish.
 
-**[The bulk pricer](/bulk-pricer)** takes a list of card names and values every one against live store prices in your market in a single pass. Build the list once — from a spreadsheet, a collection app export, or just by typing — and you have a defensible market-value total in minutes rather than an evening.
+**[The deck builder](/deck)** prices a pasted list: it takes card names and values every one against live store prices in your market in a single pass. Build the list once — from a spreadsheet, a collection app export, or just by typing — and you have a defensible market-value total in minutes rather than an evening.
 
 Two practical notes on building the list. **Set codes and collector numbers matter** for any card that exists in multiple printings, because an alternate art and its base print are different cards at very different prices. And **quantities matter**: four copies of a staple is a real position, not a rounding error.
 
@@ -10958,7 +10969,7 @@ Listed prices are for near-mint cards. **Your cards are probably not all near-mi
 
 The discount is not linear — it steepens as condition drops, and it steepens faster on expensive cards, because the buyers for those are collectors who care most about condition. A played copy of a staple still sells; a played copy of a high-end chase card sells to a much smaller audience at a much larger discount.
 
-Two resources here. **[The condition guide](/guides/riftbound-card-condition-guide)** covers how grades are actually assessed, including the near-mint to lightly-played boundary that most disputes sit on. **[The condition calculator](/tools/condition-calculator)** applies a condition adjustment to a price, which is faster than estimating it.
+**[The condition guide](/guides/riftbound-card-condition-guide)** covers how grades are actually assessed, including the near-mint to lightly-played boundary that most disputes sit on, and the typical discount for each grade, so you can apply the adjustment rather than guess it.
 
 Be honest at this step. Valuing a played collection at near-mint prices does not make it worth more; it just guarantees the first real offer feels like an insult.
 

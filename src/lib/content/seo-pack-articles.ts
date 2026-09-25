@@ -50,7 +50,6 @@ const L = {
   tools: "/tools",
   trade: "/trade",
   boxEv: "/tools/box-ev",
-  valueFinder: "/tools/value-finder",
   bestBasket: "/tools/best-basket",
   alerts: "/alerts",
   premium: "/premium",
@@ -245,6 +244,7 @@ Stop checking five tabs to find the lowest price on a Riftbound card. RiftCompar
       "Proxy bidding, sniping and setting a maximum you can defend — a disciplined eBay bidding strategy for buyers of Riftbound cards and other collectibles.",
     author: AUTHOR,
     date: PUBLISHED,
+    updated: "2026-09-25", // Premium line rewritten for the 2026-09-25 lineup (no Value Finder, no "single best row")
     readMins: 12,
     tags: ["buying", "ebay", "tips", "price comparison"],
     hero: {
@@ -358,9 +358,9 @@ Default to proxy bidding for the majority of purchases. Reserve sniping for auct
 
 ## RiftCompare helps you set maximums you can actually defend
 
-Instead of manually cross-referencing eBay completed listings, local store prices, and shipping costs, you get a single view of live prices across eBay, TCGplayer, and local US stores with shipping included. The [Deal Finder](${L.dealFinder}) shows whether an auction's current bid is above or below market.
+Instead of manually cross-referencing eBay completed listings, local store prices, and shipping costs, you get a single view of live prices across eBay, TCGplayer, and local US stores with shipping included. The [Deal Finder](${L.dealFinder}) lists the cards selling below TCGplayer market right now, so you know what a fair buy looks like before you bid.
 
-Buying often enough that the research time adds up? [RiftCompare Premium](${L.premium}) unlocks the full opportunity list rather than the single best row. Run a store? [We track store prices too](${L.stores}) — and you can see [every store in the comparison](${L.tracked}).`,
+Buying often enough that the research time adds up? A free account shows the top 3 of the Deal Finder; [RiftCompare Plus](${L.premium}) shows every row with no ads, and Premium adds [Best Basket](${L.bestBasket})'s store-by-store plan for buying a whole list. Run a store? [We track store prices too](${L.stores}) — and you can see [every store in the comparison](${L.tracked}).`,
   },
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -854,6 +854,7 @@ Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a s
       "How Riftbound card price comparison works — sticker price vs total cost, which markets are tracked, and how to find the genuinely cheapest place to buy.",
     author: AUTHOR,
     date: PUBLISHED,
+    updated: "2026-09-25", // Premium line rewritten for the 2026-09-25 lineup (no Value Finder, no "single best row")
     readMins: 8,
     tags: ["price comparison", "buying", "prices", "tools"],
     hero: {
@@ -881,7 +882,7 @@ Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a s
       },
       {
         q: "Is RiftCompare free to use?",
-        a: "Yes. Browsing the card database, comparing prices and setting price alerts are free. Premium unlocks the full deal and value-finder lists rather than the single best row.",
+        a: "Yes. Browsing the card database, comparing prices and setting price alerts are free. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows every row with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list.",
       },
       {
         q: "How often do the prices update?",
@@ -947,6 +948,7 @@ Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [how to choose 
       "A straight review of RiftCompare — what it does well, what it doesn't, who it suits, and how it compares to checking stores yourself.",
     author: AUTHOR,
     date: PUBLISHED,
+    updated: "2026-09-25", // Premium line rewritten for the 2026-09-25 lineup (no Value Finder, no "single best row")
     readMins: 8,
     tags: ["about", "price comparison", "tools", "comparison"],
     hero: {
@@ -966,7 +968,7 @@ Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [how to choose 
       },
       {
         q: "Is RiftCompare free?",
-        a: "Yes. The card database, price comparison, movers dashboard and price alerts are free. Premium unlocks the full deal-finder and value-finder lists instead of the single best row.",
+        a: "Yes. The card database, price comparison, movers dashboard and price alerts are free. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows every row with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list.",
       },
       {
         q: "Does RiftCompare sell cards?",

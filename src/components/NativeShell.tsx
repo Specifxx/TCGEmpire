@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { adsAreLive, bannerAdId, type NativePlatform } from "@/lib/admob";
+import { fetchMe, ME_INVALIDATED_EVENT } from "@/lib/use-me";
 
 // Bridges the website to its native iOS/Android shell (Capacitor).
 //
@@ -20,6 +21,7 @@ export function NativeShell() {
     document.documentElement.classList.add("capacitor-native", `capacitor-${platform}`);
 
     let removeBackListener: (() => void) | undefined;
+    let removeMeListener: (() => void) | undefined;
     let cancelled = false;
 
     (async () => {
@@ -55,6 +57,45 @@ export function NativeShell() {
         }
 
         // --- AdMob ---
+        // AD-FREE IN THE APP TOO (2026-09-25). Plus and Premium are sold as
+        // "no ads on any page", and the app loads the live site, so a paying
+        // member signed in here got the native banner anyway: it was shown
+        // unconditionally. Ask the shared session first (one /api/me per
+        // page, already fetched by the chrome) and never show it to an
+        // ad-free viewer. The native banner outlives a web-view reload, so an
+        // ad-free viewer also gets any banner left from an earlier page (e.g.
+        // before signing in) taken down. This takes effect without an app
+        // store update.
+        const takeDownBanner = async () => {
+          try {
+            await AdMob.hideBanner();
+          } catch {
+            /* no banner up */
+          }
+          try {
+            await AdMob.removeBanner();
+          } catch {
+            /* no banner up */
+          }
+          document.documentElement.classList.remove("has-native-banner");
+        };
+        const me = await fetchMe();
+        if (cancelled) return;
+        if (me.adFree) {
+          await takeDownBanner();
+          return;
+        }
+        // Signed in or bought Premium without a page load (the activation
+        // poller, a tier switch): invalidateMe() announces it, and an ad-free
+        // answer takes the banner down there and then.
+        const onMeChanged = () => {
+          fetchMe().then((next) => {
+            if (!cancelled && next.adFree) void takeDownBanner();
+          });
+        };
+        window.addEventListener(ME_INVALIDATED_EVENT, onMeChanged);
+        removeMeListener = () => window.removeEventListener(ME_INVALIDATED_EVENT, onMeChanged);
+
         const live = adsAreLive(platform);
 
         // iOS: ask for tracking permission before the SDK reads the IDFA. Declining
@@ -87,6 +128,7 @@ export function NativeShell() {
     return () => {
       cancelled = true;
       removeBackListener?.();
+      removeMeListener?.();
     };
   }, []);
 

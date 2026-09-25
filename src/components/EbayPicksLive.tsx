@@ -79,7 +79,7 @@ export function EbayPicksLive({
 }) {
   const { country } = useCountry();
   const adFree = usePremium();
-  // Premium is ad-free everywhere else on the site; this is an ad.
+  // Plus and Premium are ad-free everywhere else on the site; this is an ad.
   if (adFree) return null;
 
   const items = selectPicks(listings, country, MAX_TILES);

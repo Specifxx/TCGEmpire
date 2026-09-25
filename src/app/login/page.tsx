@@ -28,16 +28,14 @@ const CONTEXT_LINES: Record<string, string> = {
   "/dashboard": "Sign in to open your dashboard.",
   // The two tools whose signed-out preview promises the top three to a free
   // account (2026-09-23) — the line repeats that promise on the sign-in step.
-  "/tools/deal-finder": "Create a free account to see today's top 3 deals in every Deal Finder view.",
+  "/tools/deal-finder": "Create a free account to see today's top 3 Deal Finder deals.",
   "/tools/rising": "Create a free account to see the top 3 rising cards, with their full signal breakdown.",
-  // The Premium-only tools' "Sign in free" gate (2026-09-25). A free account
-  // unlocks none of these on its own — signed in, the same gate offers the
-  // Premium button instead — so the line says exactly that and no more.
-  "/tools/value-finder": "Value Finder is a Premium tool. Create a free account, then start Premium from the tool's page.",
-  "/tools/demand": "Demand Finder is a Premium tool. Create a free account, then start Premium from the tool's page.",
-  "/tools/rising-sealed": "Rising Sealed is a Premium tool. Create a free account, then start Premium from the tool's page.",
-  "/bulk-pricer": "The Bulk Pricer is a Premium tool. Create a free account, then start Premium from the tool's page.",
-  "/tools/best-basket": "Best Basket is a Premium tool. Create a free account, then start Premium from the tool's page.",
+  // Best Basket (2026-09-25 lineup): a free account sees its OWN list's
+  // delivered total; which store to buy each card from is Premium's. The line
+  // says exactly that and no more. Value Finder, Demand Finder, Rising Sealed
+  // and the Bulk Pricer had lines here until they left the product — their
+  // URLs 301 to free pages now (next.config.js), so no ?next= can carry them.
+  "/tools/best-basket": "Create a free account to see what your list costs delivered. Premium shows which store to buy each card from.",
 };
 
 // Prefix matches, for destinations that are a family of paths: every game's

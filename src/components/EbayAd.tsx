@@ -102,7 +102,7 @@ export function EbayAd({
   className?: string;
   disclosure?: boolean;
 }) {
-  if (usePremium()) return null; // ad-free for Premium subscribers
+  if (usePremium()) return null; // ad-free for every paid tier, Plus included
   const q = query ? `Riftbound ${query}` : "Riftbound TCG cards";
   const href = searchUrl(q, country);
   const label = query ? `Find ${query.length > 28 ? query.slice(0, 27) + "…" : query} on eBay` : "Shop Riftbound cards on eBay";

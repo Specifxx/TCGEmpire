@@ -54,5 +54,10 @@ test("the mobile audit actually loads the tool pages that carry this control", (
   const src = read("scripts/mobile-check.ts");
   const defaults = /process\.env\.MOBILE_CHECK_PATHS \?\?\s*\n?\s*"([^"]+)"/.exec(src)?.[1] ?? "";
   assert.ok(defaults.includes("/tools/deal-finder"), "deal-finder carries RegionToggle and must be audited");
-  assert.ok(defaults.includes("/tools/value-finder"), "value-finder carries RegionToggle and must be audited");
+  // /tools/value-finder carried it too until the Value Finder left the product
+  // (2026-09-25); every page still rendering the control must stay audited.
+  for (const f of ["src/app/tools/deal-finder/page.tsx"]) {
+    assert.match(read(f), /<RegionToggle/, `${f} is expected to carry RegionToggle`);
+  }
+  assert.ok(!defaults.includes("/tools/value-finder"), "a redirected URL audits /movers, not the control");
 });

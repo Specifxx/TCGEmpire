@@ -3,9 +3,9 @@ import Link from "next/link";
 import { premiumPlusEnabled } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
 
-// The badge on the three "full list" tools (Deal Finder, Rising Cards, Rising
-// Sealed) — they move to the cheaper Plus tier once it's configured; dark
-// (Plus unconfigured), they read exactly as they did before the split.
+// The badge on the two "full list" tools (Deal Finder, Rising Cards) — Plus
+// once it's configured; dark (Plus unconfigured), they read exactly as they
+// did before the split. Best Basket's per-store plan is always Premium.
 const LIST_BADGE = premiumPlusEnabled() ? "Plus" : "Premium";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
@@ -17,7 +17,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Free Riftbound TCG Tools & Calculators | RiftCompare" },
   description:
-    "Every RiftCompare tool in one place: box EV, deck and trade calculators free for everyone, plus Premium's Best Basket, Bulk Pricer, Deal Finder and value screeners for buying a whole list for less.",
+    "Every RiftCompare tool in one place: box EV, deck and list pricing and trade calculators free for everyone, plus Deal Finder, Rising Cards and Best Basket for buying a whole list for less.",
   alternates: pageAlternates("/tools"),
   keywords: [
     "riftbound tools",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   ],
   openGraph: pageOpenGraph({
     title: "Free Riftbound TCG Tools & Calculators",
-    description: "Box EV, deck and trade calculators free for everyone, plus Premium's Best Basket, Bulk Pricer, Deal Finder & value screeners.",
+    description: "Box EV, deck and list pricing and trade calculators free for everyone, plus Deal Finder, Rising Cards and Best Basket.",
     url: "/tools",
   }),
 };
@@ -42,25 +42,27 @@ const FAQS = [
     // DESCRIBES the tiers rather than gating anything, so it was being reported as
     // a paywalled indexable page on the strength of its own FAQ copy. Reworded
     // rather than removing the marker, which still needs to catch a real paywall.
-    a:
-      LIST_BADGE === "Plus"
-        ? "Most of them; a few ask you to be signed in, on Plus, or on Premium. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The Deal Finder and rising (cards and sealed) screeners show their single best result free, with the complete list included in Plus — the value finder, bulk pricer, Best Basket and Demand Finder need Premium."
-        : "Most of them; a few ask you to be signed in or to be Premium. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The Deal Finder, value finder and rising (cards and sealed) screeners show their single best result free, with the complete list included in Premium — the bulk pricer, Best Basket and Demand Finder are also part of Premium.",
+    //
+    // THE REAL ACCESS, stated per level (2026-09-25). This used to promise
+    // "their single best result free", which stopped being true on 09-22: a
+    // signed-out visitor sees nothing, a free account the top 3. Emitted as
+    // FAQPage JSON-LD too, so a wrong answer here is a wrong rich result.
+    a: `Most of them. The box EV calculator, deck builder and list pricer, trade calculator and sealed prices need no account at all. Deal Finder and Rising Cards show nothing when you're signed out, the top 3 with a free account, and every row with ${LIST_BADGE}, which is also ad-free. Best Basket shows your own list's delivered total with a free account; the store-by-store plan is part of Premium.`,
   },
   {
     q: "What does the Deal Finder do?",
-    a: "It compares the same Riftbound card's live price across every tracked store and region and surfaces where the gap is large enough to matter — including cards worth more on eBay than in stores, the cheapest place to buy a given card all-in, and cards priced meaningfully cheaper in another tracked market. Premium members get the complete list; everyone else sees the single best result.",
+    a: `It lists every Riftbound card a real store or eBay is selling for less than TCGplayer's US market price, converted into your currency and ranked by how far below it is. You can filter by store or switch to eBay only, and with ${LIST_BADGE} narrow it to only the cards on your watchlist or in your binder. Signed out it shows nothing, a free account sees the top 3, and ${LIST_BADGE} shows every row.`,
   },
   {
     q: "Do I need an account to use RiftCompare tools?",
     a:
       LIST_BADGE === "Plus"
-        ? "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds watchlists, price alerts and portfolio tracking. The full Deal Finder, Rising Cards and Rising Sealed lists are part of Plus; the value finder, bulk pricer, Best Basket and Demand Finder need Premium."
-        : "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds watchlists, price alerts and portfolio tracking. The pro tools — the value finder, bulk pricer, Best Basket and Demand Finder, plus the full Deal Finder, Rising Cards and Rising Sealed lists — are part of Premium.",
+        ? "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist with weekly new-low alerts, portfolio tracking, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds every row of both lists, target-price alerts and an ad-free site; Premium adds Best Basket's store-by-store plan and Buy this list."
+        : "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist with weekly new-low alerts, portfolio tracking, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Premium adds every row of both lists, target-price alerts, an ad-free site, Best Basket's store-by-store plan and Buy this list.",
   },
   {
     q: "Which Riftbound tool should I use to buy a whole decklist?",
-    a: "Best Basket, a RiftCompare Premium tool. It solves for the cheapest combination of stores for one wantlist including shipping, which is almost always cheaper than buying each card from whoever is individually cheapest.",
+    a: "Best Basket. It searches store combinations for the lowest total including postage, and shows the best one-store and two-store orders beside it. Any signed-in account sees its own delivered total; Premium shows which store to buy each card from, and can skip the copies you already own.",
   },
   {
     q: "Is a Riftbound booster box worth opening?",
@@ -81,13 +83,17 @@ interface ToolGroup {
 
 const GROUPS: ToolGroup[] = [
   {
+    // THE 2026-09-25 LINEUP. Value Finder, Demand Finder, Rising Sealed, the
+    // Condition Calculator and the Bulk Pricer left the product and 301 to the
+    // free pages that carry their useful part (next.config.js), so they are
+    // not listed; the Bulk Pricer's list pricing is the deck builder's now.
     label: "Buying & value",
     tools: [
       {
-        href: "/tools/value-finder",
-        title: "Value finder",
-        desc: "Surface the cards going cheap right now — the best buys on the board.",
-        badge: "Premium",
+        href: "/tools/deal-finder",
+        title: "Deal Finder",
+        desc: "Every card cheaper than TCGplayer's market price at a real store, with an eBay-only view — or narrowed to only the cards you watch or own.",
+        badge: LIST_BADGE,
       },
       {
         href: "/tools/rising",
@@ -96,33 +102,10 @@ const GROUPS: ToolGroup[] = [
         badge: LIST_BADGE,
       },
       {
-        href: "/tools/demand",
-        title: "Demand finder",
-        desc: "The most searched and viewed cards right now, by real traffic — raw demand, no price-timing filter.",
-        badge: "Premium",
-      },
-      {
-        href: "/tools/deal-finder",
-        title: "Deal Finder",
-        desc: "Spot cards that are cheaper in one place than another — including another market entirely — plus resale spreads if you're selling.",
-        badge: LIST_BADGE,
-      },
-      {
         href: "/tools/best-basket",
         title: "Best basket",
-        desc: "Building a want-list? Find the cheapest single-store (or split) basket to buy it all.",
+        desc: "Buying a whole list? The cheapest delivered order across your country's stores, postage included — see your total free with an account.",
         badge: "Premium",
-      },
-      {
-        href: "/bulk-pricer",
-        title: "Bulk pricer",
-        desc: "Paste a whole want-list, trade pile or collection and price every card at once with a running total.",
-        badge: "Premium",
-      },
-      {
-        href: "/tools/condition-calculator",
-        title: "Condition calculator",
-        desc: "Estimate how a card's value shifts between NM, LP, MP, HP and DMG — the same scale your portfolio uses.",
       },
     ],
   },
@@ -139,12 +122,6 @@ const GROUPS: ToolGroup[] = [
         title: "Sealed prices",
         desc: "Booster boxes, packs, Proving Grounds and bundles priced across stores — with an in-stock-at-MSRP flag.",
       },
-      {
-        href: "/tools/rising-sealed",
-        title: "Rising sealed",
-        desc: "Sealed products ranked by price-timing and supply signals — sitting near their own low, thin in-stock, not already spiking.",
-        badge: LIST_BADGE,
-      },
     ],
   },
   {
@@ -152,8 +129,8 @@ const GROUPS: ToolGroup[] = [
     tools: [
       {
         href: "/deck",
-        title: "Deck builder",
-        desc: "Build a deck and price every card across stores as you go.",
+        title: "Deck builder & list pricer",
+        desc: "Build a deck, or paste any card list, and price every card across stores as you go.",
       },
       {
         href: "/trade",
@@ -201,10 +178,10 @@ export default function ToolsHubPage() {
 
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Tools &amp; calculators</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Every RiftCompare tool in one place. Price-check a card, work out whether a box is worth ripping, and build
-        decks for less — most need no sign-up at all. A free account adds watchlists and price alerts, and the pro
-        screeners and list tools (<span className="text-gold">Premium</span>) work out the cheapest way to buy a
-        whole want-list.
+        Every RiftCompare tool in one place. Price-check a card, work out whether a box is worth ripping, and build or
+        price decks for less — most need no sign-up at all. A free account adds watchlists, price alerts and the top 3
+        of each deal list; {LIST_BADGE === "Plus" ? <>Plus shows every deal with no ads, and </> : null}
+        <span className="text-gold">Premium</span> works out the cheapest way to buy a whole want-list.
       </p>
 
       {GROUPS.map((group) => (

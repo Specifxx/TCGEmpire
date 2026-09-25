@@ -23,12 +23,13 @@ const POPUP = "src/components/SignupPromoPopup.tsx";
 const PREMIUM_LIB = "src/lib/premium.ts";
 const OAUTH_CALLBACK = "src/app/api/auth/oauth/[provider]/callback/route.ts";
 
-test("the bulk pricer gates on Premium, not merely on an account", () => {
-  // The Bulk Pricer stays on the paid tier (see the tier note in lib/premium.ts).
-  // hasAccount() here would put it back on the free tier.
-  const src = read(BULK);
-  assert.match(src, /isPremium\(/, `${BULK} must gate via isPremium()`);
-  assert.ok(!/hasAccount\s*\(/.test(src), `${BULK} must not gate on hasAccount()`);
+test("the Bulk Pricer is gone: its page is deleted and its URL goes to the free deck builder", () => {
+  // It was a paywall over the same /api/deck/price list pricing the free /deck
+  // already runs (2026-09-25 lineup), so its paste-a-list handling moved into
+  // /deck and /bulk-pricer 301s there. A page file left behind would be
+  // shadowed by the redirect and never render (tests/watchlist.test.ts).
+  assert.ok(!exists(BULK), `${BULK} must be deleted`);
+  assert.match(read("next.config.js"), /\{ source: "\/bulk-pricer", destination: "\/deck", permanent: true \}/);
 });
 
 test("Best Basket gates on Premium, not merely on an account", () => {
@@ -50,22 +51,12 @@ test("the basket API requires Premium, not merely a session", () => {
   assert.match(src, /isPremium\(/, "basket API must require Premium — it's Premium-tier again");
 });
 
-test("the bulk pricer gates the TOOL without gating the page's indexable content", () => {
-  const src = read(BULK);
-  // The heading and intro must render for everyone, or the page drops out of the
-  // index for the terms it ranks on and the shared ?list= OG card stops unfurling.
-  const gateIdx = src.indexOf("premium ?");
-  assert.ok(gateIdx > 0, "expected a premium ternary around the tool");
-  const beforeGate = src.slice(0, gateIdx);
-  assert.match(beforeGate, /<h1/, "the H1 must render above the gate, for signed-out visitors too");
-  assert.match(beforeGate, /HubIntro/, "the hub intro must render above the gate");
-});
-
-test("neither list tool still advertises itself as needing no account", () => {
-  // Both pages used to say exactly this, and a stale claim here is a promise the
-  // gate immediately breaks — both tools are Premium-gated now, which requires
-  // an account a fortiori.
-  for (const page of [BULK, BASKET]) {
+test("Best Basket does not advertise itself as needing no account", () => {
+  // It (and the Bulk Pricer, until that folded into the free /deck on
+  // 2026-09-25) used to say exactly this, and a stale claim here is a promise
+  // the gate immediately breaks — the total needs a signed-in account and the
+  // plan needs Premium.
+  for (const page of [BASKET]) {
     const src = read(page);
     assert.ok(!/No account needed/i.test(src), `${page} still claims "no account needed"`);
     assert.ok(!/no sign-in required/i.test(src), `${page} still claims "no sign-in required"`);
@@ -386,6 +377,23 @@ test("every dialog-only row override names a row that actually exists", async ()
     shown.some((r) => r.premium === true && r.account !== true),
     "the dialog table must keep at least one row where Premium gives something a free account does not"
   );
+
+  // 2026-09-25: the compact table is exactly what a payment changes. Every
+  // all-tick row is omitted (it tells a buyer nothing), every differentiating
+  // row is shown, and the ad-free row — hidden "for length" until now, which
+  // kept Plus's headline off the two surfaces that convert — is shown.
+  const allTick = (r: (typeof TIER_COMPARISON)[number]) => r.account === true && r.plus === true && r.premium === true;
+  for (const r of TIER_COMPARISON) {
+    assert.equal(DIALOG_OMIT_FEATURES.has(r.feature), allTick(r), `${r.feature}: omitted from the dialog iff it is ticked for everyone`);
+  }
+  assert.ok(shown.some((r) => r.feature === "Ad-free experience"), "the dialog must show that Plus is ad-free");
+  // The binary collapse only ever ticks a paid column that already gets the
+  // FULL thing — never Best Basket, whose Plus cell is only "Your total".
+  for (const f of DIALOG_BINARY_FEATURES) {
+    const r = TIER_COMPARISON.find((x) => x.feature === f)!;
+    assert.equal(r.plus, r.premium, `${f}: collapsing both paid cells to ✓ is only honest when they are equal`);
+    assert.notEqual(r.plus, false);
+  }
 });
 
 test("the Premium dialog stays closable once the table makes it tall", () => {

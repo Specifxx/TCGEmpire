@@ -14,10 +14,18 @@ export interface Me {
   // profile data, and nothing that renders the account chrome should read it.
   analyticsId: string | null;
   premium: boolean;
-  // Ads hidden for this viewer — a Premium-tier entitlement, not the same
-  // question as `premium` (which is true for Plus too).
+  // Ads hidden for this viewer — every paid tier, Plus included (2026-09-25).
+  // Still its own flag rather than `premium`, so the line can move again
+  // without touching every ad placement.
   adFree: boolean;
   tier: "plus" | "premium" | null; // which paid tier, or null if not entitled
+  // A paying viewer still inside the free trial: plan switches (Plus →
+  // Premium) aren't offered, because the switch routes handle paid
+  // subscriptions only. Always false for free and signed-out viewers.
+  trialing: boolean;
+  // The paying viewer's billing interval, so an upgrade quotes the price it
+  // will actually charge (annual stays annual). null when unknown/unpaid.
+  interval: "month" | "year" | null;
   premiumCheckout: boolean; // Stripe premium checkout is configured
   premiumPlus: boolean; // the cheaper Plus tier is configured (Stripe Plus price set)
   trialEligible: boolean; // signed in, not premium, trial on + never trialed
@@ -36,6 +44,8 @@ const EMPTY_ME: Me = {
   premium: false,
   adFree: false,
   tier: null,
+  trialing: false,
+  interval: null,
   premiumCheckout: false,
   premiumPlus: false,
   trialEligible: false,
@@ -60,6 +70,8 @@ export function fetchMe(): Promise<Me> {
         premium: !!d.premium,
         adFree: !!d.adFree,
         tier: d.tier === "plus" || d.tier === "premium" ? d.tier : null,
+        trialing: !!d.trialing,
+        interval: d.interval === "month" || d.interval === "year" ? d.interval : null,
         premiumCheckout: !!d.premiumCheckout,
         premiumPlus: !!d.premiumPlus,
         trialEligible: !!d.trialEligible,
@@ -78,9 +90,16 @@ export function fetchMe(): Promise<Me> {
   return mePromise;
 }
 
+// Announced on window whenever the session may have changed in place (a
+// purchase activating, a tier switch) — for listeners that can't simply re-run
+// on the next render, such as NativeShell's native AdMob banner, which must
+// come down the moment the viewer becomes ad-free.
+export const ME_INVALIDATED_EVENT = "rc:me-invalidated";
+
 // Re-fetch on next use (e.g. after login/logout navigation re-mounts the chrome).
 export function invalidateMe() {
   mePromise = null;
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(ME_INVALIDATED_EVENT));
 }
 
 export function useMe(): Me & { loaded: boolean } {
