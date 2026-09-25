@@ -41,7 +41,7 @@ set -uo pipefail
 # holding a stale early-August snapshot far behind RM12 on every metric, and
 # migrate-main-db-rm12-to-rm3 then wiped and replaced it with a
 # row-count-verified copy of RM12 (User 379, every table matching).
-CURRENT_OP="RM3"
+CURRENT_OP="RM4"
 # CUT OVER TO HISTORY_DATABASE_URL_3 ON 2026-09-22 (HISTORY_DATABASE_URL_2 came
 # within reach of its 5 GB monthly transfer allowance five days into service).
 # HISTORY_DATABASE_URL_3 is a RECYCLED project — retired since 2026-08-21 — not
@@ -63,8 +63,8 @@ CURRENT_HIST="HISTORY_DATABASE_URL_3"
 # single name. See the long note on OPERATIONAL_VARS in src/lib/db-chains.ts for
 # why a fallback chain was replaced rather than just rotated this time.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM3:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM3) — skipping schema push."
+   || [ -z "${RM4:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM4) — skipping schema push."
   exit 0
 fi
 
@@ -73,8 +73,8 @@ fi
 # happens to hold while the app (src/lib/db-chains.ts) reads RM3. A green deploy
 # against an un-migrated database is exactly the failure this script exists to
 # prevent.
-export DATABASE_URL="$RM3"
-SOURCE="RM3"
+export DATABASE_URL="$RM4"
+SOURCE="RM4"
 # Name the winner, never the value (it's a credential). There is only one
 # possible value now (the gate above already required RM3 to be set), but this
 # stays as the one line that answers "which database did this build actually

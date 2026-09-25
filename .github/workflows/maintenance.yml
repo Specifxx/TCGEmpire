@@ -200,12 +200,12 @@ jobs:
       # migrate-main-db-rm9-to-rm10 was run twice (once for the bulk copy, once
       # immediately before this flip) and verified every table matching before
       # this shipped.
-      DATABASE_URL: ${{ secrets.RM3 || vars.RM3 }}
+      DATABASE_URL: ${{ secrets.RM4 || vars.RM4 }}
       # There is only one value now, but this stays for the same reason it did
       # under the old chain: lib/db.ts cannot work this out inside Actions
       # itself (everything collapses into one DATABASE_URL before the job
       # starts), so the winning name is exported explicitly. See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM3 || vars.RM3) && 'RM3' || 'UNSET' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM4 || vars.RM4) && 'RM4' || 'UNSET' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -279,9 +279,9 @@ jobs:
           # database is set") without it — this step's env block never carried it,
           # so the task has been failing before it could copy a single row. Found
           # 2026-09-02 running the top-up ahead of the RH11 → RH6 cutover. Must be
-          # kept in lockstep with OPERATIONAL_VARS's head (RM3 as of 2026-09-22) —
+          # kept in lockstep with OPERATIONAL_VARS's head (RM4 as of 2026-09-25) —
           # this env var's NAME, not just its value, is what the script looks up.
-          RM3: ${{ secrets.RM3 || vars.RM3 }}
+          RM4: ${{ secrets.RM4 || vars.RM4 }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
@@ -4969,12 +4969,12 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 }}
+          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 }}
           # There is only one value now, but this stays for the same reason it did
           # under the old chain: lib/db.ts cannot work this out inside Actions
           # itself (everything collapses into one DATABASE_URL before the job
           # starts), so the winning name is exported explicitly. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM3 || vars.RM3) && 'RM3' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM4 || vars.RM4) && 'RM4' || 'UNSET' }}
         run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)
@@ -5040,8 +5040,8 @@ jobs:
       - name: Audit sealed price history (read-only)
         if: inputs.task == 'audit-sealed-history'
         env:
-          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 }}
-          DB_SOURCE_NAME: ${{ (secrets.RM3 || vars.RM3) && 'RM3' || 'UNSET' }}
+          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM4 || vars.RM4) && 'RM4' || 'UNSET' }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
@@ -5121,7 +5121,7 @@ jobs:
           # correctly, but this env block never forwarded the variable it
           # actually asked for, so the head of the chain read back as unset here even with the
           # secret genuinely configured in Actions).
-          RM3: ${{ secrets.RM3 || vars.RM3 }}
+          RM4: ${{ secrets.RM4 || vars.RM4 }}
         run: npx tsx scripts/probe-history-dbs.ts
 
       # Dry run unless dry_run is explicitly false — the inverse of every other

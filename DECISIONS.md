@@ -12633,3 +12633,21 @@ Separately, `/api/trade-roast` accepted only `["AUD","NZD","USD","GBP"]`. A CA, 
 
 - A signed-interaction unit test of the route itself. The repo has no route-level harness, route.ts can't export helpers, and /movers needs `getPriceMovers` (database). The test pins the footer template at source level and asserts that `COUNTRIES[DEFAULT_COUNTRY].label + " market"` is "United States market".
 - The `bot` OAuth scope. The registration script's header mentions it as optional, but it is not needed for HTTP interactions and would ask server admins for more than the bot uses.
+
+## Operational database cut over from RM3 to RM4; migrations drop target-only tables first — 2026-09-25
+
+**Why.** RM3 was approaching its 5 GB monthly transfer allowance three days after becoming the operational database on 2026-09-22.
+
+**What.**
+
+- RM4 is a recycled project. `probe-databases` found it reachable and far behind RM3 on every table (User 159, Card 1412), so the stale data it held was overwritten.
+- The first two `migrate-main-db-rm3-to-rm4` runs failed on Card alone (source 1434, target 1412). RM4 still had a legacy `EbayAuction` table (replaced by `EbayAuctionListing` in the schema long ago) with an FK onto Card. That table is not in RM3, so it is not in the dump, so `pg_restore --clean` never drops it. Its FK blocked `DROP TABLE "Card"`, and the restore then hit "already exists" and a COPY into the old column layout.
+- Fix: before the restore, the step drops every public table on the target that the source does not have. It compares the table lists rather than naming `EbayAuction`, because any recycled project can carry a different leftover. The step's existing guard still blocks a run whose target is the live database unless `overwrite_live_db` is set.
+- The third run matched on all 42 tables. A final re-sync straight before the flip matched too (Card 1434, User 386).
+- `OPERATIONAL_VARS` is now `["RM4"]`. `scripts/build-db-push.sh`, every workflow's `DATABASE_URL`/`DB_SOURCE_NAME` default, the `RM4:` env forwards in maintenance.yml and the ci-build service variable all follow.
+- The same pass fixed `migrate-main-db-rm12-to-rm3`: it had RM3 as both source and target, so it could only stop at its own same-database guard.
+- The owner asked for this to go live immediately, so the flip commit carries `[deploy]`.
+
+**Rollback.** One commit. RM3 still holds the data and still responds, so setting `OPERATIONAL_VARS` back to `["RM3"]` restores it. Anything written to RM4 in the meantime is not in RM3.
+
+**Still open.** A rested project gives time back; it does not reduce the burn. Run `audit-egress` against RM4 a few hours after the cutover. The build needs `RM4` set in Vercel for Production and Preview.
