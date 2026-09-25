@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { markSignupSource, stashSignupSource } from "@/lib/signup-source";
+import { markSignupSource, readSignupSource, stashSignupSource } from "@/lib/signup-source";
 import { trackAuthStart } from "@/lib/growth-events";
 
 // Sign-in is OAUTH ONLY — Google and Discord. The email/password form, /register,
@@ -70,7 +70,8 @@ export function AuthForm({
   // Which surface this form is embedded in ("popup", "alert_modal", …) — fed to
   // markSignupSource on provider click so the sign_in_click event and, if the
   // OAuth round trip completes, User.signupSource both carry the surface that
-  // actually converted. Defaults to "login" (the standalone page).
+  // actually converted. Absent (standalone /login): ?src=, then the cookie a
+  // CTA click stashed on the way here, then "login".
   source?: string;
   // Where to land after the OAuth round trip. Threaded into the provider hrefs
   // as ?next=; the start route stores it in a short-lived cookie and the
@@ -92,7 +93,10 @@ export function AuthForm({
   // "login" default that would otherwise clobber it.
   const [urlSrc, setUrlSrc] = useState<string | null>(null);
   const onProviderClick = (provider: "google" | "discord") => {
-    const placement = source ?? urlSrc ?? "login";
+    // A source stashed by the click that led here (header, home, article,
+    // alerts page) outranks the "login" default, which is now only what a
+    // typed or bounced /login with no recent click records.
+    const placement = source ?? urlSrc ?? readSignupSource() ?? "login";
     markSignupSource(placement);
     trackAuthStart(provider, placement);
     onProviderClickProp?.();

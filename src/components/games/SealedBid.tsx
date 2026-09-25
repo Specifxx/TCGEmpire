@@ -1006,7 +1006,7 @@ function Final({
           </ul>
           {!board.signedIn && (
             <p className="border-t border-ink-800 px-4 py-2 text-[11px] text-slate-500">
-              <Link href="/login?next=/games/sealed-bid" className="font-semibold text-brand-400 hover:underline">Sign in</Link> before your next game and your total is saved here automatically.
+              <Link href="/login?next=/games/sealed-bid&src=games" className="font-semibold text-brand-400 hover:underline">Sign in</Link> before your next game and your total is saved here automatically.
             </p>
           )}
         </div>

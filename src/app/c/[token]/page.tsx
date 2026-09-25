@@ -122,7 +122,10 @@ export default async function SharedCollectionPage({ params }: { params: { token
         <p className="mt-1 text-sm text-slate-400">
           Add your cards once and RiftCompare values them daily against live prices from every store we track.
         </p>
-        <Link href="/portfolio" className="btn-primary mt-3 inline-flex">
+        {/* Straight to /login, not /portfolio's signed-out bounce, so the
+            sign-up carries its source. No user lookup on this page for it: a
+            signed-in owner is redirected on to ?next= by /login itself. */}
+        <Link href="/login?next=/portfolio&src=shared_collection" rel="nofollow" className="btn-primary mt-3 inline-flex">
           Start your collection
         </Link>
       </section>

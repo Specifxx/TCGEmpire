@@ -198,8 +198,8 @@ export default async function GamesPage() {
               shrink-0: the 269px row overran the box's padding at 320, so there
               only "Sign in" drops to a second line. 344px and up is unchanged. */}
           <div className="flex flex-wrap gap-2">
-            <Link href="/login?next=/games" className="btn-primary text-sm">Create free account</Link>
-            <Link href="/login?next=/games" className="btn-ghost text-sm">Sign in</Link>
+            <Link href="/login?next=/games&src=games" className="btn-primary text-sm">Create free account</Link>
+            <Link href="/login?next=/games&src=games" className="btn-ghost text-sm">Sign in</Link>
           </div>
         </div>
       )}

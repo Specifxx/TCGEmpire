@@ -30,7 +30,26 @@ const CONTEXT_LINES: Record<string, string> = {
   // account (2026-09-23) — the line repeats that promise on the sign-in step.
   "/tools/deal-finder": "Create a free account to see today's top 3 deals in every Deal Finder view.",
   "/tools/rising": "Create a free account to see the top 3 rising cards, with their full signal breakdown.",
+  // The Premium-only tools' "Sign in free" gate (2026-09-25). A free account
+  // unlocks none of these on its own — signed in, the same gate offers the
+  // Premium button instead — so the line says exactly that and no more.
+  "/tools/value-finder": "Value Finder is a Premium tool. Create a free account, then start Premium from the tool's page.",
+  "/tools/demand": "Demand Finder is a Premium tool. Create a free account, then start Premium from the tool's page.",
+  "/tools/rising-sealed": "Rising Sealed is a Premium tool. Create a free account, then start Premium from the tool's page.",
+  "/bulk-pricer": "The Bulk Pricer is a Premium tool. Create a free account, then start Premium from the tool's page.",
+  "/tools/best-basket": "Best Basket is a Premium tool. Create a free account, then start Premium from the tool's page.",
 };
+
+// Prefix matches, for destinations that are a family of paths: every game's
+// save-your-score prompt passes its own page as ?next= (games/shared.tsx), and
+// Best Basket's may carry a ?list=. Exact CONTEXT_LINES entries win.
+const GAMES_LINE = "Create a free account to save your scores to the leaderboard.";
+function contextLineFor(next: string): string | undefined {
+  const path = next.split(/[?#]/)[0];
+  if (CONTEXT_LINES[path]) return CONTEXT_LINES[path];
+  if (path === "/games" || path.startsWith("/games/") || path === "/riftle") return GAMES_LINE;
+  return undefined;
+}
 
 export default async function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
   const user = await getCurrentUser();
@@ -45,7 +64,7 @@ export default async function LoginPage({ searchParams }: { searchParams: { next
       providers={enabledProviders()}
       cancelHref={next ?? "/"}
       next={next ?? undefined}
-      contextLine={next ? CONTEXT_LINES[next] : undefined}
+      contextLine={next ? contextLineFor(next) : undefined}
     />
   );
 }
