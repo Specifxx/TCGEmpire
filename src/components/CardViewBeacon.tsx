@@ -3,9 +3,12 @@
 import { useEffect } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { pushRecentCard } from "@/lib/recently-viewed";
+import { sendCardView } from "@/lib/card-views";
 
 // Records a card-page view (the page is ISR-cached, so a server-side counter would
-// miss most visits). Fire-and-forget on mount. Also fires the `card_page_view`
+// miss most visits). Fire-and-forget on mount, at most once per card per day in
+// this browser (lib/card-views.ts — the counter feeds Rising Cards and the
+// /movers "Most searched" strip, so a reload must not count twice). Also fires the `card_page_view`
 // GA4/Vercel event from the same effect — the metrics guardrail for the
 // qualified-retailer-click-through work needs a funnel step between "search
 // happened" (search_submitted) and "retailer_click" (buy_click), and this was
@@ -35,7 +38,7 @@ export function CardViewBeacon({
   imageSrc?: string | null;
 }) {
   useEffect(() => {
-    fetch(`/api/card/${idOrSlug}/view`, { method: "POST", keepalive: true }).catch(() => {});
+    sendCardView(idOrSlug, "view", cardId ?? idOrSlug);
     trackEvent("card_page_view", { card_id: cardId ?? idOrSlug, card_name: cardName, rarity });
     if (cardId && cardName && setCode && collectorNumber) {
       pushRecentCard({

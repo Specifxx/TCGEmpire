@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getPriceMovers } from "@/lib/price-history";
+import { getPriceMovers, recentMethodologyBreak } from "@/lib/price-history";
+import { getTopDemand } from "@/lib/demand";
+import { MostSearchedStrip } from "@/components/MostSearchedStrip";
 import { PriceWatch } from "@/components/PriceWatch";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { SETS } from "@/lib/constants";
@@ -13,9 +15,9 @@ import { AdSlot } from "@/components/AdSlot";
 import { MoversToolsCta } from "@/components/MoversToolsCta";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 
-// ISR: the underlying PriceHistory is rewritten once per day by the price-refresh
-// workflow (GitHub Action → import-prices), so a 24-hour window keeps the page fresh
-// without recomputing the 35-day aggregation on every request.
+// ISR: PriceHistory gains one snapshot a WEEK (HISTORY_MIN_INTERVAL_DAYS), and
+// the price-refresh workflow purges this path after every import, so a 24-hour
+// window keeps the page fresh without recomputing the aggregation per request.
 //
 // No inner unstable_cache may declare a shorter TTL than this — see the note on
 // getPriceMovers below. One used to say 600, which quietly made this page
@@ -27,7 +29,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Price Movers — Top Risers & Drops | RiftCompare" },
   description:
-    "This week's biggest Riftbound card price movers — top risers, biggest drops and best-value deals, compared across stores. Updated daily.",
+    "This week's biggest Riftbound card price movers — top risers, biggest drops and best-value deals — plus the cards most searched this week. Updated weekly.",
   keywords: [
     "Riftbound price movers",
     "Riftbound card prices going up",
@@ -40,14 +42,22 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Riftbound Price Movers — Top Risers & Drops",
     description:
-      "This week's biggest Riftbound card price movers — top risers, biggest drops and best-value deals, compared across stores. Updated daily.",
+      "This week's biggest Riftbound card price movers — top risers, biggest drops and best-value deals — plus the cards most searched this week. Updated weekly.",
     url: `${SITE_URL}/movers`,
   },
 };
 
+// The free top-10 that replaced the Premium Demand Finder (2026-09-25).
+const MOST_SEARCHED_ROWS = 10;
+
+// What every figure on this page is. Not a market's own store prices: the
+// weekly PriceHistory snapshot is the cheapest price found across AU, US, UK and
+// SG that week, converted — so it says so, everywhere the page describes it.
+const PRICE_BASIS = "the cheapest tracked price across AU/US/UK/SG, converted";
+
 export default async function MoversPage() {
-  // AU baseline, no cookie read: a getCountry() call would force this route
-  // dynamic and kill the revalidate above, so the page is genuinely static.
+  // DEFAULT_COUNTRY baseline, no cookie read: a getCountry() call would force this
+  // route dynamic and kill the revalidate above, so the page is genuinely static.
   const country = DEFAULT_COUNTRY;
   const info = COUNTRIES[country];
 
@@ -72,7 +82,17 @@ export default async function MoversPage() {
   // getPriceMovers' own TTL (8 days) is longer than this page's, so it cannot
   // undercut the segment. Freshness comes from the price importer POSTing
   // /api/revalidate at the end of every run, which purges this path outright.
-  const movers = await getPriceMovers(country, 20);
+  //
+  // Every row it computed (MOVERS_MAX, 50 per list), not a 20-row slice: the
+  // aggregation is the same either way, and this is the page for the whole list.
+  //
+  // getTopDemand (the "Most searched this week" strip) is the same kind of
+  // loader — self-cached, day-keyed, 172800s TTL, so it cannot undercut this
+  // page's revalidate either — and is called here, at the top level, for the
+  // same reason: never from inside another cache (tests/movers-most-searched.test.ts).
+  const [movers, demand] = await Promise.all([getPriceMovers(country, 50), getTopDemand(7, MOST_SEARCHED_ROWS)]);
+  const mostSearched = demand.windowUsable ? demand.bySearch.map((p) => ({ card: p.card, searches: p.searches })) : [];
+  const pricingBreak = recentMethodologyBreak();
 
   const hasAny = movers.spiking.length || movers.plummeting.length || movers.value.length;
 
@@ -92,15 +112,15 @@ export default async function MoversPage() {
   const FAQS = [
     {
       q: "Which Riftbound cards are going up in price right now?",
-      a: `The risers list above is the answer, refreshed daily: it ranks Riftbound singles by how much their lowest live price in ${info.place} has moved over roughly the last seven days.`,
+      a: `The risers list above is the answer, refreshed weekly: it ranks Riftbound singles by how much ${PRICE_BASIS} to ${info.currency}, has moved over roughly the last seven days.`,
     },
     {
       q: "How often are Riftbound price movers updated?",
-      a: "Daily. RiftCompare records the lowest live price of every tracked card each day, so a move shows up on the next import rather than the next week.",
+      a: "Weekly. RiftCompare records one price for every tracked card each week — the cheapest across the stores it tracks in Australia, the US, the UK and Singapore, converted to one currency — so a move shows up after the next weekly snapshot.",
     },
     {
       q: "How does RiftCompare calculate a price move?",
-      a: "Each card's current lowest live price is compared against its price about seven days ago. Cards below a minimum value are excluded so a few cents on a bulk common can't top the list, and extreme outliers are filtered out.",
+      a: "Each card's latest weekly price is compared with its price about seven days earlier. Cards below a minimum value are excluded so a few cents on a bulk common can't top the list, and extreme outliers are filtered out. Prices are only compared on one pricing basis: when the way a price is sourced changes, as it did on 23 September 2026 when the US TCGplayer price moved from market price to the cheapest English listing, a card sits out until it has two weekly prices on the new basis.",
     },
     {
       q: "What does 'best value' mean on this page?",
@@ -117,7 +137,7 @@ export default async function MoversPage() {
     "@type": "CollectionPage",
     name: "Riftbound Price Movers",
     url: `${SITE_URL}/movers`,
-    description: "This week's biggest Riftbound card price movers — risers, drops and best-value buys.",
+    description: "This week's biggest Riftbound card price movers — risers, drops and best-value buys — and the most searched cards.",
     isPartOf: { "@id": `${SITE_URL}/#website` },
     ...(uniqueCards.length > 0
       ? {
@@ -154,25 +174,43 @@ export default async function MoversPage() {
           Riftbound price movers — this week
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          The Riftbound cards moving the most right now in {info.place}: which singles are{" "}
+          The Riftbound cards moving the most this week: which singles are{" "}
           <strong className="text-slate-200">spiking</strong>, which are seeing the{" "}
           <strong className="text-slate-200">biggest drops</strong>, and where the{" "}
           <strong className="text-slate-200">best value</strong> is off a card&apos;s recent high. Every
-          figure is the latest {info.adjective} lowest price in {info.currency}, compared across stores
-          and updated daily. Tap any card for its full price-history chart.
+          figure is {PRICE_BASIS} to {info.currency}, updated weekly. Tap any card for its full
+          price-history chart
+          {mostSearched.length > 0 ? (
+            <>
+              , or see <a href="#most-searched" className="text-brand-400 hover:underline">what people are searching for</a>
+            </>
+          ) : null}
+          .
         </p>
         <AnswerBox className="mt-4">
           <p>
-            Riftbound price movers are the cards whose lowest live price has changed most in the past week. This page
-            ranks them daily in three lists — biggest risers, biggest drops, and best value against a card&apos;s recent
-            high — using the lowest in-stock price across every store tracked for {info.place}, in {info.currency}.
+            Riftbound price movers are the cards whose price has changed most in the past week. This page ranks them
+            weekly in three lists — biggest risers, biggest drops, and best value against a card&apos;s recent high —
+            using {PRICE_BASIS} to {info.currency}.
           </p>
         </AnswerBox>
       </div>
 
+      {pricingBreak && (
+        <p className="-mt-4 max-w-3xl rounded-lg border border-ink-700 bg-ink-900 px-4 py-3 text-xs leading-relaxed text-slate-400">
+          <strong className="text-slate-200">Fewer movers than usual for a couple of weeks.</strong> On{" "}
+          {new Date(pricingBreak.from).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" })} the US
+          TCGplayer price we track changed from TCGplayer&apos;s market price to the cheapest English listing. A change
+          across that date would measure the switch, not the market, so each card rejoins these lists once it has two weekly
+          prices on the new basis.
+        </p>
+      )}
+
       {hasAny ? (
         <>
           <PriceWatch movers={movers} currency={info.currency} place={info.place} showHeader={false} />
+
+          <MostSearchedStrip rows={mostSearched} coveredDays={demand.coveredDays} />
 
           {/* Turn habitual price-checkers into the Premium funnel (client island → the
               page stays static). */}
@@ -194,13 +232,17 @@ export default async function MoversPage() {
           <div>
             <p className="text-lg font-semibold text-white">No notable movers yet</p>
             <p className="mt-1 text-sm">
-              We need a few days of price history to spot trends. Check back soon, or browse the full
-              database in the meantime.
+              A move needs two weekly prices on the same basis. Check back after the next weekly update, or
+              browse the full database in the meantime.
             </p>
             <Link href="/browse" className="btn-primary mt-4">Card database</Link>
           </div>
         </div>
       )}
+
+      {/* With no movers the strip still shows — it is its own data, and the
+          /tools/demand redirect lands on it. */}
+      {!hasAny && <MostSearchedStrip rows={mostSearched} coveredDays={demand.coveredDays} />}
 
       {/* Internal links (crawl + discovery) */}
       <section>
@@ -236,16 +278,16 @@ export default async function MoversPage() {
         <h2 className="text-xl font-extrabold text-white">How RiftCompare tracks price movers</h2>
         <div className="mt-2 max-w-3xl space-y-3 text-sm leading-relaxed text-slate-400">
           <p>
-            RiftCompare records the lowest live price of every Riftbound card, every day, across the
-            stores it tracks in {info.place}. The movers above compare each card&apos;s price today against
-            its price about seven days ago to surface the biggest <strong className="text-slate-200">risers</strong> and{" "}
+            Once a week, RiftCompare records one price for every Riftbound card: {PRICE_BASIS} to{" "}
+            {info.currency}. The movers above compare each card&apos;s latest weekly price against its price
+            about seven days earlier to surface the biggest <strong className="text-slate-200">risers</strong> and{" "}
             <strong className="text-slate-200">fallers</strong> of the week, and against its recent high to
             highlight the <strong className="text-slate-200">best-value</strong> buys.
           </p>
           <p>
-            It&apos;s the fastest way to spot which Riftbound singles are heating up before a tournament,
-            which have cooled off, and where today&apos;s discounts are. Click any card to compare every
-            store&apos;s price, ranked by total delivered cost, and to see its full price-history chart.
+            It&apos;s the quickest way to see which Riftbound singles are heating up, which have cooled off,
+            and which cards players are looking up most. Click any card to compare every store&apos;s live
+            price in your market, ranked by total delivered cost, and to see its full price-history chart.
           </p>
         </div>
       </section>

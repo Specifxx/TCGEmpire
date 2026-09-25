@@ -5,7 +5,7 @@
 // Anthropic (Claude) OR Google Gemini's free tier — otherwise a funny rule-based
 // fallback. Either way the section is always populated.
 import Anthropic from "@anthropic-ai/sdk";
-import type { PricePoint } from "./price-history";
+import { dropBreakWindow, type PricePoint } from "./price-history";
 import { formatMoney } from "./format";
 import { DEFAULT_COUNTRY } from "./country";
 
@@ -221,7 +221,11 @@ export async function getInsight(
   const hit = cache.get(key);
   if (hit) return hit;
 
-  const signals = computeSignals(points);
+  // Only points on the current pricing basis (2026-09-25): across the 09-23
+  // TCGplayer re-basing, every affected card read as "down 25% this week, near
+  // its low — buy". With too few clean points the verdict is "Not enough data",
+  // which is the truth until new weekly prices arrive.
+  const signals = computeSignals(dropBreakWindow(points));
   const rule = ruleVerdict(signals, key, currency);
   let summary = rule.summary;
   let source: "ai" | "rules" = "rules";

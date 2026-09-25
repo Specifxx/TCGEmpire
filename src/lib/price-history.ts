@@ -203,6 +203,128 @@ export function sydneyWeekKey(d = new Date()): string {
 
 export type PricePoint = { t: number; v: number };
 
+// ── METHODOLOGY BREAKS ────────────────────────────────────────────────────────
+// Windows in which a step in the series comes from a change in how prices are
+// SOURCED rather than from the market moving. Moved here from market-index.ts
+// on 2026-09-25 (which re-exports it) so every reader that compares two points
+// of PriceHistory can honour the same list — until then only the Index did, and
+// /movers, Rising Cards and the homepage table printed the 09-23 re-basing as a
+// market-wide crash.
+//
+// 2026-09-23: the US TCGplayer row switched from TCGplayer's market price to
+// the cheapest English Near-Mint listing (lib/tcgplayer.ts), sampled at a median
+// 25% below market. For many cards that row IS the US low, and PriceHistory
+// records each card's low across markets, so the first snapshot on the new
+// basis would otherwise read as a market-wide drop. The window is eight days,
+// not one, because PriceHistory writes at most weekly per card and it cannot be
+// known from the date alone whether a snapshot written on the switch day came
+// before or after the deploy — so every step ending in that span is suspect.
+//
+// Two ways to honour a break, one per shape of reader:
+//   • a chain-linked LEVEL (the Index) flattens each step ending inside
+//     [from, to) — chainLinkSeries in market-index.ts;
+//   • a per-card COMPARISON (movers, 7-day changes, range position, records)
+//     must never compare a point recorded before the new basis with one
+//     recorded after it — dropBreakWindow below. tests/methodology-breaks.test.ts
+//     fails if a file that reads PriceHistory neither imports it nor is exempted
+//     there with a reason.
+//
+// `settled` is the first instant from which every recorded point is certainly
+// on the new basis (defaults to `to`). For 09-23 that is the next Sydney day:
+// the switch deployed on the 23rd, so only a point dated the 23rd can be either
+// basis. PriceHistory.day is the Sydney date at UTC midnight, the same encoding
+// as these bounds.
+export type MethodologyBreak = { from: number; to: number; settled?: number; why: string };
+
+export const METHODOLOGY_BREAKS: readonly MethodologyBreak[] = [
+  {
+    from: Date.UTC(2026, 8, 23),
+    to: Date.UTC(2026, 9, 1),
+    settled: Date.UTC(2026, 8, 24),
+    why: "US TCGplayer row: market price -> cheapest English NM listing",
+  },
+];
+
+// Drops every point a comparison must not reach back to across a break. For
+// each break the series has reached (a point at or after `from`):
+//   • with a point at or after `settled`, the series restarts at the first
+//     such point — everything older is on the old basis or might be;
+//   • with none (the newest point is from the switch day itself, whose basis
+//     is unknown), only that newest point is kept, so nothing is compared.
+// A series that never reached the break is returned untouched, and the order
+// of the kept points is preserved.
+//
+// The cost is the Index's cost: about a week of genuine movement is never
+// measured, and a card needs new post-break points before a mover, a 7-day
+// change or a range position means anything again. A live price appended as the
+// newest point (Rising Cards does this) takes part like any other point: until
+// a snapshot on the new basis is in the series, the live point is all that is
+// left and nothing is compared.
+export function dropBreakWindow<T extends { t: number }>(
+  points: readonly T[],
+  breaks: readonly { from: number; to: number; settled?: number }[] = METHODOLOGY_BREAKS,
+): T[] {
+  let kept = [...points];
+  for (const b of breaks) {
+    const settled = b.settled ?? b.to;
+    let reached = false;
+    let firstSettled: number | null = null;
+    let newestUnsure: number | null = null;
+    for (const p of kept) {
+      if (p.t < b.from) continue;
+      reached = true;
+      if (p.t >= settled) firstSettled = firstSettled == null ? p.t : Math.min(firstSettled, p.t);
+      else newestUnsure = newestUnsure == null ? p.t : Math.max(newestUnsure, p.t);
+    }
+    if (!reached) continue;
+    const cut = firstSettled ?? newestUnsure!;
+    kept = kept.filter((p) => p.t >= cut);
+  }
+  return kept;
+}
+
+// The break a reader should still explain to a visitor, if any: one whose window
+// opened on or before `now` and closed less than `graceDays` ago. After that the
+// weekly comparisons have rebuilt on the new basis and there is nothing to say.
+export function recentMethodologyBreak(now = Date.now(), graceDays = 14): MethodologyBreak | null {
+  for (const b of METHODOLOGY_BREAKS) {
+    if (now >= b.from && now < b.to + graceDays * 86400_000) return b;
+  }
+  return null;
+}
+
+// The GLOBAL series' own rule, applied to a card's LIVE prices: the cheapest of
+// its AU, US, UK and SG lows, each converted to USD cents. price-import.ts writes
+// exactly this figure (from the same real-listing lows it stores on Card) as the
+// weekly PriceHistory point, so a live point built here sits on the same basis
+// as the history it is appended to. CA and EU are left out for the same reason
+// the writer leaves them out. null when the card has no price in any of the four.
+//
+// price-import.ts keeps its own copy of the loop on purpose: editing an importer
+// file starts a full price import through refresh-prices.yml's push trigger
+// (docs/CURRENT-STATE.md, "Left alone on purpose"). tests/methodology-breaks.test.ts
+// pins the two to the same four markets.
+export const GLOBAL_LOW_MARKETS: readonly Country[] = ["AU", "US", "UK", "SG"];
+export function globalLowUsd(card: {
+  lowestPriceCents: number | null;
+  lowestPriceCentsUs?: number | null;
+  lowestPriceCentsUk?: number | null;
+  lowestPriceCentsSg?: number | null;
+}): number | null {
+  const candidates: number[] = [];
+  const byMarket: Record<string, number | null | undefined> = {
+    AU: card.lowestPriceCents,
+    US: card.lowestPriceCentsUs,
+    UK: card.lowestPriceCentsUk,
+    SG: card.lowestPriceCentsSg,
+  };
+  for (const market of GLOBAL_LOW_MARKETS) {
+    const cents = byMarket[market];
+    if (cents != null) candidates.push(convertCents(cents, currencyOf(market), "USD"));
+  }
+  return candidates.length ? Math.min(...candidates) : null;
+}
+
 // Circuit breaker on the per-card history read — a single card's own row
 // count within 2 years is cheap regardless (at most ~730 rows even if every
 // day had one), so this isn't a real limit today; it just keeps the read
@@ -374,7 +496,12 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
   const SEVEN = 7 * 86400_000;
   type Stat = { cardId: string; points: PricePoint[]; now: number; ref7: number; high: number; pct7: number; discount: number };
   const stats: Stat[] = [];
-  for (const [cardId, pts] of series) {
+  for (const [cardId, raw] of series) {
+    // Never compare across a methodology break (see dropBreakWindow): the
+    // 2026-09-23 TCGplayer re-basing printed as a market-wide crash here, and
+    // as "best value" for three weeks, since the recent high came from before
+    // it. A card with fewer than two points on the current basis sits out.
+    const pts = dropBreakWindow(raw);
     if (pts.length < 2) continue;
     const now = pts[pts.length - 1].v;
     if (now < MIN_CENTS) continue;
@@ -481,7 +608,10 @@ async function computeRecentlyUpdated(country: Country, limit: number): Promise<
     const OUTLIER_SPIKE = 300;
     type Stat = { cardId: string; prev: number; now: number; pct: number };
     const stats: Stat[] = [];
-    for (const [cardId, pts] of series) {
+    for (const [cardId, raw] of series) {
+      // Same rule as computePriceMovers: the previous point must be on the same
+      // pricing basis as the latest, or the "move" is the methodology change.
+      const pts = dropBreakWindow(raw.map((p) => ({ t: p.day, v: p.v }))).map((p) => ({ day: p.t, v: p.v }));
       if (pts.length < 2) continue;
       const last = pts[pts.length - 1];
       // Only cards actually touched in the LATEST snapshot qualify — a card whose

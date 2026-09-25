@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRY_LIST } from "@/lib/country";
-import { getCachedRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
+import { getCachedRisingCards, parseRiseScope, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { cardImageAlt } from "@/lib/image-alt";
 import { RisingSnapshotPanel } from "@/components/admin/RisingSnapshotPanel";
 
@@ -85,14 +85,15 @@ export default async function AdminRisingPage({
   if (!authed) notFound(); // don't reveal the page exists
 
   // Scope defaults to GLOBAL (like the RiftCompare Index): demand is market-agnostic,
-  // so Global uses each card's best-covered price series + total cross-market supply.
-  const raw = (searchParams.country ?? "").toUpperCase();
-  const scope: RiseScope = raw === "AU" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
+  // so Global uses total cross-market supply. Every COUNTRY_LIST market parses
+  // (SG/CA/EU fell back to Global here until 2026-09-25, so no snapshot could be
+  // minted for them).
+  const scope: RiseScope = parseRiseScope(searchParams.country, "GLOBAL");
   const isGlobal = scope === "GLOBAL";
 
-  // The heavy scan (400 cards × price history) is cached once per scope per day
-  // in rise-predictor.ts — the same entry /tools/rising and the homepage read,
-  // so an admin load never triggers a second copy of the scan under its own key.
+  // The same loaders /tools/rising and the homepage read (weekly history,
+  // daily operational inputs — rise-predictor.ts), so an admin load never
+  // triggers a second copy of the scan under its own key.
   const analysis = await getCachedRisingCards(scope);
 
   const bt = analysis.backtest;
@@ -144,11 +145,13 @@ export default async function AdminRisingPage({
             one. Report both, and name the threshold. */}
         <Stat
           label="Universe"
-          value={String(analysis.universeSize)}
+          value={analysis.failed ? "Failed" : String(analysis.universeSize)}
           sub={
-            analysis.withAnyHistory === 0
-              ? "no price history recorded"
-              : `${analysis.withAnyHistory} with history · ${analysis.qualifying} deep enough (≥${analysis.minPointsRequired} pts)`
+            analysis.failed
+              ? "load failed — see the function logs; retrying in ~5 min"
+              : analysis.withAnyHistory === 0
+                ? "no price history recorded"
+                : `${analysis.withAnyHistory} with history · ${analysis.qualifying} with price signals (≥${analysis.minPointsRequired} clean weekly pts)`
           }
         />
         <Stat
@@ -176,7 +179,12 @@ export default async function AdminRisingPage({
 
       {analysis.picks.length === 0 ? (
         <div className="rounded-xl border border-ink-700 bg-ink-850 px-4 py-10 text-center text-sm text-slate-400">
-          {analysis.withAnyHistory === 0 ? (
+          {analysis.failed ? (
+            <>
+              <p className="font-semibold text-white">The analysis failed to load</p>
+              <p className="mt-1">A loader threw; the error is in the function logs. The failure is not cached — the next attempt runs within about five minutes.</p>
+            </>
+          ) : analysis.withAnyHistory === 0 ? (
             <>
               <p className="font-semibold text-white">No price history in {isGlobal ? "any market" : scope} yet</p>
               <p className="mt-1">
@@ -190,15 +198,15 @@ export default async function AdminRisingPage({
                   working, there just aren't enough DAYS yet. Say exactly how far
                   off it is instead of implying a broken pipeline. */}
               <p className="font-semibold text-white">
-                Price history is building — {analysis.deepestSeries} of {analysis.minPointsRequired} days
+                Price history is building — {analysis.deepestSeries} of {analysis.minPointsRequired} weekly points
               </p>
               <p className="mx-auto mt-1 max-w-xl">
                 {analysis.withAnyHistory.toLocaleString()} cards already have price history in{" "}
-                {isGlobal ? "at least one market" : scope}, but scoring needs {analysis.minPointsRequired} daily points
-                per card and the deepest series so far is {analysis.deepestSeries}. The importer is recording normally;
-                signals switch on by themselves in about{" "}
+                {isGlobal ? "at least one market" : scope}, but price signals need {analysis.minPointsRequired} clean weekly
+                points per card (today&apos;s live price counts as one) and the deepest series so far is {analysis.deepestSeries}.
+                The importer is recording normally; signals switch on by themselves in about{" "}
                 {Math.max(1, analysis.minPointsRequired - analysis.deepestSeries)}{" "}
-                {Math.max(1, analysis.minPointsRequired - analysis.deepestSeries) === 1 ? "day" : "days"}.
+                {Math.max(1, analysis.minPointsRequired - analysis.deepestSeries) === 1 ? "week" : "weeks"}.
               </p>
             </>
           )}
@@ -213,12 +221,12 @@ export default async function AdminRisingPage({
                 <th className="px-3 py-2 text-right font-medium">Score</th>
                 <th className="px-3 py-2 font-medium">Signal breakdown</th>
                 <th className="px-3 py-2 text-right font-medium">Price{isGlobal ? "" : ` (${currencyOf(scope)})`}</th>
-                <th className="px-3 py-2 text-right font-medium">7d</th>
+                <th className="px-3 py-2 text-right font-medium">vs last week</th>
                 <th className="px-3 py-2 text-right font-medium">In range</th>
                 <th className="px-3 py-2 text-right font-medium">Searches</th>
                 <th className="px-3 py-2 text-right font-medium">/day</th>
                 <th className="px-3 py-2 text-right font-medium">Stores</th>
-                <th className="px-3 py-2">30d</th>
+                <th className="px-3 py-2">16 wk</th>
                 <th className="px-3 py-2 text-right font-medium">Conf.</th>
               </tr>
             </thead>
@@ -235,6 +243,7 @@ export default async function AdminRisingPage({
                       <span className="min-w-0">
                         <span className="block truncate font-medium text-white hover:text-brand-400">{p.displayName}</span>
                         <span className="block text-[11px] text-slate-500">{p.setCode} · {p.collectorNumber}{p.overheated ? " · ⚠ hot" : ""}</span>
+                        <span className="block text-[11px] text-slate-400">{p.reason}</span>
                       </span>
                     </Link>
                   </td>
@@ -252,8 +261,8 @@ export default async function AdminRisingPage({
                     </div>
                   </td>
                   <td className="px-3 py-2 text-right num tabular-nums text-slate-200">{p.priceCents != null ? formatMoney(p.priceCents, p.currency) : "—"}</td>
-                  <td className="px-3 py-2 text-right tabular-nums"><Pct v={p.trend7} /></td>
-                  <td className="px-3 py-2 text-right num tabular-nums text-slate-300">{Math.round(p.posPct * 100)}%</td>
+                  <td className="px-3 py-2 text-right tabular-nums"><Pct v={p.vsLastWeekPct} /></td>
+                  <td className="px-3 py-2 text-right num tabular-nums text-slate-300">{p.priceSignals ? `${Math.round(p.posPct * 100)}%` : "—"}</td>
                   <td className="px-3 py-2 text-right num tabular-nums text-slate-300">{p.searchCount.toLocaleString()}</td>
                   <td className="px-3 py-2 text-right tabular-nums">
                     {p.searchPerDay != null ? <span className={`num ${p.searchPerDay > 0 ? "text-up" : "text-slate-400"}`}>{p.searchPerDay > 0 ? "+" : ""}{p.searchPerDay}</span> : <span className="text-slate-600">—</span>}
@@ -281,10 +290,10 @@ export default async function AdminRisingPage({
         <ul className="mt-2 list-disc space-y-1 pl-5">
           <li><strong className="text-slate-300">Demand</strong> — search volume (log). The purest attention signal.</li>
           <li><strong className="text-slate-300">Velocity</strong> — extra searches/day from daily demand snapshots. The leading indicator; <em>0 for everyone until ~3+ snapshot days accrue</em> ({analysis.velocityActive ? "active now" : `warming up — ${analysis.snapshotDays} days so far`}).</li>
-          <li><strong className="text-slate-300">Room to run</strong> — how near the card sits to its own range low (1 − position‑in‑range). Demand hasn&apos;t been priced in yet.</li>
+          <li><strong className="text-slate-300">Room to run</strong> — how near the card sits to its own range low (1 − position‑in‑range), over clean weekly points only (nothing from before a methodology break in lib/price-history.ts). 0 for cards without {analysis.minPointsRequired} such points, as are momentum and volatility.</li>
           <li><strong className="text-slate-300">Scarcity</strong> — few in‑stock listings, so demand bites harder.</li>
-          <li><strong className="text-slate-300">Momentum</strong> — emerging 7‑day uptrend, capped so already‑spiked cards (⚠ hot, &gt;{35}% in 7d) are penalised, not rewarded.</li>
-          <li><strong className="text-slate-300">Volatility</strong> — day‑to‑day movement (a small &ldquo;will it move&rdquo; tilt).</li>
+          <li><strong className="text-slate-300">Momentum</strong> — today&apos;s price vs last week, capped so already‑spiked cards (⚠ hot, &gt;{35}% on last week) are penalised, not rewarded.</li>
+          <li><strong className="text-slate-300">Volatility</strong> — week‑to‑week movement (a small &ldquo;will it move&rdquo; tilt).</li>
         </ul>
         <h2 className="mt-4 text-base font-bold text-white">Validation &amp; limits</h2>
         <p className="mt-2">

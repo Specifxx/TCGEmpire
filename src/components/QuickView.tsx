@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { sendCardView } from "@/lib/card-views";
 import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
@@ -178,8 +179,10 @@ function QuickViewModal({
     // A different card (or market) is a different tab question; the previous
     // card's pick must not carry over.
     setEbayTab(null);
-    // Record the view (popularity signal) — fire-and-forget.
-    fetch(`/api/card/${ref}/view`, { method: "POST", keepalive: true }).catch(() => {});
+    // Record the view (popularity signal) — fire-and-forget, once per card per
+    // day in this browser (lib/card-views.ts): re-opening the same card, or
+    // opening it from a search pick that already counted, does not count again.
+    sendCardView(ref, "view", card.id);
     fetch(`/api/card/${ref}`)
       .then((r) => r.json())
       .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setAdListings(d.ebayAdListings ?? []); setGraded(d.ebayGradedListings ?? []); setEbayCheckedAt(d.ebayCheckedAt ?? null); } })

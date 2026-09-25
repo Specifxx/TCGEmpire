@@ -239,9 +239,12 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <Delta label="Latest" pct={index.d1} />
+                    {/* "90 days" replaced "Latest" (2026-09-25): with snapshots a
+                        week apart, the previous snapshot IS the 7-day point, so
+                        the two tiles always showed the same number. */}
                     <Delta label="7 days" pct={index.d7} />
                     <Delta label="30 days" pct={index.d30} />
+                    <Delta label="90 days" pct={index.d90} />
                     <Delta label="All time" pct={index.sinceStart} />
                   </div>
                 </div>

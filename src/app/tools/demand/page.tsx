@@ -9,7 +9,7 @@ import { COUNTRIES, pickPrice, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { PremiumButton } from "@/components/PremiumButton";
-import { CardQuickLink } from "@/components/CardQuickLink";
+import { cardHref } from "@/lib/card-url";
 import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
 
@@ -62,7 +62,7 @@ function DemandRow({ p, rank, metric, country, currency }: { p: DemandPick; rank
     <tr className="hover:bg-ink-800">
       <td className="px-3 py-2 text-slate-500">{rank}</td>
       <td className="px-3 py-2">
-        <CardQuickLink card={p.card} className="flex items-center gap-2.5">
+        <Link href={cardHref(p.card)} prefetch={false} className="flex items-center gap-2.5">
           {p.card.imageThumbUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={p.card.imageThumbUrl} alt={cardImageAlt(p.card)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
@@ -71,7 +71,7 @@ function DemandRow({ p, rank, metric, country, currency }: { p: DemandPick; rank
             <span className="block truncate font-semibold text-white">{p.card.name}</span>
             <span className="block text-[11px] text-slate-500">{p.card.setCode} · {p.card.collectorNumber}</span>
           </span>
-        </CardQuickLink>
+        </Link>
       </td>
       <td className={`num px-2 py-2 text-right ${metric === "searches" ? "font-extrabold text-brand-300" : "text-slate-400"}`}>
         {p.searches.toLocaleString()}
@@ -93,7 +93,7 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
   const view = searchParams.view === "viewed" ? "viewed" : "searched";
   const range = RANGES.find((r) => r.key === searchParams.range) ?? RANGES.find((r) => r.key === DEFAULT_RANGE)!;
 
-  const result = await getTopDemand(country, range.days, 25);
+  const result = await getTopDemand(range.days, 25);
   const rows = view === "viewed" ? result.byView : result.bySearch;
   const metric: "searches" | "views" = view === "viewed" ? "views" : "searches";
   const top = result.bySearch[0];

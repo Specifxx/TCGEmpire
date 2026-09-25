@@ -27,7 +27,7 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { priceField, type Country } from "./country";
 import { storeCountsByCountry } from "./cards";
-import { GLOBAL_HISTORY_COUNTRY, STALE_HISTORY_MS } from "./price-history";
+import { GLOBAL_HISTORY_COUNTRY, STALE_HISTORY_MS, dropBreakWindow } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
 import { cardDisplayName } from "./card-name";
 
@@ -132,7 +132,10 @@ async function computePriceTable(country: Country): Promise<PriceTableRow[]> {
         imageUrl: c.imageUrl,
         priceCents: c[field] as number,
         stores: counts.get(c.id)?.[country] ?? 0,
-        change7d: sevenDayChange(series.get(c.id) ?? []),
+        // Only points on the current pricing basis: a change measured across a
+        // methodology break (the 2026-09-23 TCGplayer switch) is the switch, not
+        // a market move — lib/price-history.ts dropBreakWindow.
+        change7d: sevenDayChange(dropBreakWindow(series.get(c.id) ?? [])),
       };
     });
   } catch {
