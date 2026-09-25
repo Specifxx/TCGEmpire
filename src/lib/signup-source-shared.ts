@@ -45,6 +45,10 @@ export const SIGNUP_SOURCES = new Set([
   "card_alert",
   "article_intro",
   "article_end",
+  // The same one-click alert, compact, inside QuickView (2026-09-25), where a
+  // CardTile tap lands. Its own value so it can be weighed against QuickView's
+  // buy_click rather than blended into card_alert.
+  "quickview_alert",
   "other",
 ]);
 
