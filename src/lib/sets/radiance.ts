@@ -19,6 +19,8 @@
 // count on a page whose whole purpose is accuracy would be worse than the
 // deviation. Re-verify against riftbound.gg/radiance/ before trusting this
 // file if much more time has passed since 2026-09-14.
+import { setByCode } from "../constants";
+
 export interface RadianceLegend {
   name: string;
   /** URL-safe id for the chip's anchor + its query-filter link. */
@@ -64,7 +66,10 @@ export function isBeforeRadianceRelease(now: Date = new Date()): boolean {
   return now.getTime() < Date.parse(`${RADIANCE_RELEASE_DATE}T00:00:00Z`);
 }
 
-export const RADIANCE_TOTAL_CARDS = 180;
+// Riot's announced total (Showcase included), read from SETS rather than typed
+// again: /sets/radiance's pre-release title and the hub's "N of 180 revealed"
+// counter both use it, and a second literal is how they would drift apart.
+export const RADIANCE_TOTAL_CARDS = setByCode("RAD")?.announcedCards ?? 180;
 export const RADIANCE_SHOWCASE_COUNT = 66;
 
 export interface RadianceProduct {

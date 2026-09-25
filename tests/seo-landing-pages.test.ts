@@ -108,6 +108,32 @@ test("set page title leads with card-list intent, price second", () => {
   assert.ok(src.includes("card list &amp; prices"), "H1 must mirror the list-first title");
 });
 
+test("a preview set's title and description fit, and a released set keeps its ladder", () => {
+  // The rungs /sets/[set] builds while isPreorderSetCode() holds and cards
+  // exist, mirrored here at the widest count the season can reach. Every
+  // unreleased set with an announced total must fit 60 / 155 at N = total.
+  const date = (iso: string) =>
+    new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  for (const s of SETS.filter((x) => x.comingSoon)) {
+    const total = s.announcedCards ?? s.totalCards;
+    if (!total || !s.releasedOn) continue;
+    const label = `${total} of ${total}`;
+    const title = `Riftbound ${s.name} Card List: ${label} So Far`;
+    assert.ok(title.length <= 60, title);
+    assert.doesNotMatch(title, /All \d+ Cards|\+ Prices|Revealed|Spoilers/);
+    const desc = `Every Riftbound ${s.name} card revealed so far (${label}) with rarity, domain and card text, added as reveals land. Live prices from ${date(s.releasedOn)}.`;
+    assert.ok(desc.length <= 155, `${desc.length}: ${desc}`);
+  }
+  const src = read("src/app/sets/[set]/page.tsx");
+  assert.ok(src.includes("`Riftbound ${set.name} Card List: ${revealLabel} So Far`"));
+  assert.ok(
+    src.includes("Every Riftbound ${set.name} card revealed so far (${revealLabel}) with rarity, domain and card text, added as reveals land. Live prices from ${releaseDateLabel}."),
+    "the test above mirrors the page's dated rung — keep them in step",
+  );
+  // Released sets: the counted rung still leads their ladder.
+  assert.ok(src.includes("`Riftbound ${set.name} Card List: All ${cardCount} Cards + Prices`"));
+});
+
 test("set page and gallery do not chase the same query", () => {
   // The whole point of the split: /sets/<slug> owns "card list", the gallery owns
   // "card gallery". If the set page ever says "Card Gallery" in its title they are
