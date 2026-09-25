@@ -130,9 +130,16 @@ test("the newly tagged surfaces each have their own source", () => {
 test("/login has a context line for the games and the gated tools", () => {
   const login = read("src/app/login/page.tsx");
   assert.match(login, /path === "\/games" \|\| path\.startsWith\("\/games\/"\) \|\| path === "\/riftle"/);
-  for (const p of ["/tools/value-finder", "/tools/demand", "/tools/rising-sealed", "/bulk-pricer", "/tools/best-basket"]) {
+  for (const p of ["/tools/deal-finder", "/tools/rising", "/tools/best-basket"]) {
     assert.match(login, new RegExp(`"${p.replace(/\//g, "\\/")}":`), p);
   }
+  // The four tools that left the product on 2026-09-25 301 before /login can
+  // ever see them as ?next=, so a line for any of them would be dead copy —
+  // and "X is a Premium tool" would be false.
+  for (const p of ["/tools/value-finder", "/tools/demand", "/tools/rising-sealed", "/bulk-pricer"]) {
+    assert.doesNotMatch(login, new RegExp(`"${p.replace(/\//g, "\\/")}":`), p);
+  }
+  assert.doesNotMatch(login, /Rising Sealed is a Premium tool/);
 });
 
 test("funnel-report prints activation by source from bounded reads", () => {

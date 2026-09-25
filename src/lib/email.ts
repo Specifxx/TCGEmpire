@@ -602,11 +602,17 @@ export async function sendTrialEndingNoChargeEmail(
 // notice above, and the copy itself states it will not repeat — so no footer
 // opt-out link is offered (mirrors trialReminderFooter's shape exactly).
 //
-// The tool list mirrors PremiumSlideIn.tsx's PITCH_TOOLS labels — kept as a
-// separate plain-string list (that file is a client component; an email
-// template has no business importing React component modules) but pinned
-// against drifting from it by tests/premium-conversion.test.ts.
-const CHECKOUT_RECOVERY_TOOLS = ["Bulk Pricer", "Best Basket", "Value Finder", "Rising Cards", "Demand Finder", "Deal Finder"];
+// The list is the 2026-09-25 lineup in buyer's words (the rows of
+// TierComparisonTable's TIER_COMPARISON a payment changes) — kept as a
+// separate plain-string list because an email template has no business
+// importing React component modules. It leads with "No ads on any page",
+// Plus's headline, and names no retired tool (tests/ad-free-tier.test.ts).
+const CHECKOUT_RECOVERY_TOOLS = [
+  "No ads on any page",
+  "Every deal: the full Deal Finder and Rising Cards lists",
+  "An email naming the store when a card you watch hits your target price",
+  "Premium: Best Basket, the cheapest delivered order for your whole deck, watchlist or binder",
+];
 
 function checkoutRecoveryFooter(): string {
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
@@ -625,8 +631,9 @@ export async function sendCheckoutRecoveryEmail(to: string, trialDays: number, f
       : `Premium is ${fromLine}.`;
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You started signing up for RiftCompare Premium but didn't finish checkout. ${trialLine} It works out the
-      cheapest way to buy a whole want-list or decklist, postage included.
+      You started signing up for RiftCompare Premium but didn't finish checkout. ${trialLine} Plus and Premium are
+      both ad-free and show every deal; Premium also works out the cheapest way to buy a whole want-list or decklist,
+      postage included. Prefer something lighter? Plus is the cheaper plan, on the same page.
     </td></tr>
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}</ul>
@@ -685,8 +692,14 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
     <tr><td style="padding:14px 32px 22px">
       <div style="border:1px solid #6b5a1f;border-radius:12px;padding:14px 16px;background:#1a1810">
         <div style="font-size:13px;line-height:1.55;color:#d8cfa8">
-          <strong style="color:#f3c969">Want every deal, not just the top three?</strong> Premium shows the full Deal Finder and
-          Rising Cards lists, plus Best Basket, the Value Finder and the Bulk Pricer. ${trialLine}
+          <strong style="color:#f3c969">Want every deal, not just the top three?</strong> Plus and Premium both come with:
+          <ul style="margin:6px 0;padding-left:18px">
+            <li>No ads on any page</li>
+            <li>Every deal: the full Deal Finder and Rising Cards lists</li>
+            <li>An email naming the store when a card you watch hits your target price</li>
+          </ul>
+          Premium adds Best Basket: the cheapest delivered order for your whole deck, watchlist or binder, skipping the
+          cards you already own. ${trialLine}
         </div>
         <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Premium</a>
       </div>
@@ -746,12 +759,13 @@ export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: 
     <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       Hi ${name}, everything in ${opts.planName} is unlocked. ${terms}
     </td></tr>
-    ${step(1, "Every deal, not just three", `The full Deal Finder list: cards selling below what they usually go for. ${link("/tools/deal-finder", "Deal&nbsp;Finder&nbsp;→")}`)}
-    ${step(2, "Watch a card", `Press <em>Watch price</em> on any card and we'll email you when it drops. ${link("/browse", "Find a card&nbsp;→")}`)}
+    ${step(1, "No ads on any page", `Every page is ad-free from now on, on the website and in the app. Nothing to switch on.`)}
+    ${step(2, "Every deal, not just three", `The full Deal Finder list: every card cheaper than TCGplayer market at a real store, which you can narrow to only the cards you watch or own. ${link("/tools/deal-finder?mine=watch", "Deal&nbsp;Finder&nbsp;→")}`)}
+    ${step(3, "Set a target price", `Watch a card and tell us what you'd pay. After every price update we check every tracked store in your country and email you the store when it's there. ${link("/watching", "Your&nbsp;watchlist&nbsp;→")}`)}
     ${
       opts.planName === "Plus"
-        ? step(3, "What's rising", `The full Rising Cards list: the cards our model thinks are about to climb. ${link("/tools/rising", "Rising&nbsp;Cards&nbsp;→")}`)
-        : step(3, "Price a whole list at once", `Paste a decklist or a want list into Best Basket and get the cheapest way to buy all of it. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)
+        ? ""
+        : step(4, "Buy a whole list for less", `Send a decklist, your watchlist or your binder to Best Basket, skip the copies you own, and get the cheapest delivered order. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)
     }
     <tr><td style="padding:10px 32px 22px;font-size:13px;line-height:1.55;color:#8b95a5">
       Manage or cancel any time: ${link("/premium", "your account page")}.
@@ -828,7 +842,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts, fromLine: st
       you're buying more than one card at a time and want the cheapest way to get the lot:
     </td></tr>
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}<li style="margin:4px 0">No ads on any page</li></ul>
+      <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}</ul>
     </td></tr>
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       ${offerBlock}
@@ -873,8 +887,8 @@ export function buildPremiumWinbackEmail(opts: PremiumWinbackEmailOpts): { subje
     </td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You joined RiftCompare recently, so here's a proper look at what Premium adds on top of the free tools you're
-      already using: Value Finder, Bulk Pricer, Best Basket, Demand Finder, the full Deal Finder and Rising Cards
-      lists, and no ads on any page.
+      already using: no ads on any page, the full Deal Finder and Rising Cards lists, target-price alerts that name
+      the store, and Best Basket's cheapest delivered order for a whole deck, watchlist or binder.
     </td></tr>
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <strong style="color:#fff">${opts.days} days, completely free — no card required, nothing to cancel.</strong>

@@ -107,11 +107,8 @@ test("public-api.ts's bulk card summary resolves through historySource", () => {
   assert.match(code, /where:\s*\{\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}/);
 });
 
-test("screener.ts's undervalued baseline resolves through historySource", () => {
-  const code = codeOnly(read("src/lib/screener.ts"));
-  assert.match(code, /import\s*\{[^}]*historySource[^}]*\}\s*from\s*"\.\/price-history"/);
-  assert.match(code, /where:\s*\{\s*country:\s*source,\s*cardId:\s*\{\s*in:\s*ids\s*\}/);
-});
+// screener.ts's undervalued baseline was pinned here until the Value Finder
+// (and screener.ts with it) left the product on 2026-09-25.
 
 test("rise-predictor.ts's GLOBAL scope reads the same shared series as every single-market scope", () => {
   // 2026-09-05: GLOBAL used to read every real per-country row and pick

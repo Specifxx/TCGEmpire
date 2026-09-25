@@ -67,8 +67,10 @@ test("it makes no claim about how the cards play", () => {
   assert.match(article!.body, /What this page deliberately does not do is tell you \*why\* any of these cards is good/);
 });
 
-test("it sends readers to pages that exist: the demand leaderboard and the deck builder", () => {
-  assert.equal(article!.browseCta?.href, "/tools/demand");
+test("it sends readers to pages that exist: the most-searched strip and the deck builder", () => {
+  // The Demand Finder leaderboard until it left Premium (2026-09-25); its free
+  // successor is the "Most searched this week" strip on /movers.
+  assert.equal(article!.browseCta?.href, "/movers#most-searched");
   assert.match(article!.body, /\]\(\/deck\)/, "the deck builder is how a reader prices what they want");
 });
 

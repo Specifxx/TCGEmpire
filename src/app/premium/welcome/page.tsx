@@ -86,7 +86,20 @@ export default async function PremiumWelcomePage({
   // What this tier actually unlocks over a free account — read off the same
   // TIER_COMPARISON rows /premium and the upsell dialog render, so this page
   // can't drift into promising something the table doesn't.
-  const unlocked = TIER_COMPARISON.filter((r) => r[tier] !== r.account).map((r) => r.feature);
+  const unlocked = TIER_COMPARISON.filter((r) => r[tier] !== r.account).map((r) => ({
+    feature: r.feature,
+    // "Full list + only my cards", "Up to 25", "Store-by-store plan" — the
+    // honest size of what unlocked, where a bare feature name would overstate it.
+    detail: typeof r[tier] === "string" ? (r[tier] as string) : null,
+  }));
+  // Where to go first: the 2026-09-25 lineup's tools, and only the ones this
+  // tier opens — a Plus member is never handed a link into a Premium wall.
+  const firstStops: { href: string; label: string }[] = [
+    { href: "/watching", label: "Set a target price" },
+    { href: "/tools/deal-finder?mine=watch", label: "Deal Finder: only my cards" },
+    { href: "/tools/rising", label: "Rising Cards" },
+    ...(tier === "premium" ? [{ href: "/tools/best-basket?source=watchlist", label: "Buy my watchlist for less" }] : []),
+  ];
 
   const done = (
     <div className="card-surface p-6">
@@ -121,19 +134,29 @@ export default async function PremiumWelcomePage({
           <p className="mt-4 text-sm font-semibold text-white">Just unlocked</p>
           <ul className="mt-2 space-y-1.5 text-sm text-slate-300">
             {unlocked.map((f) => (
-              <li key={f} className="flex items-start gap-2">
+              <li key={f.feature} className="flex items-start gap-2">
                 <span aria-hidden className="font-bold text-brand-400">✓</span>
-                <span>{f}</span>
+                <span>
+                  {f.feature}
+                  {f.detail && <span className="text-slate-500"> · {f.detail}</span>}
+                </span>
               </li>
             ))}
           </ul>
         </>
       )}
+      <div className="mt-4 flex flex-wrap gap-2 text-sm">
+        {firstStops.map((s) => (
+          <Link key={s.href} href={s.href} className="btn-ghost text-xs">
+            {s.label} →
+          </Link>
+        ))}
+      </div>
       <div className="mt-5 flex flex-col gap-2">
-        {/* /dashboard, not the /tools SEO hub, where every tool still wears a
-            Premium badge — a new member should land on their own tools. */}
+        {/* /dashboard, not the /tools SEO hub — a new member should land on
+            their own tools, named by the tier they actually bought. */}
         <Link href={back ?? "/dashboard"} className="btn-primary w-full py-3 text-center text-base">
-          {back ? "← Back to what you were doing" : "Open your Premium tools →"}
+          {back ? "← Back to what you were doing" : `Open your ${tierName} tools →`}
         </Link>
         <Link href="/premium" className="btn-ghost w-full text-center text-sm">
           Manage your subscription

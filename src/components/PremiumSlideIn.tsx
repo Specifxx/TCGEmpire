@@ -27,7 +27,7 @@ import { Skeleton } from "./ui/Skeleton";
 
 // A LOW-INTRUSION Premium nudge for LOGGED-IN, NON-PREMIUM users — aimed squarely
 // at the funnel gap behind "most logged-in free users never see a Premium pitch
-// at all". The gated tools (Deal Finder, Value Finder, Bulk Pricer) already sell
+// at all". The gated tools (Deal Finder, Rising Cards, Best Basket) already sell
 // hard with their own blur walls, but most logged-in free users never visit a
 // tool page; they browse prices. This puts one Premium moment in front of that
 // browsing majority, at a natural pause a few pages into a session. The CTA
@@ -94,20 +94,25 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // validated to name a real label from it. Deleting it would silently remove the
 // guard that catches the next tier change, which is the exact failure this list
 // was created to prevent.
+//
+// 2026-09-25 LINEUP: exactly the rows a payment changes — the two full lists,
+// target alerts, Best Basket's plan and Buy this list. Value Finder, Demand
+// Finder and the Bulk Pricer left the product (the ad-free row is still named
+// in prose, not as a chip: it is a site-wide perk, not a tool with a page).
 export const PITCH_TOOLS: { label: string }[] = [
-  { label: "Bulk Pricer" },
-  { label: "Best Basket" },
-  { label: "Value Finder" },
-  { label: "Rising Cards" },
-  { label: "Demand Finder" },
   { label: "Deal Finder" },
+  { label: "Rising Cards" },
+  { label: "Target-price alerts" },
+  { label: "Best Basket" },
+  { label: "Buy this list" },
 ];
 
 // A contextual heading/line, keyed by the CURRENT page, instead of the one
-// generic pitch every route got before. Each entry names the ONE Premium tool
+// generic pitch every route got before. Each entry names the ONE paid feature
 // most relevant to where the visitor already is — a deck page sells Best
-// Basket, a card page sells Value Finder — rather than the flat "unlock N
-// tools" line that's true everywhere and therefore compelling nowhere.
+// Basket, a card page sells a target-price alert on that card — rather than
+// the flat "unlock N tools" line that's true everywhere and therefore
+// compelling nowhere.
 //
 // EVERY HEADING IS ABOUT WHAT THE READER SAVES OR LEARNS BEFORE BUYING
 // (2026-09-14 reframe, see DECISIONS.md). Rising Cards genuinely is a
@@ -125,19 +130,25 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
     prefixes: ["/deck"],
     tool: "Best Basket",
     heading: "Best Basket finds the cheapest way to buy this whole deck",
-    line: "Paste this decklist in and get the store split with the lowest landed cost, postage included.",
+    line: "Send this deck to Best Basket and see its delivered total across your country's stores, free. Premium skips the copies you own and shows which store to buy each card from.",
   },
   {
     prefixes: ["/card/"],
-    tool: "Value Finder",
-    heading: "Value Finder shows which cards are cheap right now",
-    line: "Every card currently priced below its own 30-day average, ranked by discount.",
+    tool: "Target-price alerts",
+    heading: "Target-price alerts email you when this card hits your price",
+    line: "Set the price you'd pay on a card you watch. After every price update we check every tracked store in your country and email you the store and the link. Plus and Premium are ad-free, too.",
+  },
+  {
+    prefixes: ["/watching", "/portfolio"],
+    tool: "Deal Finder",
+    heading: "Deal Finder shows which of your cards are cheap right now",
+    line: "Every card cheaper than TCGplayer market at a real store, narrowed to the cards you watch or own. Plus and Premium are ad-free, too.",
   },
   {
     prefixes: ["/movers", "/market"],
     tool: "Rising Cards",
     heading: "Rising Cards tells you whether to buy it now or leave it",
-    line: "Ranked by demand and price-timing signals, backtested. Your free account shows the top three; Premium shows every pick. Not financial advice.",
+    line: "Ranked by demand and price-timing signals. Your free account shows the top three; Plus shows every pick, and goes ad-free. Not financial advice.",
   },
 ];
 
@@ -342,7 +353,11 @@ export function PremiumSlideIn() {
   const heading =
     personal?.heading ?? contextPitch?.heading ?? (trialEligible ? "Try Premium free" : "Never overpay for a Riftbound card");
   const bodyLine =
-    personal?.line ?? contextPitch?.line ?? "You've been comparing prices — Premium finds the cheapest way to buy the whole list, and goes ad-free:";
+    personal?.line ??
+    contextPitch?.line ??
+    (premiumPlus
+      ? "You've been comparing prices. Plus and Premium are ad-free: Plus shows every deal and emails you when a card you watch hits your price, and Premium buys your whole list for less:"
+      : "You've been comparing prices — Premium shows every deal, buys your whole list for less, and is ad-free:");
   const cta = trialEligible && trialDays > 0 ? `Start ${trialDays}-day free trial →` : "Unlock Premium →";
 
   return (
@@ -438,7 +453,7 @@ export function PremiumSlideIn() {
               the same space — a returning, signed-in visitor should see the
               same quick comparison a brand-new one does, not a lesser pitch.
               This card still carries its own per-route contextual pitch above
-              (a deck page sells Best Basket, a card page sells Value Finder),
+              (a deck page sells Best Basket, a card page sells a target alert),
               pinned by tests/premium-slidein.test.ts — that stays, since it is
               more specific than any table row, and the table is what answers
               the very next question ("okay, but what does Premium get me").

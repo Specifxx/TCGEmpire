@@ -24,11 +24,14 @@ test("Today's Top Deals no longer fetches or renders an Undervalued column", () 
   assert.doesNotMatch(uiCode, /key:\s*"undervalued"/, "the COLUMNS list must not include an undervalued entry");
 });
 
-test("Value Finder (the dedicated tool page) still works — getUndervalued wasn't deleted, just decoupled from the homepage feed", () => {
-  const screenerCode = readCode("src/lib/screener.ts");
-  assert.match(screenerCode, /export async function getUndervalued/, "getUndervalued must still exist for /tools/value-finder");
-  const valueFinderCode = readCode("src/app/tools/value-finder/page.tsx");
-  assert.match(valueFinderCode, /getUndervalued\(/, "the Value Finder page must still call it directly");
+test("the Value Finder left the product with its loader — the homepage feed never took it back", () => {
+  // Until 2026-09-25 this pinned that getUndervalued survived for the Value
+  // Finder page after the homepage stopped calling it. The Value Finder then
+  // left the product (its URL 301s to /movers), and screener.ts with it; the
+  // undervalued column must not come back through the homepage feed either.
+  const cfg = readFileSync(join(process.cwd(), "next.config.js"), "utf8");
+  assert.match(cfg, /source: "\/tools\/value-finder", destination: "\/movers", permanent: true/);
+  assert.doesNotMatch(readCode("src/lib/top-deals.ts"), /from "\.\/screener"/);
 });
 
 test("the deal badge is a plain percentage — no 'was $X' reference price cluttering the row", () => {

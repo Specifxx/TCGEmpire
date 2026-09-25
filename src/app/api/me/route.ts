@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { analyticsUserId } from "@/lib/ga-user-id";
 import { enabledProviders } from "@/lib/oauth";
 import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, premiumPlusEnabled, plusAnnualEnabled, premiumTierOf, PREMIUM_TRIAL_DAYS, introEligibleFor } from "@/lib/premium";
+import { billingStateFor } from "@/lib/billing-state";
 
 // Session endpoint for the client-side chrome (UserMenu, wishlist sync,
 // premium ad-hiding).
@@ -16,6 +17,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const user = await getCurrentUser();
+  // Trial / billing interval of a PAYING viewer's own subscription — one
+  // memoised Stripe read per customer (lib/billing-state.ts); nothing for
+  // anyone else.
+  const billing = await billingStateFor(user, isPremium(user));
   return NextResponse.json(
     {
       user: user
@@ -41,6 +46,11 @@ export async function GET() {
       // Which paid tier ("plus" | "premium"), or null if not entitled at all —
       // for surfaces that need to NAME the tier rather than just gate on it.
       tier: premiumTierOf(user),
+      // Mid-trial, a plan switch isn't offered (the switch routes handle paid
+      // subscriptions only), and an upgrade quote uses the subscriber's own
+      // billing interval — annual subscribers stay annual.
+      trialing: billing.trialing,
+      interval: billing.interval,
       // Premium upsell state for the client (the one-click Premium dialog).
       premiumCheckout: premiumCheckoutEnabled(),
       // Whether the cheaper Plus tier is configured at all (dark until its

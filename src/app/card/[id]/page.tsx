@@ -1266,7 +1266,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           <CardMarketsTable rows={rows} cardName={card.name} />
 
           {/* Conversion island (client → route stays ISR): watch-this-price email
-              capture + a Value Finder teaser for non-members. */}
+              capture + a Deal Finder pointer for non-members. */}
           <div className="mt-6">
             <CardConversionCta cardId={card.id} />
           </div>
@@ -1378,9 +1378,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               </Link>
               <Link href="/tools/best-basket" className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
                 Cheapest multi-card cart →
-              </Link>
-              <Link href="/bulk-pricer" className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
-                Bulk price a list →
               </Link>
               {/* NOT hasSetHub: /sealed?set=<code> is empty for a pre-order set
                   (getSealedGroups leaves pre-orders out), so an unreleased set

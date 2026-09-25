@@ -295,10 +295,12 @@ test("PremiumButton (the gated-tool-wall CTA) still opens the dialog — this in
   // one-click, stay-on-the-page checkout.
   const src = read("src/components/PremiumButton.tsx");
   assert.match(src, /usePremiumDialog/, "PremiumButton must still open the shared dialog");
+  // The Bulk Pricer and Value Finder pages were the other two here until they
+  // left the product on 2026-09-25 (both URLs 301 to free pages now).
   const usages = [
-    "src/app/bulk-pricer/page.tsx",
-    "src/app/tools/value-finder/page.tsx",
+    "src/app/tools/best-basket/page.tsx",
     "src/app/tools/deal-finder/page.tsx",
+    "src/app/tools/rising/page.tsx",
   ];
   for (const f of usages) {
     assert.match(read(f), /<PremiumButton/, `${f} must still use the dialog-opening PremiumButton`);

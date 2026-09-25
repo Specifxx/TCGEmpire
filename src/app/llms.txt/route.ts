@@ -1,5 +1,5 @@
 import { NAV_GROUPS } from "@/components/nav-groups";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, tierMonthlyAmount } from "@/lib/site";
 
 // llms.txt — the AI-agent site map (spec: llmstxt.org). A curated, markdown index
 // of the site's most useful pages so LLMs/agents can navigate without parsing HTML.
@@ -10,17 +10,15 @@ export const revalidate = 86400;
 const DESC: Record<string, string> = {
   "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/US/UK/SG/CA/EU).",
   "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price.",
-  "/movers": "The biggest Riftbound price rises and falls, updated daily.",
+  "/movers": "The biggest Riftbound price rises and falls, week over week.",
   "/market": "The RiftCompare Index — a daily search-weighted market index for Riftbound singles, with key stats.",
   "/stores/tracked": "The stores whose public prices RiftCompare tracks and compares.",
-  "/tools/deal-finder": "Deal Finder: cards underpriced vs TCGplayer's US market price (the default view), cards worth more on eBay than in stores, the cheapest cards to buy on eBay, and cross-region price gaps.",
-  "/tools/value-finder": "Finds undervalued cards trading below their fair market value.",
-  "/tools/rising": "Ranks cards by demand and price-timing signals to surface ones likely to rise soon.",
-  "/tools/demand": "Leaderboard of the most searched and viewed cards, by real traffic — raw demand, not a derived score.",
-  "/tools/best-basket": "Cheapest single-store basket for a list of cards (minimises combined shipping).",
+  "/tools/deal-finder": "Deal Finder: every card cheaper than TCGplayer's US market price at a real store, with a store filter and an eBay-only view. The top 3 with a free account; the full list, filterable to your watchlist or binder, with Plus.",
+  "/tools/rising": "Ranks cards by demand and price-timing signals — whether a card you want is better bought now or later. Not financial advice.",
+  "/tools/best-basket": "Best Basket: the cheapest delivered order for a list of cards across your country's stores, postage and free-shipping thresholds included, beside the best one-store and two-store orders. Your own total with a free account; the store-by-store plan with Premium.",
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
   "/tools/selling-fees": "Net proceeds calculator for selling on TCGplayer or eBay: stacks commission, processing and shipping.",
-  "/deck": "Deck builder — assemble a deck and price it in real time.",
+  "/deck": "Deck builder and list pricer — paste a decklist or any card list and price every card in real time.",
   "/trade": "Trade calculator — value two sides of a card trade fairly.",
   "/riftle": "Riftle — the daily Riftbound card guessing game.",
   "/games": "Free Riftbound mini-games (Riftle, pack sim, price games and more).",
@@ -28,7 +26,7 @@ const DESC: Record<string, string> = {
   "/guides": "Buying guides and strategy articles for Riftbound.",
   "/blog": "News, metagame snapshots and buying guides for Riftbound.",
   "/portfolio": "Track a collection's value over time.",
-  "/premium": "RiftCompare Premium — the Deal Finder / value tools and ad-free browsing.",
+  "/premium": `Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, target-price alerts, and the full Deal Finder and Rising Cards lists. Premium (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus Best Basket's store-by-store plan and Buy this list for a deck, watchlist or binder.`,
   "/sets": "Every Riftbound set with its full card list and live prices.",
   "/champions": "Browse Riftbound cards by League of Legends champion.",
   "/cards": "Card facets — browse by type, rarity and printing (Signature, Overnumbered, Alternate Art, Promo).",

@@ -109,7 +109,7 @@ test("every tier table says Top 3 for the free account", () => {
   const rows = article!.body.split("\n").filter((l) => l.trim().startsWith("| "));
   // No "No account" column (2026-09-22): every row is Feature + 3 tiers.
   assert.ok(!rows[0].includes("No account"), "the No account column must stay gone");
-  for (const r of rows.filter((l) => /^\| (Deal Finder|Rising Cards|Rising Sealed|Ad-free experience) \|/.test(l))) {
+  for (const r of rows.filter((l) => /^\| (Deal Finder|Rising Cards|Ad-free experience) \|/.test(l))) {
     assert.equal(r.split("|").length - 2, 4, `row has the wrong number of cells: ${r}`);
   }
   const cellsFor = (feature: string) => {
@@ -117,16 +117,22 @@ test("every tier table says Top 3 for the free account", () => {
     assert.ok(row, `expected a "${feature}" row`);
     return row!.split("|").slice(2, -1).map((c) => c.trim());
   };
-  assert.deepEqual(cellsFor("Deal Finder"), ["Top 3", "Full list", "Full list"]);
+  // The article's table is rendered FROM TIER_COMPARISON since 2026-09-25, so
+  // these read the same answer the /premium table gives.
+  assert.deepEqual(cellsFor("Deal Finder"), ["Top 3", "Full list + only my cards", "Full list + only my cards"]);
   assert.deepEqual(cellsFor("Rising Cards"), ["Top 3", "Full list", "Full list"]);
-  assert.equal(cellsFor("Rising Sealed")[0], "Top pick", "Rising Sealed keeps its own single free pick");
+  // Rising Sealed (which kept a single free "Top pick") left the product on
+  // 2026-09-25; no table may still carry its row.
+  assert.ok(!rows.some((r) => r.startsWith("| Rising Sealed |")), "the Rising Sealed row must be gone");
+  assert.ok(!TIER_COMPARISON.some((r) => r.feature.startsWith("Rising Sealed")), "…from TIER_COMPARISON too");
   assert.deepEqual(cellsFor("Ad-free experience"), ["—", "✓", "✓"], "ad-free is on both paid tiers (2026-09-25)");
 });
 
 // Promises that were true at some point and are not now: "Premium only" (09-22
 // to 09-23), "the #1 pick" / "top result only" (before 09-22). The article
 // carried the last two for a day after they stopped being true.
-const STALE = /Premium only|#1 pick|top result only|Free shows only the top pick|only the top pick/i;
+// "single best result" (the tools-index FAQ and its FAQPage JSON-LD, until 2026-09-25).
+const STALE = /Premium only|#1 pick|top result only|Free shows only the top pick|only the top pick|single best result/i;
 
 test("nothing still describes the old access for these two tools", () => {
   const premiumPage = read("src/app/premium/page.tsx");
@@ -140,14 +146,15 @@ test("nothing still describes the old access for these two tools", () => {
     assert.match(blockFor(href), /Free accounts see the top three/, `${href}'s /premium pitch names the free top three`);
   }
   const article = getArticles().find((a) => a.slug === "riftcompare-premium-explained")!;
-  for (const section of ["### 2. Rising Cards", "### 3. Deal Finder"]) {
-    const at = article.body.indexOf(section);
+  // Matched by name, not number: the 2026-09-25 rewrite reordered the sections.
+  for (const section of ["Rising Cards", "Deal Finder"]) {
+    const at = article.body.search(new RegExp(`\\n### \\d+\\. ${section}`)) + 1;
     assert.ok(at > 0, `expected the article section ${section}`);
     const body = article.body.slice(at, article.body.indexOf("\n### ", at + 5));
     assert.ok(!STALE.test(body), `${section} still describes old access`);
     assert.match(body, /free account sees the top three/i, `${section} names the free top three`);
   }
-  for (const f of ["src/components/PremiumSlideIn.tsx", DEAL_FINDER, RISING]) {
+  for (const f of ["src/components/PremiumSlideIn.tsx", "src/app/tools/page.tsx", DEAL_FINDER, RISING]) {
     assert.ok(!STALE.test(code(f)), `${f} still describes old access in user-visible text`);
   }
 });

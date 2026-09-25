@@ -293,11 +293,13 @@ test("the /stores pitch page counts real tracked stores (RETAILER_LIST), not eve
 // alternatives, played-alongside, all server-rendered (crawlable).
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the card page links to the deck builder, Best Basket and bulk pricer", () => {
+test("the card page links to the deck builder and Best Basket", () => {
   const src = read("src/app/card/[id]/page.tsx");
   assert.match(src, /href="\/deck"/);
   assert.match(src, /href="\/tools\/best-basket"/);
-  assert.match(src, /href="\/bulk-pricer"/);
+  // The "Bulk price a list" chip went with the Bulk Pricer (2026-09-25): its
+  // list pricing is the deck builder's now, which the first link already offers.
+  assert.doesNotMatch(src, /href="\/bulk-pricer"/);
 });
 
 test("the card page's cheaper-alternatives query is gated on a real priced baseline", () => {

@@ -50,7 +50,6 @@ const L = {
   tools: "/tools",
   trade: "/trade",
   boxEv: "/tools/box-ev",
-  valueFinder: "/tools/value-finder",
   bestBasket: "/tools/best-basket",
   alerts: "/alerts",
   premium: "/premium",

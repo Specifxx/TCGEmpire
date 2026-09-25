@@ -226,7 +226,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Cards ranked by a composite of <strong className="text-slate-200">demand and price-timing signals</strong> — high or
           rising search interest that hasn&apos;t re-rated yet. Real data, transparent scoring, backtested. Not financial advice.{" "}
-          Looking for boxes and packs instead? <Link href="/tools/rising-sealed" className="text-brand-400 hover:underline">See Rising Sealed →</Link>
+          Looking for boxes and packs instead? <Link href="/sealed" className="text-brand-400 hover:underline">See sealed prices →</Link>
         </p>
       </div>
 

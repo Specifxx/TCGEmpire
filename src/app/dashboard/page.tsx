@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { premiumCheckoutEnabled, premiumPlusEnabled, premiumTierOf, getPortfolio } from "@/lib/premium";
+import { premiumCheckoutEnabled, premiumPlusEnabled, premiumAnnualEnabled, premiumTierOf, getPortfolio } from "@/lib/premium";
+import { billingStateFor } from "@/lib/billing-state";
+import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
-import { TIER_NAMES, tierMonthlyAmount, PREMIUM_PRICE_PERIOD, type PremiumTierKey } from "@/lib/site";
+import { TIER_NAMES } from "@/lib/site";
+import { DASHBOARD_TOOLS, dashboardToolOpens } from "@/lib/dashboard-tools";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { NavIcon } from "@/components/NavIcon";
 import { PremiumNavLink } from "@/components/PremiumNavLink";
@@ -20,22 +23,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// `tier` is the MINIMUM tier that can open the tool, and it must match the
-// tool page's own gate exactly — the four `"premium"` entries below are the
-// four pages that call isPremium(user, "premium"). This list is what a Plus
-// member is shown as theirs, so a mismatch either dangles a tool that bounces
-// them to /premium or hides one they've paid for. tests/premium-tiers.test.ts
-// checks the pairing against TIER_COMPARISON.
-const TOOLS: { title: string; desc: string; href: string; tier: PremiumTierKey }[] = [
-  { title: "Bulk Pricer", desc: "Price a whole want-list or trade pile in one paste.", href: "/bulk-pricer", tier: "premium" },
-  { title: "Best Basket", desc: "The cheapest multi-store cart for a whole deck list.", href: "/tools/best-basket", tier: "premium" },
-  { title: "Value Finder", desc: "Cards trading below their recent average — what's going cheap today.", href: "/tools/value-finder", tier: "premium" },
-  { title: "Rising Cards", desc: "Cards ranked by demand + price-timing signals — buy now, or leave it.", href: "/tools/rising", tier: "plus" },
-  { title: "Rising Sealed", desc: "Sealed products ranked by price-timing + supply signals — when to buy.", href: "/tools/rising-sealed", tier: "plus" },
-  { title: "Demand Finder", desc: "The most searched and viewed cards right now, by real traffic.", href: "/tools/demand", tier: "premium" },
-  { title: "Deal Finder", desc: "The cheapest eBay buys, cross-market gaps, and resale spreads. Daily.", href: "/tools/deal-finder", tier: "plus" },
-  { title: "Condition Calculator", desc: "Estimate a card's value swap between NM, LP, MP, HP and DMG.", href: "/tools/condition-calculator", tier: "plus" },
-];
+// The tool list, each tool's minimum tier and its free taste live in
+// lib/dashboard-tools.ts (tests/premium-tiers.test.ts runs them).
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -47,15 +36,22 @@ export default async function DashboardPage() {
   const hasValue = !!portfolio && portfolio.totalCents > 0;
 
   // Free tier included (2026-09-16): a signed-in non-paying visitor gets a
-  // reason to come back too — their real portfolio/watchlist, every tool
-  // shown as locked rather than hidden, and an upgrade path, never a wall.
+  // reason to come back too — their real portfolio/watchlist, the free taste
+  // of every tool as an open link, and an upgrade path, never a wall.
   const tier = premiumTierOf(user);
   const tierName = tier ? TIER_NAMES[tier] : "Free";
   const isPlus = tier === "plus";
   const isFree = tier == null;
-  const myTools = isFree ? [] : TOOLS.filter((t) => t.tier === "plus" || !isPlus);
-  const lockedTools = isFree ? TOOLS : isPlus ? TOOLS.filter((t) => t.tier === "premium") : [];
-  const canUpgrade = isFree ? premiumCheckoutEnabled() : isPlus && premiumPlusEnabled();
+  // A Plus member's upgrade quote: not mid-trial (the upgrade route handles
+  // paid subscriptions only), and at their own interval — an annual member is
+  // billed Premium's yearly price. One memoised Stripe read, Plus only.
+  const billing = isPlus ? await billingStateFor(user, true) : { trialing: false, interval: null };
+  const tools = DASHBOARD_TOOLS.map((t) => ({ ...t, opens: dashboardToolOpens(t.tier, tier) }));
+  // Anything a tier can neither open nor taste would be a lock. None today —
+  // every paid tool has a free taste — but a future entry without one must
+  // still render honestly rather than as an open link into a wall.
+  const lockedTools = tools.filter((t) => !t.opens && !t.freeTaste);
+  const canUpgrade = isFree ? premiumCheckoutEnabled() : isPlus && premiumPlusEnabled() && !billing.trialing;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -64,12 +60,14 @@ export default async function DashboardPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Welcome back, {user.displayName}</h1>
+            {/* Gold marks Premium, so the Free chip never wears it
+                (2026-09-25); Plus names its headline benefit. */}
             <span
               className={`chip text-[10px] font-bold uppercase tracking-wider ${
-                isPlus ? "bg-slate-500/15 text-slate-200" : "bg-gold/15 text-gold"
+                isFree ? "bg-ink-700 text-slate-300" : isPlus ? "bg-slate-500/15 text-slate-200" : "bg-gold/15 text-gold"
               }`}
             >
-              {tierName}
+              {isPlus ? "Plus · ad-free" : tierName}
             </span>
           </div>
           <p className="mt-1 text-sm text-slate-400">
@@ -103,55 +101,69 @@ export default async function DashboardPage() {
         <WatchlistSnapshot />
       </div>
 
-      {/* Tools the member actually has — nothing for a free account. */}
-      {myTools.length > 0 && (
-        <>
-          <h2 className="mb-3 mt-8 text-lg font-extrabold text-white">Your {tierName} tools</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {myTools.map((t) => (
+      {/* Every tool, as an OPEN link wherever this account can use any of it
+          (2026-09-25). A tool the tier opens in full says "Open"; a paid tool
+          with a free taste says exactly what that taste is ("Top 3 free",
+          "See your total free") and names the tier for the rest — never a
+          lock, because the free account really can use it. Only a tool with
+          neither renders as a lock (lockedTools, empty today). */}
+      <div className="mb-3 mt-8 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-lg font-extrabold text-white">{isFree ? "Your tools" : <>Your {tierName} tools</>}</h2>
+        {canUpgrade && (
+          <PremiumNavLink surface="nav:dashboard" href="/premium#top-pricing" className="text-sm font-semibold text-gold hover:underline">
+            {isFree ? "See plans" : `Upgrade to Premium — ${planSwitchPriceLabel("premium", billing.interval, premiumAnnualEnabled())}`} →
+          </PremiumNavLink>
+        )}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {tools
+          .filter((t) => t.opens || t.freeTaste)
+          .map((t) =>
+            t.opens ? (
               <Link
                 key={t.title}
                 href={t.href}
-                className="card-surface group flex flex-col gap-2 border-l-2 border-gold/40 p-4 transition-colors hover:border-gold hover:bg-ink-800"
+                className="card-surface group flex flex-col gap-2 border-l-2 border-brand-500/40 p-4 transition-colors hover:border-brand-400 hover:bg-ink-800"
               >
-                <h3 className="font-bold text-white group-hover:text-gold">{t.title}</h3>
+                <h3 className="font-bold text-white group-hover:text-brand-300">{t.title}</h3>
                 <p className="flex-1 text-sm leading-relaxed text-slate-400">{t.desc}</p>
-                <span className="text-sm font-semibold text-gold">Open →</span>
+                <span className="text-sm font-semibold text-brand-400">Open →</span>
               </Link>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Locked tools, shown rather than hidden: a card that bounces you to an
-          upsell wall is worse than one that says up front it isn't yours yet.
-          Not links — nothing here navigates. A free account sees every tool
-          (Plus AND Premium) locked; a Plus member only sees the Premium ones —
-          each tagged with the tier that actually unlocks it, since a free
-          account's locked set spans both. */}
-      {lockedTools.length > 0 && (
-        <>
-          <div className="mb-3 mt-8 flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-lg font-extrabold text-white">{isFree ? "Member tools" : "Premium tools"}</h2>
-            {canUpgrade && (
-              <PremiumNavLink surface="nav:dashboard" href="/premium#top-pricing" className="text-sm font-semibold text-gold hover:underline">
-                {isFree ? "See plans" : `Upgrade to Premium — ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}`} →
-              </PremiumNavLink>
-            )}
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {lockedTools.map((t) => (
-              <div key={t.title} className="card-surface flex flex-col gap-2 border-l-2 border-ink-700 p-4 opacity-70">
-                <h3 className="font-bold text-slate-300">{t.title}</h3>
-                <p className="flex-1 text-sm leading-relaxed text-slate-500">{t.desc}</p>
-                <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  <NavIcon name="lock" className="h-3.5 w-3.5" />
-                  {TIER_NAMES[t.tier]}
+            ) : (
+              <Link
+                key={t.title}
+                href={t.href}
+                className="card-surface group flex flex-col gap-2 border-l-2 border-ink-700 p-4 transition-colors hover:border-brand-400 hover:bg-ink-800"
+              >
+                <h3 className="font-bold text-white group-hover:text-brand-300">{t.title}</h3>
+                <p className="flex-1 text-sm leading-relaxed text-slate-400">{t.desc}</p>
+                <span className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-brand-400">{t.freeTaste} →</span>
+                  {t.tier !== "free" && (
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      Full {t.tier === "plus" ? "list" : "plan"}: {TIER_NAMES[t.tier]}
+                    </span>
+                  )}
                 </span>
-              </div>
-            ))}
+              </Link>
+            )
+          )}
+        {lockedTools.map((t) => (
+          <div key={t.title} className="card-surface flex flex-col gap-2 border-l-2 border-ink-700 p-4 opacity-70">
+            <h3 className="font-bold text-slate-300">{t.title}</h3>
+            <p className="flex-1 text-sm leading-relaxed text-slate-500">{t.desc}</p>
+            <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <NavIcon name="lock" className="h-3.5 w-3.5" />
+              {t.tier === "free" ? "Free" : TIER_NAMES[t.tier]}
+            </span>
           </div>
-        </>
+        ))}
+      </div>
+      {isPlus && billing.trialing && (
+        <p className="mt-2 text-xs text-slate-500">
+          Plan changes open once your free trial has converted — Premium&apos;s store-by-store plan is one click from{" "}
+          <Link href="/premium" className="text-slate-400 hover:underline">your membership page</Link> then.
+        </p>
       )}
 
       {/* Market & account quick links */}

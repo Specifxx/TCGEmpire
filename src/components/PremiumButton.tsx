@@ -3,6 +3,7 @@
 import { usePremiumDialog } from "./PremiumDialog";
 import { useMe } from "@/lib/use-me";
 import { PREMIUM_PRICE_LABEL, premiumZeroToday, introOfferEnabled, tierIntroMonthlyAmount, tierMonthlyAmount, INTRO_MONTHS, type PremiumTierKey } from "@/lib/site";
+import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
 
 // Opens the site-wide Premium dialog (one click to subscribe / start the trial),
 // so gated features don't have to send the user off to /premium. Defaults to a
@@ -33,11 +34,17 @@ export function PremiumButton({
   tier?: PremiumTierKey;
 }) {
   const { open } = usePremiumDialog();
-  const { premium, tier, trialEligible, trialDays, introEligible, premiumPlus } = useMe();
+  const { premium, tier, trialing, interval, trialEligible, trialDays, introEligible, premiumPlus, premiumAnnual } = useMe();
   // A Plus subscriber hitting a Premium-only gate is already paying — the
   // pitch is an upgrade, not a first subscription, and it names the real
-  // recurring price rather than a trial (they've already had theirs).
+  // recurring price rather than a trial (they've already had theirs). The
+  // price follows their own interval: the upgrade route keeps it, so an
+  // annual Plus member is billed Premium's yearly price.
   const isPlusUpgrade = premium && tier === "plus";
+  // …except mid-trial (2026-09-25): the upgrade route only handles ACTIVE
+  // subscriptions, so the button must not offer one. It still opens the
+  // dialog, which says when a plan change becomes possible.
+  const upgradeLater = isPlusUpgrade && trialing;
   // Quote Plus only when Plus is actually on sale; otherwise checkout sells
   // Premium and the label must say Premium's price.
   const sellTier: PremiumTierKey = gateTier === "plus" && premiumPlus ? "plus" : "premium";
@@ -45,9 +52,16 @@ export function PremiumButton({
   return (
     <button type="button" onClick={() => open(surface, { tier: sellTier })} className={className ?? GOLD}>
       {children ?? (
-        isPlusUpgrade ? (
+        upgradeLater ? (
           <>
-            Upgrade to Premium{PREMIUM_PRICE_LABEL ? <span className="font-semibold opacity-80"> · {PREMIUM_PRICE_LABEL}</span> : null}
+            Premium<span className="font-semibold opacity-80"> · after your trial</span>
+          </>
+        ) : isPlusUpgrade ? (
+          <>
+            Upgrade to Premium
+            {PREMIUM_PRICE_LABEL ? (
+              <span className="font-semibold opacity-80"> · {planSwitchPriceLabel("premium", interval, premiumAnnual)}</span>
+            ) : null}
           </>
         ) : trialEligible && trialDays > 0 ? (
           <>

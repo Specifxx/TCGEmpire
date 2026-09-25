@@ -453,7 +453,7 @@ export function CinematicNavMenu() {
                       shrink-0 CTA a 390px phone left ~185px for a ~230px line,
                       so the pitch read "Unlock the pro tools, g…". */}
                   <span className="mt-0.5 block text-sm font-semibold text-white">
-                    {trialEligible ? "Try Premium free" : "Unlock the pro tools, go ad-free"}
+                    {trialEligible ? "Try Premium free" : "Go ad-free and see every deal"}
                   </span>
                 </span>
                 <span className="shrink-0 text-sm font-bold text-gold">

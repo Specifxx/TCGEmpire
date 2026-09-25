@@ -315,4 +315,7 @@ export function premiumLockInTail(): string {
 // changes again, including a price-only change like this one: without a bump,
 // events from the $14.99 era and the reverted $9.99 era would share one tag
 // and the before/after comparison this constant exists for would be lost.
-export const PREMIUM_COPY_VERSION = "trial3-intro-half-3mo-2026-09-24";
+// lineup-2026-09-25: the new Plus/Premium lineup (Plus = no ads, every deal,
+// target alerts; Premium = Best Basket's plan + Buy this list) and the four
+// retired tools gone from every pitch. Prices, trial and intro unchanged.
+export const PREMIUM_COPY_VERSION = "lineup-2026-09-25";

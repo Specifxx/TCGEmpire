@@ -15,12 +15,29 @@
 // handlers, so it renders inside the server-rendered /premium page AND inside the
 // client-side dialog without forcing either into the other's model.
 //
-// EVERY ROW IS A REAL ENTITLEMENT, checkable against the code:
-//   account gates       lib/premium.ts — hasAccount() / isPremium()
-//   Best Basket         api/basket 403 + tools/best-basket isPremium()
-//   Deal Finder etc.    tools/deal-finder + tools/rising: no query signed
-//                       out, a three-row query for a free account, the full
-//                       list for a paid tier (2026-09-23)
+// EVERY ROW IS A REAL ENTITLEMENT, checkable against the code
+// (tests/premium-tiers.test.ts reads the paid rows against their gates):
+//   account gates        lib/premium.ts — hasAccount() / isPremium()
+//   Deal Finder,         tools/deal-finder + tools/rising: no query signed
+//   Rising Cards         out, a three-row query for a free account, the full
+//                        list for any paid tier (2026-09-23). Deal Finder's
+//                        ?mine=watch|own ("only my cards") is honoured only
+//                        for a paid tier.
+//   Target-price alerts  lib/alert-limits.ts targetAlertLimit(tier) — the
+//                        same constant the route that sets a target enforces
+//   Best Basket,         api/basket: a signed-in account gets its own total;
+//   Buy this list        the store-by-store plan, and sending a deck /
+//                        watchlist / binder in with "skip copies I own", need
+//                        isPremium(user, "premium")
+//   Ad-free              /api/me adFree = isPremium(user) — any paid tier
+//
+// THE 2026-09-25 LINEUP (owner: fewer tools, each one worth paying for). Value
+// Finder, Demand Finder, Rising Sealed and the Condition Impact Calculator
+// left the product, each 301'd to the free page that now carries its useful
+// part (next.config.js), and the Bulk Pricer's paste-a-list pricing folded
+// into the free /deck — so their rows are gone, not ticked for everyone. Plus
+// is "no ads, every deal, and an email naming the store when a card you watch
+// hits your price"; Premium is "buy your whole list for less".
 //
 // NO "NO ACCOUNT" COLUMN (2026-09-22, owner's call). It had four columns doing
 // the work of three: signed-out and free-account differ on exactly two rows
@@ -34,39 +51,47 @@
 // that are neither a flat yes nor a flat no are the honest part of the table and
 // must stay strings rather than being rounded to a tick.
 
+import { PLUS_TARGET_ALERT_LIMIT } from "../lib/alert-limits";
+
 export type TierRow = {
   feature: string;
   account: boolean | string;
-  // Plus (2026-09-11): the cheaper tier. "See everything vs do everything" —
-  // Plus matches Premium on ad-free + the full lists (Deal Finder, Rising
-  // Cards); the four pro tools stay Premium-only. Every row where plus !==
-  // premium is exactly the pitch for upgrading from Plus to Premium.
+  // Plus (2026-09-11): the cheaper tier. Since 2026-09-25 it is "no ads,
+  // every deal, and target alerts"; every row where plus !== premium is
+  // exactly the pitch for upgrading from Plus to Premium (the list tools and
+  // unlimited targets).
   plus: boolean | string;
   premium: boolean | string;
 };
 
 export const TIER_COMPARISON: TierRow[] = [
   { feature: "Compare prices across every store + eBay", account: true, plus: true, premium: true },
-  { feature: "Full card database, search & browse", account: true, plus: true, premium: true },
-  { feature: "Deck builder, trade calculator & box EV", account: true, plus: true, premium: true },
-  { feature: "RiftCompare Index & daily price movers", account: true, plus: true, premium: true },
-  { feature: "Condition Impact Calculator", account: true, plus: true, premium: true },
-  { feature: "Price alerts", account: true, plus: true, premium: true },
-  { feature: "Portfolio tracker — history, P&L, CSV export", account: true, plus: true, premium: true },
+  { feature: "Full card database, charts & search", account: true, plus: true, premium: true },
+  // The Bulk Pricer's paste-a-list pricing lives in the free /deck now.
+  { feature: "Deck & list pricer, trade calculator & box EV", account: true, plus: true, premium: true },
+  // Weekly, not daily: /movers compares weekly history points.
+  { feature: "RiftCompare Index & weekly price movers", account: true, plus: true, premium: true },
+  { feature: "Watchlist & new-low email alerts", account: true, plus: true, premium: true },
+  // The delivered replacement-cost TOTAL is free; the store-by-store plan
+  // behind it is Premium's (the Best Basket row).
+  { feature: "Portfolio — value, P&L, CSV & replacement cost", account: true, plus: true, premium: true },
   // "Top 3" since 2026-09-23: a signed-in free account sees the top three rows
   // of each (queried at that size — see FREE_PREVIEW_ROWS in both pages). They
-  // were a flat "no" from 2026-09-22, and "Top pick" before that. Rising Sealed
-  // is NOT in this pair: it still shows its own top pick, and says so.
-  { feature: "Deal Finder", account: "Top 3", plus: "Full list", premium: "Full list" },
+  // were a flat "no" from 2026-09-22, and "Top pick" before that.
+  { feature: "Deal Finder", account: "Top 3", plus: "Full list + only my cards", premium: "Full list + only my cards" },
   { feature: "Rising Cards", account: "Top 3", plus: "Full list", premium: "Full list" },
-  { feature: "Value Finder screener", account: false, plus: false, premium: true },
-  { feature: "Bulk Pricer — price a whole list at once", account: false, plus: false, premium: true },
-  { feature: "Best Basket — cheapest store split, postage included", account: false, plus: false, premium: true },
-  { feature: "Demand Finder — most searched & viewed cards", account: false, plus: false, premium: true },
+  // Checked after both daily price imports, with no weekly cap. The number
+  // is the enforced one (lib/alert-limits.ts), never typed here.
+  { feature: "Target-price alerts after every price update", account: false, plus: `Up to ${PLUS_TARGET_ALERT_LIMIT}`, premium: "Unlimited" },
+  // Every signed-in account sees its own delivered total, store count and
+  // saving; which store to buy each card from is Premium's, withheld in the
+  // API response rather than merely hidden.
+  { feature: "Best Basket — cheapest delivered order for a list", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
+  { feature: "Buy this list — deck, watchlist or binder, skipping cards you own", account: false, plus: false, premium: true },
   // Ad-free moved Plus → Premium on 2026-09-14 and back to every paid tier on
   // 2026-09-25 (owner's call — DECISIONS.md, "Plus is ad-free again"): with
   // the half-price intro, $2.49/mo Plus is the entry tier, and "no ads" is
-  // the most broadly understood reason to pay anything at all.
+  // the most broadly understood reason to pay anything at all. Kept LAST.
   { feature: "Ad-free experience", account: false, plus: true, premium: true },
 ];
 
@@ -84,32 +109,30 @@ export function TierCell({ v, dialog = false }: { v: boolean | string; dialog?: 
 // The compact dialog is a fast glance, not the full accounting — /premium (the
 // link right below the table) is where the complete, unabridged list lives.
 //
-// Two reasons a row is omitted here, and both are about the popup's job rather
-// than the row being unimportant:
-//   • length — the popup caps its own height and scrolls, so every row costs
-//     something (Ad-free experience);
-//   • no signal — a row that is a tick for every column tells a reader deciding
-//     whether to pay nothing at all. The five here (the Condition Impact
-//     Calculator among them, now free for everyone) are exactly that shape.
-// The rows that survive are the ones that differentiate, plus the handful of
-// flat-tick rows that establish what the free tier already covers.
-// Exported for tests/access-tiers.test.ts only: a typo in either of these sets
-// is a SILENT no-op — the row just keeps rendering — so the only thing that can
-// catch it is an assertion that every entry matches a real TIER_COMPARISON row.
-export const DIALOG_OMIT_FEATURES = new Set([
-  "Ad-free experience",
-  "Condition Impact Calculator",
-  "Deck builder, trade calculator & box EV",
-  "RiftCompare Index & daily price movers",
-  "Price alerts",
-  "Portfolio tracker — history, P&L, CSV export",
-]);
+// A row is omitted here for one reason: NO SIGNAL. A row that is a tick for
+// every column tells a reader deciding whether to pay nothing at all, and the
+// popup caps its own height, so each such row pushes the rows that DO make the
+// case further down. What survives is exactly what a payment changes: the full
+// lists, target alerts, Best Basket's plan, Buy this list — and the ad-free
+// row. That one used to be omitted "for length" (until 2026-09-25), which hid
+// the most broadly understood reason to take Plus on the two surfaces that
+// actually convert (this dialog and the slide-in).
+//
+// DERIVED, not hand-listed: it was a hand-typed Set until 2026-09-25, and a
+// typo or a reworded row made an entry silently match nothing. Exported for
+// tests/access-tiers.test.ts, which still checks both sets against the rows.
+export const DIALOG_OMIT_FEATURES = new Set(
+  TIER_COMPARISON.filter((r) => r.account === true && r.plus === true && r.premium === true).map((r) => r.feature)
+);
 
-// /premium spells these out as "Full list" for the paid columns, which is the
+// /premium spells these out as "Full list …" for the paid columns, which is the
 // spec-sheet answer. The dialog is a conversion surface rather than a spec
 // sheet, so there they collapse to the same tick/✗ vocabulary as every other
-// row. The free column keeps its "Top 3" string on both surfaces (2026-09-23)
-// — it is the honest answer, and a reason to create the account.
+// row (a 64px dialog column can't hold "Full list + only my cards" anyway). The
+// free column keeps its "Top 3" string on both surfaces (2026-09-23) — it is
+// the honest answer, and a reason to create the account. Only rows where BOTH
+// paid columns get the full thing belong here: collapsing Best Basket's would
+// tick "Store-by-store plan" for Plus, which Plus does not get.
 export const DIALOG_BINARY_FEATURES = new Set(["Deal Finder", "Rising Cards"]);
 
 /**
@@ -152,8 +175,10 @@ export function TierComparisonTable({
   const plusWash = tinted ? "bg-slate-500/[0.06]" : "";
   const premiumWash = tinted ? "bg-gold/[0.07]" : "";
   return (
-    // On phones every column fits: a tier cell only ever holds a tick, a dash
-    // or "Full list", so 56px columns at 12px text are enough (2026-09-23).
+    // On phones every column fits: a tier cell holds a tick, a dash or a short
+    // string, so 56px columns at 12px text are enough (2026-09-23); the two
+    // longer ones ("Full list + only my cards", "Store-by-store plan") wrap
+    // inside their cell rather than widening the table.
     // The old 560px floor put the table in a 348px box at 390, with Free
     // account 79% visible and Plus and Premium entirely off-screen behind a
     // sideways scroll (a 22rem floor still clipped Premium at 390 and hid it

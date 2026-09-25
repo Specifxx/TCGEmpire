@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = join(__dirname, "..");
@@ -21,9 +21,10 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // site keeps working and the bill goes up.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// src/lib/screener.ts (the Value Finder's loader) was a reader here until the
+// Value Finder left the product on 2026-09-25 and the file was deleted with it.
 const HISTORY_READERS = [
   "src/lib/price-history.ts",
-  "src/lib/screener.ts",
   "src/lib/market-records.ts",
   "src/lib/premium.ts",
 ];
@@ -68,28 +69,14 @@ test("history caches are not purged by an ordinary price import", () => {
   assert.deepEqual(offenders, [], offenders.join("\n  "));
 });
 
-test("the Value Finder gets daily results without a daily history read", () => {
-  // The one deliberate exception, and the reason it is safe: the expensive
-  // history half is cached separately at the weekly rate, and only the
-  // operational-database half re-runs daily. Merging these back into a single
-  // cache would either stale the Value Finder or restore the daily history read
-  // — this asserts the split still exists.
-  const src = read("src/lib/screener.ts");
-
-  assert.match(src, /rc-undervalued-baseline/, "the history half must have its own cache entry");
-  const baseline = /\[\s*"rc-undervalued-baseline"[\s\S]{0,200}?\)\(\)/.exec(src);
-  assert.ok(baseline, "expected the baseline cache wrapper");
-  assert.match(baseline![0], /sydneyWeekKey\(\)/, "the baseline is history-derived and must be week-scoped");
-  assert.match(baseline![0], /HISTORY_TAG/, "the baseline must not be purged by a price import");
-
-  const daily = /\[\s*"rc-undervalued"[\s\S]{0,200}?\)\(\)/.exec(src);
-  assert.ok(daily, "expected the outer Value Finder cache");
-  assert.match(daily![0], /sydneyDayKey\(\)/, "the Value Finder itself must refresh daily");
-
-  // The only dbHistory read in the file must live inside the weekly baseline.
-  const historyReads = [...src.matchAll(/dbHistory\.\w+\.\w+\(/g)];
-  assert.equal(historyReads.length, 1, "the screener should touch the history database exactly once");
-  const baselineFn = /async function computeBaselines[\s\S]*?\n}/.exec(src);
-  assert.ok(baselineFn, "expected computeBaselines");
-  assert.match(baselineFn![0], /dbHistory\./, "the history read must sit inside the weekly-cached baseline");
+test("the Value Finder's day-keyed history exception left with the Value Finder", () => {
+  // The one deliberate exception above ("rc-undervalued": a daily cache over an
+  // operational read, with its history half cached weekly) lived in
+  // src/lib/screener.ts. The Value Finder left the product on 2026-09-25
+  // (/tools/value-finder 301s to /movers) and screener.ts went with it, so no
+  // file may register those cache keys again without a new reason to.
+  assert.ok(!existsSync(join(ROOT, "src/lib/screener.ts")), "screener.ts was deleted with the Value Finder");
+  for (const file of HISTORY_READERS) {
+    assert.doesNotMatch(read(file), /"rc-undervalued(-baseline)?"/, `${file} re-registers the retired Value Finder cache`);
+  }
 });

@@ -75,7 +75,7 @@ test("it emits a shown / click / dismissed event trio, routed to the right desti
   assert.ok(!ga4Only.includes("premium_slidein_click"), "click is the conversion leg and must reach Vercel too");
 });
 
-test("the pitch chips name real Premium-only tools, and none are missing", async () => {
+test("the pitch chips name every differentiating tier row, and none are missing", async () => {
   // Guards exactly the bug this redesign fixed: a hand-written sentence naming
   // three tools drifted out of date the moment Best Basket moved back to
   // Premium and Demand Finder shipped, and nothing caught it. PITCH_TOOLS is
@@ -89,17 +89,23 @@ test("the pitch chips name real Premium-only tools, and none are missing", async
   assert.ok(labels.length >= 4, "expected a real, non-trivial pitch — not just one or two tools");
 
   const { TIER_COMPARISON } = (await import("../src/components/TierComparisonTable")) as {
-    TIER_COMPARISON: { feature: string; account: boolean | string; premium: boolean | string }[];
+    TIER_COMPARISON: { feature: string; account: boolean | string; plus: boolean | string; premium: boolean | string }[];
   };
-  // Every row where Premium genuinely gives MORE than a free account — a flat
-  // premium-only tool (Bulk Pricer, Best Basket, Value Finder, Demand Finder)
-  // or a "Top pick vs Full list" upgrade (Deal Finder, Rising Cards). "Ad-free
-  // experience" is excluded on purpose: it's a site-wide perk, not a tool with
-  // its own page, and the component already names it in prose ("goes
-  // ad-free") rather than as a chip.
+  // Every DIFFERENTIATING row — one where a paid tier gives more than a free
+  // account. Since the 2026-09-25 lineup that is the two full lists (Deal
+  // Finder, Rising Cards), target-price alerts, Best Basket's store-by-store
+  // plan and Buy this list; the Bulk Pricer, Value Finder and Demand Finder
+  // chips went with those tools. "Ad-free experience" is excluded on purpose:
+  // it's a site-wide perk, not a tool with its own page, and the component
+  // names it in prose ("Plus and Premium are ad-free") rather than as a chip.
   const premiumOnly = TIER_COMPARISON.filter(
-    (r) => r.account !== r.premium && r.feature !== "Ad-free experience"
+    (r) => (r.account !== r.premium || r.account !== r.plus) && r.feature !== "Ad-free experience"
   ).map((r) => r.feature.replace(/\s*—.*$/, "").trim());
+  assert.deepEqual(
+    premiumOnly,
+    ["Deal Finder", "Rising Cards", "Target-price alerts after every price update", "Best Basket", "Buy this list"],
+    "fixture check: the differentiating rows of the 2026-09-25 lineup",
+  );
   for (const feature of premiumOnly) {
     assert.ok(
       labels.some((l) => feature.includes(l) || l.includes(feature)),

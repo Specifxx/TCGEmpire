@@ -50,11 +50,8 @@ const PITCH_SURFACES = [
   "src/components/MoversToolsCta.tsx",
   "src/app/tools/page.tsx",
   "src/app/dashboard/page.tsx",
-  "src/app/tools/value-finder/page.tsx",
   "src/app/tools/deal-finder/page.tsx",
   "src/app/tools/rising/page.tsx",
-  "src/app/tools/rising-sealed/page.tsx",
-  "src/app/tools/demand/page.tsx",
 ];
 
 // lib/email.ts is NOT scanned whole: it holds every transactional email on the
@@ -127,11 +124,11 @@ test("the site states who it is for, and the editorial policy backs it", () => {
 test("the honest tools keep their disclaimers — the reframe must not have quietly upgraded a signal into a promise", () => {
   // The reframe rewrote how these are PITCHED. What each one measures, and how
   // uncertain it is, must still be stated where it is actually used.
+  // Rising Sealed, the Value Finder and the Demand Finder (whose hub intro
+  // carried "deliberately not a price prediction") were pinned here until they
+  // left the product on 2026-09-25.
   for (const [file, needle] of [
     ["src/app/tools/rising/page.tsx", /not financial advice/i],
-    ["src/app/tools/rising-sealed/page.tsx", /not financial advice/i],
-    ["src/app/tools/value-finder/page.tsx", /signal, not advice|not.{0,30}investment advice/i],
-    ["src/lib/content/hub-intros.ts", /deliberately not a price prediction/i],
   ] as const) {
     assert.match(read(file), needle, `${file} must keep its honest-limits disclosure`);
   }

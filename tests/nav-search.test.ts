@@ -28,7 +28,9 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 // Every one of these returned ZERO results before the fix. They are the words a
 // visitor actually types, so a regression here is the bug coming back.
 const MUST_FIND: [query: string, href: string][] = [
-  ["prices", "/bulk-pricer"],
+  // /deck since 2026-09-25: the Bulk Pricer (this row's old answer) folded
+  // into the deck builder's list pricer, labelled "Deck Builder & Pricer".
+  ["prices", "/deck"],
   ["deals", "/tools/deal-finder"],
   ["blog", "/blog"],
   ["alerts", "/alerts"],

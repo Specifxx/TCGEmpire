@@ -7,12 +7,12 @@ import { invalidateMe } from "@/lib/use-me";
 import { ManageSubscriptionButton } from "./ManageSubscriptionButton";
 import {
   TIER_NAMES,
-  tierMonthlyAmount,
   tierAnnualAmount,
   annualSavingPct,
-  PREMIUM_PRICE_PERIOD,
   type PremiumTierKey,
 } from "@/lib/site";
+import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
+import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
 
 // Everything a subscriber can DO to their own plan, in one place on /premium:
 // move up a tier, move down a tier, move to annual billing, or open Stripe's
@@ -32,6 +32,7 @@ export function SubscriptionActions({
   interval,
   plusLive,
   annualAvailable,
+  targetAnnualAvailable = true,
   canManageBilling,
   trialing = false,
   keep = null,
@@ -41,6 +42,10 @@ export function SubscriptionActions({
   interval: "month" | "year" | null;
   plusLive: boolean;
   annualAvailable: boolean;
+  /** The OTHER tier (the one a switch moves to) has its own annual price. The
+   *  switch routes keep the subscriber's interval, falling back to monthly
+   *  when it doesn't — the quoted price must follow the same rule. */
+  targetAnnualAvailable?: boolean;
   canManageBilling: boolean;
   /** In a free trial: the plan-change routes only handle paid subscriptions. */
   trialing?: boolean;
@@ -123,10 +128,11 @@ export function SubscriptionActions({
               disabled={busy !== null}
               className="btn-primary w-full py-2 text-xs"
             >
-              {busy === "upgrade" ? "Upgrading…" : `Upgrade to Premium — ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}`}
+              {busy === "upgrade" ? "Upgrading…" : `Upgrade to Premium — ${planSwitchPriceLabel("premium", interval, targetAnnualAvailable)}`}
             </button>
             <p className="mt-1 text-[11px] text-slate-500">
-              Billed the difference for the rest of this period; the pro tools unlock straight away.
+              Billed the difference for the rest of this period; Best Basket&apos;s store-by-store plan and Buy this list
+              unlock straight away.
             </p>
           </div>
         )}
@@ -155,11 +161,12 @@ export function SubscriptionActions({
               disabled={busy !== null}
               className="btn-ghost w-full py-2 text-xs"
             >
-              {busy === "downgrade" ? "Switching…" : `Switch down to Plus — ${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD}`}
+              {busy === "downgrade" ? "Switching…" : `Switch down to Plus — ${planSwitchPriceLabel("plus", interval, targetAnnualAvailable)}`}
             </button>
             <p className="mt-1 text-[11px] text-slate-500">
-              Takes effect now. The unused part of this period is credited against your next invoice, and the four pro
-              tools lock.
+              Takes effect now. The unused part of this period is credited against your next invoice; Best
+              Basket&apos;s store-by-store plan and Buy this list lock, and target alerts go back to{" "}
+              {PLUS_TARGET_ALERT_LIMIT} cards. Plus stays ad-free.
             </p>
           </div>
         )}

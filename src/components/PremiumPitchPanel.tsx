@@ -97,7 +97,7 @@ export function PremiumPitchPanel({
         {showFeatures && (
           <div className="mt-3">
             <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-              Free vs Premium, at a glance
+              {showPlus ? "Free vs Plus vs Premium" : "Free vs Premium"}, at a glance
             </p>
             {/* Same compact table PremiumDialog and /premium already render —
                 see TierComparisonTable's own header for why this can never be

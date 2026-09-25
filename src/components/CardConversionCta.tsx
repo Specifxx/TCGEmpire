@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { usePremium } from "@/components/PremiumProvider";
+import { useMe } from "@/lib/use-me";
 import { NavIcon } from "@/components/NavIcon";
 
 // Conversion island for the card page (the site's biggest landing surface, which had
 // no price-watch CTA and no Premium mention). Client-side so the route stays ISR.
 //  1. "Watch this price" → opens the email-capture alert modal for this card
 //     (the single highest-intent action for a land-and-leave price checker).
-//  2. A contextual Value Finder teaser, hidden for members (usePremium).
+//  2. A pointer to Deal Finder (every card below TCGplayer market), hidden for
+//     members. It pointed at the Value Finder until that left the product
+//     (2026-09-25); /tools/value-finder now 301s to /movers.
 export function CardConversionCta({ cardId }: { cardId: string }) {
-  const premium = usePremium();
+  // Membership, not ad-free: useMe().premium, not usePremium().
+  const { premium } = useMe();
   const [watching, setWatching] = useState(false);
 
   function watch() {
@@ -45,8 +48,8 @@ export function CardConversionCta({ cardId }: { cardId: string }) {
           {watching ? "✓ Watching" : "Email me when it drops"}
         </button>
         {!premium && (
-          <Link href="/tools/value-finder" className="btn-ghost text-sm">
-            Find undervalued cards →
+          <Link href="/tools/deal-finder" className="btn-ghost text-sm">
+            See every card below TCGplayer market →
           </Link>
         )}
       </div>
