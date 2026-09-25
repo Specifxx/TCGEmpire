@@ -318,4 +318,7 @@ export function premiumLockInTail(): string {
 // lineup-2026-09-25: the new Plus/Premium lineup (Plus = no ads, every deal,
 // target alerts; Premium = Best Basket's plan + Buy this list) and the four
 // retired tools gone from every pitch. Prices, trial and intro unchanged.
-export const PREMIUM_COPY_VERSION = "lineup-2026-09-25";
+// lineup-2026-09-25b: the same day, Demand Finder back as a Premium tool on
+// every tier surface (table row, pricing cards, /premium, dialog, emails), to
+// widen the Plus→Premium gap. Prices, trial and intro unchanged.
+export const PREMIUM_COPY_VERSION = "lineup-2026-09-25b";

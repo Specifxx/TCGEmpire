@@ -5,7 +5,8 @@ import { SITE_URL } from "@/lib/site";
 
 // The badge on the two "full list" tools (Deal Finder, Rising Cards) — Plus
 // once it's configured; dark (Plus unconfigured), they read exactly as they
-// did before the split. Best Basket's per-store plan is always Premium.
+// did before the split. Best Basket's per-store plan and Demand Finder are
+// always Premium.
 const LIST_BADGE = premiumPlusEnabled() ? "Plus" : "Premium";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
@@ -17,7 +18,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Free Riftbound TCG Tools & Calculators | RiftCompare" },
   description:
-    "Every RiftCompare tool in one place: box EV, deck and list pricing and trade calculators free for everyone, plus Deal Finder, Rising Cards and Best Basket for buying a whole list for less.",
+    "Every RiftCompare tool in one place: box EV, deck and list pricing and trade calculators free for everyone, plus Deal Finder, Rising Cards, Best Basket for buying a whole list for less, and Demand Finder for what players are searching for.",
   alternates: pageAlternates("/tools"),
   keywords: [
     "riftbound tools",
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
   ],
   openGraph: pageOpenGraph({
     title: "Free Riftbound TCG Tools & Calculators",
-    description: "Box EV, deck and list pricing and trade calculators free for everyone, plus Deal Finder, Rising Cards and Best Basket.",
+    description: "Box EV, deck and list pricing and trade calculators free for everyone, plus Deal Finder, Rising Cards, Best Basket and Demand Finder.",
     url: "/tools",
   }),
 };
@@ -47,7 +48,7 @@ const FAQS = [
     // "their single best result free", which stopped being true on 09-22: a
     // signed-out visitor sees nothing, a free account the top 3. Emitted as
     // FAQPage JSON-LD too, so a wrong answer here is a wrong rich result.
-    a: `Most of them. The box EV calculator, deck builder and list pricer, trade calculator and sealed prices need no account at all. Deal Finder and Rising Cards show nothing when you're signed out, the top 3 with a free account, and every row with ${LIST_BADGE}, which is also ad-free. Best Basket shows your own list's delivered total with a free account; the store-by-store plan is part of Premium.`,
+    a: `Most of them. The box EV calculator, deck builder and list pricer, trade calculator and sealed prices need no account at all. Deal Finder and Rising Cards show nothing when you're signed out, the top 3 with a free account, and every row with ${LIST_BADGE}, which is also ad-free. Best Basket shows your own list's delivered total with a free account; the store-by-store plan is part of Premium. Demand Finder shows everyone the top 10 most searched cards of the week; its full most-searched and most-viewed lists are part of Premium.`,
   },
   {
     q: "What does the Deal Finder do?",
@@ -57,8 +58,8 @@ const FAQS = [
     q: "Do I need an account to use RiftCompare tools?",
     a:
       LIST_BADGE === "Plus"
-        ? "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist with weekly new-low alerts, portfolio tracking, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds every row of both lists, target-price alerts and an ad-free site; Premium adds Best Basket's store-by-store plan and Buy this list."
-        : "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist with weekly new-low alerts, portfolio tracking, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Premium adds every row of both lists, target-price alerts, an ad-free site, Best Basket's store-by-store plan and Buy this list.",
+        ? "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist with weekly new-low alerts, portfolio tracking, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds every row of both lists, target-price alerts and an ad-free site; Premium adds Best Basket's store-by-store plan, Buy this list and the full Demand Finder."
+        : "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist with weekly new-low alerts, portfolio tracking, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Premium adds every row of both lists, target-price alerts, an ad-free site, Best Basket's store-by-store plan, Buy this list and the full Demand Finder.",
   },
   {
     q: "Which Riftbound tool should I use to buy a whole decklist?",
@@ -83,10 +84,12 @@ interface ToolGroup {
 
 const GROUPS: ToolGroup[] = [
   {
-    // THE 2026-09-25 LINEUP. Value Finder, Demand Finder, Rising Sealed, the
-    // Condition Calculator and the Bulk Pricer left the product and 301 to the
-    // free pages that carry their useful part (next.config.js), so they are
-    // not listed; the Bulk Pricer's list pricing is the deck builder's now.
+    // THE 2026-09-25 LINEUP. Value Finder, Rising Sealed, the Condition
+    // Calculator and the Bulk Pricer left the product and 301 to the free
+    // pages that carry their useful part (next.config.js), so they are not
+    // listed; the Bulk Pricer's list pricing is the deck builder's now.
+    // Demand Finder left too and came back the same day as a Premium tool
+    // (DECISIONS.md, "Demand Finder returns as a Premium tool").
     label: "Buying & value",
     tools: [
       {
@@ -105,6 +108,12 @@ const GROUPS: ToolGroup[] = [
         href: "/tools/best-basket",
         title: "Best Basket",
         desc: "Buying a whole list? The cheapest delivered order across your country's stores, postage included — see your total free with an account.",
+        badge: "Premium",
+      },
+      {
+        href: "/tools/demand",
+        title: "Demand Finder",
+        desc: "The cards players are searching for and opening most, over 7 or 30 days. The top 10 most searched this week are free.",
         badge: "Premium",
       },
     ],

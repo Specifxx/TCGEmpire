@@ -200,11 +200,14 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       "Target-price alerts after every price update",
       "Best Basket — cheapest delivered order for a list",
       "Buy this list — deck or watchlist, skipping cards you own",
+      // Premium again from later on 2026-09-25, with the Premium rows and
+      // before Ad-free (DECISIONS.md, "Demand Finder returns as a Premium tool").
+      "Demand Finder — most searched & viewed cards",
       "Ad-free experience",
     ],
   );
   // The retired tools are gone rather than ticked for everyone.
-  for (const gone of [/Value Finder/, /Bulk Pricer/, /Demand Finder/, /Rising Sealed/, /Condition/]) {
+  for (const gone of [/Value Finder/, /Bulk Pricer/, /Rising Sealed/, /Condition/]) {
     assert.ok(!TIER_COMPARISON.some((r) => gone.test(r.feature)), `${gone} must not be a TIER_COMPARISON row`);
   }
   // No paid tier ever gets LESS than a free account, and Premium never less than Plus.
@@ -260,6 +263,14 @@ test("TIER_COMPARISON's paid columns agree with the real gates", () => {
   assert.match(route, /if \(!full\) \{\s*const preview = basketPreview\(/, "…and everyone else gets the preview");
   assert.doesNotMatch(read("src/lib/basket-request.ts"), /isPremium|premiumTierOf|user/, "what may be sent never depends on the tier");
 
+  // Demand Finder: the premium minimum on the page; below it, the free
+  // /movers strip's top 10 (lib/demand-view.ts), for Plus too.
+  const demand = row("Demand Finder — most searched & viewed cards");
+  assert.equal(demand.account, "Top 10 searched");
+  assert.equal(demand.plus, demand.account, "Plus sees exactly the free top 10");
+  assert.equal(demand.premium, true);
+  assert.match(read("src/app/tools/demand/page.tsx"), /const premium = isPremium\(user, "premium"\);/);
+
   // Ad-free: every paid tier, exactly what /api/me publishes.
   assert.deepEqual(
     [row("Ad-free experience").account, row("Ad-free experience").plus, row("Ad-free experience").premium],
@@ -273,7 +284,6 @@ test("the retired tools' URLs redirect permanently to the free page carrying the
   for (const [source, destination] of [
     ["/tools/condition-calculator", "/guides/riftbound-card-condition-guide"],
     ["/tools/value-finder", "/movers"],
-    ["/tools/demand", "/movers#most-searched"],
     ["/tools/rising-sealed", "/sealed"],
     ["/bulk-pricer", "/deck"],
   ]) {
@@ -282,6 +292,8 @@ test("the retired tools' URLs redirect permanently to the free page carrying the
       `${source} must 301 to ${destination}`,
     );
   }
+  // Demand Finder's 301 lasted a day: it is a Premium page again.
+  assert.ok(!cfg.includes(`source: "/tools/demand"`), "/tools/demand must not redirect");
 });
 
 test("a plan switch quotes the price the route will charge, in the subscriber's own interval", () => {
@@ -462,13 +474,14 @@ test("the dashboard's tool list tags each tool with the tier that opens it in fu
   // Every tag must match the tool's real gate — otherwise the dashboard either
   // dangles a tool that bounces a member to /premium, or hides one they've
   // paid for. The same invariant TIER_COMPARISON carries, read from the other
-  // end. 2026-09-25 lineup: the Bulk Pricer, Value Finder, Rising Sealed,
-  // Demand Finder and Condition Calculator entries are gone.
+  // end. 2026-09-25 lineup: the Bulk Pricer, Value Finder, Rising Sealed and
+  // Condition Calculator entries are gone; Demand Finder is back, Premium.
   const byTitle = Object.fromEntries(DASHBOARD_TOOLS.map((t) => [t.title, t]));
-  assert.deepEqual(Object.keys(byTitle), ["Deal Finder", "Rising Cards", "Best Basket", "Watchlist & target alerts", "Portfolio"]);
+  assert.deepEqual(Object.keys(byTitle), ["Deal Finder", "Rising Cards", "Best Basket", "Demand Finder", "Watchlist & target alerts", "Portfolio"]);
   assert.equal(byTitle["Deal Finder"].tier, "plus");
   assert.equal(byTitle["Rising Cards"].tier, "plus");
   assert.equal(byTitle["Best Basket"].tier, "premium");
+  assert.equal(byTitle["Demand Finder"].tier, "premium");
   assert.equal(byTitle["Watchlist & target alerts"].tier, "free");
   assert.equal(byTitle["Portfolio"].tier, "free");
 
@@ -479,12 +492,14 @@ test("the dashboard's tool list tags each tool with the tier that opens it in fu
   assert.equal(byTitle["Rising Cards"].freeTaste, "Top 3 free");
   assert.equal(cell("Best Basket — cheapest delivered order for a list"), "Your total");
   assert.equal(byTitle["Best Basket"].freeTaste, "See your total free");
+  assert.equal(cell("Demand Finder — most searched & viewed cards"), "Top 10 searched");
+  assert.equal(byTitle["Demand Finder"].freeTaste, "Top 10 free");
 
   // Who opens what, in full.
   for (const [viewer, opens] of [
     [null, ["Watchlist & target alerts", "Portfolio"]],
     ["plus", ["Deal Finder", "Rising Cards", "Watchlist & target alerts", "Portfolio"]],
-    ["premium", ["Deal Finder", "Rising Cards", "Best Basket", "Watchlist & target alerts", "Portfolio"]],
+    ["premium", ["Deal Finder", "Rising Cards", "Best Basket", "Demand Finder", "Watchlist & target alerts", "Portfolio"]],
   ] as const) {
     assert.deepEqual(
       DASHBOARD_TOOLS.filter((t) => dashboardToolOpens(t.tier, viewer)).map((t) => t.title),

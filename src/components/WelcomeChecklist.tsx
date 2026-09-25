@@ -84,8 +84,8 @@ export function WelcomeChecklist() {
         {trialOffer ? `Try Premium free for ${trialDays} days` : "See what Premium adds"}
       </p>
       <p className="text-xs text-slate-500">
-        Every deal in Deal Finder and every Rising Cards pick, not just the top three — plus Best Basket and the pro
-        tools.{trialOffer ? " Cancel before the trial ends and you pay nothing." : ""}
+        Every deal in Deal Finder and every Rising Cards pick, not just the top three — plus Best Basket and Demand
+        Finder.{trialOffer ? " Cancel before the trial ends and you pay nothing." : ""}
       </p>
       <div className="mt-2">
         <PremiumButton surface="checklist" />

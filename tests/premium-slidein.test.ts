@@ -94,8 +94,8 @@ test("the pitch chips name every differentiating tier row, and none are missing"
   // Every DIFFERENTIATING row — one where a paid tier gives more than a free
   // account. Since the 2026-09-25 lineup that is the two full lists (Deal
   // Finder, Rising Cards), target-price alerts, Best Basket's store-by-store
-  // plan and Buy this list; the Bulk Pricer, Value Finder and Demand Finder
-  // chips went with those tools. "Ad-free experience" is excluded on purpose:
+  // plan and Buy this list — and Demand Finder, Premium again later that day;
+  // the Bulk Pricer and Value Finder chips went with those tools. "Ad-free experience" is excluded on purpose:
   // it's a site-wide perk, not a tool with its own page, and the component
   // names it in prose ("Plus and Premium are ad-free") rather than as a chip.
   const premiumOnly = TIER_COMPARISON.filter(
@@ -103,7 +103,7 @@ test("the pitch chips name every differentiating tier row, and none are missing"
   ).map((r) => r.feature.replace(/\s*—.*$/, "").trim());
   assert.deepEqual(
     premiumOnly,
-    ["Deal Finder", "Rising Cards", "Target-price alerts after every price update", "Best Basket", "Buy this list"],
+    ["Deal Finder", "Rising Cards", "Target-price alerts after every price update", "Best Basket", "Buy this list", "Demand Finder"],
     "fixture check: the differentiating rows of the 2026-09-25 lineup",
   );
   for (const feature of premiumOnly) {

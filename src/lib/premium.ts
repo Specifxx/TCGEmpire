@@ -76,9 +76,9 @@ export function premiumCheckoutEnabled(): boolean {
 
 // ── Plus: the second, cheaper paid tier (2026-09-11) ────────────────────────
 // Same "inert until the price id is set" pattern as the annual price below.
-// Plus is ad-free plus the full lists (Deal Finder, Rising Cards, Rising
-// Sealed); Premium is Plus plus the four pro tools (Value Finder, Bulk Pricer,
-// Best Basket, Demand Finder). See the access-tier note further down.
+// Plus is ad-free plus the full lists (Deal Finder, Rising Cards) and target
+// alerts; Premium is Plus plus Best Basket's store-by-store plan and Demand
+// Finder (the 2026-09-25 lineup). See the access-tier note further down.
 export type PremiumTier = "plus" | "premium";
 const TIER_RANK: Record<PremiumTier, number> = { plus: 1, premium: 2 };
 export function normalizeTier(v: unknown): PremiumTier {
@@ -602,8 +602,8 @@ export const PORTFOLIO_FREE = true;
 //      plus no ads and the LISTS THEMSELVES: every row of Deal Finder, Rising
 //      Cards and Rising Sealed (which still shows everyone its top pick).
 //   4. PREMIUM (paid, `isPremium(user, "premium")`) — everything in Plus, plus
-//      the four pro tools: Value Finder, Bulk Pricer, Best Basket, Demand
-//      Finder.
+//      Best Basket's store-by-store plan and Demand Finder (2026-09-25; Value
+//      Finder and the Bulk Pricer left the product that day).
 //
 // `isPremium`'s `min` argument is the only thing that changed on any existing
 // gate: a plain `isPremium(user)` still means "any paid tier", exactly as it

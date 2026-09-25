@@ -68,8 +68,9 @@ test("it makes no claim about how the cards play", () => {
 });
 
 test("it sends readers to pages that exist: the most-searched strip and the deck builder", () => {
-  // The Demand Finder leaderboard until it left Premium (2026-09-25); its free
-  // successor is the "Most searched this week" strip on /movers.
+  // The Demand Finder leaderboard until it left Premium (2026-09-25). It came
+  // back the same day as a Premium tool; a free article still sends readers to
+  // the free "Most searched this week" strip on /movers, which links onward.
   assert.equal(article!.browseCta?.href, "/movers#most-searched");
   assert.match(article!.body, /\]\(\/deck\)/, "the deck builder is how a reader prices what they want");
 });

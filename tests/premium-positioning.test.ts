@@ -152,10 +152,11 @@ test("the funnel events carry a copy version that post-dates the reframe", () =>
   // and pinning one value here just means the next legitimate bump fails CI.
   // What must hold: it is not a pre-reframe value, and it is dated, so GA4 can
   // order the eras it labels.
-  for (const stale of ["tiers-2026-09-11", "edge-graphic-2026-09-10", "zero-today-2026-09-09"]) {
+  for (const stale of ["tiers-2026-09-11", "edge-graphic-2026-09-10", "zero-today-2026-09-09", "lineup-2026-09-25"]) {
     assert.notEqual(PREMIUM_COPY_VERSION, stale, "bump the copy version with the framing change");
   }
-  assert.match(PREMIUM_COPY_VERSION, /-20\d{2}-\d{2}-\d{2}$/, "the tag should end in the date of the framing it labels");
+  // An optional letter orders two framings on one day ("lineup-2026-09-25b").
+  assert.match(PREMIUM_COPY_VERSION, /-20\d{2}-\d{2}-\d{2}[a-z]?$/, "the tag should end in the date of the framing it labels");
 });
 
 test("the reframe did not smuggle in scarcity or invented numbers", () => {

@@ -15,7 +15,11 @@ const code = (src: string) =>
     .replace(/^\s*\/\/.*$/gm, "");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// THE 2026-09-25 PREMIUM LINEUP: FIVE TOOLS LEFT THE PRODUCT.
+// THE 2026-09-25 PREMIUM LINEUP: FOUR TOOLS LEFT THE PRODUCT.
+//
+// (Five that morning; Demand Finder came back the same day as a Premium tool —
+// DECISIONS.md, "Demand Finder returns as a Premium tool" — and is pinned in
+// tests/demand-finder.test.ts instead.)
 //
 // Owner: fewer tools, each one worth paying for. Each retired URL 301s to the
 // free page that now carries its useful part (next.config.js), so nothing
@@ -33,7 +37,6 @@ const RETIRED: { path: string; to: string; files: string[] }[] = [
     files: ["src/app/tools/condition-calculator/page.tsx", "src/components/ConditionCalculator.tsx"],
   },
   { path: "/tools/value-finder", to: "/movers", files: ["src/app/tools/value-finder/page.tsx", "src/lib/screener.ts"] },
-  { path: "/tools/demand", to: "/movers#most-searched", files: ["src/app/tools/demand/page.tsx"] },
   {
     path: "/tools/rising-sealed",
     to: "/sealed",
@@ -51,8 +54,10 @@ test("each retired tool's page (and any loader only it used) is deleted, and its
       `${r.path} must 301 to ${r.to}`,
     );
   }
-  // lib/demand.ts stays on purpose: /admin/demand and the free /movers strip read it.
+  // lib/demand.ts stays on purpose: the free /movers strip and Demand Finder read it.
   assert.ok(existsSync(join(ROOT, "src/lib/demand.ts")), "lib/demand.ts is still used — keep it");
+  // Demand Finder is back, so its redirect must not shadow the page.
+  assert.ok(!cfg.includes(`source: "/tools/demand"`), "/tools/demand is a live page again");
 });
 
 test("the condition calculator's redirect lands on a real guide", () => {
@@ -93,7 +98,7 @@ test("nothing on the site still links to a retired tool", () => {
 });
 
 test("no nav entry, tier row or pitch chip names a retired tool", () => {
-  const retiredNames = /Value Finder|Demand Finder|Rising Sealed|Bulk Pricer|Condition (Impact )?Calculator/i;
+  const retiredNames = /Value Finder|Rising Sealed|Bulk Pricer|Condition (Impact )?Calculator/i;
   for (const l of NAV_GROUPS.flatMap((g) => g.links)) {
     assert.ok(!RETIRED.some((r) => l.href === r.path), `nav still links ${l.href}`);
     assert.doesNotMatch(l.label, retiredNames, `nav label "${l.label}"`);
@@ -110,7 +115,7 @@ test("the tools index lists only the kept tools, with the badges their gates ear
   const src = read("src/app/tools/page.tsx");
   const groups = src.slice(src.indexOf("const GROUPS"), src.indexOf("export default function"));
   const hrefs = [...groups.matchAll(/href: "([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(hrefs, ["/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/box-ev", "/sealed", "/deck", "/trade", "/tools/selling-fees"]);
+  assert.deepEqual(hrefs, ["/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand", "/tools/box-ev", "/sealed", "/deck", "/trade", "/tools/selling-fees"]);
   const badgeFor = (href: string) => {
     const at = groups.indexOf(`href: "${href}"`);
     return /badge: ([^,\n]+),/.exec(groups.slice(at, groups.indexOf("}", at)))?.[1];
@@ -118,15 +123,17 @@ test("the tools index lists only the kept tools, with the badges their gates ear
   assert.equal(badgeFor("/tools/deal-finder"), "LIST_BADGE");
   assert.equal(badgeFor("/tools/rising"), "LIST_BADGE");
   assert.equal(badgeFor("/tools/best-basket"), '"Premium"');
+  assert.equal(badgeFor("/tools/demand"), '"Premium"', "Demand Finder is Premium-only, never the list badge");
   assert.match(src, /const LIST_BADGE = premiumPlusEnabled\(\) \? "Plus" : "Premium";/);
 
   // The FAQ (also the FAQPage JSON-LD) states the real access at every level —
   // it promised "their single best result free" for a day after that stopped
   // being true.
   const faq = code(src).slice(code(src).indexOf("const FAQS"), code(src).indexOf("interface Tool"));
-  assert.doesNotMatch(faq, /single best result|top pick|value finder|bulk pricer|demand finder|rising sealed/i);
+  assert.doesNotMatch(faq, /single best result|top pick|value finder|bulk pricer|rising sealed/i);
   assert.match(faq, /show nothing when you're signed out, the top 3 with a free account, and every row with \$\{LIST_BADGE\}, which is also ad-free/);
   assert.match(faq, /Best Basket shows your own list's delivered total with a free account; the store-by-store plan is part of Premium/);
+  assert.match(faq, /Demand Finder shows everyone the top 10 most searched cards of the week; its full most-searched and most-viewed lists are part of Premium/);
 });
 
 test("hub intros: no retired tool keeps an intro, and none carries banned or stale claims", () => {

@@ -5,8 +5,8 @@ import { join, relative } from "node:path";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /movers, 2026-09-25: honest about its cadence and its price, the whole
-// computed list, and a free "Most searched this week" strip (#most-searched —
-// where the retired Premium Demand Finder's URL now redirects).
+// computed list, and a free "Most searched this week" strip (#most-searched),
+// the free top 10 of the Premium Demand Finder it links to.
 //
 // The strip reads lib/demand.ts's self-cached getTopDemand. The egress rules
 // that matter (src/lib/db.ts): call it at the page's top level, never from
@@ -40,7 +40,7 @@ test("the strip is the #most-searched target, and the id carries the header offs
 test("the strip's loader is called at the page's top level, never inside another cache", () => {
   const page = code(read(PAGE));
   assert.match(page, /await Promise\.all\(\[getPriceMovers\(country, 50\), getTopDemand\(7, MOST_SEARCHED_ROWS\)\]\)/);
-  assert.match(page, /const MOST_SEARCHED_ROWS = 10;/, "a top-10 strip");
+  assert.match(page, /const MOST_SEARCHED_ROWS = FREE_DEMAND_ROWS;/, "the strip's size is the free Demand Finder's");
   assert.doesNotMatch(page, /unstable_cache|cachedOrDirect|from "next\/cache"/, "the page wraps nothing in a cache of its own");
   // And nothing anywhere wraps getTopDemand.
   const wrap = /(?:unstable_cache|cachedOrDirect)\(\s*(?:async\s*)?\(\)\s*=>\s*(?:await\s+)?getTopDemand\(/;
@@ -58,7 +58,7 @@ test("the strip's loader is called at the page's top level, never inside another
 test("the page keeps its revalidate, and the strip's cache cannot undercut it", () => {
   const page = read(PAGE);
   assert.match(page, /export const revalidate = 86400;/, "never lower a page's revalidate");
-  const ttl = Number(/\["rc-demand-v2"[\s\S]{0,80}revalidate:\s*(\d+)/.exec(read(DEMAND))?.[1]);
+  const ttl = Number(/\["rc-demand-v3"[\s\S]{0,80}revalidate:\s*(\d+)/.exec(read(DEMAND))?.[1]);
   assert.ok(ttl >= 86400, `getTopDemand's TTL (${ttl}) must not be shorter than the page's 86400`);
 });
 
@@ -68,7 +68,7 @@ test("the demand ranking is narrow and computed once for every market", () => {
   const select = /export const DEMAND_CARD_SELECT = \{[\s\S]*?\} satisfies Prisma\.CardSelect;/.exec(demand)?.[0] ?? "";
   assert.ok(select, "expected DEMAND_CARD_SELECT");
   assert.doesNotMatch(select, /_count|retailerPrices/, "no relation counts in the narrow select");
-  assert.match(demand, /\["rc-demand-v2", String\(days\), sydneyDayKey\(\)\]/, "the key carries no market");
+  assert.match(demand, /\["rc-demand-v3", String\(days\), sydneyDayKey\(\)\]/, "the key carries no market");
   // "Most searched" never lists a card nobody searched for.
   assert.match(demand, /win\.rows\.filter\(\(r\) => r\.searches > 0\)/);
 });
@@ -77,14 +77,14 @@ test("the demand ranking is narrow and computed once for every market", () => {
 // an ISR render like any other, so the strip stays hidden until the next
 // /movers regeneration (the import's revalidatePath, ~12 h, or the 24 h TTL) —
 // accepted rather than shortening the page's TTL or throwing (a throw after a
-// tag purge has no stale page to fall back on and would 500). The anchor the
-// /tools/demand redirect lands on is always there.
+// tag purge has no stale page to fall back on and would 500). The anchor old
+// links to #most-searched land on is always there.
 test("a failed demand read is never cached in the data cache, and the page keeps its anchor", () => {
   const demand = code(read(DEMAND));
   const compute = demand.slice(demand.indexOf("async function computeTopDemand"), demand.indexOf("function getTopDemandCached"));
   assert.match(compute, /catch \(err\) \{[\s\S]{0,160}throw err;/, "the cached callback rethrows");
   const outer = demand.slice(demand.indexOf("export async function getTopDemand"));
-  assert.match(outer, /catch \{[\s\S]{0,200}bySearch: \[\], windowUsable: false[^}]*failed: true/, "…and the caller degrades outside the cache");
+  assert.match(outer, /catch \{[\s\S]{0,200}bySearch: \[\], byView: \[\], windowUsable: false[^}]*failed: true/, "…and the caller degrades outside the cache");
   const strip = code(read("src/components/MostSearchedStrip.tsx"));
   const empty = strip.slice(strip.indexOf("if (!rows.length)"), strip.indexOf("const days"));
   assert.match(empty, /id="most-searched"/, "the #most-searched anchor renders with no rows too");

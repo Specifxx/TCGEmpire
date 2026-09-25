@@ -32,10 +32,13 @@ const CONTEXT_LINES: Record<string, string> = {
   "/tools/rising": "Create a free account to see the top 3 rising cards and why each one ranks.",
   // Best Basket (2026-09-25 lineup): a free account sees its OWN list's
   // delivered total; which store to buy each card from is Premium's. The line
-  // says exactly that and no more. Value Finder, Demand Finder, Rising Sealed
-  // and the Bulk Pricer had lines here until they left the product — their
-  // URLs 301 to free pages now (next.config.js), so no ?next= can carry them.
+  // says exactly that and no more. Value Finder, Rising Sealed and the Bulk
+  // Pricer had lines here until they left the product — their URLs 301 to
+  // free pages now (next.config.js), so no ?next= can carry them.
   "/tools/best-basket": "Create a free account to see what your list costs delivered. Premium shows which store to buy each card from.",
+  // Demand Finder (Premium again, 2026-09-25): the top 10 most searched are
+  // free to everyone, signed in or not, so the line promises nothing more.
+  "/tools/demand": "Sign in to open Demand Finder. The top 10 most searched this week are free; the full most-searched and most-viewed lists are part of Premium.",
 };
 
 // Prefix matches, for destinations that are a family of paths: every game's

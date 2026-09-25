@@ -131,8 +131,8 @@ export function SubscriptionActions({
               {busy === "upgrade" ? "Upgrading…" : `Upgrade to Premium — ${planSwitchPriceLabel("premium", interval, targetAnnualAvailable)}`}
             </button>
             <p className="mt-1 text-[11px] text-slate-500">
-              Billed the difference for the rest of this period; Best Basket&apos;s store-by-store plan and Buy this list
-              unlock straight away.
+              Billed the difference for the rest of this period; Best Basket&apos;s store-by-store plan, Buy this list
+              and Demand Finder unlock straight away.
             </p>
           </div>
         )}
@@ -165,7 +165,7 @@ export function SubscriptionActions({
             </button>
             <p className="mt-1 text-[11px] text-slate-500">
               Takes effect now. The unused part of this period is credited against your next invoice; Best
-              Basket&apos;s store-by-store plan and Buy this list lock, and target alerts go back to{" "}
+              Basket&apos;s store-by-store plan, Buy this list and Demand Finder lock, and target alerts go back to{" "}
               {PLUS_TARGET_ALERT_LIMIT} cards. Plus stays ad-free.
             </p>
           </div>

@@ -98,7 +98,12 @@ export default async function PremiumWelcomePage({
     { href: "/watching", label: "Set a target price" },
     { href: "/tools/deal-finder?mine=watch", label: "Deal Finder: only my cards" },
     { href: "/tools/rising", label: "Rising Cards" },
-    ...(tier === "premium" ? [{ href: "/tools/best-basket?source=watchlist", label: "Buy my watchlist for less" }] : []),
+    ...(tier === "premium"
+      ? [
+          { href: "/tools/best-basket?source=watchlist", label: "Buy my watchlist for less" },
+          { href: "/tools/demand", label: "Demand Finder" },
+        ]
+      : []),
   ];
 
   const done = (

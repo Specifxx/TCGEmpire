@@ -1,9 +1,17 @@
-// Most-searched cards over a window. Its one reader is the free "Most searched
-// this week" strip on /movers (2026-09-25); it used to be the Premium Demand
-// Finder, which left the product that day (/tools/demand 301s to
-// /movers#most-searched). The most-viewed ranking, the all-time mode and the
-// 50-row scan only that page read were removed with it (review, 2026-09-25);
-// /admin/demand has its own pipeline on getDemandWindow.
+// Most-searched and most-viewed cards over a window. Two readers, one call
+// shape — getTopDemand(days, limit):
+//   • the free "Most searched this week" strip on /movers
+//     (getTopDemand(7, FREE_DEMAND_ROWS), bySearch only);
+//   • Demand Finder (/tools/demand), Premium again from later on 2026-09-25
+//     (DECISIONS.md, "Demand Finder returns as a Premium tool"): both lists,
+//     7 or 30 days, PREMIUM_DEMAND_ROWS deep. A viewer below Premium gets
+//     exactly the strip's call and rows there, never more.
+// It was retired earlier the same day (/tools/demand 301'd to
+// /movers#most-searched) and this module trimmed to the strip; the most-viewed
+// ranking and the 25-row scan came back with the page. The all-time mode did
+// NOT: all-time totals include counts from before the counter was hardened
+// (lib/card-views.ts), so only windows diffed against a daily snapshot are
+// shown. /admin/demand has its own pipeline on getDemandWindow.
 //
 // Deliberately a DIFFERENT lens from Rising Cards, not a duplicate of it.
 // Rising Cards is a composite signal (demand is only one of its inputs,
@@ -21,9 +29,15 @@ import { prisma } from "./db";
 import { CONTENT_TAG } from "./revalidate-content";
 import { sydneyDayKey } from "./price-history";
 import { getDemandWindowOrThrow } from "./demand-snapshot";
+import { FREE_DEMAND_ROWS, PREMIUM_DEMAND_ROWS, type DemandWindowDays } from "./demand-view";
 
-// The /movers strip shows ten; computed once per (window, day) at exactly that.
-const SCAN_LIMIT = 10;
+// The windows, and the free and Premium list sizes, live in lib/demand-view.ts
+// with the pure who-sees-what rules, so a test can run them without a database.
+export { DEMAND_WINDOWS, FREE_DEMAND_ROWS, PREMIUM_DEMAND_ROWS, type DemandWindowDays } from "./demand-view";
+
+// Computed once per (window, day) at the deepest list any reader shows, and
+// sliced for every caller — the strip never pays for a second scan.
+const SCAN_LIMIT = PREMIUM_DEMAND_ROWS;
 
 // NARROW, and the same for every market (2026-09-25). This used to be
 // cardTileSelect(country), whose per-market in-stock _count subquery nothing
@@ -54,20 +68,22 @@ export type DemandCard = Prisma.CardGetPayload<{ select: typeof DEMAND_CARD_SELE
 export interface DemandPick {
   card: DemandCard;
   searches: number; // searches inside the window
+  views: number; // card-page views inside the window
 }
 
 export interface DemandResult {
-  bySearch: DemandPick[];
-  windowUsable: boolean; // false when no snapshot reaches back far enough — the strip is hidden
+  bySearch: DemandPick[]; // cards with at least one search, most searched first
+  byView: DemandPick[]; // cards with at least one view, most viewed first
+  windowUsable: boolean; // false when no snapshot reaches back far enough — nothing is ranked
   coveredDays: number | null; // real days the window actually covers
   totalDays: number; // distinct snapshot days on record at all
   // The read FAILED (getTopDemand's catch), as opposed to a window that is
-  // simply too short. Nothing was cached; the page renders without the strip.
+  // simply too short. Nothing was cached; the caller renders without a list.
   failed?: boolean;
 }
 
 function fetchTiles(ids: string[]) {
-  return prisma.card.findMany({ where: { id: { in: ids } }, select: DEMAND_CARD_SELECT });
+  return prisma.card.findMany({ where: { id: { in: ids } }, select: DEMAND_CARD_SELECT, take: ids.length });
 }
 
 // Runs INSIDE unstable_cache, so it must throw rather than return an empty
@@ -76,33 +92,39 @@ function fetchTiles(ids: string[]) {
 // day. getTopDemand catches outside the cache instead. That goes for the window
 // read too, hence getDemandWindowOrThrow: the guarded getDemandWindow turns a
 // failure into an empty window, which would then be cached as "not usable" —
-// the /movers strip gone for the day.
-async function computeTopDemand(days: number, limit: number): Promise<DemandResult> {
+// the /movers strip and Demand Finder empty for the day.
+async function computeTopDemand(days: DemandWindowDays, limit: number): Promise<DemandResult> {
   try {
     const win = await getDemandWindowOrThrow(days);
     const usable = win.baselineDay != null && win.rows.length > 0;
-    // No snapshot reaches back that far: the /movers strip is not rendered, so
-    // there is nothing to rank or hydrate (the all-time fallback the Demand
-    // Finder showed here was read by nothing once it left).
-    if (!usable) return { bySearch: [], windowUsable: false, coveredDays: null, totalDays: win.totalDays };
+    // No snapshot reaches back that far: nothing is ranked or hydrated. (The
+    // all-time fallback the old Demand Finder showed here is gone for good —
+    // see the header.)
+    if (!usable) return { bySearch: [], byView: [], windowUsable: false, coveredDays: null, totalDays: win.totalDays };
 
-    // A window row exists for any card with a search OR a view, so keep only
-    // cards with searches — "most searched" never lists a card nobody searched for.
+    // A window row exists for any card with a search OR a view, so each list
+    // keeps only cards with its own metric — "most searched" never lists a
+    // card nobody searched for, nor "most viewed" one nobody opened.
     const bySearchIds = win.rows.filter((r) => r.searches > 0).sort((a, b) => b.searches - a.searches || b.views - a.views).slice(0, limit).map((r) => r.cardId);
-    if (!bySearchIds.length) return { bySearch: [], windowUsable: true, coveredDays: win.coveredDays, totalDays: win.totalDays };
+    const byViewIds = win.rows.filter((r) => r.views > 0).sort((a, b) => b.views - a.views || b.searches - a.searches).slice(0, limit).map((r) => r.cardId);
+    // ONE narrow tile read for the union of the two ranked lists (at most
+    // 2 × SCAN_LIMIT ids), never for every card the window returned.
+    const unionIds = [...new Set([...bySearchIds, ...byViewIds])];
+    if (!unionIds.length) return { bySearch: [], byView: [], windowUsable: true, coveredDays: win.coveredDays, totalDays: win.totalDays };
 
-    const cards = await fetchTiles(bySearchIds);
+    const cards = await fetchTiles(unionIds);
     const byId = new Map(cards.map((c) => [c.id, c]));
     const winById = new Map(win.rows.map((r) => [r.cardId, r]));
-    const bySearch = bySearchIds
-      .map((id) => {
-        const c = byId.get(id);
-        const w = winById.get(id);
-        return c && w ? { card: c, searches: w.searches } : null;
-      })
-      .filter((p): p is DemandPick => !!p);
+    const build = (ids: string[]): DemandPick[] =>
+      ids
+        .map((id) => {
+          const c = byId.get(id);
+          const w = winById.get(id);
+          return c && w ? { card: c, searches: w.searches, views: w.views } : null;
+        })
+        .filter((p): p is DemandPick => !!p);
 
-    return { bySearch, windowUsable: true, coveredDays: win.coveredDays, totalDays: win.totalDays };
+    return { bySearch: build(bySearchIds), byView: build(byViewIds), windowUsable: true, coveredDays: win.coveredDays, totalDays: win.totalDays };
   } catch (err) {
     console.error(`[demand] computeTopDemand(${days}) failed — not caching it:`, err);
     throw err;
@@ -112,31 +134,43 @@ async function computeTopDemand(days: number, limit: number): Promise<DemandResu
 // DAY-scoped + CONTENT_TAG: cheap enough to recompute daily, and the
 // twice-daily price import's revalidation (which also snapshots demand) keeps
 // it from going stale for longer than that. One entry per window, not per
-// market — see DEMAND_CARD_SELECT. (An entry cached before 2026-09-25 carries
-// extra fields — byView, all-time counts, 50 rows — which are ignored and
-// sliced away, so the key did not need to change.)
-function getTopDemandCached(days: number): Promise<DemandResult> {
+// market — see DEMAND_CARD_SELECT. v3 since the most-viewed list and the
+// 25-row scan came back (later on 2026-09-25): a v2 entry holds ten searched rows and
+// no views, which Demand Finder cannot be built from.
+//
+// The TTL (two days) is longer than /movers' 86400 revalidate, so it can
+// never undercut that page's segment (egress rule 5); /tools/demand is
+// force-dynamic and has no revalidate to undercut.
+function getTopDemandCached(days: DemandWindowDays): Promise<DemandResult> {
   return unstable_cache(
     () => computeTopDemand(days, SCAN_LIMIT),
-    ["rc-demand-v2", String(days), sydneyDayKey()],
+    ["rc-demand-v3", String(days), sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   )();
 }
 
 // Self-cached: call it directly, never from inside another unstable_cache
-// callback (egress rule 6; tests/nested-cache.test.ts lists it).
+// callback (egress rule 6; tests/nested-cache.test.ts lists it). The strip
+// and Demand Finder's free view make the SAME call (7, FREE_DEMAND_ROWS), and
+// Demand Finder's Premium 7-day view reads the same cached entry.
 //
 // A failure is NOT cached in the data cache (computeTopDemand rethrows), but
 // /movers is an ISR page: the render that caught it is stored like any other,
 // so the strip stays hidden until the next /movers regeneration — the price
 // import's revalidatePath (about 12 hours) or the page's 24-hour TTL. The
 // page keeps its #most-searched anchor meanwhile (MostSearchedStrip).
-export async function getTopDemand(days: number, limit = SCAN_LIMIT): Promise<DemandResult> {
+export async function getTopDemand(days: DemandWindowDays, limit = FREE_DEMAND_ROWS): Promise<DemandResult> {
   try {
     const full = await getTopDemandCached(days);
-    return { bySearch: full.bySearch.slice(0, limit), windowUsable: full.windowUsable, coveredDays: full.coveredDays, totalDays: full.totalDays };
+    return {
+      bySearch: full.bySearch.slice(0, limit),
+      byView: full.byView.slice(0, limit),
+      windowUsable: full.windowUsable,
+      coveredDays: full.coveredDays,
+      totalDays: full.totalDays,
+    };
   } catch {
     // Logged in computeTopDemand; nothing was cached.
-    return { bySearch: [], windowUsable: false, coveredDays: null, totalDays: 0, failed: true };
+    return { bySearch: [], byView: [], windowUsable: false, coveredDays: null, totalDays: 0, failed: true };
   }
 }

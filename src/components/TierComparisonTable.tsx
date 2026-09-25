@@ -31,15 +31,21 @@
 //                        replacement), and gets back its own total. The
 //                        store-by-store plan for any of them needs
 //                        isPremium(user, "premium").
+//   Demand Finder        tools/demand: isPremium(user, "premium") sees the
+//                        top 25 by searches and by views, 7 or 30 days;
+//                        everyone else the /movers strip's top 10 most
+//                        searched this week (lib/demand-view.ts).
 //   Ad-free              /api/me adFree = isPremium(user) — any paid tier
 //
 // THE 2026-09-25 LINEUP (owner: fewer tools, each one worth paying for). Value
-// Finder, Demand Finder, Rising Sealed and the Condition Impact Calculator
-// left the product, each 301'd to the free page that now carries its useful
-// part (next.config.js), and the Bulk Pricer's paste-a-list pricing folded
-// into the free /deck — so their rows are gone, not ticked for everyone. Plus
-// is "no ads, every deal, and an email naming the store when a card you watch
-// hits your price"; Premium is "buy your whole list for less".
+// Finder, Rising Sealed and the Condition Impact Calculator left the product,
+// each 301'd to the free page that now carries its useful part
+// (next.config.js), and the Bulk Pricer's paste-a-list pricing folded into the
+// free /deck — so their rows are gone, not ticked for everyone. Plus is "no
+// ads, every deal, and an email naming the store when a card you watch hits
+// your price"; Premium is "buy your whole list for less, and see what players
+// are hunting for". Demand Finder left the same morning and came back that
+// day as a Premium row (owner: Plus was "not much different to premium").
 //
 // NO "NO ACCOUNT" COLUMN (2026-09-22, owner's call). It had four columns doing
 // the work of three: signed-out and free-account differ on exactly two rows
@@ -94,6 +100,11 @@ export const TIER_COMPARISON: TierRow[] = [
   // plan for it. The binder is a source too, but it prices replacement, so it
   // is not named here beside "skipping cards you own".
   { feature: "Buy this list — deck or watchlist, skipping cards you own", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
+  // Premium only, to widen the Plus→Premium gap (2026-09-25). Below Premium
+  // it is exactly the free top 10 most searched this week that /movers shows
+  // everyone — FREE_DEMAND_ROWS in lib/demand-view.ts, the one constant both
+  // pages read.
+  { feature: "Demand Finder — most searched & viewed cards", account: "Top 10 searched", plus: "Top 10 searched", premium: true },
   // Ad-free moved Plus → Premium on 2026-09-14 and back to every paid tier on
   // 2026-09-25 (owner's call — DECISIONS.md, "Plus is ad-free again"): with
   // the half-price intro, $2.49/mo Plus is the entry tier, and "no ads" is
@@ -119,7 +130,7 @@ export function TierCell({ v, dialog = false }: { v: boolean | string; dialog?: 
 // every column tells a reader deciding whether to pay nothing at all, and the
 // popup caps its own height, so each such row pushes the rows that DO make the
 // case further down. What survives is exactly what a payment changes: the full
-// lists, target alerts, Best Basket's plan, Buy this list — and the ad-free
+// lists, target alerts, Best Basket's plan, Buy this list, Demand Finder — and the ad-free
 // row. That one used to be omitted "for length" (until 2026-09-25), which hid
 // the most broadly understood reason to take Plus on the two surfaces that
 // actually convert (this dialog and the slide-in).

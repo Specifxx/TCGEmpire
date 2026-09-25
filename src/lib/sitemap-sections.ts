@@ -135,6 +135,7 @@ async function core(): Promise<SitemapEntry[]> {
     // not just price lookup), so the priority stays where it landed.
     { url: `${SITE_URL}/tools/best-basket`, changeFrequency: "weekly", priority: 0.8, lastModified: staticPageDate("/tools/best-basket") },
     { url: `${SITE_URL}/tools/rising`, changeFrequency: "daily", priority: 0.6, lastModified: day },
+    { url: `${SITE_URL}/tools/demand`, changeFrequency: "daily", priority: 0.6, lastModified: day },
     { url: `${SITE_URL}/tools/deal-finder`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/stores/tracked`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/stores/tracked") },
     { url: `${SITE_URL}/stores/suggest`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/stores/suggest") },

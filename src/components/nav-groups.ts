@@ -152,6 +152,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/tools/deal-finder", label: "Deal Finder", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced", "undervalued", "best value"] },
       { href: "/tools/rising", label: "Rising Cards", keywords: ["rising", "hot", "momentum", "spiking", "going up"] },
       { href: "/tools/best-basket", label: "Best Basket", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"] },
+      // Premium (2026-09-25). "most searched" and "popular cards" stay /movers'
+      // too: its free top-10 strip answers them for everyone.
+      { href: "/tools/demand", label: "Demand Finder", keywords: ["demand", "most viewed", "most searched", "popular cards", "what players are searching for", "search trends"] },
       { href: "/tools/box-ev", label: "Box EV Calc", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
       { href: "/tools/selling-fees", label: "Selling Fee Calc", keywords: ["tcgplayer fees", "ebay fees", "selling fees", "net proceeds", "marketplace commission"] },
       { href: "/tools", label: "All Tools", keywords: ["tools", "calculators", "utilities"] },

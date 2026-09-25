@@ -9,16 +9,18 @@ import type { DemandCard } from "@/lib/demand";
 
 export type MostSearchedRow = { card: DemandCard; searches: number };
 
-// "Most searched this week" on /movers (2026-09-25) — the free successor to the
-// Premium Demand Finder, whose URL now redirects to #most-searched here. A
-// client island only so each row can show the visitor's own market price: the
+// "Most searched this week" on /movers (2026-09-25) — the free top 10 of
+// Demand Finder (/tools/demand, Premium), which it links to for the full
+// most-searched and most-viewed lists. A viewer below Premium sees exactly
+// these rows on /tools/demand too, never more (lib/demand.ts FREE_DEMAND_ROWS).
+// A client island only so each row can show the visitor's own market price: the
 // page itself is static and built for DEFAULT_COUNTRY, and the rows carry every
 // market's price column (lib/demand.ts DEMAND_CARD_SELECT), the same way
 // CardTile re-prices on the client.
 export function MostSearchedStrip({ rows, coveredDays }: { rows: MostSearchedRow[]; coveredDays: number | null }) {
   const { price, fmt } = useCountry();
-  // /tools/demand 301s to #most-searched, so the anchor is always on the page —
-  // with a plain note when there is no ranking to show (a window too short
+  // Old links (and the retired redirect) point at #most-searched, so the anchor
+  // is always on the page — with a plain note when there is no ranking to show (a window too short
   // after a database move, or a failed read, which the ISR render keeps until
   // the next /movers regeneration — see lib/demand.ts getTopDemand).
   if (!rows.length) {
@@ -32,12 +34,17 @@ export function MostSearchedStrip({ rows, coveredDays }: { rows: MostSearchedRow
   const days = coveredDays && coveredDays > 0 ? coveredDays : 7;
   return (
     <section id="most-searched" className="scroll-mt-header">
-      <div className="mb-3">
-        <h2 className="text-xl font-extrabold text-white">Most searched this week</h2>
-        <p className="mt-0.5 text-xs text-slate-500">
-          The cards RiftCompare visitors picked from search most often in the last {days} {days === 1 ? "day" : "days"}.
-          Searches are counted worldwide, not per market, and each browser counts a card once a day.
-        </p>
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+        <div>
+          <h2 className="text-xl font-extrabold text-white">Most searched this week</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            The cards RiftCompare visitors picked from search most often in the last {days} {days === 1 ? "day" : "days"}.
+            Searches are counted worldwide, not per market, and each browser counts a card once a day.
+          </p>
+        </div>
+        <Link href="/tools/demand" prefetch={false} className="shrink-0 text-xs font-semibold text-brand-400 hover:underline">
+          Full leaderboard — Premium →
+        </Link>
       </div>
       <ol className="card-surface grid grid-cols-1 gap-x-6 px-4 py-1 sm:grid-cols-2">
         {rows.map((r, i) => {

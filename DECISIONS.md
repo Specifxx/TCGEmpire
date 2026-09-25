@@ -13063,3 +13063,64 @@ still handles the break.
 phones to fit the table into 390px. They now show at every width, slightly
 smaller (26×36) with the name capped at 6rem instead; measured at 390 the page
 still has no sideways scroll.
+
+## Demand Finder returns as a Premium tool — 2026-09-25
+
+Owner, the same afternoon: "everyone's going to buy plus because it's not
+much different to premium so can we adjust the offerings very slightly?
+Demand finder was actually good."
+
+**Why.** After the morning's lineup, Premium's whole case over Plus was
+Best Basket's store-by-store plan, Buy this list and unlimited targets — all
+for someone buying a whole list. A Plus buyer who never buys a full deck had
+no reason to step up. Demand Finder widens that gap with a different kind of
+value (what players are looking at) without touching Plus: Plus keeps
+exactly what it had. Everything else in the lineup, prices, the trial and
+the intro are unchanged; `PREMIUM_COPY_VERSION` is `lineup-2026-09-25b` so
+the funnel can split the two framings.
+
+**What it is.** `/tools/demand`, gated on `isPremium(user, "premium")`
+(`ADSENSE_REVIEW_MODE` lifts it, as on every paid tool). Premium sees the top
+25 by searches and the top 25 by card views, over 7 or 30 days, with both
+counts and the visitor's own market price. No all-time mode: all-time totals
+include counts from before the counter was hardened, so only windows diffed
+against a daily snapshot are shown. The copy describes attention (what
+players search for and open), never buying advice or a forecast, and the
+WebApplication JSON-LD carries no `offers price "0"`.
+
+**The free taste is the /movers strip, and no more.** Signed out, a free
+account and Plus all get the top 10 most searched over 7 days, searches
+only, then a wall (`<PremiumButton surface="gate:demand" />`, which a Plus
+member sees as "Upgrade to Premium"; signed out, a sign-in link with
+`src=tool_gate`). Those are the rows /movers already shows every visitor, so
+the page gives away nothing new. `FREE_DEMAND_ROWS` in `lib/demand-view.ts`
+is the one constant both pages read, and `demandQueryFor` /
+`visibleDemandRows` there are run by `tests/demand-finder.test.ts`: below
+Premium the loader is asked for ten rows and the most-viewed list, the 30-day
+window and the view counts never reach the HTML. The strip links to the full
+leaderboard ("Full leaderboard — Premium"). Tier row: "Demand Finder — most
+searched & viewed cards", Free and Plus "Top 10 searched", Premium ✓, with
+the Premium rows before Ad-free.
+
+**The loader.** One call shape for both readers, `getTopDemand(days,
+limit)`; days is 7 or 30 only (`DEMAND_WINDOWS`), so the data cache holds at
+most two entries a day. Each entry ranks both lists at 25 rows from
+`getDemandWindowOrThrow` (id + two integers per active card, as before) and
+hydrates the union of the ranked ids (at most 50) with ONE narrow
+`DEMAND_CARD_SELECT` read, `take`-capped. Key `rc-demand-v3` (the v2 entry
+held ten searched rows and no views), TTL 172800 ≥ /movers' 86400, still
+`CONTENT_TAG`, still throwing inside the cache and catching outside it
+(`failed: true`). /movers' strip and the free page view make the same
+`(7, 10)` call and share the 7-day entry with Premium's default view. Both
+pages call it at the top level; nothing wraps it.
+
+**The hardened counter stays.** The morning's reason for cutting it — a
+leaderboard anyone could pump with curl — was fixed before this: bots and
+HTTP libraries get a silent 204, each IP is rate-limited per card and
+overall, and each browser counts a card once per kind per day
+(`lib/card-views.ts`). None of that changes.
+
+**Known cost.** `/tools/demand` 301'd to `/movers#most-searched` in the
+morning's release. A permanent redirect can be cached by a browser, so a
+visitor who followed it today may keep landing on /movers from that browser
+until its cache clears; new visitors and crawlers get the page.

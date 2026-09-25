@@ -101,26 +101,31 @@ longer lands on its entry.
   Keep (`/api/premium/resume`); plan switches stay hidden mid-trial until
   verified on a Stripe test clock. The owner lifted the freeze for the
   09-25 lineup change (prices, trial and intro untouched); compare cohorts
-  by `PREMIUM_COPY_VERSION` (`lineup-2026-09-25`).
+  by `PREMIUM_COPY_VERSION` (`lineup-2026-09-25`, then `lineup-2026-09-25b`
+  once Demand Finder returned to Premium the same day).
   [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215), [2026-09-23](../DECISIONS.md#L10924),
   [2026-09-25](../DECISIONS.md#L12842)
 - **Tiers (lineup of 2026-09-25):** Plus, $4.99/mo or $39.99/yr, is
   **ad-free**, has the full Deal Finder (with "Only my cards") and Rising
   Cards lists, and target-price alerts on up to `PLUS_TARGET_ALERT_LIMIT`
-  (25) cards. Premium, $9.99/mo or $79.99/yr, adds unlimited targets and
+  (25) cards. Premium, $9.99/mo or $79.99/yr, adds unlimited targets,
   Best Basket's store-by-store plan (for a pasted list, deck, watchlist or
-  binder, and behind the portfolio's replacement cost). Any signed-in
+  binder, and behind the portfolio's replacement cost) and **Demand Finder**
+  (`/tools/demand`, `isPremium(user, "premium")`: top 25 most searched and
+  most viewed, 7 or 30 days). Below Premium, Plus included, Demand Finder
+  shows only the free /movers strip's top 10 most searched this week
+  (`FREE_DEMAND_ROWS`, `tests/demand-finder.test.ts`). Any signed-in
   account gets its own Best Basket total and the replacement-cost total;
-  "binder" means replacement cost, never gaps. Value Finder, Demand Finder,
-  Rising Sealed, the Condition Calculator and the Bulk Pricer are gone, each
-  301'd to the free page carrying its useful part
-  (`tests/lineup-removals.test.ts`).
+  "binder" means replacement cost, never gaps. Value Finder, Rising Sealed,
+  the Condition Calculator and the Bulk Pricer are gone, each 301'd to the
+  free page carrying its useful part (`tests/lineup-removals.test.ts`).
   The intro price is an amount-off coupon created by `ensureIntroCoupon`;
   its display and charge share `introAmountOffCents`, and it is quoted only
   where `introEligibleFor` says checkout will give it. A tier switch keeps
   exactly the discounted renewals left (`introRenewalsRemaining`).
   [2026-09-11](../DECISIONS.md#L4428), [2026-09-24](../DECISIONS.md#L12120),
-  [2026-09-25](../DECISIONS.md#L12322), [2026-09-25](../DECISIONS.md#L12842)
+  [2026-09-25](../DECISIONS.md#L12322), [2026-09-25](../DECISIONS.md#L12842),
+  [2026-09-25](../DECISIONS.md#L13067)
 - **Gates:** `isPremium(user)` defaults to the Plus minimum; ads read
   `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`);
   a `premiumTierFloor` only raises a paid tier, never grants one. Never reuse

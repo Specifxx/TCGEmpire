@@ -51,7 +51,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "RiftCompare Premium — never overpay for a Riftbound card",
-  description: "RiftCompare Plus and Premium: no ads, every card below TCGplayer market, target-price alerts that name the store, and Best Basket — the cheapest delivered order for a whole list across your country's stores, skipping cards you already own. Price comparison is free for everyone, and a free account adds alerts and your portfolio.",
+  description: "RiftCompare Plus and Premium: no ads, every card below TCGplayer market, target-price alerts that name the store, Best Basket — the cheapest delivered order for a whole list across your country's stores, skipping cards you already own — and Demand Finder, the cards players are searching for most. Price comparison is free for everyone, and a free account adds alerts and your portfolio.",
   alternates: pageAlternates("/premium"),
 };
 
@@ -104,6 +104,13 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     cta: "Open your portfolio",
     tier: "premium",
   },
+  {
+    title: "Demand Finder",
+    body: "The cards players are searching for and opening most on RiftCompare, over the last 7 or 30 days: the top 25 by searches and the top 25 by card views, with both counts and your market's price for every card. What players are looking at, not a forecast. Everyone gets the top 10 most searched this week free.",
+    href: "/tools/demand",
+    cta: "Open Demand Finder",
+    tier: "premium",
+  },
 ];
 
 
@@ -112,9 +119,9 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
 // with Premium's list tools or leave its ad-free benefit out.
 const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, and the full Deal Finder and Rising Cards lists.`;
 const PREMIUM_OFFER_DESCRIPTION =
-  "Premium: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck, watchlist or binder, and unlimited target-price alerts.";
+  "Premium: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck, watchlist or binder, Demand Finder's most searched and most viewed cards, and unlimited target-price alerts.";
 const PREMIUM_STANDALONE_DESCRIPTION =
-  "No ads on any page, target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan and Buy this list.";
+  "No ads on any page, target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.";
 
 // "6 Sep 2026" — same convention admin/premium/page.tsx already uses for this
 // exact field, so a user's own account page and the admin's view of the same
@@ -132,10 +139,10 @@ const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", mon
 const FAQ: { q: string; a: string }[] = [
   {
     q: "What's free vs what needs Plus or Premium?",
-    a: `Price comparison, the card database, the deck and list pricer, trade calculator and box EV are free for everyone. A free account adds a watchlist with weekly new-low emails, your portfolio (including its delivered replacement cost), the top three of Deal Finder and Rising Cards, and your own Best Basket total. ${
+    a: `Price comparison, the card database, the deck and list pricer, trade calculator and box EV are free for everyone. A free account adds a watchlist with weekly new-low emails, your portfolio (including its delivered replacement cost), the top three of Deal Finder and Rising Cards, and your own Best Basket total; everyone sees the top 10 most searched cards of the week. ${
       premiumPlusEnabled()
-        ? `Plus (${tierMonthlyAmount("plus")}/mo) removes every ad and adds target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, the full Deal Finder (filterable to only your cards) and the full Rising Cards list. Premium (${tierMonthlyAmount("premium")}/mo) adds Best Basket's store-by-store plan, Buy this list for your deck, watchlist or binder, unlimited target alerts, and the plan behind your replacement cost.`
-        : `Premium (${tierMonthlyAmount("premium")}/mo) removes every ad and adds target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan and Buy this list.`
+        ? `Plus (${tierMonthlyAmount("plus")}/mo) removes every ad and adds target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, the full Deal Finder (filterable to only your cards) and the full Rising Cards list. Premium (${tierMonthlyAmount("premium")}/mo) adds Best Basket's store-by-store plan, Buy this list for your deck, watchlist or binder, unlimited target alerts, the plan behind your replacement cost, and Demand Finder's full most-searched and most-viewed lists.`
+        : `Premium (${tierMonthlyAmount("premium")}/mo) removes every ad and adds target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.`
     }`,
   },
   ...(premiumTrialEnabled()
@@ -180,13 +187,13 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Which plan is worth it?",
-    a: "Depends entirely on how you buy. Plus is for someone who buys singles regularly: it takes the ads away, shows every card below TCGplayer market, and emails you the store when a card you watch reaches the price you set. Premium is for buying a whole deck or list: Best Basket shows the cheapest delivered order next to the best single-store order, so the saving on your own list is a number you can check (every signed-in account sees its own total before paying) rather than a claim we make. If you only buy the occasional single card, the free account is genuinely all you need — that's deliberate.",
+    a: "Depends entirely on how you buy. Plus is for someone who buys singles regularly: it takes the ads away, shows every card below TCGplayer market, and emails you the store when a card you watch reaches the price you set. Premium is for buying a whole deck or list: Best Basket shows the cheapest delivered order next to the best single-store order, so the saving on your own list is a number you can check (every signed-in account sees its own total before paying) rather than a claim we make. Premium also opens Demand Finder, the full list of cards players are searching for and opening. If you only buy the occasional single card, the free account is genuinely all you need — that's deliberate.",
   },
   ...(premiumPlusEnabled()
     ? [
         {
           q: "Can I upgrade from Plus to Premium later?",
-          a: "Yes — one click from this page once your first payment has gone through (plan changes aren't available during the free trial). You're only charged the prorated difference for the rest of your current billing period, on the same monthly or annual cycle, and Best Basket's store-by-store plan and Buy this list unlock immediately.",
+          a: "Yes — one click from this page once your first payment has gone through (plan changes aren't available during the free trial). You're only charged the prorated difference for the rest of your current billing period, on the same monthly or annual cycle, and Best Basket's store-by-store plan, Buy this list and Demand Finder unlock immediately.",
         },
       ]
     : []),
@@ -314,8 +321,8 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         {!already && (
           <p className="mx-auto mt-3 max-w-xl text-base font-semibold leading-relaxed text-slate-200">
             {plusLive
-              ? "Plus watches your cards and shows every deal. Premium buys your whole list for less."
-              : "Premium watches your cards, shows every deal and buys your whole list for less."}
+              ? "Plus watches your cards and shows every deal. Premium buys your whole list for less, and shows what players are hunting for."
+              : "Premium watches your cards, shows every deal, buys your whole list for less and shows what players are hunting for."}
           </p>
         )}
         <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-400">
@@ -464,7 +471,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
       )}
 
       {/* Member quick links — only what this member can actually open. Best
-          Basket's plan is dropped for a Plus member rather than left to bounce
+          Basket's plan and Demand Finder are dropped for a Plus member rather than left to bounce
           them into an upsell wall from their own membership page; the upgrade
           path is the SubscriptionActions card above, which states the price. */}
       {already && (
@@ -474,6 +481,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>
           <Link href="/watching" className="btn-ghost">Watchlist &amp; target alerts</Link>
           {currentTier !== "plus" && <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>}
+          {currentTier !== "plus" && <Link href="/tools/demand" className="btn-ghost">Demand Finder</Link>}
           <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
           {checkoutLive && <ManageSubscriptionButton />}
         </div>
@@ -484,8 +492,8 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <h2 className="mb-1 text-center text-lg font-extrabold text-white">Feature comparison</h2>
         <p className="mb-3 text-center text-xs text-slate-500">
           {plusLive
-            ? "See exactly what you get with each tier — Plus goes ad-free and unlocks the full lists; Premium adds the list tools on top."
-            : "See exactly what you get with each tier — Premium goes ad-free and adds the full lists and the list tools."}
+            ? "See exactly what you get with each tier — Plus goes ad-free and unlocks the full lists; Premium adds the list tools and Demand Finder on top."
+            : "See exactly what you get with each tier — Premium goes ad-free and adds the full lists, the list tools and Demand Finder."}
         </p>
         <div className="card-surface p-1">
           <TierComparisonTable showPlus={plusLive} tinted />
@@ -506,7 +514,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <p className="mb-4 text-center text-xs text-slate-500">A closer look at each Plus and Premium feature.</p>
         <div className="grid gap-3 sm:grid-cols-2">
           {FEATURES.map((f) => (
-            <div key={f.title} className={`card-surface flex flex-col border-l-2 p-4 ${f.tier === "plus" && plusLive ? "border-slate-400/40" : "border-gold/40"}`}>
+            <div key={f.title} className={`card-surface flex flex-col border-l-2 p-4 sm:odd:last:col-span-2 ${f.tier === "plus" && plusLive ? "border-slate-400/40" : "border-gold/40"}`}>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-white">{f.title}</h3>
                 {plusLive && (

@@ -355,7 +355,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
                 <p className="text-sm font-semibold text-gold">✓ You&apos;re on Plus</p>
                 <p className="mt-1 text-xs text-slate-400">
                   Premium adds Best Basket&apos;s store-by-store plan, Buy this list for your deck, watchlist or binder,
-                  and unlimited target alerts.
+                  Demand Finder and unlimited target alerts.
                 </p>
                 {trialing ? (
                   <p className="mt-3 rounded-lg border border-ink-700 px-3 py-2 text-xs text-slate-300">

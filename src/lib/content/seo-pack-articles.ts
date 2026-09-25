@@ -882,7 +882,7 @@ Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a s
       },
       {
         q: "Is RiftCompare free to use?",
-        a: "Yes. Browsing the card database, comparing prices and setting price alerts are free. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows every row with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list.",
+        a: "Yes. Browsing the card database, comparing prices and setting price alerts are free. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows every row with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list, and Demand Finder.",
       },
       {
         q: "How often do the prices update?",
@@ -968,7 +968,7 @@ Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [how to choose 
       },
       {
         q: "Is RiftCompare free?",
-        a: "Yes. The card database, price comparison, movers dashboard and price alerts are free. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows every row with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list.",
+        a: "Yes. The card database, price comparison, movers dashboard and price alerts are free. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows every row with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list, and Demand Finder.",
       },
       {
         q: "Does RiftCompare sell cards?",

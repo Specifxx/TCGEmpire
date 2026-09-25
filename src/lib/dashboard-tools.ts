@@ -6,16 +6,18 @@ import type { PremiumTierKey } from "./site";
 //
 // `tier` is the MINIMUM tier that opens the WHOLE tool ("free" = every
 // account), and it must match the tool's own gate exactly — Best Basket's
-// per-store plan is isPremium(user, "premium"); the full Deal Finder and
+// per-store plan and Demand Finder are isPremium(user, "premium"); the full Deal Finder and
 // Rising Cards lists are any paid tier. The test checks the pairing against
 // TIER_COMPARISON.
 //
 // `freeTaste` is what an account BELOW that tier can already use (2026-09-25):
-// the top 3 of each list, and Best Basket's own-list total. Those render as
+// the top 3 of each list, Best Basket's own-list total, and Demand Finder's
+// top 10 most searched this week (the /movers strip). Those render as
 // OPEN links labelled with exactly that, never as locks — a lock on a tool a
 // free account can use hid the free taste the whole funnel depends on. The
-// 2026-09-25 lineup dropped the Bulk Pricer, Value Finder, Rising Sealed,
-// Demand Finder and Condition Calculator entries (each 301s to a free page).
+// 2026-09-25 lineup dropped the Bulk Pricer, Value Finder, Rising Sealed and
+// Condition Calculator entries (each 301s to a free page); Demand Finder left
+// with them and came back the same day as a Premium tool.
 export type DashTool = { title: string; desc: string; href: string; tier: PremiumTierKey | "free"; freeTaste?: string };
 
 export const DASHBOARD_TOOLS: DashTool[] = [
@@ -39,6 +41,13 @@ export const DASHBOARD_TOOLS: DashTool[] = [
     href: "/tools/best-basket",
     tier: "premium",
     freeTaste: "See your total free",
+  },
+  {
+    title: "Demand Finder",
+    desc: "The cards players are searching for and opening most, over the last 7 or 30 days.",
+    href: "/tools/demand",
+    tier: "premium",
+    freeTaste: "Top 10 free",
   },
   {
     title: "Watchlist & target alerts",

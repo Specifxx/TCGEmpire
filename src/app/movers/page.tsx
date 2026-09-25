@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPriceMovers, recentMethodologyBreak } from "@/lib/price-history";
-import { getTopDemand } from "@/lib/demand";
+import { getTopDemand, FREE_DEMAND_ROWS } from "@/lib/demand";
 import { MostSearchedStrip } from "@/components/MostSearchedStrip";
 import { PriceWatch } from "@/components/PriceWatch";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
@@ -47,8 +47,10 @@ export const metadata: Metadata = {
   },
 };
 
-// The free top-10 that replaced the Premium Demand Finder (2026-09-25).
-const MOST_SEARCHED_ROWS = 10;
+// The free top 10 most searched this week. Demand Finder (/tools/demand,
+// Premium) shows anyone below Premium exactly these rows and no more — one
+// constant for both (lib/demand.ts FREE_DEMAND_ROWS).
+const MOST_SEARCHED_ROWS = FREE_DEMAND_ROWS;
 
 // What every figure on this page is. Not a market's own store prices: the
 // weekly PriceHistory snapshot is the cheapest price found across AU, US, UK and
@@ -240,8 +242,8 @@ export default async function MoversPage() {
         </div>
       )}
 
-      {/* With no movers the strip still shows — it is its own data, and the
-          /tools/demand redirect lands on it. */}
+      {/* With no movers the strip still shows — it is its own data, and old
+          links to #most-searched land on it. */}
       {!hasAny && <MostSearchedStrip rows={mostSearched} coveredDays={demand.coveredDays} />}
 
       {/* Internal links (crawl + discovery) */}

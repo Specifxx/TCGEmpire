@@ -2169,8 +2169,9 @@ We will update this page when any of the following happens, and not before: Riot
       },
     ],
     // Pointed at the Demand Finder leaderboard until that left Premium
-    // (2026-09-25); its free successor is the "Most searched this week" strip
-    // on /movers, which /tools/demand now 301s to.
+    // (2026-09-25). It came back the same day as a Premium tool, but this CTA
+    // stays on the FREE "Most searched this week" strip on /movers: a free
+    // article's reader gets the free list, and the strip links onward.
     browseCta: {
       href: "/movers#most-searched",
       label: "See this week's most-searched cards →",
@@ -6787,7 +6788,7 @@ Buying from outside the eurozone? RiftCompare also covers **[Australia](/blog/bu
       },
       {
         q: "Is RiftCompare free to use?",
-        a: "Yes, entirely. The card database, price comparison, price-drop alerts and the weekly price-movers digest are free with no account needed. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows the full lists with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list.",
+        a: "Yes, entirely. The card database, price comparison, price-drop alerts and the weekly price-movers digest are free with no account needed. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows the full lists with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list, and Demand Finder.",
       },
     ],
     hero: {
@@ -9430,7 +9431,8 @@ We built the price tracking, the price history, and the alerts specifically beca
   },
   {
     // Rewritten 2026-09-25 for the new lineup (DECISIONS.md, "Premium lineup:
-    // fewer tools, each one worth paying for"). The comparison table is built
+    // fewer tools, each one worth paying for"), and Demand Finder added back
+    // as a Premium tool the same day ("Demand Finder returns as a Premium tool"). The comparison table is built
     // from TIER_COMPARISON itself (premiumTierTableMarkdown), so this article
     // can no longer drift from /premium and the upsell dialog; the prices and
     // saving are still re-derived from lib/site.ts by
@@ -9439,12 +9441,12 @@ We built the price tracking, the price history, and the alerts specifically beca
     category: "blog",
     title: "RiftCompare Premium: Every Feature Explained",
     excerpt:
-      "Everything RiftCompare Plus and Premium include: no ads, target-price alerts, every deal and Best Basket — with pricing and honest FAQs.",
+      "Everything RiftCompare Plus and Premium include: no ads, target-price alerts, every deal, Best Basket and Demand Finder — with pricing and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
     updated: "2026-09-25",
     readMins: 9,
-    tags: ["premium", "pricing", "tools", "deal finder", "best basket"],
+    tags: ["premium", "pricing", "tools", "deal finder", "best basket", "demand finder"],
     hero: {
       src: "/blog/riftcompare-premium-explained.png",
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
@@ -9452,7 +9454,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     summary: [
       "**RiftCompare has two paid tiers: Plus at $4.99/mo and Premium at $9.99/mo** (each with an annual option at roughly a 33% saving) — both with a 3-day free trial, the first 3 months at half price on a monthly plan, and cancel-anytime billing through Stripe.",
       `**Plus is no ads, every deal, and target alerts**: no ads on any page, the full Deal Finder (which you can narrow to only the cards you watch or own) and Rising Cards lists, and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards that email you the store when a card hits your price.`,
-      "**Premium buys your whole list for less**: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck or your watchlist (skipping copies you already own), your binder's replacement cost, and unlimited target alerts.",
+      "**Premium buys your whole list for less, and shows what players are hunting for**: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck or your watchlist (skipping copies you already own), your binder's replacement cost, Demand Finder's most searched and most viewed cards, and unlimited target alerts.",
       "**Price comparison itself stays free for everyone**, and a free account keeps a watchlist with weekly new-low emails, your portfolio, the top 3 of each deal list and your own Best Basket total.",
       "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
@@ -9468,7 +9470,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
-        a: `Everything in Plus — no ads on any page, the full Deal Finder and Rising Cards lists, and target-price alerts — plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck, your watchlist or your binder, unlimited target alerts (Plus has ${PLUS_TARGET_ALERT_LIMIT}), and the store-by-store plan behind your portfolio's replacement cost.`,
+        a: `Everything in Plus — no ads on any page, the full Deal Finder and Rising Cards lists, and target-price alerts — plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck, your watchlist or your binder, unlimited target alerts (Plus has ${PLUS_TARGET_ALERT_LIMIT}), the store-by-store plan behind your portfolio's replacement cost, and Demand Finder — the cards players are searching for and opening most, over 7 or 30 days.`,
       },
       {
         q: "Is price comparison free without Premium?",
@@ -9476,7 +9478,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "What's the difference between a free account, Plus and Premium?",
-        a: `A free account (no card, just an email) adds a watchlist with weekly new-low emails, your portfolio (value history, cost-basis P&L, CSV export and its delivered replacement cost), the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus removes every ad and adds the full Deal Finder and Rising Cards lists, the "only my cards" filter and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards. Premium adds Best Basket's store-by-store plan, Buy this list and unlimited target alerts on top of everything in Plus.`,
+        a: `A free account (no card, just an email) adds a watchlist with weekly new-low emails, your portfolio (value history, cost-basis P&L, CSV export and its delivered replacement cost), the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus removes every ad and adds the full Deal Finder and Rising Cards lists, the "only my cards" filter and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards. Premium adds Best Basket's store-by-store plan, Buy this list, Demand Finder and unlimited target alerts on top of everything in Plus. Anyone can see the top 10 most searched cards of the week on the price movers page.`,
       },
       {
         q: "Is there a free trial?",
@@ -9495,8 +9497,8 @@ We built the price tracking, the price history, and the alerts specifically beca
         a: "Yes — Plus and Premium both do. Every page is ad-free, on the website and in the app, the moment you're on either paid plan, the free trial included. It's automatic; there's nothing to switch on separately.",
       },
       {
-        q: "What happened to the Value Finder, Demand Finder, Bulk Pricer, Rising Sealed and Condition Calculator?",
-        a: "They left the paid tiers on 25 September 2026, and their old links now go to the free pages that carry what was useful in them: paste-a-list pricing is part of the free deck builder, the most-searched cards are on the price movers page, sealed products keep their live prices on the sealed page, and the condition guide explains what each grade does to a price.",
+        q: "What happened to the Value Finder, Bulk Pricer, Rising Sealed and Condition Calculator?",
+        a: "They left the paid tiers on 25 September 2026, and their old links now go to the free pages that carry what was useful in them: paste-a-list pricing is part of the free deck builder, sealed products keep their live prices on the sealed page, and the condition guide explains what each grade does to a price. Demand Finder left the same day and came back as a Premium tool; its top 10 most searched cards of the week stay free on the price movers page.",
       },
     ],
     itemList: {
@@ -9507,11 +9509,12 @@ We built the price tracking, the price history, and the alerts specifically beca
         { name: "Target-price alerts", description: "Set the price you'd pay on a watched card; after every price update we email you the store when it's there.", url: "/watching" },
         { name: "Rising Cards", description: "Cards ranked by demand and price-timing signals, with the reason each one ranks.", url: "/tools/rising" },
         { name: "Best Basket", description: "The cheapest delivered order for a whole list across your country's stores, postage included (Premium).", url: "/tools/best-basket" },
+        { name: "Demand Finder", description: "The cards players are searching for and opening most on RiftCompare, over 7 or 30 days (Premium; the top 10 most searched are free).", url: "/tools/demand" },
       ],
     },
     body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder and list pricer, the trade calculator, box EV, the Index and weekly price movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Plus or Premium**, with nothing rounded up or left vague.
 
-Short version: **Plus** is $4.99/mo (or $39.99/yr) — no ads on any page, every deal, and an email naming the store when a card you watch hits your price. **Premium** is $9.99/mo (or $79.99/yr) — everything in Plus, and it buys your whole list for less: the cheapest delivered order across your country's stores, skipping the cards you already own.
+Short version: **Plus** is $4.99/mo (or $39.99/yr) — no ads on any page, every deal, and an email naming the store when a card you watch hits your price. **Premium** is $9.99/mo (or $79.99/yr) — everything in Plus, and it buys your whole list for less: the cheapest delivered order across your country's stores, skipping the cards you already own. It also shows what players are hunting for: the full Demand Finder.
 
 ## How much does RiftCompare Plus / Premium cost?
 
@@ -9532,7 +9535,7 @@ This is the same table the /premium page and the upgrade dialog show, generated 
 
 ${premiumTierTableMarkdown()}
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every collector eventually wants (a watchlist, a portfolio, the top three of each deal list and your own Best Basket total); Plus takes the ads away, shows every deal and watches your cards for the price you set; Premium adds the tools for buying a whole list.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every collector eventually wants (a watchlist, a portfolio, the top three of each deal list and your own Best Basket total); Plus takes the ads away, shows every deal and watches your cards for the price you set; Premium adds the tools for buying a whole list, and Demand Finder.
 
 ## What Plus adds
 
@@ -9570,9 +9573,13 @@ Send a list from the deck builder or your whole watchlist straight into Best Bas
 
 Every account's portfolio shows what it would cost to replace your collection, delivered. Premium adds the store-by-store plan behind that number.
 
+### 8. Demand Finder — what players are searching for
+
+[Demand Finder](/tools/demand) ranks the cards RiftCompare visitors search for and open most, over the last 7 or 30 days: the top 25 by searches and the top 25 by card views, with both counts and your market's price beside each card. It's raw attention, not a score and not a forecast — a card can be busy because it just came out, because it's in a popular deck, or because everyone is checking what it's worth. Each browser counts a card once a day and bots aren't counted, so one visitor can't push a card up the list. Everyone sees the top 10 most searched cards of the week on [price movers](/movers#most-searched); Premium opens the full lists.
+
 ## What changed on 25 September 2026
 
-The Value Finder, Demand Finder, Rising Sealed, the Bulk Pricer and the Condition Impact Calculator used to be listed here. They've left the paid tiers, and their old links now go to the free pages that carry what was useful in them: paste-a-list pricing is part of the free [deck builder](/deck), the most-searched cards are on [price movers](/movers), sealed products keep their live prices on [sealed](/sealed), and the [condition guide](/guides/riftbound-card-condition-guide) explains what each grade does to a price. Each was either unreliable with the price history we have, free elsewhere on the site already, or the same answer for every card. Fewer tools, each one worth paying for.
+The Value Finder, Rising Sealed, the Bulk Pricer and the Condition Impact Calculator used to be listed here. They've left the paid tiers, and their old links now go to the free pages that carry what was useful in them: paste-a-list pricing is part of the free [deck builder](/deck), sealed products keep their live prices on [sealed](/sealed), and the [condition guide](/guides/riftbound-card-condition-guide) explains what each grade does to a price. Each was either unreliable with the price history we have, free elsewhere on the site already, or the same answer for every card. Fewer tools, each one worth paying for. Demand Finder left the same morning and came back that day as a Premium tool, with its counter hardened against inflated counts.
 
 ## Two free ways to get Premium without paying
 
@@ -9588,7 +9595,7 @@ Neither of these requires ever entering a payment method. If Premium turns out t
 Being straightforward here, since the point of this post is accuracy over hype: if you only ever check a handful of card prices before buying, the free account already does that job completely — you'd be paying for features you won't use. The two paid tiers are for two kinds of buyer:
 
 1. **Plus is for buying singles regularly** — it takes the ads away, shows every card below TCGplayer market, and tells you the store when a card you watch reaches your price.
-2. **Premium is for buying a whole deck or list** — Best Basket and Buy this list turn a list into the cheapest delivered order across your country's stores, skipping what you already own.
+2. **Premium is for buying a whole deck or list** — Best Basket and Buy this list turn a list into the cheapest delivered order across your country's stores, skipping what you already own — and for anyone who wants to see which cards players are searching for and opening, in full.
 
 If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts and a portfolio tracker — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
 `,

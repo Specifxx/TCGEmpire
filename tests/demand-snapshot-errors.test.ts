@@ -13,8 +13,8 @@ import { join } from "node:path";
 //   • computeRiseInputs (Rising Cards' day-keyed inputs) — one blip cached "no
 //     velocity" for the day: the strongest ranking signal silently dropped out
 //     and /admin/rising said "warming up — 0 days";
-//   • computeTopDemand (the /movers "Most searched this week" strip, the
-//     /tools/demand redirect target) — an empty window fell back to an
+//   • computeTopDemand (the /movers "Most searched this week" strip, and
+//     Demand Finder at /tools/demand) — an empty window fell back to an
 //     all-time ranking with windowUsable:false, cached, and the strip vanished
 //     for the day.
 // Both now use *OrThrow readers and catch OUTSIDE their caches; the guarded

@@ -94,15 +94,17 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // was created to prevent.
 //
 // 2026-09-25 LINEUP: exactly the rows a payment changes — the two full lists,
-// target alerts, Best Basket's plan and Buy this list. Value Finder, Demand
-// Finder and the Bulk Pricer left the product (the ad-free row is still named
-// in prose, not as a chip: it is a site-wide perk, not a tool with a page).
+// target alerts, Best Basket's plan, Buy this list and Demand Finder (Premium
+// again the same day). Value Finder and the Bulk Pricer left the product (the
+// ad-free row is still named in prose, not as a chip: it is a site-wide perk,
+// not a tool with a page).
 export const PITCH_TOOLS: { label: string }[] = [
   { label: "Deal Finder" },
   { label: "Rising Cards" },
   { label: "Target-price alerts" },
   { label: "Best Basket" },
   { label: "Buy this list" },
+  { label: "Demand Finder" },
 ];
 
 // A contextual heading/line, keyed by the CURRENT page, instead of the one

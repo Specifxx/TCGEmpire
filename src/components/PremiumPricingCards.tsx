@@ -164,7 +164,7 @@ export function PremiumPricingCards({
 
         <PaidTierCard
           tier="premium"
-          tagline={plusLive ? "Buy your whole list for less" : "The full toolkit"}
+          tagline={plusLive ? "Buy your whole list for less, and see what players are hunting for" : "The full toolkit"}
           features={plusLive ? PREMIUM_FEATURES_ON_PLUS : PREMIUM_FEATURES_STANDALONE}
           highlight
           cycle={cycle}
@@ -192,6 +192,7 @@ const FREE_FEATURES = [
   "Portfolio, including its delivered replacement cost",
   "Top 3 of Deal Finder & Rising Cards",
   "Best Basket: your own list's delivered total",
+  "Top 10 most searched cards this week",
 ];
 // "N-day" is a placeholder, substituted for the real PREMIUM_TRIAL_DAYS value
 // by PaidTierCard below — this file can't import the server-only constant
@@ -214,6 +215,7 @@ const PREMIUM_FEATURES_ON_PLUS = [
   "The store-by-store plan for your deck or watchlist, skipping what you own",
   "Unlimited target-price alerts",
   "The store-by-store plan behind your binder's replacement cost",
+  "Demand Finder: the cards players search for and open most, over 7 or 30 days",
   "N-day free trial",
 ];
 const PREMIUM_FEATURES_STANDALONE = [
@@ -222,6 +224,7 @@ const PREMIUM_FEATURES_STANDALONE = [
   "Every card below TCGplayer market, and the full Rising Cards list",
   "Unlimited target-price alerts",
   "Best Basket and Buy this list: your whole list, delivered for less",
+  "Demand Finder: the most searched and most viewed cards",
   "N-day free trial",
 ];
 

@@ -709,6 +709,7 @@ const CHECKOUT_RECOVERY_TOOLS = [
   "Every deal: the full Deal Finder and Rising Cards lists",
   "An email naming the store when a card you watch hits your target price",
   "Premium: Best Basket, the cheapest delivered order for your whole deck, watchlist or binder",
+  "Premium: Demand Finder, the cards players are searching for and opening most",
 ];
 
 function checkoutRecoveryFooter(name: string): string {
@@ -738,7 +739,7 @@ export async function sendCheckoutRecoveryEmail(
   const otherPlan =
     tier === "premium"
       ? "Prefer something lighter? Plus is the cheaper plan, on the same page."
-      : "Buying a whole deck? Premium adds Best Basket's store-by-store plan, on the same page.";
+      : "Buying a whole deck? Premium adds Best Basket's store-by-store plan and Demand Finder, on the same page.";
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You started signing up for RiftCompare ${name} but didn't finish checkout. ${trialLine} Plus and Premium are
@@ -809,7 +810,8 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
             <li>An email naming the store when a card you watch hits your target price</li>
           </ul>
           Premium adds Best Basket: the cheapest delivered order for your whole deck or watchlist, skipping the
-          cards you already own. ${trialLine}
+          cards you already own. It also opens Demand Finder, the full list of cards players are searching for and
+          opening. ${trialLine}
         </div>
         <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Premium</a>
       </div>
@@ -875,7 +877,8 @@ export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: 
     ${
       opts.planName === "Plus"
         ? ""
-        : step(4, "Buy a whole list for less", `Send a decklist or your watchlist to Best Basket, skip the copies you own, and get the cheapest delivered order. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)
+        : `${step(4, "Buy a whole list for less", `Send a decklist or your watchlist to Best Basket, skip the copies you own, and get the cheapest delivered order. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)}
+    ${step(5, "See what players are hunting for", `Demand Finder ranks the cards most searched and most viewed over the last 7 or 30 days. ${link("/tools/demand", "Demand&nbsp;Finder&nbsp;→")}`)}`
     }
     <tr><td style="padding:10px 32px 22px;font-size:13px;line-height:1.55;color:#8b95a5">
       Manage or cancel any time: ${link("/premium", "your account page")}.
@@ -998,7 +1001,8 @@ export function buildPremiumWinbackEmail(opts: PremiumWinbackEmailOpts): { subje
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You joined RiftCompare recently, so here's a proper look at what Premium adds on top of the free tools you're
       already using: no ads on any page, the full Deal Finder and Rising Cards lists, target-price alerts that name
-      the store, and Best Basket's cheapest delivered order for a whole deck, watchlist or binder.
+      the store, Best Basket's cheapest delivered order for a whole deck, watchlist or binder, and Demand Finder's
+      most searched and most viewed cards.
     </td></tr>
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <strong style="color:#fff">${opts.days} days, completely free — no card required, nothing to cancel.</strong>
