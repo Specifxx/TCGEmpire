@@ -3,6 +3,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { formatMoney } from "@/lib/format";
+import { storeBySlug, storeSlug, STORE_THIN_THRESHOLD } from "@/lib/store-pages";
+import { storeBadgeHtml } from "@/lib/store-badge";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +132,13 @@ export default async function StoreReportPage({ searchParams }: { searchParams: 
   const winRate = contested > 0 ? Math.round((winning / contested) * 100) : null;
   const updated = mine.reduce<Date | null>((m, r) => (!m || r.lastSeen > m ? r.lastSeen : m), null);
 
+  // The store's public page, for the "add this badge" section below. Offered only
+  // once that page clears the thin-content threshold: below it /stores/[slug] is
+  // noindexed, and a badge pointing at "0 cards in stock" does the store no
+  // favours. Counted from `mine`, which is already loaded — zero extra reads.
+  const store = storeBySlug(storeSlug(partner.retailer));
+  const badgeStore = store && mine.length >= STORE_THIN_THRESHOLD ? { slug: store.slug, name: partner.name } : null;
+
   const Money = ({ cents }: { cents: number }) => <>{formatMoney(cents)}</>;
 
   return (
@@ -189,6 +198,25 @@ export default async function StoreReportPage({ searchParams }: { searchParams: 
           <ReportTable rows={headroom.slice(0, 50)} gapLabel="Under by" gapClass="text-brand-400" />
         )}
       </section>
+
+      {/* "Add this badge" (2026-09-25): this report is the one page a store owner
+          opens from the outreach email (docs/OUTREACH-KIT.md Template 1), so the
+          ask waits for them here, pre-filled with their slug — the same markup
+          as the section on /stores/[slug]. */}
+      {badgeStore && (
+        <section aria-labelledby="store-badge-h" className="card-surface mb-8 p-5">
+          <h2 id="store-badge-h" className="text-base font-bold text-white">Add this badge to your site</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            It links your customers to{" "}
+            <Link href={`/stores/${badgeStore.slug}`} className="text-brand-400 hover:underline">your public store page</Link>
+            , where they can see how your prices compare. Plain HTML, logo drawn inline — no script and nothing to host.
+          </p>
+          <div className="mt-3" dangerouslySetInnerHTML={{ __html: storeBadgeHtml(badgeStore) }} />
+          <pre className="mt-3 overflow-x-auto rounded-lg border border-ink-800 bg-ink-950 p-3 text-xs leading-relaxed text-slate-300">
+            <code>{storeBadgeHtml(badgeStore)}</code>
+          </pre>
+        </section>
+      )}
 
       <p className="text-center text-[11px] text-slate-600">
         {unchallenged > 0 && <>{unchallenged} of your listings have no competing in-stock listing (uncontested). </>}

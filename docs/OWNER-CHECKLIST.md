@@ -3,12 +3,14 @@
 Everything in `docs/MARKETING-PLAN.md` that needs a human, in the order it should
 happen. Nothing here needs any coding. Written 2026-09-21.
 
-Each step says roughly how long it takes. The one-off block at the top is about
-25 minutes in total and is the highest-value 25 minutes in the whole plan.
+Each step says roughly how long it takes. The first four one-off steps at the top
+take about 25 minutes in total and are the highest-value 25 minutes in the whole
+plan. The fifth (the Discord bot) can wait until the week before you start
+emailing community sites.
 
 ---
 
-## Part 1 — Four settings to change, once (~25 min total)
+## Part 1 — Five settings to change, once (~40 min total)
 
 These are switches on accounts you already own. Each one turns on something that
 is built, deployed and currently doing nothing.
@@ -88,6 +90,31 @@ and every engagement number is wrong.
 4. Find `buy_click` in the list.
 5. Toggle **Mark as key event** on.
 
+### 5. Switch on the Discord price bot (15 min) — before week 7
+
+The bot (`/price` and `/movers`) is built and deployed, but nothing on the site
+offers it until you give it an application. Once you do, `/embed` shows an
+**Add it to your server** button, and Template 2 in `docs/OUTREACH-KIT.md` can
+mention it.
+
+1. Go to **discord.com/developers/applications**. Reuse the app the site's
+   "Log in with Discord" already uses, or click **New Application** and name it
+   `RiftCompare`.
+2. On **General Information**, copy the **Application ID** and the **Public Key**.
+3. In **Vercel** → the project → **Settings** → **Environment Variables**, add
+   `DISCORD_BOT_PUBLIC_KEY` (the Public Key) and `NEXT_PUBLIC_DISCORD_APP_ID`
+   (the Application ID), both for Production. They take effect at the next daily
+   release; there is no need to force a deploy.
+4. On the **Bot** tab, click **Reset Token** and copy it. Then, on your own
+   computer in the repo folder, run
+   `DISCORD_APP_ID=… DISCORD_BOT_TOKEN=… npx tsx scripts/register-discord-commands.ts`.
+   It should print `Registered 2 commands`. Don't save the token anywhere.
+5. Back on **General Information**, set **Interactions Endpoint URL** to
+   `https://riftcompare.com/api/discord/interactions` and save. Discord checks it
+   live, so do this after the release that carries the public key.
+6. Install it in the **RiftCompare Discord first** and try `/price card: irelia`
+   and `/movers` there before telling anyone else about it.
+
 ---
 
 ## Part 2 — The Radiance window (from 25 September)
@@ -159,11 +186,14 @@ bottom of that page lists the biggest tracked stores nobody has contacted yet.
 Pick one, click **Create report link**, copy the link, and send Template 1 with
 the link pasted in. You are giving them a free report showing every card where a
 rival shop beats them on price. The ask — one sentence, near the end — is that
-when they tell customers they price match, the words link to RiftCompare.
+they paste the small "Prices tracked on RiftCompare" badge waiting under their
+report; it already carries their store's link, so there's nothing to edit. Open
+the report link yourself before sending: if the badge isn't there (stores with
+fewer than five in-stock listings don't get one), leave that sentence out.
 
 **Weeks 7–9, email community sites.** RiftDecks, Piltover Archive, RiftMana.
-Template 2. You're offering them a free widget from `riftcompare.com/embed`, not
-asking for anything.
+Template 2. You're offering them a free widget from `riftcompare.com/embed`, and
+the Discord price bot once step 5 above is done, not asking for anything.
 
 **Weeks 10–12, email creators.** Template 3. You're offering free price research,
 not asking for a shout-out.

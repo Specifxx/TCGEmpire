@@ -3,7 +3,8 @@ import { createPublicKey, verify as edVerify } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { normalizeSearch } from "@/lib/format";
 import { getPriceMovers } from "@/lib/price-history";
-import { DEFAULT_COUNTRY } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
+import { cardImageSrc } from "@/lib/card-image-url";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
@@ -48,7 +49,7 @@ async function priceEmbed(query: string) {
     orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
     select: {
       id: true, slug: true, name: true, setCode: true, setName: true, collectorNumber: true,
-      rarity: true, imageThumbUrl: true,
+      rarity: true, imageUrl: true, imageThumbUrl: true,
       lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsEu: true,
     },
   });
@@ -64,6 +65,9 @@ async function priceEmbed(query: string) {
     { label: "🇪🇺 EU", cents: card.lowestPriceCentsEu, cur: "EUR" },
   ];
   const priced = markets.filter((m) => m.cents != null);
+  // Through the card-art mirror like every other image on the site, not the raw
+  // CDN URL; absolute because Discord fetches it with no page context.
+  const thumb = cardImageSrc(card, { absolute: true });
   return {
     title: `${card.name} — ${card.setCode} ${card.collectorNumber}`,
     url,
@@ -73,7 +77,7 @@ async function priceEmbed(query: string) {
         ? priced.map((m) => `${m.label} **${formatMoney(m.cents!, m.cur)}**`).join(" · ")
         : "No live price right now — prices refresh daily.") +
       `\n[Compare every store →](${url})`,
-    ...(card.imageThumbUrl ? { thumbnail: { url: card.imageThumbUrl } } : {}),
+    ...(thumb ? { thumbnail: { url: thumb } } : {}),
     footer: { text: `${card.setName} · ${card.rarity} · live lowest in-stock prices · riftcompare.com` },
   };
 }
@@ -92,7 +96,9 @@ async function moversEmbed() {
     url: utm("/movers"),
     color: EMBED_GREEN,
     description: `**Spiking**\n${line(movers.spiking, true)}\n\n**Dropping**\n${line(movers.plummeting, false)}\n\n[Full report →](${utm("/movers")})`,
-    footer: { text: "AU market · updated daily · riftcompare.com" },
+    // Named from the same constant the movers are computed for — a hard-coded
+    // Australian label outlived the switch of DEFAULT_COUNTRY to US.
+    footer: { text: `${COUNTRIES[DEFAULT_COUNTRY].label} market · updated daily · riftcompare.com` },
   };
 }
 

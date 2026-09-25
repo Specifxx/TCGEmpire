@@ -24,8 +24,8 @@ keep, and none of them costs anything to give:
 
 | Who | What they get | What we ask for |
 |---|---|---|
-| A tracked store | Their private repricing report — every listing of theirs that another shop beats | That when they say "we price match", the words link here |
-| A community site | A live widget (price badge, market index, release countdown) their readers want | Nothing beyond using it |
+| A tracked store | Their private repricing report — every listing of theirs that another shop beats | That they paste the ready-made "Prices tracked on RiftCompare" badge waiting under the report |
+| A community site | A live widget (price badge, market index, release countdown), or the price bot for their Discord | Nothing beyond using it; the plain link under each widget snippet is the only part search engines credit |
 | A creator | Free price research for whatever they're making | Nothing at all |
 
 None of these asks a creator to weigh anything up, which is the part that made
@@ -83,10 +83,10 @@ not zero first; the page shows it, and an empty report is worse than no report.
 >
 > {report link}
 >
-> One small thing, if you find it useful: a lot of shops tell customers they price
-> match or are competitive. If you say that anywhere on your site, linking the
-> words "compare prices" to riftcompare.com makes the claim checkable, and sends
-> your customers to a page where you're one of the shops being compared.
+> One small thing, if you find it useful: there's a small "Prices tracked on
+> RiftCompare" badge under your report, ready to paste. It links your customers
+> to your own page on the site, where they can check your prices against every
+> other shop — handy if you tell customers you're competitive.
 >
 > Either way the report is yours to keep. Happy to answer anything.
 >
@@ -94,9 +94,15 @@ not zero first; the page shows it, and an empty report is worse than no report.
 > riftcompare.com
 
 **Why it's shaped this way.** The value arrives before the ask. The ask is one
-sentence, buried, and framed as something that helps *them* substantiate a claim
-they already make. There is no deadline, no "let me know either way", and no
-mention of consulting — that comes up only if they reply.
+sentence, buried, and framed as something that helps *them* back up a claim they
+already make. It asks for no editing: the badge under the report already carries
+their store's link, so the whole favour is one paste. There is no deadline, no
+"let me know either way", and no mention of consulting — that comes up only if
+they reply.
+
+**The badge shows only when the store has at least five in-stock listings**
+(`STORE_THIN_THRESHOLD`). Below that their public store page is noindexed, and the
+report hides the badge. If you don't see it, drop that paragraph from the email.
 
 ---
 
@@ -122,7 +128,13 @@ staff channel, or the site owner's X account.
 > - the Riftbound market index, with a sparkline
 > - a countdown to the next set release
 >
-> They're all here with copy-paste snippets: riftcompare.com/embed
+> They're all here with copy-paste snippets: riftcompare.com/embed. Each snippet
+> ends with one plain text link under the widget — optional, but it's how the
+> embed credits the source.
+>
+> If you run a Discord, there's also a free price bot on the same page:
+> `/price card: …` answers with the cheapest price in every market, and `/movers`
+> posts the week's biggest risers and drops.
 >
 > The countdown one might be the most useful to you right now, with Radiance
 > landing on 23 October. No obligation and no catch — if a widget would be more
@@ -130,6 +142,22 @@ staff channel, or the site owner's X account.
 >
 > {Your name}
 > riftcompare.com
+
+**Leave the Discord paragraph out until the bot's install section is live on
+`/embed`** — it renders only once `NEXT_PUBLIC_DISCORD_APP_ID` is set (see
+`docs/OWNER-CHECKLIST.md`).
+
+**For a deck database, add this paragraph** before the sign-off. It uses the deck
+page's existing `?list=` import, so it needs no code from us and none from them
+beyond one line:
+
+> One more, since {Site} hosts decklists: a "price this deck" link on each deck
+> would open it on RiftCompare with every card priced across stores. It's one
+> line of JavaScript — the decklist as plain text, one card per line:
+>
+> ```js
+> 'https://riftcompare.com/deck?list=' + encodeURIComponent(btoa(unescape(encodeURIComponent(decklist))))
+> ```
 
 **During preview season, add this line** before the sign-off:
 
@@ -230,6 +258,8 @@ target assumes most of these go nowhere.
 | Stores tracked | 168 | AU 28 · US 40 · UK 24 · SG 11 · CA 53 · EU 12. Read from `RETAILER_LIST`, 2026-09-21 — recount before quoting it |
 | Store report links | `/admin/store-partners` | Pick store → *Create report link* → copy. The link is the password |
 | Widget directory | `/embed` | Three widgets, copy-paste snippets |
+| Store badge | Under each store's report, and on `/stores/<slug>` | Pre-filled with the store's link. Shown only at 5+ in-stock listings |
+| Discord price-bot install link | `/embed`, "For Discord servers" | Visible only once `NEXT_PUBLIC_DISCORD_APP_ID` is set in Vercel |
 | Retailer hub | `/stores` | What we do for stores, free listing |
 | Consulting | `/stores/consulting` | $250 AUD, 60 minutes, tax invoice issued |
 | Creator list | `/creators` | Confirmed partnerships ONLY. Currently empty. Adding an entry is a code change |
