@@ -82,19 +82,21 @@ export function RadiancePreorderCtaView({
 // RadiancePreorderCta's post-release branch) there is nothing left to
 // pre-order, so it offers singles only.
 //
-// page_type follows the path: the same block renders on the Radiance posts and
-// on /sets/radiance, and a set-page click must not report as an article's.
+// Not on the set pages: the same block renders on /sets/radiance, where the
+// hub's own "Also on eBay" panel sits a few lines below it, and two eBay units
+// one screen apart read as a wall of paid links rather than a choice.
 export function RadianceCtaEbayLine({ released = false }: { released?: boolean }) {
   const { country } = useCountry();
   const pathname = usePathname() ?? "";
   const label = ebayLabel(country);
+  if (pathname.startsWith("/sets/")) return null;
   return (
     <div data-radiance-cta-ebay className="mt-1">
       <OutboundLink
         href={ebaySearchUrl(country, "Riftbound Radiance", "preorder-cta")}
         retailer="ebay_search"
         country={country}
-        pageType={pathname.startsWith("/sets/") ? "set_hub" : "article"}
+        pageType="article"
         surface="preorder_cta_ebay"
         className="tap-link min-h-11 text-sm text-sky-300 underline-offset-2 hover:underline"
       >

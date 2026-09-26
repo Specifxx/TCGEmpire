@@ -42,6 +42,7 @@ export function EbaySearchPanel({
   country,
   pageType,
   variant = "panel",
+  headingLevel = 2,
   className,
 }: {
   heading: string;
@@ -51,6 +52,10 @@ export function EbaySearchPanel({
   pageType: string;
   /** "panel": a titled block of links. "strip": one compact line. */
   variant?: "panel" | "strip";
+  /** The panel's heading level: 3 inside a section that already has its own h2
+   *  (the Radiance hub), so the page outline does not put the next section
+   *  under "Also on eBay". */
+  headingLevel?: 2 | 3;
   className?: string;
 }) {
   const adFree = usePremium();
@@ -88,7 +93,11 @@ export function EbaySearchPanel({
     <section aria-label={heading} data-ebay-panel="panel" className={`card-surface overflow-hidden ${className ?? ""}`}>
       <div className="flex flex-wrap items-center gap-2 border-b border-ink-800 px-4 py-3">
         <PaidLinkTag />
-        <h2 className="text-base font-extrabold text-white">{heading}</h2>
+        {headingLevel === 3 ? (
+          <h3 className="text-base font-extrabold text-white">{heading}</h3>
+        ) : (
+          <h2 className="text-base font-extrabold text-white">{heading}</h2>
+        )}
       </div>
       {sub && <p className="px-4 pt-3 text-xs leading-relaxed text-slate-400">{sub}</p>}
       <ul className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2">

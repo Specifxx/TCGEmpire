@@ -37,6 +37,7 @@ export function RadianceEbayPanel({
   country,
   pageType,
   besideRanking,
+  headingLevel,
   className,
 }: {
   country: Country;
@@ -46,6 +47,8 @@ export function RadianceEbayPanel({
    *  is separate from it. False on an empty or released page, where there is
    *  no ranking above to be separate from. */
   besideRanking: boolean;
+  /** 3 inside the hub's own h2 section; 2 (the default) on /radiance-preorders. */
+  headingLevel?: 2 | 3;
   className?: string;
 }) {
   const label = ebayLabel(country);
@@ -56,6 +59,7 @@ export function RadianceEbayPanel({
       sub={`Searches of ${label}${besideRanking ? ", separate from the price ranking above" : ""}. eBay sellers set their own prices and dispatch dates — check both on the listing.`}
       country={country}
       pageType={pageType}
+      headingLevel={headingLevel}
       className={className}
       links={[
         {

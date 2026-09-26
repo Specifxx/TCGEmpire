@@ -159,7 +159,7 @@ export async function RadianceHub({ country }: { country: Country }) {
             table or its empty state — beside the ranking, never in it. The
             country is the server's (the set page reads it per request), so the
             hrefs are built here. */}
-        <RadianceEbayPanel country={country} pageType="set_hub" besideRanking={listed.length > 0} className="mt-4" />
+        <RadianceEbayPanel country={country} pageType="set_hub" besideRanking={listed.length > 0} headingLevel={3} className="mt-4" />
         <Link href="/radiance-preorders" className="mt-3 inline-block text-sm font-semibold text-brand-300 underline-offset-2 hover:underline">
           Compare every store&apos;s pre-order price →
         </Link>

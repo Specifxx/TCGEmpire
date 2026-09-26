@@ -300,7 +300,10 @@ test("pre-order CTA: the eBay line is a disclosed, measured search that follows 
   assert.match(fn, /href=\{ebaySearchUrl\(country, "Riftbound Radiance", "preorder-cta"\)\}/);
   assert.match(fn, /retailer="ebay_search"/);
   assert.match(fn, /surface="preorder_cta_ebay"/);
-  assert.match(fn, /pageType=\{pathname\.startsWith\("\/sets\/"\) \? "set_hub" : "article"\}/);
+  // Articles only: on /sets/radiance the hub's own "Also on eBay" panel sits a
+  // few lines below, so the line steps aside there rather than doubling up.
+  assert.match(fn, /if \(pathname\.startsWith\("\/sets\/"\)\) return null;/);
+  assert.match(fn, /pageType="article"/);
   assert.match(fn, /Or search \$\{label\} for Radiance singles and sealed →/);
   assert.match(fn, /Or search \$\{label\} for Radiance singles →/);
   assert.match(fn, /className="tap-link min-h-11 text-sm text-sky-300/);
