@@ -6,12 +6,24 @@ import { ldJson } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
 import type { PriceTableRow } from "@/lib/price-table";
 import { cardArtThumb, cardImageSrc, cardImageSrcSet } from "@/lib/card-image-url";
+import { affiliateUrl } from "@/lib/affiliate";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
+import { PriceRowEbay } from "@/components/home/PriceRowEbay";
 
 // "Riftbound card prices today" — a SERVER-RENDERED price list directly under
 // each market homepage's hero (lib/price-table.ts has the why). Rendered in the
 // page's own market and currency: "/" is the US page, /au is AUD, and so on. It
 // deliberately does not re-price on the client — the market pages exist so each
 // one is a coherent, crawlable price list for its own market.
+//
+// EBAY ON EVERY ROW (2026-09-26, "The homepage's eBay column" in DECISIONS.md):
+// eBay is the site's main affiliate partner and this is the first thing under
+// the hero, yet none of its rows led to eBay. Each row now ends in an eBay
+// button (PriceRowEbay): the market's cheapest tracked listing, or a search. It
+// is a column BESIDE the list — the rows stay ranked by demand, and "Cheapest"
+// stays the cheapest across every source — with the EPN disclosure above the
+// first row, for every visitor. The only thing in the table that follows the
+// visitor rather than the page is that button's destination (see its header).
 export function PriceTodayTable({
   rows,
   country,
@@ -24,6 +36,20 @@ export function PriceTodayTable({
 }) {
   if (!rows.length) return null;
   const { currency, adjective } = COUNTRIES[country];
+  // The page this table renders on, for the EPN customid ("/" is the US page).
+  const homePath = country === "US" ? "/" : `/${country.toLowerCase()}`;
+  const ebayCell = (r: PriceTableRow, i: number) => (
+    <PriceRowEbay
+      pageCountry={country}
+      listing={r.ebay ? { retailer: r.ebay.retailer, priceCents: r.ebay.priceCents, href: affiliateUrl(r.ebay.url, "home_table", homePath) } : null}
+      cheapestCents={r.priceCents}
+      currency={currency}
+      cardId={r.id}
+      cardName={r.name}
+      searchName={r.ebayQuery ?? r.name}
+      position={i + 1}
+    />
+  );
 
   return (
     <section id="prices-today" aria-labelledby="prices-today-h" className="card-surface scroll-mt-header overflow-hidden">
@@ -34,16 +60,27 @@ export function PriceTodayTable({
           </h2>
           <p className="mt-1 text-sm text-slate-400">
             The {rows.length} most-searched cards, with the cheapest in-stock price across {adjective} stores in{" "}
-            {currency}. Updated daily. <span className="whitespace-nowrap">▼ green = cheaper this week.</span>
+            {currency}, and eBay beside each.{" "}
+            {/* Phones (2026-09-26): the key line is CSS-hidden below sm (still
+                in the HTML; ▲/▼ and the sr-only words carry direction without
+                colour), so the first row and its eBay button reach the first
+                screen. */}
+            <span className="hidden sm:inline">
+              Updated daily. <span className="whitespace-nowrap">▼ green = cheaper this week.</span>
+            </span>
           </p>
+          {/* Above the first eBay button, on first paint, for every visitor. */}
+          <AffiliateDisclosure partner="ebay" tight />
         </div>
       </div>
       {/* Below 640px (2026-09-26): stacked rows, price always visible. The
           five-column table overflowed a 390px phone and clipped the price. */}
       <ul className="divide-y divide-ink-800 border-t border-ink-800 sm:hidden">
-        {rows.map((r) => (
-          <li key={r.id}>
-            <Link href={cardHref(r)} className="flex min-h-11 items-center gap-3 px-4 py-2 hover:bg-ink-900/40">
+        {rows.map((r, i) => (
+          // Two SIBLING links (a link cannot nest another): the row to the card
+          // page, and the eBay button at its right edge.
+          <li key={r.id} className="flex items-center gap-2 pr-3 hover:bg-ink-900/40">
+            <Link href={cardHref(r)} className="flex min-h-11 min-w-0 flex-1 items-center gap-3 py-2 pl-4">
               <RowThumb row={r} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold text-slate-100">{r.name}</span>
@@ -56,22 +93,24 @@ export function PriceTodayTable({
                 </span>
               </span>
             </Link>
+            {ebayCell(r, i)}
           </li>
         ))}
       </ul>
       <div className="hidden overflow-x-auto sm:block">
-        <table className="w-full min-w-[34rem] text-left text-sm">
+        <table className="w-full min-w-[40rem] text-left text-sm">
           <thead className="border-y border-ink-800 bg-ink-900/60 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th scope="col" className="px-4 py-2 font-semibold">Card</th>
               <th scope="col" className="px-3 py-2 font-semibold">Set</th>
               <th scope="col" className="px-3 py-2 text-right font-semibold">Cheapest</th>
               <th scope="col" className="px-3 py-2 text-right font-semibold">Stores in stock</th>
-              <th scope="col" className="px-4 py-2 text-right font-semibold">7-day change</th>
+              <th scope="col" className="px-3 py-2 text-right font-semibold">7-day change</th>
+              <th scope="col" className="px-4 py-2 text-right font-semibold">eBay</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-800">
-            {rows.map((r) => (
+            {rows.map((r, i) => (
               <tr key={r.id} className="hover:bg-ink-900/40">
                 <td className="px-4 py-1.5">
                   <Link href={cardHref(r)} className="flex items-center gap-2.5 font-semibold text-slate-100 hover:text-brand-300 hover:underline">
@@ -86,15 +125,25 @@ export function PriceTodayTable({
                   {formatMoney(r.priceCents, currency)}
                 </td>
                 <td className="num px-3 py-2 text-right text-slate-300">{r.stores || "—"}</td>
-                <td className="num whitespace-nowrap px-4 py-2 text-right">
+                <td className="num whitespace-nowrap px-3 py-2 text-right">
                   <Change7d pct={r.change7d} />
+                </td>
+                <td className="px-4 py-1.5">
+                  <div className="flex justify-end">{ebayCell(r, i)}</div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="border-t border-ink-800 p-4 text-right sm:px-5">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-ink-800 p-4 sm:px-5">
+        {/* What the eBay column is, in words that stay true: an item price
+            (postage extra) for a listing we track, or a search. Never "live",
+            never "cheaper" — a tracked listing can be a day or three old. */}
+        <p className="min-w-0 flex-1 basis-64 text-[11px] leading-snug text-slate-500">
+          eBay: the cheapest in-stock listing we track for each card in this market (item price, postage extra), or a
+          search of your own eBay where we track none.
+        </p>
         <Link href="/browse" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
           See all {totalPriced.toLocaleString("en-US")} card prices →
         </Link>

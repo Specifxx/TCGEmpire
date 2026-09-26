@@ -7,6 +7,14 @@ import { usePremium } from "./PremiumProvider";
 import { useCountry } from "./CountryProvider";
 import { formatMoney } from "@/lib/format";
 import { ebayImg, ebaySrcSet } from "@/lib/ebay";
+import { affiliateUrl } from "@/lib/affiliate";
+
+// The page each pageType renders on, for the EPN customid (2026-09-26). The
+// listing URLs are tagged at import with no placement, so without this every
+// Picks click reached EPN as one undifferentiated id; affiliateUrl keeps eBay's
+// own rotation and adds our source ("picks") and page. An unknown pageType
+// keeps the stored URL rather than claiming the homepage.
+const PICKS_PAGE: Record<string, string> = { homepage: "/", browse: "/browse", set_hub: "/sets", article: "/blog" };
 
 export interface PickListing {
   country: string;
@@ -112,7 +120,7 @@ export function EbayPicksLive({
         {items.map((l) => (
           <li key={l.cardId} className="w-[38vw] max-w-[150px] shrink-0 snap-start sm:w-auto sm:max-w-none">
             <OutboundLink
-              href={l.url}
+              href={pageType && PICKS_PAGE[pageType] ? affiliateUrl(l.url, "picks", PICKS_PAGE[pageType]) : l.url}
               retailer="ebay_picks"
               country={country}
               cardId={l.cardId}

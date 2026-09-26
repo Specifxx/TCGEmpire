@@ -62,12 +62,15 @@ export function PopularCardsCarousel({
   storeWord: string;
 }) {
   const tabs: Tab[] = [
-    // Omitted when the page renders the "Riftbound card prices today" table
-    // instead (components/home/PriceTodayTable.tsx) — the same cards, ranked by
-    // the same demand signal, as a server-rendered price list.
+    // Back on every homepage (2026-09-26, the owner's call: "I kind of like
+    // the previous one better with the most popular cards"). It was dropped on
+    // 2026-09-24 when the "Riftbound card prices today" table took the same
+    // cards as a server-rendered list; the table still leads (it owns the head
+    // term) and keeps the only ItemList for them — HomeSections' popularItemList.
+    // The tiles are the visual shelf, and a tap opens QuickView on eBay first.
     ...(allTime.length === 0 ? [] : [{
       key: "alltime",
-      label: "All-time",
+      label: "Most popular",
       heading: "Most popular Riftbound cards",
       description: `The most-searched cards right now — compare ${storeCount} local ${storeWord} for every one to find the best price.`,
       allHref: "/browse",

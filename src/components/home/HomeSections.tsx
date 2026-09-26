@@ -41,6 +41,11 @@ export interface HomeSectionsProps {
   storeCount: number;
   storeWord: string;
   popularCards: CardTileData[];
+  /** Emit the "Most popular Riftbound cards" ItemList JSON-LD. False where the
+   *  page's "Riftbound card prices today" table already lists these cards and
+   *  owns that markup (2026-09-24); the carousel came back on 2026-09-26 as a
+   *  visual shelf, not as a second list for search engines. */
+  popularItemList?: boolean;
   // ALL FIVE markets, not just `country` — TodaysTopDeals/MarketPulse localise
   // to the VISITOR's own market client-side (useCountry()), which can differ
   // from the page's URL/baseline market (e.g. a bookmarked /au visited by
@@ -67,6 +72,7 @@ export function HomeSections({
   storeCount,
   storeWord,
   popularCards,
+  popularItemList = true,
   topDealsByCountry,
   moversByCountry,
   recentlyUpdated,
@@ -167,7 +173,7 @@ export function HomeSections({
           2026-09-17 (where it replaced the removed Market Pulse) until
           2026-09-21, when Today's Top Deals was moved above it on the owner's
           instruction — see that section's comment and DECISIONS.md. */}
-      <EbayPicks />
+      <EbayPicks pageType="homepage" />
 
       {/* Unified popular-cards carousel — the all-time most-popular list, with
           a "Biggest movers" tab and "Recently updated prices" (each once its
@@ -377,8 +383,9 @@ export function HomeSections({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([
-            // ItemList of the "Most popular Riftbound cards" actually rendered above.
-            ...(popularCards.length > 0
+            // ItemList of the "Most popular Riftbound cards" actually rendered above
+            // — unless the price table above the fold already carries it.
+            ...(popularItemList && popularCards.length > 0
               ? [
                   {
                     "@context": "https://schema.org",

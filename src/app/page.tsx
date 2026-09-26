@@ -330,7 +330,10 @@ export default async function HomePage() {
         totalCards={totalCards}
         storeCount={storeCount}
         storeWord={storeWord}
-        popularCards={priceTable.length ? [] : popularCards}
+        // The "Most popular" shelf is back (owner, 2026-09-26); the price table
+        // keeps the ItemList for these cards when it renders.
+        popularCards={popularCards}
+        popularItemList={priceTable.length === 0}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

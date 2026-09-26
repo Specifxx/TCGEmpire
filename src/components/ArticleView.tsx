@@ -605,6 +605,7 @@ export async function ArticleView({ article }: { article: Article }) {
       {article.ebayPicks && (
         <EbayPicks
           className="mt-8"
+          pageType="article"
           {...(typeof article.ebayPicks === "object"
             ? {
                 ...(article.ebayPicks.setCode ? { setCode: article.ebayPicks.setCode } : {}),

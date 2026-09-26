@@ -287,7 +287,7 @@ test("getCheapestOnEbay is never cached around, and top-deals chains it after th
 
 // ── The homepage block ───────────────────────────────────────────────────────
 
-test("TodaysTopDeals renders Cheapest on eBay under the grid: free, measured, disclosed, eBay blue", () => {
+test("TodaysTopDeals opens with Cheapest on eBay: free, measured, disclosed, eBay blue", () => {
   const src = code("src/components/TodaysTopDeals.tsx");
   const block = between(src, "function CheapestOnEbay(", "\n}\n");
   assert.match(block, /if \(rows\.length === 0\) return null;/, "hidden when the market has no rows");
@@ -320,10 +320,16 @@ test("TodaysTopDeals renders Cheapest on eBay under the grid: free, measured, di
   assert.match(block, /border-\[#0064d2\]/, "eBay blue");
   assert.match(block, /grid grid-cols-1 /, "a base column template (tests/grid-base-columns.test.ts)");
 
-  // Under the column grid, not a fifth column inside it.
+  // Not a fifth column inside the grid — and, since the homepage eBay pass of
+  // 2026-09-26, FIRST in the section: above the price pills (which filter only
+  // the columns) and the grid. On a phone the four stacked panels had put it
+  // roughly a thousand pixels further down.
   const gridAt = src.indexOf("items-stretch gap-4");
+  const pillsAt = src.indexOf('role="tablist" aria-label="Filter deals by price"');
   const blockAt = src.indexOf("<CheapestOnEbay rows={ebayRows}");
-  assert.ok(gridAt > 0 && blockAt > gridAt, "rendered after the grid");
+  assert.ok(gridAt > 0 && pillsAt > 0 && blockAt > 0, "all three render");
+  assert.ok(blockAt < pillsAt && blockAt < gridAt, "rendered before the pills and the grid");
+  assert.equal(src.split("<CheapestOnEbay rows={ebayRows}").length - 1, 1, "rendered once");
   assert.doesNotMatch(between(src, "const COLUMNS: ColumnDef[] = [", "];"), /cheapestOnEbay/, "not a column");
 });
 
@@ -369,7 +375,8 @@ test("/browse: a compact eBay search by the count, a full one when nothing match
   const gridAt = src.indexOf("cards.map((c) =>");
   assert.ok(countAt > 0 && compactAt > countAt && compactAt < gridAt, "by the results count, above the grid");
   assert.match(src, /<EbayPicks className="mb-6" pageType="browse" \/>/, "EbayPicks never gets the visitor's query");
-  assert.match(read("src/components/home/HomeSections.tsx"), /<EbayPicks \/>/, "the homepage's pinned call is untouched");
+  // The homepage's call names its page (2026-09-26), never the query.
+  assert.match(read("src/components/home/HomeSections.tsx"), /<EbayPicks pageType="homepage" \/>/, "the homepage's call carries no query");
 });
 
 test("Deal Finder: an eBay CTA beside the signed-out lock, and attributed table links", () => {

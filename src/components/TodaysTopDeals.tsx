@@ -38,8 +38,11 @@ import { cardThumbProps } from "@/lib/card-image-url";
 // header comment for why that call was reversed for this specific signal.
 //
 // "Cheapest on eBay" (2026-09-26) is NOT a fifth column: it is its own
-// full-width block under the grid (CheapestOnEbay below), so the column
-// layout above is untouched.
+// full-width block (CheapestOnEbay below), so the column layout is untouched.
+// It opens the section, above the price pills (which filter only the columns):
+// on a phone the grid is four stacked panels, and under them the block sat
+// roughly a thousand pixels further down ("The homepage's eBay column",
+// DECISIONS.md, 2026-09-26).
 type ColumnDef = {
   key: DealColumnKey;
   label: string;
@@ -238,7 +241,7 @@ function LockedTeaser({ count, surface, tierName }: { count: number; surface: st
 }
 
 // "Cheapest on eBay" (2026-09-26, "Pushing eBay clicks" in DECISIONS.md) — the
-// owner's original deal feature, back as a full-width block UNDER the columns
+// owner's original deal feature, back as a full-width block ABOVE the columns
 // (a fifth column would squeeze a grid GRID_COLS already had to stretch).
 // FREE and ungated: each row is one eBay affiliate link to the cheapest tracked
 // copy of that card in the visitor's market, so it is a buy path, not an ad —
@@ -251,7 +254,7 @@ function LockedTeaser({ count, surface, tierName }: { count: number; surface: st
 function CheapestOnEbay({ rows, currency, country }: { rows: CheapestEbayDeal[]; currency: string; country: Country }) {
   if (rows.length === 0) return null;
   return (
-    <section aria-label="Cheapest on eBay" className="mt-4 rounded-xl border border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-3">
+    <section aria-label="Cheapest on eBay" className="mb-4 rounded-xl border border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-3">
       <div className="mb-1 flex flex-wrap items-center gap-2 px-1">
         <h3 className="text-sm font-extrabold text-white">Cheapest on eBay</h3>
         <PaidLinkTag />
@@ -404,6 +407,10 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
         </Link>
       </div>
 
+      {/* First in the section (2026-09-26): every row is a free, direct eBay
+          listing that genuinely beats every store we track. */}
+      <CheapestOnEbay rows={ebayRows} currency={currency} country={country} />
+
       {/* Tier pills are 48px tall on TOUCH only (2026-09-23): they measured
           39/115/123/79 × 24px at 390, far under a thumb. Coarse-pointer-only,
           not `min-h-11` everywhere, so mouse desktops keep the 24px pill
@@ -496,8 +503,6 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
       {/* Outside the grid, not a panel inside it: GRID_COLS' last-child span
           rule counts the grid's direct children. */}
       {gridHasPaidLink && <AffiliateDisclosure partner="both" tight />}
-
-      <CheapestOnEbay rows={ebayRows} currency={currency} country={country} />
     </section>
   );
 }

@@ -740,6 +740,7 @@ export default async function SetPage({
       <SetPriceGuide setName={set.name} rows={priceGuide} currency={COUNTRIES[country].currency} adjective={COUNTRIES[country].adjective} />
 
       <EbayPicks
+        pageType="set_hub"
         setCode={set.code}
         heading={`${set.name} singles on eBay right now`}
         fallbackQuery={`Riftbound ${set.name}`}
