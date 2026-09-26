@@ -7,7 +7,7 @@ import { OutboundLink } from "./OutboundLink";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
-import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebaySearchUrl } from "@/lib/affiliate";
 import { formatMoney } from "@/lib/format";
 import { sealedImageAlt } from "@/lib/image-alt";
 import { Dialog } from "./ui/Dialog";
@@ -26,13 +26,12 @@ type OpenArg = { group: SealedGroup; currency: string };
 const Ctx = createContext<{ open: (group: SealedGroup, currency: string) => void }>({ open: () => {} });
 export const useSealedQuickView = () => useContext(Ctx);
 
-// eBay hosts per market. Mirrors the marketplace hosts the /sealed page uses
-// for its secondary-market searches.
-const EBAY_HOST: Record<string, string> = {
-  AU: "ebay.com.au",
-  US: "ebay.com",
-  UK: "ebay.co.uk",
-};
+// The eBay search goes through lib/affiliate.ts's ebaySearchUrl — the one
+// per-market map (2026-09-26). This file used to keep its own AU/US/UK copy, so
+// every Singapore, Canada and EU visitor who opened a sealed product was sent
+// to ebay.com.au: a marketplace that ships to them poorly, in the wrong
+// currency, on an EPN rotation that credits the wrong program. affiliate.ts
+// warns about exactly this drift; its map already knew all six markets.
 
 export function SealedQuickViewProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<OpenArg | null>(null);
@@ -80,8 +79,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
     ...new Map(listings.map((l) => [l.retailer, { retailer: l.retailer, retailerName: l.retailerName }])).values(),
   ];
   const lowest = group.lowestPriceCents;
-  const host = EBAY_HOST[country] ?? EBAY_HOST.AU;
-  const ebayHref = ebayAffiliateUrl(`https://www.${host}/sch/i.html?_nkw=${encodeURIComponent(group.name)}`);
+  const ebayHref = ebaySearchUrl(country, group.name, "sealed-quickview");
 
   return (
     <div className="max-h-[88vh] overflow-hidden rounded-lg border border-ink-700 bg-ink-900 shadow-2xl">
@@ -170,7 +168,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                         {fmt(l.priceCents)}
                       </div>
                       <OutboundLink
-                        href={affiliateUrl(l.url, l.retailer)}
+                        href={affiliateUrl(l.url, l.retailer, "/sealed")}
                         retailer={l.retailer}
                         country={country}
                         kind="sealed"

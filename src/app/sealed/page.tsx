@@ -5,7 +5,7 @@ import { soldOutEverywhere } from "@/lib/sealed-offers";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { gbpCentsToEur } from "@/lib/fx";
-import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebaySearchUrl } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
 import { Reveal } from "@/components/Reveal";
 import { SealedFilters } from "@/components/SealedFilters";
@@ -43,11 +43,16 @@ const csvParam = (v?: string | string[]) => one(v).split(",").map((s) => s.trim(
 const isFilteredParams = (sp: SealedParams) =>
   Boolean(one(sp.q) || one(sp.type) || one(sp.set) || one(sp.min) || one(sp.max) || one(sp.instock) || one(sp.atmsrp));
 
-// Marketplace hosts per site market.
-const MARKETPLACE_HOSTS: Record<string, { ebay: string; amazon: string }> = {
-  AU: { ebay: "ebay.com.au", amazon: "amazon.com.au" },
-  US: { ebay: "ebay.com", amazon: "amazon.com" },
-  UK: { ebay: "ebay.co.uk", amazon: "amazon.co.uk" },
+// Amazon hosts per site market. eBay is NOT in here any more (2026-09-26): it
+// goes through lib/affiliate.ts's ebaySearchUrl, the one map that knows all six
+// markets. This local copy only knew AU/US/UK, so Singapore, Canada and EU
+// visitors were sent to ebay.com.au. Amazon keeps its three hosts and the AU
+// fallback unchanged: an Associates tag is registered per Amazon locale, and
+// widening it is a question for whoever holds the Associates account.
+const AMAZON_HOSTS: Record<string, string> = {
+  AU: "amazon.com.au",
+  US: "amazon.com",
+  UK: "amazon.co.uk",
 };
 const SEALED_SEARCHES = [
   { label: "Vendetta sealed", q: "Riftbound Vendetta sealed" },
@@ -325,13 +330,13 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
         </p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {SEALED_SEARCHES.map((x) => {
-            const mkt = MARKETPLACE_HOSTS[country] ?? MARKETPLACE_HOSTS.AU;
+            const amazonHost = AMAZON_HOSTS[country] ?? AMAZON_HOSTS.AU;
             return (
               <div key={x.q} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2.5">
                 <span className="text-sm font-semibold text-white">{x.label}</span>
                 <span className="flex gap-1.5">
                   <OutboundLink
-                    href={ebayAffiliateUrl(`https://www.${mkt.ebay}/sch/i.html?_nkw=${encodeURIComponent(x.q)}`)}
+                    href={ebaySearchUrl(country, x.q, "sealed-page")}
                     retailer="ebay_sealed_search"
                     country={country}
                     kind="sealed"
@@ -340,7 +345,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
                     eBay →
                   </OutboundLink>
                   <OutboundLink
-                    href={affiliateUrl(`https://www.${mkt.amazon}/s?k=${encodeURIComponent(x.q)}`, "amazon_sealed")}
+                    href={affiliateUrl(`https://www.${amazonHost}/s?k=${encodeURIComponent(x.q)}`, "amazon_sealed", "/sealed")}
                     retailer="amazon_sealed_search"
                     country={country}
                     kind="sealed"

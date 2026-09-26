@@ -13636,3 +13636,113 @@ flagged as read-with-care.
 
 No `[deploy]` marker: ordinary content, rides the daily 08:00 UTC release unless
 asked to ship now.
+
+## Reddit landings: the pre-order CTA, the eBay strip and click attribution — 2026-09-26
+
+Owner's ask: the blog posts and `/radiance-preorders` are getting visitors from
+links the owner posts on Reddit — get more of them using the site and clicking
+eBay. Measured before changing anything (Playwright, 390px phone, the posts
+actually being shared, plus production HTML):
+
+- **The eBay path sat below where drive-by readers stop.** The posts are 14–17
+  screens long and their one eBay path, the "Shop this guide" strip, rendered
+  at 70–86% of the page (its default spot after the body). The site's #1 page,
+  `riftbound-radiance-leaked-mechanics`, had no strip at all — its readers met
+  eBay only in the footer banner.
+- **The pre-order CTA missed the shared posts.** `RadiancePreorderCta` (live
+  "booster box pre-orders from $X → compare every store", top and after the
+  first section) was keyed to three slugs chosen from the 09-24 Search Console
+  export. The spoiler posts written since — Seraphine, Neeko, K'Sante, the ones
+  being shared — never made the list.
+- **Nothing could be measured.** The strip and `PreorderPriceTable` fired
+  `buy_click` with no page or placement; `affiliateUrl()` without `loc`
+  reported the pre-order page's eBay rows to EPN as `…-home`; QuickView's
+  zero-stock eBay search was a bare `<a>` that fired no event; and nothing
+  recorded that a session came from Reddit (GA4 attributes sessions but sees
+  about a third of Vercel's; Vercel's custom events have no referrer split).
+- **A revenue bug on the way:** `/sealed` and `SealedQuickView` kept their own
+  AU/US/UK eBay host maps, so Singapore, Canada and EU visitors were sent to
+  ebay.com.au — the drift `lib/affiliate.ts` already warns about.
+
+**1. The pre-order CTA is a rule, not a list.** `carriesRadiancePreorderCta()`
+(lib/sets/radiance.ts): every Radiance NEWS post — category `blog`, tag
+`radiance`. The list went stale in two days; a rule covers the next spoiler post
+the day it ships. Guides are left out on purpose: the article-end release-day
+capture renders on `radiance && pre-release && !preorderCta`, so a tag-only rule
+would have made it unreachable everywhere; the four Radiance guides keep it.
+News posts keep exactly the two forms per page they had — the release-day one
+moves from the foot to after the first section, the owner's 09-24 layout. The
+block's price loader reads the same 48h-cached groups, so more pages add no
+database reads (egress rule 5 holds). A click now fires `preorder_cta_click`
+(`placement`, `entry`), dual-destination because a click is low-volume.
+
+**2. The eBay strip moves to where buying intent peaks, on the pages that get
+the traffic.** `[[shop]]` (the documented positioning marker) after the section
+that shows readers what the cards do, a full section away from the mid-article
+pre-order CTA so the two never stack. Measured at 390px: K'Sante 71% → 50%,
+Seraphine ~78% → 47%, Neeko foot → 45%, the tracker 86% → 34%, leaked-mechanics
+none → 51% (it gains a two-link strip: Radiance pre-orders, Riftbound singles —
+the post's own "what to do before release" framing). Still one strip per page,
+and it carries its EPN disclosure with it. Not a site-wide default change: 51
+articles carry strips and most were reviewed for AdSense as they are.
+
+**3. Attribution, so the owner can see whether any of this works.**
+- `buy_click` from the strip carries `page_type: "article"` and
+  `surface: "shop_strip_inline" | "shop_strip_end"`; EPN's customid splits the
+  same way (`guide-inline` / `guide-strip`), so eBay's own earnings report can
+  compare placements.
+- `PreorderPriceTable` takes a `page` (`/radiance-preorders` or
+  `/sets/radiance`) that reaches both `affiliateUrl`'s sub-id and `page_type`,
+  with `surface: "table"`, rank, stock state and price.
+- QuickView's zero-stock eBay search is an `OutboundLink` (`ebay_no_listing`,
+  like its sibling further down).
+- Every `buy_click` carries `entry` — how the tab's session first arrived:
+  reddit / discord / search / social / email / internal / direct / other
+  (`lib/entry-source.ts`, captured once per tab by `ReferralCapture`, first
+  touch because a hard navigation inside the site replaces
+  `document.referrer`). `utm_source` wins over the referrer, because **the
+  Reddit and Discord apps often send no referrer at all — posting links as
+  `…?utm_source=reddit` is what attributes those visits.** A coarse bucket,
+  never the referring URL.
+
+**4. Sealed eBay links go through `ebaySearchUrl()`** (sources `sealed-page`,
+`sealed-quickview`), so all six markets reach their own eBay. Amazon keeps its
+three hosts and AU fallback unchanged: an Associates tag is registered per
+locale, which is the account holder's call, not a code fix.
+
+**5. An alert offered on a card with no price names the notice that will fire.**
+The compact (QuickView) `PriceDropAlertCta` ignored `unpriced`, so a spoiler
+post's card tap offered "Email me when it drops" on a card with no price. Both
+variants now read one copy table: drop for a priced card; for an unpriced one
+"in stock", or "pre-order" while the set is unreleased (`isPreorderSetCode`) —
+what `email.ts` actually sends. QuickView mirrors the card page's rule
+(`!hasNoRetailChannel`) and holds the row's skeleton until its prices load
+(`pending`): without it the row showed "Price-drop alert" and flipped a second
+later — sampled every 50ms in a browser, it now only ever renders the right one.
+`PriceAlertModal` takes the same `notice` on its explicit-open event.
+
+**Declined, and why:** a fixed bottom "shop" bar (settled: fixed-bottom UI
+cannot track browser chrome); any prompt on the first page for Reddit visitors
+(settled in `signup-promo-gate.ts`); urgency or countdown copy; new pages; and
+widening `RADIANCE_CALLOUT_SLUGS`, which its own comment holds back for per-URL
+Search Console figures. Noticed and left alone: `RadiancePreorderCtaView` wears
+gold, which CURRENT-STATE reserves for Premium — it predates this entry and is
+the owner's design from 09-24.
+
+**How to read the result.** Compare from 2026-09-26 (`buy_click` had no
+baseline — docs/MARKETING-PLAN.md lists it as "—"). GA4/Vercel: `buy_click`
+by `entry`, by `surface` within `page_type: "article"`, and
+`preorder_cta_click` by `placement`. GA4 shows an event parameter in reports
+and explorations only once it is registered as an event-scoped custom
+dimension (Admin → Custom definitions): `entry` is new, so it needs one, as do
+`surface` and `page_type` if nobody registered them. Both events and their params
+are in docs/homepage-measurement.md's event table. EPN: customids
+`rc-<market>-guide-inline-*` vs `-guide-strip-*`, `…-radiance-preorders`,
+`…-sealed-page-*`.
+
+Verified on the local seed DB (never production), Playwright at 390px: the
+depths above; a Reddit-referred click on the K'Sante strip fired `buy_click`
+with `page_type: "article"`, `surface: "shop_strip_inline"`, `entry: "reddit"`
+and customid `rc-us-guide-inline-search`; `/sealed` as a Canada visitor links
+ebay.ca (`rc-ca-sealed-page-search`). Deployed off-schedule at the owner's
+explicit instruction ("implement and deploy").

@@ -174,6 +174,14 @@ longer lands on its entry.
   /login link carries `src=` or marks its source on click
   (`tests/login-links-attributed.test.ts`). By-source numbers compare only
   from 2026-09-25 on. [2026-09-25](../DECISIONS.md#L12446)
+- **Affiliate clicks name their page:** outbound store and eBay links are
+  `OutboundLink`s, so `buy_click` carries `page_type`, `surface` and the
+  visitor's first-touch `entry` bucket (`lib/entry-source.ts`). Their URLs
+  come from `lib/affiliate.ts` (`affiliateUrl` with the page's path,
+  `ebaySearchUrl` with a source), never a local eBay host map, so EPN's
+  customid names the page and all six markets reach their own eBay.
+  By-surface numbers compare only from 2026-09-26 on.
+  [2026-09-26](../DECISIONS.md#L13640)
 
 ## Navigation & chrome
 
@@ -244,6 +252,13 @@ longer lands on its entry.
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)
+- **Posts shared on Reddit put their buy paths early:** every Radiance news
+  post (`category: "blog"`, tagged `radiance`) carries the pre-order CTA by
+  rule (`carriesRadiancePreorderCta`); guides never do. A high-traffic post
+  places its eBay strip mid-article with its own `[[shop]]` line, ahead of
+  60% of the body (`tests/reddit-landing-conversion.test.ts`). Links posted
+  to Reddit should carry `?utm_source=reddit`: the apps often send no
+  referrer. [2026-09-26](../DECISIONS.md#L13640)
 
 ## Prices & data
 
@@ -337,8 +352,11 @@ longer lands on its entry.
   20h+ and was seen sold out by two runs (`soldOutRuns`) gets "back in
   stock"; a pre-2026-09-25 Card-price baseline that reads sold out is reset
   to no price instead. Both sit inside the weekly per-address cap and at
-  most 25 new digests a run. [2026-09-25](../DECISIONS.md#L12574),
-  [2026-09-25](../DECISIONS.md#L13128), [2026-09-25](../DECISIONS.md#L13394)
+  most 25 new digests a run. Offering an alert on a card with no price
+  names that notice ("pre-order alert", "in-stock alert"), never a drop,
+  in QuickView and its email modal too. [2026-09-25](../DECISIONS.md#L12574),
+  [2026-09-25](../DECISIONS.md#L13128), [2026-09-25](../DECISIONS.md#L13394),
+  [2026-09-26](../DECISIONS.md#L13640)
 - **Postage is measured, never guessed:** Best Basket, portfolio
   replacement cost and store pages price delivery with `shippingFor()`
   (lib/shipping.ts) from `src/lib/shipping-rates.json`, built by

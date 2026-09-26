@@ -170,13 +170,15 @@ test("the pre-order price table is a single shared component, used by both /radi
   assert.match(preordersPage, /import \{ PreorderPriceTable, pricedPreorderGroups, preorderTableGroups \} from "@\/components\/PreorderPriceTable"/);
   // Every listed group, sold-out ones included (2026-09-24): the table badges
   // stock itself, so the caller no longer pre-filters to priced groups.
-  assert.match(preordersPage, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} \/>/);
+  // `page` (2026-09-26): names the page to EPN's customid and buy_click — the
+  // table used to report every click as the homepage's.
+  assert.match(preordersPage, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} page="\/radiance-preorders" \/>/);
   // The old inline per-store <li> markup must be gone from the page now that
   // it lives in the shared component — otherwise there are two copies to drift.
   assert.doesNotMatch(preordersPage, /rows\.map\(\(l\) => \{/);
 
   const hub = read("src/components/sets/RadianceHub.tsx");
-  assert.match(hub, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} \/>/);
+  assert.match(hub, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} page="\/sets\/radiance" \/>/);
 });
 
 test("PreorderPriceTable never claims InStock — every listing here is unshipped", () => {

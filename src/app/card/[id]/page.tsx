@@ -1050,6 +1050,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               cardPath={cardHref(card)}
               providers={enabledProviders()}
               unpriced={priceState.isEmpty && !priceState.noRetailChannel}
+              preorder={isPreorderSetCode(card.setCode)}
             />
 
             {/* A revealed card from an unreleased set has no price to compare

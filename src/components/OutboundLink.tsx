@@ -5,6 +5,7 @@ import { trackEvent } from "@/lib/analytics";
 import { outboundRel } from "@/lib/affiliate";
 import { markBuyClick, registerBuyLink } from "@/lib/buy-intent";
 import { reportOutboundConversion } from "@/lib/google-ads";
+import { readEntrySource } from "@/lib/entry-source";
 
 // An outbound "buy" link. Used to also fire a click beacon (to /api/click) for
 // eBay retailer keys so click counts could be verified in our own DB — that
@@ -119,8 +120,11 @@ export function OutboundLink({
   /** WHICH on-page surface this click came from — the comparison table, the
    *  QuickView modal, the eBay listings strip, or the collapsed out-of-stock
    *  list — so a qualified-CTR report can be sliced by surface without
-   *  re-deriving it from page_type + DOM position. */
-  surface?: "table" | "modal" | "ebay_strip" | "out_of_stock";
+   *  re-deriving it from page_type + DOM position. The two shop_strip values
+   *  are an article's "Shop this guide" eBay strip: `_inline` where the body
+   *  placed it mid-article with [[shop]], `_end` at its default spot after the
+   *  body — the pair that says whether moving it up earned clicks. */
+  surface?: "table" | "modal" | "ebay_strip" | "out_of_stock" | "shop_strip_inline" | "shop_strip_end";
 }) {
   // Tell the signup popup a buy link exists on this page, so it stays off the
   // buy path until the click has happened. See lib/buy-intent.ts — registering
@@ -144,6 +148,10 @@ export function OutboundLink({
       variant,
       condition: condition ?? undefined,
       surface,
+      // How this tab's session arrived (reddit / search / email …), first
+      // touch — lib/entry-source.ts. Answers "do the Reddit readers click
+      // through?", which neither destination could before.
+      entry: readEntrySource(),
       transport_type: "beacon",
     });
     // Paid Google Ads conversion tracking (lib/google-ads.ts) — a no-op unless a

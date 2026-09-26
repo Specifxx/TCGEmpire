@@ -27,7 +27,7 @@ import { getPopularCards } from "@/lib/cheapest-cards";
 import { ScrollDepthTracker } from "./ScrollDepthTracker";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { ArticleSignupCta } from "./ArticleSignupCta";
-import { isBeforeRadianceRelease, RADIANCE_CALLOUT_SLUGS, RADIANCE_PREORDER_CTA_SLUGS } from "@/lib/sets/radiance";
+import { carriesRadiancePreorderCta, isBeforeRadianceRelease, RADIANCE_CALLOUT_SLUGS } from "@/lib/sets/radiance";
 import { RadiancePreorderCta } from "./RadiancePreorderCta";
 import { BanListTable } from "./BanListTable";
 import { BANLIST_SLUG } from "@/lib/banlist";
@@ -242,9 +242,10 @@ export async function ArticleView({ article }: { article: Article }) {
   const related = relatedArticles(article);
   const cta = article.browseCta ?? DEFAULT_BROWSE_CTA;
   const radianceSeason = isBeforeRadianceRelease();
-  // The pre-order CTA pages (lib/sets/radiance.ts). The block itself switches
-  // to "see Radiance prices" on release day, so this list does not expire.
-  const preorderCta = (RADIANCE_PREORDER_CTA_SLUGS as readonly string[]).includes(article.slug);
+  // Every Radiance news post (lib/sets/radiance.ts carriesRadiancePreorderCta).
+  // The block itself switches to "see Radiance prices" on release day, so the
+  // rule does not expire.
+  const preorderCta = carriesRadiancePreorderCta(article);
 
   // All galleries: `embeds` (positioned in the body via [[embed:N]] markers) plus
   // the legacy single `embed` (always rendered after the body). Close-ups reuse the
@@ -493,7 +494,7 @@ export async function ArticleView({ article }: { article: Article }) {
           const n = parseInt(bodyParts[i + 1], 10);
           if (part === "shop") {
             return article.shop && article.shop.length > 0 ? (
-              <ArticleShopStrip key={i} items={article.shop} />
+              <ArticleShopStrip key={i} items={article.shop} placement="inline" />
             ) : null;
           }
           if (part === "embed") {

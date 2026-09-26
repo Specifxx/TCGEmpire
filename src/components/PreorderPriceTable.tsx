@@ -59,14 +59,21 @@ export function PreorderPriceTable({
   groups,
   country,
   currency,
+  page = "/radiance-preorders",
   now = Date.now(),
 }: {
   groups: SealedGroup[];
   country: Country;
   currency: string;
+  /** The path this table renders on. It reaches the affiliate sub-id (EPN's
+   *  customid) and buy_click's page_type: without it every click from this
+   *  table — eBay included — reported as the HOMEPAGE ("<retailer>-home"),
+   *  which hid the pre-order page's earnings inside the homepage's. */
+  page?: "/radiance-preorders" | "/sets/radiance";
   /** Injected for tests; the page renders at request/ISR time. */
   now?: number;
 }) {
+  const pageType = page === "/sets/radiance" ? "set_hub" : "radiance_preorders";
   const shown = preorderTableGroups(groups);
   if (shown.length === 0) return null;
 
@@ -110,7 +117,7 @@ export function PreorderPriceTable({
                 </div>
               </div>
               <ul className="divide-y divide-ink-800">
-                {rows.map((l) => {
+                {rows.map((l, rank) => {
                   const state = offerStock(l, now);
                   const isOpen = state === "open";
                   const overPct =
@@ -142,10 +149,16 @@ export function PreorderPriceTable({
                           {formatMoney(l.priceCents, currency)}
                         </span>
                         <OutboundLink
-                          href={affiliateUrl(l.url, l.retailer)}
+                          href={affiliateUrl(l.url, l.retailer, page)}
                           retailer={l.retailer}
                           country={country}
                           kind="sealed"
+                          cardName={g.name}
+                          price={l.priceCents / 100}
+                          positionInList={rank + 1}
+                          inStock={isOpen}
+                          pageType={pageType}
+                          surface="table"
                           // lnum only: tabular figures widen Inter's hyphen ('Pre -order').
                           // A sold-out or unconfirmed offer keeps its link (the store
                           // may restock) but loses the button: no emphasis on a

@@ -5,6 +5,8 @@ import { useCountry } from "./CountryProvider";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { formatMoney } from "@/lib/format";
 import { currencyOf } from "@/lib/country";
+import { trackEvent } from "@/lib/analytics";
+import { readEntrySource } from "@/lib/entry-source";
 import type { RadianceBoxPrices } from "@/lib/radiance-cta";
 
 // Client half of RadiancePreorderCta: picks the VISITOR's market from the
@@ -27,6 +29,11 @@ export function RadiancePreorderCtaView({
     <aside aria-label="Radiance pre-orders" data-radiance-cta={placement} className="not-prose my-6">
       <Link
         href="/radiance-preorders"
+        // The article → pre-order hop is the funnel step this block exists
+        // for, and nothing measured it: GA4's page_referrer shows it only in
+        // an exploration, and Vercel not at all. A click, so low-volume —
+        // it stays dual-destination (lib/analytics.ts GA4_ONLY_EVENTS).
+        onClick={() => trackEvent("preorder_cta_click", { placement, has_price: from != null, entry: readEntrySource() })}
         className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-slate-200 hover:border-gold/70"
       >
         <span>

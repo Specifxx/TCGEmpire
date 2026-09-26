@@ -178,7 +178,7 @@ export default async function RadiancePreordersPage() {
               inside RadianceHub's "Products & preorders" <h2>), so this page needs
               its own enclosing <h2> or h1 -> h3 skips a level. */}
           <h2 className="sr-only">Radiance pre-order prices by product</h2>
-          <PreorderPriceTable groups={listed} country={country} currency={currency} />
+          <PreorderPriceTable groups={listed} country={country} currency={currency} page="/radiance-preorders" />
         </div>
       ) : (
         <div className="card-surface mt-5 p-6">

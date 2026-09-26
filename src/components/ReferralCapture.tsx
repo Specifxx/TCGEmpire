@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { REFERRAL_COOKIE } from "@/lib/referral-cookie";
+import { captureEntrySource } from "@/lib/entry-source";
 
 // Persists an inbound referral code (?ref=<userId>) into a cookie so it survives
 // the browse → sign-up journey and the OAuth round-trip. Read server-side by
@@ -9,6 +10,10 @@ import { REFERRAL_COOKIE } from "@/lib/referral-cookie";
 // (non-sensitive), so a plain client cookie is fine. Mounted once in the layout.
 export function ReferralCapture() {
   useEffect(() => {
+    // The landing's traffic source (Reddit, search, email…) for buy_click
+    // attribution — first touch per tab, so it runs before anything returns.
+    // See lib/entry-source.ts.
+    captureEntrySource();
     const ref = new URLSearchParams(window.location.search).get("ref");
     // cuids are lowercase alphanumeric; validate loosely before storing.
     if (!ref || !/^[a-z0-9]{6,40}$/i.test(ref)) return;

@@ -145,7 +145,7 @@ export async function RadianceHub({ country }: { country: Country }) {
           <div className="mt-4">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pre-order prices, every store</h4>
             <div className="mt-2">
-              <PreorderPriceTable groups={listed} country={country} currency={currency} />
+              <PreorderPriceTable groups={listed} country={country} currency={currency} page="/sets/radiance" />
             </div>
           </div>
         ) : (

@@ -7,7 +7,7 @@ import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
-import { isFallbackRetailer, displayRarity, isUltimate, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
+import { isFallbackRetailer, displayRarity, isUltimate, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, CONDITIONS, cardmarketRetailerFor, hasNoRetailChannel, isPreorderSetCode } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
 import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { TcgMarketPrice } from "./TcgMarketPrice";
@@ -16,7 +16,7 @@ import { cardHref } from "@/lib/card-url";
 import { QUANTITY_CAP } from "@/lib/collection-cost";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, outboundRel, isPaidLink } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, isPaidLink } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
@@ -418,7 +418,21 @@ function QuickViewModal({
                 place; ghost buttons only (see the collection row's comment).
                 OAuth returns to the card page, where SignupWelcome completes
                 the stashed watch. The heart stays. */}
-            <PriceDropAlertCta compact placement="quickview_alert" cardId={card.id} cardPath={href} providers={providers} />
+            {/* `unpriced` mirrors the card page's rule (priceState.isEmpty &&
+                !noRetailChannel): prices loaded, nothing in stock in this market,
+                and not a never-at-retail printing that no store will ever list.
+                `pending` holds the row's skeleton until the prices arrive, so it
+                renders once, with the notice that will actually fire. */}
+            <PriceDropAlertCta
+              compact
+              placement="quickview_alert"
+              cardId={card.id}
+              cardPath={href}
+              providers={providers}
+              unpriced={prices !== null && inStock.length === 0 && !hasNoRetailChannel(card.setCode)}
+              preorder={isPreorderSetCode(card.setCode)}
+              pending={prices === null}
+            />
 
             {/* Add to collection — track & value your whole collection in your profile */}
             <div className="mt-3 flex items-center gap-2">
@@ -470,17 +484,24 @@ function QuickViewModal({
                 <div className="py-4 text-sm text-slate-500">
                   <p>No in-stock listings right now.</p>
                   {/* Never a dead end: a zero-stock modal still offers the
-                      affiliate eBay search. */}
+                      affiliate eBay search. An OutboundLink, like the fallback
+                      further down (2026-09-26): as a bare <a> this was the one
+                      eBay path in the modal that fired no buy_click, so the
+                      clicks it earned were invisible to both analytics tools. */}
                   {ebaySearchUrl && ebayMkt && (
                     <>
-                      <a
+                      <OutboundLink
                         href={ebaySearchUrl}
-                        target="_blank"
-                        rel={outboundRel(ebaySearchUrl)}
+                        retailer="ebay_no_listing"
+                        country={country}
+                        cardId={card.id}
+                        cardName={cardDisplayName(card.name, card)}
+                        pageType="card_detail"
+                        surface="modal"
                         className="btn-primary mt-3 inline-flex text-xs"
                       >
                         Search {ebayMkt.label} →
-                      </a>
+                      </OutboundLink>
                       <AffiliateDisclosure partner="ebay" tight />
                     </>
                   )}

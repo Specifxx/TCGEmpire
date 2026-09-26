@@ -12,9 +12,11 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 test("QuickView renders the compact alert with its own placement, below the eBay tabs", () => {
   const qv = read("src/components/QuickView.tsx");
   assert.match(qv, /import \{ PriceDropAlertCta \} from "\.\/PriceDropAlertCta"/);
+  // `unpriced` / `preorder` (2026-09-26, tests/reddit-landing-conversion.test.ts):
+  // a card with no price is offered the notice that will actually fire.
   assert.match(
     qv,
-    /<PriceDropAlertCta compact placement="quickview_alert" cardId=\{card\.id\} cardPath=\{href\} providers=\{providers\} \/>/,
+    /<PriceDropAlertCta\s+compact\s+placement="quickview_alert"\s+cardId=\{card\.id\}\s+cardPath=\{href\}\s+providers=\{providers\}\s+unpriced=\{[^}]+\}\s+preorder=\{isPreorderSetCode\(card\.setCode\)\}\s+pending=\{prices === null\}\s*\/>/,
   );
   const disclosure = qv.indexOf('<AffiliateDisclosure partner="ebay" tight />');
   const cta = qv.indexOf("<PriceDropAlertCta");
@@ -47,9 +49,12 @@ test("compact mode uses no btn-primary: the retailer buy buttons stay QuickView'
   assert.ok(start > 0 && end > start);
   const compact = c.slice(start, end);
   assert.doesNotMatch(compact, /btn-primary/);
-  assert.match(compact, /Price-drop alert:/);
+  // The label and toggle read from `copy` (2026-09-26), which still words a
+  // PRICED card exactly as before — only an unpriced one says in-stock/pre-order.
+  assert.match(compact, /\{copy\.label\}:/);
+  assert.match(compact, /\{watching \? copy\.on : copy\.email\}/);
+  assert.match(c, /!unpriced\s*\?\s*\{ label: "Price-drop alert", get: "Get a price-drop alert", on: "✓ Price-drop alert on", email: "Email me when it drops" \}/);
   assert.match(compact, /Continue with Google/);
   assert.match(compact, /onClick=\{enable\}/, "signed in: one click");
-  assert.match(compact, /✓ Price-drop alert on/);
   assert.match(compact, /or email me/);
 });

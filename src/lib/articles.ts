@@ -326,6 +326,8 @@ Read the two cards together and the archetype is impossible to miss. Both of the
 
 Put the Legend and the spell in the same deck and you can see the shape of it: build a board of durable, shielded units, then convert that durability into reach whenever you need it — a chip of damage from the spell, a big swing from the Legend. It is a defensive deck with an offensive button, which is exactly the fantasy a K'Sante player wants — the wall that decides, on its own terms, when to stop being a wall. Whether that is strong enough to define a Radiance archetype is a question for real cards and a real format; the intent, though, could not be clearer.
 
+[[shop]]
+
 ## Calm and Body — resilience with teeth
 
 K'Sante's cards carry two domain gems: **Calm** (the green sprout) and **Body** (the orange emblem). It is a fitting pair. [Calm](/domains/calm) is the domain of growth and resilience; [Body](/domains/body) is endurance and physical power. Between them they describe a champion who wins by outlasting you and then, once he has, hitting back — which is precisely what the two cards do.
@@ -494,6 +496,8 @@ The first, art by **Naifan Zhang**, is numbered **151/167** and carries a promo 
 The second, art by **Anna Nikonova**, is numbered **174/167**. That denominator is the tell: 174 is *above* 167, and cards numbered above a set's base run are where Riftbound puts its premium treatments — the Showcase and chase variants, numbered on top of the base set in every release so far. So the 174/167 Starry-Eyed Songstress is not a different card; it is the **alternate-art chase printing** of the same Legend, and it is the one collectors will actually hunt. If you have followed how Vendetta's [over-numbered cards](/guides/riftbound-vendetta-overnumbers-explained) behaved, you already know the shape of what happens next: the base printing is attainable, the over-number carries the premium, and the gap between them is set by how good the card turns out to be.
 
 [[embed:0]]
+
+[[shop]]
 
 ## Seraphine's *other* Radiance card is already in people's hands
 
@@ -1107,6 +1111,8 @@ Riot has published the whole run-up, not just the street date. These are the dat
 
 The countdown to each of those lives on **[Riftbound release dates](/release-dates)**, which also offers an add-to-calendar file.
 
+[[shop]]
+
 ## Reveal log: what has actually been shown
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
@@ -1609,6 +1615,14 @@ Radiance releases **23 October 2026**.`,
     updated: "2026-09-12",
     readMins: 8,
     tags: ["radiance", "news", "mechanics", "spoilers"],
+    // The site's #1 page had no in-content buy path at all (2026-09-26): its
+    // readers reached eBay only through the site-wide footer banner. Two links,
+    // the pre-order framing the post's own "what to do before release" gives,
+    // placed by [[shop]] after the at-a-glance table rather than at the foot.
+    shop: [
+      { label: "Radiance pre-orders", query: "Riftbound Radiance booster box" },
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+    ],
     hero: {
       src: "/blog/riftbound-radiance-leaked-mechanics.png",
       alt: "Riftbound Radiance leak — Deploy, Showoff and Disarm, three new mechanics shown at a PAX West demo table",
@@ -1727,6 +1741,8 @@ The caption also suggests Disarm "can pair well with direct damage spells like F
 | **Deploy** | Gear | Grants a benefit only at one battlefield; dies if the opponent takes that battlefield | No direct equivalent — closer in spirit to Hunt/Ganking's battlefield-control tension |
 | **Showoff** | Unspecified | Reveal a hand card, or point at a qualifying friendly card, for a scaling effect | Vision (reveal-based value), but from hand/board instead of the top of your deck |
 | **Disarm** | Unit | Lowers an enemy unit's Might when this unit attacks | The mirror of Assault, which raises the attacker's *own* Might |
+
+[[shop]]
 
 ## What's still unconfirmed
 
@@ -5062,6 +5078,8 @@ Here is the part that will decide whether this card is a staple or a curiosity, 
 Those three Legend slots are spent whether or not you ever draw Neeko. You commit them at deckbuild. If she is in your opening hand, you have a 6-drop that reshapes what your deck can do. If she is at the bottom of your deck, you have paid a real cost for nothing and you are down a card.
 
 That is a variance trade rather than a power trade, and variance trades are exactly the kind of thing a format takes weeks to price correctly. Expect the first fortnight of Radiance to be loud and wrong about this card in both directions.
+
+[[shop]]
 
 ## Neutral is doing a lot of work here
 

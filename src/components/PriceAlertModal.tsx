@@ -20,9 +20,23 @@ import { Spinner } from "./ui/Skeleton";
 const EMAIL_KEY = "rc_alert_email";
 
 // Fired by PriceWatchButton with the ONE card just watched.
+// Which notice the alert will actually send (lib/price-alerts.ts): a drop for a
+// priced card, the first-listing notice for an unpriced one — "open for
+// pre-order" while its set is unreleased, "now in stock" after. The explicit
+// "email me" path passes it (PriceDropAlertCta); absent means "drop", which is
+// every caller that predates it (2026-09-26).
+export type AlertNotice = "drop" | "stock" | "preorder";
+
 export interface PriceAlertPromptDetail {
   cardId: string;
+  notice?: AlertNotice;
 }
+
+const NOTICE_COPY: Record<AlertNotice, { heading: string; submit: string }> = {
+  drop: { heading: "Get a price-drop email", submit: "Notify me of price drops" },
+  stock: { heading: "Get an in-stock email", submit: "Notify me when it's in stock" },
+  preorder: { heading: "Get a pre-order email", submit: "Notify me when I can pre-order it" },
+};
 
 type Phase = "form" | "success" | "error";
 
@@ -50,6 +64,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [pendingCardId, setPendingCardId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<AlertNotice>("drop");
   // The market and address the watch was just created with — the success
   // phase's target field saves against exactly that (card, market) row.
   const [subscribed, setSubscribed] = useState<{ email: string; market: string } | null>(null);
@@ -110,6 +125,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
         return;
       }
       setPendingCardId(cardId);
+      setNotice("drop");
       setPhase("form");
       setEmail("");
       setOpen(true);
@@ -120,9 +136,11 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
     // opens the form for that card, bypassing the once-ever auto-prompt gate,
     // since this is an explicit high-intent action rather than a passive click.
     const openHandler = (e: Event) => {
-      const cardId = (e as CustomEvent<PriceAlertPromptDetail>).detail?.cardId;
+      const detail = (e as CustomEvent<PriceAlertPromptDetail>).detail;
+      const cardId = detail?.cardId;
       if (!cardId) return;
       setPendingCardId(cardId);
+      setNotice(detail?.notice ?? "drop");
       // A signed-in member who reaches this modal (the card page's explicit
       // "email me" CTA fires regardless of auth) just subscribes on their
       // account address — no reason to make them type it.
@@ -205,7 +223,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                   </svg>
                   <span className="text-xs font-semibold uppercase tracking-wide">Watching this card</span>
                 </div>
-                <h2 id="price-alert-title" className="font-display text-xl font-bold text-white">Get a price-drop email</h2>
+                <h2 id="price-alert-title" className="font-display text-xl font-bold text-white">{NOTICE_COPY[notice].heading}</h2>
                 {/* ACCOUNT FIRST for signed-out visitors — this is the site's
                     highest-intent moment, and it used to hand it straight to an
                     email field. The email path below is UNCHANGED and always
@@ -267,7 +285,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                 />
                 <button type="submit" disabled={submitting} aria-busy={submitting} className="btn-primary mt-3 w-full gap-1.5">
                   {submitting && <Spinner size="sm" />}
-                  {submitting ? "Subscribing…" : "Notify me of price drops"}
+                  {submitting ? "Subscribing…" : NOTICE_COPY[notice].submit}
                 </button>
                 <button
                   type="button"
