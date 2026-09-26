@@ -157,17 +157,18 @@ export function FeedbackForm({ days }: { days: number }) {
         />
       </label>
 
-      {/* Honeypot — off-screen, untabbable, aria-hidden. Bots fill it; people
+      {/* Honeypot — display:none (autofill skips it, unlike the old opacity-0 field), untabbable. Bots fill it; people
           never see it. See /api/feedback, which silently accepts and drops
           anything that arrives with this set. */}
       <input
         type="text"
+        name="website"
         tabIndex={-1}
         autoComplete="off"
         aria-hidden="true"
         value={honeypot}
         onChange={(e) => setHoneypot(e.target.value)}
-        className="pointer-events-none absolute h-0 w-0 opacity-0"
+        className="hidden"
       />
 
       {!user && (
