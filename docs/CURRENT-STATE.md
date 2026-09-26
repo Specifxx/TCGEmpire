@@ -216,6 +216,10 @@ longer lands on its entry.
 - **No mobile bottom tab bar** (fixed-bottom UI cannot track browser chrome)
   **and no notification bell** (build a `/notifications` page rather than
   restore it). One control opens `CinematicNavMenu` below lg.
+  The one fixed-bottom exception is the card page's owner-requested sticky
+  buy bar (`CardStickyBuyBar`, below lg, hidden over the comparison); if it
+  rides up like the tab bar did, delete it — `CardTopBuy` under the name
+  carries the same action. [2026-09-26](../DECISIONS.md#L13999)
   [2026-09-18](../DECISIONS.md#L8260), [2026-09-19](../DECISIONS.md#L8590)
 - **Watchlist:** a heart on all five surfaces and its own header control
   from sm, opening a right-side drawer; `/watching` stays. The drawer renders
@@ -302,7 +306,9 @@ longer lands on its entry.
   listing's own title can veto its group.
   [2026-09-10](../DECISIONS.md#L4284), [2026-09-20](../DECISIONS.md#L8969)
 - **Card art** comes from the `/card-art` mirror via `cardImageSrc`; OG
-  images need PNG (`cardImageForOg`). [2026-09-13](../DECISIONS.md#L5750),
+  images need PNG (`cardImageForOg`). Grids, lists and thumbnails use the committed
+  320w/480w renditions via `cardImageSrcSet`/`cardThumbProps`; only the
+  card-detail hero loads the 744px file. `/browse` defaults to "Most popular". [2026-09-13](../DECISIONS.md#L5750),
   [2026-09-22](../DECISIONS.md#L10857)
 - **Portfolio value never includes shipping.** Price-drop emails: at most one
   digest per address per week, except Plus/Premium target, below-market and

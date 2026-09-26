@@ -15,6 +15,7 @@ import { ebayLabel, ebaySearchUrl, riftboundEbayQuery } from "@/lib/affiliate";
 import { RecentlyViewedRail } from "./home/RecentlyViewedRail";
 import { OutboundLink } from "./OutboundLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 // How long a focused-but-not-yet-typing field has to stay focused before it
 // counts as "focus with intent" for search_initiated below — long enough that
@@ -795,7 +796,7 @@ export function SearchBar({
                       <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
                         {c.imageThumbUrl && (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={c.imageThumbUrl} alt={cardImageAlt(c)} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                          <img {...cardThumbProps({ imageThumbUrl: c.imageThumbUrl }, "36px")} alt={cardImageAlt(c)} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -925,7 +926,7 @@ export function SearchBar({
                       <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
                         {r.imageThumbUrl && (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={r.imageThumbUrl} alt={cardImageAlt(r)} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                          <img {...cardThumbProps({ imageThumbUrl: r.imageThumbUrl }, "36px")} alt={cardImageAlt(r)} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">

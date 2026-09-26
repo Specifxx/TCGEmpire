@@ -332,7 +332,7 @@ function QuickViewModal({
           {/* Card image — shows instantly from the tile data. Capped on phones so the
               price comparison sits closer to the top (less scrolling on mobile). */}
           <div className="bg-ink-950/40 p-4">
-            <CardImage card={card} full className="mx-auto aspect-[5/7] w-full max-w-[190px] sm:max-w-none" />
+            <CardImage card={card} full sizes="(max-width: 640px) 190px, 320px" className="mx-auto aspect-[5/7] w-full max-w-[190px] sm:max-w-none" />
             {/* Plain anchor = a real navigation to the full page (the URL is already
                 /card/slug via history, so this loads the full server-rendered page). */}
             <a href={href} className="btn-ghost mt-3 flex w-full justify-center text-sm">

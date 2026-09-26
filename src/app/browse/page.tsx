@@ -26,6 +26,9 @@ import {
 } from "@/lib/cards";
 import { SITE_URL } from "@/lib/site";
 
+/** /browse opens on "Most popular" (lib/cards.ts buildCardOrderBy). */
+const BROWSE_DEFAULT_SORT = "popular";
+
 // searchParams-driven (filters/pagination), so the route stays dynamic.
 export const dynamic = "force-dynamic";
 
@@ -148,7 +151,10 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
   // through generateMetadata's default branch to `canonical: "/browse"`.
   const country = searchParams.market ? normalizeCountry(searchParams.market) : getCountry();
   const where = buildCardWhere(searchParams, country);
-  const orderBy = buildCardOrderBy(searchParams.sort, country);
+  // Default sort is "Most popular" (2026-09-26): set-and-number put US$0.01
+  // commons on page 1. The demand counters it ranks by are still written
+  // (api/card/[id]/view). ?sort=number etc. keep working for shared links.
+  const orderBy = buildCardOrderBy(searchParams.sort || BROWSE_DEFAULT_SORT, country);
   const size = parsePageSize(searchParams.size);
   const page = parsePageNum(searchParams.page);
 
@@ -181,7 +187,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
       }),
     ]);
   const [total, cards] = isDefaultView
-    ? await unstable_cache(runQuery, ["browse-default", country], {
+    ? await unstable_cache(runQuery, ["browse-default-popular", country], {
         revalidate: 3600,
         tags: [CONTENT_TAG],
       })()
@@ -300,7 +306,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
           </p>
           <div className="flex items-center gap-3">
             <PageSizeSelect size={size} />
-            <SortSelect />
+            <SortSelect defaultSort={BROWSE_DEFAULT_SORT} />
           </div>
         </div>
 

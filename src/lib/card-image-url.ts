@@ -177,3 +177,55 @@ export function cardImageSrc(card: CardImageUrls, opts: CardImageOpts = {}): str
   if (!src || !opts.absolute) return src;
   return src.startsWith("/") ? `${SITE_URL}${src}` : src;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Thumbnails (2026-09-26). scripts/card-art-thumbs.ts writes a 320w and a 480w
+// WebP beside every mirrored `/card-art/<stem>.webp`. Grids, lists and
+// thumbnails offer them through srcset + sizes; only the card-detail hero loads
+// the full 744px file.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Widths scripts/card-art-thumbs.ts generates for every mirrored card. */
+export const CARD_ART_THUMB_WIDTHS = [320, 480] as const;
+/** The mirror's own width (thumbnails/large), the srcset's largest candidate. */
+export const CARD_ART_FULL_WIDTH = 744;
+
+const MIRROR_FILE = /^((?:https?:\/\/[^/]+)?\/card-art\/)([^/]+?)\.webp$/;
+
+/** The 320w rendition of a mirrored card-art URL (the smallest), else the URL unchanged. */
+export function cardArtThumb(src: string, width: (typeof CARD_ART_THUMB_WIDTHS)[number] = 320): string {
+  const m = MIRROR_FILE.exec(src);
+  if (!m || /-\d+w$/.test(m[2])) return src;
+  return `${m[1]}${m[2]}-${width}w.webp`;
+}
+
+/**
+ * `srcset` for a card-art URL — 320w, 480w and the 744w original — or null for
+ * art that is not on the mirror (hosted spoilers, eBay images), which has no
+ * thumbnails and renders as a plain src.
+ */
+export function cardImageSrcSet(src: string | null | undefined): string | null {
+  if (!src) return null;
+  const m = MIRROR_FILE.exec(src);
+  if (!m || /-\d+w$/.test(m[2])) return null;
+  return [
+    ...CARD_ART_THUMB_WIDTHS.map((w) => `${m[1]}${m[2]}-${w}w.webp ${w}w`),
+    `${src} ${CARD_ART_FULL_WIDTH}w`,
+  ].join(", ");
+}
+
+/**
+ * Everything a plain <img> thumbnail needs: the small rendition as `src` (so a
+ * browser that ignores srcset still gets the small file), the srcset and the
+ * slot's `sizes`. `src` is null when the card has no picture at all.
+ */
+export function cardThumbProps(
+  card: CardImageUrls,
+  sizes: string,
+): { src: string | undefined; srcSet: string | undefined; sizes: string | undefined } {
+  const src = cardImageSrc(card) ?? undefined;
+  const srcSet = cardImageSrcSet(src);
+  return srcSet && src
+    ? { src: cardArtThumb(src), srcSet, sizes }
+    : { src, srcSet: undefined, sizes: undefined };
+}

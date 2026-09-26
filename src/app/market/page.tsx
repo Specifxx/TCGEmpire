@@ -14,6 +14,7 @@ import { IndexStats } from "@/components/IndexStats";
 import { IndexConstituents } from "@/components/IndexConstituents";
 import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 // searchParams-driven (?market=), so the route is dynamic regardless of any
 // page-level revalidate window — same reasoning as /browse and /sets/[set]. The
@@ -82,7 +83,7 @@ function MoverCol({ title, cards, positive, currency }: { title: string; cards: 
               <Link href={cardHref(c)} className="flex items-center gap-2.5 rounded-md px-1 py-2 transition-colors hover:bg-ink-800">
                 {c.imageThumbUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={28} height={39} loading="lazy" decoding="async" className="h-9 w-7 shrink-0 rounded-sm object-cover" />
+                  <img {...cardThumbProps({ imageThumbUrl: c.imageThumbUrl }, "28px")} alt={cardImageAlt(c)} width={28} height={39} loading="lazy" decoding="async" className="h-9 w-7 shrink-0 rounded-sm object-cover" />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-white">{c.name}</span>

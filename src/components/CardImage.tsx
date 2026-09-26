@@ -1,7 +1,7 @@
 import ReactDOM from "react-dom";
 import { CardArt } from "./CardArt";
 import { cardImageAlt } from "@/lib/image-alt";
-import { cardImageSrc } from "@/lib/card-image-url";
+import { cardArtThumb, cardImageSrc, cardImageSrcSet } from "@/lib/card-image-url";
 import { optimisedImage } from "@/lib/image-manifest";
 
 export interface CardImageData {
@@ -31,7 +31,17 @@ interface Props {
   // fetch priority instead of being lazy-loaded. Default false keeps every grid/
   // list tile lazy — only the one above-the-fold hero should opt in.
   priority?: boolean;
+  /**
+   * The slot's rendered width, for the mirrored art's 320w/480w thumbnails
+   * (2026-09-26). Grids default to a tile-sized value; a `full` image loads
+   * only the full art UNLESS a caller passes sizes (QuickView does) — the
+   * card-detail hero is the one place that should always get the 744px file.
+   */
+  sizes?: string;
 }
+
+/** A /browse-style tile: two columns on a phone, three on a tablet, ~220px after. */
+export const TILE_SIZES = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 220px";
 
 // Small "PROMO" stamp centred at the bottom of the card art (where the real card's
 // rarity symbol sits) — promo printings reuse the base art, so this marks them.
@@ -49,7 +59,7 @@ function PromoStamp() {
 // and landscape cards look good. Falls back to generated SVG art when no image is
 // available. The art is served from our own mirror (public/card-art) — see
 // lib/card-image-url.ts for why we stopped hotlinking the RiftScribe CDN.
-export function CardImage({ card, isFoil = false, full = false, className, priority = false }: Props) {
+export function CardImage({ card, isFoil = false, full = false, className, priority = false, sizes: sizesProp }: Props) {
   // lib/card-image-url.ts, not card.imageUrl directly: the rows still store
   // RiftScribe URLs, and the helper is what maps them onto our mirrored copy.
   const src = cardImageSrc(card, { full });
@@ -88,6 +98,14 @@ export function CardImage({ card, isFoil = false, full = false, className, prior
   // preload whose `imagesizes` disagrees with the source's `sizes` picks a
   // different variant and downloads the image twice.
   const sizes = full ? "(max-width: 640px) 90vw, 420px" : "220px";
+
+  // Mirrored card art (the common case) has no manifest entry but does have
+  // pre-generated 320w/480w thumbnails (scripts/card-art-thumbs.ts). Offered to
+  // every grid/list image; a `full` image without explicit sizes (the card
+  // page hero) keeps the single full-size file.
+  const thumbSrcSet = !webpSrcSet && (!full || sizesProp) ? cardImageSrcSet(src) : null;
+  const imgSrc = thumbSrcSet && !full ? cardArtThumb(src) : src;
+  const imgSizes = sizesProp ?? (full ? sizes : TILE_SIZES);
 
   // PRELOAD THE HERO. `loading="eager" fetchPriority="high"` (set below) only
   // takes effect once the parser REACHES this element, and on the card page
@@ -166,7 +184,8 @@ export function CardImage({ card, isFoil = false, full = false, className, prior
         )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={src}
+          src={imgSrc}
+          {...(thumbSrcSet ? { srcSet: thumbSrcSet, sizes: imgSizes } : {})}
           // Descriptive and keyword-aware, from the card's own data — see
           // lib/image-alt.ts for why the bare name wasn't good enough.
           alt={cardImageAlt(card)}

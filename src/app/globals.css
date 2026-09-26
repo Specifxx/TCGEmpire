@@ -493,6 +493,17 @@ html {
      makes "left-anchored" expressible in CSS at all, and the three nudges are
      pinned to that exact class string by tests/signup-slidein.test.ts, so the
      set this applies to cannot quietly drift. */
+  /* The card page's sticky buy bar (CardMobileBuy, 2026-09-26) sits on the
+     native-banner line; while it shows, the corner launchers lift above it. */
+  .buybar {
+    bottom: calc(var(--native-banner-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+  }
+  @media (max-width: 1023px) {
+    body[data-rc-buybar] .above-bottombar {
+      bottom: calc(var(--native-banner-h) + env(safe-area-inset-bottom, 0px) + 4.75rem);
+    }
+  }
   .above-bottombar.left-4 {
     left: calc(var(--sidenav-w) + 1rem);
   }

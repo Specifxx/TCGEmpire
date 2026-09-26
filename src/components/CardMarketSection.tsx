@@ -392,7 +392,7 @@ export function CardPriceComparison({
 
   return (
     <>
-      <div className="card-surface mt-4 overflow-hidden sm:mt-6">
+      <div id="price-comparison" className="card-surface mt-4 scroll-mt-header overflow-hidden sm:mt-6">
         {/* flex-wrap + a nowrap stamp (2026-09-23): the stamp used to squeeze
             beside the H2 as three lines 76px wide at 320 and forced the H2
             onto two lines at 390. Now the stamp drops to its own single line

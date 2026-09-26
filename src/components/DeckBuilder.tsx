@@ -7,11 +7,12 @@ import { COUNTRIES } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
-import { cardImageSrc } from "@/lib/card-image-url";
+import { cardImageSrc, cardImageSrcSet } from "@/lib/card-image-url";
 import { formatDeckLine } from "@/lib/deck";
 import { trackEvent } from "@/lib/analytics";
 import { CardSearch, type SearchCard } from "./CardSearch";
 import { QtyInput } from "./QtyInput";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 // The deck builder and list pricer — the free, no-account tool behind /deck.
 //
@@ -390,6 +391,8 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={cardImageSrc(preview, { full: true }) as string}
+                    srcSet={cardImageSrcSet(cardImageSrc(preview, { full: true })) ?? undefined}
+                    sizes="300px"
                     alt={cardImageAlt(preview)}
                     className="h-full w-full object-cover object-top"
                   />
@@ -498,7 +501,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
                     <QtyInput value={l.qty} onChange={(q) => setQty(l.card.id, q)} max={QTY_CAP} label={`Quantity for ${l.card.name}`} />
                     {l.card.imageThumbUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={l.card.imageThumbUrl} alt={cardImageAlt(l.card)} width={36} height={48} className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
+                      <img {...cardThumbProps({ imageThumbUrl: l.card.imageThumbUrl }, "36px")} alt={cardImageAlt(l.card)} width={36} height={48} className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
                     ) : (
                       <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
                     )}

@@ -271,7 +271,7 @@ function WatchRow({
           className="flex min-w-0 flex-1 gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
           <div className="relative aspect-[5/7] w-24 shrink-0 overflow-hidden rounded-md bg-ink-900">
-            <CardImage card={card} className="h-full w-full" />
+            <CardImage card={card} sizes="96px" className="h-full w-full" />
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col gap-1">

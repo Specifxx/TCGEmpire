@@ -9,6 +9,7 @@ import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { CopyPostButton } from "@/components/CopyPostButton";
 import { CONDITIONS } from "@/lib/constants";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 // Reads the visitor's own market (a shared binder should be valued in the
 // currency of whoever OPENED the link, not whoever posted it), which makes the
@@ -85,7 +86,7 @@ export default async function SharedCollectionPage({ params }: { params: { token
                   // beside it already describes this thumbnail — same convention as
                   // market/records/page.tsx's CardCell and UserMenu.tsx's avatar.
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={h.card.imageThumbUrl} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-12 w-9 shrink-0 rounded object-cover" />
+                  <img {...cardThumbProps({ imageThumbUrl: h.card.imageThumbUrl }, "36px")} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-12 w-9 shrink-0 rounded object-cover" />
                 )}
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold text-white">

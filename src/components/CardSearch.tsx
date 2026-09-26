@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 // Shared "search a card by name, pick an exact printing" widget — a debounced
 // /api/search-backed dropdown, extracted into one component so Best Basket's
@@ -116,7 +117,7 @@ export function CardSearch({
               >
                 {r.imageThumbUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.imageThumbUrl} alt={cardImageAlt(r)} width={28} height={36} className="h-9 w-7 rounded object-cover" />
+                  <img {...cardThumbProps({ imageThumbUrl: r.imageThumbUrl }, "28px")} alt={cardImageAlt(r)} width={28} height={36} className="h-9 w-7 rounded object-cover" />
                 ) : (
                   <div className="h-9 w-7 rounded bg-ink-800" />
                 )}

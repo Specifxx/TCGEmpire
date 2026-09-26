@@ -6,6 +6,7 @@ import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
 import type { DemandCard } from "@/lib/demand";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 export type MostSearchedRow = { card: DemandCard; searches: number };
 
@@ -57,7 +58,7 @@ export function MostSearchedStrip({ rows, coveredDays }: { rows: MostSearchedRow
                 <span className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
                   {c.imageThumbUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={36} height={48} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                    <img {...cardThumbProps({ imageThumbUrl: c.imageThumbUrl }, "36px")} alt={cardImageAlt(c)} width={36} height={48} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                   )}
                 </span>
                 <span className="min-w-0 flex-1">

@@ -17,6 +17,7 @@ import type { BasketAlternatives, BasketPlan, BasketPreview, BasketStoreGroup, T
 import { trackEvent } from "@/lib/analytics";
 import { effectiveRegion, readPostagePrefs, writePostagePrefs } from "@/lib/postage-prefs";
 import { freePrefix, joinList, planPostageNotes, postageLineBits, postagePrefix, trackedTag } from "@/lib/postage-display";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 export type BasketSource = "deck" | "watchlist" | "binder";
 
@@ -314,7 +315,7 @@ export function BestBasket({
                   <li key={p.card.id} className="flex items-center gap-3 p-2.5">
                     {p.card.imageThumbUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.card.imageThumbUrl} alt={cardImageAlt(p.card)} width={28} height={40} className="h-10 w-7 shrink-0 rounded object-cover" />
+                      <img {...cardThumbProps({ imageThumbUrl: p.card.imageThumbUrl }, "28px")} alt={cardImageAlt(p.card)} width={28} height={40} className="h-10 w-7 shrink-0 rounded object-cover" />
                     ) : (
                       <div className="h-10 w-7 shrink-0 rounded bg-ink-800" />
                     )}

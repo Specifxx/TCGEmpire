@@ -48,7 +48,7 @@ test("price table: direction is not colour-only, rows have thumbnails, capped wi
   assert.match(t, /"▲ "/);
   assert.match(t, /"▼ "/);
   assert.match(t, /className="sr-only"[\s\S]{0,120}"Price up "/);
-  assert.match(t, /cardImageSrc\(r\)/);
+  assert.match(t, /cardImageSrc\(row\)/);
   assert.match(t, /See all \{totalPriced/);
   assert.match(t, /href="\/browse"/);
 });

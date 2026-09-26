@@ -121,7 +121,7 @@ export function CinematicHero({
           to center within. The inner container-app div's own `w-full` was
           providing this before there were two nested divs; now both need it. */}
       <div className="w-full pl-[var(--sidenav-w)]">
-      <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">
+      <div className="container-app relative z-10 w-full py-5 text-center sm:py-10">
         {/* Brand mark, centered above the headline — the nav's own logo sits
             in the fixed header, but this is the FIRST thing painted (the
             hero often IS the first viewport, above the header having
@@ -130,7 +130,7 @@ export function CinematicHero({
             previously named the site itself at a glance. Reuses BrandLogo
             verbatim (same mark, same mask technique) rather than a new
             asset/component. */}
-        <div className="animate-fade-in [animation-delay:80ms] flex items-center justify-center gap-2">
+        <div className="animate-fade-in [animation-delay:80ms] hidden items-center justify-center gap-2 sm:flex">
           <BrandLogo className="h-8 w-8" />
           <span className="text-lg font-extrabold tracking-tight text-white">
             Rift<span className="text-brand-400">Compare</span>
@@ -213,7 +213,7 @@ export function CinematicHero({
             matching the titles and the price lists that outrank us for it.
             The buy-intent line that held the H1 since 09-17 is kept, verbatim,
             as the lead of the subhead below. DECISIONS.md, 2026-09-24. */}
-        <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
+        <h1 className="animate-fade-in [animation-delay:160ms] mx-auto max-w-4xl text-2xl font-extrabold sm:mt-4 sm:text-3xl leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
           <span className="text-brand-400">Riftbound</span> Card Prices{region ? ` in ${SHORT_PLACE[region.code]}` : ""}
         </h1>
         {/* "Price check" ADDED 2026-09-17 — the homepage is the declared owner of
@@ -233,10 +233,13 @@ export function CinematicHero({
             The sentence therefore lands all four of this page's target phrases
             in ~45 words, none of them duplicating the title: "price check",
             "buy Riftbound cards", "Riftbound prices", and the market list. */}
-        <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
-          <strong className="block text-lg font-semibold text-white sm:text-xl">Buy Riftbound cards at the best price</strong>
-          Price check any card and find the cheapest place to buy — live Riftbound prices from
-          every {heroAdjective} retailer we track, plus five more markets in their own currency: {otherMarkets}, updated daily.
+        <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-2 max-w-2xl text-base text-slate-300 sm:mt-4">
+          <strong className="block text-base font-semibold text-white sm:text-xl">Buy Riftbound cards at the best price</strong>
+          {/* Phones (2026-09-26): the explanatory sentence is CSS-hidden below
+              sm so the trending list and the price table start on the first
+              screen; it stays in the HTML for every width. */}
+          <span className="hidden sm:inline">Price check any card and find the cheapest place to buy — live Riftbound prices from
+          every {heroAdjective} retailer we track, plus five more markets in their own currency: {otherMarkets}, updated daily.</span>
         </p>
 
         {/* The primary action: search, not a row of buttons. Wired to the exact
@@ -298,7 +301,11 @@ export function CinematicHero({
             of DOM order, closing the gap for good rather than only for the
             one sibling (TrendingChips) this instance happened to be tested
             against. */}
-        <div className="relative z-20 animate-fade-in [animation-delay:300ms] mt-6">
+        {/* Hidden on phones (2026-09-26): the header already carries a card
+            search on its own row below xl, so the hero's was a second search box
+            stacked right under it. Desktop keeps the hero search as the primary
+            action. */}
+        <div className="relative z-20 animate-fade-in [animation-delay:300ms] mt-6 hidden sm:block">
           <Suspense fallback={<div className="input mx-auto h-12 max-w-2xl" />}>
             {/* trendingCards feeds the box's own zero-state dropdown (focused +
                 empty — see SearchBar's doc comment) in addition to the

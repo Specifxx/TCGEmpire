@@ -8,6 +8,7 @@ import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
 import type { CardTileData } from "./CardTile";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 /**
  * The live "most expensive cards right now" table an article can attach to
@@ -96,7 +97,7 @@ export async function ArticleTopValue({
                       {c.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={c.imageThumbUrl}
+                          {...cardThumbProps({ imageThumbUrl: c.imageThumbUrl }, "28px")}
                           alt={cardImageAlt(c)}
                           width={28}
                           height={39}

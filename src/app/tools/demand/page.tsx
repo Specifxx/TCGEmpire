@@ -24,6 +24,7 @@ import { cardImageAlt } from "@/lib/image-alt";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { PremiumButton } from "@/components/PremiumButton";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 // Reads the viewer's session, so it renders per request. The ranking itself is
 // one self-cached, day-keyed loader (lib/demand.ts getTopDemand), called here
@@ -91,7 +92,7 @@ function DemandRow({
           <span className="h-10 w-7 shrink-0 overflow-hidden rounded-sm bg-ink-900">
             {p.card.imageThumbUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.card.imageThumbUrl} alt={cardImageAlt(p.card)} width={28} height={39} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              <img {...cardThumbProps({ imageThumbUrl: p.card.imageThumbUrl }, "28px")} alt={cardImageAlt(p.card)} width={28} height={39} loading="lazy" decoding="async" className="h-full w-full object-cover" />
             )}
           </span>
           <span className="min-w-0">

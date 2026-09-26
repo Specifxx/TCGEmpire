@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRecentCards } from "@/lib/recently-viewed";
 import { cardHref } from "@/lib/card-url";
 import { trackEvent } from "@/lib/analytics";
+import { cardArtThumb, cardImageSrcSet } from "@/lib/card-image-url";
 
 // Client-only "cards you've looked at" chip row — reads localStorage via
 // useRecentCards(), so it renders nothing on the server and nothing on a
@@ -28,7 +29,7 @@ export function RecentlyViewedRail({ exclude, className }: { exclude?: string; c
             >
               {c.imageSrc && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.imageSrc} alt="" aria-hidden="true" width={18} height={25} loading="lazy" decoding="async" className="h-6 w-[18px] shrink-0 rounded-sm object-cover" />
+                <img src={cardArtThumb(c.imageSrc)} srcSet={cardImageSrcSet(c.imageSrc) ?? undefined} sizes="18px" alt="" aria-hidden="true" width={18} height={25} loading="lazy" decoding="async" className="h-6 w-[18px] shrink-0 rounded-sm object-cover" />
               )}
               {c.name}
             </Link>

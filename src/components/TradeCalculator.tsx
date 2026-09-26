@@ -5,6 +5,7 @@ import { useCountry } from "./CountryProvider";
 import { cardDisplayName } from "@/lib/card-name";
 import { tradeGremlin, type TradeTone } from "@/lib/trade-gremlin";
 import { cardImageAlt } from "@/lib/image-alt";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 // A card added to one side of a trade. We store the full set of market prices so
 // the totals re-compute live when the visitor switches country/currency.
@@ -365,7 +366,7 @@ function TradeColumn({
               <li key={c.id} className="flex items-start gap-3 py-2.5">
                 {c.imageThumbUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={36} height={48} className="mt-0.5 h-12 w-9 shrink-0 rounded object-cover" />
+                  <img {...cardThumbProps({ imageThumbUrl: c.imageThumbUrl }, "36px")} alt={cardImageAlt(c)} width={36} height={48} className="mt-0.5 h-12 w-9 shrink-0 rounded object-cover" />
                 ) : (
                   <div className="mt-0.5 h-12 w-9 shrink-0 rounded bg-ink-800" />
                 )}
@@ -610,7 +611,7 @@ function CardPicker({ onAdd }: { onAdd: (r: SearchResult) => void }) {
               >
                 {r.imageThumbUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.imageThumbUrl} alt={cardImageAlt(r)} width={28} height={36} className="h-9 w-7 shrink-0 rounded object-cover" />
+                  <img {...cardThumbProps({ imageThumbUrl: r.imageThumbUrl }, "28px")} alt={cardImageAlt(r)} width={28} height={36} className="h-9 w-7 shrink-0 rounded object-cover" />
                 ) : (
                   <div className="h-9 w-7 shrink-0 rounded bg-ink-800" />
                 )}

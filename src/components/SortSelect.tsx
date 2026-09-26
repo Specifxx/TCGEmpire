@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 const OPTIONS = [
+  { value: "popular", label: "Most popular" },
   { value: "number", label: "Set & card number" },
   { value: "name", label: "Name: A–Z" },
   { value: "price_asc", label: "Price: Low to High" },

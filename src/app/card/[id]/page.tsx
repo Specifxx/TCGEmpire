@@ -35,6 +35,7 @@ import { RecentlyViewedRail } from "@/components/home/RecentlyViewedRail";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { CardMarketsTable } from "@/components/CardMarketsTable";
 import { EbayCardPanel } from "@/components/EbayCardPanel";
+import { CardStickyBuyBar, CardTopBuy } from "@/components/CardMobileBuy";
 import { EbayPanelIntro } from "@/components/EbayPanelIntro";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
@@ -1000,7 +1001,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             "US$19.65" again. The sticky top is 36 below xl for the same taller
             header, 20 under the one-row header from xl. */}
         <div className="lg:sticky lg:top-36 lg:self-start xl:top-20">
-          <div className="card-surface mx-auto max-w-[140px] p-3 sm:max-w-[220px] sm:p-4 lg:max-w-[160px] xl:max-w-[320px]">
+          <div className="card-surface mx-auto max-w-[104px] p-2 sm:max-w-[220px] sm:p-4 lg:max-w-[160px] xl:max-w-[320px]">
             <CardImage card={card} full priority className="aspect-[5/7] w-full" />
           </div>
         </div>
@@ -1048,6 +1049,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 <ShareButton responsive />
               </div>
             </div>
+
+            {/* Phones: the cheapest listing in the visitor's market and its Buy
+                button directly under the name (2026-09-26) — see CardMobileBuy. */}
+            <CardTopBuy rows={rows} displayName={displayName} />
 
             {/* Market-localised metrics (SSR = AU baseline; client reconciles). */}
             <CardPriceMetrics rows={rows} energyCost={card.energyCost} might={card.might} power={card.power} />
@@ -1214,6 +1219,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
               preRelease={preview}
             />
+
+            <CardStickyBuyBar rows={rows} displayName={displayName} cardId={card.id} />
 
             {/* Price-history chart — free for everyone (AU history; the series is
                 collected on the AU baseline market). */}

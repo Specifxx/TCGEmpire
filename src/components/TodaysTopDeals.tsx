@@ -16,6 +16,7 @@ import { useMe } from "@/lib/use-me";
 import { cardImageAlt } from "@/lib/image-alt";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { PremiumButton } from "@/components/PremiumButton";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 // Homepage "Today's Top Deals". Up to four columns, one per signal (the grid
 // itself only declares as many columns as actually have data — see GRID_COLS
@@ -170,7 +171,7 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
           // to trade away by using a plain tag here.
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={deal.imageUrl}
+            {...cardThumbProps({ imageThumbUrl: deal.imageUrl }, "32px")}
             alt={cardImageAlt({ name: deal.title })}
             width={32}
             height={44}
@@ -282,7 +283,7 @@ function CheapestOnEbay({ rows, currency, country }: { rows: CheapestEbayDeal[];
                   // Plain <img> for the same reasons as DealRow's thumbnail.
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={d.imageUrl}
+                    {...cardThumbProps({ imageThumbUrl: d.imageUrl }, "32px")}
                     alt={cardImageAlt({ name: d.title })}
                     width={32}
                     height={44}

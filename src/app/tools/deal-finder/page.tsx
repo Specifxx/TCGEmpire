@@ -22,6 +22,7 @@ import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 export const dynamic = "force-dynamic";
 
@@ -565,7 +566,7 @@ function CardCell({ card }: { card: CardTileData }) {
       <CardQuickLink card={card} className="flex items-center gap-2.5">
         {card.imageThumbUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={card.imageThumbUrl} alt={cardImageAlt(card)} width={28} height={39} loading="lazy" decoding="async" className="h-9 w-[26px] shrink-0 rounded-sm object-cover sm:h-10 sm:w-7" />
+          <img {...cardThumbProps({ imageThumbUrl: card.imageThumbUrl }, "28px")} alt={cardImageAlt(card)} width={28} height={39} loading="lazy" decoding="async" className="h-9 w-[26px] shrink-0 rounded-sm object-cover sm:h-10 sm:w-7" />
         )}
         {/* Capped below sm so a long name truncates instead of widening the
             table past a phone. The thumbnail stays at every width (owner,

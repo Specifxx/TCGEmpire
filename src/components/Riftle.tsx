@@ -11,6 +11,7 @@ import { RIFTLE_HINT_GATES } from "@/lib/riftle-shared";
 import { cardImageAlt } from "@/lib/image-alt";
 import { GameResultExtras } from "@/components/games/shared";
 import { trackEvent } from "@/lib/analytics";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 // Riftle — free guess-the-card game with two modes:
 //   • Daily: one card per Sydney day, shared by everyone; progress + streak persist.
@@ -447,7 +448,7 @@ export function Riftle() {
                   <div className="flex h-11 items-center gap-2 overflow-hidden rounded-md bg-ink-900 px-2">
                     {r.imageThumbUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.imageThumbUrl} alt={cardImageAlt(r)} width={28} height={39} className="h-9 w-7 shrink-0 rounded-sm object-cover" loading="lazy" decoding="async" />
+                      <img {...cardThumbProps({ imageThumbUrl: r.imageThumbUrl }, "28px")} alt={cardImageAlt(r)} width={28} height={39} className="h-9 w-7 shrink-0 rounded-sm object-cover" loading="lazy" decoding="async" />
                     )}
                     <span className="truncate text-xs font-semibold text-white">{r.name}</span>
                   </div>
@@ -470,7 +471,7 @@ export function Riftle() {
             <div className="mt-3 flex items-center justify-center gap-3">
               {answer.imageThumbUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={answer.imageThumbUrl} alt={answer.name} className="h-24 w-[68px] rounded-md object-cover" />
+                <img {...cardThumbProps({ imageThumbUrl: answer.imageThumbUrl }, "68px")} alt={answer.name} className="h-24 w-[68px] rounded-md object-cover" />
               )}
               <div className="text-left">
                 <div className="font-bold text-white">{answer.name}</div>

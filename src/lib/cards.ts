@@ -189,6 +189,17 @@ export function buildCardOrderBy(
       return [{ [field]: { sort: "desc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput, { name: "asc" }];
     case "name":
       return [{ name: "asc" }];
+    // "Most popular" (2026-09-26, /browse's default): the demand counters the
+    // card-view beacon and search still write (Card.searchCount / viewCount —
+    // the same ranking as the homepage price table), then price so a dead heat
+    // lists the card a buyer is likelier to look up, then name for stable paging.
+    case "popular":
+      return [
+        { searchCount: "desc" },
+        { viewCount: "desc" },
+        { [field]: { sort: "desc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput,
+        { name: "asc" },
+      ];
     // Card.createdAt is set once on insert and never touched again (cards are
     // always update/create, never wholesale delete+recreate like SealedListing —
     // see the sealed importer for why that table needed a separate tracking model

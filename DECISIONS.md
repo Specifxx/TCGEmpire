@@ -13995,3 +13995,56 @@ track, or a host already queued, is acknowledged without a second row.
 test submission through /contact, /feedback and /stores/suggest each saved and
 appeared in `/admin/messages`. 9 new tests (`tests/card-narrative.test.ts`,
 `tests/contact-inbox.test.ts`).
+
+## Mobile first: stacked price rows, a phone buy path on card pages, 320/480w thumbnails, /browse by popularity — 2026-09-26
+
+**Why.** Owner's brief: 54% of visitors are on phones. At 390px the homepage's
+"Riftbound card prices today" table overflowed and clipped its price column
+under two stacked search boxes (header + hero); a card page's price comparison
+started ~780px down; every grid loaded the full 744px card art (~95 KB) into
+~158px tiles (/browse: ~100 per page, ~9.5 MB); /browse opened on set-and-number,
+so page 1 was US$0.01 commons.
+
+**What.**
+- **Homepage.** Below 640px the price table renders as stacked rows (thumbnail,
+  name, set, cheapest price, 7-day change); the table itself is `sm:` up. On
+  phones the hero search is hidden (the header's card search already has its own
+  row below xl), the logo lockup is hidden, and the explanatory sentence is
+  CSS-hidden (still in the HTML) — so the trending list and the table's heading
+  start on the first screen. Desktop is unchanged.
+- **Card page.** The art is 104px wide on phones (was 140). `CardTopBuy` puts
+  the cheapest in-stock listing in the VISITOR's market and its Buy button
+  directly under the name; `CardStickyBuyBar` shows "US$X at {store}", the watch
+  heart and Buy once that block has scrolled away, and hides whenever the price
+  comparison (`#price-comparison`) is on screen. Both read `computeMarket()`,
+  so they cannot disagree with the comparison's #1 row. While the bar shows,
+  `body[data-rc-buybar]` lifts the corner launchers above it. Outbound clicks
+  are the existing `buy_click` with two new `surface` values (`card_top_buy`,
+  `sticky_buy_bar`) — no new event, no new write.
+- **A fixed-bottom element, knowingly.** The 09-18 entry deleted the bottom TAB
+  BAR because a `position: fixed` bottom element rides against the layout
+  viewport behind the browser's chrome on some devices. The owner asked for this
+  bar explicitly; it is a transient, card-page-only CTA with no chrome
+  compensation arithmetic (bottom = native banner + safe-area inset). If it
+  rides up on the devices that broke the tab bar, delete it rather than patch
+  it — the top buy block carries the same action.
+- **Thumbnails.** `scripts/card-art-thumbs.ts` (in `npm run build`, idempotent)
+  writes `<stem>-320w.webp` and `<stem>-480w.webp` (WebP q66, avg ~17/28 KB)
+  beside each mirrored `/card-art/<stem>.webp`, committed as static files — no
+  paid on-demand optimisation. Flat names inherit the art's `immutable` cache
+  rule. `cardImageSrcSet` / `cardThumbProps` (lib/card-image-url.ts) give every
+  grid, list and thumbnail a srcset + sizes; `CardImage` offers them by default
+  and only the card-detail hero (`full`, no `sizes`) loads the 744px file.
+  Measured locally, /browse at 390px DPR 2 scrolled to the end: 99 card-art
+  files, none full-size, 1.47 MB.
+- **/browse** defaults to "Most popular" (`sort=popular`: searchCount,
+  viewCount, then price) — the demand counters are still written. The default
+  view's cache key changed to `browse-default-popular`; `?sort=number` and the
+  other sorts are unchanged, so shared links still work.
+
+**Verified** on the local seed DB with synthetic local-only listings (never
+production), Playwright at 390×844 (DPR 2) and 1440×900: homepage, /browse,
+/card/falling-star-ogn-029-298 and /blog/where-to-buy-riftbound-radiance have
+no horizontal scroll; the card page's cheapest price and Buy sit at y≈510 on a
+844px screen; the sticky bar is hidden on load and over the comparison, shown
+past it. 7 new tests (`tests/card-art-thumbs.test.ts`).

@@ -138,7 +138,9 @@ export function OutboundLink({
    *    EbayGradedLive, which fired with no surface at all until then;
    *  - `preorder_cta_ebay`: the eBay line under an article's pre-order CTA;
    *  - `cheapest_ebay`: the homepage "Cheapest on eBay" row;
-   *  - `search_box`: the header search's "Search eBay for …" link. */
+   *  - `search_box`: the header search's "Search eBay for …" link;
+   *  - `card_top_buy`, `sticky_buy_bar`: the card page's phone buy block under
+   *    the name and its sticky bottom bar (CardMobileBuy, 2026-09-26). */
   surface?:
     | "table"
     | "modal"
@@ -156,7 +158,9 @@ export function OutboundLink({
     | "ebay_graded"
     | "preorder_cta_ebay"
     | "cheapest_ebay"
-    | "search_box";
+    | "search_box"
+    | "card_top_buy"
+    | "sticky_buy_bar";
 }) {
   // Tell the signup popup a buy link exists on this page, so it stays off the
   // buy path until the click has happened. See lib/buy-intent.ts — registering

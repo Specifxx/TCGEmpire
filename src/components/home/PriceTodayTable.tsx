@@ -5,7 +5,7 @@ import { cardHref } from "@/lib/card-url";
 import { ldJson } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
 import type { PriceTableRow } from "@/lib/price-table";
-import { cardImageSrc } from "@/lib/card-image-url";
+import { cardArtThumb, cardImageSrc, cardImageSrcSet } from "@/lib/card-image-url";
 
 // "Riftbound card prices today" — a SERVER-RENDERED price list directly under
 // each market homepage's hero (lib/price-table.ts has the why). Rendered in the
@@ -38,7 +38,28 @@ export function PriceTodayTable({
           </p>
         </div>
       </div>
-      <div className="overflow-x-auto">
+      {/* Below 640px (2026-09-26): stacked rows, price always visible. The
+          five-column table overflowed a 390px phone and clipped the price. */}
+      <ul className="divide-y divide-ink-800 border-t border-ink-800 sm:hidden">
+        {rows.map((r) => (
+          <li key={r.id}>
+            <Link href={cardHref(r)} className="flex min-h-11 items-center gap-3 px-4 py-2 hover:bg-ink-900/40">
+              <RowThumb row={r} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-slate-100">{r.name}</span>
+                <span className="block truncate text-xs text-slate-500">{r.setName}</span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="num block text-sm font-semibold text-white">{formatMoney(r.priceCents, currency)}</span>
+                <span className="num block text-xs">
+                  <Change7d pct={r.change7d} />
+                </span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[34rem] text-left text-sm">
           <thead className="border-y border-ink-800 bg-ink-900/60 text-xs uppercase tracking-wide text-slate-500">
             <tr>
@@ -56,15 +77,7 @@ export function PriceTodayTable({
                   <Link href={cardHref(r)} className="flex items-center gap-2.5 font-semibold text-slate-100 hover:text-brand-300 hover:underline">
                     {/* Row thumbnail (2026-09-24). Decorative: the name beside it
                         is the link text. Fixed box so rows cannot shift. */}
-                    {(() => {
-                      const img = cardImageSrc(r);
-                      return img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={img} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-[39px] w-7 shrink-0 rounded-sm object-cover" />
-                      ) : (
-                        <span aria-hidden="true" className="h-[39px] w-7 shrink-0 rounded-sm bg-ink-800" />
-                      );
-                    })()}
+                    <RowThumb row={r} />
                     {r.name}
                   </Link>
                 </td>
@@ -74,23 +87,7 @@ export function PriceTodayTable({
                 </td>
                 <td className="num px-3 py-2 text-right text-slate-300">{r.stores || "—"}</td>
                 <td className="num whitespace-nowrap px-4 py-2 text-right">
-                  {r.change7d == null ? (
-                    <span className="text-slate-600">—</span>
-                  ) : (
-                    // Buyer's-eye colours, as the watchlist and digest email use:
-                    // a price drop is the good news (green), a rise is not. That
-                    // is the reverse of TCGplayer/PriceCharting, so the meaning
-                    // is never colour-only (2026-09-24): ▲/▼ give the direction
-                    // at a glance and the sr-only text says it in words.
-                    <span className={r.change7d < 0 ? "text-up" : r.change7d > 0 ? "text-down" : "text-slate-400"}>
-                      <span aria-hidden="true">{r.change7d > 0 ? "▲ " : r.change7d < 0 ? "▼ " : ""}</span>
-                      <span className="sr-only">
-                        {r.change7d > 0 ? "Price up " : r.change7d < 0 ? "Price down " : "Unchanged "}
-                      </span>
-                      {r.change7d > 0 ? "+" : ""}
-                      {r.change7d.toFixed(1)}%
-                    </span>
-                  )}
+                  <Change7d pct={r.change7d} />
                 </td>
               </tr>
             ))}
@@ -119,5 +116,40 @@ export function PriceTodayTable({
         }}
       />
     </section>
+  );
+}
+
+/** Row thumbnail (2026-09-24). Decorative: the name beside it is the link text. Fixed box so rows cannot shift. */
+function RowThumb({ row }: { row: PriceTableRow }) {
+  const img = cardImageSrc(row);
+  return img ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={cardArtThumb(img)} srcSet={cardImageSrcSet(img) ?? undefined} sizes="28px" alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-[39px] w-7 shrink-0 rounded-sm object-cover" />
+  ) : (
+    <span aria-hidden="true" className="h-[39px] w-7 shrink-0 rounded-sm bg-ink-800" />
+  );
+}
+
+function Change7d({ pct }: { pct: number | null }) {
+  return (
+    <>
+      {pct == null ? (
+        <span className="text-slate-600">—</span>
+      ) : (
+        // Buyer's-eye colours, as the watchlist and digest email use:
+        // a price drop is the good news (green), a rise is not. That
+        // is the reverse of TCGplayer/PriceCharting, so the meaning
+        // is never colour-only (2026-09-24): ▲/▼ give the direction
+        // at a glance and the sr-only text says it in words.
+        <span className={pct < 0 ? "text-up" : pct > 0 ? "text-down" : "text-slate-400"}>
+          <span aria-hidden="true">{pct > 0 ? "▲ " : pct < 0 ? "▼ " : ""}</span>
+          <span className="sr-only">
+            {pct > 0 ? "Price up " : pct < 0 ? "Price down " : "Unchanged "}
+          </span>
+          {pct > 0 ? "+" : ""}
+          {pct.toFixed(1)}%
+        </span>
+      )}
+    </>
   );
 }

@@ -11,6 +11,7 @@ import { useCountry } from "./CountryProvider";
 import { cardImageAlt } from "@/lib/image-alt";
 import { trackEvent } from "@/lib/analytics";
 import { EmptyState } from "./ui/EmptyState";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 type CollCard = {
   id: string;
@@ -217,7 +218,7 @@ export function MyCollection({ refreshPage = false }: { refreshPage?: boolean } 
                 <Link href={cardHref(it.card as any)} className="h-14 w-10 shrink-0 overflow-hidden rounded bg-ink-900">
                   {it.card.imageThumbUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={it.card.imageThumbUrl} alt={cardImageAlt({ ...it.card, name: cardDisplayName(it.card.name, it.card) })} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                    <img {...cardThumbProps({ imageThumbUrl: it.card.imageThumbUrl }, "40px")} alt={cardImageAlt({ ...it.card, name: cardDisplayName(it.card.name, it.card) })} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                   )}
                 </Link>
 
@@ -375,7 +376,7 @@ export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<vo
               >
                 {c.imageThumbUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                  <img {...cardThumbProps({ imageThumbUrl: c.imageThumbUrl }, "28px")} alt={cardImageAlt(c)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-white">{c.name}</span>

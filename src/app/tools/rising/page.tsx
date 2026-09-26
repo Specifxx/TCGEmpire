@@ -12,6 +12,7 @@ import { PremiumButton } from "@/components/PremiumButton";
 import { SITE_URL, tierMonthlyAmount } from "@/lib/site";
 import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
+import { cardThumbProps } from "@/lib/card-image-url";
 
 export const dynamic = "force-dynamic";
 
@@ -127,7 +128,7 @@ function CardCell({ p }: { p: RisePick }) {
     <Link href={cardHref({ id: p.id, slug: p.slug })} className="flex items-start gap-2.5">
       {p.imageThumbUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={p.imageThumbUrl} alt={cardImageAlt({ name: p.displayName, setCode: p.setCode, collectorNumber: p.collectorNumber })} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+        <img {...cardThumbProps({ imageThumbUrl: p.imageThumbUrl }, "28px")} alt={cardImageAlt({ name: p.displayName, setCode: p.setCode, collectorNumber: p.collectorNumber })} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
       )}
       <span className="min-w-0">
         <span className="block truncate font-semibold text-white">{p.displayName}</span>
