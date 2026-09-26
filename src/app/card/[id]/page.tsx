@@ -47,6 +47,8 @@ import { typeFacetBySlug, rarityFacetBySlug } from "@/lib/facets";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import {
   buildCardNarrative,
+  cheapestDelivered,
+  confirmedFoilPair,
   editionLabel,
   printingKind,
   printingFieldsFrom,
@@ -767,7 +769,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const marketFor = (country: Country): NarrativeMarket => {
     const view = computeMarket(rows, country);
     const inStock = view.prices;
-    const delivered = inStock.map((p) => p.delivered).sort((a, b) => a - b);
     // normaliseCondition is the ONE mapping from four incompatible marketplace
     // condition vocabularies (Shopify variant titles, eBay's raw-card scale,
     // TCGplayer/Cardmarket's blanket "NM") onto our five grades — used here
@@ -787,12 +788,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       place: COUNTRIES[country].place,
       currency: view.currency,
       lowestCents: view.lowest,
-      lowestDeliveredCents: delivered[0] ?? null,
+      // Delivered only when the cheapest listing's postage is known, and the
+      // foil comparison only across listings confirmed to be this printing —
+      // see cheapestDelivered / confirmedFoilPair.
+      lowestDeliveredCents: cheapestDelivered(inStock),
       secondCents: inStock[1]?.priceCents ?? null,
       storeCount: view.storeCount,
       listingCount: inStock.length,
-      cheapestNonFoilCents: view.cheapestStandard,
-      cheapestFoilCents: view.cheapestFoil,
+      ...confirmedFoilPair(inStock),
       cheapestNearMintCents: min(nm),
       cheapestPlayedCents: min(played),
     };

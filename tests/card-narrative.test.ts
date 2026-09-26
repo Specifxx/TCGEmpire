@@ -633,3 +633,59 @@ test("the prose and display casings describe the same set of printings", () => {
     );
   }
 });
+
+// ── 2026-09-26: delivered only when postage is known; foil only on one printing ──
+import { cheapestDelivered, confirmedFoilPair } from "../src/lib/content/card-narrative";
+
+test("unknown postage on the cheapest listing never produces a 'delivered' figure", () => {
+  // /card/astral-heron-ven-044: US$28.00 cheapest, postage "at checkout".
+  assert.equal(cheapestDelivered([{ priceCents: 2800, ship: null }, { priceCents: 3833, ship: 400 }]), null);
+  assert.equal(cheapestDelivered([{ priceCents: 2800, ship: 500 }]), 3300);
+  assert.equal(cheapestDelivered([{ priceCents: 2800, ship: 0 }]), 2800);
+  assert.equal(cheapestDelivered([]), null);
+
+  const t = text(card({ baseline: market({ lowestCents: 2800, lowestDeliveredCents: null }) }));
+  assert.match(t, /US\$28\.00 plus postage at checkout/);
+  assert.doesNotMatch(t, /US\$28\.00 delivered/);
+  assert.doesNotMatch(t, /Postage is the deciding factor/);
+});
+
+test("known postage still states the delivered price", () => {
+  const t = text(card({ baseline: market({ lowestCents: 2800, lowestDeliveredCents: 3300 }) }));
+  assert.match(t, /US\$28\.00 before postage and US\$33\.00 delivered/);
+});
+
+test("the narrative never claims the table ranks by delivered cost (it ranks by item price)", () => {
+  for (const b of [market({ lowestCents: 90, lowestDeliveredCents: 480 }), market(), market({ lowestDeliveredCents: null })]) {
+    assert.doesNotMatch(text(card({ baseline: b, markets: [b, market({ country: "AU", place: "Australia", currency: "AUD" })] })), /(ranks|sorts) by delivered/);
+  }
+});
+
+test("foil comparison needs a foil and a non-foil listing confirmed to be this printing", () => {
+  // The live bug: a foil eBay listing against a store's non-foil.
+  assert.deepEqual(
+    confirmedFoilPair([
+      { priceCents: 2800, isFoil: true, retailer: "ebay" },
+      { priceCents: 3833, isFoil: false, retailer: "gators" },
+    ]),
+    { cheapestFoilCents: null, cheapestNonFoilCents: null },
+  );
+  // eBay US/UK/AU retailer ids all start with "ebay".
+  assert.deepEqual(
+    confirmedFoilPair([
+      { priceCents: 100, isFoil: false, retailer: "ebay_uk" },
+      { priceCents: 3000, isFoil: true, retailer: "storeA" },
+      { priceCents: 1000, isFoil: false, retailer: "storeB" },
+      { priceCents: 900, isFoil: false, retailer: "storeC" },
+    ]),
+    { cheapestFoilCents: 3000, cheapestNonFoilCents: 900 },
+  );
+  // Only foils (or only non-foils) → no comparison at all.
+  assert.deepEqual(confirmedFoilPair([{ priceCents: 3000, isFoil: true, retailer: "storeA" }]), {
+    cheapestFoilCents: null,
+    cheapestNonFoilCents: null,
+  });
+
+  const t = text(card({ baseline: market({ cheapestFoilCents: null, cheapestNonFoilCents: null }) }));
+  assert.doesNotMatch(t, /foil/i);
+});

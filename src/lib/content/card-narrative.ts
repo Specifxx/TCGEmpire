@@ -53,7 +53,15 @@ export type NarrativeMarket = {
   currency: string;
   /** Cheapest in-stock listing, item price only. */
   lowestCents: number | null;
-  /** Cheapest in-stock listing including that retailer's postage. */
+  /**
+   * The cheapest in-stock listing's price INCLUDING its postage — null unless
+   * that listing's postage is actually known. A listing whose postage is shown
+   * "at checkout" has no delivered figure, and the narrative must say "plus
+   * postage at checkout" rather than pass its item price off as delivered
+   * (2026-09-26: /card/astral-heron-ven-044 read "US$28.00 delivered" over a
+   * row whose postage the table itself showed as "at checkout").
+   * Build it with `cheapestDelivered()`.
+   */
   lowestDeliveredCents: number | null;
   /** Second-cheapest in-stock listing, item price only. */
   secondCents: number | null;
@@ -61,7 +69,13 @@ export type NarrativeMarket = {
   storeCount: number;
   /** Total in-stock listings (a store can list NM and foil separately). */
   listingCount: number;
-  /** Cheapest in-stock non-foil / foil listing, for the foil premium. */
+  /**
+   * Cheapest in-stock non-foil / foil listing, for the foil premium. Both must
+   * come from listings CONFIRMED to be this exact printing — build them with
+   * `confirmedFoilPair()`, which leaves both null otherwise. An eBay listing's
+   * title is not confirmed (it compared a foil eBay listing against a store's
+   * non-foil and called foils "barely dearer").
+   */
   cheapestNonFoilCents?: number | null;
   cheapestFoilCents?: number | null;
   /** Cheapest listing graded Near Mint / anything below it. */
@@ -434,37 +448,75 @@ function identity(c: NarrativeInput): string {
 // we can stand behind, so it compares each market's internal item-vs-postage
 // economics and names the markets, rather than asserting a false "cheaper by $3".
 function crossMarket(c: NarrativeInput): string | null {
-  const priced = c.markets.filter((m) => m.lowestDeliveredCents != null && m.storeCount > 0);
+  const priced = c.markets.filter((m) => m.lowestCents != null && m.storeCount > 0);
   if (priced.length < 2) return null;
 
   const base = c.baseline;
-  if (base.lowestCents == null || base.lowestDeliveredCents == null) return null;
-
-  const postageShare = Math.round(
-    ((base.lowestDeliveredCents - base.lowestCents) / base.lowestDeliveredCents) * 100,
-  );
+  if (base.lowestCents == null) return null;
   const others = priced.filter((m) => m.country !== base.country);
   const names = others.map((m) => m.place);
 
   // Postage dominating the delivered cost is the actual buying advice on a
-  // cheap card, and it only gets said when it's true of THIS card's listings.
-  if (postageShare >= 40) {
-    return (
-      `Postage is the deciding factor here: at ${formatMoney(base.lowestCents, base.currency)} for the card and ` +
-      `${formatMoney(base.lowestDeliveredCents - base.lowestCents, base.currency)} to ship it, delivery is ${postageShare}% of ` +
-      `what you actually pay in ${base.place}. On a card at this price it is nearly always worth adding it to a larger ` +
-      `order from one store rather than buying it alone — the comparison table above sorts by delivered cost, not sticker price. ` +
-      `We also track it in ${names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`}.`
+  // cheap card, and it only gets said when it's true of THIS card's listings —
+  // which needs the cheapest listing's postage to be KNOWN, not "at checkout".
+  if (base.lowestDeliveredCents != null) {
+    const postageShare = Math.round(
+      ((base.lowestDeliveredCents - base.lowestCents) / base.lowestDeliveredCents) * 100,
     );
+    if (postageShare >= 40) {
+      return (
+        `Postage is the deciding factor here: at ${formatMoney(base.lowestCents, base.currency)} for the card and ` +
+        `${formatMoney(base.lowestDeliveredCents - base.lowestCents, base.currency)} to ship it, delivery is ${postageShare}% of ` +
+        `what you actually pay in ${base.place}. On a card at this price it is nearly always worth adding it to a larger ` +
+        `order from one store rather than buying it alone. ` +
+        `We also track it in ${names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`}.`
+      );
+    }
   }
 
+  const cheapest =
+    base.lowestDeliveredCents != null
+      ? `${formatMoney(base.lowestCents, base.currency)} before postage and ` +
+        `${formatMoney(base.lowestDeliveredCents, base.currency)} delivered.`
+      : `${formatMoney(base.lowestCents, base.currency)} plus postage at checkout.`;
   return (
     `${c.name} is stocked in ${priced.length} of the markets we track — ` +
-    `${priced.map((m) => m.place).join(", ")} — each priced in its own currency, so the table above ranks by delivered ` +
-    `cost inside whichever market you pick rather than converting between them. In ${base.place} the cheapest listing is ` +
-    `${formatMoney(base.lowestCents, base.currency)} before postage and ` +
-    `${formatMoney(base.lowestDeliveredCents, base.currency)} delivered.`
+    `${priced.map((m) => m.place).join(", ")} — each priced in its own currency, so the table above ranks by ` +
+    `price inside whichever market you pick rather than converting between them. In ${base.place} the cheapest listing is ` +
+    cheapest
   );
+}
+
+/**
+ * The narrative's delivered figure for a market: the CHEAPEST in-stock listing
+ * (the same one `lowestCents` names — rows come from computeMarket, cheapest
+ * first) plus its postage, or null when that postage is unknown. Never the
+ * minimum delivered across listings with unknown postage counted as free.
+ */
+export function cheapestDelivered(inStock: { priceCents: number; ship: number | null }[]): number | null {
+  const first = inStock[0];
+  if (!first || first.ship == null) return null;
+  return first.priceCents + first.ship;
+}
+
+/** eBay rows are matched from free-text titles; their printing is not confirmed. */
+const isUnconfirmedPrinting = (retailer: string) => retailer.startsWith("ebay");
+
+/**
+ * Cheapest foil and non-foil listings for the foil comparison — only when BOTH
+ * exist among listings confirmed to be this card's exact printing (store and
+ * marketplace rows matched to this printing, never eBay titles). One side
+ * missing leaves both null, so no comparison is generated.
+ */
+export function confirmedFoilPair(
+  inStock: { priceCents: number; isFoil: boolean; retailer: string }[],
+): { cheapestFoilCents: number | null; cheapestNonFoilCents: number | null } {
+  const confirmed = inStock.filter((p) => !isUnconfirmedPrinting(p.retailer));
+  const min = (xs: { priceCents: number }[]) => (xs.length ? Math.min(...xs.map((x) => x.priceCents)) : null);
+  const foil = min(confirmed.filter((p) => p.isFoil));
+  const nonFoil = min(confirmed.filter((p) => !p.isFoil));
+  if (foil == null || nonFoil == null) return { cheapestFoilCents: null, cheapestNonFoilCents: null };
+  return { cheapestFoilCents: foil, cheapestNonFoilCents: nonFoil };
 }
 
 // ── 2. Price trajectory ──────────────────────────────────────────────────────

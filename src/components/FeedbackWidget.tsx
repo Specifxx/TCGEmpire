@@ -268,12 +268,13 @@ export function FeedbackWidget() {
                     Bots fill every field they find; people never see this one. */}
                 <input
                   type="text"
+                  name="website"
                   tabIndex={-1}
                   autoComplete="off"
                   aria-hidden="true"
                   value={honeypot}
                   onChange={(e) => setHoneypot(e.target.value)}
-                  className="pointer-events-none absolute h-0 w-0 opacity-0"
+                  className="hidden"
                 />
 
                 {!positive && (

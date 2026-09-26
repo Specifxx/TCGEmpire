@@ -13956,6 +13956,46 @@ without waiting for the daily schedule").
 
 `scripts/close-inbox-items.ts --apply` ran against both rows.
 
+## Card-page copy says "delivered" only when postage is known; the contact form finally writes the inbox — 2026-09-26
+
+**Why.** Owner's audit of `/card/astral-heron-ven-044`. The About paragraph read
+"the cheapest listing is US$28.00 before postage and US$28.00 delivered" over an
+eBay row whose postage the table itself showed as "at checkout":
+`lowestDeliveredCents` was the minimum of `price + (ship ?? 0)`, so unknown
+postage counted as free. The same paragraph said "Foils are barely dearer than
+non-foils — US$28.00 against US$38.33", which compared a foil eBay listing (a
+free-text title, printing unconfirmed) against a store's non-foil. And the
+paragraph claimed the table "ranks by delivered cost", which `computeMarket`
+has never done (it ranks by item price).
+
+**What.**
+- `cheapestDelivered()` (lib/content/card-narrative.ts): the delivered figure is
+  the CHEAPEST listing's price plus ITS postage, or null when that postage is
+  unknown. Null → "US$28.00 plus postage at checkout", and the "postage is the
+  deciding factor" paragraph cannot fire.
+- `confirmedFoilPair()`: the foil comparison uses only listings confirmed to be
+  this printing — store/marketplace rows matched to it, never eBay titles — and
+  only when both a foil and a non-foil exist among them. Otherwise no foil
+  sentence at all. `computeMarket`'s `cheapestFoil`/`cheapestStandard` are
+  untouched; price selection is unchanged.
+- The "ranks/sorts by delivered cost" wording is gone.
+
+**Inbox.** `/admin/messages` showed no contact messages because nothing ever
+wrote `ContactMessage`: `/contact` was a mailto link. It now has a form →
+`/api/contact` (per-IP 6/hour, display:none honeypot, length bounds —
+`lib/contact-message.ts`), keeping the email address as an alternative. The two
+feedback forms' honeypots were rendered `opacity-0` inputs sitting right before
+the email field — the kind of field browser autofill fills, which makes
+`/api/feedback` silently accept and drop a real submission. They are now
+`display:none` with `name="website"`, as on the wrong-price form (the reference
+that demonstrably saves). Store suggestions were not broken: a store we already
+track, or a host already queued, is acknowledged without a second row.
+
+**Verified** on the local seed DB (never production), Playwright at 390px: a
+test submission through /contact, /feedback and /stores/suggest each saved and
+appeared in `/admin/messages`. 9 new tests (`tests/card-narrative.test.ts`,
+`tests/contact-inbox.test.ts`).
+
 ## HEARTSTEEL overnumbered: six cards catalogued, five of them reprints, and a matcher rule for cross-set chase reprints — 2026-09-26
 
 **Why.** The owner sent Riot's official HEARTSTEEL graphic (a phone screenshot of it) and asked for the cards on the spoiler tracker, cropped, in the database, and in a post with the graphic as its thumbnail and every card embedded. Reading the six cards against our own catalogue turned up the fact the whole post hangs on: **five are reprints.** Aphelios, Exalted (SFD 049), Ezreal, Dashing (SFD 082), Yone, Blademaster (SFD 116), Kayn, Unleashed (OGN 189) and Sett, Kingpin (OGN 240) match on name, cost, Might and domain, and a word-by-word check against the originals' card images (RiftScribe CDN) matched the rules text too, apart from Yone ("conquer a battlefield that was uncontrolled" where SFD prints "conquer an open battlefield"). The sixth, K'Sante, Courageous (RAD 178/167), is new.

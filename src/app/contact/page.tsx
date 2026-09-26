@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
+import { ContactForm } from "@/components/ContactForm";
 
 export const metadata = {
   title: "Contact & Feedback",
@@ -20,18 +21,18 @@ export default function ContactPage() {
           <h1 className="text-2xl font-extrabold text-white">Contact &amp; Feedback</h1>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-300">
             Spotted a wrong price, a missing store, or have an idea to make RiftCompare better?
-            We&apos;d genuinely love to hear from you — just send us an email.
+            We&apos;d genuinely love to hear from you.
           </p>
 
-          <a
-            href={`mailto:${CONTACT_EMAIL}?subject=RiftCompare%20feedback`}
-            className="btn-primary mt-6 inline-flex text-base"
-          >
-            Email {CONTACT_EMAIL}
-          </a>
+          <div className="mt-6">
+            <ContactForm />
+          </div>
 
           <p className="mt-4 text-xs text-slate-500">
-            We read every message and usually reply within a day or two.
+            We read every message and usually reply within a day or two. Prefer email?{" "}
+            <a href={`mailto:${CONTACT_EMAIL}?subject=RiftCompare%20feedback`} className="text-brand-300 hover:underline">
+              {CONTACT_EMAIL}
+            </a>
           </p>
 
           <p className="mt-5 border-t border-ink-800 pt-4 text-sm text-slate-400">
