@@ -37,9 +37,9 @@ import { cardTileSelect } from "./cards";
 import { TCG_US } from "./tcgplayer";
 import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
 import { usdCentsToCountry, convertCents } from "./fx";
-import { cachedOrDirect, sydneyDayKey } from "./price-history";
+import { cachedOrDirect, inNextRequest, sydneyDayKey } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
-import { isFallbackRetailer, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
+import { CARDTRADER_RETAILER, isFallbackRetailer, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
 
 const MIN_BUY_CENTS = 300;
@@ -116,8 +116,45 @@ export function ebayBuyLabel(country: Country, postageKnown: boolean): string {
 // line only differs on exact ties, and rolls over with the day key.)
 type EbayRow = { cardId: string; priceCents: number; shippingCents: number | null; url: string };
 
+// ONE READ PER RENDER, whatever the data cache is doing (2026-09-26, "Pushing
+// eBay clicks" in DECISIONS.md). Since the homepage's "Cheapest on eBay" row
+// ranks from the same three day-cached inputs as the savings column beside it
+// (minByCard, the eBay row pull, TCGplayer's rows), one render reads each of
+// them twice. That was assumed free — the second read "finds the entry the
+// first just wrote" — and review showed it is not in Next 14.2: a TAGGED
+// unstable_cache read never matches the untagged in-memory copy the write
+// leaves (FetchCache.get's hasMatchingTags), so it goes to the remote cache,
+// and if the first read's un-awaited upload has not landed it gets a 404 and
+// recomputes — the full-market groupBy and row pulls, again, on exactly the
+// cold renders after an import purge. A stale entry does the same with two
+// background recomputes.
+//
+// So each loader's promise is shared for a minute within this lambda: the
+// second caller in a render gets the first caller's promise, hit or miss.
+// Rule 2 of lib/db.ts (a globalThis TTL memo for big datasets) in its smallest
+// form; the shared data cache underneath is untouched, and a failed read is
+// dropped at once so the next caller retries. Only inside a Next render or
+// request: scripts and tests have no data cache, and a test that stubs the
+// database twice in a minute must get two reads.
+const COALESCE_MS = 60_000;
+const g = globalThis as unknown as { __rcArbCoalesce?: Map<string, { at: number; p: Promise<unknown> }> };
+function coalesced<T>(key: string, load: () => Promise<T>): Promise<T> {
+  if (!inNextRequest()) return load();
+  const memo = (g.__rcArbCoalesce ??= new Map());
+  const now = Date.now();
+  const hit = memo.get(key);
+  if (hit && now - hit.at < COALESCE_MS) return hit.p as Promise<T>;
+  if (memo.size > 64) for (const [k, v] of memo) if (now - v.at >= COALESCE_MS) memo.delete(k);
+  const p = load();
+  memo.set(key, { at: now, p });
+  p.catch(() => {
+    if (memo.get(key)?.p === p) memo.delete(key);
+  });
+  return p;
+}
+
 function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow[]> {
-  return cachedOrDirect(
+  return coalesced(`ebay-rows|${country}|${ebayKey}|${sydneyDayKey()}`, () => cachedOrDirect(
     () =>
       prisma.$queryRaw<EbayRow[]>`
         SELECT DISTINCT ON ("cardId")
@@ -128,7 +165,7 @@ function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow
       `,
     ["arb-ebay-rows", country, ebayKey, sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
-  );
+  ));
 }
 
 export type EbayBest = { cents: number; url: string; postageKnown: boolean };
@@ -195,7 +232,7 @@ export function mergeTcgUsRows(rows: readonly { cardId: string; priceCents: numb
 }
 
 function getTcgUsRowsMemoized(): Promise<TcgUsRow[]> {
-  return cachedOrDirect(
+  return coalesced(`tcg-us-rows|${sydneyDayKey()}`, () => cachedOrDirect(
     async () =>
       mergeTcgUsRows(
         await prisma.retailerPrice.findMany({
@@ -212,7 +249,7 @@ function getTcgUsRowsMemoized(): Promise<TcgUsRow[]> {
     // would otherwise keep serving cloned promo rows until it expired.
     ["arb-tcg-us-rows-v3", sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
-  );
+  ));
 }
 
 /**
@@ -420,15 +457,18 @@ export interface ArbPage {
 // because the caller's source selection changes the aggregate.
 async function minByCard(country: Country, keys: string[]) {
   if (!keys.length) return new Map<string, number>();
-  const rows = await cachedOrDirect(
-    () =>
-      prisma.retailerPrice.groupBy({
-        by: ["cardId"],
-        where: { country, inStock: true, retailer: { in: keys } },
-        _min: { priceCents: true },
-      }),
-    ["arb-min-by-card", country, [...keys].sort().join("|"), sydneyDayKey()],
-    { revalidate: 172800, tags: [CONTENT_TAG] },
+  const keyList = [...keys].sort().join("|");
+  const rows = await coalesced(`min-by-card|${country}|${keyList}|${sydneyDayKey()}`, () =>
+    cachedOrDirect(
+      () =>
+        prisma.retailerPrice.groupBy({
+          by: ["cardId"],
+          where: { country, inStock: true, retailer: { in: keys } },
+          _min: { priceCents: true },
+        }),
+      ["arb-min-by-card", country, keyList, sydneyDayKey()],
+      { revalidate: 172800, tags: [CONTENT_TAG] },
+    ),
   );
   return new Map(rows.filter((r) => r._min.priceCents != null).map((r) => [r.cardId, r._min.priceCents!]));
 }
@@ -736,6 +776,27 @@ const CHEAPEST_EBAY_CARD_SELECT = {
 export type CheapestEbayCard = { id: string; slug: string | null; name: string; setCode: string; collectorNumber: string; imageThumbUrl: string | null };
 export type CheapestOnEbayItem = CheapestEbayRanked & { card: CheapestEbayCard; ebayKey: string };
 
+// Buyable sources the card page RANKS that are not RETAILERS entries, so they
+// are not on the Deal Finder's store list (2026-09-26, review of "Pushing eBay
+// clicks"). The row says an eBay listing "costs less than any store we track",
+// and the card it links to must agree: in the EU that page ranks CardTrader —
+// the market's main in-stock source (lib/cardtrader.ts, country "EU" only) —
+// beside the Shopify stores, so eBay has to beat it too. One more day-cached
+// aggregate for the EU, a small one (CardTrader's rows only); the Deal
+// Finder's own store-list entry is left exactly as it was. The US's buyable
+// non-store row, TCGplayer's cheapest listing, is handled in the ranking.
+const RANKED_NON_STORE_SOURCES: Partial<Record<Country, string[]>> = { EU: [CARDTRADER_RETAILER] };
+
+/** Pure: the per-card minimum across two minimum maps. */
+export function mergeMin(a: ReadonlyMap<string, number>, b: ReadonlyMap<string, number>): Map<string, number> {
+  const out = new Map(a);
+  for (const [k, v] of b) {
+    const cur = out.get(k);
+    if (cur == null || v < cur) out.set(k, v);
+  }
+  return out;
+}
+
 /**
  * The homepage "Cheapest on eBay" row for one market: at most `limit` cards,
  * [] for Canada, for a market with no eBay feed, or on any error. Called
@@ -747,12 +808,14 @@ export async function getCheapestOnEbay(country: Country, limit = 4): Promise<Ch
     if (EBAY_CROSS_BORDER[country]) return [];
     const { storeKeys, buyEbayKey } = defaultBuySplit(country);
     if (!buyEbayKey || !storeKeys.length) return [];
-    const [storeMin, ebayRows, tcgRows] = await Promise.all([
+    const extraKeys = RANKED_NON_STORE_SOURCES[country] ?? [];
+    const [storeMin, extraMin, ebayRows, tcgRows] = await Promise.all([
       minByCard(country, storeKeys),
+      minByCard(country, extraKeys),
       getEbayRowsMemoized(country, buyEbayKey),
       country === "US" ? getTcgUsRowsMemoized() : Promise.resolve<TcgUsRow[]>([]),
     ]);
-    const ranked = rankCheapestOnEbay(country, storeMin, cheapestEbayByCard(country, ebayRows), tcgRows).slice(0, Math.max(0, limit));
+    const ranked = rankCheapestOnEbay(country, mergeMin(storeMin, extraMin), cheapestEbayByCard(country, ebayRows), tcgRows).slice(0, Math.max(0, limit));
     if (!ranked.length) return [];
     const cards = await prisma.card.findMany({
       where: { id: { in: ranked.map((r) => r.cardId) } },

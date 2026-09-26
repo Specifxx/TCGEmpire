@@ -625,7 +625,7 @@ export function CardPriceComparison({
               </div>
               <p className="mt-1 text-xs text-slate-400">
                 {preRelease
-                  ? "Nothing from this set ships before release — check each listing's dispatch date."
+                  ? "This set hasn't released yet — eBay sellers set their own dispatch dates, so check each listing."
                   : `We have no ${ebay.label} price on file for this card right now — eBay sellers may still list it.`}
               </p>
             </div>

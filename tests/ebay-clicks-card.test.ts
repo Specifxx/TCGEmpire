@@ -85,7 +85,7 @@ test("the fallback keeps its gate and key, and reads as an eBay search", () => {
   const code = codeOnly(block);
   assert.match(code, /Search \{ebay\.label\} for \{displayName\}/);
   assert.match(code, /We have no \$\{ebay\.label\} price on file for this card right now — eBay sellers may still list it\./);
-  assert.match(code, /Nothing from this set ships before release — check each listing's dispatch date\./);
+  assert.match(code, /This set hasn't released yet — eBay sellers set their own dispatch dates, so check each listing\./);
   assert.match(code, /surface="ebay_fallback"/);
   assert.match(code, /className="btn-ebay shrink-0 text-sm"/);
   assert.match(code, /border-\[#0064d2\]\/40 bg-\[#0064d2\]\/\[0\.06\]/);
@@ -130,7 +130,9 @@ test("the no-price explainer offers an eBay search for pre-release and resale-on
   const explainer = page.slice(start, end);
   assert.match(explainer, /\{\(preview \|\| priceState\.noRetailChannel\) && \(\s*<EbayBuyCta/);
   const cta = /<EbayBuyCta[\s\S]*?\/>/.exec(explainer)?.[0] ?? "";
-  assert.match(cta, /query=\{card\.name\}/);
+  // A pre-release card searches its plain name; a resale-only printing (T1S)
+  // searches with its credentials, since it shares its name with a set card.
+  assert.match(cta, /query=\{preview \? card\.name : cardSearchName\(card\.name, card\)\}/);
   assert.match(cta, /preRelease=\{preview\}/);
   assert.match(cta, /source=\{preview \? "card-prerelease" : "card-resale"\}/);
   assert.match(cta, /pageType="card_detail"/);
@@ -224,7 +226,7 @@ test("QuickView's two no-eBay-row searches are eBay-blue fallbacks with honest c
   assert.match(block, /border-\[#0064d2\]\/40 bg-\[#0064d2\]\/\[0\.06\]/);
   assert.match(block, /Search \{ebayMkt\.label\} for \{cardDisplayName\(card\.name, card\)\}/);
   assert.match(block, /We have no \$\{ebayMkt\.label\} price on file for this card right now — eBay sellers may still list it\./);
-  assert.match(block, /preRelease\s*\?\s*"Nothing from this set ships before release — check each listing's dispatch date\."/);
+  assert.match(block, /preRelease\s*\?\s*"This set hasn't released yet — eBay sellers set their own dispatch dates, so check each listing\."/);
   // Disclosed right beside it, for every visitor.
   assert.match(qv, /\{ebaySearchUrl && ebayMkt && <AffiliateDisclosure partner="ebay" tight \/>\}/);
 });

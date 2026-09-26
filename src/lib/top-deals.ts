@@ -218,14 +218,16 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
   })();
   // CHEAPEST ON EBAY (2026-09-26): chained AFTER the savings branch, not run
   // beside it. getCheapestOnEbay re-reads the very aggregates that branch reads
-  // (the store-price groupBy, the eBay row pull, TCGplayer's rows). Started
-  // together, a cold cache — the first render after every import purge — had
-  // both miss and both run the same full-market reads at once. Chained, it
-  // starts only after the savings branch has computed them and handed them to
-  // the data cache (on Vercel the fetch cache records an entry in the lambda's
-  // memory as the write starts), so it finds them there instead of racing to
-  // compute them, and its only read of its own is the detail lookup for at
-  // most perType cards. The other three columns still run in parallel.
+  // (the store-price groupBy, the eBay row pull, TCGplayer's rows). What stops
+  // those being computed twice on a cold or stale cache is NOT the data cache —
+  // a tagged read never matches the in-memory copy a write leaves in Next 14.2,
+  // so the second read can 404 and recompute — but lib/arbitrage.ts's
+  // `coalesced`, which hands the second caller in this lambda the first
+  // caller's promise. The chain keeps the order deterministic (the savings
+  // branch owns the reads) and costs one short wait; the row's only read of its
+  // own is the detail lookup for at most perType cards (plus, in the EU,
+  // CardTrader's small day-cached minimum). The other three columns still run
+  // in parallel.
   const cheapestOnEbayP = savingsP.then(async (): Promise<CheapestEbayDeal[]> => {
     try {
       return (await getCheapestOnEbay(country, perType)).map(cheapestEbayDeal);

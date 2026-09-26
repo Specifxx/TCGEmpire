@@ -1153,18 +1153,24 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   an unreleased set — the spoiler traffic, whose visitors are
                   already looking for a way to buy — and a printing that is
                   only ever sold by resale. A search, never a price: the
-                  pre-release copy says nothing ships before release and to
-                  check the listing's dispatch date. EbayBuyCta is a client
+                  pre-release copy says the set has not released and that
+                  sellers set their own dispatch dates. EbayBuyCta is a client
                   component, so the label follows the visitor's market on this
                   cookie-free ISR page, and it carries its own disclosure. It
-                  adds the "Riftbound" keyword itself (riftboundEbayQuery), so
-                  it takes the plain card name and its heading reads as one.
+                  adds the "Riftbound" keyword itself (riftboundEbayQuery).
+                  The query follows the rule of the search further down: a
+                  pre-release card's plain name (eBay ANDs every keyword), a
+                  resale-only printing's cardSearchName — those share their
+                  names with ordinary set printings, and a plain-name search
+                  would find the wrong card (review, 2026-09-26). The heading
+                  names the printing in full rather than truncating the query.
                   Deliberately here, after our own explanation, and NOT in the
                   details card above: the title, the metrics and the alert stay
                   free of affiliate blocks. */}
               {(preview || priceState.noRetailChannel) && (
                 <EbayBuyCta
-                  query={card.name}
+                  query={preview ? card.name : cardSearchName(card.name, card)}
+                  heading={preview ? undefined : `Search eBay for ${displayName}`}
                   preRelease={preview}
                   source={preview ? "card-prerelease" : "card-resale"}
                   pageType="card_detail"

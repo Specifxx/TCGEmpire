@@ -132,6 +132,18 @@ export async function cachedOrDirect<T>(fn: () => Promise<T>, keys: string[], op
   }
 }
 
+// True while Next is rendering or serving a request (the render store exists);
+// false in scripts and in node --test, which have no data cache to protect.
+// lib/arbitrage.ts's `coalesced` read-sharing uses it so a test that stubs the
+// database twice in a minute gets two reads, not the first stub's rows.
+export function inNextRequest(): boolean {
+  try {
+    return staticGenerationAsyncStorage.getStore() != null;
+  } catch {
+    return false;
+  }
+}
+
 // Reads the flag Next sets on the render store while an unstable_cache callback
 // is executing. Internal module, but it is the very one unstable_cache itself
 // imports, and this repo pins next to a 14.2.x range; if the import ever breaks

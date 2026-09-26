@@ -85,6 +85,10 @@ export function RadiancePreorderCtaView({
 // Not on the set pages: the same block renders on /sets/radiance, where the
 // hub's own "Also on eBay" panel sits a few lines below it, and two eBay units
 // one screen apart read as a wall of paid links rather than a choice.
+// After release the line promises singles, so it searches singles: the same
+// sealed-excluding query as RadianceEbayPanel's singles link (review, 2026-09-26).
+const RADIANCE_SINGLES_QUERY = "Riftbound Radiance -booster -display -case";
+
 export function RadianceCtaEbayLine({ released = false }: { released?: boolean }) {
   const { country } = useCountry();
   const pathname = usePathname() ?? "";
@@ -93,7 +97,7 @@ export function RadianceCtaEbayLine({ released = false }: { released?: boolean }
   return (
     <div data-radiance-cta-ebay className="mt-1">
       <OutboundLink
-        href={ebaySearchUrl(country, "Riftbound Radiance", "preorder-cta")}
+        href={ebaySearchUrl(country, released ? RADIANCE_SINGLES_QUERY : "Riftbound Radiance", "preorder-cta")}
         retailer="ebay_search"
         country={country}
         pageType="article"

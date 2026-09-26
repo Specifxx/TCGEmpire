@@ -297,7 +297,9 @@ test("pre-order CTA: the eBay line is a disclosed, measured search that follows 
   const view = read("src/components/RadiancePreorderCtaView.tsx");
   const fn = view.slice(view.indexOf("export function RadianceCtaEbayLine"));
   assert.match(fn, /const \{ country \} = useCountry\(\);/);
-  assert.match(fn, /href=\{ebaySearchUrl\(country, "Riftbound Radiance", "preorder-cta"\)\}/);
+  // After release the line says "singles", so it searches singles only (review, 2026-09-26).
+  assert.match(fn, /href=\{ebaySearchUrl\(country, released \? RADIANCE_SINGLES_QUERY : "Riftbound Radiance", "preorder-cta"\)\}/);
+  assert.match(view, /const RADIANCE_SINGLES_QUERY = "Riftbound Radiance -booster -display -case";/);
   assert.match(fn, /retailer="ebay_search"/);
   assert.match(fn, /surface="preorder_cta_ebay"/);
   // Articles only: on /sets/radiance the hub's own "Also on eBay" panel sits a
@@ -404,6 +406,8 @@ test("policy copy: the promise is the ORDER of a ranked comparison, and the eBay
   assert.match(policy, /Ranking is\s+by item price, with known postage breaking ties;/);
   assert.match(policy, /Outside the ranked lists we\s+do promote eBay, our main affiliate partner/);
   assert.match(policy, /Those are labelled as paid links, sit\s+apart from the ranking, and never change it\./);
+  // The eBay-blue buttons inside ranked lists are disclosed too (review, 2026-09-26).
+  assert.match(policy, /Inside a comparison, an eBay row&apos;s\s+button uses eBay&apos;s own colour/);
   assert.doesNotMatch(policy, /price and postage alone/);
   const about = read("src/app/about/page.tsx");
   assert.match(about, /in every ranked list the cheapest option comes first,\s+full stop\. We also link to eBay outside those lists, always labelled\./);

@@ -69,18 +69,21 @@ export function EbaySearchPanel({
           <PaidLinkTag />
           <span className="min-w-0 flex-1 basis-52 text-slate-300">{heading}</span>
           {shown.map((l, i) => (
-            <OutboundLink
-              key={l.href}
-              href={l.href}
-              retailer="ebay_search"
-              country={country}
-              pageType={pageType}
-              surface="ebay_panel"
-              positionInList={i + 1}
-              className="btn-ebay shrink-0 px-3 py-1.5 text-xs"
-            >
-              {l.label}
-            </OutboundLink>
+            // A wrapper only to carry the promo marker (see the panel below):
+            // OutboundLink does not forward data-* attributes.
+            <span key={l.href} className="contents" data-ad-placement={l.promo ? "" : undefined}>
+              <OutboundLink
+                href={l.href}
+                retailer="ebay_search"
+                country={country}
+                pageType={pageType}
+                surface="ebay_panel"
+                positionInList={i + 1}
+                className="btn-ebay shrink-0 px-3 py-1.5 text-xs"
+              >
+                {l.label}
+              </OutboundLink>
+            </span>
           ))}
         </div>
         {sub && <p className="mt-1 text-[11px] leading-snug text-slate-500">{sub}</p>}
@@ -102,7 +105,11 @@ export function EbaySearchPanel({
       {sub && <p className="px-4 pt-3 text-xs leading-relaxed text-slate-400">{sub}</p>}
       <ul className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2">
         {shown.map((l, i) => (
-          <li key={l.href}>
+          // data-ad-placement on a promo link: the ad-free boot script hides
+          // every [data-ad-placement] before first paint, so a paying member
+          // never sees the cross-sell in the moments before /api/me answers
+          // and usePremium() above drops it (review, 2026-09-26).
+          <li key={l.href} data-ad-placement={l.promo ? "" : undefined}>
             <OutboundLink
               href={l.href}
               retailer="ebay_search"

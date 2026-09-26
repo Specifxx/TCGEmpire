@@ -101,11 +101,11 @@ export function EbayBuyCta({
   const line =
     sub ??
     (!query
-      ? `Riftbound singles from individual sellers on ${label}.`
+      ? `Riftbound singles from eBay sellers on ${label}.`
       : preRelease
-        ? "Nothing from this set ships before release — check each listing's dispatch date."
+        ? "This set hasn't released yet — eBay sellers set their own dispatch dates, so check each listing."
         : freeText
-          ? `Listings from individual sellers on ${label}.`
+          ? `Listings from eBay sellers on ${label}.`
           : `Search new, used & graded listings on ${label}.`);
 
   return (

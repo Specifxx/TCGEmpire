@@ -215,8 +215,13 @@ test("the row's store keys are exactly the default Deal Finder list's, so minByC
       cs
         .map((c) => (c.op === "groupBy" ? `groupBy ${c.args.where.country} ${[...c.args.where.retailer.in].sort().join("|")}` : `$queryRaw ${c.args.country} ${c.args.retailer}`))
         .sort();
-    assert.equal(rowReads.length, 2, `${country}: the row reads one aggregate and one eBay pull`);
-    assert.deepEqual(shape(rowReads), shape(listReads), `${country}: the same aggregate and eBay pull as the default list`);
+    // The EU also reads CardTrader's own small aggregate (review, 2026-09-26):
+    // the EU card page ranks CardTrader, so eBay must beat it too. It is the
+    // ONLY extra read; the shared two are still the default list's own.
+    const extra = country === "EU" ? [`groupBy EU cardtrader`] : [];
+    assert.equal(rowReads.length, 2 + extra.length, `${country}: one aggregate and one eBay pull${extra.length ? ", plus CardTrader's" : ""}`);
+    assert.deepEqual(shape(rowReads).filter((x) => !extra.includes(x)), shape(listReads), `${country}: the same aggregate and eBay pull as the default list`);
+    for (const x of extra) assert.ok(shape(rowReads).includes(x), `${country}: reads ${x}`);
   }
 });
 
@@ -266,7 +271,14 @@ test("getCheapestOnEbay is never cached around, and top-deals chains it after th
   assert.match(lib, /const \{ storeKeys, buyEbayKey \} = splitBuyKeys\(country, buyKeys\);/, "rankVsTcgplayer splits with the same helper");
 
   const deals = code("src/lib/top-deals.ts");
-  assert.match(deals, /const cheapestOnEbayP = savingsP\.then\(/, "started after the savings branch, so a cold cache is read once");
+  assert.match(deals, /const cheapestOnEbayP = savingsP\.then\(/, "started after the savings branch");
+  // What actually makes the second read free (review, 2026-09-26): a tagged
+  // unstable_cache read never matches the in-memory copy a write leaves, so
+  // the three day-cached loaders share their promise within a lambda instead.
+  for (const loader of ["function getEbayRowsMemoized", "function getTcgUsRowsMemoized", "async function minByCard"]) {
+    const body = between(lib, loader, "\n}\n");
+    assert.match(body, /coalesced\(`/, `${loader} shares one read per render`);
+  }
   assert.match(deals, /getCheapestOnEbay\(country, perType\)/);
   assert.match(deals, /cheapestOnEbay\.length > 0/, "hasAny counts the row");
   assert.match(deals, /cheapestOnEbay,\n/, "TopDeals carries it");
@@ -408,4 +420,21 @@ test("nothing this package added claims an eBay guarantee, urgency or scarcity",
     assert.doesNotMatch(src, /money.?back|buyer protection/i, `${f}: no eBay guarantee claims`);
     assert.doesNotMatch(src, /\bbuy now\b|\bonly \d+ left\b|\bends in\b|\bhurry\b/i, `${f}: no urgency`);
   }
+});
+
+
+test("EU: CardTrader, ranked on the EU card page, is part of what eBay must beat", async () => {
+  const { mergeMin, rankCheapestOnEbay } = await import("../src/lib/arbitrage");
+  const stores = new Map([["c1", 600]]);
+  const cardtrader = new Map([["c1", 150], ["c2", 900]]);
+  const merged = mergeMin(stores, cardtrader);
+  assert.equal(merged.get("c1"), 150, "the cheaper source wins");
+  assert.equal(merged.get("c2"), 900, "a card only CardTrader lists still counts");
+  const ebay = new Map([["c1", { cents: 300, url: "https://www.ebay.es/itm/1", postageKnown: true }]]);
+  assert.equal(rankCheapestOnEbay("EU", stores, ebay, []).length, 1, "against the stores alone eBay would look cheapest");
+  assert.equal(rankCheapestOnEbay("EU", merged, ebay, []).length, 0, "with CardTrader in, it is not");
+  const lib = code("src/lib/arbitrage.ts");
+  assert.match(lib, /const RANKED_NON_STORE_SOURCES: Partial<Record<Country, string\[\]>> = \{ EU: \[CARDTRADER_RETAILER\] \};/);
+  const fn = between(lib, "export async function getCheapestOnEbay", "export interface CrossRegionGap");
+  assert.match(fn, /rankCheapestOnEbay\(country, mergeMin\(storeMin, extraMin\)/);
 });

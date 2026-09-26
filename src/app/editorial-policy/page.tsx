@@ -200,7 +200,9 @@ export default function EditorialPolicyPage() {
             one we do whenever it is cheaper, which is most of the time. Outside the ranked lists we
             do promote eBay, our main affiliate partner — an &ldquo;Also on eBay&rdquo; box or a
             &ldquo;Search eBay&rdquo; link beside a comparison. Those are labelled as paid links, sit
-            apart from the ranking, and never change it. See our{" "}
+            apart from the ranking, and never change it. Inside a comparison, an eBay row&apos;s
+            button uses eBay&apos;s own colour and carries a &ldquo;Paid link&rdquo; tag; its position
+            and price are unchanged. See our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">privacy policy</Link>{" "}
             for what advertising and analytics cookies are set and how to opt out.
           </p>
