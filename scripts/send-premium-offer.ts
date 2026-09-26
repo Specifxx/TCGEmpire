@@ -23,7 +23,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { buildPremiumOfferEmail } from "../src/lib/email";
 import { premiumFromLine } from "../src/lib/site";
-import { PREMIUM_TRIAL_DAYS } from "../src/lib/premium";
+import { PREMIUM_TRIAL_DAYS, premiumTrialEnabled } from "../src/lib/premium";
 import { PREMIUM_OFFER_DAYS, formatOfferEnds, parseOfferEnds, runPremiumOfferBlast } from "../src/lib/premium-offer";
 
 async function main() {
@@ -38,6 +38,7 @@ async function main() {
         {
           displayName: "Sample Collector",
           trialDays,
+          trialOffered: premiumTrialEnabled(),
           offerDays: PREMIUM_OFFER_DAYS,
           offerEnds: formatOfferEnds(ends),
           unsubUrl: "https://riftcompare.com/announcements/unsubscribe?token=preview",

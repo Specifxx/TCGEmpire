@@ -1323,7 +1323,12 @@ function escapeHtml(s: string): string {
 
 export interface PremiumOfferEmailOpts {
   displayName: string;
-  trialDays: number; // 0 = trial already used
+  trialDays: number; // 0 = no trial for this account (already used, or trials are off)
+  // Are trials offered at all (premiumTrialEnabled())? false since 2026-09-26,
+  // when the trial was dropped: with trialDays 0 the email must not tell a
+  // recipient who never had a trial that they "already used" one. Omitted =
+  // true, the wording from before trials could be off.
+  trialOffered?: boolean;
   offerDays: number; // what the trial is extended to, in total
   offerEnds: string; // human-readable deadline, e.g. "30 September 2026"
   unsubUrl: string;
@@ -1348,7 +1353,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts, fromLine: st
   const offerBlock =
     opts.trialDays > 0
       ? `Premium normally starts with a ${opts.trialDays}-day free trial. <strong style="color:#fff">Start yours before ${ends} and we'll extend it to a full ${opts.offerDays} days.</strong> It's $0 today, then ${fromLine} — and you can cancel any time during the trial and pay nothing.`
-      : `You've already used a free trial, so Premium bills from day one. <strong style="color:#fff">Subscribe before ${ends} and we'll add a free month on top</strong> — ${opts.offerDays} extra days on your subscription, at no charge. Premium is ${fromLine}, and you can cancel any time.`;
+      : `${opts.trialOffered === false ? "Premium has no free trial, so it bills from day one." : "You've already used a free trial, so Premium bills from day one."} <strong style="color:#fff">Subscribe before ${ends} and we'll add a free month on top</strong> — ${opts.offerDays} extra days on your subscription, at no charge. Premium is ${fromLine}, and you can cancel any time.`;
 
   const heading = opts.trialDays > 0 ? "Try Premium for a full month, free" : "A free month of Premium, on us";
   const inner = `

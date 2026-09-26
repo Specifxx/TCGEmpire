@@ -2,13 +2,19 @@
 // input), rendered with the lightweight <Markdown> component. To publish a new
 // article, add an entry here.
 import { BANLIST_UPDATED, BANNED_CARDS } from "./banlist";
-import { SITE_URL } from "./site";
+import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT, annualSavingPct, premiumEffectiveMonthly, premiumMoneyNum } from "./site";
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
 import { PLUS_TARGET_ALERT_LIMIT } from "./alert-limits";
 import { TIER_COMPARISON } from "../components/TierComparisonTable";
+
+// The Premium explainer's prices, read from lib/site.ts rather than typed into
+// the prose (2026-09-26 price cut: every hand-typed $9.99/$79.99 here had to be
+// found by a test and edited by hand on each of the three earlier changes).
+const PREMIUM_YEAR_AT_MONTHLY = `$${(premiumMoneyNum(PREMIUM_PRICE_AMOUNT) * 12).toFixed(2)}`;
+const PLUS_YEAR_AT_MONTHLY = `$${(premiumMoneyNum(PLUS_PRICE_AMOUNT) * 12).toFixed(2)}`;
 
 // The Premium explainer's comparison table, rendered from TIER_COMPARISON
 // itself (2026-09-25) — the same rows /premium and the upgrade dialog show, so
@@ -9868,7 +9874,12 @@ We built the price tracking, the price history, and the alerts specifically beca
     // from TIER_COMPARISON itself (premiumTierTableMarkdown), so this article
     // can no longer drift from /premium and the upsell dialog; the prices and
     // saving are still re-derived from lib/site.ts by
-    // tests/premium-price-increase.test.ts.
+    // tests/premium-price-increase.test.ts. Since the 2026-09-26 price cut the
+    // prices are interpolated from lib/site.ts too, and the trial and the
+    // half-price intro are gone from it: both are off by default, and this
+    // article states that. Turning either back on (PREMIUM_TRIAL_DAYS,
+    // NEXT_PUBLIC_PREMIUM_INTRO_OFFER) needs this article edited by hand —
+    // tests/premium-price-increase.test.ts fails until it is.
     slug: "riftcompare-premium-explained",
     category: "blog",
     title: "RiftCompare Premium: Every Feature Explained",
@@ -9876,7 +9887,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       "Everything RiftCompare Plus and Premium include: no ads, target-price alerts, every deal, Best Basket and Demand Finder — with pricing and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
-    updated: "2026-09-25",
+    updated: "2026-09-26",
     readMins: 9,
     tags: ["premium", "pricing", "tools", "deal finder", "best basket", "demand finder"],
     hero: {
@@ -9884,7 +9895,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
     },
     summary: [
-      "**RiftCompare has two paid tiers: Plus at $4.99/mo and Premium at $9.99/mo** (each with an annual option at roughly a 33% saving) — both with a 3-day free trial, the first 3 months at half price on a monthly plan, and cancel-anytime billing through Stripe.",
+      `**RiftCompare has two paid tiers: Plus at ${PLUS_PRICE_AMOUNT}/mo and Premium at ${PREMIUM_PRICE_AMOUNT}/mo** (each with an annual option at roughly a ${annualSavingPct()}% saving), billed through Stripe from the day you subscribe, and you can cancel anytime.`,
       `**Plus is no ads, every deal, and target alerts**: no ads on any page, the full Deal Finder (which you can narrow to only the cards you watch or own) and Rising Cards lists, and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards that email you the store when a card hits your price.`,
       "**Premium buys your whole list for less, and shows what players are hunting for**: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck or your watchlist (skipping copies you already own), your binder's replacement cost, Demand Finder's most searched and most viewed cards, and unlimited target alerts.",
       "**Price comparison itself stays free for everyone**, and a free account keeps a watchlist with weekly new-low emails, your portfolio, the top 3 of each deal list and your own Best Basket total.",
@@ -9898,7 +9909,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     faq: [
       {
         q: "How much does RiftCompare Premium cost?",
-        a: "Premium is $9.99/month, or $79.99/year if you pay annually (about $6.67/month, a 33% saving versus paying monthly — $119.88 over a year). There's also a cheaper Plus tier at $4.99/month (or $39.99/year), which is ad-free and has the full deal lists and target alerts — see below for the split. Both tiers start with a 3-day free trial; a card is required up front and it auto-converts unless you cancel first. On a monthly plan the first 3 months are then half price — $4.99/month for Premium, $2.49/month for Plus — before the normal price.",
+        a: `Premium is ${PREMIUM_PRICE_AMOUNT}/month, or ${PREMIUM_ANNUAL_AMOUNT}/year if you pay annually (about ${premiumEffectiveMonthly()}/month, a ${annualSavingPct()}% saving versus paying monthly — ${PREMIUM_YEAR_AT_MONTHLY} over a year). There's also a cheaper Plus tier at ${PLUS_PRICE_AMOUNT}/month (or ${PLUS_ANNUAL_AMOUNT}/year), which is ad-free and has the full deal lists and target alerts — see below for the split. Both are charged from the day you subscribe: there's no free trial and no introductory price, just the price above.`,
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
@@ -9914,7 +9925,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "Is there a free trial?",
-        a: "Yes — 3 days, on both tiers, on both the monthly and annual plan. It needs a card up front and converts automatically after 3 days unless you cancel before then; cancel during the trial and you're never charged. We email you a day or two before the first charge. On a monthly plan the first 3 months are then half price ($2.49/mo for Plus, $4.99/mo for Premium) before the normal price.",
+        a: "No — Plus and Premium are billed from the day you subscribe, so there's no trial to remember to cancel. You can cancel anytime from your account and keep access to the end of the period you paid for. To try Premium without paying, there are two free ways: a week for sending us feedback, or 3 days for each friend you refer (see below).",
       },
       {
         q: "Can I get RiftCompare Premium for free?",
@@ -9922,11 +9933,11 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "Can I cancel RiftCompare Premium anytime?",
-        a: "Yes. Cancel anytime from your account and your benefits run through to the end of the period you already paid for — there's no lock-in and no penalty. While you stay subscribed your price is locked in, so it never rises even as new features are added.",
+        a: "Yes. Cancel anytime from your account and your benefits run through to the end of the period you already paid for — there's no lock-in and no penalty.",
       },
       {
         q: "Does Plus remove ads on RiftCompare?",
-        a: "Yes — Plus and Premium both do. Every page is ad-free, on the website and in the app, the moment you're on either paid plan, the free trial included. It's automatic; there's nothing to switch on separately.",
+        a: "Yes — Plus and Premium both do. Every page is ad-free, on the website and in the app, the moment you're on either paid plan. It's automatic; there's nothing to switch on separately.",
       },
       {
         q: "What happened to the Value Finder, Bulk Pricer, Rising Sealed and Condition Calculator?",
@@ -9946,18 +9957,18 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder and list pricer, the trade calculator, box EV, the Index and weekly price movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Plus or Premium**, with nothing rounded up or left vague.
 
-Short version: **Plus** is $4.99/mo (or $39.99/yr) — no ads on any page, every deal, and an email naming the store when a card you watch hits your price. **Premium** is $9.99/mo (or $79.99/yr) — everything in Plus, and it buys your whole list for less: the cheapest delivered order across your country's stores, skipping the cards you already own. It also shows what players are hunting for: the full Demand Finder.
+Short version: **Plus** is ${PLUS_PRICE_AMOUNT}/mo (or ${PLUS_ANNUAL_AMOUNT}/yr) — no ads on any page, every deal, and an email naming the store when a card you watch hits your price. **Premium** is ${PREMIUM_PRICE_AMOUNT}/mo (or ${PREMIUM_ANNUAL_AMOUNT}/yr) — everything in Plus, and it buys your whole list for less: the cheapest delivered order across your country's stores, skipping the cards you already own. It also shows what players are hunting for: the full Demand Finder.
 
 ## How much does RiftCompare Plus / Premium cost?
 
-| Plan | Price | Works out to | Trial |
-| --- | --- | --- | --- |
-| Plus, monthly | $4.99/month (**$2.49/month for the first 3 months**) | $4.99/month | 3 days free |
-| Plus, annual | $39.99/year | ≈ $3.33/month (**33% off**, vs $59.88/yr paying monthly) | 3 days free |
-| Premium, monthly | $9.99/month (**$4.99/month for the first 3 months**) | $9.99/month | 3 days free |
-| Premium, annual | $79.99/year | ≈ $6.67/month (**33% off**, vs $119.88/yr paying monthly) | 3 days free |
+| Plan | Price | Works out to |
+| --- | --- | --- |
+| Plus, monthly | ${PLUS_PRICE_AMOUNT}/month | ${PLUS_PRICE_AMOUNT}/month |
+| Plus, annual | ${PLUS_ANNUAL_AMOUNT}/year | ≈ ${premiumEffectiveMonthly("plus")}/month (**${annualSavingPct("plus")}% off**, vs ${PLUS_YEAR_AT_MONTHLY}/yr paying monthly) |
+| Premium, monthly | ${PREMIUM_PRICE_AMOUNT}/month | ${PREMIUM_PRICE_AMOUNT}/month |
+| Premium, annual | ${PREMIUM_ANNUAL_AMOUNT}/year | ≈ ${premiumEffectiveMonthly()}/month (**${annualSavingPct()}% off**, vs ${PREMIUM_YEAR_AT_MONTHLY}/yr paying monthly) |
 
-Both tiers run through Stripe, need a card up front for the trial, and auto-convert after 3 days unless you cancel first — cancel during the trial and nothing is charged, and we email you a day or two before the first charge. New subscribers on a monthly plan pay half price for their first 3 months, applied automatically at checkout. Subscribe once and **your price is locked in** for as long as you stay subscribed. You can move from Plus to Premium, prorated, from the /premium page once your first payment has gone through (plan changes aren't available during the trial).
+Both tiers run through Stripe and are charged when you subscribe — no free trial, no introductory price, just the price in the table. Both prices were lowered in late September 2026, when the free trial and the half-price first months were dropped. You can move from Plus to Premium, prorated, from the /premium page once your first payment has gone through.
 
 Cancellation is genuinely no-friction: cancel anytime, and your benefits simply run to the end of the period you already paid for.
 
@@ -9973,7 +9984,7 @@ The pattern is deliberate: **nothing about seeing a price is ever gated.** A fre
 
 ### 1. No ads on any page
 
-Plus and Premium both remove every ad on every page — card pages, set lists, guides and the app — from the moment you subscribe, the free trial included. There's nothing to switch on. It's the first thing Plus does because it's the benefit that needs no explaining.
+Plus and Premium both remove every ad on every page — card pages, set lists, guides and the app — from the moment you subscribe. There's nothing to switch on. It's the first thing Plus does because it's the benefit that needs no explaining.
 
 ### 2. Deal Finder — every card below TCGplayer market
 

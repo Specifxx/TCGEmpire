@@ -14288,3 +14288,133 @@ aria-label mismatch and the Singapore customid loss before release; all three
 are fixed above. 8 new tests (`tests/home-ebay.test.ts`); assertions in
 `ebay-clicks-home`, `ebay-picks` and `card-art-thumbs` updated for the move,
 the `pageType` prop and the `md:` switch.
+
+## Prices cut to $4.99 / $2.99, no trial, no intro; existing subscribers moved down — 2026-09-26
+
+Owner: **"the price is not working."** The call:
+
+- **Premium $4.99/mo or $39.99/yr** (was $9.99 / $79.99).
+- **Plus $2.99/mo or $23.99/yr** (was $4.99 / $39.99).
+- **No free trial and no "first 3 months half price".** Checkout charges
+  at once.
+- **Existing subscribers are moved DOWN** to the new prices from their next
+  renewal. The owner does this in the Stripe dashboard; no code moves anyone.
+
+**Made knowing the evidence points the other way.** The 2026-09-08 entry
+("Premium pricing & conversion") read the git history: **$9.99 (31 Aug – 6
+Sep) outproduced $4.99 (18 – 31 Aug), ~0.67 vs ~0.38 subscribers a day and
+~$6.70 vs ~$1.90 revenue a day**. $4.99 as the only price converted worse.
+Those samples were small (days, and single-digit subscribers), and the
+trial and pitch differed between them, so neither reading is proof. The
+owner made this call with that entry in front of them. It is recorded as a
+decision, not re-litigated. The annual saving stays about 33% on both tiers
+($39.99 against 12 × $4.99 = $59.88; $23.99 against $35.88), and the
+effective monthly rates are $3.33 and $2.00.
+
+**What changed in code.**
+
+- **Prices** (`lib/site.ts`): the four defaults. Every surface reads them or
+  the helpers built on them. The Premium explainer article now interpolates
+  them too, instead of hand-typed prose that a test had to catch on each of
+  the three earlier price changes.
+- **`PREMIUM_NEXT_PRICE_AMOUNT` defaults to `PREMIUM_PRICE_AMOUNT` itself**,
+  not a typed copy. Left at "$9.99", the cut would have made every banner
+  say "We're raising Premium's price soon, to $9.99", a fake increase.
+  `premiumPriceIncreaseAnnounced()` also requires the next amount to be
+  numerically HIGHER, so a stale Vercel value can't dress a cut as a rise.
+- **Trial off:** `PREMIUM_TRIAL_DAYS` defaults to 0. A Vercel value still
+  wins, so a leftover 3 or 14 there turns the trial back on.
+- **Intro off:** `introOfferEnabled()` is now opt-in, true only for
+  `NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1` (it was on unless "0"). Checkout only
+  calls `ensureIntroCoupon` inside that switch, and every intro line on the
+  dialog, cards, /premium, /premium/start, PremiumButton, slide-in, emails,
+  FAQ and terms is behind it.
+- **Existing trials and intro coupons keep working.** The reminder cron,
+  Keep (`/api/premium/resume`), the /premium card, the welcome email and the
+  plan-switch routes read the subscription's own status, `trial_end` and
+  coupon, never the switches. Keep attaches no intro now, on checkout's rule.
+  The webhook's grace for an unreadable trial subscription uses
+  `PREMIUM_TRIAL_DAYS || 3`, so a trial checkout opened before the deploy and
+  finished after it isn't given a 0-day grace.
+- **The steady-state lock-in copy is retired.** Since 2026-09-22 the
+  banner, the dialog, the slide-in and the FAQ said "the price goes up as the
+  site grows — your rate doesn't" and "lock in $X before the price goes up".
+  After a price cut, and with subscribers moved onto new Prices, that
+  promised protection from a rise nobody had decided. The banner, the
+  dialog's lines, the slide-in's gold line and the FAQ "Does my price ever go
+  up?" now render only while an increase is announced. The one remaining
+  caption, `premiumLockInTail()`, says "cancel anytime". The unused
+  `FOUNDING_RATE_*` constants are deleted.
+- **Terms §8 "Your price"** said "we do not move existing subscribers onto a
+  new price", which is now false. It now says the price does not rise while
+  the subscription stays active, and that a LOWER price may be applied from
+  the next renewal, never a higher one. The no-rise half is unchanged. The
+  trial clauses read "if you are in a free trial", because trials started
+  before today are still running.
+- **The premium-offer email** told every trialDays-0 recipient "you've
+  already used a free trial". With trials off that is everyone, most of whom
+  never had one. It now says Premium has no free trial (`trialOffered`).
+- **`PREMIUM_COPY_VERSION` → `price-2026-09-26`.** `PROMO_VARIANT` is
+  unchanged: the signed-out popup quotes no price.
+
+**Legacy price ids.** `tierFromPriceId` resolves any price it doesn't know
+as Premium, and the webhook re-stamps `premiumTier` from the price id on
+every event. Once `STRIPE_PLUS_PRICE_ID` / `STRIPE_PLUS_ANNUAL_PRICE_ID`
+point at the new Prices, a subscriber still on an OLD Plus Price would
+silently become Premium. So:
+
+- **`STRIPE_PLUS_LEGACY_PRICE_IDS`** (comma-separated, trimmed, empties
+  ignored): the old Plus Prices, which also resolve to Plus.
+- **`STRIPE_PREMIUM_LEGACY_PRICE_IDS`**: documentation only (unknown already
+  means Premium). `/admin/subscriptions` counts active subscribers still on
+  either list (`legacyPriceActive`), which is the move's progress bar.
+- **Never reuse a Price across tiers still holds, and bites here:** the new
+  Premium $4.99/mo and $39.99/yr match the OLD Plus amounts. Create NEW
+  Premium Prices. The old Plus Price listed as legacy would read as Plus.
+- `switch-to-annual` treats any yearly price as "already annual", so a
+  legacy annual subscriber is never re-billed onto the new yearly Price.
+  Upgrade, downgrade and switch-to-annual target `priceIdFor(tier, interval)`,
+  the new Prices.
+- **A pre-existing hole, found on the way:** the maintenance steps
+  `audit-premium-vs-stripe`, `funnel-report`, `trial-cancel-report`,
+  `diagnose-billing` and `apply-intro-to-trialists` forwarded only
+  `STRIPE_SECRET_KEY`. With no Plus price id every tier read as Premium, and
+  the audit's `apply` would have stamped every Plus subscriber Premium. The
+  steps now forward the Plus ids and both legacy lists (GitHub secrets), and
+  the audit skips tier fixes when it has no Plus id at all
+  (`plusPriceIdsConfigured`).
+
+**The required order**, because the webhook re-stamps tiers from the price id:
+
+1. In Stripe, create the new Prices: Premium $4.99/mo and $39.99/yr, Plus
+   $2.99/mo and $23.99/yr. All four are new objects, none reused.
+2. In Vercel (all environments): point the four `STRIPE_*_PRICE_ID`
+   variables at them, and set `STRIPE_PLUS_LEGACY_PRICE_IDS` (and optionally
+   `STRIPE_PREMIUM_LEGACY_PRICE_IDS`) to the old ids. Remove
+   `PREMIUM_TRIAL_DAYS`, `NEXT_PUBLIC_PREMIUM_INTRO_OFFER`,
+   `NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT` and any `NEXT_PUBLIC_*_AMOUNT`
+   override if set. Mirror the price ids in GitHub secrets.
+3. Redeploy: the daily release, or "Run workflow" if the owner wants it
+   sooner.
+4. **Only then** move subscriptions, each from its next renewal.
+
+**Moving a subscription that carries a half-price intro coupon**
+(`rc-intro-*`, anyone who subscribed since 2026-09-24): the coupon is an
+amount off sized for the OLD price. Premium's $5.00 off on the new $4.99
+bills $0; Plus's $2.50 off on $2.99 bills $0.49. Removing it instead would
+raise a Plus intro subscriber from $2.49 to $2.99. So move these at the
+first renewal on or after the coupon's end date (Stripe shows it on the
+subscription), not before. Nobody then pays more than they do today.
+
+**A subscription still in its trial** converts at its OLD Price when the
+trial ends. If it has no intro coupon and should start at the new price,
+move it before `trial_end`. The trial reminder quotes whatever Price the
+subscription is on when it runs, 24–48h before the end, so a later move can
+only make the charge lower than the email said, never higher.
+
+**Measure.** Trials are gone, so `trial-cancel-report` stops getting new
+rows. Read paid starts a day and revenue a day by `PREMIUM_COPY_VERSION`
+(`price-2026-09-26` against the 09-24 and 09-25 cohorts), and set them
+beside the 2026-09-08 numbers above. The earlier freeze "until about
+2026-10-15" on the trial model is superseded: the owner has replaced the
+model it was measuring.

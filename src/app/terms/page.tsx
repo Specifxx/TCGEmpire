@@ -135,7 +135,9 @@ export default function TermsPage() {
               intro rules checkout actually applies (lib/premium.ts: the
               card-gated trial, hasEverPaid / introEligibleFor, the lock-in).
               The trial length and intro months come from the same constants
-              checkout reads, never typed here. */}
+              checkout reads, never typed here. Since 2026-09-26 both are off
+              by default (PREMIUM_TRIAL_DAYS 0, NEXT_PUBLIC_PREMIUM_INTRO_OFFER
+              unset), so neither paragraph renders: checkout charges at once. */}
           <h2 className="text-lg font-bold text-white">8. Plus and Premium subscriptions</h2>
           <p>
             {SITE_NAME} offers two paid plans, {TIER_NAMES.plus} and {TIER_NAMES.premium}, each billed monthly or
@@ -161,18 +163,27 @@ export default function TermsPage() {
               {TIER_NAMES.premium} keeps only the half-price invoices you had left.
             </p>
           )}
+          {/* "Your price" rewritten 2026-09-26: it said "we do not move existing
+              subscribers onto a new price", which stopped being true the day
+              the owner cut both plans' prices and moved existing subscribers
+              DOWN onto them from their next renewal (DECISIONS.md, 2026-09-26).
+              The no-rise half is unchanged and still holds. */}
           <p>
             <strong className="text-white">Your price.</strong> The price you subscribe at does not rise for as
-            long as your subscription stays active; we do not move existing subscribers onto a new price. If a
+            long as your subscription stays active. If we lower a plan&apos;s price, we may move existing
+            subscribers onto the lower price from their next renewal; we never move them onto a higher one. If a
             subscription ends and you subscribe again later, the price at that time applies.
           </p>
+          {/* The trial clauses here are worded "if you are in a free trial"
+              rather than hidden with the trial switch: trials started before
+              2026-09-26 are still running when the offer itself is off. */}
           <p>
             <strong className="text-white">Changing or cancelling.</strong> You can cancel at any time from your
-            account; access continues until the end of the period already paid for (or, during a trial, until the
-            trial ends). Once a subscription is paid, moving from {TIER_NAMES.plus} to {TIER_NAMES.premium} bills
-            the prorated difference straight away, and moving down credits the unused part of the period against
-            your next invoice; plan changes are not available during a free trial. Fees already paid are
-            non-refundable except where required by law.
+            account; access continues until the end of the period already paid for (or, if you are in a free
+            trial, until the trial ends). Once a subscription is paid, moving from {TIER_NAMES.plus} to{" "}
+            {TIER_NAMES.premium} bills the prorated difference straight away, and moving down credits the unused
+            part of the period against your next invoice; plan changes are not available during a free trial.
+            Fees already paid are non-refundable except where required by law.
           </p>
         </section>
 

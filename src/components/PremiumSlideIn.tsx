@@ -430,24 +430,17 @@ export function PremiumSlideIn() {
             )
           )}
           {/* Same real, decided increase the dialog and /premium announce (see
-              lib/site.ts) — sized down for this card rather than the full
-              two-line banner, which would double the slide-in's height and cut
-              against its own "low-intrusion" design (see this file's header). */}
-          {/* Shown in both states as of 2026-09-22, same change as /premium
-              and the dialog. Still one line, not the full banner — this card's
-              whole design intent is low intrusion (see this file's header),
-              and doubling its height to make a pricing point would cost more
-              attention than the point is worth. */}
-          <p className="mt-2 rounded-md border border-gold/40 bg-gold/10 px-2 py-1.5 text-[11px] font-semibold text-gold">
-            {premiumPriceIncreaseAnnounced() ? (
-              <>
-                Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
-                {PREMIUM_NEXT_PRICE_AMOUNT}
-              </>
-            ) : (
-              <>Price rises as the site grows — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for good</>
-            )}
-          </p>
+              lib/site.ts), sized down to one line for this low-intrusion card.
+              ONLY while an increase is announced: from 2026-09-22 it also
+              showed "Price rises as the site grows — lock in $X for good" in
+              the steady state, retired with the 2026-09-26 price cut (the
+              price had just gone down; no rise is decided). */}
+          {premiumPriceIncreaseAnnounced() && (
+            <p className="mt-2 rounded-md border border-gold/40 bg-gold/10 px-2 py-1.5 text-[11px] font-semibold text-gold">
+              Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
+              {PREMIUM_NEXT_PRICE_AMOUNT}
+            </p>
+          )}
           {/* Same designed panel the signed-out popup leads with, so the two
               nudges read as one offer. showFeatures is back on: the panel's
               old four-row feature list was dropped for exactly this card's
@@ -480,9 +473,10 @@ export function PremiumSlideIn() {
                 click away: /premium (this card's own CTA destination), the
                 Premium dialog and the checkout page's own "Card required...
                 then $X" disclosure all state it before any card is charged.
-              • !trialEligible (already used a trial, or trials are off):
-                there is no $0 to claim, so this branch still leads with the
-                real recurring price + the lock-in framing — dropping it here
+              • !trialEligible (already used a trial, or trials are off — the
+                default since 2026-09-26): there is no $0 to claim, so this
+                branch leads with the real recurring price + premiumLockInTail
+                ("cancel anytime" unless an increase is announced) — dropping it here
                 would leave the card with nothing but tool chips and a bare
                 "Unlock Premium" button. */}
           {PREMIUM_PRICE_AMOUNT ? (

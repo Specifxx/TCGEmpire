@@ -294,29 +294,19 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
               : "Premium is ad-free, shows every deal, and buys your whole list for less. Price comparison and the portfolio tracker stay free."}
           </p>
 
-          {/* Only for someone who could still act on it — already-Premium
-              visitors are grandfathered regardless, so the urgency has nothing
-              left to say to them. */}
-          {/* Shown whether or not a specific rise is announced — same change
-              and same reasoning as /premium's banner (2026-09-22). Still only
-              for someone who could act on it: an already-Premium visitor is
-              grandfathered regardless, so the urgency has nothing to say to
-              them. And only while PREMIUM is the plan selected: the lock-in
-              is Premium's price policy, and a Plus gate opens this dialog on
-              Plus — "lock in $9.99/month" over a $4.99 Plus checkout was the
-              wrong price on the main conversion surface (QA, 2026-09-25). */}
-          {!premium && sellTier === "premium" && (
+          {/* The lock-in banner: ONLY while a real, higher price is announced
+              (premiumPriceIncreaseAnnounced). From 2026-09-22 it also showed in
+              the steady state ("the price rises as the site grows, your rate
+              never does"); the 2026-09-26 price cut retired that — the price
+              had just gone DOWN and existing subscribers were being moved onto
+              the new Prices, so it promised protection from a rise nobody had
+              decided. Still only for someone who could act on it (not already
+              Premium) and only while PREMIUM is the plan selected: a Plus gate
+              opens this dialog on Plus, and Premium's lock-in over a Plus
+              checkout quoted the wrong price (QA, 2026-09-25). */}
+          {!premium && sellTier === "premium" && premiumPriceIncreaseAnnounced() && (
             <div className="mt-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-center text-xs font-semibold text-gold">
-              {premiumPriceIncreaseAnnounced() ? (
-                <>
-                  Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
-                  {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD}.
-                </>
-              ) : (
-                <>
-                  {premiumLockInHeadline()} — the price rises as the site grows, your rate never does.
-                </>
-              )}
+              {premiumLockInHeadline()} — it rises to {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD}.
             </div>
           )}
 
@@ -453,7 +443,10 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
             )}
           </div>
 
-          {!premium && sellTier === "premium" && (
+          {/* Announced-increase only, like the banner above: in the steady
+              state this line would be a third "cancel anytime" under the
+              button's own "· cancel anytime" caption. */}
+          {!premium && sellTier === "premium" && premiumPriceIncreaseAnnounced() && (
             <p className="mt-3 text-center text-[11px] font-medium text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
           )}
           <p className="mt-3 text-center text-xs text-slate-600">

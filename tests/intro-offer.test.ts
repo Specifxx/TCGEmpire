@@ -8,29 +8,65 @@ import {
   tierIntroMonthlyAmount,
   introPriceLine,
   introOfferEnabled,
+  introFromLine,
+  premiumFromLine,
 } from "../src/lib/site";
-import { introCouponId, PREMIUM_TRIAL_DAYS, introRenewalsRemaining, isIntroCouponId } from "../src/lib/premium";
+import { introCouponId, PREMIUM_TRIAL_DAYS, premiumTrialEnabled, introRenewalsRemaining, isIntroCouponId } from "../src/lib/premium";
 
 // Owner's call, 2026-09-24: a 3-day trial, then the first 3 months half price,
 // for Plus and Premium. DECISIONS.md, "Trial model: 3-day trial, then the
 // first 3 months half price".
+//
+// REVERSED 2026-09-26 (owner: "the price is not working"): both tiers' prices
+// cut, and the trial AND the intro dropped — both OFF by default, each still
+// switchable back on from the environment. The tests below that protected the
+// trial and the intro now pin that default-off behaviour; the machinery tests
+// (coupon sizing, renewals left on a switch) stay, because existing intro
+// coupons keep running out on live subscriptions and the env can re-arm it.
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
 test("half price is the price's cents halved, rounded so the charge rounds down", () => {
+  // The rule, on the pre-cut prices the live intro coupons were sized for…
   assert.equal(introAmountOffCents(999), 500);
   assert.equal(999 - introAmountOffCents(999), 499, "Premium $9.99 → $4.99");
   assert.equal(introAmountOffCents(499), 250);
   assert.equal(499 - introAmountOffCents(499), 249, "Plus $4.99 → $2.49");
-  assert.equal(tierIntroMonthlyAmount("premium"), "$4.99");
-  assert.equal(tierIntroMonthlyAmount("plus"), "$2.49");
-  assert.equal(introPriceLine("premium"), "$4.99/mo for your first 3 months, then $9.99/mo");
+  // …and on today's (2026-09-26) prices, should the env ever re-arm the offer.
+  assert.equal(tierIntroMonthlyAmount("premium"), "$2.49");
+  assert.equal(tierIntroMonthlyAmount("plus"), "$1.49");
+  assert.equal(introPriceLine("premium"), "$2.49/mo for your first 3 months, then $4.99/mo");
   assert.equal(INTRO_MONTHS, 3);
-  assert.equal(introOfferEnabled(), true, "on unless NEXT_PUBLIC_PREMIUM_INTRO_OFFER=0");
 });
 
-test("the trial defaults to 3 days", () => {
-  assert.equal(PREMIUM_TRIAL_DAYS, 3);
+test("the intro offer is OFF by default: only NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1 turns it on (2026-09-26)", () => {
+  assert.equal(introOfferEnabled(), false, "off unless NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1");
+  const site = read("src/lib/site.ts");
+  const at = site.indexOf("export function introOfferEnabled()");
+  assert.match(site.slice(at, at + 150), /NEXT_PUBLIC_PREMIUM_INTRO_OFFER === "1"/, "opt-in, not opt-out");
+  // Off means every intro-aware price line falls back to the plain price —
+  // even for a viewer checkout would otherwise have called eligible.
+  assert.equal(introFromLine("premium", true), premiumFromLine("premium"));
+  assert.equal(introFromLine("plus", true), premiumFromLine("plus"));
+  // And checkout only sizes/attaches a coupon inside the switch.
+  const route = read("src/app/api/premium/checkout/route.ts");
+  const calls = route.match(/ensureIntroCoupon\(/g) ?? [];
+  assert.equal(calls.length, 1, "checkout has exactly one ensureIntroCoupon call…");
+  const callAt = route.indexOf("ensureIntroCoupon(tier, priceId)");
+  assert.match(route.slice(Math.max(0, callAt - 200), callAt), /if \(introOfferEnabled\(\) && plan === "monthly"/, "…and it sits inside the intro switch");
+});
+
+test("the trial is OFF by default: no trial unless PREMIUM_TRIAL_DAYS says so (2026-09-26)", () => {
+  assert.equal(PREMIUM_TRIAL_DAYS, 0);
+  assert.equal(premiumTrialEnabled(), false);
+  const lib = read("src/lib/premium.ts");
+  assert.match(lib, /Number\(process\.env\.PREMIUM_TRIAL_DAYS \?\? 0\)/, "the default is 0, the env can still set a length");
+  // Checkout adds trial_period_days only for a trial-eligible account, which
+  // needs premiumTrialEnabled() — so with 0 the subscription starts paid.
+  const route = read("src/app/api/premium/checkout/route.ts");
+  assert.match(route, /const trialEligible = premiumTrialEnabled\(\) && !dbUser\?\.trialStartedAt;/);
+  assert.match(route, /\.\.\.\(trialEligible\s*\?\s*\{\s*trial_period_days: PREMIUM_TRIAL_DAYS/);
+  assert.match(route, /\.\.\.\(trialEligible \? \{ payment_method_collection: "always" as const \} : \{\}\)/);
 });
 
 test("the coupon id encodes tier, amount and currency, so a price change can never reuse it", () => {
@@ -62,14 +98,26 @@ test("the trial-ending email: never to a trial that already cancelled, and it qu
   assert.match(read("src/lib/email.ts"), /const charge = thenLabel \? `\$\{amountLabel\} \(then \$\{thenLabel\}\)` : amountLabel;/);
 });
 
-test("every surface that states the post-trial price states the intro too", () => {
-  assert.match(read("src/components/TrialPriceBlock.tsx"), /tierIntroMonthlyAmount\(tier\)/);
-  assert.match(read("src/components/PremiumPricingCards.tsx"), /data-intro-offer/);
-  assert.match(read("src/app/premium/start/page.tsx"), /introPriceLine\(tier\)/);
-  assert.match(read("src/app/premium/start/page.tsx"), /We'll email you a day or two before you're charged/);
+test("every surface that states the post-trial price states the intro too — each behind the switch", () => {
+  // The intro copy stays wired (the env can re-arm it), but every piece of it
+  // is gated on introOfferEnabled(), so with the default it renders nowhere.
+  const block = read("src/components/TrialPriceBlock.tsx");
+  assert.match(block, /tierIntroMonthlyAmount\(tier\)/);
+  assert.match(block, /plan === "monthly" && introOfferEnabled\(\) && introEligible/);
+  const cards = read("src/components/PremiumPricingCards.tsx");
+  assert.match(cards, /data-intro-offer/);
+  assert.match(cards, /effectiveCycle === "monthly" && introOfferEnabled\(\) && introEligible/);
+  const start = read("src/app/premium/start/page.tsx");
+  assert.match(start, /introPriceLine\(tier\)/);
+  assert.match(start, /plan === "monthly" && introOfferEnabled\(\) && !paid/);
+  assert.match(start, /We'll email you a day or two before you're charged/);
   const page = read("src/app/premium/page.tsx");
-  assert.match(page, /What is the half-price offer\?/);
-  assert.match(read("src/lib/articles.ts"), /\| Premium, monthly \| \$9\.99\/month \(\*\*\$4\.99\/month for the first 3 months\*\*\)/);
+  assert.match(page, /\.\.\.\(introOfferEnabled\(\)\s*\?\s*\[\s*\{\s*q: `What is the half-price offer\?`/);
+  // The explainer is prose, so it can't follow the switch: it states the
+  // default (no trial, no intro) and must be edited by hand to re-arm either.
+  const article = read("src/lib/articles.ts");
+  assert.match(article, /no free trial, no introductory price, just the price in the table/);
+  assert.doesNotMatch(article, /\*\*\$\d+\.\d\d\/month for the first 3 months\*\*/, "no half-price row left in the pricing table");
 });
 
 test("a price change mid-intro swaps the coupon for the renewals left, and annual clears it", () => {

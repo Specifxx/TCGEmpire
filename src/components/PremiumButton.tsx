@@ -20,7 +20,7 @@ const GOLD =
 //
 // `tier` is the LOWEST tier that unlocks what this wall is guarding
 // (2026-09-25). "plus" for the full lists and target-price alerts: the dialog
-// opens on Plus and the label quotes Plus's price, because $4.99 is the honest
+// opens on Plus and the label quotes Plus's price, because that is the honest
 // answer to "what does this cost me". Omitted = "premium", as before.
 export function PremiumButton({
   children,

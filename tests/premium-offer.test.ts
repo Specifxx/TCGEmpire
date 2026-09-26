@@ -102,6 +102,28 @@ test("the trial wording and the no-trial wording differ where the truth differs"
   assert.notEqual(premiumOfferSubject({ trialDays: 14 }), premiumOfferSubject({ trialDays: 0 }));
 });
 
+test("with trials switched off, nobody is told they 'already used' one (2026-09-26)", () => {
+  // Since the trial was dropped every recipient gets trialDays 0 — including
+  // accounts that never had a trial, for whom "you've already used a free
+  // trial" was simply false.
+  const offNoTrial = buildPremiumOfferEmail(
+    {
+      displayName: "Bill Yang",
+      trialDays: 0,
+      trialOffered: false,
+      offerDays: PREMIUM_OFFER_DAYS,
+      offerEnds: "30 September 2026",
+      unsubUrl: "https://riftcompare.com/announcements/unsubscribe?token=abc",
+    },
+    premiumFromLine(),
+  ).html;
+  assert.doesNotMatch(offNoTrial, /already used a free trial/);
+  assert.match(offNoTrial, /Premium has no free trial, so it bills from day one\./);
+  assert.doesNotMatch(offNoTrial, /\$0 today/);
+  const blast = read("src/lib/premium-offer.ts");
+  assert.match(blast, /trialOffered: premiumTrialEnabled\(\),/, "the blast says whether trials exist at all");
+});
+
 test("no fake scarcity: a real deadline, never a countdown or a 'spots left' claim", () => {
   const { html } = sample(14);
   assert.doesNotMatch(html, /only \d+ (spots|left|places)/i);

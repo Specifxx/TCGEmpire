@@ -90,25 +90,25 @@ longer lands on its entry.
 
 ## Premium & monetisation
 
-- **Measure the trial model until about 2026-10-15:** the owner replaced the
-  14-day trial on 2026-09-24 with a **3-day card-gated trial, then the first 3
-  months half price on monthly plans** (never-paid accounts; annual unchanged).
-  Leave the pitch, pricing and trial alone while it is measured with
-  `trial-cancel-report`, which counts the cancel click
-  (`cancel_at_period_end`); `funnel-report`'s "canc" counts only ended
-  subscriptions and missed every mid-trial cancel. A trial set to end is told
-  it won't be charged, gets the no-charge reminder 24–48h out and a one-click
-  Keep (`/api/premium/resume`); plan switches stay hidden mid-trial until
-  verified on a Stripe test clock. The owner lifted the freeze for the
-  09-25 lineup change (prices, trial and intro untouched); compare cohorts
-  by `PREMIUM_COPY_VERSION` (`lineup-2026-09-25`, then `lineup-2026-09-25b`
-  once Demand Finder returned to Premium the same day).
+- **No trial and no intro (2026-09-26, owner: "the price is not working"):**
+  checkout charges at once. `PREMIUM_TRIAL_DAYS` defaults to 0 and
+  `introOfferEnabled()` is opt-in (`NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1`), so
+  either returns only from the environment. This supersedes the 3-day trial
+  plus half-price months of 09-24 and its freeze to about 10-15. Trials and
+  intro coupons already running keep their machinery, which reads the
+  subscription, never the switches: a trial set to end is told it won't be
+  charged, gets the no-charge reminder 24–48h out and a one-click Keep
+  (`/api/premium/resume`), and plan switches stay hidden mid-trial.
+  `trial-cancel-report` counts the cancel click; `funnel-report`'s "canc"
+  counts only ended subscriptions. Compare cohorts by `PREMIUM_COPY_VERSION`
+  (`price-2026-09-26` from the cut).
   [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215), [2026-09-23](../DECISIONS.md#L10924),
-  [2026-09-25](../DECISIONS.md#L12842)
-- **Tiers (lineup of 2026-09-25):** Plus, $4.99/mo or $39.99/yr, is
+  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14292)
+- **Tiers (lineup of 2026-09-25, prices of 2026-09-26):** Plus, $2.99/mo or
+  $23.99/yr, is
   **ad-free**, has the full Deal Finder (with "Only my cards") and Rising
   Cards lists, and target-price alerts on up to `PLUS_TARGET_ALERT_LIMIT`
-  (25) cards. Premium, $9.99/mo or $79.99/yr, adds unlimited targets,
+  (25) cards. Premium, $4.99/mo or $39.99/yr, adds unlimited targets,
   Best Basket's store-by-store plan (for a pasted list, deck, watchlist or
   binder, and behind the portfolio's replacement cost) and **Demand Finder**
   (`/tools/demand`, `isPremium(user, "premium")`: top 25 most searched and
@@ -119,17 +119,26 @@ longer lands on its entry.
   "binder" means replacement cost, never gaps. Value Finder, Rising Sealed,
   the Condition Calculator and the Bulk Pricer are gone, each 301'd to the
   free page carrying its useful part (`tests/lineup-removals.test.ts`).
-  The intro price is an amount-off coupon created by `ensureIntroCoupon`;
-  its display and charge share `introAmountOffCents`, and it is quoted only
-  where `introEligibleFor` says checkout will give it. A tier switch keeps
-  exactly the discounted renewals left (`introRenewalsRemaining`).
+  The owner chose the cut knowing the 09-08 read had $4.99 converting worse
+  than $9.99. Existing subscribers are moved DOWN in Stripe from their next
+  renewal, and only after the new Prices and legacy ids are live. A
+  subscription with an `rc-intro-*` coupon moves at the first renewal after
+  the coupon ends. The intro, if re-armed, is an amount-off coupon created by
+  `ensureIntroCoupon`; its display and charge share `introAmountOffCents`, and
+  it is quoted only where `introEligibleFor` says checkout will give it. A
+  tier switch keeps exactly the discounted renewals left
+  (`introRenewalsRemaining`).
   [2026-09-11](../DECISIONS.md#L4428), [2026-09-24](../DECISIONS.md#L12120),
   [2026-09-25](../DECISIONS.md#L12322), [2026-09-25](../DECISIONS.md#L12842),
-  [2026-09-25](../DECISIONS.md#L13067)
+  [2026-09-25](../DECISIONS.md#L13067), [2026-09-26](../DECISIONS.md#L14292)
 - **Gates:** `isPremium(user)` defaults to the Plus minimum; ads read
-  `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`);
-  a `premiumTierFloor` only raises a paid tier, never grants one. Never reuse
-  a Price across tiers. Ad-free is enforced client-side too: the eBay
+  `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`):
+  an unknown price is Premium, so every retired Plus Price must be listed in
+  `STRIPE_PLUS_LEGACY_PRICE_IDS` (`STRIPE_PREMIUM_LEGACY_PRICE_IDS` is only
+  for reporting), and the maintenance steps that read tiers get those
+  secrets. A `premiumTierFloor` only raises a paid tier, never grants one.
+  Never reuse a Price across tiers: the new Premium amounts equal the old Plus
+  ones, so they are new Prices. Ad-free is enforced client-side too: the eBay
   carousel and the app's AdMob banner check `adFree`, and the `rc_adfree`
   boot script pauses ad requests before the (ungated) loader. **Set
   `AD_STRATEGY=manual`, or verify anchor/vignette ads stay off on a Plus
@@ -140,11 +149,16 @@ longer lands on its entry.
   surface describing Plus says it is ad-free; never link a member to a wall. The pitch is "Never overpay for a Riftbound card", with
   no flipper or "ahead of the market" language. No fake scarcity,
   countdowns, invented numbers, savings totals or testimonials. Rising
-  Cards is a screen, not a prediction. The lock-in banner is a promise:
-  never move existing subscribers onto a new Price.
+  Cards is a screen, not a prediction. No "lock in before the price goes
+  up": since the 09-26 cut, the lock-in banner, dialog lines, slide-in line
+  and FAQ render only while a real, higher price is announced
+  (`NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT`, which defaults to today's price);
+  the steady state says "cancel anytime". The terms still promise a
+  subscriber's price never rises while they stay subscribed: existing
+  subscribers may be moved onto a lower Price, never a higher one.
   [2026-09-11](../DECISIONS.md#L4642), [2026-09-14](../DECISIONS.md#L5971),
   [2026-09-10](../DECISIONS.md#L3990), [2026-09-22](../DECISIONS.md#L10328),
-  [2026-09-25](../DECISIONS.md#L12842)
+  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14292)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),

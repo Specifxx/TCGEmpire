@@ -206,6 +206,7 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts): Promise<Prem
     const ok = await sendPremiumOfferEmail(r.email, {
       displayName: r.displayName,
       trialDays: r.trialAvailable ? PREMIUM_TRIAL_DAYS : 0,
+      trialOffered: premiumTrialEnabled(),
       offerDays: PREMIUM_OFFER_DAYS,
       offerEnds: formatOfferEnds(ends),
       unsubUrl,
@@ -307,7 +308,7 @@ export async function sendPremiumOfferTest(to: string, offerEnds: string, via: P
   const configured = via === "brevo" ? isBrevoEnabled() : isEmailEnabled();
   if (!configured) return { ok: false, error: `${via === "brevo" ? "BREVO_API_KEY" : "RESEND_API_KEY"} is not set` };
   const unsubUrl = `${SITE_URL}/announcements/unsubscribe?token=test`;
-  const common = { displayName: "Test Recipient", offerDays: PREMIUM_OFFER_DAYS, offerEnds: formatOfferEnds(ends), unsubUrl, via };
+  const common = { displayName: "Test Recipient", offerDays: PREMIUM_OFFER_DAYS, offerEnds: formatOfferEnds(ends), unsubUrl, via, trialOffered: premiumTrialEnabled() };
   const a = await sendPremiumOfferEmail(to, { ...common, trialDays: PREMIUM_TRIAL_DAYS }).catch(() => false);
   const b = await sendPremiumOfferEmail(to, { ...common, trialDays: 0 }).catch(() => false);
   return a && b ? { ok: true } : { ok: false, error: "the mail provider rejected one or both test emails" };

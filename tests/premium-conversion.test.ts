@@ -27,10 +27,11 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 test("premiumEffectiveMonthly() derives the annual per-month rate from the real configured price", () => {
   const expected = `${premiumCurrencySymbol()}${(Number(PREMIUM_ANNUAL_AMOUNT.replace(/[^0-9.]/g, "")) / 12).toFixed(2)}`;
   assert.equal(premiumEffectiveMonthly(), expected);
-  // Sanity: with the real, currently-configured $79.99 annual price this is
-  // $6.67 — the number the "from $6.67/mo" framing everywhere is built on.
-  if (PREMIUM_ANNUAL_AMOUNT === "$79.99") {
-    assert.equal(premiumEffectiveMonthly(), "$6.67");
+  // Sanity: with the real, currently-configured $39.99 annual price (the
+  // 2026-09-26 cut; was $79.99 → $6.67) this is $3.33 — the number the
+  // "from $3.33/mo" framing everywhere is built on.
+  if (PREMIUM_ANNUAL_AMOUNT === "$39.99") {
+    assert.equal(premiumEffectiveMonthly(), "$3.33");
   }
 });
 

@@ -102,29 +102,74 @@ export function priceIdFor(tier: PremiumTier, plan: "monthly" | "annual"): strin
   }
   return plan === "annual" && PREMIUM_ANNUAL_PRICE_ID ? PREMIUM_ANNUAL_PRICE_ID : PREMIUM_PRICE_ID;
 }
+// Retired Stripe Price ids, comma-separated (2026-09-26). The price cut
+// repointed STRIPE_PLUS_PRICE_ID / STRIPE_PLUS_ANNUAL_PRICE_ID at NEW Prices,
+// but a subscriber stays on the OLD Price until the owner moves them at their
+// next renewal. Without this list tierFromPriceId would read every such Plus
+// subscriber as Premium (unknown → premium) — and the webhook re-stamps the
+// tier from the price id on every event. STRIPE_PLUS_LEGACY_PRICE_IDS is
+// therefore REQUIRED before the Plus env vars are repointed.
+// STRIPE_PREMIUM_LEGACY_PRICE_IDS changes no behaviour (an unknown price
+// already resolves to Premium); it exists so admin reporting can say a
+// Premium subscriber is still on a retired Price (isLegacyPriceId).
+function parsePriceIdList(v: string | undefined): string[] {
+  return (v ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+export const PLUS_LEGACY_PRICE_IDS: readonly string[] = parsePriceIdList(process.env.STRIPE_PLUS_LEGACY_PRICE_IDS);
+export const PREMIUM_LEGACY_PRICE_IDS: readonly string[] = parsePriceIdList(process.env.STRIPE_PREMIUM_LEGACY_PRICE_IDS);
+/**
+ * Can this process tell a Plus price from a Premium one at all? False when no
+ * Plus price id (current or legacy) is in the environment — e.g. a GitHub
+ * Actions step that forwards only STRIPE_SECRET_KEY — where tierFromPriceId
+ * reads EVERY subscriber as Premium. Anything that WRITES a tier from a price
+ * outside the Vercel runtime must check this first (audit-premium-vs-stripe).
+ */
+export function plusPriceIdsConfigured(): boolean {
+  return Boolean(PLUS_PRICE_ID || PLUS_ANNUAL_PRICE_ID || PLUS_LEGACY_PRICE_IDS.length);
+}
+/** Is this a retired (legacy) Plus or Premium Price, per the two env lists above? */
+export function isLegacyPriceId(priceId: string | null | undefined): boolean {
+  return !!priceId && (PLUS_LEGACY_PRICE_IDS.includes(priceId) || PREMIUM_LEGACY_PRICE_IDS.includes(priceId));
+}
+
 // Resolve a live Stripe price id back to a tier. Unknown/retired price ids —
 // including a price that used to be a standalone offer and was retired —
 // resolve to "premium", the grandfathered default, rather than silently
-// downgrading someone. Only a price id that IS a currently configured Plus
-// price counts as Plus.
+// downgrading someone. A price id counts as Plus only when it IS a currently
+// configured Plus price or is listed in STRIPE_PLUS_LEGACY_PRICE_IDS. A Plus
+// list always wins over the Premium list: the Premium one is documentation
+// only, and a Price in both is a misconfiguration better read as the tier it
+// was sold as ("never reuse a Price across tiers").
 export function tierFromPriceId(priceId: string | null | undefined): PremiumTier {
-  if (priceId && (priceId === PLUS_PRICE_ID || priceId === PLUS_ANNUAL_PRICE_ID)) return "plus";
+  if (!priceId) return "premium";
+  if (priceId === PLUS_PRICE_ID || priceId === PLUS_ANNUAL_PRICE_ID) return "plus";
+  if (PLUS_LEGACY_PRICE_IDS.includes(priceId)) return "plus";
   return "premium";
 }
 
-// Free-trial length (days) for a first-time subscriber. Defaults to 3 (was 14
-// from 2026-08-24; back to 3 on 2026-09-24 alongside the "first 3 months half
-// price" intro offer — DECISIONS.md, "Trial model: 3-day trial, then the first
-// 3 months half price"). An explicit PREMIUM_TRIAL_DAYS in the environment
-// still wins over this default, so a Vercel value of 14 must be removed or
-// changed for 3 to take effect. Set PREMIUM_TRIAL_DAYS=0 to switch it back off (immediate charge,
-// no trial). Card-gated: a card is still required up front (payment_method_collection
-// in the checkout route), so the trial auto-converts to paid unless cancelled.
+// Free-trial length (days) for a first-time subscriber. Defaults to 0 — NO
+// TRIAL, checkout charges immediately — since 2026-09-26 (owner: "the price
+// is not working": both tiers' prices cut, the trial and the half-price intro
+// dropped with them; DECISIONS.md, 2026-09-26). History: 14 days from
+// 2026-08-24, 3 days from 2026-09-24. An explicit PREMIUM_TRIAL_DAYS in the
+// environment still wins over this default, so a Vercel value of 3 or 14 must
+// be REMOVED (or set to 0) for the no-trial default to take effect; setting it
+// to N > 0 turns the card-gated trial back on everywhere at once. Card-gated:
+// a card is still required up front (payment_method_collection in the checkout
+// route), so a trial auto-converts to paid unless cancelled.
+//
+// Trials that already exist are unaffected by the default: the reminder cron
+// (runPremiumTrialReminders), the Keep button (api/premium/resume), the
+// /premium card and the webhook all read the SUBSCRIPTION's own status and
+// trial_end, never this constant.
 // Turning this on requires BOTH the Stripe customer portal (api/premium/portal —
 // done) AND the trial-ending reminder email (runPremiumTrialReminders below — done)
 // so trialists can see the charge coming and cancel before it happens. Abuse is
 // blocked by card fingerprint regardless of trial length (see the webhook).
-export const PREMIUM_TRIAL_DAYS = Math.max(0, Math.floor(Number(process.env.PREMIUM_TRIAL_DAYS ?? 3)));
+export const PREMIUM_TRIAL_DAYS = Math.max(0, Math.floor(Number(process.env.PREMIUM_TRIAL_DAYS ?? 0) || 0));
 export function premiumTrialEnabled(): boolean {
   return PREMIUM_TRIAL_DAYS > 0;
 }

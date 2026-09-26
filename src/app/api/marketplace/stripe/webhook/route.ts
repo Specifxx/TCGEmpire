@@ -160,7 +160,10 @@ async function premiumStarted(session: Stripe.Checkout.Session) {
     // renewal event or the daily reconcile cron will correct once Stripe is
     // reachable again. This is the ONLY path that may grant without confirmed
     // entitlement, and only because entitlement couldn't be checked at all.
-    const grace = new Date(Date.now() + (isTrial ? PREMIUM_TRIAL_DAYS : 32) * 86400_000);
+    // `|| 3` (2026-09-26): with trials off by default PREMIUM_TRIAL_DAYS is 0,
+    // but a trial checkout opened before that deploy can still complete after
+    // it — a 0-day grace would grant nothing at all. 3 was the last trial length.
+    const grace = new Date(Date.now() + (isTrial ? PREMIUM_TRIAL_DAYS || 3 : 32) * 86400_000);
     // No subscription object to read a price off — this is the one path that
     // must trust checkout's own session.metadata.tier stamp.
     const graceTier = normalizeTier(session.metadata?.tier);

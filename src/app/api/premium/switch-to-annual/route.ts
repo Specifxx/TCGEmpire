@@ -57,7 +57,13 @@ export async function POST() {
     // check would let a Plus-monthly → Premium-monthly upgrade slip through
     // (same interval, different tier) and double-charge nothing while also
     // never actually switching them to annual.
-    if (price.id === targetPriceId) {
+    //
+    // Also "already" on ANY yearly price (2026-09-26): after the price cut an
+    // annual subscriber can still be on a RETIRED yearly Price, which is not
+    // targetPriceId — without this a replayed or hand-made request would
+    // re-bill them onto the new annual Price with always_invoice proration.
+    // Moving them is the owner's job at their renewal, not this route's.
+    if (price.id === targetPriceId || price.recurring?.interval === "year") {
       // Already annual on this tier — nothing to do, and definitely don't double-charge.
       return NextResponse.json({ ok: true, already: true });
     }

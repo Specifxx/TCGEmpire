@@ -22,7 +22,7 @@ export const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61591482521
 export const SITE_URL = "https://riftcompare.com";
 
 // Display price for RiftCompare Premium. Amount + period render the big price on the
-// /premium pricing card; PREMIUM_PRICE_LABEL is the compact "$9.99/mo" used in CTAs.
+// /premium pricing card; PREMIUM_PRICE_LABEL is the compact "$4.99/mo" used in CTAs.
 // These are DISPLAY ONLY — set them to match the recurring price you created in
 // Stripe (override any of them via the NEXT_PUBLIC_* env vars). Changing this
 // constant alone does NOT change what Stripe actually charges: the real amount is
@@ -31,20 +31,21 @@ export const SITE_URL = "https://riftcompare.com";
 // or immediately after changing this, or the displayed price and the checkout
 // price will disagree.
 //
-// Raised from $9.99/$79.99 to $14.99/$119.99 (2026-09-06), then rolled back to
-// $9.99/$79.99 (2026-09-09) — see DECISIONS.md for both. Existing subscribers from
-// EITHER era are grandfathered: their Stripe subscription keeps referencing
-// whichever Price object they originally subscribed against, since Prices are
-// immutable and every price change here repoints STRIPE_PREMIUM_PRICE_ID /
-// STRIPE_PREMIUM_ANNUAL_PRICE_ID at a (possibly pre-existing) Price object rather
-// than editing one in place. Only new checkouts see this number.
-export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$9.99";
+// Raised from $9.99/$79.99 to $14.99/$119.99 (2026-09-06), rolled back to
+// $9.99/$79.99 (2026-09-09), then CUT to $4.99/$39.99 (2026-09-26, owner: "the
+// price is not working") — see DECISIONS.md for all three. Stripe Prices are
+// immutable, so every change here repoints STRIPE_PREMIUM_PRICE_ID /
+// STRIPE_PREMIUM_ANNUAL_PRICE_ID at a different Price object. The 2026-09-26 cut
+// is the first change that ALSO moves existing subscribers: the owner moves
+// them DOWN onto the new Prices from their next renewal, in the Stripe
+// dashboard. Nothing in this codebase re-prices a subscription by itself.
+export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$4.99";
 export const PREMIUM_PRICE_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_PRICE_PERIOD || "month";
 export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || `${PREMIUM_PRICE_AMOUNT}/mo`;
 
 // Annual plan (display only; the actual charge comes from the Stripe annual price,
 // enabled via STRIPE_PREMIUM_ANNUAL_PRICE_ID — see lib/premium.ts).
-export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$79.99";
+export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$39.99";
 export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERIOD || "year";
 
 // ── Plus: the second, cheaper paid tier (2026-09-11) ────────────────────────
@@ -53,44 +54,20 @@ export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERI
 // secrets). Every existing flat PREMIUM_* export above is kept byte-for-byte
 // (dozens of consumers and several tests read them directly) and doubles as
 // the "premium" tier's amount for the helpers below — PLUS_* is additive.
-export const PLUS_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PLUS_PRICE_AMOUNT || "$4.99";
-export const PLUS_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PLUS_ANNUAL_AMOUNT || "$39.99";
+// $4.99/$39.99 until 2026-09-26, then $2.99/$23.99 (same cut as Premium's).
+// Subscribers still on the OLD Plus Prices resolve to Plus through
+// STRIPE_PLUS_LEGACY_PRICE_IDS (lib/premium.ts tierFromPriceId).
+export const PLUS_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PLUS_PRICE_AMOUNT || "$2.99";
+export const PLUS_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PLUS_ANNUAL_AMOUNT || "$23.99";
 
-// ── The founding-rate message ───────────────────────────────────────────────
-// Owner, 2026-09-22: "for premium, we need to emphasis get premium now before
-// the price increases as the site grows."
-//
-// THIS COPY IS TRUE, and it is true because of the mechanism documented on
-// PREMIUM_PRICE_AMOUNT above, not because it is a nice thing to say. Stripe
-// Price objects are IMMUTABLE: every price change this site has made (up to
-// $14.99 on 2026-09-06, back down on 2026-09-09) repointed
-// STRIPE_PREMIUM_PRICE_ID at a different Price object rather than editing one
-// in place, so an existing subscription keeps billing against whichever Price
-// it was created with, indefinitely, until someone deliberately migrates it.
-// Both earlier eras of subscriber are still on their original rate today.
-//
-// So "your rate never goes up while your membership stays active" is a
-// description of what the billing system already does. It is also now a
-// PROMISE, and the only way to break it is to actively migrate existing
-// subscriptions onto a new Price in the Stripe dashboard. Don't.
-//
-// What this copy deliberately does NOT do:
-//   • No deadline. There is no date on which the price rises, and inventing
-//     one ("offer ends Friday") would be a fabricated scarcity claim that
-//     recurs every Friday forever. "As the site grows" is the real condition.
-//   • No fake future number. We don't claim the price "goes to $19.99" — no
-//     such decision has been made. It says the rate you join at is the rate
-//     you keep, which is the part we can actually guarantee.
-//   • No countdown timer, no "N spots left", no invented member count.
-// A claim here that outruns what Stripe actually does is a refund request and
-// a chargeback, not a conversion — see DECISIONS.md, 2026-09-22.
-export const FOUNDING_RATE_BADGE = "Founding rate";
-export const FOUNDING_RATE_HEADLINE = "Lock in today's price";
-/** One line, for a card/dialog under the price. */
-export const FOUNDING_RATE_LINE =
-  "Prices rise as coverage grows — your rate never does. Join now and you keep this price for as long as your membership stays active.";
-/** The compact version, for a nudge or a sidebar block with no room. */
-export const FOUNDING_RATE_SHORT = "Lock in today's price — your rate never rises while you stay subscribed.";
+// ── The founding-rate message: RETIRED 2026-09-26 ───────────────────────────
+// FOUNDING_RATE_BADGE / _HEADLINE / _LINE / _SHORT ("Prices rise as coverage
+// grows — your rate never does") lived here from 2026-09-22. They were never
+// rendered anywhere, and on 2026-09-26 the owner CUT both tiers' prices and
+// moved existing subscribers down onto the new ones, so "prices rise as the
+// site grows" is contradicted by the site's own latest move. Deleted rather
+// than left for someone to wire up. See premiumLockInLine() below for what the
+// price banner says instead.
 
 export type PremiumTierKey = "plus" | "premium";
 export const TIER_NAMES: Record<PremiumTierKey, string> = { plus: "Plus", premium: "Premium" };
@@ -140,8 +117,8 @@ export function annualSavingPct(tier: PremiumTierKey = "premium"): number {
   return Math.max(0, Math.round((1 - annual / (monthly * 12)) * 100));
 }
 
-// The annual price's per-month equivalent ("$79.99" -> "$6.67"), for the
-// "from $6.67/mo billed yearly" framing used across the slide-in, dialog and
+// The annual price's per-month equivalent ("$39.99" -> "$3.33"), for the
+// "from $3.33/mo billed yearly" framing used across the slide-in, dialog and
 // /premium page. "" when there's no annual price configured, so callers can
 // cleanly fall back to the monthly-only framing.
 export function premiumEffectiveMonthly(tier: PremiumTierKey = "premium"): string {
@@ -151,7 +128,7 @@ export function premiumEffectiveMonthly(tier: PremiumTierKey = "premium"): strin
 }
 
 // The lead price framing used across the slide-in, dialog and /premium page —
-// "from $6.67/mo billed yearly, or $9.99 month-to-month" when an annual plan
+// "from $3.33/mo billed yearly, or $4.99 month-to-month" when an annual plan
 // exists, otherwise just the monthly price. Centralised so the effective-annual
 // number can't drift between surfaces the way the tool list once did (see
 // PITCH_TOOLS's own header comment for that history repeating itself).
@@ -184,30 +161,38 @@ export function premiumZeroAmount(): string {
 // trial, then the first 3 months half price", 2026-09-24.
 //
 // ONE rule for "half": the discount is the price's cents halved and ROUNDED
-// UP, so the charged amount rounds DOWN — $9.99 → $4.99, $4.99 → $2.49.
+// UP, so the charged amount rounds DOWN — $9.99 → $4.99, $4.99 → $2.49 (and,
+// at the 2026-09-26 prices, $4.99 → $2.49 for Premium, $2.99 → $1.49 for Plus).
 // lib/premium.ts builds the Stripe coupon from the same function applied to
 // the Stripe Price's own unit_amount, so what these helpers print is, to the
 // cent, what Stripe charges (the display amounts already mirror the Price
 // objects — see the header of this block's price constants).
 //
 // Monthly only: annual stays the cheapest way to pay for a year even with the
-// intro ($79.99 vs 3 × $4.99 + 9 × $9.99 = $104.88), so it needs no second
-// discount. NEXT_PUBLIC_ so the checkout route and every client surface read
-// one switch; "0" turns the whole offer off everywhere at once.
+// intro, so it needs no second discount. NEXT_PUBLIC_ so the checkout route and
+// every client surface read one switch.
+//
+// OFF BY DEFAULT since 2026-09-26 (owner: "the price is not working" — both
+// tiers' prices cut, and the intro and the free trial dropped with them;
+// DECISIONS.md, 2026-09-26). The machinery stays, so NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1
+// turns the whole offer back on everywhere at once; unset, or anything else,
+// is off. Existing rc-intro-* coupons on live subscriptions keep running out on
+// their own schedule — the reminder, the /premium card and the plan-switch
+// routes read the coupon ON the subscription, never this switch.
 export const INTRO_MONTHS = 3;
 export function introOfferEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_PREMIUM_INTRO_OFFER !== "0";
+  return process.env.NEXT_PUBLIC_PREMIUM_INTRO_OFFER === "1";
 }
 /** Cents taken off each of the first INTRO_MONTHS monthly invoices. */
 export function introAmountOffCents(priceCents: number): number {
   return Math.ceil(priceCents / 2);
 }
-/** "$4.99" for Premium, "$2.49" for Plus — the monthly price during the intro months. */
+/** "$2.49" for Premium, "$1.49" for Plus at the 2026-09-26 prices — the monthly price during the intro months. */
 export function tierIntroMonthlyAmount(tier: PremiumTierKey = "premium"): string {
   const cents = Math.round(premiumMoneyNum(monthlyAmountFor(tier)) * 100);
   return `${premiumCurrencySymbol()}${((cents - introAmountOffCents(cents)) / 100).toFixed(2)}`;
 }
-/** "$4.99/mo for your first 3 months, then $9.99/mo" */
+/** "$2.49/mo for your first 3 months, then $4.99/mo" */
 export function introPriceLine(tier: PremiumTierKey = "premium"): string {
   return `${tierIntroMonthlyAmount(tier)}/mo for your first ${INTRO_MONTHS} months, then ${monthlyAmountFor(tier)}/mo`;
 }
@@ -225,86 +210,70 @@ export function introFromLine(tier: PremiumTierKey = "premium", eligible = true)
 }
 
 // ── Announced price increase ────────────────────────────────────────────────
-// History: $9.99/mo → $14.99/mo (2026-09-06, "the decided cutover price"; see
-// this file's git history for the full account of the originally-announced-but-
-// superseded $19.99 figure) → back down to $9.99/mo (2026-09-09, owner's call
-// to revert before the three-week hold period in DECISIONS.md's 2026-09-08
-// entry ran its course — see DECISIONS.md for the full account). There is no
-// announced future increase right now, so PREMIUM_NEXT_PRICE_AMOUNT is pinned
-// equal to PREMIUM_PRICE_AMOUNT rather than to some other yet-to-be-decided
-// figure — claiming an increase that isn't real would be exactly the kind of
-// thing /editorial-policy's "nothing here describes a process we don't
-// actually run" rule exists to block. The moment the two amounts match, premiumPriceIncreaseAnnounced()
-// goes false and every "lock in your price" surface below retires itself — no
-// second flag to remember to flip off. Same self-retiring shape as
-// release-calendar.ts's countdown, and for the same reason: a manually-retired
-// banner is exactly the failure mode /vendetta-countdown and
-// /radiance-countdown both died from. Should another increase ever actually be
-// decided, the fix is ONE edit: set PREMIUM_NEXT_PRICE_AMOUNT to that real
-// number, which re-arms every surface below automatically.
-//
-// The "your price never rises while you stay subscribed" half of this is true
-// regardless of whether an increase is announced — checkout always creates a
-// subscription against whatever price is CURRENTLY configured, and nothing in
-// this codebase ever migrates an existing subscription to a different Stripe
-// price (see api/premium/checkout's one-shot line_items and the absence of any
-// subscriptions.update price-sync). An announced increase only changes WHY
-// that existing guarantee is worth acting on today, not whether it holds.
-export const PREMIUM_NEXT_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT || "$9.99";
+// History: $9.99/mo → $14.99/mo (2026-09-06) → back to $9.99/mo (2026-09-09) →
+// CUT to $4.99/mo (2026-09-26, owner: "the price is not working"; existing
+// subscribers moved DOWN onto the new Prices at their next renewal). There is
+// no announced future increase, so PREMIUM_NEXT_PRICE_AMOUNT defaults to
+// PREMIUM_PRICE_AMOUNT ITSELF rather than to a hand-typed copy of it: the day
+// the price was cut, a copy left at "$9.99" would have made every surface below
+// claim "we're raising Premium's price soon, to $9.99" — a fake increase, the
+// exact thing /editorial-policy's "nothing here describes a process we don't
+// actually run" rule exists to block. Defaulting to the live amount means a
+// price change (in code OR via NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT) can never
+// announce an increase by itself; only setting NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT
+// to a real, decided, HIGHER figure does. premiumPriceIncreaseAnnounced() also
+// requires the next amount to be numerically higher, so a stale value left in
+// the Vercel dashboard from the $9.99 era can't dress a price CUT up as a
+// "rise". Same self-retiring shape as release-calendar.ts's countdown: the
+// moment the two amounts match, every surface below retires itself.
+export const PREMIUM_NEXT_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT || PREMIUM_PRICE_AMOUNT;
 export function premiumPriceIncreaseAnnounced(): boolean {
-  return PREMIUM_NEXT_PRICE_AMOUNT !== PREMIUM_PRICE_AMOUNT;
+  return PREMIUM_NEXT_PRICE_AMOUNT !== PREMIUM_PRICE_AMOUNT && premiumMoneyNum(PREMIUM_NEXT_PRICE_AMOUNT) > premiumMoneyNum(PREMIUM_PRICE_AMOUNT);
 }
 
-// The full sentence, for a banner or a dialog with room to spare. One function
-// so an announced increase updates every surface at once, instead of four
-// hand-typed copies (the /premium page, the Premium dialog, the corner
-// slide-in, the signup popup) drifting independently the way PITCH_TOOLS's own
-// header comment describes for the tool list.
+// ── The price banner's copy, in both states ─────────────────────────────────
+// One function per wording so an announced increase updates every surface at
+// once (the /premium page, the Premium dialog, the corner slide-in) instead of
+// hand-typed copies drifting independently.
+//
+// THE STEADY STATE WAS REWRITTEN 2026-09-26. From 2026-09-22 it said
+// "Premium's price goes up as the site grows … Your rate doesn't: subscribe
+// at $X and keep it for as long as you stay subscribed", and the headline
+// "Lock in $X before the price goes up". Two things made that untrue on
+// 2026-09-26: the owner CUT both tiers' prices (so "the price goes up as the
+// site grows" is contradicted by the site's own latest move), and existing
+// subscribers were moved onto the new Prices (down, but moved — so the
+// "your rate is fixed to the Price you joined on" mechanism the promise
+// rested on is no longer what happens). With no increase decided, "lock in"
+// protects nobody from anything. The steady state now states the price and
+// the one thing that is unconditionally true: no contract, cancel anytime
+// from the account page (Stripe's portal, api/premium/portal).
+//
+// The ANNOUNCED branch is kept for the day a real, higher price is decided.
+// Before anyone sets NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT, decide whether
+// existing subscribers really will keep their rate — its "keep $X for as long
+// as you stay subscribed" is a promise, and 2026-09-26 showed subscriptions
+// CAN be moved in the Stripe dashboard. Neither branch names a date or an
+// invented future figure (tests/premium-price-increase.test.ts).
 export function premiumLockInLine(): string {
   return premiumPriceIncreaseAnnounced()
     ? `We're raising Premium's price soon, to ${PREMIUM_NEXT_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}. Subscribe now and keep ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} for as long as you stay subscribed — no action needed when the price changes.`
-    : `Premium's price goes up as the site grows — more markets, more stores, deeper history. Your rate doesn't: subscribe at ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} and keep it for as long as you stay subscribed.`;
+    : `No contract: cancel anytime from your account page, in a couple of clicks.`;
 }
 
-// The banner's own headline, in BOTH states. The un-announced half of this is
-// the 2026-09-22 change: before it, the strong gold banner appeared only when
-// a specific increase was announced, and with none announced the entire
-// "act now" case shrank to one 11px caption under the pricing cards. Owner:
-// "for premium, we need to emphasis get premium now before the price
-// increases as the site grows" — which is the standing pricing policy, not a
-// one-off announcement, so it gets the banner either way.
-//
-// WHY THIS IS NOT A FABRICATED SCARCITY CLAIM, which is the thing
-// /editorial-policy's "nothing here describes a process we don't actually
-// run" rule would otherwise catch:
-//   • "goes up as the site grows" is the owner's own stated pricing policy
-//     and the site's actual history — $9.99 → $14.99 (2026-09-06) → $9.99
-//     (2026-09-09). It names no date and no future figure, because neither
-//     has been decided; inventing either is what this deliberately avoids.
-//   • "your rate doesn't" is a description of what the billing code already
-//     does. Stripe Price objects are immutable, checkout creates the
-//     subscription against whatever price is configured at that moment
-//     (api/premium/checkout's one-shot line_items), and nothing in this
-//     codebase ever migrates an existing subscription to a different price.
-//     Subscribers from both earlier price eras are still on their original
-//     rate today. The only way to break the promise is to migrate them by
-//     hand in the Stripe dashboard. Don't.
-// The moment a real increase IS decided, setting
-// NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT to it swaps every surface to the
-// stronger, dated-by-implication version with no code change.
 export function premiumLockInHeadline(): string {
   return premiumPriceIncreaseAnnounced()
     ? `Price increasing soon — lock in ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} now`
-    : `Lock in ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} before the price goes up`;
+    : `Premium is ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
 }
 
-// The compact tail for a small inline caption ("$9.99/month · …"), used by the
-// two low-intrusion nudges (the corner slide-in, the signed-out popup) whose
-// own design intent is to stay out of the way rather than carry a full banner.
+// The compact tail for a small inline caption ("$4.99/month · …"), used by the
+// low-intrusion corner slide-in, whose design intent is to stay out of the way
+// rather than carry a full banner.
 export function premiumLockInTail(): string {
   return premiumPriceIncreaseAnnounced()
     ? `locked in before it rises to ${PREMIUM_NEXT_PRICE_AMOUNT} — cancel anytime`
-    : `locked in before the price goes up — cancel anytime`;
+    : `cancel anytime`;
 }
 
 // Tags the Premium funnel events (slide-in/popup shown, checkout started) with
@@ -321,4 +290,7 @@ export function premiumLockInTail(): string {
 // lineup-2026-09-25b: the same day, Demand Finder back as a Premium tool on
 // every tier surface (table row, pricing cards, /premium, dialog, emails), to
 // widen the Plus→Premium gap. Prices, trial and intro unchanged.
-export const PREMIUM_COPY_VERSION = "lineup-2026-09-25b";
+// price-2026-09-26: Premium $4.99/$39.99, Plus $2.99/$23.99 (were $9.99/$79.99
+// and $4.99/$39.99); no free trial and no half-price intro by default; the
+// "lock in before the price goes up" copy retired to "cancel anytime".
+export const PREMIUM_COPY_VERSION = "price-2026-09-26";
