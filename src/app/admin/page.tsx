@@ -64,6 +64,12 @@ const TOOLS: Tool[] = [
     desc: "Contact messages, store suggestions, feedback and wrong-price reports — everything sent in through a site form.",
   },
   {
+    href: "/admin/decks",
+    title: "Decks",
+    icon: "🃏",
+    desc: "Import tournament decklists as JSON, and hide or restore any published deck.",
+  },
+  {
     href: "/admin/rising",
     title: "Rising cards",
     icon: "🚀",

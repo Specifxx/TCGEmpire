@@ -133,20 +133,10 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // META DECKS REMOVED (2026-09-12 — DECISIONS.md, "Meta decks: removed").
-      // /decks, the ten /decks/<slug> pages and the /decks/archetype/* and
-      // /decks/domain/* hubs were built on one hand-typed file that nothing
-      // could keep true, so the whole surface is gone. Every URL under it 301s
-      // to the deck BUILDER: it is the page that now owns the "riftbound
-      // deck(s)" intent (docs/seo-keyword-map.md), and a visitor who arrives
-      // wanting a priced decklist can paste one and get exactly that. Both
-      // forms are listed so the bare hub URL cannot depend on how `:path*`
-      // treats zero segments. These two entries also absorb every older
-      // /decks/* redirect that used to live in this file (a truncated
-      // master-yi slug, three rotated-out legends) — a redirect chain ending
-      // at a redirect would have been the worst of both.
-      { source: "/decks", destination: "/deck", permanent: true },
-      { source: "/decks/:path*", destination: "/deck", permanent: true },
+      // /decks is a live route again (2026-09-26, DECISIONS.md "Public decks"):
+      // the PLAYER-PUBLISHED deck library. The 2026-09-12 redirects that sent
+      // every /decks URL to /deck (after the hand-copied meta decks were
+      // removed) are gone with it; the old meta-deck slugs now simply 404.
       // Retired the /card-value lander — the card database is the real value
       // checker. 301 so any indexed/inbound links flow to /browse instead of 404ing.
       {

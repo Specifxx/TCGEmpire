@@ -1704,3 +1704,39 @@ model SetReleaseAlert {
   @@index([setCode])
   @@index([unsubToken])
 }
+
+// A deck a signed-in player published from /deck (2026-09-26), or one the owner
+// imported at /admin/decks. Powers /decks, /decks/[slug], /decks/legend/[legend]
+// and a card page's "Decks using this card". NOT the removed meta decks
+// (2026-09-12): nothing here is hand-copied from another site — each row is a
+// list a person chose to publish here, attributed to them. Written only by
+// that explicit publish/import (and an admin hiding a row). Additive table.
+model PublishedDeck {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  userId          String? // null for an admin import
+  authorName      String? // display name, or the event/player an import names
+  title           String
+  description     String?
+  legendCardId    String
+  legendName      String // the Legend card's full name, "Jinx, Loose Cannon"
+  legendSlug      String // champion slug for /decks/legend/[legend], "jinx"
+  // Up to two domains, most-played first, comma-separated ("Fury,Chaos").
+  domains         String
+  // The canonical list as published: "3 Jinx, Loose Cannon (OGN-251)" lines.
+  list            String
+  // [{ cardId, qty }] in list order, and the distinct card ids for lookups.
+  lines           Json
+  cardIds         String[]
+  cardCount       Int
+  // The deck's total per market at publish time, { US: cents | null, … },
+  // from the same per-market cheapest prices the deck pricer uses.
+  publishedTotals Json
+  source          String   @default("user") // "user" | "import"
+  status          String   @default("live") // "live" | "hidden"
+  createdAt       DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([legendSlug])
+  @@index([userId, createdAt])
+}

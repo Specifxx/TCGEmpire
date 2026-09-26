@@ -11,6 +11,9 @@ import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { pageAlternates } from "@/lib/seo";
+import Link from "next/link";
+import { cachedOrDirect } from "@/lib/price-history";
+import { PUBLISHED_DECKS_TAG } from "@/lib/published-decks";
 
 const TITLE = "Riftbound Deck Builder & Deck Price Calculator";
 const DESC =
@@ -85,14 +88,68 @@ export async function generateMetadata({ searchParams }: { searchParams: { list?
   }
 }
 
-export default function DeckPage({ searchParams }: { searchParams: { list?: string } }) {
+/** Newest published decks for "Start from a published deck" — cached, never a per-visit read. */
+async function newestDecks(): Promise<{ slug: string; title: string; legendName: string; list: string }[]> {
+  return cachedOrDirect(
+    () =>
+      prisma.publishedDeck
+        .findMany({
+          where: { status: "live" },
+          orderBy: { createdAt: "desc" },
+          take: 6,
+          select: { slug: true, title: true, legendName: true, list: true },
+        })
+        .catch(() => []),
+    ["deck-newest-published-v1"],
+    { revalidate: 3600, tags: [PUBLISHED_DECKS_TAG] },
+  );
+}
+
+export default async function DeckPage({ searchParams }: { searchParams: { list?: string } }) {
   const info = COUNTRIES[getCountry()];
+  const newest = await newestDecks();
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Deck Builder", href: "/deck" }]} />
-      <div className="mb-5">
-        <h1 className="text-2xl font-extrabold text-white">Deck Builder &amp; Pricing</h1>
-      <HubIntro path="/deck" />
+      {/* The tool first (2026-09-26): the explanatory text that used to open
+          the page now sits below the builder. */}
+      <h1 className="mb-3 text-2xl font-extrabold text-white">Deck Builder &amp; Pricing</h1>
+      <section aria-labelledby="start-from-h" className="mb-4">
+        <h2 id="start-from-h" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Start from a published deck
+        </h2>
+        {newest.length ? (
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {newest.map((d) => (
+              <li key={d.slug}>
+                <Link
+                  href={`/deck?list=${encodeURIComponent(Buffer.from(d.list, "utf8").toString("base64"))}`}
+                  className="chip border border-ink-700 hover:border-brand-500"
+                  title={`${d.title} — ${d.legendName}`}
+                >
+                  {d.title}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link href="/decks" className="chip text-brand-300 hover:underline">
+                All decks →
+              </Link>
+            </li>
+          </ul>
+        ) : (
+          <p className="mt-1 text-sm text-slate-400">
+            None yet — price your list below and publish it to the{" "}
+            <Link href="/decks" className="text-brand-300 hover:underline">
+              deck library
+            </Link>
+            .
+          </p>
+        )}
+      </section>
+      <DeckBuilder initialList={searchParams.list} />
+      <div className="mt-8">
+        <HubIntro path="/deck" />
         <p className="mt-1 text-sm text-slate-400">
           Paste a Riftbound decklist — or any list of card names — and get every card matched with the cheapest
           {" "}{info.adjective} price and a full total. It&apos;s also a free bulk price checker: plain names work without
@@ -100,7 +157,6 @@ export default function DeckPage({ searchParams }: { searchParams: { list?: stri
           quantities as you go.
         </p>
       </div>
-      <DeckBuilder initialList={searchParams.list} />
     </div>
   );
 }

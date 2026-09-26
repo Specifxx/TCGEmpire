@@ -37,6 +37,7 @@ import { CardMarketsTable } from "@/components/CardMarketsTable";
 import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { CardStickyBuyBar, CardTopBuy } from "@/components/CardMobileBuy";
 import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
+import { decksUsingCard } from "@/lib/published-decks-server";
 import { RADIANCE_SET_CODE } from "@/lib/sets/radiance";
 import { EbayPanelIntro } from "@/components/EbayPanelIntro";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
@@ -736,6 +737,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // three-way name split collapses to one champion — see lib/champions.ts.
   const championEntry = championForCardName(card.name);
   const champion = championEntry?.name ?? null;
+  // "Decks using this card" (2026-09-26): up to six published decks, one small
+  // indexed query at ISR render time.
+  const decksWithCard = await decksUsingCard(card.id);
+
   const championCards = championEntry
     ? await prisma.card.findMany({
         where: {
@@ -1545,6 +1550,22 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           </section>
         </div>
       </div>
+
+      {decksWithCard.length > 0 && (
+        <section aria-labelledby="decks-using-h" className="mt-10">
+          <h2 id="decks-using-h" className="text-lg font-bold text-white">Decks using {card.name}</h2>
+          <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {decksWithCard.map((d) => (
+              <li key={d.slug}>
+                <Link href={`/decks/${d.slug}`} className="card-surface block p-3 hover:border-brand-500/60">
+                  <span className="block font-semibold text-white">{d.title}</span>
+                  <span className="block text-xs text-slate-500">{d.legendName}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Other printings — promo/alt-art/Signature versions of this exact card.
           Cross-links the variant cluster (each printing is its own product with its

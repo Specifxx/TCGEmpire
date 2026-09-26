@@ -1,11 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { ARTICLES } from "../src/lib/articles";
 import { NAV_GROUPS, FOOTER_GROUPS } from "../src/components/nav-groups";
 
 // ─────────────────────────────────────────────────────────────────────────────
+// UPDATED 2026-09-26 (DECISIONS.md "Public decks"): /decks is live again as the
+// PLAYER-PUBLISHED deck library (PublishedDeck rows, attributed to whoever
+// published them). What stays banned is the thing that was removed: the
+// hand-copied meta-deck data and its libraries. The tests below keep that half.
+//
 // THE META DECKS ARE GONE, AND STAY GONE UNTIL THERE IS A SOURCE WE MAY USE.
 //
 // /decks, /decks/[slug], /decks/archetype/* and /decks/domain/* were built on
@@ -25,18 +30,8 @@ import { NAV_GROUPS, FOOTER_GROUPS } from "../src/components/nav-groups";
 
 const ROOT = process.cwd();
 
-function walk(dir: string, out: string[] = []): string[] {
-  for (const name of readdirSync(dir)) {
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else if (/\.(ts|tsx|js)$/.test(name)) out.push(p);
-  }
-  return out;
-}
-
-test("the /decks route tree, its data file and its libs do not exist", () => {
+test("the hand-copied meta-deck data file and its libs do not exist", () => {
   for (const p of [
-    "src/app/decks",
     "prisma/meta-decks.json",
     "src/lib/meta-decks.ts",
     "src/lib/deck-groups.ts",
@@ -48,41 +43,22 @@ test("the /decks route tree, its data file and its libs do not exist", () => {
   }
 });
 
-test("nothing under src/ links to /decks any more (comments about its removal aside)", () => {
-  // Code, not prose: strip // line comments and /* */ block comments, then look
-  // for the path in a string/JSX attribute. A comment explaining that /decks
-  // was removed is fine and expected; a live href is the bug.
-  const offenders: string[] = [];
-  for (const file of walk(join(ROOT, "src"))) {
-    const code = readFileSync(file, "utf8")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/(^|[^:])\/\/.*$/gm, "$1");
-    if (/["'`]\/decks(\/|["'`?#])/.test(code)) offenders.push(file.replace(`${ROOT}/`, ""));
-  }
-  assert.deepEqual(offenders, [], `live /decks references: ${offenders.join(", ")}`);
-});
-
-test("no article links to /decks, and none asks for the retired metaStaples gallery", () => {
+test("no article asks for the retired metaStaples gallery", () => {
   for (const a of ARTICLES) {
-    const text = JSON.stringify(a);
-    assert.doesNotMatch(text, /\]\(\/decks/, `${a.slug} links to /decks — it is a redirect at best now`);
-    assert.doesNotMatch(text, /"(href|url)":"\/decks/, `${a.slug} points a CTA/itemList at /decks`);
     for (const e of [...(a.embeds ?? []), ...(a.embed ? [a.embed] : [])]) {
       assert.ok(!("metaStaples" in e), `${a.slug} still uses the metaStaples embed`);
     }
   }
 });
 
-test("every /decks URL is redirected, permanently, to the deck builder — with no chain", async () => {
+test("/decks is a live route again: no redirect sends it (or anything under it) away", async () => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const cfg = require("../next.config.js") as { redirects: () => Promise<{ source: string; destination: string; permanent: boolean }[]> };
   const rows = await cfg.redirects();
-  const bare = rows.find((r) => r.source === "/decks");
-  const wild = rows.find((r) => r.source === "/decks/:path*");
-  assert.ok(bare && bare.permanent && bare.destination === "/deck", "/decks must 301 to /deck");
-  assert.ok(wild && wild.permanent && wild.destination === "/deck", "/decks/:path* must 301 to /deck");
-  const chains = rows.filter((r) => r.destination.startsWith("/decks"));
-  assert.deepEqual(chains, [], "a redirect INTO /decks would chain into the redirect OUT of it");
+  assert.deepEqual(rows.filter((r) => r.source === "/decks" || r.source.startsWith("/decks/")), []);
+  assert.ok(existsSync(join(ROOT, "src/app/decks/page.tsx")));
+  assert.ok(existsSync(join(ROOT, "src/app/decks/[slug]/page.tsx")));
+  assert.ok(existsSync(join(ROOT, "src/app/decks/legend/[legend]/page.tsx")));
 });
 
 test("the deck builder keeps a nav and a footer link, so /deck is never an orphan", () => {
@@ -90,5 +66,6 @@ test("the deck builder keeps a nav and a footer link, so /deck is never an orpha
   const inFooter = FOOTER_GROUPS.some((g) => g.links.some((l) => l.href === "/deck"));
   assert.ok(inNav, "/deck must stay in NAV_GROUPS (launcher + mega-menu)");
   assert.ok(inFooter, "/deck must stay in FOOTER_GROUPS (the server-rendered link internal-linking relies on)");
-  assert.ok(!NAV_GROUPS.some((g) => g.links.some((l) => l.href === "/decks")), "the meta-deck hub must not return to the nav");
+  // The player-published library (2026-09-26) sits beside the builder.
+  assert.ok(NAV_GROUPS.some((g) => g.links.some((l) => l.href === "/decks")), "/decks (the deck library) belongs in the nav");
 });

@@ -124,6 +124,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // (/bulk-pricer 301s here), so this is the list-pricing page too — and
       // the label is what a bare "prices" query in ⌘K ranks on.
       { href: "/deck", label: "Deck Builder & Pricer", keywords: ["build a deck", "deck price", "brew", "deck cost", "decklist", "meta", "decks", "bulk", "price a list", "paste a list", "bulk price checker"] },
+      { href: "/decks", label: "Deck Library", keywords: ["decks", "decklists", "riftbound decks", "published decks", "budget decks", "legend decks"] },
       { href: "/trade", label: "Trade Calculator", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
     ],
   },

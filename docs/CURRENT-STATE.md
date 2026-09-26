@@ -410,8 +410,10 @@ longer lands on its entry.
 
 ## Removed, declined, kept
 
-- **Meta decks:** `/decks*` 301s to `/deck`; rebuild only from a licensed
-  source, never a hand copy. [2026-09-12](../DECISIONS.md#L5565)
+- **Meta decks:** never from a hand copy; rebuild a meta/tier list only from
+  a licensed source. `/decks` is live again (2026-09-26) as the PLAYER-published
+  library only — signed-in publishes and owner imports, nothing seeded, no
+  redirect. [2026-09-12](../DECISIONS.md#L5565), [2026-09-26](../DECISIONS.md#L14127)
 - **Also removed:** Market Pulse and the domain chips; the card page's
   "Embed this live price" (`/embed` still offers the widgets); the per-card
   eBay auction pass. [2026-09-17](../DECISIONS.md#L7959),

@@ -14123,3 +14123,66 @@ with no listings shows the signup in the comparison, and a submission saved a
 card-scoped row; the cron returns 401 without the secret, counts 3 due in a dry
 run once a card is priced, and with no mail key marks nothing told. 11 new
 tests (`tests/card-mentions.test.ts`, `tests/release-alerts.test.ts`).
+
+## Public decks: a player-published deck library at /decks — 2026-09-26
+
+**Why.** Owner's brief: players search "riftbound decks" far more than
+"riftbound prices", deck sites hold visitors longer, and the top complaint about
+deck-price sites is pricing every card at one source. The multi-store deck
+pricer existed with no decks in it.
+
+**What this reverses, and what it does not.** The 2026-09-12 entry removed the
+META decks — hand-copied lists from other sites — and 301'd `/decks*` to
+`/deck`. `/decks` is live again, but only for decks a signed-in player chose to
+publish (attributed to their display name) or the owner imports at
+`/admin/decks` for lists they may publish. The ban on hand-copied meta data
+stands (`tests/decks-removed.test.ts` still refuses `prisma/meta-decks.json` and
+its libraries); the redirects are removed, so old meta-deck slugs now 404.
+
+**Seeding: none.** The catalogue has no preconstructed list with verifiable
+quantities — Proving Grounds is only described as a 24-card precon, with no
+per-deck split — so nothing was seeded. Empty states say so honestly: "Publish
+the first deck" on `/decks`, "Publish the first {Legend} deck" on a legend page
+(noindexed while empty).
+
+**Shape.**
+- `PublishedDeck` (additive table; DDL in
+  `prisma/migrations-sql/2026-09-26_published_deck.sql`): title, legend,
+  optional description, the canonical list, `[{cardId, qty}]`, `cardIds[]` for
+  "Decks using this card", and `publishedTotals` per market.
+- Publishing (`/api/decks`, from `DeckPublishPanel` under the builder): signed-in
+  only; ≤10 per account per 24h counted in the database; 3 per 10 minutes per
+  account in memory; honeypot; no links in title/description; no all-caps
+  titles or padding; the list must resolve ≥25 cards with a Legend and ≤3
+  unmatched lines; the same list twice from one account is refused. The list is
+  resolved exactly as `/deck` prices it (`lib/deck.ts`).
+- Prices: totals are Σ qty × `pickPrice` (the per-market cheapest columns the
+  deck pricer and every tile read), `null` for a market where any card is
+  unpriced — never a partial sum. The deck page's cheapest store per card is
+  `computeMarket()` over that card's in-stock rows. Budget build (client-side)
+  swaps each card for its cheapest printing in the viewer's market; the change
+  since publishing compares against `publishedTotals` for that market.
+- Pages: `/decks` (filters by legend, domain and price band, sort newest or
+  cheapest — client-side over one ISR list), `/decks/[slug]` ("{Legend} deck —
+  US$X to build | RiftCompare", OG via `/api/og`, CreativeWork JSON-LD, Best
+  Basket, Mass Entry copy, share), `/decks/legend/[legend]`. All
+  `revalidate = 3600`; the two dynamic routes carry an EMPTY
+  `generateStaticParams` (the card page's device — without it they built as
+  per-request ƒ routes), so nothing is prerendered; publish/hide revalidates the
+  affected paths and the `published-decks` tag. Sitemap: `/decks`, each live
+  deck and each legend page with a deck, in the `content` section.
+- `/deck` now opens on the tool: "Start from a published deck" (newest six, a
+  cached read) and the builder, with the explanatory text moved below.
+- Card pages: "Decks using {card}" (up to six), one indexed query per ISR render.
+- Nav: "Deck Library" beside the builder; `docs/seo-keyword-map.md` gives
+  `riftbound decks` to `/decks` and keeps `/deck` for builder/price intent. The
+  meta/tier-list row stays deliberately unowned.
+
+**Verified** on the local seed DB with a local-only test session (never
+production), Playwright at 390 and 1440: empty states; a 34-card Jinx list
+priced and published from `/deck`; the deck page titled "Jinx deck — US$419.27
+to build | RiftCompare" with no horizontal scroll; the deck on `/decks`, the Jinx
+legend page, `/deck`'s start list, the Jinx card page and the content sitemap;
+signed-out publish 401s; `/admin/decks` 404s without admin. 11 new tests
+(`tests/public-decks.test.ts`), `tests/decks-removed.test.ts` rewritten to the
+new rule.

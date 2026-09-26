@@ -58,6 +58,8 @@ export const SIGNUP_SOURCES = new Set([
   // CardTile tap lands. Its own value so it can be weighed against QuickView's
   // buy_click rather than blended into card_alert.
   "quickview_alert",
+  // "Sign in to publish" under the deck builder (2026-09-26, public decks).
+  "deck_publish",
   "other",
 ]);
 

@@ -521,12 +521,38 @@ async function content(): Promise<SitemapEntry[]> {
   // list can never regrow — and the read-side was removed with the Index too, so
   // the ~130 legacy rows are no longer served at all (their URLs 404). The rows
   // themselves are left dormant in the database.
-  return getArticles().map((a) => ({
+  const articles = getArticles().map((a) => ({
     url: `${SITE_URL}/${a.category === "guide" ? "guides" : "blog"}/${a.slug}`,
     changeFrequency: "monthly" as const,
     priority: 0.6,
     lastModified: new Date(`${a.updated ?? a.date}T09:00:00+10:00`),
   }));
+  return [...articles, ...(await deckEntries())];
+}
+
+// The public deck library (2026-09-26): /decks, every live published deck, and
+// each legend page that has at least one (an empty legend page is noindexed).
+// One narrow select; its own fence so a deck-table problem never empties the
+// articles above.
+async function deckEntries(): Promise<SitemapEntry[]> {
+  try {
+    const decks = await prisma.publishedDeck.findMany({
+      where: { status: "live" },
+      orderBy: { createdAt: "desc" },
+      take: 5000,
+      select: { slug: true, legendSlug: true, createdAt: true },
+    });
+    const newest = decks[0]?.createdAt;
+    const legends = new Map<string, Date>();
+    for (const d of decks) if (!legends.has(d.legendSlug)) legends.set(d.legendSlug, d.createdAt);
+    return [
+      { url: `${SITE_URL}/decks`, changeFrequency: "daily" as const, priority: 0.7, ...(newest ? { lastModified: newest } : {}) },
+      ...[...legends].map(([slug, at]) => ({ url: `${SITE_URL}/decks/legend/${slug}`, changeFrequency: "weekly" as const, priority: 0.5, lastModified: at })),
+      ...decks.map((d) => ({ url: `${SITE_URL}/decks/${d.slug}`, changeFrequency: "weekly" as const, priority: 0.5, lastModified: d.createdAt })),
+    ];
+  } catch {
+    return [];
+  }
 }
 
 const BUILDERS: Record<SectionId, () => Promise<SitemapEntry[]>> = {

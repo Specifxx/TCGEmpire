@@ -13,6 +13,7 @@ import { trackEvent } from "@/lib/analytics";
 import { CardSearch, type SearchCard } from "./CardSearch";
 import { QtyInput } from "./QtyInput";
 import { cardThumbProps } from "@/lib/card-image-url";
+import { DeckPublishPanel } from "./decks/DeckPublishPanel";
 
 // The deck builder and list pricer — the free, no-account tool behind /deck.
 //
@@ -451,6 +452,14 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
               </Link>
             )}
           </div>
+        )}
+
+        {/* Publish to the public deck library (2026-09-26). */}
+        {lines.length > 0 && (
+          <DeckPublishPanel
+            listText={listText}
+            loginHref={`/login?src=deck_publish&next=${encodeURIComponent(`/deck?list=${encodeURIComponent(encodeList(listText))}`)}`}
+          />
         )}
 
         {error && (
