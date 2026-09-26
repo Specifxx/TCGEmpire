@@ -8,6 +8,7 @@ import { COUNTRIES, normalizeCountry } from "@/lib/country";
 import { Filters } from "@/components/Filters";
 import { ActiveFilters } from "@/components/ActiveFilters";
 import { EbayPicks } from "@/components/EbayPicks";
+import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { SortSelect } from "@/components/SortSelect";
 import { CardTile } from "@/components/CardTile";
 import { Pagination } from "@/components/Pagination";
@@ -186,6 +187,9 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
       })()
     : await runQuery();
   const totalPages = Math.max(1, Math.ceil(total / size));
+  // The visitor's own words, for the eBay search beside the results
+  // (2026-09-26). Trimmed like generateMetadata's; empty means no search.
+  const q = (searchParams.q ?? "").trim();
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -300,23 +304,45 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
           </div>
         </div>
 
+        {/* SEARCH EBAY FOR THE SAME WORDS (2026-09-26, "Pushing eBay clicks" in
+            DECISIONS.md). A visitor who typed a search has said what they want
+            to buy, so eBay's search for those words sits by the count that
+            answers them. freeText copy ("Search eBay for “q”", never "Buy q"):
+            the words are the visitor's, not a card name, and we do not know
+            eBay has a listing for them. A client component, so it localises
+            with useCountry. Compact here; with no results at all the full one
+            below takes its place, as the only way forward. */}
+        {q && total > 0 && (
+          <EbayBuyCta query={q} freeText compact source="browse-search" pageType="browse" surface="ebay_search" className="mb-4" />
+        )}
+
         <ActiveFilters />
 
         {/* Tailored eBay unit. Above the results grid: browse is where buying
             intent is highest, and the tiles are chase cards rather than a
-            generic banner. */}
-        <EbayPicks className="mb-6" />
+            generic banner. Never given `q`: it sells the newest set's chase
+            cards, not the visitor's search. pageType names /browse in its
+            buy_click (2026-09-26). */}
+        <EbayPicks className="mb-6" pageType="browse" />
 
         {cards.length === 0 ? (
-          <div className="card-surface grid place-items-center p-16 text-center">
-            <p className="text-lg font-semibold text-white">
-              {total > 0 ? "Nothing on this page" : "No cards found"}
-            </p>
-            <p className="mt-1 text-sm text-slate-400">
-              {total > 0 ? "Try an earlier page." : "Try adjusting your filters or search."}
-            </p>
-            <Link href="/browse" className="btn-primary mt-4">Reset</Link>
-          </div>
+          <>
+            <div className="card-surface grid place-items-center p-16 text-center">
+              <p className="text-lg font-semibold text-white">
+                {total > 0 ? "Nothing on this page" : "No cards found"}
+              </p>
+              <p className="mt-1 text-sm text-slate-400">
+                {total > 0 ? "Try an earlier page." : "Try adjusting your filters or search."}
+              </p>
+              <Link href="/browse" className="btn-primary mt-4">Reset</Link>
+            </div>
+            {/* A search our database has no card for (a typo, a set we have
+                not loaded yet, a product that is not a single) can still be on
+                eBay — the full CTA, since here it is the one route left. */}
+            {q && total === 0 && (
+              <EbayBuyCta query={q} freeText source="browse-no-results" pageType="browse" surface="ebay_search" className="mt-4" />
+            )}
+          </>
         ) : (
           <>
             {/* Sized from the column's own width from lg (2026-09-23): the rail and

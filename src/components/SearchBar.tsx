@@ -11,7 +11,10 @@ import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
 import { cardImageAlt } from "@/lib/image-alt";
+import { ebayLabel, ebaySearchUrl, riftboundEbayQuery } from "@/lib/affiliate";
 import { RecentlyViewedRail } from "./home/RecentlyViewedRail";
+import { OutboundLink } from "./OutboundLink";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 
 // How long a focused-but-not-yet-typing field has to stay focused before it
 // counts as "focus with intent" for search_initiated below — long enough that
@@ -160,7 +163,7 @@ export function SearchBar({
   const router = useRouter();
   const pathname = usePathname();
   const { open: openQuickView } = useQuickView();
-  const { fmt, price } = useCountry();
+  const { fmt, price, country } = useCountry();
   // Starts EMPTY on purpose, and the ?q= prefill arrives in the effect below.
   //
   // This used to be useState(useSearchParams().get("q") ?? ""). In the App
@@ -847,8 +850,36 @@ export function SearchBar({
             </div>
             </>
           ) : results.length === 0 && sealed.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-slate-400">
-              {loading ? "Searching…" : "No matches — press Enter to search anyway."}
+            <div>
+              <div className="px-4 py-3 text-sm text-slate-400">
+                {loading ? "Searching…" : "No matches — press Enter to search anyway."}
+              </div>
+              {/* NO MATCHES → SEARCH EBAY (2026-09-26, "Pushing eBay clicks" in
+                  DECISIONS.md). A query our database has no card for — a typo,
+                  a card from a set we have not loaded, a non-card product — was
+                  a dead end; eBay's search is the one place it can still go,
+                  and the click is an affiliate click. A SEARCH link: it claims
+                  no listing exists. Outside any listbox and outside the
+                  option loop (activeIndex / optionId never reach it), so arrow
+                  keys and Enter behave exactly as before; Tab reaches it as an
+                  ordinary link. Its disclosure sits directly under it. Built on
+                  the client because the dropdown only ever renders after a
+                  keystroke, never in server HTML. */}
+              {!loading && trimmed && (
+                <div className="border-t border-ink-800 px-4 pb-2.5 pt-1">
+                  <OutboundLink
+                    href={ebaySearchUrl(country, riftboundEbayQuery(trimmed), "header-search")}
+                    retailer="ebay_search"
+                    country={country}
+                    pageType="search"
+                    surface="search_box"
+                    className="block min-h-11 py-3 text-sm font-semibold text-sky-300 [overflow-wrap:anywhere] hover:underline"
+                  >
+                    Search {ebayLabel(country)} for “{trimmed}” →
+                  </OutboundLink>
+                  <AffiliateDisclosure partner="ebay" tight />
+                </div>
+              )}
             </div>
           ) : (
             /* overflow-y-auto + a measured maxHeight is a safety net, not the

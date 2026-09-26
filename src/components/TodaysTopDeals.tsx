@@ -4,9 +4,11 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
 import { COUNTRIES, type Country } from "@/lib/country";
-import type { Deal, DealColumnKey, TopDeals } from "@/lib/top-deals";
+import type { CheapestEbayDeal, Deal, DealColumnKey, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
+import { isPaidLink } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
+import { AffiliateDisclosure, PaidLinkTag } from "@/components/AffiliateDisclosure";
 import { useCountry } from "@/components/CountryProvider";
 import { NavIcon } from "@/components/NavIcon";
 import { useQuickView } from "@/components/QuickView";
@@ -33,6 +35,10 @@ import { PremiumButton } from "@/components/PremiumButton";
 // signals read as "study this table," not "here's a deal." Rising Cards is
 // today's actual fourth column, added back deliberately — see lib/top-deals.ts's
 // header comment for why that call was reversed for this specific signal.
+//
+// "Cheapest on eBay" (2026-09-26) is NOT a fifth column: it is its own
+// full-width block under the grid (CheapestOnEbay below), so the column
+// layout above is untouched.
 type ColumnDef = {
   key: DealColumnKey;
   label: string;
@@ -190,9 +196,11 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
 
   const cls = "flex items-center gap-2.5 px-3 py-2.5 transition-colors duration-fast hover:bg-ink-900/50";
   if (deal.outboundUrl) {
+    // pageType (2026-09-26): this link can be an eBay or TCGplayer listing, and
+    // its buy_click used to arrive with no page at all.
     return (
       <li>
-        <OutboundLink href={deal.outboundUrl} retailer={deal.outboundRetailer ?? "sealed"} country={country} kind="sealed" className={cls}>
+        <OutboundLink href={deal.outboundUrl} retailer={deal.outboundRetailer ?? "sealed"} country={country} kind="sealed" pageType="homepage" className={cls}>
           {inner}
         </OutboundLink>
       </li>
@@ -225,6 +233,80 @@ function LockedTeaser({ count, surface, tierName }: { count: number; surface: st
         Unlock {count} more with {tierName} →
       </PremiumButton>
     </li>
+  );
+}
+
+// "Cheapest on eBay" (2026-09-26, "Pushing eBay clicks" in DECISIONS.md) — the
+// owner's original deal feature, back as a full-width block UNDER the columns
+// (a fifth column would squeeze a grid GRID_COLS already had to stretch).
+// FREE and ungated: each row is one eBay affiliate link to the cheapest tracked
+// copy of that card in the visitor's market, so it is a buy path, not an ad —
+// no "Ad" label, no ad-free gate, shown to paid tiers too. Honest by rule: the
+// price reads "delivered" only when the seller stated postage; the gap is
+// measured against the cheapest store we track (lib/arbitrage.ts
+// rankCheapestOnEbay); no savings total, no percentage badge, no urgency, and
+// no link to the locked Deal Finder. eBay blue, never gold (gold marks Premium).
+// The disclosure sits directly under the rows for every visitor.
+function CheapestOnEbay({ rows, currency, country }: { rows: CheapestEbayDeal[]; currency: string; country: Country }) {
+  if (rows.length === 0) return null;
+  return (
+    <section aria-label="Cheapest on eBay" className="mt-4 rounded-xl border border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-3">
+      <div className="mb-1 flex flex-wrap items-center gap-2 px-1">
+        <h3 className="text-sm font-extrabold text-white">Cheapest on eBay</h3>
+        <PaidLinkTag />
+      </div>
+      <p className="mb-1 px-1 text-[11px] leading-snug text-slate-500">
+        Cards where an eBay listing costs less than any store we track today
+      </p>
+      <ul className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+        {rows.map((d, i) => (
+          <li key={d.cardId} className="min-w-0">
+            <OutboundLink
+              href={d.outboundUrl}
+              retailer={d.outboundRetailer}
+              country={country}
+              kind="single"
+              pageType="homepage"
+              surface="cheapest_ebay"
+              cardId={d.cardId}
+              cardName={d.title}
+              price={d.priceCents / 100}
+              positionInList={i + 1}
+              inStock
+              className="flex min-h-11 items-center gap-2.5 rounded-md px-2 py-2.5 transition-colors duration-fast hover:bg-[#0064d2]/10"
+            >
+              <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-ink-900">
+                {d.imageUrl && (
+                  // Plain <img> for the same reasons as DealRow's thumbnail.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={d.imageUrl}
+                    alt={cardImageAlt({ name: d.title })}
+                    width={32}
+                    height={44}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold text-white">{d.title}</div>{" "}
+                <div className="truncate text-[11px] text-slate-500">
+                  <span className="num font-semibold text-up">{formatMoney(d.gapCents, currency)}</span> below the cheapest
+                  store
+                </div>
+              </div>{" "}
+              <div className="flex shrink-0 flex-col items-end">
+                <span className="num text-sm font-bold text-accent">{formatMoney(d.priceCents, currency)}</span>{" "}
+                <span className="text-[10px] text-slate-500">{d.postageKnown ? "delivered" : "+ postage"}</span>
+              </div>
+            </OutboundLink>
+          </li>
+        ))}
+      </ul>
+      <AffiliateDisclosure partner="ebay" tight className="px-1" />
+    </section>
   );
 }
 
@@ -277,9 +359,11 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
 
   // Tier-independent: is there ANYTHING to show today, in any tier? If not, the
   // section hides entirely (unchanged behaviour) rather than showing a shell
-  // with tabs over nothing.
+  // with tabs over nothing. The Cheapest on eBay block counts too (2026-09-26):
+  // on a day it is the only thing with rows, it shows without the tier pills.
   const allColumns = COLUMNS.map((c) => ({ def: c, items: deals[c.key] })).filter((c) => c.items.length > 0);
-  if (allColumns.length === 0) return null;
+  const ebayRows = deals.cheapestOnEbay;
+  if (allColumns.length === 0 && ebayRows.length === 0) return null;
 
   // "All" mixes cheap-first (see mixByTier) so a Premium column's single
   // unlocked item is more often approachable; an explicit tier just filters,
@@ -290,6 +374,12 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
       items: tier === "all" ? mixByTier(items, thresholds.mid) : items.filter((d) => inTier(d.priceCents, tier, thresholds)),
     }))
     .filter((c) => c.items.length > 0);
+  // The grid's only outbound links are the Cheapest sealed rows, which can be
+  // an eBay or TCGplayer listing (2026-09-26: they carried no disclosure). The
+  // disclosure renders whenever one of the rows on screen is a paid link, and
+  // not otherwise — a plain store link earns nothing, and saying it does would
+  // be the inaccuracy PaidLinkTag's own rule guards against.
+  const gridHasPaidLink = columns.some(({ items }) => items.some((d) => isPaidLink(d.outboundUrl)));
 
   function fmtT(cents: number) {
     return formatMoney(cents, currency);
@@ -315,25 +405,28 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
           39/115/123/79 × 24px at 390, far under a thumb. Coarse-pointer-only,
           not `min-h-11` everywhere, so mouse desktops keep the 24px pill
           density; `inline-flex items-center` keeps the label centred when the
-          pill grows. */}
-      <div className="mb-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Filter deals by price">
-        {TIERS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            role="tab"
-            aria-selected={tier === t.key}
-            onClick={() => changeTier(t.key)}
-            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors [@media(pointer:coarse)]:min-h-12 ${
-              tier === t.key ? "bg-brand-500 text-ink-950" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-slate-200"
-            }`}
-          >
-            {t.label(thresholds, fmtT)}
-          </button>
-        ))}
-      </div>
+          pill grows. Not rendered when only the Cheapest on eBay block has
+          rows: there would be no columns for them to filter. */}
+      {allColumns.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Filter deals by price">
+          {TIERS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={tier === t.key}
+              onClick={() => changeTier(t.key)}
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors [@media(pointer:coarse)]:min-h-12 ${
+                tier === t.key ? "bg-brand-500 text-ink-950" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-slate-200"
+              }`}
+            >
+              {t.label(thresholds, fmtT)}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {columns.length === 0 ? (
+      {allColumns.length === 0 ? null : columns.length === 0 ? (
         <div className="card-surface p-6 text-center text-sm text-slate-400">
           No {TIERS.find((t) => t.key === tier)?.label(thresholds, fmtT).toLowerCase()} deals in {place} right now — try another filter.
         </div>
@@ -397,6 +490,11 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
         })}
       </div>
       )}
+      {/* Outside the grid, not a panel inside it: GRID_COLS' last-child span
+          rule counts the grid's direct children. */}
+      {gridHasPaidLink && <AffiliateDisclosure partner="both" tight />}
+
+      <CheapestOnEbay rows={ebayRows} currency={currency} country={country} />
     </section>
   );
 }

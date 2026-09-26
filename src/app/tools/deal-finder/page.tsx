@@ -10,6 +10,7 @@ import { formatMoney } from "@/lib/format";
 import { USD_TO } from "@/lib/fx";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
+import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { PremiumButton } from "@/components/PremiumButton";
 import { RegionToggle } from "@/components/RegionToggle";
 import { ArbitrageFilters } from "@/components/ArbitrageFilters";
@@ -286,7 +287,16 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
       )}
 
       {data === null ? (
-        <LockedPreview />
+        <>
+          <LockedPreview />
+          {/* SIGNED OUT (2026-09-26, "Pushing eBay clicks" in DECISIONS.md): the
+              list is locked, but shopping is not. A visitor who came to find
+              cheap cards and does not want an account still gets somewhere to
+              buy — eBay's Riftbound singles search, an affiliate click. Beside
+              the lock, never inside LockedPreview, which stays prop-less and
+              renders nothing real. EbayBuyCta carries its own disclosure. */}
+          <EbayBuyCta source="deal-finder-locked" pageType="deals" className="mt-4" />
+        </>
       ) : data.items.length === 0 ? (
         <Empty>
           <EmptyMessage params={params} buy={buy} place={info.place} mineCount={onlyCardIds?.size ?? null} mineCapped={mineCapped} />
@@ -375,17 +385,32 @@ function BuyerTable({ items, country, currency }: { items: ArbItem[]; country: C
         </tr>
       </thead>
       <tbody className="divide-y divide-ink-800">
-        {items.map((it) => (
+        {/* pageType + surface on both links (2026-09-26): their buy_click
+            arrived with neither, so the Deal Finder's clicks — eBay rows
+            included — could not be told from any other page's. */}
+        {items.map((it, i) => (
           <tr key={it.card.id} className="hover:bg-ink-800">
             <CardCell card={it.card} />
             <td className="px-2 py-2 text-right">
-              <OutboundLink href={it.buyUrl} retailer={it.buyStore} country={country} className="num font-semibold text-white hover:text-brand-400">
+              <OutboundLink
+                href={it.buyUrl}
+                retailer={it.buyStore}
+                country={country}
+                pageType="deals"
+                surface="table"
+                cardId={it.card.id}
+                cardName={it.card.name}
+                price={it.buyCents / 100}
+                positionInList={i + 1}
+                inStock
+                className="num font-semibold text-white hover:text-brand-400"
+              >
                 {formatMoney(it.buyCents, currency)}
               </OutboundLink>
               <div className="ml-auto max-w-[5.5rem] truncate text-[10px] text-slate-500 sm:max-w-none" title={it.buyStoreName}>{it.buyStoreName}</div>
             </td>
             <td className="hidden px-2 py-2 text-right sm:table-cell">
-              <OutboundLink href={it.marketUrl} retailer="tcgplayer" country={country} className="num text-slate-300 hover:text-brand-400">
+              <OutboundLink href={it.marketUrl} retailer="tcgplayer" country={country} pageType="deals" surface="table" cardId={it.card.id} cardName={it.card.name} className="num text-slate-300 hover:text-brand-400">
                 {formatMoney(it.marketCents, currency)}
               </OutboundLink>
               <div className="text-[10px] text-slate-500">

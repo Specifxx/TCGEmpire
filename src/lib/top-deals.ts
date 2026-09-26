@@ -7,6 +7,10 @@
 //   • price-drops        (free)    — biggest 7-day price falls
 //   • cheapest-sealed    (free)    — lowest in-stock sealed products right now
 //   • rising-cards       (PREMIUM) — the Rising Cards screener's top picks
+//   • cheapest-on-eBay   (free)    — cards whose cheapest eBay listing costs
+//                                     less than any store we track (2026-09-26;
+//                                     its own block under the columns, not a
+//                                     fifth column — see TodaysTopDeals.tsx)
 //
 // price-drops depends on PriceHistory (AU-only today), and cheapest-sealed on
 // a market having tracked sealed stock, so some columns are naturally empty in
@@ -16,10 +20,13 @@
 // which needs no local eBay presence (the old eBay-cheapest signal did). Each source is independently guarded, so one failing never
 // sinks the rest. Both gated columns are gated in the UI (only the single top
 // item is rendered to non-members); the data layer itself is ungated.
+// cheapest-on-eBay does need a local eBay feed, so it is empty in Canada (whose
+// eBay rows are US listings with unquoted postage) — lib/arbitrage.ts.
 //
 // NO unstable_cache IN THIS FILE, deliberately. Every source below caches
-// ITSELF (getArbitrageVsTcgplayer's aggregates and row pulls, getPriceMovers,
-// getSealedGroups, getCachedRisingCards), and Next.js 14.2 disables an inner
+// ITSELF (getArbitrageVsTcgplayer's aggregates and row pulls — which
+// getCheapestOnEbay re-reads — getPriceMovers, getSealedGroups,
+// getCachedRisingCards), and Next.js 14.2 disables an inner
 // cache whenever it is invoked from inside another unstable_cache callback
 // (see the note on cachedOrDirect in lib/price-history.ts). The hour-long
 // outer entry this file used to keep around getTopDeals() therefore turned all
@@ -45,7 +52,7 @@
 import type { Country } from "./country";
 import { cardHref } from "./card-url";
 import { affiliateUrl } from "./affiliate";
-import { belowTcgPct, defaultTcgBuyKeys, getArbitrageVsTcgplayer, type ArbItem } from "./arbitrage";
+import { belowTcgPct, defaultTcgBuyKeys, getArbitrageVsTcgplayer, getCheapestOnEbay, type ArbItem, type CheapestOnEbayItem } from "./arbitrage";
 import { getPriceMovers } from "./price-history";
 import { getSealedGroups } from "./sealed-import";
 import { getCachedRisingCards } from "./rise-predictor";
@@ -89,6 +96,23 @@ export type Deal = {
   card: CardTileData | null;
 };
 
+// One "Cheapest on eBay" row (2026-09-26). Its own shape rather than a Deal: the
+// row is a single outbound link to the eBay listing (no card page, no QuickView,
+// no percentage badge), and it has to say whether its price includes postage.
+// Kept out of DealType/DealColumnKey on purpose — it is not a column, and the
+// column plumbing (TodaysTopDeals' COLUMNS, DealsRow's KIND_LABEL) stays as is.
+export type CheapestEbayDeal = {
+  cardId: string;
+  title: string;
+  subtitle: string; // "SET · 123"
+  imageUrl: string | null;
+  priceCents: number; // the eBay listing: item + stated postage, or the item price alone
+  postageKnown: boolean; // "{price} delivered" when true, "{price} + postage" when not
+  gapCents: number; // below the cheapest tracked store (lib/arbitrage.ts rankCheapestOnEbay)
+  outboundUrl: string; // the listing, affiliate-tagged with the homepage as its page
+  outboundRetailer: string; // the market's eBay retailer key
+};
+
 export type TopDeals = {
   savingsVsMarket: Deal[]; // PLUS (a full list on the cheaper tier)
   // The REAL count behind the Premium gate — getArbitrageVsTcgplayer's own `total`,
@@ -111,6 +135,7 @@ export type TopDeals = {
   // Real total behind the gate, same reasoning as savingsVsMarketTotal — capped
   // at the Rising Cards screener's own DISPLAY limit (40), not at perType.
   risingCardsTotal: number;
+  cheapestOnEbay: CheapestEbayDeal[]; // free, ungated — every click is an eBay affiliate click
   hasAny: boolean;
 };
 
@@ -141,36 +166,75 @@ export function savingsVsMarketDeal(it: ArbItem): Deal {
   };
 }
 
+/**
+ * One getCheapestOnEbay item as a homepage row. The listing URL is tagged with
+ * the homepage as its page, and with its own sub-id (`<eBay key>_cheapest`), so
+ * EPN's customid tells this row's clicks apart from the eBay-sealed links in the
+ * Cheapest sealed column on the same page — both would otherwise report as
+ * "<eBay key>-home" (2026-09-26).
+ */
+export function cheapestEbayDeal(it: CheapestOnEbayItem): CheapestEbayDeal {
+  return {
+    cardId: it.card.id,
+    title: it.card.name,
+    subtitle: sub(it.card),
+    imageUrl: it.card.imageThumbUrl,
+    priceCents: it.ebayCents,
+    postageKnown: it.postageKnown,
+    gapCents: it.gapCents,
+    outboundUrl: affiliateUrl(it.url, `${it.ebayKey}_cheapest`, "/"),
+    outboundRetailer: it.ebayKey,
+  };
+}
+
 export async function getTopDeals(country: Country, perType = 4): Promise<TopDeals> {
-  const [savings, priceDrops, cheapestSealed, rising] = await Promise.all([
-    (async (): Promise<{ deals: Deal[]; total: number; savingsTotalCents: number }> => {
-      try {
-        // CHEAPER THAN TCGPLAYER MARKET, not "cheapest on eBay vs the best
-        // store" (2026-09-21, owner's instruction — see DECISIONS.md). This
-        // column answers "where is this card cheaper than the wider US market
-        // right now", the same list /tools/deal-finder shows, so the homepage
-        // teaser and the tool its link opens are the same board.
-        //
-        // The buy side is the tool's own default (defaultTcgBuyKeys): every
-        // store and eBay, never TCGplayer itself — it is the reference side —
-        // and never a cross-border eBay feed with unquoted postage (CA).
-        //
-        // "pct", not "saving" (raw money below market): a four-figure chase
-        // card's modest percentage would otherwise outrank an everyday card's
-        // much bigger one purely on dollars, and TodaysTopDeals' mixByTier()
-        // can only interleave what this perType=4 slice hands it.
-        const { items, total, savingsTotalCents } = await getArbitrageVsTcgplayer(country, {
-          buy: defaultTcgBuyKeys(country),
-          sort: "pct",
-          page: 1,
-          pageSize: perType,
-        });
-        const deals = items.map(savingsVsMarketDeal);
-        return { deals, total, savingsTotalCents: savingsTotalCents ?? 0 };
-      } catch {
-        return { deals: [], total: 0, savingsTotalCents: 0 };
-      }
-    })(),
+  const savingsP = (async (): Promise<{ deals: Deal[]; total: number; savingsTotalCents: number }> => {
+    try {
+      // CHEAPER THAN TCGPLAYER MARKET, not "cheapest on eBay vs the best
+      // store" (2026-09-21, owner's instruction — see DECISIONS.md). This
+      // column answers "where is this card cheaper than the wider US market
+      // right now", the same list /tools/deal-finder shows, so the homepage
+      // teaser and the tool its link opens are the same board.
+      //
+      // The buy side is the tool's own default (defaultTcgBuyKeys): every
+      // store and eBay, never TCGplayer itself — it is the reference side —
+      // and never a cross-border eBay feed with unquoted postage (CA).
+      //
+      // "pct", not "saving" (raw money below market): a four-figure chase
+      // card's modest percentage would otherwise outrank an everyday card's
+      // much bigger one purely on dollars, and TodaysTopDeals' mixByTier()
+      // can only interleave what this perType=4 slice hands it.
+      const { items, total, savingsTotalCents } = await getArbitrageVsTcgplayer(country, {
+        buy: defaultTcgBuyKeys(country),
+        sort: "pct",
+        page: 1,
+        pageSize: perType,
+      });
+      const deals = items.map(savingsVsMarketDeal);
+      return { deals, total, savingsTotalCents: savingsTotalCents ?? 0 };
+    } catch {
+      return { deals: [], total: 0, savingsTotalCents: 0 };
+    }
+  })();
+  // CHEAPEST ON EBAY (2026-09-26): chained AFTER the savings branch, not run
+  // beside it. getCheapestOnEbay re-reads the very aggregates that branch reads
+  // (the store-price groupBy, the eBay row pull, TCGplayer's rows). Started
+  // together, a cold cache — the first render after every import purge — had
+  // both miss and both run the same full-market reads at once. Chained, it
+  // starts only after the savings branch has computed them and handed them to
+  // the data cache (on Vercel the fetch cache records an entry in the lambda's
+  // memory as the write starts), so it finds them there instead of racing to
+  // compute them, and its only read of its own is the detail lookup for at
+  // most perType cards. The other three columns still run in parallel.
+  const cheapestOnEbayP = savingsP.then(async (): Promise<CheapestEbayDeal[]> => {
+    try {
+      return (await getCheapestOnEbay(country, perType)).map(cheapestEbayDeal);
+    } catch {
+      return [];
+    }
+  });
+  const [savings, priceDrops, cheapestSealed, rising, cheapestOnEbay] = await Promise.all([
+    savingsP,
     (async (): Promise<Deal[]> => {
       try {
         const movers = await getPriceMovers(country, perType);
@@ -222,7 +286,9 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
               title: g.name,
               subtitle: g.productType,
               href: null,
-              outboundUrl: best ? affiliateUrl(best.url, best.retailer) : null,
+              // loc "/" (2026-09-26): the homepage is where this link renders,
+              // said explicitly rather than left to affiliateUrl's default.
+              outboundUrl: best ? affiliateUrl(best.url, best.retailer, "/") : null,
               outboundRetailer: best?.retailer ?? null,
               imageUrl: g.imageUrl,
               priceCents: g.lowestPriceCents!,
@@ -272,9 +338,11 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
         return { deals: [], total: 0 };
       }
     })(),
+    cheapestOnEbayP,
   ]);
 
-  const hasAny = savings.deals.length + priceDrops.length + cheapestSealed.length + rising.deals.length > 0;
+  const hasAny =
+    savings.deals.length + priceDrops.length + cheapestSealed.length + rising.deals.length + cheapestOnEbay.length > 0;
   return {
     savingsVsMarket: savings.deals,
     savingsVsMarketTotal: savings.total,
@@ -283,6 +351,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
     cheapestSealed,
     risingCards: rising.deals,
     risingCardsTotal: rising.total,
+    cheapestOnEbay,
     hasAny,
   };
 }

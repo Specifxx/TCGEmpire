@@ -13,6 +13,12 @@
 // the eBay row cache below instead of a second, item-price-only query.
 // getCrossRegionGaps (bottom of this file) stays because /market/records uses it.
 //
+// The homepage's "Cheapest on eBay" row came back on 2026-09-26 as
+// getCheapestOnEbay (below getPricesAsOf): the owner's original feature, free,
+// because every click on it is an eBay affiliate click. It is not a second
+// ranking pipeline — it re-reads the SAME day-cached aggregates the default list
+// above builds, and adds one detail lookup for at most four cards.
+//
 // Egress-bounded: a groupBy aggregate and two row pulls rank everything;
 // per-listing detail (urls/names) is fetched only for the page being shown. The
 // full-set pulls that can't be done as a groupBy (one market's cheapest eBay
@@ -45,6 +51,8 @@ const MIN_BELOW_CENTS = 100;
 // same line as the old "300% margin over the buy price" guard, restated from the
 // buyer's side: market ≥ 4 × buy either way.
 const MAX_BELOW_PCT = 75;
+// The page every getArbitrageVsTcgplayer link renders on — its affiliateUrl `loc`.
+const DEAL_FINDER_PATH = "/tools/deal-finder";
 
 // ── The one "% below" definition ─────────────────────────────────────────────
 /**
@@ -354,6 +362,28 @@ export function defaultTcgBuyKeys(country: Country): string[] {
   return ebay && !EBAY_CROSS_BORDER[country] ? [...stores, ebay.key] : stores;
 }
 
+/**
+ * Pure: a resolved buy side split into its store keys and its eBay key (null
+ * when eBay is not on it). rankVsTcgplayer splits with this, and so does
+ * getCheapestOnEbay (2026-09-26) for the default list's keys — so the homepage
+ * row asks minByCard for exactly the store-key list the default Deal Finder
+ * ranking does, and reads that same day-cached aggregate instead of a second.
+ */
+export function splitBuyKeys(country: Country, buyKeys: readonly string[]): { storeKeys: string[]; buyEbayKey: string | null } {
+  const ebayKey = EBAY_KEY[country];
+  const buyEbayKey = ebayKey && buyKeys.includes(ebayKey) ? ebayKey : null;
+  return { storeKeys: buyKeys.filter((k) => k !== buyEbayKey), buyEbayKey };
+}
+
+/**
+ * The default Deal Finder list's buy side, split: what the homepage "Cheapest
+ * on eBay" row compares against (storeKeys) and the eBay feed it ranks
+ * (buyEbayKey — null in Canada, whose eBay rows are off the default list).
+ */
+export function defaultBuySplit(country: Country): { storeKeys: string[]; buyEbayKey: string | null } {
+  return splitBuyKeys(country, resolveTcgBuyKeys(country, defaultTcgBuyKeys(country)));
+}
+
 // ── Ranking ──────────────────────────────────────────────────────────────────
 export interface ArbItem {
   card: CardTileData; // full tile data so the row can open the QuickView popup
@@ -417,9 +447,7 @@ async function minByCard(country: Country, keys: string[]) {
 // and we never fabricate a number for it.
 type TcgRankRow = { cardId: string; buy: number; buyIsEbay: boolean; market: number; low: number | null; below: number; pct: number };
 async function rankVsTcgplayer(country: Country, buyKeys: string[], sort: ArbSort) {
-  const ebayKey = EBAY_KEY[country];
-  const buyEbayKey = ebayKey && buyKeys.includes(ebayKey) ? ebayKey : null;
-  const storeKeys = buyKeys.filter((k) => k !== buyEbayKey);
+  const { storeKeys, buyEbayKey } = splitBuyKeys(country, buyKeys);
 
   const [storeMin, ebayRows, tcgRows] = await Promise.all([
     minByCard(country, storeKeys),
@@ -537,12 +565,17 @@ export async function getArbitrageVsTcgplayer(
     const bestStore = new Map<string, (typeof storeListings)[number]>();
     for (const l of storeListings) if (!bestStore.has(l.cardId)) bestStore.set(l.cardId, l);
 
+    // Every link built here renders on /tools/deal-finder (the homepage's
+    // Biggest savings column links to card pages, not to these URLs), so each
+    // carries that page as its `loc` (2026-09-26): EPN's customid and Impact's
+    // sharedid then name the Deal Finder instead of the "-home" default every
+    // one of these clicks used to report under.
     const items = slice
       .map((r): ArbItem | null => {
         const c = cardMap.get(r.cardId);
         const tcg = tcgByCard.get(r.cardId);
         if (!c || !tcg) return null;
-        const marketUrl = affiliateUrl(tcg.url, TCG_US.retailer);
+        const marketUrl = affiliateUrl(tcg.url, TCG_US.retailer, DEAL_FINDER_PATH);
         const tcgLowCents = country === "US" ? r.low : null;
         if (r.buyIsEbay) {
           // The cached eBay row carries its own price AND its own URL, so the
@@ -552,7 +585,7 @@ export async function getArbitrageVsTcgplayer(
           return {
             card: c,
             buyCents: e.cents, buyStore: buyEbayKey, buyStoreName: ebayBuyLabel(country, e.postageKnown),
-            buyUrl: affiliateUrl(e.url, buyEbayKey), postageIncluded: e.postageKnown,
+            buyUrl: affiliateUrl(e.url, buyEbayKey, DEAL_FINDER_PATH), postageIncluded: e.postageKnown,
             marketCents: r.market, marketUrl, tcgLowCents, belowCents: r.below, belowPct: r.pct,
           };
         }
@@ -569,7 +602,7 @@ export async function getArbitrageVsTcgplayer(
         return {
           card: c,
           buyCents: b.priceCents, buyStore: b.retailer, buyStoreName: b.retailerName,
-          buyUrl: affiliateUrl(b.url, b.retailer), postageIncluded: false,
+          buyUrl: affiliateUrl(b.url, b.retailer, DEAL_FINDER_PATH), postageIncluded: false,
           marketCents: r.market, marketUrl, tcgLowCents, belowCents: live.belowCents, belowPct: live.belowPct,
         };
       })
@@ -599,6 +632,139 @@ export async function getPricesAsOf(country: Country): Promise<string | null> {
     );
   } catch {
     return null;
+  }
+}
+
+// ── Cheapest on eBay (the homepage row) ──────────────────────────────────────
+// Cards whose cheapest eBay listing in the visitor's market costs less than any
+// store we track there (2026-09-26, "Pushing eBay clicks" in DECISIONS.md). The
+// owner built the site's first deal feature as "cheapest on eBay"; it left the
+// homepage on 2026-09-21 when Biggest savings switched to the TCGplayer
+// benchmark, and comes back as its own FREE row because every click on it is an
+// eBay affiliate click — the site's main revenue — on a listing that really is
+// the cheapest tracked copy.
+//
+// Honest by construction, because nothing here is re-ranked or softened:
+//  - a row exists only where eBay is genuinely cheaper, so no comparison anywhere
+//    is reordered to favour eBay;
+//  - eBay's figure is the Deal Finder's own (cheapestEbayByCard): item + stated
+//    postage when the seller stated it, the item price alone otherwise, and the
+//    row says which ("delivered" / "+ postage");
+//  - the store side is the cheapest in-stock item price across exactly the
+//    default Deal Finder list's stores. In the US it is the cheaper of that and
+//    TCGplayer's own cheapest listing, which is a buyable row there: a card
+//    TCGplayer sells for no more than the eBay copy is not "cheapest on eBay",
+//    and the gap shown is never wider than what a US buyer would really save;
+//  - Canada is skipped: its eBay rows are US listings with international
+//    postage nobody has quoted, so "costs less" could not be claimed.
+//
+// Guards: an eBay cost of at least 100 minor units (bulk commons are noise), at
+// least 50 below the cheapest alternative, and a gap under 80% of that
+// alternative — a copy at a fifth of every store's price is almost always a
+// mismatched listing (a proxy, a different printing), not a bargain. Ranked by
+// the money gap.
+//
+// EGRESS: the ranking reads only the three day-cached pulls the default list
+// already reads — minByCard with the SAME store-key list (defaultBuySplit), the
+// same eBay row pull, and in the US the same TCGplayer rows — so it adds no
+// Neon read; then ONE detail query for at most `limit` cards. Self-cached
+// through those inputs: never wrap it in cachedOrDirect / unstable_cache, and
+// never call it from inside one (src/lib/db.ts rule 6, tests/nested-cache.test.ts).
+const CHEAPEST_EBAY_MIN_CENTS = 100;
+const CHEAPEST_EBAY_MIN_GAP_CENTS = 50;
+const CHEAPEST_EBAY_MAX_GAP_PCT = 80;
+
+export interface CheapestEbayRanked {
+  cardId: string;
+  ebayCents: number; // the eBay listing: item + stated postage, or the item price alone
+  postageKnown: boolean;
+  url: string; // the listing's own URL, untagged — the caller tags it with its page
+  storeCents: number; // the cheapest tracked alternative (see the header above)
+  gapCents: number; // storeCents − ebayCents
+}
+
+/**
+ * Pure: the "Cheapest on eBay" ranking from the three cached inputs — the
+ * cheapest store item price per card, the cheapest eBay listing per card
+ * (cheapestEbayByCard) and TCGplayer's US rows (only read in the US; pass []
+ * elsewhere). Money gap first, then the bigger share of the store price.
+ */
+export function rankCheapestOnEbay(
+  country: Country,
+  storeMin: ReadonlyMap<string, number>,
+  ebayBest: ReadonlyMap<string, EbayBest>,
+  tcgRows: readonly TcgUsRow[],
+): CheapestEbayRanked[] {
+  if (EBAY_CROSS_BORDER[country] || !EBAY_KEY[country]) return [];
+  // TCGplayer's cheapest listing is a buyable row only in the US; elsewhere it
+  // is a US seller's price with international postage behind it (scoreVsTcg).
+  const tcgLow = new Map<string, number>();
+  if (country === "US") for (const r of tcgRows) if (r.lowCents != null) tcgLow.set(r.cardId, r.lowCents);
+  const out: CheapestEbayRanked[] = [];
+  for (const [cardId, e] of ebayBest) {
+    const store = storeMin.get(cardId);
+    if (store == null) continue; // no tracked store to be cheaper than
+    if (e.cents < CHEAPEST_EBAY_MIN_CENTS) continue;
+    const low = tcgLow.get(cardId);
+    if (low != null && low <= e.cents) continue; // TCGplayer sells it for no more
+    const alt = low != null ? Math.min(store, low) : store;
+    const gap = alt - e.cents;
+    if (gap < CHEAPEST_EBAY_MIN_GAP_CENTS) continue;
+    if (gap * 100 >= alt * CHEAPEST_EBAY_MAX_GAP_PCT) continue;
+    out.push({ cardId, ebayCents: e.cents, postageKnown: e.postageKnown, url: e.url, storeCents: alt, gapCents: gap });
+  }
+  out.sort(
+    (a, b) =>
+      b.gapCents - a.gapCents ||
+      b.gapCents / b.storeCents - a.gapCents / a.storeCents ||
+      (a.cardId < b.cardId ? -1 : a.cardId > b.cardId ? 1 : 0),
+  );
+  return out;
+}
+
+// The narrow card read behind the row: what it renders, nothing more (no
+// cardTileSelect — no price columns, no per-row _count subquery).
+const CHEAPEST_EBAY_CARD_SELECT = {
+  id: true,
+  slug: true,
+  name: true,
+  setCode: true,
+  collectorNumber: true,
+  imageThumbUrl: true,
+} as const;
+
+export type CheapestEbayCard = { id: string; slug: string | null; name: string; setCode: string; collectorNumber: string; imageThumbUrl: string | null };
+export type CheapestOnEbayItem = CheapestEbayRanked & { card: CheapestEbayCard; ebayKey: string };
+
+/**
+ * The homepage "Cheapest on eBay" row for one market: at most `limit` cards,
+ * [] for Canada, for a market with no eBay feed, or on any error. Called
+ * directly by lib/top-deals.ts — see the section header for why it is never
+ * wrapped in a cache.
+ */
+export async function getCheapestOnEbay(country: Country, limit = 4): Promise<CheapestOnEbayItem[]> {
+  try {
+    if (EBAY_CROSS_BORDER[country]) return [];
+    const { storeKeys, buyEbayKey } = defaultBuySplit(country);
+    if (!buyEbayKey || !storeKeys.length) return [];
+    const [storeMin, ebayRows, tcgRows] = await Promise.all([
+      minByCard(country, storeKeys),
+      getEbayRowsMemoized(country, buyEbayKey),
+      country === "US" ? getTcgUsRowsMemoized() : Promise.resolve<TcgUsRow[]>([]),
+    ]);
+    const ranked = rankCheapestOnEbay(country, storeMin, cheapestEbayByCard(country, ebayRows), tcgRows).slice(0, Math.max(0, limit));
+    if (!ranked.length) return [];
+    const cards = await prisma.card.findMany({
+      where: { id: { in: ranked.map((r) => r.cardId) } },
+      select: CHEAPEST_EBAY_CARD_SELECT,
+    });
+    const byId = new Map<string, CheapestEbayCard>(cards.map((c) => [c.id, c]));
+    return ranked.flatMap((r) => {
+      const card = byId.get(r.cardId);
+      return card ? [{ ...r, card, ebayKey: buyEbayKey }] : [];
+    });
+  } catch {
+    return [];
   }
 }
 

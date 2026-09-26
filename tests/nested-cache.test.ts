@@ -48,6 +48,11 @@ const SELF_CACHED = [
   "getRiseHistory",
   "getRiseInputs",
   "getTopDemand",
+  // 2026-09-26: the homepage "Cheapest on eBay" row. It has no cache of its
+  // own, but every input is one of the day-caches getArbitrageVsTcgplayer
+  // reads (minByCard, the eBay row pull, TCGplayer's rows), which a wrapping
+  // cache would disable.
+  "getCheapestOnEbay",
 ];
 
 function walk(dir: string, out: string[] = []): string[] {

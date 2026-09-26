@@ -14,6 +14,7 @@ import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
 import { MoversToolsCta } from "@/components/MoversToolsCta";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { EbayBuyCta } from "@/components/EbayBuyCta";
 
 // ISR: PriceHistory gains one snapshot a WEEK (HISTORY_MIN_INTERVAL_DAYS), and
 // the price-refresh workflow purges this path after every import, so a 24-hour
@@ -211,6 +212,13 @@ export default async function MoversPage() {
       {hasAny ? (
         <>
           <PriceWatch movers={movers} currency={info.currency} place={info.place} showHeader={false} />
+
+          {/* Straight after the lists (2026-09-26, "Pushing eBay clicks" in
+              DECISIONS.md): a reader who has just seen a card drop or spike
+              has a card in mind, and this is where to shop for it. A client
+              component — it localises with useCountry, so the page stays
+              static — carrying its own disclosure; a buy path, not an ad. */}
+          <EbayBuyCta source="movers" pageType="movers" />
 
           <MostSearchedStrip rows={mostSearched} coveredDays={demand.coveredDays} />
 
