@@ -188,10 +188,19 @@ export default function EditorialPolicyPage() {
             marked <code className="rounded bg-ink-800 px-1 text-xs">rel=&quot;sponsored&quot;</code> and
             disclosed in plain language next to the link.
           </p>
+          {/* 2026-09-26 ("Pushing eBay clicks" in DECISIONS.md): the site now
+              promotes eBay beside its comparisons, so the promise is stated as
+              what it always meant — the ORDER of a ranked comparison — and the
+              promotion is disclosed here rather than left for a reader to find.
+              "Price and postage alone" also overstated postage, which only
+              breaks ties (tests/business-diagnostic-fixes.test.ts). */}
           <p>
-            None of it affects the prices we show or the order results appear in. Ranking is
-            computed from price and postage alone; a store we earn nothing from outranks one we do
-            whenever it is cheaper, which is most of the time. See our{" "}
+            None of it affects the prices we show or the order of any ranked comparison. Ranking is
+            by item price, with known postage breaking ties; a store we earn nothing from outranks
+            one we do whenever it is cheaper, which is most of the time. Outside the ranked lists we
+            do promote eBay, our main affiliate partner — an &ldquo;Also on eBay&rdquo; box or a
+            &ldquo;Search eBay&rdquo; link beside a comparison. Those are labelled as paid links, sit
+            apart from the ranking, and never change it. See our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">privacy policy</Link>{" "}
             for what advertising and analytics cookies are set and how to opt out.
           </p>

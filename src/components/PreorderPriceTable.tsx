@@ -1,5 +1,6 @@
-import { affiliateUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, ebaySealedQuery, ebaySearchUrl, isPaidLink } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
+import { AffiliateDisclosure, PaidLinkTag } from "@/components/AffiliateDisclosure";
 import { formatMoney } from "@/lib/format";
 import type { SealedGroup } from "@/lib/sealed-import";
 import type { Country } from "@/lib/country";
@@ -30,6 +31,19 @@ import {
 // "taking pre-orders". This table used to take the cheapest row of all of them,
 // which put Many Realms' sold-out US$119.99 box at the top of the page.
 // lib/sealed-offers.ts holds the rules; this file only draws them.
+
+// eBay (2026-09-26, "Pushing eBay clicks" in DECISIONS.md). eBay is the site's
+// main affiliate partner and the owner asked for more of its clicks, including
+// where a store is cheaper. The ranking is untouched — every row still sorts by
+// price and stock, and the "+N%" over the cheapest open offer still shows on an
+// eBay row. What changed is presentation, and what sits OUTSIDE the ranked list:
+//  - an open eBay row reads "View on eBay" in eBay blue at the same ghost weight
+//    as its neighbours, so a dearer paid row is never the one filled button;
+//  - every paid row (eBay, TCGplayer) carries the "Paid link" tag, as the card
+//    table's rows already did;
+//  - under each product's list, a "Search eBay for <product>" line — a search,
+//    not a ranked result, so it claims no price or stock. It is filled only when
+//    no store has an open offer, where eBay sellers are the only route left.
 
 /** Groups with an OPEN offer — what may be priced in structured data or a CTA. */
 export function pricedPreorderGroups(groups: SealedGroup[]): SealedGroup[] {
@@ -74,6 +88,9 @@ export function PreorderPriceTable({
   now?: number;
 }) {
   const pageType = page === "/sets/radiance" ? "set_hub" : "radiance_preorders";
+  // EPN customid segment for the per-product search line, one per page.
+  const searchSource = page === "/sets/radiance" ? "set-hub-product" : "preorders-product";
+  const label = ebayLabel(country);
   const shown = preorderTableGroups(groups);
   if (shown.length === 0) return null;
 
@@ -124,6 +141,8 @@ export function PreorderPriceTable({
                     isOpen && headline && headline.priceCents > 0
                       ? Math.round(((l.priceCents - headline.priceCents) / headline.priceCents) * 100)
                       : 0;
+                  const isEbay = l.retailer.startsWith("ebay");
+                  const paid = isPaidLink(affiliateUrl(l.url, l.retailer, page));
                   return (
                     <li
                       key={`${g.groupKey}-${l.retailer}`}
@@ -139,6 +158,7 @@ export function PreorderPriceTable({
                             {offerStockLabel(state, true)}
                           </span>
                           <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
+                          {paid && <PaidLinkTag />}
                         </span>
                       </span>
                       <span className="flex shrink-0 items-center gap-3">
@@ -162,20 +182,52 @@ export function PreorderPriceTable({
                           // lnum only: tabular figures widen Inter's hyphen ('Pre -order').
                           // A sold-out or unconfirmed offer keeps its link (the store
                           // may restock) but loses the button: no emphasis on a
-                          // purchase that probably cannot be made.
+                          // purchase that probably cannot be made. An open eBay row
+                          // is the same size and weight in eBay blue (2026-09-26).
                           className={
-                            isOpen
-                              ? "btn-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
-                              : "px-2.5 py-1 text-xs text-slate-500 underline-offset-2 hover:underline"
+                            !isOpen
+                              ? "px-2.5 py-1 text-xs text-slate-500 underline-offset-2 hover:underline"
+                              : isEbay
+                                ? "btn-ebay-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
+                                : "btn-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
                           }
                         >
-                          {isOpen ? "Pre-order" : "View"}
+                          {!isOpen ? "View" : isEbay ? "View on eBay" : "Pre-order"}
                         </OutboundLink>
                       </span>
                     </li>
                   );
                 })}
               </ul>
+              {/* OUTSIDE the ranked <ul> on purpose: a search of eBay, not a
+                  result, so it can never read as a row of the comparison. */}
+              <div
+                data-ebay-search
+                className={`flex items-center gap-2 border-t border-ink-800 ${headline ? "px-4" : "p-3"}`}
+              >
+                <PaidLinkTag className="shrink-0" />
+                <OutboundLink
+                  href={ebaySearchUrl(country, ebaySealedQuery(g.name, g.productType), searchSource)}
+                  retailer="ebay_search"
+                  country={country}
+                  kind="sealed"
+                  cardName={g.name}
+                  pageType={pageType}
+                  surface="ebay_search"
+                  className={
+                    headline
+                      ? "flex min-h-11 min-w-0 flex-1 items-center justify-between gap-3 text-sm text-sky-300 underline-offset-2 hover:underline"
+                      : "btn-ebay min-w-0 flex-1"
+                  }
+                >
+                  <span className="min-w-0">
+                    Search {label} for {g.name}
+                  </span>
+                  <span aria-hidden className="shrink-0">
+                    →
+                  </span>
+                </OutboundLink>
+              </div>
             </section>
           );
         })}
@@ -188,12 +240,16 @@ export function PreorderPriceTable({
         days. Pre-order prices move before release, and store terms
         differ, so confirm both at checkout.
       </p>
-      {/* Store links here are affiliate-tagged (affiliateUrl), so this block carries
-          its own disclosure — AffiliateDisclosure only speaks for eBay/TCGplayer. */}
+      {/* The per-link half of the disclosure is the "Paid link" tag on each paid
+          row and search line; this is the plain-language half, then the network
+          disclosure for the eBay and TCGplayer links (2026-09-26). It also says
+          what the eBay search lines are, since they sit inside each product. */}
       <p className="mt-2 text-[11px] leading-snug text-slate-400">
-        Some store links above are affiliate links. If you pre-order through one we may earn a commission, at no
-        extra cost to you. It never affects the ranking — these are sorted purely by price and stock.
+        Links marked &ldquo;Paid link&rdquo; earn us a commission if you buy through them, at no extra cost to you.
+        Every row above is sorted purely by price and stock, whether it pays us or not. The separate &ldquo;Search
+        eBay&rdquo; links are searches of eBay, not ranked results.
       </p>
+      <AffiliateDisclosure partner="both" tight />
     </div>
   );
 }

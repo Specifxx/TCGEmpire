@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPreorderGroups } from "@/lib/sealed-import";
 import { getDisplayCurrency } from "@/lib/get-country";
 import { PreorderPriceTable, preorderTableGroups } from "@/components/PreorderPriceTable";
+import { RadianceEbayPanel } from "@/components/RadianceEbayPanel";
 import { HubFaq } from "@/components/HubFaq";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import type { Country } from "@/lib/country";
@@ -153,6 +154,12 @@ export async function RadianceHub({ country }: { country: Country }) {
             No Radiance pre-orders are tracked in your market yet. <Link href="/radiance-preorders" className="text-brand-300 underline-offset-2 hover:underline">Check the full pre-order comparison →</Link>
           </p>
         )}
+        {/* "Also on eBay" (2026-09-26, "Pushing eBay clicks" in DECISIONS.md):
+            the same panel /radiance-preorders carries, directly under the store
+            table or its empty state — beside the ranking, never in it. The
+            country is the server's (the set page reads it per request), so the
+            hrefs are built here. */}
+        <RadianceEbayPanel country={country} pageType="set_hub" besideRanking={listed.length > 0} className="mt-4" />
         <Link href="/radiance-preorders" className="mt-3 inline-block text-sm font-semibold text-brand-300 underline-offset-2 hover:underline">
           Compare every store&apos;s pre-order price →
         </Link>

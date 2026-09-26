@@ -135,7 +135,8 @@ export default async function AboutPage() {
             {SITE_NAME} is funded by advertising and by affiliate commissions: some outbound links to
             retailers (such as eBay, Amazon and TCGplayer) are affiliate links, and we may earn a small
             commission if you buy through them — at no extra cost to you. This never changes the prices we
-            show or the order results appear in: the cheapest option is always shown first, full stop.
+            show or the order of a price comparison: in every ranked list the cheapest option comes first,
+            full stop. We also link to eBay outside those lists, always labelled.
             You can read the details in our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">Privacy Policy</Link>.
           </p>

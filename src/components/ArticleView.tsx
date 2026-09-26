@@ -31,6 +31,9 @@ import { carriesRadiancePreorderCta, isBeforeRadianceRelease, RADIANCE_CALLOUT_S
 import { RadiancePreorderCta } from "./RadiancePreorderCta";
 import { BanListTable } from "./BanListTable";
 import { BANLIST_SLUG } from "@/lib/banlist";
+import { EbayCardSearchRow, EbayCountryLink } from "./EbayCountryLink";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
+import { isCurrentSetCode } from "@/lib/constants";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -177,6 +180,24 @@ function CardCloseUpFig({ cu, card }: { cu: ArticleCloseUp; card?: CardTileData 
   );
 }
 
+// Per-card eBay searches under a gallery (2026-09-26, "Pushing eBay clicks" in
+// DECISIONS.md): only a SMALL gallery (2–6 cards) whose every card is from a
+// current set (lib/constants.ts isCurrentSetCode: unreleased, or out under 45
+// days). That is the spoiler post — a handful of just-revealed cards, and a
+// reader asking where each one can be found. A long list or a gallery of older
+// cards gets nothing: the tile's own QuickView and card page are the better
+// next step there, and a wall of links under 12 tiles reads as a link farm.
+const GALLERY_EBAY_MIN = 2;
+const GALLERY_EBAY_MAX = 6;
+function galleryHasEbaySearch(embed: ArticleEmbed, cards: CardTileData[]): boolean {
+  return (
+    !embed.filterable &&
+    cards.length >= GALLERY_EBAY_MIN &&
+    cards.length <= GALLERY_EBAY_MAX &&
+    cards.every((c) => isCurrentSetCode(c.setCode))
+  );
+}
+
 // One gallery section: title + note + CardTile grid, or (for the self-populating
 // chase mode) an honest "fills as reveals land" placeholder instead of an empty box.
 function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileData[] }) {
@@ -193,6 +214,9 @@ function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileDa
               <CardTile key={c.id} card={c} />
             ))}
           </div>
+        )}
+        {galleryHasEbaySearch(embed, cards) && (
+          <EbayCardSearchRow names={cards.map((c) => c.name)} source="gallery-card" pageType="article" />
         )}
       </section>
     );
@@ -576,6 +600,11 @@ export async function ArticleView({ article }: { article: Article }) {
           moment the set ships, and getPreorderGroups() (which the page itself
           reads) returns [] from then on, so this keeps pointing at a live page
           rather than an empty one — no separate expiry to remember here. */}
+      {/* The second button (2026-09-26, "Pushing eBay clicks" in DECISIONS.md):
+          an eBay search beside the comparison, for the reader who would rather
+          buy there. Ghost weight in eBay blue, so the store comparison stays
+          the primary; client-localised (EbayCountryLink) because this page is
+          ISR and cookie-free; its disclosure sits directly under both. */}
       {article.tags.includes("radiance") && cta.href !== "/radiance-preorders" && (
         <section className="card-surface mt-8 flex flex-wrap items-center justify-between gap-3 border-brand-500/30 bg-brand-500/5 p-5">
           <div>
@@ -584,7 +613,18 @@ export async function ArticleView({ article }: { article: Article }) {
               Opening prices already differ a lot between stores — see the real spread before you order.
             </p>
           </div>
-          <Link href="/radiance-preorders" className="btn-primary max-w-full text-center">Compare Radiance preorder prices</Link>
+          <div className="flex max-w-full flex-wrap gap-2">
+            <Link href="/radiance-preorders" className="btn-primary max-w-full text-center">Compare Radiance preorder prices</Link>
+            <EbayCountryLink
+              query="Riftbound Radiance"
+              source="article-preorder-end"
+              label="Search {ebay} for Radiance"
+              pageType="article"
+              surface="preorder_cta_ebay"
+              className="btn-ebay-ghost max-w-full text-center"
+            />
+          </div>
+          <AffiliateDisclosure partner="ebay" tight className="basis-full" />
         </section>
       )}
 

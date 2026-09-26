@@ -164,7 +164,7 @@ export default function PrivacyPage() {
           <p>
             Some outbound links to retailers (such as eBay, Amazon and TCGplayer) are affiliate
             links. If you buy through them we may earn a commission at no extra cost to you. This
-            never affects the prices we show or the order in which results appear.
+            never affects the prices we show or the order in which a price comparison is ranked.
           </p>
         </section>
 

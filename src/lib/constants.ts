@@ -464,6 +464,33 @@ export function isPreorderSetCode(code: string | null | undefined, now: Date = n
   return Number.isNaN(released) || released > now.getTime();
 }
 
+// How long after release a set still counts as "current" for isCurrentSetCode.
+// Six weeks and a bit: the stretch where a new set's singles are what people
+// are actively hunting, well inside PRICE_PRIORITY_WINDOW_DAYS.
+export const CURRENT_SET_WINDOW_DAYS = 45;
+
+/**
+ * Is this set the one people are buying into right now — not yet released, or
+ * released within the last CURRENT_SET_WINDOW_DAYS? (2026-09-26, "Pushing eBay
+ * clicks" in DECISIONS.md.) Gates the per-card eBay searches under a small
+ * article gallery: for a spoiler post's handful of new cards, a reader wants to
+ * know where each one can be found; for a gallery of older cards the card page's
+ * own comparison is the better next step.
+ *
+ * Date-driven and set-agnostic, like isPreorderSetCode above: an unknown code,
+ * or a set with no release date that is not a pre-order, is not current.
+ */
+export function isCurrentSetCode(code: string | null | undefined, now: Date = new Date()): boolean {
+  if (!code) return false;
+  if (isPreorderSetCode(code, now)) return true;
+  const releasedOn = setByCode(code)?.releasedOn;
+  if (!releasedOn) return false;
+  const released = Date.parse(`${releasedOn}T00:00:00Z`);
+  if (Number.isNaN(released)) return false;
+  const at = now.getTime();
+  return released <= at && at - released <= CURRENT_SET_WINDOW_DAYS * 86_400_000;
+}
+
 /**
  * Does /sets/<slug> have something worth linking to? Every released set does; a
  * comingSoon set only once it carries `hubReady` (a real content hub, indexable

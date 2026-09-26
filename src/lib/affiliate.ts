@@ -296,6 +296,19 @@ export function riftboundEbayQuery(query: string): string {
   return /\briftbound\b/i.test(clean) ? clean : `Riftbound ${clean}`;
 }
 
+// The eBay keywords for a SEALED product's search (2026-09-26, "Pushing eBay
+// clicks" in DECISIONS.md). riftboundEbayQuery, plus one fix for booster boxes:
+// UK and EU sellers title them "Booster Display", so "Radiance Booster Box"
+// found only half the market there. eBay reads "(a,b)" as a OR b, so the words
+// "booster box" become "booster (box,display)". Applied AFTER riftboundEbayQuery
+// on purpose — that helper drops commas, which would break the OR group. Every
+// other product type is searched by its name as it stands.
+export function ebaySealedQuery(name: string, productType: string): string {
+  const q = riftboundEbayQuery(name);
+  if (productType !== "Booster Box") return q;
+  return q.replace(/\b(booster)\s+box\b/gi, "$1 (box,display)");
+}
+
 // An affiliate-tagged eBay SEARCH on the visitor's own marketplace. `source` is
 // the placement segment that reaches EPN's customid (see affiliateSubId above),
 // so reports can answer "which surface earned?" rather than only "did eBay

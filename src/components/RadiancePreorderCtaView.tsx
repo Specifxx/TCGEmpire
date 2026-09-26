@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCountry } from "./CountryProvider";
 import { NewsletterSignup } from "./NewsletterSignup";
+import { OutboundLink } from "./OutboundLink";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { formatMoney } from "@/lib/format";
 import { currencyOf } from "@/lib/country";
+import { ebayLabel, ebaySearchUrl } from "@/lib/affiliate";
 import { trackEvent } from "@/lib/analytics";
 import { readEntrySource } from "@/lib/entry-source";
 import type { RadianceBoxPrices } from "@/lib/radiance-cta";
@@ -48,6 +52,9 @@ export function RadiancePreorderCtaView({
         </span>
         <span className="shrink-0 font-semibold text-gold">Compare every store →</span>
       </Link>
+      {/* The "top" placement stays internal-only: it sits above the TL;DR, and
+          an affiliate line there would lead the post with a paid link. */}
+      {placement === "section" && <RadianceCtaEbayLine />}
       {withSignup && (
         <div className="mt-3">
           <NewsletterSignup
@@ -63,5 +70,39 @@ export function RadiancePreorderCtaView({
         </div>
       )}
     </aside>
+  );
+}
+
+// The eBay line under the CTA's "section" placement (2026-09-26, "Pushing eBay
+// clicks" in DECISIONS.md). A SIBLING of the pre-order link, never inside it:
+// the link above compares stores and this is a plain search of eBay for the
+// reader who would rather buy there, with its disclosure directly under it.
+// Client-side so it follows the visitor's market on the ISR article pages,
+// which never read a cookie on the server. After release (`released`, from
+// RadiancePreorderCta's post-release branch) there is nothing left to
+// pre-order, so it offers singles only.
+//
+// page_type follows the path: the same block renders on the Radiance posts and
+// on /sets/radiance, and a set-page click must not report as an article's.
+export function RadianceCtaEbayLine({ released = false }: { released?: boolean }) {
+  const { country } = useCountry();
+  const pathname = usePathname() ?? "";
+  const label = ebayLabel(country);
+  return (
+    <div data-radiance-cta-ebay className="mt-1">
+      <OutboundLink
+        href={ebaySearchUrl(country, "Riftbound Radiance", "preorder-cta")}
+        retailer="ebay_search"
+        country={country}
+        pageType={pathname.startsWith("/sets/") ? "set_hub" : "article"}
+        surface="preorder_cta_ebay"
+        className="tap-link min-h-11 text-sm text-sky-300 underline-offset-2 hover:underline"
+      >
+        {released
+          ? `Or search ${label} for Radiance singles →`
+          : `Or search ${label} for Radiance singles and sealed →`}
+      </OutboundLink>
+      <AffiliateDisclosure partner="ebay" tight />
+    </div>
   );
 }

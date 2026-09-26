@@ -7,6 +7,9 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { PreorderPriceTable, pricedPreorderGroups, preorderTableGroups } from "@/components/PreorderPriceTable";
+import { EbaySearchPanel } from "@/components/EbaySearchPanel";
+import { RadianceEbayPanel } from "@/components/RadianceEbayPanel";
+import { ebayLabel, ebaySealedQuery, ebaySearchUrl } from "@/lib/affiliate";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { setByCode, isPreorderSetCode } from "@/lib/constants";
@@ -113,6 +116,7 @@ export default async function RadiancePreordersPage() {
   // offer at all) feeds the visible table, which shows sold-out stores too.
   const priced = pricedPreorderGroups(groups);
   const listed = preorderTableGroups(groups);
+  const ebay = ebayLabel(country);
 
   const ld = ldJson(
     webPage({
@@ -168,9 +172,33 @@ export default async function RadiancePreordersPage() {
       </h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
         Nothing has shipped yet, so every store is simply picking an opening price — and they are picking very
-        different ones. Below is every Radiance product our tracked {info.adjective} stores are taking pre-orders on,
-        cheapest first, in {currency}. Prices refresh daily.
+        different ones. The price lists below cover every Radiance product our tracked {info.adjective} stores are
+        taking pre-orders on, each sorted cheapest first, in {currency}. Prices refresh daily.
       </p>
+
+      {/* eBay, before the ranking but visibly not part of it (2026-09-26,
+          "Pushing eBay clicks" in DECISIONS.md). Reddit and search visitors come
+          here for pre-orders, where a store is usually cheaper, so the eBay rows
+          inside the table rarely get the click; this strip offers eBay to the
+          reader who prefers it, and its sub-line says it is outside the ranking.
+          Only above a real table: with nothing listed there is no ranking below
+          to be separate from, and "Also on eBay" under the empty state covers it. */}
+      {stillUpcoming && listed.length > 0 && (
+        <EbaySearchPanel
+          variant="strip"
+          heading={`Prefer eBay? Search ${ebay} for Radiance booster boxes and displays.`}
+          sub="Not part of the store price ranking below."
+          country={country}
+          pageType="radiance_preorders"
+          className="mt-4"
+          links={[
+            {
+              label: "Search eBay →",
+              href: ebaySearchUrl(country, ebaySealedQuery("Radiance Booster Box", "Booster Box"), "preorders-strip"),
+            },
+          ]}
+        />
+      )}
 
       {listed.length > 0 ? (
         <div className="mt-4">
@@ -218,6 +246,11 @@ export default async function RadiancePreordersPage() {
           )}
         </div>
       )}
+
+      {/* "Also on eBay", directly under the ranking (or the empty-state card) and
+          in every state of the page — pre-orders listed, none tracked yet, and
+          released (2026-09-26). Beside the comparison, never in it. */}
+      <RadianceEbayPanel country={country} pageType="radiance_preorders" besideRanking={listed.length > 0} className="mt-6" />
 
       {/* Launch capture, right under the prices (2026-09-23). A visitor who is
           not ready to order today, or whose market has no pre-orders tracked

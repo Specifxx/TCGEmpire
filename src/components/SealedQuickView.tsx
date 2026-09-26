@@ -7,7 +7,7 @@ import { OutboundLink } from "./OutboundLink";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
-import { affiliateUrl, ebaySearchUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebaySearchUrl, riftboundEbayQuery } from "@/lib/affiliate";
 import { formatMoney } from "@/lib/format";
 import { sealedImageAlt } from "@/lib/image-alt";
 import { Dialog } from "./ui/Dialog";
@@ -79,7 +79,10 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
     ...new Map(listings.map((l) => [l.retailer, { retailer: l.retailer, retailerName: l.retailerName }])).values(),
   ];
   const lowest = group.lowestPriceCents;
-  const ebayHref = ebaySearchUrl(country, group.name, "sealed-quickview");
+  // "Riftbound" exactly once (2026-09-26): a bare product name like "Radiance
+  // Booster Box" also matched Pokémon's Astral Radiance on eBay.
+  const ebayQuery = riftboundEbayQuery(group.name);
+  const ebayHref = ebaySearchUrl(country, ebayQuery, "sealed-quickview");
 
   return (
     <div className="max-h-[88vh] overflow-hidden rounded-lg border border-ink-700 bg-ink-900 shadow-2xl">
@@ -144,7 +147,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
             {listings.length === 0 ? (
               <div className="p-4 text-center text-sm text-slate-400">
                 <p>No store is listing this right now.</p>
-                <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" className="btn-primary mt-3 inline-flex text-xs">
+                <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="btn-primary mt-3 inline-flex text-xs">
                   Search on eBay →
                 </OutboundLink>
               </div>
@@ -188,7 +191,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
 
             {listings.length > 0 && (
               <p className="mt-2 border-t border-ink-800 pt-2 text-right text-[11px]">
-                <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" className="font-semibold text-brand-400 hover:underline">
+                <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="font-semibold text-brand-400 hover:underline">
                   Search eBay for more listings →
                 </OutboundLink>
               </p>

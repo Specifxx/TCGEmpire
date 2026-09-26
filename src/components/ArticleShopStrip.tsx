@@ -36,7 +36,9 @@ export function ArticleShopStrip({
         <h2 className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-white">
           <span aria-hidden>🛒</span> Shop this guide
         </h2>
-        <span className="chip bg-gold/20 text-[10px] font-bold uppercase tracking-wider text-gold">eBay</span>
+        {/* eBay blue, not gold (2026-09-26): gold marks Premium, and this chip
+            names the partner the strip searches. */}
+        <span className="chip bg-[#0064d2]/20 text-[10px] font-bold uppercase tracking-wider text-sky-300">eBay</span>
       </div>
       <ul className="divide-y divide-ink-800">
         {items.map((it, i) => (

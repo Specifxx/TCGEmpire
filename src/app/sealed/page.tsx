@@ -5,7 +5,8 @@ import { soldOutEverywhere } from "@/lib/sealed-offers";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { gbpCentsToEur } from "@/lib/fx";
-import { affiliateUrl, ebaySearchUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebaySearchUrl, riftboundEbayQuery } from "@/lib/affiliate";
+import { newestReleasedSet } from "@/lib/constants";
 import { OutboundLink } from "@/components/OutboundLink";
 import { Reveal } from "@/components/Reveal";
 import { SealedFilters } from "@/components/SealedFilters";
@@ -54,13 +55,21 @@ const AMAZON_HOSTS: Record<string, string> = {
   US: "amazon.com",
   UK: "amazon.co.uk",
 };
-const SEALED_SEARCHES = [
-  { label: "Vendetta sealed", q: "Riftbound Vendetta sealed" },
-  { label: "Booster boxes", q: "Riftbound booster box" },
-  { label: "Booster packs", q: "Riftbound booster pack" },
-  { label: "Proving Grounds kits", q: "Riftbound Proving Grounds" },
-  { label: "All sealed Riftbound", q: "Riftbound TCG sealed" },
-];
+// The first search follows the newest released set (2026-09-26, "Pushing eBay
+// clicks" in DECISIONS.md) instead of naming one: it read "Vendetta sealed"
+// and would have kept pointing at Vendetta after Radiance shipped. A function,
+// not a constant, for the reason newestReleasedSet() takes `now`: a module-level
+// value would freeze the set for the life of the process.
+function sealedSearches(now: Date = new Date()): { label: string; q: string }[] {
+  const current = newestReleasedSet(now);
+  return [
+    ...(current ? [{ label: `${current.name} sealed`, q: riftboundEbayQuery(`${current.name} sealed`) }] : []),
+    { label: "Booster boxes", q: "Riftbound booster box" },
+    { label: "Booster packs", q: "Riftbound booster pack" },
+    { label: "Proving Grounds kits", q: "Riftbound Proving Grounds" },
+    { label: "All sealed Riftbound", q: "Riftbound TCG sealed" },
+  ];
+}
 
 // Internal search-result views (?q=) are noindex'd (Google/Bing discourage indexing
 // site-search results); every variant canonicalises to the clean /sealed so crawl
@@ -324,12 +333,16 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
           site, and eBay/Amazon both carry them. Affiliate-tagged per market. */}
       <section className="card-surface mt-8 p-5">
         <h2 className="text-lg font-extrabold text-white">More sealed deals on the big marketplaces</h2>
+        {/* Reworded 2026-09-26: it said eBay and Amazon "often have stock (or
+            better prices) when stores don't". Nothing here measures either
+            against the stores, or knows what they list today, so the copy
+            offers a search and claims neither a price nor stock. */}
         <p className="mt-1 max-w-2xl text-sm text-slate-400">
-          Boxes sell out and restock constantly — eBay and Amazon often have stock (or better
-          prices) when stores don&apos;t. Worth a look before you buy.
+          Boxes sell out and restock constantly, so it can be worth searching eBay and Amazon as well
+          before you buy.
         </p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {SEALED_SEARCHES.map((x) => {
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {sealedSearches().map((x) => {
             const amazonHost = AMAZON_HOSTS[country] ?? AMAZON_HOSTS.AU;
             return (
               <div key={x.q} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2.5">

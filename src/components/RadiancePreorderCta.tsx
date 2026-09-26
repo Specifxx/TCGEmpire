@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { isBeforeRadianceRelease } from "@/lib/sets/radiance";
 import { getRadianceBoxPrices } from "@/lib/radiance-cta";
-import { RadiancePreorderCtaView } from "./RadiancePreorderCtaView";
+import { RadianceCtaEbayLine, RadiancePreorderCtaView } from "./RadiancePreorderCtaView";
 
 // "Radiance booster box pre-orders from US$129.97, compare every store →" —
 // the block that routes Radiance search traffic (our #1 page is the leaked
@@ -23,17 +23,22 @@ export async function RadiancePreorderCta({
   withSignup?: boolean;
 }) {
   if (!isBeforeRadianceRelease()) {
+    // The "section" placement keeps its eBay line after release (2026-09-26,
+    // "Pushing eBay clicks" in DECISIONS.md), singles only — see
+    // RadianceCtaEbayLine. A sibling of the link, never nested in it.
     return (
-      <Link
-        href="/sets/radiance#price-guide"
-        data-radiance-cta={placement}
-        className="not-prose my-6 flex items-center justify-between gap-3 rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3 text-sm text-slate-200 hover:border-brand-500/60"
-      >
-        <span>
-          <strong className="text-brand-300">Radiance is out.</strong> Every card&apos;s live price, cheapest store first.
-        </span>
-        <span className="shrink-0 font-semibold text-brand-300">See Radiance prices →</span>
-      </Link>
+      <div data-radiance-cta={placement} className="not-prose my-6">
+        <Link
+          href="/sets/radiance#price-guide"
+          className="flex items-center justify-between gap-3 rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3 text-sm text-slate-200 hover:border-brand-500/60"
+        >
+          <span>
+            <strong className="text-brand-300">Radiance is out.</strong> Every card&apos;s live price, cheapest store first.
+          </span>
+          <span className="shrink-0 font-semibold text-brand-300">See Radiance prices →</span>
+        </Link>
+        {placement === "section" && <RadianceCtaEbayLine released />}
+      </div>
     );
   }
   const prices = await getRadianceBoxPrices().catch(() => ({}));
