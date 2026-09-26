@@ -15,6 +15,7 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { setByCode, isPreorderSetCode } from "@/lib/constants";
 import { isBeforeRadianceRelease, RADIANCE_PRODUCTS, RADIANCE_MERCH_DRAW } from "@/lib/sets/radiance";
 import { SITE_URL } from "@/lib/site";
+import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /radiance-preorders — the same box, at every store, before it ships.
@@ -251,6 +252,14 @@ export default async function RadiancePreordersPage() {
           in every state of the page — pre-orders listed, none tracked yet, and
           released (2026-09-26). Beside the comparison, never in it. */}
       <RadianceEbayPanel country={country} pageType="radiance_preorders" besideRanking={listed.length > 0} className="mt-6" />
+
+      {/* The Radiance release alert (2026-09-26, lib/release-alerts.ts): one
+          field, two emails at most — when singles get store prices, and if a
+          sold-out pre-order here restocks. Separate from the release-day
+          newsletter capture below, which stays as it was. */}
+      {setByCode(SET_CODE)?.comingSoon && (
+        <ReleaseAlertSignup setCode={SET_CODE} setName="Radiance" source="preorders" className="mt-6 max-w-lg" />
+      )}
 
       {/* Launch capture, right under the prices (2026-09-23). A visitor who is
           not ready to order today, or whose market has no pre-orders tracked

@@ -14070,3 +14070,56 @@ production), Playwright at 390×844 (DPR 2) and 1440×900: homepage, /browse,
 no horizontal scroll; the card page's cheapest price and Buy sit at y≈510 on a
 844px screen; the sticky bar is hidden on load and over the comparison, shown
 past it. 7 new tests (`tests/card-art-thumbs.test.ts`).
+
+## Blog price chips and the Radiance release alert — 2026-09-26
+
+**Why.** Owner's brief: Radiance posts are 3 of the top 7 pages and the set
+releases on 2026-10-23; blog readers should become price users, and Radiance
+demand should be captured before release.
+
+**Price chips.** `ArticleView` now resolves card mentions at ISR render time
+(`lib/card-mentions-server.ts`, articles stay `revalidate = 86400`): the first
+unlinked mention of each known card name is linked to its canonical printing
+(base, lowest collector number), and every `/card/…` link in the body renders as
+`CardPriceChip` — the name plus the cheapest price in the VIEWER's market,
+opening the existing QuickView. Posts linking two or more cards end with
+"Prices for cards in this post" (`PostPriceTable`). Rules
+(`lib/content/card-mentions.ts`): exact, case-sensitive names of TWO OR MORE
+words only — single-word card names ("Recall", "Stun") are ordinary English in a
+strategy post; never inside headings, images, shortcodes, code or an existing
+link. The name index is one narrow cached read a day (`card-name-index-v1`, 24h,
+not CONTENT_TAG); each post adds one `slug IN (…)` tile read (≤60 rows) per
+render. The chip's figure is the card tiles' localised price
+(`useCountry().price` over the importer's per-market cheapest columns, which
+apply computeMarket's exclusions) — no per-request store read; the card page's
+comparison remains the per-store view.
+
+**Release alert.** A new alert TYPE, `SetReleaseAlert` (additive table; DDL in
+`prisma/migrations-sql/2026-09-26_set_release_alert.sql`), not a PriceAlert:
+most signups name no card. One field (`ReleaseAlertSignup`) on every Radiance
+post (right after the body), `/radiance-preorders` (under the prices) and every
+Radiance card page; on a Radiance card with no listing in the visitor's market
+it replaces the empty comparison: "No store has listed this yet — get told when
+one does". Consent line in the price-alert modal's words ("… Unsubscribe
+anytime."), plus "two emails at most". The release-day newsletter captures on
+those pages are unchanged (tests pin them; existing subscribers still get
+`lib/release-day.ts`'s email).
+- Sends (`lib/release-alerts.ts`, `/api/cron/release-alerts`, a new
+  refresh-prices.yml step after the paid alerts, scheduled imports only): once
+  when singles of the set have a store price in the subscriber's market (a
+  card-page signup waits for that card), and once when a pre-order product every
+  store showed sold out (fresh reads) has an open offer again — the "was sold
+  out" memory is a `Counter` row per product and market, written only when that
+  state flips. One email per address per event, `AlertMute` respected,
+  `RELEASE_ALERT_SEND_CAP` 40 per run on the shared Resend quota (the rest wait
+  for the next run), List-Unsubscribe one-click; unsubscribe is POST-only
+  (`/alerts/release` → `/api/alerts/release/unsubscribe`). No affiliate links.
+- Writes: the visitor's own signup; the run marking rows told; the Counter
+  flips. Admin: "Radiance release alert" on /admin/accounts (distinct emails).
+
+**Verified** on the local seed DB (never production) at 390px: the HEARTSTEEL
+post renders chips and the end table with no horizontal scroll; a Radiance card
+with no listings shows the signup in the comparison, and a submission saved a
+card-scoped row; the cron returns 401 without the secret, counts 3 due in a dry
+run once a card is priced, and with no mail key marks nothing told. 11 new
+tests (`tests/card-mentions.test.ts`, `tests/release-alerts.test.ts`).

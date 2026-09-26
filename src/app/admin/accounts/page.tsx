@@ -63,6 +63,7 @@ export default async function AccountsAdminPage({
   let daily: { day: string; count: number }[] = [];
   let bySource: [string, number][] = [];
   let unclaimedAlertEmails = 0;
+  let releaseAlertEmails = 0;
   let error = false;
   try {
     // Never count synthetic seed accounts (dev-reset personas + the marketplace test
@@ -109,7 +110,7 @@ export default async function AccountsAdminPage({
                 ? { OR: [{ lastActiveAt: { gte: d7 } }, { lastActiveAt: null, lastLoginAt: { gte: d7 } }] }
                 : {};
     const where = { AND: [notSeed, search, quick] };
-    const [list, all, verified, premium, plus, active7, new7, new30, recent30, anonEmails] = await Promise.all([
+    const [list, all, verified, premium, plus, active7, new7, new30, recent30, anonEmails, releaseEmails] = await Promise.all([
       prisma.user.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -149,10 +150,18 @@ export default async function AccountsAdminPage({
       prisma.$queryRaw<{ n: bigint }[]>`
         SELECT COUNT(DISTINCT email) AS n FROM "PriceAlert" WHERE "userId" IS NULL
       `,
+      // Radiance release-alert signups (lib/release-alerts.ts), distinct
+      // addresses. A count only, like the line above. .catch: the table is
+      // created by the deploy's db push, so a page served before it exists
+      // shows 0 rather than failing the whole dashboard.
+      prisma.$queryRaw<{ n: bigint }[]>`
+        SELECT COUNT(DISTINCT email) AS n FROM "SetReleaseAlert" WHERE "setCode" = 'RAD'
+      `.catch(() => [{ n: BigInt(0) }]),
     ]);
     rows = list;
     totals = { all, verified, premium, plus, active7, new7, new30 };
     unclaimedAlertEmails = Number(anonEmails[0]?.n ?? 0);
+    releaseAlertEmails = Number(releaseEmails[0]?.n ?? 0);
     // Bucket by UTC day, zero-filling so a quiet day renders as a gap, not a
     // shorter x-axis (30 entries, oldest first).
     const byDay = new Map<string, number>();
@@ -206,7 +215,7 @@ export default async function AccountsAdminPage({
           "paid" number: they're different revenue per head, so a rise in one and
           a fall in the other is the thing worth seeing, and a single total hides
           exactly that. */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
         <Stat label="Total users" value={num(totals.all)} />
         <Stat label="Email-verified" value={num(totals.verified)} />
         <Stat label="Plus (active)" value={num(totals.plus)} />
@@ -217,6 +226,7 @@ export default async function AccountsAdminPage({
           value={num(unclaimedAlertEmails)}
           sub="distinct alert emails — adopted on signup"
         />
+        <Stat label="Radiance release alert" value={num(releaseAlertEmails)} sub="distinct emails signed up" />
       </div>
 
       {/* Signups over time + where they came from. The bar strip answers "did

@@ -384,6 +384,13 @@ longer lands on its entry.
   in QuickView and its email modal too. [2026-09-25](../DECISIONS.md#L12574),
   [2026-09-25](../DECISIONS.md#L13128), [2026-09-25](../DECISIONS.md#L13394),
   [2026-09-26](../DECISIONS.md#L13640)
+- **Release alerts are their own type** (`SetReleaseAlert`, Radiance first):
+  at most two emails per address and set — singles get a store price in its
+  market (a card-page signup waits for that card), a sold-out pre-order
+  restocks — capped per run, POST-only unsubscribe, no affiliate links. Blog
+  and guide card mentions link to the card with a viewer-market price chip,
+  resolved at ISR time; single-word card names are never auto-linked.
+  [2026-09-26](../DECISIONS.md#L14074)
 - **Postage is measured, never guessed:** Best Basket, portfolio
   replacement cost and store pages price delivery with `shippingFor()`
   (lib/shipping.ts) from `src/lib/shipping-rates.json`, built by

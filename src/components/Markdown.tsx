@@ -1,6 +1,11 @@
 import React from "react";
 import { Picture } from "./Picture";
 import { headingId } from "@/lib/toc";
+import { CardPriceChip } from "./CardPriceChip";
+import type { CardTileData } from "./CardTile";
+
+/** Card pages linked in the body → tile data, for inline price chips (ArticleView). */
+export type MarkdownCards = Record<string, CardTileData>;
 
 // Minimal, dependency-free markdown renderer for our own article content.
 // Supports: ## / ### headings (with stable anchor ids, so the article TOC and
@@ -14,7 +19,7 @@ import { headingId } from "@/lib/toc";
 // in prose, and every one of the AI-visibility target queries ("top 10 Riftbound
 // TCG marketplaces", "Riftbound card price comparison") is answered by a table.
 
-function inline(text: string, kp: string): React.ReactNode[] {
+function inline(text: string, kp: string, cards?: MarkdownCards): React.ReactNode[] {
   const nodes: React.ReactNode[] = [];
   // Order matters: **bold** before *italic* so the double-star wins.
   const re = /(\*\*([^*]+)\*\*)|(\*([^*\n]+)\*)|(\[([^\]]+)\]\(([^)]+)\))|(`([^`]+)`)/g;
@@ -26,12 +31,23 @@ function inline(text: string, kp: string): React.ReactNode[] {
     if (m[1]) {
       // Recurse so nested marks render — e.g. **[link](url)** is a linked bold,
       // not the literal "[link](url)" text.
-      nodes.push(<strong key={`${kp}b${i}`} className="font-semibold text-white">{inline(m[2], `${kp}b${i}_`)}</strong>);
+      nodes.push(<strong key={`${kp}b${i}`} className="font-semibold text-white">{inline(m[2], `${kp}b${i}_`, cards)}</strong>);
     } else if (m[3]) {
-      nodes.push(<em key={`${kp}i${i}`} className="italic text-slate-200">{inline(m[4], `${kp}i${i}_`)}</em>);
+      nodes.push(<em key={`${kp}i${i}`} className="italic text-slate-200">{inline(m[4], `${kp}i${i}_`, cards)}</em>);
     } else if (m[5]) {
       const href = m[7];
       const ext = /^https?:/i.test(href);
+      const card = cards?.[href];
+      if (card) {
+        nodes.push(
+          <CardPriceChip key={`${kp}l${i}`} card={card}>
+            {inline(m[6], `${kp}l${i}_`)}
+          </CardPriceChip>
+        );
+        last = m.index + m[0].length;
+        i++;
+        continue;
+      }
       nodes.push(
         <a
           key={`${kp}l${i}`}
@@ -66,7 +82,7 @@ export function InlineMarkdown({ content }: { content: string }) {
   return <>{inline(content, "il")}</>;
 }
 
-export function Markdown({ content }: { content: string }) {
+export function Markdown({ content, cards }: { content: string; cards?: MarkdownCards }) {
   const lines = content.replace(/\r\n/g, "\n").trim().split("\n");
   const blocks: React.ReactNode[] = [];
   let i = 0;
@@ -165,7 +181,7 @@ export function Markdown({ content }: { content: string }) {
               <tr className="bg-ink-850">
                 {head.map((c, j) => (
                   <th key={j} scope="col" className="border-b border-ink-700 px-3 py-2 font-semibold text-white">
-                    {inline(c, `th${key}-${j}`)}
+                    {inline(c, `th${key}-${j}`, cards)}
                   </th>
                 ))}
               </tr>
@@ -175,7 +191,7 @@ export function Markdown({ content }: { content: string }) {
                 <tr key={ri} className="odd:bg-ink-900/40">
                   {r.map((c, ci) => (
                     <td key={ci} className="border-b border-ink-800 px-3 py-2 align-top text-slate-300">
-                      {inline(c, `td${key}-${ri}-${ci}`)}
+                      {inline(c, `td${key}-${ri}-${ci}`, cards)}
                     </td>
                   ))}
                 </tr>
@@ -196,7 +212,7 @@ export function Markdown({ content }: { content: string }) {
       }
       blocks.push(
         <blockquote key={key} className="my-5 border-l-2 border-brand-500 bg-ink-900/60 px-4 py-3 text-slate-300 sm:max-w-[40rem]">
-          {inline(quoted.join(" "), `q${key++}`)}
+          {inline(quoted.join(" "), `q${key++}`, cards)}
         </blockquote>
       );
       continue;
@@ -207,7 +223,7 @@ export function Markdown({ content }: { content: string }) {
       while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^[-*]\s+/, "")); i++; }
       blocks.push(
         <ul key={key} className="my-3 list-disc space-y-1 pl-5 text-slate-300 sm:max-w-[40rem]">
-          {items.map((it, j) => <li key={j}>{inline(it, `u${key}-${j}`)}</li>)}
+          {items.map((it, j) => <li key={j}>{inline(it, `u${key}-${j}`, cards)}</li>)}
         </ul>
       );
       key++;
@@ -219,7 +235,7 @@ export function Markdown({ content }: { content: string }) {
       while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, "")); i++; }
       blocks.push(
         <ol key={key} className="my-3 list-decimal space-y-1 pl-5 text-slate-300 sm:max-w-[40rem]">
-          {items.map((it, j) => <li key={j}>{inline(it, `o${key}-${j}`)}</li>)}
+          {items.map((it, j) => <li key={j}>{inline(it, `o${key}-${j}`, cards)}</li>)}
         </ol>
       );
       key++;
@@ -228,7 +244,7 @@ export function Markdown({ content }: { content: string }) {
 
     const para: string[] = [];
     while (i < lines.length && lines[i].trim() && !isBreak(lines[i])) { para.push(lines[i].trim()); i++; }
-    blocks.push(<p key={key} className="my-3 leading-relaxed text-slate-300 sm:max-w-[40rem]">{inline(para.join(" "), `p${key++}`)}</p>);
+    blocks.push(<p key={key} className="my-3 leading-relaxed text-slate-300 sm:max-w-[40rem]">{inline(para.join(" "), `p${key++}`, cards)}</p>);
   }
 
   // Reading measure (2026-09-23): phones stay at 15px. From sm the body is 17px

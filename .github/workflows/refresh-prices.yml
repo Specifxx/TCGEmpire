@@ -285,6 +285,26 @@ jobs:
           curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts/paid" -H "Authorization: Bearer $CRON_SECRET" || true
           echo
 
+      - name: Release alerts (Radiance)
+        # The set release alert (lib/release-alerts.ts, 2026-09-26): at most two
+        # emails per signed-up address — once singles of the set get a store
+        # price in their market, once if a sold-out pre-order restocks — capped
+        # at RELEASE_ALERT_SEND_CAP per run on the shared transactional quota.
+        # Same gate as the paid run: after a successful scheduled import, never
+        # on push. The path 404s until the deploy that adds it, which is
+        # harmless (curl || true). Non-fatal, like every alert step.
+        if: ${{ !cancelled() && steps.import.outcome == 'success' && github.event_name != 'push' }}
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret — skipping the release alert run."
+            exit 0
+          fi
+          curl -s --max-time 120 "$SITE_URL/api/cron/release-alerts?set=RAD" -H "Authorization: Bearer $CRON_SECRET" || true
+          echo
+
       - name: Alert baselines after a push re-import (no email)
         # A push re-import follows a matcher change, so the price moves it
         # writes are matching fixes, not market news. Skipping the alert runs

@@ -36,6 +36,8 @@ import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/com
 import { CardMarketsTable } from "@/components/CardMarketsTable";
 import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { CardStickyBuyBar, CardTopBuy } from "@/components/CardMobileBuy";
+import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
+import { RADIANCE_SET_CODE } from "@/lib/sets/radiance";
 import { EbayPanelIntro } from "@/components/EbayPanelIntro";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
@@ -755,6 +757,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // genuine price-trend paragraph below. Same cache key as the chart's own fetch
   // (default take=60), so this never doubles the week's history read.
   const history = await getPriceHistory(card.id, DEFAULT_COUNTRY);
+  // The Radiance release alert (lib/release-alerts.ts) runs while the set is
+  // still "coming soon" in SETS; the signup route refuses any other set.
+  const isRadianceCard = card.setCode === RADIANCE_SET_CODE && !!setByCode(card.setCode)?.comingSoon;
 
   // ── Editorial narrative ────────────────────────────────────────────────────
   // Built by lib/content/card-narrative.ts from this card's OWN market data:
@@ -1218,6 +1223,18 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               ebaySearch={ebaySearch}
               ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
               preRelease={preview}
+              emptyState={
+                isRadianceCard ? (
+                  <ReleaseAlertSignup
+                    setCode={card.setCode}
+                    setName={card.setName}
+                    source="card_unlisted"
+                    cardId={card.id}
+                    cardName={displayName}
+                    heading="No store has listed this yet — get told when one does"
+                  />
+                ) : undefined
+              }
             />
 
             <CardStickyBuyBar rows={rows} displayName={displayName} cardId={card.id} />
@@ -1225,6 +1242,20 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             {/* Price-history chart — free for everyone (AU history; the series is
                 collected on the AU baseline market). */}
             <PriceHistoryChart cardId={card.id} rows={rows} />
+
+            {/* Every Radiance card page carries the release alert (2026-09-26);
+                with no listing in the visitor's market it replaces the empty
+                comparison above instead. */}
+            {isRadianceCard && rows.length > 0 && (
+              <ReleaseAlertSignup
+                setCode={card.setCode}
+                setName={card.setName}
+                source="card"
+                cardId={card.id}
+                cardName={displayName}
+                className="mt-4"
+              />
+            )}
           </section>
 
           {/* ── OUR OWN ANALYSIS ────────────────────────────────────────────

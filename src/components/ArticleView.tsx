@@ -25,7 +25,6 @@ import { ArticleTopValue } from "./ArticleTopValue";
 import { Picture } from "./Picture";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { ScrollDepthTracker } from "./ScrollDepthTracker";
-import { NewsletterSignup } from "./NewsletterSignup";
 import { ArticleSignupCta } from "./ArticleSignupCta";
 import { carriesRadiancePreorderCta, isBeforeRadianceRelease, RADIANCE_CALLOUT_SLUGS } from "@/lib/sets/radiance";
 import { RadiancePreorderCta } from "./RadiancePreorderCta";
@@ -34,6 +33,12 @@ import { BANLIST_SLUG } from "@/lib/banlist";
 import { EbayCardSearchRow, EbayCountryLink } from "./EbayCountryLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { isCurrentSetCode } from "@/lib/constants";
+import { resolveArticleCardMentions } from "@/lib/card-mentions-server";
+import { ReleaseAlertSignup } from "./ReleaseAlertSignup";
+import { NewsletterSignup } from "./NewsletterSignup";
+import { setByCode } from "@/lib/constants";
+import { RADIANCE_SET_CODE } from "@/lib/sets/radiance";
+import { PostPriceTable } from "./CardPriceChip";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -270,6 +275,7 @@ export async function ArticleView({ article }: { article: Article }) {
   // The block itself switches to "see Radiance prices" on release day, so the
   // rule does not expire.
   const preorderCta = carriesRadiancePreorderCta(article);
+  const radianceAlertOpen = !!setByCode(RADIANCE_SET_CODE)?.comingSoon;
 
   // All galleries: `embeds` (positioned in the body via [[embed:N]] markers) plus
   // the legacy single `embed` (always rendered after the body). Close-ups reuse the
@@ -286,7 +292,12 @@ export async function ArticleView({ article }: { article: Article }) {
   // stride of 3. The index is optional (`(?::(\d+))?`) because `shop` takes none:
   // an article has exactly one `shop` array, so there is nothing to index into.
   // An absent group comes back `undefined`, which keeps the stride at 3.
-  const bodyParts = article.body.split(/^\[\[(embed|closeup|shop)(?::(\d+))?\]\]$/m);
+  // Card mentions (2026-09-26): the first unlinked mention of each known card
+  // is linked to its page, and every card link carries an inline price chip in
+  // the viewer's market. Resolved here, at ISR render time.
+  const mentions = await resolveArticleCardMentions(article.body);
+  const cards = mentions.cards;
+  const bodyParts = mentions.body.split(/^\[\[(embed|closeup|shop)(?::(\d+))?\]\]$/m);
   const placed = new Set<number>();
   for (let i = 1; i < bodyParts.length; i += 3) {
     if (bodyParts[i] === "embed") placed.add(parseInt(bodyParts[i + 1], 10));
@@ -505,15 +516,15 @@ export async function ArticleView({ article }: { article: Article }) {
             const afterFirst = second >= 0 ? rest.slice(second + 1) : "";
             return (
               <Fragment key={i}>
-                {intro.trim() ? <Markdown content={intro} /> : null}
+                {intro.trim() ? <Markdown content={intro} cards={cards} /> : null}
                 <ArticleSignupCta placement="article_intro" radianceSeason={radianceSeason} />
-                {firstSection.trim() ? <Markdown content={firstSection} /> : null}
+                {firstSection.trim() ? <Markdown content={firstSection} cards={cards} /> : null}
                 {preorderCta && <RadiancePreorderCta placement="section" withSignup />}
-                {afterFirst.trim() ? <Markdown content={afterFirst} /> : null}
+                {afterFirst.trim() ? <Markdown content={afterFirst} cards={cards} /> : null}
               </Fragment>
             );
           }
-          if (i % 3 === 0) return part.trim() ? <Markdown key={i} content={part} /> : null;
+          if (i % 3 === 0) return part.trim() ? <Markdown key={i} content={part} cards={cards} /> : null;
           if (i % 3 === 2) return null; // the index token — consumed with its kind below
           const n = parseInt(bodyParts[i + 1], 10);
           if (part === "shop") {
@@ -534,6 +545,18 @@ export async function ArticleView({ article }: { article: Article }) {
           single `embed`) — real CardTiles (tap → QuickView popup → card page). */}
       {embeds.map((e, n) => (placed.has(n) ? null : <EmbedGallery key={`tail-${n}`} embed={e} cards={embedsCards[n] ?? []} />))}
       {article.embed && <EmbedGallery embed={article.embed} cards={legacyCards} />}
+
+      {/* Every card the post links, priced in the viewer's market (2026-09-26).
+          Only when the post mentions two or more cards. */}
+      {mentions.ordered.length >= 2 && <PostPriceTable cards={mentions.ordered} />}
+
+      {/* The Radiance release alert (2026-09-26, lib/release-alerts.ts) on
+          EVERY Radiance post, right after the body: two emails at most — when
+          singles get store prices and if sold-out pre-orders restock. The
+          release-day newsletter capture further down is unchanged. */}
+      {article.tags.includes("radiance") && radianceAlertOpen && (
+        <ReleaseAlertSignup setCode={RADIANCE_SET_CODE} setName="Radiance" source="article" className="mt-8" />
+      )}
 
       {/* Per-article eBay affiliate searches — the reader is at peak intent right
           after finishing the guide; this is where a well-ranking page converts. */}

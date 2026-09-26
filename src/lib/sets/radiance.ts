@@ -46,6 +46,8 @@ export const RADIANCE_TAGLINE = "Own the Stage. The World is Watching.";
 // second time, so a launch-day slip can never leave the page and the FAQ
 // disagreeing with each other.
 export const RADIANCE_RELEASE_DATE = "2026-10-23";
+/** Radiance's set code (SETS in lib/constants.ts). */
+export const RADIANCE_SET_CODE = "RAD";
 export const RADIANCE_PREVIEW_START = "2026-09-25";
 export const RADIANCE_PREVIEW_END = "2026-10-09";
 export const RADIANCE_PRERIFT_START = "2026-10-16";

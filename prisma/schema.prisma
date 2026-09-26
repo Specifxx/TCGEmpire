@@ -1676,3 +1676,31 @@ model PriceReport {
   @@index([cardId])
   @@index([sealedGroupKey])
 }
+
+// A "tell me when this set lands" email signup (2026-09-26, Radiance). One field
+// on every Radiance post, /radiance-preorders and every Radiance card page. It
+// is a set-level alert, NOT a PriceAlert: a PriceAlert needs a card and a
+// baseline price, and most signups name no card. lib/release-alerts.ts sends
+// at most two emails per address and set: once when singles get store prices
+// (scope "set": any single of the set; a card id: that card), and once when a
+// sold-out pre-order restocks. Written only by the visitor's explicit signup
+// and by the alert run marking a row told. Additive table (no changes to any
+// existing one) — the deploy's `prisma db push` creates it.
+model SetReleaseAlert {
+  id                String    @id @default(cuid())
+  email             String
+  setCode           String // "RAD"
+  // "set" for a set-wide signup, or the Card.id of the card page it came from.
+  scope             String    @default("set")
+  market            String    @default("US")
+  // Where it was signed up: "article" | "preorders" | "card" | "card_unlisted".
+  source            String?
+  unsubToken        String
+  createdAt         DateTime  @default(now())
+  singlesNotifiedAt DateTime?
+  restockNotifiedAt DateTime?
+
+  @@unique([email, setCode, scope])
+  @@index([setCode])
+  @@index([unsubToken])
+}

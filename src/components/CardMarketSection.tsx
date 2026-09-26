@@ -300,9 +300,13 @@ export function CardPriceComparison({
   ebaySearch,
   ebayQuery,
   preRelease = false,
+  emptyState,
 }: {
   rows: MarketRow[];
   cardId: string;
+  /** Replaces the "No prices found yet" panel when this market has no listing
+   *  at all — a Radiance card page passes its release-alert signup (2026-09-26). */
+  emptyState?: React.ReactNode;
   displayName: string;
   ebaySearch: EbaySearchMap;
   ebayQuery: string;
@@ -424,7 +428,9 @@ export function CardPriceComparison({
           )}
         </div>
 
-        {prices.length === 0 && outOfStock.length === 0 ? (
+        {prices.length === 0 && outOfStock.length === 0 && emptyState ? (
+          <div className="p-3 sm:p-4">{emptyState}</div>
+        ) : prices.length === 0 && outOfStock.length === 0 ? (
           <div className="p-8 text-center text-sm text-slate-400">
             <p className="font-semibold text-white">No prices found yet</p>
             <p className="mt-1">
