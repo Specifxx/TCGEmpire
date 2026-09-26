@@ -15,7 +15,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { clampText, formatMoney, normalizeSearch } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, ebayLabel, ebaySearchUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, ebaySearchUrl, riftboundEbayQuery } from "@/lib/affiliate";
 import { cardCredentials, cardDisplayName, cardSearchName, shortCardName } from "@/lib/card-name";
 import { cardTitle, cardMetaDescription } from "@/lib/card-seo";
 import { aliasesForSlug } from "@/lib/content/card-aliases";
@@ -36,6 +36,7 @@ import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/com
 import { CardMarketsTable } from "@/components/CardMarketsTable";
 import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { EbayPanelIntro } from "@/components/EbayPanelIntro";
+import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { compareMarkets, marketPriceListSentence, marketSpreadSentence } from "@/lib/market-comparison";
 import { KeywordText } from "@/components/KeywordTooltip";
@@ -415,7 +416,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // credentials IN the search query — searching just the base name only ever
   // surfaces the base card's listings, which is useless for the printing this
   // page is actually about.
-  const ebaySearchTerm = `${cardSearchName(card.name, card)} Riftbound`;
+  //
+  // Except before release (2026-09-26, "Pushing eBay clicks" in DECISIONS.md):
+  // a card from an unreleased set searches its plain name, as QuickView and the
+  // eBay panel below do — eBay ANDs every keyword, so our printing words would
+  // otherwise have to appear in a pre-order seller's title too. The shared
+  // riftboundEbayQuery puts "Riftbound" in exactly once and drops the comma
+  // champion names carry.
+  const ebaySearchTerm = riftboundEbayQuery(
+    isPreorderSetCode(card.setCode) ? card.name : cardSearchName(card.name, card),
+  );
   const ebaySearch: EbaySearchMap = Object.fromEntries(
     COUNTRY_LIST.map((c) => [
       c.code,
@@ -1137,6 +1147,30 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   </>
                 )}
               </p>
+              {/* An eBay route out of the empty state (2026-09-26, "Pushing eBay
+                  clicks" in DECISIONS.md), for the two cases where "no store
+                  has it" is the expected state rather than a gap: a card from
+                  an unreleased set — the spoiler traffic, whose visitors are
+                  already looking for a way to buy — and a printing that is
+                  only ever sold by resale. A search, never a price: the
+                  pre-release copy says nothing ships before release and to
+                  check the listing's dispatch date. EbayBuyCta is a client
+                  component, so the label follows the visitor's market on this
+                  cookie-free ISR page, and it carries its own disclosure. It
+                  adds the "Riftbound" keyword itself (riftboundEbayQuery), so
+                  it takes the plain card name and its heading reads as one.
+                  Deliberately here, after our own explanation, and NOT in the
+                  details card above: the title, the metrics and the alert stay
+                  free of affiliate blocks. */}
+              {(preview || priceState.noRetailChannel) && (
+                <EbayBuyCta
+                  query={card.name}
+                  preRelease={preview}
+                  source={preview ? "card-prerelease" : "card-resale"}
+                  pageType="card_detail"
+                  className="mt-4"
+                />
+              )}
               <div className="mt-4 flex flex-wrap gap-2">
                 {printings.some((p) => (p[priceField(DEFAULT_COUNTRY)] as number | null) != null) && (
                   <Link href="#other-printings" className="btn-ghost text-xs">
@@ -1169,6 +1203,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               displayName={displayName}
               ebaySearch={ebaySearch}
               ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
+              preRelease={preview}
             />
 
             {/* Price-history chart — free for everyone (AU history; the series is
@@ -1450,7 +1485,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 real but is not a price you can compare against a store — see
                 the EbayGradedListing model comment for what letting one into
                 RetailerPrice would break. */}
-            <EbayCardPanel cardId={card.id} query={cardSearchName(card.name, card)} className="mt-3" />
+            {/* A pre-release card searches its plain name (2026-09-26), the
+                same query QuickView uses: eBay ANDs every keyword, so our
+                printing words (Showcase, Overnumbered…) would otherwise have
+                to appear in a pre-order seller's title too. */}
+            <EbayCardPanel
+              cardId={card.id}
+              query={preview ? card.name : cardSearchName(card.name, card)}
+              preRelease={preview}
+              className="mt-3"
+            />
           </section>
         </div>
       </div>

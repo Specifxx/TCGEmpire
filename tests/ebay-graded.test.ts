@@ -369,8 +369,10 @@ test("bare mode is only ever used where a parent discloses", () => {
 test("the card panel's Listings tab renders bare, so the panel's one disclosure is the only one", () => {
   // 2026-09-23: two identical EPN disclosures stacked 50px apart on card pages and in QuickView.
   const panel = read("src/components/EbayCardPanelLive.tsx");
-  assert.match(panel, /<EbayAdCarouselLive listings=\{listings\} query=\{query\} bare \/>/);
-  assert.match(panel, /<EbayBuyCta query=\{query\} bare \/>/);
+  // 2026-09-26 ("Pushing eBay clicks"): both now also name their page and EPN
+  // source and pass the pre-release flag; `bare` is unchanged.
+  assert.match(panel, /<EbayAdCarouselLive listings=\{listings\} query=\{query\} bare pageType="card_detail" source="card-panel" preRelease=\{preRelease\} \/>/);
+  assert.match(panel, /<EbayBuyCta query=\{query\} bare pageType="card_detail" source="card-panel" preRelease=\{preRelease\} \/>/);
   // A bare carousel's no-listings fallback must stay bare (QuickView's path).
   assert.match(read("src/components/EbayAdCarouselLive.tsx"), /<EbayBuyCta [^>]*bare=\{bare\}/);
 });

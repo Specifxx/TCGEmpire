@@ -29,6 +29,13 @@ import { useCountry } from "./CountryProvider";
  *
  * Counts are computed per market, which is why this is a client component — the
  * server ships every market's rows so the page can stay ISR-cached.
+ *
+ * NAMED CLICKS (2026-09-26, "Pushing eBay clicks" in DECISIONS.md). This panel
+ * only ever renders on the card page, so its Listings tab reports page_type
+ * "card_detail" and its search CTA the EPN source "card-panel" — until then
+ * the CTA shared "card-cta" with every other EbayBuyCta on the site, and the
+ * carousel tiles sent no page at all. A pre-release card's CTA gets the
+ * search copy ("check each listing's dispatch date"), never "Buy … on eBay".
  */
 export function EbayCardPanelLive({
   cardId,
@@ -36,6 +43,7 @@ export function EbayCardPanelLive({
   listings,
   graded,
   className,
+  preRelease = false,
 }: {
   cardId: string;
   query: string;
@@ -43,6 +51,8 @@ export function EbayCardPanelLive({
   listings?: AdListing[];
   graded: GradedRow[];
   className?: string;
+  /** The card's set has not released yet (isPreorderSetCode on the page). */
+  preRelease?: boolean;
 }) {
   const { country } = useCountry();
 
@@ -72,9 +82,9 @@ export function EbayCardPanelLive({
       key: "listings",
       label: "Listings",
       content: listings ? (
-        <EbayAdCarouselLive listings={listings} query={query} bare />
+        <EbayAdCarouselLive listings={listings} query={query} bare pageType="card_detail" source="card-panel" preRelease={preRelease} />
       ) : (
-        <EbayBuyCta query={query} bare />
+        <EbayBuyCta query={query} bare pageType="card_detail" source="card-panel" preRelease={preRelease} />
       ),
     },
   ];

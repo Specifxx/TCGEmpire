@@ -47,6 +47,9 @@ export function EbayAdCarouselLive({
   className,
   compact,
   bare,
+  pageType,
+  source,
+  preRelease,
 }: {
   listings: AdListing[];
   query: string;
@@ -59,6 +62,16 @@ export function EbayAdCarouselLive({
   // above — AffiliateDisclosure's rule is that if an affiliate link renders, its
   // disclosure renders.
   bare?: boolean;
+  // Where this carousel sits, for the click reports (2026-09-26, "Pushing eBay
+  // clicks" in DECISIONS.md): `pageType` reaches buy_click on every tile and on
+  // the fallback CTA ("card_detail" on the card page, "quickview" in the
+  // popup); `source` is the fallback CTA's EPN customid segment, so the card
+  // page panel and the popup stop reporting as one "card-cta".
+  pageType?: string;
+  source?: string;
+  // The card's set has not released: the fallback CTA uses its search copy
+  // ("check each listing's dispatch date") rather than "Buy … on eBay".
+  preRelease?: boolean;
 }) {
   const { country } = useCountry();
   // AD-FREE MEANS THIS TOO (2026-09-25). This carousel is labelled "Ad" and
@@ -77,7 +90,9 @@ export function EbayAdCarouselLive({
     // bare carries through: QuickView renders this bare under its own
     // disclosure, and dropping the flag here stacked two identical EPN lines
     // 50px apart (2026-09-23).
-    return <EbayBuyCta query={query} compact={compact} className={className} bare={bare} />;
+    return (
+      <EbayBuyCta query={query} compact={compact} className={className} bare={bare} preRelease={preRelease} source={source} pageType={pageType} />
+    );
   }
 
   return (
@@ -95,6 +110,7 @@ export function EbayAdCarouselLive({
             country={country}
             price={l.priceCents / 100}
             positionInList={l.rank + 1}
+            pageType={pageType}
             surface="ebay_carousel"
             className={`flex shrink-0 flex-col rounded-lg border border-ink-700 bg-ink-900 transition-colors hover:border-[#0064d2]/60 hover:bg-ink-800 ${compact ? "w-20 p-1.5" : "w-32 p-2"}`}
           >

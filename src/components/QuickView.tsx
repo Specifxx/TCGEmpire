@@ -16,7 +16,7 @@ import { cardHref } from "@/lib/card-url";
 import { QUANTITY_CAP } from "@/lib/collection-cost";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, isPaidLink } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, isPaidLink, riftboundEbayQuery } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
@@ -212,7 +212,14 @@ function QuickViewModal({
     .filter((p) => !isFallbackRetailer(p.retailer))
     .map((p) => {
       const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
-      return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
+      // The card's own path as `loc` (2026-09-26, "Pushing eBay clicks" in
+      // DECISIONS.md): without it affiliateUrl fell back to SITE_URL, so every
+      // paid click from this popup's rows reached EPN's customid (and
+      // TCGplayer's sharedid) as "-home" while the card page's identical rows
+      // said "-card". Built once per row, like the card page's
+      // MarketRow.buyHref, so the Paid-link tag and the button can never test
+      // two different URLs.
+      return { ...p, ship, delivered: p.priceCents + (ship ?? 0), buyHref: affiliateUrl(p.url, p.retailer, href) };
     })
     .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
 
@@ -296,9 +303,19 @@ function QuickViewModal({
   // generic CTA — "the Listings tab has nothing of its own in this market".
   const adListingsHere = adListings.some((l) => l.country === country);
   const hasEbay = (prices ?? []).some((p) => p.retailer.startsWith("ebay") && p.inStock && p.country === country);
+  // PRE-RELEASE CARDS (2026-09-26, "Pushing eBay clicks" in DECISIONS.md) —
+  // spoiler traffic for an unreleased set opens this popup on cards no store
+  // can sell yet. Every eBay path below then searches the plain card name, the
+  // same query the card page uses: eBay ANDs every keyword, so our printing
+  // words (Showcase, Overnumbered…) would otherwise have to appear in a
+  // pre-order seller's title too. And the copy says nothing ships before
+  // release, never "Buy … on eBay". riftboundEbayQuery puts "Riftbound" in
+  // exactly once.
+  const preRelease = isPreorderSetCode(card.setCode);
+  const ebayCardQuery = preRelease ? card.name : cardSearchName(card.name, card);
   const ebaySearchUrl =
     prices !== null && !hasEbay
-      ? buildEbaySearchUrl(country, `${cardSearchName(card.name, card)} Riftbound`, "quickview")
+      ? buildEbaySearchUrl(country, riftboundEbayQuery(ebayCardQuery), "quickview")
       : null;
 
   return (
@@ -382,12 +399,19 @@ function QuickViewModal({
                 {
                   key: "listings",
                   label: "Listings",
+                  // pageType "quickview" and its own EPN source (2026-09-26):
+                  // the fallback CTA used to report as the site-wide
+                  // "card-cta", and "quickview" alone is already the no-listing
+                  // search further down.
                   content: (
                     <EbayAdCarouselLive
                       listings={adListings}
-                      query={cardSearchName(card.name, card)}
+                      query={ebayCardQuery}
                       compact
                       bare
+                      preRelease={preRelease}
+                      source="quickview-panel"
+                      pageType="quickview"
                     />
                   ),
                 },
@@ -487,7 +511,13 @@ function QuickViewModal({
                       affiliate eBay search. An OutboundLink, like the fallback
                       further down (2026-09-26): as a bare <a> this was the one
                       eBay path in the modal that fired no buy_click, so the
-                      clicks it earned were invisible to both analytics tools. */}
+                      clicks it earned were invisible to both analytics tools.
+                      surface "ebay_fallback" and eBay blue (2026-09-26,
+                      "Pushing eBay clicks"): the same placement as the card
+                      page's no-eBay-row search, and the same colour as every
+                      other eBay button (see buyButtonClass). pageType
+                      "quickview", because surface "modal" was what told these
+                      clicks apart from the card page's identical fallback. */}
                   {ebaySearchUrl && ebayMkt && (
                     <>
                       <OutboundLink
@@ -496,9 +526,9 @@ function QuickViewModal({
                         country={country}
                         cardId={card.id}
                         cardName={cardDisplayName(card.name, card)}
-                        pageType="card_detail"
-                        surface="modal"
-                        className="btn-primary mt-3 inline-flex text-xs"
+                        pageType="quickview"
+                        surface="ebay_fallback"
+                        className="btn-ebay mt-3 inline-flex text-xs"
                       >
                         Search {ebayMkt.label} →
                       </OutboundLink>
@@ -539,7 +569,7 @@ function QuickViewModal({
                             );
                           })()}
                           {p.lastSeen && <span>updated {timeAgo(p.lastSeen)}</span>}
-                          {isPaidLink(affiliateUrl(p.url, p.retailer)) && <PaidLinkTag />}
+                          {isPaidLink(p.buyHref) && <PaidLinkTag />}
                         </div>
                       </div>
                       <div className="text-right">
@@ -561,7 +591,7 @@ function QuickViewModal({
                         </div>
                       </div>
                       <OutboundLink
-                        href={affiliateUrl(p.url, p.retailer)}
+                        href={p.buyHref}
                         retailer={p.retailer}
                         country={country}
                         cardId={card.id}
@@ -647,7 +677,14 @@ function QuickViewModal({
 
                 Tracked rather than a bare anchor: this is the only eBay path
                 those cards have, so its click rate is the evidence for whether
-                skipping them was the right call. */}
+                skipping them was the right call.
+
+                Same copy and colour as the card page's fallback (2026-09-26,
+                "Pushing eBay clicks" in DECISIONS.md): eBay blue instead of
+                the amber tint, and a sentence that says what the link is — a
+                search, with no price or stock claimed. A pre-release card's
+                line says nothing ships before release instead. pageType
+                "quickview" for the reason given on the zero-stock link above. */}
             {ebaySearchUrl && ebayMkt && (
               <OutboundLink
                 href={ebaySearchUrl}
@@ -655,14 +692,19 @@ function QuickViewModal({
                 country={country}
                 cardId={card.id}
                 cardName={cardDisplayName(card.name, card)}
-                pageType="card_detail"
-                surface="modal"
-                className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber-500/25 bg-amber-500/[0.05] p-3 hover:border-amber-500/45"
+                pageType="quickview"
+                surface="ebay_fallback"
+                className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-3 transition-colors hover:border-[#0064d2]/70"
               >
-                <span className="min-w-0 text-xs text-slate-300">
-                  <span className="font-semibold text-white">No live {ebayMkt.label} price right now</span> — search eBay for it directly.
+                <span className="min-w-0 flex-1 basis-44 text-xs text-slate-300">
+                  <span className="block font-semibold text-white">Search {ebayMkt.label} for {cardDisplayName(card.name, card)}</span>
+                  <span className="block">
+                    {preRelease
+                      ? "Nothing from this set ships before release — check each listing's dispatch date."
+                      : `We have no ${ebayMkt.label} price on file for this card right now — eBay sellers may still list it.`}
+                  </span>
                 </span>
-                <span className="shrink-0 text-xs font-semibold text-amber-300">Search {ebayMkt.label} →</span>
+                <span className="shrink-0 text-xs font-semibold text-sky-300">Search {ebayMkt.label} →</span>
               </OutboundLink>
             )}
             {ebaySearchUrl && ebayMkt && <AffiliateDisclosure partner="ebay" tight />}

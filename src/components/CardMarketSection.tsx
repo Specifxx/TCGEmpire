@@ -28,18 +28,21 @@ import { playedDiscounts, playedDiscountText } from "@/lib/played-discount";
 // server-only). null = market has live eBay rows or the quota gate doesn't apply.
 export type EbaySearchMap = Record<string, { url: string; label: string } | null>;
 
-// ONE visual language for every retailer CTA (UX audit finding: mixing eBay
-// blue / TCGplayer navy / brand green by store read as three different kinds
-// of button doing three different things, when they're all the exact same
-// action — "buy this listing"). Brand-coloured buttons used to reason that a
-// familiar marketplace colour converts better than a generic one; the
-// counter-finding is that a single, consistent, unmissable primary colour is
-// what actually makes the #1 row's CTA read as THE thing to click, on every
-// row, every retailer, every page. Reuses the shared `.btn` base (layout/
-// sizing) from globals.css. Exported so QuickView's compact price list uses
-// the exact same treatment.
-export function buyButtonClass(_retailer: string): string {
-  return "btn-primary";
+// ONE green for every retailer CTA, except eBay's (2026-09-26, "Pushing eBay
+// clicks" in DECISIONS.md). The UX audit that set one colour found that eBay
+// blue / TCGplayer navy / brand green by store read as three different kinds of
+// button, and a single primary colour is what makes the #1 row's CTA read as
+// the thing to click. The owner then asked for eBay's clicks to be pushed: eBay
+// is the site's main affiliate partner and most of its revenue, including on
+// cards where a store is cheaper. So an eBay row's button now wears eBay blue
+// (`.btn-ebay`) — a familiar marketplace colour the eye picks out in the list.
+// What changes is the COLOUR only: the row's POSITION never does. The table
+// stays sorted by item price, the cheapest row keeps its "Cheapest" chip and
+// accent price, and a dearer eBay row sits exactly where its price puts it.
+// Reuses the shared `.btn` base (layout/sizing) from globals.css. Exported so
+// QuickView's compact price list uses the exact same treatment.
+export function buyButtonClass(retailer: string): string {
+  return retailer.startsWith("ebay") ? "btn-ebay" : "btn-primary";
 }
 export function buyButtonLabel(retailer: string): string {
   if (retailer.startsWith("ebay")) return "Buy on eBay →";
@@ -296,12 +299,17 @@ export function CardPriceComparison({
   displayName,
   ebaySearch,
   ebayQuery,
+  preRelease = false,
 }: {
   rows: MarketRow[];
   cardId: string;
   displayName: string;
   ebaySearch: EbaySearchMap;
   ebayQuery: string;
+  /** The card's set has not released (isPreorderSetCode): the eBay fallback
+   *  says nothing ships before release instead of implying copies are out
+   *  there now. Computed by the ISR page, which re-renders daily. */
+  preRelease?: boolean;
 }) {
   const { country, fmt, secondaryFmt } = useCountry();
   const m = useMemo(() => computeMarket(rows, country), [rows, country]);
@@ -597,6 +605,53 @@ export function CardPriceComparison({
         </div>
       </div>
 
+      {/* eBay fallback — shown whenever this market has no live eBay row for the
+          card, so a thin market is never a dead end.
+
+          DIRECTLY UNDER THE COMPARISON (2026-09-26, "Pushing eBay clicks" in
+          DECISIONS.md), above the Cardmarket/TCGplayer reference blocks: it
+          sat below both, the last block before the banners, although for a
+          card with no eBay row it is the nearest way onto eBay from the table.
+          It stays OUTSIDE the ranked panel above — a search, never a row, so
+          it cannot outrank a store — and says what it is: a search, with no
+          price or stock claimed. eBay blue rather than the old amber tint, to
+          match the eBay buttons in the table, and its own disclosure. */}
+      {ebay && (
+        <div className="mt-4">
+          <div className="card-surface flex flex-wrap items-center justify-between gap-3 border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-4">
+            <div className="min-w-0 flex-1 basis-56">
+              <div className="text-sm font-semibold text-white">
+                Search {ebay.label} for {displayName}
+              </div>
+              <p className="mt-1 text-xs text-slate-400">
+                {preRelease
+                  ? "Nothing from this set ships before release — check each listing's dispatch date."
+                  : `We have no ${ebay.label} price on file for this card right now — eBay sellers may still list it.`}
+              </p>
+            </div>
+            {/* Tracked, not a bare anchor. This panel used to be a plain <a>, so
+                its clicks reached neither the database nor Vercel Analytics — and
+                it is now the ONLY eBay path for every Common/Uncommon base print,
+                since those no longer get an eBay listing search at all (see
+                eBayWorthSearching). Whether that trade was right is exactly what
+                this link's click rate answers, so it has to be measurable. */}
+            <OutboundLink
+              href={ebay.url}
+              retailer="ebay_no_listing"
+              country={country}
+              cardId={cardId}
+              cardName={displayName}
+              pageType="card_detail"
+              surface="ebay_fallback"
+              className="btn-ebay shrink-0 text-sm"
+            >
+              Search {ebay.label} →
+            </OutboundLink>
+          </div>
+          <AffiliateDisclosure partner="ebay" tight />
+        </div>
+      )}
+
       {/* Cardmarket reference price (UK/EU only) — see the `cardmarket` memo above.
           Not an affiliate link, so no AffiliateDisclosure prop to suppress here.
 
@@ -629,47 +684,19 @@ export function CardPriceComparison({
           disclosure=false: covered by the canonical disclosure above. */}
       {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} disclosure={false} />}
 
-      {/* eBay fallback — shown whenever this market has no live eBay row for the
-          card, so a thin market is never a dead end. */}
-      {ebay && (
-        <div className="card-surface mt-4 flex flex-wrap items-center justify-between gap-3 border-amber-500/25 bg-amber-500/[0.04] p-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-sm font-semibold text-white">
-              No live {ebay.label} price for this card right now
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
-              We don&apos;t have a live {ebay.label} listing for {displayName} right now — search eBay directly to see what&apos;s on offer.
-            </p>
-          </div>
-          {/* Tracked, not a bare anchor. This panel used to be a plain <a>, so
-              its clicks reached neither the database nor Vercel Analytics — and
-              it is now the ONLY eBay path for every Common/Uncommon base print,
-              since those no longer get an eBay listing search at all (see
-              eBayWorthSearching). Whether that trade was right is exactly what
-              this link's click rate answers, so it has to be measurable. */}
-          <OutboundLink
-            href={ebay.url}
-            retailer="ebay_no_listing"
-            country={country}
-            cardName={displayName}
-            pageType="card_detail"
-            surface="table"
-            className="btn-primary shrink-0 text-sm"
-          >
-            Search {ebay.label} →
-          </OutboundLink>
-        </div>
-      )}
+      {/* Contextual eBay banner — searches for THIS card (new, used & graded).
+          FIRST of the two banners (2026-09-26, "Pushing eBay clicks" in
+          DECISIONS.md): eBay is the main affiliate partner, so its banner
+          takes the prime spot under the price table that TCGplayer's held.
+          Still an ad — "Ad" label, hidden for ad-free members — exactly as
+          before; only the order changed.
+          disclosure=false: covered by the canonical disclosure above. */}
+      <EbayAd size="leaderboard" country={country} query={ebayQuery} className="mt-6" disclosure={false} pageType="card_detail" />
 
       {/* TCGplayer affiliate banner — pays commission on click-through
-          purchases, so it gets the prime spot under the price table.
+          purchases; second since 2026-09-26 (see the eBay banner above).
           disclosure=false: covered by the canonical disclosure above. */}
-      <TcgplayerAd size="rect" mobile="rect" country={country} className="mt-6" disclosure={false} />
-
-      {/* Contextual eBay banner — searches for THIS card (new, used & graded);
-          the most relevant eBay placement converts far better than a generic one.
-          disclosure=false: covered by the canonical disclosure above. */}
-      <EbayAd size="leaderboard" country={country} query={ebayQuery} className="mt-4" disclosure={false} />
+      <TcgplayerAd size="rect" mobile="rect" country={country} className="mt-4" disclosure={false} />
     </>
   );
 }

@@ -24,8 +24,11 @@ export function FooterAds() {
     // launcher can never obscure a live ad unit (Google program policy; see
     // docs/adsense-remediation.md).
     <div id="rc-ad-zone" data-ad-placement="" className="container-app flex flex-col items-center gap-3 pb-8">
-      <TcgplayerAd size="leaderboard" country={country} disclosure={false} />
+      {/* eBay first (2026-09-26, "Pushing eBay clicks" in DECISIONS.md): it is
+          the site's main affiliate partner, so it takes the upper slot. Both
+          stay labelled "Ad" and hidden for ad-free members, as above. */}
       <EbayAd size="leaderboard" country={country} disclosure={false} />
+      <TcgplayerAd size="leaderboard" country={country} disclosure={false} />
       {/* One combined line for the pair, directly beneath them — this is the
           disclosure that covers /trade and every other page without its own
           inline affiliate surface (EPN flagged /trade specifically). */}

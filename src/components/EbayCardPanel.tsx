@@ -74,11 +74,16 @@ export async function EbayCardPanel({
   cardId,
   query,
   className,
+  preRelease = false,
 }: {
   cardId: string;
   /** Card name for the generic "search eBay" fallback in the Listings tab. */
   query: string;
   className?: string;
+  /** The card's set has not released: the fallback CTA uses its pre-release
+   *  search copy (2026-09-26). A render prop only — it is not part of the
+   *  cached data below, whose key stays the card id. */
+  preRelease?: boolean;
 }) {
   let graded: GradedRow[] = [];
   let listings: AdListing[] = [];
@@ -123,6 +128,7 @@ export async function EbayCardPanel({
       listings={listings}
       graded={graded}
       className={className}
+      preRelease={preRelease}
     />
   );
 }
