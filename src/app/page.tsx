@@ -304,8 +304,9 @@ export default async function HomePage() {
       />
 
       {/* The price list the head term asks for, directly under the hero
-          (lib/price-table.ts). Replaces the carousel's "All-time" tab, which
-          ranked the same cards by the same demand signal. */}
+          (lib/price-table.ts), with an eBay button on every row. It carries
+          the ItemList for the most-searched cards; the carousel's "Most
+          popular" tab shows the same cards as tiles without one. */}
       <PriceTodayTable rows={priceTable} country={country} totalPriced={statsByCountry[country].priced} />
 
       {/* REMOVED: the "Vendetta — the new set, priced" launch band (cheapest

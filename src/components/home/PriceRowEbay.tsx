@@ -60,11 +60,14 @@ export function PriceRowEbay({
       price={direct ? direct.priceCents / 100 : undefined}
       positionInList={position}
       inStock={direct ? true : undefined}
-      aria-label={direct ? `${cardName} on ${label}, ${price}${lowest ? ", the lowest price we track" : ""}` : `Search ${label} for ${cardName}`}
       className={`${lowest ? "btn-ebay" : "btn-ebay-ghost"} w-[4.75rem] shrink-0 flex-col gap-0 px-1 py-1 text-[11px] leading-tight`}
     >
-      <span className="font-extrabold">eBay</span>
+      {/* The accessible name is the visible words plus an sr-only tail, never
+          an aria-label: a label that does not contain "eBay Search" / "eBay
+          US$4.50" fails WCAG 2.5.3 (voice control says what it sees). */}
+      <span className="font-extrabold">eBay</span>{" "}
       <span className="num font-semibold">{price ?? "Search"}</span>
+      <span className="sr-only">{`: ${cardName} on ${label}${lowest ? ", the lowest price we track" : ""}`}</span>
     </OutboundLink>
   );
 }

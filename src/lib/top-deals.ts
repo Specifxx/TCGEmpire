@@ -9,7 +9,7 @@
 //   • rising-cards       (PREMIUM) — the Rising Cards screener's top picks
 //   • cheapest-on-eBay   (free)    — cards whose cheapest eBay listing costs
 //                                     less than any store we track (2026-09-26;
-//                                     its own block under the columns, not a
+//                                     its own block opening the section, not a
 //                                     fifth column — see TodaysTopDeals.tsx)
 //
 // price-drops depends on PriceHistory (AU-only today), and cheapest-sealed on

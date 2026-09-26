@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { cheapestEbayItemByCard, PRICE_TABLE_SIZE } from "../src/lib/price-table";
+import { affiliateUrl, ebayAffiliateUrl } from "../src/lib/affiliate";
 
 // The homepage's eBay pass (DECISIONS.md, "The homepage's eBay column",
 // 2026-09-26): an eBay button on every row of "Riftbound card prices today",
@@ -76,6 +77,11 @@ test("PriceRowEbay: a direct listing only in the page's market, the visitor's ow
   assert.match(c, /pageType="homepage"/);
   assert.match(c, /\$\{lowest \? "btn-ebay" : "btn-ebay-ghost"\} w-\[4\.75rem\]/, "fixed width: the search → listing swap cannot shift the row");
   assert.match(c, /\{price \?\? "Search"\}/, "a search never shows a price");
+  // WCAG 2.5.3: the accessible name starts with the visible words ("eBay
+  // Search"), so no aria-label, a real space between the spans, an sr-only tail.
+  assert.doesNotMatch(c, /aria-label=/);
+  assert.match(c, /<span className="font-extrabold">eBay<\/span>\{" "\}\s*<span className="num font-semibold">/);
+  assert.match(c, /<span className="sr-only">/);
   assert.doesNotMatch(c, /usePremium|gold|cheaper|guarantee/i);
   assert.match(read("src/components/OutboundLink.tsx"), /\| "price_table_ebay"/);
 });
@@ -103,7 +109,20 @@ test("the Most popular shelf is back, and the price table keeps the only ItemLis
 test("eBay Picks clicks name their page to EPN, and an unknown page keeps the stored URL", () => {
   const c = code("src/components/EbayPicksLive.tsx");
   assert.match(c, /const PICKS_PAGE: Record<string, string> = \{ homepage: "\/", browse: "\/browse", set_hub: "\/sets", article: "\/blog" \};/);
-  assert.match(c, /href=\{pageType && PICKS_PAGE\[pageType\] \? affiliateUrl\(l\.url, "picks", PICKS_PAGE\[pageType\]\) : l\.url\}/);
+  assert.match(c, /href=\{pageType && PICKS_PAGE\[pageType\] \? affiliateUrl\(l\.url, `picks_\$\{l\.country\.toLowerCase\(\)\}`, PICKS_PAGE\[pageType\]\) : l\.url\}/);
   assert.match(read("src/components/ArticleView.tsx"), /<EbayPicks\s+className="mt-8"\s+pageType="article"/);
   assert.match(read("src/app/sets/[set]/page.tsx"), /<EbayPicks\s+pageType="set_hub"/);
+});
+
+test("a Singapore Picks click still says Singapore to EPN after the re-tag", () => {
+  // Stored at import: an ebay.com.sg listing is rerouted to www.ebay.com with
+  // customid rc-sg (lib/affiliate.ts). Re-tagging rebuilds the id from rc-us,
+  // so the Picks source has to carry the market.
+  const stored = ebayAffiliateUrl("https://www.ebay.com.sg/itm/137597929650");
+  assert.equal(new URL(stored).hostname, "www.ebay.com");
+  assert.match(new URL(stored).searchParams.get("customid") ?? "", /^rc-sg\b/);
+  const sg = new URL(affiliateUrl(stored, "picks_sg", "/")).searchParams.get("customid") ?? "";
+  const us = new URL(affiliateUrl(ebayAffiliateUrl("https://www.ebay.com/itm/137597929650"), "picks_us", "/")).searchParams.get("customid") ?? "";
+  assert.match(sg, /picks_sg-home/);
+  assert.notEqual(sg, us, "Singapore and US Picks clicks stay separable");
 });

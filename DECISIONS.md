@@ -14186,3 +14186,105 @@ legend page, `/deck`'s start list, the Jinx card page and the content sitemap;
 signed-out publish 401s; `/admin/decks` 404s without admin. 11 new tests
 (`tests/public-decks.test.ts`), `tests/decks-removed.test.ts` rewritten to the
 new rule.
+
+## The homepage's eBay column: an eBay button on every price-table row, "Cheapest on eBay" first in Top Deals, "Most popular" back — 2026-09-26
+
+**Why.** Owner's brief: eBay Partner Network commission is the site's main
+revenue and TCGplayer links are secondary, so eBay must be easy to click on the
+homepage without making the page less appealing — and they liked the old "Most
+popular cards" shelf better. Measured at 390×844 before this change: the first
+screen was the hero and the top of "Riftbound card prices today", whose rows
+linked only to card pages; the first eBay link was inside Top Deals, several
+screens down, and "Cheapest on eBay" sat under Top Deals' columns.
+
+**What.**
+- **An eBay button on every row of "Riftbound card prices today"**
+  (`PriceRowEbay`, surface `price_table_ebay`). Desktop gets a sixth, last
+  column, "eBay"; the five pinned headers are unchanged. The stacked rows get
+  the button beside each row, a sibling of the row's card link (never nested in
+  it), so the first eBay button sits on or just under a phone's first screen.
+  The EPN disclosure (`AffiliateDisclosure partner="ebay" tight`) is above the
+  first row for every visitor, ad-free members included — a buy path, not an ad.
+  On phones the "Updated daily. ▼ green = cheaper this week." line is
+  CSS-hidden (still in the HTML) to pay for the disclosure line.
+- **The stacked rows now run below 768px, not 640.** The six-column table needs
+  ~670px with a real set name ("Origins: Proving Grounds") and a four-figure
+  price; the 640–767px band's scroller is 590–720px, so the table cut off the
+  eBay button with nothing showing it scrolled (`scripts/mobile-check.ts` skips
+  scrollers, so only a measurement caught it). The stacked rows carry the same
+  button. `tests/card-art-thumbs.test.ts` pins `md:` now.
+- **What the button links to.** The table is server-rendered in its PAGE's
+  market, but every market lands on `/` (no geo redirect), so the button follows
+  the VISITOR (`useCountry`):
+  - in the page's own market, with a tracked in-stock eBay listing: a direct
+    link to that listing, affiliate-tagged on the server with the page's path
+    (`affiliateUrl(url, "home_table", "/" | "/au" …)`), labelled with its item
+    price — the link type that converts best;
+  - otherwise (another market's visitor, or no tracked listing): a search of
+    the visitor's own eBay (`ebaySearchUrl(country, riftboundEbayQuery(name),
+    "home-table")`) labelled "Search" — never a price we do not have, and never
+    an Australian sent to ebay.com.
+  Filled eBay blue (`btn-ebay`) only when that listing IS the row's cheapest
+  price; ghost (`btn-ebay-ghost`) in every other state, so eBay is never dressed
+  as the best buy when a store beats it. Never gold. The footnote says what the
+  column is: "the cheapest in-stock listing we track for each card in this
+  market (item price, postage extra), or a search of your own eBay where we
+  track none." Fixed width, so the search → listing swap after hydration cannot
+  shift the row. The accessible name is the visible "eBay Search" / "eBay
+  US$4.50" plus an sr-only tail (card, market, "the lowest price we track"),
+  never an aria-label: a label that does not contain the visible words fails
+  WCAG 2.5.3, the bug class fixed in `CountryHeroToggle`.
+- **The data.** Inside `computePriceTable`'s own `unstable_cache` (no new cache,
+  no self-cached loader nested — db.ts rule 6), one extra bounded read: the
+  market's in-stock eBay `RetailerPrice` rows for the table's 15 ids
+  (`ebay`/`ebay_us`/`ebay_uk`/`ebay_sg`/`ebay_eu`; Canada none — its eBay rows
+  are US listings with unquoted postage), cheapest first, `take` 60. It fails
+  open to "Search" buttons. "Cheapest" is clamped to `min(aggregate, eBay item
+  price)`: the aggregate (`lowestPriceCents*`, price-import) already includes
+  eBay rows, so this only matters when the eBay row refreshed after the
+  aggregate, and it keeps "Cheapest" from ever reading above the eBay figure
+  beside it. New cache key `home-price-table-v3` (the cached value's shape
+  changed).
+- **"Cheapest on eBay" opens Today's Top Deals**, directly under its heading and
+  above the price-tier pills, instead of under the four columns (on a phone it
+  sat ~1000px further down). Same rows, same proof rule (only cards where eBay
+  beats every source the card page ranks).
+- **"Most popular" is back — this reverses half of the 2026-09-24 call** that
+  the price table "replaces the carousel's 'All-time' tab". The tab returns,
+  renamed "Most popular", because the owner prefers it; its tiles open
+  QuickView, whose first block is the eBay listings. The other half stands: the
+  ItemList JSON-LD stays with the table (`popularItemList={priceTable.length ===
+  0}`), so the page carries one ItemList for those cards.
+- **eBay Picks clicks name their page.** `EbayPicksLive` re-tags each stored
+  listing URL with `affiliateUrl(url, "picks_<market>", page)` for the homepage,
+  browse, set hubs and articles; an unknown page keeps the stored URL. The
+  market is in the source because a Singapore listing is stored on
+  www.ebay.com (the SG reroute), so re-tagging rebuilds the customid from
+  `rc-us`: with a bare "picks", Singapore and US Picks clicks reported the same
+  id. The price table does not need it — its page segment (`sg`) already says so.
+
+**Why this is not the affiliate-first impression** (AdSense Phase 8, which kept
+eBay out of the card page's details card and the pre-order CTA's top slot): the
+hero and the table's own data come first, and on every row the eBay button is
+the last thing, after our cheapest-across-stores price, store count and 7-day
+change. The page still opens on our comparison; `scripts/adsense-guard.ts`
+passes (22/22).
+
+**What this does not change.** No comparison is re-ranked: the table is still
+ordered by popularity and its "Cheapest" is still the true cheapest across
+sources. No query outside the table's hourly cache, no revalidate change, no
+fixed-bottom UI, no popup. The running order pinned by
+`tests/game-before-money.test.ts` is unchanged.
+
+**Verified** on the local seed DB (never production), Playwright at 320, 390,
+640, 700, 767, 768, 1024 and 1440: a US visitor on `/` saw a listing button on
+the two rows with a tracked eBay listing (the one where eBay was lowest filled
+blue, the one a store beat in ghost) and "Search" on the rest, tagged
+`rc-us-home_table-home-product` / `rc-us-home-table-search`; an Australian
+visitor on `/` got ebay.com.au searches; no eBay button cut off and no
+horizontal scroll at any width; "Cheapest on eBay" above the pills; one ItemList
+for the popular cards. An adversarial review found the 640–767px clipping, the
+aria-label mismatch and the Singapore customid loss before release; all three
+are fixed above. 8 new tests (`tests/home-ebay.test.ts`); assertions in
+`ebay-clicks-home`, `ebay-picks` and `card-art-thumbs` updated for the move,
+the `pageType` prop and the `md:` switch.

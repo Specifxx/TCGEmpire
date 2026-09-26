@@ -64,10 +64,12 @@ test("/browse defaults to Most popular; ?sort=number still means set & number", 
   assert.match(page, /buildCardOrderBy\(searchParams\.sort \|\| BROWSE_DEFAULT_SORT/);
 });
 
-test("homepage price table stacks below 640px with the price in every row", () => {
+// Below 768px since the eBay column (2026-09-26, "The homepage's eBay column"):
+// the six-column table is wider than the 640–767px band's scroller.
+test("homepage price table stacks below 768px with the price in every row", () => {
   const s = readFileSync("src/components/home/PriceTodayTable.tsx", "utf8");
-  assert.match(s, /<ul className="[^"]*sm:hidden">/);
-  assert.match(s, /<div className="hidden overflow-x-auto sm:block">/);
+  assert.match(s, /<ul className="[^"]*md:hidden">/);
+  assert.match(s, /<div className="hidden overflow-x-auto md:block">/);
 });
 
 test("card page: phone buy block under the name, sticky bar hidden while the comparison is on screen", () => {

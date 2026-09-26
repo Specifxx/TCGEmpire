@@ -197,7 +197,12 @@ longer lands on its entry.
   test). The homepage's free "Cheapest on eBay" row lists only cards where eBay
   beats every source the card page ranks (EU: CardTrader too; US: TCGplayer's
   listing too; Canada never). Its free status beside the trial measurement is
-  the owner's call. [2026-09-26](../DECISIONS.md#L13751)
+  the owner's call. The homepage price table has an eBay button on every row,
+  last, after our own figures: the tracked listing's item price in the page's
+  own market (filled only when it is the row's cheapest), a "Search" of the
+  visitor's own eBay otherwise; stacked rows below 768px so it is never cut
+  off. [2026-09-26](../DECISIONS.md#L13751),
+  [2026-09-26](../DECISIONS.md#L14190)
 
 ## Navigation & chrome
 
@@ -234,11 +239,13 @@ longer lands on its entry.
   "Sign up free" at every width; below sm the market switcher lives in the
   menu's top bar. [2026-09-24](../DECISIONS.md#L11756)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417)
-- **Homepage order:** Recently viewed (returning visitors), Top Deals (with
-  the free "Cheapest on eBay" row under its columns), eBay Picks (the newest
-  released set), the popular carousel, Riftle/pack-sim, How it works.
+- **Homepage order:** Recently viewed (returning visitors), Top Deals (opening
+  with the free "Cheapest on eBay" block, above its pills and columns), eBay
+  Picks (the newest released set), the popular carousel (its "Most popular"
+  tab back, owner's call; the ItemList stays with the price table),
+  Riftle/pack-sim, How it works.
   [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
-  [2026-09-26](../DECISIONS.md#L13751)
+  [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190)
 - **Overlays:** `ui/Dialog` portals to body; Escape closes only the top
   layer and focus returns to the opener. Corner nudges share one corner
   string. [2026-09-23](../DECISIONS.md#L11348)

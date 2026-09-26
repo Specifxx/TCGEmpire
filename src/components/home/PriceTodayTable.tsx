@@ -73,9 +73,11 @@ export function PriceTodayTable({
           <AffiliateDisclosure partner="ebay" tight />
         </div>
       </div>
-      {/* Below 640px (2026-09-26): stacked rows, price always visible. The
-          five-column table overflowed a 390px phone and clipped the price. */}
-      <ul className="divide-y divide-ink-800 border-t border-ink-800 sm:hidden">
+      {/* Stacked rows, price always visible (2026-09-26): the five-column
+          table overflowed a 390px phone and clipped the price. Below 768px, not
+          640, since the eBay column: the six-column table needs ~670px and the
+          sm band's scroller is 590–720px, which cut off the eBay button. */}
+      <ul className="divide-y divide-ink-800 border-t border-ink-800 md:hidden">
         {rows.map((r, i) => (
           // Two SIBLING links (a link cannot nest another): the row to the card
           // page, and the eBay button at its right edge.
@@ -97,7 +99,7 @@ export function PriceTodayTable({
           </li>
         ))}
       </ul>
-      <div className="hidden overflow-x-auto sm:block">
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[40rem] text-left text-sm">
           <thead className="border-y border-ink-800 bg-ink-900/60 text-xs uppercase tracking-wide text-slate-500">
             <tr>
