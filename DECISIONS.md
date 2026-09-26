@@ -13955,3 +13955,25 @@ without waiting for the daily schedule").
 - Vi, Piltover Enforcer / eBay US$1.99 — fixed 2026-09-24 (`numberMatches` no longer reads a bare number that touches someone else's slash); left open pending its next chase pass. `diagnose-card` today shows `ebay_us` pricing the overnumbered chase at US$104.68 and the US$1.99 row gone, so it closes now too.
 
 `scripts/close-inbox-items.ts --apply` ran against both rows.
+
+## HEARTSTEEL overnumbered: six cards catalogued, five of them reprints, and a matcher rule for cross-set chase reprints — 2026-09-26
+
+**Why.** The owner sent Riot's official HEARTSTEEL graphic (a phone screenshot of it) and asked for the cards on the spoiler tracker, cropped, in the database, and in a post with the graphic as its thumbnail and every card embedded. Reading the six cards against our own catalogue turned up the fact the whole post hangs on: **five are reprints.** Aphelios, Exalted (SFD 049), Ezreal, Dashing (SFD 082), Yone, Blademaster (SFD 116), Kayn, Unleashed (OGN 189) and Sett, Kingpin (OGN 240) match on name, cost, Might and domain, and a word-by-word check against the originals' card images (RiftScribe CDN) matched the rules text too, apart from Yone ("conquer a battlefield that was uncontrolled" where SFD prints "conquer an open battlefield"). The sixth, K'Sante, Courageous (RAD 178/167), is new.
+
+**What.**
+- `prisma/manual-cards.json`: six rows, RAD 178–183/167, type Unit, rarity Showcase (overnumbered), domain from the banner colour and, for the five reprints, confirmed by the original's domain. Rules text is transcribed as printed. The cards leave off reminder text and their flavour lines, so neither is added. Images are crops of the graphic, resampled 2x with the white screenshot corners filled in, and stay stopgaps until the official art lands. `build-db-push.sh` applies them on the next production build, together with the images they reference.
+- New post `riftbound-heartsteel-overnumbered-cards`. The hero is the graphic with the phone chrome cropped off, fitted whole into a 1.91:1 frame over a blurred copy of itself, because `FilterableArticles` and `LatestPosts` thumbnail with `object-cover` at 1.91:1 and would otherwise cut the sheet through the middle row. Three DB-backed embeds, one per card group. Inline markdown images were ruled out because `Markdown.tsx` renders them at full column width, which is ~1,070px tall for a portrait card.
+- **Corrections to four earlier posts, each dated where it lands:**
+  - The tracker's 18 September heading said the HEARTSTEEL Kayn was "not a Radiance card". It is RAD 182/167.
+  - The HEARTSTEEL post's buying advice said a Kayn, Unleashed listing "is an Origins card regardless of what art is on it", and its FAQ called Radiance unconfirmed. Both are now wrong, so both are updated.
+  - The K'Sante post said Pride of Nazumah was "the base card underneath" the HEARTSTEEL K'Sante. It is a different card.
+  - The colourless post's FAQ still said K'Sante had no card.
+- **Price matcher (`resolveCardId`).** These are the first cross-set chase reprints in the catalogue. Until now each of these names lived in one set, so a store title carrying only the name ("Sett, Kingpin") matched without set evidence. The RAD row made it a two-set name, which a bare title cannot resolve, so it fell out of the comparison and the OGN card lost prices it had carried since launch (verified by stashing the fix: "Sett, Kingpin" resolved to null). A plain listing (no Showcase/Signature/Overnumbered signal) now drops overnumbered and signature candidates before the set check, unless its own collector number names one. A base-numbered reprint in two sets is unaffected and still needs set evidence. The rule is pinned in `tests/cross-set-chase-reprint-matching.test.ts`.
+
+**Declined.**
+- Bumping `radiance.ts`: these are Champion Units, not Legends, so no count moves.
+- Folding the new post into `riftbound-heartsteel-cards`. The owner asked for a post, and the "overnumbered" and full-sheet intent is one the older post, written about a music-video tease, doesn't answer. The keyword-map row names it as a fold candidate once the card pages carry prices.
+
+**Noticed, not fixed.** A bare "Kayn, Unleashed" listing has never matched by name: `cleanProductName` strips "unleashed" as a set word, leaving "Kayn". That predates this change and is unaffected by it. Numbered listings still resolve.
+
+Typecheck clean. Lint clean apart from the pre-existing warning. Full suite passes. The AdSense guard and images:check pass. Landed on main without `[deploy]`, so it rides the 08:00 UTC release.

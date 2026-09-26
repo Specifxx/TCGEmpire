@@ -636,6 +636,18 @@
     ],
     "fingerprint": "e9e4b377eded8994"
   },
+  "/blog/riftbound-heartsteel-overnumbered.jpg": {
+    "src": "/blog/riftbound-heartsteel-overnumbered.jpg",
+    "width": 1600,
+    "height": 838,
+    "bytes": 116430,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/blog/riftbound-heartsteel-overnumbered.avif",
+    "avifBytes": 102009,
+    "variants": [],
+    "fingerprint": "3276b25928192f05"
+  },
   "/blog/riftbound-legacy-key-art.jpg": {
     "src": "/blog/riftbound-legacy-key-art.jpg",
     "width": 1478,
@@ -1043,6 +1055,78 @@
     "variants": [],
     "avif": "/r2-source.avif",
     "avifBytes": 11241
+  },
+  "/radiance-spoilers/heartsteel-aphelios-exalted.jpg": {
+    "src": "/radiance-spoilers/heartsteel-aphelios-exalted.jpg",
+    "width": 694,
+    "height": 964,
+    "bytes": 120872,
+    "webp": "/radiance-spoilers/heartsteel-aphelios-exalted.webp",
+    "webpBytes": 80472,
+    "avif": "/radiance-spoilers/heartsteel-aphelios-exalted.avif",
+    "avifBytes": 47902,
+    "variants": [],
+    "fingerprint": "3f6175a13cedb5a4"
+  },
+  "/radiance-spoilers/heartsteel-ezreal-dashing.jpg": {
+    "src": "/radiance-spoilers/heartsteel-ezreal-dashing.jpg",
+    "width": 694,
+    "height": 966,
+    "bytes": 118136,
+    "webp": "/radiance-spoilers/heartsteel-ezreal-dashing.webp",
+    "webpBytes": 80680,
+    "avif": "/radiance-spoilers/heartsteel-ezreal-dashing.avif",
+    "avifBytes": 48814,
+    "variants": [],
+    "fingerprint": "e733615f0ecd4a47"
+  },
+  "/radiance-spoilers/heartsteel-kayn-unleashed.jpg": {
+    "src": "/radiance-spoilers/heartsteel-kayn-unleashed.jpg",
+    "width": 694,
+    "height": 964,
+    "bytes": 115512,
+    "webp": "/radiance-spoilers/heartsteel-kayn-unleashed.webp",
+    "webpBytes": 77620,
+    "avif": "/radiance-spoilers/heartsteel-kayn-unleashed.avif",
+    "avifBytes": 47910,
+    "variants": [],
+    "fingerprint": "be572e4f0454cb7a"
+  },
+  "/radiance-spoilers/heartsteel-ksante-courageous.jpg": {
+    "src": "/radiance-spoilers/heartsteel-ksante-courageous.jpg",
+    "width": 696,
+    "height": 966,
+    "bytes": 118105,
+    "webp": "/radiance-spoilers/heartsteel-ksante-courageous.webp",
+    "webpBytes": 81714,
+    "avif": "/radiance-spoilers/heartsteel-ksante-courageous.avif",
+    "avifBytes": 49986,
+    "variants": [],
+    "fingerprint": "86289e9411007ee8"
+  },
+  "/radiance-spoilers/heartsteel-sett-kingpin.jpg": {
+    "src": "/radiance-spoilers/heartsteel-sett-kingpin.jpg",
+    "width": 692,
+    "height": 962,
+    "bytes": 118401,
+    "webp": "/radiance-spoilers/heartsteel-sett-kingpin.webp",
+    "webpBytes": 79630,
+    "avif": "/radiance-spoilers/heartsteel-sett-kingpin.avif",
+    "avifBytes": 49361,
+    "variants": [],
+    "fingerprint": "4b66014c3af4e7e5"
+  },
+  "/radiance-spoilers/heartsteel-yone-blademaster.jpg": {
+    "src": "/radiance-spoilers/heartsteel-yone-blademaster.jpg",
+    "width": 692,
+    "height": 964,
+    "bytes": 101156,
+    "webp": "/radiance-spoilers/heartsteel-yone-blademaster.webp",
+    "webpBytes": 86808,
+    "avif": "/radiance-spoilers/heartsteel-yone-blademaster.avif",
+    "avifBytes": 51796,
+    "variants": [],
+    "fingerprint": "45684ea03a6757af"
   },
   "/radiance-spoilers/ksante-ntofo-strikes.jpg": {
     "src": "/radiance-spoilers/ksante-ntofo-strikes.jpg",

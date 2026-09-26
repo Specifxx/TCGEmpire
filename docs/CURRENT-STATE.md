@@ -299,8 +299,11 @@ longer lands on its entry.
   `lib/sealed-offers.ts`); only open offers set a headline price or a store
   count. [2026-09-24](../DECISIONS.md#L11971)
 - **Matching:** one `FOREIGN_LANG` pattern and one promo-set regex; a sealed
-  listing's own title can veto its group.
-  [2026-09-10](../DECISIONS.md#L4284), [2026-09-20](../DECISIONS.md#L8969)
+  listing's own title can veto its group. A plain store title (no chase
+  signal) drops overnumbered/signature candidates before the cross-set
+  check, so a chase reprint in a new set never strands the original's
+  name-only listings. [2026-09-10](../DECISIONS.md#L4284),
+  [2026-09-20](../DECISIONS.md#L8969), [2026-09-26](../DECISIONS.md#L13959)
 - **Card art** comes from the `/card-art` mirror via `cardImageSrc`; OG
   images need PNG (`cardImageForOg`). [2026-09-13](../DECISIONS.md#L5750),
   [2026-09-22](../DECISIONS.md#L10857)
