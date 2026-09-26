@@ -255,8 +255,10 @@ function CheapestOnEbay({ rows, currency, country }: { rows: CheapestEbayDeal[];
         <h3 className="text-sm font-extrabold text-white">Cheapest on eBay</h3>
         <PaidLinkTag />
       </div>
+      {/* No "today": in the UK, Singapore and the EU the eBay rows refresh
+          every third day (lib/price-import.ts EBAY_ROTATING_MARKETS). */}
       <p className="mb-1 px-1 text-[11px] leading-snug text-slate-500">
-        Cards where an eBay listing costs less than any store we track today
+        Cards where an eBay listing costs less than any store we track
       </p>
       <ul className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         {rows.map((d, i) => (

@@ -280,7 +280,8 @@ test("TodaysTopDeals renders Cheapest on eBay under the grid: free, measured, di
   const block = between(src, "function CheapestOnEbay(", "\n}\n");
   assert.match(block, /if \(rows\.length === 0\) return null;/, "hidden when the market has no rows");
   assert.match(block, />Cheapest on eBay</);
-  assert.match(block, /Cards where an eBay listing costs less than any store we track today/);
+  assert.match(block, /Cards where an eBay listing costs less than any store we track\n/);
+  assert.doesNotMatch(block, /any store we track today/, "UK/SG/EU eBay rows refresh every third day");
   // One OutboundLink per row, straight to the listing, attributed.
   assert.equal((block.match(/<OutboundLink\b/g) ?? []).length, 1, "each row is ONE link");
   for (const attr of [
