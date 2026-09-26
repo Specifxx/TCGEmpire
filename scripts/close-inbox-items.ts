@@ -35,21 +35,34 @@ type Close = { id: string; from: string; to: string; what: string; why: string }
 const SUGGESTIONS: Close[] = [];
 
 // ── Wrong-price / wrong-card reports ─────────────────────────────────────────
-// Both 2026-09-23 "wrong card or product" reports, each traced to the REAL
-// listing title (diagnose-card for the store row, diagnose-ebay-item for the
-// eBay one) rather than guessed at. FIXED means the matcher that admitted the
-// listing changed, tests/wrong-card-reports.test.ts fails on that exact title
-// without the change, and a re-import with the fixed matcher was run AND the
-// card page was checked afterwards. The Vi eBay report (cmueqk03f0001nq05zyyoonim)
-// is fixed in code but not yet closed: its row only clears on the next eBay
-// chase pass (19:00 UTC), so it is not verified yet.
+// The 2026-09-24 pass closed the Azir/Jax report and left the Vi eBay report
+// open pending its next chase pass. diagnose-card (2026-09-26) now shows
+// ebay_us pricing Vi, Piltover Enforcer's overnumbered at US$104.68 — the
+// US$1.99 row from the 187/229 mismatch is gone — so it closes here too.
+//
+// One new report this pass: Falling Star (OGN 029/298), GG Legends US$0.49.
+// diagnose-card showed the listing as "Falling Star [Gothic]" — every other
+// store prices this card US$10-22, and "Gothic" is not a Riftbound set,
+// condition, or print-variant word. cleanProductName() in price-import.ts
+// discards bracket contents outright, so that one signal never reached the
+// matcher. Fixed the same way as foreignTotal: a bracket note that matches
+// none of our own vocabulary, on a title with no collector number to
+// corroborate it, is now evidence of a different product, not noise to
+// ignore. tests/price-import.test.ts pins the exact title.
 const REPORTS: Close[] = [
   {
-    id: "cmueqkjcl0000cye63y1ithku",
+    id: "cmueqk03f0001nq05zyyoonim",
     from: "NEW",
     to: "FIXED",
-    what: "Azir, Emperor of the Sands (SFD 247/221), Sweets and Geeks US$60",
-    why: "the row was a Jax, Grandmaster At Arms (Overnumbered) listing carrying Azir's collector number. resolveCardId's number-only path trusted 247 alone; it now refuses a title that names a different catalogue card and never names the one the number points at",
+    what: "Vi, Piltover Enforcer (UNL 229/219, Overnumbered), eBay US$1.99 in six markets",
+    why: "fixed 2026-09-24 (numberMatches no longer reads a bare number that touches someone else's slash); verified 2026-09-26 via diagnose-card — ebay_us now prices the overnumbered chase at US$104.68, and the US$1.99 row is gone",
+  },
+  {
+    id: "cmugzoyfm000014j323g337b7",
+    from: "NEW",
+    to: "FIXED",
+    what: "Falling Star (OGN 029/298), GG Legends US$0.49",
+    why: "the listing was \"Falling Star [Gothic]\", a different, non-Riftbound product filed under our card by name alone. resolveCardId now refuses a bare name match whose bracket note names nothing in our own vocabulary",
   },
 ];
 

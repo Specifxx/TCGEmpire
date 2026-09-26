@@ -1461,7 +1461,21 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
   // Never match a multi-card listing (playset/lot/bundle) to a single card — its
   // price is for the whole group, not one card.
   if (MULTI_CARD.test(t)) return null;
+  // A bracket/paren qualifier that names something NOT in our own vocabulary,
+  // on a listing with no collector number at all, is the same shape as the
+  // foreignTotal guard below — positive evidence of another product, not a
+  // missing signal to ignore. Found 2026-09-26 via a wrong-price report:
+  // GG Legends listed "Falling Star [Gothic]" at US$0.49 (every real listing
+  // of Falling Star OGN 029/298 prices US$10-22) — cleanProductName() DISCARDS
+  // bracket contents outright, so "[Gothic]" (not a set, condition, or
+  // print-variant word — nothing Riftbound calls a card) never got a chance to
+  // block the name match. Narrow like foreignTotal: only a BARE name match (no
+  // number anywhere in the title) is blocked, so a listing that also states a
+  // real collector number is unaffected even if it carries an odd bracket note.
+  const bracketNote = t.match(/[[(]([^\])]+)[\])]/)?.[1];
+  const unrecognisedBracket = !!bracketNote && !new RegExp(STOP.source, "i").test(bracketNote) && !/\d/.test(bracketNote);
   const num = parseNumber(t);
+  if (unrecognisedBracket && !num) return null;
   // Only a real signal in the title (an explicit number/total, or a set-name
   // hint) counts as "confident" — the "OGN" tail is a fallback default for the
   // number-only path below, NOT evidence the listing is actually OGN, so it must

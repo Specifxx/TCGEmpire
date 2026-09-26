@@ -212,6 +212,32 @@ test("an explicit Riftbound set signal overrides an unrecognised denominator", (
   assert.equal(resolve("Ionian Ambush - Origins - 134/999"), "ogn-134");
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Reported via a wrong-price form submission, 2026-09-26: GG Legends listed
+// "Falling Star [Gothic]" at US$0.49 while every real listing of Falling Star
+// OGN 029/298 (every store, every market) priced US$10-22. "Gothic" is not a
+// Riftbound set, condition, or print-variant word — cleanProductName() simply
+// discards bracket contents, so the one signal marking this as a different,
+// non-Riftbound product never reached the matcher. Same shape as foreignTotal
+// above: a title fact that doesn't fit our vocabulary is evidence, not noise.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("an unrecognised bracket note blocks a bare name-only match", () => {
+  assert.equal(resolve("Falling Star [Gothic]"), null);
+  assert.equal(resolve("Existential Dread (Some Other Game)"), null);
+});
+
+test("an unrecognised bracket note does not block a match with a real number", () => {
+  // The guard only fires on a BARE name match — a title that also states a real
+  // collector number is unaffected, odd bracket note or not.
+  assert.equal(resolve("Ionian Ambush [Gothic] 134/298"), "ogn-134");
+});
+
+test("a recognised bracket note (set, condition, print-variant) never blocks a name match", () => {
+  assert.equal(resolve("Existential Dread [Unleashed]"), "unl-134");
+  assert.equal(resolve("Existential Dread (Foil)"), "unl-134");
+});
+
 test("every real Riftbound denominator still resolves by number alone", () => {
   // The number-only path is load-bearing for stores whose titles bury the name
   // in punctuation — the guard must not cost it anything.

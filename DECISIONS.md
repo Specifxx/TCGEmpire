@@ -13943,3 +13943,15 @@ Noticed, not ours: `Markdown.tsx` emits duplicate React keys on long articles
 
 Deployed off-schedule at the owner's explicit instruction ("Deploy to production
 without waiting for the daily schedule").
+
+## Wrong-price report: a bracket note naming another product blocks a bare name match — 2026-09-26
+
+**Why.** Two open reports in the inbox. GG Legends listed "Falling Star [Gothic]" at US$0.49 filed under our Falling Star (OGN 029/298), which prices US$10-22 everywhere else. "Gothic" is not a Riftbound set, condition, or print-variant word — `cleanProductName()` discards bracket contents outright before the name match runs, so the one signal marking this as a different, non-Riftbound product never reached `resolveCardId`. Same shape as the foreignTotal guard (2026-09-10): a title fact that doesn't fit our vocabulary is evidence, not noise to default away.
+
+**What.** A bracket/paren note that matches none of `STOP`'s Riftbound vocabulary (no set name, condition word, or print-variant word) and carries no digit, on a title with **no collector number anywhere**, now blocks the match. Narrow like foreignTotal: a title that also states a real number is unaffected even if it carries an odd bracket note, so a genuine listing with unusual wording still resolves. `tests/price-import.test.ts` and `tests/wrong-card-reports.test.ts` pin the exact title.
+
+**Closed.** Both open reports:
+- Falling Star / GG Legends — fixed above.
+- Vi, Piltover Enforcer / eBay US$1.99 — fixed 2026-09-24 (`numberMatches` no longer reads a bare number that touches someone else's slash); left open pending its next chase pass. `diagnose-card` today shows `ebay_us` pricing the overnumbered chase at US$104.68 and the US$1.99 row gone, so it closes now too.
+
+`scripts/close-inbox-items.ts --apply` ran against both rows.

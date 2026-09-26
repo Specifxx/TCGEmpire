@@ -17,6 +17,7 @@ const CARDS: CardLite[] = [
   c("jax-base", "Jax, Grandmaster at Arms", "SFD", "193/221", "Epic"),
   c("vi-over", "Vi, Piltover Enforcer", "UNL", "229/219"),
   c("vi-base", "Vi, Piltover Enforcer", "UNL", "187/219", "Rare"),
+  c("falling-star", "Falling Star", "OGN", "029/298", "Rare"),
 ];
 const idx = buildCardIndex(CARDS);
 const resolve = (title: string) => resolveCardId({ title, handle: "h", variants: [] } as never, idx);
@@ -48,4 +49,20 @@ test("an eBay title for Vi #187 with a mistyped '/229' is not the overnumbered 2
 test("a genuine overnumbered Vi listing still matches, with or without the /219", () => {
   assert.equal(listingMatchesCard({ ...P, title: "Vi Piltover Enforcer 229/219 Overnumbered Foil Riftbound Unleashed" }, vi229), true);
   assert.equal(listingMatchesCard({ ...P, title: "Riftbound Unleashed Vi Piltover Enforcer Overnumbered #229" }, vi229), true);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// A third report, 2026-09-26: GG Legends listed "Falling Star [Gothic]" at
+// US$0.49 — a different, non-Riftbound product filed under our card by name
+// alone. Every real listing of this card prices US$10-22.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("a bracket note naming no Riftbound vocabulary blocks a bare name match", () => {
+  assert.equal(resolve("Falling Star [Gothic]"), null);
+});
+
+test("the real card still resolves by its own set/number/condition wording", () => {
+  assert.equal(resolve("Falling Star - Origins - 029/298"), "falling-star");
+  assert.equal(resolve("Falling Star [OGN - 029/298]"), "falling-star");
+  assert.equal(resolve("Falling Star (Near Mint)"), "falling-star");
 });
