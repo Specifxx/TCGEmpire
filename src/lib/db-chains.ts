@@ -118,7 +118,37 @@ export const OPERATIONAL_VARS = ["RM4"] as const;
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
  *
- *   HISTORY_DATABASE_URL_3 — in service since 2026-09-22, once
+ *   HISTORY_DATABASE_URL_4 — in service since 2026-09-26, once
+ *                            HISTORY_DATABASE_URL_3 reached its own 5 GB
+ *                            monthly transfer allowance four days into
+ *                            service (the owner reported "99% at limit").
+ *                            HISTORY_DATABASE_URL_4 is a RECYCLED name,
+ *                            retired since the 2026-08-21 cutover onto _3.
+ *                            RE-VERIFIED FRESH: a 2026-09-26 probe-databases
+ *                            run found it holding User=0, RetailerPrice=0 —
+ *                            no operational-shaped data at all, unlike RH5
+ *                            (see below) — so it was genuinely safe to wipe.
+ *                            migrate-history-db-to-hdu4 did a full
+ *                            pg_dump/restore of HISTORY_DATABASE_URL_3 over
+ *                            it, re-run once immediately before this cutover;
+ *                            both passes verified every count equal: Card
+ *                            1,447, ClickEvent 698, PriceHistory 425,410.
+ *
+ *                            RH5 WAS TRIED FIRST and refused by the
+ *                            migration's own User-row guard (User=85,
+ *                            CollectionCard=374, Order=4,
+ *                            MarketplaceListing=11, RetailerPrice=39,635 — a
+ *                            real operational snapshot, not a rested history
+ *                            project; see the RH5 note below). Nothing was
+ *                            written to it.
+ *   HISTORY_DATABASE_URL_3 — the rollback: served 2026-09-22..09-26, holds
+ *                            the same GLOBAL series (it is what _4 was
+ *                            restored FROM). Only ever selected if
+ *                            HISTORY_DATABASE_URL_4 is UNSET — a safety net
+ *                            for a missing secret, not a health check.
+ *
+ * HISTORY_DATABASE_URL_3's OWN PRIOR ENTRY (kept for the history, not the
+ * chain): in service since 2026-09-22, once
  *                            HISTORY_DATABASE_URL_2 (see below) came within
  *                            reach of its own 5 GB monthly transfer allowance
  *                            after five days live — the same terminal burn
@@ -145,38 +175,31 @@ export const OPERATIONAL_VARS = ["RM4"] as const;
  *                            distinctCards=1426, GLOBAL rows=82,175) over it,
  *                            every count verified equal: Card 1,437,
  *                            ClickEvent 698, PriceHistory 423,999.
- *   HISTORY_DATABASE_URL_2 — the rollback: served 2026-09-17..09-22, holds the
- *                            same GLOBAL series (it is what _3 was restored
- *                            FROM), so it is a genuinely safe rollback. Only
- *                            ever selected if HISTORY_DATABASE_URL_3 is UNSET
- *                            — a safety net for a missing secret, not a health
- *                            check, so a near-exhausted-but-present _3 never
- *                            masks a genuinely missing _2 (resolveVar is
- *                            precedence, never health; see OPERATIONAL_VARS
- *                            above for the outage that shape caused on the
- *                            operational side).
+ *   HISTORY_DATABASE_URL_2 — served 2026-09-17..09-22, holds the same GLOBAL
+ *                            series. DROPS OUT OF THIS CUTOVER (a chain only
+ *                            needs one rollback), still reachable and
+ *                            available to migration tasks by explicit name.
  *   DATABASE_URL           — the terminal case, meaning "no separate history
  *                            project is configured; history shares the
  *                            operational database". db-history.ts's
  *                            historyIsSplit depends on this staying last.
  *
- * HISTORY_DATABASE_URL DROPS OUT OF THIS CUTOVER (it was _2's own rollback for
- * the 2026-09-17..09-22 stint, and a chain only needs one) — still reachable,
- * still holding the GLOBAL series, available to migration tasks by explicit
- * name if ever needed again.
+ * HISTORY_DATABASE_URL DROPS OUT (it was _2's own rollback for the
+ * 2026-09-17..09-22 stint) — still reachable, still holding the GLOBAL
+ * series, available to migration tasks by explicit name if ever needed again.
  *
  * RH5 IS DELIBERATELY ABSENT, and not because it is orphaned. The 2026-08-23
  * probe found it holding User=85, CollectionCard=374, Order=4,
  * MarketplaceListing=11, RetailerPrice=39,635 — a full OPERATIONAL snapshot from
- * an early term, not a history project at all. It was briefly the intended target
- * of the RH8 rotation; the migration's User-row guard refused it. A 2026-09-02
- * probe (run to pick the RH6 rotation's target) confirmed it still holds that
- * same data — RH5 remains permanently excluded, never a candidate to recycle. It
- * is also one of the account-recovery sources probe-databases exists to find, so
- * it should be left intact rather than reused.
+ * an early term, not a history project at all. It was tried again on
+ * 2026-09-26 (this cutover) and refused again by the migration's own
+ * User-row guard — still holding that same data. RH5 remains permanently
+ * excluded, never a candidate to recycle. It is also one of the
+ * account-recovery sources probe-databases exists to find, so it should be
+ * left intact rather than reused.
  *
- * RH6, RH7, RH8, RH9, RH10, RH11 AND HISTORY_DATABASE_URL/_4 STAY OUT OF THIS
- * CHAIN — reachable (the 2026-09-22 probe-history run found all of them so,
+ * RH6, RH7, RH8, RH9, RH10, RH11 AND HISTORY_DATABASE_URL/_3 (BEYOND ITS
+ * ROLLBACK SLOT) STAY OUT OF THIS CHAIN — reachable (the 2026-09-22 probe-history run found all of them so,
  * each holding real if outdated data), but nothing has asked to cut over onto
  * any of them, and this file's own "ONLY LIVE PROJECTS BELONG IN A RUNTIME
  * CHAIN" rule means being reachable is not enough on its own to earn a chain
@@ -184,7 +207,7 @@ export const OPERATIONAL_VARS = ["RM4"] as const;
  * requiring the same live guard every recycled target gets — do not assume
  * OLD findings (documented in earlier git history) still hold.
  */
-export const HISTORY_VARS = ["HISTORY_DATABASE_URL_3", "HISTORY_DATABASE_URL_2", "DATABASE_URL"] as const;
+export const HISTORY_VARS = ["HISTORY_DATABASE_URL_4", "HISTORY_DATABASE_URL_3", "DATABASE_URL"] as const;
 
 /** First variable in `vars` that is actually set, by NAME — never its value. */
 export function resolveVar(vars: readonly string[]): string | null {
