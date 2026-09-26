@@ -203,6 +203,247 @@ export interface Article {
 // read it, so one bump when a wave lands updates every one of them.
 
 export const ARTICLES: Article[] = [
+  // HEARTSTEEL OVERNUMBERED (2026-09-26). Riot's official six-card graphic: every
+  // HEARTSTEEL member as an overnumbered Radiance Champion Unit, RAD 178–183/167.
+  // Five are REPRINTS of cards legal since OGN/SFD (cross-checked against the
+  // originals' card images: name, cost, Might, domain, rules text — only Yone's
+  // wording differs); K'Sante, Courageous is NEW. All six are in
+  // prisma/manual-cards.json. Owns the "heartsteel overnumbered" / "radiance
+  // heartsteel cards" reveal intent; riftbound-heartsteel-cards keeps the band /
+  // music-video intent it was written for (docs/seo-keyword-map.md). Title avoids
+  // "Radiance" + "spoiler" (the tracker owns that pair). Inbound links from the
+  // tracker's reveal log, the HEARTSTEEL post and the K'Sante post.
+  {
+    slug: "riftbound-heartsteel-overnumbered-cards",
+    category: "blog",
+    title: "Riftbound HEARTSTEEL Overnumbered: All 6 Cards",
+    excerpt:
+      "All six HEARTSTEEL overnumbered Radiance cards, RAD 178–183/167: what each does, which five are reprints, and K'Sante's first Champion Unit.",
+    author: "RiftCompare",
+    date: "2026-09-26",
+    readMins: 9,
+    tags: ["radiance", "news", "spoilers", "heartsteel", "collecting", "ksante"],
+    hero: {
+      src: "/blog/riftbound-heartsteel-overnumbered.jpg",
+      alt: "Riot's official HEARTSTEEL overnumbered cards for Riftbound: Radiance — K'Sante, Aphelios and Ezreal on the top row, Yone, Kayn and Sett below, numbered RAD 178/167 to 183/167",
+    },
+    shop: [
+      { label: "Radiance pre-orders", query: "Riftbound Radiance" },
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+    ],
+    // All six are in the catalogue (manual-cards.json); the originals are the
+    // live OGN/SFD rows the HEARTSTEEL post already embeds.
+    embeds: [
+      {
+        title: "All six HEARTSTEEL overnumbered cards, in our database",
+        note: "Added from Riot's graphic on 26 September 2026. The art is cropped from that graphic until Radiance's official card images land; every other field is read off the card.",
+        slugs: [
+          "k-sante-courageous-rad-178-167",
+          "aphelios-exalted-rad-179-167",
+          "ezreal-dashing-rad-180-167",
+          "yone-blademaster-rad-181-167",
+          "kayn-unleashed-rad-182-167",
+          "sett-kingpin-rad-183-167",
+        ],
+      },
+      {
+        title: "K'Sante's Radiance cards so far",
+        note: "His Champion Unit, his Legend and his signature spell — three cards, one idea: Shield that pays you back.",
+        slugs: ["k-sante-courageous-rad-178-167", "pride-of-nazumah-rad-172-167", "ntofo-strikes-rad-146-167"],
+      },
+      {
+        title: "The five originals — the same cards, buyable today",
+        note: "The Origins and Spiritforged printings the HEARTSTEEL cards reprint. Same name, cost and rules text; live prices across every store we track.",
+        slugs: [
+          "aphelios-exalted-sfd-049-221",
+          "ezreal-dashing-sfd-082-221",
+          "yone-blademaster-sfd-116-221",
+          "kayn-unleashed-ogn-189-298",
+          "sett-kingpin-ogn-240-298",
+        ],
+      },
+    ],
+    summary: [
+      "**Riot has shown all six HEARTSTEEL cards for Riftbound: Radiance** — overnumbered Champion Units numbered **RAD 178/167 to 183/167**, one per band member, all art by Luscinia Studio.",
+      "**Five of the six are reprints.** Aphelios, Exalted; Ezreal, Dashing; Yone, Blademaster; Kayn, Unleashed and Sett, Kingpin match cards legal since Origins and Spiritforged — new art on cards you can already play.",
+      "**[K'Sante, Courageous](/card/k-sante-courageous-rad-178-167) is the new one:** a 5-energy, 4-Might Body unit with Accelerate and Shield 2 that channels a rune whenever he holds. It is K'Sante's first Champion Unit.",
+      "**One reprint's wording changed.** Yone now reads *\"a battlefield that was uncontrolled\"* where the Spiritforged card says *\"an open battlefield\"*. Riot has not said whether that changes how he plays.",
+      "**Nothing is buyable yet** — Radiance releases **23 October 2026**. The five originals are on sale today, with live prices below.",
+    ],
+    faq: [
+      {
+        q: "What are the HEARTSTEEL overnumbered cards in Riftbound?",
+        a: "Six Champion Units in Riftbound: Radiance, one for each HEARTSTEEL member, shown by Riot in one official graphic: K'Sante, Courageous (RAD 178/167), Aphelios, Exalted (179/167), Ezreal, Dashing (180/167), Yone, Blademaster (181/167), Kayn, Unleashed (182/167) and Sett, Kingpin (183/167). All six carry HEARTSTEEL skin-line art by Luscinia Studio and are numbered above Radiance's 167-card base run.",
+      },
+      {
+        q: "Are the HEARTSTEEL Riftbound cards new cards?",
+        a: "Only one is. Aphelios, Exalted, Ezreal, Dashing, Yone, Blademaster, Kayn, Unleashed and Sett, Kingpin are reprints of cards already legal from Origins and Spiritforged — same name, cost, Might, domain and rules text, apart from one reworded line on Yone. K'Sante, Courageous is new: K'Sante had no Champion Unit before it.",
+      },
+      {
+        q: "What does K'Sante, Courageous do?",
+        a: "He is a Body Champion Unit costing 5 energy with 4 Might, Accelerate and Shield 2, and the line \"When I hold, channel 1 rune.\" Accelerate lets him enter ready for an extra cost, Shield 2 makes him a 6 while defending, and each time he holds a battlefield you get an extra rune. With his Legend, Pride of Nazumah, his Shield 2 can become Assault 2 for a turn.",
+      },
+      {
+        q: "What does overnumbered mean on a Riftbound card?",
+        a: "Its collector number is higher than the set's base run. Radiance's base run is 167 cards, so 178/167 to 183/167 sit outside it — the range where Riftbound numbers its premium treatments. RiftCompare files overnumbered cards as Showcase printings, the same way it files the overnumbered cards of Origins and Spiritforged.",
+      },
+      {
+        q: "Is the HEARTSTEEL Yone different from Yone, Blademaster?",
+        a: "It is the same card with one reworded line. The Spiritforged printing (116/221) reads \"When I conquer an open battlefield\"; the HEARTSTEEL printing (RAD 181/167) reads \"When I conquer a battlefield that was uncontrolled\". Cost, Might, domain and the rest of the text are unchanged. Riot has not said whether the new wording changes when the ability triggers.",
+      },
+      {
+        q: "How do I tell a HEARTSTEEL card from the original in a listing?",
+        a: "By the collector number. The HEARTSTEEL printings are RAD 178/167 to 183/167; the originals are numbered in their own sets — Kayn, Unleashed is OGN 189/298, Sett, Kingpin is OGN 240/298, and Aphelios, Ezreal and Yone are Spiritforged 049, 082 and 116 of 221. A listing that gives only the name could be either printing.",
+      },
+      {
+        q: "When can I buy the HEARTSTEEL cards?",
+        a: "Not before Radiance releases on 23 October 2026. Riot's graphic is a card reveal, not a product announcement: it does not say which product carries the HEARTSTEEL cards or at what rate. The five originals they reprint are on sale today.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Every Radiance card as it's revealed →",
+      blurb: "The set hub fills in through Preview Season and switches on live price comparison across every store we track on release day.",
+    },
+    body: `**Riot has now shown every HEARTSTEEL card in Riftbound: Radiance.** The official graphic lines the whole band up in two rows — K'Sante, Aphelios and Ezreal on top, Yone, Kayn and Sett below — as **overnumbered Champion Units, RAD 178/167 through 183/167**, every one of them in HEARTSTEEL skin-line art by **Luscinia Studio**.
+
+That settles three things this site has been tracking for a week. HEARTSTEEL *is* in Radiance: the [redacted contents list](/blog/riftbound-radiance-colorless-champion-unit) of 22 September named the band, and now there are collector numbers to go with the name. Yone, the one member missing from the "LIVE MY LIFE" video stills we saw, has a card after all. And K'Sante, whose [Legend and signature spell](/blog/riftbound-ksante-radiance-spoiler) surfaced yesterday, now has a Champion Unit too.
+
+It also answers the question [our first HEARTSTEEL post](/blog/riftbound-heartsteel-cards) asked of the Kayn card in the video: new card, or new printing? For five of the six the answer is the same — **a new printing of a card you can already play** — and the one exception is the most interesting card on the sheet.
+
+[[embed:0]]
+
+## The six cards at a glance
+
+Every field below is read off the graphic, and for the five reprints it is cross-checked against the original card.
+
+| Number | Card | Domain | Cost | Might | New card or reprint? |
+| --- | --- | --- | --- | --- | --- |
+| 178/167 | **K'Sante, Courageous** | Body | 5 | 4 | **New** — K'Sante's first Champion Unit |
+| 179/167 | **Aphelios, Exalted** | Calm | 4 | 4 | Reprint of Spiritforged 049/221 |
+| 180/167 | **Ezreal, Dashing** | Mind | 4 | 3 | Reprint of Spiritforged 082/221 |
+| 181/167 | **Yone, Blademaster** | Body | 5 | 5 | Reprint of Spiritforged 116/221, one line reworded |
+| 182/167 | **Kayn, Unleashed** | Chaos | 6 | 6 | Reprint of Origins 189/298 |
+| 183/167 | **Sett, Kingpin** | Order | 4 | 5 | Reprint of Origins 240/298 |
+
+The domain is the colour of each card's name banner, and for the five reprints it agrees with the domain the original has always had. Cost is the energy figure in the top-left badge — ringed, on these cards, with the word HEARTSTEEL — and Might is the number in the top-right shield.
+
+## K'Sante, Courageous: the one new card
+
+| | |
+| --- | --- |
+| **Name** | K'Sante, Courageous |
+| **Card type** | Champion Unit · K'Sante · Shurima |
+| **Collector number** | RAD 178/167 (overnumbered) |
+| **Domain** | Body |
+| **Cost and Might** | 5 energy, 4 Might |
+| **Artist** | Luscinia Studio (©2026 RGI) |
+
+> **Accelerate** · **Shield 2** — When I hold, channel 1 rune.
+
+Three pieces, and each does a separate job.
+
+**[Accelerate](/keywords/accelerate)** lets you pay an extra cost as you play him so he enters ready rather than exhausted: a five-cost unit that can act the turn it lands, if you can afford it. **[Shield 2](/keywords/shield)** gives him +2 Might while he is defending, so on defence he fights as a 6. And *"When I hold, channel 1 rune"* pays you for doing what a Shield unit is built to do anyway — sit on a battlefield you already control and refuse to leave. Every time he holds, you get an extra rune, the resource the whole game's economy runs on.
+
+That last line is the design worth noticing. K'Sante's two cards from yesterday were both about turning Shield into *damage*: his Legend, Pride of Nazumah, gives a friendly unit *"I have Assault equal to my Shield"* for the turn, and Ntofo Strikes grants Shield 2 and then deals damage equal to it. Courageous is the other half of the same idea — a defender rewarded for defending, with **Shield 2 of his own** for the Legend to convert. Put him next to Pride of Nazumah and the Legend's ability turns his Shield 2 into Assault 2: a wall that hits back, which is exactly what the Legend is asking for.
+
+He also fits the Legend on colour. Pride of Nazumah carries two domain gems, Calm and Body; Courageous is Body. A deck built around the Legend can run him without reaching for a third domain.
+
+[[embed:1]]
+
+**What we have not seen** is a base-numbered K'Sante, Courageous. 178/167 is the overnumbered treatment, and in earlier sets overnumbered cards have sat alongside an ordinary printing — Aphelios, Exalted, one of the cards on this very sheet, has both a 049/221 and an overnumbered 224/221 in Spiritforged. Riot has not shown whether Courageous also gets an ordinary, base-numbered printing in Radiance. If it does, that will be the version most players actually buy.
+
+[[shop]]
+
+## The five reprints, card by card
+
+The other five are not new cards. Each matches a card that has been legal since Origins or Spiritforged on name, cost, Might and domain, and the rules text is word for word the same, with the one exception covered under Yone. The HEARTSTEEL cards also leave off the reminder text the originals carry, and spend the space on flavour instead. What is new is the art, the frame and the collector number, which makes each of them a new **printing** and changes nothing about how the card plays.
+
+### Aphelios, Exalted — RAD 179/167
+
+A reprint of [Aphelios, Exalted](/card/aphelios-exalted-sfd-049-221) (Spiritforged 049/221, Calm, 4 energy, 4 Might):
+
+> When you attach an Equipment to me, choose one that hasn't been chosen this turn — Ready 2 runes. · Channel 1 rune exhausted. · Buff a friendly unit.
+
+The only visible change is typographic: "Buff" is set as a keyword chip rather than a plain word. The flavour line is *"(ding ding ding)"*.
+
+### Ezreal, Dashing — RAD 180/167
+
+A reprint of [Ezreal, Dashing](/card/ezreal-dashing-sfd-082-221) (Spiritforged 082/221, Mind, 4 energy, 3 Might):
+
+> When I attack or defend, deal damage equal to my Might to an enemy unit here. I don't deal combat damage. *Mind:* **Action** — Move me to your base.
+
+The text is identical. Ezreal has two Riftbound cards, Dashing and Prodigy, and it is Dashing that gets the band treatment.
+
+### Yone, Blademaster — RAD 181/167
+
+A reprint of [Yone, Blademaster](/card/yone-blademaster-sfd-116-221) (Spiritforged 116/221, Body, 5 energy, 5 Might):
+
+> **Weaponmaster** — When I conquer a battlefield that was uncontrolled, deal damage equal to my Might to an enemy unit in a base.
+
+**This is the one reprint whose wording differs.** The Spiritforged card reads *"When I conquer an **open** battlefield"*; the HEARTSTEEL card reads *"When I conquer a battlefield **that was uncontrolled**"*. The rest of the sentence is unchanged. Whether that is new wording for the same condition or a change to when the ability triggers, Riot has not said, and we are not going to guess. If you play Yone, the text to check is Riot's own once the card reaches its official card gallery.
+
+The flavour on the other five reads like song lyrics — two-line couplets on K'Sante, Ezreal, Kayn and Sett, a bracketed *"(ding ding ding)"* on Aphelios. Yone's is the only one written as prose: *"With his passion for music now reignited, Yone is determined to take this band straight to the top."*
+
+### Kayn, Unleashed — RAD 182/167
+
+A reprint of [Kayn, Unleashed](/card/kayn-unleashed-ogn-189-298) (Origins 189/298, Chaos, 6 energy, 6 Might):
+
+> **Ganking** — If I have moved twice this turn, I don't take damage.
+
+This is the card the "LIVE MY LIFE" video put on screen, and the one our HEARTSTEEL post identified as Kayn, Unleashed rather than a new Kayn. It now has a collector number: 182/167. It is also **the first alternate printing Kayn, Unleashed has ever had** — until today he was the one HEARTSTEEL member whose card existed in exactly one print.
+
+### Sett, Kingpin — RAD 183/167
+
+A reprint of [Sett, Kingpin](/card/sett-kingpin-ogn-240-298) (Origins 240/298, Order, 4 energy, 5 Might):
+
+> **Tank** — I get +1 Might for each buffed friendly unit at my battlefield.
+
+Sett also has two Riftbound cards, so be precise about which one this is: **Kingpin**, the Order card — not Sett, Brawler, the Body card. The two are easy to confuse in a listing that only says "HEARTSTEEL Sett".
+
+[[embed:2]]
+
+## What "overnumbered" tells you
+
+Radiance's base run is **167 cards** — the first card photographed in print, Neeko, Blending In, is numbered 167/167. A card numbered *above* that, like all six of these, sits outside the base run, which is where Riftbound numbers its premium treatments. On RiftCompare an overnumbered card is filed as a Showcase printing, the same way the overnumbered cards of Origins and Spiritforged are.
+
+The Radiance numbers above 167 shown so far:
+
+| Number | Card |
+| --- | --- |
+| 172/167 | Pride of Nazumah, K'Sante's Legend |
+| 174/167 | Seraphine, Starry-Eyed Songstress |
+| 178/167 to 183/167 | The six HEARTSTEEL Champion Units |
+
+That leaves **168 to 171, 173 and 175 to 177** unaccounted for, and anything past 183 unknown. Those numbers belong to cards that have not been shown yet, and the [live spoiler tracker](/blog/riftbound-radiance-spoilers) will log them as they are.
+
+What the graphic does **not** say is how the HEARTSTEEL cards are distributed: which product carries them, at what rate, or whether all six share one. Riot's reveal is a card reveal, not a product announcement, and until Riot publishes pull rates nobody can tell you how scarce these are.
+
+## Why five reprints and one new card
+
+HEARTSTEEL is a skin line, and the sheet reads like one. For the five members who already had a card, Riot reprinted an existing card in band art rather than designing a new one, so a player who owns the originals loses nothing and a collector gets a matched set of six. For the one member who had no card at all, it made one.
+
+That is also why this sheet is less of a deckbuilding event than it looks. Five of the six cards change nothing about what you can build; they are new ways to own cards you could already buy. The deckbuilding news is K'Sante — who, counting yesterday's two cards, now has a Legend, a signature spell and a Champion Unit that all point the same way.
+
+## What it means if you are buying
+
+**Read the collector number before you pay.** "HEARTSTEEL Kayn" is RAD 182/167. "Kayn, Unleashed" with no number could just as easily be the Origins print, 189/298, which has been on sale since launch. The same goes for every reprint on this sheet: the name alone does not tell you which printing a listing is for, and two printings of one card can be very far apart in price.
+
+**If you want to play the card, the original does the same job.** A HEARTSTEEL Aphelios and a Spiritforged Aphelios are the same card at the table. The originals are buyable now, with prices compared across every store we track on each card's page, all linked above.
+
+**Nothing from Radiance is buyable yet.** The set releases **23 October 2026**, and until then there are no Radiance singles to compare. Sealed product is on [pre-order](/radiance-preorders), compared cheapest first in your own currency, and [the set hub](/sets/radiance) switches on live singles prices on release day.
+
+We do not predict prices, and we are not going to start with a chase print nobody has pulled yet.
+
+## What we still don't know
+
+- **Distribution.** Which Radiance product the HEARTSTEEL cards come in, and at what rate.
+- **A base-run K'Sante, Courageous.** Whether the card also has an ordinary printing inside the 167-card run.
+- **Yone's wording.** Whether "a battlefield that was uncontrolled" plays any differently from "an open battlefield".
+- **Final images.** Our card images are crops of Riot's graphic at the resolution it was shared, and will be replaced with the official card art once Radiance's cards reach Riot's card gallery.
+
+Every other Radiance reveal is logged, newest first, on **[the Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)**. All six of these cards are in our database now: [K'Sante](/card/k-sante-courageous-rad-178-167), [Aphelios](/card/aphelios-exalted-rad-179-167), [Ezreal](/card/ezreal-dashing-rad-180-167), [Yone](/card/yone-blademaster-rad-181-167), [Kayn](/card/kayn-unleashed-rad-182-167) and [Sett](/card/sett-kingpin-rad-183-167).`,
+  },
   // K'SANTE'S RIFTBOUND DEBUT (2026-09-25). K'Sante had NO card anywhere in the
   // game — riftbound-heartsteel-cards built a whole section on that absence and
   // predicted Radiance would end it. It has: his Legend (Pride of Nazumah,
@@ -223,6 +464,10 @@ export const ARTICLES: Article[] = [
       "K'Sante's first Riftbound cards have surfaced: Pride of Nazumah, his Radiance Legend, and signature spell Ntofo Strikes — what both cards do, and why.",
     author: "RiftCompare",
     date: "2026-09-25",
+    // 26 Sep: corrected the claim that Pride of Nazumah was the card under the
+    // HEARTSTEEL K'Sante — Riot's graphic showed that as a separate Champion Unit,
+    // K'Sante, Courageous (RAD 178/167).
+    updated: "2026-09-26",
     readMins: 10,
     tags: ["radiance", "news", "spoilers", "ksante", "deckbuilding"],
     hero: {
@@ -338,7 +583,7 @@ On RiftCompare each card is filed under the first of its two domains, Calm, the 
 
 It is easy to skip past, so it is worth sitting on: **this is a champion's entire arrival in the game.** Most Radiance reveals are a new card for a champion who already has several. K'Sante had none. That makes Pride of Nazumah his equivalent of a first impression — the printing that establishes how the game reads him — and it is a good one, because it commits to a real identity (Shield-to-offense) rather than a generic beater.
 
-It also lands his debut inside a skin line's gravity. K'Sante's higher-profile appearance this autumn was in the [HEARTSTEEL "LIVE MY LIFE" stills](/blog/riftbound-heartsteel-cards), where a band-art K'Sante card sat on the table alongside Kayn, Ezreal, Aphelios and Sett. That HEARTSTEEL printing is a cosmetic treatment; **Pride of Nazumah is the base card underneath it** — his normal art, his Legend frame, the version an ordinary Radiance booster can produce. The two are different objects, and if you are collecting, the difference between "the HEARTSTEEL K'Sante" and "the base K'Sante Legend" is the sort of thing that will matter to prices.
+It also lands his debut inside a skin line's gravity. K'Sante's higher-profile appearance this autumn was in the [HEARTSTEEL "LIVE MY LIFE" stills](/blog/riftbound-heartsteel-cards), where a band-art K'Sante card sat on the table alongside Kayn, Ezreal, Aphelios and Sett. *Corrected 26 September:* this paragraph first said Pride of Nazumah was the card underneath that HEARTSTEEL K'Sante. It is not. Riot's official HEARTSTEEL graphic showed the band-art K'Sante as a different card altogether — **[K'Sante, Courageous](/card/k-sante-courageous-rad-178-167)**, a Body Champion Unit numbered RAD 178/167 — so his HEARTSTEEL card and his Legend are two different cards, not two printings of one. The full sheet is in [our HEARTSTEEL overnumbered post](/blog/riftbound-heartsteel-overnumbered-cards).
 
 ## What we are not claiming
 
@@ -357,7 +602,7 @@ The same rules as every pre-release card, because they are the ones that keep mo
 
 **Know where he is — and is not.** The set's beginner product, the Showdown Decks, is *Seraphine vs. Evelynn*; K'Sante is not in it. That makes **boosters** the route to his cards, which is worth knowing before you buy a precon expecting to open a K'Sante deck. Sealed and pre-order prices are what actually move now, and we compare [Radiance pre-order prices](/radiance-preorders) across every tracked store, cheapest first, in your own currency, with the [sealed comparison](/sealed) covering displays and the Vault.
 
-**When singles land, read the number before the name.** With a 172/167 over-number already shown and a base printing still to come, "Pride of Nazumah" will shortly mean more than one object at more than one price — and a HEARTSTEEL-art K'Sante is a third. The collector number is what tells them apart, and it is the first thing our matcher reads off a listing. Every K'Sante card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
+**When singles land, read the number before the name.** With a 172/167 over-number already shown and a base printing still to come, "Pride of Nazumah" will shortly mean more than one object at more than one price — and the HEARTSTEEL K'Sante, Courageous (RAD 178/167) is a different card again. The collector number is what tells them apart, and it is the first thing our matcher reads off a listing. Every K'Sante card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
 
 For the running list of everything shown so far — official reveals and sightings kept clearly apart — the [Radiance spoiler tracker](/blog/riftbound-radiance-spoilers) is updated the morning after each drop, and [what's confirmed about Radiance](/blog/riftbound-radiance-what-we-know) holds the dates, products and prices.`,
   },
@@ -1035,7 +1280,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
     author: "RiftCompare",
     date: "2026-09-21",
-    updated: "2026-09-24",
+    updated: "2026-09-26",
     readMins: 9,
     tags: ["radiance", "spoilers", "card gallery", "news", "release"],
     hero: {
@@ -1117,6 +1362,8 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
 
+**26 September — all six HEARTSTEEL cards, officially.** Riot's graphic shows the whole band as overnumbered Champion Units, RAD · 178/167 to 183/167, all art by Luscinia Studio. Five are reprints in new art of cards legal since Origins and Spiritforged — *Aphelios, Exalted*, *Ezreal, Dashing*, *Yone, Blademaster*, *Kayn, Unleashed* and *Sett, Kingpin* — and the sixth, *K'Sante, Courageous* (Body, 5 energy, 4 Might, Accelerate and Shield 2), is new: his first Champion Unit. All six are in the database. The card-by-card breakdown, including the one reprint whose wording changed, is in **[the HEARTSTEEL overnumbered write-up](/blog/riftbound-heartsteel-overnumbered-cards)**.
+
 **25 September — K'Sante's first Riftbound cards.** As Preview Season opened, K'Sante — the one HEARTSTEEL member with no Riftbound card at all — got two: his Legend *Pride of Nazumah* (Calm/Body, RAD · 172/167 over-numbered) and his signature spell *Ntofo Strikes* (RAD · 146/167), both built on turning Shield into offense. It is his entire debut in the game — the reveal [our HEARTSTEEL post](/blog/riftbound-heartsteel-cards) said Radiance would have to carry. Logged here as a sighting from reveal footage, not yet an official Legend confirmation; both cards are in the database. Full breakdown: **[the K'Sante spoiler write-up](/blog/riftbound-ksante-radiance-spoiler)**.
 
 **24 September — Seraphine's Legend, officially revealed.** Riot posted *Starry-Eyed Songstress* and its over-numbered 174/167 printing on the Riftbound Instagram, confirming the photographed card below. It is Mind and Order. Both printings are now on the site: [151/167](/card/seraphine-starry-eyed-songstress-rad-151-167) and [174/167](/card/seraphine-starry-eyed-songstress-rad-174-167).
@@ -1127,7 +1374,7 @@ Newest first. Every entry here is something Riot published, printed or displayed
 
 **19 September — the first Radiance card photographed in print.** A photo of a physical *Neeko, Blending In* surfaced: a **6-energy, 4-Might Neutral Champion Unit**, art by Luscinia Studio, and — the detail that matters most — numbered **RAD · 167/167 · EN**. Its text lets a deck that runs Neeko choose **three extra Legends** alongside its starting one, and playing her adds one of them to the Legend Zone while she is on the board. That is a deckbuilding change, not a stat line, and it is pulled apart properly in **[the Neeko spoiler breakdown](/blog/riftbound-neeko-blending-in-spoiler)**. The card is already in our database, so it is the first tile in the gallery above.
 
-**18 September — the HEARTSTEEL Kayn is a reprint, not a Radiance card.** HEARTSTEEL's comeback video carried Riftbound card images, and the Kayn card in it was widely read as a Radiance reveal. It is *Kayn, Unleashed* from Origins in new art — a printing, not a new card. The full check against the database is in **[our HEARTSTEEL cards post](/blog/riftbound-heartsteel-cards)**. It is logged here precisely because it is the kind of thing this page exists to sort out.
+**18 September — the HEARTSTEEL Kayn is a reprint, not a new card.** HEARTSTEEL's comeback video carried Riftbound card images, and the Kayn card in it was widely read as a Radiance reveal. It is *Kayn, Unleashed* from Origins in new art — a printing, not a new card. The full check against the database is in **[our HEARTSTEEL cards post](/blog/riftbound-heartsteel-cards)**. It is logged here precisely because it is the kind of thing this page exists to sort out. *Corrected 26 September:* this entry's first heading said "not a Radiance card". It turned out to be both — a reprint, printed in Radiance as RAD · 182/167 (see the 26 September entry above).
 
 **Early September — a sixth Legend: Orianna.** Riot's original Set 5 announcement named five champions. Orianna was confirmed separately at a PAX West livestream, which takes the confirmed count to **six of nine**. The remaining three are unannounced.
 
@@ -1412,7 +1659,7 @@ For stores in general rather than Radiance specifically, **[where to buy Riftbou
       },
       {
         q: "Is HEARTSTEEL in Riftbound Radiance?",
-        a: "The graphic puts HEARTSTEEL on a Radiance contents list, which is the first thing to place the band in a specific set. One member is worth watching: K'Sante has no Riftbound card at all, so a complete HEARTSTEEL line-up would have to change that.",
+        a: "Yes. This graphic was the first thing to place the band in a specific set, and on 26 September Riot confirmed it with all six members as Radiance overnumbered Champion Units, RAD 178/167 to 183/167 — including K'Sante, who had no Riftbound card when this graphic appeared. See [all six HEARTSTEEL cards](/blog/riftbound-heartsteel-overnumbered-cards).",
       },
       {
         q: "How many champion Legends does Riftbound Radiance have?",
@@ -5163,13 +5410,18 @@ For everything else that is genuinely confirmed about the set — dates, product
     category: "blog",
     title: "Riftbound HEARTSTEEL Cards: The Kayn Tease",
     excerpt:
-      "The HEARTSTEEL Kayn card is not new — it's Kayn, Unleashed from Origins in new art. We checked all six members: K'Sante has no Riftbound card at all.",
+      "The HEARTSTEEL Kayn isn't a new card — it's Kayn, Unleashed in new art, since confirmed as Radiance's RAD 182/167. All six members, checked.",
     author: "RiftCompare",
     date: "2026-09-18",
     // 19 Sep: the owner supplied a labelled still-grab from the video showing
     // FIVE members' cards, which is what promoted "images surfaced alongside the
     // comeback" to "the video shows them" below. Substantive, so it dates.
-    updated: "2026-09-19",
+    // 26 Sep: Riot's official graphic showed all six as Radiance overnumbered
+    // Champion Units (RAD 178–183/167), which answered the "which product?"
+    // question this post left open and made its "Kayn is an Origins card" buying
+    // advice wrong. Dated updates below; the full sheet is its own post,
+    // riftbound-heartsteel-overnumbered-cards.
+    updated: "2026-09-26",
     readMins: 8,
     tags: ["radiance", "news", "spoilers", "heartsteel", "collecting"],
     hero: {
@@ -5185,7 +5437,7 @@ For everything else that is genuinely confirmed about the set — dates, product
       "**The Kayn card is not a new card.** Its name, 6 cost and rules text are **Kayn, Unleashed** — collector number 189 in **Origins**, legal since the game launched. What is new is the art, which makes it a new *printing*, not a new card.",
       "**Kayn is the only HEARTSTEEL champion with a card and no alternate printing at all.** Ezreal, Sett, Yone and Aphelios all already have Showcase versions; Kayn, Unleashed has exactly one print.",
       "**K'Sante has no Riftbound card whatsoever** — so if the reports putting him in Radiance hold, it is his debut, and his first card would arrive wearing a skin line.",
-      "**Nothing here is Riot-confirmed yet.** Preview Season runs [25 September to 9 October](/release-dates) and [Radiance releases 23 October 2026](/blog/riftbound-radiance-what-we-know).",
+      "**Update, 26 September: Riot has now shown all six.** They are Radiance overnumbered Champion Units, RAD 178/167 to 183/167 — the Kayn is 182/167, Yone is included, and K'Sante's is a new card, *K'Sante, Courageous*. [All six, card by card](/blog/riftbound-heartsteel-overnumbered-cards).",
     ],
     embeds: [
       {
@@ -5214,19 +5466,19 @@ For everything else that is genuinely confirmed about the set — dates, product
       },
       {
         q: "Is the HEARTSTEEL Kayn a new Riftbound card?",
-        a: "No. The name, the 6 energy cost and the rules text on the circulating image all belong to Kayn, Unleashed — collector number 189 in Origins, the game's first set. It is a Rare, Chaos-domain Unit with 6 Might and 1 Power, and it has been legal since launch. A HEARTSTEEL version would be a new printing of that existing card, not a new card, so it changes nothing about deckbuilding.",
+        a: "No. The name, the 6 energy cost and the rules text on the circulating image all belong to Kayn, Unleashed — collector number 189 in Origins, the game's first set. It is a Rare, Chaos-domain Unit with 6 Might and 1 Power, and it has been legal since launch. A HEARTSTEEL version would be a new printing of that existing card, not a new card, so it changes nothing about deckbuilding. That is what it turned out to be: on 26 September Riot showed it as Kayn, Unleashed, RAD 182/167, a Radiance printing of the same card.",
       },
       {
         q: "How many Riftbound cards does Kayn have?",
-        a: "Exactly one: Kayn, Unleashed (OGN-189). That makes him the only HEARTSTEEL champion whose card has no alternate printing at all — Ezreal, Sett, Yone and Aphelios each already have at least one Showcase version, and Sett and Yone have signature prints on top of that.",
+        a: "Exactly one card: Kayn, Unleashed (OGN-189). Until 26 September it also had exactly one printing, which made him the only HEARTSTEEL champion whose card had no alternate printing at all. That changed when Riot showed the HEARTSTEEL Kayn, Unleashed as a Radiance overnumbered printing, RAD 182/167 — the same card in new art, and its first alternate printing.",
       },
       {
         q: "Does K'Sante have a Riftbound card?",
-        a: "Not as of 18 September 2026, when this was written — he had no card in the game at all. That has since changed: on 25 September, as Radiance Preview Season opened, K'Sante's first cards surfaced — his Legend Pride of Nazumah and his signature spell Ntofo Strikes — making Radiance his Riftbound debut exactly as the reporting suggested. See the [K'Sante spoiler write-up](/blog/riftbound-ksante-radiance-spoiler) for what they do.",
+        a: "Not as of 18 September 2026, when this was written — he had no card in the game at all. That has since changed: on 25 September, as Radiance Preview Season opened, K'Sante's first cards surfaced — his Legend Pride of Nazumah and his signature spell Ntofo Strikes — making Radiance his Riftbound debut exactly as the reporting suggested. See the [K'Sante spoiler write-up](/blog/riftbound-ksante-radiance-spoiler) for what they do. On 26 September a third followed: his HEARTSTEEL card, K'Sante, Courageous (RAD 178/167), a Champion Unit rather than a printing of either.",
       },
       {
         q: "Will the HEARTSTEEL cards be in Riftbound: Radiance?",
-        a: "Unconfirmed, and worth being careful about: the leak reporting on music-themed Riftbound cards points at a Worlds 2026-themed Riftbound product, which is not necessarily Radiance. Radiance does already lean musical — Seraphine and Evelynn are both confirmed legends and the Showdown Decks product is Seraphine vs. Evelynn — but that is a theme, not a confirmation.",
+        a: "Yes. When this was written on 18 September it was unconfirmed, and the leak reporting pointed at a Worlds 2026-themed product rather than Radiance. On 26 September Riot's official graphic settled it: all six members are Radiance overnumbered Champion Units, numbered RAD 178/167 to 183/167 — five reprints in HEARTSTEEL art and one new card, K'Sante, Courageous. See [all six HEARTSTEEL cards](/blog/riftbound-heartsteel-overnumbered-cards).",
       },
       {
         q: "Does an alternate art change how a card plays?",
@@ -5311,6 +5563,8 @@ Two things fall straight out of that table, and neither has shown up in the cove
 
 We keep this split explicit on every leak story, and this one needs it more than most.
 
+*Update, 26 September:* the product question is answered. Riot's official graphic shows all six HEARTSTEEL cards as **Radiance overnumbered Champion Units, RAD 178/167 to 183/167** — Yone included — and five of the six are exactly what this post said the Kayn was: existing cards in new art. The sixth is K'Sante's, and it is a new card, *K'Sante, Courageous*. The whole sheet is broken down in **[our HEARTSTEEL overnumbered post](/blog/riftbound-heartsteel-overnumbered-cards)**. The rest of this section is kept as written on 18 September.
+
 **Confirmed:** HEARTSTEEL's comeback and the 18 September release of "LIVE MY LIFE"; the group's six champions; HEARTSTEEL 2026 skins for all six; that League's Season 3 Act 2 is music-themed with multiple bands returning. On the Riftbound side: Radiance's 23 October 2026 release, its 180 cards and 66 Showcase prints, the Seraphine vs. Evelynn Showdown Decks, and the six legends named so far.
 
 **Shown, but not announced:** the video itself is where the cards appear. Stills from "LIVE MY LIFE" show HEARTSTEEL-art Riftbound cards for **five** of the band's six members — Kayn, Ezreal, Aphelios, Sett and K'Sante — laid out on a table between shots. **Yone is the one member not shown in the stills we have seen.** That is a sighting in official Riot footage, which is a great deal stronger than a leak; it is still not a product announcement, and none of the five has been shown with a legible set code, collector number or rarity.
@@ -5323,7 +5577,7 @@ We keep this split explicit on every leak story, and this one needs it more than
 
 A few things worth being deliberate about over the next month.
 
-**Check the set code and collector number before you pay a Radiance price.** If a listing shows Kayn, Unleashed, it is an Origins card — OGN-189 — regardless of what art is on it or what the listing title says. That is the single most likely way to overpay in the next few weeks, and it takes five seconds to check on [the card's own page](/card/kayn-unleashed-ogn-189-298).
+**Check the set code and collector number before you pay a Radiance price.** Kayn, Unleashed now exists as two printings of one card: the Origins print, OGN-189, and — *updated 26 September* — the HEARTSTEEL print Riot has since shown in Radiance as RAD 182/167. The name on a listing does not tell you which one you are buying; the collector number does. Mixing them up is the single most likely way to overpay in the next few weeks, and it takes five seconds to check on [the Origins card's own page](/card/kayn-unleashed-ogn-189-298).
 
 **Watch the base prints, not just the premium ones.** The existing Kayn, Unleashed, Sett, Brawler and Yone, Blademaster prints are the cards most likely to drift upward on attention alone, and they are cheap enough that the move is affordable to catch. [Price movers](/movers) tracks that across every store we compare.
 
@@ -5333,7 +5587,7 @@ A few things worth being deliberate about over the next month.
 
 ## What to watch, and when
 
-**Preview Season runs 25 September to 9 October 2026**, opening at RQ Los Angeles. That is the window in which speculation becomes cards: if HEARTSTEEL printings are in Radiance, this is when they get shown properly, with a collector number and a rarity attached. Our [release calendar](/release-dates) carries the dates and the countdown.
+**Preview Season runs 25 September to 9 October 2026**, opening at RQ Los Angeles. That is the window in which speculation becomes cards: if HEARTSTEEL printings are in Radiance, this is when they get shown properly, with a collector number and a rarity attached. *(They were, on 26 September: RAD 178/167 to 183/167, all six overnumbered.)* Our [release calendar](/release-dates) carries the dates and the countdown.
 
 **Radiance itself lands 23 October 2026.** [The set hub](/sets/radiance) fills in with real cards through Preview Season and switches on live price comparison across every store we track the day it releases.
 
@@ -5341,7 +5595,9 @@ A few things worth being deliberate about over the next month.
 
 HEARTSTEEL's return is real, the music theme running through Riot's autumn is real, and Riftbound is visibly part of it. But the specific card everyone is sharing is Kayn, Unleashed from Origins in new clothes — and the genuinely new information sits one lookup further on: Kayn has never had a variant, and K'Sante has never had a card.
 
-Those two facts are what to watch when Preview Season opens. Everything else is theme.`,
+Those two facts are what to watch when Preview Season opens. Everything else is theme.
+
+*Update, 26 September:* both facts have now been answered by Riot. Kayn's first variant is the HEARTSTEEL Kayn, Unleashed, RAD 182/167, and K'Sante's HEARTSTEEL card is a new Champion Unit, K'Sante, Courageous — alongside the Legend and spell that surfaced on 25 September. **[All six HEARTSTEEL cards, card by card →](/blog/riftbound-heartsteel-overnumbered-cards)**`,
   },
   // IMAGE SLOT (author): under "## How the drawing actually works", a screenshot of
   // the Riot Merch Store entry form once registration opens on 14 August would make

@@ -1571,6 +1571,22 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
   // 1) name match, disambiguated by special-print → number → variant.
   let cand = byName.get(nameKey(cleanProductName(t)));
   if (cand && cand.length) {
+    // A PLAIN listing (no Showcase/Signature/Overnumbered signal) can never be
+    // for a chase print, and the fallback at the bottom of this block already
+    // refuses to pick one. So a chase printing in ANOTHER set must not make the
+    // name ambiguous either. Added 2026-09-26 with Radiance's HEARTSTEEL
+    // over-numbered reprints (Sett, Kingpin RAD 183/167, Aphelios, Exalted
+    // 179/167…): without this, the new RAD row made every bare "Sett, Kingpin"
+    // listing span two sets and fall to the set check below, which a title
+    // with no number or set name cannot pass, so it matched nothing and the
+    // OGN card lost prices it had carried since launch. A base-numbered
+    // reprint in another set is untouched, so it still needs set evidence, and
+    // a listing whose own collector number names the chase print keeps it.
+    if (!isAlt && !titleSig && !titleOver) {
+      const plain = cand.filter((c) => !isStar(c) && !isOverCard(c));
+      const numNamesChase = !!num && !pickByNum(plain) && !!pickByNum(cand);
+      if (plain.length && !numNamesChase) cand = plain;
+    }
     // A name can legitimately repeat across sets — e.g. a VEN pre-release reveal
     // (no collector number yet) sharing a name with its later-catalogued printing
     // in another set. Never let a same-named card from the WRONG set win just

@@ -219,7 +219,7 @@ longer lands on its entry.
   The one fixed-bottom exception is the card page's owner-requested sticky
   buy bar (`CardStickyBuyBar`, below lg, hidden over the comparison); if it
   rides up like the tab bar did, delete it — `CardTopBuy` under the name
-  carries the same action. [2026-09-26](../DECISIONS.md#L13999)
+  carries the same action. [2026-09-26](../DECISIONS.md#L14021)
   [2026-09-18](../DECISIONS.md#L8260), [2026-09-19](../DECISIONS.md#L8590)
 - **Watchlist:** a heart on all five surfaces and its own header control
   from sm, opening a right-side drawer; `/watching` stays. The drawer renders
@@ -303,8 +303,11 @@ longer lands on its entry.
   `lib/sealed-offers.ts`); only open offers set a headline price or a store
   count. [2026-09-24](../DECISIONS.md#L11971)
 - **Matching:** one `FOREIGN_LANG` pattern and one promo-set regex; a sealed
-  listing's own title can veto its group.
-  [2026-09-10](../DECISIONS.md#L4284), [2026-09-20](../DECISIONS.md#L8969)
+  listing's own title can veto its group. A plain store title (no chase
+  signal) drops overnumbered/signature candidates before the cross-set
+  check, so a chase reprint in a new set never strands the original's
+  name-only listings. [2026-09-10](../DECISIONS.md#L4284),
+  [2026-09-20](../DECISIONS.md#L8969), [2026-09-26](../DECISIONS.md#L14021)
 - **Card art** comes from the `/card-art` mirror via `cardImageSrc`; OG
   images need PNG (`cardImageForOg`). Grids, lists and thumbnails use the committed
   320w/480w renditions via `cardImageSrcSet`/`cardThumbProps`; only the
