@@ -5591,7 +5591,7 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
   },
   {
     slug: "riftbound-empower-explained",
-    ebayPicks: { heading: "Vendetta singles on eBay right now" },
+    ebayPicks: { setCode: "VEN", heading: "Vendetta singles on eBay right now" },
     category: "guide",
     // CTR pass 2026-09-24 (9.1k impressions, position 6.3, 1.0%): the old
     // description answered the question in full, so the snippet was the page.
@@ -6266,7 +6266,7 @@ For the full picture of the set, read the **[complete card gallery](/blog/every-
   },
   {
     slug: "riftbound-vendetta-chase-cards-so-far",
-    ebayPicks: { heading: "These chase cards on eBay right now" },
+    ebayPicks: { setCode: "VEN", heading: "These chase cards on eBay right now" },
     category: "blog",
     title: "Riftbound Vendetta Chase Cards — Every Tier",
     excerpt:
@@ -7082,7 +7082,7 @@ The fastest way to judge any of this is to pick a card you already know the pric
   },
   {
     slug: "every-riftbound-vendetta-card-revealed",
-    ebayPicks: { heading: "Vendetta chase cards on eBay right now" },
+    ebayPicks: { setCode: "VEN", heading: "Vendetta chase cards on eBay right now" },
     category: "blog",
     title: "Riftbound Vendetta Card List: All 166 Cards",
     excerpt:

@@ -71,11 +71,14 @@ export function EbayPicksLive({
   fallbackQuery,
   heading = "Chase cards on eBay right now",
   className,
+  pageType,
 }: {
   listings: PickListing[];
   fallbackQuery: string;
   heading?: string;
   className?: string;
+  /** buy_click's page_type ("homepage", "browse", "set_hub", "article"). */
+  pageType?: string;
 }) {
   const { country } = useCountry();
   const adFree = usePremium();
@@ -88,7 +91,7 @@ export function EbayPicksLive({
   // cached listings (new set, or the daily import hasn't reached it), fall back
   // to the reliable generic search CTA rather than rendering nothing.
   if (items.length === 0) {
-    return <EbayBuyCta query={fallbackQuery} className={className} />;
+    return <EbayBuyCta query={fallbackQuery} className={className} source="picks-fallback" pageType={pageType} />;
   }
 
   return (
@@ -112,6 +115,11 @@ export function EbayPicksLive({
               href={l.url}
               retailer="ebay_picks"
               country={country}
+              cardId={l.cardId}
+              cardName={l.cardName}
+              price={l.priceCents / 100}
+              pageType={pageType}
+              surface="ebay_picks"
               className="flex h-full flex-col rounded-lg border border-ink-700 bg-ink-900 p-2 transition-colors hover:border-[#0064d2]/60 hover:bg-ink-800"
             >
               <div className="aspect-[3/4] w-full overflow-hidden rounded bg-ink-950">

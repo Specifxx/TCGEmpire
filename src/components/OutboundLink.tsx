@@ -123,8 +123,40 @@ export function OutboundLink({
    *  re-deriving it from page_type + DOM position. The two shop_strip values
    *  are an article's "Shop this guide" eBay strip: `_inline` where the body
    *  placed it mid-article with [[shop]], `_end` at its default spot after the
-   *  body — the pair that says whether moving it up earned clicks. */
-  surface?: "table" | "modal" | "ebay_strip" | "out_of_stock" | "shop_strip_inline" | "shop_strip_end";
+   *  body — the pair that says whether moving it up earned clicks.
+   *
+   *  The eBay-only values (2026-09-26, "Pushing eBay clicks" in DECISIONS.md)
+   *  name every eBay unit OUTSIDE a ranked table, so eBay's share of clicks can
+   *  be read per placement rather than as one lump:
+   *  - `ebay_panel`: an "Also on eBay" panel or strip beside a comparison;
+   *  - `ebay_search`: a search link for one product, card or query (the
+   *    pre-order table's per-product line, a gallery's per-card links);
+   *  - `ebay_fallback`: the card page / QuickView search shown when a market
+   *    has no eBay row for the card;
+   *  - `ebay_cta`, `ebay_banner`, `ebay_picks`, `ebay_carousel`,
+   *    `ebay_graded`: EbayBuyCta, EbayAd, EbayPicksLive, EbayAdCarouselLive and
+   *    EbayGradedLive, which fired with no surface at all until then;
+   *  - `preorder_cta_ebay`: the eBay line under an article's pre-order CTA;
+   *  - `cheapest_ebay`: the homepage "Cheapest on eBay" row;
+   *  - `search_box`: the header search's "Search eBay for …" link. */
+  surface?:
+    | "table"
+    | "modal"
+    | "ebay_strip"
+    | "out_of_stock"
+    | "shop_strip_inline"
+    | "shop_strip_end"
+    | "ebay_panel"
+    | "ebay_search"
+    | "ebay_fallback"
+    | "ebay_cta"
+    | "ebay_banner"
+    | "ebay_picks"
+    | "ebay_carousel"
+    | "ebay_graded"
+    | "preorder_cta_ebay"
+    | "cheapest_ebay"
+    | "search_box";
 }) {
   // Tell the signup popup a buy link exists on this page, so it stays off the
   // buy path until the click has happened. See lib/buy-intent.ts — registering

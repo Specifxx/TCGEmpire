@@ -93,6 +93,9 @@ export function EbayAdCarouselLive({
             href={l.url}
             retailer="ebay"
             country={country}
+            price={l.priceCents / 100}
+            positionInList={l.rank + 1}
+            surface="ebay_carousel"
             className={`flex shrink-0 flex-col rounded-lg border border-ink-700 bg-ink-900 transition-colors hover:border-[#0064d2]/60 hover:bg-ink-800 ${compact ? "w-20 p-1.5" : "w-32 p-2"}`}
           >
             <div className="aspect-[3/4] w-full overflow-hidden rounded bg-ink-950">

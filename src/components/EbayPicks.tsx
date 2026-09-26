@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getChaseCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
+import { newestReleasedSet, setByCode } from "@/lib/constants";
 import type { PickListing } from "./EbayPicksLive";
 
 // Below-the-fold on every page it appears on. Kept SSR'd (ssr: true, the
@@ -67,19 +68,39 @@ async function loadPicks(setCode: string, limit: number): Promise<PickListing[]>
     .map((r) => ({ ...r, cardName: nameById.get(r.cardId) as string }));
 }
 
+// SET-AGNOSTIC DEFAULT (2026-09-26). The default used to be the literal "VEN" /
+// "Riftbound Vendetta", so the homepage and /browse would have kept selling
+// Vendetta chase cards for as long as nobody remembered to edit it — through
+// Radiance's release day, the one day new singles are what every visitor wants.
+// It now follows the newest RELEASED set (lib/constants.ts), which is Vendetta
+// until 23 Oct and flips on the date alone, like every other set-aware surface
+// ("nothing names the current set", CURRENT-STATE). Released, not upcoming: a
+// pre-release set has no priced singles to pick from, and the empty result
+// would only ever show the fallback search.
+function defaultSet(): { code: string; name: string } {
+  const s = newestReleasedSet();
+  return s ? { code: s.code, name: s.name } : { code: "VEN", name: "Vendetta" };
+}
+
 export async function EbayPicks({
-  setCode = "VEN",
+  setCode,
   limit = 6,
   heading,
-  fallbackQuery = "Riftbound Vendetta",
+  fallbackQuery,
   className,
+  pageType,
 }: {
   setCode?: string;
   limit?: number;
   heading?: string;
   fallbackQuery?: string;
   className?: string;
+  /** buy_click's page_type for these tiles ("homepage", "browse", "set_hub", "article"). */
+  pageType?: string;
 }) {
+  const fallback = defaultSet();
+  const code = setCode ?? fallback.code;
+  const query = fallbackQuery ?? `Riftbound ${setCode ? setByCode(setCode)?.name ?? "" : fallback.name}`.trim();
   // Cached hard: this is the same handful of rows on five high-traffic pages, and
   // /browse is force-dynamic so without this it would hit Postgres per request.
   // CONTENT_TAG is cleared by the daily import, so fresh listings appear then.
@@ -96,7 +117,7 @@ export async function EbayPicks({
     // dynamic) and the homepage (3600) this value is harmless; only the 86400
     // article routes were undercut, so matching 86400 fixes them without changing
     // anything else.
-    listings = await unstable_cache(() => loadPicks(setCode, limit), ["ebay-picks", setCode, String(limit)], {
+    listings = await unstable_cache(() => loadPicks(code, limit), ["ebay-picks", code, String(limit)], {
       revalidate: 86400,
       tags: [CONTENT_TAG],
     })();
@@ -109,8 +130,9 @@ export async function EbayPicks({
   return (
     <EbayPicksLive
       listings={listings}
-      fallbackQuery={fallbackQuery}
+      fallbackQuery={query}
       className={className}
+      pageType={pageType}
       {...(heading ? { heading } : {})}
     />
   );

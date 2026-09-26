@@ -282,6 +282,20 @@ export function ebayLabel(country: string): string {
   return EBAY_LABEL[country] ?? EBAY_LABEL.US;
 }
 
+// The keyword string for an eBay search we build, with "Riftbound" in it
+// exactly once. Two reasons it has to be there: "Radiance" alone also matches
+// Pokémon's Astral Radiance, and eBay ANDs keywords, so every other card game
+// sharing a word floods the results. And only once: callers used to append it
+// to queries that already carried it ("Riftbound Vendetta Riftbound"), which
+// reads as a broken search in eBay's own box. Commas are dropped because a
+// champion name is "Shen, Eye of Twilight" and eBay reads commas inside
+// parentheses as OR — sellers never type the comma anyway.
+export function riftboundEbayQuery(query: string): string {
+  const clean = query.replace(/,/g, " ").replace(/\s+/g, " ").trim();
+  if (!clean) return "Riftbound";
+  return /\briftbound\b/i.test(clean) ? clean : `Riftbound ${clean}`;
+}
+
 // An affiliate-tagged eBay SEARCH on the visitor's own marketplace. `source` is
 // the placement segment that reaches EPN's customid (see affiliateSubId above),
 // so reports can answer "which surface earned?" rather than only "did eBay

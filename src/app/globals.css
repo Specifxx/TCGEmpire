@@ -380,6 +380,22 @@ html {
   .btn-ghost {
     @apply btn border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600 hover:bg-ink-800;
   }
+  /* eBay's own action (2026-09-26, "Pushing eBay clicks" in DECISIONS.md). eBay
+     is the site's main affiliate partner, so its buy buttons wear eBay blue
+     instead of the one green every other retailer shares. Position is never
+     touched: a comparison stays cheapest-first, this only changes the colour.
+     Fixed hexes in both themes — eBay blue takes white ink by eBay's brand rule,
+     and the themed `text-white` is near-black in light (tests/theme.test.ts). */
+  .btn-ebay {
+    @apply btn bg-[#0064d2] text-[#ffffff] hover:bg-[#0079e6];
+  }
+  /* The quiet version, for an eBay row inside a list whose other rows are
+     ghost buttons: the same weight as its neighbours, only the colour differs,
+     so a dearer paid row is never the one filled button in a neutral list.
+     sky-300 is palette-backed (darker in light), so it reads in both themes. */
+  .btn-ebay-ghost {
+    @apply btn border border-[#0064d2]/60 bg-[#0064d2]/10 text-sky-300 hover:border-[#0064d2] hover:bg-[#0064d2]/20;
+  }
   /* Secondary "bright" action: flat near-white panel button with dark ink text. */
   .btn-accent {
     @apply btn bg-accent text-ink-950 hover:bg-white;

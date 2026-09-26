@@ -45,7 +45,7 @@ function searchUrl(query: string, country: string): string {
   return ebaySearchUrl(country, query, "banner");
 }
 
-function Banner({ w, h, country, label, href }: { w: number; h: number; country: string; label: string; href: string }) {
+function Banner({ w, h, country, label, href, pageType }: { w: number; h: number; country: string; label: string; href: string; pageType?: string }) {
   const horizontal = w >= 2.5 * h;
   // Themed surface + a translucent brand tint (2026-09-23). The middle stop was a
   // literal #1a1012, which in light painted a black stripe behind the centred
@@ -55,7 +55,7 @@ function Banner({ w, h, country, label, href }: { w: number; h: number; country:
       className="relative inline-block overflow-hidden rounded-lg border border-[#e53238]/30 bg-ink-900 bg-gradient-to-r from-transparent via-[#e53238]/[0.05] to-transparent"
       style={{ width: w, height: h, maxWidth: "100%" }}
     >
-      <OutboundLink href={href} retailer="ebay_banner" country={country} className="absolute inset-0 block transition-colors hover:bg-white/[0.03]">
+      <OutboundLink href={href} retailer="ebay_banner" country={country} pageType={pageType} surface="ebay_banner" className="absolute inset-0 block transition-colors hover:bg-white/[0.03]">
         <span className={`absolute inset-0 flex px-4 ${horizontal ? "flex-row items-center justify-center gap-3 text-left" : "flex-col items-center justify-center gap-1 text-center"}`}>
           {/* eBay multicolour wordmark. */}
           <span className="text-lg font-extrabold tracking-tight">
@@ -94,6 +94,7 @@ export function EbayAd({
   // where a caller renders its own adjacent disclosure covering this banner —
   // FooterAds does that to avoid printing the same line twice under a pair.
   disclosure = true,
+  pageType,
 }: {
   size?: "rect" | "leaderboard" | "billboard";
   mobile?: "banner" | "rect";
@@ -101,6 +102,9 @@ export function EbayAd({
   query?: string;
   className?: string;
   disclosure?: boolean;
+  /** buy_click's page_type for this banner (e.g. "card_detail"); the footer
+   *  copy leaves it unset, which reads as "site-wide". */
+  pageType?: string;
 }) {
   if (usePremium()) return null; // ad-free for every paid tier, Plus included
   const q = query ? `Riftbound ${query}` : "Riftbound TCG cards";
@@ -129,13 +133,13 @@ export function EbayAd({
     <div data-ad-placement="" className={`flex max-w-full flex-col items-center ${className ?? ""}`}>
       {size === "billboard" ? (
         <>
-          <span className="hidden max-w-full lg:inline-block"><Banner {...desk} country={country} label={label} href={href} /></span>
-          <span className="hidden max-w-full md:inline-block lg:hidden"><Banner {...mid} country={country} label={label} href={href} /></span>
+          <span className="hidden max-w-full lg:inline-block"><Banner {...desk} country={country} label={label} href={href} pageType={pageType} /></span>
+          <span className="hidden max-w-full md:inline-block lg:hidden"><Banner {...mid} country={country} label={label} href={href} pageType={pageType} /></span>
         </>
       ) : (
-        <span className={deskShow}><Banner {...desk} country={country} label={label} href={href} /></span>
+        <span className={deskShow}><Banner {...desk} country={country} label={label} href={href} pageType={pageType} /></span>
       )}
-      <span className={mobShow}><Banner {...mob} country={country} label={label} href={href} /></span>
+      <span className={mobShow}><Banner {...mob} country={country} label={label} href={href} pageType={pageType} /></span>
       {disclosure && <AffiliateDisclosure partner="ebay" tight className="max-w-2xl text-center" />}
     </div>
   );

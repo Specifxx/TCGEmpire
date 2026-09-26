@@ -66,6 +66,8 @@ export function EbayGradedLive({ listings }: { listings: GradedRow[] }) {
                 href={l.url}
                 retailer="ebay_graded"
                 country={country}
+                price={l.priceCents / 100}
+                surface="ebay_graded"
                 className="group flex items-center gap-3 py-3 transition-colors hover:bg-ink-800/60"
               >
                 {l.imageUrl && (
