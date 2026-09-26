@@ -24,6 +24,9 @@ import { cardImageAlt } from "@/lib/image-alt";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { PremiumButton } from "@/components/PremiumButton";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { cardThumbProps } from "@/lib/card-image-url";
 
 // Reads the viewer's session, so it renders per request. The ranking itself is
@@ -165,12 +168,10 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
             </div>
           )}
         </div>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          The Riftbound cards RiftCompare visitors are{" "}
-          <strong className="text-slate-200">searching for and opening</strong>. Searches count a card picked from the
-          search box; views count a card page opened. Counted worldwide, once per browser per card per day. Prices are{" "}
-          {info.adjective} store prices.
-        </p>
+        {/* What is counted, how, and over which window (2026-09-26, "Blog and
+            tools, joined up"): lib/content/hub-intros.ts, in place of a
+            one-paragraph lede. Above the Premium split, for every visitor. */}
+        <HubIntro path="/tools/demand" />
         {access === "full" && (
           <div className="mt-3 flex gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1 sm:inline-flex">
             {(["searched", "viewed"] as const).map((l) => (
@@ -264,6 +265,10 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
           </div>
         </div>
       )}
+
+      {/* The guides behind the counts, after the table and outside the Premium
+          split, so every visitor gets them. */}
+      <RelatedGuides guides={guidesForTool("/tools/demand")} className="card-surface mt-8 p-5" />
 
       <section className="mt-10">
         <h2 className="mb-3 text-xl font-extrabold text-white">How Demand Finder works</h2>

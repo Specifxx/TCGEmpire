@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import Link from "next/link";
 import { getArbitrageVsTcgplayer, getPricesAsOf, dealFinderSources, defaultTcgBuyKeys, type ArbItem, type ArbSort } from "@/lib/arbitrage";
 import { hrefFor, parseDealFinderParams, type DealFinderParams, type DealFinderSearchParams, type MineFilter } from "@/lib/deal-finder-href";
@@ -96,9 +98,12 @@ const DEAL_FAQS = [
     q: "What does Deal Finder compare?",
     a: "One thing: the cheapest in-stock price we track for each card in your market, at a store or on eBay, against TCGplayer's US market price converted into your currency. A card is listed when it sits at least one whole unit of your currency below that price, ranked by how far below it is, in money or as a percentage. In the United States it must also be cheaper than TCGplayer's own cheapest listing.",
   },
+  // Twice a day, not "daily" (2026-09-26): refresh-prices.yml reads store
+  // prices at 07:00 and 19:00 UTC; eBay follows lib/price-import.ts's
+  // EBAY_ALWAYS_MARKETS (AU, US: daily) and EBAY_ROTATING_MARKETS.
   {
     q: "How often do the numbers update?",
-    a: "Daily. Every figure comes from the same store and eBay prices the rest of the site runs on, refreshed on the daily import, and the line above the list says when this market's prices were last read. eBay listings in the UK, Singapore and the EU refresh every third day, so an eBay row there can be up to three days old.",
+    a: "Store prices are read twice a day, at 07:00 and 19:00 UTC, and every figure here comes from the same prices the rest of the site runs on; the line above the list says when this market's prices were last read. eBay listings are refreshed daily in Australia and the US, and every third day in the UK, Singapore and the EU, so an eBay row there can be up to three days old.",
   },
   {
     q: "Does the price include postage?",
@@ -213,9 +218,12 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Deal Finder</h1>
-      <HubIntro path="/tools/deal-finder" />
           <RegionToggle />
         </div>
+        {/* Under the heading row, not inside it (2026-09-26): as a flex item
+            beside the h1 it pushed the market toggle below the whole intro.
+            Above the access split, so signed-out visitors and crawlers get it. */}
+        <HubIntro path="/tools/deal-finder" />
       </div>
 
       <h2 className="mb-1 text-lg font-extrabold text-white">Cheaper than TCGplayer market</h2>
@@ -334,6 +342,10 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
       {/* Every price in the table links out through an affiliate-tagged store,
           eBay or TCGplayer URL. */}
       <AffiliateDisclosure partner="both" className="text-center" />
+
+      {/* The guides behind the list, after it and outside the access split, so
+          a signed-out visitor gets them too (lib/content/tool-guides.ts). */}
+      <RelatedGuides guides={guidesForTool("/tools/deal-finder")} className="card-surface mt-8 p-5" />
 
       <section className="mt-10">
         <h2 className="mb-3 text-xl font-extrabold text-white">How Deal Finder works</h2>

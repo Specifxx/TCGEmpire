@@ -6,6 +6,8 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { pageAlternates } from "@/lib/seo";
 import { CONSULT_DURATION_MIN } from "@/lib/consulting";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 export const revalidate = 3600;
 
@@ -74,7 +76,7 @@ export default async function StoresPage() {
             Know exactly where your prices stand — every day
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-300">
-            RiftCompare compares {listings.toLocaleString()} live listings across {stores} stores daily and
+            RiftCompare compares {listings.toLocaleString()} live listings across {stores} stores twice a day and
             sends buyers to the cheapest one. Partner stores get that same comparison pointed at
             their own catalogue: a private, always-current repricing report.
           </p>
@@ -84,7 +86,7 @@ export default async function StoresPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {PITCH.map((p) => (
           <div key={p.title} className="card-surface p-4">
             <span className="text-xl" aria-hidden>{p.emoji}</span>
@@ -99,7 +101,7 @@ export default async function StoresPage() {
         <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-slate-400">
           <li>Email us from your store&apos;s address — we confirm which catalogue is yours.</li>
           <li>You get a private link to your live report (no login, no install — share it with your team).</li>
-          <li>The report updates with every daily price refresh. Reprice, win the comparison, sell more.</li>
+          <li>The report updates with each of our two daily price imports. Reprice, win the comparison, sell more.</li>
         </ol>
         <p className="mt-3 text-xs text-slate-500">
           Free for partner stores while the programme is in its pilot. Your data stays yours — the
@@ -124,6 +126,11 @@ export default async function StoresPage() {
           See what&apos;s covered →
         </Link>
       </div>
+
+      {/* The shopper-side guides to the same stores (lib/content/tool-guides.ts),
+          under the pitch rather than in it: a store owner reading this page is
+          also reading how buyers are told to choose between stores. */}
+      <RelatedGuides guides={guidesForTool("/stores")} />
 
       <p className="mt-6 text-center text-xs text-slate-600">
         Already a partner? Open the private report link we sent you.{" "}

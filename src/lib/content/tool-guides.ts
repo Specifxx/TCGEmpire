@@ -11,8 +11,8 @@ import type { RelatedGuide } from "@/lib/content/related-guides";
 // we wrote, and the guides that explain those tools were not linked back.
 //
 // One map, read both ways, so the two directions cannot drift: a tool page
-// renders guidesForTool(route) under its data, and an article's "Tools in this
-// guide" line is toolsForArticle(slug), the inverse of the same entries.
+// renders guidesForTool(route) under its data, and an article's "Related
+// tools" row is toolsForArticle(slug), the inverse of the same entries.
 //
 // Rules for an entry (2026-09-26, "Blog and tools, joined up" in DECISIONS.md):
 //  - at most three guides, most useful first — more reads as a link farm;
@@ -71,8 +71,8 @@ export const TOOL_GUIDES = {
   "/tools/deal-finder": {
     label: "Deal Finder",
     guides: [
+      { slug: "how-to-find-riftbound-arbitrage-opportunities", reason: "Where real price gaps between sellers come from, and how to tell one from a mirage" },
       { slug: "riftbound-card-price-comparison", reason: "How price comparison works, and why the sticker price is not the whole cost" },
-      { slug: "why-riftbound-card-prices-change", reason: "Print runs, bans and tournaments — why a card's price moves at all" },
       { slug: "riftbound-card-condition-guide", reason: "Why a cheaper copy may be a lower grade, and how much that should matter" },
     ],
   },
@@ -233,7 +233,7 @@ export const TOOL_GUIDES = {
   },
   // The mini-games run on the same card and price data as the tools, so each
   // links the guide behind what it tests. Last in the map on purpose: a guide's
-  // "Tools in this guide" line lists real tools before games.
+  // "Related tools" row lists real tools before games.
   "/games/higher-lower": {
     label: "Higher or Lower",
     guides: [

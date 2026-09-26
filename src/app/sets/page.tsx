@@ -8,6 +8,8 @@ import { AnswerBox } from "@/components/AnswerBox";
 import { HubFaq } from "@/components/HubFaq";
 import { faqPage, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // ISR: a small, stable hub. A crawlable index of every Riftbound set that funnels
 // internal link equity to the set pages (the pages already earning impressions),
@@ -17,12 +19,12 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Sets — Full Card Lists & Prices | RiftCompare" },
   description:
-    "Every Riftbound: League of Legends TCG set — Origins, Proving Grounds, Spirit Forged and more — with the full card list and live prices compared across AU, US, UK & SG stores.",
+    "Every Riftbound: League of Legends TCG set — Origins, Proving Grounds, Spirit Forged and more — with the full card list and live prices compared across stores in six markets.",
   alternates: pageAlternates("/sets"),
   keywords: ["Riftbound sets", "Riftbound card list", "Riftbound set prices", "Riftbound TCG sets"],
   openGraph: pageOpenGraph({
     title: "Riftbound Sets — Full Card Lists & Prices",
-    description: "Every Riftbound set with its full card list and live prices, updated daily.",
+    description: "Every Riftbound set with its full card list and live prices, updated twice a day.",
     url: "/sets",
   }),
 };
@@ -71,7 +73,7 @@ export default async function SetsIndexPage() {
     },
     {
       q: "Where can I see a full Riftbound card list by set?",
-      a: "Open any set above. Each set page lists every card in collector-number order with its lowest live price across the stores we track, and links to a full-art gallery view.",
+      a: "Open any set above. Each set page lists every card A–Z by name with its lowest live price in your market, adds a price guide of every card ordered dearest first, and links to a full-art gallery view.",
     },
     {
       q: "How much does it cost to complete a Riftbound set?",
@@ -79,7 +81,7 @@ export default async function SetsIndexPage() {
     },
     {
       q: "Are Riftbound set prices the same in every country?",
-      a: "No. Each market has its own stores, currency and shipping costs, so the cheapest source differs by country. RiftCompare tracks the US, UK, Australia, Canada and Singapore separately.",
+      a: "No. Each market has its own stores, currency and shipping costs, so the cheapest source differs by country. RiftCompare tracks Australia, the US, the UK, Singapore, Canada and the EU separately.",
     },
   ];
 
@@ -126,8 +128,8 @@ export default async function SetsIndexPage() {
               Riftbound: League of Legends TCG has {released.length} released{" "}
               {released.length === 1 ? "set" : "sets"}
               {upcoming.length ? `, plus ${upcoming.length} announced or in spoiler season` : ""}. Every set below links
-              to its complete card list with the lowest live price for each card across the stores RiftCompare tracks in
-              six markets — shipping included.
+              to its complete card list with the lowest live price for each card in your market, from the stores
+              RiftCompare tracks in six markets — the item price, before postage.
             </p>
           </AnswerBox>
         </div>
@@ -189,11 +191,13 @@ export default async function SetsIndexPage() {
         <h2 className="text-xl font-extrabold text-white">About Riftbound sets</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           Riftbound: League of Legends TCG releases in sets, each adding new cards, mechanics and chase
-          singles. RiftCompare tracks live prices for every card in every released set across AU, US
-          and UK stores — pick a set above to see its full card list ranked by price and find the cheapest
-          place to buy.
+          singles. RiftCompare tracks live prices for every card in every released set across stores in
+          Australia, the US, the UK, Singapore, Canada and the EU — pick a set above for its full card list and a
+          price guide of every card, dearest first, to find the cheapest place to buy.
         </p>
       </section>
+
+      <RelatedGuides guides={guidesForTool("/sets")} className="card-surface p-5" />
 
       <HubFaq faqs={FAQS} className="" />
     </div>

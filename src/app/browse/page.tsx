@@ -25,6 +25,8 @@ import {
   parsePageSize,
 } from "@/lib/cards";
 import { SITE_URL } from "@/lib/site";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 /** /browse opens on "Most popular" (lib/cards.ts buildCardOrderBy). */
 const BROWSE_DEFAULT_SORT = "popular";
@@ -119,7 +121,7 @@ export async function generateMetadata({ searchParams }: { searchParams: CardQue
     description:
       page > 1
         ? `The full Riftbound card list — every card in one database, with live prices across US, AU, UK, Singapore, Canada & EU stores. Page ${page}.`
-        : "The full Riftbound card list — every card in one database, with live prices compared across US, AU, UK, Singapore, Canada & EU stores. Updated daily.",
+        : "The full Riftbound card list — every card in one database, with live prices compared across US, AU, UK, Singapore, Canada & EU stores. Updated twice a day.",
   };
   if (q) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
   if (page > 1 && isCleanPagination(searchParams)) {
@@ -216,7 +218,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
         ? `${SITE_URL}/browse?page=${page}`
         : `${SITE_URL}/browse`,
     description:
-      "Browse every Riftbound TCG card and compare live prices across stores to find the cheapest place to buy Riftbound singles. Updated daily.",
+      "Browse every Riftbound TCG card and compare live prices across stores to find the cheapest place to buy Riftbound singles. Updated twice a day.",
     isPartOf: { "@id": `${SITE_URL}/#website` },
     // ItemList of the cards actually rendered on this page (ranked positionally).
     ...(cards.length > 0
@@ -261,6 +263,31 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
               single, with live prices compared across local stores in the US, AU, UK, Singapore,
               Canada &amp; the EU to find the cheapest place to buy.
             </p>
+            {/* How to read the grid (2026-09-26, "Blog and tools, joined up" in
+                DECISIONS.md): what a tile's price is, how fresh it is, and where
+                postage comes in — the card list had none of it. Under the H1 by
+                the owner's brief; kept to two short paragraphs so the grid still
+                starts high on a phone. Written for the visitor's own market
+                (place, currency, and Canada's converted "eBay US" rows) from
+                data the page already holds, so it costs no query. */}
+            <div className="mt-2 max-w-2xl space-y-2 text-sm leading-relaxed text-slate-400">
+              <p>
+                A tile&apos;s &ldquo;from&rdquo; price is the cheapest in-stock listing we have for that card in{" "}
+                {COUNTRIES[country].place}, in {COUNTRIES[country].currency} — the item price, before postage
+                {country === "CA" ? <>, and sometimes an &ldquo;eBay US&rdquo; listing converted from US dollars at our reference rate</> : null}.
+                &ldquo;Stocked elsewhere&rdquo; means no seller in {COUNTRIES[country].place} has it in stock but
+                another market does. Prices come from two imports a day, at 07:00 and 19:00 UTC.
+              </p>
+              <p>
+                The list opens on the cards searched and viewed most here; sort it by price, name or set and
+                card number, or filter by set, domain, rarity, type or printing. Open a card for every store&apos;s price,
+                cheapest first by item price, with the delivered total shown where the store publishes its postage (
+                <Link href="/methodology#ordering" className="text-brand-400 hover:underline">how we compare</Link>
+                ). New to buying? See{" "}
+                <Link href="/guides/where-to-buy-riftbound-cards" className="text-brand-400 hover:underline">where to buy Riftbound cards</Link>{" "}
+                in each market.
+              </p>
+            </div>
             {/* Popular-champion cross-links — /browse had no path into the
                 per-champion hub pages at all (card pages already link to
                 them; this was the other half the brief asked for). Only
@@ -363,6 +390,12 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
             <Pagination page={page} totalPages={totalPages} params={searchParams as Record<string, string | undefined>} />
           </>
         )}
+
+        {/* The guides behind the card list (lib/content/tool-guides.ts), after
+            the grid and before the ad — our writing ahead of the commercial
+            slot. Not on a ?q search, whose view is noindexed and whose reader
+            came for one card. */}
+        {!q && <RelatedGuides guides={guidesForTool("/browse")} />}
 
         {/* Moved below the results (was above, ahead of EbayPicks) — a visitor
             searching a card wants to see matches first; the ad now sits after

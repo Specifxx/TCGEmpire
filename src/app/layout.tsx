@@ -203,6 +203,10 @@ const orgJsonLd = {
       alternateName: ["Rift Compare", "RiftCompare.com"],
       url: SITE_URL,
       logo: `${SITE_URL}/icon-512.png`,
+      // The site's founder, who builds and runs it (owner, 2026-09-26). The same
+      // node /authors/bill and /about describe, by @id, so bylines, the about
+      // page and this organisation resolve to one person.
+      founder: { "@type": "Person", "@id": `${SITE_URL}/authors/bill#author`, name: "Bill", url: `${SITE_URL}/authors/bill` },
       // Linked profiles — entity signals tying the org to its community presence.
       // ADD real profile URLs here as they exist (YouTube, Reddit) and a Wikidata
       // item once created; each `sameAs` strengthens entity disambiguation for AI
@@ -412,9 +416,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </SealedQuickViewProvider>
           </QuickViewProvider>
         {/* Site-wide affiliate banners above the footer — BOTH live partners
-            (TCGplayer Impact + eBay Partner Network) on every page, so no page
-            is left unmonetised. Both are CPC/affiliate: they pay on click-through
-            purchases, so placement-where-relevant beats raw banner count.
+            (TCGplayer Impact + eBay Partner Network) on every page except the
+            policy and trust pages, which carry none (FooterAds'
+            BANNER_FREE_ROUTES, owner decision 2026-09-26). Both are
+            CPC/affiliate: they pay on click-through purchases, so
+            placement-where-relevant beats raw banner count.
             FooterAds reads the market from the client country context (inside
             CountryProvider) so the layout stays cookie-free and cacheable.
             SideNav is `position: fixed` and spans the FULL page height (it
@@ -458,14 +464,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "Methodology ·", one read "· Facebook · Privacy settings ·", it
               happened at 640 and 1440 too, and screen readers announced each
               one as "middle dot". sm:gap-x-6 keeps the desktop rhythm. */}
+          {/* THE ROW THAT IS ALWAYS VISIBLE (2026-09-26, "Blog and tools,
+              joined up" in DECISIONS.md). The site map above is closed on "/"
+              and on phones, so until now a homepage visitor or anyone on a
+              phone saw no Home, Blog, Guides or Tools link down here at all.
+              The owner's brief names them, with About us, the editorial policy
+              and methodology, privacy and terms, so all of them sit here in
+              the order a reader scans: where to go, who we are, the small
+              print. ~1 KB of anchors, against ~26 KB for a second copy of the
+              site map (DECISIONS.md, "Card pages slimmed: one footer site
+              map", 2026-09-25). */}
           <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm sm:gap-x-6">
-            <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About</Link>
-            <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
-            <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
-            <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms</Link>
+            <Link href="/" className="tap-link text-slate-300 hover:text-brand-400">Home</Link>
+            <Link href="/blog" className="tap-link text-slate-300 hover:text-brand-400">Blog</Link>
+            <Link href="/guides" className="tap-link text-slate-300 hover:text-brand-400">Guides</Link>
+            <Link href="/tools" className="tap-link text-slate-300 hover:text-brand-400">Tools</Link>
+            <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About us</Link>
             <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>
             <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
+            <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
+            <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
+            <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms of service</Link>
             {/* Discord was header-only (see Navbar.tsx) plus the Organization
                 JSON-LD's sameAs below — the homepage-redesign brief's footer
                 table explicitly lists it as something the footer itself must

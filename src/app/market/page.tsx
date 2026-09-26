@@ -15,6 +15,9 @@ import { IndexConstituents } from "@/components/IndexConstituents";
 import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
 import { cardThumbProps } from "@/lib/card-image-url";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // searchParams-driven (?market=), so the route is dynamic regardless of any
 // page-level revalidate window — same reasoning as /browse and /sets/[set]. The
@@ -199,13 +202,17 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             <h1 className="text-2xl font-extrabold text-white sm:text-3xl">The RiftCompare Index</h1>
             <MarketSwitcher value={market} />
           </div>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-            The Riftbound market in one number. The Index tracks the live prices of the{" "}
-            {index?.constituents.length ?? INDEX_SIZE} most-searched cards on RiftCompare as a
-            search-weighted index, updated weekly — like a stock index for the game. When the cards players
-            actually chase get dearer, the Index rises; when the market cools, it falls.{" "}
-            You&apos;re viewing the <strong className="text-slate-200">{COUNTRIES[market].place}</strong> market,
-            priced from {COUNTRIES[market].adjective} stores. Switch markets using the selector at the top right.
+          {/* What the Index is and how its level moves (2026-09-26, "Blog and
+              tools, joined up"): lib/content/hub-intros.ts. The lede it
+              replaced said the market was "priced from {adjective} stores";
+              only the basket and today's constituent prices are that market's
+              — the level follows the weekly worldwide low, converted
+              (lib/market-index.ts historySource). */}
+          <HubIntro path="/market" />
+          <p className="mt-2.5 max-w-3xl text-sm leading-relaxed text-slate-400">
+            You&apos;re viewing the <strong className="text-slate-200">{COUNTRIES[market].place}</strong> market: a basket of
+            its {index?.constituents.length ?? INDEX_SIZE} most-searched priced cards, in {currency}. Switch markets with the
+            selector above.
           </p>
           {/* The Index is today's number; records are the same data asked the
               other way round ("what is the most this has ever been?"). Linked
@@ -312,6 +319,9 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           </div>
         </div>
       )}
+
+      {/* The guides behind the Index, after its data and before the ad. */}
+      <RelatedGuides guides={guidesForTool("/market")} className="card-surface p-5" />
 
       <AdSlot height={100} />
 

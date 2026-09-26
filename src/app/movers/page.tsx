@@ -15,6 +15,9 @@ import { AdSlot } from "@/components/AdSlot";
 import { MoversToolsCta } from "@/components/MoversToolsCta";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // ISR: PriceHistory gains one snapshot a WEEK (HISTORY_MIN_INTERVAL_DAYS), and
 // the price-refresh workflow purges this path after every import, so a 24-hour
@@ -176,20 +179,11 @@ export default async function MoversPage() {
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
           Riftbound price movers — this week
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          The Riftbound cards moving the most this week: which singles are{" "}
-          <strong className="text-slate-200">spiking</strong>, which are seeing the{" "}
-          <strong className="text-slate-200">biggest drops</strong>, and where the{" "}
-          <strong className="text-slate-200">best value</strong> is off a card&apos;s recent high. Every
-          figure is {PRICE_BASIS} to {info.currency}, updated weekly. Tap any card for its full
-          price-history chart
-          {mostSearched.length > 0 ? (
-            <>
-              , or see <a href="#most-searched" className="text-brand-400 hover:underline">what people are searching for</a>
-            </>
-          ) : null}
-          .
-        </p>
+        {/* How the lists are built and the guide behind them (2026-09-26,
+            "Blog and tools, joined up"): lib/content/hub-intros.ts, in place
+            of the old one-paragraph lede. The answer box below still states the
+            page's own price basis and currency from PRICE_BASIS. */}
+        <HubIntro path="/movers" />
         <AnswerBox className="mt-4">
           <p>
             Riftbound price movers are the cards whose price has changed most in the past week. This page ranks them
@@ -219,9 +213,31 @@ export default async function MoversPage() {
               component — it localises with useCountry, so the page stays
               static — carrying its own disclosure; a buy path, not an ad. */}
           <EbayBuyCta source="movers" pageType="movers" />
+        </>
+      ) : (
+        <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
+          <div>
+            <p className="text-lg font-semibold text-white">No notable movers yet</p>
+            <p className="mt-1 text-sm">
+              A move needs two weekly prices on the same basis. Check back after the next weekly update, or
+              browse the full database in the meantime.
+            </p>
+            <Link href="/browse" className="btn-primary mt-4">Card database</Link>
+          </div>
+        </div>
+      )}
 
-          <MostSearchedStrip rows={mostSearched} coveredDays={demand.coveredDays} />
+      {/* The strip shows with or without movers — it is its own data, and old
+          links to #most-searched land on it. */}
+      <MostSearchedStrip rows={mostSearched} coveredDays={demand.coveredDays} />
 
+      {/* The guides behind the lists, after the page's data (2026-09-26, "Blog
+          and tools, joined up"). The eBay CTA stays pinned straight under the
+          lists by "Pushing eBay clicks", so this follows the strip instead. */}
+      <RelatedGuides guides={guidesForTool("/movers")} className="card-surface p-5" />
+
+      {hasAny ? (
+        <>
           {/* Turn habitual price-checkers into the Premium funnel (client island → the
               page stays static). */}
           <MoversToolsCta />
@@ -237,22 +253,7 @@ export default async function MoversPage() {
             done="✓ Done — you'll get the movers digest each week."
           />
         </>
-      ) : (
-        <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
-          <div>
-            <p className="text-lg font-semibold text-white">No notable movers yet</p>
-            <p className="mt-1 text-sm">
-              A move needs two weekly prices on the same basis. Check back after the next weekly update, or
-              browse the full database in the meantime.
-            </p>
-            <Link href="/browse" className="btn-primary mt-4">Card database</Link>
-          </div>
-        </div>
-      )}
-
-      {/* With no movers the strip still shows — it is its own data, and old
-          links to #most-searched land on it. */}
-      {!hasAny && <MostSearchedStrip rows={mostSearched} coveredDays={demand.coveredDays} />}
+      ) : null}
 
       {/* Internal links (crawl + discovery) */}
       <section>
@@ -297,7 +298,8 @@ export default async function MoversPage() {
           <p>
             It&apos;s the quickest way to see which Riftbound singles are heating up, which have cooled off,
             and which cards players are looking up most. Click any card to compare every store&apos;s live
-            price in your market, ranked by total delivered cost, and to see its full price-history chart.
+            price in your market, cheapest first by item price, with the delivered total shown where the store
+            publishes its postage, and to see its full price-history chart.
           </p>
         </div>
       </section>

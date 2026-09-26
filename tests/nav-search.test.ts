@@ -54,6 +54,10 @@ const MUST_FIND: [query: string, href: string][] = [
   ["pack sim", "/games/pack-sim"],
   ["expected value", "/tools/box-ev"],
   ["how to play", "/learn"],
+  // 2026-09-26: the two policies joined the Help group. Before, both were
+  // footer-row links only and ⌘K answered "privacy" and "terms" with nothing.
+  ["privacy", "/privacy"],
+  ["terms", "/terms"],
 ];
 
 test("every query that used to return nothing now finds its page", () => {

@@ -166,9 +166,17 @@ export async function currentTotals(decks: { id: string; lines: Prisma.JsonValue
 }
 
 export async function liveDecks(where: Prisma.PublishedDeckWhereInput = {}, take = 300): Promise<DeckListRow[]> {
+  return (await liveDecksOrNull(where, take)) ?? [];
+}
+
+/** liveDecks, but null when the read FAILED rather than [] — so /decks can tell
+ *  "the library is empty" (noindex) from "the database was unreachable" (stay
+ *  indexable: a noindex cached for an hour on a blip would drop a submitted URL
+ *  — the fail-open rule the champion, store and facet pages follow). */
+export async function liveDecksOrNull(where: Prisma.PublishedDeckWhereInput = {}, take = 300): Promise<DeckListRow[] | null> {
   return prisma.publishedDeck
     .findMany({ where: { status: "live", ...where }, orderBy: { createdAt: "desc" }, take, select: DECK_LIST_SELECT })
-    .catch(() => []);
+    .catch(() => null);
 }
 
 /** Up to six live decks that play a card (the card page's "Decks using this card"). */

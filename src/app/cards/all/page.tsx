@@ -155,7 +155,8 @@ export default async function AllCardsPage() {
           This is the complete index of every Riftbound printing RiftCompare tracks, grouped by the set it
           belongs to and ordered by collector number. Every entry links to that printing&apos;s own page, where the
           same card is priced across every store we monitor in Australia, the United States, the United Kingdom,
-          Singapore, Canada and the EU, in each market&apos;s own currency rather than a converted estimate.
+          Singapore, Canada and the EU, in each market&apos;s own currency — in Canada, rows marked &ldquo;eBay
+          US&rdquo; are US listings converted to Canadian dollars at our reference rate.
         </p>
         <p>
           Each printing gets its own line because each printing is its own product with its own market. A Signature,
@@ -163,7 +164,9 @@ export default async function AllCardsPage() {
           nothing else — they are pulled at different rates, they trade at different prices, and a collector
           looking for one of them does not want the others. That is why the labels below carry the printing and the
           collector number as well as the name, and why the counts here are higher than the number of distinct card
-          names in the game.
+          names in the game. The{" "}
+          <Link href="/guides/riftbound-variant-glossary" className="text-brand-400 hover:underline">variant glossary</Link>{" "}
+          explains each printing and how to read its collector number.
         </p>
         <p>
           If you would rather narrow down than scroll, the{" "}
@@ -218,7 +221,7 @@ export default async function AllCardsPage() {
               </Link>
             )}
           </div>
-          <ul className="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
             {g.cards.map((c) => (
               <li key={c.slug ?? `${c.setCode}-${c.collectorNumber}-${c.name}`} className="min-w-0">
                 {/* A card with no slug is not linkable — it serves on its raw id

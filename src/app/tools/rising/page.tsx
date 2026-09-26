@@ -9,6 +9,9 @@ import { currencyOf, COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
 import { cardHref } from "@/lib/card-url";
 import { PremiumButton } from "@/components/PremiumButton";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { SITE_URL, tierMonthlyAmount } from "@/lib/site";
 import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
@@ -39,7 +42,11 @@ const RISING_FAQS = [
   },
   {
     q: "What signals does the ranking use?",
-    a: "How often a card is picked from RiftCompare search and whether that is rising, where today's price sits in the card's own recent range, how many stores have it in stock, and how its price compares with last week. Cards already up sharply on last week are marked down, not rewarded. Prices are only compared on one pricing basis: the US TCGplayer price moved from TCGplayer's market price to the cheapest English listing on 23 September 2026, so prices from before then are not compared with prices after it, and a card without enough weekly prices since is ranked on demand and supply alone.",
+    // The basis sentence was wrong from 2026-09-25: Rising Cards reads ACROSS
+    // the 23 September switch by the owner's call (lib/rise-predictor.ts,
+    // header point 3; DECISIONS.md "Rising Cards keeps its pre-break price
+    // signals"). Corrected 2026-09-26 to say what the code does.
+    a: "How often a card is picked from RiftCompare search and whether that is rising, where today's price sits in the card's own recent range, how many stores have it in stock, and how its price compares with last week. Cards already up sharply on last week are marked down, not rewarded. On 23 September 2026 the US TCGplayer price moved from TCGplayer's market price to the cheapest English listing; for now the ranking still reads each card's price history across that date, so a card whose weekly price comes from the US can show one step down there and sit nearer the low of its range than the market alone would put it. A card with too few weekly prices is ranked on demand and supply alone.",
   },
   {
     q: "Is this financial advice?",
@@ -241,11 +248,14 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             </div>
           )}
         </div>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Cards ranked by <strong className="text-slate-200">demand and price-timing signals</strong> — search interest
-          that is high or rising on cards whose price hasn&apos;t moved up yet{where}. Real data, and every pick says why it
-          ranks. Not financial advice.{" "}
-          Looking for boxes and packs instead? <Link href="/sealed" className="text-brand-400 hover:underline">See sealed prices →</Link>
+        {/* The four signals and their cadence, above the access split so a
+            signed-out visitor and a crawler get them (2026-09-26, "Blog and
+            tools, joined up"): lib/content/hub-intros.ts, in place of a
+            one-paragraph lede. */}
+        <HubIntro path="/tools/rising" />
+        <p className="mt-2 max-w-3xl text-xs leading-relaxed text-slate-500">
+          Not financial advice. Looking for boxes and packs instead?{" "}
+          <Link href="/sealed" className="text-brand-400 hover:underline">See sealed prices →</Link>
         </p>
       </div>
 
@@ -357,6 +367,10 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
           )}
         </>
       )}
+
+      {/* The guides behind the signals, after the list and outside the access
+          split, so a signed-out visitor gets them too. */}
+      <RelatedGuides guides={guidesForTool("/tools/rising")} className="card-surface mt-8 p-5" />
 
       <section className="mt-10">
         <h2 className="mb-3 text-xl font-extrabold text-white">How Rising Cards works</h2>

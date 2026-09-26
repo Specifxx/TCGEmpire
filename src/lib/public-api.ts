@@ -172,7 +172,8 @@ export async function getCardPricesData(idOrSlug: string) {
 }
 
 // Shared by /api/v1/card/[id]/listings.json and the MCP cheapest_listing tool —
-// the full per-store comparison table, cheapest total delivered cost first. Same
+// the full per-store comparison table, cheapest item price first (postage only
+// breaks ties — lib/market-rows.ts computeMarket). Same
 // query + enrichment (affiliateUrl, shippingPolicyUrl, effectiveShippingCents)
 // and the pure computeMarket() ranking the card page itself renders from.
 export async function getCardListingsData(idOrSlug: string, market: Country = DEFAULT_COUNTRY) {

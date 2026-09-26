@@ -1,6 +1,7 @@
 import { getArticles, type Article } from "@/lib/articles";
 import { noRetailChannelProduct } from "@/lib/constants";
 import { KEYWORDS } from "@/lib/keywords";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Card → editorial: which of our ~64 guides and posts are relevant to THIS card.
@@ -62,6 +63,98 @@ export function mechanicGuideForCard(c: CardForGuides): { slug: string; name: st
     return { slug: k.guideSlug, name: k.name };
   }
   return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Each set's own guides, keyed by set CODE.
+// ─────────────────────────────────────────────────────────────────────────────
+// The card page's set rule used to find a set's article by matching the set's
+// name and code against every article's tags and breaking ties by date, so each
+// set's evergreen guide lost to whichever news post was newest: an Unleashed
+// common linked a Radiance spoiler, an Origins card the "biggest release since
+// Origins" post, a Vendetta card the Astral Heron post. The guides are named
+// here instead, as data rather than template code, so a new set is one row and
+// no page names a set (CURRENT-STATE, "Set-agnostic code"). Most useful first:
+// a card page links the first, set pages and set galleries show them all
+// ("Blog and tools, joined up", DECISIONS.md, 2026-09-26).
+//
+// Each `reason` says what the guide covers, in its own terms. Only articles
+// whose claims about the site hold (tests/site-claims.test.ts), and none under
+// ~400 words: a "read next" that is a caption and an embed reads as filler.
+type GuideRef = { slug: string; reason: string };
+
+export const SET_GUIDES: Readonly<Record<string, readonly GuideRef[]>> = {
+  OGN: [{ slug: "whats-in-the-riftbound-origins-set", reason: "Origins broken down by rarity, domain and card type, counted from our own catalogue" }],
+  OGS: [{ slug: "riftbound-sets-in-order", reason: "Where Proving Grounds, the smallest set, sits among the others, with each set's card count" }],
+  SFD: [{ slug: "whats-in-the-riftbound-spirit-forged-set", reason: "Spirit Forged by rarity, domain and card type, with its Legends and cost curve" }],
+  UNL: [{ slug: "whats-in-the-riftbound-unleashed-set", reason: "Unleashed by rarity, domain and card type, with its Legends and cost curve" }],
+  VEN: [
+    { slug: "riftbound-vendetta-chase-cards-so-far", reason: "Every Vendetta chase tier, from Signature Legends and Overnumbers to the Epic sleepers" },
+    { slug: "riftbound-empower-explained", reason: "Vendetta's Empower mechanic step by step, and every card that carries it" },
+    { slug: "riftbound-flow-explained", reason: "Where Flow lets you play cards from, what it costs, and every Flow card in the set" },
+  ],
+  RAD: [
+    { slug: "riftbound-radiance-what-we-know", reason: "Radiance's release date, products and everything Riot has confirmed so far" },
+    { slug: "riftbound-radiance-spoilers", reason: "Every Radiance card officially revealed so far, with a dated reveal log" },
+    { slug: "where-to-buy-riftbound-radiance", reason: "Where to pre-order Radiance in each of the six markets we cover" },
+  ],
+};
+
+function resolveGuides(refs: readonly GuideRef[]): RelatedGuide[] {
+  const bySlug = new Map(getArticles().map((a) => [a.slug, a]));
+  return refs.flatMap((g) => {
+    const a = bySlug.get(g.slug);
+    return a ? [{ slug: a.slug, title: a.title, category: a.category, reason: g.reason }] : [];
+  });
+}
+
+/** `first`, topped up from `fallback` without repeating a guide, capped. */
+function topUp(first: RelatedGuide[], fallback: RelatedGuide[], limit: number): RelatedGuide[] {
+  const seen = new Set(first.map((g) => g.slug));
+  return [...first, ...fallback.filter((g) => !seen.has(g.slug))].slice(0, limit);
+}
+
+/** The set's first PUBLISHED guide — a draft or retired slug falls through. */
+function setGuide(setCode: string): GuideRef | undefined {
+  const refs = SET_GUIDES[setCode];
+  if (!refs) return undefined;
+  const published = new Set(getArticles().map((a) => a.slug));
+  return refs.find((g) => published.has(g.slug));
+}
+
+/**
+ * A set page's "Read next": the set's own guides, topped up with the guides
+ * behind /sets as a whole, so a set with one guide of its own (or none yet)
+ * still links something about sets rather than nothing.
+ */
+export function guidesForSet(setCode: string, limit = 3): RelatedGuide[] {
+  return topUp(resolveGuides(SET_GUIDES[setCode] ?? []), guidesForTool("/sets"), limit);
+}
+
+// Tags are hand-typed ("ksante"), hub slugs are generated from the name
+// (lib/champions.ts championSlug: "K'Sante" → "k-sante", "Kai'Sa" → "kai-sa"),
+// so both sides drop everything but letters and digits before comparing.
+// EQUALITY, never a substring: "mel" must not match "melee", nor "vi" "vibes".
+const squash = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+// Room left for the generic champion guides beside a champion's own articles.
+const CHAMPION_OWN_MAX = 2;
+
+/**
+ * A champion hub's "Read next": our articles whose tags name THIS champion —
+ * the ones with the champion in the title first, then newest — then the
+ * guides behind /champions. The reason line is the article's own excerpt, so
+ * it describes the piece in its own words.
+ */
+export function guidesForChampion(champ: { slug: string }, limit = 3): RelatedGuide[] {
+  const key = squash(champ.slug);
+  const named = (a: Article) => squash(a.title).includes(key);
+  const own = getArticles()
+    .filter((a) => a.tags.some((t) => squash(t) === key))
+    .sort((x, y) => Number(named(y)) - Number(named(x)) || (x.date < y.date ? 1 : -1))
+    .slice(0, CHAMPION_OWN_MAX)
+    .map((a) => ({ slug: a.slug, title: a.title, category: a.category, reason: a.excerpt }));
+  return topUp(own, guidesForTool("/champions"), limit);
 }
 
 type Rule = {
@@ -141,10 +234,21 @@ const RULES: Rule[] = [
     match: ["promo", "release", "event"],
     reason: () => "Where the promo printings come from and how they are distributed",
   },
+  // The set's own guide, from SET_GUIDES above — and only that one: preferOnly
+  // stops the tag match below spending a second slot on a loosely set-matched
+  // post.
   {
-    when: () => true,
+    when: (c) => setGuide(c.setCode) != null,
+    prefer: (c) => [setGuide(c.setCode)?.slug ?? ""],
+    match: [],
+    preferOnly: true,
+    reason: (c) => setGuide(c.setCode)?.reason ?? "",
+  },
+  // A set with no SET_GUIDES row yet (a new one, before its guide is written):
+  // matched on the set's name and code, as every set used to be.
+  {
+    when: (c) => setGuide(c.setCode) == null,
     prefer: [],
-    // Set-specific: matched dynamically against the card's set name below.
     match: [],
     reason: (c) => `Buying, prices and chase cards across ${c.setName}`,
   },

@@ -17,7 +17,7 @@ export function GET() {
           name: "riftcompare",
           description:
             "Read-only Riftbound: League of Legends TCG price data — card search, per-market prices, " +
-            "store-by-store listings ranked by total delivered cost, and the sets list.",
+            "store-by-store listings cheapest first by item price, and the sets list.",
           url: `${SITE_URL}/api/mcp`,
           transport: "streamable-http",
           auth: { type: "none" },

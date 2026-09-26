@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { SETS, DOMAIN_KEYS, domainInfo } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
-import { pageAlternates } from "@/lib/seo";
+import { COUNTRY_GUIDE_SLUGS, pageAlternates } from "@/lib/seo";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { COUNTRY_LIST } from "@/lib/country";
+import { getArticles } from "@/lib/articles";
+import { articleHref, guidesForTool } from "@/lib/content/tool-guides";
 
 // SEO hub for the "Riftbound singles" search intent. Market-neutral, richly
 // internally-linked, indexable — funnels searchers into the database / sets /
@@ -17,7 +22,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: { absolute: "Buy Riftbound Singles — Compare Prices | RiftCompare" },
   description:
-    "The cheapest place to buy Riftbound singles — compare live prices across AU, US, UK, Singapore & Canada stores, ranked by delivered cost. Updated daily.",
+    "The cheapest place to buy Riftbound singles — compare live prices across stores in AU, the US, the UK, Singapore, Canada & the EU. Updated twice a day.",
   keywords: [
     "Riftbound singles",
     "buy Riftbound singles",
@@ -31,7 +36,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Buy Riftbound Singles — Compare Prices",
     description:
-      "Compare live prices for every Riftbound single across stores in AU, US, UK, Singapore & Canada — ranked by delivered cost, updated daily. Free.",
+      "Compare live prices for every Riftbound single across stores in AU, the US, the UK, Singapore, Canada & the EU — cheapest first, updated twice a day. Free.",
     url: `${SITE_URL}/singles`,
   },
 };
@@ -43,11 +48,11 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Where can I buy Riftbound singles?",
-    a: "RiftCompare compares live singles prices across a wide range of local stores in Australia, the US, the UK, Singapore, Canada and the EU, plus eBay. Search any card to see every store's price for that single, ranked by total delivered cost, and click straight through to buy from whichever store is cheapest.",
+    a: "RiftCompare compares live singles prices across a wide range of local stores in Australia, the US, the UK, Singapore, Canada and the EU, plus eBay. Search any card to see every store's price for that single, cheapest first by item price, and click straight through to buy from the store you choose.",
   },
   {
     q: "How do I find the cheapest Riftbound singles?",
-    a: "Search or browse the card database — every single shows its lowest live price in your market. Open a card to see the full store-by-store comparison ranked by delivered cost (price plus postage, with free-shipping thresholds factored in), so you always buy from the genuinely cheapest seller.",
+    a: "Search or browse the card database — every single shows its lowest live price in your market. Open a card for the full store-by-store comparison, cheapest first by item price, with the delivered total shown where the store publishes its postage. For several cards at once, Best Basket prices the whole order with each store's measured postage — once postage is counted, one or two stores can beat buying each card wherever it is lowest.",
   },
   {
     q: "Are Riftbound singles cheaper than buying packs?",
@@ -55,7 +60,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Are the singles prices on RiftCompare accurate?",
-    a: "Prices are pulled directly from each store's live public listings and refreshed daily, in each market's local currency. Stock and prices can change between our update and your visit, so always confirm the final price at checkout — but the comparison reflects each store's most recent listed price.",
+    a: "Prices are pulled directly from each store's live public listings and refreshed twice a day, in each market's local currency. Stock and prices can change between our update and your visit, so always confirm the final price at checkout — but the comparison reflects each store's most recent listed price.",
   },
 ];
 
@@ -65,6 +70,11 @@ async function getTotal(): Promise<number> {
 
 export default async function SinglesPage() {
   const total = await getTotal();
+  const published = getArticles();
+  const marketGuides = COUNTRY_LIST.flatMap((c) => {
+    const a = published.find((x) => x.slug === COUNTRY_GUIDE_SLUGS[c.code]);
+    return a ? [{ href: articleHref(a), label: c.label }] : [];
+  });
 
   const faqLd = {
     "@context": "https://schema.org",
@@ -89,7 +99,7 @@ export default async function SinglesPage() {
       // areaServed, knowsAbout — don't propagate to the page.
       isPartOf: { "@id": `${SITE_URL}/#website` },
       publisher: { "@id": `${SITE_URL}/#org` },
-    description: "Compare live prices for every Riftbound single across stores in AU, US, UK and Singapore.",
+    description: "Compare live prices for every Riftbound single across stores in Australia, the US, the UK, Singapore, Canada and the EU.",
   };
 
   return (
@@ -107,8 +117,8 @@ export default async function SinglesPage() {
           <h1 className="text-2xl font-extrabold text-white sm:text-4xl">Buy Riftbound singles — for less</h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400 sm:text-base">
             RiftCompare is the price comparison for <strong className="text-slate-200">Riftbound: League of Legends TCG
-            singles</strong>. Search any card and see every store&apos;s live price side by side — ranked by total
-            delivered cost across Australia, the US, the UK, Singapore, Canada and the EU, updated daily. Find the cheapest
+            singles</strong>. Search any card and see every store&apos;s live price side by side — cheapest first by item
+            price, across Australia, the US, the UK, Singapore, Canada and the EU, updated twice a day. Find the cheapest
             place to buy the exact cards your deck needs.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
@@ -117,7 +127,7 @@ export default async function SinglesPage() {
           </div>
           {total > 0 && (
             <p className="mt-4 text-xs text-slate-500">
-              <span className="num text-slate-300">{total.toLocaleString()}</span> Riftbound cards in the database, priced daily.
+              <span className="num text-slate-300">{total.toLocaleString()}</span> Riftbound cards in the database, priced twice a day.
             </p>
           )}
           {/* Widest-selection buy-path — eBay carries every Riftbound single
@@ -130,12 +140,12 @@ export default async function SinglesPage() {
       {/* Entry points */}
       <section>
         <h2 className="mb-4 text-xl font-extrabold text-white">Find the single you&apos;re after</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <HubCard href="/browse" title="Full card database" desc="Every Riftbound single, filterable by set, domain, rarity, type and price — with live prices." />
           <HubCard href="/browse?priced=1&sort=price_asc" title="Cheapest singles" desc="The lowest-priced Riftbound cards available right now in your market." />
-          <HubCard href="/movers" title="Price movers" desc="Which singles are climbing or cooling this week — buy before a spike." />
-          <HubCard href="/market" title="The RiftCompare Index" desc="One number for the whole Riftbound singles market, tracked daily." />
-          <HubCard href="/deck" title="Whole-deck pricer" desc="Price an entire deck's singles across every store in one click — the cheapest combined cart." />
+          <HubCard href="/movers" title="Price movers" desc="Which singles rose or fell the most this week, and by how much." />
+          <HubCard href="/market" title="The RiftCompare Index" desc="One number for the whole Riftbound singles market, recalculated weekly." />
+          <HubCard href="/deck" title="Whole-deck pricer" desc="Build or paste a deck and see what it costs at each card's cheapest listing in your market." />
           <HubCard href="/stores/tracked" title="Stores we compare" desc="Every Riftbound retailer in the comparison, by market." />
         </div>
       </section>
@@ -183,28 +193,40 @@ export default async function SinglesPage() {
       {/* How to buy for less */}
       <section className="card-surface p-6 sm:p-8">
         <h2 className="text-xl font-extrabold text-white">How to buy Riftbound singles for less</h2>
-        <ol className="mt-4 grid gap-4 sm:grid-cols-3">
+        <ol className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <li>
             <div className="text-sm font-bold text-brand-300">1 · Search the card</div>
             <p className="mt-1 text-sm text-slate-400">Find any Riftbound single in the <Link href="/browse" className="text-brand-400 hover:underline">database</Link> — it shows the lowest live price in your market instantly.</p>
           </li>
           <li>
             <div className="text-sm font-bold text-brand-300">2 · Compare every store</div>
-            <p className="mt-1 text-sm text-slate-400">Open the card for the full store-by-store table, in stock and ranked by <strong className="text-slate-200">total delivered cost</strong> (price + postage).</p>
+            <p className="mt-1 text-sm text-slate-400">Open the card for the full store-by-store table: in stock, <strong className="text-slate-200">cheapest first by item price</strong>, with the delivered total shown where the store publishes its postage.</p>
           </li>
           <li>
             <div className="text-sm font-bold text-brand-300">3 · Buy from the cheapest</div>
             <p className="mt-1 text-sm text-slate-400">Click straight through to the exact listing at the store charging the least — no hunting across tabs.</p>
           </li>
         </ol>
-        <p className="mt-5 text-sm text-slate-400">
-          New to buying singles? Read the market guides:{" "}
-          <Link href="/blog/buy-riftbound-cards-us" className="text-brand-400 hover:underline">US</Link>,{" "}
-          <Link href="/blog/buy-riftbound-cards-australia" className="text-brand-400 hover:underline">Australia</Link>,{" "}
-          <Link href="/blog/buy-riftbound-cards-uk" className="text-brand-400 hover:underline">UK</Link> and{" "}
-          <Link href="/blog/riftbound-price-comparison-singapore" className="text-brand-400 hover:underline">Singapore</Link>.
-        </p>
+        {/* Every market's buying guide, from COUNTRY_GUIDE_SLUGS (lib/seo.ts)
+            rather than typed out: the typed list stopped at four markets and
+            never gained Canada or the EU. */}
+        {marketGuides.length > 0 && (
+          <p className="mt-5 text-sm text-slate-400">
+            New to buying singles? Read the market guides:{" "}
+            {marketGuides.map((g, i) => (
+              <Fragment key={g.href}>
+                {i > 0 && (i === marketGuides.length - 1 ? " and " : ", ")}
+                <Link href={g.href} className="text-brand-400 hover:underline">{g.label}</Link>
+              </Fragment>
+            ))}
+            .
+          </p>
+        )}
       </section>
+
+      {/* The guides behind this hub (lib/content/tool-guides.ts), after its own
+          content and before the FAQ. */}
+      <RelatedGuides guides={guidesForTool("/singles")} className="card-surface p-5" />
 
       {/* FAQ */}
       <section className="card-surface divide-y divide-ink-800 overflow-hidden">

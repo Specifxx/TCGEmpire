@@ -4,6 +4,9 @@ import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { FeeCalculator } from "@/components/FeeCalculator";
 import { AdSlot } from "@/components/AdSlot";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // /tools/selling-fees — net proceeds after marketplace fees.
 //
@@ -92,14 +95,17 @@ export default function SellingFeesPage() {
           <span className="text-slate-300">Selling Fee Calculator</span>
         </nav>
         <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Riftbound Selling Fee Calculator</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          What do you actually net after selling a Riftbound card on TCGplayer or eBay? Enter the sale, your
-          marketplace&apos;s commission and processing rate, and your own shipping cost — the calculator stacks the
-          fees correctly and shows the real payout.
-        </p>
+        {/* What to enter, why commission is never pre-filled, and the guides
+            (2026-09-26, "Blog and tools, joined up"): lib/content/hub-intros.ts,
+            in place of a one-paragraph lede. The fee arithmetic itself stays in
+            "How the math works" below. */}
+        <HubIntro path="/tools/selling-fees" />
       </div>
 
       <FeeCalculator />
+
+      {/* The guides behind the numbers, after the calculator and before the ad. */}
+      <RelatedGuides guides={guidesForTool("/tools/selling-fees")} className="card-surface mt-6 p-5" />
 
       <AdSlot className="mt-6" height={100} />
 

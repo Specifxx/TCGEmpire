@@ -35,7 +35,8 @@ function tagline(country: string, contextual: boolean): string {
   return "Buy from AU & global sellers";
 }
 
-// This banner ships on EVERY route via FooterAds, so its market map is the most
+// This banner ships on almost every route via FooterAds (all but its
+// BANNER_FREE_ROUTES, the policy and trust pages), so its market map is the most
 // widely-rendered one on the site — and it was the one that had drifted: the
 // local copy listed only AU/US/UK and fell back to eBay AU, so every SG and
 // CA visitor was sent to the Australian marketplace (in AUD, with AU postage)

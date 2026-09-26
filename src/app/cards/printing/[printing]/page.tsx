@@ -6,6 +6,8 @@ import { buildCardWhere } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { PRINTING_FACETS, printingFacetBySlug, FACET_THIN_THRESHOLD } from "@/lib/facets";
 import { FacetPageBody } from "@/components/FacetPageBody";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
@@ -47,5 +49,5 @@ export async function generateMetadata({ params }: { params: { printing: string 
 export default async function CardPrintingFacetPage({ params }: { params: { printing: string } }) {
   const facet = printingFacetBySlug(params.printing);
   if (!facet) notFound();
-  return <FacetPageBody facet={facet} dimensionLabel="printing" crumbLabel="Printing" crumbHref="/cards/printing" siblings={PRINTING_FACETS} collectionKind="printing" />;
+  return <FacetPageBody facet={facet} dimensionLabel="printing" crumbLabel="Printing" crumbHref="/cards/printing" siblings={PRINTING_FACETS} collectionKind="printing" related={<RelatedGuides guides={guidesForTool("/cards")} className="card-surface p-5" />} />;
 }

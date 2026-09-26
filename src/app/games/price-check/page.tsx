@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { TcgplayerAd } from "@/components/TcgplayerAd";
-import { EbayAd } from "@/components/EbayAd";
-import { getCountry } from "@/lib/get-country";
 import { pageAlternates } from "@/lib/seo";
 import { PriceCheck } from "@/components/games/PriceCheck";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // "Game" ADDED TO THE TITLE 2026-09-17, as an anti-cannibalization fix rather
 // than a cosmetic one. This was the ONLY page on the site whose <title>
@@ -17,34 +16,43 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 export const metadata: Metadata = {
   title: "Price Check Game — Guess the Riftbound Card Price",
   description:
-    "The Price Is Right, for Riftbound: guess each card's live market price and score by how close you land. Five rounds, real store prices, free to play.",
+    "The Price Is Right, for Riftbound: guess each card's live market price and score by how close you land. Five rounds, real listing prices, free to play.",
   alternates: pageAlternates("/games/price-check"),
 };
 
+// No in-page banner pair (owner decision, 2026-09-26, "Blog and tools, joined
+// up" in DECISIONS.md): the site-wide footer pair and GameShell's AdSlot stay.
+// The scoring described below is roundPoints() in components/games/PriceCheck.tsx.
 export default function PriceCheckPage() {
-  const country = getCountry();
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Games", href: "/games" }, { name: "Price Check", href: "/games/price-check" }]} />
       <PriceCheck />
-      {/* Both partners, not one. This slot already ran a TCGplayer leaderboard
-          on every game route while eBay had none anywhere in games — the only
-          place on the site where one affiliate held an in-content surface the
-          other was absent from. Same premium suppression, same self-carried
-          disclosure, same click tracking; if the slot is worth a banner it is
-          worth both. */}
-      <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
-      <EbayAd size="leaderboard" country={country} className="mt-4" />
       <section className="mx-auto mt-8 max-w-2xl">
         <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How to play</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Five rounds, one card each — guess what it&apos;s actually selling for right now and your
-          score is based on how close your guess lands to the real live market price, the same
-          numbers RiftCompare uses for its price comparisons. Guess too low or too high and you&apos;ll
-          score less; nail it exactly and you&apos;ll top out the round. A fun gut-check for how well
-          you actually know current Riftbound prices.
+          A game is five cards, one at a time. Study the card — its art, its name, and the set code
+          and collector number that say which printing it is — then type what you think it costs in
+          your market&apos;s currency and lock it in. The real price appears straight away, with a link
+          to that card&apos;s store comparison, and the next card comes up.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          Scoring is by percentage, not by the dollar. Each round is worth up to 100 points, and you
+          lose a point for every 1% your guess is out: land within 10% and you score at least 90, be
+          half out and you score 50, guess double the price (or zero) and you score nothing. So
+          missing a 1.00 card by 0.50 costs as much as missing a 100.00 card by 50. The best possible
+          game is 500. Your best total is saved in this browser, and signed-in players&apos; best totals
+          go on the global leaderboard.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          The answer is the lowest asking price for an in-stock copy of that exact printing in your
+          market, at a store we track or on eBay: the item price alone, with no postage, as it stood
+          after our most recent price import (they run twice a day). Five rounds is a quick check on
+          whether your sense of what cards cost matches what they are listed for before you buy or
+          trade.
         </p>
       </section>
+      <RelatedGuides guides={guidesForTool("/games/price-check")} className="card-surface mx-auto mt-6 max-w-2xl p-5" />
     </div>
   );
 }

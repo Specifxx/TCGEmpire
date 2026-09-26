@@ -12,6 +12,9 @@ import { BoxEvCalculator, type BoxEvOffers, type BoxEvSet, type PullCard } from 
 import { cheapestBoxOffers, NO_BOOSTER_SETS, poolOf, POOL_ORDER, type PoolKey } from "@/lib/box-ev";
 import { pageAlternates } from "@/lib/seo";
 import { AdSlot } from "@/components/AdSlot";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "@/lib/tcg-market-rows";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -246,12 +249,11 @@ export default async function BoxEvPage() {
           <span className="text-slate-300">Box EV Calculator</span>
         </nav>
         <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Riftbound Booster Box EV Calculator</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Is a Riftbound booster box worth opening? Every card is valued at its{" "}
-          <strong className="text-slate-200">TCGplayer market price</strong>, and the chase prints most EV maths
-          quietly ignores — signatures, over-numbers and alt arts — are counted here. Tune the pack structure to
-          the box you&apos;re actually buying and the maths does the rest.
-        </p>
+        {/* The method, above the calculator (2026-09-26, "Blog and tools,
+            joined up"): lib/content/hub-intros.ts. It replaced a short lede and
+            the method paragraph that used to open "What EV can't tell you"
+            below, so the two never say the same thing twice. */}
+        <HubIntro path="/tools/box-ev" />
       </div>
 
       {sets.length === 0 ? (
@@ -261,7 +263,7 @@ export default async function BoxEvPage() {
           <div>
             <p className="text-base font-semibold text-white">Price data is still warming up</p>
             <p className="mt-1 text-sm">
-              This tool runs off the daily market-price import. Check back shortly, or{" "}
+              This tool runs off the market prices our import reads twice a day. Check back shortly, or{" "}
               <Link href="/browse" className="text-brand-400 hover:underline">browse cards</Link> meanwhile.
             </p>
           </div>
@@ -270,24 +272,20 @@ export default async function BoxEvPage() {
         <BoxEvCalculator sets={sets} offers={boxOffers} />
       )}
 
+      {/* The guide behind the number, after the calculator and before the ad. */}
+      <RelatedGuides guides={guidesForTool("/tools/box-ev")} className="card-surface mt-6 p-5" />
+
       <AdSlot className="mt-6" height={100} />
 
       <section className="card-surface mt-6 p-5">
-        <h2 className="font-bold text-white">How this works (and what EV can&apos;t tell you)</h2>
+        <h2 className="font-bold text-white">What EV can&apos;t tell you</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Expected value multiplies each pool&apos;s average card price by how many of that pool a pack yields,
-          then sums across the box. Two things make this number different from the usual back-of-envelope
-          version. First, <strong className="text-slate-200">chase prints are included</strong>: a signature or
-          over-numbered card is rare enough that it barely moves a per-pack average, but across 24 packs it is a
-          real share of what you paid for — leaving it out understates every box. Second, every card is valued at
-          the <strong className="text-slate-200">TCGplayer market price</strong> rather than the cheapest listing
-          we can find, because the cheapest listing is often a foreign-language copy or carries a shipping floor
-          that has nothing to do with the card.
-        </p>
-        <p className="mt-3 text-sm leading-relaxed text-slate-400">
-          What it can&apos;t tell you: whether <em>your</em> box is worth opening. EV is an average across many
-          boxes, and the distribution is brutally skewed — most boxes land under the average and a few land far
-          over it, because that is exactly what a 1-in-several-hundred chase card does to a mean. It also assumes
+          Chase prints are counted on purpose: a signature or over-numbered card is rare enough that it barely moves a
+          per-pack average, but across a whole box it is a real share of what you paid for, and leaving it out
+          understates every box. What the number can&apos;t tell you is whether <em>your</em> box is worth opening.
+          EV is an average across many boxes, and the distribution is brutally skewed — most boxes land under the
+          average and a few land far over it, because that is exactly what a 1-in-several-hundred chase card does to
+          a mean. It also assumes
           you could sell everything at market price, and bulk commons are close to unsellable in practice. Treat a
           box as entertainment with a partial refund, not an investment. If you want specific cards for a deck,{" "}
           <Link href="/browse" className="text-brand-400 hover:underline">buying the singles</Link> is almost

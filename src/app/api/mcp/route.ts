@@ -25,7 +25,7 @@ import { SITE_URL } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 const MARKET_ENUM = ["AU", "US", "UK", "SG", "CA", "EU"] as const;
-const marketSchema = z.enum(MARKET_ENUM).default("US").describe("Market scope — determines currency, in-stock stores and shipping estimates.");
+const marketSchema = z.enum(MARKET_ENUM).default("US").describe("Market scope — determines currency, in-stock stores and the postage shown.");
 
 function json(value: unknown, isError = false) {
   return { content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }], isError };
@@ -79,8 +79,9 @@ function buildServer(): McpServer {
     {
       title: "Find the cheapest listing for a card",
       description:
-        "Every tracked store's live listing for one card in one market, cheapest total delivered cost " +
-        "(item price + shipping) first — the tool for \"where's the cheapest place to buy X.\"",
+        "Every tracked store's live listing for one card in one market, cheapest first by item price " +
+        "(known postage only breaks ties; `ship` is null where the store quotes postage only at checkout) — " +
+        "the tool for \"where's the cheapest place to buy X.\"",
       inputSchema: { id: z.string().describe("Card URL slug or id."), market: marketSchema },
     },
     async ({ id, market }) => {

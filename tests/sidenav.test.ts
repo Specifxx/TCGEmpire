@@ -262,6 +262,17 @@ test("the header's desktop row is the curated shortlist the owner named, and not
   const nav = codeOnly(read("src/components/Navbar.tsx"));
   // Kept: "I still want the sealed, the blog, premium, Discord, the watch
   // list, the light and dark mode, the country and the accounts."
+  //
+  // PLUS TOOLS, FROM xl (2026-09-26, "Blog and tools, joined up" in
+  // DECISIONS.md). The owner's AdSense brief names Tools as a header link,
+  // which overrides the 09-21 shortlist for that one item. It is gated at xl,
+  // never lg: the 1024-1279 row has ~5px of slack on touch, and an lg Tools
+  // link would clip the sign-in control. Everything else here is unchanged.
+  const tools = /<Link href="\/tools" className="([^"]*)"/.exec(nav)?.[1] ?? "";
+  assert.ok(tools, "the header must carry Tools");
+  assert.match(tools, /\bhidden\b/, "Tools is hidden below xl");
+  assert.match(tools, /\bxl:block\b/, "…and shown from xl");
+  assert.doesNotMatch(tools, /\blg:(block|inline|flex|grid)\b/, "never at lg, where the row has no room for it");
   for (const [what, pattern] of [
     ["Sealed", /<Link href="\/sealed"[^>]*lg:block/],
     ["Blog", /<Link href="\/blog"[^>]*lg:block/],

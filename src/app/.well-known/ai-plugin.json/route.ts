@@ -16,12 +16,13 @@ export function GET() {
       name_for_model: "riftcompare",
       description_for_human:
         "Compare live Riftbound: League of Legends TCG card prices across stores in Australia, " +
-        "the US, the UK, Singapore, Canada and the EU, including real shipping cost.",
+        "the US, the UK, Singapore, Canada and the EU, with postage shown where the store publishes it.",
       description_for_model:
         "Read-only Riftbound TCG price data: card search, per-card prices in every market, the full " +
-        "store-by-store listing comparison (item price + shipping = total delivered cost) so you can find the " +
-        "cheapest place to buy a card, sealed-product prices, and the RiftCompare Index (a daily market index " +
-        "for Riftbound singles). No authentication required.",
+        "store-by-store listing comparison (cheapest first by item price; each row's postage where the store " +
+        "states it, null where it is quoted only at checkout) so you can find the cheapest place to buy a card, " +
+        "sealed-product prices, and the RiftCompare Index (a weekly market index for Riftbound singles). " +
+        "No authentication required.",
       auth: { type: "none" },
       api: { type: "openapi", url: `${SITE_URL}/openapi.json`, is_user_authenticated: false },
       logo_url: `${SITE_URL}/icon.png`,

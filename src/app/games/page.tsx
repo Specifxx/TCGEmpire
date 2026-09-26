@@ -104,7 +104,9 @@ const GAMES = [
     href: "/games/twenty48",
     name: "Riftbound 2048",
     tag: "Puzzle",
-    desc: "Slide and merge cards up the rarity ladder — two Commons make an Uncommon, all the way to Legend. Arrow keys or swipe.",
+    // "all the way to Legend" until 2026-09-26: Legend is a card type, not a
+    // rarity. The game's ladder is the site's real rarities first (Twenty48.tsx).
+    desc: "Slide and merge cards up the rarity ladder — two Commons make an Uncommon, all the way to Ultimate and beyond. Arrow keys or swipe.",
     accent: "from-cyan-500/20 to-ink-850",
   },
   {
@@ -205,7 +207,7 @@ export default async function GamesPage() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {GAMES.map((g) => (
           <Link
             key={g.href}

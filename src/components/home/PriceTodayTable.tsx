@@ -28,11 +28,15 @@ export function PriceTodayTable({
   rows,
   country,
   totalPriced,
+  buyingGuide,
 }: {
   rows: PriceTableRow[];
   country: Country;
   /** Cards priced in this market, for the "All N card prices" link. */
   totalPriced: number;
+  /** A region home's own buying guide, linked from the footer. "/" passes none:
+   *  its six-market guide leads the editorial band directly below. */
+  buyingGuide?: { href: string; label: string };
 }) {
   if (!rows.length) return null;
   const { currency, adjective } = COUNTRIES[country];
@@ -64,9 +68,10 @@ export function PriceTodayTable({
             {/* Phones (2026-09-26): the key line is CSS-hidden below sm (still
                 in the HTML; ▲/▼ and the sr-only words carry direction without
                 colour), so the first row and its eBay button reach the first
-                screen. */}
+                screen. "Worldwide": the 7-day change reads the weekly GLOBAL
+                series, not this market's own price — see the footer. */}
             <span className="hidden sm:inline">
-              Updated daily. <span className="whitespace-nowrap">▼ green = cheaper this week.</span>
+              Updated daily. <span className="whitespace-nowrap">▼ green = cheaper worldwide this week.</span>
             </span>
           </p>
           {/* Above the first eBay button, on first paint, for every visitor. */}
@@ -138,7 +143,36 @@ export function PriceTodayTable({
           </tbody>
         </table>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-ink-800 p-4 sm:px-5">
+      {/* How to read the table, BELOW the rows so nothing moves the first row
+          down on a phone (2026-09-26, "Blog and tools, joined up" in
+          DECISIONS.md). Both sentences are what lib/price-table.ts computes:
+          "Cheapest" is min(the market's stored in-stock low, the cheapest
+          tracked eBay listing), both item prices; the 7-day change reads
+          GLOBAL_HISTORY_COUNTRY, the weekly lowest across AU/US/UK/SG in USD
+          (lib/price-import.ts), so on /uk or /ca it is not that market's price. */}
+      <div className="space-y-1 border-t border-ink-800 px-4 pt-3 sm:px-5">
+        <p className="text-xs leading-relaxed text-slate-400">
+          <span className="font-semibold text-slate-300">Cheapest</span> is the lowest in-stock item price we track in
+          this market, from a store or eBay, with postage extra. The{" "}
+          <span className="font-semibold text-slate-300">7-day change</span> follows our weekly worldwide low (the
+          cheapest across Australia, the US, the UK and Singapore, in US dollars), not this market&apos;s own history,
+          and shows — where there is not enough history to compare.
+        </p>
+        <div className="flex flex-wrap gap-x-4 text-xs font-semibold">
+          <Link href="/methodology" className="tap-link text-brand-300 underline-offset-2 hover:underline">
+            How we collect prices
+          </Link>
+          <Link href="/guides/why-riftbound-card-prices-change" className="tap-link text-brand-300 underline-offset-2 hover:underline">
+            Why prices move
+          </Link>
+          {buyingGuide && (
+            <Link href={buyingGuide.href} className="tap-link text-brand-300 underline-offset-2 hover:underline">
+              {buyingGuide.label}
+            </Link>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-4 pt-2 sm:px-5">
         {/* What the eBay column is, in words that stay true: an item price
             (postage extra) for a listing we track, or a search. Never "live",
             never "cheaper" — a tracked listing can be a day or three old. */}

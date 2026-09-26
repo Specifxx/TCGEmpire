@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { TcgplayerAd } from "@/components/TcgplayerAd";
-import { EbayAd } from "@/components/EbayAd";
-import { getCountry } from "@/lib/get-country";
 import { pageAlternates } from "@/lib/seo";
 import { Pairs } from "@/components/games/Pairs";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 export const metadata: Metadata = {
   title: "Pairs — Riftbound Card Memory Game",
@@ -13,29 +12,40 @@ export const metadata: Metadata = {
   alternates: pageAlternates("/games/pairs"),
 };
 
+// No in-page banner pair (owner decision, 2026-09-26, "Blog and tools, joined
+// up" in DECISIONS.md): the site-wide footer pair and GameShell's AdSlot stay.
+// The old copy here said "There's no timer"; Pairs.tsx has always run one from
+// the first move. The leaderboard ranks on moves alone (lib/games.ts, "asc").
 export default function PairsPage() {
-  const country = getCountry();
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Games", href: "/games" }, { name: "Pairs", href: "/games/pairs" }]} />
       <Pairs />
-      {/* Both partners, not one. This slot already ran a TCGplayer leaderboard
-          on every game route while eBay had none anywhere in games — the only
-          place on the site where one affiliate held an in-content surface the
-          other was absent from. Same premium suppression, same self-carried
-          disclosure, same click tracking; if the slot is worth a banner it is
-          worth both. */}
-      <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
-      <EbayAd size="leaderboard" country={country} className="mt-4" />
       <section className="mx-auto mt-8 max-w-2xl">
         <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How to play</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          A classic memory game built from real Riftbound card art: a 4×4 grid of face-down tiles
-          hides eight matching pairs. Flip two tiles at a time — a match stays face-up, a mismatch
-          flips back — and clear the whole board in as few moves as possible. There&apos;s no timer,
-          so it&apos;s a quick, low-pressure way to start recognising card art at a glance.
+          Sixteen face-down tiles hide eight pairs of real Riftbound card art — a four-by-four grid,
+          or two rows of eight on a short landscape screen. Turn over one tile, then a second. If
+          they show the same card they stay face up with a tick; if not, both turn back after a
+          moment, so remember where each one was. Every two tiles you turn is one move, and the game
+          is won when all eight pairs are showing.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          Fewest moves wins. Eight is a perfect game, and it takes luck as well as memory: you cannot
+          know where a card&apos;s twin is until you have turned it over. A clock starts with your first
+          move and runs beside the move counter, but the global leaderboard ranks signed-in players
+          on moves alone, keeping each player&apos;s lowest count. Your personal best is saved in this
+          browser too.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          Nothing on the tiles shows a price while you play. Once the board is clear, the eight
+          cards you matched are listed with the cheapest in-stock price we have for each in your
+          market, dearest first, so you find out whether the art you kept losing track of was a bulk
+          common or a chase card. Each one links through to its own page, where the stores we track
+          that list it are compared side by side.
         </p>
       </section>
+      <RelatedGuides guides={guidesForTool("/games/pairs")} className="card-surface mx-auto mt-6 max-w-2xl p-5" />
     </div>
   );
 }

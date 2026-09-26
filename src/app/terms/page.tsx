@@ -3,21 +3,35 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL, TIER_NAMES, INTRO_MONTHS, introOfferEnabled } from "@/lib/site";
 import { PREMIUM_TRIAL_DAYS } from "@/lib/premium";
-import { staticPageDateLabel } from "@/lib/static-page-dates";
+import { STATIC_PAGE_DATES, staticPageDateLabel } from "@/lib/static-page-dates";
 import { pageAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
     `The terms of using ${SITE_NAME}: what our price comparison does and does not guarantee, how ` +
-    `affiliate links work, account rules and acceptable use.`,
+    `affiliate links work, accounts, published decks, subscriptions and store consulting.`,
   alternates: pageAlternates("/terms"),
 };
 
-
+// 2026-09-26 ("Blog and tools, joined up" in DECISIONS.md): added the paid store
+// consulting sold at /stores/consulting (its refund promise is that page's own),
+// player-published decks (/decks, hidden via /api/admin/decks), and the
+// twice-daily snapshot basis of every price. No governing-law clause: nothing
+// in the repo states a jurisdiction, and choosing one is the owner's call.
 export default function TermsPage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Terms of Service",
+    url: `${SITE_URL}/terms`,
+    dateModified: STATIC_PAGE_DATES["/terms"],
+    publisher: { "@id": `${SITE_URL}/#org` },
+  };
+
   return (
     <article className="mx-auto max-w-3xl">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Visible trail + BreadcrumbList JSON-LD. Every indexable page needs
           both — the crawl check asserts it. */}
       <Breadcrumbs trail={[{ name: "Terms", href: "/terms" }]} />
@@ -37,8 +51,9 @@ export default function TermsPage() {
           <p>
             {SITE_NAME} provides price-comparison information, a card database, tools and games for the
             Riftbound trading card game. The Site is provided free of charge for personal,
-            non-commercial use, except where a paid feature (such as {SITE_NAME} Premium) is clearly
-            offered.
+            non-commercial use, except where a paid feature is clearly offered: the {TIER_NAMES.plus} and{" "}
+            {TIER_NAMES.premium} subscriptions (section 8) and paid consulting sessions for stores
+            (section 9).
           </p>
         </section>
 
@@ -59,10 +74,22 @@ export default function TermsPage() {
             we have no authority to intervene in them.
           </p>
           <p>
-            Prices are recorded snapshots, not live lookups — see our{" "}
+            Prices are recorded snapshots, not live lookups: store prices are imported twice a day, at
+            07:00 and 19:00 UTC, and a price can change or sell out between imports. The price, postage
+            and availability shown at the retailer&rsquo;s own checkout are the ones that apply. A delivered
+            total appears only where a store publishes its postage, and postage estimated from rates
+            measured at a store&rsquo;s checkout (in Best Basket, for example) can differ from what that
+            store charges you. See our{" "}
             <Link href="/editorial-policy" className="text-brand-400 hover:underline">editorial &amp; pricing policy</Link>{" "}
             for exactly how often each surface refreshes, how listings are verified, and how to
-            report a price that is wrong.
+            report a price that is wrong, and our{" "}
+            <Link href="/methodology" className="text-brand-400 hover:underline">methodology</Link> for how
+            each figure and tool is calculated.
+          </p>
+          <p>
+            Tools that report demand, price movement or a card&rsquo;s position against a market price
+            describe recorded data; none of them predicts a price, and nothing on the Site is financial or
+            investment advice.
           </p>
         </section>
 
@@ -70,9 +97,11 @@ export default function TermsPage() {
           <h2 className="text-lg font-bold text-white">3. Affiliate links &amp; advertising</h2>
           <p>
             The Site is supported by third-party advertising (including Google AdSense), affiliate
-            commissions and Premium subscriptions. Some outbound links are
+            commissions (through the eBay Partner Network, TCGplayer&rsquo;s programme on Impact and
+            Amazon Associates), {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions and paid store
+            consulting. Some outbound links are
             affiliate links through which we may earn a commission at no extra cost to you; these
-            are marked and disclosed next to the link. Advertising never affects the prices we show
+            are marked and disclosed next to the link. None of these affects the prices we show
             or the order in which results are ranked. See our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">Privacy Policy</Link> for how
             advertising and cookies are handled.
@@ -82,10 +111,10 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">4. Accounts</h2>
           <p>
-            Some features require an account. You are responsible for keeping your login details secure
-            and for activity under your account. Provide accurate information, don&rsquo;t impersonate
-            others, and don&rsquo;t share your account. We may suspend or remove accounts that violate
-            these Terms.
+            Some features require an account. You sign in with a Google or Discord account, so keeping
+            that account secure keeps yours secure, and you are responsible for activity under your
+            account. Don&rsquo;t impersonate others, and don&rsquo;t share your account. We may suspend
+            or remove accounts that violate these Terms. To close your account, email us.
           </p>
         </section>
 
@@ -103,9 +132,17 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">6. User content &amp; moderation</h2>
           <p>
-            If you post content on the Site — including reviews, feedback, store suggestions and
-            messages — you remain responsible for it and grant us a non-exclusive licence to display
-            it on the Site.
+            If you post content on the Site — including decks you publish, reviews, feedback, store
+            suggestions and messages — you remain responsible for it and grant us a non-exclusive,
+            royalty-free licence to display it on the Site, including in the page and preview image used
+            to share a published deck.
+          </p>
+          <p>
+            <strong className="text-white">Published decks are public.</strong> A deck you publish at{" "}
+            <Link href="/decks" className="text-brand-400 hover:underline">/decks</Link> is shown to everyone
+            under your display name, with its prices recalculated from current store prices. Publishing is
+            limited per account, and we may hide a deck that breaches these Terms. To have a deck you
+            published taken down, email us.
           </p>
           <p>
             <strong className="text-white">Submitted content is moderated.</strong> It is reviewed
@@ -171,13 +208,33 @@ export default function TermsPage() {
             account; access continues until the end of the period already paid for (or, during a trial, until the
             trial ends). Once a subscription is paid, moving from {TIER_NAMES.plus} to {TIER_NAMES.premium} bills
             the prorated difference straight away, and moving down credits the unused part of the period against
-            your next invoice; plan changes are not available during a free trial. Fees already paid are
-            non-refundable except where required by law.
+            your next invoice; plan changes are not available during a free trial. Subscription fees
+            already paid are non-refundable except where required by law.
+          </p>
+        </section>
+
+        {/* The refund promise is the consulting page's own FAQ ("15 minutes in
+            ... we'll refund the whole thing"); the price and length come from
+            lib/consulting.ts on that page, so they are referred to, not typed. */}
+        <section className="space-y-2">
+          <h2 className="text-lg font-bold text-white">9. Store consulting</h2>
+          <p>
+            Stores can book a paid one-to-one consulting session at{" "}
+            <Link href="/stores/consulting" className="text-brand-400 hover:underline">/stores/consulting</Link>.
+            Its price, length and what it covers are stated on that page before you pay. Payment is taken
+            by Stripe, which issues a tax invoice. Each booking is for one session; there is no
+            subscription.
+          </p>
+          <p>
+            If, 15 minutes into the session, it isn&rsquo;t worth your time, say so on the call and the
+            whole fee is refunded. The session is advice, not a promised result: nobody can guarantee what
+            a pricing change does to a store&rsquo;s sales. Booking a session has no effect on how any
+            store appears or ranks on the Site, and nothing said in a session is published.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">9. Disclaimer &amp; limitation of liability</h2>
+          <h2 className="text-lg font-bold text-white">10. Disclaimer &amp; limitation of liability</h2>
           <p>
             The Site is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo;, without warranties of
             any kind. To the maximum extent permitted by law, {SITE_NAME} is not liable for any loss
@@ -188,7 +245,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">10. Changes</h2>
+          <h2 className="text-lg font-bold text-white">11. Changes</h2>
           <p>
             We may update these Terms from time to time. Material changes are reflected by the &ldquo;last
             updated&rdquo; date above; continued use of the Site means you accept the updated Terms.
@@ -196,7 +253,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">11. Contact</h2>
+          <h2 className="text-lg font-bold text-white">12. Contact</h2>
           <p>
             Questions about these Terms? Email{" "}
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>{" "}

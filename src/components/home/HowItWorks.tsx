@@ -31,7 +31,7 @@ const STEPS = [
     // never letting it decide the ranking would otherwise penalise a store
     // for being upfront about a cost eBay's checkout hides. Softened to what
     // actually happens.
-    body: "See live prices from every store in your market side by side — ranked by price, with delivered cost shown where stores publish postage, plus eBay.",
+    body: "See the latest prices from every store we track in your market side by side, read twice a day — ranked by price, with delivered cost shown where stores publish postage, plus eBay.",
   },
   {
     n: 3,
@@ -64,7 +64,7 @@ export function HowItWorks({ totalCards }: { totalCards: number }) {
         </p>
       </div>
 
-      <Reveal stagger className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <Reveal stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {STEPS.map((s) => (
           <div key={s.n} className="card-surface relative flex flex-col gap-2 p-5 transition-colors duration-200 hover:border-brand-500/40">
             <div className="flex items-center gap-3">
@@ -106,15 +106,23 @@ export function HowItWorks({ totalCards }: { totalCards: number }) {
           among 20+ other links with no on-page signal near the actual prices.
           A first-time visitor has no reason yet to trust a number pulled
           together from dozens of stores without something here answering
-          "says who, checked how" — kept to one quiet line, not a redesign. */}
+          "says who, checked how" — kept to one quiet line, not a redesign.
+          2026-09-26 ("Blog and tools, joined up" in DECISIONS.md): "Meet the
+          team" became "About RiftCompare", since one person runs the site and
+          /about says so; "verified daily" became what the import actually
+          does; and the editorial policy joined the line. */}
       <p className="mt-3 text-xs text-slate-500">
-        Prices verified daily ·{" "}
+        Store prices imported twice a day ·{" "}
         <Link href="/methodology" className="underline-offset-2 hover:text-slate-300 hover:underline">
           See our methodology
         </Link>{" "}
         ·{" "}
         <Link href="/about" className="underline-offset-2 hover:text-slate-300 hover:underline">
-          Meet the team
+          About RiftCompare
+        </Link>{" "}
+        ·{" "}
+        <Link href="/editorial-policy" className="underline-offset-2 hover:text-slate-300 hover:underline">
+          Editorial policy
         </Link>
       </p>
     </section>

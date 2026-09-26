@@ -12,7 +12,9 @@ import { storeBadgeHtml } from "@/lib/store-badge";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
-import { pageAlternates, pageOpenGraph } from "@/lib/seo";
+import { COUNTRY_GUIDE_SLUGS, pageAlternates, pageOpenGraph } from "@/lib/seo";
+import { getArticles } from "@/lib/articles";
+import { articleHref } from "@/lib/content/tool-guides";
 
 export const revalidate = 86400;
 
@@ -117,6 +119,12 @@ export default async function StorePage({ params }: { params: { slug: string } }
   const { count, min, max, cheapest } = await storeStats(store.key);
   const policyUrl = shippingPolicyUrl(store.key);
   const siblings = STORE_PAGES.filter((s) => (s.country ?? "AU") === country && s.slug !== store.slug);
+  // The market's buying guide and the all-markets one, for "Is it the
+  // cheapest?". Resolved against the PUBLISHED articles (in memory, no query),
+  // so a retired slug drops the link rather than rendering a dead one.
+  const published = getArticles();
+  const marketGuide = published.find((a) => a.slug === COUNTRY_GUIDE_SLUGS[country]);
+  const whereToBuy = published.find((a) => a.slug === "where-to-buy-riftbound-cards");
 
   const trail = [
     { name: "Stores", href: "/stores/tracked" },
@@ -149,7 +157,7 @@ export default async function StorePage({ params }: { params: { slug: string } }
           {count > 0 ? (
             <>
               We track <strong className="text-slate-200">{count.toLocaleString()}</strong> in-stock Riftbound
-              singles at {store.name}, a {info.adjective} store, and re-check them daily. Every price below is
+              singles at {store.name}, a {info.adjective} store, and re-check them twice a day. Every price below is
               compared against every other store we track, so you can see instantly whether {store.name} is the
               cheapest place to buy a given card.
             </>
@@ -236,16 +244,42 @@ export default async function StorePage({ params }: { params: { slug: string } }
         </div>
       </section>
 
+      {/* Said in bold until 2026-09-26 that "RiftCompare ranks every store by
+          delivered cost", which computeMarket (lib/market-rows.ts) has never
+          done: it sorts by item price and postage only breaks ties. Now says
+          what the comparison does, and sends a buyer on to the market's own
+          buying guide ("Blog and tools, joined up" in DECISIONS.md). */}
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Is {store.name} the cheapest?</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          That depends on the card. RiftCompare ranks every store by{" "}
-          <strong className="text-slate-200">delivered cost</strong> — the item price plus postage — rather than
-          sticker price alone, because the cheapest listing is often not the cheapest order once postage lands.
-          Open any card above to see the full comparison, or use the{" "}
-          <Link href="/tools/best-basket" className="text-brand-400 hover:underline">best-basket tool</Link> to work
-          out the cheapest way to buy a whole want-list, which frequently means splitting it across two stores.
-        </p>
+        <div className="mt-2 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+          <p>
+            That depends on the card. Each card page lists the stores in your selected market that have it in
+            stock — {info.label} for {store.name} —{" "}
+            <strong className="text-slate-200">cheapest first by item price</strong>, with the delivered total shown
+            where the store publishes its postage. Open any card above to see where {store.name}&apos;s price sits.
+            The cheapest card is not always the cheapest order, though:{" "}
+            <Link href="/tools/best-basket" className="text-brand-400 hover:underline">Best Basket</Link> prices a
+            whole want-list with each store&apos;s postage, which frequently means splitting it across two stores.
+          </p>
+          {(marketGuide || whereToBuy) && (
+            <p>
+              Buying in {info.place}?{" "}
+              {marketGuide && (
+                <>
+                  <Link href={articleHref(marketGuide)} className="text-brand-400 hover:underline">{marketGuide.title}</Link>{" "}
+                  compares the {info.adjective} stores as a group
+                  {whereToBuy ? ", and " : "."}
+                </>
+              )}
+              {whereToBuy && (
+                <>
+                  <Link href={articleHref(whereToBuy)} className="text-brand-400 hover:underline">{whereToBuy.title}</Link>{" "}
+                  covers all six markets we track.
+                </>
+              )}
+            </p>
+          )}
+        </div>
       </section>
 
       {/* The highest-intent B2B placement on the site: someone reading a page

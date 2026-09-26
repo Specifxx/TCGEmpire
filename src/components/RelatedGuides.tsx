@@ -11,6 +11,9 @@ import { articleHref } from "@/lib/content/tool-guides";
 //
 // Placement: after the page's own data and before any affiliate block, so our
 // content leads and the commercial block follows (AdSense remediation Phase 8).
+// Two exceptions keep an eBay CTA where "Pushing eBay clicks" (DECISIONS.md,
+// 2026-09-26) put it: under /movers' lists, and beside the signed-out Deal
+// Finder's lock.
 export function RelatedGuides({
   guides,
   heading = "Read next",

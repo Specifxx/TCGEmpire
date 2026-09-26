@@ -10,6 +10,8 @@ import { parseDeckList, resolveDeckLines } from "@/lib/deck";
 import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { pageAlternates } from "@/lib/seo";
 import Link from "next/link";
 import { cachedOrDirect } from "@/lib/price-history";
@@ -157,6 +159,10 @@ export default async function DeckPage({ searchParams }: { searchParams: { list?
           quantities as you go.
         </p>
       </div>
+      {/* The guides behind building and buying a deck, after the builder and
+          its explainer: the tool stays first (DECISIONS.md "Public decks",
+          2026-09-26; tests/public-decks.test.ts). */}
+      <RelatedGuides guides={guidesForTool("/deck")} className="card-surface mt-8 p-5" />
     </div>
   );
 }

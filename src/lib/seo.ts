@@ -241,7 +241,10 @@ export function regionHomeDescription(region: Exclude<Country, "US">, cards: num
   const info = COUNTRIES[region];
   const c = cards && cards > 0 ? `${cards.toLocaleString("en-US")} cards` : "every card";
   const s = liveStores && liveStores > 0 ? `${liveStores} ${info.adjective} stores` : `every ${info.adjective} store we track`;
-  return `Riftbound card prices in ${info.place}: ${c} compared across ${s} in ${info.currency}, with ${info.adjective} delivered cost. Updated daily.`;
+  // "with UK delivered cost" promised a delivered-cost comparison; comparisons
+  // sort by item price and show postage only where a store publishes it
+  // (2026-09-26, "Blog and tools, joined up" in DECISIONS.md).
+  return `Riftbound card prices in ${info.place}: ${c} compared across ${s} in ${info.currency}, cheapest first, postage shown where known. Updated daily.`;
 }
 
 /** Full <Metadata> for one of the region home pages (not "/" itself, which

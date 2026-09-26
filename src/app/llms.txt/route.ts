@@ -11,7 +11,7 @@ const DESC: Record<string, string> = {
   "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/US/UK/SG/CA/EU).",
   "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price.",
   "/movers": "The biggest Riftbound price rises and falls, week over week.",
-  "/market": "The RiftCompare Index — a daily search-weighted market index for Riftbound singles, with key stats.",
+  "/market": "The RiftCompare Index — a weekly, search-weighted market index for Riftbound singles, with key stats.",
   "/stores/tracked": "The stores whose public prices RiftCompare tracks and compares.",
   "/tools/deal-finder": "Deal Finder: every card cheaper than TCGplayer's US market price at a real store, with a store filter and an eBay-only view. The top 3 with a free account; the full list, filterable to your watchlist or binder, with Plus.",
   "/tools/rising": "Ranks cards by search demand, stores in stock and where the price sits in its own recent range, with the reason for each pick. A screen, not a prediction; not financial advice.",
@@ -19,7 +19,7 @@ const DESC: Record<string, string> = {
   "/tools/demand": "Demand Finder: the Riftbound cards most searched and most viewed on RiftCompare over the last 7 or 30 days, counted once per browser per card per day. The top 10 most searched this week are free (also on /movers); the full lists with Premium.",
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
   "/tools/selling-fees": "Net proceeds calculator for selling on TCGplayer or eBay: stacks commission, processing and shipping.",
-  "/deck": "Deck builder and list pricer — paste a decklist or any card list and price every card in real time.",
+  "/deck": "Deck builder and list pricer — paste a decklist or any card list and price every card at its cheapest listing in your market as you build.",
   "/trade": "Trade calculator — value two sides of a card trade fairly.",
   "/riftle": "Riftle — the daily Riftbound card guessing game.",
   "/games": "Free Riftbound mini-games (Riftle, pack sim, price games and more).",
@@ -48,10 +48,11 @@ export function GET() {
   lines.push("# RiftCompare");
   lines.push("");
   lines.push(
-    "> Free Riftbound: League of Legends TCG card database and live price comparison across " +
-      "the United States, the United Kingdom, Australia, Canada and Singapore — with the " +
-      "transparent total cost including shipping, and no hidden fees. Home of the RiftCompare " +
-      "Index (a daily market index for Riftbound singles), price movers, sealed products and buyer tools."
+    "> Free Riftbound: League of Legends TCG card database and price comparison across stores in " +
+      "the United States, the United Kingdom, Australia, Canada, Singapore and the EU. Each card's " +
+      "stores are listed cheapest first by item price, with the delivered total shown where the store " +
+      "publishes its postage; prices come from two imports a day. Home of the RiftCompare Index (a " +
+      "weekly market index for Riftbound singles), price movers, sealed products and buyer tools."
   );
   lines.push("");
   lines.push(
@@ -65,8 +66,8 @@ export function GET() {
   // Machine-readable data endpoints first — the highest-value surface for agents.
   lines.push("## Data (machine-readable)");
   lines.push(`- [RiftCompare Index (JSON)](${abs("/api/v1/index.json")}): the live index level, deltas, key stats and constituents.`);
-  lines.push(`- [Per-card prices (JSON)](${abs("/api/v1/card/<id>/prices.json")}): every tracked store's live price for one card, all five markets.`);
-  lines.push(`- [Per-card listings (JSON)](${abs("/api/v1/card/<id>/listings.json")}?market=US): every store's listing for one card, cheapest total delivered cost first — pass \`?market=\`.`);
+  lines.push(`- [Per-card prices (JSON)](${abs("/api/v1/card/<id>/prices.json")}): the lowest in-stock price for one card in each of the six markets.`);
+  lines.push(`- [Per-card listings (JSON)](${abs("/api/v1/card/<id>/listings.json")}?market=US): every store's listing for one card in one market, cheapest first by item price (\`ship\` is null where the store quotes postage only at checkout) — pass \`?market=\`.`);
   lines.push(`- [Card search (JSON)](${abs("/api/cards")}?q=<query>&market=US): free-text search with filters and pagination — pass \`?market=\` for a deterministic, cacheable, cross-origin response.`);
   lines.push(`- [OpenAPI spec](${abs("/openapi.json")}) · [API reference](${abs("/api/docs")}): every endpoint above, described with request/response schemas — no API key required, no rate limit currently enforced.`);
   lines.push(`- [MCP server](${abs("/api/mcp")}) (Streamable HTTP, no auth): \`search_cards\`, \`get_card_prices\`, \`cheapest_listing\`, \`list_sets\` — the same data as tool calls instead of HTTP requests. Discovery manifests: [${abs("/.well-known/mcp.json")}](${abs("/.well-known/mcp.json")}) · [${abs("/.well-known/ai-plugin.json")}](${abs("/.well-known/ai-plugin.json")}).`);
