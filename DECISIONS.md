@@ -13746,3 +13746,200 @@ with `page_type: "article"`, `surface: "shop_strip_inline"`, `entry: "reddit"`
 and customid `rc-us-guide-inline-search`; `/sealed` as a Canada visitor links
 ebay.ca (`rc-ca-sealed-page-search`). Deployed off-schedule at the owner's
 explicit instruction ("implement and deploy").
+
+
+## Pushing eBay clicks: eBay beside every comparison, never inside the ranking — 2026-09-26
+
+Owner's ask: most of the revenue is the eBay Partner Network, and traffic is up
+while eBay clicks are down — the new visitors arrive through Radiance pre-order
+content, where store pre-orders are cheaper than eBay, so they click stores (and
+almost every store link earns nothing: `DIRECT_PROGRAMS` is empty, only eBay,
+TCGplayer-via-Impact and Amazon pay). "Promote people clicking the eBay link
+rather than the other stores link, even though it's cheaper … more incentive to
+click on eBay, search on eBay." Deploy today, off-schedule.
+
+**What the code showed first** (six read-only surveys, then three critics —
+policy, conversion, engineering — on the draft plan):
+
+- `/radiance-preorders`, where the Reddit and search traffic lands, had exactly
+  one eBay path: one row per product inside the price-sorted table, which (US
+  box, 2026-09-24 fixture) read **+46%** against the cheapest store. No other eBay
+  link on the page, none in either empty state.
+- The pre-order CTA on every Radiance post (2026-09-26 entry above) sends readers
+  to that store comparison. It is the right page for them, and it is a page
+  where eBay loses.
+- On a pre-release card page — where every spoiler-post card tap lands — eBay
+  appeared as "No live eBay price" in amber, under two no-price boxes, and the
+  chips pointed at the store pre-orders.
+- The card-page "featured eBay module" in docs/ebay-us-affiliate-plan.md §3 was
+  never built. `buyButtonClass` gave every retailer the same green.
+- The owner's original "Cheapest on eBay" view was retired on 09-25 into the
+  Plus-only eBay preset, so signed-out visitors saw no eBay deals anywhere.
+- Five eBay units fired `buy_click` with no `surface` (EbayBuyCta, EbayAd,
+  EbayPicksLive, EbayAdCarouselLive, EbayGradedLive), and every EbayBuyCta on the
+  site reported one EPN id, `card-cta`. QuickView's rows reported as `-home`.
+
+**The position: eBay everywhere around the ranking, nothing inside it.** The
+owner can override house rules, and did (the one-green button rule, footer
+order). What they cannot waive is the published promise — `/editorial-policy`,
+`/about`, `/privacy`, `/terms` and the pre-order table's own footnote all say
+earning never changes the order of a comparison — plus the card and pre-order
+JSON-LD that read `prices[0]` as `lowPrice`, and FTC/EPN rules on disclosure and
+misleading statements. So no comparison is re-ranked, no true figure is hidden
+(the eBay row keeps its "+46%"), nothing says eBay is cheaper, and every new link
+is a "Search …" that claims no price, stock or listing. The practice itself is now
+disclosed: `/editorial-policy`, `/about` and `/privacy` say the ranked order is
+the promise, and that outside it we promote eBay, labelled as paid.
+
+**What shipped** (one foundation commit, three packages built in parallel
+worktrees with disjoint files, then integrated):
+
+- **Radiance pre-order funnel.** `/radiance-preorders`: a "Prefer eBay?" strip
+  above the table (Paid link tag, "Not part of the store price ranking below."),
+  and an "Also on eBay" panel (`RadianceEbayPanel` → `EbaySearchPanel`) directly
+  under the table in every state — Radiance singles, booster boxes, packs and
+  Vault Bundles, and (a cross-sell, hidden for ad-free members) boxes from
+  released sets. The `/sets/radiance` hub carries the same panel.
+  `PreorderPriceTable`: an open eBay row reads "View on eBay" at the SAME ghost
+  weight in eBay blue (`.btn-ebay-ghost`) — never the one filled button in a
+  neutral list; paid rows get the Paid link tag they lacked; each product ends
+  with "Search eBay for <product>" outside the ranked `<ul>`, filled only when no
+  store has an open offer. The Radiance posts' pre-order CTA gains an eBay line
+  on its "section" placement only (the "top" one stays internal: it sits above
+  the TL;DR; and it steps aside on `/sets/`, where the hub's own panel sits a few
+  lines below), and the end-of-article pre-order block a "Search eBay for
+  Radiance" button. Small galleries (2–6 cards) of current-set cards get
+  per-card eBay searches (`isCurrentSetCode`: unreleased, or released within 45
+  days) — the spoiler posts' own cards, not a generic "Riftbound Radiance".
+- **Card page and QuickView.** eBay rows' buy buttons are eBay blue
+  (`.btn-ebay`); the row's position is untouched. The no-eBay-row search moved
+  from under the reference prices to directly under the comparison, in eBay blue,
+  saying what it is ("Search eBay for <card>" / "We have no eBay price on file for
+  this card right now — eBay sellers may still list it."). A pre-release card
+  gets an eBay search in its no-price explainer and pre-release copy everywhere
+  ("This set hasn't released yet — eBay sellers set their own dispatch dates, so
+  check each listing."), searching the plain card name (eBay ANDs keywords; our
+  printing words would otherwise have to appear in a pre-order seller's title).
+  A resale-only (T1S) printing searches with its credentials instead, since it
+  shares its name with an ordinary set card. The contextual
+  EbayAd now comes before the TCGplayer banner, under the table and in the
+  footer. Nothing was added to the details card above the fold.
+- **Homepage, search, deals.** The owner's "Cheapest on eBay" is back, as a FREE
+  row under Today's Top Deals: cards where the cheapest eBay listing costs less
+  than every store we track in the visitor's market (and, in the US, less than
+  TCGplayer's cheapest listing, a buyable row there), each row one affiliate
+  link straight to that listing. It ranks from the SAME day-cached aggregates the
+  Deal Finder already reads (`splitBuyKeys` / `defaultBuySplit` give both the
+  identical store-key list, so `minByCard` hits one cache entry; a unit test pins
+  it), plus one scoped detail query for at most four cards; `getCheapestOnEbay`
+  is on `nested-cache.test.ts`'s never-wrap list, and runs after the savings
+  branch, sharing its reads (see the review note below for why the chain alone
+  did not guarantee that). In the EU the store side also takes CardTrader's
+  day-cached minimum: the EU card page ranks CardTrader, which is not a
+  RETAILERS entry, so without it the row could call eBay cheapest while
+  CardTrader was cheaper (`mergeMin`, `RANKED_NON_STORE_SOURCES`). Guards:
+  Canada skipped (cross-border, postage unknown), eBay ≥ 1 unit, at least
+  50 minor units cheaper, a gap under 80% (outlier guard); "delivered" only when
+  the seller stated postage, "+ postage" otherwise; no savings total, no link to
+  the locked tool. The header search's no-match state offers "Search eBay for
+  “q”" (outside the keyboard option list), `/browse?q=` a compact eBay search by
+  the result count and a full one in its empty state, and the signed-out Deal
+  Finder and `/movers` an EbayBuyCta. The homepage's sealed column (which can be
+  an eBay or TCGplayer link) finally carries its disclosure, and Deal Finder's
+  links name their page to EPN.
+- **Hygiene.** `riftboundEbayQuery()` — "Riftbound" exactly once (the fallback
+  searched "Riftbound Vendetta Riftbound"); `ebaySealedQuery()` — booster boxes
+  also match UK/EU "Booster Display" titles; SealedQuickView's search names the
+  game (after release, "Radiance Booster Box" alone matches Pokémon's Astral
+  Radiance). EbayPicks follows the newest released set instead of a hard-coded
+  Vendetta (the three Vendetta articles pin `setCode: "VEN"`). EbayBuyCta labels
+  Singapore's link "eBay" (it lands on ebay.com) and lost "The widest selection
+  anywhere". The article shop strip's gold "eBay" chip is eBay blue.
+
+**What the review changed.** The finished diff went to four review lenses
+(bugs, egress, policy, attribution/layout) and every finding to a separate
+verifier told to refute it: 7 of 11 survived and are fixed. The CardTrader gap
+above. A promo cross-sell that painted for paying members until `/api/me`
+answered (it now carries `data-ad-placement`, which the ad-free boot script
+hides before first paint). A resale-only (T1S) card whose eBay CTA searched the
+base card sharing its name. "Nothing from this set ships before release", false
+in Pre-Rift week. A post-release "singles" line that searched sealed too.
+"Individual sellers" (eBay has business sellers). And one egress finding worth
+recording for its mechanism: **in Next 14.2 a TAGGED `unstable_cache` read
+never matches the untagged in-memory copy a write leaves** (`FetchCache.get`'s
+`hasMatchingTags`), so "the second read finds what the first just wrote" is
+false — a cold or stale entry read twice in one render can compute twice. The
+three day-cached arbitrage loaders (`minByCard`, the eBay row pull, TCGplayer's
+rows) now share one promise per lambda for 60 s (`coalesced`, only inside a Next
+request — `inNextRequest()` — so scripts and tests read fresh). Measured on a
+cold local dev server: one homepage render covering all six markets computed
+each key exactly once. Refuted: the proof route's extra detail query (allowed by
+rule 1, and small), a free homepage row as a breach of the 09-22 paywall (that
+rule covers the Deal Finder and Rising Cards pages), the policy page as untrue
+about eBay-blue buttons (it now says so anyway), and a test that could not fail
+(each source is pinned elsewhere).
+
+**Declined, and why:**
+
+- Re-ranking eBay above a cheaper store, a "sponsored" first row, hiding or
+  softening "+N%": each breaks the published promise and the JSON-LD.
+- "eBay Money Back Guarantee on eligible purchases": a third-party programme we
+  cannot check in six markets (Singapore buyers land on ebay.com as international
+  buyers; EU visitors buy cross-border on ebay.es), whose terms eBay changes, and
+  which beside a cheaper store implies the store is riskier.
+  `tests/ebay-clicks-funnel.test.ts` fails on "money back" / "buyer protection"
+  anywhere in `src/app` or `src/components`.
+- The card page's "eBay's cheapest listing is #N of M" module: telling a buyer
+  eBay is ninth does not sell, and the fallback reframe covers the case that
+  matters.
+- An eBay link in the details card, and on the pre-order CTA's top placement:
+  affiliate before our own analysis (AdSense Phase 8).
+- A fixed-bottom eBay bar, a first-page prompt, countdown or urgency copy
+  (settled; see CURRENT-STATE).
+- Making Deal Finder's Plus eBay-only preset free: it is sold as a Plus feature
+  in five places and the pitch is frozen until ~10-15.
+- Affiliate links in the alert and release-day emails (EPN's email terms not
+  checked), and new importer searches (a push to an importer file starts a full
+  import; the egress burn is still unexplained).
+
+**The owner's call, flagged:** the free homepage "Cheapest on eBay" row brings
+back the owner's original feature as a free surface because it earns by
+affiliate, not subscription. It is not Deal Finder (different comparison: eBay
+against stores, not against TCGplayer market) and it links nowhere near the
+locked tool, but it does sit beside the trial model being measured until ~10-15.
+
+**How to read the result.** Compare from 2026-09-27. GA4 / Vercel: `buy_click`
+by `surface` — `ebay_panel`, `ebay_search`, `ebay_fallback`, `ebay_cta`,
+`ebay_banner`, `ebay_picks`, `ebay_carousel`, `ebay_graded`,
+`preorder_cta_ebay`, `cheapest_ebay`, `search_box` — and by `page_type`. EPN's
+customids (`rc-<market>-<source>-<shape>`): `preorders-strip`,
+`preorders-singles|box|bundle|released-sealed`, `preorders-product`,
+`set-hub-*`, `preorder-cta`, `article-preorder-end`, `gallery-card`,
+`card-prerelease`, `card-resale`, `card-panel`, `quickview-panel`,
+`card-fallback`, `quickview`, `ebay_us_cheapest-home` / `ebay_cheapest-home`
+(the homepage row), `header-search`, `browse-search`, `browse-no-results`,
+`deal-finder-locked`, `movers`, `picks-fallback`. EPN pays on purchases, not
+clicks: judge each placement by earnings per customid, not by `buy_click` alone.
+
+**Verified** on the local seed DB (never production), Playwright at 390px:
+`/radiance-preorders` renders strip → store table → "Also on eBay" panel in that
+order, the ranked rows unchanged (store, store +8%, TCGplayer +33%), a per-product
+search line under each list, and every eBay href carries campid 5339155912,
+mkevt=1 and its own customid (`rc-us-preorders-strip-search`,
+`rc-us-preorders-product-search`, `rc-us-preorders-box-search` …) with
+"Riftbound" in the query and `(box,display)` intact. A UK visitor on a pre-release
+card reaches ebay.co.uk searching "Riftbound Pride of Nazumah" (no printing
+words); QuickView opened from the K'Sante post's gallery leads with the
+pre-release eBay search; the K'Sante post shows the eBay line on the section CTA
+only, and per-card searches under its two-card gallery. On a priced US card the
+eBay row keeps rank 3 behind two cheaper stores, with an eBay-blue button; in AU
+(no eBay row) the eBay search sits directly under the comparison. The homepage row
+showed "US$5.00 delivered · US$4.00 below the cheapest store" in the US,
+"+ postage" in AU and nothing in Canada. No horizontal overflow on any page
+checked. Typecheck clean; lint clean but for one pre-existing warning
+(`support/page.tsx`); 2,449 tests pass (61 new); the AdSense guard passes.
+Noticed, not ours: `Markdown.tsx` emits duplicate React keys on long articles
+(its heading branches reuse `key` before incrementing it).
+
+Deployed off-schedule at the owner's explicit instruction ("Deploy to production
+without waiting for the daily schedule").

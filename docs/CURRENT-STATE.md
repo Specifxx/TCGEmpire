@@ -180,8 +180,24 @@ longer lands on its entry.
   come from `lib/affiliate.ts` (`affiliateUrl` with the page's path,
   `ebaySearchUrl` with a source), never a local eBay host map, so EPN's
   customid names the page and all six markets reach their own eBay.
-  By-surface numbers compare only from 2026-09-26 on.
-  [2026-09-26](../DECISIONS.md#L13640)
+  Every eBay unit sends its own `surface` and a distinct EPN source, and every
+  eBay query goes through `riftboundEbayQuery` ("Riftbound" exactly once).
+  By-surface numbers compare only from 2026-09-26 on (the eBay-only surfaces
+  from 09-27). [2026-09-26](../DECISIONS.md#L13640),
+  [2026-09-26](../DECISIONS.md#L13751)
+- **eBay beside every comparison, never inside the ranking** (owner, 09-26:
+  push eBay clicks even where stores are cheaper). No comparison is re-ranked
+  and no true figure (the "+N%" on a dearer eBay row) is hidden; eBay rows keep
+  their price position but wear eBay blue (`.btn-ebay`, or `.btn-ebay-ghost` in
+  a list of ghost buttons). Everything else is a labelled "Search …" beside the
+  list (`EbaySearchPanel`, Paid link tag + EPN disclosure) that claims no price,
+  stock or listing; cross-sells (`promo`) hide for ad-free members and carry
+  `data-ad-placement`. `/editorial-policy`, `/about` and `/privacy` disclose
+  this. Never claim eBay guarantees ("money back", "buyer protection" fail a
+  test). The homepage's free "Cheapest on eBay" row lists only cards where eBay
+  beats every source the card page ranks (EU: CardTrader too; US: TCGplayer's
+  listing too; Canada never). Its free status beside the trial measurement is
+  the owner's call. [2026-09-26](../DECISIONS.md#L13751)
 
 ## Navigation & chrome
 
@@ -214,9 +230,11 @@ longer lands on its entry.
   "Sign up free" at every width; below sm the market switcher lives in the
   menu's top bar. [2026-09-24](../DECISIONS.md#L11756)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417)
-- **Homepage order:** Recently viewed (returning visitors), Top Deals, eBay
-  Picks, the popular carousel, Riftle/pack-sim, How it works.
-  [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500)
+- **Homepage order:** Recently viewed (returning visitors), Top Deals (with
+  the free "Cheapest on eBay" row under its columns), eBay Picks (the newest
+  released set), the popular carousel, Riftle/pack-sim, How it works.
+  [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
+  [2026-09-26](../DECISIONS.md#L13751)
 - **Overlays:** `ui/Dialog` portals to body; Escape closes only the top
   layer and focus returns to the opener. Corner nudges share one corner
   string. [2026-09-23](../DECISIONS.md#L11348)
@@ -384,7 +402,10 @@ longer lands on its entry.
   [2026-09-21](../DECISIONS.md#L9560), [2026-09-16](../DECISIONS.md#L6683)
 - **Declined:** a locked popup ✕; guest checkout (deferred); a Radiance post blitz or paid ads; a static rule-2
   egress test; a static landscape header or
-  a 44px desktop switcher. [2026-09-14](../DECISIONS.md#L6134),
+  a 44px desktop switcher; re-ranking eBay above a cheaper store, an eBay
+  "Money Back Guarantee" claim, a card-page "#N of M" eBay module, affiliate
+  links in emails. [2026-09-26](../DECISIONS.md#L13751),
+  [2026-09-14](../DECISIONS.md#L6134),
   [2026-09-13](../DECISIONS.md#L5890), [2026-09-16](../DECISIONS.md#L6598),
   [2026-09-21](../DECISIONS.md#L9560), [2026-09-14](../DECISIONS.md#L6263),
   [2026-09-23](../DECISIONS.md#L11201). (A minimum "real drop" threshold, once
