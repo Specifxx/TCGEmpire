@@ -22,11 +22,17 @@ import type { PremiumTierKey } from "./site";
 export const PREMIUM_START_PATH = "/premium/start";
 export const PREMIUM_WELCOME_PATH = "/premium/welcome";
 
-/** Which surface sent the visitor into the start step (analytics only). */
-export type StartSrc = "premium-page" | "dialog";
+/**
+ * Which surface sent the visitor into the start step. "premium-page" and
+ * "dialog" are analytics only; "price-drop-email" (the 2026-09-27 price-drop
+ * announcement's four subscribe links, lib/premium-offer.ts) is also a Premium
+ * SURFACE (lib/premium-surface.ts), so CheckoutLauncher records the click and
+ * stamps it on the checkout for /admin/premium and the funnel report.
+ */
+export type StartSrc = "premium-page" | "dialog" | "price-drop-email";
 
 export function parseStartSrc(v: unknown): StartSrc {
-  return v === "dialog" ? "dialog" : "premium-page";
+  return v === "dialog" ? "dialog" : v === "price-drop-email" ? "price-drop-email" : "premium-page";
 }
 
 /**

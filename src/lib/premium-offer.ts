@@ -1,23 +1,34 @@
-// One-off "a full month of Premium, on us" email to every FREE-TIER account.
+// One-off PRICE-DROP announcement to every account that is not currently
+// paying (2026-09-27).
 //
-// THE OFFER. Anyone on the free tier who subscribes before a stated date gets
-// their Premium trial extended to a full month (30 days). The extension is
-// applied BY HAND by the owner after the subscription lands — nothing here
-// touches Stripe or premiumUntil. The email says exactly that, because the
-// alternative (implying checkout itself grants 30 days) would be false: Stripe
-// still runs the normal PREMIUM_TRIAL_DAYS trial, and an account that has
-// already used its trial is charged on day one as usual. See
-// sendPremiumOfferEmail in lib/email.ts for how the two cases are worded.
+// HISTORY. This file held the "a full month of Premium, on us" offer from
+// 2026-09-10 (DECISIONS.md, "Premium offer email to every free-tier account").
+// After the 2026-09-26 price cut the owner asked for the same machinery to
+// announce the new prices instead: "send emails to all non premium users
+// saying premium is now $3.33 a month and plus is now $1.99 a month, and give
+// them links to subscribe" — Plus yearly then stayed at $23.99, so the email
+// quotes whatever premiumEffectiveMonthly() says ($3.33 and $2.00 today), and
+// only ever as "…/mo billed yearly". The old offer's deadline, its two trial
+// wordings and its by-hand grant are gone; any grant still owed from it is
+// done from /admin/accounts. The email itself is buildPremiumOfferEmail in
+// lib/email.ts. See DECISIONS.md, "Price-drop announcement", 2026-09-27.
 //
 // WHY THIS IS A LIB (and the send runs on VERCEL, not in CI): identical to
 // lib/release-day.ts — the mail keys are Vercel environment variables, a GitHub
 // runner has the database but not the keys, so the send lives behind
-// /api/cron/premium-offer and the workflow only authenticates the trigger.
+// /api/cron/premium-offer (and the admin console's /api/admin/premium-offer)
+// and the workflow only authenticates the trigger.
 //
-// AUDIENCE. Registered accounts that are not currently Premium, not admins, not
-// seed personas, and have not opted out of announcements. Deduped by lowercased
-// email. Idempotent per account via User.premiumOfferSentAt (stamped ONLY on a
-// successful send), so the batched run is resumable: call it again to continue.
+// AUDIENCE (priceDropAudience below — pure, so the tests exercise it):
+// registered accounts that are NOT currently entitled — isPremium(), the same
+// check every paid gate uses, so an active Plus or Premium subscription, an
+// active comp and a hand-set premiumTierFloor all count as paying — and are not
+// admins, not seed personas, and have not opted out of announcements. Free
+// accounts, lapsed subscribers and cancelled trialists are all in. Deduped by
+// lowercased email. Idempotent per account via User.priceDropEmailSentAt
+// (stamped ONLY on a successful send), so the batched run is resumable: call it
+// again to continue. The old offer's premiumOfferSentAt is deliberately NOT
+// read — everyone that campaign reached should still hear about the new prices.
 //
 // PROVIDER. Brevo by default — the same choice lib/user-digest.ts made for the
 // registered-account audience, so a blast to every account can't eat the
@@ -25,13 +36,11 @@
 // on. `via: "resend"` is available for a small audience or if Brevo is down.
 import { randomUUID } from "node:crypto";
 import { prisma } from "./db";
-import { getLastEmailError, isBrevoEnabled, isEmailEnabled, sendPremiumOfferEmail } from "./email";
-import { NOT_SEED_WHERE, PREMIUM_TRIAL_DAYS, premiumTrialEnabled } from "./premium";
+import { PRICE_DROP_SRC, getLastEmailError, isBrevoEnabled, isEmailEnabled, sendPremiumOfferEmail, type PremiumOfferEmailOpts } from "./email";
+import { NOT_SEED_WHERE, isPremium, isSeedEmail } from "./premium";
 import { SITE_URL } from "./site";
 
-export const PREMIUM_OFFER_CAMPAIGN = "premium-offer";
-// What the owner grants by hand: the trial becomes this many days in total.
-export const PREMIUM_OFFER_DAYS = 30;
+export const PREMIUM_OFFER_CAMPAIGN = "price-drop-2026-09";
 
 export type PremiumOfferProvider = "brevo" | "resend";
 
@@ -40,9 +49,9 @@ export interface PremiumOfferResult {
   error?: string;
   dryRun: boolean;
   via: PremiumOfferProvider;
-  offerEnds?: string; // ISO date the offer closes, as given
   users?: number; // registered accounts (excl. seed personas)
-  premium?: number; // excluded: currently Premium or admin
+  paying?: number; // excluded: currently Plus/Premium (isPremium)
+  admins?: number; // excluded: admin accounts
   suppressed?: number; // excluded: opted out of announcements
   audienceSize?: number; // in scope after dedupe + exclusions
   alreadySent?: number; // of those, stamped by an earlier run
@@ -52,134 +61,205 @@ export interface PremiumOfferResult {
   remaining?: number; // still pending after this run (batch cap hit)
   // WHY sends failed — the first few distinct reasons (provider + HTTP status
   // + response body, or "opt-out row could not be written"). Never includes a
-  // recipient address: this lands in a workflow log. Added after a first live
-  // run reported failed:90 with nothing to say which of the two things that can
-  // fail per recipient actually did.
+  // recipient address: this lands in a workflow log.
   errors?: string[];
 }
 
 // Brevo's free tier caps at 300 sends/day; Resend's at 100/day. The batch
 // default sits under the smaller provider's daily cap so a run can never burn
 // a day's allowance on its own, and the throttle keeps well inside ~2 req/s.
-const DEFAULT_BATCH = 90;
+export const DEFAULT_BATCH = 90;
 const THROTTLE_MS = 600;
 
-// "2026-09-30" → a real, future calendar date, or null. The deadline is what
-// makes "subscribe now" an honest sentence, so a live send refuses to run
-// without one (see tests/premium-zero-today.test.ts's no-fake-scarcity rule —
-// a real date is the opposite of a fake countdown).
-export function parseOfferEnds(raw: string | null | undefined): Date | null {
-  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
-  const d = new Date(`${raw}T23:59:59Z`);
-  if (Number.isNaN(d.getTime())) return null;
-  return d;
+// ── The audience, as a pure function ─────────────────────────────────────────
+
+export interface PriceDropUserRow {
+  id: string;
+  email: string;
+  displayName: string;
+  isAdmin: boolean;
+  premiumUntil: Date | null;
+  premiumTier: string | null;
+  premiumTierFloor: string | null;
+  priceDropEmailSentAt: Date | null;
 }
 
-export function formatOfferEnds(d: Date): string {
-  return d.toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+export interface PriceDropRecipient {
+  id: string;
+  email: string;
+  displayName: string;
+  alreadySent: boolean;
 }
 
-export interface PremiumOfferOpts {
-  offerEnds: string;
-  dryRun: boolean;
-  limit?: number;
-  via?: PremiumOfferProvider;
-  // Restrict the send to these account ids (the admin console's checkbox
-  // selection). The exclusions above STILL apply — a hand-picked account that
-  // is Premium, an admin, a seed persona or opted out is skipped, never
-  // force-sent — so "choose who to send to" can narrow the audience but not
-  // widen it past what the offer is honest for.
-  userIds?: string[];
-  // Email an account again even though it is already stamped. Only honoured
-  // together with `userIds`, so a re-send is always a deliberate, named choice
-  // and can never turn into a second blast to everyone.
-  resend?: boolean;
+export interface PriceDropAudience {
+  paying: number;
+  admins: number;
+  seeds: number;
+  suppressed: number;
+  audience: PriceDropRecipient[];
+  pending: PriceDropRecipient[];
 }
 
-export async function runPremiumOfferBlast(opts: PremiumOfferOpts): Promise<PremiumOfferResult> {
-  const { dryRun } = opts;
-  const via: PremiumOfferProvider = opts.via === "resend" ? "resend" : "brevo";
-  const limit = opts.limit && opts.limit > 0 ? opts.limit : DEFAULT_BATCH;
-  const only = opts.userIds?.length ? new Set(opts.userIds) : null;
+/**
+ * Who the announcement reaches. `rows` are User rows (the query already drops
+ * seed personas; they are dropped again here so this function is the whole
+ * rule). `optedOut` holds lowercased emails with AnnouncementOptOut.optedOutAt
+ * set. `only` narrows to hand-picked ids (the admin console's ticks) — it can
+ * never widen past the exclusions. `resend` re-sends to stamped accounts, and
+ * only together with `only`, so it can never become a second blast to all.
+ */
+export function priceDropAudience(
+  rows: PriceDropUserRow[],
+  optedOut: Set<string>,
+  opts: { only?: Set<string> | null; resend?: boolean } = {},
+): PriceDropAudience {
+  const only = opts.only && opts.only.size ? opts.only : null;
   const resend = !!opts.resend && only != null;
-
-  const ends = parseOfferEnds(opts.offerEnds);
-  if (!ends) return { ok: false, dryRun, via, error: `offerEnds must be a YYYY-MM-DD date, got "${opts.offerEnds}"` };
-  if (ends.getTime() < Date.now()) {
-    return { ok: false, dryRun, via, offerEnds: opts.offerEnds, error: `The offer deadline ${opts.offerEnds} is in the past — nothing would be honest to send` };
-  }
-  if (!dryRun) {
-    const configured = via === "brevo" ? isBrevoEnabled() : isEmailEnabled();
-    if (!configured) {
-      return { ok: false, dryRun, via, offerEnds: opts.offerEnds, error: `${via === "brevo" ? "BREVO_API_KEY" : "RESEND_API_KEY"} is not set in this environment — nothing would send` };
-    }
-  }
-
-  const now = new Date();
-  const rows = await prisma.user.findMany({
-    where: NOT_SEED_WHERE,
-    select: {
-      id: true,
-      email: true,
-      displayName: true,
-      isAdmin: true,
-      premiumUntil: true,
-      trialStartedAt: true,
-      premiumOfferSentAt: true,
-    },
-  });
-
-  // Exclusions are computed at BUILD time, not per send, so the dry run
-  // reports the true reachable audience.
-  let premium = 0;
-  type Recipient = { id: string; email: string; displayName: string; trialAvailable: boolean; alreadySent: boolean };
-  const byEmail = new Map<string, Recipient>();
+  let paying = 0;
+  let admins = 0;
+  let seeds = 0;
+  let suppressed = 0;
+  const suppressedKeys = new Set<string>();
+  const byEmail = new Map<string, PriceDropRecipient>();
   for (const u of rows) {
     const key = u.email.trim().toLowerCase();
     if (!key) continue;
     if (only && !only.has(u.id)) continue;
-    if (u.isAdmin || (u.premiumUntil && u.premiumUntil > now)) {
-      premium++;
+    if (isSeedEmail(key)) {
+      seeds++;
+      continue;
+    }
+    if (u.isAdmin) {
+      admins++;
+      continue;
+    }
+    // The site's own entitlement check: an active paid period at Plus or
+    // above, with premiumTierFloor applied by effectiveTier(). Lapsed
+    // subscribers and cancelled trialists (premiumUntil in the past) fall
+    // through to the audience.
+    if (isPremium(u)) {
+      paying++;
+      continue;
+    }
+    if (optedOut.has(key)) {
+      // Count each opted-out address once, however many accounts share it.
+      if (!suppressedKeys.has(key)) suppressed++;
+      suppressedKeys.add(key);
       continue;
     }
     if (byEmail.has(key)) continue;
-    byEmail.set(key, {
-      id: u.id,
-      email: u.email,
-      displayName: u.displayName,
-      // One trial per account: only offer the trial framing when Stripe will
-      // actually run one; otherwise the email says "a free month on top".
-      trialAvailable: premiumTrialEnabled() && !u.trialStartedAt,
-      alreadySent: u.premiumOfferSentAt != null,
-    });
+    byEmail.set(key, { id: u.id, email: u.email, displayName: u.displayName, alreadySent: u.priceDropEmailSentAt != null });
   }
-
-  const optedOut = await prisma.announcementOptOut
-    .findMany({ where: { optedOutAt: { not: null } }, select: { email: true } })
-    .catch(() => [] as { email: string }[]);
-  let suppressed = 0;
-  for (const o of optedOut) {
-    if (byEmail.delete(o.email.trim().toLowerCase())) suppressed++;
-  }
-
   const audience = [...byEmail.values()];
-  const pendingRows = audience.filter((r) => resend || !r.alreadySent);
+  const pending = audience.filter((r) => resend || !r.alreadySent);
+  return { paying, admins, seeds, suppressed, audience, pending };
+}
+
+// ── The run ──────────────────────────────────────────────────────────────────
+
+// Everything that touches the database or the mail provider, injectable so the
+// tests can run the real loop (dry run, stamping, resumability) with fakes.
+export interface PriceDropDeps {
+  loadUsers(): Promise<PriceDropUserRow[]>;
+  loadOptedOut(): Promise<Set<string>>;
+  /** Mint (or reuse) the announcement opt-out token for this address. */
+  optOutToken(email: string): Promise<string>;
+  send(to: string, opts: PremiumOfferEmailOpts): Promise<boolean>;
+  stamp(userId: string): Promise<void>;
+  providerConfigured(via: PremiumOfferProvider): boolean;
+  lastError(): string | null;
+  sleep(ms: number): Promise<void>;
+}
+
+export const prismaPriceDropDeps: PriceDropDeps = {
+  loadUsers: () =>
+    prisma.user.findMany({
+      where: NOT_SEED_WHERE,
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        isAdmin: true,
+        premiumUntil: true,
+        premiumTier: true,
+        premiumTierFloor: true,
+        priceDropEmailSentAt: true,
+      },
+    }),
+  loadOptedOut: async () => {
+    const rows = await prisma.announcementOptOut
+      .findMany({ where: { optedOutAt: { not: null } }, select: { email: true } })
+      .catch(() => [] as { email: string }[]);
+    return new Set(rows.map((o) => o.email.trim().toLowerCase()));
+  },
+  // optedOutAt stays null — the row means "was emailed", never "opted out".
+  optOutToken: async (email) => {
+    const row = await prisma.announcementOptOut.upsert({ where: { email }, create: { email, token: randomUUID() }, update: {} });
+    return row.token;
+  },
+  send: (to, opts) => sendPremiumOfferEmail(to, opts),
+  stamp: async (userId) => {
+    await prisma.user.update({ where: { id: userId }, data: { priceDropEmailSentAt: new Date() } });
+  },
+  providerConfigured: (via) => (via === "brevo" ? isBrevoEnabled() : isEmailEnabled()),
+  lastError: () => getLastEmailError(),
+  sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+};
+
+export function announcementUnsubUrls(token: string): { unsubUrl: string; oneClickUrl: string } {
+  const t = encodeURIComponent(token);
+  return {
+    unsubUrl: `${SITE_URL}/announcements/unsubscribe?token=${t}`,
+    // RFC 8058 target for the List-Unsubscribe header: the API route takes the
+    // one-click POST with the token in the query string.
+    oneClickUrl: `${SITE_URL}/api/announcements/unsubscribe?token=${t}`,
+  };
+}
+
+export interface PremiumOfferOpts {
+  dryRun: boolean;
+  limit?: number;
+  via?: PremiumOfferProvider;
+  // Restrict the send to these account ids (the admin console's checkbox
+  // selection). The exclusions STILL apply — a hand-picked account that is
+  // paying, an admin, a seed persona or opted out is skipped, never
+  // force-sent — so "choose who to send to" can narrow the audience, not widen it.
+  userIds?: string[];
+  // Email an account again even though it is already stamped. Only honoured
+  // together with `userIds`, so a re-send is always a deliberate, named choice.
+  resend?: boolean;
+}
+
+export async function runPremiumOfferBlast(opts: PremiumOfferOpts, deps: PriceDropDeps = prismaPriceDropDeps): Promise<PremiumOfferResult> {
+  const { dryRun } = opts;
+  const via: PremiumOfferProvider = opts.via === "resend" ? "resend" : "brevo";
+  const limit = opts.limit && opts.limit > 0 ? opts.limit : DEFAULT_BATCH;
+  const only = opts.userIds?.length ? new Set(opts.userIds) : null;
+
+  if (!dryRun && !deps.providerConfigured(via)) {
+    return { ok: false, dryRun, via, error: `${via === "brevo" ? "BREVO_API_KEY" : "RESEND_API_KEY"} is not set in this environment — nothing would send` };
+  }
+
+  const [rows, optedOut] = await Promise.all([deps.loadUsers(), deps.loadOptedOut()]);
+  // Exclusions are computed at BUILD time, not per send, so the dry run
+  // reports the true reachable audience.
+  const a = priceDropAudience(rows, optedOut, { only, resend: opts.resend });
   const base = {
     ok: true,
     dryRun,
     via,
-    offerEnds: opts.offerEnds,
-    users: rows.length,
-    premium,
-    suppressed,
-    audienceSize: audience.length,
-    alreadySent: audience.length - pendingRows.length,
-    pending: pendingRows.length,
+    users: rows.length - a.seeds,
+    paying: a.paying,
+    admins: a.admins,
+    suppressed: a.suppressed,
+    audienceSize: a.audience.length,
+    alreadySent: a.audience.length - a.pending.length,
+    pending: a.pending.length,
   };
 
-  if (dryRun) return { ...base, sent: 0, failed: 0, remaining: pendingRows.length };
+  if (dryRun) return { ...base, sent: 0, failed: 0, remaining: a.pending.length };
 
-  const batch = pendingRows.slice(0, limit);
+  const batch = a.pending.slice(0, limit);
   let sent = 0;
   let failed = 0;
   const errors = new Set<string>();
@@ -188,70 +268,58 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts): Promise<Prem
   };
   for (const r of batch) {
     // Mint (or reuse) the announcement opt-out token BEFORE sending, so the
-    // unsubscribe link is live the moment the email lands. optedOutAt stays
-    // null — the row means "was emailed", never "opted out".
+    // unsubscribe link is live the moment the email lands.
     const key = r.email.trim().toLowerCase();
-    const row = await prisma.announcementOptOut
-      .upsert({ where: { email: key }, create: { email: key, token: randomUUID() }, update: {} })
-      .catch((e: unknown) => {
-        noteError(`opt-out row could not be written: ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`.slice(0, 300));
-        return null;
-      });
-    if (!row) {
+    const token = await deps.optOutToken(key).catch((e: unknown) => {
+      noteError(`opt-out row could not be written: ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`.slice(0, 300));
+      return null;
+    });
+    if (!token) {
       failed++;
       continue;
     }
-    const unsubUrl = `${SITE_URL}/announcements/unsubscribe?token=${encodeURIComponent(row.token)}`;
 
-    const ok = await sendPremiumOfferEmail(r.email, {
-      displayName: r.displayName,
-      trialDays: r.trialAvailable ? PREMIUM_TRIAL_DAYS : 0,
-      trialOffered: premiumTrialEnabled(),
-      offerDays: PREMIUM_OFFER_DAYS,
-      offerEnds: formatOfferEnds(ends),
-      unsubUrl,
-      via,
-    }).catch(() => false);
+    const ok = await deps
+      .send(r.email, { displayName: r.displayName, ...announcementUnsubUrls(token), via })
+      .catch(() => false);
 
     if (ok) {
       sent++;
       // Stamp ONLY on success, so a failed send is retried by the next run
       // rather than silently skipped forever.
-      await prisma.user.update({ where: { id: r.id }, data: { premiumOfferSentAt: new Date() } }).catch(() => {});
+      await deps.stamp(r.id).catch(() => {});
     } else {
       failed++;
-      noteError(getLastEmailError() ?? "the mail provider returned false with no recorded reason");
+      noteError(deps.lastError() ?? "the mail provider returned false with no recorded reason");
     }
-    if (batch.length > 1) await new Promise((r2) => setTimeout(r2, THROTTLE_MS));
+    if (batch.length > 1) await deps.sleep(THROTTLE_MS);
   }
 
-  return { ...base, sent, failed, remaining: pendingRows.length - sent, ...(errors.size ? { errors: [...errors] } : {}) };
+  return { ...base, sent, failed, remaining: a.pending.length - sent, ...(errors.size ? { errors: [...errors] } : {}) };
 }
 
 // ── Admin console support ────────────────────────────────────────────────────
 
-export type PremiumOfferStatus = "pending" | "sent" | "premium" | "optedOut";
+export type PremiumOfferStatus = "pending" | "sent" | "paying" | "optedOut";
 
 export interface PremiumOfferAudienceRow {
   id: string;
   email: string;
   displayName: string;
   createdAt: Date;
-  trialAvailable: boolean;
   premiumUntil: Date | null;
-  offerSentAt: Date | null;
-  // The account opened /premium from the offer email (PremiumClick source
-  // "offer") — the "came back" signal ahead of converting.
-  clickedOfferAt: Date | null;
+  sentAt: Date | null;
+  // The account followed one of the email's links (PremiumClick source
+  // "price-drop-email") — the "came back" signal ahead of converting.
+  clickedAt: Date | null;
   status: PremiumOfferStatus;
 }
 
-// Everything /admin/premium-offer needs to render its table, computed with the
-// SAME exclusions runPremiumOfferBlast applies, so what the console shows as
-// "pending" is exactly who a send would reach.
+// Everything /admin/premium-offer needs to render its table, classified by the
+// SAME priceDropAudience() the send uses, so "pending" here is exactly who a
+// send would reach.
 export async function listPremiumOfferAudience(opts?: { take?: number }): Promise<PremiumOfferAudienceRow[]> {
   const take = opts?.take && opts.take > 0 ? opts.take : 1000;
-  const now = new Date();
   const [users, optedOut, clicks] = await Promise.all([
     prisma.user.findMany({
       where: { AND: [NOT_SEED_WHERE, { isAdmin: false }] },
@@ -262,19 +330,18 @@ export async function listPremiumOfferAudience(opts?: { take?: number }): Promis
         email: true,
         displayName: true,
         createdAt: true,
-        trialStartedAt: true,
+        isAdmin: true,
         premiumUntil: true,
-        premiumOfferSentAt: true,
+        premiumTier: true,
+        premiumTierFloor: true,
+        priceDropEmailSentAt: true,
       },
     }),
-    prisma.announcementOptOut
-      .findMany({ where: { optedOutAt: { not: null } }, select: { email: true } })
-      .catch(() => [] as { email: string }[]),
+    prismaPriceDropDeps.loadOptedOut(),
     prisma.premiumClick
-      .findMany({ where: { source: "offer", userId: { not: null } }, select: { userId: true, createdAt: true } })
+      .findMany({ where: { source: PRICE_DROP_SRC, userId: { not: null } }, select: { userId: true, createdAt: true } })
       .catch(() => [] as { userId: string | null; createdAt: Date }[]),
   ]);
-  const optedOutEmails = new Set(optedOut.map((o) => o.email.trim().toLowerCase()));
   const lastClick = new Map<string, Date>();
   for (const c of clicks) {
     if (!c.userId) continue;
@@ -282,34 +349,32 @@ export async function listPremiumOfferAudience(opts?: { take?: number }): Promis
     if (!prev || c.createdAt > prev) lastClick.set(c.userId, c.createdAt);
   }
   return users.map((u) => {
-    const isPremiumNow = !!u.premiumUntil && u.premiumUntil > now;
-    const optedOutNow = optedOutEmails.has(u.email.trim().toLowerCase());
-    const status: PremiumOfferStatus = optedOutNow ? "optedOut" : isPremiumNow ? "premium" : u.premiumOfferSentAt ? "sent" : "pending";
+    const a = priceDropAudience([u], optedOut);
+    const status: PremiumOfferStatus = a.paying ? "paying" : a.suppressed ? "optedOut" : u.priceDropEmailSentAt ? "sent" : "pending";
     return {
       id: u.id,
       email: u.email,
       displayName: u.displayName,
       createdAt: u.createdAt,
-      trialAvailable: premiumTrialEnabled() && !u.trialStartedAt,
       premiumUntil: u.premiumUntil,
-      offerSentAt: u.premiumOfferSentAt,
-      clickedOfferAt: lastClick.get(u.id) ?? null,
+      sentAt: u.priceDropEmailSentAt,
+      clickedAt: lastClick.get(u.id) ?? null,
       status,
     };
   });
 }
 
-// A single test copy to the admin's own inbox: both wordings, no stamp, no
-// opt-out row, no audience check — so the copy can be proofread in a real mail
-// client before anyone else sees it.
-export async function sendPremiumOfferTest(to: string, offerEnds: string, via: PremiumOfferProvider = "brevo"): Promise<{ ok: boolean; error?: string }> {
-  const ends = parseOfferEnds(offerEnds);
-  if (!ends) return { ok: false, error: `offerEnds must be a YYYY-MM-DD date, got "${offerEnds}"` };
+// A single test copy to one inbox: no stamp, no opt-out row, no audience check
+// — so the copy and the four links can be checked in a real mail client before
+// anyone else sees it. The unsubscribe token is a dummy that the opt-out page
+// reports as "not recognised".
+export async function sendPremiumOfferTest(
+  to: string,
+  via: PremiumOfferProvider = "brevo",
+  send: (to: string, opts: PremiumOfferEmailOpts) => Promise<boolean> = sendPremiumOfferEmail,
+): Promise<{ ok: boolean; error?: string }> {
   const configured = via === "brevo" ? isBrevoEnabled() : isEmailEnabled();
   if (!configured) return { ok: false, error: `${via === "brevo" ? "BREVO_API_KEY" : "RESEND_API_KEY"} is not set` };
-  const unsubUrl = `${SITE_URL}/announcements/unsubscribe?token=test`;
-  const common = { displayName: "Test Recipient", offerDays: PREMIUM_OFFER_DAYS, offerEnds: formatOfferEnds(ends), unsubUrl, via, trialOffered: premiumTrialEnabled() };
-  const a = await sendPremiumOfferEmail(to, { ...common, trialDays: PREMIUM_TRIAL_DAYS }).catch(() => false);
-  const b = await sendPremiumOfferEmail(to, { ...common, trialDays: 0 }).catch(() => false);
-  return a && b ? { ok: true } : { ok: false, error: "the mail provider rejected one or both test emails" };
+  const ok = await send(to, { displayName: "Test Recipient", ...announcementUnsubUrls("test"), via }).catch(() => false);
+  return ok ? { ok: true } : { ok: false, error: getLastEmailError() ?? "the mail provider rejected the test email" };
 }

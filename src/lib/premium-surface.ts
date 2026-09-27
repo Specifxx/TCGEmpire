@@ -28,6 +28,9 @@ const FIXED = new Set([
   "slidein",
   "checklist",
   "welcome-email",
+  // The 2026-09-27 price-drop announcement (lib/premium-offer.ts): its four
+  // subscribe links land on /premium/start, its "compare" link on /premium.
+  "price-drop-email",
 ]);
 
 // Scoped surfaces: `nav:navbar`, `gate:deal-finder`, `nudge:watchlist` … The

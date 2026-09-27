@@ -1,8 +1,18 @@
-name: Premium offer email
+name: Price-drop email
 
-# Triggers the one-off "a full month of Premium, on us" email to every free-tier
-# account: subscribe before a stated date and the owner extends the trial to 30
-# days by hand. See src/lib/premium-offer.ts for the audience and wording.
+# Triggers the one-off PRICE-DROP announcement (2026-09-27) to every account
+# that is not currently paying: free accounts, lapsed subscribers and cancelled
+# trialists. It states the new prices (Premium and Plus, monthly and "…/mo
+# billed yearly", all read from src/lib/site.ts) with four subscribe links that
+# open checkout for that exact tier and plan. See src/lib/premium-offer.ts for
+# the audience and src/lib/email.ts (buildPremiumOfferEmail) for the wording.
+# Until 2026-09-27 this workflow sent the "a full month of Premium, on us"
+# offer; the file name and endpoint path are unchanged.
+#
+# THE EASIER WAY: the admin console at https://riftcompare.com/admin/premium-offer
+# shows the reach (audience, sent, remaining, opted out), sends a test to one
+# inbox, and sends the batches from a button. This workflow is the CI path to
+# the same lib.
 #
 # THE SEND HAPPENS ON VERCEL, NOT HERE. The mail keys (BREVO_API_KEY /
 # RESEND_API_KEY) are Vercel environment variables; a GitHub runner has the
@@ -10,27 +20,26 @@ name: Premium offer email
 # /api/cron/premium-offer with CRON_SECRET — the same split
 # release-day-email.yml uses.
 #
-# SAFETY: manual dispatch only (no schedule), dry_run defaults to TRUE, and a
-# real future deadline is required, so the Run-workflow button cannot blast by
-# accident. The endpoint is idempotent per account (stamped on success), so
-# re-running RESUMES rather than double-sending — which is also how you work
-# through an audience larger than one run's batch: run it again each day until
-# `remaining` is 0.
+# SAFETY: manual dispatch only (no schedule) and dry_run defaults to TRUE, so
+# the Run-workflow button cannot blast by accident. The endpoint is idempotent
+# per account (User.priceDropEmailSentAt, stamped on success), so re-running
+# RESUMES rather than double-sending — which is also how you work through an
+# audience larger than one run's batch (90 by default, under Brevo's 300/day
+# free cap): run it again each day until `remaining` is 0.
 #
-# AFTER IT SENDS: watch /admin/premium — anyone arriving from the email shows
-# source "offer" — and grant the extra days to each new subscriber via the
-# admin grant-premium tool (/api/admin/grant-premium, days = 30 minus the
-# trial days Stripe already gave them, or 30 for an account with no trial).
+# HOW TO RUN: 1) Run workflow with dry_run ticked — read `pending` in the log.
+# 2) Send yourself a test from the admin console. 3) Run workflow with dry_run
+# unticked, once a day, until `remaining` is 0.
+#
+# AFTER IT SENDS: /admin/premium lists anyone who followed a link (source
+# "price-drop-email"), and scripts/funnel-report.ts counts their checkouts under
+# the "price-drop-email" surface.
 #
 # SETUP: CRON_SECRET as an Actions secret (already used by refresh-prices.yml).
 
 on:
   workflow_dispatch:
     inputs:
-      offer_ends:
-        description: "Offer deadline, YYYY-MM-DD (must be in the future) — the email says 'subscribe before this date'"
-        type: string
-        required: true
       dry_run:
         description: "Dry run — report the audience, send NOTHING (untick to actually send)"
         type: boolean
@@ -44,7 +53,7 @@ on:
           - brevo
           - resend
       limit:
-        description: "Max emails this run (blank = default batch, under the provider's daily cap; re-run to continue)"
+        description: "Max emails this run (blank = default batch of 90; capped at 300, Brevo's daily free limit; re-run next day to continue)"
         type: string
         required: false
         default: ""
@@ -59,11 +68,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Trigger Premium offer email on Vercel
+      - name: Trigger the price-drop email on Vercel
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: "https://riftcompare.com"
-          OFFER_ENDS: ${{ inputs.offer_ends }}
           # dry=1 unless the box was explicitly unticked.
           DRY: ${{ inputs.dry_run && '1' || '0' }}
           VIA: ${{ inputs.via }}
@@ -73,7 +81,7 @@ jobs:
             echo "::error::No CRON_SECRET secret set — cannot authenticate the trigger."
             exit 1
           fi
-          url="$SITE_URL/api/cron/premium-offer?until=$OFFER_ENDS&dry=$DRY&via=$VIA"
+          url="$SITE_URL/api/cron/premium-offer?dry=$DRY&via=$VIA"
           [ -n "$LIMIT" ] && url="$url&limit=$LIMIT"
           echo "POST $url"
           code=$(curl -sS --max-time 290 -o response.json -w "%{http_code}" -X POST \
@@ -82,4 +90,4 @@ jobs:
           cat response.json
           echo
           # Fail the job on a non-200 so a silent no-send is visible in the UI.
-          [ "$code" = "200" ] || { echo "::error::Offer endpoint returned $code"; exit 1; }
+          [ "$code" = "200" ] || { echo "::error::Price-drop endpoint returned $code"; exit 1; }

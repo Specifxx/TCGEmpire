@@ -14433,3 +14433,102 @@ model it was measuring.
 **Rollback.** One commit. HISTORY_DATABASE_URL_3 still holds the data and still responds.
 
 **Still open.** Run `audit-egress` against HISTORY_DATABASE_URL_4 in a few hours — a rested project buys time, not a fix. `HISTORY_DATABASE_URL_4` needs to be set in Vercel for Production, Preview and Development.
+
+## Price-drop announcement: the "month on us" campaign repurposed to email the new prices — 2026-09-27
+
+Owner, 2026-09-27: **"edit the admin action to send emails to all non premium
+users saying premium is now $3.33 a month and plus is now $1.99 a month, and
+give them links to subscribe."**
+
+**The Plus figure.** $1.99 a month would need Plus yearly at $23.88
+(12 × $1.99). The owner first chose to change the price to $23.88, then kept
+it at **$23.99**. So the email quotes whatever `premiumEffectiveMonthly()`
+returns: **$3.33** for Premium ($39.99 / 12) and **$2.00** for Plus
+($23.99 / 12). No price is typed into the template. A per-month figure for a
+yearly plan always appears as "…/mo billed yearly", next to the yearly total.
+Quoted bare it would read as a monthly price nobody can buy. `$1.99` appears
+nowhere, and `tests/premium-offer.test.ts` fails if it does.
+
+**Audience** (`priceDropAudience` in `lib/premium-offer.ts`, a pure function
+the tests call directly): every registered account that is not currently
+paying. The paying check is `isPremium()`, the same check every paid gate
+uses, so active Plus, active Premium, a live comp, and `premiumTierFloor`
+(through `effectiveTier`) all count as paying. Admins, seed personas
+(`isSeedEmail`) and addresses with `AnnouncementOptOut.optedOutAt` set are
+excluded. Free accounts, lapsed subscribers and cancelled trialists are
+included. Addresses are deduped by lowercased email.
+
+**Mechanics kept from the 2026-09-10 offer.** Same files, paths and entry
+points: `/admin/premium-offer`, `/api/admin/premium-offer`,
+`/api/cron/premium-offer`, `premium-offer-email.yml` and
+`scripts/send-premium-offer.ts`.
+
+- Dry run by default everywhere.
+- Brevo by default.
+- Batches of `DEFAULT_BATCH` = 90, and any hand-typed limit is capped at 300
+  (Brevo's free daily cap).
+- A run is idempotent per account and resumable: an account is stamped only
+  after a successful send.
+- The opt-out token is minted before the send.
+- A hand-picked selection can narrow the audience but never widen it. A
+  re-send only goes to accounts named in the selection.
+
+**What changed.**
+
+- **A new stamp, `User.priceDropEmailSentAt`** (additive, nullable). The old
+  `premiumOfferSentAt` is left alone and never read, so every account the
+  "month on us" email reached still gets this one.
+- **No deadline anywhere.** The workflow's `offer_ends` input, the route's
+  `?until=` and the console's date picker are gone. This email announces
+  prices and makes no time-limited offer, so it carries no countdown and no
+  "down from" figure.
+- **The copy** (`buildPremiumOfferEmail` in `lib/email.ts`). Subject:
+  "RiftCompare Premium is now $4.99 a month", from `PREMIUM_PRICE_AMOUNT`.
+  The body gives one card per tier: the monthly price, then "…/mo billed
+  yearly (… a year)", then one line on what the tier includes (the
+  2026-09-25 lineup, as TierComparisonTable and PremiumPricingCards state
+  it), then that tier's yearly and monthly buttons. After the two cards come
+  "cancel anytime" and a "compare the plans" link. The email has a plain-text
+  part and one-click `List-Unsubscribe` / `List-Unsubscribe-Post` headers.
+  To send those through Brevo, `sendEmailBrevo` gained optional `extras`
+  (sent as `textContent` / `headers`); callers that pass nothing send the
+  same body as before. `POST /api/announcements/unsubscribe` now also reads
+  the token from the query string, where RFC 8058's one-click POST puts it.
+- **Links and attribution.** Each of the four buttons is
+  `premiumStartHref({ tier, plan, src: "price-drop-email" })` plus
+  `utm_*=email/email/price-drop-2026-09`. They open `/premium/start` with
+  that tier and plan selected. A signed-out visitor signs in on that page
+  and returns to the same URL, `src` included; a signed-in one goes straight
+  to Stripe; a paying one is sent to /premium. `"price-drop-email"` is a
+  Premium click source and surface (`lib/premium-surface.ts`) and a
+  `StartSrc`. CheckoutLauncher fires the click beacon for it, so
+  `/admin/premium` lists the account, and checkout stamps it as the surface
+  on `PremiumClick` and on the Stripe subscription's metadata, where
+  `funnel-report` counts it. `/premium?src=price-drop-email` fires the same
+  beacon through PremiumRecoveryBeacon.
+- **The console** drops the trial and grant columns. The page does a dry
+  run on load and shows audience, already sent, remaining, opted out and
+  paying (skipped) before anything is sent. "Send me a test" sends one copy,
+  with no stamp and no opt-out row.
+- **Grants still owed from the old offer**: its email promised a month to
+  anyone who subscribed before its deadline (2026-09-30). Those grants are
+  done from `/admin/accounts` (GrantPremiumForm). The console no longer has
+  grant buttons.
+
+**How to run it.** In `/admin/premium-offer`:
+
+1. Read the counts at the top.
+2. Press "Send me a test", then check the copy and the four links in a real
+   inbox.
+3. Press "Send next batch".
+4. Press it again once a day until Remaining is 0.
+
+The workflow does the same: Run workflow with `dry_run` ticked, then
+unticked once a day. Brevo's "Authorised IPs" restriction must be off
+(2026-09-10 addendum), or every Brevo send fails with a 401 that the run
+report names. The yearly buttons need the annual Stripe Prices configured.
+Without them `priceIdFor` falls back to monthly, and the button would
+open a monthly checkout.
+
+**Not verified here**: no database or mail key in this sandbox. The dry run
+on the admin page is the first real audience count.
