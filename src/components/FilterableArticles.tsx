@@ -17,6 +17,13 @@ export interface ArticleSection {
   moreLabel?: string; // default "See all →"
 }
 
+// The fields this list renders or searches, and nothing else. The pages trim
+// each Article to this before it crosses into this client component: a full
+// Article carries its markdown body, and passing those shipped every post's
+// full text in the /blog and /guides RSC payload — about 595 KB of JSON on
+// /blog for a list that shows titles and excerpts (2026-09-26).
+export type ArticleListItem = Pick<Article, "slug" | "title" | "excerpt" | "tags" | "date" | "readMins" | "hero">;
+
 // Days-old threshold for the "New" badge — purely derived from each article's own
 // real `date` field at render time, never a fabricated flag.
 const NEW_DAYS = 5;
@@ -31,7 +38,7 @@ const LATEST_VISIBLE = 9;
 
 // Blog/guides index.
 //
-// LAYOUT (rebuilt): the page used to open with a curated "Most read" strip and
+// LAYOUT (rebuilt): the page used to open with a curated picks strip and
 // then several tag-bucketed sections, which buried the newest posts — a reader
 // asking "what's new?" had to scan every section, because recency was never the
 // organising axis anywhere on the page.
@@ -51,10 +58,10 @@ export function FilterableArticles({
   sections,
   featured,
 }: {
-  articles: Article[];
+  articles: ArticleListItem[];
   basePath: string;
   sections?: ArticleSection[];
-  featured?: string[]; // article slugs, most-read first
+  featured?: readonly string[]; // owner-curated slugs, in order (lib/content/featured.ts)
 }) {
   // Which topic button is active. null = the default Latest view.
   const [view, setView] = useState<string | null>(null);
@@ -77,15 +84,17 @@ export function FilterableArticles({
   const featuredArticles = useMemo(() => {
     if (!featured?.length) return [];
     const bySlug = new Map(articles.map((a) => [a.slug, a]));
-    return featured.map((s) => bySlug.get(s)).filter((a): a is Article => !!a);
+    return featured.map((s) => bySlug.get(s)).filter((a): a is ArticleListItem => !!a);
   }, [articles, featured]);
 
   // Bucket into topics by tag (first matching section wins, so an article never
   // appears in two buckets); anything matching nothing lands in a trailing
   // "More" group so no post is unreachable by topic.
   const groups = useMemo(() => {
-    const out: { title: string; accent: string; items: Article[]; moreHref?: string; moreLabel?: string }[] = [];
-    if (featuredArticles.length) out.push({ title: "Most read", accent: "#eab308", items: featuredArticles });
+    const out: { title: string; accent: string; items: ArticleListItem[]; moreHref?: string; moreLabel?: string }[] = [];
+    // "Editor's picks", never "Most read" (2026-09-26): nothing counts views per
+    // article, so a traffic label could not be kept true (lib/content/featured.ts).
+    if (featuredArticles.length) out.push({ title: "Editor's picks", accent: "#eab308", items: featuredArticles });
     if (sections?.length) {
       const used = new Set(featuredArticles.map((a) => a.slug));
       for (const sec of sections) {
@@ -221,7 +230,7 @@ function TopicButtons({
   onPick,
   className = "",
 }: {
-  groups: { title: string; accent: string; items: Article[] }[];
+  groups: { title: string; accent: string; items: ArticleListItem[] }[];
   active: string | null;
   onPick: (t: string | null) => void;
   className?: string;
@@ -261,8 +270,10 @@ function TopicButtons({
   );
 }
 
+// grid-cols-1: the phone layout (tests/grid-base-columns.test.ts), same reason
+// as the topic buttons above.
 function Grid({ children }: { children: React.ReactNode }) {
-  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>;
+  return <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>;
 }
 
 function ArticleCard({
@@ -271,7 +282,7 @@ function ArticleCard({
   popular,
   className = "",
 }: {
-  a: Article;
+  a: ArticleListItem;
   basePath: string;
   popular?: boolean;
   className?: string;
@@ -283,20 +294,20 @@ function ArticleCard({
         popular ? "border-gold/40" : ""
       } ${className}`}
     >
-      {/* Real card art when the article has one — most don't yet, so this is
-          conditional rather than a reserved-but-empty box (see LatestPosts.tsx
-          for the "always reserve the slot" version, appropriate there because it
-          only ever shows 3 curated posts). aspect-[1.91/1] + object-cover crops
-          a portrait card photo to a scannable landscape strip, the same treatment
-          the homepage teaser row already uses for consistency. */}
+      {/* Real card art when the article has one — many don't yet, so this is
+          conditional rather than a reserved-but-empty box. aspect-[1.91/1] +
+          object-cover crops a portrait card photo to a scannable landscape
+          strip, the same treatment the homepage editorial band's lead image
+          uses. */}
       {a.hero && (
         <div className="relative aspect-[1.91/1] w-full shrink-0 overflow-hidden bg-ink-900">
           {/* wrapperClassName, not just className: Picture renders
               <picture><img/></picture>, and it is the PICTURE that is the aspect
               box's child. Left unstyled it is display:inline with no width of
               its own, so the img's `w-full` had nothing definite to resolve
-              against and fell back to its intrinsic 744px. Same fault and same
-              fix as LatestPosts — see the note there for the measurement. */}
+              against and fell back to its intrinsic 744px, which zoomed the
+              whole site out on phones (tests/hero-image-fit.test.ts has the
+              measurement). */}
           <Picture
             src={a.hero.src}
             alt={a.hero.alt}

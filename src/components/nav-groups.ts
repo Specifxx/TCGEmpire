@@ -31,10 +31,14 @@ export interface NavGroupLink {
    */
   keywords?: string[];
   /**
-   * Keep this link OUT of the footer site-map (it still appears in the launcher
-   * and in llms.txt). The launcher is the complete index of the site; the footer
-   * is a curated four-column block that has to stay a readable height. Used for
-   * the secondary mini-games, whose hub (/games) is in the footer already.
+   * Keep this link OUT of the footer site-map (it still appears in the launcher,
+   * the rail, the phone menu and llms.txt). The launcher is the complete index
+   * of the site; the footer is a curated four-column block that has to stay a
+   * readable height. Used for three kinds of link: the secondary mini-games,
+   * whose hub (/games) is in the footer already; /community, for column balance
+   * (see its entry); and the privacy policy and terms, which the footer's
+   * always-visible link row in layout.tsx already carries on every page, so a
+   * second copy in the site map would only repeat them.
    */
   hideInFooter?: boolean;
 }
@@ -266,6 +270,14 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/feedback", label: "Suggest a feature", keywords: ["feedback", "suggest", "idea", "feature request", "vote"] },
       { href: "/stores/suggest", label: "Suggest a store", keywords: ["suggest a store", "add a store", "missing store", "list my store"] },
       { href: "/about", label: "About RiftCompare", keywords: ["about", "who we are", "riftcompare", "compare"] },
+      // The two policies (2026-09-26, "Blog and tools, joined up" in
+      // DECISIONS.md). They were linked only from the footer's link row, so the
+      // rail, the phone menu, ⌘K and llms.txt never listed them, and a visitor
+      // looking for the privacy policy from the menu found nothing. Beside
+      // About, where a reader looks for "who runs this and on what terms".
+      // hideInFooter: that same footer row already carries both on every page.
+      { href: "/privacy", label: "Privacy policy", keywords: ["privacy", "privacy policy", "cookies", "personal data", "gdpr", "data protection"], hideInFooter: true },
+      { href: "/terms", label: "Terms of service", keywords: ["terms", "terms of service", "terms of use", "tos", "conditions"], hideInFooter: true },
       { href: "/creators", label: "Socials & Creators", keywords: ["socials", "social media", "discord", "instagram", "twitter", "x", "facebook", "follow us", "creators", "content creators", "influencers", "partner", "partnership", "youtube", "twitch", "tiktok"] },
       // The widget directory. It inherits the "embed" keywords that used to sit
       // on /creators above, which was the closest thing the launcher had to an
@@ -286,16 +298,18 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-// TOP-LEVEL header items — the handful of destinations that get their own
-// always-visible link rather than living inside the mega-menu.
+// NOT RENDERED. Nothing draws this list: Navbar.tsx writes the header's links
+// out by hand (Database, Sealed, Blog, Tools, Premium — the owner's curated
+// shortlist, see its comments), and SideNav is forbidden from using it
+// (tests/sidenav.test.ts). It survives only because
+// tests/market-index-restore.test.ts reads its /market entry. Editing it
+// changes nothing on screen: to change the header, edit Navbar.tsx.
 //
-// The editorial slot is here deliberately. The blog and guides were reachable
-// only from the footer and the mega-menu, which meant the ~64 pieces of
-// genuinely original writing on this site were invisible to anyone who didn't go
-// looking — including an AdSense reviewer sampling pages from the homepage.
-// Original content that a reviewer cannot find might as well not exist. It
-// points at /blog rather than /guides: same job, and the blog is the half that
-// changes weekly. Keep this in step with Navbar.tsx, which renders the real bar.
+// It was the header's source once, and why the editorial slot mattered still
+// holds: the blog and guides were reachable only from the footer and the
+// mega-menu, invisible to anyone who didn't go looking — including an AdSense
+// reviewer sampling pages from the homepage. The header's "Blog" link is that
+// slot now.
 export const PRIMARY_NAV: { href: string; label: string }[] = [
   { href: "/browse", label: "Cards" },
   { href: "/sealed", label: "Sealed" },
@@ -313,9 +327,10 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
 // COLUMN BALANCE is the thing to preserve when editing. The four columns are
 // deliberately kept within roughly 8-15 links of each other; a column at twice
 // its neighbours' height leaves a ragged block of whitespace under the other
-// three. Links flagged `hideInFooter` (the seven secondary mini-games, whose
-// /games hub is here) are dropped: the launcher is the complete index, the
-// footer is a curated block.
+// three. Links flagged `hideInFooter` (the secondary mini-games, whose /games
+// hub is here; /community; and the privacy policy and terms, which the
+// footer's own link row carries) are dropped: the launcher is the complete
+// index, the footer is a curated block.
 const byTitle = Object.fromEntries(
   NAV_GROUPS.map((g) => [g.title, g.links.filter((l) => !l.hideInFooter)])
 );

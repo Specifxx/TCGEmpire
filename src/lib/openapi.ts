@@ -195,9 +195,9 @@ export function buildOpenApiSpec() {
       "/api/v1/card/{id}/prices.json": {
         get: {
           operationId: "getCardPrices",
-          summary: "Lowest live in-stock price in EVERY market (AU/US/UK/SG/CA) for one card, in a single response.",
+          summary: "Lowest in-stock price in EVERY market (AU/US/UK/SG/CA/EU) for one card, in a single response.",
           description:
-            "Returns all five markets at once — there is no ?market= param here because there's no need for one; " +
+            "Returns all six markets at once — there is no ?market= param here because there's no need for one; " +
             "filter the `prices` object client-side for the market you want.",
           parameters: [CARD_ID_PARAM],
           responses: {
@@ -221,7 +221,7 @@ export function buildOpenApiSpec() {
                       },
                       prices: {
                         type: "object",
-                        description: "One entry per market code (AU/US/UK/SG/CA).",
+                        description: "One entry per market code (AU/US/UK/SG/CA/EU).",
                         additionalProperties: {
                           type: "object",
                           properties: { lowestCents: { type: ["integer", "null"] }, currency: CURRENCY },
@@ -273,7 +273,7 @@ export function buildOpenApiSpec() {
                             retailerName: { type: "string" },
                             priceCents: MONEY_CENTS,
                             ship: { type: ["integer", "null"], description: "Effective shipping estimate, or null if genuinely unknown (\"at checkout\")." },
-                            delivered: { type: "integer", description: "priceCents + (ship ?? 0) — total delivered cost." },
+                            delivered: { type: "integer", description: "priceCents + (ship ?? 0): the delivered total where postage is known, and equal to priceCents when ship is null (postage at checkout). Rows are ordered by priceCents; this only breaks ties." },
                             condition: { type: ["string", "null"] },
                             isFoil: { type: "boolean" },
                             inStock: { type: "boolean" },

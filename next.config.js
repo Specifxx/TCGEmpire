@@ -203,6 +203,10 @@ const nextConfig = {
       // either URL form), so their old /guides sources now point straight at
       // each post's surviving equivalent rather than chaining through the dead
       // /blog URL (their own /blog redirects live in the prune block below).
+      // whats-in-unleashed came back as a published guide on 2026-09-10 and its
+      // /guides entry was deleted on 2026-09-26: it had shadowed the live guide
+      // with a 308 to /sets/unleashed ("Blog and tools, joined up" in
+      // DECISIONS.md; tests/articles-integrity.test.ts).
       {
         source: "/guides/how-to-read-a-riftbound-card",
         destination: "/guides/riftbound-rules-explained",
@@ -211,11 +215,6 @@ const nextConfig = {
       {
         source: "/guides/every-ahri-card-in-riftbound",
         destination: "/blog/every-ahri-card-in-riftbound",
-        permanent: true,
-      },
-      {
-        source: "/guides/whats-in-the-riftbound-unleashed-set",
-        destination: "/sets/unleashed",
         permanent: true,
       },
       // Retired the proxy printer entirely (thin/low-value utility page, part of

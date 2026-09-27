@@ -26,8 +26,8 @@ export function SetPriceGuide({
           Riftbound {setName} price guide
         </h2>
         <p className="mt-1 text-sm text-slate-400">
-          All {rows.length} {setName} cards, most expensive first — the cheapest in-stock price across {adjective} stores in{" "}
-          {currency} ({priced} with a live price today). Updated daily.
+          All {rows.length} {setName} cards, most expensive first — the cheapest in-stock price we track in {currency},
+          from {adjective} stores or eBay ({priced} with a live price today). Updated twice a day.
         </p>
       </div>
       <div className="max-h-[70vh] overflow-auto">

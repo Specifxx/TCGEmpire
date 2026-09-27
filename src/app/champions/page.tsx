@@ -11,6 +11,8 @@ import { AnswerBox } from "@/components/AnswerBox";
 import { HubFaq } from "@/components/HubFaq";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 export const revalidate = 86400;
 
@@ -198,6 +200,8 @@ export default async function ChampionsIndexPage() {
           <Link href="/cards" className="text-brand-400 hover:underline">by type, rarity and printing</Link>.
         </p>
       </section>
+
+      <RelatedGuides guides={guidesForTool("/champions")} className="card-surface p-5" />
 
       <HubFaq faqs={FAQS} className="" />
     </div>

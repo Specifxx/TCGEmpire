@@ -6,6 +6,7 @@ import { AUTHORS, authorBySlug } from "@/lib/content/authors";
 import { getArticles } from "@/lib/articles";
 import { SITE_URL, CONTACT_EMAIL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
+import { plainIntroText, withLinks } from "@/components/HubIntro";
 
 export const revalidate = 86400;
 
@@ -31,8 +32,8 @@ export default function AuthorPage({ params }: { params: { slug: string } }) {
   const guides = articles.filter((a) => a.category === "guide");
   const posts = articles.filter((a) => a.category === "blog");
 
-  // Typed as what this byline actually is — an Organization, not a fabricated
-  // Person. See the header of lib/content/authors.ts.
+  // Typed as what each byline actually is: Bill a Person, the site's own
+  // byline an Organization. See the header of lib/content/authors.ts.
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": author.type,
@@ -40,7 +41,7 @@ export default function AuthorPage({ params }: { params: { slug: string } }) {
     name: author.name,
     url: `${SITE_URL}/authors/${author.slug}`,
     jobTitle: author.role,
-    description: author.bio.join(" "),
+    description: author.bio.map(plainIntroText).join(" "),
     knowsAbout: author.covers,
     ...(author.type === "Organization" ? { parentOrganization: { "@id": `${SITE_URL}/#org` } } : { worksFor: { "@id": `${SITE_URL}/#org` } }),
   };
@@ -73,7 +74,7 @@ export default function AuthorPage({ params }: { params: { slug: string } }) {
 
       <div className="mt-6 space-y-4 border-t border-ink-800 pt-6 text-sm leading-relaxed text-slate-300">
         {author.bio.map((p, i) => (
-          <p key={i}>{p}</p>
+          <p key={i}>{withLinks(p)}</p>
         ))}
       </div>
 

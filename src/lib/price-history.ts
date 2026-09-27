@@ -17,7 +17,7 @@ import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
 import { convertCents } from "./fx";
 import type { CardTileData } from "@/components/CardTile";
 import { HISTORY_TAG } from "./revalidate-content";
-import { dropBreakWindow } from "./methodology-breaks";
+import { dropBreakWindow, recentMethodologyBreak } from "./methodology-breaks";
 
 // The one PriceHistory.country value every snapshot is written under since
 // 2026-09-05 (see price-import.ts's snapshot write) — the day's lowest price
@@ -359,7 +359,19 @@ export type Mover = {
   pct: number; // signed % change vs refCents
 };
 
-export type PriceMovers = { spiking: Mover[]; plummeting: Mover[]; value: Mover[] };
+export type PriceMovers = {
+  spiking: Mover[];
+  plummeting: Mover[];
+  value: Mover[];
+  /** "pre-switch" while no card has a week to compare on the current price
+   *  basis yet: the lists are then the last week BEFORE the latest methodology
+   *  break, compared only with each other (owner, 2026-09-27: "leverage the old
+   *  strategy right up until the data has collected for the new strategy").
+   *  Absent means the current basis. */
+  basis?: "current" | "pre-switch";
+  /** With basis "pre-switch": the day (ms) the lists are measured to. */
+  asOf?: number;
+};
 
 // REMOVED 2026-09-17: MoverSummary / PulseMovers / toPulseMovers existed only
 // to trim this shape at the server/client boundary for the homepage's Market
@@ -433,25 +445,24 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
 
   const SEVEN = 7 * 86400_000;
   type Stat = { cardId: string; points: PricePoint[]; now: number; ref7: number; high: number; pct7: number; discount: number };
-  const stats: Stat[] = [];
-  for (const [cardId, raw] of series) {
-    // Never compare across a methodology break (see dropBreakWindow): the
-    // 2026-09-23 TCGplayer re-basing printed as a market-wide crash here, and
-    // as "best value" for three weeks, since the recent high came from before
-    // it. A card with fewer than two points on the current basis sits out.
-    const pts = dropBreakWindow(raw);
-    if (pts.length < 2) continue;
-    const now = pts[pts.length - 1].v;
-    if (now < MIN_CENTS) continue;
-    const nowT = pts[pts.length - 1].t;
-    // Point closest to 7 days ago (fall back to the oldest we have).
-    let ref7 = pts[0];
-    for (const p of pts) if (Math.abs(p.t - (nowT - SEVEN)) < Math.abs(ref7.t - (nowT - SEVEN))) ref7 = p;
-    const high = Math.max(...pts.map((p) => p.v));
-    const pct7 = ref7.v > 0 ? ((now - ref7.v) / ref7.v) * 100 : 0;
-    const discount = high > 0 ? ((high - now) / high) * 100 : 0;
-    stats.push({ cardId, points: pts, now, ref7: ref7.v, high, pct7, discount });
-  }
+  const statsFrom = (pick: (raw: PricePoint[]) => PricePoint[]): Stat[] => {
+    const out: Stat[] = [];
+    for (const [cardId, raw] of series) {
+      const pts = pick(raw);
+      if (pts.length < 2) continue;
+      const now = pts[pts.length - 1].v;
+      if (now < MIN_CENTS) continue;
+      const nowT = pts[pts.length - 1].t;
+      // Point closest to 7 days ago (fall back to the oldest we have).
+      let ref7 = pts[0];
+      for (const p of pts) if (Math.abs(p.t - (nowT - SEVEN)) < Math.abs(ref7.t - (nowT - SEVEN))) ref7 = p;
+      const high = Math.max(...pts.map((p) => p.v));
+      const pct7 = ref7.v > 0 ? ((now - ref7.v) / ref7.v) * 100 : 0;
+      const discount = high > 0 ? ((high - now) / high) * 100 : 0;
+      out.push({ cardId, points: pts, now, ref7: ref7.v, high, pct7, discount });
+    }
+    return out;
+  };
 
   // Outlier guard: a ≥80% one-week swing (or ≥80% off the recent high) is almost
   // always a data-quality artifact — a mismatched listing or a one-off junk price —
@@ -459,10 +470,40 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
   // equally-absurd spike (≥300%) is the same bug in the other direction.
   const OUTLIER_DROP = 80;
   const OUTLIER_SPIKE = 300;
-  const spikingStats = stats.filter((s) => s.pct7 > 1 && s.pct7 < OUTLIER_SPIKE).sort((a, b) => b.pct7 - a.pct7).slice(0, limit);
-  const plummetStats = stats.filter((s) => s.pct7 < -1 && s.pct7 > -OUTLIER_DROP).sort((a, b) => a.pct7 - b.pct7).slice(0, limit);
-  // Best value = biggest discount off the recent high (and actually down, not flat).
-  const valueStats = stats.filter((s) => s.discount > 5 && s.discount < OUTLIER_DROP && s.now < s.high).sort((a, b) => b.discount - a.discount).slice(0, limit);
+  const rank = (stats: Stat[]) => ({
+    spikingStats: stats.filter((s) => s.pct7 > 1 && s.pct7 < OUTLIER_SPIKE).sort((a, b) => b.pct7 - a.pct7).slice(0, limit),
+    plummetStats: stats.filter((s) => s.pct7 < -1 && s.pct7 > -OUTLIER_DROP).sort((a, b) => a.pct7 - b.pct7).slice(0, limit),
+    // Best value = biggest discount off the recent high (and actually down, not flat).
+    valueStats: stats.filter((s) => s.discount > 5 && s.discount < OUTLIER_DROP && s.now < s.high).sort((a, b) => b.discount - a.discount).slice(0, limit),
+  });
+
+  // Never compare across a methodology break (see dropBreakWindow): the
+  // 2026-09-23 TCGplayer re-basing printed as a market-wide crash here, and
+  // as "best value" for three weeks, since the recent high came from before
+  // it. A card with fewer than two points on the current basis sits out.
+  let basis: "current" | "pre-switch" = "current";
+  let asOf: number | undefined;
+  let ranked = rank(statsFrom((raw) => dropBreakWindow(raw)));
+  // Until ANY card has a week on the current basis (weekly snapshots: about a
+  // week after the switch), the lists would all be empty and /movers blank. For
+  // that stretch — and only inside the break's grace window, so old data can
+  // never linger — rank the last week BEFORE the switch instead: every point
+  // compared is on the old basis, so nothing measures the switch itself. The
+  // lists carry that basis and date; only /movers opts in to showing them
+  // (getPriceMovers' preSwitch), labelled, because the others present a
+  // mover's price as today's.
+  const brk = recentMethodologyBreak();
+  if (brk && !ranked.spikingStats.length && !ranked.plummetStats.length && !ranked.valueStats.length) {
+    const before = (raw: PricePoint[]) => raw.filter((p) => p.t < brk.from);
+    const pre = rank(statsFrom(before));
+    const used = [...pre.spikingStats, ...pre.plummetStats, ...pre.valueStats];
+    if (used.length) {
+      ranked = pre;
+      basis = "pre-switch";
+      asOf = Math.max(...used.map((s) => s.points[s.points.length - 1].t));
+    }
+  }
+  const { spikingStats, plummetStats, valueStats } = ranked;
 
   // Hydrate tile data for every card we'll show (in the requested market's currency).
   const ids = Array.from(new Set([...spikingStats, ...plummetStats, ...valueStats].map((s) => s.cardId)));
@@ -487,6 +528,8 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
     spiking: clean(spikingStats.map((s) => toMover(s, s.ref7, s.pct7))),
     plummeting: clean(plummetStats.map((s) => toMover(s, s.ref7, s.pct7))),
     value: clean(valueStats.map((s) => toMover(s, s.high, -s.discount))),
+    basis,
+    ...(asOf != null ? { asOf } : {}),
   };
  } catch {
   return empty;
@@ -609,15 +652,28 @@ export async function getRecentlyUpdated(country: Country = DEFAULT_COUNTRY, lim
 // limit) and slice to the caller's limit — so a bigger /movers list can't trigger a
 // second read. Auto-refreshes at the day rollover.
 const MOVERS_MAX = 50;
-export async function getPriceMovers(country: Country = DEFAULT_COUNTRY, limit = LIST_SIZE): Promise<PriceMovers> {
+// `preSwitch`: accept the last week before a methodology break when no card has
+// a week on the current basis yet (see computePriceMovers). Only /movers passes
+// it, and labels the lists with their date; every other caller (homepage deals,
+// digests, Discord, /games) shows a mover's price as today's, so it gets empty
+// lists instead, exactly as before (2026-09-27).
+export async function getPriceMovers(
+  country: Country = DEFAULT_COUNTRY,
+  limit = LIST_SIZE,
+  opts: { preSwitch?: boolean } = {},
+): Promise<PriceMovers> {
   const full = await cachedOrDirect(
     () => computePriceMovers(country, MOVERS_MAX),
-    ["rc-price-movers", country, sydneyWeekKey()],
+    // v2: the cached value gained basis/asOf (2026-09-27).
+    ["rc-price-movers-v2", country, sydneyWeekKey()],
     { revalidate: HISTORY_CACHE_TTL, tags: [HISTORY_TAG] },
   );
+  if (full.basis === "pre-switch" && !opts.preSwitch) return { spiking: [], plummeting: [], value: [] };
   return {
     spiking: full.spiking.slice(0, limit),
     plummeting: full.plummeting.slice(0, limit),
     value: full.value.slice(0, limit),
+    ...(full.basis ? { basis: full.basis } : {}),
+    ...(full.asOf != null ? { asOf: full.asOf } : {}),
   };
 }

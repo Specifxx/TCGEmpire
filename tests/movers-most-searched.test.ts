@@ -39,7 +39,7 @@ test("the strip is the #most-searched target, and the id carries the header offs
 
 test("the strip's loader is called at the page's top level, never inside another cache", () => {
   const page = code(read(PAGE));
-  assert.match(page, /await Promise\.all\(\[getPriceMovers\(country, 50\), getTopDemand\(7, MOST_SEARCHED_ROWS\)\]\)/);
+  assert.match(page, /await Promise\.all\(\[getPriceMovers\(country, 50, \{ preSwitch: true \}\), getTopDemand\(7, MOST_SEARCHED_ROWS\)\]\)/);
   assert.match(page, /const MOST_SEARCHED_ROWS = FREE_DEMAND_ROWS;/, "the strip's size is the free Demand Finder's");
   assert.doesNotMatch(page, /unstable_cache|cachedOrDirect|from "next\/cache"/, "the page wraps nothing in a cache of its own");
   // And nothing anywhere wraps getTopDemand.

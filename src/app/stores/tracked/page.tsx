@@ -7,6 +7,8 @@ import { SITE_URL } from "@/lib/site";
 import { storeSlug } from "@/lib/store-pages";
 import { pageAlternates } from "@/lib/seo";
 import { shippingNoteFor } from "@/lib/shipping";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 export const revalidate = 86400;
 
@@ -22,11 +24,11 @@ const MARKETS: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
 const FAQS = [
   {
     q: "How often are Riftbound card prices updated?",
-    a: "Prices across all tracked stores refresh daily. Our crawler visits each retailer's live listings once every 24 hours, so if a store changes a price or restocks a card, it shows up in the comparison the following day.",
+    a: "Twice a day. We import every tracked store's public listings at 07:00 and 19:00 UTC, so if a store changes a price or restocks a card, it shows up in the comparison at the next import.",
   },
   {
     q: "Does RiftCompare include postage in the price comparison?",
-    a: "Yes, but it isn't the primary sort. The price table on every card page ranks stores by item price first, with a store's known postage only breaking ties between otherwise-equal prices — that way a store isn't penalised in the ranking just because its shipping cost happens to be known upfront when a competitor's isn't. Delivered cost (price plus postage) is always shown alongside the price so you can compare on it yourself, and free-shipping thresholds are factored into that figure automatically.",
+    a: "Where we know it, but it isn't the sort. The price table on every card page lists stores cheapest first by item price, and a store's known postage only breaks ties between otherwise-equal prices — so a store is never ranked below a dearer one just because its postage is known upfront and the competitor's isn't. Most stores quote postage only at checkout, so a delivered total (price plus postage) is shown where the store publishes its postage, and the other rows say postage is added at checkout. To price a whole order, Best Basket uses postage measured at each store's own checkout.",
   },
   {
     q: "Which countries does RiftCompare cover?",
@@ -34,7 +36,7 @@ const FAQS = [
   },
   {
     q: "Can I trust the prices shown on RiftCompare?",
-    a: "Prices are pulled directly from each store's public listings and reflect what was on their website at the time of our last crawl (updated daily). Stock and prices can change between our update and when you visit, so always confirm the final price at checkout before buying.",
+    a: "Prices are pulled directly from each store's public listings and reflect what was on their website at the time of our last import (twice a day). Stock and prices can change between our update and when you visit, so always confirm the final price at checkout before buying.",
   },
 ];
 
@@ -80,9 +82,9 @@ export default function TrackedStoresPage() {
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Stores we track</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           RiftCompare compares live prices across <span className="num text-slate-300">{total}</span> Riftbound retailers
-          plus eBay, grouped by market below. Every card&apos;s comparison ranks these
-          by item price, with delivered cost (price + postage) shown alongside so you can compare on it yourself, and
-          prices refresh daily.
+          plus eBay, grouped by market below. Every card&apos;s comparison lists these cheapest first
+          by item price, with the delivered total (price + postage) shown where the store publishes its postage, and
+          prices refresh twice a day.
         </p>
         {/* Jump index (2026-09-23). At 390 this page is ~22,000px of
             single-column store cards: Canada starts ~12,300px down and the EU
@@ -113,7 +115,7 @@ export default function TrackedStoresPage() {
             {m.info.flag} {m.info.label}{" "}
             <span className="num text-sm font-normal text-slate-500">({m.stores.length})</span>
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {/* Now links INTERNALLY to each store's own page rather than straight
                 out to the retailer. Every store page was previously orphaned —
                 nothing on the site linked to one — and an outbound-only directory
@@ -149,7 +151,7 @@ export default function TrackedStoresPage() {
             in the price comparison — see our{" "}
             <Link href="/methodology" className="text-brand-400 hover:underline">methodology</Link>.
           </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {referenceSources.map((r) => (
               <div key={r.name} className="card-surface flex flex-col gap-1 p-4">
                 <span className="font-semibold text-white">{r.name}</span>
@@ -160,6 +162,10 @@ export default function TrackedStoresPage() {
           </div>
         </section>
       )}
+
+      {/* The guides behind this list (lib/content/tool-guides.ts): after the
+          stores themselves, before the FAQ. */}
+      <RelatedGuides guides={guidesForTool("/stores/tracked")} className="card-surface p-5" />
 
       {/* FAQ — answers common buyer questions and enables FAQPage rich results */}
       <section className="card-surface divide-y divide-ink-800 overflow-hidden">

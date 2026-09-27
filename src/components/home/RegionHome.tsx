@@ -9,6 +9,7 @@ import { ebayLabel } from "@/lib/affiliate";
 import { CinematicHero } from "./CinematicHero";
 import { HomeSections } from "./HomeSections";
 import { PriceTodayTable } from "./PriceTodayTable";
+import { EditorialHub } from "./EditorialHub";
 import { getPriceTable } from "@/lib/price-table";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
@@ -66,14 +67,23 @@ export async function RegionHome({ region }: { region: Country }) {
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
 
+  // Both answers corrected 2026-09-26 ("Blog and tools, joined up" in
+  // DECISIONS.md). The first claimed a ranking "by total delivered cost":
+  // computeMarket (lib/market-rows.ts) sorts by item price, with postage only
+  // breaking ties and a delivered total only where the store publishes it. The
+  // second said "no conversion" in every market, but Canada's "eBay US" rows
+  // are US listings the import converts to CAD (lib/price-import.ts).
   const faqs = [
     {
       q: `Where can I buy Riftbound cards in ${info.place}?`,
-      a: `RiftCompare tracks ${stat.stores} ${info.adjective} ${storeWord} stocking Riftbound: League of Legends TCG singles and sealed product, plus ${ebayLabel(region)}, and ranks every result by total delivered cost — item price plus ${info.adjective} shipping — so you see what you'd actually pay, not just the sticker price.`,
+      a: `RiftCompare tracks ${stat.stores} ${info.adjective} ${storeWord} stocking Riftbound: League of Legends TCG singles and sealed product, plus ${ebayLabel(region)}, and lists every result cheapest first by item price. Where a store publishes its postage to ${info.place}, the delivered total is shown beside the price; otherwise postage is added at that store's checkout.`,
     },
     {
       q: `Are prices shown in ${info.currency}?`,
-      a: `Yes — every price on this page and across the ${info.adjective} store listings is in ${info.currency}, the real currency those stores charge in. No conversion, no surprise exchange-rate markup.`,
+      a:
+        region === "CA"
+          ? `Yes — every store price on this page and across the ${info.adjective} store listings is in ${info.currency}, the currency those stores charge in. Two kinds of figure are converted at our reference rate: rows marked "eBay US", which are US listings, and figures from our weekly worldwide price history, such as the 7-day change and price drops.`
+          : `Yes — every store price on this page and across the ${info.adjective} store listings is in ${info.currency}, the real currency those stores charge in. Figures from our weekly worldwide price history, such as the 7-day change and price drops, are converted into ${info.currency} at our reference rate.`,
     },
   ];
 
@@ -87,11 +97,22 @@ export async function RegionHome({ region }: { region: Country }) {
         region={{ code: region, adjective: info.adjective }}
       />
 
-      <PriceTodayTable rows={priceTable} country={region} totalPriced={stat.priced} />
+      <PriceTodayTable
+        rows={priceTable}
+        country={region}
+        totalPriced={stat.priced}
+        buyingGuide={guideSlug ? { href: `/blog/${guideSlug}`, label: `Buying in ${info.place}` } : undefined}
+      />
 
-      {/* The full "/" feature set — Market Pulse, popular cards, Today's Top
-          Deals, How It Works, Explore, reviews, partners — see HomeSections.tsx
-          and this file's own header comment for why this exists here now. */}
+      {/* Guides, news & market updates, in the same slot as on "/" (owner
+          decision, 2026-09-26; see EditorialHub.tsx). `market` makes "Start
+          here" lead with this market's own buying guide — until now linked only
+          from the region block at the foot of the page. */}
+      <EditorialHub freshness={freshness} market={region} />
+
+      {/* The full "/" feature set — Top Deals, eBay Picks, popular cards, How
+          It Works, Explore, reviews, partners — see HomeSections.tsx and this
+          file's own header comment for why this exists here now. */}
       <HomeSections
         country={region}
         totalCards={totalCards}
@@ -110,8 +131,9 @@ export async function RegionHome({ region }: { region: Country }) {
         <h2 className="text-xl font-extrabold text-white">Buying Riftbound cards in {info.place}</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           RiftCompare compares live prices across {stat.stores} {info.adjective} {storeWord} for Riftbound: League of
-          Legends TCG — {stat.priced.toLocaleString()} cards priced so far — ranked by total delivered cost (item plus
-          {" "}{info.adjective} shipping), updated daily. It&apos;s the same database and the same ranking logic used
+          Legends TCG — {stat.priced.toLocaleString()} cards priced so far. Each card&apos;s stores are listed cheapest
+          first by item price, with the delivered total beside any store that publishes its {info.adjective} postage,
+          and store prices are imported twice a day. It&apos;s the same database and the same ranking logic used
           everywhere else on the site, scoped to what&apos;s actually available in {info.place}.
         </p>
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
@@ -120,6 +142,9 @@ export async function RegionHome({ region }: { region: Country }) {
           </Link>
           <Link href="/stores/tracked" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
             See every store we track →
+          </Link>
+          <Link href="/methodology" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+            Read our methodology →
           </Link>
           <Link href="/sets" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
             Browse by set →
@@ -162,7 +187,7 @@ export async function RegionHome({ region }: { region: Country }) {
             webPage({
               name: `RiftCompare ${info.label} — Riftbound Card Prices`,
               href: `/${region.toLowerCase()}`,
-              description: `Compare live Riftbound TCG card prices across ${info.adjective} stores — total delivered cost including ${info.adjective} shipping, in ${info.currency}.`,
+              description: `Compare live Riftbound TCG card prices across ${info.adjective} stores and ${ebayLabel(region)}, in ${info.currency}: cheapest first by item price, with the delivered total where the store publishes its postage.`,
               type: "CollectionPage",
             }),
             breadcrumb([{ name: info.label, href: `/${region.toLowerCase()}` }]),

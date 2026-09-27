@@ -14,6 +14,8 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { setBySlug, SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForSet } from "@/lib/content/related-guides";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /sets/<set>/gallery — the visual card gallery
@@ -324,9 +326,9 @@ export default async function SetGalleryPage({ params }: { params: { set: string
           move. Nothing here is a mock-up: every tile links to a real card page.
         </p>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Prices shown on each tile are the cheapest live listing we can find in your market, updated daily. Switch your
-          country at the top of the page to see local prices in your own currency — the gallery and every card page
-          follow it.
+          The price on each tile is the cheapest in-stock listing we have for that card in your market — the item
+          price, before postage — from our two imports a day. Switch your country at the top of the page to see local
+          prices in your own currency — the gallery and every card page follow it.
         </p>
 
         <h3 className="mt-6 text-base font-bold text-white">Gallery FAQ</h3>
@@ -344,36 +346,27 @@ export default async function SetGalleryPage({ params }: { params: { set: string
           </p>
           <p>
             <strong className="text-slate-200">Do the cards show prices?</strong> Yes. Each tile shows the cheapest live
-            price we can find in your market, and tapping a card opens its full store-by-store comparison ranked by total
-            delivered cost.
+            price we can find in your market, and tapping a card opens its full store-by-store comparison: cheapest first
+            by item price, with the delivered total shown where the store publishes its postage.
           </p>
         </div>
       </section>
 
+      {/* The set's own guides (lib/content/related-guides.ts SET_GUIDES, topped
+          up with the /sets guides). Was a `set.code === "VEN"` block of four
+          hard-coded chips, so every other set's gallery linked no guide at all;
+          a set's reading list is now a data row, and no template names a set
+          (2026-09-26, "Blog and tools, joined up" in DECISIONS.md). */}
+      <RelatedGuides guides={guidesForSet(set.code)} className="card-surface p-5" />
+
       {/* Internal links out — the gallery is a strong crawl entry point, so it
-          should pass that on to the set's guides and the other sets. */}
+          should pass that on to the set page and the other sets. */}
       <section>
         <h2 className="mb-3 text-lg font-bold text-white">Keep exploring {set.name}</h2>
         <div className="flex flex-wrap gap-2">
           <Link href={`/sets/${set.slug}`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
             {set.name} prices →
           </Link>
-          {set.code === "VEN" && (
-            <>
-              <Link href="/blog/every-riftbound-vendetta-card-revealed" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
-                Vendetta card list →
-              </Link>
-              <Link href="/guides/riftbound-empower-explained" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
-                Empower explained →
-              </Link>
-              <Link href="/guides/riftbound-flow-explained" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
-                Flow explained →
-              </Link>
-              <Link href="/guides/riftbound-burn-explained" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
-                Burn explained →
-              </Link>
-            </>
-          )}
           {SETS.filter((s) => s.slug !== set.slug && !s.comingSoon).map((s) => (
             <Link key={s.slug} href={`/sets/${s.slug}/gallery`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
               {s.name} gallery

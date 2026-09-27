@@ -11,11 +11,12 @@
  *
  * Pass `--md` to emit a markdown table for docs/adsense-remediation.md.
  */
-// This file has no imports, so the marker below is what makes TypeScript treat
-// it as a module. Without it every top-level name here would land in the global
-// scope and collide with the other scripts (tsconfig includes **/*.ts, and
-// `next build` typechecks the whole project).
-export {};
+// The ads.txt body rules live in ./ads-txt-check.ts, shared with
+// adsense-guard.ts and tests/ads-txt.test.ts. That import is also what makes
+// TypeScript treat this file as a module, so its top-level names stay out of
+// the global scope the other scripts share (tsconfig includes **/*.ts).
+import { adsTxtProblems } from "./ads-txt-check";
+
 const BASE = (process.argv[2] ?? "https://riftcompare.com").replace(/\/$/, "");
 const AS_MARKDOWN = process.argv.includes("--md");
 
@@ -124,13 +125,16 @@ async function checkAdsTxt() {
     const cc = direct.headers.get("cache-control") ?? "(none)";
     out.push(`cache-control ${cc}`);
 
+    // Not an exact match any more: the Google line must come FIRST, and the
+    // partner records after it only have to be well-formed (ads-txt-check.ts).
     const body = await direct.text();
-    const expected = `google.com, ${PUB_ID}, DIRECT, f08c47fec0942fa0\n`;
-    const exact = body === expected;
-    out.push(exact ? "body exact match" : `body MISMATCH: ${JSON.stringify(body.slice(0, 120))}`);
-    if (!exact) failures++;
-    if (/[<>]/.test(body)) {
-      out.push("body contains markup — still serving the HTML shell");
+    const records = body.split("\n").filter((l) => l.trim() && !l.trim().startsWith("#")).length;
+    const problems = adsTxtProblems(body, PUB_ID);
+    if (problems.length === 0) {
+      out.push(`first line is the Google DIRECT record for ${PUB_ID}; ${records} well-formed records in all`);
+    } else {
+      for (const p of problems.slice(0, 5)) out.push(`body: ${p}`);
+      if (problems.length > 5) out.push(`body: …and ${problems.length - 5} more`);
       failures++;
     }
   } catch (e) {

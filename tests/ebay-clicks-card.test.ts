@@ -116,7 +116,10 @@ test("the banners are still ads: labelled, and hidden for ad-free members", () =
     assert.match(src, />\s*Ad\s*</, `${f} keeps its "Ad" label`);
   }
   const footer = read("src/components/FooterAds.tsx");
-  assert.match(footer, /if \(adFree\) return null;/);
+  // The same early return also drops the pair on the policy and trust pages
+  // since 2026-09-26 (owner decision, "Blog and tools, joined up" in
+  // DECISIONS.md; tests/site-chrome.test.ts). Ad-free still comes first.
+  assert.match(footer, /if \(adFree \|\| !footerBannersAllowed\(pathname\)\) return null;/);
   assert.match(footer, /<AffiliateDisclosure partner="both" tight/);
 });
 

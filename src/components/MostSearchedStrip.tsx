@@ -7,6 +7,9 @@ import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
 import type { DemandCard } from "@/lib/demand";
 import { cardThumbProps } from "@/lib/card-image-url";
+import { OutboundLink } from "./OutboundLink";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
+import { ebayLabel, ebaySearchUrl, riftboundEbayQuery } from "@/lib/affiliate";
 
 export type MostSearchedRow = { card: DemandCard; searches: number };
 
@@ -19,7 +22,7 @@ export type MostSearchedRow = { card: DemandCard; searches: number };
 // market's price column (lib/demand.ts DEMAND_CARD_SELECT), the same way
 // CardTile re-prices on the client.
 export function MostSearchedStrip({ rows, coveredDays }: { rows: MostSearchedRow[]; coveredDays: number | null }) {
-  const { price, fmt } = useCountry();
+  const { price, fmt, country } = useCountry();
   // Old links (and the retired redirect) point at #most-searched, so the anchor
   // is always on the page — with a plain note when there is no ranking to show (a window too short
   // after a database move, or a failed read, which the ISR render keeps until
@@ -47,13 +50,20 @@ export function MostSearchedStrip({ rows, coveredDays }: { rows: MostSearchedRow
           Full leaderboard — Premium →
         </Link>
       </div>
+      {/* Above the first eBay button, for every visitor (2026-09-27, "Popular
+          pages tuned for eBay" in DECISIONS.md). */}
+      <AffiliateDisclosure partner="ebay" tight />
       <ol className="card-surface grid grid-cols-1 gap-x-6 px-4 py-1 sm:grid-cols-2">
         {rows.map((r, i) => {
           const c = r.card;
           const cents = price(c);
           return (
-            <li key={c.id} className="border-b border-ink-800 last:border-0 sm:[&:nth-last-child(2)]:border-0">
-              <Link href={cardHref(c)} prefetch={false} className="flex min-h-11 items-center gap-2.5 py-2 hover:bg-ink-800/50">
+            // Two SIBLING links (a link cannot nest another): the row to the
+            // card page, and a search of the visitor's own eBay for the card —
+            // this list is what people are hunting for this week, and a search
+            // (never a price or a listing we do not have) is the honest link.
+            <li key={c.id} className="flex items-center gap-2 border-b border-ink-800 last:border-0 sm:[&:nth-last-child(2)]:border-0">
+              <Link href={cardHref(c)} prefetch={false} className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5 py-2 hover:bg-ink-800/50">
                 <span className="num w-5 shrink-0 text-right text-xs text-slate-500">{i + 1}</span>
                 <span className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
                   {c.imageThumbUrl && (
@@ -71,6 +81,20 @@ export function MostSearchedStrip({ rows, coveredDays }: { rows: MostSearchedRow
                   {cents != null ? fmt(cents) : <span className="text-xs font-normal text-slate-500">No price here</span>}
                 </span>
               </Link>
+              <OutboundLink
+                href={ebaySearchUrl(country, riftboundEbayQuery(c.name), "movers-searched")}
+                retailer="ebay_search"
+                country={country}
+                kind="single"
+                pageType="movers"
+                surface="ebay_search"
+                cardId={c.id}
+                cardName={c.name}
+                positionInList={i + 1}
+                className="btn-ebay-ghost min-h-11 shrink-0 px-2.5 text-xs"
+              >
+                eBay<span className="sr-only"> search for {c.name} on {ebayLabel(country)}</span>
+              </OutboundLink>
             </li>
           );
         })}

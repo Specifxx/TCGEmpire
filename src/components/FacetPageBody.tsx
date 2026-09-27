@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { prisma } from "@/lib/db";
 import { buildCardWhere, buildCardOrderBy, cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY, priceField, COUNTRIES } from "@/lib/country";
@@ -29,6 +30,7 @@ export async function FacetPageBody({
   crumbHref,
   siblings,
   collectionKind = "type",
+  related,
 }: {
   facet: Facet;
   dimensionLabel: string; // "card type" | "rarity" | "printing" — used in copy
@@ -52,6 +54,10 @@ export async function FacetPageBody({
   siblings: Facet[]; // other values in the same dimension, for cross-links
   /** Which kind of collection this is, for the generated intro's buyer advice. */
   collectionKind?: CollectionKind;
+  /** The guides that explain this facet (a RelatedGuides block), rendered after
+   *  the grid and BEFORE the eBay block, so our own writing leads the commercial
+   *  one (Phase 8; "Blog and tools, joined up" in DECISIONS.md, 2026-09-26). */
+  related?: ReactNode;
 }) {
   const country = DEFAULT_COUNTRY;
   const field = priceField(country);
@@ -198,6 +204,8 @@ export async function FacetPageBody({
           than a specific card — which is exactly what a marketplace search
           answers better than our per-card comparison. Placed under the grid, not
           above it: our own priced cards lead. */}
+      {related}
+
       <EbayBuyCta query={facet.label} heading={`${facet.label} cards on eBay`} />
 
       {siblings.length > 1 && (

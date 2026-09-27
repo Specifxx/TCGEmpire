@@ -6,22 +6,30 @@ import { GameResultExtras, GameShell, useBestScore, useShare } from "./shared";
 
 // Riftbound 2048 — the classic slide-and-merge puzzle, climbing the rarity ladder
 // instead of numbers: two Commons make an Uncommon, two Uncommons a Rare, and on
-// up to Legend and beyond. Pure client logic, instant, endlessly replayable.
+// up to Ultimate and beyond. Pure client logic, instant, endlessly replayable.
 // Arrow keys / WASD on desktop, swipe on touch.
 type Dir = "up" | "down" | "left" | "right";
 type Cell = number | null; // tile level (0 = Common), null = empty
 
+// THE FIRST SIX RUNGS ARE REAL (2026-09-26, "Blog and tools, joined up" in
+// DECISIONS.md): the rarity badges the site puts on its cards, in their own
+// colours — lib/constants.ts RARITIES (Common to Showcase) and ULTIMATE_RARITY.
+// Rung six was "Legend", then "Champion" and "Mythic": the first two are
+// Riftbound CARD TYPES, not rarities, and Riftbound has no Mythic, so the game
+// was teaching a ladder that does not exist. Past Ultimate the game still needs
+// tiers to keep merging, so they are numbered as plainly its own
+// ("Ultimate II"…), never given a name that could pass for a printed rarity.
 const LADDER = [
   { short: "Com", name: "Common", color: "#9aa0aa" },
   { short: "Unc", name: "Uncommon", color: "#30a46c" },
   { short: "Rare", name: "Rare", color: "#3b82f6" },
   { short: "Epic", name: "Epic", color: "#a855f7" },
   { short: "Show", name: "Showcase", color: "#f5a524" },
-  { short: "Leg", name: "Legend", color: "#ef4444" },
-  { short: "Champ", name: "Champion", color: "#ec4899" },
-  { short: "Myth", name: "Mythic", color: "#14b8a6" },
-  { short: "★", name: "Ascendant", color: "#fbbf24" },
-  { short: "★★", name: "Transcendent", color: "#fde047" },
+  { short: "Ult", name: "Ultimate", color: "#ef4444" },
+  { short: "Ult II", name: "Ultimate II", color: "#ec4899" },
+  { short: "Ult III", name: "Ultimate III", color: "#14b8a6" },
+  { short: "Ult IV", name: "Ultimate IV", color: "#fbbf24" },
+  { short: "Ult V", name: "Ultimate V", color: "#fde047" },
 ];
 const tier = (lvl: number) => LADDER[Math.min(lvl, LADDER.length - 1)];
 
@@ -165,7 +173,7 @@ export function Twenty48() {
     <GameShell
       emoji="🧬"
       title="Riftbound 2048"
-      tagline="Merge cards up the rarity ladder — Common to Legend and beyond."
+      tagline="Merge cards up the rarity ladder — Common to Ultimate and beyond."
       bestLabel={`score ${score} · best ${best}`}
     >
       <div className="mb-3 flex items-center justify-between gap-3">

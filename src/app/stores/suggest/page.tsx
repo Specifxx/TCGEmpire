@@ -50,7 +50,7 @@ export default function SuggestStorePage() {
       </div>
 
       {/* Value prop for store owners — this page doubles as a partnership pitch */}
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Perk icon="🛒" title="Free to list">
           No cost, ever. We compare prices to help shoppers find the best deal.
         </Perk>

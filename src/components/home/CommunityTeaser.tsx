@@ -3,8 +3,9 @@ import { COMMUNITY_RESOURCES, CATEGORY_ORDER } from "@/lib/content/community";
 import { CommunityLink } from "@/components/CommunityLink";
 
 // Homepage teaser for /community — one representative resource per category
-// (in CATEGORY_ORDER), same "further reading" spot as LatestPosts' blog/guides
-// rows just underneath. Renders nothing if the directory is ever emptied out.
+// (in CATEGORY_ORDER), the "further reading" that follows our own writing in
+// the editorial band (EditorialHub). Renders nothing if the directory is ever
+// emptied out.
 export function CommunityTeaser() {
   const highlights = CATEGORY_ORDER.map((c) => COMMUNITY_RESOURCES.find((r) => r.category === c)).filter(
     (r): r is NonNullable<typeof r> => r != null,
@@ -25,7 +26,7 @@ export function CommunityTeaser() {
         </Link>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {highlights.map((r) => (
           <CommunityLink key={r.url} resource={r} />
         ))}

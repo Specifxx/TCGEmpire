@@ -9,6 +9,7 @@ import { useQuickView } from "./QuickView";
 import { Sparkline } from "./PriceChart";
 import { cardImageAlt } from "@/lib/image-alt";
 import { cardThumbProps } from "@/lib/card-image-url";
+import { EbayCardSearchRow } from "./EbayCountryLink";
 
 // "Price Watch" — this week's biggest movers and best-value buys in the viewer's
 // market (its own currency). Rows open the quick-view (with its interactive chart).
@@ -21,11 +22,23 @@ export function PriceWatch({
   currency,
   place,
   showHeader = true,
+  ebaySearch = false,
+  weekTo = null,
 }: {
   movers: PriceMovers;
   currency: string;
   place: string;
   showHeader?: boolean;
+  /** A "Search eBay" row under each panel naming its top three cards — the
+   *  /movers page (2026-09-27, "Popular pages tuned for eBay" in DECISIONS.md).
+   *  A row per panel, not a button per card: a button beside every row squeezed
+   *  the names to ~44px on a 390px phone. The rows themselves still open the
+   *  quick view, whose first block is the card's eBay listings. */
+  ebaySearch?: boolean;
+  /** Set when the lists are the last week before a price-basis switch
+   *  (getPriceMovers' pre-switch fallback): the panels then name that week
+   *  instead of saying "this week" (2026-09-27). */
+  weekTo?: string | null;
 }) {
   const { spiking, plummeting, value } = movers;
   if (!spiking.length && !plummeting.length && !value.length) return null;
@@ -57,15 +70,15 @@ export function PriceWatch({
           from xl, not lg: beside the 17rem rail, main is ~704px at 1024 and
           three 224px panels left every name 0px wide. */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <Panel title="Spiking this week" accent="text-up" subtitle="Up the most (7 days)" movers={spiking} kind="up" currency={currency} empty="No notable risers yet." />
-        <Panel title="Biggest drops this week" accent="text-down" subtitle="Down the most (7 days)" movers={plummeting} kind="down" currency={currency} empty="No notable fallers yet." />
-        <Panel title="Best value right now" accent="text-gold" subtitle="Largest discount off recent high" movers={value} kind="down" currency={currency} empty="No standout deals yet." />
+        <Panel title={weekTo ? "Biggest risers" : "Spiking this week"} accent="text-up" subtitle={weekTo ? `Up the most, week to ${weekTo}` : "Up the most (7 days)"} movers={spiking} kind="up" currency={currency} empty="No notable risers yet." ebaySearch={ebaySearch} />
+        <Panel title={weekTo ? "Biggest drops" : "Biggest drops this week"} accent="text-down" subtitle={weekTo ? `Down the most, week to ${weekTo}` : "Down the most (7 days)"} movers={plummeting} kind="down" currency={currency} empty="No notable fallers yet." ebaySearch={ebaySearch} />
+        <Panel title={weekTo ? "Best value" : "Best value right now"} accent="text-gold" subtitle={weekTo ? `Off the recent high, to ${weekTo}` : "Largest discount off recent high"} movers={value} kind="down" currency={currency} empty="No standout deals yet." ebaySearch={ebaySearch} />
       </div>
     </section>
   );
 }
 
-function Panel({ title, subtitle, accent, movers, kind, currency, empty }: { title: string; subtitle: string; accent: string; movers: Mover[]; kind: "up" | "down"; currency: string; empty: string }) {
+function Panel({ title, subtitle, accent, movers, kind, currency, empty, ebaySearch }: { title: string; subtitle: string; accent: string; movers: Mover[]; kind: "up" | "down"; currency: string; empty: string; ebaySearch: boolean }) {
   return (
     <div className="card-surface p-4">
       {/* Title over subtitle, always. Side by side, the longer titles wrapped
@@ -83,6 +96,11 @@ function Panel({ title, subtitle, accent, movers, kind, currency, empty }: { tit
             <Row key={m.card.id} m={m} up={kind === "up"} currency={currency} />
           ))}
         </ul>
+      )}
+      {/* The plain card name, not the display name: eBay reads "(A, B)" in a
+          query as an OR group, and a search for the name finds every printing. */}
+      {ebaySearch && movers.length >= 2 && (
+        <EbayCardSearchRow names={movers.slice(0, 3).map((m) => m.card.name)} source="movers-panel" pageType="movers" />
       )}
     </div>
   );

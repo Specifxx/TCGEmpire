@@ -242,19 +242,23 @@ export function regionHomeTitle(region: Exclude<Country, "US">, liveStores: numb
 //  - the REGIONAL figures are the measured checkout snapshot in lib/shipping.ts
 //    (real carts, per state/region, re-probed — not a live quote), and they
 //    power Best Basket's cheapest delivered order.
-// So "with delivered cost" is what a comparison page may claim, and "shipping
+// So a comparison page may say "cheapest first" and "postage shown where known"
+// (tests/site-claims.test.ts bans "with delivered cost"), and "shipping
 // measured at each store's checkout" is only ever said of the basket.
 export function homeDescription(cards: number | null | undefined, liveStores: number | null | undefined): string {
   const c = cards && cards > 0 ? `${cards.toLocaleString("en-US")} cards` : "every card";
   const s = liveStores && liveStores > 0 ? `${liveStores} stores` : "tracked stores";
-  return `Compare Riftbound card prices for ${c} across ${s} + eBay, with delivered cost — price check any card across six markets. Updated daily.`;
+  return `Compare Riftbound card prices for ${c} across ${s} + eBay — price check any card across six markets, cheapest first. Updated daily.`;
 }
 
 export function regionHomeDescription(region: Exclude<Country, "US">, cards: number | null | undefined, liveStores: number | null | undefined): string {
   const info = COUNTRIES[region];
   const c = cards && cards > 0 ? `${cards.toLocaleString("en-US")} cards` : "every card";
   const s = liveStores && liveStores > 0 ? `${liveStores} ${info.adjective} stores` : `tracked ${info.adjective} stores`;
-  return `Compare Riftbound card prices in ${info.place}: ${c} across ${s} in ${info.currency}, with delivered cost. Updated daily.`;
+  // "with UK delivered cost" promised a delivered-cost comparison; comparisons
+  // sort by item price and show postage only where a store publishes it
+  // (2026-09-26, "Blog and tools, joined up" in DECISIONS.md).
+  return `Compare Riftbound card prices in ${info.place}: ${c} across ${s} in ${info.currency}, cheapest first, postage shown where known. Updated daily.`;
 }
 
 /** Social-card (og:title / og:description) wording for "/". Separate from the

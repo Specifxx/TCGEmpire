@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Archivo } from "next/font/google";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
@@ -8,9 +9,9 @@ import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { PriceTodayTable } from "@/components/home/PriceTodayTable";
+import { EditorialHub } from "@/components/home/EditorialHub";
 import { getPriceTable } from "@/lib/price-table";
 import { homeMetadata } from "@/lib/home-metadata";
-import Link from "next/link";
 import { webPage, faqPage, webApplication } from "@/lib/jsonld";
 
 // RESTORED (2026-08-17), overriding a same-day "one job" redesign that had
@@ -253,9 +254,13 @@ const FAQS: { q: string; a: string }[] = [
     q: "Does RiftCompare cover Riftbound singles and sealed products?",
     a: "Yes — compare prices on individual Riftbound singles as well as sealed products like booster boxes, booster packs, Proving Grounds and Nexus Night packs, all priced across local retailers.",
   },
+  // The conversion sentence (2026-09-26): Canada's "eBay US" rows are US
+  // listings the import converts to CAD (lib/price-import.ts), and the 7-day
+  // change and price-drop deals read the weekly USD history, converted
+  // (lib/price-history.ts), so "no conversions" was untrue.
   {
     q: "Are the Riftbound prices shown in my local currency?",
-    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, USD in the US, GBP in the UK, SGD in Singapore, CAD in Canada and EUR in the EU — so there are no surprise currency conversions.",
+    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, USD in the US, GBP in the UK, SGD in Singapore, CAD in Canada and EUR in the EU — and store prices are shown as the stores themselves charge them. Two kinds of figure are converted at our reference rate: Canada's rows marked \"eBay US\", which are US listings, and figures from our weekly worldwide price history, such as the 7-day change and the price-drop deals.",
   },
 ];
 
@@ -330,6 +335,12 @@ export default async function HomePage() {
           popular" tab shows the same cards as tiles without one. */}
       <PriceTodayTable rows={priceTable} country={country} totalPriced={statsByCountry[country].priced} />
 
+      {/* Guides, news & market updates — directly under the table, above
+          HomeSections (owner decision, 2026-09-26, "Blog and tools, joined up"
+          in DECISIONS.md; see EditorialHub.tsx). No market passed: this page's
+          copy is market-neutral, so "Start here" keeps the six-market guide. */}
+      <EditorialHub freshness={freshness} />
+
       {/* REMOVED: the "Vendetta — the new set, priced" launch band (cheapest
           booster box, price-since-release, chase cards). It was a launch-window
           spotlight and Vendetta released on 31 Jul 2026, so by mid-August it was
@@ -342,9 +353,9 @@ export default async function HomePage() {
           nextUpcomingSet()) — inside HomeSections below, after Explore — not a
           revival of this band. */}
 
-      {/* Everything below the hero — Market Pulse, the popular-cards carousel,
-          Today's Top Deals, How It Works, Explore, reviews, partners —
-          shared with the 4 region home pages (/au, /uk, /sg, /ca) via
+      {/* Everything below the editorial band — Today's Top Deals, eBay Picks,
+          the popular-cards carousel, How It Works, Explore, reviews, partners —
+          shared with the 5 region home pages (/au, /uk, /sg, /ca, /eu) via
           HomeSections, so a visitor who picks a market in the hero toggle gets
           the SAME feature set, not a stripped-down page. See HomeSections.tsx. */}
       <HomeSections
@@ -370,23 +381,51 @@ export default async function HomePage() {
             not "intentional whitespace"). This card is meant to fill its row. */}
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
           RiftCompare is a free, independent price comparison engine for Riftbound: League of Legends
-          TCG. We track live prices for every Riftbound card across local stores in Australia,
+          TCG. We track live prices for Riftbound cards across local stores in Australia,
           the US, the UK, Singapore, Canada and the EU, plus eBay (AU, US, UK, SG, CA and EU), so you
           can buy Riftbound cards for less — whether you&apos;re chasing singles for a deck or
           sealed booster boxes.
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Every card page lists each store&apos;s price cheapest first, with the delivered cost wherever
-          the listing shows postage.{" "}
-          <Link href="/tools/best-basket" className="font-semibold text-brand-400 hover:text-brand-300">
+        {/* Who runs it, where the numbers come from and how it earns, on the
+            page a reviewer reads first (2026-09-26, "Blog and tools, joined up"
+            in DECISIONS.md). Every clause is the owner's own statement on
+            /about: one person, two imports a day, the full revenue list, and no
+            revenue source that buys a position. Worded for this page, not
+            copied, so neither page reads as the other's boilerplate. */}
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          The site is built and run by one person, Bill, its founder. Store prices come from each
+          store&apos;s own listings, imported twice a day and matched to the exact printing, and each
+          card&apos;s comparison lists them cheapest first by item price —{" "}
+          <Link href="/methodology" className="text-brand-300 underline-offset-2 hover:underline">
+            how prices are collected
+          </Link>{" "}
+          and{" "}
+          <Link href="/stores/tracked" className="text-brand-300 underline-offset-2 hover:underline">
+            which stores we track
+          </Link>{" "}
+          each have a page of their own. RiftCompare is paid for by affiliate commission (the eBay Partner
+          Network, TCGplayer and Amazon Associates), display ads, Plus and Premium subscriptions and paid
+          consulting for stores, and none of them can buy a store a better place in a comparison. More on{" "}
+          <Link href="/about" className="text-brand-300 underline-offset-2 hover:underline">
+            who runs RiftCompare
+          </Link>{" "}
+          and in our{" "}
+          <Link href="/editorial-policy" className="text-brand-300 underline-offset-2 hover:underline">
+            editorial policy
+          </Link>
+          .
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          Two tools go further than a single card:{" "}
+          <Link href="/tools/best-basket" className="text-brand-300 underline-offset-2 hover:underline">
             Best Basket
           </Link>{" "}
           prices a whole deck or card list at the cheapest delivered total, using shipping measured at each
-          store&apos;s checkout, and the{" "}
-          <Link href="/trade" className="font-semibold text-brand-400 hover:text-brand-300">
+          store&apos;s own checkout, and the{" "}
+          <Link href="/trade" className="text-brand-300 underline-offset-2 hover:underline">
             Trade Calculator
           </Link>{" "}
-          checks a trade is fair at live store prices before you swap.
+          values both sides of a trade at the cheapest in-stock store price before you swap.
         </p>
         {/* Collapsible FAQ — tidy on mobile; answers still in the DOM for SEO. */}
         <div className="mt-5 divide-y divide-ink-800 border-t border-ink-800">
@@ -429,12 +468,12 @@ export default async function HomePage() {
               // the visible/meta copy about something as checkable as "which
               // markets does this page cover" is exactly the kind of drift a
               // crawler (or an AI answer engine) can catch and penalise.
-              //
-              // 2026-09-27: "total cost including shipping, no hidden fees" went —
-              // postage is shown only where a listing carries it, and nothing here
-              // can promise what a store's checkout adds.
+              // The ranking half said "total cost including shipping, no hidden
+              // fees" until 2026-09-26; comparisons sort by item price and show a
+              // delivered total only where the store publishes postage
+              // (lib/market-rows.ts computeMarket, tests/site-claims.test.ts).
               description:
-                "Compare Riftbound card prices live across stores in the US, UK, Australia, Canada, Singapore and the EU, plus eBay, with delivered cost in your currency.",
+                "Riftbound prices compared across stores and eBay in the US, UK, Australia, Canada, Singapore and the EU — cheapest first by item price, with the delivered total shown where the store publishes its postage.",
             }),
             // What the page's TOOL does — the node answer engines read as the
             // product's capabilities. Each feature is live on the site today.
@@ -444,7 +483,7 @@ export default async function HomePage() {
               href: "/",
               applicationCategory: "ShoppingApplication",
               description:
-                "Compare Riftbound card prices across stores and eBay in six markets: live prices for every Riftbound single card and sealed product, cheapest first, with delivered cost in your currency.",
+                "Compare Riftbound card prices across stores and eBay in six markets: live prices for every Riftbound single card and sealed product, cheapest first by item price, with the delivered total shown where the store publishes its postage.",
               featureList: [
                 "Compare live Riftbound single-card prices across stores in the US, Australia, the UK, Singapore, Canada and the EU, plus eBay",
                 "Delivered cost (item price plus postage) shown beside each listing that carries a shipping figure",

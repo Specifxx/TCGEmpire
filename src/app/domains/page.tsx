@@ -6,6 +6,8 @@ import { DOMAIN_PAGES } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 export const revalidate = 86400;
 
@@ -62,6 +64,8 @@ export default async function DomainsIndexPage() {
           );
         })}
       </div>
+
+      <RelatedGuides guides={guidesForTool("/domains")} className="card-surface p-5" />
     </div>
   );
 }

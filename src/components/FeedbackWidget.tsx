@@ -62,9 +62,15 @@ export function FeedbackWidget() {
   // remediation history (docs/adsense-remediation.md), so the launcher yields:
   // while the ad zone is anywhere in the viewport, it hides entirely. Costs one
   // observer and removes the whole class of violation.
+  // A route with no zone (FooterAds renders none on the policy and trust pages)
+  // must clear the flag: arriving from a footer link while the banners were on
+  // screen would otherwise leave the launcher hidden for the whole page.
   useEffect(() => {
     const zone = document.getElementById("rc-ad-zone");
-    if (!zone || typeof IntersectionObserver === "undefined") return;
+    if (!zone || typeof IntersectionObserver === "undefined") {
+      setOverAdZone(false);
+      return;
+    }
     const io = new IntersectionObserver((entries) => setOverAdZone(entries[0]?.isIntersecting ?? false));
     io.observe(zone);
     return () => io.disconnect();

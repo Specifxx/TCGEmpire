@@ -25,6 +25,7 @@ import {
 } from "@/lib/cards";
 import { getCountry } from "@/lib/get-country";
 import { priceField, COUNTRIES } from "@/lib/country";
+import { formatMoney } from "@/lib/format";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, isPreorderSetCode, setBySlug } from "@/lib/constants";
@@ -39,6 +40,8 @@ import { setPriceGuideRows } from "@/lib/set-price-guide";
 import { storeCountsByCountry } from "@/lib/cards";
 import { RADIANCE_FAQ } from "@/lib/sets/radiance";
 import { faqPage } from "@/lib/jsonld";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForSet } from "@/lib/content/related-guides";
 
 // Per-set pre-release reading, shown on a set page that has no cards yet. Keyed by
 // slug and DATA, not JSX, so adding the next set is one array — the previous shape
@@ -410,6 +413,19 @@ export default async function SetPage({
 
   const radianceReveals = set.slug === "radiance" ? await getRadianceReveals(country) : null;
   const priceGuide = setPriceGuideRows(narrativeMembers as Record<string, unknown>[], priceField(country));
+  // Facts for "How to read … prices" that only this set has: its dearest and
+  // cheapest priced cards, and which rarity fills its ten dearest. A sentence
+  // that reads the same on every set page counts as template chrome in the
+  // AdSense audit (scripts/adsense-audit.ts, sentences on >35% of a template).
+  const pricedGuide = priceGuide.filter((r) => r.priceCents != null);
+  const guideTop = pricedGuide[0] ?? null;
+  const guideLow = pricedGuide.length > 1 ? pricedGuide[pricedGuide.length - 1] : null;
+  const topTenRarity = (() => {
+    const tally = new Map<string, number>();
+    for (const r of pricedGuide.slice(0, 10)) if (r.rarity) tally.set(r.rarity, (tally.get(r.rarity) ?? 0) + 1);
+    const [rarity, n] = [...tally].sort((x, y) => y[1] - x[1])[0] ?? [null, 0];
+    return rarity && pricedGuide.length >= 10 && n >= 5 ? { rarity, n } : null;
+  })();
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
   // A comingSoon set (singles not on sale yet) can still be FULLY revealed —
@@ -515,7 +531,7 @@ export default async function SetPage({
                 )}
               </>
             ) : (
-              <>The complete Riftbound <strong className="text-slate-200">{set.name}</strong> card list — all {totalInSet.toLocaleString()} cards, sortable and filterable, with live prices compared across stores so you can find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated daily — switch your country at the top to see local prices.</>
+              <>The complete Riftbound <strong className="text-slate-200">{set.name}</strong> card list — all {totalInSet.toLocaleString()} cards, sortable and filterable, with live prices compared across stores so you can find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated twice a day — switch your country at the top to see local prices.</>
             )}
           </p>
 
@@ -618,7 +634,7 @@ export default async function SetPage({
             {preReleaseLinks.length > 0 && (
               <div className="mx-auto mt-6 max-w-lg border-t border-ink-800 pt-5 text-left">
                 <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Get ready for {set.name}</p>
-                <ul className="grid gap-1.5 text-sm sm:grid-cols-2">
+                <ul className="grid grid-cols-1 gap-1.5 text-sm sm:grid-cols-2">
                   {preReleaseLinks.map((l) => (
                     <li key={l.href}>
                       <Link href={l.href} className="text-brand-400 hover:underline">{l.label} →</Link>
@@ -739,6 +755,56 @@ export default async function SetPage({
           same cached query as the intro above. */}
       <SetPriceGuide setName={set.name} rows={priceGuide} currency={COUNTRIES[country].currency} adjective={COUNTRIES[country].adjective} />
 
+      {/* How to read the prices above, and the set's own guides (2026-09-26,
+          "Blog and tools, joined up" in DECISIONS.md). Under the grid and the
+          price guide like the intro — the list stays above the fold (the
+          2026-09-24 set-page decision) — and ahead of the eBay block, so our
+          own writing leads the commercial one. Replaces a 51-word "About"
+          paragraph that said every store was "ranked by total delivered cost",
+          which computeMarket (lib/market-rows.ts) has never done. The middle
+          paragraph is built from this set's own price guide (its dearest and
+          cheapest cards, the rarity filling its top ten); the method sentences
+          around it are shared on purpose. Released sets only: a set still in preview has no prices
+          to read, and its reading list is PRE_RELEASE_LINKS above. */}
+      {!set.comingSoon && totalInSet > 0 && (
+        <section aria-labelledby="set-read-h" className="card-surface p-5 sm:p-6">
+          <h2 id="set-read-h" className="text-xl font-extrabold text-white">How to read {set.name} prices</h2>
+          <div className="mt-2 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+            <p>
+              Each price on this page is the cheapest in-stock listing we have for that card in{" "}
+              {COUNTRIES[country].place}, in {COUNTRIES[country].currency}: the item price, before postage.{" "}
+              {priced.toLocaleString()} of {set.name}&apos;s {totalInSet.toLocaleString()} cards have one right now
+              {priced < totalInSet ? `; the other ${(totalInSet - priced).toLocaleString()} show no price until a seller in ${COUNTRIES[country].place} lists them in stock` : ""}.
+              Prices come from two imports a day, at 07:00 and 19:00 UTC.
+            </p>
+            {guideTop && (
+              <p>
+                The dearest {set.name} card in {COUNTRIES[country].place} right now is {guideTop.name}, at{" "}
+                {formatMoney(guideTop.priceCents!, COUNTRIES[country].currency)}
+                {guideLow && (
+                  <>
+                    ; the cheapest priced one is {guideLow.name}, at{" "}
+                    {formatMoney(guideLow.priceCents!, COUNTRIES[country].currency)}
+                  </>
+                )}
+                .{topTenRarity && <> {topTenRarity.n} of the ten dearest are {topTenRarity.rarity} cards.</>} The
+                price guide lists all {priceGuide.length.toLocaleString()} cards dearest first; the grid above opens A–Z
+                and can be re-sorted and filtered.
+              </p>
+            )}
+            <p>
+              Open any card for every store&apos;s price in {COUNTRIES[country].place}, cheapest first by item price,
+              with the delivered total shown where the store publishes its postage — most stores quote it only at
+              checkout. To cost a whole want-list with each store&apos;s measured postage, use{" "}
+              <Link href="/tools/best-basket" className="text-brand-400 hover:underline">Best Basket</Link>; to weigh
+              buying these singles against opening sealed product, the{" "}
+              <Link href="/tools/box-ev" className="text-brand-400 hover:underline">box EV calculator</Link>.
+            </p>
+          </div>
+        </section>
+      )}
+      {!set.comingSoon && <RelatedGuides guides={guidesForSet(set.code)} className="card-surface p-5" />}
+
       <EbayPicks
         pageType="set_hub"
         setCode={set.code}
@@ -760,19 +826,6 @@ export default async function SetPage({
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Sealed products →</Link>
         </div>
       </section>
-
-      {/* Keyword-relevant copy for search */}
-      {!set.comingSoon && (
-        <section className="card-surface p-6">
-          <h2 className="text-xl font-extrabold text-white">About Riftbound {set.name}</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-            {set.name} is a set in Riftbound: League of Legends TCG. RiftCompare tracks live prices
-            for every {set.name} card across stores so you can find the cheapest place
-            to buy {set.name} singles — whether you&apos;re chasing a specific card or completing the set.
-            Click any card to see every store&apos;s price ranked by total delivered cost.
-          </p>
-        </section>
-      )}
 
       {/* Sealed-live note for sets whose singles haven't dropped yet. */}
       {set.comingSoon && set.sealedAvailable && (

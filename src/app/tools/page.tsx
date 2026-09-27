@@ -10,6 +10,9 @@ import { SITE_URL } from "@/lib/site";
 const LIST_BADGE = premiumPlusEnabled() ? "Plus" : "Premium";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
@@ -199,11 +202,16 @@ export default function ToolsHubPage() {
         of each deal list; {LIST_BADGE === "Plus" ? <>Plus shows every deal with no ads, and </> : null}
         <span className="text-gold">Premium</span> works out the cheapest way to buy a whole want-list.
       </p>
+      {/* What the tools share and what none of them does (2026-09-26, "Blog
+          and tools, joined up"): lib/content/hub-intros.ts. Under the lede
+          above, which carries the tier lines and is left as it is while the
+          trial is measured. */}
+      <HubIntro path="/tools" />
 
       {GROUPS.map((group) => (
         <section key={group.label} className="mt-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">{group.label}</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {group.tools.map((t) => (
               <Link
                 key={t.href}
@@ -237,6 +245,9 @@ export default function ToolsHubPage() {
           </div>
         </section>
       ))}
+
+      {/* The guides that show the tools in use, after the tool list. */}
+      <RelatedGuides guides={guidesForTool("/tools")} className="card-surface mt-8 p-5" />
 
       <HubFaq faqs={FAQS} />
     </div>

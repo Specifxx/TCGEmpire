@@ -14550,6 +14550,234 @@ The 20 s is the point: the 2026-09-24 rule protects a visitor who has not yet se
 
 The owner asked for the nudges on `/blog/*` and `/movers` (entry above) to appear after 7 seconds. `LANDING_ENGAGED_MS` is now 7 000. `PremiumSlideIn` uses it directly as its delay. The signed-out popup still runs its 5 s `NUDGE_DELAY_MS` settle-in after becoming eligible, so its reading threshold on these pages is the remainder (2 s), and it too appears 7 s in. Every other page keeps the original gate.
 
+## Blog and tools, joined up: true self-descriptions, an editorial band under the price table, trust pages that name who runs the site — 2026-09-26
+
+**Why.** Owner's brief after an AdSense "Low value content" rejection: feature the
+blog prominently on the homepage; link Home, Tools, Blog, About us, Editorial
+policy/Methodology, Privacy and Terms from the header and footer; make /about,
+/editorial-policy, /privacy and /terms comprehensive about authorship, data and
+purpose; put a 2–3 paragraph explanation beside the data on every data-heavy page
+with links to the guides; cross-link blog and tools; check ads.txt and the
+sitemap. A read-only audit (seven auditors and a critic) found the larger
+problem first: **the site's own pages and ~24 of its 106 articles described it
+wrongly** — "ranked by total delivered cost", "shipping included", "no hidden
+fees", "five markets", "real-time", an Index built from "completed sales" — and a
+reviewer who checks any of them against a card page ("postage at checkout") is
+reading exactly the low-value signal the rejection named. So accuracy went first
+and every new link points only at corrected pages.
+
+**Owner decisions (2026-09-26), asked and answered in session:**
+- The "Bill" byline is the owner, who builds and runs the site alone. Credit him.
+- Articles are "drafted with AI assistance, then edited and fact-checked by Bill
+  before publishing; prices and figures come from RiftCompare's own price
+  database, never from the draft." (`ARTICLE_PROCESS` in lib/content/authors.ts
+  holds the sentence; /about, /editorial-policy, /authors and both bios use it.)
+- The homepage editorial band goes directly under the price table — this
+  **reverses the 2026-09-21 order for that one band** (L9500); nothing inside
+  HomeSections moved, and today's eBay placements are unchanged.
+- No affiliate banner pair on the policy and trust pages; the six mini-games drop
+  their in-page pair and keep the site-wide one.
+
+**What.**
+- **Claims about the site are now true, and a test keeps them true.**
+  `tests/site-claims.test.ts` scans every page, component, hub intro, the author
+  registry and every published article (body, excerpt, summary, FAQ, CTA) for
+  claims about the SITE: delivered-cost ranking, shipping included, five markets,
+  sold-listing data, real-time lookups — with a small allow-list of true
+  sentences (eBay's fee base, the corrected ranking wording). Canonical wording:
+  "cheapest first by item price, with the delivered total shown where the store
+  publishes its postage"; Best Basket is the one tool that prices whole orders
+  with measured postage. Fixed in ~15 templates (region homes, set/domain/
+  champion/store pages, /singles, /movers, hub intros, the card narrative's
+  "five markets" on every card page, collection narratives), the machine
+  self-descriptions (llms.txt, .well-known, MCP, openapi), the sealed email, and
+  30 articles (`updated` → 2026-09-26: a correction is substantive). Country
+  guides now count stores from `RETAILER_LIST` (they said 17/19 where the list
+  held 28/54). The arbitrage guide is rewritten from the buyer's side with Deal
+  Finder described from its code; the Index guide no longer claims completed
+  sales. Where an article's figures are a dated snapshot, they are labelled with
+  their date.
+- **Authorship.** `Bill` is a Person author (/authors/bill, `@id`
+  `/authors/bill#author`), founder of the Organization in the site-wide JSON-LD
+  and on /about's AboutPage; his bio holds only the facts above. "RiftCompare
+  Markets Desk" (3 posts) folded into "RiftCompare"; every byline must resolve
+  (`tests/articles-authors.test.ts`). /authors no longer says "two bylines".
+- **Trust pages** (all checked sentence by sentence against the code): /about
+  gains "Who runs RiftCompare", "How it started" (Australia first, then US, UK,
+  Singapore, Canada, the EU on 24 Aug 2026) and the full revenue list — AdSense,
+  eBay Partner Network, TCGplayer via Impact, Amazon Associates, Plus/Premium,
+  paid store consulting — none of which buys a position. /editorial-policy:
+  the authorship statement, the Trade Gremlin as the only request-time AI text,
+  the refresh schedule rebuilt from price-import.ts, where currency is converted,
+  consulting disclosed as a potential conflict, and a corrections policy that
+  matches practice (in place with a new updated date; retired → 301). /methodology
+  now explains every tool's figure (Deal Finder, Cheapest on eBay, cross-market
+  gaps as a gap not a saving, Rising Cards as a screen, the Index, Best Basket,
+  Box EV, Demand Finder), the measured-postage model and how a comparison is
+  ordered (`#ordering`). /privacy names GA4 and Consent Mode, the cookies the code
+  sets, OAuth-only sign-in, the emails, Stripe and every processor; the hashed-
+  password and marketplace passages are gone. /terms covers consulting and
+  published decks; no governing-law clause, because nothing in the repo names a
+  jurisdiction (the owner's to add). The Amazon Associates statement renders
+  beside /sealed's Amazon links (`AffiliateDisclosure partner="amazon"`).
+- **Homepage.** `EditorialHub` ("Guides, news & market updates"), a server
+  component with no query: Start here (owner-curated `lib/content/featured.ts`;
+  a market home leads with its own buying guide, so the six homes differ),
+  Latest news (newest three posts), Market updates (the real "Prices updated …"
+  freshness, /movers, the Index and two dated market reads), and the authorship
+  line. It replaces both LatestPosts rows (deleted). Two rows per column on
+  phones, three from md: ten 48px rows made it ~800px on a 390px phone. Measured
+  at 390×844: band 645px; Today's Top Deals starts at 2,384px (1,444px this
+  morning; the price table's new footer adds ~180px of it); the page is shorter
+  overall (9,429 vs 9,890px). The price table's footer now says what "Cheapest"
+  is (item price, store or eBay, postage extra) and that the 7-day change is the
+  weekly WORLDWIDE low in USD, with links to /methodology and the guide; its
+  sm-only hint reads "cheaper worldwide this week". "Most read" is gone
+  (no per-article traffic data exists): the curated lists are "Editor's picks".
+  /blog and /guides each gained a distinct intro, and /blog's JSON-LD stopped
+  promising a daily market report (a removed feature). /blog's client payload
+  fell from ~595 KB to ~26 KB (no markdown bodies to the client).
+- **Blog ↔ tools.** `lib/content/tool-guides.ts` maps each tool/data route to at
+  most three guides, read both ways: `<RelatedGuides guides={guidesForTool(route)} />`
+  after the data and before any affiliate block (outside paywall gates) on
+  ~35 routes, and an article's "Related tools" row is the inverse
+  (`toolsForArticle`). /movers and the signed-out Deal Finder are the
+  exceptions: their eBay CTAs stay where "Pushing eBay clicks" put them (under
+  /movers' lists, beside Deal Finder's lock), so Read next follows them. Hub intros may carry
+  `[label](/path)` links (single-slash only). Set pages read a per-set reading
+  list (`SET_GUIDES`), which also fixed the card page's "Read next" picking the
+  wrong set's post; champion hubs link articles tagged with the champion. Every
+  published article now links at least one tool (ratchet test; only the LA
+  qualifier post is exempt until it is retired after its 27 Sep event).
+- **Explanations beside the data.** A visible, page-specific intro under the H1
+  on /sealed, /movers, /market, /market/records, /tools, /tools/box-ev,
+  /tools/rising, /tools/demand, /tools/selling-fees, /auctions, /decks and
+  /browse; /deck (tool first, L14127) and set pages (intro under the grid, L12080)
+  keep their placement. The "Mobile first" entry (L14021) covers the homepage,
+  card page, thumbnails and /browse's sort only — it is not a rule that tool
+  intros hide on phones. The six mini-games' how-to-play texts were rewritten to
+  match their code (Pairs has a timer; a Card Smash bomb costs one of three lives;
+  2048's tiles now follow the site's real rarity badges).
+- **Navigation and footer.** Privacy policy and Terms of service joined the
+  rail/menu Help group (hideInFooter). The header gains **Tools from xl only** —
+  the owner's brief overrides the 09-21 shortlist for this one item; at lg the
+  row has ~5px of slack. The always-visible footer row is Home, Blog, Guides,
+  Tools, About us, Editorial policy, Methodology, Who writes this, Contact &
+  feedback, Privacy policy, Terms of service. FooterAds renders nothing on
+  /about, /authors(/*), /contact, /editorial-policy, /methodology, /privacy,
+  /support and /terms (`BANNER_FREE_ROUTES`), and FeedbackWidget now clears its
+  "over the ad zone" flag on those routes.
+- **Sitemap and ads.txt.** /alerts added; editorial hubs daily 0.8, tools 0.7–0.8,
+  trust pages monthly 0.4–0.5, arcade games monthly 0.5; lastmod stays honest.
+  /decks is submitted only when a deck is live and is noindexed while empty.
+  The /guides/whats-in-the-riftbound-unleashed-set redirect is deleted: it had
+  shadowed a published guide the homepage itself linked (request re-indexing).
+  ads.txt was already correct (Google DIRECT line first); the live checks and
+  docs that expected a one-line body now validate the Google line plus
+  well-formed partner records (`scripts/ads-txt-check.ts`).
+
+**Found in review and fixed before commit.** An adversarial review of the change
+caught new copy that was itself inaccurate: /about said eBay is read twice a day
+(it is searched once a day — AU/US daily, UK/SG/EU in rotation) and called the
+four-market weekly low "worldwide"; the Rising Cards intro named four signals
+(the score uses six, and today's price is appended to the weekly series); the
+homepage currency FAQs said nothing is converted, but the 7-day change and the
+price-drop deals come from the USD history, converted; /methodology's list of
+conversions missed UK prices shown in euros and Cardmarket's fixed EUR→GBP rate;
+/privacy missed the `eur_display` cookie; Demand Finder's "view" also counts a
+quick-view open; the region homes' meta description still promised "delivered
+cost" (the claims test now has a pattern for that phrasing); a set-page sentence
+said Box EV and set prices share data (Box EV uses TCGplayer's market price); and
+most of the set pages' new explainer read the same on every set, so its middle
+paragraph now states that set's dearest and cheapest priced cards and the rarity
+filling its top ten. A second round caught articles the first pass missed or got
+half right: "cheapest delivered first/price" said of the comparison (Overnumbers,
+Empower, Burn — now a claims-test pattern too); the EU launch post still saying
+Cardmarket is not shown (it has been a labelled UK/EU reference since 4 Sep) and
+eleven stores; buying guides presenting Best Basket's store split as free (a free
+account sees the delivered total; the split is Premium); a FAQ implying TCGplayer
+listings are in every market's comparison (US only); the US guide promising a
+TCGplayer market-price reference its card pages show only when TCGplayer has no
+copy; and the "how to sell" guide still describing the arbitrage guide as
+buy-to-resell. Also: /market/records ranked gaps by "money saved" (a gap, not a
+saving); /decks now noindexes only a CONFIRMED-empty library (a failed read stays
+indexable, `liveDecksOrNull`, the fail-open rule of the champion and store pages);
+and each author page's sitemap lastmod is that author's newest article.
+
+**Not done, and why.** No new articles or pages ("publish fewer pages"). No
+mass rewrite of the corpus's voice: 30 of 106 articles are under 500 words, and
+Phase 25 judged a rushed rewrite riskier than the problem. The partner block in
+ads.txt (including a second Google DIRECT seller, `#AdEx`) is untouched — the
+owner added it on 2026-08-21; whether that partner is still live is his to
+confirm. Manual Action 1 in docs/adsense-remediation.md (closing the duplicate
+AdSense account) is still the first thing to rule out.
+
+**Verified** on the local seed DB (never production): typecheck, lint, the
+AdSense guard (22/22) and 2,600 tests pass; Playwright at 390, 1024, 1280 and
+1440 — the homepage order and band size above, the header's Tools link from xl
+with Log in / Sign up free unclipped, the footer row on /, no banner pair on the
+nine trust routes and a pair everywhere else, every tool/data route 200 with its
+intro and Read next and no horizontal scroll, the Unleashed guide 200, /alerts in
+the core sitemap.
+
+## Popular pages tuned for eBay, and /movers populated through the price switch — 2026-09-27
+
+**Why.** Owner's brief: the most-visited pages — /blog/riftbound-heartsteel-overnumbered-cards,
+/blog/where-to-buy-riftbound-radiance, /blog/riftbound-radiance-spoilers and
+/movers — should be well tuned for eBay, eBay being the main revenue. Mid-task the
+owner asked why /movers showed no movers: "We need to still leverage the old
+strategy right up until the data has collected for the new strategy so there is
+actually information to show. Having the page populated is the most important
+thing." Released off-schedule at the owner's request.
+
+**What.**
+- **HEARTSTEEL post.** Its mid-article strip searched for "Radiance pre-orders"
+  and "Riftbound TCG singles", the pair every Radiance post carries; it now
+  searches for what the post is about: HEARTSTEEL cards, K'Sante, Courageous (the
+  one new card), and Radiance booster displays. The "five originals — buyable
+  today" gallery (older-set cards a reader can buy now) gets the per-card eBay
+  search row through a new per-embed opt-in, `ebaySearch` — the automatic rule
+  still covers only current-set galleries, and the 2–6 card bound applies to both.
+- **Where to buy Radiance.** Its eBay strip rendered only after the whole body;
+  it now sits right after the product rundown (~29%), where the buying decision
+  is, and before the Merch Store draw section.
+- **Radiance spoilers.** The strip (already at 15%) gains the Vault Bundle and
+  HEARTSTEEL searches: four, the upper end of the two-to-four guidance.
+- **Every article strip** says "Search eBay →", not "View listings →": it is a
+  search, and a search never promises listings ("Pushing eBay clicks").
+- **/movers.** Each "Most searched this week" row — the list that is populated
+  right now — gets a compact eBay search button, a sibling of the row link (never
+  nested), with the EPN disclosure above the list; 48px on touch, names still
+  53px+ at 320px. Each movers panel gets a "Search eBay" row naming its top three
+  cards (the plain card name: eBay reads "(A, B)" in a query as an OR group). A
+  button per mover row was not used: it squeezed names to ~44px on a phone, and
+  those rows already open the quick view, whose first block is eBay.
+- **/movers populated through a methodology break.** Movers compare weekly
+  points on one basis only, and after the 23 Sep switch no card has two weekly
+  points on the new basis until about 1 Oct, so the lists were empty and the
+  page blank. Now, while every current-basis list is empty and only inside the
+  break's grace window (`recentMethodologyBreak`, to 14 days after the window),
+  `computePriceMovers` ranks the last week BEFORE the switch — old-basis points
+  compared only with each other, so nothing measures the switch itself — and
+  marks the result `basis: "pre-switch"` with its `asOf` day. Only /movers opts
+  in (`getPriceMovers(…, { preSwitch: true })`), with the panels titled "week to
+  {date}" and the break notice saying so; the homepage deals, digests,
+  newsletter, /games and Discord present a mover's price as today's, so they
+  still get empty lists. Cache key `rc-price-movers-v2` (the value's shape
+  changed). The switch to the new basis is automatic: the first run in which any
+  card has a week on it.
+
+**What this does not change.** No comparison is re-ranked, nothing reads across
+the switch (Rising Cards remains the one reader that does, by the 09-25 call),
+no new query, no revalidate change.
+
+**Verified** on the local seed DB (never production; local-only demand and
+price-history rows): the three posts at 390px in the US and Australia (strip
+positions, searches on ebay.com / ebay.com.au with their customids, the
+originals' per-card row), /movers with the labelled pre-switch panels, their
+eBay rows and the most-searched buttons at 320–1440px with no overflow, and the
+homepage deals unaffected. Tests: `tests/ebay-popular-pages.test.ts`.
+
 ## "Compare Riftbound card prices": comparison metadata, a WebApplication node, and shipping claims made accurate — 2026-09-27
 
 **Why.** The owner asked for metadata, schema and on-page copy that map RiftCompare to "compare Riftbound card prices", "Riftbound price comparison (engine)" and "live regional shipping costs", for search engines and for AI crawlers. The keyword map had no row for the comparison phrasing: the homepage owned "riftbound card prices" and "price check", and nothing owned "compare".
@@ -14579,12 +14807,20 @@ The owner asked for the nudges on `/blog/*` and `/movers` (entry above) to appea
 1. Card pages rank stores by ITEM price and show delivered cost beside a listing only where it carries a shipping figure (`lib/market-rows.ts`, deliberately, so a store with no published rate isn't pushed down).
 2. The regional figures are a measured checkout snapshot (`lib/shipping.ts`, real carts per state/region, re-probed), not live quotes. They power Best Basket's cheapest delivered order.
 
-So comparison pages claim "with delivered cost", and "shipping measured at each store's checkout" is said only of the basket. The homepage JSON-LD's "total cost including shipping, no hidden fees" and llms.txt's "no hidden fees" went for the same reason. `tests/comparison-discoverability.test.ts` fails if "live shipping" or "no hidden fees" comes back, and pins every length budget above.
+So comparison pages say "cheapest first, postage shown where known", and "shipping measured at each store's checkout" is said only of the basket.
+
+**Merged with "Blog and tools, joined up" (2026-09-26, above).** That pass reached the same conclusion first:
+- it removed "no hidden fees" and "total cost including shipping";
+- `tests/site-claims.test.ts` bans "with delivered cost" as a claim about the site.
+
+This change follows its wording. The descriptions, the WebSite node and llms.txt say "cheapest first" and "delivered cost shown where the store publishes its postage". The homepage About section keeps its "who runs it" paragraph, and a short tools paragraph follows it.
+
+`tests/comparison-discoverability.test.ts` fails if "live shipping" or "no hidden fees" comes back, and pins every length budget above.
 
 **Verified.**
 - A full `npm run build` (exit 0) ran against a local Postgres seeded the CI way (`prisma db push` + `prisma/seed.ts`).
 - `next start`, then fetched `/`, `/au`, `/uk`, `/trade`, `/about` and `/llms.txt`. The titles, descriptions and og:/twitter: tags render as described above, with the count-free fallbacks because the seed has no prices.
 - Every JSON-LD block parses. `/` carries Organization, WebSite, WebPage, WebApplication (`/#app`, seven features, zero-price Offer, no rating) and an eight-question FAQPage. `/trade` carries BreadcrumbList and WebApplication (`/trade#app`).
 - Playwright at 390px and 1280px: the new About paragraph and the `/trade` header match the existing styling, with no horizontal overflow.
-- Typecheck clean. Lint clean apart from the pre-existing warning. 2,521 tests pass.
+- Typecheck clean. Lint clean apart from the pre-existing warning. 2,521 tests pass. The same checks were re-run after the merge, including a second full build.
 - Landed on main without `[deploy]`, so it rides the 08:00 UTC release.

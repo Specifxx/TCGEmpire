@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cache } from "react";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
 import { DeckLibrary, type LibraryDeck } from "@/components/decks/DeckLibrary";
-import { currentTotals, liveDecks } from "@/lib/published-decks-server";
+import { guidesForTool } from "@/lib/content/tool-guides";
+import { currentTotals, liveDecksOrNull } from "@/lib/published-decks-server";
 import { pageAlternates } from "@/lib/seo";
 
 // The public deck library (2026-09-26, DECISIONS.md "Public decks"). ISR: one
@@ -10,15 +14,30 @@ import { pageAlternates } from "@/lib/seo";
 // run client-side over this list.
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "Riftbound Decks — Player Decklists Priced Across Stores",
-  description:
-    "Riftbound decks published by players, each priced card by card at the cheapest store in your market. Filter by legend, domain and budget.",
-  alternates: pageAlternates("/decks"),
-};
+// One read of the library per render, shared by generateMetadata and the page
+// (React's request cache, not a data cache: nothing here outlives the render,
+// so no loader is wrapped in another cache — src/lib/db.ts rule 6).
+const loadDecks = cache(() => liveDecksOrNull());
+
+// Noindexed while the library is empty (2026-09-26, "Blog and tools, joined
+// up"): with no decks it is a heading, an intro and a button — the thin,
+// indexable page an ad review marks down. The same rule the legend pages
+// already follow; the intro renders either way, and the first published deck
+// makes the page indexable on its next render (publishing revalidates it).
+// A failed read (null) is not an empty library: the page stays indexable.
+export async function generateMetadata(): Promise<Metadata> {
+  const decks = await loadDecks();
+  return {
+    title: "Riftbound Decks — Player Decklists Priced Across Stores",
+    description:
+      "Riftbound decks published by players, each priced card by card at the cheapest store in your market. Filter by legend, domain and budget.",
+    alternates: pageAlternates("/decks"),
+    ...(decks !== null && decks.length === 0 ? { robots: { index: false, follow: true } } : {}),
+  };
+}
 
 export default async function DecksPage() {
-  const decks = await liveDecks();
+  const decks = (await loadDecks()) ?? [];
   const totals = await currentTotals(decks);
   const rows: LibraryDeck[] = decks.map((d) => ({
     slug: d.slug,
@@ -40,10 +59,10 @@ export default async function DecksPage() {
     <div>
       <Breadcrumbs trail={[{ name: "Decks", href: "/decks" }]} />
       <h1 className="text-2xl font-extrabold text-white">Riftbound decks</h1>
-      <p className="mt-1 max-w-2xl text-sm text-slate-400">
-        Decklists published by players on RiftCompare, each priced card by card at the cheapest store in your market — so a
-        deck&apos;s cost is what it takes to build today, not one store&apos;s price for every card.
-      </p>
+      {/* How a deck's total is worked out and what a missing one means
+          (2026-09-26, "Blog and tools, joined up"): lib/content/hub-intros.ts,
+          in place of a one-sentence lede. */}
+      <HubIntro path="/decks" />
 
       {rows.length === 0 ? (
         <section className="card-surface mt-6 p-8 text-center">
@@ -75,6 +94,9 @@ export default async function DecksPage() {
           </p>
         </>
       )}
+
+      {/* The guides for reading a list, after the library. */}
+      <RelatedGuides guides={guidesForTool("/decks")} className="card-surface mt-8 p-5" />
     </div>
   );
 }

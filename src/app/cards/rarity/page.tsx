@@ -5,6 +5,8 @@ import { RARITY_FACETS } from "@/lib/facets";
 import { HubIntro } from "@/components/HubIntro";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // /cards/rarity — the rarity-system hub, added 2026-08-20 to target the
 // "Riftbound cards rarity" query directly and to fix a real gap in the site's
@@ -76,7 +78,7 @@ export default async function CardsByRarityPage() {
         <HubIntro path="/cards/rarity" />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {RARITY_FACETS.map((f) => {
           const n = countByLabel.get(f.label) ?? 0;
           return (
@@ -105,6 +107,8 @@ export default async function CardsByRarityPage() {
           <Link href="/browse" className="text-brand-400 hover:underline">filterable card database</Link> to search and sort every filter at once.
         </p>
       </section>
+
+      <RelatedGuides guides={guidesForTool("/cards/rarity")} className="card-surface p-5" />
     </div>
   );
 }

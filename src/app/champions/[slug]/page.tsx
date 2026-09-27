@@ -16,13 +16,15 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForChampion } from "@/lib/content/related-guides";
 
 // riftdecks.com's /legends/<champion> pages rank #1 for champion queries with
 // build price and win rate in the snippet; ours 404'd entirely. This is the
 // cross-set topical hub for "<champion> riftbound" — every printing of every
 // card featuring them, priced live, which is the one thing we can do better than
-// a deck site: they show one TCGplayer USD figure, we show the cheapest
-// delivered price across five markets.
+// a deck site: they show one TCGplayer USD figure, we show the cheapest in-stock
+// price in each of our six markets.
 export const revalidate = 86400;
 
 export async function generateStaticParams() {
@@ -288,6 +290,13 @@ export default async function ChampionPage({ params }: { params: { slug: string 
         </div>
       </section>
 
+      {/* This champion's own articles — any whose tags name them — topped up
+          with the guides behind /champions (lib/content/related-guides.ts
+          guidesForChampion). After the cards, and before the section below
+          because that one carries the eBay search: our writing leads the
+          commercial block (2026-09-26, "Blog and tools, joined up"). */}
+      <RelatedGuides guides={guidesForChampion(champ)} className="card-surface p-5" />
+
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Cheapest way to build {champ.name}</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
@@ -296,7 +305,8 @@ export default async function ChampionPage({ params }: { params: { slug: string 
               The cheapest {champ.name} printing currently listed is {formatMoney(cheapest, currency)}. Because each
               printing is its own product with its own price, the base print is usually far cheaper than the
               alternate-art or Signature version of the same card — open any card above to compare every store
-              side by side on delivered cost, or use the{" "}
+              side by side, cheapest first by item price with the delivered total where the store publishes its
+              postage, or use the{" "}
               <Link href="/tools/best-basket" className="text-brand-400 hover:underline">best-basket tool</Link> to
               buy several at once for the least.
             </>

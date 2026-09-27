@@ -52,3 +52,24 @@ test("every market homepage renders the table directly under the hero", () => {
   for (const col of ["Card", "Set", "Cheapest", "Stores in stock", "7-day change"]) assert.ok(t.includes(`>${col}</th>`), col);
   assert.match(t, /See all \{totalPriced\.toLocaleString\("en-US"\)\} card prices →/);
 });
+
+// 2026-09-26 ("Blog and tools, joined up" in DECISIONS.md): the table says how
+// to read it, BELOW the rows so nothing pushes the first row down on a phone,
+// in words that match what lib/price-table.ts computes.
+test("the table explains its columns under the rows, and links the method and the guide", () => {
+  const t = read("src/components/home/PriceTodayTable.tsx");
+  const rowsEnd = t.lastIndexOf("</table>");
+  const explain = t.indexOf("is the lowest in-stock item price we track in");
+  assert.ok(rowsEnd > 0 && explain > rowsEnd, "the explanation sits after the rows, never above them");
+  assert.match(t, /from a store or eBay, with postage extra/, "Cheapest is min(the market low, the tracked eBay listing), item prices");
+  // The 7-day change reads the weekly GLOBAL series (cheapest across AU/US/UK/SG
+  // in USD), so it must not read as this market's own history.
+  assert.match(t, /cheapest across Australia, the US, the UK and Singapore, in US dollars\), not this market&apos;s own history/);
+  assert.match(read("src/lib/price-table.ts"), /country: GLOBAL_HISTORY_COUNTRY/);
+  assert.match(t, /▼ green = cheaper worldwide this week\./);
+  for (const href of ['href="/methodology"', 'href="/guides/why-riftbound-card-prices-change"']) assert.ok(t.includes(href), href);
+  // A region home adds its own buying guide; "/" leads the band below with the
+  // six-market one instead.
+  assert.match(read("src/components/home/RegionHome.tsx"), /buyingGuide=\{guideSlug \? \{ href: `\/blog\/\$\{guideSlug\}`/);
+  assert.doesNotMatch(read("src/app/page.tsx"), /buyingGuide=/);
+});

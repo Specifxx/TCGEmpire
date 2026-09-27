@@ -33,8 +33,12 @@ const codeOnly = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\/
 // an ancestor's width under any srcset, DPR or CSS-timing condition.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the homepage blog teaser's hero fills its aspect box instead of sizing itself", () => {
-  const src = codeOnly(read("src/components/home/LatestPosts.tsx"));
+// Re-pointed 2026-09-26: the homepage's blog-teaser rows (LatestPosts.tsx, the
+// component this fix was first made in) were replaced by the editorial band,
+// EditorialHub.tsx, whose one image is its lead news post's hero. The same
+// invariant applies to it.
+test("the homepage editorial band's hero fills its aspect box instead of sizing itself", () => {
+  const src = codeOnly(read("src/components/home/EditorialHub.tsx"));
   const at = src.indexOf("aspect-[1.91/1]");
   assert.ok(at >= 0, "expected the fixed-aspect hero box");
   const block = src.slice(at, at + 700);

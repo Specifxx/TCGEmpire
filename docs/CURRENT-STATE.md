@@ -103,7 +103,7 @@ longer lands on its entry.
   counts only ended subscriptions. Compare cohorts by `PREMIUM_COPY_VERSION`
   (`price-2026-09-26` from the cut).
   [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215), [2026-09-23](../DECISIONS.md#L10924),
-  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14292)
+  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14553)
 - **Tiers (lineup of 2026-09-25, prices of 2026-09-26):** Plus, $2.99/mo or
   $23.99/yr, is
   **ad-free**, has the full Deal Finder (with "Only my cards") and Rising
@@ -130,7 +130,7 @@ longer lands on its entry.
   (`introRenewalsRemaining`).
   [2026-09-11](../DECISIONS.md#L4428), [2026-09-24](../DECISIONS.md#L12120),
   [2026-09-25](../DECISIONS.md#L12322), [2026-09-25](../DECISIONS.md#L12842),
-  [2026-09-25](../DECISIONS.md#L13067), [2026-09-26](../DECISIONS.md#L14292)
+  [2026-09-25](../DECISIONS.md#L13067), [2026-09-26](../DECISIONS.md#L14553)
 - **Gates:** `isPremium(user)` defaults to the Plus minimum; ads read
   `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`):
   an unknown price is Premium, so every retired Plus Price must be listed in
@@ -158,7 +158,7 @@ longer lands on its entry.
   subscribers may be moved onto a lower Price, never a higher one.
   [2026-09-11](../DECISIONS.md#L4642), [2026-09-14](../DECISIONS.md#L5971),
   [2026-09-10](../DECISIONS.md#L3990), [2026-09-22](../DECISIONS.md#L10328),
-  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14292)
+  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14553)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
@@ -229,8 +229,18 @@ longer lands on its entry.
   [2026-09-21](../DECISIONS.md#L10095)
 - **Header:** "Database" (→ `/browse`) shows at every width. Card search has
   its own row until xl, then sits inline. The theme toggle is in the header
-  from lg, in the menu below that. [2026-09-21](../DECISIONS.md#L9368),
-  [2026-09-21](../DECISIONS.md#L10095), [2026-09-23](../DECISIONS.md#L11201)
+  from lg, in the menu below that. "Tools" (→ `/tools`) joins Blog from xl
+  only (owner's brief, 09-26; the lg row has ~5px of slack).
+  [2026-09-21](../DECISIONS.md#L9368),
+  [2026-09-21](../DECISIONS.md#L10095), [2026-09-23](../DECISIONS.md#L11201),
+  [2026-09-26](../DECISIONS.md#L14553)
+- **Footer:** the always-visible row is Home, Blog, Guides, Tools, About us,
+  Editorial policy, Methodology, Who writes this, Contact & feedback, Privacy
+  policy, Terms of service (the site map stays collapsed on `/`). Privacy and
+  Terms are also in the rail/menu Help group (`hideInFooter`). `FooterAds`
+  renders no banner pair on /about, /authors(/*), /contact, /editorial-policy,
+  /methodology, /privacy, /support and /terms; the six mini-games carry no
+  in-page pair. [2026-09-26](../DECISIONS.md#L14553)
 - **1024–1279 is its own band** (~704px of content): the filter sidebar
   waits for xl, card art is 160px (320 from xl), and stickies use
   `lg:top-36 xl:top-20`. [2026-09-23](../DECISIONS.md#L11201)
@@ -255,13 +265,17 @@ longer lands on its entry.
   "Sign up free" at every width; below sm the market switcher lives in the
   menu's top bar. [2026-09-24](../DECISIONS.md#L11756)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417)
-- **Homepage order:** Recently viewed (returning visitors), Top Deals (opening
+- **Homepage order:** hero, the price table, then the editorial band
+  (`EditorialHub`: Start here, Latest news, Market updates — owner, 09-26,
+  reversing 09-21 for this one band; two rows per column on phones), then
+  Recently viewed (returning visitors), Top Deals (opening
   with the free "Cheapest on eBay" block, above its pills and columns), eBay
   Picks (the newest released set), the popular carousel (its "Most popular"
   tab back, owner's call; the ItemList stays with the price table),
   Riftle/pack-sim, How it works.
   [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
-  [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190)
+  [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190),
+  [2026-09-26](../DECISIONS.md#L14553)
 - **Overlays:** `ui/Dialog` portals to body; Escape closes only the top
   layer and focus returns to the opener. Corner nudges share one corner
   string. [2026-09-23](../DECISIONS.md#L11348)
@@ -280,14 +294,13 @@ longer lands on its entry.
   DESCRIPTIONS lead with "Compare Riftbound card prices", and the share
   previews, JSON-LD (`WebApplication` at `/#app`) and `/llms.txt` say
   "Riftbound price comparison engine". Shipping is never called "live":
-  comparison pages claim "delivered cost", and only Best Basket claims
-  shipping "measured at each store's checkout".
-  [2026-09-27](../DECISIONS.md#L14553) `/browse`
+  comparison pages say "cheapest first, postage shown where known", and only
+  Best Basket claims shipping "measured at each store's checkout". `/browse`
   owns "riftbound card list"; the Radiance spoiler tracker is the only title
   with "radiance" + "spoiler". No store count in any OTHER page title
   (Singapore's "11 Stores" excepted). Bare hreflang `en` is the US page; the
   EU pages carry one en-XX per EU country served.
-  [2026-09-24](../DECISIONS.md#L11756)
+  [2026-09-24](../DECISIONS.md#L11756), [2026-09-27](../DECISIONS.md#L14781)
   [2026-09-17](../DECISIONS.md#L7894), [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9222), [2026-09-22](../DECISIONS.md#L10403)
 - **Card pages are always indexable** (09-17 reversed Phase 7a); only
@@ -300,6 +313,30 @@ longer lands on its entry.
   predict prices. Quote leaks only from photographed cards; half-known cards
   stay out of `manual-cards.json`. [2026-09-18](../DECISIONS.md#L8476),
   [2026-09-22](../DECISIONS.md#L10683)
+- **What the site says about itself is true** (`tests/site-claims.test.ts`,
+  every page, component and published article): comparisons are "cheapest
+  first by item price, with the delivered total shown where the store
+  publishes its postage" — never "ranked by delivered cost", "shipping
+  included" or "no hidden fees"; six markets, never five; two imports a day,
+  never "real-time"; listings, never sold/completed sales. Only Best Basket
+  prices whole orders with measured postage. Store counts come from
+  `RETAILER_LIST`, never typed. A correction bumps the article's `updated`.
+  [2026-09-26](../DECISIONS.md#L14553)
+- **Authorship is the owner's statement:** the site is built and run by one
+  person, Bill (Person author `/authors/bill`, the Organization's founder).
+  Articles are "drafted with AI assistance, then edited and fact-checked by
+  Bill" with figures from our own database (`ARTICLE_PROCESS`,
+  lib/content/authors.ts). Add nothing about him he has not confirmed; every
+  byline must resolve in the registry. [2026-09-26](../DECISIONS.md#L14553)
+- **Blog ↔ tools:** `lib/content/tool-guides.ts` maps each tool/data route to
+  at most three guides, read both ways — `RelatedGuides` after the page's data
+  and before any affiliate block (outside paywalls; /movers and the signed-out
+  Deal Finder keep their pinned eBay CTAs first), and an article's "Related tools" row. Data pages carry a
+  visible, page-specific intro under the H1 (`HubIntro`, `[label](/path)`
+  links); /deck and set pages keep theirs under the tool/grid. The 09-26
+  "Mobile first" entry covers the homepage, card page, thumbnails and
+  /browse's sort only. Every published article links a tool (ratchet test).
+  [2026-09-26](../DECISIONS.md#L14553)
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)
@@ -391,7 +428,11 @@ longer lands on its entry.
   (`tests/methodology-breaks.test.ts`), and the Index and portfolio are
   chain-linked across a break. Rising Cards is the exception: it keeps its
   pre-09-23 signals by the owner's call until cards have five weekly points
-  on the new basis. [2026-09-25](../DECISIONS.md#L12842), [2026-09-25](../DECISIONS.md#L13043)
+  on the new basis. /movers is never blank through a break: until any card
+  has a week on the new basis (and only within the grace window) it shows the
+  last week BEFORE the switch, labelled — opt-in, so no other surface shows a
+  stale price as today's. [2026-09-25](../DECISIONS.md#L12842), [2026-09-25](../DECISIONS.md#L13043),
+  [2026-09-27](../DECISIONS.md#L14723)
 - **Rules text:** `Card.description` comes from Riot's gallery for every set.
   Origins, Proving Grounds, Spiritforged and Unleashed are filled by
   `scripts/backfill-card-text.ts` (maintenance task `backfill-card-text`,

@@ -3,6 +3,8 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
+import { RelatedGuides } from "@/components/RelatedGuides";
 import { PublishedDeckView, type DeckViewLine, type BestStore, type CheapestPrinting } from "@/components/decks/PublishedDeckView";
 import { COUNTRY_LIST, pickPrice, type Country } from "@/lib/country";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
@@ -14,6 +16,7 @@ import { ldJson } from "@/lib/jsonld";
 import { cardHref } from "@/lib/card-url";
 import { championForCardName } from "@/lib/champions";
 import { deckTotals, massEntry, type MarketTotals } from "@/lib/published-decks";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // A published deck (2026-09-26). ISR, an hour; nothing is prerendered at build
 // (no generateStaticParams — CLAUDE.md), and publishing/hiding revalidates it.
@@ -197,6 +200,14 @@ export default async function DeckPage({ params }: { params: { slug: string } })
         basketHref={`/tools/best-basket?list=${encodeURIComponent(base64(listText))}`}
         builderHref={`/deck?list=${encodeURIComponent(base64(listText))}`}
       />
+      {/* Each card's Buy link is its cheapest store through affiliateUrl(),
+          eBay and TCGplayer included, so the disclosure sits right under the
+          list (2026-09-26: the page had none of its own). */}
+      <AffiliateDisclosure partner="both" />
+      {/* The library's guides, after the deck (2026-09-26, "Blog and tools,
+          joined up"): a deck page reuses /decks' entry. Static links from
+          memory, no query. */}
+      <RelatedGuides guides={guidesForTool("/decks")} className="card-surface mt-8 p-5" />
     </div>
   );
 }

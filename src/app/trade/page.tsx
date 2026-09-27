@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { HubIntro } from "@/components/HubIntro";
 import { TradeCalculator } from "@/components/TradeCalculator";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { ldJson, webApplication } from "@/lib/jsonld";
 
@@ -60,6 +62,9 @@ export default function TradePage() {
           ),
         }}
       />
+      {/* The guides behind a fair trade, after the calculator (2026-09-26,
+          "Blog and tools, joined up"). Static, like the rest of this page. */}
+      <RelatedGuides guides={guidesForTool("/trade")} className="card-surface mt-8 p-5" />
     </div>
   );
 }

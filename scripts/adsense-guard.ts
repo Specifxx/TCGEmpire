@@ -25,6 +25,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, relative, extname } from "node:path";
 import { execSync } from "node:child_process";
 import { STATIC_PAGE_DATES } from "../src/lib/static-page-dates";
+import { adsTxtProblems } from "./ads-txt-check";
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -752,9 +753,12 @@ async function liveChecks(base: string) {
     const ct = res.headers.get("content-type") ?? "";
     if (ct.includes("text/plain")) ok(`/ads.txt content-type is ${ct}`);
     else fail(`/ads.txt content-type is "${ct}" (expected text/plain)`);
-    const expectedBody = `google.com, ${expectedPub}, DIRECT, f08c47fec0942fa0\n`;
-    if (text === expectedBody) ok("/ads.txt body matches byte-for-byte");
-    else fail("/ads.txt body mismatch", `expected: ${JSON.stringify(expectedBody)}\ngot:      ${JSON.stringify(text.slice(0, 200))}`);
+    // Not byte-for-byte any more: since 2026-08-21 the partner records follow
+    // the Google line, and an exact match failed the correct production file.
+    // The rules are shared with adsense-verify.ts (scripts/ads-txt-check.ts).
+    const problems = adsTxtProblems(text, expectedPub);
+    if (problems.length === 0) ok("/ads.txt starts with the Google DIRECT record, and every line is a well-formed record");
+    else fail("/ads.txt body is not a valid ads.txt", problems.slice(0, 5).join("\n"));
   } catch (e) {
     fail("/ads.txt fetch failed", String(e));
   }
