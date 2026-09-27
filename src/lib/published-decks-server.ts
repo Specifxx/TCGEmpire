@@ -22,6 +22,10 @@ const RESOLVE_SELECT = {
   nameNormalized: true,
   setCode: true,
   collectorNumber: true,
+  // Read by resolveDeckLines to prefer the standard printing over a promo,
+  // alt-art, Signature or overnumbered copy of the same card.
+  variant: true,
+  isPromo: true,
   type: true,
   domain: true,
   lowestPriceCents: true,

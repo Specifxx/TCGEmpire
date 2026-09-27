@@ -79,6 +79,7 @@ on:
           - grandfather-plus-adfree # ONE-OFF (2026-09-14): pin every CURRENT Plus subscriber to premiumTierFloor='premium' so moving ad-free from Plus to Premium takes nothing away from someone who already paid for it. Idempotent. Report-only unless `apply` is ticked.
           - audit-inbox      # read-only dump of the four /admin/messages queues (contact messages, store suggestions, feedback, wrong-price/card reports). Emails reduced to their domain and IPs never printed — job logs are collaborator-visible and these are the tables where the public typed their own address. ALL=1 via the `apply` input shows every row rather than only open ones.
           - close-inbox-items # THE WRITE half of audit-inbox: sets the status each worked item actually earned (added / rejected / FIXED / HIDDEN), row by named row. Never a blanket "mark all done" — a suggestion that could NOT be added is stamped rejected with the reason, not added. Refuses any row whose status has moved since. Report-only unless `apply` is ticked.
+          - fix-card-names   # ONE-OFF (2026-09-27): renames VEN-155 "Yordle, Heart of the Tempest" → "Kennen, Heart of the Tempest" and OGS-019 (+ promo) "Master, Wuju Bladesman - Starter" → "Master Yi, Wuju Bladesman": name, nameNormalized, slug, and published decks built on them. Old slugs keep resolving (lib/card-slug-renames.ts). Also REPORTS other cards whose names look the same. Report-only unless `apply` is ticked; run `revalidate-now` after applying.
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
           - audit-egress     # READ-ONLY forensics on the ~2 GB/day Neon transfer burn that has now killed nine projects in a row (each dies 2-3 days after cutover). Reads ONLY statistics views — pg_stat_database, pg_stat_user_tables and, if present, pg_stat_statements — and attributes the churn to a TABLE and then to a QUERY SHAPE, with rows costed into estimated bytes. Run it a few hours after a cutover, not minutes: Neon resets these counters whenever the compute endpoint restarts, so the window is short and one import run inside it dominates the extrapolation.
           - audit-indexability # READ-ONLY census of how many card pages currently noindex themselves AND drop out of the sitemap, and why. Reports the CROSS-DATABASE JOIN HEALTH first (what share of PriceHistory cardIds still resolve against the live Card table), because when that join breaks every card reads as 0 days of history and every out-of-stock card noindexes at once — silently, with no error and no deploy to blame, which looks exactly like an unexplained traffic decline. RUN THIS FIRST when traffic drops after any database rotation, restore or catalogue rebuild.
@@ -131,7 +132,7 @@ on:
         default: RM4
         options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_3]
       apply:
-        description: "audit-premium-vs-stripe / fix-promo-variants / close-inbox-items / apply-intro-to-trialists / backfill-card-text: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
+        description: "audit-premium-vs-stripe / fix-promo-variants / close-inbox-items / fix-card-names / apply-intro-to-trialists / backfill-card-text: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
         type: boolean
         default: false
       premium_until:
@@ -5391,6 +5392,12 @@ jobs:
       - name: Close the inbox items that were actually worked
         if: inputs.task == 'close-inbox-items'
         run: npx tsx scripts/close-inbox-items.ts ${{ inputs.apply && '--apply' || '' }}
+
+      # One-off card-name correction (2026-09-27, DECISIONS.md "Deck resolver
+      # and Legend names"). Idempotent: a corrected row prints "already fixed".
+      - name: Fix wrongly imported card names (VEN-155 Kennen, OGS-019 Master Yi)
+        if: inputs.task == 'fix-card-names'
+        run: npx tsx scripts/fix-card-names.ts ${{ inputs.apply && '--apply' || '' }}
 
       - name: Audit store health (read-only — which tracked stores have zero listings)
         if: inputs.task == 'audit-store-health'

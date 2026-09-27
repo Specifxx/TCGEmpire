@@ -3,6 +3,7 @@ import { getPriceHistory } from "@/lib/price-history";
 import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
+import { cardWhereParam } from "@/lib/card-slug-renames";
 
 // Public price series for one card (weekly-bucketed — see price-history.ts's
 // collapseToWeekly) — the per-card companion to /api/v1/cards.json's
@@ -11,7 +12,8 @@ import { SITE_URL } from "@/lib/site";
 // getPriceHistory's existing internal use.
 export const revalidate = 172800;
 
-const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
+// Renamed slugs resolve too (lib/card-slug-renames.ts).
+const whereParam = cardWhereParam;
 
 function parseMarket(v: string | null): Country {
   const up = (v ?? "").toUpperCase();

@@ -4990,7 +4990,7 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
           "stealthy-pursuer-ogn-177-298",
           "the-arena-s-greatest-ogn-290-298",
           "aspirant-s-climb-ogn-276-298",
-          "master-wuju-bladesman-starter-ogs-019-024",
+          "master-yi-wuju-bladesman-ogs-019-024",
         ],
       },
       {
@@ -5114,7 +5114,7 @@ We'll update this guide the moment any further changes to either ban list are an
         "stealthy-pursuer-ogn-177-298",
         "the-arena-s-greatest-ogn-290-298",
         "aspirant-s-climb-ogn-276-298",
-        "master-wuju-bladesman-starter-ogs-019-024",
+        "master-yi-wuju-bladesman-ogs-019-024",
       ],
     },
     body: `Riot dropped a surprise mid-cycle ban announcement today, ahead of Vendetta's own 31 July release — three new Standard bans, and the first-ever ban list built specifically for **Constructed 2v2**. Here's exactly what changed and why.

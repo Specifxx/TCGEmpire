@@ -14824,3 +14824,55 @@ This change follows its wording. The descriptions, the WebSite node and llms.txt
 - Playwright at 390px and 1280px: the new About paragraph and the `/trade` header match the existing styling, with no horizontal overflow.
 - Typecheck clean. Lint clean apart from the pre-existing warning. 2,521 tests pass. The same checks were re-run after the merge, including a second full build.
 - Landed on main without `[deploy]`, so it rides the 08:00 UTC release.
+
+## Deck resolver and Legend names: standard printings first, and two Legends named right at the source — 2026-09-27
+
+**Why.** Two card-matching bugs the owner reported.
+
+1. `resolveDeckLines` (`lib/deck.ts`) kept the first row, and rows come back cheapest first. Whichever printing was cheapest therefore won:
+   - Challenge OGN-128 resolved to its promo;
+   - Treasure Hunter SFD-130 resolved to its promo;
+   - "Kennen, Heart of the Tempest" resolved to the VEN-197* Signature.
+   Published decks, the admin import, Best Basket and the `/deck` pricer all priced the wrong object.
+2. Two Legends had the wrong names:
+   - VEN-155 was "Yordle, Heart of the Tempest";
+   - OGS-019 and its promo were "Master, Wuju Bladesman - Starter".
+
+**What.**
+- **Standard printing first.** All three steps (set + number, exact name, name-contains) take the cheapest STANDARD printing. Standard (`isStandardPrinting`) means:
+  - not a promo;
+  - no variant;
+  - a plain collector number: digits or a rune's R-number, not lettered, not a Signature `*`, not above the set total.
+  A non-standard printing wins only when there is no standard one: a promo-only card, or an explicit pin like `(VEN-197*)`, which matches nothing but the Signature. Every caller now selects `variant` and `isPromo`: published decks/admin import (`RESOLVE_SELECT`), Best Basket and `/deck`'s metadata; `/api/deck/price` already did. Consequence: a promo pinned by number, "(OGN-128)", now resolves to the standard card, because the two share the number.
+- **Legend names, at the source.** `lib/legend-name.ts` is now shared by `scripts/sync-cards.ts`, `prisma/seed.ts`, `scripts/fetch-set-official.ts` and `scripts/import-set-cards.ts`.
+  - **OGS-019.** RiftScribe names Proving Grounds' Legends "… - Starter". sync-cards slugified the label with the title, missed card-names.json's `master-yi-wuju-bladesman`, and fell back to the slug's first token. seed.ts had a fix, but it kept the label in the name. sync-cards had none, and rewrites every name on each run, so the bad name came back on every sync.
+    - The label is now stripped.
+    - The fallback takes the longest leading run of slug tokens that is a known champion, never the first token.
+    - Over all 100 Legends in the snapshot, exactly four names change: OGS-017 Annie, 019 Master Yi, 021 Lux and 023 Garen each lose " - Starter".
+  - **VEN-155.** The gallery importer took `tags[0]` as the champion, and Kennen's Legend lists "Yordle" first. It now:
+    - takes a tag that is a known champion wherever it sits;
+    - failing that, the first tag that isn't a region or creature type;
+    - failing that, none.
+    fetch-set-official also writes every tag, so an old dump's lone "Yordle" is refused rather than used.
+- **The stored rows.** `scripts/fix-card-names.ts`, also maintenance.yml's `fix-card-names` task, is report-only unless `apply` is ticked. It sets name, nameNormalized and slug on the three rows, and updates the Legend name/slug and list text of published decks built on them. It refuses a row whose set/number doesn't match or whose new slug is taken, and prints "already fixed" on a re-run. It also REPORTS other cards whose name has a " - Starter" label or a "Prefix," that is no known champion.
+- **Old slugs keep working, in the lookup, not next.config.js.** The rows are renamed whenever the script runs, and config redirects only change with a deploy, so a config redirect would 404 the card for however long the two are out of step. `lib/card-slug-renames.ts` maps old → new.
+  - Every card route (page, OG image, `/llm/card`, history JSON) matches either slug.
+  - The card page's existing canonical check then 308s to whichever slug the row has.
+  - Article embeds and the ban-list table match either slug too.
+  - The three references to the old Master Yi slug (two ban-list embeds, `lib/banlist.ts`) now use the new one.
+
+**Other cards with the same kind of problem (listed, not changed).**
+- **OGS-017, 021 and 023** (Annie, Lux, Garen) carry the same " - Starter" label. The fixed sync drops it from their NAMES on its next run; their slugs keep "-starter-" unless the rename map and script gain a line each.
+- **"Yi, Meditative" (OGS-004) and "Yi, Honed" (OGS-009), plus their promos,** are RiftScribe's own unit names, while card-names.json slugs them `master-yi-…`. They are probably "Master Yi, …", but that needs checking against Riot's gallery before anything is renamed.
+- **"Allay, Eager Admirer" (UNL-041)** is a creature, not a champion. It is correct.
+- **Gallery-imported sets (VEN, RAD):** can only be checked against the database. The script's report covers that.
+
+**Verified.**
+- `tests/deck-resolve.test.ts` covers promo vs normal, Signature vs normal, overnumbered vs normal, alt-art vs normal, promo-only, runes, a pinned Signature, the contains fallback, and every caller's select. The one test that pinned "cheapest printing of the name" onto a promo now expects the standard card.
+- `tests/legend-name.test.ts` covers the naming paths, the whole snapshot, the importer wiring and the slug aliases.
+- A local Postgres, seeded the CI way with the broken rows re-created:
+  - the dry run reported the three fixes and the deck update;
+  - `--apply` wrote them; a second `--apply` printed "already fixed" three times;
+  - an old slug then found the renamed row through `cardWhereParam`.
+
+**Owner steps.** After the next release, run maintenance → `fix-card-names` (dry run), check the report, run it again with `apply` ticked, then `revalidate-now`.

@@ -145,7 +145,7 @@ async function buildBasket(
         const resolved = await resolveDeckLines(lines, (args) =>
           prisma.card.findMany({
             ...args,
-            select: { id: true, name: true, slug: true, nameNormalized: true, setCode: true, collectorNumber: true },
+            select: { id: true, name: true, slug: true, nameNormalized: true, setCode: true, collectorNumber: true, variant: true, isPromo: true },
             orderBy,
           })
         );

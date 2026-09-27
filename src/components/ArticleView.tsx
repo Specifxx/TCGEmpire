@@ -40,6 +40,7 @@ import { NewsletterSignup } from "./NewsletterSignup";
 import { setByCode } from "@/lib/constants";
 import { RADIANCE_SET_CODE } from "@/lib/sets/radiance";
 import { PostPriceTable } from "./CardPriceChip";
+import { currentSlug, withSlugAliases } from "@/lib/card-slug-renames";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -64,9 +65,10 @@ async function resolveEmbed(e: ArticleEmbed | undefined): Promise<CardTileData[]
   const select = cardTileSelect(DEFAULT_COUNTRY);
   try {
     if (e.slugs?.length) {
-      const rows = await prisma.card.findMany({ where: { slug: { in: e.slugs } }, select });
-      const bySlug = new Map(rows.map((r) => [r.slug, r]));
-      return e.slugs.map((sl) => bySlug.get(sl)).filter(Boolean) as unknown as CardTileData[];
+      // Renamed slugs match under either name (lib/card-slug-renames.ts).
+      const rows = await prisma.card.findMany({ where: { slug: { in: withSlugAliases(e.slugs) } }, select });
+      const bySlug = new Map(rows.map((r) => [currentSlug(r.slug ?? ""), r]));
+      return e.slugs.map((sl) => bySlug.get(currentSlug(sl))).filter(Boolean) as unknown as CardTileData[];
     }
     if (e.popular) {
       // Most-wanted: search demand, ties toward the dearer card, priced-only —

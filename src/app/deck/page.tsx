@@ -53,6 +53,8 @@ export async function generateMetadata({ searchParams }: { searchParams: { list?
           nameNormalized: true,
           setCode: true,
           collectorNumber: true,
+          variant: true,
+          isPromo: true,
           lowestPriceCents: true,
           lowestPriceCentsUs: true,
           lowestPriceCentsUk: true,

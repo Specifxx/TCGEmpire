@@ -368,6 +368,13 @@ longer lands on its entry.
 - **Sealed offers have three states** (open / sold out / unknown past 72h,
   `lib/sealed-offers.ts`); only open offers set a headline price or a store
   count. [2026-09-24](../DECISIONS.md#L11971)
+- **Deck lines resolve to the STANDARD printing** (`isStandardPrinting` in
+  `lib/deck.ts`): not a promo, alt-art, Signature or overnumbered copy, unless
+  no standard one exists or the line pins it (`(VEN-197*)`). Every resolver
+  caller selects `variant` and `isPromo`. A card slug that changes goes in
+  `lib/card-slug-renames.ts`, which keeps the old URL resolving, never in a
+  config redirect. Legend names come from `lib/legend-name.ts` in every
+  importer. [2026-09-27](../DECISIONS.md#L14828)
 - **Matching:** one `FOREIGN_LANG` pattern and one promo-set regex; a sealed
   listing's own title can veto its group. A plain store title (no chase
   signal) drops overnumbered/signature candidates before the cross-set

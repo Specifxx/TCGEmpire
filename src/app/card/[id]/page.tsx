@@ -63,6 +63,7 @@ import {
 } from "@/lib/content/card-narrative";
 import { guidesForCard } from "@/lib/content/related-guides";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { cardWhereParam } from "@/lib/card-slug-renames";
 
 // The comparison's ordering in one line, beside the link to /methodology#ordering
 // that explains it: item price first, postage only where the store states it
@@ -102,7 +103,8 @@ export function generateStaticParams(): { id: string }[] {
 }
 
 // Accept either the slug ("vayne-hunter-sfd-223-221") or the legacy cuid.
-const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
+// Renamed slugs resolve too (lib/card-slug-renames.ts).
+const whereParam = cardWhereParam;
 
 // The market the cached page is rendered on. Metadata MUST agree with it: the
 // snippet previously quoted the AU column + AU store count while the page body

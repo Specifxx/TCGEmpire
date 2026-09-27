@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { cardImageForOg } from "@/lib/card-image-url";
 import { CardOgImage, CARD_OG_SIZE } from "@/lib/card-og";
 import { ogPriceLines, type OgPriceCard } from "@/lib/og-price";
+import { cardWhereParam } from "@/lib/card-slug-renames";
 
 // Per-card share card: card art + name + lowest live price, so a shared /card link
 // unfurls as a price comparison (not just raw art). Replaces the plain-art OG that
@@ -18,7 +19,8 @@ export const size = CARD_OG_SIZE;
 export const contentType = "image/png";
 export const alt = "RiftCompare — Riftbound card price";
 
-const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
+// Renamed slugs resolve too (lib/card-slug-renames.ts).
+const whereParam = cardWhereParam;
 
 export default async function Image({ params }: { params: { id: string } }) {
   let card: (OgPriceCard & {

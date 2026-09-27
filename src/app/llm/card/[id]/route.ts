@@ -2,12 +2,14 @@ import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
+import { cardWhereParam } from "@/lib/card-slug-renames";
 
 // Clean markdown version of a card page for AI agents (linked from the card page's
 // `alternate` type=text/markdown). Per-region lowest prices + identity, no HTML.
 export const revalidate = 900;
 
-const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
+// Renamed slugs resolve too (lib/card-slug-renames.ts).
+const whereParam = cardWhereParam;
 const line = (label: string, cents: number | null, currency: string) =>
   `- ${label}: ${cents == null ? "no tracked in-stock listing" : formatMoney(cents, currency)}`;
 

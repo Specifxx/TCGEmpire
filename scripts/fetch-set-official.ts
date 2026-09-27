@@ -37,6 +37,7 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { SETS, nextUpcomingSet, newestReleasedSet, type SetInfo } from "../src/lib/constants";
+import { pickLegendChampion } from "../src/lib/legend-name";
 
 // Which set to scrape. Accepts a slug ("radiance") or a code ("RAD"); defaults to
 // whatever is next up, which is the set a spoiler-season run almost always means.
@@ -277,6 +278,7 @@ async function main() {
     energy?: number | null;
     might?: number | null;
     champion?: string;
+    tags?: string[];
   };
   const jsonCards: JsonCard[] = [];
   const seenIds = new Set<string>();
@@ -320,9 +322,13 @@ async function main() {
           rules: parsedAlt?.rules?.slice(0, 500) || undefined,
           energy,
           might,
-          // Legend cards carry their champion here, e.g. tags: ["Renekton"] on the
-          // "Butcher of the Sands" Legend — confirmed against the raw scrape.
-          champion: typeof o?.tags?.tags?.[0] === "string" ? o.tags.tags[0] : undefined,
+          // Legend cards carry their champion in their tags, e.g. ["Renekton"] on
+          // the "Butcher of the Sands" Legend — but not always FIRST: Heart of the
+          // Tempest (VEN-155) lists "Yordle" before "Kennen", and taking tags[0]
+          // named it "Yordle, Heart of the Tempest" (2026-09-27). All tags are
+          // kept so import-set-cards can re-pick; see lib/legend-name.ts.
+          champion: pickLegendChampion(o?.tags?.tags),
+          tags: Array.isArray(o?.tags?.tags) ? o.tags.tags.filter((t: unknown) => typeof t === "string") : undefined,
         });
       }
     }
