@@ -34,6 +34,8 @@ function PremiumRecoveryBeaconInner() {
     if (src === "recovery") firePremiumClickBeacon("recovery");
     else if (src === "offer") firePremiumClickBeacon("offer");
     else if (src === "welcome") firePremiumClickBeacon("welcome-email");
+    // The price-drop announcement's "compare the plans" link (2026-09-27).
+    else if (src === "price-drop-email") firePremiumClickBeacon("price-drop-email");
     else return;
     fired.current = true;
     const rest = new URLSearchParams(searchParams.toString());

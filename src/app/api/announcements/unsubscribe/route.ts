@@ -25,9 +25,15 @@ async function optOut(token: string) {
   return { ok: true as const, already: false, email: row.email };
 }
 
+// POST takes the token from a JSON body (the page's own flow) OR from the query
+// string: RFC 8058 one-click unsubscribe (Gmail / Apple Mail's "Unsubscribe"
+// button) POSTs the form body "List-Unsubscribe=One-Click" to the exact URL in
+// the List-Unsubscribe header, so the token must ride in that URL. The
+// price-drop announcement (lib/premium-offer.ts) sets that header.
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({} as { token?: string }));
-  const res = await optOut(typeof body?.token === "string" ? body.token : "");
+  const fromQuery = new URL(req.url).searchParams.get("token") ?? "";
+  const res = await optOut(typeof body?.token === "string" ? body.token : fromQuery);
   return NextResponse.json(res, { status: res.ok ? 200 : 400 });
 }
 

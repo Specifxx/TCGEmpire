@@ -120,6 +120,15 @@ export default async function SubscriptionMetricsPage({ searchParams }: { search
                   </p>
                 </>
               )}
+              {/* The 2026-09-26 price cut: subscribers still on a retired
+                  Price (the *_LEGACY_PRICE_IDS env lists), i.e. not yet moved
+                  down to the new prices in the Stripe dashboard. */}
+              {metrics.legacyPriceActive > 0 && (
+                <p className="mt-3 text-xs text-slate-500">
+                  {metrics.legacyPriceActive.toLocaleString()} active sub{metrics.legacyPriceActive === 1 ? " is" : "s are"} still on a retired
+                  (pre-2026-09-26) price.
+                </p>
+              )}
             </div>
             <div className="rounded-xl border border-ink-700 bg-ink-850 p-4">
               <h2 className="text-sm font-semibold text-white">Trial → paid</h2>

@@ -89,6 +89,12 @@ model User {
   // would have skipped everyone that campaign reached. Same additive/nullable
   // shape as the two stamps above.
   premiumOfferSentAt  DateTime?
+  // Dedupe stamp for the one-off price-drop announcement (2026-09-27, the same
+  // campaign machinery as premiumOfferSentAt above, repurposed — see
+  // lib/premium-offer.ts). A NEW column rather than reusing premiumOfferSentAt,
+  // because every account stamped by the "month on us" offer must still get
+  // this one. Set on a successful send only. Additive + nullable, no backfill.
+  priceDropEmailSentAt DateTime?
   // Set once when the early-adopter "first 100 users get Premium" comp is granted,
   // so the grant is idempotent (never re-granted / re-extended on re-runs).
   earlyPremiumGranted Boolean   @default(false)

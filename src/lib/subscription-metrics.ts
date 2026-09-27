@@ -11,7 +11,7 @@
 
 import type Stripe from "stripe";
 import { stripe } from "./stripe";
-import { tierFromPriceId } from "./premium";
+import { tierFromPriceId, isLegacyPriceId } from "./premium";
 
 // A Stripe subscription flattened to just what the metrics need — the shape the
 // pure function below operates on, so a test can build rows by hand.
@@ -111,6 +111,11 @@ export interface SubscriptionMetrics {
   // unconfigured) simply have plusActive === 0.
   plusActive: number;
   premiumActive: number;
+  // Active subs still billing against a RETIRED Price (STRIPE_PLUS_LEGACY_PRICE_IDS
+  // / STRIPE_PREMIUM_LEGACY_PRICE_IDS, lib/premium.ts). After the 2026-09-26
+  // price cut the owner moves everyone down at their next renewal; this is
+  // the count still waiting to be moved. 0 when neither list is set.
+  legacyPriceActive: number;
   ltvCents: number | null; // ARPU / churn — estimate; null when churn is 0/unknown
   trialsStarted: number;
   trialsConverted: number;
@@ -172,9 +177,11 @@ export function computeSubscriptionMetrics(rows: SubRow[], nowMs: number, cohort
   // need a common unit to be summed.
   let plusActive = 0;
   let premiumActive = 0;
+  let legacyPriceActive = 0;
   for (const r of active) {
     if (tierFromPriceId(r.priceId) === "plus") plusActive += 1;
     else premiumActive += 1;
+    if (isLegacyPriceId(r.priceId)) legacyPriceActive += 1;
   }
 
   const arpuCents = head.active > 0 ? Math.round(head.mrrCents / head.active) : 0;
@@ -220,6 +227,7 @@ export function computeSubscriptionMetrics(rows: SubRow[], nowMs: number, cohort
     annualActive: head.annualActive,
     plusActive,
     premiumActive,
+    legacyPriceActive,
     ltvCents,
     trialsStarted,
     trialsConverted,

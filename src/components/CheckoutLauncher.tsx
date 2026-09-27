@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { trackEvent } from "@/lib/analytics";
+import { firePremiumClickBeacon, trackEvent } from "@/lib/analytics";
 import { PREMIUM_COPY_VERSION, TIER_NAMES, type PremiumTierKey } from "@/lib/site";
 import type { StartSrc } from "@/lib/premium-start";
-import { recallPremiumSurface } from "@/lib/premium-surface";
+import { isPremiumSurface, recallPremiumSurface } from "@/lib/premium-surface";
 
 // The last step of /premium/start for a SIGNED-IN visitor: open Stripe.
 //
@@ -76,8 +76,15 @@ export function CheckoutLauncher({
   useEffect(() => {
     if (launched.current) return;
     launched.current = true;
+    // An email link straight into checkout (the price-drop announcement's
+    // ?src=price-drop-email) never passes through a page that fires the click
+    // beacon, so fire it here — once per mount, signed in (this component only
+    // renders for a signed-in visitor, so the PremiumClick row carries the
+    // account). The beacon also remembers the surface synchronously, so the
+    // recallPremiumSurface() in launch() stamps it on the checkout.
+    if (isPremiumSurface(src)) firePremiumClickBeacon(src);
     void launch();
-  }, [launch]);
+  }, [launch, src]);
 
   return (
     <div className="mx-auto w-full max-w-sm py-10 text-center">

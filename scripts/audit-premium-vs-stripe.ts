@@ -35,7 +35,7 @@
 import type Stripe from "stripe";
 import { prisma } from "../src/lib/db";
 import { stripe, stripeEnabled } from "../src/lib/stripe";
-import { tierFromPriceId, normalizeTier } from "../src/lib/premium";
+import { tierFromPriceId, normalizeTier, plusPriceIdsConfigured } from "../src/lib/premium";
 import { ENTITLED_STATUSES, priceIdFromSubscription } from "../src/lib/stripe-entitlement";
 
 const FIX = process.env.FIX === "1";
@@ -60,6 +60,9 @@ async function main() {
     for await (const s of stripe().subscriptions.list({ status, limit: 100 })) subs.push(s);
   }
   console.log(`Stripe: ${subs.length} ${[...ENTITLED_STATUSES].join("/")} subscription(s).\n`);
+  if (!plusPriceIdsConfigured()) {
+    console.log("::warning::No Plus price id in this environment — tier checks are SKIPPED (every price would read as Premium).\n");
+  }
 
   const problems: { email: string; sub: string; kind: Problem; detail: string }[] = [];
   let ok = 0;
@@ -116,9 +119,13 @@ async function main() {
     // (2b) does the DB record the tier they're actually paying for? Resolved
     // from the live price id — an unrecognized/retired price grandfathers to
     // "premium", same rule as the webhook and the nightly reconcile.
+    // SKIPPED when this process has no Plus price id at all (2026-09-26): with
+    // none in the environment every price resolves to "premium", and FIX
+    // would have stamped every Plus subscriber Premium. The maintenance step
+    // forwards STRIPE_PLUS_PRICE_ID / _ANNUAL_ / _LEGACY_PRICE_IDS for this.
     const liveTier = tierFromPriceId(priceIdFromSubscription(sub));
     const storedTier = normalizeTier(user.premiumTier);
-    if (liveTier !== storedTier) {
+    if (liveTier !== storedTier && plusPriceIdsConfigured()) {
       issue = true;
       problems.push({
         email: label,

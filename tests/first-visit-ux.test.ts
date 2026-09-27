@@ -52,3 +52,15 @@ test("price table: direction is not colour-only, rows have thumbnails, capped wi
   assert.match(t, /See all \{totalPriced/);
   assert.match(t, /href="\/browse"/);
 });
+
+test("top landing pages (blog posts, /movers) show after 7 s even on a first external or phone view", async () => {
+  const { LANDING_ENGAGED_MS, isLandingPage } = await import("../src/lib/signup-promo-gate");
+  for (const p of ["/blog/riftbound-heartsteel-overnumbered-cards", "/blog/where-to-buy-riftbound-radiance", "/blog/riftbound-radiance-spoilers", "/movers"]) {
+    assert.ok(isLandingPage(p), p);
+  }
+  assert.ok(!isLandingPage("/"));
+  assert.ok(!isLandingPage("/blog"));
+  const first = { views: 1, externalEntry: true, mobile: true, landing: true };
+  assert.equal(signupPromoEligible({ ...first, engagedMs: LANDING_ENGAGED_MS - 1 }), false);
+  assert.equal(signupPromoEligible({ ...first, engagedMs: LANDING_ENGAGED_MS }), true);
+});

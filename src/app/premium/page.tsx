@@ -165,22 +165,38 @@ const FAQ: { q: string; a: string }[] = [
         },
       ]
     : []),
-  {
-    q: "What happens when the trial ends?",
-    a: `If you haven't cancelled, the card on file is charged and your subscription continues automatically at whichever plan you chose — ${introFromLine()}${introOfferEnabled() ? " (the half-price months are for new subscribers)" : ""}. We email you a day or two before it converts.`,
-  },
+  // Trial questions only while a trial exists (PREMIUM_TRIAL_DAYS > 0; off by
+  // default since 2026-09-26) — this answer used to render unconditionally.
+  ...(premiumTrialEnabled()
+    ? [
+        {
+          q: "What happens when the trial ends?",
+          a: `If you haven't cancelled, the card on file is charged and your subscription continues automatically at whichever plan you chose — ${introFromLine()}${introOfferEnabled() ? " (the half-price months are for new subscribers)" : ""}. We email you a day or two before it converts.`,
+        },
+      ]
+    : []),
   {
     q: "How do I cancel?",
-    a: "From this page, use \"Manage subscription\" to open Stripe's billing portal and cancel in a couple of clicks — no email or phone call needed. You keep access until the end of the period you already paid for (or, during a trial, until it ends — and a trial cancelled before it ends is never charged).",
+    a: `From this page, use "Manage subscription" to open Stripe's billing portal and cancel in a couple of clicks — no email or phone call needed. You keep access until the end of the period you already paid for${
+      premiumTrialEnabled() ? " (or, during a trial, until it ends — and a trial cancelled before it ends is never charged)" : ""
+    }.`,
   },
   {
     q: "Is Plus really ad-free?",
-    a: `Yes. Plus and Premium both remove every ad on every page, on the website and in the app, from the moment you subscribe — the free trial included. It is the first thing Plus does${premiumPlusEnabled() ? `, and at ${tierMonthlyAmount("plus")}/mo it is the cheapest way to browse RiftCompare without ads` : ""}.`,
+    a: `Yes. Plus and Premium both remove every ad on every page, on the website and in the app, from the moment you subscribe${premiumTrialEnabled() ? " — the free trial included" : ""}. It is the first thing Plus does${premiumPlusEnabled() ? `, and at ${tierMonthlyAmount("plus")}/mo it is the cheapest way to browse RiftCompare without ads` : ""}.`,
   },
-  {
-    q: "Does my price ever go up?",
-    a: premiumLockInLine(),
-  },
+  // Only while a real, higher price is announced (2026-09-26): with none
+  // decided, the old answer ("the price goes up as the site grows, your rate
+  // doesn't") promised protection from a rise that isn't coming, days after
+  // the price was cut and existing subscribers were moved onto the new one.
+  ...(premiumPriceIncreaseAnnounced()
+    ? [
+        {
+          q: "Does my price ever go up?",
+          a: premiumLockInLine(),
+        },
+      ]
+    : []),
   {
     q: "Monthly or annual — what's the difference?",
     a: `Same features either way. Monthly is ${premiumPlusEnabled() ? `${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} for Plus or ` : ""}${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}${premiumPlusEnabled() ? " for Premium" : ""} with no commitment; annual is ${premiumPlusEnabled() ? `${tierAnnualAmount("plus")}/yr or ` : ""}${PREMIUM_ANNUAL_AMOUNT}/yr, billed once a year, which works out cheaper per month. Switch from monthly to annual anytime from your account once your first payment has gone through.`,
@@ -193,7 +209,7 @@ const FAQ: { q: string; a: string }[] = [
     ? [
         {
           q: "Can I upgrade from Plus to Premium later?",
-          a: "Yes — one click from this page once your first payment has gone through (plan changes aren't available during the free trial). You're only charged the prorated difference for the rest of your current billing period, on the same monthly or annual cycle, and Best Basket's store-by-store plan, Buy this list and Demand Finder unlock immediately.",
+          a: `Yes — one click from this page once your first payment has gone through${premiumTrialEnabled() ? " (plan changes aren't available during the free trial)" : ""}. You're only charged the prorated difference for the rest of your current billing period, on the same monthly or annual cycle, and Best Basket's store-by-store plan, Buy this list and Demand Finder unlock immediately.`,
         },
       ]
     : []),
@@ -215,13 +231,13 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   // the signed-out CTA copy; trialEligible still gates the actual checkout
   // flow once someone is signed in.
   const trialAvailable = premiumTrialEnabled() && !already && (!user || !dbUser?.trialStartedAt);
-  const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "9.99";
+  const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "4.99";
   const compactPrice = `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD === "month" ? "mo" : PREMIUM_PRICE_PERIOD}`;
   const annualLive = premiumAnnualEnabled();
   const annualCompact = `${PREMIUM_ANNUAL_AMOUNT}/yr`;
   const plusLive = premiumPlusEnabled();
   const plusAnnualLive = plusAnnualEnabled();
-  const plusPriceNumeric = tierMonthlyAmount("plus").replace(/[^0-9.]/g, "") || "4.99";
+  const plusPriceNumeric = tierMonthlyAmount("plus").replace(/[^0-9.]/g, "") || "2.99";
   // Real Stripe read, only for someone who's actually Premium right now — see
   // the function's own header for why this is a SEPARATE query from the
   // annual-switch nudge's (that one deliberately excludes trialing subs; this
@@ -335,36 +351,30 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
       </div>
 
       {/* Pricing */}
-      {/* THE LOCK-IN BANNER BELOW RENDERS IN BOTH STATES as of 2026-09-22
-          (owner: "we need to emphasis get premium now before the price
-          increases as the site grows"). It used to be gated on
-          premiumPriceIncreaseAnnounced(), so with no specific increase
-          announced — the state this site has been in since 2026-09-09 — the
-          entire reason to act today shrank to one 11px grey caption below the
-          pricing cards, which is where copy goes to be unread. The lock-in
-          guarantee is true whether or not a rise is scheduled (see
-          premiumLockInHeadline's comment for why every word of it is literally
-          what the billing code does), and it is the strongest honest argument
-          this page has. Announcing a real increase still upgrades the wording
-          automatically via one env var — no code change.
+      {/* THE LOCK-IN BANNER: only while a real, higher price is announced
+          (premiumPriceIncreaseAnnounced — NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT
+          set above today's price). From 2026-09-22 it rendered in both states,
+          the steady one saying "the price goes up as the site grows, your rate
+          doesn't". On 2026-09-26 the owner CUT the price and moved existing
+          subscribers down onto the new Prices, so that copy promised
+          protection from a rise nobody had decided — retired, see
+          lib/site.ts's lock-in block and DECISIONS.md, 2026-09-26.
 
-          It stays inside the `!already` gate: someone who is already Premium
-          is grandfathered, so "lock in before it rises" has nothing to say to
-          them and reads as a threat to the rate they already hold. */}
+          It stays inside the `!already` gate: someone who is already a member
+          has nothing to "lock in", and the banner would read as a threat to
+          the rate they already hold. */}
       {!already && (
         <>
-          <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
-            <p className="text-sm font-bold text-gold">{premiumLockInHeadline()}</p>
-            {premiumPriceIncreaseAnnounced() ? (
+          {premiumPriceIncreaseAnnounced() && (
+            <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
+              <p className="text-sm font-bold text-gold">{premiumLockInHeadline()}</p>
               <p className="mt-1 text-xs text-gold/80 [[data-theme=light]_&]:text-gold">
                 New subscribers will pay {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} once the change takes
                 effect. Subscribe today and keep {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for as long as your
                 subscription stays active — no action needed later.
               </p>
-            ) : (
-              <p className="mt-1 text-xs text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Client island, renders nothing until it resolves — see its own comment. */}
           <PremiumProofLine />
@@ -389,7 +399,9 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] text-slate-500">
             Cancel anytime · secure checkout by Stripe
           </p>
-          <p className="mx-auto mt-1 max-w-2xl text-center text-[11px] font-medium text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
+          {premiumPriceIncreaseAnnounced() && (
+            <p className="mx-auto mt-1 max-w-2xl text-center text-[11px] font-medium text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
+          )}
         </>
       )}
 

@@ -1,4 +1,17 @@
-import { SITE_NAME, SITE_URL, TIER_NAMES, premiumFromLine, type PremiumTierKey } from "./site";
+import {
+  SITE_NAME,
+  SITE_URL,
+  TIER_NAMES,
+  PREMIUM_PRICE_AMOUNT,
+  PREMIUM_PRICE_PERIOD,
+  premiumEffectiveMonthly,
+  premiumFromLine,
+  tierAnnualAmount,
+  tierMonthlyAmount,
+  type PremiumTierKey,
+} from "./site";
+import { premiumStartHref } from "./premium-start";
+import { PLUS_TARGET_ALERT_LIMIT } from "./alert-limits";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
 import { issueNoun } from "./price-report";
@@ -90,6 +103,19 @@ export function resendPayload(
   };
 }
 
+// The Brevo request body: the base fields, plus `textContent` and `headers`
+// only when given (exported for tests/premium-offer.test.ts).
+export function brevoPayload(
+  base: { sender: { name: string; email: string }; to: { email: string }[]; subject: string; htmlContent: string },
+  extras: SendEmailExtras = {},
+): Record<string, unknown> {
+  return {
+    ...base,
+    ...(extras.text ? { textContent: extras.text } : {}),
+    ...(extras.headers && Object.keys(extras.headers).length ? { headers: extras.headers } : {}),
+  };
+}
+
 export function isBrevoEnabled(): boolean {
   return !!process.env.BREVO_API_KEY;
 }
@@ -102,14 +128,17 @@ function parseFrom(raw: string): { name: string; email: string } {
   return { name: SITE_NAME, email: raw.trim() };
 }
 
-// Sends via Brevo (app.brevo.com) instead of Resend. Used ONLY for the weekly
-// digest to registered accounts (see lib/user-digest.ts) so that larger,
+// Sends via Brevo (app.brevo.com) instead of Resend. Used for the bulk sends
+// to registered accounts (lib/user-digest.ts, lib/premium-offer.ts …) so that larger,
 // recurring audience never eats into the Resend quota the rest of the app's
 // transactional email (verification, password reset, price alerts, the
 // opt-in newsletter) depends on. Free tier: 300 emails/day, no card required
 // — app.brevo.com → SMTP & API → API Keys. The sender address must be
 // verified inside Brevo separately from Resend's domain verification.
-export async function sendEmailBrevo(to: string, subject: string, html: string): Promise<boolean> {
+// `extras` mirrors sendEmail's: Brevo's /v3/smtp/email takes the plain-text
+// part as `textContent` and extra headers (List-Unsubscribe) as `headers`.
+// Callers that pass neither send exactly what they always did.
+export async function sendEmailBrevo(to: string, subject: string, html: string, extras: SendEmailExtras = {}): Promise<boolean> {
   const key = process.env.BREVO_API_KEY;
   if (!key) {
     console.warn(`[email] BREVO_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
@@ -121,7 +150,7 @@ export async function sendEmailBrevo(to: string, subject: string, html: string):
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ sender, to: [{ email: to }], subject, htmlContent: html }),
+      body: JSON.stringify(brevoPayload({ sender, to: [{ email: to }], subject, htmlContent: html }, extras)),
     });
     if (!res.ok) {
       console.warn(`[email] Brevo returned ${res.status} for "${subject}".`);
@@ -1303,80 +1332,160 @@ export async function sendTrialWelcomeEmail(to: string, opts: TrialWelcomeEmailO
   return sendEmail(to, subject, html);
 }
 
-// ─── One-off Premium offer to free-tier accounts ──────────────────────────────
-// See lib/premium-offer.ts for the audience, idempotency and the offer itself.
+// ─── One-off price-drop announcement to accounts not currently paying ─────────
+// See lib/premium-offer.ts for the audience, idempotency and how it is run.
 //
-// HONESTY RULES THIS TEMPLATE HOLDS ITSELF TO, because the site's own tests pin
-// them elsewhere (tests/premium-zero-today.test.ts): a real deadline date, never
-// a countdown or "only N left"; the price is premiumFromLine(), never a typed
-// number; and the mechanism is stated plainly — the extra days are added BY HAND
-// after the subscription lands, so the email must never imply checkout itself
-// grants a month. Two wordings, because two things are true:
-//   • trialDays > 0  — Stripe will run its normal trial; the owner then extends
-//     it to `offerDays` in total. "$0 today" is true here.
-//   • trialDays = 0  — this account already used its one trial, so checkout
-//     charges immediately; the owner adds a free month ON TOP. "$0 today" would
-//     be false here, so it isn't said.
+// Until 2026-09-27 this slot held the "a full month of Premium, on us" offer
+// (2026-09-10). The owner repurposed the campaign after the 2026-09-26 price
+// cut: "send emails to all non premium users saying premium is now $3.33 a
+// month and plus is now $1.99 a month, and give them links to subscribe" —
+// then kept Plus yearly at $23.99, so the Plus yearly figure is whatever
+// premiumEffectiveMonthly("plus") says ($2.00), never a typed "$1.99".
+//
+// HONESTY RULES THIS TEMPLATE HOLDS ITSELF TO (tests/premium-offer.test.ts):
+//   • Every price comes from lib/site.ts — the four amounts and
+//     premiumEffectiveMonthly(). Nothing typed here can drift from checkout.
+//   • The per-month figure of a yearly plan ALWAYS appears as "…/mo billed
+//     yearly", beside the yearly total. Quoted bare it would read as a monthly
+//     price nobody can buy.
+//   • No deadline, no countdown, no "spots left": the new prices are simply
+//     the prices. No "down from" figure either — the email states what things
+//     cost now, not a comparison the reader cannot check.
+//   • Each subscribe link goes through the real checkout entry
+//     (premiumStartHref → /premium/start) with the tier and plan preselected,
+//     so what the button says is what Stripe opens.
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+// Attribution for every link in the email: `src` is the PremiumClick source /
+// checkout surface (lib/premium-surface.ts) that /admin/premium and
+// scripts/funnel-report.ts group by; the utm_* trio is for GA4.
+export const PRICE_DROP_SRC = "price-drop-email" as const;
+export const PRICE_DROP_CAMPAIGN = "price-drop-2026-09";
+const PRICE_DROP_UTM = `utm_source=email&utm_medium=email&utm_campaign=${PRICE_DROP_CAMPAIGN}`;
+
+/** The four subscribe links, each opening checkout for exactly that tier and plan. */
+export function priceDropLinks(): { plusAnnual: string; plusMonthly: string; premiumAnnual: string; premiumMonthly: string; compare: string } {
+  const start = (tier: PremiumTierKey, plan: "monthly" | "annual") =>
+    `${SITE_URL}${premiumStartHref({ tier, plan, src: PRICE_DROP_SRC })}&${PRICE_DROP_UTM}`;
+  return {
+    plusAnnual: start("plus", "annual"),
+    plusMonthly: start("plus", "monthly"),
+    premiumAnnual: start("premium", "annual"),
+    premiumMonthly: start("premium", "monthly"),
+    compare: `${SITE_URL}/premium?src=${PRICE_DROP_SRC}&${PRICE_DROP_UTM}`,
+  };
+}
+
 export interface PremiumOfferEmailOpts {
   displayName: string;
-  trialDays: number; // 0 = trial already used
-  offerDays: number; // what the trial is extended to, in total
-  offerEnds: string; // human-readable deadline, e.g. "30 September 2026"
+  // The announcement opt-out page (/announcements/unsubscribe?token=…), linked
+  // from the footer. The List-Unsubscribe header points at the API route with
+  // the same token, which accepts the RFC 8058 one-click POST.
   unsubUrl: string;
+  oneClickUrl?: string;
   via?: "brevo" | "resend";
 }
 
-export function premiumOfferSubject(opts: Pick<PremiumOfferEmailOpts, "trialDays">): string {
-  return opts.trialDays > 0
-    ? "A full month of RiftCompare Premium, on us"
-    : "A free month of RiftCompare Premium, on us";
+export function premiumOfferSubject(): string {
+  return `${SITE_NAME} Premium is now ${PREMIUM_PRICE_AMOUNT} a month`;
 }
 
-export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts, fromLine: string): { subject: string; heading: string; html: string } {
+// One tier's price line: "$4.99/month, or $3.33/mo billed yearly ($39.99 a year)".
+function priceDropTierLine(tier: PremiumTierKey): string {
+  const monthly = `${tierMonthlyAmount(tier)}/${PREMIUM_PRICE_PERIOD}`;
+  const effective = premiumEffectiveMonthly(tier);
+  return effective ? `${monthly}, or ${effective}/mo billed yearly (${tierAnnualAmount(tier)} a year)` : monthly;
+}
+
+// What each tier includes — the 2026-09-25 lineup as TierComparisonTable and
+// PremiumPricingCards state it (Plus leads with "no ads": tests/ad-free-tier.test.ts).
+export const PRICE_DROP_PLUS_INCLUDES = `No ads on any page, every deal in Deal Finder (including "only my cards"), the full Rising Cards list, and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards.`;
+export const PRICE_DROP_PREMIUM_INCLUDES =
+  "Everything in Plus, plus unlimited target-price alerts, Best Basket's store-by-store plan and Buy this list for your deck or watchlist, and Demand Finder: the cards players search for and open most.";
+
+export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail {
   // A display name that is really just an email address reads oddly after
   // "Hi" — fall back to a plain greeting rather than "Hi bill.j@…".
-  const name = opts.displayName.includes("@") ? "" : escapeHtml(opts.displayName.trim().split(/\s+/)[0] ?? "");
-  const greeting = name ? `Hi ${name},` : "Hi there,";
-  const ctaUrl = `${SITE_URL}/premium?src=offer&utm_source=email&utm_medium=email&utm_campaign=premium-offer`;
-  const toolList = CHECKOUT_RECOVERY_TOOLS.map((t) => `<li style="margin:4px 0">${t}</li>`).join("");
-  const ends = escapeHtml(opts.offerEnds);
+  const first = opts.displayName.includes("@") ? "" : (opts.displayName.trim().split(/\s+/)[0] ?? "");
+  const greeting = first ? `Hi ${escapeHtml(first)},` : "Hi there,";
+  const greetingText = first ? `Hi ${first},` : "Hi there,";
+  const links = priceDropLinks();
+  const subject = premiumOfferSubject();
+  const heading = "Premium and Plus now cost less";
+  const premiumLine = priceDropTierLine("premium");
+  const plusLine = priceDropTierLine("plus");
+  const hasAnnual = (t: PremiumTierKey) => !!premiumEffectiveMonthly(t);
 
-  const offerBlock =
-    opts.trialDays > 0
-      ? `Premium normally starts with a ${opts.trialDays}-day free trial. <strong style="color:#fff">Start yours before ${ends} and we'll extend it to a full ${opts.offerDays} days.</strong> It's $0 today, then ${fromLine} — and you can cancel any time during the trial and pay nothing.`
-      : `You've already used a free trial, so Premium bills from day one. <strong style="color:#fff">Subscribe before ${ends} and we'll add a free month on top</strong> — ${opts.offerDays} extra days on your subscription, at no charge. Premium is ${fromLine}, and you can cancel any time.`;
+  const btn = (url: string, label: string, primary: boolean) =>
+    primary
+      ? `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;background:#34d17e;color:#06210f;font-weight:700;font-size:13px;text-decoration:none;padding:10px 16px;border-radius:10px">${label}</a>`
+      : `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;border:1px solid #34d17e;color:#34d17e;font-weight:700;font-size:13px;text-decoration:none;padding:9px 15px;border-radius:10px">${label}</a>`;
 
-  const heading = opts.trialDays > 0 ? "Try Premium for a full month, free" : "A free month of Premium, on us";
+  const tierBlock = (tier: PremiumTierKey, line: string, includes: string, annualUrl: string, monthlyUrl: string) => `
+    <tr><td style="padding:8px 32px 8px">
+      <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px">
+        <div style="font-size:16px;font-weight:800;color:#fff">${TIER_NAMES[tier]}</div>
+        <div style="margin-top:4px;font-size:14px;line-height:1.6;color:#e6ebf2">${line}</div>
+        <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#b8c0cc">${escapeHtml(includes)}</div>
+        <div style="margin-top:10px">
+          ${hasAnnual(tier) ? btn(annualUrl, `${TIER_NAMES[tier]} yearly · ${tierAnnualAmount(tier)}/year`, true) : ""}
+          ${btn(monthlyUrl, `${TIER_NAMES[tier]} monthly · ${tierMonthlyAmount(tier)}/${PREMIUM_PRICE_PERIOD}`, !hasAnnual(tier))}
+        </div>
+      </div>
+    </td></tr>`;
+
   const inner = `
-    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      ${greeting}
-    </td></tr>
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${greeting}</td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      Thanks for using RiftCompare. Price comparison, alerts and your portfolio stay free — Premium is for when
-      you're buying more than one card at a time and want the cheapest way to get the lot:
+      We've lowered the price of both paid plans on ${SITE_NAME}. Price comparison, your watchlist, new-low emails
+      and your portfolio stay free — the paid plans are for when you want every deal and the cheapest way to buy a
+      whole list.
     </td></tr>
-    <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}</ul>
+    ${tierBlock("premium", premiumLine, PRICE_DROP_PREMIUM_INCLUDES, links.premiumAnnual, links.premiumMonthly)}
+    ${tierBlock("plus", plusLine, PRICE_DROP_PLUS_INCLUDES, links.plusAnnual, links.plusMonthly)}
+    <tr><td style="padding:8px 32px 4px;font-size:13px;line-height:1.6;color:#9aa4b2">
+      No contract: cancel anytime from your account page, in a couple of clicks.
+      <a href="${links.compare}" style="color:#34d17e;text-decoration:underline">Compare the plans side by side</a>.
     </td></tr>
-    <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      ${offerBlock}
-    </td></tr>
-    <tr><td style="padding:4px 32px 12px;font-size:13px;line-height:1.6;color:#9aa4b2">
-      How it works: there's nothing to enter at checkout. Once your subscription is in, we add the extra days to your
-      account by hand — usually within a day or two — and email you when it's done.
-    </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${ctaUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${opts.trialDays > 0 ? "Start my free month" : "Claim my free month"}</a></td></tr>`;
+    <tr><td style="padding:0 32px 16px"></td></tr>`;
 
-  return { subject: premiumOfferSubject(opts), heading, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl)) };
+  const text = [
+    greetingText,
+    "",
+    `We've lowered the price of both paid plans on ${SITE_NAME}. Price comparison, your watchlist, new-low emails and your portfolio stay free.`,
+    "",
+    `PREMIUM: ${premiumLine}`,
+    PRICE_DROP_PREMIUM_INCLUDES,
+    ...(hasAnnual("premium") ? [`Premium yearly (${tierAnnualAmount("premium")}/year): ${links.premiumAnnual}`] : []),
+    `Premium monthly (${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}): ${links.premiumMonthly}`,
+    "",
+    `PLUS: ${plusLine}`,
+    PRICE_DROP_PLUS_INCLUDES,
+    ...(hasAnnual("plus") ? [`Plus yearly (${tierAnnualAmount("plus")}/year): ${links.plusAnnual}`] : []),
+    `Plus monthly (${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD}): ${links.plusMonthly}`,
+    "",
+    "No contract: cancel anytime from your account page, in a couple of clicks.",
+    `Compare the plans: ${links.compare}`,
+    "",
+    "—",
+    `You're getting this because you have a ${SITE_NAME} account. This is a one-off product announcement, not a subscription.`,
+    `Don't email me announcements: ${opts.unsubUrl}`,
+  ].join("\n");
+
+  const oneClick = opts.oneClickUrl ?? opts.unsubUrl;
+  const headers = {
+    "List-Unsubscribe": `<${oneClick}>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
+  const preheader = `Premium ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}, Plus ${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
+  return { subject, heading, preheader, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl), preheader), text, headers };
 }
 
 export async function sendPremiumOfferEmail(to: string, opts: PremiumOfferEmailOpts): Promise<boolean> {
-  const { subject, html } = buildPremiumOfferEmail(opts, premiumFromLine());
-  return opts.via === "resend" ? sendEmail(to, subject, html) : sendEmailBrevo(to, subject, html);
+  const { subject, html, text, headers } = buildPremiumOfferEmail(opts);
+  return opts.via === "resend" ? sendEmail(to, subject, html, { text, headers }) : sendEmailBrevo(to, subject, html, { text, headers });
 }
 
 // One-off "N days of Premium, free, no card" win-back email. See

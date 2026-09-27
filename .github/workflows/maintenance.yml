@@ -5309,6 +5309,12 @@ jobs:
           # subscriptions, trials, conversions and cancellations — exactly the
           # half that answers "are we keeping the people we sign up?".
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          # Price ids, so tierFromPriceId can tell Plus from Premium here
+          # (2026-09-26: without them every Plus subscriber read as Premium).
+          STRIPE_PLUS_PRICE_ID: ${{ secrets.STRIPE_PLUS_PRICE_ID }}
+          STRIPE_PLUS_ANNUAL_PRICE_ID: ${{ secrets.STRIPE_PLUS_ANNUAL_PRICE_ID }}
+          STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
+          STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
         run: npx tsx scripts/funnel-report.ts
 
       - name: Trial cancellation report (read-only)
@@ -5319,6 +5325,12 @@ jobs:
         if: inputs.task == 'trial-cancel-report'
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          # Price ids, so tierFromPriceId can tell Plus from Premium here
+          # (2026-09-26: without them every Plus subscriber read as Premium).
+          STRIPE_PLUS_PRICE_ID: ${{ secrets.STRIPE_PLUS_PRICE_ID }}
+          STRIPE_PLUS_ANNUAL_PRICE_ID: ${{ secrets.STRIPE_PLUS_ANNUAL_PRICE_ID }}
+          STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
+          STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
         run: npx tsx scripts/trial-cancel-report.ts
 
       - name: Give the intro to pre-offer renewing trials (report unless apply)
@@ -5327,6 +5339,12 @@ jobs:
         if: inputs.task == 'apply-intro-to-trialists'
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          # Price ids, so tierFromPriceId can tell Plus from Premium here
+          # (2026-09-26: without them every Plus subscriber read as Premium).
+          STRIPE_PLUS_PRICE_ID: ${{ secrets.STRIPE_PLUS_PRICE_ID }}
+          STRIPE_PLUS_ANNUAL_PRICE_ID: ${{ secrets.STRIPE_PLUS_ANNUAL_PRICE_ID }}
+          STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
+          STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
         run: npx tsx scripts/apply-intro-to-trialists.ts ${{ inputs.apply && '--apply' || '' }}
 
       - name: Create/verify the intro-offer coupons (Stripe write, idempotent)
@@ -5495,6 +5513,12 @@ jobs:
         env:
           FIX: ${{ inputs.apply && '1' || '' }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          # Price ids, so tierFromPriceId can tell Plus from Premium here
+          # (2026-09-26: without them every Plus subscriber read as Premium).
+          STRIPE_PLUS_PRICE_ID: ${{ secrets.STRIPE_PLUS_PRICE_ID }}
+          STRIPE_PLUS_ANNUAL_PRICE_ID: ${{ secrets.STRIPE_PLUS_ANNUAL_PRICE_ID }}
+          STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
+          STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
         run: npx tsx scripts/audit-premium-vs-stripe.ts
 
       - name: Grant/restore Premium on one account (and re-link Stripe)
@@ -5586,6 +5610,12 @@ jobs:
         env:
           TARGET_EMAIL: ${{ inputs.email }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          # Price ids, so tierFromPriceId can tell Plus from Premium here
+          # (2026-09-26: without them every Plus subscriber read as Premium).
+          STRIPE_PLUS_PRICE_ID: ${{ secrets.STRIPE_PLUS_PRICE_ID }}
+          STRIPE_PLUS_ANNUAL_PRICE_ID: ${{ secrets.STRIPE_PLUS_ANNUAL_PRICE_ID }}
+          STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
+          STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
         run: npx tsx scripts/diagnose-billing.ts
 
       # SPOILER-SEASON PIPELINE. Reads the official card gallery for ONE set and

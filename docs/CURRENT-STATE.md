@@ -57,12 +57,12 @@ longer lands on its entry.
 
 ## Databases
 
-- **Live names** (since 2026-09-25; `src/lib/db-chains.ts` is the source of
+- **Live names** (since 2026-09-26; `src/lib/db-chains.ts` is the source of
   truth): operational `RM4`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
-  History: `HISTORY_DATABASE_URL_3`, then `_2`, then `DATABASE_URL`
+  History: `HISTORY_DATABASE_URL_4`, then `_3`, then `DATABASE_URL`
   (terminal). Never rotate onto `DATABASE_URL`.
-  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637)
+  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422)
 - **Migrating:** verify the target live first (a recycled project must trail
   the source on every metric; a new one must be empty). Use a named
   `maintenance.yml` task: it guards SOURCE≠TARGET, dumps before truncating,
@@ -90,25 +90,25 @@ longer lands on its entry.
 
 ## Premium & monetisation
 
-- **Measure the trial model until about 2026-10-15:** the owner replaced the
-  14-day trial on 2026-09-24 with a **3-day card-gated trial, then the first 3
-  months half price on monthly plans** (never-paid accounts; annual unchanged).
-  Leave the pitch, pricing and trial alone while it is measured with
-  `trial-cancel-report`, which counts the cancel click
-  (`cancel_at_period_end`); `funnel-report`'s "canc" counts only ended
-  subscriptions and missed every mid-trial cancel. A trial set to end is told
-  it won't be charged, gets the no-charge reminder 24–48h out and a one-click
-  Keep (`/api/premium/resume`); plan switches stay hidden mid-trial until
-  verified on a Stripe test clock. The owner lifted the freeze for the
-  09-25 lineup change (prices, trial and intro untouched); compare cohorts
-  by `PREMIUM_COPY_VERSION` (`lineup-2026-09-25`, then `lineup-2026-09-25b`
-  once Demand Finder returned to Premium the same day).
+- **No trial and no intro (2026-09-26, owner: "the price is not working"):**
+  checkout charges at once. `PREMIUM_TRIAL_DAYS` defaults to 0 and
+  `introOfferEnabled()` is opt-in (`NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1`), so
+  either returns only from the environment. This supersedes the 3-day trial
+  plus half-price months of 09-24 and its freeze to about 10-15. Trials and
+  intro coupons already running keep their machinery, which reads the
+  subscription, never the switches: a trial set to end is told it won't be
+  charged, gets the no-charge reminder 24–48h out and a one-click Keep
+  (`/api/premium/resume`), and plan switches stay hidden mid-trial.
+  `trial-cancel-report` counts the cancel click; `funnel-report`'s "canc"
+  counts only ended subscriptions. Compare cohorts by `PREMIUM_COPY_VERSION`
+  (`price-2026-09-26` from the cut).
   [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215), [2026-09-23](../DECISIONS.md#L10924),
-  [2026-09-25](../DECISIONS.md#L12842)
-- **Tiers (lineup of 2026-09-25):** Plus, $4.99/mo or $39.99/yr, is
+  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14553)
+- **Tiers (lineup of 2026-09-25, prices of 2026-09-26):** Plus, $2.99/mo or
+  $23.99/yr, is
   **ad-free**, has the full Deal Finder (with "Only my cards") and Rising
   Cards lists, and target-price alerts on up to `PLUS_TARGET_ALERT_LIMIT`
-  (25) cards. Premium, $9.99/mo or $79.99/yr, adds unlimited targets,
+  (25) cards. Premium, $4.99/mo or $39.99/yr, adds unlimited targets,
   Best Basket's store-by-store plan (for a pasted list, deck, watchlist or
   binder, and behind the portfolio's replacement cost) and **Demand Finder**
   (`/tools/demand`, `isPremium(user, "premium")`: top 25 most searched and
@@ -119,17 +119,26 @@ longer lands on its entry.
   "binder" means replacement cost, never gaps. Value Finder, Rising Sealed,
   the Condition Calculator and the Bulk Pricer are gone, each 301'd to the
   free page carrying its useful part (`tests/lineup-removals.test.ts`).
-  The intro price is an amount-off coupon created by `ensureIntroCoupon`;
-  its display and charge share `introAmountOffCents`, and it is quoted only
-  where `introEligibleFor` says checkout will give it. A tier switch keeps
-  exactly the discounted renewals left (`introRenewalsRemaining`).
+  The owner chose the cut knowing the 09-08 read had $4.99 converting worse
+  than $9.99. Existing subscribers are moved DOWN in Stripe from their next
+  renewal, and only after the new Prices and legacy ids are live. A
+  subscription with an `rc-intro-*` coupon moves at the first renewal after
+  the coupon ends. The intro, if re-armed, is an amount-off coupon created by
+  `ensureIntroCoupon`; its display and charge share `introAmountOffCents`, and
+  it is quoted only where `introEligibleFor` says checkout will give it. A
+  tier switch keeps exactly the discounted renewals left
+  (`introRenewalsRemaining`).
   [2026-09-11](../DECISIONS.md#L4428), [2026-09-24](../DECISIONS.md#L12120),
   [2026-09-25](../DECISIONS.md#L12322), [2026-09-25](../DECISIONS.md#L12842),
-  [2026-09-25](../DECISIONS.md#L13067)
+  [2026-09-25](../DECISIONS.md#L13067), [2026-09-26](../DECISIONS.md#L14553)
 - **Gates:** `isPremium(user)` defaults to the Plus minimum; ads read
-  `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`);
-  a `premiumTierFloor` only raises a paid tier, never grants one. Never reuse
-  a Price across tiers. Ad-free is enforced client-side too: the eBay
+  `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`):
+  an unknown price is Premium, so every retired Plus Price must be listed in
+  `STRIPE_PLUS_LEGACY_PRICE_IDS` (`STRIPE_PREMIUM_LEGACY_PRICE_IDS` is only
+  for reporting), and the maintenance steps that read tiers get those
+  secrets. A `premiumTierFloor` only raises a paid tier, never grants one.
+  Never reuse a Price across tiers: the new Premium amounts equal the old Plus
+  ones, so they are new Prices. Ad-free is enforced client-side too: the eBay
   carousel and the app's AdMob banner check `adFree`, and the `rc_adfree`
   boot script pauses ad requests before the (ungated) loader. **Set
   `AD_STRATEGY=manual`, or verify anchor/vignette ads stay off on a Plus
@@ -140,11 +149,16 @@ longer lands on its entry.
   surface describing Plus says it is ad-free; never link a member to a wall. The pitch is "Never overpay for a Riftbound card", with
   no flipper or "ahead of the market" language. No fake scarcity,
   countdowns, invented numbers, savings totals or testimonials. Rising
-  Cards is a screen, not a prediction. The lock-in banner is a promise:
-  never move existing subscribers onto a new Price.
+  Cards is a screen, not a prediction. No "lock in before the price goes
+  up": since the 09-26 cut, the lock-in banner, dialog lines, slide-in line
+  and FAQ render only while a real, higher price is announced
+  (`NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT`, which defaults to today's price);
+  the steady state says "cancel anytime". The terms still promise a
+  subscriber's price never rises while they stay subscribed: existing
+  subscribers may be moved onto a lower Price, never a higher one.
   [2026-09-11](../DECISIONS.md#L4642), [2026-09-14](../DECISIONS.md#L5971),
   [2026-09-10](../DECISIONS.md#L3990), [2026-09-22](../DECISIONS.md#L10328),
-  [2026-09-25](../DECISIONS.md#L12842)
+  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14553)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
@@ -152,10 +166,12 @@ longer lands on its entry.
 - **Nudges:** the signed-out popup sells the FREE account (no price, no
   gold); the signed-in `PremiumSlideIn` carries Premium. The popup waits for
   a 2nd page view or 60 s of reading, never on the first page from another
-  site or a phone's first view (`lib/signup-promo-gate.ts`). It stops after 2
+  site or a phone's first view (`lib/signup-promo-gate.ts`), except on the
+  top landing pages (`/blog/*`, `/movers`), where both nudges show after 7 s
+  of reading on any view. It stops after 2
   dismissals per device, snoozes 3 pages then 7 days, and keeps its 5-second
   delay. [2026-09-16](../DECISIONS.md#L7031),
-  [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089)
+  [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089), [2026-09-27](../DECISIONS.md#L14536)
 - **Signed-out visitors get nothing from Deal Finder or Rising Cards**; a
   free account gets the top 3 of each, a paid tier the full list.
   [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842)
@@ -217,14 +233,14 @@ longer lands on its entry.
   only (owner's brief, 09-26; the lg row has ~5px of slack).
   [2026-09-21](../DECISIONS.md#L9368),
   [2026-09-21](../DECISIONS.md#L10095), [2026-09-23](../DECISIONS.md#L11201),
-  [2026-09-26](../DECISIONS.md#L14292)
+  [2026-09-26](../DECISIONS.md#L14553)
 - **Footer:** the always-visible row is Home, Blog, Guides, Tools, About us,
   Editorial policy, Methodology, Who writes this, Contact & feedback, Privacy
   policy, Terms of service (the site map stays collapsed on `/`). Privacy and
   Terms are also in the rail/menu Help group (`hideInFooter`). `FooterAds`
   renders no banner pair on /about, /authors(/*), /contact, /editorial-policy,
   /methodology, /privacy, /support and /terms; the six mini-games carry no
-  in-page pair. [2026-09-26](../DECISIONS.md#L14292)
+  in-page pair. [2026-09-26](../DECISIONS.md#L14553)
 - **1024–1279 is its own band** (~704px of content): the filter sidebar
   waits for xl, card art is 160px (320 from xl), and stickies use
   `lg:top-36 xl:top-20`. [2026-09-23](../DECISIONS.md#L11201)
@@ -259,7 +275,7 @@ longer lands on its entry.
   Riftle/pack-sim, How it works.
   [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
   [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190),
-  [2026-09-26](../DECISIONS.md#L14292)
+  [2026-09-26](../DECISIONS.md#L14553)
 - **Overlays:** `ui/Dialog` portals to body; Escape closes only the top
   layer and focus returns to the opener. Corner nudges share one corner
   string. [2026-09-23](../DECISIONS.md#L11348)
@@ -300,13 +316,13 @@ longer lands on its entry.
   never "real-time"; listings, never sold/completed sales. Only Best Basket
   prices whole orders with measured postage. Store counts come from
   `RETAILER_LIST`, never typed. A correction bumps the article's `updated`.
-  [2026-09-26](../DECISIONS.md#L14292)
+  [2026-09-26](../DECISIONS.md#L14553)
 - **Authorship is the owner's statement:** the site is built and run by one
   person, Bill (Person author `/authors/bill`, the Organization's founder).
   Articles are "drafted with AI assistance, then edited and fact-checked by
   Bill" with figures from our own database (`ARTICLE_PROCESS`,
   lib/content/authors.ts). Add nothing about him he has not confirmed; every
-  byline must resolve in the registry. [2026-09-26](../DECISIONS.md#L14292)
+  byline must resolve in the registry. [2026-09-26](../DECISIONS.md#L14553)
 - **Blog ↔ tools:** `lib/content/tool-guides.ts` maps each tool/data route to
   at most three guides, read both ways — `RelatedGuides` after the page's data
   and before any affiliate block (outside paywalls; /movers and the signed-out
@@ -315,7 +331,7 @@ longer lands on its entry.
   links); /deck and set pages keep theirs under the tool/grid. The 09-26
   "Mobile first" entry covers the homepage, card page, thumbnails and
   /browse's sort only. Every published article links a tool (ratchet test).
-  [2026-09-26](../DECISIONS.md#L14292)
+  [2026-09-26](../DECISIONS.md#L14553)
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)
@@ -411,7 +427,7 @@ longer lands on its entry.
   has a week on the new basis (and only within the grace window) it shows the
   last week BEFORE the switch, labelled — opt-in, so no other surface shows a
   stale price as today's. [2026-09-25](../DECISIONS.md#L12842), [2026-09-25](../DECISIONS.md#L13043),
-  [2026-09-27](../DECISIONS.md#L14462)
+  [2026-09-27](../DECISIONS.md#L14723)
 - **Rules text:** `Card.description` comes from Riot's gallery for every set.
   Origins, Proving Grounds, Spiritforged and Unleashed are filled by
   `scripts/backfill-card-text.ts` (maintenance task `backfill-card-text`,

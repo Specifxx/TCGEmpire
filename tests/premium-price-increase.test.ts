@@ -44,11 +44,26 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("today's decided price is what the site actually announces, with no increase pending", () => {
-  // Pins the real business decision (current $9.99, no announced future
-  // increase) so a careless edit changes it loudly rather than silently.
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$9.99");
-  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$9.99");
+  // Pins the real business decision (current $4.99 since the 2026-09-26 cut,
+  // no announced future increase) so a careless edit changes it loudly rather
+  // than silently. The cut is exactly the edit that would have announced a
+  // FAKE increase had PREMIUM_NEXT_PRICE_AMOUNT stayed a hand-typed "$9.99".
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$4.99");
+  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$39.99");
+  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$4.99");
   assert.equal(premiumPriceIncreaseAnnounced(), false);
+});
+
+test("the next price defaults to TODAY's price, and only a higher one announces anything (2026-09-26)", () => {
+  // A default that tracks PREMIUM_PRICE_AMOUNT means a price change — in code
+  // or through NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT — can never announce an
+  // increase by itself; and the numeric check means a stale "$9.99" left in
+  // the Vercel dashboard can't dress a price CUT up as "raising the price".
+  const src = read("src/lib/site.ts");
+  assert.match(src, /PREMIUM_NEXT_PRICE_AMOUNT = process\.env\.NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT \|\| PREMIUM_PRICE_AMOUNT;/);
+  const at = src.indexOf("export function premiumPriceIncreaseAnnounced()");
+  const body = src.slice(at, src.indexOf("\n}", at));
+  assert.match(body, /premiumMoneyNum\(PREMIUM_NEXT_PRICE_AMOUNT\) > premiumMoneyNum\(PREMIUM_PRICE_AMOUNT\)/);
 });
 
 test("the announcement is keyed on the two prices actually disagreeing, not a separate flag", () => {
@@ -80,7 +95,7 @@ test("the lock-in guarantee is unconditional: checkout never migrates an existin
   }
 });
 
-test("with no announcement live, both helpers still make the case that the price rises as the site grows", () => {
+test("with no announcement live, the helpers say only what is true: cancel anytime (2026-09-26)", () => {
   // Live constants are currently equal (see the test above) — no increase is
   // announced right now, so both helpers must return their steady-state copy,
   // not the "raising Premium's price soon" branch.
@@ -93,15 +108,18 @@ test("with no announcement live, both helpers still make the case that the price
   // new copy states the standing pricing policy (the price goes up as
   // coverage grows) alongside the guarantee (your rate doesn't).
   //
-  // What must NOT come back is a specific future number or date in this
-  // branch — see the "no surface invents an exact date" test below, and
-  // premiumLockInHeadline's own comment for why the growth claim is honest
-  // while an invented deadline would not be.
-  assert.equal(
-    premiumLockInLine(),
-    "Premium's price goes up as the site grows — more markets, more stores, deeper history. Your rate doesn't: subscribe at $9.99/month and keep it for as long as you stay subscribed.",
-  );
-  assert.equal(premiumLockInTail(), "locked in before the price goes up — cancel anytime");
+  // REWRITTEN AGAIN 2026-09-26 (owner: "the price is not working"). Both
+  // tiers' prices were CUT and existing subscribers moved down onto the new
+  // Prices, so "the price goes up as the site grows" was contradicted by the
+  // site's own latest move, and "lock in … before the price goes up" promised
+  // protection from a rise nobody had decided. The steady state now says the
+  // one thing that is unconditionally true.
+  assert.equal(premiumLockInLine(), "No contract: cancel anytime from your account page, in a couple of clicks.");
+  assert.equal(premiumLockInHeadline(), "Premium is $4.99/month — cancel anytime");
+  assert.equal(premiumLockInTail(), "cancel anytime");
+  for (const copy of [premiumLockInLine(), premiumLockInHeadline(), premiumLockInTail()]) {
+    assert.doesNotMatch(copy, /lock|goes up|rises|rise|increas/i, `steady state must not imply a coming increase: "${copy}"`);
+  }
   // The steady-state branch must not SOUND announced: no "rises to $X",
   // no "soon". (It can't be checked by looking for PREMIUM_NEXT_PRICE_AMOUNT
   // itself — in the steady state that constant IS today's price by
@@ -214,6 +232,41 @@ test("the full-banner treatment is gated on NOT already being Premium", () => {
   assert.ok(eligibleAt < bannerAt, "PremiumSlideIn.tsx: the eligibility gate must be defined before the banner it protects");
 });
 
+test("in the steady state no surface renders the lock-in banner, the FAQ entry or the old growth copy (2026-09-26)", () => {
+  // The banner, the dialog's lines and the slide-in's gold line render ONLY
+  // while an increase is announced. Their old steady-state text is gone.
+  const page = read("src/app/premium/page.tsx");
+  const bannerAt = page.indexOf("{premiumLockInHeadline()}");
+  assert.match(page.slice(Math.max(0, bannerAt - 300), bannerAt), /premiumPriceIncreaseAnnounced\(\) && \(/, "/premium banner is announced-only");
+  const captionAt = page.lastIndexOf("{premiumLockInLine()}");
+  assert.match(page.slice(Math.max(0, captionAt - 300), captionAt), /premiumPriceIncreaseAnnounced\(\) && \(/, "/premium caption is announced-only");
+  assert.match(page, /\.\.\.\(premiumPriceIncreaseAnnounced\(\)\s*\?\s*\[\s*\{\s*q: "Does my price ever go up\?"/, "the FAQ entry is announced-only");
+
+  const dialog = read("src/components/PremiumDialog.tsx");
+  for (const call of ["{premiumLockInHeadline()}", "{premiumLockInLine()}"]) {
+    const at = dialog.indexOf(call);
+    assert.match(dialog.slice(Math.max(0, at - 900), at), /premiumPriceIncreaseAnnounced\(\) && \(/, `dialog ${call} is announced-only`);
+  }
+  const slideIn = read("src/components/PremiumSlideIn.tsx");
+  const soonAt = slideIn.indexOf("Price increasing soon");
+  assert.match(slideIn.slice(Math.max(0, soonAt - 300), soonAt), /premiumPriceIncreaseAnnounced\(\) && \(/, "slide-in gold line is announced-only");
+
+  for (const f of ["src/app/premium/page.tsx", "src/components/PremiumDialog.tsx", "src/components/PremiumSlideIn.tsx", "src/lib/site.ts"]) {
+    // Code only: the comments are free to quote the retired copy as history.
+    const code = read(f)
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    assert.doesNotMatch(code, /price rises as the site grows|price goes up as the site grows|your rate never does|lock in [^\n]* for good|before the price goes up/i, `${f}: the retired growth/lock-in copy is back`);
+  }
+});
+
+test("the terms no longer claim existing subscribers are never moved; the no-rise promise stays (2026-09-26)", () => {
+  const terms = read("src/app/terms/page.tsx");
+  assert.doesNotMatch(terms, /we do not move existing subscribers onto a new price/, "false since the owner moved subscribers down");
+  assert.match(terms, /does not rise for as\s+long as your subscription stays active/);
+  assert.match(terms, /we never move them onto a higher one/);
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // FOUND live while landing the original $9.99→$14.99 increase: the editorial
 // article about Premium's pricing (riftcompare-premium-explained) had its own
@@ -261,6 +314,13 @@ test("the Premium-explained article states the price the site actually charges, 
   // $9.99 was itself the retired price, right after the original raise.
   assert.ok(!haystack.includes("$14.99"), "article must not still quote the retired $14.99 price anywhere");
   assert.ok(!haystack.includes("$119.99"), "article must not still quote the retired $119.99 annual price anywhere");
+  // Retired by the 2026-09-26 cut: Premium's $9.99/$79.99 and the half-price
+  // intro. ($4.99 and $39.99 are legitimately still in the article — they are
+  // today's Premium prices, which were Plus's before the cut.)
+  assert.ok(!haystack.includes("$9.99"), "article must not still quote the retired $9.99 price anywhere");
+  assert.ok(!haystack.includes("$79.99"), "article must not still quote the retired $79.99 annual price anywhere");
+  assert.ok(!haystack.includes("$119.88"), "article must not still quote the old $119.88 paying-monthly total");
+  assert.ok(!/half price for their first|3-day free trial/i.test(haystack), "no trial or intro while both are off");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

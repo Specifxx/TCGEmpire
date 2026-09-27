@@ -14289,6 +14289,267 @@ are fixed above. 8 new tests (`tests/home-ebay.test.ts`); assertions in
 `ebay-clicks-home`, `ebay-picks` and `card-art-thumbs` updated for the move,
 the `pageType` prop and the `md:` switch.
 
+## Prices cut to $4.99 / $2.99, no trial, no intro; existing subscribers moved down — 2026-09-26
+
+Owner: **"the price is not working."** The call:
+
+- **Premium $4.99/mo or $39.99/yr** (was $9.99 / $79.99).
+- **Plus $2.99/mo or $23.99/yr** (was $4.99 / $39.99).
+- **No free trial and no "first 3 months half price".** Checkout charges
+  at once.
+- **Existing subscribers are moved DOWN** to the new prices from their next
+  renewal. The owner does this in the Stripe dashboard; no code moves anyone.
+
+**Made knowing the evidence points the other way.** The 2026-09-08 entry
+("Premium pricing & conversion") read the git history: **$9.99 (31 Aug – 6
+Sep) outproduced $4.99 (18 – 31 Aug), ~0.67 vs ~0.38 subscribers a day and
+~$6.70 vs ~$1.90 revenue a day**. $4.99 as the only price converted worse.
+Those samples were small (days, and single-digit subscribers), and the
+trial and pitch differed between them, so neither reading is proof. The
+owner made this call with that entry in front of them. It is recorded as a
+decision, not re-litigated. The annual saving stays about 33% on both tiers
+($39.99 against 12 × $4.99 = $59.88; $23.99 against $35.88), and the
+effective monthly rates are $3.33 and $2.00.
+
+**What changed in code.**
+
+- **Prices** (`lib/site.ts`): the four defaults. Every surface reads them or
+  the helpers built on them. The Premium explainer article now interpolates
+  them too, instead of hand-typed prose that a test had to catch on each of
+  the three earlier price changes.
+- **`PREMIUM_NEXT_PRICE_AMOUNT` defaults to `PREMIUM_PRICE_AMOUNT` itself**,
+  not a typed copy. Left at "$9.99", the cut would have made every banner
+  say "We're raising Premium's price soon, to $9.99", a fake increase.
+  `premiumPriceIncreaseAnnounced()` also requires the next amount to be
+  numerically HIGHER, so a stale Vercel value can't dress a cut as a rise.
+- **Trial off:** `PREMIUM_TRIAL_DAYS` defaults to 0. A Vercel value still
+  wins, so a leftover 3 or 14 there turns the trial back on.
+- **Intro off:** `introOfferEnabled()` is now opt-in, true only for
+  `NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1` (it was on unless "0"). Checkout only
+  calls `ensureIntroCoupon` inside that switch, and every intro line on the
+  dialog, cards, /premium, /premium/start, PremiumButton, slide-in, emails,
+  FAQ and terms is behind it.
+- **Existing trials and intro coupons keep working.** The reminder cron,
+  Keep (`/api/premium/resume`), the /premium card, the welcome email and the
+  plan-switch routes read the subscription's own status, `trial_end` and
+  coupon, never the switches. Keep attaches no intro now, on checkout's rule.
+  The webhook's grace for an unreadable trial subscription uses
+  `PREMIUM_TRIAL_DAYS || 3`, so a trial checkout opened before the deploy and
+  finished after it isn't given a 0-day grace.
+- **The steady-state lock-in copy is retired.** Since 2026-09-22 the
+  banner, the dialog, the slide-in and the FAQ said "the price goes up as the
+  site grows — your rate doesn't" and "lock in $X before the price goes up".
+  After a price cut, and with subscribers moved onto new Prices, that
+  promised protection from a rise nobody had decided. The banner, the
+  dialog's lines, the slide-in's gold line and the FAQ "Does my price ever go
+  up?" now render only while an increase is announced. The one remaining
+  caption, `premiumLockInTail()`, says "cancel anytime". The unused
+  `FOUNDING_RATE_*` constants are deleted.
+- **Terms §8 "Your price"** said "we do not move existing subscribers onto a
+  new price", which is now false. It now says the price does not rise while
+  the subscription stays active, and that a LOWER price may be applied from
+  the next renewal, never a higher one. The no-rise half is unchanged. The
+  trial clauses read "if you are in a free trial", because trials started
+  before today are still running.
+- **The premium-offer email** told every trialDays-0 recipient "you've
+  already used a free trial". With trials off that is everyone, most of whom
+  never had one. It now says Premium has no free trial (`trialOffered`).
+- **`PREMIUM_COPY_VERSION` → `price-2026-09-26`.** `PROMO_VARIANT` is
+  unchanged: the signed-out popup quotes no price.
+
+**Legacy price ids.** `tierFromPriceId` resolves any price it doesn't know
+as Premium, and the webhook re-stamps `premiumTier` from the price id on
+every event. Once `STRIPE_PLUS_PRICE_ID` / `STRIPE_PLUS_ANNUAL_PRICE_ID`
+point at the new Prices, a subscriber still on an OLD Plus Price would
+silently become Premium. So:
+
+- **`STRIPE_PLUS_LEGACY_PRICE_IDS`** (comma-separated, trimmed, empties
+  ignored): the old Plus Prices, which also resolve to Plus.
+- **`STRIPE_PREMIUM_LEGACY_PRICE_IDS`**: documentation only (unknown already
+  means Premium). `/admin/subscriptions` counts active subscribers still on
+  either list (`legacyPriceActive`), which is the move's progress bar.
+- **Never reuse a Price across tiers still holds, and bites here:** the new
+  Premium $4.99/mo and $39.99/yr match the OLD Plus amounts. Create NEW
+  Premium Prices. The old Plus Price listed as legacy would read as Plus.
+- `switch-to-annual` treats any yearly price as "already annual", so a
+  legacy annual subscriber is never re-billed onto the new yearly Price.
+  Upgrade, downgrade and switch-to-annual target `priceIdFor(tier, interval)`,
+  the new Prices.
+- **A pre-existing hole, found on the way:** the maintenance steps
+  `audit-premium-vs-stripe`, `funnel-report`, `trial-cancel-report`,
+  `diagnose-billing` and `apply-intro-to-trialists` forwarded only
+  `STRIPE_SECRET_KEY`. With no Plus price id every tier read as Premium, and
+  the audit's `apply` would have stamped every Plus subscriber Premium. The
+  steps now forward the Plus ids and both legacy lists (GitHub secrets), and
+  the audit skips tier fixes when it has no Plus id at all
+  (`plusPriceIdsConfigured`).
+
+**The required order**, because the webhook re-stamps tiers from the price id:
+
+1. In Stripe, create the new Prices: Premium $4.99/mo and $39.99/yr, Plus
+   $2.99/mo and $23.99/yr. All four are new objects, none reused.
+2. In Vercel (all environments): point the four `STRIPE_*_PRICE_ID`
+   variables at them, and set `STRIPE_PLUS_LEGACY_PRICE_IDS` (and optionally
+   `STRIPE_PREMIUM_LEGACY_PRICE_IDS`) to the old ids. Remove
+   `PREMIUM_TRIAL_DAYS`, `NEXT_PUBLIC_PREMIUM_INTRO_OFFER`,
+   `NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT` and any `NEXT_PUBLIC_*_AMOUNT`
+   override if set. Mirror the price ids in GitHub secrets.
+3. Redeploy: the daily release, or "Run workflow" if the owner wants it
+   sooner.
+4. **Only then** move subscriptions, each from its next renewal.
+
+**Moving a subscription that carries a half-price intro coupon**
+(`rc-intro-*`, anyone who subscribed since 2026-09-24): the coupon is an
+amount off sized for the OLD price. Premium's $5.00 off on the new $4.99
+bills $0; Plus's $2.50 off on $2.99 bills $0.49. Removing it instead would
+raise a Plus intro subscriber from $2.49 to $2.99. So move these at the
+first renewal on or after the coupon's end date (Stripe shows it on the
+subscription), not before. Nobody then pays more than they do today.
+
+**A subscription still in its trial** converts at its OLD Price when the
+trial ends. If it has no intro coupon and should start at the new price,
+move it before `trial_end`. The trial reminder quotes whatever Price the
+subscription is on when it runs, 24–48h before the end, so a later move can
+only make the charge lower than the email said, never higher.
+
+**Measure.** Trials are gone, so `trial-cancel-report` stops getting new
+rows. Read paid starts a day and revenue a day by `PREMIUM_COPY_VERSION`
+(`price-2026-09-26` against the 09-24 and 09-25 cohorts), and set them
+beside the 2026-09-08 numbers above. The earlier freeze "until about
+2026-10-15" on the trial model is superseded: the owner has replaced the
+model it was measuring.
+
+## History database cut over from HISTORY_DATABASE_URL_3 to HISTORY_DATABASE_URL_4 — 2026-09-26
+
+**Why.** HISTORY_DATABASE_URL_3 reached its 5 GB monthly transfer allowance four days into service. The owner asked for this deployed immediately, not on the daily schedule, so this commit carries `[deploy]`.
+
+**What.**
+
+- **RH5 was tried first**, at the owner's request. Its own User-row guard refused it: a 2026-09-26 probe found User=85, CollectionCard=374, Order=4, MarketplaceListing=11, RetailerPrice=39,635 — the same operational-shaped snapshot `db-chains.ts` already documented from 2026-08-23. Nothing was written to it. `.github/workflows/maintenance.yml` gained a `migrate-history-db-hdu3-to-rh5` task for the record, but it should never actually succeed against RH5 — the guard is the point.
+- **HISTORY_DATABASE_URL_4 is the real target.** It is a recycled project, retired since the 2026-08-21 cutover onto _3. A probe-databases run confirmed it clean (User=0, RetailerPrice=0) before anything was written. `migrate-history-db-to-hdu4` (existing, previously unused) ran twice — the bulk copy and a re-sync immediately before this flip — both passes verifying Card, ClickEvent and PriceHistory row-for-row (Card 1,447, ClickEvent 698, PriceHistory 425,410).
+- `HISTORY_VARS` is now `["HISTORY_DATABASE_URL_4", "HISTORY_DATABASE_URL_3", "DATABASE_URL"]`. `db-history.ts`'s startup warning, `build-db-push.sh`'s `CURRENT_HIST` and history-var priority, and `ci-build.yml`'s pinned chain-head env var all follow. `refresh-prices.yml`, `db-audit.yml` and `weekly-promo.yml` already forwarded both `_3` and `_4` by name, so nothing there needed to change.
+- `migrate-history-db-to-hdu4` is no longer LEGACY — relabelled CURRENT in the task dropdown; `migrate-history-db-hdu3-to-rh5` is the new one, documented as expected to fail its own guard.
+
+**Rollback.** One commit. HISTORY_DATABASE_URL_3 still holds the data and still responds.
+
+**Still open.** Run `audit-egress` against HISTORY_DATABASE_URL_4 in a few hours — a rested project buys time, not a fix. `HISTORY_DATABASE_URL_4` needs to be set in Vercel for Production, Preview and Development.
+
+## Price-drop announcement: the "month on us" campaign repurposed to email the new prices — 2026-09-27
+
+Owner, 2026-09-27: **"edit the admin action to send emails to all non premium
+users saying premium is now $3.33 a month and plus is now $1.99 a month, and
+give them links to subscribe."**
+
+**The Plus figure.** $1.99 a month would need Plus yearly at $23.88
+(12 × $1.99). The owner first chose to change the price to $23.88, then kept
+it at **$23.99**. So the email quotes whatever `premiumEffectiveMonthly()`
+returns: **$3.33** for Premium ($39.99 / 12) and **$2.00** for Plus
+($23.99 / 12). No price is typed into the template. A per-month figure for a
+yearly plan always appears as "…/mo billed yearly", next to the yearly total.
+Quoted bare it would read as a monthly price nobody can buy. `$1.99` appears
+nowhere, and `tests/premium-offer.test.ts` fails if it does.
+
+**Audience** (`priceDropAudience` in `lib/premium-offer.ts`, a pure function
+the tests call directly): every registered account that is not currently
+paying. The paying check is `isPremium()`, the same check every paid gate
+uses, so active Plus, active Premium, a live comp, and `premiumTierFloor`
+(through `effectiveTier`) all count as paying. Admins, seed personas
+(`isSeedEmail`) and addresses with `AnnouncementOptOut.optedOutAt` set are
+excluded. Free accounts, lapsed subscribers and cancelled trialists are
+included. Addresses are deduped by lowercased email.
+
+**Mechanics kept from the 2026-09-10 offer.** Same files, paths and entry
+points: `/admin/premium-offer`, `/api/admin/premium-offer`,
+`/api/cron/premium-offer`, `premium-offer-email.yml` and
+`scripts/send-premium-offer.ts`.
+
+- Dry run by default everywhere.
+- Brevo by default.
+- Batches of `DEFAULT_BATCH` = 90, and any hand-typed limit is capped at 300
+  (Brevo's free daily cap).
+- A run is idempotent per account and resumable: an account is stamped only
+  after a successful send.
+- The opt-out token is minted before the send.
+- A hand-picked selection can narrow the audience but never widen it. A
+  re-send only goes to accounts named in the selection.
+
+**What changed.**
+
+- **A new stamp, `User.priceDropEmailSentAt`** (additive, nullable). The old
+  `premiumOfferSentAt` is left alone and never read, so every account the
+  "month on us" email reached still gets this one.
+- **No deadline anywhere.** The workflow's `offer_ends` input, the route's
+  `?until=` and the console's date picker are gone. This email announces
+  prices and makes no time-limited offer, so it carries no countdown and no
+  "down from" figure.
+- **The copy** (`buildPremiumOfferEmail` in `lib/email.ts`). Subject:
+  "RiftCompare Premium is now $4.99 a month", from `PREMIUM_PRICE_AMOUNT`.
+  The body gives one card per tier: the monthly price, then "…/mo billed
+  yearly (… a year)", then one line on what the tier includes (the
+  2026-09-25 lineup, as TierComparisonTable and PremiumPricingCards state
+  it), then that tier's yearly and monthly buttons. After the two cards come
+  "cancel anytime" and a "compare the plans" link. The email has a plain-text
+  part and one-click `List-Unsubscribe` / `List-Unsubscribe-Post` headers.
+  To send those through Brevo, `sendEmailBrevo` gained optional `extras`
+  (sent as `textContent` / `headers`); callers that pass nothing send the
+  same body as before. `POST /api/announcements/unsubscribe` now also reads
+  the token from the query string, where RFC 8058's one-click POST puts it.
+- **Links and attribution.** Each of the four buttons is
+  `premiumStartHref({ tier, plan, src: "price-drop-email" })` plus
+  `utm_*=email/email/price-drop-2026-09`. They open `/premium/start` with
+  that tier and plan selected. A signed-out visitor signs in on that page
+  and returns to the same URL, `src` included; a signed-in one goes straight
+  to Stripe; a paying one is sent to /premium. `"price-drop-email"` is a
+  Premium click source and surface (`lib/premium-surface.ts`) and a
+  `StartSrc`. CheckoutLauncher fires the click beacon for it, so
+  `/admin/premium` lists the account, and checkout stamps it as the surface
+  on `PremiumClick` and on the Stripe subscription's metadata, where
+  `funnel-report` counts it. `/premium?src=price-drop-email` fires the same
+  beacon through PremiumRecoveryBeacon.
+- **The console** drops the trial and grant columns. The page does a dry
+  run on load and shows audience, already sent, remaining, opted out and
+  paying (skipped) before anything is sent. "Send me a test" sends one copy,
+  with no stamp and no opt-out row.
+- **Grants still owed from the old offer**: its email promised a month to
+  anyone who subscribed before its deadline (2026-09-30). Those grants are
+  done from `/admin/accounts` (GrantPremiumForm). The console no longer has
+  grant buttons.
+
+**How to run it.** In `/admin/premium-offer`:
+
+1. Read the counts at the top.
+2. Press "Send me a test", then check the copy and the four links in a real
+   inbox.
+3. Press "Send next batch".
+4. Press it again once a day until Remaining is 0.
+
+The workflow does the same: Run workflow with `dry_run` ticked, then
+unticked once a day. Brevo's "Authorised IPs" restriction must be off
+(2026-09-10 addendum), or every Brevo send fails with a 401 that the run
+report names. The yearly buttons need the annual Stripe Prices configured.
+Without them `priceIdFor` falls back to monthly, and the button would
+open a monthly checkout.
+
+**Not verified here**: no database or mail key in this sandbox. The dry run
+on the admin page is the first real audience count.
+
+## Sign-up popup and Premium slider show on the top landing pages — 2026-09-27
+
+**Why.** The owner noticed neither nudge appeared on the site's top pages: `/blog/riftbound-heartsteel-overnumbered-cards`, `/blog/where-to-buy-riftbound-radiance`, `/blog/riftbound-radiance-spoilers` and `/movers`. Both components render site-wide, so no page was excluded. The gate was the cause: the signed-out popup never shows on the first page of a visit from another site or on a phone (2026-09-24), and `PremiumSlideIn` waits for a second page view. These pages are where search traffic lands, and most of those visits are a single page from Google, so the nudges almost never showed there.
+
+**What.** `isLandingPage()` in `lib/signup-promo-gate.ts` covers `/blog/*` and `/movers`. On those pages:
+
+- the signed-out popup becomes eligible after `LANDING_ENGAGED_MS` (20 s) of visible reading, even on a first external or phone view;
+- `PremiumSlideIn` skips its two-page-view minimum and waits 20 s instead of the 5 s `NUDGE_DELAY_MS`.
+
+The 20 s is the point: the 2026-09-24 rule protects a visitor who has not yet seen what the site is, and 20 s on an article means they have. Everything else stands: dismissal caps, snoozes, the once-per-session slider, and the never-over-a-modal check. Every other page keeps the original gate. `tests/first-visit-ux.test.ts` pins the four URLs.
+
+**Checked.** On a local build in Chromium, a phone-width visitor arriving from google.com on a blog post saw the popup after ~20 s. The homepage under the same conditions still showed none.
+
+## Landing-page nudges: 7 s, not 20 s — 2026-09-27
+
+The owner asked for the nudges on `/blog/*` and `/movers` (entry above) to appear after 7 seconds. `LANDING_ENGAGED_MS` is now 7 000. `PremiumSlideIn` uses it directly as its delay. The signed-out popup still runs its 5 s `NUDGE_DELAY_MS` settle-in after becoming eligible, so its reading threshold on these pages is the remainder (2 s), and it too appears 7 s in. Every other page keeps the original gate.
+
 ## Blog and tools, joined up: true self-descriptions, an editorial band under the price table, trust pages that name who runs the site — 2026-09-26
 
 **Why.** Owner's brief after an AdSense "Low value content" rejection: feature the
