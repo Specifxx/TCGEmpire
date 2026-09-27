@@ -42,16 +42,16 @@ set -uo pipefail
 # migrate-main-db-rm12-to-rm3 then wiped and replaced it with a
 # row-count-verified copy of RM12 (User 379, every table matching).
 CURRENT_OP="RM4"
-# CUT OVER TO HISTORY_DATABASE_URL_3 ON 2026-09-22 (HISTORY_DATABASE_URL_2 came
-# within reach of its 5 GB monthly transfer allowance five days into service).
-# HISTORY_DATABASE_URL_3 is a RECYCLED project — retired since 2026-08-21 — not
-# a fresh one — migrate-history-db-hdu2-to-hdu3 (a full pg_dump/restore,
-# row-count verified: Card 1,437, ClickEvent 698, PriceHistory 423,999,
-# including the 82,175 GLOBAL rows) moved history onto it. See the long note on
+# CUT OVER TO HISTORY_DATABASE_URL_4 ON 2026-09-26 (HISTORY_DATABASE_URL_3
+# reached its 5 GB monthly transfer allowance four days into service).
+# HISTORY_DATABASE_URL_4 is a RECYCLED project — retired since 2026-08-21 — not
+# a fresh one — migrate-history-db-to-hdu4 (a full pg_dump/restore, row-count
+# verified: Card 1,447, ClickEvent 698, PriceHistory 425,410) moved history
+# onto it, re-run once immediately before this cutover. See the long note on
 # HISTORY_URL in src/lib/db-history.ts and on HISTORY_VARS in
-# src/lib/db-chains.ts for the full account. The chains are CURRENT-first, not
-# newest-first.
-CURRENT_HIST="HISTORY_DATABASE_URL_3"
+# src/lib/db-chains.ts for the full account, including why RH5 (tried first)
+# was refused. The chains are CURRENT-first, not newest-first.
+CURRENT_HIST="HISTORY_DATABASE_URL_4"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -95,16 +95,16 @@ fi
 # src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
 # rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
-elif [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
-  # Rollback: it is what HISTORY_DATABASE_URL_3 was restored FROM, so it holds
+if [ -n "${HISTORY_DATABASE_URL_4:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL_4"; HIST_SOURCE="HISTORY_DATABASE_URL_4"
+elif [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
+  # Rollback: it is what HISTORY_DATABASE_URL_4 was restored FROM, so it holds
   # the same GLOBAL series — a genuinely safe fallback.
-  HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
+  HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
 else
   # No separate history project — history shares the operational database, which
   # the push above already covered. RH10/RH9/RH8/RH7/RH6/RH11 are retired or
-  # unset; HISTORY_DATABASE_URL and _4 were superseded earlier. RH5 is
+  # unset; HISTORY_DATABASE_URL and _2 were superseded earlier. RH5 is
   # NOT a history project at all — it holds 85 User rows (see db-chains.ts).
   HIST=""; HIST_SOURCE=""
 fi

@@ -14418,3 +14418,18 @@ rows. Read paid starts a day and revenue a day by `PREMIUM_COPY_VERSION`
 beside the 2026-09-08 numbers above. The earlier freeze "until about
 2026-10-15" on the trial model is superseded: the owner has replaced the
 model it was measuring.
+
+## History database cut over from HISTORY_DATABASE_URL_3 to HISTORY_DATABASE_URL_4 — 2026-09-26
+
+**Why.** HISTORY_DATABASE_URL_3 reached its 5 GB monthly transfer allowance four days into service. The owner asked for this deployed immediately, not on the daily schedule, so this commit carries `[deploy]`.
+
+**What.**
+
+- **RH5 was tried first**, at the owner's request. Its own User-row guard refused it: a 2026-09-26 probe found User=85, CollectionCard=374, Order=4, MarketplaceListing=11, RetailerPrice=39,635 — the same operational-shaped snapshot `db-chains.ts` already documented from 2026-08-23. Nothing was written to it. `.github/workflows/maintenance.yml` gained a `migrate-history-db-hdu3-to-rh5` task for the record, but it should never actually succeed against RH5 — the guard is the point.
+- **HISTORY_DATABASE_URL_4 is the real target.** It is a recycled project, retired since the 2026-08-21 cutover onto _3. A probe-databases run confirmed it clean (User=0, RetailerPrice=0) before anything was written. `migrate-history-db-to-hdu4` (existing, previously unused) ran twice — the bulk copy and a re-sync immediately before this flip — both passes verifying Card, ClickEvent and PriceHistory row-for-row (Card 1,447, ClickEvent 698, PriceHistory 425,410).
+- `HISTORY_VARS` is now `["HISTORY_DATABASE_URL_4", "HISTORY_DATABASE_URL_3", "DATABASE_URL"]`. `db-history.ts`'s startup warning, `build-db-push.sh`'s `CURRENT_HIST` and history-var priority, and `ci-build.yml`'s pinned chain-head env var all follow. `refresh-prices.yml`, `db-audit.yml` and `weekly-promo.yml` already forwarded both `_3` and `_4` by name, so nothing there needed to change.
+- `migrate-history-db-to-hdu4` is no longer LEGACY — relabelled CURRENT in the task dropdown; `migrate-history-db-hdu3-to-rh5` is the new one, documented as expected to fail its own guard.
+
+**Rollback.** One commit. HISTORY_DATABASE_URL_3 still holds the data and still responds.
+
+**Still open.** Run `audit-egress` against HISTORY_DATABASE_URL_4 in a few hours — a rested project buys time, not a fix. `HISTORY_DATABASE_URL_4` needs to be set in Vercel for Production, Preview and Development.
