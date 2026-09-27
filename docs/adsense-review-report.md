@@ -136,3 +136,9 @@ This is not `NEXT_PUBLIC_ADSENSE_REVIEW_MODE`, which still controls the paywall 
   - noindexing cards whose only listings are out of stock (21 or fewer today), or
   - raising the store threshold (25 only removes 5 stores).
 - Published user decks (3) remain in content.xml.
+
+## This branch also carries earlier, unrelated work
+
+At the owner's request the branch keeps two earlier commits that were already on it: a daily PriceHistory export to a jsDelivr-served `data` branch, and card charts, movers and recently-updated reading from that export.
+
+**Do not merge to `main` before the `data` branch exists.** As of 2026-09-27 it does not (jsDelivr answers 404). Without it, every card's price chart, the movers and recently-updated come back empty. Run `maintenance.yml` → `export-history-full` once first, or split the AdSense commit out onto its own branch.
