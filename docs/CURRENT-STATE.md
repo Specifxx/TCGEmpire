@@ -167,7 +167,7 @@ longer lands on its entry.
   gold); the signed-in `PremiumSlideIn` carries Premium. The popup waits for
   a 2nd page view or 60 s of reading, never on the first page from another
   site or a phone's first view (`lib/signup-promo-gate.ts`), except on the
-  top landing pages (`/blog/*`, `/movers`), where both nudges show after 20 s
+  top landing pages (`/blog/*`, `/movers`), where both nudges show after 7 s
   of reading on any view. It stops after 2
   dismissals per device, snoozes 3 pages then 7 days, and keeps its 5-second
   delay. [2026-09-16](../DECISIONS.md#L7031),

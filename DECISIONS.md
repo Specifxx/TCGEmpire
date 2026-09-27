@@ -14545,3 +14545,7 @@ on the admin page is the first real audience count.
 The 20 s is the point: the 2026-09-24 rule protects a visitor who has not yet seen what the site is, and 20 s on an article means they have. Everything else stands: dismissal caps, snoozes, the once-per-session slider, and the never-over-a-modal check. Every other page keeps the original gate. `tests/first-visit-ux.test.ts` pins the four URLs.
 
 **Checked.** On a local build in Chromium, a phone-width visitor arriving from google.com on a blog post saw the popup after ~20 s. The homepage under the same conditions still showed none.
+
+## Landing-page nudges: 7 s, not 20 s — 2026-09-27
+
+The owner asked for the nudges on `/blog/*` and `/movers` (entry above) to appear after 7 seconds. `LANDING_ENGAGED_MS` is now 7 000. `PremiumSlideIn` uses it directly as its delay. The signed-out popup still runs its 5 s `NUDGE_DELAY_MS` settle-in after becoming eligible, so its reading threshold on these pages is the remainder (2 s), and it too appears 7 s in. Every other page keeps the original gate.

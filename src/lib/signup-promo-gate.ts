@@ -18,10 +18,10 @@ export const ENGAGED_MS = 60_000;
 // TOP LANDING PAGES (2026-09-27, owner request). Blog posts and /movers are
 // where search traffic lands, and most of those visits are one page from
 // another site, so the rules above meant the prompt essentially never showed
-// there. On these pages 20 s of visible reading is enough, even on a first
+// there. On these pages 7 s of visible reading is enough, even on a first
 // external or phone view: the visitor has already read the page, which is
 // what the first-visit rule was protecting.
-export const LANDING_ENGAGED_MS = 20_000;
+export const LANDING_ENGAGED_MS = 7_000;
 const LANDING_PREFIXES = ["/blog/", "/movers"];
 
 export function isLandingPage(pathname: string | null | undefined): boolean {
