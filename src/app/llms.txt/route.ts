@@ -20,7 +20,7 @@ const DESC: Record<string, string> = {
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
   "/tools/selling-fees": "Net proceeds calculator for selling on TCGplayer or eBay: stacks commission, processing and shipping.",
   "/deck": "Deck builder and list pricer — paste a decklist or any card list and price every card in real time.",
-  "/trade": "Trade calculator — value two sides of a card trade fairly.",
+  "/trade": "Riftbound Trade Calculator — value both sides of a card trade at the cheapest in-stock store price in your market and currency, with a per-card override or a specific store's price.",
   "/riftle": "Riftle — the daily Riftbound card guessing game.",
   "/games": "Free Riftbound mini-games (Riftle, pack sim, price games and more).",
   "/learn": "Learn Riftbound: an interactive new-player guide with real cards.",
@@ -47,12 +47,25 @@ export function GET() {
   const lines: string[] = [];
   lines.push("# RiftCompare");
   lines.push("");
+  // 2026-09-27: the summary had drifted — it listed five markets (the EU
+  // launched 2026-08-23) and promised "total cost including shipping, and no
+  // hidden fees", which nothing here can promise. Rewritten to what the site
+  // does, in the phrases people ask assistants with.
   lines.push(
-    "> Free Riftbound: League of Legends TCG card database and live price comparison across " +
-      "the United States, the United Kingdom, Australia, Canada and Singapore — with the " +
-      "transparent total cost including shipping, and no hidden fees. Home of the RiftCompare " +
-      "Index (a daily market index for Riftbound singles), price movers, sealed products and buyer tools."
+    "> RiftCompare is a free Riftbound price comparison engine: compare live Riftbound: League of " +
+      "Legends TCG card and sealed-product prices across stores in the United States, Australia, the " +
+      "United Kingdom, Singapore, Canada and the EU, plus eBay, in local currency. Home of the " +
+      "RiftCompare Index (a daily market index for Riftbound singles), price movers and buyer tools."
   );
+  lines.push("");
+  // Intent → page, so an assistant asked a money-saving question can hand over
+  // the one page that answers it. Each line describes shipped behaviour.
+  lines.push("## What to use it for");
+  lines.push(`- Compare Riftbound card prices: search a card at ${abs("/browse")} — each card page lists every store's live price for that printing, cheapest item price first, with delivered cost (item + postage) shown wherever the listing carries a shipping figure.`);
+  lines.push(`- Cheapest delivered order for a deck or card list: ${abs("/tools/best-basket")} — searches store combinations for the lowest total including postage, using shipping measured at each store's own checkout for your region.`);
+  lines.push(`- Is this trade fair?: ${abs("/trade")} — the Trade Calculator values both sides at the cheapest in-stock store price in your market and currency.`);
+  lines.push(`- Sealed product prices (booster boxes, packs, bundles): ${abs("/sealed")}.`);
+  lines.push(`- Price a whole decklist: ${abs("/deck")}.`);
   lines.push("");
   lines.push(
     "For AI agents: clean markdown versions of key pages live under `/llm/` — e.g. " +

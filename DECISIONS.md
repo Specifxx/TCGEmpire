@@ -14549,3 +14549,42 @@ The 20 s is the point: the 2026-09-24 rule protects a visitor who has not yet se
 ## Landing-page nudges: 7 s, not 20 s — 2026-09-27
 
 The owner asked for the nudges on `/blog/*` and `/movers` (entry above) to appear after 7 seconds. `LANDING_ENGAGED_MS` is now 7 000. `PremiumSlideIn` uses it directly as its delay. The signed-out popup still runs its 5 s `NUDGE_DELAY_MS` settle-in after becoming eligible, so its reading threshold on these pages is the remainder (2 s), and it too appears 7 s in. Every other page keeps the original gate.
+
+## "Compare Riftbound card prices": comparison metadata, a WebApplication node, and shipping claims made accurate — 2026-09-27
+
+**Why.** The owner asked for metadata, schema and on-page copy that map RiftCompare to "compare Riftbound card prices", "Riftbound price comparison (engine)" and "live regional shipping costs", for search engines and for AI crawlers. The keyword map had no row for the comparison phrasing: the homepage owned "riftbound card prices" and "price check", and nothing owned "compare".
+
+**What.**
+- **Descriptions, not titles.** The six market-homepage descriptions now lead with "Compare Riftbound card prices…" and fit 155 characters in every count shape (`lib/seo.ts`). The `<title>`s are unchanged. They lead with "Riftbound Card Prices", which three audits and the 2026-09-24 owner-directed growth pass settled and `tests/keyword-ownership.test.ts` pins. Retitling three days into measuring that change would have cost the attribution it was made to produce. The region titles already say "Compare N XX Stores".
+- **Share previews name the product.** The homepage's `og:title`/`twitter:title` is "RiftCompare: the Riftbound price comparison engine — N stores + eBay" (`homeSocialTitle`), so the 60-character SERP title can keep spending its budget on the head term. The root layout's default title, description and OG tags say the same.
+- **Schema.**
+  - The WebSite node gains a description and `inLanguage`.
+  - The Organization description and `knowsAbout` name the comparison.
+  - A new `webApplication()` builder (`lib/jsonld.ts`) emits a `WebApplication` for `/` (`/#app`, ShoppingApplication) and `/trade` (`/trade#app`, UtilitiesApplication). Each has a `featureList` of live features and a real zero-price `Offer`.
+  - **No `aggregateRating`:** the site has no genuine ratings, and a typed-in one to win Google's software-app rich result would be a fabricated review. Search Console may call the node ineligible for that one result; that is the honest state.
+  - Product/AggregateOffer/`OfferShippingDetails` already exist on card and sealed pages; unchanged.
+- **Homepage copy.**
+  - Three new FAQs, which are also FAQPage JSON-LD: "What is RiftCompare?", "Does RiftCompare include shipping costs?" and "Is there a Riftbound trade calculator?".
+  - A second About paragraph links Best Basket and the Trade Calculator.
+- **`/trade`.**
+  - Title "Riftbound Trade Calculator: Fair Trade Values". The old one was 68 characters with the suffix.
+  - H1 "Riftbound Trade Calculator", and an intro that says exactly how cards are valued.
+  - Its own OG tags and WebApplication.
+- **`/llms.txt`.**
+  - The summary now names all six markets; it had lost the EU.
+  - A "What to use it for" intent→page list for assistants.
+  - `ai-plugin.json`'s human description no longer says "real shipping cost".
+
+**Declined — "live regional shipping costs".** It isn't true, so no surface says it. Two things exist:
+1. Card pages rank stores by ITEM price and show delivered cost beside a listing only where it carries a shipping figure (`lib/market-rows.ts`, deliberately, so a store with no published rate isn't pushed down).
+2. The regional figures are a measured checkout snapshot (`lib/shipping.ts`, real carts per state/region, re-probed), not live quotes. They power Best Basket's cheapest delivered order.
+
+So comparison pages claim "with delivered cost", and "shipping measured at each store's checkout" is said only of the basket. The homepage JSON-LD's "total cost including shipping, no hidden fees" and llms.txt's "no hidden fees" went for the same reason. `tests/comparison-discoverability.test.ts` fails if "live shipping" or "no hidden fees" comes back, and pins every length budget above.
+
+**Verified.**
+- A full `npm run build` (exit 0) ran against a local Postgres seeded the CI way (`prisma db push` + `prisma/seed.ts`).
+- `next start`, then fetched `/`, `/au`, `/uk`, `/trade`, `/about` and `/llms.txt`. The titles, descriptions and og:/twitter: tags render as described above, with the count-free fallbacks because the seed has no prices.
+- Every JSON-LD block parses. `/` carries Organization, WebSite, WebPage, WebApplication (`/#app`, seven features, zero-price Offer, no rating) and an eight-question FAQPage. `/trade` carries BreadcrumbList and WebApplication (`/trade#app`).
+- Playwright at 390px and 1280px: the new About paragraph and the `/trade` header match the existing styling, with no horizontal overflow.
+- Typecheck clean. Lint clean apart from the pre-existing warning. 2,521 tests pass.
+- Landed on main without `[deploy]`, so it rides the 08:00 UTC release.

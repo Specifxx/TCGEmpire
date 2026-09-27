@@ -66,6 +66,48 @@ export function webPage(opts: {
   };
 }
 
+/**
+ * WebApplication (schema.org's SoftwareApplication subtype for a browser tool)
+ * for a page whose job is a TOOL rather than a document — "/" (the comparison
+ * engine) and "/trade" (the Trade Calculator). It names the utility in the
+ * terms people search for it ("compare Riftbound card prices") and lists what
+ * the tool does as `featureList`, which answer engines read as the page's
+ * capabilities.
+ *
+ * Deliberately NO aggregateRating: the site has no genuine ratings, and one
+ * typed in to earn Google's software-app rich result would be a fabricated
+ * review. Without it the node is still valid schema.org; Search Console may
+ * list it as not eligible for that one rich result, which is the honest state.
+ * `offers` is a real zero-price Offer: every comparison and calculator here is
+ * free to use (Plus/Premium add extras, described on /premium's own Product).
+ */
+export function webApplication(opts: {
+  /** Fragment id, appended to the page URL: "#app" → https://…/trade#app. */
+  id: string;
+  name: string;
+  href: string;
+  description: string;
+  featureList: string[];
+  applicationCategory: "ShoppingApplication" | "UtilitiesApplication";
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "@id": `${opts.href === "/" ? SITE_URL + "/" : absolute(opts.href)}${opts.id}`,
+    name: opts.name,
+    url: absolute(opts.href),
+    description: opts.description,
+    applicationCategory: opts.applicationCategory,
+    operatingSystem: "Any",
+    browserRequirements: "Requires a modern web browser with JavaScript enabled.",
+    isAccessibleForFree: true,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: opts.featureList,
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    publisher: { "@id": `${SITE_URL}/#org` },
+  };
+}
+
 /** FAQPage from a plain Q&A list. Returns null for an empty list so callers can
  *  spread it conditionally rather than emitting an FAQPage with no questions,
  *  which Search Console flags. */

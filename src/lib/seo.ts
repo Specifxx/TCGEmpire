@@ -231,17 +231,46 @@ export function regionHomeTitle(region: Exclude<Country, "US">, liveStores: numb
   ]);
 }
 
+// ── "Compare Riftbound card prices" (2026-09-27) ──────────────────────────────
+// The descriptions lead with the comparison intent ("compare riftbound card
+// prices", "riftbound price comparison"), which no page owned; the TITLES keep
+// the "Riftbound Card Prices" head term the audits settled (see above).
+//
+// Shipping wording is deliberately NOT "live". Two different things exist:
+//  - card pages rank stores by ITEM price and show delivered cost beside it
+//    where the listing carries a shipping figure (lib/market-rows.ts);
+//  - the REGIONAL figures are the measured checkout snapshot in lib/shipping.ts
+//    (real carts, per state/region, re-probed — not a live quote), and they
+//    power Best Basket's cheapest delivered order.
+// So "with delivered cost" is what a comparison page may claim, and "shipping
+// measured at each store's checkout" is only ever said of the basket.
 export function homeDescription(cards: number | null | undefined, liveStores: number | null | undefined): string {
   const c = cards && cards > 0 ? `${cards.toLocaleString("en-US")} cards` : "every card";
-  const s = liveStores && liveStores > 0 ? `${liveStores} stores` : "every store we track";
-  return `Riftbound card prices for ${c} across ${s} and eBay in six markets — price check any card across them and find the cheapest place to buy. Updated daily.`;
+  const s = liveStores && liveStores > 0 ? `${liveStores} stores` : "tracked stores";
+  return `Compare Riftbound card prices for ${c} across ${s} + eBay, with delivered cost — price check any card across six markets. Updated daily.`;
 }
 
 export function regionHomeDescription(region: Exclude<Country, "US">, cards: number | null | undefined, liveStores: number | null | undefined): string {
   const info = COUNTRIES[region];
   const c = cards && cards > 0 ? `${cards.toLocaleString("en-US")} cards` : "every card";
-  const s = liveStores && liveStores > 0 ? `${liveStores} ${info.adjective} stores` : `every ${info.adjective} store we track`;
-  return `Riftbound card prices in ${info.place}: ${c} compared across ${s} in ${info.currency}, with ${info.adjective} delivered cost. Updated daily.`;
+  const s = liveStores && liveStores > 0 ? `${liveStores} ${info.adjective} stores` : `tracked ${info.adjective} stores`;
+  return `Compare Riftbound card prices in ${info.place}: ${c} across ${s} in ${info.currency}, with delivered cost. Updated daily.`;
+}
+
+/** Social-card (og:title / og:description) wording for "/". Separate from the
+ *  <title> on purpose: a share preview has room for the product noun
+ *  ("price comparison engine") that the 60-character SERP title spends on the
+ *  head term. */
+export function homeSocialTitle(liveStores: number | null | undefined): string {
+  const n = liveStores && liveStores > 0 ? liveStores : null;
+  return n
+    ? `RiftCompare: the Riftbound price comparison engine — ${n} stores + eBay`
+    : "RiftCompare: the Riftbound price comparison engine";
+}
+
+export function homeSocialDescription(liveStores: number | null | undefined): string {
+  const s = liveStores && liveStores > 0 ? `${liveStores} stores` : "the stores we track";
+  return `Compare Riftbound card and sealed prices across ${s} and eBay in six markets, then find the cheapest delivered basket with shipping measured at each store's checkout.`;
 }
 
 /** Full <Metadata> for one of the region home pages (not "/" itself, which

@@ -113,11 +113,11 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "RiftCompare — Riftbound Card Database & Price Comparison",
+    default: "RiftCompare — Riftbound Price Comparison Engine & Card Database",
     template: "%s — RiftCompare",
   },
   description:
-    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, the US, the UK, Singapore, Canada and the EU to find the cheapest place to buy.",
+    "Compare Riftbound card prices across stores in the US, Australia, the UK, Singapore, Canada and the EU, plus eBay, with delivered cost in your currency.",
   applicationName: SITE_NAME,
   // NO `keywords` meta. Google has ignored it since 2009 and Bing treats stuffing
   // it as a negative signal; it only ever advertised our target terms to
@@ -139,9 +139,9 @@ export const metadata: Metadata = {
     type: "website",
     siteName: SITE_NAME,
     url: SITE_URL,
-    title: "RiftCompare — Riftbound Card Database & Price Comparison",
+    title: "RiftCompare — Riftbound Price Comparison Engine & Card Database",
     description:
-      "Compare live Riftbound TCG card prices across stores in Australia, the US, the UK, Singapore, Canada and the EU to find the cheapest place to buy.",
+      "Compare Riftbound card and sealed prices across stores in six markets, then find the cheapest delivered basket with shipping measured at each store's checkout.",
   },
   twitter: { card: "summary_large_image" },
   // Opt into large image thumbnails + full text snippets in Google/Bing results
@@ -213,8 +213,10 @@ const orgJsonLd = {
       knowsAbout: [
         "Riftbound",
         "Riftbound: League of Legends TCG",
+        "Riftbound price comparison",
         "Trading card game prices",
         "Trading card price comparison",
+        "Trading card shipping costs",
         "The RiftCompare Index",
         "Sealed trading card products",
       ],
@@ -242,7 +244,7 @@ const orgJsonLd = {
         availableLanguage: "English",
       },
       description:
-        "Riftbound: League of Legends TCG card database and live price-comparison across the United States, Australia, the United Kingdom, Singapore, Canada and the EU, home of the RiftCompare Index.",
+        "RiftCompare is a Riftbound price comparison engine: it compares live Riftbound: League of Legends TCG single-card and sealed-product prices across stores in the United States, Australia, the United Kingdom, Singapore, Canada and the EU, shows delivered cost, prices whole card lists at the cheapest delivered total using shipping measured at each store's checkout, and is home of the RiftCompare Index.",
     },
     {
       "@type": "WebSite",
@@ -250,6 +252,12 @@ const orgJsonLd = {
       url: SITE_URL,
       name: SITE_NAME,
       alternateName: ["Rift Compare", "RiftCompare.com"],
+      // What the site IS, in the words people search it with ("compare
+      // riftbound card prices", "riftbound price comparison"). The homepage's
+      // WebApplication node (app/page.tsx, @id /#app) spells out the features.
+      description:
+        "Riftbound price comparison: compare live prices for Riftbound single cards and sealed products across stores and eBay in six markets, with delivered cost.",
+      inLanguage: "en",
       publisher: { "@id": `${SITE_URL}/#org` },
       potentialAction: {
         "@type": "SearchAction",

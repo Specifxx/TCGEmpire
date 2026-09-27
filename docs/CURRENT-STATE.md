@@ -276,7 +276,13 @@ longer lands on its entry.
 - **Owners:** the six market homepages' titles and H1s lead with "Riftbound
   Card Prices", and their titles quote a LIVE count of stores with an
   in-stock listing (`homeTitle` / `regionHomeTitle`, dropped when unknown);
-  each has a "Riftbound card prices today" table under the hero. `/browse`
+  each has a "Riftbound card prices today" table under the hero. Their
+  DESCRIPTIONS lead with "Compare Riftbound card prices", and the share
+  previews, JSON-LD (`WebApplication` at `/#app`) and `/llms.txt` say
+  "Riftbound price comparison engine". Shipping is never called "live":
+  comparison pages claim "delivered cost", and only Best Basket claims
+  shipping "measured at each store's checkout".
+  [2026-09-27](../DECISIONS.md#L14553) `/browse`
   owns "riftbound card list"; the Radiance spoiler tracker is the only title
   with "radiance" + "spoiler". No store count in any OTHER page title
   (Singapore's "11 Stores" excepted). Bare hreflang `en` is the US page; the

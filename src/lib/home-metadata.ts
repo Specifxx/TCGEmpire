@@ -3,7 +3,16 @@
 // costs no query of its own — and fails open to the count-free wording.
 import type { Metadata } from "next";
 import { getHomeStats } from "./home-stats";
-import { homeDescription, homeTitle, pageAlternates, pageOpenGraph, regionHomeHreflang, regionHomeMetadata } from "./seo";
+import {
+  homeDescription,
+  homeSocialDescription,
+  homeSocialTitle,
+  homeTitle,
+  pageAlternates,
+  pageOpenGraph,
+  regionHomeHreflang,
+  regionHomeMetadata,
+} from "./seo";
 import type { Country } from "./country";
 
 async function liveStats() {
@@ -21,7 +30,18 @@ export async function homeMetadata(): Promise<Metadata> {
   return {
     title: { absolute: title },
     description,
-    openGraph: pageOpenGraph({ title, description, url: "/" }),
+    // Share previews (and the og:* tags AI crawlers read as the page's own
+    // summary) name the product; the SERP <title> keeps the head term.
+    openGraph: pageOpenGraph({
+      title: homeSocialTitle(stats?.liveStoresAll),
+      description: homeSocialDescription(stats?.liveStoresAll),
+      url: "/",
+    }),
+    twitter: {
+      card: "summary_large_image",
+      title: homeSocialTitle(stats?.liveStoresAll),
+      description: homeSocialDescription(stats?.liveStoresAll),
+    },
     alternates: pageAlternates("/", { languages: regionHomeHreflang() }),
   };
 }
