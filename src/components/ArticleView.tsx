@@ -192,7 +192,9 @@ function CardCloseUpFig({ cu, card }: { cu: ArticleCloseUp; card?: CardTileData 
 // days). That is the spoiler post — a handful of just-revealed cards, and a
 // reader asking where each one can be found. A long list or a gallery of older
 // cards gets nothing: the tile's own QuickView and card page are the better
-// next step there, and a wall of links under 12 tiles reads as a link farm.
+// next step there, and a wall of links under 12 tiles reads as a link farm —
+// unless the article opts a small, hand-picked gallery in with `ebaySearch`
+// (2026-09-27, "Popular pages tuned for eBay"): the same 2–6 bound applies.
 const GALLERY_EBAY_MIN = 2;
 const GALLERY_EBAY_MAX = 6;
 function galleryHasEbaySearch(embed: ArticleEmbed, cards: CardTileData[]): boolean {
@@ -200,7 +202,7 @@ function galleryHasEbaySearch(embed: ArticleEmbed, cards: CardTileData[]): boole
     !embed.filterable &&
     cards.length >= GALLERY_EBAY_MIN &&
     cards.length <= GALLERY_EBAY_MAX &&
-    cards.every((c) => isCurrentSetCode(c.setCode))
+    (embed.ebaySearch === true || cards.every((c) => isCurrentSetCode(c.setCode)))
   );
 }
 

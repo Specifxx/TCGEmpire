@@ -84,6 +84,12 @@ export interface ArticleEmbed {
   // tile is still server-rendered, so crawlers see every card and link.
   defaultSort?: "number" | "recent";
   initialCount?: number;
+  // Per-card eBay searches under a SMALL gallery (2–6 cards) of OLDER-set cards.
+  // Galleries of current-set cards get them automatically (ArticleView
+  // galleryHasEbaySearch); this opts in a hand-picked set of cards a reader can
+  // buy today — the HEARTSTEEL post's "five originals" (2026-09-27, "Popular
+  // pages tuned for eBay" in DECISIONS.md). Never on a filterable gallery.
+  ebaySearch?: boolean;
   // Rules-text query: cards whose ability text contains this string (optionally
   // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
   rulesContain?: string;
@@ -240,9 +246,13 @@ export const ARTICLES: Article[] = [
       src: "/blog/riftbound-heartsteel-overnumbered.jpg",
       alt: "Riot's official HEARTSTEEL overnumbered cards for Riftbound: Radiance — K'Sante, Aphelios and Ezreal on the top row, Yone, Kayn and Sett below, numbered RAD 178/167 to 183/167",
     },
+    // What the post is about, not the generic pair every Radiance post carries
+    // (2026-09-27, "Popular pages tuned for eBay" in DECISIONS.md): the band,
+    // the one new card, then the product it comes in.
     shop: [
-      { label: "Radiance pre-orders", query: "Riftbound Radiance" },
-      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+      { label: "HEARTSTEEL cards on eBay", query: "Riftbound HEARTSTEEL" },
+      { label: "K'Sante, Courageous", query: "Riftbound K'Sante Courageous" },
+      { label: "Radiance booster displays", query: "Riftbound Radiance booster display" },
     ],
     // All six are in the catalogue (manual-cards.json); the originals are the
     // live OGN/SFD rows the HEARTSTEEL post already embeds.
@@ -267,6 +277,9 @@ export const ARTICLES: Article[] = [
       {
         title: "The five originals — the same cards, buyable today",
         note: "The Origins and Spiritforged printings the HEARTSTEEL cards reprint. Same name, cost and rules text; live prices across every store we track.",
+        // Older-set cards a reader can buy today, so a per-card eBay search row
+        // (opt-in: a gallery of older cards gets none by default).
+        ebaySearch: true,
         slugs: [
           "aphelios-exalted-sfd-049-221",
           "ezreal-dashing-sfd-082-221",
@@ -1324,6 +1337,8 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
     ],
     shop: [
       { label: "Radiance pre-orders on eBay", query: "Riftbound Radiance booster box" },
+      { label: "Radiance Vault Bundle on eBay", query: "Riftbound Radiance Vault" },
+      { label: "HEARTSTEEL cards on eBay", query: "Riftbound HEARTSTEEL" },
       { label: "Radiance singles on eBay", query: "Riftbound Radiance" },
     ],
     browseCta: {
@@ -1550,6 +1565,8 @@ Three naming traps catch buyers every set, and Radiance has all three:
 - **A "Pre-Rift" listing at a store is usually an event seat**, not a sealed kit. Stores sell entry to their Pre-Rift event — you play the kit in store, 16 to 22 October — and some list those seats alongside the sealed product. Check the listing for a date and a time before you add it to a basket expecting a parcel.
 
 If you are unsure what a box is worth opening at all, that is a separate question with an arithmetic answer — the **[box EV calculator](/tools/box-ev)** does it for every released set and will cover Radiance from release day, once real singles prices exist.
+
+[[shop]]
 
 ## Buying from Riot: the Merch Store draw
 

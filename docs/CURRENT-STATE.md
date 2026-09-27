@@ -407,7 +407,11 @@ longer lands on its entry.
   (`tests/methodology-breaks.test.ts`), and the Index and portfolio are
   chain-linked across a break. Rising Cards is the exception: it keeps its
   pre-09-23 signals by the owner's call until cards have five weekly points
-  on the new basis. [2026-09-25](../DECISIONS.md#L12842), [2026-09-25](../DECISIONS.md#L13043)
+  on the new basis. /movers is never blank through a break: until any card
+  has a week on the new basis (and only within the grace window) it shows the
+  last week BEFORE the switch, labelled — opt-in, so no other surface shows a
+  stale price as today's. [2026-09-25](../DECISIONS.md#L12842), [2026-09-25](../DECISIONS.md#L13043),
+  [2026-09-27](../DECISIONS.md#L14462)
 - **Rules text:** `Card.description` comes from Riot's gallery for every set.
   Origins, Proving Grounds, Spiritforged and Unleashed are filled by
   `scripts/backfill-card-text.ts` (maintenance task `backfill-card-text`,

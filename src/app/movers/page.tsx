@@ -96,9 +96,16 @@ export default async function MoversPage() {
   // loader — self-cached, day-keyed, 172800s TTL, so it cannot undercut this
   // page's revalidate either — and is called here, at the top level, for the
   // same reason: never from inside another cache (tests/movers-most-searched.test.ts).
-  const [movers, demand] = await Promise.all([getPriceMovers(country, 50), getTopDemand(7, MOST_SEARCHED_ROWS)]);
+  // preSwitch (owner, 2026-09-27): while no card has a week on the current price
+  // basis, show the last week BEFORE the switch, labelled, rather than a blank
+  // page — see getPriceMovers.
+  const [movers, demand] = await Promise.all([getPriceMovers(country, 50, { preSwitch: true }), getTopDemand(7, MOST_SEARCHED_ROWS)]);
   const mostSearched = demand.windowUsable ? demand.bySearch.map((p) => ({ card: p.card, searches: p.searches })) : [];
   const pricingBreak = recentMethodologyBreak();
+  const preSwitch = movers.basis === "pre-switch" && movers.asOf != null;
+  const asOfLabel = preSwitch
+    ? new Date(movers.asOf!).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })
+    : null;
 
   const hasAny = movers.spiking.length || movers.plummeting.length || movers.value.length;
 
@@ -195,17 +202,23 @@ export default async function MoversPage() {
 
       {pricingBreak && (
         <p className="-mt-4 max-w-3xl rounded-lg border border-ink-700 bg-ink-900 px-4 py-3 text-xs leading-relaxed text-slate-400">
-          <strong className="text-slate-200">Fewer movers than usual for a couple of weeks.</strong> On{" "}
-          {new Date(pricingBreak.from).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" })} the US
+          {preSwitch ? (
+            <strong className="text-slate-200">Showing the week to {asOfLabel}, the last before our price switch.</strong>
+          ) : (
+            <strong className="text-slate-200">Fewer movers than usual for a couple of weeks.</strong>
+          )}{" "}
+          On {new Date(pricingBreak.from).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" })} the US
           TCGplayer price we track changed from TCGplayer&apos;s market price to the cheapest English listing. A change
           across that date would measure the switch, not the market, so each card rejoins these lists once it has two weekly
           prices on the new basis.
+          {preSwitch &&
+            " Until then these lists compare the old basis with itself, so the prices shown are from that week — open a card for today's."}
         </p>
       )}
 
       {hasAny ? (
         <>
-          <PriceWatch movers={movers} currency={info.currency} place={info.place} showHeader={false} />
+          <PriceWatch movers={movers} currency={info.currency} place={info.place} showHeader={false} ebaySearch weekTo={asOfLabel} />
 
           {/* Straight after the lists (2026-09-26, "Pushing eBay clicks" in
               DECISIONS.md): a reader who has just seen a card drop or spike

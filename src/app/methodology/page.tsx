@@ -378,7 +378,9 @@ export default function MethodologyPage() {
             narrative — never compare a point from before that switch with one after it, and the Index
             flattens the step. Rising Cards is an exception, by choice: it still reads across the switch,
             because dropping the older points would leave too few weeks to screen on, so a US-sourced card
-            can show one step there.
+            can show one step there. Until any card has a week on the new basis,{" "}
+            <Link href="/movers" className="text-brand-400 hover:underline">price movers</Link> shows the last week
+            before the switch instead, labelled with its date, so every price it compares is on the old basis.
           </p>
         </section>
 

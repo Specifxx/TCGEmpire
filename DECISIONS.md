@@ -14458,3 +14458,61 @@ with Log in / Sign up free unclipped, the footer row on /, no banner pair on the
 nine trust routes and a pair everywhere else, every tool/data route 200 with its
 intro and Read next and no horizontal scroll, the Unleashed guide 200, /alerts in
 the core sitemap.
+
+## Popular pages tuned for eBay, and /movers populated through the price switch — 2026-09-27
+
+**Why.** Owner's brief: the most-visited pages — /blog/riftbound-heartsteel-overnumbered-cards,
+/blog/where-to-buy-riftbound-radiance, /blog/riftbound-radiance-spoilers and
+/movers — should be well tuned for eBay, eBay being the main revenue. Mid-task the
+owner asked why /movers showed no movers: "We need to still leverage the old
+strategy right up until the data has collected for the new strategy so there is
+actually information to show. Having the page populated is the most important
+thing." Released off-schedule at the owner's request.
+
+**What.**
+- **HEARTSTEEL post.** Its mid-article strip searched for "Radiance pre-orders"
+  and "Riftbound TCG singles", the pair every Radiance post carries; it now
+  searches for what the post is about: HEARTSTEEL cards, K'Sante, Courageous (the
+  one new card), and Radiance booster displays. The "five originals — buyable
+  today" gallery (older-set cards a reader can buy now) gets the per-card eBay
+  search row through a new per-embed opt-in, `ebaySearch` — the automatic rule
+  still covers only current-set galleries, and the 2–6 card bound applies to both.
+- **Where to buy Radiance.** Its eBay strip rendered only after the whole body;
+  it now sits right after the product rundown (~29%), where the buying decision
+  is, and before the Merch Store draw section.
+- **Radiance spoilers.** The strip (already at 15%) gains the Vault Bundle and
+  HEARTSTEEL searches: four, the upper end of the two-to-four guidance.
+- **Every article strip** says "Search eBay →", not "View listings →": it is a
+  search, and a search never promises listings ("Pushing eBay clicks").
+- **/movers.** Each "Most searched this week" row — the list that is populated
+  right now — gets a compact eBay search button, a sibling of the row link (never
+  nested), with the EPN disclosure above the list; 48px on touch, names still
+  53px+ at 320px. Each movers panel gets a "Search eBay" row naming its top three
+  cards (the plain card name: eBay reads "(A, B)" in a query as an OR group). A
+  button per mover row was not used: it squeezed names to ~44px on a phone, and
+  those rows already open the quick view, whose first block is eBay.
+- **/movers populated through a methodology break.** Movers compare weekly
+  points on one basis only, and after the 23 Sep switch no card has two weekly
+  points on the new basis until about 1 Oct, so the lists were empty and the
+  page blank. Now, while every current-basis list is empty and only inside the
+  break's grace window (`recentMethodologyBreak`, to 14 days after the window),
+  `computePriceMovers` ranks the last week BEFORE the switch — old-basis points
+  compared only with each other, so nothing measures the switch itself — and
+  marks the result `basis: "pre-switch"` with its `asOf` day. Only /movers opts
+  in (`getPriceMovers(…, { preSwitch: true })`), with the panels titled "week to
+  {date}" and the break notice saying so; the homepage deals, digests,
+  newsletter, /games and Discord present a mover's price as today's, so they
+  still get empty lists. Cache key `rc-price-movers-v2` (the value's shape
+  changed). The switch to the new basis is automatic: the first run in which any
+  card has a week on it.
+
+**What this does not change.** No comparison is re-ranked, nothing reads across
+the switch (Rising Cards remains the one reader that does, by the 09-25 call),
+no new query, no revalidate change.
+
+**Verified** on the local seed DB (never production; local-only demand and
+price-history rows): the three posts at 390px in the US and Australia (strip
+positions, searches on ebay.com / ebay.com.au with their customids, the
+originals' per-card row), /movers with the labelled pre-switch panels, their
+eBay rows and the most-searched buttons at 320–1440px with no overflow, and the
+homepage deals unaffected. Tests: `tests/ebay-popular-pages.test.ts`.
