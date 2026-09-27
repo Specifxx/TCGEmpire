@@ -4,11 +4,12 @@ import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 
-// Public price series for one card (weekly-bucketed — see price-history.ts's
-// collapseToWeekly) — the per-card companion to /api/v1/cards.json's
-// whole-catalog summary. Safe to return raw points here (unlike the bulk
-// route) because it's scoped to one card, the same shape and cost profile as
-// getPriceHistory's existing internal use.
+// Public price series for one card — daily, CDN-published (see
+// src/lib/history-store.ts and DECISIONS.md, "History off Neon") — the
+// per-card companion to /api/v1/cards.json's whole-catalog summary. Safe to
+// return raw points here (unlike the bulk route) because it's scoped to one
+// card, the same shape and cost profile as getPriceHistory's existing
+// internal use.
 export const revalidate = 172800;
 
 const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });

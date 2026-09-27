@@ -37,24 +37,31 @@ test("SealedPriceHistory exists in the schema, keyed by a bare groupKey (no rela
   assert.match(model, /@@unique\(\[groupKey, country, day\]\)/, "at most one point per group per market per day");
 });
 
-test("sydneyDay and HISTORY_MIN_INTERVAL_DAYS have one canonical home (price-history.ts), not a duplicate definition per writer", () => {
+test("sydneyDay has one canonical home (price-history.ts), not a duplicate definition per writer", () => {
   const home = codeOnly(read("src/lib/price-history.ts"));
   assert.match(home, /export function sydneyDay\(/);
-  assert.match(home, /export const HISTORY_MIN_INTERVAL_DAYS = 7/);
+  // PriceHistory and SealedPriceHistory are separate tables with DELIBERATELY
+  // separate cadence constants now (see DECISIONS.md, "History off Neon"):
+  // PriceHistory writes daily (its request-time readers moved off Postgres),
+  // SealedPriceHistory still writes weekly (its reader has not been migrated
+  // yet). Both constants still live in this one neutral file, so "one
+  // canonical home" still holds — it's just two constants, not one shared by
+  // both writers.
+  assert.match(home, /export const HISTORY_MIN_INTERVAL_DAYS = 1/);
+  assert.match(home, /export const SEALED_HISTORY_MIN_INTERVAL_DAYS = 7/);
 
-  // price-import.ts must IMPORT these, not redefine them — a second definition
-  // could silently diverge (two writers disagreeing about what "a week" means
-  // would make the two tables' cadences drift apart from each other).
+  // Each writer must IMPORT its own constant, not redefine it — a second
+  // definition could silently diverge from the shared home.
   const priceImport = codeOnly(read("src/lib/price-import.ts"));
-  // Allows other named imports on the same line (e.g. GLOBAL_HISTORY_COUNTRY,
-  // added alongside these two for the GLOBAL history write) — the invariant
-  // this test actually cares about is "imported, not redefined locally".
   assert.match(priceImport, /import\s*\{[^}]*\bsydneyDay\b[^}]*\bHISTORY_MIN_INTERVAL_DAYS\b[^}]*\}\s*from\s*"\.\/price-history"/);
   assert.doesNotMatch(priceImport, /function sydneyDay\(/, "must not redefine sydneyDay locally");
   assert.doesNotMatch(priceImport, /const HISTORY_MIN_INTERVAL_DAYS/, "must not redefine the constant locally");
+  assert.doesNotMatch(priceImport, /SEALED_HISTORY_MIN_INTERVAL_DAYS/, "price-import.ts writes PriceHistory, not SealedPriceHistory — must not import the sealed constant");
 
   const sealedImport = codeOnly(read("src/lib/sealed-import.ts"));
-  assert.match(sealedImport, /import\s*\{[^}]*\bsydneyDay\b[^}]*\bHISTORY_MIN_INTERVAL_DAYS\b[^}]*\}\s*from\s*"\.\/price-history"/);
+  assert.match(sealedImport, /import\s*\{[^}]*\bsydneyDay\b[^}]*\bSEALED_HISTORY_MIN_INTERVAL_DAYS\b[^}]*\}\s*from\s*"\.\/price-history"/);
+  assert.doesNotMatch(sealedImport, /const SEALED_HISTORY_MIN_INTERVAL_DAYS/, "must not redefine the constant locally");
+  assert.doesNotMatch(sealedImport, /\bHISTORY_MIN_INTERVAL_DAYS\b(?!_)/, "sealed-import.ts writes SealedPriceHistory, on its own weekly cadence — must not import PriceHistory's now-daily constant");
 });
 
 test("no import cycle: price-history.ts (the shared home) imports neither price-import.ts nor sealed-import.ts", () => {
@@ -76,7 +83,7 @@ test("writeSealedPriceHistory: weekly-gated, writes through dbHistory (not the o
 
   assert.match(fn, /const day = sydneyDay\(\)/);
   assert.match(fn, /dbHistory\.sealedPriceHistory\.findFirst\(/, "the gate must check ITS OWN table's newest day, not PriceHistory's");
-  assert.match(fn, /daysSince < HISTORY_MIN_INTERVAL_DAYS/);
+  assert.match(fn, /daysSince < SEALED_HISTORY_MIN_INTERVAL_DAYS/, "sealed keeps its own weekly gate — see DECISIONS.md, \"History off Neon\"");
   assert.match(fn, /dbHistory\.sealedPriceHistory\.deleteMany\(\{ where: \{ day \} \}\)/, "same day-replace-on-rerun convention as PriceHistory");
   assert.match(fn, /dbHistory\.sealedPriceHistory\.createMany\(/);
   assert.doesNotMatch(fn, /\bprisma\.sealedPriceHistory\b/, "must write through the split history DB client, never the operational one");

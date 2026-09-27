@@ -37,10 +37,16 @@ test("PRODUCTION deployment is never disabled by these rules", () => {
   const rules = vercel.git?.deploymentEnabled;
   assert.notEqual(rules, false, "a blanket deploymentEnabled:false would stop production deploying");
   const map = rules as Record<string, boolean>;
+  // "data" is the orphan branch scripts/export-history.ts publishes daily
+  // price-history JSON to (served by jsDelivr, never by Vercel) — see
+  // DECISIONS.md, "History off Neon". It carries no app code, so disabling
+  // its deployment is the same kind of deliberate, reasoned exception as
+  // claude/* — never an accidental "production" typo.
+  const NON_PRODUCTION_PATTERNS = ["data"];
   for (const [pattern, enabled] of Object.entries(map)) {
     if (enabled) continue;
     assert.ok(
-      pattern.startsWith("claude/"),
+      pattern.startsWith("claude/") || NON_PRODUCTION_PATTERNS.includes(pattern),
       `"${pattern}": false disables a branch that is not an automation branch — production must keep deploying`,
     );
   }

@@ -14580,3 +14580,165 @@ The owner asked for the nudges on `/blog/*` and `/movers` (entry above) to appea
 **Reversed, while the flag is on.** "Card pages are always indexable" (2026-09-17): special printings with a base, and cards with no listing ever, are noindexed again. The 09-17 reasoning still holds for sold-out cards: any card with a recorded listing, in or out of stock, stays indexed.
 
 **Turning it off.** Set `ADSENSE_REVIEW_MODE=false` in Vercel (Production) and redeploy. Nothing else changes: the overview, editorial sections and fixes stay.
+
+## History off Neon, part 1: the export pipeline lands, readers don't move yet — 2026-09-21
+
+Owner asked for a plan to make RiftCompare the reference Riftbound price site,
+staying on Neon's free tier. The history project (`HISTORY_DATABASE_URL_2`
+today) has rotated 18+ times in six weeks, each rotation risking a blank-chart
+incident like 2026-09-17's, and forces price snapshots to be **weekly**
+(`HISTORY_MIN_INTERVAL_DAYS = 7`) because every windowed history read — card
+charts, movers, the market index, records, the screener, the public API — hits
+the same 5 GB/month allowance the snapshot writer does. No competitor site
+checked (magicalmeta.ink, riftboundstats.com, riftdecks.com) shows better than
+hourly-to-daily granularity; RiftCompare's own chart is the worst of the group
+on this one axis despite tracking more markets than any of them.
+
+**The fix has to be architectural, not another rotation**: stop reading
+PriceHistory from Postgres at request time, so the allowance is spent only on
+the daily write. This entry ships the write half only — the plumbing that gets
+today's snapshot out of Neon and onto a CDN. **No app-side reader changes
+yet** — `computePriceHistory`, `computePriceMovers`, `market-records.ts`,
+`market-index.ts`, `screener.ts`, `rise-predictor.ts`, `public-api.ts` and
+`premium.ts` all still read `dbHistory.priceHistory` exactly as before, and
+`HISTORY_MIN_INTERVAL_DAYS` is untouched at 7. Those changes need the
+published data to already exist before anything can be safely pointed at it,
+so they're deliberately a follow-up, not this commit.
+
+**What ships:**
+
+- `scripts/export-history.ts` — reads the GLOBAL PriceHistory series
+  (`historySource`'s `GLOBAL_HISTORY_COUNTRY`, the same series every reader
+  above already reads) and writes flat JSON: one `cards/<cardId>.json` file
+  per card (`[day, usdCents]` points), two rolling windows (35/120 days) for
+  the readers that scan every card over a short range, an all-time
+  `records.json` (first-reached peak/trough per card, matching
+  `market-records.ts`'s existing semantics so a future migration changes
+  nothing about what a record page says), and a `prices.csv` snapshot for a
+  future public-dataset page. Default run reads **only today's Sydney-day
+  rows** (~1,400, one query) and merges into the existing files — the exact
+  entity/day scoping the egress rules at the top of `src/lib/db.ts` ask for.
+  `--full` does a one-off whole-table read (~82k rows today) to seed or
+  rebuild the tree from scratch.
+- `refresh-prices.yml` gains an "Export price history" step after the sealed
+  import: checks out the orphan `data` branch as a worktree, runs the
+  incremental export, commits and pushes if anything changed. Non-fatal by
+  design — a failed export leaves charts one day stale, never blocks the
+  price import or fails the job.
+- `maintenance.yml` gains a dispatch-only `export-history-full` task to seed
+  the `data` branch the first time (or rebuild it after a quarterly squash —
+  the branch is rewritten daily and will need one eventually).
+- **Hosting: jsDelivr's GitHub-backed CDN, not GitHub Pages.** Pages was the
+  obvious first choice and is rejected here: its terms restrict it from
+  sites "primarily directed at facilitating commercial transactions", and
+  this site carries affiliate links, ads and a paid tier — a real risk for
+  zero benefit over the alternative. jsDelivr serves any GitHub ref with no
+  signup and no secret (`cdn.jsdelivr.net/gh/<owner>/<repo>@<sha>/...`,
+  20 MB/file, 150 MB/ref — both far above the ~8 MB tree), and SHA-pinned URLs
+  cache ~1 year on its CDN, so the follow-up reader PR will resolve a SHA once
+  a day (via a `Counter` row) rather than trust a mutable branch URL. Not yet
+  wired up — that's the follow-up.
+- `vercel.json` gets `"data": false` in `deploymentEnabled`, alongside the
+  existing `claude/*` rules, so the daily branch push never costs a Vercel
+  build. `tests/build-cost.test.ts`'s "no pattern but claude/* may be false"
+  guard was widened by name (`data`) rather than loosened generally, with a
+  comment saying why — the same deliberate-exception shape `claude/*` already
+  has, not a weakening of what that test actually guards against (an
+  accidental "main": false).
+- `ci.yml` already only triggers on `pull_request` and `push: branches:
+  [main]`, so the daily push to `data` triggers nothing — verified rather than
+  assumed (`tests/history-export.test.ts`).
+
+**Why this order.** Publishing the data before any reader depends on it means
+the first real day of daily snapshots accumulates while the reader PR is still
+being reviewed, instead of starting the day that PR merges. It also means the
+`export-history-full` backfill can run once, get eyeballed, and be reused —
+rather than being written and tested for the first time under the pressure of
+"the chart is broken on production."
+
+**Still weekly.** `HISTORY_MIN_INTERVAL_DAYS` moves to 1 only once the readers
+are off Neon — writing daily snapshots while still reading them at request
+time would restore exactly the read-rate problem this whole workstream exists
+to fix, seven times over.
+
+## History off Neon, part 2: card charts, movers and recently-updated move off Postgres — 2026-09-21
+
+Follow-up to "History off Neon, part 1" above, now that the `data` branch
+exists and publishes daily. This is the reader half: `computePriceHistory`,
+`computePriceMovers` and `computeRecentlyUpdated` (`src/lib/price-history.ts`)
+no longer query `dbHistory.priceHistory` at all — they read the CDN-published
+JSON through a new `src/lib/history-store.ts`, and `HISTORY_MIN_INTERVAL_DAYS`
+moves from 7 back to 1. Every other history reader
+(`market-records.ts`, `market-index.ts`, `screener.ts`, `rise-predictor.ts`,
+`public-api.ts`, `premium.ts`) is untouched — still reads Postgres directly,
+still expects weekly-ish cadence assumptions where it has them. They're a
+deliberate follow-up (part 3), not because this pass ran out of time but
+because moving them needs their own read-shape decisions (windowed reads,
+per-card batches for the market index) that don't share code with the three
+functions here.
+
+**Why a branch ref, not a SHA-pinned URL.** The original plan (and a Plan
+subagent's design) called for resolving a commit SHA once a day via a
+`Counter` row and using jsDelivr's SHA-pinned, ~1-year-cached URL form. That
+still needs a request-time lookup of "today's SHA" from *somewhere* — and if
+that somewhere is Postgres, it reintroduces exactly the read this whole
+workstream exists to remove, just for one tiny row instead of a big table.
+`src/lib/history-store.ts` instead reads the `@data` branch ref directly.
+jsDelivr caches a branch URL for up to 12h, and the branch is pushed once a
+day, so worst case a chart lags the true daily snapshot by up to ~36h (missed
+a cache refresh right before a push) — a large improvement on the weekly
+cadence this replaces, still bounded, and it costs zero Postgres reads
+instead of one tiny one. `HISTORY_DATA_BASE_URL` / `HISTORY_DATA_REPO` env
+vars override it, for testing against a fork or a future R2 fallback.
+
+**No component changes.** `LocalizedPriceHistory.tsx` and
+`/api/card/[id]/history` are untouched — they already called `getPriceHistory`
+through the normal server function boundary, so swapping what's inside that
+function was enough. The originally-sketched "client-fetch the CDN file
+directly, bypassing the API route" optimization was dropped: it would have
+meant duplicating the currency-conversion and staleness logic on the client
+for a request that's already cheap (one CDN fetch inside an `unstable_cache`
+wrapper, not a database round trip).
+
+**Cache keys moved from `sydneyWeekKey()` to `sydneyDayKey()`** on all three
+functions — they were already commented "day-scoped" in two of the three
+cases, which was aspirational until now. `HISTORY_CACHE_TTL` (8 days) is left
+as generous slack rather than retuned; a day-scoped key rotates daily
+regardless of how large the TTL is, so a bigger number than strictly needed
+costs nothing but a little cache storage.
+
+**`STALE_HISTORY_MS` moves from 10 days back to 3.** It was widened from 3 to
+10 specifically to tolerate a normal week's gap between weekly snapshots;
+with daily writes restored, the freshest point should again routinely be 0-1
+days old, and 3 days is a real outage's worth of grace, not a normal week's.
+
+**`collapseToWeekly` is kept, unused by these three functions.** The JSON
+files `scripts/export-history.ts` publishes are already at most one point per
+day (`PriceHistory.day` is unique per card), so there's nothing left to
+bucket at read time. The function stays exported and tested
+(`tests/price-history-weekly-bucketing.test.ts`) as a utility any future raw
+Postgres reader could still need for legacy dense-daily rows.
+
+**`market-records.ts`'s `MIN_DAYS` floor moved from 3 to 14.** It still reads
+Postgres directly (not migrated this pass) and counts snapshot *rows*, not
+elapsed days. With daily writes restored globally, 3 rows now means 3 real
+days of history before a card can hold an "all-time" record — too thin, the
+same failure mode `MIN_DAYS` exists to prevent. 14 restores a genuine
+two-week floor under the new cadence.
+`tests/market-records.test.ts` asserts `MIN_DAYS × the real interval >= 14`
+elapsed days in either direction, so a future cadence change fails loudly
+here too rather than silently emptying (or over-filling) the records board.
+
+**`SealedPriceHistory` gets its own cadence constant, `SEALED_HISTORY_MIN_INTERVAL_DAYS`
+(= 7, unchanged).** It's a separate table with a separate writer
+(`sealed-import.ts`) and its reader (`sealed-rise-predictor.ts`) hasn't moved
+off Postgres yet, so widening `HISTORY_MIN_INTERVAL_DAYS` for `PriceHistory`
+must not silently widen sealed's write (and therefore read) rate too. Both
+constants still live in the one neutral home (`price-history.ts`, for the
+same import-cycle reason as `sydneyDay`) — "one canonical home" still holds,
+it's just two constants now instead of one shared by both writers.
+
+Verified: `npm run typecheck`, `npm run lint`, `npm run adsense:guard` and
+`npm test` (1637/1638 passing — the one failure, "the seller id is the client
+id with ca- stripped", fails identically on `main` with none of this branch's
+changes applied, and is a pre-existing sandbox gap unrelated to this work).

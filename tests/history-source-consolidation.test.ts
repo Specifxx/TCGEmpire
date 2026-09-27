@@ -83,14 +83,38 @@ test("price-import.ts writes ONE GLOBAL row per card, the USD-converted minimum 
 // keeps completely stable behind its own changed internals. That stability is
 // the whole point of funnelling every reader through one function.
 
-test("price-history.ts's own 3 PriceHistory readers all resolve through historySource", () => {
+test("price-history.ts's own 3 readers no longer touch Postgres, and still convert through historySource", () => {
+  // DECISIONS.md, "History off Neon": computePriceHistory/computePriceMovers/
+  // computeRecentlyUpdated moved from dbHistory.priceHistory reads to
+  // src/lib/history-store.ts's CDN-published JSON. historySource() is still
+  // the single place that knows the series is USD/GLOBAL — only the SOURCE
+  // of the rows changed, not the currency-conversion contract every caller
+  // still depends on.
   const code = codeOnly(read("src/lib/price-history.ts"));
-  assert.match(code, /where:\s*\{\s*cardId,\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}/, "computePriceHistory");
-  assert.match(code, /where:\s*\{\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}[\s\S]{0,400}orderBy:\s*\{\s*day:\s*"asc"\s*\}[\s\S]{0,600}latestRowDay/, "computePriceMovers");
-  assert.match(code, /where:\s*\{\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}[\s\S]{0,600}latestDay/, "computeRecentlyUpdated");
-  // Every extracted price is converted at the point it's read, not left raw.
-  const convertCalls = code.match(/convert\(r\.lowestPriceCents\)/g) ?? [];
-  assert.ok(convertCalls.length >= 3, `expected all 3 readers to convert their rows, found ${convertCalls.length} call site(s)`);
+  assert.doesNotMatch(code, /dbHistory\.priceHistory\./, "these 3 readers must not query Postgres directly any more");
+  assert.match(code, /import\s*\{[^}]*getCardSeries[^}]*getWindow[^}]*\}\s*from\s*"\.\/history-store"/, "must import the CDN reader");
+
+  const fnBody = (name: string) => {
+    const start = code.indexOf(`async function ${name}`);
+    assert.ok(start >= 0, `expected to find ${name}`);
+    // Rough same-function slice: up to the next top-level "async function" or EOF.
+    const next = code.indexOf("\nasync function ", start + 1);
+    return code.slice(start, next === -1 ? undefined : next);
+  };
+
+  const history = fnBody("computePriceHistory");
+  assert.match(history, /historySource\(country\)/);
+  assert.match(history, /getCardSeries\(cardId\)/);
+  assert.match(history, /convert\(usdCents\)/, "must convert each point through historySource's convert()");
+
+  const movers = fnBody("computePriceMovers");
+  assert.match(movers, /historySource\(country\)/);
+  assert.match(movers, /getWindow\(35\)/);
+  assert.match(movers, /convert\(r\.lowestPriceCents\)|convert\(c\)/, "must convert rows built from the window file");
+
+  const recent = fnBody("computeRecentlyUpdated");
+  assert.match(recent, /historySource\(country\)/);
+  assert.match(recent, /getWindow\(35\)/);
 });
 
 test("premium.ts's portfolio history read resolves through historySource", () => {
