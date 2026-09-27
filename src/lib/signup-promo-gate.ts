@@ -15,6 +15,19 @@
 
 export const ENGAGED_MS = 60_000;
 
+// TOP LANDING PAGES (2026-09-27, owner request). Blog posts and /movers are
+// where search traffic lands, and most of those visits are one page from
+// another site, so the rules above meant the prompt essentially never showed
+// there. On these pages 20 s of visible reading is enough, even on a first
+// external or phone view: the visitor has already read the page, which is
+// what the first-visit rule was protecting.
+export const LANDING_ENGAGED_MS = 20_000;
+const LANDING_PREFIXES = ["/blog/", "/movers"];
+
+export function isLandingPage(pathname: string | null | undefined): boolean {
+  return !!pathname && LANDING_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
 export interface PromoGateInput {
   /** Page views in this session, including the current one. */
   views: number;
@@ -24,10 +37,13 @@ export interface PromoGateInput {
   externalEntry: boolean;
   /** Phone-width viewport. */
   mobile: boolean;
+  /** One of the top landing pages (isLandingPage). */
+  landing?: boolean;
 }
 
-export function signupPromoEligible({ views, engagedMs, externalEntry, mobile }: PromoGateInput): boolean {
+export function signupPromoEligible({ views, engagedMs, externalEntry, mobile, landing }: PromoGateInput): boolean {
   if (views >= 2) return true;
+  if (landing) return engagedMs >= LANDING_ENGAGED_MS;
   // First page view of the session.
   if (externalEntry || mobile) return false;
   return engagedMs >= ENGAGED_MS;

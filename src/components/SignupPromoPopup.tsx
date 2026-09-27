@@ -13,7 +13,7 @@ import { FreeAccountCompare } from "./FreeAccountCompare";
 // this free-account era against the Premium-pitch era is exactly what that tag
 // is for, and dropping it would make the two uncomparable in GA4.
 import { PREMIUM_COPY_VERSION } from "@/lib/site";
-import { ENGAGED_MS, isExternalReferrer, signupPromoEligible } from "@/lib/signup-promo-gate";
+import { ENGAGED_MS, LANDING_ENGAGED_MS, isExternalReferrer, isLandingPage, signupPromoEligible } from "@/lib/signup-promo-gate";
 
 // Shows on the first eligible page, then RETURNS every PAGES_BETWEEN_SHOWS
 // pages after each dismissal, for as long as the visitor stays signed out
@@ -279,10 +279,11 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   useEffect(() => {
     setEngaged(false);
     let visibleMs = 0;
+    const need = isLandingPage(pathname) ? LANDING_ENGAGED_MS : ENGAGED_MS;
     const tick = setInterval(() => {
       if (document.visibilityState !== "visible") return;
       visibleMs += 1000;
-      if (visibleMs >= ENGAGED_MS) {
+      if (visibleMs >= need) {
         setEngaged(true);
         clearInterval(tick);
       }
@@ -304,9 +305,10 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     }
     const eligible = signupPromoEligible({
       views: readCount(VIEWS_KEY),
-      engagedMs: engaged ? ENGAGED_MS : 0,
+      engagedMs: engaged ? (isLandingPage(pathname) ? LANDING_ENGAGED_MS : ENGAGED_MS) : 0,
       externalEntry,
       mobile: window.matchMedia("(max-width: 639px)").matches,
+      landing: isLandingPage(pathname),
     });
     if (!eligible) return;
 

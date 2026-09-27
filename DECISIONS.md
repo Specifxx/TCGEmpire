@@ -14532,3 +14532,16 @@ open a monthly checkout.
 
 **Not verified here**: no database or mail key in this sandbox. The dry run
 on the admin page is the first real audience count.
+
+## Sign-up popup and Premium slider show on the top landing pages — 2026-09-27
+
+**Why.** The owner noticed neither nudge appeared on the site's top pages: `/blog/riftbound-heartsteel-overnumbered-cards`, `/blog/where-to-buy-riftbound-radiance`, `/blog/riftbound-radiance-spoilers` and `/movers`. Both components render site-wide, so no page was excluded. The gate was the cause: the signed-out popup never shows on the first page of a visit from another site or on a phone (2026-09-24), and `PremiumSlideIn` waits for a second page view. These pages are where search traffic lands, and most of those visits are a single page from Google, so the nudges almost never showed there.
+
+**What.** `isLandingPage()` in `lib/signup-promo-gate.ts` covers `/blog/*` and `/movers`. On those pages:
+
+- the signed-out popup becomes eligible after `LANDING_ENGAGED_MS` (20 s) of visible reading, even on a first external or phone view;
+- `PremiumSlideIn` skips its two-page-view minimum and waits 20 s instead of the 5 s `NUDGE_DELAY_MS`.
+
+The 20 s is the point: the 2026-09-24 rule protects a visitor who has not yet seen what the site is, and 20 s on an article means they have. Everything else stands: dismissal caps, snoozes, the once-per-session slider, and the never-over-a-modal check. Every other page keeps the original gate. `tests/first-visit-ux.test.ts` pins the four URLs.
+
+**Checked.** On a local build in Chromium, a phone-width visitor arriving from google.com on a blog post saw the popup after ~20 s. The homepage under the same conditions still showed none.

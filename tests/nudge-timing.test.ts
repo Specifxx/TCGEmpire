@@ -42,7 +42,9 @@ test("every corner nudge waits the shared delay before showing", () => {
     assert.match(code, /NUDGE_DELAY_MS/, `${f} must read the shared nudge delay`);
     // Imported AND actually used as the timer — an unused import would leave the
     // old behaviour in place while looking fixed.
-    assert.match(code, /\}, NUDGE_DELAY_MS\)/, `${f} must use it as the show timer, not merely import it`);
+    // PremiumSlideIn may swap in LANDING_ENGAGED_MS on the top landing pages
+    // (signup-promo-gate.ts, 2026-09-27); everywhere else the shared delay applies.
+    assert.match(code, /\}, (landing \? LANDING_ENGAGED_MS : )?NUDGE_DELAY_MS\)/, `${f} must use it as the show timer, not merely import it`);
   }
 });
 

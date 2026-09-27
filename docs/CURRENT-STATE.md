@@ -166,10 +166,12 @@ longer lands on its entry.
 - **Nudges:** the signed-out popup sells the FREE account (no price, no
   gold); the signed-in `PremiumSlideIn` carries Premium. The popup waits for
   a 2nd page view or 60 s of reading, never on the first page from another
-  site or a phone's first view (`lib/signup-promo-gate.ts`). It stops after 2
+  site or a phone's first view (`lib/signup-promo-gate.ts`), except on the
+  top landing pages (`/blog/*`, `/movers`), where both nudges show after 20 s
+  of reading on any view. It stops after 2
   dismissals per device, snoozes 3 pages then 7 days, and keeps its 5-second
   delay. [2026-09-16](../DECISIONS.md#L7031),
-  [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089)
+  [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089), [2026-09-27](../DECISIONS.md#L14536)
 - **Signed-out visitors get nothing from Deal Finder or Rising Cards**; a
   free account gets the top 3 of each, a paid tier the full list.
   [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842)

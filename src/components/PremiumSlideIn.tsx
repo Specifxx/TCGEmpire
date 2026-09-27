@@ -20,6 +20,7 @@ import {
 } from "@/lib/site";
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
+import { LANDING_ENGAGED_MS, isLandingPage } from "@/lib/signup-promo-gate";
 import { usePresence } from "@/lib/motion";
 import { Skeleton } from "./ui/Skeleton";
 
@@ -246,7 +247,10 @@ export function PremiumSlideIn() {
     } catch {
       /* ignore */
     }
-    if (readNum(ss, PV_KEY) < MIN_PAGEVIEWS) return; // not engaged enough yet
+    // Top landing pages (blog posts, /movers) show on the first page view,
+    // after LANDING_ENGAGED_MS instead of the usual delay — see signup-promo-gate.ts.
+    const landing = isLandingPage(pathname);
+    if (!landing && readNum(ss, PV_KEY) < MIN_PAGEVIEWS) return; // not engaged enough yet
 
     let cancelled = false;
     const dialogOpen = () => typeof document !== "undefined" && document.body.dataset.rcDialog === "1";
@@ -272,7 +276,7 @@ export function PremiumSlideIn() {
         context: mine ? "personal" : (contextPitch?.tool ?? undefined),
         copy: PREMIUM_COPY_VERSION,
       });
-    }, NUDGE_DELAY_MS);
+    }, landing ? LANDING_ENGAGED_MS : NUDGE_DELAY_MS);
 
     return () => {
       cancelled = true;
