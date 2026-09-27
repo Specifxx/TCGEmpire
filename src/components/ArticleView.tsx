@@ -32,7 +32,7 @@ import { BanListTable } from "./BanListTable";
 import { BANLIST_SLUG } from "@/lib/banlist";
 import { EbayCardSearchRow, EbayCountryLink } from "./EbayCountryLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
-import { isCurrentSetCode } from "@/lib/constants";
+import { isCurrentSetCode, SETS, hasSetHub } from "@/lib/constants";
 import { resolveArticleCardMentions } from "@/lib/card-mentions-server";
 import { ReleaseAlertSignup } from "./ReleaseAlertSignup";
 import { NewsletterSignup } from "./NewsletterSignup";
@@ -268,7 +268,9 @@ const DEFAULT_BROWSE_CTA = {
 };
 
 export async function ArticleView({ article }: { article: Article }) {
-  const related = relatedArticles(article);
+  const related = relatedArticles(article, 4);
+  const articleText = `${article.title} ${article.tags.join(" ")} ${article.body}`.toLowerCase();
+  const setsDiscussed = SETS.filter((st) => hasSetHub(st) && articleText.includes(st.name.toLowerCase()));
   const cta = article.browseCta ?? DEFAULT_BROWSE_CTA;
   const radianceSeason = isBeforeRadianceRelease();
   // Every Radiance news post (lib/sets/radiance.ts carriesRadiancePreorderCta).
@@ -399,9 +401,20 @@ export async function ArticleView({ article }: { article: Article }) {
         }}
       />
 
-      <Link href={backHref} className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
-        ← {backLabel}
-      </Link>
+      {/* Visible trail matching breadcrumbLd above: Home › Blog|Guides › title. */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-400">
+        <ol className="flex flex-wrap items-center gap-1.5">
+          <li>
+            <Link href="/" className="hover:text-white">Home</Link>
+          </li>
+          <li aria-hidden="true">›</li>
+          <li>
+            <Link href={backHref} className="hover:text-white">{isGuide ? "Guides" : "Blog"}</Link>
+          </li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page" className="line-clamp-1 text-slate-500">{article.title}</li>
+        </ol>
+      </nav>
 
       <div className="mb-2 flex flex-wrap gap-1.5">
         {article.tags.map((t) => (
@@ -414,14 +427,27 @@ export async function ArticleView({ article }: { article: Article }) {
         {/* The byline links to a real author page with a real bio, and to the
             editorial policy. Anonymous long-form content at scale is one of the
             strongest "machine-generated" signals a reviewer looks for. */}
-        {authorSlug ? (
-          <Link href={`/authors/${authorSlug}`} className="text-slate-400 underline hover:text-brand-400">
-            {article.author}
+        By{" "}
+        {article.author === "RiftCompare" ? (
+          <Link href="/about" className="text-slate-400 underline hover:text-brand-400">
+            RiftCompare
           </Link>
         ) : (
-          article.author
+          <>
+            {authorSlug ? (
+              <Link href={`/authors/${authorSlug}`} className="text-slate-400 underline hover:text-brand-400">
+                {article.author}
+              </Link>
+            ) : (
+              article.author
+            )}{" "}
+            for{" "}
+            <Link href="/about" className="text-slate-400 underline hover:text-brand-400">
+              RiftCompare
+            </Link>
+          </>
         )}{" "}
-        · <time dateTime={article.date}>{fmtDate(article.date)}</time> · {article.readMins} min read
+        · Published <time dateTime={article.date}>{fmtDate(article.date)}</time> · {article.readMins} min read
         {/* Real freshness signal — Article.updated already exists on ~30 articles
             but was never rendered anywhere, so a genuinely-refreshed guide looked
             exactly as stale as one that hadn't been touched since launch. */}
@@ -719,12 +745,26 @@ export async function ArticleView({ article }: { article: Article }) {
         <Link href="/champions" className="text-brand-400 hover:underline">Champion hubs →</Link>
       </nav>
 
+      {/* The set pages this article discusses — named in its title, tags or body. */}
+      {setsDiscussed.length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-lg font-extrabold text-white">Sets in this article</h2>
+          <div className="flex flex-wrap gap-2">
+            {setsDiscussed.map((st) => (
+              <Link key={st.slug} href={`/sets/${st.slug}`} className="chip border border-ink-700 hover:border-brand-500">
+                {st.name} card list &amp; prices →
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Related guides — same-tag articles, so a reader who liked this piece has
           somewhere obvious to go next instead of bouncing. */}
       {related.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 text-lg font-extrabold text-white">Recommended reads</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <h2 className="mb-3 text-lg font-extrabold text-white">Related articles</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
             {related.map((r) => (
               <Link
                 key={r.slug}

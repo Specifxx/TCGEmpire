@@ -459,6 +459,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               happened at 640 and 1440 too, and screen readers announced each
               one as "middle dot". sm:gap-x-6 keeps the desktop rhythm. */}
           <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm sm:gap-x-6">
+            <Link href="/blog" className="tap-link text-slate-300 hover:text-brand-400">Blog</Link>
+            <Link href="/guides" className="tap-link text-slate-300 hover:text-brand-400">Guides</Link>
             <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About</Link>
             <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
             <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>

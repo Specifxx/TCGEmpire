@@ -301,6 +301,7 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
   { href: "/sealed", label: "Sealed" },
   { href: "/market", label: "Index" },
   { href: "/blog", label: "Blog" },
+  { href: "/guides", label: "Guides" },
 ];
 
 // The footer's own grouping — 4 columns instead of NAV_GROUPS' 8-9. Same links,

@@ -14549,3 +14549,34 @@ The 20 s is the point: the 2026-09-24 rule protects a visitor who has not yet se
 ## Landing-page nudges: 7 s, not 20 s — 2026-09-27
 
 The owner asked for the nudges on `/blog/*` and `/movers` (entry above) to appear after 7 seconds. `LANDING_ENGAGED_MS` is now 7 000. `PremiumSlideIn` uses it directly as its delay. The signed-out popup still runs its 5 s `NUDGE_DELAY_MS` settle-in after becoming eligible, so its reading threshold on these pages is the remainder (2 s), and it too appears 7 s in. Every other page keeps the original gate.
+
+## AdSense review mode for indexing: one policy module, variant printings canonicalised, editorial content up front — 2026-09-27
+
+**Why.** AdSense rejected riftcompare.com for "low value content". It reviews the whole domain, and the sitemap listed ~1,890 URLs, of which 1,442 were card pages and 162 store pages — mostly aggregated third-party price tables — against 106 articles. The owner asked for the indexable site to lean on editorial and reference pages while under review, without deleting any route.
+
+**What.**
+
+- **`lib/indexing-policy.ts` is the one place that decides** index vs `noindex, follow` and sitemap membership per route kind. Routes and `lib/sitemap-sections.ts` both ask it, so they cannot disagree. It is driven by `ADSENSE_REVIEW_MODE` (server env var, **default on**). With it on:
+  - facet pages (`/cards/type|rarity|printing/*`, the `/cards/rarity` index, and any filtered or sorted `/browse` view) are noindexed and the facets sitemap is empty;
+  - store pages need 25 in-stock listings (the normal threshold is 5);
+  - a special printing (promo, Showcase, alt-art, Overnumbered, Signature) with a base printing of the same name is noindexed and canonicalises to that base, preferring the same set; a special printing with no base stays indexed as the card's only page;
+  - a card with no listing ever recorded is noindexed;
+  - `/premium` and `/auctions` (a feed of third-party eBay lots that is often empty) are noindexed and dropped from the core sitemap. Account, login and checkout pages were already noindexed and stay so; `/browse?q=` already was.
+  With it off, every threshold returns to what it was and only duplicate card rows are noindexed.
+- **The flag is not the paywall flag.** `lib/adsense.ts`'s `ADSENSE_REVIEW_MODE` constant lifts the paywall; it used to read the bare env var as an alias, so switching indexing review on would also have opened the paywall, against the 2026-09-22 decision. It now reads only `NEXT_PUBLIC_ADSENSE_REVIEW_MODE`. `tests/indexing-policy.test.ts` pins the separation.
+- **Card pages lead with their own facts.** `CardOverview` sits above the price table: rules text, type, domain, cost, set and rarity; links to each printed keyword (`keywordsOnCard`, the same bracket-marker predicate as the keyword pages), the champion hub and the set; a price summary built only from our rows (`lib/content/card-price-summary.ts`: lowest in-stock price and store, the in-stock range, stores tracked, last checked); and up to three articles that mention the card, champion or set in their title, tags or body (`lib/content/card-articles.ts`), filled from `guidesForCard`. The old "Read next" block lower down is gone, since the overview replaces it.
+- **Editorial up front.**
+  - The homepage and region homes carry "Guides & News" (the six newest posts, text-only, with links to /blog and /guides) straight under the price table, replacing the two teaser rows near the bottom. Measured locally with a full price table: the heading sits at ~1,165px on a 1280×900 desktop and ~1,056px on a 390×844 phone, inside two screen-heights.
+  - The header shows Guides beside Blog from xl; at 1024 a fourth link pushed Sealed over Database (measured), and between lg and xl Guides is in the rail. The phone menu gains Blog and Guides buttons.
+  - The footer's always-visible row adds Blog and Guides beside About, Contact, Privacy and Terms.
+  - Articles get a visible breadcrumb trail, a byline linking to /about, "Published" and "Updated" dates, four related articles instead of three, and links to the set pages they name. BlogPosting/TechArticle JSON-LD and the card links were already there.
+- **/contact** shows riftcompare@gmail.com, "usually within 2 business days", and what to contact us about (price errors, missing stores, partnerships, account questions), above the form.
+- **Quality fixes found by `scripts/check-site-quality.ts`** (new crawler):
+  - `/embed/index` answered 500 in production: it exported `revalidate` while reading `request.url`, which throws DYNAMIC_SERVER_USAGE. It is now `force-dynamic` behind its existing 30-minute CDN header.
+  - `/embed` rendered its example store badge as a live link to `/stores/STORE-SLUG`; the preview now points at a real store.
+  - The homepage's unreleased-set tile said "Coming soon"; it now shows the release date.
+  A production crawl of 251 pages found no missing or duplicate titles or descriptions.
+
+**Reversed, while the flag is on.** "Card pages are always indexable" (2026-09-17): special printings with a base, and cards with no listing ever, are noindexed again. The 09-17 reasoning still holds for sold-out cards: any card with a recorded listing, in or out of stock, stays indexed.
+
+**Turning it off.** Set `ADSENSE_REVIEW_MODE=false` in Vercel (Production) and redeploy. Nothing else changes: the overview, editorial sections and fixes stay.

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { robotsMeta, staticPathPolicy } from "@/lib/indexing-policy";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { RARITY_FACETS } from "@/lib/facets";
@@ -19,6 +20,7 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
+  ...robotsMeta(staticPathPolicy("/cards/rarity")),
   title: { absolute: "Riftbound Cards by Rarity — Every Tier Explained | RiftCompare" },
   description:
     "Every Riftbound card rarity explained — Common, Uncommon, Rare, Epic and Showcase — with the full card list and live prices for each tier.",

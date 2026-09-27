@@ -7,7 +7,12 @@ import { SITE_URL } from "@/lib/site";
 // ▲ +2.3% (7d)" badge with a sparkline that links back to /market — a compounding
 // backlink + brand-mention engine (and brand mentions are the top AI-citation signal).
 // Route handler so it escapes the root layout and can be framed cross-origin.
-export const revalidate = 1800;
+// DYNAMIC, cached at the CDN by the Cache-Control header below (30 min). It
+// used to export `revalidate = 1800`, which makes Next render the handler
+// statically — and reading request.url (the ?market= param) then threw
+// DYNAMIC_SERVER_USAGE on every request: /embed/index answered 500 in
+// production (found by scripts/check-site-quality.ts, 2026-09-27).
+export const dynamic = "force-dynamic";
 
 function parseMarket(v: string | null): Country {
   const up = (v ?? "").toUpperCase();
@@ -40,7 +45,9 @@ export async function GET(req: Request) {
   const href = `${SITE_URL}/market?utm_source=embed&utm_medium=widget&utm_campaign=index-badge`;
 
   let inner: string;
-  if (!index) {
+  // Also the no-data shape: an index with no numeric level (or no points) used
+  // to throw on .toFixed and answer 500 to every embed.
+  if (!index || typeof index.latest !== "number" || !Array.isArray(index.points)) {
     inner = `<a class="rc-w" href="${href}" target="_blank" rel="noopener">
       <div class="rc-h">The RiftCompare Index</div>
       <div class="rc-sub">warming up — see riftcompare.com/market</div></a>`;

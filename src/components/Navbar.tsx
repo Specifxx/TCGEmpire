@@ -281,6 +281,11 @@ export function Navbar() {
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">
             Blog
           </Link>
+          {/* Guides from xl only (2026-09-27): at 1024 a fourth link here pushed
+              Sealed over Database (measured). Between lg and xl it is in the rail. */}
+          <Link href="/guides" className="hidden rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white xl:block [@media(pointer:coarse)]:py-3.5">
+            Guides
+          </Link>
           <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5" surface="nav:navbar">
             ✦ Premium
           </PremiumNavLink>

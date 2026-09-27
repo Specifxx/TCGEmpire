@@ -282,6 +282,9 @@ test("the header row has the slack to actually RENDER the wider signed-out CTA",
   // instruction: "I still want the sealed, the blog, premium, Discord, the
   // watch list, the light and dark mode, the country and the accounts."
   assert.equal((src.match(/lg:block lg:px-2\.5/g) ?? []).length, 3, "Sealed, Blog and Premium, and nothing more");
+  // Guides joins from xl only (2026-09-27): at 1024 a fourth link pushed Sealed
+  // over Database. Measured after: no overlap and the CTA whole at 1024-1440.
+  assert.match(src, /href="\/guides" className="hidden [^"]*\bxl:block\b/);
   assert.match(src, /aria-label="Join our Discord"[\s\S]{0,300}?\blg:grid\b/, "Discord comes back at lg with the reclaimed slack");
   assert.match(src, /<HeaderWatchButton className="hidden sm:inline-flex" \/>/, "the watchlist is a desktop control again");
 

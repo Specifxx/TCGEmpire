@@ -175,8 +175,9 @@ longer lands on its entry.
 - **Signed-out visitors get nothing from Deal Finder or Rising Cards**; a
   free account gets the top 3 of each, a paid tier the full list.
   [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842)
-- **AdSense review mode** (`NEXT_PUBLIC_ADSENSE_REVIEW_MODE`, which lifts
-  the paywall for a submission) **is off by default in code**; a value set in
+- **AdSense review mode** (`NEXT_PUBLIC_ADSENSE_REVIEW_MODE` only, which lifts
+  the paywall for a submission; the bare `ADSENSE_REVIEW_MODE` is the separate
+  indexing flag, [2026-09-27](../DECISIONS.md#L14553)) **is off by default in code**; a value set in
   Vercel's dashboard overrides it. "The paywall now takes priority." The
   loader and meta tag are never gated. `scripts/adsense-guard.ts` still
   fails on pages under 150 unique editorial words, near-duplicate clusters
@@ -284,10 +285,14 @@ longer lands on its entry.
   [2026-09-24](../DECISIONS.md#L11756)
   [2026-09-17](../DECISIONS.md#L7894), [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9222), [2026-09-22](../DECISIONS.md#L10403)
-- **Card pages are always indexable** (09-17 reversed Phase 7a); only
-  `getCanonicalTwin` duplicates are noindexed. Card titles aim for 60
-  characters, but uniqueness beats length.
-  [2026-09-17](../DECISIONS.md#L7393), [2026-09-17](../DECISIONS.md#L7801)
+- **Indexing is decided in `lib/indexing-policy.ts`**, for routes and
+  sitemaps alike. `ADSENSE_REVIEW_MODE` (server env, default on) noindexes
+  facets, stores under 25 in-stock listings, special printings that have a
+  base printing (canonical to the base), cards with no listing ever,
+  `/premium` and `/auctions`. With it off, card pages are always indexable
+  (09-17) and only `getCanonicalTwin` duplicates are noindexed. Card titles
+  aim for 60 characters, but uniqueness beats length.
+  [2026-09-17](../DECISIONS.md#L7393), [2026-09-17](../DECISIONS.md#L7801), [2026-09-27](../DECISIONS.md#L14553)
 - **Set-agnostic code:** nothing names the current set; a new set is a data
   row. [2026-08-27](../DECISIONS.md#L3501), [2026-09-21](../DECISIONS.md#L9560)
 - **Accuracy:** never invent TCG facts, numbers or testimonials, and never

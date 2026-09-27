@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { robotsMeta, staticPathPolicy } from "@/lib/indexing-policy";
 import Link from "next/link";
 import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { MarketSwitcher } from "@/components/MarketSwitcher";
@@ -29,6 +30,7 @@ import { pageAlternates } from "@/lib/seo";
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
+  ...robotsMeta(staticPathPolicy("/auctions")),
   title: { absolute: "Riftbound Chase Auctions Closing Today | RiftCompare" },
   description:
     "High-value Riftbound auctions on eBay closing within 24 hours — every lot already bid past US$500, sorted by ending soonest, with the bid at our last check, bid count and a live countdown.",

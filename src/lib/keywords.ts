@@ -889,3 +889,11 @@ export const ALL_KEYWORD_NAMES: string[] = [
 ];
 
 export const keywordSlug = (name: string): string => name.toLowerCase();
+
+/** Keywords printed on a card, by the same bracket-marker predicate the keyword pages use. */
+export function keywordsOnCard(description: string | null | undefined): KeywordEntry[] {
+  if (!description) return [];
+  return KEYWORDS.filter(
+    (k) => description.includes(k.rulesContain) && !(k.rulesExclude ?? []).some((x) => description.includes(x)),
+  );
+}

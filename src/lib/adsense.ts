@@ -110,9 +110,11 @@ export const ADSENSE_LOADER_SRC =
 // accepted as a server-side alias for the exact name specified in the
 // remediation brief. Set BOTH to the same value if you set the non-public one,
 // or a client component would disagree with the server and hydration would warn.
+// ONE name since 2026-09-27: the bare ADSENSE_REVIEW_MODE now drives the
+// indexing policy (lib/indexing-policy.ts, default ON), and turning that on must
+// never lift the paywall.
 const REVIEW_RAW = (
   process.env.NEXT_PUBLIC_ADSENSE_REVIEW_MODE ??
-  process.env.ADSENSE_REVIEW_MODE ??
   "false"
 )
   .trim()

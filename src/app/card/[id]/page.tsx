@@ -1,4 +1,9 @@
 import type { Metadata } from "next";
+import { CardOverview } from "@/components/CardOverview";
+import { keywordsOnCard } from "@/lib/keywords";
+import { articlesMentioning } from "@/lib/content/card-articles";
+import { cardPriceSummary } from "@/lib/content/card-price-summary";
+import { getCardIndexing } from "@/lib/card-indexing";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -45,7 +50,6 @@ import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { compareMarkets, marketPriceListSentence, marketSpreadSentence } from "@/lib/market-comparison";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
-import { getCanonicalTwin } from "@/lib/card-duplicates";
 import { getCardPriceState } from "@/lib/card-price-state";
 import { typeFacetBySlug, rarityFacetBySlug } from "@/lib/facets";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -283,9 +287,12 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // live listing — see lib/card-price-state.ts's header for why that is gone.
   // Dropping it takes two database round-trips off every metadata render of the
   // site's highest-volume template, one of them against the history project.
-  const twin = await getCanonicalTwin(card);
-  const canonicalPath = `/card/${twin ? twin.slug ?? twin.id : card.slug ?? params.id}`;
-  const noindex = twin != null;
+  // ADSENSE_REVIEW_MODE (lib/indexing-policy.ts) additionally noindexes special
+  // printings that have a base printing — canonical to that base — and cards
+  // with no listing ever recorded. Both stay live and linked.
+  const indexing = await getCardIndexing(card, `/card/${card.slug ?? params.id}`);
+  const canonicalPath = indexing.canonicalPath;
+  const noindex = !indexing.index;
 
   return {
     title: { absolute: `${title} | RiftCompare` },
@@ -928,6 +935,13 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     // only — nothing is inferred about what the keyword does.
     description: card.description,
   });
+  const overviewArticles = [
+    ...articlesMentioning({ cardName: card.name, champion: championEntry?.name ?? null, setName: card.setName }),
+    ...relatedGuides,
+  ]
+    .filter((a, i, all) => all.findIndex((b) => b.slug === a.slug) === i)
+    .slice(0, 3)
+    .map((a) => ({ href: `/${a.category === "guide" ? "guides" : "blog"}/${a.slug}`, title: a.title, reason: a.reason }));
   const faqs = buildFaqs(card, {
     lowest: baseline.lowest,
     stores: baseline.storeCount,
@@ -1105,6 +1119,33 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               </div>
             )}
           </div>
+
+          {/* The card's own facts and our price summary, above the table
+              (AdSense review, 2026-09-27): what the card is, where it links,
+              and what our rows say, before the third-party listings. */}
+          <CardOverview
+            name={displayName}
+            description={card.description}
+            facts={[
+              { label: "Type", value: card.type },
+              { label: "Domain", value: card.domain },
+              ...(card.energyCost != null ? [{ label: "Cost", value: `${card.energyCost} energy` }] : []),
+              { label: "Set", value: `${card.setName} (${card.setCode})`, href: setUrl },
+              { label: "Rarity", value: card.rarity },
+            ]}
+            keywords={keywordsOnCard(card.description).map((k) => ({ slug: k.slug, name: k.name }))}
+            champion={championEntry ? { slug: championEntry.slug, name: championEntry.name } : null}
+            set={{ name: card.setName, href: setUrl }}
+            priceSummary={cardPriceSummary({
+              name: displayName,
+              place: baselinePlace,
+              currency: baseline.currency,
+              inStock: baseline.prices,
+              lastSeenCents: baseline.lastSeen?.priceCents ?? null,
+              allRows: rows.filter((r) => !isFallbackRetailer(r.retailer)),
+            })}
+            articles={overviewArticles}
+          />
 
           {/* ── PRICE COMPARISON LEADS, ABOVE THE FOLD ─────────────────────────
               Reordered 2026-08 (UX audit: qualified retailer click-through
@@ -1487,31 +1528,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               )}
             </div>
           </section>
-
-          {/* Into our real editorial work. On a programmatic page this is the
-              shortest path a reader — or a reviewer — has to something a person
-              actually wrote, and it's chosen from this card's own attributes
-              rather than being the same three links on all 1,400 pages. */}
-          {relatedGuides.length > 0 && (
-            <section className="card-surface mt-6 p-5">
-              <h2 className="font-bold text-white">Read next</h2>
-              <ul className="mt-3 space-y-3">
-                {relatedGuides.map((g) => (
-                  <li key={g.slug}>
-                    <Link
-                      href={`/${g.category === "guide" ? "guides" : "blog"}/${g.slug}`}
-                      className="group block"
-                    >
-                      <span className="block text-sm font-semibold text-brand-400 group-hover:underline">
-                        {g.title}
-                      </span>
-                      <span className="block text-xs text-slate-500">{g.reason}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
 
           {/* ── AFFILIATE BLOCK — deliberately LAST of the in-column sections ──
               eBay carries this card in every market and pays a commission, so it

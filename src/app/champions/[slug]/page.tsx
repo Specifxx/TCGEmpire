@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { championPolicy, robotsMeta } from "@/lib/indexing-policy";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -15,7 +16,6 @@ import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
-import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
 
 // riftdecks.com's /legends/<champion> pages rank #1 for champion queries with
 // build price and win rate in the snippet; ours 404'd entirely. This is the
@@ -110,7 +110,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     // pageAlternates(), not a bare object — see the identical fix + reasoning
     // on card/[id]/page.tsx (same bug, same lib/seo.ts helper).
     alternates: pageAlternates(`/champions/${champ.slug}`),
-    ...(cardCount >= 0 && cardCount < CHAMPION_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
+    ...robotsMeta(championPolicy(cardCount)),
     keywords: [
       `${champ.name} riftbound`,
       `riftbound ${champ.name} cards`,

@@ -18,9 +18,9 @@ import { getArticles } from "./articles";
 import { SETS } from "./constants";
 import { DOMAIN_PAGES } from "./domains";
 import { KEYWORDS } from "./keywords";
-import { CHAMPIONS, championCardWhere, CHAMPION_THIN_THRESHOLD } from "./champions";
-import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } from "./facets";
-import { STORE_PAGES, STORE_THIN_THRESHOLD } from "./store-pages";
+import { CHAMPIONS, championCardWhere } from "./champions";
+import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS } from "./facets";
+import { STORE_PAGES } from "./store-pages";
 import { buildCardWhere } from "./cards";
 import { getDuplicateCardIds } from "./card-duplicates";
 import { DEFAULT_COUNTRY } from "./country";
@@ -29,6 +29,7 @@ import { staticPageDate } from "./static-page-dates";
 import { normalizeSearch } from "./format";
 import { AUTHORS } from "./content/authors";
 import { REGION_HOME_PATH } from "./seo";
+import { basePrintingOf, cardPolicy, championPolicy, corePathInSitemap, facetPolicy, storePolicy } from "./indexing-policy";
 
 export interface SitemapEntry {
   url: string;
@@ -105,7 +106,7 @@ async function core(): Promise<SitemapEntry[]> {
     .filter(([, path]) => path !== "/")
     .map(([, path]) => ({ url: `${SITE_URL}${path}`, changeFrequency: "daily" as const, priority: 0.9, lastModified: day }));
 
-  return [
+  const entries: SitemapEntry[] = [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1, lastModified: day },
     ...regionHomeEntries,
     { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9, lastModified: day },
@@ -217,6 +218,7 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/privacy") },
     { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/terms") },
   ];
+  return entries.filter((e) => corePathInSitemap(e.url.slice(SITE_URL.length) || "/"));
 }
 
 async function cards(): Promise<SitemapEntry[]> {
@@ -235,6 +237,12 @@ async function cards(): Promise<SitemapEntry[]> {
       select: {
         id: true,
         slug: true,
+        name: true,
+        setCode: true,
+        collectorNumber: true,
+        rarity: true,
+        variant: true,
+        isPromo: true,
         lowestPriceCents: true,
         lowestPriceCentsUs: true,
         lowestPriceCentsUk: true,
@@ -275,7 +283,18 @@ async function cards(): Promise<SitemapEntry[]> {
   ]);
   // Duplicates are still withheld — that is a "two URLs, one card" rule, not a
   // judgement about whether a card deserves an index slot.
-  return rows.filter((c) => !dupes.has(c.id)).map((c) => {
+  const byName = new Map<string, typeof rows>();
+  for (const c of rows) byName.set(c.name, [...(byName.get(c.name) ?? []), c]);
+  const listed = rows.filter(
+    (c) =>
+      cardPolicy({
+        isDuplicateRow: dupes.has(c.id),
+        basePrinting: basePrintingOf(c, byName.get(c.name) ?? []),
+        // Any listing ever recorded, in or out of stock (the map is empty if its query failed).
+        hasAnyPrice: maxLastSeenByCard.size === 0 || maxLastSeenByCard.has(c.id),
+      }).sitemap,
+  );
+  return listed.map((c) => {
     // "Priced" means priced in ANY market we track, not just the baseline one.
     // The card page localises client-side off a single ISR render, so a card with
     // only a UK price still serves a page whose prices moved with today's import
@@ -440,10 +459,10 @@ async function facets(): Promise<SitemapEntry[]> {
     );
     // Thin facets are noindexed at the page level; submitting a URL Google will
     // just drop as noindex wastes crawl budget.
-    return defs.filter((_, i) => counts[i] >= FACET_THIN_THRESHOLD).map(entry);
+    return defs.filter((_, i) => facetPolicy(counts[i]).sitemap).map(entry);
   } catch (e) {
     console.error("sitemap/facets: count query failed, listing all facets:", e);
-    return defs.map(entry);
+    return defs.filter(() => facetPolicy(-1).sitemap).map(entry);
   }
 }
 
@@ -472,7 +491,7 @@ async function champions(): Promise<SitemapEntry[]> {
   // facets() function above does) would silently shift the two arrays out of
   // sync with the filtered CHAMPIONS list.
   return CHAMPIONS.map((c, i) => ({ c, count: counts[i], lastSeen: lastSeens[i] }))
-    .filter(({ count }) => count >= CHAMPION_THIN_THRESHOLD)
+    .filter(({ count }) => championPolicy(count).sitemap)
     .map(({ c, lastSeen }) => ({
       url: `${SITE_URL}/champions/${c.slug}`,
       changeFrequency: "daily" as const,
@@ -500,7 +519,7 @@ async function stores(): Promise<SitemapEntry[]> {
   });
   const byKey = new Map(stocked.map((r) => [r.retailer, r._count._all]));
   const lastSeenByKey = new Map(stocked.map((r) => [r.retailer, r._max.lastSeen]));
-  return STORE_PAGES.filter((s) => (byKey.get(s.key) ?? 0) >= STORE_THIN_THRESHOLD).map((s) => ({
+  return STORE_PAGES.filter((s) => storePolicy(byKey.get(s.key) ?? 0).sitemap).map((s) => ({
     url: `${SITE_URL}/stores/${s.slug}`,
     changeFrequency: "daily" as const,
     priority: 0.6,

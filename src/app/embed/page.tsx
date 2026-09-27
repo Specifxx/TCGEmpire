@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { STORE_PAGES } from "@/lib/store-pages";
 import Link from "next/link";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { STATIC_PAGE_DATES } from "@/lib/static-page-dates";
@@ -201,7 +202,10 @@ export default function EmbedDirectoryPage() {
           request, nothing to host. Your store&apos;s page has the snippet with your link already filled in; find it
           under <Link href="/stores" className="text-brand-400 hover:underline">Stores</Link>.
         </p>
-        <div dangerouslySetInnerHTML={{ __html: storeBadgeHtml({ slug: "STORE-SLUG", name: "Your store" }) }} />
+        {/* The live preview points at a real store page; the copyable snippet
+            below keeps the STORE-SLUG placeholder (a placeholder link here was
+            a broken internal link). */}
+        <div dangerouslySetInnerHTML={{ __html: storeBadgeHtml({ slug: STORE_PAGES[0].slug, name: "Your store" }) }} />
         <pre className="overflow-x-auto rounded-lg border border-ink-800 bg-ink-950 p-4 text-xs leading-relaxed text-slate-300">
           <code>{storeBadgeHtml({ slug: "STORE-SLUG", name: "Your store" })}</code>
         </pre>

@@ -411,6 +411,25 @@ export function CinematicNavMenu() {
               <div className="mt-3 lg:hidden">
                 <ThemeToggle variant="row" />
               </div>
+              {/* Our editorial work, one tap from the phone menu (2026-09-27):
+                  the header row has no room for it below lg. */}
+              {!filtering && (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {[
+                    { href: "/blog", label: "Blog" },
+                    { href: "/guides", label: "Guides" },
+                  ].map((l) => (
+                    <Link
+                      key={l.href}
+                      href={l.href}
+                      onClick={close}
+                      className="rounded-lg border border-ink-700 px-3 py-3 text-center text-sm font-semibold text-slate-200 hover:border-brand-500 hover:bg-ink-800"
+                    >
+                      {l.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Premium spotlight — reported directly: "the way to see Premium [on

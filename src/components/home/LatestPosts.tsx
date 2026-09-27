@@ -33,14 +33,55 @@ export function LatestPosts({
   subhead,
   seeAllHref,
   seeAllLabel,
+  moreLinks,
+  compact,
 }: {
   posts: Article[];
   heading: string;
   subhead: string;
   seeAllHref: string;
   seeAllLabel: string;
+  /** Extra always-visible links beside "see all" (e.g. Blog and Guides). */
+  moreLinks?: { href: string; label: string }[];
+  /** Text-only rows, no hero images — for a slot near the top of a page. */
+  compact?: boolean;
 }) {
   if (posts.length === 0) return null;
+  if (compact) {
+    return (
+      <section aria-labelledby="latest-posts-h">
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 id="latest-posts-h" className="text-xl font-extrabold text-white">{heading}</h2>
+            <p className="mt-0.5 text-xs text-slate-500">{subhead}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[{ href: seeAllHref, label: seeAllLabel }, ...(moreLinks ?? [])].map((l) => (
+              <Link key={l.href} href={l.href} className="btn-ghost text-xs">
+                {l.label} →
+              </Link>
+            ))}
+          </div>
+        </div>
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {posts.map((p) => (
+            <li key={p.slug}>
+              <Link
+                href={articleHref(p)}
+                className="card-surface group flex h-full flex-col gap-1 p-4 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  {p.category === "guide" ? "Guide" : "News"} · <time dateTime={p.date}>{formatPostDate(p.date)}</time>
+                </span>
+                <h3 className="line-clamp-2 text-sm font-bold text-white group-hover:underline">{p.title}</h3>
+                <p className="line-clamp-2 text-xs leading-relaxed text-slate-400">{p.excerpt}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
   return (
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">

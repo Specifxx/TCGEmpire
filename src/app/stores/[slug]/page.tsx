@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { robotsMeta, storePolicy } from "@/lib/indexing-policy";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -6,7 +7,7 @@ import { prisma } from "@/lib/db";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { shippingPolicyUrl } from "@/lib/retailers";
-import { STORE_PAGES, storeBySlug, storePageName, STORE_THIN_THRESHOLD } from "@/lib/store-pages";
+import { STORE_PAGES, storeBySlug, storePageName } from "@/lib/store-pages";
 import { formatMeasuredDate, shippingSummary, type StoreShippingSummary } from "@/lib/shipping";
 import { storeBadgeHtml } from "@/lib/store-badge";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -103,7 +104,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     // deliberately directory-only) would be a page whose only content is
     // "nothing in stock". Real page, still linked, just not submitted for
     // indexing until it has something to show.
-    ...(count >= 0 && count < STORE_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
+    ...robotsMeta(storePolicy(count)),
     openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description: `Live Riftbound prices and stock at ${label}.`, url: `/stores/${store.slug}` }),
   };
 }

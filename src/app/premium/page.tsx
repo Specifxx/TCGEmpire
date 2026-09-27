@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PRIVATE_POLICY, robotsMeta } from "@/lib/indexing-policy";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -50,6 +51,8 @@ import { PremiumProofLine } from "@/components/PremiumProofLine";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  // A sales/checkout page: never indexed (lib/indexing-policy.ts PRIVATE_POLICY).
+  ...robotsMeta(PRIVATE_POLICY),
   title: "RiftCompare Premium — never overpay for a Riftbound card",
   description: "RiftCompare Plus and Premium: no ads, every card below TCGplayer market, target-price alerts that name the store, Best Basket — the cheapest delivered order for a whole list across your country's stores, skipping cards you already own — and Demand Finder, the cards players are searching for most. Price comparison is free for everyone, and a free account adds alerts and your portfolio.",
   alternates: pageAlternates("/premium"),

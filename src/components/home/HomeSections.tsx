@@ -110,11 +110,11 @@ export function HomeSections({
   // Two teaser rows: news/analysis/opinion from the blog, then the evergreen,
   // reference-shaped guides underneath. Same data everywhere this renders,
   // since it's the same in-memory list on every market.
-  const latestBlogPosts = getArticles("blog").slice(0, 3);
-  const latestGuides = getArticles("guide").slice(0, 3);
+  // Guides & News: the six newest posts across the blog and the guides, near the
+  // top of every market's homepage (AdSense review, 2026-09-27) — editorial work
+  // within the first two screens, not eleven sections down.
+  const latestPosts = getArticles().slice(0, 6);
   const showNextSetCard = nextSet != null;
-  const showLatestBlogPosts = latestBlogPosts.length > 0;
-  const showLatestGuides = latestGuides.length > 0;
 
   return (
     <>
@@ -141,6 +141,16 @@ export function HomeSections({
           reserving it unconditionally would punch a gap into every first-time
           visit to avoid a shift only returning visitors ever see. */}
       <RecentlyViewedRail />
+
+      <LatestPosts
+        compact
+        posts={latestPosts}
+        heading="Guides & News"
+        subhead="Our latest Riftbound news, set coverage and how-to guides."
+        seeAllHref="/blog"
+        seeAllLabel="All news"
+        moreLinks={[{ href: "/guides", label: "All guides" }]}
+      />
 
       {/* Today's Top Deals — THE TOP CONTENT SLOT as of 2026-09-21, owner's
           explicit instruction ("put today's top deals at the very top just
@@ -254,7 +264,11 @@ export function HomeSections({
               <div key={s.code} className="card-surface flex flex-col gap-1 p-4 opacity-60" aria-disabled>
                 <span className="flex items-center gap-2 text-lg font-bold text-white">
                   {s.code}
-                  <span className="chip bg-gold/20 text-gold">Coming soon</span>
+                  <span className="chip bg-gold/20 text-gold">
+                    {s.releasedOn
+                      ? `Out ${new Date(`${s.releasedOn}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}`
+                      : "Announced"}
+                  </span>
                 </span>
                 <span className="text-xs text-slate-400">{s.name}</span>
               </div>
@@ -320,35 +334,6 @@ export function HomeSections({
             set={nextSet}
             preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
             spoilers={spoilersHref ? { href: spoilersHref, setName: nextSet!.name } : null}
-          />
-        </Reveal>
-      )}
-
-      {/* Latest from the blog, then guides right underneath — fresh internal
-          links + fresh content near the bottom of the page for crawl
-          frequency and long-tail discovery. Each hides itself independently
-          if its category has no posts (shouldn't happen, but no fake
-          placeholders either way), so one running dry never leaves a gap
-          where the other should be. */}
-      {showLatestBlogPosts && (
-        <Reveal>
-          <LatestPosts
-            posts={latestBlogPosts}
-            heading="Latest from the blog"
-            subhead="News, analysis and opinion on Riftbound and the wider TCG market."
-            seeAllHref="/blog"
-            seeAllLabel="See all posts"
-          />
-        </Reveal>
-      )}
-      {showLatestGuides && (
-        <Reveal>
-          <LatestPosts
-            posts={latestGuides}
-            heading="Guides & explainers"
-            subhead="How Riftbound cards, sets and prices actually work."
-            seeAllHref="/guides"
-            seeAllLabel="See all guides"
           />
         </Reveal>
       )}

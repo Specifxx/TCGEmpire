@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { facetPolicy, robotsMeta } from "@/lib/indexing-policy";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { buildCardWhere } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { TYPE_FACETS, typeFacetBySlug, FACET_THIN_THRESHOLD } from "@/lib/facets";
+import { TYPE_FACETS, typeFacetBySlug } from "@/lib/facets";
 import { FacetPageBody } from "@/components/FacetPageBody";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -41,7 +42,7 @@ export async function generateMetadata({ params }: { params: { type: string } })
     alternates: pageAlternates(`/cards/type/${facet.slug}`),
     // A real page with genuine unique copy either way — noindex only guards
     // against a page whose ONLY content would be a near-empty card grid.
-    ...(total >= 0 && total < FACET_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
+    ...robotsMeta(facetPolicy(total)),
     openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description: facet.intro, url: `/cards/type/${facet.slug}` }),
   };
 }

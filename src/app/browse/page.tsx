@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { facetPolicy, robotsMeta } from "@/lib/indexing-policy";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
@@ -131,7 +132,14 @@ export async function generateMetadata({ searchParams }: { searchParams: CardQue
     if (page > totalPages) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
     return { ...base, alternates: { canonical: `/browse?page=${page}` } };
   }
-  return { ...base, alternates: { canonical: "/browse" } };
+  // Filtered/sorted views are facets of /browse: noindex during AdSense review
+  // (lib/indexing-policy.ts); they already canonicalise to /browse either way.
+  const filtered = !isCleanPagination(searchParams);
+  return {
+    ...base,
+    alternates: { canonical: "/browse" },
+    ...(filtered ? robotsMeta(facetPolicy(-1)) : {}),
+  };
 }
 
 export default async function BrowsePage({ searchParams }: { searchParams: CardQuery & { market?: string } }) {

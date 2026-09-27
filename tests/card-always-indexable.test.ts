@@ -47,9 +47,14 @@ test("the price state carries no indexability verdict at all", () => {
   assert.equal(priceStateFrom(false, MIN_HISTORY_DAYS).isEmpty, false);
 });
 
-test("a duplicate row is the only thing that can noindex a card page", () => {
+test("a duplicate row is the only thing that can noindex a card page outside AdSense review mode", async () => {
   const code = codeOnly(read(CARD_PAGE));
-  assert.match(code, /const noindex = twin != null;/);
+  // The decision lives in lib/indexing-policy.ts (2026-09-27); the page asks it.
+  assert.match(code, /const noindex = !indexing\.index;/);
+  const { cardPolicy } = await import("../src/lib/indexing-policy");
+  const off = (f: { isDuplicateRow: boolean; basePrinting: unknown; hasAnyPrice: boolean }) => cardPolicy(f, false).index;
+  assert.equal(off({ isDuplicateRow: true, basePrinting: null, hasAnyPrice: true }), false);
+  assert.equal(off({ isDuplicateRow: false, basePrinting: { id: "b" }, hasAnyPrice: false }), true, "review mode off: variants and unpriced cards stay indexed");
   // The old expression, in any form, must not come back.
   assert.doesNotMatch(code, /priceState\.indexable/);
   assert.doesNotMatch(code, /!\s*\w+\.indexable/);
@@ -73,7 +78,7 @@ test("the sitemap submits every card, and the withholding helper is deleted", ()
   assert.doesNotMatch(sitemap, /empty\.has\(/);
   // Duplicates are still withheld: that is "two URLs, one card", not a judgement
   // about whether a card deserves an index slot.
-  assert.match(sitemap, /!dupes\.has\(c\.id\)/);
+  assert.match(sitemap, /isDuplicateRow: dupes\.has\(c\.id\)/);
 });
 
 // ── 2. The AdSense budget that enforced the old rule ───────────────────────

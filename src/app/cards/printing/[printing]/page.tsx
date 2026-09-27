@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { facetPolicy, robotsMeta } from "@/lib/indexing-policy";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { buildCardWhere } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { PRINTING_FACETS, printingFacetBySlug, FACET_THIN_THRESHOLD } from "@/lib/facets";
+import { PRINTING_FACETS, printingFacetBySlug } from "@/lib/facets";
 import { FacetPageBody } from "@/components/FacetPageBody";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: { params: { printing: string 
     title: { absolute: `${title} | RiftCompare` },
     description: `${facet.intro} Compare live prices across every store we track.`,
     alternates: pageAlternates(`/cards/printing/${facet.slug}`),
-    ...(total >= 0 && total < FACET_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
+    ...robotsMeta(facetPolicy(total)),
     openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description: facet.intro, url: `/cards/printing/${facet.slug}` }),
   };
 }
