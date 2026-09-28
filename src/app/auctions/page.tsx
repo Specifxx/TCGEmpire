@@ -4,6 +4,9 @@ import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { MarketSwitcher } from "@/components/MarketSwitcher";
 import { AuctionsBoard } from "@/components/AuctionsBoard";
 import { AdSlot } from "@/components/AdSlot";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import {
   getLiveAuctions,
   AUCTION_ROW_CAP,
@@ -11,7 +14,7 @@ import {
   AUCTION_MIN_USD_CENTS,
   EBAY_SITE_LABEL,
 } from "@/lib/ebay-auctions";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 
 // /auctions — every live Riftbound auction on eBay, soonest-ending first.
@@ -111,21 +114,23 @@ export default async function AuctionsPage({ searchParams }: { searchParams: { m
           last check (and how long ago that was), how many bids it had drawn, and a countdown that ticks in real
           time. Graded slabs and raw singles together; filter to either below.
         </p>
+        {/* Where the lots come from and the guide to bidding (2026-09-26, "Blog
+            and tools, joined up"): lib/content/hub-intros.ts. The sweep
+            paragraph that opened "How this board works" below moved up into it;
+            the lede above keeps the figures the page prints from code. */}
+        <HubIntro path="/auctions" />
       </div>
 
       <AuctionsBoard rows={rows} market={market} windowHours={AUCTION_WINDOW_HOURS} minUsd={minUsd} />
+
+      {/* The guides behind the board, after it and before the ad. */}
+      <RelatedGuides guides={guidesForTool("/auctions")} className="card-surface mt-6 p-5" />
 
       <AdSlot className="mt-6" height={100} />
 
       <section className="card-surface mt-6 p-5">
         <h2 className="font-bold text-white">How this board works</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          {SITE_NAME} sweeps eBay&rsquo;s own auction listings for each market every few hours and keeps the ones
-          that matter here, so you can watch the serious lots close without re-running the same search on eBay all
-          day. Every lot links straight to the listing — bidding, payment and postage all happen there, and{" "}
-          {SITE_NAME} is never the seller.
-        </p>
-        <p className="mt-3 text-sm leading-relaxed text-slate-400">
           <strong className="text-slate-200">Two filters define this page.</strong> A lot has to be closing within{" "}
           {AUCTION_WINDOW_HOURS} hours, and its bidding has to have already passed US${minUsd} (checked in each
           market&rsquo;s own currency, so roughly A$750 or £395). That is deliberate: the countdown is only

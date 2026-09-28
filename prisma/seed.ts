@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { titleCase } from "../src/lib/constants";
 import { normalizeSearch } from "../src/lib/format";
 import { cardSlug } from "../src/lib/card-url";
+import { legendNameFromSlug } from "../src/lib/legend-name";
 import { liveCardImage } from "../src/lib/card-image-url";
 
 const prisma = new PrismaClient();
@@ -25,42 +26,9 @@ const between = (min: number, max: number) => min + rng() * (max - min);
 
 // ---- Legend name enrichment (TCGplayer-style "Champion, Title") ---------------
 // RiftScribe names Legends by title only ("Loose Cannon"); riftbound.gg slugs
-// carry the champion ("ogn-251-jinx-loose-cannon"). We recover the champion.
-const CHAMP_OVERRIDES: Record<string, string> = {
-  kaisa: "Kai'Sa", velkoz: "Vel'Koz", chogath: "Cho'Gath", khazix: "Kha'Zix",
-  reksai: "Rek'Sai", belveth: "Bel'Veth", ksante: "K'Sante", leblanc: "LeBlanc",
-  drmundo: "Dr. Mundo", "nunu-willump": "Nunu & Willump", "jarvan-iv": "Jarvan IV",
-};
-function titleCaseChamp(slug: string): string {
-  if (CHAMP_OVERRIDES[slug]) return CHAMP_OVERRIDES[slug];
-  const flat = slug.replace(/-/g, "");
-  if (CHAMP_OVERRIDES[flat]) return CHAMP_OVERRIDES[flat];
-  return slug.split("-").map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
-}
-function slugify(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-function enrichLegendName(nameSlug: string | undefined, epithet: string): string {
-  if (!nameSlug) return epithet;
-  // Strip the " - Starter" suffix BEFORE slugifying. Without this the epithet
-  // slug ("wuju-bladesman-starter") no longer matches the tail of the name slug
-  // ("master-yi-wuju-bladesman"), so the endsWith() branch misses and the
-  // split("-")[0] fallback takes only the FIRST token of a multi-token champion
-  // name — turning "Master Yi" into "Master". That corrupted value is already
-  // baked into prod data (and was in prisma/meta-decks.json's legend field until
-  // the meta decks were removed on 2026-09-12), and it
-  // would mint a bogus /champions/master page. Single-token champions (Annie,
-  // Lux, Garen) happened to survive the bug by luck; Master Yi was the only
-  // casualty, which is exactly the signature of a first-token-only fallback.
-  const epiSlug = slugify(epithet.replace(/\s*-\s*Starter$/i, ""));
-  let champSlug = nameSlug;
-  if (nameSlug.endsWith("-" + epiSlug)) champSlug = nameSlug.slice(0, nameSlug.length - epiSlug.length - 1);
-  else champSlug = nameSlug.split("-")[0];
-  if (!champSlug || champSlug === nameSlug) return epithet;
-  const champ = titleCaseChamp(champSlug);
-  if (epithet.toLowerCase().startsWith(champ.toLowerCase())) return epithet;
-  return `${champ}, ${epithet}`;
-}
+// carry the champion ("ogn-251-jinx-loose-cannon"). We recover the champion
+// with lib/legend-name.ts's legendNameFromSlug — shared with scripts/sync-cards.ts
+// so the seed and production can't name a Legend differently.
 
 const CONDITIONS = ["NM", "NM", "NM", "LP", "LP", "MP", "HP", "DMG"];
 const CONDITION_MULT: Record<string, number> = {
@@ -154,7 +122,7 @@ async function main() {
     const rarity = titleCase(c.rarity);
     // Legends get a champion prefix from riftbound.gg ("Loose Cannon" -> "Jinx, Loose Cannon").
     const nameKey = `${parts[0]}-${numSeg}`;
-    const name = c.type === "Legend" ? enrichLegendName(nameMap[nameKey], c.name) : c.name;
+    const name = c.type === "Legend" ? legendNameFromSlug(nameMap[nameKey], c.name) : c.name;
     return {
       externalId: c.id,
       name,

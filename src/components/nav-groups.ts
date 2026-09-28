@@ -31,10 +31,14 @@ export interface NavGroupLink {
    */
   keywords?: string[];
   /**
-   * Keep this link OUT of the footer site-map (it still appears in the launcher
-   * and in llms.txt). The launcher is the complete index of the site; the footer
-   * is a curated four-column block that has to stay a readable height. Used for
-   * the secondary mini-games, whose hub (/games) is in the footer already.
+   * Keep this link OUT of the footer site-map (it still appears in the launcher,
+   * the rail, the phone menu and llms.txt). The launcher is the complete index
+   * of the site; the footer is a curated four-column block that has to stay a
+   * readable height. Used for three kinds of link: the secondary mini-games,
+   * whose hub (/games) is in the footer already; /community, for column balance
+   * (see its entry); and the privacy policy and terms, which the footer's
+   * always-visible link row in layout.tsx already carries on every page, so a
+   * second copy in the site map would only repeat them.
    */
   hideInFooter?: boolean;
 }
@@ -72,6 +76,42 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/movers", label: "Weekly Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "most searched", "popular cards"] },
       { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"] },
       { href: "/stores/tracked", label: "Stores we track", keywords: ["stores", "shops", "retailers", "which stores"] },
+    ],
+  },
+  {
+    // Our original editorial work. Promoted out of the footer-only position it
+    // used to occupy — see PRIMARY_NAV below and Navbar.tsx. A reviewer (or a
+    // reader) landing on a programmatic price page needs a one-click path to
+    // something a person wrote, or the whole site reads as a data feed.
+    //
+    // SECOND, right under Prices, and OPEN BY DEFAULT in the rail (owner,
+    // 2026-09-28: "we need the blog and guides to be prominent so that we get
+    // approved for adsense with their lazy crawlers"). It sat seventh and
+    // collapsed, and SideNav renders a collapsed group's links not at all, so
+    // no page's HTML carried a rail link to /guides or /blog. Order here is the
+    // rail's, the phone menu's and the launcher's.
+    title: "Guides & News",
+    icon: "news",
+    links: [
+      { href: "/guides", label: "Guides", keywords: ["guides", "how to", "tutorials", "explainers"] },
+      // "Blog", not "News & analysis" (renamed 2026-09-19, owner call). The site
+      // was calling one destination two different things depending on which
+      // navigation surface you were in: PRIMARY_NAV (the top bar) has always said
+      // "Blog", the page's own H1 is "Blog", and its <title> is "Riftbound Blog —
+      // …" — while this entry, which feeds the Explore overlay, the footer,
+      // SideNav and the ⌘K launcher, said "News & analysis". Clicking it landed
+      // you on a page headed something else. The `keywords` below already carry
+      // news/articles/announcements, so ⌘K still finds it by any of the old words.
+      { href: "/blog", label: "Blog", keywords: ["blog", "news", "articles", "posts", "updates", "announcements", "analysis"] },
+      // hideInFooter: the footer's four columns are already at the top of their
+      // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
+      // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
+      // added on /blog and /guides themselves.
+      { href: "/community", label: "Community links", keywords: ["community", "resources", "links", "other sites", "riftbound news", "deck builders", "wikis", "tier list", "meta"], hideInFooter: true },
+      { href: "/learn", label: "Learn Riftbound", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
+      { href: "/authors", label: "Who writes this", keywords: ["authors", "team", "byline", "who writes"] },
+      { href: "/editorial-policy", label: "Editorial policy", keywords: ["editorial", "policy", "standards", "corrections"] },
+      { href: "/methodology", label: "Methodology", keywords: ["methodology", "condition", "grading", "fx", "currency", "ranking"] },
     ],
   },
   {
@@ -176,35 +216,6 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    // Our original editorial work. Promoted out of the footer-only position it
-    // used to occupy — see PRIMARY_NAV below and Navbar.tsx. A reviewer (or a
-    // reader) landing on a programmatic price page needs a one-click path to
-    // something a person wrote, or the whole site reads as a data feed.
-    title: "Guides & News",
-    icon: "news",
-    links: [
-      { href: "/guides", label: "Guides", keywords: ["guides", "how to", "tutorials", "explainers"] },
-      // "Blog", not "News & analysis" (renamed 2026-09-19, owner call). The site
-      // was calling one destination two different things depending on which
-      // navigation surface you were in: PRIMARY_NAV (the top bar) has always said
-      // "Blog", the page's own H1 is "Blog", and its <title> is "Riftbound Blog —
-      // …" — while this entry, which feeds the Explore overlay, the footer,
-      // SideNav and the ⌘K launcher, said "News & analysis". Clicking it landed
-      // you on a page headed something else. The `keywords` below already carry
-      // news/articles/announcements, so ⌘K still finds it by any of the old words.
-      { href: "/blog", label: "Blog", keywords: ["blog", "news", "articles", "posts", "updates", "announcements", "analysis"] },
-      // hideInFooter: the footer's four columns are already at the top of their
-      // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
-      // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
-      // added on /blog and /guides themselves.
-      { href: "/community", label: "Community links", keywords: ["community", "resources", "links", "other sites", "riftbound news", "deck builders", "wikis", "tier list", "meta"], hideInFooter: true },
-      { href: "/learn", label: "Learn Riftbound", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
-      { href: "/authors", label: "Who writes this", keywords: ["authors", "team", "byline", "who writes"] },
-      { href: "/editorial-policy", label: "Editorial policy", keywords: ["editorial", "policy", "standards", "corrections"] },
-      { href: "/methodology", label: "Methodology", keywords: ["methodology", "condition", "grading", "fx", "currency", "ranking"] },
-    ],
-  },
-  {
     // The catch-all. A page belongs here when it answers a real question but is
     // none of the things the other groups are about — not a price, not a view of
     // the card database, not a tool, not our own writing.
@@ -266,6 +277,14 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/feedback", label: "Suggest a feature", keywords: ["feedback", "suggest", "idea", "feature request", "vote"] },
       { href: "/stores/suggest", label: "Suggest a store", keywords: ["suggest a store", "add a store", "missing store", "list my store"] },
       { href: "/about", label: "About RiftCompare", keywords: ["about", "who we are", "riftcompare", "compare"] },
+      // The two policies (2026-09-26, "Blog and tools, joined up" in
+      // DECISIONS.md). They were linked only from the footer's link row, so the
+      // rail, the phone menu, ⌘K and llms.txt never listed them, and a visitor
+      // looking for the privacy policy from the menu found nothing. Beside
+      // About, where a reader looks for "who runs this and on what terms".
+      // hideInFooter: that same footer row already carries both on every page.
+      { href: "/privacy", label: "Privacy policy", keywords: ["privacy", "privacy policy", "cookies", "personal data", "gdpr", "data protection"], hideInFooter: true },
+      { href: "/terms", label: "Terms of service", keywords: ["terms", "terms of service", "terms of use", "tos", "conditions"], hideInFooter: true },
       { href: "/creators", label: "Socials & Creators", keywords: ["socials", "social media", "discord", "instagram", "twitter", "x", "facebook", "follow us", "creators", "content creators", "influencers", "partner", "partnership", "youtube", "twitch", "tiktok"] },
       // The widget directory. It inherits the "embed" keywords that used to sit
       // on /creators above, which was the closest thing the launcher had to an
@@ -286,16 +305,18 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-// TOP-LEVEL header items — the handful of destinations that get their own
-// always-visible link rather than living inside the mega-menu.
+// NOT RENDERED. Nothing draws this list: Navbar.tsx writes the header's links
+// out by hand (Database, Sealed, Blog, Tools, Premium — the owner's curated
+// shortlist, see its comments), and SideNav is forbidden from using it
+// (tests/sidenav.test.ts). It survives only because
+// tests/market-index-restore.test.ts reads its /market entry. Editing it
+// changes nothing on screen: to change the header, edit Navbar.tsx.
 //
-// The editorial slot is here deliberately. The blog and guides were reachable
-// only from the footer and the mega-menu, which meant the ~64 pieces of
-// genuinely original writing on this site were invisible to anyone who didn't go
-// looking — including an AdSense reviewer sampling pages from the homepage.
-// Original content that a reviewer cannot find might as well not exist. It
-// points at /blog rather than /guides: same job, and the blog is the half that
-// changes weekly. Keep this in step with Navbar.tsx, which renders the real bar.
+// It was the header's source once, and why the editorial slot mattered still
+// holds: the blog and guides were reachable only from the footer and the
+// mega-menu, invisible to anyone who didn't go looking — including an AdSense
+// reviewer sampling pages from the homepage. The header's "Blog" link is that
+// slot now.
 export const PRIMARY_NAV: { href: string; label: string }[] = [
   { href: "/browse", label: "Cards" },
   { href: "/sealed", label: "Sealed" },
@@ -313,9 +334,10 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
 // COLUMN BALANCE is the thing to preserve when editing. The four columns are
 // deliberately kept within roughly 8-15 links of each other; a column at twice
 // its neighbours' height leaves a ragged block of whitespace under the other
-// three. Links flagged `hideInFooter` (the seven secondary mini-games, whose
-// /games hub is here) are dropped: the launcher is the complete index, the
-// footer is a curated block.
+// three. Links flagged `hideInFooter` (the secondary mini-games, whose /games
+// hub is here; /community; and the privacy policy and terms, which the
+// footer's own link row carries) are dropped: the launcher is the complete
+// index, the footer is a curated block.
 const byTitle = Object.fromEntries(
   NAV_GROUPS.map((g) => [g.title, g.links.filter((l) => !l.hideInFooter)])
 );

@@ -53,6 +53,11 @@ const SELF_CACHED = [
   // reads (minByCard, the eBay row pull, TCGplayer's rows), which a wrapping
   // cache would disable.
   "getCheapestOnEbay",
+  "getCheapestOnEbayFor",
+  // 2026-09-28: Rising Cards' ranking rebuilt as of 7 days ago (rank movement),
+  // and the day-cached demand read behind it.
+  "getRisingWeekAgo",
+  "getDemandWeekAgo",
 ];
 
 function walk(dir: string, out: string[] = []): string[] {

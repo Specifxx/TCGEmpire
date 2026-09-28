@@ -4,6 +4,7 @@ import { BANNED_CARDS, BANLIST_UPDATED, banDate } from "@/lib/banlist";
 import { cardArtThumb, cardImageSrc, cardImageSrcSet } from "@/lib/card-image-url";
 import { formatMoney } from "@/lib/format";
 import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
+import { currentSlug, withSlugAliases } from "@/lib/card-slug-renames";
 
 // Every currently banned Riftbound card as a compact table — the FIRST thing
 // under the ban-list guide's H1. DECISIONS.md, "Search snippets: answers in the
@@ -20,11 +21,12 @@ export async function BanListTable() {
   type Row = { slug: string | null; imageUrl: string | null; imageThumbUrl: string | null } & Record<string, unknown>;
   const rows = (await prisma.card
     .findMany({
-      where: { slug: { in: BANNED_CARDS.map((b) => b.slug) } },
+      where: { slug: { in: withSlugAliases(BANNED_CARDS.map((b) => b.slug)) } },
       select: { slug: true, imageUrl: true, imageThumbUrl: true, [field]: true },
     })
     .catch(() => [])) as unknown as Row[];
-  const bySlug = new Map(rows.map((r) => [r.slug, r]));
+  // Renamed slugs match under either name (lib/card-slug-renames.ts).
+  const bySlug = new Map(rows.map((r) => [currentSlug(r.slug ?? ""), r]));
 
   return (
     <section aria-labelledby="banlist-table-h" className="card-surface mt-5 overflow-hidden" data-banlist-table>
@@ -44,7 +46,7 @@ export async function BanListTable() {
           </thead>
           <tbody className="divide-y divide-ink-800">
             {BANNED_CARDS.map((b) => {
-              const r = bySlug.get(b.slug);
+              const r = bySlug.get(currentSlug(b.slug));
               const img = r ? cardImageSrc(r) : null;
               const price = r ? (r[field] as number | null) : null;
               return (

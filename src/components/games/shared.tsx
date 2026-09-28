@@ -127,8 +127,12 @@ export function GameShell({
       {/* Below the game, above the footer — monetises the dwell time without ever
           sitting between the player and the controls. */}
       <AdSlot className="mt-6" height={100} />
+      {/* Was "Prices are live from the stores RiftCompare tracks": the figure is
+          Card.lowestPriceCents* for the visitor's market (api/games/cards,
+          api/games/pack), the cheapest IN-STOCK listing as of the latest
+          import, and an eBay listing counts. */}
       <p className="mt-6 text-center text-xs text-slate-600">
-        Prices are live from the stores RiftCompare tracks — every game doubles as market research.{" "}
+        Every price in the arcade is the cheapest in-stock listing we track for that card in your market.{" "}
         <Link href="/games" className="text-brand-400 hover:underline">More games →</Link>
       </p>
     </div>
@@ -309,7 +313,7 @@ export function RunRecap({ cards, currency, title = "💸 The cards from this ru
         ))}
       </ul>
       <div className="border-t border-ink-800 px-4 py-2.5 text-center text-xs text-slate-500">
-        Every price is the cheapest live store we track.{" "}
+        Prices are before postage; Compare opens the card&apos;s full store comparison.{" "}
         <Link href="/movers" className="font-semibold text-brand-400 hover:underline">See this week&apos;s biggest price moves →</Link>
       </div>
     </div>

@@ -13,6 +13,10 @@ import { useEffect, useState } from "react";
 // report there is nothing private in it (the same frozen public numbers for
 // every viewer), so it is safe to list every past link here rather than show
 // each once.
+//
+// DELETE (2026-09-28) asks first, naming the snapshot: the link dies for
+// everyone who has it, and there is no undo. Movement never reads a snapshot
+// (it compares with the ranking a week ago), so deleting one changes no arrow.
 interface Snapshot {
   id: string;
   token: string;
@@ -26,8 +30,15 @@ export function RisingSnapshotPanel({ adminKey, scope }: { adminKey?: string; sc
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [list, setList] = useState<Snapshot[] | null>(null);
-  const [justMade, setJustMade] = useState<{ title: string; url: string; picks: number } | null>(null);
+  const [justMade, setJustMade] = useState<{
+    title: string;
+    url: string;
+    picks: number;
+    comparedWith: { asOf: string } | null;
+    cheapestOnEbay: number;
+  } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const qs = adminKey ? `?key=${encodeURIComponent(adminKey)}` : "";
 
@@ -61,12 +72,40 @@ export function RisingSnapshotPanel({ adminKey, scope }: { adminKey?: string; sc
         setError(d.error ?? "Could not generate the snapshot");
         return;
       }
-      setJustMade({ title: d.title, url: d.url, picks: d.picks });
+      setJustMade({ title: d.title, url: d.url, picks: d.picks, comparedWith: d.comparedWith ?? null, cheapestOnEbay: d.cheapestOnEbay ?? 0 });
       void load();
     } catch {
       setError("Could not reach the server");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function remove(s: Snapshot) {
+    const ok = window.confirm(
+      `Delete this snapshot?\n\n${s.title}\n\nIts link stops working for everyone who has it. This can't be undone.`,
+    );
+    if (!ok) return;
+    setDeleting(s.id);
+    setError(null);
+    try {
+      const r = await fetch("/api/admin/rising-snapshot", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: s.id, key: adminKey }),
+      });
+      const d = await r.json().catch(() => ({}));
+      // 404 means it is already gone: drop it from the list either way.
+      if (!r.ok && r.status !== 404) {
+        setError(d.error ?? "Could not delete the snapshot");
+        return;
+      }
+      setList((cur) => (cur ?? []).filter((x) => x.id !== s.id));
+      if (justMade?.url === s.url) setJustMade(null);
+    } catch {
+      setError("Could not reach the server");
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -111,7 +150,15 @@ export function RisingSnapshotPanel({ adminKey, scope }: { adminKey?: string; sc
               Open
             </a>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-500">{justMade.picks} cards frozen into this link.</p>
+          <p className="mt-1.5 text-[11px] text-slate-500">
+            {justMade.picks} cards frozen into this link.{" "}
+            {justMade.comparedWith
+              ? `Movement ▲▼ is against the same ranking a week earlier (${new Date(`${justMade.comparedWith.asOf}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" })}).`
+              : "The ranking a week earlier couldn't be rebuilt, so this one carries no movement."}{" "}
+            {justMade.cheapestOnEbay === 0
+              ? "No pick was cheapest on eBay."
+              : `${justMade.cheapestOnEbay} ${justMade.cheapestOnEbay === 1 ? "pick is" : "picks are"} marked Cheapest on eBay, with an affiliate link.`}
+          </p>
         </div>
       )}
 
@@ -135,6 +182,14 @@ export function RisingSnapshotPanel({ adminKey, scope }: { adminKey?: string; sc
                 <a href={s.url} target="_blank" rel="noopener noreferrer" className="btn-ghost shrink-0 px-2 py-1 text-[11px]">
                   Open
                 </a>
+                <button
+                  onClick={() => remove(s)}
+                  disabled={deleting === s.id}
+                  className="btn-ghost shrink-0 px-2 py-1 text-[11px] text-rose-300 hover:text-rose-200"
+                  aria-label={`Delete snapshot: ${s.title}`}
+                >
+                  {deleting === s.id ? "Deleting…" : "Delete"}
+                </button>
               </li>
             ))}
           </ul>

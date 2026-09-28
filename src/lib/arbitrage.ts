@@ -805,18 +805,11 @@ export function mergeMin(a: ReadonlyMap<string, number>, b: ReadonlyMap<string, 
  */
 export async function getCheapestOnEbay(country: Country, limit = 4): Promise<CheapestOnEbayItem[]> {
   try {
-    if (EBAY_CROSS_BORDER[country]) return [];
-    const { storeKeys, buyEbayKey } = defaultBuySplit(country);
-    if (!buyEbayKey || !storeKeys.length) return [];
-    const extraKeys = RANKED_NON_STORE_SOURCES[country] ?? [];
-    const [storeMin, extraMin, ebayRows, tcgRows] = await Promise.all([
-      minByCard(country, storeKeys),
-      minByCard(country, extraKeys),
-      getEbayRowsMemoized(country, buyEbayKey),
-      country === "US" ? getTcgUsRowsMemoized() : Promise.resolve<TcgUsRow[]>([]),
-    ]);
-    const ranked = rankCheapestOnEbay(country, mergeMin(storeMin, extraMin), cheapestEbayByCard(country, ebayRows), tcgRows).slice(0, Math.max(0, limit));
+    const all = await rankedCheapestOnEbay(country);
+    if (!all) return [];
+    const ranked = all.ranked.slice(0, Math.max(0, limit));
     if (!ranked.length) return [];
+    const buyEbayKey = all.ebayKey;
     const cards = await prisma.card.findMany({
       where: { id: { in: ranked.map((r) => r.cardId) } },
       select: CHEAPEST_EBAY_CARD_SELECT,
@@ -829,6 +822,48 @@ export async function getCheapestOnEbay(country: Country, limit = 4): Promise<Ch
   } catch {
     return [];
   }
+}
+
+/** The whole "Cheapest on eBay" ranking for one market, or null where there is none (Canada, no eBay feed). Throws on a failed read. */
+async function rankedCheapestOnEbay(country: Country): Promise<{ ranked: CheapestEbayRanked[]; ebayKey: string } | null> {
+  if (EBAY_CROSS_BORDER[country]) return null;
+  const { storeKeys, buyEbayKey } = defaultBuySplit(country);
+  if (!buyEbayKey || !storeKeys.length) return null;
+  const extraKeys = RANKED_NON_STORE_SOURCES[country] ?? [];
+  const [storeMin, extraMin, ebayRows, tcgRows] = await Promise.all([
+    minByCard(country, storeKeys),
+    minByCard(country, extraKeys),
+    getEbayRowsMemoized(country, buyEbayKey),
+    country === "US" ? getTcgUsRowsMemoized() : Promise.resolve<TcgUsRow[]>([]),
+  ]);
+  return { ranked: rankCheapestOnEbay(country, mergeMin(storeMin, extraMin), cheapestEbayByCard(country, ebayRows), tcgRows), ebayKey: buyEbayKey };
+}
+
+/**
+ * The same verdict for a GIVEN set of cards (2026-09-28, the Hot 40 snapshots):
+ * which of them an eBay listing sells for less than any store we track, by the
+ * rule, guards and cached inputs of the homepage row above — only filtered to
+ * `cardIds` instead of cut to the top few, and with no detail query (the caller
+ * already has the cards). Empty for Canada, a market with no eBay feed, or on
+ * any error: a missing flag is never a reason for the caller to fail. Self-cached
+ * through its inputs like getCheapestOnEbay — never wrap it in a cache or call
+ * it from inside one (src/lib/db.ts rule 6, tests/nested-cache.test.ts).
+ */
+export async function getCheapestOnEbayFor(
+  country: Country,
+  cardIds: readonly string[],
+): Promise<Map<string, CheapestEbayRanked & { ebayKey: string }>> {
+  const out = new Map<string, CheapestEbayRanked & { ebayKey: string }>();
+  if (!cardIds.length) return out;
+  try {
+    const all = await rankedCheapestOnEbay(country);
+    if (!all) return out;
+    const wanted = new Set(cardIds);
+    for (const r of all.ranked) if (wanted.has(r.cardId)) out.set(r.cardId, { ...r, ebayKey: all.ebayKey });
+  } catch {
+    // an empty map: no flags, same as a market without an eBay feed
+  }
+  return out;
 }
 
 // ── Cross-region price gaps ──────────────────────────────────────────────────

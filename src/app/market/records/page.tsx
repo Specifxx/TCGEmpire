@@ -16,6 +16,9 @@ import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardThumbProps } from "@/lib/card-image-url";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // searchParams-driven (?market=), so dynamic for exactly the reason the /market
 // page documents at length: an ISR window on a route that reads searchParams,
@@ -68,8 +71,11 @@ const GAPS_CANDIDATES = 500;
 const GAP_MIN_SAVING_CENTS = 500;
 
 const TITLE = "Riftbound All-Time Price Records & Cross-Market Gaps";
+// The records come from the weekly price history and the gaps from prices read
+// twice a day, and a row links to the card's store-by-store comparison, not to
+// a store (2026-09-26: it said "Updated daily" and "linked to a store").
 const DESCRIPTION =
-  "Riftbound all-time high and low card prices with the date each record was set, plus the biggest price gaps between markets — every row linked to a store you can actually buy from. Updated daily.";
+  "Riftbound all-time high and low card prices with the date each record was set, plus the biggest price gaps between markets — every card linked to its store-by-store price comparison.";
 
 export const metadata: Metadata = {
   title: { absolute: `${TITLE} | RiftCompare` },
@@ -176,8 +182,14 @@ function RecordsBoard({
           );
         })}
       </ol>
+      {/* The series is lib/price-history.ts's GLOBAL one (historySource):
+          the cheapest price across AU/US/UK/SG, written weekly, converted on
+          read. It said "across every tracked store in this market, one point
+          per day" — true of neither the market nor, since the weekly switch,
+          the cadence. */}
       <p className="mt-2 text-[11px] text-slate-600">
-        Prices are the lowest in-stock price we recorded across every tracked store in this market, one point per day.
+        Each price comes from the history we record for the card, now once a week: its cheapest in-stock listing across
+        Australia, the US, the UK and Singapore, converted into this market&apos;s currency.
       </p>
     </section>
   );
@@ -209,8 +221,9 @@ function GapsBoard({
     <section id="gaps" className="scroll-mt-40 xl:scroll-mt-36">
       <h2 className="text-xl font-extrabold text-white">Biggest cross-market price gaps</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Cards that cost meaningfully less in another tracked market than they do in {home.place}, ranked by how much you would
-        actually save. Converted at today&apos;s rates so the two figures are comparable.
+        Cards that cost meaningfully less in another tracked market than they do in {home.place}, ranked by the
+        size of the gap in money, before postage or customs. Converted at our reference exchange rate so the two
+        figures are comparable.
       </p>
       {/* Rows stack on phones exactly like RecordsBoard's (see its doc comment):
           this board's metric line is the long one that zeroed the name. */}
@@ -291,14 +304,17 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
     ...(records.atLow.length ? [{ id: "lows", label: since ? "At their lows" : "At all-time lows" }] : []),
   ];
 
+  // Stated from lib/market-records.ts (2026-09-26): the record series is the
+  // weekly worldwide low (historySource), not a daily per-market price, and the
+  // floor is a count of recorded prices (MIN_DAYS), not two weeks of days.
   const FAQS = [
     {
       q: "What does an all-time high mean on RiftCompare?",
-      a: `The highest daily price we have ever recorded for that card in ${info.place}, where the daily price is the cheapest in-stock listing across every store we track that day. It is a real price somebody could have paid, not an average or an estimate.`,
+      a: `The highest price in the history we keep for that card, shown in ${currency}. Each point in that history is the cheapest in-stock listing we tracked across Australia, the US, the UK and Singapore at the time, converted, so a record was a real asking price, not an average or an estimate.`,
     },
     {
       q: "How far back does the record go?",
-      a: "As far back as our daily price history for that market. A card needs at least two weeks of recorded days before it can appear here at all — a card priced on three days technically has an all-time high, and it would not mean anything.",
+      a: "As far back as the price history we keep for every card, which now records one price a week. A card needs several recorded prices before it can appear here at all — a card priced once or twice technically has an all-time high, and it would not mean anything.",
     },
     {
       q: "Can I actually buy at the cross-market price?",
@@ -306,7 +322,7 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
     },
     {
       q: "How often does this update?",
-      a: "Once a day, after the price import runs. Every figure carries the date it was set, so you can see exactly how current a record is.",
+      a: "The record boards move once a week, when the new weekly price is recorded. The cross-market gaps read current prices, which our import refreshes twice a day. Every record carries the date it was set, so you can see exactly how current it is.",
     },
   ];
   const faqLd = faqPage(FAQS);
@@ -333,11 +349,10 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
           / <span className="text-slate-400">Price records</span>
         </nav>
         <h1 className="text-3xl font-extrabold text-white sm:text-4xl">Riftbound price records &amp; market gaps</h1>
-        <p className="text-slate-400">
-          Every all-time high and low we have on record for {info.flag} {info.place}, with the date each was set — plus the
-          cards priced furthest apart between markets. Unlike a reference price, every row here links to the stores actually
-          listing the card.
-        </p>
+        {/* How both boards are built and read (2026-09-26, "Blog and tools,
+            joined up"): lib/content/hub-intros.ts, in place of a lede that
+            called the records this market's own daily prices. */}
+        <HubIntro path="/market/records" className="max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400" />
         <div className="flex flex-wrap items-center gap-3">
           <MarketSwitcher
             value={country}
@@ -350,8 +365,8 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
 
       {!hasAnything ? (
         <AnswerBox heading="No records yet">
-          We do not have enough recorded price history for {info.place} to publish records here yet. Records need at least two
-          weeks of daily prices behind them, and we would rather show nothing than call a three-day-old price an all-time
+          We do not have enough recorded price history to publish records for {info.place} yet. Records need several weeks of
+          recorded prices behind them, and we would rather show nothing than call a price seen once or twice an all-time
           high.{" "}
           <Link href="/movers" className="text-brand-400 hover:underline">
             This week&apos;s movers
@@ -362,14 +377,14 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
         <>
           <AnswerBox
             points={[
-              `Records cover ${info.flag} ${info.place} and are priced in ${currency}.`,
-              "A day's price is the cheapest in-stock listing across every store we track that day.",
-              "Cards need 14+ days of history before they can hold a record.",
+              `Records are shown for ${info.flag} ${info.place}, in ${currency}.`,
+              "Each recorded price is the cheapest in-stock listing across Australia, the US, the UK and Singapore at the time, converted.",
+              "Cards need several recorded prices before they can hold a record.",
             ]}
           >
-            An all-time high here is a price someone could genuinely have paid — the cheapest live in-stock listing on the day
-            it was set, not a market average. The cross-market board below shows where the same card is listed cheaper
-            somewhere else right now.
+            An all-time high here was a real asking price — the cheapest in-stock listing we tracked when it was set, not a
+            market average. The cross-market board below shows where the same card is listed cheaper somewhere else right
+            now.
           </AnswerBox>
 
           {sections.length > 1 && <MarketSectionNav sections={sections} />}
@@ -400,8 +415,8 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
               heading={since ? `Furthest below their high since ${since}` : "Furthest below their all-time high"}
               blurb={
                 since
-                  ? `Cards trading well under their own highest price since ${since}, when the way we source one of our prices changed — earlier prices are not compared with later ones. The buyable version of a records board — every one of these is in stock now.`
-                  : "Cards trading well under their own record. The buyable version of a records board — every one of these is in stock now."
+                  ? `Cards trading well under their own highest price since ${since}, when the way we source one of our prices changed — earlier prices are not compared with later ones. Measured at each card's latest weekly price.`
+                  : "Cards trading well under their own record, measured at each card's latest weekly price."
               }
               rows={records.offPeak}
               currency={currency}
@@ -433,6 +448,9 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
           </Reveal>
         </>
       )}
+
+      {/* The guides behind both boards, after the data. */}
+      <RelatedGuides guides={guidesForTool("/market/records")} className="card-surface p-5" />
 
       <HubFaq faqs={FAQS} />
 

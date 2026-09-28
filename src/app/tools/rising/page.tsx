@@ -3,12 +3,18 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
-import { getCachedRisingCards, parseRiseScope, growthSpanLabel, type RisePick, type RiseScope } from "@/lib/rise-predictor";
+import { getCachedRisingCards, getRisingWeekAgo, parseRiseScope, growthSpanLabel, type RisePick, type RiseScope } from "@/lib/rise-predictor";
+import { movementAgainst, weekAgoLabel } from "@/lib/rising-movement";
+import type { Movement } from "@/lib/demand-movement";
+import { MoveBadge } from "@/components/MoveBadge";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
 import { cardHref } from "@/lib/card-url";
 import { PremiumButton } from "@/components/PremiumButton";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { SITE_URL, tierMonthlyAmount } from "@/lib/site";
 import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
@@ -39,7 +45,11 @@ const RISING_FAQS = [
   },
   {
     q: "What signals does the ranking use?",
-    a: "How often a card is picked from RiftCompare search and whether that is rising, where today's price sits in the card's own recent range, how many stores have it in stock, and how its price compares with last week. Cards already up sharply on last week are marked down, not rewarded. Prices are only compared on one pricing basis: the US TCGplayer price moved from TCGplayer's market price to the cheapest English listing on 23 September 2026, so prices from before then are not compared with prices after it, and a card without enough weekly prices since is ranked on demand and supply alone.",
+    // The basis sentence was wrong from 2026-09-25: Rising Cards reads ACROSS
+    // the 23 September switch by the owner's call (lib/rise-predictor.ts,
+    // header point 3; DECISIONS.md "Rising Cards keeps its pre-break price
+    // signals"). Corrected 2026-09-26 to say what the code does.
+    a: "How often a card is picked from RiftCompare search and whether that is rising, where today's price sits in the card's own recent range, how many stores have it in stock, and how its price compares with last week. Cards already up sharply on last week are marked down, not rewarded. On 23 September 2026 the US TCGplayer price moved from TCGplayer's market price to the cheapest English listing; for now the ranking still reads each card's price history across that date, so a card whose weekly price comes from the US can show one step down there and sit nearer the low of its range than the market alone would put it. A card with too few weekly prices is ranked on demand and supply alone.",
   },
   {
     q: "Is this financial advice?",
@@ -144,10 +154,15 @@ function CardCell({ p }: { p: RisePick }) {
 // Every price renders in ITS OWN currency (p.currency). Global mixes each
 // card's basis-market price, and until 2026-09-25 this table printed all of
 // them under one "A$" — a US$10.00 card read as A$10.00.
-function RisingRow({ p, rank }: { p: RisePick; rank: number }) {
+function RisingRow({ p, rank, move }: { p: RisePick; rank: number; move: Movement | null | undefined }) {
   return (
     <tr className="align-top hover:bg-ink-800">
       <td className="px-3 py-2 text-slate-500">{rank}</td>
+      {move !== undefined && (
+        <td className="px-1 py-2">
+          <MoveBadge move={move} newTitle="Not ranked 7 days ago" />
+        </td>
+      )}
       <td className="px-3 py-2">
         <CardCell p={p} />
       </td>
@@ -162,11 +177,16 @@ function RisingRow({ p, rank }: { p: RisePick; rank: number }) {
   );
 }
 
-function TableHead({ priceLabel }: { priceLabel: string }) {
+function TableHead({ priceLabel, showMove }: { priceLabel: string; showMove: boolean }) {
   return (
     <thead>
       <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
         <th className="px-3 py-2.5 font-semibold">#</th>
+        {showMove && (
+          <th className="px-1 py-2.5 font-semibold" title="Place against the ranking 7 days ago">
+            Move
+          </th>
+        )}
         <th className="px-3 py-2.5 font-semibold">Card · why it ranks</th>
         <th className="px-2 py-2.5 text-right font-semibold">{priceLabel}</th>
         <th className="px-2 py-2.5 text-right font-semibold">vs last week</th>
@@ -206,7 +226,10 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   // Two self-caching loaders (weekly history, daily operational inputs) and an
   // in-process assembly — rise-predictor.ts. Shared with the homepage column,
   // /admin/rising and the premium nudge, so any of them warms the rest.
-  const analysis = await getCachedRisingCards(scope);
+  // Last week's chart for the same market (lib/rising-movement.ts): the most
+  // recent Hot 40 snapshot at least six days old. None → no movement column.
+  const [analysis, weekAgo] = await Promise.all([getCachedRisingCards(scope), getRisingWeekAgo(scope)]);
+  const moves = movementAgainst(analysis.picks.map((p) => p.id), weekAgo);
   const visible = access === "full" ? analysis.picks : access === "top3" ? analysis.picks.slice(0, FREE_PREVIEW_ROWS) : [];
   const hiddenCount = Math.min(40, analysis.picks.length) - visible.length;
   const rebuilding = analysis.picks.length > 0 && analysis.qualifying === 0;
@@ -241,11 +264,14 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             </div>
           )}
         </div>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Cards ranked by <strong className="text-slate-200">demand and price-timing signals</strong> — search interest
-          that is high or rising on cards whose price hasn&apos;t moved up yet{where}. Real data, and every pick says why it
-          ranks. Not financial advice.{" "}
-          Looking for boxes and packs instead? <Link href="/sealed" className="text-brand-400 hover:underline">See sealed prices →</Link>
+        {/* The four signals and their cadence, above the access split so a
+            signed-out visitor and a crawler get them (2026-09-26, "Blog and
+            tools, joined up"): lib/content/hub-intros.ts, in place of a
+            one-paragraph lede. */}
+        <HubIntro path="/tools/rising" />
+        <p className="mt-2 max-w-3xl text-xs leading-relaxed text-slate-500">
+          Not financial advice. Looking for boxes and packs instead?{" "}
+          <Link href="/sealed" className="text-brand-400 hover:underline">See sealed prices →</Link>
         </p>
       </div>
 
@@ -328,9 +354,9 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
           )}
           <div className="card-surface overflow-x-auto">
             <table className="w-full text-sm sm:min-w-[760px]">
-              <TableHead priceLabel={priceLabel} />
+              <TableHead priceLabel={priceLabel} showMove={!!moves} />
               <tbody className="divide-y divide-ink-800">
-                {visible.map((p, i) => <RisingRow key={p.id} p={p} rank={i + 1} />)}
+                {visible.map((p, i) => <RisingRow key={p.id} p={p} rank={i + 1} move={moves ? moves.get(p.id) ?? null : undefined} />)}
               </tbody>
             </table>
             <p className="p-3 text-[11px] leading-relaxed text-slate-600">
@@ -341,6 +367,15 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
               converted — the series RiftCompare records weekly — with today&apos;s price as the newest point. Ranked among the{" "}
               {analysis.universeSize} most-searched priced cards{where}. A research signal, not financial advice — check a card&apos;s own
               price history before you buy.
+              {weekAgo && (
+                <>
+                  {" "}
+                  <span className="text-emerald-400">▲</span>/<span className="text-rose-400">▼</span> compare each card&apos;s
+                  place with its place 7 days earlier ({weekAgoLabel(weekAgo)}), ranked the same way on the demand and prices
+                  of that day;{" "}
+                  <span className="font-semibold text-amber-300">NEW</span> means it had no searches by then.
+                </>
+              )}
             </p>
           </div>
           {access === "top3" && hiddenCount > 0 && (
@@ -357,6 +392,10 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
           )}
         </>
       )}
+
+      {/* The guides behind the signals, after the list and outside the access
+          split, so a signed-out visitor gets them too. */}
+      <RelatedGuides guides={guidesForTool("/tools/rising")} className="card-surface mt-8 p-5" />
 
       <section className="mt-10">
         <h2 className="mb-3 text-xl font-extrabold text-white">How Rising Cards works</h2>

@@ -4,6 +4,8 @@ import { SITE_URL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { AnswerBox } from "@/components/AnswerBox";
 import { AlertsSignupCta } from "@/components/AlertsSignupCta";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
@@ -259,6 +261,11 @@ export default function AlertsPage() {
           </details>
         ))}
       </div>
+
+      {/* The guides behind a price you watch (2026-09-26, "Blog and tools,
+          joined up"). No hub-intros entry here: the answer box under the H1 is
+          already this page's own explanation, and a second would repeat it. */}
+      <RelatedGuides guides={guidesForTool("/alerts")} className="card-surface mt-10 p-5" />
 
       <section className="card-surface mt-10 flex flex-wrap items-center justify-between gap-3 p-5">
         <div>

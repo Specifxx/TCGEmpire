@@ -251,7 +251,8 @@ export function Navbar() {
               plus the account-shaped chrome the rail does not carry. What
               stayed deleted is what the owner named — Explore, Deck builder,
               Auctions — plus the brand, the inline search box and the ⌘K
-              button, which the rail now owns outright. */}
+              button, which the rail now owns outright. One addition since, by
+              the owner's own request: Tools, from xl (see its comment). */}
           {/* `[@media(pointer:coarse)]:py-3.5` on these three (2026-09-23): as
               plain `py-2` blocks they were 36px tall on a touch tablet at 1024
               (69/69 pages audited), under the 48px coarse floor globals.css
@@ -264,8 +265,19 @@ export function Navbar() {
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">
             Blog
           </Link>
-          {/* Plain, like Sealed and Blog beside it (2026-09-28): the header
-              links to the plans, it does not pitch them. */}
+          {/* TOOLS, FROM xl ONLY (2026-09-26, "Blog and tools, joined up" in
+              DECISIONS.md). The owner's AdSense brief asks for Tools in the
+              header by name, which adds this one item to the 09-21 shortlist
+              above; /tools is the hub every calculator and data tool hangs off.
+              Never at lg: from 1024 to 1279 this row has no flexible element
+              and ~5px of slack on touch (see the BREAKPOINTS note on <nav>),
+              so a sixth lg item would clip "Log in / Sign up free". From xl
+              the inline card search is in this row and gives up the ~60px
+              instead (it was 285px wide at 1280 before this link). Below xl
+              Tools stays one tap away in the menu, the rail and the footer. */}
+          <Link href="/tools" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white xl:block xl:px-2.5 [@media(pointer:coarse)]:py-3.5">
+            Tools
+          </Link>
           <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5" surface="nav:navbar">
             Pricing
           </PremiumNavLink>

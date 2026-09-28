@@ -15,6 +15,11 @@ import {
   type RisingSnapshotData,
   type RisingSnapshotPick,
 } from "@/lib/rising-snapshot";
+import { MoveBadge } from "@/components/MoveBadge";
+import { weekAgoLabel } from "@/lib/rising-movement";
+import { OutboundLink } from "@/components/OutboundLink";
+import { AffiliateDisclosure, PaidLinkTag } from "@/components/AffiliateDisclosure";
+import { affiliateUrl } from "@/lib/affiliate";
 
 export const dynamic = "force-dynamic";
 
@@ -86,14 +91,56 @@ function Pct({ v }: { v: number | null }) {
   );
 }
 
+// CHEAPEST ON EBAY (2026-09-28): a pick an eBay listing sold for less than any
+// store we tracked in its market, when the snapshot was taken — the homepage
+// row's rule (lib/arbitrage.ts getCheapestOnEbayFor), frozen at mint time like
+// every other number here. The listing's URL is frozen untagged and tagged
+// here, so the affiliate rules in force when the page is read are the ones
+// applied; its EPN sub-id (`<eBay key>_cheapest` on /rising) keeps these clicks
+// apart from the homepage row's. "Paid link" sits beside every one.
+function EbayCheapest({ p, rank }: { p: RisingSnapshotPick; rank: number }) {
+  const e = p.ebay;
+  if (!e) return null;
+  return (
+    <span className="mt-1 flex flex-col items-end gap-0.5">
+      <OutboundLink
+        href={affiliateUrl(e.url, `${e.retailer}_cheapest`, "/rising")}
+        retailer={e.retailer}
+        country={e.market}
+        kind="single"
+        pageType="rising_snapshot"
+        surface="hot40_ebay"
+        cardId={p.id}
+        cardName={p.displayName}
+        price={e.cents / 100}
+        positionInList={rank}
+        inStock
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-[#0064d2]/50 bg-[#0064d2]/10 px-1.5 py-0.5 font-sans text-[10px] font-bold text-white transition-colors duration-fast hover:bg-[#0064d2]/25"
+        aria-label={`Cheapest on eBay: ${p.displayName}, ${formatMoney(e.cents, e.currency)}${e.postageKnown ? " delivered" : " plus postage"}`}
+      >
+        Cheapest on eBay <span aria-hidden>↗</span>
+      </OutboundLink>
+      <span className="flex items-center gap-1 whitespace-nowrap text-[10px] text-slate-500">
+        {formatMoney(e.cents, e.currency)} {e.postageKnown ? "delivered" : "+ postage"}
+        <PaidLinkTag />
+      </span>
+    </span>
+  );
+}
+
 // TWO PAYLOAD SHAPES — see lib/rising-snapshot.ts. A legacy snapshot keeps the
 // columns it was minted with (its 7- and 30-day moves were real); a v2 one
 // shows "vs last week" (a dash when nothing was comparable, never 0.0%) and the
 // 16-week spark, and has no 30-day column.
-function Row({ p, rank, legacy }: { p: RisingSnapshotPick; rank: number; legacy: boolean }) {
+function Row({ p, rank, legacy, showMove, newTitle }: { p: RisingSnapshotPick; rank: number; legacy: boolean; showMove: boolean; newTitle: string }) {
   return (
     <tr className="align-middle">
       <td className="num px-3 py-2 text-slate-500">{rank}</td>
+      {showMove && (
+        <td className="px-1 py-2">
+          <MoveBadge move={p.move} newTitle={newTitle} />
+        </td>
+      )}
       <td className="px-3 py-2">
         <Link href={cardHref(p)} className="flex items-center gap-2.5 hover:text-brand-400">
           {p.imageThumbUrl ? (
@@ -120,6 +167,7 @@ function Row({ p, rank, legacy }: { p: RisingSnapshotPick; rank: number; legacy:
       </td>
       <td className="num px-3 py-2 text-right text-white">
         {p.priceCents != null ? formatMoney(p.priceCents, p.currency) : "—"}
+        <EbayCheapest p={p} rank={rank} />
       </td>
       <td className="num px-3 py-2 text-right"><Pct v={weekMove(p)} /></td>
       {legacy && <td className="num px-3 py-2 text-right"><Pct v={p.trend30} /></td>}
@@ -140,6 +188,13 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
   const taken = new Date(snap.createdAt);
   const legacy = isLegacySnapshot(data);
   const rankedFrom = rankedFromCount(data);
+  // Movement exists only on snapshots minted since 2026-09-28 that had a chart to compare with.
+  // Movement exists on snapshots minted since 2026-09-28 that had something to
+  // compare with: the ranking a week earlier (`weekAgo`), or — only on the few
+  // minted that morning — an earlier Hot 40 (`previousChart`).
+  const showMove = !legacy && (!!data.weekAgo || !!data.previousChart);
+  const newTitle = data.weekAgo ? "No searches 7 days before" : "Not on the previous chart";
+  const ebayCount = data.picks.filter((p) => p.ebay).length;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -173,10 +228,27 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
         </div>
       ) : (
         <div className="card-surface mt-6 overflow-x-auto">
+          {/* Above the table, not under it: the first eBay link can be row 1,
+              and the disclosure has to be on screen beside it. */}
+          {ebayCount > 0 && (
+            <div className="border-b border-ink-800 px-3 py-2">
+              <p className="text-xs text-slate-400">
+                <span className="font-semibold text-white">Cheapest on eBay</span> marks {ebayCount === 1 ? "the card" : `the ${ebayCount} cards`}{" "}
+                where an eBay listing cost less than any store we tracked in {ebayCount === 1 ? "its" : "their"} market when this
+                snapshot was taken. The listing may have sold since.
+              </p>
+              <AffiliateDisclosure partner="ebay" tight />
+            </div>
+          )}
           <table className="w-full min-w-[720px] text-sm">
             <thead className="text-left text-[11px] uppercase tracking-wide text-slate-500">
               <tr className="border-b border-ink-800">
                 <th className="px-3 py-2 font-semibold">#</th>
+                {showMove && (
+                  <th className="px-1 py-2 font-semibold" title={data.weekAgo ? "Place against the same ranking 7 days before" : "Place against the previous chart"}>
+                    Move
+                  </th>
+                )}
                 <th className="px-3 py-2 font-semibold">Card</th>
                 <th className="px-3 py-2 text-right font-semibold">Price</th>
                 <th className="px-3 py-2 text-right font-semibold">vs last week</th>
@@ -188,7 +260,7 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
             </thead>
             <tbody className="divide-y divide-ink-800">
               {data.picks.map((p, i) => (
-                <Row key={p.id} p={p} rank={i + 1} legacy={legacy} />
+                <Row key={p.id} p={p} rank={i + 1} legacy={legacy} showMove={showMove} newTitle={newTitle} />
               ))}
             </tbody>
           </table>
@@ -209,6 +281,25 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
               </>
             )}{" "}
             A research signal, not financial advice — always check the card&apos;s own price history before buying.
+            {data.weekAgo ? (
+              <>
+                {" "}
+                <span className="text-emerald-400">▲</span>/<span className="text-rose-400">▼</span> compare each card&apos;s
+                place with its place 7 days before ({weekAgoLabel(data.weekAgo)}), ranked the same way on that day&apos;s
+                demand and prices; <span className="font-semibold text-amber-300">NEW</span> means it had no searches by then.
+              </>
+            ) : data.previousChart ? (
+              <>
+                {" "}
+                <span className="text-emerald-400">▲</span>/<span className="text-rose-400">▼</span> compare each card&apos;s
+                place with the {hotListName(data.previousChart.count)} of {snapshotDateLabel(new Date(data.previousChart.createdAt))};{" "}
+                <span className="font-semibold text-amber-300">NEW</span> means it wasn&apos;t on that chart.
+              </>
+            ) : data.weekAgo === null ? (
+              " The ranking a week before this one couldn't be rebuilt, so no movement is shown."
+            ) : data.previousChart === null ? (
+              " There was no earlier chart to compare with, so no movement is shown."
+            ) : null}
           </p>
         </div>
       )}

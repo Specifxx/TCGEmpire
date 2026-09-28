@@ -57,7 +57,7 @@ test("the phone Explore overlay has a Games group with something to play", () =>
   assert.ok(games.links.some((l) => l.href === "/riftle"), "the free daily puzzle must be reachable: no account, no purchase");
 });
 
-// AMENDED TWICE, both times by explicit owner instruction, and each time
+// AMENDED THREE TIMES, each by explicit owner instruction, and each time
 // narrowed rather than deleted — so the current homepage order reads as a
 // decision in this file too, not as a gap where an assertion used to be.
 //
@@ -70,6 +70,12 @@ test("the phone Explore overlay has a Games group with something to play", () =>
 //               block, and the one this file's own header counted among the
 //               "FIVE consecutive price sections", so the page-order half of
 //               the 2026-09-16 pass is now fully reversed.
+//   2026-09-26: the editorial run (guides, news, market updates) left the foot
+//               of HomeSections for a band ABOVE the whole component, directly
+//               under the price table — the owner's answer to an AdSense "low
+//               value content" rejection ("Blog and tools, joined up" in
+//               DECISIONS.md; tests/home-editorial.test.ts pins it). Inside
+//               HomeSections nothing moved: the order below still holds.
 //
 // See DECISIONS.md for both. What this file still pins is everything that pass
 // won which does NOT depend on this page's section order — the nav ranking,
@@ -78,25 +84,26 @@ test("the phone Explore overlay has a Games group with something to play", () =>
 // homepage's running order is the owner's to set, and now says so explicitly.
 test("the homepage's commercial-vs-playable order is the owner's, and is asserted rather than assumed", () => {
   const code = readCode("src/components/home/HomeSections.tsx");
-  const recent = code.indexOf("<RecentlyViewedRail");
   const deals = code.indexOf("<TodaysTopDeals");
   const ebay = code.indexOf("<EbayPicks");
   const play = code.indexOf("<ReturnVisitCards");
-  assert.ok(recent > 0 && deals > 0 && ebay > 0 && play > 0, "expected all four homepage sections to render");
+  assert.ok(deals > 0 && ebay > 0 && play > 0, "expected all three homepage sections to render");
 
-  // The 2026-09-21 order, top down: recently viewed → Top Deals → eBay Picks
-  // → … → the playable cards. Recently viewed is a client-only chip row that
-  // renders null for a first-time visitor, so Top Deals is genuinely the top
-  // content block for anyone arriving fresh.
-  assert.ok(recent < deals, "Recently viewed sits directly above Today's Top Deals (owner, 2026-09-21)");
+  // The 2026-09-21 order, top down: Top Deals → eBay Picks → … → the playable
+  // cards. Recently viewed sat above Top Deals until 2026-09-28, when the
+  // owner took it off the homepage (tests/homepage-declutter.test.ts).
+  assert.ok(!code.includes("<RecentlyViewedRail"), "Recently viewed is off the homepage (owner, 2026-09-28)");
   assert.ok(deals < ebay, "Today's Top Deals is the owner-chosen top content slot as of 2026-09-21");
   assert.ok(ebay < play, "eBay Picks is above the playable sections, as of 2026-09-17");
 
   // Still pinned, because it is the part nobody has asked to change: the
-  // playable sections keep a slot ABOVE the explainer, the set/domain grid and
-  // the entire editorial run. "Behind the two commercial units" is the
-  // instruction; "buried at the bottom of the page" is not.
+  // playable sections keep a slot ABOVE the explainer and the set/domain grid.
+  // "Behind the two commercial units" is the instruction; "buried at the bottom
+  // of the page" is not. They used to sit above the editorial run too; since
+  // 2026-09-26 that run is a band above HomeSections by the owner's decision
+  // (see the note above), so it is no longer below them to assert against.
   assert.ok(play < code.indexOf("<HowItWorks"), "Riftle/pack-sim must stay above the explainer and everything below it");
+  assert.doesNotMatch(code, /<LatestPosts/, "the editorial run moved above HomeSections (owner, 2026-09-26), not back under the games");
 });
 
 test("the site's story about itself no longer ends at the purchase", () => {

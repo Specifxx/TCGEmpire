@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { getArticles } from "@/lib/articles";
-import { FilterableArticles, type ArticleSection } from "@/components/FilterableArticles";
+import { FilterableArticles, type ArticleSection, type ArticleListItem } from "@/components/FilterableArticles";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
-import { pageAlternates } from "@/lib/seo";
+import { COUNTRY_GUIDE_SLUGS, pageAlternates } from "@/lib/seo";
+import { GUIDE_PICKS } from "@/lib/content/featured";
 
-// Curated from real traffic (30-day Top Pages), not a live/self-updating ranking —
-// revisit occasionally as new guides prove themselves. Empower Explained alone
-// outdrew every other guide combined; deck-archetype content is the clear #2.
-const FEATURED_GUIDES = ["riftbound-empower-explained", "best-riftbound-vendetta-decks", "budget-riftbound-decks"];
+// "Editor's picks" come from lib/content/featured.ts (owner-curated, 2026-09-26).
+// They replaced a "Most read" list drawn from August's 30-day Top Pages, which
+// no per-article view count could keep true.
 
 // Topic clusters for the default (unfiltered) view — matched by tag, first
 // section wins so nothing appears twice. Anything matching none of these still
@@ -38,6 +38,17 @@ const GUIDE_SECTIONS: ArticleSection[] = [
   },
 ];
 
+// The tools the guides explain, linked once under the intro (2026-09-26, "Blog
+// and tools, joined up" in DECISIONS.md). Each guide links its own tool too;
+// this is the index's one-line map of them. /blog words its line differently.
+const TOOL_LINKS: { href: string; label: string }[] = [
+  { href: "/browse", label: "Card price database" },
+  { href: "/tools/best-basket", label: "Best Basket" },
+  { href: "/tools/box-ev", label: "Box EV calculator" },
+  { href: "/movers", label: "Price movers" },
+  { href: "/market", label: "RiftCompare Index" },
+];
+
 export const metadata: Metadata = {
   title: "Riftbound Guides — Learn the Game & Build Decks",
   description:
@@ -47,7 +58,19 @@ export const metadata: Metadata = {
 
 export default function GuidesPage() {
   const articles = getArticles("guide");
-  const info = COUNTRIES[getCountry()];
+  const country = getCountry();
+  const info = COUNTRIES[country];
+  // Only what the list renders and searches crosses into the client component,
+  // never a guide's markdown body (see ArticleListItem).
+  const items: ArticleListItem[] = articles.map(({ slug, title, excerpt, tags, date, readMins, hero }) => ({
+    slug,
+    title,
+    excerpt,
+    tags,
+    date,
+    readMins,
+    hero,
+  }));
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -87,15 +110,54 @@ export default function GuidesPage() {
       />
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-white">Guides</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Learn Riftbound — deckbuilding basics, buying tips and more, for {info.adjective} players. Looking
-          for the wider community?{" "}
-          <Link href="/community" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
-            See community links →
-          </Link>
+        {/* What the guides are and who writes them (2026-09-26, "Blog and
+            tools, joined up"). Its own wording, not /blog's: the two indexes
+            describe different halves of the writing. The authorship clause is
+            the owner's statement (lib/content/authors.ts ARTICLE_PROCESS). The
+            visitor's market picks the buying-guide link, as it already picked
+            this page's copy before. */}
+        <div className="mt-2 max-w-3xl space-y-2 text-sm leading-relaxed text-slate-400">
+          <p>
+            Guides are the reference side of RiftCompare: how Riftbound&apos;s mechanics and ban list work, how a deck
+            is built, how to tell one printing or condition from another, and how to buy and sell without overpaying.
+            They are revised when the game changes rather than left to date, and most end by pointing you at the tool
+            that does what the guide describes.
+          </p>
+          <p>
+            Each one is drafted with AI assistance, then edited and fact-checked by Bill, who runs the site, and the
+            prices and figures it quotes come from RiftCompare&apos;s own price database. See{" "}
+            <Link href="/authors" className="text-brand-300 underline-offset-2 hover:underline">who writes them</Link>,
+            our{" "}
+            <Link href="/editorial-policy" className="text-brand-300 underline-offset-2 hover:underline">
+              editorial policy
+            </Link>{" "}
+            and{" "}
+            <Link href="/methodology" className="text-brand-300 underline-offset-2 hover:underline">
+              how prices are collected
+            </Link>
+            . Buying in {info.place}? Start with{" "}
+            <Link
+              href={`/blog/${COUNTRY_GUIDE_SLUGS[country]}`}
+              className="font-semibold text-brand-300 underline-offset-2 hover:underline"
+            >
+              where to buy Riftbound cards in {info.place} →
+            </Link>{" "}
+            Looking for the wider community?{" "}
+            <Link href="/community" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+              See community links →
+            </Link>
+          </p>
+        </div>
+        <p className="mt-2 flex flex-wrap items-center gap-x-4 text-xs">
+          <span className="text-slate-500">Tools these guides explain:</span>
+          {TOOL_LINKS.map((l) => (
+            <Link key={l.href} href={l.href} className="tap-link font-semibold text-brand-300 underline-offset-2 hover:underline">
+              {l.label}
+            </Link>
+          ))}
         </p>
       </div>
-      <FilterableArticles articles={articles} basePath="/guides" sections={GUIDE_SECTIONS} featured={FEATURED_GUIDES} />
+      <FilterableArticles articles={items} basePath="/guides" sections={GUIDE_SECTIONS} featured={GUIDE_PICKS} />
     </div>
   );
 }

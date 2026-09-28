@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { CONTACT_EMAIL, TIER_NAMES } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { ContactForm } from "@/components/ContactForm";
 
@@ -23,13 +23,28 @@ export default function ContactPage() {
             Spotted a wrong price, a missing store, or have an idea to make RiftCompare better?
             We&apos;d genuinely love to hear from you.
           </p>
+          {/* What the form is for and what happens to a message — no response
+              time is promised here (2026-09-26, "Blog and tools, joined up" in
+              DECISIONS.md). A message is stored for the admin inbox
+              (api/contact → ContactMessage) and never published; the site is
+              run by one person (/about#who-runs-riftcompare). */}
+          <p className="mx-auto mt-3 max-w-md text-left text-sm leading-relaxed text-slate-400">
+            Use this form for anything about the site: a store or card we&apos;re missing, a bug, a
+            question about a guide or one of the tools, or a correction. Your message goes to Bill, who
+            runs RiftCompare on his own, and the reply comes by email to the address you give; nothing you
+            send here is published. For a single wrong price, the &ldquo;Report it&rdquo; link under a
+            card&apos;s store comparison is quicker, because it tells us exactly which listing you mean.
+            For a problem with a {TIER_NAMES.plus} or {TIER_NAMES.premium} payment or your account, use{" "}
+            <Link href="/support" className="font-semibold text-brand-300 hover:underline">support</Link>
+            , which gives you a ticket number.
+          </p>
 
           <div className="mt-6">
             <ContactForm />
           </div>
 
           <p className="mt-4 text-xs text-slate-500">
-            We read every message and usually reply within a day or two. Prefer email?{" "}
+            Prefer email?{" "}
             <a href={`mailto:${CONTACT_EMAIL}?subject=RiftCompare%20feedback`} className="text-brand-300 hover:underline">
               {CONTACT_EMAIL}
             </a>

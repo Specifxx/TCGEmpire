@@ -7,6 +7,8 @@ import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } fro
 import { DOMAIN_PAGES } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // Facet index — links every card-type, rarity and printing hub in one place, plus
 // the existing domain hubs. This is the internal-linking backbone item B2 needs:
@@ -166,6 +168,8 @@ export default async function CardsIndexPage() {
           see the <Link href="/keywords" className="text-brand-400 hover:underline">keywords &amp; game actions glossary</Link>.
         </p>
       </section>
+
+      <RelatedGuides guides={guidesForTool("/cards")} className="card-surface p-5" />
     </div>
   );
 }

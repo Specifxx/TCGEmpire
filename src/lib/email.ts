@@ -955,7 +955,7 @@ export async function sendReleaseDayEmail(
         // true of the next one — Radiance leads with a Vault and Showdown Decks,
         // and Proving Grounds is a 2025 product. Nothing else in this template
         // hardcodes a fact about a specific set; this was the exception.
-        `Every sealed product we can find for the set — ranked by total delivered cost, with an at-RRP flag so you can see instantly whether a box is a fair price or a scalp.`,
+        `Every sealed product we can find for the set — cheapest first, with an at-RRP flag so you can see instantly whether a box is a fair price or a scalp.`,
         { href: sealedUrl, label: `Compare ${setName} sealed` }
       )
     : "";

@@ -15,6 +15,7 @@ import { ArticleShopStrip } from "./ArticleShopStrip";
 import { EbayPicks } from "./EbayPicks";
 import { ArticleMarketData } from "./ArticleMarketData";
 import { authorByName, authorJsonLd } from "@/lib/content/authors";
+import { TOOL_GUIDES, toolsForArticle, type ToolRoute } from "@/lib/content/tool-guides";
 import { SITE_URL } from "@/lib/site";
 import { extractToc } from "@/lib/toc";
 import { AnswerBox } from "./AnswerBox";
@@ -39,6 +40,7 @@ import { NewsletterSignup } from "./NewsletterSignup";
 import { setByCode } from "@/lib/constants";
 import { RADIANCE_SET_CODE } from "@/lib/sets/radiance";
 import { PostPriceTable } from "./CardPriceChip";
+import { currentSlug, withSlugAliases } from "@/lib/card-slug-renames";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -63,9 +65,10 @@ async function resolveEmbed(e: ArticleEmbed | undefined): Promise<CardTileData[]
   const select = cardTileSelect(DEFAULT_COUNTRY);
   try {
     if (e.slugs?.length) {
-      const rows = await prisma.card.findMany({ where: { slug: { in: e.slugs } }, select });
-      const bySlug = new Map(rows.map((r) => [r.slug, r]));
-      return e.slugs.map((sl) => bySlug.get(sl)).filter(Boolean) as unknown as CardTileData[];
+      // Renamed slugs match under either name (lib/card-slug-renames.ts).
+      const rows = await prisma.card.findMany({ where: { slug: { in: withSlugAliases(e.slugs) } }, select });
+      const bySlug = new Map(rows.map((r) => [currentSlug(r.slug ?? ""), r]));
+      return e.slugs.map((sl) => bySlug.get(currentSlug(sl))).filter(Boolean) as unknown as CardTileData[];
     }
     if (e.popular) {
       // Most-wanted: search demand, ties toward the dearer card, priced-only —
@@ -191,7 +194,9 @@ function CardCloseUpFig({ cu, card }: { cu: ArticleCloseUp; card?: CardTileData 
 // days). That is the spoiler post — a handful of just-revealed cards, and a
 // reader asking where each one can be found. A long list or a gallery of older
 // cards gets nothing: the tile's own QuickView and card page are the better
-// next step there, and a wall of links under 12 tiles reads as a link farm.
+// next step there, and a wall of links under 12 tiles reads as a link farm —
+// unless the article opts a small, hand-picked gallery in with `ebaySearch`
+// (2026-09-27, "Popular pages tuned for eBay"): the same 2–6 bound applies.
 const GALLERY_EBAY_MIN = 2;
 const GALLERY_EBAY_MAX = 6;
 function galleryHasEbaySearch(embed: ArticleEmbed, cards: CardTileData[]): boolean {
@@ -199,7 +204,7 @@ function galleryHasEbaySearch(embed: ArticleEmbed, cards: CardTileData[]): boole
     !embed.filterable &&
     cards.length >= GALLERY_EBAY_MIN &&
     cards.length <= GALLERY_EBAY_MAX &&
-    cards.every((c) => isCurrentSetCode(c.setCode))
+    (embed.ebaySearch === true || cards.every((c) => isCurrentSetCode(c.setCode)))
   );
 }
 
@@ -261,6 +266,25 @@ function relatedArticles(article: Article, take = 3): Article[] {
   return [...scored, ...filler].slice(0, take);
 }
 
+// The tool links under "Ready to buy?" (2026-09-26, "Blog and tools, joined up"
+// in DECISIONS.md). They were the same three on every article — /sealed, /deck,
+// /champions — whatever the article was about. Now they are the tools this
+// article explains, read from the one tool↔guide map (toolsForArticle), minus
+// the page "Ready to buy?" already sends the reader to. An article the map
+// names for fewer than three tools is topped up from that old trio, deduped,
+// so every article still offers three ways on. Pure: no query, no cache.
+const TOOL_FALLBACK: readonly ToolRoute[] = ["/sealed", "/deck", "/champions"];
+function articleTools(slug: string, ctaHref: string): { href: ToolRoute; label: string }[] {
+  const ctaPath = ctaHref.split(/[?#]/)[0];
+  const tools = toolsForArticle(slug, ctaPath);
+  for (const href of TOOL_FALLBACK) {
+    if (tools.length >= 3) break;
+    if (href === ctaPath || tools.some((t) => t.href === href)) continue;
+    tools.push({ href, label: TOOL_GUIDES[href].label });
+  }
+  return tools;
+}
+
 const DEFAULT_BROWSE_CTA = {
   href: "/browse",
   label: "Browse the card database →",
@@ -270,6 +294,7 @@ const DEFAULT_BROWSE_CTA = {
 export async function ArticleView({ article }: { article: Article }) {
   const related = relatedArticles(article);
   const cta = article.browseCta ?? DEFAULT_BROWSE_CTA;
+  const tools = articleTools(article.slug, cta.href);
   const radianceSeason = isBeforeRadianceRelease();
   // Every Radiance news post (lib/sets/radiance.ts carriesRadiancePreorderCta).
   // The block itself switches to "see Radiance prices" on release day, so the
@@ -325,9 +350,9 @@ export async function ArticleView({ article }: { article: Article }) {
     // dateModified defaults to the publish date until an article carries an
     // explicit `updated` — never older than datePublished.
     dateModified: article.updated ?? article.date,
-    // Typed from lib/content/authors.ts — an Organization byline, because that
-    // is what it truthfully is. See that file's header on why no Person is
-    // fabricated here.
+    // Typed from lib/content/authors.ts: Bill's own articles as a Person, the
+    // site's byline as an Organization — each what it truthfully is. See that
+    // file's header on why no author is ever invented.
     author: authorJsonLd(article.author),
     publisher: { "@type": "Organization", "@id": `${SITE_URL}/#org`, name: "RiftCompare" },
     mainEntityOfPage: articleUrl,
@@ -706,17 +731,16 @@ export async function ArticleView({ article }: { article: Article }) {
         <Link href={cta.href} className="btn-primary max-w-full text-center">{cta.label}</Link>
       </section>
 
-      {/* Explore more — a fixed set of internal links into the site's other main
-          surfaces (sealed product, the deck builder, champion hubs), present on every blog/
-          guide page regardless of topic. The bounce rate on this template is
-          high and rising; a reader who finishes an article and has nowhere to go
-          but "Ready to buy?" (cards specifically) or a same-tag related read is
-          one who bounces if neither fits what they actually came here for. */}
-      <nav aria-label="Explore RiftCompare" className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-400">
-        <span className="text-slate-500">Explore:</span>
-        <Link href="/sealed" className="text-brand-400 hover:underline">Sealed product prices →</Link>
-        <Link href="/deck" className="text-brand-400 hover:underline">Price a decklist →</Link>
-        <Link href="/champions" className="text-brand-400 hover:underline">Champion hubs →</Link>
+      {/* Related tools — the tools this article explains (articleTools above),
+          so a reader who finishes it has somewhere specific to go besides
+          "Ready to buy?" and a same-tag read. The bounce rate on this template
+          is high, and the same three links on every article matched few of
+          them. */}
+      <nav aria-label="Related tools" className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400">
+        <span className="text-slate-500">Related tools:</span>
+        {tools.map((t) => (
+          <Link key={t.href} href={t.href} className="tap-link text-brand-400 hover:underline">{t.label} →</Link>
+        ))}
       </nav>
 
       {/* Related guides — same-tag articles, so a reader who liked this piece has

@@ -282,7 +282,9 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   useEffect(() => {
     setEngaged(false);
     let visibleMs = 0;
-    const need = isLandingPage(pathname) ? LANDING_ENGAGED_MS : ENGAGED_MS;
+    // On landing pages the NUDGE_DELAY_MS settle-in still runs after this, so
+    // count only the remainder: the popup appears LANDING_ENGAGED_MS in.
+    const need = isLandingPage(pathname) ? Math.max(0, LANDING_ENGAGED_MS - NUDGE_DELAY_MS) : ENGAGED_MS;
     const tick = setInterval(() => {
       if (document.visibilityState !== "visible") return;
       visibleMs += 1000;

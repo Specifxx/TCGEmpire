@@ -55,3 +55,20 @@ test("nothing was actually deleted from the nav — every link is still in NAV_G
     );
   }
 });
+
+test("the phone menu lists the privacy policy and terms, beside About in Help", () => {
+  // 2026-09-26, "Blog and tools, joined up" in DECISIONS.md: both policies used
+  // to be footer-row links only, so the phone menu (and the rail, ⌘K and
+  // llms.txt, which read the same NAV_GROUPS) never listed them.
+  const help = NAV_GROUPS.find((g) => g.title === "Help")?.links ?? [];
+  const hrefs = help.map((l) => l.href);
+  const about = hrefs.indexOf("/about");
+  assert.ok(about >= 0, "Help must still carry About");
+  assert.deepEqual(hrefs.slice(about, about + 3), ["/about", "/privacy", "/terms"], "Privacy policy and Terms of service sit right after About");
+  for (const href of ["/privacy", "/terms"]) {
+    const link = help.find((l) => l.href === href)!;
+    // The footer's always-visible row already links both on every page, so
+    // the site map must not print them a second time.
+    assert.equal(link.hideInFooter, true, `${href} is hideInFooter`);
+  }
+});

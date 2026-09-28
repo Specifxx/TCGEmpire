@@ -14672,3 +14672,487 @@ is `limits-2026-09-28`, so funnel events split before and after.
 If sign-ups or watch creation fall without paid conversions rising at the
 limit surfaces, the numbers are the lever, not the principle: both live in
 one constant each.
+
+## Landing-page nudges: 7 s, not 20 s — 2026-09-27
+
+The owner asked for the nudges on `/blog/*` and `/movers` (entry above) to appear after 7 seconds. `LANDING_ENGAGED_MS` is now 7 000. `PremiumSlideIn` uses it directly as its delay. The signed-out popup still runs its 5 s `NUDGE_DELAY_MS` settle-in after becoming eligible, so its reading threshold on these pages is the remainder (2 s), and it too appears 7 s in. Every other page keeps the original gate.
+
+## Blog and tools, joined up: true self-descriptions, an editorial band under the price table, trust pages that name who runs the site — 2026-09-26
+
+**Why.** Owner's brief after an AdSense "Low value content" rejection: feature the
+blog prominently on the homepage; link Home, Tools, Blog, About us, Editorial
+policy/Methodology, Privacy and Terms from the header and footer; make /about,
+/editorial-policy, /privacy and /terms comprehensive about authorship, data and
+purpose; put a 2–3 paragraph explanation beside the data on every data-heavy page
+with links to the guides; cross-link blog and tools; check ads.txt and the
+sitemap. A read-only audit (seven auditors and a critic) found the larger
+problem first: **the site's own pages and ~24 of its 106 articles described it
+wrongly** — "ranked by total delivered cost", "shipping included", "no hidden
+fees", "five markets", "real-time", an Index built from "completed sales" — and a
+reviewer who checks any of them against a card page ("postage at checkout") is
+reading exactly the low-value signal the rejection named. So accuracy went first
+and every new link points only at corrected pages.
+
+**Owner decisions (2026-09-26), asked and answered in session:**
+- The "Bill" byline is the owner, who builds and runs the site alone. Credit him.
+- Articles are "drafted with AI assistance, then edited and fact-checked by Bill
+  before publishing; prices and figures come from RiftCompare's own price
+  database, never from the draft." (`ARTICLE_PROCESS` in lib/content/authors.ts
+  holds the sentence; /about, /editorial-policy, /authors and both bios use it.)
+- The homepage editorial band goes directly under the price table — this
+  **reverses the 2026-09-21 order for that one band** (L9500); nothing inside
+  HomeSections moved, and today's eBay placements are unchanged.
+- No affiliate banner pair on the policy and trust pages; the six mini-games drop
+  their in-page pair and keep the site-wide one.
+
+**What.**
+- **Claims about the site are now true, and a test keeps them true.**
+  `tests/site-claims.test.ts` scans every page, component, hub intro, the author
+  registry and every published article (body, excerpt, summary, FAQ, CTA) for
+  claims about the SITE: delivered-cost ranking, shipping included, five markets,
+  sold-listing data, real-time lookups — with a small allow-list of true
+  sentences (eBay's fee base, the corrected ranking wording). Canonical wording:
+  "cheapest first by item price, with the delivered total shown where the store
+  publishes its postage"; Best Basket is the one tool that prices whole orders
+  with measured postage. Fixed in ~15 templates (region homes, set/domain/
+  champion/store pages, /singles, /movers, hub intros, the card narrative's
+  "five markets" on every card page, collection narratives), the machine
+  self-descriptions (llms.txt, .well-known, MCP, openapi), the sealed email, and
+  30 articles (`updated` → 2026-09-26: a correction is substantive). Country
+  guides now count stores from `RETAILER_LIST` (they said 17/19 where the list
+  held 28/54). The arbitrage guide is rewritten from the buyer's side with Deal
+  Finder described from its code; the Index guide no longer claims completed
+  sales. Where an article's figures are a dated snapshot, they are labelled with
+  their date.
+- **Authorship.** `Bill` is a Person author (/authors/bill, `@id`
+  `/authors/bill#author`), founder of the Organization in the site-wide JSON-LD
+  and on /about's AboutPage; his bio holds only the facts above. "RiftCompare
+  Markets Desk" (3 posts) folded into "RiftCompare"; every byline must resolve
+  (`tests/articles-authors.test.ts`). /authors no longer says "two bylines".
+- **Trust pages** (all checked sentence by sentence against the code): /about
+  gains "Who runs RiftCompare", "How it started" (Australia first, then US, UK,
+  Singapore, Canada, the EU on 24 Aug 2026) and the full revenue list — AdSense,
+  eBay Partner Network, TCGplayer via Impact, Amazon Associates, Plus/Premium,
+  paid store consulting — none of which buys a position. /editorial-policy:
+  the authorship statement, the Trade Gremlin as the only request-time AI text,
+  the refresh schedule rebuilt from price-import.ts, where currency is converted,
+  consulting disclosed as a potential conflict, and a corrections policy that
+  matches practice (in place with a new updated date; retired → 301). /methodology
+  now explains every tool's figure (Deal Finder, Cheapest on eBay, cross-market
+  gaps as a gap not a saving, Rising Cards as a screen, the Index, Best Basket,
+  Box EV, Demand Finder), the measured-postage model and how a comparison is
+  ordered (`#ordering`). /privacy names GA4 and Consent Mode, the cookies the code
+  sets, OAuth-only sign-in, the emails, Stripe and every processor; the hashed-
+  password and marketplace passages are gone. /terms covers consulting and
+  published decks; no governing-law clause, because nothing in the repo names a
+  jurisdiction (the owner's to add). The Amazon Associates statement renders
+  beside /sealed's Amazon links (`AffiliateDisclosure partner="amazon"`).
+- **Homepage.** `EditorialHub` ("Guides, news & market updates"), a server
+  component with no query: Start here (owner-curated `lib/content/featured.ts`;
+  a market home leads with its own buying guide, so the six homes differ),
+  Latest news (newest three posts), Market updates (the real "Prices updated …"
+  freshness, /movers, the Index and two dated market reads), and the authorship
+  line. It replaces both LatestPosts rows (deleted). Two rows per column on
+  phones, three from md: ten 48px rows made it ~800px on a 390px phone. Measured
+  at 390×844: band 645px; Today's Top Deals starts at 2,384px (1,444px this
+  morning; the price table's new footer adds ~180px of it); the page is shorter
+  overall (9,429 vs 9,890px). The price table's footer now says what "Cheapest"
+  is (item price, store or eBay, postage extra) and that the 7-day change is the
+  weekly WORLDWIDE low in USD, with links to /methodology and the guide; its
+  sm-only hint reads "cheaper worldwide this week". "Most read" is gone
+  (no per-article traffic data exists): the curated lists are "Editor's picks".
+  /blog and /guides each gained a distinct intro, and /blog's JSON-LD stopped
+  promising a daily market report (a removed feature). /blog's client payload
+  fell from ~595 KB to ~26 KB (no markdown bodies to the client).
+- **Blog ↔ tools.** `lib/content/tool-guides.ts` maps each tool/data route to at
+  most three guides, read both ways: `<RelatedGuides guides={guidesForTool(route)} />`
+  after the data and before any affiliate block (outside paywall gates) on
+  ~35 routes, and an article's "Related tools" row is the inverse
+  (`toolsForArticle`). /movers and the signed-out Deal Finder are the
+  exceptions: their eBay CTAs stay where "Pushing eBay clicks" put them (under
+  /movers' lists, beside Deal Finder's lock), so Read next follows them. Hub intros may carry
+  `[label](/path)` links (single-slash only). Set pages read a per-set reading
+  list (`SET_GUIDES`), which also fixed the card page's "Read next" picking the
+  wrong set's post; champion hubs link articles tagged with the champion. Every
+  published article now links at least one tool (ratchet test; only the LA
+  qualifier post is exempt until it is retired after its 27 Sep event).
+- **Explanations beside the data.** A visible, page-specific intro under the H1
+  on /sealed, /movers, /market, /market/records, /tools, /tools/box-ev,
+  /tools/rising, /tools/demand, /tools/selling-fees, /auctions, /decks and
+  /browse; /deck (tool first, L14127) and set pages (intro under the grid, L12080)
+  keep their placement. The "Mobile first" entry (L14021) covers the homepage,
+  card page, thumbnails and /browse's sort only — it is not a rule that tool
+  intros hide on phones. The six mini-games' how-to-play texts were rewritten to
+  match their code (Pairs has a timer; a Card Smash bomb costs one of three lives;
+  2048's tiles now follow the site's real rarity badges).
+- **Navigation and footer.** Privacy policy and Terms of service joined the
+  rail/menu Help group (hideInFooter). The header gains **Tools from xl only** —
+  the owner's brief overrides the 09-21 shortlist for this one item; at lg the
+  row has ~5px of slack. The always-visible footer row is Home, Blog, Guides,
+  Tools, About us, Editorial policy, Methodology, Who writes this, Contact &
+  feedback, Privacy policy, Terms of service. FooterAds renders nothing on
+  /about, /authors(/*), /contact, /editorial-policy, /methodology, /privacy,
+  /support and /terms (`BANNER_FREE_ROUTES`), and FeedbackWidget now clears its
+  "over the ad zone" flag on those routes.
+- **Sitemap and ads.txt.** /alerts added; editorial hubs daily 0.8, tools 0.7–0.8,
+  trust pages monthly 0.4–0.5, arcade games monthly 0.5; lastmod stays honest.
+  /decks is submitted only when a deck is live and is noindexed while empty.
+  The /guides/whats-in-the-riftbound-unleashed-set redirect is deleted: it had
+  shadowed a published guide the homepage itself linked (request re-indexing).
+  ads.txt was already correct (Google DIRECT line first); the live checks and
+  docs that expected a one-line body now validate the Google line plus
+  well-formed partner records (`scripts/ads-txt-check.ts`).
+
+**Found in review and fixed before commit.** An adversarial review of the change
+caught new copy that was itself inaccurate: /about said eBay is read twice a day
+(it is searched once a day — AU/US daily, UK/SG/EU in rotation) and called the
+four-market weekly low "worldwide"; the Rising Cards intro named four signals
+(the score uses six, and today's price is appended to the weekly series); the
+homepage currency FAQs said nothing is converted, but the 7-day change and the
+price-drop deals come from the USD history, converted; /methodology's list of
+conversions missed UK prices shown in euros and Cardmarket's fixed EUR→GBP rate;
+/privacy missed the `eur_display` cookie; Demand Finder's "view" also counts a
+quick-view open; the region homes' meta description still promised "delivered
+cost" (the claims test now has a pattern for that phrasing); a set-page sentence
+said Box EV and set prices share data (Box EV uses TCGplayer's market price); and
+most of the set pages' new explainer read the same on every set, so its middle
+paragraph now states that set's dearest and cheapest priced cards and the rarity
+filling its top ten. A second round caught articles the first pass missed or got
+half right: "cheapest delivered first/price" said of the comparison (Overnumbers,
+Empower, Burn — now a claims-test pattern too); the EU launch post still saying
+Cardmarket is not shown (it has been a labelled UK/EU reference since 4 Sep) and
+eleven stores; buying guides presenting Best Basket's store split as free (a free
+account sees the delivered total; the split is Premium); a FAQ implying TCGplayer
+listings are in every market's comparison (US only); the US guide promising a
+TCGplayer market-price reference its card pages show only when TCGplayer has no
+copy; and the "how to sell" guide still describing the arbitrage guide as
+buy-to-resell. Also: /market/records ranked gaps by "money saved" (a gap, not a
+saving); /decks now noindexes only a CONFIRMED-empty library (a failed read stays
+indexable, `liveDecksOrNull`, the fail-open rule of the champion and store pages);
+and each author page's sitemap lastmod is that author's newest article.
+
+**Not done, and why.** No new articles or pages ("publish fewer pages"). No
+mass rewrite of the corpus's voice: 30 of 106 articles are under 500 words, and
+Phase 25 judged a rushed rewrite riskier than the problem. The partner block in
+ads.txt (including a second Google DIRECT seller, `#AdEx`) is untouched — the
+owner added it on 2026-08-21; whether that partner is still live is his to
+confirm. Manual Action 1 in docs/adsense-remediation.md (closing the duplicate
+AdSense account) is still the first thing to rule out.
+
+**Verified** on the local seed DB (never production): typecheck, lint, the
+AdSense guard (22/22) and 2,600 tests pass; Playwright at 390, 1024, 1280 and
+1440 — the homepage order and band size above, the header's Tools link from xl
+with Log in / Sign up free unclipped, the footer row on /, no banner pair on the
+nine trust routes and a pair everywhere else, every tool/data route 200 with its
+intro and Read next and no horizontal scroll, the Unleashed guide 200, /alerts in
+the core sitemap.
+
+## Popular pages tuned for eBay, and /movers populated through the price switch — 2026-09-27
+
+**Why.** Owner's brief: the most-visited pages — /blog/riftbound-heartsteel-overnumbered-cards,
+/blog/where-to-buy-riftbound-radiance, /blog/riftbound-radiance-spoilers and
+/movers — should be well tuned for eBay, eBay being the main revenue. Mid-task the
+owner asked why /movers showed no movers: "We need to still leverage the old
+strategy right up until the data has collected for the new strategy so there is
+actually information to show. Having the page populated is the most important
+thing." Released off-schedule at the owner's request.
+
+**What.**
+- **HEARTSTEEL post.** Its mid-article strip searched for "Radiance pre-orders"
+  and "Riftbound TCG singles", the pair every Radiance post carries; it now
+  searches for what the post is about: HEARTSTEEL cards, K'Sante, Courageous (the
+  one new card), and Radiance booster displays. The "five originals — buyable
+  today" gallery (older-set cards a reader can buy now) gets the per-card eBay
+  search row through a new per-embed opt-in, `ebaySearch` — the automatic rule
+  still covers only current-set galleries, and the 2–6 card bound applies to both.
+- **Where to buy Radiance.** Its eBay strip rendered only after the whole body;
+  it now sits right after the product rundown (~29%), where the buying decision
+  is, and before the Merch Store draw section.
+- **Radiance spoilers.** The strip (already at 15%) gains the Vault Bundle and
+  HEARTSTEEL searches: four, the upper end of the two-to-four guidance.
+- **Every article strip** says "Search eBay →", not "View listings →": it is a
+  search, and a search never promises listings ("Pushing eBay clicks").
+- **/movers.** Each "Most searched this week" row — the list that is populated
+  right now — gets a compact eBay search button, a sibling of the row link (never
+  nested), with the EPN disclosure above the list; 48px on touch, names still
+  53px+ at 320px. Each movers panel gets a "Search eBay" row naming its top three
+  cards (the plain card name: eBay reads "(A, B)" in a query as an OR group). A
+  button per mover row was not used: it squeezed names to ~44px on a phone, and
+  those rows already open the quick view, whose first block is eBay.
+- **/movers populated through a methodology break.** Movers compare weekly
+  points on one basis only, and after the 23 Sep switch no card has two weekly
+  points on the new basis until about 1 Oct, so the lists were empty and the
+  page blank. Now, while every current-basis list is empty and only inside the
+  break's grace window (`recentMethodologyBreak`, to 14 days after the window),
+  `computePriceMovers` ranks the last week BEFORE the switch — old-basis points
+  compared only with each other, so nothing measures the switch itself — and
+  marks the result `basis: "pre-switch"` with its `asOf` day. Only /movers opts
+  in (`getPriceMovers(…, { preSwitch: true })`), with the panels titled "week to
+  {date}" and the break notice saying so; the homepage deals, digests,
+  newsletter, /games and Discord present a mover's price as today's, so they
+  still get empty lists. Cache key `rc-price-movers-v2` (the value's shape
+  changed). The switch to the new basis is automatic: the first run in which any
+  card has a week on it.
+
+**What this does not change.** No comparison is re-ranked, nothing reads across
+the switch (Rising Cards remains the one reader that does, by the 09-25 call),
+no new query, no revalidate change.
+
+**Verified** on the local seed DB (never production; local-only demand and
+price-history rows): the three posts at 390px in the US and Australia (strip
+positions, searches on ebay.com / ebay.com.au with their customids, the
+originals' per-card row), /movers with the labelled pre-switch panels, their
+eBay rows and the most-searched buttons at 320–1440px with no overflow, and the
+homepage deals unaffected. Tests: `tests/ebay-popular-pages.test.ts`.
+
+## "Compare Riftbound card prices": comparison metadata, a WebApplication node, and shipping claims made accurate — 2026-09-27
+
+**Why.** The owner asked for metadata, schema and on-page copy that map RiftCompare to "compare Riftbound card prices", "Riftbound price comparison (engine)" and "live regional shipping costs", for search engines and for AI crawlers. The keyword map had no row for the comparison phrasing: the homepage owned "riftbound card prices" and "price check", and nothing owned "compare".
+
+**What.**
+- **Descriptions, not titles.** The six market-homepage descriptions now lead with "Compare Riftbound card prices…" and fit 155 characters in every count shape (`lib/seo.ts`). The `<title>`s are unchanged. They lead with "Riftbound Card Prices", which three audits and the 2026-09-24 owner-directed growth pass settled and `tests/keyword-ownership.test.ts` pins. Retitling three days into measuring that change would have cost the attribution it was made to produce. The region titles already say "Compare N XX Stores".
+- **Share previews name the product.** The homepage's `og:title`/`twitter:title` is "RiftCompare: the Riftbound price comparison engine — N stores + eBay" (`homeSocialTitle`), so the 60-character SERP title can keep spending its budget on the head term. The root layout's default title, description and OG tags say the same.
+- **Schema.**
+  - The WebSite node gains a description and `inLanguage`.
+  - The Organization description and `knowsAbout` name the comparison.
+  - A new `webApplication()` builder (`lib/jsonld.ts`) emits a `WebApplication` for `/` (`/#app`, ShoppingApplication) and `/trade` (`/trade#app`, UtilitiesApplication). Each has a `featureList` of live features and a real zero-price `Offer`.
+  - **No `aggregateRating`:** the site has no genuine ratings, and a typed-in one to win Google's software-app rich result would be a fabricated review. Search Console may call the node ineligible for that one result; that is the honest state.
+  - Product/AggregateOffer/`OfferShippingDetails` already exist on card and sealed pages; unchanged.
+- **Homepage copy.**
+  - Three new FAQs, which are also FAQPage JSON-LD: "What is RiftCompare?", "Does RiftCompare include shipping costs?" and "Is there a Riftbound trade calculator?".
+  - A second About paragraph links Best Basket and the Trade Calculator.
+- **`/trade`.**
+  - Title "Riftbound Trade Calculator: Fair Trade Values". The old one was 68 characters with the suffix.
+  - H1 "Riftbound Trade Calculator", and an intro that says exactly how cards are valued.
+  - Its own OG tags and WebApplication.
+- **`/llms.txt`.**
+  - The summary now names all six markets; it had lost the EU.
+  - A "What to use it for" intent→page list for assistants.
+  - `ai-plugin.json`'s human description no longer says "real shipping cost".
+
+**Declined — "live regional shipping costs".** It isn't true, so no surface says it. Two things exist:
+1. Card pages rank stores by ITEM price and show delivered cost beside a listing only where it carries a shipping figure (`lib/market-rows.ts`, deliberately, so a store with no published rate isn't pushed down).
+2. The regional figures are a measured checkout snapshot (`lib/shipping.ts`, real carts per state/region, re-probed), not live quotes. They power Best Basket's cheapest delivered order.
+
+So comparison pages say "cheapest first, postage shown where known", and "shipping measured at each store's checkout" is said only of the basket.
+
+**Merged with "Blog and tools, joined up" (2026-09-26, above).** That pass reached the same conclusion first:
+- it removed "no hidden fees" and "total cost including shipping";
+- `tests/site-claims.test.ts` bans "with delivered cost" as a claim about the site.
+
+This change follows its wording. The descriptions, the WebSite node and llms.txt say "cheapest first" and "delivered cost shown where the store publishes its postage". The homepage About section keeps its "who runs it" paragraph, and a short tools paragraph follows it.
+
+`tests/comparison-discoverability.test.ts` fails if "live shipping" or "no hidden fees" comes back, and pins every length budget above.
+
+**Verified.**
+- A full `npm run build` (exit 0) ran against a local Postgres seeded the CI way (`prisma db push` + `prisma/seed.ts`).
+- `next start`, then fetched `/`, `/au`, `/uk`, `/trade`, `/about` and `/llms.txt`. The titles, descriptions and og:/twitter: tags render as described above, with the count-free fallbacks because the seed has no prices.
+- Every JSON-LD block parses. `/` carries Organization, WebSite, WebPage, WebApplication (`/#app`, seven features, zero-price Offer, no rating) and an eight-question FAQPage. `/trade` carries BreadcrumbList and WebApplication (`/trade#app`).
+- Playwright at 390px and 1280px: the new About paragraph and the `/trade` header match the existing styling, with no horizontal overflow.
+- Typecheck clean. Lint clean apart from the pre-existing warning. 2,521 tests pass. The same checks were re-run after the merge, including a second full build.
+- Landed on main without `[deploy]`, so it rides the 08:00 UTC release.
+
+## Deck resolver and Legend names: standard printings first, and two Legends named right at the source — 2026-09-27
+
+**Why.** Two card-matching bugs the owner reported.
+
+1. `resolveDeckLines` (`lib/deck.ts`) kept the first row, and rows come back cheapest first. Whichever printing was cheapest therefore won:
+   - Challenge OGN-128 resolved to its promo;
+   - Treasure Hunter SFD-130 resolved to its promo;
+   - "Kennen, Heart of the Tempest" resolved to the VEN-197* Signature.
+   Published decks, the admin import, Best Basket and the `/deck` pricer all priced the wrong object.
+2. Two Legends had the wrong names:
+   - VEN-155 was "Yordle, Heart of the Tempest";
+   - OGS-019 and its promo were "Master, Wuju Bladesman - Starter".
+
+**What.**
+- **Standard printing first.** All three steps (set + number, exact name, name-contains) take the cheapest STANDARD printing. Standard (`isStandardPrinting`) means:
+  - not a promo;
+  - no variant;
+  - a plain collector number: digits or a rune's R-number, not lettered, not a Signature `*`, not above the set total.
+  A non-standard printing wins only when there is no standard one: a promo-only card, or an explicit pin like `(VEN-197*)`, which matches nothing but the Signature. Every caller now selects `variant` and `isPromo`: published decks/admin import (`RESOLVE_SELECT`), Best Basket and `/deck`'s metadata; `/api/deck/price` already did. Consequence: a promo pinned by number, "(OGN-128)", now resolves to the standard card, because the two share the number.
+- **Legend names, at the source.** `lib/legend-name.ts` is now shared by `scripts/sync-cards.ts`, `prisma/seed.ts`, `scripts/fetch-set-official.ts` and `scripts/import-set-cards.ts`.
+  - **OGS-019.** RiftScribe names Proving Grounds' Legends "… - Starter". sync-cards slugified the label with the title, missed card-names.json's `master-yi-wuju-bladesman`, and fell back to the slug's first token. seed.ts had a fix, but it kept the label in the name. sync-cards had none, and rewrites every name on each run, so the bad name came back on every sync.
+    - The label is now stripped.
+    - The fallback takes the longest leading run of slug tokens that is a known champion, never the first token.
+    - Over all 100 Legends in the snapshot, exactly four names change: OGS-017 Annie, 019 Master Yi, 021 Lux and 023 Garen each lose " - Starter".
+  - **VEN-155.** The gallery importer took `tags[0]` as the champion, and Kennen's Legend lists "Yordle" first. It now:
+    - takes a tag that is a known champion wherever it sits;
+    - failing that, the first tag that isn't a region or creature type;
+    - failing that, none.
+    fetch-set-official also writes every tag, so an old dump's lone "Yordle" is refused rather than used.
+- **The stored rows.** `scripts/fix-card-names.ts`, also maintenance.yml's `fix-card-names` task, is report-only unless `apply` is ticked. It sets name, nameNormalized and slug on the three rows, and updates the Legend name/slug and list text of published decks built on them. It refuses a row whose set/number doesn't match or whose new slug is taken, and prints "already fixed" on a re-run. It also REPORTS other cards whose name has a " - Starter" label or a "Prefix," that is no known champion.
+- **Old slugs keep working, in the lookup, not next.config.js.** The rows are renamed whenever the script runs, and config redirects only change with a deploy, so a config redirect would 404 the card for however long the two are out of step. `lib/card-slug-renames.ts` maps old → new.
+  - Every card route (page, OG image, `/llm/card`, history JSON) matches either slug.
+  - The card page's existing canonical check then 308s to whichever slug the row has.
+  - Article embeds and the ban-list table match either slug too.
+  - The three references to the old Master Yi slug (two ban-list embeds, `lib/banlist.ts`) now use the new one.
+
+**Other cards with the same kind of problem (listed, not changed).**
+- **OGS-017, 021 and 023** (Annie, Lux, Garen) carry the same " - Starter" label. The fixed sync drops it from their NAMES on its next run; their slugs keep "-starter-" unless the rename map and script gain a line each.
+- **"Yi, Meditative" (OGS-004) and "Yi, Honed" (OGS-009), plus their promos,** are RiftScribe's own unit names, while card-names.json slugs them `master-yi-…`. They are probably "Master Yi, …", but that needs checking against Riot's gallery before anything is renamed.
+- **"Allay, Eager Admirer" (UNL-041)** is a creature, not a champion. It is correct.
+- **Gallery-imported sets (VEN, RAD):** can only be checked against the database. The script's report covers that.
+
+**Verified.**
+- `tests/deck-resolve.test.ts` covers promo vs normal, Signature vs normal, overnumbered vs normal, alt-art vs normal, promo-only, runes, a pinned Signature, the contains fallback, and every caller's select. The one test that pinned "cheapest printing of the name" onto a promo now expects the standard card.
+- `tests/legend-name.test.ts` covers the naming paths, the whole snapshot, the importer wiring and the slug aliases.
+- A local Postgres, seeded the CI way with the broken rows re-created:
+  - the dry run reported the three fixes and the deck update;
+  - `--apply` wrote them; a second `--apply` printed "already fixed" three times;
+  - an old slug then found the renamed row through `cardWhereParam`.
+
+**Owner steps.** After the next release, run maintenance → `fix-card-names` (dry run), check the report, run it again with `apply` ticked, then `revalidate-now`.
+
+## Demand leaderboard: Billboard-style rank movement — 2026-09-28
+
+**Why.** Owner's request: `/admin/demand`'s windowed charts (Most searched, Most viewed) should show each card's movement next to its rank, Hot 100 style.
+
+**What.**
+- For any windowed range (24h to 90 days), the equal-length period just before the window is ranked the same way. Each row shows ▲n / ▼n / = beside its rank, plus a "Last" column with the previous rank.
+- **NEW** means no activity on that measure in the previous period. A card with views but no searches last period is NEW on the searches chart only.
+- The all-time view shows no movement, because there is no previous period.
+
+**Choices.**
+- **The previous period is ranked across every active card, not just last period's top 50.** A climb from #73 to #40 reads ▲33, not a vague re-entry. That also means "Last" can show a rank below 50.
+- **One comparator for both periods** (`compareDemand`, in `lib/demand-movement.ts`): the metric, then the other metric, then card id. Before this, ties had no final order, so a tied pair could swap between loads and show movement that never happened.
+- **Cost.** `getDemandWindow(days, { previous: true })` reuses the window's baseline snapshot as the previous period's end, so it adds one date lookup and one day of snapshot rows (id + two integers per card). It runs only on this uncached admin page; `lib/demand.ts`'s cached public read is unchanged.
+- **Coverage is stated, not assumed.** The caption names the two snapshot dates compared. When snapshots don't reach back two windows, it says so and the movement column is hidden.
+
+**Verified.** `tests/demand-movement.test.ts`. A local Postgres with 15 days of synthetic snapshots produced every movement kind, each matching the seeded figures (for example Flame Chompers ▲5 from #8, Blazing Scorcher ▼8 from #1, Get Excited! NEW). The page rendered via `next dev` at 1280px and 390px with no page overflow.
+
+## Operational database cut over from RM4 to RM5 — 2026-09-28
+
+**Why.** RM4 came within reach of its 5 GB monthly transfer allowance three days after becoming the operational database on 2026-09-25.
+
+**What.**
+
+- RM5 is a recycled project. `probe-databases` found it reachable and behind RM4 on every metric: User 144 vs 409, CollectionCard 618 vs 2,266, RetailerPrice 66,481 vs 136,112. That is an old operational snapshot, so it was safe to overwrite.
+- `migrate-main-db-rm4-to-rm5` (the rm3-to-rm4 step with the names moved one along) dropped RM5's leftover `EbayAuction` table, restored RM4 over it, and verified all 45 public tables row-for-row (User 409, RetailerPrice 136,112, DemandSnapshot 70,098).
+- `OPERATIONAL_VARS` is now `["RM5"]`. `scripts/build-db-push.sh`, every workflow's `DATABASE_URL`/`DB_SOURCE_NAME` default, the `RM5:` env forwards in maintenance.yml and the ci-build service variable all follow.
+- **The same source/target bug came back.** `migrate-main-db-rm12-to-rm3` had RM3 as both source and target again (the 2026-09-25 fix did not survive a later merge), and the first draft of the new step made the same mistake. `tests/migration-source-target.test.ts` now fails on any step whose first source secret is also a target secret.
+
+**Rollback.** One commit: RM4 still holds the data. Anything written to RM5 after the cutover is not in RM4.
+
+**Still open.** Three days per project is the same burn as RM3 and RM4. Run `audit-egress` against RM5; rotating buys time, it does not fix the burn. RM5 must be set in Vercel for Production and Preview.
+
+## Chart movement on Demand Finder, Rising Cards and the Hot 40; chart-story titles; Cheapest on eBay on snapshots — 2026-09-28
+
+**Why.** Owner's requests, after the admin demand leaderboard got movement (above):
+- the same arrows on the public Demand Finder, on Rising Cards (public and admin) and on the Hot 40 snapshots;
+- minting must keep working this week and every week "until the change settles", with no movement where there is no data;
+- generated titles should read like a chart ("xxx moves to the top 3, xxx remains at #1");
+- snapshot picks that are cheapest on eBay should say so, with an affiliate link.
+
+**What.**
+- **Demand Finder** (`/tools/demand`): movement against the equal-length period before the window, ranked by `compareDemand`, as on the admin page. It is computed inside `lib/demand.ts`'s daily cached loader (cache key `rc-demand-v4`), so it costs one extra snapshot-day read per window per day, not per view. This supersedes the admin entry's "the cached public read is unchanged". The caption names the dates, or says movement starts once the snapshots reach back two windows.
+- **Rising Cards and the Hot 40** (`lib/rising-movement.ts`):
+  - Rising Cards keeps no history of its own rankings, so "last week's chart" is the most recent Hot 40 snapshot for the same market that is at least `PREVIOUS_CHART_MIN_AGE_DAYS` (6) old. Only version-2 payloads count, because a legacy chart was ranked by the old method.
+  - A snapshot freezes each pick's movement at mint time (`move`, and `previousChart` on the payload).
+  - `/tools/rising` and `/admin/rising` compare today's ranking with the same chart, read through `getPreviousRisingChart`: one row per market per day, self-cached, on the nested-cache list.
+  - On the Hot 40, NEW means "not on last week's chart". On the demand charts it means "no activity in the previous period". `MoveBadge` takes the wording per chart, so the symbols mean the same everywhere.
+- **No chart never blocks anything.** No earlier snapshot, a legacy-only history or a failed read all mint normally without movement. The page then says it is the first chart for the market; the admin panel says the next week's will have it.
+- **Chart-story titles** (`chartStory` in `lib/rising-snapshot.ts`):
+  - The lead is what happened at #1: remains / climbs to #1 from #k / debuts.
+  - The second clause is the first of these that applies: a card into the top 3, the biggest climb of 3+ places, the highest new entry, the biggest fall of 3+ places.
+  - Past 150 characters the second clause is dropped rather than cut mid-name.
+  - Without movement, the older angles apply unchanged.
+  - Every clause is a fact about rank order. None says where a price goes.
+- **Cheapest on eBay on snapshots:**
+  - At mint, each pick is checked with `getCheapestOnEbayFor(market, cardIds)`. That is the homepage row's rule, guards and day-cached inputs, filtered to the given cards instead of cut to the top four, with no detail query.
+  - The check runs in the pick's basis market: the scope, or for GLOBAL the market whose price the row shows. The eBay figure therefore always sits beside a price in the same currency.
+  - The verdict is frozen like every other number. Canada never qualifies.
+  - `/rising/[token]` shows a "Cheapest on eBay ↗" link in the Price cell with the eBay cost ("delivered" or "+ postage") and a Paid link tag. When any pick is marked, the EPN disclosure sits above the table, next to row 1, not under 40 rows.
+  - Clicks are `buy_click` with `surface="hot40_ebay"`, `pageType="rising_snapshot"`.
+
+**Choices.**
+- **The listing URL is frozen untagged and tagged at render.** The frozen fact is "this listing was cheapest", not the tracking parameters. So the attribution rules in force when the page is read apply, including any campaign or rotation change. The EPN customid is `rc-<market>-<ebay key>_cheapest-rising-product`, kept apart from the homepage row's `…-home-…`.
+- **"The listing may have sold since" is said once, above the table.** A snapshot outlives its listings. eBay still credits a click on an ended listing, which lands on eBay's own "similar items".
+- **`getCheapestOnEbay` now reads through a shared `rankedCheapestOnEbay`**, placed after it in the file so the existing source pins in `tests/ebay-clicks-home.test.ts` still cover the reads. A GLOBAL mint may read up to five markets' day-cached inputs, the ones the homepage reads daily anyway. Minting is a weekly admin action.
+
+**Verified.**
+- Tests:
+  - `tests/rising-movement.test.ts`: movement, title clauses and fallbacks, freezing, the eBay payload, the route's per-market lookup, the EPN customid and campid, and the page's link, Paid link tag and disclosure placement.
+  - `tests/ebay-clicks-home.test.ts`: `getCheapestOnEbayFor` keeps exactly the homepage rule's cards, with no detail query and no read for Canada.
+  - `tests/demand-movement.test.ts`, `tests/demand-finder.test.ts`, `tests/nested-cache.test.ts`.
+- Local Postgres with a synthetic "last week" Hot 16 and US store and eBay rows, via `next dev`:
+  - `/admin/rising` showed the Move column against the Hot 16.
+  - Minting returned "RiftCompare Hot 20: Chemtech Enforcer debuts at #1, Magma Wurm moves into the top 3 (US, 28 September 2026)" and marked exactly the 7 seeded cheaper-on-eBay cards. The 6 cards whose eBay copy was dearer were not marked.
+  - The snapshot page rendered 7 `rel="sponsored"` links carrying campid 5339155912 and the new customid, 7 Paid link tags and the disclosure.
+  - Checked at 1280px, at 390px (no page overflow) and in the light theme.
+  - `/tools/demand` showed ▲/▼/NEW with its date caption.
+- The sim's Price column did not match its eBay rows, because it seeded `lowestPriceCentsUs` separately. In production that column is the minimum item price over the same rows, so a marked card's Price is at most its eBay item price.
+
+## OG images: official Riot art with a query string counts as PNG — 2026-09-28
+
+**Why.** Owner report: a shared Hot 40 link (Astral Heron at #1, Kai'Sa, Survivor at #3) unfurled with empty grey boxes where #1's and #3's art should be. #2 (a RiftScribe card) was fine.
+
+**Cause.** Both empty picks store Riot's official gallery art, `cmsassets.rgpub.io/…-744x1039.png?accountingTag=RB` (the shape `scripts/set-official-art.ts` writes, and the Vendetta rows carry). `cardImageForOg` accepts non-RiftScribe art only if it looks like a PNG or JPEG, and it tested `/\.(png|jpe?g)$/` against the whole URL. With the query string on the end the test failed, so the helper returned null and the image drew its placeholder. The page itself was fine, because `cardImageSrc` passes such URLs through unchanged.
+
+**Fix.** The extension is now read from the path, with the query and fragment removed; the URL returned still has its query string. The same helper feeds every OG route (home, `/card/[id]`, `/c/[token]`, `/rising/[token]`), so Vendetta card pages' own unfurls get their art back too.
+
+**Verified.** `tests/rising-snapshot.test.ts` now covers the official-art URL and a `.webp?x=1.png` decoy. The Hot 40 image rendered locally with the snapshot's real top three shows all three pictures. The rgpub URL answers `200 image/png` (about 1.1 MB, which satori decodes).
+
+## Rising Cards movement compares with the ranking 7 days ago, not with snapshots; snapshots can be deleted — 2026-09-28
+
+**Why.** After the entry above shipped, the owner reported: "I dont see the arrows in rising cards", then "literally just use the data from a week ago, it doesn't need to be dependant on the snapshot for the arrows. It should just be compared to the prev 7 days". Also: "have an option to delete snapshots too".
+
+The arrows were missing by construction. The previous chart had to be a version-2 Hot 40 at least 6 days old, and version 2 only began on 25 September. So no market could show movement before 1 October.
+
+**What.**
+- **The week-ago ranking is rebuilt, not stored** (`lib/rise-predictor.ts` `getRisingWeekAgo` / `weekAgoRanks`). It runs the same pure `assembleRisingCards` over the inputs as they stood 7 days ago:
+  - **Demand:** each card's running totals on its last snapshot on or before that day, and its velocity over the 21 days before it. This comes from `getDemandAsOfOrThrow`, one row per card aggregated in the database. Velocity uses the same `velocityBetween` arithmetic as today's `getDemandVelocityOrThrow`.
+  - **Price:** the weekly GLOBAL series cut off at that day. Live prices are nulled, so today's price never enters a week-ago rank.
+  - **Stock:** today's in-stock store counts. Nothing records these historically, and the admin caption says so.
+- **Ranked over today's universe, the whole field.** A card with no searches by that day was not ranked then, and shows NEW ("No searches 7 days before"). Every other card keeps its full rank, so a climb from #73 reads ▲n.
+- `/tools/rising`, `/admin/rising` and newly minted Hot 40s all use it. Snapshots freeze the movement plus `weekAgo: { asOf }`, and chart-story titles work from it.
+  - Snapshots minted this morning keep the `previousChart` they froze, and the page still renders them.
+  - `lib/rising-movement.ts` no longer reads any snapshot, so deleting one changes no arrow.
+- **Delete.** `DELETE /api/admin/rising-snapshot` sits behind the same admin gate and deletes exactly one row by id (404 if it is already gone). Each row in the panel's "Previous snapshots" list has a Delete button that asks first, naming the snapshot, because the link dies for everyone and there is no undo. `/rising/[token]` then 404s, and its share image falls back to the brand-only one.
+
+**Cost.**
+- One extra database read per day: `getDemandWeekAgo`, day-keyed and untagged (a past day's snapshots never change), about 1,400 narrow rows for every market.
+- The other inputs are the two loaders Rising Cards already caches.
+- The rebuild runs in-process per request, like `getCachedRisingCards`. Both new loaders are on the nested-cache list.
+
+**Verified.**
+- Tests: `tests/rising-movement.test.ts` covers:
+  - re-ranking on week-ago demand and NEW for cards not searched by then;
+  - the full-field ranks;
+  - prices cut at the day: a later price point and today's live price leave the week-ago ranking identical while they do change today's;
+  - the pages and route wiring, the DELETE gate, and the panel's confirmation.
+- Local Postgres with 31 days of demand snapshots and 10 weeks of prices:
+  - `getDemandAsOfOrThrow` matched the raw rows for all 20 cards.
+  - Its as-of-today velocity matched `getDemandVelocityOrThrow` exactly.
+  - `/admin/rising` showed ▲/▼ with no snapshot in the database (e.g. Legion Rearguard ▲2 from #3).
+  - A mint was titled "Legion Rearguard climbs to #1 from #3, Magma Wurm moves into the top 3".
+  - Deleting it from the panel asked with its title, removed the row, and its link then returned 404.
+
+## Homepage: Recently viewed removed; blog and guides moved up for AdSense's crawlers — 2026-09-28
+
+**Why.** Owner: "get rid of recently viewed from the homepage. Also we need the blog and guides to be prominent so that we get approved for adsense with their lazy crawlers."
+
+The editorial band ("Guides, news & market updates") has been in the server HTML since 2026-09-26, but only below the hero and all 15 rows of the price table, so it began one to two screens down. On desktop the side rail was worse. It opens only Prices on a first visit, and a collapsed group renders no links at all (`{open && …}` in `SideNav`). So no page's HTML carried a rail link to `/guides` or `/blog`: the group sat seventh, as a heading with nothing under it.
+
+**What.**
+- **Recently viewed is off the homepage** (all six market homes, via `HomeSections`). The rail stays in the search box's empty state and on the card page, where it helps a returning visitor.
+- **The editorial band comes directly after the hero**, above the price table, on all six market homes. The price table is now the next band, still carrying the ItemList for the most-searched cards. Rendered:
+  - at 1280×900 the band's heading sits at the fold (y≈860, previously below the table);
+  - on a 390px phone its first rows are on the first screen (y≈620).
+  - It is in the order the server HTML is written, so a crawler that neither scrolls nor runs scripts reaches the writing before the price data.
+- **Guides & News is the rail's second group and opens by default** with Prices (`DEFAULT_OPEN_GROUPS`). Every page's HTML now carries rail links to Guides, Blog, Learn, Who writes this, Editorial policy and Methodology. The phone menu and the ⌘K launcher follow the same order. A returning visitor's own collapsed set still wins once it loads.
+
+**Not changed.**
+- The header keeps its shortlist: Blog from lg, Tools from xl. The lg row has ~5px of slack, and a Guides link from xl would squeeze the inline card search below ~160px. The rail, now open on every desktop page, carries Guides one row under Blog.
+- Nothing in the band was rewritten; it only moved.
+
+**Verified.**
+- Tests:
+  - `tests/home-editorial.test.ts`: hero, then band, then table, then the rest, with nothing between the hero and the band.
+  - `tests/sidenav.test.ts`: the two open groups; Guides & News second, with /guides and /blog first; collapsed groups render no links.
+  - `tests/homepage-declutter.test.ts`: no rail on any homepage; the search box and card page keep it.
+  - `tests/game-before-money.test.ts`: Prices still first; Decks and Games still ahead of Deals.
+- `next dev` against a local database:
+  - the served HTML has the band before the table and the rail's Prices and Guides & News groups expanded, with `/guides` and `/blog` in it;
+  - "Recently viewed" does not appear;
+  - the page was checked with JavaScript off, and at 1280px and 390px with no horizontal overflow.

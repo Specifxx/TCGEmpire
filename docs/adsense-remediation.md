@@ -94,11 +94,14 @@ value lives where you'd look for it. Then merge/deploy the branch to production.
 ### 3. Confirm the Sites page flips ads.txt to "Authorized"
 
 AdSense → Sites → riftcompare.com. The ads.txt status was **"Not found"**. After
-deploying, `https://riftcompare.com/ads.txt` must return a plain-text body of exactly:
+deploying, `https://riftcompare.com/ads.txt` must return a plain-text body whose FIRST
+line is exactly:
 
 ```
 google.com, pub-6842128782879909, DIRECT, f08c47fec0942fa0
 ```
+
+followed by the header-bidding partner's records added on 2026-08-21 (see Phase 3).
 
 Google re-crawls ads.txt on its own schedule — allow up to 24 hours before worrying.
 
@@ -337,11 +340,17 @@ CSP exists, so nothing can block it; the Report-Only policy allow-lists it anywa
 
 `src/app/ads.txt/route.ts` — `force-static`, HTTP 200, no redirect,
 `Content-Type: text/plain; charset=utf-8`, `Cache-Control: public, max-age=3600`,
-`X-Robots-Tag: noindex`. Body, exactly:
+`X-Robots-Tag: noindex`. First line, exactly:
 
 ```
 google.com, pub-6842128782879909, DIRECT, f08c47fec0942fa0
 ```
+
+then, since 2026-08-21, a header-bidding partner's published records
+(`PARTNER_RECORDS`, pasted as the partner published them, never edited). The live
+checks validate the Google line first and well-formed IAB records after it
+(`scripts/ads-txt-check.ts`, used by `scripts/adsense-verify.ts`); they no longer
+expect a one-line body (2026-09-26).
 
 The seller id is `ADSENSE_CLIENT_ID.replace(/^ca-/, "")` — it cannot drift from the
 loader. `f08c47fec0942fa0` is Google's certification-authority id, identical for every
@@ -357,9 +366,9 @@ they pay per referred sale through a tracking link and do not buy or resell ad
 inventory on this domain, so neither issues ads.txt records. Inventing lines for them
 would add unverifiable seller records, which is worse than none.
 
-**Tests:** `tests/ads-txt.test.ts` — 7 assertions covering status, content type,
-cache-control, exact body, absence of markup, the `ca-` derivation, and IAB field
-count/format on every record. Run with `npm test`.
+**Tests:** `tests/ads-txt.test.ts` covers status, content type, cache-control, the
+Google line first, absence of markup, the `ca-` derivation, IAB field count/format on
+every record, and the live checks' validator. Run with `npm test`.
 
 **Google policy addressed:** *Authorized Digital Sellers (ads.txt)* — an unresolved
 "Not found" is a standing warning on the Sites page throughout review.
@@ -854,9 +863,12 @@ convention. Its SearchBar is wrapped in Suspense for the same reason the hero's 
 
 ### 11d. Guides promoted into the header
 
-"Guides & News" is now a primary header item and its own nav group. The ~64 hand-written
+"Guides & News" was made a primary header item and its own nav group. The ~64 hand-written
 guides and posts were previously reachable only from the footer and the mega-menu —
-original content a reviewer cannot find might as well not exist.
+original content a reviewer cannot find might as well not exist. *(Current state,
+2026-09-26: the header's editorial link is "Blog" → /blog from lg, with /guides one hop
+away; "Tools" → /tools joins it from xl; the always-visible footer row links Home, Blog,
+Guides and Tools — see Phase 27.)*
 
 ### 11e. Site search
 
@@ -1598,6 +1610,69 @@ after this phase.
 retired total) is real and defensible, but it is still a content-quality lever, not a
 guaranteed fix — the standing note about Manual Action 1 (the unresolved second
 AdSense account question) applies here exactly as it did after Phase 25.
+
+## Phase 27 — The site's description of itself, authorship, and the blog joined to the tools
+
+**Requested by the owner, 2026-09-26**, after another "Low value content" rejection: a
+prominent editorial section on the homepage, Home/Tools/Blog/About/Editorial/Privacy/Terms
+in the header and footer, comprehensive trust pages, an explanation beside the data on
+every data-heavy page, and blog ↔ tool links. Full record: DECISIONS.md, "Blog and tools,
+joined up" (2026-09-26).
+
+**The finding that led the work.** A read-only audit found the site describing itself
+wrongly in dozens of places — "ranked by total delivered cost", "shipping included", "no
+hidden fees", "five markets", "real-time", an Index built from "completed sales" — on six
+market homepages, set/store/champion pages, every card page's narrative, the machine
+self-descriptions and ~24 articles. Comparisons sort by item price and most stores quote
+postage only at checkout, so a reviewer who checks any one of those claims against a card
+page finds it false. That is a low-value/trust signal in its own right, and no amount of
+new copy outweighs it. All were corrected first (30 articles carry `updated: 2026-09-26`),
+and `tests/site-claims.test.ts` now fails the build on any of those claims about the site.
+
+**What changed for a reviewer**
+- **Authorship is stated, and it is the owner's statement.** The site is built and run by
+  one person, Bill (a Person author at /authors/bill, the founder in the Organization and
+  AboutPage JSON-LD). Articles are "drafted with AI assistance, then edited and
+  fact-checked by Bill before publishing; prices and figures come from RiftCompare's own
+  price database, never from the draft" — the owner's wording, on /about,
+  /editorial-policy, /authors, /blog, /guides and the homepage band. This replaces the
+  unqualified "written by people", which the Phase 25 note and the rejection's own
+  wording made risky. Phase 10d stands: nothing about Bill beyond what he confirmed.
+- **Trust pages** were rewritten sentence by sentence against the code: the refresh
+  schedule, where currency is converted, the measured-postage model, every tool's figure
+  on /methodology, every cookie and processor on /privacy, consulting and published decks
+  in /terms, and one complete revenue list everywhere (AdSense, eBay Partner Network,
+  TCGplayer via Impact, Amazon Associates with its required statement, Plus/Premium,
+  paid store consulting disclosed as a potential conflict).
+- **Homepage:** a "Guides, news & market updates" band directly under the price table
+  (Start here, Latest news, Market updates with the real price-freshness time), replacing
+  two image rows that sat ~9 phone screens down behind every affiliate unit.
+- **Every data page explains itself** under its H1 (or under its data where a decision
+  keeps the tool first) and ends with "Read next" guides before any affiliate block; every
+  article links the tools it describes. One map (`lib/content/tool-guides.ts`) drives both
+  directions.
+- **Navigation:** Privacy and Terms in the rail/menu; Tools in the header from xl; the
+  always-visible footer row carries Home, Blog, Guides, Tools, About us, Editorial policy,
+  Methodology, Who writes this, Contact & feedback, Privacy policy, Terms of service.
+- **Banners:** no affiliate banner pair on /about, /authors, /contact, /editorial-policy,
+  /methodology, /privacy, /support or /terms; the six mini-games dropped their in-page pair
+  and gained 220–260 words each of how-to-play true to their code.
+- **Technical:** a published guide shadowed by a stale 308 is reachable again; /alerts is
+  in the sitemap; priorities and change frequencies were set per page type; ads.txt was
+  already correct and its live checks now expect the partner records after the Google line.
+
+**Still open, in order of leverage**
+1. **Manual Action 1** — closing `ca-pub-6262011577596407` — is still the first thing to
+   rule out; nothing in this phase changes that.
+2. **ads.txt partner block** — it includes a second Google DIRECT seller
+   (`pub-3944954862316283 … #AdEx`) from the header-bidding partner added 2026-08-21. If
+   that partnership is no longer live, remove the block (owner's call; the file's rule is
+   paste-only).
+3. **Corpus voice.** 30 of 106 articles are under 500 words. Phase 25's deferred voice
+   audit is still the next content step; this phase corrected facts, not prose.
+4. **Re-run `npm run adsense:audit`** after release — `docs/adsense-audit.json` dates from
+   16 Aug 2026 — and request re-indexing of /, /about, /editorial-policy, /methodology,
+   /blog, /guides and /guides/whats-in-the-riftbound-unleashed-set in Search Console.
 
 ---
 

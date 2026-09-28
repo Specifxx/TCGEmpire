@@ -9,6 +9,8 @@ import { HubIntro } from "@/components/HubIntro";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { galleryDescription, galleryTitle } from "@/lib/gallery-seo";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // /gallery — added 2026-08-20 to target the "Riftbound card gallery" query
 // directly. Every set already has its own full-art gallery
@@ -107,7 +109,7 @@ export default async function GalleryIndexPage() {
 
       <section>
         <h2 className="mb-3 text-lg font-extrabold text-white">Browse the gallery by set</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {released.map((s) => (
             <Link
               key={s.slug}
@@ -133,6 +135,8 @@ export default async function GalleryIndexPage() {
           <Link href="/browse" className="text-brand-400 hover:underline">full filterable card database</Link> to search and sort every card at once.
         </p>
       </section>
+
+      <RelatedGuides guides={guidesForTool("/gallery")} className="card-surface p-5" />
     </div>
   );
 }

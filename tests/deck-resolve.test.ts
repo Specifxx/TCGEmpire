@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Prisma } from "@prisma/client";
-import { parseDeckList, resolveDeckLines, isSectionHeader, formatDeckLine, DECK_LINE_CAP, type ResolvableCard } from "../src/lib/deck";
+import { parseDeckList, resolveDeckLines, isSectionHeader, formatDeckLine, isStandardPrinting, DECK_LINE_CAP, type ResolvableCard } from "../src/lib/deck";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -67,7 +67,7 @@ interface C extends ResolvableCard {
 }
 const CARDS: C[] = [
   { id: "ogn-251", name: "Jinx, Loose Cannon", nameNormalized: "jinxloosecannon", setCode: "OGN", collectorNumber: "251/298", price: 900 },
-  { id: "ogn-251-promo", name: "Jinx, Loose Cannon", nameNormalized: "jinxloosecannon", setCode: "OGP", collectorNumber: "251/298", price: 400 },
+  { id: "ogn-251-promo", name: "Jinx, Loose Cannon", nameNormalized: "jinxloosecannon", setCode: "OGP", collectorNumber: "251/298", isPromo: true, price: 400 },
   { id: "sfd-251", name: "Other Card", nameNormalized: "othercard", setCode: "SFD", collectorNumber: "251/221", price: 50 },
   { id: "ogn-301", name: "Viktor, Herald", nameNormalized: "viktorherald", setCode: "OGN", collectorNumber: "301/298", price: 100 },
   { id: "ogn-301s", name: "Viktor, Herald", nameNormalized: "viktorherald", setCode: "OGN", collectorNumber: "301*/298", price: 9000 },
@@ -95,11 +95,11 @@ function matches(c: C, w: Prisma.CardWhereInput): boolean {
   }
   return true;
 }
-function db() {
+function db(cards: C[] = CARDS) {
   const calls: { where: Prisma.CardWhereInput; take?: number }[] = [];
   const find = async (args: { where: Prisma.CardWhereInput; take?: number }) => {
     calls.push(args);
-    const hits = CARDS.filter((c) => matches(c, args.where)).sort((a, b) => a.price - b.price);
+    const hits = cards.filter((c) => matches(c, args.where)).sort((a, b) => a.price - b.price);
     return args.take != null ? hits.slice(0, args.take) : hits;
   };
   return { find, calls };
@@ -116,11 +116,11 @@ test("set + number is scoped to the line's set, and keeps the Signature printing
   assert.equal(r.fuzzy.length, 0);
 });
 
-test("exact name takes the cheapest printing; unmatched lines come back, not dropped", async () => {
+test("exact name takes the cheapest standard printing; unmatched lines come back, not dropped", async () => {
   const { find } = db();
   const r = await resolveDeckLines(parseDeckList("3 Jinx, Loose Cannon\n1 Nobody Here At All", { plainNames: true }), find);
   assert.equal(r.matched.length, 1);
-  assert.equal(r.matched[0].card.id, "ogn-251-promo", "cheapest printing of the name");
+  assert.equal(r.matched[0].card.id, "ogn-251", "the standard printing, not the cheaper promo");
   assert.equal(r.matched[0].fuzzy, false);
   assert.deepEqual(r.unmatched.map((l) => l.raw), ["1 Nobody Here At All"]);
 });
@@ -172,4 +172,101 @@ test("/deck's list pricer computes its notice from the response, not inside a st
   assert.doesNotMatch(fn, /setLines\(\(/, "no updater function");
   assert.ok(fn.indexOf("const missed") < fn.indexOf("setNotice("));
   assert.match(fn, /missed\.length/);
+});
+
+// ── Standard printings first (2026-09-27) ────────────────────────────────────
+// Results come back cheapest first, and the first row used to win, so a deck
+// landed on whichever printing was cheapest: Challenge OGN-128 on its promo,
+// Treasure Hunter SFD-130 on its promo, "Kennen, Heart of the Tempest" on the
+// VEN-197* Signature. Each case below makes the non-standard copy the CHEAPER
+// one, so the old first-row rule would pick it.
+
+const PRINTINGS: C[] = [
+  // promo vs normal, sharing set + number
+  { id: "challenge", name: "Challenge", nameNormalized: "challenge", setCode: "OGN", collectorNumber: "128/298", price: 60 },
+  { id: "challenge-promo", name: "Challenge", nameNormalized: "challenge", setCode: "OGN", collectorNumber: "128/298", isPromo: true, price: 20 },
+  { id: "treasure", name: "Treasure Hunter", nameNormalized: "treasurehunter", setCode: "SFD", collectorNumber: "130/221", price: 90 },
+  { id: "treasure-promo", name: "Treasure Hunter", nameNormalized: "treasurehunter", setCode: "SFD", collectorNumber: "130/221", isPromo: true, price: 30 },
+  // Signature vs normal
+  { id: "kennen", name: "Kennen, Heart of the Tempest", nameNormalized: "kennenheartofthetempest", setCode: "VEN", collectorNumber: "155/166", price: 500 },
+  { id: "kennen-sig", name: "Kennen, Heart of the Tempest", nameNormalized: "kennenheartofthetempest", setCode: "VEN", collectorNumber: "197*/166", price: 300 },
+  // overnumbered vs normal (a cross-set reprint)
+  { id: "kayn", name: "Kayn, Unleashed", nameNormalized: "kaynunleashed", setCode: "OGN", collectorNumber: "189/298", price: 400 },
+  { id: "kayn-over", name: "Kayn, Unleashed", nameNormalized: "kaynunleashed", setCode: "RAD", collectorNumber: "182/167", price: 100 },
+  // alt-art (variant, lettered number) vs normal
+  { id: "sett", name: "Sett, Kingpin", nameNormalized: "settkingpin", setCode: "OGN", collectorNumber: "240/298", price: 300 },
+  { id: "sett-alt", name: "Sett, Kingpin", nameNormalized: "settkingpin", setCode: "OGN", collectorNumber: "240a/298", variant: "a", price: 150 },
+  // promo-only: nothing standard to prefer
+  { id: "promo-only", name: "Promo Only Card", nameNormalized: "promoonlycard", setCode: "OGN", collectorNumber: "501/298", isPromo: true, price: 50 },
+  // runes: an R-numbered rune is standard, its alt-art is not
+  { id: "mind-rune-alt", name: "Mind Rune", nameNormalized: "mindrune", setCode: "VEN", collectorNumber: "R03a", variant: "a", price: 3 },
+  { id: "mind-rune", name: "Mind Rune", nameNormalized: "mindrune", setCode: "VEN", collectorNumber: "R03", price: 5 },
+];
+
+test("isStandardPrinting: plain in-set numbers and runes only", () => {
+  const std = (collectorNumber: string, extra: Partial<C> = {}) => isStandardPrinting({ collectorNumber, ...extra });
+  assert.ok(std("128/298"));
+  assert.ok(std("167/167"), "the last card of the base run is still standard");
+  assert.ok(std("R01"), "a rune");
+  assert.ok(std("R12/166"), "a rune with a set total");
+  assert.ok(!std("128/298", { isPromo: true }), "promo");
+  assert.ok(!std("240a/298", { variant: "a" }), "alt-art");
+  assert.ok(!std("240a/298"), "a lettered number is non-standard even without variant set");
+  assert.ok(!std("197*/166"), "Signature");
+  assert.ok(!std("182/167"), "overnumbered");
+});
+
+test("set + number prefers the standard printing over a promo sharing it", async () => {
+  const { find } = db(PRINTINGS);
+  const r = await resolveDeckLines(parseDeckList("1 Challenge (OGN-128)\n1 OGN-128"), find);
+  assert.deepEqual(r.items.map((it) => it.card?.id), ["challenge", "challenge"]);
+});
+
+test("exact name prefers the standard printing: promo, Signature, overnumbered and alt-art all lose", async () => {
+  const { find } = db(PRINTINGS);
+  const r = await resolveDeckLines(
+    parseDeckList("1 Treasure Hunter\n1 Kennen, Heart of the Tempest\n1 Kayn, Unleashed\n1 Sett, Kingpin", { plainNames: true }),
+    find,
+  );
+  assert.deepEqual(r.items.map((it) => it.card?.id), ["treasure", "kennen", "kayn", "sett"]);
+  assert.equal(r.fuzzy.length, 0);
+});
+
+test("a promo-only card still resolves, to the promo", async () => {
+  const { find } = db(PRINTINGS);
+  const r = await resolveDeckLines(parseDeckList("2 Promo Only Card", { plainNames: true }), find);
+  assert.equal(r.items[0].card?.id, "promo-only");
+});
+
+test("runes count as standard: an R-numbered rune beats its cheaper alt-art", async () => {
+  const { find } = db(PRINTINGS);
+  const r = await resolveDeckLines(parseDeckList("12 Mind Rune", { plainNames: true }), find);
+  assert.equal(r.items[0].card?.id, "mind-rune");
+});
+
+test("an explicitly pinned Signature still resolves to the Signature", async () => {
+  const { find } = db(PRINTINGS);
+  const r = await resolveDeckLines(parseDeckList("1 Kennen, Heart of the Tempest (VEN-197*)\n1 Kennen, Heart of the Tempest (VEN-155)"), find);
+  assert.deepEqual(r.items.map((it) => it.card?.id), ["kennen-sig", "kennen"]);
+});
+
+test("the name-contains fallback prefers the standard printing too", async () => {
+  const { find } = db(PRINTINGS);
+  const r = await resolveDeckLines(parseDeckList("1 Treasure Hunt", { plainNames: true }), find);
+  assert.equal(r.items[0].card?.id, "treasure");
+  assert.equal(r.items[0].fuzzy, true);
+});
+
+test("every resolver caller selects variant and isPromo, or the preference can't see them", () => {
+  const server = read("src/lib/published-decks-server.ts");
+  const select = server.slice(server.indexOf("const RESOLVE_SELECT"), server.indexOf("} satisfies Prisma.CardSelect"));
+  assert.match(select, /variant: true/);
+  assert.match(select, /isPromo: true/);
+  const price = read("src/app/api/deck/price/route.ts");
+  const cardSelect = price.slice(price.indexOf("const cardSelect"), price.indexOf("} as const"));
+  assert.match(cardSelect, /variant: true/);
+  assert.match(cardSelect, /isPromo: true/);
+  assert.match(read("src/app/api/basket/route.ts"), /nameNormalized: true, setCode: true, collectorNumber: true, variant: true, isPromo: true/);
+  const deckPage = read("src/app/deck/page.tsx");
+  assert.match(deckPage.slice(deckPage.indexOf("resolveDeckLines(")), /variant: true,\s*isPromo: true/);
 });

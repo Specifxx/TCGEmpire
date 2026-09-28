@@ -4,9 +4,11 @@ import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRY_LIST } from "@/lib/country";
-import { getCachedRisingCards, parseRiseScope, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
+import { getCachedRisingCards, getRisingWeekAgo, parseRiseScope, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { cardImageAlt } from "@/lib/image-alt";
 import { RisingSnapshotPanel } from "@/components/admin/RisingSnapshotPanel";
+import { MoveBadge } from "@/components/MoveBadge";
+import { movementAgainst, weekAgoLabel } from "@/lib/rising-movement";
 import { cardThumbProps } from "@/lib/card-image-url";
 
 export const dynamic = "force-dynamic";
@@ -95,7 +97,12 @@ export default async function AdminRisingPage({
   // The same loaders /tools/rising and the homepage read (weekly history,
   // daily operational inputs — rise-predictor.ts), so an admin load never
   // triggers a second copy of the scan under its own key.
-  const analysis = await getCachedRisingCards(scope);
+  //
+  // Last week's chart for this scope (lib/rising-movement.ts): the most recent
+  // Hot 40 snapshot at least six days old — what next week's snapshot will be
+  // compared with too. None → no Move column, and the panel above says so.
+  const [analysis, weekAgo] = await Promise.all([getCachedRisingCards(scope), getRisingWeekAgo(scope)]);
+  const moves = movementAgainst(analysis.picks.map((p) => p.id), weekAgo);
 
   const bt = analysis.backtest;
 
@@ -137,6 +144,20 @@ export default async function AdminRisingPage({
           reads the table, decides this run is worth sharing, and the control
           for that should not be at the bottom of a long table. */}
       <RisingSnapshotPanel adminKey={searchParams.key} scope={scope} />
+      <p className="-mt-4 mb-6 text-xs text-slate-500">
+        {weekAgo ? (
+          <>
+            Move ▲▼ compares today&apos;s ranking with the same ranking rebuilt as of {weekAgoLabel(weekAgo)}, 7 days
+            earlier: demand and prices as they stood then, today&apos;s stock counts (nothing records those
+            historically). NEW means the card had no searches by then. Snapshots freeze this movement.
+          </>
+        ) : (
+          <>
+            The ranking from 7 days ago couldn&apos;t be rebuilt (no demand snapshots that far back, or a failed read),
+            so there is no movement. Snapshots still generate as normal, without arrows.
+          </>
+        )}
+      </p>
 
       {/* Validation + status tiles */}
       <div className="mb-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
@@ -218,6 +239,11 @@ export default async function AdminRisingPage({
             <thead>
               <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-3 py-2 font-medium">#</th>
+                {moves && (
+                  <th className="px-1 py-2 font-medium" title="Place against the ranking 7 days ago">
+                    Move
+                  </th>
+                )}
                 <th className="px-3 py-2 font-medium">Card</th>
                 <th className="px-3 py-2 text-right font-medium">Score</th>
                 <th className="px-3 py-2 font-medium">Signal breakdown</th>
@@ -235,6 +261,11 @@ export default async function AdminRisingPage({
               {analysis.picks.map((p: RisePick, i) => (
                 <tr key={p.id} className="border-b border-ink-800 last:border-0 hover:bg-ink-800/60">
                   <td className="px-3 py-2 text-slate-500">{i + 1}</td>
+                  {moves && (
+                    <td className="px-1 py-2">
+                      <MoveBadge move={moves.get(p.id)} newTitle="Not ranked 7 days ago" />
+                    </td>
+                  )}
                   <td className="px-3 py-2">
                     <Link href={`/card/${p.slug ?? p.id}`} className="flex items-center gap-2.5">
                       {p.imageThumbUrl && (

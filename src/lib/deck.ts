@@ -121,12 +121,43 @@ export interface ResolvableCard {
   nameNormalized: string;
   setCode: string;
   collectorNumber: string;
+  // Optional so a caller that doesn't select them still compiles, but every
+  // caller should: without them a promo or alt-art can't be told apart from
+  // the standard printing (see isStandardPrinting).
+  variant?: string | null;
+  isPromo?: boolean | null;
+}
+
+// A STANDARD printing is the one a pasted name means: not a promo, not an
+// alt-art (no variant), and a plain collector number ("128/298", or a rune's
+// "R01") that is neither a Signature ("197*") nor lettered ("240a") nor
+// numbered above the set's total (an overnumbered chase, "182/167").
+//
+// Why it matters (2026-09-27): results come back cheapest first, and the
+// first row used to win outright, so a list landed on whichever printing was
+// cheapest — Challenge OGN-128 on its promo, Treasure Hunter SFD-130 on its
+// promo, "Kennen, Heart of the Tempest" on the VEN-197* Signature. Published
+// decks, the admin import and the /deck pricer all priced the wrong object.
+export function isStandardPrinting(c: Pick<ResolvableCard, "collectorNumber" | "variant" | "isPromo">): boolean {
+  if (c.isPromo) return false;
+  if (c.variant) return false;
+  const [num, total] = c.collectorNumber.split("/");
+  if (!/^R?\d+$/i.test(num)) return false;
+  const t = total && /^\d+$/.test(total) ? parseInt(total, 10) : null;
+  return !(t && !/^R/i.test(num) && parseInt(num, 10) > t);
+}
+
+// The cheapest standard printing among `cards` (already cheapest first), else
+// the cheapest of any kind. The fallback is what keeps an explicit pin working:
+// "(VEN-197*)" only matches the Signature, so the Signature is what it gets.
+function preferStandard<C extends ResolvableCard>(cards: C[]): C | undefined {
+  return cards.find(isStandardPrinting) ?? cards[0];
 }
 
 // The single database call this needs, e.g.
 //   (args) => prisma.card.findMany({ ...args, select, orderBy: cheapestFirst })
 // Results must come back cheapest first for the market: when several printings
-// share a name or number, the first one wins.
+// share a name or number, the cheapest STANDARD one wins (preferStandard).
 export type CardFinder<C extends ResolvableCard> = (args: { where: Prisma.CardWhereInput; take?: number }) => Promise<C[]>;
 
 export interface ResolvedLine<C> {
@@ -145,6 +176,18 @@ export interface DeckResolution<C> {
 }
 
 const numberKey = (setCode: string, number: string) => `${setCode.toUpperCase()}-${number.toLowerCase()}`;
+
+// Groups keep the finder's order, so each group is still cheapest first.
+function groupBy<C>(cards: C[], key: (c: C) => string): Map<string, C[]> {
+  const out = new Map<string, C[]>();
+  for (const c of cards) {
+    const k = key(c);
+    const g = out.get(k);
+    if (g) g.push(c);
+    else out.set(k, [c]);
+  }
+  return out;
+}
 
 // Set + collector number first (scoped to the line's set: 810 of 950 cards
 // share their number with a card in another set), then exact name, then a
@@ -173,14 +216,10 @@ export async function resolveDeckLines<C extends ResolvableCard>(
         })),
       },
     });
-    const byNum = new Map<string, C>();
-    for (const c of cards) {
-      const k = numberKey(c.setCode, c.collectorNumber.split("/")[0]);
-      if (!byNum.has(k)) byNum.set(k, c);
-    }
+    const byNum = groupBy(cards, (c) => numberKey(c.setCode, c.collectorNumber.split("/")[0]));
     for (const it of items) {
       const l = it.line;
-      if (l.setCode && l.number) it.card = byNum.get(numberKey(l.setCode, l.number)) ?? null;
+      if (l.setCode && l.number) it.card = preferStandard(byNum.get(numberKey(l.setCode, l.number)) ?? []) ?? null;
     }
   }
 
@@ -189,9 +228,8 @@ export async function resolveDeckLines<C extends ResolvableCard>(
   const nqs = [...new Set(nameless.map((it) => normalizeSearch(it.line.name)).filter(Boolean))];
   if (nqs.length) {
     const cards = await find({ where: { nameNormalized: { in: nqs } } });
-    const byName = new Map<string, C>();
-    for (const c of cards) if (!byName.has(c.nameNormalized)) byName.set(c.nameNormalized, c);
-    for (const it of nameless) it.card = byName.get(normalizeSearch(it.line.name)) ?? null;
+    const byName = groupBy(cards, (c) => c.nameNormalized);
+    for (const it of nameless) it.card = preferStandard(byName.get(normalizeSearch(it.line.name)) ?? []) ?? null;
   }
 
   // 3. Name contains — bounded: at most five rows per unresolved line, 200 in
@@ -206,7 +244,7 @@ export async function resolveDeckLines<C extends ResolvableCard>(
     });
     for (const it of unresolved) {
       const nq = normalizeSearch(it.line.name);
-      const hit = cards.find((c) => c.nameNormalized.includes(nq));
+      const hit = preferStandard(cards.filter((c) => c.nameNormalized.includes(nq)));
       if (hit) {
         it.card = hit;
         it.fuzzy = true;

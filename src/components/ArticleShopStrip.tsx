@@ -54,7 +54,9 @@ export function ArticleShopStrip({
               className="flex items-center justify-between gap-3 px-5 py-3 text-sm transition-colors hover:bg-ink-800"
             >
               <span className="font-semibold text-white">{it.label}</span>
-              <span className="shrink-0 text-brand-400">View listings →</span>
+              {/* A search, so it says so (2026-09-27): the old label promised
+                  listings a search may not find ("Pushing eBay clicks"). */}
+              <span className="shrink-0 font-semibold text-sky-300">Search eBay →</span>
             </OutboundLink>
           </li>
         ))}

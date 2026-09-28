@@ -58,12 +58,12 @@ longer lands on its entry.
 
 ## Databases
 
-- **Live names** (since 2026-09-26; `src/lib/db-chains.ts` is the source of
-  truth): operational `RM4`, one variable, never a chain, because
+- **Live names** (since 2026-09-28; `src/lib/db-chains.ts` is the source of
+  truth): operational `RM5`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
   History: `HISTORY_DATABASE_URL_4`, then `_3`, then `DATABASE_URL`
   (terminal). Never rotate onto `DATABASE_URL`.
-  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422)
+  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422), [2026-09-28](../DECISIONS.md#L15024)
 - **Migrating:** verify the target live first (a recycled project must trail
   the source on every metric; a new one must be empty). Use a named
   `maintenance.yml` task: it guards SOURCE≠TARGET, dumps before truncating,
@@ -104,7 +104,7 @@ longer lands on its entry.
   counts only ended subscriptions. Compare cohorts by `PREMIUM_COPY_VERSION`
   (`price-2026-09-26` from the cut).
   [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215), [2026-09-23](../DECISIONS.md#L10924),
-  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14292)
+  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14680)
 - **Tiers (lineup of 2026-09-25, prices of 2026-09-26):** Plus, $2.99/mo or
   $23.99/yr, is
   **ad-free**, has the full Deal Finder (with "Only my cards") and Rising
@@ -131,7 +131,7 @@ longer lands on its entry.
   (`introRenewalsRemaining`).
   [2026-09-11](../DECISIONS.md#L4428), [2026-09-24](../DECISIONS.md#L12120),
   [2026-09-25](../DECISIONS.md#L12322), [2026-09-25](../DECISIONS.md#L12842),
-  [2026-09-25](../DECISIONS.md#L13067), [2026-09-26](../DECISIONS.md#L14292)
+  [2026-09-25](../DECISIONS.md#L13067), [2026-09-26](../DECISIONS.md#L14680)
 - **Gates:** `isPremium(user)` defaults to the Plus minimum; ads read
   `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`):
   an unknown price is Premium, so every retired Plus Price must be listed in
@@ -160,7 +160,7 @@ longer lands on its entry.
   subscribers may be moved onto a lower Price, never a higher one.
   [2026-09-11](../DECISIONS.md#L4642), [2026-09-14](../DECISIONS.md#L5971),
   [2026-09-10](../DECISIONS.md#L3990), [2026-09-22](../DECISIONS.md#L10328),
-  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14292),
+  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14292), [2026-09-26](../DECISIONS.md#L14680),
   [2026-09-28](../DECISIONS.md#L14549)
 - **Free limits (2026-09-28, owner: "charge for the features people use every
   week"):** a free account watches up to 10 distinct cards and keeps up to 50
@@ -187,7 +187,7 @@ longer lands on its entry.
   no signed-in Premium slide-in (deleted 2026-09-28). The popup waits for
   a 2nd page view or 60 s of reading, never on the first page from another
   site or a phone's first view (`lib/signup-promo-gate.ts`), except on the
-  top landing pages (`/blog/*`, `/movers`), where it shows after 20 s
+  top landing pages (`/blog/*`, `/movers`), where it shows after 7 s
   of reading on any view. It stops after 2
   dismissals per device, snoozes 3 pages then 7 days, and keeps its 5-second
   delay. [2026-09-16](../DECISIONS.md#L7031),
@@ -234,7 +234,10 @@ longer lands on its entry.
   test). The homepage's free "Cheapest on eBay" row lists only cards where eBay
   beats every source the card page ranks (EU: CardTrader too; US: TCGplayer's
   listing too; Canada never). Its free status beside the trial measurement is
-  the owner's call. The homepage price table has an eBay button on every row,
+  the owner's call. Hot 40 snapshots mark picks "Cheapest on eBay" by the same
+  rule (`getCheapestOnEbayFor`), in each pick's basis market, frozen at mint,
+  with a Paid link tag and the disclosure above the table
+  [2026-09-28](../DECISIONS.md#L15039). The homepage price table has an eBay button on every row,
   last, after our own figures: the tracked listing's item price in the page's
   own market (filled only when it is the row's cheapest), a "Search" of the
   visitor's own eBay otherwise; stacked rows below 768px so it is never cut
@@ -244,14 +247,26 @@ longer lands on its entry.
 ## Navigation & chrome
 
 - **Desktop rail:** 17rem from 1024px, always expanded (the collapse mode was
-  deleted on 09-21). Group headers are disclosures; only Prices opens on a
-  first visit. The rail's search filters FEATURES; the header's searches
+  deleted on 09-21). Group headers are disclosures; Prices and Guides & News
+  (the second group) open on a first visit, because a collapsed group renders
+  no links and the guides must be in every page's HTML for AdSense's
+  crawlers. The rail's search filters FEATURES; the header's searches
   CARDS. [2026-09-21](../DECISIONS.md#L9958),
-  [2026-09-21](../DECISIONS.md#L10095)
+  [2026-09-21](../DECISIONS.md#L10095), [2026-09-28](../DECISIONS.md#L15131)
 - **Header:** "Database" (→ `/browse`) shows at every width. Card search has
   its own row until xl, then sits inline. The theme toggle is in the header
-  from lg, in the menu below that. [2026-09-21](../DECISIONS.md#L9368),
-  [2026-09-21](../DECISIONS.md#L10095), [2026-09-23](../DECISIONS.md#L11201)
+  from lg, in the menu below that. "Tools" (→ `/tools`) joins Blog from xl
+  only (owner's brief, 09-26; the lg row has ~5px of slack).
+  [2026-09-21](../DECISIONS.md#L9368),
+  [2026-09-21](../DECISIONS.md#L10095), [2026-09-23](../DECISIONS.md#L11201),
+  [2026-09-26](../DECISIONS.md#L14680)
+- **Footer:** the always-visible row is Home, Blog, Guides, Tools, About us,
+  Editorial policy, Methodology, Who writes this, Contact & feedback, Privacy
+  policy, Terms of service (the site map stays collapsed on `/`). Privacy and
+  Terms are also in the rail/menu Help group (`hideInFooter`). `FooterAds`
+  renders no banner pair on /about, /authors(/*), /contact, /editorial-policy,
+  /methodology, /privacy, /support and /terms; the six mini-games carry no
+  in-page pair. [2026-09-26](../DECISIONS.md#L14680)
 - **1024–1279 is its own band** (~704px of content): the filter sidebar
   waits for xl, card art is 160px (320 from xl), and stickies use
   `lg:top-36 xl:top-20`. [2026-09-23](../DECISIONS.md#L11201)
@@ -278,13 +293,18 @@ longer lands on its entry.
   menu's top bar. [2026-09-24](../DECISIONS.md#L11756)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417),
   [2026-09-28](../DECISIONS.md#L14549)
-- **Homepage order:** Recently viewed (returning visitors), Top Deals (opening
+- **Homepage order:** hero, then the editorial band (`EditorialHub`: Start
+  here, Latest news, Market updates — directly under the hero since 09-28 so
+  AdSense's crawlers meet the writing first; two rows per column on phones),
+  then the price table, Top Deals (opening
   with the free "Cheapest on eBay" block, above its pills and columns), eBay
   Picks (the newest released set), the popular carousel (its "Most popular"
   tab back, owner's call; the ItemList stays with the price table),
-  Riftle/pack-sim, How it works.
+  Riftle/pack-sim, How it works. No Recently viewed on any homepage (owner,
+  09-28); it stays in the search box and on card pages.
   [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
-  [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190)
+  [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190),
+  [2026-09-26](../DECISIONS.md#L14680), [2026-09-28](../DECISIONS.md#L15131)
 - **Overlays:** `ui/Dialog` portals to body; Escape closes only the top
   layer and focus returns to the opener. Corner nudges share one corner
   string. [2026-09-23](../DECISIONS.md#L11348)
@@ -299,12 +319,18 @@ longer lands on its entry.
 - **Owners:** the six market homepages' titles and H1s lead with "Riftbound
   Card Prices", and their titles quote a LIVE count of stores with an
   in-stock listing (`homeTitle` / `regionHomeTitle`, dropped when unknown);
-  each has a "Riftbound card prices today" table under the hero. `/browse`
+  each has a "Riftbound card prices today" table right after the editorial
+  band under the hero ([2026-09-28](../DECISIONS.md#L15131)). Their
+  DESCRIPTIONS lead with "Compare Riftbound card prices", and the share
+  previews, JSON-LD (`WebApplication` at `/#app`) and `/llms.txt` say
+  "Riftbound price comparison engine". Shipping is never called "live":
+  comparison pages say "cheapest first, postage shown where known", and only
+  Best Basket claims shipping "measured at each store's checkout". `/browse`
   owns "riftbound card list"; the Radiance spoiler tracker is the only title
   with "radiance" + "spoiler". No store count in any OTHER page title
   (Singapore's "11 Stores" excepted). Bare hreflang `en` is the US page; the
   EU pages carry one en-XX per EU country served.
-  [2026-09-24](../DECISIONS.md#L11756)
+  [2026-09-24](../DECISIONS.md#L11756), [2026-09-27](../DECISIONS.md#L14908)
   [2026-09-17](../DECISIONS.md#L7894), [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9222), [2026-09-22](../DECISIONS.md#L10403)
 - **Card pages are always indexable** (09-17 reversed Phase 7a); only
@@ -317,6 +343,30 @@ longer lands on its entry.
   predict prices. Quote leaks only from photographed cards; half-known cards
   stay out of `manual-cards.json`. [2026-09-18](../DECISIONS.md#L8476),
   [2026-09-22](../DECISIONS.md#L10683)
+- **What the site says about itself is true** (`tests/site-claims.test.ts`,
+  every page, component and published article): comparisons are "cheapest
+  first by item price, with the delivered total shown where the store
+  publishes its postage" — never "ranked by delivered cost", "shipping
+  included" or "no hidden fees"; six markets, never five; two imports a day,
+  never "real-time"; listings, never sold/completed sales. Only Best Basket
+  prices whole orders with measured postage. Store counts come from
+  `RETAILER_LIST`, never typed. A correction bumps the article's `updated`.
+  [2026-09-26](../DECISIONS.md#L14680)
+- **Authorship is the owner's statement:** the site is built and run by one
+  person, Bill (Person author `/authors/bill`, the Organization's founder).
+  Articles are "drafted with AI assistance, then edited and fact-checked by
+  Bill" with figures from our own database (`ARTICLE_PROCESS`,
+  lib/content/authors.ts). Add nothing about him he has not confirmed; every
+  byline must resolve in the registry. [2026-09-26](../DECISIONS.md#L14680)
+- **Blog ↔ tools:** `lib/content/tool-guides.ts` maps each tool/data route to
+  at most three guides, read both ways — `RelatedGuides` after the page's data
+  and before any affiliate block (outside paywalls; /movers and the signed-out
+  Deal Finder keep their pinned eBay CTAs first), and an article's "Related tools" row. Data pages carry a
+  visible, page-specific intro under the H1 (`HubIntro`, `[label](/path)`
+  links); /deck and set pages keep theirs under the tool/grid. The 09-26
+  "Mobile first" entry covers the homepage, card page, thumbnails and
+  /browse's sort only. Every published article links a tool (ratchet test).
+  [2026-09-26](../DECISIONS.md#L14680)
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)
@@ -348,6 +398,13 @@ longer lands on its entry.
 - **Sealed offers have three states** (open / sold out / unknown past 72h,
   `lib/sealed-offers.ts`); only open offers set a headline price or a store
   count. [2026-09-24](../DECISIONS.md#L11971)
+- **Deck lines resolve to the STANDARD printing** (`isStandardPrinting` in
+  `lib/deck.ts`): not a promo, alt-art, Signature or overnumbered copy, unless
+  no standard one exists or the line pins it (`(VEN-197*)`). Every resolver
+  caller selects `variant` and `isPromo`. A card slug that changes goes in
+  `lib/card-slug-renames.ts`, which keeps the old URL resolving, never in a
+  config redirect. Legend names come from `lib/legend-name.ts` in every
+  importer. [2026-09-27](../DECISIONS.md#L14955)
 - **Matching:** one `FOREIGN_LANG` pattern and one promo-set regex; a sealed
   listing's own title can veto its group. A plain store title (no chase
   signal) drops overnumbered/signature candidates before the cross-set
@@ -408,7 +465,11 @@ longer lands on its entry.
   (`tests/methodology-breaks.test.ts`), and the Index and portfolio are
   chain-linked across a break. Rising Cards is the exception: it keeps its
   pre-09-23 signals by the owner's call until cards have five weekly points
-  on the new basis. [2026-09-25](../DECISIONS.md#L12842), [2026-09-25](../DECISIONS.md#L13043)
+  on the new basis. /movers is never blank through a break: until any card
+  has a week on the new basis (and only within the grace window) it shows the
+  last week BEFORE the switch, labelled — opt-in, so no other surface shows a
+  stale price as today's. [2026-09-25](../DECISIONS.md#L12842), [2026-09-25](../DECISIONS.md#L13043),
+  [2026-09-27](../DECISIONS.md#L14850)
 - **Rules text:** `Card.description` comes from Riot's gallery for every set.
   Origins, Proving Grounds, Spiritforged and Unleashed are filled by
   `scripts/backfill-card-text.ts` (maintenance task `backfill-card-text`,

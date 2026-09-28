@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { HubIntro } from "@/components/HubIntro";
 import { HubFaq } from "@/components/HubFaq";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
@@ -202,7 +204,9 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
 
       {/* Rendered regardless of sign-in state, so a signed-out visitor — and the
           crawler that indexes this page while logged out — gets real substance
-          beyond the sign-in card above. */}
+          beyond the sign-in card above. The guides first (2026-09-26, "Blog and
+          tools, joined up"), then the questions. */}
+      <RelatedGuides guides={guidesForTool("/tools/best-basket")} className="card-surface mt-8 p-5" />
       <HubFaq faqs={FAQS} />
     </div>
   );

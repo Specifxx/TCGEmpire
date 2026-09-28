@@ -96,8 +96,13 @@ export function ProofStrip({ pickByCountry }: { pickByCountry: Record<Country, P
           <span className="text-slate-400">buying from the cheapest store shown, delivered.</span>
         </p>
       )}
+      {/* Said "Every store, ranked by total delivered cost" until 2026-09-26:
+          this strip orders its own three stores by delivered cost, but no
+          comparison on the site does (lib/market-rows.ts sorts by item price),
+          and "every store" was a claim about all of them. Unmounted today;
+          kept true for the day it returns (tests/site-claims.test.ts). */}
       <p className="mt-1 text-center text-xs text-slate-500">
-        Every store, ranked by total delivered cost. Free, no sign-up.
+        Three stores stocking this card, side by side. Free, no sign-up.
       </p>
     </section>
   );

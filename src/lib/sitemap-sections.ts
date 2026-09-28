@@ -119,14 +119,22 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/market/records`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/sets`, changeFrequency: "weekly", priority: 0.8, lastModified: day },
-    { url: `${SITE_URL}/deck`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/deck") },
+    { url: `${SITE_URL}/deck`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/deck") },
     { url: `${SITE_URL}/trade`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/trade") },
     { url: `${SITE_URL}/learn`, changeFrequency: "monthly", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/riftle`, changeFrequency: "daily", priority: 0.7, lastModified: staticPageDate("/riftle") },
     { url: `${SITE_URL}/games`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
-    { url: `${SITE_URL}/tools`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/tools") },
-    { url: `${SITE_URL}/tools/box-ev`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
-    { url: `${SITE_URL}/tools/selling-fees`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/tools/selling-fees") },
+    // PRIORITY AND CHANGEFREQ, re-set 2026-09-26 ("Blog and tools, joined up"
+    // in DECISIONS.md) to one scheme: the editorial hubs 0.8 and daily; tools
+    // and data pages 0.7-0.8; articles 0.7; the policy and trust pages 0.4-0.5,
+    // monthly; the arcade mini-games 0.5. A page whose content is the price
+    // snapshot (lastModified: day) says "daily"; a static tool shell keeps the
+    // frequency its hand-kept date can back up, because a "daily" beside a
+    // months-old lastmod is the sitemap contradicting itself. Google weighs
+    // neither field much; lastmod, which stays honest, is the one it reads.
+    { url: `${SITE_URL}/tools`, changeFrequency: "weekly", priority: 0.8, lastModified: staticPageDate("/tools") },
+    { url: `${SITE_URL}/tools/box-ev`, changeFrequency: "daily", priority: 0.7, lastModified: day },
+    { url: `${SITE_URL}/tools/selling-fees`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/tools/selling-fees") },
     // Raised from 0.6 to 0.8 when it briefly had a header nav item and a
     // homepage section — the homepage section stays (see HomeSections.tsx) even
     // though the header link didn't (Best Basket moved back to Premium — see
@@ -134,9 +142,15 @@ async function core(): Promise<SitemapEntry[]> {
     // hardest-to-replicate feature on the site (per-store shipping optimisation,
     // not just price lookup), so the priority stays where it landed.
     { url: `${SITE_URL}/tools/best-basket`, changeFrequency: "weekly", priority: 0.8, lastModified: staticPageDate("/tools/best-basket") },
+    // Rising and Demand stay a step below the free tools: a signed-out visitor,
+    // and so a crawler, sees their locked preview rather than the data.
     { url: `${SITE_URL}/tools/rising`, changeFrequency: "daily", priority: 0.6, lastModified: day },
     { url: `${SITE_URL}/tools/demand`, changeFrequency: "daily", priority: 0.6, lastModified: day },
     { url: `${SITE_URL}/tools/deal-finder`, changeFrequency: "daily", priority: 0.7, lastModified: day },
+    // The price-alerts explainer (2026-09-26): indexable, linked from the rail
+    // and the menu, and the one page answering "riftbound price alert" — but
+    // it was never submitted. An evergreen page, so a hand-kept date.
+    { url: `${SITE_URL}/alerts`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/alerts") },
     { url: `${SITE_URL}/stores/tracked`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/stores/tracked") },
     { url: `${SITE_URL}/stores/suggest`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/stores/suggest") },
     { url: `${SITE_URL}/premium`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/premium") },
@@ -159,22 +173,26 @@ async function core(): Promise<SitemapEntry[]> {
     // player. /stores/consulting/confirmed is deliberately absent — it is a
     // post-payment, noindex page keyed to a Stripe session id.
     { url: `${SITE_URL}/stores/consulting`, changeFrequency: "monthly", priority: 0.5, lastModified: day },
-    { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/higher-lower") },
-    { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/price-check") },
-    { url: `${SITE_URL}/games/zoomed`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/zoomed") },
-    { url: `${SITE_URL}/games/pairs`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/pairs") },
+    { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/higher-lower") },
+    { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/price-check") },
+    { url: `${SITE_URL}/games/zoomed`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/zoomed") },
+    { url: `${SITE_URL}/games/pairs`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/pairs") },
     // The pack simulator is not a minor mini-game any more: it is the page
     // targeting "riftbound pack opening simulator", it carries the sourced pack
     // structure and pull-rate tables, and the incumbent at #1 (riftcore.app)
     // serves an empty SPA shell that canonicalises to its own homepage. Rated
     // like the other flagship tools rather than like Riftle.
     { url: `${SITE_URL}/games/pack-sim`, changeFrequency: "weekly", priority: 0.8, lastModified: staticPageDate("/games/pack-sim") },
-    { url: `${SITE_URL}/games/twenty48`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/twenty48") },
-    { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/card-smash") },
-    { url: `${SITE_URL}/games/card-rain`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/card-rain") },
+    { url: `${SITE_URL}/games/twenty48`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/twenty48") },
+    { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/card-smash") },
+    { url: `${SITE_URL}/games/card-rain`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/card-rain") },
     { url: `${SITE_URL}/games/sealed-bid`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/games/sealed-bid") },
-    { url: `${SITE_URL}/guides`, changeFrequency: "weekly", priority: 0.7, lastModified: latestGuide },
-    { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.7, lastModified: latestBlog },
+    // The editorial hubs, the pages the owner's brief puts first. Each changes
+    // whenever an article in its category is published or updated, and its
+    // lastmod is that newest article, so the date stays honest whatever this
+    // frequency hint says.
+    { url: `${SITE_URL}/guides`, changeFrequency: "daily", priority: 0.8, lastModified: latestGuide },
+    { url: `${SITE_URL}/blog`, changeFrequency: "daily", priority: 0.8, lastModified: latestBlog },
     { url: `${SITE_URL}/community`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/community") },
     // The release calendar. This slot used to be a per-set countdown URL that had
     // to be swapped here every launch (/vendetta-countdown, then
@@ -203,19 +221,25 @@ async function core(): Promise<SitemapEntry[]> {
     // Trust pages. /editorial-policy and /authors carry the "who writes this and
     // how are the prices collected" disclosures a reviewer looks for, so they are
     // submitted rather than left to be discovered from the footer.
-    { url: `${SITE_URL}/editorial-policy`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/editorial-policy") },
-    { url: `${SITE_URL}/methodology`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/methodology") },
+    { url: `${SITE_URL}/editorial-policy`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/editorial-policy") },
+    { url: `${SITE_URL}/methodology`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/methodology") },
     { url: `${SITE_URL}/authors`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/authors") },
-    ...AUTHORS.map((a) => ({
-      url: `${SITE_URL}/authors/${a.slug}`,
-      changeFrequency: "monthly" as const,
-      priority: 0.4,
-      lastModified: latestBlog,
-    })),
-    { url: `${SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.4, lastModified: staticPageDate("/contact") },
+    // Each author page lists only that author's articles (authors/[slug]), so its
+    // lastmod is the newest of THEM — guides included — not the newest blog post
+    // by anyone, which moved /authors/bill whenever another byline published.
+    ...AUTHORS.map((a) => {
+      const own = articles.filter((x) => x.author === a.name).map(dateOf);
+      return {
+        url: `${SITE_URL}/authors/${a.slug}`,
+        changeFrequency: "monthly" as const,
+        priority: 0.4,
+        lastModified: own.length ? new Date(Math.max(...own)) : staticPageDate("/authors"),
+      };
+    }),
+    { url: `${SITE_URL}/contact`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/contact") },
     { url: `${SITE_URL}/support`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/support") },
-    { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/privacy") },
-    { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/terms") },
+    { url: `${SITE_URL}/privacy`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/privacy") },
+    { url: `${SITE_URL}/terms`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/terms") },
   ];
 }
 
@@ -521,10 +545,15 @@ async function content(): Promise<SitemapEntry[]> {
   // list can never regrow — and the read-side was removed with the Index too, so
   // the ~130 legacy rows are no longer served at all (their URLs 404). The rows
   // themselves are left dormant in the database.
+  //
+  // 0.7 since 2026-09-26: the writing is what the site's editorial case rests
+  // on, so it ranks with the tools rather than with facet pages. Still
+  // "monthly": most articles are never edited after publication, and their
+  // lastmod (`updated ?? date`) says so.
   const articles = getArticles().map((a) => ({
     url: `${SITE_URL}/${a.category === "guide" ? "guides" : "blog"}/${a.slug}`,
     changeFrequency: "monthly" as const,
-    priority: 0.6,
+    priority: 0.7,
     lastModified: new Date(`${a.updated ?? a.date}T09:00:00+10:00`),
   }));
   return [...articles, ...(await deckEntries())];
@@ -532,8 +561,12 @@ async function content(): Promise<SitemapEntry[]> {
 
 // The public deck library (2026-09-26): /decks, every live published deck, and
 // each legend page that has at least one (an empty legend page is noindexed).
-// One narrow select; its own fence so a deck-table problem never empties the
-// articles above.
+// /decks itself only once a deck is live: an empty library is noindexed too
+// (decks/page.tsx, the same status: "live" read), and a submitted URL that
+// answers noindex is Search Console's "Submitted URL marked 'noindex'". The
+// count is this select's own result, so the gate costs no query. One narrow
+// select; its own fence so a deck-table problem never empties the articles
+// above.
 async function deckEntries(): Promise<SitemapEntry[]> {
   try {
     const decks = await prisma.publishedDeck.findMany({
@@ -543,10 +576,11 @@ async function deckEntries(): Promise<SitemapEntry[]> {
       select: { slug: true, legendSlug: true, createdAt: true },
     });
     const newest = decks[0]?.createdAt;
+    if (!newest) return [];
     const legends = new Map<string, Date>();
     for (const d of decks) if (!legends.has(d.legendSlug)) legends.set(d.legendSlug, d.createdAt);
     return [
-      { url: `${SITE_URL}/decks`, changeFrequency: "daily" as const, priority: 0.7, ...(newest ? { lastModified: newest } : {}) },
+      { url: `${SITE_URL}/decks`, changeFrequency: "daily" as const, priority: 0.7, lastModified: newest },
       ...[...legends].map(([slug, at]) => ({ url: `${SITE_URL}/decks/legend/${slug}`, changeFrequency: "weekly" as const, priority: 0.5, lastModified: at })),
       ...decks.map((d) => ({ url: `${SITE_URL}/decks/${d.slug}`, changeFrequency: "weekly" as const, priority: 0.5, lastModified: d.createdAt })),
     ];

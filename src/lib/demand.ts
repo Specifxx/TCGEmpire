@@ -29,6 +29,7 @@ import { prisma } from "./db";
 import { CONTENT_TAG } from "./revalidate-content";
 import { sydneyDayKey } from "./price-history";
 import { getDemandWindowOrThrow } from "./demand-snapshot";
+import { chartMovement, compareDemand, type Movement } from "./demand-movement";
 import { FREE_DEMAND_ROWS, PREMIUM_DEMAND_ROWS, type DemandWindowDays } from "./demand-view";
 
 // The windows, and the free and Premium list sizes, live in lib/demand-view.ts
@@ -69,6 +70,10 @@ export interface DemandPick {
   card: DemandCard;
   searches: number; // searches inside the window
   views: number; // card-page views inside the window
+  // Rank movement on THIS pick's list against the equal-length period before
+  // the window (lib/demand-movement.ts). null when snapshots don't reach back
+  // that far; absent on an entry cached before 2026-09-28.
+  move?: Movement | null;
 }
 
 export interface DemandResult {
@@ -80,6 +85,9 @@ export interface DemandResult {
   // The read FAILED (getTopDemand's catch), as opposed to a window that is
   // simply too short. Nothing was cached; the caller renders without a list.
   failed?: boolean;
+  // The period the movement compares with, as ISO dates (unstable_cache
+  // serialises its value, so no Date objects here). null = none available.
+  previous?: { startDay: string; endDay: string; coveredDays: number } | null;
 }
 
 function fetchTiles(ids: string[]) {
@@ -95,7 +103,7 @@ function fetchTiles(ids: string[]) {
 // the /movers strip and Demand Finder empty for the day.
 async function computeTopDemand(days: DemandWindowDays, limit: number): Promise<DemandResult> {
   try {
-    const win = await getDemandWindowOrThrow(days);
+    const win = await getDemandWindowOrThrow(days, { previous: true });
     const usable = win.baselineDay != null && win.rows.length > 0;
     // No snapshot reaches back that far: nothing is ranked or hydrated. (The
     // all-time fallback the old Demand Finder showed here is gone for good —
@@ -105,32 +113,53 @@ async function computeTopDemand(days: DemandWindowDays, limit: number): Promise<
     // A window row exists for any card with a search OR a view, so each list
     // keeps only cards with its own metric — "most searched" never lists a
     // card nobody searched for, nor "most viewed" one nobody opened.
-    const bySearchIds = win.rows.filter((r) => r.searches > 0).sort((a, b) => b.searches - a.searches || b.views - a.views).slice(0, limit).map((r) => r.cardId);
-    const byViewIds = win.rows.filter((r) => r.views > 0).sort((a, b) => b.views - a.views || b.searches - a.searches).slice(0, limit).map((r) => r.cardId);
+    //
+    // compareDemand is the one ordering the previous period is ranked by too,
+    // so the movement compares like with like (ties fall to card id).
+    const bySearchIds = win.rows.filter((r) => r.searches > 0).sort(compareDemand("searches")).slice(0, limit).map((r) => r.cardId);
+    const byViewIds = win.rows.filter((r) => r.views > 0).sort(compareDemand("views")).slice(0, limit).map((r) => r.cardId);
+    const prev = win.previous ?? null;
+    const searchMoves = prev ? chartMovement(bySearchIds, prev.rows, "searches") : null;
+    const viewMoves = prev ? chartMovement(byViewIds, prev.rows, "views") : null;
+    const previous = prev
+      ? { startDay: prev.startDay.toISOString(), endDay: prev.endDay.toISOString(), coveredDays: prev.coveredDays }
+      : null;
     // ONE narrow tile read for the union of the two ranked lists (at most
     // 2 × SCAN_LIMIT ids), never for every card the window returned.
     const unionIds = [...new Set([...bySearchIds, ...byViewIds])];
-    if (!unionIds.length) return { bySearch: [], byView: [], windowUsable: true, coveredDays: win.coveredDays, totalDays: win.totalDays };
+    if (!unionIds.length) return { bySearch: [], byView: [], windowUsable: true, coveredDays: win.coveredDays, totalDays: win.totalDays, previous };
 
     const cards = await fetchTiles(unionIds);
     const byId = new Map(cards.map((c) => [c.id, c]));
     const winById = new Map(win.rows.map((r) => [r.cardId, r]));
-    const build = (ids: string[]): DemandPick[] =>
+    const build = (ids: string[], moves: Map<string, Movement> | null): DemandPick[] =>
       ids
         .map((id) => {
           const c = byId.get(id);
           const w = winById.get(id);
-          return c && w ? { card: c, searches: w.searches, views: w.views } : null;
+          const pick: DemandPick | null = c && w ? { card: c, searches: w.searches, views: w.views, move: moves?.get(id) ?? null } : null;
+          return pick;
         })
         .filter((p): p is DemandPick => !!p);
 
-    return { bySearch: build(bySearchIds), byView: build(byViewIds), windowUsable: true, coveredDays: win.coveredDays, totalDays: win.totalDays };
+    return {
+      bySearch: build(bySearchIds, searchMoves),
+      byView: build(byViewIds, viewMoves),
+      windowUsable: true,
+      coveredDays: win.coveredDays,
+      totalDays: win.totalDays,
+      previous,
+    };
   } catch (err) {
     console.error(`[demand] computeTopDemand(${days}) failed — not caching it:`, err);
     throw err;
   }
 }
 
+// v4 (2026-09-28): picks carry `move` and the result `previous` — the rank
+// movement against the period before the window. It costs one more day of
+// snapshot rows per recompute, once a day per window.
+//
 // DAY-scoped + CONTENT_TAG: cheap enough to recompute daily, and the
 // twice-daily price import's revalidation (which also snapshots demand) keeps
 // it from going stale for longer than that. One entry per window, not per
@@ -144,7 +173,7 @@ async function computeTopDemand(days: DemandWindowDays, limit: number): Promise<
 function getTopDemandCached(days: DemandWindowDays): Promise<DemandResult> {
   return unstable_cache(
     () => computeTopDemand(days, SCAN_LIMIT),
-    ["rc-demand-v3", String(days), sydneyDayKey()],
+    ["rc-demand-v4", String(days), sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   )();
 }
@@ -168,6 +197,7 @@ export async function getTopDemand(days: DemandWindowDays, limit = FREE_DEMAND_R
       windowUsable: full.windowUsable,
       coveredDays: full.coveredDays,
       totalDays: full.totalDays,
+      previous: full.previous ?? null,
     };
   } catch {
     // Logged in computeTopDemand; nothing was cached.

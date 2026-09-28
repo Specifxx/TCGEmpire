@@ -24,7 +24,11 @@ import { cardImageAlt } from "@/lib/image-alt";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { PremiumButton } from "@/components/PremiumButton";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { cardThumbProps } from "@/lib/card-image-url";
+import { MoveBadge } from "@/components/MoveBadge";
 
 // Reads the viewer's session, so it renders per request. The ranking itself is
 // one self-cached, day-keyed loader (lib/demand.ts getTopDemand), called here
@@ -73,6 +77,7 @@ function DemandRow({
   rank,
   list,
   showViews,
+  showMove,
   country,
   currency,
 }: {
@@ -80,6 +85,7 @@ function DemandRow({
   rank: number;
   list: DemandList;
   showViews: boolean;
+  showMove: boolean;
   country: Country;
   currency: string;
 }) {
@@ -87,6 +93,11 @@ function DemandRow({
   return (
     <tr className="hover:bg-ink-800">
       <td className="num px-3 py-2 text-slate-500">{rank}</td>
+      {showMove && (
+        <td className="px-1 py-2">
+          <MoveBadge move={p.move} newTitle={`No ${list === "viewed" ? "views" : "searches"} in the previous period`} />
+        </td>
+      )}
       <td className="px-3 py-2">
         <Link href={cardHref(p.card)} prefetch={false} className="flex items-center gap-2.5">
           <span className="h-10 w-7 shrink-0 overflow-hidden rounded-sm bg-ink-900">
@@ -137,6 +148,11 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
   const rows = visibleDemandRows(result, access, list);
   const showViews = access === "full";
   const covered = result.coveredDays && result.coveredDays > 0 ? result.coveredDays : days;
+  // Rank movement against the equal-length period before the window, when the
+  // daily snapshots reach back that far (lib/demand.ts, 2026-09-28).
+  const previous = result.previous ?? null;
+  const showMove = !!previous;
+  const dayFmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -165,12 +181,10 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
             </div>
           )}
         </div>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          The Riftbound cards RiftCompare visitors are{" "}
-          <strong className="text-slate-200">searching for and opening</strong>. Searches count a card picked from the
-          search box; views count a card page opened. Counted worldwide, once per browser per card per day. Prices are{" "}
-          {info.adjective} store prices.
-        </p>
+        {/* What is counted, how, and over which window (2026-09-26, "Blog and
+            tools, joined up"): lib/content/hub-intros.ts, in place of a
+            one-paragraph lede. Above the Premium split, for every visitor. */}
+        <HubIntro path="/tools/demand" />
         {access === "full" && (
           <div className="mt-3 flex gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1 sm:inline-flex">
             {(["searched", "viewed"] as const).map((l) => (
@@ -220,6 +234,11 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
             <thead>
               <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
                 <th className="px-3 py-2.5 font-semibold">#</th>
+                {showMove && (
+                  <th className="px-1 py-2.5 font-semibold" title="Rank movement against the previous period">
+                    Move
+                  </th>
+                )}
                 <th className="px-3 py-2.5 font-semibold">Card</th>
                 <th className="px-2 py-2.5 text-right font-semibold">Searches</th>
                 {showViews && <th className="px-2 py-2.5 text-right font-semibold">Views</th>}
@@ -228,13 +247,24 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
             </thead>
             <tbody className="divide-y divide-ink-800">
               {rows.map((p, i) => (
-                <DemandRow key={p.card.id} p={p} rank={i + 1} list={list} showViews={showViews} country={country} currency={info.currency} />
+                <DemandRow key={p.card.id} p={p} rank={i + 1} list={list} showViews={showViews} showMove={showMove} country={country} currency={info.currency} />
               ))}
             </tbody>
           </table>
           <p className="p-3 text-[11px] leading-relaxed text-slate-600">
             {showViews ? "Searches and views" : "Searches"} in the last {covered} {covered === 1 ? "day" : "days"}. What
             players are looking at, not a price forecast. Check a card&apos;s own price history before you buy.
+            {previous ? (
+              <>
+                {" "}
+                <span className="text-emerald-400">▲</span>/<span className="text-rose-400">▼</span> compare each card&apos;s
+                place with the {previous.coveredDays} days before ({dayFmt.format(new Date(previous.startDay))} to{" "}
+                {dayFmt.format(new Date(previous.endDay))}); <span className="font-semibold text-amber-300">NEW</span> means
+                none in that period.
+              </>
+            ) : (
+              " Rank movement appears once the daily snapshots reach back two windows."
+            )}
           </p>
         </div>
       )}
@@ -264,6 +294,10 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
           </div>
         </div>
       )}
+
+      {/* The guides behind the counts, after the table and outside the Premium
+          split, so every visitor gets them. */}
+      <RelatedGuides guides={guidesForTool("/tools/demand")} className="card-surface mt-8 p-5" />
 
       <section className="mt-10">
         <h2 className="mb-3 text-xl font-extrabold text-white">How Demand Finder works</h2>

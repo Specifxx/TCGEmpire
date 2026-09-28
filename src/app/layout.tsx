@@ -113,11 +113,11 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "RiftCompare — Riftbound Card Database & Price Comparison",
+    default: "RiftCompare — Riftbound Price Comparison Engine & Card Database",
     template: "%s — RiftCompare",
   },
   description:
-    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, the US, the UK, Singapore, Canada and the EU to find the cheapest place to buy.",
+    "Compare Riftbound card prices across stores in the US, Australia, the UK, Singapore, Canada and the EU, plus eBay — cheapest first, in your currency.",
   applicationName: SITE_NAME,
   // NO `keywords` meta. Google has ignored it since 2009 and Bing treats stuffing
   // it as a negative signal; it only ever advertised our target terms to
@@ -139,9 +139,9 @@ export const metadata: Metadata = {
     type: "website",
     siteName: SITE_NAME,
     url: SITE_URL,
-    title: "RiftCompare — Riftbound Card Database & Price Comparison",
+    title: "RiftCompare — Riftbound Price Comparison Engine & Card Database",
     description:
-      "Compare live Riftbound TCG card prices across stores in Australia, the US, the UK, Singapore, Canada and the EU to find the cheapest place to buy.",
+      "Compare Riftbound card and sealed prices across stores in six markets, then find the cheapest delivered basket with shipping measured at each store's checkout.",
   },
   twitter: { card: "summary_large_image" },
   // Opt into large image thumbnails + full text snippets in Google/Bing results
@@ -203,6 +203,10 @@ const orgJsonLd = {
       alternateName: ["Rift Compare", "RiftCompare.com"],
       url: SITE_URL,
       logo: `${SITE_URL}/icon-512.png`,
+      // The site's founder, who builds and runs it (owner, 2026-09-26). The same
+      // node /authors/bill and /about describe, by @id, so bylines, the about
+      // page and this organisation resolve to one person.
+      founder: { "@type": "Person", "@id": `${SITE_URL}/authors/bill#author`, name: "Bill", url: `${SITE_URL}/authors/bill` },
       // Linked profiles — entity signals tying the org to its community presence.
       // ADD real profile URLs here as they exist (YouTube, Reddit) and a Wikidata
       // item once created; each `sameAs` strengthens entity disambiguation for AI
@@ -213,8 +217,10 @@ const orgJsonLd = {
       knowsAbout: [
         "Riftbound",
         "Riftbound: League of Legends TCG",
+        "Riftbound price comparison",
         "Trading card game prices",
         "Trading card price comparison",
+        "Trading card shipping costs",
         "The RiftCompare Index",
         "Sealed trading card products",
       ],
@@ -242,7 +248,7 @@ const orgJsonLd = {
         availableLanguage: "English",
       },
       description:
-        "Riftbound: League of Legends TCG card database and live price-comparison across the United States, Australia, the United Kingdom, Singapore, Canada and the EU, home of the RiftCompare Index.",
+        "RiftCompare is a Riftbound price comparison engine: it compares live Riftbound: League of Legends TCG single-card and sealed-product prices across stores in the United States, Australia, the United Kingdom, Singapore, Canada and the EU, shows delivered cost, prices whole card lists at the cheapest delivered total using shipping measured at each store's checkout, and is home of the RiftCompare Index.",
     },
     {
       "@type": "WebSite",
@@ -250,6 +256,12 @@ const orgJsonLd = {
       url: SITE_URL,
       name: SITE_NAME,
       alternateName: ["Rift Compare", "RiftCompare.com"],
+      // What the site IS, in the words people search it with ("compare
+      // riftbound card prices", "riftbound price comparison"). The homepage's
+      // WebApplication node (app/page.tsx, @id /#app) spells out the features.
+      description:
+        "Riftbound price comparison: compare live prices for Riftbound single cards and sealed products across stores and eBay in six markets, cheapest first, with delivered cost shown where the store publishes its postage.",
+      inLanguage: "en",
       publisher: { "@id": `${SITE_URL}/#org` },
       potentialAction: {
         "@type": "SearchAction",
@@ -407,9 +419,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </SealedQuickViewProvider>
           </QuickViewProvider>
         {/* Site-wide affiliate banners above the footer — BOTH live partners
-            (TCGplayer Impact + eBay Partner Network) on every page, so no page
-            is left unmonetised. Both are CPC/affiliate: they pay on click-through
-            purchases, so placement-where-relevant beats raw banner count.
+            (TCGplayer Impact + eBay Partner Network) on every page except the
+            policy and trust pages, which carry none (FooterAds'
+            BANNER_FREE_ROUTES, owner decision 2026-09-26). Both are
+            CPC/affiliate: they pay on click-through purchases, so
+            placement-where-relevant beats raw banner count.
             FooterAds reads the market from the client country context (inside
             CountryProvider) so the layout stays cookie-free and cacheable.
             SideNav is `position: fixed` and spans the FULL page height (it
@@ -453,14 +467,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "Methodology ·", one read "· Facebook · Privacy settings ·", it
               happened at 640 and 1440 too, and screen readers announced each
               one as "middle dot". sm:gap-x-6 keeps the desktop rhythm. */}
+          {/* THE ROW THAT IS ALWAYS VISIBLE (2026-09-26, "Blog and tools,
+              joined up" in DECISIONS.md). The site map above is closed on "/"
+              and on phones, so until now a homepage visitor or anyone on a
+              phone saw no Home, Blog, Guides or Tools link down here at all.
+              The owner's brief names them, with About us, the editorial policy
+              and methodology, privacy and terms, so all of them sit here in
+              the order a reader scans: where to go, who we are, the small
+              print. ~1 KB of anchors, against ~26 KB for a second copy of the
+              site map (DECISIONS.md, "Card pages slimmed: one footer site
+              map", 2026-09-25). */}
           <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm sm:gap-x-6">
-            <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About</Link>
-            <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
-            <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
-            <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms</Link>
+            <Link href="/" className="tap-link text-slate-300 hover:text-brand-400">Home</Link>
+            <Link href="/blog" className="tap-link text-slate-300 hover:text-brand-400">Blog</Link>
+            <Link href="/guides" className="tap-link text-slate-300 hover:text-brand-400">Guides</Link>
+            <Link href="/tools" className="tap-link text-slate-300 hover:text-brand-400">Tools</Link>
+            <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About us</Link>
             <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>
             <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
+            <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
+            <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
+            <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms of service</Link>
             {/* Discord was header-only (see Navbar.tsx) plus the Organization
                 JSON-LD's sameAs below — the homepage-redesign brief's footer
                 table explicitly lists it as something the footer itself must

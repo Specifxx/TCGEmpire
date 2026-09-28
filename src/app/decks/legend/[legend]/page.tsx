@@ -3,9 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { RelatedGuides } from "@/components/RelatedGuides";
 import { DeckLibrary, type LibraryDeck } from "@/components/decks/DeckLibrary";
 import { championBySlug, championCardWhere } from "@/lib/champions";
 import { currentTotals, liveDecks } from "@/lib/published-decks-server";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { SITE_URL } from "@/lib/site";
 
 // Legend landing pages (2026-09-26): every published deck for one champion's
@@ -93,6 +95,9 @@ export default async function LegendDecksPage({ params }: { params: { legend: st
           <DeckLibrary decks={rows} legends={[]} domains={[...new Set(rows.flatMap((d) => d.domains))].sort()} />
         </div>
       )}
+      {/* The library's guides, after the decks: a legend page reuses /decks'
+          entry (2026-09-26, "Blog and tools, joined up"). */}
+      <RelatedGuides guides={guidesForTool("/decks")} className="card-surface mt-8 p-5" />
     </div>
   );
 }

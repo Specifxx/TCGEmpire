@@ -6,6 +6,8 @@ import { buildCardWhere } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { TYPE_FACETS, typeFacetBySlug, FACET_THIN_THRESHOLD } from "@/lib/facets";
 import { FacetPageBody } from "@/components/FacetPageBody";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
@@ -49,5 +51,5 @@ export async function generateMetadata({ params }: { params: { type: string } })
 export default async function CardTypeFacetPage({ params }: { params: { type: string } }) {
   const facet = typeFacetBySlug(params.type);
   if (!facet) notFound();
-  return <FacetPageBody facet={facet} dimensionLabel="card type" crumbLabel="Type" crumbHref="/cards/type" siblings={TYPE_FACETS} collectionKind="type" />;
+  return <FacetPageBody facet={facet} dimensionLabel="card type" crumbLabel="Type" crumbHref="/cards/type" siblings={TYPE_FACETS} collectionKind="type" related={<RelatedGuides guides={guidesForTool("/deck")} className="card-surface p-5" />} />;
 }

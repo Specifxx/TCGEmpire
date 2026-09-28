@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 
+// "Order problem" and "Selling on RiftCompare" belonged to the marketplace,
+// removed 2026-08-26; nothing can be ordered or sold here now, so the form no
+// longer offers them. An old link carrying ?category=ORDER falls back to
+// "Something else" below, and api/support still accepts both keys (2026-09-26).
 const CATEGORIES: { key: string; label: string }[] = [
-  { key: "ORDER", label: "Order problem" },
   { key: "PAYMENT", label: "Payment / billing" },
   { key: "ACCOUNT", label: "Account" },
-  { key: "SELLER", label: "Selling on RiftCompare" },
   { key: "OTHER", label: "Something else" },
 ];
 

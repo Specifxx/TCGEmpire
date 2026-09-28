@@ -6,15 +6,12 @@ import { ReviewsSection } from "@/components/ReviewsSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { AccountStrip } from "@/components/home/AccountStrip";
 import { WelcomeBack } from "@/components/home/WelcomeBack";
-import { RecentlyViewedRail } from "@/components/home/RecentlyViewedRail";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
-import { LatestPosts } from "@/components/home/LatestPosts";
 import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { SETS, newestReleasedSet, nextUpcomingSet } from "@/lib/constants";
 import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
-import { getArticles } from "@/lib/articles";
 import type { Country } from "@/lib/country";
 import type { TopDeals } from "@/lib/top-deals";
 import type { PriceMovers } from "@/lib/price-history";
@@ -107,45 +104,20 @@ export function HomeSections({
   // were the site's #2 and #5 Search Console queries and the homepage linked
   // neither — the front door had no path to the page those searchers wanted.
   const spoilersHref = nextSet ? spoilersHrefForSet(nextSet.code) : null;
-  // Two teaser rows: news/analysis/opinion from the blog, then the evergreen,
-  // reference-shaped guides underneath. Same data everywhere this renders,
-  // since it's the same in-memory list on every market.
-  const latestBlogPosts = getArticles("blog").slice(0, 3);
-  const latestGuides = getArticles("guide").slice(0, 3);
   const showNextSetCard = nextSet != null;
-  const showLatestBlogPosts = latestBlogPosts.length > 0;
-  const showLatestGuides = latestGuides.length > 0;
 
   return (
     <>
-      {/* Recently viewed — first thing on the page, moved up from the very
-          bottom (2026-09-19, owner request).
-
-          It reads localStorage through useSyncExternalStore, so it renders
-          NOTHING on the server and NOTHING for a first-ever visitor. That is
-          what makes the top of the page the right home for it rather than a
-          contested slot: a new visitor, a crawler and the prerendered HTML all
-          see exactly the page they saw before, now led by Today's Top Deals
-          (the owner-chosen top content slot, 2026-09-21 — see below and
-          tests/game-before-money.test.ts). The only person it appears for is
-          someone coming back, and for them "the cards you were just looking at"
-          is the most useful thing on the page — which is the entire argument
-          for putting it above the fold instead of eleven sections down, where
-          returning visitors were the one group who had to scroll past
-          everything to reach the one row addressed to them.
-
-          The cost, stated rather than discovered later: a returning visitor
-          gets one layout shift of about a chip-row's height shortly after
-          hydration, where before it happened off-screen. It cannot be reserved
-          — the height is only knowable once localStorage has been read, and
-          reserving it unconditionally would punch a gap into every first-time
-          visit to avoid a shift only returning visitors ever see. */}
-      <RecentlyViewedRail />
+      {/* Recently viewed WAS the first thing here (2026-09-19 to 2026-09-28).
+          Removed from the homepage on the owner's instruction ("get rid of
+          recently viewed from the homepage"). It stays where it is useful
+          elsewhere: the search box's empty state and the card page. */}
 
       {/* Today's Top Deals — THE TOP CONTENT SLOT as of 2026-09-21, owner's
           explicit instruction ("put today's top deals at the very top just
-          under recently viewed"), directly beneath the Recently viewed rail
-          above.
+          under recently viewed"). The first section here; it follows the
+          hero, the editorial band and the price table, which render above
+          this component (2026-09-28 order: see page.tsx).
 
           THIS COMPLETES THE REVERSAL of the 2026-09-16 "game before money"
           pass, and is flagged rather than buried. That pass moved the playable
@@ -217,7 +189,9 @@ export function HomeSections({
 
           They remain the site's best "come back tomorrow" mechanics that
           aren't the price data itself, and they still sit ahead of the
-          explainer, the set/domain grid and the whole editorial run below. */}
+          explainer and the set/domain grid below. The editorial run no longer
+          follows them: since 2026-09-26 it is the band above this component,
+          under the price table (owner decision; see EditorialHub.tsx). */}
       {/* Three across only from 1440 (2026-09-23): beside the 17rem rail the
           three cards were 224px at 1024 and ~300px at 1280, leaving their text
           columns 16-110px wide next to the shrink-0 CTA, one word per line and
@@ -324,39 +298,17 @@ export function HomeSections({
         </Reveal>
       )}
 
-      {/* Latest from the blog, then guides right underneath — fresh internal
-          links + fresh content near the bottom of the page for crawl
-          frequency and long-tail discovery. Each hides itself independently
-          if its category has no posts (shouldn't happen, but no fake
-          placeholders either way), so one running dry never leaves a gap
-          where the other should be. */}
-      {showLatestBlogPosts && (
-        <Reveal>
-          <LatestPosts
-            posts={latestBlogPosts}
-            heading="Latest from the blog"
-            subhead="News, analysis and opinion on Riftbound and the wider TCG market."
-            seeAllHref="/blog"
-            seeAllLabel="See all posts"
-          />
-        </Reveal>
-      )}
-      {showLatestGuides && (
-        <Reveal>
-          <LatestPosts
-            posts={latestGuides}
-            heading="Guides & explainers"
-            subhead="How Riftbound cards, sets and prices actually work."
-            seeAllHref="/guides"
-            seeAllLabel="See all guides"
-          />
-        </Reveal>
-      )}
+      {/* REMOVED 2026-09-26: the "Latest from the blog" and "Guides &
+          explainers" rows that sat here, about nine phone screens down. They
+          are replaced, not duplicated, by the editorial band (EditorialHub)
+          that the owner placed above this whole component, directly under the
+          price table — see its header and "Blog and tools, joined up" in
+          DECISIONS.md. */}
 
       {/* Community directory teaser — RiftCompare isn't the only Riftbound site
           worth knowing about; this points at /community's curated, unpaid
-          directory of news, wikis, deck builders, tier lists and video. Same
-          "further reading" slot as the blog/guides rows just above. */}
+          directory of news, wikis, deck builders, tier lists and video: the
+          "further reading" that follows our own writing in the band above. */}
       <Reveal>
         <CommunityTeaser />
       </Reveal>

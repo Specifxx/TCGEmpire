@@ -6,6 +6,8 @@ import { buildCardWhere } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { RARITY_FACETS, rarityFacetBySlug, FACET_THIN_THRESHOLD } from "@/lib/facets";
 import { FacetPageBody } from "@/components/FacetPageBody";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
@@ -47,5 +49,5 @@ export async function generateMetadata({ params }: { params: { rarity: string } 
 export default async function CardRarityFacetPage({ params }: { params: { rarity: string } }) {
   const facet = rarityFacetBySlug(params.rarity);
   if (!facet) notFound();
-  return <FacetPageBody facet={facet} dimensionLabel="rarity" crumbLabel="Rarity" crumbHref="/cards/rarity" siblings={RARITY_FACETS} collectionKind="rarity" />;
+  return <FacetPageBody facet={facet} dimensionLabel="rarity" crumbLabel="Rarity" crumbHref="/cards/rarity" siblings={RARITY_FACETS} collectionKind="rarity" related={<RelatedGuides guides={guidesForTool("/cards/rarity")} className="card-surface p-5" />} />;
 }

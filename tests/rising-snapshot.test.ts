@@ -351,6 +351,13 @@ test("the OG-safe image helper returns a format satori can actually decode", () 
     cardImageForOg({ imageThumbUrl: "https://riftcompare.com/radiance-spoilers/neeko-blending-in.jpg" }),
     "https://riftcompare.com/radiance-spoilers/neeko-blending-in.jpg",
   );
+  // Riot's official gallery art carries a query string. Astral Heron (VEN 044)
+  // led the 2026-09-28 snapshot and unfurled with an empty #1 slot because the
+  // extension test read `.png?accountingTag=RB` as not-a-PNG.
+  const official =
+    "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/b1ce87efc9a1a7e2438c53e034a7f92caaa67ed6-744x1039.png?accountingTag=RB";
+  assert.equal(cardImageForOg({ imageThumbUrl: official }), official);
+  assert.equal(cardImageForOg({ imageThumbUrl: "https://example.com/art.webp?x=1.png" }), null);
   // Nothing it can vouch for → null, so the caller draws a placeholder rather
   // than an invisible broken image.
   assert.equal(cardImageForOg({ imageThumbUrl: null }), null);

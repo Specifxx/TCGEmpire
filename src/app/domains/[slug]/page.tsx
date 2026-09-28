@@ -12,6 +12,8 @@ import { getSiteMedianCents } from "@/lib/content/site-median";
 import { DOMAIN_PAGES, domainBySlug } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 
 // AU baseline server render (country-neutral copy); card tiles localise the price
 // client-side from the per-market price columns, like the set pages.
@@ -145,7 +147,7 @@ export default async function DomainPage({ params }: { params: { slug: string } 
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           {cards.length > 0 ? (
-            <>Browse all {cards.length} Riftbound <strong className="text-slate-200">{domain.label}</strong> cards and compare live prices across stores to find the cheapest singles. {priced.toLocaleString()} are priced right now, updated daily — switch your country at the top to see local prices.</>
+            <>Browse all {cards.length} Riftbound <strong className="text-slate-200">{domain.label}</strong> cards and compare live prices across stores to find the cheapest singles. {priced.toLocaleString()} are priced right now, updated twice a day — switch your country at the top to see local prices.</>
           ) : (
             <>We&apos;re tracking the Riftbound <strong className="text-slate-200">{domain.label}</strong> domain — {domain.label} cards with live prices will appear here as they release.</>
           )}
@@ -196,7 +198,8 @@ export default async function DomainPage({ params }: { params: { slug: string } 
         <h2 className="text-xl font-extrabold text-white">About the {domain.label} domain</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">{domain.lore}</p>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Click any card above to see every store&apos;s price ranked by total delivered cost, or
+          Click any card above for every store&apos;s price in your market, cheapest first by item price, with
+          the delivered total shown where the store publishes its postage — or
           {" "}
           <Link href={`/browse?domain=${domain.key}`} className="text-brand-400 hover:underline">
             filter the full database by the {domain.label} domain
@@ -204,6 +207,10 @@ export default async function DomainPage({ params }: { params: { slug: string } 
           .
         </p>
       </section>
+
+      {/* The guides behind domain hubs (lib/content/tool-guides.ts, keyed on the
+          parent /domains route), after the page's own cards and copy. */}
+      <RelatedGuides guides={guidesForTool("/domains")} className="card-surface p-5" />
     </div>
   );
 }

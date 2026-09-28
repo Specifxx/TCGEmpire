@@ -16,7 +16,10 @@
 //      but the corrupted value is already baked into production data — and
 //      was, until the meta decks were removed on 2026-09-12, in
 //      prisma/meta-decks.json's `legend` field too — so the alias below must
-//      stay regardless).
+//      stay regardless). The PRODUCTION source was scripts/sync-cards.ts, which
+//      carried its own unpatched copy and re-wrote the name on every sync; both
+//      now use lib/legend-name.ts, and scripts/fix-card-names.ts corrects the
+//      stored rows (2026-09-27). Keep the alias until that script has run.
 //
 // So: an explicit allowlist, an alias map, and per-champion name prefixes. Every
 // name below was observed in the actual card data — none is added from general

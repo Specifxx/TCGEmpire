@@ -13,6 +13,9 @@ import { SealedFilters } from "@/components/SealedFilters";
 import { SealedSort } from "@/components/SealedSort";
 import { SealedTile } from "@/components/SealedTile";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 
@@ -80,8 +83,11 @@ export async function generateMetadata({ searchParams }: { searchParams: SealedP
     title: q
       ? `${q} — Riftbound sealed products`
       : "Riftbound Sealed Prices — Boxes, Packs & Sets",
+    // Market-neutral since 2026-09-26: it named four markets (sealed is read
+    // wherever we track stores) and said "daily" of an import that runs twice a
+    // day (.github/workflows/refresh-prices.yml).
     description:
-      "Compare live prices on Riftbound booster boxes, packs, bundles & Proving Grounds across AU, US, UK & SG stores — find the cheapest sealed. Updated daily.",
+      "Compare prices on Riftbound booster boxes, packs, bundles & Proving Grounds across the stores we track in your market, with an at-MSRP flag — find the cheapest sealed. Updated twice a day.",
     alternates: pageAlternates("/sealed"),
     robots: isFilteredParams(searchParams) ? { index: false, follow: true } : undefined,
   };
@@ -115,6 +121,12 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
   const atMsrpOnly = one(searchParams.atmsrp) === "1";
   const sort = one(searchParams.sort);
   const isFiltered = isFilteredParams(searchParams);
+  // The newest released set, read from SETS (2026-09-26, "Blog and tools,
+  // joined up" in DECISIONS.md). The default order floats its sealed to the
+  // top and the callout below names it. Both said "Vendetta" in code — the
+  // callout still announced "Vendetta sealed is here" two months on — and code
+  // stays set-agnostic: a new set is a data row, not an edit here.
+  const newest = newestReleasedSet();
 
   // Facet options — only the product types / sets that actually exist in the feed.
   const typeOptions = [...new Set(all.map((g) => g.productType))].sort((a, b) => a.localeCompare(b));
@@ -146,13 +158,13 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
     // like "just added" the way it would if missing sorted as epoch-0 descending.
     groups = [...groups].sort((a, b) => (b.firstSeenAt?.getTime() ?? -1) - (a.firstSeenAt?.getTime() ?? -1));
   else
-    // Default: float the freshly-live Vendetta (VEN) sealed to the top via a stable
+    // Default: float the newest released set's sealed to the top via a stable
     // sort, leaving every other group in its (already-filtered) order.
     groups = groups
       .map((g, i) => [g, i] as const)
       .sort((a, b) => {
-        const av = a[0].setCode === "VEN" ? 0 : 1;
-        const bv = b[0].setCode === "VEN" ? 0 : 1;
+        const av = newest && a[0].setCode === newest.code ? 0 : 1;
+        const bv = newest && b[0].setCode === newest.code ? 0 : 1;
         return av - bv || a[1] - b[1];
       })
       .map(([g]) => g);
@@ -164,9 +176,9 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
   // history, unlike the Rising Sealed trend it replaces.
   const soldOutKeys = new Set(all.filter((g) => soldOutEverywhere(g.listings)).map((g) => g.groupKey));
 
-  // Show the "Vendetta is here" callout only on the unfiltered view, and only when
-  // Vendetta sealed actually exists in the feed.
-  const hasVendetta = !isFiltered && all.some((g) => g.setCode === "VEN");
+  // The newest-set callout shows only on the unfiltered view, and only when
+  // that set's sealed actually exists in the feed.
+  const featuredSet = !isFiltered && newest && all.some((g) => g.setCode === newest.code) ? newest : null;
 
   // Structured data: BreadcrumbList (mirrors the visible nav) + an ItemList of the
   // rendered groups. Google requires a Product to carry "offers", "review", or
@@ -247,15 +259,18 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
       <section className="card-surface animate-fade-up mb-5 overflow-hidden border-l-2 border-brand-500 bg-ink-900">
         <div className="px-6 py-8">
           <h1 className="text-2xl font-extrabold text-white">Sealed Products</h1>
-          <p className="mt-1 max-w-2xl text-sm text-slate-400">
-            Booster boxes, packs, Proving Grounds, bundles and other sealed Riftbound
-            products — priced across {info.adjective} stores so you can find the cheapest.
-            Wondering if a box is worth ripping?{" "}
-            <Link href="/tools/box-ev" className="text-brand-400 hover:underline">Run the EV calculator →</Link>
-          </p>
+          {/* How to read a tile, what MSRP means and the guides (2026-09-26,
+              "Blog and tools, joined up"): lib/content/hub-intros.ts. It
+              replaced a one-line lede; the box EV link moved into it. */}
+          <HubIntro path="/sealed" />
+          {/* The fallback is DEFAULT_COUNTRY's listings, named from the data:
+              this said "Australian listings (prices in AUD)" for months after
+              the fallback became the US, and promised boxes "ship
+              internationally", which nothing here checks. */}
           {usingFallback && (
             <p className="mt-2 text-xs text-slate-500">
-              We don&apos;t track {info.adjective} sealed stores yet — showing Australian listings (prices in AUD). Boxes ship internationally.
+              We don&apos;t track {info.adjective} sealed stores yet, so these are {COUNTRIES[priceCountry].adjective} listings,
+              priced in {COUNTRIES[priceCountry].currency}. Check that a store ships to you before you order.
             </p>
           )}
           {q && (
@@ -267,19 +282,21 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
         </div>
       </section>
 
-      {/* Freshly-live Vendetta sealed callout — only on the default (unfiltered) view. */}
-      {hasVendetta && (
+      {/* Newest-set callout — only on the default (unfiltered) view. "Newest
+          set", not "NEW": newestReleasedSet() is the newest set however long
+          ago it shipped. Brand, not gold: gold marks Premium. */}
+      {featuredSet && (
         <div className="card-surface mb-5 flex flex-wrap items-center gap-3 border-l-2 border-brand-500 bg-ink-900 px-5 py-4">
-          <span className="chip bg-gold/20 font-semibold text-gold">NEW</span>
+          <span className="chip bg-brand-500/15 font-semibold text-brand-300">Newest set</span>
           {/* basis-56 (2026-09-23): flex-1 alone is a 0 basis, so this flex-wrap
               row never wrapped and the copy took all the squeeze (72px, 11 lines
               at 344). Now the button wraps below once the copy drops under 14rem. */}
           <p className="min-w-0 flex-1 basis-56 text-sm text-slate-300">
-            <span className="font-semibold text-white">Vendetta sealed is here</span> — booster
-            boxes &amp; packs available now, priced across stores.
+            <span className="font-semibold text-white">{featuredSet.name} sealed</span> — product from the newest
+            released set, priced across stores.
           </p>
-          <Link href="/sealed?q=vendetta" className="btn-primary px-3 py-1.5 text-xs">
-            Shop Vendetta →
+          <Link href={`/sealed?set=${featuredSet.code}`} className="btn-primary px-3 py-1.5 text-xs">
+            Shop {featuredSet.name} →
           </Link>
         </div>
       )}
@@ -329,6 +346,11 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
         </section>
       </div>
 
+      {/* The guides that explain this page, after its own data and before the
+          marketplace searches below: our content leads, the affiliate block
+          follows (lib/content/tool-guides.ts). */}
+      <RelatedGuides guides={guidesForTool("/sealed")} className="card-surface mt-8 p-5" />
+
       {/* High-AOV marketplace searches: sealed boxes are the biggest baskets on the
           site, and eBay/Amazon both carry them. Affiliate-tagged per market. */}
       <section className="card-surface mt-8 p-5">
@@ -371,6 +393,9 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
             );
           })}
         </div>
+        {/* Amazon's own required statement, beside the Amazon links it covers;
+            the eBay line is the "both" disclosure at the foot of the page. */}
+        <AffiliateDisclosure partner="amazon" />
       </section>
 
 

@@ -62,6 +62,13 @@ import {
   type NarrativeMarket,
 } from "@/lib/content/card-narrative";
 import { guidesForCard } from "@/lib/content/related-guides";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { cardWhereParam } from "@/lib/card-slug-renames";
+
+// The comparison's ordering in one line, beside the link to /methodology#ordering
+// that explains it: item price first, postage only where the store states it
+// (lib/market-rows.ts computeMarket).
+const HOW_WE_COMPARE = "Cheapest first by item price, with the delivered total shown where the store publishes its postage.";
 
 // REAL ISR: no cookie/header reads anywhere in this route's tree — the page is
 // rendered once on the AU baseline and served from cache to every visitor and
@@ -96,7 +103,8 @@ export function generateStaticParams(): { id: string }[] {
 }
 
 // Accept either the slug ("vayne-hunter-sfd-223-221") or the legacy cuid.
-const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
+// Renamed slugs resolve too (lib/card-slug-renames.ts).
+const whereParam = cardWhereParam;
 
 // The market the cached page is rendered on. Metadata MUST agree with it: the
 // snippet previously quoted the AU column + AU store count while the page body
@@ -990,7 +998,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </ol>
       </nav>
 
-      <div className="grid gap-4 lg:gap-6 lg:grid-cols-[160px_1fr] xl:grid-cols-[320px_1fr]">
+      <div className="grid grid-cols-1 gap-4 lg:gap-6 lg:grid-cols-[160px_1fr] xl:grid-cols-[320px_1fr]">
         {/* Card visual. Capped much smaller on phones than desktop (was a flat
             max-w-[320px] at every breakpoint) — at 390px wide, a 320px-wide
             5:7 card image ran ~450px tall and, combined with the header stat
@@ -1160,7 +1168,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                     None of the stores we track in Australia, the United States, the
                     United Kingdom, Singapore, Canada or the EU has this printing in stock today, and we
                     have no recorded price history for it yet — so there is nothing
-                    honest to compare. We check every store daily; this page fills in on its own
+                    honest to compare. We check every store twice a day; this page fills in on its own
                     the moment one lists it.
                   </>
                 )}
@@ -1221,6 +1229,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               heading) gives this block its own crawlable section signal. */}
           <section className="mt-4 sm:mt-6">
             <h2 className="sr-only">Price history &amp; where to buy {card.name}</h2>
+            {/* How the list below is ordered, and where that is explained in
+                full (2026-09-26, "Blog and tools, joined up" in DECISIONS.md):
+                the comparison's only note was "prices may change". From sm it
+                sits right above the panel's top edge; below sm nothing may push
+                the first row down (Phase 8a, CardTopBuy's placement), so the
+                phone copy follows the comparison instead. */}
+            <p className="hidden text-right text-xs text-slate-500 sm:-mb-4 sm:block">
+              {HOW_WE_COMPARE}{" "}
+              <Link href="/methodology#ordering" className="tap-link text-brand-400 hover:underline">How we compare prices →</Link>
+            </p>
             <CardPriceComparison
               rows={rows}
               cardId={card.id}
@@ -1241,6 +1259,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 ) : undefined
               }
             />
+
+            <p className="mt-4 text-xs text-slate-500 sm:hidden">
+              {HOW_WE_COMPARE}{" "}
+              <Link href="/methodology#ordering" className="tap-link text-brand-400 hover:underline">How we compare prices →</Link>
+            </p>
 
             <CardStickyBuyBar rows={rows} displayName={displayName} cardId={card.id} />
 
@@ -1492,26 +1515,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               shortest path a reader — or a reviewer — has to something a person
               actually wrote, and it's chosen from this card's own attributes
               rather than being the same three links on all 1,400 pages. */}
-          {relatedGuides.length > 0 && (
-            <section className="card-surface mt-6 p-5">
-              <h2 className="font-bold text-white">Read next</h2>
-              <ul className="mt-3 space-y-3">
-                {relatedGuides.map((g) => (
-                  <li key={g.slug}>
-                    <Link
-                      href={`/${g.category === "guide" ? "guides" : "blog"}/${g.slug}`}
-                      className="group block"
-                    >
-                      <span className="block text-sm font-semibold text-brand-400 group-hover:underline">
-                        {g.title}
-                      </span>
-                      <span className="block text-xs text-slate-500">{g.reason}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          <RelatedGuides guides={relatedGuides} />
 
           {/* ── AFFILIATE BLOCK — deliberately LAST of the in-column sections ──
               eBay carries this card in every market and pays a commission, so it

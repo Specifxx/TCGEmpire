@@ -127,8 +127,13 @@ export function cardImageForOg(card: CardImageUrls): string | null {
       // The 71 cards whose art the CDN dropped entirely have no PNG either.
       return MISSING_CARD_ART.has(stem) ? null : `${CDN_CARDS}originals/${stem}.png`;
     }
-    // Art we host ourselves (manual spoiler rows) is already PNG or JPEG.
-    if (/\.(png|jpe?g)$/i.test(raw)) return raw.startsWith("/") ? `${SITE_URL}${raw}` : raw;
+    // Art we host ourselves (manual spoiler rows) is already PNG or JPEG, and so
+    // is Riot's official gallery art — but that is stored WITH a query string
+    // (`…-744x1039.png?accountingTag=RB`, scripts/set-official-art.ts and the
+    // Vendetta rows), so the extension is read off the path, not the raw URL.
+    // Testing the raw string refused every such card: a shared Hot 40 link led
+    // by Astral Heron (VEN 044) unfurled with an empty slot where #1's art goes.
+    if (/\.(png|jpe?g)$/i.test(raw.split(/[?#]/, 1)[0])) return raw.startsWith("/") ? `${SITE_URL}${raw}` : raw;
   }
   return null;
 }

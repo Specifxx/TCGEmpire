@@ -36,7 +36,7 @@ export const BANNED_CARDS: BannedCard[] = [
   { name: "Stealthy Pursuer", slug: "stealthy-pursuer-ogn-177-298", formats: BOTH, effective: "2026-07-24" },
   { name: "The Arena's Greatest", slug: "the-arena-s-greatest-ogn-290-298", formats: BOTH, effective: "2026-07-24" },
   { name: "Aspirant's Climb", slug: "aspirant-s-climb-ogn-276-298", formats: BOTH, effective: "2026-07-24" },
-  { name: "Master Yi, Wuju Bladesman", slug: "master-wuju-bladesman-starter-ogs-019-024", formats: ["2v2"], effective: "2026-07-24" },
+  { name: "Master Yi, Wuju Bladesman", slug: "master-yi-wuju-bladesman-ogs-019-024", formats: ["2v2"], effective: "2026-07-24" },
   { name: "Scrapheap", slug: "scrapheap-ogn-182-298", formats: BOTH, effective: "2026-03-31" },
   { name: "Called Shot", slug: "called-shot-sfd-122-221", formats: BOTH, effective: "2026-03-31" },
   { name: "Draven, Vanquisher", slug: "draven-vanquisher-sfd-020-221", formats: BOTH, effective: "2026-03-31" },

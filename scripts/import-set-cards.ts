@@ -32,6 +32,7 @@ import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { normalizeSearch } from "../src/lib/format";
+import { pickLegendChampion, withChampion } from "../src/lib/legend-name";
 import { chasePrintRarity, isOvernumbered, SETS, nextUpcomingSet, newestReleasedSet, type SetInfo } from "../src/lib/constants";
 
 const prisma = new PrismaClient();
@@ -75,18 +76,18 @@ type Scraped = {
   energy?: number | null;
   might?: number | null;
   champion?: string; // Legend cards only — the champion this Legend belongs to
+  tags?: string[]; // the gallery's raw tags; the champion is picked from these when present
 };
 
 // Legend cards are named by their epithet alone in the source data ("Eye of
 // Twilight"), with the champion carried separately (see fetch-set-official.ts).
 // Prefix it to match every other champion card's "Champion, Title" naming on the
 // site (e.g. "Renekton, Rage Fueled") — "Legend" itself is already shown as its
-// own type badge, so it doesn't need to be repeated in the name text.
-function enrichLegendName(name: string, champion: string | undefined): string {
-  if (!champion) return name;
-  if (name.toLowerCase().startsWith(champion.toLowerCase())) return name;
-  return `${champion}, ${name}`;
-}
+// own type badge, so it doesn't need to be repeated in the name text. The
+// champion is re-picked from the raw tags (a dump written before 2026-09-27 has
+// only `champion`, which was tags[0] — "Yordle" for Kennen's Legend — so it goes
+// through the same picker, which refuses a region or creature type).
+const legendChampion = (r: Scraped): string | undefined => pickLegendChampion(r.tags ?? (r.champion ? [r.champion] : []));
 
 const DOMAINS = new Set(["Fury", "Calm", "Mind", "Body", "Chaos", "Order", "Colorless"]);
 const TYPES = new Set(["Unit", "Spell", "Gear", "Rune", "Battlefield", "Legend"]);
@@ -133,7 +134,7 @@ async function main() {
     const domain = r.domain && DOMAINS.has(titleCase(r.domain)) ? titleCase(r.domain) : "";
     const rawRarity = r.rarity && RARITIES.has(titleCase(r.rarity)) ? titleCase(r.rarity) : "TBC";
     const rawName = (r.name ?? "").trim();
-    const name = type === "Legend" ? enrichLegendName(rawName, r.champion?.trim()) : rawName;
+    const name = type === "Legend" ? withChampion(rawName, legendChampion(r)) : rawName;
 
     const problems: string[] = [];
     if (!name || /coming soon/i.test(name)) problems.push("name");

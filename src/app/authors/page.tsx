@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AUTHORS } from "@/lib/content/authors";
+import { ARTICLE_PROCESS, AUTHORS } from "@/lib/content/authors";
 import { getArticles } from "@/lib/articles";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
@@ -10,7 +10,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Who writes RiftCompare",
   description:
-    "The bylines behind RiftCompare's Riftbound guides, posts and market coverage — who writes what, and how it's researched.",
+    "Who writes RiftCompare's Riftbound guides and posts: Bill, the founder who runs the site, and the site byline he edits — and how every article is checked.",
   alternates: pageAlternates("/authors"),
 };
 
@@ -40,28 +40,27 @@ export default function AuthorsPage() {
       <h1 className="text-3xl font-extrabold leading-tight text-white">Who writes RiftCompare</h1>
       <div className="mt-3 max-w-2xl space-y-3 text-sm leading-relaxed text-slate-400">
         <p>
-          Two bylines, kept separate on purpose: writing composed by the people who run the site, and
-          writing generated directly from our price database. Which one a piece carries tells you how
-          it was produced.
+          RiftCompare is built and run by one person: Bill, its founder. Every article carries one of
+          two bylines — Bill&rsquo;s own name, on the articles that are his, and RiftCompare, the
+          site&rsquo;s byline for everything else: buying guides, set overviews, news and market posts.
         </p>
         <p>
-          We think that distinction is worth making explicit rather than blurring. A guide to storing
-          cards, or to whether a set is worth opening, is a judgement someone made — it should carry a
-          human byline and be arguable. A price snapshot is not a judgement; it is a query result with
-          a fixed methodology, and dressing it up as analysis would be misleading about how much
-          thought went into it. So the two never share a byline.
+          Both are produced the same way. {ARTICLE_PROCESS} So a price quoted in an article is one
+          our importer recorded, not a number a draft suggested.
         </p>
         <p>
           What neither byline is: an invented person. There is no stock photo and no fabricated
-          biography here, because a name we made up would be worth less than no name at all — and
-          would be a straightforward lie to anyone who checked. If that changes and a named person
-          starts writing for the site, they will appear here under their own name.
+          biography here. Bill&rsquo;s page says only what is true of him, and the RiftCompare byline
+          is typed as what it is, the site itself, rather than dressed up as a writer.
         </p>
         <p>
           Our{" "}
           <Link href="/editorial-policy" className="text-brand-400 hover:underline">editorial &amp; pricing policy</Link>{" "}
           sets out how prices are collected and verified, how often each surface refreshes, how
-          corrections are handled, how the site makes money, and how to report something that is wrong.
+          corrections are handled and how the site makes money. Spotted a mistake? The{" "}
+          <Link href="/contact" className="text-brand-400 hover:underline">contact form</Link> reaches
+          Bill directly, and every card page has a &ldquo;Spotted a wrong price? Report it&rdquo; link
+          under its list of stores.
         </p>
       </div>
 

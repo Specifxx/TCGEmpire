@@ -20,6 +20,7 @@ import { join } from "node:path";
 import { titleCase } from "../src/lib/constants";
 import { normalizeSearch } from "../src/lib/format";
 import { cardSlug } from "../src/lib/card-url";
+import { legendNameFromSlug } from "../src/lib/legend-name";
 import { liveCardImage } from "../src/lib/card-image-url";
 
 const prisma = new PrismaClient();
@@ -47,27 +48,11 @@ interface RsCard {
 // lib/constants.ts is already the single source of truth for set identity, and it
 // gains the next set months before its cards exist, so read it.
 const SET_NAMES: Record<string, string> = Object.fromEntries(SETS.map((s) => [s.code, s.name]));
-const CHAMP_OVERRIDES: Record<string, string> = {
-  kaisa: "Kai'Sa", velkoz: "Vel'Koz", chogath: "Cho'Gath", khazix: "Kha'Zix",
-  reksai: "Rek'Sai", belveth: "Bel'Veth", ksante: "K'Sante", leblanc: "LeBlanc",
-  drmundo: "Dr. Mundo", "nunu-willump": "Nunu & Willump", "jarvan-iv": "Jarvan IV",
-};
-const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-function titleCaseChamp(slug: string): string {
-  if (CHAMP_OVERRIDES[slug]) return CHAMP_OVERRIDES[slug];
-  const flat = slug.replace(/-/g, "");
-  if (CHAMP_OVERRIDES[flat]) return CHAMP_OVERRIDES[flat];
-  return slug.split("-").map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
-}
-function enrichLegendName(nameSlug: string | undefined, epithet: string): string {
-  if (!nameSlug) return epithet;
-  const epiSlug = slugify(epithet);
-  let champSlug = nameSlug.endsWith("-" + epiSlug) ? nameSlug.slice(0, nameSlug.length - epiSlug.length - 1) : nameSlug.split("-")[0];
-  if (!champSlug || champSlug === nameSlug) return epithet;
-  const champ = titleCaseChamp(champSlug);
-  if (epithet.toLowerCase().startsWith(champ.toLowerCase())) return epithet;
-  return `${champ}, ${epithet}`;
-}
+// Legend naming ("Champion, Title") lives in lib/legend-name.ts, shared with
+// seed.ts and the gallery importer. This file's own copy took only the FIRST
+// slug token when RiftScribe's "Wuju Bladesman - Starter" didn't line up with
+// card-names.json's "master-yi-wuju-bladesman", and every sync rewrote OGS-019
+// as "Master, Wuju Bladesman - Starter" (2026-09-27).
 // Synthesised reference price by rarity/type (RiftScribe has none) — only for NEW cards.
 const RARITY_PRICE_CENTS: Record<string, [number, number]> = {
   Common: [20, 120], Uncommon: [60, 320], Rare: [180, 1100], Epic: [700, 4200], Showcase: [2200, 16000],
@@ -88,7 +73,7 @@ function mapCard(c: RsCard, nameMap: Record<string, string>) {
   const domain = c.faction === "colorless" ? "Colorless" : titleCase(c.faction);
   const rarity = titleCase(c.rarity);
   const nameKey = `${parts[0]}-${numSeg}`;
-  const name = c.type === "Legend" ? enrichLegendName(nameMap[nameKey], c.name) : c.name;
+  const name = c.type === "Legend" ? legendNameFromSlug(nameMap[nameKey], c.name) : c.name;
   return {
     externalId: c.id,
     name,

@@ -1,5 +1,6 @@
-import type { RiseAnalysis, RisePick, RiseScope } from "./rise-predictor";
-import { COUNTRIES } from "./country";
+import type { RiseAnalysis, RisePick, RiseScope, WeekAgoRanking } from "./rise-predictor";
+import { COUNTRIES, type Country } from "./country";
+import { movementFromRanks, type Movement } from "./demand-movement";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // A shareable, frozen copy of one Rising Cards run — the payload and its title.
@@ -68,6 +69,37 @@ export interface RisingSnapshotPick {
   priceSignals?: boolean;
   /** v2: the pick's one-line reason, as the live tool showed it. */
   reason?: string;
+  /**
+   * Place against the same ranking a week earlier, frozen at mint time
+   * (lib/rising-movement.ts). Absent on snapshots minted before 2026-09-28;
+   * null when it couldn't be rebuilt. "new" = not ranked a week earlier (or,
+   * on a payload with `previousChart`, not on that chart).
+   */
+  move?: Movement | null;
+  /**
+   * Cheapest on eBay, frozen at mint time (2026-09-28): an eBay listing cost
+   * less than any store we tracked in this card's market. Absent on snapshots
+   * minted before then; null when no eBay listing was cheapest.
+   */
+  ebay?: SnapshotEbayDeal | null;
+}
+
+/**
+ * One pick's "Cheapest on eBay" verdict, by the homepage row's rule
+ * (lib/arbitrage.ts getCheapestOnEbayFor), in the pick's own market and currency.
+ */
+export interface SnapshotEbayDeal {
+  /** The listing's own URL, untagged: the page adds the affiliate tags when it renders. */
+  url: string;
+  /** The eBay retailer key ("ebay_us"): the click's retailer and EPN sub-id. */
+  retailer: string;
+  market: Country;
+  /** Item + stated postage, or the item price alone when postage wasn't stated. Minor units of `currency`. */
+  cents: number;
+  currency: string;
+  postageKnown: boolean;
+  /** How far below the cheapest tracked store it was, in `currency` minor units. */
+  gapCents: number;
 }
 
 /** Everything the public page renders. Frozen at mint time; never recomputed. */
@@ -83,6 +115,17 @@ export interface RisingSnapshotData {
   minPointsRequired: number;
   /** 2 for payloads minted from the 2026-09-25 ranking; absent on older ones. */
   version?: 2;
+  /**
+   * What the picks' `move` compares with: the ranking rebuilt as of `asOf`, a
+   * week before (getRisingWeekAgo). Null when it couldn't be rebuilt, which
+   * the page says; absent on older payloads.
+   */
+  weekAgo?: { asOf: string } | null;
+  /**
+   * Only on snapshots minted on 2026-09-28 before movement moved to the week-
+   * ago ranking: `move` then compares with this earlier Hot 40. Never written now.
+   */
+  previousChart?: { createdAt: string; count: number } | null;
 }
 
 /** True for a payload minted before the 2026-09-25 rebuild (see TWO PAYLOAD SHAPES). */
@@ -167,6 +210,16 @@ export function generateRisingTitle(data: RisingSnapshotData, now = new Date()):
 
   const name = hotListName(n);
 
+  // 0. THE CHART STORY, when the picks carry movement (the ranking a week earlier)
+  // (owner, 2026-09-28: "xxx moves to the top 3, xxx remains at #1"). Places on
+  // a chart are measured facts about rank order, so this is the most concrete
+  // headline a run can have, and the one a chart's reader looks for first.
+  const story = chartStory(data.picks);
+  if (story) {
+    const full = `${name}: ${story.lead}${story.second ? `, ${story.second}` : ""} (${market}, ${date})`;
+    return full.length <= TITLE_MAX ? full : `${name}: ${story.lead} (${market}, ${date})`;
+  }
+
   const plural = n === 1 ? "card" : "cards";
 
   // 1. The top pick is already moving. (weekMove: null is "no comparable
@@ -193,6 +246,60 @@ export function generateRisingTitle(data: RisingSnapshotData, now = new Date()):
   return `${name}: ${top.displayName} tops the ${market} ranking (${date})`;
 }
 
+// Long card names are why the second clause is optional: a title is read in a
+// share preview and a browser tab, and past this it gets cut mid-name.
+const TITLE_MAX = 150;
+
+/**
+ * The chart story: what happened at #1, then the one other movement most worth
+ * a headline. null when the picks carry no movement (nothing a week earlier to compare with, or a
+ * snapshot minted before 2026-09-28), and the older angles below take over.
+ *
+ * The second clause, first that applies (each skips #1):
+ *   1. a card that moved INTO the top 3 — the biggest jump in, or a debut there;
+ *   2. the biggest climb anywhere, of at least 3 places;
+ *   3. the highest new entry;
+ *   4. the biggest fall, of at least 3 places.
+ * Nothing here says where a card is going, only where it moved on the chart.
+ */
+export function chartStory(picks: readonly RisingSnapshotPick[]): { lead: string; second: string | null } | null {
+  if (!picks.length || !picks.some((p) => p.move)) return null;
+  const ranked = picks.map((p, i) => ({ p, rank: i + 1, m: p.move ?? null }));
+  const top = ranked[0];
+  if (!top.m) return null;
+  const lead =
+    top.m?.kind === "same"
+      ? `${top.p.displayName} remains at #1`
+      : top.m?.kind === "up"
+        ? `${top.p.displayName} climbs to #1 from #${top.m.prev}`
+        : `${top.p.displayName} debuts at #1`;
+
+  const rest = ranked.slice(1);
+  const jump = (x: (typeof rest)[number]) => (x.m?.kind === "up" ? x.m.by : x.m?.kind === "new" ? Number.POSITIVE_INFINITY : 0);
+  const intoTop3 = rest
+    .filter((x) => x.rank <= 3 && (x.m?.kind === "new" || (x.m?.kind === "up" && x.m.prev > 3)))
+    .sort((a, b) => jump(b) - jump(a) || a.rank - b.rank)[0];
+  if (intoTop3) {
+    return {
+      lead,
+      second: intoTop3.m?.kind === "new" ? `${intoTop3.p.displayName} debuts at #${intoTop3.rank}` : `${intoTop3.p.displayName} moves into the top 3`,
+    };
+  }
+  const climber = rest.filter((x) => x.m?.kind === "up" && x.m.by >= 3).sort((a, b) => jump(b) - jump(a) || a.rank - b.rank)[0];
+  if (climber && climber.m?.kind === "up") {
+    return { lead, second: `${climber.p.displayName} climbs ${climber.m.by} places to #${climber.rank}` };
+  }
+  const debut = rest.find((x) => x.m?.kind === "new");
+  if (debut) return { lead, second: `${debut.p.displayName} is the highest new entry, at #${debut.rank}` };
+  const faller = rest
+    .filter((x) => x.m?.kind === "down" && x.m.by >= 3)
+    .sort((a, b) => (b.m?.kind === "down" ? b.m.by : 0) - (a.m?.kind === "down" ? a.m.by : 0) || a.rank - b.rank)[0];
+  if (faller && faller.m?.kind === "down") {
+    return { lead, second: `${faller.p.displayName} falls ${faller.m.by} places to #${faller.rank}` };
+  }
+  return { lead, second: null };
+}
+
 /** The one-line standfirst under the title. Same honesty rules. */
 export function generateRisingSubtitle(data: RisingSnapshotData): string {
   // The RANKED set, not `qualifying`: on a v2 payload that is only the cards
@@ -206,8 +313,22 @@ export function generateRisingSubtitle(data: RisingSnapshotData): string {
   );
 }
 
-/** RiseAnalysis → the frozen payload. Drops everything the public page doesn't draw. */
-export function toSnapshotData(analysis: RiseAnalysis, scope: RiseScope, now = new Date()): RisingSnapshotData {
+/**
+ * RiseAnalysis → the frozen payload. Drops everything the public page doesn't
+ * draw. `weekAgo` is the ranking a week before (lib/rise-predictor.ts
+ * getRisingWeekAgo), or null when it couldn't be rebuilt — the snapshot is
+ * minted either way, just without movement.
+ * `ebay` is each pick's Cheapest on eBay verdict, by card id; a card missing
+ * from it is frozen as not cheapest on eBay.
+ */
+export function toSnapshotData(
+  analysis: RiseAnalysis,
+  scope: RiseScope,
+  now = new Date(),
+  weekAgo: WeekAgoRanking | null = null,
+  ebay: ReadonlyMap<string, SnapshotEbayDeal> = new Map(),
+): RisingSnapshotData {
+  const moves = weekAgo ? movementFromRanks(analysis.picks.map((p) => p.id), new Map(weekAgo.ranks)) : null;
   return {
     scope,
     generatedAt: now.toISOString(),
@@ -233,10 +354,13 @@ export function toSnapshotData(analysis: RiseAnalysis, scope: RiseScope, now = n
       vsLastWeekPct: p.vsLastWeekPct,
       priceSignals: p.priceSignals,
       reason: p.reason,
+      move: moves?.get(p.id) ?? null,
+      ebay: ebay.get(p.id) ?? null,
     })),
     universeSize: analysis.universeSize,
     qualifying: analysis.qualifying,
     minPointsRequired: analysis.minPointsRequired,
     version: 2,
+    weekAgo: weekAgo ? { asOf: weekAgo.asOf } : null,
   };
 }
