@@ -98,33 +98,22 @@ test("Market Pulse is gone from the homepage, and left nothing dangling behind i
   );
 });
 
-test("Recently viewed is the first thing in HomeSections, not the last", () => {
-  // Moved from the bottom of HomeSections to the top (2026-09-19, owner
-  // request). Returning visitors were the one group who had to scroll past
-  // every section on the page to reach the single row addressed to them.
-  // On the page it follows the hero, the price table (2026-09-24) and the
-  // editorial band (2026-09-26, owner decision), which render above
-  // HomeSections — tests/home-editorial.test.ts pins that order.
-  const code = readCode("src/components/home/HomeSections.tsx");
-  const recent = code.indexOf("<RecentlyViewedRail");
-  assert.ok(recent > 0, "the homepage must still render the rail");
-  // Every other section comes after it.
-  for (const tag of ["<EbayPicks", "<PopularCardsCarousel", "<TodaysTopDeals", "<PartnersStrip"]) {
-    const at = code.indexOf(tag);
-    assert.ok(at > 0, `expected ${tag} on the homepage`);
-    assert.ok(recent < at, `Recently viewed must render above ${tag}`);
+test("Recently viewed is not on the homepage, and stays where it helps", () => {
+  // It was the first thing in HomeSections from 2026-09-19 (owner request);
+  // on 2026-09-28 the owner took it off: "get rid of recently viewed from the
+  // homepage". Only the homepage: the search box's empty state and the card
+  // page still show a returning visitor the cards they were looking at.
+  for (const f of ["src/components/home/HomeSections.tsx", "src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
+    assert.ok(!readCode(f).includes("RecentlyViewedRail"), `${f}: no Recently viewed rail on a homepage`);
   }
-  // …and it appears exactly once. The old bottom copy has to be gone, not
-  // duplicated — two rails would render the same eight chips twice.
-  assert.equal(code.split("<RecentlyViewedRail").length - 1, 1, "exactly one rail on the homepage");
+  assert.match(read("src/components/SearchBar.tsx"), /<RecentlyViewedRail \/>/, "the search box keeps it");
+  assert.match(read("src/app/card/[id]/page.tsx"), /<RecentlyViewedRail exclude=\{card\.id\}/, "the card page keeps it");
 });
 
-test("putting Recently viewed first does not change the page a new visitor or a crawler sees", () => {
-  // The whole reason the top slot is free for it: the rail reads localStorage
-  // through useSyncExternalStore, so the server snapshot is empty and it
-  // returns null on a first-ever visit. Today's Top Deals is the first
-  // HomeSections block in the prerendered HTML (2026-09-21) — see
-  // tests/game-before-money.test.ts, which pins that decision.
+test("where the rail remains, a new visitor and a crawler see nothing of it", () => {
+  // The rail reads localStorage through useSyncExternalStore, so the server
+  // snapshot is empty and it returns null on a first-ever visit: the card
+  // page and the search box's prerendered HTML carry no rail.
   const rail = read("src/components/home/RecentlyViewedRail.tsx");
   assert.match(rail, /useRecentCards\(\)/, "the rail must read from the client-only store");
   assert.match(rail, /if \(recent\.length === 0\) return null;/, "an empty history must render nothing at all");
@@ -133,6 +122,6 @@ test("putting Recently viewed first does not change the page a new visitor or a 
   assert.match(
     store,
     /useSyncExternalStore\(subscribe, getSnapshot, getServerSnapshot\)/,
-    "a server snapshot is what keeps the prerendered homepage rail-free",
+    "a server snapshot is what keeps the prerendered pages rail-free",
   );
 });

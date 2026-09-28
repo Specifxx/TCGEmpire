@@ -15000,3 +15000,32 @@ The arrows were missing by construction. The previous chart had to be a version-
   - `/admin/rising` showed ▲/▼ with no snapshot in the database (e.g. Legion Rearguard ▲2 from #3).
   - A mint was titled "Legion Rearguard climbs to #1 from #3, Magma Wurm moves into the top 3".
   - Deleting it from the panel asked with its title, removed the row, and its link then returned 404.
+
+## Homepage: Recently viewed removed; blog and guides moved up for AdSense's crawlers — 2026-09-28
+
+**Why.** Owner: "get rid of recently viewed from the homepage. Also we need the blog and guides to be prominent so that we get approved for adsense with their lazy crawlers."
+
+The editorial band ("Guides, news & market updates") has been in the server HTML since 2026-09-26, but only below the hero and all 15 rows of the price table, so it began one to two screens down. On desktop the side rail was worse. It opens only Prices on a first visit, and a collapsed group renders no links at all (`{open && …}` in `SideNav`). So no page's HTML carried a rail link to `/guides` or `/blog`: the group sat seventh, as a heading with nothing under it.
+
+**What.**
+- **Recently viewed is off the homepage** (all six market homes, via `HomeSections`). The rail stays in the search box's empty state and on the card page, where it helps a returning visitor.
+- **The editorial band comes directly after the hero**, above the price table, on all six market homes. The price table is now the next band, still carrying the ItemList for the most-searched cards. Rendered:
+  - at 1280×900 the band's heading sits at the fold (y≈860, previously below the table);
+  - on a 390px phone its first rows are on the first screen (y≈620).
+  - It is in the order the server HTML is written, so a crawler that neither scrolls nor runs scripts reaches the writing before the price data.
+- **Guides & News is the rail's second group and opens by default** with Prices (`DEFAULT_OPEN_GROUPS`). Every page's HTML now carries rail links to Guides, Blog, Learn, Who writes this, Editorial policy and Methodology. The phone menu and the ⌘K launcher follow the same order. A returning visitor's own collapsed set still wins once it loads.
+
+**Not changed.**
+- The header keeps its shortlist: Blog from lg, Tools from xl. The lg row has ~5px of slack, and a Guides link from xl would squeeze the inline card search below ~160px. The rail, now open on every desktop page, carries Guides one row under Blog.
+- Nothing in the band was rewritten; it only moved.
+
+**Verified.**
+- Tests:
+  - `tests/home-editorial.test.ts`: hero, then band, then table, then the rest, with nothing between the hero and the band.
+  - `tests/sidenav.test.ts`: the two open groups; Guides & News second, with /guides and /blog first; collapsed groups render no links.
+  - `tests/homepage-declutter.test.ts`: no rail on any homepage; the search box and card page keep it.
+  - `tests/game-before-money.test.ts`: Prices still first; Decks and Games still ahead of Deals.
+- `next dev` against a local database:
+  - the served HTML has the band before the table and the rail's Prices and Guides & News groups expanded, with `/guides` and `/blog` in it;
+  - "Recently viewed" does not appear;
+  - the page was checked with JavaScript off, and at 1280px and 390px with no horizontal overflow.

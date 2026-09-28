@@ -97,18 +97,18 @@ export async function RegionHome({ region }: { region: Country }) {
         region={{ code: region, adjective: info.adjective }}
       />
 
+      {/* Guides, news & market updates, in the same slot as on "/": directly
+          under the hero, above the price table (owner, 2026-09-28; see
+          EditorialHub.tsx). `market` makes "Start here" lead with this
+          market's own buying guide. */}
+      <EditorialHub freshness={freshness} market={region} />
+
       <PriceTodayTable
         rows={priceTable}
         country={region}
         totalPriced={stat.priced}
         buyingGuide={guideSlug ? { href: `/blog/${guideSlug}`, label: `Buying in ${info.place}` } : undefined}
       />
-
-      {/* Guides, news & market updates, in the same slot as on "/" (owner
-          decision, 2026-09-26; see EditorialHub.tsx). `market` makes "Start
-          here" lead with this market's own buying guide — until now linked only
-          from the region block at the foot of the page. */}
-      <EditorialHub freshness={freshness} market={region} />
 
       {/* The full "/" feature set — Top Deals, eBay Picks, popular cards, How
           It Works, Explore, reviews, partners — see HomeSections.tsx and this

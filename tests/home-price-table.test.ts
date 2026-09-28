@@ -39,7 +39,7 @@ test("the loader is capped, cached no shorter than the homepages, fails open, an
   for (const f of ["src/app/page.tsx", "src/app/au/page.tsx"]) assert.match(read(f), /revalidate = 3600/);
 });
 
-test("every market homepage renders the table directly under the hero", () => {
+test("every market homepage renders the table high up: under the hero and the editorial band", () => {
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = read(f);
     const hero = src.indexOf("<CinematicHero");

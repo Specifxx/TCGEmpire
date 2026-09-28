@@ -226,10 +226,12 @@ longer lands on its entry.
 ## Navigation & chrome
 
 - **Desktop rail:** 17rem from 1024px, always expanded (the collapse mode was
-  deleted on 09-21). Group headers are disclosures; only Prices opens on a
-  first visit. The rail's search filters FEATURES; the header's searches
+  deleted on 09-21). Group headers are disclosures; Prices and Guides & News
+  (the second group) open on a first visit, because a collapsed group renders
+  no links and the guides must be in every page's HTML for AdSense's
+  crawlers. The rail's search filters FEATURES; the header's searches
   CARDS. [2026-09-21](../DECISIONS.md#L9958),
-  [2026-09-21](../DECISIONS.md#L10095)
+  [2026-09-21](../DECISIONS.md#L10095), [2026-09-28](../DECISIONS.md#L15004)
 - **Header:** "Database" (→ `/browse`) shows at every width. Card search has
   its own row until xl, then sits inline. The theme toggle is in the header
   from lg, in the menu below that. "Tools" (→ `/tools`) joins Blog from xl
@@ -268,17 +270,18 @@ longer lands on its entry.
   "Sign up free" at every width; below sm the market switcher lives in the
   menu's top bar. [2026-09-24](../DECISIONS.md#L11756)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417)
-- **Homepage order:** hero, the price table, then the editorial band
-  (`EditorialHub`: Start here, Latest news, Market updates — owner, 09-26,
-  reversing 09-21 for this one band; two rows per column on phones), then
-  Recently viewed (returning visitors), Top Deals (opening
+- **Homepage order:** hero, then the editorial band (`EditorialHub`: Start
+  here, Latest news, Market updates — directly under the hero since 09-28 so
+  AdSense's crawlers meet the writing first; two rows per column on phones),
+  then the price table, Top Deals (opening
   with the free "Cheapest on eBay" block, above its pills and columns), eBay
   Picks (the newest released set), the popular carousel (its "Most popular"
   tab back, owner's call; the ItemList stays with the price table),
-  Riftle/pack-sim, How it works.
+  Riftle/pack-sim, How it works. No Recently viewed on any homepage (owner,
+  09-28); it stays in the search box and on card pages.
   [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
   [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190),
-  [2026-09-26](../DECISIONS.md#L14553)
+  [2026-09-26](../DECISIONS.md#L14553), [2026-09-28](../DECISIONS.md#L15004)
 - **Overlays:** `ui/Dialog` portals to body; Escape closes only the top
   layer and focus returns to the opener. Corner nudges share one corner
   string. [2026-09-23](../DECISIONS.md#L11348)
@@ -293,7 +296,8 @@ longer lands on its entry.
 - **Owners:** the six market homepages' titles and H1s lead with "Riftbound
   Card Prices", and their titles quote a LIVE count of stores with an
   in-stock listing (`homeTitle` / `regionHomeTitle`, dropped when unknown);
-  each has a "Riftbound card prices today" table under the hero. Their
+  each has a "Riftbound card prices today" table right after the editorial
+  band under the hero ([2026-09-28](../DECISIONS.md#L15004)). Their
   DESCRIPTIONS lead with "Compare Riftbound card prices", and the share
   previews, JSON-LD (`WebApplication` at `/#app`) and `/llms.txt` say
   "Riftbound price comparison engine". Shipping is never called "live":

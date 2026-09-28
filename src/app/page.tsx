@@ -329,17 +329,20 @@ export default async function HomePage() {
         freshness={freshness}
       />
 
-      {/* The price list the head term asks for, directly under the hero
-          (lib/price-table.ts), with an eBay button on every row. It carries
-          the ItemList for the most-searched cards; the carousel's "Most
-          popular" tab shows the same cards as tiles without one. */}
-      <PriceTodayTable rows={priceTable} country={country} totalPriced={statsByCountry[country].priced} />
-
-      {/* Guides, news & market updates — directly under the table, above
-          HomeSections (owner decision, 2026-09-26, "Blog and tools, joined up"
-          in DECISIONS.md; see EditorialHub.tsx). No market passed: this page's
-          copy is market-neutral, so "Start here" keeps the six-market guide. */}
+      {/* Guides, news & market updates — DIRECTLY UNDER THE HERO since
+          2026-09-28, above the price table (owner: "we need the blog and
+          guides to be prominent so that we get approved for adsense with their
+          lazy crawlers"). It had sat under the table since 2026-09-26, which
+          put the writing one to two screens down behind 15 price rows. See
+          EditorialHub.tsx. No market passed: this page's copy is
+          market-neutral, so "Start here" keeps the six-market guide. */}
       <EditorialHub freshness={freshness} />
+
+      {/* The price list the head term asks for (lib/price-table.ts), with an
+          eBay button on every row, now the band after the editorial one. It
+          carries the ItemList for the most-searched cards; the carousel's
+          "Most popular" tab shows the same cards as tiles without one. */}
+      <PriceTodayTable rows={priceTable} country={country} totalPriced={statsByCountry[country].priced} />
 
       {/* REMOVED: the "Vendetta — the new set, priced" launch band (cheapest
           booster box, price-since-release, chase cards). It was a launch-window
@@ -353,7 +356,7 @@ export default async function HomePage() {
           nextUpcomingSet()) — inside HomeSections below, after Explore — not a
           revival of this band. */}
 
-      {/* Everything below the editorial band — Today's Top Deals, eBay Picks,
+      {/* Everything below the price table — Today's Top Deals, eBay Picks,
           the popular-cards carousel, How It Works, Explore, reviews, partners —
           shared with the 5 region home pages (/au, /uk, /sg, /ca, /eu) via
           HomeSections, so a visitor who picks a market in the hero toggle gets

@@ -211,19 +211,25 @@ test("SideNav forces the active page's group open even if it was previously coll
   assert.match(src, /if \(!hydrated \|\| !activeGroupTitle \|\| !collapsed\.has\(activeGroupTitle\)\) return;/);
 });
 
-test("only Prices is open on a first visit, and the default is identical on the server and the client", () => {
+test("Prices and Guides & News are open on a first visit, and the default is identical on the server and the client", () => {
   // 2026-09-21, owner: "lets have the default on the left prices is expanded
   // whilst everything else is rolled up." Every group used to start open,
-  // which made the rail ~60 links long and mostly a scrollbar.
+  // which made the rail ~60 links long and mostly a scrollbar. 2026-09-28,
+  // owner: the blog and guides must be prominent for AdSense's crawlers, and a
+  // collapsed group renders no links, so Guides & News opens too.
   const code = codeOnly(read("src/components/SideNav.tsx"));
-  assert.match(code, /const DEFAULT_OPEN_GROUP = "Prices"/, "the open group is named, not an index");
-  assert.ok(
-    NAV_GROUPS.some((g) => g.title === "Prices"),
-    "DEFAULT_OPEN_GROUP must name a real group — a typo would roll every group up",
-  );
+  assert.match(code, /const DEFAULT_OPEN_GROUPS: readonly string\[\] = \["Prices", "Guides & News"\];/, "the open groups are named, not indexes");
+  for (const t of ["Prices", "Guides & News"]) {
+    assert.ok(NAV_GROUPS.some((g) => g.title === t), `"${t}" must name a real group — a typo would roll it up`);
+  }
+  const guides = NAV_GROUPS.find((g) => g.title === "Guides & News")!;
+  assert.deepEqual(guides.links.slice(0, 2).map((l) => l.href), ["/guides", "/blog"], "its first two links are the guides and the blog");
+  assert.equal(NAV_GROUPS[1].title, "Guides & News", "second in the rail, right under Prices");
   // Derived from NAV_GROUPS rather than written out, so it cannot drift when a
   // group is added.
-  assert.match(code, /NAV_GROUPS\.map\(\(g\) => g\.title\)\.filter\(\(t\) => t !== DEFAULT_OPEN_GROUP\)/);
+  assert.match(code, /NAV_GROUPS\.map\(\(g\) => g\.title\)\.filter\(\(t\) => !DEFAULT_OPEN_GROUPS\.includes\(t\)\)/);
+  // A collapsed group renders no links, which is why the default matters to a crawler.
+  assert.match(code, /\{open && \(/);
   // And it must be the INITIAL React state, not applied in an effect:
   // localStorage is unreadable on the server, so anything else would make the
   // client's first render disagree and React would log a hydration mismatch.

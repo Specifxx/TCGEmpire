@@ -6,7 +6,6 @@ import { ReviewsSection } from "@/components/ReviewsSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { AccountStrip } from "@/components/home/AccountStrip";
 import { WelcomeBack } from "@/components/home/WelcomeBack";
-import { RecentlyViewedRail } from "@/components/home/RecentlyViewedRail";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
@@ -109,38 +108,16 @@ export function HomeSections({
 
   return (
     <>
-      {/* Recently viewed — first thing in this component, moved up from the
-          very bottom (2026-09-19, owner request). On the page it follows the
-          hero, the price table and the editorial band (2026-09-26), which all
-          render above HomeSections.
-
-          It reads localStorage through useSyncExternalStore, so it renders
-          NOTHING on the server and NOTHING for a first-ever visitor. That is
-          what makes the top of the page the right home for it rather than a
-          contested slot: a new visitor, a crawler and the prerendered HTML all
-          see exactly the page they saw before, now led by Today's Top Deals
-          (the owner-chosen top content slot, 2026-09-21 — see below and
-          tests/game-before-money.test.ts). The only person it appears for is
-          someone coming back, and for them "the cards you were just looking at"
-          is the most useful thing on the page — which is the entire argument
-          for putting it above the fold instead of eleven sections down, where
-          returning visitors were the one group who had to scroll past
-          everything to reach the one row addressed to them.
-
-          The cost, stated rather than discovered later: a returning visitor
-          gets one layout shift of about a chip-row's height shortly after
-          hydration, where before it happened off-screen. It cannot be reserved
-          — the height is only knowable once localStorage has been read, and
-          reserving it unconditionally would punch a gap into every first-time
-          visit to avoid a shift only returning visitors ever see. */}
-      <RecentlyViewedRail />
+      {/* Recently viewed WAS the first thing here (2026-09-19 to 2026-09-28).
+          Removed from the homepage on the owner's instruction ("get rid of
+          recently viewed from the homepage"). It stays where it is useful
+          elsewhere: the search box's empty state and the card page. */}
 
       {/* Today's Top Deals — THE TOP CONTENT SLOT as of 2026-09-21, owner's
           explicit instruction ("put today's top deals at the very top just
-          under recently viewed"), directly beneath the Recently viewed rail
-          above. Still the first section here; since 2026-09-26 it sits one
-          band lower on the page, under the editorial band the owner placed
-          between the price table and this component.
+          under recently viewed"). The first section here; it follows the
+          hero, the editorial band and the price table, which render above
+          this component (2026-09-28 order: see page.tsx).
 
           THIS COMPLETES THE REVERSAL of the 2026-09-16 "game before money"
           pass, and is flagged rather than buried. That pass moved the playable

@@ -6,10 +6,18 @@ import { getArticles, type Article } from "@/lib/articles";
 import { articleHref } from "@/lib/content/tool-guides";
 import { MARKET_READS, startHereFor, type HomePick } from "@/lib/content/featured";
 
-// "Guides, news & market updates" — the homepage's editorial band, directly
-// under the "Riftbound card prices today" table on all six market homes.
+// "Guides, news & market updates" — the homepage's editorial band, DIRECTLY
+// UNDER THE HERO on all six market homes, above the "Riftbound card prices
+// today" table.
 //
-// WHY IT SITS THERE (owner decision, 2026-09-26, "Blog and tools, joined up" in
+// MOVED ABOVE THE TABLE (owner, 2026-09-28: "we need the blog and guides to be
+// prominent so that we get approved for adsense with their lazy crawlers").
+// Under the table it began one to two screens down, behind 15 price rows; now
+// it is the first band after the hero, in the server HTML with every link a
+// plain <a>, so a crawler that neither scrolls nor runs scripts meets the
+// writing before the price data.
+//
+// WHY IT WAS ADDED (owner decision, 2026-09-26, "Blog and tools, joined up" in
 // DECISIONS.md). After an AdSense "low value content" rejection the owner asked
 // for the homepage to feature its writing prominently. The two "Latest from the
 // blog" / "Guides & explainers" rows this replaces sat about nine phone screens

@@ -13,20 +13,27 @@ import { BLOG_PICKS, GUIDE_PICKS, MARKET_READS, START_HERE, startHereFor } from 
 // /guides. DECISIONS.md, "Blog and tools, joined up", 2026-09-26: after an
 // AdSense "low value content" rejection the owner asked for the homepage to
 // feature its writing prominently, and chose the slot directly under the price
-// table, reversing the 2026-09-21 order for this one band.
+// table, reversing the 2026-09-21 order for this one band. On 2026-09-28 it
+// moved up again, above the table, directly under the hero ("we need the blog
+// and guides to be prominent so that we get approved for adsense with their
+// lazy crawlers").
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const code = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 const HUB = "src/components/home/EditorialHub.tsx";
 
-test("every market home renders hero, price table, editorial band, then HomeSections", () => {
+test("every market home renders hero, editorial band, price table, then HomeSections", () => {
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = code(f);
     const hero = src.indexOf("<CinematicHero");
     const table = src.indexOf("<PriceTodayTable");
     const band = src.indexOf("<EditorialHub");
     const rest = src.indexOf("<HomeSections");
-    assert.ok(hero >= 0 && hero < table && table < band && band < rest, `${f}: hero < table < EditorialHub < HomeSections`);
+    assert.ok(hero >= 0 && hero < band && band < table && table < rest, `${f}: hero < EditorialHub < table < HomeSections`);
+    // Nothing between the hero and the band: it is the first thing after it.
+    // (JSX comments survive comment-stripping as an empty `{}`.)
+    const between = src.slice(src.indexOf("/>", hero) + 2, band).replace(/\{\s*\}/g, "").trim();
+    assert.equal(between, "", `${f}: the band directly follows the hero`);
     assert.equal(src.split("<EditorialHub").length - 1, 1, `${f}: one band`);
   }
   // "/" is market-neutral; a region home leads "Start here" with its own guide.

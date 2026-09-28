@@ -56,13 +56,21 @@ const STORAGE_KEY = "rc:sidenav:collapsed-groups";
 //
 // Matched by TITLE against NAV_GROUPS, and deliberately not by index: a group
 // added or reordered tomorrow must not silently become "the open one".
-const DEFAULT_OPEN_GROUP = "Prices";
+//
+// GUIDES & NEWS OPENS TOO (2026-09-28, owner: "we need the blog and guides to
+// be prominent so that we get approved for adsense with their lazy
+// crawlers"). A collapsed group renders no links at all (`{open && …}` below),
+// so with Prices alone open no page's HTML carried a rail link to /guides or
+// /blog — a crawler reading the rail saw a heading and nothing under it. It is
+// also the second group now (nav-groups.ts). A returning visitor's own
+// collapsed set still wins once it loads.
+const DEFAULT_OPEN_GROUPS: readonly string[] = ["Prices", "Guides & News"];
 
 // The default collapsed set, derived rather than written out, so it cannot
 // drift from NAV_GROUPS. Computed once at module load — it is a pure function
 // of a static array, and it must be IDENTICAL on the server and on the
 // client's first render or React reports a hydration mismatch.
-const DEFAULT_COLLAPSED: string[] = NAV_GROUPS.map((g) => g.title).filter((t) => t !== DEFAULT_OPEN_GROUP);
+const DEFAULT_COLLAPSED: string[] = NAV_GROUPS.map((g) => g.title).filter((t) => !DEFAULT_OPEN_GROUPS.includes(t));
 
 function isActiveLink(pathname: string | null, link: { href: string; external?: boolean }): boolean {
   // Active when the current route IS this link, or is nested under it (e.g.

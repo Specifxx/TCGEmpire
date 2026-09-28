@@ -79,6 +79,42 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // Our original editorial work. Promoted out of the footer-only position it
+    // used to occupy — see PRIMARY_NAV below and Navbar.tsx. A reviewer (or a
+    // reader) landing on a programmatic price page needs a one-click path to
+    // something a person wrote, or the whole site reads as a data feed.
+    //
+    // SECOND, right under Prices, and OPEN BY DEFAULT in the rail (owner,
+    // 2026-09-28: "we need the blog and guides to be prominent so that we get
+    // approved for adsense with their lazy crawlers"). It sat seventh and
+    // collapsed, and SideNav renders a collapsed group's links not at all, so
+    // no page's HTML carried a rail link to /guides or /blog. Order here is the
+    // rail's, the phone menu's and the launcher's.
+    title: "Guides & News",
+    icon: "news",
+    links: [
+      { href: "/guides", label: "Guides", keywords: ["guides", "how to", "tutorials", "explainers"] },
+      // "Blog", not "News & analysis" (renamed 2026-09-19, owner call). The site
+      // was calling one destination two different things depending on which
+      // navigation surface you were in: PRIMARY_NAV (the top bar) has always said
+      // "Blog", the page's own H1 is "Blog", and its <title> is "Riftbound Blog —
+      // …" — while this entry, which feeds the Explore overlay, the footer,
+      // SideNav and the ⌘K launcher, said "News & analysis". Clicking it landed
+      // you on a page headed something else. The `keywords` below already carry
+      // news/articles/announcements, so ⌘K still finds it by any of the old words.
+      { href: "/blog", label: "Blog", keywords: ["blog", "news", "articles", "posts", "updates", "announcements", "analysis"] },
+      // hideInFooter: the footer's four columns are already at the top of their
+      // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
+      // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
+      // added on /blog and /guides themselves.
+      { href: "/community", label: "Community links", keywords: ["community", "resources", "links", "other sites", "riftbound news", "deck builders", "wikis", "tier list", "meta"], hideInFooter: true },
+      { href: "/learn", label: "Learn Riftbound", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
+      { href: "/authors", label: "Who writes this", keywords: ["authors", "team", "byline", "who writes"] },
+      { href: "/editorial-policy", label: "Editorial policy", keywords: ["editorial", "policy", "standards", "corrections"] },
+      { href: "/methodology", label: "Methodology", keywords: ["methodology", "condition", "grading", "fx", "currency", "ranking"] },
+    ],
+  },
+  {
     // The database's own hub pages. These were reachable from the sitemap and
     // from /llms.txt but were NOT in the nav at all, on the old view that "the
     // nav is a shortlist, not an index". The ⌘K launcher is now the index — a
@@ -177,35 +213,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/watching", label: "My Watchlist", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"] },
       { href: "/alerts", label: "Price Alerts", keywords: ["alerts", "price alerts", "notify me", "notifications", "email me", "price drop"] },
       { href: "/premium", label: "Premium", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"] },
-    ],
-  },
-  {
-    // Our original editorial work. Promoted out of the footer-only position it
-    // used to occupy — see PRIMARY_NAV below and Navbar.tsx. A reviewer (or a
-    // reader) landing on a programmatic price page needs a one-click path to
-    // something a person wrote, or the whole site reads as a data feed.
-    title: "Guides & News",
-    icon: "news",
-    links: [
-      { href: "/guides", label: "Guides", keywords: ["guides", "how to", "tutorials", "explainers"] },
-      // "Blog", not "News & analysis" (renamed 2026-09-19, owner call). The site
-      // was calling one destination two different things depending on which
-      // navigation surface you were in: PRIMARY_NAV (the top bar) has always said
-      // "Blog", the page's own H1 is "Blog", and its <title> is "Riftbound Blog —
-      // …" — while this entry, which feeds the Explore overlay, the footer,
-      // SideNav and the ⌘K launcher, said "News & analysis". Clicking it landed
-      // you on a page headed something else. The `keywords` below already carry
-      // news/articles/announcements, so ⌘K still finds it by any of the old words.
-      { href: "/blog", label: "Blog", keywords: ["blog", "news", "articles", "posts", "updates", "announcements", "analysis"] },
-      // hideInFooter: the footer's four columns are already at the top of their
-      // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
-      // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
-      // added on /blog and /guides themselves.
-      { href: "/community", label: "Community links", keywords: ["community", "resources", "links", "other sites", "riftbound news", "deck builders", "wikis", "tier list", "meta"], hideInFooter: true },
-      { href: "/learn", label: "Learn Riftbound", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
-      { href: "/authors", label: "Who writes this", keywords: ["authors", "team", "byline", "who writes"] },
-      { href: "/editorial-policy", label: "Editorial policy", keywords: ["editorial", "policy", "standards", "corrections"] },
-      { href: "/methodology", label: "Methodology", keywords: ["methodology", "condition", "grading", "fx", "currency", "ranking"] },
     ],
   },
   {

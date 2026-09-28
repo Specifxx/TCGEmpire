@@ -84,17 +84,15 @@ test("the phone Explore overlay has a Games group with something to play", () =>
 // homepage's running order is the owner's to set, and now says so explicitly.
 test("the homepage's commercial-vs-playable order is the owner's, and is asserted rather than assumed", () => {
   const code = readCode("src/components/home/HomeSections.tsx");
-  const recent = code.indexOf("<RecentlyViewedRail");
   const deals = code.indexOf("<TodaysTopDeals");
   const ebay = code.indexOf("<EbayPicks");
   const play = code.indexOf("<ReturnVisitCards");
-  assert.ok(recent > 0 && deals > 0 && ebay > 0 && play > 0, "expected all four homepage sections to render");
+  assert.ok(deals > 0 && ebay > 0 && play > 0, "expected all three homepage sections to render");
 
-  // The 2026-09-21 order, top down: recently viewed → Top Deals → eBay Picks
-  // → … → the playable cards. Recently viewed is a client-only chip row that
-  // renders null for a first-time visitor, so Top Deals is genuinely the top
-  // content block for anyone arriving fresh.
-  assert.ok(recent < deals, "Recently viewed sits directly above Today's Top Deals (owner, 2026-09-21)");
+  // The 2026-09-21 order, top down: Top Deals → eBay Picks → … → the playable
+  // cards. Recently viewed sat above Top Deals until 2026-09-28, when the
+  // owner took it off the homepage (tests/homepage-declutter.test.ts).
+  assert.ok(!code.includes("<RecentlyViewedRail"), "Recently viewed is off the homepage (owner, 2026-09-28)");
   assert.ok(deals < ebay, "Today's Top Deals is the owner-chosen top content slot as of 2026-09-21");
   assert.ok(ebay < play, "eBay Picks is above the playable sections, as of 2026-09-17");
 
