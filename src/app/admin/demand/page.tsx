@@ -8,6 +8,7 @@ import { formatMoney } from "@/lib/format";
 import { normalizeCountry, pickPrice, currencyOf, COUNTRY_LIST } from "@/lib/country";
 import { getDemandWindow } from "@/lib/demand-snapshot";
 import { chartMovement, compareDemand, type Movement } from "@/lib/demand-movement";
+import { MoveBadge } from "@/components/MoveBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -252,7 +253,7 @@ export default async function AdminDemandPage({
               <td className="px-3 py-2 tabular-nums text-slate-500">{i + 1}</td>
               {moves && (
                 <td className="px-1 py-2">
-                  <MoveBadge move={moves.get(c.id)} />
+                  <MoveBadge move={moves.get(c.id)} newTitle="No activity on this measure in the previous period" />
                 </td>
               )}
               <td className="px-3 py-2">
@@ -499,34 +500,6 @@ export default async function AdminDemandPage({
         </p>
       </section>
     </div>
-  );
-}
-
-// Billboard-style movement: ▲ climbed, ▼ fell, = held, NEW had no rank last period.
-function MoveBadge({ move }: { move: Movement | undefined }) {
-  if (!move) return null;
-  if (move.kind === "new") {
-    return (
-      <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-amber-300" title="No activity on this measure in the previous period">
-        NEW
-      </span>
-    );
-  }
-  if (move.kind === "same") {
-    return (
-      <span className="text-xs text-slate-500" title={`Held #${move.prev}`}>
-        =
-      </span>
-    );
-  }
-  const up = move.kind === "up";
-  return (
-    <span
-      className={`whitespace-nowrap text-xs font-semibold tabular-nums ${up ? "text-emerald-400" : "text-rose-400"}`}
-      title={`${up ? "Up" : "Down"} ${move.by} from #${move.prev}`}
-    >
-      {up ? "▲" : "▼"} {move.by}
-    </span>
   );
 }
 

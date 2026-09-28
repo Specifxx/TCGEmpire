@@ -7,6 +7,9 @@ import { currencyOf, COUNTRY_LIST } from "@/lib/country";
 import { getCachedRisingCards, parseRiseScope, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { cardImageAlt } from "@/lib/image-alt";
 import { RisingSnapshotPanel } from "@/components/admin/RisingSnapshotPanel";
+import { MoveBadge } from "@/components/MoveBadge";
+import { getPreviousRisingChart, movementAgainst } from "@/lib/rising-movement";
+import { hotListName, snapshotDateLabel } from "@/lib/rising-snapshot";
 import { cardThumbProps } from "@/lib/card-image-url";
 
 export const dynamic = "force-dynamic";
@@ -95,7 +98,12 @@ export default async function AdminRisingPage({
   // The same loaders /tools/rising and the homepage read (weekly history,
   // daily operational inputs — rise-predictor.ts), so an admin load never
   // triggers a second copy of the scan under its own key.
-  const analysis = await getCachedRisingCards(scope);
+  //
+  // Last week's chart for this scope (lib/rising-movement.ts): the most recent
+  // Hot 40 snapshot at least six days old — what next week's snapshot will be
+  // compared with too. None → no Move column, and the panel above says so.
+  const [analysis, prevChart] = await Promise.all([getCachedRisingCards(scope), getPreviousRisingChart(scope)]);
+  const moves = movementAgainst(analysis.picks.map((p) => p.id), prevChart);
 
   const bt = analysis.backtest;
 
@@ -137,6 +145,19 @@ export default async function AdminRisingPage({
           reads the table, decides this run is worth sharing, and the control
           for that should not be at the bottom of a long table. */}
       <RisingSnapshotPanel adminKey={searchParams.key} scope={scope} />
+      <p className="-mt-4 mb-6 text-xs text-slate-500">
+        {prevChart ? (
+          <>
+            Move ▲▼ compares today&apos;s ranking with the {hotListName(prevChart.count)} of{" "}
+            {snapshotDateLabel(new Date(prevChart.createdAt))}, the chart the next snapshot will be compared with.
+          </>
+        ) : (
+          <>
+            No {scope} snapshot from at least 6 days ago, so there is no movement yet. Snapshots still generate as
+            normal, without arrows; movement starts once one of them is at least 6 days old.
+          </>
+        )}
+      </p>
 
       {/* Validation + status tiles */}
       <div className="mb-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
@@ -218,6 +239,11 @@ export default async function AdminRisingPage({
             <thead>
               <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-3 py-2 font-medium">#</th>
+                {moves && (
+                  <th className="px-1 py-2 font-medium" title="Place against last week's chart">
+                    Move
+                  </th>
+                )}
                 <th className="px-3 py-2 font-medium">Card</th>
                 <th className="px-3 py-2 text-right font-medium">Score</th>
                 <th className="px-3 py-2 font-medium">Signal breakdown</th>
@@ -235,6 +261,11 @@ export default async function AdminRisingPage({
               {analysis.picks.map((p: RisePick, i) => (
                 <tr key={p.id} className="border-b border-ink-800 last:border-0 hover:bg-ink-800/60">
                   <td className="px-3 py-2 text-slate-500">{i + 1}</td>
+                  {moves && (
+                    <td className="px-1 py-2">
+                      <MoveBadge move={moves.get(p.id)} newTitle="Not on last week's chart" />
+                    </td>
+                  )}
                   <td className="px-3 py-2">
                     <Link href={`/card/${p.slug ?? p.id}`} className="flex items-center gap-2.5">
                       {p.imageThumbUrl && (

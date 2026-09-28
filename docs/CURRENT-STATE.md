@@ -213,7 +213,10 @@ longer lands on its entry.
   test). The homepage's free "Cheapest on eBay" row lists only cards where eBay
   beats every source the card page ranks (EU: CardTrader too; US: TCGplayer's
   listing too; Canada never). Its free status beside the trial measurement is
-  the owner's call. The homepage price table has an eBay button on every row,
+  the owner's call. Hot 40 snapshots mark picks "Cheapest on eBay" by the same
+  rule (`getCheapestOnEbayFor`), in each pick's basis market, frozen at mint,
+  with a Paid link tag and the disclosure above the table
+  [2026-09-28](../DECISIONS.md#L14912). The homepage price table has an eBay button on every row,
   last, after our own figures: the tracked listing's item price in the page's
   own market (filled only when it is the row's cheapest), a "Search" of the
   visitor's own eBay otherwise; stacked rows below 768px so it is never cut

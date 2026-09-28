@@ -4,6 +4,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { getCachedRisingCards, parseRiseScope, growthSpanLabel, type RisePick, type RiseScope } from "@/lib/rise-predictor";
+import { getPreviousRisingChart, movementAgainst } from "@/lib/rising-movement";
+import { hotListName, snapshotDateLabel } from "@/lib/rising-snapshot";
+import type { Movement } from "@/lib/demand-movement";
+import { MoveBadge } from "@/components/MoveBadge";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
@@ -151,10 +155,15 @@ function CardCell({ p }: { p: RisePick }) {
 // Every price renders in ITS OWN currency (p.currency). Global mixes each
 // card's basis-market price, and until 2026-09-25 this table printed all of
 // them under one "A$" — a US$10.00 card read as A$10.00.
-function RisingRow({ p, rank }: { p: RisePick; rank: number }) {
+function RisingRow({ p, rank, move }: { p: RisePick; rank: number; move: Movement | null | undefined }) {
   return (
     <tr className="align-top hover:bg-ink-800">
       <td className="px-3 py-2 text-slate-500">{rank}</td>
+      {move !== undefined && (
+        <td className="px-1 py-2">
+          <MoveBadge move={move} newTitle="Not on last week's chart" />
+        </td>
+      )}
       <td className="px-3 py-2">
         <CardCell p={p} />
       </td>
@@ -169,11 +178,16 @@ function RisingRow({ p, rank }: { p: RisePick; rank: number }) {
   );
 }
 
-function TableHead({ priceLabel }: { priceLabel: string }) {
+function TableHead({ priceLabel, showMove }: { priceLabel: string; showMove: boolean }) {
   return (
     <thead>
       <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
         <th className="px-3 py-2.5 font-semibold">#</th>
+        {showMove && (
+          <th className="px-1 py-2.5 font-semibold" title="Place against last week's chart">
+            Move
+          </th>
+        )}
         <th className="px-3 py-2.5 font-semibold">Card · why it ranks</th>
         <th className="px-2 py-2.5 text-right font-semibold">{priceLabel}</th>
         <th className="px-2 py-2.5 text-right font-semibold">vs last week</th>
@@ -213,7 +227,10 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   // Two self-caching loaders (weekly history, daily operational inputs) and an
   // in-process assembly — rise-predictor.ts. Shared with the homepage column,
   // /admin/rising and the premium nudge, so any of them warms the rest.
-  const analysis = await getCachedRisingCards(scope);
+  // Last week's chart for the same market (lib/rising-movement.ts): the most
+  // recent Hot 40 snapshot at least six days old. None → no movement column.
+  const [analysis, prevChart] = await Promise.all([getCachedRisingCards(scope), getPreviousRisingChart(scope)]);
+  const moves = movementAgainst(analysis.picks.map((p) => p.id), prevChart);
   const visible = access === "full" ? analysis.picks : access === "top3" ? analysis.picks.slice(0, FREE_PREVIEW_ROWS) : [];
   const hiddenCount = Math.min(40, analysis.picks.length) - visible.length;
   const rebuilding = analysis.picks.length > 0 && analysis.qualifying === 0;
@@ -338,9 +355,9 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
           )}
           <div className="card-surface overflow-x-auto">
             <table className="w-full text-sm sm:min-w-[760px]">
-              <TableHead priceLabel={priceLabel} />
+              <TableHead priceLabel={priceLabel} showMove={!!moves} />
               <tbody className="divide-y divide-ink-800">
-                {visible.map((p, i) => <RisingRow key={p.id} p={p} rank={i + 1} />)}
+                {visible.map((p, i) => <RisingRow key={p.id} p={p} rank={i + 1} move={moves ? moves.get(p.id) ?? null : undefined} />)}
               </tbody>
             </table>
             <p className="p-3 text-[11px] leading-relaxed text-slate-600">
@@ -351,6 +368,14 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
               converted — the series RiftCompare records weekly — with today&apos;s price as the newest point. Ranked among the{" "}
               {analysis.universeSize} most-searched priced cards{where}. A research signal, not financial advice — check a card&apos;s own
               price history before you buy.
+              {prevChart && (
+                <>
+                  {" "}
+                  <span className="text-emerald-400">▲</span>/<span className="text-rose-400">▼</span> compare each card&apos;s
+                  place with the {hotListName(prevChart.count)} of {snapshotDateLabel(new Date(prevChart.createdAt))};{" "}
+                  <span className="font-semibold text-amber-300">NEW</span> means it wasn&apos;t on that chart.
+                </>
+              )}
             </p>
           </div>
           {access === "top3" && hiddenCount > 0 && (

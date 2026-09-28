@@ -62,7 +62,7 @@ test("Rising Cards' cached inputs use the throwing readers", () => {
 test("the Most-searched ranking's cached callback uses the throwing window read", () => {
   const demand = code(read("src/lib/demand.ts"));
   const compute = body(demand, "computeTopDemand");
-  assert.match(compute, /await getDemandWindowOrThrow\(days\)/);
+  assert.match(compute, /await getDemandWindowOrThrow\(days(, \{ previous: true \})?\)/);
   assert.doesNotMatch(compute, /\bgetDemandWindow\(/, "the guarded window would turn a failure into a cached all-time fallback");
   assert.match(compute, /catch \(err\) \{[\s\S]{0,160}throw err;/, "and anything that does fail is rethrown, not stored");
   assert.doesNotMatch(demand, /import \{[^}]*\bgetDemandWindow\b[^}]*\} from "\.\/demand-snapshot"/);

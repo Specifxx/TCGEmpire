@@ -14908,3 +14908,50 @@ This change follows its wording. The descriptions, the WebSite node and llms.txt
 **Rollback.** One commit: RM4 still holds the data. Anything written to RM5 after the cutover is not in RM4.
 
 **Still open.** Three days per project is the same burn as RM3 and RM4. Run `audit-egress` against RM5; rotating buys time, it does not fix the burn. RM5 must be set in Vercel for Production and Preview.
+
+## Chart movement on Demand Finder, Rising Cards and the Hot 40; chart-story titles; Cheapest on eBay on snapshots — 2026-09-28
+
+**Why.** Owner's requests, after the admin demand leaderboard got movement (above):
+- the same arrows on the public Demand Finder, on Rising Cards (public and admin) and on the Hot 40 snapshots;
+- minting must keep working this week and every week "until the change settles", with no movement where there is no data;
+- generated titles should read like a chart ("xxx moves to the top 3, xxx remains at #1");
+- snapshot picks that are cheapest on eBay should say so, with an affiliate link.
+
+**What.**
+- **Demand Finder** (`/tools/demand`): movement against the equal-length period before the window, ranked by `compareDemand`, as on the admin page. It is computed inside `lib/demand.ts`'s daily cached loader (cache key `rc-demand-v4`), so it costs one extra snapshot-day read per window per day, not per view. This supersedes the admin entry's "the cached public read is unchanged". The caption names the dates, or says movement starts once the snapshots reach back two windows.
+- **Rising Cards and the Hot 40** (`lib/rising-movement.ts`):
+  - Rising Cards keeps no history of its own rankings, so "last week's chart" is the most recent Hot 40 snapshot for the same market that is at least `PREVIOUS_CHART_MIN_AGE_DAYS` (6) old. Only version-2 payloads count, because a legacy chart was ranked by the old method.
+  - A snapshot freezes each pick's movement at mint time (`move`, and `previousChart` on the payload).
+  - `/tools/rising` and `/admin/rising` compare today's ranking with the same chart, read through `getPreviousRisingChart`: one row per market per day, self-cached, on the nested-cache list.
+  - On the Hot 40, NEW means "not on last week's chart". On the demand charts it means "no activity in the previous period". `MoveBadge` takes the wording per chart, so the symbols mean the same everywhere.
+- **No chart never blocks anything.** No earlier snapshot, a legacy-only history or a failed read all mint normally without movement. The page then says it is the first chart for the market; the admin panel says the next week's will have it.
+- **Chart-story titles** (`chartStory` in `lib/rising-snapshot.ts`):
+  - The lead is what happened at #1: remains / climbs to #1 from #k / debuts.
+  - The second clause is the first of these that applies: a card into the top 3, the biggest climb of 3+ places, the highest new entry, the biggest fall of 3+ places.
+  - Past 150 characters the second clause is dropped rather than cut mid-name.
+  - Without movement, the older angles apply unchanged.
+  - Every clause is a fact about rank order. None says where a price goes.
+- **Cheapest on eBay on snapshots:**
+  - At mint, each pick is checked with `getCheapestOnEbayFor(market, cardIds)`. That is the homepage row's rule, guards and day-cached inputs, filtered to the given cards instead of cut to the top four, with no detail query.
+  - The check runs in the pick's basis market: the scope, or for GLOBAL the market whose price the row shows. The eBay figure therefore always sits beside a price in the same currency.
+  - The verdict is frozen like every other number. Canada never qualifies.
+  - `/rising/[token]` shows a "Cheapest on eBay ↗" link in the Price cell with the eBay cost ("delivered" or "+ postage") and a Paid link tag. When any pick is marked, the EPN disclosure sits above the table, next to row 1, not under 40 rows.
+  - Clicks are `buy_click` with `surface="hot40_ebay"`, `pageType="rising_snapshot"`.
+
+**Choices.**
+- **The listing URL is frozen untagged and tagged at render.** The frozen fact is "this listing was cheapest", not the tracking parameters. So the attribution rules in force when the page is read apply, including any campaign or rotation change. The EPN customid is `rc-<market>-<ebay key>_cheapest-rising-product`, kept apart from the homepage row's `…-home-…`.
+- **"The listing may have sold since" is said once, above the table.** A snapshot outlives its listings. eBay still credits a click on an ended listing, which lands on eBay's own "similar items".
+- **`getCheapestOnEbay` now reads through a shared `rankedCheapestOnEbay`**, placed after it in the file so the existing source pins in `tests/ebay-clicks-home.test.ts` still cover the reads. A GLOBAL mint may read up to five markets' day-cached inputs, the ones the homepage reads daily anyway. Minting is a weekly admin action.
+
+**Verified.**
+- Tests:
+  - `tests/rising-movement.test.ts`: movement, title clauses and fallbacks, freezing, the eBay payload, the route's per-market lookup, the EPN customid and campid, and the page's link, Paid link tag and disclosure placement.
+  - `tests/ebay-clicks-home.test.ts`: `getCheapestOnEbayFor` keeps exactly the homepage rule's cards, with no detail query and no read for Canada.
+  - `tests/demand-movement.test.ts`, `tests/demand-finder.test.ts`, `tests/nested-cache.test.ts`.
+- Local Postgres with a synthetic "last week" Hot 16 and US store and eBay rows, via `next dev`:
+  - `/admin/rising` showed the Move column against the Hot 16.
+  - Minting returned "RiftCompare Hot 20: Chemtech Enforcer debuts at #1, Magma Wurm moves into the top 3 (US, 28 September 2026)" and marked exactly the 7 seeded cheaper-on-eBay cards. The 6 cards whose eBay copy was dearer were not marked.
+  - The snapshot page rendered 7 `rel="sponsored"` links carrying campid 5339155912 and the new customid, 7 Paid link tags and the disclosure.
+  - Checked at 1280px, at 390px (no page overflow) and in the light theme.
+  - `/tools/demand` showed ▲/▼/NEW with its date caption.
+- The sim's Price column did not match its eBay rows, because it seeded `lowestPriceCentsUs` separately. In production that column is the minimum item price over the same rows, so a marked card's Price is at most its eBay item price.

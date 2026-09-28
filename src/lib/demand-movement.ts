@@ -47,6 +47,16 @@ export function movementFor(rank: number, prevRank: number | undefined): Movemen
   return prevRank > rank ? { kind: "up", by: prevRank - rank, prev: prevRank } : { kind: "down", by: rank - prevRank, prev: prevRank };
 }
 
+/**
+ * Movement against a previous CHART rather than a previous period's raw counts:
+ * `prevRanks` is last chart's card → position. Used by Rising Cards and the
+ * Hot 40, whose previous chart is a frozen snapshot that only holds its own
+ * picks, so "new" there means "not on that chart" (it may have ranked lower).
+ */
+export function movementFromRanks(order: readonly string[], prevRanks: ReadonlyMap<string, number>): Map<string, Movement> {
+  return new Map(order.map((id, i) => [id, movementFor(i + 1, prevRanks.get(id))]));
+}
+
 /** Movement for each card in this period's displayed list (already in rank order). */
 export function chartMovement(
   currentOrder: readonly string[],

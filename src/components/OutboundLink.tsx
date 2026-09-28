@@ -142,7 +142,9 @@ export function OutboundLink({
    *  - `card_top_buy`, `sticky_buy_bar`: the card page's phone buy block under
    *    the name and its sticky bottom bar (CardMobileBuy, 2026-09-26);
    *  - `price_table_ebay`: the eBay button on each row of the homepage's
-   *    "Riftbound card prices today" table (PriceRowEbay, 2026-09-26). */
+   *    "Riftbound card prices today" table (PriceRowEbay, 2026-09-26);
+   *  - `hot40_ebay`: the "Cheapest on eBay" link on a Hot 40 snapshot row
+   *    (/rising/[token], 2026-09-28). */
   surface?:
     | "table"
     | "modal"
@@ -163,7 +165,8 @@ export function OutboundLink({
     | "search_box"
     | "card_top_buy"
     | "sticky_buy_bar"
-    | "price_table_ebay";
+    | "price_table_ebay"
+    | "hot40_ebay";
 }) {
   // Tell the signup popup a buy link exists on this page, so it stays off the
   // buy path until the click has happened. See lib/buy-intent.ts — registering

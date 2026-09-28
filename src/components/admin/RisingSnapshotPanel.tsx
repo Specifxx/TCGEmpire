@@ -26,7 +26,13 @@ export function RisingSnapshotPanel({ adminKey, scope }: { adminKey?: string; sc
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [list, setList] = useState<Snapshot[] | null>(null);
-  const [justMade, setJustMade] = useState<{ title: string; url: string; picks: number } | null>(null);
+  const [justMade, setJustMade] = useState<{
+    title: string;
+    url: string;
+    picks: number;
+    comparedWith: { createdAt: string; count: number } | null;
+    cheapestOnEbay: number;
+  } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
   const qs = adminKey ? `?key=${encodeURIComponent(adminKey)}` : "";
@@ -61,7 +67,7 @@ export function RisingSnapshotPanel({ adminKey, scope }: { adminKey?: string; sc
         setError(d.error ?? "Could not generate the snapshot");
         return;
       }
-      setJustMade({ title: d.title, url: d.url, picks: d.picks });
+      setJustMade({ title: d.title, url: d.url, picks: d.picks, comparedWith: d.comparedWith ?? null, cheapestOnEbay: d.cheapestOnEbay ?? 0 });
       void load();
     } catch {
       setError("Could not reach the server");
@@ -111,7 +117,15 @@ export function RisingSnapshotPanel({ adminKey, scope }: { adminKey?: string; sc
               Open
             </a>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-500">{justMade.picks} cards frozen into this link.</p>
+          <p className="mt-1.5 text-[11px] text-slate-500">
+            {justMade.picks} cards frozen into this link.{" "}
+            {justMade.comparedWith
+              ? `Movement ▲▼ is against the Hot ${justMade.comparedWith.count} of ${new Date(justMade.comparedWith.createdAt).toLocaleDateString()}.`
+              : "No earlier chart for this market from at least 6 days ago, so this one carries no movement — the next week's will."}{" "}
+            {justMade.cheapestOnEbay === 0
+              ? "No pick was cheapest on eBay."
+              : `${justMade.cheapestOnEbay} ${justMade.cheapestOnEbay === 1 ? "pick is" : "picks are"} marked Cheapest on eBay, with an affiliate link.`}
+          </p>
         </div>
       )}
 

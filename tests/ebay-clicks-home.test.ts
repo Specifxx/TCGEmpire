@@ -259,6 +259,30 @@ test("getCheapestOnEbay end to end: one narrow detail query for at most `limit` 
   assert.ok(!db.calls.some((c) => c.op === "retailerPrice.findMany" && c.args.where.cardId), "no per-listing detail read — the cached eBay row carries its own URL");
 });
 
+test("getCheapestOnEbayFor: the row's verdict for the cards asked about, no top-N cut and no detail query (Hot 40, 2026-09-28)", async () => {
+  const stores = arb.defaultBuySplit("US").storeKeys;
+  db.rows = [];
+  for (let i = 0; i < 6; i++) {
+    db.rows.push(
+      row({ cardId: `c${i}`, retailer: stores[0], priceCents: 3000 + i * 100 }),
+      row({ cardId: `c${i}`, retailer: "ebay_us", priceCents: 2000, shippingCents: i % 2 ? null : 150, url: `https://www.ebay.com/itm/${i}` }),
+    );
+  }
+  // c5: TCGplayer undercuts eBay. c9: no store at all. d1: eBay dearer than the store.
+  db.rows.push(row({ cardId: "c5", retailer: "tcgplayer", priceCents: 1900 }), row({ cardId: "c5", retailer: "tcgplayer_market", priceCents: 4000 }));
+  db.rows.push(row({ cardId: "c9", retailer: "ebay_us", priceCents: 500 }));
+  db.rows.push(row({ cardId: "d1", retailer: stores[0], priceCents: 900 }), row({ cardId: "d1", retailer: "ebay_us", priceCents: 1500 }));
+  db.calls = [];
+  const found = await arb.getCheapestOnEbayFor("US", ["c0", "c2", "c5", "c9", "d1", "zz"]);
+  assert.deepEqual([...found.keys()].sort(), ["c0", "c2"], "the same rule as the homepage row, whatever the cards' place in it");
+  assert.deepEqual(found.get("c0"), { cardId: "c0", ebayCents: 2150, postageKnown: true, url: "https://www.ebay.com/itm/0", storeCents: 3000, gapCents: 850, ebayKey: "ebay_us" });
+  assert.ok(!db.calls.some((c) => c.op === "card.findMany"), "no detail query: the snapshot already has its cards");
+  db.calls = [];
+  assert.equal((await arb.getCheapestOnEbayFor("CA", ["c0"])).size, 0, "Canada: nothing, and no read");
+  assert.deepEqual(db.calls, []);
+  assert.equal((await arb.getCheapestOnEbayFor("US", [])).size, 0);
+});
+
 test("getCheapestOnEbay is never cached around, and top-deals chains it after the list that warms its inputs", () => {
   const nested = read("tests/nested-cache.test.ts");
   assert.match(nested, /"getCheapestOnEbay",/, "listed as self-cached in the nested-cache guard");

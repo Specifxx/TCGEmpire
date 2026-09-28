@@ -58,7 +58,7 @@ test("the strip's loader is called at the page's top level, never inside another
 test("the page keeps its revalidate, and the strip's cache cannot undercut it", () => {
   const page = read(PAGE);
   assert.match(page, /export const revalidate = 86400;/, "never lower a page's revalidate");
-  const ttl = Number(/\["rc-demand-v3"[\s\S]{0,80}revalidate:\s*(\d+)/.exec(read(DEMAND))?.[1]);
+  const ttl = Number(/\["rc-demand-v4"[\s\S]{0,80}revalidate:\s*(\d+)/.exec(read(DEMAND))?.[1]);
   assert.ok(ttl >= 86400, `getTopDemand's TTL (${ttl}) must not be shorter than the page's 86400`);
 });
 
@@ -68,7 +68,7 @@ test("the demand ranking is narrow and computed once for every market", () => {
   const select = /export const DEMAND_CARD_SELECT = \{[\s\S]*?\} satisfies Prisma\.CardSelect;/.exec(demand)?.[0] ?? "";
   assert.ok(select, "expected DEMAND_CARD_SELECT");
   assert.doesNotMatch(select, /_count|retailerPrices/, "no relation counts in the narrow select");
-  assert.match(demand, /\["rc-demand-v3", String\(days\), sydneyDayKey\(\)\]/, "the key carries no market");
+  assert.match(demand, /\["rc-demand-v4", String\(days\), sydneyDayKey\(\)\]/, "the key carries no market");
   // "Most searched" never lists a card nobody searched for.
   assert.match(demand, /win\.rows\.filter\(\(r\) => r\.searches > 0\)/);
 });

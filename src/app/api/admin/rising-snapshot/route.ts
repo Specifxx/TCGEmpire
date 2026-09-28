@@ -4,9 +4,11 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { SITE_URL } from "@/lib/site";
-import { getCachedRisingCards, type RiseScope } from "@/lib/rise-predictor";
-import { generateRisingTitle, toSnapshotData } from "@/lib/rising-snapshot";
-import { COUNTRIES } from "@/lib/country";
+import { getCachedRisingCards, type RisePick, type RiseScope } from "@/lib/rise-predictor";
+import { generateRisingTitle, toSnapshotData, type SnapshotEbayDeal } from "@/lib/rising-snapshot";
+import { loadPreviousChart, type PreviousChart } from "@/lib/rising-movement";
+import { getCheapestOnEbayFor } from "@/lib/arbitrage";
+import { COUNTRIES, currencyOf, type Country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +30,37 @@ const schema = z.object({
 function authed(user: { isAdmin: boolean } | null, suppliedKey: string | undefined) {
   const token = process.env.ADMIN_TOKEN;
   return (!!token && suppliedKey === token) || !!user?.isAdmin;
+}
+
+/**
+ * Each pick's Cheapest on eBay verdict, frozen into the snapshot (2026-09-28).
+ * Checked in the pick's own basis market — the scope, or for GLOBAL the market
+ * whose price the row shows — so the eBay price sits beside a price in the same
+ * currency. One lookup per market present, each over the day-cached inputs the
+ * homepage's Cheapest on eBay row reads (getCheapestOnEbayFor is self-cached:
+ * called directly, never wrapped). It never throws; a market it can't check
+ * freezes as "not cheapest on eBay".
+ */
+async function cheapestOnEbayByPick(picks: readonly RisePick[]): Promise<Map<string, SnapshotEbayDeal>> {
+  const byMarket = new Map<Country, string[]>();
+  for (const p of picks) byMarket.set(p.basisMarket, [...(byMarket.get(p.basisMarket) ?? []), p.id]);
+  const out = new Map<string, SnapshotEbayDeal>();
+  await Promise.all(
+    [...byMarket].map(async ([market, ids]) => {
+      for (const [id, r] of await getCheapestOnEbayFor(market, ids)) {
+        out.set(id, {
+          url: r.url,
+          retailer: r.ebayKey,
+          market,
+          cents: r.ebayCents,
+          currency: currencyOf(market),
+          postageKnown: r.postageKnown,
+          gapCents: r.gapCents,
+        });
+      }
+    }),
+  );
+  return out;
 }
 
 export async function GET(req: Request) {
@@ -75,7 +108,17 @@ export async function POST(req: Request) {
   }
 
   const now = new Date();
-  const data = toSnapshotData(analysis, scope, now);
+  // Last week's chart, for the Billboard-style movement frozen into this one
+  // (lib/rising-movement.ts). NEVER a reason not to mint: no earlier chart, a
+  // legacy-only history or a failed read all mint a snapshot without movement.
+  const [previous, ebay] = await Promise.all([
+    loadPreviousChart(scope, now.getTime()).catch((e: Error): PreviousChart | null => {
+      console.warn("[rising-snapshot] previous chart unavailable, minting without movement:", e.message);
+      return null;
+    }),
+    cheapestOnEbayByPick(analysis.picks),
+  ]);
+  const data = toSnapshotData(analysis, scope, now, previous, ebay);
 
   // An empty run is still mintable, deliberately. A market with no searched,
   // priced cards legitimately has nothing to rank, and a link that says so
@@ -95,5 +138,7 @@ export async function POST(req: Request) {
     title: snapshot.title,
     url: `${SITE_URL}/rising/${snapshot.token}`,
     picks: data.picks.length,
+    comparedWith: previous ? { createdAt: previous.createdAt, count: previous.count } : null,
+    cheapestOnEbay: ebay.size,
   });
 }

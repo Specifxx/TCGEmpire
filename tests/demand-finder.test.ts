@@ -96,7 +96,7 @@ test("the page and the strip call the self-cached loader directly, never inside 
   for (const loader of ["getTopDemand(", "getPriceMovers(", "getCachedRisingCards(", "getDemandWindow("]) {
     assert.ok(!body.includes(loader), `computeTopDemand must not call ${loader}`);
   }
-  assert.match(body, /getDemandWindowOrThrow\(days\)/, "the throwing reader, so a failure is never cached");
+  assert.match(body, /getDemandWindowOrThrow\(days, \{ previous: true \}\)/, "the throwing reader (with the previous period, for movement), so a failure is never cached");
 });
 
 test("every tier surface sells it as Premium", () => {
@@ -146,10 +146,10 @@ test("lib/demand.ts computes once at the deepest list and slices for every calle
   assert.equal(PREMIUM_DEMAND_ROWS, 25);
   assert.match(src, /unstable_cache\(/, "the expensive computation must be cached");
   assert.match(src, /tags: \[CONTENT_TAG\]/, "must revalidate on the same content tag as every other daily screener");
-  assert.match(src, /\["rc-demand-v3", String\(days\), sydneyDayKey\(\)\]/, "a new key for the new shape; no market in it");
+  assert.match(src, /\["rc-demand-v4", String\(days\), sydneyDayKey\(\)\]/, "a new key for the new shape (v4: rank movement, 2026-09-28); no market in it");
   assert.match(src, /bySearch: full\.bySearch\.slice\(0, limit\)/);
   assert.match(src, /byView: full\.byView\.slice\(0, limit\)/);
-  const ttl = Number(/\["rc-demand-v3"[\s\S]{0,80}revalidate:\s*(\d+)/.exec(src)?.[1]);
+  const ttl = Number(/\["rc-demand-v4"[\s\S]{0,80}revalidate:\s*(\d+)/.exec(src)?.[1]);
   assert.ok(ttl >= 86400, `the TTL (${ttl}) must not undercut /movers' 86400 revalidate`);
 });
 
