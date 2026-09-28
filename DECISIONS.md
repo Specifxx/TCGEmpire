@@ -14877,7 +14877,6 @@ This change follows its wording. The descriptions, the WebSite node and llms.txt
 
 **Owner steps.** After the next release, run maintenance → `fix-card-names` (dry run), check the report, run it again with `apply` ticked, then `revalidate-now`.
 
-<<<<<<< Updated upstream
 ## Demand leaderboard: Billboard-style rank movement — 2026-09-28
 
 **Why.** Owner's request: `/admin/demand`'s windowed charts (Most searched, Most viewed) should show each card's movement next to its rank, Hot 100 style.
@@ -14894,7 +14893,7 @@ This change follows its wording. The descriptions, the WebSite node and llms.txt
 - **Coverage is stated, not assumed.** The caption names the two snapshot dates compared. When snapshots don't reach back two windows, it says so and the movement column is hidden.
 
 **Verified.** `tests/demand-movement.test.ts`. A local Postgres with 15 days of synthetic snapshots produced every movement kind, each matching the seeded figures (for example Flame Chompers ▲5 from #8, Blazing Scorcher ▼8 from #1, Get Excited! NEW). The page rendered via `next dev` at 1280px and 390px with no page overflow.
-=======
+
 ## Operational database cut over from RM4 to RM5 — 2026-09-28
 
 **Why.** RM4 came within reach of its 5 GB monthly transfer allowance three days after becoming the operational database on 2026-09-25.
@@ -14909,4 +14908,3 @@ This change follows its wording. The descriptions, the WebSite node and llms.txt
 **Rollback.** One commit: RM4 still holds the data. Anything written to RM5 after the cutover is not in RM4.
 
 **Still open.** Three days per project is the same burn as RM3 and RM4. Run `audit-egress` against RM5; rotating buys time, it does not fix the burn. RM5 must be set in Vercel for Production and Preview.
->>>>>>> Stashed changes

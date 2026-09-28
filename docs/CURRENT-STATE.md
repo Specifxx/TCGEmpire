@@ -62,7 +62,7 @@ longer lands on its entry.
   `resolveVar()` takes the first SET variable, not the first healthy one.
   History: `HISTORY_DATABASE_URL_4`, then `_3`, then `DATABASE_URL`
   (terminal). Never rotate onto `DATABASE_URL`.
-  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422), [2026-09-28](../DECISIONS.md#L14880)
+  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422), [2026-09-28](../DECISIONS.md#L14897)
 - **Migrating:** verify the target live first (a recycled project must trail
   the source on every metric; a new one must be empty). Use a named
   `maintenance.yml` task: it guards SOURCE≠TARGET, dumps before truncating,
