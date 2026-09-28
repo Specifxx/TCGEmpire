@@ -78,19 +78,75 @@ export async function getDemandVelocityOrThrow(cardIds: string[], days = 21): Pr
     });
   }
   for (const [cardId, pts] of byCard) {
-    if (pts.length < 2) continue;
-    const first = pts[0];
-    const last = pts[pts.length - 1];
-    const spanDays = (last.t - first.t) / 86400_000;
-    if (spanDays < 1) continue;
-    const searchGrowthPct = first.s > 0 ? Math.round(((last.s - first.s) / first.s) * 1000) / 10 : null;
-    out.set(cardId, {
-      searchPerDay: Math.round(((last.s - first.s) / spanDays) * 100) / 100,
-      viewPerDay: Math.round(((last.v - first.v) / spanDays) * 100) / 100,
-      searchGrowthPct,
-      spanDays: Math.round(spanDays),
-      points: pts.length,
-    });
+    const v = velocityBetween(pts[0], pts[pts.length - 1], pts.length);
+    if (v) out.set(cardId, v);
+  }
+  return out;
+}
+
+/**
+ * Velocity from a card's first and last snapshot in a window: the arithmetic
+ * behind getDemandVelocityOrThrow, shared with getDemandAsOfOrThrow so a week-
+ * ago ranking measures velocity exactly as today's does. Null below 2 points
+ * or a day of span.
+ */
+export function velocityBetween(
+  first: { t: number; s: number; v: number },
+  last: { t: number; s: number; v: number },
+  points: number,
+): DemandVelocity | null {
+  if (points < 2) return null;
+  const spanDays = (last.t - first.t) / 86400_000;
+  if (spanDays < 1) return null;
+  const searchGrowthPct = first.s > 0 ? Math.round(((last.s - first.s) / first.s) * 1000) / 10 : null;
+  return {
+    searchPerDay: Math.round(((last.s - first.s) / spanDays) * 100) / 100,
+    viewPerDay: Math.round(((last.v - first.v) / spanDays) * 100) / 100,
+    searchGrowthPct,
+    spanDays: Math.round(spanDays),
+    points,
+  };
+}
+
+/** One card's demand as it stood on a past day. Plain JSON (it is cached). */
+export interface DemandAsOfCard {
+  searchCount: number; // the running totals on its last snapshot on or before that day
+  viewCount: number;
+  velocity: DemandVelocity | null; // over the `windowDays` before that day, as getDemandVelocityOrThrow measures it
+}
+
+/**
+ * Every card's demand AS OF a past Sydney day (2026-09-28, Rising Cards'
+ * week-ago ranking): its running totals on its last snapshot on or before
+ * `asOfDay`, and its velocity over the `windowDays` before it.
+ *
+ * Aggregated IN THE DATABASE, one row per card (first and last snapshot in the
+ * window, and how many), not the ~22 daily rows per card the velocity needs:
+ * ~1,400 narrow rows for the whole catalogue. Throws on a failed read (see the
+ * header): the caller caches it.
+ */
+export async function getDemandAsOfOrThrow(asOfDay: Date, windowDays = 21): Promise<Record<string, DemandAsOfCard>> {
+  const from = new Date(asOfDay.getTime() - windowDays * 86400_000);
+  const rows = await prisma.$queryRaw<
+    { cardId: string; points: bigint; firstDay: Date; lastDay: Date; firstS: number; firstV: number; lastS: number; lastV: number }[]
+  >`
+    SELECT "cardId",
+           COUNT(*) AS "points",
+           MIN("day") AS "firstDay",
+           MAX("day") AS "lastDay",
+           (ARRAY_AGG("searchCount" ORDER BY "day" ASC))[1] AS "firstS",
+           (ARRAY_AGG("viewCount" ORDER BY "day" ASC))[1] AS "firstV",
+           (ARRAY_AGG("searchCount" ORDER BY "day" DESC))[1] AS "lastS",
+           (ARRAY_AGG("viewCount" ORDER BY "day" DESC))[1] AS "lastV"
+    FROM "DemandSnapshot"
+    WHERE "day" >= ${from}::date AND "day" <= ${asOfDay}::date
+    GROUP BY "cardId"
+  `;
+  const out: Record<string, DemandAsOfCard> = {};
+  for (const r of rows) {
+    const first = { t: new Date(r.firstDay).getTime(), s: r.firstS, v: r.firstV };
+    const last = { t: new Date(r.lastDay).getTime(), s: r.lastS, v: r.lastV };
+    out[r.cardId] = { searchCount: r.lastS, viewCount: r.lastV, velocity: velocityBetween(first, last, Number(r.points)) };
   }
   return out;
 }

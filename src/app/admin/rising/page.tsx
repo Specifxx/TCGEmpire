@@ -4,12 +4,11 @@ import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRY_LIST } from "@/lib/country";
-import { getCachedRisingCards, parseRiseScope, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
+import { getCachedRisingCards, getRisingWeekAgo, parseRiseScope, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { cardImageAlt } from "@/lib/image-alt";
 import { RisingSnapshotPanel } from "@/components/admin/RisingSnapshotPanel";
 import { MoveBadge } from "@/components/MoveBadge";
-import { getPreviousRisingChart, movementAgainst } from "@/lib/rising-movement";
-import { hotListName, snapshotDateLabel } from "@/lib/rising-snapshot";
+import { movementAgainst, weekAgoLabel } from "@/lib/rising-movement";
 import { cardThumbProps } from "@/lib/card-image-url";
 
 export const dynamic = "force-dynamic";
@@ -102,8 +101,8 @@ export default async function AdminRisingPage({
   // Last week's chart for this scope (lib/rising-movement.ts): the most recent
   // Hot 40 snapshot at least six days old — what next week's snapshot will be
   // compared with too. None → no Move column, and the panel above says so.
-  const [analysis, prevChart] = await Promise.all([getCachedRisingCards(scope), getPreviousRisingChart(scope)]);
-  const moves = movementAgainst(analysis.picks.map((p) => p.id), prevChart);
+  const [analysis, weekAgo] = await Promise.all([getCachedRisingCards(scope), getRisingWeekAgo(scope)]);
+  const moves = movementAgainst(analysis.picks.map((p) => p.id), weekAgo);
 
   const bt = analysis.backtest;
 
@@ -146,15 +145,16 @@ export default async function AdminRisingPage({
           for that should not be at the bottom of a long table. */}
       <RisingSnapshotPanel adminKey={searchParams.key} scope={scope} />
       <p className="-mt-4 mb-6 text-xs text-slate-500">
-        {prevChart ? (
+        {weekAgo ? (
           <>
-            Move ▲▼ compares today&apos;s ranking with the {hotListName(prevChart.count)} of{" "}
-            {snapshotDateLabel(new Date(prevChart.createdAt))}, the chart the next snapshot will be compared with.
+            Move ▲▼ compares today&apos;s ranking with the same ranking rebuilt as of {weekAgoLabel(weekAgo)}, 7 days
+            earlier: demand and prices as they stood then, today&apos;s stock counts (nothing records those
+            historically). NEW means the card had no searches by then. Snapshots freeze this movement.
           </>
         ) : (
           <>
-            No {scope} snapshot from at least 6 days ago, so there is no movement yet. Snapshots still generate as
-            normal, without arrows; movement starts once one of them is at least 6 days old.
+            The ranking from 7 days ago couldn&apos;t be rebuilt (no demand snapshots that far back, or a failed read),
+            so there is no movement. Snapshots still generate as normal, without arrows.
           </>
         )}
       </p>
@@ -240,7 +240,7 @@ export default async function AdminRisingPage({
               <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-3 py-2 font-medium">#</th>
                 {moves && (
-                  <th className="px-1 py-2 font-medium" title="Place against last week's chart">
+                  <th className="px-1 py-2 font-medium" title="Place against the ranking 7 days ago">
                     Move
                   </th>
                 )}
@@ -263,7 +263,7 @@ export default async function AdminRisingPage({
                   <td className="px-3 py-2 text-slate-500">{i + 1}</td>
                   {moves && (
                     <td className="px-1 py-2">
-                      <MoveBadge move={moves.get(p.id)} newTitle="Not on last week's chart" />
+                      <MoveBadge move={moves.get(p.id)} newTitle="Not ranked 7 days ago" />
                     </td>
                   )}
                   <td className="px-3 py-2">

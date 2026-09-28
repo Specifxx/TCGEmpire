@@ -54,8 +54,10 @@ const SELF_CACHED = [
   // cache would disable.
   "getCheapestOnEbay",
   "getCheapestOnEbayFor",
-  // 2026-09-28: last week's Hot 40, for Rising Cards' rank movement.
-  "getPreviousRisingChart",
+  // 2026-09-28: Rising Cards' ranking rebuilt as of 7 days ago (rank movement),
+  // and the day-cached demand read behind it.
+  "getRisingWeekAgo",
+  "getDemandWeekAgo",
 ];
 
 function walk(dir: string, out: string[] = []): string[] {

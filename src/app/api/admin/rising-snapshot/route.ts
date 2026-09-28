@@ -4,9 +4,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { SITE_URL } from "@/lib/site";
-import { getCachedRisingCards, type RisePick, type RiseScope } from "@/lib/rise-predictor";
+import { getCachedRisingCards, getRisingWeekAgo, type RisePick, type RiseScope } from "@/lib/rise-predictor";
 import { generateRisingTitle, toSnapshotData, type SnapshotEbayDeal } from "@/lib/rising-snapshot";
-import { loadPreviousChart, type PreviousChart } from "@/lib/rising-movement";
 import { getCheapestOnEbayFor } from "@/lib/arbitrage";
 import { COUNTRIES, currencyOf, type Country } from "@/lib/country";
 
@@ -108,17 +107,12 @@ export async function POST(req: Request) {
   }
 
   const now = new Date();
-  // Last week's chart, for the Billboard-style movement frozen into this one
-  // (lib/rising-movement.ts). NEVER a reason not to mint: no earlier chart, a
-  // legacy-only history or a failed read all mint a snapshot without movement.
-  const [previous, ebay] = await Promise.all([
-    loadPreviousChart(scope, now.getTime()).catch((e: Error): PreviousChart | null => {
-      console.warn("[rising-snapshot] previous chart unavailable, minting without movement:", e.message);
-      return null;
-    }),
-    cheapestOnEbayByPick(analysis.picks),
-  ]);
-  const data = toSnapshotData(analysis, scope, now, previous, ebay);
+  // The same ranking a week ago, for the Billboard-style movement frozen into
+  // this one (lib/rising-movement.ts). NEVER a reason not to mint:
+  // getRisingWeekAgo returns null when it can't be rebuilt, and the snapshot is
+  // minted without movement. It depends on no earlier snapshot.
+  const [weekAgo, ebay] = await Promise.all([getRisingWeekAgo(scope), cheapestOnEbayByPick(analysis.picks)]);
+  const data = toSnapshotData(analysis, scope, now, weekAgo, ebay);
 
   // An empty run is still mintable, deliberately. A market with no searched,
   // priced cards legitimately has nothing to rank, and a link that says so
@@ -138,7 +132,28 @@ export async function POST(req: Request) {
     title: snapshot.title,
     url: `${SITE_URL}/rising/${snapshot.token}`,
     picks: data.picks.length,
-    comparedWith: previous ? { createdAt: previous.createdAt, count: previous.count } : null,
+    comparedWith: weekAgo ? { asOf: weekAgo.asOf } : null,
     cheapestOnEbay: ebay.size,
   });
+}
+
+// DELETE (owner, 2026-09-28: "have an option to delete snapshots too"). Same
+// dual gate. The link stops working at once for everyone holding it —
+// /rising/[token] is force-dynamic and 404s a missing token, and its share
+// image falls back to the brand-only one — and the admin panel confirms before
+// calling this, because there is no undo. Nothing else reads a snapshot:
+// movement compares with the ranking a week ago, not with minted charts.
+const deleteSchema = z.object({ id: z.string().min(1), key: z.string().optional() });
+
+export async function DELETE(req: Request) {
+  const body = await req.json().catch(() => null);
+  const user = await getCurrentUser();
+  if (!authed(user, body?.key)) return NextResponse.json({ error: "Admin only" }, { status: 403 });
+
+  const parsed = deleteSchema.safeParse(body ?? {});
+  if (!parsed.success) return NextResponse.json({ error: "missing snapshot id" }, { status: 400 });
+
+  const { count } = await prisma.risingSnapshot.deleteMany({ where: { id: parsed.data.id } });
+  if (count === 0) return NextResponse.json({ error: "No such snapshot" }, { status: 404 });
+  return NextResponse.json({ ok: true });
 }

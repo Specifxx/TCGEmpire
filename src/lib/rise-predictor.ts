@@ -7,6 +7,7 @@ import {
   historySource,
   GLOBAL_HISTORY_COUNTRY,
   cachedOrDirect,
+  sydneyDay,
   sydneyDayKey,
   sydneyWeekKey,
   collapseToWeekly,
@@ -16,7 +17,13 @@ import {
 import { CONTENT_TAG, HISTORY_TAG } from "./revalidate-content";
 import { usdCentsToCountry } from "./fx";
 import { cardDisplayName } from "./card-name";
-import { getDemandVelocityOrThrow, demandSnapshotDaysOrThrow, type DemandVelocity } from "./demand-snapshot";
+import {
+  getDemandVelocityOrThrow,
+  demandSnapshotDaysOrThrow,
+  getDemandAsOfOrThrow,
+  type DemandAsOfCard,
+  type DemandVelocity,
+} from "./demand-snapshot";
 import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats";
 
 // ── Rise predictor ────────────────────────────────────────────────────────────
@@ -435,7 +442,15 @@ async function computeRiseInputs(scope: RiseScope): Promise<RiseInputs> {
 // ── The assembly: pure, in-process, uncached ────────────────────────────────
 // Exported for tests (tests/rising-cards.test.ts drives it with synthetic
 // inputs — no database).
-export function assembleRisingCards(scope: RiseScope, inputs: RiseInputs, history: RiseHistory, now: number): RiseAnalysis {
+export function assembleRisingCards(
+  scope: RiseScope,
+  inputs: RiseInputs,
+  history: RiseHistory,
+  now: number,
+  // How many picks to keep. The screener shows DISPLAY; the week-ago ranking
+  // below keeps every card, so a climb from #73 reads ▲n rather than NEW.
+  limit = DISPLAY,
+): RiseAnalysis {
   const isGlobal = scope === "GLOBAL";
   const { universe } = inputs;
   if (!universe.length) return emptyAnalysis(scope);
@@ -590,7 +605,7 @@ export function assembleRisingCards(scope: RiseScope, inputs: RiseInputs, histor
     pick.reason = riseReason(pick, scope);
     return { pick, raw: rawScore[i] };
   });
-  const picks: RisePick[] = built.sort((a, b) => b.raw - a.raw).slice(0, DISPLAY).map((b) => b.pick);
+  const picks: RisePick[] = built.sort((a, b) => b.raw - a.raw).slice(0, limit).map((b) => b.pick);
 
   // Context: how correlated demand rank is with price rank (positive is normal; the
   // picks are the high-demand / low-price residuals the score surfaces).
@@ -612,6 +627,110 @@ export function assembleRisingCards(scope: RiseScope, inputs: RiseInputs, histor
     scope,
     failed: false,
   };
+}
+
+// ── The ranking a week ago (2026-09-28) ─────────────────────────────────────
+// Owner: "literally just use the data from a week ago, it doesn't need to be
+// dependant on the snapshot for the arrows. It should just be compared to the
+// prev 7 days." Rising Cards stores no history of its own rankings, so the
+// week-ago ranking is REBUILT: the same pure assembly, over the inputs as they
+// stood WEEK_AGO_DAYS ago —
+//   • demand: each card's running search/view totals on that day, and its
+//     velocity over the 21 days before it (DemandSnapshot, getDemandAsOfOrThrow);
+//   • price: the weekly GLOBAL series cut off at that day, its last recorded
+//     point standing in for the live price;
+//   • stock: TODAY's in-stock store counts — the one input nothing records
+//     historically. Scarcity is one of seven weighted terms; the page says so.
+// Same method on both sides, so a move is the market's, not a methodology's.
+// Ranked over today's universe (the 400 most-searched priced cards): a card
+// with no searches by that day was not ranked then, and shows NEW.
+//
+// EGRESS: one aggregated DemandSnapshot read per day for the whole catalogue
+// (getDemandWeekAgo, ~1,400 narrow rows); the other two inputs are the cached
+// loaders above. The assembly runs in-process, like getCachedRisingCards.
+export const WEEK_AGO_DAYS = 7;
+
+/** Every card's place in the ranking rebuilt as of `asOf`. Plain JSON. */
+export interface WeekAgoRanking {
+  asOf: string; // the Sydney day it is rebuilt as of, YYYY-MM-DD
+  ranks: [cardId: string, rank: number][];
+}
+
+export type DemandWeekAgo = { asOf: string; cards: Record<string, DemandAsOfCard> };
+
+// Loader 3: day-keyed, untagged — a past day's snapshots never change, so an
+// import has nothing to purge here. Throws inside (never caches a failure).
+export function getDemandWeekAgo(): Promise<DemandWeekAgo> {
+  return cachedOrDirect(() => computeDemandWeekAgo(), ["rc-rise-demand-week-ago-v1", sydneyDayKey()], {
+    revalidate: 172800,
+    tags: [],
+  });
+}
+
+async function computeDemandWeekAgo(): Promise<DemandWeekAgo> {
+  const asOfDay = sydneyDay(new Date(Date.now() - WEEK_AGO_DAYS * DAY_MS));
+  return { asOf: asOfDay.toISOString().slice(0, 10), cards: await getDemandAsOfOrThrow(asOfDay) };
+}
+
+/** Pure: the ranking rebuilt as of `past.asOf` (see the section header). Null when nothing had demand then. */
+export function weekAgoRanks(
+  scope: RiseScope,
+  inputs: RiseInputs,
+  history: RiseHistory,
+  past: DemandWeekAgo,
+  now: number,
+): WeekAgoRanking | null {
+  const asOfEpochDay = Math.round(Date.parse(`${past.asOf}T00:00:00Z`) / DAY_MS);
+  const universe: UniverseCard[] = [];
+  const velocity: Record<string, DemandVelocity> = {};
+  const series: RiseHistory["series"] = {};
+  for (const card of inputs.universe) {
+    const d = past.cards[card.id];
+    if (!d || d.searchCount <= 0) continue; // not searched by then, so not ranked then
+    // Prices nulled: the assembly appends a card's live price as its newest
+    // point, and today's price is not a price a week ago. The series' last
+    // recorded point up to that day stands in for it.
+    universe.push({
+      ...card,
+      searchCount: d.searchCount,
+      viewCount: d.viewCount,
+      lowestPriceCents: null,
+      lowestPriceCentsUs: null,
+      lowestPriceCentsUk: null,
+      lowestPriceCentsSg: null,
+      lowestPriceCentsCa: null,
+      lowestPriceCentsEu: null,
+    });
+    if (d.velocity) velocity[card.id] = d.velocity;
+    const pts = history.series[card.id]?.filter(([day]) => day <= asOfEpochDay);
+    if (pts?.length) series[card.id] = pts;
+  }
+  if (!universe.length) return null;
+  const then = assembleRisingCards(
+    scope,
+    { universe, supply: inputs.supply, velocity, snapshotDays: inputs.snapshotDays },
+    { series },
+    now - WEEK_AGO_DAYS * DAY_MS,
+    Number.POSITIVE_INFINITY,
+  );
+  return { asOf: past.asOf, ranks: then.picks.map((p, i) => [p.id, i + 1]) };
+}
+
+/**
+ * The ranking as it stood a week ago, for Rising Cards' ▲▼ (the live pages and
+ * the Hot 40 minted from them). Null when it can't be rebuilt — no demand
+ * snapshots that far back, or a failed read — and the pages then show no
+ * movement rather than fail. Self-cached through its loaders: never wrap it in
+ * a cache or call it from inside one (tests/nested-cache.test.ts).
+ */
+export async function getRisingWeekAgo(scope: RiseScope): Promise<WeekAgoRanking | null> {
+  try {
+    const [history, inputs, past] = await Promise.all([getRiseHistory(), getRiseInputs(scope), getDemandWeekAgo()]);
+    return weekAgoRanks(scope, inputs, history, past, Date.now());
+  } catch (err) {
+    console.warn(`[rise-predictor] week-ago ranking for ${scope} unavailable:`, (err as Error).message);
+    return null;
+  }
 }
 
 // One plain line per pick, built only from fields on the row — the page shows

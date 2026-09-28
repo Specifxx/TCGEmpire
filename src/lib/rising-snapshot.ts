@@ -1,4 +1,4 @@
-import type { RiseAnalysis, RisePick, RiseScope } from "./rise-predictor";
+import type { RiseAnalysis, RisePick, RiseScope, WeekAgoRanking } from "./rise-predictor";
 import { COUNTRIES, type Country } from "./country";
 import { movementFromRanks, type Movement } from "./demand-movement";
 
@@ -70,9 +70,10 @@ export interface RisingSnapshotPick {
   /** v2: the pick's one-line reason, as the live tool showed it. */
   reason?: string;
   /**
-   * Place against last week's chart, frozen at mint time (lib/rising-movement.ts).
-   * Absent on snapshots minted before 2026-09-28; null when there was no chart
-   * to compare with. "new" = not on that chart.
+   * Place against the same ranking a week earlier, frozen at mint time
+   * (lib/rising-movement.ts). Absent on snapshots minted before 2026-09-28;
+   * null when it couldn't be rebuilt. "new" = not ranked a week earlier (or,
+   * on a payload with `previousChart`, not on that chart).
    */
   move?: Movement | null;
   /**
@@ -115,9 +116,14 @@ export interface RisingSnapshotData {
   /** 2 for payloads minted from the 2026-09-25 ranking; absent on older ones. */
   version?: 2;
   /**
-   * The chart the picks' `move` compares with. Absent before 2026-09-28 (the
-   * page then shows no movement and says nothing about it); null when there was
-   * no earlier chart for this market, which the page says.
+   * What the picks' `move` compares with: the ranking rebuilt as of `asOf`, a
+   * week before (getRisingWeekAgo). Null when it couldn't be rebuilt, which
+   * the page says; absent on older payloads.
+   */
+  weekAgo?: { asOf: string } | null;
+  /**
+   * Only on snapshots minted on 2026-09-28 before movement moved to the week-
+   * ago ranking: `move` then compares with this earlier Hot 40. Never written now.
    */
   previousChart?: { createdAt: string; count: number } | null;
 }
@@ -204,7 +210,7 @@ export function generateRisingTitle(data: RisingSnapshotData, now = new Date()):
 
   const name = hotListName(n);
 
-  // 0. THE CHART STORY, when there is a previous chart to tell it against
+  // 0. THE CHART STORY, when the picks carry movement (the ranking a week earlier)
   // (owner, 2026-09-28: "xxx moves to the top 3, xxx remains at #1"). Places on
   // a chart are measured facts about rank order, so this is the most concrete
   // headline a run can have, and the one a chart's reader looks for first.
@@ -246,7 +252,7 @@ const TITLE_MAX = 150;
 
 /**
  * The chart story: what happened at #1, then the one other movement most worth
- * a headline. null when the picks carry no movement (no previous chart, or a
+ * a headline. null when the picks carry no movement (nothing a week earlier to compare with, or a
  * snapshot minted before 2026-09-28), and the older angles below take over.
  *
  * The second clause, first that applies (each skips #1):
@@ -309,8 +315,9 @@ export function generateRisingSubtitle(data: RisingSnapshotData): string {
 
 /**
  * RiseAnalysis → the frozen payload. Drops everything the public page doesn't
- * draw. `previous` is last week's chart (lib/rising-movement.ts), or null when
- * there is none — the snapshot is minted either way, just without movement.
+ * draw. `weekAgo` is the ranking a week before (lib/rise-predictor.ts
+ * getRisingWeekAgo), or null when it couldn't be rebuilt — the snapshot is
+ * minted either way, just without movement.
  * `ebay` is each pick's Cheapest on eBay verdict, by card id; a card missing
  * from it is frozen as not cheapest on eBay.
  */
@@ -318,10 +325,10 @@ export function toSnapshotData(
   analysis: RiseAnalysis,
   scope: RiseScope,
   now = new Date(),
-  previous: { createdAt: string; count: number; ranks: [string, number][] } | null = null,
+  weekAgo: WeekAgoRanking | null = null,
   ebay: ReadonlyMap<string, SnapshotEbayDeal> = new Map(),
 ): RisingSnapshotData {
-  const moves = previous ? movementFromRanks(analysis.picks.map((p) => p.id), new Map(previous.ranks)) : null;
+  const moves = weekAgo ? movementFromRanks(analysis.picks.map((p) => p.id), new Map(weekAgo.ranks)) : null;
   return {
     scope,
     generatedAt: now.toISOString(),
@@ -354,6 +361,6 @@ export function toSnapshotData(
     qualifying: analysis.qualifying,
     minPointsRequired: analysis.minPointsRequired,
     version: 2,
-    previousChart: previous ? { createdAt: previous.createdAt, count: previous.count } : null,
+    weekAgo: weekAgo ? { asOf: weekAgo.asOf } : null,
   };
 }

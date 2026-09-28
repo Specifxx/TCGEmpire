@@ -16,6 +16,7 @@ import {
   type RisingSnapshotPick,
 } from "@/lib/rising-snapshot";
 import { MoveBadge } from "@/components/MoveBadge";
+import { weekAgoLabel } from "@/lib/rising-movement";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure, PaidLinkTag } from "@/components/AffiliateDisclosure";
 import { affiliateUrl } from "@/lib/affiliate";
@@ -131,13 +132,13 @@ function EbayCheapest({ p, rank }: { p: RisingSnapshotPick; rank: number }) {
 // columns it was minted with (its 7- and 30-day moves were real); a v2 one
 // shows "vs last week" (a dash when nothing was comparable, never 0.0%) and the
 // 16-week spark, and has no 30-day column.
-function Row({ p, rank, legacy, showMove }: { p: RisingSnapshotPick; rank: number; legacy: boolean; showMove: boolean }) {
+function Row({ p, rank, legacy, showMove, newTitle }: { p: RisingSnapshotPick; rank: number; legacy: boolean; showMove: boolean; newTitle: string }) {
   return (
     <tr className="align-middle">
       <td className="num px-3 py-2 text-slate-500">{rank}</td>
       {showMove && (
         <td className="px-1 py-2">
-          <MoveBadge move={p.move} newTitle="Not on last week's chart" />
+          <MoveBadge move={p.move} newTitle={newTitle} />
         </td>
       )}
       <td className="px-3 py-2">
@@ -188,7 +189,11 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
   const legacy = isLegacySnapshot(data);
   const rankedFrom = rankedFromCount(data);
   // Movement exists only on snapshots minted since 2026-09-28 that had a chart to compare with.
-  const showMove = !legacy && !!data.previousChart;
+  // Movement exists on snapshots minted since 2026-09-28 that had something to
+  // compare with: the ranking a week earlier (`weekAgo`), or — only on the few
+  // minted that morning — an earlier Hot 40 (`previousChart`).
+  const showMove = !legacy && (!!data.weekAgo || !!data.previousChart);
+  const newTitle = data.weekAgo ? "No searches 7 days before" : "Not on the previous chart";
   const ebayCount = data.picks.filter((p) => p.ebay).length;
 
   return (
@@ -240,7 +245,7 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
               <tr className="border-b border-ink-800">
                 <th className="px-3 py-2 font-semibold">#</th>
                 {showMove && (
-                  <th className="px-1 py-2 font-semibold" title="Place against last week's chart">
+                  <th className="px-1 py-2 font-semibold" title={data.weekAgo ? "Place against the same ranking 7 days before" : "Place against the previous chart"}>
                     Move
                   </th>
                 )}
@@ -255,7 +260,7 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
             </thead>
             <tbody className="divide-y divide-ink-800">
               {data.picks.map((p, i) => (
-                <Row key={p.id} p={p} rank={i + 1} legacy={legacy} showMove={showMove} />
+                <Row key={p.id} p={p} rank={i + 1} legacy={legacy} showMove={showMove} newTitle={newTitle} />
               ))}
             </tbody>
           </table>
@@ -276,15 +281,24 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
               </>
             )}{" "}
             A research signal, not financial advice — always check the card&apos;s own price history before buying.
-            {data.previousChart ? (
+            {data.weekAgo ? (
+              <>
+                {" "}
+                <span className="text-emerald-400">▲</span>/<span className="text-rose-400">▼</span> compare each card&apos;s
+                place with its place 7 days before ({weekAgoLabel(data.weekAgo)}), ranked the same way on that day&apos;s
+                demand and prices; <span className="font-semibold text-amber-300">NEW</span> means it had no searches by then.
+              </>
+            ) : data.previousChart ? (
               <>
                 {" "}
                 <span className="text-emerald-400">▲</span>/<span className="text-rose-400">▼</span> compare each card&apos;s
                 place with the {hotListName(data.previousChart.count)} of {snapshotDateLabel(new Date(data.previousChart.createdAt))};{" "}
                 <span className="font-semibold text-amber-300">NEW</span> means it wasn&apos;t on that chart.
               </>
+            ) : data.weekAgo === null ? (
+              " The ranking a week before this one couldn't be rebuilt, so no movement is shown."
             ) : data.previousChart === null ? (
-              " This is the first chart for this market, so no movement is shown; next week's will have it."
+              " There was no earlier chart to compare with, so no movement is shown."
             ) : null}
           </p>
         </div>

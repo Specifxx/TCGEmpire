@@ -4,17 +4,18 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { movementFromRanks } from "../src/lib/demand-movement";
 import { chartStory, generateRisingTitle, toSnapshotData, type RisingSnapshotData, type RisingSnapshotPick } from "../src/lib/rising-snapshot";
-import { movementAgainst, PREVIOUS_CHART_MIN_AGE_DAYS } from "../src/lib/rising-movement";
-import type { RiseAnalysis, RisePick } from "../src/lib/rise-predictor";
+import { movementAgainst, weekAgoLabel } from "../src/lib/rising-movement";
+import { assembleRisingCards, weekAgoRanks, WEEK_AGO_DAYS, type RiseAnalysis, type RiseInputs, type RisePick } from "../src/lib/rise-predictor";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Rising Cards and the Hot 40 get Billboard-style movement (2026-09-28): each
-// pick's place against LAST WEEK'S CHART, the most recent Hot 40 snapshot for
-// the market at least six days old. Snapshots freeze it; the live pages
-// compare today's ranking with the same chart. And a snapshot's generated
-// title tells the chart story ("… remains at #1, … moves into the top 3").
+// pick's place against THE SAME RANKING 7 DAYS AGO, rebuilt from that day's
+// demand snapshots and price history (owner: "literally just use the data
+// from a week ago, it doesn't need to be dependant on the snapshot"). Snapshots
+// freeze it; the live pages compute it. And a snapshot's generated title tells
+// the chart story ("… remains at #1, … moves into the top 3").
 // ─────────────────────────────────────────────────────────────────────────────
 
 const AT = new Date("2026-09-28T03:00:00Z");
@@ -28,16 +29,18 @@ function chart(names: string[], prev: string[] | null): RisingSnapshotData {
   return {
     scope: "US", generatedAt: AT.toISOString(), universeSize: 300, qualifying: 0, minPointsRequired: 14, version: 2,
     picks: names.map((n) => pick(n, n, { move: moves ? moves.get(n) ?? null : null })),
-    previousChart: prev ? { createdAt: "2026-09-21T03:00:00Z", count: prev.length } : null,
+    weekAgo: prev ? { asOf: "2026-09-21" } : null,
   };
 }
 
-test("movementFromRanks: 'new' means not on the previous chart", () => {
+test("movementFromRanks: 'new' means not ranked then", () => {
   const m = movementFromRanks(["a", "b", "c"], new Map([["b", 1], ["a", 5]]));
   assert.deepEqual(m.get("a"), { kind: "up", by: 4, prev: 5 });
   assert.deepEqual(m.get("b"), { kind: "down", by: 1, prev: 1 });
   assert.deepEqual(m.get("c"), { kind: "new" });
-  assert.equal(movementAgainst(["a"], null), null, "no chart, no movement");
+  assert.equal(movementAgainst(["a"], null), null, "nothing to compare with, no movement");
+  assert.deepEqual(movementAgainst(["a", "b"], { asOf: "2026-09-21", ranks: [["a", 2], ["b", 1]] })?.get("a"), { kind: "up", by: 1, prev: 2 });
+  assert.equal(weekAgoLabel({ asOf: "2026-09-21" }), "21 September");
 });
 
 test("the title tells the chart story: #1 held, a card into the top 3", () => {
@@ -57,7 +60,7 @@ test("each lead and each second clause", () => {
   assert.equal(story(["J", "b"], ["J", "b"])?.second, null, "a quiet week says only what #1 did");
 });
 
-test("no previous chart: the older headline angles, untouched", () => {
+test("no movement: the older headline angles, untouched", () => {
   const t = generateRisingTitle(chart(["Jinx", "Ahri"], null), AT);
   assert.doesNotMatch(t, /remains|climbs|debuts|moves into/);
   assert.match(t, /^RiftCompare Hot 2: Jinx tops the US ranking/);
@@ -72,32 +75,105 @@ test("a long pair of names drops the second clause instead of overrunning", () =
   assert.doesNotMatch(t, /\b(will|guaranteed|profit|buy now|moon|surge|skyrocket|prediction|forecast)\b/i);
 });
 
-test("toSnapshotData freezes the movement, or null without a previous chart", () => {
+test("toSnapshotData freezes the movement against the week-ago ranking, or null without one", () => {
   const rp = (id: string) => ({ ...pick(id, id), components: {}, basisMarket: "US", searchCount: 1, viewCount: 1, rangeWeeks: 0, volatilityPct: 0, searchPerDay: null, searchGrowthPct: null, searchGrowthDays: null, historyPoints: 0, reason: "r", overheated: false }) as unknown as RisePick;
   const analysis = { picks: [rp("a"), rp("b")], universeSize: 2, qualifying: 0, minPointsRequired: 14 } as unknown as RiseAnalysis;
-  const withPrev = toSnapshotData(analysis, "US", AT, { createdAt: "2026-09-21T00:00:00.000Z", count: 2, ranks: [["b", 1], ["a", 2]] });
+  const withPrev = toSnapshotData(analysis, "US", AT, { asOf: "2026-09-21", ranks: [["b", 1], ["a", 2]] });
   assert.deepEqual(withPrev.picks.map((p) => p.move), [{ kind: "up", by: 1, prev: 2 }, { kind: "down", by: 1, prev: 1 }]);
-  assert.deepEqual(withPrev.previousChart, { createdAt: "2026-09-21T00:00:00.000Z", count: 2 });
+  assert.deepEqual(withPrev.weekAgo, { asOf: "2026-09-21" });
+  assert.equal(withPrev.previousChart, undefined, "no longer written");
   const without = toSnapshotData(analysis, "US", AT, null);
   assert.deepEqual(without.picks.map((p) => p.move), [null, null]);
-  assert.equal(without.previousChart, null);
+  assert.equal(without.weekAgo, null);
 });
 
-test("minting never waits on the previous chart, and the live pages read it cached", () => {
-  assert.equal(PREVIOUS_CHART_MIN_AGE_DAYS, 6);
-  const lib = read("src/lib/rising-movement.ts");
-  assert.match(lib, /isLegacySnapshot\(data\)/, "a legacy chart is never a place to move from");
+// ── The week-ago ranking itself ─────────────────────────────────────────────
+const DAY = 86400_000;
+type Card = RiseInputs["universe"][number];
+const card = (id: string, searchCount: number, over: Partial<Card> = {}): Card => ({
+  id, slug: id, name: `Card ${id}`, setCode: "OGN", collectorNumber: "001", variant: null, isPromo: false,
+  rarity: "Rare", imageThumbUrl: null, searchCount, viewCount: 1,
+  lowestPriceCents: null, lowestPriceCentsUs: 500, lowestPriceCentsUk: null,
+  lowestPriceCentsSg: null, lowestPriceCentsCa: null, lowestPriceCentsEu: null,
+  ...over,
+});
+
+test("weekAgoRanks re-ranks on that day's demand, drops cards not searched by then, and ranks the whole field", () => {
+  const now = Date.parse("2026-09-28T03:00:00Z");
+  const today: RiseInputs = {
+    universe: [card("rocket", 5000), card("steady", 900), card("fresh", 800), ...Array.from({ length: 50 }, (_, i) => card(`f${i}`, 100 + i))],
+    supply: {}, velocity: {}, snapshotDays: 40,
+  };
+  const past = {
+    asOf: "2026-09-21",
+    cards: {
+      rocket: { searchCount: 20, viewCount: 1, velocity: null }, // barely searched a week ago
+      steady: { searchCount: 880, viewCount: 1, velocity: null },
+      // "fresh" had no snapshot: not searched by then
+      ...Object.fromEntries(Array.from({ length: 50 }, (_, i) => [`f${i}`, { searchCount: 90 + i, viewCount: 1, velocity: null }])),
+    },
+  };
+  const r = weekAgoRanks("US", today, { series: {} }, past, now);
+  assert.ok(r);
+  assert.equal(r.asOf, "2026-09-21");
+  const rank = new Map(r.ranks);
+  assert.equal(rank.get("steady"), 1, "the most-searched card a week ago led then");
+  assert.equal(rank.has("fresh"), false, "no searches by then: not ranked, so NEW today");
+  assert.equal(r.ranks.length, 52, "every card with demand then is ranked, not just 40");
+  assert.ok(rank.get("rocket")! > 40, "rocket ranked outside the top 40 a week ago");
+  const m = movementAgainst(["rocket", "steady", "fresh"], r)!;
+  assert.equal(m.get("rocket")?.kind, "up");
+  assert.deepEqual(m.get("steady"), { kind: "down", by: 1, prev: 1 });
+  assert.deepEqual(m.get("fresh"), { kind: "new" });
+  assert.equal(weekAgoRanks("US", today, { series: {} }, { asOf: "2026-09-21", cards: {} }, now), null, "no demand then, no ranking");
+});
+
+test("weekAgoRanks reads prices only up to that day, never today's live price", () => {
+  const now = Date.parse("2026-09-28T03:00:00Z");
+  const eday = (iso: string) => Math.round(Date.parse(`${iso}T00:00:00Z`) / DAY);
+  const weeks = ["2026-08-03", "2026-08-10", "2026-08-17", "2026-08-24", "2026-08-31", "2026-09-07", "2026-09-14", "2026-09-21"];
+  const upto = (vals: number[]) => weeks.map((d, i) => [eday(d), vals[i]] as [number, number]);
+  // Three cards with equal demand; "spiker" jumps 5× AFTER the 21st.
+  const before = {
+    spiker: upto([1000, 1010, 990, 1000, 1005, 995, 1000, 1000]),
+    dipper: upto([1000, 980, 1000, 990, 1000, 900, 800, 700]),
+    riser: upto([700, 720, 750, 780, 800, 850, 900, 950]),
+  };
+  const after = { ...before, spiker: [...before.spiker, [eday("2026-09-28"), 5000] as [number, number]] };
+  const universe = (live: boolean) => ["spiker", "dipper", "riser"].map((id) => card(id, 100, { lowestPriceCentsUs: live ? (id === "spiker" ? 5000 : 900) : null }));
+  const past = { asOf: "2026-09-21", cards: Object.fromEntries(["spiker", "dipper", "riser"].map((id) => [id, { searchCount: 100, viewCount: 1, velocity: null }])) };
+  const inputs = (live: boolean): RiseInputs => ({ universe: universe(live), supply: {}, velocity: {}, snapshotDays: 40 });
+
+  const withLater = weekAgoRanks("US", inputs(true), { series: after }, past, now)!;
+  const without = weekAgoRanks("US", inputs(false), { series: before }, past, now)!;
+  assert.deepEqual(withLater, without, "a later price point and today's live price change nothing a week back");
+
+  const today = assembleRisingCards("US", inputs(true), { series: after }, now).picks.map((p) => p.id);
+  assert.notDeepEqual(today, withLater.ranks.map(([id]) => id), "while today's ranking does move on them");
+  assert.equal(WEEK_AGO_DAYS, 7);
+});
+
+test("minting and the live pages use the rebuilt week-ago ranking, never a snapshot", () => {
+  const lib = read("src/lib/rise-predictor.ts");
+  assert.match(lib, /export async function getRisingWeekAgo\(scope: RiseScope\)/);
+  assert.match(lib, /Promise\.all\(\[getRiseHistory\(\), getRiseInputs\(scope\), getDemandWeekAgo\(\)\]\)/, "its inputs are the cached loaders");
+  assert.match(lib, /\["rc-rise-demand-week-ago-v1", sydneyDayKey\(\)\]/, "one demand read per day for every market");
+  assert.doesNotMatch(read("src/lib/rising-movement.ts"), /risingSnapshot|prisma/, "movement reads no snapshot");
+  const demand = read("src/lib/demand-snapshot.ts");
+  assert.match(demand, /GROUP BY "cardId"/, "aggregated in the database: one row per card");
+  assert.match(demand, /const v = velocityBetween\(pts\[0\], pts\[pts\.length - 1\], pts\.length\);/, "today's velocity uses the same arithmetic");
   const route = read("src/app/api/admin/rising-snapshot/route.ts");
-  assert.match(route, /loadPreviousChart\(scope, now\.getTime\(\)\)\.catch\(/, "a failed read mints without movement");
-  assert.match(route, /toSnapshotData\(analysis, scope, now, previous, ebay\)/);
+  assert.match(route, /Promise\.all\(\[getRisingWeekAgo\(scope\), cheapestOnEbayByPick\(analysis\.picks\)\]\)/);
+  assert.match(route, /toSnapshotData\(analysis, scope, now, weekAgo, ebay\)/);
   for (const f of ["src/app/tools/rising/page.tsx", "src/app/admin/rising/page.tsx"]) {
     const src = read(f);
-    assert.match(src, /Promise\.all\(\[getCachedRisingCards\(scope\), getPreviousRisingChart\(scope\)\]\)/, f);
-    assert.match(src, /movementAgainst\(analysis\.picks\.map\(\(p\) => p\.id\), prevChart\)/, f);
+    assert.match(src, /Promise\.all\(\[getCachedRisingCards\(scope\), getRisingWeekAgo\(scope\)\]\)/, f);
+    assert.match(src, /movementAgainst\(analysis\.picks\.map\(\(p\) => p\.id\), weekAgo\)/, f);
     assert.match(src, /<MoveBadge /, f);
+    assert.match(src, /newTitle="Not ranked 7 days ago"/, f);
   }
   const snap = read("src/app/rising/[token]/page.tsx");
-  assert.match(snap, /const showMove = !legacy && !!data\.previousChart;/);
+  assert.match(snap, /const showMove = !legacy && \(!!data\.weekAgo \|\| !!data\.previousChart\);/, "the morning's snapshots keep the chart they froze");
   assert.match(read("src/app/tools/demand/page.tsx"), /<MoveBadge move=\{p\.move\}/);
 });
 
@@ -138,4 +214,25 @@ test("the snapshot page links the listing through EPN, measured, with Paid link 
   assert.match(page, /\{ebayCount > 0 && \([\s\S]*?<AffiliateDisclosure partner="ebay" tight \/>[\s\S]*?<table/, "the disclosure renders above the table, and only when a pick is marked");
   assert.match(page, /The listing may have sold since\./, "frozen, and says so");
   assert.match(read("src/components/OutboundLink.tsx"), /\| "hot40_ebay"/);
+});
+
+// ── Deleting a snapshot (2026-09-28) ─────────────────────────────────────────
+// Owner: "have an option to delete snapshots too".
+
+test("DELETE is admin-gated like mint and list, deletes one snapshot by id, and 404s a missing one", () => {
+  const route = read("src/app/api/admin/rising-snapshot/route.ts");
+  const del = route.slice(route.indexOf("export async function DELETE"));
+  assert.match(del, /if \(!authed\(user, body\?\.key\)\) return NextResponse\.json\(\{ error: "Admin only" \}, \{ status: 403 \}\);/);
+  assert.match(del, /prisma\.risingSnapshot\.deleteMany\(\{ where: \{ id: parsed\.data\.id \} \}\)/, "exactly one row, by id");
+  assert.match(del, /count === 0\) return NextResponse\.json\(\{ error: "No such snapshot" \}, \{ status: 404 \}\)/);
+  assert.match(route, /const deleteSchema = z\.object\(\{ id: z\.string\(\)\.min\(1\)/, "an id is required: never a bulk delete");
+});
+
+test("the panel confirms before deleting, names the snapshot, and drops it from the list", () => {
+  const panel = read("src/components/admin/RisingSnapshotPanel.tsx");
+  assert.match(panel, /window\.confirm\(\s*`Delete this snapshot\?\\n\\n\$\{s\.title\}/, "names what is being deleted");
+  assert.match(panel, /This can't be undone\./);
+  assert.match(panel, /method: "DELETE",[\s\S]{0,160}body: JSON\.stringify\(\{ id: s\.id, key: adminKey \}\)/);
+  assert.match(panel, /setList\(\(cur\) => \(cur \?\? \[\]\)\.filter\(\(x\) => x\.id !== s\.id\)\)/);
+  assert.match(panel, /onClick=\{\(\) => remove\(s\)\}/);
 });

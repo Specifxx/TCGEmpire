@@ -3,9 +3,8 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
-import { getCachedRisingCards, parseRiseScope, growthSpanLabel, type RisePick, type RiseScope } from "@/lib/rise-predictor";
-import { getPreviousRisingChart, movementAgainst } from "@/lib/rising-movement";
-import { hotListName, snapshotDateLabel } from "@/lib/rising-snapshot";
+import { getCachedRisingCards, getRisingWeekAgo, parseRiseScope, growthSpanLabel, type RisePick, type RiseScope } from "@/lib/rise-predictor";
+import { movementAgainst, weekAgoLabel } from "@/lib/rising-movement";
 import type { Movement } from "@/lib/demand-movement";
 import { MoveBadge } from "@/components/MoveBadge";
 import { formatMoney } from "@/lib/format";
@@ -161,7 +160,7 @@ function RisingRow({ p, rank, move }: { p: RisePick; rank: number; move: Movemen
       <td className="px-3 py-2 text-slate-500">{rank}</td>
       {move !== undefined && (
         <td className="px-1 py-2">
-          <MoveBadge move={move} newTitle="Not on last week's chart" />
+          <MoveBadge move={move} newTitle="Not ranked 7 days ago" />
         </td>
       )}
       <td className="px-3 py-2">
@@ -184,7 +183,7 @@ function TableHead({ priceLabel, showMove }: { priceLabel: string; showMove: boo
       <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
         <th className="px-3 py-2.5 font-semibold">#</th>
         {showMove && (
-          <th className="px-1 py-2.5 font-semibold" title="Place against last week's chart">
+          <th className="px-1 py-2.5 font-semibold" title="Place against the ranking 7 days ago">
             Move
           </th>
         )}
@@ -229,8 +228,8 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   // /admin/rising and the premium nudge, so any of them warms the rest.
   // Last week's chart for the same market (lib/rising-movement.ts): the most
   // recent Hot 40 snapshot at least six days old. None → no movement column.
-  const [analysis, prevChart] = await Promise.all([getCachedRisingCards(scope), getPreviousRisingChart(scope)]);
-  const moves = movementAgainst(analysis.picks.map((p) => p.id), prevChart);
+  const [analysis, weekAgo] = await Promise.all([getCachedRisingCards(scope), getRisingWeekAgo(scope)]);
+  const moves = movementAgainst(analysis.picks.map((p) => p.id), weekAgo);
   const visible = access === "full" ? analysis.picks : access === "top3" ? analysis.picks.slice(0, FREE_PREVIEW_ROWS) : [];
   const hiddenCount = Math.min(40, analysis.picks.length) - visible.length;
   const rebuilding = analysis.picks.length > 0 && analysis.qualifying === 0;
@@ -368,12 +367,13 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
               converted — the series RiftCompare records weekly — with today&apos;s price as the newest point. Ranked among the{" "}
               {analysis.universeSize} most-searched priced cards{where}. A research signal, not financial advice — check a card&apos;s own
               price history before you buy.
-              {prevChart && (
+              {weekAgo && (
                 <>
                   {" "}
                   <span className="text-emerald-400">▲</span>/<span className="text-rose-400">▼</span> compare each card&apos;s
-                  place with the {hotListName(prevChart.count)} of {snapshotDateLabel(new Date(prevChart.createdAt))};{" "}
-                  <span className="font-semibold text-amber-300">NEW</span> means it wasn&apos;t on that chart.
+                  place with its place 7 days earlier ({weekAgoLabel(weekAgo)}), ranked the same way on the demand and prices
+                  of that day;{" "}
+                  <span className="font-semibold text-amber-300">NEW</span> means it had no searches by then.
                 </>
               )}
             </p>

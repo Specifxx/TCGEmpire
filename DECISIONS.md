@@ -14965,3 +14965,38 @@ This change follows its wording. The descriptions, the WebSite node and llms.txt
 **Fix.** The extension is now read from the path, with the query and fragment removed; the URL returned still has its query string. The same helper feeds every OG route (home, `/card/[id]`, `/c/[token]`, `/rising/[token]`), so Vendetta card pages' own unfurls get their art back too.
 
 **Verified.** `tests/rising-snapshot.test.ts` now covers the official-art URL and a `.webp?x=1.png` decoy. The Hot 40 image rendered locally with the snapshot's real top three shows all three pictures. The rgpub URL answers `200 image/png` (about 1.1 MB, which satori decodes).
+
+## Rising Cards movement compares with the ranking 7 days ago, not with snapshots; snapshots can be deleted — 2026-09-28
+
+**Why.** After the entry above shipped, the owner reported: "I dont see the arrows in rising cards", then "literally just use the data from a week ago, it doesn't need to be dependant on the snapshot for the arrows. It should just be compared to the prev 7 days". Also: "have an option to delete snapshots too".
+
+The arrows were missing by construction. The previous chart had to be a version-2 Hot 40 at least 6 days old, and version 2 only began on 25 September. So no market could show movement before 1 October.
+
+**What.**
+- **The week-ago ranking is rebuilt, not stored** (`lib/rise-predictor.ts` `getRisingWeekAgo` / `weekAgoRanks`). It runs the same pure `assembleRisingCards` over the inputs as they stood 7 days ago:
+  - **Demand:** each card's running totals on its last snapshot on or before that day, and its velocity over the 21 days before it. This comes from `getDemandAsOfOrThrow`, one row per card aggregated in the database. Velocity uses the same `velocityBetween` arithmetic as today's `getDemandVelocityOrThrow`.
+  - **Price:** the weekly GLOBAL series cut off at that day. Live prices are nulled, so today's price never enters a week-ago rank.
+  - **Stock:** today's in-stock store counts. Nothing records these historically, and the admin caption says so.
+- **Ranked over today's universe, the whole field.** A card with no searches by that day was not ranked then, and shows NEW ("No searches 7 days before"). Every other card keeps its full rank, so a climb from #73 reads ▲n.
+- `/tools/rising`, `/admin/rising` and newly minted Hot 40s all use it. Snapshots freeze the movement plus `weekAgo: { asOf }`, and chart-story titles work from it.
+  - Snapshots minted this morning keep the `previousChart` they froze, and the page still renders them.
+  - `lib/rising-movement.ts` no longer reads any snapshot, so deleting one changes no arrow.
+- **Delete.** `DELETE /api/admin/rising-snapshot` sits behind the same admin gate and deletes exactly one row by id (404 if it is already gone). Each row in the panel's "Previous snapshots" list has a Delete button that asks first, naming the snapshot, because the link dies for everyone and there is no undo. `/rising/[token]` then 404s, and its share image falls back to the brand-only one.
+
+**Cost.**
+- One extra database read per day: `getDemandWeekAgo`, day-keyed and untagged (a past day's snapshots never change), about 1,400 narrow rows for every market.
+- The other inputs are the two loaders Rising Cards already caches.
+- The rebuild runs in-process per request, like `getCachedRisingCards`. Both new loaders are on the nested-cache list.
+
+**Verified.**
+- Tests: `tests/rising-movement.test.ts` covers:
+  - re-ranking on week-ago demand and NEW for cards not searched by then;
+  - the full-field ranks;
+  - prices cut at the day: a later price point and today's live price leave the week-ago ranking identical while they do change today's;
+  - the pages and route wiring, the DELETE gate, and the panel's confirmation.
+- Local Postgres with 31 days of demand snapshots and 10 weeks of prices:
+  - `getDemandAsOfOrThrow` matched the raw rows for all 20 cards.
+  - Its as-of-today velocity matched `getDemandVelocityOrThrow` exactly.
+  - `/admin/rising` showed ▲/▼ with no snapshot in the database (e.g. Legion Rearguard ▲2 from #3).
+  - A mint was titled "Legion Rearguard climbs to #1 from #3, Magma Wurm moves into the top 3".
+  - Deleting it from the panel asked with its title, removed the row, and its link then returned 404.
