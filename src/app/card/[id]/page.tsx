@@ -64,6 +64,7 @@ import {
 import { guidesForCard } from "@/lib/content/related-guides";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { cardWhereParam } from "@/lib/card-slug-renames";
+import { getRiftboundStocksLinks, rbsCardUrl } from "@/lib/riftboundstocks";
 
 // The comparison's ordering in one line, beside the link to /methodology#ordering
 // that explains it: item price first, postage only where the store states it
@@ -745,6 +746,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // three-way name split collapses to one champion — see lib/champions.ts.
   const championEntry = championForCardName(card.name);
   const champion = championEntry?.name ?? null;
+  // Sister-site link map (lib/riftboundstocks.ts) — started here so its
+  // once-a-day fetch overlaps the queries below; never rejects.
+  const rbsLinks = getRiftboundStocksLinks();
   // "Decks using this card" (2026-09-26): up to six published decks, one small
   // indexed query at ISR render time.
   const decksWithCard = await decksUsingCard(card.id);
@@ -770,6 +774,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // genuine price-trend paragraph below. Same cache key as the chart's own fetch
   // (default take=60), so this never doubles the week's history read.
   const history = await getPriceHistory(card.id, DEFAULT_COUNTRY);
+  const rbsHref = rbsCardUrl(await rbsLinks, card.slug);
   // The Radiance release alert (lib/release-alerts.ts) runs while the set is
   // still "coming soon" in SETS; the signup route refuses any other set.
   const isRadianceCard = card.setCode === RADIANCE_SET_CODE && !!setByCode(card.setCode)?.comingSoon;
@@ -1270,6 +1275,20 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             {/* Price-history chart — free for everyone (AU history; the series is
                 collected on the AU baseline market). */}
             <PriceHistoryChart cardId={card.id} rows={rows} />
+
+            {/* The same card on RiftboundStocks, our sister site: US (TCGplayer)
+                price history, foil prices and daily movers — the chart above is
+                AU store history. Absent when the card has no match there or the
+                link map is unreachable (2026-09-28, DECISIONS.md). rel keeps the
+                referrer (no noreferrer) so the visit is attributed on that side. */}
+            {rbsHref && (
+              <p className="mt-3 text-xs text-slate-500">
+                US price history from TCGplayer, with foil prices and daily movers:{" "}
+                <a href={rbsHref} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
+                  {displayName} on RiftboundStocks ↗
+                </a>
+              </p>
+            )}
 
             {/* Every Radiance card page carries the release alert (2026-09-26);
                 with no listing in the visitor's market it replaces the empty

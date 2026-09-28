@@ -15156,3 +15156,21 @@ The editorial band ("Guides, news & market updates") has been in the server HTML
   - the served HTML has the band before the table and the rail's Prices and Guides & News groups expanded, with `/guides` and `/blog` in it;
   - "Recently viewed" does not appear;
   - the page was checked with JavaScript off, and at 1280px and 390px with no horizontal overflow.
+
+## Card, champion and set pages link to their RiftboundStocks counterparts — 2026-09-28
+
+**Why.** Owner request: send more visitors to RiftboundStocks.com, our sister site (same owner). It was linked only from the footer and `/about`'s "Who it's for", so none of the ~1,400 card pages pointed at the same card's page there. The positioning stays as settled on 2026-09-12 ("Never overpay"): this site is for buying; RiftboundStocks is where the price-tracking use case goes. The link copy describes what is on the other page (US TCGplayer price history, foil prices, daily movers) and makes no appreciation or resale claim, so `tests/premium-positioning.test.ts` passes unchanged.
+
+**How the join works — and why it lives on their side.** RiftboundStocks names printings differently: Legends by title alone ("Daughter of the Void", ours "Kai'Sa, Daughter of the Void"), promo tiers in the name, no `-promo` suffix, its own slugs. Rather than re-derive their slugs here and drift, RiftboundStocks publishes the join: `https://riftboundstocks.com/api/riftcompare-links` maps OUR card slugs, champion slugs and set codes to its pages. It is built from its port of `cardSlug()` (`lib/card-url.ts`) plus the known spelling differences, ranked so an exact match always beats a looser one, and was checked against our `/sitemaps/cards.xml`: 1,332 of 1,442 card pages match. A guess that an overnumbered printing is our Signature was tried and dropped there, because 8 of its 9 matches were a different printing (we list both 307 and 307*). The misses are rune alt arts they don't track and Radiance.
+
+**What.**
+- `lib/riftboundstocks.ts` fetches the map with `fetch`'s own Data Cache (`revalidate: 86400`, 3 s timeout). That is one ~200 KB request a day from their CDN, with no database query and no `unstable_cache`. It returns `null` on any failure, and every link then simply doesn't render.
+- Card page: one line under the price-history chart, "{card} on RiftboundStocks ↗". The fetch starts beside `decksUsingCard` so it overlaps the page's queries.
+- Champion page: under the "Every {champion} printing" grid.
+- Set page: the last paragraph of "How to read {set} prices" (released sets only).
+- `rel="noopener"`, deliberately without `noreferrer`: same owner and no commission, so it is a plain referral (not `nofollow`/`sponsored`), and the referrer lets the visit be attributed there.
+- Slugs from the map are accepted only if they are `[a-z0-9-]+`. The map is another site's output, so it is treated as input.
+
+**Verified.** `tests/riftboundstocks-links.test.ts` covers the URL building, no map / no match giving no link, unsafe slugs being refused, and all three pages rendering the link as a plain referral. Typecheck, lint and the full suite pass.
+
+**If it needs undoing.** Delete the three render sites; nothing else reads `lib/riftboundstocks.ts`. `RIFTBOUNDSTOCKS_LINKS_URL` points the map at a staging copy.

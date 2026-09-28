@@ -18,6 +18,7 @@ import { getSiteMedianCents } from "@/lib/content/site-median";
 import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForChampion } from "@/lib/content/related-guides";
+import { getRiftboundStocksLinks, rbsChampionUrl } from "@/lib/riftboundstocks";
 
 // riftdecks.com's /legends/<champion> pages rank #1 for champion queries with
 // build price and win rate in the snippet; ours 404'd entirely. This is the
@@ -131,6 +132,9 @@ export default async function ChampionPage({ params }: { params: { slug: string 
   const field = priceField(country);
   const currency = COUNTRIES[country].currency;
   const where = championCardWhere(champ);
+  // Sister-site link map (lib/riftboundstocks.ts): started now, awaited at
+  // render; never rejects, null when unreachable.
+  const rbsLinks = getRiftboundStocksLinks();
 
   // A DB OUTAGE MUST NOT LOOK LIKE "this champion has no cards". Those two
   // states are indistinguishable if the error is swallowed into an empty array,
@@ -288,6 +292,7 @@ export default async function ChampionPage({ params }: { params: { slug: string 
             <CardTile key={c.id} card={c} />
           ))}
         </div>
+        <RbsChampionLink href={rbsChampionUrl(await rbsLinks, champ.slug)} name={champ.name} />
       </section>
 
       {/* This champion's own articles — any whose tags name them — topped up
@@ -355,5 +360,18 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
       <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
       <div className={`num mt-1 text-lg font-bold ${accent ? "text-accent" : "text-white"}`}>{value}</div>
     </div>
+  );
+}
+
+/** Every printing's US price history on RiftboundStocks, our sister site (2026-09-28, DECISIONS.md). */
+function RbsChampionLink({ href, name }: { href: string | null; name: string }) {
+  if (!href) return null;
+  return (
+    <p className="mt-3 text-xs text-slate-500">
+      US price history from TCGplayer for every {name} printing:{" "}
+      <a href={href} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
+        {name} on RiftboundStocks ↗
+      </a>
+    </p>
   );
 }

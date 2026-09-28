@@ -42,6 +42,7 @@ import { RADIANCE_FAQ } from "@/lib/sets/radiance";
 import { faqPage } from "@/lib/jsonld";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForSet } from "@/lib/content/related-guides";
+import { getRiftboundStocksLinks, rbsSetUrl } from "@/lib/riftboundstocks";
 
 // Per-set pre-release reading, shown on a set page that has no cards yet. Keyed by
 // slug and DATA, not JSX, so adding the next set is one array — the previous shape
@@ -312,6 +313,9 @@ export default async function SetPage({
   if (!set) notFound();
 
   const country = getCountry();
+  // Sister-site link map (lib/riftboundstocks.ts): started now, awaited at
+  // render; never rejects, null when unreachable.
+  const rbsLinks = getRiftboundStocksLinks();
 
   // Unfiltered totals for the set (hero copy + the "not released yet" empty
   // state) — distinct from the filtered/paginated grid below.
@@ -800,6 +804,7 @@ export default async function SetPage({
               buying these singles against opening sealed product, the{" "}
               <Link href="/tools/box-ev" className="text-brand-400 hover:underline">box EV calculator</Link>.
             </p>
+            <RbsSetLink href={rbsSetUrl(await rbsLinks, set.code)} name={set.name} />
           </div>
         </section>
       )}
@@ -840,5 +845,23 @@ export default async function SetPage({
         </section>
       )}
     </div>
+  );
+}
+
+/**
+ * The set's US (TCGplayer) price list and value over time on RiftboundStocks,
+ * our sister site (2026-09-28, DECISIONS.md). Null when the set has no match
+ * there or the link map is unreachable.
+ */
+function RbsSetLink({ href, name }: { href: string | null; name: string }) {
+  if (!href) return null;
+  return (
+    <p>
+      For US prices from TCGplayer and how the set&apos;s value has moved day by day, see{" "}
+      <a href={href} target="_blank" rel="noopener" className="text-brand-400 hover:underline">
+        {name} on RiftboundStocks ↗
+      </a>
+      .
+    </p>
   );
 }

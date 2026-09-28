@@ -377,6 +377,10 @@ longer lands on its entry.
   60% of the body (`tests/reddit-landing-conversion.test.ts`). Links posted
   to Reddit should carry `?utm_source=reddit`: the apps often send no
   referrer. [2026-09-26](../DECISIONS.md#L13640)
+- **RiftboundStocks per-page links:** card, champion and set pages link to
+  the same page on RiftboundStocks.com through the map it publishes
+  (`lib/riftboundstocks.ts`); no link when there is no match. Copy describes
+  the other page and makes no appreciation claim. [2026-09-28](../DECISIONS.md#L15160)
 
 ## Prices & data
 
