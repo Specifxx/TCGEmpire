@@ -14955,3 +14955,13 @@ This change follows its wording. The descriptions, the WebSite node and llms.txt
   - Checked at 1280px, at 390px (no page overflow) and in the light theme.
   - `/tools/demand` showed ▲/▼/NEW with its date caption.
 - The sim's Price column did not match its eBay rows, because it seeded `lowestPriceCentsUs` separately. In production that column is the minimum item price over the same rows, so a marked card's Price is at most its eBay item price.
+
+## OG images: official Riot art with a query string counts as PNG — 2026-09-28
+
+**Why.** Owner report: a shared Hot 40 link (Astral Heron at #1, Kai'Sa, Survivor at #3) unfurled with empty grey boxes where #1's and #3's art should be. #2 (a RiftScribe card) was fine.
+
+**Cause.** Both empty picks store Riot's official gallery art, `cmsassets.rgpub.io/…-744x1039.png?accountingTag=RB` (the shape `scripts/set-official-art.ts` writes, and the Vendetta rows carry). `cardImageForOg` accepts non-RiftScribe art only if it looks like a PNG or JPEG, and it tested `/\.(png|jpe?g)$/` against the whole URL. With the query string on the end the test failed, so the helper returned null and the image drew its placeholder. The page itself was fine, because `cardImageSrc` passes such URLs through unchanged.
+
+**Fix.** The extension is now read from the path, with the query and fragment removed; the URL returned still has its query string. The same helper feeds every OG route (home, `/card/[id]`, `/c/[token]`, `/rising/[token]`), so Vendetta card pages' own unfurls get their art back too.
+
+**Verified.** `tests/rising-snapshot.test.ts` now covers the official-art URL and a `.webp?x=1.png` decoy. The Hot 40 image rendered locally with the snapshot's real top three shows all three pictures. The rgpub URL answers `200 image/png` (about 1.1 MB, which satori decodes).
