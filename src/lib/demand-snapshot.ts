@@ -106,6 +106,17 @@ export interface DemandWindowResult {
   baselineDay: Date | null; // snapshot day used as the window's start (null = none old enough)
   coveredDays: number | null; // real days from baseline to now — may be < requested
   totalDays: number; // distinct snapshot days on record at all
+  // The equal-length period just BEFORE the window, for chart movement on
+  // /admin/demand (lib/demand-movement.ts). Only when asked for; null when no
+  // snapshot reaches back that far.
+  previous?: DemandPreviousWindow | null;
+}
+
+export interface DemandPreviousWindow {
+  rows: DemandWindowRow[]; // activity between startDay's and endDay's snapshots
+  startDay: Date;
+  endDay: Date; // = the current window's baselineDay
+  coveredDays: number; // may be < requested, like the window itself
 }
 
 // Demand accrued WITHIN a time window, for the admin demand leaderboard.
@@ -125,7 +136,7 @@ export interface DemandWindowResult {
 //
 // Throws on a failed read; getDemandWindow below is the guarded form (the
 // admin leaderboard uses it).
-export async function getDemandWindowOrThrow(days: number): Promise<DemandWindowResult> {
+export async function getDemandWindowOrThrow(days: number, opts: { previous?: boolean } = {}): Promise<DemandWindowResult> {
   const empty: DemandWindowResult = { rows: [], baselineDay: null, coveredDays: null, totalDays: 0 };
   const totalDays = await demandSnapshotDaysOrThrow();
   if (totalDays === 0) return empty;
@@ -169,13 +180,50 @@ export async function getDemandWindowOrThrow(days: number): Promise<DemandWindow
     0,
     Math.round((Date.now() - baseline.day.getTime()) / 86400_000)
   );
-  return { rows, baselineDay: baseline.day, coveredDays, totalDays };
+  const previous = opts.previous ? await previousWindowOrThrow(days, baseline.day, baseRows) : undefined;
+  return { rows, baselineDay: baseline.day, coveredDays, totalDays, ...(opts.previous ? { previous } : {}) };
+}
+
+// The period before the window: the window's own baseline snapshot (already
+// read, passed in) minus the snapshot `days` before it. One extra day of
+// snapshot rows — id + two integers per card, the same size as the baseline
+// read above — and only for the uncached admin leaderboard, which asks for it.
+async function previousWindowOrThrow(
+  days: number,
+  endDay: Date,
+  endRows: { cardId: string; searchCount: number; viewCount: number }[]
+): Promise<DemandPreviousWindow | null> {
+  const start = await prisma.demandSnapshot.findFirst({
+    where: { day: { lte: new Date(endDay.getTime() - days * 86400_000) } },
+    orderBy: { day: "desc" },
+    select: { day: true },
+  });
+  if (!start) return null;
+  const startRows = await prisma.demandSnapshot.findMany({
+    where: { day: start.day },
+    select: { cardId: true, searchCount: true, viewCount: true },
+  });
+  const base = new Map(startRows.map((r) => [r.cardId, r]));
+  const rows: DemandWindowRow[] = [];
+  for (const e of endRows) {
+    const b = base.get(e.cardId);
+    // Same conventions as the window: no start row means the card is new since.
+    const searches = Math.max(0, e.searchCount - (b?.searchCount ?? 0));
+    const views = Math.max(0, e.viewCount - (b?.viewCount ?? 0));
+    if (searches > 0 || views > 0) rows.push({ cardId: e.cardId, searches, views });
+  }
+  return {
+    rows,
+    startDay: start.day,
+    endDay,
+    coveredDays: Math.round((endDay.getTime() - start.day.getTime()) / 86400_000),
+  };
 }
 
 /** Guarded getDemandWindowOrThrow: an empty window on error. Never call it inside a cache callback. */
-export async function getDemandWindow(days: number): Promise<DemandWindowResult> {
+export async function getDemandWindow(days: number, opts: { previous?: boolean } = {}): Promise<DemandWindowResult> {
   try {
-    return await getDemandWindowOrThrow(days);
+    return await getDemandWindowOrThrow(days, opts);
   } catch (e) {
     console.warn("getDemandWindow skipped:", (e as Error).message);
     return { rows: [], baselineDay: null, coveredDays: null, totalDays: 0 };

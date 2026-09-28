@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import { normalizeCountry, pickPrice, currencyOf, COUNTRY_LIST } from "@/lib/country";
 import { getDemandWindow } from "@/lib/demand-snapshot";
+import { chartMovement, compareDemand, type Movement } from "@/lib/demand-movement";
 
 export const dynamic = "force-dynamic";
 
@@ -96,7 +97,9 @@ export default async function AdminDemandPage({
     return prisma.card.findMany({ where: { id: { in: ids } }, select: cardSelect });
   }
 
-  const demandWindow = range.days != null ? await getDemandWindow(range.days) : null;
+  // `previous: true` also reads the equal-length period before the window, so
+  // each ranked card can show Billboard-style movement against its rank then.
+  const demandWindow = range.days != null ? await getDemandWindow(range.days, { previous: true }) : null;
   // A window was asked for but no snapshot reaches back that far — fall back to
   // cumulative and SAY SO in the UI rather than mislabel all-time as "last 7 days".
   const windowUsable = !!demandWindow && demandWindow.baselineDay != null && demandWindow.rows.length > 0;
@@ -105,11 +108,21 @@ export default async function AdminDemandPage({
   let topViewed: Awaited<ReturnType<typeof fetchCards>>;
   // cardId -> in-window counts, for rendering the windowed numbers.
   const inWindow = new Map<string, { searches: number; views: number }>();
+  // cardId -> rank movement against the previous period (windowed views only).
+  let searchMoves: Map<string, Movement> | null = null;
+  let viewMoves: Map<string, Movement> | null = null;
+  const previous = windowUsable ? demandWindow?.previous ?? null : null;
 
   if (windowUsable && demandWindow) {
     for (const r of demandWindow.rows) inWindow.set(r.cardId, { searches: r.searches, views: r.views });
-    const bySearch = [...demandWindow.rows].sort((a, b) => b.searches - a.searches || b.views - a.views).slice(0, TOP_N);
-    const byView = [...demandWindow.rows].sort((a, b) => b.views - a.views || b.searches - a.searches).slice(0, TOP_N);
+    // compareDemand is the ONE ordering both periods are ranked by, so movement
+    // compares like with like (ties fall to card id, so they can't flip).
+    const bySearch = [...demandWindow.rows].sort(compareDemand("searches")).slice(0, TOP_N);
+    const byView = [...demandWindow.rows].sort(compareDemand("views")).slice(0, TOP_N);
+    if (previous) {
+      searchMoves = chartMovement(bySearch.map((r) => r.cardId), previous.rows, "searches");
+      viewMoves = chartMovement(byView.map((r) => r.cardId), previous.rows, "views");
+    }
     // One fetch for the union, then re-split — the two lists overlap heavily.
     const cards = await fetchCards([...new Set([...bySearch, ...byView].map((r) => r.cardId))]);
     const byId = new Map(cards.map((c) => [c.id, c]));
@@ -201,15 +214,22 @@ export default async function AdminDemandPage({
   const CardTable = ({
     rows,
     metric,
+    moves,
   }: {
     rows: typeof topSearched;
     metric: "searchCount" | "viewCount";
+    moves: Map<string, Movement> | null;
   }) => (
     <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
             <th className="px-3 py-2 font-medium">#</th>
+            {moves && (
+              <th className="px-1 py-2 font-medium" title="Rank movement against the previous period">
+                Move
+              </th>
+            )}
             <th className="px-3 py-2 font-medium">Card</th>
             <th className="px-3 py-2 text-right font-medium">
               Searches{windowUsable && <span className="ml-1 normal-case text-slate-600">in window</span>}
@@ -217,6 +237,11 @@ export default async function AdminDemandPage({
             <th className="px-3 py-2 text-right font-medium">
               Views{windowUsable && <span className="ml-1 normal-case text-slate-600">in window</span>}
             </th>
+            {moves && (
+              <th className="px-3 py-2 text-right font-medium" title="Rank in the previous period">
+                Last
+              </th>
+            )}
             <th className="px-3 py-2 text-right font-medium">Lowest ({currency})</th>
             <th className="px-3 py-2 text-right font-medium">Last seen</th>
           </tr>
@@ -224,7 +249,12 @@ export default async function AdminDemandPage({
         <tbody>
           {rows.map((c, i) => (
             <tr key={c.id} className="border-b border-ink-800 last:border-0 hover:bg-ink-800/60">
-              <td className="px-3 py-2 text-slate-500">{i + 1}</td>
+              <td className="px-3 py-2 tabular-nums text-slate-500">{i + 1}</td>
+              {moves && (
+                <td className="px-1 py-2">
+                  <MoveBadge move={moves.get(c.id)} />
+                </td>
+              )}
               <td className="px-3 py-2">
                 <Link
                   href={`/card/${c.slug ?? c.id}`}
@@ -262,6 +292,14 @@ export default async function AdminDemandPage({
                   </div>
                 )}
               </td>
+              {moves && (
+                <td className="px-3 py-2 text-right tabular-nums text-slate-500">
+                  {(() => {
+                    const m = moves.get(c.id);
+                    return m && m.kind !== "new" ? `#${m.prev}` : "—";
+                  })()}
+                </td>
+              )}
               <td className="px-3 py-2 text-right tabular-nums text-slate-300">{priceOf(c)}</td>
               <td className="px-3 py-2 text-right text-xs text-slate-500">
                 {c.lastViewedAt ? dateFmt.format(c.lastViewedAt) : "—"}
@@ -347,6 +385,23 @@ export default async function AdminDemandPage({
                 Card counters are cumulative with no per-event log, so they can only be windowed to
                 daily resolution. Outbound clicks below are exact.
               </span>
+              <span className="mt-2 block">
+                {previous ? (
+                  <>
+                    <span className="text-emerald-400">▲</span>/<span className="text-rose-400">▼</span> compare each
+                    card&apos;s rank with the previous {previous.coveredDays} day{previous.coveredDays === 1 ? "" : "s"} (
+                    <span className="tabular-nums">{dateFmt.format(previous.startDay)}</span> to{" "}
+                    <span className="tabular-nums">{dateFmt.format(previous.endDay)}</span>), ranked the same way across
+                    every card with activity then. <span className="font-semibold text-amber-300">NEW</span> means none
+                    on that measure in the previous period.
+                  </>
+                ) : (
+                  <span className="text-slate-500">
+                    Rank movement appears once snapshots reach back two windows ({(range.days ?? 0) * 2} days); they
+                    go back {demandWindow.totalDays} day{demandWindow.totalDays === 1 ? "" : "s"}.
+                  </span>
+                )}
+              </span>
             </>
           ) : (
             <>
@@ -374,7 +429,7 @@ export default async function AdminDemandPage({
               : "No search activity recorded yet."}
           </Empty>
         ) : (
-          <CardTable rows={topSearched} metric="searchCount" />
+          <CardTable rows={topSearched} metric="searchCount" moves={searchMoves} />
         )}
       </section>
 
@@ -390,7 +445,7 @@ export default async function AdminDemandPage({
             {windowUsable ? `No views in the last ${range.label}.` : "No views recorded yet."}
           </Empty>
         ) : (
-          <CardTable rows={topViewed} metric="viewCount" />
+          <CardTable rows={topViewed} metric="viewCount" moves={viewMoves} />
         )}
       </section>
 
@@ -444,6 +499,34 @@ export default async function AdminDemandPage({
         </p>
       </section>
     </div>
+  );
+}
+
+// Billboard-style movement: ▲ climbed, ▼ fell, = held, NEW had no rank last period.
+function MoveBadge({ move }: { move: Movement | undefined }) {
+  if (!move) return null;
+  if (move.kind === "new") {
+    return (
+      <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-amber-300" title="No activity on this measure in the previous period">
+        NEW
+      </span>
+    );
+  }
+  if (move.kind === "same") {
+    return (
+      <span className="text-xs text-slate-500" title={`Held #${move.prev}`}>
+        =
+      </span>
+    );
+  }
+  const up = move.kind === "up";
+  return (
+    <span
+      className={`whitespace-nowrap text-xs font-semibold tabular-nums ${up ? "text-emerald-400" : "text-rose-400"}`}
+      title={`${up ? "Up" : "Down"} ${move.by} from #${move.prev}`}
+    >
+      {up ? "▲" : "▼"} {move.by}
+    </span>
   );
 }
 

@@ -14876,3 +14876,20 @@ This change follows its wording. The descriptions, the WebSite node and llms.txt
   - an old slug then found the renamed row through `cardWhereParam`.
 
 **Owner steps.** After the next release, run maintenance → `fix-card-names` (dry run), check the report, run it again with `apply` ticked, then `revalidate-now`.
+
+## Demand leaderboard: Billboard-style rank movement — 2026-09-28
+
+**Why.** Owner's request: `/admin/demand`'s windowed charts (Most searched, Most viewed) should show each card's movement next to its rank, Hot 100 style.
+
+**What.**
+- For any windowed range (24h to 90 days), the equal-length period just before the window is ranked the same way. Each row shows ▲n / ▼n / = beside its rank, plus a "Last" column with the previous rank.
+- **NEW** means no activity on that measure in the previous period. A card with views but no searches last period is NEW on the searches chart only.
+- The all-time view shows no movement, because there is no previous period.
+
+**Choices.**
+- **The previous period is ranked across every active card, not just last period's top 50.** A climb from #73 to #40 reads ▲33, not a vague re-entry. That also means "Last" can show a rank below 50.
+- **One comparator for both periods** (`compareDemand`, in `lib/demand-movement.ts`): the metric, then the other metric, then card id. Before this, ties had no final order, so a tied pair could swap between loads and show movement that never happened.
+- **Cost.** `getDemandWindow(days, { previous: true })` reuses the window's baseline snapshot as the previous period's end, so it adds one date lookup and one day of snapshot rows (id + two integers per card). It runs only on this uncached admin page; `lib/demand.ts`'s cached public read is unchanged.
+- **Coverage is stated, not assumed.** The caption names the two snapshot dates compared. When snapshots don't reach back two windows, it says so and the movement column is hidden.
+
+**Verified.** `tests/demand-movement.test.ts`. A local Postgres with 15 days of synthetic snapshots produced every movement kind, each matching the seeded figures (for example Flame Chompers ▲5 from #8, Blazing Scorcher ▼8 from #1, Get Excited! NEW). The page rendered via `next dev` at 1280px and 390px with no page overflow.
