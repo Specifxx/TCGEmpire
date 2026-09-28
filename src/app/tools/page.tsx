@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { premiumPlusEnabled } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
+import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // The badge on the two "full list" tools (Deal Finder, Rising Cards) — Plus
 // once it's configured; dark (Plus unconfigured), they read exactly as they
@@ -58,8 +59,8 @@ const FAQS = [
     q: "Do I need an account to use RiftCompare tools?",
     a:
       LIST_BADGE === "Plus"
-        ? "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist with weekly new-low alerts, portfolio tracking, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds every row of both lists, target-price alerts and an ad-free site; Premium adds Best Basket's store-by-store plan, Buy this list and the full Demand Finder."
-        : "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist with weekly new-low alerts, portfolio tracking, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Premium adds every row of both lists, target-price alerts, an ad-free site, Best Basket's store-by-store plan, Buy this list and the full Demand Finder.",
+        ? `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds an unlimited watchlist and portfolio, every row of both lists, target-price alerts and an ad-free site; Premium adds Best Basket's store-by-store plan, Buy this list and the full Demand Finder.`
+        : `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Premium adds an unlimited watchlist and portfolio, every row of both lists, target-price alerts, an ad-free site, Best Basket's store-by-store plan, Buy this list and the full Demand Finder.`,
   },
   {
     q: "Which Riftbound tool should I use to buy a whole decklist?",
@@ -195,8 +196,9 @@ export default function ToolsHubPage() {
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Tools &amp; calculators</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
         Every RiftCompare tool in one place. Price-check a card, work out whether a box is worth ripping, and build or
-        price decks for less — most need no sign-up at all. A free account adds watchlists, price alerts and the top 3
-        of each deal list; {LIST_BADGE === "Plus" ? <>Plus shows every deal with no ads, and </> : null}
+        price decks for less — most need no sign-up at all. A free account adds a watchlist of up to{" "}
+        {FREE_WATCHLIST_LIMIT} cards, a portfolio of up to {FREE_PORTFOLIO_LIMIT} and the top 3 of each deal list;{" "}
+        {LIST_BADGE === "Plus" ? <>Plus lifts those limits and shows every deal with no ads, and </> : null}
         <span className="text-gold">Premium</span> works out the cheapest way to buy a whole want-list.
       </p>
 

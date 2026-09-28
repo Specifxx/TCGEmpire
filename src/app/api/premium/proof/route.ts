@@ -33,7 +33,7 @@ export async function GET(req: Request) {
     );
   } catch {
     // Never let a proof-line fetch surface an error — the caller treats a
-    // failed/empty response as "don't show the line" (see PremiumSlideIn.tsx).
+    // failed/empty response as "don't show the line" (see PremiumProofLine).
     return NextResponse.json({ deals: 0, savingsCents: 0, currency: "USD" }, { headers });
   }
 }

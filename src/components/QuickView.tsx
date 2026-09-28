@@ -373,13 +373,16 @@ function QuickViewModal({
                 11rem basis lets the labelled Watch button drop under the title
                 in the 640–767 band, where the details column is only ~346px
                 (the modal goes side by side at sm), instead of squeezing the
-                title to ~150px. Below sm the button is a 48px heart square. */}
+                title to ~150px. Below sm the button is a 48px heart square.
+                limitInline: at the free watchlist limit the upgrade panel
+                wraps onto its own line here, inside the dialog, rather than
+                as a popover the dialog's own layer would cover. */}
             <div className="mt-2 flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
               <div className="min-w-0 flex-1 basis-44">
                 <h2 id="quickview-title" className="break-words text-lg font-extrabold text-white sm:text-xl">{cardDisplayName(card.name, card)}</h2>
                 <p className="font-mono text-xs text-slate-500">{card.setName} ({card.setCode}) · {card.collectorNumber}</p>
               </div>
-              <PriceWatchButton cardId={card.id} variant="responsive" />
+              <PriceWatchButton cardId={card.id} variant="responsive" limitInline />
             </div>
 
             <div className="mt-3 rounded-lg bg-ink-950/50 p-3">

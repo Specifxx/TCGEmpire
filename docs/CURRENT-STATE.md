@@ -170,7 +170,9 @@ longer lands on its entry.
   at or over the limit, and existing watches, portfolio cards, copies, edits
   and removals keep working, lapsed subscribers included. Every create route
   enforces it (`402 code:"free_limit"`), the anonymous email-only door
-  included, and the import adds up to the allowance and reports the rest.
+  included (counted per canonical inbox, so a `+tag` alias of an address
+  that already watches ten is at the limit too), and the import adds up to
+  the allowance and reports the rest.
   [2026-09-28](../DECISIONS.md#L14549)
 - **Upgrade prompts live where a limit is hit, not in popups or headers:**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best

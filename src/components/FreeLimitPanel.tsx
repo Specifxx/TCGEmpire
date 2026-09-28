@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PremiumButton } from "./PremiumButton";
 import { useMe } from "@/lib/use-me";
-import { freeLimitHeadline, type FreeLimitKind } from "@/lib/free-limits";
+import { FREE_LIMIT_POPOVER, freeLimitHeadline, freeLimitPopoverTop, type FreeLimitKind } from "@/lib/free-limits";
 import { PREMIUM_PRICE_LABEL, TIER_NAMES, tierMonthlyAmount } from "@/lib/site";
 
 // THE UPGRADE PROMPT AT THE LIMIT (owner, 2026-09-28: "Put the upgrade prompt
@@ -62,6 +62,19 @@ export function FreeLimitPanel({
  * The same panel for a control too small to hold it (a tile's heart): shown
  * beside the control that was just tapped, closed by Escape, an outside tap or
  * a scroll. Portalled, so a tile's overflow can't clip it.
+ *
+ * `z-modal`, not `z-50` (2026-09-28 review): the heart also lives inside
+ * overlays — the phone buy bar (z-40), sheets (85), menus (95) and any Dialog
+ * (QuickView's is `overlay`, 60) — and a popover under one of them is a tap
+ * that does nothing visible. QuickView renders the inline panel instead
+ * (PriceWatchButton `limitInline`), which also keeps it inside the Dialog's
+ * focus trap; this z-index is the backstop for every other host.
+ *
+ * Placed BELOW the anchor when it fits and ABOVE it otherwise, clamped to the
+ * viewport: the card page's sticky buy bar pins the heart to the bottom of a
+ * phone screen, where "below" is off-screen — and scrolling to find it would
+ * close it. The panel is measured on a hidden first pass, so it never flashes
+ * in the wrong place.
  */
 export function FreeLimitPopover({
   anchor,
@@ -75,16 +88,22 @@ export function FreeLimitPopover({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const WIDTH = 288;
+  const [pos, setPos] = useState<{ top: number; left: number; measured: boolean } | null>(null);
 
   useLayoutEffect(() => {
     if (!anchor) return;
     const r = anchor.getBoundingClientRect();
-    const vw = window.innerWidth;
-    const left = Math.max(16, Math.min(vw - WIDTH - 16, r.right - WIDTH));
-    setPos({ top: r.bottom + 8, left });
-  }, [anchor]);
+    const { width, gutter } = FREE_LIMIT_POPOVER;
+    const left = Math.max(gutter, Math.min(window.innerWidth - width - gutter, r.right - width));
+    const h = ref.current?.offsetHeight;
+    if (h == null) {
+      // First pass: render hidden below the anchor to measure the height.
+      setPos({ top: r.bottom + 8, left, measured: false });
+      return;
+    }
+    setPos({ top: freeLimitPopoverTop(r, h, window.innerHeight), left, measured: true });
+    // Re-run once the hidden first pass has mounted (pos.measured flips once).
+  }, [anchor, pos?.measured]);
 
   useEffect(() => {
     const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -104,7 +123,11 @@ export function FreeLimitPopover({
 
   if (!pos || typeof document === "undefined") return null;
   return createPortal(
-    <div ref={ref} style={{ position: "fixed", top: pos.top, left: pos.left, width: WIDTH }} className="z-50 shadow-2xl">
+    <div
+      ref={ref}
+      style={{ position: "fixed", top: pos.top, left: pos.left, width: FREE_LIMIT_POPOVER.width, visibility: pos.measured ? "visible" : "hidden" }}
+      className={`${FREE_LIMIT_POPOVER.zClass} shadow-2xl`}
+    >
       <FreeLimitPanel kind={kind} count={count} onClose={onClose} />
     </div>,
     document.body,

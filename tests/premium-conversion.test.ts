@@ -92,8 +92,9 @@ test("the proof route's reader of savingsVsMarketCents falls back to 0 for a sta
   // A TopDeals value served from the 1h unstable_cache from before this field
   // existed won't have it for up to an hour after deploy — the read site
   // must tolerate that with `?? 0`, not assume the field is always present.
-  // (/premium's own proof strip was removed 2026-09-11 — this endpoint is
-  // still read by PremiumSlideIn, so its guard still matters.)
+  // (Its readers have changed — /premium's PremiumProofLine reads it now;
+  // PremiumSlideIn did until its removal on 2026-09-28 — but the guard
+  // matters for any reader.)
   const proofRoute = read("src/app/api/premium/proof/route.ts");
   assert.match(proofRoute, /savingsVsMarketCents \?\? 0/, "the proof route must guard the field with ?? 0");
 });

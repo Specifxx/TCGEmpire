@@ -22,8 +22,10 @@ test("QuickView renders the compact alert with its own placement, below the eBay
   const cta = qv.indexOf("<PriceDropAlertCta");
   const collection = qv.indexOf("＋ Add to collection");
   assert.ok(disclosure > 0 && cta > disclosure && collection > cta, "after the eBay buy path, above the collection row");
-  // The heart stays: signed-in visitors still get the icon toggle.
-  assert.match(qv, /<PriceWatchButton cardId=\{card\.id\} variant="responsive" \/>/);
+  // The heart stays: signed-in visitors still get the icon toggle. limitInline
+  // (2026-09-28): its free-limit panel renders inside the dialog, not as a
+  // popover the dialog's layer would cover.
+  assert.match(qv, /<PriceWatchButton cardId=\{card\.id\} variant="responsive" limitInline \/>/);
   assert.match(qv, /onClose=\{close\} providers=\{providers\}/, "threaded from the provider to the modal");
 });
 

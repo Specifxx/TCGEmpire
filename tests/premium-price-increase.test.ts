@@ -8,7 +8,6 @@ import {
   PREMIUM_ANNUAL_AMOUNT,
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
-  premiumLockInTail,
   premiumLockInHeadline,
   annualSavingPct,
 } from "../src/lib/site";
@@ -116,8 +115,7 @@ test("with no announcement live, the helpers say only what is true: cancel anyti
   // one thing that is unconditionally true.
   assert.equal(premiumLockInLine(), "No contract: cancel anytime from your account page, in a couple of clicks.");
   assert.equal(premiumLockInHeadline(), "Premium is $4.99/month — cancel anytime");
-  assert.equal(premiumLockInTail(), "cancel anytime");
-  for (const copy of [premiumLockInLine(), premiumLockInHeadline(), premiumLockInTail()]) {
+  for (const copy of [premiumLockInLine(), premiumLockInHeadline()]) {
     assert.doesNotMatch(copy, /lock|goes up|rises|rise|increas/i, `steady state must not imply a coming increase: "${copy}"`);
   }
   // The steady-state branch must not SOUND announced: no "rises to $X",
@@ -138,9 +136,6 @@ test("the announced-increase branch, when it DOES fire, names both the current a
   assert.match(lineBody, /\$\{PREMIUM_PRICE_AMOUNT\}/, "the announced sentence must still state today's price");
   assert.match(lineBody, /\$\{PREMIUM_NEXT_PRICE_AMOUNT\}/, "the announced sentence must state the future price");
 
-  const tailFnAt = src.indexOf("export function premiumLockInTail()");
-  const tailBody = src.slice(tailFnAt, tailFnAt + 300);
-  assert.match(tailBody, /\$\{PREMIUM_NEXT_PRICE_AMOUNT\}/, "the announced compact caption must also name the future price");
 });
 
 test("no surface invents an exact date for an increase that doesn't have one yet", () => {
@@ -151,12 +146,11 @@ test("no surface invents an exact date for an increase that doesn't have one yet
   // the same guard applied to set release dates.
   const datePattern = /\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}|\d{4}-\d{2}-\d{2}/;
   assert.ok(!datePattern.test(premiumLockInLine()), "premiumLockInLine must not name a specific date");
-  assert.ok(!datePattern.test(premiumLockInTail()), "premiumLockInTail must not name a specific date");
   // Both branches of both banner helpers, now that the steady state renders a
   // banner of its own (2026-09-22) rather than only a caption.
   assert.ok(!datePattern.test(premiumLockInHeadline()), "premiumLockInHeadline must not name a specific date");
   const siteSrc = read("src/lib/site.ts");
-  for (const fn of ["premiumLockInLine", "premiumLockInTail", "premiumLockInHeadline"]) {
+  for (const fn of ["premiumLockInLine", "premiumLockInHeadline"]) {
     const at = siteSrc.indexOf(`export function ${fn}()`);
     assert.ok(at >= 0, `expected ${fn} to exist`);
     // The function BODY only — the comment above it is free to discuss real

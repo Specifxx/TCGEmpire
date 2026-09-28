@@ -77,8 +77,8 @@ const EXTERNAL_ENTRY_KEY = "rc_signup_promo_external_entry";
 // earlier, pushier version of this popup measured a 78% dismiss rate with
 // bounce up and pages/visitor down. A re-show every few pages is a smaller ask
 // than that version was, and the visitor still controls it — but note there is
-// NO lifetime cap here, unlike PremiumSlideIn, which stops for good after two
-// dismissals. If signup_promo_dismissed climbs or pages/visitor falls after
+// NO lifetime PAGE cap here (the removed PremiumSlideIn stopped for good after
+// two dismissals; this card has the two-strike cap below but re-asks between). If signup_promo_dismissed climbs or pages/visitor falls after
 // this ships, a cap is the first thing to add.
 const PAGES_BETWEEN_SHOWS = 3;
 
@@ -116,13 +116,13 @@ function writeLocal(key: string, value: number): void {
 // already cost this codebase one production incident on its own (see
 // tests/signup-slidein.test.ts's header for the short-phone history) and, more
 // basically, is a much bigger interruption than a corner card needs to be.
-// PremiumSlideIn already proved the pattern for the logged-in audience: a small
-// corner card that never blocks scroll, never traps focus, and yields to any
-// REAL modal (checks the shared body[data-rc-dialog] flag, same as before — but
-// no longer SETS it, since it no longer blocks anything itself). The two
-// audiences are exclusive by construction (signed-out here, signed-in-non-
-// Premium there), so sharing PremiumSlideIn's exact corner and z-tier is safe —
-// they can never be on screen at the same time for the same visitor. The
+// PremiumSlideIn proved the pattern for the logged-in audience until its removal
+// on 2026-09-28: a small corner card that never blocks scroll, never traps
+// focus, and yields to any REAL modal (checks the shared body[data-rc-dialog]
+// flag, same as before — but no longer SETS it, since it no longer blocks
+// anything itself). While both existed the audiences were exclusive by
+// construction (signed-out here, signed-in-non-Premium there), which is why
+// they could share a corner and z-tier. The
 // COLOURING is deliberately no longer shared (2026-09-16): this card is
 // brand-green because it sells the free tier, and gold is reserved for the
 // surfaces that actually ask for money. A visitor who sees both across two
@@ -134,8 +134,9 @@ function writeLocal(key: string, value: number): void {
 
 // A FIVE-SECOND DELAY (2026-09-11, explicit owner instruction: every slider on
 // the site shows five seconds after the page opens rather than instantly). The
-// value is NUDGE_DELAY_MS, shared with PremiumSlideIn and AnnualSwitchNudge so
-// the three corner nudges can never drift to three different answers again —
+// value is NUDGE_DELAY_MS, shared with AnnualSwitchNudge (and with PremiumSlideIn
+// until its removal on 2026-09-28) so the corner nudges can never drift to
+// different answers again —
 // see lib/nudge-timing.ts, which also carries the full history.
 //
 // READ THAT HISTORY BEFORE CHANGING THIS AGAIN. The timing here has been
@@ -153,8 +154,8 @@ function writeLocal(key: string, value: number): void {
 // seconds suppresses the popup instead of being covered by it.
 //
 // /premium is also skipped — no point pitching "sign up to reach Premium" to a
-// visitor already standing on the page that sells it (same reasoning
-// PremiumSlideIn's own SKIP_PATHS already applies).
+// visitor already standing on the page that sells it (the same reasoning the
+// removed PremiumSlideIn's SKIP_PATHS applied).
 const SKIP_PATHS = ["/login", "/verify", "/premium"];
 
 // Distinguishes this behaviour from every version before it, on
@@ -228,7 +229,8 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // only has to convert them into an account, so a higher rate here is expected
 // and is not by itself evidence the reversal was right. The honest comparison
 // is downstream — accounts created, then Premium conversions from those
-// accounts via PremiumSlideIn — against the Premium-popup era's direct rate.
+// accounts (through the upgrade prompts at the free limits since 2026-09-28,
+// PremiumSlideIn before) — against the Premium-popup era's direct rate.
 //
 // READ THESE IN GA4, NOT VERCEL. Both events are in GA4_ONLY_EVENTS
 // (lib/analytics.ts): shown is an impression that fires for a large share of
@@ -244,7 +246,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   // mounted/entered now come from the shared usePresence primitive
   // (src/lib/motion.ts) instead of a hand-rolled double-rAF entrance + a bare
   // setTimeout exit — same contract (entered drives the slide-in, mounted
-  // gates the unmount), same 250ms exit as PremiumSlideIn shares below.
+  // gates the unmount), same 250ms exit the removed PremiumSlideIn used.
   const { mounted, entered } = usePresence(shown, 250);
   const lastCountedPath = useRef<string | null>(null);
   // Visible time on the current page (lib/signup-promo-gate.ts): only a first
@@ -254,7 +256,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   // NO trial/premium state is read here any more. The card makes no paid
   // offer, so `trialDays`/`premiumPlus` (which the Premium-pitch version used
   // to pick a $0-today vs recurring-price framing) are nobody's business on
-  // this surface — PremiumSlideIn still reads them for the signed-in audience.
+  // this surface.
 
   // Count the pages a SIGNED-OUT visitor sees, once per distinct route. Declared
   // before the arming effect on purpose: React runs effects in order, so this
@@ -315,8 +317,8 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
 
     // THE LIFETIME CAP, checked before anything else because it is the cheapest
     // read and the most final. Two dismissals is a no — same rule, same numbers
-    // and now the same constants as PremiumSlideIn, which has enforced them
-    // since 2026-08-27. Before this the popup had no cap at all and could ask
+    // and the same constants PremiumSlideIn enforced from 2026-08-27 until its
+    // removal on 2026-09-28. Before this the popup had no cap at all and could ask
     // someone who had declined it a dozen times.
     if (readLocal(DISMISS_COUNT_KEY) >= MAX_NUDGE_DISMISSALS) return;
     if (Date.now() < readLocal(SNOOZE_UNTIL_KEY)) return;
@@ -360,8 +362,8 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   }, [loaded, user, shown, pathname, engaged]);
 
   // usePresence(shown, 250) now owns letting the exit transition finish
-  // before actually unmounting — mirrors PremiumSlideIn's own hide(), which
-  // shares the exact same call.
+  // before actually unmounting — the same call the removed PremiumSlideIn's
+  // hide() made.
   const hide = useCallback(() => setShown(false), []);
 
   const dismiss = useCallback(() => {
@@ -388,13 +390,13 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   // ENGAGING IS NOT REFUSING. Clicking a provider button snoozes the popup for
   // a fortnight but burns NO strike — someone who signed in and came back
   // should not be one dismissal away from never being asked again. Same split
-  // PremiumSlideIn's accept() already makes between its two snooze windows.
+  // the removed PremiumSlideIn's accept() made between its two snooze windows.
   const snoozeForClick = useCallback(() => {
     writeLocal(SNOOZE_UNTIL_KEY, Date.now() + SNOOZE_AFTER_CLICK_MS);
   }, []);
 
-  // Esc dismisses it — non-trapping, because this is not a modal (matches
-  // PremiumSlideIn exactly: no focus trap, no scroll lock, no aria-modal).
+  // Esc dismisses it — non-trapping, because this is not a modal (no focus
+  // trap, no scroll lock, no aria-modal — as PremiumSlideIn was).
   // Ignored while a real dialog is open (2026-09-23): that Escape belongs to
   // the dialog, and dismissing here as well would silently burn a
   // frequency-cap strike and a week's snooze on a visitor who only meant to
@@ -412,10 +414,9 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   if (!mounted) return null;
 
   return (
-    // Bottom-LEFT, same corner and z-tier as PremiumSlideIn (z-[70], under every
-    // real modal). Safe to share: this audience (signed-out) and PremiumSlideIn's
-    // (signed-in, non-Premium) are mutually exclusive for any one visitor, so the
-    // two can never stack.
+    // Bottom-LEFT, z-[70], under every real modal — the corner and z-tier it
+    // shared with PremiumSlideIn until that was removed on 2026-09-28 (the
+    // audiences were exclusive, so the two could never stack).
     <div
       role="region"
       aria-label="Create a free RiftCompare account"

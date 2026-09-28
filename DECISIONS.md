@@ -14595,7 +14595,18 @@ order up to the allowance and reports the rest (`limitSkipped`). The refusal
 is `402 { error, code: "free_limit", kind, limit, count }` everywhere.
 `tests/free-limits.test.ts` pins that no other route creates a `PriceAlert` or
 `CollectionCard`. Two adds racing at 9 of 10 can both land (11); accepted, since
-a lock would hold a pooled Neon connection on every heart tap.
+a lock would hold a pooled Neon connection on every heart tap. Beside it, the
+email-only door counts an address together with its canonical inbox
+(`canonicalWatchEmail`: lowercased, `+tag` dropped, Gmail dots dropped and
+googlemail folded to gmail), as one `"email" = ANY(...)` equality lookup, and
+checks both forms for a paying owner. That closes the one-inbox alias trick
+against an address that already watches ten: `alice+1@gmail.com` after
+`alice@gmail.com`, or a free member at 10 who signs out and adds a `+tag`.
+It does not stop two fresh aliases that never touched the base address, or
+simply a second address, from each starting at 0; an unverified door can't,
+and that is accepted for the same reason as the race: the limit is a funnel,
+not a quota anyone is billed on. The watch is still stored and emailed at the
+address as typed.
 
 **The upgrade prompt is where the limit is hit, and only there.**
 `FreeLimitPanel` answers the add that was refused, where it was tried: the
@@ -14604,8 +14615,18 @@ card heart (a popover beside it), the card page's alert button, QuickView,
 quick add and the paste import. It states the real count, says nothing already
 tracked is lost, and sells Plus through `PremiumButton tier="plus"` with the
 new surfaces `limit:watchlist` / `limit:portfolio`. `use-watchlist`'s `watch()`
-pre-checks from the id Set it already holds, so a heart at 10 opens the panel
-instead of flipping and rolling back. A quiet "N of 10 free" counter shows on
+pre-checks from the id Set it already holds, so a heart at 10 does not flip
+and roll back; but that Set holds only the account's own rows (not an
+unadopted email-only watch on the same address) and only the newest 500, so a
+pre-check block is never final. The tap still goes to the route, without the
+optimistic flip, and the route's success or 402 decides (a card already
+watched is always allowed). The heart's popover sits at `z-modal`, above the
+phone buy bar, every Dialog, sheets and menus, and flips above its anchor when
+there is no room below (the card page's sticky buy bar pins the heart to the
+bottom of a phone screen); QuickView renders the inline panel instead, inside
+its Dialog's focus trap. The anonymous limit phase does not promise "sign in
+for unlimited": it only shows for an address with no account or a free one,
+and a free member who signs in is at the same 10. A quiet "N of 10 free" counter shows on
 the watchlist from 7, and on My Collection from 40, for free accounts only.
 
 **Best Basket leads with money.** The free and Plus preview now opens with
@@ -14617,7 +14638,9 @@ each card's cheapest copy separately. Unlock it for {price}." (Plus:
 an average or an example. Surface `limit:basket`.
 
 **No popup or header upsells.** The signed-in `PremiumSlideIn` is deleted,
-with its mount, `PremiumPitchPanel` and `/api/premium/nudge`. The header's
+with its mount, `PremiumPitchPanel`, `/api/premium/nudge`, its
+`premiumLockInTail` caption helper and its `premium_slidein_*` GA4-only event
+names. The header's
 gold, shimmering "✦ Premium" (phone and desktop), the account menu's
 "✦ Get Premium" and "· get Premium", the rail's gold "Get Premium" and the
 menu overlay's gold Premium spotlight became plain, non-gold "Pricing" links
@@ -14640,7 +14663,8 @@ read "10 cards" / "50 cards" for a free account and "Unlimited" for Plus and
 Premium (so both now show in the dialog). Updated from the constants:
 `PremiumPricingCards`, /premium's features and FAQ (price comparison stays
 "free for everyone, with no limit"), the Premium explainer article, llms.txt,
-/alerts, /watching, /portfolio and the welcome email. `PREMIUM_COPY_VERSION`
+/alerts, /watching, /portfolio, the /tools FAQ and the welcome email.
+`PREMIUM_COPY_VERSION`
 is `limits-2026-09-28`, so funnel events split before and after.
 
 **Measure.** `funnel-report`'s by-surface tables now carry `limit:watchlist`,

@@ -153,10 +153,15 @@ test("use-watchlist.ts is optimistic: publish() before the fetch, with a rollbac
   // `opts` (2026-09-28) carries onLimit, the free-watchlist-limit callback.
   const watchFn = /async watch\(cardId, market, opts\) \{[\s\S]*?\n\s*\},/.exec(src)?.[0] ?? "";
   const unwatchFn = /async unwatch\(cardId\) \{[\s\S]*?\n\s*\},/.exec(src)?.[0] ?? "";
-  for (const [name, fn] of [["watch", watchFn], ["unwatch", unwatchFn]] as const) {
+  // At the free limit watch() deliberately skips the optimistic flip (the id
+  // Set can't tell a grandfathered card from a new one; the route decides), so
+  // the optimistic path is the one from the pre-click snapshot on. The fetch
+  // itself is postWatch(), shared by both paths.
+  const optimisticWatch = watchFn.slice(watchFn.indexOf("const prev = watched"));
+  for (const [name, fn] of [["watch", optimisticWatch], ["unwatch", unwatchFn]] as const) {
     assert.ok(fn, `expected to find ${name}()`);
     const publishAt = fn.indexOf("publish();");
-    const fetchAt = fn.indexOf("await fetch(");
+    const fetchAt = Math.max(fn.indexOf("await fetch("), fn.indexOf("await postWatch("));
     assert.ok(publishAt >= 0 && fetchAt >= 0 && publishAt < fetchAt, `${name}() must publish() the optimistic state before awaiting the fetch`);
     assert.match(fn, /watched = prev/, `${name}() must roll back to the pre-click snapshot on failure`);
   }

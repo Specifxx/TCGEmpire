@@ -5,7 +5,7 @@ import { useMe } from "@/lib/use-me";
 import { useWatchlist } from "@/lib/use-watchlist";
 import type { FreeLimitBody } from "@/lib/free-limits";
 import { useCountry } from "./CountryProvider";
-import { FreeLimitPopover } from "./FreeLimitPanel";
+import { FreeLimitPanel, FreeLimitPopover } from "./FreeLimitPanel";
 
 // "Watch this card's price" — and, now, "stop watching it".
 //
@@ -24,12 +24,20 @@ import { FreeLimitPopover } from "./FreeLimitPanel";
 // "responsive" (2026-09-23) is a 48px heart square below sm and the labelled
 // button from sm; it is one more value of the same `variant` prop, so the
 // { cardId, variant } shape is unchanged and all five call sites still compile.
+//
+// `limitInline` (2026-09-28): at the free watchlist limit, render the upgrade
+// panel as the button's next sibling (full width, so a flex-wrap parent puts
+// it on its own line) instead of the body-portalled popover. For hosts inside
+// a Dialog — QuickView — where the panel must stay inside the focus trap and
+// can't be painted over by the dialog's own layer.
 export function PriceWatchButton({
   cardId,
   variant = "icon",
+  limitInline = false,
 }: {
   cardId: string;
   variant?: "icon" | "full" | "responsive";
+  limitInline?: boolean;
 }) {
   const { user, loaded: meLoaded } = useMe();
   const { watched, watch, unwatch } = useWatchlist();
@@ -83,6 +91,12 @@ export function PriceWatchButton({
     </svg>
   );
 
+  const limitPrompt = !limit ? null : limitInline ? (
+    <FreeLimitPanel kind="watchlist" count={limit.count} onClose={() => setLimit(null)} className="w-full basis-full" />
+  ) : (
+    <FreeLimitPopover anchor={btnRef.current} kind="watchlist" count={limit.count} onClose={() => setLimit(null)} />
+  );
+
   const label = watching ? "Stop watching this card" : "Watch this card's price";
   const hint = watching
     ? "You'll get an email when the price drops — click to stop"
@@ -123,7 +137,7 @@ export function PriceWatchButton({
             state. */}
         <span className={responsive ? "hidden sm:inline" : undefined}>{watching ? "Watching" : "Watch price"}</span>
       </button>
-      {limit && <FreeLimitPopover anchor={btnRef.current} kind="watchlist" count={limit.count} onClose={() => setLimit(null)} />}
+      {limitPrompt}
       </>
     );
   }
@@ -145,7 +159,7 @@ export function PriceWatchButton({
     >
       {bell}
     </button>
-    {limit && <FreeLimitPopover anchor={btnRef.current} kind="watchlist" count={limit.count} onClose={() => setLimit(null)} />}
+    {limitPrompt}
     </>
   );
 }

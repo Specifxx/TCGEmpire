@@ -136,7 +136,7 @@ test("the card reads no trial or price state at all — it makes no paid offer",
 
 test("it wears NO gold: gold is reserved for the surfaces that ask for money", () => {
   // REVERSED 2026-09-16. Gold is this site's Premium colour on every surface
-  // that sells it (PremiumButton, PremiumSlideIn, the nav spotlight). A card
+  // that sells it (PremiumButton; PremiumSlideIn and the gold nav until 2026-09-28). A card
   // that sells the FREE tier wearing Premium's colour promises a paid tier it
   // deliberately never mentions, which is the kind of small dishonesty this
   // suite exists to prevent.
@@ -147,7 +147,7 @@ test("it wears NO gold: gold is reserved for the surfaces that ask for money", (
   // The pitch is the shared comparison component, not a table hand-rolled into
   // this file (see the access-tiers test of the same name).
   assert.match(code, /<FreeAccountCompare \/>/, "the pitch must be the shared component");
-  assert.doesNotMatch(code, /PremiumPitchPanel/, "the free-vs-Premium panel belongs to PremiumSlideIn now");
+  assert.doesNotMatch(code, /PremiumPitchPanel/, "PremiumPitchPanel was removed 2026-09-28; this card must not reintroduce a Premium pitch");
 });
 
 test("shows instantly — the buy_click-aware timing system was removed after this file was first written (2026-09-01)", () => {

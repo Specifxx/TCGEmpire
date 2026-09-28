@@ -111,7 +111,7 @@ test("the popup's Premium pitch never grows its own hand-typed tool list or comp
   assert.ok(!/const PITCH_TOOLS/.test(src), "must not declare its own PITCH_TOOLS");
   assert.ok(!/const COMPARISON|const ROWS/.test(src), "must not hand-type a comparison table inline");
   assert.match(src, /<FreeAccountCompare \/>/, "the pitch is the shared comparison component");
-  assert.ok(!/<PremiumPitchPanel/.test(src), "the free-vs-Premium panel is PremiumSlideIn's now");
+  assert.ok(!/<PremiumPitchPanel|<PremiumButton/.test(src), "PremiumPitchPanel was removed 2026-09-28; the free-account popup must not reintroduce a Premium pitch");
 });
 
 test("the popup sells the FREE account, and grants nothing automatically", () => {
@@ -146,8 +146,8 @@ test("the popup's honesty guarantees survive the reversal: no fake scarcity, and
   // the real recurring price) moved WITH the pitch on 2026-09-16 — this card
   // quotes no price at all now. They are still enforced, on the surfaces that
   // do quote one: see tests/premium-price-increase.test.ts and
-  // tests/premium-zero-today.test.ts, which cover PremiumSlideIn,
-  // PremiumDialog, PremiumCta and /premium.
+  // tests/premium-zero-today.test.ts, which cover PremiumDialog, PremiumCta
+  // and /premium (and covered PremiumSlideIn until its removal on 2026-09-28).
   assert.ok(!/PREMIUM_PRICE_AMOUNT|premiumZeroToday|premiumFromLine/.test(src), "a card with no paid ask must quote no price");
 });
 

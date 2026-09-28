@@ -96,6 +96,31 @@ export function wouldHitFreeLimit(kind: FreeLimitKind, opts: { paid: boolean; he
   return opts.held.size >= FREE_LIMITS[kind];
 }
 
+/**
+ * The inbox an address delivers to, for counting ANONYMOUS watches: lowercased,
+ * any `+tag` dropped from the local part, and for Gmail (gmail.com /
+ * googlemail.com) the dots dropped and the domain folded to gmail.com — the
+ * forms that all land in one mailbox. Without it `alice+1@gmail.com`,
+ * `alice+2@gmail.com` … each started again at 0 of FREE_WATCHLIST_LIMIT
+ * through the email-only door. Used only to COUNT and to find a paying owner;
+ * the watch is still stored and emailed at the address exactly as typed.
+ * Anything that isn't a plain local@domain comes back lowercased, untouched.
+ */
+export function canonicalWatchEmail(email: string): string {
+  const e = email.trim().toLowerCase();
+  const at = e.lastIndexOf("@");
+  if (at <= 0 || at === e.length - 1) return e;
+  let local = e.slice(0, at);
+  let domain = e.slice(at + 1);
+  const plus = local.indexOf("+");
+  if (plus > 0) local = local.slice(0, plus);
+  if (domain === "gmail.com" || domain === "googlemail.com") {
+    local = local.replace(/\./g, "");
+    domain = "gmail.com";
+  }
+  return local ? `${local}@${domain}` : e;
+}
+
 // The quiet "N of 10" counter: only once a free account is close (7 of 10,
 // 40 of 50), never before — no nagging while the limit is far away.
 const COUNTER_FROM: Record<FreeLimitKind, number> = { watchlist: 7, portfolio: 40 };
@@ -107,6 +132,26 @@ export function showFreeLimitCounter(kind: FreeLimitKind, count: number, paid: b
 export function freeLimitCounterText(kind: FreeLimitKind, count: number): string {
   const limit = FREE_LIMITS[kind];
   return count > limit ? `${count} cards · free accounts add up to ${limit}` : `${count} of ${limit} free`;
+}
+
+// ── The popover's placement (FreeLimitPanel's FreeLimitPopover) ──────────
+// Here, not in the component, so it is testable without React. `zClass` is the
+// Tailwind z-index token from lib/motion-tokens.ts: `modal` (120) outranks the
+// phone buy bar (40), every Dialog (`overlay`, 60), sheets (85) and menus (95)
+// the heart can sit in — a popover under one of them is an invisible prompt.
+export const FREE_LIMIT_POPOVER = { width: 288, gutter: 16, zClass: "z-modal", zToken: "modal" } as const;
+
+/**
+ * Top edge of the popover for an anchor rect and the panel's measured height:
+ * 8px below the anchor when the whole panel fits above the bottom gutter,
+ * otherwise 8px above it (the card page's sticky buy bar pins the heart to the
+ * bottom of a phone screen) — clamped inside the viewport either way.
+ */
+export function freeLimitPopoverTop(anchor: { top: number; bottom: number }, height: number, viewportHeight: number): number {
+  const g = FREE_LIMIT_POPOVER.gutter;
+  const below = anchor.bottom + 8;
+  const top = below + height <= viewportHeight - g ? below : anchor.top - 8 - height;
+  return Math.max(g, Math.min(top, viewportHeight - height - g));
 }
 
 // ── The check itself ────────────────────────────────────────────────────────

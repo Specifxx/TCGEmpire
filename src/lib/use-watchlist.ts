@@ -5,7 +5,7 @@ import type { Country } from "./country";
 import { trackEvent } from "./analytics";
 import { trackAlertCreated } from "./growth-events";
 import { fetchMe } from "./use-me";
-import { FREE_LIMIT_STATUS, freeLimitBody, parseFreeLimit, wouldHitFreeLimit, type FreeLimitBody } from "./free-limits";
+import { FREE_LIMIT_STATUS, parseFreeLimit, wouldHitFreeLimit, type FreeLimitBody } from "./free-limits";
 
 // Shared client-side view of "which cards am I watching?".
 //
@@ -88,6 +88,23 @@ export interface WatchlistApi {
   unwatch(cardId: string): Promise<boolean>;
 }
 
+function postWatch(cardId: string, market: Country): Promise<Response | null> {
+  return fetch("/api/alerts/watchlist", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cardId, market }),
+  }).catch(() => null);
+}
+
+/** A 402 from the route is the free limit: hand it to the control that was tapped. */
+async function reportLimit(res: Response | null, cardId: string, onLimit?: (limit: FreeLimitBody) => void) {
+  if (res?.status !== FREE_LIMIT_STATUS) return;
+  const limit = parseFreeLimit(await res.json().catch(() => null));
+  if (!limit) return;
+  trackEvent("free_limit_hit", { kind: "watchlist", card_id: cardId });
+  onLimit?.(limit);
+}
+
 export function useWatchlist(): WatchlistApi {
   const [state, setState] = useState<{ watched: Set<string> | null; loaded: boolean }>({
     watched: watched ? new Set(watched) : null,
@@ -115,15 +132,26 @@ export function useWatchlist(): WatchlistApi {
     // MyCollection stays await-first, on purpose — it renders money, where a
     // rollback flicker on a number is worse than a moment of latency.
     async watch(cardId, market, opts) {
-      // THE FREE LIMIT, checked here first from what this page already knows
-      // (the shared id Set and /api/me — both loaded, no request): a free
-      // account at 10 cards tapping an 11th sees the panel at once. The route
-      // re-checks and answers 402 for anything this Set can't see (an
-      // email-only watch on the same address), handled below.
+      // THE FREE LIMIT. The shared id Set is NOT the whole truth: it holds only
+      // this account's rows (not an email-only watch on the same address that
+      // was never adopted) and only the newest 500. So a pre-check block is
+      // never final — a card the account already watches is always allowed
+      // (grandfathering), and the Set may just not show it. When the Set says
+      // "at the limit", the tap goes to the route WITHOUT the optimistic flip
+      // (no heart that flips and rolls back), and the route's 402 — or its
+      // success — decides.
       const me = await fetchMe();
       if (watched && wouldHitFreeLimit("watchlist", { paid: me.premium, held: watched, cardId })) {
-        trackEvent("free_limit_hit", { kind: "watchlist", card_id: cardId });
-        opts?.onLimit?.(freeLimitBody("watchlist", watched.size));
+        const res = await postWatch(cardId, market);
+        if (res?.ok) {
+          watched = watched ? new Set(watched) : new Set();
+          watched.add(cardId);
+          publish();
+          trackEvent("watch_add", { card_id: cardId });
+          trackAlertCreated(true);
+          return true;
+        }
+        await reportLimit(res, cardId, opts?.onLimit);
         return false;
       }
       const prev = watched ? new Set(watched) : null;
@@ -131,21 +159,11 @@ export function useWatchlist(): WatchlistApi {
       watched.add(cardId);
       publish();
       trackEvent("watch_add", { card_id: cardId });
-      const res = await fetch("/api/alerts/watchlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardId, market }),
-      }).catch(() => null);
+      const res = await postWatch(cardId, market);
       if (!res?.ok) {
         watched = prev;
         publish();
-        if (res?.status === FREE_LIMIT_STATUS) {
-          const limit = parseFreeLimit(await res.json().catch(() => null));
-          if (limit) {
-            trackEvent("free_limit_hit", { kind: "watchlist", card_id: cardId });
-            opts?.onLimit?.(limit);
-          }
-        }
+        await reportLimit(res, cardId, opts?.onLimit);
         return false;
       }
       // Every account alert goes through here — the bell, the card page's

@@ -372,13 +372,18 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
               <div className="p-6">
                 <h2 id="price-alert-title" className="font-display text-xl font-bold text-white">This address is at the free limit</h2>
                 <FreeLimitPanel kind="watchlist" count={limit.count} className="mt-3" />
+                {/* No "sign in for unlimited" here: this phase only shows when the
+                    address has no account or a FREE one (watchAllowance already
+                    lets a paying member's address through signed out), and a free
+                    member who signs in is at the same 10. The sign-in link routes
+                    a paying member who typed a different address. */}
                 {!user && (
                   <p className="mt-3 text-xs text-slate-400">
-                    Already a member?{" "}
+                    Already a Plus or Premium member?{" "}
                     <Link href={`/login?next=${encodeURIComponent(pathname ?? "/watching")}`} rel="nofollow" onClick={() => markSignupSource("alert_modal")} className="font-semibold text-brand-400 hover:underline">
                       Sign in
                     </Link>{" "}
-                    and watch as many cards as you like.
+                    to add it to your account.
                   </p>
                 )}
                 <button onClick={() => setOpen(false)} className="btn-ghost mt-4 w-full">

@@ -6,9 +6,12 @@ import {
   FREE_LIMIT_STATUS,
   FREE_PORTFOLIO_LIMIT,
   FREE_WATCHLIST_LIMIT,
+  FREE_LIMIT_POPOVER,
+  canonicalWatchEmail,
   checkFreeAllowance,
   freeLimitBody,
   freeLimitCounterText,
+  freeLimitPopoverTop,
   parseFreeLimit,
   showFreeLimitCounter,
   wouldHitFreeLimit,
@@ -159,7 +162,7 @@ function stubDb(opts: { rows?: { cardId: string }[]; distinct?: number; owner?: 
 
 test("watch counting is scoped to the address (and the account), and counted in Postgres", async () => {
   const s = stubDb({ rows: [], distinct: 3 });
-  const h = watchHoldings(s.db as never, { email: "a@x.com", userId: "u1" });
+  const h = watchHoldings(s.db as never, { emails: ["a@x.com"], userId: "u1" });
   await h.held(["k1", "k2"]);
   const fm = s.calls[0].args as { where: unknown; take: number };
   assert.deepEqual(fm.where, { AND: [{ OR: [{ email: "a@x.com" }, { userId: "u1" }] }, { cardId: { in: ["k1", "k2"] } }] });
@@ -171,7 +174,7 @@ test("watch counting is scoped to the address (and the account), and counted in 
 
   // Anonymous: the address alone.
   const anon = stubDb();
-  const ah = watchHoldings(anon.db as never, { email: "b@x.com" });
+  const ah = watchHoldings(anon.db as never, { emails: ["b@x.com"] });
   await ah.held(["k1"]);
   await ah.count();
   assert.deepEqual((anon.calls[0].args as { where: unknown }).where, { AND: [{ email: "b@x.com" }, { cardId: { in: ["k1"] } }] });
@@ -222,6 +225,45 @@ test("anonymous email-only watches are capped per address too — no way around 
   const a = await watchAllowance(acct.db as never, { email: "a@x.com", account: free, cardIds: ["new"] });
   assert.deepEqual(a.blocked, ["new"]);
   assert.ok(!acct.calls.some((c) => c.op === "user"));
+});
+
+test("a +tag or dotted-Gmail alias of an address that watches ten is at the limit too (one inbox, one allowance)", async () => {
+  assert.equal(canonicalWatchEmail("Alice+1@Gmail.com"), "alice@gmail.com");
+  assert.equal(canonicalWatchEmail("a.l.ice+deals@googlemail.com"), "alice@gmail.com");
+  assert.equal(canonicalWatchEmail("bob+x@example.com"), "bob@example.com");
+  assert.equal(canonicalWatchEmail("b.o.b@example.com"), "b.o.b@example.com", "dots only fold on Gmail");
+  assert.equal(canonicalWatchEmail("+x@example.com"), "+x@example.com", "nothing left of the local part: untouched");
+
+  // alice@gmail.com already watches 10 distinct cards; alice+1 tries an 11th.
+  const s = stubDb({ distinct: FREE_WATCHLIST_LIMIT, owner: null });
+  const r = await watchAllowance(s.db as never, { email: "alice+1@gmail.com", account: null, cardIds: ["new"] });
+  assert.deepEqual(r.blocked, ["new"]);
+  assert.equal(r.count, FREE_WATCHLIST_LIMIT);
+  const held = s.calls.find((c) => c.op === "findMany")!.args as { where: unknown };
+  assert.deepEqual(held.where, { AND: [{ email: { in: ["alice+1@gmail.com", "alice@gmail.com"] } }, { cardId: { in: ["new"] } }] });
+  const raw = s.calls.find((c) => c.op === "raw")!.args as { sql: string; values: unknown[] };
+  assert.match(raw.sql, /WHERE "email" = ANY\(\?\)$/, "one equality lookup over both forms, no LIKE");
+  assert.deepEqual(raw.values, [["alice+1@gmail.com", "alice@gmail.com"]]);
+  // Both forms are checked for a paying owner, so a member's alias stays unlimited.
+  const lookups = s.calls.filter((c) => c.op === "user").map((c) => (c.args as { where: { email: string } }).where.email);
+  assert.deepEqual(lookups, ["alice+1@gmail.com", "alice@gmail.com"]);
+
+  // A card the inbox already watches is grandfathered through the alias.
+  const again = await watchAllowance(stubDb({ rows: [{ cardId: "have" }], distinct: 14 }).db as never, { email: "alice+1@gmail.com", account: null, cardIds: ["have"] });
+  assert.deepEqual(again.allowed, ["have"]);
+
+  // A paying member whose account is the base address: the alias is unlimited.
+  const paid = await watchAllowance(
+    stubDb({ distinct: 30, owner: { isAdmin: false, premiumUntil: PAID_UNTIL, premiumTier: "plus", premiumTierFloor: null } }).db as never,
+    { email: "alice+1@gmail.com", account: null, cardIds: ["new"] },
+  );
+  assert.deepEqual(paid.allowed, ["new"]);
+
+  // A signed-in account is still counted by its own address only.
+  const acct = stubDb({ distinct: 3 });
+  await watchAllowance(acct.db as never, { email: "alice+1@gmail.com", account: free, cardIds: ["new"] });
+  const acctRaw = acct.calls.find((c) => c.op === "raw")!.args as { values: unknown[] };
+  assert.deepEqual(acctRaw.values, ["alice+1@gmail.com", "u1"]);
 });
 
 // ── The routes ─────────────────────────────────────────────────────────────
@@ -284,14 +326,63 @@ test("the at-the-limit panel sells Plus from the add that hit the limit, on ever
   ] as const) {
     assert.match(code(f), re, f);
   }
-  // The shared watch() pre-checks from what the page already holds, and hands
-  // a 402 from the route to the same callback.
+  // The shared watch() pre-checks from what the page already holds — but the
+  // id Set can miss a card the account already watches (an email-only row,
+  // anything past the newest 500), so a pre-check block is never final: the
+  // request still goes to the route (without the optimistic flip) and the
+  // route's 402 or success decides. Grandfathering is the server's call.
   const hook = code("src/lib/use-watchlist.ts");
-  assert.match(hook, /wouldHitFreeLimit\("watchlist", \{ paid: me\.premium, held: watched, cardId \}\)/);
-  assert.match(hook, /res\?\.status === FREE_LIMIT_STATUS/);
+  const pre = hook.indexOf('wouldHitFreeLimit("watchlist", { paid: me.premium, held: watched, cardId })');
+  assert.ok(pre > 0);
+  const preBlock = hook.slice(pre, hook.indexOf("const prev = watched", pre));
+  assert.match(preBlock, /await postWatch\(cardId, market\)[\s\S]*if \(res\?\.ok\)[\s\S]*return true;[\s\S]*await reportLimit\(res, cardId, opts\?\.onLimit\)[\s\S]*return false;/);
+  assert.doesNotMatch(preBlock, /freeLimitBody\(/, "no locally invented 402");
+  assert.match(hook, /res\?\.status !== FREE_LIMIT_STATUS/);
   // The quiet counters.
   assert.match(code("src/components/Watchlist.tsx"), /showFreeLimitCounter\("watchlist", watchedCards, premium\)/);
   assert.match(code("src/components/MyCollection.tsx"), /showFreeLimitCounter\("portfolio", distinctCards, premium\)/);
+});
+
+test("the heart's popover is visible from every host: above every overlay, flipped above an anchor near the bottom", () => {
+  const Z = { rail: 45, header: 40, bottombar: 40, dropdown: 50, overlay: 60, nudge: 70, toast: 80, sheet: 85, menu: 95, modal: 120 };
+  const tokens = read("src/lib/motion-tokens.ts");
+  for (const [k, v] of Object.entries(Z)) assert.match(tokens, new RegExp(`\\b${k}: ${v},`), `Z.${k} is ${v}`);
+  assert.equal(FREE_LIMIT_POPOVER.zClass, `z-${FREE_LIMIT_POPOVER.zToken}`);
+  const z = Z[FREE_LIMIT_POPOVER.zToken];
+  for (const host of ["overlay", "sheet", "menu", "bottombar", "nudge"] as const) assert.ok(z > Z[host], `outranks Z.${host}`);
+  const panel = code("src/components/FreeLimitPanel.tsx");
+  assert.match(panel, /className=\{`\$\{FREE_LIMIT_POPOVER\.zClass\} shadow-2xl`\}/);
+  assert.doesNotMatch(panel, /\bz-50\b/);
+  assert.match(panel, /freeLimitPopoverTop\(r, h, window\.innerHeight\)/, "placement reads the viewport height");
+
+  // Room below: 8px under the anchor.
+  assert.equal(freeLimitPopoverTop({ top: 100, bottom: 140 }, 190, 844), 148);
+  // The phone buy bar's heart (y 788–836 of 844): above it, fully on screen.
+  const top = freeLimitPopoverTop({ top: 788, bottom: 836 }, 187, 844);
+  assert.equal(top, 788 - 8 - 187);
+  assert.ok(top + 187 <= 844 - 16);
+  // No room either way: clamped inside the viewport, never off the top.
+  assert.equal(freeLimitPopoverTop({ top: 40, bottom: 80 }, 190, 250), 16);
+
+  // QuickView (a Dialog) renders the inline panel instead of the popover.
+  assert.match(code("src/components/QuickView.tsx"), /<PriceWatchButton cardId=\{card\.id\} variant="responsive" limitInline \/>/);
+  assert.match(code("src/components/PriceWatchButton.tsx"), /limitInline \? \(\s*<FreeLimitPanel kind="watchlist"/);
+});
+
+test("the email-only limit phase promises nothing a free member can't have", () => {
+  const modal = code("src/components/PriceAlertModal.tsx");
+  const limitPhase = modal.slice(modal.indexOf('phase === "limit"'), modal.indexOf('phase === "error"'));
+  assert.doesNotMatch(limitPhase, /as many cards|unlimited/i, "signing in doesn't lift a free account's limit");
+  assert.match(limitPhase, /Already a Plus or Premium member\?/);
+});
+
+test("the /tools FAQ quotes the free limits from the constants and says paid lifts them", () => {
+  const tools = code("src/app/tools/page.tsx");
+  assert.match(tools, /from "@\/lib\/free-limits"/);
+  assert.equal((tools.match(/a watchlist of up to \$\{FREE_WATCHLIST_LIMIT\} cards with weekly new-low alerts, a portfolio of up to \$\{FREE_PORTFOLIO_LIMIT\} cards/g) ?? []).length, 2);
+  assert.match(tools, /Plus adds an unlimited watchlist and portfolio/);
+  assert.match(tools, /Premium adds an unlimited watchlist and portfolio/);
+  assert.doesNotMatch(tools, /\b10 cards\b|\b50 cards\b/, "no hand-typed numbers");
 });
 
 // ── Best Basket leads with the list's own saving, in money ─────────────────
