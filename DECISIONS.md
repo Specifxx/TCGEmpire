@@ -14545,3 +14545,106 @@ on the admin page is the first real audience count.
 The 20 s is the point: the 2026-09-24 rule protects a visitor who has not yet seen what the site is, and 20 s on an article means they have. Everything else stands: dismissal caps, snoozes, the once-per-session slider, and the never-over-a-modal check. Every other page keeps the original gate. `tests/first-visit-ux.test.ts` pins the four URLs.
 
 **Checked.** On a local build in Chromium, a phone-width visitor arriving from google.com on a blog post saw the popup after ~20 s. The homepage under the same conditions still showed none.
+
+## Free limits: charge for what people use every week — 2026-09-28
+
+**Why.** Owner, verbatim essentials:
+
+> 1. Charge for the features people use every week. Cap free portfolios at
+>    around 50–100 cards and free watchlists at around 10 cards; paid gets
+>    unlimited. Keep price comparison fully free, since that's what brings
+>    people in.
+> 2. Show savings in dollars. Best Basket is your strongest feature. Instead of
+>    "Premium shows the store-by-store plan," show something like
+>    "Store-by-store saves you $14.20 on this deck. Unlock for $4.99." If it
+>    pays for itself on the first order, it sells itself.
+> 3. Put the upgrade prompt where people hit a limit (their 11th watchlist
+>    card, the 101st portfolio card, the Best Basket result), not in popups
+>    and headers.
+>
+> For users with currently over 50 cards allow them to keep it but their next
+> card is the upgrade.
+
+**The limits.** `lib/free-limits.ts` holds them, and every route and every
+surface that quotes a number reads the same constants: a free account watches
+up to `FREE_WATCHLIST_LIMIT` (10) distinct cards and keeps up to
+`FREE_PORTFOLIO_LIMIT` (50) distinct cards in its portfolio. Any paid tier
+(`isPremium(user)`: Plus, Premium, a tier floor, an admin) is unlimited. Cards,
+not rows or copies: a watch is a row per (card, market) and a portfolio entry
+a row per (card, condition, foil), so both count `COUNT(DISTINCT "cardId")` in
+Postgres (`lib/free-limits-server.ts`), never with Prisma's client-side
+`distinct`. 50, not 100: the owner's own grandfathering line names 50.
+
+**Nobody loses anything.** Only adding a NEW card is refused while the
+account already holds the limit. Every existing watch keeps alerting and every
+portfolio card keeps valuing, however far over the limit. More copies,
+another condition or foil, another market for a watched card, editing and
+removing are never blocked. A lapsed subscriber over the limit is in the same
+position. The research before this decision cautioned that paywalling
+collection tracking draws complaints in other collection apps; grandfathering
+is the mitigation, and the FAQ says it plainly ("What happens to cards I
+already track?").
+
+**Enforced on every create path**, server-side, before any price read or write:
+`/api/alerts/watchlist` POST, `/api/alerts/subscribe` (account and anonymous
+email-only watches: an address is capped at 10 distinct cards too, its
+account's rows included, unless it belongs to a paying account, so the
+email-only door is no bypass), `/api/collection` POST, and
+`/api/collection/import`, which adds held cards and then new cards in paste
+order up to the allowance and reports the rest (`limitSkipped`). The refusal
+is `402 { error, code: "free_limit", kind, limit, count }` everywhere.
+`tests/free-limits.test.ts` pins that no other route creates a `PriceAlert` or
+`CollectionCard`. Two adds racing at 9 of 10 can both land (11); accepted, since
+a lock would hold a pooled Neon connection on every heart tap.
+
+**The upgrade prompt is where the limit is hit, and only there.**
+`FreeLimitPanel` answers the add that was refused, where it was tried: the
+card heart (a popover beside it), the card page's alert button, QuickView,
+`PriceAlertModal` (anonymous too), My Collection's search, the portfolio's
+quick add and the paste import. It states the real count, says nothing already
+tracked is lost, and sells Plus through `PremiumButton tier="plus"` with the
+new surfaces `limit:watchlist` / `limit:portfolio`. `use-watchlist`'s `watch()`
+pre-checks from the id Set it already holds, so a heart at 10 opens the panel
+instead of flipping and rolling back. A quiet "N of 10 free" counter shows on
+the watchlist from 7, and on My Collection from 40, for free accounts only.
+
+**Best Basket leads with money.** The free and Plus preview now opens with
+"The store-by-store plan saves you {saving} on this list compared with buying
+each card's cheapest copy separately. Unlock it for {price}." (Plus:
+"Upgrade to Premium to unlock it."), from the list's own computed
+`savedCents` and only at a whole unit of its currency or more
+(`lib/basket-saving.ts`); below that the preview makes no saving claim. Never
+an average or an example. Surface `limit:basket`.
+
+**No popup or header upsells.** The signed-in `PremiumSlideIn` is deleted,
+with its mount, `PremiumPitchPanel` and `/api/premium/nudge`. The header's
+gold, shimmering "✦ Premium" (phone and desktop), the account menu's
+"✦ Get Premium" and "· get Premium", the rail's gold "Get Premium" and the
+menu overlay's gold Premium spotlight became plain, non-gold "Pricing" links
+(the overlay keeps /premium as its NAV_GROUPS entry). The phone link shows
+from 400px: "Pricing" has no glyph form to fit 360–399px, and the menu covers
+that band. The `.premium-shimmer` CSS and keyframes went with it. Kept: the
+signed-out sign-up popup, which sells the FREE account the limits start from,
+the tool walls on Deal Finder, Rising Cards, Demand Finder and Best Basket
+(where people hit a limit), the in-page nudge cards on /watching and
+/portfolio, and the monthly subscriber's switch-to-annual nudge (not an
+upgrade to a paid tier).
+
+**This reverses** CURRENT-STATE's "Kept on purpose: Premium's nav prominence"
+(2026-09-16, 2026-09-22) and its "Nudges" bullet's signed-in slide-in, along
+with the 2026-09-10 brief for a gold shimmering phone Premium link and the
+2026-09-27 landing-page timing for the slider (the popup's half stands).
+
+**Copy.** `TIER_COMPARISON` rows "Watchlist & new-low alerts" and "Portfolio"
+read "10 cards" / "50 cards" for a free account and "Unlimited" for Plus and
+Premium (so both now show in the dialog). Updated from the constants:
+`PremiumPricingCards`, /premium's features and FAQ (price comparison stays
+"free for everyone, with no limit"), the Premium explainer article, llms.txt,
+/alerts, /watching, /portfolio and the welcome email. `PREMIUM_COPY_VERSION`
+is `limits-2026-09-28`, so funnel events split before and after.
+
+**Measure.** `funnel-report`'s by-surface tables now carry `limit:watchlist`,
+`limit:portfolio` and `limit:basket`; GA4 gets `free_limit_hit` with its kind.
+If sign-ups or watch creation fall without paid conversions rising at the
+limit surfaces, the numbers are the lever, not the principle: both live in
+one constant each.

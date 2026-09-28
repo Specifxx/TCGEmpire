@@ -8,6 +8,7 @@ import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
 import { PLUS_TARGET_ALERT_LIMIT } from "./alert-limits";
+import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "./free-limits";
 import { TIER_COMPARISON } from "../components/TierComparisonTable";
 
 // The Premium explainer's prices, read from lib/site.ts rather than typed into
@@ -9884,10 +9885,10 @@ We built the price tracking, the price history, and the alerts specifically beca
     category: "blog",
     title: "RiftCompare Premium: Every Feature Explained",
     excerpt:
-      "Everything RiftCompare Plus and Premium include: no ads, target-price alerts, every deal, Best Basket and Demand Finder — with pricing and honest FAQs.",
+      "Everything RiftCompare Plus and Premium include: no ads, unlimited watchlist and portfolio, target alerts, every deal, Best Basket and Demand Finder.",
     author: "RiftCompare",
     date: "2026-08-20",
-    updated: "2026-09-26",
+    updated: "2026-09-28",
     readMins: 9,
     tags: ["premium", "pricing", "tools", "deal finder", "best basket", "demand finder"],
     hero: {
@@ -9896,9 +9897,9 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     summary: [
       `**RiftCompare has two paid tiers: Plus at ${PLUS_PRICE_AMOUNT}/mo and Premium at ${PREMIUM_PRICE_AMOUNT}/mo** (each with an annual option at roughly a ${annualSavingPct()}% saving), billed through Stripe from the day you subscribe, and you can cancel anytime.`,
-      `**Plus is no ads, every deal, and target alerts**: no ads on any page, the full Deal Finder (which you can narrow to only the cards you watch or own) and Rising Cards lists, and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards that email you the store when a card hits your price.`,
+      `**Plus is no ads, no limits, every deal, and target alerts**: no ads on any page, an unlimited watchlist and portfolio, the full Deal Finder (which you can narrow to only the cards you watch or own) and Rising Cards lists, and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards that email you the store when a card hits your price.`,
       "**Premium buys your whole list for less, and shows what players are hunting for**: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck or your watchlist (skipping copies you already own), your binder's replacement cost, Demand Finder's most searched and most viewed cards, and unlimited target alerts.",
-      "**Price comparison itself stays free for everyone**, and a free account keeps a watchlist with weekly new-low emails, your portfolio, the top 3 of each deal list and your own Best Basket total.",
+      `**Price comparison itself stays free for everyone, with no limit**, and a free account keeps a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, the top 3 of each deal list and your own Best Basket total. Cards you already track past a limit stay; only new ones need Plus.`,
       "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
     browseCta: {
@@ -9921,7 +9922,11 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "What's the difference between a free account, Plus and Premium?",
-        a: `A free account (no card, just an email) adds a watchlist with weekly new-low emails, your portfolio (value history, cost-basis P&L, CSV export and its delivered replacement cost), the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus removes every ad and adds the full Deal Finder and Rising Cards lists, the "only my cards" filter and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards. Premium adds Best Basket's store-by-store plan, Buy this list, Demand Finder and unlimited target alerts on top of everything in Plus. Anyone can see the top 10 most searched cards of the week on the price movers page.`,
+        a: `A free account (no card, just an email) adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards (value history, cost-basis P&L, CSV export and its delivered replacement cost), the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus removes every ad and both limits, and adds the full Deal Finder and Rising Cards lists, the "only my cards" filter and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards. Premium adds Best Basket's store-by-store plan, Buy this list, Demand Finder and unlimited target alerts on top of everything in Plus. Anyone can see the top 10 most searched cards of the week on the price movers page.`,
+      },
+      {
+        q: "What happens to cards I already track if I'm over the free limit?",
+        a: `You keep every one. The free limits (${FREE_WATCHLIST_LIMIT} watched cards, ${FREE_PORTFOLIO_LIMIT} portfolio cards) only stop you adding a NEW card: everything you already track stays, your alerts keep firing and your portfolio keeps its value, and you can still edit quantities, conditions and prices or remove cards. Adding copies of a card you already have is never blocked. The same applies if a Plus or Premium subscription ends: nothing is deleted.`,
       },
       {
         q: "Is there a free trial?",
@@ -9948,6 +9953,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       name: "What's included with RiftCompare Plus and Premium",
       items: [
         { name: "Ad-free site", description: "No ads on any page, on the website and in the app — Plus and Premium.", url: "/premium" },
+        { name: "Unlimited watchlist and portfolio", description: `Free accounts watch up to ${FREE_WATCHLIST_LIMIT} cards and keep up to ${FREE_PORTFOLIO_LIMIT} in a portfolio; Plus and Premium have no limit.`, url: "/watching" },
         { name: "Deal Finder", description: "Every card cheaper than TCGplayer's market price at a real store, filterable to only the cards you watch or own.", url: "/tools/deal-finder" },
         { name: "Target-price alerts", description: "Set the price you'd pay on a watched card; after every price update we email you the store when it's there.", url: "/watching" },
         { name: "Rising Cards", description: "Cards ranked by demand and price-timing signals, with the reason each one ranks.", url: "/tools/rising" },
@@ -9978,7 +9984,7 @@ This is the same table the /premium page and the upgrade dialog show, generated 
 
 ${premiumTierTableMarkdown()}
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every collector eventually wants (a watchlist, a portfolio, the top three of each deal list and your own Best Basket total); Plus takes the ads away, shows every deal and watches your cards for the price you set; Premium adds the tools for buying a whole list, and Demand Finder.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every collector eventually wants (a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards, a portfolio of up to ${FREE_PORTFOLIO_LIMIT}, the top three of each deal list and your own Best Basket total); Plus takes the ads away and the limits off, shows every deal and watches your cards for the price you set; Premium adds the tools for buying a whole list, and Demand Finder.
 
 ## What Plus adds
 
@@ -9986,37 +9992,41 @@ The pattern is deliberate: **nothing about seeing a price is ever gated.** A fre
 
 Plus and Premium both remove every ad on every page — card pages, set lists, guides and the app — from the moment you subscribe. There's nothing to switch on. It's the first thing Plus does because it's the benefit that needs no explaining.
 
-### 2. Deal Finder — every card below TCGplayer market
+### 2. An unlimited watchlist and portfolio
+
+A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} cards in its portfolio. Plus and Premium remove both limits. If you already track more than that, nothing is taken away: every card you have stays, alerts keep firing and the portfolio keeps valuing — only adding a new card needs a paid plan. Price comparison has no limit for anyone.
+
+### 3. Deal Finder — every card below TCGplayer market
 
 Deal Finder lists every Riftbound card that a real store or eBay is selling for less than TCGplayer's US market price, converted into your currency and ranked by how far below it sits. Filter it to the stores you actually buy from, or switch to eBay only. With Plus you can also narrow it to **only the cards on your watchlist or in your binder** — the quickest way to see whether anything you actually want is cheap right now.
 
 TCGplayer's market price is a US sales-based reference, so treat it as a yardstick rather than a guarantee, and check the listing before you pay; store prices are the item price, with postage added at checkout. A free account sees the top three deals; Plus and Premium get the full, sortable list.
 
-### 3. Target-price alerts
+### 4. Target-price alerts
 
 Every account can watch a card and get a weekly email when it hits a new low. Plus adds the price **you** set: tell us what you'd pay for a watched card, and after every price update we check every tracked store in your country and email you the store and a link to the listing when it's there, with no weekly cap. The email quotes the item price and says when postage is extra. Plus covers up to ${PLUS_TARGET_ALERT_LIMIT} cards at a time; Premium has no limit.
 
-### 4. Rising Cards — the full list
+### 5. Rising Cards — the full list
 
 Rising Cards ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. The scoring is transparent, and it is a signal, not a prediction or financial advice. A free account sees the top three picks, each with the reason it ranks; Plus unlocks the full ranked list for every market RiftCompare tracks.
 
 ## What Premium adds on top
 
-### 5. Best Basket — the cheapest delivered order for a list
+### 6. Best Basket — the cheapest delivered order for a list
 
 Best Basket answers the question that matters when you're buying more than one card: **what's the cheapest way to actually buy the whole list**, postage included? Send it a decklist or your watchlist (or your binder, to see what re-buying it would cost, delivered), and it searches combinations of your country's stores for the lowest delivered total — each store's postage and free-shipping threshold counted — and shows the best one-store and two-store orders beside it, because sometimes one parcel is worth a little more. Cards it can't match or can't find in stock are listed, never silently dropped.
 
-Any signed-in account sees its own list's delivered total, how many stores it takes and the saving against buying each card's cheapest copy separately. Premium shows which store to buy each card from, with the links. It helps most outside the US, where the stores RiftCompare tracks each charge their own postage; in the US, TCGplayer's own cart optimiser already covers much of the same ground.
+Any signed-in account sees its own list's delivered total, how many stores it takes and the saving against buying each card's cheapest copy separately — in money, from your own list, so you can see whether the plan pays for itself on the first order. Premium shows which store to buy each card from, with the links. It helps most outside the US, where the stores RiftCompare tracks each charge their own postage; in the US, TCGplayer's own cart optimiser already covers much of the same ground.
 
-### 6. Buy this list
+### 7. Buy this list
 
 Send a list from the deck builder or your whole watchlist straight into Best Basket and tick **Skip copies I already own**: it subtracts what's in your portfolio before it optimises, so you never re-buy a card you already have. Your binder can be sent too — it prices what replacing it would cost, the same number as your portfolio's replacement cost, so skipping owned copies doesn't apply there.
 
-### 7. The plan behind your replacement cost
+### 8. The plan behind your replacement cost
 
 Every account's portfolio shows what it would cost to replace your collection, delivered. Premium adds the store-by-store plan behind that number.
 
-### 8. Demand Finder — what players are searching for
+### 9. Demand Finder — what players are searching for
 
 [Demand Finder](/tools/demand) ranks the cards RiftCompare visitors search for and open most, over the last 7 or 30 days: the top 25 by searches and the top 25 by card views, with both counts and your market's price beside each card. It's raw attention, not a score and not a forecast — a card can be busy because it just came out, because it's in a popular deck, or because everyone is checking what it's worth. Each browser counts a card once a day and bots aren't counted, so one visitor can't push a card up the list. Everyone sees the top 10 most searched cards of the week on [price movers](/movers#most-searched); Premium opens the full lists.
 
@@ -10040,7 +10050,7 @@ Being straightforward here, since the point of this post is accuracy over hype: 
 1. **Plus is for buying singles regularly** — it takes the ads away, shows every card below TCGplayer market, and tells you the store when a card you watch reaches your price.
 2. **Premium is for buying a whole deck or list** — Best Basket and Buy this list turn a list into the cheapest delivered order across your country's stores, skipping what you already own — and for anyone who wants to see which cards players are searching for and opening, in full.
 
-If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts and a portfolio tracker — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
+If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts on up to ${FREE_WATCHLIST_LIMIT} cards and a portfolio tracker for up to ${FREE_PORTFOLIO_LIMIT} — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
 `,
   },
   {

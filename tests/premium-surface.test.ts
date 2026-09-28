@@ -23,7 +23,7 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 test("the allow-list takes the historic sources, the new surfaces, and nothing else", () => {
-  for (const ok of ["dialog", "checkout", "premium-page", "button", "recovery", "offer", "slidein", "checklist", "welcome-email", "nav:navbar", "gate:deal-finder", "nudge:watchlist"]) {
+  for (const ok of ["dialog", "checkout", "premium-page", "button", "recovery", "offer", "slidein", "checklist", "welcome-email", "nav:navbar", "gate:deal-finder", "nudge:watchlist", "limit:watchlist", "limit:portfolio", "limit:basket"]) {
     assert.ok(isPremiumClickSource(ok), `${ok} must be accepted`);
   }
   for (const bad of ["", "gate:", "gate:Deal Finder", "evil:x", "nav:" + "x".repeat(33), "<script>", 42, null, undefined]) {
@@ -74,8 +74,9 @@ test("every PremiumButton and PremiumNavLink in the app names its surface", () =
   assert.deepEqual(unnamed, [], "a Premium CTA without a surface records the catch-all and cannot be measured");
 });
 
-test("the slide-in, the dialog and the landing beacon record their own sources", () => {
-  assert.match(read("src/components/PremiumSlideIn.tsx"), /firePremiumClickBeacon\("slidein"\)/);
+test("the dialog and the landing beacon record their own sources", () => {
+  // "slidein" stays a valid source for historic rows; the slide-in itself was
+  // removed on 2026-09-28 (tests/free-limits.test.ts pins that it stays gone).
   assert.match(read("src/components/PremiumDialog.tsx"), /firePremiumClickBeacon\(surface \?\? "dialog"\)/);
   const beacon = read("src/components/PremiumRecoveryBeacon.tsx");
   assert.match(beacon, /src === "welcome"\) firePremiumClickBeacon\("welcome-email"\)/);

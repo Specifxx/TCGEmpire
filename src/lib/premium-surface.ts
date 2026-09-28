@@ -35,7 +35,14 @@ const FIXED = new Set([
 
 // Scoped surfaces: `nav:navbar`, `gate:deal-finder`, `nudge:watchlist` … The
 // suffix names the place; the prefix is the kind of surface.
-const SCOPED = /^(nav|gate|nudge):[a-z0-9-]{1,32}$/;
+// `limit:` (2026-09-28) is the upgrade prompt shown where a free account hits
+// one of its limits (lib/free-limits.ts): `limit:watchlist` (the 11th watched
+// card), `limit:portfolio` (the 51st portfolio card) and `limit:basket` (Best
+// Basket's result, leading with the list's own store-by-store saving).
+const SCOPED = /^(nav|gate|nudge|limit):[a-z0-9-]{1,32}$/;
+
+/** The at-the-limit surfaces, for tests and the funnel report. */
+export const LIMIT_SURFACES = ["limit:watchlist", "limit:portfolio", "limit:basket"] as const;
 
 export function isPremiumClickSource(v: unknown): v is string {
   return typeof v === "string" && (FIXED.has(v) || SCOPED.test(v));

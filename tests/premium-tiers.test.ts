@@ -194,7 +194,9 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       "Full card database, charts & search",
       "Deck & list pricer, trade calculator & box EV",
       "RiftCompare Index & weekly price movers",
-      "Watchlist & new-low email alerts",
+      // Free limits since 2026-09-28 (lib/free-limits.ts; pinned in
+      // tests/free-limits.test.ts).
+      "Watchlist & new-low alerts",
       "Portfolio — value, P&L, CSV & replacement cost",
       "Deal Finder",
       "Rising Cards",

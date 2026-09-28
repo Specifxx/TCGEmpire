@@ -6,9 +6,9 @@
 // who arrived wanting the pro tools shouldn't have to survive a later nudge to
 // hear about it. In practice, asking a stranger to buy before they have an
 // account put the paid ask first for an audience that has not yet had a reason
-// to come back. So the signed-out surface sells the FREE account again, and
-// Premium waits for PremiumSlideIn, which only ever fires once someone is
-// signed in and has browsed a little.
+// to come back. So the signed-out surface sells the FREE account again. Since
+// 2026-09-28 there is no signed-in slide-in either: the paid ask waits for the
+// moment a free account hits one of its limits (lib/free-limits.ts).
 //
 // WHY A COMPARISON RATHER THAN A FEATURE LIST: a bare list of three perks reads
 // as "here are some things", and does not answer the only question a signed-out

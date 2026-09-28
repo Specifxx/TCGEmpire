@@ -36,6 +36,11 @@
 //                        everyone else the /movers strip's top 10 most
 //                        searched this week (lib/demand-view.ts).
 //   Ad-free              /api/me adFree = isPremium(user) — any paid tier
+//   Watchlist, Portfolio lib/free-limits.ts: a free account adds up to
+//                        FREE_WATCHLIST_LIMIT / FREE_PORTFOLIO_LIMIT distinct
+//                        cards (api/alerts/watchlist, api/alerts/subscribe,
+//                        api/collection, api/collection/import); any paid
+//                        tier is unlimited (2026-09-28)
 //
 // THE 2026-09-25 LINEUP (owner: fewer tools, each one worth paying for). Value
 // Finder, Rising Sealed and the Condition Impact Calculator left the product,
@@ -60,6 +65,7 @@
 // must stay strings rather than being rounded to a tick.
 
 import { PLUS_TARGET_ALERT_LIMIT } from "../lib/alert-limits";
+import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../lib/free-limits";
 
 export type TierRow = {
   feature: string;
@@ -79,10 +85,14 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Deck & list pricer, trade calculator & box EV", account: true, plus: true, premium: true },
   // Weekly, not daily: /movers compares weekly history points.
   { feature: "RiftCompare Index & weekly price movers", account: true, plus: true, premium: true },
-  { feature: "Watchlist & new-low email alerts", account: true, plus: true, premium: true },
+  // THE FREE LIMITS (2026-09-28, owner: "charge for the features people use
+  // every week"). The numbers are the enforced ones (lib/free-limits.ts, read
+  // by the create routes), never typed here. Cards already tracked are kept
+  // past the limit; only a NEW card needs a paid tier.
+  { feature: "Watchlist & new-low alerts", account: `${FREE_WATCHLIST_LIMIT} cards`, plus: "Unlimited", premium: "Unlimited" },
   // The delivered replacement-cost TOTAL is free; the store-by-store plan
   // behind it is Premium's (the Best Basket row).
-  { feature: "Portfolio — value, P&L, CSV & replacement cost", account: true, plus: true, premium: true },
+  { feature: "Portfolio — value, P&L, CSV & replacement cost", account: `${FREE_PORTFOLIO_LIMIT} cards`, plus: "Unlimited", premium: "Unlimited" },
   // "Top 3" since 2026-09-23: a signed-in free account sees the top three rows
   // of each (queried at that size — see FREE_PREVIEW_ROWS in both pages). They
   // were a flat "no" from 2026-09-22, and "Top pick" before that.
@@ -130,8 +140,8 @@ export function TierCell({ v, dialog = false }: { v: boolean | string; dialog?: 
 // every column tells a reader deciding whether to pay nothing at all, and the
 // popup caps its own height, so each such row pushes the rows that DO make the
 // case further down. What survives is exactly what a payment changes: the full
-// lists, target alerts, Best Basket's plan, Buy this list, Demand Finder — and the ad-free
-// row. That one used to be omitted "for length" (until 2026-09-25), which hid
+// lists, the watchlist and portfolio limits (2026-09-28), target alerts, Best
+// Basket's plan, Buy this list, Demand Finder — and the ad-free row. That one used to be omitted "for length" (until 2026-09-25), which hid
 // the most broadly understood reason to take Plus on the two surfaces that
 // actually convert (this dialog and the slide-in).
 //

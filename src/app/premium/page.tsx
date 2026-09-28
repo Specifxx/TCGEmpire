@@ -41,6 +41,7 @@ import {
   type PremiumTierKey,
 } from "@/lib/site";
 import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
+import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { faqPage, ldJson } from "@/lib/jsonld";
@@ -62,6 +63,15 @@ export const metadata: Metadata = {
 // only once Plus is actually live (see the render below); with Plus dark every
 // card reads as Premium's, same as before the split.
 const FEATURES: { title: string; body: string; href: string | null; cta: string | null; tier: PremiumTierKey }[] = [
+  // The free limits (lib/free-limits.ts, 2026-09-28): the weekly-use
+  // features a free account caps and every paid tier lifts.
+  {
+    title: "Unlimited watchlist and portfolio",
+    body: `A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} cards in its portfolio. Plus and Premium have no limit on either. Cards you already track stay if you're over a limit or your subscription ends; only adding a new card needs a paid plan. Price comparison stays free for everyone, with no limit.`,
+    href: "/watching",
+    cta: "Open your watchlist",
+    tier: "plus",
+  },
   {
     title: "No ads, anywhere",
     body: "Plus and Premium remove every ad on every page, on the website and in the app, from the moment you subscribe. Automatic, nothing to switch on.",
@@ -117,11 +127,11 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
 // The Product JSON-LD's per-tier descriptions: each names only what that tier
 // really gets (TIER_COMPARISON's rows), so a rich result can't credit Plus
 // with Premium's list tools or leave its ad-free benefit out.
-const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, and the full Deal Finder and Rising Cards lists.`;
+const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, and the full Deal Finder and Rising Cards lists.`;
 const PREMIUM_OFFER_DESCRIPTION =
   "Premium: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck, watchlist or binder, Demand Finder's most searched and most viewed cards, and unlimited target-price alerts.";
 const PREMIUM_STANDALONE_DESCRIPTION =
-  "No ads on any page, target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.";
+  "No ads on any page, an unlimited watchlist and portfolio, target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.";
 
 // "6 Sep 2026" — same convention admin/premium/page.tsx already uses for this
 // exact field, so a user's own account page and the admin's view of the same
@@ -139,10 +149,10 @@ const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", mon
 const FAQ: { q: string; a: string }[] = [
   {
     q: "What's free vs what needs Plus or Premium?",
-    a: `Price comparison, the card database, the deck and list pricer, trade calculator and box EV are free for everyone. A free account adds a watchlist with weekly new-low emails, your portfolio (including its delivered replacement cost), the top three of Deal Finder and Rising Cards, and your own Best Basket total; everyone sees the top 10 most searched cards of the week. ${
+    a: `Price comparison, the card database, the deck and list pricer, trade calculator and box EV are free for everyone, with no limit. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards (including its delivered replacement cost), the top three of Deal Finder and Rising Cards, and your own Best Basket total; everyone sees the top 10 most searched cards of the week. ${
       premiumPlusEnabled()
-        ? `Plus (${tierMonthlyAmount("plus")}/mo) removes every ad and adds target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, the full Deal Finder (filterable to only your cards) and the full Rising Cards list. Premium (${tierMonthlyAmount("premium")}/mo) adds Best Basket's store-by-store plan, Buy this list for your deck, watchlist or binder, unlimited target alerts, the plan behind your replacement cost, and Demand Finder's full most-searched and most-viewed lists.`
-        : `Premium (${tierMonthlyAmount("premium")}/mo) removes every ad and adds target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.`
+        ? `Plus (${tierMonthlyAmount("plus")}/mo) removes every ad and the watchlist and portfolio limits, and adds target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, the full Deal Finder (filterable to only your cards) and the full Rising Cards list. Premium (${tierMonthlyAmount("premium")}/mo) adds Best Basket's store-by-store plan, Buy this list for your deck, watchlist or binder, unlimited target alerts, the plan behind your replacement cost, and Demand Finder's full most-searched and most-viewed lists.`
+        : `Premium (${tierMonthlyAmount("premium")}/mo) removes every ad and the watchlist and portfolio limits, and adds target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.`
     }`,
   },
   ...(premiumTrialEnabled()
@@ -175,6 +185,10 @@ const FAQ: { q: string; a: string }[] = [
         },
       ]
     : []),
+  {
+    q: "What happens to cards I already track?",
+    a: `You keep them all. The free limits (${FREE_WATCHLIST_LIMIT} watched cards, ${FREE_PORTFOLIO_LIMIT} portfolio cards) only apply when you add a NEW card: if you already track more, every one of them stays, your alerts keep firing and your portfolio keeps its value. You can still change quantities, conditions and prices, and remove cards. Only a new card needs ${premiumPlusEnabled() ? "Plus" : "Premium"}. The same goes if a subscription ends: nothing is deleted.`,
+  },
   {
     q: "How do I cancel?",
     a: `From this page, use "Manage subscription" to open Stripe's billing portal and cancel in a couple of clicks — no email or phone call needed. You keep access until the end of the period you already paid for${

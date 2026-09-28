@@ -8,6 +8,8 @@ import type { Country } from "@/lib/country";
 import { sendAlertConfirmationEmail } from "@/lib/email";
 import { claimConfirmationSlot, confirmationCards } from "@/lib/alert-confirmations";
 import { alertBaselineSeed, alertPairKey, computeAlertPrices, type AlertPrice } from "@/lib/alert-price";
+import { FREE_LIMIT_STATUS, freeLimitBody } from "@/lib/free-limits";
+import { watchAllowance } from "@/lib/free-limits-server";
 
 export const dynamic = "force-dynamic";
 
@@ -86,7 +88,23 @@ export async function POST(req: Request) {
       })
     : [];
   const watched = new Set(already.map((r) => r.cardId));
-  const fresh = cards.filter((c) => !watched.has(c.id));
+
+  // THE FREE WATCHLIST LIMIT (lib/free-limits.ts, 2026-09-28), here too, so
+  // the email-only door is no way around it: an address watches up to
+  // FREE_WATCHLIST_LIMIT distinct cards (its account's rows included, when the
+  // session owns it), unless the address belongs to a paying account. Cards
+  // this address already watches always pass (grandfathered, and a re-heart is
+  // a no-op anyway); new cards fill what is left of the allowance and the rest
+  // are reported, never silently dropped.
+  const allowance = await watchAllowance(prisma, { email, account: userId && me ? me : null, cardIds: cards.map((c) => c.id) });
+  const allowedIds = new Set(allowance.allowed);
+  const fresh = cards.filter((c) => !watched.has(c.id) && allowedIds.has(c.id));
+  if (allowance.blocked.length && fresh.length === 0) {
+    return NextResponse.json(
+      { ...freeLimitBody("watchlist", allowance.count ?? allowance.limit), signedIn: userId != null },
+      { status: FREE_LIMIT_STATUS },
+    );
+  }
   let prices: Map<string, AlertPrice>;
   try {
     prices = fresh.length
@@ -132,10 +150,17 @@ export async function POST(req: Request) {
     // pause and List-Unsubscribe links. `userId == null` means this watch has
     // no account behind it — those recipients (and only those) get the
     // create-a-free-account block in the confirmation.
-    void confirmationCards(prisma, cards, market as Country, new Date(), prices)
+    void confirmationCards(prisma, cards.filter((c) => allowedIds.has(c.id)), market as Country, new Date(), prices)
       .then((list) => sendAlertConfirmationEmail(email, list, total, unsubToken, userId == null))
       .catch(() => false);
   }
 
-  return NextResponse.json({ ok: true, added: result.count, watching: total });
+  return NextResponse.json({
+    ok: true,
+    added: result.count,
+    watching: total,
+    // New cards refused at the free limit (0 when nothing was), so the modal
+    // can say so rather than claim every card is watched.
+    ...(allowance.blocked.length ? { skipped: allowance.blocked.length, freeLimit: freeLimitBody("watchlist", allowance.count ?? allowance.limit) } : {}),
+  });
 }

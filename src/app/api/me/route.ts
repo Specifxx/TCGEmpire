@@ -69,7 +69,7 @@ export async function GET() {
       // CLIENT component can show the sign-in form without being handed the list
       // as a prop: PremiumDialog embeds AuthForm for signed-out visitors, and it
       // is mounted by PremiumDialogProvider, which the root layout renders as a
-      // bare literal (pinned by tests/premium-slidein.test.ts) with nowhere to
+      // bare literal (tests/nav-premium-spotlight.test.ts) with nowhere to
       // thread a prop through. SignupPromoPopup and PriceAlertModal still take
       // theirs from the layout; unify later, not in this pass.
       providers: enabledProviders(),

@@ -7,6 +7,7 @@ import { AlertsSignupCta } from "@/components/AlertsSignupCta";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
+import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // Watchlists & price alerts had no page of their own. The FEATURE shipped long
 // ago — PriceWatchButton on every card tile, PriceAlertModal on the card page,
@@ -59,7 +60,7 @@ const FAQS = [
   },
   {
     q: "Do price alerts cost anything?",
-    a: "No. Watchlists and new-low alerts are free and need only an account so we have somewhere to send the notification. Setting your own target price on a card is part of Plus, which is also ad-free.",
+    a: `No. Watchlists and new-low alerts are free on up to ${FREE_WATCHLIST_LIMIT} cards and need only an account (or just an email) so we have somewhere to send the notification. Plus and Premium watch unlimited cards; if you already watch more than ${FREE_WATCHLIST_LIMIT}, you keep them all and only a new card needs Plus. Setting your own target price on a card is part of Plus, which is also ad-free.`,
   },
   {
     q: "Which price triggers the alert?",
@@ -155,7 +156,8 @@ export default function AlertsPage() {
       <AnswerBox>
         <p>
           A watchlist is a list of Riftbound cards you want; a price alert is an email when one drops to a new low — at
-          most one email a week. Both are free, with no price to set. The
+          most one email a week. Both are free, with no price to set, on up to {FREE_WATCHLIST_LIMIT} cards (unlimited
+          with Plus). The
           trigger is the cheapest Near Mint copy in stock at the stores we track for your market — never an eBay
           listing or a played copy. That is the item price, before postage, so every alert names up to three stores
           with their postage and delivered total, and links each listing.

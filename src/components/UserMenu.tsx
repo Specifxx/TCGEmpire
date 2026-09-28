@@ -176,13 +176,16 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             <MenuLink href="/dashboard" onClick={() => setOpen(false)}>
               ◆ {premium ? (tier === "plus" ? "Plus" : "Premium") : "Your"} dashboard
             </MenuLink>
+            {/* A plain "Pricing" row, not a gold "✦ Get Premium" CTA
+                (2026-09-28: upgrade prompts live where a free account hits a
+                limit, not in the chrome). Still one tap to /premium. */}
             {!premium && (
               <PremiumNavLink
                 surface="nav:menu"
                 onClick={() => setOpen(false)}
-                className="block w-full px-4 py-2.5 text-left text-sm font-bold text-gold hover:bg-ink-800"
+                className="block w-full px-4 py-2.5 text-left text-sm text-slate-200 hover:bg-ink-800 hover:text-white"
               >
-                ✦ Get Premium
+                Pricing
               </PremiumNavLink>
             )}
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
@@ -192,7 +195,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
                 dashboard / orders / funds links this menu used to carry are gone
                 with it — the site is back to pure price comparison. */}
             <MenuLink href="/feedback" onClick={() => setOpen(false)}>
-              Feedback{!premium ? <span className="text-gold"> · get Premium</span> : null}
+              Feedback
             </MenuLink>
           </div>
           <div className="border-t border-ink-700 py-1">

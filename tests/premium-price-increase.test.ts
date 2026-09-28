@@ -168,9 +168,9 @@ test("no surface invents an exact date for an increase that doesn't have one yet
   for (const f of [
     "src/app/premium/page.tsx",
     "src/components/PremiumDialog.tsx",
-    "src/components/PremiumSlideIn.tsx",
     // SignupPromoPopup dropped 2026-09-16: it quotes no price, so it has no
-    // price-increase banner to hard-code a date into.
+    // price-increase banner to hard-code a date into. PremiumSlideIn dropped
+    // 2026-09-28: removed.
   ]) {
     const src = read(f);
     // The announced branch still says "Price increasing soon" verbatim in the
@@ -189,7 +189,6 @@ test("every surface that pitches a price shares the ONE lock-in helper, rather t
   for (const [file, fn] of [
     ["src/app/premium/page.tsx", "premiumLockInLine"],
     ["src/components/PremiumDialog.tsx", "premiumLockInLine"],
-    ["src/components/PremiumSlideIn.tsx", "premiumLockInTail"],
     // SignupPromoPopup dropped 2026-09-16: no price pitch, no lock-in copy.
   ] as const) {
     const src = read(file);
@@ -204,7 +203,7 @@ test("the full-banner treatment is gated on NOT already being Premium", () => {
   // is either confusing or, worse, reads as a threat that THEIR price might
   // rise too. The page and dialog gate the banner itself, immediately above
   // it; the slide-in instead gates its ENTIRE render behind `!premium` much
-  // earlier (see premium-slidein.test.ts's own "only ever targets a...
+  // earlier (see the since-removed premium-slidein.test.ts's own "only ever targets a...
   // non-Premium user" test for that), so the banner text just has to exist
   // somewhere after that check, not immediately above it.
   // 2026-09-22: the page and dialog now render this banner in BOTH states
@@ -219,17 +218,6 @@ test("the full-banner treatment is gated on NOT already being Premium", () => {
     const before = src.slice(Math.max(0, bannerAt - 900), bannerAt);
     assert.match(before, /!already|!premium/, `${file}: the banner must be gated behind a "not already Premium" check`);
   }
-
-  const slideIn = read("src/components/PremiumSlideIn.tsx");
-  const eligibleAt = slideIn.indexOf("const eligible =");
-  const bannerAt = slideIn.indexOf("Price increasing soon");
-  assert.ok(eligibleAt >= 0 && bannerAt >= 0, "PremiumSlideIn.tsx: expected both the eligibility gate and the banner");
-  assert.match(
-    slideIn.slice(eligibleAt, eligibleAt + 200),
-    /!premium/,
-    "PremiumSlideIn.tsx: the whole component's render must be gated behind !premium",
-  );
-  assert.ok(eligibleAt < bannerAt, "PremiumSlideIn.tsx: the eligibility gate must be defined before the banner it protects");
 });
 
 test("in the steady state no surface renders the lock-in banner, the FAQ entry or the old growth copy (2026-09-26)", () => {
@@ -247,11 +235,7 @@ test("in the steady state no surface renders the lock-in banner, the FAQ entry o
     const at = dialog.indexOf(call);
     assert.match(dialog.slice(Math.max(0, at - 900), at), /premiumPriceIncreaseAnnounced\(\) && \(/, `dialog ${call} is announced-only`);
   }
-  const slideIn = read("src/components/PremiumSlideIn.tsx");
-  const soonAt = slideIn.indexOf("Price increasing soon");
-  assert.match(slideIn.slice(Math.max(0, soonAt - 300), soonAt), /premiumPriceIncreaseAnnounced\(\) && \(/, "slide-in gold line is announced-only");
-
-  for (const f of ["src/app/premium/page.tsx", "src/components/PremiumDialog.tsx", "src/components/PremiumSlideIn.tsx", "src/lib/site.ts"]) {
+  for (const f of ["src/app/premium/page.tsx", "src/components/PremiumDialog.tsx", "src/lib/site.ts"]) {
     // Code only: the comments are free to quote the retired copy as history.
     const code = read(f)
       .replace(/\/\*[\s\S]*?\*\//g, "")
@@ -334,19 +318,18 @@ test("the Premium-explained article states the price the site actually charges, 
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("every literal 'Premium' nav entry point navigates straight to /premium, not the dialog", () => {
+  // CinematicNavMenu's gold spotlight was removed on 2026-09-28; its /premium
+  // entry is a plain NAV_GROUPS link now.
   for (const file of [
     "src/components/Navbar.tsx",
-    "src/components/CinematicNavMenu.tsx",
     "src/components/UserMenu.tsx",
+    "src/components/SideNav.tsx",
   ]) {
     const src = read(file);
     assert.match(src, /PremiumNavLink/, `${file} must use PremiumNavLink, not the dialog, for its "Premium" link`);
     assert.ok(!/usePremiumDialog/.test(src), `${file} must no longer import the dialog hook at all`);
   }
-
-  const slideIn = read("src/components/PremiumSlideIn.tsx");
-  assert.ok(!/usePremiumDialog/.test(slideIn), "PremiumSlideIn must no longer import the dialog hook");
-  assert.match(slideIn, /router\.push\(["']\/premium["']\)/, "PremiumSlideIn's CTA must navigate straight to /premium");
+  assert.ok(!/usePremiumDialog/.test(read("src/components/CinematicNavMenu.tsx")));
 });
 
 test("PremiumButton (the gated-tool-wall CTA) still opens the dialog — this instruction never touched it", () => {
@@ -377,11 +360,6 @@ test("the premium-interest beacon still fires from every retired dialog entry po
 
   const navLink = read("src/components/PremiumNavLink.tsx");
   assert.match(navLink, /firePremiumClickBeacon/, "PremiumNavLink must fire the beacon on click");
-
-  const slideIn = read("src/components/PremiumSlideIn.tsx");
-  const acceptAt = slideIn.indexOf("const accept = ");
-  assert.ok(acceptAt >= 0, "expected PremiumSlideIn's accept() handler");
-  assert.match(slideIn.slice(acceptAt, acceptAt + 500), /firePremiumClickBeacon/, "PremiumSlideIn's CTA must fire the beacon before navigating");
 });
 
 test("SignupPromoPopup shows NO price at all — it sells the free account (2026-09-16)", () => {
@@ -402,41 +380,6 @@ test("SignupPromoPopup shows NO price at all — it sells the free account (2026
   assert.ok(!/Price increasing soon/.test(src), "no price-increase banner");
   // What it must say instead: signing up is free and needs no card.
   assert.match(src, /Free, no card needed/, "the free-account ask must state it costs nothing");
-});
-
-test("PremiumSlideIn always shows a price too; the trial-eligible branch is a bare $0 today (2026-09-09)", () => {
-  // The slide-in had the SAME bug SignupPromoPopup was fixed for on 2026-09-06
-  // (a price hidden whenever trialEligible — true for nearly every logged-in
-  // free visitor) but was missed in that pass. Hiding the price never stopped
-  // Stripe from charging it at checkout; it just moved the surprise to the
-  // most expensive place to lose someone. Fixed 2026-09-08 (always show SOME
-  // number) then simplified further 2026-09-09 (bare "$0 today", no recurring
-  // price stated in this branch) — see PremiumSlideIn's own header comment on
-  // the price block and DECISIONS.md for the full reasoning either way.
-  const src = read("src/components/PremiumSlideIn.tsx");
-  assert.ok(
-    !/\{!trialEligible && PREMIUM_PRICE_AMOUNT/.test(src),
-    "the price block must not be gated on !trialEligible — that was the exact bug",
-  );
-  const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
-  assert.ok(priceBlockAt >= 0, "expected an unconditional price block");
-  // 1000, not 600 (2026-09-24): the trial branch now also states the intro
-  // offer ("then $4.99/mo for 3 months (half price)") — still no recurring
-  // premiumFromLine() there, which the assertions below keep pinning.
-  const block = src.slice(priceBlockAt, priceBlockAt + 1000);
-  const trialBranchAt = block.indexOf("trialEligible ? (");
-  assert.ok(trialBranchAt >= 0, "expected a trialEligible branch");
-  const elseAt = block.indexOf(") : (", trialBranchAt);
-  assert.ok(elseAt >= 0, "expected the non-trial else branch");
-  const trialBranch = block.slice(trialBranchAt, elseAt);
-  const nonTrialBranch = block.slice(elseAt);
-  assert.match(trialBranch, /premiumZeroToday\(\)/, "trial-eligible branch must use the shared $0-today helper");
-  assert.match(trialBranch, /introOfferEnabled\(\) && introEligible &&[\s\S]*tierIntroMonthlyAmount\(\)/, "the intro price is stated beside the $0, from the shared helper");
-  assert.ok(!/premiumFromLine\(\)/.test(trialBranch), "trial-eligible branch must NOT also state the recurring price — bare $0 today, by design");
-  // introFromLine (2026-09-25): the real recurring price, with the half-price
-  // months for a viewer checkout would give them to (a cancelled trialist).
-  assert.match(nonTrialBranch, /introFromLine\("premium", introEligible\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
-  assert.match(nonTrialBranch, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
 });
 
 test("the dialog's Premium lock-in copy shows only while Premium is the plan selected", () => {

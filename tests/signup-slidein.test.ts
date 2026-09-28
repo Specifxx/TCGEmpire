@@ -22,7 +22,7 @@ const SRC = "src/components/SignupPromoPopup.tsx";
 // viewport, so the specific failure mode above cannot recur regardless of
 // content height. tests/signup-popup-dismissible.test.ts is retired along with
 // it; this file pins the NEW contract instead, mirroring
-// tests/premium-slidein.test.ts's own coverage of the same pattern.
+// the since-removed tests/premium-slidein.test.ts's own coverage of the same pattern.
 //
 // 2026-09-04: the CHROME above stayed put, but the CONTENT it wraps flipped
 // from an honest free-account comparison to a Premium pitch (explicit product
@@ -58,7 +58,7 @@ test("dismissible independently of content height: the ✕, Escape, and a full-w
   assert.ok(dismissCalls >= 1, "the ✕ and/or secondary button must call dismiss()");
 });
 
-test("shares PremiumSlideIn's exact corner, sizing and entrance pattern", () => {
+test("shares the corner nudges' exact corner, sizing and entrance pattern", () => {
   const code = codeOnly(read(SRC));
   // 2026-09-16 (P7, mobile bottom tab bar): the sm:bottom-4/bottom-20 pair
   // retired in favour of one shared corner utility (globals.css) that clears
@@ -82,8 +82,8 @@ test("shares PremiumSlideIn's exact corner, sizing and entrance pattern", () => 
   // longer duplicated per-component. Assert the SAME call exists in
   // PremiumSlideIn.tsx too, since that's this test's actual intent: one
   // shared pattern, not two copies that can drift.
-  assert.match(code, /usePresence\(shown, 250\)/, "must use the shared presence primitive, same 250ms exit as PremiumSlideIn");
-  assert.match(codeOnly(read("src/components/PremiumSlideIn.tsx")), /usePresence\(shown, 250\)/, "PremiumSlideIn must share the exact same call");
+  // (PremiumSlideIn, which shared it, was removed on 2026-09-28.)
+  assert.match(code, /usePresence\(shown, 250\)/, "must use the shared presence primitive, same 250ms exit");
 });
 
 test("the popup embeds AuthForm the same way it always has", () => {
@@ -127,7 +127,7 @@ test("the card reads no trial or price state at all — it makes no paid offer",
   // surface the owner explicitly took it off.
   //
   // The trialDays-vs-trialEligible distinction still matters and is still
-  // pinned — in tests/premium-slidein.test.ts, for the surface that does pitch.
+  // pinned — in the since-removed tests/premium-slidein.test.ts, for the surface that does pitch.
   const code = codeOnly(read(SRC));
   assert.doesNotMatch(code, /trialEligible|trialAvailable|trialDays/, "no trial state on a free-account card");
   assert.doesNotMatch(code, /premiumZeroToday|premiumFromLine|premiumLockInTail|PREMIUM_PRICE_AMOUNT/, "no price helpers");

@@ -13,9 +13,9 @@ import { usePresence } from "@/lib/motion";
 // (POST /api/premium/switch-to-annual upgrades the live Stripe subscription with
 // immediate proration).
 //
-// Audience is the exact opposite of PremiumSlideIn's: this only ever fires for a
-// LOGGED-IN, PREMIUM, MONTHLY subscriber who has been paying a while, so the two
-// corner nudges are mutually exclusive by `premium` and never collide. It is a
+// Audience: this only ever fires for a LOGGED-IN, PREMIUM, MONTHLY subscriber
+// who has been paying a while (the free-account PremiumSlideIn it used to
+// mirror was removed on 2026-09-28). It is a
 // non-modal corner slide-in (never covers content, never locks scroll, yields to
 // any open modal via body[data-rc-dialog]) and is capped hard — once per session,
 // a 30-day snooze after a "not now", and never again after two.

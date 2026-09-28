@@ -7,6 +7,8 @@ import { useCountry } from "./CountryProvider";
 import { markSignupSource } from "@/lib/signup-source";
 import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
 import { trackAuthStart, trackSignupCta } from "@/lib/growth-events";
+import type { FreeLimitBody } from "@/lib/free-limits";
+import { FreeLimitPanel } from "./FreeLimitPanel";
 
 // "Get a price-drop alert" — the card page's PRIMARY call to action, directly
 // under the cheapest price (2026-09-24 growth pass).
@@ -70,6 +72,9 @@ export function PriceDropAlertCta({
   const { watched, watch } = useWatchlist();
   const { country } = useCountry();
   const [busy, setBusy] = useState(false);
+  // Set when this click hit the free watchlist limit (lib/free-limits.ts):
+  // the upgrade panel replaces nothing and shows right under the button.
+  const [limit, setLimit] = useState<FreeLimitBody | null>(null);
   const watching = !!watched?.has(cardId);
   // Name the notice lib/price-alerts.ts will actually send. A priced card gets
   // a drop; an unpriced one gets its isFirstPrice notice, which email.ts words
@@ -103,7 +108,7 @@ export function PriceDropAlertCta({
   const enable = async () => {
     setBusy(true);
     try {
-      await watch(cardId, country);
+      await watch(cardId, country, { onLimit: setLimit });
     } finally {
       setBusy(false);
     }
@@ -112,8 +117,13 @@ export function PriceDropAlertCta({
   // Reserve the height until the session is known, so the price block does not jump.
   if (!loaded || pending) return <div aria-hidden className={compact ? "mt-3 h-12" : "mt-3 h-[4.5rem]"} />;
 
+  const limitPanel = limit ? (
+    <FreeLimitPanel kind="watchlist" count={limit.count} onClose={() => setLimit(null)} className="mt-2 w-full" />
+  ) : null;
+
   if (compact) {
     return (
+      <>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="text-sm font-semibold text-white">{copy.label}:</span>
         {user ? (
@@ -154,11 +164,14 @@ export function PriceDropAlertCta({
           </>
         )}
       </div>
+      {limitPanel}
+      </>
     );
   }
 
   if (user) {
     return (
+      <>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -178,6 +191,8 @@ export function PriceDropAlertCta({
               : "One click — we email you when it gets cheaper."}
         </span>
       </div>
+      {limitPanel}
+      </>
     );
   }
 

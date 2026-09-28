@@ -293,4 +293,8 @@ export function premiumLockInTail(): string {
 // price-2026-09-26: Premium $4.99/$39.99, Plus $2.99/$23.99 (were $9.99/$79.99
 // and $4.99/$39.99); no free trial and no half-price intro by default; the
 // "lock in before the price goes up" copy retired to "cancel anytime".
-export const PREMIUM_COPY_VERSION = "price-2026-09-26";
+// limits-2026-09-28: the free limits (10 watched cards, 50 portfolio cards,
+// lib/free-limits.ts) on every tier surface, the at-the-limit upgrade panels,
+// Best Basket's preview leading with the list's own saving in money, and the
+// signed-in slide-in and gold header CTAs gone. Prices unchanged.
+export const PREMIUM_COPY_VERSION = "limits-2026-09-28";

@@ -11,6 +11,7 @@ import { useCountry } from "./CountryProvider";
 import { useWatchlist } from "@/lib/use-watchlist";
 import { useMe } from "@/lib/use-me";
 import { targetAlertLimit } from "@/lib/alert-limits";
+import { freeLimitCounterText, showFreeLimitCounter } from "@/lib/free-limits";
 import { honouredTargetIds } from "@/lib/target-price";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
@@ -72,7 +73,7 @@ export function Watchlist({
   const { country, price } = useCountry();
   const { watched } = useWatchlist();
   // The same shared /api/me the target fields read — no extra request.
-  const { premium, tier } = useMe();
+  const { premium, tier, loaded: meLoaded } = useMe();
   const [items, setItems] = useState<WatchItem[] | null>(null);
   // Alert emails paused for this address (AlertMute) — null = unknown.
   const [paused, setPaused] = useState<boolean | null>(null);
@@ -128,6 +129,8 @@ export function Watchlist({
   // Targets in use across the whole watchlist, every market — the same count
   // the PATCH route enforces the Plus limit on. Updated in place on each save.
   const targetsUsed = visible.filter((it) => it.targetCents != null).length;
+  // Distinct cards (a card watched in two markets is one), the free limit's unit.
+  const watchedCards = new Set(visible.map((it) => it.cardId)).size;
   // Which of those targets the cron actually emails on: all of them, unless the
   // account holds more than its tier allows (a Premium member now on Plus) —
   // then the oldest watches' targets, by the cron's own rule. Recomputed on
@@ -155,6 +158,12 @@ export function Watchlist({
         <p className="text-sm text-slate-400">
           <span className="num font-semibold text-white">{visible.length}</span>{" "}
           {visible.length === 1 ? "card" : "cards"} · newest first
+          {/* The quiet free-limit counter (lib/free-limits.ts): distinct
+              cards, and only once a free account is close — never before.
+              The upgrade itself is offered by the heart, at the 11th card. */}
+          {meLoaded && showFreeLimitCounter("watchlist", watchedCards, premium) && (
+            <span className="text-slate-500"> · {freeLimitCounterText("watchlist", watchedCards)}</span>
+          )}
         </p>
         <p className="text-xs text-slate-500">Tap a card&apos;s heart to stop watching it</p>
       </div>

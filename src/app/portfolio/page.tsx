@@ -20,6 +20,7 @@ import { HoldingsGrid } from "@/components/HoldingsGrid";
 import { PortfolioReplacementCost } from "@/components/PortfolioReplacementCost";
 import { PortfolioQuickAdd } from "@/components/PortfolioQuickAdd";
 import { NavIcon } from "@/components/NavIcon";
+import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -162,6 +163,9 @@ export default async function PortfolioPage() {
           </h1>
           <p className="mt-1 text-sm text-slate-400">
             Your cards, and what they&apos;d cost at today&apos;s lowest {info.adjective} prices, adjusted for condition.
+            {!premium && (
+              <> A free account tracks up to {FREE_PORTFOLIO_LIMIT} cards; if you already have more, you keep them all.</>
+            )}
           </p>
         </div>
         {premium && (

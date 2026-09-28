@@ -7,6 +7,8 @@ import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { cardTileSelect } from "@/lib/cards";
 import { getCountry } from "@/lib/get-country";
 import { alertBaselineSeed, alertPairKey, computeAlertPrices } from "@/lib/alert-price";
+import { FREE_LIMIT_STATUS, freeLimitBody } from "@/lib/free-limits";
+import { watchAllowance } from "@/lib/free-limits-server";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The ACCOUNT-scoped half of price watches.
@@ -118,6 +120,17 @@ export async function POST(req: Request) {
 
   const card = await prisma.card.findUnique({ where: { id: cardId }, select: { id: true } });
   if (!card) return NextResponse.json({ error: "No matching card" }, { status: 400 });
+
+  // THE FREE WATCHLIST LIMIT (lib/free-limits.ts, 2026-09-28): a free account
+  // watches up to FREE_WATCHLIST_LIMIT distinct cards; any paid tier is
+  // unlimited. Only a NEW card is refused — a card already watched (in any
+  // market, or as an email-only watch this account is about to adopt) always
+  // passes, and nothing already watched is touched. Checked before the price
+  // read, so a refused add costs two tiny reads and no price query.
+  const allowance = await watchAllowance(prisma, { email: user.email, account: user, cardIds: [card.id] });
+  if (allowance.blocked.length) {
+    return NextResponse.json(freeLimitBody("watchlist", allowance.count ?? allowance.limit), { status: FREE_LIMIT_STATUS });
+  }
 
   // THE BASELINE, for a new row: today's ALERT PRICE for this (card, market),
   // null when no store has it — the same seed as /api/alerts/subscribe

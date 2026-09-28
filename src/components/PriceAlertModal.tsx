@@ -14,6 +14,8 @@ import { TargetPriceField } from "./TargetPriceField";
 import { Dialog } from "./ui/Dialog";
 import { Toast } from "./ui/Toast";
 import { Spinner } from "./ui/Skeleton";
+import { FreeLimitPanel } from "./FreeLimitPanel";
+import { FREE_LIMIT_STATUS, parseFreeLimit, type FreeLimitBody } from "@/lib/free-limits";
 
 // Where we remember the visitor's email so clicking "watch price" again
 // doesn't re-prompt — it silently extends their existing watch instead.
@@ -38,7 +40,9 @@ const NOTICE_COPY: Record<AlertNotice, { heading: string; submit: string }> = {
   preorder: { heading: "Get a pre-order email", submit: "Notify me when I can pre-order it" },
 };
 
-type Phase = "form" | "success" | "error";
+// "limit": the address already watches the free limit of distinct cards
+// (lib/free-limits.ts) — the upgrade panel, shown in place of the form.
+type Phase = "form" | "success" | "error" | "limit";
 
 // A global, single-instance modal that turns a "watch this price" click into
 // an opt-in for price-drop emails on that one card. Mounted once in the root
@@ -68,6 +72,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
   // The market and address the watch was just created with — the success
   // phase's target field saves against exactly that (card, market) row.
   const [subscribed, setSubscribed] = useState<{ email: string; market: string } | null>(null);
+  const [limit, setLimit] = useState<FreeLimitBody | null>(null);
   // Lightweight toast for the silent (already-subscribed) path. `accountLink`
   // adds a low-key "manage in a free account" line — the ONLY account pitch a
   // habitual anonymous watcher ever sees, since this path never opens a modal.
@@ -88,13 +93,19 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
 
   // Subscribe one card for the active market.
   const subscribe = useCallback(
-    async (addr: string, cardId: string): Promise<{ ok: boolean }> => {
+    async (addr: string, cardId: string): Promise<{ ok: boolean; limit?: FreeLimitBody | null }> => {
       try {
         const res = await fetch("/api/alerts/subscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: addr, cardIds: [cardId], market: country }),
         });
+        // The address is at the free watchlist limit: nothing was saved.
+        if (res.status === FREE_LIMIT_STATUS) {
+          const limit = parseFreeLimit(await res.json().catch(() => null));
+          if (limit) trackEvent("free_limit_hit", { kind: "watchlist", card_id: cardId });
+          return { ok: false, limit };
+        }
         return { ok: res.ok };
       } catch {
         return { ok: false };
@@ -120,6 +131,13 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
           if (r.ok) {
             flashToast("Watching this card's price ✓", true);
             trackEvent("price_alert_silent_extend", { card: cardId });
+          } else if (r.limit) {
+            // At the free limit: the tap is answered with the upgrade panel,
+            // not a silent failure.
+            setPendingCardId(cardId);
+            setLimit(r.limit);
+            setPhase("limit");
+            setOpen(true);
           }
         });
         return;
@@ -165,6 +183,11 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
     setSubmitting(true);
     const r = await subscribe(addr, pendingCardId);
     setSubmitting(false);
+    if (r.limit) {
+      setLimit(r.limit);
+      setPhase("limit");
+      return;
+    }
     if (r.ok) {
       setSubscribed({ email: addr.toLowerCase(), market: country });
       try {
@@ -342,6 +365,25 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                     — your watches come with you.
                   </p>
                 )}
+              </div>
+            )}
+
+            {phase === "limit" && limit && (
+              <div className="p-6">
+                <h2 id="price-alert-title" className="font-display text-xl font-bold text-white">This address is at the free limit</h2>
+                <FreeLimitPanel kind="watchlist" count={limit.count} className="mt-3" />
+                {!user && (
+                  <p className="mt-3 text-xs text-slate-400">
+                    Already a member?{" "}
+                    <Link href={`/login?next=${encodeURIComponent(pathname ?? "/watching")}`} rel="nofollow" onClick={() => markSignupSource("alert_modal")} className="font-semibold text-brand-400 hover:underline">
+                      Sign in
+                    </Link>{" "}
+                    and watch as many cards as you like.
+                  </p>
+                )}
+                <button onClick={() => setOpen(false)} className="btn-ghost mt-4 w-full">
+                  Not now
+                </button>
               </div>
             )}
 

@@ -1,7 +1,8 @@
 // How many watched cards may carry a TARGET PRICE ("Notify me at $X"), per
 // tier (2026-09-25 premium lineup). Plain watches and the weekly new-low
-// email stay unlimited and free for every account; only the paid target
-// trigger is metered, and only Plus has a ceiling. Premium's "unlimited" is
+// email are free for every account — up to FREE_WATCHLIST_LIMIT distinct cards
+// on a free account, unlimited on any paid tier (lib/free-limits.ts,
+// 2026-09-28); the target trigger is the paid one, and only Plus has a ceiling. Premium's "unlimited" is
 // the ladder the rest of the category uses (MTGStocks, Pricempire, Market
 // Movers) — see DECISIONS.md, "Premium lineup: fewer tools, each one worth
 // paying for".

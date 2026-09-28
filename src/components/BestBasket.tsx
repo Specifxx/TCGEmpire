@@ -18,6 +18,9 @@ import { trackEvent } from "@/lib/analytics";
 import { effectiveRegion, readPostagePrefs, writePostagePrefs } from "@/lib/postage-prefs";
 import { freePrefix, joinList, planPostageNotes, postageLineBits, postagePrefix, trackedTag } from "@/lib/postage-display";
 import { cardThumbProps } from "@/lib/card-image-url";
+import { useMe } from "@/lib/use-me";
+import { basketSavingPitch } from "@/lib/basket-saving";
+import { PREMIUM_PRICE_LABEL } from "@/lib/site";
 
 export type BasketSource = "deck" | "watchlist" | "binder";
 
@@ -514,6 +517,7 @@ function PreviewCard({
   overCap: boolean;
   postage: PostageView;
 }) {
+  const { premium, tier } = useMe();
   if (r.covered === 0) {
     return (
       <div className="card-surface p-5 text-sm text-slate-300">
@@ -524,15 +528,25 @@ function PreviewCard({
     );
   }
   const stores = `${r.storeCount} ${plural(r.storeCount, "store", "stores")}`;
+  // THE UPGRADE LEADS WITH THIS LIST'S OWN SAVING (lib/basket-saving.ts,
+  // 2026-09-28), and only when it is at least a whole unit of the list's
+  // currency; below that, the plain line with no money claim.
+  const pitch = basketSavingPitch(r.savedCents, fmt, { plusMember: premium && tier === "plus", priceLabel: PREMIUM_PRICE_LABEL });
   return (
     <div className="card-surface p-5">
       <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Your delivered total</div>
       <div className="font-display text-4xl font-extrabold text-white">{fmt(r.totalCents)}</div>
+      {pitch && (
+        <p data-basket-saving className="mt-3 rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-2 text-sm font-semibold leading-relaxed text-white">
+          {pitch}
+        </p>
+      )}
       <p className="mt-2 text-sm leading-relaxed text-slate-300">
-        {r.savedCents > 0 ? (
+        {r.savedCents > 0 && pitch ? (
+          <>Your list: {fmt(r.totalCents)} delivered from {stores}.</>
+        ) : r.savedCents > 0 ? (
           <>
-            Your list: {fmt(r.totalCents)} delivered from {stores}, {fmt(r.savedCents)} less than buying each card&apos;s cheapest copy
-            separately. Premium shows which store to buy each card from.
+            Your list: {fmt(r.totalCents)} delivered from {stores}. Premium shows which store to buy each card from.
           </>
         ) : r.naiveTotalCents < r.totalCents ? (
           <>
@@ -556,7 +570,7 @@ function PreviewCard({
       {overCap && <ResultCapNote />}
       <UnmatchedList unmatched={r.unmatched} />
       <div className="mt-4">
-        <PremiumButton surface="gate:basket-preview" />
+        <PremiumButton surface="limit:basket" />
       </div>
       <PostageFooter postage={postage} className="mt-4 text-left" />
     </div>

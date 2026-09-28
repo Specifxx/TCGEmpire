@@ -17,6 +17,7 @@ import {
   type PremiumTierKey,
 } from "@/lib/site";
 import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
+import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // The /premium pricing section, rebuilt 2026-09-11 to match the layout at
 // mtgstocks.com/go-premium (owner: "copy their formatting and pillars") —
@@ -188,8 +189,10 @@ export function PremiumPricingCards({
 const FREE_FEATURES = [
   "Unlimited price comparisons",
   "Deck & list pricer, trade calculator & box EV",
-  "Watchlist with weekly new-low emails",
-  "Portfolio, including its delivered replacement cost",
+  // The free limits (lib/free-limits.ts, 2026-09-28). Price comparison
+  // stays unlimited and free: it is what brings people in.
+  `Watch up to ${FREE_WATCHLIST_LIMIT} cards, with weekly new-low emails`,
+  `Portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, including its delivered replacement cost`,
   "Top 3 of Deal Finder & Rising Cards",
   "Best Basket: your own list's delivered total",
   "Top 10 most searched cards this week",
@@ -201,6 +204,7 @@ const FREE_FEATURES = [
 const TRIAL_ROW = "N-day free trial";
 const PLUS_FEATURES = [
   "No ads on any page",
+  "Unlimited watchlist and portfolio",
   `Target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, naming the store`,
   "Every card below TCGplayer market, filtered to the cards you watch or own",
   "The full Rising Cards list",
@@ -221,6 +225,7 @@ const PREMIUM_FEATURES_ON_PLUS = [
 const PREMIUM_FEATURES_STANDALONE = [
   "Everything free",
   "No ads on any page",
+  "Unlimited watchlist and portfolio",
   "Every card below TCGplayer market, and the full Rising Cards list",
   "Unlimited target-price alerts",
   "Best Basket and Buy this list: your whole list, delivered for less",

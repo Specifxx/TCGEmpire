@@ -4,14 +4,17 @@ import { getCurrentUser } from "@/lib/auth";
 import { parseDeckList } from "@/lib/deck";
 import { normalizeSearch } from "@/lib/format";
 import { addCopies, collectionRowStore } from "@/lib/collection-add";
+import { freeLimitBody } from "@/lib/free-limits";
+import { portfolioAllowance } from "@/lib/free-limits-server";
 
 export const dynamic = "force-dynamic";
 
 // Bulk-add cards to the collection from a pasted list (TCGplayer mass-entry style,
 // e.g. "3 Jinx, Loose Cannon"). Matches by name (cheapest printing), adds each at
 // NM/non-foil, incrementing quantity. Returns how many cards gained copies, the
-// names already at the 999 cap (nothing added), and any unmatched names so the
-// user can fix them.
+// names already at the 999 cap (nothing added), any unmatched names so the
+// user can fix them, and — for a free account at its portfolio limit — how many
+// new cards were skipped (limitSkipped, freeLimit).
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
@@ -54,6 +57,15 @@ export async function POST(req: Request) {
   // copies as free, a row with no recorded cost stays unknown, the row never
   // passes the 999 cap, and each write is one guarded increment, so a POST that
   // lands mid-import is counted rather than overwritten.
+  // THE FREE PORTFOLIO LIMIT (lib/free-limits.ts, 2026-09-28). A free
+  // account's import adds every card it already holds, then new cards in the
+  // order they were pasted until FREE_PORTFOLIO_LIMIT distinct cards, and
+  // reports the rest as skipped — never a silent partial import, and never an
+  // all-or-nothing refusal that loses the cards that did fit.
+  const allowance = await portfolioAllowance(prisma, user, [...qtyByCard.keys()]);
+  const limitSkipped = allowance.blocked.map((id) => nameByCard.get(id) ?? id);
+  for (const id of allowance.blocked) qtyByCard.delete(id);
+
   const ids = [...qtyByCard.keys()];
   // No `.catch(() => [])`: an empty answer here would silently take the old
   // "new copies are free" path. A failed read fails the import instead.
@@ -79,7 +91,16 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     added,
-    matchedCards: qtyByCard.size,
+    matchedCards: qtyByCard.size + allowance.blocked.length,
+    // Cards not added because the free portfolio is full (their names, up to
+    // 30), with the structured limit for the upgrade panel. Absent when none.
+    ...(allowance.blocked.length
+      ? {
+          limitSkipped: allowance.blocked.length,
+          limitSkippedNames: limitSkipped.slice(0, 30),
+          freeLimit: freeLimitBody("portfolio", allowance.count ?? allowance.limit),
+        }
+      : {}),
     full: full.slice(0, 30),
     unmatched: [...new Set(unmatched)].slice(0, 30),
   });

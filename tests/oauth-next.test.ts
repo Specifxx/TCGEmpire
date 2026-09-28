@@ -74,5 +74,7 @@ test("SignupWelcome completes a watch stashed before the OAuth round trip", () =
   // took the account path in the alert modal had a pending watch too.
   assert.match(src, /localStorage\.getItem\(PENDING_WATCH_KEY\)/);
   assert.match(src, /localStorage\.removeItem\(PENDING_WATCH_KEY\)/);
-  assert.match(src, /watch\(pending\.cardId, pending\.market as Country\)/);
+  // `{ onLimit }` (2026-09-28): at the free watchlist limit the toast says the
+  // card wasn't added.
+  assert.match(src, /watch\(pending\.cardId, pending\.market as Country, \{ onLimit \}\)/);
 });

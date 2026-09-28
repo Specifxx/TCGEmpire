@@ -16,7 +16,7 @@ const code = (p: string) =>
     .replace(/^\s*\/\/.*$/gm, "");
 
 const POPUP = "src/components/SignupPromoPopup.tsx";
-const SLIDEIN = "src/components/PremiumSlideIn.tsx";
+// PremiumSlideIn, the second consumer, was removed on 2026-09-28.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HOW OFTEN A CORNER NUDGE MAY ASK (2026-09-14). See DECISIONS.md.
@@ -34,7 +34,7 @@ const SLIDEIN = "src/components/PremiumSlideIn.tsx";
 // idea arriving quietly later, because it will come back.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the cap has exactly one definition, and both nudges consume it", () => {
+test("the cap has exactly one definition, and the popup consumes it", () => {
   assert.equal(MAX_NUDGE_DISMISSALS, 2, "two firm no's is a no");
   assert.equal(SNOOZE_AFTER_DISMISS_MS, 7 * 864e5, "a week of quiet after a dismissal");
   assert.equal(SNOOZE_AFTER_CLICK_MS, 14 * 864e5, "a fortnight after an engaged click");
@@ -42,7 +42,7 @@ test("the cap has exactly one definition, and both nudges consume it", () => {
     SNOOZE_AFTER_CLICK_MS > SNOOZE_AFTER_DISMISS_MS,
     "engaging must buy MORE quiet than refusing, or the incentives are backwards",
   );
-  for (const f of [POPUP, SLIDEIN]) {
+  for (const f of [POPUP]) {
     assert.match(code(f), /from "@\/lib\/nudge-timing"/, `${f} must import the shared cap`);
     assert.ok(
       !/const MAX_NUDGE_DISMISSALS\s*=/.test(code(f)),
@@ -137,7 +137,7 @@ test("no corner nudge may gate, delay or disable its own close control", () => {
   // constraint on this site, six other tests forbid countdown pressure on
   // Premium surfaces, and the popup has already caused one production incident
   // by being hard to close. The dismiss control must work from first paint.
-  for (const f of [POPUP, SLIDEIN, "src/components/AnnualSwitchNudge.tsx"]) {
+  for (const f of [POPUP, "src/components/AnnualSwitchNudge.tsx"]) {
     const src = code(f);
     // Find every element that closes the thing, and prove none is disabled or
     // conditionally rendered on a timer.
@@ -150,5 +150,4 @@ test("no corner nudge may gate, delay or disable its own close control", () => {
   }
   // And the dismiss handler must be bound directly, not behind a predicate.
   assert.match(code(POPUP), /onClick=\{dismiss\}/, "the ✕ must call dismiss directly");
-  assert.match(code(SLIDEIN), /onClick=\{dismiss\}/, "same for the slide-in");
 });

@@ -12,6 +12,9 @@ import { cardImageAlt } from "@/lib/image-alt";
 import { trackEvent } from "@/lib/analytics";
 import { EmptyState } from "./ui/EmptyState";
 import { cardThumbProps } from "@/lib/card-image-url";
+import { useMe } from "@/lib/use-me";
+import { FREE_LIMIT_STATUS, freeLimitCounterText, parseFreeLimit, showFreeLimitCounter, type FreeLimitBody } from "@/lib/free-limits";
+import { FreeLimitPanel } from "./FreeLimitPanel";
 
 type CollCard = {
   id: string;
@@ -161,6 +164,13 @@ export function MyCollection({ refreshPage = false }: { refreshPage?: boolean } 
     changed();
   }, [changed]);
 
+  // The quiet free-limit counter (lib/free-limits.ts): distinct CARDS, the
+  // unit the limit counts (a card in two conditions is one), and only once a
+  // free account is close to the limit — never before.
+  const { premium, loaded: meLoaded } = useMe();
+  const distinctCards = items ? new Set(items.map((it) => it.cardId)).size : 0;
+  const showCounter = meLoaded && items != null && showFreeLimitCounter("portfolio", distinctCards, premium);
+
   return (
     <div id="collection" className="card-surface mt-5 scroll-mt-header p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -175,6 +185,7 @@ export function MyCollection({ refreshPage = false }: { refreshPage?: boolean } 
               ? "Your collection is empty."
               : `${summary.distinct} ${summary.distinct === 1 ? "card" : "cards"} · ${summary.total} total${summary.priced ? ` · worth ~${fmt(summary.value)}` : ""}`}
           </p>
+          {showCounter && <p className="mt-0.5 text-xs text-slate-500">{freeLimitCounterText("portfolio", distinctCards)}</p>}
         </div>
         <button onClick={() => setImporting((v) => !v)} className="btn-ghost shrink-0 text-sm">Import a list</button>
       </div>
@@ -308,6 +319,8 @@ export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<vo
   const [justAdded, setJustAdded] = useState<string | null>(null);
   // A row already at QUANTITY_CAP: the add changed nothing, so it must not say "✓ Added".
   const [atCap, setAtCap] = useState<string | null>(null);
+  // The free portfolio limit, when an add hit it (lib/free-limits.ts).
+  const [limit, setLimit] = useState<FreeLimitBody | null>(null);
 
   useEffect(() => {
     const t = q.trim();
@@ -347,6 +360,13 @@ export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<vo
       } else if (res.status === 409 && (await res.json().catch(() => null))?.full) {
         setAtCap(card.id);
         setTimeout(() => setAtCap((v) => (v === card.id ? null : v)), 2500);
+      } else if (res.status === FREE_LIMIT_STATUS) {
+        const l = parseFreeLimit(await res.json().catch(() => null));
+        if (l) {
+          trackEvent("free_limit_hit", { kind: "portfolio", card_id: card.id });
+          setLimit(l);
+          setOpen(false);
+        }
       }
     } finally {
       setAdding(null);
@@ -390,6 +410,7 @@ export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<vo
           ))}
         </ul>
       )}
+      {limit && <FreeLimitPanel kind="portfolio" count={limit.count} onClose={() => setLimit(null)} className="mt-2" />}
     </div>
   );
 }
@@ -399,7 +420,16 @@ export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<vo
 function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ added: number; matchedCards: number; full?: string[]; unmatched: string[] } | null>(null);
+  const [result, setResult] = useState<{
+    added: number;
+    matchedCards: number;
+    full?: string[];
+    unmatched: string[];
+    // New cards skipped at the free portfolio limit (lib/free-limits.ts).
+    limitSkipped?: number;
+    limitSkippedNames?: string[];
+    freeLimit?: FreeLimitBody;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
@@ -457,6 +487,15 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
             <p className="mt-1 text-xs text-amber-300/90">
               Already at {QUANTITY_CAP} copies, nothing added: <span className="text-slate-400">{result.full.join(" · ")}</span>
             </p>
+          )}
+          {result.limitSkipped != null && result.limitSkipped > 0 && result.freeLimit && (
+            <>
+              <p className="mt-1 text-xs text-amber-300/90">
+                {result.limitSkipped} new card{result.limitSkipped === 1 ? "" : "s"} not added — free portfolios hold {result.freeLimit.limit} cards:{" "}
+                <span className="text-slate-400">{(result.limitSkippedNames ?? []).join(" · ")}</span>
+              </p>
+              <FreeLimitPanel kind="portfolio" count={result.freeLimit.count} className="mt-2" />
+            </>
           )}
           {result.unmatched.length > 0 && (
             <p className="mt-1 text-xs text-amber-300/90">

@@ -81,7 +81,14 @@ function SignupWelcomeInner() {
     }
     if (!pending?.cardId || !pending.market) return;
     claimed.current = true;
-    void watch(pending.cardId, pending.market as Country).then((ok) => {
+    // At the free watchlist limit the card is not added, and the toast says
+    // so plainly (no upsell here: the upgrade panel belongs to the heart the
+    // member taps next, lib/free-limits.ts).
+    const onLimit = (l: { limit: number }) => {
+      setToast(`That card wasn't added — your watchlist is at the free limit of ${l.limit} cards.`);
+      setTimeout(() => setToast(null), 6000);
+    };
+    void watch(pending.cardId, pending.market as Country, { onLimit }).then((ok) => {
       if (ok) {
         setToast("Watching that card ✓ — it's on your watchlist");
         setTimeout(() => setToast(null), 5000);

@@ -1,7 +1,8 @@
 # Current state: the rules and decisions in force
 
 Last reviewed 2026-09-23, against DECISIONS.md up to and including the
-overlays entry, [2026-09-23](../DECISIONS.md#L11348).
+overlays entry, [2026-09-23](../DECISIONS.md#L11348); the free-limits bullets
+updated on [2026-09-28](../DECISIONS.md#L14549).
 
 The short version of [DECISIONS.md](../DECISIONS.md): what still stands,
 with the latest position where an entry was reversed. Each bullet ends with
@@ -148,30 +149,48 @@ longer lands on its entry.
   that a Plus-level wall sells Plus (`<PremiumButton tier="plus">`) and every
   surface describing Plus says it is ad-free; never link a member to a wall. The pitch is "Never overpay for a Riftbound card", with
   no flipper or "ahead of the market" language. No fake scarcity,
-  countdowns, invented numbers, savings totals or testimonials. Rising
+  countdowns, invented numbers, savings totals or testimonials; the one
+  saving figure allowed is Best Basket's, the viewer's own list's computed
+  saving, from one whole unit of its currency (`lib/basket-saving.ts`). Rising
   Cards is a screen, not a prediction. No "lock in before the price goes
-  up": since the 09-26 cut, the lock-in banner, dialog lines, slide-in line
-  and FAQ render only while a real, higher price is announced
+  up": since the 09-26 cut, the lock-in banner, dialog lines and FAQ render only while a real, higher price is announced
   (`NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT`, which defaults to today's price);
   the steady state says "cancel anytime". The terms still promise a
   subscriber's price never rises while they stay subscribed: existing
   subscribers may be moved onto a lower Price, never a higher one.
   [2026-09-11](../DECISIONS.md#L4642), [2026-09-14](../DECISIONS.md#L5971),
   [2026-09-10](../DECISIONS.md#L3990), [2026-09-22](../DECISIONS.md#L10328),
-  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14292)
+  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14292),
+  [2026-09-28](../DECISIONS.md#L14549)
+- **Free limits (2026-09-28, owner: "charge for the features people use every
+  week"):** a free account watches up to 10 distinct cards and keeps up to 50
+  in its portfolio (`lib/free-limits.ts`, the one source for every route and
+  every quoted number); any paid tier is unlimited; price comparison stays
+  free with no limit. Nobody loses anything: only a NEW card is refused while
+  at or over the limit, and existing watches, portfolio cards, copies, edits
+  and removals keep working, lapsed subscribers included. Every create route
+  enforces it (`402 code:"free_limit"`), the anonymous email-only door
+  included, and the import adds up to the allowance and reports the rest.
+  [2026-09-28](../DECISIONS.md#L14549)
+- **Upgrade prompts live where a limit is hit, not in popups or headers:**
+  the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
+  Basket's preview (`limit:basket`, leading with the list's own saving) and
+  the tool walls. [2026-09-28](../DECISIONS.md#L14549)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
   [2026-09-14](../DECISIONS.md#L6038)
 - **Nudges:** the signed-out popup sells the FREE account (no price, no
-  gold); the signed-in `PremiumSlideIn` carries Premium. The popup waits for
+  gold), and matters more now that the free limits are the funnel. There is
+  no signed-in Premium slide-in (deleted 2026-09-28). The popup waits for
   a 2nd page view or 60 s of reading, never on the first page from another
   site or a phone's first view (`lib/signup-promo-gate.ts`), except on the
-  top landing pages (`/blog/*`, `/movers`), where both nudges show after 20 s
+  top landing pages (`/blog/*`, `/movers`), where it shows after 20 s
   of reading on any view. It stops after 2
   dismissals per device, snoozes 3 pages then 7 days, and keeps its 5-second
   delay. [2026-09-16](../DECISIONS.md#L7031),
-  [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089), [2026-09-27](../DECISIONS.md#L14536)
+  [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089), [2026-09-27](../DECISIONS.md#L14536),
+  [2026-09-28](../DECISIONS.md#L14549)
 - **Signed-out visitors get nothing from Deal Finder or Rising Cards**; a
   free account gets the top 3 of each, a paid tier the full list.
   [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842)
@@ -249,12 +268,14 @@ longer lands on its entry.
   stacks above the badges, which stop short of it.
   [2026-09-18](../DECISIONS.md#L8349), [2026-09-22](../DECISIONS.md#L10260),
   [2026-09-24](../DECISIONS.md#L11719)
-- **Gold marks Premium**, so a non-Premium action never wears it. Phones show
-  "✦" beside Database from 360px and the word from 400px (below 360, the
-  menu's Premium spotlight). Signed-out visitors see "Log in" and a primary
+- **Gold marks Premium**, so a non-Premium action never wears it, and the
+  chrome no longer sells it: the header, rail and account menu carry a
+  plain, non-gold "Pricing" link to /premium (phones from 400px; below that,
+  the menu's Premium entry). No shimmer, no menu spotlight. Signed-out visitors see "Log in" and a primary
   "Sign up free" at every width; below sm the market switcher lives in the
   menu's top bar. [2026-09-24](../DECISIONS.md#L11756)
-  [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417)
+  [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417),
+  [2026-09-28](../DECISIONS.md#L14549)
 - **Homepage order:** Recently viewed (returning visitors), Top Deals (opening
   with the free "Cheapest on eBay" block, above its pills and columns), eBay
   Picks (the newest released set), the popular carousel (its "Most popular"
@@ -451,9 +472,10 @@ longer lands on its entry.
   [2026-09-21](../DECISIONS.md#L9560), [2026-09-14](../DECISIONS.md#L6263),
   [2026-09-23](../DECISIONS.md#L11201). (A minimum "real drop" threshold, once
   declined, was set on [2026-09-25](../DECISIONS.md#L13128).)
-- **Kept on purpose:** Premium's nav prominence; the client-only
-  `ssr: false` overlays. [2026-09-16](../DECISIONS.md#L6834),
-  [2026-09-22](../DECISIONS.md#L10328)
+- **Kept on purpose:** the client-only `ssr: false` overlays. Premium's nav
+  prominence, kept on purpose until then, was reversed on 2026-09-28 (plain
+  "Pricing" links). [2026-09-16](../DECISIONS.md#L6834),
+  [2026-09-22](../DECISIONS.md#L10328), [2026-09-28](../DECISIONS.md#L14549)
 
 ## UI conventions
 

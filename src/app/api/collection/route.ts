@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { CONDITION_KEYS } from "@/lib/constants";
 import { QUANTITY_CAP } from "@/lib/collection-cost";
 import { addCopies, collectionRowStore } from "@/lib/collection-add";
+import { FREE_LIMIT_STATUS, freeLimitBody } from "@/lib/free-limits";
+import { portfolioAllowance } from "@/lib/free-limits-server";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +62,16 @@ export async function POST(req: Request) {
   try {
     const card = await prisma.card.findUnique({ where: { id: d.cardId }, select: { id: true } });
     if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
+
+    // THE FREE PORTFOLIO LIMIT (lib/free-limits.ts, 2026-09-28): a free
+    // account keeps up to FREE_PORTFOLIO_LIMIT distinct cards; any paid tier
+    // is unlimited. Only a card NOT already in the portfolio is refused: more
+    // copies, another condition or foil of a card already held, and every
+    // existing entry of an account already over the limit keep working.
+    const allowance = await portfolioAllowance(prisma, user, [card.id]);
+    if (allowance.blocked.length) {
+      return NextResponse.json(freeLimitBody("portfolio", allowance.count ?? allowance.limit), { status: FREE_LIMIT_STATUS });
+    }
 
     // ADDING COPIES HAS TO KEEP THE ROW'S COST HONEST AND NEVER LOSE A COPY
     // (lib/collection-add.ts, lib/collection-cost.ts). A row that records a

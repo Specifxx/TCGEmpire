@@ -28,7 +28,8 @@ const readCode = (p: string) =>
 
 const NUDGES = [
   "src/components/SignupPromoPopup.tsx", // signed-out: sign up / Premium
-  "src/components/PremiumSlideIn.tsx", // signed-in free: Premium
+  // "src/components/PremiumSlideIn.tsx" (signed-in free: Premium) was removed
+  // on 2026-09-28 — upgrade prompts now live at the free limits.
   "src/components/AnnualSwitchNudge.tsx", // monthly subscriber: switch to annual
 ];
 
@@ -89,11 +90,6 @@ test("the delay is a timing change only — every frequency cap is untouched", (
   // Waiting longer must not quietly become "shows to more people". Each nudge
   // keeps its own eligibility and frequency rules; this pins the ones that
   // would be easiest to lose while editing the timer next to them.
-  const promo = readCode("src/components/PremiumSlideIn.tsx");
-  assert.match(promo, /MIN_PAGEVIEWS\s*=\s*2/, "the slide-in still waits for an engaged visitor");
-  assert.match(promo, /MAX_DISMISSALS = MAX_NUDGE_DISMISSALS/, "two dismissals is still a permanent no");
-  assert.match(promo, /!!user/, "still signed-in only — the signed-out surface is SignupPromoPopup");
-
   const signup = readCode("src/components/SignupPromoPopup.tsx");
   assert.match(signup, /PAGES_BETWEEN_SHOWS/, "the popup still spaces out re-shows after a dismissal");
   assert.match(signup, /if \(!loaded \|\| user/, "still signed-out only — the two audiences must not overlap");

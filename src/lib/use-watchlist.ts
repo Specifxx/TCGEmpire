@@ -5,6 +5,7 @@ import type { Country } from "./country";
 import { trackEvent } from "./analytics";
 import { trackAlertCreated } from "./growth-events";
 import { fetchMe } from "./use-me";
+import { FREE_LIMIT_STATUS, freeLimitBody, parseFreeLimit, wouldHitFreeLimit, type FreeLimitBody } from "./free-limits";
 
 // Shared client-side view of "which cards am I watching?".
 //
@@ -77,7 +78,13 @@ export interface WatchlistApi {
   /** Watched card ids, or null while loading / when signed out. */
   watched: Set<string> | null;
   loaded: boolean;
-  watch(cardId: string, market: Country): Promise<boolean>;
+  /**
+   * Watch a card. Resolves false when nothing was saved. At the free
+   * watchlist limit (lib/free-limits.ts) it also calls `onLimit` with the
+   * structured limit, so the control that was tapped can show the upgrade
+   * panel right there — no heart flips and rolls back.
+   */
+  watch(cardId: string, market: Country, opts?: { onLimit?: (limit: FreeLimitBody) => void }): Promise<boolean>;
   unwatch(cardId: string): Promise<boolean>;
 }
 
@@ -107,7 +114,18 @@ export function useWatchlist(): WatchlistApi {
     // a silent LIE: the UI always converges on what the server actually has.
     // MyCollection stays await-first, on purpose — it renders money, where a
     // rollback flicker on a number is worse than a moment of latency.
-    async watch(cardId, market) {
+    async watch(cardId, market, opts) {
+      // THE FREE LIMIT, checked here first from what this page already knows
+      // (the shared id Set and /api/me — both loaded, no request): a free
+      // account at 10 cards tapping an 11th sees the panel at once. The route
+      // re-checks and answers 402 for anything this Set can't see (an
+      // email-only watch on the same address), handled below.
+      const me = await fetchMe();
+      if (watched && wouldHitFreeLimit("watchlist", { paid: me.premium, held: watched, cardId })) {
+        trackEvent("free_limit_hit", { kind: "watchlist", card_id: cardId });
+        opts?.onLimit?.(freeLimitBody("watchlist", watched.size));
+        return false;
+      }
       const prev = watched ? new Set(watched) : null;
       watched = watched ? new Set(watched) : new Set();
       watched.add(cardId);
@@ -121,6 +139,13 @@ export function useWatchlist(): WatchlistApi {
       if (!res?.ok) {
         watched = prev;
         publish();
+        if (res?.status === FREE_LIMIT_STATUS) {
+          const limit = parseFreeLimit(await res.json().catch(() => null));
+          if (limit) {
+            trackEvent("free_limit_hit", { kind: "watchlist", card_id: cardId });
+            opts?.onLimit?.(limit);
+          }
+        }
         return false;
       }
       // Every account alert goes through here — the bell, the card page's

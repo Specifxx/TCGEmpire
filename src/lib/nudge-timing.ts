@@ -3,8 +3,10 @@
  * three of them, so they can never drift apart again:
  *
  *   SignupPromoPopup   the signed-out "make an account / Premium" pitch
- *   PremiumSlideIn     the signed-in free-account Premium nudge
  *   AnnualSwitchNudge  the monthly-subscriber "switch to annual" offer
+ *   (PremiumSlideIn, the signed-in free-account Premium nudge, was the third
+ *   until 2026-09-28, when upgrade prompts moved to where a free account hits
+ *   a limit — lib/free-limits.ts.)
  *
  * They had three different answers — instant, 12s and 8s — each arrived at by
  * its own separate decision, with nothing connecting them. A visitor never

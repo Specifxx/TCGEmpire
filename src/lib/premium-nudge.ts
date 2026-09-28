@@ -74,8 +74,8 @@ export function hasNudge(n: PremiumNudge | null): n is PremiumNudge {
 
 /**
  * Row caps on the two selects below: an account's newest 500 watches and newest
- * 1,000 binder entries. Watches are unlimited for every account
- * (lib/alert-limits.ts), so a long list IS cut here, and the Deal Finder says
+ * 1,000 binder entries. Watches are unlimited on a paid tier, and a free
+ * account over lib/free-limits.ts's limit keeps what it had, so a long list IS cut here, and the Deal Finder says
  * so ("your 500 most recent watches") rather than calling the cut list "all of
  * your cards".
  */
@@ -162,8 +162,8 @@ export async function getPremiumNudge(userId: string, country: Country): Promise
 // line; "member" drops the free-top-3 counts and the pitch, because a member
 // already sees every row — PremiumNudgeCard then links to the list itself
 // (memberNudgeHref below) instead of a wall. /watching and /portfolio show a
-// member this card too; the slide-in (/api/premium/nudge) stays free-only,
-// because it exists to sell.
+// member this card too. (The signed-in slide-in that read this through
+// /api/premium/nudge was removed on 2026-09-28.)
 // `kind` says which list the nudge is about, so that link can be the right one.
 const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 

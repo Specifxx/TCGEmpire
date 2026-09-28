@@ -5,7 +5,7 @@ import { useCountry } from "./CountryProvider";
 import { Skeleton } from "./ui/Skeleton";
 
 // Real numbers above the pricing cards, not a made-up urgency line — the same
-// cached feed PremiumSlideIn's proof line reads (api/premium/proof), so this
+// cached feed the retired slide-in's proof line read (api/premium/proof), so this
 // adds no server work beyond what the homepage already pays for. Renders
 // nothing until the fetch resolves, and nothing at all if there's too little
 // to make a real case or the fetch fails — this can only make the pitch

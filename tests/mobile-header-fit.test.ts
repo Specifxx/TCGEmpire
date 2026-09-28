@@ -123,44 +123,33 @@ test("the wordmark, not a nav control, is what pays for the tablet band", () => 
   assert.doesNotMatch(code, /tracking-tight text-white sm:block/, "the wordmark must not turn back on at sm");
 });
 
-test("Premium keeps its phone slot — it was an explicit brief, not incidental", () => {
-  // 2026-09-10: Premium was deliberately put beside Database on phones. Database
-  // went; this must not have gone with it, and it is the reason the left group
-  // still needs to be able to shrink.
+test("Pricing keeps the phone slot Premium had — plain, not gold (2026-09-28)", () => {
+  // 2026-09-10: Premium was deliberately put beside Database on phones, gold
+  // and shimmering. 2026-09-28: the owner moved upgrade prompts to where a
+  // free account hits a limit, "not in popups and headers", so the slot is a
+  // plain "Pricing" link to /premium now — still the reason the left group
+  // must be able to shrink.
   const code = readCode(NAVBAR);
   const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
   assert.match(row, /<PremiumNavLink/);
   assert.match(row, /lg:hidden/);
-  // shrink-0 + nowrap, and BOTH are load-bearing — see the next test. Checked as
-  // independent tokens, not as one contiguous string: the class list has been
-  // reordered twice by unrelated edits and a positional match just breaks.
+  // shrink-0 + nowrap, and BOTH are load-bearing — see the next test.
   const premClass = /<PremiumNavLink[\s\S]*?className="([^"]*)"/.exec(row)?.[1] ?? "";
   for (const t of ["shrink-0", "whitespace-nowrap", "min-h-11", "min-w-11", "lg:hidden"]) {
-    assert.ok(premClass.split(/\s+/).includes(t), `Premium must keep "${t}" (has: ${premClass})`);
+    assert.ok(premClass.split(/\s+/).includes(t), `Pricing must keep "${t}" (has: ${premClass})`);
   }
-  // 2026-09-24 (growth pass): the row now carries "Log in" + "Sign up" at every
-  // width, which costs ~70px on a phone. Measured: logo, Database, "✦ Premium",
-  // Log in, Sign up and the menu need ~374px with their 44px targets, so the
-  // word moves to 400px, the glyph shows from 360px, and below 360px Premium is
-  // reached from the menu's Premium spotlight. The market switcher moved into
-  // the menu below sm in the same change.
+  // Measured 2026-09-24: logo, Database, "✦ Premium", Log in, Sign up and the
+  // menu need ~374px, so the WORD waited for 400px and only a 44px glyph fit
+  // from 360px. "Pricing" is a word with no glyph form, so it shows from 400px
+  // (narrower there than "✦ Premium" was) and below that the menu's Premium
+  // entry (nav-groups.ts) reaches the same page.
   assert.match(premClass, /\bhidden\b/);
-  assert.match(premClass, /min-\[360px\]:inline-flex/);
-  // THE WORD IS BACK. It shipped icon-only below sm for one release and was
-  // rejected: "for the premium rides, it's gone now… it's just a diamond. I need
-  // the actual premium letters to show up." The text now renders from 360px up —
-  // every phone in real use — and the ~40px it needed was paid for by tightening
-  // three things rather than dropping a control: px-4 -> px-3 below sm, text-sm
-  // -> text-xs below sm, and the country switcher's chevron (see below).
-  assert.match(row, /✦<span className="hidden min-\[400px\]:inline"> Premium<\/span>/);
-  // Under 360px the glyph alone is all that fits beside five 44px targets; it
-  // must still BE a 44px target.
-  assert.match(row, /min-w-11/);
-  // A bare glyph needs a name of its own.
-  assert.match(row, /aria-label="Premium"/);
+  assert.match(premClass, /min-\[400px\]:inline-flex/);
+  assert.doesNotMatch(premClass, /text-gold/, "not gold: the header no longer sells Premium");
+  assert.match(row, />\s*Pricing\s*<\/PremiumNavLink>/);
 });
 
-test("Premium cannot wrap AND cannot shrink — two screenshots' worth of bugs", () => {
+test("Pricing (was Premium) cannot wrap AND cannot shrink — two screenshots' worth of bugs", () => {
   // Neither flag is cosmetic, and neither failure was visible to a measurement:
   //   • shrinkable + wrapping  → "✦" on one line and "Premium" on the next.
   //     scrollWidth === clientWidth when text WRAPS, so the overflow audit

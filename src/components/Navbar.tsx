@@ -109,43 +109,26 @@ export function Navbar() {
           >
             Database
           </Link>
-          {/* Premium, on phones, sitting next to Database (2026-09-10, owner
-              brief). The desktop "✦ Premium" link further down is gated xl:block,
-              so before this a phone visitor could only reach Premium through the
-              menu overlay — see CinematicNavMenu's spotlight banner, which
-              stays as the in-menu answer. Same lg:hidden band and same shape as
-              Database above so the two read as one pair, but gold and shimmering
-              because the brief is specifically that this one should stand out.
-              The shimmer lives on the inner span, NOT this link: .premium-shimmer
-              uses background-clip:text, which would clip the hover background to
-              the glyphs if both sat on the same element. */}
-          {/* `whitespace-nowrap` IS LOAD-BEARING, and the reason is worth keeping.
-              Once the watchlist got its own control, this row carried five
-              targets below lg and the shrinkable left cluster absorbed the extra
-              44px by WRAPPING this label — "✦" on one line, "Premium" on the
-              next, which looks like a broken header. No measurement caught it:
-              scrollWidth/clientWidth are equal when text wraps rather than
-              clips, so it took a screenshot. Nowrap forces the row to find the
-              space instead, which the icon-only band below does.
+          {/* PRICING, NOT A GOLD PREMIUM CTA (2026-09-28, owner: "Put the upgrade
+              prompt where people hit a limit … not in popups and headers").
+              This slot carried a gold, shimmering "✦ Premium" from the
+              2026-09-10 brief until then; it is now a plain link to /premium,
+              the same weight as Database beside it, so the plans stay one tap
+              away without the header selling them. The upgrade itself is
+              offered where a free account hits a limit (lib/free-limits.ts).
 
-              ICON-ONLY BELOW sm, full "✦ Premium" from sm up. At 375px the row's
-              budget is 343px and nowrap needed ~367; dropping to the bare gold
-              star saves ~40px and it fits with room. This is also the coherent
-              reading of the row — on a phone every other control here is already
-              an icon (market flag, account, watchlist, menu), so a lone label was
-              the odd one out. The glyph keeps the gold, the shimmer and an
-              accessible name, so the 2026-09-10 brief ("Premium should stand out
-              on phones") still holds; it is prominence by colour and motion
-              rather than by width. */}
+              From 400px only: "Pricing" is wider than the old bare "✦" glyph
+              the 360-399px band could fit beside Log in, Sign up and the
+              menu (tests/mobile-header-fit.test.ts), and below 400px the
+              menu's own Premium entry (nav-groups.ts) reaches the same page.
+              `whitespace-nowrap` + `shrink-0` stay load-bearing: a shrinkable
+              label here once wrapped onto two lines and once had the theme
+              toggle drawn through it. */}
           <PremiumNavLink
             surface="nav:navbar"
-            aria-label="Premium"
-            title="Premium"
-            className="hidden min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold text-gold hover:bg-ink-800 min-[360px]:inline-flex sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
+            className="hidden min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold text-slate-100 hover:bg-ink-800 hover:text-white min-[400px]:inline-flex sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
           >
-            <span className="premium-shimmer animate-premium-shimmer motion-reduce:animate-none">
-              ✦<span className="hidden min-[400px]:inline"> Premium</span>
-            </span>
+            Pricing
           </PremiumNavLink>
 
           {/* CARD SEARCH, BACK IN THE HEADER AND LEFT-ALIGNED (2026-09-21,
@@ -281,8 +264,10 @@ export function Navbar() {
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">
             Blog
           </Link>
-          <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5" surface="nav:navbar">
-            ✦ Premium
+          {/* Plain, like Sealed and Blog beside it (2026-09-28): the header
+              links to the plans, it does not pitch them. */}
+          <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5" surface="nav:navbar">
+            Pricing
           </PremiumNavLink>
 
           {/* Deck builder — the free "paste a list, price every card" tool. This

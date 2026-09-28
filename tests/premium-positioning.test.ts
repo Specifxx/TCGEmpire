@@ -43,9 +43,12 @@ const code = (p: string) =>
 const PITCH_SURFACES = [
   "src/app/premium/page.tsx",
   "src/components/PremiumDialog.tsx",
-  "src/components/PremiumSlideIn.tsx",
   "src/components/SignupPromoPopup.tsx",
-  "src/components/PremiumPitchPanel.tsx",
+  // The at-the-limit upgrade surfaces (2026-09-28), which replaced the
+  // signed-in PremiumSlideIn and its PremiumPitchPanel.
+  "src/components/FreeLimitPanel.tsx",
+  "src/lib/free-limits.ts",
+  "src/lib/basket-saving.ts",
   "src/components/PremiumCta.tsx",
   "src/components/PremiumPricingCards.tsx",
   "src/components/MoversToolsCta.tsx",
@@ -89,25 +92,16 @@ test("no Premium pitch surface sells an advantage over other buyers", () => {
   }
 });
 
-test("the tagline is present on all four surfaces that carry the headline, and the panel matches it", () => {
+test("the tagline is present on both surfaces that carry the headline", () => {
   for (const file of [
     "src/app/premium/page.tsx",
     "src/components/PremiumDialog.tsx",
-    "src/components/PremiumSlideIn.tsx",
     // SignupPromoPopup is deliberately NOT here since 2026-09-16: it sells the
-    // free account and names no price, so it carries no Premium headline, no
-    // tagline and no lock-in copy to keep in sync. Premium lives on the three
-    // surfaces below plus PremiumSlideIn for signed-in visitors.
+    // free account and names no price. PremiumSlideIn and its graphic
+    // PremiumPitchPanel carried it until both were removed on 2026-09-28.
   ]) {
     assert.match(code(file), /Never overpay for a Riftbound card/, `${file} must carry the tagline`);
   }
-  // The graphic panel splits the same line across three rows, so it can't match
-  // the sentence — check its parts and its eyebrow instead.
-  const panel = code("src/components/PremiumPitchPanel.tsx");
-  assert.match(panel, /Never/);
-  assert.match(panel, />Overpay</);
-  assert.match(panel, /for a Riftbound card/);
-  assert.match(panel, /Spend less on every order\./, "the eyebrow must lead on the saving too");
 });
 
 test("the site states who it is for, and the editorial policy backs it", () => {
@@ -135,7 +129,7 @@ test("the honest tools keep their disclaimers — the reframe must not have quie
   }
   // And the two Premium surfaces that name a prediction tool must not promise a
   // price outcome from it.
-  for (const file of ["src/app/premium/page.tsx", "src/components/PremiumSlideIn.tsx"]) {
+  for (const file of ["src/app/premium/page.tsx"]) {
     assert.ok(
       !/will (go up|rise|increase)/i.test(code(file)),
       `${file} must not promise that a price will move`,

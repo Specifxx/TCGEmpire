@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { PremiumNavLink } from "./PremiumNavLink";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { usePathname } from "next/navigation";
@@ -12,7 +11,6 @@ import { searchNav } from "./nav-search";
 import { cardHref } from "@/lib/card-url";
 import { BrandLogo } from "./BrandLogo";
 import { NavIcon } from "./NavIcon";
-import { useMe } from "@/lib/use-me";
 import { useScrollLock, useModalFlag, useEscapeLayer } from "./ui/Dialog";
 
 // How many database matches the overlay shows before deferring to /browse.
@@ -76,7 +74,6 @@ function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: stri
 // single accent (brand green). Fully prefers-reduced-motion safe.
 export function CinematicNavMenu() {
   const { open, setOpen } = useMegaMenu();
-  const { premium, premiumCheckout, trialEligible, trialDays } = useMe();
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -413,54 +410,10 @@ export function CinematicNavMenu() {
               </div>
             </div>
 
-            {/* Premium spotlight — reported directly: "the way to see Premium [on
-                phone] is clicking the three bars and finding the premium
-                feature which is way too hidden." Premium was already IN this
-                menu (the ⭐ tile in Popular below, popular:true in
-                nav-groups.ts) but as one of nine equal tiles in a grid you
-                have to scan, not the first thing seen. This is the fix: the
-                very first thing rendered below the filter box, spotlighted
-                and gold like every other Premium surface (PremiumButton,
-                UserMenu's "✦ Get Premium", PremiumSlideIn) instead of sharing
-                the Popular grid's neutral brand-green treatment.
-
-                Signed-out visitors see it too, deliberately — this is a menu
-                the visitor chose to open, not an unsolicited auto-popup like
-                SignupPromoPopup (which pitches Premium too as of 2026-09-04,
-                but on its own separate frequency cap — see that component).
-                The ⭐ Premium tile below was already visible to signed-out
-                visitors in this exact overlay; this only makes that existing,
-                already-public entry more prominent, matching how the header's
-                own PremiumButton and /premium itself are public to every
-                visitor regardless of auth state.
-
-                Only shown in the default (unfiltered) view — once someone is
-                actively searching they are in "I know what I want" mode and a
-                promo banner is noise. Hidden for anyone already Premium
-                (isPremium() covers admins too, via useMe()) and while
-                checkout itself isn't configured. */}
-            {!filtering && !premium && premiumCheckout ? (
-              <PremiumNavLink
-                surface="nav:explore"
-                onClick={close}
-                className="mt-7 flex w-full items-center justify-between gap-3 rounded-lg border border-gold/40 bg-gold/10 p-4 text-left transition-colors hover:border-gold/60 hover:bg-gold/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
-              >
-                <span className="min-w-0">
-                  <span className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-gold">
-                    ✦ Premium
-                  </span>
-                  {/* Wraps rather than truncates (2026-09-23): beside the
-                      shrink-0 CTA a 390px phone left ~185px for a ~230px line,
-                      so the pitch read "Unlock the pro tools, g…". */}
-                  <span className="mt-0.5 block text-sm font-semibold text-white">
-                    {trialEligible ? "Try Premium free" : "Go ad-free and see every deal"}
-                  </span>
-                </span>
-                <span className="shrink-0 text-sm font-bold text-gold">
-                  {trialEligible && trialDays > 0 ? `${trialDays}-day trial →` : "See plans →"}
-                </span>
-              </PremiumNavLink>
-            ) : null}
+            {/* The gold Premium spotlight that sat here (2026-09-10 → 09-28) is
+                gone: the owner moved every upgrade prompt to where a free
+                account hits a limit, "not in popups and headers". /premium
+                stays in this menu as the Premium entry of NAV_GROUPS. */}
 
             {/* Every category, always — no curated "Popular" subset and no
                 "Show all features" gate in front of it any more (2026-09-16).

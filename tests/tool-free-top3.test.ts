@@ -165,7 +165,7 @@ test("nothing still describes the old access for these two tools", () => {
     assert.ok(!STALE.test(body), `${section} still describes old access`);
     assert.match(body, /free account sees the top three/i, `${section} names the free top three`);
   }
-  for (const f of ["src/components/PremiumSlideIn.tsx", "src/app/tools/page.tsx", DEAL_FINDER, RISING]) {
+  for (const f of ["src/app/tools/page.tsx", DEAL_FINDER, RISING]) {
     assert.ok(!STALE.test(code(f)), `${f} still describes old access in user-visible text`);
   }
 });

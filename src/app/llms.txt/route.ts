@@ -1,5 +1,6 @@
 import { NAV_GROUPS } from "@/components/nav-groups";
 import { SITE_URL, tierMonthlyAmount } from "@/lib/site";
+import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // llms.txt — the AI-agent site map (spec: llmstxt.org). A curated, markdown index
 // of the site's most useful pages so LLMs/agents can navigate without parsing HTML.
@@ -26,15 +27,15 @@ const DESC: Record<string, string> = {
   "/learn": "Learn Riftbound: an interactive new-player guide with real cards.",
   "/guides": "Buying guides and strategy articles for Riftbound.",
   "/blog": "News, metagame snapshots and buying guides for Riftbound.",
-  "/portfolio": "Track a collection's value over time.",
-  "/premium": `Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, target-price alerts, and the full Deal Finder and Rising Cards lists. Premium (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus Best Basket's store-by-store plan, Buy this list for a deck, watchlist or binder, and the full Demand Finder (most searched and most viewed cards).`,
+  "/portfolio": `Track a collection's value over time: up to ${FREE_PORTFOLIO_LIMIT} cards with a free account, unlimited with Plus or Premium.`,
+  "/premium": `Price comparison is free for everyone, with no limit. A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} in its portfolio; cards already tracked past a limit are kept. Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, an unlimited watchlist and portfolio, target-price alerts, and the full Deal Finder and Rising Cards lists. Premium (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus Best Basket's store-by-store plan, Buy this list for a deck, watchlist or binder, and the full Demand Finder (most searched and most viewed cards).`,
   "/sets": "Every Riftbound set with its full card list and live prices.",
   "/champions": "Browse Riftbound cards by League of Legends champion.",
   "/cards": "Card facets — browse by type, rarity and printing (Signature, Overnumbered, Alternate Art, Promo).",
   "/domains": "The Riftbound domains (Fury, Calm, Mind, Body, Chaos, Order, Colorless) and their cards.",
   "/keywords": "Riftbound keywords and game actions, defined, with every card that uses them.",
   "/singles": "Riftbound singles — the cheapest live price for individual cards.",
-  "/alerts": "Watchlists and price alerts — be told when a Riftbound card hits your price.",
+  "/alerts": `Watchlists and price alerts — be told when a Riftbound card hits a new low (up to ${FREE_WATCHLIST_LIMIT} cards free; unlimited, and at your own price, with Plus).`,
   "/tools": "Every RiftCompare tool and calculator in one place.",
 };
 

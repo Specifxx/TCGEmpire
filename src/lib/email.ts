@@ -12,6 +12,7 @@ import {
 } from "./site";
 import { premiumStartHref } from "./premium-start";
 import { PLUS_TARGET_ALERT_LIMIT } from "./alert-limits";
+import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "./free-limits";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
 import { issueNoun } from "./price-report";
@@ -1231,15 +1232,16 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
     <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       Hi ${name}, your free account is ready. Three things it does that a visitor can't:
     </td></tr>
-    ${step(1, "Watch a card", `Press <em>Watch price</em> on any card and we'll email you when its price drops. ${link("/browse", "Find a card&nbsp;→")}`)}
+    ${step(1, "Watch a card", `Press <em>Watch price</em> on any card and we'll email you when its price drops — up to ${FREE_WATCHLIST_LIMIT} cards on a free account. ${link("/browse", "Find a card&nbsp;→")}`)}
     ${step(2, "See today's top 3 deals", `Your account shows the three biggest deals in Deal Finder and the three top-ranked Rising Cards, updated daily. ${link("/tools/deal-finder", "Deal&nbsp;Finder&nbsp;→")} · ${link("/tools/rising", "Rising&nbsp;Cards&nbsp;→")}`)}
-    ${step(3, "Track your collection", `Add the cards you own and see what they're worth today. ${link("/portfolio", "Your&nbsp;portfolio&nbsp;→")}`)}
+    ${step(3, "Track your collection", `Add up to ${FREE_PORTFOLIO_LIMIT} cards you own and see what they're worth today. ${link("/portfolio", "Your&nbsp;portfolio&nbsp;→")}`)}
     <tr><td style="padding:14px 32px 22px">
       <div style="border:1px solid #6b5a1f;border-radius:12px;padding:14px 16px;background:#1a1810">
         <div style="font-size:13px;line-height:1.55;color:#d8cfa8">
           <strong style="color:#f3c969">Want every deal, not just the top three?</strong> Plus and Premium both come with:
           <ul style="margin:6px 0;padding-left:18px">
             <li>No ads on any page</li>
+            <li>No limit on your watchlist or portfolio</li>
             <li>Every deal: the full Deal Finder and Rising Cards lists</li>
             <li>An email naming the store when a card you watch hits your target price</li>
           </ul>

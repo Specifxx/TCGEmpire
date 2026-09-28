@@ -4,11 +4,10 @@ import { getCachedTopDeals } from "@/lib/top-deals";
 
 export const dynamic = "force-dynamic";
 
-// Live value-proof numbers for the Premium upsell surfaces (the slide-in's
-// "Deal Finder is showing N deals worth $X right now" line, the /premium proof
-// strip) — a small public JSON endpoint rather than a server component so the
-// CLIENT slide-in can fetch it lazily, only once it's actually about to show
-// (never on mount — see PremiumSlideIn.tsx). Backed entirely by the SAME 1h
+// Live value-proof numbers for /premium's proof strip (PremiumProofLine; the
+// signed-in slide-in that also read it was removed on 2026-09-28) — a small
+// public JSON endpoint rather than a server component so a CLIENT component
+// can fetch it lazily. Backed entirely by the SAME 1h
 // unstable_cache the homepage already reads (getCachedTopDeals), so this adds
 // no per-request DB work beyond what the homepage already pays for.
 //

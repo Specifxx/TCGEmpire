@@ -36,8 +36,8 @@ export function useScrollLock(active: boolean) {
 let modalFlagCount = 0;
 /**
  * Sets `document.body.dataset.rcDialog = "1"` while ANY Dialog-based overlay
- * is mounted — the signal the three corner nudges (PremiumSlideIn,
- * SignupPromoPopup, AnnualSwitchNudge) check before showing themselves, so a
+ * is mounted — the signal the corner nudges (SignupPromoPopup,
+ * AnnualSwitchNudge; PremiumSlideIn until 2026-09-28) check before showing themselves, so a
  * nudge never pops up over an open dialog.
  */
 export function useModalFlag(active: boolean) {

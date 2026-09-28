@@ -470,7 +470,7 @@ html {
      longer carries is --bottombar-h (gone — nothing reserves that space any
      more) or --chrome-lift (gone with the bar whose position it corrected). */
   /* The shared corner for every bottom-left nudge (SignupPromoPopup,
-     PremiumSlideIn, AnnualSwitchNudge). It clears the phone tab bar's space
+     AnnualSwitchNudge; PremiumSlideIn until 2026-09-28). It clears the phone tab bar's space
      below lg and, since 2026-09-21, clears the DESKTOP RAIL from lg up:
      those cards are `left-4`, which from 1024px put them on top of the
      sidebar ("for any sliders (sign up and premium), it should be shifted to
@@ -639,46 +639,11 @@ body {
    cta-shine' src` found only this file) — dead weight carried forward from
    earlier flat-terminal-look passes, not live decoration. */
 
-/* Gold sheen for the ONE element that is meant to stand out: the phone header's
-   "✦ Premium" link (Navbar.tsx). Pair with `animate-premium-shimmer
-   motion-reduce:animate-none` — the keyframes live in tailwind.config.ts and
-   this supplies the gradient they slide.
-   .
-   YES, THIS REVERSES A PRIOR DECISION, NARROWLY AND ON PURPOSE. `.brand-shimmer`
-   and `.cta-shine` above are tombstones: a headline shimmer and a CTA shine sweep
-   were both stripped out for the flat terminal look. This is not those coming
-   back site-wide — it is one nav link, on phones only, because Premium was
-   otherwise reachable there only through the hamburger. Explicit owner brief,
-   2026-09-10: "you want the premium button to stand out... it's like gold, and it
-   shimmers", alongside an equally explicit "don't make the whole website shine".
-   Keep it to this one element.
-   .
-   The @supports guard matters: without background-clip:text the gold would fall
-   back to a transparent fill, i.e. invisible text. The bare colour below is the
-   fallback, and the gradient only applies where the clip is actually supported. */
-.premium-shimmer { color: #caa85a; }
-@supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  .premium-shimmer {
-    background-image: linear-gradient(100deg, #caa85a 0%, #caa85a 40%, #f6e7bd 50%, #caa85a 60%, #caa85a 100%);
-    background-size: 220% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-}
-
-/* Light theme: the palette darkens gold for TEXT (--c-gold 122 95 20, 5.58:1 on
-   the light header), and the sheen has to follow it. The literal #caa85a and
-   #f6e7bd above measure 2.09:1 and 1.13:1 on the light header, so the label
-   vanished each time the highlight passed. It is still gold, still shimmering
-   and still one element (DECISIONS.md REVERSAL #1 stands). #7a5f14 is the light
-   --c-gold, and the #a07c1c highlight stays at 3.59:1 for the moment it passes. */
-:root[data-theme="light"] .premium-shimmer { color: rgb(var(--c-gold)); }
-@supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  :root[data-theme="light"] .premium-shimmer {
-    background-image: linear-gradient(100deg, #7a5f14 0%, #7a5f14 40%, #a07c1c 50%, #7a5f14 60%, #7a5f14 100%);
-  }
-}
+/* REMOVED 2026-09-28: .premium-shimmer, the gold sheen on the phone header's
+   "✦ Premium" link (2026-09-10 brief). The header now carries a plain
+   "Pricing" link — upgrade prompts moved to where a free account hits a limit
+   (DECISIONS.md, "Free limits: charge for what people use every week"). Its
+   keyframes went from tailwind.config.ts with it. */
 
 /* Reveal-on-scroll. Classes are toggled by the <Reveal> client component via
    IntersectionObserver (works in every browser). The hidden state lives only on

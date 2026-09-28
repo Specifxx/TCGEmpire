@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMe } from "@/lib/use-me";
 import { useWatchlist } from "@/lib/use-watchlist";
+import type { FreeLimitBody } from "@/lib/free-limits";
 import { useCountry } from "./CountryProvider";
+import { FreeLimitPopover } from "./FreeLimitPanel";
 
 // "Watch this card's price" — and, now, "stop watching it".
 //
@@ -33,6 +35,10 @@ export function PriceWatchButton({
   const { watched, watch, unwatch } = useWatchlist();
   const { country } = useCountry();
   const [busy, setBusy] = useState(false);
+  // The free watchlist limit, when this tap hit it (lib/free-limits.ts): the
+  // upgrade panel opens beside THIS heart — the only place it ever appears.
+  const [limit, setLimit] = useState<FreeLimitBody | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   const watching = !!watched?.has(cardId);
 
@@ -52,7 +58,7 @@ export function PriceWatchButton({
     setBusy(true);
     try {
       if (watching) await unwatch(cardId);
-      else await watch(cardId, country);
+      else await watch(cardId, country, { onLimit: setLimit });
     } finally {
       setBusy(false);
     }
@@ -85,7 +91,9 @@ export function PriceWatchButton({
   if (variant === "full" || variant === "responsive") {
     const responsive = variant === "responsive";
     return (
+      <>
       <button
+        ref={btnRef}
         onClick={click}
         disabled={busy}
         aria-pressed={watching}
@@ -115,11 +123,15 @@ export function PriceWatchButton({
             state. */}
         <span className={responsive ? "hidden sm:inline" : undefined}>{watching ? "Watching" : "Watch price"}</span>
       </button>
+      {limit && <FreeLimitPopover anchor={btnRef.current} kind="watchlist" count={limit.count} onClose={() => setLimit(null)} />}
+      </>
     );
   }
 
   return (
+    <>
     <button
+      ref={btnRef}
       onClick={click}
       disabled={busy}
       aria-pressed={watching}
@@ -133,5 +145,7 @@ export function PriceWatchButton({
     >
       {bell}
     </button>
+    {limit && <FreeLimitPopover anchor={btnRef.current} kind="watchlist" count={limit.count} onClose={() => setLimit(null)} />}
+    </>
   );
 }

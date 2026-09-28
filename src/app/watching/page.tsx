@@ -9,6 +9,7 @@ import { getPremiumNudge, nudgeCopy as watchedNudgeCopy } from "@/lib/premium-nu
 import { isPremium, premiumCheckoutEnabled, premiumTierOf } from "@/lib/premium";
 import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
 import { getCountry } from "@/lib/get-country";
+import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // getCurrentUser() reads cookies(), so this route can never be cached. Declared
 // explicitly rather than left to inference — a stray session read is what once
@@ -100,7 +101,12 @@ export default async function WatchingPage() {
             </>
           )}{" "}
           Every alert email has one-tap links to stop watching a card or snooze it for 30 days, and you can pause all alert
-          emails without losing this list. Tap the heart on any card to stop watching it.
+          emails without losing this list. Tap the heart on any card to stop watching it.{" "}
+          {!member && (
+            <>
+              A free account watches up to {FREE_WATCHLIST_LIMIT} cards; if you already watch more, you keep them all.
+            </>
+          )}
         </p>
       </div>
 

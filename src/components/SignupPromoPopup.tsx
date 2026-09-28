@@ -32,14 +32,15 @@ import { ENGAGED_MS, LANDING_ENGAGED_MS, isExternalReferrer, isLandingPage, sign
 // them Premium existed. Reversed now, for a reason the reversal states plainly:
 // asking a stranger to buy — before they have an account, a watchlist, or any
 // reason to come back — puts the paid ask in front of the audience least ready
-// for it. Signed-out visitors get the free account; Premium waits for
-// PremiumSlideIn, which only fires once someone is signed in and has browsed a
-// little. The two audiences stay mutually exclusive, exactly as before.
+// for it. Signed-out visitors get the free account. Premium waits until a free
+// account hits one of its limits (lib/free-limits.ts, 2026-09-28 — the
+// signed-in PremiumSlideIn was removed then), and this popup matters more for
+// it: the free account is where those limits start.
 //
 // What that means concretely, and what the tests below pin:
 //   • The pitch is FreeAccountCompare (no account vs free account, four rows),
-//     not PremiumPitchPanel (free vs Premium). PremiumPitchPanel is untouched
-//     and still PremiumSlideIn's.
+//     not a free-vs-Premium panel (PremiumPitchPanel went with the slide-in
+//     on 2026-09-28).
 //   • No trial framing, no price, no price-increase banner, no gold. Nothing
 //     on this card mentions money, because nothing on it asks for any.
 //   • The CTA returns the visitor TO THE PAGE THEY WERE ON, not to /premium.
@@ -462,11 +463,10 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         </button>
 
         {/* THE PITCH: no account vs free account, four rows. Brand-green, not
-            gold — gold is this site's Premium colour everywhere (PremiumButton,
-            PremiumSlideIn, the nav spotlight), and wearing it on a card that
-            sells nothing would promise a paid tier this card deliberately never
-            mentions. PremiumPitchPanel (free vs Premium) is untouched and
-            remains PremiumSlideIn's, for signed-in visitors. */}
+            gold — gold is this site's Premium colour (PremiumButton, the
+            at-the-limit upgrade panels), and wearing it on a card that sells
+            nothing would promise a paid tier this card deliberately never
+            mentions. */}
         <div className="px-4 pb-1 pt-4">
           <p className="pr-10 text-sm font-extrabold leading-snug text-white">Create a free account</p>
           <p className="mt-0.5 text-[11px] leading-snug text-slate-400">

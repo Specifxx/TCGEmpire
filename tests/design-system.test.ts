@@ -150,7 +150,8 @@ test("layout.tsx mounts NextTopLoader, not between Navbar and SideNav", () => {
 
 test("use-watchlist.ts is optimistic: publish() before the fetch, with a rollback on failure", () => {
   const src = readCode("src/lib/use-watchlist.ts");
-  const watchFn = /async watch\(cardId, market\) \{[\s\S]*?\n\s*\},/.exec(src)?.[0] ?? "";
+  // `opts` (2026-09-28) carries onLimit, the free-watchlist-limit callback.
+  const watchFn = /async watch\(cardId, market, opts\) \{[\s\S]*?\n\s*\},/.exec(src)?.[0] ?? "";
   const unwatchFn = /async unwatch\(cardId\) \{[\s\S]*?\n\s*\},/.exec(src)?.[0] ?? "";
   for (const [name, fn] of [["watch", watchFn], ["unwatch", unwatchFn]] as const) {
     assert.ok(fn, `expected to find ${name}()`);
@@ -446,10 +447,11 @@ test("the watchlist is its own header control, opening a drawer and carrying the
   assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="hidden sm:inline-flex" \/>/);
 });
 
-test("every fixed bottom-corner surface (the three nudges, the feedback FAB, ui/Toast) clears the banner via .above-bottombar", () => {
+test("every fixed bottom-corner surface (the two nudges, the feedback FAB, ui/Toast) clears the banner via .above-bottombar", () => {
+  // PremiumSlideIn was the third nudge until 2026-09-28 (removed: upgrade
+  // prompts live where a free account hits a limit, lib/free-limits.ts).
   for (const rel of [
     "src/components/SignupPromoPopup.tsx",
-    "src/components/PremiumSlideIn.tsx",
     "src/components/AnnualSwitchNudge.tsx",
     "src/components/FeedbackWidget.tsx",
     "src/components/ui/Toast.tsx",

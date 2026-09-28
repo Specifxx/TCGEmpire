@@ -401,13 +401,16 @@ export function SideNav() {
           members got an empty 21px strip at the rail's foot. */}
       {!premium && (
         <div className="shrink-0 border-t border-ink-800 px-3 py-2.5">
+          {/* Plain since 2026-09-28 (was a gold, bordered "Get Premium"): the
+              rail links to the plans; the upgrade is offered where a free
+              account hits a limit (lib/free-limits.ts). */}
           <PremiumNavLink
             href="/premium"
             surface="nav:sidebar"
-            className="flex w-full items-center gap-2.5 rounded-lg border border-gold/40 px-2.5 py-2 text-sm font-bold text-gold transition-colors hover:bg-gold/10 [@media(pointer:coarse)]:py-3.5"
+            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-ink-800 hover:text-white [@media(pointer:coarse)]:py-3.5"
           >
             <NavIcon name="trophy" className="h-[18px] w-[18px] shrink-0" />
-            <span className="truncate">Get Premium</span>
+            <span className="truncate">Pricing</span>
           </PremiumNavLink>
         </div>
       )}

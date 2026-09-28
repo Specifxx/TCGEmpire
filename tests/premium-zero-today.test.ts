@@ -71,14 +71,6 @@ test("PremiumCta's signed-out state sells the trial when one is available, hones
   assert.match(signedOutBlock, /card is required/i, "the trial CTA must disclose that a card is required to actually start it");
 });
 
-test("PremiumSlideIn's price now precedes its CTA button, not the other way around", () => {
-  const src = read("src/components/PremiumSlideIn.tsx");
-  const priceAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
-  const ctaAt = src.indexOf("onClick={accept}");
-  assert.ok(priceAt >= 0 && ctaAt >= 0, "expected both the price block and the accept button");
-  assert.ok(priceAt < ctaAt, "the price block must render above the CTA row, not below it as a footnote");
-});
-
 test("PremiumButton is trial-aware but still opens the shared dialog", () => {
   const src = read("src/components/PremiumButton.tsx");
   assert.match(src, /premiumZeroToday\(\)/, "expected a trial-eligible label using the shared $0-today helper");
@@ -87,7 +79,6 @@ test("PremiumButton is trial-aware but still opens the shared dialog", () => {
 
 test("the Premium funnel events carry PREMIUM_COPY_VERSION so before/after can be split in GA4", () => {
   for (const file of [
-    "src/components/PremiumSlideIn.tsx",
     "src/components/SignupPromoPopup.tsx",
     "src/components/PremiumCta.tsx",
     "src/components/PremiumDialog.tsx",
@@ -108,7 +99,7 @@ test("none of the touched surfaces grew fake scarcity or a countdown while promo
     "src/components/PremiumDialog.tsx",
     "src/app/premium/page.tsx",
     "src/components/PremiumCta.tsx",
-    "src/components/PremiumSlideIn.tsx",
+    "src/components/FreeLimitPanel.tsx",
   ]) {
     const src = read(file);
     assert.ok(!/only \d+ (left|spots|seats)/i.test(src), `${file}: no fake scarcity`);

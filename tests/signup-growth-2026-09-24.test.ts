@@ -41,7 +41,7 @@ test("the card page's primary CTA: one-click OAuth that creates the account and 
   assert.match(c, /Get a price-drop alert/);
   assert.match(c, /localStorage\.setItem\(PENDING_WATCH_KEY, JSON\.stringify\(\{ cardId, market: country \}\)\)/, "stashed before the redirect");
   assert.match(c, /\/api\/auth\/oauth\/\$\{provider\}\?next=\$\{encodeURIComponent\(cardPath\)\}/, "returns to the card");
-  assert.match(c, /await watch\(cardId, country\)/, "signed in: one click");
+  assert.match(c, /await watch\(cardId, country, \{ onLimit: setLimit \}\)/, "signed in: one click (the free-limit panel shows on onLimit)");
   assert.match(c, /price-alert-open/, "email-only stays as the secondary");
   // SignupWelcome completes the stashed watch on return, for new and existing accounts alike.
   assert.match(read("src/components/SignupWelcome.tsx"), /localStorage\.getItem\(PENDING_WATCH_KEY\)/);

@@ -33,6 +33,8 @@ import { Spinner } from "./ui/Skeleton";
 import { pushRecentCard } from "@/lib/recently-viewed";
 import { cardImageSrc } from "@/lib/card-image-url";
 import { PriceDropAlertCta } from "./PriceDropAlertCta";
+import { FreeLimitPanel } from "./FreeLimitPanel";
+import { FREE_LIMIT_STATUS, parseFreeLimit, type FreeLimitBody } from "@/lib/free-limits";
 
 interface RetailerPrice {
   id: string;
@@ -146,6 +148,8 @@ function QuickViewModal({
   const [history, setHistory] = useState<PricePoint[] | null>(null);
   const [coll, setColl] = useState<"idle" | "saving" | "added" | "full" | "signin" | "error">("idle");
   const [collFoil, setCollFoil] = useState(false);
+  // The free portfolio limit, when "Add to collection" hit it (lib/free-limits.ts).
+  const [collLimit, setCollLimit] = useState<FreeLimitBody | null>(null);
   // Which eBay tab the visitor has picked, null until they pick one. Controlled
   // for the same reason EbayCardPanelLive is — see that file's header: `graded`
   // arrives from a fetch, so the uncontrolled default would already have seeded
@@ -166,6 +170,16 @@ function QuickViewModal({
         body: JSON.stringify({ cardId: card.id, isFoil: collFoil }),
       });
       if (res.status === 401) return setColl("signin");
+      // A new card on a free account at its portfolio limit: nothing was
+      // added, and the upgrade panel shows under this button.
+      if (res.status === FREE_LIMIT_STATUS) {
+        const limit = parseFreeLimit(await res.json().catch(() => null));
+        if (limit) {
+          trackEvent("free_limit_hit", { kind: "portfolio", card_id: card.id });
+          setCollLimit(limit);
+          return setColl("idle");
+        }
+      }
       // Already at the per-row cap: nothing was added, so don't say it was.
       if (res.status === 409 && (await res.json().catch(() => null))?.full) return setColl("full");
       if (!res.ok) return setColl("error");
@@ -496,6 +510,9 @@ function QuickViewModal({
                 </>
               )}
             </div>
+            {collLimit && (
+              <FreeLimitPanel kind="portfolio" count={collLimit.count} onClose={() => setCollLimit(null)} className="mt-2" />
+            )}
 
             <div className="mt-4">
               <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>

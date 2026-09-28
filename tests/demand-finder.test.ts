@@ -114,7 +114,6 @@ test("every tier surface sells it as Premium", () => {
     "src/app/premium/page.tsx",
     "src/lib/sitemap-sections.ts",
     "src/app/llms.txt/route.ts",
-    "src/components/PremiumSlideIn.tsx",
     "src/components/PremiumPricingCards.tsx",
     "src/components/MostSearchedStrip.tsx",
   ]) {

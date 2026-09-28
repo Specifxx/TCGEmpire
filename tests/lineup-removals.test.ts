@@ -104,9 +104,7 @@ test("no nav entry, tier row or pitch chip names a retired tool", () => {
     assert.doesNotMatch(l.label, retiredNames, `nav label "${l.label}"`);
   }
   for (const r of TIER_COMPARISON) assert.doesNotMatch(r.feature, retiredNames, `tier row "${r.feature}"`);
-  const pitch = /const PITCH_TOOLS[^=]*=\s*\[([\s\S]*?)\n\];/.exec(read("src/components/PremiumSlideIn.tsx"))?.[1] ?? "";
-  assert.ok(pitch.length > 0, "fixture check: expected PITCH_TOOLS");
-  assert.doesNotMatch(pitch, retiredNames, "a pitch chip names a retired tool");
+  // The slide-in's PITCH_TOOLS chips went with the slide-in (2026-09-28).
   // "Daily Movers" was a mislabel: /movers compares weekly history points.
   assert.ok(NAV_GROUPS.flatMap((g) => g.links).some((l) => l.href === "/movers" && l.label === "Weekly Movers"));
 });
