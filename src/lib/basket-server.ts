@@ -17,6 +17,11 @@ import { pickPrice, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
 import type { BasketCard } from "./basket";
 import { meetsMinCondition, parseBasketPrefs, type BasketPrefs, type MinCondition } from "./basket-condition";
+import { isPreorderSetCode, setByCode } from "./constants";
+import { getSetChecklist } from "./set-checklist";
+import { ownedBySet } from "./set-owned";
+import type { ChecklistCard, OwnedMap, SetScope } from "./set-scope";
+import { planSetGap, preReleaseGapMessage, revealedWithoutListing, type SetGapOptions, type SetGapPlan } from "./set-gap";
 
 // The stores themselves — which serve this market, and what each charges to
 // post an order — are not a read: lib/shipping.ts basketStoresFor() builds
@@ -133,11 +138,13 @@ export async function loadOwnedQty(userId: string, cardIds: string[]): Promise<M
 
 // ── The binder, for replacement cost ─────────────────────────────────────────
 //
-// The binder has no notion of "missing" cards — a CollectionCard row is a card
-// you hold, and there is no want-list or set-completion target to diff against.
-// So "price my binder" honestly means replacement: what re-buying the cards you
-// hold would cost today, delivered — the same question the portfolio's
-// "Replacement cost, delivered" panel answers, from the same reader.
+// A CollectionCard row is a card you hold, and Best Basket's "binder" source
+// prices REPLACEMENT: what re-buying the cards you hold would cost today,
+// delivered — the same question the portfolio's "Replacement cost, delivered"
+// panel answers, from the same reader. It never asks what the binder LACKS:
+// that is the set checklist's question (lib/set-checklist.ts, 2026-09-29), which
+// Best Basket answers through the separate "set" source below (loadSetGapLines),
+// never through this one.
 
 // The optimiser is a local search over cards × stores, and the listing read
 // grows with the collection. A collection past this is priced on its dearest
@@ -215,4 +222,57 @@ export async function loadBinderHoldings(
   const ranked = [...merged.values()].sort((a, b) => b.valueCents - a.valueCents);
   const wanted = ranked.slice(0, MAX_HOLDINGS);
   return { wanted, skipped: ranked.length - wanted.length, empty: valid.length === 0 };
+}
+
+
+// ── A set's gap, for "Finish this set" ───────────────────────────────────────
+//
+// The cards a member is MISSING from one set, ranked and cut into a plan-sized
+// chunk (lib/set-gap.ts is the pure rule). Two reads, both inside the egress
+// rules: the set checklist's own cached catalogue, CALLED DIRECTLY (it caches
+// itself; never wrap it or call it from inside an unstable_cache, tests/
+// nested-cache.test.ts), and ONE user-scoped groupBy for what the account owns
+// of THIS set. Nothing here is cached: the answer is per member.
+//
+// Ownership comes from ownedBySet (the tracker's own reader: one groupBy, any
+// finish and condition, capped at 1,500 cards), not loadOwnedQty above. That one
+// reads at most 400 rows, sized for a 200-card list; a set holder can have three
+// rows a card across a 392-printing set, and a truncated read would call an
+// owned card missing and ask the member to buy it again. Using the tracker's
+// reader also makes "missing" here exactly what the checklist shows.
+//
+// The price used to RANK is the checklist's cheapest real-store listing (never
+// Card.lowestPriceCents*, which is stores + eBay). The plan itself is priced
+// afterwards by loadStoreListings, unchanged, for at most SET_GAP_CHUNK card ids.
+export interface SetGapDeps {
+  checklist: (setCode: string, country: Country) => Promise<ChecklistCard[]>;
+  owned: (userId: string, setCode: string) => Promise<OwnedMap>;
+}
+const setGapDeps: SetGapDeps = {
+  checklist: getSetChecklist,
+  owned: (userId, setCode) => ownedBySet(prisma, userId, setCode),
+};
+
+export type SetGapLoad =
+  | { ok: true; setName: string; plan: SetGapPlan }
+  | { ok: false; reason: "unknown-set" | "preorder"; message: string };
+
+export async function loadSetGapLines(
+  userId: string,
+  setCode: string,
+  scope: SetScope,
+  country: Country,
+  opts: Omit<SetGapOptions, "scope"> = {},
+  deps: SetGapDeps = setGapDeps
+): Promise<SetGapLoad> {
+  const set = setByCode(setCode);
+  if (!set) return { ok: false, reason: "unknown-set", message: "That set isn't one we track." };
+  const cards = await deps.checklist(set.code, country);
+  // A set that has not released has no total to finish: Radiance's is unsettled,
+  // so the answer is how many revealed cards have no listing yet, never a plan.
+  if (isPreorderSetCode(set.code)) {
+    return { ok: false, reason: "preorder", message: preReleaseGapMessage(set.name, revealedWithoutListing(cards)) };
+  }
+  const owned = await deps.owned(userId, set.code);
+  return { ok: true, setName: set.name, plan: planSetGap(set.code, cards, owned, { ...opts, scope }) };
 }

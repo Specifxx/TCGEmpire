@@ -53,8 +53,10 @@ test("the basket API tiers its answer server-side, not in the page", () => {
   assert.match(src, /if \(!user\) return NextResponse\.json\(/, "must still reject signed-out callers");
   assert.match(src, /const full = isPremium\(user, "premium"\)/);
   assert.match(src, /if \(!full\) \{\s*const preview = basketPreview\(optimizeBasket\(/, "non-Premium gets the preview aggregate only");
-  // The aggregate plus where delivery was priced to — never the plan.
-  assert.match(src, /res: NextResponse\.json\(\{ \.\.\.preview, shipping \}, /);
+  // The aggregate plus where delivery was priced to — never the plan. For a set
+  // (2026-09-29) it adds only setGapFields(false, …): counts, no store, line or link
+  // (tests/set-gap.test.ts pins its keys and that no store name can be in it).
+  assert.match(src, /res: NextResponse\.json\(\{ \.\.\.preview, shipping, \.\.\.\(setGap \? setGapFields\(false, setGap\) : \{\}\) \}, /);
 });
 
 test("Best Basket renders its heading and intro for everyone, above the sign-in split", () => {

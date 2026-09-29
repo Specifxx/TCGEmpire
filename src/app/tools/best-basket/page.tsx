@@ -12,7 +12,10 @@ import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { faqPage } from "@/lib/jsonld";
-import { BestBasket, type BasketSource } from "@/components/BestBasket";
+import { BestBasket, type BasketSetOption, type BasketSetStart, type BasketSource } from "@/components/BestBasket";
+import { RARITY_KEYS, SETS, isPreorderSetCode, setBySlug } from "@/lib/constants";
+import { parseScope } from "@/lib/set-scope";
+import { SET_GAP_CHUNK } from "@/lib/set-gap";
 import { loadBasketPrefs } from "@/lib/basket-server";
 import { initialMinCondition, storedMinCondition } from "@/lib/basket-condition";
 import { headers } from "next/headers";
@@ -29,7 +32,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Best Basket — Cheapest Way to Buy a Riftbound Deck | RiftCompare";
 const DESCRIPTION =
-  "Paste a Riftbound decklist, or send your watchlist or binder, and get the cheapest delivered way to buy it across stores — each store's measured postage included. Premium shows the store-by-store plan beside the best one-store and two-store orders, at the minimum condition you set.";
+  "Paste a Riftbound decklist, or send your watchlist or binder or the cards you're missing from a set, and get the cheapest delivered way to buy it across stores — each store's measured postage included. Premium shows the store-by-store plan beside the best one-store and two-store orders, at the minimum condition you set.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -63,6 +66,10 @@ const FAQS = [
     a: "Premium lets you set the lowest condition you'll accept: Near Mint only, Lightly Played or better, or anything. Best Basket, Buy this list and the deck price watch then only use listings at or above it, so the cheapest plan can't quietly include a heavily played copy. Each line still shows its condition. If nothing at that grade is in stock, the card is shown as not covered rather than filled with a played copy. Without Premium your total counts each store's cheapest copy in any condition and tells you how many played copies that includes. A new session starts on Lightly Played or better, and your last choice is remembered.",
   },
   {
+    q: "Can Best Basket plan the rest of a set?",
+    a: `Yes. Choose "Finish a set" (or press "Plan the purchase" on your set checklist), pick the set and whether to count the base set or every printing we track, and it prices the cards you are missing, one copy each, with everything you own left out. You can limit it to one rarity and leave out cards dearer than a price you set. Any signed-in account sees the total, postage and store count for its own list; Premium shows which store to buy each card from, at the minimum condition you set. One plan holds up to ${SET_GAP_CHUNK} cards: if you are missing more, it plans the ${SET_GAP_CHUNK} cheapest first, says how many more are not included, and offers the next ${SET_GAP_CHUNK}. Cards no tracked store has in stock are listed apart and are not in the total. It prices non-foil listings only, and a set that has not been released has nothing to plan yet.`,
+  },
+  {
     q: "Do I need Premium just to price a list, not buy it?",
     a: "No — the free deck and list pricer at /deck needs no account at all if you only want per-card prices. Premium is only needed for Best Basket's store-by-store plan.",
   },
@@ -84,6 +91,9 @@ interface Params {
   source?: string;
   skipOwned?: string;
   watch?: string;
+  set?: string;
+  scope?: string;
+  rarity?: string;
 }
 
 // This page's own URL with its entry parameters, for the sign-in round trip.
@@ -91,6 +101,12 @@ function selfHref(sp: Params): string {
   const q = new URLSearchParams();
   if (sp.list) q.set("list", sp.list);
   if (sp.source === "watchlist" || sp.source === "binder") q.set("source", sp.source);
+  if (sp.source === "set" && typeof sp.set === "string" && setBySlug(sp.set)) {
+    q.set("source", "set");
+    q.set("set", sp.set);
+    if (typeof sp.scope === "string") q.set("scope", sp.scope);
+    if (typeof sp.rarity === "string" && RARITY_KEYS.includes(sp.rarity)) q.set("rarity", sp.rarity);
+  }
   if (sp.skipOwned === "1") q.set("skipOwned", "1");
   const qs = q.toString();
   return qs ? `/tools/best-basket?${qs}` : "/tools/best-basket";
@@ -124,8 +140,26 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
   // so nobody else's row is read.
   const startFloor = watchRow ? storedMinCondition(watchRow.minCondition) : premium && user ? initialMinCondition(await loadBasketPrefs(user.id)) : initialMinCondition(null);
   const initialList = watchRow ? watchRow.listText : searchParams.list ? decodeList(searchParams.list) : undefined;
-  const initialSource: BasketSource =
-    !watchRow && (searchParams.source === "watchlist" || searchParams.source === "binder") ? searchParams.source : "deck";
+  // "Finish a set" (?source=set&set=<slug>&scope=&rarity=, from the set checklist's
+  // "Plan the purchase"): only a known, RELEASED set starts the source; anything
+  // else is the ordinary paste tab. Radiance is a disabled option until it is out.
+  const setOptions: BasketSetOption[] = SETS.map((x) => ({ code: x.code, slug: x.slug, name: x.name, released: !isPreorderSetCode(x.code) }));
+  const startSet = typeof searchParams.set === "string" ? setBySlug(searchParams.set) : undefined;
+  const initialSet: BasketSetStart | null =
+    !watchRow && searchParams.source === "set" && startSet && !isPreorderSetCode(startSet.code)
+      ? {
+          code: startSet.code,
+          scope: parseScope(searchParams.scope),
+          rarity: typeof searchParams.rarity === "string" && RARITY_KEYS.includes(searchParams.rarity) ? searchParams.rarity : null,
+        }
+      : null;
+  const initialSource: BasketSource = watchRow
+    ? "deck"
+    : initialSet
+      ? "set"
+      : searchParams.source === "watchlist" || searchParams.source === "binder"
+        ? searchParams.source
+        : "deck";
   const handedIn = initialSource !== "deck" || !!initialList?.trim();
   // Postage choices for the picker: this market's regions, whether any store
   // here prices by region at all, and when the rates were measured.
@@ -190,6 +224,8 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           initialList={initialList}
           initialSource={initialSource}
           initialSkipOwned={!watchRow && searchParams.skipOwned === "1"}
+          sets={setOptions}
+          initialSet={initialSet}
           initialMinCondition={startFloor}
           autoRun={premium && handedIn}
           market={country}

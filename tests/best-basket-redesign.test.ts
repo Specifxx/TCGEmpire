@@ -574,8 +574,9 @@ test("the basket route withholds the plan from non-Premium callers", () => {
   assert.ok(at > 0);
   const branch = code.slice(at, code.indexOf("const { plan, alternatives }", at));
   assert.match(branch, /const preview = basketPreview\(optimizeBasket\(basketCards, stores\), unmatched, region\)/);
-  // The aggregate, plus where delivery was priced to (no store in it).
-  assert.match(branch, /NextResponse\.json\(\{ \.\.\.preview, shipping \}, /);
+  // The aggregate, plus where delivery was priced to (no store in it) and, for a
+  // set, the tier-safe counts (setGapFields(false, …), 2026-09-29).
+  assert.match(branch, /NextResponse\.json\(\{ \.\.\.preview, shipping, \.\.\.\(setGap \? setGapFields\(false, setGap\) : \{\}\) \}, /);
   assert.doesNotMatch(branch, /plan|alternatives|fuzzy/, "the preview branch returns nothing but the aggregate");
   // The full plan's store links carry the page for the affiliate sub-id.
   assert.match(code, /planBasket\(basketCards, stores, \{ loc: "\/tools\/best-basket" \}\)/);
@@ -676,7 +677,7 @@ test("nothing in Best Basket is cached: every answer is per user", () => {
 test("skipOwned subtracts owned copies (and doesn't apply to the binder itself)", () => {
   // Behavioural: the parser takes no account, so what it returns is what ANY
   // signed-in caller may send — the tier only decides the answer.
-  assert.deepEqual(parseBasketRequest({ source: "watchlist", skipOwned: true }), { source: "watchlist", skipOwned: true, text: "", picked: [], minCondition: "any", saveMinCondition: false });
+  assert.deepEqual(parseBasketRequest({ source: "watchlist", skipOwned: true }), { source: "watchlist", skipOwned: true, text: "", picked: [], minCondition: "any", saveMinCondition: false, setCode: "", scope: "base", rarity: null, maxPriceCents: null, offset: 0 });
   assert.equal(parseBasketRequest({ source: "deck", skipOwned: true, text: "1 Jinx" }).skipOwned, true);
   assert.equal(parseBasketRequest({ source: "binder", skipOwned: true }).skipOwned, false, "the binder prices replacement; skip is ignored");
   assert.equal(parseBasketRequest({ source: "nonsense" }).source, "deck");
@@ -731,7 +732,7 @@ test("the UI: tracked store links, the free preview's own-numbers copy, and its 
   assert.match(ui, /Buying each card&apos;s cheapest copy is already the cheapest way for\s+this list\./);
   assert.match(ui, /<PremiumButton surface="limit:basket" \/>/);
   assert.match(ui, /Skip copies I already own/);
-  for (const t of ["Paste a list", "My watchlist", "My binder"]) assert.ok(ui.includes(t), `tab "${t}"`);
+  for (const t of ["Paste a list", "My watchlist", "My binder", "Finish a set"]) assert.ok(ui.includes(t), `tab "${t}"`);
   for (const t of ["Cheapest split", "Best single store", "Best two stores"]) assert.ok(ui.includes(t), `plan card "${t}"`);
   assert.match(ui, /l\.condition \?\? "Condition not stated"/, "condition on every line");
   // Changing an input clears the answer on screen…

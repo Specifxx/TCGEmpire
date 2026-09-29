@@ -223,6 +223,7 @@ const PREMIUM_FEATURES_ON_PLUS = [
   "Best Basket: the cheapest delivered order, beside the best one-store and two-store orders",
   "The store-by-store plan for your deck or watchlist, skipping what you own, at the minimum condition you set",
   "The store-by-store plan behind your binder's replacement cost",
+  "Finish this set: the store-by-store plan, postage included, for the cards a set is missing",
   "Demand Finder: the cards players search for and open most, over 7 or 30 days",
   "N-day free trial",
 ];
@@ -233,7 +234,7 @@ const PREMIUM_FEATURES_STANDALONE = [
   "Every card below TCGplayer market, and the full Rising Cards list",
   "Unlimited target-price alerts and sealed watches: back in stock, at RRP, or at your price",
   `Deck price watch: up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every update, emailed at your price`,
-  "Best Basket and Buy this list: your whole list, delivered for less, at the minimum condition you set",
+  "Best Basket, Buy this list and Finish this set: your whole list, delivered for less, at the minimum condition you set",
   "Demand Finder: the most searched and most viewed cards",
   "N-day free trial",
 ];

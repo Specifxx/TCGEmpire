@@ -42,6 +42,7 @@ import {
 } from "@/lib/site";
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_HARD_CAP, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+import { SET_GAP_CHUNK } from "@/lib/set-gap";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { faqPage, ldJson } from "@/lib/jsonld";
@@ -124,6 +125,14 @@ const FEATURES: { title: string; body: string; when: string; href: string | null
     tier: "premium",
   },
   {
+    title: "Finish this set: the store-by-store plan for what's missing",
+    body: `Press "Plan the purchase" on your set checklist, or choose "Finish a set" in Best Basket, and it prices the cards you're missing from that set (one copy each, everything you own left out) as one delivered order with each store's measured postage. Count the base set or every printing we track, limit it to a rarity, and leave out cards dearer than a price you set. A plan holds up to ${SET_GAP_CHUNK} cards: a bigger gap is planned ${SET_GAP_CHUNK} at a time, cheapest first, and it says how many more are not included. Cards no tracked store has in stock are listed apart. Non-foil listings. Every signed-in account sees its own total and saving; Premium shows which store to buy each card from, with the links.`,
+    when: "You're most of the way through a set and want the rest ordered without a dozen small postage bills.",
+    href: "/portfolio/sets",
+    cta: "Open the set checklist",
+    tier: "premium",
+  },
+  {
     title: "Minimum condition",
     body: "Set the lowest condition you'll accept: Near Mint only, Lightly Played or better, or anything. Best Basket's plan, Buy this list and the deck price watch then only use listings at or above it, so the cheapest plan can't quietly include a heavily played copy. Every line still shows its condition, a card with nothing at that grade in stock is shown as not covered rather than filled with a played copy, and the deck watch email uses the same rule as the page. Without Premium, your own total counts each store's cheapest copy in any condition and tells you how many played copies that includes.",
     when: "You play your cards, or you're completing a collection, and want the cheapest copy in the condition you'll actually accept.",
@@ -154,7 +163,7 @@ const FEATURES: { title: string; body: string; when: string; href: string | null
 // really gets (TIER_COMPARISON's rows), so a rich result can't credit Plus
 // with Premium's list tools or leave its ad-free benefit out.
 const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio (so a whole set fits in the set tracker), target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP or at your price), and the full Deal Finder and Rising Cards lists.`;
-const PREMIUM_OFFER_DESCRIPTION = `Premium: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, Best Basket's store-by-store plan for the cheapest delivered order (at the minimum condition you set), Buy this list for a deck, watchlist or binder, and Demand Finder's most searched and most viewed cards.`;
+const PREMIUM_OFFER_DESCRIPTION = `Premium: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, Best Basket's store-by-store plan for the cheapest delivered order (at the minimum condition you set), Buy this list for a deck, watchlist or binder, the store-by-store plan for what a set is missing, and Demand Finder's most searched and most viewed cards.`;
 const PREMIUM_STANDALONE_DESCRIPTION =
   "No ads on any page, an unlimited watchlist and portfolio, target-price alerts, sealed watches, a deck price watch, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.";
 
@@ -225,6 +234,10 @@ const FAQ: { q: string; a: string }[] = [
   {
     q: "Is the cost to finish what I would actually pay?",
     a: "It's the cheapest in-stock store listing for each missing card in your country, before postage. Cards no tracked store has in stock are counted separately with no price, and cards only eBay lists are left out of the total. It's a way to see what's left, not a promise of one order: Best Basket picks stores and adds measured postage.",
+  },
+  {
+    q: "What does Finish this set do?",
+    a: `It turns what your set checklist says is missing into a delivered order. Best Basket prices one copy of each missing card, with the cards you own left out, from your country's stores with each store's measured postage; any signed-in account sees its own total, postage and store count, and Premium shows which store to buy each card from. A plan holds up to ${SET_GAP_CHUNK} cards: if more are missing it plans the ${SET_GAP_CHUNK} cheapest and says how many more are not included, with a step to the next ${SET_GAP_CHUNK}. Cards no tracked store has in stock are listed apart, and it uses non-foil listings only. A set that hasn't been released has nothing to order yet.`,
   },
   {
     q: "What does minimum condition do?",

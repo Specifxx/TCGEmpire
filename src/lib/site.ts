@@ -307,4 +307,7 @@ export function premiumLockInTail(): string {
 // condition (Premium) and the set tracker (free within the 50-card portfolio,
 // whole sets on Plus) on the table, the slide-in chips, /premium and the pricing
 // cards. Prices unchanged.
-export const PREMIUM_COPY_VERSION = "premium-2026-09-29b";
+// premium-2026-09-29c: Finish this set (Best Basket's set source and the set
+// checklist's "Plan the purchase") on the table, the slide-in chips, /premium and
+// the pricing cards. Prices unchanged.
+export const PREMIUM_COPY_VERSION = "premium-2026-09-29c";

@@ -25,6 +25,7 @@ import {
   type ShowFilter,
   type SortKey,
 } from "@/lib/set-scope";
+import { SET_GAP_CHUNK, revealedWithoutListing } from "@/lib/set-gap";
 import { OwnedTick, SetLimitPanel, useSetOwned } from "./SetOwned";
 import { SetMissingActions } from "./SetMissingActions";
 
@@ -122,6 +123,7 @@ export function SetTracker({
             <Row key={c.id} c={c} owned={owned} currency={currency} place={place} country={country} priced={false} />
           ))}
         </ul>
+        <PlanThePurchase setName={setName} setSlug={setSlug} disabledReason={preReleasePlanLine(setName, releasedLabel, revealedWithoutListing(cards))} />
         <Notes setSlug={setSlug} setName={setName} freeLimit={freeLimit} />
       </div>
     );
@@ -234,8 +236,70 @@ export function SetTracker({
           ))}
         </ul>
       )}
+      {show === "missing" && missingNow.length > 0 && (
+        <PlanThePurchase
+          setName={setName}
+          setSlug={setSlug}
+          scope={scope}
+          rarity={activeRarity}
+          count={missingNow.filter((c) => stockOf(c) === "store").length}
+        />
+      )}
       <Notes setSlug={setSlug} setName={setName} freeLimit={freeLimit} />
     </div>
+  );
+}
+
+// Radiance (and any set not out yet): the button is off, and says why with the
+// number of revealed cards that have no listing yet, never a total.
+function preReleasePlanLine(setName: string, releasedLabel: string | null, noListing: number): string {
+  return `You can plan the purchase once ${setName} is released${releasedLabel ? ` on ${releasedLabel}` : ""}. ${noListing} ${
+    noListing === 1 ? "revealed card has" : "revealed cards have"
+  } no store listing yet.`;
+}
+
+// "Plan the purchase" (2026-09-29, Finish this set): the bottom of the missing
+// list hands the set, the printings counted and the rarity on screen to Best
+// Basket's "Finish a set" source. It is a link, not a request: Best Basket's
+// own run (a free total, Premium's store-by-store plan) starts there.
+function PlanThePurchase({
+  setName,
+  setSlug,
+  scope,
+  rarity,
+  count,
+  disabledReason,
+}: {
+  setName: string;
+  setSlug: string;
+  scope?: SetScope;
+  rarity?: string;
+  count?: number;
+  disabledReason?: string;
+}) {
+  if (disabledReason) {
+    return (
+      <section className="card-surface p-4" data-plan-purchase="disabled">
+        <button type="button" disabled className="btn-primary cursor-not-allowed text-sm opacity-50">
+          Plan the purchase
+        </button>
+        <p className="mt-2 text-xs text-slate-400">{disabledReason}</p>
+      </section>
+    );
+  }
+  const q = new URLSearchParams({ source: "set", set: setSlug, scope: scope ?? "base" });
+  if (rarity) q.set("rarity", rarity);
+  return (
+    <section className="card-surface p-4" data-plan-purchase>
+      <Link href={`/tools/best-basket?${q}`} className="btn-primary inline-block text-sm">
+        Plan the purchase
+      </Link>
+      <p className="mt-2 text-xs text-slate-400">
+        Best Basket prices the {count} missing {setName} {count === 1 ? "card that has" : "cards that have"} a store listing, delivered, with each store&apos;s measured postage.
+        Any account sees its total; Premium shows which store to buy each card from.
+        {(count ?? 0) > SET_GAP_CHUNK ? ` A plan holds up to ${SET_GAP_CHUNK} cards, so it starts with the ${SET_GAP_CHUNK} cheapest and offers the next ${SET_GAP_CHUNK}.` : ""}
+      </p>
+    </section>
   );
 }
 
@@ -302,7 +366,7 @@ function Notes({ setSlug, setName, freeLimit }: { setSlug: string; setName: stri
       <p className="mt-1">
         Ticked a card by mistake? Change its quantity in <Link href="/portfolio#collection" className="text-brand-400 hover:underline">My binder</Link>.
         Bringing in a whole binder? Import a CSV with a set, collector number, finish and quantity from the same place: it keeps the
-        printing and tells you what it skipped. To price the delivered order for what&apos;s missing, paste the copied list into{" "}
+        printing and tells you what it skipped. To price the delivered order for what&apos;s missing, use &quot;Plan the purchase&quot; above, or paste the copied list into{" "}
         <Link href="/tools/best-basket" className="text-brand-400 hover:underline">Best Basket</Link>.
       </p>
       <p className="mt-1">

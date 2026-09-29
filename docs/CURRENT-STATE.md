@@ -113,7 +113,8 @@ longer lands on its entry.
   products (2026-09-29). Premium, $4.99/mo or $39.99/yr, adds unlimited
   targets and sealed watches, the deck price watch (up to `DECK_WATCH_LIMIT`,
   10, saved lists), Best Basket's store-by-store plan (for a pasted list,
-  deck, watchlist or binder, and behind the portfolio's replacement cost) and
+  deck, watchlist, binder or a set's missing cards, and behind the portfolio's
+  replacement cost) and
   **Demand Finder**
   (`/tools/demand`, `isPremium(user, "premium")`: top 25 most searched and
   most viewed, 7 or 30 days). Below Premium, Plus included, Demand Finder
@@ -248,6 +249,27 @@ longer lands on its entry.
   free. No P&L, "worth", prediction or urgency wording in the set view. Phase
   2, after Radiance: opt-in "looking for these" on `/c/[token]`.
   [2026-09-29](../DECISIONS.md#L15366)
+- **Finish this set (2026-09-29, Premium):** Best Basket's fourth source,
+  `source: "set"` ("Finish a set", and "Plan the purchase" under the missing
+  list on `/portfolio/sets/[set]`): the cards the account is MISSING from one
+  released set, one copy each, from `getSetChecklist` (called directly, never
+  wrapped) minus one user-scoped `ownedBySet` read (NOT `loadOwnedQty`, which
+  reads 400 rows and would call an owned card missing); pure rule in
+  `lib/set-gap.ts`. Skip-owned is locked on. **One plan is at most
+  `SET_GAP_CHUNK` (the 200-line cap) cards**, cheapest listing first with stable
+  ties; a bigger gap is a chunk with "Your 200 cheapest missing cards. N more not
+  included." and a "Plan the next 200" step (`offset`), never silently partial.
+  A card no real store has in stock is listed apart ("not stocked in {place}",
+  named for Premium, counted for everyone), never dropped; a card dearer than
+  the member's own ceiling is counted; non-foil listings; the minimum condition
+  applies (ranking is by the any-condition cheapest, the plan by the floor). The
+  tier is the existing gate: any account keeps `basketPreview` and Best
+  Basket's own saving on its own list plus `setGap` COUNTS (no store, line, link
+  or card name; `setGapFields`), store names, lines and URLs are Premium's, no
+  other saving figure anywhere. Radiance answers 400 "N revealed cards have no
+  store listing yet" until it releases (no denominator). Table cell "Total and
+  saving preview" / "Store-by-store plan, up to 200 cards".
+  [2026-09-29](../DECISIONS.md#L15397)
 - **Every paid feature is discoverable where it lives, inline, never a
   popup:** `DiscoveryTip` (`tip:*` surfaces) is one dismissable sentence for
   signed-in non-members only, on /sealed, a non-Premium Best Basket result and

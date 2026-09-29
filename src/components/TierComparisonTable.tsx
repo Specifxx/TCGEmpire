@@ -45,6 +45,11 @@
 //                        portfolio's FREE_PORTFOLIO_LIMIT cards (the tick is
 //                        POST /api/collection, so the 402 is the route's);
 //                        any paid tier has no limit (2026-09-29)
+//   Finish this set      lib/set-gap.ts + Best Basket's "set" source: any
+//                        signed-in account gets its own total and saving
+//                        (basketPreview), the store-by-store plan is
+//                        isPremium(user, "premium"); SET_GAP_CHUNK cards a
+//                        plan (2026-09-29)
 //   Ad-free              /api/me adFree = isPremium(user) — any paid tier
 //   Watchlist, Portfolio lib/free-limits.ts: a free account adds up to
 //                        FREE_WATCHLIST_LIMIT / FREE_PORTFOLIO_LIMIT distinct
@@ -76,6 +81,7 @@
 
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../lib/free-limits";
+import { SET_GAP_CHUNK } from "../lib/set-gap";
 
 export type TierRow = {
   feature: string;
@@ -126,6 +132,12 @@ export const TIER_COMPARISON: TierRow[] = [
   // plan for it. The binder is a source too, but it prices replacement, so it
   // is not named here beside "skipping cards you own".
   { feature: "Buy this list — deck or watchlist, skipping cards you own", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
+  // FINISH THIS SET (2026-09-29, lib/set-gap.ts): Best Basket's fourth source, the
+  // cards a member is MISSING from one set. The same split as the row above: any
+  // signed-in account sees its own total and Best Basket's own computed saving
+  // (the route withholds every store name, line and link), Premium gets the
+  // store-by-store plan. The 200 is the enforced chunk (SET_GAP_CHUNK), never typed.
+  { feature: "Finish this set — store-by-store plan for what's missing, postage included", account: "Total and saving preview", plus: "Total and saving preview", premium: `Store-by-store plan, up to ${SET_GAP_CHUNK} cards` },
   // MINIMUM CONDITION (2026-09-29, lib/basket-condition.ts): Premium sets the
   // lowest condition the plan, Buy this list and the deck watch may use. Below
   // Premium the total counts every condition and says how many played copies it

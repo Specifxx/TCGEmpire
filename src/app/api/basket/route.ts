@@ -10,7 +10,9 @@ import { clampQty, parseBasketRequest, type BasketRequest } from "@/lib/basket-r
 import { rateLimit, refundRateLimit, tooManyRequests } from "@/lib/rate-limit";
 import type { Country } from "@/lib/country";
 import { basketPreview, optimizeBasket, planBasket, type BasketCard, type PreviewRegion } from "@/lib/basket";
-import { loadBinderHoldings, loadOwnedQty, loadStoreListings, loadWatchlistCardIds, saveMinConditionPref } from "@/lib/basket-server";
+import { loadBinderHoldings, loadOwnedQty, loadSetGapLines, loadStoreListings, loadWatchlistCardIds, saveMinConditionPref } from "@/lib/basket-server";
+import { nothingStockedMessage, NOT_STOCKED_LIST_CAP, setGapFields, type SetGapAnswer } from "@/lib/set-gap";
+import { COUNTRIES } from "@/lib/country";
 import type { MinCondition } from "@/lib/basket-condition";
 import { basketStoresFor, postageContextFor, postageOptionsFrom, type PostageOptions } from "@/lib/shipping";
 
@@ -34,11 +36,23 @@ export const dynamic = "force-dynamic";
 // WHAT CAN BE SENT. { source: "deck" } with a pasted `text` and/or exact
 // `lines` ({ cardId, qty }, from the search-and-add picker or a handoff);
 // { source: "watchlist" } — the cards this account watches in this market;
-// { source: "binder" } — the cards it holds (replacement: the binder has no
-// notion of missing cards, see lib/basket-server.ts). `skipOwned` subtracts
-// the copies the account already holds (meaningless for the binder itself,
-// so ignored there). Parsing lives in lib/basket-request.ts and never looks
-// at the tier: sending any of these is open to every signed-in account.
+// { source: "binder" } — the cards it holds (replacement: what re-buying them
+// would cost; what a binder is MISSING is the "set" source); { source: "set",
+// set, scope, rarity?, maxPriceCents?, offset? } — Finish this set (2026-09-29):
+// the cards the account is missing from one released set, one copy each, from
+// the set checklist's catalogue minus what it owns. `skipOwned` subtracts the
+// copies the account already holds (meaningless for the binder itself, so
+// ignored there; locked ON for a set, which prices only what is missing).
+// Parsing lives in lib/basket-request.ts and never looks at the tier: sending
+// any of these is open to every signed-in account.
+//
+// A SET IS PLANNED IN CHUNKS. One plan holds at most SET_GAP_CHUNK (200, the line
+// cap) missing cards, cheapest listing first; a bigger gap is served as a ranked
+// chunk with `setGap` saying how many more are not included and where the next
+// chunk starts (`offset`). Cards no real store has in stock are not priced: they
+// come back counted (every tier) and named (Premium), never dropped. Radiance is
+// refused until it releases. `setGap` is counts for a non-Premium account: no
+// store, line or link, like the rest of its preview.
 //
 // LIST SIZE. At most DECK_LINE_CAP (200) lines: cards added one by one first,
 // then the pasted lines, in order. The page counts lines the same way and says
@@ -120,7 +134,7 @@ const fail = (error: string, status: number): Outcome => ({ res: NextResponse.js
 async function buildBasket(
   userId: string,
   full: boolean,
-  { source, skipOwned, text, picked }: BasketRequest,
+  { source, skipOwned, text, picked, setCode, scope, rarity, maxPriceCents, offset }: BasketRequest,
   minCondition: MinCondition,
   country: Country,
   postageOpts: PostageOptions
@@ -132,12 +146,43 @@ async function buildBasket(
     const unmatched: { raw: string; qty: number }[] = [];
     const fuzzy: { raw: string; matchedAs: string }[] = [];
     let skippedHoldings = 0;
+    let skippedOwned = 0;
+    // Finish this set: what the chunk was cut from, for the answer's `setGap`.
+    let setGap: SetGapAnswer | null = null;
     const add = (cardId: string, qty: number) => wanted.set(cardId, clampQty((wanted.get(cardId) ?? 0) + qty));
 
     if (source === "watchlist") {
       const ids = await loadWatchlistCardIds(userId, country);
       if (!ids.length) return fail("Your watchlist has no cards in this market yet.", 400);
       for (const id of ids) add(id, 1);
+    } else if (source === "set") {
+      const gap = await loadSetGapLines(userId, setCode, scope, country, { rarity, maxPriceCents, offset });
+      if (!gap.ok) return fail(gap.message, 400);
+      const { plan, setName } = gap;
+      const s = plan.summary;
+      if (!s.gapTotal) return fail(`You already own every ${s.rarity ? `${s.rarity} ` : ""}card in this list for ${setName}.`, 400);
+      if (!plan.chunk.length) {
+        // Nothing to price: every missing card is unstocked, over the ceiling, or past the last chunk.
+        return fail(
+          s.offset > 0
+            ? "That is all of the missing cards: there is no next chunk."
+            : s.stocked === 0
+              ? nothingStockedMessage(s.gapTotal, COUNTRIES[country].place)
+              : `Every missing card with a store listing is dearer than your per-card price limit (${s.overCeiling} ${s.overCeiling === 1 ? "card" : "cards"}).`,
+          400
+        );
+      }
+      // The gap already excludes what is owned, so step 2 below is not run for a set.
+      for (const c of plan.chunk) {
+        wanted.set(c.id, 1);
+        info.set(c.id, c);
+      }
+      skippedOwned = s.ownedInScope;
+      setGap = {
+        summary: s,
+        setName,
+        notStocked: plan.notStocked.slice(0, NOT_STOCKED_LIST_CAP).map((c) => ({ name: c.name, setCode: c.setCode, collectorNumber: c.collectorNumber })),
+      };
     } else if (source === "binder") {
       const binder = await loadBinderHoldings(userId, country);
       if (binder.empty) return fail("Nothing in your binder yet.", 400);
@@ -172,8 +217,7 @@ async function buildBasket(
     }
 
     // 2. "Skip copies I already own."
-    let skippedOwned = 0;
-    if (skipOwned && wanted.size) {
+    if (skipOwned && source !== "set" && wanted.size) {
       const owned = await loadOwnedQty(userId, [...wanted.keys()]);
       for (const [id, qty] of [...wanted]) {
         const have = Math.min(owned.get(id) ?? 0, qty);
@@ -223,14 +267,27 @@ async function buildBasket(
     if (!full) {
       const preview = basketPreview(optimizeBasket(basketCards, stores), unmatched, region);
       return {
-        res: NextResponse.json({ ...preview, shipping }, { headers: { "Cache-Control": "no-store" } }),
+        // Counts only for the set source: how many were priced, how many are not
+        // included, how many are not stocked. No name, store, line or link.
+        res: NextResponse.json({ ...preview, shipping, ...(setGap ? setGapFields(false, setGap) : {}) }, { headers: { "Cache-Control": "no-store" } }),
         priced: preview.covered > 0,
       };
     }
     const { plan, alternatives } = planBasket(basketCards, stores, { loc: "/tools/best-basket" });
     return {
       res: NextResponse.json(
-        { ...basketPreview(plan, unmatched, region), plan, alternatives, fuzzy, skippedOwned, skippedHoldings, source, shipping, minCondition },
+        {
+          ...basketPreview(plan, unmatched, region),
+          plan,
+          alternatives,
+          fuzzy,
+          skippedOwned,
+          skippedHoldings,
+          source,
+          shipping,
+          minCondition,
+          ...(setGap ? setGapFields(true, setGap) : {}),
+        },
         { headers: { "Cache-Control": "no-store" } }
       ),
       priced: plan.coveredCopies > 0,

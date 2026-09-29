@@ -120,6 +120,8 @@ export const PITCH_TOOLS: { label: string }[] = [
   { label: "Target-price alerts" },
   { label: "Best Basket" },
   { label: "Buy this list" },
+  // 2026-09-29: Best Basket's set source, the plan for what a set is missing.
+  { label: "Finish this set" },
   // 2026-09-29: the lowest condition the plan and the deck watch may use.
   { label: "Minimum condition" },
   { label: "Demand Finder" },
