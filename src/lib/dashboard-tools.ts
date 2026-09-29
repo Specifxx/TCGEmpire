@@ -1,4 +1,5 @@
 import type { PremiumTierKey } from "./site";
+import { FREE_PORTFOLIO_LIMIT } from "./free-limits";
 
 // The member dashboard's tool list (app/dashboard/page.tsx). A lib module, not
 // a const in the page, so tests/premium-tiers.test.ts can run it — a Next.js
@@ -37,7 +38,7 @@ export const DASHBOARD_TOOLS: DashTool[] = [
   },
   {
     title: "Best Basket",
-    desc: "The cheapest delivered order for a whole list across your country's stores, skipping cards you own — and, on Premium, a watch that re-prices the list after every update.",
+    desc: "The cheapest delivered order for a whole list, or the rest of a set, across your country's stores, skipping cards you own, at the minimum condition you set — and, on Premium, a watch that re-prices the list after every update.",
     href: "/tools/best-basket",
     tier: "premium",
     freeTaste: "See your total free",
@@ -59,6 +60,14 @@ export const DASHBOARD_TOOLS: DashTool[] = [
     title: "Portfolio",
     desc: "Your collection's value, P&L, CSV export and delivered replacement cost.",
     href: "/portfolio",
+    tier: "free",
+  },
+  // The set tracker (2026-09-29): free within the portfolio's card limit, so it
+  // opens for every account; the tier gates are Plus's no-limit and Premium's plan.
+  {
+    title: "Set checklist",
+    desc: `What your binder is missing from a set, and the cheapest listing for each card. Free for your first ${FREE_PORTFOLIO_LIMIT} cards; Plus removes the limit.`,
+    href: "/portfolio/sets",
     tier: "free",
   },
 ];

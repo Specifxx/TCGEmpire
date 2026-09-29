@@ -313,4 +313,12 @@ export function premiumLockInTail(): string {
 // premium-2026-09-29d: sealed watches "checked about every six hours" (four store
 // reads a day, the checked time in every email) on the table, /premium, the FAQ,
 // the watch form and the article. Prices unchanged.
-export const PREMIUM_COPY_VERSION = "premium-2026-09-29d";
+// personas-2026-09-29: the persona pass's one bump for all its copy (owner: "picture
+// a trading card player or collector: what would they pay for"): /premium leads with
+// "Know what you're missing. Buy it for less." and a section each for the collector,
+// the player, the sealed buyer and the Radiance launch; the set checklist, Finish this
+// set, the minimum condition and the six-hourly sealed watches on the table, the
+// slide-in, the dialog, the pricing cards, the tools index, the emails and the
+// article; Demand Finder moved lower and described as what people are searching for;
+// "Beating the market by X%" softened to "Since you bought". Prices unchanged.
+export const PREMIUM_COPY_VERSION = "personas-2026-09-29";

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
+import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 import { AnswerBox } from "@/components/AnswerBox";
 import { HubFaq } from "@/components/HubFaq";
 import { faqPage, webPage } from "@/lib/jsonld";
@@ -122,6 +123,15 @@ export default async function SetsIndexPage() {
             <Link href="/gallery" className="text-brand-400 hover:underline">full-art card gallery</Link>.
             Building around a colour instead? Browse{" "}
             <Link href="/domains" className="text-brand-400 hover:underline">cards by domain</Link>.
+          </p>
+          {/* The set tracker (2026-09-29): a plain link, so this ISR page adds no
+              request. The tracker itself is /portfolio/sets, free within the
+              portfolio limit. */}
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+            Collecting a set?{" "}
+            <Link href="/portfolio/sets" className="font-semibold text-brand-400 hover:underline">Tick what&apos;s in your binder</Link>{" "}
+            to see what a set is missing and the cheapest listing for each card, before postage. Free for your first{" "}
+            {FREE_PORTFOLIO_LIMIT} cards.
           </p>
           <AnswerBox className="mt-4">
             <p>

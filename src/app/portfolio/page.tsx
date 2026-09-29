@@ -59,8 +59,8 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
 const pctText = (p: number | null) => (p == null ? "—" : `${p > 0 ? "+" : ""}${p}%`);
 const pctClass = (p: number | null) => (p == null || p === 0 ? "text-slate-300" : p > 0 ? "text-brand-400" : "text-rose-400");
 
-// The Premium "investor" panel: cost-basis P&L + how the portfolio is tracking
-// against the RiftCompare Index over the same windows.
+// The "Since you bought" panel: cost-basis P&L for the cards with a recorded
+// price, and the portfolio's move beside the RiftCompare Index over the same windows.
 function PnlView({
   pnl,
   index,
@@ -74,14 +74,21 @@ function PnlView({
   d30: number | null;
   currency: string;
 }) {
-  const beat = (port: number | null, idx: number | null) => (port != null && idx != null ? Math.round((port - idx) * 10) / 10 : null);
+  // 2026-09-29 (the personas pass): the panel used to say "Beating the market by
+  // X%" / "Trailing the market by X%" under each window, the most flipper-sounding
+  // line left in the binder. It now says what it is: the cards you recorded a price
+  // for, "Since you bought", and the two plain numbers (yours, the index's) with no
+  // verdict between them.
   return (
     <div className="mt-3 space-y-4">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat label="You paid" value={formatMoney(pnl.investedCents, currency)} />
-        <Stat label="Worth now" value={formatMoney(pnl.valueCents, currency)} />
-        <Stat label="Up / down" value={`${pnl.plCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(pnl.plCents), currency)}`} cls={pctClass(pnl.plCents)} />
-        <Stat label="Change" value={pctText(pnl.plPct)} cls={pctClass(pnl.plPct)} />
+      <div>
+        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">Since you bought</div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Stat label="You paid" value={formatMoney(pnl.investedCents, currency)} />
+          <Stat label="Worth now" value={formatMoney(pnl.valueCents, currency)} />
+          <Stat label="Up / down" value={`${pnl.plCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(pnl.plCents), currency)}`} cls={pctClass(pnl.plCents)} />
+          <Stat label="Change" value={pctText(pnl.plPct)} cls={pctClass(pnl.plPct)} />
+        </div>
       </div>
       {index && (index.d7 != null || index.d30 != null) && (
         <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3 text-sm">
@@ -90,19 +97,11 @@ function PnlView({
             {[
               { w: "7-day", port: d7, idx: index.d7 },
               { w: "30-day", port: d30, idx: index.d30 },
-            ].map(({ w, port, idx }) => {
-              const b = beat(port, idx);
-              return (
-                <div key={w} className="flex flex-col">
-                  <span className="text-xs text-slate-500">{w}: you <span className={pctClass(port)}>{pctText(port)}</span> · index <span className={pctClass(idx)}>{pctText(idx)}</span></span>
-                  {b != null && (
-                    <span className={`text-sm font-bold ${pctClass(b)}`}>
-                      {b > 0 ? `▲ Beating the market by ${b}%` : b < 0 ? `▼ Trailing the market by ${Math.abs(b)}%` : "Matching the market"}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+            ].map(({ w, port, idx }) => (
+              <div key={w} className="flex flex-col">
+                <span className="text-xs text-slate-500">{w}: you <span className={pctClass(port)}>{pctText(port)}</span> · index <span className={pctClass(idx)}>{pctText(idx)}</span></span>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -165,7 +164,9 @@ export default async function PortfolioPage() {
             Your cards, and what they&apos;d cost at today&apos;s lowest {info.adjective} prices, adjusted for condition.
             {!premium && (
               <> A free account tracks up to {FREE_PORTFOLIO_LIMIT} cards; if you already have more, you keep them all.</>
-            )}
+            )}{" "}
+            Want to know what a set is missing?{" "}
+            <Link href="/portfolio/sets" className="font-semibold text-brand-300 underline-offset-2 hover:underline">Open the set checklist</Link>.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

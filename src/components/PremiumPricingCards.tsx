@@ -16,7 +16,7 @@ import {
   INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // The /premium pricing section, rebuilt 2026-09-11 to match the layout at
@@ -150,7 +150,7 @@ export function PremiumPricingCards({
         {plusLive && (
           <PaidTierCard
             tier="plus"
-            tagline="No ads, every deal, target alerts and sealed watches"
+            tagline="No ads, whole sets, every deal, target alerts and sealed watches"
             features={PLUS_FEATURES}
             cycle={cycle}
             annualLiveForTier={plusAnnualLive}
@@ -165,7 +165,7 @@ export function PremiumPricingCards({
 
         <PaidTierCard
           tier="premium"
-          tagline={plusLive ? "Works while you're away: deck price watch, unlimited target alerts, the store-by-store plan" : "The full toolkit"}
+          tagline={plusLive ? "Plans the order: which stores, what postage, at the condition you'll play, and a deck price watch" : "The full toolkit"}
           features={plusLive ? PREMIUM_FEATURES_ON_PLUS : PREMIUM_FEATURES_STANDALONE}
           highlight
           cycle={cycle}
@@ -206,9 +206,9 @@ const FREE_FEATURES = [
 const TRIAL_ROW = "N-day free trial";
 const PLUS_FEATURES = [
   "No ads on any page",
-  "Unlimited watchlist and portfolio, so a whole set fits in the set checklist",
+  "Unlimited watchlist and portfolio: track whole sets with no card limit",
   `Target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, naming the store`,
-  `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products: back in stock, at RRP, or at your price`,
+  `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products: back in stock, at RRP, or at your price, checked ${SEALED_CHECK_CADENCE}`,
   "Every card below TCGplayer market, filtered to the cards you watch or own",
   "The full Rising Cards list",
   "N-day free trial",
@@ -221,9 +221,9 @@ const PREMIUM_FEATURES_ON_PLUS = [
   `Deck price watch: up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price`,
   "Unlimited target-price alerts and sealed watches",
   "Best Basket: the cheapest delivered order, beside the best one-store and two-store orders",
-  "The store-by-store plan for your deck or watchlist, skipping what you own, at the minimum condition you set",
+  "The store-by-store plan for your deck or watchlist, skipping what you own, at the minimum condition you set (NM only, LP or better, or anything)",
   "The store-by-store plan behind your binder's replacement cost",
-  "Finish this set: the store-by-store plan, postage included, for the cards a set is missing",
+  "Finish this set: the store-by-store plan, postage included, for the rest of a set",
   "Demand Finder: the cards players search for and open most, over 7 or 30 days",
   "N-day free trial",
 ];

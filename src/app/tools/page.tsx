@@ -3,7 +3,7 @@ import Link from "next/link";
 import { premiumPlusEnabled } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
-import { DECK_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 
 // The badge on the two "full list" tools (Deal Finder, Rising Cards) — Plus
 // once it's configured; dark (Plus unconfigured), they read exactly as they
@@ -63,8 +63,8 @@ const FAQS = [
     q: "Do I need an account to use RiftCompare tools?",
     a:
       LIST_BADGE === "Plus"
-        ? `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds an unlimited watchlist and portfolio, every row of both lists, target-price alerts, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (an email when a box is back in stock or at RRP) and an ad-free site; Premium adds a deck price watch (a saved list re-priced delivered after every update, up to ${DECK_WATCH_LIMIT} lists), Best Basket's store-by-store plan, Buy this list and the full Demand Finder.`
-        : `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Premium adds an unlimited watchlist and portfolio, every row of both lists, target-price alerts, sealed watches (an email when a box is back in stock or at RRP), a deck price watch (a saved list re-priced delivered after every update; up to ${DECK_WATCH_LIMIT} lists), an ad-free site, Best Basket's store-by-store plan, Buy this list and the full Demand Finder.`,
+        ? `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist of what each set is missing, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds an unlimited watchlist and portfolio (a whole set fits), every row of both lists, target-price alerts, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (an email when a box is back in stock or at RRP) and an ad-free site; Premium adds a deck price watch (a saved list re-priced delivered after every update, up to ${DECK_WATCH_LIMIT} lists), Best Basket's store-by-store plan (at the minimum condition you set, and for the rest of a set), Buy this list and the full Demand Finder.`
+        : `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist of what each set is missing, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Premium adds an unlimited watchlist and portfolio (a whole set fits), every row of both lists, target-price alerts, sealed watches (an email when a box is back in stock or at RRP), a deck price watch (a saved list re-priced delivered after every update; up to ${DECK_WATCH_LIMIT} lists), an ad-free site, Best Basket's store-by-store plan, Buy this list and the full Demand Finder.`,
   },
   {
     q: "Which Riftbound tool should I use to buy a whole decklist?",
@@ -112,7 +112,7 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/tools/best-basket",
         title: "Best Basket",
-        desc: "Buying a whole list? The cheapest delivered order across your country's stores, postage included — see your total free with an account.",
+        desc: "Buying a whole list, or the rest of a set? The cheapest delivered order across your country's stores, postage included, at the condition you'll play — see your total free with an account.",
         badge: "Premium",
       },
       {
@@ -120,6 +120,17 @@ const GROUPS: ToolGroup[] = [
         title: "Demand Finder",
         desc: "The cards players are searching for and opening most, over 7 or 30 days. The top 10 most searched this week are free.",
         badge: "Premium",
+      },
+    ],
+  },
+  // The set tracker (2026-09-29): free within the portfolio's card limit.
+  {
+    label: "Your collection",
+    tools: [
+      {
+        href: "/portfolio/sets",
+        title: "Set checklist",
+        desc: `Tick what's in your binder and see what a set is missing and the cheapest listing for each card, before postage. Free for your first ${FREE_PORTFOLIO_LIMIT} cards; Plus removes the limit.`,
       },
     ],
   },
@@ -134,7 +145,7 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/sealed",
         title: "Sealed prices",
-        desc: "Booster boxes, packs, Proving Grounds and bundles priced across stores, with an in-stock-at-MSRP flag — and, with Plus, a watch that emails you on a restock or at RRP.",
+        desc: `Booster boxes, packs, Proving Grounds and bundles priced across stores, with an in-stock-at-MSRP flag — and, with Plus, a watch that emails you on a restock or at RRP, checked ${SEALED_CHECK_CADENCE}.`,
       },
     ],
   },

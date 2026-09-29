@@ -55,13 +55,13 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   assert.deepEqual([deck.account, deck.plus, deck.premium], [false, false, true]);
   assert.ok(features.indexOf(sealed.feature) < features.indexOf(deck.feature) && features.indexOf(deck.feature) === features.length - 2);
   assert.equal(features[features.length - 1], "Ad-free experience");
-  assert.equal(PREMIUM_COPY_VERSION, "premium-2026-09-29d");
+  assert.equal(PREMIUM_COPY_VERSION, "personas-2026-09-29");
   // Every surface that quotes a watch number reads the constant.
   for (const f of ["src/components/PremiumPricingCards.tsx", "src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);
     assert.match(read(f), /SEALED_WATCH_LIMIT_PLUS/, `${f} quotes the sealed watch limit from the constant`);
   }
-  assert.match(read("src/components/PremiumPricingCards.tsx"), /Works while you're away: deck price watch, unlimited target alerts, the store-by-store plan/);
+  assert.match(read("src/components/PremiumPricingCards.tsx"), /Plans the order: which stores, what postage, at the condition you'll play, and a deck price watch/);
   // The definitions a newcomer needs, on /premium.
   const page = read("src/app/premium/page.tsx");
   assert.match(page, /q: "I'm new — what do I actually get\?"/);

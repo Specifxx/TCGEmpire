@@ -43,8 +43,13 @@ test("the header links to pricing plainly — no gold, no shimmer (2026-09-28)",
 });
 
 test("one tagline, on every surface that carries the Premium headline", () => {
+  // /premium's hero is "Know what you're missing. Buy it for less." since the
+  // personas pass (2026-09-29); the tagline stays on the dialog and in the page title.
+  assert.match(read("src/app/premium/page.tsx"), /Know what you're missing\. Buy it for less\./);
+  for (const retired of [/[Pp]ower tools for buyers/, /unfair edge/i]) {
+    assert.ok(!retired.test(read("src/app/premium/page.tsx")), `/premium still carries a retired tagline (${retired})`);
+  }
   for (const file of [
-    "src/app/premium/page.tsx",
     "src/components/PremiumDialog.tsx",
     // PremiumSlideIn carried it too until its removal on 2026-09-28.
     // SignupPromoPopup is deliberately NOT here since 2026-09-16: it sells the

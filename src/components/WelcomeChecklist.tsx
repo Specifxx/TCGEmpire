@@ -8,7 +8,8 @@ import { CardSearch, type SearchCard } from "./CardSearch";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
 import { trackEvent } from "@/lib/analytics";
 import { PremiumButton } from "./PremiumButton";
-import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+import Link from "next/link";
+import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { isSignupSession } from "@/lib/signup-session";
 
 const DISMISS_KEY = "rc_welcome_dismissed";
@@ -83,6 +84,23 @@ export function WelcomeChecklist() {
     setEligible(false);
   }
 
+  // THE SET TRACKER (2026-09-29, the personas pass): what the binder is missing,
+  // introduced right after the first card is added rather than as a fourth counted
+  // step (the three core steps and their 3/3 stay as they were). Free within the
+  // portfolio limit, so it says so.
+  const setTrackerStep = (
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-semibold text-white">See what a set is missing</p>
+      <p className="text-xs text-slate-500">
+        Tick what&apos;s in your binder and the set checklist shows what&apos;s missing and the cheapest listing for each card,
+        before postage. Free for your first {FREE_PORTFOLIO_LIMIT} cards.
+      </p>
+      <div className="mt-2">
+        <Link href="/portfolio/sets" className="btn-ghost text-sm">Open the set checklist →</Link>
+      </div>
+    </div>
+  );
+
   const premiumStep = (
     <div className="min-w-0 flex-1">
       <p className="text-sm font-semibold text-white">
@@ -90,8 +108,8 @@ export function WelcomeChecklist() {
       </p>
       <p className="text-xs text-slate-500">
         Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium)
-        a whole deck&apos;s delivered price — plus every deal in Deal Finder and Rising Cards, Best Basket&apos;s store-by-store plan and
-        Demand Finder.{trialOffer ? " Cancel before the trial ends and you pay nothing." : ""}
+        a whole deck&apos;s delivered price. Plus also removes the card limits, so a whole set fits; Premium plans the order, store
+        by store, at the condition you&apos;ll play.{trialOffer ? " Cancel before the trial ends and you pay nothing." : ""}
       </p>
       <div className="mt-2">
         <PremiumButton surface="checklist" />
@@ -113,6 +131,12 @@ export function WelcomeChecklist() {
             ✦
           </span>
           {premiumStep}
+        </div>
+        <div className="mt-4 flex items-start gap-3">
+          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-500/20 text-xs font-bold text-brand-300" aria-hidden="true">
+            +
+          </span>
+          {setTrackerStep}
         </div>
       </section>
     );
@@ -200,6 +224,15 @@ export function WelcomeChecklist() {
             )}
           </div>
         </li>
+
+        {collectionDone && (
+          <li className="flex items-start gap-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-500/20 text-xs font-bold text-brand-300" aria-hidden="true">
+              +
+            </span>
+            {setTrackerStep}
+          </li>
+        )}
 
         {offerPremium && (
           <li className="flex items-start gap-3">

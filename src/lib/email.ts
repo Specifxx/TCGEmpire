@@ -11,7 +11,7 @@ import {
   type PremiumTierKey,
 } from "./site";
 import { premiumStartHref } from "./premium-start";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "./free-limits";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
@@ -1145,9 +1145,10 @@ const CHECKOUT_RECOVERY_TOOLS = [
   "No ads on any page",
   "Every deal: the full Deal Finder and Rising Cards lists",
   "An email naming the store when a card you watch hits your target price",
+  "No limit on your watchlist or portfolio, so a whole set fits in the set checklist",
   "Sealed watches: an email when a box is back in stock or at RRP",
   "Premium: a deck price watch — a saved list re-priced delivered after every price update, emailed at your price",
-  "Premium: Best Basket, the cheapest delivered order for your whole deck, watchlist or binder",
+  "Premium: Best Basket, the cheapest delivered order for your whole deck, watchlist, binder or the rest of a set, at the condition you'll play",
   "Premium: Demand Finder, the cards players are searching for and opening most",
 ];
 
@@ -1234,26 +1235,27 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
     </td></tr>`;
   const inner = `
     <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      Hi ${name}, your free account is ready. Three things it does that a visitor can't:
+      Hi ${name}, your free account is ready. Four things it does that a visitor can't:
     </td></tr>
     ${step(1, "Watch a card", `Press <em>Watch price</em> on any card and we'll email you when its price drops — up to ${FREE_WATCHLIST_LIMIT} cards on a free account. ${link("/browse", "Find a card&nbsp;→")}`)}
     ${step(2, "See today's top 3 deals", `Your account shows the three biggest deals in Deal Finder and the three top-ranked Rising Cards, updated daily. ${link("/tools/deal-finder", "Deal&nbsp;Finder&nbsp;→")} · ${link("/tools/rising", "Rising&nbsp;Cards&nbsp;→")}`)}
     ${step(3, "Track your collection", `Add up to ${FREE_PORTFOLIO_LIMIT} cards you own and see what they're worth today. ${link("/portfolio", "Your&nbsp;portfolio&nbsp;→")}`)}
+    ${step(4, "See what a set is missing", `Tick what's in your binder and the set checklist shows what's missing and the cheapest listing for each card, before postage. Free for your first ${FREE_PORTFOLIO_LIMIT} cards. ${link("/portfolio/sets", "Set&nbsp;checklist&nbsp;→")}`)}
     <tr><td style="padding:14px 32px 22px">
       <div style="border:1px solid #6b5a1f;border-radius:12px;padding:14px 16px;background:#1a1810">
         <div style="font-size:13px;line-height:1.55;color:#d8cfa8">
           <strong style="color:#f3c969">Want every deal, not just the top three?</strong> Plus and Premium both come with:
           <ul style="margin:6px 0;padding-left:18px">
             <li>No ads on any page</li>
-            <li>No limit on your watchlist or portfolio</li>
+            <li>No limit on your watchlist or portfolio, so a whole set fits in the set checklist</li>
             <li>Every deal: the full Deal Finder and Rising Cards lists</li>
             <li>An email naming the store when a card you watch hits your target price</li>
-            <li>Sealed watches: an email when a box is back in stock or at RRP (the price Riot sets)</li>
+            <li>Sealed watches: an email when a box is back in stock or at RRP (the price Riot sets), checked ${SEALED_CHECK_CADENCE}</li>
           </ul>
-          Premium works while you're away: a deck price watch re-prices a saved list after every price update and
-          emails you when its delivered total reaches your price. It also adds Best Basket, the cheapest delivered
-          order for your whole deck or watchlist, skipping the cards you already own, and Demand Finder, the full
-          list of cards players are searching for and opening. ${trialLine}
+          Premium plans the order: Best Basket's store-by-store plan for your deck, watchlist or the rest of a set,
+          skipping the cards you already own, at the minimum condition you set. It also adds a deck price watch,
+          which re-prices a saved list after every price update and emails you when its delivered total reaches your
+          price, and Demand Finder, the full list of what people are searching for. ${trialLine}
         </div>
         <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Premium</a>
       </div>
@@ -1316,13 +1318,14 @@ export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: 
     ${step(1, "No ads on any page", `Every page is ad-free from now on, on the website and in the app. Nothing to switch on.`)}
     ${step(2, "Every deal, not just three", `The full Deal Finder list: every card cheaper than TCGplayer market at a real store, which you can narrow to only the cards you watch or own. ${link("/tools/deal-finder?mine=watch", "Deal&nbsp;Finder&nbsp;→")}`)}
     ${step(3, "Set a target price", `Watch a card and tell us what you'd pay. After every price update we check every tracked store in your country and email you the store when it's there. ${link("/watching", "Your&nbsp;watchlist&nbsp;→")}`)}
-    ${step(4, "Watch a sealed product", `Tap the heart on a box: we email you when it is back in stock after selling out everywhere, at RRP, or at your price. ${link("/sealed", "Sealed&nbsp;products&nbsp;→")}`)}
+    ${step(4, "Watch a sealed product", `Tap the heart on a box: we email you when it is back in stock after selling out everywhere, at RRP, or at your price. Stores are checked ${SEALED_CHECK_CADENCE}, and each email says when. ${link("/sealed", "Sealed&nbsp;products&nbsp;→")}`)}
+    ${step(5, "Track a whole set", `Your binder has no card limit now, so a whole set fits. The set checklist shows what's missing and the cheapest listing for each card, before postage. ${link("/portfolio/sets", "Set&nbsp;checklist&nbsp;→")}`)}
     ${
       opts.planName === "Plus"
         ? ""
-        : `${step(5, "Watch a whole deck's price", `Save a list from Best Basket or the deck pricer with the delivered price you'd pay; we re-price it after every update and email you when it's there. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)}
-    ${step(6, "Buy a whole list for less", `Send a decklist or your watchlist to Best Basket, skip the copies you own, and get the cheapest delivered order. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)}
-    ${step(7, "See what players are hunting for", `Demand Finder ranks the cards most searched and most viewed over the last 7 or 30 days. ${link("/tools/demand", "Demand&nbsp;Finder&nbsp;→")}`)}`
+        : `${step(6, "Watch a whole deck's price", `Save a list from Best Basket or the deck pricer with the delivered price you'd pay; we re-price it after every update and email you when it's there. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)}
+    ${step(7, "Buy a whole list for less", `Send a decklist, your watchlist or the rest of a set to Best Basket, skip the copies you own, choose the lowest condition you'll accept, and get the cheapest delivered order. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)}
+    ${step(8, "See what people are searching for", `Demand Finder ranks the cards most searched and most viewed over the last 7 or 30 days. ${link("/tools/demand", "Demand&nbsp;Finder&nbsp;→")}`)}`
     }
     <tr><td style="padding:10px 32px 22px;font-size:13px;line-height:1.55;color:#8b95a5">
       Manage or cancel any time: ${link("/premium", "your account page")}.

@@ -290,8 +290,8 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
           <h2 id="premium-dialog-title" className="text-lg font-extrabold text-white">Never overpay for a Riftbound card</h2>
           <p className="mt-1 text-sm text-slate-400">
             {premiumPlus
-              ? "Plus and Premium are ad-free. Plus shows every deal and emails you the store when a card you watch hits your price; Premium buys your whole list for less. Price comparison and the portfolio tracker stay free."
-              : "Premium is ad-free, shows every deal, and buys your whole list for less. Price comparison and the portfolio tracker stay free."}
+              ? "Plus and Premium are ad-free. Plus tracks whole sets with no card limit and emails you when a card or a box you watch hits your price; Premium plans the order, store by store, at the condition you'll play. Price comparison and the set checklist stay free."
+              : "Premium is ad-free, tracks whole sets, shows every deal, and plans your whole list store by store at the condition you'll play. Price comparison and the set checklist stay free."}
           </p>
 
           {/* The lock-in banner: ONLY while a real, higher price is announced
@@ -344,9 +344,9 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
               <div className="text-center">
                 <p className="text-sm font-semibold text-gold">✓ You&apos;re on Plus</p>
                 <p className="mt-1 text-xs text-slate-400">
-                  Premium works while you&apos;re away: a deck price watch that re-prices a saved list after every price
-                  update, unlimited target alerts and sealed watches, Best Basket&apos;s store-by-store plan, Buy this list and
-                  Demand Finder.
+                  Premium plans the order: Best Basket&apos;s store-by-store plan for a deck, a list or the rest of a set, at
+                  the minimum condition you set, a deck price watch that re-prices a saved list after every price update,
+                  unlimited target alerts and sealed watches, and Demand Finder.
                 </p>
                 {trialing ? (
                   <p className="mt-3 rounded-lg border border-ink-700 px-3 py-2 text-xs text-slate-300">

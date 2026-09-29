@@ -113,7 +113,7 @@ test("the tools index lists only the kept tools, with the badges their gates ear
   const src = read("src/app/tools/page.tsx");
   const groups = src.slice(src.indexOf("const GROUPS"), src.indexOf("export default function"));
   const hrefs = [...groups.matchAll(/href: "([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(hrefs, ["/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand", "/tools/box-ev", "/sealed", "/deck", "/trade", "/tools/selling-fees"]);
+  assert.deepEqual(hrefs, ["/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand", "/portfolio/sets", "/tools/box-ev", "/sealed", "/deck", "/trade", "/tools/selling-fees"]);
   const badgeFor = (href: string) => {
     const at = groups.indexOf(`href: "${href}"`);
     return /badge: ([^,\n]+),/.exec(groups.slice(at, groups.indexOf("}", at)))?.[1];
@@ -122,6 +122,8 @@ test("the tools index lists only the kept tools, with the badges their gates ear
   assert.equal(badgeFor("/tools/rising"), "LIST_BADGE");
   assert.equal(badgeFor("/tools/best-basket"), '"Premium"');
   assert.equal(badgeFor("/tools/demand"), '"Premium"', "Demand Finder is Premium-only, never the list badge");
+  // The set checklist (2026-09-29) is free within the portfolio limit, so it has no badge.
+  assert.equal(badgeFor("/portfolio/sets"), undefined, "the set checklist is free, so it carries no tier badge");
   assert.match(src, /const LIST_BADGE = premiumPlusEnabled\(\) \? "Plus" : "Premium";/);
 
   // The FAQ (also the FAQPage JSON-LD) states the real access at every level —

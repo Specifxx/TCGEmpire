@@ -472,5 +472,5 @@ test("every tier surface quotes the limits from the constants, and price compari
   }
   // Bumped 2026-09-29 with the watches (DECISIONS.md, "Premium works while
   // you're away"); the free limits are unchanged on every surface above.
-  assert.equal(PREMIUM_COPY_VERSION, "premium-2026-09-29d");
+  assert.equal(PREMIUM_COPY_VERSION, "personas-2026-09-29");
 });

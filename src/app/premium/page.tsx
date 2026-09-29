@@ -43,6 +43,7 @@ import {
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_HARD_CAP, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { SET_GAP_CHUNK } from "@/lib/set-gap";
+import { RADIANCE_RELEASE_DATE, isBeforeRadianceRelease } from "@/lib/sets/radiance";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { faqPage, ldJson } from "@/lib/jsonld";
@@ -53,9 +54,85 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "RiftCompare Premium — never overpay for a Riftbound card",
-  description: "Compare Riftbound card prices across every store, free. Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium) a whole deck's delivered total re-priced after every update — plus every deal, Best Basket's store-by-store plan and Demand Finder. No ads on either.",
+  description: "Compare Riftbound card prices across every store, free, and track what your binder is missing. Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium) a whole deck's delivered total re-priced after every update, the store-by-store plan for a deck or the rest of a set, at the condition you'll play. No ads on either.",
   alternates: pageAlternates("/premium"),
 };
+
+// THE PERSONA SECTIONS (2026-09-29, DECISIONS.md, "Personas: the set tracker,
+// Finish this set, minimum condition, six-hourly sealed watches"). Owner: "Picture
+// a trading card player or collector: what would they pay for". Each section is one
+// person doing a chore by hand, what is free for them FIRST, then what Plus and
+// Premium add, and a link to the real page. Every number is the enforced constant.
+// Nothing here predicts a price, names a saving, counts down or says "worth": the
+// only saving figure on the site is Best Basket's own computed one on the
+// viewer's own list, and it is not quoted here. A feature is described only when it
+// is live (the set watch, planned for later, is deliberately absent).
+type PersonaSection = { eyebrow: string; headline: string; body: string; features: string[]; href: string; cta: string };
+
+const dayMonth = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+
+function personaSections(now: Date = new Date()): PersonaSection[] {
+  const beforeRadiance = isBeforeRadianceRelease(now);
+  const radianceDay = dayMonth(RADIANCE_RELEASE_DATE);
+  return [
+    {
+      eyebrow: "If you collect",
+      headline: "See what your set is missing, and what it costs to finish",
+      body: `Tick what's in your binder and see how far through a set you are, what's missing, and the cheapest listing for each card in your country, before postage. That part is free for your first ${FREE_PORTFOLIO_LIMIT} cards. Plus removes the limit so a whole set fits (nobody loses cards they already have). Premium turns the missing list into an order: which stores to buy from, with postage measured, skipping what you own.`,
+      features: [
+        `Set progress and a missing list, cheapest first, free for up to ${FREE_PORTFOLIO_LIMIT} cards`,
+        "Base set, or every printing we track (alt-arts, overnumbered prints, Signatures)",
+        "Whole-set binder with no limit (Plus)",
+        `Finish this set: a store-by-store plan for what's missing, up to ${SET_GAP_CHUNK} cards at a time (Premium)`,
+      ],
+      href: "/portfolio/sets",
+      cta: "Start with a free set checklist",
+    },
+    {
+      eyebrow: "If you play",
+      headline: "The cheapest delivered way to finish the deck, in the condition you'll play",
+      body: "Paste a list and Best Basket splits it across stores with the postage counted, and your own total is free. Premium lets you set the lowest condition you'll accept (Near Mint only, Lightly Played or better, or anything), so the plan never quietly includes a heavily played copy. The deck price watch emails you when the delivered total drops, using the same rule as the page, so the email and the page agree.",
+      features: [
+        "Store-by-store plan with measured postage",
+        "Minimum condition, kept in the plan, Buy this list and the deck watch",
+        "Skip copies you already own",
+        `Deck price watch on up to ${DECK_WATCH_LIMIT} saved lists`,
+      ],
+      href: "/deck",
+      cta: "Price your deck free, then see the plan",
+    },
+    {
+      eyebrow: "If you buy sealed",
+      headline: "Hear about the box while it's still on the shelf",
+      body: `Heart a booster box, bundle or Proving Grounds set and Plus emails you when it's back in stock at a real store, at or under RRP where we publish one (Australia, the US and the UK today), or at your own target price. Stores are read ${SEALED_CHECK_CADENCE} and every email says when the store was last checked. It isn't instant, and a Discord stock bot may be faster; we'd rather say so. Real stores only, never eBay.`,
+      features: [
+        "Restock, at-RRP, target and drop alerts",
+        `Checked ${SEALED_CHECK_CADENCE}, with the time in each email`,
+        `Up to ${SEALED_WATCH_LIMIT_PLUS} products on Plus, unlimited on Premium`,
+        "Pre-order price comparison stays free",
+      ],
+      href: "/sealed",
+      cta: "Watch a box",
+    },
+    // The Radiance block is published because the set tracker is live (the plan's
+    // condition). Date-aware: after release it says so instead of counting down.
+    {
+      eyebrow: "Radiance launch",
+      headline: beforeRadiance ? `Radiance is ${radianceDay}. Bring a list, not six tabs.` : "Radiance is out. Tick what you pull, see what's left.",
+      body: beforeRadiance
+        ? `Pre-order prices for boxes are already side by side, free. Watch the cards you need (${FREE_WATCHLIST_LIMIT} free, unlimited on Plus) and get an email when a store first lists one or opens it for pre-order, labelled as such. Once the set is out, tick what you pull and see what's left; Premium plans the cheapest delivered order for the rest. We don't predict prices or tell you when to buy: we show what stores charge today and tell you when your number is met.`
+        : `Tick what you pull and see what's left, with the cheapest listing for each missing card. The count says how many cards are revealed so far until the set is complete, because the printed total isn't settled. Premium plans the cheapest delivered order for the rest. We don't predict prices or tell you when to buy: we show what stores charge today.`,
+      features: [
+        "Radiance pre-order comparison, free",
+        `Free watches on Radiance cards, up to ${FREE_WATCHLIST_LIMIT} (unlimited on Plus)`,
+        "Set tracker from release, counting revealed cards only until the set is complete",
+        "Finish this set plan (Premium)",
+      ],
+      href: beforeRadiance ? "/radiance-preorders" : "/sets/radiance",
+      cta: beforeRadiance ? "Compare Radiance pre-orders" : "Open the Radiance set",
+    },
+  ];
+}
 
 // ONE SECTION PER PAID FEATURE (rewritten 2026-09-29, owner: "it also needs to
 // be marketed better and highly accessible to new users"). Each is a row of
@@ -141,14 +218,6 @@ const FEATURES: { title: string; body: string; when: string; href: string | null
     tier: "premium",
   },
   {
-    title: "Demand Finder",
-    body: "The cards players are searching for and opening most on RiftCompare, over the last 7 or 30 days: the top 25 by searches and the top 25 by card views, with both counts and your market's price for every card. What players are looking at, not a forecast. Everyone gets the top 10 most searched this week free.",
-    when: "You're choosing what to buy or list and want to know what everyone else is hunting for.",
-    href: "/tools/demand",
-    cta: "Open Demand Finder",
-    tier: "premium",
-  },
-  {
     title: "No ads, and no limits on your watchlist or portfolio",
     body: `Plus and Premium remove every ad on every page, on the website and in the app, from the moment you subscribe. A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} in its portfolio; a paid plan has no limit on either. Cards you already track stay if you're over a limit or your subscription ends. Price comparison stays free for everyone, with no limit.`,
     when: "You use the site every week and want it to just work.",
@@ -156,13 +225,24 @@ const FEATURES: { title: string; body: string; when: string; href: string | null
     cta: "Open your watchlist",
     tier: "plus",
   },
+  // Demand Finder stays Premium but no longer leads (2026-09-29, the personas pass):
+  // for someone buying at a launch it reads as "what to buy before it spikes", the
+  // tone the community punished. It is described as what it counts: searches.
+  {
+    title: "Demand Finder: what people are searching for",
+    body: "The cards players are searching for and opening most on RiftCompare, over the last 7 or 30 days: the top 25 by searches and the top 25 by card views, with both counts and your market's price for every card. A count of what people looked at, not a forecast or a reason to buy. Everyone gets the top 10 most searched this week free.",
+    when: "You're curious what other players are looking at this week.",
+    href: "/tools/demand",
+    cta: "Open Demand Finder",
+    tier: "premium",
+  },
 ];
 
 
 // The Product JSON-LD's per-tier descriptions: each names only what that tier
 // really gets (TIER_COMPARISON's rows), so a rich result can't credit Plus
 // with Premium's list tools or leave its ad-free benefit out.
-const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio (so a whole set fits in the set tracker), target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP or at your price), and the full Deal Finder and Rising Cards lists.`;
+const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio (so a whole set fits in the set tracker), target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP or at your price, checked ${SEALED_CHECK_CADENCE}), and the full Deal Finder and Rising Cards lists.`;
 const PREMIUM_OFFER_DESCRIPTION = `Premium: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, Best Basket's store-by-store plan for the cheapest delivered order (at the minimum condition you set), Buy this list for a deck, watchlist or binder, the store-by-store plan for what a set is missing, and Demand Finder's most searched and most viewed cards.`;
 const PREMIUM_STANDALONE_DESCRIPTION =
   "No ads on any page, an unlimited watchlist and portfolio, target-price alerts, sealed watches, a deck price watch, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.";
@@ -183,13 +263,13 @@ const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", mon
 const FAQ: { q: string; a: string }[] = [
   {
     q: "I'm new — what do I actually get?",
-    a: `Without an account: every Riftbound card's price compared across every store we track in your country, plus eBay, with the delivered total (item price plus postage) where the store publishes its postage — free, with no limit. A free account adds a watchlist (up to ${FREE_WATCHLIST_LIMIT} cards, with an email when one hits a new low), a portfolio (up to ${FREE_PORTFOLIO_LIMIT} cards), the top three of Deal Finder and Rising Cards, and your own Best Basket total. Plus and Premium watch prices FOR you: your own target price on cards, sealed products back in stock or at RRP, and (Premium) a whole deck's delivered total, checked after every price update (sealed products about every six hours) — with no ads. Nothing you already track is ever taken away.`,
+    a: `Without an account: every Riftbound card's price compared across every store we track in your country, plus eBay, with the delivered total (item price plus postage) where the store publishes its postage — free, with no limit. A free account adds a watchlist (up to ${FREE_WATCHLIST_LIMIT} cards, with an email when one hits a new low), a portfolio (up to ${FREE_PORTFOLIO_LIMIT} cards) with a set checklist that shows what each set is missing and the cheapest listing to finish it, the top three of Deal Finder and Rising Cards, and your own Best Basket total. Plus and Premium watch prices FOR you: your own target price on cards, sealed products back in stock or at RRP, and (Premium) a whole deck's delivered total, checked after every price update (sealed products about every six hours) — with no ads. Nothing you already track is ever taken away.`,
   },
   {
     q: "What's free vs what needs Plus or Premium?",
-    a: `Price comparison, the card database, the deck and list pricer, trade calculator and box EV are free for everyone, with no limit. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards (including its delivered replacement cost), the top three of Deal Finder and Rising Cards, and your own Best Basket total; everyone sees the top 10 most searched cards of the week. ${
+    a: `Price comparison, the card database, the deck and list pricer, trade calculator and box EV are free for everyone, with no limit. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards (including its delivered replacement cost) with the set checklist, the top three of Deal Finder and Rising Cards, and your own Best Basket total; everyone sees the top 10 most searched cards of the week. ${
       premiumPlusEnabled()
-        ? `Plus (${tierMonthlyAmount("plus")}/mo) removes every ad and the watchlist and portfolio limits, and adds target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (an email when a box is back in stock or at RRP), the full Deal Finder (filterable to only your cards) and the full Rising Cards list. Premium (${tierMonthlyAmount("premium")}/mo) adds a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered, emailed at your price), unlimited target alerts and sealed watches, Best Basket's store-by-store plan, Buy this list for your deck, watchlist or binder, the plan behind your replacement cost, and Demand Finder's full most-searched and most-viewed lists.`
+        ? `Plus (${tierMonthlyAmount("plus")}/mo) removes every ad and the watchlist and portfolio limits, and adds target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (an email when a box is back in stock or at RRP), the full Deal Finder (filterable to only your cards) and the full Rising Cards list. Premium (${tierMonthlyAmount("premium")}/mo) adds a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered, emailed at your price), unlimited target alerts and sealed watches, Best Basket's store-by-store plan (at the minimum condition you set), Buy this list for your deck, watchlist or binder, Finish this set for the cards a set is missing, the plan behind your replacement cost, and Demand Finder's full most-searched and most-viewed lists.`
         : `Premium (${tierMonthlyAmount("premium")}/mo) removes every ad and the watchlist and portfolio limits, and adds target-price alerts, sealed watches (an email when a box is back in stock or at RRP), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered, emailed at your price), the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.`
     }`,
   },
@@ -242,6 +322,22 @@ const FAQ: { q: string; a: string }[] = [
   {
     q: "What does minimum condition do?",
     a: "Best Basket, Buy this list and the deck price watch only use listings at or above the grade you choose (Near Mint only, Lightly Played or better, or anything). Each line still shows its condition. If nothing at that grade is in stock, the card is shown as not covered rather than filled with a played copy. It is a Premium setting: a new Best Basket session starts on Lightly Played or better with Anything one tap away, your last choice is remembered, and a deck watch saved before this keeps counting every condition until you change it. Without Premium your total counts each store's cheapest copy in any condition and says how many played copies that includes.",
+  },
+  {
+    q: "How many cards can Finish this set plan at once?",
+    a: `Up to ${SET_GAP_CHUNK} at a time. If you're missing more, it plans your cheapest ${SET_GAP_CHUNK} and tells you how many aren't included, then you can plan the next ${SET_GAP_CHUNK}. It never quietly leaves cards out.`,
+  },
+  {
+    q: "How often are sealed watches checked?",
+    a: `${SEALED_CHECK_CADENCE.charAt(0).toUpperCase()}${SEALED_CHECK_CADENCE.slice(1)}, and every email says when the store was last read. That's fast enough for a box that stays up for a few hours, and not fast enough to beat a bot that checks every minute. At-RRP alerts exist only where we publish an RRP (Australia, the US and the UK), and never for a pre-order set until an official price exists.`,
+  },
+  {
+    q: "Why does Radiance show \"N revealed\" instead of a percentage?",
+    a: "Cards appear in our catalogue as they're revealed and the printed total is still unsettled, so we count against what we can list today. The number grows as reveals land and settles once the set is released.",
+  },
+  {
+    q: "Do you predict prices or tell me when to buy?",
+    a: "No. Rising Cards and the Deal Finder show what stores charge today, and Demand Finder shows what people are searching for. Watches tell you when a price, restock or listing matches something you set.",
   },
   {
     q: "What is a sealed watch?",
@@ -404,20 +500,20 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
       <div className="text-center">
         <span className="chip mb-3 inline-flex bg-gold/15 font-bold uppercase tracking-wide text-gold">Premium</span>
         <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">
-          {already ? `You're ${TIER_NAMES[currentTier ?? "premium"]}` : "Never overpay for a Riftbound card"}
+          {already ? `You're ${TIER_NAMES[currentTier ?? "premium"]}` : "Know what you're missing. Buy it for less."}
         </h1>
         {/* The 2026-09-25 subline: one sentence per tier, what each is FOR.
             The trial clause reads trialAvailable (this viewer can really
             start one), not premiumTrialEnabled(): a returning trialist was
             being promised a second trial here that checkout won't give. */}
-        {/* Rewritten 2026-09-29 for someone who has never used the site: one
-            sentence for what is free, one for what the paid plans do. */}
+        {/* The personas pass (2026-09-29): the hero names the two things people
+            do here, in the order they do them, and the subline says what is
+            free before what is paid. It quotes no price and no saving figure. */}
         {!already && (
           <p className="mx-auto mt-3 max-w-xl text-base font-semibold leading-relaxed text-slate-200">
-            Compare Riftbound card prices across every store, free.{" "}
-            {plusLive ? "Plus and Premium watch prices for you" : "Premium watches prices for you"} — your target price on a card, a
-            sealed box back in stock or at RRP, {plusLive ? "and (Premium) " : "and "}a whole deck&apos;s delivered total — and email you
-            when it&apos;s there.
+            {plusLive
+              ? "Comparing prices is free, and so is tracking what your binder is missing. Plus watches prices and stock for you. Premium plans the order: which stores, what postage, in the condition you'll play."
+              : "Comparing prices is free, and so is tracking what your binder is missing. Premium watches prices and stock for you and plans the order: which stores, what postage, in the condition you'll play."}
           </p>
         )}
         <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-400">
@@ -428,6 +524,37 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
               }${introEligible ? `, and monthly plans are half price for the first ${INTRO_MONTHS} months` : ""}.`}
         </p>
       </div>
+
+      {/* WHO IT IS FOR (2026-09-29, the personas pass): one block per kind of
+          player, what is free for them first and then what Plus and Premium add,
+          with a link to the real page. Above the per-feature cards, which follow
+          for anyone who wants every feature spelled out. */}
+      {!already && (
+        <div className="mt-8">
+          <h2 className="mb-1 text-center text-lg font-extrabold text-white">Start with what you do</h2>
+          <p className="mb-4 text-center text-xs text-slate-500">
+            Each of these begins with what&apos;s free. Nothing here predicts a price or tells you when to buy.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {personaSections().map((sec) => (
+              <section key={sec.eyebrow} className="card-surface flex flex-col p-4">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-brand-400">{sec.eyebrow}</div>
+                <h3 className="mt-1 font-bold text-white">{sec.headline}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">{sec.body}</p>
+                <ul className="mt-3 flex-1 space-y-1.5 text-[13px] text-slate-300">
+                  {sec.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2 [font-feature-settings:'lnum'_1]">
+                      <span className="mt-0.5 font-bold text-brand-400">✓</span>
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href={sec.href} className="btn-ghost mt-4 self-start text-sm">{sec.cta} →</Link>
+              </section>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* WHAT EACH PAID FEATURE DOES — before the prices (2026-09-29), one
           card per feature: what it does, when you'd use it, which tier. The
@@ -613,6 +740,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           {currentTier !== "plus" && <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>}
           {currentTier !== "plus" && <Link href="/tools/demand" className="btn-ghost">Demand Finder</Link>}
           <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
+          <Link href="/portfolio/sets" className="btn-ghost">Set checklist</Link>
           {checkoutLive && <ManageSubscriptionButton />}
         </div>
       )}
@@ -622,7 +750,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <h2 className="mb-1 text-center text-lg font-extrabold text-white">Feature comparison</h2>
         <p className="mb-3 text-center text-xs text-slate-500">
           {plusLive
-            ? "See exactly what you get with each tier — Plus goes ad-free, unlocks the full lists and watches cards and sealed products for you; Premium adds the deck price watch, the list tools and Demand Finder on top."
+            ? "See exactly what you get with each tier — Plus goes ad-free, lifts the watchlist and portfolio limits (so a whole set fits in the set tracker), unlocks the full lists and watches cards and sealed products for you; Premium adds the store-by-store plans, the minimum condition, the deck price watch and Demand Finder on top."
             : "See exactly what you get with each tier — Premium goes ad-free and adds the full lists, the watches, the list tools and Demand Finder."}
         </p>
         <div className="card-surface p-1">

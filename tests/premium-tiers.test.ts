@@ -506,13 +506,14 @@ test("the dashboard's tool list tags each tool with the tier that opens it in fu
   // end. 2026-09-25 lineup: the Bulk Pricer, Value Finder, Rising Sealed and
   // Condition Calculator entries are gone; Demand Finder is back, Premium.
   const byTitle = Object.fromEntries(DASHBOARD_TOOLS.map((t) => [t.title, t]));
-  assert.deepEqual(Object.keys(byTitle), ["Deal Finder", "Rising Cards", "Best Basket", "Demand Finder", "Watchlist & target alerts", "Portfolio"]);
+  assert.deepEqual(Object.keys(byTitle), ["Deal Finder", "Rising Cards", "Best Basket", "Demand Finder", "Watchlist & target alerts", "Portfolio", "Set checklist"]);
   assert.equal(byTitle["Deal Finder"].tier, "plus");
   assert.equal(byTitle["Rising Cards"].tier, "plus");
   assert.equal(byTitle["Best Basket"].tier, "premium");
   assert.equal(byTitle["Demand Finder"].tier, "premium");
   assert.equal(byTitle["Watchlist & target alerts"].tier, "free");
   assert.equal(byTitle["Portfolio"].tier, "free");
+  assert.equal(byTitle["Set checklist"].tier, "free", "the set tracker is free within the portfolio limit, so it opens for every account");
 
   // The free taste each paid tool offers is exactly TIER_COMPARISON's free cell.
   const cell = (feature: string) => TIER_COMPARISON.find((r) => r.feature === feature)!.account;
@@ -526,9 +527,9 @@ test("the dashboard's tool list tags each tool with the tier that opens it in fu
 
   // Who opens what, in full.
   for (const [viewer, opens] of [
-    [null, ["Watchlist & target alerts", "Portfolio"]],
-    ["plus", ["Deal Finder", "Rising Cards", "Watchlist & target alerts", "Portfolio"]],
-    ["premium", ["Deal Finder", "Rising Cards", "Best Basket", "Demand Finder", "Watchlist & target alerts", "Portfolio"]],
+    [null, ["Watchlist & target alerts", "Portfolio", "Set checklist"]],
+    ["plus", ["Deal Finder", "Rising Cards", "Watchlist & target alerts", "Portfolio", "Set checklist"]],
+    ["premium", ["Deal Finder", "Rising Cards", "Best Basket", "Demand Finder", "Watchlist & target alerts", "Portfolio", "Set checklist"]],
   ] as const) {
     assert.deepEqual(
       DASHBOARD_TOOLS.filter((t) => dashboardToolOpens(t.tier, viewer)).map((t) => t.title),

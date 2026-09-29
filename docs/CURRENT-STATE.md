@@ -108,18 +108,27 @@ longer lands on its entry.
 - **Tiers (lineup of 2026-09-25, prices of 2026-09-26):** Plus, $2.99/mo or
   $23.99/yr, is
   **ad-free**, has the full Deal Finder (with "Only my cards") and Rising
-  Cards lists, and target-price alerts on up to `PLUS_TARGET_ALERT_LIMIT`
+  Cards lists, no watchlist or portfolio limit (so a whole set fits in the set
+  tracker), and target-price alerts on up to `PLUS_TARGET_ALERT_LIMIT`
   (25) cards and sealed watches on up to `SEALED_WATCH_LIMIT_PLUS` (10)
-  products (2026-09-29). Premium, $4.99/mo or $39.99/yr, adds unlimited
-  targets and sealed watches, the deck price watch (up to `DECK_WATCH_LIMIT`,
-  10, saved lists), Best Basket's store-by-store plan (for a pasted list,
-  deck, watchlist, binder or a set's missing cards, and behind the portfolio's
-  replacement cost) and
+  products, checked about every six hours (2026-09-29). Premium, $4.99/mo or
+  $39.99/yr, adds unlimited targets and sealed watches, the deck price watch
+  (up to `DECK_WATCH_LIMIT`, 10, saved lists), Best Basket's store-by-store
+  plan (for a pasted list, deck, watchlist, binder or a set's missing cards,
+  and behind the portfolio's replacement cost) at the minimum condition the
+  member sets, and
   **Demand Finder**
   (`/tools/demand`, `isPremium(user, "premium")`: top 25 most searched and
   most viewed, 7 or 30 days). Below Premium, Plus included, Demand Finder
   shows only the free /movers strip's top 10 most searched this week
-  (`FREE_DEMAND_ROWS`, `tests/demand-finder.test.ts`). Any signed-in
+  (`FREE_DEMAND_ROWS`, `tests/demand-finder.test.ts`); it is described as "what
+  people are searching for" and sits low on /premium, never as "what to buy
+  before it spikes". **The persona line (2026-09-29): Plus tells you what to
+  buy and when; Premium tells you which stores to buy it from and what it
+  costs delivered.** The set tracker is FREE within the 50-card portfolio (the
+  tick, the missing list and the cost to finish are never metered; card 51 is
+  the Plus step), so /premium leads "Know what you're missing. Buy it for
+  less." with what is free first. Any signed-in
   account gets its own Best Basket total and the replacement-cost total;
   in Best Basket "binder" means replacement cost, never gaps (narrowed
   2026-09-29: what a binder is missing from a set is answered by the free set
@@ -137,7 +146,8 @@ longer lands on its entry.
   (`introRenewalsRemaining`).
   [2026-09-11](../DECISIONS.md#L4428), [2026-09-24](../DECISIONS.md#L12120),
   [2026-09-25](../DECISIONS.md#L12322), [2026-09-25](../DECISIONS.md#L12842),
-  [2026-09-25](../DECISIONS.md#L13067), [2026-09-26](../DECISIONS.md#L14680)
+  [2026-09-25](../DECISIONS.md#L13067), [2026-09-26](../DECISIONS.md#L14680),
+  [2026-09-29 personas](../DECISIONS.md#L15447)
 - **Gates:** `isPremium(user)` defaults to the Plus minimum; ads read
   `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`):
   an unknown price is Premium, so every retired Plus Price must be listed in
@@ -158,7 +168,11 @@ longer lands on its entry.
   countdowns, invented numbers, savings totals or testimonials; the one
   saving figure allowed is Best Basket's, the viewer's own list's computed
   saving, from one whole unit of its currency (`lib/basket-saving.ts`). Rising
-  Cards is a screen, not a prediction. No "lock in before the price goes
+  Cards is a screen, not a prediction. The persona pass adds: no P&L or "worth"
+  in the set view, "cost to finish" is always "the cheapest listing today,
+  before postage", Radiance is "N revealed" and never a denominator, sealed is
+  "about every six hours" and never "instant", and the binder's since-you-bought
+  panel gives no "beating the market" verdict. No "lock in before the price goes
   up": since the 09-26 cut, the lock-in banner, dialog lines and FAQ render only while a real, higher price is announced
   (`NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT`, which defaults to today's price);
   the steady state says "cancel anytime". The terms still promise a
@@ -167,7 +181,7 @@ longer lands on its entry.
   [2026-09-11](../DECISIONS.md#L4642), [2026-09-14](../DECISIONS.md#L5971),
   [2026-09-10](../DECISIONS.md#L3990), [2026-09-22](../DECISIONS.md#L10328),
   [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14292), [2026-09-26](../DECISIONS.md#L14680),
-  [2026-09-28](../DECISIONS.md#L14549)
+  [2026-09-28](../DECISIONS.md#L14549), [2026-09-29 personas](../DECISIONS.md#L15447)
 - **Free limits (2026-09-28, owner: "charge for the features people use every
   week"):** a free account watches up to 10 distinct cards and keeps up to 50
   in its portfolio (`lib/free-limits.ts`, the one source for every route and
@@ -288,7 +302,8 @@ longer lands on its entry.
   one sentence for free and one for paid, then one card per paid feature
   (what / when / tier) above the prices, then the table and a FAQ that
   defines a deck watch and a sealed watch. Premium's tagline is "Works while
-  you're away". `PREMIUM_COPY_VERSION` `premium-2026-09-29`.
+  you're away". `PREMIUM_COPY_VERSION` `personas-2026-09-29` (Plus's tagline
+  leads with whole sets, Premium's is "Plans the order").
   [2026-09-29](../DECISIONS.md#L15178)
 - **Upgrade prompts live where a limit is hit, not in headers:**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best

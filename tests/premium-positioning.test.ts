@@ -92,9 +92,14 @@ test("no Premium pitch surface sells an advantage over other buyers", () => {
   }
 });
 
-test("the tagline is present on both surfaces that carry the headline", () => {
+test("the tagline is present on the surface that carries it, and /premium leads with the personas hero", () => {
+  // /premium's hero changed on 2026-09-29 (the personas pass, DECISIONS.md): the
+  // owner-approved line is "Know what you're missing. Buy it for less.", which is
+  // still a saving the reader makes, not an advantage over other buyers. The old
+  // tagline stays on the dialog, and in /premium's page <title>.
+  assert.match(code("src/app/premium/page.tsx"), /Know what you're missing\. Buy it for less\./, "/premium must carry the hero line");
+  assert.match(code("src/app/premium/page.tsx"), /never overpay for a Riftbound card/, "/premium's title still carries the tagline");
   for (const file of [
-    "src/app/premium/page.tsx",
     "src/components/PremiumDialog.tsx",
     // SignupPromoPopup is deliberately NOT here since 2026-09-16: it sells the
     // free account and names no price. PremiumSlideIn and its graphic

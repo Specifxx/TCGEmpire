@@ -18,6 +18,8 @@ import {
   tierIntroMonthlyAmount,
   INTRO_MONTHS,
 } from "@/lib/site";
+import { SEALED_CHECK_CADENCE } from "@/lib/alert-limits";
+import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
 import { usePresence } from "@/lib/motion";
@@ -156,7 +158,22 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
     prefixes: ["/sealed"],
     tool: "Sealed watches",
     heading: "Sealed watches email you when a box is back or at RRP",
-    line: "Heart a booster box or bundle and Plus emails you when a real store has it back in stock, when it's at RRP where we publish one, or at your own price. Every email says when the store was last checked.",
+    line: `Heart a booster box or bundle and Plus emails you when a real store has it back in stock, when it's at RRP where we publish one, or at your own price. Stores are checked ${SEALED_CHECK_CADENCE} and every email says when.`,
+  },
+  // 2026-09-29 (personas pass). The set tracker is free within the 50-card
+  // portfolio, so this line is where card 51 becomes Plus: it says what is free
+  // first. It must sit BEFORE "/portfolio" (first prefix match wins).
+  {
+    prefixes: ["/portfolio/sets", "/sets"],
+    tool: "Set tracker",
+    heading: "Set tracker: see what your set is missing, and the cheapest listing to finish it",
+    line: `Tick the cards in your binder to see what a set is missing and the cheapest listing for each, free for your first ${FREE_PORTFOLIO_LIMIT} cards. Plus removes the limit so a whole set fits; nobody loses cards they already have. Premium plans the store-by-store order for the rest.`,
+  },
+  {
+    prefixes: ["/tools/best-basket"],
+    tool: "Minimum condition",
+    heading: "Minimum condition keeps a played copy out of your plan",
+    line: "Premium's Best Basket can use only Near Mint, or Lightly Played or better, so the cheapest plan never quietly includes a copy you wouldn't play. A card with nothing at that grade is shown as not covered.",
   },
   {
     prefixes: ["/deck"],

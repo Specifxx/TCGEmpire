@@ -2,6 +2,7 @@ import { NAV_GROUPS } from "@/components/nav-groups";
 import { SITE_URL, tierMonthlyAmount } from "@/lib/site";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import { SET_GAP_CHUNK } from "@/lib/set-gap";
 
 // llms.txt — the AI-agent site map (spec: llmstxt.org). A curated, markdown index
 // of the site's most useful pages so LLMs/agents can navigate without parsing HTML.
@@ -28,8 +29,8 @@ const DESC: Record<string, string> = {
   "/learn": "Learn Riftbound: an interactive new-player guide with real cards.",
   "/guides": "Buying guides and strategy articles for Riftbound.",
   "/blog": "News, metagame snapshots and buying guides for Riftbound.",
-  "/portfolio": `Track a collection's value over time: up to ${FREE_PORTFOLIO_LIMIT} cards with a free account, unlimited with Plus or Premium.`,
-  "/premium": `Price comparison is free for everyone, with no limit. A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} in its portfolio; cards already tracked past a limit are kept. Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, an unlimited watchlist and portfolio, target-price alerts, and the full Deal Finder and Rising Cards lists. Plus also watches sealed products (up to ${SEALED_WATCH_LIMIT_PLUS}: back in stock after selling out, at RRP, at your price, checked ${SEALED_CHECK_CADENCE}). Premium (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), unlimited target alerts and sealed watches, Best Basket's store-by-store plan, Buy this list for a deck, watchlist or binder, and the full Demand Finder (most searched and most viewed cards).`,
+  "/portfolio": `Track a collection's value over time: up to ${FREE_PORTFOLIO_LIMIT} cards with a free account, unlimited with Plus or Premium. The set checklist (/portfolio/sets) shows what a set is missing and the cheapest listing for each missing card, before postage.`,
+  "/premium": `Price comparison is free for everyone, with no limit. A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} in its portfolio; cards already tracked past a limit are kept. Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, an unlimited watchlist and portfolio, target-price alerts, and the full Deal Finder and Rising Cards lists. Plus also watches sealed products (up to ${SEALED_WATCH_LIMIT_PLUS}: back in stock after selling out, at RRP, at your price, checked ${SEALED_CHECK_CADENCE}), and with no card limit a whole set fits in the set checklist. Premium (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus Best Basket's store-by-store plan for a deck, a list or the rest of a set (Finish this set, up to ${SET_GAP_CHUNK} cards a plan) at the minimum condition you set (Near Mint only, Lightly Played or better, or anything), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), unlimited target alerts and sealed watches, Buy this list for a deck, watchlist or binder, and the full Demand Finder (what people are searching for and viewing).`,
   "/sets": "Every Riftbound set with its full card list and live prices.",
   "/champions": "Browse Riftbound cards by League of Legends champion.",
   "/cards": "Card facets — browse by type, rarity and printing (Signature, Overnumbered, Alternate Art, Promo).",
@@ -69,6 +70,7 @@ export function GET() {
   lines.push(`- Is this trade fair?: ${abs("/trade")} — the Trade Calculator values both sides at the cheapest in-stock store price in your market and currency.`);
   lines.push(`- Sealed product prices (booster boxes, packs, bundles): ${abs("/sealed")}.`);
   lines.push(`- Price a whole decklist: ${abs("/deck")}.`);
+  lines.push(`- What is a set missing from my binder, and what is the cheapest listing to finish it?: ${abs("/portfolio/sets")} — a free set checklist for a signed-in account (up to ${FREE_PORTFOLIO_LIMIT} cards free), with the cheapest in-stock store listing for each missing card before postage.`);
   lines.push("");
   lines.push(
     "For AI agents: clean markdown versions of key pages live under `/llm/` — e.g. " +
