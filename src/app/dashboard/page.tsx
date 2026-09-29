@@ -14,6 +14,7 @@ import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton"
 import { NavIcon } from "@/components/NavIcon";
 import { PremiumNavLink } from "@/components/PremiumNavLink";
 import { WatchlistSnapshot } from "@/components/WatchlistSnapshot";
+import { WelcomeChecklist } from "@/components/WelcomeChecklist";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,9 @@ export const metadata: Metadata = {
 
 // The tool list, each tool's minimum tier and its free taste live in
 // lib/dashboard-tools.ts (tests/premium-tiers.test.ts runs them).
+
+// How young an account is still greeted as new rather than "back".
+const NEW_ACCOUNT_MS = 60 * 60 * 1000;
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -40,6 +44,12 @@ export default async function DashboardPage() {
   // of every tool as an open link, and an upgrade path, never a wall.
   const tier = premiumTierOf(user);
   const tierName = tier ? TIER_NAMES[tier] : "Free";
+  // THE LANDING AFTER SIGN-IN (2026-09-29): a sign-in with nowhere to return
+  // to lands here (lib/next-param.ts POST_SIGN_IN_FALLBACK), a brand-new
+  // account included. "Welcome back" would be wrong seconds after sign-up, so
+  // an account under an hour old is greeted as new. Server-side, from the row
+  // getCurrentUser already reads, so the heading never flips after hydration.
+  const isNewAccount = Date.now() - user.createdAt.getTime() < NEW_ACCOUNT_MS;
   const isPlus = tier === "plus";
   const isFree = tier == null;
   // A Plus member's upgrade quote: not mid-trial (the upgrade route handles
@@ -59,7 +69,9 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Welcome back, {user.displayName}</h1>
+            <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">
+              {isNewAccount ? "Welcome" : "Welcome back"}, {user.displayName}
+            </h1>
             {/* Gold marks Premium, so the Free chip never wears it
                 (2026-09-25); Plus names its headline benefit. */}
             <span
@@ -79,6 +91,12 @@ export default async function DashboardPage() {
             hub showed this button). */}
         {premiumCheckoutEnabled() && tier != null && user.stripeCustomerId && <ManageSubscriptionButton />}
       </div>
+
+      {/* The three-step setup checklist, FIRST on the page for a new account
+          (2026-09-29). It renders nothing outside its 7-day window, once
+          dismissed, or once done — see its own comment; before this it lived
+          only on /profile and at the foot of the homepage. */}
+      <WelcomeChecklist />
 
       {/* Portfolio + watchlist snapshots */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

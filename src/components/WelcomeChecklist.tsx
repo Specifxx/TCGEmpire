@@ -8,6 +8,7 @@ import { CardSearch, type SearchCard } from "./CardSearch";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
 import { trackEvent } from "@/lib/analytics";
 import { PremiumButton } from "./PremiumButton";
+import { isSignupSession } from "@/lib/signup-session";
 
 const DISMISS_KEY = "rc_welcome_dismissed";
 // Written by SignupWelcome.tsx the moment a ?welcome landing fires — not read
@@ -19,9 +20,10 @@ const WELCOME_KEY = "rc_welcome_at";
 const ELIGIBLE_MS = 7 * 24 * 60 * 60 * 1000;
 
 // Inline, three-step onboarding — never a modal. Eligible for a signed-in
-// account within 7 days of its ?welcome landing and not dismissed. Mounted on
-// /profile (id="welcome") and by WelcomeBack on the homepage — same component,
-// same completion state, wherever it renders.
+// account within 7 days of its ?welcome landing and not dismissed. Mounted at
+// the top of /dashboard (where a sign-in with nowhere to return to lands, since
+// 2026-09-29), on /profile (id="welcome") and by WelcomeBack on the homepage —
+// same component, same completion state, wherever it renders.
 //
 // THE PREMIUM STEP (2026-09-23; DECISIONS.md, "Premium after sign-up"). A
 // fourth, optional item: "Try Premium free". It is NOT counted in the 3/3 and
@@ -43,7 +45,9 @@ export function WelcomeChecklist() {
     try {
       if (localStorage.getItem(DISMISS_KEY) === "1") return;
       const stamp = Number(localStorage.getItem(WELCOME_KEY));
-      if (Number.isFinite(stamp) && Date.now() - stamp < ELIGIBLE_MS) setEligible(true);
+      // isSignupSession(): the landing itself counts even if this effect runs
+      // before SignupWelcome's writes the stamp (lib/signup-session.ts).
+      if ((Number.isFinite(stamp) && Date.now() - stamp < ELIGIBLE_MS) || isSignupSession()) setEligible(true);
     } catch {
       /* private mode — no onboarding, not worth failing over */
     }

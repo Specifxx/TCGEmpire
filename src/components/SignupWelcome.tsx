@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { trackEvent } from "@/lib/analytics";
 import { trackSignupComplete } from "@/lib/growth-events";
@@ -8,6 +9,7 @@ import { useMe } from "@/lib/use-me";
 import { useWatchlist } from "@/lib/use-watchlist";
 import type { Country } from "@/lib/country";
 import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
+import { markSignupSession } from "@/lib/signup-session";
 import { Toast } from "./ui/Toast";
 
 // Fires the sign_up analytics event for a BRAND-NEW account.
@@ -35,6 +37,9 @@ function SignupWelcomeInner() {
   const { watch } = useWatchlist();
   const claimed = useRef(false);
   const [toast, setToast] = useState<string | null>(null);
+  // Only the welcome toast carries an action ("Get set up →"); the watch
+  // toasts below clear it when they take over.
+  const [toastAction, setToastAction] = useState<{ href: string; label: string } | null>(null);
   // Kept around through the toast's own timeout so Toast's exit fade has
   // something to render for its last ~120ms instead of going blank.
   const lastToastRef = useRef<string | null>(null);
@@ -45,6 +50,21 @@ function SignupWelcomeInner() {
     if (!welcome || fired.current) return;
     fired.current = true;
     trackEvent("sign_up", { method: welcome });
+    // The rest of this tab's session is the sign-up session: no Premium
+    // slide-in until the next visit (lib/signup-session.ts).
+    markSignupSession();
+    // RETURNED TO THEIR PAGE, NOT THE DASHBOARD (2026-09-29): a new account
+    // that signed up from a page goes back to it, which is right, but used to
+    // get no sign that anything had changed. One quiet toast says the account
+    // is ready and points at the setup checklist, without pulling them off
+    // what they were doing. On /dashboard the page itself says it.
+    if (pathname !== "/dashboard") {
+      setToast("Your free account is ready.");
+      setToastAction({ href: "/dashboard", label: "Get set up →" });
+      setTimeout(() => {
+        setToast((t) => (t === "Your free account is ready." ? null : t));
+      }, 8000);
+    }
     // ?welcome= is set by the OAuth callback for a NEW account only, so this
     // is first-login-only by construction.
     trackSignupComplete(welcome);
@@ -85,18 +105,36 @@ function SignupWelcomeInner() {
     // so plainly (no upsell here: the upgrade panel belongs to the heart the
     // member taps next, lib/free-limits.ts).
     const onLimit = (l: { limit: number }) => {
+      setToastAction(null);
       setToast(`That card wasn't added — your watchlist is at the free limit of ${l.limit} cards.`);
       setTimeout(() => setToast(null), 6000);
     };
     void watch(pending.cardId, pending.market as Country, { onLimit }).then((ok) => {
       if (ok) {
+        setToastAction(null);
         setToast("Watching that card ✓ — it's on your watchlist");
         setTimeout(() => setToast(null), 5000);
       }
     });
   }, [loaded, user, watch]);
 
-  return <Toast open={!!toast} message={lastToastRef.current} />;
+  return (
+    <Toast
+      open={!!toast}
+      message={lastToastRef.current}
+      action={
+        toastAction ? (
+          <Link
+            href={toastAction.href}
+            onClick={() => setToast(null)}
+            className="shrink-0 whitespace-nowrap text-sm font-semibold text-brand-300 underline-offset-2 hover:underline"
+          >
+            {toastAction.label}
+          </Link>
+        ) : undefined
+      }
+    />
+  );
 }
 
 export function SignupWelcome() {

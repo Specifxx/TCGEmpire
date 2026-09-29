@@ -4,7 +4,7 @@ import { AuthForm } from "@/components/AuthForm";
 import { getCurrentUser } from "@/lib/auth";
 import { enabledProviders } from "@/lib/oauth";
 import { pageAlternates } from "@/lib/seo";
-import { sanitizeNextPath } from "@/lib/next-param";
+import { sanitizeNextPath, POST_SIGN_IN_FALLBACK } from "@/lib/next-param";
 
 // auth/utility — never indexed. The self-referencing canonical is what collapses
 // the ?next= family: the navbar's sign-in link carries the current path as ?next=,
@@ -56,10 +56,12 @@ export default async function LoginPage({ searchParams }: { searchParams: { next
   const user = await getCurrentUser();
   // "Safe internal path" is defined once in lib/next-param.ts (the OAuth start
   // route and callback apply the same rule); the fallbacks differ per use:
-  // an already-signed-in visitor goes to /profile, a Cancel link goes home
-  // (an unauthenticated visitor sent to /profile would just bounce back here).
+  // an already-signed-in visitor goes to POST_SIGN_IN_FALLBACK (/dashboard,
+  // the same place a sign-in with no destination lands), a Cancel link goes
+  // home (an unauthenticated visitor sent to /dashboard would just bounce back
+  // here).
   const next = sanitizeNextPath(searchParams.next);
-  if (user) redirect(next ?? "/profile");
+  if (user) redirect(next ?? POST_SIGN_IN_FALLBACK);
   return (
     <AuthForm
       providers={enabledProviders()}

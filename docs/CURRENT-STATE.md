@@ -210,6 +210,13 @@ longer lands on its entry.
 - **Measure changes:** after the freeze, bump `PREMIUM_COPY_VERSION` /
   `PROMO_VARIANT` whenever funnel wording, price or frequency changes.
   [2026-09-09](../DECISIONS.md#L3628), [2026-09-14](../DECISIONS.md#L6134)
+- **After sign-in:** back to the page it started on (`?next=` on every
+  contextual `/login` link; a pending watch completes). With no destination:
+  `/dashboard` (`POST_SIGN_IN_FALLBACK`), never `/profile`. A new account gets
+  "Welcome" and the setup checklist first there, or a one-time "Your free
+  account is ready — Get set up →" toast on the page it returned to, and no
+  Premium slide-in for the rest of that session (`lib/signup-session.ts`).
+  [2026-09-29](../DECISIONS.md#L15239)
 - **Sign-up attribution:** /login keeps the clicked source
   (`readSignupSource`) rather than overwriting it with "login", and every
   /login link carries `src=` or marks its source on click

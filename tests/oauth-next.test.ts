@@ -52,7 +52,9 @@ test("the callback honors next (re-sanitized), clears the cookie, and keeps welc
   assert.match(src, /sanitizeNextPath\(cookies\(\)\.get\(`oauth_next_\$\{provider\}`\)\?\.value\)/);
   // Cleared unconditionally — a stale destination must not leak into a later sign-in.
   assert.match(src, /cookies\(\)\.set\(`oauth_next_\$\{provider\}`, "", \{ path: "\/", maxAge: 0 \}\)/);
-  assert.match(src, /new URL\(next \?\? "\/profile", req\.url\)/);
+  // No destination → the dashboard, not /profile (2026-09-29): one constant.
+  assert.match(src, /new URL\(next \?\? POST_SIGN_IN_FALLBACK, req\.url\)/);
+  assert.match(read("src/lib/next-param.ts"), /export const POST_SIGN_IN_FALLBACK = "\/dashboard";/);
   assert.match(src, /if \(isNew\) dest\.searchParams\.set\("welcome", provider\)/);
 });
 

@@ -42,8 +42,11 @@ export function AccountStrip() {
             ))}
           </ul>
         </div>
+        {/* No ?next= (2026-09-29): a new account from the homepage lands on
+            /dashboard, where the setup checklist is at the top, rather than
+            back on a homepage whose checklist sits at the very bottom. */}
         <Link
-          href="/login?next=/"
+          href="/login"
           rel="nofollow"
           onClick={() => markSignupSource("home")}
           className="btn-primary shrink-0 whitespace-nowrap"

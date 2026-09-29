@@ -123,8 +123,9 @@ test("the newly tagged surfaces each have their own source", () => {
   }
   // QuickView returns to the card it was opened on, not /profile.
   assert.match(read("src/components/QuickView.tsx"), /\/login\?next=\$\{encodeURIComponent\(cardHref\(card\)\)\}&src=quickview/);
-  // The homepage strip returns home rather than to the /profile default.
-  assert.match(read("src/components/home/AccountStrip.tsx"), /href="\/login\?next=\/"/);
+  // The homepage strip carries no ?next= since 2026-09-29: a new account lands
+  // on /dashboard, with the setup checklist first, not back on the homepage.
+  assert.match(read("src/components/home/AccountStrip.tsx"), /href="\/login"\s/);
 });
 
 test("/login has a context line for the games and the gated tools", () => {

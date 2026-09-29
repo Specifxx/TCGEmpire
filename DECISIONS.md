@@ -15235,3 +15235,34 @@ This reverses the 2026-09-24 first-visit rule ("First visit from Reddit/Discord:
 | Sign-up | `/movers` on a phone | 0.2 s |
 | Premium slide-in (signed-in free account) | `/`, desktop | 0.3 s |
 | Premium slide-in (signed-in free account) | a blog post on a phone | 0.3 s |
+
+## Where people land after signing in — 2026-09-29
+
+**Why.** Owner: "have a think about what page the user lands on after they login for the best user experience", then "yes pls" to the four changes proposed.
+
+What was there:
+- A sign-in that started on a page returned to it (every contextual `/login` link carries `?next=`), and a watch started while signed out completed after it.
+- With no destination (the header's Log in on the homepage, a direct `/login`, the homepage strip) the callback fell back to `/profile`: the account-settings page. That was never a decision, just the code's default.
+- A brand-new account got no visible welcome. Its setup checklist lived only on `/profile` and at the foot of the homepage.
+- And since the Premium slide-in went to page load earlier today, the first thing after creating a free account was a request to pay. That contradicts the 2026-09-23 "Premium after sign-up" rule.
+
+**What.**
+1. **Back to where they were stays rule one.** Unchanged: `?next=`, and the pending-watch completion.
+2. **No destination → `/dashboard`** (`POST_SIGN_IN_FALLBACK`, `lib/next-param.ts`). This applies to the OAuth callback and to `/login` for an already-signed-in visitor. The homepage strip's "Create your free account" drops `?next=/` and lands there too. `/profile` stays in the account menu.
+3. **First sign-in:**
+   - On `/dashboard`, an account under an hour old reads "Welcome, {name}" rather than "Welcome back". This uses `createdAt`, which `getCurrentUser` now selects from the row it already reads, so there is no extra query and no flicker.
+   - The setup checklist (`WelcomeChecklist`) is first on the page, above the snapshots.
+   - A new account returned to another page gets one toast: "Your free account is ready." with "Get set up →" to `/dashboard`, for 8 s. A completed pending watch's toast is more specific and replaces it.
+4. **No Premium slide-in for the rest of the sign-up session.** `lib/signup-session.ts` marks the tab on the `?welcome` landing (sessionStorage, plus the URL itself before `SignupWelcome` has run). `PremiumSlideIn` returns before arming, and the next visit is an ordinary one. The same helper lets the checklist show on the landing regardless of effect order: it reads a stamp `SignupWelcome` writes in its own effect.
+
+**Verified.**
+- `tests/post-sign-in-landing.test.ts`: the fallback, the greeting, the checklist's position, the toast and its hand-off, the slide-in guard, and `isSignupSession` against stubbed storage. `tests/oauth-next.test.ts` and `tests/login-links-attributed.test.ts` are updated.
+- `next dev`, simulating the callback's landings with real sessions:
+
+| Scenario | Result |
+|---|---|
+| New account at `/dashboard?welcome=google` | "Welcome, Nova"; the checklist above the snapshots; no toast; no slide-in; the URL stripped |
+| The next page in the same tab | No slide-in |
+| New account back on `/about?welcome=discord`, at 390px | The toast with "Get set up →" to `/dashboard`; no slide-in; the link opens the dashboard with the checklist |
+| That account's next visit, in a new session | The slide-in shows |
+| An account three days old visiting `/login` while signed in | Redirected to `/dashboard`, "Welcome back, Oldie", no checklist |

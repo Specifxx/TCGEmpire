@@ -21,6 +21,7 @@ import {
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
 import { usePresence } from "@/lib/motion";
+import { isSignupSession } from "@/lib/signup-session";
 import { Skeleton } from "./ui/Skeleton";
 
 // REMOVED 2026-09-28 WITH THE FREE LIMITS, RESTORED 2026-09-29. The owner's
@@ -244,6 +245,13 @@ export function PremiumSlideIn() {
     } catch {
       /* storage blocked — treat as "no prior state", the caps below all fail open to showing once */
     }
+
+    // NEVER IN THE SIGN-UP SESSION (2026-09-29): the tab where the account was
+    // just created gets no Premium ask at all — the first thing after making a
+    // free account must not be a request to pay (the 2026-09-23 "Premium after
+    // sign-up" rule, which the page-load timing had overridden). The next
+    // visit is an ordinary one. lib/signup-session.ts.
+    if (isSignupSession()) return;
 
     // Hard caps, cheapest first.
     if (readNum(ls, DISMISS_COUNT) >= MAX_DISMISSALS) return; // a firm no is permanent
