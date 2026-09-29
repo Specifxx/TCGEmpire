@@ -309,3 +309,12 @@ export function useCountry(): CountryCtx {
   if (!ctx) throw new Error("useCountry must be used within <CountryProvider>");
   return ctx;
 }
+
+/**
+ * The context, or null outside the provider — for a component that is also
+ * rendered by a server-side table (PreorderPriceTable → SealedWatchButton,
+ * 2026-09-29) and takes its market as a prop there instead.
+ */
+export function useCountryMaybe(): CountryCtx | null {
+  return useContext(Ctx);
+}

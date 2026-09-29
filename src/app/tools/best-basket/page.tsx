@@ -6,6 +6,7 @@ import { guidesForTool } from "@/lib/content/tool-guides";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
+import { prisma } from "@/lib/db";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
@@ -76,6 +77,7 @@ interface Params {
   list?: string;
   source?: string;
   skipOwned?: string;
+  watch?: string;
 }
 
 // This page's own URL with its entry parameters, for the sign-in round trip.
@@ -99,9 +101,20 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
   // (?source=watchlist), the portfolio's replacement panel (?source=binder),
   // each optionally with ?skipOwned=1. Decoded here so a Premium visitor's
   // basket runs straight away; a free preview waits for a click.
-  const initialList = searchParams.list ? decodeList(searchParams.list) : undefined;
+  // A saved deck price watch (?watch=, from its email or /watching,
+  // 2026-09-29): its OWNER, while Premium, gets the list run straight away
+  // with the delivery it was saved with. Anyone else sees the empty tool —
+  // one primary-key read, scoped to the viewer. It is priced in the viewer's
+  // current market; the row's own market is what its emails use.
+  const watchRow =
+    premium && user && typeof searchParams.watch === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(searchParams.watch)
+      ? await prisma.deckWatch
+          .findFirst({ where: { id: searchParams.watch, userId: user.id }, select: { id: true, name: true, listText: true, region: true, trackedOnly: true } })
+          .catch(() => null)
+      : null;
+  const initialList = watchRow ? watchRow.listText : searchParams.list ? decodeList(searchParams.list) : undefined;
   const initialSource: BasketSource =
-    searchParams.source === "watchlist" || searchParams.source === "binder" ? searchParams.source : "deck";
+    !watchRow && (searchParams.source === "watchlist" || searchParams.source === "binder") ? searchParams.source : "deck";
   const handedIn = initialSource !== "deck" || !!initialList?.trim();
   // Postage choices for the picker: this market's regions, whether any store
   // here prices by region at all, and when the rates were measured.
@@ -173,6 +186,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           measuredAt={measuredAt}
           measuredTo={marketMeasuredPlaces(country)}
           geoRegion={geoRegion}
+          watch={watchRow ? { id: watchRow.id, name: watchRow.name, region: watchRow.region, trackedOnly: !!watchRow.trackedOnly } : null}
         />
       ) : (
         <div className="card-surface p-6 text-center">

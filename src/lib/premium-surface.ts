@@ -39,10 +39,22 @@ const FIXED = new Set([
 // one of its limits (lib/free-limits.ts): `limit:watchlist` (the 11th watched
 // card), `limit:portfolio` (the 51st portfolio card) and `limit:basket` (Best
 // Basket's result, leading with the list's own store-by-store saving).
-const SCOPED = /^(nav|gate|nudge|limit):[a-z0-9-]{1,32}$/;
+// `tip:` (2026-09-29) is a one-line, dismissable "did you know" shown INLINE
+// on the page where a paid feature lives, to signed-in non-members only —
+// never a popup or overlay (components/DiscoveryTip.tsx; the 2026-09-28 "no
+// popups or header upsells" rule stands). One surface per placement.
+const SCOPED = /^(nav|gate|nudge|limit|tip):[a-z0-9-]{1,32}$/;
 
 /** The at-the-limit surfaces, for tests and the funnel report. */
 export const LIMIT_SURFACES = ["limit:watchlist", "limit:portfolio", "limit:basket"] as const;
+
+/** The in-context discovery lines (DiscoveryTip), for tests and the funnel report. */
+// (/deck's line is the deck watch form's own gate, gate:deck-watch, and the
+// card watch button teaches in its tooltip with nothing to click.)
+export const TIP_SURFACES = ["tip:sealed", "tip:sealed-quickview", "tip:basket", "tip:watching"] as const;
+
+/** The walls the two watch features sell through (PremiumButton on a gate). */
+export const WATCH_GATE_SURFACES = ["gate:deck-watch", "gate:sealed-watch"] as const;
 
 export function isPremiumClickSource(v: unknown): v is string {
   return typeof v === "string" && (FIXED.has(v) || SCOPED.test(v));

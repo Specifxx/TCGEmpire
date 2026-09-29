@@ -14,6 +14,7 @@ import { CardSearch, type SearchCard } from "./CardSearch";
 import { QtyInput } from "./QtyInput";
 import { cardThumbProps } from "@/lib/card-image-url";
 import { DeckPublishPanel } from "./decks/DeckPublishPanel";
+import { DeckWatchForm } from "./DeckWatchForm";
 
 // The deck builder and list pricer — the free, no-account tool behind /deck.
 //
@@ -453,6 +454,11 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
             )}
           </div>
         )}
+
+        {/* Watch this deck's delivered price (Premium, 2026-09-29): the paid
+            run re-prices the list after every import, lib/deck-watch.ts. The
+            form for a Premium member; the PremiumButton gate for anyone else. */}
+        {lines.length > 0 && <DeckWatchForm listText={listText} defaultName={lines[0] ? `${cardDisplayName(lines[0].card.name, lines[0].card)} deck` : "My deck"} />}
 
         {/* Publish to the public deck library (2026-09-26). */}
         {lines.length > 0 && (

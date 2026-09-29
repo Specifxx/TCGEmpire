@@ -12,6 +12,7 @@ import { Reveal } from "@/components/Reveal";
 import { SealedFilters } from "@/components/SealedFilters";
 import { SealedSort } from "@/components/SealedSort";
 import { SealedTile } from "@/components/SealedTile";
+import { DiscoveryTip } from "@/components/DiscoveryTip";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { HubIntro } from "@/components/HubIntro";
 import { RelatedGuides } from "@/components/RelatedGuides";
@@ -316,6 +317,11 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
             </p>
             <SealedSort />
           </div>
+          {/* One inline line for a signed-in free account (2026-09-29), never
+              a popup: the heart on every tile is a Plus feature. */}
+          <DiscoveryTip id="sealed" surface="tip:sealed" tier="plus" cta="See Plus" className="mb-4">
+            Plus can email you when a box is back in stock or at RRP — tap the heart on a product to watch it.
+          </DiscoveryTip>
           {groups.length === 0 ? (
             <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
               <div>

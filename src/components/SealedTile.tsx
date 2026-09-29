@@ -4,6 +4,7 @@ import { formatMoney } from "@/lib/format";
 import type { SealedGroup } from "@/lib/sealed-import";
 import { useSealedQuickView } from "./SealedQuickView";
 import { sealedImageAlt } from "@/lib/image-alt";
+import { SealedWatchButton } from "./SealedWatchButton";
 
 // A single compact sealed-product tile for the /sealed grid — the RiftCompare twin
 // of DexCompare's SealedTile. RiftCompare has no /sealed/<slug> detail page, so the
@@ -30,11 +31,17 @@ export function SealedTile({
   const { open } = useSealedQuickView();
   const fmt = (cents: number) => formatMoney(cents, currency);
 
+  // The watch heart (2026-09-29) is a SIBLING of the tile's button, never a
+  // child — a button inside a button is invalid HTML, and its own click must
+  // not open the quick view. Sits top-right; the sold-out badge moved under
+  // the product-type chip to make room.
   return (
+    <div className="relative">
+    <SealedWatchButton groupKey={g.groupKey} name={g.name} compact className="absolute right-2 top-2 z-10" />
     <button
       type="button"
       onClick={() => open(g, currency)}
-      className="cv-auto group card-surface relative flex flex-col overflow-hidden text-left transition-[transform,box-shadow,border-color] duration-base motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0"
+      className="cv-auto group card-surface relative flex h-full w-full flex-col overflow-hidden text-left transition-[transform,box-shadow,border-color] duration-base motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0"
     >
       <div className="relative grid aspect-square w-full place-items-center overflow-hidden bg-ink-950 p-4">
         {g.imageUrl ? (
@@ -53,7 +60,7 @@ export function SealedTile({
           {g.productType}
         </span>
         {soldOut && (
-          <span className="absolute right-2 top-2 chip bg-rose-500/15 text-[10px] font-semibold text-rose-300">
+          <span className="absolute left-2 top-9 chip bg-rose-500/15 text-[10px] font-semibold text-rose-300">
             {soldOutEverywhere ? "Sold out" : "Unavailable"}
           </span>
         )}
@@ -103,5 +110,6 @@ export function SealedTile({
         </div>
       </div>
     </button>
+    </div>
   );
 }

@@ -98,9 +98,11 @@ export function PriceWatchButton({
   );
 
   const label = watching ? "Stop watching this card" : "Watch this card's price";
+  // The tooltip teaches (2026-09-29): what a free watch does, and that Plus
+  // and Premium watch sealed products and whole decks too — one line, no popup.
   const hint = watching
     ? "You'll get an email when the price drops — click to stop"
-    : "Get an email when the price drops";
+    : "Watch this card: a free email when its price hits a new low (free accounts: up to 10 cards). Plus adds your own target price and sealed-product watches; Premium watches a whole deck's delivered price.";
 
   if (variant === "full" || variant === "responsive") {
     const responsive = variant === "responsive";

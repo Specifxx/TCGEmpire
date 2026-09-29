@@ -8,6 +8,7 @@ import { CardSearch, type SearchCard } from "./CardSearch";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
 import { trackEvent } from "@/lib/analytics";
 import { PremiumButton } from "./PremiumButton";
+import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 const DISMISS_KEY = "rc_welcome_dismissed";
 // Written by SignupWelcome.tsx the moment a ?welcome landing fires — not read
@@ -84,8 +85,9 @@ export function WelcomeChecklist() {
         {trialOffer ? `Try Premium free for ${trialDays} days` : "See what Premium adds"}
       </p>
       <p className="text-xs text-slate-500">
-        Every deal in Deal Finder and every Rising Cards pick, not just the top three — plus Best Basket and Demand
-        Finder.{trialOffer ? " Cancel before the trial ends and you pay nothing." : ""}
+        Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium)
+        a whole deck&apos;s delivered price — plus every deal in Deal Finder and Rising Cards, Best Basket&apos;s store-by-store plan and
+        Demand Finder.{trialOffer ? " Cancel before the trial ends and you pay nothing." : ""}
       </p>
       <div className="mt-2">
         <PremiumButton surface="checklist" />
@@ -154,7 +156,10 @@ export function WelcomeChecklist() {
           <StepBadge done={watchDone} />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-white">Watch a card</p>
-            <p className="text-xs text-slate-500">Get emailed the moment its price drops to a new low.</p>
+            <p className="text-xs text-slate-500">
+              Free: up to {FREE_WATCHLIST_LIMIT} cards, an email when one hits a new low. Plus also watches sealed products (back in
+              stock, at RRP); Premium watches a whole deck&apos;s delivered price.
+            </p>
             {!watchDone && (
               <div className="mt-2 max-w-sm">
                 <CardSearch placeholder="Search a card to watch…" onPick={(c: SearchCard) => void watch(c.id, country)} />

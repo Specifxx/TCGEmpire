@@ -11,7 +11,9 @@ import { ebaySearchUrl } from "@/lib/affiliate";
 import { COUNTRIES } from "@/lib/country";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
-import { parseDeckList, DECK_LINE_CAP } from "@/lib/deck";
+import { parseDeckList, formatDeckLine, DECK_LINE_CAP } from "@/lib/deck";
+import { DeckWatchForm } from "./DeckWatchForm";
+import { DiscoveryTip } from "./DiscoveryTip";
 import { CardSearch, type SearchCard } from "./CardSearch";
 import type { BasketAlternatives, BasketPlan, BasketPreview, BasketStoreGroup, TwoStoresNone } from "@/lib/basket";
 import { trackEvent } from "@/lib/analytics";
@@ -90,6 +92,7 @@ export function BestBasket({
   measuredAt,
   measuredTo,
   geoRegion,
+  watch = null,
 }: {
   full: boolean;
   initialList?: string;
@@ -97,6 +100,10 @@ export function BestBasket({
   initialSkipOwned?: boolean;
   autoRun?: boolean;
   market: string;
+  // A saved deck price watch being re-run for its owner (?watch=, 2026-09-29):
+  // its name, and the delivery it was saved with, which overrides the
+  // remembered postage choice so the plan matches the email.
+  watch?: { id: string; name: string; region: string | null; trackedOnly: boolean } | null;
   regions: BasketRegionOption[];
   zonePriced: boolean;
   measuredAt: string | null; // "25 Sep 2026"
@@ -133,13 +140,22 @@ export function BestBasket({
   // Declared before the auto-run effect, which relies on it having run.
   useEffect(() => {
     const p = readPostagePrefs(market);
-    const r = effectiveRegion(p, geoRegion, validRegion);
+    const r = watch ? (watch.region && validRegion(watch.region) ? watch.region : null) : effectiveRegion(p, geoRegion, validRegion);
+    const tracked = watch ? watch.trackedOnly : p.trackedOnly;
     setRegion(r);
-    setRegionGuessed(!p.regionChosen && !!geoRegion && validRegion(geoRegion));
-    setTrackedOnly(p.trackedOnly);
-    delivery.current = { region: r, trackedOnly: p.trackedOnly };
+    setRegionGuessed(!watch && !p.regionChosen && !!geoRegion && validRegion(geoRegion));
+    setTrackedOnly(tracked);
+    delivery.current = { region: r, trackedOnly: tracked };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [market, regions, geoRegion]);
+
+  // The list as text, for "Watch this list": cards added by search first
+  // (as pinned lines), then the paste — the order the route prices them in.
+  const watchListText = useMemo(
+    () => [...picked.map((p) => formatDeckLine(p.qty, p.card)), pasteText.trim()].filter(Boolean).join("\n"),
+    [picked, pasteText],
+  );
+  const watchDefaultName = watch?.name ?? (picked[0] ? `${picked[0].card.name} deck` : (parseDeckList(pasteText, { plainNames: true })[0]?.name ?? "My list").slice(0, 60));
 
   // Any change to what's being asked for clears the old answer, so a plan on
   // screen always belongs to the inputs above it — including an answer still
@@ -430,6 +446,12 @@ export function BestBasket({
       </div>
 
       {result && !isFull(result) && <PreviewCard r={result} fmt={fmt} adjective={adjective} overCap={overCap} postage={postageView} />}
+      {result && !isFull(result) && tab === "deck" && (
+        <DiscoveryTip id="basket-watch" surface="tip:basket" tier="premium" cta="See Premium">
+          Premium can watch this deck&apos;s price for you: it re-prices the list after every price update and emails you when the
+          delivered total reaches your price.
+        </DiscoveryTip>
+      )}
 
       {result && isFull(result) && (
         <FullResultView
@@ -442,6 +464,27 @@ export function BestBasket({
           overCap={overCap}
           postage={postageView}
         />
+      )}
+      {/* Watch this list (Premium, 2026-09-29): saves the pasted / picked list
+          with a delivered-price target for the paid run (lib/deck-watch.ts).
+          A pasted list only — the watchlist and binder sources change on
+          their own. A watch being re-run (?watch=) is already saved. */}
+      {result && isFull(result) && tab === "deck" && result.plan.coveredCopies > 0 && !watch && (
+        <DeckWatchForm
+          listText={watchListText}
+          defaultName={watchDefaultName}
+          totalCents={result.totalCents}
+          region={delivery.current.region}
+          trackedOnly={delivery.current.trackedOnly}
+        />
+      )}
+      {watch && result && isFull(result) && (
+        <p className="text-xs text-slate-400">
+          This is your saved watch <strong className="text-slate-200">{watch.name}</strong>, priced the way its emails are.{" "}
+          <Link href="/watching#decks" className="text-brand-400 hover:underline">
+            Change its target or stop it →
+          </Link>
+        </p>
       )}
     </div>
   );

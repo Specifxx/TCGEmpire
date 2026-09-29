@@ -5,6 +5,7 @@ import { formatMoney } from "@/lib/format";
 import type { SealedGroup } from "@/lib/sealed-import";
 import type { Country } from "@/lib/country";
 import { CheckedAgo } from "@/components/CheckedAgo";
+import { SealedWatchButton } from "@/components/SealedWatchButton";
 import {
   headlineOffer,
   offerStock,
@@ -120,17 +121,22 @@ export function PreorderPriceTable({
                     {rows.length > open ? ` · ${rows.length - open} sold out or unconfirmed` : ""}
                   </p>
                 </div>
-                <div className="shrink-0 text-right">
-                  {headline ? (
-                    <>
-                      <div className="num text-lg font-extrabold text-brand-400" data-headline>
-                        {formatMoney(headline.priceCents, currency)}
-                      </div>
-                      <div className="text-[11px] text-slate-500">cheapest open · {headline.retailerName}</div>
-                    </>
-                  ) : (
-                    <div className="text-sm font-bold text-slate-400">Sold out everywhere</div>
-                  )}
+                <div className="flex shrink-0 items-center gap-2 text-right">
+                  <div>
+                    {headline ? (
+                      <>
+                        <div className="num text-lg font-extrabold text-brand-400" data-headline>
+                          {formatMoney(headline.priceCents, currency)}
+                        </div>
+                        <div className="text-[11px] text-slate-500">cheapest open · {headline.retailerName}</div>
+                      </>
+                    ) : (
+                      <div className="text-sm font-bold text-slate-400">Sold out everywhere</div>
+                    )}
+                  </div>
+                  {/* Watch it (Plus/Premium, 2026-09-29): a restock or at-RRP
+                      email for a pre-order that sells out — lib/sealed-watch.ts. */}
+                  <SealedWatchButton groupKey={g.groupKey} name={g.name} market={country} compact />
                 </div>
               </div>
               <ul className="divide-y divide-ink-800">

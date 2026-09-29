@@ -7,9 +7,13 @@ import { NavIcon } from "@/components/NavIcon";
 import { PremiumNudgeCard } from "@/components/PremiumNudgeCard";
 import { getPremiumNudge, nudgeCopy as watchedNudgeCopy } from "@/lib/premium-nudge";
 import { isPremium, premiumCheckoutEnabled, premiumTierOf } from "@/lib/premium";
-import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS, sealedWatchLimit } from "@/lib/alert-limits";
 import { getCountry } from "@/lib/get-country";
 import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+import { getSealedGroups } from "@/lib/sealed-import";
+import { DeckWatchList } from "@/components/DeckWatchList";
+import { SealedWatchList, type SealedWatchName } from "@/components/SealedWatchList";
+import { PremiumButton } from "@/components/PremiumButton";
 
 // getCurrentUser() reads cookies(), so this route can never be cached. Declared
 // explicitly rather than left to inference — a stray session read is what once
@@ -54,9 +58,20 @@ export default async function WatchingPage() {
   // (lib/premium-nudge.ts). Never fails the page.
   const member = isPremium(user);
   const onPlus = member && premiumTierOf(user) === "plus";
+  const country = getCountry();
   const nudge =
     isPremium(user) || premiumCheckoutEnabled() ? await getPremiumNudge(user.id, getCountry()).catch(() => null) : null;
   const nudgeCopy = nudge ? watchedNudgeCopy(nudge, "watched", isPremium(user) ? "member" : "free") : null;
+  const onPremium = member && premiumTierOf(user) === "premium";
+  // Names for the member's sealed watches, from the self-cached groups read
+  // (called directly — it caches itself; never wrapped). Members only: a free
+  // account has no sealed watches to name.
+  const sealedNames: Record<string, SealedWatchName> = {};
+  if (member) {
+    const groups = await getSealedGroups(country).catch(() => []);
+    for (const g of groups) sealedNames[g.groupKey] = { name: g.name, lowestPriceCents: g.lowestPriceCents, msrpCents: g.msrpCents };
+  }
+  const sealedLimit = sealedWatchLimit(premiumTierOf(user));
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -112,7 +127,77 @@ export default async function WatchingPage() {
 
       {nudgeCopy && <PremiumNudgeCard {...nudgeCopy} member={isPremium(user)} surface="nudge:watchlist" className="mb-5" />}
 
+      {/* WHAT YOU CAN WATCH (2026-09-29, "Premium works while you're away"):
+          three kinds, each in one plain line, so someone new to the site can
+          tell a card watch from a target from a sealed or deck watch without a
+          popup. The paid kinds carry the ordinary PremiumButton, inline. */}
+      <section aria-labelledby="what-h" className="card-surface mb-5 p-4" data-watch-explainer>
+        <h2 id="what-h" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          What you can watch
+        </h2>
+        <ul className="mt-2 grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
+          <li>
+            <strong className="text-white">Cards</strong> — free, up to {FREE_WATCHLIST_LIMIT}. An email when a card you watch hits a new
+            low at a store. <strong className="text-white">A target</strong> (Plus: {PLUS_TARGET_ALERT_LIMIT} cards, Premium: any) is your
+            own price: we email you as soon as a store has it there.
+          </li>
+          <li>
+            <strong className="text-white">Sealed products</strong> — Plus (up to {SEALED_WATCH_LIMIT_PLUS}) and Premium (any). Tap the
+            heart on a box on /sealed: an email when it is back in stock after selling out everywhere, at RRP (the price Riot sets),
+            or at your price.
+            {!member && (
+              <div className="mt-1.5">
+                <PremiumButton tier="plus" surface="tip:watching" className="text-xs font-semibold text-brand-300 hover:underline">
+                  See Plus →
+                </PremiumButton>
+              </div>
+            )}
+          </li>
+          <li>
+            <strong className="text-white">A whole deck</strong> — Premium, up to {DECK_WATCH_LIMIT} lists. Save a list from Best Basket
+            or the deck pricer: we re-price it delivered (cards + postage) after every price update and email you when the total
+            reaches your price.
+            {!onPremium && (
+              <div className="mt-1.5">
+                <PremiumButton surface="tip:watching" className="text-xs font-semibold text-brand-300 hover:underline">
+                  See Premium →
+                </PremiumButton>
+              </div>
+            )}
+          </li>
+        </ul>
+      </section>
+
       <Watchlist />
+
+      {member && (
+        <section id="sealed" aria-labelledby="sealed-h" className="card-surface mt-8 scroll-mt-header p-5">
+          <h2 id="sealed-h" className="font-display text-lg font-bold text-white">
+            Sealed
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Checked after every price update: back in stock after selling out everywhere, at RRP, at your target, or a real drop.
+          </p>
+          <div className="mt-3">
+            <SealedWatchList names={sealedNames} limit={Number.isFinite(sealedLimit) ? sealedLimit : null} />
+          </div>
+        </section>
+      )}
+
+      {onPremium && (
+        <section id="decks" aria-labelledby="decks-h" className="card-surface mt-8 scroll-mt-header p-5">
+          <h2 id="decks-h" className="font-display text-lg font-bold text-white">
+            Decks
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Each list is re-priced delivered — cards and postage, across every store — after every price update, the way Best Basket
+            prices it.
+          </p>
+          <div className="mt-3">
+            <DeckWatchList />
+          </div>
+        </section>
+      )}
     </div>
   );
 }
