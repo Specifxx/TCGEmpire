@@ -188,6 +188,15 @@ export function summarisePreRelease(cards: readonly ChecklistCard[], owned: Owne
   return { revealed, owned: have };
 }
 
+/**
+ * A collector number as a pre-release set shows it: "001/167" is "001". The
+ * printed denominator is a total, and a set that has not released has none we
+ * will state (167 printed against 180 announced), so no row may print one.
+ */
+export function numberWithoutTotal(collectorNumber: string): string {
+  return collectorNumber.split("/")[0].trim();
+}
+
 export function preReleaseLine(s: PreReleaseSummary): string {
   return `${s.revealed} ${s.revealed === 1 ? "card" : "cards"} revealed so far`;
 }

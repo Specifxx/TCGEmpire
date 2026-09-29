@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { foldStoreRows, readSetChecklist } from "../src/lib/set-checklist";
-import { ownedBySet, OWNED_TAKE, type OwnedDb } from "../src/lib/set-owned";
+import { ownedBySet, ownedTakeFor, OWNED_TAKE, type OwnedDb } from "../src/lib/set-owned";
 import { ALL_FALLBACK_RETAILERS } from "../src/lib/constants";
 import { summarise } from "../src/lib/set-scope";
 
@@ -152,6 +152,20 @@ test("the owned read is one groupBy scoped by userId and the set, capped, and su
   assert.ok(OWNED_TAKE <= 1500);
   await ownedBySet(db, "user-1", ["OGN", "SFD"]);
   assert.deepEqual(seen[1].where, { userId: "user-1", card: { setCode: { in: ["OGN", "SFD"] } } });
+  assert.equal(seen[1].take, OWNED_TAKE, "a plain multi-set call keeps the single-set backstop unless told otherwise");
+});
+
+test("the index scales its owned read to the sets it lists, so a completionist is not cut at 1,500 shared cards", async () => {
+  // One cap for every set together would truncate an account holding 1,600 printings of the tracked sets.
+  assert.equal(ownedTakeFor([392, 41, 317, 314]), OWNED_TAKE, "a normal catalogue stays at the backstop");
+  assert.equal(ownedTakeFor([1200, 1200]), 2400, "two full sets can be owned in full");
+  assert.equal(ownedTakeFor([]), OWNED_TAKE);
+  const seen: any[] = [];
+  const db: OwnedDb = { collectionCard: { groupBy: async (a: any) => (seen.push(a), []) } };
+  await ownedBySet(db, "user-1", ["OGN", "SFD"], ownedTakeFor([1200, 1200]));
+  assert.equal(seen[0].take, 2400);
+  const index = code("src/app/portfolio/sets/page.tsx");
+  assert.match(index, /ownedTakeFor\(shown\.map\(\(l\) => l\.cards\.length\)\)/);
 });
 
 test("GET /api/collection/owned is authenticated, validates the set, and answers no-store from the caller's own rows", () => {

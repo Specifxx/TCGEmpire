@@ -7,7 +7,9 @@ import { PAID_SEND_CAP } from "@/lib/price-alerts";
 // Plus and Premium) and nothing else. Called by .github/workflows/sealed-refresh.yml
 // right after the stores-only sealed import at 01:00 and 13:00 UTC, which with
 // refresh-prices.yml's 07:00 and 19:00 makes a sealed check about every six hours.
-// Same Authorization: Bearer <CRON_SECRET> as every cron route.
+// Authorization: Bearer <CRON_SECRET>, and it fails CLOSED: with no CRON_SECRET
+// set (a preview, a misconfigured project) nobody is authorised, because this
+// route sends real email.
 //
 // ONLY runSealedWatches. Not the card run, not the deck watches, not the set
 // digests: those run twice a day after the price imports and must not run four
@@ -33,7 +35,7 @@ export const maxDuration = 120; // seconds: one read per watched market, one sen
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
-  if (secret && auth !== `Bearer ${secret}`) {
+  if (!secret || auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const loaders = freshSealedLoaders();

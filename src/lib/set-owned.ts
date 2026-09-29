@@ -14,8 +14,19 @@
 import type { prisma } from "./db";
 import type { OwnedMap } from "./set-scope";
 
-/** Distinct owned cards returned per request. A set is a few hundred; this is a backstop. */
+/** Distinct owned cards returned for ONE set. A set is a few hundred; this is a backstop. */
 export const OWNED_TAKE = 1500;
+
+/**
+ * The cap for a read across several sets: one set's backstop for each, so the
+ * index (every tracked set in one groupBy) is not cut at 1,500 cards shared
+ * between them and a completionist's progress bars undercount. `cardCounts` is
+ * how many cards each listed set has in the catalogue, which bounds what the
+ * account can own of it; never below OWNED_TAKE.
+ */
+export function ownedTakeFor(cardCounts: readonly number[]): number {
+  return Math.max(OWNED_TAKE, cardCounts.reduce((n, c) => n + Math.max(0, c), 0));
+}
 
 type Grouped = { cardId: string; _sum: { quantity: number | null } };
 export type OwnedDb = {
@@ -35,6 +46,7 @@ export async function ownedBySet(
   db: OwnedDb | typeof prisma,
   userId: string,
   setCodes: string | string[],
+  take: number = OWNED_TAKE,
 ): Promise<OwnedMap> {
   const d = db as OwnedDb;
   const rows = await d.collectionCard.groupBy({
@@ -42,7 +54,7 @@ export async function ownedBySet(
     where: { userId, card: { setCode: Array.isArray(setCodes) ? { in: setCodes } : setCodes } },
     _sum: { quantity: true },
     orderBy: { cardId: "asc" },
-    take: OWNED_TAKE,
+    take,
   });
   const out: Record<string, number> = {};
   for (const r of rows) {

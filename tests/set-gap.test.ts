@@ -5,16 +5,18 @@ import { join } from "node:path";
 import {
   NOT_STOCKED_LIST_CAP,
   SET_GAP_CHUNK,
-  SET_GAP_MAX_OFFSET,
+  encodeCursor,
   nextChunkLabel,
-  normalizeOffset,
+  nothingPricedMessage,
+  parseCursor,
   planSetGap,
   preReleaseGapMessage,
   revealedWithoutListing,
   setGapFields,
   setGapNote,
+  type SetGapPrice,
 } from "../src/lib/set-gap";
-import { loadSetGapLines, type SetGapDeps } from "../src/lib/basket-server";
+import { loadSetGapLines, loadSetGapPrices, type SetGapBuy, type SetGapDeps } from "../src/lib/basket-server";
 import { parseBasketRequest } from "../src/lib/basket-request";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { DECK_LINE_CAP } from "../src/lib/deck";
@@ -83,26 +85,28 @@ test("a card no real store has is reported as not stocked, never dropped and nev
   assert.equal(planSetGap("OGN", [stocked, e], { [e.id]: 1 }, { scope: "base" }).summary.notStockedCount, 0);
 });
 
-test("a gap over 200 is a ranked chunk: 200 cheapest, the rest counted, a step to the next, nothing lost or repeated", () => {
+test("a gap over 200 is a ranked chunk: 200 cheapest, the rest counted, a cursor to the next, nothing lost or repeated", () => {
   assert.equal(SET_GAP_CHUNK, DECK_LINE_CAP, "the chunk is Best Basket's own line cap");
   const cards = Array.from({ length: 450 }, (_, i) => priced(100 + ((i * 7) % 90)));
   const first = planSetGap("OGN", cards, {}, { scope: "base" });
   assert.equal(first.chunk.length, 200);
   assert.equal(first.summary.moreAfter, 250);
-  assert.equal(first.summary.nextOffset, 200);
+  assert.equal(first.summary.continued, false);
+  assert.ok(first.summary.nextCursor);
   assert.equal(setGapNote(first.summary), "Your 200 cheapest missing cards. 250 more not included.");
   assert.equal(nextChunkLabel(first.summary), "Plan the next 200");
 
-  const second = planSetGap("OGN", cards, {}, { scope: "base", offset: 200 });
+  const second = planSetGap("OGN", cards, {}, { scope: "base", after: parseCursor(first.summary.nextCursor) });
   assert.equal(second.chunk.length, 200);
   assert.equal(second.summary.moreAfter, 50);
-  assert.equal(setGapNote(second.summary), "Missing cards 201 to 400, cheapest first. 50 more not included.");
+  assert.equal(second.summary.continued, true);
+  assert.equal(setGapNote(second.summary), "The next 200 cheapest missing cards. 50 more not included.");
 
-  const third = planSetGap("OGN", cards, {}, { scope: "base", offset: 400 });
+  const third = planSetGap("OGN", cards, {}, { scope: "base", after: parseCursor(second.summary.nextCursor) });
   assert.equal(third.chunk.length, 50);
   assert.equal(third.summary.moreAfter, 0);
-  assert.equal(third.summary.nextOffset, null);
-  assert.equal(setGapNote(third.summary), "Missing cards 401 to 450, cheapest first. That is all of the rest.");
+  assert.equal(third.summary.nextCursor, null);
+  assert.equal(setGapNote(third.summary), "The next 50 cheapest missing cards. That is all of the rest.");
 
   const ids = [...first.chunk, ...second.chunk, ...third.chunk].map((c) => c.id);
   assert.equal(new Set(ids).size, 450, "no card twice, none missing");
@@ -110,10 +114,51 @@ test("a gap over 200 is a ranked chunk: 200 cheapest, the rest counted, a step t
   assert.deepEqual(prices, [...prices].sort((x, y) => x - y), "dearer cards only ever come later");
 });
 
+test("the next chunk follows a CURSOR, not a rank: cards bought between two clicks skip nothing and lose nothing", () => {
+  // 298 base cards at similar prices: chunks of 200 and 98.
+  const cards = Array.from({ length: 298 }, (_, i) => priced(100 + (i % 5)));
+  const first = planSetGap("OGN", cards, {}, { scope: "base" });
+  assert.equal(first.chunk.length, 200);
+  const inFirst = new Set(first.chunk.map((c) => c.id));
+  const never = cards.filter((c) => !inFirst.has(c.id)).map((c) => c.id).sort();
+  assert.equal(never.length, 98);
+  // The member buys the first chunk and ticks every card off before pressing "next".
+  const owned = Object.fromEntries(first.chunk.map((c) => [c.id, 1]));
+  const next = planSetGap("OGN", cards, owned, { scope: "base", after: parseCursor(first.summary.nextCursor) });
+  assert.deepEqual(next.chunk.map((c) => c.id).sort(), never, "all 98 remaining cards, not the 0 a rank offset of 200 would give");
+  assert.equal(next.summary.moreAfter, 0);
+  // Ticking only some of them: the 98 never planned still all come, none skipped.
+  const some = Object.fromEntries(first.chunk.slice(0, 150).map((c) => [c.id, 1]));
+  const rest = planSetGap("OGN", cards, some, { scope: "base", after: parseCursor(first.summary.nextCursor) });
+  assert.deepEqual(rest.chunk.map((c) => c.id).sort(), never, "the 98 never planned; the 50 unticked ones of chunk one are not repeated");
+});
+
+test("a cursor with nothing after it while cards remain starts again from the cheapest and says the list changed", () => {
+  const cards = [priced(500), priced(600), priced(700)];
+  const gone = { cents: 9999, collectorNumber: "999", id: "zzz" };
+  const p = planSetGap("OGN", cards, {}, { scope: "base", after: gone });
+  assert.equal(p.chunk.length, 3);
+  assert.equal(p.summary.restarted, true);
+  assert.match(setGapNote(p.summary) ?? "", /changed since the last plan, so this starts again from the cheapest/);
+  // Nothing missing at all: no restart, an empty chunk.
+  const done = planSetGap("OGN", cards, Object.fromEntries(cards.map((c) => [c.id, 1])), { scope: "base", after: gone });
+  assert.equal(done.chunk.length, 0);
+  assert.equal(done.summary.restarted, false);
+  assert.equal(done.summary.gapTotal, 0);
+});
+
+test("cursors round-trip and anything that is not exactly one is the first chunk", () => {
+  const c = { cents: 1234, collectorNumber: "112a/298", id: "cabc_123" };
+  assert.deepEqual(parseCursor(encodeCursor(c)), c);
+  for (const bad of [undefined, null, 5, "", "12|x", "-1|001|abc", "1|001|a b", "1|00 1|abc", "x|001|abc", `1|${"9".repeat(30)}|abc`, "1|001|abc|def"]) {
+    assert.equal(parseCursor(bad), null, String(bad));
+  }
+});
+
 test("a gap that fits in one plan carries no chunk note", () => {
   const p = planSetGap("OGN", [priced(100), priced(200)], {}, { scope: "base" });
   assert.equal(setGapNote(p.summary), null);
-  assert.equal(p.summary.nextOffset, null);
+  assert.equal(p.summary.nextCursor, null);
   assert.equal(planSetGap("OGN", Array.from({ length: 200 }, () => priced(100)), {}, { scope: "base" }).summary.moreAfter, 0, "exactly 200 fits");
   assert.equal(planSetGap("OGN", Array.from({ length: 201 }, () => priced(100)), {}, { scope: "base" }).summary.moreAfter, 1, "201 is a chunk and one more");
 });
@@ -140,38 +185,114 @@ test("a per-card ceiling leaves out the dearer cards, and says how many", () => 
   assert.equal(planSetGap("OGN", cards, {}, { scope: "base", maxPriceCents: null }).summary.overCeiling, 0);
 });
 
-test("an offset is a whole number of chunks and never past the catalogue", () => {
-  assert.equal(normalizeOffset(undefined), 0);
-  assert.equal(normalizeOffset("200"), 0, "a string is not a number");
-  assert.equal(normalizeOffset(-5), 0);
-  assert.equal(normalizeOffset(NaN), 0);
-  assert.equal(normalizeOffset(199), 0);
-  assert.equal(normalizeOffset(200), 200);
-  assert.equal(normalizeOffset(399), 200);
-  assert.equal(normalizeOffset(1e9), SET_GAP_MAX_OFFSET);
-  // A plan asked to start past its ranked cards is empty, with the counts intact.
-  const p = planSetGap("OGN", [priced(100), priced(200)], {}, { scope: "base", offset: 200 });
+test("a plan asked to start after its last ranked card is empty, with the counts intact", () => {
+  const cards = [priced(100), priced(200)];
+  const last = { cents: 200, collectorNumber: cards[1].collectorNumber, id: cards[1].id };
+  // Every card is owned (nothing left to restart on): an empty chunk, no note.
+  const p = planSetGap("OGN", cards, { [cards[0].id]: 1, [cards[1].id]: 1 }, { scope: "base", after: last });
   assert.equal(p.chunk.length, 0);
   assert.equal(p.summary.moreAfter, 0);
   assert.equal(setGapNote(p.summary), null);
 });
 
+// ── Ranked and ceilinged on what the plan buys (review finding: HP $1.50 / NM $5) ──
+
+const price = (floorCents: number | null, anyCents: number | null): SetGapPrice => ({ floorCents, anyCents });
+
+test("ranking and the ceiling use the price the plan pays at the floor, not the checklist's cheapest copy in any condition", () => {
+  // The checklist says $1.50 (a Heavily Played copy); at Lightly Played or better the card costs $5.
+  const hp = priced(150);
+  const cheap = priced(300);
+  const prices = new Map([[hp.id, price(500, 150)], [cheap.id, price(300, 300)]]);
+  const p = planSetGap("OGN", [hp, cheap], {}, { scope: "base", prices, maxPriceCents: 200 });
+  assert.deepEqual(p.chunk.map((c) => c.id), [], "the $5 copy is over a $2 limit, though the played copy is under it");
+  assert.equal(p.summary.overCeiling, 2);
+  const open = planSetGap("OGN", [hp, cheap], {}, { scope: "base", prices });
+  assert.deepEqual(open.chunk.map((c) => [c.id, c.minCents]), [[cheap.id, 300], [hp.id, 500]], "ranked by what the plan pays, and carrying that price");
+});
+
+test("the 200 cheapest are the 200 the plan can buy: a card it cannot price never takes a chunk slot", () => {
+  const unbuyable = Array.from({ length: 30 }, () => priced(50));
+  const buyable = Array.from({ length: 200 }, () => priced(400));
+  const prices = new Map<string, SetGapPrice>();
+  for (const c of unbuyable) prices.set(c.id, price(null, null)); // only at a store with no measured postage
+  for (const c of buyable) prices.set(c.id, price(400, 400));
+  const p = planSetGap("OGN", [...unbuyable, ...buyable], {}, { scope: "base", prices });
+  assert.equal(p.chunk.length, 200);
+  assert.ok(p.chunk.every((c) => buyable.some((b) => b.id === c.id)));
+  assert.equal(p.summary.moreAfter, 0, "no buyable card is pushed into 'N more not included'");
+  assert.equal(p.summary.noPostageCount, 30);
+  assert.equal(p.summary.stocked, 200);
+  assert.equal(p.summary.stocked + p.summary.noPostageCount + p.summary.belowFloorCount + p.summary.notStockedCount, p.summary.gapTotal, "every missing card is in exactly one count");
+});
+
+test("uncovered cards are split by cause: postage we cannot price, the floor, nothing stocked", () => {
+  const noPost = priced(54);
+  const played = priced(120);
+  const fine = priced(300);
+  const nothingAnywhere = nothing();
+  const prices = new Map([[played.id, price(null, 120)], [fine.id, price(300, 300)]]);
+  const p = planSetGap("OGN", [noPost, played, fine, nothingAnywhere], {}, { scope: "base", prices });
+  assert.deepEqual([p.summary.noPostageCount, p.summary.belowFloorCount, p.summary.notStockedCount, p.summary.stocked], [1, 1, 1, 1]);
+  assert.deepEqual(p.chunk.map((c) => c.id), [fine.id]);
+  // The refusal says which cause applies; the "choose Anything" hint only where a lower floor would cover the card.
+  const msg = nothingPricedMessage({ gapTotal: 3, notStockedCount: 1, noPostageCount: 1, belowFloorCount: 1 }, "the US");
+  assert.match(msg, /only in stock below your minimum condition \(choose Anything/);
+  assert.match(msg, /only stocked at stores we can't price postage for/);
+  const postageOnly = nothingPricedMessage({ gapTotal: 2, notStockedCount: 0, noPostageCount: 2, belowFloorCount: 0 }, "the US");
+  assert.doesNotMatch(postageOnly, /Anything/, "switching the floor cannot help a card no priced store stocks");
+  assert.match(nothingPricedMessage({ gapTotal: 2, notStockedCount: 2, noPostageCount: 0, belowFloorCount: 0 }, "the US"), /has a store listing|have a store listing|None of the 2 cards/);
+});
+
+test("loadSetGapPrices reads one groupBy by (card, condition) and folds the floor and the any-condition minimum", async () => {
+  const calls: unknown[] = [];
+  const db = {
+    retailerPrice: {
+      groupBy: async (args: unknown) => (
+        calls.push(args),
+        [
+          { cardId: "a", condition: "Heavily Played", _min: { priceCents: 200 } },
+          { cardId: "a", condition: "Near Mint", _min: { priceCents: 500 } },
+          { cardId: "a", condition: "Lightly Played", _min: { priceCents: 300 } },
+          { cardId: "b", condition: "Heavily Played", _min: { priceCents: 100 } },
+          { cardId: "c", condition: null, _min: { priceCents: null } },
+        ]
+      ),
+    },
+  };
+  const lp = await loadSetGapPrices(["a", "b", "c"], "US", ["storea"], "lp", db);
+  assert.equal(calls.length, 1, "one query");
+  assert.deepEqual(lp.get("a"), { floorCents: 300, anyCents: 200 });
+  assert.deepEqual(lp.get("b"), { floorCents: null, anyCents: 100 }, "only a played copy: below the floor, not unstocked");
+  assert.equal(lp.has("c"), false);
+  assert.deepEqual((await loadSetGapPrices(["a"], "US", ["storea"], "nm", db)).get("a"), { floorCents: 500, anyCents: 200 });
+  assert.deepEqual((await loadSetGapPrices(["a"], "US", ["storea"], "any", db)).get("a"), { floorCents: 200, anyCents: 200 });
+  const args = calls[0] as { where: { retailer: { in: string[] }; inStock: boolean; cardId: { in: string[] } } };
+  assert.deepEqual(args.where.retailer.in, ["storea"]);
+  assert.equal(args.where.inStock, true);
+  // No ids or no stores: no query at all.
+  const before = calls.length;
+  assert.equal((await loadSetGapPrices([], "US", ["storea"], "lp", db)).size, 0);
+  assert.equal((await loadSetGapPrices(["a"], "US", [], "lp", db)).size, 0);
+  assert.equal(calls.length, before);
+});
+
 test("the request: skip-owned is locked ON for a set, and the set inputs are read for that source only", () => {
-  const r = parseBasketRequest({ source: "set", skipOwned: false, set: "ogn", scope: "all", rarity: "Rare", maxPriceCents: 1250.7, offset: 400 });
+  const r = parseBasketRequest({ source: "set", skipOwned: false, set: "ogn", scope: "all", rarity: "Rare", maxPriceCents: 1250.7, after: "1250|001/298|c1" });
   assert.equal(r.source, "set");
   assert.equal(r.skipOwned, true, "a set prices only what is missing: not switchable off");
   assert.equal(r.setCode, "OGN");
   assert.equal(r.scope, "all");
   assert.equal(r.rarity, "Rare");
   assert.equal(r.maxPriceCents, 1250);
-  assert.equal(r.offset, 400);
+  assert.deepEqual(r.after, { cents: 1250, collectorNumber: "001/298", id: "c1" });
   // Junk is dropped, not trusted.
-  const j = parseBasketRequest({ source: "set", set: "not a set!", scope: "weird", rarity: "Mythic", maxPriceCents: -3, offset: "x" });
-  assert.deepEqual([j.setCode, j.scope, j.rarity, j.maxPriceCents, j.offset], ["", "base", null, null, 0]);
+  const j = parseBasketRequest({ source: "set", set: "not a set!", scope: "weird", rarity: "Mythic", maxPriceCents: -3, after: "x" });
+  assert.deepEqual([j.setCode, j.scope, j.rarity, j.maxPriceCents, j.after], ["", "base", null, null, null]);
   // Every other source ignores them: the binder, the deck and the watchlist are unchanged.
   for (const source of ["deck", "watchlist", "binder"] as const) {
-    const o = parseBasketRequest({ source, set: "OGN", rarity: "Rare", maxPriceCents: 500, offset: 200, skipOwned: true });
-    assert.deepEqual([o.setCode, o.rarity, o.maxPriceCents, o.offset], ["", null, null, 0], source);
+    const o = parseBasketRequest({ source, set: "OGN", rarity: "Rare", maxPriceCents: 500, after: "1|001|c1", skipOwned: true });
+    assert.deepEqual([o.setCode, o.rarity, o.maxPriceCents, o.after], ["", null, null, null], source);
   }
   assert.equal(parseBasketRequest({ source: "binder", skipOwned: true }).skipOwned, false, "the binder source is unchanged");
   assert.equal(parseBasketRequest({ source: "watchlist", skipOwned: true }).skipOwned, true);
@@ -180,45 +301,52 @@ test("the request: skip-owned is locked ON for a set, and the set inputs are rea
 
 // ── loadSetGapLines: the database half, against stubs ────────────────────────
 
-function deps(cards: ChecklistCard[], owned: Record<string, number> = {}) {
-  const calls = { checklist: [] as unknown[][], owned: [] as unknown[][] };
+/** Every stocked card is priced at its own checklist price at any floor, unless a test says otherwise. */
+function deps(cards: ChecklistCard[], owned: Record<string, number> = {}, prices?: (ids: string[]) => Map<string, SetGapPrice>) {
+  const calls = { checklist: [] as unknown[][], owned: [] as unknown[][], prices: [] as unknown[][] };
   const d: SetGapDeps = {
     checklist: async (...a) => (calls.checklist.push(a), cards),
     owned: async (...a) => (calls.owned.push(a), owned),
+    prices: async (ids, ...rest) => (
+      calls.prices.push([ids, ...rest]),
+      prices ? prices(ids) : new Map(cards.filter((c) => ids.includes(c.id)).map((c) => [c.id, { floorCents: c.minCents, anyCents: c.minCents }]))
+    ),
   };
   return { d, calls };
 }
+const buy: SetGapBuy = { stores: ["storea", "storeb"], minCondition: "lp" };
 
 test("loadSetGapLines reads the cached catalogue once and the caller's own owned map once, scoped to that set", async () => {
   const a = priced(100);
   const b = priced(200);
   const { d, calls } = deps([a, b], { [a.id]: 1 });
-  const res = await loadSetGapLines("user-1", "OGN", "base", "US", {}, d);
+  const res = await loadSetGapLines("user-1", "OGN", "base", "US", {}, buy, d);
   assert.ok(res.ok);
   if (!res.ok) return;
   assert.deepEqual(res.plan.chunk.map((c) => c.id), [b.id]);
   assert.deepEqual(calls.checklist, [["OGN", "US"]]);
   assert.deepEqual(calls.owned, [["user-1", "OGN"]], "one user-scoped read for THIS set");
+  assert.deepEqual(calls.prices, [[[b.id], "US", ["storea", "storeb"], "lp"]], "priced once, for the missing stocked cards only, at the plan's stores and floor");
 });
 
 test("an unknown set is refused before any read", async () => {
   const { d, calls } = deps([]);
-  const res = await loadSetGapLines("u", "ZZZ", "base", "US", {}, d);
+  const res = await loadSetGapLines("u", "ZZZ", "base", "US", {}, buy, d);
   assert.equal(res.ok, false);
-  assert.equal(calls.checklist.length + calls.owned.length, 0);
+  assert.equal(calls.checklist.length + calls.owned.length + calls.prices.length, 0);
 });
 
 test("Radiance is refused until it releases, with how many revealed cards have no listing yet and no denominator", async () => {
   const revealed = [priced(100), ebayOnly(), nothing(), priced(300, { isPromo: true })];
   const { d, calls } = deps(revealed);
-  const res = await loadSetGapLines("u", "RAD", "base", "US", {}, d);
+  const res = await loadSetGapLines("u", "RAD", "base", "US", {}, buy, d);
   assert.equal(res.ok, false);
   if (res.ok) return;
   assert.equal(res.reason, "preorder");
   assert.equal(res.message, preReleaseGapMessage("Radiance", 2));
   assert.match(res.message, /2 revealed cards have no store listing yet/);
   assert.doesNotMatch(res.message, /\b\d+\s*(of|\/)\s*\d+\b|%/, "no fraction and no percentage");
-  assert.equal(calls.owned.length, 0, "no owned read for a set that is not out");
+  assert.equal(calls.owned.length + calls.prices.length, 0, "no owned or price read for a set that is not out");
   assert.equal(revealedWithoutListing(revealed), 2, "a promo is not a revealed card of the set");
 });
 
@@ -260,7 +388,9 @@ test("the route: the free branch answers the preview plus the set counts, and a 
   assert.doesNotMatch(freeBranch, /notStocked|setName/, "the free branch never touches the named list");
   // The set source, in order: the gap is read, the listing read is the same
   // loadStoreListings for at most a chunk of ids, and the generic skip-owned step does not run.
-  assert.match(route, /source === "set"[\s\S]*loadSetGapLines\(userId, setCode, scope, country, \{ rarity, maxPriceCents, offset \}\)/);
+  assert.match(route, /source === "set"[\s\S]*loadSetGapLines\(userId, setCode, scope, country, \{ rarity, maxPriceCents, after \}, \{ stores: buyStores, minCondition \}\)/);
+  // The ranking read prices only the stores that post to this buyer, at the member's floor.
+  assert.match(route, /\.filter\(\(\[, st\]\) => !st\.unavailable\)/);
   assert.match(route, /if \(skipOwned && source !== "set" && wanted\.size\)/);
   assert.match(route, /loadStoreListings\(\[\.\.\.wanted\.keys\(\)\], country, Object\.keys\(stores\), prisma, minCondition\)/);
   // A refused run (Radiance, unknown set, nothing to price) hands the free slot back: it is a 400 via fail().

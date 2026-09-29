@@ -50,26 +50,34 @@ export interface CsvSkip {
 
 export interface ParsedCollectionCsv {
   rows: CsvCopy[];
+  /** The first SKIP_STORE_CAP skipped lines, in file order. */
   skipped: CsvSkip[];
+  /** Every skipped line, stored or not: a huge file allocates no more than the cap. */
+  skippedCount: number;
   /** Rows whose condition was filled in but not understood: imported as Near Mint. */
   conditionDefaulted: number;
 }
 
 /** Most data lines one import reads; the rest are reported, never dropped silently. */
 export const CSV_LINE_CAP = 2000;
+/** Skipped lines kept with their reason; the rest are only counted (the response names 30). */
+const SKIP_STORE_CAP = 500;
 /** Most copies one line may ask for; the collection row holds 999 (QUANTITY_CAP). */
 const QTY_CAP = 999;
 
 /**
  * A collector number reduced to what identifies a printing inside its set:
  * "001/298" and "1" and "OGN-001" are card 1; "112a/298" is the alt-art "112a";
- * "223*" over 221 is the Signature "223*". The denominator, leading zeros and case
+ * "223*" over 221 is the Signature "223*"; Vendetta's "SP1" and "VEN-SP1" are the Crystal Rose "sp1". The denominator, leading zeros and case
  * are not part of the identity.
  */
 export function numberKey(raw: string): string {
   let n = raw.trim().toLowerCase();
-  n = n.replace(/^[a-z]{2,4}[-\s]+(?=\d)/, ""); // "ogn-001", "ogn 001"
+  n = n.replace(/^[a-z]{2,4}[-\s]+(?=\d|sp\d)/, ""); // "ogn-001", "ogn 001", "ven-sp1"
   n = n.split("/")[0].trim();
+  // A Crystal Rose (Vendetta's SP1 to SP6) is "sp" and a number, never a plain one.
+  const rose = n.match(/^sp0*(\d+)$/);
+  if (rose) return `sp${rose[1]}`;
   const m = n.match(/^0*(\d+)([a-z]?)(\*?)$/);
   return m ? `${m[1]}${m[2]}${m[3]}` : n;
 }
@@ -173,6 +181,11 @@ export function parseCollectionCsv(text: string): ParsedCollectionCsv | null {
 
   const rows: CsvCopy[] = [];
   const skipped: CsvSkip[] = [];
+  let skippedCount = 0;
+  const skip = (s: CsvSkip) => {
+    skippedCount++;
+    if (skipped.length < SKIP_STORE_CAP) skipped.push(s);
+  };
   let conditionDefaulted = 0;
   let read = 0;
   const merged = new Map<string, CsvCopy>();
@@ -182,7 +195,7 @@ export function parseCollectionCsv(text: string): ParsedCollectionCsv | null {
     if (raw.trim() === "") continue;
     const line = i + 1;
     if (++read > CSV_LINE_CAP) {
-      skipped.push({ line, reason: `over the ${CSV_LINE_CAP}-line limit for one import; paste the rest as a second file`, text: clip(raw.trim()) });
+      skip({ line, reason: `over the ${CSV_LINE_CAP}-line limit for one import; paste the rest as a second file`, text: clip(raw.trim()) });
       continue;
     }
     const cells = splitCells(raw, delim);
@@ -194,21 +207,21 @@ export function parseCollectionCsv(text: string): ParsedCollectionCsv | null {
     // RiftCompare's own export ends with "TOTAL,,,,,,,123.45": not a card.
     if (!setRaw && !numRaw && (name ?? cells[0] ?? "").toUpperCase() === "TOTAL") continue;
     if (!setRaw) {
-      skipped.push({ line, reason: "no set", text: clip(raw.trim()) });
+      skip({ line, reason: "no set", text: clip(raw.trim()) });
       continue;
     }
     const setCode = resolveSetCode(setRaw);
     if (!setCode) {
-      skipped.push({ line, reason: `set "${setRaw}" is not one we track`, text: clip(raw.trim()) });
+      skip({ line, reason: `set "${setRaw}" is not one we track`, text: clip(raw.trim()) });
       continue;
     }
     if (!numRaw) {
-      skipped.push({ line, reason: "no collector number", text: clip(raw.trim()) });
+      skip({ line, reason: "no collector number", text: clip(raw.trim()) });
       continue;
     }
     const key = numberKey(numRaw);
-    if (!/^\d+[a-z]?\*?$/.test(key)) {
-      skipped.push({ line, reason: `collector number "${numRaw}" not understood`, text: clip(raw.trim()) });
+    if (!/^(\d+[a-z]?\*?|sp\d+)$/.test(key)) {
+      skip({ line, reason: `collector number "${numRaw}" not understood`, text: clip(raw.trim()) });
       continue;
     }
 
@@ -217,7 +230,7 @@ export function parseCollectionCsv(text: string): ParsedCollectionCsv | null {
     if (qRaw !== "") {
       const q = Number(qRaw);
       if (!Number.isInteger(q) || q < 1) {
-        skipped.push({ line, reason: `quantity "${qRaw}" is not a whole number of 1 or more`, text: clip(raw.trim()) });
+        skip({ line, reason: `quantity "${qRaw}" is not a whole number of 1 or more`, text: clip(raw.trim()) });
         continue;
       }
       qty = Math.min(QTY_CAP, q);
@@ -227,7 +240,7 @@ export function parseCollectionCsv(text: string): ParsedCollectionCsv | null {
     let isFoil = false;
     if (TRUTHY.has(fRaw)) isFoil = true;
     else if (!FALSY.has(fRaw)) {
-      skipped.push({ line, reason: `finish "${cell(cols.foil)}" not understood (use foil or normal)`, text: clip(raw.trim()) });
+      skip({ line, reason: `finish "${cell(cols.foil)}" not understood (use foil or normal)`, text: clip(raw.trim()) });
       continue;
     }
 
@@ -247,7 +260,7 @@ export function parseCollectionCsv(text: string): ParsedCollectionCsv | null {
     merged.set(mk, copy);
     rows.push(copy);
   }
-  return { rows, skipped, conditionDefaulted };
+  return { rows, skipped, skippedCount, conditionDefaulted };
 }
 
 // ── Matching lines to Card rows ──────────────────────────────────────────────

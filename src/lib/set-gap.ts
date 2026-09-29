@@ -11,10 +11,20 @@
 //   • one copy of each;
 //   • a card with no in-stock REAL-STORE listing (nothing anywhere, or eBay only)
 //     is not priced: it is listed apart as "not stocked", never dropped;
+//   • RANKED AND CEILINGED ON WHAT THE PLAN BUYS. When the caller hands over
+//     `prices` (the cheapest copy at the member's minimum condition, at the
+//     stores whose postage we can price: lib/basket-server.ts loadSetGapPrices),
+//     that is the price a card is ranked and ceilinged by, so "your 200 cheapest"
+//     are the 200 the plan can buy and a card is never priced above the limit
+//     the member set. A card listed only where we cannot price postage, or only
+//     below the floor, is counted apart (`noPostageCount`, `belowFloorCount`),
+//     never chunked and then reported "not covered";
 //   • an optional per-card ceiling leaves out the dearer ones, and says how many;
 //   • ONE PLAN HOLDS AT MOST SET_GAP_CHUNK CARDS (Best Basket's 200-line cap).
 //     A bigger gap is served as a ranked chunk, cheapest first, with one plain
-//     line and a step to the next chunk. Never silently partial.
+//     line and a step to the next chunk. Never silently partial. The step is a
+//     CURSOR (the last card's price, number and id), not a rank: ownership and
+//     prices move between two clicks, and a rank offset would skip cards.
 //
 // Client-safe: imports only pure modules (tests/client-imports.test.ts).
 import { DECK_LINE_CAP } from "./deck";
@@ -31,17 +41,35 @@ import {
 /** Cards in one plan. Best Basket's line cap (DECK_LINE_CAP, WATCHLIST_BASKET_CAP), so a plan is never bigger than the tool prices. */
 export const SET_GAP_CHUNK = DECK_LINE_CAP;
 
-/** The catalogue read is capped at 1,200 cards (lib/set-checklist.ts), so no chunk starts past it. */
-export const SET_GAP_MAX_OFFSET = 1200;
-
 /** How many not-stocked cards a Premium answer names; the rest are counted. */
 export const NOT_STOCKED_LIST_CAP = 200;
 
-/** A chunk start from a request: a whole number of chunks, 0 or more, never past the catalogue. */
-export function normalizeOffset(v: unknown): number {
-  const n = typeof v === "number" && Number.isFinite(v) ? Math.floor(v) : 0;
-  if (n <= 0) return 0;
-  return Math.min(SET_GAP_MAX_OFFSET, Math.floor(n / SET_GAP_CHUNK) * SET_GAP_CHUNK);
+/**
+ * Where the next chunk starts: the last card of the chunk before, by the rank
+ * key (price, collector number, id). Strictly after it, so a card bought or
+ * ticked off between two clicks moves nothing.
+ */
+export interface SetGapCursor {
+  cents: number;
+  collectorNumber: string;
+  id: string;
+}
+
+export function encodeCursor(c: SetGapCursor): string {
+  return `${c.cents}|${c.collectorNumber}|${c.id}`;
+}
+
+/** A cursor from a request; anything that is not exactly one is null (the first chunk). */
+export function parseCursor(v: unknown): SetGapCursor | null {
+  if (typeof v !== "string") return null;
+  const m = /^(\d{1,9})\|([^|\s]{1,24})\|([A-Za-z0-9_-]{1,64})$/.exec(v);
+  return m ? { cents: parseInt(m[1], 10), collectorNumber: m[2], id: m[3] } : null;
+}
+
+/** What one card costs the plan: its cheapest copy at the floor and its cheapest in any condition, at stores we can price postage for. */
+export interface SetGapPrice {
+  floorCents: number | null;
+  anyCents: number | null;
 }
 
 export interface SetGapOptions {
@@ -50,8 +78,13 @@ export interface SetGapOptions {
   rarity?: string | null;
   /** Leave out cards whose cheapest listing is dearer than this, cents. */
   maxPriceCents?: number | null;
-  /** Rank to start at, a multiple of SET_GAP_CHUNK. */
-  offset?: number;
+  /** Start strictly after this card (the chunk before's last), or null for the first chunk. */
+  after?: SetGapCursor | null;
+  /**
+   * What each card costs the plan (see the header). Absent: the checklist's own
+   * cheapest listing ranks and ceilings. A card with no entry is not priceable.
+   */
+  prices?: ReadonlyMap<string, SetGapPrice> | null;
 }
 
 /** Counts only: safe to send to any signed-in account (no store, line or link). */
@@ -64,21 +97,28 @@ export interface SetGapSummary {
   ownedInScope: number;
   /** Cards in scope (and rarity) it is missing. */
   gapTotal: number;
-  /** Of those, cards with an in-stock real-store listing. */
+  /** Of those, cards the plan can price: a listing at the floor at a store we can price postage for. */
   stocked: number;
   /** Stocked cards dearer than the ceiling: left out at the member's own choice. */
   overCeiling: number;
   /** Stocked cards within the ceiling: what the chunks are cut from. */
   candidates: number;
-  /** Where this chunk starts (0-based rank) and how many cards it holds. */
-  offset: number;
+  /** How many cards this chunk holds. */
   inChunk: number;
+  /** This chunk carries on from a cursor (it is not the cheapest end of the list). */
+  continued: boolean;
+  /** A cursor was sent but nothing was left after it, so this starts again from the cheapest. */
+  restarted: boolean;
   /** Candidates past this chunk: "N more not included". */
   moreAfter: number;
-  /** Offset of the next chunk, or null when this is the last. */
-  nextOffset: number | null;
+  /** Cursor for the next chunk, or null when this is the last. */
+  nextCursor: string | null;
   /** Missing cards with no in-stock real-store listing: listed apart, not priced. */
   notStockedCount: number;
+  /** Missing cards a store lists, but only where we cannot price postage: not in the plan. */
+  noPostageCount: number;
+  /** Missing cards a priceable store lists, but only below the minimum condition: not in the plan. */
+  belowFloorCount: number;
 }
 
 export interface SetGapPlan {
@@ -89,9 +129,37 @@ export interface SetGapPlan {
   summary: SetGapSummary;
 }
 
-/** Cheapest listing first; ties by collector number then id, so a chunk boundary is stable. */
-function byPriceThenNumber(a: ChecklistCard, b: ChecklistCard): number {
-  return (a.minCents ?? 0) - (b.minCents ?? 0) || compareByNumber(a, b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+interface Ranked {
+  card: ChecklistCard;
+  cents: number;
+}
+
+/** Cheapest first; ties by collector number then id: a stable order the cursor can be recomputed from. */
+function rankCmp(a: { cents: number; collectorNumber: string; id: string }, b: { cents: number; collectorNumber: string; id: string }): number {
+  return (
+    a.cents - b.cents ||
+    compareByNumber({ collectorNumber: a.collectorNumber, name: "" }, { collectorNumber: b.collectorNumber, name: "" }) ||
+    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  );
+}
+const keyOf = (r: Ranked) => ({ cents: r.cents, collectorNumber: r.card.collectorNumber, id: r.card.id });
+
+/** The set's cards in scope (and rarity) the account does not hold, and how many it does. */
+export function missingIn(
+  cards: readonly ChecklistCard[],
+  owned: OwnedMap,
+  opts: Pick<SetGapOptions, "scope" | "rarity">,
+): { missing: ChecklistCard[]; ownedInScope: number } {
+  const rarity = opts.rarity ? opts.rarity : null;
+  let ownedInScope = 0;
+  const missing: ChecklistCard[] = [];
+  for (const c of cards) {
+    if (!cardInScope(c, opts.scope)) continue;
+    if (rarity && c.rarity !== rarity) continue;
+    if (isOwned(owned, c.id)) ownedInScope++;
+    else missing.push(c);
+  }
+  return { missing, ownedInScope };
 }
 
 export function planSetGap(
@@ -102,23 +170,34 @@ export function planSetGap(
 ): SetGapPlan {
   const rarity = opts.rarity ? opts.rarity : null;
   const ceiling = opts.maxPriceCents != null && opts.maxPriceCents > 0 ? Math.floor(opts.maxPriceCents) : null;
-  const offset = normalizeOffset(opts.offset ?? 0);
+  const { missing, ownedInScope } = missingIn(cards, owned, opts);
 
-  let ownedInScope = 0;
-  const missing: ChecklistCard[] = [];
-  for (const c of cards) {
-    if (!cardInScope(c, opts.scope)) continue;
-    if (rarity && c.rarity !== rarity) continue;
-    if (isOwned(owned, c.id)) ownedInScope++;
-    else missing.push(c);
-  }
-
-  const stocked = missing.filter((c) => stockOf(c) === "store");
+  const listed = missing.filter((c) => stockOf(c) === "store");
   const notStocked = missing.filter((c) => stockOf(c) !== "store").sort(compareByNumber);
-  const within = ceiling == null ? stocked : stocked.filter((c) => (c.minCents ?? 0) <= ceiling);
-  const ranked = [...within].sort(byPriceThenNumber);
-  const chunk = ranked.slice(offset, offset + SET_GAP_CHUNK);
-  const moreAfter = Math.max(0, ranked.length - (offset + chunk.length));
+  // What the plan can buy, at the price it would pay.
+  const buyable: Ranked[] = [];
+  let noPostageCount = 0;
+  let belowFloorCount = 0;
+  for (const c of listed) {
+    if (!opts.prices) {
+      buyable.push({ card: c, cents: c.minCents ?? 0 });
+      continue;
+    }
+    const p = opts.prices.get(c.id);
+    if (p?.floorCents != null) buyable.push({ card: c, cents: p.floorCents });
+    else if (p?.anyCents != null) belowFloorCount++;
+    else noPostageCount++;
+  }
+  const within = ceiling == null ? buyable : buyable.filter((r) => r.cents <= ceiling);
+  const ranked = [...within].sort((a, b) => rankCmp(keyOf(a), keyOf(b)));
+  let start = opts.after ? ranked.findIndex((r) => rankCmp(keyOf(r), opts.after!) > 0) : 0;
+  // A cursor with nothing after it while cards remain: ownership or prices
+  // moved between two clicks. Start again rather than say the list is done.
+  const restarted = !!opts.after && start < 0 && ranked.length > 0;
+  if (start < 0) start = restarted ? 0 : ranked.length;
+  const slice = ranked.slice(start, start + SET_GAP_CHUNK);
+  const chunk = slice.map((r) => (r.card.minCents === r.cents ? r.card : { ...r.card, minCents: r.cents }));
+  const moreAfter = Math.max(0, ranked.length - (start + slice.length));
 
   return {
     chunk,
@@ -130,14 +209,17 @@ export function planSetGap(
       maxPriceCents: ceiling,
       ownedInScope,
       gapTotal: missing.length,
-      stocked: stocked.length,
-      overCeiling: stocked.length - within.length,
+      stocked: buyable.length,
+      overCeiling: buyable.length - within.length,
       candidates: ranked.length,
-      offset,
       inChunk: chunk.length,
+      continued: start > 0,
+      restarted,
       moreAfter,
-      nextOffset: moreAfter > 0 ? offset + chunk.length : null,
+      nextCursor: moreAfter > 0 && slice.length ? encodeCursor(keyOf(slice[slice.length - 1])) : null,
       notStockedCount: notStocked.length,
+      noPostageCount,
+      belowFloorCount,
     },
   };
 }
@@ -145,20 +227,47 @@ export function planSetGap(
 /**
  * The one plain line above a chunked plan, or null when the whole gap fits in
  * one plan. The first chunk reads exactly "Your 200 cheapest missing cards. N
- * more not included."; a later one says which ranks it is.
+ * more not included."; a later one says it is the next cheapest.
  */
-export function setGapNote(s: Pick<SetGapSummary, "offset" | "inChunk" | "moreAfter">): string | null {
+export function setGapNote(s: Pick<SetGapSummary, "inChunk" | "moreAfter" | "continued" | "restarted">): string | null {
   if (s.inChunk === 0) return null;
-  if (s.offset === 0) {
-    return s.moreAfter > 0 ? `Your ${s.inChunk} cheapest missing cards. ${s.moreAfter} more not included.` : null;
+  const more = s.moreAfter > 0 ? `${s.moreAfter} more not included.` : null;
+  if (s.continued) {
+    return `The next ${s.inChunk} cheapest missing cards. ${more ?? "That is all of the rest."}`;
   }
-  const range = `Missing cards ${s.offset + 1} to ${s.offset + s.inChunk}, cheapest first.`;
-  return s.moreAfter > 0 ? `${range} ${s.moreAfter} more not included.` : `${range} That is all of the rest.`;
+  const first = more ? `Your ${s.inChunk} cheapest missing cards. ${more}` : null;
+  if (s.restarted) {
+    const changed = "Your list or the prices changed since the last plan, so this starts again from the cheapest.";
+    return first ? `${changed} ${first}` : changed;
+  }
+  return first;
 }
 
 /** The label on the step to the next chunk. */
 export function nextChunkLabel(s: Pick<SetGapSummary, "moreAfter">): string {
   return `Plan the next ${Math.min(SET_GAP_CHUNK, s.moreAfter)}`;
+}
+
+/** The refusal when nothing missing can be priced, by cause: nothing stocked, postage we cannot price, or the floor. */
+export function nothingPricedMessage(
+  s: Pick<SetGapSummary, "gapTotal" | "notStockedCount" | "noPostageCount" | "belowFloorCount">,
+  place: string,
+): string {
+  if (s.notStockedCount >= s.gapTotal) return nothingStockedMessage(s.gapTotal, place);
+  const parts: string[] = [];
+  if (s.belowFloorCount > 0) {
+    parts.push(
+      `${s.belowFloorCount} ${plural(s.belowFloorCount, "is", "are")} only in stock below your minimum condition (choose Anything to price ${plural(s.belowFloorCount, "it", "them")})`,
+    );
+  }
+  if (s.noPostageCount > 0) {
+    parts.push(`${s.noPostageCount} ${plural(s.noPostageCount, "is", "are")} only stocked at stores we can't price postage for`);
+  }
+  return `None of the ${s.gapTotal} ${s.gapTotal === 1 ? "card" : "cards"} you're missing can be priced delivered in ${place} right now${parts.length ? `: ${parts.join("; ")}` : ""}.`;
+}
+
+function plural(n: number, one: string, many: string): string {
+  return n === 1 ? one : many;
 }
 
 /** The refusal for a set that has not released, with how many revealed cards have no listing yet. No denominator. */

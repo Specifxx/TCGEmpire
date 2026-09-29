@@ -14,6 +14,7 @@ import {
   missingCsv,
   missingText,
   otherSourceLabel,
+  numberWithoutTotal,
   preReleaseLine,
   raritiesIn,
   stockOf,
@@ -120,7 +121,7 @@ export function SetTracker({
         </section>
         <ul className="card-surface divide-y divide-ink-800 overflow-hidden">
           {list.map((c) => (
-            <Row key={c.id} c={c} owned={owned} currency={currency} place={place} country={country} priced={false} />
+            <Row key={c.id} c={c} owned={owned} currency={currency} place={place} country={country} priced={false} hideTotal />
           ))}
         </ul>
         <PlanThePurchase setName={setName} setSlug={setSlug} disabledReason={preReleasePlanLine(setName, releasedLabel, revealedWithoutListing(cards))} />
@@ -311,6 +312,7 @@ function Row({
   country,
   priced,
   justTicked = false,
+  hideTotal = false,
 }: {
   c: ChecklistCard;
   owned: OwnedMap;
@@ -319,6 +321,8 @@ function Row({
   country: string;
   priced: boolean;
   justTicked?: boolean;
+  /** A set that has not released: the number without its printed "/TTT" total. */
+  hideTotal?: boolean;
 }) {
   const r = rarityInfo(displayRarity(c));
   const stock = stockOf(c);
@@ -332,7 +336,7 @@ function Row({
           {cardDisplayName(c.name, c)}
         </Link>
         <p className="text-xs text-slate-500">
-          <span className="num">{c.setCode} · {c.collectorNumber}</span> ·{" "}
+          <span className="num">{c.setCode} · {hideTotal ? numberWithoutTotal(c.collectorNumber) : c.collectorNumber}</span> ·{" "}
           <span style={{ color: r.color }}>{r.label}</span>
         </p>
       </div>

@@ -8,6 +8,7 @@ import { SIGNUP_SOURCES } from "../src/lib/signup-source-shared";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { freeLimitPitch } from "../src/components/FreeLimitPanel";
 import { isPreorderSetCode } from "../src/lib/constants";
+import { numberWithoutTotal } from "../src/lib/set-scope";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE SET TRACKER'S WIRING (2026-09-29, DECISIONS.md, "Set tracker"): the
@@ -172,4 +173,16 @@ test("the price guide row and the tile carry the tick, and only when the set is 
   assert.match(g, /\{\.\.\.\(ticks \? \{ "data-tick-rows": "" \} : \{\}\)\}/, "one marker on the tbody");
   assert.doesNotMatch(g, /OwnedTick|data-c/, "no per-row markup; the client layer pairs the rows with the ids by position");
   assert.match(g, /ticks = false/);
+});
+
+test("a pre-release set never prints a '/TTT' total on a card row; a released set keeps it", () => {
+  assert.equal(numberWithoutTotal("001/167"), "001");
+  assert.equal(numberWithoutTotal("112a/298"), "112a");
+  assert.equal(numberWithoutTotal("SP1"), "SP1");
+  const t = code("src/components/SetTracker.tsx");
+  const pre = t.slice(t.indexOf("if (preRelease) {"), t.indexOf("const scopeInfo"));
+  assert.match(pre, /<Row [^>]*priced=\{false\} hideTotal \/>/, "the pre-release list hides the denominator");
+  assert.match(t, /hideTotal \? numberWithoutTotal\(c\.collectorNumber\) : c\.collectorNumber/);
+  const released = t.slice(t.indexOf("const scopeInfo"), t.indexOf("function Row("));
+  assert.doesNotMatch(released, /hideTotal/, "the released list's rows still show OGN · 132/298");
 });

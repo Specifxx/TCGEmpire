@@ -8,7 +8,7 @@ import { NavIcon } from "@/components/NavIcon";
 import { PremiumNudgeCard } from "@/components/PremiumNudgeCard";
 import { getPremiumNudge, nudgeCopy as watchedNudgeCopy } from "@/lib/premium-nudge";
 import { isPremium, premiumCheckoutEnabled, premiumTierOf } from "@/lib/premium";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS, sealedWatchLimit } from "@/lib/alert-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_ONLY, SEALED_WATCH_LIMIT_PLUS, sealedWatchLimit } from "@/lib/alert-limits";
 import { getCountry } from "@/lib/get-country";
 import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { getSealedGroups } from "@/lib/sealed-import";
@@ -151,8 +151,8 @@ export default async function WatchingPage() {
           </li>
           <li>
             <strong className="text-white">Sealed products</strong> — Plus (up to {SEALED_WATCH_LIMIT_PLUS}) and Premium (any). Tap the
-            heart on a box on /sealed: an email when it is back in stock after selling out everywhere, at RRP (the price Riot sets),
-            or at your price. Checked {SEALED_CHECK_CADENCE}, and every email says when the store was last read; a Discord stock bot
+            heart on a box on /sealed: an email when it is back in stock after selling out everywhere, at RRP (the price Riot sets;
+            {SEALED_RRP_ONLY}), or at your price. Checked {SEALED_CHECK_CADENCE}, and every email says when the store was last read; a Discord stock bot
             may be faster.
             {!member && (
               <div className="mt-1.5">

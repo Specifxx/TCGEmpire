@@ -278,13 +278,16 @@ longer lands on its entry.
   wrapped) minus one user-scoped `ownedBySet` read (NOT `loadOwnedQty`, which
   reads 400 rows and would call an owned card missing); pure rule in
   `lib/set-gap.ts`. Skip-owned is locked on. **One plan is at most
-  `SET_GAP_CHUNK` (the 200-line cap) cards**, cheapest listing first with stable
+  `SET_GAP_CHUNK` (the 200-line cap) cards**, cheapest first with stable
   ties; a bigger gap is a chunk with "Your 200 cheapest missing cards. N more not
-  included." and a "Plan the next 200" step (`offset`), never silently partial.
+  included." and a "Plan the next 200" step (a cursor, `after`, not a rank),
+  never silently partial.
   A card no real store has in stock is listed apart ("not stocked in {place}",
   named for Premium, counted for everyone), never dropped; a card dearer than
   the member's own ceiling is counted; non-foil listings; the minimum condition
-  applies (ranking is by the any-condition cheapest, the plan by the floor). The
+  applies (ranking and the ceiling use the price the plan pays: the floor, at
+  the stores that post to the buyer; a card only a postage-less store or only
+  a played copy has is counted apart, never chunked). The
   tier is the existing gate: any account keeps `basketPreview` and Best
   Basket's own saving on its own list plus `setGap` COUNTS (no store, line, link
   or card name; `setGapFields`), store names, lines and URLs are Premium's, no

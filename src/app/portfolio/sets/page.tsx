@@ -7,7 +7,7 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SETS, isPreorderSetCode } from "@/lib/constants";
 import { getSetChecklist } from "@/lib/set-checklist";
-import { ownedBySet } from "@/lib/set-owned";
+import { ownedBySet, ownedTakeFor } from "@/lib/set-owned";
 import { preReleaseLine, summarise, summarisePreRelease, type ChecklistCard, type OwnedMap } from "@/lib/set-scope";
 import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 import { NavIcon } from "@/components/NavIcon";
@@ -45,7 +45,7 @@ export default async function SetChecklistIndex() {
   );
   const shown = lists.filter((l) => l.cards.length > 0);
   const owned: OwnedMap = shown.length
-    ? await ownedBySet(prisma, user.id, shown.map((l) => l.set.code)).catch(() => {
+    ? await ownedBySet(prisma, user.id, shown.map((l) => l.set.code), ownedTakeFor(shown.map((l) => l.cards.length))).catch(() => {
         failed = true;
         return {};
       })

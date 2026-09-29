@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { SEALED_RESTOCK_COOLDOWN_MS, SEALED_RESTOCK_MIN_SOLDOUT_MS, SEALED_WATCH_COOLDOWN_MS, inSealedCooldown, sealedCooldownMs } from "../src/lib/sealed-watch";
-import { SEALED_CHECK_CADENCE, SEALED_CHECK_SENTENCE } from "../src/lib/alert-limits";
+import { SEALED_CHECK_CADENCE, SEALED_CHECK_SENTENCE, SEALED_RRP_MARKETS, SEALED_RRP_ONLY } from "../src/lib/alert-limits";
+import { msrpCents } from "../src/lib/msrp";
 import { freshSealedLoaders, groupSealedRowsForWatch, type SealedAlertRow } from "../src/lib/sealed-alert-read";
 import { buildSealedWatchEmail, type SealedWatchKind } from "../src/lib/watch-emails";
 import { checkedLabel } from "../src/lib/email";
@@ -276,7 +277,7 @@ test("every sealed email states when the store was last read, in the body and th
 
 test("the copy says 'about every six hours' everywhere the cadence is named, and never promises speed", () => {
   const row = TIER_COMPARISON.find((r) => r.feature.startsWith("Sealed watches"))!;
-  assert.equal(row.feature, `Sealed watches — restock, at-RRP and price alerts, checked ${SEALED_CHECK_CADENCE}`);
+  assert.equal(row.feature, `Sealed watches — restock, at-RRP (${SEALED_RRP_MARKETS}) and price alerts, checked ${SEALED_CHECK_CADENCE}`);
   assert.equal(SEALED_CHECK_CADENCE, "about every six hours");
   for (const f of ["src/app/premium/page.tsx", "src/components/SealedWatchButton.tsx", "src/app/watching/page.tsx", "src/app/llms.txt/route.ts", "src/lib/articles.ts", "src/components/TierComparisonTable.tsx"]) {
     assert.match(read(f), /SEALED_CHECK_CADENCE/, `${f} quotes the cadence from the constant`);
@@ -289,4 +290,37 @@ test("the copy says 'about every six hours' everywhere the cadence is named, and
   for (const f of ["src/app/premium/page.tsx", "src/lib/articles.ts"]) {
     assert.doesNotMatch(read(f), /sold out at every store (we track|it tracks) for at least a day|checked after every price update, at most (once a day|one email a day) per product/, `${f} still quotes the old restock rule`);
   }
+});
+
+// ── Review fixes (2026-09-29) ────────────────────────────────────────────────
+
+test("the sealed alert route fails CLOSED: no CRON_SECRET, or the wrong one, is a 401 before anything is read or sent", async () => {
+  const { GET } = await import("../src/app/api/cron/price-alerts/sealed/route");
+  const saved = process.env.CRON_SECRET;
+  try {
+    delete process.env.CRON_SECRET;
+    const url = "http://localhost/api/cron/price-alerts/sealed";
+    assert.equal((await GET(new Request(url))).status, 401, "no secret configured: nobody is authorised");
+    assert.equal((await GET(new Request(url, { headers: { authorization: "Bearer undefined" } }))).status, 401);
+    process.env.CRON_SECRET = "s3cret";
+    assert.equal((await GET(new Request(url))).status, 401, "no header");
+    assert.equal((await GET(new Request(url, { headers: { authorization: "Bearer nope" } }))).status, 401, "wrong header");
+  } finally {
+    if (saved === undefined) delete process.env.CRON_SECRET;
+    else process.env.CRON_SECRET = saved;
+  }
+});
+
+test("'at RRP' is qualified wherever it is promised: it exists only where lib/msrp.ts publishes an RRP", () => {
+  // The markets in the copy are the markets the RRP table has.
+  const withRrp = (["AU", "US", "UK", "CA", "SG", "EU"] as const).filter((m) => msrpCents("Booster Box", m) != null);
+  assert.deepEqual(withRrp, ["AU", "US", "UK"]);
+  assert.equal(SEALED_RRP_MARKETS, "AU/US/UK");
+  assert.equal(SEALED_RRP_ONLY, "AU/US/UK only");
+  const row = TIER_COMPARISON.find((r) => r.feature.startsWith("Sealed watches"))!;
+  assert.match(row.feature, /at-RRP \(AU\/US\/UK\)/);
+  for (const f of ["src/components/SealedWatchButton.tsx", "src/app/watching/page.tsx"]) {
+    assert.match(read(f), /SEALED_RRP_ONLY/, `${f} says where at-RRP exists`);
+  }
+  assert.match(read("src/components/PremiumPricingCards.tsx"), /at RRP \(\$\{SEALED_RRP_MARKETS\}\)/);
 });

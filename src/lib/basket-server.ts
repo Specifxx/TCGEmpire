@@ -20,8 +20,8 @@ import { meetsMinCondition, parseBasketPrefs, type BasketPrefs, type MinConditio
 import { isPreorderSetCode, setByCode } from "./constants";
 import { getSetChecklist } from "./set-checklist";
 import { ownedBySet } from "./set-owned";
-import type { ChecklistCard, OwnedMap, SetScope } from "./set-scope";
-import { planSetGap, preReleaseGapMessage, revealedWithoutListing, type SetGapOptions, type SetGapPlan } from "./set-gap";
+import { stockOf, type ChecklistCard, type OwnedMap, type SetScope } from "./set-scope";
+import { missingIn, planSetGap, preReleaseGapMessage, revealedWithoutListing, type SetGapOptions, type SetGapPlan, type SetGapPrice } from "./set-gap";
 
 // The stores themselves — which serve this market, and what each charges to
 // post an order — are not a read: lib/shipping.ts basketStoresFor() builds
@@ -241,28 +241,96 @@ export async function loadBinderHoldings(
 // owned card missing and ask the member to buy it again. Using the tracker's
 // reader also makes "missing" here exactly what the checklist shows.
 //
-// The price used to RANK is the checklist's cheapest real-store listing (never
-// Card.lowestPriceCents*, which is stores + eBay). The plan itself is priced
-// afterwards by loadStoreListings, unchanged, for at most SET_GAP_CHUNK card ids.
+// The price used to RANK and to apply the member's ceiling is what the PLAN
+// would pay, not the checklist's cheapest listing (any condition, any real
+// store, postage-less stores included). loadSetGapPrices reads it: the cheapest
+// copy at the member's minimum condition among the stores whose postage we can
+// price, for the missing cards the checklist says a real store lists. So "your
+// 200 cheapest" are the 200 the plan can buy, and a card whose cheapest copy is
+// Heavily Played, or that only a postage-less store stocks, is counted apart
+// (lib/set-gap.ts) instead of taking a chunk slot and coming back "not covered".
+// The plan itself is priced afterwards by loadStoreListings, unchanged, for at
+// most SET_GAP_CHUNK card ids.
+//
+// EGRESS. loadSetGapPrices is ONE DB-side groupBy by (card, condition), min
+// price, over the candidate ids (at most the checklist's 1,200-card cap, in
+// practice the missing cards of one set) at this market's priceable stores:
+// about a handful of 60-byte rows a card, no url, `take` capped. It is per request and
+// uncached like the rest of this file, and only the set source makes it.
 export interface SetGapDeps {
   checklist: (setCode: string, country: Country) => Promise<ChecklistCard[]>;
   owned: (userId: string, setCode: string) => Promise<OwnedMap>;
+  prices: (cardIds: string[], country: Country, stores: string[], minCondition: MinCondition) => Promise<Map<string, SetGapPrice>>;
 }
 const setGapDeps: SetGapDeps = {
   checklist: getSetChecklist,
   owned: (userId, setCode) => ownedBySet(prisma, userId, setCode),
+  prices: (ids, country, stores, floor) => loadSetGapPrices(ids, country, stores, floor),
 };
+
+type SetGapPriceRow = { cardId: string; condition: string | null; _min: { priceCents: number | null } };
+export type SetGapPriceDb = {
+  retailerPrice: {
+    groupBy: (args: {
+      by: ["cardId", "condition"];
+      where: { cardId: { in: string[] }; country: Country; inStock: true; retailer: { in: string[] } };
+      _min: { priceCents: true };
+      orderBy: { cardId: "asc" };
+      take: number;
+    }) => PromiseLike<SetGapPriceRow[]>;
+  };
+};
+
+/**
+ * Per card: its cheapest in-stock copy at `minCondition` and its cheapest in any
+ * condition, both at `stores` (the ones the plan can price postage for). A card
+ * with no row at all has no entry. Throws on failure, like loadStoreListings.
+ */
+export async function loadSetGapPrices(
+  cardIds: string[],
+  country: Country,
+  stores: string[],
+  minCondition: MinCondition,
+  db: SetGapPriceDb | typeof prisma = prisma
+): Promise<Map<string, SetGapPrice>> {
+  const out = new Map<string, SetGapPrice>();
+  if (!cardIds.length || !stores.length) return out;
+  const rows = await (db as SetGapPriceDb).retailerPrice.groupBy({
+    by: ["cardId", "condition"],
+    where: { cardId: { in: cardIds }, country, inStock: true, retailer: { in: stores } },
+    _min: { priceCents: true },
+    orderBy: { cardId: "asc" },
+    // A store's condition text has a handful of spellings a card; 20 a card is a backstop, not a limit.
+    take: cardIds.length * 20,
+  });
+  for (const r of rows) {
+    const p = r._min.priceCents;
+    if (p == null) continue;
+    const cur = out.get(r.cardId) ?? { floorCents: null, anyCents: null };
+    if (cur.anyCents == null || p < cur.anyCents) cur.anyCents = p;
+    if (meetsMinCondition(r.condition, minCondition) && (cur.floorCents == null || p < cur.floorCents)) cur.floorCents = p;
+    out.set(r.cardId, cur);
+  }
+  return out;
+}
 
 export type SetGapLoad =
   | { ok: true; setName: string; plan: SetGapPlan }
   | { ok: false; reason: "unknown-set" | "preorder"; message: string };
+
+/** What the plan can buy with: the stores whose postage we can price for this buyer, and the floor. */
+export interface SetGapBuy {
+  stores: string[];
+  minCondition: MinCondition;
+}
 
 export async function loadSetGapLines(
   userId: string,
   setCode: string,
   scope: SetScope,
   country: Country,
-  opts: Omit<SetGapOptions, "scope"> = {},
+  opts: Omit<SetGapOptions, "scope" | "prices">,
+  buy: SetGapBuy,
   deps: SetGapDeps = setGapDeps
 ): Promise<SetGapLoad> {
   const set = setByCode(setCode);
@@ -274,5 +342,8 @@ export async function loadSetGapLines(
     return { ok: false, reason: "preorder", message: preReleaseGapMessage(set.name, revealedWithoutListing(cards)) };
   }
   const owned = await deps.owned(userId, set.code);
-  return { ok: true, setName: set.name, plan: planSetGap(set.code, cards, owned, { ...opts, scope }) };
+  const { missing } = missingIn(cards, owned, { scope, rarity: opts.rarity });
+  const listedIds = missing.filter((c) => stockOf(c) === "store").map((c) => c.id);
+  const prices = await deps.prices(listedIds, country, buy.stores, buy.minCondition);
+  return { ok: true, setName: set.name, plan: planSetGap(set.code, cards, owned, { ...opts, scope, prices }) };
 }

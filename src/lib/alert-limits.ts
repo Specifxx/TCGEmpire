@@ -52,6 +52,13 @@ export function sealedWatchLimit(tier: "plus" | "premium" | null | undefined): n
 // the copy says so. One definition, so the table, the FAQ, the watch form and
 // the email cannot drift apart (tests/sealed-cadence.test.ts pins them).
 export const SEALED_CHECK_CADENCE = "about every six hours";
+
+// WHERE "AT RRP" EXISTS. lib/msrp.ts publishes an RRP for AU, US and UK only (never
+// a guess for CA, SG or the EU), so an at-RRP alert can only fire there; restock,
+// target and drop alerts work in every market. One definition, so the watch form,
+// the table row and the pricing card say the same thing.
+export const SEALED_RRP_MARKETS = "AU/US/UK";
+export const SEALED_RRP_ONLY = `${SEALED_RRP_MARKETS} only`;
 export const SEALED_CHECK_SENTENCE = `Sealed products are checked ${SEALED_CHECK_CADENCE}, so stock may have moved since. A Discord stock bot may be faster.`;
 
 // Premium's "unlimited" sealed watches still stop at a sanity ceiling, so one

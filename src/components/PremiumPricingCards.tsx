@@ -16,7 +16,7 @@ import {
   INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_MARKETS, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // The /premium pricing section, rebuilt 2026-09-11 to match the layout at
@@ -208,7 +208,7 @@ const PLUS_FEATURES = [
   "No ads on any page",
   "Unlimited watchlist and portfolio: track whole sets with no card limit",
   `Target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, naming the store`,
-  `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products: back in stock, at RRP, or at your price, checked ${SEALED_CHECK_CADENCE}`,
+  `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products: back in stock, at RRP (${SEALED_RRP_MARKETS}), or at your price, checked ${SEALED_CHECK_CADENCE}`,
   "Every card below TCGplayer market, filtered to the cards you watch or own",
   "The full Rising Cards list",
   "N-day free trial",
@@ -232,7 +232,7 @@ const PREMIUM_FEATURES_STANDALONE = [
   "No ads on any page",
   "Unlimited watchlist and portfolio",
   "Every card below TCGplayer market, and the full Rising Cards list",
-  "Unlimited target-price alerts and sealed watches: back in stock, at RRP, or at your price",
+  `Unlimited target-price alerts and sealed watches: back in stock, at RRP (${SEALED_RRP_MARKETS}), or at your price`,
   `Deck price watch: up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every update, emailed at your price`,
   "Best Basket, Buy this list and Finish this set: your whole list, delivered for less, at the minimum condition you set",
   "Demand Finder: the most searched and most viewed cards",

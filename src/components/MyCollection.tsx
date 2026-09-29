@@ -437,6 +437,7 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
     skipped?: { line: number; reason: string; text: string }[];
     conditionDefaulted?: number;
     failed?: string[];
+    failedCount?: number;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -547,7 +548,9 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
             <p className="mt-1 text-xs text-slate-500">{result.conditionDefaulted} {result.conditionDefaulted === 1 ? "line" : "lines"} had a condition we could not read and went in as Near Mint.</p>
           )}
           {result.failed && result.failed.length > 0 && (
-            <p className="mt-1 text-xs text-amber-300/90">Couldn&apos;t save, try again: <span className="text-slate-400">{result.failed.join(" · ")}</span></p>
+            <p className="mt-1 text-xs text-amber-300/90">Couldn&apos;t save, try again: <span className="text-slate-400">{result.failed.join(" · ")}</span>
+              {(result.failedCount ?? 0) > result.failed.length && ` …and ${(result.failedCount ?? 0) - result.failed.length} more`}
+            </p>
           )}
         </div>
       )}

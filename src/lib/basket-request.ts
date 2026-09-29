@@ -2,7 +2,7 @@ import { DECK_LINE_CAP } from "./deck";
 import { parseMinCondition, type MinCondition } from "./basket-condition";
 import { RARITY_KEYS } from "./constants";
 import { parseScope, type SetScope } from "./set-scope";
-import { normalizeOffset } from "./set-gap";
+import { parseCursor, type SetGapCursor } from "./set-gap";
 
 // What a Best Basket request may send, parsed the same way for every caller.
 // Pure (no database), so the tier story can be tested behaviourally: nothing
@@ -34,12 +34,12 @@ export interface BasketRequest {
   // The "set" source's own inputs (ignored by every other source): the set's
   // code ("" = none or malformed; the route checks it is a known, released set),
   // which printings count, an optional rarity and per-card price ceiling, and
-  // where in the ranked gap this plan starts (a whole number of chunks).
+  // the cursor a later chunk starts strictly after (null = the cheapest end).
   setCode: string;
   scope: SetScope;
   rarity: string | null;
   maxPriceCents: number | null;
-  offset: number;
+  after: SetGapCursor | null;
 }
 
 // A pasted or picked quantity, clamped server-side whatever the client sends.
@@ -75,6 +75,6 @@ export function parseBasketRequest(raw: unknown): BasketRequest {
     scope: parseScope(body.scope),
     rarity: source === "set" ? rarity : null,
     maxPriceCents: source === "set" && ceiling > 0 && ceiling <= 10_000_000 ? ceiling : null,
-    offset: source === "set" ? normalizeOffset(body.offset) : 0,
+    after: source === "set" ? parseCursor(body.after) : null,
   };
 }

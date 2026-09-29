@@ -163,3 +163,51 @@ test("the import UI says what a CSV needs and lists what was skipped", () => {
   assert.match(c, /Skipped \{result\.skippedCount/);
   assert.match(c, /had a condition we could not read and went in as Near Mint/);
 });
+
+// ── Review fixes (2026-09-29) ────────────────────────────────────────────────
+
+test("Vendetta's Crystal Roses (SP1 to SP6) import: the number is understood in every spelling and matches the catalogue", () => {
+  assert.equal(numberKey("SP1"), "sp1");
+  assert.equal(numberKey("sp01"), "sp1");
+  assert.equal(numberKey("SP1/6"), "sp1");
+  assert.equal(numberKey("VEN-SP1"), "sp1");
+  assert.equal(numberKey("ven sp6"), "sp6");
+  assert.equal(numberKey("OGN-001"), "1", "the prefix strip still works for plain numbers");
+  const r = parseCollectionCsv("set,number,quantity\nVEN,SP1,1\nVEN,VEN-SP2,2\nVEN,SPX,1")!;
+  assert.deepEqual(r.rows.map((x) => [x.setCode, x.key, x.qty]), [["VEN", "sp1", 1], ["VEN", "sp2", 2]]);
+  assert.equal(r.skippedCount, 1, "a number that is not a printing is still reported");
+  assert.match(r.skipped[0].reason, /not understood/);
+  const m = matchCsvRows(r.rows, [
+    { id: "rose1", setCode: "VEN", collectorNumber: "SP1" },
+    { id: "rose2", setCode: "VEN", collectorNumber: "SP2/6" },
+    { id: "base1", setCode: "VEN", collectorNumber: "001/200" },
+  ]);
+  assert.deepEqual(m.matched.map((x) => x.card.id), ["rose1", "rose2"]);
+  assert.equal(m.unmatched.length, 0);
+});
+
+test("a huge file allocates only a bounded skip list, and still counts every skipped line", () => {
+  const body = Array.from({ length: CSV_LINE_CAP + 5000 }, (_, i) => `OGN,${i + 1}`).join("\n");
+  const r = parseCollectionCsv(`set,number\n${body}`)!;
+  assert.equal(r.rows.length, CSV_LINE_CAP);
+  assert.equal(r.skippedCount, 5000, "every line past the cap is counted");
+  assert.ok(r.skipped.length <= 500, "but only a bounded number is stored");
+  assert.match(r.skipped[0].reason, /limit for one import/);
+});
+
+test("the import route bounds its input and its run: a size ceiling, a function budget, bounded writes, and a report of what was not reached", () => {
+  const c = code("src/app/api/collection/import/route.ts");
+  assert.match(c, /export const maxDuration = 60;/);
+  assert.match(c, /MAX_TEXT_CHARS = 500_000/);
+  assert.match(c, /text\.length > MAX_TEXT_CHARS[\s\S]*status: 413/);
+  assert.ok(c.indexOf("text.length > MAX_TEXT_CHARS") < c.indexOf("parseCollectionCsv(text)"), "the size check runs before any parsing");
+  const path = c.slice(c.indexOf("async function importPrintings"));
+  assert.match(c, /WRITE_CONCURRENCY = 8/);
+  assert.match(path, /Promise\.all\(/);
+  assert.match(path, /Date\.now\(\) > deadline[\s\S]*failed\.push\(labelOf\(m\)\)/, "out of time: the lines not reached are reported, not written and not lost");
+  assert.match(path, /failedCount: failed\.length/);
+  assert.match(path, /skippedCount: csv\.skippedCount \+ unmatched\.length/);
+  const ui = read("src/components/MyCollection.tsx");
+  assert.match(ui, /failedCount/);
+  assert.match(ui, /f\.size <= 500_000/, "the client picker holds the same 500 KB line");
+});

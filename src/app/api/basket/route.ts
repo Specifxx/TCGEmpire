@@ -11,7 +11,7 @@ import { rateLimit, refundRateLimit, tooManyRequests } from "@/lib/rate-limit";
 import type { Country } from "@/lib/country";
 import { basketPreview, optimizeBasket, planBasket, type BasketCard, type PreviewRegion } from "@/lib/basket";
 import { loadBinderHoldings, loadOwnedQty, loadSetGapLines, loadStoreListings, loadWatchlistCardIds, saveMinConditionPref } from "@/lib/basket-server";
-import { nothingStockedMessage, NOT_STOCKED_LIST_CAP, setGapFields, type SetGapAnswer } from "@/lib/set-gap";
+import { nothingPricedMessage, NOT_STOCKED_LIST_CAP, setGapFields, type SetGapAnswer } from "@/lib/set-gap";
 import { COUNTRIES } from "@/lib/country";
 import type { MinCondition } from "@/lib/basket-condition";
 import { basketStoresFor, postageContextFor, postageOptionsFrom, type PostageOptions } from "@/lib/shipping";
@@ -47,9 +47,11 @@ export const dynamic = "force-dynamic";
 // any of these is open to every signed-in account.
 //
 // A SET IS PLANNED IN CHUNKS. One plan holds at most SET_GAP_CHUNK (200, the line
-// cap) missing cards, cheapest listing first; a bigger gap is served as a ranked
-// chunk with `setGap` saying how many more are not included and where the next
-// chunk starts (`offset`). Cards no real store has in stock are not priced: they
+// cap) missing cards, cheapest first BY THE PRICE THIS PLAN WOULD PAY (the member's
+// floor, the stores that post to them); a bigger gap is served as a ranked
+// chunk with `setGap` saying how many more are not included and a cursor for the
+// next chunk (`after`: the last card's price, number and id, so a card bought in
+// between moves nothing). Cards no real store has in stock are not priced: they
 // come back counted (every tier) and named (Premium), never dropped. Radiance is
 // refused until it releases. `setGap` is counts for a non-Premium account: no
 // store, line or link, like the rest of its preview.
@@ -134,7 +136,7 @@ const fail = (error: string, status: number): Outcome => ({ res: NextResponse.js
 async function buildBasket(
   userId: string,
   full: boolean,
-  { source, skipOwned, text, picked, setCode, scope, rarity, maxPriceCents, offset }: BasketRequest,
+  { source, skipOwned, text, picked, setCode, scope, rarity, maxPriceCents, after }: BasketRequest,
   minCondition: MinCondition,
   country: Country,
   postageOpts: PostageOptions
@@ -156,19 +158,22 @@ async function buildBasket(
       if (!ids.length) return fail("Your watchlist has no cards in this market yet.", 400);
       for (const id of ids) add(id, 1);
     } else if (source === "set") {
-      const gap = await loadSetGapLines(userId, setCode, scope, country, { rarity, maxPriceCents, offset });
+      // Ranked and ceilinged on what THIS plan buys: the stores that post to this
+      // buyer, at this floor (lib/set-gap.ts), not the checklist's any-condition price.
+      const buyStores = Object.entries(basketStoresFor(country, postageOpts))
+        .filter(([, st]) => !st.unavailable)
+        .map(([key]) => key);
+      const gap = await loadSetGapLines(userId, setCode, scope, country, { rarity, maxPriceCents, after }, { stores: buyStores, minCondition });
       if (!gap.ok) return fail(gap.message, 400);
       const { plan, setName } = gap;
       const s = plan.summary;
       if (!s.gapTotal) return fail(`You already own every ${s.rarity ? `${s.rarity} ` : ""}card in this list for ${setName}.`, 400);
       if (!plan.chunk.length) {
-        // Nothing to price: every missing card is unstocked, over the ceiling, or past the last chunk.
+        // Nothing to price: every missing card is unstocked, unpriceable, or over the ceiling.
         return fail(
-          s.offset > 0
-            ? "That is all of the missing cards: there is no next chunk."
-            : s.stocked === 0
-              ? nothingStockedMessage(s.gapTotal, COUNTRIES[country].place)
-              : `Every missing card with a store listing is dearer than your per-card price limit (${s.overCeiling} ${s.overCeiling === 1 ? "card" : "cards"}).`,
+          s.candidates === 0 && s.stocked > 0
+            ? `Every missing card with a store listing is dearer than your per-card price limit (${s.overCeiling} ${s.overCeiling === 1 ? "card" : "cards"}).`
+            : nothingPricedMessage(s, COUNTRIES[country].place),
           400
         );
       }

@@ -156,13 +156,14 @@ export function BestBasket({
   const [picked, setPicked] = useState<PickedLine[]>([]);
   const [pasteText, setPasteText] = useState(initialList ?? "");
   const [skipOwned, setSkipOwned] = useState(initialSkipOwned);
-  // Finish a set. `chunkStart` is what run() sends as `offset`: set in the same
-  // tick as a step to the next chunk, and put back to 0 by any other change.
+  // Finish a set. `chunkStart` is what run() sends as `after` (the cursor the
+  // last answer gave for its next chunk): set in the same tick as a step to the
+  // next chunk, and put back to null by any other change.
   const [setCode, setSetCode] = useState(initialSet?.code ?? "");
   const [setScope, setSetScope] = useState<SetScope>(initialSet?.scope ?? "base");
   const [setRarity, setSetRarity] = useState(initialSet?.rarity ?? "");
   const [ceilingText, setCeilingText] = useState("");
-  const chunkStart = useRef(0);
+  const chunkStart = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -219,7 +220,7 @@ export function BestBasket({
   // on its way for the inputs as they were.
   function touched() {
     setResult(null);
-    chunkStart.current = 0;
+    chunkStart.current = null;
     setError(null);
     reqSeq.current++;
     setLoading(false);
@@ -248,9 +249,10 @@ export function BestBasket({
     return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : null;
   })();
 
-  // "Plan the next 200": the same set, scope, rarity and ceiling, from the next rank.
-  function nextChunk(offset: number) {
-    chunkStart.current = offset;
+  // "Plan the next 200": the same set, scope, rarity and ceiling, strictly after
+  // the last card of the chunk on screen (a cursor, not a rank).
+  function nextChunk(cursor: string) {
+    chunkStart.current = cursor;
     void run();
   }
 
@@ -275,7 +277,7 @@ export function BestBasket({
           ...(full ? { minCondition: floor.current, saveMinCondition: saveMin } : {}),
           ...(tab === "deck" ? { text: pasteText, lines: picked.map((p) => ({ cardId: p.card.id, qty: p.qty })) } : {}),
           ...(tab === "set"
-            ? { set: setCode, scope: setScope, rarity: setRarity || undefined, maxPriceCents: ceilingCents ?? undefined, offset: chunkStart.current }
+            ? { set: setCode, scope: setScope, rarity: setRarity || undefined, maxPriceCents: ceilingCents ?? undefined, after: chunkStart.current ?? undefined }
             : {}),
         }),
       });
@@ -766,24 +768,24 @@ function SetGapNotes({
   place: string;
   fmt: (c: number) => string;
   full: boolean;
-  onNext: (offset: number) => void;
+  onNext: (cursor: string) => void;
   busy: boolean;
 }) {
   const note = setGapNote(gap);
   return (
     <div className="card-surface p-4 text-sm text-slate-300" data-set-gap>
       <p>
-        You&apos;re missing {gap.gapTotal} {plural(gap.gapTotal, "card", "cards")} in this list; {gap.stocked} {plural(gap.stocked, "has", "have")} a store
-        listing in {place}. Non-foil listings.
+        You&apos;re missing {gap.gapTotal} {plural(gap.gapTotal, "card", "cards")} in this list; {gap.stocked}{" "}
+        {plural(gap.stocked, "has", "have")} a listing we can price delivered in {place}. Non-foil listings.
       </p>
       {note && (
         <p className="mt-1.5 font-semibold text-amber-300" data-set-chunk-note>
           {note}
         </p>
       )}
-      {gap.nextOffset != null && (
+      {gap.nextCursor != null && (
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => onNext(gap.nextOffset!)} disabled={busy} className="btn-ghost text-xs disabled:opacity-50" data-set-next>
+          <button type="button" onClick={() => onNext(gap.nextCursor!)} disabled={busy} className="btn-ghost text-xs disabled:opacity-50" data-set-next>
             {nextChunkLabel(gap)} →
           </button>
           {!full && <span className="text-xs text-slate-500">Another total, another of today&apos;s runs.</span>}
@@ -793,6 +795,18 @@ function SetGapNotes({
         <p className="mt-1.5 text-xs text-slate-400">
           {gap.overCeiling} {plural(gap.overCeiling, "card is", "cards are")} dearer than your {fmt(gap.maxPriceCents)} limit and{" "}
           {plural(gap.overCeiling, "isn't", "aren't")} in this plan.
+        </p>
+      )}
+      {gap.noPostageCount > 0 && (
+        <p className="mt-1.5 text-xs text-slate-400" data-set-no-postage>
+          {gap.noPostageCount} {plural(gap.noPostageCount, "card is", "cards are")} only stocked at stores we can&apos;t price postage for, so{" "}
+          {plural(gap.noPostageCount, "it isn't", "they aren't")} in the total. The set list shows their listing prices.
+        </p>
+      )}
+      {gap.belowFloorCount > 0 && (
+        <p className="mt-1.5 text-xs text-slate-400" data-set-below-floor>
+          {gap.belowFloorCount} {plural(gap.belowFloorCount, "card is", "cards are")} only in stock below your minimum condition, so{" "}
+          {plural(gap.belowFloorCount, "it isn't", "they aren't")} in the total. Choose Anything above to include {plural(gap.belowFloorCount, "it", "them")}.
         </p>
       )}
       {gap.notStockedCount > 0 && (

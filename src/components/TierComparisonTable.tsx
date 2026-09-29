@@ -81,7 +81,7 @@
 // that are neither a flat yes nor a flat no are the honest part of the table and
 // must stay strings rather than being rounded to a tick.
 
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "../lib/alert-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_MARKETS, SEALED_WATCH_LIMIT_PLUS } from "../lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../lib/free-limits";
 import { SET_GAP_CHUNK } from "../lib/set-gap";
 
@@ -153,7 +153,7 @@ export const TIER_COMPARISON: TierRow[] = [
   // THE WATCHES THAT RUN WHILE YOU'RE AWAY (2026-09-29, DECISIONS.md "Premium
   // works while you're away"). Both numbers are the enforced ones
   // (lib/alert-limits.ts), never typed here.
-  { feature: `Sealed watches — restock, at-RRP and price alerts, checked ${SEALED_CHECK_CADENCE}`, account: false, plus: `Up to ${SEALED_WATCH_LIMIT_PLUS}`, premium: "Unlimited" },
+  { feature: `Sealed watches — restock, at-RRP (${SEALED_RRP_MARKETS}) and price alerts, checked ${SEALED_CHECK_CADENCE}`, account: false, plus: `Up to ${SEALED_WATCH_LIMIT_PLUS}`, premium: "Unlimited" },
   { feature: "Deck price watch — email when a deck's delivered total drops", account: false, plus: false, premium: true },
   // Ad-free moved Plus → Premium on 2026-09-14 and back to every paid tier on
   // 2026-09-25 (owner's call — DECISIONS.md, "Plus is ad-free again"): with

@@ -9,6 +9,15 @@ import { portfolioAllowance } from "@/lib/free-limits-server";
 import { matchCsvRows, parseCollectionCsv, type CsvMatch, type ParsedCollectionCsv } from "@/lib/collection-csv";
 
 export const dynamic = "force-dynamic";
+// The printing-aware path can write up to CSV_LINE_CAP lines, one guarded write
+// each. Its own budget (WRITE_BUDGET_MS) stops well inside this, so a slow
+// database ends in a REPORT of the lines not reached, never in a function killed
+// mid-file with the response lost (a retry of a file half-written would add
+// every quantity again).
+export const maxDuration = 60;
+
+/** The upload picker refuses files over this (MyCollection.tsx); the route holds the same line. */
+const MAX_TEXT_CHARS = 500_000;
 
 // Bulk-add cards to the collection from a pasted list (TCGplayer mass-entry style,
 // e.g. "3 Jinx, Loose Cannon"). Matches by name (cheapest printing), adds each at
@@ -22,6 +31,9 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => null);
   const text: string = typeof body?.text === "string" ? body.text : "";
+  if (text.length > MAX_TEXT_CHARS) {
+    return NextResponse.json({ error: "That file is over 500 KB. Split it into two and import them one after the other." }, { status: 413 });
+  }
   // A CSV whose header names a set and a number column takes the
   // printing-aware path below (2026-09-29): it keeps the printing, finish and
   // condition and reports every line it skipped. Anything else is a name list.
@@ -122,16 +134,19 @@ export async function POST(req: Request) {
 // Reads: the referenced sets' catalogue once (narrow columns, at most the sets
 // named in the file, capped), the account's rows for the matched cards once,
 // then one guarded write per line (lib/collection-add.ts), exactly like the
-// name path.
+// name path, WRITE_CONCURRENCY at a time (different rows: the lines are merged
+// per printing, finish and condition, so no two writes touch one row).
 const CATALOGUE_TAKE = 3000;
 const LIST_CAP = 30;
+const WRITE_CONCURRENCY = 8;
+const WRITE_BUDGET_MS = 40_000;
 
 async function importPrintings(user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>, csv: ParsedCollectionCsv) {
   if (csv.rows.length === 0) {
     return NextResponse.json(
       {
         error: "No lines could be imported from that file.",
-        skippedCount: csv.skipped.length,
+        skippedCount: csv.skippedCount,
         skipped: csv.skipped.slice(0, LIST_CAP),
       },
       { status: 400 },
@@ -174,16 +189,31 @@ async function importPrintings(user: NonNullable<Awaited<ReturnType<typeof getCu
   const full: string[] = [];
   const failed: string[] = [];
   const landed = new Set<string>();
-  for (const m of writable) {
-    const key = { userId: user.id, cardId: m.card.id, condition: m.copy.condition, isFoil: m.copy.isFoil };
-    const store = collectionRowStore(prisma, key);
-    const res = await addCopies(store, { quantity: m.copy.qty }, { existing: existingBy.get(rowKey(m.card.id, key.condition, key.isFoil)) ?? null }).catch(() => null);
-    if (res?.status === "added") {
-      added++;
-      copies += res.added;
-      landed.add(m.card.id);
-    } else if (res?.status === "full") full.push(labelOf(m));
-    else failed.push(labelOf(m));
+  const deadline = Date.now() + WRITE_BUDGET_MS;
+  for (let i = 0; i < writable.length; i += WRITE_CONCURRENCY) {
+    const batch = writable.slice(i, i + WRITE_CONCURRENCY);
+    // Out of time: nothing more is written, and every line not reached is
+    // reported below as not saved, so the member re-imports just those.
+    if (Date.now() > deadline) {
+      for (const m of batch) failed.push(labelOf(m));
+      continue;
+    }
+    const results = await Promise.all(
+      batch.map((m) => {
+        const key = { userId: user.id, cardId: m.card.id, condition: m.copy.condition, isFoil: m.copy.isFoil };
+        const store = collectionRowStore(prisma, key);
+        return addCopies(store, { quantity: m.copy.qty }, { existing: existingBy.get(rowKey(m.card.id, key.condition, key.isFoil)) ?? null }).catch(() => null);
+      }),
+    );
+    batch.forEach((m, j) => {
+      const res = results[j];
+      if (res?.status === "added") {
+        added++;
+        copies += res.added;
+        landed.add(m.card.id);
+      } else if (res?.status === "full") full.push(labelOf(m));
+      else failed.push(labelOf(m));
+    });
   }
 
   return NextResponse.json({
@@ -205,11 +235,12 @@ async function importPrintings(user: NonNullable<Awaited<ReturnType<typeof getCu
     full: full.slice(0, LIST_CAP),
     // Busy (lost a write race four times) or failed: nothing was written.
     failed: failed.slice(0, LIST_CAP),
+    failedCount: failed.length,
     // Lines that are not a printing we track come back in `skipped` with their
     // reason, beside the lines that could not be read; `unmatched` is the name
     // path's field and stays empty here so nothing is listed twice.
     unmatched: [],
-    skippedCount: csv.skipped.length + unmatched.length,
+    skippedCount: csv.skippedCount + unmatched.length,
     skipped: [...csv.skipped, ...unmatched]
       .sort((a, b) => a.line - b.line)
       .slice(0, LIST_CAP)
