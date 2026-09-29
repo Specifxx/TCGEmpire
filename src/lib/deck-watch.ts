@@ -10,12 +10,19 @@ import { isPremium, premiumTierOf, type EntitlementUser } from "./premium";
 import { isAdminEmail, ADMIN_EMAILS } from "./admin-emails";
 import { deckWatchLimit, DECK_WATCH_LIMIT } from "./alert-limits";
 import { ALERT_BUDGET_WINDOW_MS, PAID_SEND_CAP, alertDailyBudget, liveWatermark } from "./price-alerts";
-import { recentlyEmailedAddresses, RunBudget } from "./alert-budget";
+import { recentlyEmailedAddresses, RunBudget, WATCH_EMAILS_PER_ADDRESS } from "./alert-budget";
 import { pausedAddresses } from "./alert-mute";
 import { watchActionLinks } from "./alert-actions";
 import { sendDeckWatchEmail as sendDeckWatchEmailImpl, type DeckWatchItem, type DeckWatchKind } from "./watch-emails";
 import { notify } from "./notifications";
 import { formatMoney } from "./format";
+import { clampDeckTargetCents } from "./deck-watch-pure";
+
+// The client-safe pieces (friendlyTargetCents, clampDeckTargetCents and the
+// DECK_TARGET_* bounds) live in ./deck-watch-pure so a "use client" component
+// can import them without pulling prisma and node:crypto into the browser
+// bundle (tests/client-imports.test.ts). Re-exported here for the server side.
+export { friendlyTargetCents, clampDeckTargetCents, canWatchPricedResult, DECK_TARGET_MIN_CENTS, DECK_TARGET_MAX_CENTS } from "./deck-watch-pure";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DECK PRICE WATCH — Premium (2026-09-29, DECISIONS.md "Premium works while
@@ -48,9 +55,11 @@ import { formatMoney } from "./format";
 // the narrow select in loadStoreListings), only for entitled owners, only in
 // the cron. DECK_WATCH_LIMIT per account bounds the run.
 //
-// BUDGET: every email opens a slot in the shared ALERT_DAILY_BUDGET
-// (lib/alert-budget.ts) and counts against PAID_SEND_CAP for this pass;
-// what does not fit is deferred with its baseline held, so it re-detects.
+// BUDGET: a NEW address opens a slot in the shared ALERT_DAILY_BUDGET
+// (lib/alert-budget.ts) and counts against the paid run's shared PAID_SEND_CAP;
+// one address gets at most WATCH_EMAILS_PER_ADDRESS emails from this pass (a
+// deck watch is one email per watch, not a digest). What does not fit is
+// deferred with its baseline held, so it re-detects at the next run.
 
 /** After a target fires, it fires again only this % further down. */
 export const DECK_TARGET_REFIRE_PCT = 5;
@@ -63,9 +72,6 @@ export const DECK_WATCH_READ_CAP = 2000;
 /** Longest saved list, in characters (the Best Basket request cap). */
 export const DECK_WATCH_TEXT_MAX = 20_000;
 export const DECK_WATCH_NAME_MAX = 80;
-/** A target in minor units: one whole unit to a very large deck. */
-export const DECK_TARGET_MIN_CENTS = 100;
-export const DECK_TARGET_MAX_CENTS = 100_000_00;
 
 // ── The pure rules ───────────────────────────────────────────────────────────
 
@@ -98,21 +104,6 @@ export function shouldEmailDeckDrop(opts: { totalCents: number; targetCents: num
   if (opts.targetCents != null) return false;
   const ref = deckReference(opts).cents;
   return ref != null && isDeckMaterialDrop(ref, opts.totalCents);
-}
-
-/**
- * The default target Best Basket offers: today's total rounded DOWN to a
- * friendly figure — the nearest $10 under it for a big list, $5, then $1 —
- * so the first email is a real drop, never today's price again.
- */
-export function friendlyTargetCents(totalCents: number): number {
-  const step = totalCents >= 30_000 ? 1000 : totalCents >= 5_000 ? 500 : 100;
-  const down = Math.floor((totalCents - 1) / step) * step;
-  return Math.max(DECK_TARGET_MIN_CENTS, Math.min(DECK_TARGET_MAX_CENTS, down));
-}
-
-export function clampDeckTargetCents(cents: number): number {
-  return Math.max(DECK_TARGET_MIN_CENTS, Math.min(DECK_TARGET_MAX_CENTS, Math.round(cents)));
 }
 
 const isSupportedMarket = (m: string): m is Country => Object.prototype.hasOwnProperty.call(COUNTRIES, m);
@@ -186,6 +177,9 @@ export interface DeckWatchRunDeps {
   sendDeckWatchEmail?: typeof sendDeckWatchEmailImpl;
   notifyUsers?: boolean;
   dailyBudget?: number;
+  // New addresses this pass may open: what is left of PAID_SEND_CAP after the
+  // card run (the paid route shares one cap across its three passes).
+  sendCap?: number;
 }
 
 export interface DeckWatchRunSummary {
@@ -201,6 +195,8 @@ export interface DeckWatchRunSummary {
   paused: number;
   deferred: number;
   budgetDeferred: number;
+  addressDeferred: number; // held past WATCH_EMAILS_PER_ADDRESS emails to one address this run
+  newAddresses: number; // distinct addresses this pass opened (counts against PAID_SEND_CAP)
   emails: number;
   updated: number;
   held: number;
@@ -214,7 +210,7 @@ export async function runDeckWatches(deps: DeckWatchRunDeps = {}): Promise<DeckW
   const now = deps.now ?? new Date();
   const summary: DeckWatchRunSummary = {
     watches: 0, lapsed: 0, legacyMarket: 0, priced: 0, unpriced: 0, incomplete: 0, targets: 0, drops: 0,
-    snoozed: 0, paused: 0, deferred: 0, budgetDeferred: 0, emails: 0, updated: 0, held: 0,
+    snoozed: 0, paused: 0, deferred: 0, budgetDeferred: 0, addressDeferred: 0, newAddresses: 0, emails: 0, updated: 0, held: 0,
   };
 
   // Only rows whose owner is inside a paid period or is an admin (the same
@@ -359,13 +355,14 @@ export async function runDeckWatches(deps: DeckWatchRunDeps = {}): Promise<DeckW
   live.sort((x, y) => (x.item.kind === y.item.kind ? x.order - y.order : x.item.kind === "deck_target" ? -1 : 1));
   const recent = live.length ? await recentlyEmailedAddresses(db, now, ALERT_BUDGET_WINDOW_MS) : new Set<string>();
   const budgetTotal = deps.dailyBudget ?? alertDailyBudget();
-  const budget = new RunBudget(recent, Math.max(0, budgetTotal - recent.size), PAID_SEND_CAP);
+  const budget = new RunBudget(recent, Math.max(0, budgetTotal - recent.size), deps.sendCap ?? PAID_SEND_CAP, WATCH_EMAILS_PER_ADDRESS);
   const notified = new Set<string>();
   for (const c of live) {
     const why = budget.reason(c.email);
     if (why) {
       summary.deferred++;
       if (why === "budget") summary.budgetDeferred++;
+      if (why === "address") summary.addressDeferred++;
       heldIds.add(c.id);
       continue;
     }
@@ -398,6 +395,7 @@ export async function runDeckWatches(deps: DeckWatchRunDeps = {}): Promise<DeckW
     if (Object.keys(data).length) writes.push({ id: w.id, data });
   }
   summary.held = heldIds.size;
+  summary.newAddresses = budget.newAddresses;
   summary.updated = writes.length;
   if (writes.length) await db.$transaction(writes.map((x) => db.deckWatch.update({ where: { id: x.id }, data: x.data })));
   return summary;
@@ -469,9 +467,15 @@ export async function listDeckWatches(db: DeckWatchRouteDb, user: RouteUser): Pr
   return { status: 200, body: { watches, limit: DECK_WATCH_LIMIT, entitled: isPremium(user, "premium") } };
 }
 
-/** PATCH: change the target (re-arms it), rename, or snooze / unsnooze. Owner and Premium only. */
+/**
+ * PATCH: change the target (re-arms it), rename, or snooze / unsnooze. The
+ * owner only (the row lookup is `where: { id, userId }`). Editing the target or
+ * the name is Premium's; SNOOZING needs no entitlement, so a lapsed owner can
+ * quiet a watch that would resume when they resubscribe.
+ */
 export async function updateDeckWatch(db: DeckWatchRouteDb, user: RouteUser, id: string, raw: unknown, now: Date = new Date()): Promise<WatchRouteResult> {
-  if (!isPremium(user, "premium")) return notPremium();
+  const edits = raw && typeof raw === "object" && ("targetCents" in raw || (typeof (raw as { name?: unknown }).name === "string" && !!(raw as { name: string }).name.trim()));
+  if (edits && !isPremium(user, "premium")) return notPremium();
   const row = await db.deckWatch.findFirst({ where: { id, userId: user.id }, select: { id: true } });
   if (!row) return { status: 404, body: { error: "That watch isn't on your list." } };
   const body = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
@@ -497,9 +501,12 @@ export async function updateDeckWatch(db: DeckWatchRouteDb, user: RouteUser, id:
   return { status: 200, body: { ok: true, watch } };
 }
 
-/** DELETE: stop watching. Owner and Premium only; idempotent. */
+/**
+ * DELETE: stop watching. The owner only, whatever the tier (stopping a watch
+ * needs no entitlement, and a lapsed member's rows are otherwise invisible and
+ * unremovable); idempotent.
+ */
 export async function deleteDeckWatch(db: DeckWatchRouteDb, user: RouteUser, id: string): Promise<WatchRouteResult> {
-  if (!isPremium(user, "premium")) return notPremium();
   const res = await db.deckWatch.deleteMany({ where: { id, userId: user.id } });
   return { status: res.count ? 200 : 404, body: { ok: res.count > 0, removed: res.count } };
 }

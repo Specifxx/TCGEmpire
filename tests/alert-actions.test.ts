@@ -272,9 +272,12 @@ test("POST /api/alerts/action: 403 on a bad token, JSON or form", async () => {
   assert.equal(form.status, 403);
 });
 
-test("no GET acts: the route has no GET handler, and the page only confirms, posting a form", () => {
+test("no GET acts: the route's GET only redirects to the confirmation page, and the page only confirms, posting a form", () => {
   const route = code("src/app/api/alerts/action/route.ts");
-  assert.doesNotMatch(route, /export (async )?function GET/);
+  // A GET (a mail scanner, or a client opening List-Unsubscribe in a browser) redirects to the page and does nothing else.
+  const get = route.slice(route.indexOf("export async function GET"), route.indexOf("export async function POST"));
+  assert.match(get, /NextResponse\.redirect\(to, \{ status: 303/);
+  assert.doesNotMatch(get, /performAlertAction|prisma|deleteMany|\.update\(/);
   assert.match(route, /performAlertAction\(prisma, token\)/);
   const page = code("src/app/alerts/action/page.tsx");
   assert.doesNotMatch(page, /performAlertAction|deleteMany|\.update\(|applyTargetPrice/, "the GET page must never change state");

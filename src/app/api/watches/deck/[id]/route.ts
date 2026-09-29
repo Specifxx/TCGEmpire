@@ -5,7 +5,7 @@ import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { deleteDeckWatch, updateDeckWatch } from "@/lib/deck-watch";
 
 // One deck price watch: PATCH (target, name, snooze) and DELETE (stop). Owner
-// and Premium only — lib/deck-watch.ts.
+// only; target and name edits are Premium's, stop and snooze are any owner's — lib/deck-watch.ts.
 export const dynamic = "force-dynamic";
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {

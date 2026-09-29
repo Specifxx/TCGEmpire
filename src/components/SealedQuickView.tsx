@@ -15,7 +15,6 @@ import { CheckedAgo } from "./CheckedAgo";
 import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/sealed-offers";
 import { isPreorderSetCode } from "@/lib/constants";
 import { SealedWatchButton } from "./SealedWatchButton";
-import { DiscoveryTip } from "./DiscoveryTip";
 
 // Quick-view popup for sealed products — the sealed twin of QuickView.tsx (cards).
 // Clicking a SealedTile opens this instead of expanding the whole /sealed page, so
@@ -145,11 +144,9 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
               <SealedWatchButton groupKey={group.groupKey} name={group.name} market={country} className="mt-3" />
             </div>
           </div>
-          <div className="px-4 pt-3">
-            <DiscoveryTip id="sealed-quickview" surface="tip:sealed-quickview" tier="plus" cta="See Plus">
-              Plus can email you when this is back in stock or at RRP (the price Riot sets), checked after every price update.
-            </DiscoveryTip>
-          </div>
+          {/* No discovery tip here (2026-09-29 review): the watch button above
+              already says what Plus does for this box and sells it in place, and
+              this is an overlay — one Plus line per view. */}
 
           {/* Price comparison — every tracked store, cheapest in-stock first */}
           <div className="p-4">

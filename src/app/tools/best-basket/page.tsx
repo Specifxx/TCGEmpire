@@ -178,7 +178,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           full={premium}
           initialList={initialList}
           initialSource={initialSource}
-          initialSkipOwned={searchParams.skipOwned === "1"}
+          initialSkipOwned={!watchRow && searchParams.skipOwned === "1"}
           autoRun={premium && handedIn}
           market={country}
           regions={regions}

@@ -125,7 +125,7 @@ test("a target met is emailed once, with the totals, the stores and one-tap deck
   assert.match(built.html, /\/tools\/best-basket\?watch=w1/);
   assert.match(built.text, /Stop watching this list: https:/);
   assert.match(built.html, /The Mythic Store/);
-  assert.ok(built.headers["List-Unsubscribe"]?.includes("/api/alerts/action?t="), "one-click snoozes this watch");
+  assert.ok(built.headers["List-Unsubscribe"]?.includes("/api/alerts/action?t="), "the one-click header carries this watch's own token (a stop)");
 
   // Next run, same total: not news.
   const again = deckHarness([deckRow("w1", premium, { targetCents: t, lastTotalCents: t, lastEmailedCents: t, lastNotifiedAt: NOW })], { listings: LISTINGS, now: hoursAgo(-12) });

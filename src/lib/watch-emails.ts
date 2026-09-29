@@ -15,11 +15,15 @@ import type { WatchActionLinks } from "./alert-actions";
 
 const utm = (campaign: string) => `utm_source=email&utm_medium=email&utm_campaign=${encodeURIComponent(campaign)}`;
 
-// A watch email's one-click List-Unsubscribe SNOOZES that one watch for 30
-// days (reversible, per watch), through the same signed POST the confirmation
-// page uses; the confirmation page's stop / snooze links are the human path.
+// A watch email's List-Unsubscribe is what a mail client's "Unsubscribe" button
+// uses, so it must STOP: its one-click POST (RFC 8058) deletes this one watch
+// through the same signed route the confirmation page uses (the token is the
+// watch's stop token, so it can do nothing else). The URL also answers a plain
+// GET — mail clients that do not do one-click open it in a browser — with a
+// redirect to the confirmation page, which changes nothing until its button is
+// pressed (api/alerts/action). Snooze stays a link in the body.
 function watchHeaders(links: WatchActionLinks): Record<string, string> {
-  return alertListHeaders({ oneClick: `${SITE_URL}/api/alerts/action?t=${encodeURIComponent(new URL(links.snooze).searchParams.get("t") ?? "")}` });
+  return alertListHeaders({ oneClick: `${SITE_URL}/api/alerts/action?t=${encodeURIComponent(new URL(links.stop).searchParams.get("t") ?? "")}` });
 }
 
 function watchFooter(kind: "deck" | "sealed", links: WatchActionLinks, manage: string): string {

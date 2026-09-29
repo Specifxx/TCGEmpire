@@ -51,7 +51,7 @@ export const LIMIT_SURFACES = ["limit:watchlist", "limit:portfolio", "limit:bask
 /** The in-context discovery lines (DiscoveryTip), for tests and the funnel report. */
 // (/deck's line is the deck watch form's own gate, gate:deck-watch, and the
 // card watch button teaches in its tooltip with nothing to click.)
-export const TIP_SURFACES = ["tip:sealed", "tip:sealed-quickview", "tip:basket", "tip:watching"] as const;
+export const TIP_SURFACES = ["tip:sealed", "tip:basket", "tip:watching"] as const;
 
 /** The walls the two watch features sell through (PremiumButton on a gate). */
 export const WATCH_GATE_SURFACES = ["gate:deck-watch", "gate:sealed-watch"] as const;

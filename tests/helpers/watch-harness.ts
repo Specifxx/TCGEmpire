@@ -139,7 +139,7 @@ export function deckHarness(rows: DeckRow[], opts: DeckHarnessOpts = {}) {
     listingQueries,
     budgetReads,
     writeFor: (id: string) => writes.find((w) => w.id === id)?.data,
-    run: () => runDeckWatches(deps),
+    run: (extra: Partial<DeckWatchRunDeps> = {}) => runDeckWatches({ ...deps, ...extra }),
   };
 }
 
@@ -273,6 +273,6 @@ export function sealedHarness(rows: SealedRow[], opts: SealedHarnessOpts = {}) {
     writes,
     groupCalls,
     writeFor: (id: string) => writes.find((w) => w.id === id)?.data,
-    run: () => runSealedWatches(deps),
+    run: (extra: Partial<SealedWatchRunDeps> = {}) => runSealedWatches({ ...deps, ...extra }),
   };
 }

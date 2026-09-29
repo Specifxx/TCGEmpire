@@ -3,9 +3,9 @@ import { prisma } from "./db";
 import { COUNTRIES, currencyOf, type Country } from "./country";
 import { isPremium, premiumTierOf, type EntitlementUser } from "./premium";
 import { isAdminEmail, ADMIN_EMAILS } from "./admin-emails";
-import { sealedWatchLimit, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
+import { sealedWatchLimit, sealedWatchCeiling, SEALED_WATCH_LIMIT_PLUS, SEALED_WATCH_HARD_CAP } from "./alert-limits";
 import { ALERT_BUDGET_WINDOW_MS, PAID_SEND_CAP, alertDailyBudget, isMaterialDrop, liveWatermark } from "./price-alerts";
-import { recentlyEmailedAddresses, RunBudget } from "./alert-budget";
+import { recentlyEmailedAddresses, RunBudget, WATCH_EMAILS_PER_ADDRESS } from "./alert-budget";
 import { pausedAddresses } from "./alert-mute";
 import { watchActionLinks } from "./alert-actions";
 import { headlineOffer, offerStock, soldOutEverywhere } from "./sealed-offers";
@@ -25,8 +25,9 @@ import { clampTargetCents } from "./target-price";
 // market. After the sealed import the PAID alert run reads the self-cached
 // sealed groups DIRECTLY — getSealedGroups(market), never wrapped, never inside
 // an unstable_cache callback (tests/nested-cache.test.ts) — and for each
-// entitled watch looks at the REAL-STORE listings: a store, CardTrader or
-// TCGplayer's sealed listing, never an eBay row (retailer "ebay*"). The three
+// entitled watch looks at the REAL-STORE listings: a store or CardTrader,
+// never an eBay row (retailer "ebay*") or TCGplayer's market-price reference row
+// (isRealSealedStore). The three
 // offer states are lib/sealed-offers.ts's: open, sold out, unknown (a row not
 // read for 72h). Triggers, in precedence order, each at most once per
 // SEALED_WATCH_COOLDOWN_MS per watch:
@@ -56,8 +57,17 @@ export const SEALED_WATCH_READ_CAP = 5000;
 
 export type { SealedWatchKind };
 
-/** A real store's listing: never eBay (retailer "ebay", "ebay_us", …). */
-export const isRealSealedStore = (retailer: string) => !/^ebay(_|$)/i.test(retailer);
+/**
+ * A real store's listing: never eBay (retailer "ebay", "ebay_us", …), and never
+ * the TCGplayer row. The importer writes that row with inStock hard-coded true
+ * and falls back to TCGplayer's MARKET price when it has no listing
+ * (lib/sealed-import.ts refreshTcgplayerSealed), so it is a reference, not
+ * stock: counting it would make every US product TCGplayer catalogues look
+ * "open" forever (no restock could ever fire) and would email a market-price
+ * reference as an in-stock price. The importer is not ours to change, so the
+ * watch code leaves the row out. /sealed itself still shows it.
+ */
+export const isRealSealedStore = (retailer: string) => !/^ebay(_|$)/i.test(retailer) && retailer.toLowerCase() !== "tcgplayer";
 
 export interface SealedOfferState {
   open: SealedGroup["listings"][number] | null; // the cheapest open real-store listing
@@ -132,6 +142,14 @@ export interface SealedWatchRunDeps {
   sendSealedWatchEmail?: typeof sendSealedWatchEmailImpl;
   notifyUsers?: boolean;
   dailyBudget?: number;
+  // New addresses this pass may open: what is left of PAID_SEND_CAP after the
+  // card and deck passes (the paid route shares one cap across its passes).
+  sendCap?: number;
+  // Called once, just before the groups are first read, when the run has
+  // entitled watches to evaluate. The paid route passes lib/sealed-fresh's
+  // bustSealedGroups on a run whose ISR purge was skipped, so the read below is
+  // the sealed import's own output, not the last purge's.
+  freshen?: () => void;
 }
 
 export interface SealedWatchRunSummary {
@@ -151,6 +169,8 @@ export interface SealedWatchRunSummary {
   paused: number;
   deferred: number;
   budgetDeferred: number;
+  addressDeferred: number; // held past WATCH_EMAILS_PER_ADDRESS emails to one address this run
+  newAddresses: number; // distinct addresses this pass opened (counts against PAID_SEND_CAP)
   emails: number;
   updated: number;
   held: number;
@@ -175,7 +195,7 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
   const now = deps.now ?? new Date();
   const summary: SealedWatchRunSummary = {
     watches: 0, lapsed: 0, overLimit: 0, legacyMarket: 0, missing: 0, unknown: 0, soldOut: 0, restocks: 0, rrp: 0, targets: 0,
-    drops: 0, cooldown: 0, snoozed: 0, paused: 0, deferred: 0, budgetDeferred: 0, emails: 0, updated: 0, held: 0,
+    drops: 0, cooldown: 0, snoozed: 0, paused: 0, deferred: 0, budgetDeferred: 0, addressDeferred: 0, newAddresses: 0, emails: 0, updated: 0, held: 0,
   };
 
   const rows = await db.sealedWatch.findMany({
@@ -223,7 +243,7 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
     }
     const n = (perUser.get(w.userId) ?? 0) + 1;
     perUser.set(w.userId, n);
-    if (n > sealedWatchLimit(premiumTierOf(user))) {
+    if (n > sealedWatchCeiling(premiumTierOf(user))) {
       summary.overLimit++;
       continue;
     }
@@ -237,6 +257,13 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
   // The groups, once per market, read directly. A failed read throws out of
   // the whole pass, uncached: nothing is decided from a partial read.
   const groupsByMarket = new Map<Country, Map<string, SealedGroup>>();
+  if (live.length && deps.freshen) {
+    try {
+      deps.freshen();
+    } catch {
+      /* best-effort: the read below then serves whatever the cache holds */
+    }
+  }
   for (const market of new Set(live.map((w) => w.market))) {
     const byKey = new Map<string, SealedGroup>();
     for (const g of await loadGroups(market)) byKey.set(g.groupKey, g);
@@ -278,7 +305,13 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
       // (once). A mix of sold-out and stale rows is not "everywhere".
       if (w.lastInStock !== false) patch(always, w.id, { lastInStock: false });
       if (state.soldOutEverywhere && w.soldOutAt == null) {
-        patch(always, w.id, { soldOutAt: now });
+        // A row never yet seen open was WATCHED sold out from the moment the
+        // member created it (hearting a "Sold out" box is the usual way in), so
+        // the 20h counts from then, not from this first run: otherwise a
+        // restock in the first day after the first run is cleared as a short
+        // gap and never told. A row that has been seen open starts at now.
+        const since = w.lastInStock == null && w.createdAt.getTime() < now.getTime() ? w.createdAt : now;
+        patch(always, w.id, { soldOutAt: since });
         summary.soldOut++;
       }
       return;
@@ -368,13 +401,14 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
 
   const recent = toSend.length ? await recentlyEmailedAddresses(db, now, ALERT_BUDGET_WINDOW_MS) : new Set<string>();
   const budgetTotal = deps.dailyBudget ?? alertDailyBudget();
-  const budget = new RunBudget(recent, Math.max(0, budgetTotal - recent.size), PAID_SEND_CAP);
+  const budget = new RunBudget(recent, Math.max(0, budgetTotal - recent.size), deps.sendCap ?? PAID_SEND_CAP, WATCH_EMAILS_PER_ADDRESS);
   const notified = new Set<string>();
   for (const c of toSend) {
     const why = budget.reason(c.email);
     if (why) {
       summary.deferred++;
       if (why === "budget") summary.budgetDeferred++;
+      if (why === "address") summary.addressDeferred++;
       heldIds.add(c.id);
       continue;
     }
@@ -414,6 +448,7 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
     if (Object.keys(data).length) writes.push({ id: w.id, data });
   }
   summary.held = heldIds.size;
+  summary.newAddresses = budget.newAddresses;
   summary.updated = writes.length;
   if (writes.length) await db.$transaction(writes.map((x) => db.sealedWatch.update({ where: { id: x.id }, data: x.data })));
   return summary;
@@ -476,9 +511,12 @@ export async function createSealedWatch(db: SealedWatchRouteDb, user: RouteUser,
     return { status: 200, body: { ok: true, watch, existed: true } };
   }
   const tier = premiumTierOf(user);
-  const limit = sealedWatchLimit(tier);
+  const ceiling = sealedWatchCeiling(tier);
   const count = await db.sealedWatch.count({ where: { userId: user.id } });
-  if (count >= limit) {
+  if (count >= ceiling) {
+    if (tier === "premium") {
+      return { status: 409, body: { error: `Sealed watches stop at ${SEALED_WATCH_HARD_CAP} products per account. Stop one to add another.`, code: "limit", limit: SEALED_WATCH_HARD_CAP, count } };
+    }
     return {
       status: 409,
       body: { error: `Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} sealed products. Stop one, or move to Premium for unlimited.`, code: "limit", limit: SEALED_WATCH_LIMIT_PLUS, count },
@@ -496,9 +534,13 @@ export async function listSealedWatches(db: SealedWatchRouteDb, user: RouteUser)
   return { status: 200, body: { watches, limit: Number.isFinite(limit) ? limit : null, entitled: isPremium(user) } };
 }
 
-/** PATCH: change the target (re-arms it) or snooze / unsnooze. Owner and Plus only. */
+/**
+ * PATCH: change the target (re-arms it) or snooze / unsnooze. The owner only.
+ * Editing the target is Plus's; SNOOZING needs no entitlement, so a lapsed
+ * owner can quiet a watch that would resume when they resubscribe.
+ */
 export async function updateSealedWatch(db: SealedWatchRouteDb, user: RouteUser, id: string, raw: unknown, now: Date = new Date()): Promise<WatchRouteResult> {
-  if (!isPremium(user)) return notPlus();
+  if (raw && typeof raw === "object" && "targetCents" in raw && !isPremium(user)) return notPlus();
   const row = await db.sealedWatch.findFirst({ where: { id, userId: user.id }, select: { id: true } });
   if (!row) return { status: 404, body: { error: "That watch isn't on your list." } };
   const body = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
@@ -522,9 +564,12 @@ export async function updateSealedWatch(db: SealedWatchRouteDb, user: RouteUser,
   return { status: 200, body: { ok: true, watch } };
 }
 
-/** DELETE: stop watching. Owner and Plus only; idempotent. */
+/**
+ * DELETE: stop watching. The owner only, whatever the tier (stopping a watch
+ * needs no entitlement, and a lapsed member's rows are otherwise invisible and
+ * unremovable); idempotent.
+ */
 export async function deleteSealedWatch(db: SealedWatchRouteDb, user: RouteUser, id: string): Promise<WatchRouteResult> {
-  if (!isPremium(user)) return notPlus();
   const res = await db.sealedWatch.deleteMany({ where: { id, userId: user.id } });
   return { status: res.count ? 200 : 404, body: { ok: res.count > 0, removed: res.count } };
 }

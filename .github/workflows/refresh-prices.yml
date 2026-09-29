@@ -190,6 +190,8 @@ jobs:
         run: npx tsx scripts/import-sealed.ts
 
       - name: Revalidate site pages (on-demand ISR)
+        # id: the paid alert step reads this step's `purged` output — see there.
+        id: revalidate
         # New prices just landed, so regenerate the ISR pages NOW. This is what lets
         # the public pages carry a 24h revalidate fallback instead of re-querying
         # Neon on a short timer — the fix for the DB's public-transfer allowance.
@@ -201,6 +203,10 @@ jobs:
           SITE_URL: "https://riftcompare.com"
           EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
+          # `purged` is true only when the purge below actually returned 200: the
+          # paid alert step uses it to decide whether the sealed groups need an
+          # uncached read of their own.
+          echo "purged=false" >> "$GITHUB_OUTPUT"
           if [ -z "$CRON_SECRET" ]; then
             echo "No CRON_SECRET secret — skipping revalidation (pages fall back to their 24h TTL)."
             exit 0
@@ -224,6 +230,7 @@ jobs:
           code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 -X POST \
             "$SITE_URL/api/revalidate" -H "Authorization: Bearer $CRON_SECRET" || true)
           echo "revalidate -> HTTP ${code:-000}"
+          [ "$code" = "200" ] && echo "purged=true" >> "$GITHUB_OUTPUT"
           [ "$code" = "200" ] || echo "Non-200/failed (pages still refresh on their 24h TTL); not failing the run."
 
       - name: Free price alerts (daily digest)
@@ -276,6 +283,15 @@ jobs:
         # sealed import leaves the previous rows, which read as "unknown" past
         # 72h and decide nothing (lib/sealed-offers.ts).
         #
+        # FRESHNESS. getSealedGroups is served from a 48h Data Cache entry that
+        # only the "Revalidate site pages" step above refreshes — and that step
+        # SKIPS the 07:00 run when a deploy is pending. So when the purge did
+        # not happen (`purged` != true) this step calls the route with ?fresh=1,
+        # which busts the sealed data cache and this instance's memo before the
+        # sealed pass reads (lib/sealed-fresh.ts). When the purge did happen the
+        # groups are already fresh and the plain URL is used, so nothing is
+        # purged twice.
+        #
         # Its own path, NOT ?scope=paid on the parent route: the pre-lineup
         # parent route ignored the query, so the query form ran a full "all"
         # run after every import. Non-fatal: a missed paid run is caught by
@@ -286,12 +302,15 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: "https://riftcompare.com"
+          PURGED: ${{ steps.revalidate.outputs.purged }}
         run: |
           if [ -z "$CRON_SECRET" ]; then
             echo "No CRON_SECRET secret — skipping the paid alert run."
             exit 0
           fi
-          curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts/paid" -H "Authorization: Bearer $CRON_SECRET" || true
+          fresh=""
+          [ "$PURGED" = "true" ] || fresh="?fresh=1"
+          curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts/paid$fresh" -H "Authorization: Bearer $CRON_SECRET" || true
           echo
 
       - name: Release alerts (Radiance)

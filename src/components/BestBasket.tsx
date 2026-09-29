@@ -12,6 +12,7 @@ import { COUNTRIES } from "@/lib/country";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
 import { parseDeckList, formatDeckLine, DECK_LINE_CAP } from "@/lib/deck";
+import { canWatchPricedResult } from "@/lib/deck-watch-pure";
 import { DeckWatchForm } from "./DeckWatchForm";
 import { DiscoveryTip } from "./DiscoveryTip";
 import { CardSearch, type SearchCard } from "./CardSearch";
@@ -156,6 +157,8 @@ export function BestBasket({
     [picked, pasteText],
   );
   const watchDefaultName = watch?.name ?? (picked[0] ? `${picked[0].card.name} deck` : (parseDeckList(pasteText, { plainNames: true })[0]?.name ?? "My list").slice(0, 60));
+
+  const watchable = !!result && isFull(result) && canWatchPricedResult({ skippedOwned: result.skippedOwned, coveredCopies: result.plan.coveredCopies });
 
   // Any change to what's being asked for clears the old answer, so a plan on
   // screen always belongs to the inputs above it — including an answer still
@@ -469,7 +472,16 @@ export function BestBasket({
           with a delivered-price target for the paid run (lib/deck-watch.ts).
           A pasted list only — the watchlist and binder sources change on
           their own. A watch being re-run (?watch=) is already saved. */}
-      {result && isFull(result) && tab === "deck" && result.plan.coveredCopies > 0 && !watch && (
+      {/* A total priced with "skip copies I already own" is a smaller list than
+          the one a watch would price every run: say so instead of saving a
+          watch whose target could never be met (lib/deck-watch-pure.ts). */}
+      {result && isFull(result) && tab === "deck" && !watch && result.plan.coveredCopies > 0 && !watchable && (
+        <p className="text-xs text-slate-400" data-watch-skipowned>
+          A deck watch prices the whole list, and this total leaves out the {result.skippedOwned} {plural(result.skippedOwned, "copy", "copies")} you own. To watch
+          this list, untick &quot;skip copies I already own&quot; and price it again.
+        </p>
+      )}
+      {result && isFull(result) && tab === "deck" && !watch && watchable && (
         <DeckWatchForm
           listText={watchListText}
           defaultName={watchDefaultName}
@@ -480,7 +492,8 @@ export function BestBasket({
       )}
       {watch && result && isFull(result) && (
         <p className="text-xs text-slate-400">
-          This is your saved watch <strong className="text-slate-200">{watch.name}</strong>, priced the way its emails are.{" "}
+          This is your saved watch <strong className="text-slate-200">{watch.name}</strong>,{" "}
+          {result.skippedOwned > 0 ? "priced without the copies you own, so its total is lower than the watch's own." : "priced the way its emails are."}{" "}
           <Link href="/watching#decks" className="text-brand-400 hover:underline">
             Change its target or stop it →
           </Link>

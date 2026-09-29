@@ -43,3 +43,15 @@ export function sealedWatchLimit(tier: "plus" | "premium" | null | undefined): n
   if (tier === "plus") return SEALED_WATCH_LIMIT_PLUS;
   return 0;
 }
+
+// Premium's "unlimited" sealed watches still stop at a sanity ceiling, so one
+// account cannot fill the watch table (and the paid run's read cap, which is
+// oldest-first) with junk rows. Nobody tracks two hundred sealed products; the
+// number is quoted from here by the create route, the run and the copy that
+// explains it. `sealedWatchLimit` stays the marketing ladder (Infinity =
+// "Unlimited"); this is the enforcement.
+export const SEALED_WATCH_HARD_CAP = 200;
+
+export function sealedWatchCeiling(tier: "plus" | "premium" | null | undefined): number {
+  return Math.min(sealedWatchLimit(tier), SEALED_WATCH_HARD_CAP);
+}

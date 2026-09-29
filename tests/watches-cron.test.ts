@@ -31,8 +31,8 @@ test("the paid alert step runs AFTER the sealed import, and the paid route runs 
   assert.ok(sealedImport > 0 && paid > sealedImport, "the sealed watches read the groups the sealed import just wrote");
   const route = read("src/app/api/cron/price-alerts/paid/route.ts");
   assert.match(route, /runPriceAlerts\(\{\}, \{ scope: "paid" \}\)/);
-  assert.match(route, /await runDeckWatches\(\)[\s\S]*\.catch\(failed\)/, "a failed deck pass is reported, not fatal to the others");
-  assert.match(route, /await runSealedWatches\(\)[\s\S]*\.catch\(failed\)/);
+  assert.match(route, /await runDeckWatches\(\{ sendCap: afterCards \}\)[\s\S]*\.catch\(failed\)/, "a failed deck pass is reported, not fatal to the others");
+  assert.match(route, /await runSealedWatches\(\{ sendCap: afterDecks, freshen: fresh \? bustSealedGroups : undefined \}\)[\s\S]*\.catch\(failed\)/);
   assert.match(route, /decks, sealed \}/, "every pass's summary is in the response");
   // The deck run reads only entitled owners' rows and prices each with one bounded listing read.
   const deck = read("src/lib/deck-watch.ts");
@@ -43,7 +43,7 @@ test("the paid alert step runs AFTER the sealed import, and the paid route runs 
   assert.match(deck, /basketStoresFor\(opts\.market, postageOptionsFrom\(/, "…with the measured postage for the saved delivery");
   const sealed = read("src/lib/sealed-watch.ts");
   assert.match(sealed, /isPremium\(user\)/, "any paid tier");
-  assert.match(sealed, /sealedWatchLimit\(premiumTierOf\(user\)\)/, "the Plus cap is honoured in the run too");
+  assert.match(sealed, /sealedWatchCeiling\(premiumTierOf\(user\)\)/, "the Plus cap (and Premium's sanity ceiling) is honoured in the run too");
 });
 
 test("the tier table carries both watches before Ad-free, from the constants; the copy version is bumped", () => {
@@ -97,7 +97,9 @@ test("the discovery lines are inline — no Dialog, no overlay, no portal — an
   assert.match(code("src/components/SealedWatchButton.tsx"), /tier="plus" surface="gate:sealed-watch"/);
   // The placements the owner asked for: /sealed, the sealed quick view, the Best Basket result, /watching, the card watch button.
   assert.match(code("src/app/sealed/page.tsx"), /<DiscoveryTip id="sealed" surface="tip:sealed" tier="plus"/);
-  assert.match(code("src/components/SealedQuickView.tsx"), /surface="tip:sealed-quickview"/);
+  // The quick view is an overlay whose watch button already sells Plus: no second, tip line there.
+  assert.doesNotMatch(code("src/components/SealedQuickView.tsx"), /DiscoveryTip|tip:sealed-quickview/);
+  assert.match(code("src/components/SealedQuickView.tsx"), /<SealedWatchButton /);
   assert.match(code("src/components/BestBasket.tsx"), /surface="tip:basket" tier="premium"/);
   assert.match(code("src/app/watching/page.tsx"), /surface="tip:watching"/);
   assert.match(code("src/components/PriceWatchButton.tsx"), /Plus adds your own target price and sealed-product watches; Premium watches a whole deck/);

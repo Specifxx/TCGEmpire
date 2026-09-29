@@ -6,7 +6,7 @@ import { useMe } from "@/lib/use-me";
 import { useCountry } from "./CountryProvider";
 import { PremiumButton } from "./PremiumButton";
 import { DECK_WATCH_LIMIT } from "@/lib/alert-limits";
-import { friendlyTargetCents } from "@/lib/deck-watch";
+import { friendlyTargetCents } from "@/lib/deck-watch-pure";
 import { currencyOf, type Country } from "@/lib/country";
 import { trackEvent } from "@/lib/analytics";
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { Watchlist } from "@/components/Watchlist";
 import { NavIcon } from "@/components/NavIcon";
 import { PremiumNudgeCard } from "@/components/PremiumNudgeCard";
@@ -72,6 +73,13 @@ export default async function WatchingPage() {
     for (const g of groups) sealedNames[g.groupKey] = { name: g.name, lowestPriceCents: g.lowestPriceCents, msrpCents: g.msrpCents };
   }
   const sealedLimit = sealedWatchLimit(premiumTierOf(user));
+  // A LAPSED owner keeps their sealed and deck watches (nothing is emailed),
+  // and must be able to see and stop them: two cheap indexed counts, only for
+  // an account that is not entitled to the section.
+  const [lapsedSealed, lapsedDecks] = await Promise.all([
+    member ? 0 : prisma.sealedWatch.count({ where: { userId: user.id } }).catch(() => 0),
+    onPremium ? 0 : prisma.deckWatch.count({ where: { userId: user.id } }).catch(() => 0),
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -170,7 +178,7 @@ export default async function WatchingPage() {
 
       <Watchlist />
 
-      {member && (
+      {(member || lapsedSealed > 0) && (
         <section id="sealed" aria-labelledby="sealed-h" className="card-surface mt-8 scroll-mt-header p-5">
           <h2 id="sealed-h" className="font-display text-lg font-bold text-white">
             Sealed
@@ -179,12 +187,12 @@ export default async function WatchingPage() {
             Checked after every price update: back in stock after selling out everywhere, at RRP, at your target, or a real drop.
           </p>
           <div className="mt-3">
-            <SealedWatchList names={sealedNames} limit={Number.isFinite(sealedLimit) ? sealedLimit : null} />
+            <SealedWatchList names={sealedNames} limit={Number.isFinite(sealedLimit) ? sealedLimit : null} lapsed={!member} />
           </div>
         </section>
       )}
 
-      {onPremium && (
+      {(onPremium || lapsedDecks > 0) && (
         <section id="decks" aria-labelledby="decks-h" className="card-surface mt-8 scroll-mt-header p-5">
           <h2 id="decks-h" className="font-display text-lg font-bold text-white">
             Decks
@@ -194,7 +202,7 @@ export default async function WatchingPage() {
             prices it.
           </p>
           <div className="mt-3">
-            <DeckWatchList />
+            <DeckWatchList lapsed={!onPremium} />
           </div>
         </section>
       )}

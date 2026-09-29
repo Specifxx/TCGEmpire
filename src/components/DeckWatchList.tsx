@@ -9,8 +9,10 @@ import { DECK_WATCH_LIMIT } from "@/lib/alert-limits";
 
 // The "Decks" section of /watching (Premium, 2026-09-29): every saved list
 // the paid run prices (lib/deck-watch.ts), with its last delivered total,
-// target edit, snooze and stop. Shown only to a Premium member; the page
-// teaches everyone else what a deck price watch is instead.
+// target edit, snooze and stop. Shown to a Premium member, and to an owner whose
+// plan has lapsed (rows are kept; `lapsed` turns off the paid controls and says
+// they resume on resubscribing — stop and snooze need no plan); the page teaches
+// everyone else what a deck price watch is instead.
 interface Row {
   id: string;
   market: string;
@@ -27,7 +29,7 @@ interface Row {
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
-export function DeckWatchList() {
+export function DeckWatchList({ lapsed = false }: { lapsed?: boolean }) {
   const { country } = useCountry();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +83,11 @@ export function DeckWatchList() {
   }
   return (
     <div>
+      {lapsed && (
+        <p className="mb-2 text-xs leading-relaxed text-amber-300" data-lapsed-note>
+          Your plan has ended, so these lists are not being priced or emailed. They resume if you rejoin Premium; stop any you no longer want.
+        </p>
+      )}
       {error && (
         <p role="alert" className="mb-2 text-xs text-rose-400">
           {error}
@@ -119,11 +126,13 @@ export function DeckWatchList() {
               <div className="flex flex-wrap items-center gap-2">
                 <label className="flex items-center gap-1 text-xs text-slate-400">
                   Target ({cur})
-                  <TargetInput cents={r.targetCents} onSave={(c) => patch(r.id, { targetCents: c })} />
+                  <TargetInput cents={r.targetCents} disabled={lapsed} onSave={(c) => patch(r.id, { targetCents: c })} />
                 </label>
-                <Link href={`/tools/best-basket?watch=${encodeURIComponent(r.id)}`} className="btn-ghost text-xs">
-                  Open plan
-                </Link>
+                {!lapsed && (
+                  <Link href={`/tools/best-basket?watch=${encodeURIComponent(r.id)}`} className="btn-ghost text-xs">
+                    Open plan
+                  </Link>
+                )}
                 <button type="button" onClick={() => patch(r.id, { snoozeDays: snoozed ? 0 : 30 })} className="btn-ghost text-xs">
                   {snoozed ? "Unsnooze" : "Snooze 30 days"}
                 </button>
@@ -143,13 +152,14 @@ export function DeckWatchList() {
 }
 
 // A small "save on blur" money field: empty = no target.
-export function TargetInput({ cents, onSave, className = "input w-28 text-xs" }: { cents: number | null; onSave: (cents: number | null) => void; className?: string }) {
+export function TargetInput({ cents, onSave, disabled = false, className = "input w-28 text-xs" }: { cents: number | null; onSave: (cents: number | null) => void; disabled?: boolean; className?: string }) {
   const [v, setV] = useState(cents == null ? "" : (cents / 100).toFixed(2));
   useEffect(() => setV(cents == null ? "" : (cents / 100).toFixed(2)), [cents]);
   return (
     <input
       value={v}
       inputMode="decimal"
+      disabled={disabled}
       placeholder="any drop"
       onChange={(e) => setV(e.target.value)}
       onBlur={() => {

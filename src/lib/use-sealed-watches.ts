@@ -29,10 +29,10 @@ function publish() {
   for (const fn of subscribers) fn(snapshot);
 }
 
-function load(): Promise<SealedWatchRow[] | null> {
+function load(force = false): Promise<SealedWatchRow[] | null> {
   if (!inflight) {
     inflight = fetchMe()
-      .then((me) => (me.user && me.premium ? fetch("/api/watches/sealed", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)) : null))
+      .then((me) => (me.user && (me.premium || force) ? fetch("/api/watches/sealed", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)) : null))
       .then((d: { watches?: SealedWatchRow[] } | null) => (d ? d.watches ?? [] : null))
       .catch(() => null)
       .then((r) => {
@@ -58,15 +58,20 @@ export interface SealedWatchOutcome {
   body: Record<string, unknown> | null;
 }
 
-export function useSealedWatches() {
+// `force` (the /watching list only): read the account's rows even when it is not
+// entitled now, so a lapsed member can see and stop what would resume when they
+// resubscribe. The per-tile buttons never pass it, so a free account still makes
+// no request from /sealed.
+export function useSealedWatches(opts: { force?: boolean } = {}) {
+  const force = opts.force === true;
   const [state, setState] = useState<SealedWatchRow[] | null>(rows);
   useEffect(() => {
     subscribers.add(setState);
-    void load().then(setState);
+    void load(force).then(setState);
     return () => {
       subscribers.delete(setState);
     };
-  }, []);
+  }, [force]);
   const keys = state ? new Set(state.map((r) => sealedWatchKey(r.market, r.groupKey))) : null;
   return {
     rows: state,

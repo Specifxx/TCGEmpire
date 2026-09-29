@@ -21,8 +21,8 @@ export interface SealedWatchName {
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
-export function SealedWatchList({ names, limit }: { names: Record<string, SealedWatchName>; limit: number | null }) {
-  const { rows, update, unwatch } = useSealedWatches();
+export function SealedWatchList({ names, limit, lapsed = false }: { names: Record<string, SealedWatchName>; limit: number | null; lapsed?: boolean }) {
+  const { rows, update, unwatch } = useSealedWatches({ force: lapsed });
   const [error, setError] = useState<string | null>(null);
   if (!rows) return <p className="text-sm text-slate-500">Loading…</p>;
   if (rows.length === 0) {
@@ -40,6 +40,11 @@ export function SealedWatchList({ names, limit }: { names: Record<string, Sealed
   }
   return (
     <div>
+      {lapsed && (
+        <p className="mb-2 text-xs leading-relaxed text-amber-300" data-lapsed-note>
+          Your plan has ended, so these are not being checked or emailed. They resume if you rejoin Plus; stop any you no longer want.
+        </p>
+      )}
       {error && (
         <p role="alert" className="mb-2 text-xs text-rose-400">
           {error}
@@ -72,6 +77,7 @@ export function SealedWatchList({ names, limit }: { names: Record<string, Sealed
                   Target ({cur})
                   <TargetInput
                     cents={r.targetCents}
+                    disabled={lapsed}
                     onSave={async (c) => {
                       const out = await update(r.id, { targetCents: c });
                       setError(out.ok ? null : ((out.body?.error as string | undefined) ?? "Couldn't save that."));

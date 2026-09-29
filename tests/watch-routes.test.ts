@@ -89,7 +89,7 @@ function sealedDb(seed: Record<string, unknown>[] = []) {
 
 // ── Deck watches: Premium only, owner only, DECK_WATCH_LIMIT ─────────────────
 
-test("deck watches: create / update / delete need Premium (402 for free, Plus and lapsed), and only the owner's rows", async () => {
+test("deck watches: create / update / delete need Premium to create or edit (402 for free, Plus and lapsed); snooze and stop are any owner's; only the owner's rows", async () => {
   const { db, rows, calls } = deckDb();
   for (const who of [free, plus, lapsed]) {
     const res = await createDeckWatch(db, u("x", who), { name: "d", listText: "3 Alpha" }, "US");
@@ -138,11 +138,18 @@ test("deck watches: create / update / delete need Premium (402 for free, Plus an
   assert.equal(list.body.limit, DECK_WATCH_LIMIT);
   assert.equal(((await listDeckWatches(db, u("someone-else", premium))).body.watches as unknown[]).length, 0);
 
-  // Delete: owner and Premium only, idempotent.
-  assert.equal((await deleteDeckWatch(db, u("owner", free), "d1")).status, 402);
+  // A LAPSED owner keeps their rows and may snooze or stop them (no entitlement
+  // needed, ownership still is); editing the target or the name stays Premium's.
+  assert.equal((await updateDeckWatch(db, u("owner", free), "d2", { targetCents: 5000 }, NOW)).status, 402);
+  assert.equal((await updateDeckWatch(db, u("owner", free), "d2", { name: "renamed" }, NOW)).status, 402);
+  assert.equal((await updateDeckWatch(db, u("owner", free), "d2", { snoozeDays: 30 }, NOW)).status, 200, "a lapsed owner can snooze");
+  assert.equal((await updateDeckWatch(db, u("someone-else", free), "d2", { snoozeDays: 30 }, NOW)).status, 404, "…only their own");
+
+  // Delete: the owner at any tier, never another account's; idempotent.
   assert.equal((await deleteDeckWatch(db, u("someone-else", premium), "d1")).status, 404);
+  assert.equal((await deleteDeckWatch(db, u("someone-else", free), "d1")).status, 404);
   assert.equal(rows.length, 3, "nothing removed");
-  assert.equal((await deleteDeckWatch(db, u("owner", premium), "d1")).status, 200);
+  assert.equal((await deleteDeckWatch(db, u("owner", free), "d1")).status, 200, "a lapsed owner can stop a watch");
   assert.equal((await deleteDeckWatch(db, u("owner", premium), "d1")).status, 404);
   assert.equal(rows.length, 2);
   assert.ok(calls.some((c) => c.startsWith("delete:d1:true")));
@@ -161,7 +168,7 @@ test("deck watches: the eleventh list is refused with 409 and the real count", a
 
 // ── Sealed watches: any paid tier, Plus capped, owner only ───────────────────
 
-test("sealed watches: create / update / delete need a paid tier (402 for free and lapsed); Plus works; ownership; the unique key updates instead", async () => {
+test("sealed watches: create / update / delete need a paid tier to create or edit a target (402 for free and lapsed); snooze and stop are any owner's; Plus works; ownership; the unique key updates instead", async () => {
   const { db, rows } = sealedDb();
   for (const who of [free, lapsed]) {
     const res = await createSealedWatch(db, u("x", who), { groupKey: "OGN|Booster Box" }, "US");
@@ -188,6 +195,9 @@ test("sealed watches: create / update / delete need a paid tier (402 for free an
 
   assert.equal((await updateSealedWatch(db, u("q", premium), "s1", { targetCents: 1 }, NOW)).status, 404, "not the owner");
   assert.equal((await updateSealedWatch(db, u("p", free), "s1", { targetCents: 1 }, NOW)).status, 402);
+  assert.equal((await updateSealedWatch(db, u("p", lapsed), "s1", { snoozeDays: 30 }, NOW)).status, 200, "a lapsed owner can snooze");
+  assert.equal((await updateSealedWatch(db, u("q", free), "s1", { snoozeDays: 30 }, NOW)).status, 404, "…only their own");
+  assert.equal((await updateSealedWatch(db, u("p", plus), "s1", { snoozeDays: 0 }, NOW)).status, 200);
   const upd = await updateSealedWatch(db, u("p", plus), "s1", { targetCents: 11000, snoozeDays: 30 }, NOW);
   assert.equal(upd.status, 200);
   assert.equal(rows[0]!.targetCents, 11000);
@@ -200,9 +210,10 @@ test("sealed watches: create / update / delete need a paid tier (402 for free an
   assert.equal(list.body.limit, SEALED_WATCH_LIMIT_PLUS);
   assert.equal((await listSealedWatches(db, u("p", premium))).body.limit, null, "Premium: no limit to quote");
 
-  assert.equal((await deleteSealedWatch(db, u("p", lapsed), "s1")).status, 402);
   assert.equal((await deleteSealedWatch(db, u("q", premium), "s1")).status, 404);
-  assert.equal((await deleteSealedWatch(db, u("p", plus), "s1")).status, 200);
+  assert.equal((await deleteSealedWatch(db, u("q", free), "s1")).status, 404);
+  assert.equal(rows.length, 2, "nothing removed");
+  assert.equal((await deleteSealedWatch(db, u("p", lapsed), "s1")).status, 200, "a lapsed owner can stop a watch");
   assert.equal((await deleteSealedWatch(db, u("p", plus), "s1")).status, 404, "idempotent");
   assert.equal(rows.length, 1);
 });

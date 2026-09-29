@@ -261,7 +261,7 @@ test("the sealed watch run calls getSealedGroups directly, unwrapped, and the cr
   assert.doesNotMatch(run, /unstable_cache|cachedOrDirect/, "no cache of its own");
   const route = strip(read("src/app/api/cron/price-alerts/paid/route.ts"));
   assert.doesNotMatch(route, /unstable_cache|cachedOrDirect/);
-  assert.match(route, /await runSealedWatches\(\)/);
+  assert.match(route, /await runSealedWatches\(\{ sendCap: afterDecks/);
   const deck = strip(read("src/lib/deck-watch.ts"));
   assert.doesNotMatch(deck, /unstable_cache|cachedOrDirect/, "the deck run is per member: nothing to cache");
 });

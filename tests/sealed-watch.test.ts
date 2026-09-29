@@ -29,7 +29,9 @@ test("the numbers and the pure rules", () => {
   assert.equal(SEALED_RESTOCK_MIN_SOLDOUT_MS, 20 * 3_600_000);
   assert.equal(SEALED_WATCH_COOLDOWN_MS, 24 * 3_600_000);
   for (const r of ["ebay", "ebay_us", "ebay_uk", "EBAY_AU"]) assert.equal(isRealSealedStore(r), false, r);
-  for (const r of ["shopx", "tcgplayer", "cardtrader", "ebayish-store"]) assert.equal(isRealSealedStore(r), true, r);
+  for (const r of ["shopx", "cardtrader", "ebayish-store"]) assert.equal(isRealSealedStore(r), true, r);
+  // TCGplayer's sealed row is a market-price REFERENCE (always inStock: true), not a store.
+  for (const r of ["tcgplayer", "TCGplayer"]) assert.equal(isRealSealedStore(r), false, r);
   // The offer state ignores eBay rows entirely.
   const ebayOnly = sealedOfferState([offer(9000, { retailer: "ebay_us", retailerName: "eBay" })], NOW);
   assert.equal(ebayOnly.open, null);

@@ -189,13 +189,15 @@ test("alert runs follow a SUCCESSFUL, non-push import: free once a day after 07:
   // Its own path: the workflow is live as soon as it lands on main, the route
   // only after the next deploy, and the old parent route ignored ?scope=paid
   // (a full "all" run after every import). A new path 404s until then.
-  assert.match(step, /curl -s --max-time 120 "\$SITE_URL\/api\/cron\/price-alerts\/paid" -H "Authorization: Bearer \$CRON_SECRET" \|\| true/);
+  assert.match(step, /curl -s --max-time 120 "\$SITE_URL\/api\/cron\/price-alerts\/paid\$fresh" -H "Authorization: Bearer \$CRON_SECRET" \|\| true/);
   for (const curl of step.match(/curl [^\n]*/g) ?? []) assert.doesNotMatch(curl, /scope=paid/);
   const paidRoute = read("src/app/api/cron/price-alerts/paid/route.ts");
   assert.match(paidRoute, /export async function GET\(req: Request\)/);
   assert.match(paidRoute, /auth !== `Bearer \$\{secret\}`/);
   assert.match(paidRoute, /runPriceAlerts\(\{\}, \{ scope: "paid" \}\)/);
-  assert.doesNotMatch(paidRoute, /searchParams/, "this path can only ever run 'paid'");
+  // The query may carry only ?fresh=1 (an uncached sealed read); never a scope.
+  assert.deepEqual([...paidRoute.matchAll(/searchParams\.get\("([a-z]+)"\)/g)].map((m) => m[1]), ["fresh"], "this path can only ever run 'paid'");
+  assert.doesNotMatch(paidRoute.replace(/\/\/.*$/gm, ""), /scope\s*=|\.get\("scope"\)/);
   // The parent route is GET, authenticates that header, and still maps the query (manual runs).
   const route = read("src/app/api/cron/price-alerts/route.ts");
   assert.match(route, /export async function GET\(req: Request\)/);

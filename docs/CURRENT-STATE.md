@@ -181,24 +181,35 @@ longer lands on its entry.
   attractive", "marketed better and highly accessible to new users"):** the
   paid tiers watch prices after every import and email when something is
   worth acting on. **Sealed watches** (Plus up to `SEALED_WATCH_LIMIT_PLUS`,
-  10; Premium unlimited; `lib/sealed-watch.ts`): a restock after ≥20h sold out
-  at every fresh real store, at or under RRP (`lib/msrp.ts`), the member's
-  target, or a material drop — real stores only, never eBay, at most once per
-  24h per watch, from `getSealedGroups` called directly. **Deck price watch**
+  10; Premium unlimited, ceiling `SEALED_WATCH_HARD_CAP` 200;
+  `lib/sealed-watch.ts`): a restock after ≥20h sold out at every fresh real
+  store (the clock starts when the member starts watching), at or under RRP
+  (`lib/msrp.ts`), the member's target, or a material drop — real stores only,
+  never eBay and never TCGplayer's market-price row, at most once per 24h per
+  watch, from `getSealedGroups` called directly (busted first, `?fresh=1`,
+  when the 07:00 page purge was skipped). **Deck price watch**
   (Premium, up to `DECK_WATCH_LIMIT`, 10; `lib/deck-watch.ts`): a saved list
   re-priced delivered with Best Basket's own resolver, listing read, optimiser
   and measured postage for the saved delivery; emails at the target (news per
   the 30-day watermark, 5% further) or on a ≥5%/≥one-unit drop, only when the
-  plan covers every copy. Both run in the paid cron after the sealed import,
-  as separate passes that fail alone, under the shared `ALERT_DAILY_BUDGET`
-  (`lib/alert-budget.ts` counts all three tables) and `PAID_SEND_CAP`; lapsed
-  owners keep rows and get nothing; one-tap stop/snooze tokens carry a kind
-  (`lib/alert-actions.ts`, v1 card tokens stay valid). Manage on /watching
-  ("Sealed", "Decks"). [2026-09-29](../DECISIONS.md#L15178)
+  plan covers every copy; "Watch this list" is offered only for a result
+  priced without "skip copies I own". Both run in the paid cron after the
+  sealed import, as separate passes that fail alone, under the shared
+  `ALERT_DAILY_BUDGET` (`lib/alert-budget.ts` counts all three tables) and one
+  `PAID_SEND_CAP` across the card, deck and sealed passes, at most
+  `WATCH_EMAILS_PER_ADDRESS` (3) emails to one address per pass; lapsed owners
+  keep rows, get nothing, and can still see, snooze and stop them; one-tap
+  stop/snooze tokens carry a kind (`lib/alert-actions.ts`, v1 card tokens stay
+  valid) and a watch email's List-Unsubscribe stops that watch. Manage on
+  /watching ("Sealed", "Decks"). A "use client" file never imports a server
+  module (`lib/deck-watch-pure.ts` is the client-safe half;
+  `tests/client-imports.test.ts`). [2026-09-29](../DECISIONS.md#L15178),
+  [2026-09-29 review](../DECISIONS.md#L15224)
 - **Every paid feature is discoverable where it lives, inline, never a
   popup:** `DiscoveryTip` (`tip:*` surfaces) is one dismissable sentence for
-  signed-in non-members only, on /sealed, the sealed quick view, a non-Premium
-  Best Basket result and /watching's "What you can watch" block; the deck
+  signed-in non-members only, on /sealed, a non-Premium Best Basket result and
+  /watching's "What you can watch" block (the sealed quick view's watch button
+  sells Plus itself, no second line in an overlay); the deck
   watch form and the sealed heart are the ordinary `PremiumButton` gates
   (`gate:deck-watch`, `gate:sealed-watch`) below the tier. /premium leads with
   one sentence for free and one for paid, then one card per paid feature

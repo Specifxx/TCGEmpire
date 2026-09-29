@@ -40,7 +40,7 @@ import {
   INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_HARD_CAP, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -164,8 +164,8 @@ const FAQ: { q: string; a: string }[] = [
     q: "What's free vs what needs Plus or Premium?",
     a: `Price comparison, the card database, the deck and list pricer, trade calculator and box EV are free for everyone, with no limit. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards (including its delivered replacement cost), the top three of Deal Finder and Rising Cards, and your own Best Basket total; everyone sees the top 10 most searched cards of the week. ${
       premiumPlusEnabled()
-        ? `Plus (${tierMonthlyAmount("plus")}/mo) removes every ad and the watchlist and portfolio limits, and adds target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, the full Deal Finder (filterable to only your cards) and the full Rising Cards list. Premium (${tierMonthlyAmount("premium")}/mo) adds Best Basket's store-by-store plan, Buy this list for your deck, watchlist or binder, unlimited target alerts, the plan behind your replacement cost, and Demand Finder's full most-searched and most-viewed lists.`
-        : `Premium (${tierMonthlyAmount("premium")}/mo) removes every ad and the watchlist and portfolio limits, and adds target-price alerts, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.`
+        ? `Plus (${tierMonthlyAmount("plus")}/mo) removes every ad and the watchlist and portfolio limits, and adds target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (an email when a box is back in stock or at RRP), the full Deal Finder (filterable to only your cards) and the full Rising Cards list. Premium (${tierMonthlyAmount("premium")}/mo) adds a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered, emailed at your price), unlimited target alerts and sealed watches, Best Basket's store-by-store plan, Buy this list for your deck, watchlist or binder, the plan behind your replacement cost, and Demand Finder's full most-searched and most-viewed lists.`
+        : `Premium (${tierMonthlyAmount("premium")}/mo) removes every ad and the watchlist and portfolio limits, and adds target-price alerts, sealed watches (an email when a box is back in stock or at RRP), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered, emailed at your price), the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.`
     }`,
   },
   ...(premiumTrialEnabled()
@@ -204,7 +204,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What is a sealed watch?",
-    a: `A Plus and Premium feature for booster boxes, bundles, Proving Grounds and other sealed products. Tap the heart on a product on the sealed page (or in its quick view) and we email you when it is back in stock after being sold out at every store we track for at least a day, when a store has it at or under RRP (the price Riot sets), when it reaches a price you set, or when it drops for real — checked after every price update, at most once a day per product, never from an eBay listing. Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} products; Premium has no limit.`,
+    a: `A Plus and Premium feature for booster boxes, bundles, Proving Grounds and other sealed products. Tap the heart on a product on the sealed page (or in its quick view) and we email you when it is back in stock after being sold out at every store we track for at least a day, when a store has it at or under RRP (the price Riot sets), when it reaches a price you set, or when it drops for real — checked after every price update, at most once a day per product, never from an eBay listing or a price reference. Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} products; Premium has no limit you will meet (an account holds up to ${SEALED_WATCH_HARD_CAP}).`,
   },
   {
     q: "What happens to cards I already track?",
@@ -238,7 +238,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Which plan is worth it?",
-    a: "Depends entirely on how you buy. Plus is for someone who buys singles regularly: it takes the ads away, shows every card below TCGplayer market, and emails you the store when a card you watch reaches the price you set. Premium is for buying a whole deck or list: Best Basket shows the cheapest delivered order next to the best single-store order, so the saving on your own list is a number you can check (every signed-in account sees its own total before paying) rather than a claim we make. Premium also opens Demand Finder, the full list of cards players are searching for and opening. If you only buy the occasional single card, the free account is genuinely all you need — that's deliberate.",
+    a: "Depends entirely on how you buy. Plus is for someone who buys singles or sealed regularly: it takes the ads away, shows every card below TCGplayer market, emails you the store when a card you watch reaches the price you set, and emails you when a box you watch is back in stock or at RRP. Premium is for buying a whole deck or list: a deck price watch re-prices your saved list delivered after every update and emails you when it reaches your price, and Best Basket shows the cheapest delivered order next to the best single-store order, so the saving on your own list is a number you can check (every signed-in account sees its own total before paying) rather than a claim we make. Premium also opens Demand Finder, the full list of cards players are searching for and opening. If you only buy the occasional single card, the free account is genuinely all you need — that's deliberate.",
   },
   ...(premiumPlusEnabled()
     ? [
