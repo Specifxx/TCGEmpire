@@ -267,8 +267,15 @@ export function premiumLockInHeadline(): string {
     : `Premium is ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
 }
 
-// (premiumLockInTail, the compact caption for the corner slide-in, went with
-// PremiumSlideIn on 2026-09-28.)
+// The compact tail for a small inline caption ("$4.99/month · …"), used by the
+// low-intrusion corner slide-in, whose design intent is to stay out of the way
+// rather than carry a full banner. (Removed with PremiumSlideIn on 2026-09-28;
+// back with it on 2026-09-29.)
+export function premiumLockInTail(): string {
+  return premiumPriceIncreaseAnnounced()
+    ? `locked in before it rises to ${PREMIUM_NEXT_PRICE_AMOUNT} — cancel anytime`
+    : `cancel anytime`;
+}
 
 // Tags the Premium funnel events (slide-in/popup shown, checkout started) with
 // which price/framing pass they were rendered under, so GA4 can split

@@ -33,8 +33,12 @@ const NUDGES = [
   "src/components/AnnualSwitchNudge.tsx", // monthly subscriber: switch to annual
 ];
 
-test("the shared delay is five seconds", () => {
-  assert.equal(NUDGE_DELAY_MS, 5_000);
+test("the shared delay is zero: instant once eligible (owner, 2026-09-29)", () => {
+  // Five seconds from 2026-09-11; back to instant on 2026-09-29: "make the sign
+  // up and premium slider instant. I want to bring the instant feature back."
+  // Eligibility is unchanged (lib/signup-promo-gate.ts; the slider's page-view
+  // gate and LANDING_ENGAGED_MS), by the owner's choice: "drop the delay only".
+  assert.equal(NUDGE_DELAY_MS, 0);
 });
 
 test("every corner nudge waits the shared delay before showing", () => {

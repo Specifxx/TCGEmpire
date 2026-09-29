@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tally, nudgeCopy, hasNudge, FREE_PREVIEW_ROWS, type PremiumNudge } from "../src/lib/premium-nudge";
 
@@ -102,11 +102,11 @@ test("Deal Finder and the nudge rank from one definition", () => {
   assert.match(read("src/app/tools/deal-finder/page.tsx"), /const tcgBuyKeys = defaultTcgBuyKeys\(country\);/);
 });
 
-test("where the nudge appears: watchlist and portfolio (the slide-in is gone)", () => {
+test("where the nudge appears: watchlist, portfolio, and the slide-in", () => {
   // The two pages show it to a free account (as the Plus upsell, only while
   // checkout is on) AND to a member (as a link into the list, never a wall —
-  // 2026-09-25). The signed-in slide-in and its /api/premium/nudge route were
-  // removed on 2026-09-28 (upgrade prompts moved to the free limits).
+  // 2026-09-25). The slide-in below stays free-only: it exists to sell.
+  // (Removed 2026-09-28 with the free limits; restored 2026-09-29.)
   const watching = read("src/app/watching/page.tsx");
   assert.match(watching, /isPremium\(user\) \|\| premiumCheckoutEnabled\(\) \? await getPremiumNudge\(user\.id, getCountry\(\)\)\.catch\(\(\) => null\)/);
   assert.match(watching, /<PremiumNudgeCard \{\.\.\.nudgeCopy\} member=\{isPremium\(user\)\} surface="nudge:watchlist"/);
@@ -114,6 +114,17 @@ test("where the nudge appears: watchlist and portfolio (the slide-in is gone)", 
   assert.match(portfolio, /\(premium \|\| premiumCheckoutEnabled\(\)\) && portfolio\.holdings\.length > 0/);
   assert.match(portfolio, /<PremiumNudgeCard \{\.\.\.ownedNudge\} member=\{premium\} surface="nudge:portfolio"/);
 
-  assert.ok(!existsSync(join(process.cwd(), "src/app/api/premium/nudge/route.ts")), "the slide-in's copy route went with it");
-  assert.ok(!existsSync(join(process.cwd(), "src/components/PremiumSlideIn.tsx")));
+  const route = read("src/app/api/premium/nudge/route.ts");
+  assert.match(route, /if \(!user \|\| isPremium\(user\) \|\| !premiumCheckoutEnabled\(\)\) return none;/);
+  assert.match(route, /"Cache-Control": "private, no-store"/);
+
+  const slide = code("src/components/PremiumSlideIn.tsx");
+  // 600 ms since the slider went instant (2026-09-29): the only wait left.
+  assert.match(slide, /const PERSONAL_WAIT_MS = 600;/);
+  assert.match(slide, /personal\?\.heading \?\? contextPitch\?\.heading/, "personal copy outranks the per-page pitch");
+  // Fetched inside the show timer, and the session is only marked seen once
+  // the card will really appear.
+  const timer = slide.slice(slide.indexOf("const t = setTimeout(async () => {"), slide.indexOf("NUDGE_DELAY_MS);"));
+  assert.ok(timer.indexOf("await fetchPersonalCopy()") < timer.indexOf("ss?.setItem(SESSION_SEEN"), "SESSION_SEEN after the wait");
+  assert.match(timer, /if \(cancelled \|\| dialogOpen\(\)\) return;/);
 });

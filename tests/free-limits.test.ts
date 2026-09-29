@@ -408,19 +408,20 @@ test("the basket saving line: real money at or above $1, no saving claim below i
 
 // ── No popup or header upsells ─────────────────────────────────────────────
 
-test("the signed-in Premium slide-in is gone and nothing mounts it; the signed-out popup stays", () => {
-  assert.ok(!existsSync(join(ROOT, "src/components/PremiumSlideIn.tsx")));
-  assert.ok(!existsSync(join(ROOT, "src/components/PremiumPitchPanel.tsx")));
-  assert.ok(!existsSync(join(ROOT, "src/app/api/premium/nudge/route.ts")));
+test("the signed-in Premium slide-in is back beside the at-limit prompts; the signed-out popup stays", () => {
+  // Removed with the free limits on 2026-09-28 ("not in popups and headers");
+  // restored 2026-09-29 at the owner's request ("make the sign up and premium
+  // slider instant. I want to bring the instant feature back"). Only the
+  // slide-in came back: the header, rail and account menu stay plain "Pricing"
+  // links (next test), and the at-limit prompts stay where the limit is hit.
+  for (const f of ["src/components/PremiumSlideIn.tsx", "src/components/PremiumPitchPanel.tsx", "src/app/api/premium/nudge/route.ts"]) {
+    assert.ok(existsSync(join(ROOT, f)), `${f} restored`);
+  }
   const layout = code("src/app/layout.tsx");
-  assert.doesNotMatch(layout, /PremiumSlideIn/);
+  assert.match(layout, /<PremiumSlideIn \/>/, "mounted once, in the layout");
+  assert.equal(layout.split("<PremiumSlideIn").length - 1, 1);
   assert.match(layout, /<SignupPromoPopup providers=\{enabledProviders\(\)\} \/>/, "the free-account popup stays: the free limits are the funnel");
-  const walk = (d: string): string[] =>
-    readdirSync(join(ROOT, d)).flatMap((n) => {
-      const p = `${d}/${n}`;
-      return statSync(join(ROOT, p)).isDirectory() ? walk(p) : /\.(ts|tsx)$/.test(n) ? [p] : [];
-    });
-  for (const f of walk("src")) assert.doesNotMatch(code(f), /PremiumSlideIn|PremiumPitchPanel/, `${f} still references the slide-in`);
+  assert.match(code("src/components/FreeLimitPanel.tsx"), /limit:/, "the at-limit upgrade prompt is still there");
 });
 
 test("the header, rail and account menu link to /premium plainly — no gold Premium CTA", () => {

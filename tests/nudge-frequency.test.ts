@@ -104,18 +104,18 @@ test("the within-session spacing is untouched — the cap sits on top of it", ()
 test("the frequency change is separable in GA4 from the uncapped era", () => {
   // PROMO_VARIANT tracks whichever value is current rather than re-pinning one
   // era forever; the file's own changelog carries the full list. It is now
-  // "free_account_compare_subtle" (2026-09-16), the owner's reversal back to a
-  // free-account pitch — the largest swing yet on the CONTENT axis, since the
-  // ASK itself changed from "buy Premium" to "make a free account". Nothing in
-  // the premium_graphic_* buckets is comparable to it, which is exactly why it
-  // needed a new name instead of a suffix.
+  // "free_account_compare_instant" (2026-09-29): the same free-account card as
+  // "free_account_compare_subtle" (2026-09-16, the owner's reversal back to a
+  // free-account pitch), without the 5 s settle-in — the TIMING axis, so the
+  // instant and 5 s impressions must not average together in GA4.
   //
   // Every retired name is checked as an EXACT string, not a substring: the
   // names in this family are prefixes of one another, so a substring check
   // would fire on the legitimate current value.
   const src = code(POPUP);
-  assert.match(src, /const PROMO_VARIANT = "free_account_compare_subtle"/, "expected the current variant name");
+  assert.match(src, /const PROMO_VARIANT = "free_account_compare_instant"/, "expected the current variant name");
   for (const retired of [
+    "free_account_compare_subtle",
     "premium_graphic_5s_motion",
     "premium_graphic_5s",
     "premium_graphic_table",

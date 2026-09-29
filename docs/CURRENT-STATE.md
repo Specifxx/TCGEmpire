@@ -174,25 +174,30 @@ longer lands on its entry.
   that already watches ten is at the limit too), and the import adds up to
   the allowance and reports the rest.
   [2026-09-28](../DECISIONS.md#L14549)
-- **Upgrade prompts live where a limit is hit, not in popups or headers:**
+- **Upgrade prompts live where a limit is hit, not in headers:**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
-  the tool walls. [2026-09-28](../DECISIONS.md#L14549)
+  the tool walls — plus, since 09-29 at the owner's request, the restored
+  signed-in `PremiumSlideIn`. Header, rail and account menu stay plain
+  "Pricing" links. [2026-09-28](../DECISIONS.md#L14549),
+  [2026-09-29](../DECISIONS.md#L15178)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
   [2026-09-14](../DECISIONS.md#L6038)
 - **Nudges:** the signed-out popup sells the FREE account (no price, no
-  gold), and matters more now that the free limits are the funnel. There is
-  no signed-in Premium slide-in (deleted 2026-09-28). The popup waits for
+  gold), and matters more now that the free limits are the funnel. The
+  signed-in Premium slide-in (deleted 09-28, restored 09-29) waits for a 2nd
+  page view (7 s of reading on the landing pages). The popup waits for
   a 2nd page view or 60 s of reading, never on the first page from another
   site or a phone's first view (`lib/signup-promo-gate.ts`), except on the
   top landing pages (`/blog/*`, `/movers`), where it shows after 7 s
   of reading on any view. It stops after 2
-  dismissals per device, snoozes 3 pages then 7 days, and keeps its 5-second
-  delay. [2026-09-16](../DECISIONS.md#L7031),
+  dismissals per device and snoozes 3 pages then 7 days. Once eligible,
+  every corner nudge shows INSTANTLY (`NUDGE_DELAY_MS` 0 since 09-29, owner;
+  it was 5 s). [2026-09-16](../DECISIONS.md#L7031),
   [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089), [2026-09-27](../DECISIONS.md#L14536),
-  [2026-09-28](../DECISIONS.md#L14549)
+  [2026-09-28](../DECISIONS.md#L14549), [2026-09-29](../DECISIONS.md#L15178)
 - **Signed-out visitors get nothing from Deal Finder or Rising Cards**; a
   free account gets the top 3 of each, a paid tier the full list.
   [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842)

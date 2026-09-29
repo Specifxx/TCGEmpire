@@ -211,12 +211,19 @@ export function TierComparisonTable({
     // sideways scroll (a 22rem floor still clipped Premium at 390 and hid it
     // completely at 320, so it is min-w-0). The cost is taller rows
     // at 320. From sm up the min-width keeps the columns roomy and the wrapper
-    // still contains its own scroll; the compact dialog table keeps its floor.
+    // still contains its own scroll.
+    //
+    // The COMPACT table lost its floor too (2026-09-29). It had 380px (440 with
+    // Plus), which the restored Premium slide-in's ~350px body could not hold:
+    // Premium, the column the card exists to sell, sat off-screen behind a
+    // sideways scroll ("Prem", "Unlim" at the edge), and the free limits' "10
+    // cards" / "50 cards" had widened the free column further. Its tier columns
+    // are a fixed 64px, so the feature column takes the rest and wraps.
     <div className="overflow-x-auto">
       <table
         className={`w-full border-collapse ${
           compact
-            ? (showPlus ? "min-w-[440px]" : "min-w-[380px]") + " text-xs"
+            ? "min-w-0 text-xs"
             : (showPlus ? "min-w-0 sm:min-w-[560px]" : "min-w-0 sm:min-w-[440px]") + " text-sm"
         }`}
       >
