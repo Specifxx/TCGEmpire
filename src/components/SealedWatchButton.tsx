@@ -6,7 +6,7 @@ import { useSealedWatches } from "@/lib/use-sealed-watches";
 import { useCountryMaybe } from "./CountryProvider";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { PremiumButton } from "./PremiumButton";
-import { SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import { SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 
 // "Watch this sealed product" (2026-09-29): a toggle for a Plus/Premium
 // member — an email when it is back in stock after selling out everywhere,
@@ -49,7 +49,7 @@ export function SealedWatchButton({
     }
     return (
       <div className={className}>
-        <p className="text-xs text-slate-400">Plus emails you when this is back in stock, at RRP, or at your price.</p>
+        <p className="text-xs text-slate-400">Plus emails you when this is back in stock, at RRP, or at your price, checked {SEALED_CHECK_CADENCE}.</p>
         <div className="mt-1.5">
           <PremiumButton tier="plus" surface="gate:sealed-watch" />
         </div>
@@ -102,8 +102,8 @@ export function SealedWatchButton({
       </button>
       <p className="mt-1 text-[11px] text-slate-500">
         {watching
-          ? "We email you when it's back in stock after selling out everywhere, at RRP, at your target, or on a real drop — checked after every price update. Set a target on your watchlist."
-          : "Email me when it's back in stock, at RRP, or at my price — checked after every price update."}
+          ? `We email you when it's back in stock after selling out everywhere, at RRP, at your target, or on a real drop. Checked ${SEALED_CHECK_CADENCE}; a Discord stock bot may be faster. Set a target on your watchlist.`
+          : `Email me when it's back in stock, at RRP, or at my price. Checked ${SEALED_CHECK_CADENCE}; a Discord stock bot may be faster.`}
       </p>
       {note && (
         <p role="alert" className="mt-1 text-xs text-amber-300">

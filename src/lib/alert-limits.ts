@@ -44,6 +44,16 @@ export function sealedWatchLimit(tier: "plus" | "premium" | null | undefined): n
   return 0;
 }
 
+// HOW OFTEN A SEALED WATCH IS CHECKED, as copy (2026-09-29). Four store reads a
+// day (refresh-prices.yml at 07:00 and 19:00 UTC, sealed-refresh.yml at 01:00
+// and 13:00), each followed by the sealed alert pass: about every six hours, and
+// "about" because the GitHub scheduler starts a run late. Never "instant", never
+// "first in line": a Discord stock bot polls faster than a price site can, and
+// the copy says so. One definition, so the table, the FAQ, the watch form and
+// the email cannot drift apart (tests/sealed-cadence.test.ts pins them).
+export const SEALED_CHECK_CADENCE = "about every six hours";
+export const SEALED_CHECK_SENTENCE = `Sealed products are checked ${SEALED_CHECK_CADENCE}, so stock may have moved since. A Discord stock bot may be faster.`;
+
 // Premium's "unlimited" sealed watches still stop at a sanity ceiling, so one
 // account cannot fill the watch table (and the paid run's read cap, which is
 // oldest-first) with junk rows. Nobody tracks two hundred sealed products; the

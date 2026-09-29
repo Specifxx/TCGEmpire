@@ -310,4 +310,7 @@ export function premiumLockInTail(): string {
 // premium-2026-09-29c: Finish this set (Best Basket's set source and the set
 // checklist's "Plan the purchase") on the table, the slide-in chips, /premium and
 // the pricing cards. Prices unchanged.
-export const PREMIUM_COPY_VERSION = "premium-2026-09-29c";
+// premium-2026-09-29d: sealed watches "checked about every six hours" (four store
+// reads a day, the checked time in every email) on the table, /premium, the FAQ,
+// the watch form and the article. Prices unchanged.
+export const PREMIUM_COPY_VERSION = "premium-2026-09-29d";

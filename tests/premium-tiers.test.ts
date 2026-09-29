@@ -215,7 +215,7 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       // 2026-09-29, "Premium works while you're away": the sealed watches
       // (any paid tier, Plus capped) and the deck price watch (Premium),
       // before Ad-free, which stays last.
-      "Sealed watches — restock, at-RRP and price alerts",
+      "Sealed watches — restock, at-RRP and price alerts, checked about every six hours",
       "Deck price watch — email when a deck's delivered total drops",
       "Ad-free experience",
     ],

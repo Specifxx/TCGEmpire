@@ -185,12 +185,19 @@ longer lands on its entry.
   paid tiers watch prices after every import and email when something is
   worth acting on. **Sealed watches** (Plus up to `SEALED_WATCH_LIMIT_PLUS`,
   10; Premium unlimited, ceiling `SEALED_WATCH_HARD_CAP` 200;
-  `lib/sealed-watch.ts`): a restock after ≥20h sold out at every fresh real
+  `lib/sealed-watch.ts`): a restock after ≥5h sold out at every fresh real
   store (the clock starts when the member starts watching), at or under RRP
   (`lib/msrp.ts`), the member's target, or a material drop — real stores only,
-  never eBay and never TCGplayer's market-price row, at most once per 24h per
-  watch, from `getSealedGroups` called directly (busted first, `?fresh=1`,
-  when the 07:00 page purge was skipped). **Deck price watch**
+  never eBay and never TCGplayer's market-price row, a restock at most once
+  per 6h and the rest once per 24h per watch. **Checked about every six
+  hours** (`SEALED_CHECK_CADENCE`, never "instant" or "first in line"; "a
+  Discord stock bot may be faster"): the 07:00 and 19:00 paid runs read
+  `getSealedGroups` directly (busted first, `?fresh=1`, when the page purge was
+  skipped), and the schedule-only `sealed-refresh.yml` (01:00 and 13:00 UTC,
+  stores-only import, NO revalidate step and no CONTENT_TAG bust) calls
+  `/api/cron/price-alerts/sealed`, which runs only the sealed pass on an
+  uncached read (`lib/sealed-alert-read.ts`). Every sealed email states the
+  listing's checked time in bold. **Deck price watch**
   (Premium, up to `DECK_WATCH_LIMIT`, 10; `lib/deck-watch.ts`): a saved list
   re-priced delivered with Best Basket's own resolver, listing read, optimiser
   and measured postage for the saved delivery; emails at the target (news per
@@ -207,7 +214,8 @@ longer lands on its entry.
   /watching ("Sealed", "Decks"). A "use client" file never imports a server
   module (`lib/deck-watch-pure.ts` is the client-safe half;
   `tests/client-imports.test.ts`). [2026-09-29](../DECISIONS.md#L15178),
-  [2026-09-29 review](../DECISIONS.md#L15224)
+  [2026-09-29 review](../DECISIONS.md#L15224),
+  [2026-09-29 six-hourly sealed check](../DECISIONS.md#L15423)
 - **Minimum condition (2026-09-29, Premium):** Best Basket, Buy this list and
   the deck price watch may be limited to NM only or LP or better
   (`lib/basket-condition.ts`; grades are `conditionRank`, unstated = NM). The

@@ -21,8 +21,8 @@ name: Egress audit (Neon transfer)
 # well under a megabyte per run.
 #
 # WHEN. Sunday 03:00 UTC (13:00 Sydney): no import, cron or scheduled deploy
-# runs in that window (refresh-prices 07:00/19:00, production-deploy 08:00,
-# store-health 08:00/20:00, the Vercel crons 07:15/09:00/18:30/22:00). A
+# runs in that window (refresh-prices 07:00/19:00, sealed-refresh 01:00/13:00,
+# production-deploy 08:00, store-health 08:00/20:00, the Vercel crons 07:15/09:00/18:30/22:00). A
 # `[deploy]` commit pushed by hand during the sample would land a build inside
 # it — the report says so if the numbers look like one (see the script header),
 # and at one build a day that is now a real steady-state cost worth seeing.

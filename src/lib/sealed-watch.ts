@@ -31,7 +31,7 @@ import { clampTargetCents } from "./target-price";
 // (isRealSealedStore). The three
 // offer states are lib/sealed-offers.ts's: open, sold out, unknown (a row not
 // read for 72h). Triggers, in precedence order, each at most once per
-// SEALED_WATCH_COOLDOWN_MS per watch:
+// SEALED_WATCH_COOLDOWN_MS per watch (a restock: SEALED_RESTOCK_COOLDOWN_MS):
 //   • sealed_target   the cheapest open real-store price is at or under the
 //                     member's target and news: never emailed, or at least
 //                     SEALED_TARGET_REFIRE_PCT under the price we last emailed,
@@ -39,6 +39,7 @@ import { clampTargetCents } from "./target-price";
 //   • sealed_restock  the product was sold out at EVERY tracked real store
 //                     (soldOutEverywhere, on fresh reads) for at least
 //                     SEALED_RESTOCK_MIN_SOLDOUT_MS, and a real store has it now.
+//                     Its own, shorter cooldown (SEALED_RESTOCK_COOLDOWN_MS).
 //   • sealed_rrp      the cheapest open price is at or under RRP (lib/msrp.ts
 //                     isAtMsrp, 2% tolerance), and it is news: the first time,
 //                     or after a run saw it over RRP (lastAtRrp).
@@ -46,11 +47,31 @@ import { clampTargetCents } from "./target-price";
 //                     ≥ SEALED_DROP_MIN_CENTS) under the reference: the price
 //                     we last emailed while live, else the last price.
 // All-unknown listings decide nothing (a feed outage is not a sell-out).
+//
+// CADENCE (2026-09-29, DECISIONS.md "Sealed watches are checked about every six
+// hours"). The sealed import runs at 01:00, 07:00, 13:00 and 19:00 UTC
+// (.github/workflows/sealed-refresh.yml adds the first and third) and this pass
+// follows each: the 07:00 and 19:00 ones inside the paid route, the other two
+// through /api/cron/price-alerts/sealed, which reads the listings UNCACHED
+// (lib/sealed-alert-read.ts) so the public /sealed page and CONTENT_TAG caches
+// are never purged four extra times a day. "About": GitHub cron drifts.
+//
 // Lapsed owners are skipped untouched; Plus rows past SEALED_WATCH_LIMIT_PLUS
 // (oldest first) are kept but not evaluated. Snoozed watches and paused
 // addresses advance their baseline with no email.
 
-export const SEALED_RESTOCK_MIN_SOLDOUT_MS = 20 * 60 * 60 * 1000;
+// FIVE hours, not six, for a check that runs about every six: a sell-out is
+// first SEEN by one run and a restock by a later one, so with a run a few
+// minutes early the gap between the two reads 5h50, and a threshold of exactly
+// six hours would clear a genuine overnight sell-out as a "short gap" and never
+// tell it. Five still ignores a store flipping stock off and on between runs
+// (one run apart is the shortest gap that can be seen at all). Was 20h while
+// the check ran twice a day.
+export const SEALED_RESTOCK_MIN_SOLDOUT_MS = 5 * 60 * 60 * 1000;
+// The 24h cooldown is for target, RRP and drop emails. A restock has its own,
+// about one run long: it is the one signal a member wants the moment it is seen,
+// and it needs a real sell-out first, so it cannot repeat faster than that.
+export const SEALED_RESTOCK_COOLDOWN_MS = 6 * 60 * 60 * 1000;
 export const SEALED_WATCH_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 export const SEALED_TARGET_REFIRE_PCT = 5;
 export const SEALED_DROP_MIN_CENTS = 100;
@@ -116,13 +137,21 @@ export function shouldEmailSealedDrop(opts: { priceCents: number; targetCents: n
   return ref - opts.priceCents >= Math.max(Math.ceil((ref * 5) / 100), SEALED_DROP_MIN_CENTS) && isMaterialDrop(ref, opts.priceCents);
 }
 
-export function inSealedCooldown(lastNotifiedAt: Date | null, now: Date): boolean {
-  return lastNotifiedAt != null && now.getTime() - lastNotifiedAt.getTime() < SEALED_WATCH_COOLDOWN_MS;
+export function sealedCooldownMs(kind?: SealedWatchKind): number {
+  return kind === "sealed_restock" ? SEALED_RESTOCK_COOLDOWN_MS : SEALED_WATCH_COOLDOWN_MS;
+}
+
+/** Has this watch been emailed too recently for a `kind` email? Restock: 6h. Anything else: 24h. */
+export function inSealedCooldown(lastNotifiedAt: Date | null, now: Date, kind?: SealedWatchKind): boolean {
+  return lastNotifiedAt != null && now.getTime() - lastNotifiedAt.getTime() < sealedCooldownMs(kind);
 }
 
 const isSupportedMarket = (m: string): m is Country => Object.prototype.hasOwnProperty.call(COUNTRIES, m);
 
 // ── The run ──────────────────────────────────────────────────────────────────
+
+/** What the run reads of a sealed group: the fresh read (lib/sealed-alert-read.ts) fills only these. */
+export type SealedWatchGroup = Pick<SealedGroup, "groupKey" | "name" | "productType" | "setCode" | "listings">;
 
 export type SealedWatchDb = {
   sealedWatch: Pick<typeof prisma.sealedWatch, "findMany" | "update" | "groupBy">;
@@ -138,8 +167,8 @@ export interface SealedWatchRunDeps {
   // The sealed groups for a market. Defaults to getSealedGroups, called
   // directly (it caches itself), with getPreorderGroups for a watched key it
   // does not carry (a pre-order set's products).
-  groups?: (market: Country) => Promise<SealedGroup[]>;
-  preorderGroups?: (market: Country) => Promise<SealedGroup[]>;
+  groups?: (market: Country) => Promise<SealedWatchGroup[]>;
+  preorderGroups?: (market: Country) => Promise<SealedWatchGroup[]>;
   sendSealedWatchEmail?: typeof sendSealedWatchEmailImpl;
   notifyUsers?: boolean;
   dailyBudget?: number;
@@ -257,7 +286,7 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
 
   // The groups, once per market, read directly. A failed read throws out of
   // the whole pass, uncached: nothing is decided from a partial read.
-  const groupsByMarket = new Map<Country, Map<string, SealedGroup>>();
+  const groupsByMarket = new Map<Country, Map<string, SealedWatchGroup>>();
   if (live.length && deps.freshen) {
     try {
       deps.freshen();
@@ -266,7 +295,7 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
     }
   }
   for (const market of new Set(live.map((w) => w.market))) {
-    const byKey = new Map<string, SealedGroup>();
+    const byKey = new Map<string, SealedWatchGroup>();
     for (const g of await loadGroups(market)) byKey.set(g.groupKey, g);
     const wanted = live.filter((w) => w.market === market).map((w) => w.groupKey);
     if (wanted.some((k) => !byKey.has(k))) {
@@ -308,7 +337,7 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
       if (state.soldOutEverywhere && w.soldOutAt == null) {
         // A row never yet seen open was WATCHED sold out from the moment the
         // member created it (hearting a "Sold out" box is the usual way in), so
-        // the 20h counts from then, not from this first run: otherwise a
+        // the sold-out clock counts from then, not from this first run: otherwise a
         // restock in the first day after the first run is cleared as a short
         // gap and never told. A row that has been seen open starts at now.
         const since = w.lastInStock == null && w.createdAt.getTime() < now.getTime() ? w.createdAt : now;
@@ -351,7 +380,7 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
       summary.drops++;
     }
     if (!kind) return;
-    if (inSealedCooldown(w.lastNotifiedAt, now)) {
+    if (inSealedCooldown(w.lastNotifiedAt, now, kind)) {
       summary.cooldown++;
       heldIds.add(w.id);
       return;

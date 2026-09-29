@@ -268,3 +268,27 @@ test("the sealed watch run calls getSealedGroups directly, unwrapped, and the cr
   const deck = strip(read("src/lib/deck-watch.ts"));
   assert.doesNotMatch(deck, /unstable_cache|cachedOrDirect/, "the deck run is per member: nothing to cache");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE SEALED-ONLY ALERT PASS READS UNCACHED, AND WRAPS NOTHING (2026-09-29).
+// ─────────────────────────────────────────────────────────────────────────────
+// /api/cron/price-alerts/sealed runs four times a day's worth of sealed passes
+// without busting CONTENT_TAG: it reads SealedListing itself
+// (lib/sealed-alert-read.ts), so there is no self-cached loader to wrap, no
+// cache to bypass and no revalidateTag. getSealedGroupsFresh is uncached by
+// construction — the point is that it is NOT one of SELF_CACHED and is never
+// put inside an unstable_cache callback either (that would be a pointless
+// per-outer-miss recompute). tests/sealed-cadence.test.ts pins the rest.
+test("the sealed-only cron route and its fresh read use no cache and call no self-cached loader", () => {
+  const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'])\/\/.*$/gm, "$1");
+  const route = strip(read("src/app/api/cron/price-alerts/sealed/route.ts"));
+  const fresh = strip(read("src/lib/sealed-alert-read.ts"));
+  for (const [name, src] of [["route", route], ["sealed-alert-read", fresh]] as const) {
+    assert.doesNotMatch(src, /unstable_cache|cachedOrDirect|revalidateTag|revalidatePath/, `${name}: no cache, no bust`);
+    for (const loader of SELF_CACHED) assert.ok(!new RegExp(`\\b${loader}\\(`).test(src), `${name} must not call the self-cached ${loader}`);
+  }
+  assert.ok(!SELF_CACHED.includes("getSealedGroupsFresh"), "the fresh read is not a cached loader");
+  // Nothing in src wraps it in a cache callback.
+  const wrapped = new RegExp("(?:unstable_cache|cachedOrDirect)\\(\\s*(?:async\\s*)?\\(\\)\\s*=>\\s*(?:await\\s+)?(?:getSealedGroupsFresh|getAllSealedGroupsFresh|getPreorderGroupsFresh)\\(");
+  for (const f of walk(SRC)) assert.doesNotMatch(strip(readFileSync(f, "utf8")), wrapped, relative(ROOT, f));
+});

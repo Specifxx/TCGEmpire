@@ -4,6 +4,7 @@ import { SITE_URL } from "./site";
 import { alertListHeaders, checkedLabel, emailButton, emailShell, escapeHtml, sendEmail } from "./email";
 import type { WatchActionLinks } from "./alert-actions";
 import { MIN_CONDITION_PHRASE } from "./basket-condition";
+import { SEALED_CHECK_CADENCE, SEALED_CHECK_SENTENCE } from "./alert-limits";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE DECK PRICE WATCH AND SEALED WATCH EMAILS (2026-09-29, "Premium works
@@ -27,10 +28,18 @@ function watchHeaders(links: WatchActionLinks): Record<string, string> {
   return alertListHeaders({ oneClick: `${SITE_URL}/api/alerts/action?t=${encodeURIComponent(new URL(links.stop).searchParams.get("t") ?? "")}` });
 }
 
+// The cadence a sealed watch is honestly sold at (lib/sealed-watch.ts,
+// .github/workflows/sealed-refresh.yml): four store reads a day, so about every
+// six hours; the scheduler can start one late. Never "instant". A Discord stock
+// bot polls faster than a price site can, so the copy says so instead of
+// pretending otherwise.
+const SEALED_CADENCE_NOTE = SEALED_CHECK_SENTENCE;
+
 function watchFooter(kind: "deck" | "sealed", links: WatchActionLinks, manage: string): string {
   const what = kind === "deck" ? "this list's delivered price" : "this sealed product";
+  const cadence = kind === "deck" ? "it is checked after every price update" : `sealed products are checked ${SEALED_CHECK_CADENCE}`;
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;line-height:1.6;color:#6b7585">
-    You're getting this because you asked RiftCompare to watch ${what}${kind === "deck" ? " (Premium)" : " (Plus or Premium)"}; it is checked after every price update.<br/>
+    You're getting this because you asked RiftCompare to watch ${what}${kind === "deck" ? " (Premium)" : " (Plus or Premium)"}; ${cadence}.<br/>
     <a href="${escapeHtml(links.stop)}" style="color:#9aa4b2;text-decoration:underline">Stop watching</a>
     &nbsp;·&nbsp; <a href="${escapeHtml(links.snooze)}" style="color:#9aa4b2;text-decoration:underline">Snooze 30 days</a>
     &nbsp;·&nbsp; <a href="${escapeHtml(manage)}" style="color:#9aa4b2;text-decoration:underline">Manage your watches</a><br/>
@@ -261,6 +270,10 @@ export function buildSealedWatchEmail(item: SealedWatchItem): BuiltWatchEmail {
       ? `${item.referenceBasis === "emailed" ? "We last emailed you at" : "Our last check saw"} ${m(item.referenceCents)}.`
       : "";
   const since = item.kind === "sealed_restock" && item.soldOutAt ? `Sold out at every store we track since ${checkedLabel(item.soldOutAt, item.market)}.` : "";
+  // When the store's page was last read, in the body and in bold: a restock is
+  // only worth acting on while it is still true, and the reader should see how
+  // old this reading is before they click, not in the small print.
+  const checked = `Checked ${checkedLabel(item.checkedAt, item.market)} at ${item.store.name}.`;
   const actions = item.actions;
   const inner = `
     <tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">
@@ -271,11 +284,12 @@ export function buildSealedWatchEmail(item: SealedWatchItem): BuiltWatchEmail {
       ${item.kind === "sealed_target" && item.targetCents != null ? `<br/>Your target is ${m(item.targetCents)}.` : ""}
       ${changeLine ? `<br/>${escapeHtml(changeLine)}` : ""}
       ${since ? `<br/>${escapeHtml(since)}` : ""}
+      <br/><strong style="color:#fff">${escapeHtml(checked)}</strong> <span style="color:#9aa4b2">Stock can sell out again before you get there.</span>
     </td></tr>
     <tr><td style="padding:14px 32px 4px">${emailButton(item.store.url, `Buy at ${escapeHtml(item.store.name)}`)}
       <div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(sealed)}" style="color:#34d17e;font-weight:700;text-decoration:none">Compare every store on /sealed →</a></div></td></tr>
     <tr><td style="padding:4px 32px 16px;font-size:12px;line-height:1.7;color:#6b7585">
-      Checked ${escapeHtml(checkedLabel(item.checkedAt, item.market))}. Stock and prices move, so the store's checkout is final. RRP is the price Riot sets.<br/>
+      ${escapeHtml(SEALED_CADENCE_NOTE)} The store's checkout is final. RRP is the price Riot sets.<br/>
       ${actions ? `<a href="${escapeHtml(actions.stop)}" style="color:#9aa4b2;text-decoration:underline">Stop watching this product</a> &nbsp;·&nbsp; <a href="${escapeHtml(actions.snooze)}" style="color:#9aa4b2;text-decoration:underline">Snooze 30 days</a>` : ""}
     </td></tr>`;
   const text = [
@@ -285,9 +299,10 @@ export function buildSealedWatchEmail(item: SealedWatchItem): BuiltWatchEmail {
     item.kind === "sealed_target" && item.targetCents != null ? `Your target is ${m(item.targetCents)}.` : "",
     changeLine,
     since,
+    `${checked} Stock can sell out again before you get there.`,
     `Buy at ${item.store.name}: ${item.store.url}`,
     `Compare every store: ${sealed}`,
-    `Checked ${checkedLabel(item.checkedAt, item.market)}. Stock and prices move, so the store's checkout is final. RRP is the price Riot sets.`,
+    `${SEALED_CADENCE_NOTE} The store's checkout is final. RRP is the price Riot sets.`,
     ...(actions ? [`Stop watching this product: ${actions.stop}`, `Snooze 30 days: ${actions.snooze}`] : []),
     `Manage your watches: ${manage}`,
   ]

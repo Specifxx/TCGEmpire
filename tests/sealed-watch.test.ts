@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  SEALED_RESTOCK_COOLDOWN_MS,
   SEALED_RESTOCK_MIN_SOLDOUT_MS,
   SEALED_WATCH_COOLDOWN_MS,
   isRealSealedStore,
@@ -14,9 +15,10 @@ import { verifyAlertAction } from "../src/lib/alert-actions";
 import { NOW, daysAgo, hoursAgo, free, group, lapsed, offer, plus, premium, sealedHarness, sealedRow } from "./helpers/watch-harness";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SEALED WATCHES (lib/sealed-watch.ts, 2026-09-29): restock after ≥20h sold
-// out everywhere, at RRP, at the member's target, or a material drop — from
-// the self-cached sealed groups, real stores only, once per 24h per watch.
+// SEALED WATCHES (lib/sealed-watch.ts, 2026-09-29): restock after ≥5h sold
+// out everywhere (the check runs about every six hours), at RRP, at the
+// member's target, or a material drop — real stores only, a restock at most
+// once per 6h and the rest once per 24h per watch.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STALE = new Date(NOW.getTime() - 80 * 3_600_000).toISOString();
@@ -26,7 +28,8 @@ test("the numbers and the pure rules", () => {
   assert.equal(sealedWatchLimit("plus"), 10);
   assert.equal(sealedWatchLimit("premium"), Number.POSITIVE_INFINITY);
   assert.equal(sealedWatchLimit(null), 0);
-  assert.equal(SEALED_RESTOCK_MIN_SOLDOUT_MS, 20 * 3_600_000);
+  assert.equal(SEALED_RESTOCK_MIN_SOLDOUT_MS, 5 * 3_600_000, "retuned from 20h: the check now runs about every six hours");
+  assert.equal(SEALED_RESTOCK_COOLDOWN_MS, 6 * 3_600_000);
   assert.equal(SEALED_WATCH_COOLDOWN_MS, 24 * 3_600_000);
   for (const r of ["ebay", "ebay_us", "ebay_uk", "EBAY_AU"]) assert.equal(isRealSealedStore(r), false, r);
   for (const r of ["shopx", "cardtrader", "ebayish-store"]) assert.equal(isRealSealedStore(r), true, r);
@@ -58,7 +61,7 @@ test("the numbers and the pure rules", () => {
   assert.equal(rrpGapText(15000, null, "USD"), "");
 });
 
-test("restock: sold out at every real store for 20h, then a real store has it — not from a short gap, not from eBay", async () => {
+test("restock: sold out at every real store for 5h, then a real store has it — not from a short gap, not from eBay", async () => {
   // Run 1: everything sold out → the clock starts.
   const h1 = sealedHarness([sealedRow("s1", plus, { lastPriceCents: 15000, lastInStock: true })], { groups: [group([offer(15000, { inStock: false })])] });
   const s1 = await h1.run();
@@ -75,12 +78,12 @@ test("restock: sold out at every real store for 20h, then a real store has it �
   assert.equal(h2.sent.length, 0, "an eBay listing is never a restock");
   assert.equal(h2.writeFor("s1")?.soldOutAt, undefined);
 
-  // Back at a store after 19h: cleared quietly. After 21h: news.
-  const short = sealedHarness([sealedRow("s1", plus, { lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(19) })], { groups: [group([offer(15000)])] });
+  // Back at a store after 3h (a blip between two runs): cleared quietly. After 7h: news.
+  const short = sealedHarness([sealedRow("s1", plus, { lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(3) })], { groups: [group([offer(15000)])] });
   const ss = await short.run();
   assert.equal(ss.restocks, 0);
   assert.equal(short.writeFor("s1")!.soldOutAt, null, "a short gap just clears");
-  const long = sealedHarness([sealedRow("s1", plus, { lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(21) })], { groups: [group([offer(15000)])] });
+  const long = sealedHarness([sealedRow("s1", plus, { lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(7) })], { groups: [group([offer(15000)])] });
   const sl = await long.run();
   assert.equal(sl.restocks, 1);
   assert.equal(long.sent.length, 1);
@@ -89,7 +92,7 @@ test("restock: sold out at every real store for 20h, then a real store has it �
   assert.equal(item.store.name, "Shop X");
   assert.match(item.store.url, /shopx\.example/);
   assert.equal(item.rrpCents, 14400);
-  assert.deepEqual(item.soldOutAt, hoursAgo(21));
+  assert.deepEqual(item.soldOutAt, hoursAgo(7));
   const w = long.writeFor("s1")!;
   assert.equal(w.soldOutAt, null);
   assert.equal(w.lastEmailedCents, 15000);

@@ -7,7 +7,7 @@ import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "./free-limits";
 import { TIER_COMPARISON } from "../components/TierComparisonTable";
 import { RETAILER_LIST, retailerCountry } from "./retailers";
@@ -9976,7 +9976,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "What is a sealed watch?",
-        a: `A Plus and Premium feature for booster boxes, bundles, Proving Grounds and other sealed products. Tap the heart on a product on the sealed page and RiftCompare emails you when it is back in stock after being sold out at every store it tracks for at least a day, when a store has it at or under RRP (the price Riot sets), when it reaches a price you set, or when it drops for real — checked after every price update, at most once a day per product, and never from an eBay listing. Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} products; Premium has no limit.`,
+        a: `A Plus and Premium feature for booster boxes, bundles, Proving Grounds and other sealed products. Tap the heart on a product on the sealed page and RiftCompare emails you when it is back in stock after being sold out at every store it tracks for several hours, when a store has it at or under RRP (the price Riot sets), when it reaches a price you set, or when it drops for real — checked ${SEALED_CHECK_CADENCE} (a Discord stock bot may be faster), a restock email at most once every six hours per product and the others at most once a day, and never from an eBay listing. Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} products; Premium has no limit.`,
       },
       {
         q: "Is price comparison free without Premium?",
@@ -10025,7 +10025,7 @@ We built the price tracking, the price history, and the alerts specifically beca
         { name: "Demand Finder", description: "The cards players are searching for and opening most on RiftCompare, over 7 or 30 days (Premium; the top 10 most searched are free).", url: "/tools/demand" },
       ],
     },
-    body: `If you have never used RiftCompare, here is the whole thing in two sentences. **Comparing Riftbound card prices is free**: every card, every store we track in your country, plus eBay, with the delivered total (the item price plus postage) wherever the store publishes its postage — no account, no limit. **Plus and Premium watch prices for you**, so you stop checking: your own target price on a card, a sealed box that comes back in stock or lands at RRP, and, with Premium, a whole deck's delivered total, each checked after every price update and emailed to you when it's there.
+    body: `If you have never used RiftCompare, here is the whole thing in two sentences. **Comparing Riftbound card prices is free**: every card, every store we track in your country, plus eBay, with the delivered total (the item price plus postage) wherever the store publishes its postage — no account, no limit. **Plus and Premium watch prices for you**, so you stop checking: your own target price on a card, a sealed box that comes back in stock or lands at RRP, and, with Premium, a whole deck's delivered total, each checked after every price update (sealed products about every six hours) and emailed to you when it's there.
 
 This post goes through what you get, one feature at a time, with nothing rounded up or left vague. Two words you'll see a lot: **delivered** means the item price plus postage, and **RRP** is the recommended retail price — the price Riot sets.
 
@@ -10064,7 +10064,7 @@ The pattern is deliberate: **nothing about seeing a price is ever gated.** A fre
 
 ### 4. Sealed watches
 
-**What it does:** tap the heart on a booster box, bundle, Proving Grounds set or any other product on [sealed](/sealed) (or in its quick view), and we email you when it is **back in stock** after being sold out at every store we track for at least a day, when a store has it **at or under RRP**, when it reaches **your own price**, or when it **drops for real** (at least 5% and a whole unit below the last price we told you). Checked after every price update, at most one email a day per product, and never from an eBay listing — only a store you can actually order from. The email names the price, the RRP and the gap ("$118, RRP $120"), the store and when we last saw the listing. Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} products; Premium has no limit. **When you'd use it:** a box sold out at launch, or every listing is over RRP, and you'd rather be told than keep checking.
+**What it does:** tap the heart on a booster box, bundle, Proving Grounds set or any other product on [sealed](/sealed) (or in its quick view), and we email you when it is **back in stock** after being sold out at every store we track for several hours, when a store has it **at or under RRP**, when it reaches **your own price**, or when it **drops for real** (at least 5% and a whole unit below the last price we told you). Sealed products are checked **${SEALED_CHECK_CADENCE}**, not instantly, and a Discord stock bot may be faster. A restock email comes at most once every six hours per product, the others at most once a day, and never from an eBay listing — only a store you can actually order from. The email names the price, the RRP and the gap ("$118, RRP $120"), the store and, in bold, when we last read that listing, because stock can sell out again before you get there. Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} products; Premium has no limit. **When you'd use it:** a box sold out at launch, or every listing is over RRP, and you'd rather be told than keep checking.
 
 ### 5. Deal Finder — every card below TCGplayer market
 

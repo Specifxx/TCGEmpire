@@ -1,0 +1,101 @@
+name: Refresh sealed (stores only)
+
+# Two extra sealed-product refreshes a day, so a sealed watch is checked about
+# every six hours instead of twice a day: 01:00 and 13:00 UTC, between
+# refresh-prices.yml's 07:00 and 19:00 (DECISIONS.md, "Sealed watches are
+# checked about every six hours", 2026-09-29). "About" is the honest word: the
+# GitHub scheduler starts a run minutes, sometimes an hour, late.
+#
+# SCHEDULE-ONLY ON PURPOSE. There is NO push trigger: a push must never start a
+# sealed import from here (refresh-prices.yml already re-imports on the price
+# and sealed importer paths), and adding one would tie this workflow to every
+# commit. Manual runs come from the "Run workflow" button.
+#
+# WHAT IT RUNS. scripts/import-sealed-only.ts, the existing importer: every
+# AU/US/UK/SG/CA/EU sealed store (Shopify, WooCommerce, product pages) is read
+# and its rows replaced, TCGplayer's US catalogue refreshed and stale rows
+# cleaned (importSealed), and nothing else. Deliberately NOT run here:
+#   - the eBay pass. EBAY_REFRESH=false, and no eBay secret is passed at all, so
+#     the once-a-day Browse budget (tests/affiliate-priority.test.ts) is
+#     untouched; an eBay listing never counts as a restock anyway.
+#   - the weekly SealedPriceHistory write and the Cardmarket EU catalogue,
+#     which live in scripts/import-sealed.ts (the twice-daily job's step).
+#   - the schema sync, the card import, the free alert digest.
+#
+# NO CACHE BUST, NO "Revalidate site pages" STEP. That step POSTs
+# /api/revalidate, which clears CONTENT_TAG: every cached sealed, price and
+# market loader on the site. Twice more a day is the same class of burn as the
+# deploy cadence (CLAUDE.md "Deploys are gated"; DECISIONS.md "Network transfer:
+# the deploy cadence was the burn"). The public /sealed page stays on its
+# 07:00 / 19:00 rhythm; the alert pass below reads the listings itself,
+# uncached (src/lib/sealed-alert-read.ts). tests/sealed-cadence.test.ts pins
+# this: no push trigger, no revalidate step, no CONTENT_TAG.
+#
+# THEN THE ALERT PASS. GET /api/cron/price-alerts/sealed runs ONLY the sealed
+# watches (lib/sealed-watch.ts): not the card, deck or set passes, which stay on
+# the two daily price imports. Same Authorization: Bearer CRON_SECRET, the same
+# shared ALERT_DAILY_BUDGET and PAID_SEND_CAP. The path 404s until the daily
+# 08:00 UTC release that adds it (curl || true), which is harmless.
+#
+# SAME CONCURRENCY GROUP AS refresh-prices.yml: two importers never write
+# SealedListing at once (a queued run waits; it does not cancel the running one).
+# A run is ~20 minutes, so a 07:00 import that overruns delays the 13:00 one at
+# most a little.
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+    - cron: "0 13 * * *"
+  workflow_dispatch: {} # manual "Run workflow" button
+
+concurrency:
+  group: refresh-prices
+  cancel-in-progress: false
+
+jobs:
+  sealed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Import sealed products (stores only)
+        id: import
+        env:
+          DATABASE_URL: ${{ secrets.RM5 || vars.RM5 }}
+          # Set explicitly, as refresh-prices.yml does: Actions collapses the
+          # chain into one DATABASE_URL before the job starts, so lib/db.ts
+          # cannot tell which secret won. See src/lib/db.ts and db-chains.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM5 || vars.RM5) && 'RM5' || 'UNSET' }}
+          # Never eBay from here (see the header). No EBAY_* secret is named.
+          EBAY_REFRESH: "false"
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::No database URL configured, cannot import."
+            exit 1
+          fi
+          npx tsx scripts/import-sealed-only.ts
+
+      - name: Sealed watch alerts (about every six hours)
+        # After a SUCCESSFUL import only: a half-written sealed table would read
+        # as sold out. `!cancelled()` so a manual cancel still stops it. A failed
+        # import leaves the previous rows, which turn "unknown" after 72h and
+        # decide nothing (lib/sealed-offers.ts), so skipping is the safe side.
+        # Non-fatal by design: a missed pass is caught by the next one (or the
+        # 07:00 / 19:00 paid run), and must never red a successful import.
+        if: ${{ !cancelled() && steps.import.outcome == 'success' }}
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret, skipping the sealed alert run."
+            exit 0
+          fi
+          curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts/sealed" -H "Authorization: Bearer $CRON_SECRET" || true
+          echo
