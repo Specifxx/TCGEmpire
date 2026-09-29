@@ -119,6 +119,10 @@ export const PITCH_TOOLS: { label: string }[] = [
   { label: "Best Basket" },
   { label: "Buy this list" },
   { label: "Demand Finder" },
+  // 2026-09-29: the two watches that run for a member (lib/sealed-watch.ts,
+  // lib/deck-watch.ts), added to the tier table the same day.
+  { label: "Sealed watches" },
+  { label: "Deck price watch" },
 ];
 
 // A contextual heading/line, keyed by the CURRENT page, instead of the one
@@ -142,6 +146,12 @@ export const PITCH_TOOLS: { label: string }[] = [
 // holds itself to, so this can't silently drift the way the old hand-written
 // sentence did.
 const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: string }[] = [
+  {
+    prefixes: ["/sealed"],
+    tool: "Sealed watches",
+    heading: "Sealed watches email you when a box is back or at RRP",
+    line: "Heart a booster box or bundle and Plus emails you when a real store has it back in stock, when it's at RRP where we publish one, or at your own price. Every email says when the store was last checked.",
+  },
   {
     prefixes: ["/deck"],
     tool: "Best Basket",
