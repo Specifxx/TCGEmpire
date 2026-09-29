@@ -62,7 +62,7 @@ const FAQS = [
     q: "Do I need an account to use RiftCompare tools?",
     a:
       LIST_BADGE === "Plus"
-        ? `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds an unlimited watchlist and portfolio, every row of both lists, target-price alerts and an ad-free site; Premium adds Best Basket's store-by-store plan, Buy this list and the full Demand Finder.`
+        ? `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds an unlimited watchlist and portfolio, every row of both lists, target-price alerts, sealed watches (an email when a box is back in stock or at RRP) and an ad-free site; Premium adds a deck price watch (a saved list re-priced delivered after every update), Best Basket's store-by-store plan, Buy this list and the full Demand Finder.`
         : `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Premium adds an unlimited watchlist and portfolio, every row of both lists, target-price alerts, an ad-free site, Best Basket's store-by-store plan, Buy this list and the full Demand Finder.`,
   },
   {
@@ -133,7 +133,7 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/sealed",
         title: "Sealed prices",
-        desc: "Booster boxes, packs, Proving Grounds and bundles priced across stores — with an in-stock-at-MSRP flag.",
+        desc: "Booster boxes, packs, Proving Grounds and bundles priced across stores, with an in-stock-at-MSRP flag — and, with Plus, a watch that emails you on a restock or at RRP.",
       },
     ],
   },

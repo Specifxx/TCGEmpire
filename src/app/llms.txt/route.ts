@@ -1,6 +1,7 @@
 import { NAV_GROUPS } from "@/components/nav-groups";
 import { SITE_URL, tierMonthlyAmount } from "@/lib/site";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+import { DECK_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 
 // llms.txt — the AI-agent site map (spec: llmstxt.org). A curated, markdown index
 // of the site's most useful pages so LLMs/agents can navigate without parsing HTML.
@@ -10,7 +11,7 @@ export const revalidate = 86400;
 // One-line descriptions for the hub pages (falls back to the nav label otherwise).
 const DESC: Record<string, string> = {
   "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/US/UK/SG/CA/EU).",
-  "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price.",
+  "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price and an at-RRP flag. Plus and Premium can watch a product: an email when it is back in stock, at RRP, at your price, or on a real drop.",
   "/movers": "The biggest Riftbound price rises and falls, week over week.",
   "/market": "The RiftCompare Index — a weekly, search-weighted market index for Riftbound singles, with key stats.",
   "/stores/tracked": "The stores whose public prices RiftCompare tracks and compares.",
@@ -28,14 +29,14 @@ const DESC: Record<string, string> = {
   "/guides": "Buying guides and strategy articles for Riftbound.",
   "/blog": "News, metagame snapshots and buying guides for Riftbound.",
   "/portfolio": `Track a collection's value over time: up to ${FREE_PORTFOLIO_LIMIT} cards with a free account, unlimited with Plus or Premium.`,
-  "/premium": `Price comparison is free for everyone, with no limit. A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} in its portfolio; cards already tracked past a limit are kept. Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, an unlimited watchlist and portfolio, target-price alerts, and the full Deal Finder and Rising Cards lists. Premium (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus Best Basket's store-by-store plan, Buy this list for a deck, watchlist or binder, and the full Demand Finder (most searched and most viewed cards).`,
+  "/premium": `Price comparison is free for everyone, with no limit. A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} in its portfolio; cards already tracked past a limit are kept. Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, an unlimited watchlist and portfolio, target-price alerts, and the full Deal Finder and Rising Cards lists. Plus also watches sealed products (up to ${SEALED_WATCH_LIMIT_PLUS}: back in stock after selling out, at RRP, at your price). Premium (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), unlimited target alerts and sealed watches, Best Basket's store-by-store plan, Buy this list for a deck, watchlist or binder, and the full Demand Finder (most searched and most viewed cards).`,
   "/sets": "Every Riftbound set with its full card list and live prices.",
   "/champions": "Browse Riftbound cards by League of Legends champion.",
   "/cards": "Card facets — browse by type, rarity and printing (Signature, Overnumbered, Alternate Art, Promo).",
   "/domains": "The Riftbound domains (Fury, Calm, Mind, Body, Chaos, Order, Colorless) and their cards.",
   "/keywords": "Riftbound keywords and game actions, defined, with every card that uses them.",
   "/singles": "Riftbound singles — the cheapest live price for individual cards.",
-  "/alerts": `Watchlists and price alerts — be told when a Riftbound card hits a new low (up to ${FREE_WATCHLIST_LIMIT} cards free; unlimited, and at your own price, with Plus).`,
+  "/alerts": `Watchlists and price alerts — be told when a Riftbound card hits a new low (up to ${FREE_WATCHLIST_LIMIT} cards free; unlimited, and at your own price, with Plus). Plus also watches sealed products; Premium watches a whole deck's delivered price.`,
   "/tools": "Every RiftCompare tool and calculator in one place.",
 };
 

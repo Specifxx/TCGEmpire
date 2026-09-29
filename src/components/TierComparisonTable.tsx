@@ -35,6 +35,12 @@
 //                        top 25 by searches and by views, 7 or 30 days;
 //                        everyone else the /movers strip's top 10 most
 //                        searched this week (lib/demand-view.ts).
+//   Sealed watches       lib/sealed-watch.ts: restock, at-RRP, target and drop
+//                        emails for a sealed product; any paid tier, Plus up
+//                        to SEALED_WATCH_LIMIT_PLUS (lib/alert-limits.ts)
+//   Deck price watch     lib/deck-watch.ts: a saved list re-priced delivered
+//                        after every import; isPremium(user, "premium"), up
+//                        to DECK_WATCH_LIMIT
 //   Ad-free              /api/me adFree = isPremium(user) — any paid tier
 //   Watchlist, Portfolio lib/free-limits.ts: a free account adds up to
 //                        FREE_WATCHLIST_LIMIT / FREE_PORTFOLIO_LIMIT distinct
@@ -64,7 +70,7 @@
 // that are neither a flat yes nor a flat no are the honest part of the table and
 // must stay strings rather than being rounded to a tick.
 
-import { PLUS_TARGET_ALERT_LIMIT } from "../lib/alert-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../lib/free-limits";
 
 export type TierRow = {
@@ -115,6 +121,11 @@ export const TIER_COMPARISON: TierRow[] = [
   // everyone — FREE_DEMAND_ROWS in lib/demand-view.ts, the one constant both
   // pages read.
   { feature: "Demand Finder — most searched & viewed cards", account: "Top 10 searched", plus: "Top 10 searched", premium: true },
+  // THE WATCHES THAT RUN WHILE YOU'RE AWAY (2026-09-29, DECISIONS.md "Premium
+  // works while you're away"). Both numbers are the enforced ones
+  // (lib/alert-limits.ts), never typed here.
+  { feature: "Sealed watches — restock, at-RRP and price alerts", account: false, plus: `Up to ${SEALED_WATCH_LIMIT_PLUS}`, premium: "Unlimited" },
+  { feature: "Deck price watch — email when a deck's delivered total drops", account: false, plus: false, premium: true },
   // Ad-free moved Plus → Premium on 2026-09-14 and back to every paid tier on
   // 2026-09-25 (owner's call — DECISIONS.md, "Plus is ad-free again"): with
   // the half-price intro, $2.49/mo Plus is the entry tier, and "no ads" is

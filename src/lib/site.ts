@@ -291,4 +291,9 @@ export function premiumLockInHeadline(): string {
 // lib/free-limits.ts) on every tier surface, the at-the-limit upgrade panels,
 // Best Basket's preview leading with the list's own saving in money, and the
 // signed-in slide-in and gold header CTAs gone. Prices unchanged.
-export const PREMIUM_COPY_VERSION = "limits-2026-09-28";
+// premium-2026-09-29: "Premium works while you're away" — the deck price watch
+// (Premium) and sealed watches (Plus and Premium) on every tier surface, the
+// /premium page rewritten for a newcomer (one section per paid feature, what it
+// does / when you'd use it / which tier), the inline did-you-know lines, and
+// the Premium tagline "Works while you're away". Prices unchanged.
+export const PREMIUM_COPY_VERSION = "premium-2026-09-29";

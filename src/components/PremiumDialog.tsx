@@ -344,8 +344,9 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
               <div className="text-center">
                 <p className="text-sm font-semibold text-gold">✓ You&apos;re on Plus</p>
                 <p className="mt-1 text-xs text-slate-400">
-                  Premium adds Best Basket&apos;s store-by-store plan, Buy this list for your deck, watchlist or binder,
-                  Demand Finder and unlimited target alerts.
+                  Premium works while you&apos;re away: a deck price watch that re-prices a saved list after every price
+                  update, unlimited target alerts and sealed watches, Best Basket&apos;s store-by-store plan, Buy this list and
+                  Demand Finder.
                 </p>
                 {trialing ? (
                   <p className="mt-3 rounded-lg border border-ink-700 px-3 py-2 text-xs text-slate-300">

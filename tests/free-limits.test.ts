@@ -469,5 +469,7 @@ test("every tier surface quotes the limits from the constants, and price compari
     assert.match(read(f), /FREE_WATCHLIST_LIMIT/, `${f} quotes the watchlist limit from the constant`);
     assert.doesNotMatch(code(f), /\b(10|ten) (watched )?cards\b|\b50 (portfolio )?cards\b/i, `${f} hand-types a limit`);
   }
-  assert.equal(PREMIUM_COPY_VERSION, "limits-2026-09-28");
+  // Bumped 2026-09-29 with the watches (DECISIONS.md, "Premium works while
+  // you're away"); the free limits are unchanged on every surface above.
+  assert.equal(PREMIUM_COPY_VERSION, "premium-2026-09-29");
 });

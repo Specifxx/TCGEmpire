@@ -206,6 +206,11 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       // Premium again from later on 2026-09-25, with the Premium rows and
       // before Ad-free (DECISIONS.md, "Demand Finder returns as a Premium tool").
       "Demand Finder — most searched & viewed cards",
+      // 2026-09-29, "Premium works while you're away": the sealed watches
+      // (any paid tier, Plus capped) and the deck price watch (Premium),
+      // before Ad-free, which stays last.
+      "Sealed watches — restock, at-RRP and price alerts",
+      "Deck price watch — email when a deck's delivered total drops",
       "Ad-free experience",
     ],
   );

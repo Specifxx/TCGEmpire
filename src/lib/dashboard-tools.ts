@@ -37,7 +37,7 @@ export const DASHBOARD_TOOLS: DashTool[] = [
   },
   {
     title: "Best Basket",
-    desc: "The cheapest delivered order for a whole list across your country's stores, skipping cards you own.",
+    desc: "The cheapest delivered order for a whole list across your country's stores, skipping cards you own — and, on Premium, a watch that re-prices the list after every update.",
     href: "/tools/best-basket",
     tier: "premium",
     freeTaste: "See your total free",
@@ -51,7 +51,7 @@ export const DASHBOARD_TOOLS: DashTool[] = [
   },
   {
     title: "Watchlist & target alerts",
-    desc: "A weekly new-low email for every card you watch. On Plus and Premium, set your own target price.",
+    desc: "A free email when a card you watch hits a new low. Plus adds your own target price and sealed-product watches (back in stock, at RRP); Premium watches a whole deck's delivered price.",
     href: "/watching",
     tier: "free",
   },

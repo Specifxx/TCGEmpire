@@ -109,9 +109,12 @@ longer lands on its entry.
   $23.99/yr, is
   **ad-free**, has the full Deal Finder (with "Only my cards") and Rising
   Cards lists, and target-price alerts on up to `PLUS_TARGET_ALERT_LIMIT`
-  (25) cards. Premium, $4.99/mo or $39.99/yr, adds unlimited targets,
-  Best Basket's store-by-store plan (for a pasted list, deck, watchlist or
-  binder, and behind the portfolio's replacement cost) and **Demand Finder**
+  (25) cards and sealed watches on up to `SEALED_WATCH_LIMIT_PLUS` (10)
+  products (2026-09-29). Premium, $4.99/mo or $39.99/yr, adds unlimited
+  targets and sealed watches, the deck price watch (up to `DECK_WATCH_LIMIT`,
+  10, saved lists), Best Basket's store-by-store plan (for a pasted list,
+  deck, watchlist or binder, and behind the portfolio's replacement cost) and
+  **Demand Finder**
   (`/tools/demand`, `isPremium(user, "premium")`: top 25 most searched and
   most viewed, 7 or 30 days). Below Premium, Plus included, Demand Finder
   shows only the free /movers strip's top 10 most searched this week
@@ -174,6 +177,35 @@ longer lands on its entry.
   that already watches ten is at the limit too), and the import adds up to
   the allowance and reports the rest.
   [2026-09-28](../DECISIONS.md#L14549)
+- **Watches that run for you (2026-09-29, owner: "make premium more
+  attractive", "marketed better and highly accessible to new users"):** the
+  paid tiers watch prices after every import and email when something is
+  worth acting on. **Sealed watches** (Plus up to `SEALED_WATCH_LIMIT_PLUS`,
+  10; Premium unlimited; `lib/sealed-watch.ts`): a restock after ≥20h sold out
+  at every fresh real store, at or under RRP (`lib/msrp.ts`), the member's
+  target, or a material drop — real stores only, never eBay, at most once per
+  24h per watch, from `getSealedGroups` called directly. **Deck price watch**
+  (Premium, up to `DECK_WATCH_LIMIT`, 10; `lib/deck-watch.ts`): a saved list
+  re-priced delivered with Best Basket's own resolver, listing read, optimiser
+  and measured postage for the saved delivery; emails at the target (news per
+  the 30-day watermark, 5% further) or on a ≥5%/≥one-unit drop, only when the
+  plan covers every copy. Both run in the paid cron after the sealed import,
+  as separate passes that fail alone, under the shared `ALERT_DAILY_BUDGET`
+  (`lib/alert-budget.ts` counts all three tables) and `PAID_SEND_CAP`; lapsed
+  owners keep rows and get nothing; one-tap stop/snooze tokens carry a kind
+  (`lib/alert-actions.ts`, v1 card tokens stay valid). Manage on /watching
+  ("Sealed", "Decks"). [2026-09-29](../DECISIONS.md#L15178)
+- **Every paid feature is discoverable where it lives, inline, never a
+  popup:** `DiscoveryTip` (`tip:*` surfaces) is one dismissable sentence for
+  signed-in non-members only, on /sealed, the sealed quick view, a non-Premium
+  Best Basket result and /watching's "What you can watch" block; the deck
+  watch form and the sealed heart are the ordinary `PremiumButton` gates
+  (`gate:deck-watch`, `gate:sealed-watch`) below the tier. /premium leads with
+  one sentence for free and one for paid, then one card per paid feature
+  (what / when / tier) above the prices, then the table and a FAQ that
+  defines a deck watch and a sealed watch. Premium's tagline is "Works while
+  you're away". `PREMIUM_COPY_VERSION` `premium-2026-09-29`.
+  [2026-09-29](../DECISIONS.md#L15178)
 - **Upgrade prompts live where a limit is hit, not in popups or headers:**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
