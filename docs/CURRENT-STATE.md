@@ -323,18 +323,28 @@ longer lands on its entry.
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
   [2026-09-14](../DECISIONS.md#L6038)
-- **Nudges:** the signed-out popup sells the FREE account (no price, no
-  gold), and matters more now that the free limits are the funnel. The
-  signed-in Premium slide-in was deleted 09-28 and restored 09-29. Since 09-29
-  (owner) BOTH show on the FIRST page, as soon as it loads: no page-view,
-  reading, referrer or phone gate (`lib/signup-promo-gate.ts` is gone), no
-  delay (`NUDGE_DELAY_MS` 0), and the slide-in does not wait for its personal
-  line. What stays: audiences, 2 dismissals per device, the snoozes, the
-  popup's 3-page spacing after a dismissal, the slide-in's once per session,
-  and the skipped paths. [2026-09-16](../DECISIONS.md#L7031),
-  [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089), [2026-09-27](../DECISIONS.md#L14536),
-  [2026-09-28](../DECISIONS.md#L14549), [2026-09-29](../DECISIONS.md#L15178),
-  [2026-09-29](../DECISIONS.md#L15281)
+- **Nudges (value first, 09-29 evening; supersedes "instant" and "on the
+  first page"):** the signed-out popup sells the FREE account (no price, no
+  gold). NEVER on a visit's first page view, any referrer or device: from the
+  2nd view, or after 45 s of engaged time (tab visible + a scroll/click/key;
+  30 s on `/blog/*` and `/movers`), and never for a tab that has started
+  signing in (`lib/signin-intent.ts`). The Premium slide-in (signed in, no paid
+  tier) waits for the session's 3rd view and an account older than 48 h, skips
+  `/tools`, `/portfolio`, `/watching`, `/sealed`, and is a compact card (about
+  23% of a phone's height) with the tier table behind "See what's included".
+  All three corner cards wait `NUDGE_DELAY_MS` = 12 s from eligibility, cancel
+  on a dialog, drawer, focused text field or navigation, and never appear within
+  10 s of a dialog closing (`lib/nudge-gate.ts`, `lib/nudge-runtime.ts`;
+  popup variant `free_account_value_first`). What stays: audiences, 2
+  dismissals per device, the 7/14-day snoozes, the popup's 3-page spacing after
+  a dismissal, the slide-in's once per session, and no slide-in in the sign-up
+  session. Do not add an instant or first-page path back: an instant card
+  measured 78% dismissed and Google treats a pop-up over a phone's first page
+  as intrusive. [2026-09-16](../DECISIONS.md#L7031),
+  [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089),
+  [2026-09-27](../DECISIONS.md#L14536), [2026-09-28](../DECISIONS.md#L14549),
+  [2026-09-29](../DECISIONS.md#L15178), [2026-09-29](../DECISIONS.md#L15281),
+  [2026-09-29](../DECISIONS.md#L15555)
 - **Signed-out visitors get nothing from Deal Finder or Rising Cards**; a
   free account gets the top 3 of each, a paid tier the full list.
   [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842)
