@@ -17,3 +17,29 @@ export function targetAlertLimit(tier: "plus" | "premium" | null | undefined): n
   if (tier === "plus") return PLUS_TARGET_ALERT_LIMIT;
   return 0;
 }
+
+// ── Deck price watches and sealed watches (2026-09-29, "Premium works while
+// you're away" — DECISIONS.md) ─────────────────────────────────────────────
+//
+// A DECK PRICE WATCH (a saved list priced delivered after every import, emailed
+// at a target or on a material drop) is Premium only, up to DECK_WATCH_LIMIT
+// per account: each is a bounded RetailerPrice read per run, so "unlimited"
+// would let one account set the run's egress.
+export const DECK_WATCH_LIMIT = 10;
+
+export function deckWatchLimit(tier: "plus" | "premium" | null | undefined): number {
+  return tier === "premium" ? DECK_WATCH_LIMIT : 0;
+}
+
+// A SEALED WATCH (restock, at-RRP, target and drop emails for one sealed
+// product in one market) is Plus and Premium: Plus up to
+// SEALED_WATCH_LIMIT_PLUS, Premium unlimited — the same ladder as targets.
+// The run reads the self-cached sealed groups once per market whatever the
+// count, so unlimited costs nothing extra.
+export const SEALED_WATCH_LIMIT_PLUS = 10;
+
+export function sealedWatchLimit(tier: "plus" | "premium" | null | undefined): number {
+  if (tier === "premium") return Number.POSITIVE_INFINITY;
+  if (tier === "plus") return SEALED_WATCH_LIMIT_PLUS;
+  return 0;
+}

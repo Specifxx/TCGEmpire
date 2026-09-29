@@ -208,6 +208,10 @@ export function harness(rows: (Row & { _price?: number | null })[], opts: Harnes
           .slice(0, args.take ?? Infinity);
       },
     },
+    // The two other watch tables the shared budget counts (lib/alert-budget.ts):
+    // empty here — the card run's tests are about the card run.
+    deckWatch: { findMany: async () => [] as { user: { email: string } }[] },
+    sealedWatch: { groupBy: async () => [] as { email: string }[] },
     alertMute: {
       findMany: async (args: { where: { email: { in: string[] } }; take?: number }) => {
         muteQueries.push(args as unknown as Record<string, unknown>);

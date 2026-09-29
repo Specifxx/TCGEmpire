@@ -658,7 +658,10 @@ test("watchlist, binder and owned reads are per-user, selected and capped", () =
   const binder = code.slice(code.indexOf("export async function loadBinderHoldings"));
   assert.match(binder, /where: \{ userId \}/);
   assert.match(binder, /take: BINDER_ROW_CAP/);
-  const listing = code.slice(code.indexOf("prisma.retailerPrice.findMany"), code.indexOf("const best = new Map"));
+  // `db.retailerPrice.findMany` since 2026-09-29 (the client is injectable so
+  // the deck price watch prices a list with this exact read; it defaults to prisma).
+  const listing = code.slice(code.indexOf("retailerPrice.findMany"), code.indexOf("const best = new Map"));
+  assert.match(code, /db: StoreListingsDb = prisma/, "the routes still read through prisma");
   assert.match(listing, /condition: true/, "condition is selected so every line can show it");
   assert.doesNotMatch(listing, /retailerName/, "unused column dropped");
 });

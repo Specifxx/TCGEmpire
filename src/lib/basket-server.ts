@@ -30,14 +30,20 @@ import type { BasketCard } from "./basket";
 // cheapest per (card, store) — the optimiser wants one row per store, not
 // every copy a store has. retailerName is not selected (names come from
 // RETAILERS); condition is, so every plan line can show it. Throws on failure.
+//
+// `db` is injectable (2026-09-29) so the deck price watch run
+// (lib/deck-watch.ts) prices a saved list with exactly this read against a
+// stub client in tests; the routes pass nothing.
+export type StoreListingsDb = { retailerPrice: Pick<typeof prisma.retailerPrice, "findMany"> };
 export async function loadStoreListings(
   cardIds: string[],
   country: Country,
-  allowed: string[]
+  allowed: string[],
+  db: StoreListingsDb = prisma
 ): Promise<Map<string, BasketCard["listings"]>> {
   const byCard = new Map<string, BasketCard["listings"]>();
   if (!cardIds.length || !allowed.length) return byCard;
-  const rows = await prisma.retailerPrice.findMany({
+  const rows = await db.retailerPrice.findMany({
     where: { cardId: { in: cardIds }, country, inStock: true, retailer: { in: allowed } },
     select: { cardId: true, retailer: true, priceCents: true, url: true, condition: true },
   });

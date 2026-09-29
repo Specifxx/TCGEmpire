@@ -259,13 +259,22 @@ jobs:
           curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts" -H "Authorization: Bearer $CRON_SECRET" || true
           echo
 
-      - name: Paid price alerts (targets + below-market)
+      - name: Paid price alerts (targets + below-market + deck and sealed watches)
         # Plus/Premium target-price, below-market and restock alerts, checked
         # right after every price update (07:xx and 19:xx UTC) rather than once
         # a day. /api/cron/price-alerts/paid runs ONLY watches owned by an
         # entitled account (lib/price-alerts.ts AlertScope "paid"). At 07:00 it
         # follows the free run above, which already evaluated entitled rows, so
         # it finds only what is new. GET, with the same Bearer CRON_SECRET.
+        #
+        # Since 2026-09-29 the same call also runs the DECK PRICE WATCHES
+        # (lib/deck-watch.ts, Premium) and the SEALED WATCHES
+        # (lib/sealed-watch.ts, Plus and Premium). The sealed pass reads the
+        # sealed groups the "Import sealed products" step above just wrote, so
+        # THIS STEP MUST STAY AFTER THAT ONE (tests/watches-cron.test.ts pins
+        # the order). It is not gated on the sealed import's outcome: a failed
+        # sealed import leaves the previous rows, which read as "unknown" past
+        # 72h and decide nothing (lib/sealed-offers.ts).
         #
         # Its own path, NOT ?scope=paid on the parent route: the pre-lineup
         # parent route ignored the query, so the query form ran a full "all"

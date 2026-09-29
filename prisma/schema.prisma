@@ -177,6 +177,8 @@ model User {
   reviewsReceived     MarketplaceReview[]  @relation("ReviewsReceived")
   sentOrderMessages   OrderMessage[]
   priceAlerts         PriceAlert[]
+  deckWatches         DeckWatch[]
+  sealedWatches       SealedWatch[]
 
   @@index([googleId])
   @@index([discordId])
@@ -916,6 +918,89 @@ model AlertMute {
   mutedAt DateTime @default(now())
   // Where the pause came from: "page" | "one-click" | "watchlist".
   source  String?
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DECK PRICE WATCH — Premium (2026-09-29, "Premium works while you're away").
+// ─────────────────────────────────────────────────────────────────────────────
+// A saved list (the same text /deck and /tools/best-basket?list= carry) that
+// the PAID alert run prices after every import with Best Basket's own
+// optimiser and measured postage (lib/deck-watch.ts), and emails when the
+// delivered total reaches the member's target or drops materially. Only an
+// owner who is entitled (isPremium(user, "premium")) is priced or emailed; a
+// lapsed owner's rows are kept untouched. Every column past the list is
+// nullable so the deploy's `prisma db push` needs no backfill.
+model DeckWatch {
+  id               String    @id @default(cuid())
+  userId           String
+  // Market the list is priced in (AU | US | UK | SG | CA | EU), fixed at creation.
+  market           String    @default("AU")
+  name             String
+  // The list, one card per line, as pasted (plain text, never base64).
+  listText         String
+  // The buyer's saved postage preference at creation (a SHIPPING_REGIONS key
+  // and "tracked only"), so the cron prices the same delivery the page did.
+  // Null = the market's default (highest regional rate).
+  region           String?
+  trackedOnly      Boolean?
+  // "Email me when the delivered total is at or under this." Null = no
+  // target: email on a material drop instead (deck_drop).
+  targetCents      Int?
+  // The delivered total the last priced run saw, and when.
+  lastTotalCents   Int?
+  lastCheckedAt    DateTime?
+  // The total we last emailed — the watermark a further email must beat
+  // (lib/deck-watch.ts), and the clock it lives on.
+  lastEmailedCents Int?
+  lastNotifiedAt   DateTime?
+  // The email's one-tap "Snooze 30 days" (lib/alert-actions.ts kind "deck").
+  snoozedUntil     DateTime?
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SEALED WATCH — Plus and Premium (2026-09-29).
+// ─────────────────────────────────────────────────────────────────────────────
+// One sealed product group (SealedListing.groupKey, as getSealedGroups
+// returns it) in one market. The paid alert run (lib/sealed-watch.ts) reads
+// the self-cached sealed groups after each sealed import and emails on a
+// restock after ≥20h sold out everywhere, a price at or under RRP
+// (lib/msrp.ts), the member's target, or a material drop. Plus holds up to
+// SEALED_WATCH_LIMIT_PLUS (lib/alert-limits.ts); Premium is unlimited. A
+// lapsed owner's rows are kept untouched. Nullable past the key, no backfill.
+model SealedWatch {
+  id               String    @id @default(cuid())
+  userId           String
+  // The account's address at creation (the mail-routing key, as PriceAlert).
+  email            String
+  market           String    @default("AU")
+  groupKey         String
+  targetCents      Int?
+  // The cheapest OPEN listing the last run saw (null = none open), and whether
+  // any real store had it in stock.
+  lastPriceCents   Int?
+  lastInStock      Boolean?
+  // When the run first saw it sold out at every tracked store in this market
+  // (soldOutEverywhere, lib/sealed-offers.ts); cleared when a store lists it.
+  soldOutAt        DateTime?
+  // The price we last emailed (any trigger), the clock it lives on (and the
+  // 24h per-watch cooldown), and whether that email said "at RRP" — so
+  // sealed_rrp fires again only after the price has been over RRP.
+  lastEmailedCents Int?
+  lastNotifiedAt   DateTime?
+  lastAtRrp        Boolean?
+  snoozedUntil     DateTime?
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupKey, market])
+  @@index([userId])
+  @@index([email])
 }
 
 // A live price for a card at an external retailer, used for price comparison.

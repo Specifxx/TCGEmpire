@@ -48,6 +48,17 @@ import type { prisma } from "./db";
 export const ALERT_ACTIONS = ["stop", "snooze", "target-set", "target-down"] as const;
 export type AlertAction = (typeof ALERT_ACTIONS)[number];
 
+// WHICH KIND OF WATCH a token acts on (2026-09-29). "price" is a PriceAlert
+// row (a card); "deck" a DeckWatch (lib/deck-watch.ts); "sealed" a
+// SealedWatch (lib/sealed-watch.ts). The kind is INSIDE the signed payload, so
+// a deck watch's stop link can never delete a card watch that happens to
+// share an id, and the reverse. A card token keeps its original "v1" payload
+// (every link already in an inbox stays valid); deck and sealed tokens are a
+// "v2" payload that names the kind. Only cards have target actions: a v2
+// token carrying one is malformed.
+export const ALERT_ACTION_KINDS = ["price", "deck", "sealed"] as const;
+export type AlertActionKind = (typeof ALERT_ACTION_KINDS)[number];
+
 /** How long an emailed action link stays valid. */
 export const ALERT_ACTION_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 /** "Snooze 30 days". */
@@ -69,22 +80,30 @@ function mac(payload: string): Buffer {
 }
 
 export interface AlertActionClaims {
-  alertId: string;
+  kind: AlertActionKind;
+  alertId: string; // the row's id in the kind's table
   action: AlertAction;
   value: number | null; // target cents for target-set / target-down
   exp: number; // epoch seconds
 }
 
 const isAction = (s: string): s is AlertAction => (ALERT_ACTIONS as readonly string[]).includes(s);
+const isKind = (s: string): s is AlertActionKind => (ALERT_ACTION_KINDS as readonly string[]).includes(s);
 const needsValue = (a: AlertAction) => a === "target-set" || a === "target-down";
 
-/** Sign one action for one row. `value` is required for the two target actions. */
-export function signAlertAction(opts: { alertId: string; action: AlertAction; value?: number | null; now?: Date }): string {
+/**
+ * Sign one action for one row. `value` is required for the two target actions.
+ * `kind` defaults to "price" (a card watch); a deck or sealed watch may only
+ * be stopped or snoozed.
+ */
+export function signAlertAction(opts: { alertId: string; action: AlertAction; value?: number | null; now?: Date; kind?: AlertActionKind }): string {
   const { alertId, action } = opts;
+  const kind = opts.kind ?? "price";
   if (!/^[A-Za-z0-9_-]{1,64}$/.test(alertId)) throw new Error("alert id not signable");
+  if (kind !== "price" && needsValue(action)) throw new Error("only a card watch has a target");
   const value = needsValue(action) ? clampTargetCents(opts.value ?? 0) : null;
   const exp = Math.floor(((opts.now ?? new Date()).getTime() + ALERT_ACTION_TTL_MS) / 1000);
-  const payload = `v1.${alertId}.${action}.${value ?? ""}.${exp}`;
+  const payload = kind === "price" ? `v1.${alertId}.${action}.${value ?? ""}.${exp}` : `v2.${kind}.${alertId}.${action}.${value ?? ""}.${exp}`;
   return `${b64u(Buffer.from(payload))}.${b64u(mac(payload))}`;
 }
 
@@ -103,15 +122,24 @@ export function verifyAlertAction(token: string | null | undefined, now: Date = 
   const expected = mac(payload);
   if (given.length !== expected.length || !timingSafeEqual(given, expected)) return { ok: false, reason: "signature" };
   const parts = payload.split(".");
-  if (parts.length !== 5 || parts[0] !== "v1") return { ok: false, reason: "malformed" };
-  const [, alertId, action, rawValue, rawExp] = parts as [string, string, string, string, string];
+  let kind: AlertActionKind;
+  let rest: string[];
+  if (parts.length === 5 && parts[0] === "v1") {
+    kind = "price";
+    rest = parts.slice(1);
+  } else if (parts.length === 6 && parts[0] === "v2" && isKind(parts[1]!)) {
+    kind = parts[1] as AlertActionKind;
+    rest = parts.slice(2);
+  } else return { ok: false, reason: "malformed" };
+  const [alertId, action, rawValue, rawExp] = rest as [string, string, string, string];
   if (!alertId || !isAction(action)) return { ok: false, reason: "malformed" };
+  if (kind !== "price" && needsValue(action)) return { ok: false, reason: "malformed" };
   const exp = Number(rawExp);
   if (!Number.isInteger(exp)) return { ok: false, reason: "malformed" };
   const value = rawValue === "" ? null : Number(rawValue);
   if (needsValue(action) ? value == null || !Number.isInteger(value) : value != null) return { ok: false, reason: "malformed" };
   if (exp * 1000 <= now.getTime()) return { ok: false, reason: "expired" };
-  return { ok: true, alertId, action, value, exp };
+  return { ok: true, kind, alertId, action, value, exp };
 }
 
 /** The confirmation page for one signed action. */
@@ -161,10 +189,23 @@ export function alertActionLinks(opts: {
   };
 }
 
+// The links a deck or sealed watch's email carries: stop and snooze only.
+export interface WatchActionLinks {
+  stop: string;
+  snooze: string;
+}
+
+export function watchActionLinks(opts: { kind: Exclude<AlertActionKind, "price">; id: string; now?: Date }): WatchActionLinks {
+  const url = (action: AlertAction) => alertActionUrl(signAlertAction({ alertId: opts.id, action, now: opts.now, kind: opts.kind }));
+  return { stop: url("stop"), snooze: url("snooze") };
+}
+
 // ── Applying an action (POST /api/alerts/action) ─────────────────────────────
 
 export type AlertActionDb = TargetDb & {
   priceAlert: Pick<typeof prisma.priceAlert, "findUnique" | "deleteMany" | "update">;
+  deckWatch: Pick<typeof prisma.deckWatch, "findUnique" | "deleteMany" | "update">;
+  sealedWatch: Pick<typeof prisma.sealedWatch, "findUnique" | "deleteMany" | "update">;
 };
 
 // The outcome the confirmation page renders (?r=…). "ok" = done.
@@ -185,6 +226,28 @@ export interface AlertActionResult {
 export async function performAlertAction(db: AlertActionDb, token: string | null | undefined, now: Date = new Date()): Promise<AlertActionResult> {
   const v = verifyAlertAction(token, now);
   if (!v.ok) return { status: 403, outcome: "invalid", body: { error: "This link is not valid or has expired.", reason: v.reason } };
+
+  // A deck or sealed watch: stop (delete that one row, idempotently) or snooze.
+  // The token's kind picks the table; the id is never looked up anywhere else.
+  if (v.kind !== "price") {
+    const where = { id: v.alertId };
+    const found =
+      v.kind === "deck"
+        ? await db.deckWatch.findUnique({ where, select: { id: true } })
+        : await db.sealedWatch.findUnique({ where, select: { id: true } });
+    if (v.action === "stop") {
+      if (found) {
+        if (v.kind === "deck") await db.deckWatch.deleteMany({ where });
+        else await db.sealedWatch.deleteMany({ where });
+      }
+      return { status: 200, outcome: "ok", body: { ok: true, kind: v.kind, action: v.action, removed: found ? 1 : 0 } };
+    }
+    if (!found) return { status: 404, outcome: "gone", body: { error: "You're no longer watching this." } };
+    const until = new Date(now.getTime() + SNOOZE_MS);
+    if (v.kind === "deck") await db.deckWatch.update({ where, data: { snoozedUntil: until } });
+    else await db.sealedWatch.update({ where, data: { snoozedUntil: until } });
+    return { status: 200, outcome: "ok", body: { ok: true, kind: v.kind, action: v.action, snoozedUntil: until.toISOString() } };
+  }
 
   const row = await db.priceAlert.findUnique({
     where: { id: v.alertId },

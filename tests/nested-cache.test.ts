@@ -245,3 +245,23 @@ test("sealed groups are shared across lambdas, not only memoised per instance", 
   assert.match(src, /\["sealed-groups-v2"/, "computed sealed groups must go through cachedOrDirect");
   assert.match(src, /firstSeenAt: [^\n]*new Date\(/, "Date fields must be revived after the JSON round-trip through the data cache");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE SEALED WATCH RUN READS THE GROUPS DIRECTLY (2026-09-29).
+// ─────────────────────────────────────────────────────────────────────────────
+// lib/sealed-watch.ts calls getSealedGroups(market) (and getPreorderGroups)
+// as they are — self-cached — with no unstable_cache or cachedOrDirect of its
+// own, and it is never invoked from inside one: the paid cron route awaits it
+// at the top level.
+test("the sealed watch run calls getSealedGroups directly, unwrapped, and the cron route does not wrap it", () => {
+  const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'])\/\/.*$/gm, "$1");
+  const run = strip(read("src/lib/sealed-watch.ts"));
+  assert.match(run, /import \{ getPreorderGroups, getSealedGroups, type SealedGroup \} from "\.\/sealed-import";/);
+  assert.match(run, /deps\.groups \?\? getSealedGroups/, "the default loader is the self-cached one, passed as-is");
+  assert.doesNotMatch(run, /unstable_cache|cachedOrDirect/, "no cache of its own");
+  const route = strip(read("src/app/api/cron/price-alerts/paid/route.ts"));
+  assert.doesNotMatch(route, /unstable_cache|cachedOrDirect/);
+  assert.match(route, /await runSealedWatches\(\)/);
+  const deck = strip(read("src/lib/deck-watch.ts"));
+  assert.doesNotMatch(deck, /unstable_cache|cachedOrDirect/, "the deck run is per member: nothing to cache");
+});

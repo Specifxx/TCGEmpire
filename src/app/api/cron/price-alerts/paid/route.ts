@@ -1,11 +1,23 @@
 import { NextResponse } from "next/server";
 import { runPriceAlerts } from "@/lib/price-alerts";
+import { runDeckWatches } from "@/lib/deck-watch";
+import { runSealedWatches } from "@/lib/sealed-watch";
 
 // The PAID alert run: target-price and below-market alerts for watches owned
-// by a Plus/Premium account (lib/price-alerts.ts AlertScope "paid"). Called by
-// .github/workflows/refresh-prices.yml right after each of the two daily price
-// imports, with the same Authorization: Bearer <CRON_SECRET> as the Vercel
-// cron.
+// by a Plus/Premium account (lib/price-alerts.ts AlertScope "paid"), then —
+// since 2026-09-29 — the DECK PRICE WATCHES (lib/deck-watch.ts, Premium) and
+// the SEALED WATCHES (lib/sealed-watch.ts, Plus and Premium). Called by
+// .github/workflows/refresh-prices.yml right after each of the two daily
+// price imports AND the sealed import (the step order matters: the sealed
+// pass reads the groups the sealed import just wrote), with the same
+// Authorization: Bearer <CRON_SECRET> as the Vercel cron.
+//
+// THREE INDEPENDENT PASSES. Each has its own try/catch: a failed read aborts
+// only that pass, uncached and unwritten, and the other two still run. The
+// three share one ALERT_DAILY_BUDGET (lib/alert-budget.ts) and each keeps
+// PAID_SEND_CAP for its own new emails. The response carries every pass's
+// summary (the card run's at the top level, as before, so the workflow's
+// logs read the same).
 //
 // WHY ITS OWN PATH, NOT ?scope=paid ON THE PARENT ROUTE. A workflow change
 // takes effect the moment it lands on main; the route only goes live at the
@@ -16,7 +28,7 @@ import { runPriceAlerts } from "@/lib/price-alerts";
 // after every import, on the shared 100/day Resend quota. This path simply
 // 404s until the deploy that adds it, and then can only ever run "paid".
 export const dynamic = "force-dynamic";
-export const maxDuration = 120; // seconds
+export const maxDuration = 300; // seconds: three passes, each pricing lists or reading groups
 
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -24,11 +36,10 @@ export async function GET(req: Request) {
   if (secret && auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  try {
-    const summary = await runPriceAlerts({}, { scope: "paid" });
-    return NextResponse.json({ ok: true, scope: "paid", ...summary });
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "alert run failed";
-    return NextResponse.json({ ok: false, scope: "paid", error: message }, { status: 500 });
-  }
+  const failed = (e: unknown) => ({ ok: false, error: e instanceof Error ? e.message : "run failed" });
+  const cards = await runPriceAlerts({}, { scope: "paid" }).then((s) => ({ ok: true, ...s })).catch(failed);
+  const decks = await runDeckWatches().then((s) => ({ ok: true, ...s })).catch(failed);
+  const sealed = await runSealedWatches().then((s) => ({ ok: true, ...s })).catch(failed);
+  const ok = cards.ok && decks.ok && sealed.ok;
+  return NextResponse.json({ ...cards, ok, scope: "paid", decks, sealed }, { status: ok ? 200 : 500 });
 }

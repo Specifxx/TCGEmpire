@@ -67,6 +67,10 @@ export default async function AlertActionPage({ searchParams }: { searchParams: 
     );
   }
 
+  // A deck price watch or a sealed watch (token kind "deck" / "sealed",
+  // 2026-09-29): stop or snooze only, the same confirm-then-POST shape.
+  if (v.kind !== "price") return <WatchAction token={token} kind={v.kind} id={v.alertId} action={v.action} outcome={outcome} />;
+
   const row = await prisma.priceAlert
     .findUnique({
       where: { id: v.alertId },
@@ -236,4 +240,90 @@ export default async function AlertActionPage({ searchParams }: { searchParams: 
       </Link>
     </Shell>
   );
+}
+
+// ── Deck price watches and sealed watches ────────────────────────────────────
+async function WatchAction({
+  token,
+  kind,
+  id,
+  action,
+  outcome,
+}: {
+  token: string;
+  kind: "deck" | "sealed";
+  id: string;
+  action: AlertAction;
+  outcome: AlertActionOutcome | null;
+}) {
+  const row =
+    kind === "deck"
+      ? await prisma.deckWatch.findUnique({ where: { id }, select: { name: true, snoozedUntil: true } }).catch(() => null)
+      : await prisma.sealedWatch
+          .findUnique({ where: { id }, select: { groupKey: true, market: true, snoozedUntil: true } })
+          .then((r) => (r ? { name: sealedWatchLabel(r.groupKey), snoozedUntil: r.snoozedUntil } : null))
+          .catch(() => null);
+  const what = row?.name ?? (kind === "deck" ? "this list" : "this sealed product");
+  const noun = kind === "deck" ? "list" : "product";
+
+  if (outcome === "ok" && action === "stop") {
+    return (
+      <Shell title="You've stopped watching it">
+        <p className="mt-2 text-sm leading-relaxed text-slate-300">
+          We won&apos;t email you about <strong className="text-white">{what}</strong> again. Your other watches are unchanged.
+        </p>
+        <Link href="/watching" className="btn-ghost mt-4">
+          My watchlist
+        </Link>
+      </Shell>
+    );
+  }
+  if (outcome === "ok") {
+    return (
+      <Shell title="Snoozed for 30 days">
+        <p className="mt-2 text-sm leading-relaxed text-slate-300">
+          No emails about <strong className="text-white">{what}</strong>
+          {row?.snoozedUntil ? ` until ${dateLabel(row.snoozedUntil)}` : " for 30 days"}. We keep checking it, so after that you hear
+          about news from then on, not a backlog.
+        </p>
+        <Link href="/watching" className="btn-ghost mt-4">
+          My watchlist
+        </Link>
+      </Shell>
+    );
+  }
+  if (outcome === "gone" || !row) {
+    return (
+      <Shell title={`You're no longer watching this ${noun}`}>
+        <p className="mt-2 text-sm leading-relaxed text-slate-300">It was removed from your watches, so there&apos;s nothing to change.</p>
+        <Link href="/watching" className="btn-ghost mt-4">
+          My watchlist
+        </Link>
+      </Shell>
+    );
+  }
+  const stop = action === "stop";
+  return (
+    <Shell title={stop ? `Stop watching ${what}?` : `Snooze ${what} for 30 days?`}>
+      <p className="mt-2 text-sm leading-relaxed text-slate-300">
+        {stop
+          ? `This stops the ${kind === "deck" ? "delivered-price" : "restock, RRP and price"} emails for ${what}. Your other watches are unchanged.`
+          : `No emails about ${what} for 30 days. It stays on your watches and we keep checking it after every price update.`}
+      </p>
+      <form method="post" action="/api/alerts/action" className="mt-4">
+        <input type="hidden" name="t" value={token} />
+        <button type="submit" className="btn-primary w-full">
+          {stop ? "Stop watching" : "Snooze 30 days"}
+        </button>
+      </form>
+      <Link href="/watching" className="mt-3 block text-center text-xs text-slate-500 hover:text-slate-300">
+        Manage all my watches instead
+      </Link>
+    </Shell>
+  );
+}
+
+// "RAD|Booster Box" → "RAD Booster Box"; a name-only key reads as itself.
+function sealedWatchLabel(groupKey: string): string {
+  return groupKey.split("|").filter(Boolean).join(" ");
 }

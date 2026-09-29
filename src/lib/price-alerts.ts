@@ -26,6 +26,7 @@ import { RETAILERS } from "./retailers";
 import { shippingFor } from "./shipping";
 import { formatMoney } from "./format";
 import { DROP_MIN_CENTS, DROP_MIN_PCT } from "./alert-thresholds";
+import { recentlyEmailedAddresses } from "./alert-budget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PRICE ALERTS — what fires, and when (rules as of 2026-09-25, DECISIONS.md
@@ -383,7 +384,7 @@ const isSupportedMarket = (m: string): m is Country => Object.prototype.hasOwnPr
 // import and call shape); `notifyUsers: false` switches the in-app mirror off
 // instead, so a test can never write a Notification row.
 export interface AlertRunDeps {
-  db?: Pick<typeof prisma, "priceAlert" | "retailerPrice" | "alertMute" | "$transaction">;
+  db?: Pick<typeof prisma, "priceAlert" | "retailerPrice" | "alertMute" | "deckWatch" | "sealedWatch" | "$transaction">;
   sendPriceDropEmail?: typeof sendPriceDropEmailImpl;
   now?: Date;
   notifyUsers?: boolean;
@@ -579,15 +580,9 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
   const budget = deps.dailyBudget ?? alertDailyBudget();
   // A GROUP BY in Postgres, not findMany's `distinct` (which Prisma dedupes
   // client-side after reading every row — tests/prisma-client-side-distinct).
-  const recent = baselineOnly
-    ? []
-    : await db.priceAlert.groupBy({
-        by: ["email"],
-        where: { lastNotifiedAt: { gte: new Date(now.getTime() - ALERT_BUDGET_WINDOW_MS) } },
-        orderBy: { email: "asc" },
-        take: 1000,
-      });
-  const recentAddresses = new Set(recent.map((r) => r.email));
+  // Since 2026-09-29 the count spans every alert table (lib/alert-budget.ts):
+  // a deck or sealed watch's email counts against the same fifty.
+  const recentAddresses = baselineOnly ? new Set<string>() : await recentlyEmailedAddresses(db, now, ALERT_BUDGET_WINDOW_MS);
   const remaining = Math.max(0, budget - recentAddresses.size);
   const runBudget = scope === "all" ? Math.min(ALL_RUN_SHARE, remaining) : remaining;
 

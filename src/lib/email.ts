@@ -11,7 +11,7 @@ import {
   type PremiumTierKey,
 } from "./site";
 import { premiumStartHref } from "./premium-start";
-import { PLUS_TARGET_ALERT_LIMIT } from "./alert-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "./free-limits";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
@@ -636,6 +636,8 @@ function alertFooterText(links: Pick<AlertAddressLinks, "pause" | "deleteAll">):
 
 const button = (href: string, label: string) =>
   `<a href="${escapeHtml(href)}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${label}</a>`;
+/** The green button, for the watch emails in lib/watch-emails.ts. */
+export const emailButton = button;
 
 export interface BuiltEmail {
   subject: string;
@@ -1143,6 +1145,8 @@ const CHECKOUT_RECOVERY_TOOLS = [
   "No ads on any page",
   "Every deal: the full Deal Finder and Rising Cards lists",
   "An email naming the store when a card you watch hits your target price",
+  "Sealed watches: an email when a box is back in stock or at RRP",
+  "Premium: a deck price watch — a saved list re-priced delivered after every price update, emailed at your price",
   "Premium: Best Basket, the cheapest delivered order for your whole deck, watchlist or binder",
   "Premium: Demand Finder, the cards players are searching for and opening most",
 ];
@@ -1244,10 +1248,12 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
             <li>No limit on your watchlist or portfolio</li>
             <li>Every deal: the full Deal Finder and Rising Cards lists</li>
             <li>An email naming the store when a card you watch hits your target price</li>
+            <li>Sealed watches: an email when a box is back in stock or at RRP (the price Riot sets)</li>
           </ul>
-          Premium adds Best Basket: the cheapest delivered order for your whole deck or watchlist, skipping the
-          cards you already own. It also opens Demand Finder, the full list of cards players are searching for and
-          opening. ${trialLine}
+          Premium works while you're away: a deck price watch re-prices a saved list after every price update and
+          emails you when its delivered total reaches your price. It also adds Best Basket, the cheapest delivered
+          order for your whole deck or watchlist, skipping the cards you already own, and Demand Finder, the full
+          list of cards players are searching for and opening. ${trialLine}
         </div>
         <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Premium</a>
       </div>
@@ -1310,11 +1316,13 @@ export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: 
     ${step(1, "No ads on any page", `Every page is ad-free from now on, on the website and in the app. Nothing to switch on.`)}
     ${step(2, "Every deal, not just three", `The full Deal Finder list: every card cheaper than TCGplayer market at a real store, which you can narrow to only the cards you watch or own. ${link("/tools/deal-finder?mine=watch", "Deal&nbsp;Finder&nbsp;→")}`)}
     ${step(3, "Set a target price", `Watch a card and tell us what you'd pay. After every price update we check every tracked store in your country and email you the store when it's there. ${link("/watching", "Your&nbsp;watchlist&nbsp;→")}`)}
+    ${step(4, "Watch a sealed product", `Tap the heart on a box: we email you when it is back in stock after selling out everywhere, at RRP, or at your price. ${link("/sealed", "Sealed&nbsp;products&nbsp;→")}`)}
     ${
       opts.planName === "Plus"
         ? ""
-        : `${step(4, "Buy a whole list for less", `Send a decklist or your watchlist to Best Basket, skip the copies you own, and get the cheapest delivered order. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)}
-    ${step(5, "See what players are hunting for", `Demand Finder ranks the cards most searched and most viewed over the last 7 or 30 days. ${link("/tools/demand", "Demand&nbsp;Finder&nbsp;→")}`)}`
+        : `${step(5, "Watch a whole deck's price", `Save a list from Best Basket or the deck pricer with the delivered price you'd pay; we re-price it after every update and email you when it's there. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)}
+    ${step(6, "Buy a whole list for less", `Send a decklist or your watchlist to Best Basket, skip the copies you own, and get the cheapest delivered order. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)}
+    ${step(7, "See what players are hunting for", `Demand Finder ranks the cards most searched and most viewed over the last 7 or 30 days. ${link("/tools/demand", "Demand&nbsp;Finder&nbsp;→")}`)}`
     }
     <tr><td style="padding:10px 32px 22px;font-size:13px;line-height:1.55;color:#8b95a5">
       Manage or cancel any time: ${link("/premium", "your account page")}.
@@ -1356,7 +1364,7 @@ export async function sendTrialWelcomeEmail(to: string, opts: TrialWelcomeEmailO
 //   • Each subscribe link goes through the real checkout entry
 //     (premiumStartHref → /premium/start) with the tier and plan preselected,
 //     so what the button says is what Stripe opens.
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
@@ -1403,9 +1411,8 @@ function priceDropTierLine(tier: PremiumTierKey): string {
 
 // What each tier includes — the 2026-09-25 lineup as TierComparisonTable and
 // PremiumPricingCards state it (Plus leads with "no ads": tests/ad-free-tier.test.ts).
-export const PRICE_DROP_PLUS_INCLUDES = `No ads on any page, every deal in Deal Finder (including "only my cards"), the full Rising Cards list, and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards.`;
-export const PRICE_DROP_PREMIUM_INCLUDES =
-  "Everything in Plus, plus unlimited target-price alerts, Best Basket's store-by-store plan and Buy this list for your deck or watchlist, and Demand Finder: the cards players search for and open most.";
+export const PRICE_DROP_PLUS_INCLUDES = `No ads on any page, every deal in Deal Finder (including "only my cards"), the full Rising Cards list, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, and sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP, or at your price).`;
+export const PRICE_DROP_PREMIUM_INCLUDES = `Everything in Plus, plus unlimited target-price alerts and sealed watches, a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), Best Basket's store-by-store plan and Buy this list for your deck or watchlist, and Demand Finder: the cards players search for and open most.`;
 
 export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail {
   // A display name that is really just an email address reads oddly after
