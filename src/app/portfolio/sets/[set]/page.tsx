@@ -23,10 +23,10 @@ export const metadata: Metadata = {
 
 // ONE SET'S CHECKLIST (2026-09-29, DECISIONS.md, "Set tracker").
 //
-// It reads NO searchParams and never calls notFound(): a loading.tsx sits above
-// /portfolio (scripts/adsense-guard.ts refuses one above a searchParams route or
-// a notFound() route), so scope, filters and sort live in the client component
-// and an unknown set bounces to the index. The catalogue is lib/set-checklist.ts's
+// It takes no query string and never throws a not-found: a loading boundary
+// sits above /portfolio (scripts/adsense-guard.ts refuses one above a route
+// that reads the query string or throws not-found), so scope, filters and sort
+// live in the client component and an unknown set bounces to the index. The catalogue is lib/set-checklist.ts's
 // cached entry; the only per-request read is the account's owned cards for THIS
 // set, one narrow groupBy. Called directly, never inside an unstable_cache.
 export default async function SetChecklistPage({ params }: { params: { set: string } }) {
