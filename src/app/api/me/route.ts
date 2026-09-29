@@ -32,6 +32,10 @@ export async function GET() {
             emailVerified: !!user.emailVerified,
             balanceCents: user.balanceCents,
             preferredCountry: user.preferredCountry,
+            // When the account was made (already selected by getCurrentUser, no
+            // extra read). PremiumSlideIn holds its ask back for the account's
+            // first 48 hours: those belong to setup, not to a purchase.
+            createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : null,
           }
         : null,
       // GA4 User-ID (components/GoogleAnalyticsUser.tsx). Hashed here rather than

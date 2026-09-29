@@ -47,6 +47,7 @@ export function PremiumPitchPanel({
   badge,
   showFeatures = true,
   showPlus = false,
+  tableOnly = false,
 }: {
   // The gold PREMIUM badge is passed in rather than declared here: both callers
   // are pinned by tests that read their OWN source for the badge's classes.
@@ -61,7 +62,24 @@ export function PremiumPitchPanel({
   // caller's own premiumPlus (from its own session read) once Plus is
   // actually configured, same contract as TierComparisonTable's own showPlus.
   showPlus?: boolean;
+  // Just the comparison table, with no wordmark, watermark or headline: for a
+  // caller that already has its own headline (PremiumSlideIn's "See what's
+  // included" disclosure, 2026-09-29) and only needs the answer to "what does
+  // Premium get me". showFeatures is implied.
+  tableOnly?: boolean;
 }) {
+  if (tableOnly) {
+    return (
+      <div className="px-3 py-3">
+        <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+          {showPlus ? "Free vs Plus vs Premium" : "Free vs Premium"}, at a glance
+        </p>
+        <div className="mt-1.5 overflow-hidden rounded-lg border border-ink-800 bg-ink-950/60">
+          <TierComparisonTable compact showPlus={showPlus} />
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-ink-900 via-ink-950 to-ink-950">
       {/* The site's own mark, not a stock character — bled large and faint off

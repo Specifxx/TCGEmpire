@@ -316,7 +316,7 @@ test("the card page CTA no longer undercuts the account pitch", () => {
   assert.match(src, /watchlist syncs everywhere/);
 });
 
-test("the first show waits the shared 5s nudge delay — not instant, not its own number (2026-09-11)", () => {
+test("the first show waits the shared nudge delay — never its own number (2026-09-11, 12 s since 2026-09-29)", () => {
   // The timing history this file pins, in order: 5s timer → relaxed pageview
   // gate → buy_click-aware 3-case timing → no timer at all (2026-09-01) → the
   // shared 5s delay. Each step was a real product decision, not drift.
@@ -332,17 +332,19 @@ test("the first show waits the shared 5s nudge delay — not instant, not its ow
   // on their first eligible page. That is a different mechanism from the
   // retired first-show gate, which is why those constant names stay banned
   // below while the new cadence is allowed.
+  // 2026-09-29: the delay reaches the popup through the shared timer
+  // (armNudge), counted from the moment the card is eligible.
   const src = read("src/components/SignupPromoPopup.tsx");
-  assert.match(src, /NUDGE_DELAY_MS/, "must read the shared nudge delay");
+  assert.match(src, /delayMs: NUDGE_DELAY_MS,/, "the shared delay must wrap the show, not merely be imported");
   assert.doesNotMatch(
     src,
     /const\s+(PROMO_)?DELAY_MS\s*=/,
     "the delay must come from lib/nudge-timing.ts, not a second copy of the number here",
   );
-  // The wait must actually gate the show, not sit unused.
-  assert.match(src, /\}, NUDGE_DELAY_MS\)/, "the delay must wrap the show, not merely be imported");
-  // Navigating away mid-wait must cancel it, or it lands on a page already left.
-  assert.match(src, /return \(\) => clearTimeout\(t\)/, "the pending show must be cancelled on unmount/route change");
+  // Navigating away mid-wait must cancel it, or it lands on a page already left:
+  // the effect returns armNudge's cleanup.
+  assert.match(src, /return armNudge\(\{/, "the pending show must be cancelled on unmount/route change");
+  assert.match(read("src/lib/nudge-runtime.ts"), /clearTimeout\(timer\)/, "and the shared timer must actually clear itself");
   assert.doesNotMatch(src, /PROMO_DELAY_MS|MIN_PAGEVIEWS|PV_KEY/, "the old delay/pageview-gate machinery must stay gone, not come back");
   // The re-arm gate must be reachable ONLY when a dismissal has been stamped —
   // a never-dismissed visitor must not be held back by any page count.

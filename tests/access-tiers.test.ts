@@ -88,7 +88,7 @@ test("the signup popup still appears on its own, with no promo gate", () => {
   assert.match(src, /setShown\(true\)/, "popup must still have its auto-show path");
   // The only conditions on showing are: loaded, signed out, not an auth page,
   // not already dismissed.
-  assert.match(src, /if \(!loaded \|\| user \|\| shown\) return/, "still only shown to signed-out visitors");
+  assert.match(src, /if \(!loaded \|\| user \|\| shown \|\| views === 0\) return/, "still only shown to signed-out visitors, once this route is counted");
 });
 
 test("the popup's Premium pitch never grows its own hand-typed tool list or comparison table", () => {
@@ -186,18 +186,19 @@ test("a dismissed promo goes quiet for a set number of pages, then comes back", 
     /views - dismissedAt < PAGES_BETWEEN_SHOWS\) return;/,
     "the arming effect must stay away until that many further pages have been seen",
   );
+  // Pages are counted by the shared hook under the SAME key the stamp above
+  // reads, or the gap above can never close. It counts once per distinct route
+  // (never once per render or reload): tests/nudge-gate.test.ts pins that.
   assert.match(
     src,
-    /sessionStorage\.setItem\(VIEWS_KEY, String\(readCount\(VIEWS_KEY\) \+ 1\)\)/,
+    /const views = useSessionViews\(VIEWS_KEY, pathname, loaded && !user\);/,
     "pages must actually be counted, or the gap above can never close",
   );
-  // Counted once per distinct route — otherwise a re-render would inflate it.
-  assert.match(src, /lastCountedPath\.current === pathname/, "each page must count once, not once per render");
 });
 
 test("the promo never fires for a signed-in visitor", () => {
   const src = read(POPUP);
-  assert.match(src, /if \(!loaded \|\| user \|\| shown\) return;/, "the arming effect must bail for a signed-in user");
+  assert.match(src, /if \(!loaded \|\| user \|\| shown \|\| views === 0\) return;/, "the arming effect must bail for a signed-in user");
 });
 
 test("the retired WEEK-long signup comp's specific machinery stays gone", () => {

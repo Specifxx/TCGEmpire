@@ -48,7 +48,10 @@ test("the nudge only ever targets a monthly, tenured, Premium subscriber", () =>
 
 test("the nudge is non-modal and capped hard", () => {
   const code = codeOnly(read(NUDGE));
-  assert.match(code, /dataset\.rcDialog === "1"/, "must yield to any open modal");
+  // The yield to an open modal lives in the shared timer (lib/nudge-runtime.ts,
+  // armNudge, pinned by tests/nudge-gate.test.ts); this nudge must use it.
+  assert.match(code, /armNudge\(\{[\s\S]*?delayMs: NUDGE_DELAY_MS/, "must arm the shared show timer, which yields to any open modal");
+  assert.match(readFileSync(join(process.cwd(), "src/lib/nudge-runtime.ts"), "utf8"), /dataset\.rcDialog === "1"/, "the shared timer yields to any open modal");
   assert.doesNotMatch(code, /dataset\.rcDialog\s*=\s*["']1["']/, "a corner nudge must not claim the modal lock");
   assert.match(code, /MAX_DISMISSALS\s*=\s*2/, "two 'not now's is a permanent no");
   assert.match(code, /localStorage/, "the snooze/never-again state must outlive the session");

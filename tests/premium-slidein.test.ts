@@ -29,8 +29,12 @@ test("it only ever targets a logged-in, non-Premium user who can actually buy", 
 
 test("it is NON-MODAL: it yields to real modals and never blocks them", () => {
   const code = codeOnly(read(SRC));
-  // Reads the shared dialog flag so it won't slide in over an open modal…
-  assert.match(code, /dataset\.rcDialog === "1"/, "must not appear on top of an open modal");
+  // Reads the shared dialog flag so it won't slide in over an open modal: since
+  // 2026-09-29 through the shared show timer (lib/nudge-runtime.ts armNudge),
+  // which checks it when the timer FIRES and cancels while a dialog is open…
+  assert.match(code, /return armNudge\(\{/, "must arm the shared timer, which yields to an open modal");
+  assert.match(codeOnly(read("src/lib/nudge-runtime.ts")), /dataset\.rcDialog === "1"/, "must not appear on top of an open modal");
+  assert.match(code, /dataset\.rcDialog !== "1"\) dismiss\(\)/, "Escape belongs to an open dialog, not this card");
   // …but must NEVER set it, or it would block the feedback/signup modals the way
   // a modal does. A corner toast has no business claiming the modal lock.
   assert.doesNotMatch(code, /dataset\.rcDialog\s*=\s*["']1["']/, "a non-modal toast must not claim the modal flag");
@@ -159,7 +163,7 @@ test("every CONTEXT_PITCH names a real PITCH_TOOLS tool, so it can't drift the w
   }
 });
 
-test("the live proof line is fetched only after the card actually appears, never on mount", () => {
+test("the live proof line is fetched only after the card appears AND its disclosure is opened, never on mount", () => {
   const code = codeOnly(read(SRC));
   // The proof-fetch effect must be gated on `shown` (its own dependency array
   // includes it) — a fetch that could fire unconditionally on mount would run
@@ -167,5 +171,68 @@ test("the live proof line is fetched only after the card actually appears, never
   const effectAt = code.indexOf("api/premium/proof");
   assert.ok(effectAt >= 0, "expected a fetch to api/premium/proof");
   const before = code.slice(Math.max(0, effectAt - 400), effectAt);
-  assert.match(before, /if \(!shown \|\| proofFetched\.current\) return;/, "the proof fetch must bail out until `shown` is true");
+  // Since 2026-09-29 the proof line lives inside "See what's included", so the
+  // request waits for that tap too: most visitors never open it.
+  assert.match(before, /if \(!shown \|\| !details \|\| proofFetched\.current\) return;/, "the proof fetch must bail out until `shown` is true and the disclosure is open");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPACT (2026-09-29, "Nudges: value first"). At 390x844 it was ~740px tall and
+// scrolled inside itself; it is now a headline, one price line, the button pair
+// and a "See what's included" disclosure that opens the tier table on demand.
+// The rendered heights were measured in a real browser (DECISIONS.md, the
+// entry's Measured section); these pin the structure that produces them.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("compact: the tier table and the long copy are behind a 'See what's included' disclosure", () => {
+  const src = read(SRC);
+  const code = codeOnly(src);
+  assert.match(code, /See what&apos;s included/, "the disclosure button");
+  assert.match(code, /aria-expanded=\{details\}/, "announced as expandable");
+  assert.match(code, /aria-controls="premium-slidein-details"/);
+  assert.match(code, /const \[details, setDetails\] = useState\(false\);/, "closed by default");
+  // The table is INSIDE the disclosure, after its opening condition…
+  const openAt = code.indexOf("{details && (");
+  assert.ok(openAt > 0, "the disclosure body is conditional");
+  const tableAt = code.indexOf("<PremiumPitchPanel tableOnly");
+  assert.ok(tableAt > openAt, "the tier table renders only when opened");
+  // …and so are the per-page pitch line and the proof line.
+  assert.ok(code.indexOf("{bodyLine}") > openAt, "the long per-page line waits behind the disclosure");
+  // The default card has no full pitch panel, table or chip row.
+  assert.doesNotMatch(code.slice(0, openAt), /<PremiumPitchPanel|TierComparisonTable|PITCH_TOOLS\.map/, "nothing tall above the disclosure");
+});
+
+test("compact: a small corner card, never a full-width overlay or tall panel", () => {
+  const code = codeOnly(read(SRC));
+  assert.match(code, /max-w-\[20rem\]/, "at most 20rem wide on a phone");
+  assert.match(code, /sm:w-80/, "a fixed small card on a desktop");
+  assert.doesNotMatch(code, /max-w-sm/, "not the old 24rem panel");
+  assert.match(code, /details \? "max-w-\[23rem\] sm:w-\[23rem\]" : "max-w-\[20rem\] sm:w-80"/, "widens to 23rem only while the tier table is open, so its Premium column is not clipped");
+  assert.match(code, /above-bottombar fixed left-4/, "a bottom-left card that clears the tab bar");
+  assert.match(code, /max-h-\[min\(80dvh,calc\(100dvh-9\.5rem\)\)\]/, "a rail for the OPEN disclosure and for short viewports");
+});
+
+test("its ✕ is at least 44px, labelled, sticky, and Escape closes it", () => {
+  const code = codeOnly(read(SRC));
+  const btn = code.slice(code.indexOf("onClick={dismiss}"), code.indexOf("✕"));
+  assert.match(btn, /aria-label="Dismiss"/);
+  assert.match(btn, /min-h-11 min-w-11/, "44px at every width");
+  assert.match(code, /sticky top-0/, "the ✕ never scrolls away");
+  assert.match(code, /e\.key === "Escape"/, "Escape closes it");
+  // Every dismiss control is a button with a real handler, none of it timed.
+  assert.doesNotMatch(code, /disabled=\{/, "no disabled control on the card");
+});
+
+test("respects prefers-reduced-motion: the slide only exists under motion-safe", () => {
+  const code = codeOnly(read(SRC));
+  assert.match(code, /motion-safe:translate-y-4 motion-safe:opacity-0/, "the un-entered state is motion-safe only, so reduced motion just appears");
+  assert.doesNotMatch(code, /(?<!motion-safe:)translate-y-4 /, "no unconditional slide");
+});
+
+test("the price stays one honest line: $0 today when a trial exists, otherwise the real price", () => {
+  const code = codeOnly(read(SRC));
+  assert.match(code, /premiumZeroToday\(\)/);
+  assert.match(code, /introFromLine\("premium", introEligible\)/);
+  assert.match(code, /premiumLockInTail\(\)/);
+  assert.match(code, /premiumPriceIncreaseAnnounced\(\)/, "an announced increase is still stated, on the card");
 });

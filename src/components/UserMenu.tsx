@@ -21,6 +21,10 @@ export interface MenuUser {
   // The account's remembered market (see prisma User.preferredCountry) — null
   // until backfilled or explicitly chosen. Used by CountryProvider, not this menu.
   preferredCountry: string | null;
+  // ISO timestamp of account creation, from /api/me. Optional: server-rendered
+  // MenuUser values elsewhere don't carry it. lib/nudge-gate.ts accountAgeMs
+  // treats a missing one as unknown, which fails closed (no Premium ask).
+  createdAt?: string | null;
 }
 
 // Profile icon (top-right) + dropdown. Signed out → a "sign in" person icon linking

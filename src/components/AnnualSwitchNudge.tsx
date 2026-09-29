@@ -5,7 +5,10 @@ import { useMe, invalidateMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { TIER_NAMES, tierAnnualAmount, annualSavingPct, type PremiumTierKey } from "@/lib/site";
 import { NUDGE_DELAY_MS } from "@/lib/nudge-timing";
+import { ANNUAL_MIN_VIEWS } from "@/lib/nudge-gate";
+import { armNudge, useSessionViews } from "@/lib/nudge-runtime";
 import { usePresence } from "@/lib/motion";
+import { usePathname } from "next/navigation";
 
 // RETENTION LEVER: nudge a monthly Premium subscriber onto the annual plan.
 // Annual up-front is the single biggest churn win on a small-ticket consumer sub
@@ -18,9 +21,13 @@ import { usePresence } from "@/lib/motion";
 // mirror was removed on 2026-09-28). It is a
 // non-modal corner slide-in (never covers content, never locks scroll, yields to
 // any open modal via body[data-rc-dialog]) and is capped hard — once per session,
-// a 30-day snooze after a "not now", and never again after two.
+// a 30-day snooze after a "not now", and never again after two. Since
+// 2026-09-29 ("Nudges: value first") it also waits for the session's 2nd page
+// view (ANNUAL_MIN_VIEWS) and then the shared 12 s NUDGE_DELAY_MS, cancelled by
+// a dialog, a drawer or a focused text field (lib/nudge-runtime.ts armNudge).
 
 const SESSION_SEEN = "rc_annual_nudge_session";
+const PV_KEY = "rc_annual_nudge_pv"; // sessionStorage: this component's own page-view count
 const DISMISS_COUNT = "rc_annual_nudge_dismisses";
 const SNOOZE_UNTIL = "rc_annual_nudge_until";
 
@@ -38,6 +45,12 @@ function readNum(store: Storage | null, key: string): number {
 
 export function AnnualSwitchNudge() {
   const { premium, loaded } = useMe();
+  const pathname = usePathname();
+  // The session's page views as a subscriber. The effect below depends on the
+  // BOOLEAN, so it runs once when the 2nd view arrives and is not re-run (and
+  // its pending timer cancelled) by every later navigation.
+  const views = useSessionViews(PV_KEY, pathname, loaded && premium);
+  const pastFirstPage = views >= ANNUAL_MIN_VIEWS;
   const [phase, setPhase] = useState<"hidden" | "offer" | "working" | "done" | "error">("hidden");
   const [tier, setTier] = useState<PremiumTierKey>("premium");
   const checked = useRef(false); // one subscription fetch per mount, max
@@ -59,7 +72,7 @@ export function AnnualSwitchNudge() {
   const hide = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
-    if (!loaded || !premium || checked.current) return;
+    if (!loaded || !premium || !pastFirstPage || checked.current) return;
 
     let ls: Storage | null = null;
     let ss: Storage | null = null;
@@ -80,7 +93,7 @@ export function AnnualSwitchNudge() {
 
     checked.current = true;
     let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let stopTimer: (() => void) | undefined;
 
     fetch("/api/premium/subscription", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
@@ -88,26 +101,30 @@ export function AnnualSwitchNudge() {
         if (cancelled || !d) return;
         // Monthly, annual is configured (for THEIR tier), and they've stuck around a bit.
         if (d.interval !== "month" || !d.annualAvailable || (d.monthsActive ?? 0) < MIN_MONTHS) return;
-        timer = setTimeout(() => {
-          if (typeof document !== "undefined" && document.body.dataset.rcDialog === "1") return;
-          try {
-            ss?.setItem(SESSION_SEEN, "1");
-          } catch {
-            /* ignore */
-          }
-          setTier(d.tier === "plus" ? "plus" : "premium");
-          setPhase("offer");
-          setOpen(true);
-          trackEvent("annual_switch_shown", { months_active: d.monthsActive ?? 0 });
-        }, NUDGE_DELAY_MS);
+        // armNudge: NUDGE_DELAY_MS, cancelled by a dialog/drawer/focused text
+        // field, and fired at a quiet moment only (never over an open dialog).
+        stopTimer = armNudge({
+          delayMs: NUDGE_DELAY_MS,
+          onFire: () => {
+            try {
+              ss?.setItem(SESSION_SEEN, "1");
+            } catch {
+              /* ignore */
+            }
+            setTier(d.tier === "plus" ? "plus" : "premium");
+            setPhase("offer");
+            setOpen(true);
+            trackEvent("annual_switch_shown", { months_active: d.monthsActive ?? 0 });
+          },
+        });
       })
       .catch(() => {});
 
     return () => {
       cancelled = true;
-      if (timer) clearTimeout(timer);
+      stopTimer?.();
     };
-  }, [loaded, premium]);
+  }, [loaded, premium, pastFirstPage]);
 
   const dismiss = useCallback(() => {
     hide();
@@ -187,7 +204,7 @@ export function AnnualSwitchNudge() {
             <button
               onClick={dismiss}
               aria-label="Dismiss"
-              className="tap-icon -my-3 -ml-2 -mr-4 shrink-0 rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+              className="tap-icon min-h-11 min-w-11 -my-3 -ml-2 -mr-4 shrink-0 rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
             >
               ✕
             </button>

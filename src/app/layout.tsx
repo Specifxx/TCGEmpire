@@ -35,9 +35,10 @@ import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
 import NextTopLoader from "nextjs-toploader";
 
 // Neither is needed for the initial paint or SEO: the alert modal only opens in
-// response to a PriceWatchButton click, and the signup popup waits 25s before
-// showing itself. ssr:false + dynamic import keeps both out of the JS the
-// browser has to parse/execute before first paint.
+// response to a PriceWatchButton click, and the signup popup never shows on a
+// visit's first page and then waits 12 s ("Nudges: value first", 2026-09-29).
+// ssr:false + dynamic import keeps both out of the JS the browser has to
+// parse/execute before first paint.
 const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").then((m) => m.PriceAlertModal), {
   ssr: false,
 });
@@ -45,11 +46,12 @@ const SignupPromoPopup = dynamic(() => import("@/components/SignupPromoPopup").t
   ssr: false,
 });
 // Low-intrusion Premium nudge for logged-in non-Premium users (a corner slide-in,
-// not a modal). ssr:false — it renders nothing until a few pages into a session,
-// so there's nothing for a crawler to see and no reason to ship it server-side.
-// Removed 2026-09-28 (upgrade prompts moved to the free limits), RESTORED
-// 2026-09-29 at the owner's request ("bring the instant feature back"): the
-// at-the-limit prompts stay too, and the header keeps its plain "Pricing" link.
+// not a modal). ssr:false — it renders nothing until the 3rd page of a session (and
+// a 48-hour-old account), so there's nothing for a crawler to see and no reason to
+// ship it server-side. Removed 2026-09-28 (upgrade prompts moved to the free
+// limits), restored 2026-09-29 and made compact and later the same day ("Nudges:
+// value first"): the at-the-limit prompts stay too, and the header keeps its plain
+// "Pricing" link.
 const PremiumSlideIn = dynamic(() => import("@/components/PremiumSlideIn").then((m) => m.PremiumSlideIn), {
   ssr: false,
 });

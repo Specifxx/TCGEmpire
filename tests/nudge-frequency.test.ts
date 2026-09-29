@@ -60,7 +60,7 @@ test("the popup enforces a LIFETIME cap and a snooze, before it arms its timer",
   // for someone it has already stopped asking.
   const capAt = src.indexOf("MAX_NUDGE_DISMISSALS) return");
   const snoozeAt = src.indexOf("SNOOZE_UNTIL_KEY)) return");
-  const armAt = src.indexOf("setTimeout(");
+  const armAt = src.indexOf("armNudge({");
   assert.ok(capAt >= 0 && snoozeAt >= 0 && armAt >= 0, "expected both gates and the timer");
   assert.ok(capAt < armAt, "the lifetime cap must be checked before arming");
   assert.ok(snoozeAt < armAt, "the snooze must be checked before arming");
@@ -104,18 +104,19 @@ test("the within-session spacing is untouched — the cap sits on top of it", ()
 test("the frequency change is separable in GA4 from the uncapped era", () => {
   // PROMO_VARIANT tracks whichever value is current rather than re-pinning one
   // era forever; the file's own changelog carries the full list. It is now
-  // "free_account_compare_first_page" (2026-09-29): the same free-account card
-  // as "free_account_compare_subtle" (2026-09-16, the owner's reversal back to
-  // a free-account pitch), with no 5 s settle-in ("…_instant", earlier that
-  // day) and then no first-visit gate either — it reaches visitors none of the
-  // gated variants could, so none of them may average into it in GA4.
+  // "free_account_value_first" (2026-09-29, "Nudges: value first"): the same
+  // free-account card as "free_account_compare_subtle" (5 s), "…_instant" and
+  // "…_first_page" (instant, on the first page) before it, now never on a
+  // visit's first page view and 12 s after it becomes eligible, so none of them
+  // may average into it in GA4.
   //
   // Every retired name is checked as an EXACT string, not a substring: the
   // names in this family are prefixes of one another, so a substring check
   // would fire on the legitimate current value.
   const src = code(POPUP);
-  assert.match(src, /const PROMO_VARIANT = "free_account_compare_first_page"/, "expected the current variant name");
+  assert.match(src, /const PROMO_VARIANT = "free_account_value_first"/, "expected the current variant name");
   for (const retired of [
+    "free_account_compare_first_page",
     "free_account_compare_instant",
     "free_account_compare_subtle",
     "premium_graphic_5s_motion",
@@ -152,4 +153,25 @@ test("no corner nudge may gate, delay or disable its own close control", () => {
   }
   // And the dismiss handler must be bound directly, not behind a predicate.
   assert.match(code(POPUP), /onClick=\{dismiss\}/, "the ✕ must call dismiss directly");
+});
+
+// ── Every corner card is easy to close (2026-09-29, "Nudges: value first") ──
+
+test("all three corner cards: a labelled ≥44px ✕, Escape that yields to an open dialog, and no slide under reduced motion", () => {
+  for (const f of [POPUP, "src/components/PremiumSlideIn.tsx", "src/components/AnnualSwitchNudge.tsx"]) {
+    const src = code(f);
+    const btn = src.slice(src.lastIndexOf("<button", src.indexOf("✕")), src.indexOf("✕"));
+    assert.match(btn, /aria-label="Dismiss"/, `${f}: the ✕ is labelled`);
+    assert.match(btn, /min-h-11 min-w-11/, `${f}: the ✕ is at least 44px at every width`);
+    assert.match(src, /e\.key === "Escape" && document\.body\.dataset\.rcDialog !== "1"/, `${f}: Escape closes it, but belongs to an open dialog first`);
+    assert.match(src, /motion-safe:translate-y-4 motion-safe:opacity-0/, `${f}: the slide is motion-safe only`);
+    assert.match(src, /above-bottombar fixed left-4[^"]*w-\[calc\(100%-2rem\)\]/, `${f}: a bottom card with a gutter, not a full-width overlay`);
+  }
+});
+
+test("a click on a provider button also marks the tab as having started sign-in", () => {
+  const src = code(POPUP);
+  const snooze = src.slice(src.indexOf("const snoozeForClick"), src.indexOf("const snoozeForClick") + 260);
+  assert.match(snooze, /markSignInStarted\(\)/);
+  assert.match(src, /useEffect\(\(\) => watchSignInClicks\(\), \[\]\);/, "and every sign-in link click is watched");
 });

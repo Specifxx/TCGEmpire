@@ -124,9 +124,12 @@ test("where the nudge appears: watchlist, portfolio, and the slide-in", () => {
   // Since 2026-09-29 the card shows on page load and does NOT wait for the
   // personal line: the show timer marks the session and shows, and the line is
   // fetched once the card is up, then recorded with the impression.
-  const timer = slide.slice(slide.indexOf("const t = setTimeout(() => {"), slide.indexOf("}, NUDGE_DELAY_MS);"));
+  // (Since 2026-09-29 the timer is the shared armNudge: 12 s, cancelled by a
+  // dialog or a focused field, and it fires only over no open dialog.)
+  const timer = slide.slice(slide.indexOf("return armNudge({"), slide.indexOf("}, [eligible, shown, pathname]);"));
   assert.ok(timer.length > 0 && !timer.includes("fetchPersonalCopy"), "the show timer never waits on the personal line");
-  assert.ok(timer.indexOf("if (dialogOpen()) return;") < timer.indexOf("setShown(true)"), "never over a real modal");
+  assert.match(timer, /delayMs: NUDGE_DELAY_MS/, "the shared delay");
+  assert.ok(timer.indexOf("SESSION_SEEN") < timer.indexOf("setShown(true)"), "the session's one showing is claimed only when the card really appears");
   const after = slide.slice(slide.indexOf("if (!shown || personalFetched.current) return;"));
   assert.match(after, /void fetchPersonalCopy\(\)\.then\(\(mine\) => \{[\s\S]*?if \(mine\) setPersonal\(mine\);[\s\S]*?trackEvent\("premium_slidein_shown"/, "fetched after the card is up; impression records which pitch showed");
 });

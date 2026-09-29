@@ -36,8 +36,12 @@ const SRC = "src/components/SignupPromoPopup.tsx";
 
 test("it is NON-MODAL: it yields to real modals and never blocks them", () => {
   const code = codeOnly(read(SRC));
-  // Reads the shared dialog flag so it won't slide in over an open modal…
-  assert.match(code, /dataset\.rcDialog === "1"/, "must not appear on top of an open modal");
+  // Reads the shared dialog flag so it won't slide in over an open modal: since
+  // 2026-09-29 through the shared show timer (lib/nudge-runtime.ts armNudge),
+  // which checks it when the timer FIRES and cancels while a dialog is open…
+  assert.match(code, /return armNudge\(\{/, "must arm the shared timer, which yields to an open modal");
+  assert.match(codeOnly(read("src/lib/nudge-runtime.ts")), /dataset\.rcDialog === "1"/, "must not appear on top of an open modal");
+  assert.match(code, /e\.key === "Escape" && document\.body\.dataset\.rcDialog !== "1"/, "Escape belongs to an open dialog, not this card");
   // …but must NEVER set it, unlike the old modal version — a corner card has no
   // business claiming the modal lock.
   assert.doesNotMatch(code, /dataset\.rcDialog\s*=\s*["']1["']/, "a non-modal slide-in must not claim the modal flag");
@@ -113,9 +117,13 @@ test("the CTA returns the visitor to the page they were on, NOT to /premium", ()
 
 test("/premium is in SKIP_PATHS — no point pitching a sign-up-for-Premium popup on the page that already sells it", () => {
   const code = codeOnly(read(SRC));
-  const skipMatch = code.match(/const SKIP_PATHS = \[([^\]]*)\]/);
-  assert.ok(skipMatch, "expected a SKIP_PATHS declaration");
-  assert.match(skipMatch![1], /"\/premium"/, "SKIP_PATHS must include /premium, mirroring PremiumSlideIn's own list");
+  // The list is one definition in lib/nudge-gate.ts since 2026-09-29.
+  assert.match(code, /const SKIP_PATHS = SIGNUP_SKIP_PATHS;/, "expected the SKIP_PATHS declaration");
+  const gate = codeOnly(read("src/lib/nudge-gate.ts"));
+  const list = gate.match(/export const SIGNUP_SKIP_PATHS = \[([^\]]*)\]/);
+  assert.ok(list, "expected SIGNUP_SKIP_PATHS");
+  for (const p of ["/login", "/verify", "/premium"]) assert.ok(list![1].includes(`"${p}"`), `SIGNUP_SKIP_PATHS must include ${p}`);
+  assert.match(code, /pathSkipped\(pathname, SKIP_PATHS\)/, "and the arming effect must consult it");
 });
 
 test("the card reads no trial or price state at all — it makes no paid offer", () => {

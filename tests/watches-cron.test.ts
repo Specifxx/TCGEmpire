@@ -55,7 +55,8 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   assert.deepEqual([deck.account, deck.plus, deck.premium], [false, false, true]);
   assert.ok(features.indexOf(sealed.feature) < features.indexOf(deck.feature) && features.indexOf(deck.feature) === features.length - 2);
   assert.equal(features[features.length - 1], "Ad-free experience");
-  assert.equal(PREMIUM_COPY_VERSION, "premium-2026-09-29c");
+  // "nudges-2026-09-29" since the value-first nudges (DECISIONS.md, "Nudges: value first"); no copy, plan or price changed.
+  assert.equal(PREMIUM_COPY_VERSION, "nudges-2026-09-29");
   // Every surface that quotes a watch number reads the constant.
   for (const f of ["src/components/PremiumPricingCards.tsx", "src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);

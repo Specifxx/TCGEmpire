@@ -1,10 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
+import { SIGNUP_SKIP_PATHS, isLandingPage, pathSkipped, signupEngagedNeededMs, signupPromoEligible } from "@/lib/nudge-gate";
+import { armNudge, useEngaged, useSessionViews } from "@/lib/nudge-runtime";
+import { isSignInPath, markSignInStarted, signInStarted, watchSignInClicks } from "@/lib/signin-intent";
 import { usePresence } from "@/lib/motion";
 import { AuthForm } from "./AuthForm";
 import { FreeAccountCompare } from "./FreeAccountCompare";
@@ -14,13 +17,25 @@ import { FreeAccountCompare } from "./FreeAccountCompare";
 // is for, and dropping it would make the two uncomparable in GA4.
 import { PREMIUM_COPY_VERSION } from "@/lib/site";
 
-// Shows on the FIRST PAGE A SIGNED-OUT VISITOR LOADS, as soon as it loads
-// (2026-09-29, owner: "it should show up as soon as the page loads", "not
-// wait for a second page view", instant on blog posts and /movers too). The
-// first-visit gate of 2026-09-24 (lib/signup-promo-gate.ts: a 2nd page view or
-// 60 s of reading, never a first page from another site or on a phone, 7 s on
-// the landing pages) is gone with its module. What still holds: the dismissal
-// cap, the snoozes and the spacing below, and SKIP_PATHS. Then it RETURNS every PAGES_BETWEEN_SHOWS
+// VALUE FIRST, THEN ASK (2026-09-29, "Nudges: value first" in DECISIONS.md;
+// owner: "make the login slider less annoying again and focus on getting
+// visitors to use the site rather than annoy them"). The card is never shown on
+// a visit's FIRST page view, whatever the referrer or device. It becomes
+// eligible from the visit's 2nd page view, or after 45 s of ENGAGED time on the
+// first page (tab visible AND at least one scroll/click/key press; 30 s on
+// blog posts and /movers, where search and social traffic lands). Once eligible it
+// waits NUDGE_DELAY_MS (12 s), counted from the moment it became eligible (page
+// load from the 2nd view; the 45 s / 30 s engaged mark on a first page), and the
+// wait is cancelled if the visitor navigates away, opens a dialog or drawer, or
+// focuses a text field: see lib/nudge-gate.ts
+// for the rules (pure, pinned by tests/nudge-gate.test.ts) and lib/nudge-runtime.ts
+// for the timer. It is never shown to a tab that has already started signing in
+// (lib/signin-intent.ts). The rules of 2026-09-29 morning (instant, no gate) and
+// of 2026-09-24 (a 60 s / phone / referrer gate) are both retired; the history
+// is in lib/nudge-timing.ts and DECISIONS.md.
+//
+// What holds throughout: the two-dismissal cap, the snoozes and the spacing
+// below, and SKIP_PATHS. Then it RETURNS every PAGES_BETWEEN_SHOWS
 // pages after each dismissal, for as long as the visitor stays signed out
 // (sessionStorage, not localStorage, so a new tab starts the count over).
 // Signing up suppresses it for good, simply because a signed-in visitor never
@@ -133,33 +148,26 @@ function writeLocal(key: string, value: number): void {
 // exit transition — are UNCHANGED from every version before this one. Only the
 // PITCH (this file's whole body, below) and the CTA's destination changed.
 
-// INSTANT AGAIN (2026-09-29, owner: "make the sign up and premium slider
-// instant. I want to bring the instant feature back"). From 2026-09-11 it
-// waited five seconds (also the owner's instruction). The value is
-// NUDGE_DELAY_MS — now 0 — shared with PremiumSlideIn and AnnualSwitchNudge so
-// the corner nudges can never drift to different answers again — see
-// lib/nudge-timing.ts, which also carries the full history. First the same
-// day the first-visit gate stayed ("drop the delay only"); hours later the
-// owner removed it too, so this is now instant on page load (header above).
+// TIMING (2026-09-29, "Nudges: value first"). NUDGE_DELAY_MS is now 12 s, shared
+// with PremiumSlideIn and AnnualSwitchNudge so the corner nudges can never
+// drift to different answers again: see lib/nudge-timing.ts, which carries the
+// full history (5 s, instant, instant with no gate, and this). The eligibility
+// rules that sit in front of it are in lib/nudge-gate.ts.
 //
-// READ THAT HISTORY BEFORE CHANGING THIS AGAIN. The timing here has been
-// through four states: a 5s timer → a relaxed pageview gate → buy_click-aware
-// 3-case timing → no timer at all (2026-09-01) → this. The FIRST of those, a
-// bare 5s delay, is the one that measurably cost the site: bounce rose,
-// pages/visitor fell, buy_click fell, and 78% of visitors dismissed it
-// outright. That is precisely what this change reinstates, so it is a
-// deliberate re-test of a known-failed value rather than a fresh idea. It was
-// asked for explicitly; the honest thing is to ship it AND say plainly what to
-// watch — signup_promo_shown/_dismissed, sign_up, buy_click, pages/visitor.
+// READ THAT HISTORY BEFORE CHANGING THIS AGAIN. A bare 5 s delay on a first
+// page measurably cost the site: bounce rose, pages/visitor fell, buy_click
+// fell, and 78% of visitors dismissed it outright. The number to watch after
+// this change is dismissals per impression, with sign_up per impression and
+// pages/visitor: signup_promo_shown/_dismissed, sign_up, buy_click.
 //
-// One thing the delay buys back for free: the rcDialog check now runs when the
-// timer FIRES, not when the effect arms, so a modal opened during those five
-// seconds suppresses the popup instead of being covered by it.
+// The dialog check runs when the timer FIRES (armNudge), not just when it arms,
+// so a modal opened during the wait suppresses the card instead of being
+// covered by it.
 //
 // /premium is also skipped — no point pitching "sign up to reach Premium" to a
 // visitor already standing on the page that sells it (the same reasoning the
 // removed PremiumSlideIn's SKIP_PATHS applied).
-const SKIP_PATHS = ["/login", "/verify", "/premium"];
+const SKIP_PATHS = SIGNUP_SKIP_PATHS;
 
 // Distinguishes this behaviour from every version before it, on
 // signup_promo_shown/_dismissed, so variants are separable in GA4 rather than
@@ -247,12 +255,19 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // it reaches visitors none of the gated variants could, so it needs its own
 // bucket.
 //
+// → "free_account_value_first" (2026-09-29, the same day again): value first.
+// Never on a visit's first page view (unless 45 s / 30 s engaged), 12 s after
+// it becomes eligible, cancelled by dialogs and typing, never after the tab
+// started signing in. TIMING/AUDIENCE axis: separable in GA4 from
+// "free_account_compare_first_page" (instant, first page) and
+// "free_account_compare_subtle" (5 s).
+//
 // READ THESE IN GA4, NOT VERCEL. Both events are in GA4_ONLY_EVENTS
 // (lib/analytics.ts): shown is an impression that fires for a large share of
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "free_account_compare_first_page";
+const PROMO_VARIANT = "free_account_value_first";
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
   const { user, loaded } = useMe();
@@ -263,36 +278,44 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   // setTimeout exit — same contract (entered drives the slide-in, mounted
   // gates the unmount), same 250ms exit PremiumSlideIn uses.
   const { mounted, entered } = usePresence(shown, 250);
-  const lastCountedPath = useRef<string | null>(null);
-
   // NO trial/premium state is read here any more. The card makes no paid
   // offer, so `trialDays`/`premiumPlus` (which the Premium-pitch version used
   // to pick a $0-today vs recurring-price framing) are nobody's business on
   // this surface.
 
-  // Count the pages a SIGNED-OUT visitor sees, once per distinct route. Declared
-  // before the arming effect on purpose: React runs effects in order, so this
-  // page is already counted by the time the effect below reads the total.
-  // Gated on `loaded` as well as `user` so the very first route still counts
-  // once /api/me resolves — lastCountedPath is only claimed after that.
+  // Pages this SIGNED-OUT visit has seen, once per distinct route (a reload is
+  // not a second page). Gated on `loaded` as well as `user` so the very first
+  // route still counts once /api/me resolves. 0 until this route is counted.
+  const views = useSessionViews(VIEWS_KEY, pathname, loaded && !user);
+
+  // Engaged time on a FIRST page: visible tab + at least one scroll/click/key.
+  // Only tracked while it could still matter (the first page, not yet shown).
+  const engaged = useEngaged(signupEngagedNeededMs(pathname), pathname, loaded && !user && !shown && views === 1);
+
+  // "This tab has started signing in": any click on a link into /login (or the
+  // OAuth start routes), and any visit to /login or /verify. lib/signin-intent.ts.
+  useEffect(() => watchSignInClicks(), []);
   useEffect(() => {
-    if (!loaded || user) return;
-    if (!pathname || lastCountedPath.current === pathname) return;
-    lastCountedPath.current = pathname;
-    try {
-      sessionStorage.setItem(VIEWS_KEY, String(readCount(VIEWS_KEY) + 1));
-    } catch {
-      /* private mode — the promo then just behaves as never-dismissed */
-    }
-  }, [pathname, loaded, user]);
+    if (isSignInPath(pathname)) markSignInStarted();
+  }, [pathname]);
 
   useEffect(() => {
-    if (!loaded || user || shown) return;
-    if (SKIP_PATHS.some((p) => pathname?.startsWith(p))) return;
+    if (!loaded || user || shown || views === 0) return;
+    if (pathSkipped(pathname, SKIP_PATHS)) return;
 
-    // NO FIRST-VISIT GATE (removed 2026-09-29 at the owner's request): the
-    // first page a signed-out visitor loads shows the card, whatever the
-    // referrer, the device or the page.
+    // VALUE FIRST (2026-09-29): never a visit's first page view unless it has
+    // been read for 45 s (30 s on blog posts and /movers); from the 2nd page view
+    // on. Referrer, device and width are deliberately not inputs. The same
+    // check runs again when the timer fires (below), because a tab can start
+    // signing in during the wait.
+    const gate = () =>
+      signupPromoEligible({
+        views,
+        engagedMs: engaged ? signupEngagedNeededMs(pathname) : 0,
+        landing: isLandingPage(pathname),
+        signInStarted: signInStarted(),
+      });
+    if (!gate()) return;
 
     // THE LIFETIME CAP, checked before anything else because it is the cheapest
     // read and the most final. Two dismissals is a no — same rule, same numbers
@@ -302,16 +325,13 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     if (readLocal(DISMISS_COUNT_KEY) >= MAX_NUDGE_DISMISSALS) return;
     if (Date.now() < readLocal(SNOOZE_UNTIL_KEY)) return;
 
-    // Never dismissed this session → show at the first opportunity, with no
-    // gate of any kind, exactly as before. Dismissed → stay away until they
-    // have moved on PAGES_BETWEEN_SHOWS further pages, then come back.
+    // Never dismissed this session → eligible as above. Dismissed → stay away
+    // until they have moved on PAGES_BETWEEN_SHOWS further pages, then come back.
     //
     // This within-session spacing is UNCHANGED and still does its own job; the
     // cap above sits on top of it rather than replacing it.
-    let views = 0;
     let dismissedAt: number | null = null;
     try {
-      views = readCount(VIEWS_KEY);
       const raw = sessionStorage.getItem(DISMISSED_AT_KEY);
       dismissedAt = raw === null ? null : Number(raw) || 0;
     } catch {
@@ -319,27 +339,20 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     }
     if (dismissedAt !== null && views - dismissedAt < PAGES_BETWEEN_SHOWS) return;
 
-    // Never slide in on top of a real modal. FeedbackWidget sets this flag
-    // while its panel is open; sliding a signup pitch in over a visitor who is
-    // mid-sentence writing us feedback would lose the feedback entirely.
-    // Deliberately does NOT touch the counters when it skips, so that visitor
-    // still gets the promo on the next page rather than losing this turn.
-    const t = setTimeout(() => {
-      // Checked HERE rather than when the effect armed: a modal can open before
-      // the timer fires (a zero delay still yields to the render that opened
-      // it), and sliding in over it is the thing this guard exists to prevent.
-      // Skipping does not touch the counters, so the visitor still gets the
-      // promo on the next page rather than losing this turn.
-      if (document.body.dataset.rcDialog === "1") return;
-
-      setShown(true);
-      trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, copy: PREMIUM_COPY_VERSION, repeat: dismissedAt !== null });
-    }, NUDGE_DELAY_MS);
-
-    // Navigating away mid-wait must cancel it, or the popup lands on a page the
-    // visitor has already left — including one in SKIP_PATHS.
-    return () => clearTimeout(t);
-  }, [loaded, user, shown, pathname]);
+    // armNudge (lib/nudge-runtime.ts) owns the wait: cancelled if the visitor
+    // navigates away (this cleanup), opens a dialog or drawer, or focuses a text
+    // field; restarted when that ends; and at a quiet moment only (not over an
+    // open dialog, not within 10 s of one closing, not mid-scroll or mid-typing).
+    // None of that touches the counters, so a skipped turn is not a lost one.
+    return armNudge({
+      delayMs: NUDGE_DELAY_MS,
+      onFire: () => {
+        if (!gate()) return;
+        setShown(true);
+        trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, copy: PREMIUM_COPY_VERSION, repeat: dismissedAt !== null });
+      },
+    });
+  }, [loaded, user, shown, pathname, views, engaged]);
 
   // usePresence(shown, 250) now owns letting the exit transition finish
   // before actually unmounting — the same call PremiumSlideIn's
@@ -373,6 +386,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   // PremiumSlideIn's accept() makes between its two snooze windows.
   const snoozeForClick = useCallback(() => {
     writeLocal(SNOOZE_UNTIL_KEY, Date.now() + SNOOZE_AFTER_CLICK_MS);
+    markSignInStarted();
   }, []);
 
   // Esc dismisses it — non-trapping, because this is not a modal (no focus
@@ -438,7 +452,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         <button
           onClick={dismiss}
           aria-label="Dismiss"
-          className="tap-icon absolute right-0 top-0 z-10 shrink-0 rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+          className="tap-icon absolute right-0 top-0 z-10 min-h-11 min-w-11 shrink-0 rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
         >
           ✕
         </button>

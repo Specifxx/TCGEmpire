@@ -27,28 +27,29 @@ const readCode = (p: string) =>
 // ─────────────────────────────────────────────────────────────────────────────
 
 const NUDGES = [
-  "src/components/SignupPromoPopup.tsx", // signed-out: sign up / Premium
-  // "src/components/PremiumSlideIn.tsx" (signed-in free: Premium) was removed
-  // on 2026-09-28 — upgrade prompts now live at the free limits.
+  "src/components/SignupPromoPopup.tsx", // signed-out: make a free account
+  "src/components/PremiumSlideIn.tsx", // signed-in free: Premium (removed 2026-09-28, restored 2026-09-29)
   "src/components/AnnualSwitchNudge.tsx", // monthly subscriber: switch to annual
 ];
+const RUNTIME = "src/lib/nudge-runtime.ts";
 
-test("the shared delay is zero: instant once eligible (owner, 2026-09-29)", () => {
-  // Five seconds from 2026-09-11; back to instant on 2026-09-29: "make the sign
-  // up and premium slider instant. I want to bring the instant feature back."
-  // Hours later the page-view and reading gates went too: both cards show on
-  // the first page as soon as it loads (tests/first-visit-ux.test.ts).
-  assert.equal(NUDGE_DELAY_MS, 0);
+test("the shared delay is twelve seconds (owner, 2026-09-29: \"make the delay slightly longer\")", () => {
+  // 5 s from 2026-09-11; instant on the morning of 2026-09-29 ("I want to bring
+  // the instant feature back"); 12 s that afternoon: "make the login slider less
+  // annoying again and focus on getting visitors to use the site rather than
+  // annoy them. Make the delay slightly longer." Longer than the 5 s it replaced
+  // AND longer than instant, on every corner nudge, from one constant.
+  assert.equal(NUDGE_DELAY_MS, 12_000);
+  assert.ok(NUDGE_DELAY_MS > 5_000, "slightly longer than the last non-instant delay");
 });
 
-test("every corner nudge waits the shared delay before showing", () => {
+test("every corner nudge waits the shared delay before showing, through the shared timer", () => {
   for (const f of NUDGES) {
     const code = readCode(f);
-    assert.match(code, /NUDGE_DELAY_MS/, `${f} must read the shared nudge delay`);
-    // Imported AND actually used as the timer — an unused import would leave the
-    // old behaviour in place while looking fixed.
-    // No landing-page swap any more (2026-09-29): the shared delay everywhere.
-    assert.match(code, /\}, NUDGE_DELAY_MS\)/, `${f} must use it as the show timer, not merely import it`);
+    // The show timer is armNudge (lib/nudge-runtime.ts), and the delay handed to
+    // it must be the shared constant, used directly.
+    assert.match(code, /armNudge\(\{/, `${f} must use the shared show timer`);
+    assert.match(code, /delayMs: NUDGE_DELAY_MS/, `${f} must use the shared delay as the show timer, not merely import it`);
   }
 });
 
@@ -67,26 +68,36 @@ test("no nudge keeps a private copy of the delay", () => {
 });
 
 test("a pending show is cancelled if the visitor navigates away first", () => {
-  // Five seconds is long enough to leave. Without cleanup the nudge fires
-  // against a page that is gone — including one the component's own SKIP_PATHS
-  // would have refused.
+  // Twelve seconds is long enough to leave. Without cleanup the nudge fires
+  // against a page that is gone, including one the component's own skipped
+  // paths would have refused. Each nudge returns armNudge's cleanup (or, for
+  // the annual offer, calls it from its effect's), and that cleanup clears the
+  // timer.
   for (const f of NUDGES) {
     const code = readCode(f);
-    assert.match(code, /clearTimeout/, `${f} must clear its pending show on unmount/route change`);
+    assert.match(code, /return armNudge\(\{|stopTimer\?\.\(\)/, `${f} must clean up its pending show on unmount/route change`);
   }
+  const runtime = readCode(RUNTIME);
+  const arm = runtime.slice(runtime.indexOf("export function armNudge"), runtime.indexOf("// ── Engaged time"));
+  assert.match(arm, /return \(\) => \{\s*done = true;\s*clear\(\);/, "the cleanup must stop and clear the timer for good");
 });
 
-test("the modal yield is checked when the timer FIRES, not when it is armed", () => {
+test("the modal yield is checked when the timer FIRES, not only when it is armed", () => {
   // A modal can open during the wait. Checking only at arm time would let the
-  // nudge slide in over a visitor who started writing feedback two seconds ago
-  // — the exact thing the rcDialog flag exists to prevent.
-  for (const f of NUDGES) {
-    const code = readCode(f);
-    const armAt = code.indexOf("setTimeout(");
-    const guardAt = code.indexOf("dataset.rcDialog");
-    assert.ok(armAt >= 0, `${f} must arm a timer`);
-    assert.ok(guardAt > armAt, `${f} must check the modal flag inside the timer, not before arming it`);
-  }
+  // nudge slide in over a visitor who started writing feedback ten seconds ago:
+  // the exact thing the rcDialog flag exists to prevent. attempt() is what the
+  // timer runs, and it asks quietWaitMs (which returns a wait while a dialog is
+  // open) before it calls onFire.
+  const runtime = readCode(RUNTIME);
+  const attempt = runtime.slice(runtime.indexOf("const attempt = () =>"), runtime.indexOf("const onFocusIn"));
+  assert.ok(attempt.length > 0, "expected the timer callback");
+  assert.ok(attempt.indexOf("quietWaitMs(readQuietInput())") >= 0, "the fire-time check");
+  assert.ok(attempt.indexOf("quietWaitMs(readQuietInput())") < attempt.indexOf("onFire()"), "checked before it shows");
+  assert.match(runtime, /dialogOpen: dialogFlag\(\)/, "the check reads the shared dialog flag");
+  // And it is cancelled while a dialog opens or a text field takes focus, and restarted after.
+  assert.match(runtime, /const onDialog = \(open: boolean\) => \{\s*if \(open\) clear\(\);/, "a dialog opening cancels the pending show");
+  assert.match(runtime, /const onFocusIn = [\s\S]*?isTextEntry\(e\.target as HTMLElement \| null\)\) clear\(\)/, "focusing a text field cancels it");
+  assert.match(runtime, /schedule\(delayMs\)/, "and it restarts when the visitor is done");
 });
 
 test("the delay is a timing change only — every frequency cap is untouched", () => {
@@ -109,4 +120,6 @@ test("the history behind this number is written down where the next editor will 
   const src = read("src/lib/nudge-timing.ts");
   assert.match(src, /78%/, "the recorded dismiss rate from the last 5s era must stay in the file");
   assert.match(src, /buy_click/, "the metrics to watch must be named");
+  assert.match(src, /intrusive interstitial/, "Google's guidance on pop-ups over a phone's first page must stay in the file");
+  assert.match(src, /instant with no page-view gate/, "the flip-flop history must stay in one place");
 });

@@ -329,4 +329,10 @@ export function premiumLockInTail(): string {
 // screen at 390x844 and 1280x720; What you get is one line a feature, the table is
 // collapsed, the FAQ is seven questions, and the persona sections and per-feature
 // cards are gone. Plans, prices and every entitlement unchanged.
-export const PREMIUM_COPY_VERSION = "premium-2026-09-29c";
+// nudges-2026-09-29: the corner cards ask later and smaller (DECISIONS.md, "Nudges:
+// value first"): the sign-up card is never on a visit's first page view, the Premium
+// slide-in waits for the 3rd page and a 48-hour-old account and is a compact card
+// with the tier table behind "See what's included", and both wait 12 s. No copy,
+// plan or price changed; the label separates the funnel events from the era of
+// instant cards.
+export const PREMIUM_COPY_VERSION = "nudges-2026-09-29";

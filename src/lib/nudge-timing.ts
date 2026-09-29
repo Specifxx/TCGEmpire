@@ -13,18 +13,22 @@
  * things appearing in the corner of the page, and those should feel like one
  * system behaving consistently.
  *
- * ZERO — INSTANT — since 2026-09-29, at the owner's explicit instruction:
- * "make the sign up and premium slider instant. I want to bring the instant
- * feature back." It was FIVE SECONDS from 2026-09-11 (also the owner's call:
- * "every slider shows five seconds after the page opens, rather than
- * instantly"). Hours later the owner went further: "the slider should show up
- * instantly and it should not wait for a second page view. on blog posts and
- * movers it should also be instant … it should show up as soon as the page
- * loads." So the page-view and reading gates are gone too (the sign-up
- * popup's lib/signup-promo-gate.ts with them): both cards show on the first
- * page, as soon as the account check says who is looking. Only the caps and
- * snoozes below, once-per-session for the Premium card, and each card's
- * skipped paths (/login, /verify, /premium) still hold.
+ * TWELVE SECONDS since 2026-09-29 ("Nudges: value first", DECISIONS.md), and
+ * that number is one half of a rule rather than a bare delay: a corner card
+ * appears NUDGE_DELAY_MS after it became ELIGIBLE, and eligibility itself is
+ * earned first (lib/nudge-gate.ts: never a visit's first page view unless it
+ * has been read for 45 s, never a Premium ask before the 3rd page or on a
+ * 48-hour-old account). The owner's brief that day: "make the login slider less
+ * annoying again and focus on getting visitors to use the site rather than
+ * annoy them. Make the delay slightly longer."
+ *
+ * THE FLIP-FLOP, in one place, so the next change starts from the evidence: 5 s
+ * (2026-09-11) → instant (2026-09-29 morning: "I want to bring the instant
+ * feature back") → instant with no page-view gate either (same day, both cards
+ * on the first page as it loads) → this. An instant card had already been
+ * measured once (78% dismissed, bounce up, pages/visitor down), and Google
+ * treats a pop-up that covers the content of a phone's first page from search
+ * as an intrusive interstitial, which matters to a site applying for AdSense.
  *
  * WHAT THE HISTORY SAYS, because this number has been fought over before and
  * the next person to touch it deserves the evidence rather than a bare value.
@@ -43,7 +47,7 @@
  * says how long after the page opens an already-eligible nudge appears. Nothing
  * here makes a nudge show to someone it would not otherwise have shown to.
  */
-export const NUDGE_DELAY_MS = 0;
+export const NUDGE_DELAY_MS = 12_000;
 
 /**
  * HOW OFTEN A CORNER NUDGE MAY COME BACK, and when it must stop asking.

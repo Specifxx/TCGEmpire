@@ -481,5 +481,6 @@ test("every tier surface quotes the limits from the constants, and price compari
   }
   // Bumped 2026-09-29 for the plans-first /premium (DECISIONS.md, "/premium: plans
   // first, a fifth of the words"); the free limits are unchanged on every surface above.
-  assert.equal(PREMIUM_COPY_VERSION, "premium-2026-09-29c");
+  // "nudges-2026-09-29" since the value-first nudges (DECISIONS.md, "Nudges: value first"); no copy, plan or price changed.
+  assert.equal(PREMIUM_COPY_VERSION, "nudges-2026-09-29");
 });
