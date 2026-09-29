@@ -35,7 +35,12 @@ import { PREMIUM_COPY_VERSION, PREMIUM_PRICE_LABEL } from "../src/lib/site";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
-const code = (p: string) => read(p).replace(/\{\/\*[\s\S]*?\*\/\}/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+// Block comments are matched only where one can start — at the beginning of a
+// line — so prose like "/sets/* hub" or a Signature number such as "169*/167"
+// inside an article string can't open or close one. Unanchored, a "/*" in
+// articles.ts once paired with a "*/" 5,700 lines later and hid the text in
+// between from every check below (2026-09-29).
+const code = (p: string) => read(p).replace(/\{\/\*[\s\S]*?\*\/\}/g, "").replace(/^\s*\/\*[\s\S]*?\*\//gm, "").replace(/^\s*\/\/.*$/gm, "");
 
 const PAID_UNTIL = new Date("2099-01-01T00:00:00Z");
 const free = { id: "u1", email: "a@x.com", isAdmin: false, premiumUntil: null, premiumTier: null, premiumTierFloor: null };
@@ -468,7 +473,10 @@ test("every tier surface quotes the limits from the constants, and price compari
     "src/app/alerts/page.tsx",
   ]) {
     assert.match(read(f), /FREE_WATCHLIST_LIMIT/, `${f} quotes the watchlist limit from the constant`);
-    assert.doesNotMatch(code(f), /\b(10|ten) (watched )?cards\b|\b50 (portfolio )?cards\b/i, `${f} hand-types a limit`);
+    // "Side deck … 10 cards" is a tournament rule (lib/articles.ts' side-deck
+    // guide), not a tier limit.
+    const text = code(f).replace(/side deck[^\n]*/gi, "");
+    assert.doesNotMatch(text, /\b(10|ten) (watched )?cards\b|\b50 (portfolio )?cards\b/i, `${f} hand-types a limit`);
   }
   // Bumped 2026-09-29 with the watches (DECISIONS.md, "Premium works while
   // you're away"); the free limits are unchanged on every surface above.

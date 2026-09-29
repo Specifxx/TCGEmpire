@@ -41,9 +41,11 @@ test("FilterableCardGallery hides past initialCount, never slices the list", () 
 
 test("leak roundup and guides: RAD-scoped, bracketed-marker galleries, all positioned", () => {
   const cases: [string, string[]][] = [
-    ["riftbound-radiance-leaked-mechanics", ["[Deploy", "[Showoff", "[Disarm"]],
+    // "[Show Off": the cards print the name as two words (2026-09-29), not the
+    // leak's "Showoff"; the old marker would never match a real card.
+    ["riftbound-radiance-leaked-mechanics", ["[Deploy", "[Show Off", "[Disarm"]],
     ["riftbound-deploy-explained", ["[Deploy"]],
-    ["riftbound-showoff-explained", ["[Showoff"]],
+    ["riftbound-showoff-explained", ["[Show Off"]],
     ["riftbound-disarm-explained", ["[Disarm"]],
   ];
   for (const [slug, want] of cases) {
@@ -53,7 +55,7 @@ test("leak roundup and guides: RAD-scoped, bracketed-marker galleries, all posit
     for (const e of embeds) {
       assert.equal(e.rulesSet, "RAD", `${slug}: scoped to Radiance`);
       // Bracketed prefix only — plain "Disarm" is on an unrelated Kai'Sa text.
-      assert.match(e.rulesContain ?? "", /^\[[A-Z][a-z]+$/, `${slug}: bracketed marker`);
+      assert.match(e.rulesContain ?? "", /^\[[A-Z][a-z]+( [A-Z][a-z]+)?$/, `${slug}: bracketed marker`);
       assert.ok(!e.setAll && !e.chaseSet, `${slug}: renders nothing until a card matches`);
     }
     assert.deepEqual(markers(a.body), want.map((_, i) => i), `${slug}: every gallery placed in the body`);

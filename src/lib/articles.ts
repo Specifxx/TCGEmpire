@@ -230,6 +230,216 @@ export interface Article {
 // read it, so one bump when a wave lands updates every one of them.
 
 export const ARTICLES: Article[] = [
+  // RADIANCE PREVIEW SEASON, WEEK ONE (2026-09-29). The first wave of finished
+  // Preview Season card images, as gathered by StarCityGames' round-up: 23 cards
+  // read in full and added to prisma/manual-cards.json (three Legends, the three
+  // leaked mechanics in print, seven Champion Units, four chase printings), plus
+  // three cards described but NOT catalogued because a number or gem is
+  // unreadable. Owns the week-one / Legends-in-print / mechanics-confirmed intent
+  // (docs/seo-keyword-map.md); the tracker keeps "radiance spoilers", the leak
+  // post "radiance leak", /sets/radiance "card list". Title avoids "spoiler".
+  // Inbound links from the tracker's reveal log, the leak post and the three
+  // mechanic guides.
+  {
+    slug: "riftbound-radiance-preview-week-one",
+    category: "blog",
+    title: "Riftbound Radiance Preview Week 1: 23 Cards",
+    excerpt:
+      "Ekko, Ziggs and Orianna's Legends, Deploy, Show Off and Disarm in print, and Radiance's first Signature cards: 23 cards from Preview Season's first week.",
+    author: "RiftCompare",
+    date: "2026-09-29",
+    readMins: 11,
+    tags: ["radiance", "news", "preview season", "legends", "mechanics"],
+    hero: {
+      src: "/blog/riftbound-radiance-preview-week-one.jpg",
+      alt: "Three Riftbound: Radiance Signature Legends from Preview Season's first week — Ziggs, Hexplosives Expert (169*/167), Orianna, Lady of Clockwork (171*/167) and Seraphine, Starry-Eyed Songstress (174*/167)",
+    },
+    shop: [
+      { label: "Radiance booster displays", query: "Riftbound Radiance booster display" },
+      { label: "Ziggs and Orianna Signatures", query: "Riftbound Radiance signature" },
+      { label: "Radiance singles on eBay", query: "Riftbound Radiance" },
+    ],
+    // Every slug is a manual-cards.json row added the same day.
+    embeds: [
+      {
+        title: "The three new Legends, their Signatures and Ziggs' spell",
+        note: "Read off Preview Season's finished card images. Every field is in our database; the art is a stopgap until Riot's official gallery carries these cards.",
+        slugs: [
+          "ekko-boy-who-shattered-time-rad-139-167",
+          "ziggs-hexplosives-expert-rad-141-167",
+          "orianna-lady-of-clockwork-rad-145-167",
+          "ziggs-hexplosives-expert-rad-169s-167",
+          "orianna-lady-of-clockwork-rad-171s-167",
+          "hexplosive-minefield-rad-142-167",
+        ],
+      },
+      {
+        title: "Deploy, Show Off and Disarm, in print",
+        note: "Two cards for each of the three mechanics that leaked from Riot's PAX West demo table.",
+        slugs: [
+          "pillaged-armory-rad-073-167",
+          "dockside-lock-up-rad-136-167",
+          "primordial-roar-rad-082-167",
+          "rousing-display-rad-127-167",
+          "kai-sa-rebel-rad-063-167",
+          "disposal-expert-rad-093-167",
+        ],
+      },
+      {
+        title: "The week's Champion Units",
+        note: "Seven Champion Units, including Evelynn's alternate art and K'Sante, Courageous' base printing.",
+        slugs: [
+          "k-sante-dauntless-rad-045-167",
+          "k-sante-courageous-rad-086-167",
+          "ekko-ingenious-rad-061-167",
+          "evelynn-consuming-rad-090-167",
+          "evelynn-consuming-rad-090a-167",
+          "heimerdinger-academy-instructor-rad-132-167",
+          "seraphine-not-alone-rad-138-167",
+        ],
+      },
+      {
+        title: "The rest of the week's cards",
+        note: "Radiance's first battlefield, two more Epics, a Common, and Seraphine's Signature Legend.",
+        slugs: [
+          "clocktower-guardian-rad-067-167",
+          "zero-point-inflection-rad-069-167",
+          "momentary-companion-rad-095-167",
+          "rakelstake-rad-165-167",
+          "seraphine-starry-eyed-songstress-rad-174s-167",
+        ],
+      },
+    ],
+    summary: [
+      "**Three of Radiance's nine Legends are now in print:** [Ekko, Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-139-167) (Fury/Mind), [Ziggs, Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-141-167) (Fury/Chaos) and [Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-145-167) (Calm/Mind).",
+      "**The leaked mechanics are real.** Deploy, Show Off and Disarm are each printed on two finished cards, with reminder text that matches the PAX West leak. The printed name is **Show Off**, two words.",
+      "**Radiance's first Signature cards:** Ziggs 169\\*/167, Orianna 171\\*/167 and Seraphine 174\\*/167, plus an alternate-art Evelynn, 090a/167.",
+      "**23 cards are in our database** with their own pages. Three more from the same images, including Ahri, Confident, stay out until their number and rarity can be read.",
+      "**Nothing is for sale yet.** Pre-Rift events run 16–22 October and Radiance releases on **23 October 2026**.",
+    ],
+    faq: [
+      {
+        q: "Which Riftbound Radiance Legends have been revealed?",
+        a: "Six are confirmed by name — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — out of nine. Four have Legend cards in print as of 29 September 2026: Starry-Eyed Songstress for Seraphine (Mind/Order), Boy Who Shattered Time for Ekko (Fury/Mind), Hexplosives Expert for Ziggs (Fury/Chaos) and Lady of Clockwork for Orianna (Calm/Mind). K'Sante's Legend, Pride of Nazumah, has also been shown. Evelynn's and Jarvan IV's Legend cards have not been shown in full, and three Legends are still unannounced.",
+      },
+      {
+        q: "Are Deploy, Show Off and Disarm confirmed for Radiance?",
+        a: "Yes. All three are printed on finished Radiance cards shown during Preview Season: Deploy on Pillaged Armory and Dockside Lock-Up, Show Off on Primordial Roar and Rousing Display, and Disarm on Kai'Sa, Rebel and Disposal Expert. Their reminder text matches what leaked from Riot's PAX West demo table in September. The leak spelt one of them Showoff; the cards print SHOW OFF as two words.",
+      },
+      {
+        q: "What does Ziggs' Radiance Legend do?",
+        a: "Ziggs, Hexplosives Expert lets you pay 1 energy and 1 power of any domain and exhaust him to play a Bomb gear token to a battlefield. A Bomb has Deploy, and when it dies it deals 2 to an enemy there and kills your other Bombs there. His signature spell, Hexplosive Minefield, kills any number of your Bombs and plays that many back onto one battlefield at the end of the turn.",
+      },
+      {
+        q: "What do the asterisk and the letter in Radiance collector numbers mean?",
+        a: "An asterisk marks a Signature printing, the same card with the artist's signature and its own art: Ziggs is 169*/167, Orianna 171*/167 and Seraphine's Legend 174*/167. A letter marks an alternate art of a base card, like Evelynn, Consuming at 090a/167. Both are chase printings; the plain numbers up to 167 are the base set.",
+      },
+      {
+        q: "How many Radiance cards have been revealed so far?",
+        a: "Our live tracker's gallery is the running count, drawn from our database. This post covers the 23 cards added on 29 September 2026 from Preview Season's first week, which brought the catalogued total past 30 Radiance cards. Riot announced 180 cards for the set, including 66 Showcase printings.",
+      },
+      {
+        q: "When can you buy Riftbound Radiance cards?",
+        a: "Pre-Rift events run from 16 to 22 October 2026, which is when the first singles usually change hands, and Radiance releases worldwide on 23 October 2026. Until then only sealed product can be pre-ordered.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Every Radiance card as it's revealed →",
+      blurb: "The set hub fills in through Preview Season and switches on live price comparison across every store we track on release day.",
+    },
+    body: `**Five days into Preview Season, Riftbound: Radiance is starting to look like a card list.** The finished card images shown since the Regional Qualifier in Los Angeles, gathered in one place by StarCityGames, include **three of the set's nine Legends**, its first Signature printings, and cards carrying all three of the mechanics that leaked from Riot's PAX West demo table in September.
+
+We read every card in that round-up whose collector number and rarity gem can be made out. **23 of them are now in our database**, each with its own page, and they fill the galleries below. Card text quoted here is read off the cards, with the energy, power and exhaust symbols written out in words. Where we say what a card might be good at, that is our read, and we say so. The dated log of every reveal is on **[the live Radiance tracker](/blog/riftbound-radiance-spoilers)**, and **[the Radiance set page](/sets/radiance)** lists every card as it arrives.
+
+## The week at a glance
+
+| What | Cards | What it settles |
+| --- | --- | --- |
+| **Legends** | Ekko, Ziggs, Orianna | Three of the nine Legends are in print; Ziggs and Orianna also have Signature printings |
+| **New mechanics** | Deploy ×2, Show Off ×2, Disarm ×2 | The PAX West leak was accurate, down to the reminder text |
+| **Champion Units** | K'Sante ×2, Ekko, Kai'Sa, Evelynn, Heimerdinger, Seraphine | Seraphine, Not Alone's place in the set: 138/167, Epic |
+| **Chase printings** | Evelynn 090a, Ziggs 169\\*, Orianna 171\\*, Seraphine 174\\* | Radiance's first alternate art and Signature numbers |
+| **The rest** | Clocktower Guardian, Zero Point Inflection, Momentary Companion, Rakelstake | Radiance's first battlefield, and a gear that can give your opponent a point |
+
+## Ekko, Ziggs and Orianna: three Legends in print
+
+**[Ekko, Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-139-167)** (Fury/Mind, 139/167, Rare) is the one Legend whose ability Riot had already described, in its first-look article in August, and the printed card matches it. Ekko has **[Empower](/keywords/empower)** for one energy and exhausting him, usable only while he is not Empowered. Then: *"Disempower me, exhaust: Reduce the cost of the next unit you play this turn by 2 energy and 1 power and give it 'Kill me at end of turn.'"* You charge Ekko on one turn and spend the charge on a later one to play a unit early, and that unit dies when the turn ends.
+
+Our read: the cost is steep unless the unit does its work on the way in. A unit with a "when you play me" ability keeps that value after it dies. And his own Champion Unit, *Ekko, Ingenious*, asks you to return a friendly unit to its owner's hand as an additional cost. Returned before the turn ends, a discounted unit would not be on the board to die. Whether that loop is worth two cards is exactly the kind of thing Preview Season can't answer yet.
+
+**[Ziggs, Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-141-167)** (Fury/Chaos, 141/167, Rare) makes bombs: *"1 energy and 1 power, exhaust: Play a Bomb gear token to a battlefield."* The card's reminder text defines the Bomb. It has **Deploy**, and when it dies it deals 2 to an enemy there and kills your other Bombs there. His signature spell, **[Hexplosive Minefield](/card/hexplosive-minefield-rad-142-167)** (2 energy, Epic, an **[Action](/keywords/action)**), kills any number of your Bomb tokens, then at the end of the turn plays that many back onto a single battlefield.
+
+Read the Bomb's text twice, because it chains. One Bomb dying kills the others at the same battlefield, and each of those deals 2 as it dies. And because every Bomb has Deploy, an opponent who holds a battlefield with your Bombs on it sets them all off. Hexplosive Minefield is what turns a spread of Bombs into one stack that goes off together. Ziggs also has a Signature printing, **[169\\*/167](/card/ziggs-hexplosives-expert-rad-169s-167)**, art by Kindlejack.
+
+**[Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-145-167)** (Calm/Mind, 145/167, Rare): *"At the start of your Main Phase, you may pay 1 to choose a friendly gear. It becomes a unit gear with Might equal to its Energy cost until you choose another gear with me."* The more a gear costs, the bigger the body. Radiance has already shown a 6-energy gear (Dockside Lock-Up) and a 9-energy one (Zero Point Inflection). What "unit gear" means in the rules — whether it can move, and what happens to its gear abilities — Riot hasn't published yet. Orianna's Signature, **[171\\*/167](/card/orianna-lady-of-clockwork-rad-171s-167)**, is by Anh Dang.
+
+With Seraphine's *Starry-Eyed Songstress*, officially revealed on 24 September, that is four of the nine Legends in print. The fifth Legend shown so far is K'Sante's *Pride of Nazumah*, [covered here](/blog/riftbound-ksante-radiance-spoiler). Riot hasn't formally counted him among the nine.
+
+[[embed:0]]
+
+## Deploy, Show Off and Disarm are real
+
+In September a fan photo of Riot's PAX West demo reference card showed three unreleased mechanics. **[Our write-up of the leak](/blog/riftbound-radiance-leaked-mechanics)** treated them as unconfirmed, because a demo card is not a printed one. Now all three are on finished cards, and the reminder text matches the leak almost word for word. The one real change is a name: the leak spelt it **Showoff**, and the cards print **SHOW OFF**, two words.
+
+**Deploy** — *"Play this only to a battlefield. When an opponent holds here, kill this."* Both Deploy cards so far are gear, as the leak said. **[Pillaged Armory](/card/pillaged-armory-rad-073-167)** (Body, 1 energy, Common) gives a friendly unit a **[Buff](/keywords/buff)** when you play it and whenever you conquer there. **[Dockside Lock-Up](/card/dockside-lock-up-rad-136-167)** (Order, 6 energy, Epic) banishes a unit there when you play it, and when you hold there you can kill the Lock-Up to play the banished card, ignoring its cost. Its printed aside, *"Tokens aren't cards"*, means a banished token has no card to play back. The card says *a unit*, not *an enemy unit*, so it can also park one of your own for later. How playing the card works when the unit was your opponent's is a rules question Riot hasn't answered yet.
+
+**Show Off** — *"As you play this, you may reveal a unit from your hand or pick a friendly unit."* The leak's "listed criteria" turn out to be printed straight after the keyword. **[Primordial Roar](/card/primordial-roar-rad-082-167)** (Body, 4 energy, Uncommon) shows off *a unit*. If you did, it deals damage equal to that unit's Might to a unit, so the spell is only as good as the biggest unit you can show. **[Rousing Display](/card/rousing-display-rad-127-167)** (Order, 5 energy, Uncommon) shows off *a card with Energy cost 7 or more*. It plays two 1-Might Recruit unit tokens to your base, or four if you showed off. The difference between the two is worth noting: Roar does nothing without the show-off, while Display is still a spell without it, just a smaller one.
+
+**Disarm** — *"When I attack, give an enemy unit here -1 Might this turn."* Like **[Assault](/keywords/assault)**, it takes a number. **[Disposal Expert](/card/disposal-expert-rad-093-167)** (Chaos, 4 energy, 3 Might, Common) has **Disarm 2**, and enters ready if you control no other units. **[Kai'Sa, Rebel](/card/kai-sa-rebel-rad-063-167)** (Mind, 5 energy, 5 Might, Rare) has Disarm, and while she is in a showdown your spells have **[Reaction](/keywords/reaction)**. That settles one argument the leak post left open. Anonymous text for a Kai'Sa card circulated in September beginning with the word "Disarm", and seemed to use it for something else. The printed card has Disarm as a keyword with exactly the demo card's meaning, followed by a separate ability.
+
+The galleries on the leak write-up and on each mechanic's guide (**[Deploy](/guides/riftbound-deploy-explained)**, **[Show Off](/guides/riftbound-showoff-explained)**, **[Disarm](/guides/riftbound-disarm-explained)**) now fill with these cards on their own.
+
+[[embed:1]]
+
+[[shop]]
+
+## The Champion Units
+
+Seven Champion Units arrived this week, and several tie back to the Legends above.
+
+- **[K'Sante, Dauntless](/card/k-sante-dauntless-rad-045-167)** (Calm, 4 energy, 4 Might, Epic) has **[Shield](/keywords/shield)**, and when he attacks or defends he doubles the Shield of a unit you control there that turn. K'Sante's Legend, *Pride of Nazumah*, gives a unit Assault equal to its Shield. Every K'Sante card so far is about Shield.
+- **[K'Sante, Courageous](/card/k-sante-courageous-rad-086-167)** (Body, 5 energy, 4 Might, Rare) is the base printing of the card first seen as HEARTSTEEL's overnumbered 178/167: **[Accelerate](/keywords/accelerate)**, Shield 2, and channel 1 rune when he holds. It confirms the HEARTSTEEL K'Sante works like [the other five HEARTSTEEL cards](/blog/riftbound-heartsteel-overnumbered-cards): an overnumbered printing of a card in a set's base run.
+- **[Ekko, Ingenious](/card/ekko-ingenious-rad-061-167)** (Mind, 3 energy, 4 Might, Rare) costs you a friendly unit returned to its owner's hand, and has **[Ganking](/keywords/ganking)**.
+- **[Evelynn, Consuming](/card/evelynn-consuming-rad-090-167)** (Body, 5 energy, 5 Might, Epic) has **[Ambush](/keywords/ambush)**, and whenever you play a card from face down she readies and gets +1 Might for the turn. Cards played face down are **[Hidden](/keywords/hidden)** cards, so she pays off a Hidden deck. Her alternate art, **[090a/167](/card/evelynn-consuming-rad-090a-167)**, is credited to Dark Glow (黯荧岛).
+- **[Heimerdinger, Academy Instructor](/card/heimerdinger-academy-instructor-rad-132-167)** (Order, 6 energy, 5 Might, Rare): while he is at a battlefield, any unit token you would play to a location can be a 3-Might Mech token instead. The card says *a location*, not *a battlefield*, so Rousing Display's Recruits, which go to your base, look like they qualify: four 1-Might tokens become four 3-Might Mechs.
+- **[Seraphine, Not Alone](/card/seraphine-not-alone-rad-138-167)** (Order, 5 energy, 1 Might, Epic) has been in collectors' hands since [the T1 Worlds collection](/blog/riftbound-t1-worlds-champion-collection); now it has a number and a rarity in the set itself. She plays a 1-Might Recruit token when she enters or becomes exhausted, and gets +1 Might for each other exhausted unit you control. Her Legend's cost-reduction asks you to exhaust three friendly units.
+- **[Kai'Sa, Rebel](/card/kai-sa-rebel-rad-063-167)** is covered under Disarm above.
+
+[[embed:2]]
+
+## Everything else from the first week
+
+- **[Clocktower Guardian](/card/clocktower-guardian-rad-067-167)** (Mind, 8 energy, 8 Might, Epic): **[Predict](/keywords/predict)** 3 when you play it and whenever it holds, and a **[Deathknell](/keywords/deathknell)** that banishes the top card of your Main Deck and lets you play it, ignoring its Energy cost.
+- **[Zero Point Inflection](/card/zero-point-inflection-rad-069-167)** (Mind gear, 9 energy, Epic): whenever you play a card, draw 2. When you draw with 9 or more other cards in hand, you discard your hand, kill it, and choose an opponent, who scores 1 point. It is a draw engine with a limit you have to manage.
+- **[Momentary Companion](/card/momentary-companion-rad-095-167)** (Chaos, 4 energy, 4 Might, Common): Hidden, and if you play it when it isn't your turn it gets **[Temporary](/keywords/temporary)**, so it dies at the start of your next Beginning Phase, before scoring.
+- **[Rakelstake](/card/rakelstake-rad-165-167)** (Battlefield, 165/167, Uncommon) is Radiance's first battlefield: for each player, the first time they play a unit or gear there each turn, they Predict.
+
+[[embed:3]]
+
+## The chase printings: an alternate art and three Signatures
+
+Radiance's base run stops at 167, the denominator printed on every card. This week showed both kinds of chase numbering. A **letter** marks an alternate art of a base card: Evelynn, Consuming 090a/167, with a gold Showcase gem. An **asterisk** marks a Signature printing, with the artist's signature on new art: Ziggs 169\\*/167 by Kindlejack, Orianna 171\\*/167 by Anh Dang, and Seraphine's Legend 174\\*/167 by Anna Nikonova. The **[variant glossary](/guides/riftbound-variant-glossary)** explains the tiers.
+
+In earlier sets, Signature Legends came in pairs: an overnumbered printing, and a signed version of it with the same number plus an asterisk (Origins' 303/298 and 303\\*/298, for example). Seraphine's pair is now complete on our side: the [174/167 over-number](/card/seraphine-starry-eyed-songstress-rad-174-167) Riot revealed on 24 September, and its signed twin, [174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167). Unsigned 169/167 and 171/167 printings of Ziggs and Orianna would fit the same pattern, but neither has been shown, so neither is in our database. When singles are listed, the asterisk is what separates the two, and our price matching reads it.
+
+## What isn't in our database yet, and why
+
+Three more cards in the same images are described here but not catalogued. We add a card only when its collector number, rarity and text can all be read. In these images, one of the three can't.
+
+- **Ahri, Confident** — Calm, 4 energy, 4 Might, with **Disarm** and *"When you reduce the Might of an enemy unit here by 1 or more, give me +1 Might this turn."* Her collector number and rarity gem are smeared.
+- **Invigorating Bloom** — a Calm gear that gives a friendly unit +3 Might when played, and draws a card when you exhaust a friendly **[Mighty](/keywords/mighty)** unit and the Bloom. Its energy cost and collector number are cropped out.
+- **Supernova** — Mind, 9 energy, 059/167: *"Deal 10 to a unit. Draw 2."* The rarity gem is unreadable.
+
+The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdinger's). Our catalogue lists cards, not tokens.
+
+## What we still don't know
+
+- **The rest of the Legends.** Jarvan IV is named but not shown, Evelynn's Legend text is unpublished, and three Legends are unannounced.
+- **The new set mechanic.** Riot's redacted contents list promised one. Whether it is one of these three, or something not yet shown, Riot hasn't said.
+- **Rules detail.** What a "unit gear" is under Orianna, and how Dockside Lock-Up plays an opponent's banished unit, wait on Radiance's rules update.
+- **Prices.** None of these cards can be bought yet. Each card page starts comparing store prices as listings appear, most likely from the Pre-Rift events on 16–22 October. Until then, **[Radiance pre-order prices](/radiance-preorders)** compares sealed product across stores.`,
+  },
   // HEARTSTEEL OVERNUMBERED (2026-09-26). Riot's official six-card graphic: every
   // HEARTSTEEL member as an overnumbered Radiance Champion Unit, RAD 178–183/167.
   // Five are REPRINTS of cards legal since OGN/SFD (cross-checked against the
@@ -248,6 +458,7 @@ export const ARTICLES: Article[] = [
       "All six HEARTSTEEL overnumbered Radiance cards, RAD 178–183/167: what each does, which five are reprints, and K'Sante's first Champion Unit.",
     author: "RiftCompare",
     date: "2026-09-26",
+    updated: "2026-09-29",
     readMins: 9,
     tags: ["radiance", "news", "spoilers", "heartsteel", "collecting", "ksante"],
     hero: {
@@ -363,6 +574,8 @@ Every field below is read off the graphic, and for the five reprints it is cross
 The domain is the colour of each card's name banner, and for the five reprints it agrees with the domain the original has always had. Cost is the energy figure in the top-left badge — ringed, on these cards, with the word HEARTSTEEL — and Might is the number in the top-right shield.
 
 ## K'Sante, Courageous: the one new card
+
+*Update, 29 September:* K'Sante, Courageous also has an ordinary base printing, **[RAD 086/167](/card/k-sante-courageous-rad-086-167)**, a Rare, shown in Preview Season's first week. So the HEARTSTEEL card is an overnumbered printing of a Radiance base card, the same relationship the other five have with their Origins and Spiritforged originals. More in [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one).
 
 | | |
 | --- | --- |
@@ -1314,7 +1527,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
     author: "RiftCompare",
     date: "2026-09-21",
-    updated: "2026-09-26",
+    updated: "2026-09-29",
     readMins: 9,
     tags: ["radiance", "spoilers", "card gallery", "news", "release"],
     hero: {
@@ -1336,11 +1549,11 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       },
       {
         q: "Which Legends are in Radiance?",
-        a: "Six are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more unrevealed at the start of Preview Season, for nine new champion Legends in total.",
+        a: "Six are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more unrevealed at the start of Preview Season, for nine new champion Legends in total. Four of the six are in print: Seraphine (Starry-Eyed Songstress), Ekko (Boy Who Shattered Time), Ziggs (Hexplosives Expert) and Orianna (Lady of Clockwork). K'Sante's Legend, Pride of Nazumah, has also been shown, though Riot has not formally counted him among the nine.",
       },
       {
         q: "Are the Deploy, Showoff and Disarm leaks real?",
-        a: "Unconfirmed. They come from a fan photo of Riot's PAX West demo material, which is a real source but not an announcement. Nothing Riot has published since confirms or contradicts them. This page logs official reveals; the leak coverage is kept separate and hedged.",
+        a: "Yes. They first appeared in a fan photo of Riot's PAX West demo material, and since Preview Season opened all three have been printed on finished Radiance cards: Deploy on Pillaged Armory and Dockside Lock-Up, Show Off (two words in print) on Primordial Roar and Rousing Display, and Disarm on Kai'Sa, Rebel and Disposal Expert. The reminder text on those cards matches the leaked wording.",
       },
     ],
     shop: [
@@ -1373,7 +1586,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
     ],
     body: `This is the **live Riftbound: Radiance spoiler tracker**. The gallery below is drawn from our card database and updates as each official reveal is imported, so it is current the morning after a reveal without anyone editing this page. Under it is a **dated log of everything that has actually been revealed**, the Preview Season schedule, and a clear line between what Riot has shown and what has merely circulated.
 
-**Where things stand today, 24 September 2026:** Preview Season opens tomorrow. Two Radiance cards have been **photographed in print** — *Neeko, Blending In* (167/167) and Seraphine's Legend, *Starry-Eyed Songstress* (151/167) — one is **already in circulation** through a promo collection, and one Legend's text has been **described in full by Riot** in its own first-look article. Everything else, including the three leaked mechanics, is unconfirmed. The reveals proper begin on **25 September**.
+**Where things stand today, 29 September 2026:** Preview Season is five days old. **Four of the nine Legends are now in print**: Seraphine's, and in the last few days Ekko's, Ziggs' and Orianna's, alongside K'Sante's, which surfaced as the season opened. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
 
 **How this page keeps up:** from 25 September we pull Riot's official card gallery twice a day, at about 02:30 and 18:30 UTC, and every newly revealed card lands in the gallery below on its own. A card revealed in the afternoon in the US is usually here by the next morning in Europe and Australia.
 
@@ -1398,6 +1611,15 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
 
+**25 – 29 September — the first Preview Season wave: three Legends, and the leaked mechanics in print.** StarCityGames gathered the finished card images shown in Preview Season's first days, and **23 more Radiance cards** in them can be read in full: collector number, rarity gem, domain and text. All 23 are now in our database and in the gallery above.
+
+- **Three Legends.** *[Ekko, Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-139-167)* (Fury/Mind, 139/167) is printed exactly as Riot's first-look article described it. *[Ziggs, Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-141-167)* (Fury/Chaos, 141/167) makes Bomb gear tokens, with his signature spell *Hexplosive Minefield*. *[Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-145-167)* (Calm/Mind, 145/167) turns a friendly gear into a unit. Ziggs and Orianna also have Signature printings, 169\\*/167 and 171\\*/167.
+- **Deploy, Show Off and Disarm are real.** Deploy is on *Pillaged Armory* and *Dockside Lock-Up*, Show Off (two words in print) on *Primordial Roar* and *Rousing Display*, and Disarm on *Kai'Sa, Rebel* and *Disposal Expert*. The reminder text matches the leaked wording.
+- **Champion Units.** *K'Sante, Dauntless* (Calm) and a base printing of *K'Sante, Courageous* (Body, 086/167), *Ekko, Ingenious*, *Kai'Sa, Rebel*, *Evelynn, Consuming* (with a 090a/167 alternate art), *Heimerdinger, Academy Instructor* and *[Seraphine, Not Alone](/card/seraphine-not-alone-rad-138-167)*, which is 138/167 and Epic in the set itself.
+- **Seraphine's Signature.** Her Legend's chase card in these images is **[174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167)**, with Anna Nikonova's signature across the art. It is the signed twin of the [174/167 over-number](/card/seraphine-starry-eyed-songstress-rad-174-167) Riot revealed on 24 September, the same pairing every earlier set used for its Signature Legends.
+
+Three more cards in the same round-up are left out of the database for now: in the images available, the collector number or rarity gem of *Ahri, Confident*, *Invigorating Bloom* and *Supernova* can't be read. Card-by-card breakdown: **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
+
 **26 September — all six HEARTSTEEL cards, officially.** Riot's graphic shows the whole band as overnumbered Champion Units, RAD · 178/167 to 183/167, all art by Luscinia Studio. Five are reprints in new art of cards legal since Origins and Spiritforged — *Aphelios, Exalted*, *Ezreal, Dashing*, *Yone, Blademaster*, *Kayn, Unleashed* and *Sett, Kingpin* — and the sixth, *K'Sante, Courageous* (Body, 5 energy, 4 Might, Accelerate and Shield 2), is new: his first Champion Unit. All six are in the database. The card-by-card breakdown, including the one reprint whose wording changed, is in **[the HEARTSTEEL overnumbered write-up](/blog/riftbound-heartsteel-overnumbered-cards)**.
 
 **25 September — K'Sante's first Riftbound cards.** As Preview Season opened, K'Sante — the one HEARTSTEEL member with no Riftbound card at all — got two: his Legend *Pride of Nazumah* (Calm/Body, RAD · 172/167 over-numbered) and his signature spell *Ntofo Strikes* (RAD · 146/167), both built on turning Shield into offense. It is his entire debut in the game — the reveal [our HEARTSTEEL post](/blog/riftbound-heartsteel-cards) said Radiance would have to carry. Logged here as a sighting from reveal footage, not yet an official Legend confirmation; both cards are in the database. Full breakdown: **[the K'Sante spoiler write-up](/blog/riftbound-ksante-radiance-spoiler)**.
@@ -1418,7 +1640,7 @@ Newest first. Every entry here is something Riot published, printed or displayed
 
 **4 August — the set itself.** Riot's product rundown announced Radiance as Set 5: a **23 October** release, **nine new champion Legends**, a new **Ultimate Rare** chase tier, "180 cards (66 Showcase)", the tagline *"Own the Stage. The World is Watching."*, and four product lines. The set code, **RAD**, was published later in the same rundown. Every confirmed product, its contents and its US list price are laid out in **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)**.
 
-**Already in circulation — Seraphine, Not Alone.** The odd one out: a Radiance card that physically exists months before its set. Seraphine was one of the five cards in the **[Riftbound x T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection)**, so anyone who won a T1 box is holding a Radiance card that is not legal for sanctioned play until 23 October.
+**Already in circulation — Seraphine, Not Alone.** The odd one out: a Radiance card that physically exists months before its set. Seraphine was one of the five cards in the **[Riftbound x T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection)**, so anyone who won a T1 box is holding a Radiance card that is not legal for sanctioned play until 23 October. *Updated 29 September:* its in-set printing is RAD 138/167, Epic (see the 25–29 September entry above).
 
 ## The nine Legends
 
@@ -1426,12 +1648,12 @@ Radiance brings **nine new champion Legends**, pinned down from two directions: 
 
 | Champion | Status | What is known |
 | --- | --- | --- |
-| **Ekko** | Confirmed, ability public | Fury/Mind, Empower-based; see the log above |
-| **Seraphine** | Confirmed, Legend officially revealed | *[Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-151-167)* (Mind/Order) revealed by Riot on 24 September, with a [174/167 over-number](/card/seraphine-starry-eyed-songstress-rad-174-167); *Not Alone* exists via the T1 collection; headlines the Showdown Decks |
-| **Evelynn** | Confirmed, art shown | *Evelynn, In Control*; reporting from the Vancouver reveal places her in Chaos, text unpublished |
-| **Ziggs** | Confirmed | Named in the announcement; nothing shown |
+| **Ekko** | Confirmed, Legend in print | *[Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-139-167)* (Fury/Mind, 139/167), Empower-based; Champion Unit *[Ekko, Ingenious](/card/ekko-ingenious-rad-061-167)* (Mind) |
+| **Seraphine** | Confirmed, Legend officially revealed | *[Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-151-167)* (Mind/Order) revealed by Riot on 24 September, with a [174/167 over-number](/card/seraphine-starry-eyed-songstress-rad-174-167) and its signed [174\\*/167 twin](/card/seraphine-starry-eyed-songstress-rad-174s-167); Champion Unit *[Not Alone](/card/seraphine-not-alone-rad-138-167)* is 138/167, Epic; headlines the Showdown Decks |
+| **Evelynn** | Confirmed, art shown | Legend *Evelynn, In Control*; reporting from the Vancouver reveal places her in Chaos, text unpublished. Her Champion Unit *[Evelynn, Consuming](/card/evelynn-consuming-rad-090-167)* (Body, Epic) is in print |
+| **Ziggs** | Confirmed, Legend in print | *[Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-141-167)* (Fury/Chaos, 141/167) makes Bomb gear tokens; signature spell *Hexplosive Minefield*; a [169\\*/167 Signature](/card/ziggs-hexplosives-expert-rad-169s-167) |
 | **Jarvan IV** | Confirmed | Named in the announcement; nothing shown |
-| **Orianna** | Confirmed | Added at PAX West; nothing shown |
+| **Orianna** | Confirmed, Legend in print | *[Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-145-167)* (Calm/Mind, 145/167) turns a friendly gear into a unit; a [171\\*/167 Signature](/card/orianna-lady-of-clockwork-rad-171s-167) |
 | Three more | Unrevealed | K'Sante's first cards have surfaced (see the 25 Sep log and the [write-up](/blog/riftbound-ksante-radiance-spoiler)) but Riot has not formally confirmed him |
 
 All six named champions are League of Legends champions without an existing Riftbound Legend, so each is a debut rather than a reprint. Riot has not said whether that holds for the last three. When a Legend is revealed and imported it appears in the gallery above and on the **[Radiance set page](/sets/radiance)**, where each confirmed champion already has an anchor that resolves to their cards the moment they exist.
@@ -1440,7 +1662,7 @@ All six named champions are League of Legends champions without an existing Rift
 
 The distinction is the whole reason this page is separate from our leak coverage.
 
-A **spoiler** is a card Riot has revealed, printed or put on a demo table in public. It goes in the log above and, once imported, in the gallery. A **leak** is anything else — and Radiance has had two kinds. The first is the fan photograph of Riot's own PAX West demo reference material, showing three mechanics, **Deploy**, **Showoff** and **Disarm**. That has real provenance, so we covered it, hedged throughout, in **[the Radiance mechanics leak](/blog/riftbound-radiance-leaked-mechanics)** and in three per-mechanic pieces: **[Deploy](/guides/riftbound-deploy-explained)**, **[Showoff](/guides/riftbound-showoff-explained)** and **[Disarm](/guides/riftbound-disarm-explained)**. Nothing Riot has published since confirms or contradicts any of it.
+A **spoiler** is a card Riot has revealed, printed or put on a demo table in public. It goes in the log above and, once imported, in the gallery. A **leak** is anything else — and Radiance has had two kinds. The first is the fan photograph of Riot's own PAX West demo reference material, showing three mechanics, **Deploy**, **Showoff** and **Disarm**. That has real provenance, so we covered it, hedged throughout, in **[the Radiance mechanics leak](/blog/riftbound-radiance-leaked-mechanics)** and in three per-mechanic pieces: **[Deploy](/guides/riftbound-deploy-explained)**, **[Showoff](/guides/riftbound-showoff-explained)** and **[Disarm](/guides/riftbound-disarm-explained)**. *Update, 29 September:* all three are now printed on finished Radiance cards (the 25–29 September entry above), so they have moved from leak to fact.
 
 The second kind is purported card text from anonymous social-media accounts — Legends for Seraphine and Evelynn, a Neeko card, a Kai'Sa card. We did not reproduce it, because it had none of the provenance the demo photo has. One entry in that batch has since changed status: Seraphine's Legend, *Starry-Eyed Songstress*, was **photographed in print** on 22 September, and the printed wording matches the leaked text — so we now cover that one card, from the photograph rather than the post (**[the breakdown is here](/blog/riftbound-seraphine-radiance-spoiler)**). The rest stays unquoted, and the Kai'Sa text from the same wave used "Disarm" for an effect unrelated to the demo table's wording, so at least one source in it is wrong about what Disarm is. Preview Season settles the remainder the honest way.
 
@@ -1897,7 +2119,11 @@ Radiance releases **23 October 2026**.`,
     date: "2026-09-08",
     // 12 Sep 2026: status check — still unconfirmed; Preview Season now opens 25
     // Sep; a second, weaker wave of leaks (anonymous card text) noted, not reproduced.
-    updated: "2026-09-12",
+    // 29 Sep 2026: all three printed on finished Preview Season cards — dated
+    // update at the top, FAQ and summary corrected; title untouched (it owns
+    // "radiance leak", docs/seo-keyword-map.md). The Showoff gallery now matches
+    // "[Show Off", the two-word name the cards print.
+    updated: "2026-09-29",
     readMins: 8,
     tags: ["radiance", "news", "mechanics", "spoilers"],
     // The site's #1 page had no in-content buy path at all (2026-09-26): its
@@ -1917,7 +2143,7 @@ Radiance releases **23 October 2026**.`,
       "**Disarm is reportedly Assault's mirror image**: \"When this unit attacks, decrease the Might of an enemy unit here\" — shrinking an opponent's stat instead of boosting your own.",
       "**Deploy is a Gear keyword with a built-in expiry**: it only grants its benefit at one battlefield, and is killed the moment your opponent takes that battlefield back.",
       "**Showoff pays off for revealing a card** — its wording (\"reveal a card from hand or choose a friendly card that meets the listed criteria\") points to a modal, card-specific effect rather than one fixed bonus.",
-      "**None of this is Riot-confirmed.** [Radiance releases 23 October 2026](/blog/riftbound-radiance-what-we-know), and reference material shown at a convention demo can still change before then — in wording, in name, or by being cut outright.",
+      "**Update, 29 September: all three are now on finished cards.** Deploy is printed on Pillaged Armory and Dockside Lock-Up, Show Off (two words in print) on Primordial Roar and Rousing Display, and Disarm on Kai'Sa, Rebel and Disposal Expert — see [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one).",
     ],
     faq: [
       {
@@ -1942,7 +2168,7 @@ Radiance releases **23 October 2026**.`,
       },
       {
         q: "Are Deploy, Showoff and Disarm officially confirmed by Riot?",
-        a: "No. This is a fan photo of physical reference material from a public convention demo, not a Riot announcement. Riftbound's last three new mechanics — Empower, Flow and Burn — were only added to our keyword reference pages once their wording could be verified against Riot's own Core Rules PDF; the same bar applies here, and none of these three have cleared it yet.",
+        a: "Yes, in print. When this page was written they were known only from a fan photo of Riot's demo reference material. Since Preview Season opened on 25 September, all three have appeared on finished Radiance cards: Deploy on Pillaged Armory and Dockside Lock-Up, Show Off on Primordial Roar and Rousing Display, and Disarm on Kai'Sa, Rebel and Disposal Expert. Each card's reminder text matches the leaked wording. The one change is the name: the cards print SHOW OFF as two words.",
       },
       {
         q: "When does Riftbound Radiance release?",
@@ -1967,9 +2193,9 @@ Radiance releases **23 October 2026**.`,
         take: 8,
       },
       {
-        title: "Radiance cards with Showoff",
-        note: "Official Radiance cards whose printed text carries Showoff. Fills in as reveals are imported.",
-        rulesContain: "[Showoff",
+        title: "Radiance cards with Show Off",
+        note: "Official Radiance cards whose printed text carries Show Off, the two-word name the cards use. Fills in as reveals are imported.",
+        rulesContain: "[Show Off",
         rulesSet: "RAD",
         take: 8,
       },
@@ -1981,7 +2207,9 @@ Radiance releases **23 October 2026**.`,
         take: 8,
       },
     ],
-    body: `**Three unreleased Riftbound: Radiance mechanics have leaked from Riot's own demo table at PAX West** — Deploy, Showoff and Disarm — photographed and shared publicly by Riftbound content creator AskJoshy. This isn't a Riot announcement and it isn't a baseless rumour either: it's a photo of physical reference material Riot itself put in front of players at a public convention, months ahead of **[Radiance's confirmed 23 October 2026 release](/blog/riftbound-radiance-what-we-know)**. Here's exactly what the photo shows, what each keyword appears to do, and — just as importantly — what still isn't known.
+    body: `*Update, 29 September 2026: all three mechanics are now printed on finished Radiance cards.* Preview Season's first wave put **Deploy** on *Pillaged Armory* and *Dockside Lock-Up*, **Show Off** on *Primordial Roar* and *Rousing Display*, and **Disarm** on *Kai'Sa, Rebel* and *Disposal Expert*. Each card's reminder text says what the demo card said, almost word for word. The one real change is the name: the cards print **SHOW OFF**, two words. The galleries under each section below now show the cards, and the card-by-card read is in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**. The rest of this page is kept as it was written, as the record of what the leak said before the cards existed.
+
+**Three unreleased Riftbound: Radiance mechanics have leaked from Riot's own demo table at PAX West** — Deploy, Showoff and Disarm — photographed and shared publicly by Riftbound content creator AskJoshy. This isn't a Riot announcement and it isn't a baseless rumour either: it's a photo of physical reference material Riot itself put in front of players at a public convention, months ahead of **[Radiance's confirmed 23 October 2026 release](/blog/riftbound-radiance-what-we-know)**. Here's exactly what the photo shows, what each keyword appears to do, and — just as importantly — what still isn't known.
 
 ## Where this leak actually comes from
 
@@ -2036,13 +2264,13 @@ The caption also suggests Disarm "can pair well with direct damage spells like F
 - **Whether more mechanics exist beyond these three.** The leaked caption itself says Radiance has "many new mechanics," which reads as an admission that this photo only captured part of a longer list.
 - **Whether the names or wording survive to release at all.** Preview-season terminology shifting before a final print run isn't unusual in this genre, and this is Radiance's first mid-cycle mechanic leak, so Riftbound itself hasn't set a precedent either way yet.
 
-We've written a dedicated deep dive for each of the three — **[Deploy explained](/guides/riftbound-deploy-explained)**, **[Showoff explained](/guides/riftbound-showoff-explained)** and **[Disarm explained](/guides/riftbound-disarm-explained)** — but every one of them carries the same caveat this roundup does, all the way through. We add a keyword to our *verified* reference glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** got added for Vendetta — only once we can check the exact wording against Riot's own Core Rules PDF or an official card image. None of Deploy, Showoff or Disarm have cleared that bar yet.
+We've written a dedicated deep dive for each of the three — **[Deploy explained](/guides/riftbound-deploy-explained)**, **[Showoff explained](/guides/riftbound-showoff-explained)** and **[Disarm explained](/guides/riftbound-disarm-explained)** — but every one of them carries the same caveat this roundup does, all the way through. We add a keyword to our *verified* reference glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** got added for Vendetta — only once we can check the exact wording against Riot's own Core Rules PDF or an official card image. None of Deploy, Showoff or Disarm had cleared that bar when this was written. *(29 September: finished card images now show all three.)*
 
 ## Status, 12 September 2026
 
 *Update, 21 September:* Preview Season opens in four days. Official reveals, as distinct from this leak, are logged card by card on **[the live Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)**; this page stays as the record of what the demo photo showed and how it holds up.
 
-Nothing here has been confirmed or contradicted by Riot since the photo surfaced. Two things have changed around it. First, **Preview Season now opens on 25 September** at the Regional Qualifier: Los Angeles rather than on the 28th — so the first official card images, the only thing that can settle any of this, are closer than this page originally said. Second, a further wave of "leaks" appeared on social media on 9 September: purported card text for Seraphine's and Evelynn's Legends, a Neeko card, and a Kai'Sa card whose text begins with the word *Disarm*. We are not reproducing any of it, because none of it has the one thing the PAX photo has — provenance. One of those has since changed status: Seraphine's Legend, *Starry-Eyed Songstress*, was photographed in print on 22 September, and its printed wording matches what leaked — so we now cover that one card from the photograph rather than the post ([the breakdown is here](/blog/riftbound-seraphine-radiance-spoiler)), while the rest stays unquoted. It is worth noting, too, that the Kai'Sa text uses "Disarm" as a label for an effect that has nothing to do with lowering Might, which is inconsistent with the demo-table wording above. At least one of the two sources is wrong about what Disarm is, and a demo card Riot printed and displayed is the more credible of them. Either way, a mechanic's name being reused for something else is one more reason to wait for the real cards.
+Nothing here has been confirmed or contradicted by Riot since the photo surfaced. Two things have changed around it. First, **Preview Season now opens on 25 September** at the Regional Qualifier: Los Angeles rather than on the 28th — so the first official card images, the only thing that can settle any of this, are closer than this page originally said. Second, a further wave of "leaks" appeared on social media on 9 September: purported card text for Seraphine's and Evelynn's Legends, a Neeko card, and a Kai'Sa card whose text begins with the word *Disarm*. We are not reproducing any of it, because none of it has the one thing the PAX photo has — provenance. One of those has since changed status: Seraphine's Legend, *Starry-Eyed Songstress*, was photographed in print on 22 September, and its printed wording matches what leaked — so we now cover that one card from the photograph rather than the post ([the breakdown is here](/blog/riftbound-seraphine-radiance-spoiler)), while the rest stays unquoted. It is worth noting, too, that the Kai'Sa text uses "Disarm" as a label for an effect that has nothing to do with lowering Might, which is inconsistent with the demo-table wording above. At least one of the two sources is wrong about what Disarm is, and a demo card Riot printed and displayed is the more credible of them. Either way, a mechanic's name being reused for something else is one more reason to wait for the real cards. *(29 September: the real card, Kai'Sa, Rebel, carries Disarm as a keyword with exactly the Might-lowering reminder text the demo card described, followed by a separate ability of its own. The demo-table wording is what Disarm means.)*
 
 ## How to read a leak like this responsibly
 
@@ -2056,7 +2284,7 @@ This is the same bar we hold every unreleased-set claim to, and it's why none of
 
 ## What to actually do with this before release
 
-Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, and none of these three cards have been shown. If you want to track the set as real information lands: our **[Radiance hub](/sets/radiance)** rounds up every confirmed fact, the legends revealed so far and live pre-order prices in one place; **[Radiance pre-order pricing](/radiance-preorders)** compares sealed product across stores on its own; and our **[what's actually confirmed](/blog/riftbound-radiance-what-we-know)** roundup is where we keep everything Riot has said on the record, updated as it changes. We'll publish a proper keyword page for any of these three the moment Riot — not a demo-table photo — confirms it.`,
+Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, and the first cards carrying these mechanics were only shown in Preview Season's opening week. If you want to track the set as real information lands: our **[Radiance hub](/sets/radiance)** rounds up every confirmed fact, the legends revealed so far and live pre-order prices in one place; **[Radiance pre-order pricing](/radiance-preorders)** compares sealed product across stores on its own; and our **[what's actually confirmed](/blog/riftbound-radiance-what-we-know)** roundup is where we keep everything Riot has said on the record, updated as it changes. We'll publish a proper keyword page for any of these three the moment Riot — not a demo-table photo — confirms it.`,
   },
   // ── Per-mechanic deep dives for the Radiance leak above, targeting "riftbound
   // deploy" / "riftbound showoff" / "riftbound disarm" query intent the same way
@@ -2074,25 +2302,25 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
       "Lose the battlefield, lose the card outright: the leaked Deploy wording in full, why it's a riskier trade than Equip, and what Riot has yet to confirm.",
     author: "RiftCompare",
     date: "2026-09-08",
-    updated: "2026-09-12",
+    updated: "2026-09-29",
     readMins: 5,
     tags: ["radiance", "mechanics", "deploy", "leak", "spoilers", "guide"],
     hero: {
       src: "/blog/riftbound-deploy-explained.png",
-      alt: "Riftbound Deploy — a leaked Radiance Gear keyword, not yet confirmed by Riot",
+      alt: "Riftbound Deploy — a Radiance Gear keyword, first leaked at PAX West and now printed on Radiance cards",
     },
     summary: [
       "**Deploy is a leaked Gear keyword from Riftbound: Radiance**, reportedly tied to holding one specific battlefield rather than being attached to a unit.",
       "**Lose the battlefield, lose the card**: the leaked wording says an opponent taking that battlefield kills the Gear outright, not just switches it off.",
       "**It's the opposite risk profile from [Equip](/keywords/equip)**, which stays functional on its unit regardless of what's happening on the board.",
-      "**Not officially confirmed.** This is sourced to a photo of Riot's own PAX West demo material, not a Riot announcement — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source.",
+      "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-leaked-mechanics)); now printed on Pillaged Armory and Dockside Lock-Up, two finished Radiance cards.",
     ],
     faq: [
       { q: "What is Deploy in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear.\" It's reportedly a Gear keyword tied to controlling one specific battlefield, not yet confirmed by Riot." },
       { q: "How does the Deploy mechanic work?", a: "As leaked: you play the Gear to a battlefield rather than to a unit or your base. While you hold that battlefield, it grants a benefit (the leak doesn't say what kind). If an opponent takes the battlefield, the Gear is killed outright." },
       { q: "What happens if I lose the battlefield a Deploy gear is on?", a: "Per the leaked wording, the Gear is killed — not deactivated or returned to hand, but removed from the game the way any killed permanent would be." },
       { q: "How is Deploy different from Equip?", a: "Equip attaches a Gear card to a unit, and it stays functional regardless of board state. Deploy, as leaked, attaches to a battlefield instead of a unit, and is destroyed if you lose control of that battlefield — a much higher-risk trade for whatever benefit it grants." },
-      { q: "Is Deploy confirmed by Riot?", a: "No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West 2026, not an official Riot announcement or Core Rules update." },
+      { q: "Is Deploy confirmed by Riot?", a: "Yes, in print. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, and since Preview Season opened on 25 September it has appeared on finished Radiance cards: Pillaged Armory and Dockside Lock-Up." },
       { q: "How is Deploy different from Showoff and Disarm?", a: "Deploy is a Gear keyword about holding a battlefield; Showoff is a modal reveal effect triggered on play; Disarm weakens an enemy unit's Might on attack. All three reportedly leaked together but don't appear designed to combo directly, unlike Vendetta's Empower/Flow/Burn." },
     ],
     browseCta: {
@@ -2109,7 +2337,7 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
         take: 8,
       },
     ],
-    body: `*Status, 12 September 2026: still unconfirmed by Riot. Preview Season now opens on 25 September at the Regional Qualifier: Los Angeles — the first point at which this can be confirmed, reworded or contradicted by an official card.*
+    body: `*Status, 29 September 2026: confirmed in print.* Deploy is on two finished Radiance cards, [Pillaged Armory](/card/pillaged-armory-rad-073-167) and [Dockside Lock-Up](/card/dockside-lock-up-rad-136-167), and both are Gear, as the leak said. The printed reminder text — *"Play this only to a battlefield. When an opponent holds here, kill this."* — is the leaked rule in fewer words. What the leak left vague, the benefit, turns out to be each card's own text: Pillaged Armory buffs a friendly unit when played and whenever you conquer there, and Dockside Lock-Up banishes a unit and, once you hold, brings it back for free. The gallery below shows both, the card-by-card read is in [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one), and the rest of this page is the analysis as written before the cards existed.*
 
 **Deploy is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what would need to happen before we'd treat any of it as settled.
 
@@ -2164,7 +2392,7 @@ Deploy is one of three mechanics in the same leak. **[Showoff](/guides/riftbound
 
 ## Is Deploy officially confirmed?
 
-No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West, not a Riot announcement. We'll only add Deploy to our verified keyword glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** were added for Vendetta — once its wording can be checked against Riot's own Core Rules PDF or an official card image. Until then, treat everything on this page as **reported, not settled**. There's also nothing to buy yet: no confirmed Deploy card exists, so the only thing actually trackable today is **[Radiance's sealed pre-order pricing](/radiance-preorders)**, which the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** links out to and which we'll keep updating independently of whatever any individual card in the set turns out to do.`,
+Yes, in print. When this page was written, Deploy was known only from a fan photo of Riot's own demo reference material at PAX West. Since Preview Season opened on 25 September it has appeared on finished Radiance cards, [Pillaged Armory](/card/pillaged-armory-rad-073-167) and [Dockside Lock-Up](/card/dockside-lock-up-rad-136-167), which is the evidence this page said it was waiting for: an official card image with the keyword printed on it. There is still nothing to buy until Radiance's Pre-Rift events on 16–22 October and release on 23 October; until then the trackable prices are **[Radiance's sealed pre-orders](/radiance-preorders)**, and each card page above gets live prices as stores list it.`,
   },
   {
     slug: "riftbound-showoff-explained",
@@ -2174,25 +2402,25 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
       "Reveal from hand or point at a friendly card: what Riftbound's leaked Showoff keyword reportedly does, how it differs from Vision, and what's unconfirmed.",
     author: "RiftCompare",
     date: "2026-09-08",
-    updated: "2026-09-12",
+    updated: "2026-09-29",
     readMins: 5,
     tags: ["radiance", "mechanics", "showoff", "leak", "spoilers", "guide"],
     hero: {
       src: "/blog/riftbound-showoff-explained.png",
-      alt: "Riftbound Showoff — a leaked Radiance reveal mechanic, not yet confirmed by Riot",
+      alt: "Riftbound Show Off — a Radiance reveal mechanic, first leaked as Showoff at PAX West and now printed on Radiance cards",
     },
     summary: [
       "**Showoff is a leaked, modal reveal effect from Riftbound: Radiance** — reveal a card from hand, or point at a qualifying friendly card, and the payoff scales with what you showed.",
       "**It's different from [Vision](/keywords/vision)**, Riftbound's existing reveal mechanic: Vision looks at the top of your own deck, while Showoff reportedly checks your hand or board instead.",
-      "**The exact printed criteria are unknown.** No confirmed Showoff card exists yet, so its real power level can't be judged from the leak alone.",
-      "**Not officially confirmed.** This is sourced to a photo of Riot's own PAX West demo material, not a Riot announcement — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source.",
+      "**The criteria are printed after the keyword.** Primordial Roar shows off *a unit*; Rousing Display shows off *a card with Energy cost 7 or more*. Each card sets its own.",
+      "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-leaked-mechanics)); now printed on Primordial Roar and Rousing Display, two finished Radiance cards.",
     ],
     faq: [
       { q: "What is Showoff in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off.\" It's reportedly a modal reveal effect, not yet confirmed by Riot." },
       { q: "How does the Showoff mechanic work?", a: "As leaked: when you play a Showoff card, you may either reveal a card from your hand or point at a friendly card already in play that meets whatever criteria is printed on the Showoff card. The effect then changes depending on what you showed." },
-      { q: "What does 'meets the listed criteria' mean for Showoff?", a: "It isn't specified in the leak — likely a card type, domain, rarity or stat threshold printed on each individual Showoff card, similar to modal reveal effects in other card games. No confirmed Showoff card exists yet to check." },
+      { q: "What does 'meets the listed criteria' mean for Showoff?", a: "Each card prints its own criteria straight after the keyword. On Primordial Roar it is 'Show Off a unit'; on Rousing Display it is 'Show Off a card with Energy cost 7 or more'. You meet it by revealing a matching card from your hand or picking a matching friendly card on the board." },
       { q: "How is Showoff different from Vision?", a: "Vision triggers a Predict, looking at the top card of your own Main Deck. Showoff, as leaked, instead looks at a card you already have — in hand or already in play — rather than the top of your deck." },
-      { q: "Is Showoff confirmed by Riot?", a: "No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West 2026, not an official Riot announcement or Core Rules update." },
+      { q: "Is Showoff confirmed by Riot?", a: "Yes, in print. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, and since Preview Season opened on 25 September it has appeared on finished Radiance cards: Primordial Roar and Rousing Display." },
       { q: "How is Showoff different from Deploy and Disarm?", a: "Showoff is a modal reveal effect triggered on play; Deploy is a Gear keyword tied to holding a battlefield; Disarm weakens an enemy unit's Might on attack. All three reportedly leaked together but don't appear designed to combo directly." },
     ],
     browseCta: {
@@ -2202,14 +2430,14 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
     },
     embeds: [
       {
-        title: "Radiance cards with Showoff",
+        title: "Radiance cards with Show Off",
         note: "Official Radiance cards whose printed text carries Showoff. Fills in as reveals are imported.",
-        rulesContain: "[Showoff",
+        rulesContain: "[Show Off",
         rulesSet: "RAD",
         take: 8,
       },
     ],
-    body: `*Status, 12 September 2026: still unconfirmed by Riot. Preview Season now opens on 25 September at the Regional Qualifier: Los Angeles — the first point at which this can be confirmed, reworded or contradicted by an official card.*
+    body: `*Status, 29 September 2026: confirmed in print, as **Show Off** — two words.* It is on two finished Radiance spells, [Primordial Roar](/card/primordial-roar-rad-082-167) and [Rousing Display](/card/rousing-display-rad-127-167). The reminder text reads *"As you play this, you may reveal a unit from your hand or pick a friendly unit"*, and the "listed criteria" this page could only guess at are printed straight after the keyword: Primordial Roar shows off *a unit* and deals damage equal to its Might; Rousing Display shows off *a card with Energy cost 7 or more* and doubles its Recruit tokens from two to four. The gallery below shows both, the card-by-card read is in [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one), and the rest of this page is the analysis as written before the cards existed.*
 
 **Showoff is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what's still missing before it can be judged properly.
 
@@ -2261,7 +2489,7 @@ The same three things that would confirm any of these leaked mechanics apply her
 
 ## Is Showoff officially confirmed?
 
-No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West, not a Riot announcement. We'll only add Showoff to our verified keyword glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** were added for Vendetta — once its wording can be checked against Riot's own Core Rules PDF or an official card image. Until then, treat everything on this page as **reported, not settled**. There's also nothing to buy yet: no confirmed Showoff card exists, so the only thing genuinely trackable today is **[Radiance's sealed pre-order pricing](/radiance-preorders)**, updated independently of whatever any individual card in the set turns out to do.`,
+Yes, in print. When this page was written, Showoff was known only from a fan photo of Riot's own demo reference material at PAX West. Since Preview Season opened on 25 September it has appeared on finished Radiance cards, [Primordial Roar](/card/primordial-roar-rad-082-167) and [Rousing Display](/card/rousing-display-rad-127-167), which is the evidence this page said it was waiting for: an official card image with the keyword printed on it. There is still nothing to buy until Radiance's Pre-Rift events on 16–22 October and release on 23 October; until then the trackable prices are **[Radiance's sealed pre-orders](/radiance-preorders)**, and each card page above gets live prices as stores list it.`,
   },
   {
     slug: "riftbound-disarm-explained",
@@ -2271,25 +2499,25 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
       "What Riftbound's leaked Disarm keyword reportedly does, how it compares to the existing Assault keyword, and why it isn't Riot-confirmed yet.",
     author: "RiftCompare",
     date: "2026-09-08",
-    updated: "2026-09-12",
+    updated: "2026-09-29",
     readMins: 5,
     tags: ["radiance", "mechanics", "disarm", "leak", "spoilers", "guide"],
     hero: {
       src: "/blog/riftbound-disarm-explained.png",
-      alt: "Riftbound Disarm — a leaked Radiance combat mechanic, not yet confirmed by Riot",
+      alt: "Riftbound Disarm — a Radiance combat keyword, first leaked at PAX West and now printed on Radiance cards",
     },
     summary: [
       "**Disarm is a leaked combat mechanic from Riftbound: Radiance**, reportedly weakening an enemy unit's Might when the Disarm unit attacks.",
       "**It's the reported mirror image of [Assault](/keywords/assault)**: Assault gives the attacker +X Might; Disarm instead lowers an enemy unit's Might — a debuff aimed outward rather than a self-buff.",
       "**It reportedly pairs with direct-damage spells** like Falling Star — shrink a blocker's Might first, and a fixed amount of damage goes further toward lethal.",
-      "**Not officially confirmed.** This is sourced to a photo of Riot's own PAX West demo material, not a Riot announcement — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source.",
+      "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-leaked-mechanics)); now printed on Kai'Sa, Rebel and Disposal Expert, two finished Radiance cards.",
     ],
     faq: [
       { q: "What is Disarm in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"When this unit attacks, decrease the Might of an enemy unit here.\" It reportedly weakens an enemy unit's Might as part of attacking, rather than boosting the attacker's own stats." },
       { q: "How does the Disarm mechanic work?", a: "As leaked: when a unit with Disarm attacks, it decreases the Might of an enemy unit present at that battlefield. It reads as a repeatable, built-in unit ability rather than a one-time removal spell." },
       { q: "Is Disarm the opposite of Assault?", a: "That's how the leak's own source frames it, and the wording supports the comparison: Assault gives the attacker +X Might while attacking — a self-buff. Disarm, as leaked, instead lowers an enemy unit's Might when this unit attacks — a debuff aimed at the opponent's board." },
       { q: "Does Disarm work with direct damage spells?", a: "The leak's own source suggests pairing Disarm with direct-damage spells like Falling Star — a real Fury-domain Spell from the Origins set. Shrinking a blocker's Might first would make a fixed amount of direct damage go further toward actually killing it, though Disarm's exact numbers aren't known yet." },
-      { q: "Is Disarm confirmed by Riot?", a: "No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West 2026, not an official Riot announcement or Core Rules update." },
+      { q: "Is Disarm confirmed by Riot?", a: "Yes, in print. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, and since Preview Season opened on 25 September it has appeared on finished Radiance cards: Kai'Sa, Rebel and Disposal Expert." },
       { q: "How is Disarm different from Deploy and Showoff?", a: "Disarm weakens an enemy unit's Might on attack; Deploy is a Gear keyword tied to holding a battlefield; Showoff is a modal reveal effect triggered on play. All three reportedly leaked together but don't appear designed to combo directly." },
     ],
     browseCta: {
@@ -2306,7 +2534,7 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
         take: 8,
       },
     ],
-    body: `*Status, 12 September 2026: still unconfirmed by Riot. Preview Season now opens on 25 September at the Regional Qualifier: Los Angeles — the first point at which this can be confirmed, reworded or contradicted by an official card.*
+    body: `*Status, 29 September 2026: confirmed in print.* Disarm is on two finished Radiance units, [Kai'Sa, Rebel](/card/kai-sa-rebel-rad-063-167) and [Disposal Expert](/card/disposal-expert-rad-093-167), with the reminder text *"When I attack, give an enemy unit here -1 Might this turn."* That is the leaked rule, with two details the leak did not show: the Might loss lasts for the turn, and, like Assault, Disarm takes a number — Disposal Expert has **Disarm 2**, for -2. The gallery below shows both, the card-by-card read is in [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one), and the rest of this page is the analysis as written before the cards existed.*
 
 **Disarm is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how it reportedly compares to an existing keyword, and what's still unknown.
 
@@ -2358,7 +2586,7 @@ The same bar applies here as to the other two leaked mechanics: an official Riot
 
 ## Is Disarm officially confirmed?
 
-No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West, not a Riot announcement. We'll only add Disarm to our verified keyword glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** were added for Vendetta — once its wording can be checked against Riot's own Core Rules PDF or an official card image. Until then, treat everything on this page as **reported, not settled**. There's also nothing to buy yet: no confirmed Disarm card exists, so the only thing genuinely trackable today is **[Radiance's sealed pre-order pricing](/radiance-preorders)**, updated independently of whatever any individual card in the set turns out to do.`,
+Yes, in print. When this page was written, Disarm was known only from a fan photo of Riot's own demo reference material at PAX West. Since Preview Season opened on 25 September it has appeared on finished Radiance cards, [Kai'Sa, Rebel](/card/kai-sa-rebel-rad-063-167) and [Disposal Expert](/card/disposal-expert-rad-093-167), which is the evidence this page said it was waiting for: an official card image with the keyword printed on it. There is still nothing to buy until Radiance's Pre-Rift events on 16–22 October and release on 23 October; until then the trackable prices are **[Radiance's sealed pre-orders](/radiance-preorders)**, and each card page above gets live prices as stores list it.`,
   },
   // ── Gradient sleeves. A genuine accessory-search topic with zero prior coverage
   // on this site. Kept factual and specific to what's actually verifiable (card

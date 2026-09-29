@@ -224,6 +224,23 @@ async function main() {
     };
 
     const existing = await prisma.card.findUnique({ where: { externalId }, select: { id: true, slug: true } });
+    // A printing already catalogued by hand (prisma/manual-cards.json, e.g. a
+    // "spoiler-rad-…" row added from a reveal image before the gallery had it)
+    // is the SAME card under another externalId. Creating it again would give it
+    // a second page with a second slug, and add-manual-cards.ts upserts its row
+    // by externalId on every build, so the hand-made one can't be adopted here
+    // either: it would come back. The manual row owns the printing; swapping its
+    // imageUrl to the official art is an edit to that file (2026-09-29).
+    if (!existing && collectorNumber !== "TBA") {
+      const byHand = await prisma.card.findFirst({
+        where: { setCode: SET_CODE, collectorNumber, isPromo: false, externalId: { not: externalId } },
+        select: { externalId: true },
+      });
+      if (byHand) {
+        skipped.push(`${name} ${collectorNumber} — already catalogued as ${byHand.externalId}; official art: ${imageUrl}`);
+        continue;
+      }
+    }
     if (existing) {
       if (!DRY) await prisma.card.update({ where: { id: existing.id }, data });
       updated++;
