@@ -11,11 +11,14 @@ export function SetPriceGuide({
   rows,
   currency,
   adjective,
+  ticks = false,
 }: {
   setName: string;
   rows: SetPriceGuideRow[];
   currency: string;
   adjective: string;
+  /** Mark the tbody so SetTickLayer (components/SetOwned.tsx) can portal a tick into each row on the client (a released set). */
+  ticks?: boolean;
 }) {
   if (!rows.length) return null;
   const priced = rows.filter((r) => r.priceCents != null).length;
@@ -40,7 +43,7 @@ export function SetPriceGuide({
               <th scope="col" className="px-4 py-2 text-right font-semibold">Stores</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink-800">
+          <tbody className="divide-y divide-ink-800" {...(ticks ? { "data-tick-rows": "" } : {})}>
             {rows.map((r) => (
               <tr key={r.id}>
                 <td className="px-4 py-1.5">

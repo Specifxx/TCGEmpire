@@ -34,6 +34,8 @@ import { preordersHrefForSet } from "@/lib/release-calendar";
 import { RadianceHub } from "@/components/sets/RadianceHub";
 import { RadiancePreorderCta } from "@/components/RadiancePreorderCta";
 import { SetPriceGuide } from "@/components/sets/SetPriceGuide";
+import { SetOwnedProvider, SetOwnedStatus, SetTickLayer } from "@/components/SetOwned";
+import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 import { RadianceReveals } from "@/components/sets/RadianceReveals";
 import { getRadianceReveals } from "@/lib/radiance-reveals";
 import { setPriceGuideRows } from "@/lib/set-price-guide";
@@ -444,6 +446,15 @@ export default async function SetPage({
   const completeAt = set.announcedCards ?? set.totalCards;
   const revealedCount = radianceReveals?.revealed ?? totalInSet;
   const fullyRevealed = !!completeAt && revealedCount >= completeAt;
+  // THE SET TRACKER'S OWNED TICKS (2026-09-29, DECISIONS.md, "Set tracker"):
+  // offered once the set has RELEASED (date-driven, so a set whose comingSoon
+  // flag outlives release day still opens), never on a set still revealing. The
+  // page reads NEITHER cookies nor the user for this: the ticks are a client
+  // overlay (components/SetOwned.tsx) fed by GET /api/collection/owned, because
+  // this route is force-dynamic with a memoised default view shared by every
+  // visitor and a session read here would break that memo. tests/set-tracker.test.ts
+  // pins it.
+  const trackerOpen = totalInSet > 0 && !isPreorderSetCode(set.code);
   // Pre-order comparison page for THIS set, while it is still upcoming. Read from
   // the release calendar rather than hardcoded, so this template never names a
   // set and the link retires itself on release day (see preordersHrefForSet).
@@ -483,6 +494,8 @@ export default async function SetPage({
   const faqLd = set.slug === "radiance" ? faqPage(RADIANCE_FAQ) : null;
 
   return (
+    <SetOwnedProvider setCode={set.code} enabled={trackerOpen}>
+    {trackerOpen && <SetTickLayer tileIds={cards.map((c) => c.id)} rowIds={priceGuide.map((r) => r.id)} scanKey={JSON.stringify(searchParams)} />}
     <div className="flex flex-col gap-8">
       <script
         type="application/ld+json"
@@ -684,6 +697,8 @@ export default async function SetPage({
               </div>
             )}
 
+            {trackerOpen && <SetOwnedStatus setName={set.name} trackerHref={`/portfolio/sets/${set.slug}`} freeLimit={FREE_PORTFOLIO_LIMIT} />}
+
             {/* Filters' "Show results" target, on the count row rather than the
                 section; scroll-mt-36 clears the 125px sticky header (2026-09-23). */}
             <div id="results" className="mb-4 flex scroll-mt-36 flex-wrap items-center justify-between gap-3">
@@ -712,11 +727,17 @@ export default async function SetPage({
                     (2026-09-23): the rail and the sidebar squeeze it, and the
                     10.5rem floor keeps CardTile's min-w-[6.5rem] price block
                     inside the tile. */}
+                {/* The ticks are portalled into the tiles on the client
+                    (components/SetOwned.tsx SetTickLayer), found through this
+                    one marker and paired with the ids by position, so the
+                    page's HTML carries no tick markup. */}
+                <div {...(trackerOpen ? { "data-tick-grid": "" } : {})} className="contents">
                 <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
-                  {cards.map((c) => (
-                    <CardTile key={c.id} card={c} />
-                  ))}
-                </Reveal>
+                    {cards.map((c) => (
+                      <CardTile key={c.id} card={c} />
+                    ))}
+                  </Reveal>
+                </div>
                 <Pagination
                   page={page}
                   totalPages={totalPages}
@@ -757,7 +778,7 @@ export default async function SetPage({
           page at 7-9 with no clicks, and the page had a 60-card grid but no
           list of every card's price on it. Default view only — it reads the
           same cached query as the intro above. */}
-      <SetPriceGuide setName={set.name} rows={priceGuide} currency={COUNTRIES[country].currency} adjective={COUNTRIES[country].adjective} />
+      <SetPriceGuide setName={set.name} rows={priceGuide} currency={COUNTRIES[country].currency} adjective={COUNTRIES[country].adjective} ticks={trackerOpen} />
 
       {/* How to read the prices above, and the set's own guides (2026-09-26,
           "Blog and tools, joined up" in DECISIONS.md). Under the grid and the
@@ -845,6 +866,7 @@ export default async function SetPage({
         </section>
       )}
     </div>
+    </SetOwnedProvider>
   );
 }
 

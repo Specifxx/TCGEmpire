@@ -60,6 +60,9 @@ export const SIGNUP_SOURCES = new Set([
   "quickview_alert",
   // "Sign in to publish" under the deck builder (2026-09-26, public decks).
   "deck_publish",
+  // The set tracker's "I own this" tick and "Sign up free" line on a released
+  // /sets/[set] page (2026-09-29): the free front door, judged on sign-ups.
+  "set_tracker",
   "other",
 ]);
 

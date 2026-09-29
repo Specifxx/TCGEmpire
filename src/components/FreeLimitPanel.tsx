@@ -21,9 +21,16 @@ import { PREMIUM_PRICE_LABEL, TIER_NAMES, tierMonthlyAmount } from "@/lib/site";
 // Gold is only on the button: it is the one Premium action in the panel
 // (CURRENT-STATE, "Gold marks Premium").
 
-export function freeLimitPitch(kind: FreeLimitKind, plusOnSale: boolean): string {
+// `context: "set"` (2026-09-29, the set tracker): the same panel where a tick on
+// a set page hit the limit. The copy is about fitting a whole set, and says
+// nobody loses cards they already have. It carries no value or "worth" wording:
+// the set view has no P&L (lib/set-scope.ts).
+export function freeLimitPitch(kind: FreeLimitKind, plusOnSale: boolean, context?: "set"): string {
   const tier = plusOnSale ? TIER_NAMES.plus : TIER_NAMES.premium;
   const price = plusOnSale ? `${tierMonthlyAmount("plus")}/mo` : PREMIUM_PRICE_LABEL;
+  if (kind === "portfolio" && context === "set") {
+    return `${tier} tracks unlimited cards, so a whole set fits — ${price}. Nobody loses cards they already have: everything already in your binder stays.`;
+  }
   return kind === "watchlist"
     ? `${tier} watches unlimited cards and can email you at your own price — ${price}. Everything you already watch stays.`
     : `${tier} tracks unlimited cards in your portfolio — ${price}. Everything already in it stays and keeps its value.`;
@@ -34,18 +41,21 @@ export function FreeLimitPanel({
   count,
   onClose,
   className = "",
+  context,
 }: {
   kind: FreeLimitKind;
   /** Distinct cards the account holds (the route's `count`). */
   count: number;
   onClose?: () => void;
   className?: string;
+  /** Where the tap happened, for the wording: a tick on a set page. */
+  context?: "set";
 }) {
   const { premiumPlus } = useMe();
   return (
     <div role="status" data-free-limit={kind} className={`rounded-xl border border-ink-600 bg-ink-900 p-3 text-left ${className}`}>
       <p className="text-sm font-semibold text-white">{freeLimitHeadline(kind, count)}</p>
-      <p className="mt-1 text-xs leading-relaxed text-slate-300">{freeLimitPitch(kind, premiumPlus)}</p>
+      <p className="mt-1 text-xs leading-relaxed text-slate-300">{freeLimitPitch(kind, premiumPlus, context)}</p>
       <div className="mt-2.5 flex flex-wrap items-center gap-2">
         <PremiumButton tier="plus" surface={`limit:${kind}`} />
         {onClose && (

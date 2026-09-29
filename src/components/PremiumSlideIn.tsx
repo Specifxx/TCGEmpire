@@ -113,6 +113,8 @@ export const PITCH_TOOLS: { label: string }[] = [
   // (2026-09-29), when the tier table had grown these two rows.
   { label: "Watchlist" },
   { label: "Portfolio" },
+  // 2026-09-29: the set tracker's whole-set row (free within the 50 cards).
+  { label: "Set tracker" },
   { label: "Deal Finder" },
   { label: "Rising Cards" },
   { label: "Target-price alerts" },

@@ -103,8 +103,8 @@ test("the pitch chips name every differentiating tier row, and none are missing"
   ).map((r) => r.feature.replace(/\s*—.*$/, "").trim());
   assert.deepEqual(
     premiumOnly,
-    ["Watchlist & new-low alerts", "Portfolio", "Deal Finder", "Rising Cards", "Target-price alerts after every price update", "Best Basket", "Buy this list", "Minimum condition", "Demand Finder", "Sealed watches", "Deck price watch"],
-    "fixture check: the differentiating rows of the 2026-09-25 lineup, plus the 2026-09-28 free limits and the 2026-09-29 watches",
+    ["Watchlist & new-low alerts", "Portfolio", "Set tracker", "Deal Finder", "Rising Cards", "Target-price alerts after every price update", "Best Basket", "Buy this list", "Minimum condition", "Demand Finder", "Sealed watches", "Deck price watch"],
+    "fixture check: the differentiating rows of the 2026-09-25 lineup, plus the 2026-09-28 free limits and the 2026-09-29 watches, minimum condition and set tracker",
   );
   for (const feature of premiumOnly) {
     assert.ok(

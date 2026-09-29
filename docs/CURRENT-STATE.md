@@ -120,7 +120,9 @@ longer lands on its entry.
   shows only the free /movers strip's top 10 most searched this week
   (`FREE_DEMAND_ROWS`, `tests/demand-finder.test.ts`). Any signed-in
   account gets its own Best Basket total and the replacement-cost total;
-  "binder" means replacement cost, never gaps. Value Finder, Rising Sealed,
+  in Best Basket "binder" means replacement cost, never gaps (narrowed
+  2026-09-29: what a binder is missing from a set is answered by the free set
+  checklist, below). Value Finder, Rising Sealed,
   the Condition Calculator and the Bulk Pricer are gone, each 301'd to the
   free page carrying its useful part (`tests/lineup-removals.test.ts`).
   The owner chose the cut knowing the 09-08 read had $4.99 converting worse
@@ -218,6 +220,34 @@ longer lands on its entry.
   total says "Includes N played copies" when it does (an honesty line, not an
   entitlement). "Any printing" waits until after Radiance.
   [2026-09-29](../DECISIONS.md#L15344)
+- **Set tracker (2026-09-29, free within the 50-card portfolio; Plus's "no
+  limit" lets a whole set fit):** what a binder is missing from a set and the
+  cheapest listing for each card, on `/portfolio/sets` and
+  `/portfolio/sets/[set]` (noindex, per-request, no `searchParams`, no
+  `notFound()`: a `loading.tsx` sits above `/portfolio`). The rules are pure in
+  `lib/set-scope.ts`: "Base set" is the numbered run (no promo, alt-art,
+  overnumbered, Signature or Crystal Rose), "Every printing we track" adds
+  those but never promos, tokens are in neither, one copy of any finish or
+  condition is owned, and counts say "printings we track", never a typed-in
+  total. The price is `lib/set-checklist.ts`'s own read of real-store
+  `RetailerPrice` rows (in stock, market, no `ebay*`, no fallback or derived
+  rows), NEVER `Card.lowestPriceCents*`, which is stores + eBay; an eBay-only
+  card is counted in neither total; the footer is "Cheapest listing per card,
+  before postage. Best Basket prices delivery." Its cache key is
+  `['set-checklist', code, country]`, 3600s, `CONTENT_TAG`, with no nested
+  loader; owned copies are one user-scoped groupBy
+  (`GET /api/collection/owned?set=CODE`, no-store). `/sets/[set]` reads neither
+  cookies nor the user: a released set's ticks are a client overlay portalled
+  into the tiles and price guide rows, so the page's HTML is unchanged and its
+  memo is shared. The tick is `POST /api/collection`, so card 51 opens the
+  `limit:portfolio` panel inline ("Nobody loses cards they already have").
+  Radiance shows "N cards revealed so far" with no denominator, percentage,
+  bar or cost until it releases (its total is unsettled). The printing-aware
+  CSV import (`lib/collection-csv.ts`: set, collector number, finish,
+  condition, quantity; skipped lines listed with reasons) is free and stays
+  free. No P&L, "worth", prediction or urgency wording in the set view. Phase
+  2, after Radiance: opt-in "looking for these" on `/c/[token]`.
+  [2026-09-29](../DECISIONS.md#L15366)
 - **Every paid feature is discoverable where it lives, inline, never a
   popup:** `DiscoveryTip` (`tip:*` surfaces) is one dismissable sentence for
   signed-in non-members only, on /sealed, a non-Premium Best Basket result and
@@ -234,7 +264,8 @@ longer lands on its entry.
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
   the tool walls — plus, since 09-29 at the owner's request, the restored
-  signed-in `PremiumSlideIn`. Header, rail and account menu stay plain
+  signed-in `PremiumSlideIn`, and a tick on a set page (the same
+  `limit:portfolio` panel, reworded for a set). Header, rail and account menu stay plain
   "Pricing" links. [2026-09-28](../DECISIONS.md#L14549),
   [2026-09-29](../DECISIONS.md#L15178)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when

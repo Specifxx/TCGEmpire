@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { enabledProviders } from "@/lib/oauth";
 import { pageAlternates } from "@/lib/seo";
 import { sanitizeNextPath, POST_SIGN_IN_FALLBACK } from "@/lib/next-param";
+import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 
 // auth/utility — never indexed. The self-referencing canonical is what collapses
 // the ?next= family: the navbar's sign-in link carries the current path as ?next=,
@@ -45,9 +46,13 @@ const CONTEXT_LINES: Record<string, string> = {
 // save-your-score prompt passes its own page as ?next= (games/shared.tsx), and
 // Best Basket's may carry a ?list=. Exact CONTEXT_LINES entries win.
 const GAMES_LINE = "Create a free account to save your scores to the leaderboard.";
+// The set tracker (2026-09-29): a released set's "I own this" ticks and the
+// /portfolio/sets checklist. Free for the first 50 cards, and it says so.
+const SET_TRACKER_LINE = `Create a free account to tick the cards you own and see what a set is missing, with the cheapest listing for each. Free for your first ${FREE_PORTFOLIO_LIMIT} cards.`;
 function contextLineFor(next: string): string | undefined {
   const path = next.split(/[?#]/)[0];
   if (CONTEXT_LINES[path]) return CONTEXT_LINES[path];
+  if (path === "/portfolio/sets" || path.startsWith("/portfolio/sets/") || path.startsWith("/sets/")) return SET_TRACKER_LINE;
   if (path === "/games" || path.startsWith("/games/") || path === "/riftle") return GAMES_LINE;
   return undefined;
 }

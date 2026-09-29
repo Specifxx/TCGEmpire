@@ -193,6 +193,8 @@ const FREE_FEATURES = [
   // stays unlimited and free: it is what brings people in.
   `Watch up to ${FREE_WATCHLIST_LIMIT} cards, with weekly new-low emails`,
   `Portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, including its delivered replacement cost`,
+  // The set tracker (2026-09-29): free within the portfolio's 50 cards.
+  "Set checklist: what your binder is missing, and the cheapest listing for each card",
   "Top 3 of Deal Finder & Rising Cards",
   "Best Basket: your own list's delivered total",
   "Top 10 most searched cards this week",
@@ -204,7 +206,7 @@ const FREE_FEATURES = [
 const TRIAL_ROW = "N-day free trial";
 const PLUS_FEATURES = [
   "No ads on any page",
-  "Unlimited watchlist and portfolio",
+  "Unlimited watchlist and portfolio, so a whole set fits in the set checklist",
   `Target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, naming the store`,
   `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products: back in stock, at RRP, or at your price`,
   "Every card below TCGplayer market, filtered to the cards you watch or own",

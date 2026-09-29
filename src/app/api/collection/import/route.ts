@@ -6,6 +6,7 @@ import { normalizeSearch } from "@/lib/format";
 import { addCopies, collectionRowStore } from "@/lib/collection-add";
 import { freeLimitBody } from "@/lib/free-limits";
 import { portfolioAllowance } from "@/lib/free-limits-server";
+import { matchCsvRows, parseCollectionCsv, type CsvMatch, type ParsedCollectionCsv } from "@/lib/collection-csv";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,11 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => null);
   const text: string = typeof body?.text === "string" ? body.text : "";
+  // A CSV whose header names a set and a number column takes the
+  // printing-aware path below (2026-09-29): it keeps the printing, finish and
+  // condition and reports every line it skipped. Anything else is a name list.
+  const csv = parseCollectionCsv(text);
+  if (csv) return importPrintings(user, csv);
   const lines = parseDeckList(text).slice(0, 300).filter((l) => l.name);
   if (!lines.length) return NextResponse.json({ error: "Paste a list like “3 Jinx, Loose Cannon”." }, { status: 400 });
 
@@ -103,5 +109,111 @@ export async function POST(req: Request) {
       : {}),
     full: full.slice(0, 30),
     unmatched: [...new Set(unmatched)].slice(0, 30),
+  });
+}
+
+// THE PRINTING-AWARE PATH (lib/collection-csv.ts, 2026-09-29). Free like every
+// way of entering your own binder. One line names one printing (set + collector
+// number), at a finish and condition, so an alt-art or a Signature lands as
+// itself, not as its base card. The same free-limit rule as the name path
+// (lib/free-limits.ts): every already-held card, then new cards in file order
+// until the limit, the rest reported, never a silent partial import.
+//
+// Reads: the referenced sets' catalogue once (narrow columns, at most the sets
+// named in the file, capped), the account's rows for the matched cards once,
+// then one guarded write per line (lib/collection-add.ts), exactly like the
+// name path.
+const CATALOGUE_TAKE = 3000;
+const LIST_CAP = 30;
+
+async function importPrintings(user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>, csv: ParsedCollectionCsv) {
+  if (csv.rows.length === 0) {
+    return NextResponse.json(
+      {
+        error: "No lines could be imported from that file.",
+        skippedCount: csv.skipped.length,
+        skipped: csv.skipped.slice(0, LIST_CAP),
+      },
+      { status: 400 },
+    );
+  }
+
+  const sets = [...new Set(csv.rows.map((r) => r.setCode))];
+  const catalogue = await prisma.card.findMany({
+    where: { setCode: { in: sets }, isPromo: false },
+    select: { id: true, setCode: true, collectorNumber: true, isPromo: true },
+    take: CATALOGUE_TAKE,
+  });
+  const { matched, unmatched } = matchCsvRows(csv.rows, catalogue);
+
+  const labelOf = (m: CsvMatch) => m.copy.name ?? `${m.copy.setCode} ${m.copy.number}`;
+  const nameByCard = new Map<string, string>();
+  for (const m of matched) if (!nameByCard.has(m.card.id)) nameByCard.set(m.card.id, labelOf(m));
+
+  // Distinct cards in file order; the limit takes already-held cards first.
+  const allowance = await portfolioAllowance(prisma, user, [...new Set(matched.map((m) => m.card.id))]);
+  const blocked = new Set(allowance.blocked);
+  const limitSkipped = allowance.blocked.map((id) => nameByCard.get(id) ?? id);
+  const writable = matched.filter((m) => !blocked.has(m.card.id));
+
+  const ids = [...new Set(writable.map((m) => m.card.id))];
+  // No `.catch(() => [])`: an empty answer would silently take the "new copies
+  // are free" path. A failed read fails the import instead.
+  const existingRows = ids.length
+    ? await prisma.collectionCard.findMany({
+        where: { userId: user.id, cardId: { in: ids } },
+        select: { cardId: true, condition: true, isFoil: true, quantity: true, costBasisCents: true, costBasisIsTotal: true },
+        take: ids.length * 10, // 5 conditions x 2 finishes a card
+      })
+    : [];
+  const rowKey = (cardId: string, condition: string, isFoil: boolean) => `${cardId}|${condition}|${isFoil ? 1 : 0}`;
+  const existingBy = new Map(existingRows.map((r) => [rowKey(r.cardId, r.condition, r.isFoil), r]));
+
+  let added = 0;
+  let copies = 0;
+  const full: string[] = [];
+  const failed: string[] = [];
+  const landed = new Set<string>();
+  for (const m of writable) {
+    const key = { userId: user.id, cardId: m.card.id, condition: m.copy.condition, isFoil: m.copy.isFoil };
+    const store = collectionRowStore(prisma, key);
+    const res = await addCopies(store, { quantity: m.copy.qty }, { existing: existingBy.get(rowKey(m.card.id, key.condition, key.isFoil)) ?? null }).catch(() => null);
+    if (res?.status === "added") {
+      added++;
+      copies += res.added;
+      landed.add(m.card.id);
+    } else if (res?.status === "full") full.push(labelOf(m));
+    else failed.push(labelOf(m));
+  }
+
+  return NextResponse.json({
+    ok: true,
+    format: "csv",
+    added,
+    copies,
+    // Distinct cards this file put into the binder (a foil and a normal copy of
+    // one card are two entries but one card).
+    cards: landed.size,
+    matchedCards: new Set(matched.map((m) => m.card.id)).size,
+    ...(allowance.blocked.length
+      ? {
+          limitSkipped: allowance.blocked.length,
+          limitSkippedNames: limitSkipped.slice(0, LIST_CAP),
+          freeLimit: freeLimitBody("portfolio", allowance.count ?? allowance.limit),
+        }
+      : {}),
+    full: full.slice(0, LIST_CAP),
+    // Busy (lost a write race four times) or failed: nothing was written.
+    failed: failed.slice(0, LIST_CAP),
+    // Lines that are not a printing we track come back in `skipped` with their
+    // reason, beside the lines that could not be read; `unmatched` is the name
+    // path's field and stays empty here so nothing is listed twice.
+    unmatched: [],
+    skippedCount: csv.skipped.length + unmatched.length,
+    skipped: [...csv.skipped, ...unmatched]
+      .sort((a, b) => a.line - b.line)
+      .slice(0, LIST_CAP)
+      .map((s) => ({ line: s.line, reason: s.reason, text: s.text })),
+    conditionDefaulted: csv.conditionDefaulted,
   });
 }

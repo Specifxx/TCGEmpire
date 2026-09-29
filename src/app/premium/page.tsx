@@ -108,6 +108,14 @@ const FEATURES: { title: string; body: string; when: string; href: string | null
     tier: "plus",
   },
   {
+    title: "Set tracker: whole sets, no limit",
+    body: `Tick what's in your binder and see how far through Origins or Spirit Forged you are, what's missing, and the cheapest listing for each missing card in your country, before postage. Count the base set, or every printing we track (alt-arts, overnumbered prints and Signatures). Importing a CSV of your binder, with the printing kept, is free. The tracker is free for your first ${FREE_PORTFOLIO_LIMIT} cards; Plus removes the limit so a whole set fits, and nobody loses cards they already have.`,
+    when: "You're completing a set and want to know what's left without keeping a spreadsheet.",
+    href: "/portfolio/sets",
+    cta: "Open the set checklist",
+    tier: "plus",
+  },
+  {
     title: "Best Basket's store-by-store plan",
     body: "Send a decklist or your watchlist, tick “skip copies I already own”, and get the cheapest delivered order across your country's stores — postage and free-shipping thresholds counted — beside the best one-store and two-store orders; or send your binder to see what replacing it would cost. Every signed-in account sees its own total and saving first, in money; Premium shows which store to buy each card from, with the links.",
     when: "Buying a whole deck or list: the saving on your own list is a number you can check before you pay.",
@@ -145,7 +153,7 @@ const FEATURES: { title: string; body: string; when: string; href: string | null
 // The Product JSON-LD's per-tier descriptions: each names only what that tier
 // really gets (TIER_COMPARISON's rows), so a rich result can't credit Plus
 // with Premium's list tools or leave its ad-free benefit out.
-const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP or at your price), and the full Deal Finder and Rising Cards lists.`;
+const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio (so a whole set fits in the set tracker), target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP or at your price), and the full Deal Finder and Rising Cards lists.`;
 const PREMIUM_OFFER_DESCRIPTION = `Premium: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, Best Basket's store-by-store plan for the cheapest delivered order (at the minimum condition you set), Buy this list for a deck, watchlist or binder, and Demand Finder's most searched and most viewed cards.`;
 const PREMIUM_STANDALONE_DESCRIPTION =
   "No ads on any page, an unlimited watchlist and portfolio, target-price alerts, sealed watches, a deck price watch, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.";
@@ -209,6 +217,14 @@ const FAQ: { q: string; a: string }[] = [
   {
     q: "What is a deck price watch?",
     a: `A Premium feature. Save a deck or card list (from Best Basket or the deck pricer) with the delivered price you'd pay — delivered means the cards plus each store's postage. After every price update we re-price the whole list across every store in your country, the way Best Basket does, and email you when the total is at or under your price, or, with no price set, when it drops at least 5% and a whole unit below the last figure we told you. The email names the total, the postage, the stores and a button to the store-by-store plan. Up to ${DECK_WATCH_LIMIT} lists; stop or snooze any of them from the email or your watchlist.`,
+  },
+  {
+    q: "Do I have to pay to see what my set is missing?",
+    a: `No. A free account can tick up to ${FREE_PORTFOLIO_LIMIT} cards, see its progress and the missing list, and export it. Plus removes the ${FREE_PORTFOLIO_LIMIT}-card limit so a whole set fits. If you already hold more than that you keep all of them; the limit only stops adding a new card.`,
+  },
+  {
+    q: "Is the cost to finish what I would actually pay?",
+    a: "It's the cheapest in-stock store listing for each missing card in your country, before postage. Cards no tracked store has in stock are counted separately with no price, and cards only eBay lists are left out of the total. It's a way to see what's left, not a promise of one order: Best Basket picks stores and adds measured postage.",
   },
   {
     q: "What does minimum condition do?",

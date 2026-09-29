@@ -58,6 +58,9 @@ const SELF_CACHED = [
   // and the day-cached demand read behind it.
   "getRisingWeekAgo",
   "getDemandWeekAgo",
+  // 2026-09-29: the set tracker's per-(set, market) catalogue with each card's
+  // cheapest real-store listing (lib/set-checklist.ts, key set-checklist).
+  "getSetChecklist",
 ];
 
 function walk(dir: string, out: string[] = []): string[] {

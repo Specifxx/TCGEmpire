@@ -168,6 +168,9 @@ export default async function PortfolioPage() {
             )}
           </p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* The set tracker (2026-09-29): what the binder is missing, per set. Free. */}
+          <Link href="/portfolio/sets" className="btn-ghost text-sm">Set checklist</Link>
         {premium && (
           <span
             className={`chip text-xs font-bold ${
@@ -177,6 +180,7 @@ export default async function PortfolioPage() {
             ★ {premiumTierOf(user) === "plus" ? "PLUS" : "PREMIUM"}
           </span>
         )}
+        </div>
       </div>
 
       {/* Headline value — always shown, even before the first card is added,

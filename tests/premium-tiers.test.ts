@@ -198,6 +198,8 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       // tests/free-limits.test.ts).
       "Watchlist & new-low alerts",
       "Portfolio — value, P&L, CSV & replacement cost",
+      // 2026-09-29: the set tracker, free within the portfolio's card limit.
+      "Set tracker — what your binder is missing and the cheapest listing to finish",
       "Deal Finder",
       "Rising Cards",
       "Target-price alerts after every price update",

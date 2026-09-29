@@ -429,6 +429,14 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
     limitSkipped?: number;
     limitSkippedNames?: string[];
     freeLimit?: FreeLimitBody;
+    // The printing-aware CSV path (lib/collection-csv.ts, 2026-09-29): copies
+    // added, lines it could not import and why, and rows with no usable condition.
+    format?: "csv";
+    copies?: number;
+    skippedCount?: number;
+    skipped?: { line: number; reason: string; text: string }[];
+    conditionDefaulted?: number;
+    failed?: string[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -444,7 +452,11 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
       });
       const d = await res.json();
       if (!res.ok) {
-        setError(d.error ?? "Import failed");
+        // A CSV where no line could be read still says which lines and why.
+        const why = Array.isArray(d.skipped) && d.skipped.length
+          ? ` ${d.skipped.slice(0, 3).map((x: { line: number; reason: string }) => `Line ${x.line}: ${x.reason}.`).join(" ")}`
+          : "";
+        setError(`${d.error ?? "Import failed"}${why}`);
         return;
       }
       setResult(d);
@@ -460,7 +472,8 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
   return (
     <div className="mt-4 rounded-xl border border-ink-700 bg-ink-900/60 p-4">
       <label className="mb-1 block text-xs font-medium text-slate-400">
-        Paste a list — one card per line, e.g. <span className="text-slate-300">3 Jinx, Loose Cannon</span>
+        Paste a list — one card per line, e.g. <span className="text-slate-300">3 Jinx, Loose Cannon</span>. Or import a CSV with a
+        set, collector number, finish and quantity to keep the exact printing.
       </label>
       {/* sm:text-sm, not text-sm: .input is 16px below sm so iOS doesn't zoom the page on focus (2026-09-23). */}
       <textarea
@@ -474,7 +487,21 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
         <button onClick={submit} disabled={busy || !text.trim()} className="btn-primary text-sm disabled:opacity-50">
           {busy ? "Importing…" : "Add to collection"}
         </button>
-        <span className="text-[11px] text-slate-600">Adds at Near Mint · adjust condition/qty/cost after.</span>
+        <label className="btn-ghost cursor-pointer text-sm">
+          Choose a CSV file
+          <input
+            type="file"
+            accept=".csv,text/csv,text/plain"
+            className="sr-only"
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f && f.size <= 500_000) setText(await f.text());
+              else if (f) setError("That file is too large — import up to about 2,000 lines at a time.");
+            }}
+          />
+        </label>
+        <span className="text-[11px] text-slate-600">A list adds at Near Mint; a CSV takes finish and condition from the file (blank = Near Mint, non-foil).</span>
       </div>
       {error && <p role="alert" className="mt-2 text-sm text-rose-400">{error}</p>}
       {result && (
@@ -501,6 +528,26 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
             <p className="mt-1 text-xs text-amber-300/90">
               Couldn&apos;t match: <span className="text-slate-400">{result.unmatched.join(" · ")}</span>
             </p>
+          )}
+          {result.format === "csv" && result.copies != null && result.copies > 0 && (
+            <p className="mt-1 text-xs text-slate-400">{result.copies} {result.copies === 1 ? "copy" : "copies"} in all, each at the printing, finish and condition the file named.</p>
+          )}
+          {result.skipped && result.skipped.length > 0 && (
+            <div className="mt-1 text-xs text-amber-300/90">
+              <p>Skipped {result.skippedCount ?? result.skipped.length} {(result.skippedCount ?? result.skipped.length) === 1 ? "line" : "lines"}:</p>
+              <ul className="mt-0.5 list-disc pl-4 text-slate-400">
+                {result.skipped.slice(0, 10).map((x, i) => (
+                  <li key={i}>Line {x.line}: {x.reason}</li>
+                ))}
+              </ul>
+              {(result.skippedCount ?? 0) > 10 && <p className="text-slate-500">…and {(result.skippedCount ?? 0) - 10} more.</p>}
+            </div>
+          )}
+          {result.conditionDefaulted != null && result.conditionDefaulted > 0 && (
+            <p className="mt-1 text-xs text-slate-500">{result.conditionDefaulted} {result.conditionDefaulted === 1 ? "line" : "lines"} had a condition we could not read and went in as Near Mint.</p>
+          )}
+          {result.failed && result.failed.length > 0 && (
+            <p className="mt-1 text-xs text-amber-300/90">Couldn&apos;t save, try again: <span className="text-slate-400">{result.failed.join(" · ")}</span></p>
           )}
         </div>
       )}

@@ -303,4 +303,8 @@ export function premiumLockInTail(): string {
 // /premium page rewritten for a newcomer (one section per paid feature, what it
 // does / when you'd use it / which tier), the inline did-you-know lines, and
 // the Premium tagline "Works while you're away". Prices unchanged.
-export const PREMIUM_COPY_VERSION = "premium-2026-09-29";
+// premium-2026-09-29b: the same pass's second and third items: the minimum
+// condition (Premium) and the set tracker (free within the 50-card portfolio,
+// whole sets on Plus) on the table, the slide-in chips, /premium and the pricing
+// cards. Prices unchanged.
+export const PREMIUM_COPY_VERSION = "premium-2026-09-29b";
