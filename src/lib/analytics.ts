@@ -34,10 +34,14 @@ import { rememberPremiumSurface } from "./premium-surface";
 // site intact is what keeps the two destinations from silently diverging, which
 // is the whole reason this dispatcher exists.
 //
-// (premium_slidein_shown/_dismissed/_click went with PremiumSlideIn on
-// 2026-09-28; nothing fires them any more, so they are no longer listed. The
-// upgrade prompts that replaced it fire free_limit_hit, which is low-volume —
-// one per refused add — and so stays dual-destination.)
+// premium_slidein_shown/_dismissed are the same shape as the signup pair: an
+// impression that fires for a share of logged-in visitors, plus its close
+// companion. They go to GA4 only for the same billing reason. The valuable low-
+// volume leg — premium_slidein_click — is deliberately NOT here, so it still
+// reaches Vercel alongside buy_click and sign_up. (Off the list while
+// PremiumSlideIn was removed, 2026-09-28 to 2026-09-29.) The at-the-limit
+// upgrade prompts fire free_limit_hit, which is low-volume — one per refused
+// add — and so stays dual-destination.
 //
 // Same rule, stated once for the whole checkout funnel: premium_signin_step
 // (a signed-out visitor clicking a buy button, 2026-09-13) and
@@ -53,6 +57,8 @@ import { rememberPremiumSurface } from "./premium-surface";
 const GA4_ONLY_EVENTS = new Set([
   "signup_promo_shown",
   "signup_promo_dismissed",
+  "premium_slidein_shown",
+  "premium_slidein_dismissed",
   "annual_switch_shown",
   "annual_switch_dismissed",
   "scroll_depth",

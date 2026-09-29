@@ -15248,3 +15248,95 @@ An independent review of the deck price watch and sealed watches (entry above) f
 **Verified.** `tests/watch-review-fixes.test.ts` (RunBudget's per-address cap; forty sealed and ten deck watches for one member send three emails each with baselines held; the shared cap through `sendCap` and the route's chain; the creation-seeded restock clock including an over-RRP restock at the next run; TCGplayer excluded; the 200 ceiling; the header's stop token and the route's GET and one-click guard; the workflow's `purged`/`fresh` plumbing and `freshen` called once, only with watches; the FAQ copy; the lapsed owner's `/watching` sections), `tests/client-imports.test.ts`, and the updated `tests/watch-routes.test.ts` (free and lapsed owners can snooze and stop, not edit a target; ownership). Typecheck, lint, the full suite, and `next dev` rendering `/deck`, `/tools/best-basket`, `/tools`, `/dashboard` and `/sealed` at 390 and 1280.
 
 **If it needs undoing.** Each is a small, separate change; `?fresh=1` is ignored by the route if the step stops sending it, and `WATCH_EMAILS_PER_ADDRESS` is a constant.
+
+## Corner nudges instant again, and the Premium slide-in restored — 2026-09-29
+
+**Why.** Owner: "make the sign up and premium slider instant. I want to bring the instant feature back." Two things were unclear, so the owner was asked:
+- **The Premium slide-in.** It had been deleted the day before, by the owner's free-limits instruction ("put the upgrade prompt where people hit a limit … not in popups and headers"). Answer: **restore it, instant.**
+- **How instant.** Drop only the 5 s delay, or also the first-visit rules of 2026-09-24? Answer: **drop the delay only.**
+
+**What.**
+- **`NUDGE_DELAY_MS` is 0** (`lib/nudge-timing.ts`), shared by the sign-up popup, the restored `PremiumSlideIn` and `AnnualSwitchNudge`. It was 5 s from 2026-09-11. A nudge now appears the moment it is eligible, and every eligibility rule stands:
+  - the sign-up popup never shows on a visit's first page from another site, or on a phone's first view;
+  - the slide-in waits for a second page view;
+  - on `/blog/*` and `/movers` both wait for 7 s of reading (`LANDING_ENGAGED_MS`).
+  - Caps, snoozes and the dialog guard are unchanged.
+- **`PremiumSlideIn` is back**, as it stood before its removal (so after the 2026-09-27 price cut): its mount, `PremiumPitchPanel`, `/api/premium/nudge`, the `premiumLockInTail` caption and the GA4-only `premium_slidein_shown/_dismissed` names.
+  - Kept from the free limits: the at-the-limit panels and Best Basket's saving-first preview.
+  - The header, rail and account menu stay plain "Pricing" links. Only the slide-in returned, not the gold header CTAs.
+  - Its personalised-line wait is capped at 600 ms, down from 1.5 s. It is the only wait left before the card appears, and a slow answer shows the generic pitch rather than holding the card.
+  - `PITCH_TOOLS` gains Watchlist and Portfolio. The restored test (`tests/premium-slidein.test.ts`) caught that the tier table had grown those two paid-only rows.
+- **The compact tier table has no minimum width** (`TierComparisonTable`). Restored, the slide-in's ~350 px body showed Premium off-screen behind a sideways scroll ("Prem", "Unlim" at the edge). The compact table's 380 px floor could never fit there, and the free limits' "10 cards" / "50 cards" widened the free column further. Its 64 px tier columns now fit, and the feature column wraps. The Premium dialog on a narrow phone benefits too.
+- **The popup's `PROMO_VARIANT` is `free_account_compare_instant`.** Timing axis: compare it with `free_account_compare_subtle`, the 5 s version of the same card. The old `comparison_instant` predates every gate and cap, so it is not a baseline.
+
+**Known cost.** The slide-in is tall: 796 of 900 px on desktop and 740 of 844 on a phone, scrolling inside. That is its restored design plus the two free-limit rows. The history behind the 5 s delay also still applies: an earlier instant, ungated popup measured a 78% dismiss rate. Watch `signup_promo_*`, `premium_slidein_*`, `sign_up`, `buy_click` and pages/visitor.
+
+**Verified.**
+- Tests: `tests/nudge-timing.test.ts` (0); `tests/premium-slidein.test.ts` (restored); `tests/premium-post-signup.test.ts` (the route's free-only guard and the 600 ms wait); `tests/free-limits.test.ts` (slide-in mounted once beside the at-limit panel; header links stay plain); `tests/nudge-frequency.test.ts` (the new variant).
+- `next dev`, with a signed-in free account made through a locally signed session:
+  - on a second page view the sign-up card was visible 0.3 s after load, and the slide-in 0.9 s (the account read plus the capped personalised-line call);
+  - neither appeared on the first page;
+  - the Premium column shows in full at 1280px and 390px.
+
+## Corner nudges on page load: no page-view or reading gates — 2026-09-29
+
+**Why.** Owner, hours after the entry above: "the slider should show up instantly and it should not wait for a second page view. on blog posts and movers it should also be instant. It shouldnt be when a visitor qualifies either, it should show up as soon as the page loads."
+
+This reverses the 2026-09-24 first-visit rule ("First visit from Reddit/Discord: no sign-up prompt on the first page") and the 2026-09-27 landing-page timing. It also reverses the entry above's choice to keep them.
+
+**What.**
+- **Sign-up card** (signed-out). The first-visit gate is gone, and `lib/signup-promo-gate.ts` with it: no 2nd-page-view or 60 s rule, no exception for a first page from another site or on a phone, no 7 s on `/blog/*` and `/movers`. The card shows on the first page a signed-out visitor loads, as soon as `/api/me` says they are signed out. `PROMO_VARIANT` is `free_account_compare_first_page`.
+- **Premium slide-in** (signed-in, no Premium). The second-page-view rule and the 7 s landing wait are gone, so it shows on the first page. It also no longer waits for its personal line: the card appears with the per-page or generic pitch, and the personal line replaces it only if it arrives within `PERSONAL_WAIT_MS` (600 ms), during or just after the entrance. `premium_slidein_shown` is recorded when that race settles, so its `context` says which pitch showed.
+- **Still holds.** Who each card is for (signed-out; signed-in without Premium, with checkout on), the two-dismissal cap and the 7/14-day snoozes, the sign-up card's 3-page spacing after a dismissal, the slide-in's once-per-session, the paths both skip (`/login`, `/verify`, `/premium`), and never sliding over an open dialog. "As soon as the page loads" was read as timing and gating. A visitor's own no is still respected.
+
+**Known cost.**
+- Google's guidance treats a pop-up covering content on a phone's first page from search as intrusive. The 2026-09-24 rule existed for that, and the site is applying for AdSense.
+- The last instant, ungated version of this card measured a 78% dismiss rate, with bounce up and pages/visitor down.
+- Watch `signup_promo_*`, `premium_slidein_*`, `sign_up`, `buy_click`, pages/visitor, and Search Console's mobile results.
+
+**Verified.**
+- `tests/first-visit-ux.test.ts` now pins:
+  - no gate in either component, and the gate module gone;
+  - what still holds: audiences, the cap, once-per-session and the skipped paths.
+- `tests/premium-post-signup.test.ts`: the show timer never waits on the personal line, which is fetched once the card is up.
+- `tests/nudge-timing.test.ts` and `tests/nudge-frequency.test.ts` updated.
+- `next dev`, measured from the page's load event, all on the FIRST page:
+
+| Card | Page | Appeared after load |
+|---|---|---|
+| Sign-up | `/`, desktop | 1.5 s (dev hydration of the homepage) |
+| Sign-up | a blog post on a 390px phone, arriving from reddit.com | 0.3 s |
+| Sign-up | `/movers` on a phone | 0.2 s |
+| Premium slide-in (signed-in free account) | `/`, desktop | 0.3 s |
+| Premium slide-in (signed-in free account) | a blog post on a phone | 0.3 s |
+
+## Where people land after signing in — 2026-09-29
+
+**Why.** Owner: "have a think about what page the user lands on after they login for the best user experience", then "yes pls" to the four changes proposed.
+
+What was there:
+- A sign-in that started on a page returned to it (every contextual `/login` link carries `?next=`), and a watch started while signed out completed after it.
+- With no destination (the header's Log in on the homepage, a direct `/login`, the homepage strip) the callback fell back to `/profile`: the account-settings page. That was never a decision, just the code's default.
+- A brand-new account got no visible welcome. Its setup checklist lived only on `/profile` and at the foot of the homepage.
+- And since the Premium slide-in went to page load earlier today, the first thing after creating a free account was a request to pay. That contradicts the 2026-09-23 "Premium after sign-up" rule.
+
+**What.**
+1. **Back to where they were stays rule one.** Unchanged: `?next=`, and the pending-watch completion.
+2. **No destination → `/dashboard`** (`POST_SIGN_IN_FALLBACK`, `lib/next-param.ts`). This applies to the OAuth callback and to `/login` for an already-signed-in visitor. The homepage strip's "Create your free account" drops `?next=/` and lands there too. `/profile` stays in the account menu.
+3. **First sign-in:**
+   - On `/dashboard`, an account under an hour old reads "Welcome, {name}" rather than "Welcome back". This uses `createdAt`, which `getCurrentUser` now selects from the row it already reads, so there is no extra query and no flicker.
+   - The setup checklist (`WelcomeChecklist`) is first on the page, above the snapshots.
+   - A new account returned to another page gets one toast: "Your free account is ready." with "Get set up →" to `/dashboard`, for 8 s. A completed pending watch's toast is more specific and replaces it.
+4. **No Premium slide-in for the rest of the sign-up session.** `lib/signup-session.ts` marks the tab on the `?welcome` landing (sessionStorage, plus the URL itself before `SignupWelcome` has run). `PremiumSlideIn` returns before arming, and the next visit is an ordinary one. The same helper lets the checklist show on the landing regardless of effect order: it reads a stamp `SignupWelcome` writes in its own effect.
+
+**Verified.**
+- `tests/post-sign-in-landing.test.ts`: the fallback, the greeting, the checklist's position, the toast and its hand-off, the slide-in guard, and `isSignupSession` against stubbed storage. `tests/oauth-next.test.ts` and `tests/login-links-attributed.test.ts` are updated.
+- `next dev`, simulating the callback's landings with real sessions:
+
+| Scenario | Result |
+|---|---|
+| New account at `/dashboard?welcome=google` | "Welcome, Nova"; the checklist above the snapshots; no toast; no slide-in; the URL stripped |
+| The next page in the same tab | No slide-in |
+| New account back on `/about?welcome=discord`, at 390px | The toast with "Get set up →" to `/dashboard`; no slide-in; the link opens the dashboard with the checklist |
+| That account's next visit, in a new session | The slide-in shows |
+| An account three days old visiting `/login` while signed in | Redirected to `/dashboard`, "Welcome back, Oldie", no checklist |

@@ -6,7 +6,7 @@ import { applyReferral } from "@/lib/referral";
 import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
 import { claimAlertsForUser } from "@/lib/alerts";
 import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-shared";
-import { sanitizeNextPath } from "@/lib/next-param";
+import { sanitizeNextPath, POST_SIGN_IN_FALLBACK } from "@/lib/next-param";
 import { PREMIUM_START_PATH } from "@/lib/premium-start";
 
 // Where a failed sign-in lands. /login by default — it renders AuthForm, which
@@ -161,9 +161,16 @@ export async function GET(req: Request, { params }: { params: { provider: string
   // isNew, the analytics run in the browser, and this param is the bridge
   // across the OAuth redirect. The component strips it from the URL
   // immediately, so it never survives into a refresh, share, or bookmark.
+  //
+  // NO DESTINATION → /dashboard, not /profile (2026-09-29, owner-approved
+  // "where the user lands after login"). The dashboard is the signed-in hub
+  // ("Welcome back", portfolio, watchlist, tools, and the setup checklist for
+  // a new account); /profile is account settings, which nobody signs in to
+  // read. It stays one click away in the account menu. A sign-in that started
+  // on a page still returns to that page.
   const next = sanitizeNextPath(cookies().get(`oauth_next_${provider}`)?.value);
   cookies().set(`oauth_next_${provider}`, "", { path: "/", maxAge: 0 });
-  const dest = new URL(next ?? "/profile", req.url);
+  const dest = new URL(next ?? POST_SIGN_IN_FALLBACK, req.url);
   if (isNew) dest.searchParams.set("welcome", provider);
   return NextResponse.redirect(dest);
 }

@@ -10,6 +10,7 @@ import { pausedAddresses } from "./alert-mute";
 import { watchActionLinks } from "./alert-actions";
 import { headlineOffer, offerStock, soldOutEverywhere } from "./sealed-offers";
 import { isAtMsrp, msrpCents } from "./msrp";
+import { isPreorderSetCode } from "./constants";
 import { getPreorderGroups, getSealedGroups, type SealedGroup } from "./sealed-import";
 import { affiliateUrl } from "./affiliate";
 import { sendSealedWatchEmail as sendSealedWatchEmailImpl, type SealedWatchItem, type SealedWatchKind } from "./watch-emails";
@@ -317,8 +318,13 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
       return;
     }
     const price = state.open.priceCents;
-    const rrp = msrpCents(g.productType, w.market);
-    const atRrp = isAtMsrp(price, g.productType, w.market);
+    // A PRE-ORDER set has no official RRP for us to quote: lib/msrp.ts is keyed
+    // by product type and market only, so the CURRENT set's RRP would be
+    // applied to a box that isn't out yet (sealed-import nulls it for the same
+    // reason). Treat rrp as unknown there: no at-RRP trigger, no RRP line.
+    const preorder = isPreorderSetCode(g.setCode, now);
+    const rrp = preorder ? null : msrpCents(g.productType, w.market);
+    const atRrp = !preorder && isAtMsrp(price, g.productType, w.market);
     if (w.lastInStock !== true) patch(always, w.id, { lastInStock: true });
     if (!atRrp && w.lastAtRrp === true) patch(always, w.id, { lastAtRrp: false });
     const restock = isSealedRestock({ soldOutAt: w.soldOutAt, now });
@@ -337,7 +343,7 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
     } else if (restock) {
       kind = "sealed_restock";
       summary.restocks++;
-    } else if (shouldEmailSealedRrp({ priceCents: price, productType: g.productType, market: w.market, lastAtRrp: w.lastAtRrp })) {
+    } else if (!preorder && shouldEmailSealedRrp({ priceCents: price, productType: g.productType, market: w.market, lastAtRrp: w.lastAtRrp })) {
       kind = "sealed_rrp";
       summary.rrp++;
     } else if (shouldEmailSealedDrop({ priceCents: price, targetCents: w.targetCents, ...refOpts })) {

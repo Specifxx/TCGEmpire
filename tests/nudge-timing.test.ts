@@ -33,8 +33,12 @@ const NUDGES = [
   "src/components/AnnualSwitchNudge.tsx", // monthly subscriber: switch to annual
 ];
 
-test("the shared delay is five seconds", () => {
-  assert.equal(NUDGE_DELAY_MS, 5_000);
+test("the shared delay is zero: instant once eligible (owner, 2026-09-29)", () => {
+  // Five seconds from 2026-09-11; back to instant on 2026-09-29: "make the sign
+  // up and premium slider instant. I want to bring the instant feature back."
+  // Hours later the page-view and reading gates went too: both cards show on
+  // the first page as soon as it loads (tests/first-visit-ux.test.ts).
+  assert.equal(NUDGE_DELAY_MS, 0);
 });
 
 test("every corner nudge waits the shared delay before showing", () => {
@@ -43,9 +47,8 @@ test("every corner nudge waits the shared delay before showing", () => {
     assert.match(code, /NUDGE_DELAY_MS/, `${f} must read the shared nudge delay`);
     // Imported AND actually used as the timer — an unused import would leave the
     // old behaviour in place while looking fixed.
-    // PremiumSlideIn may swap in LANDING_ENGAGED_MS on the top landing pages
-    // (signup-promo-gate.ts, 2026-09-27); everywhere else the shared delay applies.
-    assert.match(code, /\}, (landing \? LANDING_ENGAGED_MS : )?NUDGE_DELAY_MS\)/, `${f} must use it as the show timer, not merely import it`);
+    // No landing-page swap any more (2026-09-29): the shared delay everywhere.
+    assert.match(code, /\}, NUDGE_DELAY_MS\)/, `${f} must use it as the show timer, not merely import it`);
   }
 });
 

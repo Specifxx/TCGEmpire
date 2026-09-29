@@ -125,6 +125,22 @@ test("at RRP: fires the first time and again only after a run saw it over RRP", 
   assert.equal(s3.rrp, 1);
 });
 
+test("a PRE-ORDER set never emails 'at RRP' (its RRP is unknown), a released set still does", async () => {
+  // RAD (Radiance) is unreleased: msrp.ts is keyed by product type + market, so the
+  // current set's RRP must not be applied to a box that isn't out yet.
+  const pre = sealedHarness([sealedRow("s1", plus, { groupKey: "RAD|Booster Box" })], {
+    groups: [group([offer(14400)], { groupKey: "RAD|Booster Box", name: "Radiance Booster Box", setCode: "RAD" })],
+    now: new Date("2026-10-10T09:00:00Z"), // before Radiance's 23 Oct release
+  });
+  const s = await pre.run();
+  assert.equal(s.rrp, 0, "no at-RRP trigger for a pre-order group");
+  assert.ok(!pre.sent.some((m) => m.item.kind === "sealed_rrp"));
+  assert.ok(!pre.sent.some((m) => m.item.rrpCents != null), "no RRP line on any email for a pre-order group");
+  // A released set still fires.
+  const rel = sealedHarness([sealedRow("s1", plus)], { groups: [group([offer(14400)])] });
+  assert.equal((await rel.run()).rrp, 1);
+});
+
 test("a target beats every other trigger; a drop needs no target and a material fall; the 24h cooldown holds the baseline", async () => {
   const t = sealedHarness([sealedRow("s1", premium, { targetCents: 14400, lastPriceCents: 16000, soldOutAt: daysAgo(2) })], { groups: [group([offer(14000)])] });
   const s1 = await t.run();

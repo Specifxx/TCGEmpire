@@ -10,8 +10,8 @@
 // Rules: must be a same-origin absolute path ("/..."), never protocol-relative
 // ("//evil.com" parses as a host by browsers), and never an API route (an auth
 // redirect into /api/* is at best a JSON screen, at worst a CSRF-shaped
-// footgun). Anything else → null; callers pick their own fallback (/profile
-// after sign-in, "/" for a cancel link).
+// footgun). Anything else → null; callers pick their own fallback
+// (POST_SIGN_IN_FALLBACK after sign-in, "/" for a cancel link).
 //
 // BACKSLASHES AND CONTROL CHARACTERS ARE REJECTED OUTRIGHT (review,
 // 2026-09-25). The WHATWG URL parser — browsers, and `new URL()` on the
@@ -21,6 +21,13 @@
 // a server-side 307, but every caller gets the stricter rule. As a last check
 // the path is resolved against a dummy origin and must stay on it.
 const UNSAFE_CHARS = /[\\\x00-\x20\x7f]/;
+
+/**
+ * Where a sign-in with no destination lands (2026-09-29): the signed-in hub,
+ * not the /profile settings page it used to be. One constant, read by the
+ * OAuth callback and by /login for an already-signed-in visitor.
+ */
+export const POST_SIGN_IN_FALLBACK = "/dashboard";
 
 export function sanitizeNextPath(next: string | null | undefined): string | null {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/api")) return null;

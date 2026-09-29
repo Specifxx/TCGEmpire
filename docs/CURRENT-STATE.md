@@ -217,25 +217,29 @@ longer lands on its entry.
   defines a deck watch and a sealed watch. Premium's tagline is "Works while
   you're away". `PREMIUM_COPY_VERSION` `premium-2026-09-29`.
   [2026-09-29](../DECISIONS.md#L15178)
-- **Upgrade prompts live where a limit is hit, not in popups or headers:**
+- **Upgrade prompts live where a limit is hit, not in headers:**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
-  the tool walls. [2026-09-28](../DECISIONS.md#L14549)
+  the tool walls — plus, since 09-29 at the owner's request, the restored
+  signed-in `PremiumSlideIn`. Header, rail and account menu stay plain
+  "Pricing" links. [2026-09-28](../DECISIONS.md#L14549),
+  [2026-09-29](../DECISIONS.md#L15178)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
   [2026-09-14](../DECISIONS.md#L6038)
 - **Nudges:** the signed-out popup sells the FREE account (no price, no
-  gold), and matters more now that the free limits are the funnel. There is
-  no signed-in Premium slide-in (deleted 2026-09-28). The popup waits for
-  a 2nd page view or 60 s of reading, never on the first page from another
-  site or a phone's first view (`lib/signup-promo-gate.ts`), except on the
-  top landing pages (`/blog/*`, `/movers`), where it shows after 7 s
-  of reading on any view. It stops after 2
-  dismissals per device, snoozes 3 pages then 7 days, and keeps its 5-second
-  delay. [2026-09-16](../DECISIONS.md#L7031),
+  gold), and matters more now that the free limits are the funnel. The
+  signed-in Premium slide-in was deleted 09-28 and restored 09-29. Since 09-29
+  (owner) BOTH show on the FIRST page, as soon as it loads: no page-view,
+  reading, referrer or phone gate (`lib/signup-promo-gate.ts` is gone), no
+  delay (`NUDGE_DELAY_MS` 0), and the slide-in does not wait for its personal
+  line. What stays: audiences, 2 dismissals per device, the snoozes, the
+  popup's 3-page spacing after a dismissal, the slide-in's once per session,
+  and the skipped paths. [2026-09-16](../DECISIONS.md#L7031),
   [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089), [2026-09-27](../DECISIONS.md#L14536),
-  [2026-09-28](../DECISIONS.md#L14549)
+  [2026-09-28](../DECISIONS.md#L14549), [2026-09-29](../DECISIONS.md#L15178),
+  [2026-09-29](../DECISIONS.md#L15281)
 - **Signed-out visitors get nothing from Deal Finder or Rising Cards**; a
   free account gets the top 3 of each, a paid tier the full list.
   [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842)
@@ -249,6 +253,13 @@ longer lands on its entry.
 - **Measure changes:** after the freeze, bump `PREMIUM_COPY_VERSION` /
   `PROMO_VARIANT` whenever funnel wording, price or frequency changes.
   [2026-09-09](../DECISIONS.md#L3628), [2026-09-14](../DECISIONS.md#L6134)
+- **After sign-in:** back to the page it started on (`?next=` on every
+  contextual `/login` link; a pending watch completes). With no destination:
+  `/dashboard` (`POST_SIGN_IN_FALLBACK`), never `/profile`. A new account gets
+  "Welcome" and the setup checklist first there, or a one-time "Your free
+  account is ready — Get set up →" toast on the page it returned to, and no
+  Premium slide-in for the rest of that session (`lib/signup-session.ts`).
+  [2026-09-29](../DECISIONS.md#L15313)
 - **Sign-up attribution:** /login keeps the clicked source
   (`readSignupSource`) rather than overwriting it with "login", and every
   /login link carries `src=` or marks its source on click

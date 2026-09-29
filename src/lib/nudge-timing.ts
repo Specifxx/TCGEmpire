@@ -2,11 +2,10 @@
  * HOW LONG A CORNER NUDGE WAITS BEFORE IT SLIDES IN. One number, read by all
  * three of them, so they can never drift apart again:
  *
- *   SignupPromoPopup   the signed-out "make an account / Premium" pitch
+ *   SignupPromoPopup   the signed-out "make a free account" pitch
+ *   PremiumSlideIn     the signed-in free-account Premium nudge (removed
+ *                      2026-09-28, restored 2026-09-29)
  *   AnnualSwitchNudge  the monthly-subscriber "switch to annual" offer
- *   (PremiumSlideIn, the signed-in free-account Premium nudge, was the third
- *   until 2026-09-28, when upgrade prompts moved to where a free account hits
- *   a limit — lib/free-limits.ts.)
  *
  * They had three different answers — instant, 12s and 8s — each arrived at by
  * its own separate decision, with nothing connecting them. A visitor never
@@ -14,26 +13,37 @@
  * things appearing in the corner of the page, and those should feel like one
  * system behaving consistently.
  *
- * FIVE SECONDS, set 2026-09-11 at the owner's explicit instruction: every
- * slider shows five seconds after the page opens, rather than instantly.
+ * ZERO — INSTANT — since 2026-09-29, at the owner's explicit instruction:
+ * "make the sign up and premium slider instant. I want to bring the instant
+ * feature back." It was FIVE SECONDS from 2026-09-11 (also the owner's call:
+ * "every slider shows five seconds after the page opens, rather than
+ * instantly"). Hours later the owner went further: "the slider should show up
+ * instantly and it should not wait for a second page view. on blog posts and
+ * movers it should also be instant … it should show up as soon as the page
+ * loads." So the page-view and reading gates are gone too (the sign-up
+ * popup's lib/signup-promo-gate.ts with them): both cards show on the first
+ * page, as soon as the account check says who is looking. Only the caps and
+ * snoozes below, once-per-session for the Premium card, and each card's
+ * skipped paths (/login, /verify, /premium) still hold.
  *
  * WHAT THE HISTORY SAYS, because this number has been fought over before and
  * the next person to touch it deserves the evidence rather than a bare value.
  * SignupPromoPopup ran a 5s delay once and it measurably cost the site: bounce
  * rose, pages/visitor fell, buy_click fell, and 78% of visitors dismissed it
  * outright. That is what drove the buy-click-aware timing that replaced it, and
- * then the instant show (2026-09-01) that replaced THAT. So this value is a
- * deliberate re-test of a thing that has failed once, not a fresh idea — the
- * metrics to read are signup_promo_shown/_dismissed, sign_up, buy_click and
- * pages/visitor, and the popup's PROMO_VARIANT was renamed alongside this so
- * GA4 can separate before from after instead of averaging them together.
+ * then the instant show (2026-09-01) that replaced THAT; 2026-09-11 went back
+ * to five seconds, and 2026-09-29 back to instant. The metrics to read are
+ * signup_promo_shown/_dismissed, premium_slidein_shown/_dismissed/_click,
+ * sign_up, buy_click and pages/visitor, and the popup's PROMO_VARIANT is
+ * renamed with every change here so GA4 can separate before from after
+ * instead of averaging them together.
  *
  * A delay is NOT the same as a frequency cap. Each nudge keeps its own
  * eligibility rules, pageview gates, dismissal counts and snoozes — this only
  * says how long after the page opens an already-eligible nudge appears. Nothing
  * here makes a nudge show to someone it would not otherwise have shown to.
  */
-export const NUDGE_DELAY_MS = 5_000;
+export const NUDGE_DELAY_MS = 0;
 
 /**
  * HOW OFTEN A CORNER NUDGE MAY COME BACK, and when it must stop asking.

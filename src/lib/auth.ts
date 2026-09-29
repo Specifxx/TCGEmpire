@@ -40,6 +40,10 @@ export interface SessionUser {
   // schema comment on User.preferredCountry. Raw/untyped here (auth.ts stays
   // decoupled from lib/country.ts); consumers normalize with normalizeCountry().
   preferredCountry: string | null;
+  // When the account was created. Lets a page greet a brand-new account as new
+  // ("Welcome", not "Welcome back") on the very first render, without waiting
+  // for the client's ?welcome handling (2026-09-29, /dashboard).
+  createdAt: Date;
 }
 
 
@@ -118,7 +122,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
         id: true, email: true, displayName: true, avatarUrl: true, emailVerified: true,
         balanceCents: true, isAdmin: true, premiumUntil: true, premiumTier: true,
         premiumTierFloor: true, trialStartedAt: true, preferredCountry: true, stripeCustomerId: true,
-        lastActiveAt: true, activeDays: true,
+        lastActiveAt: true, activeDays: true, createdAt: true,
       },
     });
     if (!user) return null;
@@ -141,6 +145,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       trialStartedAt: user.trialStartedAt,
       stripeCustomerId: user.stripeCustomerId,
       preferredCountry: user.preferredCountry,
+      createdAt: user.createdAt,
     };
   } catch {
     return null;
