@@ -20,7 +20,6 @@ import {
 } from "@/lib/site";
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
-import { LANDING_ENGAGED_MS, isLandingPage } from "@/lib/signup-promo-gate";
 import { usePresence } from "@/lib/motion";
 import { Skeleton } from "./ui/Skeleton";
 
@@ -49,9 +48,11 @@ import { Skeleton } from "./ui/Skeleton";
 // signed-OUT only (see SignupPromoPopup), so the two audiences never overlap.
 //
 // FREQUENCY IS CAPPED HARD, because a repeat nag just trains dismissal:
-//   • it waits NUDGE_DELAY_MS after the page opens (0, instant, since
-//     2026-09-29; shared by every corner nudge — see lib/nudge-timing.ts),
-//     once the page-view gate below is met
+//   • it shows AS SOON AS THE PAGE LOADS, on the first page (2026-09-29,
+//     owner: "it should not wait for a second page view … on blog posts and
+//     movers it should also be instant … it should show up as soon as the
+//     page loads"). NUDGE_DELAY_MS is 0 and there is no page-view or reading
+//     gate; it no longer waits for its personal line either (see PERSONAL COPY)
 //   • once per browser session (sessionStorage), so navigating doesn't re-pop it
 //   • a 7-day snooze after a dismiss; a 14-day snooze after they engage the CTA
 //   • NEVER AGAIN after two dismissals (localStorage) — a firm no is permanent
@@ -62,10 +63,7 @@ import { Skeleton } from "./ui/Skeleton";
 const SESSION_SEEN = "rc_prem_slidein_session"; // sessionStorage: shown this session
 const DISMISS_COUNT = "rc_prem_slidein_dismisses"; // localStorage: lifetime dismissals
 const SNOOZE_UNTIL = "rc_prem_slidein_until"; // localStorage: epoch ms; don't show before this
-const PV_KEY = "rc_prem_slidein_pv"; // sessionStorage: this component's own per-session pageview count
 
-// "after they visit 2 pages in one session" — engaged, not a first-impression pop.
-const MIN_PAGEVIEWS = 2;
 // A second dismissal means never again — two firm no's is a no.
 //
 // These three moved to lib/nudge-timing.ts on 2026-09-14 so SignupPromoPopup
@@ -207,7 +205,6 @@ export function PremiumSlideIn() {
   // corner nudge enters/exits" instead of two copies of the double-rAF +
   // setTimeout trick.
   const { mounted, entered } = usePresence(shown, 250);
-  const lastCountedPath = useRef<string | null>(null);
   const contextPitch = contextPitchFor(pathname);
   // Live "N cards below TCGplayer market right now" proof line (a count — no
   // dollar total, 2026-09-25). Fetched from the shared,
@@ -223,23 +220,15 @@ export function PremiumSlideIn() {
   // PERSONAL COPY (2026-09-23; lib/premium-nudge.ts). "4 cards you watch are
   // underpriced right now" beats any per-page pitch, so when the account's own
   // cards are in Deal Finder or Rising Cards it REPLACES the heading and line.
-  // Fetched once, at the moment the card is about to appear (never on mount),
-  // and raced against PERSONAL_WAIT_MS so a slow answer costs a generic card,
-  // never a late one; the copy is settled before the card renders, so it never
-  // swaps in front of the reader. The TIMING rules above are untouched.
+  // Fetched once, when the card appears (never on mount, so an account that
+  // never sees the card never costs the read), and raced against
+  // PERSONAL_WAIT_MS. Since 2026-09-29 the card does NOT wait for it: it shows
+  // on page load with the per-page or generic pitch, and the personal line
+  // replaces it if it arrives within PERSONAL_WAIT_MS — during or just after
+  // the 250 ms entrance. Later than that it is dropped, so it never changes
+  // under someone already reading.
   const [personal, setPersonal] = useState<{ heading: string; line: string } | null>(null);
-
-  // Count route views once per pathname, on its own key so this component never
-  // depends on the signup popup's counter existing.
-  useEffect(() => {
-    if (!pathname || lastCountedPath.current === pathname) return;
-    lastCountedPath.current = pathname;
-    try {
-      sessionStorage.setItem(PV_KEY, String(readNum(sessionStorage, PV_KEY) + 1));
-    } catch {
-      /* private mode — the arming gate below just fails to show, which is fine */
-    }
-  }, [pathname]);
+  const personalFetched = useRef(false);
 
   const eligible =
     loaded && !!user && !premium && premiumCheckout && !SKIP_PATHS.some((p) => pathname?.startsWith(p));
@@ -264,44 +253,47 @@ export function PremiumSlideIn() {
     } catch {
       /* ignore */
     }
-    // Top landing pages (blog posts, /movers) show on the first page view,
-    // after LANDING_ENGAGED_MS (7 s of reading) in place of the page-view
-    // gate — see signup-promo-gate.ts. Kept when the delay went to 0
-    // (2026-09-29), as the sign-up popup keeps its gates.
-    const landing = isLandingPage(pathname);
-    if (!landing && readNum(ss, PV_KEY) < MIN_PAGEVIEWS) return; // not engaged enough yet
-
-    let cancelled = false;
+    // NO PAGE-VIEW OR READING GATE (removed 2026-09-29, owner): the first page
+    // an eligible account loads shows the card, blog posts and /movers
+    // included. Once per session, the dismissal cap and the snoozes above stay.
     const dialogOpen = () => typeof document !== "undefined" && document.body.dataset.rcDialog === "1";
-    const t = setTimeout(async () => {
-      // Never slide in on top of a real modal (signup / feedback / premium dialog).
+    const t = setTimeout(() => {
+      // Never slide in on top of a real modal (signup / feedback / premium
+      // dialog). Skipping does not burn the session's one showing: the next
+      // page arms again.
       if (dialogOpen()) return;
-      const mine = await fetchPersonalCopy();
-      // Checked AGAIN after the wait: a navigation cancels this run (and the
-      // next page starts its own), and a dialog may have opened meanwhile.
-      // SESSION_SEEN is only written once the card really will appear, so a
-      // cancelled run never burns the session's one showing.
-      if (cancelled || dialogOpen()) return;
       try {
         ss?.setItem(SESSION_SEEN, "1");
       } catch {
         /* ignore */
       }
-      setPersonal(mine);
       setShown(true);
+    }, NUDGE_DELAY_MS);
+
+    return () => clearTimeout(t);
+  }, [eligible, shown, pathname]);
+
+  // The personal line, once the card is up (see PERSONAL COPY above). The
+  // impression is recorded when the race settles, so `context` says which
+  // pitch the reader actually got.
+  useEffect(() => {
+    if (!shown || personalFetched.current) return;
+    personalFetched.current = true;
+    let cancelled = false;
+    void fetchPersonalCopy().then((mine) => {
+      if (cancelled) return;
+      if (mine) setPersonal(mine);
       trackEvent("premium_slidein_shown", {
         path: pathname ?? "/",
         trial_eligible: trialEligible,
         context: mine ? "personal" : (contextPitch?.tool ?? undefined),
         copy: PREMIUM_COPY_VERSION,
       });
-    }, landing ? LANDING_ENGAGED_MS : NUDGE_DELAY_MS);
-
+    });
     return () => {
       cancelled = true;
-      clearTimeout(t);
     };
-  }, [eligible, shown, pathname, trialEligible, contextPitch]);
+  }, [shown, pathname, trialEligible, contextPitch]);
 
   // Fetch the live proof numbers only once the card has actually appeared —
   // never speculatively on mount, since most visitors never trigger it at all.

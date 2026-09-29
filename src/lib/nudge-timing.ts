@@ -17,12 +17,14 @@
  * "make the sign up and premium slider instant. I want to bring the instant
  * feature back." It was FIVE SECONDS from 2026-09-11 (also the owner's call:
  * "every slider shows five seconds after the page opens, rather than
- * instantly"). Instant means no wait once a nudge is ELIGIBLE; the eligibility
- * rules themselves are unchanged, by the owner's choice the same day: the
- * sign-up popup still skips a visit's first page from another site or on a
- * phone (lib/signup-promo-gate.ts), the Premium slider still waits for a second
- * page view, and on the top landing pages both still wait for 7 s of reading
- * (LANDING_ENGAGED_MS).
+ * instantly"). Hours later the owner went further: "the slider should show up
+ * instantly and it should not wait for a second page view. on blog posts and
+ * movers it should also be instant … it should show up as soon as the page
+ * loads." So the page-view and reading gates are gone too (the sign-up
+ * popup's lib/signup-promo-gate.ts with them): both cards show on the first
+ * page, as soon as the account check says who is looking. Only the caps and
+ * snoozes below, once-per-session for the Premium card, and each card's
+ * skipped paths (/login, /verify, /premium) still hold.
  *
  * WHAT THE HISTORY SAYS, because this number has been fought over before and
  * the next person to touch it deserves the evidence rather than a bare value.

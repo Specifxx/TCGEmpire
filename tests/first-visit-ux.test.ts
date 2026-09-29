@@ -2,34 +2,32 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { signupPromoEligible, isExternalReferrer, ENGAGED_MS } from "../src/lib/signup-promo-gate";
+import { existsSync } from "node:fs";
 
 // Section 4 of the 2026-09-24 brief: first visit from Reddit/Discord.
 // DECISIONS.md, "First visit from Reddit/Discord: no sign-up prompt on the
-// first page".
+// first page". REVERSED 2026-09-29 by the owner: both corner cards show on the
+// first page, as soon as it loads ("Corner nudges on page load" in
+// DECISIONS.md). The gate tests below now pin the reversal.
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
-const base = { views: 1, engagedMs: 0, externalEntry: false, mobile: false };
+const code = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
-test("sign-up slide-in: second page view, or a minute of reading on the first", () => {
-  assert.equal(signupPromoEligible(base), false, "not in the first seconds of a first visit");
-  assert.equal(signupPromoEligible({ ...base, engagedMs: ENGAGED_MS - 1 }), false);
-  assert.equal(signupPromoEligible({ ...base, engagedMs: ENGAGED_MS }), true);
-  assert.equal(signupPromoEligible({ ...base, views: 2 }), true);
-  assert.equal(ENGAGED_MS, 60_000);
-});
-
-test("never on the first page from another site, never on a phone's first view", () => {
-  assert.equal(signupPromoEligible({ ...base, externalEntry: true, engagedMs: 10 * ENGAGED_MS }), false);
-  assert.equal(signupPromoEligible({ ...base, mobile: true, engagedMs: 10 * ENGAGED_MS }), false);
-  // From the second page on, both are allowed — they have chosen to browse.
-  assert.equal(signupPromoEligible({ ...base, views: 2, externalEntry: true, mobile: true }), true);
-  assert.equal(isExternalReferrer("https://www.reddit.com/r/riftboundtcg/", "riftcompare.com"), true);
-  assert.equal(isExternalReferrer("https://riftcompare.com/sets", "riftcompare.com"), false);
-  assert.equal(isExternalReferrer("", "riftcompare.com"), false, "a typed URL is not a referral");
-  const popup = read("src/components/SignupPromoPopup.tsx");
-  assert.match(popup, /signupPromoEligible\(\{/);
-  assert.match(popup, /if \(!eligible\) return;/);
+test("both corner cards show on the first page, as soon as it loads: no page-view or reading gate", () => {
+  // Owner, 2026-09-29: "the slider should show up instantly and it should not
+  // wait for a second page view. on blog posts and movers it should also be
+  // instant … it should show up as soon as the page loads."
+  assert.ok(!existsSync(join(process.cwd(), "src/lib/signup-promo-gate.ts")), "the first-visit gate module is gone");
+  const popup = code("src/components/SignupPromoPopup.tsx");
+  assert.doesNotMatch(popup, /signupPromoEligible|ENGAGED_MS|isLandingPage|externalEntry|matchMedia/, "no gate on the sign-up card");
+  const slide = code("src/components/PremiumSlideIn.tsx");
+  assert.doesNotMatch(slide, /MIN_PAGEVIEWS|PV_KEY|LANDING_ENGAGED_MS|isLandingPage/, "no page-view or landing gate on the Premium card");
+  // What still holds: who each card is for, the caps and snoozes, and the paths they skip.
+  assert.match(popup, /if \(!loaded \|\| user \|\| shown\) return;/, "signed-out visitors only");
+  assert.match(popup, /if \(readLocal\(DISMISS_COUNT_KEY\) >= MAX_NUDGE_DISMISSALS\) return;/);
+  assert.match(slide, /loaded && !!user && !premium && premiumCheckout/, "signed-in accounts without Premium only");
+  assert.match(slide, /if \(ss\?\.getItem\(SESSION_SEEN\) === "1"\) return;/, "once per session");
+  for (const src of [popup, slide]) assert.match(src, /const SKIP_PATHS = \["\/login", "\/verify", "\/premium"\];/);
 });
 
 test("hero stats render the server's final numbers, with no count-up", () => {
@@ -53,14 +51,3 @@ test("price table: direction is not colour-only, rows have thumbnails, capped wi
   assert.match(t, /href="\/browse"/);
 });
 
-test("top landing pages (blog posts, /movers) show after 7 s even on a first external or phone view", async () => {
-  const { LANDING_ENGAGED_MS, isLandingPage } = await import("../src/lib/signup-promo-gate");
-  for (const p of ["/blog/riftbound-heartsteel-overnumbered-cards", "/blog/where-to-buy-riftbound-radiance", "/blog/riftbound-radiance-spoilers", "/movers"]) {
-    assert.ok(isLandingPage(p), p);
-  }
-  assert.ok(!isLandingPage("/"));
-  assert.ok(!isLandingPage("/blog"));
-  const first = { views: 1, externalEntry: true, mobile: true, landing: true };
-  assert.equal(signupPromoEligible({ ...first, engagedMs: LANDING_ENGAGED_MS - 1 }), false);
-  assert.equal(signupPromoEligible({ ...first, engagedMs: LANDING_ENGAGED_MS }), true);
-});

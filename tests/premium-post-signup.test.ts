@@ -119,12 +119,14 @@ test("where the nudge appears: watchlist, portfolio, and the slide-in", () => {
   assert.match(route, /"Cache-Control": "private, no-store"/);
 
   const slide = code("src/components/PremiumSlideIn.tsx");
-  // 600 ms since the slider went instant (2026-09-29): the only wait left.
   assert.match(slide, /const PERSONAL_WAIT_MS = 600;/);
   assert.match(slide, /personal\?\.heading \?\? contextPitch\?\.heading/, "personal copy outranks the per-page pitch");
-  // Fetched inside the show timer, and the session is only marked seen once
-  // the card will really appear.
-  const timer = slide.slice(slide.indexOf("const t = setTimeout(async () => {"), slide.indexOf("NUDGE_DELAY_MS);"));
-  assert.ok(timer.indexOf("await fetchPersonalCopy()") < timer.indexOf("ss?.setItem(SESSION_SEEN"), "SESSION_SEEN after the wait");
-  assert.match(timer, /if \(cancelled \|\| dialogOpen\(\)\) return;/);
+  // Since 2026-09-29 the card shows on page load and does NOT wait for the
+  // personal line: the show timer marks the session and shows, and the line is
+  // fetched once the card is up, then recorded with the impression.
+  const timer = slide.slice(slide.indexOf("const t = setTimeout(() => {"), slide.indexOf("}, NUDGE_DELAY_MS);"));
+  assert.ok(timer.length > 0 && !timer.includes("fetchPersonalCopy"), "the show timer never waits on the personal line");
+  assert.ok(timer.indexOf("if (dialogOpen()) return;") < timer.indexOf("setShown(true)"), "never over a real modal");
+  const after = slide.slice(slide.indexOf("if (!shown || personalFetched.current) return;"));
+  assert.match(after, /void fetchPersonalCopy\(\)\.then\(\(mine\) => \{[\s\S]*?if \(mine\) setPersonal\(mine\);[\s\S]*?trackEvent\("premium_slidein_shown"/, "fetched after the card is up; impression records which pitch showed");
 });

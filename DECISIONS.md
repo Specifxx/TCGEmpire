@@ -15203,3 +15203,35 @@ The editorial band ("Guides, news & market updates") has been in the server HTML
   - on a second page view the sign-up card was visible 0.3 s after load, and the slide-in 0.9 s (the account read plus the capped personalised-line call);
   - neither appeared on the first page;
   - the Premium column shows in full at 1280px and 390px.
+
+## Corner nudges on page load: no page-view or reading gates — 2026-09-29
+
+**Why.** Owner, hours after the entry above: "the slider should show up instantly and it should not wait for a second page view. on blog posts and movers it should also be instant. It shouldnt be when a visitor qualifies either, it should show up as soon as the page loads."
+
+This reverses the 2026-09-24 first-visit rule ("First visit from Reddit/Discord: no sign-up prompt on the first page") and the 2026-09-27 landing-page timing. It also reverses the entry above's choice to keep them.
+
+**What.**
+- **Sign-up card** (signed-out). The first-visit gate is gone, and `lib/signup-promo-gate.ts` with it: no 2nd-page-view or 60 s rule, no exception for a first page from another site or on a phone, no 7 s on `/blog/*` and `/movers`. The card shows on the first page a signed-out visitor loads, as soon as `/api/me` says they are signed out. `PROMO_VARIANT` is `free_account_compare_first_page`.
+- **Premium slide-in** (signed-in, no Premium). The second-page-view rule and the 7 s landing wait are gone, so it shows on the first page. It also no longer waits for its personal line: the card appears with the per-page or generic pitch, and the personal line replaces it only if it arrives within `PERSONAL_WAIT_MS` (600 ms), during or just after the entrance. `premium_slidein_shown` is recorded when that race settles, so its `context` says which pitch showed.
+- **Still holds.** Who each card is for (signed-out; signed-in without Premium, with checkout on), the two-dismissal cap and the 7/14-day snoozes, the sign-up card's 3-page spacing after a dismissal, the slide-in's once-per-session, the paths both skip (`/login`, `/verify`, `/premium`), and never sliding over an open dialog. "As soon as the page loads" was read as timing and gating. A visitor's own no is still respected.
+
+**Known cost.**
+- Google's guidance treats a pop-up covering content on a phone's first page from search as intrusive. The 2026-09-24 rule existed for that, and the site is applying for AdSense.
+- The last instant, ungated version of this card measured a 78% dismiss rate, with bounce up and pages/visitor down.
+- Watch `signup_promo_*`, `premium_slidein_*`, `sign_up`, `buy_click`, pages/visitor, and Search Console's mobile results.
+
+**Verified.**
+- `tests/first-visit-ux.test.ts` now pins:
+  - no gate in either component, and the gate module gone;
+  - what still holds: audiences, the cap, once-per-session and the skipped paths.
+- `tests/premium-post-signup.test.ts`: the show timer never waits on the personal line, which is fetched once the card is up.
+- `tests/nudge-timing.test.ts` and `tests/nudge-frequency.test.ts` updated.
+- `next dev`, measured from the page's load event, all on the FIRST page:
+
+| Card | Page | Appeared after load |
+|---|---|---|
+| Sign-up | `/`, desktop | 1.5 s (dev hydration of the homepage) |
+| Sign-up | a blog post on a 390px phone, arriving from reddit.com | 0.3 s |
+| Sign-up | `/movers` on a phone | 0.2 s |
+| Premium slide-in (signed-in free account) | `/`, desktop | 0.3 s |
+| Premium slide-in (signed-in free account) | a blog post on a phone | 0.3 s |
