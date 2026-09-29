@@ -481,7 +481,7 @@ test("the free trial is visible in BOTH billing cycles, not traded against the y
   assert.match(src, /effectiveCycle === "annual" && \(/, "the yearly line must be its own conditional, not an either/or arm");
   assert.match(src, /\{trialDays\}-day free trial/, "the trial line must survive");
   // And the trial must be advertised on the Premium feature list, not only Plus.
-  const premiumLists = src.slice(src.indexOf("const PREMIUM_FEATURES_ON_PLUS"), src.indexOf("function FreeCard"));
+  const premiumLists = src.slice(src.indexOf("const PREMIUM_FEATURES_ON_PLUS"), src.indexOf("function PaidTierCard"));
   assert.match(premiumLists, /N-day free trial/, "Premium's own feature list must carry the trial row too");
 });
 

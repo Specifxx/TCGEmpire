@@ -164,7 +164,8 @@ test("/portfolio links to the checklist, and the tier table row is the enforced 
   assert.deepEqual([row.account, row.plus, row.premium], [`Up to ${FREE_PORTFOLIO_LIMIT} cards`, "Whole sets, no limit", "Whole sets, no limit"]);
   assert.match(read("src/components/PremiumSlideIn.tsx"), /\{ label: "Set tracker" \}/);
   const premium = read("src/app/premium/page.tsx");
-  assert.match(premium, /title: "Set tracker: whole sets, no limit"/);
+  assert.match(premium, /text: "No watchlist or portfolio limit, so whole sets fit"/, "the What you get line for Plus");
+  assert.match(premium, /text: "Set checklist: what's missing, cheapest listing to finish"/, "the free set checklist line");
   assert.match(premium, /q: "Do I have to pay to see what my set is missing\?"/);
 });
 

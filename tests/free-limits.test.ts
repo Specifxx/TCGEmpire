@@ -464,8 +464,9 @@ test("every tier surface quotes the limits from the constants, and price compari
   assert.match(page, /q: "What happens to cards I already track\?"/);
   assert.match(page, /You keep them all/);
   assert.match(page, /free for everyone, with no limit/);
+  // (PremiumPricingCards.tsx left this list on 2026-09-29: the Free card is gone
+  // from the cards, so /premium's "What you get" and FAQ, in page.tsx, quote it.)
   for (const f of [
-    "src/components/PremiumPricingCards.tsx",
     "src/app/premium/page.tsx",
     "src/lib/articles.ts",
     "src/app/llms.txt/route.ts",
@@ -478,7 +479,7 @@ test("every tier surface quotes the limits from the constants, and price compari
     const text = code(f).replace(/side deck[^\n]*/gi, "");
     assert.doesNotMatch(text, /\b(10|ten) (watched )?cards\b|\b50 (portfolio )?cards\b/i, `${f} hand-types a limit`);
   }
-  // Bumped 2026-09-29 with the watches (DECISIONS.md, "Premium works while
-  // you're away"); the free limits are unchanged on every surface above.
-  assert.equal(PREMIUM_COPY_VERSION, "personas-2026-09-29");
+  // Bumped 2026-09-29 for the plans-first /premium (DECISIONS.md, "/premium: plans
+  // first, a fifth of the words"); the free limits are unchanged on every surface above.
+  assert.equal(PREMIUM_COPY_VERSION, "premium-2026-09-29c");
 });

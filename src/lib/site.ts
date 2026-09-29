@@ -321,4 +321,12 @@ export function premiumLockInTail(): string {
 // slide-in, the dialog, the pricing cards, the tools index, the emails and the
 // article; Demand Finder moved lower and described as what people are searching for;
 // "Beating the market by X%" softened to "Since you bought". Prices unchanged.
-export const PREMIUM_COPY_VERSION = "personas-2026-09-29";
+// premium-2026-09-29c (the label is reused: the "c" of the Finish-this-set line
+// above was overwritten by the personas bump before it was measured on its own):
+// /premium is plans first and a fifth of the words (owner: "way too wordy now and
+// the buttons to get premium are at the bottom of the page"): the hero, the
+// Monthly/Annual toggle and the two plan cards with their buy buttons are the first
+// screen at 390x844 and 1280x720; What you get is one line a feature, the table is
+// collapsed, the FAQ is seven questions, and the persona sections and per-feature
+// cards are gone. Plans, prices and every entitlement unchanged.
+export const PREMIUM_COPY_VERSION = "premium-2026-09-29c";

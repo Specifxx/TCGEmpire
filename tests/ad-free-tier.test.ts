@@ -58,7 +58,7 @@ test("both paid tiers' feature lists sell ad-free, and Plus LEADS with it", () =
   // 2026-09-25 lineup: "No ads on any page" is Plus's first bullet, the benefit
   // a first-time payer understands without a tour.
   assert.match(plusList, /const PLUS_FEATURES = \[\s*"No ads on any page",/, "PLUS_FEATURES must lead with ad-free");
-  const premiumLists = cards.slice(cards.indexOf("const PREMIUM_FEATURES_ON_PLUS"), cards.indexOf("function FreeCard"));
+  const premiumLists = cards.slice(cards.indexOf("const PREMIUM_FEATURES_ON_PLUS"), cards.indexOf("function PaidTierCard"));
   const onPlus = premiumLists.slice(0, premiumLists.indexOf("const PREMIUM_FEATURES_STANDALONE"));
   const standalone = premiumLists.slice(premiumLists.indexOf("const PREMIUM_FEATURES_STANDALONE"));
   assert.match(onPlus, /no ads/i, "Premium-on-Plus must say it keeps Plus's ad-free");

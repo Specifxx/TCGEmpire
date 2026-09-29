@@ -147,15 +147,19 @@ const STALE = /Premium only|#1 pick|top result only|Free shows only the top pick
 
 test("nothing still describes the old access for these two tools", () => {
   const premiumPage = read("src/app/premium/page.tsx");
-  const blockFor = (href: string) => {
-    const i = premiumPage.indexOf(`href: "${href}"`);
-    assert.ok(i > 0, `expected a Premium feature block for ${href}`);
-    return premiumPage.slice(Math.max(0, premiumPage.lastIndexOf("{", premiumPage.lastIndexOf("body:", i))), i);
+  // /premium's "What you get" has one line per tier for these two tools (the
+  // per-feature paragraph cards went on 2026-09-29): the free line names the top
+  // three, the Plus line the full lists, and neither describes the old access.
+  const lineFor = (tier: string, text: RegExp) => {
+    const line = premiumPage.split("\n").find((l) => l.includes(`tier: "${tier}"`) && text.test(l));
+    assert.ok(line, `expected a ${tier} What you get line matching ${text}`);
+    return line!;
   };
-  for (const href of ["/tools/rising", "/tools/deal-finder"]) {
-    assert.ok(!STALE.test(blockFor(href)), `${href}'s /premium pitch describes old access`);
-    assert.match(blockFor(href), /Free accounts see the top three/, `${href}'s /premium pitch names the free top three`);
-  }
+  const freeLine = lineFor("free", /Deal Finder and Rising Cards/);
+  const plusLine = lineFor("plus", /Deal Finder and Rising Cards/);
+  for (const line of [freeLine, plusLine]) assert.ok(!STALE.test(line), "/premium's pitch describes old access");
+  assert.match(freeLine, /Top 3 of Deal Finder and Rising Cards/, "the free line names the top three");
+  assert.match(plusLine, /Full Deal Finder and Rising Cards lists/, "the Plus line names the full lists");
   const article = getArticles().find((a) => a.slug === "riftcompare-premium-explained")!;
   // Matched by name, not number: the 2026-09-25 rewrite reordered the sections.
   for (const section of ["Rising Cards", "Deal Finder"]) {

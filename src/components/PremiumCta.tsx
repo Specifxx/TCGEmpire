@@ -48,6 +48,7 @@ export function PremiumCta({
   plan = "monthly",
   tier = "premium",
   ctaLabel,
+  compact = false,
 }: {
   checkoutLive: boolean;
   signedIn: boolean;
@@ -63,6 +64,12 @@ export function PremiumCta({
   // predating the tier split (there was only one tier) is unchanged.
   tier?: PremiumTierKey;
   ctaLabel?: string;
+  // The pricing cards' own layout (2026-09-29, /premium is plans-first): the
+  // signed-out button drops its "Ready when you are" heading and the sign-in
+  // small print, which the page states ONCE under both cards, so two buttons fit
+  // on the first screen of a phone. A trial's disclosure, the waitlist state
+  // and every error line are unchanged: they are never compacted away.
+  compact?: boolean;
 }) {
   const dayPhrase = `${trialDays} day${trialDays === 1 ? "" : "s"}`;
   const [busy, setBusy] = useState(false);
@@ -122,6 +129,15 @@ export function PremiumCta({
             if you don&apos;t have one — no card needed for that. A card is required to start the {dayPhrase}{" "}
             free trial; it becomes {priceLabel ? `${priceLabel} ` : "the paid price "}after that unless you cancel.
           </p>
+        </div>
+      );
+    }
+    if (compact) {
+      return (
+        <div className="w-full">
+          <Link href={startHref} onClick={onStartClick} className={CTA_BTN}>
+            Get {TIER_NAMES[tier]}&nbsp;→
+          </Link>
         </div>
       );
     }

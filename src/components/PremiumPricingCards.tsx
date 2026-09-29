@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { PremiumCta } from "./PremiumCta";
 import {
   TIER_NAMES,
@@ -16,8 +15,7 @@ import {
   INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_MARKETS, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
-import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 
 // The /premium pricing section, rebuilt 2026-09-11 to match the layout at
 // mtgstocks.com/go-premium (owner: "copy their formatting and pillars") —
@@ -35,6 +33,16 @@ import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 //      "Maybe the $0 was a bad idea" was the owner's own call on this.
 //   3. A plain tier-name button ("Get Plus", "Get Premium") instead of
 //      "Start your N-day free trial" — same reasoning as (2).
+//
+// PLANS FIRST (2026-09-29, owner: "way too wordy now and the buttons to get
+// premium are at the bottom of the page and you have to scroll"). The cards are
+// the first thing under the hero, TWO across at every width (a phone gets two
+// narrow columns, not two stacked cards, so both buy buttons sit inside a
+// 390x844 first screen), each with a name, the real price, ONE tagline, four
+// bullets of a few words, and the button. The Free card is gone: what is free is
+// the first group of the page's "What you get" list, and the cards sell only
+// what is bought. Everything else on those cards (the monthly default, the
+// real price, the trial and intro lines behind their switches) is unchanged.
 //
 // A CLIENT COMPONENT, not inline in page.tsx, because the toggle needs real
 // state and page.tsx is a server component (it reads the session and Stripe).
@@ -64,21 +72,16 @@ export function PremiumPricingCards({
   introEligible?: boolean;
 }) {
   const anyAnnualLive = annualLive || (plusLive && plusAnnualLive);
-  // Annual by default (2026-09-11, owner: "so the prices look cheaper at
-  // initial glance") — this only works because the headline number under
-  // MONTHLY IS THE DEFAULT AGAIN (2026-09-14). This defaulted to annual from
-  // 2026-09-11 so the per-month figure would "look cheaper at initial glance",
-  // and the per-month figure did get smaller — but the ASK got eight times
-  // bigger, because both buy buttons carry the selected cycle. The live page
-  // ended up offering nothing but a $79.99/year commitment, and the card's
-  // trial line is suppressed in the annual branch (see PaidTierCard), so the
-  // one genuinely zero-risk thing on offer stopped being visible at all.
-  //
-  // This is the rule the Premium DIALOG has followed the whole time, in its
-  // own words: defaulting to annual shows a bigger number to someone who has
-  // not decided to pay anything yet. The two surfaces now agree. Annual is one
-  // tap away and keeps its "Save 33%" badge, which is where it belongs — an
-  // upgrade for someone already sold, not the opening ask.
+  // MONTHLY IS THE DEFAULT (2026-09-14, reversing the annual default of
+  // 2026-09-11). Annual was chosen so the per-month figure would "look cheaper
+  // at initial glance", and the per-month figure did get smaller, but the ASK
+  // got eight times bigger: both buy buttons carry the selected cycle, so the
+  // page ended up offering nothing but a yearly commitment, and the trial line
+  // was suppressed in the annual branch, so the one zero-risk thing on offer
+  // stopped being visible at all. This is the rule the Premium DIALOG has
+  // followed the whole time: defaulting to annual shows a bigger number to
+  // someone who has not decided to pay anything yet. Annual is one tap away and
+  // keeps its "Save 33%" badge, an upgrade for someone already sold.
   //
   // A tier with no annual price of its own still falls back to monthly display
   // regardless of this default — see PaidTierCard's own effectiveCycle guard.
@@ -96,61 +99,44 @@ export function PremiumPricingCards({
         <div
           role="tablist"
           aria-label="Billing cycle"
-          className="mx-auto mt-6 flex max-w-md items-stretch gap-1.5 rounded-xl border border-ink-700 bg-ink-900/70 p-1.5"
+          className="mx-auto flex max-w-sm items-stretch gap-1 rounded-xl border border-ink-700 bg-ink-900/70 p-1"
         >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={cycle === "annual"}
-            onClick={() => setCycle("annual")}
-            className={`flex-1 rounded-lg px-3 py-2.5 text-center transition ${
-              cycle === "annual" ? "bg-ink-800 shadow-sm" : "text-slate-400 hover:bg-ink-800/60"
-            }`}
-          >
-            <span className="flex flex-wrap items-center justify-center gap-1.5 gap-y-0.5">
-              <span className={`whitespace-nowrap text-sm font-bold ${cycle === "annual" ? "text-white" : "text-slate-300"}`}>Annual billing</span>
-              {savePct > 0 && (
-                <span className="rounded-full bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-extrabold text-brand-400">
-                  Save {savePct}%
-                </span>
-              )}
-            </span>
-            <span className="mt-0.5 block text-[11px] text-slate-500">One payment per year</span>
-          </button>
           <button
             type="button"
             role="tab"
             aria-selected={cycle === "monthly"}
             onClick={() => setCycle("monthly")}
-            className={`flex-1 rounded-lg px-3 py-2.5 text-center transition ${
-              cycle === "monthly" ? "bg-ink-800 shadow-sm" : "text-slate-400 hover:bg-ink-800/60"
+            className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-center text-sm font-bold transition ${
+              cycle === "monthly" ? "bg-ink-800 text-white shadow-sm" : "text-slate-400 hover:bg-ink-800/60"
             }`}
           >
-            <span className={`text-sm font-bold ${cycle === "monthly" ? "text-white" : "text-slate-300"}`}>Monthly billing</span>
-            <span className="mt-0.5 block text-[11px] text-slate-500">Cancel anytime</span>
+            Monthly
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={cycle === "annual"}
+            onClick={() => setCycle("annual")}
+            className={`flex min-h-11 flex-1 flex-wrap items-center justify-center gap-x-1.5 rounded-lg px-3 text-center text-sm font-bold transition ${
+              cycle === "annual" ? "bg-ink-800 text-white shadow-sm" : "text-slate-400 hover:bg-ink-800/60"
+            }`}
+          >
+            <span className="whitespace-nowrap">Annual</span>
+            {savePct > 0 && (
+              <span className="rounded-full bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-extrabold text-brand-400">Save {savePct}%</span>
+            )}
           </button>
         </div>
       )}
 
-      {/* From sm up each card is three subgrid rows (header, list, CTA) sharing
-          tracks across the cards, so every header is one height, every list
-          starts at one y and every button shares one top. Before (2026-09-23)
-          the Free card's button sat ~100px below the paid ones at 1440
-          (1069 vs 968/967) because each card's flex column sized on its own.
-          sm:gap-y-0 because a subgrid inherits the parent's row gap, which
-          would otherwise open gaps inside the cards. Phones keep the stacked
-          flex column: every sm: class below is inert there. Without subgrid
-          support the cards stack header/list/CTA in auto rows: unaligned,
-          not broken. The toggle's "Annual billing" is whitespace-nowrap in a
-          max-w-md bar: in max-w-sm it wrapped to two lines (40px) at every
-          width, and on phones the Save pill now drops under the label. */}
-      <div className={`mx-auto mt-6 grid gap-4 sm:gap-y-0 ${plusLive ? "max-w-4xl sm:grid-cols-3" : "max-w-2xl sm:grid-cols-2"}`}>
-        <FreeCard signedIn={signedIn} />
-
+      {/* Two columns at every width: a phone gets two narrow cards side by
+          side, so both buy buttons are on its first screen. Cards stretch to
+          one height and each button sits at the bottom of its own card. */}
+      <div className={`mx-auto mt-3 grid gap-2.5 sm:gap-4 ${plusLive ? "max-w-3xl grid-cols-2" : "max-w-sm grid-cols-1"}`}>
         {plusLive && (
           <PaidTierCard
             tier="plus"
-            tagline="No ads, whole sets, every deal, target alerts and sealed watches"
+            tagline="No ads, and price watches"
             features={PLUS_FEATURES}
             cycle={cycle}
             annualLiveForTier={plusAnnualLive}
@@ -165,7 +151,7 @@ export function PremiumPricingCards({
 
         <PaidTierCard
           tier="premium"
-          tagline={plusLive ? "Plans the order: which stores, what postage, at the condition you'll play, and a deck price watch" : "The full toolkit"}
+          tagline={plusLive ? "Plans which stores to buy from" : "The full toolkit"}
           features={plusLive ? PREMIUM_FEATURES_ON_PLUS : PREMIUM_FEATURES_STANDALONE}
           highlight
           cycle={cycle}
@@ -182,97 +168,43 @@ export function PremiumPricingCards({
   );
 }
 
-// THE 2026-09-25 LINEUP — the same entitlements as TIER_COMPARISON's rows,
-// in buyer's words. Plus LEADS with "No ads on any page": it is the benefit a
-// first-time payer understands without a tour, and every surface that
-// describes Plus must say so (tests/ad-free-tier.test.ts).
-const FREE_FEATURES = [
-  "Unlimited price comparisons",
-  "Deck & list pricer, trade calculator & box EV",
-  // The free limits (lib/free-limits.ts, 2026-09-28). Price comparison
-  // stays unlimited and free: it is what brings people in.
-  `Watch up to ${FREE_WATCHLIST_LIMIT} cards, with weekly new-low emails`,
-  `Portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards, including its delivered replacement cost`,
-  // The set tracker (2026-09-29): free within the portfolio's 50 cards.
-  "Set checklist: what your binder is missing, and the cheapest listing for each card",
-  "Top 3 of Deal Finder & Rising Cards",
-  "Best Basket: your own list's delivered total",
-  "Top 10 most searched cards this week",
-];
-// "N-day" is a placeholder, substituted for the real PREMIUM_TRIAL_DAYS value
-// by PaidTierCard below — this file can't import the server-only constant
+// THE LINEUP — the same entitlements as TIER_COMPARISON's rows, in a few words
+// each, four bullets a card (owner, 2026-09-29: "3–4 bullets of ≤8 words").
+// Plus LEADS with "No ads on any page": it is the benefit a first-time payer
+// understands without a tour, and every surface that describes Plus must say so
+// (tests/ad-free-tier.test.ts). Every number is the enforced constant. The full
+// list, feature by feature, is the page's "What you get" and the table.
+//
+// "N-day" is a placeholder, substituted for the real PREMIUM_TRIAL_DAYS value by
+// PaidTierCard below — this file can't import the server-only constant
 // directly, and the real count arrives as the `trialDays` prop instead. The
 // row is dropped entirely when this viewer can't start a trial (TRIAL_ROW).
 const TRIAL_ROW = "N-day free trial";
 const PLUS_FEATURES = [
   "No ads on any page",
-  "Unlimited watchlist and portfolio: track whole sets with no card limit",
-  `Target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, naming the store`,
-  `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products: back in stock, at RRP (${SEALED_RRP_MARKETS}), or at your price, checked ${SEALED_CHECK_CADENCE}`,
-  "Every card below TCGplayer market, filtered to the cards you watch or own",
-  "The full Rising Cards list",
+  "No watchlist or portfolio limit",
+  `Target alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards`,
+  `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products`,
   "N-day free trial",
 ];
 // Two different lists depending on whether Plus exists to build on top of —
 // same reasoning TIER_COMPARISON's own header gives for keeping one row set
 // rather than two near-duplicate copies of the feature list.
 const PREMIUM_FEATURES_ON_PLUS = [
-  "Everything in Plus, including no ads",
-  `Deck price watch: up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price`,
-  "Unlimited target-price alerts and sealed watches",
-  "Best Basket: the cheapest delivered order, beside the best one-store and two-store orders",
-  "The store-by-store plan for your deck or watchlist, skipping what you own, at the minimum condition you set (NM only, LP or better, or anything)",
-  "The store-by-store plan behind your binder's replacement cost",
-  "Finish this set: the store-by-store plan, postage included, for the rest of a set",
-  "Demand Finder: the cards players search for and open most, over 7 or 30 days",
+  "Everything in Plus, no ads",
+  `Deck price watch on up to ${DECK_WATCH_LIMIT} lists`,
+  "Store-by-store plan for any list",
+  "Unlimited alerts and Demand Finder",
   "N-day free trial",
 ];
 const PREMIUM_FEATURES_STANDALONE = [
-  "Everything free",
   "No ads on any page",
-  "Unlimited watchlist and portfolio",
-  "Every card below TCGplayer market, and the full Rising Cards list",
-  `Unlimited target-price alerts and sealed watches: back in stock, at RRP (${SEALED_RRP_MARKETS}), or at your price`,
-  `Deck price watch: up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every update, emailed at your price`,
-  "Best Basket, Buy this list and Finish this set: your whole list, delivered for less, at the minimum condition you set",
-  "Demand Finder: the most searched and most viewed cards",
+  "No watchlist or portfolio limit",
+  `Deck price watch on up to ${DECK_WATCH_LIMIT} lists`,
+  "Unlimited alerts, sealed watches, Demand Finder",
+  "Store-by-store plan for any list",
   "N-day free trial",
 ];
-
-function FreeCard({ signedIn }: { signedIn: boolean }) {
-  return (
-    <div className="card-surface flex flex-col overflow-hidden rounded-2xl border border-ink-700 sm:row-span-3 sm:grid sm:grid-rows-subgrid">
-      <div className="border-b border-ink-800 bg-ink-900 px-5 py-5 text-center">
-        <div className="text-base font-extrabold text-white">Free account</div>
-        <p className="mt-0.5 text-[11px] text-slate-500">Price comparison, always</p>
-        <div className="mt-3 flex items-baseline justify-center gap-1">
-          <span className="num text-3xl font-extrabold text-white">$0</span>
-          <span className="text-sm text-slate-400">/mo</span>
-        </div>
-        <p className="mt-1 text-[11px] font-semibold text-brand-400">Free forever</p>
-      </div>
-      <div className="flex flex-1 flex-col justify-between gap-4 px-5 py-5 sm:contents">
-        <ul className="space-y-2 text-left text-[13px] text-slate-300 sm:px-5 sm:pt-5">
-          {FREE_FEATURES.map((f) => (
-            <li key={f} className="flex items-start gap-2 [font-feature-settings:'lnum'_1]">
-              <span className="mt-0.5 font-bold text-brand-400">✓</span>
-              <span>{f}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="sm:self-start sm:px-5 sm:pb-5 sm:pt-4">
-          {signedIn ? (
-            <div className="rounded-lg border border-ink-700 py-3 text-center text-sm text-slate-400">Included with your account</div>
-          ) : (
-            <Link href="/login?next=/premium" className="btn-ghost w-full py-3 text-center text-sm">
-              Create a free account →
-            </Link>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function PaidTierCard({
   tier,
@@ -324,62 +256,57 @@ function PaidTierCard({
 
   return (
     <div
-      className={`card-surface relative flex flex-col overflow-hidden rounded-2xl sm:row-span-3 sm:grid sm:grid-rows-subgrid ${
+      className={`card-surface relative flex flex-col overflow-hidden rounded-2xl ${
         highlight ? "border-2 border-gold/60 shadow-[0_8px_24px_rgba(0,0,0,0.35)]" : "border border-ink-700"
       }`}
     >
       {highlight && (
-        <span className="absolute right-0 top-0 rounded-bl-lg bg-gold px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink-950">
+        <span className="absolute right-0 top-0 hidden rounded-bl-lg bg-gold px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-ink-950 sm:block">
           Recommended
         </span>
       )}
-      <div className={`border-b border-ink-800 px-5 py-5 text-center ${highlight ? "bg-gold/10" : "bg-ink-900"}`}>
+      <div className={`border-b border-ink-800 px-2.5 py-2.5 text-center sm:px-5 sm:py-4 ${highlight ? "bg-gold/10" : "bg-ink-900"}`}>
         <div className={`text-base font-extrabold ${highlight ? "text-gold" : "text-white"}`}>{TIER_NAMES[tier]}</div>
-        <p className="mt-0.5 text-[11px] text-slate-500">{tagline}</p>
-        <div className="mt-3 flex items-baseline justify-center gap-1">
-          <span className="num text-3xl font-extrabold text-white">{headline}</span>
+        <div className="flex items-baseline justify-center gap-1">
+          <span className="num text-2xl font-extrabold text-white sm:text-3xl">{headline}</span>
           <span className="text-sm text-slate-400">/mo</span>
         </div>
+        <p className="mt-0.5 text-[11px] leading-snug text-slate-400">{tagline}</p>
         {/* The trial survives BOTH cycles. This used to be an either/or, so
             selecting annual replaced "14-day free trial" with "Billed as
             $79.99/year" — the strongest and the scariest line on the card
             traded for one another. They are not alternatives: the trial is
             what happens today, the billing line is what happens in 14 days. */}
         {effectiveCycle === "annual" && (
-          <p className="mt-1 text-[11px] font-semibold text-brand-400">Billed as {annualAmount}/year</p>
+          <p className="mt-0.5 text-[11px] font-semibold text-brand-400">Billed as {annualAmount}/year</p>
         )}
         {intro && (
           <p className="mt-1 text-[11px] font-semibold text-brand-400" data-intro-offer>
             First {INTRO_MONTHS} months {tierIntroMonthlyAmount(tier)}/mo — half price
           </p>
         )}
-        {trialAvailable && trialDays > 0 ? (
-          <p className="mt-1 text-[11px] text-slate-500">{trialDays}-day free trial</p>
-        ) : effectiveCycle === "annual" ? null : (
-          <p className="mt-1 text-[11px] text-slate-500">&nbsp;</p>
-        )}
+        {trialAvailable && trialDays > 0 && <p className="mt-1 text-[11px] text-slate-500">{trialDays}-day free trial</p>}
       </div>
-      <div className="flex flex-1 flex-col justify-between gap-4 px-5 py-5 sm:contents">
-        <ul className="space-y-2 text-left text-[13px] text-slate-300 sm:px-5 sm:pt-5">
+      <div className="flex flex-1 flex-col justify-between gap-2.5 px-2.5 py-2.5 sm:px-5 sm:py-4">
+        <ul className="space-y-1.5 text-left text-[12px] leading-snug text-slate-300 sm:text-[13px]">
           {features_.map((f) => (
-            <li key={f} className="flex items-start gap-2 [font-feature-settings:'lnum'_1]">
-              <span className={`mt-0.5 font-bold ${highlight ? "text-gold" : "text-brand-400"}`}>✓</span>
+            <li key={f} className="flex items-start gap-1.5 [font-feature-settings:'lnum'_1]">
+              <span className={`font-bold ${highlight ? "text-gold" : "text-brand-400"}`}>✓</span>
               <span>{f}</span>
             </li>
           ))}
         </ul>
-        <div className="sm:self-start sm:px-5 sm:pb-5 sm:pt-4">
-          <PremiumCta
-            checkoutLive={checkoutLive}
-            signedIn={signedIn}
-            trialEligible={trialEligible}
-            trialAvailable={trialAvailable}
-            priceLabel={priceLabel}
-            trialDays={trialDays}
-            plan={effectiveCycle}
-            tier={tier}
-          />
-        </div>
+        <PremiumCta
+          compact
+          checkoutLive={checkoutLive}
+          signedIn={signedIn}
+          trialEligible={trialEligible}
+          trialAvailable={trialAvailable}
+          priceLabel={priceLabel}
+          trialDays={trialDays}
+          plan={effectiveCycle}
+          tier={tier}
+        />
       </div>
     </div>
   );

@@ -55,18 +55,23 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   assert.deepEqual([deck.account, deck.plus, deck.premium], [false, false, true]);
   assert.ok(features.indexOf(sealed.feature) < features.indexOf(deck.feature) && features.indexOf(deck.feature) === features.length - 2);
   assert.equal(features[features.length - 1], "Ad-free experience");
-  assert.equal(PREMIUM_COPY_VERSION, "personas-2026-09-29");
+  assert.equal(PREMIUM_COPY_VERSION, "premium-2026-09-29c");
   // Every surface that quotes a watch number reads the constant.
   for (const f of ["src/components/PremiumPricingCards.tsx", "src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);
     assert.match(read(f), /SEALED_WATCH_LIMIT_PLUS/, `${f} quotes the sealed watch limit from the constant`);
   }
-  assert.match(read("src/components/PremiumPricingCards.tsx"), /Plans the order: which stores, what postage, at the condition you'll play, and a deck price watch/);
-  // The definitions a newcomer needs, on /premium.
+  // Premium's card says what it adds in one short tagline (the long one went on
+  // 2026-09-29: "Plans the order: which stores, what postage, at the condition you'll play, and a deck price watch").
+  assert.match(read("src/components/PremiumPricingCards.tsx"), /Plans which stores to buy from/);
+  assert.match(read("src/components/PremiumPricingCards.tsx"), /Deck price watch on up to \$\{DECK_WATCH_LIMIT\} lists/);
+  // The definitions a newcomer needs, on /premium: the FAQ's first answer, and
+  // each watch defined in its own "What you get" line (the two "What is a … watch?"
+  // FAQ entries were folded into those lines on 2026-09-29).
   const page = read("src/app/premium/page.tsx");
   assert.match(page, /q: "I'm new — what do I actually get\?"/);
-  assert.match(page, /q: "What is a deck price watch\?"/);
-  assert.match(page, /q: "What is a sealed watch\?"/);
+  assert.match(page, /Deck price watch: \$\{DECK_WATCH_LIMIT\} saved lists, emailed at your price/);
+  assert.match(page, /Sealed watches for \$\{SEALED_WATCH_LIMIT_PLUS\} products: restock, RRP, your price/);
   assert.match(page, /RRP is the price Riot sets/);
   assert.match(page, /item price plus postage/);
   assert.match(page, /riftcompare-premium-explained/, "the long read is linked");

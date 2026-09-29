@@ -226,15 +226,14 @@ test("the workflow asks for a fresh sealed read whenever it did not purge, and t
 
 // ── F3 (review 2): every tier summary names both watches ─────────────────────
 
-test("the FAQ tier summaries name sealed watches and the deck price watch, with their limits from the constants", () => {
+test("the /premium tier lists name sealed watches and the deck price watch, with their limits from the constants", () => {
+  // The FAQ's tier summaries ("What's free vs…", "Which plan is worth it?") went on
+  // 2026-09-29 with the wordy page: "What you get" is now the one summary, a line
+  // per feature, and it must still name both watches and quote their limits.
   const premiumPage = read("src/app/premium/page.tsx");
-  const free = premiumPage.slice(premiumPage.indexOf('q: "What\'s free vs'), premiumPage.indexOf('q: "', premiumPage.indexOf('q: "What\'s free vs') + 10));
-  assert.match(free, /sealed watches on up to \$\{SEALED_WATCH_LIMIT_PLUS\}/);
-  assert.match(free, /deck price watch \(up to \$\{DECK_WATCH_LIMIT\}/);
-  assert.match(free.slice(free.indexOf(": `Premium (")), /sealed watches[\s\S]*deck price watch/, "the single-tier branch too");
-  const worth = premiumPage.slice(premiumPage.indexOf('q: "Which plan is worth it?"'), premiumPage.indexOf('q: "Can I upgrade'));
-  assert.match(worth, /box you watch is back in stock or at RRP/);
-  assert.match(worth, /deck price watch/);
+  assert.match(premiumPage, /tier: "plus", text: `Sealed watches for \$\{SEALED_WATCH_LIMIT_PLUS\} products: restock, RRP, your price`/);
+  assert.match(premiumPage, /tier: "premium", text: `Deck price watch: \$\{DECK_WATCH_LIMIT\} saved lists, emailed at your price`/);
+  assert.match(premiumPage, /tier: "premium", text: "Unlimited target-price alerts and sealed watches"/);
   const tools = read("src/app/tools/page.tsx");
   const faq = tools.slice(tools.indexOf('q: "Do I need an account'), tools.indexOf('q: "', tools.indexOf('q: "Do I need an account') + 10));
   const [plusBranch, premiumBranch] = faq.split("\n        : `");

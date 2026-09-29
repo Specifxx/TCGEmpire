@@ -127,8 +127,8 @@ longer lands on its entry.
   buy and when; Premium tells you which stores to buy it from and what it
   costs delivered.** The set tracker is FREE within the 50-card portfolio (the
   tick, the missing list and the cost to finish are never metered; card 51 is
-  the Plus step), so /premium leads "Know what you're missing. Buy it for
-  less." with what is free first. Any signed-in
+  the Plus step), so /premium's hero is "Know what you're missing. Buy it for
+  less." and its "What you get" list starts with what is free. Any signed-in
   account gets its own Best Basket total and the replacement-cost total;
   in Best Basket "binder" means replacement cost, never gaps (narrowed
   2026-09-29: what a binder is missing from a set is answered by the free set
@@ -301,13 +301,16 @@ longer lands on its entry.
   /watching's "What you can watch" block (the sealed quick view's watch button
   sells Plus itself, no second line in an overlay); the deck
   watch form and the sealed heart are the ordinary `PremiumButton` gates
-  (`gate:deck-watch`, `gate:sealed-watch`) below the tier. /premium leads with
-  one sentence for free and one for paid, then one card per paid feature
-  (what / when / tier) above the prices, then the table and a FAQ that
-  defines a deck watch and a sealed watch. Premium's tagline is "Works while
-  you're away". `PREMIUM_COPY_VERSION` `personas-2026-09-29` (Plus's tagline
-  leads with whole sets, Premium's is "Plans the order").
-  [2026-09-29](../DECISIONS.md#L15178)
+  (`gate:deck-watch`, `gate:sealed-watch`) below the tier. /premium is PLANS FIRST
+  (2026-09-29, owner: "way too wordy... the buttons... at the bottom"): H1, one
+  short subline, the Monthly/Annual toggle and the two plan cards with their
+  buy buttons are the first screen at 390x844 and 1280x720; then "What you get"
+  (one line a feature, Free / Plus / Premium), the table collapsed in a
+  `<details>`, and a seven-question FAQ. No persona sections, per-feature
+  cards, CTA band or sticky bar; the page's own content is about 900 words
+  (`tests/premium-plans-first.test.ts`). `PREMIUM_COPY_VERSION`
+  `premium-2026-09-29c`. [2026-09-29](../DECISIONS.md#L15178),
+  [2026-09-29 plans first](../DECISIONS.md#L15538)
 - **Upgrade prompts live where a limit is hit, not in headers:**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
