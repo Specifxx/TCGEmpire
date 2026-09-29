@@ -702,6 +702,18 @@
     ],
     "fingerprint": "bc83d146b5c75ee3"
   },
+  "/blog/riftbound-radiance-preview-week-one.jpg": {
+    "src": "/blog/riftbound-radiance-preview-week-one.jpg",
+    "width": 1400,
+    "height": 733,
+    "bytes": 113236,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/blog/riftbound-radiance-preview-week-one.avif",
+    "avifBytes": 98605,
+    "variants": [],
+    "fingerprint": "77ebaad72d4c70f6"
+  },
   "/blog/riftbound-radiance-what-we-know.png": {
     "src": "/blog/riftbound-radiance-what-we-know.png",
     "width": 1200,
@@ -1056,6 +1068,90 @@
     "avif": "/r2-source.avif",
     "avifBytes": 11241
   },
+  "/radiance-spoilers/clocktower-guardian.jpg": {
+    "src": "/radiance-spoilers/clocktower-guardian.jpg",
+    "width": 646,
+    "height": 922,
+    "bytes": 89061,
+    "webp": "/radiance-spoilers/clocktower-guardian.webp",
+    "webpBytes": 54728,
+    "avif": "/radiance-spoilers/clocktower-guardian.avif",
+    "avifBytes": 41981,
+    "variants": [],
+    "fingerprint": "61c1564afce3cc29"
+  },
+  "/radiance-spoilers/disposal-expert.jpg": {
+    "src": "/radiance-spoilers/disposal-expert.jpg",
+    "width": 770,
+    "height": 1076,
+    "bytes": 116799,
+    "webp": "/radiance-spoilers/disposal-expert.webp",
+    "webpBytes": 67232,
+    "avif": "/radiance-spoilers/disposal-expert.avif",
+    "avifBytes": 48796,
+    "variants": [],
+    "fingerprint": "15b9f3457d45f616"
+  },
+  "/radiance-spoilers/dockside-lock-up.jpg": {
+    "src": "/radiance-spoilers/dockside-lock-up.jpg",
+    "width": 760,
+    "height": 1064,
+    "bytes": 108643,
+    "webp": "/radiance-spoilers/dockside-lock-up.webp",
+    "webpBytes": 102370,
+    "avif": "/radiance-spoilers/dockside-lock-up.avif",
+    "avifBytes": 74005,
+    "variants": [],
+    "fingerprint": "5fac95931f225b35"
+  },
+  "/radiance-spoilers/ekko-boy-who-shattered-time.jpg": {
+    "src": "/radiance-spoilers/ekko-boy-who-shattered-time.jpg",
+    "width": 349,
+    "height": 489,
+    "bytes": 51067,
+    "webp": "/radiance-spoilers/ekko-boy-who-shattered-time.webp",
+    "webpBytes": 42718,
+    "avif": "/radiance-spoilers/ekko-boy-who-shattered-time.avif",
+    "avifBytes": 27538,
+    "variants": [],
+    "fingerprint": "51278aa9027f9f20"
+  },
+  "/radiance-spoilers/ekko-ingenious.jpg": {
+    "src": "/radiance-spoilers/ekko-ingenious.jpg",
+    "width": 556,
+    "height": 772,
+    "bytes": 67082,
+    "webp": "/radiance-spoilers/ekko-ingenious.webp",
+    "webpBytes": 40916,
+    "avif": "/radiance-spoilers/ekko-ingenious.avif",
+    "avifBytes": 27754,
+    "variants": [],
+    "fingerprint": "4f15d7dcb0580e46"
+  },
+  "/radiance-spoilers/evelynn-consuming-alt-art.jpg": {
+    "src": "/radiance-spoilers/evelynn-consuming-alt-art.jpg",
+    "width": 771,
+    "height": 1077,
+    "bytes": 105159,
+    "webp": "/radiance-spoilers/evelynn-consuming-alt-art.webp",
+    "webpBytes": 76752,
+    "avif": "/radiance-spoilers/evelynn-consuming-alt-art.avif",
+    "avifBytes": 59372,
+    "variants": [],
+    "fingerprint": "5043ba466eec39ad"
+  },
+  "/radiance-spoilers/evelynn-consuming.jpg": {
+    "src": "/radiance-spoilers/evelynn-consuming.jpg",
+    "width": 541,
+    "height": 753,
+    "bytes": 68591,
+    "webp": "/radiance-spoilers/evelynn-consuming.webp",
+    "webpBytes": 47336,
+    "avif": "/radiance-spoilers/evelynn-consuming.avif",
+    "avifBytes": 33823,
+    "variants": [],
+    "fingerprint": "dcadf845719cb7e5"
+  },
   "/radiance-spoilers/heartsteel-aphelios-exalted.jpg": {
     "src": "/radiance-spoilers/heartsteel-aphelios-exalted.jpg",
     "width": 694,
@@ -1128,6 +1224,66 @@
     "variants": [],
     "fingerprint": "45684ea03a6757af"
   },
+  "/radiance-spoilers/heimerdinger-academy-instructor.jpg": {
+    "src": "/radiance-spoilers/heimerdinger-academy-instructor.jpg",
+    "width": 428,
+    "height": 599,
+    "bytes": 57582,
+    "webp": "/radiance-spoilers/heimerdinger-academy-instructor.webp",
+    "webpBytes": 39898,
+    "avif": "/radiance-spoilers/heimerdinger-academy-instructor.avif",
+    "avifBytes": 27073,
+    "variants": [],
+    "fingerprint": "7ee04c0953ab7b62"
+  },
+  "/radiance-spoilers/hexplosive-minefield.jpg": {
+    "src": "/radiance-spoilers/hexplosive-minefield.jpg",
+    "width": 656,
+    "height": 931,
+    "bytes": 85231,
+    "webp": "/radiance-spoilers/hexplosive-minefield.webp",
+    "webpBytes": 53542,
+    "avif": "/radiance-spoilers/hexplosive-minefield.avif",
+    "avifBytes": 40250,
+    "variants": [],
+    "fingerprint": "c93e744955df55d8"
+  },
+  "/radiance-spoilers/kaisa-rebel.jpg": {
+    "src": "/radiance-spoilers/kaisa-rebel.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 110818,
+    "webp": "/radiance-spoilers/kaisa-rebel.webp",
+    "webpBytes": 86616,
+    "avif": "/radiance-spoilers/kaisa-rebel.avif",
+    "avifBytes": 61977,
+    "variants": [],
+    "fingerprint": "ea662be13f0f38e6"
+  },
+  "/radiance-spoilers/ksante-courageous.jpg": {
+    "src": "/radiance-spoilers/ksante-courageous.jpg",
+    "width": 771,
+    "height": 1059,
+    "bytes": 120328,
+    "webp": "/radiance-spoilers/ksante-courageous.webp",
+    "webpBytes": 69678,
+    "avif": "/radiance-spoilers/ksante-courageous.avif",
+    "avifBytes": 49137,
+    "variants": [],
+    "fingerprint": "9b28014ad8778957"
+  },
+  "/radiance-spoilers/ksante-dauntless.jpg": {
+    "src": "/radiance-spoilers/ksante-dauntless.jpg",
+    "width": 589,
+    "height": 824,
+    "bytes": 94258,
+    "webp": "/radiance-spoilers/ksante-dauntless.webp",
+    "webpBytes": 62552,
+    "avif": "/radiance-spoilers/ksante-dauntless.avif",
+    "avifBytes": 44601,
+    "variants": [],
+    "fingerprint": "fc34f1eabe53eb1d"
+  },
   "/radiance-spoilers/ksante-ntofo-strikes.jpg": {
     "src": "/radiance-spoilers/ksante-ntofo-strikes.jpg",
     "width": 952,
@@ -1170,6 +1326,18 @@
     ],
     "fingerprint": "e23446eb1faa1c4a"
   },
+  "/radiance-spoilers/momentary-companion.jpg": {
+    "src": "/radiance-spoilers/momentary-companion.jpg",
+    "width": 574,
+    "height": 803,
+    "bytes": 81412,
+    "webp": "/radiance-spoilers/momentary-companion.webp",
+    "webpBytes": 52494,
+    "avif": "/radiance-spoilers/momentary-companion.avif",
+    "avifBytes": 36187,
+    "variants": [],
+    "fingerprint": "6fb87cb938da81b1"
+  },
   "/radiance-spoilers/neeko-blending-in.jpg": {
     "src": "/radiance-spoilers/neeko-blending-in.jpg",
     "width": 744,
@@ -1182,6 +1350,102 @@
     "variants": [],
     "fingerprint": "0dba457873babae8"
   },
+  "/radiance-spoilers/orianna-lady-of-clockwork-signature.jpg": {
+    "src": "/radiance-spoilers/orianna-lady-of-clockwork-signature.jpg",
+    "width": 760,
+    "height": 1061,
+    "bytes": 121974,
+    "webp": "/radiance-spoilers/orianna-lady-of-clockwork-signature.webp",
+    "webpBytes": 74628,
+    "avif": "/radiance-spoilers/orianna-lady-of-clockwork-signature.avif",
+    "avifBytes": 50544,
+    "variants": [],
+    "fingerprint": "57c327c168a21628"
+  },
+  "/radiance-spoilers/orianna-lady-of-clockwork.jpg": {
+    "src": "/radiance-spoilers/orianna-lady-of-clockwork.jpg",
+    "width": 657,
+    "height": 927,
+    "bytes": 103114,
+    "webp": "/radiance-spoilers/orianna-lady-of-clockwork.webp",
+    "webpBytes": 64862,
+    "avif": "/radiance-spoilers/orianna-lady-of-clockwork.avif",
+    "avifBytes": 43643,
+    "variants": [],
+    "fingerprint": "5ac9448f00b4f7dd"
+  },
+  "/radiance-spoilers/pillaged-armory.jpg": {
+    "src": "/radiance-spoilers/pillaged-armory.jpg",
+    "width": 655,
+    "height": 920,
+    "bytes": 104227,
+    "webp": "/radiance-spoilers/pillaged-armory.webp",
+    "webpBytes": 64194,
+    "avif": "/radiance-spoilers/pillaged-armory.avif",
+    "avifBytes": 43476,
+    "variants": [],
+    "fingerprint": "30812b05fb778a32"
+  },
+  "/radiance-spoilers/primordial-roar.jpg": {
+    "src": "/radiance-spoilers/primordial-roar.jpg",
+    "width": 652,
+    "height": 925,
+    "bytes": 84087,
+    "webp": "/radiance-spoilers/primordial-roar.webp",
+    "webpBytes": 50726,
+    "avif": "/radiance-spoilers/primordial-roar.avif",
+    "avifBytes": 36264,
+    "variants": [],
+    "fingerprint": "56bdde0c1d8dabef"
+  },
+  "/radiance-spoilers/rakelstake.jpg": {
+    "src": "/radiance-spoilers/rakelstake.jpg",
+    "width": 779,
+    "height": 557,
+    "bytes": 89268,
+    "webp": "/radiance-spoilers/rakelstake.webp",
+    "webpBytes": 64920,
+    "avif": "/radiance-spoilers/rakelstake.avif",
+    "avifBytes": 43986,
+    "variants": [],
+    "fingerprint": "cec1bf23d849175a"
+  },
+  "/radiance-spoilers/rousing-display.jpg": {
+    "src": "/radiance-spoilers/rousing-display.jpg",
+    "width": 590,
+    "height": 819,
+    "bytes": 88736,
+    "webp": "/radiance-spoilers/rousing-display.webp",
+    "webpBytes": 58784,
+    "avif": "/radiance-spoilers/rousing-display.avif",
+    "avifBytes": 38069,
+    "variants": [],
+    "fingerprint": "8e365a227115707f"
+  },
+  "/radiance-spoilers/seraphine-not-alone.jpg": {
+    "src": "/radiance-spoilers/seraphine-not-alone.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 110520,
+    "webp": "/radiance-spoilers/seraphine-not-alone.webp",
+    "webpBytes": 109556,
+    "avif": "/radiance-spoilers/seraphine-not-alone.avif",
+    "avifBytes": 80523,
+    "variants": [],
+    "fingerprint": "537c39e22670e4c7"
+  },
+  "/radiance-spoilers/seraphine-starry-eyed-songstress-signature.jpg": {
+    "src": "/radiance-spoilers/seraphine-starry-eyed-songstress-signature.jpg",
+    "width": 757,
+    "height": 1076,
+    "bytes": 114270,
+    "webp": "/radiance-spoilers/seraphine-starry-eyed-songstress-signature.webp",
+    "webpBytes": 104518,
+    "avif": "/radiance-spoilers/seraphine-starry-eyed-songstress-signature.avif",
+    "avifBytes": 76188,
+    "variants": [],
+    "fingerprint": "e290245fc7e4659e"
+  },
   "/radiance-spoilers/seraphine-starry-eyed-songstress.jpg": {
     "src": "/radiance-spoilers/seraphine-starry-eyed-songstress.jpg",
     "width": 748,
@@ -1193,6 +1457,42 @@
     "avifBytes": 55363,
     "variants": [],
     "fingerprint": "2d30e98e280f7ed1"
+  },
+  "/radiance-spoilers/zero-point-inflection.jpg": {
+    "src": "/radiance-spoilers/zero-point-inflection.jpg",
+    "width": 772,
+    "height": 1078,
+    "bytes": 120143,
+    "webp": "/radiance-spoilers/zero-point-inflection.webp",
+    "webpBytes": 93154,
+    "avif": "/radiance-spoilers/zero-point-inflection.avif",
+    "avifBytes": 65786,
+    "variants": [],
+    "fingerprint": "459fa85698674ae0"
+  },
+  "/radiance-spoilers/ziggs-hexplosives-expert-signature.jpg": {
+    "src": "/radiance-spoilers/ziggs-hexplosives-expert-signature.jpg",
+    "width": 760,
+    "height": 1062,
+    "bytes": 122337,
+    "webp": "/radiance-spoilers/ziggs-hexplosives-expert-signature.webp",
+    "webpBytes": 91248,
+    "avif": "/radiance-spoilers/ziggs-hexplosives-expert-signature.avif",
+    "avifBytes": 68412,
+    "variants": [],
+    "fingerprint": "c578c5029830a682"
+  },
+  "/radiance-spoilers/ziggs-hexplosives-expert.jpg": {
+    "src": "/radiance-spoilers/ziggs-hexplosives-expert.jpg",
+    "width": 652,
+    "height": 930,
+    "bytes": 103675,
+    "webp": "/radiance-spoilers/ziggs-hexplosives-expert.webp",
+    "webpBytes": 65684,
+    "avif": "/radiance-spoilers/ziggs-hexplosives-expert.avif",
+    "avifBytes": 48402,
+    "variants": [],
+    "fingerprint": "15ffa058c46d4c38"
   },
   "/rune-variants/body-rune-ogn-126b.jpg": {
     "src": "/rune-variants/body-rune-ogn-126b.jpg",

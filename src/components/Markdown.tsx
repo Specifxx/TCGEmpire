@@ -19,7 +19,18 @@ export type MarkdownCards = Record<string, CardTileData>;
 // in prose, and every one of the AI-visibility target queries ("top 10 Riftbound
 // TCG marketplaces", "Riftbound card price comparison") is answered by a table.
 
-function inline(text: string, kp: string, cards?: MarkdownCards): React.ReactNode[] {
+// A backslash-escaped star (\* in the content, so "\\*" inside an article's
+// template literal) is a literal "*": the Signature numbers in "Ziggs 169\*/167
+// and Orianna 171\*/167". Unescaped, two such numbers in one paragraph read as
+// *italic*; escaped, the backslash used to print and a star inside **bold** or
+// a [link](…) broke the match outright (2026-09-29). The escape is
+// swapped for a private-use character before parsing, so no pattern below can
+// see it, and swapped back to "*" wherever text is emitted.
+const STAR = "\uE000";
+const unstar = (s: string) => s.replace(/\uE000/g, "*");
+
+function inline(raw: string, kp: string, cards?: MarkdownCards): React.ReactNode[] {
+  const text = raw.replace(/\\\*/g, STAR);
   const nodes: React.ReactNode[] = [];
   // Order matters: **bold** before *italic* so the double-star wins.
   const re = /(\*\*([^*]+)\*\*)|(\*([^*\n]+)\*)|(\[([^\]]+)\]\(([^)]+)\))|(`([^`]+)`)/g;
@@ -27,7 +38,7 @@ function inline(text: string, kp: string, cards?: MarkdownCards): React.ReactNod
   let m: RegExpExecArray | null;
   let i = 0;
   while ((m = re.exec(text)) !== null) {
-    if (m.index > last) nodes.push(text.slice(last, m.index));
+    if (m.index > last) nodes.push(unstar(text.slice(last, m.index)));
     if (m[1]) {
       // Recurse so nested marks render — e.g. **[link](url)** is a linked bold,
       // not the literal "[link](url)" text.
@@ -61,14 +72,14 @@ function inline(text: string, kp: string, cards?: MarkdownCards): React.ReactNod
     } else if (m[8]) {
       nodes.push(
         <code key={`${kp}c${i}`} className="rounded bg-ink-800 px-1 py-0.5 text-[0.85em] text-slate-200">
-          {m[9]}
+          {unstar(m[9])}
         </code>
       );
     }
     last = m.index + m[0].length;
     i++;
   }
-  if (last < text.length) nodes.push(text.slice(last));
+  if (last < text.length) nodes.push(unstar(text.slice(last)));
   return nodes;
 }
 

@@ -87,6 +87,10 @@ async function main() {
       description: c.description ?? null,
       imageUrl: c.imageUrl ?? null,
       imageThumbUrl: c.imageThumbUrl ?? c.imageUrl ?? null,
+      // Battlefields are the only landscape cards (the same rule import-set-cards.ts
+      // applies). Without it CardImage frames Rakelstake, the first hand-added
+      // Battlefield (RAD 165/167, 2026-09-29), as a portrait card.
+      ...(c.type === "Battlefield" ? { orientation: "landscape" } : {}),
     };
 
     const existing = c.externalId

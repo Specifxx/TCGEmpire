@@ -19,7 +19,9 @@
 import { appendFileSync } from "node:fs";
 import { prisma } from "../src/lib/db";
 
-const KEYWORDS = ["Deploy", "Showoff", "Disarm"] as const;
+// "Show Off", two words: that is how the cards print it (2026-09-29), and the
+// galleries' marker moved with it. The leak spelt it "Showoff".
+const KEYWORDS = ["Deploy", "Show Off", "Disarm"] as const;
 
 function argSet(): string {
   const i = process.argv.indexOf("--set");
