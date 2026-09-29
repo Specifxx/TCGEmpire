@@ -13,6 +13,8 @@ import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { faqPage } from "@/lib/jsonld";
 import { BestBasket, type BasketSource } from "@/components/BestBasket";
+import { loadBasketPrefs } from "@/lib/basket-server";
+import { initialMinCondition, storedMinCondition } from "@/lib/basket-condition";
 import { headers } from "next/headers";
 import {
   formatMeasuredDate,
@@ -27,7 +29,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Best Basket — Cheapest Way to Buy a Riftbound Deck | RiftCompare";
 const DESCRIPTION =
-  "Paste a Riftbound decklist, or send your watchlist or binder, and get the cheapest delivered way to buy it across stores — each store's measured postage included. Premium shows the store-by-store plan beside the best one-store and two-store orders.";
+  "Paste a Riftbound decklist, or send your watchlist or binder, and get the cheapest delivered way to buy it across stores — each store's measured postage included. Premium shows the store-by-store plan beside the best one-store and two-store orders, at the minimum condition you set.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -55,6 +57,10 @@ const FAQS = [
   {
     q: "Is the cheapest split guaranteed to be the cheapest possible?",
     a: "It's the cheapest the search finds, not a proof — with free-shipping thresholds there's no fast exact answer. It is never dearer than buying each card's cheapest copy separately, or than the single-store and two-store orders shown beside it so you can compare. The single-store order is the cheapest one store offers; the two-store order is the cheapest split the search finds, shown only when it beats buying everything from one store. One exception: where an order is bigger than any the store's checkout was measured on and its postage was still rising with size, the search allows for it to keep rising, so an order resting on that store's 'from' figure can show a slightly lower total than the one it picks.",
+  },
+  {
+    q: "What does minimum condition do?",
+    a: "Premium lets you set the lowest condition you'll accept: Near Mint only, Lightly Played or better, or anything. Best Basket, Buy this list and the deck price watch then only use listings at or above it, so the cheapest plan can't quietly include a heavily played copy. Each line still shows its condition. If nothing at that grade is in stock, the card is shown as not covered rather than filled with a played copy. Without Premium your total counts each store's cheapest copy in any condition and tells you how many played copies that includes. A new session starts on Lightly Played or better, and your last choice is remembered.",
   },
   {
     q: "Do I need Premium just to price a list, not buy it?",
@@ -109,9 +115,14 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
   const watchRow =
     premium && user && typeof searchParams.watch === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(searchParams.watch)
       ? await prisma.deckWatch
-          .findFirst({ where: { id: searchParams.watch, userId: user.id }, select: { id: true, name: true, listText: true, region: true, trackedOnly: true } })
+          .findFirst({ where: { id: searchParams.watch, userId: user.id }, select: { id: true, name: true, listText: true, region: true, trackedOnly: true, minCondition: true } })
           .catch(() => null)
       : null;
+  // The minimum condition to start on (2026-09-29): a saved watch's own floor
+  // (so the plan matches its email), else the member's last choice (one column
+  // of their own row), else "LP or better" for a new session. Premium's switch,
+  // so nobody else's row is read.
+  const startFloor = watchRow ? storedMinCondition(watchRow.minCondition) : premium && user ? initialMinCondition(await loadBasketPrefs(user.id)) : initialMinCondition(null);
   const initialList = watchRow ? watchRow.listText : searchParams.list ? decodeList(searchParams.list) : undefined;
   const initialSource: BasketSource =
     !watchRow && (searchParams.source === "watchlist" || searchParams.source === "binder") ? searchParams.source : "deck";
@@ -179,6 +190,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           initialList={initialList}
           initialSource={initialSource}
           initialSkipOwned={!watchRow && searchParams.skipOwned === "1"}
+          initialMinCondition={startFloor}
           autoRun={premium && handedIn}
           market={country}
           regions={regions}
@@ -186,7 +198,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           measuredAt={measuredAt}
           measuredTo={marketMeasuredPlaces(country)}
           geoRegion={geoRegion}
-          watch={watchRow ? { id: watchRow.id, name: watchRow.name, region: watchRow.region, trackedOnly: !!watchRow.trackedOnly } : null}
+          watch={watchRow ? { id: watchRow.id, name: watchRow.name, region: watchRow.region, trackedOnly: !!watchRow.trackedOnly, minCondition: storedMinCondition(watchRow.minCondition) } : null}
         />
       ) : (
         <div className="card-surface p-6 text-center">

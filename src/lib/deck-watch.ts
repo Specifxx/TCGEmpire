@@ -17,6 +17,7 @@ import { sendDeckWatchEmail as sendDeckWatchEmailImpl, type DeckWatchItem, type 
 import { notify } from "./notifications";
 import { formatMoney } from "./format";
 import { clampDeckTargetCents } from "./deck-watch-pure";
+import { DEFAULT_MIN_CONDITION, isMinCondition, storedMinCondition, toStoredMinCondition, type MinCondition } from "./basket-condition";
 
 // The client-safe pieces (friendlyTargetCents, clampDeckTargetCents and the
 // DECK_TARGET_* bounds) live in ./deck-watch-pure so a "use client" component
@@ -50,6 +51,16 @@ export { friendlyTargetCents, clampDeckTargetCents, canWatchPricedResult, DECK_T
 // emailed. A lapsed owner's rows are skipped untouched — kept, never deleted,
 // live again on resubscribing. Snoozed watches and paused addresses
 // (AlertMute) advance their baseline without an email, so nothing backs up.
+//
+// MINIMUM CONDITION (2026-09-29, lib/basket-condition.ts): a watch may carry a
+// floor ("nm" or "lp"; null = any, which is every row saved before it). The run
+// hands it to loadStoreListings, the same filter Best Basket's page applies, so
+// the email and the page agree on the total. A floor that leaves a card
+// uncovered makes the plan incomplete, so the watch stays quiet rather than
+// naming a total that leaves a card out or fills it with a played copy.
+// Changing a watch's floor re-baselines it (updateDeckWatch clears the last
+// total and the emailed watermark): the new floor's total is recorded by the
+// next run and can never read as a "drop" from the old floor's total.
 //
 // EGRESS: one bounded RetailerPrice read per watch (≤ DECK_LINE_CAP card ids,
 // the narrow select in loadStoreListings), only for entitled owners, only in
@@ -131,7 +142,7 @@ export interface DeckPricing {
  */
 export async function priceDeckList(
   db: DeckPricingDb,
-  opts: { listText: string; market: Country; region: string | null; trackedOnly: boolean | null },
+  opts: { listText: string; market: Country; region: string | null; trackedOnly: boolean | null; minCondition?: MinCondition },
 ): Promise<DeckPricing | null> {
   const lines = parseDeckList(opts.listText, { plainNames: true }).slice(0, DECK_LINE_CAP);
   if (!lines.length) return null;
@@ -151,7 +162,7 @@ export async function priceDeckList(
   }
   if (!wanted.size) return null;
   const stores = basketStoresFor(opts.market, postageOptionsFrom(opts.market, opts.region, opts.trackedOnly ? "1" : null));
-  const listings = await loadStoreListings([...wanted.keys()], opts.market, Object.keys(stores), db);
+  const listings = await loadStoreListings([...wanted.keys()], opts.market, Object.keys(stores), db, opts.minCondition ?? "any");
   const cards: BasketCard[] = [...wanted].map(([cardId, qty]) => {
     const c = info.get(cardId)!;
     return { cardId, name: c.name, slug: c.slug, setCode: c.setCode, collectorNumber: c.collectorNumber, qty, listings: listings.get(cardId) ?? [] };
@@ -237,6 +248,7 @@ export async function runDeckWatches(deps: DeckWatchRunDeps = {}): Promise<DeckW
       listText: true,
       region: true,
       trackedOnly: true,
+      minCondition: true,
       targetCents: true,
       lastTotalCents: true,
       lastEmailedCents: true,
@@ -281,7 +293,8 @@ export async function runDeckWatches(deps: DeckWatchRunDeps = {}): Promise<DeckW
     }
     const market: Country = w.market;
     // A failed read throws out of the whole pass: nothing below is written.
-    const priced = await priceDeckList(db, { listText: w.listText, market, region: w.region, trackedOnly: w.trackedOnly });
+    const floor = storedMinCondition(w.minCondition);
+    const priced = await priceDeckList(db, { listText: w.listText, market, region: w.region, trackedOnly: w.trackedOnly, minCondition: floor });
     patch(always, w.id, { lastCheckedAt: now });
     if (!priced || priced.plan.coveredCopies === 0) {
       summary.unpriced++;
@@ -335,6 +348,7 @@ export async function runDeckWatches(deps: DeckWatchRunDeps = {}): Promise<DeckW
         targetCents: w.targetCents,
         referenceCents: ref.cents,
         referenceBasis: ref.basis,
+        minCondition: floor,
         stores: priced.plan.stores.slice(0, 3).map((s) => ({ name: s.name, subtotalCents: s.subtotalCents, shippingCents: s.shippingCents, items: s.items })),
         checkedAt: now,
         actions,
@@ -421,6 +435,7 @@ const DECK_WATCH_SELECT = {
   listText: true,
   region: true,
   trackedOnly: true,
+  minCondition: true,
   targetCents: true,
   lastTotalCents: true,
   lastCheckedAt: true,
@@ -450,12 +465,19 @@ export async function createDeckWatch(db: DeckWatchRouteDb, user: RouteUser, raw
   const targetCents = targetRaw == null ? null : clampDeckTargetCents(targetRaw);
   const region = typeof body.region === "string" && /^[a-z0-9-]{1,32}$/i.test(body.region) ? body.region : null;
   const trackedOnly = body.trackedOnly === true;
+  // A NEW watch defaults to "LP or better" (owner's default for new sessions and
+  // watches, 2026-09-29); "any" (or null) is one tap away and stored as null.
+  if (body.minCondition != null && !isMinCondition(body.minCondition)) {
+    return { status: 400, body: { error: "The minimum condition must be nm, lp or any." } };
+  }
+  const floor: MinCondition = !("minCondition" in body) ? DEFAULT_MIN_CONDITION : isMinCondition(body.minCondition) ? body.minCondition : "any";
+  const minCondition = toStoredMinCondition(floor);
   const count = await db.deckWatch.count({ where: { userId: user.id } });
   if (count >= DECK_WATCH_LIMIT) {
     return { status: 409, body: { error: `Premium watches up to ${DECK_WATCH_LIMIT} lists. Stop one on your watchlist to add this.`, code: "limit", limit: DECK_WATCH_LIMIT, count } };
   }
   const watch = await db.deckWatch.create({
-    data: { userId: user.id, market, name, listText, region, trackedOnly, targetCents },
+    data: { userId: user.id, market, name, listText, region, trackedOnly, targetCents, minCondition },
     select: DECK_WATCH_SELECT,
   });
   return { status: 201, body: { ok: true, watch } };
@@ -474,9 +496,9 @@ export async function listDeckWatches(db: DeckWatchRouteDb, user: RouteUser): Pr
  * quiet a watch that would resume when they resubscribe.
  */
 export async function updateDeckWatch(db: DeckWatchRouteDb, user: RouteUser, id: string, raw: unknown, now: Date = new Date()): Promise<WatchRouteResult> {
-  const edits = raw && typeof raw === "object" && ("targetCents" in raw || (typeof (raw as { name?: unknown }).name === "string" && !!(raw as { name: string }).name.trim()));
+  const edits = raw && typeof raw === "object" && ("targetCents" in raw || "minCondition" in raw || (typeof (raw as { name?: unknown }).name === "string" && !!(raw as { name: string }).name.trim()));
   if (edits && !isPremium(user, "premium")) return notPremium();
-  const row = await db.deckWatch.findFirst({ where: { id, userId: user.id }, select: { id: true } });
+  const row = await db.deckWatch.findFirst({ where: { id, userId: user.id }, select: { id: true, minCondition: true } });
   if (!row) return { status: 404, body: { error: "That watch isn't on your list." } };
   const body = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const data: Prisma.DeckWatchUpdateInput = {};
@@ -489,6 +511,19 @@ export async function updateDeckWatch(db: DeckWatchRouteDb, user: RouteUser, id:
     }
     // A changed target is armed again: the next run judges it afresh.
     data.lastEmailedCents = null;
+  }
+  if ("minCondition" in body) {
+    if (body.minCondition != null && !isMinCondition(body.minCondition)) return { status: 400, body: { error: "The minimum condition must be nm, lp or any." } };
+    const next = toStoredMinCondition(isMinCondition(body.minCondition) ? body.minCondition : "any");
+    data.minCondition = next;
+    if (next !== (row.minCondition ?? null)) {
+      // A changed floor is a different list of prices: re-baseline. The next run
+      // records the new floor's total, and nothing it finds can read as a drop
+      // from the old floor's total (a target is judged afresh, as a changed
+      // target is above).
+      data.lastTotalCents = null;
+      data.lastEmailedCents = null;
+    }
   }
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim().slice(0, DECK_WATCH_NAME_MAX);
   if ("snoozeDays" in body) {

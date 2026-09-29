@@ -24,6 +24,7 @@ import { cardThumbProps } from "@/lib/card-image-url";
 import { useMe } from "@/lib/use-me";
 import { basketSavingPitch } from "@/lib/basket-saving";
 import { PREMIUM_PRICE_LABEL } from "@/lib/site";
+import { DEFAULT_MIN_CONDITION, MIN_CONDITIONS, MIN_CONDITION_LABEL, MIN_CONDITION_PHRASE, playedCopiesNote, type MinCondition } from "@/lib/basket-condition";
 
 export type BasketSource = "deck" | "watchlist" | "binder";
 
@@ -47,6 +48,8 @@ interface FullResult extends BasketPreview {
   fuzzy: { raw: string; matchedAs: string }[];
   skippedOwned: number;
   skippedHoldings: number;
+  // The floor the plan was priced at (Premium's; lib/basket-condition.ts).
+  minCondition?: MinCondition;
 }
 type Result = BasketPreview | FullResult;
 const isFull = (r: Result): r is FullResult => "plan" in r;
@@ -86,6 +89,7 @@ export function BestBasket({
   initialList,
   initialSource = "deck",
   initialSkipOwned = false,
+  initialMinCondition = DEFAULT_MIN_CONDITION,
   autoRun = false,
   market,
   regions,
@@ -99,12 +103,16 @@ export function BestBasket({
   initialList?: string;
   initialSource?: BasketSource;
   initialSkipOwned?: boolean;
+  // The starting minimum condition: the member's last choice, "LP or better"
+  // for a new session, or a saved watch's own floor. Premium's switch; anyone
+  // else is priced at any condition (the route ignores it).
+  initialMinCondition?: MinCondition;
   autoRun?: boolean;
   market: string;
   // A saved deck price watch being re-run for its owner (?watch=, 2026-09-29):
   // its name, and the delivery it was saved with, which overrides the
   // remembered postage choice so the plan matches the email.
-  watch?: { id: string; name: string; region: string | null; trackedOnly: boolean } | null;
+  watch?: { id: string; name: string; region: string | null; trackedOnly: boolean; minCondition: MinCondition } | null;
   regions: BasketRegionOption[];
   zonePriced: boolean;
   measuredAt: string | null; // "25 Sep 2026"
@@ -135,6 +143,13 @@ export function BestBasket({
   // started by that change (or by the auto-run below, in the same commit as
   // the prefs load) never reads the choice from before it.
   const delivery = useRef<{ region: string | null; trackedOnly: boolean }>({ region: geo, trackedOnly: false });
+
+  // Minimum condition (Premium). The ref is what run() prices with, set in the
+  // same tick as a change, like the delivery choice above. `saveNext` marks the
+  // run that follows the member's own change, which is remembered server-side.
+  const [minCondition, setMinCondition] = useState<MinCondition>(initialMinCondition);
+  const floor = useRef<MinCondition>(initialMinCondition);
+  const saveFloor = useRef(false);
 
   // Remembered choices load after mount (localStorage is not readable on the
   // server); an unknown region prices at each store's highest regional rate.
@@ -196,6 +211,8 @@ export function BestBasket({
     const q = new URLSearchParams();
     if (delivery.current.region) q.set("region", delivery.current.region);
     if (delivery.current.trackedOnly) q.set("tracked", "1");
+    const saveMin = saveFloor.current;
+    saveFloor.current = false;
     try {
       const res = await fetch(`/api/basket${q.toString() ? `?${q}` : ""}`, {
         method: "POST",
@@ -203,6 +220,7 @@ export function BestBasket({
         body: JSON.stringify({
           source: tab,
           skipOwned: tab !== "binder" && skipOwned,
+          ...(full ? { minCondition: floor.current, saveMinCondition: saveMin } : {}),
           ...(tab === "deck" ? { text: pasteText, lines: picked.map((p) => ({ cardId: p.card.id, qty: p.qty })) } : {}),
         }),
       });
@@ -222,6 +240,7 @@ export function BestBasket({
         matched: size.matched,
         stores: built.storeCount,
         savedCents: built.savedCents,
+        ...(full ? { min_condition: floor.current } : {}),
       });
     } catch {
       if (seq === reqSeq.current) setError("Network error — try again.");
@@ -275,6 +294,16 @@ export function BestBasket({
     delivery.current = { region: nextRegion, trackedOnly: nextTracked };
     writePostagePrefs(market, { region: nextRegion, trackedOnly: nextTracked });
     if (full && (result || loading)) void run();
+    else touched();
+  }
+  // The switch: Premium's plan on screen (or on its way) is re-priced at the new
+  // floor; the choice is remembered for next time.
+  function changeMinCondition(next: MinCondition) {
+    if (next === floor.current) return;
+    setMinCondition(next);
+    floor.current = next;
+    saveFloor.current = true;
+    if (result || loading) void run();
     else touched();
   }
   const regionOpt = regions.find((r) => r.key === region) ?? null;
@@ -431,6 +460,47 @@ export function BestBasket({
           </p>
         </div>
 
+        {/* Minimum condition (Premium, 2026-09-29): the cheapest copy in the
+            condition you'll play. Below Premium it is one plain line, no
+            button: the total says how many played copies it includes. */}
+        {full ? (
+          <div className="mt-4 rounded-lg border border-ink-800 p-2.5" data-min-condition>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span id="min-condition-label" className="text-xs font-medium text-slate-400">
+                Minimum condition
+              </span>
+              <div role="radiogroup" aria-labelledby="min-condition-label" className="flex flex-wrap gap-1.5">
+                {MIN_CONDITIONS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    role="radio"
+                    aria-checked={minCondition === c}
+                    onClick={() => changeMinCondition(c)}
+                    className={`min-h-9 rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                      minCondition === c ? "border-brand-500 bg-brand-500/15 text-white" : "border-ink-700 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    {MIN_CONDITION_LABEL[c]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="mt-1.5 text-[11px] leading-snug text-slate-500">
+              The cheapest copy in the condition you&apos;ll play.{" "}
+              {minCondition === "any"
+                ? "Every store's cheapest copy counts, whatever its condition; each line still shows it."
+                : `Only listings at ${MIN_CONDITION_PHRASE[minCondition]} are used, in the total and in every plan. A card with none in stock is listed as not covered, never filled with a played copy.`}
+              {watch ? " A saved watch keeps its own setting; change it on your watchlist." : ""}
+            </p>
+          </div>
+        ) : (
+          <p className="mt-4 text-[11px] leading-snug text-slate-500" data-min-condition-free>
+            Your total counts each store&apos;s cheapest copy in any condition, and says how many played copies that includes. Premium can
+            limit it to NM only or LP or better.
+          </p>
+        )}
+
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button type="button" onClick={() => void run()} disabled={loading || !canRun} className="btn-primary text-sm disabled:opacity-50">
             {loading ? "Working it out…" : full ? "🧺 Find the cheapest basket" : "See my total"}
@@ -488,12 +558,17 @@ export function BestBasket({
           totalCents={result.totalCents}
           region={delivery.current.region}
           trackedOnly={delivery.current.trackedOnly}
+          minCondition={result.minCondition ?? floor.current}
         />
       )}
       {watch && result && isFull(result) && (
         <p className="text-xs text-slate-400">
           This is your saved watch <strong className="text-slate-200">{watch.name}</strong>,{" "}
-          {result.skippedOwned > 0 ? "priced without the copies you own, so its total is lower than the watch's own." : "priced the way its emails are."}{" "}
+          {result.skippedOwned > 0
+            ? "priced without the copies you own, so its total is lower than the watch's own."
+            : (result.minCondition ?? floor.current) === watch.minCondition
+              ? "priced the way its emails are."
+              : `priced at ${MIN_CONDITION_PHRASE[result.minCondition ?? floor.current]}, not at the ${MIN_CONDITION_PHRASE[watch.minCondition]} its emails use, so the totals can differ.`}{" "}
           <Link href="/watching#decks" className="text-brand-400 hover:underline">
             Change its target or stop it →
           </Link>
@@ -545,16 +620,19 @@ function CapNote({ lines, picked }: { lines: number; picked: number }) {
 // Nothing to price: say which of the two reasons it is. Every line unmatched
 // is not the same as "out of stock", and the preview used to say the latter
 // for both.
-function NothingPriced({ r, adjective }: { r: BasketPreview; adjective: string }) {
+function NothingPriced({ r, adjective, floor = "any" }: { r: BasketPreview; adjective: string; floor?: MinCondition }) {
   const unmatchedCopies = r.unmatched.reduce((n, u) => n + u.qty, 0);
   const noneMatched = r.unmatched.length > 0 && r.requested === unmatchedCopies;
+  // Under a minimum condition "not in stock" would be untrue of a card that only
+  // has played copies: say which floor nothing met.
+  const at = floor === "any" ? "" : ` at ${MIN_CONDITION_PHRASE[floor]}`;
   return (
     <p>
       {noneMatched
         ? "None of these lines matched a card."
         : r.unmatched.length > 0
-          ? `None of the cards we matched is in stock at a tracked ${adjective} store right now.`
-          : `None of these cards is in stock at a tracked ${adjective} store right now.`}
+          ? `None of the cards we matched is in stock${at} at a tracked ${adjective} store right now.`
+          : `None of these cards is in stock${at} at a tracked ${adjective} store right now.`}
     </p>
   );
 }
@@ -622,6 +700,14 @@ function PreviewCard({
         {postage.regionLabel ? ` · delivered to ${postage.regionLabel}` : ""}
       </p>
       {r.postageNotes.length > 0 && <p className="mt-0.5 text-xs text-amber-300/80">{r.postageNotes.join(" · ")}</p>}
+      {/* The honesty line, not an entitlement: any account is told when its
+          cheapest-copy total includes played copies. The button below is the
+          upgrade prompt beside it. */}
+      {r.playedCopies > 0 && (
+        <p data-played-copies className="mt-0.5 text-xs text-amber-300/80">
+          {playedCopiesNote(r.playedCopies)}. Premium can leave them out and price only NM or LP copies.
+        </p>
+      )}
       <Coverage r={r} />
       {overCap && <ResultCapNote />}
       <UnmatchedList unmatched={r.unmatched} />
@@ -655,12 +741,12 @@ function ResultCapNote() {
   );
 }
 
-function Coverage({ r }: { r: BasketPreview }) {
+function Coverage({ r, floor = "any" }: { r: BasketPreview; floor?: MinCondition }) {
   if (r.covered >= r.requested) return null;
   return (
     <p className="mt-1 text-xs text-amber-300">
-      Covers {r.covered} of the {r.requested} cards you asked for — the rest aren&apos;t matched or in stock at a tracked store, and
-      aren&apos;t in the total.
+      Covers {r.covered} of the {r.requested} cards you asked for — the rest aren&apos;t matched or in stock
+      {floor === "any" ? "" : ` at ${MIN_CONDITION_PHRASE[floor]}`} at a tracked store, and aren&apos;t in the total.
     </p>
   );
 }
@@ -711,10 +797,10 @@ function FullResultView({
   if (plan.storeCount === 0) {
     return (
       <div className="card-surface p-5 text-sm text-slate-300">
-        <NothingPriced r={r} adjective={adjective} />
+        <NothingPriced r={r} adjective={adjective} floor={r.minCondition ?? "any"} />
         {overCap && <ResultCapNote />}
         <UnmatchedList unmatched={r.unmatched} />
-        <Unbuyable plan={plan} country={country} />
+        <Unbuyable plan={plan} country={country} floor={r.minCondition ?? "any"} />
         <LeftOut plan={plan} />
       </div>
     );
@@ -767,7 +853,17 @@ function FullResultView({
             <>Buying each card&apos;s cheapest copy is already the cheapest way for this list.</>
           )}
         </p>
-        <Coverage r={r} />
+        <Coverage r={r} floor={r.minCondition ?? "any"} />
+        {r.minCondition && r.minCondition !== "any" && (
+          <p className="mt-1 text-xs text-slate-500" data-priced-at>
+            Priced at {MIN_CONDITION_PHRASE[r.minCondition]}: cheaper copies in a lower condition are left out.
+          </p>
+        )}
+        {(!r.minCondition || r.minCondition === "any") && r.playedCopies > 0 && (
+          <p className="mt-1 text-xs text-amber-300/80" data-played-copies>
+            {playedCopiesNote(r.playedCopies)}. Set a minimum condition above to leave them out.
+          </p>
+        )}
         {overCap && <ResultCapNote />}
         {r.skippedOwned > 0 && (
           <p className="mt-1 text-xs text-slate-500">
@@ -866,7 +962,7 @@ function FullResultView({
         </div>
       ))}
 
-      <Unbuyable plan={plan} country={country} />
+      <Unbuyable plan={plan} country={country} floor={r.minCondition ?? "any"} />
       <LeftOut plan={plan} />
 
       <PostageFooter postage={postage} className="text-center">
@@ -1018,11 +1114,11 @@ function PlanCard({
   );
 }
 
-function Unbuyable({ plan, country }: { plan: BasketPlan; country: string }) {
+function Unbuyable({ plan, country, floor }: { plan: BasketPlan; country: string; floor: MinCondition }) {
   if (!plan.unbuyable.length) return null;
   return (
-    <div className="card-surface p-4 text-sm">
-      <p className="font-semibold text-amber-300">No in-stock store listing for:</p>
+    <div className="card-surface p-4 text-sm" data-not-covered>
+      <p className="font-semibold text-amber-300">{floor === "any" ? "No in-stock store listing for:" : `Not covered — nothing in stock at ${MIN_CONDITION_PHRASE[floor]} for:`}</p>
       {/* Each card is a live eBay search: no tracked store has it, and eBay
           usually carries the long tail. */}
       <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1.5">
@@ -1039,7 +1135,11 @@ function Unbuyable({ plan, country }: { plan: BasketPlan; country: string }) {
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs text-slate-500">No tracked store has these in stock right now — eBay usually carries the long tail.</p>
+      <p className="mt-2 text-xs text-slate-500">
+        {floor === "any"
+          ? "No tracked store has these in stock right now — eBay usually carries the long tail."
+          : `No tracked store has these in stock at ${MIN_CONDITION_PHRASE[floor]} right now. A played copy was not used in their place; choose Anything above to see the cheapest copy in any condition. eBay usually carries the long tail.`}
+      </p>
       <AffiliateDisclosure partner="ebay" tight />
     </div>
   );

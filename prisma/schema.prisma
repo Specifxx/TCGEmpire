@@ -178,6 +178,10 @@ model User {
   sentOrderMessages   OrderMessage[]
   priceAlerts         PriceAlert[]
   deckWatches         DeckWatch[]
+  // Best Basket's remembered choices for a Premium member: { minCondition:
+  // "nm" | "lp" | "any" } (lib/basket-condition.ts parseBasketPrefs). Null = never
+  // chosen (a new session starts on "LP or better"). Additive + nullable.
+  basketPrefs         Json?
   sealedWatches       SealedWatch[]
 
   @@index([googleId])
@@ -946,6 +950,11 @@ model DeckWatch {
   // "Email me when the delivered total is at or under this." Null = no
   // target: email on a material drop instead (deck_drop).
   targetCents      Int?
+  // The lowest condition the plan may use: "nm" (Near Mint only) or "lp"
+  // (Lightly Played or better). Null = any condition, which is what every row
+  // saved before 2026-09-29 means, so their baselines and emails are unchanged
+  // (lib/basket-condition.ts). Changing it re-baselines the watch.
+  minCondition     String?
   // The delivered total the last priced run saw, and when.
   lastTotalCents   Int?
   lastCheckedAt    DateTime?

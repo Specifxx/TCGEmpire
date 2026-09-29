@@ -413,6 +413,7 @@ test("the non-Premium preview is the aggregate only — no store names, lines or
   assert.deepEqual(Object.keys(preview).sort(), [
     "covered",
     "naiveTotalCents",
+    "playedCopies",
     "postageNotes",
     "requested",
     "savedCents",
@@ -675,7 +676,7 @@ test("nothing in Best Basket is cached: every answer is per user", () => {
 test("skipOwned subtracts owned copies (and doesn't apply to the binder itself)", () => {
   // Behavioural: the parser takes no account, so what it returns is what ANY
   // signed-in caller may send — the tier only decides the answer.
-  assert.deepEqual(parseBasketRequest({ source: "watchlist", skipOwned: true }), { source: "watchlist", skipOwned: true, text: "", picked: [] });
+  assert.deepEqual(parseBasketRequest({ source: "watchlist", skipOwned: true }), { source: "watchlist", skipOwned: true, text: "", picked: [], minCondition: "any", saveMinCondition: false });
   assert.equal(parseBasketRequest({ source: "deck", skipOwned: true, text: "1 Jinx" }).skipOwned, true);
   assert.equal(parseBasketRequest({ source: "binder", skipOwned: true }).skipOwned, false, "the binder prices replacement; skip is ignored");
   assert.equal(parseBasketRequest({ source: "nonsense" }).source, "deck");

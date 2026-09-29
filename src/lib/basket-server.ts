@@ -16,6 +16,7 @@ import { prisma } from "./db";
 import { pickPrice, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
 import type { BasketCard } from "./basket";
+import { meetsMinCondition, parseBasketPrefs, type BasketPrefs, type MinCondition } from "./basket-condition";
 
 // The stores themselves — which serve this market, and what each charges to
 // post an order — are not a read: lib/shipping.ts basketStoresFor() builds
@@ -34,12 +35,21 @@ import type { BasketCard } from "./basket";
 // `db` is injectable (2026-09-29) so the deck price watch run
 // (lib/deck-watch.ts) prices a saved list with exactly this read against a
 // stub client in tests; the routes pass nothing.
+//
+// `minRank` (2026-09-29, lib/basket-condition.ts) is the member's minimum
+// condition, default "any" so every existing caller reads exactly what it did.
+// It filters the rows IN MEMORY, before the per-(card, store) reduction below:
+// condition is the store's free text, so it cannot be a WHERE clause, and the
+// read is the same one query with the same narrow select, zero new rows. Run
+// after the reduction, a store's Near Mint row would already have lost to a
+// cheaper Heavily Played one and the store would drop out of the plan.
 export type StoreListingsDb = { retailerPrice: Pick<typeof prisma.retailerPrice, "findMany"> };
 export async function loadStoreListings(
   cardIds: string[],
   country: Country,
   allowed: string[],
-  db: StoreListingsDb = prisma
+  db: StoreListingsDb = prisma,
+  minRank: MinCondition = "any"
 ): Promise<Map<string, BasketCard["listings"]>> {
   const byCard = new Map<string, BasketCard["listings"]>();
   if (!cardIds.length || !allowed.length) return byCard;
@@ -49,6 +59,7 @@ export async function loadStoreListings(
   });
   const best = new Map<string, (typeof rows)[number]>();
   for (const r of rows) {
+    if (!meetsMinCondition(r.condition, minRank)) continue;
     const k = `${r.cardId}|${r.retailer}`;
     const prev = best.get(k);
     if (!prev || r.priceCents < prev.priceCents) best.set(k, r);
@@ -59,6 +70,38 @@ export async function loadStoreListings(
     byCard.set(r.cardId, arr);
   }
   return byCard;
+}
+
+// The member's remembered Best Basket choices (User.basketPrefs): one row,
+// scoped to the user, one column. Never throws: a failed read is "no prefs".
+export async function loadBasketPrefs(
+  userId: string,
+  db: { user: Pick<typeof prisma.user, "findUnique"> } = prisma
+): Promise<BasketPrefs> {
+  try {
+    const row = await db.user.findUnique({ where: { id: userId }, select: { basketPrefs: true } });
+    return parseBasketPrefs(row?.basketPrefs);
+  } catch {
+    return {};
+  }
+}
+
+// Remember the floor a member just chose. Read-merge so a later key survives;
+// a no-op when it is already what is stored. Best effort: never fails a run.
+export async function saveMinConditionPref(
+  userId: string,
+  minCondition: MinCondition,
+  db: { user: Pick<typeof prisma.user, "findUnique" | "update"> } = prisma
+): Promise<void> {
+  try {
+    const row = await db.user.findUnique({ where: { id: userId }, select: { basketPrefs: true } });
+    const prefs = parseBasketPrefs(row?.basketPrefs);
+    if (prefs.minCondition === minCondition) return;
+    const existing = row?.basketPrefs && typeof row.basketPrefs === "object" && !Array.isArray(row.basketPrefs) ? (row.basketPrefs as Record<string, unknown>) : {};
+    await db.user.update({ where: { id: userId }, data: { basketPrefs: { ...existing, minCondition } } });
+  } catch (e) {
+    console.error("[basket] saving the minimum condition failed", e);
+  }
 }
 
 // The cards this account watches in this market, one copy each.

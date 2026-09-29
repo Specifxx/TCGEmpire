@@ -205,6 +205,19 @@ longer lands on its entry.
   module (`lib/deck-watch-pure.ts` is the client-safe half;
   `tests/client-imports.test.ts`). [2026-09-29](../DECISIONS.md#L15178),
   [2026-09-29 review](../DECISIONS.md#L15224)
+- **Minimum condition (2026-09-29, Premium):** Best Basket, Buy this list and
+  the deck price watch may be limited to NM only or LP or better
+  (`lib/basket-condition.ts`; grades are `conditionRank`, unstated = NM). The
+  filter runs INSIDE `loadStoreListings` before the per-(card, store)
+  reduction (`minRank`, default `any`, so every other caller is unchanged), in
+  memory, on the same single read. A card with nothing at the floor is "not
+  covered", never filled with a played copy. Premium only on the server; a new
+  session and a new deck watch start on LP or better, the last choice is
+  remembered (`User.basketPrefs`), and `DeckWatch.minCondition` null = any, so
+  old watches keep their baselines; changing a floor re-baselines. Every free
+  total says "Includes N played copies" when it does (an honesty line, not an
+  entitlement). "Any printing" waits until after Radiance.
+  [2026-09-29](../DECISIONS.md#L15344)
 - **Every paid feature is discoverable where it lives, inline, never a
   popup:** `DiscoveryTip` (`tip:*` surfaces) is one dismissable sentence for
   signed-in non-members only, on /sealed, a non-Premium Best Basket result and

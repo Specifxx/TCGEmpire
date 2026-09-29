@@ -203,6 +203,8 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       "Target-price alerts after every price update",
       "Best Basket — cheapest delivered order for a list",
       "Buy this list — deck or watchlist, skipping cards you own",
+      // 2026-09-29: the lowest condition the plan and the deck watch may use.
+      "Minimum condition — NM only or LP or better, in the plan and the deck watch",
       // Premium again from later on 2026-09-25, with the Premium rows and
       // before Ad-free (DECISIONS.md, "Demand Finder returns as a Premium tool").
       "Demand Finder — most searched & viewed cards",

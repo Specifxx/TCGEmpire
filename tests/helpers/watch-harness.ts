@@ -20,6 +20,7 @@ export interface DeckRow {
   listText: string;
   region: string | null;
   trackedOnly: boolean | null;
+  minCondition: string | null;
   targetCents: number | null;
   lastTotalCents: number | null;
   lastEmailedCents: number | null;
@@ -38,6 +39,7 @@ export function deckRow(id: string, user: User, over: Partial<DeckRow> = {}): De
     listText: "3 Alpha\n1 Beta",
     region: null,
     trackedOnly: null,
+    minCondition: null,
     targetCents: null,
     lastTotalCents: null,
     lastEmailedCents: null,

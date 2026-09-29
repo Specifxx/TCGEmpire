@@ -9,6 +9,7 @@ import { DECK_WATCH_LIMIT } from "@/lib/alert-limits";
 import { friendlyTargetCents } from "@/lib/deck-watch-pure";
 import { currencyOf, type Country } from "@/lib/country";
 import { trackEvent } from "@/lib/analytics";
+import { DEFAULT_MIN_CONDITION, MIN_CONDITIONS, MIN_CONDITION_LABEL, MIN_CONDITION_PHRASE, type MinCondition } from "@/lib/basket-condition";
 
 // "WATCH THIS LIST" (2026-09-29, Premium): saves the list the member just
 // priced, with a delivered-price target, so the paid alert run re-prices it
@@ -25,6 +26,7 @@ export function DeckWatchForm({
   totalCents,
   region,
   trackedOnly,
+  minCondition,
   className = "",
 }: {
   listText: string;
@@ -32,12 +34,19 @@ export function DeckWatchForm({
   totalCents?: number | null;
   region?: string | null;
   trackedOnly?: boolean;
+  // The condition floor the list was just priced at (Best Basket). Given, it is
+  // the watch's floor and is only stated (the default target above is that
+  // floor's total); absent (/deck, no total), the member picks it here and a new
+  // watch starts on "LP or better".
+  minCondition?: MinCondition;
   className?: string;
 }) {
   const { user, loaded, premium, tier } = useMe();
   const { country, fmt } = useCountry();
   const [name, setName] = useState(defaultName.slice(0, 80));
   const [target, setTarget] = useState<string>(() => (totalCents != null ? (friendlyTargetCents(totalCents) / 100).toFixed(2) : ""));
+  const [floorPick, setFloorPick] = useState<MinCondition>(DEFAULT_MIN_CONDITION);
+  const floor = minCondition ?? floorPick;
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState<{ id: string; targetCents: number | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +77,7 @@ export function DeckWatchForm({
           {saved.targetCents != null
             ? `We email you when the delivered total is ${fmt(saved.targetCents)} or less, checked after every price update.`
             : "We email you when the delivered total drops at least 5% (and a whole unit) below the last figure we saw, checked after every price update."}{" "}
+          {floor === "any" ? "Every store's cheapest copy counts, whatever its condition. " : `Priced at ${MIN_CONDITION_PHRASE[floor]}. `}
           <Link href="/watching#decks" className="text-brand-400 hover:underline">
             Manage it on your watchlist →
           </Link>
@@ -95,7 +105,7 @@ export function DeckWatchForm({
       const res = await fetch("/api/watches/deck", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, listText, targetCents, region: region ?? null, trackedOnly: !!trackedOnly }),
+        body: JSON.stringify({ name, listText, targetCents, region: region ?? null, trackedOnly: !!trackedOnly, minCondition: floor }),
       });
       const d = (await res.json().catch(() => null)) as { watch?: { id: string; targetCents: number | null }; error?: string } | null;
       if (!res.ok || !d?.watch) {
@@ -127,10 +137,27 @@ export function DeckWatchForm({
           Delivered total under ({currency})
           <input value={target} onChange={(e) => setTarget(e.target.value)} inputMode="decimal" placeholder="any real drop" className="input w-36" />
         </label>
+        {minCondition == null && (
+          <label className="flex flex-col gap-1 text-xs text-slate-400">
+            Minimum condition
+            <select value={floorPick} onChange={(e) => setFloorPick(e.target.value as MinCondition)} className="input w-36 py-1 sm:text-sm" aria-label="Minimum condition">
+              {MIN_CONDITIONS.map((c) => (
+                <option key={c} value={c}>
+                  {MIN_CONDITION_LABEL[c]}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <button type="submit" disabled={busy} className="btn-primary text-sm">
           {busy ? "Saving…" : "Watch this list"}
         </button>
       </div>
+      <p className="mt-2 text-[11px] leading-snug text-slate-500">
+        {floor === "any"
+          ? "The watch uses each store's cheapest copy, whatever its condition."
+          : `The watch only uses listings at ${MIN_CONDITION_PHRASE[floor]}, the same rule as the plan. If a card has none in stock at that condition the list stays quiet until it does.`}
+      </p>
       {error && (
         <p role="alert" className="mt-2 text-xs text-rose-400">
           {error}

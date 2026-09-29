@@ -10,7 +10,8 @@ import { clampQty, parseBasketRequest, type BasketRequest } from "@/lib/basket-r
 import { rateLimit, refundRateLimit, tooManyRequests } from "@/lib/rate-limit";
 import type { Country } from "@/lib/country";
 import { basketPreview, optimizeBasket, planBasket, type BasketCard, type PreviewRegion } from "@/lib/basket";
-import { loadBinderHoldings, loadOwnedQty, loadStoreListings, loadWatchlistCardIds } from "@/lib/basket-server";
+import { loadBinderHoldings, loadOwnedQty, loadStoreListings, loadWatchlistCardIds, saveMinConditionPref } from "@/lib/basket-server";
+import type { MinCondition } from "@/lib/basket-condition";
 import { basketStoresFor, postageContextFor, postageOptionsFrom, type PostageOptions } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +57,14 @@ export const dynamic = "force-dynamic";
 // postageNotes say why a total is less certain than it looks (estimated
 // postage, an order bigger than any measured) in store COUNTS only.
 //
+// MINIMUM CONDITION (2026-09-29, lib/basket-condition.ts). `minCondition`
+// ("nm" | "lp" | "any") is Premium's: it is applied INSIDE loadStoreListings,
+// before the cheapest-row-per-store reduction, and echoed on the Premium
+// response. A request from anyone else is priced at "any" whatever it sends,
+// and its preview says how many played copies that total includes. A card with
+// nothing at the floor is not covered (`unbuyable`), never filled with a played
+// copy. `saveMinCondition` remembers the choice (User.basketPrefs), Premium's too.
+//
 // RATE LIMITS. Premium: 30 an hour. Without Premium: 5 TOTALS a day — a run
 // that comes back without one (a 400 such as an empty watchlist, a 503, a list
 // where nothing matched or nothing is in stock) hands its slot back, so a
@@ -98,7 +107,9 @@ export async function POST(req: Request) {
   const country = getCountry();
   const params = new URL(req.url).searchParams;
   const postageOpts = postageOptionsFrom(country, params.get("region"), params.get("tracked"));
-  const out = await buildBasket(user.id, full, parseBasketRequest(await req.json().catch(() => null)), country, postageOpts);
+  const request = parseBasketRequest(await req.json().catch(() => null));
+  const out = await buildBasket(user.id, full, request, full ? request.minCondition : "any", country, postageOpts);
+  if (full && request.saveMinCondition && out.res.status === 200) void saveMinConditionPref(user.id, request.minCondition);
   // Only a run that came back with a total counts against the free five.
   if (!full && !out.priced) refundRateLimit(`basket:${user.id}`);
   return out.res;
@@ -110,6 +121,7 @@ async function buildBasket(
   userId: string,
   full: boolean,
   { source, skipOwned, text, picked }: BasketRequest,
+  minCondition: MinCondition,
   country: Country,
   postageOpts: PostageOptions
 ): Promise<Outcome> {
@@ -189,7 +201,7 @@ async function buildBasket(
     // and their in-stock listings. The read throws rather than pricing a
     // failed read as "nothing in stock".
     const stores = basketStoresFor(country, postageOpts);
-    const listings = await loadStoreListings([...wanted.keys()], country, Object.keys(stores));
+    const listings = await loadStoreListings([...wanted.keys()], country, Object.keys(stores), prisma, minCondition);
     const basketCards: BasketCard[] = [...wanted].map(([cardId, qty]) => {
       const c = info.get(cardId)!;
       return {
@@ -218,7 +230,7 @@ async function buildBasket(
     const { plan, alternatives } = planBasket(basketCards, stores, { loc: "/tools/best-basket" });
     return {
       res: NextResponse.json(
-        { ...basketPreview(plan, unmatched, region), plan, alternatives, fuzzy, skippedOwned, skippedHoldings, source, shipping },
+        { ...basketPreview(plan, unmatched, region), plan, alternatives, fuzzy, skippedOwned, skippedHoldings, source, shipping, minCondition },
         { headers: { "Cache-Control": "no-store" } }
       ),
       priced: plan.coveredCopies > 0,

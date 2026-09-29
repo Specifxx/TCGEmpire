@@ -116,6 +116,14 @@ const FEATURES: { title: string; body: string; when: string; href: string | null
     tier: "premium",
   },
   {
+    title: "Minimum condition",
+    body: "Set the lowest condition you'll accept: Near Mint only, Lightly Played or better, or anything. Best Basket's plan, Buy this list and the deck price watch then only use listings at or above it, so the cheapest plan can't quietly include a heavily played copy. Every line still shows its condition, a card with nothing at that grade in stock is shown as not covered rather than filled with a played copy, and the deck watch email uses the same rule as the page. Without Premium, your own total counts each store's cheapest copy in any condition and tells you how many played copies that includes.",
+    when: "You play your cards, or you're completing a collection, and want the cheapest copy in the condition you'll actually accept.",
+    href: "/tools/best-basket",
+    cta: "Open Best Basket",
+    tier: "premium",
+  },
+  {
     title: "Demand Finder",
     body: "The cards players are searching for and opening most on RiftCompare, over the last 7 or 30 days: the top 25 by searches and the top 25 by card views, with both counts and your market's price for every card. What players are looking at, not a forecast. Everyone gets the top 10 most searched this week free.",
     when: "You're choosing what to buy or list and want to know what everyone else is hunting for.",
@@ -138,7 +146,7 @@ const FEATURES: { title: string; body: string; when: string; href: string | null
 // really gets (TIER_COMPARISON's rows), so a rich result can't credit Plus
 // with Premium's list tools or leave its ad-free benefit out.
 const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP or at your price), and the full Deal Finder and Rising Cards lists.`;
-const PREMIUM_OFFER_DESCRIPTION = `Premium: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck, watchlist or binder, and Demand Finder's most searched and most viewed cards.`;
+const PREMIUM_OFFER_DESCRIPTION = `Premium: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, Best Basket's store-by-store plan for the cheapest delivered order (at the minimum condition you set), Buy this list for a deck, watchlist or binder, and Demand Finder's most searched and most viewed cards.`;
 const PREMIUM_STANDALONE_DESCRIPTION =
   "No ads on any page, an unlimited watchlist and portfolio, target-price alerts, sealed watches, a deck price watch, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.";
 
@@ -201,6 +209,10 @@ const FAQ: { q: string; a: string }[] = [
   {
     q: "What is a deck price watch?",
     a: `A Premium feature. Save a deck or card list (from Best Basket or the deck pricer) with the delivered price you'd pay — delivered means the cards plus each store's postage. After every price update we re-price the whole list across every store in your country, the way Best Basket does, and email you when the total is at or under your price, or, with no price set, when it drops at least 5% and a whole unit below the last figure we told you. The email names the total, the postage, the stores and a button to the store-by-store plan. Up to ${DECK_WATCH_LIMIT} lists; stop or snooze any of them from the email or your watchlist.`,
+  },
+  {
+    q: "What does minimum condition do?",
+    a: "Best Basket, Buy this list and the deck price watch only use listings at or above the grade you choose (Near Mint only, Lightly Played or better, or anything). Each line still shows its condition. If nothing at that grade is in stock, the card is shown as not covered rather than filled with a played copy. It is a Premium setting: a new Best Basket session starts on Lightly Played or better with Anything one tap away, your last choice is remembered, and a deck watch saved before this keeps counting every condition until you change it. Without Premium your total counts each store's cheapest copy in any condition and says how many played copies that includes.",
   },
   {
     q: "What is a sealed watch?",

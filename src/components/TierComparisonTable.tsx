@@ -116,6 +116,11 @@ export const TIER_COMPARISON: TierRow[] = [
   // plan for it. The binder is a source too, but it prices replacement, so it
   // is not named here beside "skipping cards you own".
   { feature: "Buy this list — deck or watchlist, skipping cards you own", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
+  // MINIMUM CONDITION (2026-09-29, lib/basket-condition.ts): Premium sets the
+  // lowest condition the plan, Buy this list and the deck watch may use. Below
+  // Premium the total counts every condition and says how many played copies it
+  // includes (an honesty line, not an entitlement).
+  { feature: "Minimum condition — NM only or LP or better, in the plan and the deck watch", account: false, plus: false, premium: true },
   // Premium only, to widen the Plus→Premium gap (2026-09-25). Below Premium
   // it is exactly the free top 10 most searched this week that /movers shows
   // everyone — FREE_DEMAND_ROWS in lib/demand-view.ts, the one constant both

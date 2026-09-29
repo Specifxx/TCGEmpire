@@ -38,7 +38,7 @@ test("the paid alert step runs AFTER the sealed import, and the paid route runs 
   const deck = read("src/lib/deck-watch.ts");
   assert.match(deck, /premiumUntil: \{ gt: now \}/, "the read is trimmed to paid owners");
   assert.match(deck, /isPremium\(user, "premium"\)/, "…and the Premium minimum is the real check");
-  assert.match(deck, /loadStoreListings\(\[\.\.\.wanted\.keys\(\)\], opts\.market, Object\.keys\(stores\), db\)/, "Best Basket's own listing read");
+  assert.match(deck, /loadStoreListings\(\[\.\.\.wanted\.keys\(\)\], opts\.market, Object\.keys\(stores\), db, opts\.minCondition \?\? "any"\)/, "Best Basket's own listing read, at the watch's own minimum condition");
   assert.match(deck, /optimizeBasket\(cards, stores\)/, "…and its optimiser");
   assert.match(deck, /basketStoresFor\(opts\.market, postageOptionsFrom\(/, "…with the measured postage for the saved delivery");
   const sealed = read("src/lib/sealed-watch.ts");

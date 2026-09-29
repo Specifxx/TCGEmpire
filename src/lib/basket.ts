@@ -80,6 +80,7 @@
 import { affiliateUrl } from "./affiliate";
 import { planPostageNotes } from "./postage-display";
 import type { PostageCart, PostageQuote } from "./shipping";
+import { playedCopyCount } from "./basket-condition";
 
 export interface BasketListing {
   retailer: string; // store key
@@ -210,6 +211,10 @@ export interface BasketPreview {
   // bigger than any measured, a region not measured (planPostageNotes). Store
   // COUNTS and region names only: no note names a store.
   postageNotes: string[];
+  // Copies in the plan that are below Lightly Played (lib/basket-condition.ts).
+  // A count only, no store or line: the free total says "Includes N played
+  // copies" so the cheapest price is never passed off as a Near Mint one.
+  playedCopies: number;
 }
 
 // How the buyer's region was chosen, for the postage notes: `picked` — a
@@ -238,6 +243,7 @@ export function basketPreview(
     requested: plan.coveredCopies + unbuyableCopies + unmatchedCopies,
     unmatched: unmatched.map((u) => ({ raw: u.raw, qty: u.qty })),
     postageNotes: planPostageNotes(plan, region.picked, region.unmeasured),
+    playedCopies: playedCopyCount(plan.stores.flatMap((s) => s.lines)),
   };
 }
 

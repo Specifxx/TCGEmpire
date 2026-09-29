@@ -118,6 +118,8 @@ export const PITCH_TOOLS: { label: string }[] = [
   { label: "Target-price alerts" },
   { label: "Best Basket" },
   { label: "Buy this list" },
+  // 2026-09-29: the lowest condition the plan and the deck watch may use.
+  { label: "Minimum condition" },
   { label: "Demand Finder" },
   // 2026-09-29: the two watches that run for a member (lib/sealed-watch.ts,
   // lib/deck-watch.ts), added to the tier table the same day.

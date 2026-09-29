@@ -3,6 +3,7 @@ import { formatMoney } from "./format";
 import { SITE_URL } from "./site";
 import { alertListHeaders, checkedLabel, emailButton, emailShell, escapeHtml, sendEmail } from "./email";
 import type { WatchActionLinks } from "./alert-actions";
+import { MIN_CONDITION_PHRASE } from "./basket-condition";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE DECK PRICE WATCH AND SEALED WATCH EMAILS (2026-09-29, "Premium works
@@ -74,6 +75,9 @@ export interface DeckWatchItem {
   // else the total the last run saw. null the first time.
   referenceCents: number | null;
   referenceBasis: "emailed" | "last" | null;
+  // The watch's minimum condition (lib/basket-condition.ts); "any" or absent
+  // prints nothing, "nm" / "lp" says cheaper played copies were left out.
+  minCondition?: "nm" | "lp" | "any";
   stores: DeckWatchStoreLine[]; // the plan's stores, dearest first, at most 3
   checkedAt: Date;
   actions: WatchActionLinks | null;
@@ -123,6 +127,8 @@ export function buildDeckWatchEmail(item: DeckWatchItem): BuiltWatchEmail {
       ? `This covers ${item.coveredCopies} of the ${item.requestedCopies} copies on the list; the rest have no in-stock copy at a store that posts to you.`
       : `Every copy on the list is in stock.`;
   const postage = item.shippingCents === 0 ? "free postage" : `${m(item.shippingCents)} postage`;
+  // The floor the total was priced at, so the email and the page agree.
+  const floorLine = item.minCondition && item.minCondition !== "any" ? `Priced at ${MIN_CONDITION_PHRASE[item.minCondition]}: cheaper copies in a lower condition are left out.` : "";
   const storeRows = stores
     .map(
       (s) =>
@@ -136,7 +142,7 @@ export function buildDeckWatchEmail(item: DeckWatchItem): BuiltWatchEmail {
       <span style="font-size:22px;font-weight:800;color:#34d17e">${total(m, item)}</span> delivered: ${m(item.itemsCents)} of cards + ${postage}, from ${item.storeCount} ${item.storeCount === 1 ? "store" : "stores"}.
       ${item.kind === "deck_target" && item.targetCents != null ? `<br/>Your target is ${m(item.targetCents)}.` : ""}
       ${changeLine ? `<br/>${escapeHtml(changeLine)}` : ""}
-      <br/><span style="font-size:12px;color:#6b7585">${escapeHtml(coverage)}</span>
+      <br/><span style="font-size:12px;color:#6b7585">${escapeHtml(coverage)}${floorLine ? ` ${escapeHtml(floorLine)}` : ""}</span>
     </td></tr>
     ${storeRows ? `<tr><td style="padding:10px 32px 0"><div style="font-size:12px;color:#6b7585;margin-bottom:2px">Where the plan buys${item.stores.length > 3 ? " (largest orders first)" : ""}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%">${storeRows}</table></td></tr>` : ""}
     <tr><td style="padding:14px 32px 4px">${emailButton(basket, "See the store-by-store plan")}</td></tr>
@@ -150,6 +156,7 @@ export function buildDeckWatchEmail(item: DeckWatchItem): BuiltWatchEmail {
     item.kind === "deck_target" && item.targetCents != null ? `Your target is ${m(item.targetCents)}.` : "",
     changeLine,
     coverage,
+    floorLine,
     ...stores.map((s) => `  - ${s.name}: ${s.items} ${s.items === 1 ? "card" : "cards"}, ${m(s.subtotalCents)}${s.shippingCents === 0 ? ", free postage" : ` + ${m(s.shippingCents)} postage`}`),
     `See the store-by-store plan: ${basket}`,
     `Checked ${checkedLabel(item.checkedAt, item.market)}. Prices and postage move, so the stores' checkouts are final.`,

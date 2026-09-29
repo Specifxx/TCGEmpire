@@ -6,6 +6,7 @@ import { useCountry } from "./CountryProvider";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, type Country } from "@/lib/country";
 import { DECK_WATCH_LIMIT } from "@/lib/alert-limits";
+import { MIN_CONDITIONS, MIN_CONDITION_LABEL, MIN_CONDITION_PHRASE, storedMinCondition, toStoredMinCondition, type MinCondition } from "@/lib/basket-condition";
 
 // The "Decks" section of /watching (Premium, 2026-09-29): every saved list
 // the paid run prices (lib/deck-watch.ts), with its last delivered total,
@@ -18,6 +19,8 @@ interface Row {
   market: string;
   name: string;
   listText: string;
+  // "nm" | "lp" | null (any): lib/basket-condition.ts. Null is every watch saved before it.
+  minCondition: string | null;
   targetCents: number | null;
   lastTotalCents: number | null;
   lastCheckedAt: string | null;
@@ -125,6 +128,25 @@ export function DeckWatchList({ lapsed = false }: { lapsed?: boolean }) {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <label className="flex items-center gap-1 text-xs text-slate-400">
+                  Condition
+                  <select
+                    value={storedMinCondition(r.minCondition)}
+                    disabled={lapsed}
+                    onChange={(e) => {
+                      const next = e.target.value as MinCondition;
+                      if (toStoredMinCondition(next) !== (r.minCondition ?? null)) void patch(r.id, { minCondition: next });
+                    }}
+                    className="input py-1 text-xs"
+                    aria-label={`Minimum condition for ${r.name}`}
+                  >
+                    {MIN_CONDITIONS.map((c) => (
+                      <option key={c} value={c}>
+                        {MIN_CONDITION_LABEL[c]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex items-center gap-1 text-xs text-slate-400">
                   Target ({cur})
                   <TargetInput cents={r.targetCents} disabled={lapsed} onSave={(c) => patch(r.id, { targetCents: c })} />
                 </label>
@@ -146,6 +168,14 @@ export function DeckWatchList({ lapsed = false }: { lapsed?: boolean }) {
       </ul>
       <p className="mt-2 text-[11px] text-slate-500">
         {rows.length} of {DECK_WATCH_LIMIT} lists. Empty the target to be emailed on any real drop (5% and a whole unit) instead.
+        {rows.some((r) => r.minCondition) && (
+          <>
+            {" "}
+            A list with a condition ({[...new Set(rows.filter((r) => r.minCondition).map((r) => MIN_CONDITION_PHRASE[storedMinCondition(r.minCondition)]))].join(", ")}) only uses listings at
+            that condition, so if a card has none in stock it stays quiet until it does; Open plan shows which. Changing a list&apos;s condition starts its
+            price history again.
+          </>
+        )}
       </p>
     </div>
   );

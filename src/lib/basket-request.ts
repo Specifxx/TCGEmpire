@@ -1,4 +1,5 @@
 import { DECK_LINE_CAP } from "./deck";
+import { parseMinCondition, type MinCondition } from "./basket-condition";
 
 // What a Best Basket request may send, parsed the same way for every caller.
 // Pure (no database), so the tier story can be tested behaviourally: nothing
@@ -19,6 +20,12 @@ export interface BasketRequest {
   skipOwned: boolean;
   text: string;
   picked: PickedLine[];
+  // The minimum condition asked for (lib/basket-condition.ts), "any" when the
+  // request says nothing so every existing caller prices what it always did.
+  // Whether it is HONOURED is the route's call: it is Premium's.
+  minCondition: MinCondition;
+  // The member changed the switch: remember it (User.basketPrefs).
+  saveMinCondition: boolean;
 }
 
 // A pasted or picked quantity, clamped server-side whatever the client sends.
@@ -38,5 +45,5 @@ export function parseBasketRequest(raw: unknown): BasketRequest {
         .filter((l: unknown): l is PickedLine => !!l && typeof (l as PickedLine).cardId === "string" && Number.isFinite((l as PickedLine).qty))
         .slice(0, DECK_LINE_CAP)
     : [];
-  return { source, skipOwned, text, picked };
+  return { source, skipOwned, text, picked, minCondition: parseMinCondition(body.minCondition, "any"), saveMinCondition: body.saveMinCondition === true };
 }
