@@ -65,7 +65,7 @@ test("an explicit empty buy param is respected, not coerced back to the default 
   // buy=<empty string> (the URL selectNone() + Apply produces) must NOT be
   // treated the same as buy being absent entirely (first visit, no filter
   // touched) — a truthy check can't tell those apart, since "" is falsy.
-  const opts = { allowMine: false, ebayKey: "ebay_us" };
+  const opts = { allowMine: false };
   assert.deepEqual(parseDealFinderParams({ buy: "" }, opts).buy, [], "buy= is an explicit empty selection");
   assert.equal(parseDealFinderParams({}, opts).buy, null, "no buy param means the default list");
   assert.deepEqual(parseDealFinderParams({ buy: "a, b,,c" }, opts).buy, ["a", "b", "c"]);

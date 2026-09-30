@@ -109,7 +109,7 @@ export type CheapestEbayDeal = {
   priceCents: number; // the eBay listing: item + stated postage, or the item price alone
   postageKnown: boolean; // "{price} delivered" when true, "{price} + postage" when not
   gapCents: number; // below the cheapest tracked store (lib/arbitrage.ts rankCheapestOnEbay)
-  outboundUrl: string; // the listing, affiliate-tagged with the homepage as its page
+  outboundUrl: string; // the listing, affiliate-tagged with the page it renders on
   outboundRetailer: string; // the market's eBay retailer key
 };
 
@@ -167,13 +167,14 @@ export function savingsVsMarketDeal(it: ArbItem): Deal {
 }
 
 /**
- * One getCheapestOnEbay item as a homepage row. The listing URL is tagged with
- * the homepage as its page, and with its own sub-id (`<eBay key>_cheapest`), so
- * EPN's customid tells this row's clicks apart from the eBay-sealed links in the
- * Cheapest sealed column on the same page — both would otherwise report as
- * "<eBay key>-home" (2026-09-26).
+ * One getCheapestOnEbay item as a row. The listing URL is tagged with the page
+ * it renders on (`loc`: the homepage by default; Deal Finder's "Cheapest on
+ * eBay" view passes its own path, 2026-09-30), and with its own sub-id
+ * (`<eBay key>_cheapest`), so EPN's customid tells this row's clicks apart from
+ * the eBay-sealed links that sat in the Cheapest sealed column on the same page
+ * — both would otherwise report as "<eBay key>-home" (2026-09-26).
  */
-export function cheapestEbayDeal(it: CheapestOnEbayItem): CheapestEbayDeal {
+export function cheapestEbayDeal(it: CheapestOnEbayItem, loc = "/"): CheapestEbayDeal {
   return {
     cardId: it.card.id,
     title: it.card.name,
@@ -182,7 +183,7 @@ export function cheapestEbayDeal(it: CheapestOnEbayItem): CheapestEbayDeal {
     priceCents: it.ebayCents,
     postageKnown: it.postageKnown,
     gapCents: it.gapCents,
-    outboundUrl: affiliateUrl(it.url, `${it.ebayKey}_cheapest`, "/"),
+    outboundUrl: affiliateUrl(it.url, `${it.ebayKey}_cheapest`, loc),
     outboundRetailer: it.ebayKey,
   };
 }
@@ -190,7 +191,7 @@ export function cheapestEbayDeal(it: CheapestOnEbayItem): CheapestEbayDeal {
 export async function getTopDeals(country: Country, perType = 4): Promise<TopDeals> {
   const savingsP = (async (): Promise<{ deals: Deal[]; total: number; savingsTotalCents: number }> => {
     try {
-      // CHEAPER THAN TCGPLAYER MARKET, not "cheapest on eBay vs the best
+      // UNDERPRICED VS TCGPLAYER, not "cheapest on eBay vs the best
       // store" (2026-09-21, owner's instruction — see DECISIONS.md). This
       // column answers "where is this card cheaper than the wider US market
       // right now", the same list /tools/deal-finder shows, so the homepage
@@ -230,7 +231,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
   // in parallel.
   const cheapestOnEbayP = savingsP.then(async (): Promise<CheapestEbayDeal[]> => {
     try {
-      return (await getCheapestOnEbay(country, perType)).map(cheapestEbayDeal);
+      return (await getCheapestOnEbay(country, perType)).map((it) => cheapestEbayDeal(it));
     } catch {
       return [];
     }

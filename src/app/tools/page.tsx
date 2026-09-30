@@ -57,7 +57,7 @@ const FAQS = [
   },
   {
     q: "What does the Deal Finder do?",
-    a: `It lists every Riftbound card a real store or eBay is selling for less than TCGplayer's US market price, converted into your currency and ranked by how far below it is. You can filter by store or switch to eBay only, and with ${LIST_BADGE} narrow it to only the cards on your watchlist or in your binder. Signed out it shows nothing, a free account sees the top 3, and ${LIST_BADGE} shows every row.`,
+    a: `It lists every Riftbound card a real store or eBay is selling for less than TCGplayer's US market price, converted into your currency and ranked by how far below it is. That is its Underpriced vs TCGplayer tab, which you can filter by store, and with ${LIST_BADGE} narrow to only the cards on your watchlist or in your binder. Two more tabs compare against eBay: Cheapest on eBay, free for everyone, and Underpriced vs eBay. Signed out the two Underpriced lists show nothing, a free account sees the top 3 of each, and ${LIST_BADGE} shows every row.`,
   },
   {
     q: "Do I need an account to use RiftCompare tools?",
@@ -100,7 +100,7 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/tools/deal-finder",
         title: "Deal Finder",
-        desc: "Every card cheaper than TCGplayer's market price at a real store, with an eBay-only view — or narrowed to only the cards you watch or own.",
+        desc: "Underpriced vs TCGplayer, Cheapest on eBay and Underpriced vs eBay: three lists of the cards a real store or eBay sells for less — narrowed, with Plus, to only the cards you watch or own.",
         badge: LIST_BADGE,
       },
       {

@@ -388,7 +388,7 @@ export default function MethodologyPage() {
           <h2 className="text-lg font-bold text-white">How each tool works</h2>
 
           <div id="deal-finder" className="scroll-mt-header space-y-2">
-            <h3 className="font-bold text-white">Deal Finder: underpriced vs TCGplayer</h3>
+            <h3 className="font-bold text-white">Deal Finder: Underpriced vs TCGplayer</h3>
             <p>
               <Link href="/tools/deal-finder" className="text-brand-400 hover:underline">Deal Finder</Link>{" "}
               lists cards you can buy in your market for less than TCGplayer&rsquo;s US market price, converted
@@ -408,9 +408,9 @@ export default function MethodologyPage() {
           </div>
 
           <div id="cheapest-on-ebay" className="scroll-mt-header space-y-2">
-            <h3 className="font-bold text-white">The homepage&rsquo;s &ldquo;Cheapest on eBay&rdquo;</h3>
+            <h3 className="font-bold text-white">Deal Finder: Cheapest on eBay</h3>
             <p>
-              A card appears there only when its cheapest eBay listing costs less than every source the
+              Deal Finder&rsquo;s free second tab. A card appears there only when its cheapest eBay listing costs less than every source the
               card&rsquo;s own page compares: the stores we track in your market, CardTrader in the EU, and
               TCGplayer&rsquo;s cheapest listing in the US. The eBay figure includes the seller&rsquo;s stated
               postage where there is one, and says so. It must be at least 1.00, at least 0.50 cheaper than
@@ -418,6 +418,22 @@ export default function MethodologyPage() {
               store&rsquo;s price is almost always a mismatched listing. Cards are ordered by the money saved.
               Canada is left out,
               because its eBay rows carry international postage nobody has quoted.
+            </p>
+          </div>
+
+          <div id="underpriced-vs-ebay" className="scroll-mt-header space-y-2">
+            <h3 className="font-bold text-white">Deal Finder: Underpriced vs eBay</h3>
+            <p>
+              The mirror of Cheapest on eBay, from the same prices: a card appears when the cheapest in-stock price
+              at a store we track in your market (and CardTrader in the EU) is lower than the cheapest in-stock
+              eBay listing there. The eBay figure is that listing&rsquo;s asking price, not a sale, with the
+              seller&rsquo;s stated postage where there is one; the store figure is the item price, postage extra,
+              so the real gap is smaller by the store&rsquo;s postage.{" "}
+              <strong className="text-white">% below = (eBay price − store price) ÷ eBay price</strong>. The store
+              price must be at least 1.00, at least 0.50 below eBay, and less than 80% below it — a store at a
+              fifth of the cheapest eBay copy almost always means that listing is a different product, such as a
+              graded card. Equal prices are not listed. Ordered by the amount below eBay, or by the percentage.
+              Canada is left out for the same reason as above.
             </p>
           </div>
 

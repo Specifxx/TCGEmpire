@@ -9,7 +9,10 @@ import { cardThumbProps } from "@/lib/card-image-url";
 // "Cheapest on eBay" (2026-09-26, "Pushing eBay clicks" in DECISIONS.md) — the
 // owner's original deal feature. It sat at the top of the homepage's Today's Top
 // Deals until 2026-09-30, when the owner moved it into Deal Finder ("Move
-// cheapest on eBay inside of the deal finder").
+// cheapest on eBay inside of the deal finder"), where it is the whole
+// ?view=ebay tab, paged (DECISIONS.md "Deal Finder: three views"). `bare` drops
+// the block's own heading line for that tab, which has its h2 above it;
+// `positionOffset` keeps positionInList counting across pages.
 // FREE and ungated: each row is one eBay affiliate link to the cheapest tracked
 // copy of that card in the visitor's market, so it is a buy path, not an ad —
 // no "Ad" label, no ad-free gate, shown to paid tiers too. Honest by rule: the
@@ -24,25 +27,37 @@ export function CheapestOnEbay({
   country,
   pageType,
   className = "mb-4",
+  bare = false,
+  positionOffset = 0,
 }: {
   rows: CheapestEbayDeal[];
   currency: string;
   country: Country;
   pageType: string;
   className?: string;
+  bare?: boolean;
+  positionOffset?: number;
 }) {
   if (rows.length === 0) return null;
   return (
     <section aria-label="Cheapest on eBay" className={`${className} rounded-xl border border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-3`}>
-      <div className="mb-1 flex flex-wrap items-center gap-2 px-1">
-        <h3 className="text-sm font-extrabold text-white">Cheapest on eBay</h3>
-        <PaidLinkTag />
-      </div>
-      {/* No "today": in the UK, Singapore and the EU the eBay rows refresh
-          every third day (lib/price-import.ts EBAY_ROTATING_MARKETS). */}
-      <p className="mb-1 px-1 text-[11px] leading-snug text-slate-500">
-        Cards where an eBay listing costs less than any store we track
-      </p>
+      {bare ? (
+        <div className="mb-1 flex justify-end px-1">
+          <PaidLinkTag />
+        </div>
+      ) : (
+        <>
+          <div className="mb-1 flex flex-wrap items-center gap-2 px-1">
+            <h3 className="text-sm font-extrabold text-white">Cheapest on eBay</h3>
+            <PaidLinkTag />
+          </div>
+          {/* No "today": in the UK, Singapore and the EU the eBay rows refresh
+              every third day (lib/price-import.ts EBAY_ROTATING_MARKETS). */}
+          <p className="mb-1 px-1 text-[11px] leading-snug text-slate-500">
+            Cards where an eBay listing costs less than any store we track
+          </p>
+        </>
+      )}
       <ul className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         {rows.map((d, i) => (
           <li key={d.cardId} className="min-w-0">
@@ -56,7 +71,7 @@ export function CheapestOnEbay({
               cardId={d.cardId}
               cardName={d.title}
               price={d.priceCents / 100}
-              positionInList={i + 1}
+              positionInList={positionOffset + i + 1}
               inStock
               className="flex min-h-11 items-center gap-2.5 rounded-md px-2 py-2.5 transition-colors duration-fast hover:bg-[#0064d2]/10"
             >

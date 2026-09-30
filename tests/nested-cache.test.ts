@@ -61,6 +61,10 @@ const SELF_CACHED = [
   // 2026-09-29: the set tracker's per-(set, market) catalogue with each card's
   // cheapest real-store listing (lib/set-checklist.ts, key set-checklist).
   "getSetChecklist",
+  // 2026-09-30: Deal Finder's Cheapest on eBay and Underpriced vs eBay views.
+  // No cache of their own; their inputs are the day-caches above.
+  "getCheapestOnEbayPage",
+  "getUnderpricedVsEbay",
 ];
 
 function walk(dir: string, out: string[] = []): string[] {

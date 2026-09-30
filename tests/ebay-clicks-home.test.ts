@@ -327,7 +327,7 @@ test("Cheapest on eBay (in Deal Finder since 2026-09-30): free, measured, disclo
     /cardId=\{d\.cardId\}/,
     /cardName=\{d\.title\}/,
     /price=\{d\.priceCents \/ 100\}/,
-    /positionInList=\{i \+ 1\}/,
+    /positionInList=\{positionOffset \+ i \+ 1\}/, // counts on across the view's pages
     /\binStock\b/,
   ]) {
     assert.match(block, attr);
@@ -343,15 +343,21 @@ test("Cheapest on eBay (in Deal Finder since 2026-09-30): free, measured, disclo
   assert.match(block, /border-\[#0064d2\]/, "eBay blue");
   assert.match(block, /grid grid-cols-1 /, "a base column template (tests/grid-base-columns.test.ts)");
 
-  // Owner, 2026-09-30: "Move cheapest on eBay inside of the deal finder". It
-  // left the homepage section and renders in Deal Finder for every visitor,
-  // signed out included (outside the access split), once.
+  // Owner, 2026-09-30: "Move cheapest on eBay inside of the deal finder" —
+  // and later that day, "then there should be a cheapest on eBay column": it is
+  // Deal Finder's ?view=ebay tab, the whole ranking paged, rendered once, for
+  // every visitor (no access split), its links tagged with the Deal Finder.
   const home = code("src/components/TodaysTopDeals.tsx");
   assert.doesNotMatch(home, /<CheapestOnEbay\b|cheapestOnEbay/, "no longer on the homepage");
   const df = code("src/app/tools/deal-finder/page.tsx");
   assert.equal(df.split("<CheapestOnEbay").length - 1, 1, "rendered once in Deal Finder");
-  assert.match(df, /<CheapestOnEbay rows=\{cheapestEbay\} currency=\{info\.currency\} country=\{country\} pageType="deals"/);
-  assert.match(df, /getCheapestOnEbay\(country, CHEAPEST_EBAY_ROWS\)/);
+  assert.match(df, /<CheapestOnEbay\s+rows=\{cheapestEbay\.items\.map\(\(it\) => cheapestEbayDeal\(it, DEAL_FINDER_PATH\)\)\}\s+currency=\{info\.currency\}\s+country=\{country\}\s+pageType="deals"/);
+  assert.match(df, /const cheapestEbay = view === "ebay" \? await getCheapestOnEbayPage\(country, page, PAGE_SIZE\) : null;/, "only on its own tab, paged");
+  assert.doesNotMatch(df, /CHEAPEST_EBAY_ROWS|getCheapestOnEbay\(/, "the 8-row block under the default list is gone");
+  // The block rendered inside the view's own branch, never inside an access split.
+  const ebayView = between(df, '{view === "ebay" && cheapestEbay && (', '{view === "vs-ebay" && (');
+  assert.match(ebayView, /<CheapestOnEbay/);
+  assert.doesNotMatch(ebayView, /access|LockedPreview|MorePremium|PremiumButton/, "free for everyone");
 });
 
 test("TodaysTopDeals discloses the Cheapest sealed column's paid links and names the page on them", () => {

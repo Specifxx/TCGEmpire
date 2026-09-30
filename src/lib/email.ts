@@ -1380,7 +1380,7 @@ export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: 
       Hi ${name}, everything in ${opts.planName} is unlocked. ${terms}
     </td></tr>
     ${step(1, "No ads on any page", `Every page is ad-free from now on, on the website and in the app. Nothing to switch on.`)}
-    ${step(2, "Every deal, not just three", `The full Deal Finder list: every card cheaper than TCGplayer market at a real store, which you can narrow to only the cards you watch or own. ${link("/tools/deal-finder?mine=watch", "Deal&nbsp;Finder&nbsp;→")}`)}
+    ${step(2, "Every deal, not just three", `The full Deal Finder lists: every card underpriced vs TCGplayer or vs eBay at a real store, which you can narrow to only the cards you watch or own. ${link("/tools/deal-finder?mine=watch", "Deal&nbsp;Finder&nbsp;→")}`)}
     ${step(3, "Set a target price", `Watch a card and tell us what you'd pay. After every price update we check every tracked store in your country and email you the store when it's there. ${link("/watching", "Your&nbsp;watchlist&nbsp;→")}`)}
     ${step(4, "Watch a sealed product", `Tap the heart on a box: we email you when it is back in stock after selling out everywhere, at RRP, or at your price. Stores are checked ${SEALED_CHECK_CADENCE}, and each email says when. ${link("/sealed", "Sealed&nbsp;products&nbsp;→")}`)}
     ${step(5, "Track a whole set", `Your binder has no card limit now, so a whole set fits. The set checklist shows what's missing and the cheapest listing for each card, before postage. ${link("/portfolio/sets", "Set&nbsp;checklist&nbsp;→")}`)}

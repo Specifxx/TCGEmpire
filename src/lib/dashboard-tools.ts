@@ -24,7 +24,7 @@ export type DashTool = { title: string; desc: string; href: string; tier: Premiu
 export const DASHBOARD_TOOLS: DashTool[] = [
   {
     title: "Deal Finder",
-    desc: "Every card cheaper than TCGplayer market at a real store — narrow it to the cards you watch or own.",
+    desc: "Every card underpriced vs TCGplayer or vs eBay at a real store — narrow it to the cards you watch or own.",
     href: "/tools/deal-finder",
     tier: "plus",
     freeTaste: "Top 3 free",

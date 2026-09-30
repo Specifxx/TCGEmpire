@@ -177,7 +177,7 @@ const n = (count: number, one: string, many: string) => `${count} ${count === 1 
  * being cheap.
  */
 export function memberNudgeHref(kind: "deal" | "rising"): string {
-  return kind === "deal" ? hrefFor({ buy: null, sort: "saving", page: 1, mine: "watch" }) : "/tools/rising";
+  return kind === "deal" ? hrefFor({ view: "tcg", buy: null, sort: "saving", page: 1, mine: "watch" }) : "/tools/rising";
 }
 
 // Plus is ad-free, and every surface that describes Plus says so (lineup spec).

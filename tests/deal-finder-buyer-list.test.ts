@@ -447,13 +447,13 @@ test("getUserCardIds is the capped, user-scoped select, newest first, and is nev
 // ── Links ────────────────────────────────────────────────────────────────────
 
 test("hrefFor carries buy, sort, mine and page through every control", () => {
-  const p: DealFinderParams = { buy: ["cardempire", "ebay_us"], sort: "pct", page: 3, mine: "watch" };
+  const p: DealFinderParams = { view: "tcg", buy: ["cardempire", "ebay_us"], sort: "pct", page: 3, mine: "watch" };
   const url = (patch: Partial<DealFinderParams>) => new URL(hrefFor(p, patch), "https://x.test");
   const keep = (u: URL, except: string[] = []) => {
     if (!except.includes("buy")) assert.equal(u.searchParams.get("buy"), "cardempire,ebay_us");
     if (!except.includes("sort")) assert.equal(u.searchParams.get("sort"), "pct");
     if (!except.includes("mine")) assert.equal(u.searchParams.get("mine"), "watch");
-    assert.equal(u.searchParams.get("view"), null, "no retired view= is ever emitted");
+    assert.equal(u.searchParams.get("view"), null, "the default view stays implicit, and no retired view= is ever emitted");
   };
   const next = url({ page: 4 }); // pager
   keep(next);
@@ -462,7 +462,7 @@ test("hrefFor carries buy, sort, mine and page through every control", () => {
   keep(sorted, ["sort"]);
   assert.equal(sorted.searchParams.get("sort"), null, "the default sort stays implicit");
   assert.equal(sorted.searchParams.get("page"), null);
-  const stores = url({ buy: ["ebay_us"], page: 1 }); // store picker / eBay-only preset
+  const stores = url({ buy: ["ebay_us"], page: 1 }); // store picker ("only" beside eBay)
   keep(stores, ["buy"]);
   assert.equal(stores.searchParams.get("buy"), "ebay_us");
   const chips = url({ mine: "own", page: 1 }); // Only my cards
@@ -471,20 +471,57 @@ test("hrefFor carries buy, sort, mine and page through every control", () => {
   const all = url({ mine: null, page: 1 });
   keep(all, ["mine"]);
   assert.equal(all.searchParams.get("mine"), null);
-  assert.equal(hrefFor({ buy: null, sort: "saving", page: 1, mine: null }), "/tools/deal-finder", "the canonical URL is bare");
+  assert.equal(hrefFor({ view: "tcg", buy: null, sort: "saving", page: 1, mine: null }), "/tools/deal-finder", "the canonical URL is bare");
 
   // Round trip: what a link writes is what the page reads back.
-  const back = parseDealFinderParams(Object.fromEntries(next.searchParams), { allowMine: true, ebayKey: "ebay_us" });
+  const back = parseDealFinderParams(Object.fromEntries(next.searchParams), { allowMine: true });
   assert.deepEqual(back, { ...p, page: 4 });
 });
 
-test("retired and unentitled parameters resolve to the one list", () => {
-  const opts = { allowMine: true, ebayKey: "ebay_us" };
-  const dflt = { buy: null, sort: "saving", page: 1, mine: null };
+test("the view tabs: each view carries only the parameters it uses, and every link round-trips", () => {
+  const p: DealFinderParams = { view: "tcg", buy: ["cardempire"], sort: "pct", page: 3, mine: "watch" };
+  const read = (href: string) => parseDealFinderParams(Object.fromEntries(new URL(href, "https://x.test").searchParams), { allowMine: true });
+
+  // Underpriced vs eBay: sort and mine carry over, the store picker's buy= does
+  // not (its store side is fixed), and the tab resets the page.
+  const vs = hrefFor(p, { view: "vs-ebay", page: 1 });
+  assert.equal(vs, "/tools/deal-finder?view=vs-ebay&sort=pct&mine=watch");
+  assert.deepEqual(read(vs), { view: "vs-ebay", buy: null, sort: "pct", page: 1, mine: "watch" });
+  assert.equal(hrefFor(read(vs), { page: 2 }), "/tools/deal-finder?view=vs-ebay&sort=pct&mine=watch&page=2", "its pager keeps the view");
+
+  // Cheapest on eBay: free, one ranking — nothing but the page.
+  const eb = hrefFor(p, { view: "ebay", page: 1 });
+  assert.equal(eb, "/tools/deal-finder?view=ebay");
+  assert.deepEqual(read(eb), { view: "ebay", buy: null, sort: "saving", page: 1, mine: null });
+  assert.equal(hrefFor(read(eb), { page: 3 }), "/tools/deal-finder?view=ebay&page=3");
+  assert.deepEqual(read("/tools/deal-finder?view=ebay&buy=a&sort=pct&mine=own&page=2"), { view: "ebay", buy: null, sort: "saving", page: 2, mine: null }, "a crafted eBay URL is canonicalised on the way in");
+
+  // Back to the default: no view=, the page reset; buy= reappears only if it is still in the params.
+  assert.equal(hrefFor(read(vs), { view: "tcg", page: 1 }), "/tools/deal-finder?sort=pct&mine=watch");
+  assert.equal(hrefFor(p, { view: "tcg", page: 1 }), "/tools/deal-finder?buy=cardempire&sort=pct&mine=watch");
+
+  // Every view round-trips through every patch a control can make.
+  for (const view of ["tcg", "ebay", "vs-ebay"] as const) {
+    for (const patch of [{}, { page: 5 }, { sort: "saving" as const }, { mine: "own" as const }, { buy: ["x", "y"] }]) {
+      const href = hrefFor({ ...p, view }, patch);
+      assert.equal(hrefFor(read(href)), href, `${view} ${JSON.stringify(patch)}: ${href}`);
+    }
+  }
+});
+
+test("retired and unentitled parameters resolve to a real view", () => {
+  const opts = { allowMine: true };
+  const dflt = { view: "tcg", buy: null, sort: "saving", page: 1, mine: null };
   assert.deepEqual(parseDealFinderParams({ view: "flip" }, opts), dflt, "?view=flip lands on the default list");
   assert.deepEqual(parseDealFinderParams({ view: "xregion" }, opts), dflt, "?view=xregion lands on the default list");
-  assert.deepEqual(parseDealFinderParams({ view: "deals" }, opts).buy, ["ebay_us"], "?view=deals opens the eBay-only preset");
-  assert.equal(parseDealFinderParams({ view: "deals" }, { ...opts, ebayKey: null }).buy, null, "no eBay market: the default list");
+  assert.deepEqual(parseDealFinderParams({ view: "nonsense" }, opts), dflt, "an unknown view lands on the default list");
+  // ?view=deals was "Cheapest on eBay" until 2026-09-25, then the eBay-only
+  // preset; since 2026-09-30 it opens the Cheapest on eBay view again.
+  assert.equal(parseDealFinderParams({ view: "deals" }, opts).view, "ebay", "?view=deals opens Cheapest on eBay");
+  assert.equal(parseDealFinderParams({ view: "deals", buy: "x" }, opts).buy, null, "…with no store selection");
+  assert.equal(parseDealFinderParams({ view: "ebay" }, opts).view, "ebay");
+  assert.equal(parseDealFinderParams({ view: "vs-ebay" }, opts).view, "vs-ebay");
+  assert.equal(parseDealFinderParams({ view: "vs-ebay", mine: "watch" }, { allowMine: false }).mine, null, "free and signed-out: ?mine= is ignored on vs-ebay too");
   assert.equal(parseDealFinderParams({ sort: "margin" }, opts).sort, "pct", "old sort=margin links keep their order");
   assert.equal(parseDealFinderParams({ sort: "profit" }, opts).sort, "saving");
   assert.equal(parseDealFinderParams({ mine: "watch" }, opts).mine, "watch");
@@ -497,11 +534,11 @@ test("retired and unentitled parameters resolve to the one list", () => {
 test("every link on the page goes through hrefFor", () => {
   const page = readFileSync(join(process.cwd(), "src/app/tools/deal-finder/page.tsx"), "utf8");
   assert.doesNotMatch(page, /["`']\/tools\/deal-finder\?/, "no hand-built Deal Finder query string");
-  assert.match(page, /const params = parseDealFinderParams\(searchParams, \{ allowMine: member, ebayKey: ebay\?\.key \?\? null \}\);/);
+  assert.match(page, /const params = parseDealFinderParams\(searchParams, \{ allowMine: member \}\);/);
   assert.match(page, /const member = isPremium\(user\);/, "mine is gated on a real membership, not review mode");
   for (const use of [
     /href=\{hrefFor\(params, \{ mine: c\.key, page: 1 \}\)\}/, // chips
-    /href=\{hrefFor\(params, \{ buy: pr\.buy, page: 1 \}\)\}/, // presets
+    /href=\{hrefFor\(params, \{ view: v\.key, page: 1 \}\)\}/, // view tabs
     /linkFor=\{\(s\) => hrefFor\(params, \{ sort: s, page: 1 \}\)\}/, // sort
     /linkFor=\{\(p\) => hrefFor\(params, \{ page: p \}\)\}/, // pager
     /<ArbitrageFilters sources=\{sources\} buy=\{buy\} defaultBuy=\{tcgBuyKeys\} params=\{params\} \/>/, // store picker
@@ -533,7 +570,7 @@ test("members' nudges link to their own cards; free accounts keep the Plus upsel
   // A deal nudge is only ever about watched cards; a rising one opens Rising Cards.
   assert.equal(nudge.memberNudgeHref("deal"), "/tools/deal-finder?mine=watch");
   assert.equal(nudge.memberNudgeHref("rising"), "/tools/rising");
-  assert.equal(hrefFor({ buy: null, sort: "saving", page: 1, mine: "own" }), "/tools/deal-finder?mine=own");
+  assert.equal(hrefFor({ view: "tcg", buy: null, sort: "saving", page: 1, mine: "own" }), "/tools/deal-finder?mine=own");
   const card = readFileSync(join(process.cwd(), "src/components/PremiumNudgeCard.tsx"), "utf8");
   assert.match(card, /<Link href=\{memberNudgeHref\(kind\)\}/);
   assert.match(card, /<PremiumButton surface=\{surface\} tier="plus" \/>/);

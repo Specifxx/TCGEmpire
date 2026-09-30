@@ -214,7 +214,7 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
     prefixes: ["/watching", "/portfolio"],
     tool: "Deal Finder",
     heading: "Deal Finder shows which of your cards are cheap right now",
-    line: "Every card cheaper than TCGplayer market at a real store, narrowed to the cards you watch or own. Plus and Premium are ad-free, too.",
+    line: "Every card underpriced vs TCGplayer or vs eBay at a real store, narrowed to the cards you watch or own. Plus and Premium are ad-free, too.",
   },
   {
     prefixes: ["/movers", "/market"],

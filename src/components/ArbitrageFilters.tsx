@@ -5,8 +5,12 @@ import { useEffect, useState } from "react";
 import type { ArbSource } from "@/lib/arbitrage";
 import { hrefFor, type DealFinderParams } from "@/lib/deal-finder-href";
 
-// The Deal Finder's "Buy from" picker. Only the BUY side is selectable — every
-// row is measured against TCGplayer's market price, which is fixed. Ticking and
+// The Deal Finder's store picker, on the "Underpriced vs TCGplayer" view only
+// (the eBay views compare against a fixed store set). Only the BUY side is
+// selectable — every row is measured against TCGplayer's market price, which is
+// fixed. It is the one way to narrow the buy side since the "Buy from" preset
+// chips went (2026-09-30): All, None, a checkbox per source, and "only" beside
+// each for a one-click single store or eBay alone. Ticking and
 // unticking changes a local draft; nothing reloads until Apply. It used to
 // router.push on every checkbox, which made the picker lag a full server round
 // trip per click and could cost a cold aggregate per intermediate selection.
@@ -40,7 +44,7 @@ export function ArbitrageFilters({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<string[]>(buy);
-  // A navigation (a preset chip, Back) changes `buy` under an open picker.
+  // A navigation (Back, a view tab) changes `buy` under an open picker.
   const buyKey = buy.join(",");
   useEffect(() => setDraft(buyKey ? buyKey.split(",") : []), [buyKey]);
 

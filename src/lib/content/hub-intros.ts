@@ -96,8 +96,8 @@ export const HUB_INTROS: Record<string, HubIntro> = {
   },
   "/tools/deal-finder": {
     paragraphs: [
-      "Deal Finder lists the Riftbound cards a store or an eBay seller in your market is selling for less than TCGplayer's market price. For each card it takes the cheapest in-stock copy we track, sets it against TCGplayer's US market price converted into your currency, and ranks the list by how far below that price it sits — in money, or as a percentage. In the United States a card must also beat TCGplayer's own cheapest listing.",
-      "TCGplayer's market price is a reference built from recent US sales, not a price you can check out at, so a big gap is a reason to look, not a guarantee: the cheap copy is often one seller's only one, and it may be a lower grade — [the condition guide](/guides/riftbound-card-condition-guide) covers what that is worth. [Why Riftbound card prices change](/guides/why-riftbound-card-prices-change) explains where gaps like these come from. Open the card to see every store before you buy.",
+      "Deal Finder has three tabs. Underpriced vs TCGplayer lists the Riftbound cards a store or an eBay seller in your market is selling for less than TCGplayer's US market price, converted into your currency and ranked by how far below it sits; in the United States a card must also beat TCGplayer's own cheapest listing. Cheapest on eBay, free for everyone, lists the cards whose cheapest eBay listing costs less than every store we track. Underpriced vs eBay is the reverse: cards a store sells for less than the cheapest eBay listing.",
+      "TCGplayer's market price is a reference built from recent US sales, and an eBay price is one seller's asking price, so a big gap is a reason to look, not a guarantee: the cheap copy is often one seller's only one, and it may be a lower grade — [the condition guide](/guides/riftbound-card-condition-guide) covers what that is worth. [Why Riftbound card prices change](/guides/why-riftbound-card-prices-change) explains where gaps like these come from.",
     ],
   },
   "/tools/box-ev": {

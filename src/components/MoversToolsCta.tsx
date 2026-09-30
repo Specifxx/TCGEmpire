@@ -62,8 +62,8 @@ export function MoversToolsCta() {
       <h2 className="text-lg font-bold text-white">Know what a card should cost</h2>
       <p className="mt-1 max-w-xl text-sm text-slate-400">
         Movers tell you a price changed. Plus tells you whether today&apos;s price is a good one: the{" "}
-        <strong className="text-slate-200">Deal Finder</strong> lists every card cheaper than TCGplayer market at a real
-        store, and <strong className="text-slate-200">Rising Cards</strong> ranks cards by demand and price-timing signals
+        <strong className="text-slate-200">Deal Finder</strong> lists every card underpriced vs TCGplayer or vs eBay at a
+        real store, and <strong className="text-slate-200">Rising Cards</strong> ranks cards by demand and price-timing signals
         — the full lists, with no ads on any page.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">

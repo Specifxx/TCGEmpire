@@ -370,9 +370,11 @@ longer lands on its entry.
   [2026-09-27](../DECISIONS.md#L14536), [2026-09-28](../DECISIONS.md#L14549),
   [2026-09-29](../DECISIONS.md#L15178), [2026-09-29](../DECISIONS.md#L15281),
   [2026-09-29](../DECISIONS.md#L15555), [2026-09-30](../DECISIONS.md#L15871)
-- **Signed-out visitors get nothing from Deal Finder or Rising Cards**; a
-  free account gets the top 3 of each, a paid tier the full list.
-  [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842)
+- **Signed-out visitors get nothing from Deal Finder's two Underpriced lists
+  or Rising Cards**; a free account gets the top 3 of each, a paid tier the full
+  list. Deal Finder's Cheapest on eBay view is free for everyone.
+  [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842),
+  [2026-09-30](../DECISIONS.md#L16000)
 - **AdSense review mode** (`NEXT_PUBLIC_ADSENSE_REVIEW_MODE`, which lifts
   the paywall for a submission) **is off by default in code**; a value set in
   Vercel's dashboard overrides it. "The paywall now takes priority." The
@@ -415,7 +417,8 @@ longer lands on its entry.
   stock or listing; cross-sells (`promo`) hide for ad-free members and carry
   `data-ad-placement`. `/editorial-policy`, `/about` and `/privacy` disclose
   this. Never claim eBay guarantees ("money back", "buyer protection" fail a
-  test). The free "Cheapest on eBay" block (Deal Finder since 09-30) lists only cards where eBay
+  test). The free "Cheapest on eBay" view (Deal Finder's `?view=ebay` since 09-30, the whole
+  ranking, paged) lists only cards where eBay
   beats every source the card page ranks (EU: CardTrader too; US: TCGplayer's
   listing too; Canada never). Its free status beside the trial measurement is
   the owner's call. Hot 40 snapshots mark picks "Cheapest on eBay" by the same
@@ -426,7 +429,7 @@ longer lands on its entry.
   own market (filled only when it is the row's cheapest), a "Search" of the
   visitor's own eBay otherwise; stacked rows below 768px so it is never cut
   off. [2026-09-26](../DECISIONS.md#L13751),
-  [2026-09-26](../DECISIONS.md#L14190)
+  [2026-09-26](../DECISIONS.md#L14190), [2026-09-30](../DECISIONS.md#L16000)
 
 ## Navigation & chrome
 
@@ -485,7 +488,7 @@ longer lands on its entry.
   rows per column on phones), eBay Picks (the newest released set), the popular
   carousel (its "Most popular" tab back, owner's call; it carries the ItemList
   on `/`), Riftle/pack-sim, How it works. No price table on `/` since 09-30
-  (the region homes keep theirs). "Cheapest on eBay" lives in Deal Finder since
+  (the region homes keep theirs). "Cheapest on eBay" is a Deal Finder view since
   09-30. No Recently viewed on any homepage (owner, 09-28); it stays in the
   search box and on card pages.
   [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
@@ -583,9 +586,16 @@ longer lands on its entry.
   in-stock English NM listing; `tcgplayer_market` is reference-only.
   [2026-09-18](../DECISIONS.md#L8181), [2026-09-19](../DECISIONS.md#L8747),
   [2026-09-23](../DECISIONS.md#L10975)
-- **Deal Finder opens on "Underpriced vs TCGplayer".**
-  `Card.marketPriceCents` is synthetic; never show it.
-  [2026-09-21](../DECISIONS.md#L9681), [2026-09-17](../DECISIONS.md#L7801)
+- **Deal Finder has three views, as tabs under its intro:** "Underpriced vs
+  TCGplayer" (the default; the store picker, no Buy-from presets), "Cheapest on
+  eBay" (`?view=ebay`, free) and "Underpriced vs eBay" (`?view=vs-ebay`, gated
+  like the first): a store on the default list (+ CardTrader in the EU) below
+  the cheapest eBay listing, an asking price; store prices are item prices,
+  postage extra, and the copy says the gap is smaller by it; % is of the eBay
+  price; ties excluded; Canada has no eBay view. The store picker is on the
+  first view only. `Card.marketPriceCents` is synthetic; never show it.
+  [2026-09-21](../DECISIONS.md#L9681), [2026-09-17](../DECISIONS.md#L7801),
+  [2026-09-30](../DECISIONS.md#L16000)
 - **Stores:** check the match rate before adding one. If a read fails, keep
   yesterday's rows; rows expire after 72h of empty returns, and
   `DECOMMISSIONED_RETAILERS` purges removed stores. A store's `currency`

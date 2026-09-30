@@ -69,13 +69,16 @@ test("Deal Finder: the locked states take no rows, so they cannot leak any", () 
   const src = code(DEAL_FINDER);
   assert.match(src, /function LockedPreview\(\) \{/, "the signed-out lock takes no props at all");
   assert.match(src, /function MorePremium\(\{ more, unit \}: \{ more: number; unit: string \}\)/, "the free-account panel takes a count, never rows");
-  assert.equal((src.match(/<LockedPreview \/>/g) ?? []).length, 1, "the one list uses it");
+  // Two gated views since 2026-09-30 (Underpriced vs TCGplayer, Underpriced vs
+  // eBay), one lock each; the free Cheapest on eBay view has none.
+  assert.equal((src.match(/<LockedPreview \/>/g) ?? []).length, 2, "one lock per gated view");
   assert.ok(!/function LockedTable/.test(src), "LockedTable wrapped the real table — it must stay gone");
   assert.ok(!/tbody_tr[^\n]*blur|tr:not\(:first-child\)/.test(src), "rows must never be 'hidden' behind CSS");
   // Filters, sorting and pagination are for members; a free account's
   // ?buy=/?sort=/?page= are ignored by the preview query.
-  assert.equal((src.match(/access === "full" && \(/g) ?? []).length, 1, "the filter bar is members-only");
-  assert.equal((src.match(/access === "full" \? \(\s*<Pager/g) ?? []).length, 1, "pagination is members-only");
+  assert.equal((src.match(/access === "full" && \(/g) ?? []).length, 1, "the TCGplayer view's filter bar is members-only");
+  assert.equal((src.match(/access === "full" && vsEbay\?\.available && \(/g) ?? []).length, 1, "so is the eBay mirror's sort bar");
+  assert.equal((src.match(/access === "full" \? \(\s*<Pager/g) ?? []).length, 2, "pagination is members-only on both gated views");
   // Both gates sell the tier that unlocks the list.
   assert.equal((src.match(/<PremiumButton surface="gate:deal-finder" tier="plus"/g) ?? []).length, 2, "both gates open the dialog on Plus");
 });

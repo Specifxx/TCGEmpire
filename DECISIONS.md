@@ -15997,3 +15997,107 @@ cheapest sealed and deploy ignoring daily schedule."
   itself, not a tag.
 - Released at once on the owner's instruction, not on the 08:00 schedule.
 
+## Deal Finder: three views — 2026-09-30
+
+Owner: "I think the deal finder itself is inherently flawed. Right now we have
+[presets] all stores plus eBay versus market. Can we just rename it underpriced
+versus TCG player? And get rid of the other ones because there's already a
+filter where you can check all the stores, or only the store, or select all
+stores. So it should be that. Then there should be a cheapest on eBay column.
+And then there should be an underpriced versus eBay column."
+
+"Column" was read as a view: three tabs directly under the page intro, links
+not client state (`?view=`, built by `hrefFor` like every other control).
+
+- **Underpriced vs TCGplayer** (default, no `?view=`) is the one buyer list of
+  2026-09-25 under its new name: h2, metadata, FAQ, hub intro, `/tools`,
+  `llms.txt`, the Premium explainer article, `/methodology`, and the pitch lines
+  that called it "every card cheaper than TCGplayer market". The **"Buy from"
+  preset chips** ("Stores + eBay" / "Stores only" / "eBay only") and their code
+  are gone; the store picker (`ArbitrageFilters`: All, None, a box per source,
+  "only" beside each) already does all three. The sort tabs, paging and "Only
+  my cards" are unchanged.
+- **Cheapest on eBay** (`?view=ebay`) is the whole `rankCheapestOnEbay`
+  ranking, 25 a page, in `CheapestOnEbay`'s row design (thumbnails, eBay blue,
+  one affiliate link per row, disclosure under it). `getCheapestOnEbayPage`
+  reuses `rankedCheapestOnEbay` and its narrow card select for the page's ids
+  only. It replaces the 8-row block that sat under the default list earlier
+  today; `CHEAPEST_EBAY_ROWS` is gone. Its links now carry the Deal Finder as
+  their page (`cheapestEbayDeal(it, loc)`); the block had been tagging them as
+  the homepage. The retired `?view=deals` (the old Cheapest on eBay tab, then
+  the eBay-only preset) opens this view again; `?view=flip` / `?view=xregion`
+  still open the default.
+- **Underpriced vs eBay** (`?view=vs-ebay`) is the mirror: a card is listed
+  when the cheapest in-stock price at a store on the default list
+  (`defaultBuySplit(country).storeKeys`, plus `RANKED_NON_STORE_SOURCES`, i.e.
+  CardTrader in the EU) is below the cheapest in-stock eBay listing in the same
+  market (`cheapestEbayByCard`). Columns: Card · Best store price (the store,
+  linked to its listing) · Cheapest on eBay (linked) · Below eBay · % below.
+  Sorted by money or by %.
+
+**What "below eBay" means, and the honesty rules.**
+- The eBay figure is the cheapest listing's ASKING price, not a sale, and the
+  page says so. It is item + stated postage ("delivered") when the seller
+  stated it, the item price alone ("+ postage") otherwise, as everywhere else.
+- The store figure is the item price, postage extra. That favours the store
+  side of this comparison (the reverse of Cheapest on eBay, where it favours
+  the stores), so the copy says outright that the real gap is smaller by the
+  store's postage. Comparing both on item price was considered and rejected:
+  the eBay column would then show a figure the gap is not measured against.
+- `% below` is a share of the eBay price (`pctBelow`, the same arithmetic as
+  `belowTcgPct`), because eBay is the reference side here, as TCGplayer is in
+  the default view.
+- Equal prices are not "below". The guards mirror Cheapest on eBay's: a store
+  price of at least 1.00, at least 0.50 below eBay, and under 80% below it (a
+  store at a fifth of the cheapest eBay copy almost always means that listing is
+  a graded card or a lot). So the two eBay views can never both claim a card.
+- The store row is re-read live for the page's cards and re-scored with the
+  same predicate (`scoreVsEbay`); a store that repriced out of it is dropped,
+  never shown with a cached price beside its link. In the US TCGplayer's own
+  cheapest listing is NOT on the store side: it is the reference of the first
+  view, and the owner asked for stores.
+- Canada gets an honest empty state on both eBay views (its eBay rows are US
+  listings with unquoted international postage), not "nothing today".
+
+**Gating per view, and why.**
+- Underpriced vs TCGplayer: unchanged (signed out: lock, no query; free
+  account: top 3, queried at that size; Plus and up: everything).
+- Underpriced vs eBay: the same three levels, with the same prop-less
+  `LockedPreview` (its copy now says "the top three cards on this list") and
+  `MorePremium`. It is a deal list of the same kind as the first, so it sits
+  behind the same line; `?mine=` works here too, filtered before paging.
+  `ADSENSE_REVIEW_MODE` opens both, as before.
+- Cheapest on eBay: free for everyone, signed out included, every page. It was
+  free on the homepage and every row is an eBay affiliate click to the
+  cheapest copy we track; gating it would cost clicks and sell nothing.
+- The store picker is on Underpriced vs TCGplayer only. The eBay views compare
+  against one fixed store set, and a picker there would mint a new day-cached
+  full-market aggregate per selection for a view whose point is "every store we
+  track"; `hrefFor` drops `buy=` off those views.
+
+**Egress.** Nothing new is cached and nothing is wrapped. Both eBay views read
+`ebayComparisonInputs` — the default list's own `minByCard` entry, CardTrader's
+small one in the EU, and the eBay row pull — so a view costs no Neon read
+beyond one `take`-bounded detail query for its page. For Underpriced vs eBay that
+query is one `card.findMany` with each card's cheapest store listing nested in
+it (`take: 1`), not a second `retailerPrice` read. Both loaders are in
+`tests/nested-cache.test.ts`'s self-cached list.
+
+**Tests.** `tests/deal-finder-views.test.ts` (new): the mirror ranking (ties,
+no eBay row, equal prices, % of the eBay price, guards, Canada, never both
+views), `pageOf`, both loaders end to end against a stub client (reads shared
+with Cheapest on eBay, one nested detail query, live re-scoring, "only my
+cards" before paging, EU CardTrader), and the page (three tabs, no presets,
+gating per view, empty states, copy). Retargeted: the `hrefFor` / `?view=`
+tests (the view round-trips; `?view=deals` → ebay), the Cheapest on eBay
+placement test (`tests/ebay-clicks-home.test.ts`: the tab, not the block), and
+the lock counts in `tests/tool-free-top3.test.ts` (one lock per gated view).
+Not changed: prices, tiers, what Plus includes, and the tier table's Deal
+Finder row.
+The homepage's "All deals →" still opens the default view.
+
+**Checked** against the local database (US, `next dev`): signed out, the two
+Underpriced tabs show the lock and the eBay CTA with no list query, and Cheapest
+on eBay shows its ten rows and pager; with review mode on, Underpriced vs eBay
+listed 128 cards (25 a page) and Underpriced vs TCGplayer 111, with the store
+picker on the latter only. No horizontal scroll at 390px or 1280px.
