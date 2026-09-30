@@ -15717,15 +15717,21 @@ intro, if turned on, would stack with the trial). Keep plan switching OFF in the
 portal (unchanged: a portal switch mid-trial ends the trial and charges). The portal's
 cancel timing may stay as it is.
 
-**Open for the owner.** (1) **Refund policy for the $1.** /terms keeps its standing line,
-"Subscription fees already paid are non-refundable except where required by law", and
-says nothing more; no refund policy was invented. The only refund the code gives is
-the automatic one for a trial refused because the card already had one. (2) **A lapsed
-paying subscriber who never had a trial** (a subscriber from before 08-24, or since
-09-26) has no `trialStartedAt` and is offered the $1 month again, which is the rule the
-code has always had. If it is abused, gate it on `hasEverPaid` like the intro (and have
-`/api/me` and the surfaces say the same). (3) `hasEverPaid` counts a paid $1 invoice
-as "has paid", which only matters if the half-price intro is ever re-armed.
+**Owner's calls, same day (2026-09-30), after release review.** (1) **No refunds for the
+$1.** /terms keeps its standing line, "Subscription fees already paid are
+non-refundable except where required by law", and nothing more. The one refund the code
+still gives is the automatic one for a trial refused because the card already had one:
+that customer paid at checkout and got no trial, so it undoes our own refusal rather
+than granting a refund on request. (2) **Lapsed payers are not offered the $1.** One
+rule, `trialOfferedTo` in `lib/premium.ts`: the trial is on, the account has no
+`trialStartedAt`, AND its Stripe customer has never paid (`hasEverPaid`, memoised 10
+minutes, fails open so a Stripe blip offers rather than hides it; the card check in the
+webhook still stands). Checkout, `/premium`, `/premium/start`, `/api/me` (so the buttons
+and dialog), the welcome email and the checkout-recovery email all ask it, so no surface
+quotes a $1 month checkout will not give. The rule also refuses a paid subscriber from
+before 08-24 or since 09-26 who never had a `trialStartedAt`. Terms §8 says the trial is
+for new subscribers. (3) `hasEverPaid` counts a paid $1 invoice as "has paid", which
+only matters if the half-price intro is ever re-armed.
 
 **Not verified here.** No real Stripe checkout could be run (no keys, and production is
 never touched). Checked instead: the request shape against the installed SDK's types

@@ -50,7 +50,7 @@ test("prices and the trial come from the shared helpers, never typed", () => {
   // premiumFromLine() otherwise — still never a typed price.
   assert.match(src, /fromLine: introOfferEnabled\(\) \? `\$\{introPriceLine\(\)\}, or \$\{PREMIUM_ANNUAL_AMOUNT\}\/yr` : premiumFromLine\(\)/);
   assert.match(src, /trialFeeCents: PREMIUM_TRIAL_FEE_CENTS/, "the fee is the configured constant, never typed");
-  assert.match(src, /trialDays: premiumTrialEnabled\(\) && !u\.trialStartedAt \? PREMIUM_TRIAL_DAYS : 0/);
+  assert.match(src, /trialDays: \(await trialOfferedTo\(u\)\) \? PREMIUM_TRIAL_DAYS : 0/);
   const tpl = read("src/lib/email.ts");
   const block = tpl.slice(tpl.indexOf("export function buildWelcomeEmail"), tpl.indexOf("function welcomeFooter"));
   assert.doesNotMatch(block, /\$\d/, "no hand-typed price in the template");

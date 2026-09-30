@@ -89,7 +89,7 @@ test("/premium treats a signed-out, never-trialed visitor as trial-available, an
   const src = read("src/app/premium/page.tsx");
   assert.match(
     src,
-    /const trialAvailable = premiumTrialEnabled\(\) && !already && \(!user \|\| !dbUser\?\.trialStartedAt\);/,
+    /const trialAvailable = !already && \(await trialOfferedTo\(user \? dbUser : null\)\);/,
     "trialAvailable must not require a signed-in user, unlike trialEligible",
   );
   assert.match(src, /<PremiumPricingCards/, "expected the pricing cards component");

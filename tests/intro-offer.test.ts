@@ -67,7 +67,7 @@ test("the trial is ON by default as the $1 first month: 30 days, a 100-cent fee,
   // Checkout adds trial_period_days only for a trial-eligible account, which
   // needs premiumTrialEnabled() — so with 0 the subscription starts paid.
   const route = read("src/app/api/premium/checkout/route.ts");
-  assert.match(route, /const trialEligible = premiumTrialEnabled\(\) && !dbUser\?\.trialStartedAt;/);
+  assert.match(route, /const trialEligible = await trialOfferedTo\(dbUser\);/);
   assert.match(route, /trial: trialEligible \? \{ days: PREMIUM_TRIAL_DAYS, feeCents: PREMIUM_TRIAL_FEE_CENTS \} : null/);
   const builder = read("src/lib/checkout-params.ts");
   assert.match(builder, /\.\.\.\(trial\s*\?\s*\{\s*trial_period_days: trial\.days/);

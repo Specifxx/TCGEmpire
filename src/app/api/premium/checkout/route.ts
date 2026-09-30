@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, priceIdFor, priceCurrencyOf, ensureIntroCoupon, forgetIntroCoupons, hasEverPaid, type PremiumTier } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, trialOfferedTo, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, priceIdFor, priceCurrencyOf, ensureIntroCoupon, forgetIntroCoupons, hasEverPaid, type PremiumTier } from "@/lib/premium";
 import { introOfferEnabled } from "@/lib/site";
 import { buildCheckoutSessionParams } from "@/lib/checkout-params";
 import { parseCheckoutSelection, sanitizeBackPath } from "@/lib/premium-start";
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
   // gets the plain checkout: no trial, no $1 line. The webhook independently
   // re-checks by card fingerprint, so this gate can't be bypassed for a second
   // trial by re-hitting the endpoint.
-  const trialEligible = premiumTrialEnabled() && !dbUser?.trialStartedAt;
+  const trialEligible = await trialOfferedTo(dbUser);
 
   // First 3 months half price (lib/site.ts intro block), monthly plans only,
   // for anyone who has never paid — people who cancelled a trial included.

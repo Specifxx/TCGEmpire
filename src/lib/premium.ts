@@ -328,16 +328,39 @@ export async function hasEverPaid(stripeCustomerId: string | null | undefined): 
  * for 10 minutes so /api/me doesn't call Stripe on every page view.
  */
 const everPaidMemo = new Map<string, { paid: boolean; at: number }>();
+async function everPaidCached(id: string, now: number): Promise<boolean> {
+  const hit = everPaidMemo.get(id);
+  if (hit && now - hit.at < 10 * 60_000) return hit.paid;
+  const paid = await hasEverPaid(id);
+  if (everPaidMemo.size > 5000) everPaidMemo.clear();
+  everPaidMemo.set(id, { paid, at: now });
+  return paid;
+}
 export async function introEligibleFor(user: { stripeCustomerId?: string | null } | null, now: number = Date.now()): Promise<boolean> {
   if (!introOfferEnabled()) return false;
   const id = user?.stripeCustomerId;
   if (!id) return true;
-  const hit = everPaidMemo.get(id);
-  if (hit && now - hit.at < 10 * 60_000) return !hit.paid;
-  const paid = await hasEverPaid(id);
-  if (everPaidMemo.size > 5000) everPaidMemo.clear();
-  everPaidMemo.set(id, { paid, at: now });
-  return !paid;
+  return !(await everPaidCached(id, now));
+}
+
+/**
+ * Is the $1 first month on offer to this viewer? The rule checkout applies and
+ * every surface quotes: the trial is switched on, the account has never started
+ * one (trialStartedAt), and its Stripe customer has never paid us (owner,
+ * 2026-09-30: "Lapsed payers should not be offered" — a subscriber from before
+ * the trial existed has no trialStartedAt, so hasEverPaid is what keeps them off
+ * it). Signed out, or no Stripe customer yet: offered, no API call. Same
+ * 10-minute memo as introEligibleFor.
+ */
+export async function trialOfferedTo(
+  user: { trialStartedAt?: Date | null; stripeCustomerId?: string | null } | null,
+  now: number = Date.now(),
+): Promise<boolean> {
+  if (!premiumTrialEnabled()) return false;
+  if (!user) return true;
+  if (user.trialStartedAt) return false;
+  if (!user.stripeCustomerId) return true;
+  return !(await everPaidCached(user.stripeCustomerId, now));
 }
 
 // The reminder half of the trial precondition above. Stripe's own
@@ -525,7 +548,7 @@ export async function runCheckoutRecovery(): Promise<number> {
     try {
       // Only offer the trial framing if this account genuinely hasn't used one
       // yet — otherwise state the plain price, never a trial that no longer applies.
-      const trialDays = premiumTrialEnabled() && !u.trialStartedAt ? PREMIUM_TRIAL_DAYS : 0;
+      const trialDays = (await trialOfferedTo(u)) ? PREMIUM_TRIAL_DAYS : 0;
       // The plan they abandoned, and the price line its checkout would really
       // charge: the half-price intro for anyone who has never paid (almost
       // every abandoner), else the list price.

@@ -193,3 +193,22 @@ test("terms section 8 states the $1 trial factually and invents no refund policy
   assert.match(refunds.join(" "), /non-refundable except where required by law/);
   assert.match(refunds.join(" "), /breaks the one-per-card limit/);
 });
+
+// Owner, 2026-09-30: "Lapsed payers should not be offered." One rule, trialOfferedTo:
+// never started a trial AND the Stripe customer has never paid.
+test("the $1 month is offered through one rule that excludes anyone who has paid before", () => {
+  const premium = readFileSync("src/lib/premium.ts", "utf8");
+  assert.match(premium, /export async function trialOfferedTo\(/);
+  const body = premium.slice(premium.indexOf("export async function trialOfferedTo("));
+  assert.match(body.slice(0, 700), /premiumTrialEnabled\(\)[\s\S]*trialStartedAt[\s\S]*everPaidCached/);
+  for (const f of [
+    "src/app/api/premium/checkout/route.ts",
+    "src/app/api/me/route.ts",
+    "src/app/premium/page.tsx",
+    "src/app/premium/start/page.tsx",
+    "src/lib/welcome-email.ts",
+  ]) {
+    assert.match(readFileSync(f, "utf8"), /trialOfferedTo\(/, `${f} must ask trialOfferedTo`);
+  }
+  assert.doesNotMatch(readFileSync("src/app/api/premium/checkout/route.ts", "utf8"), /trialEligible = premiumTrialEnabled/);
+});

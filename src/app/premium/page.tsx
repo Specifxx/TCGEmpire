@@ -6,6 +6,7 @@ import {
   isPremium,
   premiumCheckoutEnabled,
   premiumTrialEnabled,
+  trialOfferedTo,
   premiumAnnualEnabled,
   premiumPlusEnabled,
   plusAnnualEnabled,
@@ -189,7 +190,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   const dbUser = user
     ? await prisma.user.findUnique({ where: { id: user.id }, select: { trialStartedAt: true, stripeCustomerId: true } })
     : null;
-  const trialEligible = premiumTrialEnabled() && !!user && !already && !dbUser?.trialStartedAt;
+  const trialEligible = !!user && !already && (await trialOfferedTo(dbUser));
   // A brand-new account has, by definition, never started a trial before — so
   // unlike trialEligible (which requires a signed-in user to check their own
   // trialStartedAt), a signed-out visitor is trial-available on the strength
@@ -197,7 +198,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   // trialAvailable documents). Used to decide the pricing-card headline and
   // the signed-out CTA copy; trialEligible still gates the actual checkout
   // flow once someone is signed in.
-  const trialAvailable = premiumTrialEnabled() && !already && (!user || !dbUser?.trialStartedAt);
+  const trialAvailable = !already && (await trialOfferedTo(user ? dbUser : null));
   const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "4.99";
   const compactPrice = `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD === "month" ? "mo" : PREMIUM_PRICE_PERIOD}`;
   const annualLive = premiumAnnualEnabled();

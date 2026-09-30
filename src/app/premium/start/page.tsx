@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { AuthForm } from "@/components/AuthForm";
 import { CheckoutLauncher } from "@/components/CheckoutLauncher";
 import { enabledProviders } from "@/lib/oauth";
-import { isPremium, premiumCheckoutEnabled, premiumPlusEnabled, premiumTrialEnabled, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, hasEverPaid } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumPlusEnabled, premiumTrialEnabled, trialOfferedTo, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, hasEverPaid } from "@/lib/premium";
 import { parseCheckoutSelection, parseStartSrc, sanitizeBackPath, PREMIUM_START_PATH } from "@/lib/premium-start";
 import { TIER_NAMES, premiumTrialFee, trialDaysPhrase, tierAnnualAmount, tierMonthlyAmount, PREMIUM_PRICE_PERIOD, introOfferEnabled, introPriceLine } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
@@ -75,7 +75,7 @@ export default async function PremiumStartPage({
       where: { id: user.id },
       select: { trialStartedAt: true, stripeCustomerId: true },
     });
-    const trialEligible = premiumTrialEnabled() && !dbUser?.trialStartedAt;
+    const trialEligible = await trialOfferedTo(dbUser);
     priceLine = introShown(await hasEverPaid(dbUser?.stripeCustomerId)) ? introPriceLine(tier) : fullPriceLine;
     return (
       <div className="mx-auto w-full max-w-lg px-4">

@@ -195,7 +195,8 @@ export default function TermsPage() {
                 <>
                   Where a trial is offered, {premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} is charged when you start
                   and gives you the first {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} of the
-                  plan you chose. It requires a payment card and is limited to one per account and one per card.
+                  plan you chose. It requires a payment card, is limited to one per account and one per card, and is for new
+                  subscribers: it is not offered to an account that has paid for a subscription before.
                   Unless you cancel before day {PREMIUM_TRIAL_DAYS}, the plan&apos;s price for the period you chose
                   starts on day {PREMIUM_TRIAL_DAYS} and your card is charged then. If you cancel before day{" "}
                   {PREMIUM_TRIAL_DAYS}, the plan&apos;s price is never charged and you keep access until the trial

@@ -97,7 +97,9 @@ longer lands on its entry.
   Stripe's own trial. A first-timer of either tier and either interval pays **$1 at
   checkout** for the first **30 days**, then the plan price (Plus $2.99/mo or
   $23.99/yr, Premium $4.99/mo or $39.99/yr) starts unless they cancel first; one per
-  account and per card. Checkout is the recurring line first plus an inline one-time
+  account and per card. New subscribers only: `trialOfferedTo` refuses anyone who
+  has paid before (owner: "Lapsed payers should not be offered"); no refunds beyond the
+  automatic one for a reused card (owner: "No refunds"). Checkout is the recurring line first plus an inline one-time
   fee line and `trial_period_days` (`lib/checkout-params.ts`, pure, tested); no new
   Stripe Price. `PREMIUM_TRIAL_DAYS` defaults to 30 (**`0` is the kill switch**, with a
   redeploy; a leftover value in Vercel overrides the default, so remove it) and

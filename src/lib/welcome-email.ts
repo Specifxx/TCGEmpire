@@ -19,7 +19,7 @@
 // retries; the window caps that at three days of attempts.
 import { prisma } from "./db";
 import type Stripe from "stripe";
-import { NOT_SEED_WHERE, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled, trialFeeCentsOf, subscriptionChargeLine, subscriptionIsCancelling, isIntroCouponId, tierFromPriceId } from "./premium";
+import { NOT_SEED_WHERE, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, trialOfferedTo, trialFeeCentsOf, subscriptionChargeLine, subscriptionIsCancelling, isIntroCouponId, tierFromPriceId } from "./premium";
 import { premiumFromLine, introOfferEnabled, introPriceLine, PREMIUM_ANNUAL_AMOUNT } from "./site";
 import { sendWelcomeEmail, sendTrialWelcomeEmail } from "./email";
 import { stripe, stripeEnabled } from "./stripe";
@@ -103,7 +103,7 @@ export async function runWelcomeEmails(now = Date.now()): Promise<{ candidates: 
         // A brand-new account has never had a trial, but read it rather than
         // assume it: an account can be created, subscribe and cancel inside the
         // ten-minute wait.
-        trialDays: premiumTrialEnabled() && !u.trialStartedAt ? PREMIUM_TRIAL_DAYS : 0,
+        trialDays: (await trialOfferedTo(u)) ? PREMIUM_TRIAL_DAYS : 0,
         // Intro-aware (lib/site.ts intro block): the monthly half-price months,
         // or the annual rate.
         fromLine: introOfferEnabled() ? `${introPriceLine()}, or ${PREMIUM_ANNUAL_AMOUNT}/yr` : premiumFromLine(),

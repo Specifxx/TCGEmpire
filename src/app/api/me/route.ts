@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { analyticsUserId } from "@/lib/ga-user-id";
 import { enabledProviders } from "@/lib/oauth";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, premiumPlusEnabled, plusAnnualEnabled, premiumTierOf, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, introEligibleFor } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, trialOfferedTo, premiumAnnualEnabled, premiumPlusEnabled, plusAnnualEnabled, premiumTierOf, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, introEligibleFor } from "@/lib/premium";
 import { billingStateFor } from "@/lib/billing-state";
 
 // Session endpoint for the client-side chrome (UserMenu, wishlist sync,
@@ -62,7 +62,7 @@ export async function GET() {
       // Whether the cheaper Plus tier is configured at all (dark until its
       // Stripe price ids are set) — sibling of premiumAnnual below.
       premiumPlus: premiumPlusEnabled(),
-      trialEligible: !!user && !isPremium(user) && premiumTrialEnabled() && !user.trialStartedAt,
+      trialEligible: !!user && !isPremium(user) && (await trialOfferedTo(user)),
       trialDays: PREMIUM_TRIAL_DAYS,
       // What the trial costs today, in cents (client components format it; lib/site.ts).
       trialFeeCents: PREMIUM_TRIAL_FEE_CENTS,
