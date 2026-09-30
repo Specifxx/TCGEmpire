@@ -15917,3 +15917,23 @@ So the header shows it from 360px (`hidden min-[360px]:block`). Below 360 (a fir
 **Known and accepted.** On the homepage on a phone, the header's flag and the hero's market pills are now both above the fold. `scripts/homepage-audit.mjs` (manual, not CI) counts that as two region selectors. Desktop has always shown both, and the owner asked for this.
 
 `tests/signup-growth-2026-09-24.test.ts` pins the two complementary gates and the phone panel placement.
+
+## The unsigned Seraphine 174 is merged into 174*, not kept — 2026-09-30
+
+**Why.** After the day's deploy the live Radiance gallery showed 85 cards against Riot's 84. The extra was the unsigned Seraphine, Starry-Eyed Songstress 174/167, which "Radiance matches Riot's gallery" (above) retired. Its URL still served a 200 instead of redirecting to 174*. `add-manual-cards.ts`'s `RETIRED` rule deletes a card only when no user data points at it, so the production run most likely logged KEEP: someone had watched, collected or published it. The owner chose to move that data onto the signed printing and delete the card.
+
+**What changed.** A `RETIRED` entry can name `mergeInto`, the printing the card really was. When user rows point at a retired card with a `mergeInto`:
+- **What moves:** every row goes to the target card: price alerts (the watchlist), collection holdings, listings, buy orders, marketplace listings, price reports, card-scoped release-day signups, and published decks. For decks that means the `cardIds`, the `lines` (copies summed if the deck already lists the target) and a Legend reference.
+- **All or nothing:** the retired card is deleted in the same transaction as the moves.
+- **Collisions:** if a move would collide with a row the same person already has on the target, under the table's unique key, nothing moves and the card is kept with the reason logged. The keys are email + card + market for alerts, user + card + condition + finish for holdings, and email + set + scope for signups. The script does not choose between two of someone's rows.
+- **Dry run and logging:** a dry run reports what would move and writes nothing. The log gives counts only, never an email or user id, because it is a CI log.
+
+Catalogue data (price history, retailer prices, eBay rows) still cascades with the card; a pre-release card has none worth keeping.
+
+**Rehearsed locally.** A copy of the unsigned card was given one row of every kind, including a deck with it as Legend. Results:
+- The dry run changed nothing.
+- The real run moved all of it and deleted the card.
+- A re-run was a no-op.
+- A clashing alert on 174* kept the card and said why.
+
+**Applied through `maintenance.yml`'s `cards-manual` task**, dry run first, not a site deploy. The script is the same one every build runs, and a real run ends with the ping that purges the content cache. The gallery drops to 84 and the old URL resolves to 174* through `CARD_SLUG_RENAMES` without a rebuild. `tests/retire-merge.test.ts` pins that each `mergeInto` is a live row, every user table moves, the delete sits inside the transaction, and a clash keeps the card.

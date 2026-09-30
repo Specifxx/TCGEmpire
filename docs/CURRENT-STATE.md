@@ -684,11 +684,14 @@ longer lands on its entry.
   type and stats from the printed card, because the gallery's metadata
   fields are wrong for many Radiance cards. So the scheduled Radiance import
   runs as a dry run. A printing no Riot source shows is retired through
-  `RETIRED` in `add-manual-cards.ts`, never deleted while user data points at
-  it, and a slug moves only through `CARD_SLUG_RENAMES`. The gallery import
+  `RETIRED` in `add-manual-cards.ts`. A retired card that user data points at
+  is merged into the printing it really was (`mergeInto`: every user row
+  moves, then the card goes, in one transaction; any unique-key clash keeps
+  it) or, with no `mergeInto`, kept. A slug moves only through
+  `CARD_SLUG_RENAMES`. The gallery import
   skips a printing already catalogued by hand (same set + number). Article
   markdown writes a Signature number as `169\*/167`.
-  [2026-09-29](../DECISIONS.md#L15513), [2026-09-30](../DECISIONS.md#L15766), [2026-09-30](../DECISIONS.md#L15794)
+  [2026-09-29](../DECISIONS.md#L15513), [2026-09-30](../DECISIONS.md#L15766), [2026-09-30](../DECISIONS.md#L15794), [2026-09-30](../DECISIONS.md#L15921)
 - **First-listing and restock alerts:** a watch with a null baseline (no
   price in that market when it was created) gets one "now listed" email when
   the card lists — "open for pre-order" while its set is unreleased, which

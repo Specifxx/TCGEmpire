@@ -58,35 +58,134 @@ async function uniqueSlug(base: string, externalId: string): Promise<string> {
 // Printings this file once catalogued that Riot's own sources show do not
 // exist. Removing a row from manual-cards.json leaves it in the database, so
 // it is retired here. Every relation on Card cascades, including users' price
-// alerts, collection holdings and listings, so a card that any of those point
-// at is kept and reported rather than deleted: never trade user data for
-// catalogue tidiness. The old URL keeps working through lib/card-slug-renames.ts.
-const RETIRED: { externalId: string; why: string }[] = [
+// alerts, collection holdings and listings, so user data is never deleted with
+// the card: a retired card that user rows point at is either MERGED into the
+// printing it really was (`mergeInto`, which moves every row across first) or
+// kept and reported. Never trade user data for catalogue tidiness. The old URL
+// keeps working through lib/card-slug-renames.ts.
+const RETIRED: { externalId: string; why: string; mergeInto?: string }[] = [
   {
     externalId: "spoiler-rad-174-seraphine-starry-eyed-songstress",
     why: "Riot's gallery lists one printing at 174, the signed 174*/167 (2026-09-30)",
+    // Kept on the first production run because user rows pointed at it (the
+    // gallery showed 85 cards, not 84). Anyone who saved the unsigned 174 was
+    // saving this Legend's over-numbered printing, which is the 174*.
+    mergeInto: "spoiler-rad-174s-seraphine-starry-eyed-songstress",
   },
 ];
+
+type DeckLine = { cardId: string; qty: number };
+
+// Rows that would collide with one the same person already has on the target,
+// under each table's unique key. Any clash stops the merge (see mergeInto): the
+// fix would have to choose between two of someone's rows, and this script does
+// not make that choice for them.
+async function mergeClashes(from: string, to: string): Promise<string[]> {
+  const clashes: string[] = [];
+  const alerts = await prisma.priceAlert.findMany({ where: { cardId: from }, select: { email: true, market: true } });
+  if (alerts.length) {
+    const n = await prisma.priceAlert.count({ where: { cardId: to, OR: alerts.map((a) => ({ email: a.email, market: a.market })) } });
+    if (n) clashes.push(`${n} price alert(s) already on the target for the same email and market`);
+  }
+  const holdings = await prisma.collectionCard.findMany({ where: { cardId: from }, select: { userId: true, condition: true, isFoil: true } });
+  if (holdings.length) {
+    const n = await prisma.collectionCard.count({ where: { cardId: to, OR: holdings.map((h) => ({ userId: h.userId, condition: h.condition, isFoil: h.isFoil })) } });
+    if (n) clashes.push(`${n} collection holding(s) already on the target in the same condition and finish`);
+  }
+  const signups = await prisma.setReleaseAlert.findMany({ where: { scope: from }, select: { email: true, setCode: true } });
+  if (signups.length) {
+    const n = await prisma.setReleaseAlert.count({ where: { scope: to, OR: signups.map((s) => ({ email: s.email, setCode: s.setCode })) } });
+    if (n) clashes.push(`${n} release-day signup(s) already scoped to the target`);
+  }
+  return clashes;
+}
+
+// Moves every user row from one card to another, then deletes the first, in one
+// transaction: either all of it happens or none of it does. Counts only in the
+// log, never an email or a user id (the log is a CI log).
+async function mergeCard(from: { id: string; slug: string | null }, to: { id: string; slug: string | null }): Promise<void> {
+  const decks = await prisma.publishedDeck.findMany({
+    where: { OR: [{ cardIds: { has: from.id } }, { legendCardId: from.id }] },
+    select: { id: true, cardIds: true, lines: true, legendCardId: true },
+  });
+  const counts = {
+    alerts: await prisma.priceAlert.count({ where: { cardId: from.id } }),
+    holdings: await prisma.collectionCard.count({ where: { cardId: from.id } }),
+    listings: await prisma.listing.count({ where: { cardId: from.id } }),
+    buyOrders: await prisma.buyOrder.count({ where: { cardId: from.id } }),
+    marketListings: await prisma.marketplaceListing.count({ where: { cardId: from.id } }),
+    reports: await prisma.priceReport.count({ where: { cardId: from.id } }),
+    signups: await prisma.setReleaseAlert.count({ where: { scope: from.id } }),
+    decks: decks.length,
+  };
+  const moved = Object.entries(counts).filter(([, n]) => n > 0).map(([k, n]) => `${n} ${k}`).join(", ") || "nothing";
+  console.log(`${DRY ? "(dry) " : ""}MERGE /card/${from.slug} -> /card/${to.slug}: moving ${moved}, then deleting the retired card`);
+  if (DRY) return;
+  await prisma.$transaction(
+    async (tx) => {
+      const move = { where: { cardId: from.id }, data: { cardId: to.id } };
+      await tx.priceAlert.updateMany(move);
+      await tx.collectionCard.updateMany(move);
+      await tx.listing.updateMany(move);
+      await tx.buyOrder.updateMany(move);
+      await tx.marketplaceListing.updateMany(move);
+      await tx.priceReport.updateMany(move);
+      await tx.setReleaseAlert.updateMany({ where: { scope: from.id }, data: { scope: to.id } });
+      for (const d of decks) {
+        // A deck that already lists the target keeps one line for it, copies summed.
+        const lines = new Map<string, number>();
+        for (const l of (d.lines as unknown as DeckLine[]) ?? []) {
+          const id = l.cardId === from.id ? to.id : l.cardId;
+          lines.set(id, (lines.get(id) ?? 0) + l.qty);
+        }
+        await tx.publishedDeck.update({
+          where: { id: d.id },
+          data: {
+            cardIds: [...new Set(d.cardIds.map((id) => (id === from.id ? to.id : id)))],
+            lines: [...lines].map(([cardId, qty]) => ({ cardId, qty })),
+            legendCardId: d.legendCardId === from.id ? to.id : d.legendCardId,
+          },
+        });
+      }
+      await tx.card.delete({ where: { id: from.id } });
+    },
+    { timeout: 30_000 },
+  );
+}
 
 async function retire(): Promise<void> {
   for (const r of RETIRED) {
     const card = await prisma.card.findUnique({ where: { externalId: r.externalId }, select: { id: true, slug: true } });
     if (!card) continue;
     const where = { cardId: card.id };
-    // Plus the two that hold a card id without a relation, so they would be
-    // left pointing at nothing: price reports and published decks.
-    const [alerts, holdings, listings, buyOrders, marketListings, reports, decks] = await Promise.all([
+    // Plus the ones that hold a card id without a relation, so they would be
+    // left pointing at nothing: price reports, published decks (ids and Legend)
+    // and card-scoped release-day signups.
+    const [alerts, holdings, listings, buyOrders, marketListings, reports, decks, signups] = await Promise.all([
       prisma.priceAlert.count({ where }),
       prisma.collectionCard.count({ where }),
       prisma.listing.count({ where }),
       prisma.buyOrder.count({ where }),
       prisma.marketplaceListing.count({ where }),
       prisma.priceReport.count({ where }),
-      prisma.publishedDeck.count({ where: { cardIds: { has: card.id } } }),
+      prisma.publishedDeck.count({ where: { OR: [{ cardIds: { has: card.id } }, { legendCardId: card.id }] } }),
+      prisma.setReleaseAlert.count({ where: { scope: card.id } }),
     ]);
-    const userRows = alerts + holdings + listings + buyOrders + marketListings + reports + decks;
+    const userRows = alerts + holdings + listings + buyOrders + marketListings + reports + decks + signups;
     if (userRows > 0) {
-      console.log(`KEEP  /card/${card.slug} — ${r.why}, but ${userRows} user row(s) point at it; not deleted`);
+      const target = r.mergeInto
+        ? await prisma.card.findUnique({ where: { externalId: r.mergeInto }, select: { id: true, slug: true } })
+        : null;
+      if (!target) {
+        console.log(`KEEP  /card/${card.slug} — ${r.why}, but ${userRows} user row(s) point at it; not deleted`);
+        continue;
+      }
+      const clashes = await mergeClashes(card.id, target.id);
+      if (clashes.length) {
+        console.log(`KEEP  /card/${card.slug} — not merged into /card/${target.slug}: ${clashes.join("; ")}`);
+        continue;
+      }
+      await mergeCard(card, target);
       continue;
     }
     console.log(`${DRY ? "(dry) " : ""}RETIRE /card/${card.slug} — ${r.why}`);
