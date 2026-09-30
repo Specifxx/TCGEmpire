@@ -15756,3 +15756,31 @@ new behaviour with their intent kept.
 
 **Delivery.** Lands on `main` and rides the daily 08:00 UTC release; no `[deploy]` in the
 commit subject.
+
+## Radiance gallery wave: 13 cards from Riot's own images, Ntofo Strikes corrected, and the scheduled import paused to a dry run — 2026-09-30
+
+**Why.** The owner linked Riot's X post of 30 September, a 9-second reveal video of 11 cards, and asked for them in the database. The video could be read frame by frame. A better source turned up while checking: the same day, playriftbound.com's card gallery went from 7 Radiance cards to 84, all 11 among them, each with a clean 744×1039 card image.
+
+**The gallery's metadata is wrong for Radiance.** The images and the rules text are right. The domain, type and sometimes Might fields disagree with the printed cards:
+- The Good Stuff is filed Body; it prints Chaos.
+- Pillaged Armory is filed Calm (Body); Disposal Expert Fury (Chaos); Clocktower Guardian Fury (Mind).
+- Improvised Projectile is filed a Gear (SPELL); Zero Point Inflection a Spell and Dockside Lock-Up a Unit (both GEAR); Supernova an Order Unit (a Mind Spell).
+- Kai'Sa SP4/005 is filed 4 Might (5); Evelynn 090a 3/2 (5/5).
+
+Rarity matched the printed gem for every card checked.
+
+**The scheduled import had never written a Radiance card.** Its last run (29 Sep, 22:32 UTC) saw 7 Radiance cards in the gallery. `fetch-set-official.ts` treats fewer than 10 as "data missing" and falls back to scraping every card image on the page, from every set. The importer rejected all 236 of those for a missing domain. With 84 cards the next run would have passed that threshold and imported the wrong metadata for every card not already added by hand. The gallery's "02:30 UTC" slot has been firing at about 08:30.
+
+**What.**
+- `radiance-reveals.yml` now dispatches `set-pipeline` with `dry_run=true`. It still scrapes and logs what it would import, and writes nothing. Remove the flag once a dry run's log agrees with the printed cards.
+- `prisma/manual-cards.json`, 14 rows:
+  - The 11 cards in the post: The Good Stuff, Demacian Standard (Jarvan IV's signature gear), Concert Poster, Chronobreak (Ekko's signature spell), Lost to the Sands, Hunker Down, Satchel Charge, Improvised Projectile and Stalwart Goatherd. Also Kai'Sa, Rebel SP4/005 and Seraphine, Not Alone SP5/005: new art on a gold gem, numbered in an SP run of five. Their distribution isn't stated, so isPromo stays false. A plain listing still resolves to the base cards (tested).
+  - Jarvan IV, Exemplar of Demacia (155/167). The post shows his signature gear; the gallery shows both.
+  - Pride of Nazumah 147/167, the Legend's in-set printing.
+  - Every field is read off Riot's image. Domain is the printed domain icons, bottom right; the rules text was checked word for word against the gallery's. The image URL is Riot's CDN asset, as the Vendetta Signature rows already do.
+- **Ntofo Strikes is 148/167 and Epic.** We had it as 146/167, read under a video caption, and "Rare", an estimate. Both are corrected. `CARD_SLUG_RENAMES` maps `ntofo-strikes-rad-146-167` to `-148-167`, and `add-manual-cards.ts` now applies a rename-map entry to an existing row's slug, so the old URL 308s. Every article link, the K'Sante post's number table and two of its bullets are corrected in place and dated.
+- The tracker gets a 30 September reveal-log entry. Jarvan IV's row in its Legends table is filled in, and the status line and one FAQ now say five of nine Legends are in print.
+
+**Not done.** The other ~60 new gallery cards. Each needs the same reading off its image; importing the gallery's metadata is exactly what the dry run prevents. The Seraphine 174 question is also still open: the gallery has one entry at 169, 171 and 174 each, and each shows the signed art, while Vendetta's gallery lists signed and unsigned separately (`ven-189-166`, `ven-189-star-166`). The 174/167 row stays until a card settles it.
+
+Typecheck, lint, full test suite, the AdSense guard and images:check pass. Landed on main without `[deploy]`.

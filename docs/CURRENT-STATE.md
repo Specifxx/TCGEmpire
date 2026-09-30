@@ -665,7 +665,11 @@ longer lands on its entry.
   are separate rows, and neither is added until it is seen. The gallery
   import skips a printing already catalogued by hand (same set + number), so
   swapping in official art is an edit to that file. Article markdown writes a
-  Signature number as `169\*/167`. [2026-09-29](../DECISIONS.md#L15513)
+  Signature number as `169\*/167`. Riot's gallery metadata (domain, type,
+  stats) is wrong for many Radiance cards while its images and rules text are
+  right, so the scheduled Radiance import runs as a dry run and rows are read
+  off Riot's card images, using those images as the art.
+  [2026-09-29](../DECISIONS.md#L15513), [2026-09-30](../DECISIONS.md#L15595)
 - **First-listing and restock alerts:** a watch with a null baseline (no
   price in that market when it was created) gets one "now listed" email when
   the card lists — "open for pre-order" while its set is unreleased, which

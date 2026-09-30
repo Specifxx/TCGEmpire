@@ -517,7 +517,7 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
       {
         title: "K'Sante's Radiance cards so far",
         note: "His Champion Unit, his Legend and his signature spell — three cards, one idea: Shield that pays you back.",
-        slugs: ["k-sante-courageous-rad-178-167", "pride-of-nazumah-rad-172-167", "ntofo-strikes-rad-146-167"],
+        slugs: ["k-sante-courageous-rad-178-167", "pride-of-nazumah-rad-172-167", "ntofo-strikes-rad-148-167"],
       },
       {
         title: "The five originals — the same cards, buyable today",
@@ -720,7 +720,7 @@ Every other Radiance reveal is logged, newest first, on **[the Radiance spoiler 
   // K'SANTE'S RIFTBOUND DEBUT (2026-09-25). K'Sante had NO card anywhere in the
   // game — riftbound-heartsteel-cards built a whole section on that absence and
   // predicted Radiance would end it. It has: his Legend (Pride of Nazumah,
-  // 172/167 over-numbered) and his signature spell (Ntofo Strikes, 146/167) both
+  // 172/167 over-numbered) and his signature spell (Ntofo Strikes, 148/167 — first read as 146, corrected 2026-09-30) both
   // surfaced as Preview Season opened. Both cards are in the catalogue
   // (prisma/manual-cards.json, filed under Calm = the first/top gem per the
   // dual-domain convention). DELIBERATELY does NOT bump radiance.ts's confirmed
@@ -740,7 +740,7 @@ Every other Radiance reveal is logged, newest first, on **[the Radiance spoiler 
     // 26 Sep: corrected the claim that Pride of Nazumah was the card under the
     // HEARTSTEEL K'Sante — Riot's graphic showed that as a separate Champion Unit,
     // K'Sante, Courageous (RAD 178/167).
-    updated: "2026-09-26",
+    updated: "2026-09-30",
     readMins: 10,
     tags: ["radiance", "news", "spoilers", "ksante", "deckbuilding"],
     hero: {
@@ -757,20 +757,20 @@ Every other Radiance reveal is logged, newest first, on **[the Radiance spoiler 
       {
         title: "K'Sante's first two Riftbound cards, in our database",
         note: "Added from the reveal images on 25 September 2026. The art is the de-captioned reveal crop until Radiance's official card images land; every other field is read off the card.",
-        slugs: ["pride-of-nazumah-rad-172-167", "ntofo-strikes-rad-146-167"],
+        slugs: ["pride-of-nazumah-rad-172-167", "ntofo-strikes-rad-148-167"],
       },
     ],
     summary: [
       "**K'Sante's first Riftbound card ever is [Pride of Nazumah](/card/pride-of-nazumah-rad-172-167)** — his Radiance Legend, a Calm/Body build-around. He is the one League champion who had **no Riftbound card of any kind** until now.",
       "**What the Legend does:** pay 1 energy and exhaust it to give a friendly unit *\"I have Assault equal to my Shield\"* for the turn — it turns a wall into a threat.",
-      "**His signature spell, [Ntofo Strikes](/card/ntofo-strikes-rad-146-167), does the same trick faster:** give a unit Shield 2, then deal damage equal to its Shield to an enemy. Defense converted straight into offense.",
+      "**His signature spell, [Ntofo Strikes](/card/ntofo-strikes-rad-148-167), does the same trick faster:** give a unit Shield 2, then deal damage equal to its Shield to an enemy. Defense converted straight into offense.",
       "**This is the debut [our HEARTSTEEL post](/blog/riftbound-heartsteel-cards) said had to happen.** K'Sante's absence was the clearest gap in the band's line-up; Radiance closes it.",
       "**Nothing is buyable yet** — Radiance releases **23 October 2026**. The Legend is an over-numbered 172/167 chase; both cards are on [the set hub](/sets/radiance) with live prices from release day.",
     ],
     faq: [
       {
         q: "Does K'Sante have a Riftbound card now?",
-        a: "Yes. K'Sante's first Riftbound cards — his Legend, Pride of Nazumah (RAD 172/167), and his signature spell, Ntofo Strikes (RAD 146/167) — surfaced on 25 September 2026 as Radiance Preview Season opened. Before this he was the one HEARTSTEEL member, and one of very few League champions in the set's orbit, with no Riftbound card of any kind. He is not tournament-legal until Radiance releases on 23 October 2026.",
+        a: "Yes. K'Sante's first Riftbound cards — his Legend, Pride of Nazumah (RAD 172/167), and his signature spell, Ntofo Strikes (RAD 148/167) — surfaced on 25 September 2026 as Radiance Preview Season opened. Before this he was the one HEARTSTEEL member, and one of very few League champions in the set's orbit, with no Riftbound card of any kind. He is not tournament-legal until Radiance releases on 23 October 2026.",
       },
       {
         q: "What does Pride of Nazumah do in Riftbound?",
@@ -825,7 +825,7 @@ And the signature spell:
 | **Card type** | Signature Spell · K'Sante |
 | **Set** | Radiance (RAD) |
 | **Energy cost** | 2 |
-| **Collector number** | 146/167 |
+| **Collector number** | 148/167 (first read here as 146/167; corrected 30 September from Riot's own card image) |
 | **Domains** | Calm and Body |
 | **Artist** | Polar Engine Studio (©2026 RGI) |
 
@@ -863,8 +863,8 @@ It also lands his debut inside a skin line's gravity. K'Sante's higher-profile a
 The usual line between what is on the card and what would be a guess:
 
 - **We are treating this as a sighting, not an official confirmation.** The cards appear in reveal footage as Preview Season opens, which is strong — but our [confirmed-facts page](/blog/riftbound-radiance-what-we-know) still counts the Legends Riot has formally named, and K'Sante was not among that group. His cards being visible is logged on the [spoiler tracker](/blog/riftbound-radiance-spoilers); the official count moves when Riot's own reveal does.
-- **The 146/167 number on Ntofo Strikes was read under a video caption** that sat across the bottom of that card, so treat it as read-with-care rather than pristine. The Legend's 172/167 is clean.
-- **Ntofo Strikes' rarity is not legible** — the gem that shows it was behind the same caption. Its base-run number tells us it is an in-set card, not an over-numbered chase like the Legend, but the exact tier waits for a clean image.
+- **The number on Ntofo Strikes was read under a video caption** that sat across the bottom of that card, and we read it as 146/167. *Corrected 30 September:* Riot's own card image prints **148/167**. The Legend's 172/167 was clean, and it also has an in-set printing at 147/167.
+- **Ntofo Strikes' rarity was not legible** — the gem that shows it was behind the same caption. *Updated 30 September:* Riot's card image shows an orange pentagon, so it is an **Epic**.
 - **The ordinary in-set Pride of Nazumah has not been seen.** 172/167 is the over-numbered Showcase treatment; a base-numbered printing at or below 167 is expected and simply has not surfaced.
 
 ## What this means if you are buying
@@ -1553,7 +1553,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
     author: "RiftCompare",
     date: "2026-09-21",
-    updated: "2026-09-29",
+    updated: "2026-09-30",
     readMins: 9,
     tags: ["radiance", "spoilers", "card gallery", "news", "release"],
     hero: {
@@ -1575,7 +1575,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       },
       {
         q: "Which Legends are in Radiance?",
-        a: "Six are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more unrevealed at the start of Preview Season, for nine new champion Legends in total. Four of the six are in print: Seraphine (Starry-Eyed Songstress), Ekko (Boy Who Shattered Time), Ziggs (Hexplosives Expert) and Orianna (Lady of Clockwork). K'Sante's Legend, Pride of Nazumah, has also been shown, though Riot has not formally counted him among the nine.",
+        a: "Six are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more unrevealed at the start of Preview Season, for nine new champion Legends in total. Five of the six are in print: Seraphine (Starry-Eyed Songstress), Ekko (Boy Who Shattered Time), Ziggs (Hexplosives Expert), Orianna (Lady of Clockwork) and Jarvan IV (Exemplar of Demacia). K'Sante's Legend, Pride of Nazumah, has also been shown, though Riot has not formally counted him among the nine.",
       },
       {
         q: "Are the Deploy, Showoff and Disarm leaks real?",
@@ -1612,7 +1612,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
     ],
     body: `This is the **live Riftbound: Radiance spoiler tracker**. The gallery below is drawn from our card database and updates as each official reveal is imported, so it is current the morning after a reveal without anyone editing this page. Under it is a **dated log of everything that has actually been revealed**, the Preview Season schedule, and a clear line between what Riot has shown and what has merely circulated.
 
-**Where things stand today, 29 September 2026:** Preview Season is five days old. **Four of the nine Legends are now in print**: Seraphine's, and in the last few days Ekko's, Ziggs' and Orianna's, alongside K'Sante's, which surfaced as the season opened. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
+**Where things stand today, 30 September 2026:** Preview Season is six days old. **Five of the nine Legends are now in print**: Seraphine's, and in the last few days Ekko's, Ziggs', Orianna's and Jarvan IV's, alongside K'Sante's, which surfaced as the season opened. Riot's own card gallery now lists 84 Radiance cards. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
 
 **How this page keeps up:** from 25 September we pull Riot's official card gallery twice a day, at about 02:30 and 18:30 UTC, and every newly revealed card lands in the gallery below on its own. A card revealed in the afternoon in the US is usually here by the next morning in Europe and Australia.
 
@@ -1637,6 +1637,14 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
 
+**30 September — another wave, and Riot's gallery fills in.** Riot posted another round of reveals on X, and on the same day its official card gallery went from seven Radiance cards to 84. The eleven cards in Riot's post are now in our database, each read off Riot's own card image, plus Jarvan IV's Legend:
+
+- **Jarvan IV's first cards.** His Legend, *[Exemplar of Demacia](/card/jarvan-iv-exemplar-of-demacia-rad-155-167)* (Body/Order, 155/167), lets you move a friendly unit to a battlefield when you play a Deploy gear there. His signature gear, *[Demacian Standard](/card/demacian-standard-rad-156-167)* (Epic), is exactly that: a Deploy gear that gives an attacking unit +2 Might.
+- **Ekko's signature spell.** *[Chronobreak](/card/chronobreak-rad-140-167)* (Fury/Mind, Epic): pay any amount of Power, banish that many of your units, and play each one straight back, ignoring its cost.
+- **Seven more cards.** Two more Deploy gear, *[The Good Stuff](/card/the-good-stuff-rad-106-167)* and *[Concert Poster](/card/concert-poster-rad-116-167)*. Four spells, *[Lost to the Sands](/card/lost-to-the-sands-rad-013-167)*, *[Hunker Down](/card/hunker-down-rad-034-167)*, *[Satchel Charge](/card/satchel-charge-rad-096-167)* (another Bomb maker) and *[Improvised Projectile](/card/improvised-projectile-rad-056-167)*. And one unit, *[Stalwart Goatherd](/card/stalwart-goatherd-rad-083-167)*.
+- **Two SP printings.** New art for *[Kai'Sa, Rebel](/card/kai-sa-rebel-rad-sp4-005)* (RAD · SP4/005) and *[Seraphine, Not Alone](/card/seraphine-not-alone-rad-sp5-005)* (RAD · SP5/005), both with the gold Showcase gem.
+- **Two corrections.** *[Ntofo Strikes](/card/ntofo-strikes-rad-148-167)* is **148/167** and an Epic. We had 146/167, read under a video caption, and its rarity was a guess. K'Sante's Legend also has an in-set printing, *[Pride of Nazumah 147/167](/card/pride-of-nazumah-rad-147-167)*, besides the 172/167 over-number.
+
 **25 – 29 September — the first Preview Season wave: three Legends, and the leaked mechanics in print.** StarCityGames gathered the finished card images shown in Preview Season's first days, and **23 more Radiance cards** in them can be read in full: collector number, rarity gem, domain and text. All 23 are now in our database and in the gallery above.
 
 - **Three Legends.** *[Ekko, Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-139-167)* (Fury/Mind, 139/167) is printed exactly as Riot's first-look article described it. *[Ziggs, Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-141-167)* (Fury/Chaos, 141/167) makes Bomb gear tokens, with his signature spell *Hexplosive Minefield*. *[Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-145-167)* (Calm/Mind, 145/167) turns a friendly gear into a unit. Ziggs and Orianna also have Signature printings, 169\\*/167 and 171\\*/167.
@@ -1648,7 +1656,7 @@ Three more cards in the same round-up are left out of the database for now: in t
 
 **26 September — all six HEARTSTEEL cards, officially.** Riot's graphic shows the whole band as overnumbered Champion Units, RAD · 178/167 to 183/167, all art by Luscinia Studio. Five are reprints in new art of cards legal since Origins and Spiritforged — *Aphelios, Exalted*, *Ezreal, Dashing*, *Yone, Blademaster*, *Kayn, Unleashed* and *Sett, Kingpin* — and the sixth, *K'Sante, Courageous* (Body, 5 energy, 4 Might, Accelerate and Shield 2), is new: his first Champion Unit. All six are in the database. The card-by-card breakdown, including the one reprint whose wording changed, is in **[the HEARTSTEEL overnumbered write-up](/blog/riftbound-heartsteel-overnumbered-cards)**.
 
-**25 September — K'Sante's first Riftbound cards.** As Preview Season opened, K'Sante — the one HEARTSTEEL member with no Riftbound card at all — got two: his Legend *Pride of Nazumah* (Calm/Body, RAD · 172/167 over-numbered) and his signature spell *Ntofo Strikes* (RAD · 146/167), both built on turning Shield into offense. It is his entire debut in the game — the reveal [our HEARTSTEEL post](/blog/riftbound-heartsteel-cards) said Radiance would have to carry. Logged here as a sighting from reveal footage, not yet an official Legend confirmation; both cards are in the database. Full breakdown: **[the K'Sante spoiler write-up](/blog/riftbound-ksante-radiance-spoiler)**.
+**25 September — K'Sante's first Riftbound cards.** As Preview Season opened, K'Sante — the one HEARTSTEEL member with no Riftbound card at all — got two: his Legend *Pride of Nazumah* (Calm/Body, RAD · 172/167 over-numbered) and his signature spell *Ntofo Strikes* (RAD · 148/167; first logged here as 146/167, corrected 30 September from Riot's card image), both built on turning Shield into offense. It is his entire debut in the game — the reveal [our HEARTSTEEL post](/blog/riftbound-heartsteel-cards) said Radiance would have to carry. Logged here as a sighting from reveal footage, not yet an official Legend confirmation; both cards are in the database. Full breakdown: **[the K'Sante spoiler write-up](/blog/riftbound-ksante-radiance-spoiler)**.
 
 **24 September — Seraphine's Legend, officially revealed.** Riot posted *Starry-Eyed Songstress* and its over-numbered 174/167 printing on the Riftbound Instagram, confirming the photographed card below. It is Mind and Order. Both printings are now on the site: [151/167](/card/seraphine-starry-eyed-songstress-rad-151-167) and [174/167](/card/seraphine-starry-eyed-songstress-rad-174-167).
 
@@ -1678,7 +1686,7 @@ Radiance brings **nine new champion Legends**, pinned down from two directions: 
 | **Seraphine** | Confirmed, Legend officially revealed | *[Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-151-167)* (Mind/Order) revealed by Riot on 24 September, with a [174/167 over-number](/card/seraphine-starry-eyed-songstress-rad-174-167) and its signed [174\\*/167 twin](/card/seraphine-starry-eyed-songstress-rad-174s-167); Champion Unit *[Not Alone](/card/seraphine-not-alone-rad-138-167)* is 138/167, Epic; headlines the Showdown Decks |
 | **Evelynn** | Confirmed, art shown | Legend *Evelynn, In Control*; reporting from the Vancouver reveal places her in Chaos, text unpublished. Her Champion Unit *[Evelynn, Consuming](/card/evelynn-consuming-rad-090-167)* (Body, Epic) is in print |
 | **Ziggs** | Confirmed, Legend in print | *[Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-141-167)* (Fury/Chaos, 141/167) makes Bomb gear tokens; signature spell *Hexplosive Minefield*; a [169\\*/167 Signature](/card/ziggs-hexplosives-expert-rad-169s-167) |
-| **Jarvan IV** | Confirmed | Named in the announcement; nothing shown |
+| **Jarvan IV** | Confirmed, Legend in print | *[Exemplar of Demacia](/card/jarvan-iv-exemplar-of-demacia-rad-155-167)* (Body/Order, 155/167), built around Deploy gear; signature gear *[Demacian Standard](/card/demacian-standard-rad-156-167)* |
 | **Orianna** | Confirmed, Legend in print | *[Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-145-167)* (Calm/Mind, 145/167) turns a friendly gear into a unit; a [171\\*/167 Signature](/card/orianna-lady-of-clockwork-rad-171s-167) |
 | Three more | Unrevealed | K'Sante's first cards have surfaced (see the 25 Sep log and the [write-up](/blog/riftbound-ksante-radiance-spoiler)) but Riot has not formally confirmed him |
 

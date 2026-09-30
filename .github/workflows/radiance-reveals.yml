@@ -19,6 +19,17 @@ name: Radiance reveals import
 # Twice daily — reveals go out on US daytime, so 18:30 UTC catches the day's
 # cards and 02:30 UTC catches anything shown late in the Pacific evening.
 #
+# PAUSED TO A DRY RUN (2026-09-30). On 30 September the gallery went from 7
+# Radiance cards to 84, and its metadata is wrong for many of them while the
+# card IMAGES are right: Pillaged Armory filed Calm (the card prints Body),
+# Disposal Expert Fury (Chaos), Clocktower Guardian Fury (Mind), Zero Point
+# Inflection a Spell and Dockside Lock-Up a Unit (both print GEAR), Supernova
+# an Order Unit (a Mind Spell), Kai'Sa SP4/005 4 Might (5). A live import would
+# have written those into the catalogue for every card not already added by
+# hand. The run still scrapes and logs what it would import, and writes
+# nothing. Radiance cards go in through prisma/manual-cards.json, each field
+# read off the official image, until a dry run's log matches the printed cards.
+#
 # Each dispatched set-pipeline run ends with a read-only count of imported cards
 # carrying the leaked Deploy / Showoff / Disarm markers, in THAT run's summary
 # (scripts/check-leaked-keywords.ts) — this job has no checkout or database.
@@ -52,5 +63,9 @@ jobs:
             echo "Outside the Radiance reveal window ($today) — nothing to do."
             exit 0
           fi
-          gh workflow run maintenance.yml --repo "$REPO" --ref main -f task=set-pipeline -f set_slug=radiance
-          echo "Dispatched maintenance.yml set-pipeline (radiance) for $today."
+          # DRY RUN since 2026-09-30: Riot's gallery metadata for Radiance is
+          # wrong for many cards (domain and type, sometimes Might), while the
+          # card images are right. See the header note. Remove dry_run=true
+          # once a dry run's log agrees with the printed cards.
+          gh workflow run maintenance.yml --repo "$REPO" --ref main -f task=set-pipeline -f set_slug=radiance -f dry_run=true
+          echo "Dispatched maintenance.yml set-pipeline (radiance, dry run) for $today."
