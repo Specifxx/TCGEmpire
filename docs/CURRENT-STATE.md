@@ -473,8 +473,10 @@ longer lands on its entry.
   chrome no longer sells it: the header, rail and account menu carry a
   plain, non-gold "Pricing" link to /premium (phones from 400px; below that,
   the menu's Premium entry). No shimmer, no menu spotlight. Signed-out visitors see "Log in" and a primary
-  "Sign up free" at every width; below sm the market switcher lives in the
-  menu's top bar. [2026-09-24](../DECISIONS.md#L11756)
+  "Sign up free" at every width. The market switcher (flag only below sm) is
+  in the header from 360px, and in the menu's top bar below that; on phones
+  its panel opens full width under the header. [2026-09-24](../DECISIONS.md#L11756),
+  [2026-09-30](../DECISIONS.md#L15905)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417),
   [2026-09-28](../DECISIONS.md#L14549)
 - **Homepage order:** hero, then the editorial band (`EditorialHub`: Start

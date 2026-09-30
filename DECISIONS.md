@@ -15901,3 +15901,19 @@ So this is not a new page, which would compete with the one Google already knows
 **Tests.** `tests/signup-inline.test.ts` (new): the layout mounts no sign-up nudge and the popup, `FreeAccountCompare` and `signin-intent` are gone; PremiumSlideIn is mounted once with its gate, 3 views, 48 h, 12 s and compact width; both corner nudges share the corner string (moved from the deleted `tests/signup-slidein.test.ts`); the prompt is signed-out only, timer-free, overlay-free, price-free and gold-free; its link, events and IntersectionObserver; the exact placement list, one per page, surfaces whitelisted; each placement's copy uses the enforced limits and names nothing paid; each sits after its content; the placement pages keep their `revalidate` and read no session. Deleted as popup-only: `tests/signup-slidein.test.ts`, and the popup's assertions in `nudge-gate` (its gate, engaged clock, sign-in intent), `nudge-frequency` (its cap, counters, spacing, variant), `first-visit-ux`, `access-tiers` (seven popup tests), `signup-funnel`, `premium-price-increase` and `search-uncapped`; their honesty guarantees (no price, no scarcity, "free, no card needed", no grant, no search allowance) now pin the new prompt. The shared-cap and close-control tests now run against PremiumSlideIn and AnnualSwitchNudge.
 
 **Delivery.** Commits land locally without `[deploy]`: nothing here is urgent enough to skip the daily 08:00 UTC release.
+
+## The market switcher is back in the phone header — 2026-09-30
+
+**Why.** The owner: "have the region switcher on mobile phone on the top bar so I don't have to click the three lines". From 2026-09-24 it lived in the menu overlay's top bar below sm. That entry made room for "Log in" + "Sign up free", and argued the IP-detected market made the switcher the row's least-used control. The owner uses it, so it comes back.
+
+**Measured before choosing, signed out, in Chromium on touch** (the account controls cannot shrink, and they are the widest thing in the row):
+- 360–414px: the row had 66–67px free between the left group (logo, Database, and Pricing from 400px) and Log in / Sign up / menu. The flag-only switcher is 44px wide, so it fits with ~20px to spare. At 360 the flag sits at x=142–186, beside Database ending at 121.
+- 320px: it does not fit. The flag overlapped "Database" by 19px, with no page scroll to reveal it. A scroll check alone would have passed.
+
+So the header shows it from 360px (`hidden min-[360px]:block`). Below 360 (a first-generation iPhone SE) it stays in the menu's top bar (`min-[360px]:hidden`). The two gates are exact complements at the same breakpoint, so the switcher is never shown twice and never missing. No page scroll at 320, 360, 375, 390, 414, 480 or 639.
+
+**The dropdown on phones.** Anchored to the button's right edge, the 208px panel started at x=−22 at 360px (−62 at 320), cutting off the start of every market name. Below sm the header's panel is now `fixed inset-x-2 top-[4.25rem]`: full width, 8px from each edge, just under the header. The sticky header's backdrop-filter makes it the containing block, so the panel lands there scrolled or not. From sm the button sits at the row's right end, and the anchored dropdown returns. The menu overlay's copy passes `anchored` and keeps the old placement. Measured: 8–352 at 360, 8–382 at 390, 282–490 at 768. Picking a market re-prices the page at each width.
+
+**Known and accepted.** On the homepage on a phone, the header's flag and the hero's market pills are now both above the fold. `scripts/homepage-audit.mjs` (manual, not CI) counts that as two region selectors. Desktop has always shown both, and the owner asked for this.
+
+`tests/signup-growth-2026-09-24.test.ts` pins the two complementary gates and the phone panel placement.

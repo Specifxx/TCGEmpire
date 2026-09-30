@@ -30,10 +30,18 @@ test("every new placement is an accepted signup source", () => {
   for (const s of ["header", "card_alert", "article_intro", "article_end"]) assert.ok(SIGNUP_SOURCES.has(s), s);
 });
 
-test("the header: Log in + Sign up free at every width; the market switcher folds into the menu on phones", () => {
+test("the header: Log in + Sign up free at every width; the market switcher is in the top bar from 360px", () => {
+  // It folded into the menu overlay on phones from 2026-09-24 until the owner
+  // asked for it back in the top bar (2026-09-30): "so I don't have to click
+  // the three lines". In the header from 360px; below that the row cannot fit
+  // it (measured: 19px overlap with Database at 320), so the overlay keeps it
+  // there. Exact complements at the same breakpoint: never both, never neither.
   const nav = read("src/components/Navbar.tsx");
-  assert.match(nav, /<CountrySwitcher className="hidden sm:ml-1 sm:block" \/>/);
-  assert.match(read("src/components/CinematicNavMenu.tsx"), /<CountrySwitcher className="ml-auto sm:hidden" \/>/, "never unreachable");
+  assert.match(nav, /<CountrySwitcher className="hidden min-\[360px\]:block sm:ml-1" \/>/);
+  assert.match(read("src/components/CinematicNavMenu.tsx"), /<CountrySwitcher className="ml-auto min-\[360px\]:hidden" anchored \/>/, "never unreachable");
+  // Below sm the header's panel opens full width under the header, not hung
+  // off a mid-row button (it started at x=-22 at 360px).
+  assert.match(read("src/components/CountrySwitcher.tsx"), /"fixed inset-x-2 top-\[4\.25rem\] sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-1\.5 sm:w-52"/);
 });
 
 test("the card page's primary CTA: one-click OAuth that creates the account and the alert together", () => {

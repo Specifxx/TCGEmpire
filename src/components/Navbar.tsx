@@ -381,12 +381,19 @@ export function Navbar() {
               copy of a control the overlay owns, and the overlay's version reads
               its state in words rather than as an ambiguous glyph. */}
           <ThemeToggle className="hidden lg:grid" />
-          {/* Below sm the market switcher lives in the menu overlay's top bar
-              (CinematicNavMenu), 2026-09-24: the signed-out row now carries
-              "Log in" + "Sign up free" at every width, and the market is
-              auto-detected from the visitor's IP, which makes the switcher the
-              least-used control in the row. */}
-          <CountrySwitcher className="hidden sm:ml-1 sm:block" />
+          {/* THE MARKET SWITCHER, AT EVERY WIDTH (2026-09-30, owner: "have the
+              region switcher on mobile phone on the top bar so I don't have to
+              click the three lines"). From 2026-09-24 it lived in the menu
+              overlay's top bar below sm, on the reasoning that the market is
+              auto-detected from the visitor's IP. Below sm it is the flag
+              alone, 44px wide. Measured signed out: the row had 66-67px free
+              at 360-414px, so from 360 it fits with ~20px to spare (flag at
+              x=142-186 beside Database ending at 121). Below ~345px it does
+              not: at 320 the flag overlapped Database by 19px, because the
+              account controls cannot shrink. So from 360px only; under that
+              (a first-generation iPhone SE) it stays in the menu overlay's
+              top bar, the exact complement, never both and never neither. */}
+          <CountrySwitcher className="hidden min-[360px]:block sm:ml-1" />
           <NavUser />
           {/* THE PHONE/TABLET MENU, BACK IN THE HEADER. Below lg only — from lg
               the ⌘K launcher above is the full-nav surface and the SideNav rail

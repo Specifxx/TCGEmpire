@@ -9,7 +9,9 @@ import { useCountry } from "./CountryProvider";
 // Singapore / 🇨🇦 Canada. Switching reloads prices + store lists for the chosen
 // country and persists via cookie. Hidden entirely while INTL_ENABLED is off
 // (the site is US-only then).
-export function CountrySwitcher({ className = "" }: { className?: string }) {
+// `anchored`: the panel always hangs off the button's right edge. The menu
+// overlay's copy passes it; the header's copy does not (see the panel below).
+export function CountrySwitcher({ className = "", anchored = false }: { className?: string; anchored?: boolean }) {
   const { country, setCountry, isEurDisplay, setEurDisplay } = useCountry();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -76,8 +78,22 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
           row by 13px and putting UK's "Show UK prices in…" row off-screen with
           no way to reach it (it lives in the sticky header, so the page cannot
           scroll it into view). 4.5rem leaves the header row plus the gap. */}
+      {/* FULL WIDTH UNDER THE HEADER BELOW sm (2026-09-30). In the header's
+          phone row the button sits mid-row (x=142 at 360px), so a 208px panel
+          hung off its right edge started at x=-22 (-62 at 320) and the first
+          letters of every market were off-screen. `fixed` resolves against the
+          sticky header here (its backdrop-filter makes it the containing
+          block), so inset-x-2 top-[4.25rem] is "just under the header, 8px
+          from each edge". From sm the button is at the row's right end and the
+          anchored dropdown fits. */}
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 max-h-[calc(100dvh-4.5rem)] w-52 overflow-y-auto overscroll-contain rounded-xl border border-ink-700 bg-ink-850 p-1 shadow-2xl">
+        <div
+          className={`${
+            anchored
+              ? "absolute right-0 top-full mt-1.5 w-52"
+              : "fixed inset-x-2 top-[4.25rem] sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-1.5 sm:w-52"
+          } z-50 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain rounded-xl border border-ink-700 bg-ink-850 p-1 shadow-2xl`}
+        >
           <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Shop & prices for
           </div>

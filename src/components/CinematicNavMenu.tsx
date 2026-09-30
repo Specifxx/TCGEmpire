@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { CountrySwitcher } from "./CountrySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
@@ -9,6 +8,7 @@ import { useMegaMenu } from "./MegaMenuProvider";
 import { NAV_GROUPS, type NavGroupLink } from "./nav-groups";
 import { searchNav } from "./nav-search";
 import { cardHref } from "@/lib/card-url";
+import { CountrySwitcher } from "./CountrySwitcher";
 import { BrandLogo } from "./BrandLogo";
 import { NavIcon } from "./NavIcon";
 import { useScrollLock, useModalFlag, useEscapeLayer } from "./ui/Dialog";
@@ -298,9 +298,10 @@ export function CinematicNavMenu() {
                   Rift<span className="text-brand-400">Compare</span>
                 </span>
               </Link>
-              {/* The market switcher, phones only — it leaves the header row
-                  below sm (Navbar.tsx) and lands here, one tap away. */}
-              <CountrySwitcher className="ml-auto sm:hidden" />
+              {/* The market switcher, below 360px only: under that the header
+                  row cannot fit it (Navbar.tsx), so it lands here, one tap
+                  away. The exact complement of the header's min-[360px]:block. */}
+              <CountrySwitcher className="ml-auto min-[360px]:hidden" anchored />
               <button
                 type="button"
                 data-autofocus
