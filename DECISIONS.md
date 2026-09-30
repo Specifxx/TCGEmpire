@@ -15591,3 +15591,168 @@ Rendered in `next dev` against the local seed with real sessions: `/sets/origins
 - The sign-up card itself is unchanged in size (57% of a 390x844 screen, capped at 62dvh by the 2026-09-16 chrome). It now appears later and less often, but it is still a large card when it does; shrinking it is the next candidate if its dismiss rate stays high.
 
 **Tests.** `tests/nudge-gate.test.ts` (new) runs the rules as behaviour: page views, engaged time (visible AND interacting, hidden tabs add nothing), landing-page thresholds, sign-in intent, dialog open, input focused, the 10 s dialog quiet, scroll and typing quiet, snoozes, account age, and `armNudge` against a fake DOM and fake timers (12 s exactly, cancelled by navigation, dialog and focus, restarted, only once). The tests that pinned the instant, no-gate behaviour were updated to pin the new rules rather than deleted: `nudge-timing` (12 000, shared timer, cancel on navigate, checked when the timer fires), `first-visit-ux` (the gate is back, with no referrer or device input; the slide-in's page count and account age), `nudge-frequency` (variant name, all three cards' close controls), `signup-slidein`, `signup-funnel`, `annual-switch`, `access-tiers`, `post-sign-in-landing`, `premium-post-signup`, `premium-slidein` (compact structure, the PITCH_TOOLS guard kept), and the three that pin `PREMIUM_COPY_VERSION`.
+
+## A $1 first month for both tiers — 2026-09-30
+
+**Why.** The owner, 2026-09-30: "Can we do $1 free trial for both pro and premium
+please? And the trial is for the first month?" Read, as decided in session and not
+re-asked, as a **paid trial**: the customer pays **$1 today** and gets the first
+**30 days** of Plus or Premium (their pick, monthly or annual); after the 30 days
+the normal price starts (Plus $2.99/mo or $23.99/yr, Premium $4.99/mo or $39.99/yr)
+unless they cancel first. One per account and one per card. It is **not** a free
+trial, so no surface says "free trial", "$0 today" or "nothing charged" while the fee
+is above zero; the words are "First 30 days for $1, then $2.99/mo" and
+"Start 30 days for $1". Prices, tiers and every entitlement are unchanged. This
+supersedes the "no trial" half of the 2026-09-26 price cut ("the price is not working");
+the half-price intro stays off.
+
+**Why it rides on Stripe's trial and not a coupon.** The repo already had the whole
+trial machinery, switched off since 09-26: a `trialing` subscription, the "your trial
+ends" reminder cron (`runPremiumTrialReminders`, 24-48h before, quoting the live
+price), the cancelled-trial handling and one-click Keep (`/api/premium/resume`), the
+account card's trial line, `TrialRedemption` (one trial per card) and
+`trial-cancel-report`. A coupon that made invoice one cost $1 would skip all of it,
+including the one thing that matters for a card taken up front: **a reminder before
+the first full-price charge**, so nobody meets a surprise auto-renew.
+
+**The mechanics (`lib/checkout-params.ts`, a pure builder the checkout route calls).**
+- A subscription-mode Checkout Session with `line_items` = the recurring plan line
+  **first** (`{ price: priceId, quantity: 1 }`, unchanged: `tests/premium-price-increase.test.ts`
+  and the webhook's `items[0]` rely on it) plus a **second, one-time line created inline**
+  with `price_data` (`currency` = the plan Price's own currency, read once per instance by
+  `priceCurrencyOf` because Stripe refuses mixed currencies; `unit_amount` = the fee;
+  `product_data.name` "RiftCompare Plus — first 30 days"; no `recurring`; quantity 1),
+  and `subscription_data.trial_period_days` = 30 with
+  `trial_settings.end_behavior.missing_payment_method: "cancel"`. The trial makes the
+  recurring line $0 on the first invoice and Stripe charges the one-time line at
+  checkout. `payment_method_collection: "always"` as before. **No new Stripe Price, no
+  dashboard change.** With a fee of 0 the one-time line is omitted and it is a genuinely
+  free trial.
+- **Constants (`lib/trial-config.ts`, re-exported from `lib/premium.ts`):**
+  `PREMIUM_TRIAL_DAYS` default **30** (env overrides; **0 is the kill switch**: no trial,
+  no $1 line, checkout charges the plan price at once, needs a redeploy since it is read
+  at build) and `PREMIUM_TRIAL_FEE_CENTS` default **100** (0 = free; 1-49 falls back to
+  100 because Stripe's minimum charge is US$0.50 and a lower value would fail every
+  checkout). Unset, blank or non-numeric means the default, so a blank Vercel value is
+  neither a kill switch nor a free trial. `/api/me` carries `trialFeeCents` for client
+  components; `lib/site.ts` has the copy helpers (`premiumTrialFee`, `trialOfferLead`,
+  `trialThenLine`, `trialButtonLabel`, `trialDisclosure`), all taking the fee as an
+  argument and saying "free" only when it is 0. `premiumZeroToday` / `premiumZeroAmount`
+  are gone.
+- **Who gets it:** exactly the rule the code always had, `premiumTrialEnabled() &&
+  !dbUser.trialStartedAt`, shown only where the viewer would get it (signed out, or an
+  account with no `trialStartedAt`); a returning customer gets the plain checkout with
+  no $1 line, and members never see it.
+- **The checkout text** (Stripe's `custom_text.submit`): "$1.00 today for your first 30
+  days. We'll email you a day or two before day 30. Then it's $2.99/month unless you
+  cancel from your account page."
+- **The fee is stamped** as `trialFeeCents` on the session and on the subscription
+  metadata (session metadata does not propagate), so the reminder, the account card and
+  the welcome email describe what THAT customer paid; a 3- or 14-day trial from before
+  reads 0 and stays "free".
+
+**The webhook.** A $1 trial checkout is `payment_status: "paid"` with `amount_total`
+100, indistinguishable from a plain first payment, and it used to be
+`no_payment_required` / 0. Nothing in the premium path ever read either (it reads
+`session.metadata.trial` and the subscription), and now `checkoutTrialFacts` in
+`lib/stripe-entitlement.ts` decides `isTrial` as *checkout intended one OR the
+subscription is/was one* (`status === "trialing"` or a `trial_end` ever set), never
+from the amount or the payment status. A trialing subscription's period end is the trial
+end, so `premiumUntil` = day 30 through the unchanged extend-only rule. `TrialRedemption`
+is recorded on the $1 trial (`trialCardVerdict`: record / known / refuse). **A trial
+refused for a reused card now refunds its $1** (`refundTrialFee`: the session's invoice
+payment intent), because the customer already paid at checkout; a failure logs the
+session id for a manual refund. **Cancelling during the trial keeps access to day 30:**
+the portal's cancel leaves the subscription `trialing` with `cancel_at_period_end`, and
+even a "cancel immediately" portal setting earns nothing new and, being extend-only,
+takes nothing away (`tests/trial-webhook.test.ts`).
+
+**Emails and surfaces audited for "a trial costs $0".** The reminder says "Your
+RiftCompare Plus trial ends on <date>. You paid $1 to start it. Unless you cancel before
+then, the card on file will be charged $2.99/month…" (never "free trial" or "nothing was
+charged"); the renewal-off reminder and the trial welcome say "nothing MORE will be
+charged" and "no further charge"; the checkout-recovery and welcome emails quote the $1
+and the plan price after it; the account card reads "Trial · $1 paid" and "Converts to
+… on <date>", or "Trial ends <date> — no further charge" when renewal is off; the
+welcome page timeline says "$1 charged for your first 30 days"; the poller says "Trial
+started ✓ — $1 paid"; /terms section 8, the /premium FAQ (one entry), llms.txt and the
+Plus/Premium explainer article state it from the same constants (so the kill switch
+also retires them on the next build). The one-off price-drop announcement and the
+free-days win-back are untouched: the first is a past announcement to an audience that
+includes people who have already trialed, the second is a free grant, not this trial.
+`/admin/subscriptions` still counts trialing outside MRR (the $1 is a one-time fee, not
+MRR); `trial-cancel-report` splits free from $1 trials and its cancel-timing buckets now
+reach past 14 days; `funnel-report` notes the discontinuity. `PREMIUM_COPY_VERSION` is
+`trial-2026-09-30`.
+
+**/premium stays short.** One line under each plan's price ("First 30 days for $1, then
+$2.99/mo", or "/yr" on Annual, in place of the old trial bullet and the "Billed as" line),
+the buy buttons read "Start 30 days for $1" and are still on the first screen at 390x844
+and 1280x720 with the short disclosure beneath, and one FAQ entry. The sign-up corner
+card makes no paid offer and is unchanged (its own rule since 2026-09-16).
+
+**Economics.** Stripe's fee on $1 is 2.9% + $0.30 ≈ $0.33 (more for an international or
+converted card), so about **$0.67 net per trial start**, before any dispute. Against a
+free trial it filters out people who will not pay a dollar and gives a small, real
+revenue per start; against no trial at all it adds a step. The 2026-09-08 read that a
+cheaper entry converted worse (`$9.99` outproduced `$4.99` in subscribers and revenue a
+day) is recorded as a caution, not a verdict: this is not a lower price, it is a
+first month, the samples were days long and the 09-24 trials were free (5 of 6 cancelled,
+half inside the first hour). One more honest caution: **a $1 charge is also the
+classic card-testing amount**, so watch Radar and disputes in the first days.
+
+**What to watch.** (1) Trial starts per week, and `premium_checkout_started` to a
+completed $1 checkout against the no-trial weeks of `nudges-2026-09-29` (the copy
+version splits them). (2) Day-30 conversion: the first full charges land from 2026-10-30
+(monthly) and the reminder goes out 24-48h before. (3) `scripts/trial-cancel-report.ts`,
+now split by fee paid. (4) Stripe disputes and Radar blocks on the $1. (5) Whether
+Stripe's own "trial ending" reminder is switched on in Billing settings: if it is, a
+customer gets two, and ours is the one that quotes the price.
+
+**Owner actions.** None in Stripe. In Vercel, in all three environments: **remove
+`PREMIUM_TRIAL_DAYS`** if it is set to anything (a leftover `0`, `3` or `14` overrides the
+new default, `0` being the kill switch), leave `PREMIUM_TRIAL_FEE_CENTS` unset, and keep
+`NEXT_PUBLIC_PREMIUM_INTRO_OFFER` unset (there is no NEXT_PUBLIC trial variable; the
+intro, if turned on, would stack with the trial). Keep plan switching OFF in the Stripe
+portal (unchanged: a portal switch mid-trial ends the trial and charges). The portal's
+cancel timing may stay as it is.
+
+**Open for the owner.** (1) **Refund policy for the $1.** /terms keeps its standing line,
+"Subscription fees already paid are non-refundable except where required by law", and
+says nothing more; no refund policy was invented. The only refund the code gives is
+the automatic one for a trial refused because the card already had one. (2) **A lapsed
+paying subscriber who never had a trial** (a subscriber from before 08-24, or since
+09-26) has no `trialStartedAt` and is offered the $1 month again, which is the rule the
+code has always had. If it is abused, gate it on `hasEverPaid` like the intro (and have
+`/api/me` and the surfaces say the same). (3) `hasEverPaid` counts a paid $1 invoice
+as "has paid", which only matters if the half-price intro is ever re-armed.
+
+**Not verified here.** No real Stripe checkout could be run (no keys, and production is
+never touched). Checked instead: the request shape against the installed SDK's types
+(`stripe` 17.7.0, API `2025-02-24.acacia`: `SessionCreateParams.LineItem.price_data` with
+`currency`, `unit_amount`, `product_data` and an optional `recurring`;
+`SubscriptionData.trial_period_days` and `trial_settings`), and Stripe's Billing docs,
+"Combining trials with add_invoice_items": "you can combine trial periods for
+subscriptions with one time prices … Stripe automatically generates an invoice for the
+one-time charge, even though the trial hasn't ended yet. The customer pays the one-time
+amount upfront, while the recurring subscription billing begins after the trial period
+ends." That page is about `add_invoice_items`; Checkout's `line_items` is the same
+setup-fee pattern but was not exercised. **Before the first live day, run one
+test-mode checkout** with a test key: expect $1.00 charged, a `trialing` subscription
+with `trial_end` 30 days out, a $1.00 paid invoice plus a $0 recurring line, and the
+webhook stamping `premiumUntil` to that date. Stripe's newer Trial Offer API (paid
+trials as an item-level price) is preview-only and not supported by Checkout, which is
+why this uses the legacy trial.
+
+**Tests.** `checkout-params.test.ts` (every branch of the builder: first-timer, returning,
+fee 0, days 0, Plus vs Premium, monthly vs annual, currency, metadata, text),
+`trial-webhook.test.ts` (payment_status "paid" + 100 + trialing = a trial until its end,
+`TrialRedemption` recorded, a reused card refused, a plain paid sub unchanged, cancel keeps
+day 30), `trial-copy.test.ts` (the knobs and the kill switch, the reminder and other
+emails, a sweep that fails on any unguarded "free trial" / "$0 today", /premium's
+one-line rule, terms §8 with no invented refund). Existing tests that pinned the
+off-by-default trial, "$0 today" or the session shape in the route were updated to the
+new behaviour with their intent kept.
+
+**Delivery.** Lands on `main` and rides the daily 08:00 UTC release; no `[deploy]` in the
+commit subject.

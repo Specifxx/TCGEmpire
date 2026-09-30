@@ -2,7 +2,8 @@
 
 Last reviewed 2026-09-23, against DECISIONS.md up to and including the
 overlays entry, [2026-09-23](../DECISIONS.md#L11348); the free-limits bullets
-updated on [2026-09-28](../DECISIONS.md#L14549).
+updated on [2026-09-28](../DECISIONS.md#L14549); the trial and tiers bullets on
+[2026-09-30](../DECISIONS.md#L15595).
 
 The short version of [DECISIONS.md](../DECISIONS.md): what still stands,
 with the latest position where an entry was reversed. Each bullet ends with
@@ -91,21 +92,37 @@ longer lands on its entry.
 
 ## Premium & monetisation
 
-- **No trial and no intro (2026-09-26, owner: "the price is not working"):**
-  checkout charges at once. `PREMIUM_TRIAL_DAYS` defaults to 0 and
-  `introOfferEnabled()` is opt-in (`NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1`), so
-  either returns only from the environment. This supersedes the 3-day trial
-  plus half-price months of 09-24 and its freeze to about 10-15. Trials and
-  intro coupons already running keep their machinery, which reads the
-  subscription, never the switches: a trial set to end is told it won't be
-  charged, gets the no-charge reminder 24–48h out and a one-click Keep
-  (`/api/premium/resume`), and plan switches stay hidden mid-trial.
-  `trial-cancel-report` counts the cancel click; `funnel-report`'s "canc"
-  counts only ended subscriptions. Compare cohorts by `PREMIUM_COPY_VERSION`
-  (`price-2026-09-26` from the cut).
-  [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215), [2026-09-23](../DECISIONS.md#L10924),
-  [2026-09-25](../DECISIONS.md#L12842), [2026-09-26](../DECISIONS.md#L14680)
-- **Tiers (lineup of 2026-09-25, prices of 2026-09-26):** Plus, $2.99/mo or
+- **The $1 first month, no intro (2026-09-30, owner: "Can we do $1 free trial for both
+  pro and premium please? And the trial is for the first month?"):** a PAID trial on
+  Stripe's own trial. A first-timer of either tier and either interval pays **$1 at
+  checkout** for the first **30 days**, then the plan price (Plus $2.99/mo or
+  $23.99/yr, Premium $4.99/mo or $39.99/yr) starts unless they cancel first; one per
+  account and per card. Checkout is the recurring line first plus an inline one-time
+  fee line and `trial_period_days` (`lib/checkout-params.ts`, pure, tested); no new
+  Stripe Price. `PREMIUM_TRIAL_DAYS` defaults to 30 (**`0` is the kill switch**, with a
+  redeploy; a leftover value in Vercel overrides the default, so remove it) and
+  `PREMIUM_TRIAL_FEE_CENTS` to 100 (`lib/trial-config.ts`; 0 = a free trial, and every
+  copy helper then says "free"). **It is never called free or "$0 today" while the fee
+  is above zero**: "First 30 days for $1, then $2.99/mo", "Start 30 days for $1". Shown
+  only where the viewer would get it (signed out, or no `trialStartedAt`). The webhook
+  recognises a trial from the SUBSCRIPTION (`trialing` / `trial_end`), never from
+  `amount_total` or `payment_status` (a $1 trial is "paid", 100); `premiumUntil` runs to
+  day 30, extend-only, so cancelling in the trial keeps access to day 30; a trial refused
+  for a reused card refunds its $1. The reminder cron, Keep, the account card and the
+  emails all read the subscription (its `trialFeeCents` metadata says what was paid) and
+  never say "free" for a paid trial. The half-price intro is still off
+  (`introOfferEnabled()` opt-in, `NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1`) and the 3-day
+  trial plus half-price months of 09-24 stay superseded. `trial-cancel-report` counts the
+  cancel click, split free vs $1; `funnel-report`'s "canc" counts only ended
+  subscriptions. Compare cohorts by `PREMIUM_COPY_VERSION` (`trial-2026-09-30` from
+  this change, `nudges-2026-09-29` before it). Open for the owner: the refund policy for
+  the $1 (none invented; /terms keeps only "non-refundable except where required by
+  law"), and a lapsed payer with no `trialStartedAt` being offered it again.
+  [2026-09-30](../DECISIONS.md#L15595), [2026-09-26](../DECISIONS.md#L14680),
+  [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215),
+  [2026-09-23](../DECISIONS.md#L10924), [2026-09-25](../DECISIONS.md#L12842)
+- **Tiers (lineup of 2026-09-25, prices of 2026-09-26; a $1 first month from
+  2026-09-30, above):** Plus, $2.99/mo or
   $23.99/yr, is
   **ad-free**, has the full Deal Finder (with "Only my cards") and Rising
   Cards lists, no watchlist or portfolio limit (so a whole set fits in the set
@@ -147,7 +164,7 @@ longer lands on its entry.
   [2026-09-11](../DECISIONS.md#L4428), [2026-09-24](../DECISIONS.md#L12120),
   [2026-09-25](../DECISIONS.md#L12322), [2026-09-25](../DECISIONS.md#L12842),
   [2026-09-25](../DECISIONS.md#L13067), [2026-09-26](../DECISIONS.md#L14680),
-  [2026-09-29 personas](../DECISIONS.md#L15447)
+  [2026-09-29 personas](../DECISIONS.md#L15447), [2026-09-30](../DECISIONS.md#L15595)
 - **Gates:** `isPremium(user)` defaults to the Plus minimum; ads read
   `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`):
   an unknown price is Premium, so every retired Plus Price must be listed in
