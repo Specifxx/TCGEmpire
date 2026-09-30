@@ -545,6 +545,13 @@ longer lands on its entry.
   "Mobile first" entry covers the homepage, card page, thumbnails and
   /browse's sort only. Every published article links a tool (ratchet test).
   [2026-09-26](../DECISIONS.md#L14680)
+- **A set in preview:** its `/sets/<slug>` and `/sets/<slug>/gallery` pages
+  count what is shown ("N of 180 So Far" / "(N So Far)") and date the prices
+  while `isPreorderSetCode()` holds, and return to the released-set titles on
+  release day by themselves. The gallery owns "<set> card gallery", never
+  "spoiler", "revealed" or "card list". A comingSoon + hubReady set's gallery
+  is in the nav (derived from `SETS`) and on `/gallery` as "Upcoming", kept out
+  of the hub's all-sets count. [2026-09-30](../DECISIONS.md#L15834)
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { SETS } from "@/lib/constants";
+import { hasSetHub, SETS } from "@/lib/constants";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { CardTile } from "@/components/CardTile";
 import { HubIntro } from "@/components/HubIntro";
@@ -31,18 +31,27 @@ export const revalidate = 3600;
 // the kind of duplicate read src/lib/db.ts's egress rules are about. Fails
 // open to an empty list so a DB blip renders a link hub (and a count-less
 // title) rather than a 500 on an indexed URL.
+//
+// A set still revealing cards (comingSoon with a hub, e.g. Radiance through
+// preview season) is listed apart, as `upcoming`: its gallery is real and
+// indexable once it has cards, but its partial count stays out of the title's
+// "all N cards, every set", which counts released sets only.
 const getSetCounts = cache(async () => {
   try {
     const counts = await prisma.card.groupBy({ by: ["setCode"], _count: { _all: true } });
     const countByCode = new Map(counts.map((c) => [c.setCode, c._count._all]));
-    return SETS.map((s) => ({ ...s, cards: countByCode.get(s.code) ?? 0 })).filter((s) => !s.comingSoon && s.cards > 0);
+    const withCounts = SETS.map((s) => ({ ...s, cards: countByCode.get(s.code) ?? 0 })).filter((s) => s.cards > 0);
+    return {
+      released: withCounts.filter((s) => !s.comingSoon),
+      upcoming: withCounts.filter((s) => s.comingSoon && hasSetHub(s)),
+    };
   } catch {
-    return [];
+    return { released: [], upcoming: [] };
   }
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const released = await getSetCounts();
+  const { released } = await getSetCounts();
   const total = released.reduce((n, s) => n + s.cards, 0);
   return {
     title: { absolute: `${galleryTitle(total)} | RiftCompare` },
@@ -57,7 +66,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function GalleryIndexPage() {
-  const [released, highlights] = await Promise.all([getSetCounts(), getPopularCards(12)]);
+  const [{ released, upcoming }, highlights] = await Promise.all([getSetCounts(), getPopularCards(12)]);
   const total = released.reduce((n, s) => n + s.cards, 0);
 
   const breadcrumbLd = {
@@ -72,7 +81,7 @@ export default async function GalleryIndexPage() {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Riftbound set galleries",
-    itemListElement: released.map((s, i) => ({
+    itemListElement: [...upcoming, ...released].map((s, i) => ({
       "@type": "ListItem",
       position: i + 1,
       name: `${s.name} gallery`,
@@ -110,6 +119,22 @@ export default async function GalleryIndexPage() {
       <section>
         <h2 className="mb-3 text-lg font-extrabold text-white">Browse the gallery by set</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {upcoming.map((s) => (
+            <Link
+              key={s.slug}
+              href={`/sets/${s.slug}/gallery`}
+              className="card-surface flex items-center justify-between gap-2 border-brand-500/40 p-4 transition-colors hover:border-brand-500"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-extrabold text-white">{s.name}</h3>
+                  <span className="chip bg-brand-500/15 text-[10px] text-brand-300">Upcoming</span>
+                </div>
+                <p className="text-xs text-slate-500">Every card shown so far, official images</p>
+              </div>
+              <span className="text-xs font-semibold text-slate-500">{s.cards.toLocaleString()} so far →</span>
+            </Link>
+          ))}
           {released.map((s) => (
             <Link
               key={s.slug}

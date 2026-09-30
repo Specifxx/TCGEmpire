@@ -11,7 +11,8 @@ import { CardTile } from "@/components/CardTile";
 import { cardTileSelect, trimTileArtFallback } from "@/lib/cards";
 import type { CardTileData } from "@/components/CardTile";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { setBySlug, SETS } from "@/lib/constants";
+import { DOMAIN_KEYS, hasSetHub, isPreorderSetCode, setBySlug, SETS } from "@/lib/constants";
+import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
@@ -148,7 +149,23 @@ export async function generateMetadata({ params }: { params: { set: string } }):
   // Never let the -1 sentinel reach the title as "All -1 Cards" — a set with no
   // totalCards constant falls back to the live count, which may now be unknown.
   const shownTotal = set.totalCards ?? (total >= 0 ? total : null);
-  const titleCandidates = [
+  // PREVIEW SEASON (2026-09-30): a set still revealing cards has neither a
+  // complete count nor prices, so the counted rung counts what is here so far
+  // ("Riftbound Radiance Card Gallery (84 So Far)") instead of the base run,
+  // and the description dates the prices. It never says "Revealed" or
+  // "Spoilers": docs/seo-keyword-map.md gives those to the spoiler tracker,
+  // and "Card List" to /sets/<slug>. Released sets keep the ladder below.
+  const preview = isPreorderSetCode(set.code) && total > 0;
+  const releaseLabel = set.releasedOn
+    ? new Date(`${set.releasedOn}T00:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "long", timeZone: "UTC" })
+    : null;
+  const previewTitles = [
+    `Riftbound ${set.name} Card Gallery (${total} So Far)`,
+    `Riftbound ${set.name} Card Gallery So Far`,
+    `${set.name} Card Gallery (${total} So Far)`,
+    `${set.name} Card Gallery So Far`,
+  ];
+  const titleCandidates = preview ? previewTitles : [
     ...(shownTotal != null
       ? [
           `Riftbound ${set.name} Card Gallery — All ${shownTotal} Cards`,
@@ -159,9 +176,16 @@ export async function generateMetadata({ params }: { params: { set: string } }):
     `${set.name} Card Gallery`,
   ];
   const title = titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
-  const description =
-    `Browse every Riftbound ${set.name} card in one visual gallery — full card images, filterable by domain, ` +
-    `rarity and type, with live prices from every store we track. Tap any card for its rules text and price comparison.`;
+  const announced = set.announcedCards ?? set.totalCards;
+  const description = preview
+    ? [
+        ...(announced && releaseLabel
+          ? [`Every Riftbound ${set.name} card shown so far, ${total} of ${announced}, in one gallery of official card images. Filter by domain, rarity or type. Prices from ${releaseLabel}.`]
+          : []),
+        `Every Riftbound ${set.name} card shown so far, ${total} in all, in one gallery of official card images. Filter by domain, rarity or type.`,
+      ].find((d) => d.length <= 155) ?? `Every Riftbound ${set.name} card shown so far, in one gallery of official card images.`
+    : `Browse every Riftbound ${set.name} card in one visual gallery — full card images, filterable by domain, ` +
+      `rarity and type, with live prices from every store we track. Tap any card for its rules text and price comparison.`;
 
   // A set with nothing imported has no gallery to show — noindex until it does,
   // matching the parent set page's rule. Flips back automatically on import.
@@ -200,6 +224,70 @@ export default async function SetGalleryPage({ params }: { params: { set: string
   const capped = total >= MAX_TILES;
   const priced = cards.filter((c) => c.lowestPriceCents != null).length;
 
+  // Pre-release (the same gate generateMetadata uses): the copy counts what is
+  // here so far and dates the prices, rather than claiming a complete, priced set.
+  const preview = isPreorderSetCode(set.code) && total > 0;
+  const announced = set.announcedCards ?? set.totalCards ?? null;
+  const releaseLabel = set.releasedOn
+    ? new Date(`${set.releasedOn}T00:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
+    : null;
+
+  // Text a searcher can read and a crawler can follow, beside the image grid:
+  // the set's Legends by name, and how the cards split across the domains.
+  // One Legend per name, the in-set printing ahead of its chase prints.
+  const legends = [...cards]
+    .filter((c) => c.type === "Legend")
+    .sort((a, b) => Number(a.rarity === "Showcase") - Number(b.rarity === "Showcase"))
+    .filter((c, i, arr) => arr.findIndex((x) => x.name === c.name) === i);
+  // The set's own run-up pages, from its release-calendar row; each goes null
+  // on its own when the set ships.
+  const spoilersHref = spoilersHrefForSet(set.code);
+  const preordersHref = preordersHrefForSet(set.code);
+  const byDomain = DOMAIN_KEYS.map((d) => ({ domain: d, count: cards.filter((c) => c.domain === d).length })).filter((d) => d.count > 0);
+
+  // One FAQ, rendered on the page and marked up as FAQPage, so the two never drift.
+  const faq: { q: string; a: string }[] = preview
+    ? [
+        {
+          q: `How many cards are in Riftbound ${set.name}?`,
+          a: `${set.totalCards ? `The base set is ${set.totalCards} cards: every base card is numbered out of ${set.totalCards}. ` : ""}${
+            set.announcedCards && set.announcedCards !== set.totalCards ? `Riot announced ${set.announcedCards} cards in all, counting Showcase printings. ` : ""
+          }This gallery shows the ${total.toLocaleString()} printings shown so far, alternate arts and chase printings included, and grows as more are shown.`,
+        },
+        ...(releaseLabel
+          ? [{ q: `When does Riftbound ${set.name} come out?`, a: `${set.name} releases on ${releaseLabel}. Until then, each card Riot shows is added here as it is catalogued, so the gallery grows through the preview season.` }]
+          : []),
+        {
+          q: "Where do these card images come from?",
+          a: "Each image is the finished card as Riot has shown it, from Riot's official card gallery wherever Riot has published the card. Tap any card for its rules text, domain, rarity and every printing.",
+        },
+        {
+          q: `Do ${set.name} cards have prices yet?`,
+          a: `Not yet: singles go on sale ${releaseLabel ? `on ${releaseLabel}` : "at release"}. Each card page starts comparing store prices as listings appear, cheapest first by item price.`,
+        },
+      ]
+    : [
+        {
+          q: `How many cards are in Riftbound ${set.name}?`,
+          a: set.totalCards
+            ? `The main set is ${set.totalCards} cards. This gallery shows ${total.toLocaleString()} printings in total, because it also includes the alternate-art, Overnumbered and signature versions that sit on top of that base numbering.`
+            : `This gallery shows ${total.toLocaleString()} ${set.name} printings, including alternate-art and chase variants.`,
+        },
+        {
+          q: "Can I filter the gallery?",
+          a: "Yes — filter by domain, rarity and card type, search by card name or collector number, and sort by collector number or most recently added. Filtering happens instantly in your browser; no page reloads.",
+        },
+        {
+          q: "Do the cards show prices?",
+          a: "Yes. Each tile shows the cheapest live price we can find in your market, and tapping a card opens its full store-by-store comparison: cheapest first by item price, with the delivered total shown where the store publishes its postage.",
+        },
+      ];
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+  };
+
   // ItemList — the schema type that actually describes a gallery. Entries stay lean
   // (see MAX_ITEMLIST above) and every one points at a real, crawlable card page
   // that the grid below also links, so the markup never describes cards the visitor
@@ -208,7 +296,7 @@ export default async function SetGalleryPage({ params }: { params: { set: string
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: `Riftbound ${set.name} card gallery`,
-    description: `Every Riftbound ${set.name} card with images and live prices.`,
+    description: preview ? `Every Riftbound ${set.name} card shown so far, with official card images.` : `Every Riftbound ${set.name} card with images and live prices.`,
     url: `${SITE_URL}/sets/${set.slug}/gallery`,
       // Edges back to the site-level graph in app/layout.tsx. Without them this
       // node is an island and the Organization/WebSite entity signals — sameAs,
@@ -228,6 +316,7 @@ export default async function SetGalleryPage({ params }: { params: { set: string
   return (
     <div className="flex flex-col gap-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }} />
+      {total > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
 
       <section className="card-surface animate-fade-up relative overflow-hidden">
         <div className="relative border-l-2 border-brand-500 bg-ink-900 px-6 py-8">
@@ -240,21 +329,33 @@ export default async function SetGalleryPage({ params }: { params: { set: string
           />
 
           <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-            Riftbound {set.name} card gallery — every card
+            Riftbound {set.name} card gallery — every card{preview ? " so far" : ""}
           </h1>
 
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-            Every Riftbound <strong className="text-slate-200">{set.name}</strong> card in one place, with full card
-            images you can actually see. Filter by domain, rarity or type, search by name or collector number, and tap
-            any card to open its page — rules text, every printing, price history and a live price comparison across
-            every store we track.
-          </p>
+          {preview ? (
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+              Every Riftbound <strong className="text-slate-200">{set.name}</strong> card Riot has shown so far
+              {announced ? <> — <span className="num">{total}</span> of the {announced} announced —</> : ""} in one place,
+              with the finished card images. Filter by domain, rarity or type, search by name or collector number, and
+              tap any card for its rules text and every printing. New cards appear here as they are catalogued
+              {releaseLabel ? <>, and prices start when {set.name} releases on {releaseLabel}</> : ""}.
+            </p>
+          ) : (
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+              Every Riftbound <strong className="text-slate-200">{set.name}</strong> card in one place, with full card
+              images you can actually see. Filter by domain, rarity or type, search by name or collector number, and tap
+              any card to open its page — rules text, every printing, price history and a live price comparison across
+              every store we track.
+            </p>
+          )}
 
           {total > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="chip bg-brand-500/15 text-brand-300">
-                <span className="num font-bold">{total.toLocaleString()}</span>&nbsp;cards shown
+                <span className="num font-bold">{total.toLocaleString()}</span>&nbsp;
+                {preview && announced ? `of ${announced} cards so far` : "cards shown"}
               </span>
+              {preview && releaseLabel && <span className="chip bg-ink-800 text-slate-300">Releases {releaseLabel}</span>}
               {priced > 0 && (
                 <span className="chip bg-gold/20 text-gold">
                   <span className="num font-bold">{priced.toLocaleString()}</span>&nbsp;priced
@@ -265,7 +366,7 @@ export default async function SetGalleryPage({ params }: { params: { set: string
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Link href={`/sets/${set.slug}`} className="btn-primary text-sm">
-              Compare {set.name} prices →
+              {preview ? `${set.name} card list →` : `Compare ${set.name} prices →`}
             </Link>
             <Link href="/browse" className="btn-ghost text-sm">Full card database</Link>
           </div>
@@ -315,40 +416,63 @@ export default async function SetGalleryPage({ params }: { params: { set: string
         </section>
       )}
 
+      {(legends.length > 0 || byDomain.length > 0) && (
+        <section className="card-surface p-6">
+          {legends.length > 0 && (
+            <>
+              <h2 className="text-xl font-extrabold text-white">{set.name} Legends{preview ? " so far" : ""}</h2>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {legends.map((c) => (
+                  <li key={c.id}>
+                    <Link href={`/card/${c.slug ?? c.id}`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
+                      {c.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {byDomain.length > 0 && (
+            <>
+              <h2 className={`${legends.length > 0 ? "mt-6 " : ""}text-xl font-extrabold text-white`}>{set.name} cards by domain</h2>
+              <ul className="mt-3 flex flex-wrap gap-2 text-sm">
+                {byDomain.map((d) => (
+                  <li key={d.domain}>
+                    <Link href={`/domains/${d.domain.toLowerCase()}`} className="chip border border-ink-700 px-3 py-1.5 transition-colors hover:border-brand-500">
+                      {d.domain} <span className="num ml-1 font-bold text-white">{d.count}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
+
       {/* Editorial context — a gallery of images alone is a thin page; this is the
           part that answers what a searcher landing here actually wants to know. */}
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">About the Riftbound {set.name} card gallery</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          This gallery shows every card in Riftbound {set.name} — the main set plus the alternate-art Showcase
-          printings, Overnumbered chase cards and signature variants that share the set&apos;s numbering. Cards come
-          straight from our live database, so the gallery updates itself as new printings are catalogued and as prices
-          move. Nothing here is a mock-up: every tile links to a real card page.
+          {preview
+            ? `This gallery shows every Riftbound ${set.name} card shown so far — main-set cards alongside the alternate-art Showcase printings, Overnumbered chase cards and signature variants that share the set's numbering. `
+            : `This gallery shows every card in Riftbound ${set.name} — the main set plus the alternate-art Showcase printings, Overnumbered chase cards and signature variants that share the set's numbering. `}
+          Cards come straight from our live database, so the gallery updates itself as new printings are catalogued
+          {preview ? "" : " and as prices move"}. Nothing here is a mock-up: every tile links to a real card page.
         </p>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-          The price on each tile is the cheapest in-stock listing we have for that card in your market — the item
-          price, before postage — from our two imports a day. Switch your country at the top of the page to see local
-          prices in your own currency — the gallery and every card page follow it.
+          {preview
+            ? `${set.name} has not released yet, so no tile carries a price. From release day each tile shows the cheapest in-stock listing we have for that card in your market, from our two imports a day, and every card page compares every store we track.`
+            : "The price on each tile is the cheapest in-stock listing we have for that card in your market — the item price, before postage — from our two imports a day. Switch your country at the top of the page to see local prices in your own currency — the gallery and every card page follow it."}
         </p>
 
         <h3 className="mt-6 text-base font-bold text-white">Gallery FAQ</h3>
         <div className="mt-2 space-y-3 text-sm leading-relaxed text-slate-400">
-          <p>
-            <strong className="text-slate-200">How many cards are in Riftbound {set.name}?</strong>{" "}
-            {set.totalCards
-              ? `The main set is ${set.totalCards} cards. This gallery shows ${total.toLocaleString()} printings in total, because it also includes the alternate-art, Overnumbered and signature versions that sit on top of that base numbering.`
-              : `This gallery shows ${total.toLocaleString()} ${set.name} printings, including alternate-art and chase variants.`}
-          </p>
-          <p>
-            <strong className="text-slate-200">Can I filter the gallery?</strong> Yes — filter by domain, rarity and card
-            type, search by card name or collector number, and sort by collector number or most recently added. Filtering
-            happens instantly in your browser; no page reloads.
-          </p>
-          <p>
-            <strong className="text-slate-200">Do the cards show prices?</strong> Yes. Each tile shows the cheapest live
-            price we can find in your market, and tapping a card opens its full store-by-store comparison: cheapest first
-            by item price, with the delivered total shown where the store publishes its postage.
-          </p>
+          {faq.map((f) => (
+            <p key={f.q}>
+              <strong className="text-slate-200">{f.q}</strong> {f.a}
+            </p>
+          ))}
         </div>
       </section>
 
@@ -365,9 +489,21 @@ export default async function SetGalleryPage({ params }: { params: { set: string
         <h2 className="mb-3 text-lg font-bold text-white">Keep exploring {set.name}</h2>
         <div className="flex flex-wrap gap-2">
           <Link href={`/sets/${set.slug}`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
-            {set.name} prices →
+            {preview ? `${set.name} card list →` : `${set.name} prices →`}
           </Link>
-          {SETS.filter((s) => s.slug !== set.slug && !s.comingSoon).map((s) => (
+          {spoilersHref && (
+            <Link href={spoilersHref} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
+              {set.name} spoilers, reveal by reveal →
+            </Link>
+          )}
+          {preordersHref && (
+            <Link href={preordersHref} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
+              {set.name} pre-order prices →
+            </Link>
+          )}
+          {/* hasSetHub, not !comingSoon: a set in its preview season has a real
+              gallery, and every other set's gallery should lead to it. */}
+          {SETS.filter((s) => s.slug !== set.slug && hasSetHub(s)).map((s) => (
             <Link key={s.slug} href={`/sets/${s.slug}/gallery`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
               {s.name} gallery
             </Link>

@@ -1730,9 +1730,10 @@ Two things move during Preview Season, and neither is singles.
 
 ## How to follow along
 
-Four pages, each for a different question:
+Five pages, each for a different question:
 
 - **This page** for *what has been revealed* — the gallery and the dated log.
+- **[The Radiance card gallery](/sets/radiance/gallery)** for *looking at the cards* — every card image shown so far on one page, filterable by domain, rarity and type, alternate arts included.
 - **[The Radiance set page](/sets/radiance)** for *the card list* as it fills in, with live prices on every card from release day, exactly as **[Vendetta's](/sets/vendetta)** did.
 - **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)** for *the set itself* — every product, price and date, kept current.
 - **[Where to buy Radiance](/blog/where-to-buy-riftbound-radiance)** for *getting it* — stores by country, marketplaces and the Riot draw.

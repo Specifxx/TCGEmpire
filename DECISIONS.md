@@ -15830,3 +15830,35 @@ Typecheck, lint, full test suite, the AdSense guard and images:check pass. Lande
 **Open, not fixed.** After release, the RiftScribe sync (`scripts/sync-cards.ts`) will catalogue Radiance under its own ids. Its adoption step only claims rows whose externalId contains "-official-" or starts "manual-". The 85 "spoiler-rad-*" rows here match neither, so release week would bring duplicate card pages unless adoption learns that prefix. `add-manual-cards.ts` must also stop recreating a row once it has been adopted.
 
 Typecheck, lint, the full test suite, the AdSense guard and images:check pass. Landed on main without `[deploy]`.
+
+## Radiance's card gallery, indexable before release — 2026-09-30
+
+**Why.** The owner asked for "our own Radiance card gallery that we can SEO index". One already existed: `/sets/radiance/gallery`, the generic `/sets/<set>/gallery` route, indexable and in the sitemap since Radiance's first card. But it was written for a released set:
+- The title said "Riftbound Radiance Card Gallery — 167 Cards" while 84 were shown.
+- The description promised "live prices from every store we track" for a set nobody can buy until 23 October.
+- The H1 said "every card".
+- Nothing on the site linked to it except `/sets/radiance` and the card pages. `/gallery`, the other sets' galleries and the nav all filter out `comingSoon` sets.
+
+So this is not a new page, which would compete with the one Google already knows. It is the existing page made accurate for a set in preview, plus the links that get it crawled.
+
+**A preview branch on the template, gated like the set page's.** `isPreorderSetCode(set.code) && total > 0` is the same rule `/sets/<slug>` uses for its "N of 180 So Far" title (2026-09-25), and it switches off by itself on release day. While it is on:
+- **Title:** "Riftbound Radiance Card Gallery (84 So Far)", stepping down to a count-less "<set> Card Gallery So Far" for long set names.
+- **Description:** "Every Riftbound Radiance card shown so far, 84 of 180, in one gallery of official card images… Prices from October 23."
+- **Keyword ownership:** it never says "Spoiler", "Revealed" or "Card List". The tracker owns the first two and `/sets/radiance` the third (`docs/seo-keyword-map.md`, new row).
+- **H1 and body:** say "so far", show "84 of 180 cards so far" and the release date, and the primary button goes to the card list, not "compare prices".
+
+**Text beside the images.** A grid of images is thin to a crawler. The page now carries:
+- The set's Legends by name, one chip per Legend linking to its card page.
+- A card count per domain, each linking to `/domains/<domain>`.
+- A four-question FAQ (how many cards, when it releases, where the images come from, whether there are prices), rendered from one array that also emits the FAQPage JSON-LD. The released-set FAQ keeps its three questions word for word, now also marked up.
+- In "Keep exploring": the spoiler tracker and the pre-order page, from the release calendar (`spoilersHrefForSet`, `preordersHrefForSet`), so both drop out on release day.
+
+**Links in.**
+- **Nav (and so the footer):** a "Radiance card gallery" entry in The card database group. It is derived from `SETS` (comingSoon + hubReady), not typed, per the "nothing names the current set" rule, so the next set's gallery takes the slot when its hub goes live.
+- **`/gallery`:** lists a hub-ready upcoming set apart, as an "Upcoming" tile. Its partial count stays out of the hub title's "all N cards, every set", which still counts released sets only.
+- **Other set galleries:** each now links every set with a hub (`hasSetHub`), not only released ones.
+- **The tracker:** its "How to follow along" list names the gallery, for looking at the cards.
+
+**Not done.** No new route, no `generateStaticParams` change, no new query. The Legends and domain counts are computed from the cards the page already loads, so no extra database egress. The "official card images" claim holds because all 84 Radiance rows carry Riot's gallery image (the entry above). A card added later from another source would make it untrue, so check that claim when the next hand-catalogued reveal lands.
+
+`tests/set-gallery-preview.test.ts` pins the preview title and description budgets for every set name, the shared gate, the single FAQ array, and the three links in. Typecheck, lint, the full test suite, the AdSense guard and images:check pass. Rendered locally against the dev database: 84 tiles, the FAQPage and ItemList JSON-LD, six Legends, seven domain links. Landed on main without `[deploy]`.

@@ -51,5 +51,7 @@ test("metadata and page share one cached query, and the H1 mirrors the title", (
   assert.ok(src.includes("export async function generateMetadata"), "title must be generated from the count");
   assert.ok(!src.includes("export const metadata"), "the static metadata export must be gone");
   assert.match(src, /<h1[^>]*>\s*Riftbound card gallery\{total > 0/, "H1 must carry the same count");
-  assert.ok(src.includes("catch {") && src.includes("return [];"), "the count query must fail open");
+  // Fails open to no sets at all. Two lists since 2026-09-30: released sets,
+  // and a set still in its preview season, listed apart (tests/set-gallery-preview.test.ts).
+  assert.match(src, /catch \{\s*return \{ released: \[\], upcoming: \[\] \};/, "the count query must fail open");
 });

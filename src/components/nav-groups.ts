@@ -1,4 +1,5 @@
 import { DISCORD_URL } from "@/lib/site";
+import { SETS } from "@/lib/constants";
 
 // The grouped site navigation, shared by the ⌘K command launcher
 // (CommandLauncher.tsx), the persistent desktop rail (SideNav.tsx), the footer
@@ -132,6 +133,16 @@ export const NAV_GROUPS: NavGroup[] = [
       // "riftbound card gallery" directly — see that route's own doc comment for
       // the Search Console data behind the per-set galleries it links to).
       { href: "/gallery", label: "Card gallery", keywords: ["gallery", "card gallery", "full art", "browse art", "card images"] },
+      // The set still revealing cards, if there is one (2026-09-30, Radiance):
+      // its gallery has every card image shown so far on one page and owns
+      // "<set> card gallery" (the set page owns "card list"). It was linked only
+      // from its set page and card pages; a sitewide link is what gets a new
+      // page crawled during a preview season. Derived from SETS, so the next
+      // set's gallery takes the slot when its hub goes live.
+      ...SETS.filter((s) => s.comingSoon && s.hubReady).map((s) => {
+        const n = s.name.toLowerCase();
+        return { href: `/sets/${s.slug}/gallery`, label: `${s.name} card gallery`, keywords: [`${n} gallery`, `${n} card gallery`, `${n} cards`, `${n} card images`] };
+      }),
       { href: "/domains", label: "Domains", keywords: ["domains", "colours", "colors", "fury", "calm", "mind", "body", "chaos", "order"] },
       // 2026-09-24: "riftbound ban list" is 8.7K impressions a month; the guide
       // now opens with the full banned-card table (lib/banlist.ts).
