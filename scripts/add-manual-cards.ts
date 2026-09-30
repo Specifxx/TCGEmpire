@@ -14,6 +14,7 @@ import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { cardSlug } from "../src/lib/card-url";
+import { currentSlug } from "../src/lib/card-slug-renames";
 import { normalizeSearch } from "../src/lib/format";
 
 const prisma = new PrismaClient();
@@ -99,7 +100,11 @@ async function main() {
 
     if (existing) {
       console.log(`${DRY ? "(dry) " : ""}UPDATE ${c.name} [${c.setCode} ${c.collectorNumber}${isPromo ? " promo" : ""}]`);
-      if (!DRY) await prisma.card.update({ where: { id: existing.id }, data: { ...data, slug: existing.slug ?? (await uniqueSlug(cardSlug({ ...data }), externalId)) } });
+      // A slug moves only through lib/card-slug-renames.ts, which also keeps the
+      // old URL working (a correction to a row's collector number, e.g. Ntofo
+      // Strikes 146 -> 148 on 2026-09-30). Otherwise the live slug is kept.
+      const slug = existing.slug ? currentSlug(existing.slug) : await uniqueSlug(cardSlug({ ...data }), externalId);
+      if (!DRY) await prisma.card.update({ where: { id: existing.id }, data: { ...data, slug } });
       updated++;
     } else {
       const slug = await uniqueSlug(cardSlug({ name: c.name, setCode: c.setCode, collectorNumber: c.collectorNumber, isPromo }), externalId);

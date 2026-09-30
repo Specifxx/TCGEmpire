@@ -18,6 +18,10 @@ export const CARD_SLUG_RENAMES: Readonly<Record<string, string>> = {
   // Named "Master, Wuju Bladesman - Starter" by sync-cards (same entry).
   "master-wuju-bladesman-starter-ogs-019-024": "master-yi-wuju-bladesman-ogs-019-024",
   "master-wuju-bladesman-starter-ogs-019-024-promo": "master-yi-wuju-bladesman-ogs-019-024-promo",
+  // Catalogued by hand at 146/167, a number read under a video caption; Riot's
+  // own card image prints 148/167 (2026-09-30). scripts/add-manual-cards.ts
+  // moves the slug on its next run.
+  "ntofo-strikes-rad-146-167": "ntofo-strikes-rad-148-167",
 };
 
 const REVERSE: Record<string, string> = Object.fromEntries(Object.entries(CARD_SLUG_RENAMES).map(([o, n]) => [n, o]));

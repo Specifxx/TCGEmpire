@@ -73,3 +73,22 @@ test("a numbered base listing is not pulled onto the chase print or the T1 promo
   assert.equal(resolve("Seraphine, Not Alone - 138/167"), "notalone-138");
   assert.equal(resolve("Seraphine, Not Alone - Radiance"), "notalone-138");
 });
+
+// The SP printings (2026-09-30): "RAD · SP4/005" Kai'Sa, Rebel and "RAD · SP5/005"
+// Seraphine, Not Alone, new art on a gold gem. They are catalogued with
+// isPromo false, so they sit beside the base cards in the same set, and a
+// plain listing must still find the base printing.
+test("the SP printings never take a plain listing from the base card", () => {
+  const sp = buildCardIndex([
+    c("kaisa-063", "Kai'Sa, Rebel", "RAD", "063/167", "Rare"),
+    c("kaisa-sp4", "Kai'Sa, Rebel", "RAD", "SP4/005", "Showcase"),
+    c("notalone-138", "Seraphine, Not Alone", "RAD", "138/167", "Epic"),
+    c("notalone-sp5", "Seraphine, Not Alone", "RAD", "SP5/005", "Showcase"),
+    c("notalone-t1s", "Seraphine, Not Alone", "T1S", "005/005", "Showcase", true),
+  ]);
+  const r = (title: string) => resolveCardId({ title, handle: "h", variants: [] } as never, sp);
+  assert.equal(r("Kai'Sa, Rebel"), "kaisa-063");
+  assert.equal(r("Kai'Sa, Rebel - 063/167"), "kaisa-063");
+  assert.equal(r("Seraphine, Not Alone"), "notalone-138");
+  assert.equal(r("Seraphine, Not Alone - 138/167"), "notalone-138");
+});
