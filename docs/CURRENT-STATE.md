@@ -342,28 +342,34 @@ longer lands on its entry.
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
   [2026-09-14](../DECISIONS.md#L6038)
-- **Nudges (value first, 09-29 evening; supersedes "instant" and "on the
-  first page"):** the signed-out popup sells the FREE account (no price, no
-  gold). NEVER on a visit's first page view, any referrer or device: from the
-  2nd view, or after 45 s of engaged time (tab visible + a scroll/click/key;
-  30 s on `/blog/*` and `/movers`), and never for a tab that has started
-  signing in (`lib/signin-intent.ts`). The Premium slide-in (signed in, no paid
-  tier) waits for the session's 3rd view and an account older than 48 h, skips
-  `/tools`, `/portfolio`, `/watching`, `/sealed`, and is a compact card (about
-  23% of a phone's height) with the tier table behind "See what's included".
-  All three corner cards wait `NUDGE_DELAY_MS` = 12 s from eligibility, cancel
-  on a dialog, drawer, focused text field or navigation, and never appear within
-  10 s of a dialog closing (`lib/nudge-gate.ts`, `lib/nudge-runtime.ts`;
-  popup variant `free_account_value_first`). What stays: audiences, 2
-  dismissals per device, the 7/14-day snoozes, the popup's 3-page spacing after
-  a dismissal, the slide-in's once per session, and no slide-in in the sign-up
+- **No sign-up slider; sign-up prompts live in the page (09-30; reverses the
+  signed-out half of "value first"):** nothing in the layout asks a signed-out
+  visitor to sign up. `InlineSignupPrompt` is page content, one per page, below
+  the first screen, signed-out only after `/api/me` answers: `/browse` (after
+  the 12th tile), a priced `/deck`, `/decks/[slug]`, `/movers`,
+  `/champions/[slug]`. The homepage keeps `AccountStrip` and a released set page
+  its tracker line instead. Free account only: no price, gold, Premium, timer,
+  modal or dismiss; numbers from `lib/free-limits.ts`; `/login?next=…&src=inline_*`;
+  `signup_inline_view` (GA4 only) and `signup_inline_click` by `surface`
+  (`tests/signup-inline.test.ts`). `PREMIUM_COPY_VERSION` `signup-inline-2026-09-30`.
+  [2026-09-30](../DECISIONS.md#L15871)
+- **Corner nudges (value first, 09-29 evening; supersedes "instant" and "on the
+  first page"):** only signed-in cards remain. The Premium slide-in (signed in,
+  no paid tier) waits for the session's 3rd view and an account older than 48 h,
+  skips `/tools`, `/portfolio`, `/watching`, `/sealed`, and is a compact card
+  (about 23% of a phone's height) with the tier table behind "See what's
+  included". It and `AnnualSwitchNudge` wait `NUDGE_DELAY_MS` = 12 s from
+  eligibility, cancel on a dialog, drawer, focused text field or navigation, and
+  never appear within 10 s of a dialog closing (`lib/nudge-gate.ts`,
+  `lib/nudge-runtime.ts`). What stays: 2 dismissals per device, the 7/14-day
+  snoozes, the slide-in's once per session, and no slide-in in the sign-up
   session. Do not add an instant or first-page path back: an instant card
   measured 78% dismissed and Google treats a pop-up over a phone's first page
   as intrusive. [2026-09-16](../DECISIONS.md#L7031),
   [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089),
   [2026-09-27](../DECISIONS.md#L14536), [2026-09-28](../DECISIONS.md#L14549),
   [2026-09-29](../DECISIONS.md#L15178), [2026-09-29](../DECISIONS.md#L15281),
-  [2026-09-29](../DECISIONS.md#L15555)
+  [2026-09-29](../DECISIONS.md#L15555), [2026-09-30](../DECISIONS.md#L15871)
 - **Signed-out visitors get nothing from Deal Finder or Rising Cards**; a
   free account gets the top 3 of each, a paid tier the full list.
   [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842)
