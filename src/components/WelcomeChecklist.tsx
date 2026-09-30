@@ -11,6 +11,7 @@ import { PremiumButton } from "./PremiumButton";
 import Link from "next/link";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { isSignupSession } from "@/lib/signup-session";
+import { trialOfferLead } from "@/lib/site";
 
 const DISMISS_KEY = "rc_welcome_dismissed";
 // Written by SignupWelcome.tsx the moment a ?welcome landing fires — not read
@@ -36,7 +37,7 @@ const ELIGIBLE_MS = 7 * 24 * 60 * 60 * 1000;
 // which meant anyone quick never saw the step at all; it now collapses to one
 // short "you're set up" card carrying it, until dismissed or the week is up.
 export function WelcomeChecklist() {
-  const { user, loaded, premium, premiumCheckout, trialEligible, trialDays } = useMe();
+  const { user, loaded, premium, premiumCheckout, trialEligible, trialDays, trialFeeCents } = useMe();
   const { country, setCountry } = useCountry();
   const { watched, watch } = useWatchlist();
   const [eligible, setEligible] = useState(false);
@@ -104,12 +105,12 @@ export function WelcomeChecklist() {
   const premiumStep = (
     <div className="min-w-0 flex-1">
       <p className="text-sm font-semibold text-white">
-        {trialOffer ? `Try Premium free for ${trialDays} days` : "See what Premium adds"}
+        {trialOffer ? `Plus or Premium: ${trialOfferLead(trialDays, trialFeeCents).replace(/^First/, "first")}` : "See what Premium adds"}
       </p>
       <p className="text-xs text-slate-500">
         Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium)
         a whole deck&apos;s delivered price. Plus also removes the card limits, so a whole set fits; Premium plans the order, store
-        by store, at the condition you&apos;ll play.{trialOffer ? " Cancel before the trial ends and you pay nothing." : ""}
+        by store, at the condition you&apos;ll play.{trialOffer ? (trialFeeCents > 0 ? ` Cancel before day ${trialDays} and you pay nothing more.` : " Cancel before the trial ends and you pay nothing.") : ""}
       </p>
       <div className="mt-2">
         <PremiumButton surface="checklist" />

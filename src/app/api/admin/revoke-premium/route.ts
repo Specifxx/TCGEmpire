@@ -16,8 +16,8 @@ export const dynamic = "force-dynamic";
 //     premiumUntil, so an ADMIN ACCOUNT STAYS PREMIUM after this runs. Silently
 //     dropping someone's admin rights to satisfy "remove premium" would be a
 //     far larger action, so it's reported back instead and left alone.
-//   • trialStartedAt — one free trial per account. Clearing it hands out a
-//     second free trial, which is a different request.
+//   • trialStartedAt — one trial per account. Clearing it hands out a
+//     second trial, which is a different request.
 //   • the Stripe subscription — if one is still ACTIVE, its next webhook
 //     re-stamps premiumUntil and Premium returns on its own. Reported back so
 //     that surprise is visible up front rather than discovered later.

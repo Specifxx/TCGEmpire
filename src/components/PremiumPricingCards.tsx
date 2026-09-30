@@ -7,6 +7,7 @@ import {
   tierMonthlyAmount,
   tierAnnualAmount,
   premiumEffectiveMonthly,
+  trialThenLine,
   annualSavingPct,
   PREMIUM_PRICE_PERIOD,
   tierIntroMonthlyAmount,
@@ -33,6 +34,11 @@ import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } fr
 //      "Maybe the $0 was a bad idea" was the owner's own call on this.
 //   3. A plain tier-name button ("Get Plus", "Get Premium") instead of
 //      "Start your N-day free trial" — same reasoning as (2).
+//   (2026-09-30, the $1 first month: the headline is STILL the real recurring
+//   price. What changed is one line under it, "First 30 days for $1, then
+//   $2.99/mo", and the button of a viewer who would get the trial, which reads
+//   "Start 30 days for $1". Both are shown only where checkout would really
+//   charge $1: signed out, or an account with no trialStartedAt.)
 //
 // PLANS FIRST (2026-09-29, owner: "way too wordy now and the buttons to get
 // premium are at the bottom of the page and you have to scroll"). The cards are
@@ -58,6 +64,7 @@ export function PremiumPricingCards({
   trialEligible,
   trialAvailable,
   trialDays,
+  trialFeeCents,
   introEligible = true,
 }: {
   plusLive: boolean;
@@ -68,6 +75,8 @@ export function PremiumPricingCards({
   trialEligible: boolean;
   trialAvailable: boolean;
   trialDays: number;
+  /** What the trial costs today, in cents (PREMIUM_TRIAL_FEE_CENTS), from the server page. */
+  trialFeeCents: number;
   /** Would checkout attach the half-price intro (never paid)? lib/premium.ts introEligibleFor. */
   introEligible?: boolean;
 }) {
@@ -145,6 +154,7 @@ export function PremiumPricingCards({
             trialEligible={trialEligible}
             trialAvailable={trialAvailable}
             trialDays={trialDays}
+            trialFeeCents={trialFeeCents}
             introEligible={introEligible}
           />
         )}
@@ -161,6 +171,7 @@ export function PremiumPricingCards({
           trialEligible={trialEligible}
           trialAvailable={trialAvailable}
           trialDays={trialDays}
+          trialFeeCents={trialFeeCents}
           introEligible={introEligible}
         />
       </div>
@@ -175,17 +186,15 @@ export function PremiumPricingCards({
 // (tests/ad-free-tier.test.ts). Every number is the enforced constant. The full
 // list, feature by feature, is the page's "What you get" and the table.
 //
-// "N-day" is a placeholder, substituted for the real PREMIUM_TRIAL_DAYS value by
-// PaidTierCard below — this file can't import the server-only constant
-// directly, and the real count arrives as the `trialDays` prop instead. The
-// row is dropped entirely when this viewer can't start a trial (TRIAL_ROW).
-const TRIAL_ROW = "N-day free trial";
+// The trial is NOT a feature row (it was one, "N-day free trial", until the $1 first
+// month of 2026-09-30): the card carries ONE line under the price instead,
+// "First 30 days for $1, then $2.99/month", and only for a viewer who would really
+// get it. Four bullets a card, as the owner asked.
 const PLUS_FEATURES = [
   "No ads on any page",
   "No watchlist or portfolio limit",
   `Target alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards`,
   `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products`,
-  "N-day free trial",
 ];
 // Two different lists depending on whether Plus exists to build on top of —
 // same reasoning TIER_COMPARISON's own header gives for keeping one row set
@@ -195,7 +204,6 @@ const PREMIUM_FEATURES_ON_PLUS = [
   `Deck price watch on up to ${DECK_WATCH_LIMIT} lists`,
   "Store-by-store plan for any list",
   "Unlimited alerts and Demand Finder",
-  "N-day free trial",
 ];
 const PREMIUM_FEATURES_STANDALONE = [
   "No ads on any page",
@@ -203,7 +211,6 @@ const PREMIUM_FEATURES_STANDALONE = [
   `Deck price watch on up to ${DECK_WATCH_LIMIT} lists`,
   "Unlimited alerts, sealed watches, Demand Finder",
   "Store-by-store plan for any list",
-  "N-day free trial",
 ];
 
 function PaidTierCard({
@@ -218,6 +225,7 @@ function PaidTierCard({
   trialEligible,
   trialAvailable,
   trialDays,
+  trialFeeCents,
   introEligible,
 }: {
   tier: PremiumTierKey;
@@ -231,6 +239,7 @@ function PaidTierCard({
   trialEligible: boolean;
   trialAvailable: boolean;
   trialDays: number;
+  trialFeeCents: number;
   introEligible: boolean;
 }) {
   // A tier whose OWN annual price isn't configured falls back to monthly
@@ -248,11 +257,10 @@ function PaidTierCard({
   const intro = effectiveCycle === "monthly" && introOfferEnabled() && introEligible;
   const priceLabel =
     effectiveCycle === "annual" ? `${annualAmount}/yr` : intro ? introPriceLine(tier) : `${monthlyAmount}/${PREMIUM_PRICE_PERIOD}`;
-  // The trial row is a claim about THIS viewer: someone who already used
-  // their trial (or with trials switched off) must not be promised one.
-  const features_ = features
-    .filter((f) => f !== TRIAL_ROW || (trialAvailable && trialDays > 0))
-    .map((f) => f.replace("N-day", `${trialDays}-day`));
+  // The trial line is a claim about THIS viewer: someone who already used their
+  // trial (or with trials switched off) must not be promised one.
+  const showTrial = trialAvailable && trialDays > 0;
+  const features_ = features;
 
   return (
     <div
@@ -273,11 +281,13 @@ function PaidTierCard({
         </div>
         <p className="mt-0.5 text-[11px] leading-snug text-slate-400">{tagline}</p>
         {/* The trial survives BOTH cycles. This used to be an either/or, so
-            selecting annual replaced "14-day free trial" with "Billed as
+            selecting annual replaced the trial line with "Billed as
             $79.99/year" — the strongest and the scariest line on the card
             traded for one another. They are not alternatives: the trial is
-            what happens today, the billing line is what happens in 14 days. */}
-        {effectiveCycle === "annual" && (
+            what happens today, the billing line is what happens after it. With a
+            trial the ONE line below states both ("First 30 days for $1, then
+            $23.99/yr"), so "Billed as" is dropped rather than said twice. */}
+        {effectiveCycle === "annual" && !showTrial && (
           <p className="mt-0.5 text-[11px] font-semibold text-brand-400">Billed as {annualAmount}/year</p>
         )}
         {intro && (
@@ -285,7 +295,11 @@ function PaidTierCard({
             First {INTRO_MONTHS} months {tierIntroMonthlyAmount(tier)}/mo — half price
           </p>
         )}
-        {trialAvailable && trialDays > 0 && <p className="mt-1 text-[11px] text-slate-500">{trialDays}-day free trial</p>}
+        {showTrial && (
+          <p className="mt-1 text-[11px] font-semibold text-slate-300" data-trial-offer>
+            {trialThenLine(trialDays, trialFeeCents, effectiveCycle === "annual" ? `${annualAmount}/yr` : `${monthlyAmount}/mo`)}
+          </p>
+        )}
       </div>
       <div className="flex flex-1 flex-col justify-between gap-2.5 px-2.5 py-2.5 sm:px-5 sm:py-4">
         <ul className="space-y-1.5 text-left text-[12px] leading-snug text-slate-300 sm:text-[13px]">
@@ -304,6 +318,7 @@ function PaidTierCard({
           trialAvailable={trialAvailable}
           priceLabel={priceLabel}
           trialDays={trialDays}
+          trialFeeCents={trialFeeCents}
           plan={effectiveCycle}
           tier={tier}
         />

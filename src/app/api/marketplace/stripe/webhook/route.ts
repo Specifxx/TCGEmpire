@@ -6,9 +6,11 @@ import { PREMIUM_TRIAL_DAYS, tierFromPriceId, normalizeTier, type PremiumTier } 
 import {
   customerIdOf,
   entitledUntilFromSubscription,
+  checkoutTrialFacts,
   extendedPremiumUntil,
   priceIdFromSubscription,
   subscriptionIdFromInvoice,
+  trialCardVerdict,
   userIdFromSubscription,
 } from "@/lib/stripe-entitlement";
 import { CONSULT_DURATION_MIN, CONSULT_REPLY_HOURS, CONSULT_SCHEDULING_URL } from "@/lib/consulting";
@@ -114,9 +116,15 @@ export async function POST(req: Request) {
 
 // First successful premium checkout: link the Stripe customer to the account and
 // grant the first period (the period end comes off the subscription itself). For a
-// free trial, the card is fingerprinted and checked against past trials FIRST — a
-// reused card's trial is cancelled and NO entitlement is granted (entitlement is
-// only ever written here, so a blocked abuser never gets a moment of access).
+// trial (since 2026-09-30 a PAID one: $1 at checkout for the first 30 days, so the
+// session is payment_status "paid" with amount_total 100; the trial is recognised
+// from the SUBSCRIPTION, status "trialing" / trial_end, never from the amount) the
+// card is fingerprinted and checked against past trials FIRST — a reused card's
+// trial is cancelled, its $1 refunded, and NO entitlement is granted (entitlement
+// is only ever written here, so a blocked abuser never gets a moment of access).
+// A trialing subscription's period end IS the trial end, so an accepted trial
+// entitles to day 30 whether or not the customer cancels meanwhile (cancelling
+// only stops the first full charge; premiumUntil is extend-only).
 //
 // PAYMENT MUST SUCCEED BEFORE ANYTHING IS GRANTED (the churchless@gmail.com
 // incident, Aug 2026). `checkout.session.completed` fires once the customer
@@ -137,7 +145,10 @@ async function premiumStarted(session: Stripe.Checkout.Session) {
     console.error("stripe webhook: premium checkout with no userId (session", session.id, ")");
     return;
   }
-  const isTrial = session.metadata?.trial === "1";
+  // What checkout INTENDED (session metadata). Once the subscription is read,
+  // the subscription decides (isTrialSubscription below): a $1 trial checkout is
+  // payment_status "paid" with amount_total 100, so neither says "trial".
+  const intendedTrial = session.metadata?.trial === "1";
   const customerId = customerIdOf(session);
   const subId = typeof session.subscription === "string" ? session.subscription : null;
   if (!subId) {
@@ -163,31 +174,36 @@ async function premiumStarted(session: Stripe.Checkout.Session) {
     // `|| 3` (2026-09-26): with trials off by default PREMIUM_TRIAL_DAYS is 0,
     // but a trial checkout opened before that deploy can still complete after
     // it — a 0-day grace would grant nothing at all. 3 was the last trial length.
-    const grace = new Date(Date.now() + (isTrial ? PREMIUM_TRIAL_DAYS || 3 : 32) * 86400_000);
+    // (2026-09-30: the default is 30 days again; `|| 3` still covers an env that
+    // says 0 with a trial checkout opened before the switch-off deploy.)
+    const grace = new Date(Date.now() + (intendedTrial ? PREMIUM_TRIAL_DAYS || 3 : 32) * 86400_000);
     // No subscription object to read a price off — this is the one path that
     // must trust checkout's own session.metadata.tier stamp.
     const graceTier = normalizeTier(session.metadata?.tier);
     await stampPremium(userId, grace, customerId, `checkout ${session.id} (grace — subscription unreadable)`, graceTier);
-    if (isTrial) {
+    if (intendedTrial) {
       await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
     }
     return;
   }
 
+  const { isTrial, fingerprint } = checkoutTrialFacts(session, sub);
   if (isTrial) {
-    const pm = sub.default_payment_method;
-    const fingerprint = pm && typeof pm !== "string" ? pm.card?.fingerprint ?? null : null;
     if (fingerprint) {
       const seen = await prisma.trialRedemption.findUnique({ where: { cardFingerprint: fingerprint } });
-      if (seen && seen.userId !== userId) {
-        // This card already had a free trial (on any account) → refuse this one.
+      const verdict = trialCardVerdict(fingerprint, seen?.userId, userId);
+      if (verdict === "refuse") {
+        // This card already had a trial (on any account) → refuse this one. The
+        // customer has ALREADY paid the $1 trial fee at checkout, so it goes back:
+        // charging for a trial we then refuse would be taking money for nothing.
         await stripe().subscriptions.cancel(subId).catch(() => {});
+        await refundTrialFee(session);
         // Mark the account as having attempted a trial so it can't loop, but grant
         // nothing.
         await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
         return;
       }
-      if (!seen) {
+      if (verdict === "record") {
         await prisma.trialRedemption.create({ data: { cardFingerprint: fingerprint, userId } }).catch(() => {});
       }
     }
@@ -217,6 +233,23 @@ async function premiumStarted(session: Stripe.Checkout.Session) {
   await stampPremium(userId, until, customerId, `checkout ${session.id}`, tier);
   if (isTrial) {
     await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
+  }
+}
+
+// Refund what the refused trial's checkout charged (the one-time $1 line): the
+// payment intent behind the session's first invoice. Best-effort and loud: a
+// failure is logged with the session id for a manual refund, and never blocks the
+// webhook (the subscription is already cancelled and no access was granted).
+async function refundTrialFee(session: Stripe.Checkout.Session) {
+  try {
+    const invoiceId = typeof session.invoice === "string" ? session.invoice : session.invoice?.id ?? null;
+    if (!invoiceId) return; // nothing was invoiced, so nothing was charged
+    const inv = await stripe().invoices.retrieve(invoiceId);
+    const pi = typeof inv.payment_intent === "string" ? inv.payment_intent : inv.payment_intent?.id ?? null;
+    if (!pi || !(inv.amount_paid > 0)) return;
+    await stripe().refunds.create({ payment_intent: pi, metadata: { reason: "trial_refused_reused_card", session: session.id } });
+  } catch (e) {
+    console.error(`stripe webhook: could not refund the trial fee for checkout ${session.id} — refund it by hand:`, e);
   }
 }
 

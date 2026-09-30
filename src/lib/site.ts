@@ -92,14 +92,14 @@ export function tierAnnualAmount(tier: PremiumTierKey = "premium"): string {
 // Shared numeric parse for a display price string ("$9.99" -> 9.99). Lifted
 // out of annualSavingPct/AnnualPriceBlock's own local copies so every "do the
 // math on the display price" call site (this file, AnnualPriceBlock,
-// PremiumDialog's $0-due-today derivation) reads the same parsing rule instead
+// PremiumDialog's due-today derivation) reads the same parsing rule instead
 // of three near-identical regexes drifting independently.
 export function premiumMoneyNum(s: string): number {
   return Number(s.replace(/[^0-9.]/g, "")) || 0;
 }
 
 // The bare currency symbol/prefix off PREMIUM_PRICE_AMOUNT ("$9.99" -> "$"),
-// for building a "$0 due today" string that carries whatever symbol the real
+// for building a "$1 due today" string that carries whatever symbol the real
 // price uses (a re-denominated £/€ amount) rather than assuming dollars.
 // Falls back to "$" if the amount is bare digits.
 export function premiumCurrencySymbol(): string {
@@ -139,19 +139,65 @@ export function premiumFromLine(tier: PremiumTierKey = "premium"): string {
   return `from ${effective}/mo billed yearly, or ${monthly}/${PREMIUM_PRICE_PERIOD} month-to-month`;
 }
 
-// "$0 today" — the trial-eligible lead-in, symbol derived from the real price
-// rather than hardcoded so a re-denominated PREMIUM_PRICE_AMOUNT carries its
-// own currency through.
-export function premiumZeroToday(): string {
-  return `${premiumCurrencySymbol()}0 today`;
+// ── The $1 first month (2026-09-30) ─────────────────────────────────────────
+// Owner, 2026-09-30: "Can we do $1 free trial for both pro and premium please?
+// And the trial is for the first month?" Built as a PAID trial: $1 at checkout
+// buys the first PREMIUM_TRIAL_DAYS (30) days of Plus or Premium, then the normal
+// price starts unless the member cancels first (DECISIONS.md, "A $1 first month
+// for both tiers", 2026-09-30). It is NOT a free trial and no surface may say
+// "free trial" or "$0 today" while the fee is above zero.
+//
+// Every helper here takes the fee as a parameter in CENTS because this file is
+// client-safe and the constant (PREMIUM_TRIAL_FEE_CENTS, lib/premium.ts) reads a
+// server-only env var: server code passes the constant, client code passes
+// `trialFeeCents` from /api/me (lib/use-me.ts). With a fee of 0 the same helpers
+// say "free", so PREMIUM_TRIAL_FEE_CENTS=0 turns the offer back into a genuinely
+// free trial without touching a single surface.
+//
+// The currency symbol comes off the real price (a re-denominated £/€ amount
+// carries its own), as premiumZeroToday() did before this.
+
+/** The amount charged today for the trial, bare: 100 -> "$1", 150 -> "$1.50", 0 -> "$0". */
+export function premiumTrialFee(feeCents: number): string {
+  const c = Math.max(0, Math.round(feeCents || 0));
+  return `${premiumCurrencySymbol()}${c % 100 === 0 ? c / 100 : (c / 100).toFixed(2)}`;
 }
 
-// Bare "$0" (no "today" suffix) for a HEADLINE number — e.g. TrialPriceBlock's
-// big price figure, styled the same way PREMIUM_PRICE_AMOUNT itself is
-// rendered elsewhere ("due today" sits next to it as its own smaller label).
-// premiumZeroToday() stays the inline-caption form ("$0 today, then …").
-export function premiumZeroAmount(): string {
-  return `${premiumCurrencySymbol()}0`;
+/** "$1 today" (inline caption). "$0 today" only for a genuinely free trial. */
+export function premiumChargedToday(feeCents: number): string {
+  return `${premiumTrialFee(feeCents)} today`;
+}
+
+/** "30 days" / "1 day". */
+export function trialDaysPhrase(days: number): string {
+  return `${days} day${days === 1 ? "" : "s"}`;
+}
+
+/** "First 30 days for $1", or "First 30 days free" when the fee is 0. */
+export function trialOfferLead(days: number, feeCents: number): string {
+  return feeCents > 0 ? `First ${trialDaysPhrase(days)} for ${premiumTrialFee(feeCents)}` : `First ${trialDaysPhrase(days)} free`;
+}
+
+/** "First 30 days for $1, then $2.99/mo" — `then` is the plan's own price line, e.g. "$2.99/mo". */
+export function trialThenLine(days: number, feeCents: number, then: string): string {
+  return `${trialOfferLead(days, feeCents)}, then ${then}`;
+}
+
+/** The buy button: "Start 30 days for $1", or "Start 30 days free". */
+export function trialButtonLabel(days: number, feeCents: number): string {
+  return feeCents > 0 ? `Start ${trialDaysPhrase(days)} for ${premiumTrialFee(feeCents)}` : `Start ${trialDaysPhrase(days)} free`;
+}
+
+/**
+ * The disclosure a card-gated trial owes the buyer (card-network rules), in one
+ * short sentence under a buy button: a card is required, what is charged today,
+ * when the plan price starts and how to stop it. `then` is the plan's price line
+ * ("$2.99/mo"). The full terms are section 8 of /terms and the /premium FAQ.
+ */
+export function trialDisclosure(days: number, feeCents: number, then: string): string {
+  return feeCents > 0
+    ? `A card is required: ${premiumTrialFee(feeCents)} today, then ${then} from day ${days} unless you cancel first. We email you a day or two before.`
+    : `A card is required: free for ${trialDaysPhrase(days)}, then ${then} unless you cancel first. We email you a day or two before.`;
 }
 
 // ── Intro offer: first 3 months half price (monthly plans) ─────────────────
@@ -335,4 +381,9 @@ export function premiumLockInTail(): string {
 // with the tier table behind "See what's included", and both wait 12 s. No copy,
 // plan or price changed; the label separates the funnel events from the era of
 // instant cards.
-export const PREMIUM_COPY_VERSION = "nudges-2026-09-29";
+// trial-2026-09-30: the $1 first month (owner: "Can we do $1 free trial for both pro
+// and premium please? And the trial is for the first month?"): "Start 30 days for $1"
+// on every buy button, "First 30 days for $1, then $2.99/mo" on the plan cards,
+// the checkout text, the emails, the terms and the FAQ. Plans and prices unchanged.
+// Compare the funnel against `nudges-2026-09-29` (no trial, price at once).
+export const PREMIUM_COPY_VERSION = "trial-2026-09-30";

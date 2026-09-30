@@ -6,6 +6,8 @@ import {
   PREMIUM_PRICE_PERIOD,
   premiumEffectiveMonthly,
   premiumFromLine,
+  premiumTrialFee,
+  trialDaysPhrase,
   tierAnnualAmount,
   tierMonthlyAmount,
   type PremiumTierKey,
@@ -1055,13 +1057,19 @@ export async function sendUserDigestEmail(
   return via === "resend" ? sendEmail(to, subject, html) : sendEmailBrevo(to, subject, html);
 }
 
-// ─── Premium free-trial reminder ─────────────────────────────────────────────
+// ─── Premium trial reminder ──────────────────────────────────────────────────
 
-// Sent once, ~a day before a Premium free trial converts to a paid subscription
+// Sent once, 24-48h before a Plus or Premium trial converts to a paid subscription
 // (see runPremiumTrialReminders in lib/premium.ts) — a card was collected up front,
 // so without this warning the first a trialist hears about the charge is the charge
 // itself. amountLabel/chargeDate come from the trialist's own live Stripe
 // subscription, never guessed, since it also has to be right for annual trials.
+//
+// Since 2026-09-30 the trial is a PAID one ($1 for the first 30 days), so this
+// says "trial", never "free trial", and never "nothing was charged": the customer
+// paid to start it. `paidCents` is what THIS subscription's customer paid (its
+// metadata, lib/premium.ts trialFeeCentsOf; 0 for the free 3- and 14-day trials
+// that already exist), so each email describes the trial its reader really had.
 //
 // planName is the TIER the trial actually converts to ("Plus" or "Premium"),
 // resolved by the caller from the same live subscription the amount comes from.
@@ -1070,9 +1078,36 @@ export async function sendUserDigestEmail(
 // didn't buy.
 function trialReminderFooter(planName: string): string {
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
-    You're getting this because you started a RiftCompare ${planName} free trial.<br/>
+    You're getting this because you started a RiftCompare ${planName} trial.<br/>
     RiftCompare · Riftbound card price comparison.
   </td></tr>`;
+}
+
+export function buildTrialEndingEmail(opts: {
+  chargeDate: Date;
+  amountLabel: string;
+  planName?: string;
+  /** During the intro offer: the full price the plan moves to afterwards, e.g. "$9.99/month after 3 months". */
+  thenLabel?: string;
+  /** What the customer paid to start the trial (cents); 0 = a free trial. */
+  paidCents?: number;
+}): { subject: string; heading: string; html: string } {
+  const planName = opts.planName ?? "Premium";
+  const dateLabel = opts.chargeDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const charge = opts.thenLabel ? `${opts.amountLabel} (then ${opts.thenLabel})` : opts.amountLabel;
+  const paid = (opts.paidCents ?? 0) > 0 ? ` You paid ${premiumTrialFee(opts.paidCents!)} to start it.` : "";
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Your RiftCompare ${planName} trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>.${paid} Unless you cancel
+      before then, the card on file will be charged ${charge} and your subscription continues automatically.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Manage subscription</a></td></tr>`;
+  const heading = "Your trial is ending soon";
+  return {
+    subject: `Your RiftCompare ${planName} trial ends ${dateLabel}`,
+    heading,
+    html: emailShell(heading, inner, trialReminderFooter(planName)),
+  };
 }
 
 export async function sendTrialEndingEmail(
@@ -1080,50 +1115,52 @@ export async function sendTrialEndingEmail(
   chargeDate: Date,
   amountLabel: string,
   planName = "Premium",
-  /** During the intro offer: the full price the plan moves to afterwards, e.g. "$9.99/month after 3 months". */
   thenLabel?: string,
+  paidCents = 0,
 ): Promise<boolean> {
-  const dateLabel = chargeDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-  const charge = thenLabel ? `${amountLabel} (then ${thenLabel})` : amountLabel;
-  const inner = `
-    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      Your RiftCompare ${planName} free trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>. Unless you cancel
-      before then, the card on file will be charged ${charge} and your subscription continues automatically.
-    </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Manage subscription</a></td></tr>`;
-  return sendEmail(
-    to,
-    `Your RiftCompare ${planName} trial ends ${dateLabel}`,
-    emailShell("Your free trial is ending soon", inner, trialReminderFooter(planName)),
-  );
+  const { subject, html } = buildTrialEndingEmail({ chargeDate, amountLabel, planName, thenLabel, paidCents });
+  return sendEmail(to, subject, html);
 }
 
 // The trial reminder for a trial whose renewal is already OFF (2026-09-24).
 // It used to get the charge warning above, which was false. This says what is
-// true — it ends on <date> and nothing is charged — and, once, what keeping it
+// true — it ends on <date> and nothing MORE is charged (a paid trial's $1 was
+// already taken; the plan price is what won't be) — and, once, what keeping it
 // would cost, linking to /premium?keep=1, where keeping is a deliberate click
 // (the link itself changes nothing: mail scanners prefetch links).
+export function buildTrialEndingNoChargeEmail(opts: {
+  endsAt: Date;
+  planName?: string;
+  keepLine?: string | null;
+}): { subject: string; heading: string; html: string } {
+  const planName = opts.planName ?? "Premium";
+  const keepLine = opts.keepLine ?? null;
+  const dateLabel = opts.endsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Your RiftCompare ${planName} trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>. You turned off
+      renewal, so <strong style="color:#e6ebf2">nothing more will be charged</strong> and ${planName} simply stops then.
+    </td></tr>
+    <tr><td style="padding:0 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      If you'd like to keep it${keepLine ? `, it's ${keepLine}` : ""} — one click on your account page. Otherwise there's nothing to do.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?keep=1#keep" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Keep ${planName}</a></td></tr>`;
+  const heading = "Your trial ends soon";
+  return {
+    subject: `Your RiftCompare ${planName} trial ends ${dateLabel} — no further charge`,
+    heading,
+    html: emailShell(heading, inner, trialReminderFooter(planName)),
+  };
+}
+
 export async function sendTrialEndingNoChargeEmail(
   to: string,
   endsAt: Date,
   planName = "Premium",
   keepLine: string | null = null,
 ): Promise<boolean> {
-  const dateLabel = endsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-  const inner = `
-    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      Your RiftCompare ${planName} free trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>. You turned off
-      renewal, so <strong style="color:#e6ebf2">nothing will be charged</strong> and ${planName} simply stops then.
-    </td></tr>
-    <tr><td style="padding:0 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      If you'd like to keep it${keepLine ? `, it's ${keepLine}` : ""} — one click on your account page. Otherwise there's nothing to do.
-    </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?keep=1#keep" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Keep ${planName}</a></td></tr>`;
-  return sendEmail(
-    to,
-    `Your RiftCompare ${planName} trial ends ${dateLabel} — no charge`,
-    emailShell("Your free trial ends soon", inner, trialReminderFooter(planName)),
-  );
+  const { subject, html } = buildTrialEndingNoChargeEmail({ endsAt, planName, keepLine });
+  return sendEmail(to, subject, html);
 }
 
 // ─── Premium checkout-recovery (one-time) ────────────────────────────────────
@@ -1162,19 +1199,23 @@ function checkoutRecoveryFooter(name: string): string {
 // `tier` is the plan the abandoned checkout was for (PremiumClick.tier, read by
 // runCheckoutRecovery) — the email names that plan and quotes ITS price. A Plus
 // abandoner used to be told they had started Premium, at Premium's price.
-export async function sendCheckoutRecoveryEmail(
-  to: string,
+export function buildCheckoutRecoveryEmail(
   trialDays: number,
   fromLine: string,
   tier: PremiumTierKey = "premium",
-): Promise<boolean> {
+  trialFeeCents = 0,
+): { subject: string; heading: string; html: string } {
   const name = TIER_NAMES[tier];
   const toolList = CHECKOUT_RECOVERY_TOOLS.map(
     (t) => `<li style="margin:4px 0">${t}</li>`
   ).join("");
+  // The trial, stated as it is charged (2026-09-30: $1 for the first 30 days,
+  // then the plan price). "free" only when the fee really is 0.
   const trialLine =
     trialDays > 0
-      ? `Your ${trialDays}-day free trial is still available — $0 today, then ${fromLine}.`
+      ? trialFeeCents > 0
+        ? `Your first ${trialDaysPhrase(trialDays)} are still ${premiumTrialFee(trialFeeCents)}. After that, ${name} is ${fromLine}.`
+        : `Your ${trialDays}-day free trial is still available — $0 today, then ${fromLine}.`
       : `${name} is ${fromLine}.`;
   const otherPlan =
     tier === "premium"
@@ -1190,11 +1231,27 @@ export async function sendCheckoutRecoveryEmail(
       <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}</ul>
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?src=recovery" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Finish setting up ${name}</a></td></tr>`;
-  return sendEmail(
-    to,
-    trialDays > 0 ? `Your RiftCompare ${name} free trial is still waiting` : `Your RiftCompare ${name} checkout is still waiting`,
-    emailShell(`Still want ${name}?`, inner, checkoutRecoveryFooter(name))
-  );
+  return {
+    subject:
+      trialDays > 0
+        ? trialFeeCents > 0
+          ? `Your first ${trialDaysPhrase(trialDays)} of RiftCompare ${name} for ${premiumTrialFee(trialFeeCents)} are still waiting`
+          : `Your RiftCompare ${name} free trial is still waiting`
+        : `Your RiftCompare ${name} checkout is still waiting`,
+    heading: `Still want ${name}?`,
+    html: emailShell(`Still want ${name}?`, inner, checkoutRecoveryFooter(name)),
+  };
+}
+
+export async function sendCheckoutRecoveryEmail(
+  to: string,
+  trialDays: number,
+  fromLine: string,
+  tier: PremiumTierKey = "premium",
+  trialFeeCents = 0,
+): Promise<boolean> {
+  const { subject, html } = buildCheckoutRecoveryEmail(trialDays, fromLine, tier, trialFeeCents);
+  return sendEmail(to, subject, html);
 }
 
 // ─── Welcome email to a new account (one-time) ────────────────────────────────
@@ -1206,7 +1263,7 @@ export async function sendCheckoutRecoveryEmail(
 // WHAT IT IS FOR: the three things a free account does that a visitor cannot,
 // in the order most people will get value from them, and then — one short
 // block, not the headline — what Premium adds, with its trial stated the way
-// every other surface states it (premiumZeroToday / premiumFromLine, never a
+// every other surface states it (premiumTrialFee / premiumFromLine, never a
 // typed price; the trial only when the account is actually eligible).
 //
 // Same category as the checkout-recovery email: tied to one action the
@@ -1216,7 +1273,7 @@ export interface WelcomeEmailOpts {
   displayName: string;
   trialDays: number; // 0 = no trial available (disabled, or somehow already used)
   fromLine: string; // premiumFromLine()
-  zeroToday: string; // premiumZeroToday()
+  trialFeeCents: number; // what the trial costs today (PREMIUM_TRIAL_FEE_CENTS); 0 = free
 }
 
 const WELCOME_UTM = "utm_source=email&utm_medium=email&utm_campaign=welcome";
@@ -1225,9 +1282,13 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
   const name = escapeHtml(opts.displayName.trim().split(/\s+/)[0] || "there");
   const link = (path: string, label: string) =>
     `<a href="${SITE_URL}${path}${path.includes("?") ? "&" : "?"}${WELCOME_UTM}" style="color:#34d17e;font-weight:700;text-decoration:none">${label}</a>`;
+  // The first-month fee (2026-09-30): it is charged today, so this never says
+  // "free" or "you pay nothing" unless PREMIUM_TRIAL_FEE_CENTS really is 0.
   const trialLine =
     opts.trialDays > 0
-      ? `Try it free for ${opts.trialDays} days — ${opts.zeroToday}, then ${opts.fromLine}. Cancel before the trial ends and you pay nothing.`
+      ? opts.trialFeeCents > 0
+        ? `Start with ${trialDaysPhrase(opts.trialDays)} for ${premiumTrialFee(opts.trialFeeCents)}, then ${opts.fromLine}. Cancel before day ${opts.trialDays} and you pay nothing more.`
+        : `Try it free for ${opts.trialDays} days — ${premiumTrialFee(0)} today, then ${opts.fromLine}. Cancel before the trial ends and you pay nothing.`
       : `Premium is ${opts.fromLine}.`;
   const step = (n: number, title: string, body: string) =>
     `<tr><td style="padding:6px 32px;font-size:14px;line-height:1.6;color:#b8c0cc">
@@ -1295,6 +1356,8 @@ export interface TrialWelcomeEmailOpts {
   endsAt: Date;
   chargeLine: string | null;
   cancelling: boolean;
+  /** What the customer paid to start the trial (cents); 0 or absent = a free trial. */
+  paidCents?: number;
 }
 
 const WELCOME_TRIAL_UTM = "utm_source=email&utm_medium=email&utm_campaign=welcome-trial";
@@ -1308,9 +1371,10 @@ export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: 
     `<tr><td style="padding:6px 32px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <strong style="color:#e6ebf2">${n}. ${title}</strong><br/>${body}
     </td></tr>`;
+  const paid = (opts.paidCents ?? 0) > 0 ? ` You paid ${premiumTrialFee(opts.paidCents!)} to start it.` : "";
   const terms = opts.cancelling
-    ? `Your ${opts.planName} trial runs until <strong style="color:#e6ebf2">${dateLabel}</strong>. Renewal is off, so you won't be charged — it simply ends then.`
-    : `Your ${opts.planName} trial runs until <strong style="color:#e6ebf2">${dateLabel}</strong>. Then it's ${opts.chargeLine ?? "your plan's price"} unless you cancel. We'll email you a day or two before.`;
+    ? `Your ${opts.planName} trial runs until <strong style="color:#e6ebf2">${dateLabel}</strong>.${paid} Renewal is off, so nothing more will be charged — it simply ends then.`
+    : `Your ${opts.planName} trial runs until <strong style="color:#e6ebf2">${dateLabel}</strong>.${paid} Then it's ${opts.chargeLine ?? "your plan's price"} unless you cancel. We'll email you a day or two before.`;
   const inner = `
     <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       Hi ${name}, everything in ${opts.planName} is unlocked. ${terms}
@@ -1333,7 +1397,7 @@ export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: 
   const heading = `Your ${opts.planName} trial has started`;
   return {
     subject: opts.cancelling
-      ? `Your RiftCompare ${opts.planName} trial — runs until ${dateLabel}, no charge`
+      ? `Your RiftCompare ${opts.planName} trial — runs until ${dateLabel}, no further charge`
       : `Your RiftCompare ${opts.planName} trial — runs until ${dateLabel}`,
     heading,
     html: emailShell(heading, inner, welcomeFooter()),

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { runCheckoutRecovery } from "@/lib/premium";
 
-// Daily "your free trial is still waiting" email for accounts that started
+// Daily "your trial is still waiting" email for accounts that started
 // Stripe checkout for Premium but never completed it (see runCheckoutRecovery
 // in lib/premium.ts). Triggered by GitHub Actions rather than Vercel Cron —
 // see .github/workflows/premium-checkout-recovery.yml — for the same reason

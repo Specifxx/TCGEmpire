@@ -165,7 +165,7 @@ async function main() {
 
   // ── Output ────────────────────────────────────────────────────────────────
   console.log("RiftCompare premium funnel — by ISO week (Monday start, UTC)\n");
-  console.log("HOW TO READ THIS. Four documented discontinuities sit inside any window");
+  console.log("HOW TO READ THIS. Several documented discontinuities sit inside any window");
   console.log("that reaches back to August, and none of them are demand:");
   console.log("  · 2026-08-24  the free trial went 3 -> 14 days, so every subscription");
   console.log("                after it takes 14 days to become revenue, not 3.");
@@ -173,6 +173,11 @@ async function main() {
   console.log("                entitled, which cut the headcount with no demand change.");
   console.log("  · 2026-09-13  signupSource values premium_cta / premium_dialog first");
   console.log("                existed; before that those signups recorded as 'login'.");
+  console.log("  · 2026-09-30  the trial came back as the $1 first month (30 days, $1 at");
+  console.log("                checkout, then the plan price; cancel any time before day 30).");
+  console.log("                A subscription created after it takes 30 days to become revenue");
+  console.log("                (the $1 is a one-time fee, not MRR), and 'chkout' completion is");
+  console.log("                comparable only with the no-trial weeks (copy nudges-2026-09-29).");
   console.log("  · 2026-08-20..22 a database recovery lost writes — that week is thin.");
   console.log("  · 2026-09-25  header / navbar / home / alerts_page / article_* signups");
   console.log("                stopped being overwritten to 'login' by /login's own");

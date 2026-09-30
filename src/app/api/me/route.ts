@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { analyticsUserId } from "@/lib/ga-user-id";
 import { enabledProviders } from "@/lib/oauth";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, premiumPlusEnabled, plusAnnualEnabled, premiumTierOf, PREMIUM_TRIAL_DAYS, introEligibleFor } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, premiumPlusEnabled, plusAnnualEnabled, premiumTierOf, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, introEligibleFor } from "@/lib/premium";
 import { billingStateFor } from "@/lib/billing-state";
 
 // Session endpoint for the client-side chrome (UserMenu, wishlist sync,
@@ -64,6 +64,8 @@ export async function GET() {
       premiumPlus: premiumPlusEnabled(),
       trialEligible: !!user && !isPremium(user) && premiumTrialEnabled() && !user.trialStartedAt,
       trialDays: PREMIUM_TRIAL_DAYS,
+      // What the trial costs today, in cents (client components format it; lib/site.ts).
+      trialFeeCents: PREMIUM_TRIAL_FEE_CENTS,
       // Would checkout give this viewer the half-price first months (monthly
       // plans)? Same never-paid rule as checkout; false for current payers.
       introEligible: !isPremium(user) && (await introEligibleFor(user)),

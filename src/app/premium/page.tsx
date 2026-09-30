@@ -15,6 +15,7 @@ import {
   hasEverPaid,
   introEligibleFor,
   PREMIUM_TRIAL_DAYS,
+  PREMIUM_TRIAL_FEE_CENTS,
 } from "@/lib/premium";
 import { PremiumPricingCards } from "@/components/PremiumPricingCards";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
@@ -33,6 +34,7 @@ import {
   premiumLockInLine,
   premiumLockInHeadline,
   introFromLine,
+  premiumTrialFee,
   introOfferEnabled,
   introPriceLine,
   introAmountOffCents,
@@ -121,12 +123,14 @@ const FAQ: { q: string; a: string }[] = [
   ...(premiumTrialEnabled()
     ? [
         {
-          q: `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
-          a: `Everything in your plan unlocks at once. A card is required and nothing is charged until day ${PREMIUM_TRIAL_DAYS}, then ${
+          q: PREMIUM_TRIAL_FEE_CENTS > 0 ? `How do the first ${PREMIUM_TRIAL_DAYS} days for ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} work?` : `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
+          // Charged-today first, then the plan price, then the way out; never "free"
+          // while the fee is above zero, and no refund promise either way.
+          a: `${PREMIUM_TRIAL_FEE_CENTS > 0 ? `You pay ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} today and everything in your plan unlocks for ${PREMIUM_TRIAL_DAYS} days.` : `Everything in your plan unlocks at once and nothing is charged today.`} A card is required. We email you a day or two before day ${PREMIUM_TRIAL_DAYS}, then ${
             introOfferEnabled()
               ? `${premiumPlusEnabled() ? `${introPriceLine("plus")} for Plus or ` : ""}${introPriceLine("premium")}${premiumPlusEnabled() ? " for Premium" : ""} on the monthly plan`
               : `${premiumPlusEnabled() ? `${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} for Plus or ` : ""}${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}${premiumPlusEnabled() ? " for Premium" : ""}`
-          } (${introFromLine()}), or the annual rate. Cancel first and you are never charged; we email a day or two before.`,
+          } (${introFromLine()}), or the annual rate, unless you cancel first from this page. Cancel before day ${PREMIUM_TRIAL_DAYS} and the plan price is never charged; you keep access to day ${PREMIUM_TRIAL_DAYS} either way.`,
         },
       ]
     : []),
@@ -141,7 +145,7 @@ const FAQ: { q: string; a: string }[] = [
   {
     q: "How do I cancel?",
     a: `Use "Manage subscription" on this page to open Stripe's billing portal and cancel in a couple of clicks. You keep access until the end of the period you paid for${
-      premiumTrialEnabled() ? " (a trial cancelled before it ends is never charged)" : ""
+      premiumTrialEnabled() ? ` (cancel before day ${PREMIUM_TRIAL_DAYS} of a trial and the plan price is never charged)` : ""
     }.`,
   },
   {
@@ -334,6 +338,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
               trialEligible={trialEligible}
               trialAvailable={trialAvailable}
               trialDays={PREMIUM_TRIAL_DAYS}
+              trialFeeCents={PREMIUM_TRIAL_FEE_CENTS}
               introEligible={introEligible}
             />
           </div>
@@ -388,7 +393,9 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
               <p className="font-semibold text-white">
                 {TIER_NAMES[currentTier ?? subDetails.tier]} ·{" "}
                 {subDetails.status === "trialing"
-                  ? "Free trial"
+                  ? subDetails.trialFeeCents > 0
+                    ? `Trial · ${premiumTrialFee(subDetails.trialFeeCents)} paid`
+                    : "Free trial"
                   : subDetails.interval === "year"
                   ? "Annual plan"
                   : "Monthly plan"}
@@ -401,7 +408,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
               <p>
                 {subDetails.cancelAtPeriodEnd ? (
                   subDetails.status === "trialing" ? (
-                    <>Trial ends {fmtDate(subDetails.currentPeriodEnd)} — you won&apos;t be charged</>
+                    <>Trial ends {fmtDate(subDetails.currentPeriodEnd)} — no further charge</>
                   ) : (
                     <>Access ends {fmtDate(subDetails.currentPeriodEnd)} — won&apos;t renew</>
                   )
@@ -552,7 +559,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           <>Update your card or cancel anytime via &ldquo;Manage subscription&rdquo; above. </>
         ) : trialAvailable ? (
           <>
-            The free trial needs a card and converts to the plan you picked
+            The {PREMIUM_TRIAL_FEE_CENTS > 0 ? `${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} trial` : "free trial"} needs a card and converts to the plan you picked
             {plusLive ? <> — {tierMonthlyAmount("plus")}/{PREMIUM_PRICE_PERIOD} for Plus, {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for Premium</> : <> ({PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD})</>}
             {" "}after {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} unless you cancel first
             {introEligible ? <> — at half price for the first {INTRO_MONTHS} months on a monthly plan</> : null}. We email

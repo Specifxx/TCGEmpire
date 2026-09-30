@@ -104,15 +104,18 @@ test("checkout stamps tier on BOTH the session and the subscription metadata", (
   // Session metadata does NOT propagate to the subscription object — a tier
   // stamped only in `metadata` would be lost on every renewal and on the
   // reconcile cron, which only ever sees the subscription.
-  const src = read("src/app/api/premium/checkout/route.ts");
+  // The session is built by lib/checkout-params.ts (2026-09-30), which the route
+  // calls; both objects are pinned there, and behaviourally in checkout-params.test.ts.
+  const src = read("src/lib/checkout-params.ts");
   // `...surfaceMeta` (2026-09-23) is the attributed Premium surface — see
   // lib/premium-surface.ts — and rides alongside tier on both objects.
-  // `intro` (2026-09-24) flags a checkout carrying the half-price intro coupon.
-  assert.match(src, /metadata:\s*\{\s*kind:\s*"premium",\s*userId:\s*user\.id,\s*trial:[^}]*tier(,\s*\.\.\.surfaceMeta)?\s*\}/s, "session metadata must carry tier");
-  assert.match(src, /subscription_data:\s*\{[\s\S]{0,700}metadata:\s*\{\s*userId:\s*user\.id,\s*tier,(\s*intro:[^,]*,)?(\s*\.\.\.surfaceMeta)?\s*\}/, "subscription_data.metadata must ALSO carry tier");
+  // `intro` (2026-09-24) flags a checkout carrying the half-price intro coupon;
+  // `trialFeeCents` (2026-09-30) is what a trial cost to start.
+  assert.match(src, /metadata:\s*\{\s*kind:\s*"premium",\s*userId:\s*i\.userId,\s*trial:[\s\S]*?tier,(\s*\.\.\.surfaceMeta,?)?\s*\}/, "session metadata must carry tier");
+  assert.match(src, /subscription_data:\s*\{[\s\S]{0,1200}metadata:\s*\{\s*userId:\s*i\.userId,\s*tier,(\s*intro:[^,]*,)?(\s*\.\.\.\(trial \? \{ trialFeeCents: String\(fee\) \} : \{\}\),)?(\s*\.\.\.surfaceMeta,?)?\s*\}/, "subscription_data.metadata must ALSO carry tier");
   // The lock-in guarantee test (premium-price-increase.test.ts) already pins
   // `price: priceId` — confirm the tier/plan resolution feeds that same var.
-  assert.match(src, /const priceId = priceIdFor\(tier, plan\)/);
+  assert.match(read("src/app/api/premium/checkout/route.ts"), /const priceId = priceIdFor\(tier, plan\)/);
 });
 
 test("the webhook's tier write is not gated behind an extend-only premiumUntil change", () => {
@@ -435,6 +438,7 @@ test("no new fake scarcity or invented numbers on any of the new tier surfaces",
     "src/components/SubscriptionActions.tsx",
     "src/app/api/premium/upgrade/route.ts",
     "src/app/api/premium/checkout/route.ts",
+    "src/lib/checkout-params.ts",
   ]) {
     const src = read(file);
     assert.ok(!/only \d+ (left|spots|seats)/i.test(src), `${file} must not invent scarcity`);
@@ -472,17 +476,23 @@ test("/premium's billing-cycle toggle defaults to MONTHLY, same as the dialog", 
   assert.match(src, /effectiveCycle/, "a tier without its own annual price must still fall back to monthly display");
 });
 
-test("the free trial is visible in BOTH billing cycles, not traded against the yearly line", () => {
+test("the trial line is visible in BOTH billing cycles, not traded against the yearly line", () => {
   // The annual branch used to REPLACE "{N}-day free trial" with "Billed as
   // $79.99/year" — the strongest line on the card swapped for the scariest.
-  // They answer different questions (what happens today vs what happens in 14
-  // days) and must both render.
+  // They answer different questions (what happens today vs what happens after
+  // the trial) and must both be said. Since the $1 first month (2026-09-30) ONE
+  // line says both, "First 30 days for $1, then $23.99/yr", so "Billed as" steps
+  // aside only while that line is showing and comes back for a viewer with no trial.
   const src = read("src/components/PremiumPricingCards.tsx");
-  assert.match(src, /effectiveCycle === "annual" && \(/, "the yearly line must be its own conditional, not an either/or arm");
-  assert.match(src, /\{trialDays\}-day free trial/, "the trial line must survive");
-  // And the trial must be advertised on the Premium feature list, not only Plus.
-  const premiumLists = src.slice(src.indexOf("const PREMIUM_FEATURES_ON_PLUS"), src.indexOf("function PaidTierCard"));
-  assert.match(premiumLists, /N-day free trial/, "Premium's own feature list must carry the trial row too");
+  assert.match(src, /effectiveCycle === "annual" && !showTrial && \(/, "the yearly line must be its own conditional, not an either/or arm");
+  assert.match(src, /trialThenLine\(trialDays, trialFeeCents, effectiveCycle === "annual" \? `\$\{annualAmount\}\/yr` : `\$\{monthlyAmount\}\/mo`\)/, "the trial line must survive, in both cycles, quoting that cycle's price");
+  // And the trial must be advertised on the Premium card, not only Plus: both
+  // tiers render the same PaidTierCard, which owns the line. The old per-list
+  // "N-day free trial" bullets are gone (the card's one line replaced them).
+  assert.match(src, /<PaidTierCard\s+tier="plus"/);
+  assert.match(src, /<PaidTierCard\s+tier="premium"/);
+  const premiumLists = src.slice(src.indexOf("const PLUS_FEATURES"), src.indexOf("function PaidTierCard"));
+  assert.doesNotMatch(premiumLists, /free trial/i, "no feature bullet calls the $1 first month a free trial");
 });
 
 test("grantPremiumDays and grantPremiumMonths accept an optional tier, defaulting to premium", () => {

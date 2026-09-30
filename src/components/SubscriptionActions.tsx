@@ -47,7 +47,7 @@ export function SubscriptionActions({
    *  when it doesn't — the quoted price must follow the same rule. */
   targetAnnualAvailable?: boolean;
   canManageBilling: boolean;
-  /** In a free trial: the plan-change routes only handle paid subscriptions. */
+  /** In a trial: the plan-change routes only handle paid subscriptions. */
   trialing?: boolean;
   /** Set when the subscription is due to END: what keeping it charges, and from when. */
   keep?: { line: string; from: string } | null;
@@ -86,7 +86,7 @@ export function SubscriptionActions({
   }
 
   // Plan switches are for PAID subscriptions: the three routes select an
-  // active subscription, so during a free trial each button answered with a
+  // active subscription, so during a trial each button answered with a
   // 400 and "Cancel" was the only control that worked (2026-09-24). A trialist
   // changes plan in the portal-free way — keep or let the trial end — until a
   // mid-trial switch has been verified against Stripe on a test clock.
@@ -101,7 +101,7 @@ export function SubscriptionActions({
         {/* KEEP (2026-09-24). A subscription set to end — most often a trial
             whose renewal was switched off in its first hour, "to be safe" —
             had no way back on in the app. One POST, from its owner, clears the
-            cancellation; nothing is charged until the date shown. The plain
+            cancellation; nothing more is charged until the date shown. The plain
             "do nothing" line is deliberate: letting it end is a real choice. */}
         {keep && (
           <div
@@ -117,7 +117,7 @@ export function SubscriptionActions({
               {busy === "resume" ? "Keeping…" : `Keep ${TIER_NAMES[tier]} — ${keep.line} from ${keep.from}`}
             </button>
             <p className="mt-1 text-[11px] text-slate-500">
-              Nothing is charged before {keep.from}. Or do nothing and it simply ends then.
+              Nothing more is charged before {keep.from}. Or do nothing and it simply ends then.
             </p>
           </div>
         )}

@@ -26,6 +26,7 @@ import {
   premiumLockInLine,
   premiumLockInHeadline,
   premiumEffectiveMonthly,
+  trialButtonLabel,
   tierMonthlyAmount,
   tierAnnualAmount,
   tierIntroMonthlyAmount,
@@ -81,7 +82,7 @@ export function PremiumDialogProvider({ children }: { children: React.ReactNode 
 }
 
 function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialTier: PremiumTierKey }) {
-  const { user, premium, tier, trialing, interval, premiumCheckout, premiumPlus, trialEligible, trialDays, introEligible, premiumAnnual, plusAnnual, providers, loaded } = useMe();
+  const { user, premium, tier, trialing, interval, premiumCheckout, premiumPlus, trialEligible, trialDays, trialFeeCents, introEligible, premiumAnnual, plusAnnual, providers, loaded } = useMe();
   // Where the visitor was when the wall interrupted them — carried through
   // sign-in and Stripe so /premium/welcome can put them back on it.
   const pathname = usePathname();
@@ -113,7 +114,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
   // reasoning /premium's own trialAvailable uses, and why trialEligible (which
   // needs a signed-in account to check trialStartedAt) can't answer for them.
   // Without this the signed-out card quoted the full price for a purchase that
-  // will actually charge $0 today.
+  // will actually charge only the trial fee ($1) today.
   const showTrial = trialEligible || (!user && trialDays > 0);
 
   async function checkout(selected: "monthly" | "annual") {
@@ -216,14 +217,14 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
 
               {/* Price for the selected plan.
                   While the visitor is trial-eligible the headline number is
-                  what they will actually be charged today — zero — because
-                  that is the number the decision turns on. The real price and
-                  the day it starts sit directly underneath in the same block,
-                  not in fine print further down: "$0" alone would be a lie by
-                  omission, and a card IS required to start. */}
+                  what they will actually be charged today ($1, the trial fee)
+                  because that is the number the decision turns on. The real
+                  price and the day it starts sit directly underneath in the
+                  same block, not in fine print further down: "$1" alone would
+                  hide a recurring charge, and a card IS required to start. */}
               {showTrial ? (
                 <div className="mb-3">
-                  <TrialPriceBlock plan={activePlan} trialDays={trialDays} tier={sellTier} introEligible={introEligible} />
+                  <TrialPriceBlock plan={activePlan} trialDays={trialDays} feeCents={trialFeeCents} tier={sellTier} introEligible={introEligible} />
                 </div>
               ) : activePlan === "annual" ? (
                 <div className="mb-3">
@@ -350,7 +351,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
                 </p>
                 {trialing ? (
                   <p className="mt-3 rounded-lg border border-ink-700 px-3 py-2 text-xs text-slate-300">
-                    Plan changes open once your free trial has converted — upgrade from{" "}
+                    Plan changes open once your trial has converted — upgrade from{" "}
                     <Link href="/premium" onClick={onClose} className="font-semibold text-gold hover:underline">
                       your membership page
                     </Link>{" "}
@@ -412,7 +413,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
                   {busy
                     ? "Opening checkout…"
                     : trialEligible
-                    ? `Start ${trialDays}-day free trial →`
+                    ? `${trialButtonLabel(trialDays, trialFeeCents)} →`
                     : activePlan === "annual"
                     ? `Get annual — ${tierAnnualAmount(sellTier)}/yr →`
                     : `Upgrade to ${TIER_NAMES[sellTier]} →`}
@@ -433,7 +434,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
                     // the block above does NOT cover: a card is needed up front,
                     // and cancelling is free.
                     return trialEligible ? (
-                      <>Card required to start · cancel anytime before it converts.</>
+                      <>Card required to start · cancel before day {trialDays} and the plan price is never charged.</>
                     ) : (
                       <>{priceAfter} · cancel anytime.</>
                     );

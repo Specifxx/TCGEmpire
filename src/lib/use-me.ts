@@ -29,7 +29,8 @@ export interface Me {
   premiumCheckout: boolean; // Stripe premium checkout is configured
   premiumPlus: boolean; // the cheaper Plus tier is configured (Stripe Plus price set)
   trialEligible: boolean; // signed in, not premium, trial on + never trialed
-  trialDays: number; // configured free-trial length (0 = trial off)
+  trialDays: number; // configured trial length in days (0 = trial off)
+  trialFeeCents: number; // what the trial costs today, in cents ($1 = 100; 0 = a free trial)
   introEligible: boolean; // checkout would attach the half-price intro (monthly)
   premiumAnnual: boolean; // annual plan is configured (Stripe annual price set)
   plusAnnual: boolean; // Plus's own annual plan is configured
@@ -55,6 +56,7 @@ const EMPTY_ME: Me = {
   premiumPlus: false,
   trialEligible: false,
   trialDays: 0,
+  trialFeeCents: 0,
   introEligible: false,
   premiumAnnual: false,
   plusAnnual: false,
@@ -82,6 +84,7 @@ export function fetchMe(): Promise<Me> {
         premiumPlus: !!d.premiumPlus,
         trialEligible: !!d.trialEligible,
         trialDays: Number(d.trialDays) || 0,
+        trialFeeCents: Number(d.trialFeeCents) || 0,
         introEligible: !!d.introEligible,
         premiumAnnual: !!d.premiumAnnual,
         plusAnnual: !!d.plusAnnual,

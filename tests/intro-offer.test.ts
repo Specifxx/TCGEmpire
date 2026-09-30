@@ -11,7 +11,7 @@ import {
   introFromLine,
   premiumFromLine,
 } from "../src/lib/site";
-import { introCouponId, PREMIUM_TRIAL_DAYS, premiumTrialEnabled, introRenewalsRemaining, isIntroCouponId } from "../src/lib/premium";
+import { introCouponId, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled, introRenewalsRemaining, isIntroCouponId } from "../src/lib/premium";
 
 // Owner's call, 2026-09-24: a 3-day trial, then the first 3 months half price,
 // for Plus and Premium. DECISIONS.md, "Trial model: 3-day trial, then the
@@ -56,17 +56,22 @@ test("the intro offer is OFF by default: only NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1 
   assert.match(route.slice(Math.max(0, callAt - 200), callAt), /if \(introOfferEnabled\(\) && plan === "monthly"/, "…and it sits inside the intro switch");
 });
 
-test("the trial is OFF by default: no trial unless PREMIUM_TRIAL_DAYS says so (2026-09-26)", () => {
-  assert.equal(PREMIUM_TRIAL_DAYS, 0);
-  assert.equal(premiumTrialEnabled(), false);
-  const lib = read("src/lib/premium.ts");
-  assert.match(lib, /Number\(process\.env\.PREMIUM_TRIAL_DAYS \?\? 0\)/, "the default is 0, the env can still set a length");
+test("the trial is ON by default as the $1 first month: 30 days, a 100-cent fee, env can still change or kill it (2026-09-30)", () => {
+  assert.equal(PREMIUM_TRIAL_DAYS, 30);
+  assert.equal(PREMIUM_TRIAL_FEE_CENTS, 100);
+  assert.equal(premiumTrialEnabled(), true);
+  const cfg = read("src/lib/trial-config.ts");
+  assert.match(cfg, /parseTrialEnv\(process\.env\.PREMIUM_TRIAL_DAYS, 30\)/, "the default is 30, the env can still set a length (0 = the kill switch)");
+  assert.match(cfg, /parseTrialFeeCents\(process\.env\.PREMIUM_TRIAL_FEE_CENTS\)/);
+  assert.match(read("src/lib/premium.ts"), /export \{ PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS,/, "premium.ts is where every server caller imports them from");
   // Checkout adds trial_period_days only for a trial-eligible account, which
   // needs premiumTrialEnabled() — so with 0 the subscription starts paid.
   const route = read("src/app/api/premium/checkout/route.ts");
   assert.match(route, /const trialEligible = premiumTrialEnabled\(\) && !dbUser\?\.trialStartedAt;/);
-  assert.match(route, /\.\.\.\(trialEligible\s*\?\s*\{\s*trial_period_days: PREMIUM_TRIAL_DAYS/);
-  assert.match(route, /\.\.\.\(trialEligible \? \{ payment_method_collection: "always" as const \} : \{\}\)/);
+  assert.match(route, /trial: trialEligible \? \{ days: PREMIUM_TRIAL_DAYS, feeCents: PREMIUM_TRIAL_FEE_CENTS \} : null/);
+  const builder = read("src/lib/checkout-params.ts");
+  assert.match(builder, /\.\.\.\(trial\s*\?\s*\{\s*trial_period_days: trial\.days/);
+  assert.match(builder, /\.\.\.\(trial \? \{ payment_method_collection: "always" as const \} : \{\}\)/);
 });
 
 test("the coupon id encodes tier, amount and currency, so a price change can never reuse it", () => {
@@ -80,13 +85,14 @@ test("the coupon id encodes tier, amount and currency, so a price change can nev
 
 test("checkout: monthly, never-paid accounts get the coupon; codes are not offered alongside it", () => {
   const route = read("src/app/api/premium/checkout/route.ts");
+  const builder = read("src/lib/checkout-params.ts");
   assert.match(route, /introOfferEnabled\(\) && plan === "monthly" && !\(await hasEverPaid\(dbUser\?\.stripeCustomerId\)\)/);
-  assert.match(route, /\.\.\.\(coupon \? \{ discounts: \[\{ coupon \}\] \} : \{ allow_promotion_codes: true \}\)/);
+  assert.match(builder, /\.\.\.\(coupon \? \{ discounts: \[\{ coupon \}\] \} : \{ allow_promotion_codes: true \}\)/);
   // A coupon Stripe rejects (deleted in the dashboard, still cached on a warm
   // instance) retries once at full price instead of a 500 (2026-09-25 review).
   assert.match(route, /param\.startsWith\("discounts"\)[\s\S]*forgetIntroCoupons\(\);[\s\S]*sessionParams\(null\)/);
-  assert.doesNotMatch(route, /^\s*allow_promotion_codes: true,\s*$/m, "never both — Stripe rejects the session");
-  assert.match(route, /trial_period_days: PREMIUM_TRIAL_DAYS/);
+  assert.doesNotMatch(builder, /^\s*allow_promotion_codes: true,\s*$/m, "never both — Stripe rejects the session");
+  assert.match(builder, /trial_period_days: trial\.days/);
 });
 
 test("the trial-ending email: never to a trial that already cancelled, and it quotes the intro charge", () => {
@@ -95,7 +101,7 @@ test("the trial-ending email: never to a trial that already cancelled, and it qu
   assert.match(lib, /if \(subscriptionIsCancelling\(sub\)\) \{/);
   assert.match(lib, /const introAmountOff = coupon && isIntroCouponId\(coupon\.id\) \? coupon\.amount_off \?\? 0 : 0;/);
   assert.match(lib, /Math\.max\(0, price\.unit_amount - off\)/);
-  assert.match(read("src/lib/email.ts"), /const charge = thenLabel \? `\$\{amountLabel\} \(then \$\{thenLabel\}\)` : amountLabel;/);
+  assert.match(read("src/lib/email.ts"), /const charge = opts\.thenLabel \? `\$\{opts\.amountLabel\} \(then \$\{opts\.thenLabel\}\)` : opts\.amountLabel;/);
 });
 
 test("every surface that states the post-trial price states the intro too — each behind the switch", () => {

@@ -82,7 +82,7 @@ export default async function SubscriptionMetricsPage({ searchParams }: { search
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="MRR" value={money(metrics.mrrCents)} sub={`${money(metrics.arrCents)} ARR`} accent />
             <Stat label="Active subscribers" value={metrics.active.toLocaleString()} sub={dbActive != null ? `${dbActive.toLocaleString()} entitled in DB` : undefined} />
-            <Stat label="Trialing" value={metrics.trialing.toLocaleString()} sub="not yet in MRR" />
+            <Stat label="Trialing" value={metrics.trialing.toLocaleString()} sub="not yet in MRR (a trial's $1 fee is one-time, not MRR)" />
             <Stat label="ARPU" value={money(metrics.arpuCents)} sub="per active / mo" />
           </div>
 
@@ -139,7 +139,8 @@ export default async function SubscriptionMetricsPage({ searchParams }: { search
                 </span>
               </div>
               <p className="mt-3 text-xs text-slate-500">
-                Trials whose window has ended and are now in a live paying state, over all trials ever started.
+                Trials whose window has ended and are now in a live paying state, over all trials ever started
+                (the free 3- and 14-day trials of before 2026-09-30 and the $1 first month alike).
               </p>
             </div>
           </div>

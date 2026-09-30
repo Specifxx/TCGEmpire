@@ -8,7 +8,7 @@ import {
   PREMIUM_ANNUAL_AMOUNT,
   premiumEffectiveMonthly,
   premiumFromLine,
-  premiumZeroToday,
+  premiumChargedToday,
   premiumCurrencySymbol,
 } from "../src/lib/site";
 
@@ -52,8 +52,10 @@ test("premiumFromLine() states both the annual and monthly framing together", ()
   assert.ok(line.includes(PREMIUM_PRICE_AMOUNT), "must include the real monthly price");
 });
 
-test("premiumZeroToday() carries the real currency symbol, not a hardcoded dollar sign", () => {
-  assert.equal(premiumZeroToday(), `${premiumCurrencySymbol()}0 today`);
+test("premiumChargedToday() carries the real currency symbol, not a hardcoded dollar sign", () => {
+  // Was premiumZeroToday() ("$0 today") until the $1 first month, 2026-09-30.
+  assert.equal(premiumChargedToday(100), `${premiumCurrencySymbol()}1 today`);
+  assert.equal(premiumChargedToday(0), `${premiumCurrencySymbol()}0 today`);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -196,14 +198,17 @@ test("the recovery email names the plan that was abandoned, at that plan's price
   assert.match(fn, /by: \["userId", "tier"\]/, "grouped by tier in the database — never a client-side distinct");
   assert.doesNotMatch(fn, /introFromLine\("premium"/, "the price line follows the tier, not a hard-coded Premium");
   assert.match(fn, /introFromLine\(tier, /);
-  assert.match(fn, /sendCheckoutRecoveryEmail\(u\.email, trialDays, fromLine, tier\)/);
+  assert.match(fn, /sendCheckoutRecoveryEmail\(u\.email, trialDays, fromLine, tier, PREMIUM_TRIAL_FEE_CENTS\)/);
   assert.match(fn, /Your \$\{TIER_NAMES\[tier\]\} checkout is right where you left it\./);
   const email = read("src/lib/email.ts");
-  const send = email.slice(email.indexOf("export async function sendCheckoutRecoveryEmail"), email.indexOf("// ─── Welcome email"));
+  const send = email.slice(email.indexOf("export function buildCheckoutRecoveryEmail"), email.indexOf("// ─── Welcome email"));
   for (const hard of [/signing up for RiftCompare Premium/, /Finish setting up Premium/, /"Still want Premium\?"/, /"Your RiftCompare Premium free trial/]) {
     assert.doesNotMatch(send, hard, "the plan name comes from the tier");
   }
-  assert.match(send, /trialDays > 0 \? `Your RiftCompare \$\{name\} free trial is still waiting` : `Your RiftCompare \$\{name\} checkout is still waiting`/, "no trial promised in the subject when none applies");
+  // 2026-09-30: the subject states the fee ("first 30 days … for $1"); "free trial"
+  // survives only for a fee of 0, and no trial is promised when none applies.
+  assert.match(send, /`Your RiftCompare \$\{name\} free trial is still waiting`/, "the free wording only for a fee of 0");
+  assert.match(send, /: `Your RiftCompare \$\{name\} checkout is still waiting`/, "no trial promised in the subject when none applies");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

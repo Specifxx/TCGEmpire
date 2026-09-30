@@ -182,7 +182,7 @@ export default async function DashboardPage() {
       </div>
       {isPlus && billing.trialing && (
         <p className="mt-2 text-xs text-slate-500">
-          Plan changes open once your free trial has converted — Premium&apos;s store-by-store plan is one click from{" "}
+          Plan changes open once your trial has converted — Premium&apos;s store-by-store plan is one click from{" "}
           <Link href="/premium" className="text-slate-400 hover:underline">your membership page</Link> then.
         </p>
       )}

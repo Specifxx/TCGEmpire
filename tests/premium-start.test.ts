@@ -11,6 +11,7 @@ import {
   sanitizeBackPath,
 } from "../src/lib/premium-start";
 import { SIGNUP_SOURCES } from "../src/lib/signup-source-shared";
+import { trialDisclosure } from "../src/lib/site";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -95,15 +96,17 @@ test("the checkout route shares the selection rule rather than keeping a second 
 });
 
 test("checkout returns the buyer to a page that knows they bought something", () => {
-  const src = read("src/app/api/premium/checkout/route.ts");
+  // The session parameters live in lib/checkout-params.ts since 2026-09-30 (a pure
+  // builder the route calls), so the URLs are pinned there.
+  const src = read("src/lib/checkout-params.ts");
   // {CHECKOUT_SESSION_ID} is Stripe's own placeholder — it must stay literal.
   assert.match(src, /success_url: `\$\{SITE_URL\}\/premium\/welcome\?session_id=\{CHECKOUT_SESSION_ID\}/,
     "success_url must point at the welcome page and carry Stripe's session-id placeholder");
-  assert.match(src, /cancel_url: `\$\{SITE_URL\}\$\{back \?\? "\/premium"\}`/,
+  assert.match(src, /cancel_url: `\$\{SITE_URL\}\$\{i\.back \?\? "\/premium"\}`/,
     "cancelling at Stripe must return the visitor to where they started");
   // The old dead end: /portfolio?upgraded=1 was read by nothing, so a buyer
   // landed on the ordinary free-tier portfolio.
-  for (const f of ["src/app/api/premium/checkout/route.ts", "src/app/portfolio/page.tsx"]) {
+  for (const f of ["src/app/api/premium/checkout/route.ts", "src/lib/checkout-params.ts", "src/app/portfolio/page.tsx"]) {
     assert.ok(!/upgraded=1|searchParams\.upgraded/.test(code(f)), `${f} must not carry the dead ?upgraded=1 handoff`);
   }
 });
@@ -183,7 +186,9 @@ test("PremiumCta's signed-out CTA attributes the signup and records the funnel s
   const signedOutAt = src.indexOf("if (!signedIn)");
   const signedOutBlock = src.slice(signedOutAt, src.indexOf("if (!checkoutLive)"));
   assert.match(signedOutBlock, /no card needed/i);
-  assert.match(signedOutBlock, /card is required/i);
+  // "A card is required. $1 today for your first 30 days, then …" (lib/site.ts trialDisclosure).
+  assert.match(signedOutBlock, /trialDisclosure\(trialDays, trialFeeCents, thenPrice\)/);
+  assert.match(trialDisclosure(30, 100, "$2.99/month"), /card is required/i);
 });
 
 test("the wall dialog signs a visitor in IN PLACE, keeping both the tier choice and the page they were on", () => {
@@ -219,7 +224,7 @@ test("/premium/welcome proves the Stripe session belongs to the viewer before it
 
 test("/premium/welcome waits for the webhook instead of lying about the tier", () => {
   const page = code("src/app/premium/welcome/page.tsx");
-  assert.match(page, /<PremiumActivationPoller( trial=\{trial\})?>/, "entitlement is webhook-async — the page must wait for it");
+  assert.match(page, /<PremiumActivationPoller( trial=\{trial\})?( paid=\{[^}]*\})?>/, "entitlement is webhook-async — the page must wait for it");
   assert.match(page, /TIER_COMPARISON\.filter/, "what was unlocked must be read off the shared table, not re-typed here");
 
   const poller = code("src/components/PremiumActivationPoller.tsx");

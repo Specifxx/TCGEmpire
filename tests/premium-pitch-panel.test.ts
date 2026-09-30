@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { trialDisclosure } from "../src/lib/site";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -83,8 +84,12 @@ test("/premium's CTA is one big green button, with the price in the line beneath
   const signedOutAt = src.indexOf("if (!signedIn)");
   const signedOutBlock = src.slice(signedOutAt, src.indexOf("if (!checkoutLive)"));
   assert.match(signedOutBlock, /Get \{TIER_NAMES\[tier\]\}/, "the button itself must name the tier being sold");
-  assert.match(signedOutBlock, /card is required/i, "the card-required disclosure must survive the restructure");
-  assert.match(signedOutBlock, /priceLabel/, "the price must appear in the small print under the button");
+  // 2026-09-30: with a trial to sell the button reads "Start 30 days for $1"
+  // (the plan card above it names the tier); the plain tier button remains for
+  // everyone with no trial. The disclosure moved into the shared helper.
+  assert.match(signedOutBlock, /trialDisclosure\(trialDays, trialFeeCents, thenPrice\)/, "the card-required disclosure must survive the restructure");
+  assert.match(trialDisclosure(30, 100, "$2.99/mo"), /card is required/i);
+  assert.match(src, /const thenPrice = priceLabel \|\|/, "the price must appear in the small print under the button");
 
   // The dialog and the gated-tool wall keep gold — the split is one page deep.
   assert.match(read("src/components/PremiumDialog.tsx"), /bg-gold/, "the dialog keeps the gold Premium button");
@@ -102,8 +107,9 @@ test("TrialPriceBlock kept its compact size and its honesty contract — still u
   assert.match(src, /"lg" \| "sm" \| "compact"/, "expected the compact size option");
   // The "$0 ... then $X after your N-day trial" pairing is load-bearing policy
   // (see the file's own header) — shrinking the $0 must not have split them.
-  assert.match(src, /premiumZeroAmount\(\)/, "must still render the shared bare-$0 helper");
-  assert.match(src, /after your \{dayPhrase\} free trial/, "the real price and when it starts must stay in the same block as the $0");
+  assert.match(src, /premiumTrialFee\(feeCents\)/, "must still render the shared fee helper (the $1 due today)");
+  assert.match(src, /after your \$\{dayPhrase\} free trial|after your \{dayPhrase\} free trial/, "a genuinely free trial (fee 0) still states the real price and when it starts in the same block");
+  assert.match(src, /for your first \$\{trialDaysPhrase\(trialDays\)\}, then/, "the $1 trial states the real price and when it starts in the same block as the $1");
 
   const dialog = read("src/components/PremiumDialog.tsx");
   assert.match(dialog, /<TrialPriceBlock plan=\{activePlan\}/, "the dialog's trial-eligible branch must still render the shared block");

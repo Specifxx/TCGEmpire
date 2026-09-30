@@ -150,29 +150,21 @@ export function tierFromPriceId(priceId: string | null | undefined): PremiumTier
   return "premium";
 }
 
-// Free-trial length (days) for a first-time subscriber. Defaults to 0 — NO
-// TRIAL, checkout charges immediately — since 2026-09-26 (owner: "the price
-// is not working": both tiers' prices cut, the trial and the half-price intro
-// dropped with them; DECISIONS.md, 2026-09-26). History: 14 days from
-// 2026-08-24, 3 days from 2026-09-24. An explicit PREMIUM_TRIAL_DAYS in the
-// environment still wins over this default, so a Vercel value of 3 or 14 must
-// be REMOVED (or set to 0) for the no-trial default to take effect; setting it
-// to N > 0 turns the card-gated trial back on everywhere at once. Card-gated:
-// a card is still required up front (payment_method_collection in the checkout
-// route), so a trial auto-converts to paid unless cancelled.
-//
-// Trials that already exist are unaffected by the default: the reminder cron
-// (runPremiumTrialReminders), the Keep button (api/premium/resume), the
-// /premium card and the webhook all read the SUBSCRIPTION's own status and
-// trial_end, never this constant.
-// Turning this on requires BOTH the Stripe customer portal (api/premium/portal —
-// done) AND the trial-ending reminder email (runPremiumTrialReminders below — done)
-// so trialists can see the charge coming and cancel before it happens. Abuse is
-// blocked by card fingerprint regardless of trial length (see the webhook).
-export const PREMIUM_TRIAL_DAYS = Math.max(0, Math.floor(Number(process.env.PREMIUM_TRIAL_DAYS ?? 0) || 0));
-export function premiumTrialEnabled(): boolean {
-  return PREMIUM_TRIAL_DAYS > 0;
-}
+// The trial's two knobs — PREMIUM_TRIAL_DAYS (default 30) and PREMIUM_TRIAL_FEE_CENTS
+// (default 100, i.e. $1) — are defined in ./trial-config.ts (a module with no
+// database import, so lib/articles.ts can read them too) and re-exported here,
+// where every server caller imports them from. See that file for the full history,
+// the kill switch (PREMIUM_TRIAL_DAYS=0 + a redeploy) and the Vercel env caveat.
+export { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, parseTrialEnv, parseTrialFeeCents, premiumTrialEnabled } from "./trial-config";
+import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "./trial-config";
+
+// A trial requires BOTH the Stripe customer portal (api/premium/portal — done) AND
+// the trial-ending reminder email (runPremiumTrialReminders below — done) so
+// trialists can see the charge coming and cancel before it happens. Abuse is
+// blocked by card fingerprint regardless of trial length (see the webhook). Trials
+// that already exist are unaffected by these constants: the reminder cron, the Keep
+// button (api/premium/resume), the /premium card and the webhook all read the
+// SUBSCRIPTION's own status and trial_end, never these.
 
 // ── Intro offer: the Stripe side ────────────────────────────────────────────
 // The coupon behind "first 3 months half price" (site.ts has the display side
@@ -196,6 +188,21 @@ export function introCouponId(tier: PremiumTier, amountOffCents: number, currenc
 
 export function isIntroCouponId(id: string | null | undefined): boolean {
   return !!id && id.startsWith("rc-intro-");
+}
+
+// The currency a Stripe Price is denominated in, for the trial's one-time fee
+// line: Stripe refuses a subscription-mode Checkout whose line items are in two
+// currencies, and the plan's Price (not this code) decides which one it is. A
+// Price's currency is immutable, so it is cached for the life of the instance.
+// A failed read THROWS: guessing "usd" against a non-USD Price would fail the
+// whole checkout at Stripe instead, and the route turns a throw into "try again".
+const priceCurrencyCache = new Map<string, string>();
+export async function priceCurrencyOf(priceId: string): Promise<string> {
+  const hit = priceCurrencyCache.get(priceId);
+  if (hit) return hit;
+  const price = await stripe().prices.retrieve(priceId);
+  priceCurrencyCache.set(priceId, price.currency);
+  return price.currency;
 }
 
 const introCouponCache = new Map<string, string>();
@@ -356,6 +363,18 @@ export async function introEligibleFor(user: { stripeCustomerId?: string | null 
  */
 export const TRIAL_REMINDER_WINDOW_MS = 48 * 3_600_000;
 
+/**
+ * What this subscription's customer PAID to start its trial, in cents, or 0 for
+ * a free one. Read off the subscription's own metadata (stamped at checkout by
+ * lib/checkout-params.ts), never off PREMIUM_TRIAL_FEE_CENTS: a trial started
+ * before the fee changed (or before it existed: the 3- and 14-day trials were
+ * free) must be described as what it was. Pure.
+ */
+export function trialFeeCentsOf(sub: { metadata?: Record<string, string> | null } | null | undefined): number {
+  const n = Number(sub?.metadata?.trialFeeCents);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
 export async function runPremiumTrialReminders(): Promise<number> {
   if (!stripeEnabled()) return 0;
 
@@ -410,7 +429,7 @@ export async function runPremiumTrialReminders(): Promise<number> {
           });
           if (await sendTrialEndingNoChargeEmail(u.email, endsAt, planName, keepLine)) {
             sent++;
-            void notify(u.id, "trial_ending", "Your trial ends soon", "Renewal is off, so you won't be charged.", "/premium?keep=1").catch(() => {});
+            void notify(u.id, "trial_ending", "Your trial ends soon", "Renewal is off, so nothing more will be charged.", "/premium?keep=1").catch(() => {});
           }
         } else {
           // RENEWING — the charge warning, quoting the FIRST charge (the
@@ -425,7 +444,7 @@ export async function runPremiumTrialReminders(): Promise<number> {
             off > 0 && price?.unit_amount != null
               ? `${formatMoney(price.unit_amount, price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}${months ? ` after ${months} months` : ""}`
               : undefined;
-          if (await sendTrialEndingEmail(u.email, endsAt, amountLabel, planName, thenLabel)) {
+          if (await sendTrialEndingEmail(u.email, endsAt, amountLabel, planName, thenLabel, trialFeeCentsOf(sub))) {
             sent++;
             void notify(u.id, "trial_ending", "Your trial ends soon", `${amountLabel} starts once it converts.`, "/premium").catch(() => {});
           }
@@ -512,7 +531,7 @@ export async function runCheckoutRecovery(): Promise<number> {
       // every abandoner), else the list price.
       const tier = latestTier.get(u.id)?.tier ?? "premium";
       const fromLine = introFromLine(tier, await introEligibleFor(u));
-      if (await sendCheckoutRecoveryEmail(u.email, trialDays, fromLine, tier)) {
+      if (await sendCheckoutRecoveryEmail(u.email, trialDays, fromLine, tier, PREMIUM_TRIAL_FEE_CENTS)) {
         sent++;
         void notify(u.id, "checkout_recovery", "Still thinking it over?", `Your ${TIER_NAMES[tier]} checkout is right where you left it.`, "/premium").catch(() => {});
       }
@@ -544,6 +563,8 @@ export interface PremiumSubscriptionDetails {
   currency: string | null;
   /** The intro coupon's amount off per invoice while it lasts (0 when none). */
   introAmountOff: number;
+  /** What the customer paid to START this trial, in cents (0 = a free trial, or not a trial). From the subscription's metadata. */
+  trialFeeCents: number;
 }
 
 /**
@@ -617,6 +638,7 @@ export async function getPremiumSubscriptionDetails(stripeCustomerId: string | n
       unitAmount: price?.unit_amount ?? null,
       currency: price?.currency ?? null,
       introAmountOff: coupon && isIntroCouponId(coupon.id) ? coupon.amount_off ?? 0 : 0,
+      trialFeeCents: trialFeeCentsOf(sub),
     };
   } catch (e) {
     console.error("premium subscription detail read failed:", e);

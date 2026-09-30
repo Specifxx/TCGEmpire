@@ -4,7 +4,8 @@ import {
   PREMIUM_ANNUAL_AMOUNT,
   PREMIUM_ANNUAL_PERIOD,
   annualSavingPct,
-  premiumZeroAmount,
+  premiumTrialFee,
+  trialDaysPhrase,
   premiumEffectiveMonthly,
   tierMonthlyAmount,
   tierAnnualAmount,
@@ -14,26 +15,32 @@ import {
   type PremiumTierKey,
 } from "@/lib/site";
 
-// The shared "$0 due today" headline for a trial-eligible visitor — used
-// wherever a pricing card or the Premium dialog currently leads with the
-// full recurring price ($9.99) instead of what a trial-eligible visitor
-// actually pays right now (nothing). Presentational only (no hooks), so it's
-// usable in both the server /premium page and the client Premium dialog,
-// exactly like AnnualPriceBlock.
+// The shared "due today" headline for a trial-eligible visitor — used wherever a
+// pricing card or the Premium dialog would otherwise lead with the full
+// recurring price instead of what a trial-eligible visitor actually pays right
+// now. Since 2026-09-30 that is a PAID trial: "$1 due today, for your first 30
+// days, then $2.99/month". With a fee of 0 (PREMIUM_TRIAL_FEE_CENTS=0) it says
+// "$0 due today ... after your 30-day free trial", as it did before. Presentational
+// only (no hooks), so it is usable in both the server /premium page and the
+// client Premium dialog, exactly like AnnualPriceBlock; the fee arrives as a prop
+// (`feeCents`) because the client cannot read the server's env.
 //
-// "$0" is the honest number ONLY alongside the real price and WHEN it starts
-// — both render in the same block here, never split into a big "$0" with the
-// real price buried elsewhere, which is what /premium and the dialog did
-// before this (see DECISIONS.md, 2026-09-09).
+// The amount due today is the honest headline ONLY alongside the real price and
+// WHEN it starts — both render in the same block here, never split into a big
+// figure with the real price buried elsewhere, which is what /premium and the
+// dialog did before (see DECISIONS.md, 2026-09-09).
 export function TrialPriceBlock({
   plan,
   trialDays,
+  feeCents,
   size = "lg",
   tier = "premium",
   introEligible = true,
 }: {
   plan: "monthly" | "annual";
   trialDays: number;
+  /** What the trial costs today, in cents (PREMIUM_TRIAL_FEE_CENTS; the client reads it from /api/me as trialFeeCents). */
+  feeCents: number;
   // "compact" (2026-09-10) exists so /premium's cards can put the CTA button
   // first: the owner's brief was that the biggest thing on the card should be
   // "start your 14-day free trial", not the price. At text-4xl this block was
@@ -52,6 +59,9 @@ export function TrialPriceBlock({
 }) {
   const big = size === "lg" ? "text-4xl" : size === "sm" ? "text-3xl" : "text-2xl";
   const dayPhrase = `${trialDays}-day`;
+  const paid = feeCents > 0;
+  // "for your first 30 days, then" (paid) / "after your 30-day free trial" (free).
+  const firstDays = `for your first ${trialDaysPhrase(trialDays)}, then`;
   const perMonth = tier === "plus" ? premiumEffectiveMonthly("plus") : premiumEffectiveMonthly();
   const save = tier === "plus" ? annualSavingPct("plus") : annualSavingPct();
   const monthlyAmount = tier === "plus" ? tierMonthlyAmount("plus") : PREMIUM_PRICE_AMOUNT;
@@ -62,12 +72,12 @@ export function TrialPriceBlock({
   return (
     <div className="text-center">
       <div className="flex items-baseline justify-center gap-1.5">
-        <span className={`num ${big} font-extrabold text-white`}>{premiumZeroAmount()}</span>
+        <span className={`num ${big} font-extrabold text-white`}>{premiumTrialFee(feeCents)}</span>
         <span className="text-sm text-slate-400">due today</span>
       </div>
       {intro ? (
         <p className="mt-1.5 text-xs text-slate-400">
-          after your {dayPhrase} free trial:{" "}
+          {paid ? `${firstDays}` : `after your ${dayPhrase} free trial:`}{" "}
           <span className="font-semibold text-slate-200">
             {tierIntroMonthlyAmount(tier)}/mo for {INTRO_MONTHS} months
           </span>{" "}
@@ -75,12 +85,12 @@ export function TrialPriceBlock({
         </p>
       ) : (
         <p className="mt-1.5 text-xs text-slate-400">
-          then{" "}
+          {paid ? firstDays : "then"}{" "}
           <span className="font-semibold text-slate-200">
             {plan === "annual" ? `${annualAmount}/${PREMIUM_ANNUAL_PERIOD}` : `${monthlyAmount}/${PREMIUM_PRICE_PERIOD}`}
           </span>{" "}
           {plan === "annual" && perMonth && <span className="text-slate-400">(≈ {perMonth}/mo) </span>}
-          after your {dayPhrase} free trial
+          {paid ? "" : `after your ${dayPhrase} free trial`}
         </p>
       )}
       {plan === "annual" && save > 0 && (

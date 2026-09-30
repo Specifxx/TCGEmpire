@@ -8,7 +8,7 @@ import { isPremium, normalizeTier, PREMIUM_TRIAL_DAYS, subscriptionChargeLine, i
 import { sanitizeBackPath, PREMIUM_WELCOME_PATH } from "@/lib/premium-start";
 import { TIER_COMPARISON } from "@/components/TierComparisonTable";
 import { PremiumActivationPoller } from "@/components/PremiumActivationPoller";
-import { TIER_NAMES } from "@/lib/site";
+import { TIER_NAMES, premiumTrialFee } from "@/lib/site";
 
 // WHERE STRIPE SENDS A BUYER BACK TO. Replaces /portfolio?upgraded=1, which
 // nothing on the site ever read: the buyer landed on the ordinary free-tier
@@ -51,16 +51,19 @@ export default async function PremiumWelcomePage({
   // purchase.
   let tier: "plus" | "premium" = "premium";
   let trial = false;
+  // What the trial cost to start (cents), from checkout's own metadata stamp; 0 = free.
+  let trialFeeCents = 0;
   // The dated trial timeline (2026-09-24): every date and amount is read from
   // the subscription Checkout just created — never PREMIUM_TRIAL_DAYS
   // arithmetic — so it cannot disagree with what Stripe will do.
-  let timeline: { endsAt: Date; charge: string | null } | null = null;
+  let timeline: { endsAt: Date; days: number; charge: string | null } | null = null;
   try {
     const s = await stripe().checkout.sessions.retrieve(sessionId, { expand: ["subscription", "subscription.items.data.price"] });
     const ownerId = s.metadata?.userId ?? s.client_reference_id;
     if (s.metadata?.kind !== "premium" || ownerId !== user.id) redirect("/premium");
     tier = normalizeTier(s.metadata?.tier);
     trial = s.metadata?.trial === "1";
+    trialFeeCents = Math.max(0, Math.floor(Number(s.metadata?.trialFeeCents) || 0));
     const sub = typeof s.subscription === "object" ? (s.subscription as Stripe.Subscription | null) : null;
     if (trial && sub?.trial_end) {
       const price = sub.items.data[0]?.price as Stripe.Price | undefined;
@@ -68,6 +71,8 @@ export default async function PremiumWelcomePage({
       const interval = price?.recurring?.interval;
       timeline = {
         endsAt: new Date(sub.trial_end * 1000),
+        // The length this trial really has (from the subscription), for "your first N days".
+        days: Math.max(1, Math.round((sub.trial_end - (sub.trial_start ?? sub.created)) / 86_400)),
         charge: subscriptionChargeLine({
           unitAmount: price?.unit_amount ?? null,
           currency: price?.currency ?? null,
@@ -117,7 +122,7 @@ export default async function PremiumWelcomePage({
       {trial && timeline ? (
         <ol className="mt-3 space-y-1.5 text-sm text-slate-300" data-trial-timeline>
           <li>
-            <span className="font-semibold text-white">Today</span> — full {tierName}, nothing charged.
+            <span className="font-semibold text-white">Today</span> — full {tierName}, {trialFeeCents > 0 ? `${premiumTrialFee(trialFeeCents)} charged for your first ${timeline.days} days` : "nothing charged"}.
           </li>
           <li>
             <span className="font-semibold text-white">By {fmtDay(new Date(timeline.endsAt.getTime() - 86_400_000))}</span> — we
@@ -130,7 +135,7 @@ export default async function PremiumWelcomePage({
         </ol>
       ) : trial && PREMIUM_TRIAL_DAYS > 0 ? (
         <p className="mt-2 text-sm text-slate-300">
-          Your free trial has started. We&apos;ll email you a day or two before it converts, and you can cancel any
+          Your trial has started. We&apos;ll email you a day or two before it converts, and you can cancel any
           time from your account page.
         </p>
       ) : null}
@@ -172,7 +177,7 @@ export default async function PremiumWelcomePage({
 
   return (
     <div className="mx-auto w-full max-w-lg px-4 py-10">
-      {isPremium(user) ? done : <PremiumActivationPoller trial={trial}>{done}</PremiumActivationPoller>}
+      {isPremium(user) ? done : <PremiumActivationPoller trial={trial} paid={trialFeeCents > 0 ? premiumTrialFee(trialFeeCents) : null}>{done}</PremiumActivationPoller>}
     </div>
   );
 }

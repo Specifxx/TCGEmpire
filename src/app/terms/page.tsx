@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
-import { CONTACT_EMAIL, SITE_NAME, SITE_URL, TIER_NAMES, INTRO_MONTHS, introOfferEnabled } from "@/lib/site";
-import { PREMIUM_TRIAL_DAYS } from "@/lib/premium";
+import { CONTACT_EMAIL, SITE_NAME, SITE_URL, TIER_NAMES, INTRO_MONTHS, introOfferEnabled, premiumTrialFee } from "@/lib/site";
+import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS } from "@/lib/premium";
 import { STATIC_PAGE_DATES, staticPageDateLabel } from "@/lib/static-page-dates";
 import { pageAlternates } from "@/lib/seo";
 
@@ -171,10 +171,11 @@ export default function TermsPage() {
           {/* Rewritten 2026-09-25 to name both paid tiers and the trial and
               intro rules checkout actually applies (lib/premium.ts: the
               card-gated trial, hasEverPaid / introEligibleFor, the lock-in).
-              The trial length and intro months come from the same constants
-              checkout reads, never typed here. Since 2026-09-26 both are off
-              by default (PREMIUM_TRIAL_DAYS 0, NEXT_PUBLIC_PREMIUM_INTRO_OFFER
-              unset), so neither paragraph renders: checkout charges at once. */}
+              The trial length, its fee and the intro months come from the same
+              constants checkout reads, never typed here. From 2026-09-26 both
+              were off; from 2026-09-30 the trial is back as the $1 first month
+              (PREMIUM_TRIAL_DAYS 30, PREMIUM_TRIAL_FEE_CENTS 100) and the intro
+              is still off (NEXT_PUBLIC_PREMIUM_INTRO_OFFER unset). */}
           <h2 className="text-lg font-bold text-white">8. Plus and Premium subscriptions</h2>
           <p>
             {SITE_NAME} offers two paid plans, {TIER_NAMES.plus} and {TIER_NAMES.premium}, each billed monthly or
@@ -182,13 +183,34 @@ export default function TermsPage() {
             confirm. The features each plan includes are listed on the{" "}
             <Link href="/premium" className="text-brand-400 hover:underline">Premium page</Link>.
           </p>
+          {/* The $1 first month (2026-09-30): a PAID trial, so this says what is
+              charged today, when the plan price starts and how to stop it, and
+              never "free" while the fee is above zero. It makes no refund promise
+              beyond the last paragraph's standing clause and the one refund the
+              code really gives (a trial refused for a reused card). */}
           {PREMIUM_TRIAL_DAYS > 0 && (
             <p>
-              <strong className="text-white">Free trial.</strong> Where a free trial is offered it lasts{" "}
-              {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"}, is limited to one per account, and
-              requires a payment card to start. Unless you cancel before it ends, the trial converts automatically
-              into the plan you chose and your card is charged on the day it ends. If you cancel during the trial,
-              you are not charged. We email you a day or two before the trial ends.
+              <strong className="text-white">{PREMIUM_TRIAL_FEE_CENTS > 0 ? "Introductory trial." : "Free trial."}</strong>{" "}
+              {PREMIUM_TRIAL_FEE_CENTS > 0 ? (
+                <>
+                  Where a trial is offered, {premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} is charged when you start
+                  and gives you the first {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} of the
+                  plan you chose. It requires a payment card and is limited to one per account and one per card.
+                  Unless you cancel before day {PREMIUM_TRIAL_DAYS}, the plan&apos;s price for the period you chose
+                  starts on day {PREMIUM_TRIAL_DAYS} and your card is charged then. If you cancel before day{" "}
+                  {PREMIUM_TRIAL_DAYS}, the plan&apos;s price is never charged and you keep access until the trial
+                  ends. We email you a day or two before day {PREMIUM_TRIAL_DAYS}. If we cancel a trial because it
+                  breaks the one-per-card limit, the {premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} is refunded.
+                </>
+              ) : (
+                <>
+                  Where a free trial is offered it lasts {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"},
+                  is limited to one per account and one per card, and requires a payment card to start. Unless you
+                  cancel before it ends, the trial converts automatically into the plan you chose and your card is
+                  charged on the day it ends. If you cancel during the trial, you are not charged. We email you a
+                  day or two before the trial ends.
+                </>
+              )}
             </p>
           )}
           {introOfferEnabled() && (
@@ -211,15 +233,16 @@ export default function TermsPage() {
             subscribers onto the lower price from their next renewal; we never move them onto a higher one. If a
             subscription ends and you subscribe again later, the price at that time applies.
           </p>
-          {/* The trial clauses here are worded "if you are in a free trial"
-              rather than hidden with the trial switch: trials started before
-              2026-09-26 are still running when the offer itself is off. */}
+          {/* The trial clauses here are worded "if you are in a trial" rather
+              than hidden with the trial switch: trials already running (free
+              ones from before 2026-09-26, $1 ones from 2026-09-30) outlive the
+              offer itself when it is switched off. */}
           <p>
             <strong className="text-white">Changing or cancelling.</strong> You can cancel at any time from your
-            account; access continues until the end of the period already paid for (or, if you are in a free
+            account; access continues until the end of the period already paid for (or, if you are in a
             trial, until the trial ends). Once a subscription is paid, moving from {TIER_NAMES.plus} to{" "}
             {TIER_NAMES.premium} bills the prorated difference straight away, and moving down credits the unused
-            part of the period against your next invoice; plan changes are not available during a free trial.
+            part of the period against your next invoice; plan changes are not available during a trial.
             Subscription fees already paid are non-refundable except where required by law.
           </p>
         </section>

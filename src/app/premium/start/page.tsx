@@ -6,9 +6,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { AuthForm } from "@/components/AuthForm";
 import { CheckoutLauncher } from "@/components/CheckoutLauncher";
 import { enabledProviders } from "@/lib/oauth";
-import { isPremium, premiumCheckoutEnabled, premiumPlusEnabled, premiumTrialEnabled, PREMIUM_TRIAL_DAYS, hasEverPaid } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumPlusEnabled, premiumTrialEnabled, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, hasEverPaid } from "@/lib/premium";
 import { parseCheckoutSelection, parseStartSrc, sanitizeBackPath, PREMIUM_START_PATH } from "@/lib/premium-start";
-import { TIER_NAMES, premiumZeroAmount, tierAnnualAmount, tierMonthlyAmount, PREMIUM_PRICE_PERIOD, introOfferEnabled, introPriceLine } from "@/lib/site";
+import { TIER_NAMES, premiumTrialFee, trialDaysPhrase, tierAnnualAmount, tierMonthlyAmount, PREMIUM_PRICE_PERIOD, introOfferEnabled, introPriceLine } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 
 // SIGN-IN AS A STEP INSIDE CHECKOUT, NOT A GATE IN FRONT OF IT.
@@ -87,7 +87,9 @@ export default async function PremiumStartPage({
             ? // The reminder promise answers the instant-cancel habit ("I prefer to
               // manually renew", 2026-09-24): no need to switch renewal off to be
               // safe — runPremiumTrialReminders emails 24-48h before the trial ends.
-              `${premiumZeroAmount()} due today — your ${PREMIUM_TRIAL_DAYS}-day free trial, then ${priceLine}. We'll email you a day or two before you're charged, and you can cancel in one click.`
+              // 2026-09-30: a paid trial, so the amount due today is the fee ($1) and
+              // says so; "free" only if PREMIUM_TRIAL_FEE_CENTS is 0.
+              `${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} due today — ${PREMIUM_TRIAL_FEE_CENTS > 0 ? `your first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)}` : `your ${PREMIUM_TRIAL_DAYS}-day free trial`}, then ${priceLine}. We'll email you a day or two before you're charged, and you can cancel in one click.`
             : `${priceLine} · cancel anytime.`}
         </p>
         <CheckoutLauncher tier={tier} plan={plan} back={back} src={src} trialEligible={trialEligible} />
@@ -114,9 +116,9 @@ export default async function PremiumStartPage({
           {premiumTrialEnabled() ? (
             <>
               Your account is free and takes one tap — no card needed for it. Checkout opens straight
-              after: {premiumZeroAmount()} due today with the {PREMIUM_TRIAL_DAYS}-day free trial if you
-              haven&apos;t had one before, then {priceLine}. A card is required to start the trial, and you can
-              cancel any time before it converts.
+              after: {premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} due today for your first {trialDaysPhrase(PREMIUM_TRIAL_DAYS)}{PREMIUM_TRIAL_FEE_CENTS > 0 ? "" : " (free)"} if you
+              haven&apos;t had a trial before, then {priceLine}. A card is required to start the trial, and you can
+              cancel any time before day {PREMIUM_TRIAL_DAYS}.
             </>
           ) : (
             <>

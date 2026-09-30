@@ -123,6 +123,63 @@ export function entitledUntilFromSubscription(sub: unknown): Date | null {
   return periodEndFromSubscription(s);
 }
 
+/**
+ * Is (or was) this subscription a TRIAL? Read off the subscription itself:
+ * status "trialing", or a `trial_end` that was ever set (a trial the webhook
+ * reaches after it converted, or whose paid first invoice is still settling,
+ * is still a trial). NEVER off the checkout session's amount or payment_status:
+ * since 2026-09-30 a trial checkout charges a $1 one-time fee, so it is
+ * payment_status "paid" with amount_total 100, exactly what a plain first
+ * payment looks like, and it used to be "no_payment_required" / 0.
+ */
+export function isTrialSubscription(sub: unknown): boolean {
+  const s = rec(sub);
+  if (!s) return false;
+  if (s.status === "trialing") return true;
+  const end = typeof s.trial_end === "number" ? s.trial_end : Number(s.trial_end);
+  return Number.isFinite(end) && end > 0;
+}
+
+/**
+ * What the webhook needs to know about a completed premium checkout before it
+ * grants anything, from the session and the subscription it created:
+ *   isTrial     — did this checkout start a trial? True when checkout INTENDED one
+ *                 (session.metadata.trial === "1", which also covers a first
+ *                 invoice still settling) OR the subscription itself is/was a trial
+ *                 (isTrialSubscription). NEVER read off payment_status or
+ *                 amount_total: the $1 first month (2026-09-30) is "paid" with
+ *                 amount_total 100, and a plain first payment looks identical.
+ *   fingerprint — the card's fingerprint off the EXPANDED default_payment_method,
+ *                 for the one-trial-per-card rule; null when not expanded/known.
+ * Pure: tests/trial-webhook.test.ts drives it with real-shaped payloads.
+ */
+export function checkoutTrialFacts(session: unknown, sub: unknown): { isTrial: boolean; fingerprint: string | null } {
+  const meta = rec(rec(session)?.metadata);
+  const intended = meta?.trial === "1";
+  const pm = rec(rec(sub)?.default_payment_method);
+  const fp = rec(pm?.card)?.fingerprint;
+  return {
+    isTrial: intended || isTrialSubscription(sub),
+    fingerprint: typeof fp === "string" && fp ? fp : null,
+  };
+}
+
+/**
+ * The one-trial-per-card decision for a trial checkout, given who (if anyone)
+ * already redeemed a trial on this card fingerprint:
+ *   "refuse"  — a DIFFERENT account already had a trial on this card: cancel this
+ *               subscription, refund its trial fee, grant nothing;
+ *   "record"  — first sight of the card: write the TrialRedemption row;
+ *   "known"   — this same account's own card: nothing to write;
+ *   "skip"    — no fingerprint to check.
+ */
+export type TrialCardVerdict = "refuse" | "record" | "known" | "skip";
+export function trialCardVerdict(fingerprint: string | null, seenUserId: string | null | undefined, userId: string): TrialCardVerdict {
+  if (!fingerprint) return "skip";
+  if (!seenUserId) return "record";
+  return seenUserId === userId ? "known" : "refuse";
+}
+
 /** The userId stamped into subscription metadata at checkout, if present. */
 export function userIdFromSubscription(sub: unknown): string | null {
   const meta = rec(rec(sub)?.metadata);

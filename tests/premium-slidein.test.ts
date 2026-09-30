@@ -229,9 +229,13 @@ test("respects prefers-reduced-motion: the slide only exists under motion-safe",
   assert.doesNotMatch(code, /(?<!motion-safe:)translate-y-4 /, "no unconditional slide");
 });
 
-test("the price stays one honest line: $0 today when a trial exists, otherwise the real price", () => {
+test("the price stays one honest line: the $1 first month when a trial exists (then the plan price), otherwise the real price", () => {
   const code = codeOnly(read(SRC));
-  assert.match(code, /premiumZeroToday\(\)/);
+  // 2026-09-30: "First 30 days for $1 · then from $2.99/mo", from the shared helper
+  // and the configured fee; the button reads "Start 30 days for $1".
+  assert.match(code, /trialOfferLead\(trialDays, trialFeeCents\)/);
+  assert.match(code, /then from \{premiumPlus \? tierMonthlyAmount\("plus"\) : PREMIUM_PRICE_AMOUNT\}\/mo/, "the plan price it turns into is beside the $1");
+  assert.match(code, /trialButtonLabel\(trialDays, trialFeeCents\)/);
   assert.match(code, /introFromLine\("premium", introEligible\)/);
   assert.match(code, /premiumLockInTail\(\)/);
   assert.match(code, /premiumPriceIncreaseAnnounced\(\)/, "an announced increase is still stated, on the card");

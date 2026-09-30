@@ -2,12 +2,13 @@
 
 import { usePremiumDialog } from "./PremiumDialog";
 import { useMe } from "@/lib/use-me";
-import { PREMIUM_PRICE_LABEL, premiumZeroToday, introOfferEnabled, tierIntroMonthlyAmount, tierMonthlyAmount, INTRO_MONTHS, type PremiumTierKey } from "@/lib/site";
+import { PREMIUM_PRICE_LABEL, trialButtonLabel, introOfferEnabled, tierIntroMonthlyAmount, tierMonthlyAmount, INTRO_MONTHS, type PremiumTierKey } from "@/lib/site";
 import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
 
 // Opens the site-wide Premium dialog (one click to subscribe / start the trial),
 // so gated features don't have to send the user off to /premium. Defaults to a
-// trial-aware label — "Start free trial · $0 today" for anyone still eligible,
+// trial-aware label — "Start 30 days for $1" for anyone still eligible (the $1 first
+// month, 2026-09-30; "Start 30 days free" only if the fee is configured to 0),
 // "Upgrade now · $X/mo" otherwise; pass `children` for custom text (e.g. the
 // navbar "✦ Premium") and/or `className` to override the styling (e.g. a ghost
 // variant).
@@ -34,13 +35,18 @@ export function PremiumButton({
   tier?: PremiumTierKey;
 }) {
   const { open } = usePremiumDialog();
-  const { premium, tier, trialing, interval, trialEligible, trialDays, introEligible, premiumPlus, premiumAnnual } = useMe();
+  const { user, premium, tier, trialing, interval, trialEligible, trialDays, trialFeeCents, introEligible, premiumPlus, premiumAnnual, premiumCheckout } = useMe();
   // A Plus subscriber hitting a Premium-only gate is already paying — the
   // pitch is an upgrade, not a first subscription, and it names the real
   // recurring price rather than a trial (they've already had theirs). The
   // price follows their own interval: the upgrade route keeps it, so an
   // annual Plus member is billed Premium's yearly price.
   const isPlusUpgrade = premium && tier === "plus";
+  // Who is offered the $1 first month: an account that has not had a trial, and a
+  // SIGNED-OUT visitor (a brand-new account has never had one: the same reasoning
+  // the dialog's own showTrial and /premium's trialAvailable use). Members and
+  // accounts that already trialed see the plain "Upgrade now · $X/mo".
+  const trialOffer = trialDays > 0 && (trialEligible || (!user && premiumCheckout));
   // …except mid-trial (2026-09-25): the upgrade route only handles ACTIVE
   // subscriptions, so the button must not offer one. It still opens the
   // dialog, which says when a plan change becomes possible.
@@ -63,9 +69,9 @@ export function PremiumButton({
               <span className="font-semibold opacity-80"> · {planSwitchPriceLabel("premium", interval, premiumAnnual)}</span>
             ) : null}
           </>
-        ) : trialEligible && trialDays > 0 ? (
+        ) : trialOffer ? (
           <>
-            Start free trial<span className="font-semibold opacity-80"> · {premiumZeroToday()}</span>
+            {trialButtonLabel(trialDays, trialFeeCents)}
           </>
         ) : introEligible && introOfferEnabled() ? (
           // No trial left (e.g. a cancelled trialist) but never paid, so

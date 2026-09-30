@@ -3,6 +3,11 @@
 // 3-day trial, then the first 3 months half price" and "Trial cancellations:
 // keep, remind, tell the truth", both 2026-09-24.
 //
+// Since 2026-09-30 a trial can be PAID (the $1 first month): the customer paid to
+// start it, so "cancelled in trial" is a customer who paid $1 and still left, and
+// the report splits by trialFeeCents so free and $1 cohorts are never pooled.
+// Access to day 30 is kept either way (premiumUntil is extend-only).
+//
 // The rule that matters: a trial is CANCELLED the moment the person clicks
 // Cancel, which Stripe records as cancel_at_period_end=true (and canceled_at)
 // while the status stays "trialing" until the trial ends. Counting only ended
@@ -29,6 +34,8 @@ export interface TrialRow {
   alerts: number | null;
   collectionCards: number | null;
   reminderSentMs: number | null;
+  /** What the customer paid to start the trial, in cents (subscription metadata trialFeeCents; 0/absent = a free trial). */
+  trialFeeCents?: number | null;
   /** Trial length in whole days (trial_end − trial_start): 14-day and 3-day cohorts are never pooled. */
   trialDays?: number | null;
   /** The subscription's coupon id, if any (rc-intro-* = the half-price intro). */
@@ -97,5 +104,8 @@ export function cancelBucket(hours: number | null): string {
   if (hours < 72) return "1–3 days";
   if (hours < 168) return "3–7 days";
   if (hours < 264) return "7–11 days";
-  return "11–14 days";
+  // The 30-day $1 trial (2026-09-30) runs well past the old 14-day ceiling.
+  if (hours < 336) return "11–14 days";
+  if (hours < 504) return "14–21 days";
+  return "21+ days";
 }

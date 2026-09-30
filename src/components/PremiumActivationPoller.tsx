@@ -17,10 +17,21 @@ import { invalidateMe } from "@/lib/use-me";
 const POLL_MS = 1500;
 const GIVE_UP_MS = 20_000;
 
-export function PremiumActivationPoller({ children, trial = false }: { children: React.ReactNode; trial?: boolean }) {
-  // A trial charges nothing, so "Payment received" was false for every
-  // trialist — at the exact moment they were deciding whether to trust us.
-  const received = trial ? "Trial started ✓ — nothing charged" : "Payment received ✓";
+export function PremiumActivationPoller({
+  children,
+  trial = false,
+  paid = null,
+}: {
+  children: React.ReactNode;
+  trial?: boolean;
+  /** What a trial charged to start, formatted ("$1"); null = a free trial. */
+  paid?: string | null;
+}) {
+  // A trial charges no PLAN price, so "Payment received" was false for every
+  // trialist — at the exact moment they were deciding whether to trust us. Since
+  // the $1 first month (2026-09-30) it states what WAS charged; "nothing charged"
+  // remains for a free trial (fee 0).
+  const received = trial ? (paid ? `Trial started ✓ — ${paid} paid` : "Trial started ✓ — nothing charged") : "Payment received ✓";
   const [state, setState] = useState<"waiting" | "ready" | "slow">("waiting");
 
   useEffect(() => {

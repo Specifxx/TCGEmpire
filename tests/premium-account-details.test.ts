@@ -33,7 +33,7 @@ test("the account-detail read is a SEPARATE query from the annual-switch nudge's
   const lib = codeOnly(read(PREMIUM_LIB));
   const fnAt = lib.indexOf("export async function getPremiumSubscriptionDetails(");
   assert.ok(fnAt >= 0, "expected getPremiumSubscriptionDetails to exist");
-  const body = lib.slice(fnAt, fnAt + 1200);
+  const body = lib.slice(fnAt, fnAt + 1600);
   assert.match(body, /status:\s*"all"/, "must read every subscription status, not just active ones");
   assert.doesNotMatch(body, /status:\s*"active"\s*,\s*\n\s*limit/, "must not narrow the Stripe query to active-only the way the switch nudge does");
 
@@ -47,7 +47,7 @@ test("the account-detail read is a SEPARATE query from the annual-switch nudge's
 test("a customer with no Stripe subscription at all returns null, not a guess", () => {
   const lib = codeOnly(read(PREMIUM_LIB));
   const fnAt = lib.indexOf("export async function getPremiumSubscriptionDetails(");
-  const body = lib.slice(fnAt, fnAt + 1200);
+  const body = lib.slice(fnAt, fnAt + 1600);
   assert.match(body, /if \(!stripeCustomerId \|\| !stripeEnabled\(\)\) return null;/, "no customer id or Stripe disabled must short-circuit to null");
   assert.match(body, /if \(!sub\) return null;/, "no subscription object found must return null, not throw or fabricate one");
   assert.match(body, /catch/, "a Stripe API error must be caught rather than 500ing the page");

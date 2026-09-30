@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { runPremiumTrialReminders } from "@/lib/premium";
 
-// Daily "your free trial ends soon" email for Premium trialists (see
+// Daily "your trial ends soon" email for Plus and Premium trialists (see
 // runPremiumTrialReminders for why this runs on a schedule rather than reacting to
 // Stripe's trial_will_end webhook). Triggered by GitHub Actions rather than Vercel
 // Cron — see .github/workflows/premium-trial-reminders.yml — because this project's

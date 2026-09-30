@@ -5,7 +5,7 @@
  * The funnel report (scripts/funnel-report.ts) could not see it: it counts a
  * cancellation only once the subscription has ENDED. A trialist who clicks
  * Cancel in the Stripe portal stays `trialing` with `cancel_at_period_end`
- * until the 14 days run out, so the report counted them as live trials while
+ * until the trial runs out, so the report counted them as live trials while
  * Stripe's dashboard showed "Cancels <date>". The 2026-09-23 read of "one
  * cancellation ever" was that blind spot. DECISIONS.md, "Trial model: 3-day
  * trial, then the first 3 months half price", 2026-09-24.
@@ -136,6 +136,8 @@ async function main() {
       reminderSentMs: u?.trialReminderSentAt ? u.trialReminderSentAt.getTime() : null,
       trialDays: s.trial_start && s.trial_end ? Math.round((s.trial_end - s.trial_start) / 86_400) : null,
       couponId: s.discount?.coupon?.id ?? null,
+      // What the customer paid to start (the $1 first month, 2026-09-30); 0 = free.
+      trialFeeCents: Number(s.metadata?.trialFeeCents) > 0 ? Math.floor(Number(s.metadata?.trialFeeCents)) : 0,
       keptAtMs: typeof s.metadata?.keptAt === "string" ? Date.parse(s.metadata.keptAt) : null,
       keptVia: typeof s.metadata?.keptVia === "string" ? s.metadata.keptVia : null,
       resumedByEvent: resumed.has(s.id),
@@ -162,7 +164,7 @@ async function main() {
   console.log("\nTIME FROM TRIAL START TO THE CANCEL CLICK (cancelled trials only)");
   const buckets = new Map<string, number>();
   for (const x of cancelled) buckets.set(cancelBucket(x.c.hoursToCancel), (buckets.get(cancelBucket(x.c.hoursToCancel)) ?? 0) + 1);
-  for (const b of ["< 1 hour", "1–24 hours", "1–3 days", "3–7 days", "7–11 days", "11–14 days", "unknown"]) {
+  for (const b of ["< 1 hour", "1–24 hours", "1–3 days", "3–7 days", "7–11 days", "11–14 days", "14–21 days", "21+ days", "unknown"]) {
     if (buckets.get(b)) console.log(`  ${b.padEnd(12)} ${String(buckets.get(b)).padStart(3)}  ${pct(buckets.get(b)!, cancelled.length)}`);
   }
   const afterReminder = cancelled.filter((x) => x.c.afterReminder === true).length;
@@ -184,6 +186,7 @@ async function main() {
     }
   };
   split("TRIAL LENGTH (never pool these)", (r) => (r.trialDays == null ? "(unknown)" : `${r.trialDays}-day`));
+  split("TRIAL FEE PAID (free vs $1: never pool these either)", (r) => ((r.trialFeeCents ?? 0) > 0 ? `paid ${(r.trialFeeCents! / 100).toFixed(2)}` : "free"));
   split("INTRO COUPON", (r) => (r.couponId?.startsWith("rc-intro-") ? "half-price intro" : r.couponId ? "other coupon" : "none"));
   split("PLAN", (r) => `${r.tier}/${r.interval ?? "?"}`);
   split("CHECKOUT SURFACE", (r) => r.surface ?? "(not stamped)");

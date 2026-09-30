@@ -81,8 +81,13 @@ test("the lock-in guarantee is unconditional: checkout never migrates an existin
   // The claim "your price never rises while subscribed" would be false the
   // moment something re-priced an active subscription. checkout must only ever
   // create NEW subscriptions against whatever price is currently configured.
-  const checkout = read("src/app/api/premium/checkout/route.ts");
+  // The session is built in lib/checkout-params.ts (2026-09-30); the recurring
+  // plan line is still FIRST and still a Price id, and the only other line is the
+  // trial's inline one-time fee (no `recurring`, so it can never re-price anyone).
+  const checkout = read("src/lib/checkout-params.ts");
   assert.match(checkout, /line_items:\s*\[\{\s*price:\s*priceId/, "checkout must create a subscription against a single, current price");
+  assert.match(read("src/app/api/premium/checkout/route.ts"), /const priceId = priceIdFor\(tier, plan\)/);
+  assert.doesNotMatch(checkout, /recurring:/, "the trial fee line is one-time: it never carries a recurring component");
 
   // The one legitimate subscriptions.update call in the app is a user-initiated
   // monthly→annual switch, not an automatic re-price of an existing sub — every

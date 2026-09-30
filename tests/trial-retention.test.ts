@@ -31,7 +31,8 @@ test("/premium: a cancelled trial is told it won't be charged — the cancel tes
   const cancelAt = page.indexOf("{subDetails.cancelAtPeriodEnd ? (");
   const trialAt = page.indexOf(') : subDetails.status === "trialing" ? (');
   assert.ok(cancelAt > 0 && trialAt > cancelAt, "cancelling is checked first");
-  assert.match(page, /Trial ends \{fmtDate\(subDetails\.currentPeriodEnd\)\} — you won&apos;t be charged/);
+  // "no further charge", not "you won't be charged": a $1 trial's fee was already taken.
+  assert.match(page, /Trial ends \{fmtDate\(subDetails\.currentPeriodEnd\)\} — no further charge/);
   assert.match(page, /Converts to \{subscriptionChargeLine\(subDetails\)/);
   const lib = code("src/lib/premium.ts");
   assert.doesNotMatch(lib, /s\.status === "trialing"\) \?\? subs\.data\[0\]/, "no fallback to a dead subscription");
@@ -71,7 +72,7 @@ test("reminders: one 48h window for both branches, the no-charge email for a can
   assert.ok(cancelAt > 0 && noCharge > cancelAt && charge > noCharge, "a cancelling trial never reaches the charge warning");
   assert.match(fn, /await prisma\.user\.update\(\{ where: \{ id: u\.id \}, data: \{ trialReminderSentAt: new Date\(\) \} \}\)/);
   const email = read("src/lib/email.ts");
-  assert.match(email, /nothing will be charged/);
+  assert.match(email, /nothing more will be charged/);
   assert.match(email, /\/premium\?keep=1#keep/);
   for (const f of ["src/app/premium/page.tsx", "src/app/premium/start/page.tsx", "src/lib/articles.ts"]) {
     assert.doesNotMatch(read(f), /the day before/, `${f}: the window is 24–48h, so "a day or two before"`);
@@ -79,9 +80,13 @@ test("reminders: one 48h window for both branches, the no-charge email for a can
 });
 
 test("checkout and welcome: the trial stated as dated terms, not an undated 'cancel any time'", () => {
-  const checkout = code("src/app/api/premium/checkout/route.ts");
-  assert.match(checkout, /\.\.\.\(trialEligible \? \{ custom_text: \{ submit: \{ message: trialMessage \} \} \} : \{\}\)/);
-  assert.match(checkout, /We'll email you a day or two before your \$\{PREMIUM_TRIAL_DAYS\}-day trial ends/);
+  // The checkout text is built in lib/checkout-params.ts (2026-09-30) and states
+  // the fee: "$1.00 today for your first 30 days. We'll email you a day or two
+  // before day 30. Then it's … unless you cancel from your account page."
+  const checkout = code("src/lib/checkout-params.ts");
+  assert.match(checkout, /\.\.\.\(trial \? \{ custom_text: \{ submit: \{ message: trialCheckoutMessage\(trial, afterTrialPrice\(tier, plan, coupon\)\) \} \} \} : \{\}\)/);
+  assert.match(checkout, /We'll email you a day or two before day \$\{trial\.days\}/);
+  assert.match(checkout, /We'll email you a day or two before your \$\{trial\.days\}-day trial ends/, "the free-trial wording, only for a fee of 0");
   const welcome = code("src/app/premium/welcome/page.tsx");
   assert.match(welcome, /expand: \["subscription", "subscription\.items\.data\.price"\]/);
   assert.match(welcome, /endsAt: new Date\(sub\.trial_end \* 1000\)/, "dates from the subscription, not PREMIUM_TRIAL_DAYS arithmetic");
@@ -100,7 +105,8 @@ test("the trialist welcome email: the terms, the reminder, the manage link — n
   assert.match(e.html, /\/premium\?utm_source=email/);
   assert.doesNotMatch(e.html, /See Premium|three biggest deals/);
   const c = buildTrialWelcomeEmail({ displayName: "Sam", planName: "Plus", endsAt, chargeLine: "US$2.49/mo", cancelling: true });
-  assert.match(c.html, /you won't be charged/);
+  assert.match(c.html, /nothing more will be charged/);
+  assert.doesNotMatch(c.html, /free trial/i);
   assert.doesNotMatch(c.html, /unless you cancel/);
   assert.doesNotMatch(c.html, /best-basket/, "Best Basket is Premium-only");
   assert.match(code("src/lib/welcome-email.ts"), /const trial = u\.trialStartedAt \? await liveTrial\(u\.stripeCustomerId\) : null;/);

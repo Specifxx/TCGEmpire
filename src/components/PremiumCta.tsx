@@ -5,7 +5,7 @@ import { useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { markSignupSource } from "@/lib/signup-source";
 import { premiumStartHref } from "@/lib/premium-start";
-import { PREMIUM_COPY_VERSION, TIER_NAMES, type PremiumTierKey } from "@/lib/site";
+import { PREMIUM_COPY_VERSION, TIER_NAMES, trialButtonLabel, trialDisclosure, type PremiumTierKey } from "@/lib/site";
 import { recallPremiumSurface } from "@/lib/premium-surface";
 
 // GREEN, NOT GOLD, AND BIG — on this page only (2026-09-10, owner brief: "it
@@ -45,6 +45,7 @@ export function PremiumCta({
   trialAvailable = false,
   priceLabel = "",
   trialDays = 0,
+  trialFeeCents = 0,
   plan = "monthly",
   tier = "premium",
   ctaLabel,
@@ -59,6 +60,8 @@ export function PremiumCta({
   trialAvailable?: boolean;
   priceLabel?: string;
   trialDays?: number;
+  /** What the trial costs today, in cents (PREMIUM_TRIAL_FEE_CENTS, passed down by the server page). */
+  trialFeeCents?: number;
   plan?: "monthly" | "annual";
   // Which tier this card is selling — defaults to "premium" so every caller
   // predating the tier split (there was only one tier) is unchanged.
@@ -71,7 +74,8 @@ export function PremiumCta({
   // and every error line are unchanged: they are never compacted away.
   compact?: boolean;
 }) {
-  const dayPhrase = `${trialDays} day${trialDays === 1 ? "" : "s"}`;
+  // The plan's price after the trial, as the card quotes it ("$2.99/month").
+  const thenPrice = priceLabel || "the paid price";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -114,20 +118,17 @@ export function PremiumCta({
 
   if (!signedIn) {
     if (trialAvailable && trialDays > 0) {
-      // The button names the TIER, not the trial (2026-09-11 — see this
-      // file's own header and DECISIONS.md: leading with "$0"/"start your
-      // trial" tested worse than a plain price-led card). The trial is real
-      // and still disclosed — the small print below still states it, the card
-      // requirement, and when it converts — it just isn't the headline claim.
+      // The button states the offer (2026-09-30: "Start 30 days for $1"), and the
+      // small print discloses what a card-gated trial owes the buyer: a card is
+      // required, what is charged today, and when the plan price starts. The
+      // plan card above already names the tier and its real price.
       return (
         <div className="w-full">
           <Link href={startHref} onClick={onStartClick} className={CTA_BTN}>
-            Get {TIER_NAMES[tier]}&nbsp;→
+            {trialButtonLabel(trialDays, trialFeeCents)}&nbsp;→
           </Link>
           <p className="mt-2 text-[11px] leading-snug text-slate-400">
-            Sign in on the next screen and checkout opens straight after. Create a free account in one tap
-            if you don&apos;t have one — no card needed for that. A card is required to start the {dayPhrase}{" "}
-            free trial; it becomes {priceLabel ? `${priceLabel} ` : "the paid price "}after that unless you cancel.
+            Create a free account in one tap — no card needed for that. {trialDisclosure(trialDays, trialFeeCents, thenPrice)}
           </p>
         </div>
       );
@@ -165,15 +166,12 @@ export function PremiumCta({
   return (
     <div className="w-full">
       <button onClick={subscribe} disabled={busy} className={CTA_BTN}>
-        {busy ? "Opening checkout…" : ctaLabel ?? `Get ${TIER_NAMES[tier]} →`}
+        {busy ? "Opening checkout…" : ctaLabel ?? (trialEligible && trialDays > 0 ? `${trialButtonLabel(trialDays, trialFeeCents)} →` : `Get ${TIER_NAMES[tier]} →`)}
       </button>
-      {trialEligible && (
+      {trialEligible && trialDays > 0 && (
         // Required disclosure for a card-gated trial (Stripe / card-network rules):
-        // state the auto-charge and the cancel path up front.
-        <p className="mt-2 text-[11px] leading-snug text-slate-400">
-          Card required. Free for {dayPhrase}, then {priceLabel ? `${priceLabel} ` : "billed monthly "}
-          — cancel anytime before it ends and you won&apos;t be charged.
-        </p>
+        // state what is charged today, the plan price and the cancel path up front.
+        <p className="mt-2 text-[11px] leading-snug text-slate-400">{trialDisclosure(trialDays, trialFeeCents, thenPrice)}</p>
       )}
       {error && (
         <div role="alert" className="mt-2 text-xs">

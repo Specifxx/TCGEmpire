@@ -19,8 +19,8 @@
 // retries; the window caps that at three days of attempts.
 import { prisma } from "./db";
 import type Stripe from "stripe";
-import { NOT_SEED_WHERE, PREMIUM_TRIAL_DAYS, premiumTrialEnabled, subscriptionChargeLine, subscriptionIsCancelling, isIntroCouponId, tierFromPriceId } from "./premium";
-import { premiumFromLine, premiumZeroToday, introOfferEnabled, introPriceLine, PREMIUM_ANNUAL_AMOUNT } from "./site";
+import { NOT_SEED_WHERE, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled, trialFeeCentsOf, subscriptionChargeLine, subscriptionIsCancelling, isIntroCouponId, tierFromPriceId } from "./premium";
+import { premiumFromLine, introOfferEnabled, introPriceLine, PREMIUM_ANNUAL_AMOUNT } from "./site";
 import { sendWelcomeEmail, sendTrialWelcomeEmail } from "./email";
 import { stripe, stripeEnabled } from "./stripe";
 
@@ -48,6 +48,8 @@ async function liveTrial(stripeCustomerId: string | null) {
       planName: tierFromPriceId(price?.id) === "plus" ? "Plus" : "Premium",
       endsAt: new Date(sub.trial_end * 1000),
       cancelling: subscriptionIsCancelling(sub),
+      // What THIS trial cost to start, from the subscription's own metadata.
+      paidCents: trialFeeCentsOf(sub),
       chargeLine: subscriptionChargeLine({
         unitAmount: price?.unit_amount ?? null,
         currency: price?.currency ?? null,
@@ -105,7 +107,7 @@ export async function runWelcomeEmails(now = Date.now()): Promise<{ candidates: 
         // Intro-aware (lib/site.ts intro block): the monthly half-price months,
         // or the annual rate.
         fromLine: introOfferEnabled() ? `${introPriceLine()}, or ${PREMIUM_ANNUAL_AMOUNT}/yr` : premiumFromLine(),
-        zeroToday: premiumZeroToday(),
+        trialFeeCents: PREMIUM_TRIAL_FEE_CENTS,
       });
     } catch {
       ok = false;

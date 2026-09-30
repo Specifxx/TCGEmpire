@@ -159,7 +159,7 @@ export function GrantPremiumForm({ adminKey }: { adminKey?: string }) {
       </div>
       <p className="mt-2 text-xs text-slate-500">
         Revoke clears the entitlement only. It never cancels a Stripe subscription, never drops admin rights, and
-        never hands back a used free trial.
+        never hands back a used trial.
       </p>
       {result && <p className={`mt-2 text-xs ${result.startsWith("✓") ? "text-brand-400" : "text-rose-400"}`}>{result}</p>}
 

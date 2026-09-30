@@ -1,5 +1,6 @@
 import { NAV_GROUPS } from "@/components/nav-groups";
-import { SITE_URL, tierMonthlyAmount } from "@/lib/site";
+import { SITE_URL, tierMonthlyAmount, premiumTrialFee, trialDaysPhrase } from "@/lib/site";
+import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "@/lib/trial-config";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 import { SET_GAP_CHUNK } from "@/lib/set-gap";
@@ -8,6 +9,15 @@ import { SET_GAP_CHUNK } from "@/lib/set-gap";
 // of the site's most useful pages so LLMs/agents can navigate without parsing HTML.
 // Served at /llms.txt. Mirrors the feed.xml route-handler pattern (plain-text GET).
 export const revalidate = 86400;
+
+// The trial, stated as charged (2026-09-30: the first 30 days for $1, then the plan
+// price, a card required, cancel any time before day 30), from the same two knobs
+// checkout reads; absent when the trial is switched off.
+const TRIAL_SENTENCE = premiumTrialEnabled()
+  ? PREMIUM_TRIAL_FEE_CENTS > 0
+    ? ` A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} of either plan cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} (card required), then the plan's price starts unless they cancel first.`
+    : ` A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} of either plan are free (card required), then the plan's price starts unless they cancel first.`
+  : "";
 
 // One-line descriptions for the hub pages (falls back to the nav label otherwise).
 const DESC: Record<string, string> = {
@@ -30,7 +40,7 @@ const DESC: Record<string, string> = {
   "/guides": "Buying guides and strategy articles for Riftbound.",
   "/blog": "News, metagame snapshots and buying guides for Riftbound.",
   "/portfolio": `Track a collection's value over time: up to ${FREE_PORTFOLIO_LIMIT} cards with a free account, unlimited with Plus or Premium. The set checklist (/portfolio/sets) shows what a set is missing and the cheapest listing for each missing card, before postage.`,
-  "/premium": `Price comparison is free for everyone, with no limit. A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} in its portfolio; cards already tracked past a limit are kept. Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, an unlimited watchlist and portfolio, target-price alerts, and the full Deal Finder and Rising Cards lists. Plus also watches sealed products (up to ${SEALED_WATCH_LIMIT_PLUS}: back in stock after selling out, at RRP, at your price, checked ${SEALED_CHECK_CADENCE}), and with no card limit a whole set fits in the set checklist. Premium (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus Best Basket's store-by-store plan for a deck, a list or the rest of a set (Finish this set, up to ${SET_GAP_CHUNK} cards a plan) at the minimum condition you set (Near Mint only, Lightly Played or better, or anything), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), unlimited target alerts and sealed watches, Buy this list for a deck, watchlist or binder, and the full Demand Finder (what people are searching for and viewing).`,
+  "/premium": `Price comparison is free for everyone, with no limit. A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} in its portfolio; cards already tracked past a limit are kept. Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, an unlimited watchlist and portfolio, target-price alerts, and the full Deal Finder and Rising Cards lists. Plus also watches sealed products (up to ${SEALED_WATCH_LIMIT_PLUS}: back in stock after selling out, at RRP, at your price, checked ${SEALED_CHECK_CADENCE}), and with no card limit a whole set fits in the set checklist. Premium (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus Best Basket's store-by-store plan for a deck, a list or the rest of a set (Finish this set, up to ${SET_GAP_CHUNK} cards a plan) at the minimum condition you set (Near Mint only, Lightly Played or better, or anything), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), unlimited target alerts and sealed watches, Buy this list for a deck, watchlist or binder, and the full Demand Finder (what people are searching for and viewing).${TRIAL_SENTENCE}`,
   "/sets": "Every Riftbound set with its full card list and live prices.",
   "/champions": "Browse Riftbound cards by League of Legends champion.",
   "/cards": "Card facets — browse by type, rarity and printing (Signature, Overnumbered, Alternate Art, Promo).",

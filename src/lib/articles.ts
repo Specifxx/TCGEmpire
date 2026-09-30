@@ -2,7 +2,8 @@
 // input), rendered with the lightweight <Markdown> component. To publish a new
 // article, add an entry here.
 import { BANLIST_UPDATED, BANNED_CARDS } from "./banlist";
-import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT, annualSavingPct, premiumEffectiveMonthly, premiumMoneyNum } from "./site";
+import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT, annualSavingPct, premiumEffectiveMonthly, premiumMoneyNum, premiumTrialFee, trialDaysPhrase } from "./site";
+import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "./trial-config";
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { monthYear } from "./content/month-year";
@@ -228,6 +229,31 @@ export interface Article {
 // The ban list's last wave lives with the ban data itself (lib/banlist.ts):
 // the guide's `updated`, its title month and the table's "Updated …" line all
 // read it, so one bump when a wave lands updates every one of them.
+
+// The trial paragraphs of the Plus/Premium explainer, from the SAME two knobs
+// checkout reads (lib/trial-config.ts), so the kill switch (PREMIUM_TRIAL_DAYS=0)
+// makes the article say "no trial" again on the next build instead of leaving a
+// stale promise. Since 2026-09-30: the first 30 days for $1, then the plan price.
+const PREMIUM_TRIAL_ARTICLE_SUMMARY = premiumTrialEnabled()
+  ? PREMIUM_TRIAL_FEE_CENTS > 0
+    ? `: the first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)}, then the plan's price`
+    : `, after a ${PREMIUM_TRIAL_DAYS}-day free trial`
+  : " from the day you subscribe";
+const PREMIUM_TRIAL_ARTICLE_PRICE_TAIL = premiumTrialEnabled()
+  ? PREMIUM_TRIAL_FEE_CENTS > 0
+    ? `A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)}, and the price above starts after that unless you cancel.`
+    : `A first-time subscriber gets ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} free, and the price above starts after that unless you cancel.`
+  : "Both are charged from the day you subscribe: there's no free trial and no introductory price, just the price above.";
+const PREMIUM_TRIAL_ARTICLE_FAQ = premiumTrialEnabled()
+  ? PREMIUM_TRIAL_FEE_CENTS > 0
+    ? `Yes, and it isn't free: your first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} of Plus or Premium cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)}, charged when you start (a card is required). After ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} the plan's normal price starts (Plus ${PLUS_PRICE_AMOUNT}/month or ${PLUS_ANNUAL_AMOUNT}/year, Premium ${PREMIUM_PRICE_AMOUNT}/month or ${PREMIUM_ANNUAL_AMOUNT}/year) unless you cancel first, and we email you a day or two before. Cancel any time before day ${PREMIUM_TRIAL_DAYS} from your account page and the plan price is never charged; you keep access until the ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} are up. It's limited to one per account and one per card. To try Premium without paying, there are two free ways: a week for sending us feedback, or 3 days for each friend you refer (see below).`
+    : `Yes: ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} free (a card is required), then the plan's normal price unless you cancel first. We email you a day or two before it ends.`
+  : "No — Plus and Premium are billed from the day you subscribe, so there's no trial to remember to cancel. You can cancel anytime from your account and keep access to the end of the period you paid for. To try Premium without paying, there are two free ways: a week for sending us feedback, or 3 days for each friend you refer (see below).";
+const PREMIUM_TRIAL_ARTICLE_BILLING = premiumTrialEnabled()
+  ? PREMIUM_TRIAL_FEE_CENTS > 0
+    ? `Both tiers run through Stripe. A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)}, and the price in the table starts after that unless you cancel; there is no other introductory price.`
+    : `Both tiers run through Stripe. A first-time subscriber gets ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} free, and the price in the table starts after that unless you cancel; there is no other introductory price.`
+  : "Both tiers run through Stripe and are charged when you subscribe — no free trial, no introductory price, just the price in the table.";
 
 export const ARTICLES: Article[] = [
   // RADIANCE PREVIEW SEASON, WEEK ONE (2026-09-29). The first wave of finished
@@ -10160,10 +10186,13 @@ We built the price tracking, the price history, and the alerts specifically beca
     // comparison table is built from TIER_COMPARISON itself
     // (premiumTierTableMarkdown), so this article can no longer drift from
     // /premium and the upsell dialog; the prices and saving are re-derived
-    // from lib/site.ts by tests/premium-price-increase.test.ts. The trial and
-    // the half-price intro are off by default, and this article states that.
-    // Turning either back on (PREMIUM_TRIAL_DAYS, NEXT_PUBLIC_PREMIUM_INTRO_OFFER)
-    // needs this article edited by hand — that test fails until it is.
+    // from lib/site.ts by tests/premium-price-increase.test.ts. The trial (the $1
+    // first month of 2026-09-30) is stated from the same PREMIUM_TRIAL_DAYS /
+    // PREMIUM_TRIAL_FEE_CENTS checkout reads (lib/trial-config.ts), so the kill
+    // switch turns it back into "no trial" on the next build. The half-price
+    // intro is off by default, and this article says there is no other intro
+    // price; turning NEXT_PUBLIC_PREMIUM_INTRO_OFFER back on needs this article
+    // edited by hand — tests/premium-price-increase.test.ts fails until it is.
     slug: "riftcompare-premium-explained",
     category: "blog",
     title: "Plus and Premium: Every Feature Explained",
@@ -10171,7 +10200,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       "What's free on RiftCompare, and what Plus and Premium add, one feature at a time: the set checklist, alerts, sealed watches, store plans and more.",
     author: "RiftCompare",
     date: "2026-08-20",
-    updated: "2026-09-29",
+    updated: "2026-09-30",
     readMins: 10,
     tags: ["premium", "pricing", "tools", "deal finder", "best basket", "demand finder", "price alerts", "sealed", "set tracker"],
     hero: {
@@ -10179,7 +10208,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
     },
     summary: [
-      `**Comparing Riftbound card prices is free, with no limit and no account.** RiftCompare has two paid tiers on top: Plus at ${PLUS_PRICE_AMOUNT}/mo and Premium at ${PREMIUM_PRICE_AMOUNT}/mo (each with an annual option at roughly a ${annualSavingPct()}% saving), billed through Stripe from the day you subscribe, and you can cancel anytime.`,
+      `**Comparing Riftbound card prices is free, with no limit and no account.** RiftCompare has two paid tiers on top: Plus at ${PLUS_PRICE_AMOUNT}/mo and Premium at ${PREMIUM_PRICE_AMOUNT}/mo (each with an annual option at roughly a ${annualSavingPct()}% saving), billed through Stripe${PREMIUM_TRIAL_ARTICLE_SUMMARY}, and you can cancel anytime.`,
       `**Plus and Premium watch prices for you.** Plus is no ads, an unlimited watchlist and portfolio, every deal in Deal Finder and Rising Cards, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, and sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products: an email when a box is back in stock, at RRP, or at your price (checked ${SEALED_CHECK_CADENCE}). With no card limit, a whole set fits in the set checklist.`,
       `**Premium plans the order.** Everything in Plus, plus Best Basket's store-by-store plan for a deck, a list or the rest of a set (which stores, with each store's postage counted), at the minimum condition you set, and a deck price watch: save up to ${DECK_WATCH_LIMIT} lists and we re-price each one delivered after every price update and email you when the total reaches your price. Also unlimited target alerts and sealed watches, Buy this list, and Demand Finder.`,
       `**A free account is genuinely useful**: a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist showing what each set is missing and the cheapest listing to finish it, the top 3 of each deal list and your own Best Basket total. Cards you already track past a limit stay; only new ones need Plus.`,
@@ -10193,7 +10222,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     faq: [
       {
         q: "How much does RiftCompare Premium cost?",
-        a: `Premium is ${PREMIUM_PRICE_AMOUNT}/month, or ${PREMIUM_ANNUAL_AMOUNT}/year if you pay annually (about ${premiumEffectiveMonthly()}/month, a ${annualSavingPct()}% saving versus paying monthly — ${PREMIUM_YEAR_AT_MONTHLY} over a year). There's also a cheaper Plus tier at ${PLUS_PRICE_AMOUNT}/month (or ${PLUS_ANNUAL_AMOUNT}/year), which is ad-free and has the full deal lists, target alerts and sealed watches — see below for the split. Both are charged from the day you subscribe: there's no free trial and no introductory price, just the price above.`,
+        a: `Premium is ${PREMIUM_PRICE_AMOUNT}/month, or ${PREMIUM_ANNUAL_AMOUNT}/year if you pay annually (about ${premiumEffectiveMonthly()}/month, a ${annualSavingPct()}% saving versus paying monthly — ${PREMIUM_YEAR_AT_MONTHLY} over a year). There's also a cheaper Plus tier at ${PLUS_PRICE_AMOUNT}/month (or ${PLUS_ANNUAL_AMOUNT}/year), which is ad-free and has the full deal lists, target alerts and sealed watches — see below for the split. ${PREMIUM_TRIAL_ARTICLE_PRICE_TAIL}`,
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
@@ -10236,9 +10265,8 @@ We built the price tracking, the price history, and the alerts specifically beca
         a: `You keep every one. The free limits (${FREE_WATCHLIST_LIMIT} watched cards, ${FREE_PORTFOLIO_LIMIT} portfolio cards) only stop you adding a NEW card: everything you already track stays, your alerts keep firing and your portfolio keeps its value, and you can still edit quantities, conditions and prices or remove cards. Adding copies of a card you already have is never blocked. The same applies if a Plus or Premium subscription ends: nothing is deleted, and a deck or sealed watch simply waits until you subscribe again.`,
       },
       {
-        q: "Is there a free trial?",
-        a: "No — Plus and Premium are billed from the day you subscribe, so there's no trial to remember to cancel. You can cancel anytime from your account and keep access to the end of the period you paid for. To try Premium without paying, there are two free ways: a week for sending us feedback, or 3 days for each friend you refer (see below).",
-      },
+        q: premiumTrialEnabled() ? (PREMIUM_TRIAL_FEE_CENTS > 0 ? "Is there a trial?" : "Is there a free trial?") : "Is there a free trial?",
+        a: PREMIUM_TRIAL_ARTICLE_FAQ,      },
       {
         q: "Can I get RiftCompare Premium for free?",
         a: "You can earn free Premium two ways, no card required either way: submit feedback once at riftcompare.com/feedback and it unlocks a full week automatically, or share your referral link from your profile and every friend who creates a free account earns you 3 days.",
@@ -10285,7 +10313,7 @@ This post goes through what you get, one feature at a time, with nothing rounded
 | Premium, monthly | ${PREMIUM_PRICE_AMOUNT}/month | ${PREMIUM_PRICE_AMOUNT}/month |
 | Premium, annual | ${PREMIUM_ANNUAL_AMOUNT}/year | ≈ ${premiumEffectiveMonthly()}/month (**${annualSavingPct()}% off**, vs ${PREMIUM_YEAR_AT_MONTHLY}/yr paying monthly) |
 
-Both tiers run through Stripe and are charged when you subscribe — no free trial, no introductory price, just the price in the table. You can move from Plus to Premium, prorated, from the /premium page once your first payment has gone through, and cancel anytime: your benefits run to the end of the period you already paid for.
+${PREMIUM_TRIAL_ARTICLE_BILLING} You can move from Plus to Premium, prorated, from the /premium page once your first payment has gone through, and cancel anytime: your benefits run to the end of the period you already paid for.
 
 ## What's free, what needs a free account, and what needs Plus or Premium
 

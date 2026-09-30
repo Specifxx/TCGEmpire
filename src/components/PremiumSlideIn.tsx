@@ -12,7 +12,9 @@ import {
   PREMIUM_COPY_VERSION,
   premiumPriceIncreaseAnnounced,
   premiumLockInTail,
-  premiumZeroToday,
+  trialButtonLabel,
+  trialOfferLead,
+  tierMonthlyAmount,
   introFromLine,
   introOfferEnabled,
   tierIntroMonthlyAmount,
@@ -250,7 +252,7 @@ async function fetchPersonalCopy(): Promise<{ heading: string; line: string } | 
 }
 
 export function PremiumSlideIn() {
-  const { user, premium, premiumCheckout, premiumPlus, trialEligible, trialDays, introEligible, loaded } = useMe();
+  const { user, premium, premiumCheckout, premiumPlus, trialEligible, trialDays, trialFeeCents, introEligible, loaded } = useMe();
   const { country } = useCountry();
   const router = useRouter();
   const pathname = usePathname();
@@ -438,30 +440,31 @@ export function PremiumSlideIn() {
   if (!mounted) return null;
 
   const heading =
-    personal?.heading ?? contextPitch?.heading ?? (trialEligible ? "Try Premium free" : "Never overpay for a Riftbound card");
+    personal?.heading ?? contextPitch?.heading ?? (trialEligible && trialDays > 0 ? trialOfferLead(trialDays, trialFeeCents) : "Never overpay for a Riftbound card");
   const bodyLine =
     personal?.line ??
     contextPitch?.line ??
     (premiumPlus
       ? "You've been comparing prices. Plus and Premium are ad-free: Plus shows every deal and emails you when a card you watch hits your price, and Premium buys your whole list for less:"
       : "You've been comparing prices — Premium shows every deal, buys your whole list for less, and is ad-free:");
-  const cta = trialEligible && trialDays > 0 ? `Start ${trialDays}-day free trial →` : "Unlock Premium →";
+  const cta = trialEligible && trialDays > 0 ? `${trialButtonLabel(trialDays, trialFeeCents)} →` : "Unlock Premium →";
 
   // ONE PRICE LINE. Two framings by design, not an oversight (2026-09-09):
-  // • trialEligible (true for nearly every logged-in free visitor): bare
-  //   "$0 today", the number that's actually true right now. The recurring price
-  //   is never more than one click away: /premium (this card's own CTA
-  //   destination), the Premium dialog and the checkout page's own "Card
-  //   required... then $X" disclosure all state it before any card is charged.
+  // • trialEligible (true for nearly every logged-in free visitor): the number
+  //   that's actually true right now ("First 30 days for $1", the $1 first month
+  //   of 2026-09-30) and the plan price it turns into, "then from $2.99/mo". The
+  //   Premium dialog and the checkout page's own disclosure state the full
+  //   terms before any card is charged.
   // • !trialEligible (already used a trial, or trials are off — the default
   //   since 2026-09-26): the real recurring price + premiumLockInTail
   //   ("cancel anytime" unless an increase is announced).
   const priceLine = PREMIUM_PRICE_AMOUNT ? (
     <p className="text-xs text-slate-400">
-      {trialEligible ? (
+      {trialEligible && trialDays > 0 ? (
         <>
-          <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span>
-          {/* The intro offer (lib/site.ts), stated where the $0 is. */}
+          <span className="text-sm font-extrabold text-white">{trialOfferLead(trialDays, trialFeeCents)}</span>
+          <> · then from {premiumPlus ? tierMonthlyAmount("plus") : PREMIUM_PRICE_AMOUNT}/mo</>
+          {/* The intro offer (lib/site.ts), stated beside the trial. */}
           {introOfferEnabled() && introEligible && (
             <> · then {tierIntroMonthlyAmount()}/mo for {INTRO_MONTHS} months (half price)</>
           )}
