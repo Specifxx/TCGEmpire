@@ -44,7 +44,7 @@ test("it is NON-MODAL: it yields to real modals and never blocks them", () => {
 
 test("frequency is capped hard across sessions, not just per session", () => {
   const code = codeOnly(read(SRC));
-  // The VALUE moved to lib/nudge-timing.ts on 2026-09-14 so SignupPromoPopup
+  // The VALUE moved to lib/nudge-timing.ts on 2026-09-14 so SignupPromoPopup (removed 2026-09-30)
   // could adopt the same cap from one definition instead of a second copy of
   // the number. Assert it there, and that this file actually consumes it —
   // pinning the literal here would have blocked the de-duplication.

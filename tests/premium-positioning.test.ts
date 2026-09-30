@@ -43,7 +43,6 @@ const code = (p: string) =>
 const PITCH_SURFACES = [
   "src/app/premium/page.tsx",
   "src/components/PremiumDialog.tsx",
-  "src/components/SignupPromoPopup.tsx",
   // The at-the-limit upgrade surfaces (2026-09-28), which replaced the
   // signed-in PremiumSlideIn and its PremiumPitchPanel.
   "src/components/FreeLimitPanel.tsx",
@@ -101,7 +100,7 @@ test("the tagline is present on the surface that carries it, and /premium leads 
   assert.match(code("src/app/premium/page.tsx"), /never overpay for a Riftbound card/, "/premium's title still carries the tagline");
   for (const file of [
     "src/components/PremiumDialog.tsx",
-    // SignupPromoPopup is deliberately NOT here since 2026-09-16: it sells the
+    // SignupPromoPopup (removed 2026-09-30) was deliberately NOT here from 2026-09-16: it sold the
     // free account and names no price. PremiumSlideIn and its graphic
     // PremiumPitchPanel carried it until both were removed on 2026-09-28.
   ]) {

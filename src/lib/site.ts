@@ -386,4 +386,11 @@ export function premiumLockInTail(): string {
 // on every buy button, "First 30 days for $1, then $2.99/mo" on the plan cards,
 // the checkout text, the emails, the terms and the FAQ. Plans and prices unchanged.
 // Compare the funnel against `nudges-2026-09-29` (no trial, price at once).
-export const PREMIUM_COPY_VERSION = "trial-2026-09-30";
+// signup-inline-2026-09-30: the signed-out sign-up slider is gone (DECISIONS.md,
+// "The sign-up slider is gone: sign-up prompts live in the page"): no corner card
+// for a signed-out visitor at all, and free-account prompts inside five pages
+// instead (InlineSignupPrompt; its events carry this tag). The FREQUENCY of the
+// sign-up ask changed, which is what feeds every Premium funnel downstream, so the
+// label separates the $1-trial-with-slider hours from what follows. The Premium
+// slide-in, plans, prices and every Premium surface's copy are unchanged.
+export const PREMIUM_COPY_VERSION = "signup-inline-2026-09-30";

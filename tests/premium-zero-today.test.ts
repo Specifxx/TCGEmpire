@@ -123,7 +123,6 @@ test("PremiumButton is trial-aware but still opens the shared dialog", () => {
 
 test("the Premium funnel events carry PREMIUM_COPY_VERSION so before/after can be split in GA4", () => {
   for (const file of [
-    "src/components/SignupPromoPopup.tsx",
     "src/components/PremiumCta.tsx",
     "src/components/PremiumDialog.tsx",
   ]) {

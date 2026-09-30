@@ -19,15 +19,15 @@ const readCode = (p: string) =>
 // after the page opens", then clarified — "change all sliders we have to show
 // up 5 seconds after rather than instant".
 //
-// ALL of them, one number. The three corner nudges had three different answers
+// ALL of them, one number. The corner nudges had three different answers
 // arrived at separately — instant, 12s and 8s — with nothing connecting them,
 // which is how they drifted apart in the first place. A visitor does not
 // experience "the signup popup" or "the premium slide-in"; they experience
-// things appearing in the corner of the page.
+// things appearing in the corner of the page. (The signed-out sign-up popup was
+// removed on 2026-09-30; two corner nudges remain, both signed-in.)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const NUDGES = [
-  "src/components/SignupPromoPopup.tsx", // signed-out: make a free account
   "src/components/PremiumSlideIn.tsx", // signed-in free: Premium (removed 2026-09-28, restored 2026-09-29)
   "src/components/AnnualSwitchNudge.tsx", // monthly subscriber: switch to annual
 ];
@@ -78,7 +78,7 @@ test("a pending show is cancelled if the visitor navigates away first", () => {
     assert.match(code, /return armNudge\(\{|stopTimer\?\.\(\)/, `${f} must clean up its pending show on unmount/route change`);
   }
   const runtime = readCode(RUNTIME);
-  const arm = runtime.slice(runtime.indexOf("export function armNudge"), runtime.indexOf("// ── Engaged time"));
+  const arm = runtime.slice(runtime.indexOf("export function armNudge"), runtime.indexOf("// ── Page views this visit"));
   assert.match(arm, /return \(\) => \{\s*done = true;\s*clear\(\);/, "the cleanup must stop and clear the timer for good");
 });
 
@@ -104,9 +104,9 @@ test("the delay is a timing change only — every frequency cap is untouched", (
   // Waiting longer must not quietly become "shows to more people". Each nudge
   // keeps its own eligibility and frequency rules; this pins the ones that
   // would be easiest to lose while editing the timer next to them.
-  const signup = readCode("src/components/SignupPromoPopup.tsx");
-  assert.match(signup, /PAGES_BETWEEN_SHOWS/, "the popup still spaces out re-shows after a dismissal");
-  assert.match(signup, /if \(!loaded \|\| user/, "still signed-out only — the two audiences must not overlap");
+  const slide = readCode("src/components/PremiumSlideIn.tsx");
+  assert.match(slide, /premiumSlideInEligible\(/, "the slide-in still asks the shared eligibility gate");
+  assert.match(slide, /MAX_DISMISSALS = MAX_NUDGE_DISMISSALS/, "and keeps the shared two-dismissal cap");
 
   const annual = readCode("src/components/AnnualSwitchNudge.tsx");
   assert.match(annual, /MIN_MONTHS/, "the annual nudge still requires tenure");

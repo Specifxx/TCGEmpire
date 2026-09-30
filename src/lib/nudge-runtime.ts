@@ -5,26 +5,19 @@
 // MOMENT is a decent one, and owns the timer that waits for it.
 // DECISIONS.md, "Nudges: value first", 2026-09-29.
 //
-// Three things, shared by SignupPromoPopup, PremiumSlideIn and
-// AnnualSwitchNudge so they cannot drift into three different sets of manners:
+// Two things, shared by PremiumSlideIn and AnnualSwitchNudge so they cannot
+// drift into two different sets of manners (the signed-out SignupPromoPopup
+// used them too until it was removed on 2026-09-30, and took its engaged-time
+// clock with it):
 //   • armNudge     the show timer. Cancelled the moment the visitor opens a
 //                  dialog or drawer or puts the cursor in a text field, restarted
 //                  when they are done, and re-checked when it fires so a visitor
 //                  who started scrolling fast or typing during the wait is not
 //                  interrupted.
-//   • useEngaged   visible-and-interacting time on the current page.
 //   • useSessionViews  distinct page views this visit (tab), reloads not counted.
 
 import { useEffect, useState } from "react";
-import {
-  NEW_CLOCK,
-  engagedMsOf,
-  isTextEntry,
-  noteInteraction,
-  quietWaitMs,
-  tickEngaged,
-  type QuietInput,
-} from "./nudge-gate";
+import { isTextEntry, quietWaitMs, type QuietInput } from "./nudge-gate";
 
 // ── Shared watchers, installed once per page load ───────────────────────────
 
@@ -118,57 +111,6 @@ export function armNudge({ delayMs, onFire }: { delayMs: number; onFire: () => v
     document.removeEventListener("focusout", onFocusOut);
     dialogListeners.delete(onDialog);
   };
-}
-
-// ── Engaged time ────────────────────────────────────────────────────────────
-
-/**
- * True once the current page has been open, in a VISIBLE tab, for `neededMs`
- * with at least one real scroll, click, key press or touch (nudge-gate.ts
- * EngagedClock). Resets when `resetKey` (the pathname) changes.
- *
- * A scroll in the first 800 ms is ignored: that is scroll restoration or a
- * #hash jump, not the visitor.
- */
-export function useEngaged(neededMs: number, resetKey: string | null, enabled: boolean): boolean {
-  // Keyed by resetKey: right after a navigation the previous page's `true` must
-  // not be read as this page's (effects run after the render that sees it).
-  const [state, setState] = useState<{ key: string | null; engaged: boolean }>({ key: null, engaged: false });
-  useEffect(() => {
-    setState({ key: resetKey, engaged: false });
-    if (!enabled) return;
-    let clock = NEW_CLOCK;
-    const startedAt = Date.now();
-    let last = startedAt;
-    const touch = () => (clock = noteInteraction(clock));
-    const onScroll = () => {
-      if (Date.now() - startedAt > 800) touch();
-    };
-    const opts = { passive: true, capture: true } as const;
-    window.addEventListener("wheel", touch, opts);
-    window.addEventListener("touchmove", touch, opts);
-    window.addEventListener("pointerdown", touch, opts);
-    window.addEventListener("keydown", touch, opts);
-    window.addEventListener("scroll", onScroll, opts);
-    const tick = setInterval(() => {
-      const now = Date.now();
-      clock = tickEngaged(clock, document.visibilityState === "visible", now - last);
-      last = now;
-      if (engagedMsOf(clock) >= neededMs) {
-        setState({ key: resetKey, engaged: true });
-        clearInterval(tick);
-      }
-    }, 1000);
-    return () => {
-      clearInterval(tick);
-      window.removeEventListener("wheel", touch, opts);
-      window.removeEventListener("touchmove", touch, opts);
-      window.removeEventListener("pointerdown", touch, opts);
-      window.removeEventListener("keydown", touch, opts);
-      window.removeEventListener("scroll", onScroll, opts);
-    };
-  }, [neededMs, resetKey, enabled]);
-  return state.key === resetKey && state.engaged;
 }
 
 // ── Page views this visit ───────────────────────────────────────────────────

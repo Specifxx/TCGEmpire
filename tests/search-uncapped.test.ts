@@ -10,7 +10,7 @@ const exists = (p: string) => existsSync(join(ROOT, p));
 const SEARCH_API = "src/app/api/search/route.ts";
 const SEARCHBAR = "src/components/SearchBar.tsx";
 const PREMIUM_PAGE = "src/app/premium/page.tsx";
-const POPUP = "src/components/SignupPromoPopup.tsx";
+const SIGNUP_PROMPT = "src/components/InlineSignupPrompt.tsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SEARCH IS UNMETERED. This file replaced tests/search-limits.test.ts, which
@@ -38,7 +38,7 @@ test("the search-limit ladder's modules are gone, not merely unreferenced", () =
 });
 
 test("no module anywhere still imports the ladder", () => {
-  for (const f of [SEARCH_API, SEARCHBAR, PREMIUM_PAGE, POPUP]) {
+  for (const f of [SEARCH_API, SEARCHBAR, PREMIUM_PAGE, SIGNUP_PROMPT]) {
     const src = read(f);
     assert.ok(!/search-limits|search-quota/.test(src), `${f} still imports the removed ladder modules`);
     assert.ok(!/ANON_SEARCH_LIMIT|FREE_SEARCH_LIMIT/.test(src), `${f} still references a search-limit constant`);
@@ -69,8 +69,12 @@ test("the premium page no longer sells a search allowance", () => {
   assert.ok(!/Unlimited"/.test(src) || !/searches/i.test(src), "no unlimited-search upsell may remain");
 });
 
-test("the signup popup no longer sells a search allowance", () => {
-  const src = read(POPUP);
-  assert.ok(!/Searches per day|more searches/i.test(src), "the popup must not pitch a search allowance");
-  assert.ok(!/Signed out/.test(src), "the three-tier search ladder block must be gone");
+test("the sign-up prompts do not sell a search allowance", () => {
+  // The signup popup carried the three-tier search ladder until it was
+  // removed; it was retired altogether on 2026-09-30. Its replacement, the
+  // in-page InlineSignupPrompt, and the homepage's AccountStrip must not grow one.
+  for (const f of [SIGNUP_PROMPT, "src/components/home/AccountStrip.tsx"]) {
+    const src = read(f);
+    assert.ok(!/Searches per day|more searches|unlimited search/i.test(src), `${f} must not pitch a search allowance`);
+  }
 });

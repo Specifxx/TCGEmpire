@@ -6,13 +6,15 @@ import { useMe } from "@/lib/use-me";
 
 // The homepage's ONE account pitch. Before this the homepage — the site's
 // front door — contained zero account references outside the navbar icon and
-// the session popup; the free tier (alerts/portfolio/watchlist) was pitched
-// nowhere a first-time visitor actually reads.
+// the session popup (itself removed on 2026-09-30); the free tier
+// (alerts/portfolio/watchlist) was pitched nowhere a first-time visitor
+// actually reads. It is the homepage's one in-page sign-up prompt; the other
+// pages that have one use InlineSignupPrompt.
 //
 // Client component, but it renders IDENTICALLY for every visitor's first
 // paint (the signed-in check only ever *hides* it after hydration), so the
 // homepage's caching story is unchanged — no user state is baked into server
-// HTML. Perks mirror the popup's PERKS list; one primary CTA, `home` source.
+// HTML. Perks mirror AuthForm's PERKS list; one primary CTA, `home` source.
 const PERKS: [string, string][] = [
   ["Price alerts", "get an email when a card you watch gets cheaper"],
   ["Binder", "keep your collection in one place, priced live"],

@@ -168,14 +168,14 @@ export function OutboundLink({
     | "price_table_ebay"
     | "hot40_ebay";
 }) {
-  // Tell the signup popup a buy link exists on this page, so it stays off the
-  // buy path until the click has happened. See lib/buy-intent.ts — registering
-  // here rather than listing "pages with buy links" somewhere means a new buy
-  // surface is covered automatically.
+  // Record that a buy link exists on this page (lib/buy-intent.ts). Built so
+  // the signup popup (removed 2026-09-30) could stay off the buy path; kept as
+  // general infrastructure. Registering here rather than listing "pages with
+  // buy links" somewhere means a new buy surface is covered automatically.
   useEffect(() => registerBuyLink(), []);
 
   function onClick(e: React.MouseEvent<HTMLAnchorElement>) {
-    // Before the event, so the popup's re-arm cannot race the beacon.
+    // Before the event, so a consumer reading the flag cannot race the beacon.
     markBuyClick();
     trackEvent("buy_click", {
       retailer,

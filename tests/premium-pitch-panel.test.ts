@@ -53,7 +53,7 @@ test("one tagline, on every surface that carries the Premium headline", () => {
   for (const file of [
     "src/components/PremiumDialog.tsx",
     // PremiumSlideIn carried it too until its removal on 2026-09-28.
-    // SignupPromoPopup is deliberately NOT here since 2026-09-16: it sells the
+    // SignupPromoPopup (removed 2026-09-30) was deliberately NOT here from 2026-09-16: it sold the
     // free account and names no price, so it carries no Premium headline, no
     // tagline and no lock-in copy to keep in sync. Premium lives on the three
     // surfaces below plus PremiumSlideIn for signed-in visitors.

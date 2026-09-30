@@ -1,11 +1,14 @@
 /**
- * HOW LONG A CORNER NUDGE WAITS BEFORE IT SLIDES IN. One number, read by all
- * three of them, so they can never drift apart again:
+ * HOW LONG A CORNER NUDGE WAITS BEFORE IT SLIDES IN. One number, read by both
+ * of them, so they can never drift apart again:
  *
- *   SignupPromoPopup   the signed-out "make a free account" pitch
  *   PremiumSlideIn     the signed-in free-account Premium nudge (removed
  *                      2026-09-28, restored 2026-09-29)
  *   AnnualSwitchNudge  the monthly-subscriber "switch to annual" offer
+ *
+ * (A third, the signed-out sign-up slider SignupPromoPopup, was removed for good
+ * on 2026-09-30: sign-up prompts now live inline in the pages. The history below
+ * is mostly its history, kept because it is the evidence behind this number.)
  *
  * They had three different answers — instant, 12s and 8s — each arrived at by
  * its own separate decision, with nothing connecting them. A visitor never
@@ -16,9 +19,8 @@
  * TWELVE SECONDS since 2026-09-29 ("Nudges: value first", DECISIONS.md), and
  * that number is one half of a rule rather than a bare delay: a corner card
  * appears NUDGE_DELAY_MS after it became ELIGIBLE, and eligibility itself is
- * earned first (lib/nudge-gate.ts: never a visit's first page view unless it
- * has been read for 45 s, never a Premium ask before the 3rd page or on a
- * 48-hour-old account). The owner's brief that day: "make the login slider less
+ * earned first (lib/nudge-gate.ts: never a Premium ask before the 3rd page or
+ * on a 48-hour-old account). The owner's brief that day: "make the login slider less
  * annoying again and focus on getting visitors to use the site rather than
  * annoy them. Make the delay slightly longer."
  *
@@ -32,15 +34,14 @@
  *
  * WHAT THE HISTORY SAYS, because this number has been fought over before and
  * the next person to touch it deserves the evidence rather than a bare value.
- * SignupPromoPopup ran a 5s delay once and it measurably cost the site: bounce
+ * The sign-up popup ran a 5s delay once and it measurably cost the site: bounce
  * rose, pages/visitor fell, buy_click fell, and 78% of visitors dismissed it
  * outright. That is what drove the buy-click-aware timing that replaced it, and
  * then the instant show (2026-09-01) that replaced THAT; 2026-09-11 went back
  * to five seconds, and 2026-09-29 back to instant. The metrics to read are
- * signup_promo_shown/_dismissed, premium_slidein_shown/_dismissed/_click,
- * sign_up, buy_click and pages/visitor, and the popup's PROMO_VARIANT is
- * renamed with every change here so GA4 can separate before from after
- * instead of averaging them together.
+ * premium_slidein_shown/_dismissed/_click, sign_up, buy_click and
+ * pages/visitor (signup_promo_shown/_dismissed stop at 2026-09-30, when the
+ * popup was removed).
  *
  * A delay is NOT the same as a frequency cap. Each nudge keeps its own
  * eligibility rules, pageview gates, dismissal counts and snoozes — this only
@@ -53,8 +54,8 @@ export const NUDGE_DELAY_MS = 12_000;
  * HOW OFTEN A CORNER NUDGE MAY COME BACK, and when it must stop asking.
  *
  * Added 2026-09-14. `PremiumSlideIn` had all three of these as local constants
- * and `SignupPromoPopup` had NONE of them — no lifetime cap at all, a fact its
- * own header admitted. It returned every few pages after every dismissal
+ * and the sign-up popup (removed 2026-09-30) had NONE of them — no lifetime
+ * cap at all, a fact its own header admitted. It returned every few pages after every dismissal
  * forever, and because its counters were sessionStorage, a new tab wiped even
  * that and the visitor was asked again on their very first page. Someone could
  * decline it indefinitely and keep being asked, which is what makes a ✕

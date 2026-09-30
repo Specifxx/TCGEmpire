@@ -34,15 +34,15 @@ import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
 import NextTopLoader from "nextjs-toploader";
 
-// Neither is needed for the initial paint or SEO: the alert modal only opens in
-// response to a PriceWatchButton click, and the signup popup never shows on a
-// visit's first page and then waits 12 s ("Nudges: value first", 2026-09-29).
-// ssr:false + dynamic import keeps both out of the JS the browser has to
-// parse/execute before first paint.
+// Not needed for the initial paint or SEO: the alert modal only opens in
+// response to a PriceWatchButton click. ssr:false + dynamic import keeps it out
+// of the JS the browser has to parse/execute before first paint.
+//
+// There is NO signed-out sign-up slider any more (removed 2026-09-30, DECISIONS.md
+// "The sign-up slider is gone: sign-up prompts live in the page"). Signed-out
+// visitors meet InlineSignupPrompt inside the pages where an account helps with
+// what they are doing; nothing mounted here asks them to sign up.
 const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").then((m) => m.PriceAlertModal), {
-  ssr: false,
-});
-const SignupPromoPopup = dynamic(() => import("@/components/SignupPromoPopup").then((m) => m.SignupPromoPopup), {
   ssr: false,
 });
 // Low-intrusion Premium nudge for logged-in non-Premium users (a corner slide-in,
@@ -398,10 +398,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </main>
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
-                <SignupPromoPopup providers={enabledProviders()} />
-                {/* Signed-in, non-Premium browsing nudge — the signed-out
-                    counterpart of SignupPromoPopup. The two never overlap by
-                    audience. */}
+                {/* Signed-in, non-Premium browsing nudge. Signed-out visitors
+                    get no corner card at all since 2026-09-30, only the inline
+                    prompts in the pages themselves (InlineSignupPrompt). */}
                 <PremiumSlideIn />
                 {/* Its mirror image: monthly-Premium → annual retention nudge.
                     Mutually exclusive with PremiumSlideIn by `premium` state. */}

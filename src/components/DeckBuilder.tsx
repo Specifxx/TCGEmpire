@@ -15,6 +15,8 @@ import { QtyInput } from "./QtyInput";
 import { cardThumbProps } from "@/lib/card-image-url";
 import { DeckPublishPanel } from "./decks/DeckPublishPanel";
 import { DeckWatchForm } from "./DeckWatchForm";
+import { InlineSignupPrompt } from "./InlineSignupPrompt";
+import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // The deck builder and list pricer — the free, no-account tool behind /deck.
 //
@@ -606,6 +608,21 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
               Clear list
             </button>
           </div>
+        )}
+
+        {/* After a list is priced, under it (2026-09-30, "The sign-up slider
+            is gone"): what a free account adds to the list they just priced.
+            Best Basket's delivered total is any signed-in account's (api/basket;
+            the store-by-store plan and the deck price watch are Premium's, and
+            neither is promised here). Signed-out visitors only; ?next= brings
+            them back to this list. */}
+        {lines.length > 0 && (
+          <InlineSignupPrompt
+            surface="inline_deck"
+            title="See what this list costs delivered"
+            body={`A free account shows what this list costs delivered in Best Basket, postage included, and how much less that is than buying each card's cheapest copy separately. You can also watch up to ${FREE_WATCHLIST_LIMIT} of its cards for an email when one drops in price.`}
+            next={`/deck?list=${encodeURIComponent(encodeList(listText))}`}
+          />
         )}
       </div>
     </div>

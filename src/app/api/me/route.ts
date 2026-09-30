@@ -76,8 +76,8 @@ export async function GET() {
       // as a prop: PremiumDialog embeds AuthForm for signed-out visitors, and it
       // is mounted by PremiumDialogProvider, which the root layout renders as a
       // bare literal (tests/nav-premium-spotlight.test.ts) with nowhere to
-      // thread a prop through. SignupPromoPopup and PriceAlertModal still take
-      // theirs from the layout; unify later, not in this pass.
+      // thread a prop through. PriceAlertModal still takes its list from the
+      // layout; unify later, not in this pass.
       providers: enabledProviders(),
     },
     { headers: { "Cache-Control": "no-store" } }

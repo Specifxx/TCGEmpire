@@ -19,16 +19,18 @@ import { rememberPremiumSurface } from "./premium-surface";
 //
 // Vercel bills custom events against a monthly quota, so a single high-volume
 // event can crowd out every low-volume one that actually drives decisions.
-// signup_promo_shown is an IMPRESSION — it fires for a large share of visitors
-// (26% at its peak, the site's #1 event by volume), and _dismissed tracks it
-// closely. Between them they were consuming the allowance that buy_click,
-// sign_up and price_alert_subscribed need, and those are the events worth
-// paying for: a handful of them a day decide whether the site works.
+// The sign-up popup's signup_promo_shown was an IMPRESSION — it fired for a
+// large share of visitors (26% at its peak, the site's #1 event by volume), and
+// _dismissed tracked it closely. Between them they were consuming the allowance
+// that buy_click, sign_up and price_alert_subscribed need, and those are the
+// events worth paying for: a handful of them a day decide whether the site works.
+// The popup was removed on 2026-09-30; its replacement's impression,
+// signup_inline_view (InlineSignupPrompt, one per placement seen), is the same
+// shape and sits here for the same reason. signup_inline_click is low-volume and
+// is deliberately NOT here, so it reaches Vercel beside sign_up.
 //
-// They are NOT deleted — GA4 still receives both, with the `variant` property,
-// so the popup's shown → dismissed → sign_up funnel and the comparison-vs-perks
-// layout test remain fully measurable. GA4 has no per-event billing, which
-// makes it the right home for a high-cardinality impression.
+// GA4 still receives every event in this set. GA4 has no per-event billing,
+// which makes it the right home for a high-cardinality impression.
 //
 // Add to this set rather than dropping a trackEvent() call: keeping the call
 // site intact is what keeps the two destinations from silently diverging, which
@@ -55,8 +57,7 @@ import { rememberPremiumSurface } from "./premium-surface";
 // sign_up do; GA4 (no per-event billing) is where high-cardinality usage
 // telemetry like this belongs.
 const GA4_ONLY_EVENTS = new Set([
-  "signup_promo_shown",
-  "signup_promo_dismissed",
+  "signup_inline_view",
   "premium_slidein_shown",
   "premium_slidein_dismissed",
   "annual_switch_shown",

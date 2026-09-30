@@ -17,6 +17,7 @@ import { cardHref } from "@/lib/card-url";
 import { championForCardName } from "@/lib/champions";
 import { deckTotals, massEntry, type MarketTotals } from "@/lib/published-decks";
 import { guidesForTool } from "@/lib/content/tool-guides";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 
 // A published deck (2026-09-26). ISR, an hour; nothing is prerendered at build
 // (no generateStaticParams — CLAUDE.md), and publishing/hiding revalidates it.
@@ -204,6 +205,17 @@ export default async function DeckPage({ params }: { params: { slug: string } })
           eBay and TCGplayer included, so the disclosure sits right under the
           list (2026-09-26: the page had none of its own). */}
       <AffiliateDisclosure partner="both" />
+      {/* Under the deck and its disclosure (2026-09-30, "The sign-up slider is
+          gone"): what a free account adds to THIS list is Best Basket's
+          delivered total (api/basket: any signed-in account gets its own total
+          and saving; the store-by-store plan is Premium's, and this names no
+          plan). Signed-out only, a client island: the page stays ISR. */}
+      <InlineSignupPrompt
+        surface="inline_published_deck"
+        className="mt-6"
+        title="See what this deck costs delivered"
+        body="A free account shows what this list costs delivered in Best Basket, postage included: from how many stores, and how much less that is than buying each card's cheapest copy separately."
+      />
       {/* The library's guides, after the deck (2026-09-26, "Blog and tools,
           joined up"): a deck page reuses /decks' entry. Static links from
           memory, no query. */}

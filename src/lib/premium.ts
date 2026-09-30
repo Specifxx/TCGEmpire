@@ -708,7 +708,7 @@ export const PORTFOLIO_FREE = true;
 // the two tools are allowed to sit on different tiers independently (see
 // tests/access-tiers.test.ts), it just happens that they agree again now. Every
 // surface that pitched Best Basket as a free-account perk (the header nav link,
-// SignupPromoPopup's comparison, articles.ts's own copy, /premium's feature
+// the sign-up popup's comparison (the popup is gone since 2026-09-30), articles.ts's own copy, /premium's feature
 // list) had to be updated in the same pass this comment was — see git history
 // for the full file list, the same six-plus-files problem TierComparisonTable's
 // own header comment warns about.

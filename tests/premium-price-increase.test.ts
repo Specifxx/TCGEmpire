@@ -361,25 +361,9 @@ test("the premium-interest beacon still fires from every retired dialog entry po
   assert.match(navLink, /firePremiumClickBeacon/, "PremiumNavLink must fire the beacon on click");
 });
 
-test("SignupPromoPopup shows NO price at all — it sells the free account (2026-09-16)", () => {
-  // THIS TEST USED TO PIN THE OPPOSITE, and the reversal is the point. From
-  // 2026-09-06 the popup always showed a price ("we also need to show the
-  // prices for non logged in users"), simplified on 2026-09-09 to a bare "$0
-  // today". On 2026-09-16 the owner took the Premium pitch off this surface
-  // entirely: it now sells the free account, so there is no price to show
-  // honestly or dishonestly.
-  //
-  // The $0-today honesty guarantee that used to live here is NOT lost — it
-  // moved with the pitch. PremiumSlideIn, PremiumDialog, PremiumCta and
-  // /premium all still carry it, and all four are still in this file's own
-  // surface lists above plus tests/premium-zero-today.test.ts.
-  const src = read("src/components/SignupPromoPopup.tsx");
-  assert.ok(!/PREMIUM_PRICE_AMOUNT/.test(src), "no price block on a card that asks for no money");
-  assert.ok(!/premiumZeroToday|premiumFromLine|premiumLockInTail/.test(src), "no price helpers");
-  assert.ok(!/Price increasing soon/.test(src), "no price-increase banner");
-  // What it must say instead: signing up is free and needs no card.
-  assert.match(src, /Free, no card needed/, "the free-account ask must state it costs nothing");
-});
+// "SignupPromoPopup shows NO price at all" lived here from 2026-09-16 until the
+// popup was removed on 2026-09-30. Its replacement, InlineSignupPrompt, carries
+// the same no-price guarantee in tests/signup-inline.test.ts.
 
 test("the dialog's Premium lock-in copy shows only while Premium is the plan selected", () => {
   // QA, 2026-09-25: every Plus gate opens the dialog on Plus, which then led

@@ -194,8 +194,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   // A brand-new account has, by definition, never started a trial before — so
   // unlike trialEligible (which requires a signed-in user to check their own
   // trialStartedAt), a signed-out visitor is trial-available on the strength
-  // of premiumTrialEnabled() alone (same reasoning SignupPromoPopup.tsx's own
-  // trialAvailable documents). Used to decide the pricing-card headline and
+  // of premiumTrialEnabled() alone. Used to decide the pricing-card headline and
   // the signed-out CTA copy; trialEligible still gates the actual checkout
   // flow once someone is signed in.
   const trialAvailable = !already && (await trialOfferedTo(user ? dbUser : null));

@@ -8,11 +8,11 @@ import { Dialog } from "./ui/Dialog";
 
 // Site-wide feedback / review widget.
 //
-// WHY A PERSISTENT LAUNCHER AND NOT A SECOND POPUP. The site already auto-opens
-// one full-screen dialog at 25s (SignupPromoPopup), and that component's own
-// header records the real user feedback that prompted it: "ads + subscription
-// pitch + a still-growing marketplace all at once read as overwhelming /
-// untrustworthy to a new visitor". Adding a second uninvited interruption to
+// WHY A PERSISTENT LAUNCHER AND NOT A SECOND POPUP. When this was written the
+// site already auto-opened one sign-up dialog (SignupPromoPopup, removed
+// altogether on 2026-09-30), whose own header recorded the real user feedback
+// behind it: "ads + subscription pitch + a still-growing marketplace all at once
+// read as overwhelming / untrustworthy to a new visitor". Adding a second uninvited interruption to
 // collect satisfaction data would be measuring a problem while making it worse —
 // and the people most likely to have something useful to say are exactly the
 // ones a wall of modals drives off. So this NEVER auto-opens. It is a small,
@@ -97,8 +97,8 @@ export function FeedbackWidget() {
   }, [pathname]);
 
   // Escape, the focus trap, scroll lock and the shared rcDialog flag (read by
-  // SignupPromoPopup before it auto-opens, so the two dialogs can never
-  // stack) now all belong to Dialog — refcounted there, so this widget shares
+  // the corner nudges before they slide in, so nothing can stack on this
+  // panel) now all belong to Dialog — refcounted there, so this widget shares
   // the exact same flag every other Dialog-based overlay sets, rather than
   // its own private copy. Dialog also restores focus to whatever triggered
   // it (the launcher button) once the panel unmounts, so close() no longer
@@ -154,8 +154,8 @@ export function FeedbackWidget() {
 
   return (
     <>
-      {/* Launcher. z-40 keeps it under every dialog (SignupPromoPopup is z-75,
-          QuickView z-60) and under the sticky nav, so it can never trap or
+      {/* Launcher. z-40 keeps it under every dialog and corner nudge
+          (PremiumSlideIn is z-70, QuickView z-60) and under the sticky nav, so it can never trap or
           cover a more important surface.
 
           Sized down to a 44x44 icon-only circle below `sm` (was a wider

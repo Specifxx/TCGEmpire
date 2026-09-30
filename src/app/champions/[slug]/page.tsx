@@ -18,6 +18,8 @@ import { getSiteMedianCents } from "@/lib/content/site-median";
 import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForChampion } from "@/lib/content/related-guides";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
+import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { getRiftboundStocksLinks, rbsChampionUrl } from "@/lib/riftboundstocks";
 
 // riftdecks.com's /legends/<champion> pages rank #1 for champion queries with
@@ -294,6 +296,15 @@ export default async function ChampionPage({ params }: { params: { slug: string 
         </div>
         <RbsChampionLink href={rbsChampionUrl(await rbsLinks, champ.slug)} name={champ.name} />
       </section>
+
+      {/* After the printings, for a visitor collecting or pricing this
+          champion (2026-09-30, "The sign-up slider is gone"). Signed-out only,
+          a client island: the page stays ISR. */}
+      <InlineSignupPrompt
+        surface="inline_champion"
+        title={`Collecting ${champ.name}?`}
+        body={`A free account tracks what your collection is worth, with profit and loss, for up to ${FREE_PORTFOLIO_LIMIT} cards, and watches up to ${FREE_WATCHLIST_LIMIT} cards for price drops by email.`}
+      />
 
       {/* This champion's own articles — any whose tags name them — topped up
           with the guides behind /champions (lib/content/related-guides.ts

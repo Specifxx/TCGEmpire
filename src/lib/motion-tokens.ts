@@ -45,7 +45,7 @@ export const EASING = {
 // Every z-index literal found in the codebase at the time this scale was
 // introduced, named. New overlay work should reach for one of these instead of
 // inventing a bare `z-[N]`; TWO literals stay hardcoded outside it on purpose,
-// pinned by tests: the corner nudges' `z-[70]` (tests/signup-slidein.test.ts)
+// pinned by tests: the corner nudges' `z-[70]` (tests/signup-inline.test.ts)
 // and the skip link's `focus:z-[200]` (layout.tsx) — both predate this file and
 // changing the source string, not just the token, would break their tests for
 // no visual gain. NextTopLoader also sits at 200 so it always wins over every

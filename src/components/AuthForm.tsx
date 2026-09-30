@@ -30,8 +30,9 @@ const OAUTH_ERRORS: Record<string, string> = {
   oauth_session: "Something went wrong finishing sign-in. Please try again.",
 };
 
-// What a free account PERMANENTLY unlocks — the same perks the signup popup
-// pitches (FreeAccountCompare), rendered here as the /login page's value prop
+// What a free account PERMANENTLY unlocks — the same perks the in-page sign-up
+// prompts (InlineSignupPrompt) and the homepage's AccountStrip describe,
+// rendered here as the /login page's value prop
 // so the standalone page sells the account instead of assuming the visitor
 // already wants one. "Top 3 deals" since 2026-09-23: a free account sees the
 // top three rows of Deal Finder and Rising Cards.
@@ -55,11 +56,11 @@ export function AuthForm({
   // Drop the heading, the value-prop paragraph, the surrounding card chrome and
   // the password-migration footnote, leaving just the provider buttons.
   //
-  // For SignupPromoPopup, which already states the pitch immediately above this
-  // form. Rendering both meant the same three perks were listed TWICE, one
-  // restatement under the other, inside a dialog whose excessive height is what
-  // pushed its own close button off-screen on a phone (see the layout note in
-  // SignupPromoPopup). Height here is not cosmetic — it is the bug.
+  // For the dialogs that already state their pitch immediately above this form
+  // (PriceAlertModal, PremiumDialog, /premium/start). Written for the sign-up
+  // popup (removed 2026-09-30), where rendering both listed the same perks
+  // TWICE inside a card whose excessive height pushed its own close button
+  // off-screen on a phone. Height here is not cosmetic — it was the bug.
   compact?: boolean;
   // Standalone /login only (bare's modal already has its own close button). A
   // visitor who lands here off a gated feature, unasked, previously had no way
@@ -67,7 +68,7 @@ export function AuthForm({
   // WS4 collapsed elsewhere on the site. /login/page.tsx computes this from
   // ?next=, falling back to the homepage.
   cancelHref?: string;
-  // Which surface this form is embedded in ("popup", "alert_modal", …) — fed to
+  // Which surface this form is embedded in ("alert_modal", "premium_dialog", …) — fed to
   // markSignupSource on provider click so the sign_in_click event and, if the
   // OAuth round trip completes, User.signupSource both carry the surface that
   // actually converted. Absent (standalone /login): ?src=, then the cookie a
@@ -203,9 +204,9 @@ export function AuthForm({
           New here? Either button creates your account on the spot.
         </p>
         {/* The password-migration note is genuinely useful on /login, where
-            someone actively troubleshooting sign-in has room to read it. In the
-            promo popup it is four lines of edge-case prose that push the dialog
-            past the height of a phone screen; /login remains one tap away. */}
+            someone actively troubleshooting sign-in has room to read it. In an
+            embedded dialog it is four lines of edge-case prose that push the
+            dialog past the height of a phone screen; /login remains one tap away. */}
         {!compact && (
           <p className="mt-2 text-center text-xs text-slate-500">
             Signed up with a password before? Use the same email address with Google or Discord and you&apos;ll

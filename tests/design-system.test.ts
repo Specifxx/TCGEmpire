@@ -116,8 +116,8 @@ test("the dead NavMenu.tsx renderer is gone", () => {
 });
 
 test("no component hand-rolls the double-rAF entrance any more — usePresence() covers all of them now", () => {
-  // 2026-09-16: the three corner nudges (SignupPromoPopup, PremiumSlideIn,
-  // AnnualSwitchNudge) were the last holdouts, each with its own copy of the
+  // 2026-09-16: the three corner nudges (SignupPromoPopup, removed 2026-09-30;
+  // PremiumSlideIn; AnnualSwitchNudge) were the last holdouts, each with its own copy of the
   // double-rAF entrance + a bare setTimeout exit. All three now share
   // usePresence(shown, 250) from @/lib/motion, so this check no longer needs
   // an exclusion list — the pattern should not exist anywhere in src/.
@@ -453,10 +453,10 @@ test("the watchlist is its own header control, opening a drawer and carrying the
 });
 
 test("every fixed bottom-corner surface (the two nudges, the feedback FAB, ui/Toast) clears the banner via .above-bottombar", () => {
-  // PremiumSlideIn was the third nudge until 2026-09-28 (removed: upgrade
-  // prompts live where a free account hits a limit, lib/free-limits.ts).
+  // The signed-out SignupPromoPopup was one of these until its removal on
+  // 2026-09-30 ("The sign-up slider is gone"); PremiumSlideIn is back in its place.
   for (const rel of [
-    "src/components/SignupPromoPopup.tsx",
+    "src/components/PremiumSlideIn.tsx",
     "src/components/AnnualSwitchNudge.tsx",
     "src/components/FeedbackWidget.tsx",
     "src/components/ui/Toast.tsx",

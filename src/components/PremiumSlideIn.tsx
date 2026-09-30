@@ -50,9 +50,10 @@ import { Skeleton } from "./ui/Skeleton";
 //
 // DELIBERATELY NOT A MODAL. It is a corner slide-in that never covers content,
 // never locks scroll, and yields to any real modal — it checks the shared
-// body[data-rc-dialog] flag the signup/feedback modals set, and never sets it
-// itself. The signup popup — the site's one full-screen auto-modal — is
-// signed-OUT only (see SignupPromoPopup), so the two audiences never overlap.
+// body[data-rc-dialog] flag the alert/feedback/Premium dialogs set, and never
+// sets it itself. Signed-out visitors get no corner card at all since
+// 2026-09-30 (the sign-up slider was removed; sign-up prompts are inline page
+// content, InlineSignupPrompt), so this is the only card a free account sees.
 //
 // ACTIVATE FIRST, ASK SECOND (2026-09-29, "Nudges: value first" in
 // DECISIONS.md; owner: "focus on getting visitors to use the site rather than
@@ -86,9 +87,9 @@ const SNOOZE_UNTIL = "rc_prem_slidein_until"; // localStorage: epoch ms; don't s
 
 // A second dismissal means never again — two firm no's is a no.
 //
-// These three moved to lib/nudge-timing.ts on 2026-09-14 so SignupPromoPopup
-// could adopt the same cap from ONE definition rather than a second copy of
-// these numbers. MAX_DISMISSALS stays as a local alias because this file reads
+// These three moved to lib/nudge-timing.ts on 2026-09-14 so the sign-up popup
+// (removed 2026-09-30) could adopt the same cap from ONE definition rather than
+// a second copy of these numbers. MAX_DISMISSALS stays as a local alias because this file reads
 // it in five places and the shorter name is what those lines were written
 // around; the VALUE has exactly one home.
 const MAX_DISMISSALS = MAX_NUDGE_DISMISSALS;
@@ -257,8 +258,8 @@ export function PremiumSlideIn() {
   const router = useRouter();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
-  // Same shared primitive SignupPromoPopup uses — one definition of "how a
-  // corner nudge enters/exits" instead of two copies of the double-rAF +
+  // Same shared primitive AnnualSwitchNudge uses — one definition of "how a
+  // corner nudge enters/exits" instead of copies of the double-rAF +
   // setTimeout trick.
   const { mounted, entered } = usePresence(shown, 250);
   const contextPitch = contextPitchFor(pathname);
@@ -482,10 +483,10 @@ export function PremiumSlideIn() {
     // (FeedbackWidget, above-bottombar right-4). `.above-bottombar` clears the
     // mobile bottom tab bar (0 on desktop, where it's a plain corner inset);
     // z-[70] keeps it under every real modal (feedback panel z-85, premium
-    // dialog z-120) while sitting above page chrome. SignupPromoPopup shares
-    // this exact z-tier now too (it became a non-modal slide-in itself,
-    // 2026-09-01) — safe, since the two audiences (signed-out there, signed-in
-    // non-Premium here) can never both apply to the same visitor at once.
+    // dialog z-120) while sitting above page chrome. AnnualSwitchNudge shares
+    // this corner and z-tier — safe, since its audience (monthly Premium) and
+    // this one (signed in, no paid tier) never overlap. (The signed-out
+    // SignupPromoPopup shared it too until its removal on 2026-09-30.)
     // A bottom CARD, never a full-width overlay: 20rem at most, so on a phone
     // the page stays visible beside and above it. The un-entered state uses
     // motion-safe: only, so under prefers-reduced-motion it simply appears.
@@ -502,8 +503,8 @@ export function PremiumSlideIn() {
           table fits with its Premium column visible (at 20rem "Unlimited" was cut
           off at the edge). The max-h + scroll is for the OPEN disclosure
           (the tier table) and for short viewports, and the header is sticky so
-          the ✕ never scrolls away (the short-phone incident in
-          SignupPromoPopup's header). */}
+          the ✕ never scrolls away (the short-phone incident the removed
+          sign-up popup once had). */}
       <div className="relative max-h-[min(80dvh,calc(100dvh-9.5rem))] overflow-y-auto overflow-x-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center gap-2 bg-ink-900 py-1 pl-4 pr-1">
           <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">

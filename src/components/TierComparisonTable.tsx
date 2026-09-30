@@ -73,8 +73,9 @@
 // the work of three: signed-out and free-account differ on exactly two rows
 // (price alerts, portfolio), and a reader deciding whether to PAY does not need
 // that distinction spelled out on the pricing page. The signed-out pitch is its
-// own surface — FreeAccountCompare, in the signup popup — and that is where
-// "what does an account add" belongs. The dialog had already dropped the column
+// own surface — the in-page sign-up prompts (InlineSignupPrompt, since the
+// sign-up popup and its FreeAccountCompare were removed on 2026-09-30) and the
+// homepage's AccountStrip — and that is where "what does an account add" belongs. The dialog had already dropped the column
 // for space; this makes both surfaces agree.
 //
 // `false` renders an em dash, `true` a tick, a string renders as-is — the rows

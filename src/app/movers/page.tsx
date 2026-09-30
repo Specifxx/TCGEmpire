@@ -18,6 +18,8 @@ import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { HubIntro } from "@/components/HubIntro";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
+import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // ISR: PriceHistory gains one snapshot a WEEK (HISTORY_MIN_INTERVAL_DAYS), and
 // the price-refresh workflow purges this path after every import, so a 24-hour
@@ -243,6 +245,18 @@ export default async function MoversPage() {
       {/* The strip shows with or without movers — it is its own data, and old
           links to #most-searched land on it. */}
       <MostSearchedStrip rows={mostSearched} coveredDays={demand.coveredDays} />
+
+      {/* The free account where it fits what a movers reader is doing: they
+          have just watched prices move, and a watched card emails them when it
+          drops (lib/price-alerts.ts, the free "all" run). Signed-out visitors
+          only, a client island: the page stays static. After the lists and the
+          eBay CTA pinned under them, never above them. (2026-09-30, "The
+          sign-up slider is gone".) */}
+      <InlineSignupPrompt
+        surface="inline_movers"
+        title="Get an email when a card you want gets cheaper"
+        body={`With a free account you can watch up to ${FREE_WATCHLIST_LIMIT} cards, and we email you when one of them drops in price. Your watchlist lives in one place, on any device.`}
+      />
 
       {/* The guides behind the lists, after the page's data (2026-09-26, "Blog
           and tools, joined up"). The eBay CTA stays pinned straight under the

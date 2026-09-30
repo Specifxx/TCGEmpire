@@ -77,49 +77,22 @@ test("SignupWelcome is mounted in the root layout", () => {
   assert.match(src, /<SignupWelcome \/>/);
 });
 
-// ── Popup + alert-modal instrumentation ──────────────────────────────────────
+// ── Sign-up prompt + alert-modal instrumentation ──────────────────────────────────────
 
-test("the signup popup reports shown and dismissed — its conversion rate is measurable", () => {
-  const src = read("src/components/SignupPromoPopup.tsx");
-  // Both events carry `variant`, so the comparison layout stays separable from
-  // the perk-list version it replaced instead of being averaged together across
-  // the changeover. Read them in GA4 — see the GA4_ONLY_EVENTS test below.
-  // Asserted on the PROPERTIES the funnel needs, not on one literal argument
-  // list — this pinned the exact object and then had to change the moment
-  // `trigger` was added to separate the buy-path cases. What must hold is that
-  // the impression carries the path and the layout variant.
-  assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*path: pathname/);
-  assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*variant: PROMO_VARIANT/);
-  assert.match(src, /trackEvent\("signup_promo_dismissed", \{ variant: PROMO_VARIANT \}\)/);
-  // The literal moves with each real content or timing change so GA4 can
-  // separate the eras — "premium_pitch" (text pitch) → "premium_graphic"
-  // (2026-09-10, the pitch became the designed PremiumPitchPanel) →
-  // "premium_graphic_5s" (2026-09-11, instant show became a 5s delay). See the
-  // component's own naming-history comment.
-  //
-  // MATCHED LOOSELY ON PURPOSE. This assertion used to pin the exact literal,
-  // which contradicted the comment directly above it and turned every
-  // legitimate rename into a test failure — the rename is the DESIRED
-  // behaviour here, since without it two eras average together in GA4 and
-  // neither can be read. What actually needs pinning is that the variant stays
-  // a single named constant rather than being inlined at each call site.
-  assert.match(src, /const PROMO_VARIANT = "[a-z0-9_]+";/, "the variant must be a named constant, not inlined at each call");
-  assert.doesNotMatch(src, /variant: "[a-z]/, "no call site may inline a variant literal");
-  // The embedded AuthForm attributes its provider clicks to the popup.
-  assert.match(src, /source="popup"/);
-});
-
-test("the promo impression events are GA4-only — they must not bill Vercel's event quota", () => {
-  // signup_promo_shown fires for a large share of visitors (26% at its peak,
-  // the site's #1 event by volume) and _dismissed tracks it closely. Vercel
-  // bills custom events against a monthly quota, so the pair was crowding out
-  // buy_click, sign_up and price_alert_subscribed — the handful-a-day events
-  // that actually decide whether the site works.
+test("the inline sign-up prompt's impression is GA4-only; its click reaches both", () => {
+  // The popup's signup_promo_shown was an impression that fired for a large
+  // share of visitors (26% at its peak, the site's #1 event by volume) and,
+  // with _dismissed, crowded buy_click, sign_up and price_alert_subscribed out
+  // of Vercel's monthly custom-event quota. The popup is gone (2026-09-30);
+  // its replacement's impression, signup_inline_view, is the same shape and
+  // gets the same treatment. The click is low-volume and decides things, so it
+  // goes to both destinations.
   const src = read("src/lib/analytics.ts");
   const setMatch = src.match(/const GA4_ONLY_EVENTS = new Set\(\[([\s\S]*?)\]\)/);
   assert.ok(setMatch, "expected a GA4_ONLY_EVENTS set");
-  assert.match(setMatch![1], /"signup_promo_shown"/);
-  assert.match(setMatch![1], /"signup_promo_dismissed"/);
+  assert.match(setMatch![1], /"signup_inline_view"/);
+  assert.doesNotMatch(setMatch![1], /"signup_inline_click"/, "the click must still reach Vercel");
+  assert.doesNotMatch(setMatch![1], /"signup_promo_/, "the retired popup's events fire nowhere now");
   // The Vercel leg must be the one that is gated, and GA4's must NOT be —
   // suppressing both would delete the funnel rather than move it.
   assert.match(src, /if \(!GA4_ONLY_EVENTS\.has\(name\)\) vercelTrack\(name, cleaned\);/);
@@ -134,14 +107,11 @@ test("the promo impression events are GA4-only — they must not bill Vercel's e
   );
 
   // The call sites stay intact — the exclusion is a destination policy, not a
-  // deletion. Dropping the trackEvent() call instead is what makes the two
-  // destinations silently diverge, which is why this dispatcher exists.
-  const popup = read("src/components/SignupPromoPopup.tsx");
-  assert.match(popup, /trackEvent\("signup_promo_shown"/);
-  assert.match(popup, /trackEvent\("signup_promo_dismissed"/);
-
-  // Nothing may reach Vercel around these events except through trackEvent().
-  assert.ok(!/@vercel\/analytics/.test(popup), "the popup must not import Vercel's track() directly");
+  // deletion — and nothing reaches Vercel around them except through trackEvent().
+  const prompt = read("src/components/InlineSignupPrompt.tsx");
+  assert.match(prompt, /trackEvent\("signup_inline_view"/);
+  assert.match(prompt, /trackEvent\("signup_inline_click"/);
+  assert.ok(!/@vercel\/analytics/.test(prompt), "the prompt must not import Vercel's track() directly");
 });
 
 test("PriceAlertModal events reach BOTH analytics systems, and the silent path is finally visible", () => {
@@ -316,49 +286,6 @@ test("the card page CTA no longer undercuts the account pitch", () => {
   assert.match(src, /watchlist syncs everywhere/);
 });
 
-test("the first show waits the shared nudge delay — never its own number (2026-09-11, 12 s since 2026-09-29)", () => {
-  // The timing history this file pins, in order: 5s timer → relaxed pageview
-  // gate → buy_click-aware 3-case timing → no timer at all (2026-09-01) → the
-  // shared 5s delay. Each step was a real product decision, not drift.
-  //
-  // THE FIRST OF THOSE IS THIS ONE. A bare 5s delay measurably cost the site
-  // last time — bounce rose, pages/visitor fell, buy_click fell, 78% dismissed
-  // — which is why lib/nudge-timing.ts carries that evidence and why the
-  // PROMO_VARIANT was renamed, so GA4 can separate this from the instant era
-  // rather than averaging the two together.
-  //
-  // 2026-09-10: the popup also COUNTS pages, but only to decide when to come
-  // back after a dismissal — a visitor who has never dismissed it still sees it
-  // on their first eligible page. That is a different mechanism from the
-  // retired first-show gate, which is why those constant names stay banned
-  // below while the new cadence is allowed.
-  // 2026-09-29: the delay reaches the popup through the shared timer
-  // (armNudge), counted from the moment the card is eligible.
-  const src = read("src/components/SignupPromoPopup.tsx");
-  assert.match(src, /delayMs: NUDGE_DELAY_MS,/, "the shared delay must wrap the show, not merely be imported");
-  assert.doesNotMatch(
-    src,
-    /const\s+(PROMO_)?DELAY_MS\s*=/,
-    "the delay must come from lib/nudge-timing.ts, not a second copy of the number here",
-  );
-  // Navigating away mid-wait must cancel it, or it lands on a page already left:
-  // the effect returns armNudge's cleanup.
-  assert.match(src, /return armNudge\(\{/, "the pending show must be cancelled on unmount/route change");
-  assert.match(read("src/lib/nudge-runtime.ts"), /clearTimeout\(timer\)/, "and the shared timer must actually clear itself");
-  assert.doesNotMatch(src, /PROMO_DELAY_MS|MIN_PAGEVIEWS|PV_KEY/, "the old delay/pageview-gate machinery must stay gone, not come back");
-  // The re-arm gate must be reachable ONLY when a dismissal has been stamped —
-  // a never-dismissed visitor must not be held back by any page count.
-  assert.match(
-    src,
-    /dismissedAt !== null && views - dismissedAt < PAGES_BETWEEN_SHOWS/,
-    "the page-count gate must be conditional on having been dismissed first",
-  );
-  // The hard-won dismissibility contract must survive this change untouched.
-  assert.match(src, /SKIP_PATHS/);
-  assert.match(src, /document\.body\.dataset\.rcDialog/);
-  assert.match(src, /Maybe later/);
-});
-
 test("the homepage finally pitches the free account (AccountStrip)", () => {
   const strip = read("src/components/home/AccountStrip.tsx");
   assert.match(strip, /markSignupSource\("home"\)/);
@@ -380,26 +307,11 @@ test("/login leads with account creation, not returning-user framing", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// THE POPUP NO LONGER AVOIDS THE BUY PATH — DELIBERATELY (2026-09-01).
-//
-// It used to time itself around buy_click specifically so it could never land
-// on top of the buy button (see git history — the removed 3-case
-// timer/backstop/post-buy system). That protection is gone on purpose, by
-// explicit instruction: the popup now shows instantly regardless of what else
-// is on the page. See the component's own header comment for the accepted
-// trade-off this reopens.
-//
-// OutboundLink's own buy-signal machinery (registerBuyLink/markBuyClick) is
-// UNCHANGED and still pinned below — it's general infrastructure other
-// features (PremiumSlideIn's post-buy framing, future ones) can still use, and
-// still deserves its own ordering guarantee even though the popup no longer
-// consumes it.
+// OutboundLink's buy-signal machinery (registerBuyLink/markBuyClick) was built
+// so the signup popup could stay off the buy path. The popup stopped consuming
+// it on 2026-09-01 and was removed altogether on 2026-09-30; the signal is
+// kept as general infrastructure and still deserves its ordering guarantee.
 // ─────────────────────────────────────────────────────────────────────────────
-test("the popup no longer references buy-click/buy-intent signals at all", () => {
-  const src = read("src/components/SignupPromoPopup.tsx");
-  assert.doesNotMatch(src, /buy-intent|BUY_CLICK_EVENT|buyLinksOnPage|hasBoughtThisSession/, "buy-click awareness must be fully removed, not just unused");
-});
-
 test("OutboundLink's own buy-signal ordering still holds, independent of who consumes it", () => {
   const outbound = read("src/components/OutboundLink.tsx");
   assert.match(outbound, /registerBuyLink\(\)/, "OutboundLink must register its presence on mount");

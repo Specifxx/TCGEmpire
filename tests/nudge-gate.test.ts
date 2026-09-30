@@ -6,37 +6,26 @@ import { join } from "node:path";
 import {
   ANNUAL_MIN_VIEWS,
   DIALOG_QUIET_MS,
-  NEW_CLOCK,
   PREMIUM_MIN_ACCOUNT_AGE_MS,
   PREMIUM_MIN_VIEWS,
   PREMIUM_SKIP_PATHS,
-  SIGNUP_ENGAGED_MS,
-  SIGNUP_LANDING_ENGAGED_MS,
-  SIGNUP_MIN_VIEWS,
-  SIGNUP_SKIP_PATHS,
   accountAgeMs,
-  engagedMsOf,
-  isLandingPage,
   isTextEntry,
-  noteInteraction,
   pathSkipped,
   premiumSlideInEligible,
   quietWaitMs,
-  signupEngagedNeededMs,
-  signupPromoEligible,
-  tickEngaged,
   type QuietInput,
 } from "../src/lib/nudge-gate";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "../src/lib/nudge-timing";
-import { isSignInHref, isSignInPath } from "../src/lib/signin-intent";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // "Nudges: value first" (DECISIONS.md, 2026-09-29). These run the ELIGIBILITY
-// rules of the three corner cards as behaviour, not as source patterns:
-// page-view counts, engaged time, referrer irrelevance, dialogs, focused inputs,
-// dismissal snoozes and account age. tests/first-visit-ux.test.ts,
-// nudge-timing.test.ts and nudge-frequency.test.ts pin that the components USE
-// them.
+// rules of the corner cards as behaviour, not as source patterns: page-view
+// counts, dialogs, focused inputs, dismissal snoozes and account age.
+// tests/first-visit-ux.test.ts, nudge-timing.test.ts and nudge-frequency.test.ts
+// pin that the components USE them. The signed-out sign-up card's own rules
+// (first page view, engaged time, sign-in intent) went with the card itself on
+// 2026-09-30 ("The sign-up slider is gone", tests/signup-inline.test.ts).
 // ─────────────────────────────────────────────────────────────────────────────
 
 const HOUR = 3_600_000;
@@ -44,9 +33,6 @@ const DAY = 24 * HOUR;
 
 test("the constants are the owner's rules, in one place", () => {
   assert.equal(NUDGE_DELAY_MS, 12_000);
-  assert.equal(SIGNUP_MIN_VIEWS, 2);
-  assert.equal(SIGNUP_ENGAGED_MS, 45_000);
-  assert.equal(SIGNUP_LANDING_ENGAGED_MS, 30_000, "30 s on blog posts and /movers, up from 7 s");
   assert.equal(PREMIUM_MIN_VIEWS, 3);
   assert.equal(PREMIUM_MIN_ACCOUNT_AGE_MS, 48 * HOUR);
   assert.equal(ANNUAL_MIN_VIEWS, 2);
@@ -55,58 +41,6 @@ test("the constants are the owner's rules, in one place", () => {
   assert.equal(MAX_NUDGE_DISMISSALS, 2);
   assert.equal(SNOOZE_AFTER_DISMISS_MS, 7 * DAY);
   assert.equal(SNOOZE_AFTER_CLICK_MS, 14 * DAY);
-});
-
-// ── The sign-up card ────────────────────────────────────────────────────────
-
-test("sign-up card: never on a visit's first page view, however it was reached", () => {
-  // No referrer, device or width is even an input, so nothing about where the
-  // visitor came from can open the first page.
-  assert.equal(signupPromoEligible({ views: 1, engagedMs: 0 }), false);
-  assert.equal(signupPromoEligible({ views: 1, engagedMs: 0, landing: true }), false);
-  // Not by time alone either: 44.9 s engaged is still short.
-  assert.equal(signupPromoEligible({ views: 1, engagedMs: SIGNUP_ENGAGED_MS - 1 }), false);
-  // views 0 = the route is not counted yet.
-  assert.equal(signupPromoEligible({ views: 0, engagedMs: 0 }), false);
-});
-
-test("sign-up card: from the 2nd page view", () => {
-  assert.equal(signupPromoEligible({ views: 2, engagedMs: 0 }), true);
-  assert.equal(signupPromoEligible({ views: 7, engagedMs: 0, landing: true }), true);
-});
-
-test("sign-up card: or after 45 s engaged on the first page, 30 s on blog posts and /movers", () => {
-  assert.equal(signupPromoEligible({ views: 1, engagedMs: 45_000 }), true);
-  assert.equal(signupPromoEligible({ views: 1, engagedMs: 30_000 }), false, "30 s is not enough off the landing pages");
-  assert.equal(signupPromoEligible({ views: 1, engagedMs: 30_000, landing: true }), true);
-  assert.equal(signupPromoEligible({ views: 1, engagedMs: 7_000, landing: true }), false, "the 7 s of 09-27 is gone");
-  assert.equal(signupEngagedNeededMs("/blog/some-post"), 30_000);
-  assert.equal(signupEngagedNeededMs("/movers"), 30_000);
-  assert.equal(signupEngagedNeededMs("/card/x"), 45_000);
-  assert.equal(signupEngagedNeededMs("/"), 45_000);
-  assert.ok(isLandingPage("/blog/x") && isLandingPage("/movers") && !isLandingPage("/blog") && !isLandingPage("/browse"));
-});
-
-test("sign-up card: not for a tab that has already started signing in", () => {
-  assert.equal(signupPromoEligible({ views: 5, engagedMs: 999_999, signInStarted: true }), false);
-  assert.equal(signupPromoEligible({ views: 1, engagedMs: 60_000, landing: true, signInStarted: true }), false);
-  assert.equal(signupPromoEligible({ views: 2, engagedMs: 0, signInStarted: false }), true);
-});
-
-test("sign-up card timing: NUDGE_DELAY_MS from the moment it is eligible, on either path", () => {
-  // One number, no shorter special case for the engaged first-page path: the
-  // card shows 12 s after the 2nd page loads, or 12 s after the 45 s / 30 s mark.
-  const gate = readFileSync(join(process.cwd(), "src/lib/nudge-gate.ts"), "utf8");
-  assert.doesNotMatch(gate, /signupShowDelayMs/, "no second delay function");
-  const popup = readFileSync(join(process.cwd(), "src/components/SignupPromoPopup.tsx"), "utf8");
-  assert.match(popup, /delayMs: NUDGE_DELAY_MS,/);
-  assert.equal(NUDGE_DELAY_MS, 12_000);
-});
-
-test("sign-up card: skipped paths, whole segments only", () => {
-  assert.deepEqual([...SIGNUP_SKIP_PATHS], ["/login", "/verify", "/premium"]);
-  for (const p of ["/login", "/login/x", "/verify", "/premium", "/premium/success"]) assert.equal(pathSkipped(p, SIGNUP_SKIP_PATHS), true, p);
-  for (const p of ["/", "/card/x", "/browse", "/premiumish", "/loginx", null, undefined]) assert.equal(pathSkipped(p, SIGNUP_SKIP_PATHS), false, String(p));
 });
 
 // ── The Premium slide-in ────────────────────────────────────────────────────
@@ -125,6 +59,12 @@ test("premium slide-in: not for an account under 48 hours old; unknown age fails
   assert.equal(premiumSlideInEligible({ views: 5, accountAgeMs: 48 * HOUR, pathname: "/" }), true);
   assert.equal(premiumSlideInEligible({ views: 5, accountAgeMs: 0, pathname: "/" }), false);
   assert.equal(premiumSlideInEligible({ views: 5, accountAgeMs: null, pathname: "/" }), false, "no createdAt, no ask");
+});
+
+test("pathSkipped matches whole path segments only", () => {
+  const skips = ["/login", "/premium"];
+  for (const p of ["/login", "/login/x", "/premium", "/premium/success"]) assert.equal(pathSkipped(p, skips), true, p);
+  for (const p of ["/", "/card/x", "/browse", "/premiumish", "/loginx", null, undefined]) assert.equal(pathSkipped(p, skips), false, String(p));
 });
 
 test("accountAgeMs reads /api/me's ISO createdAt and never invents an age", () => {
@@ -149,27 +89,6 @@ test("premium slide-in: never on a page with its own inline paid prompt, or on t
   for (const p of ["/login", "/verify", "/premium", "/tools", "/portfolio", "/watching", "/sealed"]) {
     assert.ok((PREMIUM_SKIP_PATHS as readonly string[]).includes(p), `${p} is in the list`);
   }
-});
-
-// ── Engaged time ────────────────────────────────────────────────────────────
-
-test("engaged time needs a visible tab AND at least one interaction", () => {
-  let c = NEW_CLOCK;
-  for (let i = 0; i < 60; i++) c = tickEngaged(c, true, 1000);
-  assert.equal(c.visibleMs, 60_000);
-  assert.equal(engagedMsOf(c), 0, "a page loaded and never touched is not engagement");
-  c = noteInteraction(c);
-  assert.equal(engagedMsOf(c), 60_000);
-});
-
-test("a hidden tab adds no engaged time", () => {
-  let c = noteInteraction(NEW_CLOCK);
-  for (let i = 0; i < 100; i++) c = tickEngaged(c, false, 1000);
-  assert.equal(engagedMsOf(c), 0);
-  for (let i = 0; i < 44; i++) c = tickEngaged(c, true, 1000);
-  assert.equal(signupPromoEligible({ views: 1, engagedMs: engagedMsOf(c) }), false, "44 s visible");
-  c = tickEngaged(c, true, 1000);
-  assert.equal(signupPromoEligible({ views: 1, engagedMs: engagedMsOf(c) }), true, "45 s visible + a scroll");
 });
 
 // ── Never mid-task ──────────────────────────────────────────────────────────
@@ -221,21 +140,6 @@ test("isTextEntry: inputs you type in, not buttons and checkboxes", () => {
   assert.equal(isTextEntry({ tagName: "A" }), false);
   assert.equal(isTextEntry({ tagName: "BODY" }), false);
   assert.equal(isTextEntry(null), false);
-});
-
-// ── Sign-in intent ──────────────────────────────────────────────────────────
-
-test("sign-in links and pages are recognised, ordinary ones are not", () => {
-  const origin = "https://riftcompare.test";
-  for (const h of [
-    "/login", "/login?next=/watching&src=watchlist_drawer", "/register", "/api/auth/oauth/google?next=/",
-    "https://riftcompare.test/login?src=quickview",
-  ]) assert.equal(isSignInHref(h, origin), true, h);
-  for (const h of ["/loginx", "/browse", "/card/login", "https://elsewhere.test/login", "", null, undefined, "#login"]) {
-    assert.equal(isSignInHref(h as string | null | undefined, origin), false, String(h));
-  }
-  for (const p of ["/login", "/verify", "/register", "/login/x"]) assert.equal(isSignInPath(p), true, p);
-  for (const p of ["/", "/premium", "/verifyx", null]) assert.equal(isSignInPath(p as string | null), false, String(p));
 });
 
 // ── The browser half: armNudge and the page-view counter, against a fake DOM ─
@@ -460,7 +364,6 @@ test("countSessionView: distinct pages count, a reload of the same page does not
   assert.equal(countSessionView("k", "/b"), 2);
   assert.equal(countSessionView("k", "/a"), 3, "A to B to A is three page views");
   assert.equal(countSessionView("other", "/a"), 1, "each nudge counts under its own key");
-  // The sign-up card's dismissal spacing reads the same total.
   assert.equal(store.get("k"), "3");
 });
 

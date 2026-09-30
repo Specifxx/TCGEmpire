@@ -12,8 +12,24 @@
 // arbitrary text into the User table or the admin breakdown.
 export const SIGNUP_SOURCE_COOKIE = "rc_signup_src";
 
-export const SIGNUP_SOURCES = new Set([
+// The in-page sign-up prompts (InlineSignupPrompt, 2026-09-30, "The sign-up
+// slider is gone: sign-up prompts live in the page"). One value per placement,
+// so User.signupSource and signup_inline_click{surface} read per page. Each is
+// the prompt's `surface` and rides its /login link as ?src=.
+export const INLINE_SIGNUP_SURFACES = [
+  "inline_browse", // /browse, after the first rows of the card grid
+  "inline_deck", // /deck, under a priced list
+  "inline_published_deck", // /decks/[slug], under the deck's list
+  "inline_movers", // /movers, after the lists
+  "inline_champion", // /champions/[slug], after the champion's printings
+] as const;
+export type InlineSignupSurface = (typeof INLINE_SIGNUP_SURFACES)[number];
+
+export const SIGNUP_SOURCES = new Set<string>([
   "navbar",
+  // RETIRED 2026-09-30 with the sign-up popup ("The sign-up slider is gone").
+  // Kept, like "gate" below, so accounts that carry it and a cookie set just
+  // before the deploy still parse.
   "popup",
   "alert_modal",
   "alert_success",
@@ -63,6 +79,7 @@ export const SIGNUP_SOURCES = new Set([
   // The set tracker's "I own this" tick and "Sign up free" line on a released
   // /sets/[set] page (2026-09-29): the free front door, judged on sign-ups.
   "set_tracker",
+  ...INLINE_SIGNUP_SURFACES,
   "other",
 ]);
 

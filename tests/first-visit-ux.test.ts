@@ -8,30 +8,25 @@ import { existsSync } from "node:fs";
 // DECISIONS.md, "First visit from Reddit/Discord: no sign-up prompt on the
 // first page", 2026-09-24. REVERSED the morning of 2026-09-29 (both cards on
 // the first page, instant), then RESTORED IN SPIRIT that afternoon by the owner
-// ("Nudges: value first" in DECISIONS.md): the gate is back, simpler and
-// stricter, and it no longer looks at the referrer or the device at all.
-// tests/nudge-gate.test.ts runs the rules; these pin that the components use them.
+// ("Nudges: value first" in DECISIONS.md), and settled on 2026-09-30 by removing
+// the signed-out card altogether ("The sign-up slider is gone"). The Premium
+// slide-in keeps its gate. tests/nudge-gate.test.ts runs the rules; these pin
+// that the components use them.
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const code = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
-test("the sign-up card never shows on a first page view: the gate is back, and it ignores referrer and device", () => {
-  // The module is back under its new name, with new rules, not resurrected.
+test("no sign-up card interrupts any page view: the slider is gone (2026-09-30), not just gated", () => {
+  // 2026-09-30 went one step further than "value first": the owner removed the
+  // signed-out sign-up slider altogether ("Users who don't want to sign up
+  // don't have to... we don't want to interfere with that"). Sign-up prompts are
+  // page content now (InlineSignupPrompt; tests/signup-inline.test.ts).
   assert.ok(!existsSync(join(process.cwd(), "src/lib/signup-promo-gate.ts")), "the 2026-09-24 gate module stays gone");
-  assert.ok(existsSync(join(process.cwd(), "src/lib/nudge-gate.ts")), "the shared gate exists");
-  const popup = code("src/components/SignupPromoPopup.tsx");
-  assert.match(popup, /signupPromoEligible\(\{[\s\S]*?views,[\s\S]*?engagedMs:[\s\S]*?signInStarted: signInStarted\(\)/, "the sign-up card asks the gate");
-  assert.match(popup, /if \(!gate\(\)\) return;/, "and does not arm without it");
-  assert.match(popup, /onFire: \(\) => \{\s*if \(!gate\(\)\) return;/, "and checks again when the timer fires");
+  assert.ok(!existsSync(join(process.cwd(), "src/components/SignupPromoPopup.tsx")), "the sign-up slider stays gone");
+  assert.ok(existsSync(join(process.cwd(), "src/lib/nudge-gate.ts")), "the shared gate still serves the signed-in cards");
   // Referrer, device, width: none of them decide anything (they did on 09-24).
-  assert.doesNotMatch(popup, /document\.referrer|isExternalReferrer|externalEntry|matchMedia|innerWidth/, "no referrer or device input");
   assert.doesNotMatch(code("src/lib/nudge-gate.ts"), /referrer|matchMedia|innerWidth|mobile/i, "the gate has no referrer or device input");
-  // The engaged clock that opens a first page is the shared one, with the landing-page threshold.
-  assert.match(popup, /useEngaged\(signupEngagedNeededMs\(pathname\), pathname, loaded && !user && !shown && views === 1\)/);
-  // What always held: who each card is for, the caps and snoozes, the skipped paths.
-  assert.match(popup, /if \(!loaded \|\| user \|\| shown \|\| views === 0\) return;/, "signed-out visitors only");
-  assert.match(popup, /if \(readLocal\(DISMISS_COUNT_KEY\) >= MAX_NUDGE_DISMISSALS\) return;/);
-  assert.match(popup, /const SKIP_PATHS = SIGNUP_SKIP_PATHS;/);
+  assert.doesNotMatch(code("src/lib/nudge-gate.ts"), /signupPromoEligible|SIGNUP_/, "and no sign-up card rules left to revive");
 });
 
 test("the Premium slide-in asks later: 3rd page view, a 48-hour-old account, never over an inline paid prompt", () => {

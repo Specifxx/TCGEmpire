@@ -55,8 +55,9 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   assert.deepEqual([deck.account, deck.plus, deck.premium], [false, false, true]);
   assert.ok(features.indexOf(sealed.feature) < features.indexOf(deck.feature) && features.indexOf(deck.feature) === features.length - 2);
   assert.equal(features[features.length - 1], "Ad-free experience");
-  // "nudges-2026-09-29" since the value-first nudges, then "trial-2026-09-30" for the $1 first month (DECISIONS.md, "A $1 first month for both tiers"); plans and prices unchanged.
-  assert.equal(PREMIUM_COPY_VERSION, "trial-2026-09-30");
+  // "nudges-2026-09-29" since the value-first nudges, then "trial-2026-09-30" for the $1 first month (DECISIONS.md, "A $1 first month for both tiers"),
+  // then "signup-inline-2026-09-30" when the sign-up slider was removed ("The sign-up slider is gone"); plans and prices unchanged.
+  assert.equal(PREMIUM_COPY_VERSION, "signup-inline-2026-09-30");
   // Every surface that quotes a watch number reads the constant.
   for (const f of ["src/components/PremiumPricingCards.tsx", "src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);

@@ -2,68 +2,19 @@
 // pins every branch. DECISIONS.md, "Nudges: value first", 2026-09-29.
 //
 // The rule behind every number here: a visitor is shown what the site does
-// BEFORE they are asked for anything, and a "no" is respected. So the signed-out
-// sign-up card never covers a visit's first page view (unless they have really
-// been reading it), and the signed-in Premium card waits until the account has
-// had time to get something out of the free tier.
+// BEFORE they are asked for anything, and a "no" is respected. So the signed-in
+// Premium card waits until the account has had time to get something out of the
+// free tier.
+//
+// There is no signed-out corner card any more: the sign-up slider was removed
+// on 2026-09-30 ("The sign-up slider is gone: sign-up prompts live in the page",
+// DECISIONS.md), along with its first-page, engaged-time and sign-in-intent
+// rules. Signed-out visitors meet InlineSignupPrompt in the page instead, which
+// needs no gate because it never interrupts anything.
 //
 // lib/nudge-timing.ts holds the shared settle-in delay (NUDGE_DELAY_MS) and the
 // dismissal caps and snoozes; this file holds the ELIGIBILITY rules those sit
 // on top of. lib/nudge-runtime.ts is the browser half (timers, watchers).
-
-// ── The sign-up card (signed-out) ───────────────────────────────────────────
-
-/** Eligible from the 2nd page view of a visit. Never the 1st, from any referrer, on any device. */
-export const SIGNUP_MIN_VIEWS = 2;
-
-/**
- * ...or after this much ENGAGED time on the first page: the tab visible AND at
- * least one scroll, click or key press. A tab left open in the background, or a
- * page loaded and never touched, is not someone who has seen the site.
- */
-export const SIGNUP_ENGAGED_MS = 45_000;
-
-/**
- * Blog posts and /movers are where search and social traffic lands. 7 s was
- * enough there on 2026-09-27 and the card then covered the article they came
- * for; 30 s of real reading is the bar now.
- */
-export const SIGNUP_LANDING_ENGAGED_MS = 30_000;
-
-const LANDING_PREFIXES = ["/blog/", "/movers"];
-
-export function isLandingPage(pathname: string | null | undefined): boolean {
-  return !!pathname && LANDING_PREFIXES.some((p) => pathname.startsWith(p));
-}
-
-/** Engaged time the first page needs before the sign-up card may show. */
-export function signupEngagedNeededMs(pathname: string | null | undefined): number {
-  return isLandingPage(pathname) ? SIGNUP_LANDING_ENGAGED_MS : SIGNUP_ENGAGED_MS;
-}
-
-export interface SignupGateInput {
-  /** Distinct page views this visit (tab session), the current one included. */
-  views: number;
-  /** Engaged time on the current page, ms (engagedMsOf). */
-  engagedMs: number;
-  /** One of the landing pages (isLandingPage). */
-  landing?: boolean;
-  /** This tab has already visited /login or clicked a sign-in link. */
-  signInStarted?: boolean;
-}
-
-// NO referrer, device or width in the input on purpose: whether they came from
-// Reddit, Google or a typed URL, on a phone or a desktop, page one is page one.
-export function signupPromoEligible({ views, engagedMs, landing, signInStarted }: SignupGateInput): boolean {
-  if (signInStarted) return false; // they are already doing the thing the card asks for
-  if (views >= SIGNUP_MIN_VIEWS) return true;
-  return engagedMs >= (landing ? SIGNUP_LANDING_ENGAGED_MS : SIGNUP_ENGAGED_MS);
-}
-
-// The delay itself is NUDGE_DELAY_MS (lib/nudge-timing.ts), counted from the
-// moment the card becomes eligible on the page: page load from the 2nd view on,
-// the 45 s / 30 s engaged mark on a first page. There is deliberately no second,
-// shorter number for either case.
 
 // ── The Premium slide-in (signed in, no paid tier, checkout on) ─────────────
 
@@ -78,9 +29,6 @@ export function pathSkipped(pathname: string | null | undefined, skips: readonly
   if (!pathname) return false;
   return skips.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
-
-/** The sign-up card's skipped paths: pages that are, or sell, the thing it asks for. */
-export const SIGNUP_SKIP_PATHS = ["/login", "/verify", "/premium"] as const;
 
 /**
  * The Premium card's skipped paths: the sign-in pages, /premium itself, and
@@ -113,33 +61,8 @@ export function premiumSlideInEligible({ views, accountAgeMs: age, pathname }: P
 
 // ── The monthly subscriber's annual offer ───────────────────────────────────
 
-/** From the 2nd page view of a session, like the sign-up card. */
+/** From the 2nd page view of a session. */
 export const ANNUAL_MIN_VIEWS = 2;
-
-// ── Engaged time ────────────────────────────────────────────────────────────
-
-export interface EngagedClock {
-  /** Time this page has been in a visible tab, ms. */
-  visibleMs: number;
-  /** Scrolls, clicks, key presses and touches on this page so far. */
-  interactions: number;
-}
-
-export const NEW_CLOCK: EngagedClock = { visibleMs: 0, interactions: 0 };
-
-/** Advance the clock by `dtMs`; a hidden tab adds nothing. */
-export function tickEngaged(c: EngagedClock, visible: boolean, dtMs: number): EngagedClock {
-  return visible ? { ...c, visibleMs: c.visibleMs + dtMs } : c;
-}
-
-export function noteInteraction(c: EngagedClock): EngagedClock {
-  return { ...c, interactions: c.interactions + 1 };
-}
-
-/** Engaged ms: the visible time, but only once there has been at least one interaction. */
-export function engagedMsOf(c: EngagedClock): number {
-  return c.interactions > 0 ? c.visibleMs : 0;
-}
 
 // ── Never mid-task ──────────────────────────────────────────────────────────
 

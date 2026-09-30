@@ -413,7 +413,7 @@ test("the basket saving line: real money at or above $1, no saving claim below i
 
 // ── No popup or header upsells ─────────────────────────────────────────────
 
-test("the signed-in Premium slide-in is back beside the at-limit prompts; the signed-out popup stays", () => {
+test("the signed-in Premium slide-in is back beside the at-limit prompts; no signed-out popup", () => {
   // Removed with the free limits on 2026-09-28 ("not in popups and headers");
   // restored 2026-09-29 at the owner's request ("make the sign up and premium
   // slider instant. I want to bring the instant feature back"). Only the
@@ -425,7 +425,10 @@ test("the signed-in Premium slide-in is back beside the at-limit prompts; the si
   const layout = code("src/app/layout.tsx");
   assert.match(layout, /<PremiumSlideIn \/>/, "mounted once, in the layout");
   assert.equal(layout.split("<PremiumSlideIn").length - 1, 1);
-  assert.match(layout, /<SignupPromoPopup providers=\{enabledProviders\(\)\} \/>/, "the free-account popup stays: the free limits are the funnel");
+  // The signed-out sign-up popup stayed beside it until 2026-09-30, when the
+  // owner removed it altogether: sign-up prompts are page content now
+  // (InlineSignupPrompt; tests/signup-inline.test.ts).
+  assert.doesNotMatch(layout, /SignupPromoPopup/, "no signed-out sign-up popup in the layout");
   assert.match(code("src/components/FreeLimitPanel.tsx"), /limit:/, "the at-limit upgrade prompt is still there");
 });
 
@@ -481,6 +484,7 @@ test("every tier surface quotes the limits from the constants, and price compari
   }
   // Bumped 2026-09-29 for the plans-first /premium (DECISIONS.md, "/premium: plans
   // first, a fifth of the words"); the free limits are unchanged on every surface above.
-  // "nudges-2026-09-29" since the value-first nudges, then "trial-2026-09-30" for the $1 first month (DECISIONS.md, "A $1 first month for both tiers"); plans and prices unchanged.
-  assert.equal(PREMIUM_COPY_VERSION, "trial-2026-09-30");
+  // "nudges-2026-09-29" since the value-first nudges, then "trial-2026-09-30" for the $1 first month (DECISIONS.md, "A $1 first month for both tiers"),
+  // then "signup-inline-2026-09-30" when the sign-up slider was removed ("The sign-up slider is gone"); plans and prices unchanged.
+  assert.equal(PREMIUM_COPY_VERSION, "signup-inline-2026-09-30");
 });

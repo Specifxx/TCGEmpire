@@ -18,7 +18,6 @@ const exists = (p: string) => existsSync(join(ROOT, p));
 
 const BASKET = "src/app/tools/best-basket/page.tsx";
 const BASKET_API = "src/app/api/basket/route.ts";
-const POPUP = "src/components/SignupPromoPopup.tsx";
 const PREMIUM_LIB = "src/lib/premium.ts";
 const OAUTH_CALLBACK = "src/app/api/auth/oauth/[provider]/callback/route.ts";
 
@@ -78,128 +77,11 @@ test("Best Basket doesn't advertise itself as needing no account", () => {
   assert.ok(!/no sign-in required/i.test(src), `${BASKET} still claims "no sign-in required"`);
 });
 
-test("the signup popup still appears on its own, with no promo gate", () => {
-  // The explicit requirement when the comp was retired: keep the popup. It used
-  // to render only when a promo API confirmed slots remained, so deleting the
-  // promo without touching this would have silently killed the popup forever.
-  const src = read(POPUP);
-  assert.ok(!/api\/promo/.test(src), "popup must not depend on a promo endpoint");
-  assert.ok(!/promo\?\.active/.test(src), "popup must not gate on promo.active");
-  assert.match(src, /setShown\(true\)/, "popup must still have its auto-show path");
-  // The only conditions on showing are: loaded, signed out, not an auth page,
-  // not already dismissed.
-  assert.match(src, /if \(!loaded \|\| user \|\| shown \|\| views === 0\) return/, "still only shown to signed-out visitors, once this route is counted");
-});
-
-test("the popup's Premium pitch never grows its own hand-typed tool list or comparison table", () => {
-  // 2026-09-04: the popup flipped from a free-account comparison to a Premium
-  // pitch (explicit product instruction — see the component's own header
-  // comment for the full reasoning and why this is NOT the removed signup
-  // comp). It listed tools as a chip row, reusing PremiumSlideIn's PITCH_TOOLS
-  // so a second hand-typed copy couldn't drift out of date.
-  //
-  // 2026-09-10: the popup stopped naming tools at all — the chip row became a
-  // designed PremiumPitchPanel, so the import went with it. The anti-duplication
-  // guarantee is what still matters and is what this now pins: if a future
-  // pass reintroduces a tool list here, it must import the shared one rather
-  // than hand-type a second copy, which is the "same claim written twice,
-  // updated once" drift TierComparisonTable's own header comment warns about.
-  // 2026-09-16: the pitch is a free-account comparison again (owner's
-  // reversal), but the anti-duplication guarantee is unchanged and is still
-  // the whole point of this test. The comparison lives in its OWN component,
-  // FreeAccountCompare, whose rows are AuthForm's PERKS — not a second table
-  // hand-typed into this file to drift away from the three perks /login sells.
-  const src = read(POPUP);
-  assert.ok(!/const PITCH_TOOLS/.test(src), "must not declare its own PITCH_TOOLS");
-  assert.ok(!/const COMPARISON|const ROWS/.test(src), "must not hand-type a comparison table inline");
-  assert.match(src, /<FreeAccountCompare \/>/, "the pitch is the shared comparison component");
-  assert.ok(!/<PremiumPitchPanel|<PremiumButton/.test(src), "PremiumPitchPanel was removed 2026-09-28; the free-account popup must not reintroduce a Premium pitch");
-});
-
-test("the popup sells the FREE account, and grants nothing automatically", () => {
-  // The removed signup comp (2026-08-23, see lib/premium.ts's "NO PREMIUM ON
-  // SIGNUP" note) silently handed new accounts real days of the paid tier for
-  // free. This is a different mechanism: a pitch plus a redirect to /premium,
-  // where Premium is still only ever reached by a real Stripe trial or
-  // checkout — the exact same pattern PremiumDialog.tsx already uses for a
-  // signed-out visitor ("Create a free account to start →"). What must hold is
-  // that NOTHING here grants Premium outright.
-  // The no-automatic-grant guarantee is the durable half of this test and is
-  // UNCHANGED. What changed on 2026-09-16 is the destination: the CTA now
-  // returns the visitor to the page they were on rather than routing them to
-  // /premium, because the card no longer pitches Premium at all. Either way it
-  // is a redirect, never a grant.
-  const src = read(POPUP);
-  assert.ok(!/signupPremiumDays/.test(src), "the popup must not take or thread a Premium-preview prop");
-  assert.ok(!/grantPremiumDays|grantPremiumMonths/.test(src), "the popup must never call a Premium-granting function itself");
-  assert.match(src, /next=\{pathname \?\? "\/"\}/, "the CTA returns the visitor to where they were (a redirect, not a grant)");
-});
-
-test("the popup's honesty guarantees survive the reversal: no fake scarcity, and no price to get wrong", () => {
-  const src = read(POPUP);
-  // Countdowns, seat counts and "expires in" pressure are exactly what this
-  // popup must never grow, under any pitch. Unchanged since it was written.
-  assert.ok(!/only \d+ (left|spots|seats)/i.test(src), "no fake scarcity");
-  assert.ok(!/expires? in/i.test(src), "no countdown pressure");
-  // Signing up must still cost nothing and need no card, and must still SAY so.
-  assert.match(src, /free, no card needed/i, "the copy must state that signing up costs nothing and needs no card");
-  // The price-honesty assertions that used to live here (the unconditional
-  // price block, the bare $0-today trial branch, the non-trial branch stating
-  // the real recurring price) moved WITH the pitch on 2026-09-16 — this card
-  // quotes no price at all now. They are still enforced, on the surfaces that
-  // do quote one: see tests/premium-price-increase.test.ts and
-  // tests/premium-zero-today.test.ts, which cover PremiumDialog, PremiumCta
-  // and /premium (and covered PremiumSlideIn until its removal on 2026-09-28).
-  assert.ok(!/PREMIUM_PRICE_AMOUNT|premiumZeroToday|premiumFromLine/.test(src), "a card with no paid ask must quote no price");
-});
-
-test("the promo has no artificial delay — shows the instant it's eligible (2026-09-01)", () => {
-  // History, oldest to newest: a bare 5s timer (26% shown, 78% dismissed,
-  // pages/visitor and buy_click both fell) → a named 30s constant plus a
-  // buy_click-aware 3-case system so the delay could never cost a buy_click →
-  // no delay at all, by explicit instruction. Each step was a real, deliberate
-  // decision — this test pins the current one and guards against the old
-  // constants quietly reappearing.
-  const src = read(POPUP);
-  assert.doesNotMatch(src, /PROMO_DELAY_MS|BUY_SURFACE_BACKSTOP_MS|POST_BUY_DELAY_MS/, "the old delay constants must be fully gone");
-  assert.doesNotMatch(src, /setTimeout\(\(\) => \{[\s\S]{0,50}setShown\(true\)/, "must not gate showing itself behind a setTimeout");
-});
-
-test("a dismissed promo goes quiet for a set number of pages, then comes back", () => {
-  // WAS "stays dismissed for the rest of the session", on the reasoning that
-  // re-showing a dialog someone just closed is its own contribution to a 78%
-  // dismiss rate. Changed by explicit owner brief (2026-09-10): "the slider
-  // should show up again every 3 pages a user visits if they're not logged in".
-  //
-  // What must still hold is that a dismissal BUYS SOMETHING: it cannot be a
-  // no-op, and the quiet stretch has to be measured in real pages, not reset by
-  // the next route change.
-  const src = read(POPUP);
-  assert.match(src, /const PAGES_BETWEEN_SHOWS = \d+/, "the cadence must be a named constant, not a magic number");
-  assert.match(
-    src,
-    /sessionStorage\.setItem\(DISMISSED_AT_KEY, String\(readCount\(VIEWS_KEY\)\)\)/,
-    "dismiss must stamp WHERE the visitor was, so the quiet stretch is measured from there",
-  );
-  assert.match(
-    src,
-    /views - dismissedAt < PAGES_BETWEEN_SHOWS\) return;/,
-    "the arming effect must stay away until that many further pages have been seen",
-  );
-  // Pages are counted by the shared hook under the SAME key the stamp above
-  // reads, or the gap above can never close. It counts once per distinct route
-  // (never once per render or reload): tests/nudge-gate.test.ts pins that.
-  assert.match(
-    src,
-    /const views = useSessionViews\(VIEWS_KEY, pathname, loaded && !user\);/,
-    "pages must actually be counted, or the gap above can never close",
-  );
-});
-
-test("the promo never fires for a signed-in visitor", () => {
-  const src = read(POPUP);
-  assert.match(src, /if \(!loaded \|\| user \|\| shown \|\| views === 0\) return;/, "the arming effect must bail for a signed-in user");
-});
+// The signed-out sign-up popup's own guarantees (signed-out only, no promo
+// gate, no price, "free, no card needed", no grant, no fake scarcity) lived
+// here until the popup was removed on 2026-09-30 ("The sign-up slider is gone:
+// sign-up prompts live in the page"). The same honesty guarantees now pin its
+// replacement, InlineSignupPrompt, in tests/signup-inline.test.ts.
 
 test("the retired WEEK-long signup comp's specific machinery stays gone", () => {
   // This guards the OLD, capped, backfill-script-dependent comp specifically —
@@ -301,7 +183,7 @@ test("grantPremiumDays is a real, generic helper the signup grant can reuse", ()
 // justify-center` with an overflow-hidden card and NO scroll container. A centred
 // card taller than the viewport overflows EQUALLY in both directions, so the ✕
 // pinned to its header goes above the top of the screen with nothing to scroll to
-// reach it — the SignupPromoPopup bug fixed in 263eaeb.
+// reach it — the (since removed) SignupPromoPopup's bug, fixed in 263eaeb.
 //
 // Measured in a real browser with the table added and the OLD overlay restored:
 // the close button rendered at y = -3 (375x553) and y = -23 (360x480). With the
@@ -351,8 +233,9 @@ test("the Premium dialog and /premium show the SAME tier table, from one source"
   );
 
   // The "No account" column was removed on 2026-09-22 — signed-out and free
-  // differ on two rows, which is the signup popup's job (FreeAccountCompare),
-  // not the pricing page's.
+  // differ on two rows, which is the in-page sign-up prompts' job
+  // (InlineSignupPrompt, since the popup's removal on 2026-09-30), not the
+  // pricing page's.
   assert.doesNotMatch(shared, /\banon\b/, "the anon column must stay gone");
   assert.doesNotMatch(shared, /No account/, "the No account header must stay gone");
 });

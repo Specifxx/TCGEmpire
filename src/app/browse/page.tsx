@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Fragment } from "react";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
@@ -27,9 +28,14 @@ import {
 import { SITE_URL } from "@/lib/site";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
+import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 /** /browse opens on "Most popular" (lib/cards.ts buildCardOrderBy). */
 const BROWSE_DEFAULT_SORT = "popular";
+
+/** The free-account prompt sits after this many tiles (fewer on a short page: after the last). */
+const BROWSE_PROMPT_AFTER = 12;
 
 // searchParams-driven (filters/pagination), so the route stays dynamic.
 export const dynamic = "force-dynamic";
@@ -198,6 +204,8 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
   // The visitor's own words, for the eBay search beside the results
   // (2026-09-26). Trimmed like generateMetadata's; empty means no search.
   const q = (searchParams.q ?? "").trim();
+  // The tile the free-account prompt follows: the 12th, or the last on a short page.
+  const promptAfterId = cards[Math.min(BROWSE_PROMPT_AFTER, cards.length) - 1]?.id;
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -382,9 +390,28 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
                 the sidebar squeeze it, and the 10.5rem floor keeps CardTile's
                 min-w-[6.5rem] price block inside the tile. Was lg:4 / xl:5 by
                 viewport, i.e. 94px tiles at 1024 and 123px at 1280. */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
+            {/* grid-flow-row-dense: the sign-up prompt below is a full-width
+                row after the 12th tile, and where 12 does not fill the last row
+                (5 columns) the next tiles fill the gap before it rather than
+                leaving holes. The tiles keep their order. */}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] grid-flow-row-dense">
               {cards.map((c) => (
-                <CardTile key={c.id} card={trimTileArtFallback(c)} />
+                <Fragment key={c.id}>
+                  <CardTile card={trimTileArtFallback(c)} />
+                  {/* THE CARD LIST'S SIGN-UP PROMPT (2026-09-30, "The sign-up
+                      slider is gone"): after the first rows, never above the
+                      results, signed-out visitors only, a client island that
+                      renders nothing on the server. Six rows down on a phone,
+                      three or four on a desktop: below the first screen. */}
+                  {c.id === promptAfterId && (
+                    <InlineSignupPrompt
+                      surface="inline_browse"
+                      className="col-span-full"
+                      title="Keep track of the cards you're after"
+                      body={`A free account keeps a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards and emails you when one drops in price, and tracks what your collection is worth, with profit and loss, for up to ${FREE_PORTFOLIO_LIMIT} cards.`}
+                    />
+                  )}
+                </Fragment>
               ))}
             </div>
             <Pagination page={page} totalPages={totalPages} params={searchParams as Record<string, string | undefined>} />

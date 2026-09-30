@@ -14,8 +14,8 @@ import type { PremiumTierKey } from "@/lib/site";
 // CTAs. So this is a sentence in the page's own flow, in plain words, with
 // the same PremiumButton every gate uses (its surface names the placement,
 // `tip:*` in lib/premium-surface.ts) and a Dismiss that is remembered in
-// this browser. Nothing is rendered for a signed-out visitor (the signed-out
-// sign-up popup sells the free account), for a member who already has the
+// this browser. Nothing is rendered for a signed-out visitor (the in-page
+// sign-up prompts, InlineSignupPrompt, sell them the free account), for a member who already has the
 // tier, or while the session is unknown — so a cached page never flashes it.
 //
 // NOT a Dialog, NOT fixed, NOT portalled — tests/watches-discovery.test.ts

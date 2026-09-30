@@ -3,10 +3,13 @@
 // WHERE THE BUY IS, AND WHETHER IT HAS HAPPENED YET.
 //
 // buy_click is the event every affiliate dollar depends on, and the signup popup
-// is the only thing on the site that can cover it up. This module is the shared
-// signal between the two so the popup can stay off the buy path without either
-// component hardcoding a list of "pages with buy links" — a list that would rot
-// the first time a new surface rendered an OutboundLink.
+// was the one thing on the site that could cover it up. This module was the
+// shared signal between the two so the popup could stay off the buy path
+// without either component hardcoding a list of "pages with buy links" — a list
+// that would rot the first time a new surface rendered an OutboundLink. The
+// popup stopped reading it on 2026-09-01 and was removed on 2026-09-30; nothing
+// consumes the signal today, and it is kept as general infrastructure
+// (tests/signup-funnel.test.ts still pins its ordering).
 //
 // Two facts, both cheap:
 //
@@ -23,8 +26,8 @@
 //                      cannot cost a buy_click, because the click already
 //                      happened.
 //
-// The flag is per SESSION, matching the popup's own SEEN_KEY: someone who bought
-// something this session has cleared the bar for the rest of it.
+// The flag is per SESSION: someone who bought something this session has
+// cleared the bar for the rest of it.
 
 const BOUGHT_KEY = "rc_bought_this_session";
 export const BUY_CLICK_EVENT = "rc:buy_click";
@@ -49,7 +52,7 @@ export function hasBoughtThisSession(): boolean {
   try {
     return sessionStorage.getItem(BOUGHT_KEY) === "1";
   } catch {
-    // Private mode: fail to FALSE. The popup treats "unknown" as "not yet
+    // Private mode: fail to FALSE. A consumer treats "unknown" as "not yet
     // bought", which keeps it off the buy path — the safe direction for the
     // metric this whole module exists to protect.
     return false;
@@ -61,7 +64,7 @@ export function markBuyClick(): void {
   try {
     sessionStorage.setItem(BOUGHT_KEY, "1");
   } catch {
-    /* private mode — the event below still fires, so the popup still re-arms */
+    /* private mode — the event below still fires, so a listener still hears it */
   }
   try {
     window.dispatchEvent(new CustomEvent(BUY_CLICK_EVENT));
