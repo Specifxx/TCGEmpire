@@ -80,3 +80,23 @@ test("card page: phone buy block under the name, sticky bar hidden while the com
   assert.match(bar, /getElementById\(PRICE_TABLE_ID\)/);
   assert.match(readFileSync("src/components/CardMarketSection.tsx", "utf8"), /id="price-comparison"/);
 });
+
+// Riot's gallery art (2026-09-30): the Sanity proxy at cmsassets.rgpub.io resizes
+// on request, so tiles ask it for a small WebP instead of the ~1 MB PNG.
+test("Riot's gallery art gets resized WebP renditions from its own CDN", () => {
+  const png = "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/abc123-744x1039.png?accountingTag=RB";
+  const base = "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/abc123-744x1039.png";
+  assert.equal(cardArtThumb(png), `${base}?accountingTag=RB&fm=webp&w=320`);
+  assert.equal(cardArtThumb(png, 480), `${base}?accountingTag=RB&fm=webp&w=480`);
+  assert.equal(
+    cardImageSrcSet(png),
+    `${base}?accountingTag=RB&fm=webp&w=320 320w, ${base}?accountingTag=RB&fm=webp&w=480 480w, ${base}?accountingTag=RB&fm=webp&w=744 744w`,
+  );
+  // Already-sized URLs are rebuilt from the base, never stacked.
+  assert.equal(cardArtThumb(`${base}?accountingTag=RB&fm=webp&w=480`), `${base}?accountingTag=RB&fm=webp&w=320`);
+  // Other hosts are left alone.
+  assert.equal(cardImageSrcSet("https://cmsassets.rgpub.io/sanity/files/dsfx7636/news_live/x.pdf"), null);
+  const p = cardThumbProps({ imageUrl: png, imageThumbUrl: png }, "220px");
+  assert.equal(p.src, `${base}?accountingTag=RB&fm=webp&w=320`);
+  assert.equal(p.sizes, "220px");
+});

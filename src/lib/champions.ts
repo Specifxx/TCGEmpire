@@ -47,7 +47,7 @@ const RAW: [name: string, extraPrefixes?: string[]][] = [
   ["Ashe"], ["Azir"], ["Bard"], ["Blitzcrank"], ["Caitlyn"], ["Darius"], ["Diana"],
   ["Dr. Mundo"], ["Draven"], ["Ekko"], ["Evelynn"], ["Ezreal"], ["Fiora"], ["Fizz"],
   ["Galio"], ["Gangplank"], ["Garen"], ["Heimerdinger"], ["Hwei"], ["Illaoi"],
-  ["Irelia"], ["Ivern"], ["Janna"], ["Jax"], ["Jayce"], ["Jhin"], ["Jinx"], ["Kai'Sa"],
+  ["Irelia"], ["Ivern"], ["Janna"], ["Jarvan IV"], ["Jax"], ["Jayce"], ["Jhin"], ["Jinx"], ["K'Sante"], ["Kai'Sa"],
   ["Karma"], ["Karthus"], ["Katarina"], ["Kayle"], ["Kayn"], ["Kennen"], ["Kha'Zix"],
   ["Kog'Maw"], ["LeBlanc"], ["Lee Sin"], ["Leona"], ["Lillia"], ["Lucian"], ["Lux"],
   ["Malzahar"],
@@ -55,13 +55,13 @@ const RAW: [name: string, extraPrefixes?: string[]][] = [
   // the Unit printings are named; "Master" is the seed.ts bug's output.
   ["Master Yi", ["Yi", "Master"]],
   ["Mel"],
-  ["Miss Fortune"], ["Morgana"], ["Nami"], ["Nasus"], ["Nidalee"], ["Nilah"],
-  ["Nocturne"], ["Ornn"], ["Poppy"], ["Pyke"], ["Qiyana"], ["Rek'Sai"], ["Rell"],
+  ["Miss Fortune"], ["Mordekaiser"], ["Morgana"], ["Nami"], ["Nasus"], ["Neeko"], ["Nidalee"], ["Nilah"],
+  ["Nocturne"], ["Orianna"], ["Ornn"], ["Poppy"], ["Pyke"], ["Qiyana"], ["Rek'Sai"], ["Rell"],
   ["Renata Glasc"], ["Renekton"], ["Rengar"], ["Riven"], ["Rumble"], ["Seraphine"],
   ["Sett"], ["Shen"], ["Sivir"], ["Sona"], ["Soraka"], ["Swain"], ["Syndra"], ["Taric"],
   ["Teemo"], ["Tryndamere"], ["Twisted Fate"], ["Udyr"], ["Vayne"], ["Vex"], ["Vi"],
   ["Viktor"], ["Volibear"], ["Warwick"], ["Xerath"], ["Xin Zhao"], ["Yasuo"], ["Yone"],
-  ["Yuumi"], ["Zed"], ["Zilean"],
+  ["Yuumi"], ["Zed"], ["Ziggs"], ["Zilean"],
 ];
 
 // Slug: lowercase, non-alphanumerics collapsed to "-". Chosen so the apostrophe

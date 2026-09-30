@@ -663,15 +663,17 @@ longer lands on its entry.
   [2026-09-25](../DECISIONS.md#L12375)
 - **Hand-catalogued reveals:** a card Riot's gallery doesn't carry yet goes
   in `manual-cards.json` only when its number, rarity gem and text all read
-  off a finished card image. A Signature (`*`) and its unsigned over-number
-  are separate rows, and neither is added until it is seen. The gallery
-  import skips a printing already catalogued by hand (same set + number), so
-  swapping in official art is an edit to that file. Article markdown writes a
-  Signature number as `169\*/167`. Riot's gallery metadata (domain, type,
-  stats) is wrong for many Radiance cards while its images and rules text are
-  right, so the scheduled Radiance import runs as a dry run and rows are read
-  off Riot's card images, using those images as the art.
-  [2026-09-29](../DECISIONS.md#L15513), [2026-09-30](../DECISIONS.md#L15595)
+  off a finished card image. Radiance matches Riot's card gallery, all 84
+  printings: image, name, number, rarity and rules text from the gallery
+  (text in the importer's [S]/[T]/[N]/[A]/[C] token format), and domain,
+  type and stats from the printed card, because the gallery's metadata
+  fields are wrong for many Radiance cards. So the scheduled Radiance import
+  runs as a dry run. A printing no Riot source shows is retired through
+  `RETIRED` in `add-manual-cards.ts`, never deleted while user data points at
+  it, and a slug moves only through `CARD_SLUG_RENAMES`. The gallery import
+  skips a printing already catalogued by hand (same set + number). Article
+  markdown writes a Signature number as `169\*/167`.
+  [2026-09-29](../DECISIONS.md#L15513), [2026-09-30](../DECISIONS.md#L15766), [2026-09-30](../DECISIONS.md#L15794)
 - **First-listing and restock alerts:** a watch with a null baseline (no
   price in that market when it was created) gets one "now listed" email when
   the card lists — "open for pre-order" while its set is unreleased, which

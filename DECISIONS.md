@@ -15790,3 +15790,43 @@ Rarity matched the printed gem for every card checked.
 **Not done.** The other ~60 new gallery cards. Each needs the same reading off its image; importing the gallery's metadata is exactly what the dry run prevents. The Seraphine 174 question is also still open: the gallery has one entry at 169, 171 and 174 each, and each shows the signed art, while Vendetta's gallery lists signed and unsigned separately (`ven-189-166`, `ven-189-star-166`). The 174/167 row stays until a card settles it.
 
 Typecheck, lint, full test suite, the AdSense guard and images:check pass. Landed on main without `[deploy]`.
+
+## Radiance matches Riot's gallery: 37 more printings, Riot's images and text on all 84, K'Sante's Legend renamed, the unsigned Seraphine 174 retired — 2026-09-30
+
+**Why.** The owner asked for every card in Riot's card gallery, anything missing added, and "anything Riot as a source of truth".
+
+**Coverage, checked across every set.** Each gallery printing was compared with the live card sitemap (1,466 card URLs, served from cache, so no database egress):
+- Origins, Spiritforged and Proving Grounds are complete.
+- Unleashed lacks only two tokens (Buff, XP Tracker); the catalogue lists no tokens.
+- Vendetta's six SP printings are there under number-less slugs.
+- The gap was all Radiance: 37 of its 84 printings.
+
+**Where each field comes from.** All of it is Riot, but Riot's sources disagree with each other, so:
+- **From the gallery:**
+  - The card image (its cmsassets URL is now `imageUrl` on all 84 rows, replacing our crops).
+  - The name and number.
+  - The rarity, which matched the printed gem on every card.
+  - The rules text. This is the gallery's rich text converted to the catalogue's token format ([S] Might, [T] exhaust, [N] energy, [A] any rune, [C] a domain rune). It is identical on all 84 cards to the accessibility text the automated importer stores for every other set.
+- **Off the printed card:** domain (the icon bottom right), type, energy and Might. The gallery's own fields are wrong for many Radiance cards:
+  - Amateur Demolitionist, Bilgewater Tracker and Runeblade Anvil print the Fury icon but are filed Chaos, Body and Chaos.
+  - Supernova is filed an Order Unit and prints a Mind SPELL.
+  - Runeblade Anvil is filed a Unit and prints GEAR.
+  - Command: Attack is filed a Gear and prints SPELL.
+- **Two fixes to Riot's text:**
+  - Rousing Display ends "instead.disa" in the data; the card prints "instead.".
+  - Ekko's Legend has a double space.
+- Blade of the Exile's printed "+3" and Ganking box are not in Riot's text, so they aren't in ours, and no gear here carries a Might value.
+
+**Names.** Pride of Nazumah was the one Legend without its champion prefix. `lib/champions.ts` finds a champion's cards by "K'Sante,", so it was missing from K'Sante's page. Both printings are now "K'Sante, Pride of Nazumah"; `CARD_SLUG_RENAMES` moves their URLs and `add-manual-cards.ts` applies the move. Stores that list a Legend by its epithet alone ("Pride of Nazumah") don't match. That was already true of every other Legend (tested with "Daughter of the Void"), so this makes K'Sante consistent rather than worse.
+
+**Seraphine 174, reversed.** Riot's gallery lists one printing each at 169, 171 and 174, and each is the signed art printed with "*". The 2026-09-29 entry kept an unsigned 174/167 because Vendetta paired its Signatures. The pair evidence was real for Vendetta, whose gallery lists `ven-190-166` and `ven-190-star-166`. For Radiance no Riot source shows an unsigned 174, so the row is removed. Removing a row from the file leaves it in the database, so `add-manual-cards.ts` gained a `RETIRED` list. Every relation on Card cascades, including users' alerts and holdings, so a retired card is deleted only when no alert, holding, listing, buy order, price report or published deck points at it; otherwise it is kept and logged. Its URL redirects to the 174* page. Corrections are dated in place on the Seraphine post, the tracker, the HEARTSTEEL post and the week-one post.
+
+**Champions.** `lib/champions.ts` adds K'Sante, Jarvan IV, Mordekaiser, Neeko, Orianna and Ziggs, per its own rule: add a champion once their cards exist.
+
+**Thumbnails from Riot's CDN.** Riot's card art is a ~1.1 MB PNG, and the tracker's gallery shows 84 of them. cmsassets.rgpub.io is a Sanity image proxy that resizes on request: `?fm=webp&w=320` is ~28 KB and `w=480` ~48 KB, measured. `cardArtThumb` and `cardImageSrcSet` (lib/card-image-url.ts) now build 320w/480w/744w WebP renditions for any cmsassets image URL, as they already did for the mirrored RiftScribe art. It is pure string work, so nothing new ships to the client. The card-page hero still loads the full file. Every Vendetta card imported from the gallery uses the same host, so its tiles shrink too.
+
+**Still true.** The scheduled Radiance import stays a dry run. Its metadata problem is unchanged, and every Radiance card is now in this file anyway.
+
+**Open, not fixed.** After release, the RiftScribe sync (`scripts/sync-cards.ts`) will catalogue Radiance under its own ids. Its adoption step only claims rows whose externalId contains "-official-" or starts "manual-". The 85 "spoiler-rad-*" rows here match neither, so release week would bring duplicate card pages unless adoption learns that prefix. `add-manual-cards.ts` must also stop recreating a row once it has been adopted.
+
+Typecheck, lint, the full test suite, the AdSense guard and images:check pass. Landed on main without `[deploy]`.

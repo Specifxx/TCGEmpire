@@ -197,8 +197,18 @@ export const CARD_ART_FULL_WIDTH = 744;
 
 const MIRROR_FILE = /^((?:https?:\/\/[^/]+)?\/card-art\/)([^/]+?)\.webp$/;
 
+// Riot's own card art (playriftbound.com's gallery, cmsassets.rgpub.io) is a
+// Sanity image proxy that resizes and re-encodes on request: `?w=480&fm=webp`
+// is ~48 KB where the 744px PNG the gallery links is ~1.1 MB (measured
+// 2026-09-30, when every Radiance card moved onto Riot's art). Vendetta's
+// imported cards use the same host. Pure string work, like the mirror path.
+const RIOT_ART = /^(https:\/\/cmsassets\.rgpub\.io\/sanity\/images\/[^?#]+\.(?:png|jpe?g))(?:\?[^#]*)?$/i;
+const riotArt = (base: string, width: number) => `${base}?accountingTag=RB&fm=webp&w=${width}`;
+
 /** The 320w rendition of a mirrored card-art URL (the smallest), else the URL unchanged. */
 export function cardArtThumb(src: string, width: (typeof CARD_ART_THUMB_WIDTHS)[number] = 320): string {
+  const riot = RIOT_ART.exec(src);
+  if (riot) return riotArt(riot[1], width);
   const m = MIRROR_FILE.exec(src);
   if (!m || /-\d+w$/.test(m[2])) return src;
   return `${m[1]}${m[2]}-${width}w.webp`;
@@ -211,6 +221,8 @@ export function cardArtThumb(src: string, width: (typeof CARD_ART_THUMB_WIDTHS)[
  */
 export function cardImageSrcSet(src: string | null | undefined): string | null {
   if (!src) return null;
+  const riot = RIOT_ART.exec(src);
+  if (riot) return [...CARD_ART_THUMB_WIDTHS, CARD_ART_FULL_WIDTH].map((w) => `${riotArt(riot[1], w)} ${w}w`).join(", ");
   const m = MIRROR_FILE.exec(src);
   if (!m || /-\d+w$/.test(m[2])) return null;
   return [

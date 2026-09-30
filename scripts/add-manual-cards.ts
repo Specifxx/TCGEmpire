@@ -55,6 +55,45 @@ async function uniqueSlug(base: string, externalId: string): Promise<string> {
   return `${base}-${externalId.replace(/[^a-z0-9]/gi, "").slice(-5)}`;
 }
 
+// Printings this file once catalogued that Riot's own sources show do not
+// exist. Removing a row from manual-cards.json leaves it in the database, so
+// it is retired here. Every relation on Card cascades, including users' price
+// alerts, collection holdings and listings, so a card that any of those point
+// at is kept and reported rather than deleted: never trade user data for
+// catalogue tidiness. The old URL keeps working through lib/card-slug-renames.ts.
+const RETIRED: { externalId: string; why: string }[] = [
+  {
+    externalId: "spoiler-rad-174-seraphine-starry-eyed-songstress",
+    why: "Riot's gallery lists one printing at 174, the signed 174*/167 (2026-09-30)",
+  },
+];
+
+async function retire(): Promise<void> {
+  for (const r of RETIRED) {
+    const card = await prisma.card.findUnique({ where: { externalId: r.externalId }, select: { id: true, slug: true } });
+    if (!card) continue;
+    const where = { cardId: card.id };
+    // Plus the two that hold a card id without a relation, so they would be
+    // left pointing at nothing: price reports and published decks.
+    const [alerts, holdings, listings, buyOrders, marketListings, reports, decks] = await Promise.all([
+      prisma.priceAlert.count({ where }),
+      prisma.collectionCard.count({ where }),
+      prisma.listing.count({ where }),
+      prisma.buyOrder.count({ where }),
+      prisma.marketplaceListing.count({ where }),
+      prisma.priceReport.count({ where }),
+      prisma.publishedDeck.count({ where: { cardIds: { has: card.id } } }),
+    ]);
+    const userRows = alerts + holdings + listings + buyOrders + marketListings + reports + decks;
+    if (userRows > 0) {
+      console.log(`KEEP  /card/${card.slug} — ${r.why}, but ${userRows} user row(s) point at it; not deleted`);
+      continue;
+    }
+    console.log(`${DRY ? "(dry) " : ""}RETIRE /card/${card.slug} — ${r.why}`);
+    if (!DRY) await prisma.card.delete({ where: { id: card.id } });
+  }
+}
+
 async function main() {
   let list: ManualCard[];
   try {
@@ -113,6 +152,7 @@ async function main() {
       created++;
     }
   }
+  await retire();
   console.log(`\nManual cards: ${created} created, ${updated} updated, ${skipped} skipped${DRY ? " (dry run — no writes)" : ""}.`);
 }
 

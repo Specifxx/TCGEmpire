@@ -92,3 +92,30 @@ test("the SP printings never take a plain listing from the base card", () => {
   assert.equal(r("Seraphine, Not Alone"), "notalone-138");
   assert.equal(r("Seraphine, Not Alone - 138/167"), "notalone-138");
 });
+
+// Riot's full gallery (2026-09-30) adds alternate arts beside several base
+// cards, an over-numbered Legend beside its in-set printing, and renames K'Sante's
+// Legend to "K'Sante, Pride of Nazumah" like every other Legend.
+test("the gallery's alternate arts and over-numbers each get their own listings", () => {
+  const g = buildCardIndex([
+    c("z023", "Ziggs, Short-Fused", "RAD", "023/167", "Epic"),
+    c("z023a", "Ziggs, Short-Fused", "RAD", "023a/167", "Showcase"),
+    c("j155", "Jarvan IV, Exemplar of Demacia", "RAD", "155/167", "Rare"),
+    c("j176", "Jarvan IV, Exemplar of Demacia", "RAD", "176/167", "Showcase"),
+    c("k086", "K'Sante, Courageous", "RAD", "086/167", "Rare"),
+    c("k086a", "K'Sante, Courageous", "RAD", "086a/167", "Showcase"),
+    c("k178", "K'Sante, Courageous", "RAD", "178/167", "Showcase"),
+    c("p147", "K'Sante, Pride of Nazumah", "RAD", "147/167", "Rare"),
+    c("p172", "K'Sante, Pride of Nazumah", "RAD", "172/167", "Showcase"),
+  ]);
+  const r = (title: string) => resolveCardId({ title, handle: "h", variants: [] } as never, g);
+  assert.equal(r("Ziggs, Short-Fused"), "z023");
+  assert.equal(r("Ziggs, Short-Fused (Alternate Art)"), "z023a");
+  assert.equal(r("Jarvan IV, Exemplar of Demacia"), "j155");
+  assert.equal(r("Jarvan IV, Exemplar of Demacia - 176/167"), "j176");
+  assert.equal(r("K'Sante, Courageous"), "k086");
+  assert.equal(r("K'Sante, Courageous (Alternate Art)"), "k086a");
+  assert.equal(r("K'Sante, Courageous - 178/167"), "k178");
+  assert.equal(r("K'Sante - Pride of Nazumah"), "p147");
+  assert.equal(r("Pride of Nazumah - 172/167"), "p172");
+});
