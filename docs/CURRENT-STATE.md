@@ -550,8 +550,8 @@ longer lands on its entry.
   while `isPreorderSetCode()` holds, and return to the released-set titles on
   release day by themselves. The gallery owns "<set> card gallery", never
   "spoiler", "revealed" or "card list". A comingSoon + hubReady set's gallery
-  is in the nav (derived from `SETS`) and on `/gallery` as "Upcoming", kept out
-  of the hub's all-sets count. [2026-09-30](../DECISIONS.md#L15834)
+  is in the nav (derived from `SETS`), on `/gallery` as "Upcoming" (kept out
+  of the hub's all-sets count), and is the homepage set tile's link. [2026-09-30](../DECISIONS.md#L15834)
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)

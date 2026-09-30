@@ -325,7 +325,9 @@ export const SETS: SetInfo[] = [
   { code: "UNL", name: "Unleashed", slug: "unleashed" },
   // Singles started trading (Pre-Rift launch events + early marketplace listings)
   // a few days ahead of the 31 Jul 2026 official street date — treated as released.
-  { code: "VEN", name: "Vendetta", slug: "vendetta", totalCards: 166, recentlyReleased: true, releasedOn: "2026-07-31" },
+  // recentlyReleased dropped 2026-09-30: two months on sale, and the homepage's
+  // "New" badge belongs to Radiance's preview now.
+  { code: "VEN", name: "Vendetta", slug: "vendetta", totalCards: 166, releasedOn: "2026-07-31" },
   // Set 5, announced in Riot's 4 Aug 2026 product rundown (written up in
   // /blog/riftbound-2027-set-roadmap): 23 Oct 2026. comingSoon with no
   // sealedAvailable, so it renders as a disabled "Coming soon" tile on the homepage

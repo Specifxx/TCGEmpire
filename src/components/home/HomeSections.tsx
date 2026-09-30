@@ -9,7 +9,7 @@ import { WelcomeBack } from "@/components/home/WelcomeBack";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
-import { SETS, newestReleasedSet, nextUpcomingSet } from "@/lib/constants";
+import { SETS, hasSetHub, newestReleasedSet, nextUpcomingSet } from "@/lib/constants";
 import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import type { Country } from "@/lib/country";
@@ -220,18 +220,33 @@ export function HomeSections({
             from lg the 17rem rail leaves only ~704px of content (2026-09-23). */}
         <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {SETS.map((s) =>
-            // Fully unreleased (no cards, no sealed) → disabled tile. Vendetta has
-            // revealed cards + sealed live, so it links through with a green "New"
-            // cue (the revealed-card list is browsable now; store prices land at
-            // release).
+            // An unreleased set in its preview season (comingSoon + hubReady,
+            // Radiance from 25 Sep 2026) keeps its "Coming soon" cue but links to
+            // its card gallery: every card shown so far, on one page. An
+            // unreleased set with no hub yet (no cards, no sealed) stays a
+            // disabled tile.
             s.comingSoon && !s.sealedAvailable ? (
-              <div key={s.code} className="card-surface flex flex-col gap-1 p-4 opacity-60" aria-disabled>
-                <span className="flex items-center gap-2 text-lg font-bold text-white">
-                  {s.code}
-                  <span className="chip bg-gold/20 text-gold">Coming soon</span>
-                </span>
-                <span className="text-xs text-slate-400">{s.name}</span>
-              </div>
+              hasSetHub(s) ? (
+                <Link
+                  key={s.code}
+                  href={`/sets/${s.slug}/gallery`}
+                  className="card-surface flex flex-col gap-1 p-4 transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
+                >
+                  <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
+                    {s.code}
+                    <span className="chip bg-gold/20 text-gold">Coming soon</span>
+                  </span>
+                  <span className="text-xs text-slate-400">{s.name} · card gallery →</span>
+                </Link>
+              ) : (
+                <div key={s.code} className="card-surface flex flex-col gap-1 p-4 opacity-60" aria-disabled>
+                  <span className="flex items-center gap-2 text-lg font-bold text-white">
+                    {s.code}
+                    <span className="chip bg-gold/20 text-gold">Coming soon</span>
+                  </span>
+                  <span className="text-xs text-slate-400">{s.name}</span>
+                </div>
+              )
             ) : (
               <Link
                 key={s.code}
@@ -252,9 +267,20 @@ export function HomeSections({
 
         {/* The homepage's link into the visual gallery, inherited from the
             removed Vendetta launch band. Points at whichever set is CURRENT
-            rather than at one set by name, so it follows Radiance in October
-            instead of going stale. */}
-        {newestSet && (
+            rather than at one set by name: the set in its preview season when
+            there is one (its gallery is the page people are looking for, and
+            it has no complete count to quote yet), else the newest released
+            set, which is Radiance again from 23 October. */}
+        {nextSet && hasSetHub(nextSet) ? (
+          <p className="mt-3 text-sm">
+            <Link
+              href={`/sets/${nextSet.slug}/gallery`}
+              className="font-semibold text-brand-300 underline-offset-2 hover:underline"
+            >
+              See every {nextSet.name} card shown so far in the gallery →
+            </Link>
+          </p>
+        ) : newestSet && (
           <p className="mt-3 text-sm">
             <Link
               href={`/sets/${newestSet.slug}/gallery`}
@@ -277,7 +303,7 @@ export function HomeSections({
       </section>
 
       {/* Next-set countdown — new-set hype, right after Explore (which already
-          shows the upcoming set as a disabled "Coming soon" tile above): new-set
+          shows the upcoming set as a "Coming soon" tile above): new-set
           searches are the biggest organic traffic spikes in TCGs, so this
           captures that intent instead of waiting for a visitor to find
           /release-dates on their own. Hides itself once nothing upcoming

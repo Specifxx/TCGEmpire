@@ -15861,4 +15861,9 @@ So this is not a new page, which would compete with the one Google already knows
 
 **Not done.** No new route, no `generateStaticParams` change, no new query. The Legends and domain counts are computed from the cards the page already loads, so no extra database egress. The "official card images" claim holds because all 84 Radiance rows carry Riot's gallery image (the entry above). A card added later from another source would make it untrue, so check that claim when the next hand-catalogued reveal lands.
 
+**The homepage, same day (owner: "Vendetta is no longer new and the Radiance coming soon should be clickable, linked to the gallery").**
+- Vendetta loses `recentlyReleased`, the homepage-only "New" badge. It has been on sale since 31 July, and the field's own comment says to drop it once the badge has run its course.
+- The "By set" grid rendered every comingSoon set without sealed product as a disabled tile. A set with a hub (`hasSetHub`) now keeps its "Coming soon" chip but links to its gallery. A set with no hub yet stays disabled.
+- The gallery line under the grid pointed at the newest released set ("See all 166 Vendetta cards"). While the next set has a hub, it now points at that set's gallery ("See every Radiance card shown so far"). From 23 October the newest released set is Radiance, so it switches back to the counted line by itself.
+
 `tests/set-gallery-preview.test.ts` pins the preview title and description budgets for every set name, the shared gate, the single FAQ array, and the three links in. Typecheck, lint, the full test suite, the AdSense guard and images:check pass. Rendered locally against the dev database: 84 tiles, the FAQPage and ItemList JSON-LD, six Legends, seven domain links. Landed on main without `[deploy]`.
