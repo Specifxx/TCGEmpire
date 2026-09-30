@@ -1068,6 +1068,87 @@
     "avif": "/r2-source.avif",
     "avifBytes": 11241
   },
+  "/radiance-spoilers/akali-brash.jpg": {
+    "src": "/radiance-spoilers/akali-brash.jpg",
+    "width": 644,
+    "height": 900,
+    "bytes": 88912,
+    "webp": "/radiance-spoilers/akali-brash.webp",
+    "webpBytes": 57810,
+    "avif": "/radiance-spoilers/akali-brash.avif",
+    "avifBytes": 41113,
+    "variants": [],
+    "fingerprint": "6e5b0fcfa875a980"
+  },
+  "/radiance-spoilers/avalanche.jpg": {
+    "src": "/radiance-spoilers/avalanche.jpg",
+    "width": 644,
+    "height": 900,
+    "bytes": 65507,
+    "webp": "/radiance-spoilers/avalanche.webp",
+    "webpBytes": 42476,
+    "avif": "/radiance-spoilers/avalanche.avif",
+    "avifBytes": 29814,
+    "variants": [],
+    "fingerprint": "44be6a1dc86d0c54"
+  },
+  "/radiance-spoilers/bandle-scouts-academy.jpg": {
+    "src": "/radiance-spoilers/bandle-scouts-academy.jpg",
+    "width": 1039,
+    "height": 744,
+    "bytes": 104222,
+    "webp": "/radiance-spoilers/bandle-scouts-academy.webp",
+    "webpBytes": 70410,
+    "avif": "/radiance-spoilers/bandle-scouts-academy.avif",
+    "avifBytes": 48551,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/radiance-spoilers/bandle-scouts-academy-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/radiance-spoilers/bandle-scouts-academy-768w.webp"
+      }
+    ],
+    "fingerprint": "a398eecdc660602a"
+  },
+  "/radiance-spoilers/body-rune-alt-art.jpg": {
+    "src": "/radiance-spoilers/body-rune-alt-art.jpg",
+    "width": 274,
+    "height": 381,
+    "bytes": 21070,
+    "webp": "/radiance-spoilers/body-rune-alt-art.webp",
+    "webpBytes": 13726,
+    "avif": "/radiance-spoilers/body-rune-alt-art.avif",
+    "avifBytes": 10859,
+    "variants": [],
+    "fingerprint": "8443e3d4a4f5806a"
+  },
+  "/radiance-spoilers/brawl.jpg": {
+    "src": "/radiance-spoilers/brawl.jpg",
+    "width": 644,
+    "height": 900,
+    "bytes": 92662,
+    "webp": "/radiance-spoilers/brawl.webp",
+    "webpBytes": 63218,
+    "avif": "/radiance-spoilers/brawl.avif",
+    "avifBytes": 42859,
+    "variants": [],
+    "fingerprint": "b9fa68ccf7561ae3"
+  },
+  "/radiance-spoilers/cataclysm.jpg": {
+    "src": "/radiance-spoilers/cataclysm.jpg",
+    "width": 617,
+    "height": 815,
+    "bytes": 73709,
+    "webp": "/radiance-spoilers/cataclysm.webp",
+    "webpBytes": 51088,
+    "avif": "/radiance-spoilers/cataclysm.avif",
+    "avifBytes": 35587,
+    "variants": [],
+    "fingerprint": "69e179a5b606e6df"
+  },
   "/radiance-spoilers/clocktower-guardian.jpg": {
     "src": "/radiance-spoilers/clocktower-guardian.jpg",
     "width": 646,
@@ -1079,6 +1160,18 @@
     "avifBytes": 41981,
     "variants": [],
     "fingerprint": "61c1564afce3cc29"
+  },
+  "/radiance-spoilers/consult-the-heavens.jpg": {
+    "src": "/radiance-spoilers/consult-the-heavens.jpg",
+    "width": 406,
+    "height": 565,
+    "bytes": 43138,
+    "webp": "/radiance-spoilers/consult-the-heavens.webp",
+    "webpBytes": 28934,
+    "avif": "/radiance-spoilers/consult-the-heavens.avif",
+    "avifBytes": 19844,
+    "variants": [],
+    "fingerprint": "9641b592bbb7d42b"
   },
   "/radiance-spoilers/disposal-expert.jpg": {
     "src": "/radiance-spoilers/disposal-expert.jpg",
@@ -1151,6 +1244,18 @@
     "avifBytes": 33823,
     "variants": [],
     "fingerprint": "dcadf845719cb7e5"
+  },
+  "/radiance-spoilers/for-demacia.jpg": {
+    "src": "/radiance-spoilers/for-demacia.jpg",
+    "width": 616,
+    "height": 900,
+    "bytes": 69452,
+    "webp": "/radiance-spoilers/for-demacia.webp",
+    "webpBytes": 40410,
+    "avif": "/radiance-spoilers/for-demacia.avif",
+    "avifBytes": 28556,
+    "variants": [],
+    "fingerprint": "9c774be2b7d9f56a"
   },
   "/radiance-spoilers/heartsteel-aphelios-exalted.jpg": {
     "src": "/radiance-spoilers/heartsteel-aphelios-exalted.jpg",

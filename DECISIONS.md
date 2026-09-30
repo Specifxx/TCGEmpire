@@ -15937,3 +15937,33 @@ Catalogue data (price history, retailer prices, eBay rows) still cascades with t
 - A clashing alert on 174* kept the card and said why.
 
 **Applied through `maintenance.yml`'s `cards-manual` task**, dry run first, not a site deploy. The script is the same one every build runs, and a real run ends with the ping that purges the content cache. The gallery drops to 84 and the old URL resolves to 174* through `CARD_SLUG_RENAMES` without a rebuild. `tests/retire-merge.test.ts` pins that each `mergeInto` is a live row, every user table moves, the delete sits inside the transaction, and a clash keeps the card.
+
+## Eight preview-partner reveals catalogued ahead of Riot's gallery — 2026-09-30
+
+**Why.** The owner sent Akali, Brash (RAD 015/167) and asked for the day's new reveals to be imported with it. Riot's card gallery still lists the same 84 Radiance printings we carry (checked against its `__NEXT_DATA__`; the only differences were `R02a`/`R02A` and `169`/`169*` notation). So the new cards came from the preview partners' own exclusive reveals, which Riot schedules alongside its gallery.
+
+**What went in** (8 rows in `prisma/manual-cards.json`, under a dated `_note`). Each card was read off a finished English card image: number, rarity gem, domain icon, cost, Might, text with its printed reminder text, and artist.
+
+| Card | Number | Type | Domain | Rarity | Source |
+| --- | --- | --- | --- | --- | --- |
+| Akali, Brash | 015/167 | Unit | Fury | Rare | the owner's image and riftbound.zone |
+| Brawl | 004/167 | Spell | Fury | Common | MMORPG.com's exclusive |
+| Consult the Heavens | 025/167 | Spell | Calm | Common | riftbound.zone |
+| Avalanche | 079/167 | Spell | Body | Uncommon | GameTyrant's exclusive |
+| Cataclysm | 084/167 | Spell | Body | Rare | riftbound.zone |
+| For Demacia! | 117/167 | Spell | Order | Common | riftbound.zone |
+| Bandle Scouts' Academy | 157/167 | Battlefield | Colorless | Uncommon | PCGamesN's exclusive |
+| Body Rune (alternate art) | R04A | Rune | Body | Showcase | riftbound.zone |
+
+The images are self-hosted in `public/radiance-spoilers/`, with WebP/AVIF siblings from `optimize-images.ts`. When Riot's gallery carries a card, its `imageUrl` moves to the cmsassets asset, as the "every card in Riot's official gallery" pass did. The Body Rune image is small (274×381), but its number and gem are legible at 4×.
+
+**Left out, on purpose.**
+- **Evelynn, Agony's Embrace (RAD 153/167):** the only image is the Simplified Chinese printing. riftbound.zone carries an English rendering, but it is secondhand, and our own translation would be invented wording ("half-known cards stay out").
+- **Riven, The Exile:** named as the ninth Legend, but no card has been shown.
+- **"Clockwork Guardian":** the League wiki's name for our Clocktower Guardian, RAD 067, which Riot's gallery prints as Clocktower.
+
+**A correction to the tracker's own claim.** Its "How this page keeps up" line said every revealed card "lands in the gallery below on its own". The scheduled import has run as a dry run since the gallery-wave entry above, so that stopped being true. It now says cards are checked twice a day and added by hand once their image can be read in full. `tests/radiance-where-to-buy.test.ts` still finds the schedule it pins, and the workflow still runs on it.
+
+**Going live.** The rows reference self-hosted images, which ship with a site build, so they reach production with a deploy, not the `cards-manual` maintenance task. Otherwise the card pages would show broken images until the next release.
+
+Rehearsed locally: 8 created, Bandle Scouts' Academy stored landscape, 92 Radiance printings. Typecheck, lint, the full test suite, the AdSense guard and images:check pass.

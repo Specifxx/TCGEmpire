@@ -1613,9 +1613,9 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
     ],
     body: `This is the **live Riftbound: Radiance spoiler tracker**. The gallery below is drawn from our card database and updates as each official reveal is imported, so it is current the morning after a reveal without anyone editing this page. Under it is a **dated log of everything that has actually been revealed**, the Preview Season schedule, and a clear line between what Riot has shown and what has merely circulated.
 
-**Where things stand today, 30 September 2026:** Preview Season is six days old. **Five of the nine Legends are now in print**: Seraphine's, and in the last few days Ekko's, Ziggs', Orianna's and Jarvan IV's, alongside K'Sante's, which surfaced as the season opened. Riot's own card gallery now lists 84 Radiance printings, and every one of them is in the gallery below. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
+**Where things stand today, 30 September 2026:** Preview Season is six days old. **Five of the nine Legends are now in print**: Seraphine's, and in the last few days Ekko's, Ziggs', Orianna's and Jarvan IV's, alongside K'Sante's, which surfaced as the season opened. Riot's own card gallery now lists 84 Radiance printings, and every one of them is in the gallery below, with eight more that preview partners showed on 30 September. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
 
-**How this page keeps up:** from 25 September we pull Riot's official card gallery twice a day, at about 02:30 and 18:30 UTC, and every newly revealed card lands in the gallery below on its own. A card revealed in the afternoon in the US is usually here by the next morning in Europe and Australia.
+**How this page keeps up:** Riot's official card gallery is checked twice a day, at about 02:30 and 18:30 UTC, and the preview partners' reveals as they land. Each new card is added once its finished card image can be read in full: collector number, rarity gem, domain and text. *Updated 30 September:* this used to say new cards land here automatically. The automatic import is paused while Riot's gallery files some Radiance cards under the wrong domain or type, so each card is now checked by hand before it goes in.
 
 [[embed:0]]
 
@@ -1637,6 +1637,15 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 ## Reveal log: what has actually been shown
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
+
+**30 September, later — eight more from preview partners, Akali among them.** Riot's preview partners published their own exclusive reveals through the day. Each card image can be read in full, so all eight are in our database, ahead of Riot's own gallery, which still lists 84:
+
+- **[Akali, Brash](/card/akali-brash-rad-015-167)** (Fury Champion Unit, 5 energy, 5 Might, Rare, 015/167). The first time she moves each turn, you add 1 energy and 1 power of any domain. The second time, you banish the top card of your Main Deck and may play it until your next Ending Phase.
+- **[Bandle Scouts' Academy](/card/bandle-scouts-academy-rad-157-167)** (Battlefield, 157/167), PCGamesN's reveal: when you hide a card here, you get a Gold gear token, which you can kill for 1 power of any domain. Ramp for Hidden decks.
+- **Five spells.** *[Avalanche](/card/avalanche-rad-079-167)* (Body, Uncommon), GameTyrant's reveal, deals 3 to every unit in bases. *[Brawl](/card/brawl-rad-004-167)* (Fury, Common) gives a unit Assault equal to its Might. *[Cataclysm](/card/cataclysm-rad-084-167)* (Body, Rare) stops opponents playing spells for the turn and moves a friendly unit to an occupied enemy battlefield. *[Consult the Heavens](/card/consult-the-heavens-rad-025-167)* (Calm) and *[For Demacia!](/card/for-demacia-rad-117-167)* (Order) are Shield 2 reactions, both Common.
+- **A Body Rune alternate art** ([R04A](/card/body-rune-rad-r04a)), the third rune art shown after Calm's and Mind's.
+
+Not in the database yet: Evelynn's Legend, *Agony's Embrace* (RAD 153/167), has only been shown as the Simplified Chinese printing, and we don't catalogue our own translation of a card's text. It goes in from an English card image.
 
 **30 September — another wave, and Riot's gallery fills in.** Riot posted another round of reveals on X, and on the same day its official card gallery went from seven Radiance cards to 84. The eleven cards in Riot's post are now in our database, each read off Riot's own card image, plus Jarvan IV's Legend:
 
