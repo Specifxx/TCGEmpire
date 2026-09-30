@@ -15967,3 +15967,33 @@ The images are self-hosted in `public/radiance-spoilers/`, with WebP/AVIF siblin
 **Going live.** The rows reference self-hosted images, which ship with a site build, so they reach production with a deploy, not the `cards-manual` maintenance task. Otherwise the card pages would show broken images until the next release.
 
 Rehearsed locally: 8 created, Bandle Scouts' Academy stored landscape, 92 Radiance printings. Typecheck, lint, the full test suite, the AdSense guard and images:check pass.
+
+## Homepage: Top Deals first, no price table, Cheapest on eBay moves to Deal Finder — 2026-09-30
+
+Owner: "Get rid of the riftbound card prices today on the home page and move
+today's top deals to the very top. Move cheapest on eBay inside of the deal
+finder. Remove the plus tags on both biggest savings and rising cards. Get rid of
+cheapest sealed and deploy ignoring daily schedule."
+
+- **Order on `/`:** hero (the search box and header stay first), then Today's Top
+  Deals, then the editorial band, then HomeSections (`showTopDeals={false}`, so
+  the deals render once). Top Deals is not wrapped in `<Reveal>` there, so it is
+  not hidden until hydration near the first screen. "Very top" was read as the
+  first content under the hero, not above the search box.
+- **"Riftbound card prices today" (`PriceTodayTable`) is off `/`,** and its
+  `getPriceTable` read with it. The region homes (/au, /uk, …) keep their table;
+  the owner named the home page only. The popular carousel now always carries
+  the ItemList on `/`.
+- **Cheapest on eBay** left Top Deals for Deal Finder
+  (`components/CheapestOnEbay.tsx`, 8 rows, `pageType="deals"`), shown to every
+  visitor, signed out included, below the list. Its inputs are day-cached
+  (`lib/arbitrage.ts`); the only per-request read is one select for those 8
+  cards on a page that is already `force-dynamic`. The homepage loader still
+  computes the field (its callers include /premium's proof), unused on `/`.
+- **Cheapest sealed** is no longer a Top Deals column; /sealed still ranks
+  every product. The loader still returns it (the unmounted DealsRow names it).
+- **No tier chip** on Biggest savings or Rising cards. The locked teaser under
+  each column's first pick ("Unlock N more with Plus") stays: it is the gate
+  itself, not a tag.
+- Released at once on the owner's instruction, not on the 08:00 schedule.
+

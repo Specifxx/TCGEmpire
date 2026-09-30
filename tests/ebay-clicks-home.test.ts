@@ -311,9 +311,8 @@ test("getCheapestOnEbay is never cached around, and top-deals chains it after th
 
 // ── The homepage block ───────────────────────────────────────────────────────
 
-test("TodaysTopDeals opens with Cheapest on eBay: free, measured, disclosed, eBay blue", () => {
-  const src = code("src/components/TodaysTopDeals.tsx");
-  const block = between(src, "function CheapestOnEbay(", "\n}\n");
+test("Cheapest on eBay (in Deal Finder since 2026-09-30): free, measured, disclosed, eBay blue", () => {
+  const block = code("src/components/CheapestOnEbay.tsx");
   assert.match(block, /if \(rows\.length === 0\) return null;/, "hidden when the market has no rows");
   assert.match(block, />Cheapest on eBay</);
   assert.match(block, /Cards where an eBay listing costs less than any store we track\n/);
@@ -323,7 +322,7 @@ test("TodaysTopDeals opens with Cheapest on eBay: free, measured, disclosed, eBa
   for (const attr of [
     /href=\{d\.outboundUrl\}/,
     /retailer=\{d\.outboundRetailer\}/,
-    /pageType="homepage"/,
+    /pageType=\{pageType\}/,
     /surface="cheapest_ebay"/,
     /cardId=\{d\.cardId\}/,
     /cardName=\{d\.title\}/,
@@ -339,22 +338,20 @@ test("TodaysTopDeals opens with Cheapest on eBay: free, measured, disclosed, eBa
   // Not an ad and not gated: shown to every visitor, paid tiers included.
   assert.doesNotMatch(block, /usePremium|useMe|premium|ADSENSE_REVIEW_MODE|>\s*Ad\s*</);
   // No savings total, no badge, no path to the locked tool, no gold.
-  assert.doesNotMatch(block, /PctBadge|Save |total|\/tools\/deal-finder|LockedTeaser|PremiumButton/);
+  assert.doesNotMatch(block, /PctBadge|Save |total|LockedTeaser|PremiumButton/);
   assert.doesNotMatch(block, /gold/, "gold is reserved for Premium");
   assert.match(block, /border-\[#0064d2\]/, "eBay blue");
   assert.match(block, /grid grid-cols-1 /, "a base column template (tests/grid-base-columns.test.ts)");
 
-  // Not a fifth column inside the grid — and, since the homepage eBay pass of
-  // 2026-09-26, FIRST in the section: above the price pills (which filter only
-  // the columns) and the grid. On a phone the four stacked panels had put it
-  // roughly a thousand pixels further down.
-  const gridAt = src.indexOf("items-stretch gap-4");
-  const pillsAt = src.indexOf('role="tablist" aria-label="Filter deals by price"');
-  const blockAt = src.indexOf("<CheapestOnEbay rows={ebayRows}");
-  assert.ok(gridAt > 0 && pillsAt > 0 && blockAt > 0, "all three render");
-  assert.ok(blockAt < pillsAt && blockAt < gridAt, "rendered before the pills and the grid");
-  assert.equal(src.split("<CheapestOnEbay rows={ebayRows}").length - 1, 1, "rendered once");
-  assert.doesNotMatch(between(src, "const COLUMNS: ColumnDef[] = [", "];"), /cheapestOnEbay/, "not a column");
+  // Owner, 2026-09-30: "Move cheapest on eBay inside of the deal finder". It
+  // left the homepage section and renders in Deal Finder for every visitor,
+  // signed out included (outside the access split), once.
+  const home = code("src/components/TodaysTopDeals.tsx");
+  assert.doesNotMatch(home, /<CheapestOnEbay\b|cheapestOnEbay/, "no longer on the homepage");
+  const df = code("src/app/tools/deal-finder/page.tsx");
+  assert.equal(df.split("<CheapestOnEbay").length - 1, 1, "rendered once in Deal Finder");
+  assert.match(df, /<CheapestOnEbay rows=\{cheapestEbay\} currency=\{info\.currency\} country=\{country\} pageType="deals"/);
+  assert.match(df, /getCheapestOnEbay\(country, CHEAPEST_EBAY_ROWS\)/);
 });
 
 test("TodaysTopDeals discloses the Cheapest sealed column's paid links and names the page on them", () => {

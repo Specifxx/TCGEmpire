@@ -86,20 +86,20 @@ test("PriceRowEbay: a direct listing only in the page's market, the visitor's ow
   assert.match(read("src/components/OutboundLink.tsx"), /\| "price_table_ebay"/);
 });
 
-test("Cheapest on eBay opens Today's Top Deals", () => {
+test("Cheapest on eBay left Today's Top Deals for Deal Finder (2026-09-30)", () => {
   const src = read("src/components/TodaysTopDeals.tsx");
-  const heading = src.indexOf("Today&apos;s Top Deals</h2>");
-  const block = src.indexOf("<CheapestOnEbay rows={ebayRows}");
-  const pills = src.indexOf('role="tablist" aria-label="Filter deals by price"');
-  assert.ok(heading > 0 && heading < block && block < pills);
+  assert.doesNotMatch(src, /<CheapestOnEbay\b/);
+  assert.match(read("src/app/tools/deal-finder/page.tsx"), /<CheapestOnEbay\b/);
 });
 
-test("the Most popular shelf is back, and the price table keeps the only ItemList for those cards", () => {
+test("the Most popular shelf is back, and exactly one of the table or the shelf carries the ItemList", () => {
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
-    const src = code(f);
-    assert.match(src, /popularCards=\{popularCards\}/, f);
-    assert.match(src, /popularItemList=\{priceTable\.length === 0\}/, f);
+    assert.match(code(f), /popularCards=\{popularCards\}/, f);
   }
+  // A region home keeps its price table, which carries the list when it renders.
+  assert.match(code("src/components/home/RegionHome.tsx"), /popularItemList=\{priceTable\.length === 0\}/);
+  // "/" has no table since 2026-09-30, so the shelf always carries it.
+  assert.match(code("src/app/page.tsx"), /\bpopularItemList\n\s*showTopDeals=\{false\}/);
   const home = code("src/components/home/HomeSections.tsx");
   assert.match(home, /popularItemList = true,/);
   assert.match(home, /\.\.\.\(popularItemList && popularCards\.length > 0/);
@@ -125,4 +125,15 @@ test("a Singapore Picks click still says Singapore to EPN after the re-tag", () 
   const us = new URL(affiliateUrl(ebayAffiliateUrl("https://www.ebay.com/itm/137597929650"), "picks_us", "/")).searchParams.get("customid") ?? "";
   assert.match(sg, /picks_sg-home/);
   assert.notEqual(sg, us, "Singapore and US Picks clicks stay separable");
+});
+
+// Owner, 2026-09-30: "Remove the plus tags on both biggest savings and rising
+// cards. Get rid of cheapest sealed."
+test("Today's Top Deals: no Cheapest sealed column, no tier chip on the gated columns", () => {
+  const src = read("src/components/TodaysTopDeals.tsx");
+  const cols = src.slice(src.indexOf("const COLUMNS: ColumnDef[] = ["), src.indexOf("];", src.indexOf("const COLUMNS: ColumnDef[] = [")));
+  assert.doesNotMatch(cols, /cheapestSealed/);
+  assert.match(cols, /savingsVsMarket/);
+  assert.match(cols, /risingCards/);
+  assert.doesNotMatch(src, /<span className="chip bg-gold\/20 text-gold">/);
 });

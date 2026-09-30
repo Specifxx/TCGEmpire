@@ -4,11 +4,11 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
 import { COUNTRIES, type Country } from "@/lib/country";
-import type { CheapestEbayDeal, Deal, DealColumnKey, TopDeals } from "@/lib/top-deals";
+import type { Deal, DealColumnKey, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
 import { isPaidLink } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
-import { AffiliateDisclosure, PaidLinkTag } from "@/components/AffiliateDisclosure";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { useCountry } from "@/components/CountryProvider";
 import { NavIcon } from "@/components/NavIcon";
 import { useQuickView } from "@/components/QuickView";
@@ -18,7 +18,7 @@ import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { PremiumButton } from "@/components/PremiumButton";
 import { cardThumbProps } from "@/lib/card-image-url";
 
-// Homepage "Today's Top Deals". Up to four columns, one per signal (the grid
+// Homepage "Today's Top Deals". Up to three columns, one per signal (the grid
 // itself only declares as many columns as actually have data — see GRID_COLS
 // below). Each gated column (Biggest savings, Rising cards — full lists on the
 // Plus tier) reveals only its single best pick, then a clearly-locked teaser
@@ -26,8 +26,9 @@ import { cardThumbProps } from "@/lib/card-image-url";
 // behind it, ONLY for a visitor who isn't already a paying member (see
 // useMe() below — this used to gate on `def.premium` alone, which locked the
 // column for every visitor including paying subscribers, since nothing here
-// ever read their actual entitlement). The free columns (price drops, cheapest
-// sealed) show in full. Empty columns (a signal with no data in this market)
+// ever read their actual entitlement). The free column (price drops) shows in
+// full. "Cheapest sealed" was a column until 2026-09-30 (owner: "get rid of
+// cheapest sealed"); /sealed still ranks every product. Empty columns (a signal with no data in this market)
 // are dropped entirely.
 //
 // "undervalued" used to sit here as a fourth column — removed per an earlier
@@ -37,12 +38,9 @@ import { cardThumbProps } from "@/lib/card-image-url";
 // today's actual fourth column, added back deliberately — see lib/top-deals.ts's
 // header comment for why that call was reversed for this specific signal.
 //
-// "Cheapest on eBay" (2026-09-26) is NOT a fifth column: it is its own
-// full-width block (CheapestOnEbay below), so the column layout is untouched.
-// It opens the section, above the price pills (which filter only the columns):
-// on a phone the grid is four stacked panels, and under them the block sat
-// roughly a thousand pixels further down ("The homepage's eBay column",
-// DECISIONS.md, 2026-09-26).
+// "Cheapest on eBay" opened this section from 2026-09-26 to 2026-09-30; the
+// owner moved it into Deal Finder ("Move cheapest on eBay inside of the deal
+// finder"). It lives in components/CheapestOnEbay.tsx now.
 type ColumnDef = {
   key: DealColumnKey;
   label: string;
@@ -66,7 +64,6 @@ type ColumnDef = {
 const COLUMNS: ColumnDef[] = [
   { key: "savingsVsMarket", label: "Biggest savings", sub: "Cards selling below the TCGplayer market price", premium: true, allHref: "/tools/deal-finder", allLabel: "All deals", totalKey: "savingsVsMarketTotal", surface: "gate:home-deals" },
   { key: "priceDrops", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
-  { key: "cheapestSealed", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
   { key: "risingCards", label: "Rising cards", sub: "Cards ranked by demand and price-timing signals", premium: true, allHref: "/tools/rising", allLabel: "All rising cards", totalKey: "risingCardsTotal", surface: "gate:home-rising" },
 ];
 
@@ -240,82 +237,6 @@ function LockedTeaser({ count, surface, tierName }: { count: number; surface: st
   );
 }
 
-// "Cheapest on eBay" (2026-09-26, "Pushing eBay clicks" in DECISIONS.md) — the
-// owner's original deal feature, back as a full-width block ABOVE the columns
-// (a fifth column would squeeze a grid GRID_COLS already had to stretch).
-// FREE and ungated: each row is one eBay affiliate link to the cheapest tracked
-// copy of that card in the visitor's market, so it is a buy path, not an ad —
-// no "Ad" label, no ad-free gate, shown to paid tiers too. Honest by rule: the
-// price reads "delivered" only when the seller stated postage; the gap is
-// measured against the cheapest store we track (lib/arbitrage.ts
-// rankCheapestOnEbay); no savings total, no percentage badge, no urgency, and
-// no link to the locked Deal Finder. eBay blue, never gold (gold marks Premium).
-// The disclosure sits directly under the rows for every visitor.
-function CheapestOnEbay({ rows, currency, country }: { rows: CheapestEbayDeal[]; currency: string; country: Country }) {
-  if (rows.length === 0) return null;
-  return (
-    <section aria-label="Cheapest on eBay" className="mb-4 rounded-xl border border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-3">
-      <div className="mb-1 flex flex-wrap items-center gap-2 px-1">
-        <h3 className="text-sm font-extrabold text-white">Cheapest on eBay</h3>
-        <PaidLinkTag />
-      </div>
-      {/* No "today": in the UK, Singapore and the EU the eBay rows refresh
-          every third day (lib/price-import.ts EBAY_ROTATING_MARKETS). */}
-      <p className="mb-1 px-1 text-[11px] leading-snug text-slate-500">
-        Cards where an eBay listing costs less than any store we track
-      </p>
-      <ul className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-        {rows.map((d, i) => (
-          <li key={d.cardId} className="min-w-0">
-            <OutboundLink
-              href={d.outboundUrl}
-              retailer={d.outboundRetailer}
-              country={country}
-              kind="single"
-              pageType="homepage"
-              surface="cheapest_ebay"
-              cardId={d.cardId}
-              cardName={d.title}
-              price={d.priceCents / 100}
-              positionInList={i + 1}
-              inStock
-              className="flex min-h-11 items-center gap-2.5 rounded-md px-2 py-2.5 transition-colors duration-fast hover:bg-[#0064d2]/10"
-            >
-              <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-ink-900">
-                {d.imageUrl && (
-                  // Plain <img> for the same reasons as DealRow's thumbnail.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    {...cardThumbProps({ imageThumbUrl: d.imageUrl }, "32px")}
-                    alt={cardImageAlt({ name: d.title })}
-                    width={32}
-                    height={44}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-white">{d.title}</div>{" "}
-                <div className="truncate text-[11px] text-slate-500">
-                  <span className="num font-semibold text-up">{formatMoney(d.gapCents, currency)}</span> below the cheapest
-                  store
-                </div>
-              </div>{" "}
-              <div className="flex shrink-0 flex-col items-end">
-                <span className="num text-sm font-bold text-accent">{formatMoney(d.priceCents, currency)}</span>{" "}
-                <span className="text-[10px] text-slate-500">{d.postageKnown ? "delivered" : "+ postage"}</span>
-              </div>
-            </OutboundLink>
-          </li>
-        ))}
-      </ul>
-      <AffiliateDisclosure partner="ebay" tight className="px-1" />
-    </section>
-  );
-}
-
 // Column-count classes are looked up (not string-built) so Tailwind's build-time
 // class scan can see every literal — the grid always matches how many columns
 // actually have data today instead of a fixed count, which used to leave the
@@ -368,8 +289,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
   // with tabs over nothing. The Cheapest on eBay block counts too (2026-09-26):
   // on a day it is the only thing with rows, it shows without the tier pills.
   const allColumns = COLUMNS.map((c) => ({ def: c, items: deals[c.key] })).filter((c) => c.items.length > 0);
-  const ebayRows = deals.cheapestOnEbay;
-  if (allColumns.length === 0 && ebayRows.length === 0) return null;
+  if (allColumns.length === 0) return null;
 
   // "All" mixes cheap-first (see mixByTier) so a Premium column's single
   // unlocked item is more often approachable; an explicit tier just filters,
@@ -407,9 +327,6 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
         </Link>
       </div>
 
-      {/* First in the section (2026-09-26): every row is a free, direct eBay
-          listing that genuinely beats every store we track. */}
-      <CheapestOnEbay rows={ebayRows} currency={currency} country={country} />
 
       {/* Tier pills are 48px tall on TOUCH only (2026-09-23): they measured
           39/115/123/79 × 24px at 390, far under a thumb. Coarse-pointer-only,
@@ -470,15 +387,9 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
                 <span className="flex items-center gap-1.5 text-sm font-extrabold text-white">
                   {def.label}
                 </span>
-                {/* Both gated columns (Deal Finder, Rising Cards) are FULL-LIST
-                    tools on the cheaper Plus tier, so the badge names the lowest
-                    tier that actually unlocks them — same rule as the tools
-                    index. Badging them "Premium" would both over-quote the price
-                    and tell an existing Plus member their own unlocked column
-                    belongs to a tier they're not on. */}
-                {def.premium && !ADSENSE_REVIEW_MODE && (
-                  <span className="chip bg-gold/20 text-gold">{premiumPlus ? "Plus" : "Premium"}</span>
-                )}
+                {/* No tier chip on the gated columns (owner, 2026-09-30: "remove
+                    the plus tags on both biggest savings and rising cards"). The
+                    locked teaser under the first pick still names the tier. */}
               </div>
               {def.sub && <p className="mb-1 px-1 text-[11px] leading-snug text-slate-500">{def.sub}</p>}
 

@@ -8,9 +8,8 @@ import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/pric
 import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
-import { PriceTodayTable } from "@/components/home/PriceTodayTable";
 import { EditorialHub } from "@/components/home/EditorialHub";
-import { getPriceTable } from "@/lib/price-table";
+import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { homeMetadata } from "@/lib/home-metadata";
 import { webPage, faqPage, webApplication } from "@/lib/jsonld";
 
@@ -276,7 +275,6 @@ export default async function HomePage() {
     topDealsArr,
     recentlyUpdated,
     moversArr,
-    priceTable,
   ] = await Promise.all([
     // Per-market stat tiles + the "Prices updated Xh ago" freshness signal —
     // shared with the 4 region home pages (see lib/home-stats.ts) so they read
@@ -309,7 +307,6 @@ export default async function HomePage() {
     // six fresh DB scans. moversByCountry[country] (the baseline) also feeds the
     // popular-cards carousel's "Movers" tab below, unchanged from before.
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
-    getPriceTable(country),
   ]);
   const storeCount = statsByCountry[country].stores;
   const storeWord = storeCount === 1 ? "store" : "stores";
@@ -317,6 +314,7 @@ export default async function HomePage() {
   // client-side to whichever market the VISITOR is actually in (see its own
   // doc comment) — not just the AU baseline this page's ISR render bakes in.
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
+  const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
 
   return (
@@ -329,8 +327,17 @@ export default async function HomePage() {
         freshness={freshness}
       />
 
-      {/* Guides, news & market updates — DIRECTLY UNDER THE HERO since
-          2026-09-28, above the price table (owner: "we need the blog and
+      {/* Today's Top Deals — DIRECTLY UNDER THE HERO, the first content on the
+          page (owner, 2026-09-30: "move today's top deals to the very top").
+          The hero stays above it: it is the search box and the site header, not
+          a content band. HomeSections renders it for the region homes; this page
+          passes showTopDeals={false} so it appears once. */}
+      {/* No <Reveal> wrapper: it is in or near the first screen, where a
+          scroll-in fade would hide real content until hydration. */}
+      {anyDeals && <TodaysTopDeals dealsByCountry={topDealsByCountry} />}
+
+      {/* Guides, news & market updates — under the hero since 2026-09-28
+          (below Today's Top Deals since 2026-09-30), and above what was the price table (owner: "we need the blog and
           guides to be prominent so that we get approved for adsense with their
           lazy crawlers"). It had sat under the table since 2026-09-26, which
           put the writing one to two screens down behind 15 price rows. See
@@ -338,11 +345,11 @@ export default async function HomePage() {
           market-neutral, so "Start here" keeps the six-market guide. */}
       <EditorialHub freshness={freshness} />
 
-      {/* The price list the head term asks for (lib/price-table.ts), with an
-          eBay button on every row, now the band after the editorial one. It
-          carries the ItemList for the most-searched cards; the carousel's
-          "Most popular" tab shows the same cards as tiles without one. */}
-      <PriceTodayTable rows={priceTable} country={country} totalPriced={statsByCountry[country].priced} />
+      {/* REMOVED 2026-09-30: "Riftbound card prices today", the price table
+          (PriceTodayTable, lib/price-table.ts), on the owner's instruction ("get
+          rid of the riftbound card prices today on the home page"). The region
+          homes still carry it. Its ItemList moved to the popular-cards carousel
+          (popularItemList below). */}
 
       {/* REMOVED: the "Vendetta — the new set, priced" launch band (cheapest
           booster box, price-since-release, chase cards). It was a launch-window
@@ -366,10 +373,11 @@ export default async function HomePage() {
         totalCards={totalCards}
         storeCount={storeCount}
         storeWord={storeWord}
-        // The "Most popular" shelf is back (owner, 2026-09-26); the price table
-        // keeps the ItemList for these cards when it renders.
+        // The "Most popular" shelf is back (owner, 2026-09-26) and carries the
+        // ItemList for these cards now the price table is gone (2026-09-30).
         popularCards={popularCards}
-        popularItemList={priceTable.length === 0}
+        popularItemList
+        showTopDeals={false}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

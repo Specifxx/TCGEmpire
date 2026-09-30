@@ -3,7 +3,7 @@ import { HubIntro } from "@/components/HubIntro";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import Link from "next/link";
-import { getArbitrageVsTcgplayer, getPricesAsOf, dealFinderSources, defaultTcgBuyKeys, type ArbItem, type ArbSort } from "@/lib/arbitrage";
+import { getArbitrageVsTcgplayer, getCheapestOnEbay, getPricesAsOf, dealFinderSources, defaultTcgBuyKeys, type ArbItem, type ArbSort } from "@/lib/arbitrage";
 import { hrefFor, parseDealFinderParams, type DealFinderParams, type DealFinderSearchParams, type MineFilter } from "@/lib/deal-finder-href";
 import { readUserCardIds, PLUS_GATE_LINE, USER_CARD_ID_CAPS } from "@/lib/premium-nudge";
 import { getCountry } from "@/lib/get-country";
@@ -13,6 +13,8 @@ import { USD_TO } from "@/lib/fx";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
+import { CheapestOnEbay } from "@/components/CheapestOnEbay";
+import { cheapestEbayDeal } from "@/lib/top-deals";
 import { PremiumButton } from "@/components/PremiumButton";
 import { RegionToggle } from "@/components/RegionToggle";
 import { ArbitrageFilters } from "@/components/ArbitrageFilters";
@@ -49,6 +51,8 @@ export const metadata: Metadata = {
 // "Only my cards" chips — so no control can drop a parameter again (the flip
 // tab lost view=flip that way and sent paying members to another tab for days).
 const PAGE_SIZE = 25;
+// Rows in the free "Cheapest on eBay" block below the list.
+const CHEAPEST_EBAY_ROWS = 8;
 // THREE LEVELS OF ACCESS (2026-09-23; DECISIONS.md, "Premium after sign-up").
 //
 //   full — Plus/Premium (and ADSENSE_REVIEW_MODE): every row, the filters,
@@ -153,6 +157,14 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
   const onlyCardIds = mineRead?.ids;
   const mineCapped = !!mineRead?.capped;
 
+  // "Cheapest on eBay" (moved here from the homepage's Today's Top Deals,
+  // owner, 2026-09-30). Free and shown to every visitor, signed out included:
+  // each row is one eBay listing that beats every store we track. Self-cached
+  // through its day-keyed inputs (lib/arbitrage.ts); the only per-request read
+  // is one select for these CHEAPEST_EBAY_ROWS cards. Never wrap it in a cache.
+  const cheapestEbayPromise = getCheapestOnEbay(country, CHEAPEST_EBAY_ROWS)
+    .then((rows) => rows.map(cheapestEbayDeal))
+    .catch(() => []);
   // Signed out runs nothing, this included.
   const asOfPromise = access === "none" ? Promise.resolve(null) : getPricesAsOf(country);
   const data =
@@ -162,6 +174,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
         ? await getArbitrageVsTcgplayer(country, { buy: tcgBuyKeys, sort: "saving", page: 1, pageSize: FREE_PREVIEW_ROWS })
         : null;
   const asOf = await asOfPromise;
+  const cheapestEbay = await cheapestEbayPromise;
 
   const storeKeys = sources.filter((s) => !s.isEbay).map((s) => s.key);
   const defaultHasEbay = tcgBuyKeys.length !== storeKeys.length;
@@ -328,6 +341,8 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
           </p>
         </>
       )}
+
+      <CheapestOnEbay rows={cheapestEbay} currency={info.currency} country={country} pageType="deals" className="mt-6" />
 
       <p className="mt-4 text-xs text-slate-500">
         Looking for cards that cost less in another market?{" "}

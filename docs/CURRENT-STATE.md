@@ -415,13 +415,13 @@ longer lands on its entry.
   stock or listing; cross-sells (`promo`) hide for ad-free members and carry
   `data-ad-placement`. `/editorial-policy`, `/about` and `/privacy` disclose
   this. Never claim eBay guarantees ("money back", "buyer protection" fail a
-  test). The homepage's free "Cheapest on eBay" row lists only cards where eBay
+  test). The free "Cheapest on eBay" block (Deal Finder since 09-30) lists only cards where eBay
   beats every source the card page ranks (EU: CardTrader too; US: TCGplayer's
   listing too; Canada never). Its free status beside the trial measurement is
   the owner's call. Hot 40 snapshots mark picks "Cheapest on eBay" by the same
   rule (`getCheapestOnEbayFor`), in each pick's basis market, frozen at mint,
   with a Paid link tag and the disclosure above the table
-  [2026-09-28](../DECISIONS.md#L15039). The homepage price table has an eBay button on every row,
+  [2026-09-28](../DECISIONS.md#L15039). The region homes' price table has an eBay button on every row,
   last, after our own figures: the tracked listing's item price in the page's
   own market (filled only when it is the row's cheapest), a "Search" of the
   visitor's own eBay otherwise; stacked rows below 768px so it is never cut
@@ -479,18 +479,19 @@ longer lands on its entry.
   [2026-09-30](../DECISIONS.md#L15905)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417),
   [2026-09-28](../DECISIONS.md#L14549)
-- **Homepage order:** hero, then the editorial band (`EditorialHub`: Start
-  here, Latest news, Market updates — directly under the hero since 09-28 so
-  AdSense's crawlers meet the writing first; two rows per column on phones),
-  then the price table, Top Deals (opening
-  with the free "Cheapest on eBay" block, above its pills and columns), eBay
-  Picks (the newest released set), the popular carousel (its "Most popular"
-  tab back, owner's call; the ItemList stays with the price table),
-  Riftle/pack-sim, How it works. No Recently viewed on any homepage (owner,
-  09-28); it stays in the search box and on card pages.
+- **Homepage order:** hero, then Today's Top Deals (Biggest savings, Price
+  drops, Rising cards; no tier chips, no Cheapest sealed column), then the
+  editorial band (`EditorialHub`: Start here, Latest news, Market updates; two
+  rows per column on phones), eBay Picks (the newest released set), the popular
+  carousel (its "Most popular" tab back, owner's call; it carries the ItemList
+  on `/`), Riftle/pack-sim, How it works. No price table on `/` since 09-30
+  (the region homes keep theirs). "Cheapest on eBay" lives in Deal Finder since
+  09-30. No Recently viewed on any homepage (owner, 09-28); it stays in the
+  search box and on card pages.
   [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
   [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190),
-  [2026-09-26](../DECISIONS.md#L14680), [2026-09-28](../DECISIONS.md#L15131)
+  [2026-09-26](../DECISIONS.md#L14680), [2026-09-28](../DECISIONS.md#L15131),
+  [2026-09-30](../DECISIONS.md#L15971)
 - **Overlays:** `ui/Dialog` portals to body; Escape closes only the top
   layer and focus returns to the opener. Corner nudges share one corner
   string. [2026-09-23](../DECISIONS.md#L11348)

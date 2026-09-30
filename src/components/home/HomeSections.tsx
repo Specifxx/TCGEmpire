@@ -43,6 +43,8 @@ export interface HomeSectionsProps {
    *  owns that markup (2026-09-24); the carousel came back on 2026-09-26 as a
    *  visual shelf, not as a second list for search engines. */
   popularItemList?: boolean;
+  /** Render Today's Top Deals here (the region homes). "/" renders it itself, directly under the hero (2026-09-30). */
+  showTopDeals?: boolean;
   // ALL FIVE markets, not just `country` — TodaysTopDeals/MarketPulse localise
   // to the VISITOR's own market client-side (useCountry()), which can differ
   // from the page's URL/baseline market (e.g. a bookmarked /au visited by
@@ -70,6 +72,7 @@ export function HomeSections({
   storeWord,
   popularCards,
   popularItemList = true,
+  showTopDeals = true,
   topDealsByCountry,
   moversByCountry,
   recentlyUpdated,
@@ -134,7 +137,7 @@ export function HomeSections({
           "how it works" story still ends past the till at something playable,
           and nothing was removed to make room — all still pinned by the same
           test file. Hidden entirely if no market has data. */}
-      {anyDeals && (
+      {showTopDeals && anyDeals && (
         <Reveal>
           <TodaysTopDeals dealsByCountry={topDealsByCountry} />
         </Reveal>
