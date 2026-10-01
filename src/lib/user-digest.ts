@@ -25,7 +25,7 @@ import { getPriceMovers } from "./price-history";
 import { sendUserDigestEmail, isBrevoEnabled, isEmailEnabled, getLastEmailError } from "./email";
 import { normalizeCountry, type Country } from "./country";
 import { SITE_URL } from "./site";
-import { editionKey, buildDigest, recentRadianceReveals, type Digest } from "./newsletter";
+import { editionKey, buildDigest, loadDigestExtras, recentRadianceReveals, type Digest } from "./newsletter";
 
 export type UserDigestProvider = "brevo" | "resend";
 
@@ -120,7 +120,10 @@ export async function runUserDigest(opts?: { limit?: number; via?: UserDigestPro
   for (const r of batch) {
     if (!digests.has(r.market)) {
       const movers = await getPriceMovers(r.market, 8);
-      digests.set(r.market, buildDigest(movers, r.market, reveals));
+      // Same richer content as the newsletter, but no sponsored slot: account
+      // holders signed up for their account digest, not for promotions.
+      const extras = await loadDigestExtras(r.market);
+      digests.set(r.market, buildDigest(movers, r.market, reveals, extras));
       if (!digests.get(r.market)) summary.quietMarkets.push(r.market);
     }
     const digest = digests.get(r.market);

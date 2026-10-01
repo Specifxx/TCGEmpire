@@ -16363,3 +16363,19 @@ use sparingly any remaining quota for pokemon."
   unknown. Older sets keep their eBay search link. `tests/pokemon-ebay.test.ts`
   pins the cap, the floor against `lib/ebay.ts`'s reserve, and that the only
   eBay schedule runs after Riftbound's last.
+
+## Weekly newsletter: a sponsored slot, and a fuller edition — 2026-10-01
+
+**Why.** The owner asked for a paid placement in the weekly newsletter and for the edition itself to carry much more. Selling or sharing the list was ruled out first: the privacy policy says "We do not sell your personal information", and most subscribers are in GDPR, UK GDPR, Privacy Act, CASL or PDPA jurisdictions, where passing emails to another company for its marketing needs opt-in consent nobody gave.
+
+**What.**
+
+- **Sponsored slot** (`lib/newsletter-sponsor.ts`). Bookings are a typed list in code with `from`/`until` dates and optional `markets`; one runs per edition. It is labelled "SPONSORED · <name>", sits after the week's risers, links with `rel="sponsored"` and sponsor-side UTM tags, and HTML-escapes the sponsor's text. Only https links and images are accepted. With nothing booked, the slot is a labelled "Sponsor this newsletter" line to /contact. Sponsors receive no subscriber data, and the privacy policy now says so.
+- **The account weekly digest** (lib/user-digest.ts) gets the same new sections but **no sponsored slot**: account holders signed up for their digest, not for promotions.
+- **A fuller edition.** `loadDigestExtras` adds:
+  - the market at a glance (RiftCompare Index level with its 7- and 30-day change, cards with a live price, stores with stock);
+  - the most valuable cards (the all-time peak board, with peak date);
+  - what collectors are searching for (top 5 by searches, with the lowest price);
+  - the week's new articles (or the latest four when none are new);
+  - upcoming dated releases with a countdown.
+  Movers show 8 risers and 8 drops (was 5 each) and 5 value picks (was 3). Every figure comes from a loader the site already shows (`getMarketIndex`, `getHomeStats`, `getAllTimeRecords`, `getPopularCards`, `getArticles`, `RELEASES`). Each source fails on its own, so one failing loader drops a section, not the send. The quiet-week rule is unchanged: no movers and no reveals means no email.

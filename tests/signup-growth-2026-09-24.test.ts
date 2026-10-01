@@ -69,5 +69,5 @@ test("articles: an intro CTA and an end CTA, Radiance-led until release, and the
   const nl = read("src/lib/newsletter.ts");
   assert.match(nl, /if \(!isBeforeRadianceRelease\(now\)\) return \[\];/);
   assert.match(nl, /\$\{revealsSection\(reveals\)\}/);
-  assert.match(read("src/lib/user-digest.ts"), /buildDigest\(movers, r\.market, reveals\)/);
+  assert.match(read("src/lib/user-digest.ts"), /buildDigest\(movers, r\.market, reveals(, extras)?\)/);
 });

@@ -295,6 +295,11 @@ export default function PrivacyPage() {
             send us.
           </p>
           <p>
+            The weekly newsletter may include one clearly labelled sponsored message. We send it
+            ourselves: sponsors never receive your email address or any other information about you, and
+            clicking their link is the only way they learn you read it.
+          </p>
+          <p>
             Emails are delivered through Resend, and the weekly account digest and announcements through
             Brevo. Every alert and newsletter email carries an unsubscribe link, and alert emails also
             support the one-click unsubscribe your email app may show at the top. For price alerts,
