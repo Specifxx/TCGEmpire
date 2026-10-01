@@ -11,10 +11,11 @@ import { useCountry } from "../CountryProvider";
 // collector can paste into a community that bans links (lib/pokemon/share-text.ts
 // says what the text may carry). Two ways in:
 //   texts   finished strings from the server (share-text shareTexts), for
-//           force-dynamic pages that already know the visitor's market (set,
-//           price per pack);
+//           force-dynamic pages that already know the visitor's market and
+//           display currency (set, price per pack: pass `eur: showEur`);
 //   product the product's boards, for the ISR product page, which reads no
-//           cookie: the text is built here for useCountry()'s market at click.
+//           cookie: the text is built here for useCountry()'s market at click,
+//           in euros for a UK visitor who asked for them, as the board shows.
 // No link unless "Include source link" is ticked, and then one, to our page.
 //
 // The clipboard API is missing or refused in more places than expected (an
@@ -58,7 +59,7 @@ function legacyCopy(text: string): boolean {
 }
 
 export function CopyPrices({ page, className, texts, product }: Props) {
-  const { country } = useCountry();
+  const { country, isEurDisplay } = useCountry();
   const [withLink, setWithLink] = useState(false);
   const [done, setDone] = useState<ShareFormat | null>(null);
   const [manual, setManual] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export function CopyPrices({ page, className, texts, product }: Props) {
   function textFor(format: ShareFormat): string {
     if (texts) return withLink ? texts[format].linked : texts[format].plain;
     const p = product as CopyProduct;
-    return productShareText(p.boards, p.name, p.slug, p.packCount, p.asOf, country, { format, withLink });
+    return productShareText(p.boards, p.name, p.slug, p.packCount, p.asOf, country, { format, withLink, eur: isEurDisplay });
   }
 
   async function copy(format: ShareFormat) {

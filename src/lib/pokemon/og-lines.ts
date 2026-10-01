@@ -14,7 +14,7 @@ import { formatDay } from "./format";
 import { kindInfo, type PkKind } from "./kinds";
 import { perPackCents } from "./packs";
 import { asOfLabel, cheapestByKind, formatPerPack } from "./value";
-import type { PkCatalog, PkProductDetail, PkTile } from "./types";
+import type { PkCatalog, PkProductDetail, PkSetSummary, PkTile } from "./types";
 
 const footerLine = (asOf: string | null): string => ["Item price, postage extra", "updated daily", asOf].filter(Boolean).join(" · ");
 
@@ -74,20 +74,44 @@ export interface SetOgLines {
    * pack)"; `price` and `perPack` are its two halves, for the card's two lines.
    */
   rows: { kind: string; text: string; price: string; perPack: string | null }[];
-  /** "TCGplayer lists 16 Sep 2026", or "Pre-orders open: …" for a set not out yet. */
+  /** setReleaseLine: "Release: TCGplayer lists 16 Sep 2026", or "Pre-orders open: …" for a set not out yet. */
   release: string | null;
   footer: string;
+}
+
+/**
+ * A whole set's release line, for the set card and the bot's /set reply.
+ * "Pre-orders open" only while the set itself is not out: the date TCGplayer
+ * lists for it is still ahead, or every product in it is a pre-order. A set
+ * that is out often gains later products (a tin, a collection) listed as
+ * pre-orders of their own; their rows say so, and calling the set's past date a
+ * pre-order opening would be untrue. Says nothing of pre-orders it cannot see:
+ * a date ahead with no product listed as a pre-order is just the release.
+ */
+export function setReleaseLine(
+  set: Pick<PkSetSummary, "releasedOn">,
+  tiles: readonly Pick<PkTile, "presale">[],
+  now: number = Date.now(),
+): string | null {
+  const date = formatDay(set.releasedOn);
+  if (!date || !set.releasedOn) return null;
+  const ahead = set.releasedOn.slice(0, 10) > new Date(now).toISOString().slice(0, 10);
+  const open = tiles.some((t) => t.presale) && (ahead || tiles.every((t) => t.presale));
+  return `${open ? "Pre-orders open" : "Release"}: TCGplayer lists ${date}`;
 }
 
 /** The three kinds a set card prices: the ones people compare first. */
 export const SET_OG_KINDS: readonly PkKind[] = ["booster-box", "etb", "booster-bundle"];
 
 /** Null when the US catalogue holds no such set. */
-export function setOgLines(catalog: Pick<PkCatalog, "sets" | "tiles" | "pricesAsOf" | "currency">, slug: string): SetOgLines | null {
+export function setOgLines(
+  catalog: Pick<PkCatalog, "sets" | "tiles" | "pricesAsOf" | "currency">,
+  slug: string,
+  now: number = Date.now(),
+): SetOgLines | null {
   const set = catalog.sets.find((s) => s.slug === slug);
   if (!set) return null;
   const tiles = catalog.tiles.filter((t) => t.setSlug === set.slug);
-  const presale = tiles.some((t) => t.presale);
   const released = cheapestByKind(tiles);
   // A set that is all pre-orders still gets prices: its pre-order listings,
   // said as such, which is what a card shared before release day is for.
@@ -102,13 +126,12 @@ export function setOgLines(catalog: Pick<PkCatalog, "sets" | "tiles" | "pricesAs
     const perPack = t.perPackCents != null ? formatPerPack(t.perPackCents, catalog.currency) : null;
     rows.push({ kind: kindInfo(kind).label, text: perPack ? `${price} (${perPack})` : price, price, perPack });
   }
-  const date = formatDay(set.releasedOn);
   return {
     name: set.name,
     context: `${set.series} · ${set.productCount} sealed ${set.productCount === 1 ? "product" : "products"}`,
     label: "US prices",
     rows,
-    release: date ? `${presale ? "Pre-orders open: " : ""}TCGplayer lists ${date}` : null,
+    release: setReleaseLine(set, tiles, now),
     footer: footerLine(asOfLabel(catalog.pricesAsOf)),
   };
 }

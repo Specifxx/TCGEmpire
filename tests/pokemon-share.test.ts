@@ -1,9 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { formatMoney } from "../src/lib/format";
+import { gbpCentsToEur } from "../src/lib/fx";
 import { allBoards } from "../src/lib/pokemon/board";
+import { perPackCents } from "../src/lib/pokemon/packs";
 import { DISCORD_MAX, DISCORD_ROWS, offersAsOf, perPackShareText, productShareText, setShareText, type ShareOpts } from "../src/lib/pokemon/share-text";
-import { headlineSentence, productOgLines, setOgLines } from "../src/lib/pokemon/og-lines";
+import { headlineSentence, productOgLines, setOgLines, setReleaseLine } from "../src/lib/pokemon/og-lines";
 import { textViolations } from "./helpers/pokemon-copy";
 import type { PkCatalog, PkOfferRow, PkProductDetail, PkTile } from "../src/lib/pokemon/types";
 
@@ -46,6 +49,22 @@ const allMarkets: PkProductDetail = {
 const usOnly: PkProductDetail = { ...product, offers: product.offers.filter((o) => o.market === "US") };
 const noListing: PkProductDetail = { ...product, offers: product.offers.filter((o) => o.source === "tcgplayer_market") };
 
+// A UK catalogue derived from the US one: pound figures from eBay UK, enough to
+// check the euro display without a second fixture.
+const toGbp = (c: number | null) => (c == null ? null : Math.round(c * 0.79));
+const ukCatalog: PkCatalog = {
+  ...catalog,
+  market: "UK",
+  currency: "GBP",
+  tiles: catalog.tiles.map((t) => ({
+    ...t,
+    lowCents: toGbp(t.lowCents),
+    refCents: toGbp(t.refCents),
+    perPackCents: toGbp(t.perPackCents),
+    lowSource: t.lowCents == null ? null : "ebay",
+  })) as PkTile[],
+};
+
 const boardsOf = (p: PkProductDetail) => allBoards(p.name, p.offers, { page: `/pokemon/sealed/${p.slug}`, surface: "product", now: NOW });
 const opts = (format: "reddit" | "discord", withLink: boolean): ShareOpts => ({ format, withLink, now: NOW });
 
@@ -71,6 +90,15 @@ function everyText(): { label: string; text: string; format: "reddit" | "discord
         out.push({ label: `set ${slug} ${format}`, text: setShareText(catalog, slug, opts(format, withLink)) as string, format, withLink });
       }
       out.push({ label: `per pack ${format}`, text: perPackShareText(catalog, {}, opts(format, withLink)), format, withLink });
+      const eur = { ...opts(format, withLink), eur: true };
+      out.push({
+        label: `product UK in euros ${format}`,
+        text: productShareText(boardsOf(allMarkets), product.name, product.slug, product.packCount, offersAsOf(allMarkets.offers), "UK", eur),
+        format,
+        withLink,
+      });
+      out.push({ label: `set UK in euros ${format}`, text: setShareText(ukCatalog, "perfect-order", eur) as string, format, withLink });
+      out.push({ label: `per pack UK in euros ${format}`, text: perPackShareText(ukCatalog, {}, eur), format, withLink });
       out.push({
         label: `per pack boxes ${format}`,
         text: perPackShareText(catalog, { kinds: ["booster-box"], label: "Booster boxes", anchor: "booster-box", limit: 25 }, opts(format, withLink)),
@@ -137,6 +165,42 @@ test("Discord: bullets, no table, at most one message and a capped number of row
     p.split("\n").filter((l) => l.startsWith("- ")),
     ["- US$109.99 + US$4.99 postage · eBay · US$12.22 a pack", "- US$115.00 · TCGplayer · US$12.78 a pack"],
   );
+});
+
+test("UK euro display: the pasted figures are the ones the page shows, converted and said so", () => {
+  const eur = { ...opts("reddit", false), eur: true };
+  const asOf = offersAsOf(allMarkets.offers);
+  const ukEur = productShareText(boardsOf(allMarkets), product.name, product.slug, product.packCount, asOf, "UK", eur);
+  const e = (gbp: number) => formatMoney(gbpCentsToEur(gbp), "EUR");
+  assert.ok(ukEur.includes(`| eBay UK | ${e(8999)}, free postage | ${e(perPackCents(8999, 9) as number)} |`), ukEur);
+  assert.match(ukEur, /TCGplayer market price \(a reference, not a listing\): ≈ €/);
+  assert.doesNotMatch(ukEur, /£/, "no pound figure left beside the euro ones");
+  assert.match(ukEur, /^Shown in euros, converted from the pound prices of UK listings\.$/m);
+  // References only (no UK listing): each already says ≈, so no listing note.
+  const refsOnly = productShareText(boardsOf(product), product.name, product.slug, product.packCount, offersAsOf(product.offers), "UK", eur);
+  assert.match(refsOnly, /No tracked listings in the United Kingdom\./);
+  assert.match(refsOnly, /TCGplayer market price \(a reference, not a listing\): ≈ €/);
+  assert.doesNotMatch(refsOnly, /£|Shown in euros/);
+
+  // Only pounds convert: every other market's text is unchanged by the option.
+  for (const market of ["US", "EU", "AU", "CA", "SG"] as const) {
+    const plain = productShareText(boardsOf(allMarkets), product.name, product.slug, product.packCount, asOf, market, opts("reddit", false));
+    assert.equal(productShareText(boardsOf(allMarkets), product.name, product.slug, product.packCount, asOf, market, eur), plain, market);
+  }
+
+  const set = setShareText(ukCatalog, "perfect-order", eur) as string;
+  assert.match(set, /^\| Booster Box \| [^|]+ \| €[\d,.]+ on eBay UK \| €[\d.]+ \|$/m);
+  assert.doesNotMatch(set, /£/);
+  assert.match(set, /Shown in euros/);
+  assert.doesNotMatch(setShareText(ukCatalog, "perfect-order", opts("reddit", false)) as string, /€|Shown in euros/, "pounds unless asked");
+
+  const ranked = perPackShareText(ukCatalog, { kinds: ["booster-box"] }, eur);
+  assert.match(ranked, /^\| 1 \| [^|]+ \| €[\d.]+ \| €[\d,.]+ on eBay UK \| \d+ \|$/m);
+  assert.doesNotMatch(ranked, /£/);
+  assert.match(ranked, /Shown in euros/);
+
+  // A source line and the as-of sentence still close the text.
+  assert.ok(productShareText(boardsOf(allMarkets), product.name, product.slug, product.packCount, asOf, "UK", { ...eur, withLink: true }).endsWith(ENDING));
 });
 
 test("with the link: exactly one URL, ours, tagged for the paste; without it: no URL and no brand", () => {
@@ -210,7 +274,7 @@ test("productOgLines: all markets, US only, no listing; US figures, the as-of da
 });
 
 test("setOgLines: box, ETB and bundle from the cheapest listing with the price per pack; pre-orders said as such", () => {
-  const po = setOgLines(catalog, "perfect-order");
+  const po = setOgLines(catalog, "perfect-order", NOW);
   assert.ok(po);
   assert.equal(po.label, "US prices");
   assert.match(po.context, /^Mega Evolution · \d+ sealed products$/);
@@ -220,24 +284,55 @@ test("setOgLines: box, ETB and bundle from the cheapest listing with the price p
     assert.match(r.text, /^from US\$[\d,.]+( \(US\$[\d.]+ a pack\))?$/, r.text);
     assert.equal(r.text, r.perPack ? `${r.price} (${r.perPack})` : r.price);
   }
-  assert.match(po.release ?? "", /^TCGplayer lists \d{1,2} [A-Z][a-z]{2} \d{4}$/);
+  assert.match(po.release ?? "", /^Release: TCGplayer lists \d{1,2} [A-Z][a-z]{2} \d{4}$/);
   assert.equal(po.footer, "Item price, postage extra · updated daily · as of 1 Oct 2026");
 
-  const dr = setOgLines(catalog, "delta-reign");
+  const dr = setOgLines(catalog, "delta-reign", NOW);
   assert.ok(dr && dr.rows.length > 0);
   assert.equal(dr.release, "Pre-orders open: TCGplayer lists 6 Nov 2026");
   for (const r of dr.rows) {
     assert.match(r.text, /^pre-order from US\$[\d,.]+ \(US\$[\d.]+ a pack\)$/, r.text);
   }
-  assert.equal(setOgLines(catalog, "no-such-set"), null);
-  for (const l of [po, dr]) assert.deepEqual(textViolations(JSON.stringify(l)), []);
+
+  // Out since 16 Sep, with later products listed as pre-orders of their own:
+  // the set's past date is its release, never a pre-order opening.
+  const tc = setOgLines(catalog, "30th-celebration", NOW);
+  assert.ok(tc && tc.rows.length > 0);
+  assert.ok(catalog.tiles.some((t) => t.setSlug === "30th-celebration" && t.presale), "the fixture still holds a later pre-order");
+  assert.equal(tc.release, "Release: TCGplayer lists 16 Sep 2026");
+  assert.ok(tc.rows.some((r) => r.price.startsWith("from ")), "released products priced as such");
+
+  assert.equal(setOgLines(catalog, "no-such-set", NOW), null);
+  for (const l of [po, dr, tc]) assert.deepEqual(textViolations(JSON.stringify(l)), []);
+});
+
+test("setReleaseLine: pre-orders open only while the set itself is not out", () => {
+  const ahead = { releasedOn: "2026-11-06" };
+  const past = { releasedOn: "2026-09-16" };
+  const pre = { presale: true };
+  const out = { presale: false };
+  assert.equal(setReleaseLine(ahead, [pre, pre], NOW), "Pre-orders open: TCGplayer lists 6 Nov 2026");
+  assert.equal(setReleaseLine(ahead, [pre, out], NOW), "Pre-orders open: TCGplayer lists 6 Nov 2026", "a date still ahead");
+  assert.equal(setReleaseLine(ahead, [out], NOW), "Release: TCGplayer lists 6 Nov 2026", "no product listed as a pre-order: no pre-order claim");
+  assert.equal(setReleaseLine(past, [pre, out, out], NOW), "Release: TCGplayer lists 16 Sep 2026", "a later pre-order in a set that is out");
+  assert.equal(setReleaseLine(past, [pre, pre], NOW), "Pre-orders open: TCGplayer lists 16 Sep 2026", "every product still a pre-order");
+  assert.equal(setReleaseLine(past, [], NOW), "Release: TCGplayer lists 16 Sep 2026");
+  assert.equal(setReleaseLine(ahead, [pre, out], Date.parse("2026-11-07T00:00:00Z")), "Release: TCGplayer lists 6 Nov 2026", "the day after");
+  assert.equal(setReleaseLine({ releasedOn: null }, [pre], NOW), null);
 });
 
 test("both share-card routes: lowercase cache-control (six hours, never immutable), nodejs, the loader's TTL, gated", () => {
   for (const f of ["src/app/pokemon/sealed/[slug]/opengraph-image.tsx", "src/app/pokemon/sets/[set]/opengraph-image.tsx"]) {
     const src = readFileSync(f, "utf8");
     const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-    assert.match(code, /headers: \{ "cache-control": "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400" \}/, f);
+    assert.match(code, /const CACHED = "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400";/, f);
+    assert.match(code, /headers: \{ "cache-control": failed \? AFTER_ERROR : CACHED \}/, f);
+    // The card drawn after a read error must not sit in the CDN for six hours.
+    const afterError = code.match(/const AFTER_ERROR = "([^"]+)";/)?.[1] ?? "";
+    const sMaxAge = Number(afterError.match(/s-maxage=(\d+)/)?.[1] ?? NaN);
+    assert.ok(sMaxAge > 0 && sMaxAge <= 300, `${f}: AFTER_ERROR "${afterError}"`);
+    assert.doesNotMatch(afterError, /stale-while-revalidate/, f);
+    assert.match(code, /catch \(e\) \{\s*failed = true;/, `${f}: only a read error takes the short header`);
     assert.doesNotMatch(code, /immutable/, f);
     assert.doesNotMatch(code, /"Cache-Control"/, `${f}: a capitalised key would sit beside Next's default, not replace it`);
     assert.match(code, /export const runtime = "nodejs";/, f);
@@ -246,4 +341,11 @@ test("both share-card routes: lowercase cache-control (six hours, never immutabl
     assert.match(code, /PokemonBrandOgImage/, `${f}: a missing item draws the brand card, never a 500`);
   }
   assert.match(readFileSync("src/app/pokemon/opengraph-image.tsx", "utf8"), /if \(!pokemonEnabled\(\)\) notFound\(\);/);
+
+  // An invented slug costs no product read and no cache entry: the URL is
+  // checked against the US catalogue first (rule 3), as the bot resolves names.
+  const product = readFileSync("src/app/pokemon/sealed/[slug]/opengraph-image.tsx", "utf8");
+  const known = product.indexOf('(await getPokemonCatalog("US")).tiles.some((t) => t.slug === slug)');
+  assert.ok(known > 0, "the slug is looked up in the catalogue");
+  assert.ok(product.indexOf("known ? await getPokemonProduct(slug) : null") > known, "and only a known slug is read");
 });

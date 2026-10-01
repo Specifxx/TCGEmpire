@@ -26,6 +26,7 @@ import { offerStock } from "../sealed-offers";
 import { buildBoard, listingLabel } from "./board";
 import { formatDay } from "./format";
 import { foldName, kindInfo, kindOrder, type PkKind } from "./kinds";
+import { setReleaseLine } from "./og-lines";
 import { perPackCents } from "./packs";
 import { PER_PACK_KINDS, asOfLabel, cheapestByKind, formatPerPack, isHalfBox, perPackRanking, pokemonUtm } from "./value";
 import type { PkCatalog, PkProductDetail, PkSetSummary, PkTile } from "./types";
@@ -403,16 +404,19 @@ export function perPackReply(catalog: PkCatalog, kind: PerPackChoice): DiscordRe
 /** Kinds a /set answer can list, at most. */
 export const SET_ROWS = 8;
 
-/** /set: the cheapest product of each type in one set, in one market. */
-export function setReply(catalog: PkCatalog, slug: string): DiscordReply {
+/**
+ * /set: the cheapest product of each type in one set, in one market. The set's
+ * own release line is the share card's (og-lines setReleaseLine); a later
+ * product that is a pre-order says so on its own row.
+ */
+export function setReply(catalog: PkCatalog, slug: string, now: number = Date.now()): DiscordReply {
   const set = catalog.sets.find((s) => s.slug === slug);
   if (!set) return fallbackReply("not found");
   const tiles = catalog.tiles.filter((t) => t.setSlug === set.slug);
   const place = COUNTRIES[catalog.market].place;
-  const presale = tiles.some((t) => t.presale);
   const lines: string[] = [`${set.productCount} sealed ${set.productCount === 1 ? "product" : "products"} · ${set.series}`];
-  const date = formatDay(set.releasedOn);
-  if (date) lines.push(presale ? `Pre-orders open: TCGplayer lists ${date}` : `Release: TCGplayer lists ${date}`);
+  const release = setReleaseLine(set, tiles, now);
+  if (release) lines.push(release);
   lines.push("");
   lines.push(`**Cheapest listing of each type in ${place}**`);
 

@@ -209,8 +209,9 @@ function allReplies(): { label: string; reply: DiscordReply }[] {
     { label: "perpack etb", reply: perPackReply(catalog, "etb") },
     { label: "perpack bundle", reply: perPackReply(catalog, "booster-bundle") },
     { label: "perpack SG", reply: perPackReply(sg, "booster-box") },
-    { label: "set released", reply: setReply(catalog, "perfect-order") },
-    { label: "set pre-order", reply: setReply(catalog, "delta-reign") },
+    { label: "set released", reply: setReply(catalog, "perfect-order", NOW) },
+    { label: "set pre-order", reply: setReply(catalog, "delta-reign", NOW) },
+    { label: "set out, later pre-orders", reply: setReply(catalog, "30th-celebration", NOW) },
     { label: "set SG", reply: setReply(sg, "perfect-order") },
   ];
 }
@@ -256,13 +257,20 @@ test("perpack and set: ranked lowest per pack first; pre-orders said as such; SG
   assert.match(sgSet, /No tracked listings in Singapore\./);
   assert.match(sgSet, /≈ S\$/);
 
-  const released = desc(setReply(catalog, "perfect-order"));
+  const released = desc(setReply(catalog, "perfect-order", NOW));
   assert.match(released, /Booster Box: \*\*US\$/);
   assert.match(released, /Release: TCGplayer lists /);
-  const pre = desc(setReply(catalog, "delta-reign"));
+  const pre = desc(setReply(catalog, "delta-reign", NOW));
   assert.match(pre, /Pre-orders open: TCGplayer lists 6 Nov 2026/);
   assert.match(pre, /· pre-order/);
   assert.match(pre, /Booster Box: \*\*US\$[\d,.]+\*\* · TCGplayer · pre-order · US\$[\d.]+ a pack/, "a pre-order is said as such");
+
+  // Out since 16 Sep with later products listed as pre-orders: the set line is
+  // its release; only those products' own rows say pre-order.
+  const tc = desc(setReply(catalog, "30th-celebration", NOW));
+  assert.match(tc, /^Release: TCGplayer lists 16 Sep 2026$/m);
+  assert.doesNotMatch(tc, /Pre-orders open/);
+  assert.match(tc, /^Elite Trainer Box: \*\*US\$[\d,.]+\*\* · TCGplayer · US\$[\d.]+ a pack/m, "a released row carries no pre-order mark");
 
   const missing = setReply(catalog, "no-such-set");
   assert.equal(missing.data.flags, EPHEMERAL);

@@ -125,8 +125,8 @@ export default function PokemonDiscordPage() {
         </ul>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
           Every command takes an optional market: the United States (the default), the United Kingdom, the EU, Australia,
-          Canada or Singapore. We track no listings in Singapore, so there the bot shows TCGplayer&apos;s market price,
-          converted, as a reference.
+          Canada or Singapore. We track no listings in Singapore, so there /sealed and /set show TCGplayer&apos;s market
+          price, converted, as a reference, and /perpack has no listings to rank.
         </p>
       </section>
 

@@ -13,9 +13,14 @@
 //   - never an affiliate or marketplace URL.
 // Reddit gets a pipe table (it renders in Markdown mode); Discord has no tables,
 // so it gets bullets, capped to fit one message.
+//
+// The figures are the ones on the page copied from. A UK visitor who asked for
+// euros sees the market's pound figures converted (PokemonBoardView, browse.ts
+// toDisplay), so `eur` converts them here too, and the text says they were.
 
 import { COUNTRIES, type Country } from "../country";
 import { formatMoney } from "../format";
+import { gbpCentsToEur } from "../fx";
 import { offerStock } from "../sealed-offers";
 import { listingLabel } from "./board";
 import { kindInfo, kindOrder, type PkKind } from "./kinds";
@@ -29,7 +34,22 @@ export interface ShareOpts {
   format: ShareFormat;
   withLink: boolean;
   now?: number;
+  /** The UK euro display (useCountry().isEurDisplay, or the page's showEur): pound figures shown in euros. */
+  eur?: boolean;
 }
+
+/** A figure as the page shows it: pounds in euros when the visitor asked for that. */
+type Money = (cents: number, currency: string) => string;
+
+function moneyFor(opts: ShareOpts): Money {
+  return (cents, currency) => (opts.eur && currency === "GBP" ? formatMoney(gbpCentsToEur(cents), "EUR") : formatMoney(cents, currency));
+}
+
+/**
+ * Said under the rows whenever moneyFor converted a listing: a converted
+ * reference already carries its ≈, a listing row carries no mark of its own.
+ */
+const EUR_NOTE = "Shown in euros, converted from the pound prices of UK listings.";
 
 /** All four texts a CopyPrices button set can put on the clipboard. */
 export interface CopyTexts {
@@ -107,8 +127,8 @@ function render(shape: Shape, opts: ShareOpts): string {
   return text.length > DISCORD_MAX ? `${text.slice(0, DISCORD_MAX - 1)}…` : text;
 }
 
-const postage = (l: PkListing) =>
-  l.source !== "ebay" ? "" : l.shippingCents == null ? " + postage" : l.shippingCents === 0 ? ", free postage" : ` + ${formatMoney(l.shippingCents, l.currency)} postage`;
+const postage = (l: PkListing, money: Money) =>
+  l.source !== "ebay" ? "" : l.shippingCents == null ? " + postage" : l.shippingCents === 0 ? ", free postage" : ` + ${money(l.shippingCents, l.currency)} postage`;
 
 /**
  * One product in one market: its open listings, cheapest first, the price per
@@ -127,16 +147,17 @@ export function productShareText(
   const board = boards[market] ?? boards.US;
   const place = COUNTRIES[board?.market ?? market].place;
   const now = opts.now ?? Date.now();
+  const money = moneyFor(opts);
   const open = (board?.listings ?? []).filter((l) => offerStock(l, now) === "open");
   const perPack = packCount != null && packCount > 0;
   const rows = open.map((l) => {
     const pp = perPack ? perPackCents(l.priceCents, packCount) : null;
-    return [l.label, `${formatMoney(l.priceCents, l.currency)}${postage(l)}`, ...(perPack ? [pp != null ? formatMoney(pp, l.currency) : "—"] : [])];
+    return [l.label, `${money(l.priceCents, l.currency)}${postage(l, money)}`, ...(perPack ? [pp != null ? money(pp, l.currency) : "—"] : [])];
   });
-  const notes = (board?.references ?? []).map(
-    (r) => `${r.label} (a reference, not a listing): ${r.converted ? "≈ " : ""}${formatMoney(r.priceCents, r.currency)}`,
-  );
+  const refs = board?.references ?? [];
+  const notes = refs.map((r) => `${r.label} (a reference, not a listing): ${r.converted ? "≈ " : ""}${money(r.priceCents, r.currency)}`);
   if (perPack) notes.unshift(`${packCount} booster ${packCount === 1 ? "pack" : "packs"} inside.`);
+  if (opts.eur && open.some((l) => l.currency === "GBP")) notes.push(EUR_NOTE);
   return render(
     {
       heading: `**${name}**: cheapest listings in ${place}`,
@@ -164,6 +185,7 @@ export function setShareText(catalog: Pick<PkCatalog, "market" | "currency" | "t
   const set = catalog.sets.find((s) => s.slug === setSlug);
   if (!set) return null;
   const place = COUNTRIES[catalog.market].place;
+  const money = moneyFor(opts);
   const tiles = catalog.tiles.filter((t) => t.setSlug === set.slug);
   const picks = Object.values(cheapestByKind(tiles, { includePresale: true }))
     .filter((t): t is PkTile => t != null)
@@ -172,8 +194,8 @@ export function setShareText(catalog: Pick<PkCatalog, "market" | "currency" | "t
   const rows = picks.map((t) => [
     kindInfo(t.kind).label,
     t.name,
-    `${formatMoney(t.lowCents as number, catalog.currency)}${t.presale ? " (pre-order)" : ""}${t.lowSource ? ` on ${listingLabel(t.lowSource, catalog.market)}` : ""}`,
-    t.perPackCents != null ? formatMoney(t.perPackCents, catalog.currency) : "—",
+    `${money(t.lowCents as number, catalog.currency)}${t.presale ? " (pre-order)" : ""}${t.lowSource ? ` on ${listingLabel(t.lowSource, catalog.market)}` : ""}`,
+    t.perPackCents != null ? money(t.perPackCents, catalog.currency) : "—",
   ]);
   return render(
     {
@@ -183,7 +205,7 @@ export function setShareText(catalog: Pick<PkCatalog, "market" | "currency" | "t
       rows,
       bullet: (r) => `${r[0]}: ${r[2]}${r[3] !== "—" ? ` · ${r[3]} a pack` : ""} (${r[1]})`,
       empty: `No tracked listings in ${place}.`,
-      notes: [],
+      notes: opts.eur && rows.length && catalog.currency === "GBP" ? [EUR_NOTE] : [],
       path: `/pokemon/sets/${set.slug}`,
       asOf: catalog.pricesAsOf,
     },
@@ -203,12 +225,13 @@ export function perPackShareText(
   opts: ShareOpts,
 ): string {
   const place = COUNTRIES[catalog.market].place;
+  const money = moneyFor(opts);
   const ranked = perPackRanking(catalog.tiles, { kinds: scope.kinds, limit: scope.limit ?? 20 });
   const rows = ranked.map((t, i) => [
     String(i + 1),
     t.name,
-    formatMoney(t.perPackCents as number, catalog.currency),
-    `${formatMoney(t.lowCents as number, catalog.currency)}${t.lowSource ? ` on ${listingLabel(t.lowSource, catalog.market)}` : ""}`,
+    money(t.perPackCents as number, catalog.currency),
+    `${money(t.lowCents as number, catalog.currency)}${t.lowSource ? ` on ${listingLabel(t.lowSource, catalog.market)}` : ""}`,
     String(t.packCount),
   ]);
   return render(
@@ -219,7 +242,7 @@ export function perPackShareText(
       rows,
       bullet: (r) => `${r[2]} a pack · ${r[1]} · ${r[3]}, ${r[4]} ${r[4] === "1" ? "pack" : "packs"}`,
       empty: `No tracked listings in ${place} with a known pack count.`,
-      notes: ["Released products only: pre-orders are left out."],
+      notes: ["Released products only: pre-orders are left out.", ...(opts.eur && rows.length && catalog.currency === "GBP" ? [EUR_NOTE] : [])],
       path: `/pokemon/price-per-pack${scope.anchor ? `#${scope.anchor}` : ""}`,
       asOf: catalog.pricesAsOf,
     },
