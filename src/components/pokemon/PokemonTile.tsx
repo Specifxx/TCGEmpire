@@ -3,6 +3,7 @@
 import { formatMoney } from "@/lib/format";
 import { kindInfo } from "@/lib/pokemon/kinds";
 import { formatDay, pokemonImageAlt, sourceWord, thumbOf } from "@/lib/pokemon/format";
+import { formatPerPack } from "@/lib/pokemon/value";
 import type { PkTile } from "@/lib/pokemon/types";
 import { usePokemonQuickView } from "./PokemonQuickView";
 
@@ -12,7 +13,19 @@ import { usePokemonQuickView } from "./PokemonQuickView";
 // quick view in place instead. `currency` is the page's display currency,
 // resolved on the server (the market cookie can disagree with the client
 // provider until it hydrates, which is why /sealed passes it the same way).
-export function PokemonTile({ tile, currency, showSet = true }: { tile: PkTile; currency: string; showSet?: boolean }) {
+// `eager` is for the first few tiles above the fold: their images are the
+// page's largest paint, and lazy-loading them only delays it.
+export function PokemonTile({
+  tile,
+  currency,
+  showSet = true,
+  eager = false,
+}: {
+  tile: PkTile;
+  currency: string;
+  showSet?: boolean;
+  eager?: boolean;
+}) {
   const { open } = usePokemonQuickView();
   const kind = kindInfo(tile.kind);
   const thumb = thumbOf(tile.imageUrl);
@@ -34,7 +47,8 @@ export function PokemonTile({ tile, currency, showSet = true }: { tile: PkTile; 
           <img
             src={thumb}
             alt={pokemonImageAlt(tile.name)}
-            loading="lazy"
+            loading={eager ? "eager" : "lazy"}
+            {...(eager ? { fetchPriority: "high" as const } : {})}
             decoding="async"
             className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.04]"
           />
@@ -52,22 +66,29 @@ export function PokemonTile({ tile, currency, showSet = true }: { tile: PkTile; 
           {tile.name}
         </h3>
         {showSet && tile.setName && <p className="truncate text-xs text-slate-500">{tile.setName}</p>}
-        {tile.presale && released && <p className="text-[11px] text-sky-300">Releases {released}</p>}
+        {tile.presale && released && <p className="text-[11px] text-sky-300">TCGplayer lists {released}</p>}
 
         {tile.lowCents != null ? (
-          <div className="mt-auto flex items-end justify-between gap-2 pt-1">
-            <div className="min-w-0">
-              <div className="text-[11px] text-slate-500">cheapest {sourceWord(tile.lowSource)}</div>
-              <div className="num whitespace-nowrap text-lg font-bold text-accent">{formatMoney(tile.lowCents, currency)}</div>
-            </div>
-            {tile.refCents != null && (
-              <div className="shrink-0 text-right text-[11px] leading-tight text-slate-500">
-                <span className="block">TCGplayer market</span>
-                <span className="num font-semibold text-slate-300">
-                  {currency === "USD" ? "" : "≈ "}
-                  {formatMoney(tile.refCents, currency)}
-                </span>
+          <div className="mt-auto pt-1">
+            {/* Wraps: in a ~170px phone column the reference used to sit on top of the price. */}
+            <div className="flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
+              <div className="min-w-0">
+                <div className="text-[11px] text-slate-500">cheapest {sourceWord(tile.lowSource)}</div>
+                <div className="num whitespace-nowrap text-lg font-bold text-accent">{formatMoney(tile.lowCents, currency)}</div>
               </div>
+              {tile.refCents != null && (
+                <div className="shrink-0 text-right text-[11px] leading-tight text-slate-500">
+                  <span className="block">TCGplayer market</span>
+                  <span className="num font-semibold text-slate-300">
+                    {currency === "USD" ? "" : "≈ "}
+                    {formatMoney(tile.refCents, currency)}
+                  </span>
+                </div>
+              )}
+            </div>
+            {/* Its own line: beside the price, a two-column phone grid ran it into the reference. */}
+            {tile.perPackCents != null && (
+              <div className="num mt-0.5 whitespace-nowrap text-[11px] text-slate-300">{formatPerPack(tile.perPackCents, currency)}</div>
             )}
           </div>
         ) : (

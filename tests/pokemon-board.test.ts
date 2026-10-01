@@ -180,7 +180,7 @@ test("browse: parsing, filtering, featured order, paging and the UK euro display
 });
 
 test("copy names only the sources that exist, and makes no claim the site's rules forbid", () => {
-  assert.equal(sourceList(["tcgplayer", "tcgplayer_market"]), "TCGplayer and eBay");
+  assert.equal(sourceList(["tcgplayer", "tcgplayer_market"]), "TCGplayer", "no eBay rows, so no eBay");
   assert.equal(sourceList(["tcgplayer", "cardmarket", "ebay"]), "TCGplayer, Cardmarket and eBay");
   const withCm = pokemonFaq(["tcgplayer", "cardmarket", "ebay"]).map((f) => `${f.q} ${f.a}`).join(" ");
   const without = pokemonFaq(["tcgplayer"]).map((f) => `${f.q} ${f.a}`).join(" ");

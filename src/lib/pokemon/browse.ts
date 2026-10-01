@@ -129,3 +129,30 @@ export function toDisplay(tiles: readonly PkTile[], showEur: boolean): PkTile[] 
     perPackCents: t.perPackCents != null ? gbpCentsToEur(t.perPackCents) : null,
   }));
 }
+
+/** The search-result title's fixed tail; the query is clamped so the whole title fits in 60. */
+export const SEARCH_TITLE_TAIL = ": Pokémon sealed prices";
+const TITLE_LIMIT = 60;
+
+/** "151 booster bundle: Pokémon sealed prices", the query cut at a word with "…" when it would run past 60. */
+export function searchTitle(q: string): string {
+  const room = TITLE_LIMIT - SEARCH_TITLE_TAIL.length;
+  const query = q.replace(/\s+/g, " ").trim();
+  if (query.length <= room) return `${query}${SEARCH_TITLE_TAIL}`;
+  const cut = query.slice(0, room - 1);
+  const atWord = cut.lastIndexOf(" ");
+  return `${(atWord > room / 2 ? cut.slice(0, atWord) : cut).trimEnd()}…${SEARCH_TITLE_TAIL}`;
+}
+
+/**
+ * Canonical and robots for a /pokemon/sealed view. The clean first page is
+ * the one indexable view. Pages 2+ of the clean list are their own canonical
+ * (each lists different products) but noindex, follow, so crawlers reach the
+ * products without the pages competing with page one. A filtered, searched or
+ * sorted view is noindex, follow and canonical to the clean page.
+ */
+export function sealedIndexing(q: BrowseQuery): { path: string; noindex: boolean } {
+  if (isFiltered(q) || q.sort) return { path: "/pokemon/sealed", noindex: true };
+  if (q.page > 1) return { path: `/pokemon/sealed?page=${q.page}`, noindex: true };
+  return { path: "/pokemon/sealed", noindex: false };
+}

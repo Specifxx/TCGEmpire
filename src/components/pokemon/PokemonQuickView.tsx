@@ -7,7 +7,8 @@ import { formatMoney } from "@/lib/format";
 import { ebaySearchUrl } from "@/lib/affiliate";
 import { kindInfo } from "@/lib/pokemon/kinds";
 import { pokemonEbayQuery } from "@/lib/pokemon/ebay-query";
-import { pokemonImageAlt, sourceWord } from "@/lib/pokemon/format";
+import { formatDay, pokemonImageAlt, sourceWord } from "@/lib/pokemon/format";
+import { formatPerPack } from "@/lib/pokemon/value";
 import type { PkBoard, PkTile } from "@/lib/pokemon/types";
 import type { Country } from "@/lib/country";
 import { useCountry } from "../CountryProvider";
@@ -75,6 +76,7 @@ function QuickViewPanel({ tile, currency, onClose }: { tile: PkTile; currency: s
 
   const board = boards?.[country];
   const kind = kindInfo(tile.kind);
+  const released = formatDay(tile.releasedOn);
   // Built here so the eBay button works before (and without) the fetch. The
   // fetched board carries the same search, built on the server.
   const ebayHref = ebaySearchUrl(country, pokemonEbayQuery(tile.name), "pkmn-quickview");
@@ -107,11 +109,19 @@ function QuickViewPanel({ tile, currency, onClose }: { tile: PkTile; currency: s
             <h2 id="pokemon-quickview-title" className="mt-1.5 text-lg font-extrabold leading-tight text-white">
               {tile.name}
             </h2>
+            {released && <p className={`mt-1 text-xs ${tile.presale ? "text-sky-300" : "text-slate-400"}`}>TCGplayer lists {released}</p>}
             <div className="mt-2">
               {tile.lowCents != null ? (
                 <>
                   <div className="text-[11px] uppercase tracking-wide text-slate-500">Cheapest we track {sourceWord(tile.lowSource)}</div>
                   <div className="num text-2xl font-extrabold text-accent">{formatMoney(tile.lowCents, currency)}</div>
+                  {/* Here, not in PokemonBoardView: the board is shared with the
+                      product page, whose hero renders its own per-pack line. */}
+                  {tile.perPackCents != null && tile.packCount != null && (
+                    <div className="num text-xs text-slate-300">
+                      {formatPerPack(tile.perPackCents, currency)} · {tile.packCount} {tile.packCount === 1 ? "booster pack" : "booster packs"}
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="text-sm font-semibold text-slate-400">No tracked listing in your market</div>
