@@ -7,16 +7,23 @@ import { usePathname } from "next/navigation";
 // /pokemon page (app/pokemon/layout.tsx). The section keeps its links to
 // itself: the site header and rail stay Riftbound's, and this is how a visitor
 // moves around inside Pokémon and back out.
-const TABS = [
+//
+// The Blog tab appears only once a post is published (the layout passes
+// showBlog from the blog registry), so production never links an index that
+// would 404 while every post is still a draft.
+const TABS: { href: string; label: string; exact?: boolean }[] = [
   { href: "/pokemon", label: "Overview", exact: true },
   { href: "/pokemon/sealed", label: "All sealed" },
   { href: "/pokemon/sets", label: "Sets" },
-] as const;
+  { href: "/pokemon/price-per-pack", label: "Price per pack" },
+];
+const BLOG_TAB = { href: "/pokemon/blog", label: "Blog" };
 
-export function PokemonSubnav() {
+export function PokemonSubnav({ showBlog = false }: { showBlog?: boolean }) {
   const pathname = usePathname() ?? "";
   const active = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+  const tabs = showBlog ? [...TABS, BLOG_TAB] : TABS;
 
   return (
     <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-ink-800 bg-ink-900/70 px-3 py-2">
@@ -26,8 +33,8 @@ export function PokemonSubnav() {
         <span className="chip bg-sky-500/15 text-[10px] font-semibold text-sky-300">Beta</span>
       </span>
       <nav aria-label="Pokémon section" className="flex flex-wrap gap-1">
-        {TABS.map((t) => {
-          const on = active(t.href, "exact" in t ? t.exact : false);
+        {tabs.map((t) => {
+          const on = active(t.href, "exact" in t ? Boolean(t.exact) : false);
           return (
             <Link
               key={t.href}
