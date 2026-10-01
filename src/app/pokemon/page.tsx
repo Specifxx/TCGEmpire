@@ -59,9 +59,11 @@ export default async function PokemonHub() {
   const raw = await getPokemonCatalog(country);
   const catalog = { ...raw, tiles: toDisplay(raw.tiles, showEur) };
   const home = buildHome(catalog, country, new Date().toISOString().slice(0, 10));
-  const faq = pokemonFaq(catalog.sources);
+  // This market's sources, not catalog.sources: that one is every market's,
+  // so it would name Cardmarket in the US and TCGplayer listings in Singapore.
+  const faq = pokemonFaq(home.stats.sources);
   const hasTiles = catalog.tiles.length > 0;
-  const ebayTracked = catalog.sources.includes("ebay");
+  const ebayTracked = home.stats.listingSources.includes("ebay");
   // Wired by the integrator: published posts, and the Discord page once the app exists.
   const guides: HomeGuide[] = [];
   const discordHref: string | undefined = undefined;

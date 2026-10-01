@@ -30,7 +30,7 @@ export function HomeComingUp({ data, currency }: { data: ComingUp; currency: str
         </p>
       )}
       {tiles.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 min-[360px]:grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
           {tiles.map((t, i) => (
             <PokemonTile key={t.id} tile={t} currency={currency} eager={i < 4} />
           ))}

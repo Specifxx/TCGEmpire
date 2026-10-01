@@ -38,11 +38,15 @@ export function listingSourceList(sources: readonly PkListingSource[]): string {
 export function pokemonFaq(sources: readonly PkSource[]): { q: string; a: string }[] {
   const cardmarket = sources.includes("cardmarket") || sources.includes("cardmarket_trend");
   const ebayTracked = sources.includes("ebay");
+  // TCGplayer listings exist in the US only; elsewhere its data is the reference alone.
+  const tcgplayerListings = sources.includes("tcgplayer");
   return [
     {
       q: "Where do these Pokémon sealed prices come from?",
       a:
-        "TCGplayer's own published price data gives the cheapest TCGplayer listing and its market price for every product. " +
+        (tcgplayerListings
+          ? "TCGplayer's own published price data gives the cheapest TCGplayer listing and its market price, for each product that has them. "
+          : "TCGplayer's own published price data gives its market price, shown as a reference for each product that has one; TCGplayer listings are shown in the United States only. ") +
         (ebayTracked
           ? "For booster boxes, Elite Trainer Boxes, booster bundles and premium collections from recent sets, we also search eBay in the United States, the United Kingdom, Australia, Canada and the EU for the cheapest listing that matches the product. "
           : "") +

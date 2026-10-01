@@ -13,6 +13,7 @@ import {
   comingUp,
   daysUntil,
   daysWording,
+  heroLine,
   homeStats,
   marketListingSources,
   newestSets,
@@ -35,7 +36,7 @@ import {
   perPackPage,
   proseLabel,
 } from "../src/lib/pokemon/hubs";
-import { listingSourceList, sourceList } from "../src/lib/pokemon/copy";
+import { listingSourceList, pokemonFaq, sourceList } from "../src/lib/pokemon/copy";
 import { SEARCH_TITLE_TAIL, parseBrowse, sealedIndexing, searchTitle } from "../src/lib/pokemon/browse";
 import { isHalfBox } from "../src/lib/pokemon/value";
 import { DESCRIPTION_MAX, TITLE_MAX } from "../src/lib/pokemon/seo";
@@ -145,6 +146,51 @@ test("homeStats: counts, this market's sources and the as-of date", () => {
   assert.deepEqual(homeStats(SG).listingSources, []);
   assert.equal(homeStats(SG).sourceList, "TCGplayer", "the reference only: no Cardmarket or TCGplayer listing in Singapore");
   assert.equal(homeStats({ ...US, tiles: [], sets: [], pricesAsOf: null }).asOf, null);
+  assert.equal(us.listed, US.tiles.filter((t) => t.lowCents != null).length);
+  assert.ok(us.listed < us.products, "the fixture has products with no listing, as the real catalogue does");
+  assert.equal(homeStats(SG).listed, 0);
+  assert.deepEqual(us.sources, ["tcgplayer", "tcgplayer_market"], "this market's, not the catalogue's every-market list");
+  assert.ok(US.sources.includes("cardmarket"), "the fixture's catalogue-wide list does name Cardmarket");
+});
+
+test("hero line: counts the products with a listing, never promises one for each", () => {
+  const lines = MARKETS.map(([m, c]) => [m, heroLine(homeStats(c), m === "US" ? "the United States" : m === "UK" ? "the United Kingdom" : "Singapore", m !== "US")] as const);
+  for (const [m, line] of lines) {
+    assertClean(m, line);
+    assert.deepEqual(textViolations(line), [], `${m}: ${line}`);
+    assert.doesNotMatch(line, /for each one|for every product|each product shows/i, `${m}: ${line}`);
+  }
+  const [us, uk, sg] = lines.map(([, l]) => l);
+  const usStats = homeStats(US);
+  assert.match(us, new RegExp(`cheapest TCGplayer listing in the United States for ${usStats.listed} of them`));
+  assert.match(us, /where it publishes one/);
+  assert.doesNotMatch(us, /≈/);
+  assert.match(uk, new RegExp(`cheapest eBay listing in the United Kingdom for ${homeStats(UK).listed} of them`));
+  assert.doesNotMatch(uk, /TCGplayer listing/);
+  assert.match(uk, /converted, marked ≈/);
+  assert.match(sg, /We track no listings in Singapore/);
+  assert.doesNotMatch(sg, /cheapest/);
+  const all = { ...US, tiles: US.tiles.filter((t) => t.lowCents != null) };
+  assert.match(heroLine(homeStats(all), "the United States", false), /for every one of them/);
+  assert.equal(heroLine(homeStats({ ...US, tiles: [], sets: [] }), "the United States", false), "No prices yet.");
+});
+
+test("hub FAQ from this market's sources: no Cardmarket outside it, no TCGplayer listing in Singapore", () => {
+  const text = (c: PkCatalog) =>
+    pokemonFaq(homeStats(c).sources)
+      .map((f) => `${f.q} ${f.a}`)
+      .join(" ");
+  const us = text(US);
+  assert.doesNotMatch(us, /Cardmarket/, "US has no Cardmarket rows even though the catalogue's list does");
+  assert.match(us, /cheapest TCGplayer listing/);
+  assert.doesNotMatch(us, /checked in rotation|we also search eBay/);
+  const sg = text(SG);
+  assert.doesNotMatch(sg, /Cardmarket|cheapest TCGplayer listing|checked in rotation/);
+  assert.match(sg, /TCGplayer listings are shown in the United States only/);
+  const uk = text(UK);
+  assert.match(uk, /we also search eBay/);
+  assert.doesNotMatch(uk, /Cardmarket|cheapest TCGplayer listing/);
+  for (const t of [us, sg, uk]) assert.deepEqual(textViolations(t), []);
 });
 
 test("perPackBoard: three hub groups, top five, lowest per pack first, no pre-orders; SG empty", () => {
@@ -353,6 +399,19 @@ test("hub facts, prose and FAQ: true to the data, in every market, nothing unfil
   assert.ok(hubProse(etb, kindHub("elite-trainer-boxes"), "USD").some((s) => /counted from the published contents\)/.test(s)));
 });
 
+test("a single pack reads \"1 pack\", never \"1 packs\"", () => {
+  const h = kindHub("booster-bundles");
+  const one = { ...US, tiles: US.tiles.map((t) => (t.kind === "booster-bundle" ? { ...t, packCount: 1, perPackCents: t.lowCents } : t)) };
+  const f = hubFacts(one, h, TODAY);
+  const text = [...hubProse(f, h, "USD"), ...hubFaq(f, h, "USD").map((x) => x.a)].join(" ");
+  assert.match(text, /for 1 pack\b/);
+  assert.match(text, /usual count for booster bundles is 1 booster pack /);
+  assert.doesNotMatch(text, /\b1 (booster )?packs\b/);
+  for (const rel of ["src/components/pokemon/PerPackTable.tsx", "src/components/pokemon/PokemonQuickView.tsx"]) {
+    assert.doesNotMatch(readFileSync(rel, "utf8"), /\{\w+\.packCount\} (booster )?packs/, `${rel}: a count with a fixed plural`);
+  }
+});
+
 test("hand-written copy: no digits, no set names, no banned words, distinct explainers of 150+ words", () => {
   const hand = [...KIND_HUBS.flatMap((h) => h.explainer), ...PER_PACK_METHOD];
   for (const p of hand) {
@@ -432,6 +491,29 @@ test("W1 pages: static titles and descriptions within limits, metadata through p
   const hub = readFileSync("src/app/pokemon/page.tsx", "utf8");
   assert.match(hub, /const TITLE = "Pokémon Sealed Prices: Booster Boxes, ETBs & Bundles";/, "the hub's title is unchanged");
   assert.match(readFileSync("src/components/pokemon/HomeHero.tsx", "utf8"), />Pokémon Sealed Prices<\/h1>/, "the hub's H1 is unchanged");
+});
+
+test("W1 layouts: every grid starts at one column; the newest sets the ItemList names are all visible on a phone", () => {
+  const files = [
+    "src/app/pokemon/page.tsx",
+    "src/app/pokemon/sealed/page.tsx",
+    "src/app/pokemon/sets/page.tsx",
+    "src/app/pokemon/price-per-pack/page.tsx",
+    "src/components/pokemon/HomeHero.tsx",
+    "src/components/pokemon/HomePerPack.tsx",
+    "src/components/pokemon/HomeComingUp.tsx",
+    "src/components/pokemon/HomeShopByType.tsx",
+    "src/components/pokemon/HomeNewestSets.tsx",
+    "src/components/pokemon/HomeBelowMarket.tsx",
+    "src/components/pokemon/HomeGuides.tsx",
+    "src/components/pokemon/KindHubView.tsx",
+    "src/components/pokemon/PerPackTable.tsx",
+  ];
+  for (const rel of files) {
+    // An unprefixed multi-column class is a phone's base layout.
+    assert.doesNotMatch(readFileSync(rel, "utf8"), /(?<![\w:\]-])grid-cols-(?:[2-9]|1[0-2])\b/, `${rel}: a grid whose base is not one column`);
+  }
+  assert.doesNotMatch(readFileSync("src/components/pokemon/HomeNewestSets.tsx", "utf8"), /\bhidden\b/, "a set in the ItemList hidden on phones");
 });
 
 test("the Riftbound homepage promo: same switch and targets, links to the kind hubs", () => {

@@ -10,7 +10,7 @@
 // do, with the page's display currency.
 
 import { kindInfo, kindOrder, type PkKind } from "./kinds";
-import { sourceList } from "./copy";
+import { listingSourceList, sourceList } from "./copy";
 import { KIND_HUBS, kindHref, type KindHub } from "./hubs";
 import { asOfLabel, cheapestByKind, isHalfBox, perPackRanking } from "./value";
 import type { Country } from "../country";
@@ -21,8 +21,12 @@ import type { PkCatalog, PkListingSource, PkSetSummary, PkSource, PkTile } from 
 export interface HomeStats {
   products: number;
   sets: number;
+  /** Products with an open listing we track in THIS market (never "each one": many have none). */
+  listed: number;
   /** Sources with an open listing that heads a product in THIS market, fixed order. */
   listingSources: PkListingSource[];
+  /** This market's listing sources plus the reference, for the FAQ and any "prices from" copy. */
+  sources: PkSource[];
   /** "TCGplayer and eBay": the reference plus this market's listing sources. */
   sourceList: string;
   asOf: string | null;
@@ -44,10 +48,32 @@ export function homeStats(catalog: PkCatalog): HomeStats {
   return {
     products: catalog.tiles.length,
     sets: catalog.sets.length,
+    listed: catalog.tiles.filter((t) => t.lowCents != null).length,
     listingSources,
+    sources,
     sourceList: sourceList(sources),
     asOf: asOfLabel(catalog.pricesAsOf),
   };
+}
+
+/**
+ * The hero's stat line. It quotes how many products have a tracked listing
+ * rather than promising one "for each": in the US about a tenth have none,
+ * and where eBay is the only source it covers a few dozen of a thousand.
+ * The reference is "where TCGplayer publishes one" for the same reason.
+ */
+export function heroLine(stats: HomeStats, place: string, converted: boolean): string {
+  if (stats.products === 0) return "No prices yet.";
+  const n = (x: number) => x.toLocaleString("en-US");
+  const head = `${n(stats.products)} English sealed ${stats.products === 1 ? "product" : "products"} from ${n(stats.sets)} ${stats.sets === 1 ? "set" : "sets"}.`;
+  const asOf = stats.asOf ? ` Prices ${stats.asOf}, updated daily.` : " Updated daily.";
+  const ref = `TCGplayer's market price as a reference${converted ? " (converted, marked ≈)" : ""} where it publishes one`;
+  const listings = listingSourceList(stats.listingSources);
+  if (!listings || stats.listed === 0) {
+    return `${head} We track no listings in ${place}: each product links to a search of your own eBay site, with ${ref}.${asOf}`;
+  }
+  const coverage = stats.listed === stats.products ? "every one of them" : `${n(stats.listed)} of them`;
+  return `${head} We track the cheapest ${listings} listing in ${place} for ${coverage}, with the price per pack wherever the pack count is known, and show ${ref}.${asOf}`;
 }
 
 // ── Lowest price per pack, by kind ────────────────────────────────────────────

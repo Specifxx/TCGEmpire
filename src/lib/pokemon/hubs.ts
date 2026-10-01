@@ -227,7 +227,7 @@ export function hubProse(f: HubFacts, hub: Pick<KindHub, "plural" | "noun">, cur
     const l = f.lowest;
     out.push(
       `The lowest price per pack among released ${hub.plural} with an open listing in ${f.place} is ${nameWithSet(l)}: ` +
-        `${formatMoney(l.lowCents as number, currency)} ${sourceWord(l.lowSource)} for ${l.packCount} packs, ${formatPerPack(l.perPackCents as number, currency)}` +
+        `${formatMoney(l.lowCents as number, currency)} ${sourceWord(l.lowSource)} for ${plural(l.packCount as number, "pack", "packs")}, ${formatPerPack(l.perPackCents as number, currency)}` +
         `${f.asOf ? `, ${f.asOf}` : ""}.`,
     );
   }
@@ -245,7 +245,7 @@ export function hubProse(f: HubFacts, hub: Pick<KindHub, "plural" | "noun">, cur
   }
   for (const t of f.typical) {
     out.push(
-      `In the ${plural(f.recentSets, "most recent released set", "most recent released sets")}, the usual count for ${t.label} is ${t.typical.count} booster packs ` +
+      `In the ${plural(f.recentSets, "most recent released set", "most recent released sets")}, the usual count for ${t.label} is ${plural(t.typical.count, "booster pack", "booster packs")} ` +
         `(${ofCounted(t.typical)} with a known count, ${fromWords(t.typical.from)}).`,
     );
   }
@@ -258,7 +258,7 @@ export function hubFaq(f: HubFacts, hub: Pick<KindHub, "noun" | "plural">, curre
   if (f.typical.length) {
     const parts = f.typical.map(
       (t) =>
-        `${capitalise(t.label)} from the ${plural(f.recentSets, "most recent released set", "most recent released sets")} most often hold ${t.typical.count} booster packs ` +
+        `${capitalise(t.label)} from the ${plural(f.recentSets, "most recent released set", "most recent released sets")} most often hold ${plural(t.typical.count, "booster pack", "booster packs")} ` +
         `(${ofCounted(t.typical)} with a known count, ${fromWords(t.typical.from)}).`,
     );
     out.push({
@@ -272,7 +272,7 @@ export function hubFaq(f: HubFacts, hub: Pick<KindHub, "noun" | "plural">, curre
       q: `Which ${hub.noun} has the lowest price per pack we track?`,
       a:
         `${nameWithSet(l)}, at ${formatPerPack(l.perPackCents as number, currency)}: its cheapest listing in ${f.place} is ` +
-        `${formatMoney(l.lowCents as number, currency)} ${sourceWord(l.lowSource)} for ${l.packCount} packs${f.asOf ? `, ${f.asOf}` : ""}. ` +
+        `${formatMoney(l.lowCents as number, currency)} ${sourceWord(l.lowSource)} for ${plural(l.packCount as number, "pack", "packs")}${f.asOf ? `, ${f.asOf}` : ""}. ` +
         `That is the item price, postage extra, and only released products with an open listing are compared.`,
     });
   }

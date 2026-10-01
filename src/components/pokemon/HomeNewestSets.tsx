@@ -3,8 +3,9 @@ import type { NewestSet } from "@/lib/pokemon/home";
 import { PokemonSetCard } from "./PokemonSetCard";
 
 // "Newest sets": the six newest, each with its booster box and ETB "from"
-// figures (pre-orders included and flagged). Three on a phone, where six
-// stacked cards pushed everything below a screen further down.
+// figures (pre-orders included and flagged). All six on a phone too: the
+// page's ItemList names these six sets, and JSON-LD describes only what a
+// visitor (and Google's smartphone crawler) can see.
 
 export function HomeNewestSets({ sets, currency, total }: { sets: NewestSet[]; currency: string; total: number }) {
   if (!sets.length) return null;
@@ -19,11 +20,10 @@ export function HomeNewestSets({ sets, currency, total }: { sets: NewestSet[]; c
         </Link>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {sets.map((s, i) => (
+        {sets.map((s) => (
           <PokemonSetCard
             key={s.set.slug}
             set={s.set}
-            className={i >= 3 ? "hidden sm:flex" : ""}
             from={{
               currency,
               ...(s.box?.lowCents != null ? { boxCents: s.box.lowCents, boxPresale: s.box.presale } : {}),

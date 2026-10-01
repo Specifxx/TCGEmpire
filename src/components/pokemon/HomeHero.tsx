@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { listingSourceList } from "@/lib/pokemon/copy";
 import { KIND_HUBS } from "@/lib/pokemon/hubs";
-import type { HomeStats } from "@/lib/pokemon/home";
+import { heroLine, type HomeStats } from "@/lib/pokemon/home";
 
-// The top of /pokemon: the H1, one stat line written from the market's data,
-// the search box and the ways in (the three kind hubs, price per pack, sets).
-// The stat line names only the listing sources that head a product in THIS
-// market, so Singapore is never told it is reading TCGplayer listings.
+// The top of /pokemon: the H1, one stat line written from the market's data
+// (lib/pokemon/home.ts heroLine), the search box and the ways in (the three
+// kind hubs, price per pack, sets). The stat line names only the listing
+// sources that head a product in THIS market, so Singapore is never told it is
+// reading TCGplayer listings, and counts the products that have one.
 
 export function HomeHero({
   stats,
@@ -22,15 +22,7 @@ export function HomeHero({
   /** "Prices in Discord", rendered only when passed (the integrator passes it once the app exists). */
   discordHref?: string;
 }) {
-  const listings = listingSourceList(stats.listingSources);
-  const products = stats.products.toLocaleString("en-US");
-  const asOf = stats.asOf ? ` Prices ${stats.asOf}, updated daily.` : " Updated daily.";
-  const line =
-    stats.products === 0
-      ? "No prices yet."
-      : listings
-        ? `${products} English sealed products from ${stats.sets} sets. For each one: the cheapest ${listings} listing we track in ${place}, TCGplayer's market price as a reference${converted ? " (converted, marked ≈)" : ""}, and the price per pack wherever the pack count is known.${asOf}`
-        : `${products} English sealed products from ${stats.sets} sets. We track no listings in ${place}, so each product shows TCGplayer's market price as a reference${converted ? ", converted and marked ≈," : ""} beside a search of your own eBay site.${asOf}`;
+  const line = heroLine(stats, place, converted);
 
   return (
     <section className="card-surface animate-fade-up mb-6 overflow-hidden border-l-2 border-rose-500 bg-ink-900">

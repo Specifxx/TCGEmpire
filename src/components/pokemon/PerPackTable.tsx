@@ -139,7 +139,7 @@ export function PerPackTable({
                   <span className="num font-semibold text-white">{formatMoney(t.lowCents as number, currency)}</span>{" "}
                   <span className="text-xs text-slate-400">{sourceWord(t.lowSource)}</span>
                   {/* The Packs column is hidden on a phone; its figure rides here. */}
-                  <span className="text-xs text-slate-400 md:hidden"> · {t.packCount} packs</span>
+                  <span className="text-xs text-slate-400 md:hidden">{` · ${t.packCount} ${t.packCount === 1 ? "pack" : "packs"}`}</span>
                 </td>
                 <td className={`${CELL} hidden md:table-cell md:text-right`}>
                   <span className="num">{t.packCount}</span>

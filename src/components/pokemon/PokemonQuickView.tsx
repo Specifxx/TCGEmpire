@@ -119,7 +119,7 @@ function QuickViewPanel({ tile, currency, onClose }: { tile: PkTile; currency: s
                       product page, whose hero renders its own per-pack line. */}
                   {tile.perPackCents != null && tile.packCount != null && (
                     <div className="num text-xs text-slate-300">
-                      {formatPerPack(tile.perPackCents, currency)} · {tile.packCount} booster packs
+                      {formatPerPack(tile.perPackCents, currency)} · {tile.packCount} {tile.packCount === 1 ? "booster pack" : "booster packs"}
                     </div>
                   )}
                 </>

@@ -155,7 +155,7 @@ export function KindHubView({
 // better than a table scrolling inside its box.
 const XL = {
   box: "card-surface overflow-hidden xl:overflow-x-auto",
-  row: "grid grid-cols-2 gap-x-3 md:grid-cols-3 gap-y-2 border-b border-ink-800 px-3 py-3 last:border-b-0 xl:table-row xl:p-0",
+  row: "grid grid-cols-1 gap-x-3 gap-y-2 min-[360px]:grid-cols-2 md:grid-cols-3 border-b border-ink-800 px-3 py-3 last:border-b-0 xl:table-row xl:p-0",
   cell: "block xl:table-cell xl:px-2.5 xl:py-2.5 xl:align-middle",
   labelled:
     "before:mb-0.5 before:block before:text-[10px] before:font-semibold before:uppercase before:tracking-wide before:text-slate-500 before:content-[attr(data-label)] xl:before:content-none",
