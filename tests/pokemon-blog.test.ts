@@ -38,9 +38,8 @@ const emptyCtx: BlockCtx = { catalog: EMPTY, today: TODAY };
 // holds eBay rows, so this variant is the one where every token resolves.
 const ebayCtx: BlockCtx = { catalog: { ...catalog, sources: [...catalog.sources, "ebay"] }, today: TODAY };
 
-// W1's pages, which land in the same integration. TEMPORARY: the integrator
-// deletes this once /pokemon/booster-boxes and the rest exist on the branch.
-const PLANNED_ROUTES = ["/pokemon/booster-boxes", "/pokemon/elite-trainer-boxes", "/pokemon/booster-bundles", "/pokemon/price-per-pack"];
+// The kind hubs and price per pack: each post links at least one.
+const LANDING_ROUTES = ["/pokemon/booster-boxes", "/pokemon/elite-trainer-boxes", "/pokemon/booster-bundles", "/pokemon/price-per-pack"];
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 const BLOCK_LINE = /^\s*\[\[pk:[a-z0-9-]+\]\]\s*$/;
@@ -381,7 +380,6 @@ test("links: every internal link resolves to a route (or one of W1's planned pag
     const filled = fillPost(p, ctx);
     for (const href of [...internalLinks(filled.body), ...filled.summary.flatMap(internalLinks), ...filled.faq.flatMap((f) => internalLinks(f.a))]) {
       const path = href.split("#")[0].split("?")[0];
-      if (PLANNED_ROUTES.includes(path)) continue;
       if (path.startsWith("/pokemon/blog/")) {
         if (!getPokemonPost(path.slice("/pokemon/blog/".length))) broken.push(`${p.slug} → ${href}`);
         continue;
@@ -396,7 +394,7 @@ test("links: each post links the sealed grid or a set page, and a kind hub or pr
   for (const p of POKEMON_POSTS) {
     const links = internalLinks(fillPost(p, ctx).body);
     assert.ok(links.some((l) => l === "/pokemon/sealed" || l.startsWith("/pokemon/sets")), `${p.slug}: no /pokemon/sealed or set link`);
-    assert.ok(links.some((l) => PLANNED_ROUTES.includes(l)), `${p.slug}: no kind hub or price-per-pack link`);
+    assert.ok(links.some((l) => LANDING_ROUTES.includes(l.split("#")[0])), `${p.slug}: no kind hub or price-per-pack link`);
   }
 });
 

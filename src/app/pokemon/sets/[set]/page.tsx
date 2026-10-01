@@ -21,6 +21,8 @@ import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { PokemonTile } from "@/components/pokemon/PokemonTile";
 import { SetFacts } from "@/components/pokemon/SetFacts";
 import { SetNav } from "@/components/pokemon/SetNav";
+import { CopyPrices } from "@/components/pokemon/CopyPrices";
+import { setShareText, shareTexts } from "@/lib/pokemon/share-text";
 
 // One Pokémon expansion's sealed range, grouped by product type, priced for the
 // visitor's market from the cached catalogue. Its paragraphs are written from
@@ -79,6 +81,12 @@ export default async function PokemonSetPage({ params }: { params: Params }) {
   );
   const listed = formatDay(set.releasedOn);
   const prose = setProse(facts);
+  // The first row of tiles is above the fold on a phone and a desktop alike.
+  const eagerIds = new Set(groups.flatMap((g) => g.tiles).slice(0, 4).map((t) => t.id));
+  // Copy text from the market's own figures (share-text converts pounds to
+  // euros itself and says so), not from the displayed catalogue.
+  const showEur = country === "UK" && getDisplayCurrency(country) === "EUR";
+  const copyTexts = shareTexts((o) => setShareText(loaded.catalog, set.slug, { ...o, eur: showEur }) ?? "");
   const indexed = tiles.filter((t) => productIsIndexed(t)).map((t) => ({ name: t.name, path: `/pokemon/sealed/${t.slug}` }));
 
   const ebayLinks = [
@@ -124,6 +132,7 @@ export default async function PokemonSetPage({ params }: { params: Params }) {
             {facts.asOf ? `, ${facts.asOf}` : ""}, and every product links to all the prices we have for it.
           </p>
           <SetFacts blocks={prose} className="mt-3" />
+          {copyTexts.reddit.plain && <CopyPrices className="mt-4" page="pokemon_set" texts={copyTexts} />}
         </div>
       </section>
 
@@ -140,9 +149,9 @@ export default async function PokemonSetPage({ params }: { params: Params }) {
           <h2 className="mb-3 text-lg font-extrabold text-white">
             {set.name}: {g.kind.plural}
           </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 min-[360px]:grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
             {g.tiles.map((t) => (
-              <PokemonTile key={t.id} tile={t} currency={currency} showSet={false} />
+              <PokemonTile key={t.id} tile={t} currency={currency} showSet={false} eager={eagerIds.has(t.id)} />
             ))}
           </div>
         </section>

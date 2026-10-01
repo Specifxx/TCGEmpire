@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import {
   DESCRIPTION_MAX,
   TITLE_MAX,
@@ -61,7 +61,7 @@ test("productTitle: ≤60, unique over every product, bracket kept, rung counts 
   }
   t.diagnostic(`all products: rung 1 ${rungs[1]}, rung 2 ${rungs[2]}, rung 3 ${rungs[3]}`);
   t.diagnostic(`stage-1 gated: rung 1 ${gated[1]}, rung 2 ${gated[2]}, rung 3 ${gated[3]}`);
-  // 2026-10-01: 161 gated products, 39 of which need rung 2 or 3.
+  // 2026-10-01: 159 gated products (after the mini-pack and battle-deck reclassification), most at rung 1.
   assert.ok(gated[1] + gated[2] + gated[3] >= 150);
   assert.ok(gated[2] + gated[3] > 0 && gated[3] < gated[2], "rung 3 is the exception, not the rule");
 });
@@ -235,9 +235,7 @@ test("setDescription: the UK shown in euros marks its figures ≈", () => {
   assert.doesNotMatch(setDescription(setFactsFor("Phantasmal Flames", "worst")), /≈/);
 });
 
-// ── Metadata wiring on the pages this workstream owns ────────────────────────
-// (Widened to every src/app/pokemon/**/page.tsx once every page builds its
-// metadata through pokemonMeta.)
+// ── Metadata wiring ──────────────────────────────────────────────────────────
 const OWNED_PAGES = ["src/app/pokemon/sealed/[slug]/page.tsx", "src/app/pokemon/sets/[set]/page.tsx"];
 
 test("product and set pages build metadata through pokemonMeta, with their own share image", () => {
@@ -255,6 +253,42 @@ test("product and set pages build metadata through pokemonMeta, with their own s
   const set = codeOnly(read(OWNED_PAGES[1]));
   assert.match(set, /title: setTitle\(loaded\.set\.name, \{ perPack: facts\.countable \}\)/, "the same title in every market");
   assert.match(set, /description: setDescription\(facts\)/);
+});
+
+// Every Pokémon page, not just the templates above: absolute titles ≤60 and
+// descriptions ≤155 (DECISIONS D16), no Riftbound metadata helpers (their feed
+// alternates are Riftbound news, their titles carry the brand template), and
+// an explicit share image. Only the three routes with their own
+// opengraph-image.tsx may say "colocated".
+function pokemonPages(dir = "src/app/pokemon", out: string[] = []): string[] {
+  for (const e of readdirSync(dir)) {
+    const p = `${dir}/${e}`;
+    if (statSync(p).isDirectory()) pokemonPages(p, out);
+    else if (e === "page.tsx") out.push(p);
+  }
+  return out;
+}
+
+test("every Pokémon page: pokemonMeta, short static copy, the right share image", () => {
+  const pages = pokemonPages();
+  assert.ok(pages.length >= 12, `found ${pages.length} pages`);
+  const COLOCATED = ["src/app/pokemon/page.tsx", "src/app/pokemon/sealed/[slug]/page.tsx", "src/app/pokemon/sets/[set]/page.tsx"];
+  for (const rel of pages) {
+    const src = codeOnly(read(rel));
+    assert.match(src, /pokemonMeta\(\{/, `${rel} builds its metadata through pokemonMeta`);
+    assert.doesNotMatch(src, /pageOpenGraph|pageAlternates/, `${rel}: no Riftbound metadata helpers`);
+    const title = /const TITLE\s*=\s*"([^"]+)"/.exec(src)?.[1];
+    if (title) assert.ok(title.length <= TITLE_MAX, `${rel}: TITLE is ${title.length} characters`);
+    const desc = /const DESCRIPTION\s*=\s*((?:"[^"]*"\s*\+?\s*)+);/.exec(src)?.[1];
+    if (desc) {
+      const text = [...desc.matchAll(/"([^"]*)"/g)].map((m) => m[1]).join("");
+      assert.ok(text.length <= DESCRIPTION_MAX, `${rel}: DESCRIPTION is ${text.length} characters`);
+    }
+    const mode = /ogImage: "(section|colocated)"/.exec(src)?.[1];
+    assert.ok(mode, `${rel} names its share image`);
+    assert.equal(mode, COLOCATED.includes(rel) ? "colocated" : "section", rel);
+    if (mode === "colocated") assert.ok(existsSync(rel.replace(/page\.tsx$/, "opengraph-image.tsx")), `${rel}: its own opengraph-image.tsx exists`);
+  }
 });
 
 test("fail-open: a read error is never caught into a 404", () => {

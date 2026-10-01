@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
 import { PokemonQuickViewProvider } from "@/components/pokemon/PokemonQuickView";
 import { PokemonSubnav } from "@/components/pokemon/PokemonSubnav";
+import { getPokemonPosts } from "@/lib/pokemon/blog/index";
 
 // The Pokémon section's gate and frame (docs/pokemon/README.md).
 //
@@ -12,12 +13,13 @@ import { PokemonSubnav } from "@/components/pokemon/PokemonSubnav";
 // fails a loading.tsx above a page that calls notFound().
 //
 // ON → the section's own sub-navigation and its quick view, which mounts here
-// and nowhere else, so nothing Pokémon loads on a Riftbound page.
+// and nowhere else, so nothing Pokémon loads on a Riftbound page. The Blog tab
+// shows once a post is published (the registry is pure, no read).
 export default function PokemonLayout({ children }: { children: React.ReactNode }) {
   if (!pokemonEnabled()) notFound();
   return (
     <PokemonQuickViewProvider>
-      <PokemonSubnav />
+      <PokemonSubnav showBlog={getPokemonPosts().length > 0} />
       {children}
     </PokemonQuickViewProvider>
   );

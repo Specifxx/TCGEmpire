@@ -26,6 +26,10 @@ export async function pokemonSitemapEntries(): Promise<SitemapEntry[]> {
   // Loaded only when the section is on: lib/sitemap-sections.ts is imported by
   // every Riftbound importer, whose workflows never generate this client.
   const { pokemonDb } = await import("./db");
+  // The blog registry, dynamically too: this module must load nothing beyond
+  // ./index-gate statically (tests/pokemon-isolation.test.ts). Only published
+  // posts are listed, and the index only once one exists (it 404s before).
+  const { getPokemonPosts, pokemonPostSitemapEntries } = await import("./blog/index");
   const db = pokemonDb();
   const [lastRun, sets, products] = await Promise.all([
     db.pokemonImportRun.findFirst({ where: { ok: true }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
@@ -47,6 +51,8 @@ export async function pokemonSitemapEntries(): Promise<SitemapEntry[]> {
     // Static, and built only when the app exists (the page 404s without its ID),
     // so no lastmod: an import does not change it.
     ...(process.env.POKEMON_DISCORD_APP_ID ? [{ url: `${SITE_URL}/pokemon/discord`, changeFrequency: "monthly" as const, priority: 0.4 }] : []),
+    ...(getPokemonPosts().length ? [{ url: `${SITE_URL}/pokemon/blog`, changeFrequency: "weekly" as const, priority: 0.5 }] : []),
+    ...pokemonPostSitemapEntries(SITE_URL),
     ...sets.map((s) => ({ url: `${SITE_URL}/pokemon/sets/${s.slug}`, changeFrequency: "daily" as const, priority: 0.5, lastModified })),
     ...products.filter(productPassesIndexGate).map((p) => ({
       url: `${SITE_URL}/pokemon/sealed/${p.slug}`,

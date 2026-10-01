@@ -29,8 +29,10 @@ const NUM = `\\(?(\\d{1,3})\\)?|(${Object.keys(WORDS).join("|")})`;
 const LINE = new RegExp(`(?:^|\\b(?:includes?|contains?|with|and|plus)\\s+)(?:${NUM})\\s+([^.|]{0,90}?)\\bbooster packs?\\b`, "i");
 // A pack that is not a standard booster ("four-card", "3-card fun pack") makes
 // a per-pack figure meaningless: Celebrations' ETB mixes ten 4-card packs with
-// five standard ones. Such a product gets no count at all.
-const ODD_PACK = /\b(?:\d+|one|two|three|four|five|six)[- ]card\b[^.|]{0,30}\bpacks?\b|\bfun packs?\b|\bmini[- ]packs?\b/;
+// five standard ones. Such a product gets no count at all, whether its contents
+// or its NAME says so: "Trick or Trade BOOster Bundle 2023 - Mini Booster Pack"
+// is one three-card pack that TCGplayer's title files as a booster bundle.
+const ODD_PACK = /\b(?:\d+|one|two|three|four|five|six)[- ]card\b[^.|]{0,30}\bpacks?\b|\bfun packs?\b|\bmini[- ](?:booster[- ])?packs?\b/;
 
 function countIn(line: string): number | null {
   const l = foldName(line).replace(/\s+/g, " ").trim();
@@ -47,7 +49,7 @@ export function packCount(p: {
   /** A main numbered expansion (TCGplayer group "SV05:", "ME02:", "SWSH07:"), whose English booster box is 36 packs. */
   mainExpansion?: boolean;
 }): PackCount | null {
-  if (p.contents.some((line) => ODD_PACK.test(foldName(line)))) return null;
+  if (ODD_PACK.test(foldName(p.name)) || p.contents.some((line) => ODD_PACK.test(foldName(line)))) return null;
   let total = 0;
   for (const line of p.contents) {
     const n = countIn(line);

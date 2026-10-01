@@ -57,6 +57,17 @@ test("every host touchpoint that renders or lists something is behind the switch
   assert.match(read("src/app/api/pokemon/revalidate/route.ts"), /if \(!pokemonEnabled\(\)\)/);
   assert.match(read("src/app/api/pokemon/product/[slug]/route.ts"), /if \(!pokemonEnabled\(\)\)/);
   assert.match(read("src/lib/pokemon/sitemap.ts"), /if \(!pokemonEnabled\(\)\) return \[\];/);
+  // Route handlers and opengraph-image files skip app/pokemon/layout.tsx, so
+  // each gates itself. The Discord endpoint also needs its own public key.
+  assert.match(
+    read("src/app/api/pokemon/discord/route.ts"),
+    /if \(!pokemonEnabled\(\) \|\| !publicKey\) return NextResponse\.json\(\{ error: "Not found" \}, \{ status: 404 \}\);/,
+  );
+  for (const og of ["src/app/pokemon/opengraph-image.tsx", "src/app/pokemon/sealed/[slug]/opengraph-image.tsx", "src/app/pokemon/sets/[set]/opengraph-image.tsx"]) {
+    assert.match(read(og), /if \(!pokemonEnabled\(\)\) notFound\(\);/, og);
+  }
+  // The Discord page exists only once the owner has created the app.
+  assert.match(read("src/app/pokemon/discord/page.tsx"), /if \(!appId\) notFound\(\);/);
 });
 
 test("the switch is OFF by default: nothing Pokémon shows until the owner turns it on", () => {
@@ -78,6 +89,12 @@ test("the Pokémon code never touches the Riftbound databases, importers or eBay
     [/riftboundEbayQuery|ebaySealedQuery/, "a Riftbound eBay query helper"],
     [/from ["'](?:@\/lib\/ebay|\.\.\/ebay)["']/, "Riftbound's eBay importer (on refresh-prices.yml's push paths)"],
     [/sealed-import|price-import|revalidateContent|CONTENT_TAG/, "the Riftbound importer or its purge"],
+    // The Pokémon blog is its own registry: the Riftbound article system, its
+    // posts and its IndexNow pings stay out (DECISIONS, the Pokémon panel D4).
+    [/\bArticleView\b/, "the Riftbound article renderer"],
+    [/from ["']@\/lib\/(?:articles|posts)["']/, "the Riftbound article registry"],
+    [/tool-guides/, "the Riftbound tool guides"],
+    [/lib\/indexnow/, "Riftbound's IndexNow submitter"],
   ];
   const bad: string[] = [];
   for (const f of files) {
@@ -96,6 +113,28 @@ test("nothing a Riftbound importer loads pulls in the Pokémon Prisma client", (
     const pokemonDb = rel.startsWith("src/lib/pokemon/") ? /^import[^;]*from ["']\.\/db["']/m : /^import[^;]*from ["'][^"']*pokemon\/db["']/m;
     assert.doesNotMatch(src, pokemonDb, `${rel} statically imports the Pokémon client`);
     assert.doesNotMatch(src, /\.prisma\/pokemon-client/, rel);
+  }
+  // sitemap.ts reaches the gate and the blog registry; both must stay as bare
+  // as the importers need. index-gate.ts imports nothing; the registry imports
+  // only itself (its types and posts), never the blocks, renderer, seo or db.
+  const sitemap = stripComments(readFileSync(join(ROOT, "src/lib/pokemon/sitemap.ts"), "utf8"));
+  assert.doesNotMatch(sitemap, /^import[^;]*from ["']\.\/(?:blog|seo|data)\b/m, "sitemap.ts loads the blog only dynamically, and never ./seo or ./data");
+  assert.doesNotMatch(stripComments(readFileSync(join(ROOT, "src/lib/pokemon/index-gate.ts"), "utf8")), /^\s*import\b/m, "index-gate.ts imports nothing");
+  const blogFiles = [
+    "src/lib/pokemon/blog/index.ts",
+    "src/lib/pokemon/blog/types.ts",
+    ...readdirSync(join(ROOT, "src/lib/pokemon/blog/posts")).map((f) => `src/lib/pokemon/blog/posts/${f}`),
+  ];
+  for (const rel of blogFiles) {
+    const src = stripComments(readFileSync(join(ROOT, rel), "utf8"));
+    for (const m of src.matchAll(/^(?:import|export)[^;]*?from ["']([^"']+)["']/gm)) {
+      const spec = m[1];
+      assert.ok(/^\.\.?\//.test(spec), `${rel} imports ${spec}: the registry imports only its own files`);
+      assert.doesNotMatch(spec, /(?:^|\/)(?:db|seo|blocks|render|data)$/, `${rel} imports ${spec}`);
+      // posts/* may reach ../types; index.ts and types.ts stay in their own folder.
+      const outside = rel.includes("/posts/") ? /^\.\.\/\.\./ : /^\.\.\//;
+      assert.doesNotMatch(spec, outside, `${rel} imports ${spec}, outside the blog folder`);
+    }
   }
 });
 
@@ -123,8 +162,25 @@ test("caching: the product page's TTL is the loaders' TTL, and the grids are per
   assert.equal(Number(/export const revalidate = (\d+);/.exec(product)?.[1]), POKEMON_TTL);
   // ISR on first visit, nothing prerendered at build: an empty list, like /card/[id].
   assert.match(product, /export function generateStaticParams\(\): \{ slug: string \}\[\] \{\s*return \[\];\s*\}/);
-  for (const p of ["src/app/pokemon/page.tsx", "src/app/pokemon/sealed/page.tsx", "src/app/pokemon/sets/page.tsx", "src/app/pokemon/sets/[set]/page.tsx"]) {
+  for (const p of [
+    "src/app/pokemon/page.tsx",
+    "src/app/pokemon/sealed/page.tsx",
+    "src/app/pokemon/sets/page.tsx",
+    "src/app/pokemon/sets/[set]/page.tsx",
+    "src/app/pokemon/booster-boxes/page.tsx",
+    "src/app/pokemon/elite-trainer-boxes/page.tsx",
+    "src/app/pokemon/booster-bundles/page.tsx",
+    "src/app/pokemon/price-per-pack/page.tsx",
+  ]) {
     assert.match(readFileSync(join(ROOT, p), "utf8"), /export const dynamic = "force-dynamic";/, p);
+  }
+  // Blog posts: ISR at the loaders' TTL, nothing prerendered at build.
+  const post = stripComments(readFileSync(join(ROOT, "src/app/pokemon/blog/[slug]/page.tsx"), "utf8"));
+  assert.equal(Number(/export const revalidate = (\d+);/.exec(post)?.[1]), POKEMON_TTL);
+  assert.match(post, /export function generateStaticParams\(\): \{ slug: string \}\[\] \{\s*return \[\];\s*\}/);
+  // The price share cards: never cached longer than the data they draw.
+  for (const og of ["src/app/pokemon/sealed/[slug]/opengraph-image.tsx", "src/app/pokemon/sets/[set]/opengraph-image.tsx"]) {
+    assert.equal(Number(/export const revalidate = (\d+);/.exec(readFileSync(join(ROOT, og), "utf8"))?.[1]), POKEMON_TTL, og);
   }
   const revalidate = readFileSync(join(ROOT, "src/app/api/pokemon/revalidate/route.ts"), "utf8");
   assert.match(revalidate, /revalidateTag\(POKEMON_TAG\)/);
@@ -142,4 +198,36 @@ test("the import workflow: schedule only, its own database, its own purge", () =
   assert.match(wf, /\/api\/pokemon\/revalidate/);
   assert.doesNotMatch(wf, /\/api\/revalidate\b/, "never the Riftbound purge");
   assert.match(wf, /prisma db push --schema prisma\/pokemon\/schema\.prisma/);
+});
+
+/** Scripts outside scripts/pokemon/ allowed to mention the section: the audit registrations. */
+const SCRIPT_TOUCHPOINTS = ["scripts/adsense-audit.ts", "scripts/template-seo-check.ts"].sort();
+
+test("the Riftbound scripts know about the Pokémon section in exactly the listed files", () => {
+  // Their Pokémon rows are harmless if left behind after a removal (the
+  // templates simply match nothing), but they belong on the removal checklist.
+  // The pattern catches path strings, regex literals (\/pokemon) and the
+  // template names, and ignores a Riftbound slug like
+  // "pokemon-collector-to-riftbound".
+  const found = readdirSync(join(ROOT, "scripts"))
+    .filter((f) => /\.(ts|tsx|mjs|js)$/.test(f))
+    .map((f) => `scripts/${f}`)
+    .filter((rel) =>
+      /\\\/pokemon\b|["'`]\/pokemon\b|lib\/pokemon|pokemon-(?:hub|landing|index|set|product|post)\b/.test(stripComments(readFileSync(join(ROOT, rel), "utf8"))),
+    )
+    .sort();
+  assert.deepEqual(found, SCRIPT_TOUCHPOINTS);
+});
+
+test("the archive probe: by hand, no secrets, no database, the date only through env", () => {
+  const wf = readFileSync(join(ROOT, ".github/workflows/pokemon-archive-probe.yml"), "utf8").replace(/^\s*#.*$/gm, "");
+  assert.doesNotMatch(wf, /secrets\./);
+  assert.doesNotMatch(wf, /DATABASE_URL/);
+  assert.doesNotMatch(wf, /^\s*(schedule|push|pull_request):/m);
+  assert.match(wf, /permissions:\s*\n\s*contents: read/);
+  // A workflow_dispatch input interpolated into run: is script injection.
+  assert.deepEqual(
+    wf.split("\n").filter((l) => l.includes("inputs.date")).map((l) => l.trim()),
+    ["PROBE_DATE: ${{ inputs.date }}"],
+  );
 });

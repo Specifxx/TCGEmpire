@@ -23,6 +23,7 @@ test("product kinds: the specific shape wins, real titles", () => {
     ["Phantasmal Flames Booster Box", "booster-box"],
     ["Delta Reign Half Booster Box", "booster-box"],
     ["Phantasmal Flames Booster Bundle", "booster-bundle"],
+    ["Trick or Trade BOOster Bundle 2023 - Mini Booster Pack", "booster-pack"],
     ["151 Ultra-Premium Collection", "upc"],
     ["Prismatic Evolutions Super-Premium Collection", "spc"],
     ["Blooming Waters Premium Collection", "premium-collection"],

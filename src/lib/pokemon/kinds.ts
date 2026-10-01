@@ -169,6 +169,9 @@ export function classifyPokemonSealed(name: string): PkKind | null {
   if (/super[- ]?premium collection/.test(n)) return "spc";
   // "Greninja ex Battle Deck & 2 Booster Bundle" is a deck that comes with packs.
   if (/\bbattle decks?\b/.test(n)) return "deck";
+  // "Trick or Trade BOOster Bundle 2023 - Mini Booster Pack" is one small pack
+  // sold out of that bundle, not a booster bundle (packs.ts gives it no count).
+  if (/\bmini[- ]booster packs?\b/.test(n)) return "booster-pack";
   if (/booster bundle/.test(n)) return "booster-bundle";
   if (/booster box|\bhalf booster box\b/.test(n)) return "booster-box";
   if (/build (?:&|and) battle/.test(n)) return "build-battle";

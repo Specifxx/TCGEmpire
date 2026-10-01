@@ -22,6 +22,7 @@ import { HomeShopByType } from "@/components/pokemon/HomeShopByType";
 import { HomeNewestSets } from "@/components/pokemon/HomeNewestSets";
 import { HomeBelowMarket } from "@/components/pokemon/HomeBelowMarket";
 import { HomeGuides, type HomeGuide } from "@/components/pokemon/HomeGuides";
+import { getPokemonPosts } from "@/lib/pokemon/blog/index";
 
 // The Pokémon section's home page. Per-request like /sealed: the visitor's
 // market comes from the cookie (getCountry), and the data from ONE cached
@@ -64,9 +65,13 @@ export default async function PokemonHub() {
   const faq = pokemonFaq(home.stats.sources);
   const hasTiles = catalog.tiles.length > 0;
   const ebayTracked = home.stats.listingSources.includes("ebay");
-  // Wired by the integrator: published posts, and the Discord page once the app exists.
-  const guides: HomeGuide[] = [];
-  const discordHref: string | undefined = undefined;
+  // Published posts only (getPokemonPosts is the one published filter), and
+  // the Discord page only once the app exists: /pokemon/discord 404s without
+  // its ID, and this link keeps the sitemapped page from being an orphan.
+  const guides: HomeGuide[] = getPokemonPosts()
+    .slice(0, 3)
+    .map((p) => ({ href: `/pokemon/blog/${p.slug}`, title: p.title, excerpt: p.excerpt }));
+  const discordHref = process.env.POKEMON_DISCORD_APP_ID ? "/pokemon/discord" : undefined;
 
   const newestSet = home.newest[0]?.set;
   const ebayLinks = [

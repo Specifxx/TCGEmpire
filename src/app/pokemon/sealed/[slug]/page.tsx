@@ -20,6 +20,10 @@ import { PokemonProductBoard } from "@/components/pokemon/PokemonProductBoard";
 import { PokemonPriceChart } from "@/components/pokemon/PokemonPriceChart";
 import { ProductFacts } from "@/components/pokemon/ProductFacts";
 import { ProductFaq } from "@/components/pokemon/ProductFaq";
+import { CopyPrices } from "@/components/pokemon/CopyPrices";
+import { offersAsOf } from "@/lib/pokemon/share-text";
+import { getPokemonPosts } from "@/lib/pokemon/blog/index";
+import type { PkKind } from "@/lib/pokemon/kinds";
 
 // One Pokémon sealed product: every market's prices, its market-price history
 // and what is inside. ISR like a Riftbound card page, and for the same reasons:
@@ -38,6 +42,14 @@ export function generateStaticParams(): { slug: string }[] {
 }
 
 type Params = { slug: string };
+
+// Which posts a product page links, by its kind. Filtered through
+// getPokemonPosts(), so a draft is never linked; a post's publishing commit
+// is also a release, which renders these pages afresh.
+const POSTS_BY_KIND: Record<string, readonly PkKind[]> = {
+  "booster-box-vs-etb-vs-booster-bundle": ["booster-box", "etb", "pc-etb", "booster-bundle"],
+  "pokemon-center-etb-vs-elite-trainer-box": ["etb", "pc-etb"],
+};
 
 // FAIL-OPEN (DECISIONS D14): only a product that is not in the catalogue is a
 // 404. A read error is thrown, never caught into notFound(): ISR then keeps
@@ -80,6 +92,7 @@ export default async function PokemonProductPage({ params }: { params: Params })
   const base = boards[DEFAULT_COUNTRY];
   const released = formatDay(p.releasedOn);
   const usOpen = base.listings.filter((l) => offerStock(l, now) === "open");
+  const guides = getPokemonPosts().filter((post) => POSTS_BY_KIND[post.slug]?.includes(p.kind));
 
   // Product + AggregateOffer for the default market only, and only when there
   // is an open listing to back it (Google flags a Product with no offers).
@@ -226,6 +239,31 @@ export default async function PokemonProductPage({ params }: { params: Params })
       </section>
 
       <ProductFacts facts={facts} prose={prose} />
+
+      <section className="card-surface mt-6 p-5">
+        <h2 className="text-lg font-extrabold text-white">Copy these prices</h2>
+        <CopyPrices
+          className="mt-3"
+          page="pokemon_product"
+          product={{ boards, name: p.name, slug: p.slug, packCount: p.packCount, asOf: offersAsOf(p.offers) }}
+        />
+      </section>
+
+      {guides.length > 0 && (
+        <section className="card-surface mt-6 p-5">
+          <h2 className="text-lg font-extrabold text-white">Guides</h2>
+          <ul className="mt-2 space-y-2 text-sm">
+            {guides.map((g) => (
+              <li key={g.slug}>
+                <Link href={`/pokemon/blog/${g.slug}`} className="tap-link font-semibold text-brand-400 hover:underline">
+                  {g.title}
+                </Link>
+                <span className="block text-slate-400">{g.excerpt}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="card-surface mt-6 p-5">
         <h2 className="mb-3 text-lg font-extrabold text-white">TCGplayer market price history (US$)</h2>

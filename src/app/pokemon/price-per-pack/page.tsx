@@ -15,6 +15,8 @@ import { asOfLabel } from "@/lib/pokemon/value";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { PerPackTable } from "@/components/pokemon/PerPackTable";
+import { CopyPrices } from "@/components/pokemon/CopyPrices";
+import { perPackShareText, shareTexts } from "@/lib/pokemon/share-text";
 
 // Every sealed product with a known pack count and an open listing in the
 // visitor's market, ranked by price per booster pack (lib/pokemon/value.ts
@@ -45,7 +47,8 @@ export default async function PokemonPricePerPackPage() {
   const country = getCountry();
   const currency = getDisplayCurrency(country);
   const catalog = await getPokemonCatalog(country);
-  const tiles = toDisplay(catalog.tiles, country === "UK" && currency === "EUR");
+  const showEur = country === "UK" && currency === "EUR";
+  const tiles = toDisplay(catalog.tiles, showEur);
   const page = perPackPage({ tiles });
   const asOf = asOfLabel(catalog.pricesAsOf);
   const place = COUNTRIES[country].place;
@@ -105,6 +108,12 @@ export default async function PokemonPricePerPackPage() {
             pageType="pokemon_perpack"
             caption={`The ${PER_PACK_TOP} sealed products with the lowest price per pack`}
             showKind
+          />
+          {/* Built from the market's own figures; share-text converts pounds to euros itself and says so. */}
+          <CopyPrices
+            className="mt-3"
+            page="pokemon_perpack"
+            texts={shareTexts((o) => perPackShareText(catalog, { limit: PER_PACK_TOP }, { ...o, eur: showEur }))}
           />
         </section>
       )}

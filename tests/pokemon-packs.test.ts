@@ -35,6 +35,20 @@ test("a product with non-standard packs gets no count, never a misleading one", 
     packCount({ name: "Holiday Calendar", kind: "collection", contents: ["6 Pokémon TCG: Sword & Shield Series booster packs", "6 Pokémon TCG 3-card fun packs"] }),
     null,
   );
+  // A single three-card pack whose title files it as a booster bundle: never six packs.
+  assert.equal(
+    packCount({
+      name: "Trick or Trade BOOster Bundle 2023 - Mini Booster Pack",
+      kind: "booster-bundle",
+      contents: ["3 Colorful cards from the Pokémon Trading Card Game"],
+    }),
+    null,
+  );
+  assert.deepEqual(
+    packCount({ name: "Shrouded Fable Mini Tin [Zoroark]", kind: "tin", contents: ["2 Pokémon TCG: Scarlet & Violet—Shrouded Fable booster packs"] }),
+    { count: 2, from: "contents" },
+    "a mini TIN is not a mini pack",
+  );
 });
 
 test("only four shapes are counted from the name", () => {
