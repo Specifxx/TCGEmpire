@@ -49,6 +49,7 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
         firstSeenAt: true,
         setId: true,
         packCount: true,
+        packCountFrom: true,
       },
     }),
     // This market's rows plus the US market price every market references.
@@ -99,6 +100,7 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
       firstSeenAt: p.firstSeenAt.toISOString(),
       ...figures,
       packCount: p.packCount,
+      packCountFrom: (p.packCountFrom as "contents" | "name" | null) ?? null,
       perPackCents: perPackCents(figures.lowCents, p.packCount),
     };
   });
@@ -151,7 +153,7 @@ export function clearPokemonMemo(): void {
 export const getPokemonCatalog = cache(async (market: Country): Promise<PkCatalog> => {
   const hit = memo.get(market);
   if (hit && Date.now() - hit.at < MEMO_TTL_MS) return hit.data;
-  const data = await cachedOrDirect(() => computeCatalog(market), ["pokemon-catalog-v2", market], {
+  const data = await cachedOrDirect(() => computeCatalog(market), ["pokemon-catalog-v3", market], {
     revalidate: POKEMON_TTL,
     tags: [POKEMON_TAG],
   });

@@ -95,6 +95,8 @@ export interface PkTile {
   firstSeenAt: string;
   /** Booster packs inside (lib/pokemon/packs.ts), null when not knowable. */
   packCount: number | null;
+  /** Where packCount was read: the product's contents list, or its name. */
+  packCountFrom: "contents" | "name" | null;
   /** lowCents ÷ packCount, in the market's currency; null when either is unknown. */
   perPackCents: number | null;
 }

@@ -16,12 +16,15 @@ export function pokemonSectionOn(): boolean {
 }
 
 /**
- * Product pages are noindex (follow) unless POKEMON_INDEX_PRODUCTS is "1".
- * Server-only (a plain variable, read where the metadata is built). ~1,000
- * templated product pages are the shape AdSense called low-value before
- * (CURRENT-STATE, "publish fewer pages than feels natural"), so the POC
- * indexes the hub, the grid and the set pages, whose text is written from each
- * set's own data, and leaves this switch to the owner. The sitemap follows it.
+ * Product pages are noindex (follow) unless POKEMON_INDEX_PRODUCTS is "1", and
+ * then only those passing the stage-1 gate (lib/pokemon/index-gate.ts: booster
+ * boxes, ETBs, Pokémon Center ETBs and booster bundles with a known pack
+ * count; lib/pokemon/seo.ts productIsIndexed). Server-only (a plain variable,
+ * read where the metadata is built). Templated product pages are the shape
+ * AdSense called low-value before (CURRENT-STATE, "publish fewer pages than
+ * feels natural"), so the switch stays off until a measured audit shows no
+ * `pokemon-product` near-duplicate cluster and a median of at least 150
+ * unique words (docs/pokemon/README.md). The sitemap follows it.
  */
 export function pokemonIndexProducts(): boolean {
   return process.env.POKEMON_INDEX_PRODUCTS === "1";

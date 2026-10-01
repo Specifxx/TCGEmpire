@@ -1,0 +1,317 @@
+{
+  "id": 704143,
+  "slug": "30th-celebration-elite-trainer-box",
+  "name": "30th Celebration Elite Trainer Box",
+  "kind": "etb",
+  "series": "Mega Evolution",
+  "set": {
+    "slug": "30th-celebration",
+    "name": "30th Celebration",
+    "code": "30C",
+    "releasedOn": "2026-09-16"
+  },
+  "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704143_in_1000x1000.jpg",
+  "tcgplayerUrl": "https://www.tcgplayer.com/product/704143/pokemon-me-30th-celebration-30th-celebration-elite-trainer-box",
+  "releasedOn": "2026-09-16",
+  "presale": false,
+  "contents": [
+    "9 Pokemon TCG: 30th Celebration booster packs (cards vary by pack)",
+    "1 full-art foil promo featuring Nidorina",
+    "16 foil Basic Energy cards",
+    "65-ct standard-sized card sleeves",
+    "A player's guide to the 30th Celebration expansion",
+    "6 damage-counter dice",
+    "1 competition-legal coin-flip die",
+    "1 plastic coin",
+    "A collector's box to hold everything, with 6 dividers to keep it organized",
+    "A code card for Pokémon Trading Card Game Live"
+  ],
+  "upc": "0196214158801",
+  "packCount": 9,
+  "packCountFrom": "contents",
+  "offers": [
+    {
+      "market": "US",
+      "source": "tcgplayer",
+      "priceCents": 11500,
+      "currency": "USD",
+      "shippingCents": null,
+      "url": "https://www.tcgplayer.com/product/704143/pokemon-me-30th-celebration-30th-celebration-elite-trainer-box",
+      "title": null,
+      "inStock": true,
+      "checkedAt": "2026-10-01T12:42:49.851Z"
+    },
+    {
+      "market": "US",
+      "source": "tcgplayer_market",
+      "priceCents": 16245,
+      "currency": "USD",
+      "shippingCents": null,
+      "url": "https://www.tcgplayer.com/product/704143/pokemon-me-30th-celebration-30th-celebration-elite-trainer-box",
+      "title": null,
+      "inStock": true,
+      "checkedAt": "2026-10-01T12:42:49.851Z"
+    },
+    {
+      "market": "EU",
+      "source": "cardmarket",
+      "priceCents": 8500,
+      "currency": "EUR",
+      "shippingCents": null,
+      "url": "https://www.cardmarket.com/en/Pokemon/Products?idProduct=895551",
+      "title": null,
+      "inStock": true,
+      "checkedAt": "2026-10-01T12:42:50.932Z"
+    },
+    {
+      "market": "EU",
+      "source": "cardmarket_trend",
+      "priceCents": 13527,
+      "currency": "EUR",
+      "shippingCents": null,
+      "url": "https://www.cardmarket.com/en/Pokemon/Products?idProduct=895551",
+      "title": null,
+      "inStock": true,
+      "checkedAt": "2026-10-01T12:42:50.932Z"
+    }
+  ],
+  "history": [
+    {
+      "day": "2026-10-01",
+      "cents": 16245
+    }
+  ],
+  "siblings": [
+    {
+      "slug": "30th-celebration-pokemon-center-elite-trainer-box",
+      "name": "30th Celebration Pokémon Center Elite Trainer Box",
+      "kind": "pc-etb",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704144_in_1000x1000.jpg",
+      "packCount": 11
+    },
+    {
+      "slug": "30th-celebration-booster-bundle",
+      "name": "30th Celebration Booster Bundle",
+      "kind": "booster-bundle",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704171_in_1000x1000.jpg",
+      "packCount": 6
+    },
+    {
+      "slug": "30th-celebration-ultra-premium-collection-day",
+      "name": "30th Celebration Ultra-Premium Collection [Day]",
+      "kind": "upc",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704190_in_1000x1000.jpg",
+      "packCount": 30
+    },
+    {
+      "slug": "30th-celebration-ultra-premium-collection-night",
+      "name": "30th Celebration Ultra-Premium Collection [Night]",
+      "kind": "upc",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704191_in_1000x1000.jpg",
+      "packCount": 30
+    },
+    {
+      "slug": "30th-celebration-ditto-premium-collection",
+      "name": "30th Celebration Ditto Premium Collection",
+      "kind": "premium-collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704189_in_1000x1000.jpg",
+      "packCount": 8
+    },
+    {
+      "slug": "30th-celebration-binder-collection",
+      "name": "30th Celebration Binder Collection",
+      "kind": "collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704169_in_1000x1000.jpg",
+      "packCount": 5
+    },
+    {
+      "slug": "30th-celebration-classic-collection-pack",
+      "name": "30th Celebration Classic Collection Pack",
+      "kind": "collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704192_in_1000x1000.jpg",
+      "packCount": null
+    },
+    {
+      "slug": "30th-celebration-figure-collection-mew",
+      "name": "30th Celebration Figure Collection [Mew]",
+      "kind": "collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704193_in_1000x1000.jpg",
+      "packCount": 5
+    },
+    {
+      "slug": "30th-celebration-figure-collection-mewtwo",
+      "name": "30th Celebration Figure Collection [Mewtwo]",
+      "kind": "collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704194_in_1000x1000.jpg",
+      "packCount": 5
+    },
+    {
+      "slug": "30th-celebration-greninja-ex-box",
+      "name": "30th Celebration Greninja ex Box",
+      "kind": "collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704168_in_1000x1000.jpg",
+      "packCount": 4
+    },
+    {
+      "slug": "30th-celebration-knock-out-collection",
+      "name": "30th Celebration Knock Out Collection",
+      "kind": "collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704152_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-poster-collection",
+      "name": "30th Celebration Poster Collection",
+      "kind": "collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704153_in_1000x1000.jpg",
+      "packCount": 3
+    },
+    {
+      "slug": "30th-celebration-sylveon-ex-box",
+      "name": "30th Celebration Sylveon ex Box",
+      "kind": "collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704155_in_1000x1000.jpg",
+      "packCount": 4
+    },
+    {
+      "slug": "30th-celebration-tech-sticker-collection-alolan-exeggutor",
+      "name": "30th Celebration Tech Sticker Collection [Alolan Exeggutor]",
+      "kind": "collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704145_in_1000x1000.jpg",
+      "packCount": 3
+    },
+    {
+      "slug": "30th-celebration-tech-sticker-collection-lucario",
+      "name": "30th Celebration Tech Sticker Collection [Lucario]",
+      "kind": "collection",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704146_in_1000x1000.jpg",
+      "packCount": 3
+    },
+    {
+      "slug": "30th-celebration-ex-tin-greninja-ex-international-version",
+      "name": "30th Celebration ex Tin [Greninja ex] (International Version)",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704150_in_1000x1000.jpg",
+      "packCount": 4
+    },
+    {
+      "slug": "30th-celebration-ex-tin-greninja-ex-retail-version",
+      "name": "30th Celebration ex Tin [Greninja ex] (Retail Version)",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/718673_in_1000x1000.jpg",
+      "packCount": 5
+    },
+    {
+      "slug": "30th-celebration-ex-tin-sylveon-ex-international-version",
+      "name": "30th Celebration ex Tin [Sylveon ex] (International Version)",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704149_in_1000x1000.jpg",
+      "packCount": 4
+    },
+    {
+      "slug": "30th-celebration-ex-tin-sylveon-ex-retail-version",
+      "name": "30th Celebration ex Tin [Sylveon ex] (Retail Version)",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/718674_in_1000x1000.jpg",
+      "packCount": 5
+    },
+    {
+      "slug": "30th-celebration-mini-tin-day-pikachu",
+      "name": "30th Celebration Mini Tin [Day Pikachu]",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704177_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-mini-tin-espeon",
+      "name": "30th Celebration Mini Tin [Espeon]",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704176_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-mini-tin-greninja",
+      "name": "30th Celebration Mini Tin [Greninja]",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704185_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-mini-tin-lapras",
+      "name": "30th Celebration Mini Tin [Lapras]",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704179_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-mini-tin-mew",
+      "name": "30th Celebration Mini Tin [Mew]",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704178_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-mini-tin-mewtwo",
+      "name": "30th Celebration Mini Tin [Mewtwo]",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704183_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-mini-tin-moltres",
+      "name": "30th Celebration Mini Tin [Moltres]",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704180_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-mini-tin-night-pikachu",
+      "name": "30th Celebration Mini Tin [Night Pikachu]",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704184_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-mini-tin-umbreon",
+      "name": "30th Celebration Mini Tin [Umbreon]",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704182_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-mini-tin-zapdos",
+      "name": "30th Celebration Mini Tin [Zapdos]",
+      "kind": "tin",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704181_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-2-pack-blister",
+      "name": "30th Celebration 2-Pack Blister",
+      "kind": "blister",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704148_in_1000x1000.jpg",
+      "packCount": 2
+    },
+    {
+      "slug": "30th-celebration-booster-pack",
+      "name": "30th Celebration Booster Pack",
+      "kind": "booster-pack",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/696613_in_1000x1000.jpg",
+      "packCount": 1
+    },
+    {
+      "slug": "30th-celebration-battle-deck-espeon-ex",
+      "name": "30th Celebration Battle Deck [Espeon ex]",
+      "kind": "deck",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704187_in_1000x1000.jpg",
+      "packCount": null
+    },
+    {
+      "slug": "30th-celebration-battle-deck-umbreon-ex",
+      "name": "30th Celebration Battle Deck [Umbreon ex]",
+      "kind": "deck",
+      "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/704188_in_1000x1000.jpg",
+      "packCount": null
+    }
+  ]
+}

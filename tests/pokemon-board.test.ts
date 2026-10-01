@@ -152,6 +152,7 @@ const tile = (over: Partial<PkTile>): PkTile => ({
   openCount: 1,
   firstSeenAt: "2026-10-01T00:00:00Z",
   packCount: null,
+  packCountFrom: null,
   perPackCents: null,
   ...over,
 });
