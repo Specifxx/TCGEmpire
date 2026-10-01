@@ -45,6 +45,17 @@ interface Spec {
 }
 
 const SPECS: Spec[] = [
+  // The Pokémon section (docs/pokemon/README.md). First, so no Riftbound row can
+  // claim a /pokemon path; each is a regex literal tests/pokemon-seo.test.ts
+  // reads, and a row left behind after the section is removed simply matches
+  // nothing. Product pages require no Product node: they carry one only when
+  // there is an open US listing to back its offers.
+  { name: "pokemon-hub", test: (p) => /^\/pokemon$/.test(p), requires: ["BreadcrumbList", "CollectionPage"], optional: ["FAQPage", "ItemList"] },
+  { name: "pokemon-landing", test: (p) => /^\/pokemon\/(?:booster-boxes|elite-trainer-boxes|booster-bundles|price-per-pack)$/.test(p), requires: ["BreadcrumbList", "CollectionPage"], optional: ["ItemList", "FAQPage"] },
+  { name: "pokemon-index", test: (p) => /^\/pokemon\/(?:sealed|sets|blog|discord)$/.test(p), requires: ["BreadcrumbList"], optional: ["CollectionPage", "ItemList"] },
+  { name: "pokemon-set", test: (p) => /^\/pokemon\/sets\/[^/]+$/.test(p), requires: ["BreadcrumbList", "CollectionPage"], optional: ["ItemList"] },
+  { name: "pokemon-product", test: (p) => /^\/pokemon\/sealed\/[^/]+$/.test(p), requires: ["BreadcrumbList"], optional: ["Product", "FAQPage"] },
+  { name: "pokemon-post", test: (p) => /^\/pokemon\/blog\/[^/]+$/.test(p), requires: ["BreadcrumbList"], optional: ["BlogPosting", "Article", "FAQPage"] },
   { name: "card", test: (p) => p.startsWith("/card/"), requires: ["BreadcrumbList", "Product", "FAQPage"] },
   { name: "champion", test: (p) => p.startsWith("/champions/") && p !== "/champions", requires: ["BreadcrumbList", "ItemList"] },
   { name: "keyword", test: (p) => p.startsWith("/keywords/") && p !== "/keywords", requires: ["BreadcrumbList", "DefinedTerm"] },
