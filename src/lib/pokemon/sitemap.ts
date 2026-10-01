@@ -4,13 +4,23 @@ import { SITE_URL } from "../site";
 import type { SitemapEntry } from "../sitemap-sections";
 import { pokemonIndexProducts } from "./flag";
 import { pokemonEnabled } from "./gate";
+import { INDEX_STAGE1_KINDS, productPassesIndexGate } from "./index-gate";
+
+// The head-term landing pages: the three kind hubs and price per pack.
+const LANDING = ["/pokemon/booster-boxes", "/pokemon/elite-trainer-boxes", "/pokemon/booster-bundles", "/pokemon/price-per-pack"];
 
 // The Pokémon section's indexable pages (docs/pokemon/README.md): the hub, the
-// grid, the set index and each set; product pages only once the owner turns on
-// POKEMON_INDEX_PRODUCTS. A direct narrow read of the Pokémon database, NOT
-// lib/pokemon/data.ts's cached catalogue: that loader's six-hour TTL would
-// become this 24-hour route's (egress rule 5). lastmod is the last import that
-// finished, the day the prices on these pages last changed.
+// kind hubs, price per pack, the grid, the set index and each set; product
+// pages only once the owner turns on POKEMON_INDEX_PRODUCTS, and then only
+// those passing the stage-1 gate (lib/pokemon/index-gate.ts), so the sitemap
+// never lists a page that answers noindex. A direct narrow read of the Pokémon
+// database, NOT lib/pokemon/data.ts's cached catalogue: that loader's six-hour
+// TTL would become this 24-hour route's (egress rule 5). lastmod is the last
+// import that finished, the day the prices on these pages last changed.
+//
+// The gate is imported from ./index-gate, never ./seo: this module is on the
+// Riftbound importers' load path (lib/sitemap-sections.ts), and ./seo pulls in
+// the page-metadata helpers that path has no business loading.
 export async function pokemonSitemapEntries(): Promise<SitemapEntry[]> {
   if (!pokemonEnabled()) return [];
   // Loaded only when the section is on: lib/sitemap-sections.ts is imported by
@@ -21,16 +31,24 @@ export async function pokemonSitemapEntries(): Promise<SitemapEntry[]> {
     db.pokemonImportRun.findFirst({ where: { ok: true }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
     db.pokemonSet.findMany({ where: { products: { some: { active: true } } }, select: { slug: true } }),
     pokemonIndexProducts()
-      ? db.pokemonProduct.findMany({ where: { active: true }, select: { slug: true, imageUrl: true }, take: 5000 })
-      : Promise.resolve([] as { slug: string; imageUrl: string | null }[]),
+      ? db.pokemonProduct.findMany({
+          where: { active: true, kind: { in: [...INDEX_STAGE1_KINDS] } },
+          select: { slug: true, imageUrl: true, kind: true, packCount: true },
+          take: 5000,
+        })
+      : Promise.resolve([] as { slug: string; imageUrl: string | null; kind: string; packCount: number | null }[]),
   ]);
   const lastModified = lastRun?.finishedAt ?? undefined;
   return [
     { url: `${SITE_URL}/pokemon`, changeFrequency: "daily" as const, priority: 0.7, lastModified },
+    ...LANDING.map((path) => ({ url: `${SITE_URL}${path}`, changeFrequency: "daily" as const, priority: 0.6, lastModified })),
     { url: `${SITE_URL}/pokemon/sealed`, changeFrequency: "daily" as const, priority: 0.6, lastModified },
     { url: `${SITE_URL}/pokemon/sets`, changeFrequency: "weekly" as const, priority: 0.5, lastModified },
+    // Static, and built only when the app exists (the page 404s without its ID),
+    // so no lastmod: an import does not change it.
+    ...(process.env.POKEMON_DISCORD_APP_ID ? [{ url: `${SITE_URL}/pokemon/discord`, changeFrequency: "monthly" as const, priority: 0.4 }] : []),
     ...sets.map((s) => ({ url: `${SITE_URL}/pokemon/sets/${s.slug}`, changeFrequency: "daily" as const, priority: 0.5, lastModified })),
-    ...products.map((p) => ({
+    ...products.filter(productPassesIndexGate).map((p) => ({
       url: `${SITE_URL}/pokemon/sealed/${p.slug}`,
       changeFrequency: "daily" as const,
       priority: 0.4,

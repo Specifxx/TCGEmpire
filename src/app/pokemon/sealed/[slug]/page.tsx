@@ -4,26 +4,30 @@ import { notFound } from "next/navigation";
 import { COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { offerStock } from "@/lib/sealed-offers";
-import { pageAlternates, pageOpenGraph } from "@/lib/seo";
-import { ldJson } from "@/lib/jsonld";
+import { faqPage, ldJson } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
-import { pokemonIndexProducts } from "@/lib/pokemon/flag";
-import { getPokemonProduct } from "@/lib/pokemon/data";
+import { getPokemonCatalog, getPokemonProduct } from "@/lib/pokemon/data";
 import { allBoards } from "@/lib/pokemon/board";
 import { kindInfo } from "@/lib/pokemon/kinds";
-import { formatDay, pokemonImageAlt, sourceWord, thumbOf } from "@/lib/pokemon/format";
+import { formatDay, kindNoun, pokemonImageAlt, sourceWord, thumbOf } from "@/lib/pokemon/format";
+import { pokemonMeta, productDescription, productIsIndexed, productTitle } from "@/lib/pokemon/seo";
+import { productFacts, productFaq, productProse } from "@/lib/pokemon/product-facts";
+import type { PkCatalog } from "@/lib/pokemon/types";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PokemonProductBoard } from "@/components/pokemon/PokemonProductBoard";
 import { PokemonPriceChart } from "@/components/pokemon/PokemonPriceChart";
+import { ProductFacts } from "@/components/pokemon/ProductFacts";
+import { ProductFaq } from "@/components/pokemon/ProductFaq";
 
 // One Pokémon sealed product: every market's prices, its market-price history
 // and what is inside. ISR like a Riftbound card page, and for the same reasons:
 // no cookie or header read anywhere in this tree, every market's board shipped
 // and localised client-side (PokemonProductBoard), nothing prerendered at build.
-// The one read is getPokemonProduct, cached for exactly this page's TTL under
-// the "pokemon" tag the daily import purges.
+// The reads are getPokemonProduct and, for the comparisons, the US catalogue the
+// grid pages share; both are cached for exactly this page's TTL under the
+// "pokemon" tag the daily import purges.
 export const revalidate = 21600;
 
 // An EMPTY list, as /card/[id] has: it is what makes Next cache each product
@@ -35,61 +39,72 @@ export function generateStaticParams(): { slug: string }[] {
 
 type Params = { slug: string };
 
+// FAIL-OPEN (DECISIONS D14): only a product that is not in the catalogue is a
+// 404. A read error is thrown, never caught into notFound(): ISR then keeps
+// serving the last good page, and a first render fails with a 500, which is
+// neither cached for six hours nor read by a crawler as "gone".
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   if (!pokemonEnabled()) return notFoundMetadata();
-  const p = await getPokemonProduct(params.slug).catch(() => null);
+  const p = await getPokemonProduct(params.slug);
   if (!p) return notFoundMetadata("Product");
-  const title = `${p.name} Price`;
-  const where = p.set ? ` from ${p.set.name}` : "";
-  const description = `${p.name}${where}: the cheapest TCGplayer and eBay listings we track in six markets, TCGplayer's market price and its price history. Updated daily.`;
-  return {
-    title,
-    description,
-    alternates: pageAlternates(`/pokemon/sealed/${p.slug}`),
-    openGraph: pageOpenGraph({
-      title,
-      description,
-      url: `/pokemon/sealed/${p.slug}`,
-      ...(p.imageUrl ? { images: [p.imageUrl] } : {}),
-    }),
-    robots: pokemonIndexProducts() ? undefined : { index: false, follow: true },
-  };
+  const facts = productFacts(p, null, Date.now());
+  return pokemonMeta({
+    title: productTitle(p.name),
+    description: productDescription(facts),
+    path: `/pokemon/sealed/${p.slug}`,
+    // The route's own opengraph-image.tsx shows this product's prices.
+    ogImage: "colocated",
+    robots: productIsIndexed(p) ? undefined : { index: false, follow: true },
+  });
 }
 
 export default async function PokemonProductPage({ params }: { params: Params }) {
-  const p = await getPokemonProduct(params.slug).catch(() => null);
+  const p = await getPokemonProduct(params.slug);
   if (!p) notFound();
 
+  // The comparisons need the US catalogue. It is the grids' own cached read,
+  // so a failure here costs only those paragraphs, never the page.
+  let usCatalog: PkCatalog | null = null;
+  try {
+    usCatalog = await getPokemonCatalog("US");
+  } catch (e) {
+    console.error("[pokemon] US catalogue read failed; product comparisons left out", e);
+  }
+
+  const now = Date.now();
+  const facts = productFacts(p, usCatalog, now);
+  const prose = productProse(facts);
+  const faq = productFaq(facts);
   const kind = kindInfo(p.kind);
-  const boards = allBoards(p.name, p.offers, { page: `/pokemon/sealed/${p.slug}`, surface: "product" });
+  const boards = allBoards(p.name, p.offers, { page: `/pokemon/sealed/${p.slug}`, surface: "product", now });
   const base = boards[DEFAULT_COUNTRY];
   const released = formatDay(p.releasedOn);
-  const usOpen = base.listings.filter((l) => offerStock(l) === "open");
+  const usOpen = base.listings.filter((l) => offerStock(l, now) === "open");
 
   // Product + AggregateOffer for the default market only, and only when there
   // is an open listing to back it (Google flags a Product with no offers).
-  const productLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: p.name,
-    category: "Trading Card Game Sealed Product",
-    brand: { "@type": "Brand", name: "Pokémon" },
-    ...(p.imageUrl ? { image: p.imageUrl } : {}),
-    ...(p.upc && [8, 12, 13, 14].includes(p.upc.length) ? { gtin: p.upc } : {}),
-    url: `${SITE_URL}/pokemon/sealed/${p.slug}`,
-    ...(usOpen.length
-      ? {
-          offers: {
-            "@type": "AggregateOffer",
-            priceCurrency: base.currency,
-            lowPrice: (Math.min(...usOpen.map((l) => l.priceCents)) / 100).toFixed(2),
-            highPrice: (Math.max(...usOpen.map((l) => l.priceCents)) / 100).toFixed(2),
-            offerCount: usOpen.length,
-            availability: p.presale ? "https://schema.org/PreOrder" : "https://schema.org/InStock",
-          },
-        }
-      : {}),
-  };
+  // Without one the page carries BreadcrumbList and FAQPage only.
+  const productLd = usOpen.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: p.name,
+        category: "Trading Card Game Sealed Product",
+        brand: { "@type": "Brand", name: "Pokémon" },
+        ...(p.imageUrl ? { image: p.imageUrl } : {}),
+        ...(p.upc && [8, 12, 13, 14].includes(p.upc.length) ? { gtin: p.upc } : {}),
+        url: `${SITE_URL}/pokemon/sealed/${p.slug}`,
+        offers: {
+          "@type": "AggregateOffer",
+          priceCurrency: base.currency,
+          lowPrice: (Math.min(...usOpen.map((l) => l.priceCents)) / 100).toFixed(2),
+          highPrice: (Math.max(...usOpen.map((l) => l.priceCents)) / 100).toFixed(2),
+          offerCount: usOpen.length,
+          availability: p.presale ? "https://schema.org/PreOrder" : "https://schema.org/InStock",
+        },
+      }
+    : null;
+  const faqLd = faqPage(faq);
 
   const trail = p.set
     ? [
@@ -105,16 +120,28 @@ export default async function PokemonProductPage({ params }: { params: Params })
 
   return (
     <div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(productLd) }} />
-      <Breadcrumbs trail={trail} />
+      {(productLd || faqLd) && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(productLd, faqLd) }} />}
+      {/* Wraps: a product name runs to 90-odd characters, and an unwrapped
+          trail was cut off at the edge of a phone screen. */}
+      <Breadcrumbs trail={trail} className="mb-3 flex-wrap" />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         <div>
-          {/* Capped on phones so the price board starts on the first screen. */}
-          <div className="card-surface mx-auto grid aspect-square w-full max-w-[15rem] place-items-center overflow-hidden bg-white/95 p-6 lg:max-w-none">
+          {/* Capped on phones so the price board starts on the first screen. The
+              image is out of flow, so its 1000px intrinsic width can never widen
+              the page (the invariant tests/hero-image-fit.test.ts records). */}
+          <div className="card-surface relative mx-auto grid aspect-square w-full max-w-[15rem] place-items-center overflow-hidden bg-white/95 p-6 lg:max-w-none">
             {p.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.imageUrl} alt={pokemonImageAlt(p.name)} className="max-h-full max-w-full object-contain" />
+              <img
+                src={p.imageUrl}
+                alt={pokemonImageAlt(p.name)}
+                width={1000}
+                height={1000}
+                fetchPriority="high"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-contain p-6"
+              />
             ) : (
               <span className="text-sm font-bold text-slate-600">{kind.label}</span>
             )}
@@ -127,7 +154,8 @@ export default async function PokemonProductPage({ params }: { params: Params })
             {p.presale && <span className="chip bg-sky-500/15 font-semibold text-sky-300">Pre-order</span>}
             <span className="chip bg-ink-800 text-slate-300">{p.series}</span>
           </div>
-          <h1 className="mt-2 text-2xl font-extrabold leading-tight text-white sm:text-3xl">{p.name}</h1>
+          {/* break-words: "[Glaceon/Vaporeon/Sylveon/Espeon]" is one unbreakable word wider than a phone. */}
+          <h1 className="mt-2 break-words text-2xl font-extrabold leading-tight text-white sm:text-3xl">{p.name}</h1>
           <p className="mt-1 text-sm text-slate-400">
             {p.set ? (
               <>
@@ -139,7 +167,7 @@ export default async function PokemonProductPage({ params }: { params: Params })
             ) : (
               "A Pokémon TCG collection product"
             )}
-            {released && <>{p.presale ? ` · releases ${released}` : ` · released ${released}`}</>}
+            {released && <> · TCGplayer lists {released}</>}
           </p>
 
           <section className="card-surface mt-4 p-4">
@@ -197,6 +225,8 @@ export default async function PokemonProductPage({ params }: { params: Params })
         </div>
       </section>
 
+      <ProductFacts facts={facts} prose={prose} />
+
       <section className="card-surface mt-6 p-5">
         <h2 className="mb-3 text-lg font-extrabold text-white">TCGplayer market price history (US$)</h2>
         <PokemonPriceChart points={p.history} />
@@ -204,7 +234,7 @@ export default async function PokemonProductPage({ params }: { params: Params })
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="card-surface p-5">
-          <h2 className="text-lg font-extrabold text-white">What&apos;s inside</h2>
+          <h2 className="text-lg font-extrabold text-white">Contents, as TCGplayer lists them</h2>
           {p.contents.length ? (
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
               {p.contents.map((c) => (
@@ -212,11 +242,11 @@ export default async function PokemonProductPage({ params }: { params: Params })
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-slate-400">The publisher&apos;s contents list for this product isn&apos;t in our data.</p>
+            <p className="mt-2 text-sm text-slate-400">TCGplayer publishes no contents list for this product.</p>
           )}
         </section>
         <section className="card-surface p-5">
-          <h2 className="text-lg font-extrabold text-white">About {kind.plural.toLowerCase()}</h2>
+          <h2 className="text-lg font-extrabold text-white">About {kindNoun(kind, 2)}</h2>
           <p className="mt-2 text-sm text-slate-300">{kind.about}</p>
           <p className="mt-2 text-sm text-slate-400">
             Prices here are listings, checked once a day: the item price, with postage extra unless an eBay seller states
@@ -224,6 +254,8 @@ export default async function PokemonProductPage({ params }: { params: Params })
           </p>
         </section>
       </div>
+
+      <ProductFaq faq={faq} />
 
       {p.siblings.length > 0 && p.set && (
         <section className="mt-6">

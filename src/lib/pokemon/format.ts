@@ -27,3 +27,41 @@ export function thumbOf(imageUrl: string | null): string | null {
   if (!imageUrl) return null;
   return imageUrl.replace(/_in_1000x1000\.jpg$/, "_200w.jpg");
 }
+
+/** "Sep 2026" from "2026-09-16": a set's month in a meta description, where a full date is too long. */
+export function formatMonth(day: string | null | undefined): string | null {
+  if (!day || !/^\d{4}-\d{2}/.test(day)) return null;
+  const [y, m] = day.slice(0, 7).split("-").map(Number);
+  return `${MONTHS[m - 1]} ${y}`;
+}
+
+/** Whole calendar days from `from` to `to` ("YYYY-MM-DD"), negative when `to` is earlier. */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((Date.parse(`${to.slice(0, 10)}T00:00:00Z`) - Date.parse(`${from.slice(0, 10)}T00:00:00Z`)) / 86400_000);
+}
+
+/** "a", "a and b", "a, b and c". */
+export function listJoin(items: readonly string[]): string {
+  if (items.length <= 2) return items.join(" and ");
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
+// Kind names that are product names in their own right keep their capitals
+// ("Elite Trainer Box", "Pokémon Center ETB", "Ultra-Premium Collection");
+// the generic ones read lower case mid-sentence ("a booster bundle", "two tins").
+const PROPER_KIND = /^(?:Elite|Pok[eé]mon|Ultra|Super|Build)\b/;
+
+// Labels that are chip text rather than a countable noun ("1 Build & Battle").
+const SINGULAR: Record<string, string> = { "build-battle": "Build & Battle kit", other: "other sealed product" };
+const PLURAL: Record<string, string> = { other: "other sealed products" };
+
+/** A kind's name for running text: "booster box" / "booster boxes", "Elite Trainer Box" / "Elite Trainer Boxes". */
+export function kindNoun(info: { id?: string; label: string; plural: string }, n = 1): string {
+  const word = n === 1 ? (SINGULAR[info.id ?? ""] ?? info.label) : (PLURAL[info.id ?? ""] ?? info.plural);
+  return PROPER_KIND.test(word) ? word : word.toLowerCase();
+}
+
+/** "Black Bolt's", "Destined Rivals'". */
+export function possessive(name: string): string {
+  return /s$/i.test(name) ? `${name}'` : `${name}'s`;
+}
