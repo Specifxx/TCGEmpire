@@ -355,3 +355,20 @@ test("route: POST only, nodejs, force-dynamic; gate, then signature, then parse,
   assert.match(routeSrc, /console\.info\("\[pokemon-discord\]", \{ command, market, context: interactionContext\(interaction\) \}\);/);
   assert.doesNotMatch(routeSrc, /\b(?:guild_id|channel_id|member|user)\b/, "no ids are read");
 });
+
+test("/set with no listings: references prefer released products and mark a pre-order", () => {
+  // No listings anywhere in the set (Singapore's case), one released ETB and a
+  // pre-order bundle, plus a pre-order ETB that is cheaper than the released one.
+  const base = catalog.tiles.find((t) => t.setSlug === "perfect-order" && t.kind === "etb") as PkTile;
+  const mk = (over: Partial<PkTile>): PkTile => ({ ...base, lowCents: null, lowSource: null, perPackCents: null, openCount: 0, ...over });
+  const tiles = [
+    mk({ id: 1, slug: "a", name: "Released ETB", kind: "etb", refCents: 9_000, presale: false }),
+    mk({ id: 2, slug: "b", name: "Pre-order ETB", kind: "etb", refCents: 5_000, presale: true }),
+    mk({ id: 3, slug: "c", name: "Pre-order Bundle", kind: "booster-bundle", refCents: 4_000, presale: true }),
+  ];
+  const cat = { ...catalog, market: "SG" as const, currency: "SGD", tiles };
+  const text = JSON.stringify(setReply(cat, "perfect-order", NOW));
+  assert.match(text, /Released ETB/);
+  assert.doesNotMatch(text, /Pre-order ETB/, "a released product stands for its kind when there is one");
+  assert.match(text, /S\$40\.00 · pre-order \(Pre-order Bundle\)/);
+});

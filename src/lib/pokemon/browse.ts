@@ -4,6 +4,7 @@
 
 import { gbpCentsToEur } from "../fx";
 import { foldName, isPkKind, kindOrder } from "./kinds";
+import { perPackCents } from "./packs";
 import type { PkTile } from "./types";
 
 export const PAGE_SIZE = 48;
@@ -126,7 +127,9 @@ export function toDisplay(tiles: readonly PkTile[], showEur: boolean): PkTile[] 
     ...t,
     lowCents: t.lowCents != null ? gbpCentsToEur(t.lowCents) : null,
     refCents: t.refCents != null ? gbpCentsToEur(t.refCents) : null,
-    perPackCents: t.perPackCents != null ? gbpCentsToEur(t.perPackCents) : null,
+    // From the converted listing, never the pound figure converted on its own:
+    // otherwise the shown price ÷ packs and the shown per-pack differ by a cent.
+    perPackCents: t.lowCents != null ? perPackCents(gbpCentsToEur(t.lowCents), t.packCount) : null,
   }));
 }
 

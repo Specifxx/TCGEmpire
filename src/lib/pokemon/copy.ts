@@ -21,6 +21,13 @@ export function joinNames(names: readonly string[]): string {
  * which was false wherever no eBay row had been imported yet. Copy about the
  * eBay SEARCH links says "eBay searches", never that a price came from eBay.
  */
+/**
+ * Said wherever a UK visitor's euro display converts listing prices (pound
+ * listings shown in euros with lib/fx.ts's approximate rate): the set page
+ * marks each figure ≈, list pages say it once.
+ */
+export const EUR_DISPLAY_NOTE = "Shown in euros: the pound prices of UK listings converted with an approximate exchange rate.";
+
 export function sourceList(sources: readonly PkSource[]): string {
   const names = ["TCGplayer"];
   if (sources.includes("cardmarket") || sources.includes("cardmarket_trend")) names.push("Cardmarket");

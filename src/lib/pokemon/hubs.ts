@@ -98,7 +98,7 @@ export const KIND_HUBS: readonly KindHub[] = [
     ebayQuery: "booster bundle",
     explainer: [
       "Booster bundles are listed here newest set first, one product to a row. Each row carries the release date TCGplayer gives, the cheapest open listing we have found in your market, the packs in the bundle and the price per pack that listing works out to. TCGplayer's market price follows in a separate column: a published reference, never something on sale, and approximate wherever it has been converted from US dollars.",
-      "A booster bundle is a small sealed pack of booster packs with no extras: no sleeves, no dice, no storage box. That makes it the one kind on these pages counted from its name when TCGplayer publishes no contents list, since a bundle is that shape by definition. When a contents list does exist, the list decides the count.",
+      "A booster bundle is a small sealed pack of booster packs with no extras: no sleeves, no dice, no storage box. Because a bundle is that shape by definition, it can be counted from its name when TCGplayer publishes no contents list, as a main-expansion booster box can. When a contents list does exist, the list decides the count.",
       "With nothing but packs inside, a bundle's per-pack figure has no promo card or accessory folded into it, so it reads most directly against the price of a loose pack. It is still only the lowest open listing we follow, divided by the packs: item price, postage extra, and to be checked against the listing itself before you buy. Pre-order bundles show their price and the date TCGplayer lists, and join the ranking once they are released.",
     ],
   },
@@ -318,7 +318,7 @@ export function perPackPage(catalog: Pick<PkCatalog, "tiles">): PerPackPage {
 /** Hand-written method text for /pokemon/price-per-pack. No digits, no set names. */
 export const PER_PACK_METHOD: readonly string[] = [
   "A price per pack is the cheapest open listing we track for a product in your market, divided by the booster packs it holds. Nothing else goes into it: no postage, no promo cards, no sleeves or dice, and no guess about what an accessory might fetch on its own. TCGplayer's market price is a reference and never enters the ranking, because it is not a price anyone is offering.",
-  "Pack counts come from the contents list TCGplayer publishes for each product. Only a few shapes are counted from the name when that list is missing: a single booster pack, a blister whose name states its packs, a booster bundle, and a main-expansion booster box or half box. A product holding packs that are not standard boosters, such as small packs of a few cards, gets no count at all, since dividing by them would compare unlike things.",
+  "Pack counts come from the contents list TCGplayer publishes, wherever a product has one. Only a few shapes are counted from the name when that list is missing: a single booster pack, a blister whose name states its packs, a booster bundle, and a main-expansion booster box or half box. A product holding packs that are not standard boosters, such as small packs of a few cards, gets no count at all, since dividing by them would compare unlike things.",
   "Pre-orders are left out until release, and so is anything without an open listing in your market, which is why a product can appear on its set page but not here. The ranking is a sort, not a recommendation: two products at the same figure per pack can differ widely in what else comes in the box, so open the product before you decide.",
 ];
 

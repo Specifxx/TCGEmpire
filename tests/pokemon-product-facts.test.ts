@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { HISTORY_MIN_POINTS, productFacts, productFaq, productProse, type ProductFacts } from "../src/lib/pokemon/product-facts";
+import { buildBoard } from "../src/lib/pokemon/board";
+import { HISTORY_MIN_POINTS, catalogAgrees, productFacts, productFaq, productProse, type ProductFacts } from "../src/lib/pokemon/product-facts";
 import { proseText, setFacts, setProse } from "../src/lib/pokemon/set-facts";
 import { toDisplay } from "../src/lib/pokemon/browse";
 import { isHalfBox, PER_PACK_KINDS } from "../src/lib/pokemon/value";
@@ -49,8 +50,18 @@ const VARIANTS: Record<string, PkProductDetail> = {
   noRelease: { ...base, releasedOn: null },
 };
 
+// The catalogue as the same import would have built it for this variant: its
+// tile for the product carries the variant's own US headline (productFacts
+// leaves out a catalogue that disagrees, as a stale memo would).
+function sameImport(p: PkProductDetail, cat: PkCatalog): PkCatalog {
+  const low = buildBoard(p.name, p.offers, "US", { page: "/", surface: "product", now: NOW }).headline?.priceCents ?? null;
+  const tile = cat.tiles.find((t) => t.slug === p.slug);
+  const synced = tile ? { ...tile, lowCents: low } : { ...cat.tiles[0], id: p.id, slug: p.slug, name: p.name, kind: p.kind, setSlug: p.set?.slug ?? null, lowCents: low };
+  return { ...cat, tiles: [...cat.tiles.filter((t) => t.slug !== p.slug), synced] };
+}
+
 function render(p: PkProductDetail, cat: PkCatalog | null = catalog) {
-  const facts = productFacts(p, cat, NOW);
+  const facts = productFacts(p, cat ? sameImport(p, cat) : null, NOW);
   const prose = productProse(facts);
   const faq = productFaq(facts);
   const description = productDescription(facts);
@@ -214,7 +225,7 @@ test("set facts: a pre-order set, a released set with neighbours, a set without 
   const nb = setProse(pf).find((b) => b.id === "neighbours");
   assert.ok(nb && nb.parts.some((p) => typeof p !== "string" && p.href.startsWith("/pokemon/sets/")), "neighbours are linked");
   assert.match(proseText(nb.parts), /^Phantasmal Flames' booster box comes to US\$\d+\.\d\d a pack/);
-  assert.match(setDescription(pf), /^Phantasmal Flames: \d+ sealed products, released Nov 2025: booster box from US\$/);
+  assert.match(setDescription(pf), /^Phantasmal Flames: \d+ sealed products, TCGplayer lists Nov 2025: booster box from US\$/);
   assert.equal(pf.nav.newer?.slug, "ascended-heroes");
   assert.equal(pf.nav.older?.slug, "mega-evolution");
 
@@ -312,4 +323,50 @@ test("set prose: the UK shown in euros marks every figure ≈ and says it is con
   assert.ok(text.includes("€"));
   checkStrings("uk-eur", [text, setDescription(f)]);
   assert.equal(setFacts(catalog, "phantasmal-flames", "2026-10-01")?.converted, false);
+});
+
+test("a half box never takes the booster box's place in its set's per-pack comparison", () => {
+  const half = catalog.tiles.find((t) => t.setSlug === "perfect-order" && isHalfBox(t));
+  const full = catalog.tiles.find((t) => t.setSlug === "perfect-order" && t.kind === "booster-box" && !isHalfBox(t));
+  assert.ok(half && full && full.perPackCents != null, "fixture holds Perfect Order's half and full boxes");
+  // Listed cheap enough to be the lowest per pack of the set: the old code then
+  // claimed "the lowest" while leaving the full box out entirely.
+  const p: PkProductDetail = {
+    ...base,
+    id: half.id,
+    slug: half.slug,
+    name: half.name,
+    kind: "booster-box",
+    set: { slug: "perfect-order", name: "Perfect Order", code: null, releasedOn: "2026-03-27" },
+    releasedOn: "2026-03-27",
+    presale: false,
+    packCount: 18,
+    packCountFrom: "name",
+    offers: [{ market: "US", source: "tcgplayer", priceCents: 9_000, currency: "USD", shippingCents: null, url: "https://www.tcgplayer.com/product/1", title: null, inStock: true, checkedAt: "2026-10-01T12:00:00.000Z" }],
+  };
+  const { facts, prose } = render(p);
+  const rows = facts.setPerPack ?? [];
+  assert.ok(rows.some((r) => r.isThis && r.slug === half.slug), "the half box is its own row");
+  assert.ok(rows.some((r) => !r.isThis && r.slug === full.slug), "the full box keeps its place");
+  const text = prose.find((b) => b.id === "set-per-pack")?.text ?? "";
+  assert.match(text, /booster box at US\$/, text);
+});
+
+test("as of: a UK eBay listing checked days ago dates the page, not today's TCGplayer rows", () => {
+  const old = { ...ebay("UK", "GBP", 9_900), checkedAt: "2026-09-29T09:00:00.000Z" };
+  const { facts, all } = render({ ...base, offers: [...base.offers, old] });
+  assert.equal(facts.asOf, "as of 29 Sep 2026");
+  assert.ok(all.every((t) => !/as of 1 Oct 2026/i.test(t)), "no figure is dated by the newer rows");
+});
+
+test("a catalogue from another import is left out of the comparisons, as on a read error", () => {
+  const fresh = productFacts(base, sameImport(base, catalog), NOW);
+  assert.ok(fresh.sameKind || fresh.setPerPack, "the same import compares");
+  // The catalogue's tile still has yesterday's price: a warm instance's memo.
+  const stale = { ...catalog, tiles: catalog.tiles.map((t) => (t.slug === base.slug ? { ...t, lowCents: (t.lowCents ?? 0) + 500 } : t)) };
+  const f = productFacts(base, stale, NOW);
+  assert.equal(f.sameKind, null);
+  assert.equal(f.setPerPack, null);
+  assert.equal(catalogAgrees(null, base.slug, 1), false);
+  assert.equal(catalogAgrees({ ...catalog, tiles: [] }, base.slug, null), false, "a product the catalogue does not know yet");
 });

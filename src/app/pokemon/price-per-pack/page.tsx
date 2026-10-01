@@ -18,6 +18,7 @@ import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { PerPackTable } from "@/components/pokemon/PerPackTable";
 import { CopyPrices } from "@/components/pokemon/CopyPrices";
 import { perPackShareText, shareTexts } from "@/lib/pokemon/share-text";
+import { EUR_DISPLAY_NOTE } from "@/lib/pokemon/copy";
 
 // Every sealed product with a known pack count and an open listing in the
 // visitor's market, ranked by price per booster pack (lib/pokemon/value.ts
@@ -82,8 +83,8 @@ export default async function PokemonPricePerPackPage() {
             {catalog.tiles.length === 0
               ? "No prices yet."
               : ranked
-                ? `We have a tracked listing with a known pack count for ${page.coverage.toLocaleString("en-US")} products in ${place}${asOf ? `, ${asOf}` : ""}. Each is ranked by its cheapest open listing divided by the booster packs inside: the lowest price per pack first, item price with postage extra.`
-                : `We have no tracked listing with a known pack count in ${place}, so there is nothing to rank by price per pack here. TCGplayer's market price is a reference, not a listing, and is never ranked. Searches of your own eBay site are below.`}
+                ? `We rank ${page.coverage.toLocaleString("en-US")} released products with a tracked listing and a known pack count in ${place}${asOf ? `, ${asOf}` : ""}, each by its cheapest open listing divided by the booster packs inside: the lowest price per pack first, item price with postage extra. Pre-orders join once they are released.${showEur ? ` ${EUR_DISPLAY_NOTE}` : ""}`
+                : `No released product has both a tracked listing and a known pack count in ${place}, so there is nothing to rank by price per pack here. TCGplayer's market price is a reference, not a listing, and is never ranked. Searches of your own eBay site are below.`}
           </p>
           {page.sections.length > 0 && (
             <nav aria-label="Product types on this page" className="mt-4 flex flex-wrap gap-1.5">

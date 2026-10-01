@@ -66,11 +66,24 @@ export interface FilledPokemonPost {
   dropped: number;
 }
 
+const POST_LINK = /\[([^\]]+)\]\(\/pokemon\/blog\/([a-z0-9-]+)(#[^)]*)?\)/g;
+
+/**
+ * Links to other posts that cannot be opened here become their plain label:
+ * posts are published one at a time, and a published post must not link a
+ * draft that 404s in production. The link comes back by itself once its
+ * target is published.
+ */
+export function unlinkPosts(md: string, linkable: (slug: string) => boolean): string {
+  return md.replace(POST_LINK, (whole, label: string, slug: string) => (linkable(slug) ? whole : label));
+}
+
 /**
  * Fill a post. `ctx` is null when the post places no block (no catalogue is
- * read for it); a block line is then left out.
+ * read for it); a block line is then left out. `linkable` says which other
+ * posts may be linked (all of them by default).
  */
-export function fillPost(post: PokemonPost, ctx: BlockCtx | null): FilledPokemonPost {
+export function fillPost(post: PokemonPost, ctx: BlockCtx | null, linkable: (slug: string) => boolean = () => true): FilledPokemonPost {
   const facts: Record<string, string> = {};
   if (ctx) {
     const asOf = asOfLabel(ctx.catalog.pricesAsOf);
@@ -98,21 +111,21 @@ export function fillPost(post: PokemonPost, ctx: BlockCtx | null): FilledPokemon
     }
     const filled = fillTokens(line, facts);
     if (filled == null) dropped++;
-    else lines.push(filled);
+    else lines.push(unlinkPosts(filled, linkable));
   }
 
   const summary: string[] = [];
   for (const s of post.summary ?? []) {
     const filled = fillTokens(s, facts);
     if (filled == null) dropped++;
-    else summary.push(filled);
+    else summary.push(unlinkPosts(filled, linkable));
   }
   const faq: PokemonPostFaq[] = [];
   for (const f of post.faq ?? []) {
     const q = fillTokens(f.q, facts);
     const a = fillTokens(f.a, facts);
     if (q == null || a == null) dropped++;
-    else faq.push({ q, a });
+    else faq.push({ q, a: unlinkPosts(a, linkable) });
   }
 
   return { body: lines.join("\n").replace(/\n{3,}/g, "\n\n").trim(), summary, faq, facts, dropped };

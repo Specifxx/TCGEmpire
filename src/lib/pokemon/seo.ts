@@ -239,7 +239,7 @@ export function productDescription(f: ProductFacts): string {
 }
 
 /**
- * "{Set}: 14 sealed products, released Sep 2026: booster box from US$…, ETB
+ * "{Set}: 14 sealed products, TCGplayer lists Sep 2026: booster box from US$…, ETB
  * from US$…. Updated daily." In the visitor's market (the set page is
  * per-request); a crawler reads the US. "From" figures drop from the end
  * until it fits.
@@ -247,7 +247,8 @@ export function productDescription(f: ProductFacts): string {
 export function setDescription(f: SetFacts): string {
   const name = squash(f.name);
   const month = formatMonth(f.releasedOn);
-  const when = month ? (f.upcoming ? `, TCGplayer lists ${month}` : `, released ${month}`) : "";
+  // Release dates are always TCGplayer's, said as such, out or not.
+  const when = month ? `, TCGplayer lists ${month}` : "";
   const head = `${name}: ${f.productCount} sealed ${f.productCount === 1 ? "product" : "products"}${when}`;
   const SHORT: Partial<Record<string, string>> = { "booster-box": "booster box", etb: "ETB", "pc-etb": "Pokémon Center ETB", "booster-bundle": "booster bundle" };
   // The UK shown in euros is a conversion, marked "≈" as on the page.

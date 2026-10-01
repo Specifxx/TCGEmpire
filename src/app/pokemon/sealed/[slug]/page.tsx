@@ -11,7 +11,7 @@ import { pokemonEnabled } from "@/lib/pokemon/gate";
 import { getPokemonCatalog, getPokemonProduct } from "@/lib/pokemon/data";
 import { allBoards } from "@/lib/pokemon/board";
 import { kindInfo } from "@/lib/pokemon/kinds";
-import { formatDay, kindNoun, pokemonImageAlt, sourceWord, thumbOf } from "@/lib/pokemon/format";
+import { formatDay, isPokemonSlug, kindNoun, pokemonImageAlt, sourceWord, thumbOf } from "@/lib/pokemon/format";
 import { pokemonMeta, productDescription, productIsIndexed, productTitle } from "@/lib/pokemon/seo";
 import { productFacts, productFaq, productProse } from "@/lib/pokemon/product-facts";
 import type { PkCatalog } from "@/lib/pokemon/types";
@@ -57,6 +57,7 @@ const POSTS_BY_KIND: Record<string, readonly PkKind[]> = {
 // neither cached for six hours nor read by a crawler as "gone".
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   if (!pokemonEnabled()) return notFoundMetadata();
+  if (!isPokemonSlug(params.slug)) return notFoundMetadata("Product");
   const p = await getPokemonProduct(params.slug);
   if (!p) return notFoundMetadata("Product");
   const facts = productFacts(p, null, Date.now());
@@ -75,6 +76,7 @@ export default async function PokemonProductPage({ params }: { params: Params })
   // in parallel, so a page that reads first would fail with a 500 when the
   // section is off rather than 404.
   if (!pokemonEnabled()) notFound();
+  if (!isPokemonSlug(params.slug)) notFound();
   const p = await getPokemonProduct(params.slug);
   if (!p) notFound();
 

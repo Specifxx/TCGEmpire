@@ -172,7 +172,10 @@ test("UK euro display: the pasted figures are the ones the page shows, converted
   const asOf = offersAsOf(allMarkets.offers);
   const ukEur = productShareText(boardsOf(allMarkets), product.name, product.slug, product.packCount, asOf, "UK", eur);
   const e = (gbp: number) => formatMoney(gbpCentsToEur(gbp), "EUR");
-  assert.ok(ukEur.includes(`| eBay UK | ${e(8999)}, free postage | ${e(perPackCents(8999, 9) as number)} |`), ukEur);
+  // Per pack is the shown euro price ÷ packs, as the page computes it (browse.ts
+  // toDisplay), not the pound per-pack converted separately.
+  const perPackEur = formatMoney(perPackCents(gbpCentsToEur(8999), 9) as number, "EUR");
+  assert.ok(ukEur.includes(`| eBay UK | ${e(8999)}, free postage | ${perPackEur} |`), ukEur);
   assert.match(ukEur, /TCGplayer market price \(a reference, not a listing\): ≈ €/);
   assert.doesNotMatch(ukEur, /£/, "no pound figure left beside the euro ones");
   assert.match(ukEur, /^Shown in euros, converted from the pound prices of UK listings\.$/m);
@@ -332,7 +335,7 @@ test("both share-card routes: lowercase cache-control (six hours, never immutabl
     const sMaxAge = Number(afterError.match(/s-maxage=(\d+)/)?.[1] ?? NaN);
     assert.ok(sMaxAge > 0 && sMaxAge <= 300, `${f}: AFTER_ERROR "${afterError}"`);
     assert.doesNotMatch(afterError, /stale-while-revalidate/, f);
-    assert.match(code, /catch \(e\) \{\s*failed = true;/, `${f}: only a read error takes the short header`);
+    assert.match(code, /catch \(e\) \{\s*failed = true;/, `${f}: a read error takes the short header (and, on the product card, a slug this instance does not know yet)`);
     assert.doesNotMatch(code, /immutable/, f);
     assert.doesNotMatch(code, /"Cache-Control"/, `${f}: a capitalised key would sit beside Next's default, not replace it`);
     assert.match(code, /export const runtime = "nodejs";/, f);

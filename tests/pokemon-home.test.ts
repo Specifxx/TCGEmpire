@@ -173,6 +173,12 @@ test("hero line: counts the products with a listing, never promises one for each
   const all = { ...US, tiles: US.tiles.filter((t) => t.lowCents != null) };
   assert.match(heroLine(homeStats(all), "the United States", false), /for every one of them/);
   assert.equal(heroLine(homeStats({ ...US, tiles: [], sets: [] }), "the United States", false), "No prices yet.");
+  // Setless products are counted apart: they come from no set.
+  const setless = usStats.setless;
+  assert.ok(setless > 0, "the fixture holds setless products");
+  assert.match(us, new RegExp(`: ${(usStats.products - setless).toLocaleString("en-US")} from ${usStats.sets} sets and ${setless} outside any set\\.`));
+  const inSets = { ...US, tiles: US.tiles.filter((t) => t.setSlug) };
+  assert.match(heroLine(homeStats(inSets), "the United States", false), new RegExp(`products from ${usStats.sets} sets\\.`));
 });
 
 test("hub FAQ from this market's sources: no Cardmarket outside it, no TCGplayer listing in Singapore", () => {

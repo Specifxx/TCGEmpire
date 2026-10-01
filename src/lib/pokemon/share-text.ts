@@ -25,7 +25,7 @@ import { offerStock } from "../sealed-offers";
 import { listingLabel } from "./board";
 import { kindInfo, kindOrder, type PkKind } from "./kinds";
 import { perPackCents } from "./packs";
-import { asOfLabel, cheapestByKind, perPackRanking, pokemonUtm } from "./value";
+import { asOfLabel, cheapestByKind, figuresAsOf, perPackRanking, pokemonUtm } from "./value";
 import type { PkBoard, PkCatalog, PkListing, PkTile } from "./types";
 
 export type ShareFormat = "reddit" | "discord";
@@ -43,6 +43,19 @@ type Money = (cents: number, currency: string) => string;
 
 function moneyFor(opts: ShareOpts): Money {
   return (cents, currency) => (opts.eur && currency === "GBP" ? formatMoney(gbpCentsToEur(cents), "EUR") : formatMoney(cents, currency));
+}
+
+/**
+ * A per-pack figure as the page shows it: in euros it is the converted listing
+ * divided by the packs (browse.ts toDisplay), never the pound per-pack
+ * converted on its own, which can differ by a cent from the shown division.
+ */
+function perPackFor(opts: ShareOpts): (listingCents: number, packs: number | null, currency: string) => string | null {
+  return (listingCents, packs, currency) => {
+    const euros = opts.eur && currency === "GBP";
+    const pp = perPackCents(euros ? gbpCentsToEur(listingCents) : listingCents, packs);
+    return pp == null ? null : formatMoney(pp, euros ? "EUR" : currency);
+  };
 }
 
 /**
@@ -70,7 +83,7 @@ export const DISCORD_MAX = 2000;
 /** Rows a Discord paste lists at most, whatever the page shows. */
 export const DISCORD_ROWS = 10;
 
-/** The newest check among a product's stored rows: its "as of". */
+/** The newest check among a product's stored rows: the fallback "as of" for a market with no board. */
 export function offersAsOf(offers: readonly { checkedAt: string }[]): string | null {
   return offers.length ? offers.reduce((a, o) => (o.checkedAt > a ? o.checkedAt : a), offers[0].checkedAt) : null;
 }
@@ -147,12 +160,22 @@ export function productShareText(
   const board = boards[market] ?? boards.US;
   const place = COUNTRIES[board?.market ?? market].place;
   const now = opts.now ?? Date.now();
+  // The figures pasted are this market's, so the date is theirs: the oldest
+  // open listing shown, else the newest reference (value.ts figuresAsOf). The
+  // product-wide `asOf` is only the fallback for a market with no board.
+  const shownAsOf = board
+    ? figuresAsOf(
+        board.listings.filter((l) => offerStock(l, now) === "open").map((l) => l.lastSeen),
+        board.references.map((r) => r.checkedAt),
+      )
+    : null;
   const money = moneyFor(opts);
+  const perPackMoney = perPackFor(opts);
   const open = (board?.listings ?? []).filter((l) => offerStock(l, now) === "open");
   const perPack = packCount != null && packCount > 0;
   const rows = open.map((l) => {
-    const pp = perPack ? perPackCents(l.priceCents, packCount) : null;
-    return [l.label, `${money(l.priceCents, l.currency)}${postage(l, money)}`, ...(perPack ? [pp != null ? money(pp, l.currency) : "—"] : [])];
+    const pp = perPack ? perPackMoney(l.priceCents, packCount, l.currency) : null;
+    return [l.label, `${money(l.priceCents, l.currency)}${postage(l, money)}`, ...(perPack ? [pp ?? "—"] : [])];
   });
   const refs = board?.references ?? [];
   const notes = refs.map((r) => `${r.label} (a reference, not a listing): ${r.converted ? "≈ " : ""}${money(r.priceCents, r.currency)}`);
@@ -167,7 +190,7 @@ export function productShareText(
       empty: board?.listings.length ? `No open listing we track in ${place}.` : `No tracked listings in ${place}.`,
       notes,
       path: `/pokemon/sealed/${slug}`,
-      asOf,
+      asOf: shownAsOf ?? asOf,
     },
     opts,
   );
@@ -186,6 +209,7 @@ export function setShareText(catalog: Pick<PkCatalog, "market" | "currency" | "t
   if (!set) return null;
   const place = COUNTRIES[catalog.market].place;
   const money = moneyFor(opts);
+  const perPackMoney = perPackFor(opts);
   const tiles = catalog.tiles.filter((t) => t.setSlug === set.slug);
   const picks = Object.values(cheapestByKind(tiles, { includePresale: true }))
     .filter((t): t is PkTile => t != null)
@@ -195,7 +219,7 @@ export function setShareText(catalog: Pick<PkCatalog, "market" | "currency" | "t
     kindInfo(t.kind).label,
     t.name,
     `${money(t.lowCents as number, catalog.currency)}${t.presale ? " (pre-order)" : ""}${t.lowSource ? ` on ${listingLabel(t.lowSource, catalog.market)}` : ""}`,
-    t.perPackCents != null ? money(t.perPackCents, catalog.currency) : "—",
+    (t.perPackCents != null ? perPackMoney(t.lowCents as number, t.packCount, catalog.currency) : null) ?? "—",
   ]);
   return render(
     {
@@ -226,11 +250,12 @@ export function perPackShareText(
 ): string {
   const place = COUNTRIES[catalog.market].place;
   const money = moneyFor(opts);
+  const perPackMoney = perPackFor(opts);
   const ranked = perPackRanking(catalog.tiles, { kinds: scope.kinds, limit: scope.limit ?? 20 });
   const rows = ranked.map((t, i) => [
     String(i + 1),
     t.name,
-    money(t.perPackCents as number, catalog.currency),
+    perPackMoney(t.lowCents as number, t.packCount, catalog.currency) ?? "—",
     `${money(t.lowCents as number, catalog.currency)}${t.lowSource ? ` on ${listingLabel(t.lowSource, catalog.market)}` : ""}`,
     String(t.packCount),
   ]);

@@ -26,7 +26,7 @@ import { daysBetween, formatDay, kindNoun, listJoin, possessive, sourceWord } fr
 import { kindInfo, type PkKind } from "./kinds";
 import { perPackCents } from "./packs";
 import { lowestPerPackByKind } from "./set-facts";
-import { PER_PACK_KINDS, RECENT_SETS, asOfLabel, formatPerPack, isHalfBox, recentReleasedSets } from "./value";
+import { PER_PACK_KINDS, RECENT_SETS, asOfLabel, figuresAsOf, formatPerPack, isHalfBox, recentReleasedSets } from "./value";
 import type { PkCatalog, PkListingSource, PkProductDetail, PkTile } from "./types";
 
 /** History sentences wait for this many daily points (Phase 2 backfill brings them sooner). */
@@ -72,7 +72,7 @@ export interface ProductFacts {
   releasedOn: string | null;
   packCount: number | null;
   packCountFrom: "contents" | "name" | null;
-  /** "as of 1 Oct 2026": the newest row this product has, null without rows. */
+  /** "as of 1 Oct 2026": the oldest listing quoted (value.ts figuresAsOf), null without rows. */
   asOf: string | null;
   /** The cheapest OPEN US listing, and its price per pack when the count is known. */
   us: { cents: number; currency: string; source: PkListingSource; perPackCents: number | null } | null;
@@ -107,10 +107,24 @@ const capital = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 /** The group a product is compared within: a Pokémon Center ETB against other Pokémon Center ETBs. */
 const comparable = (kind: PkKind): boolean => (PER_PACK_KINDS as readonly string[]).includes(kind);
 
-export function productFacts(p: PkProductDetail, usCatalog: PkCatalog | null, now: Date | number): ProductFacts {
+/** Whether a US catalogue was built from the same import as this product's figures. */
+export function catalogAgrees(catalog: PkCatalog | null, slug: string, usHeadlineCents: number | null): boolean {
+  if (!catalog) return false;
+  const tile = catalog.tiles.find((t) => t.slug === slug);
+  return !!tile && tile.lowCents === usHeadlineCents;
+}
+
+export function productFacts(p: PkProductDetail, catalogIn: PkCatalog | null, now: Date | number): ProductFacts {
   const nowMs = typeof now === "number" ? now : now.getTime();
   const today = new Date(nowMs).toISOString().slice(0, 10);
   const boards = allBoards(p.name, p.offers, { page: `/pokemon/sealed/${p.slug}`, surface: "product", now: nowMs });
+  // The comparisons rank this product's fresh figures against the catalogue's.
+  // A warm instance's catalogue memo can outlive the import's purge by up to
+  // 15 minutes, and an ISR page rendered then keeps the mix for six hours; so
+  // the catalogue is used only when its tile for this product agrees with the
+  // product's own US headline (same import), and is otherwise left out, as on
+  // a read error.
+  const usCatalog = catalogAgrees(catalogIn, p.slug, boards.US.headline?.priceCents ?? null) ? catalogIn : null;
 
   const markets: PkMarketFact[] = COUNTRY_LIST.map(({ code }) => {
     const b = boards[code];
@@ -131,7 +145,12 @@ export function productFacts(p: PkProductDetail, usCatalog: PkCatalog | null, no
     ? { cents: usListing.cents, currency: usListing.currency, source: usListing.source, perPackCents: perPackCents(usListing.cents, p.packCount) }
     : null;
 
-  const newest = p.offers.reduce<string | null>((acc, o) => (!acc || o.checkedAt > acc ? o.checkedAt : acc), null);
+  // Dated by the listings it quotes (each market's headline), never by the
+  // newest row of any source: see value.ts figuresAsOf.
+  const quoted = Object.values(boards)
+    .map((b) => b?.headline?.lastSeen)
+    .filter((d): d is string => !!d);
+  const newest = figuresAsOf(quoted, p.offers.filter((o) => o.source === "tcgplayer_market").map((o) => o.checkedAt));
 
   let daysAfterSet: number | null = null;
   if (p.releasedOn && p.set?.releasedOn) daysAfterSet = daysBetween(p.set.releasedOn, p.releasedOn);
@@ -167,8 +186,12 @@ export function productFacts(p: PkProductDetail, usCatalog: PkCatalog | null, no
     const setTiles = usCatalog.tiles.filter((t) => t.setSlug === p.set?.slug && t.presale === p.presale);
     const cheapest = lowestPerPackByKind(setTiles, { includePresale: p.presale });
     const rows: PkPerPackRow[] = [];
+    // A half box never stands for the set's booster box: it joins as its own
+    // row beside the full box, which keeps its place in the comparison.
+    const half = isHalfBox(p);
+    if (half) rows.push({ kind: p.kind, slug: p.slug, name: p.name, cents: us.cents, perPackCents: thisPerPack, isThis: true });
     for (const k of PER_PACK_KINDS) {
-      if (k === p.kind) {
+      if (k === p.kind && !half) {
         rows.push({ kind: k, slug: p.slug, name: p.name, cents: us.cents, perPackCents: thisPerPack, isThis: true });
         continue;
       }

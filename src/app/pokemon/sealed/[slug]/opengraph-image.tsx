@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { notFound } from "next/navigation";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
+import { isPokemonSlug } from "@/lib/pokemon/format";
 import { getPokemonCatalog, getPokemonProduct } from "@/lib/pokemon/data";
 import { productOgLines, type ProductOgLines } from "@/lib/pokemon/og-lines";
 import { POKEMON_OG_SIZE, PokemonBrandOgImage, ProductOgImage, ogImageDataUri } from "@/lib/pokemon/product-og";
@@ -29,9 +30,6 @@ export const contentType = "image/png";
 const CACHED = "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400";
 const AFTER_ERROR = "public, max-age=0, s-maxage=60";
 
-// Every product slug is lowercase words joined by hyphens. Anything else is not
-// a product, and is not worth a read to find out.
-const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export default async function Image({ params }: { params: { slug: string } }) {
   if (!pokemonEnabled()) notFound();
@@ -39,12 +37,17 @@ export default async function Image({ params }: { params: { slug: string } }) {
   let lines: ProductOgLines | null = null;
   let art: string | null = null;
   let failed = false;
-  if (slug.length <= 120 && SLUG.test(slug)) {
+  if (isPokemonSlug(slug)) {
     try {
       // The URL is anyone's to invent, so the slug is checked against the US
       // catalogue (self-cached, and warmed after each import) before it becomes
       // a product read and a cache entry of its own.
       const known = (await getPokemonCatalog("US")).tiles.some((t) => t.slug === slug);
+      // Not in this instance's catalogue: an invented slug, or a product the
+      // last import added that a warm instance's 15-minute memo has not seen.
+      // Either way the brand card, cached briefly so a new product's real card
+      // follows within a minute.
+      if (!known) failed = true;
       const p = known ? await getPokemonProduct(slug) : null;
       if (p) {
         lines = productOgLines(p);

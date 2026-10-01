@@ -117,7 +117,11 @@ export interface PkCatalog {
   currency: string;
   tiles: PkTile[];
   sets: PkSetSummary[];
-  /** When the newest TCGplayer price was read — the "updated" line. */
+  /**
+   * The "as of" for this market's figures: the oldest live listing row (every
+   * listing quoted is at least that fresh), else the newest TCGplayer market
+   * price. lib/pokemon/data.ts computes it; value.ts asOfLabel formats it.
+   */
   pricesAsOf: string | null;
   /** Which sources hold any row at all, so copy names only sources that exist. */
   sources: PkSource[];

@@ -40,6 +40,9 @@ type Props = {
 const LABEL: Record<ShareFormat, string> = { reddit: "Reddit", discord: "Discord" };
 
 function legacyCopy(text: string): boolean {
+  // select() moves focus into the temporary textarea; removing it would drop
+  // focus to <body>, so a keyboard user's next Tab would restart at the top.
+  const prev = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const ta = document.createElement("textarea");
   ta.value = text;
   ta.setAttribute("readonly", "");
@@ -55,6 +58,7 @@ function legacyCopy(text: string): boolean {
     ok = false;
   }
   document.body.removeChild(ta);
+  prev?.focus({ preventScroll: true });
   return ok;
 }
 
@@ -62,7 +66,9 @@ export function CopyPrices({ page, className, texts, product }: Props) {
   const { country, isEurDisplay } = useCountry();
   const [withLink, setWithLink] = useState(false);
   const [done, setDone] = useState<ShareFormat | null>(null);
-  const [manual, setManual] = useState<string | null>(null);
+  // The format whose text is shown for copying by hand; the text itself is
+  // rebuilt on each render, so it follows the link box and the market.
+  const [manual, setManual] = useState<ShareFormat | null>(null);
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -70,7 +76,7 @@ export function CopyPrices({ page, className, texts, product }: Props) {
   }, []);
   useEffect(() => {
     if (manual != null) areaRef.current?.select();
-  }, [manual]);
+  }, [manual, withLink]);
 
   function textFor(format: ShareFormat): string {
     if (texts) return withLink ? texts[format].linked : texts[format].plain;
@@ -95,7 +101,7 @@ export function CopyPrices({ page, className, texts, product }: Props) {
       timer.current = setTimeout(() => setDone(null), 2500);
     } else {
       setDone(null);
-      setManual(text);
+      setManual(format);
     }
   }
 
@@ -129,14 +135,15 @@ export function CopyPrices({ page, className, texts, product }: Props) {
       {manual != null && (
         <div className="mt-2">
           <p className="text-xs text-slate-400" role="status">
-            Copying was blocked here. The text is selected below: press Ctrl or Cmd and C.
+            Copying was blocked here. The {LABEL[manual]} text is selected below: copy it with your keyboard shortcut, or
+            press and hold it and choose Copy.
           </p>
           <textarea
             ref={areaRef}
             readOnly
-            value={manual}
-            rows={Math.min(10, manual.split("\n").length + 1)}
-            aria-label="Prices to copy"
+            value={textFor(manual)}
+            rows={Math.min(10, textFor(manual).split("\n").length + 1)}
+            aria-label={`Prices to copy for ${LABEL[manual]}`}
             className="mt-1 w-full resize-y rounded-lg border border-ink-700 bg-ink-950 px-3 py-2 font-mono text-xs leading-relaxed text-slate-300 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           />
         </div>

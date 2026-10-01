@@ -28,7 +28,7 @@ import { formatDay } from "./format";
 import { foldName, kindInfo, kindOrder, type PkKind } from "./kinds";
 import { setReleaseLine } from "./og-lines";
 import { perPackCents } from "./packs";
-import { PER_PACK_KINDS, asOfLabel, cheapestByKind, formatPerPack, isHalfBox, perPackRanking, pokemonUtm } from "./value";
+import { PER_PACK_KINDS, asOfLabel, cheapestByKind, figuresAsOf, formatPerPack, isHalfBox, perPackRanking, pokemonUtm } from "./value";
 import type { PkCatalog, PkProductDetail, PkSetSummary, PkTile } from "./types";
 
 // ── Verification ─────────────────────────────────────────────────────────────
@@ -337,8 +337,6 @@ const releaseLine = (day: string | null, presale: boolean): string | null => {
 
 const packs = (n: number) => `${n} ${n === 1 ? "pack" : "packs"}`;
 
-const newest = (isos: readonly string[]): string | null => (isos.length ? isos.reduce((a, b) => (b > a ? b : a)) : null);
-
 /** /sealed: one product's listings in one market, cheapest first, references below. */
 export function sealedReply(detail: PkProductDetail, market: Country, now: number = Date.now()): DiscordReply {
   const path = `/pokemon/sealed/${detail.slug}`;
@@ -378,7 +376,9 @@ export function sealedReply(detail: PkProductDetail, market: Country, now: numbe
     lines.push(release);
   }
 
-  const asOf = asOfLabel(newest([...board.listings.map((l) => l.lastSeen), ...board.references.map((r) => r.checkedAt)]));
+  // Dated by the oldest listing shown, not the newest row (a US reference is
+  // rewritten daily while a UK eBay row may be days old): value.ts figuresAsOf.
+  const asOf = asOfLabel(figuresAsOf(board.listings.map((l) => l.lastSeen), board.references.map((r) => r.checkedAt)));
   return embedReply(detail.name, utm(path, "pkmn-sealed"), lines, asOf);
 }
 
@@ -435,17 +435,19 @@ export function setReply(catalog: PkCatalog, slug: string, now: number = Date.no
   if (!cheapest.length) {
     lines.push(`No tracked listings in ${place}.`);
     // The reference only, as on the site: TCGplayer's US market price, converted outside the US.
-    const refs = PER_PACK_KINDS.map((k) =>
-      tiles
-        .filter((t) => t.kind === k && t.refCents != null && !isHalfBox(t))
-        .sort((a, b) => (a.refCents as number) - (b.refCents as number))[0],
-    ).filter((t): t is PkTile => t != null);
+    // Released products first; a kind with none falls back to its pre-orders,
+    // which say so, as the listing rows above do.
+    const refs = PER_PACK_KINDS.map((k) => {
+      const pool = tiles.filter((t) => t.kind === k && t.refCents != null && !isHalfBox(t));
+      const released = pool.filter((t) => !t.presale);
+      return (released.length ? released : pool).sort((a, b) => (a.refCents as number) - (b.refCents as number))[0];
+    }).filter((t): t is PkTile => t != null);
     if (refs.length) {
       const converted = catalog.market !== "US";
       lines.push("");
       lines.push(`**TCGplayer market price**, a reference, not a listing${converted ? " (converted)" : ""}`);
       for (const t of refs) {
-        lines.push(`${kindInfo(t.kind).label}: ${converted ? "≈ " : ""}${formatMoney(t.refCents as number, catalog.currency)} (${t.name})`);
+        lines.push(`${kindInfo(t.kind).label}: ${converted ? "≈ " : ""}${formatMoney(t.refCents as number, catalog.currency)}${t.presale ? " · pre-order" : ""} (${t.name})`);
       }
     }
   }

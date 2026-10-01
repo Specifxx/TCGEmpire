@@ -65,3 +65,13 @@ export function kindNoun(info: { id?: string; label: string; plural: string }, n
 export function possessive(name: string): string {
   return /s$/i.test(name) ? `${name}'` : `${name}'s`;
 }
+
+/**
+ * Whether a URL segment could be one of our slugs: lowercase words joined by
+ * hyphens, at most 120 characters (lib/pokemon/catalog.ts slugify). Anything
+ * else is not a product or set, and is not worth a database read and a cache
+ * entry to find out.
+ */
+export function isPokemonSlug(s: string): boolean {
+  return s.length <= 120 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s);
+}

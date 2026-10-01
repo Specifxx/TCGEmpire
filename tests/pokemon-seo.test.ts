@@ -224,7 +224,7 @@ test("setDescription: ≤155, starts with the set, unique over every set", () =>
       seen.add(d);
       assert.deepEqual(textViolations(d), [], d);
       if (shape === "upcoming") assert.match(d, /TCGplayer lists Nov 2026/);
-      if (shape === "worst") assert.match(d, /released Nov 2026: booster box from US\$9,999\.99/);
+      if (shape === "worst") assert.match(d, /TCGplayer lists Nov 2026: booster box from US\$9,999\.99/);
     }
   }
 });
@@ -341,7 +341,8 @@ test("sitemap.ts: the gate from ./index-gate, a narrow select, the landing pages
   for (const p of ["/pokemon/booster-boxes", "/pokemon/elite-trainer-boxes", "/pokemon/booster-bundles", "/pokemon/price-per-pack"]) {
     assert.ok(src.includes(`"${p}"`), p);
   }
-  assert.match(src, /process\.env\.POKEMON_DISCORD_APP_ID \? \[\{ url: `\$\{SITE_URL\}\/pokemon\/discord`, changeFrequency: "monthly" as const, priority: 0\.4 \}\]/);
+  // The same ID check as the page and the hub link (flag.ts), so the sitemap never lists a 404.
+  assert.match(src, /pokemonDiscordAppId\(\) \? \[\{ url: `\$\{SITE_URL\}\/pokemon\/discord`, changeFrequency: "monthly" as const, priority: 0\.4 \}\]/);
 });
 
 test("the import's purge refreshes the section's sitemap and keeps its gate", () => {

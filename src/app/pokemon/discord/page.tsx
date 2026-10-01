@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
+import { pokemonDiscordAppId } from "@/lib/pokemon/flag";
 import { pokemonMeta } from "@/lib/pokemon/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
@@ -22,10 +23,7 @@ const TITLE = "Pokémon Sealed Price Bot for Discord";
 const DESCRIPTION =
   "A Discord app that answers with the cheapest Pokémon sealed listings we track, price per pack and set prices. Its replies carry no affiliate links.";
 
-function discordAppId(): string | null {
-  const id = (process.env.POKEMON_DISCORD_APP_ID ?? "").trim();
-  return /^\d{5,25}$/.test(id) ? id : null;
-}
+const discordAppId = pokemonDiscordAppId;
 
 export function generateMetadata(): Metadata {
   if (!pokemonEnabled() || !discordAppId()) return notFoundMetadata();
@@ -161,10 +159,15 @@ export default function PokemonDiscordPage() {
         <h2 className="text-lg font-extrabold text-white">Privacy</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-slate-300">
           <li>
-            When you run a command, Discord sends us your user ID, the server and channel IDs and the options you chose, as
-            it does for every app. The request comes from Discord&apos;s servers, not from your device.
+            When you run a command, Discord sends us what it sends every app: your user ID, username, display name and
+            avatar; in a server, your member details there, such as nickname and roles; the server and channel IDs and basic
+            channel details; your language settings; and the options you chose. The request comes from Discord&apos;s
+            servers, not from your device.
           </li>
-          <li>We use them only to answer that command.</li>
+          <li>
+            We read only the command, the options you chose and whether it ran in a server or a DM: to answer that command,
+            and for the log line below. The rest is ignored.
+          </li>
           <li>
             Our hosting log records the command&apos;s name, the market and whether it ran in a server, in a DM with the
             app, or in another DM or group DM. It records no IDs.

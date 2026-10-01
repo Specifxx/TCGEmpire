@@ -37,7 +37,7 @@ The catalogue is English-language sealed product: booster boxes, Elite Trainer B
 
 ## Where the prices come from
 
-**TCGplayer.** Its own published price data gives us, for every product, the cheapest listing on TCGplayer and TCGplayer's market price. TCGplayer's listings are US listings, so they appear in the United States only.
+**TCGplayer.** Its own published price data gives us the cheapest listing on TCGplayer and TCGplayer's market price, for the products that have them. TCGplayer's listings are US listings, so they appear in the United States only.
 
 **eBay.** A tracked eBay price comes from our own search of eBay for the cheapest listing that matches the product. That search runs for booster boxes, Elite Trainer Boxes, Pokémon Center ETBs, booster bundles, and Ultra-Premium and Super-Premium Collections from recent sets, plus pre-orders. It covers fixed-price listings in new condition that the seller will deliver to the market in question. eBay allows a limited number of searches a day, shared with the rest of the site, so products are searched in rotation: the ones never checked come first, then the ones checked longest ago.
 

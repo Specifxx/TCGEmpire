@@ -61,7 +61,9 @@ export default async function PokemonBlogPostPage({ params }: { params: Params }
 
   // One catalogue read, and only when the post places a block.
   const catalog = postBlockIds(post).length ? await getPokemonCatalog("US") : null;
-  const filled = fillPost(post, catalog ? { catalog, today: new Date().toISOString().slice(0, 10) } : null);
+  // A link to another post stays only when that post can be opened here.
+  const linkable = (slug: string) => draftVisible() || getPokemonPost(slug)?.status === "published";
+  const filled = fillPost(post, catalog ? { catalog, today: new Date().toISOString().slice(0, 10) } : null, linkable);
 
   const pool = draftVisible() ? getAllPokemonPosts() : getPokemonPosts();
   const related = pool

@@ -15,7 +15,7 @@ import {
   pokemonPostSitemapEntries,
 } from "../src/lib/pokemon/blog/index";
 import { BLOCKS, BLOCK_FACTS, BLOCK_IDS, isBlockId, type BlockCtx } from "../src/lib/pokemon/blog/blocks";
-import { COMMON_FACTS, fillPost, fillTokens, postBlockIds, postEbayLinks, postFactKeys } from "../src/lib/pokemon/blog/render";
+import { COMMON_FACTS, fillPost, fillTokens, postBlockIds, postEbayLinks, postFactKeys, unlinkPosts } from "../src/lib/pokemon/blog/render";
 import type { PokemonPost } from "../src/lib/pokemon/blog/types";
 import type { PkCatalog } from "../src/lib/pokemon/types";
 import { textViolations } from "./helpers/pokemon-copy";
@@ -504,4 +504,17 @@ test("the blog index's intro is at least 150 words with no digits", () => {
   const words = text.split(/\s+/).filter((w) => /[A-Za-z]/.test(w)).length;
   assert.ok(words >= 150, `intro ${words} words`);
   assert.doesNotMatch(text, /\d/);
+});
+
+test("links: a post links another post only when that post can be opened (published, or a preview)", () => {
+  for (const p of POKEMON_POSTS) {
+    // Production with only this post published: every other post is a draft.
+    const filled = fillPost(p, ctx, (slug) => slug === p.slug);
+    const all = [filled.body, ...filled.summary, ...filled.faq.map((f) => f.a)].join("\n");
+    for (const other of POKEMON_POSTS.filter((o) => o.slug !== p.slug)) {
+      assert.ok(!all.includes(`](/pokemon/blog/${other.slug}`), `${p.slug} links the draft ${other.slug}`);
+    }
+  }
+  assert.equal(unlinkPosts("See [the method](/pokemon/blog/x#y).", () => false), "See the method.");
+  assert.equal(unlinkPosts("See [the method](/pokemon/blog/x).", () => true), "See [the method](/pokemon/blog/x).");
 });

@@ -3,13 +3,25 @@ import { formatMoney } from "@/lib/format";
 import { sourceWord } from "@/lib/pokemon/format";
 import { formatPerPack } from "@/lib/pokemon/value";
 import type { PerPackGroup } from "@/lib/pokemon/home";
+import { EUR_DISPLAY_NOTE } from "@/lib/pokemon/copy";
 
 // "Lowest price per pack": the section's signature figure, for the three
 // kinds with a hub. Each row reads product, set, then the per-pack figure and
 // the listing it comes from. Renders nothing when no group has enough rows
 // (Singapore, or a market with almost no tracked listings).
 
-export function HomePerPack({ groups, currency, asOf }: { groups: PerPackGroup[]; currency: string; asOf: string | null }) {
+export function HomePerPack({
+  groups,
+  currency,
+  asOf,
+  eurConverted = false,
+}: {
+  groups: PerPackGroup[];
+  currency: string;
+  asOf: string | null;
+  /** UK listings shown in euros (the visitor's display preference). */
+  eurConverted?: boolean;
+}) {
   if (!groups.length) return null;
   return (
     <section className="mb-8" aria-labelledby="home-per-pack">
@@ -25,7 +37,7 @@ export function HomePerPack({ groups, currency, asOf }: { groups: PerPackGroup[]
         {groups.map((g) => (
           <div key={g.hub.slug} className="card-surface p-4">
             <h3 className="mb-2 text-sm font-extrabold text-white">
-              <Link href={g.hub.path} className="hover:text-brand-300 hover:underline">
+              <Link href={g.hub.path} className="tap-link hover:text-brand-300 hover:underline">
                 {g.hub.label}
               </Link>
             </h3>
@@ -33,8 +45,12 @@ export function HomePerPack({ groups, currency, asOf }: { groups: PerPackGroup[]
               {g.rows.map((t) => (
                 <li key={t.id} className="text-sm">
                   <div className="flex items-start justify-between gap-3">
-                    <Link href={`/pokemon/sealed/${t.slug}`} className="line-clamp-2 min-w-0 font-semibold text-slate-200 hover:text-brand-300 hover:underline" title={t.name}>
-                      {t.name}
+                    <Link
+                      href={`/pokemon/sealed/${t.slug}`}
+                      className="tap-link-block min-w-0 font-semibold text-slate-200 hover:text-brand-300 hover:underline"
+                      title={t.name}
+                    >
+                      <span className="line-clamp-2">{t.name}</span>
                     </Link>
                     <span className="num shrink-0 whitespace-nowrap font-bold text-accent">{formatPerPack(t.perPackCents as number, currency)}</span>
                   </div>
@@ -52,6 +68,7 @@ export function HomePerPack({ groups, currency, asOf }: { groups: PerPackGroup[]
       </div>
       <p className="mt-2 text-[11px] text-slate-500">
         Cheapest open listing divided by the booster packs inside; item price, postage extra. Pre-orders are not ranked.
+        {eurConverted ? ` ${EUR_DISPLAY_NOTE}` : ""}
       </p>
     </section>
   );

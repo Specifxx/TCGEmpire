@@ -24,7 +24,7 @@ export const pokemonCenterEtbVsEliteTrainerBox: PokemonPost = {
   body: `
 A set can come with two Elite Trainer Boxes that look almost the same: the regular one, sold through stores, and the Pokémon Center version, the official store's own. They share a name and most of what is inside, so the question a buyer has is a simple one. What does the Pokémon Center box add, and what does it cost per pack?
 
-This post sets the two side by side for each recent set that has both, using the contents TCGplayer publishes for each product and the cheapest open listing we track in the United States. Nothing in the tables is typed by hand: they are computed from the same catalogue as our [Elite Trainer Box prices](/pokemon/elite-trainer-boxes) each time the page is rebuilt, so they always match what the price pages show.
+This post sets the two side by side for each recent set that has both, using the contents TCGplayer publishes for these boxes and the cheapest open listing we track in the United States. Nothing in the tables is typed by hand: they are computed from the same catalogue as our [Elite Trainer Box prices](/pokemon/elite-trainer-boxes) each time the page is rebuilt, so they always match what the price pages show.
 
 ## What the two boxes share
 

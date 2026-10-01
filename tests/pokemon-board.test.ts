@@ -6,6 +6,7 @@ import { filterTiles, isFiltered, pageOf, parseBrowse, sortTiles, toDisplay } fr
 import { pokemonFaq, sourceList } from "../src/lib/pokemon/copy";
 import { convertCents } from "../src/lib/fx";
 import type { PkOfferRow, PkTile } from "../src/lib/pokemon/types";
+import { perPackCents } from "../src/lib/pokemon/packs";
 
 // What each market shows for one Pokémon product (lib/pokemon/board.ts), the
 // Cardmarket matcher, the grid's filter/sort rules and the section's copy.
@@ -193,4 +194,11 @@ test("copy names only the sources that exist, and makes no claim the site's rule
     assert.doesNotMatch(text, /\b(rank|sort)\w*\b[^.\n]{0,60}\b(delivered|total cost|shipping included)/i);
     assert.doesNotMatch(text, /money.?back|buyer protection|invest|will rise/i);
   }
+});
+
+test("toDisplay: the euro per-pack is the shown euro listing ÷ packs, never the pound per-pack converted alone", () => {
+  // £104.69 for 9 packs: converting £11.63 alone gave one cent off the division.
+  const [t] = toDisplay([tile({ lowCents: 10_469, packCount: 9, perPackCents: perPackCents(10_469, 9) })], true);
+  assert.equal(t.perPackCents, perPackCents(t.lowCents, 9));
+  assert.equal(toDisplay([tile({ lowCents: null, packCount: 9, perPackCents: null })], true)[0].perPackCents, null);
 });

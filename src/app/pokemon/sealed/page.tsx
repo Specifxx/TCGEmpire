@@ -32,7 +32,7 @@ type SP = Record<string, string | string[] | undefined>;
 
 const TITLE = "All Pokémon Sealed Products: Prices Compared";
 const DESCRIPTION =
-  "English Pokémon sealed products from Sword & Shield on, with the cheapest TCGplayer or eBay listing we track in your market. Filter by set, type and price.";
+  "English Pokémon sealed products from Sword & Shield on, with the cheapest listing we track in your market. Filter by set, type and price.";
 
 export async function generateMetadata({ searchParams }: { searchParams: SP }): Promise<Metadata> {
   if (!pokemonEnabled()) return notFoundMetadata();

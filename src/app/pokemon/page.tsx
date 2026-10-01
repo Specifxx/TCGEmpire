@@ -7,6 +7,7 @@ import { ebaySearchUrl } from "@/lib/affiliate";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
+import { pokemonDiscordAppId } from "@/lib/pokemon/flag";
 import { getPokemonCatalog } from "@/lib/pokemon/data";
 import { toDisplay } from "@/lib/pokemon/browse";
 import { pokemonFaq } from "@/lib/pokemon/copy";
@@ -39,7 +40,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Pokémon Sealed Prices: Booster Boxes, ETBs & Bundles";
 const DESCRIPTION =
-  "Pokémon booster box, ETB and booster bundle prices from TCGplayer and eBay listings, with the price per pack, from Sword & Shield on. Updated daily.";
+  "Pokémon booster box, ETB and booster bundle prices: the cheapest listing we track in your market and its price per pack, Sword & Shield on. Updated daily.";
 
 export async function generateMetadata(): Promise<Metadata> {
   if (!pokemonEnabled()) return notFoundMetadata();
@@ -73,7 +74,7 @@ export default async function PokemonHub() {
   const guides: HomeGuide[] = getPokemonPosts()
     .slice(0, 3)
     .map((p) => ({ href: `/pokemon/blog/${p.slug}`, title: p.title, excerpt: p.excerpt }));
-  const discordHref = process.env.POKEMON_DISCORD_APP_ID ? "/pokemon/discord" : undefined;
+  const discordHref = pokemonDiscordAppId() ? "/pokemon/discord" : undefined;
 
   const newestSet = home.newest[0]?.set;
   const ebayLinks = [
@@ -107,7 +108,7 @@ export default async function PokemonHub() {
 
       {hasTiles && (
         <>
-          <HomePerPack groups={home.perPack} currency={currency} asOf={home.stats.asOf} />
+          <HomePerPack groups={home.perPack} currency={currency} asOf={home.stats.asOf} eurConverted={showEur} />
           <HomeComingUp data={home.comingUp} currency={currency} />
           <HomeShopByType types={home.shop} currency={currency} place={place} />
           <HomeNewestSets sets={home.newest} currency={currency} total={home.stats.sets} />

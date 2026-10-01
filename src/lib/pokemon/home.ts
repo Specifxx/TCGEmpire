@@ -21,6 +21,8 @@ import type { PkCatalog, PkListingSource, PkSetSummary, PkSource, PkTile } from 
 export interface HomeStats {
   products: number;
   sets: number;
+  /** Products outside any set (promo boxes, mini tins, accessories with packs). */
+  setless: number;
   /** Products with an open listing we track in THIS market (never "each one": many have none). */
   listed: number;
   /** Sources with an open listing that heads a product in THIS market, fixed order. */
@@ -48,6 +50,7 @@ export function homeStats(catalog: PkCatalog): HomeStats {
   return {
     products: catalog.tiles.length,
     sets: catalog.sets.length,
+    setless: catalog.tiles.filter((t) => !t.setSlug).length,
     listed: catalog.tiles.filter((t) => t.lowCents != null).length,
     listingSources,
     sources,
@@ -65,7 +68,11 @@ export function homeStats(catalog: PkCatalog): HomeStats {
 export function heroLine(stats: HomeStats, place: string, converted: boolean): string {
   if (stats.products === 0) return "No prices yet.";
   const n = (x: number) => x.toLocaleString("en-US");
-  const head = `${n(stats.products)} English sealed ${stats.products === 1 ? "product" : "products"} from ${n(stats.sets)} ${stats.sets === 1 ? "set" : "sets"}.`;
+  const inSets = stats.products - stats.setless;
+  const setWord = `${n(stats.sets)} ${stats.sets === 1 ? "set" : "sets"}`;
+  const head =
+    `${n(stats.products)} English sealed ${stats.products === 1 ? "product" : "products"}` +
+    (stats.setless === 0 ? ` from ${setWord}.` : inSets === 0 ? `, none of them in a set.` : `: ${n(inSets)} from ${setWord} and ${n(stats.setless)} outside any set.`);
   const asOf = stats.asOf ? ` Prices ${stats.asOf}, updated daily.` : " Updated daily.";
   const ref = `TCGplayer's market price as a reference${converted ? " (converted, marked ≈)" : ""} where it publishes one`;
   const listings = listingSourceList(stats.listingSources);

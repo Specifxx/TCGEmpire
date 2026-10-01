@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EUR_DISPLAY_NOTE } from "@/lib/pokemon/copy";
 import type { Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { ebaySearchUrl } from "@/lib/affiliate";
@@ -96,6 +97,7 @@ export function KindHubView({
           </h2>
           <p className="mb-3 max-w-3xl text-xs text-slate-400">
             Item price, postage extra. Newest set first; products with no set come last.
+            {country === "UK" && currency === "EUR" ? ` ${EUR_DISPLAY_NOTE}` : ""}
           </p>
           {!perPack && (
             <p className="mb-3 max-w-3xl rounded-md border border-ink-800 bg-ink-900 px-3 py-2 text-xs text-slate-300">

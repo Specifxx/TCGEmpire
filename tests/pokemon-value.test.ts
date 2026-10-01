@@ -6,6 +6,7 @@ import {
   RECENT_SETS,
   asOfLabel,
   cheapestByKind,
+  figuresAsOf,
   formatPerPack,
   isHalfBox,
   median,
@@ -166,4 +167,35 @@ test("pokemonMeta: absolute title, no feed alternates, and the two share-image m
   const list = pokemonItemList("Sets", [{ name: "A", path: "/pokemon/sets/a" }]);
   assert.equal(list["@type"], "ItemList");
   assert.equal(list.itemListElement[0].url, "https://riftcompare.com/pokemon/sets/a");
+});
+
+test("figuresAsOf: the oldest listing quoted, else the newest reference", () => {
+  assert.equal(figuresAsOf(["2026-10-01T12:00:00Z", "2026-09-29T08:00:00Z"], ["2026-10-01T13:00:00Z"]), "2026-09-29T08:00:00Z");
+  assert.equal(figuresAsOf([], ["2026-09-30T00:00:00Z", "2026-10-01T13:00:00Z"]), "2026-10-01T13:00:00Z");
+  assert.equal(figuresAsOf([], []), null);
+});
+
+test("pokemonDiscordAppId: an ID or nothing, one check for the page, the hub link and the sitemap", async () => {
+  const { pokemonDiscordAppId } = await import("../src/lib/pokemon/flag");
+  const prev = process.env.POKEMON_DISCORD_APP_ID;
+  try {
+    for (const [v, want] of [["123456789012345678", "123456789012345678"], [" 123456789012345678 ", "123456789012345678"], ['"123456789012345678"', null], ["Application ID: 1234", null], ["", null]] as const) {
+      process.env.POKEMON_DISCORD_APP_ID = v;
+      assert.equal(pokemonDiscordAppId(), want, v);
+    }
+  } finally {
+    if (prev === undefined) delete process.env.POKEMON_DISCORD_APP_ID;
+    else process.env.POKEMON_DISCORD_APP_ID = prev;
+  }
+  for (const f of ["src/app/pokemon/page.tsx", "src/lib/pokemon/sitemap.ts", "src/app/pokemon/discord/page.tsx"]) {
+    assert.doesNotMatch(readFileSync(f, "utf8"), /process\.env\.POKEMON_DISCORD_APP_ID/, `${f} reads the ID only through pokemonDiscordAppId`);
+  }
+});
+
+test("isPokemonSlug: every real slug passes, anything else costs no read", async () => {
+  const { isPokemonSlug } = await import("../src/lib/pokemon/format");
+  const names = JSON.parse(readFileSync("tests/fixtures/pokemon-catalog-us.json", "utf8")) as PkCatalog;
+  for (const t of names.tiles) assert.ok(isPokemonSlug(t.slug), t.slug);
+  for (const s of names.sets) assert.ok(isPokemonSlug(s.slug), s.slug);
+  for (const bad of ["", "A", "a--b", "-a", "a b", "a/b", "x".repeat(121), "%E2%9C%93"]) assert.equal(isPokemonSlug(bad), false, bad);
 });

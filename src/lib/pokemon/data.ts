@@ -18,6 +18,7 @@
 
 import { cache } from "react";
 import { cachedOrDirect } from "../price-history";
+import { OFFER_STALE_MS } from "../sealed-offers";
 import { COUNTRIES, type Country } from "../country";
 import { pokemonDb } from "./db";
 import { tileFigures } from "./board";
@@ -62,7 +63,13 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
   ]);
 
   const rowsByProduct = new Map<number, PkOfferRow[]>();
-  let pricesAsOf: Date | null = null;
+  const now = Date.now();
+  // "As of" for this market's figures: the oldest live listing row, so every
+  // listing a page quotes is at least that fresh (eBay rows are checked in
+  // rotation, days apart; dating them by TCGplayer's daily import would make
+  // them look newer). Without a live listing, the newest TCGplayer market price.
+  let oldestListing: Date | null = null;
+  let newestReference: Date | null = null;
   for (const o of offers) {
     const row: PkOfferRow = {
       market: o.market,
@@ -78,11 +85,14 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
     const list = rowsByProduct.get(o.productId) ?? [];
     list.push(row);
     rowsByProduct.set(o.productId, list);
-    if (o.source === "tcgplayer_market" && (!pricesAsOf || o.checkedAt > pricesAsOf)) pricesAsOf = o.checkedAt;
+    if (o.source === "tcgplayer_market" && (!newestReference || o.checkedAt > newestReference)) newestReference = o.checkedAt;
+    const listing = o.market === market && (o.source === "tcgplayer" || o.source === "ebay" || o.source === "cardmarket");
+    if (listing && o.inStock && now - o.checkedAt.getTime() <= OFFER_STALE_MS && (!oldestListing || o.checkedAt < oldestListing)) {
+      oldestListing = o.checkedAt;
+    }
   }
 
   const setById = new Map(sets.map((s) => [s.id, s]));
-  const now = Date.now();
   const tiles: PkTile[] = products.map((p) => {
     const set = p.setId != null ? setById.get(p.setId) : undefined;
     const figures = tileFigures(rowsByProduct.get(p.id) ?? [], market, now);
@@ -132,7 +142,7 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
     currency: COUNTRIES[market].currency,
     tiles,
     sets: setSummaries,
-    pricesAsOf: iso(pricesAsOf),
+    pricesAsOf: iso(oldestListing ?? newestReference),
     sources: sourceGroups.map((g) => g.source as PkSource),
   };
 }
@@ -153,7 +163,7 @@ export function clearPokemonMemo(): void {
 export const getPokemonCatalog = cache(async (market: Country): Promise<PkCatalog> => {
   const hit = memo.get(market);
   if (hit && Date.now() - hit.at < MEMO_TTL_MS) return hit.data;
-  const data = await cachedOrDirect(() => computeCatalog(market), ["pokemon-catalog-v3", market], {
+  const data = await cachedOrDirect(() => computeCatalog(market), ["pokemon-catalog-v4", market], {
     revalidate: POKEMON_TTL,
     tags: [POKEMON_TAG],
   });

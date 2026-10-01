@@ -129,6 +129,19 @@ export function asOfLabel(pricesAsOf: string | null | undefined): string | null 
   return d ? `as of ${d}` : null;
 }
 
+/**
+ * The moment to quote for a set of figures shown together: the OLDEST listing
+ * among them, so every listing quoted is at least that fresh (eBay rows are
+ * checked in rotation, days apart, while TCGplayer's are rewritten daily, and
+ * dating an eBay figure by TCGplayer's import would make it look newer than it
+ * is). With no listing, the newest reference. ISO in, ISO out.
+ */
+export function figuresAsOf(listingChecks: readonly string[], referenceChecks: readonly string[] = []): string | null {
+  if (listingChecks.length) return listingChecks.reduce((a, b) => (b < a ? b : a));
+  if (referenceChecks.length) return referenceChecks.reduce((a, b) => (b > a ? b : a));
+  return null;
+}
+
 /** "US$4.10 a pack". */
 export function formatPerPack(cents: number, currency: string): string {
   return `${formatMoney(cents, currency)} a pack`;
