@@ -187,6 +187,11 @@ function ladder(head: string, variants: readonly (readonly string[])[], tail: st
  * United Kingdom. Updated daily." Clauses drop, least useful first, until it
  * fits; the name never does, so two products never share a description. The
  * eBay markets are named only when an open eBay listing exists in them.
+ *
+ * Every clause is a figure this product has. With no open US listing, the
+ * first market (in the site's order) that holds one stands in for it; with no
+ * listing anywhere, TCGplayer's US market price, if it has a row; with none of
+ * those, the name alone.
  */
 export function productDescription(f: ProductFacts): string {
   const name = squash(f.name);
@@ -194,12 +199,24 @@ export function productDescription(f: ProductFacts): string {
   const packs = f.packCount != null ? `${f.packCount} booster ${f.packCount === 1 ? "pack" : "packs"}` : "";
   const date = day ? `${f.presale ? "pre-order, " : ""}TCGplayer lists ${day}` : "";
   const head = [packs, date].filter(Boolean).join(", ");
+  const abroad = f.us ? null : (f.markets.find((m) => m.market !== "US" && m.listing) ?? null);
+  const away = abroad?.listing ?? null;
   const listing = f.us
     ? `Cheapest US ${f.presale ? "pre-order " : ""}listing ${formatMoney(f.us.cents, f.us.currency)} ${sourceWord(f.us.source)}` +
       (f.us.perPackCents != null ? ` (${formatPerPack(f.us.perPackCents, f.us.currency)})` : "")
-    : "";
-  const listingShort = f.us ? `Cheapest US listing ${formatMoney(f.us.cents, f.us.currency)}` : "";
-  const ebay = f.ebayMarkets.length ? `Tracked eBay listings in ${listJoin(f.ebayMarkets.map((m) => COUNTRIES[m].place))}` : "";
+    : abroad && away
+      ? `Listed in ${COUNTRIES[abroad.market].place} from ${formatMoney(away.cents, away.currency)} ${sourceWord(away.source)}`.trimEnd()
+      : "";
+  const listingShort = f.us
+    ? `Cheapest US listing ${formatMoney(f.us.cents, f.us.currency)}`
+    : abroad && away
+      ? `Listed in ${COUNTRIES[abroad.market].place} from ${formatMoney(away.cents, away.currency)}`
+      : "";
+  // The market the stand-in listing already names as eBay's is not named twice.
+  const ebayIn = f.ebayMarkets.filter((m) => !(away?.source === "ebay" && abroad?.market === m));
+  const ebay = ebayIn.length ? `Tracked eBay listings in ${listJoin(ebayIn.map((m) => COUNTRIES[m].place))}` : "";
+  const usRef = f.markets.find((m) => m.market === "US")?.reference ?? null;
+  const reference = usRef ? `TCGplayer's market price ${formatMoney(usRef.cents, usRef.currency)}` : "";
   const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
   // A released product's date is the first thing to go; a pre-order's stays,
   // since "when does it come out" is what its searchers ask.
@@ -214,7 +231,7 @@ export function productDescription(f: ProductFacts): string {
       [lead, listingShort],
       [listingShort],
       [cap(packs)],
-      ["TCGplayer's market price in six markets, and any listing we track"],
+      [reference],
     ],
     "Updated daily.",
     `${name}. Updated daily.`,
@@ -233,7 +250,8 @@ export function setDescription(f: SetFacts): string {
   const when = month ? (f.upcoming ? `, TCGplayer lists ${month}` : `, released ${month}`) : "";
   const head = `${name}: ${f.productCount} sealed ${f.productCount === 1 ? "product" : "products"}${when}`;
   const SHORT: Partial<Record<string, string>> = { "booster-box": "booster box", etb: "ETB", "pc-etb": "Pokémon Center ETB", "booster-bundle": "booster bundle" };
-  const froms = f.cheapest.map((c) => `${SHORT[c.kind] ?? c.kind} from ${formatMoney(c.cents, f.currency)}`);
+  // The UK shown in euros is a conversion, marked "≈" as on the page.
+  const froms = f.cheapest.map((c) => `${SHORT[c.kind] ?? c.kind} from ${f.converted ? "≈ " : ""}${formatMoney(c.cents, f.currency)}`);
   for (let n = froms.length; n >= 1; n--) {
     const d = `${head}: ${listJoin(froms.slice(0, n))}. Updated daily.`;
     if (d.length <= DESCRIPTION_MAX) return d;

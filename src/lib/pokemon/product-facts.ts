@@ -25,7 +25,8 @@ import { allBoards, listingLabel } from "./board";
 import { daysBetween, formatDay, kindNoun, listJoin, possessive, sourceWord } from "./format";
 import { kindInfo, type PkKind } from "./kinds";
 import { perPackCents } from "./packs";
-import { PER_PACK_KINDS, RECENT_SETS, asOfLabel, cheapestByKind, formatPerPack, isHalfBox, recentReleasedSets } from "./value";
+import { lowestPerPackByKind } from "./set-facts";
+import { PER_PACK_KINDS, RECENT_SETS, asOfLabel, formatPerPack, isHalfBox, recentReleasedSets } from "./value";
 import type { PkCatalog, PkListingSource, PkProductDetail, PkTile } from "./types";
 
 /** History sentences wait for this many daily points (Phase 2 backfill brings them sooner). */
@@ -41,7 +42,7 @@ export interface PkMarketFact {
   reference: { cents: number; currency: string; converted: boolean } | null;
 }
 
-/** One kind's cheapest product in a set, per pack (US). */
+/** One kind's lowest price per pack in a set, at its cheapest US listing. */
 export interface PkPerPackRow {
   kind: PkKind;
   slug: string;
@@ -51,7 +52,7 @@ export interface PkPerPackRow {
   isThis: boolean;
 }
 
-/** The same kind in one recent set, at its cheapest US listing. */
+/** The same kind in one recent set: its lowest price per pack, at the cheapest US listing. */
 export interface PkSameKindRow {
   setSlug: string;
   setName: string;
@@ -79,13 +80,13 @@ export interface ProductFacts {
   markets: PkMarketFact[];
   /** Markets other than the US holding an open eBay listing. */
   ebayMarkets: Country[];
-  /** The set's per-pack kinds at their cheapest US listing, this product in its kind's place; null without the catalogue. */
+  /** The set's per-pack kinds at their lowest US price per pack, this product in its kind's place; null without the catalogue. */
   setPerPack: PkPerPackRow[] | null;
   /**
-   * This kind across the newest released sets (US), each set's cheapest. This
-   * product is added when it is not one of them: "older" when its set is
-   * outside the window, "variant" when another product of its kind is its
-   * set's cheapest.
+   * This kind across the newest released sets (US), each set's lowest per pack.
+   * This product is added when it is not one of them: "older" when its set is
+   * outside the window, "variant" when another product of its kind is lower
+   * per pack in its set.
    */
   sameKind: { rows: PkSameKindRow[]; window: number; added: "older" | "variant" | null } | null;
   /** Calendar days from the set's listed date to the product's (negative: earlier). */
@@ -157,13 +158,14 @@ export function productFacts(p: PkProductDetail, usCatalog: PkCatalog | null, no
   const thisPerPack = us?.perPackCents ?? null;
   const self = (t: { slug: string }) => t.slug === p.slug;
 
-  // The set's kinds per pack. Pre-orders compare with pre-orders: a released
-  // product against its set's released kinds, a pre-order against the rest of
-  // its pre-order set.
+  // The set's kinds per pack, each at its lowest per pack (never its cheapest
+  // listing, which may have no pack count: see lowestPerPackByKind). Pre-orders
+  // compare with pre-orders: a released product against its set's released
+  // kinds, a pre-order against the rest of its pre-order set.
   let setPerPack: PkPerPackRow[] | null = null;
   if (usCatalog && p.set && comparable(p.kind) && thisPerPack != null && us) {
     const setTiles = usCatalog.tiles.filter((t) => t.setSlug === p.set?.slug && t.presale === p.presale);
-    const cheapest = cheapestByKind(setTiles, { includePresale: p.presale });
+    const cheapest = lowestPerPackByKind(setTiles, { includePresale: p.presale });
     const rows: PkPerPackRow[] = [];
     for (const k of PER_PACK_KINDS) {
       if (k === p.kind) {
@@ -178,27 +180,27 @@ export function productFacts(p: PkProductDetail, usCatalog: PkCatalog | null, no
     setPerPack = rows.length >= 2 ? rows.sort((a, b) => a.perPackCents - b.perPackCents || a.name.localeCompare(b.name)) : null;
   }
 
-  // The same kind across the newest released sets: each set's cheapest of the
-  // kind by listing (a half box never stands for a box), and this product
-  // added when it is not one of them. This product's own row always carries
-  // its own figures, so the paragraph never quotes two prices for it; a
-  // pre-order is never ranked against released products.
+  // The same kind across the newest released sets: each set's lowest per pack
+  // of the kind (a half box never stands for a box), and this product added
+  // when it is not one of them. This product's own row always carries its own
+  // figures, so the paragraph never quotes two prices for it; a pre-order is
+  // never ranked against released products.
   let sameKind: ProductFacts["sameKind"] = null;
   if (usCatalog && comparable(p.kind) && !isHalfBox(p)) {
     const recent = recentReleasedSets(usCatalog, today, RECENT_SETS);
     const rows: PkSameKindRow[] = [];
     for (const s of recent) {
-      const t: PkTile | undefined = cheapestByKind(usCatalog.tiles.filter((x) => x.setSlug === s.slug && !self(x)))[p.kind];
+      const t: PkTile | undefined = lowestPerPackByKind(usCatalog.tiles.filter((x) => x.setSlug === s.slug && !self(x)))[p.kind];
       if (t && t.perPackCents != null && t.lowCents != null) {
         rows.push({ setSlug: s.slug, setName: s.name, slug: t.slug, name: t.name, cents: t.lowCents, perPackCents: t.perPackCents, isThis: false });
       }
     }
-    // This product replaces its set's row when it is at least as cheap, and
-    // joins the table beside it otherwise.
+    // This product replaces its set's row when it is at least as low per pack,
+    // and joins the table beside it otherwise.
     if (us && thisPerPack != null && p.set && !p.presale) {
       const mine: PkSameKindRow = { setSlug: p.set.slug, setName: p.set.name, slug: p.slug, name: p.name, cents: us.cents, perPackCents: thisPerPack, isThis: true };
       const at = rows.findIndex((r) => r.setSlug === p.set?.slug);
-      if (at >= 0 && us.cents <= rows[at].cents) rows[at] = mine;
+      if (at >= 0 && thisPerPack <= rows[at].perPackCents) rows[at] = mine;
       else rows.push(mine);
     }
     const mine = rows.find((r) => r.isThis);

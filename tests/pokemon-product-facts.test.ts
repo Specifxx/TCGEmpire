@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { HISTORY_MIN_POINTS, productFacts, productFaq, productProse, type ProductFacts } from "../src/lib/pokemon/product-facts";
 import { proseText, setFacts, setProse } from "../src/lib/pokemon/set-facts";
+import { toDisplay } from "../src/lib/pokemon/browse";
+import { isHalfBox, PER_PACK_KINDS } from "../src/lib/pokemon/value";
 import { productDescription, setDescription, setTitle } from "../src/lib/pokemon/seo";
 import type { PkCatalog, PkOfferRow, PkProductDetail } from "../src/lib/pokemon/types";
 import { textViolations } from "./helpers/pokemon-copy";
@@ -191,7 +193,7 @@ test("set facts and prose for every fixture set: clean strings, blocks only with
     const strings = [...blocks.map((b) => proseText(b.parts)), setDescription(f), setTitle(f.name, { perPack: f.countable })];
     checkStrings(s.slug, strings);
     const ids = blocks.map((b) => b.id);
-    assert.equal(ids.includes("per-pack"), f.cheapest.some((c) => c.perPackCents != null), `${s.slug}: per-pack block iff a figure`);
+    assert.equal(ids.includes("per-pack"), f.perPack.length > 0, `${s.slug}: per-pack block iff a figure`);
     assert.equal(ids.includes("neighbours"), f.boxes != null, s.slug);
     assert.equal(ids.includes("preorders"), f.preorders.count > 0, s.slug);
     for (const b of blocks) for (const p of b.parts) if (typeof p !== "string") assert.match(p.href, /^\/pokemon\/(?:sets|sealed)\/[a-z0-9-]+$/);
@@ -217,7 +219,7 @@ test("set facts: a pre-order set, a released set with neighbours, a set without 
   assert.equal(pf.nav.older?.slug, "mega-evolution");
 
   const fp = setFacts(catalog, "first-partner-collection-2026", "2026-10-01");
-  assert.ok(fp && !fp.cheapest.some((c) => c.perPackCents != null));
+  assert.ok(fp && fp.perPack.length === 0);
   assert.equal(fp.countable, false, "no box, ETB or bundle with a pack count");
   assert.equal(pf.countable, true);
   assert.ok(!setProse(fp).some((b) => b.id === "per-pack"));
@@ -225,4 +227,89 @@ test("set facts: a pre-order set, a released set with neighbours, a set without 
   // The mix sentence counts every product.
   const mix = setProse(fp).find((b) => b.id === "mix");
   assert.match(proseText(mix?.parts ?? []), /^We price 6 sealed products from First Partner Collection 2026: /);
+});
+
+// ── Per pack means per pack ──────────────────────────────────────────────────
+// A kind's cheapest listing can have no pack count: Mega Evolution's Enhanced
+// booster box (US$279.99, no count) undercuts its 36-pack box (US$291.00,
+// US$8.08 a pack). Picking each kind by listing price dropped the counted box
+// from every comparison, so the set page called the bundle the lowest per pack
+// and the box and bundle pages contradicted each other.
+
+const usOffer = base.offers.find((o) => o.market === "US" && o.source === "tcgplayer") as PkOfferRow;
+const megaSet = { slug: "mega-evolution", name: "Mega Evolution", code: "MEG", releasedOn: "2025-09-26" };
+const mega = (slug: string, name: string, kind: PkProductDetail["kind"], packCount: number, cents: number): PkProductDetail => ({
+  ...base,
+  slug,
+  name,
+  kind,
+  set: megaSet,
+  releasedOn: megaSet.releasedOn,
+  packCount,
+  packCountFrom: "name",
+  contents: [],
+  siblings: [],
+  offers: [{ ...usOffer, priceCents: cents }],
+  history: [],
+});
+
+test("set facts: each kind's per-pack figure is its lowest, whatever its cheapest listing", () => {
+  for (const s of catalog.sets) {
+    const f = setFacts(catalog, s.slug, "2026-10-01");
+    assert.ok(f);
+    const tiles = catalog.tiles.filter((t) => t.setSlug === s.slug);
+    const released = tiles.filter((t) => !t.presale);
+    const pool = (released.length ? released : tiles).filter((t) => t.lowCents != null && t.perPackCents != null && !isHalfBox(t));
+    for (const k of PER_PACK_KINDS) {
+      const lows = pool.filter((t) => t.kind === k).map((t) => t.perPackCents as number);
+      assert.equal(f.perPack.find((c) => c.kind === k)?.perPackCents ?? null, lows.length ? Math.min(...lows) : null, `${s.slug} ${k}`);
+    }
+    // The paragraph's "lowest" is the lowest of every counted product in the pool.
+    if (f.perPack.length) assert.equal(f.perPack[0].perPackCents, Math.min(...pool.filter((t) => (PER_PACK_KINDS as readonly string[]).includes(t.kind)).map((t) => t.perPackCents as number)), s.slug);
+  }
+});
+
+test("Mega Evolution: the 36-pack box is the lowest per pack, on the set page and on both product pages", () => {
+  const f = setFacts(catalog, "mega-evolution", "2026-10-01");
+  assert.ok(f);
+  assert.deepEqual(
+    f.perPack.map((c) => [c.kind, c.slug, c.perPackCents]),
+    [
+      ["booster-box", "mega-evolution-booster-box", 808],
+      ["booster-bundle", "mega-evolution-booster-bundle", 983],
+      ["etb", "mega-evolution-elite-trainer-box-mega-gardevoir", 1111],
+      ["pc-etb", "mega-evolution-pokemon-center-elite-trainer-box-exclusive-mega-gardevoir", 1754],
+    ],
+  );
+  // The "from" figure is still the kind's cheapest listing.
+  assert.equal(f.cheapest.find((c) => c.kind === "booster-box")?.slug, "mega-evolution-enhanced-booster-box");
+  const perPack = proseText(setProse(f).find((b) => b.id === "per-pack")?.parts ?? []);
+  assert.match(perPack, /the lowest price per pack in Mega Evolution is the booster box: Mega Evolution Booster Box at US\$8\.08 a pack, against US\$9\.83 a pack for the booster bundle/);
+  assert.ok(f.boxes, "a booster box figure, so a neighbours block");
+
+  // Its neighbours count it: Phantasmal Flames' nearest earlier set with a box figure is Mega Evolution.
+  const pf = setFacts(catalog, "phantasmal-flames", "2026-10-01");
+  assert.equal(pf?.boxes?.earlier?.slug, "mega-evolution");
+  assert.match(proseText(setProse(pf as NonNullable<typeof pf>).find((b) => b.id === "neighbours")?.parts ?? []), /Of the sets whose booster box has a known pack count and a listing we track there, the nearest earlier by the dates TCGplayer lists, Mega Evolution, is at US\$8\.08 a pack/);
+
+  const bundle = render(mega("mega-evolution-booster-bundle", "Mega Evolution Booster Bundle", "booster-bundle", 6, 5_899));
+  const bundleText = bundle.prose.find((b) => b.id === "set-per-pack")?.text ?? "";
+  assert.doesNotMatch(bundleText, /the lowest/, "the bundle never claims to be lowest");
+  assert.match(bundleText, /^Per pack, it sits between Mega Evolution's booster box at US\$8\.08 a pack and its Pokémon Center ETB at US\$17\.54 a pack/);
+  const box = render(mega("mega-evolution-booster-box", "Mega Evolution Booster Box", "booster-box", 36, 29_100));
+  assert.match(box.prose.find((b) => b.id === "set-per-pack")?.text ?? "", /^Per pack, it is the lowest of Mega Evolution's sealed kinds with a known pack count at their cheapest US listings: the booster bundle at US\$9\.83 a pack/);
+});
+
+test("set prose: the UK shown in euros marks every figure ≈ and says it is converted", () => {
+  const uk: PkCatalog = { ...catalog, market: "UK", currency: "EUR", tiles: toDisplay(catalog.tiles, true) };
+  const f = setFacts(uk, "phantasmal-flames", "2026-10-01");
+  assert.ok(f?.converted);
+  const text = setProse(f).map((b) => proseText(b.parts)).join(" ");
+  assert.match(text, /in the United Kingdom \(converted from GBP\)/);
+  assert.match(setDescription(f), /booster box from ≈ €/);
+  // Every euro figure carries its ≈.
+  assert.deepEqual([...text.matchAll(/(≈ )?€[\d,.]+/g)].filter((m) => !m[1]).map((m) => m[0]), []);
+  assert.ok(text.includes("€"));
+  checkStrings("uk-eur", [text, setDescription(f)]);
+  assert.equal(setFacts(catalog, "phantasmal-flames", "2026-10-01")?.converted, false);
 });

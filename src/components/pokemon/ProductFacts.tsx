@@ -67,8 +67,8 @@ export function ProductFacts({ facts, prose }: { facts: Facts; prose: ProseBlock
             </table>
           </div>
           <p className="mt-2 text-[11px] text-slate-500">
-            Each set&apos;s cheapest product of this kind by listing price{same.added ? ", and this one" : ""}: item price, postage
-            extra
+            Each set&apos;s lowest price per pack for this kind, at its cheapest US listing{same.added ? ", and this one" : ""}: item
+            price, postage extra
             {facts.asOf ? `, ${facts.asOf}` : ""}.
           </p>
         </div>

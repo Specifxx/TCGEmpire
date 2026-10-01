@@ -155,6 +155,38 @@ test("productDescription: clauses name only what exists", () => {
   assert.match(ebay, /Tracked eBay listings in the United Kingdom and Canada/);
 });
 
+test("productDescription: with no US listing, only figures this product has", () => {
+  const blister = NAMES.find((n) => n.name === "Scarlet & Violet Premium Checklane Blister [Gengar]") as NameRow;
+  assert.ok(blister, "fixture name");
+  const facts = (markets: ProductFacts["markets"], ebayMarkets: Country[] = []) => ({ ...productFactsFor(blister, "bare"), markets, ebayMarkets });
+  const none = { listing: null, ebay: false, reference: null };
+  // Its only row in the local import: a Cardmarket listing in the EU.
+  const eu = productDescription(
+    facts([
+      { market: "US", ...none },
+      { market: "EU", ...none, listing: { cents: 1_290, currency: "EUR", source: "cardmarket", label: "Cardmarket" } },
+    ]),
+  );
+  assert.equal(eu, "Scarlet & Violet Premium Checklane Blister [Gengar]: Listed in the EU from €12.90 on Cardmarket. Updated daily.");
+  assert.doesNotMatch(eu, /market price/, "no TCGplayer market price without its row");
+  // The eBay market the stand-in already names is not named again.
+  const uk = productDescription(
+    facts(
+      [
+        { market: "US", ...none },
+        { market: "UK", ...none, ebay: true, listing: { cents: 1_100, currency: "GBP", source: "ebay", label: "eBay UK" } },
+        { market: "CA", ...none, ebay: true, listing: { cents: 2_000, currency: "CAD", source: "ebay", label: "eBay Canada" } },
+      ],
+      ["UK", "CA"],
+    ),
+  );
+  assert.match(uk, /: Listed in the United Kingdom from £11\.00 on eBay\. Tracked eBay listings in Canada\. Updated daily\.$/);
+  // No listing anywhere: TCGplayer's US market price only when it has that row.
+  const ref = productDescription(facts([{ market: "US", ...none, reference: { cents: 2_499, currency: "USD", converted: false } }]));
+  assert.equal(ref, "Scarlet & Violet Premium Checklane Blister [Gengar]: TCGplayer's market price US$24.99. Updated daily.");
+  assert.equal(productDescription(facts([{ market: "US", ...none }])), "Scarlet & Violet Premium Checklane Blister [Gengar]. Updated daily.");
+});
+
 function setFactsFor(name: string, shape: "worst" | "upcoming" | "none"): SetFacts {
   const kinds: PkKind[] = ["booster-box", "etb", "pc-etb", "booster-bundle"];
   return {
@@ -167,10 +199,12 @@ function setFactsFor(name: string, shape: "worst" | "upcoming" | "none"): SetFac
     productCount: 999,
     market: "US",
     currency: "USD",
+    converted: false,
     place: "the United States",
     asOf: "as of 30 Sep 2026",
     mix: [],
-    cheapest: shape === "none" ? [] : kinds.map((kind) => ({ kind, slug: kind, name: kind, cents: 999_999, perPackCents: 99_999 })),
+    cheapest: shape === "none" ? [] : kinds.map((kind) => ({ kind, slug: kind, name: kind, cents: 999_999 })),
+    perPack: shape === "none" ? [] : kinds.map((kind) => ({ kind, slug: kind, name: kind, cents: 999_999, perPackCents: 99_999 })),
     countable: shape !== "none",
     preorders: { count: 0, first: null, last: null },
     boxes: null,
@@ -193,6 +227,12 @@ test("setDescription: ≤155, starts with the set, unique over every set", () =>
       if (shape === "worst") assert.match(d, /released Nov 2026: booster box from US\$9,999\.99/);
     }
   }
+});
+
+test("setDescription: the UK shown in euros marks its figures ≈", () => {
+  const f = { ...setFactsFor("Phantasmal Flames", "worst"), market: "UK" as const, currency: "EUR", converted: true, place: "the United Kingdom" };
+  assert.match(setDescription(f), /booster box from ≈ €9,999\.99/);
+  assert.doesNotMatch(setDescription(setFactsFor("Phantasmal Flames", "worst")), /≈/);
 });
 
 // ── Metadata wiring on the pages this workstream owns ────────────────────────
