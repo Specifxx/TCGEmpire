@@ -34,6 +34,9 @@ const EMPTY: PkCatalog = { market: "US", currency: "USD", tiles: [], sets: [], p
 const TODAY = "2026-10-01";
 const ctx: BlockCtx = { catalog, today: TODAY };
 const emptyCtx: BlockCtx = { catalog: EMPTY, today: TODAY };
+// The fixture is a local import: Cardmarket rows and no eBay rows. Production
+// holds eBay rows, so this variant is the one where every token resolves.
+const ebayCtx: BlockCtx = { catalog: { ...catalog, sources: [...catalog.sources, "ebay"] }, today: TODAY };
 
 // W1's pages, which land in the same integration. TEMPORARY: the integrator
 // deletes this once /pokemon/booster-boxes and the rest exist on the branch.
@@ -190,6 +193,20 @@ test("blocks: per-pack-by-set covers the recent window, bolds each row's lowest,
   assert.ok(out.facts.perPackLine && out.facts.perPackLowest);
 });
 
+test("blocks: per-pack-by-set skips an uncounted product of a kind rather than blanking the cell (derived variant)", () => {
+  // An enhanced box has no count from its name and is often cheaper than the
+  // standard box; it must not hide the standard box's figure.
+  const box = catalog.tiles.find((t) => t.setSlug === "pitch-black" && t.kind === "booster-box" && t.perPackCents != null);
+  assert.ok(box);
+  const enhanced = { ...box, id: -1, slug: "pitch-black-enhanced-booster-box", name: "Pitch Black Enhanced Booster Box", lowCents: 100, packCount: null, perPackCents: null };
+  const withEnhanced: PkCatalog = { ...catalog, tiles: [...catalog.tiles, enhanced] };
+  const row = BLOCKS["per-pack-by-set"]({ catalog: withEnhanced, today: TODAY }).markdown.split("\n").find((l) => l.includes("(/pokemon/sets/pitch-black)"));
+  const before = BLOCKS["per-pack-by-set"](ctx).markdown.split("\n").find((l) => l.includes("(/pokemon/sets/pitch-black)"));
+  assert.ok(row && before);
+  assert.equal(row, before);
+  assert.ok(row.split("|")[2].includes("US$"), row);
+});
+
 test("blocks: pack-counts and etb-vs-pc-etb read the fixture's real counts", () => {
   const packs = BLOCKS["pack-counts"](ctx).facts;
   assert.equal(packs.boxPacks, "36");
@@ -211,25 +228,62 @@ test("blocks: sentences read right for a single set and for a clean sweep (deriv
   assert.doesNotMatch(perPack + etb, /\bin 0\b/);
 });
 
-test("blocks: coverage names Cardmarket and eBay only when they hold rows", () => {
-  const withCm = BLOCKS.coverage(ctx).facts.sourcesLine;
-  assert.match(withCm, /Cardmarket/, "the fixture holds Cardmarket rows");
-  assert.match(withCm, /No tracked eBay listing/, "the fixture holds no eBay rows");
-  const prod: PkCatalog = { ...catalog, sources: ["tcgplayer", "tcgplayer_market", "ebay"] };
-  const line = BLOCKS.coverage({ catalog: prod, today: TODAY }).facts.sourcesLine;
-  assert.doesNotMatch(line, /Cardmarket/);
-  assert.match(line, /eBay \(the cheapest matching listing/);
-  assert.doesNotMatch(line, /No tracked eBay/);
+test("blocks: the PC ETB's extra packs are never a range through zero or below (derived variants)", () => {
+  // The fixture's PC ETBs all hold more packs; make one set's level, then fewer.
+  const base = BLOCKS["etb-vs-pc-etb"](ctx);
+  const sets = [...base.markdown.matchAll(/\(\/pokemon\/sets\/([a-z0-9-]+)\)/g)].map((m) => m[1]);
+  const slug = sets.find((s) => catalog.tiles.some((t) => t.setSlug === s && t.kind === "etb" && t.packCount != null));
+  assert.ok(slug, "a set with both boxes and an ETB count");
+  const etbPacks = catalog.tiles.find((t) => t.setSlug === slug && t.kind === "etb" && t.packCount != null)?.packCount as number;
+  const line = (pcPacks: number) => {
+    const tiles = catalog.tiles.map((t) => (t.setSlug === slug && t.kind === "pc-etb" ? { ...t, packCount: pcPacks } : t));
+    return BLOCKS["etb-vs-pc-etb"]({ catalog: { ...catalog, tiles }, today: TODAY }).facts.pcEtbExtraPacksLine;
+  };
+  for (const [pcPacks, word] of [
+    [etbPacks, /as many/],
+    [etbPacks - 1, /fewer/],
+  ] as const) {
+    const l = line(pcPacks);
+    assert.ok(l, `pc ${pcPacks}`);
+    assert.match(l, word, l);
+    assert.doesNotMatch(l, /between -?\d+ and|\b0 more|-\d/, l);
+    assert.deepEqual(textViolations(l), []);
+  }
+  assert.match(base.facts.pcEtbExtraPacksLine, /\d+ more booster packs/);
 });
 
-test("blocks: method-constants quotes the code's own constants and names eBay's markets", () => {
-  const f = BLOCKS["method-constants"](ctx).facts;
+test("blocks: coverage names Cardmarket and eBay only when they hold rows", () => {
+  const withCm = BLOCKS.coverage(ctx).facts;
+  assert.match(withCm.sourcesLine, /Cardmarket/, "the fixture holds Cardmarket rows");
+  assert.match(withCm.sourcesLine, /No tracked eBay listing/, "the fixture holds no eBay rows");
+  assert.match(withCm.importLine, /TCGplayer's published prices and Cardmarket's/);
+  assert.doesNotMatch(withCm.importLine, /eBay/, "no eBay rows, so no claim that eBay is searched");
+  const prod: PkCatalog = { ...catalog, sources: ["tcgplayer", "tcgplayer_market", "ebay"] };
+  const f = BLOCKS.coverage({ catalog: prod, today: TODAY }).facts;
+  assert.doesNotMatch(f.sourcesLine + f.importLine, /Cardmarket/);
+  assert.match(f.sourcesLine, /eBay \(the cheapest matching listing/);
+  assert.doesNotMatch(f.sourcesLine, /No tracked eBay/);
+  assert.match(f.importLine, /a rotating share of eBay searches/);
+});
+
+test("blocks: method-constants quotes the code's own constants, attributes the scope date, and names eBay's markets only with eBay rows", () => {
+  const out = BLOCKS["method-constants"](ebayCtx);
+  const f = out.facts;
   assert.equal(f.offerStaleHours, "72");
   assert.equal(f.scopeStart, "7 Feb 2020");
   assert.equal(f.scopeSeries, "Sword & Shield");
   assert.equal(f.ebayMarkets, "the United States, the United Kingdom, Australia, Canada and the EU");
   assert.equal(f.ebaySearchOnly, "Singapore");
   assert.doesNotMatch(Object.values(f).join(" "), /\bfive\b/i);
+  const scope = out.markdown.split("\n").find((l) => l.startsWith("- **Scope:**")) ?? "";
+  assert.match(scope, /TCGplayer lists 7 Feb 2020/, "a release date is always attributed to TCGplayer");
+  assert.match(out.markdown, /eBay markets we search for matching listings:\*\* the United States/);
+
+  const none = BLOCKS["method-constants"](ctx);
+  assert.equal(none.facts.ebayMarkets, undefined);
+  assert.equal(none.facts.ebaySearchOnly, undefined);
+  assert.doesNotMatch(none.markdown, /eBay/);
+  assert.match(none.markdown, /TCGplayer lists 7 Feb 2020/);
 });
 
 // ── Posts: tokens, copy, length ───────────────────────────────────────────────
@@ -244,9 +298,9 @@ test("posts: every [[pk:…]] is a known block and every {{fact}} is one its blo
   }
 });
 
-test("posts: against the fixture every token resolves, nothing is dropped, and no NaN/null/undefined renders", () => {
+test("posts: with eBay rows every token resolves, nothing is dropped, and no NaN/null/undefined renders", () => {
   for (const p of POKEMON_POSTS) {
-    const filled = fillPost(p, ctx);
+    const filled = fillPost(p, ebayCtx);
     assert.equal(filled.dropped, 0, p.slug);
     assert.equal(filled.summary.length, p.summary?.length ?? 0, p.slug);
     assert.equal(filled.faq.length, p.faq?.length ?? 0, p.slug);
@@ -256,6 +310,21 @@ test("posts: against the fixture every token resolves, nothing is dropped, and n
     assert.doesNotMatch(all, /\{\{|\[\[pk:|\bNaN\b|\bnull\b|\bundefined\b/, p.slug);
     assert.deepEqual(textViolations(all), [], p.slug);
     assert.ok(postFactKeys(p).every((k) => filled.facts[k]), p.slug);
+  }
+});
+
+test("posts: with no eBay rows nothing claims an eBay search; only the eBay lines drop", () => {
+  for (const p of POKEMON_POSTS) {
+    const filled = fillPost(p, ctx);
+    const claims = [...filled.summary, ...filled.faq.flatMap((f) => [f.q, f.a])].join("\n");
+    assert.doesNotMatch(claims, /search(?:es)? eBay|eBay searches|eBay markets/i, p.slug);
+    assert.doesNotMatch(filled.body, /eBay markets we search/, p.slug);
+    assert.ok(filled.summary.length >= 3 && filled.faq.length >= 3, p.slug);
+    const all = allGenerated(filled).join("\n");
+    assert.doesNotMatch(all, /\{\{|\[\[pk:|\bNaN\b|\bnull\b|\bundefined\b/, p.slug);
+    assert.deepEqual(textViolations(all), [], p.slug);
+    // The method post loses its eBay-markets bullet and FAQ; the data posts lose nothing.
+    assert.equal(filled.dropped, p.slug === "how-we-price-pokemon-sealed" ? 2 : 0, p.slug);
   }
 });
 

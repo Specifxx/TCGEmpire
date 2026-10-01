@@ -128,8 +128,11 @@ function sharedPackCount(tiles: readonly PkTile[]): number | null {
 
 // ── per-pack-by-set ───────────────────────────────────────────────────────────
 // For each recent released set: the cheapest open US listing of each of the
-// four kinds (cheapestByKind, so half boxes never stand for a box and
-// pre-orders are out) divided by its packs. The lowest in a row is bold.
+// four kinds that has a pack count (cheapestByKind, so half boxes never stand
+// for a box and pre-orders are out) divided by its packs. The lowest in a row
+// is bold. Uncounted products are out before the pick, not after: an enhanced
+// booster box has no count from its name and is often cheaper than the
+// standard box, so picking first would blank a cell the standard box can fill.
 
 function perPackBySet(ctx: BlockCtx): BlockOut {
   const { catalog } = ctx;
@@ -142,7 +145,7 @@ function perPackBySet(ctx: BlockCtx): BlockOut {
       skipped.push(s);
       continue;
     }
-    const cheapest = cheapestByKind(tiles);
+    const cheapest = cheapestByKind(tiles.filter((t) => t.perPackCents != null));
     const cells: Partial<Record<PkKind, PkTile>> = {};
     for (const k of PER_PACK_KINDS) {
       const t = cheapest[k];
@@ -217,7 +220,7 @@ function perPackBySet(ctx: BlockCtx): BlockOut {
     "",
     usCaption(
       catalog,
-      " Each cell is the cheapest product of its kind in that set divided by the booster packs inside; a dash means no open listing or no known pack count. Half boxes never stand for a booster box, and pre-orders are left out. Sets are the most recent released ones by the dates TCGplayer lists.",
+      " Each cell is the cheapest product of its kind in that set with a known pack count, divided by the booster packs inside; a dash means no open listing or no known pack count. Half boxes never stand for a booster box, and pre-orders are left out. Sets are the most recent released ones by the dates TCGplayer lists.",
     ),
     "",
     notes.join(" "),
@@ -287,6 +290,36 @@ function packCounts(ctx: BlockCtx): BlockOut {
 interface EtbSide {
   packs: number | null;
   tile: PkTile | undefined;
+}
+
+/**
+ * How the Pokémon Center ETB's pack count compared with the regular one's in
+ * each set where both are known (`extras` = PC packs minus ETB packs). A range
+ * of "more" is only written when every set had more: a set where the two were
+ * level or the PC box held fewer is counted as such, never as "0 more".
+ */
+function extraPacksLine(extras: readonly number[]): string {
+  const n = extras.length;
+  const setWord = n === 1 ? "set" : "sets";
+  const more = extras.filter((x) => x > 0);
+  if (more.length === n) {
+    const lo = Math.min(...more);
+    const hi = Math.max(...more);
+    return lo === hi
+      ? `The Pokémon Center ETB held ${lo} more booster packs than the regular one in ${n === 1 ? "the one set" : `each of the ${n} sets`} where both counts are known.`
+      : `Where both counts are known (${n} ${setWord}), the Pokémon Center ETB held between ${lo} and ${hi} more booster packs than the regular one.`;
+  }
+  const level = extras.filter((x) => x === 0).length;
+  const groups = [
+    { n: more.length, long: "more booster packs than the regular one", short: "more" },
+    { n: level, long: "as many booster packs as the regular one", short: "as many" },
+    { n: n - more.length - level, long: "fewer booster packs than the regular one", short: "fewer" },
+  ].filter((g) => g.n > 0);
+  if (groups.length === 1) {
+    return `${n === 1 ? "In the one set" : `In each of the ${n} sets`} where both counts are known, the Pokémon Center ETB held ${groups[0].long}.`;
+  }
+  const parts = groups.map((g, i) => `${i === 0 ? g.long : g.short} in ${g.n}`);
+  return `Where both counts are known (${n} ${setWord}), the Pokémon Center ETB held ${listJoin(parts)}.`;
 }
 
 function etbSide(tiles: readonly PkTile[], kind: PkKind): EtbSide {
@@ -364,14 +397,8 @@ function etbVsPcEtb(ctx: BlockCtx): BlockOut {
     notes.push(facts.etbVsPcLine);
   }
   if (extras.length) {
-    const distinct = [...new Set(extras)];
-    const setWord = extras.length === 1 ? "set" : "sets";
-    if (distinct.length === 1 && distinct[0] > 0) {
-      facts.pcEtbExtraPacksLine = `The Pokémon Center ETB held ${distinct[0]} more booster packs than the regular one in each of the ${extras.length} ${setWord} where both counts are known.`;
-    } else if (distinct.length > 1) {
-      facts.pcEtbExtraPacksLine = `Where both counts are known (${extras.length} ${setWord}), the Pokémon Center ETB held between ${Math.min(...extras)} and ${Math.max(...extras)} more booster packs than the regular one.`;
-    }
-    if (facts.pcEtbExtraPacksLine) notes.push(facts.pcEtbExtraPacksLine);
+    facts.pcEtbExtraPacksLine = extraPacksLine(extras);
+    notes.push(facts.pcEtbExtraPacksLine);
   }
   const gap = median(gaps);
   if (gap != null) {
@@ -401,6 +428,7 @@ function etbVsPcEtb(ctx: BlockCtx): BlockOut {
 // What the catalogue holds: products, sets, pack counts, US listings, and the
 // sources with rows at all (catalog.sources). Cardmarket is named only when it
 // has rows; eBay only when it has rows, else the search that always exists.
+// The same rule decides what importLine says the daily import reads.
 
 function sourcesSentence(sources: readonly PkSource[], asOf: string | null): string {
   const has = (s: PkSource) => sources.includes(s);
@@ -411,6 +439,16 @@ function sourcesSentence(sources: readonly PkSource[], asOf: string | null): str
   if (!parts.length) return "No source holds any rows yet.";
   const ebay = has("ebay") ? "" : ` No tracked eBay listing is in the data${asOf ? ` ${asOf}` : ""}; every product still links to a search of the visitor's own eBay.`;
   return `The sources with rows in the data: ${listJoin(parts)}.${ebay}`;
+}
+
+/** What the daily import reads, from the sources that hold rows; null when none does. */
+function importSentence(sources: readonly PkSource[]): string | null {
+  const has = (s: PkSource) => sources.includes(s);
+  const parts: string[] = [];
+  if (has("tcgplayer") || has("tcgplayer_market")) parts.push("TCGplayer's published prices");
+  if (has("cardmarket") || has("cardmarket_trend")) parts.push("Cardmarket's published price guide");
+  if (has("ebay")) parts.push("a rotating share of eBay searches");
+  return parts.length ? `The daily import reads ${listJoin(parts)}, and every page is refreshed from it.` : null;
 }
 
 function coverage(ctx: BlockCtx): BlockOut {
@@ -441,6 +479,7 @@ function coverage(ctx: BlockCtx): BlockOut {
     (presale ? `; ${num(presale)} are pre-orders` : "") +
     ".";
   const sourcesLine = sourcesSentence(catalog.sources, asOf);
+  const importLine = importSentence(catalog.sources);
   const facts: Record<string, string> = {
     productCount: num(tiles.length),
     setCount: num(catalog.sets.length),
@@ -448,6 +487,7 @@ function coverage(ctx: BlockCtx): BlockOut {
     usListedCount: num(listed),
     coverageLine,
     sourcesLine,
+    ...(importLine ? { importLine } : {}),
   };
   const markdown = [...lines, "", `*Every active product in the catalogue, by kind. An open listing is one we checked in the last ${OFFER_STALE_H} hours and found in stock.*`, "", coverageLine, "", sourcesLine].join("\n");
   return { markdown, facts };
@@ -458,29 +498,37 @@ function coverage(ctx: BlockCtx): BlockOut {
 // scope start (catalog.ts), the stale-row threshold (lib/sealed-offers.ts) and
 // the markets the importer searches eBay in (ebay.ts), named through
 // COUNTRIES. Numbers that live only in the importer's budget stay out.
+//
+// The eBay markets are named only when eBay holds rows, the coverage block's
+// rule: with the importer off (no credentials, or POKEMON_EBAY=0) "we search
+// eBay in…" would be false, and the page would contradict its own "no tracked
+// eBay listing". Every token that quotes them drops with them.
+// SCOPE_START is compared against the dates TCGplayer lists (catalog.ts), so
+// it is attributed like every other release date.
 
 function names(codes: readonly string[]): string {
   return listJoin(codes.filter((c): c is Country => c in COUNTRIES).map((c) => COUNTRIES[c as Country].place));
 }
 
-export function methodFacts(): Record<string, string> {
-  const searchOnly = COUNTRY_LIST.map((c) => c.code).filter((c) => !POKEMON_EBAY_MARKETS.includes(c));
+function methodConstants(ctx: BlockCtx): BlockOut {
   const series = seriesForDate(SCOPE_START);
-  return {
+  const f: Record<string, string> = {
     scopeStart: formatDay(SCOPE_START) ?? SCOPE_START,
     ...(series ? { scopeSeries: series } : {}),
     offerStaleHours: String(OFFER_STALE_H),
-    ebayMarkets: names(POKEMON_EBAY_MARKETS),
-    ...(searchOnly.length ? { ebaySearchOnly: names(searchOnly) } : {}),
   };
-}
-
-function methodConstants(): BlockOut {
-  const f = methodFacts();
+  if (ctx.catalog.sources.includes("ebay")) {
+    f.ebayMarkets = names(POKEMON_EBAY_MARKETS);
+    const searchOnly = COUNTRY_LIST.map((c) => c.code).filter((c) => !POKEMON_EBAY_MARKETS.includes(c));
+    if (searchOnly.length) f.ebaySearchOnly = names(searchOnly);
+  }
+  const scope = f.scopeSeries
+    ? `English-language sealed products from the ${f.scopeSeries} series onward, pre-orders included. TCGplayer lists ${f.scopeStart} for the series' first set, and a product outside any set is in scope when TCGplayer lists that day or later for its release.`
+    : `English-language sealed products whose release TCGplayer lists for ${f.scopeStart} or later, pre-orders included.`;
   const markdown = [
-    `- **Scope:** English-language sealed products released from ${f.scopeSeries ? `${f.scopeSeries} (${f.scopeStart})` : f.scopeStart} onward, pre-orders included.`,
+    `- **Scope:** ${scope}`,
     `- **Stale listings:** a listing we have not re-checked within ${f.offerStaleHours} hours shows as unknown, never as in stock.`,
-    `- **eBay markets we search for matching listings:** ${f.ebayMarkets}.`,
+    ...(f.ebayMarkets ? [`- **eBay markets we search for matching listings:** ${f.ebayMarkets}.`] : []),
     ...(f.ebaySearchOnly ? [`- **eBay search link only:** ${f.ebaySearchOnly}, where we search for no listing of our own.`] : []),
   ].join("\n");
   return { markdown, facts: f };
@@ -505,6 +553,6 @@ export const BLOCK_FACTS: Record<BlockId, readonly string[]> = {
   "per-pack-by-set": ["perPackSets", "perPackCompared", "perPackLine", "perPackLeader", "perPackLeaderWins", "perPackLowest"],
   "pack-counts": ["packCountSets", "boxPacks", "etbPacks", "pcEtbPacks", "bundlePacks", "packCountsLine", "etbPcPacksLine", "pcEtbExtraPacks"],
   "etb-vs-pc-etb": ["etbVsPcSets", "etbVsPcLine", "pcEtbExtraPacksLine", "pcEtbGapLine"],
-  coverage: ["productCount", "setCount", "packCountCount", "usListedCount", "coverageLine", "sourcesLine"],
+  coverage: ["productCount", "setCount", "packCountCount", "usListedCount", "coverageLine", "sourcesLine", "importLine"],
   "method-constants": ["scopeStart", "scopeSeries", "offerStaleHours", "ebayMarkets", "ebaySearchOnly"],
 };

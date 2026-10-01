@@ -27,7 +27,7 @@ None of the figures below were typed in. Each table is computed from the same ca
 
 ## What each product holds
 
-A **booster box** is a sealed carton of booster packs, sold to stores as one unit. Nothing else is inside: no sleeves, no dice, no promo card. It is the largest of the three by a long way.
+A **booster box** is a sealed carton of booster packs, sold to stores as one unit. A standard booster box holds booster packs and nothing else: no sleeves, no dice, no promo card. An enhanced booster box adds promos, and its pack count is read only from its contents list. Either way it is the largest of the three by a long way.
 
 An **Elite Trainer Box** bundles booster packs with sleeves, energy cards, dice, condition markers and a storage box with dividers. Part of its price pays for those extras, which matters to a player who needs them and not at all to a collector who only opens packs.
 
@@ -43,7 +43,7 @@ The count comes from the product's own published contents list whenever it has o
 
 ## Price per pack, set by set
 
-Each row below is one recent set. Each cell takes the cheapest product of that kind with an open listing and divides its price by the packs inside. The lowest figure in a row is in bold.
+Each row below is one recent set. Each cell takes the cheapest product of that kind with an open listing and a pack count, and divides its price by the packs inside. The lowest figure in a row is in bold.
 
 [[pk:per-pack-by-set]]
 
@@ -53,7 +53,7 @@ A dash is not a zero. It means we have no open US listing for that product, or n
 
 The per-pack figure carries everything the price pays for. That is the main reason the three products seldom agree.
 
-- A booster box spreads its price over the most packs and adds nothing else, so there are no extras inside its figure.
+- A standard booster box spreads its price over the most packs and adds nothing else, so there are no extras inside its figure. An enhanced booster box with a known count carries the cost of its promos in its figure.
 - An Elite Trainer Box carries the cost of its accessories in every pack. If you would buy sleeves and dice anyway, part of that cost is something you were going to spend; if you would not, it is cost with no packs behind it.
 - A booster bundle has no extras either, but it holds the fewest packs, so a small change in its price moves its per-pack figure the most.
 - Listings for each product move on their own. One can climb while another from the same set stays put, and the cheapest listing can change hands from one seller to another overnight.

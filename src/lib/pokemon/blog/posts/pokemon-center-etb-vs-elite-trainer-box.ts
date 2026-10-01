@@ -32,7 +32,7 @@ An Elite Trainer Box bundles booster packs with sleeves, energy cards, dice, con
 
 ## What the Pokémon Center version adds
 
-The Pokémon Center Elite Trainer Box is the official store's own version of the ETB, usually with extra booster packs and a stamped promo card. We hold no data on the promo card, so it plays no part in anything below. The extra packs are the part we can measure, and here are the counts we read from each product's contents list across the recent sets:
+The Pokémon Center Elite Trainer Box is the official store's own version of the ETB, usually with extra booster packs and a stamped promo card. We hold no data on the promo card, so it plays no part in anything below. The extra packs are the part we can measure. Here are the most common counts of each kind across the recent sets, with where each count was read:
 
 [[pk:pack-counts]]
 

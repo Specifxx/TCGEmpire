@@ -5,7 +5,10 @@ import type { PokemonPost } from "../types";
 // ebay.ts's search filter), the stale-row rule (lib/sealed-offers.ts, quoted
 // through a token), references below the comparison (board.ts), pack counts
 // (packs.ts) and price per pack (value.ts). Cardmarket is named only by the
-// coverage block, and only when it has rows.
+// coverage block, and only when it has rows. The same holds for every claim
+// that eBay is searched now: the summary bullet and FAQs that say so quote
+// {{ebayMarkets}} or {{importLine}}, which exist only when eBay holds rows, so
+// they drop with the importer off. The matching rules stay, as method.
 
 export const howWePricePokemonSealed: PokemonPost = {
   slug: "how-we-price-pokemon-sealed",
@@ -36,7 +39,7 @@ The catalogue is English-language sealed product: booster boxes, Elite Trainer B
 
 **TCGplayer.** Its own published price data gives us, for every product, the cheapest listing on TCGplayer and TCGplayer's market price. TCGplayer's listings are US listings, so they appear in the United States only.
 
-**eBay.** For booster boxes, Elite Trainer Boxes, Pokémon Center ETBs, booster bundles, and Ultra-Premium and Super-Premium Collections from recent sets, plus pre-orders, we search eBay for the cheapest listing that matches the product. The search covers fixed-price listings in new condition that the seller will deliver to the market in question. The markets are named in the rules further down. eBay allows a limited number of searches a day, shared with the rest of the site, so products are searched in rotation: the ones never checked come first, then the ones checked longest ago.
+**eBay.** A tracked eBay price comes from our own search of eBay for the cheapest listing that matches the product. That search runs for booster boxes, Elite Trainer Boxes, Pokémon Center ETBs, booster bundles, and Ultra-Premium and Super-Premium Collections from recent sets, plus pre-orders. It covers fixed-price listings in new condition that the seller will deliver to the market in question. eBay allows a limited number of searches a day, shared with the rest of the site, so products are searched in rotation: the ones never checked come first, then the ones checked longest ago.
 
 **eBay searches.** Every product, tracked or not, also links to a search of the visitor's own eBay site. A search shows everything listed there; it is not a price we have checked, and we never present it as one.
 
@@ -89,7 +92,7 @@ RiftCompare is built and run by one person, Bill, and this section is new. If a 
     },
     {
       q: "How often are the prices updated?",
-      a: "Once a day. The daily import reads TCGplayer's published prices and a rotating share of eBay searches, and every page is refreshed from it. The prices in this post are {{asOf}}.",
+      a: "Once a day. {{importLine}} The prices in this post are {{asOf}}.",
     },
     {
       q: "When does a listing count as out of date?",
