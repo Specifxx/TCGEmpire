@@ -34,6 +34,7 @@ test("product kinds: the specific shape wins, real titles", () => {
     ["Phantasmal Flames Booster Pack", "booster-pack"],
     ["Phantasmal Flames Sleeved Booster Pack", "booster-pack"],
     ["League Battle Deck [Gardevoir ex]", "deck"],
+    ["Greninja ex Battle Deck & 2 Booster Bundle", "deck"],
     ["151 Poster Collection", "collection"],
     ["30th Celebration Greninja ex Box", "collection"],
     // Out of scope by design.
@@ -61,11 +62,13 @@ test("groups: expansions, setless specials and the misc group are in scope; prom
     role: "set",
     series: "Mega Evolution",
     name: "Phantasmal Flames",
+    main: true,
   });
   assert.deepEqual(groupRole({ name: "SV: Scarlet & Violet 151", publishedOn: "2023-09-22" }), {
     role: "set",
     series: "Scarlet & Violet",
     name: "Scarlet & Violet 151",
+    main: false,
   });
   assert.equal((groupRole({ name: "SWSH07: Evolving Skies", publishedOn: "2021-08-27" }) as { series: string }).series, "Sword & Shield");
   assert.equal((groupRole({ name: "Celebrations", publishedOn: "2021-10-08" }) as { role: string }).role, "set");

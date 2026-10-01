@@ -146,6 +146,8 @@ async function importTcgcsv(summary: PokemonImportSummary): Promise<void> {
           presale: p.presale,
           contents: p.contents,
           upc: p.upc,
+          packCount: p.packCount,
+          packCountFrom: p.packCountFrom,
           active: true,
         };
         return db.pokemonProduct.upsert({

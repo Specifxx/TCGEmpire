@@ -9,6 +9,7 @@
 // "cheapest English listing" filter lib/tcgplayer.ts needs is not needed here.
 
 import { classifyPokemonSealed, type PkKind } from "./kinds";
+import { packCount } from "./packs";
 
 // ── TCGCSV payload shapes (only the fields we read) ──────────────────────────
 export interface TcgcsvGroup {
@@ -73,7 +74,8 @@ export function seriesForDate(isoDay: string | null | undefined): PkSeries | nul
 }
 
 export type GroupRole =
-  | { role: "set"; series: PkSeries; name: string }
+  // `main`: a numbered expansion ("ME02:", "SV05:", "SWSH07:"), not a special set.
+  | { role: "set"; series: PkSeries; name: string; main: boolean }
   | { role: "setless" }
   | { role: "misc" }
   | null;
@@ -84,10 +86,10 @@ export function groupRole(g: Pick<TcgcsvGroup, "name" | "publishedOn">): GroupRo
   if (SETLESS_GROUP.test(g.name)) return seriesForDate(g.publishedOn) ? { role: "setless" } : null;
   if (NOT_A_SET.test(g.name)) return null;
   for (const [re, series] of SERIES_PREFIX) {
-    if (re.test(g.name)) return { role: "set", series, name: g.name.replace(re, "").trim() };
+    if (re.test(g.name)) return { role: "set", series, name: g.name.replace(re, "").trim(), main: /^(?:ME|SV|SWSH)\d+:/.test(g.name) };
   }
   const special = UNPREFIXED_SETS[g.name];
-  if (special) return { role: "set", series: special, name: g.name };
+  if (special) return { role: "set", series: special, name: g.name, main: false };
   return null;
 }
 
@@ -172,6 +174,9 @@ export interface CatalogProduct {
   presale: boolean;
   contents: string[];
   upc: string | null;
+  /** Booster packs inside (lib/pokemon/packs.ts), null when not knowable. */
+  packCount: number | null;
+  packCountFrom: "contents" | "name" | null;
 }
 export interface CatalogPrice {
   productId: number;
@@ -237,6 +242,8 @@ export function buildCatalog(
       }
       seen.add(p.productId);
       if (released && (!earliest || released < earliest)) earliest = released;
+      const contents = parseContents((p.extendedData ?? []).find((e) => e.name === "CardText")?.value);
+      const packs = packCount({ name: p.name, kind, contents, mainExpansion: role.role === "set" && role.main });
       setProducts.push({
         id: p.productId,
         name: displayName(p.name),
@@ -249,8 +256,10 @@ export function buildCatalog(
         tcgplayerUrl: p.url || `https://www.tcgplayer.com/product/${p.productId}`,
         releasedOn: released,
         presale: Boolean(p.presaleInfo?.isPresale),
-        contents: parseContents((p.extendedData ?? []).find((e) => e.name === "CardText")?.value),
+        contents,
         upc: upcOf(p),
+        packCount: packs?.count ?? null,
+        packCountFrom: packs?.from ?? null,
       });
     }
     if (!setProducts.length) continue;

@@ -52,6 +52,10 @@ model PokemonProduct {
   presale      Boolean   @default(false)
   // "What's inside", one line each, parsed from the listing's own bullet list.
   contents     String[]
+  // Booster packs inside, from the contents list or (four shapes only) the name:
+  // lib/pokemon/packs.ts. Null when not knowable — never guessed.
+  packCount     Int?
+  packCountFrom String? // "contents" | "name"
   upc          String?
   cardmarketId Int?
   // false once a successful read of its group no longer lists it.

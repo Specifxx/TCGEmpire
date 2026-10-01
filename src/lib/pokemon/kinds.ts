@@ -167,6 +167,8 @@ export function classifyPokemonSealed(name: string): PkKind | null {
   if (/elite trainer box|\betb\b/.test(n)) return "etb";
   if (/ultra[- ]?premium collection/.test(n)) return "upc";
   if (/super[- ]?premium collection/.test(n)) return "spc";
+  // "Greninja ex Battle Deck & 2 Booster Bundle" is a deck that comes with packs.
+  if (/\bbattle decks?\b/.test(n)) return "deck";
   if (/booster bundle/.test(n)) return "booster-bundle";
   if (/booster box|\bhalf booster box\b/.test(n)) return "booster-box";
   if (/build (?:&|and) battle/.test(n)) return "build-battle";
