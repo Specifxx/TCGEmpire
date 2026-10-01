@@ -2,16 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
-import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { ebaySearchUrl } from "@/lib/affiliate";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
 import { getPokemonCatalog } from "@/lib/pokemon/data";
-import { SETLESS, SORTS, filterTiles, isFiltered, pageOf, parseBrowse, sortTiles, toDisplay } from "@/lib/pokemon/browse";
+import { SETLESS, SORTS, filterTiles, isFiltered, pageOf, parseBrowse, sealedIndexing, searchTitle, sortTiles, toDisplay } from "@/lib/pokemon/browse";
 import { PK_KINDS } from "@/lib/pokemon/kinds";
 import { pokemonEbayQuery } from "@/lib/pokemon/ebay-query";
-import { sourceList } from "@/lib/pokemon/copy";
-import type { PkCatalog } from "@/lib/pokemon/types";
+import { homeStats } from "@/lib/pokemon/home";
+import { pokemonMeta } from "@/lib/pokemon/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SealedFilters } from "@/components/SealedFilters";
 import { SealedSort } from "@/components/SealedSort";
@@ -22,25 +21,30 @@ import { PokemonTile } from "@/components/pokemon/PokemonTile";
 // Every Pokémon sealed product, filtered and sorted on the server from the
 // market's cached catalogue — the /sealed page's shape (force-dynamic,
 // searchParams, the same SealedFilters and SealedSort pointed at this path).
-// Filtered and searched views are noindex, canonical to the clean page.
+// Indexing (lib/pokemon/browse.ts sealedIndexing): the clean first page only;
+// pages 2+ are self-canonical noindex, follow; filtered, searched and sorted
+// views are noindex, follow and canonical to the clean page. A read error
+// throws (HTTP 500); an empty catalogue is a 200 with noindex.
 export const dynamic = "force-dynamic";
 
 type SP = Record<string, string | string[] | undefined>;
 
 const TITLE = "All Pokémon Sealed Products: Prices Compared";
 const DESCRIPTION =
-  "Every English Pokémon sealed product from Sword & Shield on, with the cheapest TCGplayer and eBay listing we track in your market. Filter by set, product type and price.";
+  "English Pokémon sealed products from Sword & Shield on, with the cheapest TCGplayer or eBay listing we track in your market. Filter by set, type and price.";
 
-export function generateMetadata({ searchParams }: { searchParams: SP }): Metadata {
+export async function generateMetadata({ searchParams }: { searchParams: SP }): Promise<Metadata> {
   if (!pokemonEnabled()) return notFoundMetadata();
   const q = parseBrowse(searchParams);
-  return {
-    title: q.q ? `${q.q}: Pokémon sealed prices` : TITLE,
+  const catalog = await getPokemonCatalog(getCountry());
+  const { path, noindex } = sealedIndexing(q);
+  return pokemonMeta({
+    title: q.q ? searchTitle(q.q) : TITLE,
     description: DESCRIPTION,
-    alternates: pageAlternates("/pokemon/sealed"),
-    openGraph: pageOpenGraph({ title: TITLE, description: DESCRIPTION, url: "/pokemon/sealed" }),
-    robots: isFiltered(q) || q.page > 1 || q.sort ? { index: false, follow: true } : undefined,
-  };
+    path,
+    ogImage: "section",
+    robots: noindex || catalog.tiles.length === 0 ? { index: false, follow: true } : undefined,
+  });
 }
 
 function pageHref(sp: SP, page: number): string {
@@ -59,20 +63,15 @@ export default async function PokemonSealedPage({ searchParams }: { searchParams
   const currency = getDisplayCurrency(country);
   const showEur = country === "UK" && currency === "EUR";
   const query = parseBrowse(searchParams);
-  let catalog: PkCatalog | null = null;
-  try {
-    catalog = await getPokemonCatalog(country);
-  } catch (e) {
-    console.error("[pokemon] catalogue read failed", e);
-  }
-  const all = catalog?.tiles ?? [];
+  const catalog = await getPokemonCatalog(country);
+  const all = catalog.tiles;
   const results = sortTiles(filterTiles(all, query), query.sort);
   const { items, page, pages } = pageOf(results, query.page);
   const shown = toDisplay(items, showEur);
 
   const kindOptions = PK_KINDS.filter((k) => all.some((t) => t.kind === k.id)).map((k) => ({ value: k.id, label: k.plural }));
   const setOptions = [
-    ...(catalog?.sets ?? []).map((s) => ({ code: s.slug, name: s.name })),
+    ...catalog.sets.map((s) => ({ code: s.slug, name: s.name })),
     ...(all.some((t) => !t.setSlug) ? [{ code: SETLESS, name: "Collections & other products" }] : []),
   ];
   const ebayHref = ebaySearchUrl(country, pokemonEbayQuery(query.q || "sealed"), "pkmn-browse");
@@ -125,17 +124,15 @@ export default async function PokemonSealedPage({ searchParams }: { searchParams
             <div className="card-surface grid place-items-center p-12 text-center text-slate-400">
               <div>
                 <p className="text-lg font-semibold text-white">
-                  {isFiltered(query) ? "No Pokémon sealed products match" : "Pokémon prices are on their way"}
+                  {isFiltered(query) ? "No Pokémon sealed products match" : "No prices yet."}
                 </p>
-                <p className="mt-1 text-sm">
-                  {isFiltered(query) ? (
+                {isFiltered(query) && (
+                  <p className="mt-1 text-sm">
                     <Link href="/pokemon/sealed" className="text-brand-400 hover:underline">
                       Clear filters
                     </Link>
-                  ) : (
-                    "The first daily import has not run yet."
-                  )}
-                </p>
+                  </p>
+                )}
                 <OutboundLink
                   href={ebayHref}
                   retailer="pkmn_ebay_search"
@@ -152,8 +149,8 @@ export default async function PokemonSealedPage({ searchParams }: { searchParams
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-              {shown.map((t) => (
-                <PokemonTile key={t.id} tile={t} currency={currency} />
+              {shown.map((t, i) => (
+                <PokemonTile key={t.id} tile={t} currency={currency} eager={i < 4} />
               ))}
             </div>
           )}
@@ -180,7 +177,7 @@ export default async function PokemonSealedPage({ searchParams }: { searchParams
 
       <div className="mt-8 text-center">
         <p className="text-[11px] text-slate-500">
-          Prices come from {sourceList(catalog?.sources ?? [])}, are checked once a day and may have changed since.
+          Prices come from {homeStats(catalog).sourceList}, are checked once a day and may have changed since.
         </p>
         <AffiliateDisclosure partner="both" tight />
       </div>

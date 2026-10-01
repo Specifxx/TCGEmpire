@@ -10,9 +10,12 @@ import { pokemonSectionOn } from "@/lib/pokemon/flag";
 // Riftbound homepage, and it renders nothing while the section is off.
 // `pokemon_promo_click` (by `target`) is how the POC's homepage reach is
 // measured against the section's own traffic.
+// The two kind hubs, not the filtered grid: they are indexable landing pages
+// with the price per pack, where `?type=` views are noindex. `target` values
+// are unchanged so the event's history stays one series.
 const LINKS = [
-  { href: "/pokemon/sealed?type=booster-box", label: "Booster boxes", target: "booster-box" },
-  { href: "/pokemon/sealed?type=etb", label: "Elite Trainer Boxes", target: "etb" },
+  { href: "/pokemon/booster-boxes", label: "Booster boxes", target: "booster-box" },
+  { href: "/pokemon/elite-trainer-boxes", label: "Elite Trainer Boxes", target: "etb" },
   { href: "/pokemon/sets", label: "By set", target: "sets" },
 ];
 
