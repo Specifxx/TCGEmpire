@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
@@ -44,6 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PokemonPricePerPackPage() {
+  if (!pokemonEnabled()) notFound();
   const country = getCountry();
   const currency = getDisplayCurrency(country);
   const catalog = await getPokemonCatalog(country);

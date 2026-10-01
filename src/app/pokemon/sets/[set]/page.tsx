@@ -66,6 +66,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function PokemonSetPage({ params }: { params: Params }) {
+  if (!pokemonEnabled()) notFound();
   const country = getCountry();
   const loaded = await load(params.set, country);
   if (!loaded) notFound();

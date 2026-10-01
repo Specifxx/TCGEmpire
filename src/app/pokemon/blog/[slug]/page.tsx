@@ -55,6 +55,7 @@ export function generateMetadata({ params }: { params: Params }): Metadata {
 }
 
 export default async function PokemonBlogPostPage({ params }: { params: Params }) {
+  if (!pokemonEnabled()) notFound();
   const post = visiblePost(params.slug);
   if (!post) notFound();
 

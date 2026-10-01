@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
@@ -59,6 +60,7 @@ function pageHref(sp: SP, page: number): string {
 }
 
 export default async function PokemonSealedPage({ searchParams }: { searchParams: SP }) {
+  if (!pokemonEnabled()) notFound();
   const country = getCountry();
   const currency = getDisplayCurrency(country);
   const showEur = country === "UK" && currency === "EUR";

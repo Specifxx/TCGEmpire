@@ -66,6 +66,25 @@ test("every host touchpoint that renders or lists something is behind the switch
   for (const og of ["src/app/pokemon/opengraph-image.tsx", "src/app/pokemon/sealed/[slug]/opengraph-image.tsx", "src/app/pokemon/sets/[set]/opengraph-image.tsx"]) {
     assert.match(read(og), /if \(!pokemonEnabled\(\)\) notFound\(\);/, og);
   }
+  // Every page that reads the Pokémon data gates its own body as well: Next
+  // renders the layout and the page in parallel, and a page whose read fails
+  // first answers 500 instead of the layout's 404 (measured with the section
+  // off and an ISR product page never rendered before).
+  const pages: string[] = [];
+  const visitPages = (d: string) => {
+    for (const e of readdirSync(join(ROOT, d))) {
+      const rel = `${d}/${e}`;
+      if (statSync(join(ROOT, rel)).isDirectory()) visitPages(rel);
+      else if (e === "page.tsx") pages.push(rel);
+    }
+  };
+  visitPages("src/app/pokemon");
+  for (const rel of pages) {
+    const src = stripComments(read(rel));
+    if (!/getPokemon(?:Catalog|Product)\(/.test(src)) continue;
+    const body = src.slice(src.indexOf("export default"));
+    assert.match(body, /^export default[^\n]*\{\s*if \(!pokemonEnabled\(\)\) notFound\(\);/, `${rel}: the page body gates itself first`);
+  }
   // The Discord page exists only once the owner has created the app.
   assert.match(read("src/app/pokemon/discord/page.tsx"), /if \(!appId\) notFound\(\);/);
 });

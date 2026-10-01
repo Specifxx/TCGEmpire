@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { ldJson, webPage } from "@/lib/jsonld";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
@@ -35,6 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PokemonSetsPage() {
+  if (!pokemonEnabled()) notFound();
   const country = getCountry();
   const currency = getDisplayCurrency(country);
   const raw = await getPokemonCatalog(country);

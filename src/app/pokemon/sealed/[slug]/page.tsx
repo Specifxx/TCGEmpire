@@ -71,6 +71,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function PokemonProductPage({ params }: { params: Params }) {
+  // Gate here too, not only in the layout: Next renders the layout and the page
+  // in parallel, so a page that reads first would fail with a 500 when the
+  // section is off rather than 404.
+  if (!pokemonEnabled()) notFound();
   const p = await getPokemonProduct(params.slug);
   if (!p) notFound();
 

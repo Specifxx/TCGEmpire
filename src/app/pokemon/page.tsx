@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
@@ -53,6 +54,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PokemonHub() {
+  if (!pokemonEnabled()) notFound();
   const country = getCountry();
   const currency = getDisplayCurrency(country);
   const showEur = country === "UK" && currency === "EUR";

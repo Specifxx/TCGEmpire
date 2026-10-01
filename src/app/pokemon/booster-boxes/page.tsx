@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
@@ -30,6 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BoosterBoxesPage() {
+  if (!pokemonEnabled()) notFound();
   const country = getCountry();
   const currency = getDisplayCurrency(country);
   const catalog = await getPokemonCatalog(country);
