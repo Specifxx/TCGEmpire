@@ -77,6 +77,7 @@ jobs:
 
       # Pokémon pages and the "pokemon" tag only: never the Riftbound content purge.
       - name: Purge the Pokémon pages
+        id: purge
         if: ${{ !cancelled() && steps.import.outcome == 'success' }}
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -88,3 +89,14 @@ jobs:
           fi
           code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 -X POST "$SITE_URL/api/pokemon/revalidate" -H "Authorization: Bearer $CRON_SECRET" || true)
           echo "revalidate: HTTP $code (404 means the section is switched off on the live site)"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+      # One request to /pokemon (US) right after a successful purge, so the US
+      # catalogue is recomputed now rather than by the first visitor, or by a
+      # Discord command racing its three-second deadline on a cold cache.
+      - name: Warm the Pokémon hub
+        if: ${{ !cancelled() && steps.purge.outputs.code == '200' }}
+        env:
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          curl -s -o /dev/null --max-time 60 -H "Cookie: country=US" "$SITE_URL/pokemon" || true
