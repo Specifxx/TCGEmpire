@@ -1,0 +1,46 @@
+name: Pokemon archive probe
+
+# One look at TCGCSV's daily TCGplayer price archive (scripts/pokemon/probe-archive.ts),
+# to decide whether the Pokémon section can backfill a year of market-price
+# history (docs/pokemon/README.md). By hand only: no schedule, no push trigger.
+#
+# It reads ONE public archive and prints its structure. No secrets, no database,
+# read-only token. The date input reaches the script only through env
+# (PROBE_DATE), never interpolated into a run: line, and the script refuses
+# anything that is not YYYY-MM-DD, so an input can never become shell.
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Archive day, YYYY-MM-DD (empty = yesterday, UTC)"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: 7-Zip
+        run: |
+          if ! command -v 7z >/dev/null 2>&1; then
+            sudo apt-get update -q && sudo apt-get install -y -q p7zip-full
+          fi
+          7z i | head -3
+
+      - name: Probe the archive
+        env:
+          PROBE_DATE: ${{ inputs.date }}
+        run: npx tsx scripts/pokemon/probe-archive.ts

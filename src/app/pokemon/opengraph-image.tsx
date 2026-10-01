@@ -1,9 +1,14 @@
 import { ImageResponse } from "next/og";
+import { notFound } from "next/navigation";
+import { pokemonEnabled } from "@/lib/pokemon/gate";
 
 // The share card for every /pokemon page without its own image (the product and
-// set pages pass their product image instead), so a Pokémon link never unfurls
-// with the site default's Riftbound card. Static: no data, no font or emoji
-// fetches, generated once at build.
+// set pages have their own price cards beside them), so a Pokémon link never
+// unfurls with the site default's Riftbound card. Static: no data, no font or
+// emoji fetches, generated once at build.
+//
+// An image route skips app/pokemon/layout.tsx, so it gates itself: with the
+// section off this URL is a 404 like every other /pokemon URL.
 export const alt = "Pokémon sealed prices on RiftCompare";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -12,6 +17,7 @@ const RED = "#e5484d";
 const KINDS = ["Booster boxes", "Elite Trainer Boxes", "Booster bundles", "Collections"];
 
 export default function OgImage() {
+  if (!pokemonEnabled()) notFound();
   return new ImageResponse(
     (
       <div
