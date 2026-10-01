@@ -16331,3 +16331,35 @@ sitemap orphan; the sitemap's 159 products equal the gate's SQL count), and
 screenshots at 390 and 1280. Not verifiable here: eBay rows (none locally),
 the Discord client itself, the TCGCSV archive (403 from this sandbox), and how
 Vercel caches the OG routes.
+
+## Pokémon: the Discord app removed, and eBay quota strictly Riftbound's first — 2026-10-01
+
+Owner, after the section went live: "I don't need the discord section we can
+remove it. Also let's please prioritise our eBay quota for riftbound and only
+use sparingly any remaining quota for pokemon."
+
+- **The Pokémon Discord app is gone**, not switched off: the interactions
+  route, `/pokemon/discord`, `lib/pokemon/discord.ts`, the command-registration
+  script, its tests, the sitemap entry, the hub's "Prices in Discord" chip and
+  the `POKEMON_DISCORD_*` variables. The isolation test fails if any of those
+  files comes back. Riftbound's own Discord (sign-in, invite, its bot) is
+  untouched. The link-free tools that stay are the price share cards and the
+  "Copy for Reddit / Copy for Discord" text, which are pastes, not a bot.
+- **eBay: Pokémon searches last, little, and above a Riftbound-sized floor.**
+  The first live import (22:05 UTC, run by hand) spent 160 calls at 4,210
+  remaining, and its 05:17 UTC schedule sat right before Riftbound's 07:00
+  refresh, the worst moment to take shared quota. Now:
+  - 05:17 UTC runs the catalogue and prices with no eBay at all;
+  - a second run at 21:47 UTC, after both Riftbound refreshes (07:00 and 19:00,
+    ~45 minutes each), adds eBay;
+  - it spends `min(60, remaining − 2500)`: at most 60 calls (1.2% of the day),
+    and never into the 2,500 that covers a full Riftbound run (~1,400) plus
+    `lib/ebay.ts`'s own 600 reserve, so wherever eBay's daily reset falls the
+    next Riftbound run is whole. An unreadable count still spends nothing;
+  - a manual run searches eBay only when "with_ebay" is ticked.
+  Tracking narrows to sets released in the last 12 months plus pre-orders
+  (~29 products × 5 markets, from ~50), so 60 a day still revisits each pair
+  about every two and a half days, inside the 72h after which a row shows as
+  unknown. Older sets keep their eBay search link. `tests/pokemon-ebay.test.ts`
+  pins the cap, the floor against `lib/ebay.ts`'s reserve, and that the only
+  eBay schedule runs after Riftbound's last.

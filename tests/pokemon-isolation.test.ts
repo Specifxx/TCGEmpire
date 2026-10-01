@@ -58,11 +58,7 @@ test("every host touchpoint that renders or lists something is behind the switch
   assert.match(read("src/app/api/pokemon/product/[slug]/route.ts"), /if \(!pokemonEnabled\(\)\)/);
   assert.match(read("src/lib/pokemon/sitemap.ts"), /if \(!pokemonEnabled\(\)\) return \[\];/);
   // Route handlers and opengraph-image files skip app/pokemon/layout.tsx, so
-  // each gates itself. The Discord endpoint also needs its own public key.
-  assert.match(
-    read("src/app/api/pokemon/discord/route.ts"),
-    /if \(!pokemonEnabled\(\) \|\| !publicKey\) return NextResponse\.json\(\{ error: "Not found" \}, \{ status: 404 \}\);/,
-  );
+  // each gates itself.
   for (const og of ["src/app/pokemon/opengraph-image.tsx", "src/app/pokemon/sealed/[slug]/opengraph-image.tsx", "src/app/pokemon/sets/[set]/opengraph-image.tsx"]) {
     assert.match(read(og), /if \(!pokemonEnabled\(\)\) notFound\(\);/, og);
   }
@@ -85,8 +81,11 @@ test("every host touchpoint that renders or lists something is behind the switch
     const body = src.slice(src.indexOf("export default"));
     assert.match(body, /^export default[^\n]*\{\s*if \(!pokemonEnabled\(\)\) notFound\(\);/, `${rel}: the page body gates itself first`);
   }
-  // The Discord page exists only once the owner has created the app.
-  assert.match(read("src/app/pokemon/discord/page.tsx"), /if \(!appId\) notFound\(\);/);
+  // The Pokémon Discord app was removed (owner, 2026-10-01): nothing may bring
+  // it back by half — no route, no page, no app-ID variable read.
+  for (const gone of ["src/app/api/pokemon/discord", "src/app/pokemon/discord", "src/lib/pokemon/discord.ts", "scripts/pokemon/register-discord.ts"]) {
+    assert.ok(!existsSync(join(ROOT, gone)), `${gone} is gone`);
+  }
 });
 
 test("the switch is OFF by default: nothing Pokémon shows until the owner turns it on", () => {

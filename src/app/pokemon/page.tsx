@@ -7,7 +7,6 @@ import { ebaySearchUrl } from "@/lib/affiliate";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
-import { pokemonDiscordAppId } from "@/lib/pokemon/flag";
 import { getPokemonCatalog } from "@/lib/pokemon/data";
 import { toDisplay } from "@/lib/pokemon/browse";
 import { pokemonFaq } from "@/lib/pokemon/copy";
@@ -68,13 +67,10 @@ export default async function PokemonHub() {
   const faq = pokemonFaq(home.stats.sources);
   const hasTiles = catalog.tiles.length > 0;
   const ebayTracked = home.stats.listingSources.includes("ebay");
-  // Published posts only (getPokemonPosts is the one published filter), and
-  // the Discord page only once the app exists: /pokemon/discord 404s without
-  // its ID, and this link keeps the sitemapped page from being an orphan.
+  // Published posts only: getPokemonPosts is the one published filter.
   const guides: HomeGuide[] = getPokemonPosts()
     .slice(0, 3)
     .map((p) => ({ href: `/pokemon/blog/${p.slug}`, title: p.title, excerpt: p.excerpt }));
-  const discordHref = pokemonDiscordAppId() ? "/pokemon/discord" : undefined;
 
   const newestSet = home.newest[0]?.set;
   const ebayLinks = [
@@ -104,7 +100,7 @@ export default async function PokemonHub() {
       />
       <Breadcrumbs trail={[{ name: "Pokémon", href: "/pokemon" }]} />
 
-      <HomeHero stats={home.stats} place={place} converted={currency !== "USD"} discordHref={discordHref} />
+      <HomeHero stats={home.stats} place={place} converted={currency !== "USD"} />
 
       {hasTiles && (
         <>

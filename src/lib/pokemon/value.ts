@@ -2,7 +2,7 @@
 // the cheapest product of each kind, the recent-set window, typical pack counts.
 // Pure and client-safe. Every Pokémon surface that ranks, compares or quotes
 // these (the homepage, kind hubs, price-per-pack, product and set pages, blog
-// blocks, the Discord bot, copy buttons) imports them from here, so two pages
+// blocks, share cards, copy buttons) imports them from here, so two pages
 // can never disagree about which set is "recent" or which box is cheapest.
 //
 // Wording these feed: "lowest price per pack", never "best value" or "deal"

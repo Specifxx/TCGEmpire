@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { pokemonEbayQuery, pokemonSetEbayQuery } from "../src/lib/pokemon/ebay-query";
 import {
   bestEbayMatch,
@@ -149,10 +150,10 @@ test("Browse items are parsed defensively", () => {
 });
 
 test("the eBay quota is Riftbound's first: a capped slice above a reserve, nothing when unknown", () => {
-  assert.equal(pokemonEbayBudget(4200, 160, 2000), 160);
-  assert.equal(pokemonEbayBudget(2100, 160, 2000), 100);
-  assert.equal(pokemonEbayBudget(1500, 160, 2000), 0);
-  assert.equal(pokemonEbayBudget(null, 160, 2000), 0, "an unreadable count spends nothing");
+  assert.equal(pokemonEbayBudget(4200, 60, 2500), 60);
+  assert.equal(pokemonEbayBudget(2530, 60, 2500), 30);
+  assert.equal(pokemonEbayBudget(2400, 60, 2500), 0);
+  assert.equal(pokemonEbayBudget(null, 60, 2500), 0, "an unreadable count spends nothing");
 });
 
 test("the rotation searches never-checked pairs first, then the stalest, newer sets breaking ties", () => {
@@ -171,4 +172,26 @@ test("the rotation searches never-checked pairs first, then the stalest, newer s
     [5, 2, 4, 3],
   );
   assert.deepEqual(pickEbayWork([{ productId: 1, market: "US", lastChecked: null, priority: 0 }], 0), []);
+});
+
+test("eBay quota: Riftbound first — Pokémon searches late, a little, and never into Riftbound's next run", () => {
+  // Owner, 2026-10-01: "prioritise our eBay quota for riftbound and only use
+  // sparingly any remaining quota for pokemon".
+  const src = readFileSync("src/lib/pokemon/import.ts", "utf8");
+  const cap = Number(/export const POKEMON_EBAY_CAP = (\d+);/.exec(src)?.[1]);
+  const reserve = Number(/export const POKEMON_EBAY_RESERVE = (\d+);/.exec(src)?.[1]);
+  assert.ok(cap > 0 && cap <= 60, `cap ${cap}`);
+  // One full Riftbound refresh (~1,400 calls) plus lib/ebay.ts's own 600 reserve.
+  const riftboundReserve = Number(/EBAY_QUOTA_RESERVE \?\? (\d+)/.exec(readFileSync("src/lib/ebay.ts", "utf8"))?.[1]);
+  assert.ok(reserve >= 1400 + riftboundReserve, `reserve ${reserve}`);
+
+  const wf = readFileSync(".github/workflows/pokemon-import.yml", "utf8").replace(/^\s*#.*$/gm, "");
+  const crons = [...wf.matchAll(/cron: "(\d+) (\d+) \* \* \*"/g)].map((m) => ({ cron: `${m[1]} ${m[2]} * * *`, minutes: Number(m[2]) * 60 + Number(m[1]) }));
+  const ebayLine = /POKEMON_EBAY: \$\{\{(.*)\}\}/.exec(wf)?.[1] ?? "";
+  const ebayCrons = crons.filter((c) => ebayLine.includes(`'${c.cron}'`));
+  assert.equal(ebayCrons.length, 1, "exactly one scheduled run searches eBay");
+  // ...and it comes after Riftbound's last refresh of the day (19:00 UTC, ~45 minutes).
+  const rift = [...readFileSync(".github/workflows/refresh-prices.yml", "utf8").matchAll(/cron: "(\d+) (\d+) \* \* \*"/g)].map((m) => Number(m[2]) * 60 + Number(m[1]));
+  assert.ok(ebayCrons[0].minutes >= Math.max(...rift) + 60, `eBay run at ${ebayCrons[0].cron}`);
+  assert.match(ebayLine, /inputs\.with_ebay/, "a manual run searches eBay only when asked");
 });

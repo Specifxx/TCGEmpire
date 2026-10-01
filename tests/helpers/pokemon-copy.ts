@@ -1,5 +1,5 @@
 // The Pokémon copy scanner, shared by tests/pokemon-copy.test.ts and any
-// Pokémon test that checks generated strings (the blog, the Discord replies,
+// Pokémon test that checks generated strings (the blog, the share cards,
 // copy buttons). A helper, not a test file: importing a *.test.ts would run
 // its tests a second time.
 

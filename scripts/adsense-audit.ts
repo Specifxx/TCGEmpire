@@ -59,12 +59,12 @@ const TEMPLATES: [string, RegExp][] = [
   // The Pokémon section (docs/pokemon/README.md), first so its pages are judged
   // as their own templates instead of vanishing into "static", where a
   // near-duplicate product cluster would be averaged away. pokemon-landing is
-  // the hub, kind hubs, price per pack, the indexes and the Discord page. A row
+  // the hub, kind hubs, price per pack, and the indexes. A row
   // left behind after the section is removed matches nothing.
   ["pokemon-product", /^\/pokemon\/sealed\/[^/]+$/],
   ["pokemon-set", /^\/pokemon\/sets\/[^/]+$/],
   ["pokemon-post", /^\/pokemon\/blog\/[^/]+$/],
-  ["pokemon-landing", /^\/pokemon(?:\/(?:booster-boxes|elite-trainer-boxes|booster-bundles|price-per-pack|sealed|sets|blog|discord))?$/],
+  ["pokemon-landing", /^\/pokemon(?:\/(?:booster-boxes|elite-trainer-boxes|booster-bundles|price-per-pack|sealed|sets|blog))?$/],
   ["card", /^\/card\//],
   ["set", /^\/sets\//],
   ["domain", /^\/domains\//],

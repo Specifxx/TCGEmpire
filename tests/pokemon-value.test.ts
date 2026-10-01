@@ -114,14 +114,14 @@ test("median, asOfLabel, formatPerPack", () => {
 });
 
 test("pokemonUtm: absolute, query before the anchor, appends to an existing query", () => {
-  const u = { source: "discord-bot", medium: "bot", campaign: "pkmn-sealed" } as const;
+  const u = { source: "reddit", medium: "copy", campaign: "pkmn-copy" } as const;
   assert.equal(
     pokemonUtm("/pokemon/price-per-pack#booster-box", u),
-    "https://riftcompare.com/pokemon/price-per-pack?utm_source=discord-bot&utm_medium=bot&utm_campaign=pkmn-sealed#booster-box",
+    "https://riftcompare.com/pokemon/price-per-pack?utm_source=reddit&utm_medium=copy&utm_campaign=pkmn-copy#booster-box",
   );
   assert.equal(
     pokemonUtm("/pokemon/sealed?type=tin", u),
-    "https://riftcompare.com/pokemon/sealed?type=tin&utm_source=discord-bot&utm_medium=bot&utm_campaign=pkmn-sealed",
+    "https://riftcompare.com/pokemon/sealed?type=tin&utm_source=reddit&utm_medium=copy&utm_campaign=pkmn-copy",
   );
 });
 
@@ -173,23 +173,6 @@ test("figuresAsOf: the oldest listing quoted, else the newest reference", () => 
   assert.equal(figuresAsOf(["2026-10-01T12:00:00Z", "2026-09-29T08:00:00Z"], ["2026-10-01T13:00:00Z"]), "2026-09-29T08:00:00Z");
   assert.equal(figuresAsOf([], ["2026-09-30T00:00:00Z", "2026-10-01T13:00:00Z"]), "2026-10-01T13:00:00Z");
   assert.equal(figuresAsOf([], []), null);
-});
-
-test("pokemonDiscordAppId: an ID or nothing, one check for the page, the hub link and the sitemap", async () => {
-  const { pokemonDiscordAppId } = await import("../src/lib/pokemon/flag");
-  const prev = process.env.POKEMON_DISCORD_APP_ID;
-  try {
-    for (const [v, want] of [["123456789012345678", "123456789012345678"], [" 123456789012345678 ", "123456789012345678"], ['"123456789012345678"', null], ["Application ID: 1234", null], ["", null]] as const) {
-      process.env.POKEMON_DISCORD_APP_ID = v;
-      assert.equal(pokemonDiscordAppId(), want, v);
-    }
-  } finally {
-    if (prev === undefined) delete process.env.POKEMON_DISCORD_APP_ID;
-    else process.env.POKEMON_DISCORD_APP_ID = prev;
-  }
-  for (const f of ["src/app/pokemon/page.tsx", "src/lib/pokemon/sitemap.ts", "src/app/pokemon/discord/page.tsx"]) {
-    assert.doesNotMatch(readFileSync(f, "utf8"), /process\.env\.POKEMON_DISCORD_APP_ID/, `${f} reads the ID only through pokemonDiscordAppId`);
-  }
 });
 
 test("isPokemonSlug: every real slug passes, anything else costs no read", async () => {

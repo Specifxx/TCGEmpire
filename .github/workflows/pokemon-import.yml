@@ -12,12 +12,16 @@ name: Pokemon sealed import
 # starts an import (unlike refresh-prices.yml's importer paths). Once a day is
 # what the data supports: TCGCSV and Cardmarket both publish daily.
 #
-# eBay QUOTA IS SHARED with Riftbound (one app, 5,000 Browse calls a day, and
-# refresh-prices.yml uses most of it). The import reads the live remaining
-# count and spends at most POKEMON_EBAY_MAX_CALLS (default 160), and only what
-# sits above POKEMON_EBAY_RESERVE (default 2,000) — an unknown count spends
-# nothing. 05:17 UTC sits between sealed-refresh (01:00, no eBay) and the
-# Riftbound 07:00 run.
+# eBay QUOTA IS RIFTBOUND'S FIRST (one app, 5,000 Browse calls a day, and
+# refresh-prices.yml uses most of it). Two runs:
+#   05:17 UTC  catalogue and prices only, NO eBay: it sits just before the
+#              Riftbound 07:00 run, the worst moment to spend shared quota;
+#   21:47 UTC  the same import plus eBay, after both Riftbound runs (07:00 and
+#              19:00, ~45 min each), spending at most POKEMON_EBAY_MAX_CALLS
+#              (default 60) and only what sits above POKEMON_EBAY_RESERVE
+#              (default 2,500: a full Riftbound run plus its own reserve). An
+#              unknown count spends nothing (src/lib/pokemon/import.ts).
+# A manual run searches eBay only when "with_ebay" is ticked.
 #
 # Before the owner has created the database, the import step logs that and
 # exits 0, so this workflow is harmless to merge first.
@@ -25,10 +29,11 @@ name: Pokemon sealed import
 on:
   schedule:
     - cron: "17 5 * * *"
+    - cron: "47 21 * * *"
   workflow_dispatch:
     inputs:
-      skip_ebay:
-        description: "Skip the eBay pass (catalogue and prices only)"
+      with_ebay:
+        description: "Also search eBay (still capped, and only above the reserve Riftbound needs)"
         type: boolean
         default: false
 
@@ -69,7 +74,8 @@ jobs:
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
-          POKEMON_EBAY: ${{ inputs.skip_ebay && '0' || '1' }}
+          # eBay only on the late schedule, or a manual run that asks for it.
+          POKEMON_EBAY: ${{ ((github.event_name == 'schedule' && github.event.schedule == '47 21 * * *') || (github.event_name == 'workflow_dispatch' && inputs.with_ebay)) && '1' || '0' }}
           POKEMON_EBAY_MAX_CALLS: ${{ vars.POKEMON_EBAY_MAX_CALLS }}
           POKEMON_EBAY_RESERVE: ${{ vars.POKEMON_EBAY_RESERVE }}
           POKEMON_CARDMARKET: ${{ vars.POKEMON_CARDMARKET }}
@@ -92,8 +98,7 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
 
       # One request to /pokemon (US) right after a successful purge, so the US
-      # catalogue is recomputed now rather than by the first visitor, or by a
-      # Discord command racing its three-second deadline on a cold cache.
+      # catalogue is recomputed now rather than by the first visitor.
       - name: Warm the Pokémon hub
         if: ${{ !cancelled() && steps.purge.outputs.code == '200' }}
         env:

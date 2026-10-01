@@ -29,14 +29,3 @@ export function pokemonSectionOn(): boolean {
 export function pokemonIndexProducts(): boolean {
   return process.env.POKEMON_INDEX_PRODUCTS === "1";
 }
-
-/**
- * The Pokémon Discord app's ID, or null while the owner has not created it (or
- * set something that is not an ID). Server-only. One check for the three
- * places that must agree: /pokemon/discord 404s without it, and the sitemap and
- * the hub link it only when the page exists.
- */
-export function pokemonDiscordAppId(): string | null {
-  const id = (process.env.POKEMON_DISCORD_APP_ID ?? "").trim();
-  return /^\d{5,25}$/.test(id) ? id : null;
-}

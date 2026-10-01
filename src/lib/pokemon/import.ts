@@ -246,12 +246,22 @@ async function importCardmarket(summary: PokemonImportSummary): Promise<void> {
 }
 
 // ── 3. eBay ───────────────────────────────────────────────────────────────────
-// Defaults sized against Riftbound's observed use (~3,500-4,000 of 5,000 calls a
-// day, DECISIONS.md 2026-10-01): at most 160 a day, and never below 2,000 left.
-export const POKEMON_EBAY_CAP = 160;
-export const POKEMON_EBAY_RESERVE = 2000;
-/** Tracked: the box-shaped kinds of sets released in the last N months, plus pre-orders. */
-export const POKEMON_EBAY_MONTHS = 24;
+// RIFTBOUND FIRST (owner, 2026-10-01: "prioritise our eBay quota for riftbound
+// and only use sparingly any remaining quota for pokemon"). The 5,000-a-day
+// Browse quota is one app's; Pokémon searches only in the late run
+// (pokemon-import.yml, 21:47 UTC), after both Riftbound refreshes (07:00 and
+// 19:00 UTC), spends at most 60 calls, and never takes the count below 2,500:
+// one full Riftbound run (~1,400 calls) plus its own 600 reserve, with room to
+// spare, wherever eBay's daily reset falls. An unreadable count spends nothing.
+export const POKEMON_EBAY_CAP = 60;
+export const POKEMON_EBAY_RESERVE = 2500;
+/**
+ * Tracked: the box-shaped kinds of sets released in the last N months, plus
+ * pre-orders. Sized to the cap: ~29 products × 5 markets = ~145 pairs, so at 60
+ * a day each pair is searched again about every two and a half days, inside the
+ * 72h after which a row shows as unknown.
+ */
+export const POKEMON_EBAY_MONTHS = 12;
 
 async function importEbay(summary: PokemonImportSummary): Promise<void> {
   const db = pokemonDb();

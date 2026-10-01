@@ -271,7 +271,7 @@ function pokemonPages(dir = "src/app/pokemon", out: string[] = []): string[] {
 
 test("every Pokémon page: pokemonMeta, short static copy, the right share image", () => {
   const pages = pokemonPages();
-  assert.ok(pages.length >= 12, `found ${pages.length} pages`);
+  assert.ok(pages.length >= 11, `found ${pages.length} pages`);
   const COLOCATED = ["src/app/pokemon/page.tsx", "src/app/pokemon/sealed/[slug]/page.tsx", "src/app/pokemon/sets/[set]/page.tsx"];
   for (const rel of pages) {
     const src = codeOnly(read(rel));
@@ -330,7 +330,7 @@ test("index-gate.ts: the gate reads only kind and pack count, and its kinds are 
   assert.doesNotMatch(src, /^\s*import\b/m, "no imports: it is on the Riftbound importers' load path");
 });
 
-test("sitemap.ts: the gate from ./index-gate, a narrow select, the landing pages, Discord only when it exists", () => {
+test("sitemap.ts: the gate from ./index-gate, a narrow select, the landing pages", () => {
   const src = codeOnly(read("src/lib/pokemon/sitemap.ts"));
   assert.match(src, /import \{ INDEX_STAGE1_KINDS, productPassesIndexGate \} from "\.\/index-gate";/);
   assert.doesNotMatch(src, /from "\.\/seo"|from "\.\/data"|getPokemonCatalog/, "never the metadata module or the catalogue loader");
@@ -341,8 +341,7 @@ test("sitemap.ts: the gate from ./index-gate, a narrow select, the landing pages
   for (const p of ["/pokemon/booster-boxes", "/pokemon/elite-trainer-boxes", "/pokemon/booster-bundles", "/pokemon/price-per-pack"]) {
     assert.ok(src.includes(`"${p}"`), p);
   }
-  // The same ID check as the page and the hub link (flag.ts), so the sitemap never lists a 404.
-  assert.match(src, /pokemonDiscordAppId\(\) \? \[\{ url: `\$\{SITE_URL\}\/pokemon\/discord`, changeFrequency: "monthly" as const, priority: 0\.4 \}\]/);
+  assert.doesNotMatch(src, /discord/i, "no Discord page to list");
 });
 
 test("the import's purge refreshes the section's sitemap and keeps its gate", () => {
@@ -384,7 +383,6 @@ test("adsense-audit: the Pokémon templates come first and classify their pages"
     ["/pokemon/sealed", "pokemon-landing"],
     ["/pokemon/sets", "pokemon-landing"],
     ["/pokemon/blog", "pokemon-landing"],
-    ["/pokemon/discord", "pokemon-landing"],
     // Riftbound paths keep their templates.
     ["/sets/origins", "set"],
     ["/sealed", "tool"],
@@ -419,7 +417,6 @@ test("template-seo-check: the Pokémon specs come first and match their pages", 
     ["/pokemon/sealed", "pokemon-index"],
     ["/pokemon/sets", "pokemon-index"],
     ["/pokemon/blog", "pokemon-index"],
-    ["/pokemon/discord", "pokemon-index"],
     ["/pokemon/sets/delta-reign", "pokemon-set"],
     ["/pokemon/sealed/delta-reign-booster-box", "pokemon-product"],
     ["/pokemon/blog/how-we-price-pokemon-sealed", "pokemon-post"],

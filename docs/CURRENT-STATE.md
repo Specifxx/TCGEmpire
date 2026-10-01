@@ -754,8 +754,10 @@ longer lands on its entry.
   promo, sitemap section, robots.txt and llms.txt entries vanish. Six Riftbound
   files know it exists, pinned by `tests/pokemon-isolation.test.ts`; the
   removal table is in `docs/pokemon/README.md`. Daily import
-  (`pokemon-import.yml`, schedule only) from TCGCSV; eBay is a capped slice of
-  the SHARED Browse quota (`min(160, remaining − 2000)`, nothing when unknown);
+  (`pokemon-import.yml`, schedule only) from TCGCSV; eBay is Riftbound's first:
+  Pokémon searches only at 21:47 UTC, after both Riftbound runs, and spends
+  `min(60, remaining − 2500)` (nothing when unknown) on the last 12 months' sets
+  [2026-10-01](../DECISIONS.md#L16335);
   Cardmarket is built but off (`POKEMON_CARDMARKET`) pending the owner's
   permission question; product pages noindex until `POKEMON_INDEX_PRODUCTS=1`.
   eBay queries go through `pokemonEbayQuery` ("Pokemon" once), never
@@ -772,8 +774,8 @@ longer lands on its entry.
   only; per-pack comparisons pick by price per pack. No MSRP/RRP, no "deal",
   dates "TCGplayer lists", "as of" not "today" (`tests/pokemon-copy.test.ts`).
   Titles absolute ≤60 via `pokemonMeta` with an explicit share image. Reaching
-  communities that ban links: a separate Discord app (one utm link, no
-  affiliate URL), price share cards and copy-as-text buttons, never promo posts.
+  communities that ban links: price share cards and copy-as-text buttons, never
+  promo posts; the Pokémon Discord app was built and then removed by the owner.
   [2026-10-01](../DECISIONS.md#L16219)
 
 ## Removed, declined, kept

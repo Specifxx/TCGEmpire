@@ -52,7 +52,7 @@ const SPECS: Spec[] = [
   // there is an open US listing to back its offers.
   { name: "pokemon-hub", test: (p) => /^\/pokemon$/.test(p), requires: ["BreadcrumbList", "CollectionPage"], optional: ["FAQPage", "ItemList"] },
   { name: "pokemon-landing", test: (p) => /^\/pokemon\/(?:booster-boxes|elite-trainer-boxes|booster-bundles|price-per-pack)$/.test(p), requires: ["BreadcrumbList", "CollectionPage"], optional: ["ItemList", "FAQPage"] },
-  { name: "pokemon-index", test: (p) => /^\/pokemon\/(?:sealed|sets|blog|discord)$/.test(p), requires: ["BreadcrumbList"], optional: ["CollectionPage", "ItemList"] },
+  { name: "pokemon-index", test: (p) => /^\/pokemon\/(?:sealed|sets|blog)$/.test(p), requires: ["BreadcrumbList"], optional: ["CollectionPage", "ItemList"] },
   { name: "pokemon-set", test: (p) => /^\/pokemon\/sets\/[^/]+$/.test(p), requires: ["BreadcrumbList", "CollectionPage"], optional: ["ItemList"] },
   { name: "pokemon-product", test: (p) => /^\/pokemon\/sealed\/[^/]+$/.test(p), requires: ["BreadcrumbList"], optional: ["Product", "FAQPage"] },
   { name: "pokemon-post", test: (p) => /^\/pokemon\/blog\/[^/]+$/.test(p), requires: ["BreadcrumbList"], optional: ["BlogPosting", "Article", "FAQPage"] },

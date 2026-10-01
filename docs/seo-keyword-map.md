@@ -228,7 +228,6 @@ The section is off until the owner switches it on (docs/pokemon/README.md); thes
 | `<set> booster box price`, `<set> etb price` | `/pokemon/sets/<set>` until product pages are indexed; then `/pokemon/sealed/<slug>` ("<Product> Price") takes it | Product pages are **noindex** until `POKEMON_INDEX_PRODUCTS=1`, and then only the stage-1 gate (`lib/pokemon/index-gate.ts`) |
 | `pokemon tcg sets list`, `pokemon expansions` | `/pokemon/sets` | — |
 | `booster box vs etb`, `pokemon center etb vs etb`, `how pokemon sealed prices are calculated` | the three `/pokemon/blog/<slug>` posts, once published (drafts 404 in production) | the kind hubs answer the price half of each query |
-| `pokemon price bot discord` | `/pokemon/discord` (exists only once the app ID is set) | — |
 | `pokemon collector to riftbound` | unchanged — `/guides/pokemon-collector-to-riftbound` (a Riftbound switching guide, not a Pokémon price page) | No Pokémon page targets "riftbound" |
 
 ## How to use this file going forward

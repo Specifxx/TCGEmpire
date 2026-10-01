@@ -2,7 +2,7 @@
 // lib/sitemap-sections.ts while the section's switch is on.
 import { SITE_URL } from "../site";
 import type { SitemapEntry } from "../sitemap-sections";
-import { pokemonDiscordAppId, pokemonIndexProducts } from "./flag";
+import { pokemonIndexProducts } from "./flag";
 import { pokemonEnabled } from "./gate";
 import { INDEX_STAGE1_KINDS, productPassesIndexGate } from "./index-gate";
 
@@ -48,9 +48,6 @@ export async function pokemonSitemapEntries(): Promise<SitemapEntry[]> {
     ...LANDING.map((path) => ({ url: `${SITE_URL}${path}`, changeFrequency: "daily" as const, priority: 0.6, lastModified })),
     { url: `${SITE_URL}/pokemon/sealed`, changeFrequency: "daily" as const, priority: 0.6, lastModified },
     { url: `${SITE_URL}/pokemon/sets`, changeFrequency: "weekly" as const, priority: 0.5, lastModified },
-    // Static, and built only when the app exists (the page 404s without its ID),
-    // so no lastmod: an import does not change it.
-    ...(pokemonDiscordAppId() ? [{ url: `${SITE_URL}/pokemon/discord`, changeFrequency: "monthly" as const, priority: 0.4 }] : []),
     ...(getPokemonPosts().length ? [{ url: `${SITE_URL}/pokemon/blog`, changeFrequency: "weekly" as const, priority: 0.5 }] : []),
     ...pokemonPostSitemapEntries(SITE_URL),
     ...sets.map((s) => ({ url: `${SITE_URL}/pokemon/sets/${s.slug}`, changeFrequency: "daily" as const, priority: 0.5, lastModified })),

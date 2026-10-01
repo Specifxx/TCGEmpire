@@ -12,15 +12,12 @@ export function HomeHero({
   stats,
   place,
   converted,
-  discordHref,
 }: {
   stats: HomeStats;
   /** "the United States" */
   place: string;
   /** The reference is a conversion here (every market but the US). */
   converted: boolean;
-  /** "Prices in Discord", rendered only when passed (the integrator passes it once the app exists). */
-  discordHref?: string;
 }) {
   const line = heroLine(stats, place, converted);
 
@@ -50,11 +47,6 @@ export function HomeHero({
           <Link href="/pokemon/sets" className="chip tap-link bg-ink-800 text-slate-300 hover:bg-ink-700 hover:text-white">
             Sets
           </Link>
-          {discordHref && (
-            <Link href={discordHref} className="chip tap-link bg-[#5865f2]/15 text-indigo-200 hover:bg-[#5865f2]/25 hover:text-white">
-              Prices in Discord
-            </Link>
-          )}
         </nav>
       </div>
     </section>

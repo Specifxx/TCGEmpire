@@ -24,8 +24,9 @@ Pokémon section as a home for Pokémon sealed", both 2026-10-01.
    `CRON_SECRET` already exist and are reused.)
 3. **Run the import once:** Actions → "Pokemon sealed import" → Run workflow.
    The first run creates the tables (`prisma db push`), loads ~1,000 products
-   and their TCGplayer prices in a few seconds, then spends a capped slice of
-   eBay quota. It runs daily at 05:17 UTC after that.
+   and their TCGplayer prices in a few seconds (tick "with_ebay" to also spend
+   the small eBay slice). After that it runs at 05:17 UTC (no eBay) and 21:47
+   UTC (with eBay, after Riftbound's runs; §4).
 4. **Vercel → Settings → Environment Variables** (Production, and Preview if
    wanted):
    - `POKEMON_DATABASE_URL` = the same connection string
@@ -39,10 +40,8 @@ Optional switches:
 | Where | Variable | Effect |
 |---|---|---|
 | GitHub repo **variable** | `POKEMON_CARDMARKET=1` | Adds Cardmarket (EU lowest listing + trend). **Off until the owner confirms Cardmarket is happy with Pokémon data use**: the 2026-09-04 permission in `src/lib/cardmarket.ts` was asked for Riftbound. |
-| GitHub repo variable | `POKEMON_EBAY_MAX_CALLS` (default 160) / `POKEMON_EBAY_RESERVE` (default 2000) | The daily eBay slice and the floor it never spends below (see §4). |
+| GitHub repo variable | `POKEMON_EBAY_MAX_CALLS` (default 60) / `POKEMON_EBAY_RESERVE` (default 2500) | The daily eBay slice and the floor it never spends below (see §4). Riftbound comes first; raise the cap only if Riftbound's runs leave room. |
 | Vercel | `POKEMON_INDEX_PRODUCTS=1` | Lets the product pages that pass the stage-1 gate be indexed and sitemapped: booster boxes, ETBs, Pokémon Center ETBs and booster bundles with a known pack count (`src/lib/pokemon/index-gate.ts`, ~160 products). Off by default; flip it only after the audit in §6. |
-| Vercel (Production + Preview), **before** the release build | `POKEMON_DISCORD_APP_ID`, `POKEMON_DISCORD_PUBLIC_KEY` | Turn on the Discord app: `/pokemon/discord` (static, so the ID must exist at build) and `/api/pokemon/discord`. Both 404 without them. See "Discord setup" below. |
-| Your machine only | `POKEMON_DISCORD_BOT_TOKEN` | Registering the bot's commands, once. Never stored anywhere. |
 | Vercel **Preview** | `NEXT_PUBLIC_POKEMON_SECTION=1`, `POKEMON_DATABASE_URL`, `POKEMON_INDEX_PRODUCTS=1` | Lets you read the blog drafts and run the audits on a preview deployment. |
 
 ### Publish a blog post
@@ -56,24 +55,6 @@ day>"` (`tests/pokemon-blog.test.ts` requires `reviewed ≥ date` and no
 `[TODO]`). The Blog tab, `/pokemon/blog`, the hub's guides band, the product
 pages' guide links and the sitemap entries all appear from the published posts
 alone (`getPokemonPosts()`).
-
-### Discord setup (about 20 minutes)
-
-1. Developer Portal → New Application. Pick a Pokémon-sounding name;
-   "RiftCompare" reads as Riftbound.
-2. Before the release that should carry it, put the Application ID and Public
-   Key into Vercel (Production + Preview) as `POKEMON_DISCORD_APP_ID` and
-   `POKEMON_DISCORD_PUBLIC_KEY`.
-3. Installation tab: enable User Install and Guild Install with
-   `applications.commands`.
-4. After that release: Interactions Endpoint URL
-   `https://riftcompare.com/api/pokemon/discord`, Privacy Policy URL
-   `https://riftcompare.com/pokemon/discord#privacy`.
-5. Reset the bot token and run, on your machine,
-   `POKEMON_DISCORD_APP_ID=… POKEMON_DISCORD_BOT_TOKEN=… npx tsx scripts/pokemon/register-discord.ts`.
-   Don't save the token.
-6. Try `/sealed`, `/perpack` and `/set` in your own server first. Apply for
-   verification at about 75 servers (unverified apps stop at 100).
 
 ### Archive probe (decides history backfill)
 
@@ -132,7 +113,7 @@ Riftbound behaviour). Then delete the Neon project.
 ## 4. Architecture
 
 ```
-                     ┌──────────── GitHub Actions, daily 05:17 UTC ────────────┐
+                     ┌───── GitHub Actions, 05:17 UTC (no eBay) + 21:47 UTC ─────┐
 TCGCSV (TCGplayer) ─▶│ scripts/pokemon/import.ts → src/lib/pokemon/import.ts    │
 Cardmarket files  ─▶│   catalog.ts  kinds.ts  cardmarket-match.ts  ebay-match  │──▶ Neon "Pokémon" project
 eBay Browse API   ─▶│   (writes ONLY to POKEMON_DATABASE_URL)                  │      (POKEMON_DATABASE_URL)
@@ -141,7 +122,7 @@ eBay Browse API   ─▶│   (writes ONLY to POKEMON_DATABASE_URL)             
   /pokemon, the kind hubs, /pokemon/price-per-pack,
   /pokemon/sealed, /pokemon/sets, /pokemon/sets/[set]            ◀── getPokemonCatalog(market)  (unstable_cache, tag "pokemon", 6h)
   /pokemon/sealed/[slug] (ISR 6h, + the US catalogue)             ◀── getPokemonProduct(slug)
-  /pokemon/blog/[slug] (ISR 6h)  ·  share cards  ·  /api/pokemon/discord  ◀── the same two loaders, nothing else
+  /pokemon/blog/[slug] (ISR 6h)  ·  share cards                  ◀── the same two loaders, nothing else
 ```
 
 **Pages** (all titles absolute and ≤60 through `src/lib/pokemon/seo.ts`
@@ -155,7 +136,6 @@ eBay Browse API   ─▶│   (writes ONLY to POKEMON_DATABASE_URL)             
 | `/pokemon/sets/[set]` | The set's products, its per-pack paragraph, neighbouring sets | yes |
 | `/pokemon/sealed/[slug]` | Every market's board, pack maths, the same kind across recent sets, FAQ | gate + flag |
 | `/pokemon/blog`, `/pokemon/blog/[slug]` | The section's own posts (`src/lib/pokemon/blog/`) | published only |
-| `/pokemon/discord` | The bot: install links, commands, privacy | yes, once the app exists |
 
 **Shared figures.** `src/lib/pokemon/value.ts` is the one place for the
 per-pack ranking, cheapest-by-kind (a half box never stands for a box),
@@ -165,10 +145,7 @@ come from pure builders (`home.ts`, `hubs.ts`, `product-facts.ts`,
 `set-facts.ts`, the blog's `blocks.ts`) that print a sentence only when its
 fact exists.
 
-**Distribution without links** (communities ban promotion): the Discord app
-(`src/lib/pokemon/discord.ts`; the signature is checked over the raw body
-before anything else, typed text is resolved against the catalogue before it
-reaches a loader, replies carry one utm link and no affiliate URL); price share
+**Distribution without links** (communities ban promotion): price share
 cards (`opengraph-image.tsx` beside the product and set pages; 6h CDN header,
 60s after a read error, a brand card instead of a 500); "Copy for Reddit /
 Discord" (`CopyPrices`, `src/lib/pokemon/share-text.ts`: a table or bullets,
@@ -202,15 +179,18 @@ at or above max(a per-type floor, half the TCGplayer market price). The
 cheapest by item + stated postage wins after gross low outliers are pruned. A
 miss costs nothing: the page still offers the search.
 
-**eBay quota.** The Browse API allows 5,000 calls a day for the whole app, and
-Riftbound's importers use most of it (4,200 → 2,800 remaining across one
-refresh run, DECISIONS.md 2026-10-01). Pokémon reads the live remaining count
-and spends `min(160, remaining − 2000)`; an unreadable count spends nothing.
-Tracked: booster boxes, ETBs, Pokémon Center ETBs, booster bundles, Ultra- and
-Super-Premium Collections from sets released in the last 24 months plus
-pre-orders (50 products × 5 markets on 2026-10-01), searched in rotation,
-never-checked first, then stalest. Each pair comes round in under two days at
-the default 160 calls; a row older
+**eBay quota: Riftbound first.** The Browse API allows 5,000 calls a day for
+the whole app, and Riftbound's importers use most of it (4,200 → 2,800
+remaining across one refresh run, DECISIONS.md 2026-10-01). Pokémon searches
+only in the 21:47 UTC run, after both Riftbound refreshes (07:00 and 19:00
+UTC), reads the live remaining count and spends `min(60, remaining − 2500)`:
+never more than 60, and never into the 2,500 that covers a full Riftbound run
+plus its own reserve, wherever eBay's daily reset falls. An unreadable count
+spends nothing; the 05:17 UTC run never searches eBay. Tracked: booster boxes,
+ETBs, Pokémon Center ETBs, booster bundles, Ultra- and Super-Premium
+Collections from sets released in the last 12 months plus pre-orders (~29
+products × 5 markets), searched in rotation, never-checked first, then
+stalest. Each pair comes round about every two and a half days; a row older
 than 72h shows as "unknown", never in stock (`lib/sealed-offers.ts`).
 
 **Prices on the page** (`src/lib/pokemon/board.ts`), the site's rules applied
@@ -250,8 +230,7 @@ under 50 MB/day.
 | Affiliate clicks | `buy_click` with `page_type` `pokemon_*` (`retailer` `pkmn_*` for tracked rows, `pkmn_ebay_search` / `ebay_search` for searches) |
 | Revenue | EPN: customid contains `pkmn`. TCGplayer (Impact): sharedid starts `pkmn_` |
 | Copy buttons | `pokemon_copy_prices` (`format`, `withLink`, `page`) |
-| Bot and pasted links | sessions with `utm_campaign` `pkmn-sealed` / `pkmn-perpack` / `pkmn-set` (`utm_source=discord-bot`) and `pkmn-copy` (`utm_source` reddit or discord, `utm_medium=copy`) |
-| Bot installs | Discord Developer Portal: server and user installs. The `[pokemon-discord]` log lines are for debugging; Vercel keeps them too briefly to count. |
+| Pasted links | sessions with `utm_campaign=pkmn-copy` (`utm_source` reddit or discord, `utm_medium=copy`) |
 | Search | Search Console clicks on `/pokemon/*`; submit `/sitemaps/pokemon.xml` |
 
 A sensible read after four to six weeks: Pokémon sessions as a share of the
