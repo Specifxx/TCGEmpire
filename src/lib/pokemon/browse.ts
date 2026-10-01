@@ -126,5 +126,6 @@ export function toDisplay(tiles: readonly PkTile[], showEur: boolean): PkTile[] 
     ...t,
     lowCents: t.lowCents != null ? gbpCentsToEur(t.lowCents) : null,
     refCents: t.refCents != null ? gbpCentsToEur(t.refCents) : null,
+    perPackCents: t.perPackCents != null ? gbpCentsToEur(t.perPackCents) : null,
   }));
 }

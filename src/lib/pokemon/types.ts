@@ -93,6 +93,10 @@ export interface PkTile {
   /** Number of sources with an open listing. */
   openCount: number;
   firstSeenAt: string;
+  /** Booster packs inside (lib/pokemon/packs.ts), null when not knowable. */
+  packCount: number | null;
+  /** lowCents ÷ packCount, in the market's currency; null when either is unknown. */
+  perPackCents: number | null;
 }
 
 export interface PkSetSummary {
@@ -136,9 +140,11 @@ export interface PkProductDetail {
   presale: boolean;
   contents: string[];
   upc: string | null;
+  packCount: number | null;
+  packCountFrom: "contents" | "name" | null;
   /** Raw stored rows, every market. Boards are built from these. */
   offers: PkOfferRow[];
   /** TCGplayer market price (USD), oldest first. */
   history: PkPricePointView[];
-  siblings: { slug: string; name: string; kind: PkKind; imageUrl: string | null }[];
+  siblings: { slug: string; name: string; kind: PkKind; imageUrl: string | null; packCount: number | null }[];
 }

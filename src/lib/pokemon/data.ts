@@ -22,6 +22,7 @@ import { COUNTRIES, type Country } from "../country";
 import { pokemonDb } from "./db";
 import { tileFigures } from "./board";
 import { kindOrder, type PkKind } from "./kinds";
+import { perPackCents } from "./packs";
 import type { PkCatalog, PkOfferRow, PkProductDetail, PkSetSummary, PkSource, PkTile } from "./types";
 
 import { POKEMON_TAG, POKEMON_TTL } from "./cache-keys";
@@ -47,6 +48,7 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
         presale: true,
         firstSeenAt: true,
         setId: true,
+        packCount: true,
       },
     }),
     // This market's rows plus the US market price every market references.
@@ -82,6 +84,7 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
   const now = Date.now();
   const tiles: PkTile[] = products.map((p) => {
     const set = p.setId != null ? setById.get(p.setId) : undefined;
+    const figures = tileFigures(rowsByProduct.get(p.id) ?? [], market, now);
     return {
       id: p.id,
       slug: p.slug,
@@ -94,7 +97,9 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
       releasedOn: day(p.releasedOn),
       presale: p.presale,
       firstSeenAt: p.firstSeenAt.toISOString(),
-      ...tileFigures(rowsByProduct.get(p.id) ?? [], market, now),
+      ...figures,
+      packCount: p.packCount,
+      perPackCents: perPackCents(figures.lowCents, p.packCount),
     };
   });
 
@@ -146,7 +151,7 @@ export function clearPokemonMemo(): void {
 export const getPokemonCatalog = cache(async (market: Country): Promise<PkCatalog> => {
   const hit = memo.get(market);
   if (hit && Date.now() - hit.at < MEMO_TTL_MS) return hit.data;
-  const data = await cachedOrDirect(() => computeCatalog(market), ["pokemon-catalog-v1", market], {
+  const data = await cachedOrDirect(() => computeCatalog(market), ["pokemon-catalog-v2", market], {
     revalidate: POKEMON_TTL,
     tags: [POKEMON_TAG],
   });
@@ -171,6 +176,8 @@ async function computeProduct(slug: string): Promise<PkProductDetail | null> {
       presale: true,
       contents: true,
       upc: true,
+      packCount: true,
+      packCountFrom: true,
       active: true,
       setId: true,
       set: { select: { slug: true, name: true, code: true, releasedOn: true } },
@@ -201,7 +208,7 @@ async function computeProduct(slug: string): Promise<PkProductDetail | null> {
     p.setId != null
       ? db.pokemonProduct.findMany({
           where: { setId: p.setId, active: true, id: { not: p.id } },
-          select: { slug: true, name: true, kind: true, imageUrl: true },
+          select: { slug: true, name: true, kind: true, imageUrl: true, packCount: true },
           take: 80,
         })
       : Promise.resolve([]),
@@ -219,6 +226,8 @@ async function computeProduct(slug: string): Promise<PkProductDetail | null> {
     presale: p.presale,
     contents: p.contents,
     upc: p.upc,
+    packCount: p.packCount,
+    packCountFrom: (p.packCountFrom as "contents" | "name" | null) ?? null,
     offers: p.offers.map((o) => ({ ...o, source: o.source as PkSource, checkedAt: o.checkedAt.toISOString() })),
     history: history.map((h) => ({ day: h.day.toISOString().slice(0, 10), cents: h.cents })),
     siblings: siblings
@@ -229,7 +238,7 @@ async function computeProduct(slug: string): Promise<PkProductDetail | null> {
 
 export const getPokemonProduct = cache(
   async (slug: string): Promise<PkProductDetail | null> =>
-    cachedOrDirect(() => computeProduct(slug), ["pokemon-product-v1", slug], {
+    cachedOrDirect(() => computeProduct(slug), ["pokemon-product-v2", slug], {
       revalidate: POKEMON_TTL,
       tags: [POKEMON_TAG],
     }),
