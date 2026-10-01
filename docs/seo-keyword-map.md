@@ -221,9 +221,14 @@ The section is off until the owner switches it on (docs/pokemon/README.md); thes
 
 | Query pattern | Primary URL | Secondary (different angle) |
 |---|---|---|
-| `pokemon sealed prices`, `pokemon booster box prices`, `pokemon etb price` | `/pokemon` (title "Pokémon Sealed Prices: Booster Boxes, ETBs & Bundles") | `/pokemon/sealed` is the full grid; it is titled "All Pokémon Sealed Products" so the two never share a phrase |
-| `<set> booster box price`, `<set> etb price`, `<set> sealed` (e.g. `phantasmal flames booster box price`) | `/pokemon/sets/<set>` — "<Set> Sealed Prices: Booster Box, ETB & More", its text written from the set's own data | The product pages (`/pokemon/sealed/<slug>`) are **noindex** until `POKEMON_INDEX_PRODUCTS=1`, so they cannot compete with their set page for now |
+| `pokemon sealed prices` | `/pokemon` (title "Pokémon Sealed Prices: Booster Boxes, ETBs & Bundles") | `/pokemon/sealed` is the full grid; it is titled "All Pokémon Sealed Products" so the two never share a phrase |
+| `pokemon booster box prices`, `pokemon etb price`, `pokemon booster bundle price` | the kind hubs `/pokemon/booster-boxes`, `/pokemon/elite-trainer-boxes`, `/pokemon/booster-bundles` | `/pokemon` links each; it no longer chases the kind terms itself |
+| `price per pack pokemon`, `cheapest pokemon booster packs` | `/pokemon/price-per-pack` | each kind hub states its own lowest per-pack figure and links here |
+| `<set> sealed`, `<set> sealed prices` (e.g. `phantasmal flames sealed`) | `/pokemon/sets/<set>` — "<Set> Sealed Prices & Price per Pack", its text written from the set's own data | — |
+| `<set> booster box price`, `<set> etb price` | `/pokemon/sets/<set>` until product pages are indexed; then `/pokemon/sealed/<slug>` ("<Product> Price") takes it | Product pages are **noindex** until `POKEMON_INDEX_PRODUCTS=1`, and then only the stage-1 gate (`lib/pokemon/index-gate.ts`) |
 | `pokemon tcg sets list`, `pokemon expansions` | `/pokemon/sets` | — |
+| `booster box vs etb`, `pokemon center etb vs etb`, `how pokemon sealed prices are calculated` | the three `/pokemon/blog/<slug>` posts, once published (drafts 404 in production) | the kind hubs answer the price half of each query |
+| `pokemon price bot discord` | `/pokemon/discord` (exists only once the app ID is set) | — |
 | `pokemon collector to riftbound` | unchanged — `/guides/pokemon-collector-to-riftbound` (a Riftbound switching guide, not a Pokémon price page) | No Pokémon page targets "riftbound" |
 
 ## How to use this file going forward

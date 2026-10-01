@@ -761,6 +761,20 @@ longer lands on its entry.
   eBay queries go through `pokemonEbayQuery` ("Pokemon" once), never
   `riftboundEbayQuery`; affiliate sub-ids carry `pkmn`. The site's price rules
   apply unchanged. [2026-10-01](../DECISIONS.md#L16105)
+- **Home, hubs, blog and distribution (2026-10-01):** `/pokemon` is the
+  section's home; three kind hubs and `/pokemon/price-per-pack` own the head
+  terms; product pages index only through the stage-1 gate
+  (`lib/pokemon/index-gate.ts`: box, ETB, PC ETB, bundle with a known pack
+  count) and only once `POKEMON_INDEX_PRODUCTS=1`, which waits on an audit with
+  no `pokemon-product` cluster (never padding). The blog is its own registry
+  (`lib/pokemon/blog/`, never `ARTICLES`); posts land as drafts that 404 in
+  production until Bill approves. Shared figures come from `lib/pokemon/value.ts`
+  only; per-pack comparisons pick by price per pack. No MSRP/RRP, no "deal",
+  dates "TCGplayer lists", "as of" not "today" (`tests/pokemon-copy.test.ts`).
+  Titles absolute ≤60 via `pokemonMeta` with an explicit share image. Reaching
+  communities that ban links: a separate Discord app (one utm link, no
+  affiliate URL), price share cards and copy-as-text buttons, never promo posts.
+  [2026-10-01](../DECISIONS.md#L16219)
 
 ## Removed, declined, kept
 

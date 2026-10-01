@@ -10,7 +10,8 @@ It is designed to be **switched off in one variable and deleted in one commit**.
 Nothing Riftbound depends on it, it never reads or writes a Riftbound database,
 and the few Riftbound files that know it exists are pinned by a test.
 
-Decision record: DECISIONS.md, "The Pokémon sealed section (beta)", 2026-10-01.
+Decision records: DECISIONS.md, "The Pokémon sealed section (beta)" and "The
+Pokémon section as a home for Pokémon sealed", both 2026-10-01.
 
 ---
 
@@ -39,7 +40,46 @@ Optional switches:
 |---|---|---|
 | GitHub repo **variable** | `POKEMON_CARDMARKET=1` | Adds Cardmarket (EU lowest listing + trend). **Off until the owner confirms Cardmarket is happy with Pokémon data use**: the 2026-09-04 permission in `src/lib/cardmarket.ts` was asked for Riftbound. |
 | GitHub repo variable | `POKEMON_EBAY_MAX_CALLS` (default 160) / `POKEMON_EBAY_RESERVE` (default 2000) | The daily eBay slice and the floor it never spends below (see §4). |
-| Vercel | `POKEMON_INDEX_PRODUCTS=1` | Lets product pages be indexed and puts them in the sitemap. Off by default (§6). |
+| Vercel | `POKEMON_INDEX_PRODUCTS=1` | Lets the product pages that pass the stage-1 gate be indexed and sitemapped: booster boxes, ETBs, Pokémon Center ETBs and booster bundles with a known pack count (`src/lib/pokemon/index-gate.ts`, ~160 products). Off by default; flip it only after the audit in §6. |
+| Vercel (Production + Preview), **before** the release build | `POKEMON_DISCORD_APP_ID`, `POKEMON_DISCORD_PUBLIC_KEY` | Turn on the Discord app: `/pokemon/discord` (static, so the ID must exist at build) and `/api/pokemon/discord`. Both 404 without them. See "Discord setup" below. |
+| Your machine only | `POKEMON_DISCORD_BOT_TOKEN` | Registering the bot's commands, once. Never stored anywhere. |
+| Vercel **Preview** | `NEXT_PUBLIC_POKEMON_SECTION=1`, `POKEMON_DATABASE_URL`, `POKEMON_INDEX_PRODUCTS=1` | Lets you read the blog drafts and run the audits on a preview deployment. |
+
+### Publish a blog post
+
+Posts live in `src/lib/pokemon/blog/posts/<slug>.ts` and land as
+`status: "draft"`: they render in development and on Vercel previews
+(`/pokemon/blog/<slug>`, with a DRAFT banner and noindex) and 404 in
+production. On Bill's word, one commit per post sets three fields:
+`status: "published"`, `reviewed: "<YYYY-MM-DD>"` and `date: "<publishing
+day>"` (`tests/pokemon-blog.test.ts` requires `reviewed ≥ date` and no
+`[TODO]`). The Blog tab, `/pokemon/blog`, the hub's guides band, the product
+pages' guide links and the sitemap entries all appear from the published posts
+alone (`getPokemonPosts()`).
+
+### Discord setup (about 20 minutes)
+
+1. Developer Portal → New Application. Pick a Pokémon-sounding name;
+   "RiftCompare" reads as Riftbound.
+2. Before the release that should carry it, put the Application ID and Public
+   Key into Vercel (Production + Preview) as `POKEMON_DISCORD_APP_ID` and
+   `POKEMON_DISCORD_PUBLIC_KEY`.
+3. Installation tab: enable User Install and Guild Install with
+   `applications.commands`.
+4. After that release: Interactions Endpoint URL
+   `https://riftcompare.com/api/pokemon/discord`, Privacy Policy URL
+   `https://riftcompare.com/pokemon/discord#privacy`.
+5. Reset the bot token and run, on your machine,
+   `POKEMON_DISCORD_APP_ID=… POKEMON_DISCORD_BOT_TOKEN=… npx tsx scripts/pokemon/register-discord.ts`.
+   Don't save the token.
+6. Try `/sealed`, `/perpack` and `/set` in your own server first. Apply for
+   verification at about 75 servers (unverified apps stop at 100).
+
+### Archive probe (decides history backfill)
+
+Actions → "Pokemon archive probe" → Run workflow (date optional). It downloads
+one TCGCSV price archive and logs its layout; no secrets, no database. Paste
+the log's verdict line into the session that plans the backfill.
 
 ## 2. Turning it off
 
@@ -61,7 +101,8 @@ src/app/pokemon/            src/app/api/pokemon/
 src/components/pokemon/     src/lib/pokemon/
 prisma/pokemon/             scripts/pokemon/
 docs/pokemon/               .github/workflows/pokemon-import.yml
-tests/pokemon-*.test.ts
+tests/pokemon-*.test.ts     .github/workflows/pokemon-archive-probe.yml
+tests/fixtures/pokemon-*    tests/helpers/pokemon-copy.ts
 ```
 
 Delete those, then revert the **host touchpoints** — the complete list, pinned
@@ -75,6 +116,10 @@ by `tests/pokemon-isolation.test.ts`:
 | `src/components/FooterAds.tsx` | `OFF_TOPIC_ROUTES` (harmless if left) |
 | `src/lib/nudge-gate.ts` | `"/pokemon"` in `PREMIUM_SKIP_PATHS` (harmless if left) |
 | `src/lib/db-chains.ts` | `POKEMON_VARS` (harmless if left) |
+| `scripts/adsense-audit.ts` | the four `pokemon-*` rows at the top of `TEMPLATES` (harmless if left) |
+| `scripts/template-seo-check.ts` | the six `pokemon-*` rows at the top of `SPECS` (harmless if left) |
+
+The two scripts are pinned as `SCRIPT_TOUCHPOINTS` in the same test.
 
 Also: the two `generate --schema prisma/pokemon/...` additions in `package.json`
 (`build`, `db:generate`, and the three `pokemon:*` scripts) and in
@@ -93,9 +138,46 @@ Cardmarket files  ─▶│   catalog.ts  kinds.ts  cardmarket-match.ts  ebay-ma
 eBay Browse API   ─▶│   (writes ONLY to POKEMON_DATABASE_URL)                  │      (POKEMON_DATABASE_URL)
                      └──────────────── POST /api/pokemon/revalidate ────────────┘              │
                                                                                                ▼
-  /pokemon, /pokemon/sealed, /pokemon/sets, /pokemon/sets/[set]   ◀── getPokemonCatalog(market)  (unstable_cache, tag "pokemon", 6h)
-  /pokemon/sealed/[slug] (ISR 6h)  ·  /api/pokemon/product/[slug] ◀── getPokemonProduct(slug)
+  /pokemon, the kind hubs, /pokemon/price-per-pack,
+  /pokemon/sealed, /pokemon/sets, /pokemon/sets/[set]            ◀── getPokemonCatalog(market)  (unstable_cache, tag "pokemon", 6h)
+  /pokemon/sealed/[slug] (ISR 6h, + the US catalogue)             ◀── getPokemonProduct(slug)
+  /pokemon/blog/[slug] (ISR 6h)  ·  share cards  ·  /api/pokemon/discord  ◀── the same two loaders, nothing else
 ```
+
+**Pages** (all titles absolute and ≤60 through `src/lib/pokemon/seo.ts`
+`pokemonMeta`, which also names the share image explicitly):
+
+| Page | What | Index |
+|---|---|---|
+| `/pokemon` | The home: stat line, lowest price per pack, coming up, shop by type, newest sets, US listings under TCGplayer's market price, guides, FAQ | yes |
+| `/pokemon/booster-boxes`, `/elite-trainer-boxes`, `/booster-bundles` | Every product of the kind: cheapest listing, packs, per pack, reference, eBay search | yes |
+| `/pokemon/price-per-pack` | Released products with a listing and a pack count, lowest per pack first; one section per kind | yes |
+| `/pokemon/sets/[set]` | The set's products, its per-pack paragraph, neighbouring sets | yes |
+| `/pokemon/sealed/[slug]` | Every market's board, pack maths, the same kind across recent sets, FAQ | gate + flag |
+| `/pokemon/blog`, `/pokemon/blog/[slug]` | The section's own posts (`src/lib/pokemon/blog/`) | published only |
+| `/pokemon/discord` | The bot: install links, commands, privacy | yes, once the app exists |
+
+**Shared figures.** `src/lib/pokemon/value.ts` is the one place for the
+per-pack ranking, cheapest-by-kind (a half box never stands for a box),
+`RECENT_SETS`, typical pack counts and the "as of" label; a per-pack comparison
+picks each kind by price per pack, never by listing price. The pages' sentences
+come from pure builders (`home.ts`, `hubs.ts`, `product-facts.ts`,
+`set-facts.ts`, the blog's `blocks.ts`) that print a sentence only when its
+fact exists.
+
+**Distribution without links** (communities ban promotion): the Discord app
+(`src/lib/pokemon/discord.ts`; the signature is checked over the raw body
+before anything else, typed text is resolved against the catalogue before it
+reaches a loader, replies carry one utm link and no affiliate URL); price share
+cards (`opengraph-image.tsx` beside the product and set pages; 6h CDN header,
+60s after a read error, a brand card instead of a 500); "Copy for Reddit /
+Discord" (`CopyPrices`, `src/lib/pokemon/share-text.ts`: a table or bullets,
+no link unless asked).
+
+**Failure behaviour.** A read error throws: force-dynamic pages answer 500,
+ISR pages keep the last good copy, share cards fall back to the brand card.
+Only an unknown product or set is a 404. Every page body checks the switch
+itself as well as the layout.
 
 **Data sources**
 
@@ -167,6 +249,10 @@ under 50 MB/day.
 | Engagement | `pokemon_quickview_open` (`product`, `kind`) |
 | Affiliate clicks | `buy_click` with `page_type` `pokemon_*` (`retailer` `pkmn_*` for tracked rows, `pkmn_ebay_search` / `ebay_search` for searches) |
 | Revenue | EPN: customid contains `pkmn`. TCGplayer (Impact): sharedid starts `pkmn_` |
+| Copy buttons | `pokemon_copy_prices` (`format`, `withLink`, `page`) |
+| Bot and pasted links | sessions with `utm_campaign` `pkmn-sealed` / `pkmn-perpack` / `pkmn-set` (`utm_source=discord-bot`) and `pkmn-copy` (`utm_source` reddit or discord, `utm_medium=copy`) |
+| Bot installs | Discord Developer Portal: server and user installs. The `[pokemon-discord]` log lines are for debugging; Vercel keeps them too briefly to count. |
+| Search | Search Console clicks on `/pokemon/*`; submit `/sitemaps/pokemon.xml` |
 
 A sensible read after four to six weeks: Pokémon sessions as a share of the
 site's, buy-click rate per session against `/sealed`'s, and EPN earnings per
@@ -174,10 +260,18 @@ site's, buy-click rate per session against `/sealed`'s, and EPN earnings per
 
 ## 6. Decisions the owner may want to revisit
 
-- **Product pages are noindex** (`POKEMON_INDEX_PRODUCTS`). ~1,000 templated
-  pages is the shape AdSense called low-value before; the hub, grid and 42 set
-  pages (text written from each set's data) are indexed. Turn it on once the
-  section proves itself.
+- **Product pages are noindex** until `POKEMON_INDEX_PRODUCTS=1`, and then only
+  the ~160 that pass the stage-1 gate. Templated product pages are the shape
+  AdSense called low-value before. Flip it only when both the local audit and a
+  preview run of `scripts/adsense-audit.ts` show no `pokemon-product` cluster
+  and a median of at least 150 words (2026-10-01 locally: median 555, masked
+  similarity 0.323, no cluster). A cluster flag means no flip; never pad.
+  Stage 2 (UPC/SPC, then premium collections with known packs) waits for a
+  premium-collections hub so none is an orphan.
+- **No MSRP** until a sourced registry exists (one URL and checked date per
+  product and market); `tests/pokemon-copy.test.ts` bans the word meanwhile.
+- **TCGplayer prices in a downloadable CSV**: not built; pasted tables and bot
+  replies show the same figures the pages already do.
 - **Cardmarket off** pending the permission question (§1).
 - **DexCompare.** `/about` links the owner's separate Pokémon site. Two of the
   owner's sites pricing Pokémon sealed may compete in search; whether to

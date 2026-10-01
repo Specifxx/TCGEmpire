@@ -16215,3 +16215,119 @@ pounds, and the section switched off. eBay could not be exercised here (no
 credentials); the matcher, budget and rotation are covered by
 `tests/pokemon-ebay.test.ts`, and the first workflow run's log prints what it spent
 and matched.
+
+## The Pokémon section as a home for Pokémon sealed: indexable pages, its own blog, link-free distribution — 2026-10-01
+
+Owner: "/pokemon should be like a home page for Pokemon cards … highly indexable
+… you'll show on Google … keep like blog posts separate … Pokemon blog posts …
+Reddit, like all these Pokemon communities, they ban you if you post like
+websites or like promotional material. So we need to find a better way to break
+in to Pokemon." Then "Ultracode": built by a research pass, a three-proposal
+design panel with a critique, four builders in their own worktrees from one
+shared base commit, an independent review of each, and an integration pass.
+Still sealed only; singles are not assumed. The section stays off by default
+and removable (the entry above).
+
+The panel's decisions, as built:
+
+- **D1 Pages for the head terms.** `/pokemon` is rebuilt as the section's home:
+  a stat line, the lowest price per pack, what is coming up (dates "TCGplayer
+  lists"), shop by type, the newest sets, US products listed under TCGplayer's
+  market price, guides and an FAQ. Three kind hubs (`/pokemon/booster-boxes`,
+  `/pokemon/elite-trainer-boxes`, `/pokemon/booster-bundles`) list every
+  product of their kind with packs and price per pack, and
+  `/pokemon/price-per-pack` ranks them. All force-dynamic over the one cached
+  catalogue. Premium collections and release dates are Phase 2.
+- **D2/D3 Product indexing is staged on durable facts.** `lib/pokemon/index-gate.ts`:
+  kind ∈ {booster-box, etb, pc-etb, booster-bundle} AND a known pack count:
+  159 products locally after the reclassification below. Never stock, offers,
+  presale or history, so a page never flips with the market. Every gated kind
+  has a hub linking each of its products, so none is an orphan.
+  `POKEMON_INDEX_PRODUCTS=1` now means "index the gate", and stays off until the
+  owner flips it after the audits. Measured locally (production build, the flag
+  on, 30-page samples): `pokemon-product` median 555 unique editorial words
+  (min 410), masked similarity 0.323, no cluster; before the rewrite the same
+  template on the gated pages had median 285 and a 23% near-duplicate share.
+  `pokemon-set` median 585, masked similarity 0.262 against a 0.333 baseline,
+  no cluster. Both pass the flip rule here; a preview audit is the second half
+  of it. A cluster flag would mean no flip, never padding.
+- **D4/D5 A separate blog.** `/pokemon/blog`, its own registry
+  (`lib/pokemon/blog/`), never the Riftbound `ARTICLES` or `ArticleView` (the
+  isolation test bans them). Post numbers come from the catalogue through
+  `[[pk:block]]` and `{{fact}}` tokens: hand-written prose has no digits and no
+  set names (`tests/pokemon-blog.test.ts`). Posts are ISR at the loaders' TTL.
+  Three posts land as **drafts**: they render in development and on Vercel
+  previews, and 404 in production, until Bill reads them. Publishing is one
+  edit per post (`status`, `reviewed`, `date`).
+- **D7 Breaking in without promo posts: tools that carry our numbers, not our
+  links.** A separate Pokémon Discord app (`/api/pokemon/discord`;
+  `/sealed`, `/perpack`, `/set` in every market) that users install
+  themselves or servers add. Replies carry exactly one utm link to our page and
+  no affiliate or marketplace URL. Its privacy notice is on
+  `/pokemon/discord#privacy` (an edit to `/privacy` would be a new host
+  touchpoint) and states exactly what the route logs: the command, market and
+  context, no ids. The signature is verified over the raw body before any parse
+  or read, and typed text is resolved against the catalogue before it can
+  become a loader key.
+- **D8 Share images that answer the question, and text to paste.** Product and
+  set pages have their own `opengraph-image.tsx` showing the cheapest US
+  listing, the price per pack and the as-of date (an unfurl must stand alone in
+  a channel that strips links); a 6-hour CDN header (lowercase `cache-control`,
+  replacing `ImageResponse`'s `immutable` year), 60 seconds after a read error,
+  and a brand card rather than a 500. "Copy for Reddit / Copy for Discord"
+  buttons on product, set and price-per-pack pages give a Markdown table or
+  bullets with no link unless asked, in the visitor's market and display
+  currency.
+- **D9 One shared base.** `lib/pokemon/value.ts` (per-pack ranking,
+  cheapest-by-kind, `RECENT_SETS = 6`, typical pack counts, `asOfLabel`,
+  `pokemonUtm`), `index-gate.ts` and `seo.ts` (`pokemonMeta`) were committed
+  before branching, so four builders could not each invent a "recent set" or a
+  per-pack rule. A per-pack comparison picks each kind by price per pack, never
+  by listing price: an uncounted Enhanced box is often the cheaper listing.
+- **D13 No MSRP anywhere.** Sources disagree (US$159.99 vs US$161.64 for one
+  Delta Reign box); MSRP/RRP is banned in Pokémon copy until a sourced registry
+  exists. `tests/pokemon-copy.test.ts` scans every renderable string in the
+  Pokémon folders for this and the other bans (worth, invest*, deals, sold
+  listings, real-time, hourly, five markets, pull rates).
+- **D14 Fail-open.** A read error throws: force-dynamic pages answer 500 and
+  ISR pages keep their last good copy (measured under `next start` with a dead
+  database and a cold cache). Only a genuinely unknown product or set is a 404,
+  and an empty catalogue is 200 + noindex. Every page body also gates itself:
+  Next renders layout and page in parallel, and a product page never rendered
+  before answered 500 instead of 404 with the section off until it did.
+- **D16 Titles and share images.** Every Pokémon title is absolute, ≤60
+  characters and brandless; descriptions ≤155 and unique per template, product
+  and set ones starting with the name. `pokemonMeta`'s `ogImage` is explicit:
+  a page that sets `openGraph` loses its parent folder's image in Next 14, so
+  `/pokemon/sets` and `/pokemon/sealed` had been unfurling with none.
+- **D12 The audits see the section.** `scripts/adsense-audit.ts` and
+  `scripts/template-seo-check.ts` carry `pokemon-*` rows ahead of Riftbound's
+  (harmless after a removal); they are the only Riftbound scripts that know the
+  section (`SCRIPT_TOUCHPOINTS`). A future committed audit that shows a Pokémon
+  cluster will fail `adsense-guard`, as intended.
+- **D17 History.** A hand-run workflow (`pokemon-archive-probe.yml`) downloads
+  one TCGCSV price archive and logs its structure, with no secrets, no database
+  and the date only through `env`. Backfill waits on what it shows.
+- **Data fix found by the builders.** "Trick or Trade BOOster Bundle 2023 - Mini
+  Booster Pack" is one three-card pack that TCGplayer's title files as a
+  bundle; counted as six packs it led every per-pack ranking at US$0.13 a pack
+  and passed the index gate. It is now a booster pack with no count
+  (`kinds.ts`, `packs.ts`); the next import corrects the stored row.
+
+Owner steps, none of them needed for the merge to be safe: turn the section on
+(README §1); read the three drafts on a preview and say which to publish;
+create the Discord app before the release that should carry it
+(`POKEMON_DISCORD_APP_ID`, `POKEMON_DISCORD_PUBLIC_KEY`; README "Discord
+setup"); flip `POKEMON_INDEX_PRODUCTS` after a preview audit; submit
+`/sitemaps/pokemon.xml`; run the archive probe once. Community approach: answer
+"box vs ETB" and "is this a fair price" questions with the copied table and no
+link, put the site in profiles and signatures, and offer the bot to Discord
+moderators by DM, never in channels.
+
+**Checked:** typecheck, lint, `npm test`, a local `next build` + `next start`
+(OG headers, ISR MISS→HIT, drafts 404, section off, fail-open), the two audits
+and `crawl-check` (no Pokémon broken link, duplicate title or description, or
+sitemap orphan; the sitemap's 159 products equal the gate's SQL count), and
+screenshots at 390 and 1280. Not verifiable here: eBay rows (none locally),
+the Discord client itself, the TCGCSV archive (403 from this sandbox), and how
+Vercel caches the OG routes.
