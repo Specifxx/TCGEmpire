@@ -36,7 +36,9 @@ export function pathSkipped(pathname: string | null | undefined, skips: readonly
  * walls and limit panels, the watchlist/portfolio Plus upsell, the sealed
  * watches). Stacking a corner card on those is asking twice for one thing.
  */
-export const PREMIUM_SKIP_PATHS = ["/login", "/verify", "/premium", "/tools", "/portfolio", "/watching", "/sealed"] as const;
+// "/pokemon" (2026-10-01): the Pokémon section sells nothing of Premium's, which
+// is all Riftbound, so a Premium card there would be an ad for another game.
+export const PREMIUM_SKIP_PATHS = ["/login", "/verify", "/premium", "/tools", "/portfolio", "/watching", "/sealed", "/pokemon"] as const;
 
 /** Milliseconds since `createdAt` (an ISO string or Date), or null when it is missing or unreadable. */
 export function accountAgeMs(createdAt: string | Date | null | undefined, now: number = Date.now()): number | null {

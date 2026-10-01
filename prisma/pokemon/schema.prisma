@@ -1,0 +1,122 @@
+// Pokémon sealed — its OWN Neon project, never the Riftbound databases.
+//
+// Everything Pokémon lives in this database and nowhere else: the catalogue
+// (sets, sealed products), the current offer per (product, market, source),
+// the eBay rotation book-keeping and a daily price series. The Riftbound
+// operational project (RM5) and the history project never see a Pokémon row,
+// and nothing in this schema references theirs, so the section can be turned
+// off, or deleted outright, without a migration on either side
+// (docs/pokemon/README.md, "Removing it").
+//
+// Generated to its own client (`.prisma/pokemon-client`) so it never collides
+// with the main `@prisma/client`:
+//   npx prisma generate --schema prisma/pokemon/schema.prisma
+//   npx prisma db push  --schema prisma/pokemon/schema.prisma   (the import workflow does this)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/.prisma/pokemon-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POKEMON_DATABASE_URL")
+}
+
+// One expansion (TCGplayer "group"), e.g. ME02: Phantasmal Flames. Products
+// outside an expansion (TCGplayer's "Miscellaneous Cards & Products") have no set.
+model PokemonSet {
+  id         Int       @id // TCGplayer groupId
+  slug       String    @unique
+  name       String // "Phantasmal Flames"
+  code       String? // "ME02" (the group prefix), null for specials
+  series     String // "Mega Evolution" | "Scarlet & Violet" | "Sword & Shield"
+  releasedOn DateTime? @db.Date
+  updatedAt  DateTime  @updatedAt
+
+  products PokemonProduct[]
+}
+
+model PokemonProduct {
+  id           Int       @id // TCGplayer productId — the catalogue's identity
+  slug         String    @unique // stable once written: the importer never renames a product's slug
+  name         String
+  setId        Int?
+  set          PokemonSet? @relation(fields: [setId], references: [id])
+  groupId      Int // TCGplayer group the product was read from (set or misc)
+  kind         String // lib/pokemon/kinds.ts — "booster-box", "etb", …
+  series       String
+  imageUrl     String?
+  tcgplayerUrl String
+  releasedOn   DateTime? @db.Date
+  presale      Boolean   @default(false)
+  // "What's inside", one line each, parsed from the listing's own bullet list.
+  contents     String[]
+  upc          String?
+  cardmarketId Int?
+  // false once a successful read of its group no longer lists it.
+  active       Boolean   @default(true)
+  firstSeenAt  DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  offers PokemonOffer[]
+
+  @@index([setId])
+  @@index([active])
+}
+
+// The CURRENT price from one source in one market — rewritten by each import,
+// never appended. Stored in the source's own market and currency; conversions
+// for other markets (≈ reference figures) happen at read time from lib/fx.ts.
+model PokemonOffer {
+  productId     Int
+  product       PokemonProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  market        String // US | UK | EU | AU | CA | SG
+  // tcgplayer        cheapest listing on TCGplayer (US, item price)
+  // tcgplayer_market TCGplayer's market price (US, reference only)
+  // ebay             cheapest matching fixed-price eBay listing we found
+  // cardmarket       Cardmarket's lowest price (EU, any language)
+  // cardmarket_trend Cardmarket's trend price (EU, reference only)
+  source        String
+  priceCents    Int
+  currency      String
+  shippingCents Int? // eBay only: the seller's stated postage, null when not stated
+  url           String
+  title         String? // eBay only: the listing's own title
+  inStock       Boolean        @default(true)
+  checkedAt     DateTime
+
+  @@id([productId, market, source])
+  @@index([market])
+}
+
+// eBay rotation book-keeping: when each (product, market) pair was last
+// searched, so a small daily call budget walks the whole list oldest-first.
+model PokemonEbayCheck {
+  productId Int
+  market    String
+  checkedAt DateTime
+  matched   Boolean
+
+  @@id([productId, market])
+  @@index([checkedAt])
+}
+
+// One point per product, series and UTC day. Small on purpose: the product
+// page charts TCGplayer's market price, nothing else reads it.
+model PokemonPricePoint {
+  productId Int
+  series    String // "tcgplayer_market" (USD) | "cardmarket_trend" (EUR)
+  day       DateTime @db.Date
+  cents     Int
+
+  @@id([productId, series, day])
+}
+
+model PokemonImportRun {
+  id         Int       @id @default(autoincrement())
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  ok         Boolean   @default(false)
+  summary    Json?
+}

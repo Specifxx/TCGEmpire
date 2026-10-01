@@ -215,6 +215,17 @@ at once" intent (a real, distinct query shape from "riftbound empower
 explained"), and it already links out to each per-mechanic guide. Not a
 cannibalization problem.
 
+## Pokémon sealed intent (added 2026-10-01, the Pokémon section beta)
+
+The section is off until the owner switches it on (docs/pokemon/README.md); these rows apply from then.
+
+| Query pattern | Primary URL | Secondary (different angle) |
+|---|---|---|
+| `pokemon sealed prices`, `pokemon booster box prices`, `pokemon etb price` | `/pokemon` (title "Pokémon Sealed Prices: Booster Boxes, ETBs & Bundles") | `/pokemon/sealed` is the full grid; it is titled "All Pokémon Sealed Products" so the two never share a phrase |
+| `<set> booster box price`, `<set> etb price`, `<set> sealed` (e.g. `phantasmal flames booster box price`) | `/pokemon/sets/<set>` — "<Set> Sealed Prices: Booster Box, ETB & More", its text written from the set's own data | The product pages (`/pokemon/sealed/<slug>`) are **noindex** until `POKEMON_INDEX_PRODUCTS=1`, so they cannot compete with their set page for now |
+| `pokemon tcg sets list`, `pokemon expansions` | `/pokemon/sets` | — |
+| `pokemon collector to riftbound` | unchanged — `/guides/pokemon-collector-to-riftbound` (a Riftbound switching guide, not a Pokémon price page) | No Pokémon page targets "riftbound" |
+
 ## How to use this file going forward
 
 1. Before writing new content, search this file for the target query.

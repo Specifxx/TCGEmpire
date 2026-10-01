@@ -215,6 +215,14 @@ export const OPERATIONAL_VARS = ["RM5"] as const;
  */
 export const HISTORY_VARS = ["HISTORY_DATABASE_URL_4", "HISTORY_DATABASE_URL_3", "DATABASE_URL"] as const;
 
+/**
+ * Pokémon sealed (2026-10-01): its OWN Neon project, one variable, never a
+ * chain and never a fallback onto either database above. Unset means the
+ * Pokémon section is off (src/lib/pokemon/gate.ts), not that it borrows RM5.
+ * Its schema is prisma/pokemon/schema.prisma; see docs/pokemon/README.md.
+ */
+export const POKEMON_VARS = ["POKEMON_DATABASE_URL"] as const;
+
 /** First variable in `vars` that is actually set, by NAME — never its value. */
 export function resolveVar(vars: readonly string[]): string | null {
   for (const name of vars) if (process.env[name]) return name;

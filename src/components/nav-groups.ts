@@ -1,5 +1,6 @@
 import { DISCORD_URL } from "@/lib/site";
 import { SETS } from "@/lib/constants";
+import { pokemonSectionOn } from "@/lib/pokemon/flag";
 
 // The grouped site navigation, shared by the ⌘K command launcher
 // (CommandLauncher.tsx), the persistent desktop rail (SideNav.tsx), the footer
@@ -77,6 +78,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/movers", label: "Weekly Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "most searched", "popular cards"] },
       { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"] },
       { href: "/stores/tracked", label: "Stores we track", keywords: ["stores", "shops", "retailers", "which stores"] },
+      // The Pokémon section (2026-10-01), only while its switch is on
+      // (lib/pokemon/flag.ts). Last in Prices, which renders open on a first
+      // visit, so the link is in every page's HTML. No "prices"/"sealed" word
+      // that would outrank /deck or /sealed in tests/nav-search.test.ts.
+      ...(pokemonSectionOn()
+        ? [{ href: "/pokemon", label: "Pokémon (beta)", keywords: ["pokemon", "pokémon", "pokemon tcg", "pokemon booster box", "etb", "elite trainer box"] }]
+        : []),
     ],
   },
   {

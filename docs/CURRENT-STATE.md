@@ -3,7 +3,8 @@
 Last reviewed 2026-09-23, against DECISIONS.md up to and including the
 overlays entry, [2026-09-23](../DECISIONS.md#L11348); the free-limits bullets
 updated on [2026-09-28](../DECISIONS.md#L14549); the trial and tiers bullets on
-[2026-09-30](../DECISIONS.md#L15595).
+[2026-09-30](../DECISIONS.md#L15595); the Pokémon section on
+[2026-10-01](../DECISIONS.md#L16105).
 
 The short version of [DECISIONS.md](../DECISIONS.md): what still stands,
 with the latest position where an entry was reversed. Each bullet ends with
@@ -356,7 +357,7 @@ longer lands on its entry.
 - **Corner nudges (value first, 09-29 evening; supersedes "instant" and "on the
   first page"):** only signed-in cards remain. The Premium slide-in (signed in,
   no paid tier) waits for the session's 3rd view and an account older than 48 h,
-  skips `/tools`, `/portfolio`, `/watching`, `/sealed`, and is a compact card
+  skips `/tools`, `/portfolio`, `/watching`, `/sealed`, `/pokemon`, and is a compact card
   (about 23% of a phone's height) with the tier table behind "See what's
   included". It and `AnnualSwitchNudge` wait `NUDGE_DELAY_MS` = 12 s from
   eligibility, cancel on a dialog, drawer, focused text field or navigation, and
@@ -369,7 +370,7 @@ longer lands on its entry.
   [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089),
   [2026-09-27](../DECISIONS.md#L14536), [2026-09-28](../DECISIONS.md#L14549),
   [2026-09-29](../DECISIONS.md#L15178), [2026-09-29](../DECISIONS.md#L15281),
-  [2026-09-29](../DECISIONS.md#L15555), [2026-09-30](../DECISIONS.md#L15871)
+  [2026-09-29](../DECISIONS.md#L15555), [2026-09-30](../DECISIONS.md#L15871), [2026-10-01](../DECISIONS.md#L16105)
 - **Signed-out visitors get nothing from Deal Finder's two Underpriced lists
   or Rising Cards**; a free account gets the top 3 of each, a paid tier the full
   list. Deal Finder's Cheapest on eBay view is free for everyone.
@@ -404,7 +405,8 @@ longer lands on its entry.
   `ebaySearchUrl` with a source), never a local eBay host map, so EPN's
   customid names the page and all six markets reach their own eBay.
   Every eBay unit sends its own `surface` and a distinct EPN source, and every
-  eBay query goes through `riftboundEbayQuery` ("Riftbound" exactly once).
+  eBay query goes through `riftboundEbayQuery` ("Riftbound" exactly once);
+  the Pokémon section's go through `pokemonEbayQuery` ("Pokemon" once).
   By-surface numbers compare only from 2026-09-26 on (the eBay-only surfaces
   from 09-27). [2026-09-26](../DECISIONS.md#L13640),
   [2026-09-26](../DECISIONS.md#L13751)
@@ -452,8 +454,9 @@ longer lands on its entry.
   policy, Terms of service (the site map stays collapsed on `/`). Privacy and
   Terms are also in the rail/menu Help group (`hideInFooter`). `FooterAds`
   renders no banner pair on /about, /authors(/*), /contact, /editorial-policy,
-  /methodology, /privacy, /support and /terms; the six mini-games carry no
-  in-page pair. [2026-09-26](../DECISIONS.md#L14680)
+  /methodology, /privacy, /support and /terms, nor on `/pokemon` (another game:
+  `OFF_TOPIC_ROUTES`); the six mini-games carry no in-page pair.
+  [2026-09-26](../DECISIONS.md#L14680), [2026-10-01](../DECISIONS.md#L16105)
 - **1024–1279 is its own band** (~704px of content): the filter sidebar
   waits for xl, card art is 160px (320 from xl), and stickies use
   `lg:top-36 xl:top-20`. [2026-09-23](../DECISIONS.md#L11201)
@@ -485,7 +488,8 @@ longer lands on its entry.
 - **Homepage order:** hero, then Today's Top Deals (Biggest savings, Price
   drops, Rising cards; no tier chips, no Cheapest sealed column), then the
   editorial band (`EditorialHub`: Start here, Latest news, Market updates; two
-  rows per column on phones), eBay Picks (the newest released set), the popular
+  rows per column on phones), the one-line Pokémon promo while that section is
+  on (`PokemonHomePromo`, all six homes), eBay Picks (the newest released set), the popular
   carousel (its "Most popular" tab back, owner's call; it carries the ItemList
   on `/`), Riftle/pack-sim, How it works. No price table on `/` since 09-30
   (the region homes keep theirs). "Cheapest on eBay" is a Deal Finder view since
@@ -494,7 +498,7 @@ longer lands on its entry.
   [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
   [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190),
   [2026-09-26](../DECISIONS.md#L14680), [2026-09-28](../DECISIONS.md#L15131),
-  [2026-09-30](../DECISIONS.md#L15971)
+  [2026-09-30](../DECISIONS.md#L15971), [2026-10-01](../DECISIONS.md#L16105)
 - **Overlays:** `ui/Dialog` portals to body; Escape closes only the top
   layer and focus returns to the opener. Corner nudges share one corner
   string. [2026-09-23](../DECISIONS.md#L11348)
@@ -738,6 +742,25 @@ longer lands on its entry.
   stays in the Stripe portal. The paid-renewal reminder is built on
   `feedback/auto-renew` and held for Stripe test-mode testing.
   [2026-09-25](../DECISIONS.md#L12831)
+
+## Pokémon section (beta)
+
+- **Self-contained, removable, off by default (2026-10-01, owner: "if there is
+  an issue, I can just completely remove all the Pokemon"):** `/pokemon` prices
+  English Pokémon sealed (Sword & Shield onward) in all six markets from its OWN
+  Neon project (`POKEMON_DATABASE_URL`, `prisma/pokemon/schema.prisma`, its own
+  client) — never RM5 or history. On only when `NEXT_PUBLIC_POKEMON_SECTION=1`
+  AND the database is set; off, every route 404s and the nav link, homepage
+  promo, sitemap section, robots.txt and llms.txt entries vanish. Six Riftbound
+  files know it exists, pinned by `tests/pokemon-isolation.test.ts`; the
+  removal table is in `docs/pokemon/README.md`. Daily import
+  (`pokemon-import.yml`, schedule only) from TCGCSV; eBay is a capped slice of
+  the SHARED Browse quota (`min(160, remaining − 2000)`, nothing when unknown);
+  Cardmarket is built but off (`POKEMON_CARDMARKET`) pending the owner's
+  permission question; product pages noindex until `POKEMON_INDEX_PRODUCTS=1`.
+  eBay queries go through `pokemonEbayQuery` ("Pokemon" once), never
+  `riftboundEbayQuery`; affiliate sub-ids carry `pkmn`. The site's price rules
+  apply unchanged. [2026-10-01](../DECISIONS.md#L16105)
 
 ## Removed, declined, kept
 

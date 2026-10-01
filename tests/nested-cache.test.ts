@@ -65,6 +65,10 @@ const SELF_CACHED = [
   // No cache of their own; their inputs are the day-caches above.
   "getCheapestOnEbayPage",
   "getUnderpricedVsEbay",
+  // 2026-10-01: the Pokémon section's two loaders (lib/pokemon/data.ts), each a
+  // cachedOrDirect under the "pokemon" tag.
+  "getPokemonCatalog",
+  "getPokemonProduct",
 ];
 
 function walk(dir: string, out: string[] = []): string[] {

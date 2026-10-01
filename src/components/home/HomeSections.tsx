@@ -9,6 +9,7 @@ import { WelcomeBack } from "@/components/home/WelcomeBack";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
+import { PokemonHomePromo } from "@/components/pokemon/PokemonHomePromo";
 import { SETS, hasSetHub, newestReleasedSet, nextUpcomingSet } from "@/lib/constants";
 import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
@@ -142,6 +143,11 @@ export function HomeSections({
           <TodaysTopDeals dealsByCountry={topDealsByCountry} />
         </Reveal>
       )}
+
+      {/* The Pokémon section's one line (2026-10-01, owner's request), on all
+          six homes: after Top Deals and the editorial band, never above them.
+          Renders nothing while the section is off (lib/pokemon/flag.ts). */}
+      <PokemonHomePromo />
 
       {/* eBay Picks — the newest set's chase cards with their cheapest live
           listing, rather than a generic banner. Held the top slot from

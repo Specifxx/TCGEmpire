@@ -27,9 +27,16 @@ export const BANNER_FREE_ROUTES = [
   "/terms",
 ] as const;
 
+// Routes whose subject is not Riftbound at all (2026-10-01): the Pokémon
+// section. A "Shop Riftbound cards" leaderboard there is an ad for the wrong
+// game, and the section carries its own eBay and TCGplayer links with their own
+// disclosure. Kept apart from BANNER_FREE_ROUTES, whose reason is different.
+export const OFF_TOPIC_ROUTES = ["/pokemon"] as const;
+
 export function footerBannersAllowed(pathname: string | null): boolean {
   if (!pathname) return true;
-  return !BANNER_FREE_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`));
+  const under = (r: string) => pathname === r || pathname.startsWith(`${r}/`);
+  return !BANNER_FREE_ROUTES.some(under) && !OFF_TOPIC_ROUTES.some(under);
 }
 
 // Client wrapper for the site-wide footer affiliate banners. The layout used

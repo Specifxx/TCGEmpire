@@ -29,6 +29,8 @@ import { staticPageDate } from "./static-page-dates";
 import { normalizeSearch } from "./format";
 import { AUTHORS } from "./content/authors";
 import { REGION_HOME_PATH } from "./seo";
+import { pokemonSectionOn } from "./pokemon/flag";
+import { pokemonSitemapEntries } from "./pokemon/sitemap";
 
 export interface SitemapEntry {
   url: string;
@@ -38,7 +40,7 @@ export interface SitemapEntry {
   images?: string[];
 }
 
-export const SECTIONS = [
+const ALL_SECTIONS = [
   "core",
   "cards",
   "sets",
@@ -48,8 +50,13 @@ export const SECTIONS = [
   "champions",
   "stores",
   "content",
+  "pokemon",
 ] as const;
-export type SectionId = (typeof SECTIONS)[number];
+export type SectionId = (typeof ALL_SECTIONS)[number];
+// "pokemon" (2026-10-01) exists only while the section's switch is on, so a
+// switched-off section leaves no empty child sitemap behind in the index,
+// robots.txt or the purge list (all three read SECTIONS).
+export const SECTIONS: readonly SectionId[] = ALL_SECTIONS.filter((s) => s !== "pokemon" || pokemonSectionOn());
 
 // Honest lastModified for price-bearing pages: the day of the latest price
 // snapshot (i.e. when the page's content really last changed). Stamping every URL
@@ -589,8 +596,11 @@ async function deckEntries(): Promise<SitemapEntry[]> {
   }
 }
 
+// The Pokémon section's URLs live with the section (lib/pokemon/sitemap.ts).
+const pokemon = pokemonSitemapEntries;
+
 const BUILDERS: Record<SectionId, () => Promise<SitemapEntry[]>> = {
-  core, cards, sets, domains, keywords, facets, champions, stores, content,
+  core, cards, sets, domains, keywords, facets, champions, stores, content, pokemon,
 };
 
 /**

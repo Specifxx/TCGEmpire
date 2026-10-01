@@ -16101,3 +16101,117 @@ Underpriced tabs show the lock and the eBay CTA with no list query, and Cheapest
 on eBay shows its ten rows and pager; with review mode on, Underpriced vs eBay
 listed 128 cards (25 a page) and Underpriced vs TCGplayer 111, with the store
 picker on the latter only. No horizontal scroll at 390px or 1280px.
+
+## The Pokémon sealed section (beta): its own database, off by default — 2026-10-01
+
+Owner: "I'm thinking of making a Pokemon section of the website … independent to
+the Rift Bound section … start off with … Pokemon sealed products only … eBay is
+really important for us to promote … TCG player as well … if there is an issue,
+I can just completely remove all the Pokemon … on the homepage … try out our
+Pokemon sealed products … easily able to get disabled … a POC … leverage lots of
+components of Rift Compare … keep it in all of the markets." Then: "pokemon should
+use a separate database I can create in neon."
+
+Design, runbook and removal list: `docs/pokemon/README.md`. The decisions:
+
+- **Its own Neon project and Prisma client.** `POKEMON_DATABASE_URL`
+  (`POKEMON_VARS` in `lib/db-chains.ts`, one variable, never a chain, never a
+  fallback onto RM5), schema `prisma/pokemon/schema.prisma`, client generated to
+  `.prisma/pokemon-client`. No Pokémon table in the Riftbound schema, and no
+  Pokémon code imports `lib/db`, `db-history` or `@prisma/client`
+  (`tests/pokemon-isolation.test.ts`). The on/off check (`lib/pokemon/gate.ts`)
+  is kept apart from the client so `lib/sitemap-sections.ts` (loaded by every
+  Riftbound importer via `revalidate-content.ts`, whose workflows generate only
+  the main client) never loads it. `npm run db:generate`, the build and `ci.yml`
+  generate both clients; `npm test` needs neither.
+- **One switch, off by default.** `NEXT_PUBLIC_POKEMON_SECTION === "1"` (the
+  `introOfferEnabled` pattern) AND a database URL. Off: every `/pokemon` route and
+  `/api/pokemon/*` 404 (the section layout calls `notFound()`; no middleware, no
+  `loading.tsx`), and the nav link, homepage promo, sitemap section, robots.txt
+  line and llms.txt entry are absent. Verified both ways on local databases. So
+  merging changes nothing until the owner creates the database and sets the two
+  Vercel variables.
+- **Removable by construction.** Everything lives under `src/{app,lib,components}/pokemon`,
+  `src/app/api/pokemon`, `prisma/pokemon`, `scripts/pokemon`, one workflow and
+  `tests/pokemon-*`. Six Riftbound files know it exists (nav-groups, HomeSections,
+  sitemap-sections, FooterAds, nudge-gate, db-chains); the isolation test fails on
+  a seventh, which is the moment to extend the README's removal table.
+- **Data.** TCGCSV (TCGplayer's own published data, category 3) is the catalogue
+  and the US price: one JSON per expansion, no pagination and no browser-header
+  scraping (unlike `lib/tcgplayer.ts`'s mp-search-api for Riftbound). Scope:
+  English sealed from Sword & Shield to the newest Mega Evolution set, pre-orders
+  included — 42 sets, 1,020 products on the day. Cases, displays, "[Set of N]"
+  combinations, code cards and non-English editions are out (`lib/pokemon/kinds.ts`,
+  tested against all 1,943 sealed titles). A product keeps its first slug forever.
+  A TCGplayer low under 30% of its own market price is dropped (damaged or
+  mis-listed boxes; the market price still shows).
+- **eBay, the priority.** Every product in every market links to a search of the
+  visitor's own eBay (`pokemonEbayQuery`: "Pokemon" exactly once, never
+  `riftboundEbayQuery`). On top, the cheapest matching listing is tracked for the
+  box-shaped kinds of the last 24 months' sets plus pre-orders (50 products × US,
+  UK, AU, CA, EU; Singapore gets the search only, there being no EPN program
+  there). The matcher (`lib/pokemon/ebay-match.ts`) refuses anything not plainly
+  one sealed unit of this product: other sets, lots, empties, accessories, graded,
+  foreign, the wrong box type, or under max(type floor, half the market price).
+- **The eBay quota is Riftbound's first.** One app, 5,000 Browse calls a day; a
+  refresh run on 2026-09-30 went from 4,200 remaining to 2,800 before its sealed
+  pass. Pokémon spends `min(160, remaining − 2000)` and nothing when the count
+  cannot be read, from its own module (`lib/pokemon/ebay.ts`), because
+  `lib/ebay.ts` is on refresh-prices.yml's push paths and its searches require
+  "Riftbound" in titles. Pairs rotate never-checked-first, then stalest: about
+  every day and a half, inside the 72h unknown window.
+- **Cardmarket is built but off** (`POKEMON_CARDMARKET=1`, a repo variable): the
+  2026-09-04 data permission in `lib/cardmarket.ts` was asked for Riftbound, so
+  Pokémon waits on the same question. Its matcher reconciles the two catalogues'
+  wording ("[Blaziken]" vs "Blaziken …", "(18 Boosters)" = half box) and drops any
+  Cardmarket product two of ours claim: 739 of 1,020 matched.
+- **The site's price rules, unchanged.** Cheapest first by item price; eBay rows in
+  their price position in eBay blue; references below the comparison, converted
+  outside their market and marked ≈; open / sold out / unknown past 72h from
+  `lib/sealed-offers.ts`; listings, never sales; "updated daily", never real-time
+  (the FAQ is built from the sources that actually hold rows).
+- **Read path, egress.** Two self-cached loaders under the `pokemon` tag, TTL 6h
+  (`lib/pokemon/data.ts`, React-`cache()`d per request, in `nested-cache.test.ts`):
+  the catalogue per market (~455 KB) and one product (~5 KB). The grids are
+  force-dynamic over the catalogue (`/sealed`'s shape); the product page is ISR at
+  exactly the loader's TTL, `generateStaticParams` returning `[]` like `/card/[id]`
+  (first visit MISS, then HIT, checked on `next start`), shipping all six markets'
+  boards for the client to pick. The import purges only its own tag and paths
+  (`/api/pokemon/revalidate`), never `revalidateContent()`; the sitemap reads the
+  DB directly so the 6h TTL never becomes the sitemap route's (rule 5).
+- **Reuse, not forks, where it was free.** `SealedFilters` and `SealedSort` take
+  an optional `basePath` (and `msrpFilter`/`options`); their Riftbound defaults
+  are unchanged. The quick view is a Pokémon twin of `SealedQuickView` that
+  fetches its board on open (a thousand-product grid cannot carry every offer).
+  The tile is a real link to the product page (crawlable) that opens the quick
+  view on a plain click.
+- **SEO: product pages noindex for now.** ~1,000 templated product pages is the
+  shape AdSense called low-value before; the hub, grid, set index and 42 set
+  pages (text written from each set's own data) are indexed and in a `pokemon`
+  sitemap section that exists only while the switch is on. `POKEMON_INDEX_PRODUCTS=1`
+  is the owner's later call. Keyword map rows added.
+- **Chrome.** The section has its own sub-navigation and a "Riftbound prices"
+  link out; the site header and rail stay Riftbound's, with one "Pokémon (beta)"
+  link last in Prices (no "prices"/"sealed" word, for `nav-search.test.ts`). No
+  Riftbound footer banners (`OFF_TOPIC_ROUTES`) and no Premium slide-in on
+  `/pokemon`: both sell another game. Its own share image.
+- **Homepage: one line, on all six homes**, after Top Deals and the editorial band
+  and before eBay Picks (`PokemonHomePromo`, static, no data read). Lower down it
+  would sit about nine phone screens deep, which the owner's "try out our Pokemon
+  sealed products" would not survive; above Top Deals it would break the owner's
+  09-30 order. `pokemon_promo_click` measures it.
+- **Measurement.** `buy_click` `page_type` `pokemon_*`, `pokemon_quickview_open`,
+  `pokemon_promo_click`; EPN customid `rc-<market>-pkmn…` and Impact sharedid
+  `pkmn_…` split the revenue in the networks' own reports.
+- **Not decided here:** DexCompare (the owner's separate Pokémon site, linked from
+  `/about`) and this section may compete in search; stores (phase 2), watches and
+  Japanese sealed are out of the POC.
+
+**Checked:** typecheck, lint, the AdSense and image guards, `npm test` (all
+passing, the new files included), a full `npm run build`, and in a browser against
+local databases loaded by a real import (TCGCSV, Cardmarket on): every page at
+390px and 1280px with no horizontal scroll, the quick view, the UK board in
+pounds, and the section switched off. eBay could not be exercised here (no
+credentials); the matcher, budget and rotation are covered by
+`tests/pokemon-ebay.test.ts`, and the first workflow run's log prints what it spent
+and matched.

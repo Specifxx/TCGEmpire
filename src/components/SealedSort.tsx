@@ -10,7 +10,12 @@ const OPTIONS = [
   { value: "new", label: "Recently Added" },
 ];
 
-export function SealedSort() {
+// `basePath` and `options` (2026-10-01): the Pokémon section reuses this with
+// its own sort list on /pokemon/sealed.
+export function SealedSort({
+  basePath = "/sealed",
+  options = OPTIONS,
+}: { basePath?: string; options?: { value: string; label: string }[] } = {}) {
   const router = useRouter();
   const params = useSearchParams();
   const current = params.get("sort") ?? "";
@@ -23,12 +28,12 @@ export function SealedSort() {
         if (e.target.value) next.set("sort", e.target.value);
         else next.delete("sort");
         const qs = next.toString();
-        router.push(qs ? `/sealed?${qs}` : "/sealed");
+        router.push(qs ? `${basePath}?${qs}` : basePath);
       }}
       className="input w-auto cursor-pointer"
       aria-label="Sort sealed products"
     >
-      {OPTIONS.map((o) => (
+      {options.map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}
         </option>

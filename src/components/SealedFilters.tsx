@@ -23,14 +23,21 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
+// `basePath` and `msrpFilter` (2026-10-01) let the Pokémon section reuse this
+// panel as is: it pushes to /pokemon/sealed and has no MSRP table to filter on.
+// `types` may carry a label per value for a section whose type ids are slugs.
 export function SealedFilters({
   types,
   sets,
   currency = "AUD",
+  basePath = "/sealed",
+  msrpFilter = true,
 }: {
-  types: string[];
+  types: (string | { value: string; label: string })[];
   sets: { code: string; name: string }[];
   currency?: string;
+  basePath?: string;
+  msrpFilter?: boolean;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -57,7 +64,7 @@ export function SealedFilters({
     mutate(next);
     const qs = next.toString();
     setOptimistic(qs);
-    startTransition(() => router.push(qs ? `/sealed?${qs}` : "/sealed"));
+    startTransition(() => router.push(qs ? `${basePath}?${qs}` : basePath));
   }
 
   function clearAll() {
@@ -66,7 +73,7 @@ export function SealedFilters({
     if (q) next.set("q", q);
     const qs = next.toString();
     setOptimistic(qs);
-    startTransition(() => router.push(qs ? `/sealed?${qs}` : "/sealed"));
+    startTransition(() => router.push(qs ? `${basePath}?${qs}` : basePath));
   }
 
   function isActive(key: string, value: string) {
@@ -143,19 +150,23 @@ export function SealedFilters({
               onChange={() => update((p) => (p.get("instock") === "1" ? p.delete("instock") : p.set("instock", "1")))}
               label="In stock only"
             />
-            <Check
-              className="mt-2"
-              checked={sp.get("atmsrp") === "1"}
-              onChange={() => update((p) => (p.get("atmsrp") === "1" ? p.delete("atmsrp") : p.set("atmsrp", "1")))}
-              label="In stock at MSRP"
-            />
+            {msrpFilter && (
+              <Check
+                className="mt-2"
+                checked={sp.get("atmsrp") === "1"}
+                onChange={() => update((p) => (p.get("atmsrp") === "1" ? p.delete("atmsrp") : p.set("atmsrp", "1")))}
+                label="In stock at MSRP"
+              />
+            )}
           </Section>
 
           <Section title="Product type" defaultOpen>
             <div className="flex flex-col gap-1">
-              {types.map((t) => (
-                <Check key={t} checked={isActive("type", t)} onChange={() => update((p) => setCsv(p, "type", t))} label={t} />
-              ))}
+              {types.map((t) => {
+                const value = typeof t === "string" ? t : t.value;
+                const label = typeof t === "string" ? t : t.label;
+                return <Check key={value} checked={isActive("type", value)} onChange={() => update((p) => setCsv(p, "type", value))} label={label} />;
+              })}
               {types.length === 0 && <span className="px-1 py-2 text-xs text-slate-500">No product types yet.</span>}
             </div>
           </Section>

@@ -59,6 +59,11 @@ npm run lint
 npm test            # node --test over tests/*.test.ts; needs `npx prisma generate` first
 ```
 
+Typecheck needs BOTH Prisma clients: `npm run db:generate` (the Riftbound one
+and the Pokémon section's, `prisma/pokemon/schema.prisma`). The Pokémon section
+is self-contained and removable — read `docs/pokemon/README.md` before touching
+anything under `src/**/pokemon/`, and never point it at a Riftbound database.
+
 Record non-obvious decisions in `DECISIONS.md` (newest at the bottom), in the
 same style as the entries already there.
 

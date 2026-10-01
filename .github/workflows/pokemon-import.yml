@@ -1,0 +1,90 @@
+name: Pokemon sealed import
+
+# The Pokémon section's one importer (docs/pokemon/README.md). Writes ONLY to
+# the Pokémon Neon project (POKEMON_DATABASE_URL): never RM5, never history.
+#
+#   1. TCGCSV → catalogue + TCGplayer US prices      (always)
+#   2. Cardmarket → EU prices                        (repo variable POKEMON_CARDMARKET=1)
+#   3. eBay Browse → cheapest matching listing       (EBAY_* secrets; capped, see below)
+#   4. Purge the /pokemon pages and the "pokemon" cache tag
+#
+# Schedule and nothing else: no push trigger, so landing Pokémon code never
+# starts an import (unlike refresh-prices.yml's importer paths). Once a day is
+# what the data supports: TCGCSV and Cardmarket both publish daily.
+#
+# eBay QUOTA IS SHARED with Riftbound (one app, 5,000 Browse calls a day, and
+# refresh-prices.yml uses most of it). The import reads the live remaining
+# count and spends at most POKEMON_EBAY_MAX_CALLS (default 160), and only what
+# sits above POKEMON_EBAY_RESERVE (default 2,000) — an unknown count spends
+# nothing. 05:17 UTC sits between sealed-refresh (01:00, no eBay) and the
+# Riftbound 07:00 run.
+#
+# Before the owner has created the database, the import step logs that and
+# exits 0, so this workflow is harmless to merge first.
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+    inputs:
+      skip_ebay:
+        description: "Skip the eBay pass (catalogue and prices only)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: pokemon-import
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      POKEMON_DATABASE_URL: ${{ secrets.POKEMON_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema prisma/pokemon/schema.prisma
+
+      # Additive schema sync, the same contract refresh-prices.yml keeps with RM5.
+      - name: Sync the Pokémon schema
+        run: |
+          if [ -z "${POKEMON_DATABASE_URL:-}" ]; then
+            echo "POKEMON_DATABASE_URL is not set: the Pokémon section is off, nothing to do."
+            exit 0
+          fi
+          npx prisma db push --schema prisma/pokemon/schema.prisma --skip-generate
+
+      - name: Import
+        id: import
+        env:
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
+          POKEMON_EBAY: ${{ inputs.skip_ebay && '0' || '1' }}
+          POKEMON_EBAY_MAX_CALLS: ${{ vars.POKEMON_EBAY_MAX_CALLS }}
+          POKEMON_EBAY_RESERVE: ${{ vars.POKEMON_EBAY_RESERVE }}
+          POKEMON_CARDMARKET: ${{ vars.POKEMON_CARDMARKET }}
+        run: npx tsx scripts/pokemon/import.ts
+
+      # Pokémon pages and the "pokemon" tag only: never the Riftbound content purge.
+      - name: Purge the Pokémon pages
+        if: ${{ !cancelled() && steps.import.outcome == 'success' }}
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "${POKEMON_DATABASE_URL:-}" ] || [ -z "${CRON_SECRET:-}" ]; then
+            echo "Nothing to purge (no Pokémon database, or no CRON_SECRET)."
+            exit 0
+          fi
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 -X POST "$SITE_URL/api/pokemon/revalidate" -H "Authorization: Bearer $CRON_SECRET" || true)
+          echo "revalidate: HTTP $code (404 means the section is switched off on the live site)"

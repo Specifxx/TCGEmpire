@@ -41,8 +41,12 @@ jobs:
 
       # Prisma's generated client is a compile-time dependency of most of src/,
       # so typecheck can't run without it. No database connection is needed.
+      # Two clients since 2026-10-01: the Pokémon section has its own schema
+      # and database (prisma/pokemon/schema.prisma, docs/pokemon/README.md).
       - name: Generate Prisma client
-        run: npx prisma generate
+        run: |
+          npx prisma generate
+          npx prisma generate --schema prisma/pokemon/schema.prisma
 
       - name: Typecheck
         run: npm run typecheck
