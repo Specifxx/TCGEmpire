@@ -8,9 +8,9 @@ import { COUNTRY_GUIDE_SLUGS } from "@/lib/seo";
 import { ebayLabel } from "@/lib/affiliate";
 import { CinematicHero } from "./CinematicHero";
 import { HomeSections } from "./HomeSections";
-import { PriceTodayTable } from "./PriceTodayTable";
+import { PriceGuideCallout } from "./PriceGuideCallout";
+import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EditorialHub } from "./EditorialHub";
-import { getPriceTable } from "@/lib/price-table";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
 // Every market, so the cross-market strips on a region page show them all.
@@ -51,14 +51,12 @@ export async function RegionHome({ region }: { region: Country }) {
     topDealsArr,
     recentlyUpdated,
     moversArr,
-    priceTable,
   ] = await Promise.all([
     getHomeStats(),
     getPopularCards(12, region),
     Promise.all(COUNTRY_CODES.map((c) => getCachedTopDeals(c))),
     getRecentlyUpdated(region, 24),
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
-    getPriceTable(region),
   ]);
   const trendingCards = popularCards.slice(0, 6);
   const stat = statsByCountry[region];
@@ -66,6 +64,7 @@ export async function RegionHome({ region }: { region: Country }) {
   const guideSlug = COUNTRY_GUIDE_SLUGS[region];
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
+  const topDealsAny = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
 
   // Both answers corrected 2026-09-26 ("Blog and tools, joined up" in
   // DECISIONS.md). The first claimed a ranking "by total delivered cost":
@@ -97,18 +96,19 @@ export async function RegionHome({ region }: { region: Country }) {
         region={{ code: region, adjective: info.adjective }}
       />
 
-      {/* Guides, news & market updates, in the same slot as on "/": directly
-          under the hero, above the price table (owner, 2026-09-28; see
-          EditorialHub.tsx). `market` makes "Start here" lead with this
-          market's own buying guide. */}
-      <EditorialHub freshness={freshness} market={region} />
 
-      <PriceTodayTable
-        rows={priceTable}
-        country={region}
-        totalPriced={stat.priced}
-        buyingGuide={guideSlug ? { href: `/blog/${guideSlug}`, label: `Buying in ${info.place}` } : undefined}
-      />
+      {/* Today's Top Deals, then the price guide (2026-10-02, owner: the
+          "Riftbound card prices today" table is gone; a link to /price-guide
+          takes its place, with Top Deals above it). HomeSections gets
+          showTopDeals={false} below so the deals render once. */}
+      {topDealsAny && <TodaysTopDeals dealsByCountry={topDealsByCountry} />}
+      <PriceGuideCallout totalCards={totalCards} />
+
+      {/* Guides, news & market updates: the same slot as on "/", under Top
+          Deals and the price guide (2026-10-02, owner: "the other homes should
+          be structured in exactly the same way"). `market` makes "Start here"
+          lead with this market's own buying guide. */}
+      <EditorialHub freshness={freshness} market={region} />
 
       {/* The full "/" feature set — Top Deals, eBay Picks, popular cards, How
           It Works, Explore, reviews, partners — see HomeSections.tsx and this
@@ -118,10 +118,11 @@ export async function RegionHome({ region }: { region: Country }) {
         totalCards={totalCards}
         storeCount={stat.stores}
         storeWord={storeWord}
-        // The "Most popular" shelf is back (owner, 2026-09-26); the price table
-        // keeps the ItemList for these cards when it renders.
+        // The "Most popular" shelf carries the ItemList now the price table
+        // is gone (2026-10-02, as on "/" since 2026-09-30).
         popularCards={popularCards}
-        popularItemList={priceTable.length === 0}
+        popularItemList
+        showTopDeals={false}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

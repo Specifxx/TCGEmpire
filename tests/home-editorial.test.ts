@@ -22,30 +22,15 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const code = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 const HUB = "src/components/home/EditorialHub.tsx";
 
-test("a region home renders hero, editorial band, price table, then HomeSections", () => {
-  for (const f of ["src/components/home/RegionHome.tsx"]) {
+test("every home has one structure: hero, Top Deals, price guide, editorial band, HomeSections", () => {
+  for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = code(f);
-    const hero = src.indexOf("<CinematicHero");
-    const table = src.indexOf("<PriceTodayTable");
-    const band = src.indexOf("<EditorialHub");
-    const rest = src.indexOf("<HomeSections");
-    assert.ok(hero >= 0 && hero < band && band < table && table < rest, `${f}: hero < EditorialHub < table < HomeSections`);
-    // Nothing between the hero and the band: it is the first thing after it.
-    // (JSX comments survive comment-stripping as an empty `{}`.)
-    const between = src.slice(src.indexOf("/>", hero) + 2, band).replace(/\{\s*\}/g, "").trim();
-    assert.equal(between, "", `${f}: the band directly follows the hero`);
+    const order = ["<CinematicHero", "<TodaysTopDeals", "<PriceGuideCallout", "<EditorialHub", "<HomeSections"].map((t) => src.indexOf(t));
+    assert.ok(order[0] >= 0 && order.every((v, i) => i === 0 || v > order[i - 1]), `${f}: ${order}`);
     assert.equal(src.split("<EditorialHub").length - 1, 1, `${f}: one band`);
+    assert.doesNotMatch(src, /<PriceTodayTable|getPriceTable\(/);
+    assert.match(src, /showTopDeals=\{false\}/, "HomeSections does not render the deals a second time");
   }
-  // "/" (2026-09-30, owner): hero, then Today's Top Deals, then the band, and
-  // no price table ("get rid of the riftbound card prices today on the home page").
-  const home = code("src/app/page.tsx");
-  const hero = home.indexOf("<CinematicHero");
-  const deals = home.indexOf("<TodaysTopDeals");
-  const band = home.indexOf("<EditorialHub");
-  const rest = home.indexOf("<HomeSections");
-  assert.ok(hero >= 0 && hero < deals && deals < band && band < rest, "hero < deals < EditorialHub < HomeSections");
-  assert.doesNotMatch(home, /<PriceTodayTable|getPriceTable\(/);
-  assert.match(home, /showTopDeals=\{false\}/, "HomeSections does not render the deals a second time");
   // "/" is market-neutral; a region home leads "Start here" with its own guide.
   assert.match(code("src/app/page.tsx"), /<EditorialHub freshness=\{freshness\} \/>/);
   assert.match(code("src/components/home/RegionHome.tsx"), /<EditorialHub freshness=\{freshness\} market=\{region\} \/>/);

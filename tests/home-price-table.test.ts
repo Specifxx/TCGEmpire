@@ -2,10 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { sevenDayChange, PRICE_TABLE_SIZE } from "../src/lib/price-table";
+import { sevenDayChange } from "../src/lib/price-table";
 
-// "Riftbound card prices today" under every market homepage's hero.
-// DECISIONS.md, "Growth pass: rank for 'riftbound card prices'", 2026-09-24.
+// The homepage price table ("Riftbound card prices today", 2026-09-24) is gone
+// from every home (2026-10-02): a link to /price-guide sits under Today's Top
+// Deals instead. Its 7-day helper lives on in the price guide.
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const DAY = 86400_000;
@@ -28,49 +29,18 @@ test("no change is invented: too few points, stale data, outliers and zero bases
   assert.equal(sevenDayChange([{ t: now - 8 * DAY, v: 0 }, { t: now - DAY, v: 900 }], now), null);
 });
 
-test("the loader is capped, cached no shorter than the homepages, fails open, and nests no cached loader", () => {
-  const src = read("src/lib/price-table.ts");
-  assert.equal(PRICE_TABLE_SIZE, 15, "capped at ~15 rows with a See-all link (2026-09-24)");
-  assert.match(src, /take: PRICE_TABLE_SIZE/);
-  assert.match(src, /revalidate: 3600/);
-  assert.match(src, /cardId: \{ in: ids \}/, "history is read for the table's cards only");
-  assert.doesNotMatch(src, /getPopularCards\(|getPriceMovers\(|getRecentlyUpdated\(/, "db.ts rule 6");
-  assert.match(src, /\}\)\(\)\.catch\(\(\) => \[\]\)/);
-  for (const f of ["src/app/page.tsx", "src/app/au/page.tsx"]) assert.match(read(f), /revalidate = 3600/);
-});
-
-test("every region homepage renders the table high up: under the hero and the editorial band (not \"/\" since 2026-09-30)", () => {
-  assert.doesNotMatch(read("src/app/page.tsx"), /<PriceTodayTable/);
-  for (const f of ["src/components/home/RegionHome.tsx"]) {
+test("every home: Today's Top Deals, then the price guide link; no price table anywhere", () => {
+  for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = read(f);
-    const hero = src.indexOf("<CinematicHero");
-    const table = src.indexOf("<PriceTodayTable");
+    assert.doesNotMatch(src, /<PriceTodayTable|getPriceTable\(/, f);
+    const deals = src.indexOf("<TodaysTopDeals");
+    const guide = src.indexOf("<PriceGuideCallout");
     const rest = src.indexOf("<HomeSections");
-    assert.ok(hero >= 0 && hero < table && table < rest, f);
+    assert.ok(deals > 0 && deals < guide && guide < rest, `${f}: deals < price guide < HomeSections`);
+    assert.match(src, /showTopDeals=\{false\}/, `${f}: the deals render once`);
   }
-  const t = read("src/components/home/PriceTodayTable.tsx");
-  assert.match(t, /Riftbound card prices today/);
-  for (const col of ["Card", "Set", "Cheapest", "Stores in stock", "7-day change"]) assert.ok(t.includes(`>${col}</th>`), col);
-  assert.match(t, /See all \{totalPriced\.toLocaleString\("en-US"\)\} card prices →/);
-});
-
-// 2026-09-26 ("Blog and tools, joined up" in DECISIONS.md): the table says how
-// to read it, BELOW the rows so nothing pushes the first row down on a phone,
-// in words that match what lib/price-table.ts computes.
-test("the table explains its columns under the rows, and links the method and the guide", () => {
-  const t = read("src/components/home/PriceTodayTable.tsx");
-  const rowsEnd = t.lastIndexOf("</table>");
-  const explain = t.indexOf("is the lowest in-stock item price we track in");
-  assert.ok(rowsEnd > 0 && explain > rowsEnd, "the explanation sits after the rows, never above them");
-  assert.match(t, /from a store or eBay, with postage extra/, "Cheapest is min(the market low, the tracked eBay listing), item prices");
-  // The 7-day change reads the weekly GLOBAL series (cheapest across AU/US/UK/SG
-  // in USD), so it must not read as this market's own history.
-  assert.match(t, /cheapest across Australia, the US, the UK and Singapore, in US dollars\), not this market&apos;s own history/);
-  assert.match(read("src/lib/price-table.ts"), /country: GLOBAL_HISTORY_COUNTRY/);
-  assert.match(t, /▼ green = cheaper worldwide this week\./);
-  for (const href of ['href="/methodology"', 'href="/guides/why-riftbound-card-prices-change"']) assert.ok(t.includes(href), href);
-  // A region home adds its own buying guide; "/" leads the band below with the
-  // six-market one instead.
-  assert.match(read("src/components/home/RegionHome.tsx"), /buyingGuide=\{guideSlug \? \{ href: `\/blog\/\$\{guideSlug\}`/);
-  assert.doesNotMatch(read("src/app/page.tsx"), /buyingGuide=/);
+  const c = read("src/components/home/PriceGuideCallout.tsx");
+  assert.match(c, /href="\/price-guide"/);
+  assert.match(c, /prefetch=\{false\}/);
+  assert.doesNotMatch(c, /prisma|unstable_cache|cookies/, "static: no data of its own");
 });

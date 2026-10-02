@@ -16501,3 +16501,20 @@ This entry covers the owner's audit plan, which was built from Reddit feedback. 
 - **Sale history.** The site's claims say "listings, never sales" (`tests/site-claims.test.ts`), and ended auctions are not kept. Tracking sales is its own piece of work (schema, egress, claim changes), not a tweak.
 
 **Tests:** `tests/community-feedback.test.ts`; the arcade pins in `tests/site-chrome.test.ts` are rewritten.
+
+## Homepages: the price table gives way to a price-guide link, one structure on all six — 2026-10-02
+
+**Decision (owner).** "Riftbound card prices today" (`PriceTodayTable`, 15 rows) is gone from the five region homes. "/" lost it on 2026-09-30.
+
+In its place, on every home, comes `PriceGuideCallout`: a static card linking to /price-guide. Today's Top Deals sits directly above it.
+
+All six homes now share one structure: hero, Today's Top Deals, price guide, the editorial band, then `HomeSections` (with `showTopDeals={false}`, so the deals render once). On the region homes the editorial band therefore moved from directly under the hero to under the price guide. "/" had already put the deals first.
+
+**Removed with it:**
+- `PriceTodayTable.tsx` and `PriceRowEbay.tsx`.
+- The `getPriceTable` loader and its eBay read. That is one hourly cached query per market fewer.
+- The tests that pinned them.
+
+**Kept.** `lib/price-table.ts` keeps only `sevenDayChange`, which the price guide uses.
+
+**ItemList.** The "Most popular" shelf now carries the ItemList on every home.

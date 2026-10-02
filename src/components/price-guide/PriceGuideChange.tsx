@@ -4,7 +4,7 @@
 // TCGplayer/PriceCharting. So direction is never colour alone: ▲/▼ give it at
 // a glance and the sr-only words say it.
 //
-// A COPY of PriceTodayTable's Change7d, not an extraction:
+// Once a copy of the homepage table's Change7d (that table is gone):
 // tests/first-visit-ux.test.ts pins those strings inside PriceTodayTable.tsx.
 export function PriceGuideChange({ pct, label = "No change data yet" }: { pct: number | null | undefined; label?: string }) {
   if (pct == null) {

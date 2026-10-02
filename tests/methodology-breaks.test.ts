@@ -189,7 +189,6 @@ test("each comparing reader actually applies the drop where it compares", () => 
     ["src/lib/price-history.ts", "computeRecentlyUpdated"],
     ["src/lib/market-index.ts", "computeRegionIndex"],
     ["src/lib/market-records.ts", "computeAllTimeRecords"],
-    ["src/lib/price-table.ts", "computePriceTable"],
     ["src/lib/price-guide.ts", "computeGuideChanges"],
   ];
   for (const [file, fn] of sites) assert.match(fnBody(file, fn), /dropBreakWindow\(/, `${file} ${fn} must drop pre-break points`);

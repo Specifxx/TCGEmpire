@@ -57,15 +57,3 @@ test("hero stats render the server's final numbers, with no count-up", () => {
   assert.match(cu, /useState\(value\)/, "the server render (pre-hydration) is the real value");
 });
 
-test("price table: direction is not colour-only, rows have thumbnails, capped with See all", () => {
-  const t = read("src/components/home/PriceTodayTable.tsx");
-  assert.match(t, /"▲ "/);
-  assert.match(t, /"▼ "/);
-  assert.match(t, /className="sr-only"[\s\S]{0,120}"Price up "/);
-  assert.match(t, /cardImageSrc\(row\)/);
-  assert.match(t, /See all \{totalPriced/);
-  // 2026-10-02: "See all" now lands on the site-wide price guide (/price-guide),
-  // the one page that lists every card's price in a table like this one.
-  assert.match(t, /href="\/price-guide"/);
-});
-

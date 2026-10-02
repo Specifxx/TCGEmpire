@@ -10,6 +10,7 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
+import { PriceGuideCallout } from "@/components/home/PriceGuideCallout";
 import { homeMetadata } from "@/lib/home-metadata";
 import { webPage, faqPage, webApplication } from "@/lib/jsonld";
 
@@ -335,6 +336,9 @@ export default async function HomePage() {
       {/* No <Reveal> wrapper: it is in or near the first screen, where a
           scroll-in fade would hide real content until hydration. */}
       {anyDeals && <TodaysTopDeals dealsByCountry={topDealsByCountry} />}
+
+      {/* The price guide, under Top Deals (2026-10-02, owner). */}
+      <PriceGuideCallout totalCards={totalCards} />
 
       {/* Guides, news & market updates — under the hero since 2026-09-28
           (below Today's Top Deals since 2026-09-30), and above what was the price table (owner: "we need the blog and
