@@ -16436,4 +16436,6 @@ A button reads "Search" when there is no figure. A plain click on a card opens t
 
 **What does not change.** Routes with their own `opengraph-image.tsx` keep theirs: card pages, sets, the market page and Riftle.
 
+**Second version, the same day (owner).** The thumbnail now features the filter sidebar and highlights local stores, with an outlined Stores column and a "Your local game stores, compared" panel. The eBay and TCGplayer columns are hidden in the screenshot, since they are de-emphasised.
+
 **Refreshing it.** The figures in the image are a snapshot from 2026-10-02. Re-shoot it when the table changes noticeably.
