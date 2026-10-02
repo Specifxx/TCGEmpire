@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 // No in-page banner pair (owner decision, 2026-09-26, "Blog and tools, joined
-// up" in DECISIONS.md): the site-wide footer pair and GameShell's AdSlot stay.
+// up" in DECISIONS.md): (2026-10-02: the arcade is now ad-free, footer pair and AdSlot included.)
 // The scoring described below is roundPoints() in components/games/PriceCheck.tsx.
 export default function PriceCheckPage() {
   return (

@@ -4,10 +4,9 @@
 // per-game best-score store, and the common header/footer chrome so every game
 // feels like part of one arcade.
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { PriceWatchButton } from "../PriceWatchButton";
-import { AdSlot } from "../AdSlot";
 import { NavIcon } from "../NavIcon";
 
 export type GameCard = {
@@ -73,6 +72,35 @@ export function useBestScore(key: string) {
   return { best, record };
 }
 
+/**
+ * Ref for a game's result panel: on mount it scrolls the panel's top into view,
+ * so "Play again" is on screen the moment a run ends. On a phone the board is
+ * two tall cards, and the result used to appear above or below wherever the
+ * player had scrolled to reach the guess buttons (2026-10-02, Reddit feedback).
+ */
+export function useResultInView<T extends HTMLElement = HTMLDivElement>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const top = el.getBoundingClientRect().top;
+    // Only when the top is off screen or low enough that the buttons may be below the fold.
+    if (top < 0 || top > window.innerHeight * 0.35) el.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+  }, []);
+  return ref;
+}
+
+/** A game's end-of-run panel: a div that brings itself into view when it mounts. */
+export function ResultPanel({ className, children }: { className?: string; children: React.ReactNode }) {
+  const ref = useResultInView();
+  return (
+    <div ref={ref} data-game-result className={`scroll-mt-20 ${className ?? ""}`}>
+      {children}
+    </div>
+  );
+}
+
 export function GameShell({
   emoji,
   title,
@@ -124,9 +152,8 @@ export function GameShell({
         bestLabel && <div className="mb-3 text-right text-xs text-slate-400">{bestLabel}</div>
       )}
       {children}
-      {/* Below the game, above the footer — monetises the dwell time without ever
-          sitting between the player and the controls. */}
-      <AdSlot className="mt-6" height={100} />
+      {/* No ad slot here any more (2026-10-02, community feedback): the games
+          are ad-free for everyone, not only Plus members. */}
       {/* Was "Prices are live from the stores RiftCompare tracks": the figure is
           Card.lowestPriceCents* for the visitor's market (api/games/cards,
           api/games/pack), the cheapest IN-STOCK listing as of the latest

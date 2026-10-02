@@ -1,3 +1,4 @@
+import { BanNotice } from "@/components/BanNotice";
 import type { Metadata } from "next";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
@@ -1057,6 +1058,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   {thisPrintingKind !== "base" ? `${PRINTING_DISPLAY[thisPrintingKind]} printing · ` : ""}
                   {card.setName} ({card.setCode}) · {card.collectorNumber}
                 </p>
+                <BanNotice name={card.name} />
                 {cardAliases.length > 0 && (
                   <p className="mt-1 text-xs text-slate-400">Also known as: {cardAliases.join(", ")}</p>
                 )}

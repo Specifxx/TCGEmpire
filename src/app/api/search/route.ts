@@ -7,6 +7,8 @@ import { parseSearchQuery } from "@/lib/search-query";
 import { getSealedGroups } from "@/lib/sealed-import";
 import { getCountry } from "@/lib/get-country";
 import { priceField } from "@/lib/country";
+import { didYouMean } from "@/lib/did-you-mean";
+import { getPriceGuideRows } from "@/lib/price-guide";
 
 // Typeahead search for the navbar dropdown. Returns full tile data so a result can
 // open the same instant quick-view modal as the browse grid, plus any matching
@@ -86,5 +88,15 @@ export async function GET(req: Request) {
       lowestPriceCents: g.lowestPriceCents,
     }));
 
-  return NextResponse.json({ results: ranked, sealed });
+  // Nothing at all: offer near-miss names ("Did you mean?", 2026-10-02) from
+  // the price guide's self-caching catalogue — a warm memo, no new database
+  // read. Called here at route level, never inside a cache callback (rule 6).
+  // Fails open to no suggestion.
+  let suggest: string[] = [];
+  if (ranked.length === 0 && sealed.length === 0) {
+    const rows = await getPriceGuideRows().catch(() => null);
+    if (rows) suggest = didYouMean(parsed.name || q, rows.map((r) => r.n));
+  }
+
+  return NextResponse.json({ results: ranked, sealed, ...(suggest.length ? { suggest } : {}) });
 }

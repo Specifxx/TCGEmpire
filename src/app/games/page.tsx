@@ -7,7 +7,6 @@ import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
-import { AdSlot } from "@/components/AdSlot";
 import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
 import { NavIcon } from "@/components/NavIcon";
@@ -230,8 +229,6 @@ export default async function GamesPage() {
           </Link>
         ))}
       </div>
-
-      <AdSlot className="mt-8" height={100} />
 
       {/* Arcade → shop: today's best buys, while they're here */}
       {deals.length > 0 && (

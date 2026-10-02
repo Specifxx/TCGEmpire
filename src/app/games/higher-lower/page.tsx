@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 
 // No in-page banner pair any more (owner decision, 2026-09-26, "Blog and tools,
 // joined up" in DECISIONS.md): with FooterAds' pair below and GameShell's
-// AdSlot, a toy with ~70 words of help carried up to five ad units. The site-wide
-// footer pair and the AdSlot stay; the words went up instead. Every sentence
+// AdSlot, a toy with ~70 words of help carried up to five ad units. The words went
+// up instead (and since 2026-10-02 the arcade carries no ads at all). Every sentence
 // below is checkable in components/games/HigherLower.tsx and api/games/cards.
 export default function HigherLowerPage() {
   return (

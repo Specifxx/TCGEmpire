@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { GameLoading, GameResultExtras, GameShell, RunRecap, useGameCards, useShare, type GameCard } from "./shared";
+import { GameLoading, GameResultExtras, GameShell, RunRecap, useGameCards, useShare, type GameCard, ResultPanel } from "./shared";
 
 // Pairs — classic memory with real card art: 8 cards × 2 = a 4×4 grid. Fewest
 // moves wins; the clock keeps you honest. Best (lowest) move count is stored
@@ -190,7 +190,7 @@ export function Pairs() {
           })}
         </div>
       ) : (
-        <div className="card-surface animate-fade-up p-6 text-center">
+        <ResultPanel className="card-surface animate-fade-up p-6 text-center">
           <p className="text-3xl" aria-hidden>{moves <= 12 ? "🏆" : moves <= 18 ? "🎉" : "🧠"}</p>
           <h2 className="mt-1 text-xl font-extrabold text-white">Cleared in {moves} moves · {mm}:{ss}</h2>
           <p className="mt-1 text-sm text-slate-400">
@@ -209,7 +209,7 @@ export function Pairs() {
           </div>
           <GameResultExtras game="pairs" score={moves} seconds={seconds} />
           <RunRecap cards={cards.slice(0, PAIRS)} currency={currency} title="💸 The cards you matched" />
-        </div>
+        </ResultPanel>
       )}
     </GameShell>
   );

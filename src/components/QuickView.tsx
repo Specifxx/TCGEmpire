@@ -7,6 +7,7 @@ import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
+import { BanNotice } from "./BanNotice";
 import { isFallbackRetailer, displayRarity, isUltimate, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, CONDITIONS, cardmarketRetailerFor, hasNoRetailChannel, isPreorderSetCode } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
 import { tcgReferenceRows } from "@/lib/tcg-reference";
@@ -381,6 +382,7 @@ function QuickViewModal({
               <div className="min-w-0 flex-1 basis-44">
                 <h2 id="quickview-title" className="break-words text-lg font-extrabold text-white sm:text-xl">{cardDisplayName(card.name, card)}</h2>
                 <p className="font-mono text-xs text-slate-500">{card.setName} ({card.setCode}) · {card.collectorNumber}</p>
+                <BanNotice name={card.name} compact />
               </div>
               <PriceWatchButton cardId={card.id} variant="responsive" limitInline />
             </div>

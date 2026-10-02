@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SealedBid } from "@/components/games/SealedBid";
 import { GameBoundary } from "@/components/GameBoundary";
-import { AdSlot } from "@/components/AdSlot";
-import { TcgplayerAd } from "@/components/TcgplayerAd";
-import { EbayAd } from "@/components/EbayAd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { getCountry } from "@/lib/get-country";
 import { SITE_URL } from "@/lib/site";
 import { faqPage, ldJson } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -65,7 +61,6 @@ const FAQ = [
 ];
 
 export default function SealedBidPage() {
-  const country = getCountry();
 
   const game = {
     "@context": "https://schema.org",
@@ -98,12 +93,7 @@ export default function SealedBidPage() {
         <SealedBid />
       </GameBoundary>
 
-      <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
-      <EbayAd size="leaderboard" country={country} className="mt-4" />
-
       <div className="mx-auto max-w-3xl">
-        <AdSlot className="mt-8" height={100} />
-
         <section className="mt-8">
           <h2 className="text-base font-bold text-white">What is Sealed Bid?</h2>
           <p className="mt-2 text-sm leading-relaxed text-slate-400">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { formatMoney } from "@/lib/format";
-import { GameLoading, GameResultExtras, GameShell, RunRecap, cardUrl, useBestScore, useGameCards, useShare } from "./shared";
+import { GameLoading, GameResultExtras, GameShell, RunRecap, cardUrl, useBestScore, useGameCards, useShare, ResultPanel } from "./shared";
 
 // Price Check — The Price Is Right, for Riftbound. Five cards; type what you
 // think each one's cheapest live price is; score by closeness. Teaches market
@@ -128,7 +128,7 @@ export function PriceCheck() {
           </div>
         </div>
       ) : (
-        <div className="card-surface animate-fade-up p-6 text-center">
+        <ResultPanel className="card-surface animate-fade-up p-6 text-center">
           <p className="text-3xl" aria-hidden>{total >= 400 ? "🏆" : total >= 250 ? "🎉" : "🧾"}</p>
           <h2 className="mt-1 text-xl font-extrabold text-white">{total}/{ROUNDS * MAX_PTS}</h2>
           <p className="mt-1 text-sm text-slate-400">{rating} · personal best {best}</p>
@@ -144,7 +144,7 @@ export function PriceCheck() {
           </div>
           <GameResultExtras game="price-check" score={total} />
           <RunRecap cards={deck} currency={currency} title="💸 The cards you priced" />
-        </div>
+        </ResultPanel>
       )}
     </GameShell>
   );

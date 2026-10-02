@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { DOMAINS, type DomainKey } from "@/lib/constants";
 import { SB, type SbStanding, type SbView, type SbViewCard } from "@/lib/sealed-bid-engine";
-import { useShare } from "./shared";
+import { ResultPanel, useShare } from "./shared";
 
 type Session = { code: string; token: string; pid: string };
 type Poll = { view: SbView; share: string | null };
@@ -924,7 +924,7 @@ function Final({
 
   return (
     <div className="grid gap-4">
-      <div className="card-surface animate-fade-up p-5 text-center">
+      <ResultPanel className="card-surface animate-fade-up p-5 text-center">
         <p className="text-3xl" aria-hidden>{mine?.rank === 1 ? "🏆" : mine?.rank === 2 ? "🥈" : mine?.rank === 3 ? "🥉" : "🪦"}</p>
         <h2 className="mt-1 text-xl font-extrabold text-white">
           {mine?.rank === 1 ? "You own the richest vault!" : `You finished #${mine?.rank} of ${view.players.length}`}
@@ -940,7 +940,7 @@ function Final({
           )}
           <button onClick={onExit} className="btn-ghost text-sm">New game</button>
         </div>
-      </div>
+      </ResultPanel>
 
       <div className="card-surface overflow-hidden">
         <div className="border-b border-ink-800 px-4 py-2.5">

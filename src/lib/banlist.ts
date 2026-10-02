@@ -50,3 +50,16 @@ export const BANNED_CARDS: BannedCard[] = [
 export function banDate(iso: string): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
+
+/** The guide every ban notice links to. */
+export const BANLIST_HREF = `/guides/${BANLIST_SLUG}`;
+
+/**
+ * The ban that applies to a card, or null (2026-10-02, card pages and the
+ * quick view). Matched by NAME, not slug: a ban covers every printing of the
+ * card (alt arts, Signatures, promos), and the table lists only the base one.
+ */
+export function banFor(name: string): BannedCard | null {
+  const key = name.trim().toLowerCase();
+  return BANNED_CARDS.find((b) => b.name.toLowerCase() === key) ?? null;
+}

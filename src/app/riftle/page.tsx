@@ -2,10 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Riftle } from "@/components/Riftle";
 import { GameBoundary } from "@/components/GameBoundary";
-import { AdSlot } from "@/components/AdSlot";
-import { TcgplayerAd } from "@/components/TcgplayerAd";
-import { EbayAd } from "@/components/EbayAd";
-import { getCountry } from "@/lib/get-country";
 import { SITE_URL } from "@/lib/site";
 import { RIFTLE_ATTEMPTS } from "@/lib/riftle-shared";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -95,7 +91,6 @@ export function generateMetadata({ searchParams }: { searchParams?: { r?: string
 }
 
 export default function RiftlePage() {
-  const country = getCountry();
 
   // VideoGame is the type that actually describes a playable browser game, and
   // `name: "Riftle"` + `alternateName` is the direct entity claim on the term we
@@ -138,18 +133,8 @@ export default function RiftlePage() {
       <GameBoundary>
         <Riftle />
       </GameBoundary>
-      {/* Partner banners under the puzzle — the game's daily repeat visitors
-          are exactly the audience these creatives convert. Both partners, not
-          one: this slot ran a TCGplayer leaderboard on every game route while
-          eBay had none anywhere in games, the only place on the site where one
-          affiliate held an in-content surface the other was absent from. Same
-          premium suppression, same self-carried disclosure, same click tracking;
-          if the slot is worth a banner it is worth both. */}
-      <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
-      <EbayAd size="leaderboard" country={country} className="mt-4" />
+      {/* No ads under the puzzle (2026-10-02): the arcade is ad-free for everyone. */}
       <div className="mx-auto max-w-2xl">
-        <AdSlot className="mt-8" height={100} />
-
         <section className="mt-8">
           <h2 className="text-base font-bold text-white">What is Riftle?</h2>
           <p className="mt-2 text-sm leading-relaxed text-slate-400">

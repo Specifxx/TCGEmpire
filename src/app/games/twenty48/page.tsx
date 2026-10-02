@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 // No in-page banner pair (owner decision, 2026-09-26, "Blog and tools, joined
-// up" in DECISIONS.md): the site-wide footer pair and GameShell's AdSlot stay.
+// up" in DECISIONS.md): (2026-10-02: the arcade is now ad-free, footer pair and AdSlot included.)
 // The copy used to promise a ladder "up to Legend": Legend is a card type, not
 // a rarity, and the game's tiers past it (Champion, Mythic…) do not exist in
 // Riftbound either. Twenty48.tsx's LADDER now uses the real rarities first; the

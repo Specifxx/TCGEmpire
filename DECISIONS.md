@@ -16474,3 +16474,30 @@ Graves joins `lib/champions.ts` with his first card, per that file's own rule.
 - **The Bomb and Mech tokens:** the catalogue carries no tokens.
 
 Rehearsed locally: 19 created, 111 Radiance printings, both battlefields landscape. Typecheck (after `npm run db:generate`, which the Pokémon client now needs), lint, the full test suite, the AdSense guard and images:check pass.
+
+## Community feedback batch: ban badges, ad-free arcade, author box, did-you-mean — 2026-10-02
+
+This entry covers the owner's audit plan, which was built from Reddit feedback. It records what shipped, what already existed, and what was declined.
+
+**Shipped:**
+- **Ban status on card pages and in the quick view.** `BanNotice` reads `lib/banlist.ts`, which is Riot's announcements and is already the source of the ban-list guide's table. It matches by NAME, so every printing of a banned card is flagged. Prices still show. The notice links the ban-list guide. `/blog/riftbound-ban-list` now redirects there.
+- **The arcade is ad-free for every visitor.** That covers `/games/*` and `/riftle`:
+  - `GameShell`'s AdSense slot, the hub's slot, and the in-page TCGplayer + eBay pairs on Riftle, Sealed Bid and Card Rain are gone.
+  - `FooterAds` skips `AD_FREE_GAME_ROUTES`.
+  - Ads stay on the buying pages.
+  - Riftle, Sealed Bid and Card Rain no longer read the country cookie, which only fed the banners, so they can render statically. They do no database reads.
+- **Game results come into view.** A run's result panel (`ResultPanel`) scrolls itself into view when it mounts, so "Play again" is on screen the moment a run ends on a phone. This covers Higher or Lower, Price Check, Zoomed, Pairs and Sealed Bid. The feedback's "Price Duel" is Higher or Lower; no game has that name.
+- **An author box at the end of every article.** It shows the byline (linked to its author page), the role, the registry's link-free first bio paragraph, and `ARTICLE_PROCESS` word for word. Nothing new is said about anyone.
+- **"Did you mean?" in the header search.** It appears only when a query returns no card and no sealed product. It suggests up to three card names within a small edit distance (`lib/did-you-mean.ts`), drawn from the price guide's self-caching catalogue, so it makes no new database read.
+
+**Already existed, unchanged:**
+- **eBay language filtering.** `FOREIGN_LANG` / `isForeignListing` drop CJK titles, language words and China-located items before anything is stored, and `pruneCheapOutliers` backstops English-titled foreign prints. A "show non-English" toggle would mean storing listings we deliberately discard, so it was not built. A foreign listing that still slips through is a matcher bug to report against that pattern.
+- **Article bylines and dates.** The byline, published date and "Updated" date were already in the header.
+- **Name normalisation in search.** "kaisa" already finds Kai'Sa.
+
+**Declined:**
+- **P2P marketplace trust features.** The marketplace is retired, and there is no live listing to verify or review.
+- **Non-Riftbound search coverage (MTG "Power 9").** There are no MTG pages.
+- **Sale history.** The site's claims say "listings, never sales" (`tests/site-claims.test.ts`), and ended auctions are not kept. Tracking sales is its own piece of work (schema, egress, claim changes), not a tweak.
+
+**Tests:** `tests/community-feedback.test.ts`; the arcade pins in `tests/site-chrome.test.ts` are rewritten.

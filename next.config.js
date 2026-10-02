@@ -286,6 +286,8 @@ const nextConfig = {
       // three — and the early-release post below — now point at the Vendetta
       // set hub, the surviving page that answers the same query, rather than
       // chaining through the dead post.
+      // The ban list as people type it (2026-10-02).
+      { source: "/blog/riftbound-ban-list", destination: "/guides/riftbound-banlist-explained", permanent: true },
       { source: "/blog/riftbound-vendetta-next-set", destination: "/sets/vendetta", permanent: true },
       { source: "/blog/riftbound-vendetta-launch-week-buying-checklist", destination: "/sets/vendetta", permanent: true },
       { source: "/blog/riftbound-vendetta-countdown-how-long-until-release", destination: "/sets/vendetta", permanent: true },

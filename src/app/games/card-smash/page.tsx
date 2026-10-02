@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 // No in-page banner pair (owner decision, 2026-09-26, "Blog and tools, joined
-// up" in DECISIONS.md): the site-wide footer pair and GameShell's AdSlot stay.
+// up" in DECISIONS.md): (2026-10-02: the arcade is now ad-free, footer pair and AdSlot included.)
 // The numbers below are CardSmash.tsx's own constants (GAME_SECONDS, LIVES,
 // BOMB_CHANCE, tierPts, the combo bonus and the spawn schedule) — change one
 // there and this copy has to follow.

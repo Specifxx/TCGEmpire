@@ -62,7 +62,7 @@ test("the policy and trust pages carry no footer banner pair; every other route 
   for (const path of ["/privacy", "/terms", "/editorial-policy", "/methodology", "/about", "/authors", "/authors/riftcompare-editorial", "/contact", "/support"]) {
     assert.equal(footerBannersAllowed(path), false, `${path} must render no banner pair`);
   }
-  for (const path of ["/", "/browse", "/card/some-card", "/trade", "/games/pairs", "/blog", "/guides/some-guide", "/tools", "/stores/tracked", "/aboutness", "/termsheet"]) {
+  for (const path of ["/", "/browse", "/card/some-card", "/trade", "/blog", "/guides/some-guide", "/tools", "/stores/tracked", "/aboutness", "/termsheet"]) {
     assert.equal(footerBannersAllowed(path), true, `${path} keeps the banner pair`);
   }
   // No pathname yet is not a reason to drop the pair.
@@ -143,13 +143,20 @@ test("/decks is submitted only when a deck is live, because an empty library is 
 
 const MINI_GAMES = ["card-smash", "higher-lower", "pairs", "price-check", "twenty48", "zoomed"] as const;
 
-test("the mini-games carry no in-page banner pair; the site-wide pair and GameShell's AdSlot remain", () => {
-  for (const g of MINI_GAMES) {
-    const page = codeOnly(read(`src/app/games/${g}/page.tsx`));
-    assert.doesNotMatch(page, /<(TcgplayerAd|EbayAd)\b/, `${g}: no in-page affiliate banner`);
+// 2026-10-02 (owner, from Reddit feedback): the arcade is ad-free for every
+// visitor. No in-page pair, no AdSense slot, and no footer pair on /games/* or
+// /riftle. Ads stay on the buying pages.
+test("the arcade is ad-free: no in-page pair, no AdSlot, no footer pair", () => {
+  const pages = [...MINI_GAMES.map((g) => `src/app/games/${g}/page.tsx`), "src/app/games/page.tsx", "src/app/games/sealed-bid/page.tsx", "src/app/games/card-rain/page.tsx", "src/app/riftle/page.tsx"];
+  for (const f of pages) {
+    const page = codeOnly(read(f));
+    assert.doesNotMatch(page, /<(TcgplayerAd|EbayAd|AdSlot)\b/, `${f}: no ad unit`);
   }
-  assert.match(codeOnly(read("src/components/games/shared.tsx")), /<AdSlot className="mt-6" height=\{100\} \/>/, "GameShell keeps its AdSlot");
-  assert.match(read("src/app/layout.tsx"), /<FooterAds \/>/, "the site-wide pair still renders under every game");
+  assert.doesNotMatch(codeOnly(read("src/components/games/shared.tsx")), /<AdSlot\b/, "GameShell carries no AdSlot");
+  for (const path of ["/games", "/games/pairs", "/games/sealed-bid", "/riftle"]) {
+    assert.equal(footerBannersAllowed(path), false, `${path} must render no footer pair`);
+  }
+  assert.equal(footerBannersAllowed("/gamestop"), true, "a prefix is not a route");
 });
 
 test("each mini-game explains itself in 150+ words, then links the guides behind it", () => {

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 // No in-page banner pair (owner decision, 2026-09-26, "Blog and tools, joined
-// up" in DECISIONS.md): the site-wide footer pair and GameShell's AdSlot stay.
+// up" in DECISIONS.md): (2026-10-02: the arcade is now ad-free, footer pair and AdSlot included.)
 // The old copy here said "There's no timer"; Pairs.tsx has always run one from
 // the first move. The leaderboard ranks on moves alone (lib/games.ts, "asc").
 export default function PairsPage() {

@@ -14,7 +14,7 @@ import { AdSlot } from "./AdSlot";
 import { ArticleShopStrip } from "./ArticleShopStrip";
 import { EbayPicks } from "./EbayPicks";
 import { ArticleMarketData } from "./ArticleMarketData";
-import { authorByName, authorJsonLd } from "@/lib/content/authors";
+import { ARTICLE_PROCESS, authorByName, authorJsonLd } from "@/lib/content/authors";
 import { TOOL_GUIDES, toolsForArticle, type ToolRoute } from "@/lib/content/tool-guides";
 import { SITE_URL } from "@/lib/site";
 import { extractToc } from "@/lib/toc";
@@ -340,7 +340,8 @@ export async function ArticleView({ article }: { article: Article }) {
   const backLabel = isGuide ? "All guides" : "All posts";
 
   const articleUrl = `${SITE_URL}/${isGuide ? "guides" : "blog"}/${article.slug}`;
-  const authorSlug = authorByName(article.author)?.slug ?? null;
+  const byline = authorByName(article.author);
+  const authorSlug = byline?.slug ?? null;
   const articleLd = {
     "@context": "https://schema.org",
     "@type": isGuide ? "TechArticle" : "BlogPosting",
@@ -742,6 +743,24 @@ export async function ArticleView({ article }: { article: Article }) {
           <Link key={t.href} href={t.href} className="tap-link text-brand-400 hover:underline">{t.label} →</Link>
         ))}
       </nav>
+
+      {/* About the author (2026-10-02, from Reddit's "AI slop" feedback): who
+          wrote this and how it was made, at the end where a reader decides
+          whether to trust it. The registry's own words only — bio[0] is the
+          link-free paragraph, ARTICLE_PROCESS is the owner's statement. */}
+      {byline && (
+        <aside data-author-box className="card-surface mt-8 p-4 text-sm">
+          <p className="font-semibold text-white">
+            Written by{" "}
+            <Link href={`/authors/${byline.slug}`} className="text-brand-400 hover:underline">
+              {byline.name}
+            </Link>
+            <span className="font-normal text-slate-500"> · {byline.role}</span>
+          </p>
+          <p className="mt-1.5 leading-relaxed text-slate-400">{byline.bio[0]}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{ARTICLE_PROCESS}</p>
+        </aside>
+      )}
 
       {/* Related guides — same-tag articles, so a reader who liked this piece has
           somewhere obvious to go next instead of bouncing. */}

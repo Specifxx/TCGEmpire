@@ -1,7 +1,4 @@
 import type { Metadata } from "next";
-import { TcgplayerAd } from "@/components/TcgplayerAd";
-import { EbayAd } from "@/components/EbayAd";
-import { getCountry } from "@/lib/get-country";
 import { pageAlternates } from "@/lib/seo";
 import { CardRain } from "@/components/games/CardRain";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -14,13 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default function CardRainPage() {
-  const country = getCountry();
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Games", href: "/games" }, { name: "Card Rain", href: "/games/card-rain" }]} />
       <CardRain />
-      <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
-      <EbayAd size="leaderboard" country={country} className="mt-4" />
       <section className="mx-auto mt-8 max-w-2xl">
         <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How to play</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">

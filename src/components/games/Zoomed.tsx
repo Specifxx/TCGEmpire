@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { GameLoading, GameResultExtras, GameShell, RunRecap, cardUrl, useBestScore, useGameCards, useShare, type GameCard } from "./shared";
+import { GameLoading, GameResultExtras, GameShell, RunRecap, cardUrl, useBestScore, useGameCards, useShare, type GameCard, ResultPanel } from "./shared";
 
 // Zoomed In — name the card from a tight crop of its art. Four choices per
 // round; "zoom out" once for a better look at half points. Five rounds.
@@ -161,7 +161,7 @@ export function Zoomed() {
           </div>
         </div>
       ) : (
-        <div className="card-surface animate-fade-up p-6 text-center">
+        <ResultPanel className="card-surface animate-fade-up p-6 text-center">
           <p className="text-3xl" aria-hidden>{score >= maxScore - 1 ? "🏆" : score >= maxScore / 2 ? "🎉" : "🖼️"}</p>
           <h2 className="mt-1 text-xl font-extrabold text-white">{score}/{maxScore}</h2>
           <p className="mt-1 text-sm text-slate-400">
@@ -180,7 +180,7 @@ export function Zoomed() {
           </div>
           <GameResultExtras game="zoomed" score={score} />
           <RunRecap cards={rounds.map((x) => x.answer)} currency={currency} title="💸 The cards behind the art" />
-        </div>
+        </ResultPanel>
       )}
     </GameShell>
   );

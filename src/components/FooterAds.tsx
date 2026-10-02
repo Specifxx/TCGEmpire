@@ -33,10 +33,15 @@ export const BANNER_FREE_ROUTES = [
 // disclosure. Kept apart from BANNER_FREE_ROUTES, whose reason is different.
 export const OFF_TOPIC_ROUTES = ["/pokemon"] as const;
 
+// The arcade (2026-10-02, owner, from Reddit feedback: "Nice banner ads bro").
+// Games are ad-free for everyone, not just Plus: no footer pair, no in-page
+// pair, no AdSense slot. Ads stay on the pages where people are buying.
+export const AD_FREE_GAME_ROUTES = ["/games", "/riftle"] as const;
+
 export function footerBannersAllowed(pathname: string | null): boolean {
   if (!pathname) return true;
   const under = (r: string) => pathname === r || pathname.startsWith(`${r}/`);
-  return !BANNER_FREE_ROUTES.some(under) && !OFF_TOPIC_ROUTES.some(under);
+  return !BANNER_FREE_ROUTES.some(under) && !OFF_TOPIC_ROUTES.some(under) && !AD_FREE_GAME_ROUTES.some(under);
 }
 
 // Client wrapper for the site-wide footer affiliate banners. The layout used

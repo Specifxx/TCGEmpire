@@ -183,6 +183,8 @@ export function SearchBar({
   const [value, setValue] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [sealed, setSealed] = useState<SealedResult[]>([]);
+  // Near-miss card names the route offers when a query matched nothing.
+  const [suggest, setSuggest] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   // Tracked ONLY so the close button can appear the moment the field takes
   // focus. Tapping Search on a phone focuses the box and raises the keyboard,
@@ -331,6 +333,7 @@ export function SearchBar({
     if (q.length < 2) {
       setResults([]);
       setSealed([]);
+      setSuggest([]);
       setLoading(false);
       return;
     }
@@ -346,6 +349,7 @@ export function SearchBar({
         const nextSealed: SealedResult[] = data.sealed ?? [];
         setResults(nextResults);
         setSealed(nextSealed);
+        setSuggest(Array.isArray(data.suggest) ? data.suggest : []);
         // A free product-gap report: every distinct, debounced-settled query
         // that came back completely empty. Firing per settled query (not per
         // keystroke — the 180ms debounce above already collapses a fast typist
@@ -855,6 +859,25 @@ export function SearchBar({
               <div className="px-4 py-3 text-sm text-slate-400">
                 {loading ? "Searching…" : "No matches — press Enter to search anyway."}
               </div>
+              {!loading && suggest.length > 0 && (
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 pb-2 text-sm text-slate-400">
+                  <span>Did you mean</span>
+                  {suggest.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => {
+                        setValue(name);
+                        inputRef.current?.focus();
+                      }}
+                      className="min-h-11 font-semibold text-brand-400 hover:underline"
+                    >
+                      {name}
+                    </button>
+                  ))}
+                  <span>?</span>
+                </div>
+              )}
               {/* NO MATCHES → SEARCH EBAY (2026-09-26, "Pushing eBay clicks" in
                   DECISIONS.md). A query our database has no card for — a typo,
                   a card from a set we have not loaded, a non-card product — was

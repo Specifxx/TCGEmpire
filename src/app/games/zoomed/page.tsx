@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 // No in-page banner pair (owner decision, 2026-09-26, "Blog and tools, joined
-// up" in DECISIONS.md): the site-wide footer pair and GameShell's AdSlot stay.
+// up" in DECISIONS.md): (2026-10-02: the arcade is now ad-free, footer pair and AdSlot included.)
 // The zoom levels and points below are Zoomed.tsx's (scale 3.2 / 1.8,
 // PTS_FULL 2, PTS_HINT 1); the card pool is api/games/cards.
 export default function ZoomedPage() {
