@@ -16438,4 +16438,6 @@ A button reads "Search" when there is no figure. A plain click on a card opens t
 
 **Second version, the same day (owner).** The thumbnail now features the filter sidebar and highlights local stores, with an outlined Stores column and a "Your local game stores, compared" panel. The eBay and TCGplayer columns are hidden in the screenshot, since they are de-emphasised.
 
+**Third version, the same day (owner).** The owner found v2 too salesy. v3 is plain: a "Riftbound price guide" title, a short factual list and the screenshot, with no green callouts, outlines or pitch panel.
+
 **Refreshing it.** The figures in the image are a snapshot from 2026-10-02. Re-shoot it when the table changes noticeably.
