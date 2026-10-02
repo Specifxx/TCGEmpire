@@ -22,6 +22,7 @@ const TRIAL_SENTENCE = premiumTrialEnabled()
 // One-line descriptions for the hub pages (falls back to the nav label otherwise).
 const DESC: Record<string, string> = {
   "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/US/UK/SG/CA/EU).",
+  "/price-guide": "Every Riftbound card's cheapest in-stock price in one sortable, filterable table, in six markets; two imports a day.",
   "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price and an at-RRP flag. Plus and Premium can watch a product: an email when it is back in stock, at RRP, at your price, or on a real drop.",
   "/movers": "The biggest Riftbound price rises and falls, week over week.",
   "/market": "The RiftCompare Index — a weekly, search-weighted market index for Riftbound singles, with key stats.",

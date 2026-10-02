@@ -37,6 +37,14 @@ export const TOOL_GUIDES = {
       { slug: "riftbound-card-condition-guide", reason: "What each condition grade means and roughly what it is worth against Near Mint" },
     ],
   },
+  "/price-guide": {
+    label: "Price guide",
+    guides: [
+      { slug: "why-riftbound-card-prices-change", reason: "What usually sits behind a card's price moving up or down in a week" },
+      { slug: "riftbound-variant-glossary", reason: "Signature, Overnumbered, foil and alt art: why printings of one card price differently" },
+      { slug: "riftbound-card-condition-guide", reason: "What each condition grade means and roughly what it is worth against Near Mint" },
+    ],
+  },
   "/sealed": {
     label: "Sealed product prices",
     guides: [

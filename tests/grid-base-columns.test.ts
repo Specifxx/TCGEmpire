@@ -75,6 +75,7 @@ const GRIDS: { file: string; anchor: string; what: string }[] = [
   { file: "src/components/FilterableArticles.tsx", anchor: "gap-4 sm:grid-cols-2 lg:grid-cols-3", what: "/blog and /guides article grid" },
   { file: "src/components/home/HowItWorks.tsx", anchor: "gap-3 sm:grid-cols-2 lg:grid-cols-4", what: "homepage and /about 'How RiftCompare works' steps" },
   { file: "src/components/home/CommunityTeaser.tsx", anchor: "gap-3 sm:grid-cols-2 lg:grid-cols-4", what: "homepage community teaser" },
+  { file: "src/components/price-guide/PriceGuideSummary.tsx", anchor: "gap-3 sm:grid-cols-2 lg:grid-cols-4", what: "/price-guide stat strip" },
 ];
 
 for (const { file, anchor, what } of GRIDS) {

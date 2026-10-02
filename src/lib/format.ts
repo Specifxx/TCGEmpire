@@ -7,7 +7,7 @@
 // SGD was MISSING here until the CA rollout — Singapore prices were rendering as a
 // bare "$" via the `?? "$"` fallback below, i.e. exactly the ambiguity this table
 // exists to prevent. Added alongside CAD rather than left broken.
-const SYMBOL: Record<string, string> = { AUD: "A$", USD: "US$", GBP: "£", SGD: "S$", CAD: "C$", EUR: "€" };
+export const SYMBOL: Record<string, string> = { AUD: "A$", USD: "US$", GBP: "£", SGD: "S$", CAD: "C$", EUR: "€" };
 
 // Format integer cents in the given currency (default AUD), e.g. "A$12.50".
 // A negative amount takes a LEADING U+2212 minus before the symbol ("−US$190.00"),

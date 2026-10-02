@@ -107,6 +107,9 @@ const CHECKS: Check[] = [
     minLinks: 20,
   },
   { path: "/sets/vendetta", label: "Vendetta set page", must: ["Vendetta"], minLinks: 20 },
+  // The site-wide price guide (2026-10-02): rows are server-rendered, so the
+  // HTML itself must carry the card links and the ItemList.
+  { path: "/price-guide", label: "price guide", optional: true, must: ['"@type":"ItemList"', "Riftbound Price Guide"], minLinks: 50 },
   {
     path: "/riftle",
     label: "Riftle",

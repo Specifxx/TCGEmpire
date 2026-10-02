@@ -64,6 +64,8 @@ test("price table: direction is not colour-only, rows have thumbnails, capped wi
   assert.match(t, /className="sr-only"[\s\S]{0,120}"Price up "/);
   assert.match(t, /cardImageSrc\(row\)/);
   assert.match(t, /See all \{totalPriced/);
-  assert.match(t, /href="\/browse"/);
+  // 2026-10-02: "See all" now lands on the site-wide price guide (/price-guide),
+  // the one page that lists every card's price in a table like this one.
+  assert.match(t, /href="\/price-guide"/);
 });
 

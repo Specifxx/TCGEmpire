@@ -174,7 +174,10 @@ export default async function AllCardsPage() {
           type, rarity, printing and price range together, the{" "}
           <Link href="/cards" className="text-brand-400 hover:underline">facet index</Link> lists every way to slice
           the catalogue, and each set also has a{" "}
-          <Link href="/sets" className="text-brand-400 hover:underline">set page and a visual gallery</Link>.
+          <Link href="/sets" className="text-brand-400 hover:underline">set page and a visual gallery</Link>. To compare
+          what they cost, the{" "}
+          <Link href="/price-guide" className="text-brand-400 hover:underline">Riftbound price guide</Link> lists every
+          card&apos;s cheapest price in one sortable table.
         </p>
       </div>
 

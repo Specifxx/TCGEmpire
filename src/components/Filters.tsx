@@ -8,6 +8,7 @@ import {
   RARITY_KEYS,
   CARD_TYPES,
   SETS,
+  isPreorderSetCode,
   domainInfo,
   rarityInfo,
 } from "@/lib/constants";
@@ -29,7 +30,19 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-export function Filters({ basePath = "/browse", hideSet = false, currency }: { basePath?: string; hideSet?: boolean; currency?: string }) {
+export function Filters({
+  basePath = "/browse",
+  hideSet = false,
+  hidePreorderSets = false,
+  currency,
+}: {
+  basePath?: string;
+  hideSet?: boolean;
+  /** Leave unreleased (pre-order) sets out of the Set facet, for pages that never list their rows. */
+  hidePreorderSets?: boolean;
+  currency?: string;
+}) {
+  const setOptions = hidePreorderSets ? SETS.filter((s) => !isPreorderSetCode(s.code)) : SETS;
   // Pages pass their server-side market (which honours /browse's ?market=), so
   // the SSR label and the hydrated one agree; the hook is only the fallback.
   const { country } = useCountry();
@@ -166,7 +179,7 @@ export function Filters({ basePath = "/browse", hideSet = false, currency }: { b
           {!hideSet && (
             <Section title="Set" defaultOpen>
               <div className="flex flex-col gap-1">
-                {SETS.map((s) => (
+                {setOptions.map((s) => (
                   <Check key={s.code} checked={isActive("set", s.code)} onChange={() => update((p) => setCsv(p, "set", s.code), "set")} label={`${s.name} (${s.code})`} />
                 ))}
               </div>

@@ -520,7 +520,10 @@ longer lands on its entry.
   "Riftbound price comparison engine". Shipping is never called "live":
   comparison pages say "cheapest first, postage shown where known", and only
   Best Basket claims shipping "measured at each store's checkout". `/browse`
-  owns "riftbound card list"; the Radiance spoiler tracker is the only title
+  owns "riftbound card list"; `/price-guide` owns the UNSCOPED "riftbound price
+  guide / price list" (set-scoped ones stay on `/sets/<slug>`) and never leads
+  with "Riftbound Card Prices" ([2026-10-02](../DECISIONS.md#L16383)); the
+  Radiance spoiler tracker is the only title
   with "radiance" + "spoiler". No store count in any OTHER page title
   (Singapore's "11 Stores" excepted). Bare hreflang `en` is the US page; the
   EU pages carry one en-XX per EU country served.

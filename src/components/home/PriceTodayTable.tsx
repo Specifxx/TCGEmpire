@@ -180,7 +180,7 @@ export function PriceTodayTable({
           eBay: the cheapest in-stock listing we track for each card in this market (item price, postage extra), or a
           search of your own eBay where we track none.
         </p>
-        <Link href="/browse" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+        <Link href="/price-guide" className="font-semibold text-brand-400 underline-offset-2 hover:underline">
           See all {totalPriced.toLocaleString("en-US")} card prices →
         </Link>
       </div>

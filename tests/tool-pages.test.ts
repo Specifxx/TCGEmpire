@@ -49,6 +49,7 @@ const PAGE: Record<string, string> = {
   "/decks": "src/app/decks/page.tsx",
   "/trade": "src/app/trade/page.tsx",
   "/deck": "src/app/deck/page.tsx",
+  "/price-guide": "src/app/price-guide/page.tsx",
 };
 
 // For each page: the element that IS its data, and (where the page has one)
@@ -69,6 +70,7 @@ const LAYOUT: Record<string, { data: string; before?: string }> = {
   "/decks": { data: "<DeckLibrary" },
   "/trade": { data: "<TradeCalculator" },
   "/deck": { data: "<DeckBuilder" },
+  "/price-guide": { data: "<PriceGuideTable", before: "<AdSlot" },
 };
 
 const published = new Map(getArticles().map((a) => [a.slug, a]));

@@ -147,10 +147,12 @@ export const SEO_PACK_ARTICLES: Article[] = [
         a: "Only if the PSA 10 comp minus grading/shipping/insurance exceeds the raw median by at least 40–50%.",
       },
     ],
+    // Points at the site-wide price guide (2026-10-02, owner's call): this post
+    // keeps "riftbound card values"; the guide is where every value sits in one list.
     browseCta: {
-      href: L.browse,
-      label: "Look up a card's live value →",
-      blurb: "Search any Riftbound card and see what every store we track is asking for it, cheapest first by item price.",
+      href: "/price-guide",
+      label: "See every card's price in one list →",
+      blurb: "The Riftbound price guide puts every card on one sortable, filterable table, with the cheapest in-stock price in your market.",
     },
     body: `The fastest way to get a reliable current value for any Riftbound card is to check two numbers — what stores and sellers are asking for it right now, and what copies have actually sold for — then cross-check the graded premium before you buy, sell, or grade. Asking prices on active listings often sit above what cards actually clear for, so sold comps are the number to anchor a sale price to.
 

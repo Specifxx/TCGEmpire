@@ -43,7 +43,7 @@ test("the extra sections render only from the data they are given", () => {
     index: { latest: 114.9, d7: 1.2, d30: -3.4 },
     stats: { priced: 1234, liveStores: 42 },
     peaks: [{ card: card("Kai'Sa"), nowCents: 50000, peakCents: 62000, peakDay: "2026-09-12" }],
-    popular: [{ ...card("Vi"), lowestPriceCentsUs: 1999, lowestPriceCents: null } as never],
+    popular: [{ ...(card("Vi") as object), lowestPriceCentsUs: 1999, lowestPriceCents: null } as never],
     articles: [{ title: "Radiance guide", excerpt: "All about it", href: "/guides/x", date: "2026-09-30", fresh: true }],
     releases: [{ name: "Radiance", date: "2026-10-23", daysAway: 22, href: "/blog/riftbound-radiance-spoilers" }],
   };

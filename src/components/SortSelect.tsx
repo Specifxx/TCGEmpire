@@ -11,7 +11,18 @@ const OPTIONS = [
   { value: "new", label: "Recently Added" },
 ];
 
-export function SortSelect({ basePath = "/browse", defaultSort = "number" }: { basePath?: string; defaultSort?: string }) {
+// `options` (2026-10-02): /price-guide has its own list (7-day change, stores);
+// /browse and the set pages keep OPTIONS. Choosing the page's default writes no
+// `sort` at all, so the default order stays the clean, indexable URL.
+export function SortSelect({
+  basePath = "/browse",
+  defaultSort = "number",
+  options = OPTIONS,
+}: {
+  basePath?: string;
+  defaultSort?: string;
+  options?: readonly { value: string; label: string }[];
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const current = params.get("sort") ?? defaultSort;
@@ -21,14 +32,16 @@ export function SortSelect({ basePath = "/browse", defaultSort = "number" }: { b
       value={current}
       onChange={(e) => {
         const next = new URLSearchParams(Array.from(params.entries()));
-        next.set("sort", e.target.value);
+        if (e.target.value === defaultSort) next.delete("sort");
+        else next.set("sort", e.target.value);
         next.delete("page");
-        router.push(`${basePath}?${next.toString()}`);
+        const qs = next.toString();
+        router.push(qs ? `${basePath}?${qs}` : basePath);
       }}
       className="input w-auto cursor-pointer"
       aria-label="Sort listings"
     >
-      {OPTIONS.map((o) => (
+      {options.map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}
         </option>

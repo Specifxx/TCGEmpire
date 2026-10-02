@@ -64,6 +64,13 @@ export function SetPriceGuide({
           </tbody>
         </table>
       </div>
+      {/* The site-wide guide (2026-10-02): every set's cards in one sortable,
+          filterable table. The set-scoped "<set> price guide" stays here. */}
+      <p className="border-t border-ink-800 px-4 py-3 text-sm sm:px-5">
+        <Link href="/price-guide" className="tap-link font-semibold text-brand-400 hover:underline">
+          Every set in one price guide →
+        </Link>
+      </p>
     </section>
   );
 }

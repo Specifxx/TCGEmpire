@@ -130,6 +130,12 @@ export const HUB_INTROS: Record<string, HubIntro> = {
       "A price is an item price unless a tool says otherwise; Best Basket is the one that prices whole orders with each store's measured postage. None of them forecasts where a price will go. [Best Basket, worked through](/guides/best-basket-cheapest-riftbound-deck) and [box EV: rip or buy singles?](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles) show two of them in use.",
     ],
   },
+  "/price-guide": {
+    paragraphs: [
+      "Every released Riftbound card in one sortable table, one row per printing, each with the cheapest in-stock price we track in your market and how many stores have it. A price is the item price from a store or eBay seller, with postage added at checkout, and it is an asking price on a live listing rather than a record of a sale. We read every price twice a day, at 07:00 and 19:00 UTC.",
+      "The 7-day column compares one weekly price per card, the cheapest across Australia, the US, the UK and Singapore converted to US dollars, so its percentage reads the same in every market. It stays blank until a card has two weekly prices on the current basis. [Why Riftbound card prices change](/guides/why-riftbound-card-prices-change) explains what usually sits behind a move, and [the variant glossary](/guides/riftbound-variant-glossary) explains why printings of one card are priced apart.",
+    ],
+  },
   "/sealed": {
     paragraphs: [
       "Booster boxes, packs, Proving Grounds and bundles, priced across the stores we track in your market. A tile's price is the cheapest offer you can order now — the item price, with postage at the store's checkout — and its store count is how many have it in stock. Tap a tile for every offer, cheapest open offer first.",

@@ -46,6 +46,10 @@ const SELF_CACHED = [
   // 2026-09-25: Rising Cards' two loaders (getCachedRisingCards is now an
   // uncached assembly over these) and the /movers "Most searched" strip's.
   "getRiseHistory",
+  // 2026-10-02: /price-guide's catalogue (memo over cachedOrDirect) and its
+  // memoised change map over getRiseHistory.
+  "getPriceGuideRows",
+  "getPriceGuideChanges",
   "getRiseInputs",
   "getTopDemand",
   // 2026-09-26: the homepage "Cheapest on eBay" row. It has no cache of its

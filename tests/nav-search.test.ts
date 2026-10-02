@@ -30,7 +30,11 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const MUST_FIND: [query: string, href: string][] = [
   // /deck since 2026-09-25: the Bulk Pricer (this row's old answer) folded
   // into the deck builder's list pricer, labelled "Deck Builder & Pricer".
-  ["prices", "/deck"],
+  // 2026-10-02: "prices" now ranks the site-wide price guide ("Price Guide" in
+  // the Prices group) first, by the owner's call; /deck stays pinned by "bulk".
+  ["prices", "/price-guide"],
+  ["price guide", "/price-guide"],
+  ["bulk", "/deck"],
   ["deals", "/tools/deal-finder"],
   ["blog", "/blog"],
   ["alerts", "/alerts"],

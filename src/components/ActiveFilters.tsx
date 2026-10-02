@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
+import { SYMBOL } from "@/lib/format";
 
 const CSV_KEYS = ["domain", "rarity", "type", "set"];
 
@@ -18,7 +19,9 @@ const ALL_FILTER_KEYS = [
 
 // Skinport-style "applied filters" row: every active filter shown as a removable
 // chip above the results, so it's obvious what's filtered and easy to undo.
-export function ActiveFilters({ basePath = "/browse" }: { basePath?: string }) {
+// `currency` (2026-10-02): the price chip used to say "$" in every market; a
+// page passes its display currency and the chip reads "£5–∞", "€5–∞" and so on.
+export function ActiveFilters({ basePath = "/browse", currency }: { basePath?: string; currency?: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const [, startTransition] = useTransition();
@@ -38,7 +41,7 @@ export function ActiveFilters({ basePath = "/browse" }: { basePath?: string }) {
   if (params.get("priced") === "1") chips.push({ key: "priced", value: "", label: "Has price" });
   const min = params.get("min");
   const max = params.get("max");
-  if (min || max) chips.push({ key: "price", value: "", label: `$${min ?? "0"}–${max ?? "∞"}` });
+  if (min || max) chips.push({ key: "price", value: "", label: `${(currency && SYMBOL[currency]) ?? "$"}${min ?? "0"}–${max ?? "∞"}` });
 
   if (chips.length === 0) return null;
 
@@ -56,7 +59,8 @@ export function ActiveFilters({ basePath = "/browse" }: { basePath?: string }) {
 
   function go(next: URLSearchParams) {
     next.delete("page");
-    startTransition(() => router.push(`${basePath}?${next.toString()}`));
+    const qs = next.toString();
+    startTransition(() => router.push(qs ? `${basePath}?${qs}` : basePath));
   }
 
   function remove(key: string, value: string) {
@@ -88,7 +92,7 @@ export function ActiveFilters({ basePath = "/browse" }: { basePath?: string }) {
         <button
           key={i}
           onClick={() => remove(c.key, c.value)}
-          className="chip gap-1.5 bg-brand-500/15 font-medium text-brand-300 hover:bg-brand-500/25"
+          className="chip gap-1.5 bg-brand-500/15 font-medium text-brand-400 hover:bg-brand-500/25"
         >
           {c.label}
           <span aria-hidden className="text-brand-400/70">✕</span>

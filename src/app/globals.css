@@ -527,7 +527,9 @@ html {
     .tap-link-block,
     .btn,
     .input,
-    .min-h-11 {
+    .min-h-11,
+    .pg-a,
+    .pg-sb {
       min-height: 48px;
     }
     /* Short labels ("Sets", "Terms") were clearing 48px tall but measuring
@@ -602,6 +604,34 @@ html {
   /* Tabular numerals for prices/tickers — the terminal voice. */
   .num {
     @apply font-mono tabular-nums tracking-tight;
+  }
+
+  /* /price-guide table (components/price-guide/PriceGuideTable.tsx). Short
+     class names, because each one is written into the HTML AND again into the
+     inline RSC payload on 100 rows: the long utility strings alone put the
+     clean page at ~786 KB against the brief's ≤450 KB budget (2026-10-02).
+     Column visibility: pg-sm from sm, pg-md from md, pg-x2 from 2xl. */
+  .pg-sm, .pg-md, .pg-x2 { @apply hidden; }
+  .pg-sm { @apply sm:table-cell; }
+  .pg-md { @apply md:table-cell; }
+  .pg-x2 { @apply 2xl:table-cell; }
+  .pg-t > tbody > tr { @apply transition-colors hover:bg-ink-800/50; }
+  .pg-t > tbody > tr > td { @apply px-3 py-1.5; }
+  .pg-t > tbody > tr > td.pg-c1 { @apply pl-3 pr-2 sm:pl-4; }
+  .pg-t > tbody > tr > td.pg-p { @apply pl-2 pr-3 text-right; }
+  .pg-t > tbody > tr > td.pg-n { @apply text-right text-xs font-semibold; }
+  .pg-t > tbody > tr > td.pg-s { @apply pl-2 pr-3 text-right text-slate-300 sm:pr-4; }
+  .pg-a {
+    @apply flex min-h-11 min-w-0 items-center gap-2.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/60;
+  }
+  .pg-i { @apply h-[39px] w-7 shrink-0 rounded-sm bg-ink-800 object-cover; }
+  .pg-b { @apply min-w-0 flex-1; }
+  .pg-nm { @apply block truncate font-semibold text-slate-100; }
+  .pg-a:hover .pg-nm { @apply text-brand-400 underline; }
+  .pg-sub { @apply flex min-w-0 items-center gap-1.5 text-xs text-slate-500; }
+  .pg-pc { @apply block text-[11px] font-semibold sm:hidden; }
+  .pg-sb {
+    @apply inline-flex min-h-11 items-center gap-1 rounded uppercase tracking-wide transition-colors hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/60 sm:[@media(pointer:fine)]:min-h-0 sm:[@media(pointer:fine)]:py-1;
   }
 }
 

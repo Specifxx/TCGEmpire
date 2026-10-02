@@ -47,6 +47,7 @@ test("grid/list thumbnails never render a raw imageThumbUrl as their src", () =>
     "src/app/tools/rising/page.tsx", "src/app/tools/deal-finder/page.tsx", "src/app/market/records/page.tsx",
     "src/components/ArticleTopValue.tsx", "src/components/TodaysTopDeals.tsx", "src/components/Riftle.tsx",
     "src/app/admin/rising/page.tsx", "src/app/c/[token]/page.tsx", "src/app/games/page.tsx",
+    "src/components/price-guide/PriceGuideTable.tsx",
   ];
   for (const f of files) assert.doesNotMatch(readFileSync(f, "utf8"), /<img\s+src=\{[\w.]*imageThumbUrl\}/, f);
   // CardImage offers the thumbnails; the card-page hero (full, no sizes) keeps the full file.

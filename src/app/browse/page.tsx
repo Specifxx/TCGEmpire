@@ -291,7 +291,8 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
                 card number, or filter by set, domain, rarity, type or printing. Open a card for every store&apos;s price,
                 cheapest first by item price, with the delivered total shown where the store publishes its postage (
                 <Link href="/methodology#ordering" className="text-brand-400 hover:underline">how we compare</Link>
-                ). New to buying? See{" "}
+                ). For every card&apos;s price in one table, sorted dearest first, see the{" "}
+                <Link href="/price-guide" className="text-brand-400 hover:underline">Riftbound price guide</Link>. New to buying? See{" "}
                 <Link href="/guides/where-to-buy-riftbound-cards" className="text-brand-400 hover:underline">where to buy Riftbound cards</Link>{" "}
                 in each market.
               </p>

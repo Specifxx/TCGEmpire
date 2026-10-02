@@ -2,10 +2,13 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
-import { PAGE_SIZES } from "@/lib/cards";
+import { PAGE_SIZES, parsePageSize } from "@/lib/cards";
 
 // Lets the user choose how many cards to show per page (10/20/50/100). Changing
-// it resets to page 1.
+// it resets to page 1. The default size writes no `size` at all (2026-10-02),
+// so choosing it again returns to the clean URL rather than a duplicate of it.
+const DEFAULT_SIZE = parsePageSize(undefined);
+
 export function PageSizeSelect({ size, basePath = "/browse" }: { size: number; basePath?: string }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -13,9 +16,11 @@ export function PageSizeSelect({ size, basePath = "/browse" }: { size: number; b
 
   function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const next = new URLSearchParams(Array.from(params.entries()));
-    next.set("size", e.target.value);
+    if (Number(e.target.value) === DEFAULT_SIZE) next.delete("size");
+    else next.set("size", e.target.value);
     next.delete("page");
-    startTransition(() => router.push(`${basePath}?${next.toString()}`));
+    const qs = next.toString();
+    startTransition(() => router.push(qs ? `${basePath}?${qs}` : basePath));
   }
 
   return (

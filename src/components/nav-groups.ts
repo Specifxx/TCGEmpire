@@ -68,6 +68,8 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: "prices",
     links: [
       { href: "/browse", label: "Card Database", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"] },
+      // The site-wide price guide (2026-10-02): every card in one sortable table.
+      { href: "/price-guide", label: "Price Guide", keywords: ["price list", "price guide", "card values", "all prices", "value"] },
       { href: "/sealed", label: "Sealed Products", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"] },
       // Label deliberately omits the word "prices": nav search scores the label, and
       // "Radiance pre-order prices" outranked the Bulk Pricer on a bare "prices"

@@ -116,6 +116,9 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1, lastModified: day },
     ...regionHomeEntries,
     { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9, lastModified: day },
+    // The site-wide price guide (2026-10-02): force-dynamic, so `day`, never
+    // staticPageDate(). Only the clean URL; ?page=N is reached by its links.
+    { url: `${SITE_URL}/price-guide`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/singles`, changeFrequency: "daily", priority: 0.9, lastModified: day },
     { url: `${SITE_URL}/movers`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     // Hourly, genuinely: the board is swept every 4 hours and its lots expire on

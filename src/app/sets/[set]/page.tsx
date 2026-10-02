@@ -849,6 +849,7 @@ export default async function SetPage({
           ))}
           <Link href={`/sets/${set.slug}/gallery`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">{set.name} gallery →</Link>
           <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">All cards →</Link>
+          <Link href="/price-guide" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">All Riftbound card prices →</Link>
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Sealed products →</Link>
         </div>
       </section>
