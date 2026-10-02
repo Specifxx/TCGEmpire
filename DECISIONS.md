@@ -16427,3 +16427,13 @@ A button reads "Search" when there is no figure. A plain click on a card opens t
 **Columns.** The two new columns take the room that Rarity and Stores had below 2xl. Below 2xl the rarity chip stays in line 2 of the Card cell.
 
 **Tests.** The pins in `tests/price-guide.test.ts` are updated and dated.
+
+## Share image: a designed screenshot of the price guide — 2026-10-02
+
+**Decision.** At the owner's request, the share thumbnail is now a static image for advertising on Reddit. It is a real desktop screenshot of the live /price-guide table, set in a branded frame with a headline, and is 2400×1260. It is used as `src/app/opengraph-image.jpg` and also `src/app/price-guide/opengraph-image.jpg`.
+
+**What it replaces.** The generated root `opengraph-image.tsx`, which drew one card's store prices. The tests that pinned that file's image helper no longer list it.
+
+**What does not change.** Routes with their own `opengraph-image.tsx` keep theirs: card pages, sets, the market page and Riftle.
+
+**Refreshing it.** The figures in the image are a snapshot from 2026-10-02. Re-shoot it when the table changes noticeably.

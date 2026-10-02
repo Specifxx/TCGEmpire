@@ -149,7 +149,6 @@ test("every card render path goes through the helper rather than reading imageUr
     "src/components/CardImage.tsx",
     "src/components/ArticleView.tsx",
     "src/components/DeckBuilder.tsx",
-    "src/app/opengraph-image.tsx",
     "src/app/card/[id]/opengraph-image.tsx",
     "src/app/c/[token]/opengraph-image.tsx",
     "src/app/card/[id]/page.tsx",
@@ -190,7 +189,6 @@ test("anything that leaves the page asks for an absolute URL", () => {
   // fills with nothing. Every OG image on the site was drawing an empty card
   // box until 2026-09-22. cardImageForOg returns an absolute PNG/JPEG or null.
   for (const rel of [
-    "src/app/opengraph-image.tsx",
     "src/app/card/[id]/opengraph-image.tsx",
     "src/app/c/[token]/opengraph-image.tsx",
     "src/lib/hot40-og.tsx",

@@ -320,7 +320,7 @@ test("a shared link unfurls with the top three and their deltas, from the frozen
   // decode — it lays the <img> out, draws the border, and fills it with
   // nothing. That is what the site-wide OG image shipped for months. Both OG
   // surfaces must use cardImageForOg, which hands back a PNG.
-  for (const [file, src] of [["lib/hot40-og.tsx", art], ["app/opengraph-image.tsx", readFileSync(join(process.cwd(), "src/app/opengraph-image.tsx"), "utf8")]] as const) {
+  for (const [file, src] of [["lib/hot40-og.tsx", art]] as const) {
     assert.match(src, /cardImageForOg\(/, `${file} must use the OG-safe image helper`);
     assert.ok(!/cardImageSrc\(/.test(src), `${file} must not use the WebP mirror in an OG image`);
   }
