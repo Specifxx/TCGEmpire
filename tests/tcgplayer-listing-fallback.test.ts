@@ -20,16 +20,21 @@ test("the buyable row quotes the listing, in stock, with its own postage", () =>
   assert.deepEqual(tcgQuote(TCG_US, 5, listing), { price: 3.2, shippingCents: 149, inStock: true });
 });
 
-test("no English NM listing: the market figure is kept but written OUT of stock", () => {
-  assert.deepEqual(tcgQuote(TCG_US, 4.2, null), { price: 4.2, shippingCents: null, inStock: false });
+test("no English NM listing: the row quotes the last-sold market price, IN stock", () => {
+  // Owner, 2026-10-02: "if we can't get the lowest English card from TCGplayer
+  // … use the last sold TCGplayer price". Until then this row was written out
+  // of stock and disappeared from the comparison.
+  assert.deepEqual(tcgQuote(TCG_US, 4.2, null), { price: 4.2, shippingCents: null, inStock: true });
+  assert.deepEqual(tcgQuote(TCG_UK, 4.2, null), { price: 4.2, shippingCents: null, inStock: true });
   assert.deepEqual(tcgQuote(TCG_US, null, null), { price: null, shippingCents: null, inStock: false });
 });
 
-test("reference rows are unchanged: market price, falling back to the listing, always 'in stock'", () => {
+test("reference rows quote market price, falling back to the listing, and buyable rows quote the listing", () => {
   assert.deepEqual(tcgQuote(TCG_US_MARKET, 5, listing), { price: 5, shippingCents: null, inStock: true });
   assert.deepEqual(tcgQuote(TCG_US_MARKET, null, listing), { price: 3.2, shippingCents: 149, inStock: true });
+  // UK is a buyable row since 2026-10-02: it quotes the cheapest English NM listing.
   const uk = tcgQuote(TCG_UK, 5, listing);
-  assert.equal(uk.price, 5);
+  assert.equal(uk.price, 3.2);
   assert.equal(uk.inStock, true);
 });
 

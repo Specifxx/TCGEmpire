@@ -16518,3 +16518,34 @@ All six homes now share one structure: hero, Today's Top Deals, price guide, the
 **Kept.** `lib/price-table.ts` keeps only `sevenDayChange`, which the price guide uses.
 
 **ItemList.** The "Most popular" shelf now carries the ItemList on every home.
+
+## TCGplayer is a buyable comparison row everywhere but Australia, with last sold as its fallback — 2026-10-02
+
+**Why.** The owner reported TCGplayer prices missing from every region outside Australia ("highest priority") and set the rule: "we need tcgplayer buyable rows for all regions apart from Australia", and "if we can't get the lowest English card from TCGplayer … use the last sold TCGplayer price". Two things were hiding them, both working as designed under the old rule:
+- **UK, SG and CA.** Their rows (`tcgplayer_uk`, `_sg`, `_ca`) were converted market references in the fallback lists. "THE RULE" in `constants.ts` stripped them from the comparison, the store count and the from-price, leaving only a labelled reference block.
+- **The US.** Since 2026-09-23 the buyable `tcgplayer` row quotes the cheapest English Near-Mint listing. Since 2026-09-25, when there is no such listing, the row was written out of stock, and `computeMarket` hid it even from the out-of-stock list. Sampled live: Jinx, Loose Cannon OGN 301\*/298 had an in-stock `tcgplayer_market` row and an out-of-stock `tcgplayer` row, so no TCGplayer row appeared.
+- **The EU.** It had no TCGplayer row at all.
+
+**What changed.**
+- **The rule (`constants.ts`).** `tcgplayer_uk`, `_sg` and `_ca` leave the fallback lists. UK keeps Cardmarket, and SG and CA are now empty. A new key, `TCGPLAYER_EU_RETAILER = "tcgplayer_eu"`, is added. THE RULE carries a dated amendment.
+  - **Australia is unchanged:** `tcgplayer_au` stays a fallback, so TCGplayer is never an AU comparison row.
+  - **Also unchanged:** `tcgplayer_market` stays the US reference row.
+- **What each row quotes (`lib/tcgplayer.ts`).**
+  - UK, SG and CA move from `basis: "market"` to `basis: "listing"`: the same buyable price as the US row, FX-converted, with the listing's shipping converted too.
+  - `TCG_EU` (EUR) is added to the refresh loop.
+  - `tcgQuote` writes a row **in stock whenever it has a price**. With no English NM listing, it quotes TCGplayer's market price, which TCGplayer builds from recent sales: the owner's "last sold". That price stays in the comparison.
+- **Downstream.** Every surface reads `isFallbackRetailer` or `ALL_FALLBACK_RETAILERS`, so these rows now count as a store, can set the `lowestPriceCents*` from-price at the next import, show in the QuickView, and can trigger alerts. That is the point of "buyable".
+  - **Reference block:** `tcg-reference.ts` suppresses it wherever a buyable row now shows, so there are no duplicates.
+  - **Deal Finder:** `TCGPLAYER_KEY` gains CA and EU, and the Deal Finder still strips TCGplayer from its buy side in every market, since it is the side every row is measured against.
+  - **Price guide:** gains the EU key.
+
+**The cost the old rule named, accepted by the owner.** A converted TCGplayer price can now undercut a local store in the UK, SG, CA or EU. It also excludes import duty, and its postage is TCGplayer's US listing postage converted. The row is labelled "TCGplayer", so it reads as what it is.
+
+Twelve tests that pinned the old rule are rewritten to pin the new one, not deleted:
+- Australia excluded.
+- Every other market buyable.
+- In stock at market price when there's no listing.
+- The Deal Finder buy side unchanged.
+- The EU exemption in `tests/affiliate-priority.test.ts` emptied.
+
+Deployed at the owner's request, and the price import run straight after so the rows and from-prices are live without waiting for the next scheduled import.

@@ -589,11 +589,13 @@ longer lands on its entry.
 
 ## Prices & data
 
-- **Reference prices sit below the comparison, never in it** (TCGplayer;
-  Cardmarket leads for UK/EU). The US `tcgplayer` row is the cheapest
-  in-stock English NM listing; `tcgplayer_market` is reference-only.
+- **TCGplayer is a buyable comparison row in every market but Australia**
+  (US `tcgplayer`; UK/SG/CA/EU the same price converted): the cheapest English
+  NM listing, else TCGplayer's market (last-sold) price, in stock either way.
+  In Australia it stays a reference, never a row. Other references (Cardmarket;
+  `tcgplayer_market`) still sit below the comparison, never in it.
   [2026-09-18](../DECISIONS.md#L8181), [2026-09-19](../DECISIONS.md#L8747),
-  [2026-09-23](../DECISIONS.md#L10975)
+  [2026-09-23](../DECISIONS.md#L10975), [2026-10-02](../DECISIONS.md#L16522)
 - **Deal Finder has three views, as tabs under its intro:** "Underpriced vs
   TCGplayer" (the default; the store picker, no Buy-from presets), "Cheapest on
   eBay" (`?view=ebay`, free) and "Underpriced vs eBay" (`?view=vs-ebay`, gated

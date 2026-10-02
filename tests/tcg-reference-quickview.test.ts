@@ -45,19 +45,16 @@ const row = (over: Partial<TcgRefRow> = {}): TcgRefRow => ({
 
 // ── 1. Which markets get the block ─────────────────────────────────────────
 
-test("every market with a converted row quotes the USD row instead of it", () => {
-  // AU, UK, SG and CA each get a `tcgplayer_<market>` row written by the price
-  // importer. Every one is in ALL_FALLBACK_RETAILERS, so the comparison strips
-  // it and the reference block is purely additive. Verified against the live
-  // /api/card response, which carries exactly these four plus the USD row.
-  for (const country of ["AU", "UK", "SG", "CA"]) {
-    const rows = [
-      row(),
-      row({ retailer: `tcgplayer_${country.toLowerCase()}`, country, priceCents: 9999 }),
-    ];
-    const ref = tcgReferenceRows(rows, country);
-    assert.ok(ref, `${country} must get a reference block`);
-    assert.equal(ref.std?.priceCents, 1234, `${country} must quote the USD row, not the converted one`);
+test("Australia quotes the USD market row; the other markets show their buyable row instead", () => {
+  // Since 2026-10-02 the UK, SG, CA and EU rows are buyable comparison rows, so
+  // the reference block would duplicate them and is suppressed. Australia's
+  // converted row is still stripped from the comparison, so it keeps the block.
+  const au = tcgReferenceRows([row(), row({ retailer: "tcgplayer_au", country: "AU", priceCents: 9999 })], "AU");
+  assert.ok(au, "AU must get a reference block");
+  assert.equal(au.std?.priceCents, 1234, "AU must quote the USD row, not the converted one");
+  for (const country of ["UK", "SG", "CA", "EU"]) {
+    const rows = [row(), row({ retailer: `tcgplayer_${country.toLowerCase()}`, country, priceCents: 9999 })];
+    assert.equal(tcgReferenceRows(rows, country), null, `${country}: the buyable row is shown, so no reference block`);
   }
 });
 

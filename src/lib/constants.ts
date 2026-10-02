@@ -32,13 +32,16 @@ export const CARDTRADER_RETAILER = "cardtrader";
 // listing exists, and only used as a fallback when none does. Real UK stores and
 // eBay UK are never in this set. One source of truth shared by the importer
 // (headline computation) and the UI (breakdown filtering).
-export const UK_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_UK_RETAILER, CARDMARKET_RETAILER];
+// TCGPLAYER_UK_RETAILER left this list on 2026-10-02 (owner: "we need tcgplayer
+// buyable rows for all regions apart from Australia") — see THE RULE below.
+export const UK_FALLBACK_RETAILERS: readonly string[] = [CARDMARKET_RETAILER];
 
 // Singapore mirrors the UK pattern: TCGplayer's USD market price converted to SGD is
 // surfaced as a reference source, excluded from the SG "from" price whenever a real
 // SGD listing (local store / eBay SG) exists.
 export const TCGPLAYER_SG_RETAILER = "tcgplayer_sg";
-export const SG_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_SG_RETAILER];
+// Empty since 2026-10-02: TCGplayer is a buyable row in Singapore (THE RULE).
+export const SG_FALLBACK_RETAILERS: readonly string[] = [];
 
 // AU also gets a TCGplayer (converted to AUD) row — NOT because AU lacks real
 // stores (it has plenty), but so the Deal Finder's arbitrage tools can treat
@@ -81,7 +84,12 @@ export const TCGPLAYER_CA_RETAILER = "tcgplayer_ca";
 // US_FALLBACK_RETAILERS below, so it can never appear as a store row, set a
 // "from" price, or count toward a store total.
 export const TCGPLAYER_MARKET_RETAILER = "tcgplayer_market";
-export const CA_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_CA_RETAILER];
+// Empty since 2026-10-02: TCGplayer is a buyable row in Canada (THE RULE).
+export const CA_FALLBACK_RETAILERS: readonly string[] = [];
+// The EU's TCGplayer row (2026-10-02): the same buyable US price, EUR-converted.
+// Its own key for the reason CARDMARKET_EU_RETAILER has one: RetailerPrice is
+// keyed without a country.
+export const TCGPLAYER_EU_RETAILER = "tcgplayer_eu";
 
 // eBay CA. For SINGLES this key is written by price-import.ts's US pass (CA rows
 // are FX-derived from the US Browse results, not a separate ~1,400-card search —
@@ -95,6 +103,16 @@ export const EBAY_CA_RETAILER = "ebay_ca";
 // ─────────────────────────────────────────────────────────────────────────────
 // THE RULE: a converted reference price is never a row in the price comparison.
 // ─────────────────────────────────────────────────────────────────────────────
+// AMENDED 2026-10-02 for TCGplayer, by the owner: "we need tcgplayer buyable
+// rows for all regions apart from Australia". TCGplayer ships internationally,
+// so its UK, SG, CA and EU rows are now its BUYABLE US price (the cheapest
+// English Near-Mint listing, else TCGplayer's market price, built from recent
+// sales) converted to the local currency, and they are ordinary comparison
+// rows: they count as a store and can set the "from" price. Australia is
+// unchanged — TCGplayer stays out of the AU comparison (AU_FALLBACK_RETAILERS).
+// Cardmarket is unchanged too. The text below is the original rule; read it
+// for Cardmarket and Australia.
+//
 // TCGplayer is a US marketplace. Its AU/UK/SG/CA figures are its USD market
 // price run through an FX rate — useful as a "what is this worth?" reference,
 // but NOT a local listing: nobody can buy from "TCGplayer Australia", the price

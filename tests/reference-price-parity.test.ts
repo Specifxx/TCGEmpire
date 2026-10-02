@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ALL_FALLBACK_RETAILERS, isFallbackRetailer } from "../src/lib/constants";
-import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA } from "../src/lib/tcgplayer";
+import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU } from "../src/lib/tcgplayer";
 import { COUNTRY_LIST } from "../src/lib/country";
 
 const ROOT = process.cwd();
@@ -99,21 +99,18 @@ test("the card tile's store count excludes reference rows too", () => {
 // The facts the above depends on, asserted so they cannot drift silently.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("tcgplayer_ca is real, produced, and classified as a reference", () => {
-  // The stale comment claimed the opposite, and the importer believed it.
+test("tcgplayer_ca is real, produced, and a buyable row (2026-10-02)", () => {
   assert.equal(TCG_CA.country, "CA");
   assert.equal(TCG_CA.currency, "CAD");
-  assert.ok(isFallbackRetailer(TCG_CA.retailer), `${TCG_CA.retailer} must be a reference, not a store`);
+  assert.ok(!isFallbackRetailer(TCG_CA.retailer), `${TCG_CA.retailer} is a buyable row since 2026-10-02`);
 });
 
-test("every non-US TCGplayer market is a reference; the US one is a real store", () => {
-  for (const m of [TCG_UK, TCG_SG, TCG_AU, TCG_CA]) {
-    assert.ok(isFallbackRetailer(m.retailer), `${m.country}: ${m.retailer} must be excluded from comparisons`);
+test("Australia's TCGplayer row is a reference; every other market's is a real store", () => {
+  // Owner, 2026-10-02: "we need tcgplayer buyable rows for all regions apart from Australia".
+  assert.ok(isFallbackRetailer(TCG_AU.retailer), "AU: TCGplayer must stay out of the comparison");
+  for (const m of [TCG_US, TCG_UK, TCG_SG, TCG_CA, TCG_EU]) {
+    assert.ok(!isFallbackRetailer(m.retailer), `${m.country}: ${m.retailer} must be a buyable row`);
   }
-  assert.ok(
-    !isFallbackRetailer(TCG_US.retailer),
-    "TCGplayer IS a buyable store in the US — excluding it there would blank the baseline market"
-  );
 });
 
 // Markets that have NO converted reference source at all, and so register no key
@@ -126,7 +123,9 @@ test("every non-US TCGplayer market is a reference; the US one is a real store",
 //        feature-flagged off pending written permission to redisplay its data.
 //        EU_FALLBACK_RETAILERS is declared-and-empty in constants.ts precisely so
 //        the day that changes, the union picks it up with no further edits.
-const NO_REFERENCE_SOURCE = new Set(["US", "EU"]);
+//   UK, SG, CA — since 2026-10-02 their TCGplayer rows are buyable, not
+//        references (the UK still registers Cardmarket).
+const NO_REFERENCE_SOURCE = new Set(["US", "EU", "SG", "CA"]);
 
 test("every tracked market is covered by the union", () => {
   // If a market is added with no reference key registered, the write side above

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { cheapestEnglishNm, TCG_US, TCG_US_MARKET, TCG_UK, TCG_SG, TCG_AU, TCG_CA, type TcgProduct, type TcgListing } from "../src/lib/tcgplayer";
+import { cheapestEnglishNm, TCG_US, TCG_US_MARKET, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU, type TcgProduct, type TcgListing } from "../src/lib/tcgplayer";
 import { isFallbackRetailer, TCGPLAYER_MARKET_RETAILER, ALL_FALLBACK_RETAILERS } from "../src/lib/constants";
 import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "../src/lib/tcg-market-rows";
 import { tcgReferenceRows } from "../src/lib/tcg-reference";
@@ -57,12 +57,15 @@ test("a listing without a printing field is accepted, so an API change degrades 
 });
 
 test("each market row declares which number it quotes", () => {
-  assert.equal(TCG_US.basis, "listing", "the US row is the buyable one");
-  for (const m of [TCG_US_MARKET, TCG_UK, TCG_SG, TCG_AU, TCG_CA]) {
-    assert.equal(m.basis, "market", `${m.retailer} is a reference row and must stay on market price`);
-  }
+  // Since 2026-10-02 every buyable row (US, UK, SG, CA, EU) quotes the cheapest
+  // English NM listing, else the market price. The references stay on market:
+  // the US market-price row, and Australia's converted row.
+  for (const m of [TCG_US, TCG_UK, TCG_SG, TCG_CA, TCG_EU]) assert.equal(m.basis, "listing", `${m.retailer} is buyable`);
+  for (const m of [TCG_US_MARKET, TCG_AU]) assert.equal(m.basis, "market", `${m.retailer} is a reference row`);
   assert.equal(TCG_US_MARKET.retailer, TCGPLAYER_MARKET_RETAILER);
   assert.equal(TCG_US_MARKET.country, "US");
+  assert.equal(TCG_EU.retailer, "tcgplayer_eu");
+  assert.equal(TCG_EU.currency, "EUR");
 });
 
 test("the market reference row can never become a store row", () => {
@@ -73,7 +76,7 @@ test("the market reference row can never become a store row", () => {
 
 test("the importer writes both US rows, and the market row cannot overwrite the US coverage count", () => {
   const src = read("src/lib/tcgplayer.ts");
-  assert.match(src, /for \(const mkt of \[TCG_US, TCG_US_MARKET, TCG_UK, TCG_SG, TCG_AU, TCG_CA\]\)/);
+  assert.match(src, /for \(const mkt of \[TCG_US, TCG_US_MARKET, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU\]\)/);
   assert.match(src, /if \(mkt !== TCG_US_MARKET\) byCountry\[mkt\.country\] = rows\.length;/);
   // The quoted listing's real shipping travels with it; the aggregate has none.
   assert.match(src, /shippingCents: b\.shippingCents,/);

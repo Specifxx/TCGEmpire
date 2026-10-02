@@ -10,12 +10,12 @@ import {
   SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS,
 } from "../src/lib/constants";
 import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, ebaySearchUrl, ebayLabel, EBAY_CAMPAIGN_ID } from "../src/lib/affiliate";
-import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA } from "../src/lib/tcgplayer";
+import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU } from "../src/lib/tcgplayer";
 import { computeMarket } from "../src/lib/market-rows";
 import { COUNTRY_LIST } from "../src/lib/country";
 import { AUCTION_MARKETS, AUCTION_PAGE_CAP } from "../src/lib/ebay-auctions";
 
-const TCG_MARKETS = [TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA];
+const TCG_MARKETS = [TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU];
 
 const tcgRow = (country: string, retailer: string) => ({
   id: retailer, country, retailer, retailerName: "TCGplayer", priceCents: 1000, ship: null,
@@ -387,7 +387,10 @@ test("UK and CA keep their own distinct, non-US rotations (only SG reroutes)", (
 // Cardmarket — is feature-flagged OFF pending written permission to redisplay
 // its price data (see lib/cardmarket.ts's header). If that permission ever
 // lands, EU gets a reference source and comes OUT of this list.
-const NO_TCGPLAYER_REFERENCE = new Set(["EU"]);
+// EMPTIED 2026-10-02: the EU now has a TCGplayer row (tcgplayer_eu), the
+// buyable US price converted to EUR, at the owner's request — TCGplayer ships
+// to the EU, so it needs no EUR price of its own to be quoted there.
+const NO_TCGPLAYER_REFERENCE = new Set<string>([]);
 
 test("every tracked market has a TCGplayer reference price", () => {
   const covered = new Set(TCG_MARKETS.map((m) => m.country));
@@ -408,28 +411,18 @@ test("each TCGplayer market converts into that market's own currency", () => {
   }
 });
 
-test("a converted TCGplayer price is NEVER counted as a local store", () => {
-  // It is a reference, not a retailer — counting it would put an unbuyable
-  // "1 store" and a foreign price on a card with no local listings at all.
-  const rows = TCG_MARKETS.filter((m) => m.country !== "US").map((m, i) => ({
-    id: `r${i}`,
-    country: m.country,
-    retailer: m.retailer,
-    retailerName: "TCGplayer",
-    priceCents: 1000,
-    ship: null,
-    condition: "NM",
-    isFoil: false,
-    inStock: true,
-    lastSeen: "2026-08-03T00:00:00.000Z",
-    buyHref: "https://www.tcgplayer.com/product/1",
-    policyUrl: null,
-  }));
+test("TCGplayer counts as a store outside Australia, and never in Australia", () => {
+  // Owner, 2026-10-02: "we need tcgplayer buyable rows for all regions apart from
+  // Australia" (constants.ts, THE RULE, amended). Australia's converted row stays out.
   for (const m of TCG_MARKETS) {
-    if (m.country === "US") continue;
-    const view = computeMarket(rows, m.country as (typeof COUNTRY_LIST)[number]["code"]);
-    assert.equal(view.storeCount, 0, `${m.country}: reference price counted as a store`);
-    assert.equal(view.lowest, null, `${m.country}: reference price set the "from" price`);
+    const view = computeMarket([tcgRow(m.country, m.retailer)], m.country as (typeof COUNTRY_LIST)[number]["code"]);
+    if (m.country === "AU") {
+      assert.equal(view.storeCount, 0, "AU: TCGplayer must never be a comparison row");
+      assert.equal(view.lowest, null, "AU: TCGplayer must never set the from price");
+    } else {
+      assert.equal(view.storeCount, 1, `${m.country}: TCGplayer must be a buyable row`);
+      assert.equal(view.lowest, 1000, `${m.country}: TCGplayer can set the from price`);
+    }
   }
 });
 
@@ -467,18 +460,18 @@ test("AUSTRALIA: TCGplayer is never a comparison row or a counted store", () => 
   assert.equal(v.lowest, null, "a converted price must not set the AU 'from' price");
 });
 
-test("every non-US market excludes its converted TCGplayer row", () => {
-  for (const m of TCG_MARKETS) {
-    if (m.country === "US") continue;
+test("only Australia excludes its converted TCGplayer row", () => {
+  const au = computeMarket([tcgRow("AU", TCG_AU.retailer)], "AU" as never);
+  assert.equal(au.storeCount, 0);
+  for (const m of [TCG_UK, TCG_SG, TCG_CA, TCG_EU]) {
     const v = computeMarket([tcgRow(m.country, m.retailer)], m.country as never);
-    assert.equal(v.storeCount, 0, `${m.country}: shown as a store`);
-    assert.equal(v.lowest, null, `${m.country}: set the "from" price`);
+    assert.equal(v.storeCount, 1, `${m.country}: must be shown`);
   }
 });
 
-test("isFallbackRetailer covers every converted variant and no real store", () => {
+test("isFallbackRetailer covers Australia's TCGplayer row and no buyable one", () => {
   for (const m of TCG_MARKETS) {
-    const shouldBeFallback = m.country !== "US";
+    const shouldBeFallback = m.country === "AU";
     assert.equal(
       isFallbackRetailer(m.retailer),
       shouldBeFallback,
@@ -486,9 +479,10 @@ test("isFallbackRetailer covers every converted variant and no real store", () =
     );
   }
   // Real stores and eBay must never be caught by it.
-  for (const r of ["ebay", "ebay_us", "ebay_ca", "cherrycollectables", "tcgplayer"]) {
+  for (const r of ["ebay", "ebay_us", "ebay_ca", "cherrycollectables", "tcgplayer", "tcgplayer_uk", "tcgplayer_eu"]) {
     assert.equal(isFallbackRetailer(r), false, r);
   }
+  assert.equal(isFallbackRetailer("tcgplayer_market"), true, "the US market-price row stays a reference");
 });
 
 test("the union covers every per-market list — a new market cannot be forgotten", () => {

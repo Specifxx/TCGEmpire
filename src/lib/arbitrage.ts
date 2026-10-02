@@ -39,7 +39,7 @@ import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
 import { usdCentsToCountry, convertCents } from "./fx";
 import { cachedOrDirect, inNextRequest, sydneyDayKey } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
-import { CARDTRADER_RETAILER, isFallbackRetailer, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
+import { CARDTRADER_RETAILER, isFallbackRetailer, TCGPLAYER_CA_RETAILER, TCGPLAYER_EU_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
 
 const MIN_BUY_CENTS = 300;
@@ -351,16 +351,12 @@ export interface ArbSource {
 export const TCGPLAYER_KEY: Record<Country, string | null> = {
   AU: null,
   US: TCG_US.retailer,
+  // Since 2026-10-02 the UK, SG, CA and EU rows are the buyable US price
+  // converted (constants.ts, THE RULE), so each market has a real key here.
   UK: TCGPLAYER_UK_RETAILER,
   SG: TCGPLAYER_SG_RETAILER,
-  // tcgplayer_ca exists (refreshTcgplayerPrices writes it) but is a converted
-  // reference like the UK/SG rows, so it would be filtered out anyway.
-  CA: null,
-  // The EU market has NO reference source at all — a licensing fact, not an
-  // oversight. TCGplayer publishes no EUR market price, and Cardmarket is
-  // feature-flagged OFF pending written permission to redisplay its data (read
-  // the header of lib/cardmarket.ts before assuming this is a gap to fill).
-  EU: null,
+  CA: TCGPLAYER_CA_RETAILER,
+  EU: TCGPLAYER_EU_RETAILER,
 };
 
 /**

@@ -136,14 +136,17 @@ function usStore() {
 
 // ── Buy side ─────────────────────────────────────────────────────────────────
 
-test("a converted TCGplayer reference row is never a buy source", () => {
-  for (const country of ["UK", "SG"] as const) {
-    const keys = arb.getArbSources(country).map((s) => s.key);
-    assert.ok(!keys.includes(`tcgplayer_${country.toLowerCase()}`), `${country}: the converted reference row must not be offered`);
-    assert.deepEqual(arb.resolveTcgBuyKeys(country, [`tcgplayer_${country.toLowerCase()}`]), [], `${country}: nor accepted from a URL`);
+test("TCGplayer is a source outside Australia but never on the Deal Finder's buy side", () => {
+  // Owner, 2026-10-02: TCGplayer rows are buyable outside Australia, so
+  // getArbSources lists them there. The Deal Finder still strips TCGplayer from
+  // its buy side in every market: it is the reference side of every row.
+  for (const country of ["UK", "SG", "CA", "EU"] as const) {
+    const key = `tcgplayer_${country.toLowerCase()}`;
+    assert.ok(arb.getArbSources(country).some((s) => s.key === key), `${country}: TCGplayer is a source`);
+    assert.ok(!arb.dealFinderSources(country).some((s) => s.key === key), `${country}: but not a Deal Finder buy source`);
+    assert.deepEqual(arb.resolveTcgBuyKeys(country, [key]), [], `${country}: nor accepted from a URL`);
   }
-  // The US row is a real listing, so getArbSources may list it — but the Deal
-  // Finder strips it: TCGplayer is the reference side of every row.
+  assert.ok(!arb.getArbSources("AU").some((s) => s.key.startsWith("tcgplayer")), "AU: never a source");
   assert.ok(arb.getArbSources("US").some((s) => s.key === "tcgplayer"));
   assert.ok(!arb.dealFinderSources("US").some((s) => s.key === "tcgplayer"));
   const store = usStore();

@@ -34,7 +34,7 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { TCGPLAYER_AU_RETAILER,
-  TCGPLAYER_CA_RETAILER, TCGPLAYER_MARKET_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
+  TCGPLAYER_CA_RETAILER, TCGPLAYER_EU_RETAILER, TCGPLAYER_MARKET_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
 import { USD_TO } from "@/lib/fx";
 import { isForeignLanguageTitle } from "@/lib/scrape-http";
 
@@ -414,15 +414,20 @@ export const USD_TO_GBP = USD_TO.GBP;
 export const TCG_US: TcgMarket = { retailer: "tcgplayer", country: "US", currency: "USD", fx: 1, basis: "listing" };
 // The US MARKET price, as a reference row — see TCGPLAYER_MARKET_RETAILER.
 export const TCG_US_MARKET: TcgMarket = { retailer: TCGPLAYER_MARKET_RETAILER, country: "US", currency: "USD", fx: 1, basis: "market" };
-export const TCG_UK: TcgMarket = { retailer: TCGPLAYER_UK_RETAILER, country: "UK", currency: "GBP", fx: USD_TO_GBP, basis: "market" };
+// UK, SG, CA and EU quote the BUYABLE US price converted (basis "listing"),
+// since 2026-10-02: they are comparison rows now, not references (constants.ts,
+// THE RULE). Australia stays a market-price reference.
+export const TCG_UK: TcgMarket = { retailer: TCGPLAYER_UK_RETAILER, country: "UK", currency: "GBP", fx: USD_TO_GBP, basis: "listing" };
 // Singapore reference price (TCGplayer ships internationally; SGD-converted).
-export const TCG_SG: TcgMarket = { retailer: TCGPLAYER_SG_RETAILER, country: "SG", currency: "SGD", fx: USD_TO.SGD, basis: "market" };
+export const TCG_SG: TcgMarket = { retailer: TCGPLAYER_SG_RETAILER, country: "SG", currency: "SGD", fx: USD_TO.SGD, basis: "listing" };
 // AU reference price (AUD-converted) — a fallback-only source for the main price
 // comparison (see AU_FALLBACK_RETAILERS), but a real buy source for the Deal Finder.
 export const TCG_AU: TcgMarket = { retailer: TCGPLAYER_AU_RETAILER, country: "AU", currency: "AUD", fx: USD_TO.AUD, basis: "market" };
 // Canada reference price (CAD-converted). CA was the only tracked market with no
 // TCGplayer row — see the note on CA_FALLBACK_RETAILERS in constants.ts.
-export const TCG_CA: TcgMarket = { retailer: TCGPLAYER_CA_RETAILER, country: "CA", currency: "CAD", fx: USD_TO.CAD, basis: "market" };
+export const TCG_CA: TcgMarket = { retailer: TCGPLAYER_CA_RETAILER, country: "CA", currency: "CAD", fx: USD_TO.CAD, basis: "listing" };
+// The EU had no TCGplayer row at all until 2026-10-02.
+export const TCG_EU: TcgMarket = { retailer: TCGPLAYER_EU_RETAILER, country: "EU", currency: "EUR", fx: USD_TO.EUR, basis: "listing" };
 
 /**
  * What one product's row quotes for one market, and whether anyone can buy at it.
@@ -449,7 +454,12 @@ export function tcgQuote(
     useListing && listing!.shippingPrice != null && listing!.shippingPrice >= 0
       ? Math.round(listing!.shippingPrice * 100 * mkt.fx)
       : null;
-  return { price, shippingCents, inStock: mkt.basis === "listing" ? useListing : true };
+  // IN STOCK whenever there is a price (owner, 2026-10-02: "if we can't get the
+  // lowest English card from TCGplayer … use the last sold TCGplayer price").
+  // With no English Near-Mint listing, the buyable row quotes TCGplayer's market
+  // price — its figure from recent sales — and stays a row in the comparison,
+  // where until today it was written out of stock and vanished from it.
+  return { price, shippingCents, inStock: price != null };
 }
 
 // Match products to cards and build RetailerPrice rows (no DB writes — caller
@@ -626,7 +636,7 @@ export async function refreshTcgplayerPrices(): Promise<{ written: number; byCou
   const products = await fetchTcgplayerProducts();
   let written = 0;
   const byCountry: Record<string, number> = {};
-  for (const mkt of [TCG_US, TCG_US_MARKET, TCG_UK, TCG_SG, TCG_AU, TCG_CA]) {
+  for (const mkt of [TCG_US, TCG_US_MARKET, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU]) {
     const { total, matched, rows, unmatchedSamples } = await buildTcgplayerRows(mkt, products);
     console.log(`TCGplayer ${mkt.country}: ${total} products, ${matched} matched, ${rows.length} rows.`);
     if (unmatchedSamples.length && mkt === TCG_US) {

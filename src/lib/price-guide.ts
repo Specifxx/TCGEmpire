@@ -35,7 +35,7 @@ import { buildDuplicateMap } from "./card-duplicates";
 import { cardDisplayName } from "./card-name";
 import { cardImageSrc } from "./card-image-url";
 import { pickPrice } from "./country";
-import { TCGPLAYER_AU_RETAILER, TCGPLAYER_CA_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
+import { TCGPLAYER_AU_RETAILER, TCGPLAYER_CA_RETAILER, TCGPLAYER_EU_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
 import { normalizeSearch } from "./format";
 import { sevenDayChange } from "./price-table";
 import { getRiseHistory, type RiseHistory } from "./rise-predictor";
@@ -164,6 +164,7 @@ const TCG_KEYS: Partial<Record<(typeof GUIDE_MARKETS)[number], string>> = {
   UK: TCGPLAYER_UK_RETAILER,
   SG: TCGPLAYER_SG_RETAILER,
   CA: TCGPLAYER_CA_RETAILER,
+  EU: TCGPLAYER_EU_RETAILER,
 };
 
 async function guideSidePrices(): Promise<Map<string, { eb: (number | null)[]; tc: (number | null)[] }>> {
