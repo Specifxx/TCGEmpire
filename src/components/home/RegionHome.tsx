@@ -96,6 +96,10 @@ export async function RegionHome({ region }: { region: Country }) {
         region={{ code: region, adjective: info.adjective }}
       />
 
+      {/* Guides, news & market updates: directly under the hero on every
+          home (owner, 2026-10-02: "should still be at the top under the
+          hero"), then Today's Top Deals and the price guide. */}
+      <EditorialHub freshness={freshness} market={region} />
 
       {/* Today's Top Deals, then the price guide (2026-10-02, owner: the
           "Riftbound card prices today" table is gone; a link to /price-guide
@@ -104,11 +108,6 @@ export async function RegionHome({ region }: { region: Country }) {
       {topDealsAny && <TodaysTopDeals dealsByCountry={topDealsByCountry} />}
       <PriceGuideCallout totalCards={totalCards} />
 
-      {/* Guides, news & market updates: the same slot as on "/", under Top
-          Deals and the price guide (2026-10-02, owner: "the other homes should
-          be structured in exactly the same way"). `market` makes "Start here"
-          lead with this market's own buying guide. */}
-      <EditorialHub freshness={freshness} market={region} />
 
       {/* The full "/" feature set — Top Deals, eBay Picks, popular cards, How
           It Works, Explore, reviews, partners — see HomeSections.tsx and this

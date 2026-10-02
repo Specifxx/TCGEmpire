@@ -22,10 +22,10 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const code = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 const HUB = "src/components/home/EditorialHub.tsx";
 
-test("every home has one structure: hero, Top Deals, price guide, editorial band, HomeSections", () => {
+test("every home has one structure: hero, editorial band, Top Deals, price guide, HomeSections", () => {
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = code(f);
-    const order = ["<CinematicHero", "<TodaysTopDeals", "<PriceGuideCallout", "<EditorialHub", "<HomeSections"].map((t) => src.indexOf(t));
+    const order = ["<CinematicHero", "<EditorialHub", "<TodaysTopDeals", "<PriceGuideCallout", "<HomeSections"].map((t) => src.indexOf(t));
     assert.ok(order[0] >= 0 && order.every((v, i) => i === 0 || v > order[i - 1]), `${f}: ${order}`);
     assert.equal(src.split("<EditorialHub").length - 1, 1, `${f}: one band`);
     assert.doesNotMatch(src, /<PriceTodayTable|getPriceTable\(/);

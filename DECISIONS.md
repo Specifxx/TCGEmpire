@@ -16508,7 +16508,7 @@ This entry covers the owner's audit plan, which was built from Reddit feedback. 
 
 In its place, on every home, comes `PriceGuideCallout`: a static card linking to /price-guide. Today's Top Deals sits directly above it.
 
-All six homes now share one structure: hero, Today's Top Deals, price guide, the editorial band, then `HomeSections` (with `showTopDeals={false}`, so the deals render once). On the region homes the editorial band therefore moved from directly under the hero to under the price guide. "/" had already put the deals first.
+All six homes now share one structure: hero, the editorial band ("Guides, news & market updates"), Today's Top Deals, price guide, then `HomeSections` (with `showTopDeals={false}`, so the deals render once). The band stays directly under the hero (owner, same day: "should still be at the top under the hero"); on "/" Top Deals therefore moved from directly under the hero to directly under the band.
 
 **Removed with it:**
 - `PriceTodayTable.tsx` and `PriceRowEbay.tsx`.

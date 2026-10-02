@@ -328,11 +328,13 @@ export default async function HomePage() {
         freshness={freshness}
       />
 
-      {/* Today's Top Deals — DIRECTLY UNDER THE HERO, the first content on the
-          page (owner, 2026-09-30: "move today's top deals to the very top").
-          The hero stays above it: it is the search box and the site header, not
-          a content band. HomeSections renders it for the region homes; this page
-          passes showTopDeals={false} so it appears once. */}
+      {/* Guides, news & market updates: directly under the hero on every
+          home (owner, 2026-10-02: "should still be at the top under the
+          hero"), then Today's Top Deals and the price guide. */}
+      <EditorialHub freshness={freshness} />
+
+      {/* Today's Top Deals, under the editorial band (2026-10-02). HomeSections
+          gets showTopDeals={false} so it appears once. */}
       {/* No <Reveal> wrapper: it is in or near the first screen, where a
           scroll-in fade would hide real content until hydration. */}
       {anyDeals && <TodaysTopDeals dealsByCountry={topDealsByCountry} />}
@@ -340,14 +342,6 @@ export default async function HomePage() {
       {/* The price guide, under Top Deals (2026-10-02, owner). */}
       <PriceGuideCallout totalCards={totalCards} />
 
-      {/* Guides, news & market updates — under the hero since 2026-09-28
-          (below Today's Top Deals since 2026-09-30), and above what was the price table (owner: "we need the blog and
-          guides to be prominent so that we get approved for adsense with their
-          lazy crawlers"). It had sat under the table since 2026-09-26, which
-          put the writing one to two screens down behind 15 price rows. See
-          EditorialHub.tsx. No market passed: this page's copy is
-          market-neutral, so "Start here" keeps the six-market guide. */}
-      <EditorialHub freshness={freshness} />
 
       {/* REMOVED 2026-09-30: "Riftbound card prices today", the price table
           (PriceTodayTable, lib/price-table.ts), on the owner's instruction ("get
