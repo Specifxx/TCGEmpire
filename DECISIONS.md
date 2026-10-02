@@ -16441,3 +16441,36 @@ A button reads "Search" when there is no figure. A plain click on a card opens t
 **Third version, the same day (owner).** The owner found v2 too salesy. v3 is plain: a "Riftbound price guide" title, a short factual list and the screenshot, with no green callouts, outlines or pitch panel.
 
 **Refreshing it.** The figures in the image are a snapshot from 2026-10-02. Re-shoot it when the table changes noticeably.
+
+## Sixteen more Radiance reveals, and the unsigned 169/171/174 overnumbers restored — 2026-10-02
+
+**Why.** The owner asked to import the new Radiance cards. Riot's card gallery still serves the same 84 Radiance printings (fetched fresh: `cache-control: max-age=0`, 1,273 items). So the new cards came from the preview partners' own reveals, read off finished English card images under the 30 September rules. These went in:
+
+| Card | Number | Source |
+| --- | --- | --- |
+| Jarvan IV, Martial Paragon | 091/167 and its 091a beach alternate art | GamesRadar's exclusive |
+| High Note | 048/167 | VICE's exclusive (the card render, not the art-only header) |
+| Coalesced Energy, Watchful Curator, Portable Portal, Hunting Dog | 016, 037, 087, 119 | riftbound.zone's spoiler images |
+| Fanfare, Piltovan Guidebot, Nazuman Ntofo, Graves, Blasting Through, Bedeviling Stranger, Encore | 047, 057, 071, 085, 107, 152 | riftbound.gg's card database (`api.dotgg.gg/cgfw/getcards?game=riftbound`; images on static.dotgg.gg) |
+| Black Market, Hunters' Circle | 158, 163 | riftbound.gg; rotated to landscape |
+| Evelynn, In Control (K/DA special) | SP3/005 | riftbound.gg |
+
+Graves joins `lib/champions.ts` with his first card, per that file's own rule.
+
+**The correction.** "Radiance matches Riot's gallery" (2026-09-30) said Riot's gallery lists one printing each at 169, 171 and 174, "and each is the signed art printed with '*'". That was wrong. Riot's own images for RAD-169/167, RAD-171/167 and RAD-174/167 are the **unsigned** overnumbers: no asterisk in the number, no signature across the art. They were viewed today, 744×1039 cmsassets PNGs. The signed 169\*, 171\* and 174\* exist too: the StarCityGames round-up crops read on 29 September, and riftbound.gg's `RAD-169-STAR` and `RAD-174-STAR` renders. Each Legend is therefore a pair, the shape Vendetta's 190/190\* had, which the 29 September entry assumed before the 30th reversed it. So:
+- The unsigned 169/167, 171/167 and 174/167 rows go in with Riot's images and text. The Seraphine row returns under its original externalId, `spoiler-rad-174-seraphine-starry-eyed-songstress`.
+- The 169\*, 171\* and 174\* rows now use the signed crops. Until today they carried Riot's image of the unsigned card, so the signed pages showed unsigned art.
+- `RETIRED` in `add-manual-cards.ts` is empty, and the `CARD_SLUG_RENAMES` line sending `…-174-167` to `…-174s-167` is gone. Each card keeps its own URL, and the add-manual-cards update path would otherwise have renamed the restored row onto the signed card's slug. The `mergeInto` mechanism stays; the lesson is in a comment on the list: look at the image Riot serves for a number, not only at the number.
+- **The one moved watch.** The 30 September merge moved one price alert from the unsigned 174 to 174\*. It stays there. The merge deliberately logged counts, not ids, so that alert cannot be told apart from alerts made on 174\* directly, and it is still a watch on Seraphine's 174 overnumber.
+- Dated corrections, with `updated` bumped, went into the Preview Season week-one post, the HEARTSTEEL overnumbers post, the Seraphine post and the tracker.
+
+`tests/radiance-preview-matching.test.ts` gains Ziggs' and Orianna's unsigned/signed pairs. `tests/retire-merge.test.ts` now pins that the unsigned 174 is a live row, not retired, and not renamed.
+
+**Left out, on purpose.**
+- **Ekko's over-numbered Legend:** two sources disagree on 168/167. riftbound.gg shows Blaine Burgos art with a signed 168\*; riftbound.zone shows Valentine Tran art.
+- **Last Caress (154), Siren's Song (098) and Trifarian Captain:** Simplified Chinese printings only.
+- **Evelynn, Agony's Embrace:** still Chinese only.
+- **Riven:** no card shown.
+- **The Bomb and Mech tokens:** the catalogue carries no tokens.
+
+Rehearsed locally: 19 created, 111 Radiance printings, both battlefields landscape. Typecheck (after `npm run db:generate`, which the Pokémon client now needs), lint, the full test suite, the AdSense guard and images:check pass.

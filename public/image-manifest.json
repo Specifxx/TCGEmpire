@@ -1113,6 +1113,39 @@
     ],
     "fingerprint": "a398eecdc660602a"
   },
+  "/radiance-spoilers/bedeviling-stranger.jpg": {
+    "src": "/radiance-spoilers/bedeviling-stranger.jpg",
+    "width": 694,
+    "height": 958,
+    "bytes": 91611,
+    "webp": "/radiance-spoilers/bedeviling-stranger.webp",
+    "webpBytes": 57768,
+    "avif": "/radiance-spoilers/bedeviling-stranger.avif",
+    "avifBytes": 39567,
+    "variants": [],
+    "fingerprint": "9d5e9ffa11041372"
+  },
+  "/radiance-spoilers/black-market.jpg": {
+    "src": "/radiance-spoilers/black-market.jpg",
+    "width": 1039,
+    "height": 744,
+    "bytes": 100688,
+    "webp": "/radiance-spoilers/black-market.webp",
+    "webpBytes": 79014,
+    "avif": "/radiance-spoilers/black-market.avif",
+    "avifBytes": 51883,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/radiance-spoilers/black-market-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/radiance-spoilers/black-market-768w.webp"
+      }
+    ],
+    "fingerprint": "62b5a15e340f9d1d"
+  },
   "/radiance-spoilers/body-rune-alt-art.jpg": {
     "src": "/radiance-spoilers/body-rune-alt-art.jpg",
     "width": 274,
@@ -1160,6 +1193,18 @@
     "avifBytes": 41981,
     "variants": [],
     "fingerprint": "61c1564afce3cc29"
+  },
+  "/radiance-spoilers/coalesced-energy.jpg": {
+    "src": "/radiance-spoilers/coalesced-energy.jpg",
+    "width": 647,
+    "height": 900,
+    "bytes": 86433,
+    "webp": "/radiance-spoilers/coalesced-energy.webp",
+    "webpBytes": 53826,
+    "avif": "/radiance-spoilers/coalesced-energy.avif",
+    "avifBytes": 38622,
+    "variants": [],
+    "fingerprint": "fca670195a9f7c85"
   },
   "/radiance-spoilers/consult-the-heavens.jpg": {
     "src": "/radiance-spoilers/consult-the-heavens.jpg",
@@ -1221,6 +1266,18 @@
     "variants": [],
     "fingerprint": "4f15d7dcb0580e46"
   },
+  "/radiance-spoilers/encore.jpg": {
+    "src": "/radiance-spoilers/encore.jpg",
+    "width": 636,
+    "height": 881,
+    "bytes": 84950,
+    "webp": "/radiance-spoilers/encore.webp",
+    "webpBytes": 57476,
+    "avif": "/radiance-spoilers/encore.avif",
+    "avifBytes": 43353,
+    "variants": [],
+    "fingerprint": "8a5107e989cfea4c"
+  },
   "/radiance-spoilers/evelynn-consuming-alt-art.jpg": {
     "src": "/radiance-spoilers/evelynn-consuming-alt-art.jpg",
     "width": 771,
@@ -1245,6 +1302,30 @@
     "variants": [],
     "fingerprint": "dcadf845719cb7e5"
   },
+  "/radiance-spoilers/evelynn-in-control-sp3.jpg": {
+    "src": "/radiance-spoilers/evelynn-in-control-sp3.jpg",
+    "width": 570,
+    "height": 786,
+    "bytes": 81940,
+    "webp": "/radiance-spoilers/evelynn-in-control-sp3.webp",
+    "webpBytes": 56818,
+    "avif": "/radiance-spoilers/evelynn-in-control-sp3.avif",
+    "avifBytes": 41542,
+    "variants": [],
+    "fingerprint": "f383116de2171c82"
+  },
+  "/radiance-spoilers/fanfare.jpg": {
+    "src": "/radiance-spoilers/fanfare.jpg",
+    "width": 744,
+    "height": 1060,
+    "bytes": 79523,
+    "webp": "/radiance-spoilers/fanfare.webp",
+    "webpBytes": 46802,
+    "avif": "/radiance-spoilers/fanfare.avif",
+    "avifBytes": 32310,
+    "variants": [],
+    "fingerprint": "fbfbe21dacdd8153"
+  },
   "/radiance-spoilers/for-demacia.jpg": {
     "src": "/radiance-spoilers/for-demacia.jpg",
     "width": 616,
@@ -1256,6 +1337,18 @@
     "avifBytes": 28556,
     "variants": [],
     "fingerprint": "9c774be2b7d9f56a"
+  },
+  "/radiance-spoilers/graves-blasting-through.jpg": {
+    "src": "/radiance-spoilers/graves-blasting-through.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 116915,
+    "webp": "/radiance-spoilers/graves-blasting-through.webp",
+    "webpBytes": 78338,
+    "avif": "/radiance-spoilers/graves-blasting-through.avif",
+    "avifBytes": 54214,
+    "variants": [],
+    "fingerprint": "d9b7561d2caa65fc"
   },
   "/radiance-spoilers/heartsteel-aphelios-exalted.jpg": {
     "src": "/radiance-spoilers/heartsteel-aphelios-exalted.jpg",
@@ -1353,6 +1446,75 @@
     "variants": [],
     "fingerprint": "c93e744955df55d8"
   },
+  "/radiance-spoilers/high-note.jpg": {
+    "src": "/radiance-spoilers/high-note.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 113540,
+    "webp": "/radiance-spoilers/high-note.webp",
+    "webpBytes": 92268,
+    "avif": "/radiance-spoilers/high-note.avif",
+    "avifBytes": 61487,
+    "variants": [],
+    "fingerprint": "9b2bf8bfda157533"
+  },
+  "/radiance-spoilers/hunters-circle.jpg": {
+    "src": "/radiance-spoilers/hunters-circle.jpg",
+    "width": 900,
+    "height": 643,
+    "bytes": 67625,
+    "webp": "/radiance-spoilers/hunters-circle.webp",
+    "webpBytes": 42948,
+    "avif": "/radiance-spoilers/hunters-circle.avif",
+    "avifBytes": 32840,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/radiance-spoilers/hunters-circle-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/radiance-spoilers/hunters-circle-768w.webp"
+      }
+    ],
+    "fingerprint": "b607a973a0154b3d"
+  },
+  "/radiance-spoilers/hunting-dog.jpg": {
+    "src": "/radiance-spoilers/hunting-dog.jpg",
+    "width": 629,
+    "height": 900,
+    "bytes": 71879,
+    "webp": "/radiance-spoilers/hunting-dog.webp",
+    "webpBytes": 42430,
+    "avif": "/radiance-spoilers/hunting-dog.avif",
+    "avifBytes": 30600,
+    "variants": [],
+    "fingerprint": "0883a6c39d4fa66c"
+  },
+  "/radiance-spoilers/jarvan-iv-martial-paragon-alt-art.jpg": {
+    "src": "/radiance-spoilers/jarvan-iv-martial-paragon-alt-art.jpg",
+    "width": 744,
+    "height": 1038,
+    "bytes": 116760,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/radiance-spoilers/jarvan-iv-martial-paragon-alt-art.avif",
+    "avifBytes": 83866,
+    "variants": [],
+    "fingerprint": "69cce7758464b2ff"
+  },
+  "/radiance-spoilers/jarvan-iv-martial-paragon.jpg": {
+    "src": "/radiance-spoilers/jarvan-iv-martial-paragon.jpg",
+    "width": 744,
+    "height": 1038,
+    "bytes": 115121,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/radiance-spoilers/jarvan-iv-martial-paragon.avif",
+    "avifBytes": 78808,
+    "variants": [],
+    "fingerprint": "92349795d48a85f0"
+  },
   "/radiance-spoilers/kaisa-rebel.jpg": {
     "src": "/radiance-spoilers/kaisa-rebel.jpg",
     "width": 744,
@@ -1443,6 +1605,18 @@
     "variants": [],
     "fingerprint": "6fb87cb938da81b1"
   },
+  "/radiance-spoilers/nazuman-ntofo.jpg": {
+    "src": "/radiance-spoilers/nazuman-ntofo.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 88170,
+    "webp": "/radiance-spoilers/nazuman-ntofo.webp",
+    "webpBytes": 60172,
+    "avif": "/radiance-spoilers/nazuman-ntofo.avif",
+    "avifBytes": 42931,
+    "variants": [],
+    "fingerprint": "08817f330b0544c2"
+  },
   "/radiance-spoilers/neeko-blending-in.jpg": {
     "src": "/radiance-spoilers/neeko-blending-in.jpg",
     "width": 744,
@@ -1490,6 +1664,30 @@
     "avifBytes": 43476,
     "variants": [],
     "fingerprint": "30812b05fb778a32"
+  },
+  "/radiance-spoilers/piltovan-guidebot.jpg": {
+    "src": "/radiance-spoilers/piltovan-guidebot.jpg",
+    "width": 728,
+    "height": 1020,
+    "bytes": 90365,
+    "webp": "/radiance-spoilers/piltovan-guidebot.webp",
+    "webpBytes": 60948,
+    "avif": "/radiance-spoilers/piltovan-guidebot.avif",
+    "avifBytes": 44270,
+    "variants": [],
+    "fingerprint": "2385bb8376801b32"
+  },
+  "/radiance-spoilers/portable-portal.jpg": {
+    "src": "/radiance-spoilers/portable-portal.jpg",
+    "width": 644,
+    "height": 900,
+    "bytes": 90120,
+    "webp": "/radiance-spoilers/portable-portal.webp",
+    "webpBytes": 57846,
+    "avif": "/radiance-spoilers/portable-portal.avif",
+    "avifBytes": 41014,
+    "variants": [],
+    "fingerprint": "c005db1dbf9bf259"
   },
   "/radiance-spoilers/primordial-roar.jpg": {
     "src": "/radiance-spoilers/primordial-roar.jpg",
@@ -1562,6 +1760,18 @@
     "avifBytes": 55363,
     "variants": [],
     "fingerprint": "2d30e98e280f7ed1"
+  },
+  "/radiance-spoilers/watchful-curator.jpg": {
+    "src": "/radiance-spoilers/watchful-curator.jpg",
+    "width": 644,
+    "height": 900,
+    "bytes": 69936,
+    "webp": "/radiance-spoilers/watchful-curator.webp",
+    "webpBytes": 43692,
+    "avif": "/radiance-spoilers/watchful-curator.avif",
+    "avifBytes": 31243,
+    "variants": [],
+    "fingerprint": "5a3748222c987652"
   },
   "/radiance-spoilers/zero-point-inflection.jpg": {
     "src": "/radiance-spoilers/zero-point-inflection.jpg",

@@ -707,9 +707,9 @@ longer lands on its entry.
   moves, then the card goes, in one transaction; any unique-key clash keeps
   it) or, with no `mergeInto`, kept. A slug moves only through
   `CARD_SLUG_RENAMES`. The gallery import
-  skips a printing already catalogued by hand (same set + number). A card a preview partner shows before Riot's gallery does goes in from that partner's finished English image, self-hosted until Riot's asset exists; a non-English printing alone is not enough. Article
+  skips a printing already catalogued by hand (same set + number). A card a preview partner shows before Riot's gallery does goes in from that partner's finished English image, self-hosted until Riot's asset exists; a non-English printing alone is not enough. Read the image Riot serves for a number, not only the number: RAD 169, 171 and 174 are each an unsigned overnumber (Riot's image) plus a signed \* twin, and nothing is in `RETIRED` now. Article
   markdown writes a Signature number as `169\*/167`.
-  [2026-09-29](../DECISIONS.md#L15513), [2026-09-30](../DECISIONS.md#L15766), [2026-09-30](../DECISIONS.md#L15794), [2026-09-30](../DECISIONS.md#L15921), [2026-09-30](../DECISIONS.md#L15941)
+  [2026-09-29](../DECISIONS.md#L15513), [2026-09-30](../DECISIONS.md#L15766), [2026-09-30](../DECISIONS.md#L15794), [2026-09-30](../DECISIONS.md#L15921), [2026-09-30](../DECISIONS.md#L15941), [2026-10-02](../DECISIONS.md#L16445)
 - **First-listing and restock alerts:** a watch with a null baseline (no
   price in that market when it was created) gets one "now listed" email when
   the card lists — "open for pre-order" while its set is unreleased, which

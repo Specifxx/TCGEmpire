@@ -15,10 +15,18 @@ const manual = JSON.parse(readFileSync(join(process.cwd(), "prisma/manual-cards.
 
 test("every mergeInto names a card this file still catalogues", () => {
   const ids = new Set(manual.map((c) => c.externalId).filter(Boolean));
-  const targets = [...src.matchAll(/mergeInto: "([^"]+)"/g)].map((m) => m[1]);
-  assert.ok(targets.length > 0, "the Seraphine 174 retirement carries a mergeInto");
-  for (const t of targets) assert.ok(ids.has(t), `${t} must be a live row in manual-cards.json`);
-  assert.ok(src.includes('mergeInto: "spoiler-rad-174s-seraphine-starry-eyed-songstress"'));
+  for (const [, t] of src.matchAll(/mergeInto: "([^"]+)"/g)) assert.ok(ids.has(t), `${t} must be a live row in manual-cards.json`);
+});
+
+// The one retirement this was built for was wrong (2026-10-02): Riot's image
+// for RAD-174/167 is the unsigned printing, so the row is back and must not
+// be retired or merged again, and its URL must not redirect to 174*.
+test("the unsigned Seraphine 174 is a live row, not a retirement", () => {
+  const retired = src.slice(src.indexOf("const RETIRED"), src.indexOf("];", src.indexOf("const RETIRED")));
+  assert.doesNotMatch(retired, /externalId: "spoiler-rad-174-seraphine/);
+  assert.ok(manual.some((c) => c.externalId === "spoiler-rad-174-seraphine-starry-eyed-songstress"));
+  const renames = readFileSync(join(process.cwd(), "src/lib/card-slug-renames.ts"), "utf8");
+  assert.doesNotMatch(renames, /"seraphine-starry-eyed-songstress-rad-174-167":/);
 });
 
 test("the merge moves every user table, and deletes only inside the same transaction", () => {

@@ -119,3 +119,25 @@ test("the gallery's alternate arts and over-numbers each get their own listings"
   assert.equal(r("K'Sante - Pride of Nazumah"), "p147");
   assert.equal(r("Pride of Nazumah - 172/167"), "p172");
 });
+
+// 2026-10-02: Riot's own images for RAD-169/167, 171/167 and 174/167 are the
+// UNSIGNED overnumbers, so Ziggs and Orianna have the same pair Seraphine has.
+// The 30 September reading (one signed printing at each) was wrong.
+test("Ziggs and Orianna's unsigned overnumbers and their Signatures resolve apart", () => {
+  const t = buildCardIndex([
+    c("ziggs-141", "Ziggs, Hexplosives Expert", "RAD", "141/167", "Rare"),
+    c("ziggs-169", "Ziggs, Hexplosives Expert", "RAD", "169/167", "Showcase"),
+    c("ziggs-169s", "Ziggs, Hexplosives Expert", "RAD", "169*/167", "Showcase"),
+    c("orianna-145", "Orianna, Lady of Clockwork", "RAD", "145/167", "Rare"),
+    c("orianna-171", "Orianna, Lady of Clockwork", "RAD", "171/167", "Showcase"),
+    c("orianna-171s", "Orianna, Lady of Clockwork", "RAD", "171*/167", "Showcase"),
+  ]);
+  const r = (title: string) => resolveCardId({ title, handle: "h", variants: [] } as never, t);
+  assert.equal(r("Ziggs, Hexplosives Expert"), "ziggs-141");
+  assert.equal(r("Ziggs, Hexplosives Expert - 169/167"), "ziggs-169");
+  assert.equal(r("Ziggs, Hexplosives Expert - 169*/167"), "ziggs-169s");
+  assert.equal(r("Ziggs, Hexplosives Expert (Signature)"), "ziggs-169s");
+  assert.equal(r("Orianna, Lady of Clockwork"), "orianna-145");
+  assert.equal(r("Orianna, Lady of Clockwork - 171/167"), "orianna-171");
+  assert.equal(r("Orianna, Lady of Clockwork - 171*/167 Signature"), "orianna-171s");
+});

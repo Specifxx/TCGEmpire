@@ -64,14 +64,12 @@ async function uniqueSlug(base: string, externalId: string): Promise<string> {
 // kept and reported. Never trade user data for catalogue tidiness. The old URL
 // keeps working through lib/card-slug-renames.ts.
 const RETIRED: { externalId: string; why: string; mergeInto?: string }[] = [
-  {
-    externalId: "spoiler-rad-174-seraphine-starry-eyed-songstress",
-    why: "Riot's gallery lists one printing at 174, the signed 174*/167 (2026-09-30)",
-    // Kept on the first production run because user rows pointed at it (the
-    // gallery showed 85 cards, not 84). Anyone who saved the unsigned 174 was
-    // saving this Legend's over-numbered printing, which is the 174*.
-    mergeInto: "spoiler-rad-174s-seraphine-starry-eyed-songstress",
-  },
+  // Empty since 2026-10-02. Its one entry retired the unsigned Seraphine
+  // 174/167 and merged it into 174*/167 on the reading that Riot's gallery
+  // showed only the signed card. Riot's image for RAD-174/167 is the UNSIGNED
+  // printing, so the row is back in manual-cards.json under its original
+  // externalId. Before adding an entry here, look at the card image Riot
+  // serves for that number, not only at the number.
 ];
 
 type DeckLine = { cardId: string; qty: number };

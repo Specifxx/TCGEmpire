@@ -274,7 +274,7 @@ export const ARTICLES: Article[] = [
       "Ekko, Ziggs and Orianna's Legends, Deploy, Show Off and Disarm in print, and Radiance's first Signature cards: 23 cards from Preview Season's first week.",
     author: "RiftCompare",
     date: "2026-09-29",
-    updated: "2026-09-30",
+    updated: "2026-10-02",
     readMins: 11,
     tags: ["radiance", "news", "preview season", "legends", "mechanics"],
     hero: {
@@ -448,7 +448,7 @@ Seven Champion Units arrived this week, and several tie back to the Legends abov
 
 Radiance's base run stops at 167, the denominator printed on every card. This week showed both kinds of chase numbering. A **letter** marks an alternate art of a base card: Evelynn, Consuming 090a/167, with a gold Showcase gem. An **asterisk** marks a Signature printing, with the artist's signature on new art: Ziggs 169\\*/167 by Kindlejack, Orianna 171\\*/167 by Anh Dang, and Seraphine's Legend 174\\*/167 by Anna Nikonova. The **[variant glossary](/guides/riftbound-variant-glossary)** explains the tiers.
 
-In earlier sets, Signature Legends came in pairs: an overnumbered printing, and a signed version of it with the same number plus an asterisk (Origins' 303/298 and 303\\*/298, for example). *Corrected 30 September:* this paragraph first said Seraphine's pair was complete, with an unsigned 174/167 beside the signed [174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167). Riot's card gallery lists one printing at each of 169, 171 and 174, and each is the signed card, so Radiance shows no unsigned twins so far. When singles are listed, the asterisk is what marks a Signature, and our price matching reads it.
+In earlier sets, Signature Legends came in pairs: an overnumbered printing, and a signed version of it with the same number plus an asterisk (Origins' 303/298 and 303\\*/298, for example). Radiance keeps the pairs. Riot's card gallery shows the unsigned [169/167](/card/ziggs-hexplosives-expert-rad-169-167), [171/167](/card/orianna-lady-of-clockwork-rad-171-167) and [174/167](/card/seraphine-starry-eyed-songstress-rad-174-167), and the signed [169\\*](/card/ziggs-hexplosives-expert-rad-169s-167), [171\\*](/card/orianna-lady-of-clockwork-rad-171s-167) and [174\\*](/card/seraphine-starry-eyed-songstress-rad-174s-167) are in these images. *Corrected 2 October:* on 30 September this paragraph said Riot's gallery showed only the signed cards, so Radiance had no unsigned twins. Riot's own images for those three numbers are the unsigned cards. When singles are listed, the asterisk is what marks a Signature, and our price matching reads it.
 
 ## What isn't in our database yet, and why
 
@@ -485,7 +485,7 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
       "All six HEARTSTEEL overnumbered Radiance cards, RAD 178–183/167: what each does, which five are reprints, and K'Sante's first Champion Unit.",
     author: "RiftCompare",
     date: "2026-09-26",
-    updated: "2026-09-30",
+    updated: "2026-10-02",
     readMins: 9,
     tags: ["radiance", "news", "spoilers", "heartsteel", "collecting", "ksante"],
     hero: {
@@ -689,7 +689,7 @@ The Radiance numbers above 167 shown so far:
 | 174\\*/167 | Seraphine, Starry-Eyed Songstress (Signature) |
 | 178/167 to 183/167 | The six HEARTSTEEL Champion Units |
 
-That leaves **168 to 171, 173 and 175 to 177** unaccounted for, and anything past 183 unknown. Those numbers belong to cards that have not been shown yet, and the [live spoiler tracker](/blog/riftbound-radiance-spoilers) will log them as they are. *Updated 30 September:* Riot's card gallery has since filled in 169\\* (Ziggs' Signature Legend), 171\\* (Orianna's) and 176 (Jarvan IV's Legend, over-numbered), and Seraphine's 174 is printed 174\\*/167, a Signature.
+That leaves **168 to 171, 173 and 175 to 177** unaccounted for, and anything past 183 unknown. Those numbers belong to cards that have not been shown yet, and the [live spoiler tracker](/blog/riftbound-radiance-spoilers) will log them as they are. *Updated 30 September, corrected 2 October:* Riot's card gallery has since filled in 169, 171 and 174 (Ziggs', Orianna's and Seraphine's Legends, over-numbered) and 176 (Jarvan IV's). Each of the first three also has a signed Signature printing, 169\\*, 171\\* and 174\\*/167. On 30 September this note said the gallery's three were the signed cards; Riot's own images show the unsigned ones.
 
 What the graphic does **not** say is how the HEARTSTEEL cards are distributed: which product carries them, at what rate, or whether all six share one. Riot's reveal is a card reveal, not a product announcement, and until Riot publishes pull rates nobody can tell you how scarce these are.
 
@@ -904,7 +904,7 @@ For the running list of everything shown so far — official reveals and sightin
       "Seraphine's Riftbound: Radiance Legend, Starry-Eyed Songstress, is pictured in print: a spell-cost engine in a promo and an over-numbered chase.",
     author: "RiftCompare",
     date: "2026-09-22",
-    updated: "2026-09-30",
+    updated: "2026-10-02",
     readMins: 11,
     tags: ["radiance", "news", "spoilers", "seraphine", "deckbuilding"],
     hero: {
@@ -917,8 +917,9 @@ For the running list of everything shown so far — official reveals and sightin
       { label: "Riftbound singles", query: "Riftbound TCG singles" },
     ],
     // Riot revealed the Legend officially on 24 Sept, so both of its printings
-    // are now in the catalogue (manual-cards.json: RAD 151/167 and the Signature
-    // 174*/167 — first catalogued as an unsigned 174/167, corrected 2026-09-30). The RAD 138/167 Not Alone printing is still NOT added: its
+    // are now in the catalogue (manual-cards.json: RAD 151/167, the over-numbered
+    // 174/167 and its Signature 174*/167; the 174/167 was wrongly retired on
+    // 2026-09-30 and restored 2026-10-02). The RAD 138/167 Not Alone printing is still NOT added: its
     // Radiance rarity has not been shown.
     embeds: [
       {
@@ -954,7 +955,7 @@ For the running list of everything shown so far — official reveals and sightin
       },
       {
         q: "What is the 174*/167 Seraphine card?",
-        a: "The Signature printing of her Legend. Radiance's base numbered run is 167 cards (the denominator printed on every base card), so a card numbered 174 sits above the base set, where Showcase and chase treatments are numbered, and the asterisk marks a Signature: new art by Anna Nikonova, with her signature across it. It is the same card as the 151/167 printing (Naifan Zhang), not a different one. Riot's card gallery lists only this signed printing at 174; we first catalogued it as an unsigned 174/167 and corrected that on 30 September.",
+        a: "The Signature printing of her Legend. Radiance's base numbered run is 167 cards (the denominator printed on every base card), so a card numbered 174 sits above the base set, where Showcase and chase treatments are numbered, and the asterisk marks a Signature: new art by Anna Nikonova, with her signature across it. It is the same card as the 151/167 printing (Naifan Zhang), not a different one. It also has an unsigned twin, 174/167, with the same art and no signature, which is the printing Riot's card gallery shows. (Corrected 2 October: on 30 September this answer said only the signed printing existed.)",
       },
       {
         q: "Is Seraphine, Not Alone the same card as her Legend?",
@@ -985,8 +986,8 @@ Read straight off the print:
 | **Name** | Starry-Eyed Songstress |
 | **Card type** | Legend · Seraphine |
 | **Set** | Radiance (RAD) |
-| **Collector numbers seen** | 151/167 (promo) and 174\\*/167 (Signature) |
-| **Artists** | Naifan Zhang (151/167) · Anna Nikonova (174\\*/167) — ©2026 RGI |
+| **Collector numbers seen** | 151/167 (promo), 174/167 and its Signature twin 174\\*/167 |
+| **Artists** | Naifan Zhang (151/167) · Anna Nikonova (174/167 and 174\\*/167) — ©2026 RGI |
 
 And the ability, in full:
 
@@ -1012,7 +1013,7 @@ Starry-Eyed Songstress has been seen twice, and the difference between the two p
 
 The first, art by **Naifan Zhang**, is numbered **151/167** and carries a promo stamp. That number sits inside the base run — Radiance's base numbered set is **167 cards**, the denominator [Neeko's 167/167 first established](/blog/riftbound-neeko-blending-in-spoiler) — so 151 is an ordinary in-set slot wearing a promotional finish.
 
-The second, art by **Anna Nikonova**, is numbered **174\\*/167**. *Corrected 30 September:* this page first gave it as 174/167; Riot's own card image prints the asterisk that marks a **Signature**, with the artist's signature across the art. The denominator is the tell either way: 174 is *above* 167, and cards numbered above a set's base run are where Riftbound puts its premium treatments — the Showcase and chase variants, numbered on top of the base set in every release so far. So the 174\\*/167 Starry-Eyed Songstress is not a different card; it is the **Signature chase printing** of the same Legend, and it is the one collectors will actually hunt. If you have followed how Vendetta's [over-numbered cards](/guides/riftbound-vendetta-overnumbers-explained) behaved, you already know the shape of what happens next: the base printing is attainable, the over-number carries the premium, and the gap between them is set by how good the card turns out to be.
+The second, art by **Anna Nikonova**, is numbered **[174/167](/card/seraphine-starry-eyed-songstress-rad-174-167)**, and it has a signed twin, **[174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167)**, with the artist's signature across the art: the **Signature**. *Corrected 2 October:* this page first gave the number as 174/167, then on 30 September changed it to 174\\*/167 only. Both exist; Riot's card gallery shows the unsigned 174/167. The denominator is the tell either way: 174 is *above* 167, and cards numbered above a set's base run are where Riftbound puts its premium treatments — the Showcase and chase variants, numbered on top of the base set in every release so far. So the 174/167 Starry-Eyed Songstress is not a different card; it is the **over-numbered chase printing** of the same Legend, and its signed 174\\* twin is the one collectors will hunt hardest. If you have followed how Vendetta's [over-numbered cards](/guides/riftbound-vendetta-overnumbers-explained) behaved, you already know the shape of what happens next: the base printing is attainable, the over-number carries the premium, and the gap between them is set by how good the card turns out to be.
 
 [[embed:0]]
 
@@ -1059,7 +1060,7 @@ Same three rules as every pre-release card, because they are the ones that save 
 
 **Watch the sealed and pre-order prices instead.** Those are the only Radiance products you can actually buy right now, and they are what moves as the chase cards become known. We compare [Radiance pre-order prices](/radiance-preorders) across every tracked store, cheapest first, in your own currency — and the [sealed comparison](/sealed) is where displays, the Vault and the Showdown Decks are comparable long before any single is.
 
-**When singles do land, read the number before the name.** "Seraphine" is about to mean at least four different objects at four different prices — the Not Alone Champion Unit at 138/167, the Starry-Eyed Songstress Legend at 151/167, its 174\\*/167 Signature, and the T1 collection printing that already exists. The collector number is what tells them apart, and it is the first thing our matcher reads off a listing. Every Radiance card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
+**When singles do land, read the number before the name.** "Seraphine" is about to mean at least five different objects at five different prices — the Not Alone Champion Unit at 138/167, the Starry-Eyed Songstress Legend at 151/167, its 174/167 over-number and 174\\*/167 Signature, and the T1 collection printing that already exists. The collector number is what tells them apart, and it is the first thing our matcher reads off a listing. Every Radiance card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
 
 For the running list of everything Riot has genuinely shown — kept strictly separate from leaks like this one — the [Radiance spoiler tracker](/blog/riftbound-radiance-spoilers) is updated the morning after each reveal, and [what's confirmed about Radiance](/blog/riftbound-radiance-what-we-know) holds the dates, products and prices.`,
   },
@@ -1554,7 +1555,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
     author: "RiftCompare",
     date: "2026-09-21",
-    updated: "2026-09-30",
+    updated: "2026-10-02",
     readMins: 9,
     tags: ["radiance", "spoilers", "card gallery", "news", "release"],
     hero: {
@@ -1613,7 +1614,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
     ],
     body: `This is the **live Riftbound: Radiance spoiler tracker**. The gallery below is drawn from our card database and updates as each official reveal is imported, so it is current the morning after a reveal without anyone editing this page. Under it is a **dated log of everything that has actually been revealed**, the Preview Season schedule, and a clear line between what Riot has shown and what has merely circulated.
 
-**Where things stand today, 30 September 2026:** Preview Season is six days old. **Five of the nine Legends are now in print**: Seraphine's, and in the last few days Ekko's, Ziggs', Orianna's and Jarvan IV's, alongside K'Sante's, which surfaced as the season opened. Riot's own card gallery now lists 84 Radiance printings, and every one of them is in the gallery below, with eight more that preview partners showed on 30 September. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
+**Where things stand today, 30 September 2026:** Preview Season is six days old. **Five of the nine Legends are now in print**: Seraphine's, and in the last few days Ekko's, Ziggs', Orianna's and Jarvan IV's, alongside K'Sante's, which surfaced as the season opened. Riot's own card gallery now lists 84 Radiance printings, and every one of them is in the gallery below, with 27 more read off preview partners' card images. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
 
 **How this page keeps up:** Riot's official card gallery is checked twice a day, at about 02:30 and 18:30 UTC, and the preview partners' reveals as they land. Each new card is added once its finished card image can be read in full: collector number, rarity gem, domain and text. *Updated 30 September:* this used to say new cards land here automatically. The automatic import is paused while Riot's gallery files some Radiance cards under the wrong domain or type, so each card is now checked by hand before it goes in.
 
@@ -1638,6 +1639,17 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
 
+**1 – 2 October — sixteen more, Jarvan IV's second card among them, and a correction.** Riot's card gallery has not added a Radiance card since 30 September, so these come from the preview partners' own reveals, each read off a finished English card image:
+
+- **[Jarvan IV, Martial Paragon](/card/jarvan-iv-martial-paragon-rad-091-167)** (Body Champion Unit, 4 energy, 4 Might, Epic, 091/167), GamesRadar's reveal, with a beach-skin [alternate art at 091a](/card/jarvan-iv-martial-paragon-rad-091a-167). Your gear with Deploy gain Action, and when he conquers where you have a Deploy gear, you channel a rune.
+- **Seraphine's signature spell, [Encore](/card/encore-rad-152-167)** (Epic): choose two of four modes, among them two Recruit tokens and 2 damage to a unit. And **[High Note](/card/high-note-rad-048-167)**, VICE's reveal: a Reaction that gives a unit −Might equal to the number of exhausted units you control.
+- **[Graves, Blasting Through](/card/graves-blasting-through-rad-085-167)** (Body, Rare): when he attacks or defends, he deals his Might to every enemy unit there, and he deals no combat damage.
+- **Two battlefields.** [Black Market](/card/black-market-rad-158-167) lets each player pay two power to draw 1, once on their turn, and [Hunters' Circle](/card/hunters-circle-rad-163-167) makes the first unit or gear each player plays there on their turn cost 1 less.
+- **Nine more.** [Coalesced Energy](/card/coalesced-energy-rad-016-167), [Watchful Curator](/card/watchful-curator-rad-037-167), [Fanfare](/card/fanfare-rad-047-167), [Piltovan Guidebot](/card/piltovan-guidebot-rad-057-167), the Equipment [Nazuman Ntofo](/card/nazuman-ntofo-rad-071-167), the Deploy gear [Portable Portal](/card/portable-portal-rad-087-167), [Bedeviling Stranger](/card/bedeviling-stranger-rad-107-167), [Hunting Dog](/card/hunting-dog-rad-119-167), and a K/DA special printing of [Evelynn, In Control](/card/evelynn-in-control-rad-sp3-005) (SP3/005).
+- **A correction.** On 30 September we said Riot's gallery showed only the signed printings at 169, 171 and 174, and took the unsigned Seraphine 174 out of the database. Riot's own images for those numbers are the unsigned cards, so all six are in now, each with its own art: [169](/card/ziggs-hexplosives-expert-rad-169-167) and [169\\*](/card/ziggs-hexplosives-expert-rad-169s-167), [171](/card/orianna-lady-of-clockwork-rad-171-167) and [171\\*](/card/orianna-lady-of-clockwork-rad-171s-167), [174](/card/seraphine-starry-eyed-songstress-rad-174-167) and [174\\*](/card/seraphine-starry-eyed-songstress-rad-174s-167).
+
+Not in the database yet: Ekko's over-numbered Legend, because two sites show different art for the same number, 168/167; *Last Caress*, *Siren's Song* and *Trifarian Captain*, shown so far only as Simplified Chinese printings; and Evelynn's Legend, *Agony's Embrace*, still Chinese only.
+
 **30 September, later — eight more from preview partners, Akali among them.** Riot's preview partners published their own exclusive reveals through the day. Each card image can be read in full, so all eight are in our database, ahead of Riot's own gallery, which still lists 84:
 
 - **[Akali, Brash](/card/akali-brash-rad-015-167)** (Fury Champion Unit, 5 energy, 5 Might, Rare, 015/167). The first time she moves each turn, you add 1 energy and 1 power of any domain. The second time, you banish the top card of your Main Deck and may play it until your next Ending Phase.
@@ -1654,14 +1666,14 @@ Not in the database yet: Evelynn's Legend, *Agony's Embrace* (RAD 153/167), has 
 - **Seven more cards.** Two more Deploy gear, *[The Good Stuff](/card/the-good-stuff-rad-106-167)* and *[Concert Poster](/card/concert-poster-rad-116-167)*. Four spells, *[Lost to the Sands](/card/lost-to-the-sands-rad-013-167)*, *[Hunker Down](/card/hunker-down-rad-034-167)*, *[Satchel Charge](/card/satchel-charge-rad-096-167)* (another Bomb maker) and *[Improvised Projectile](/card/improvised-projectile-rad-056-167)*. And one unit, *[Stalwart Goatherd](/card/stalwart-goatherd-rad-083-167)*.
 - **Two SP printings.** New art for *[Kai'Sa, Rebel](/card/kai-sa-rebel-rad-sp4-005)* (RAD · SP4/005) and *[Seraphine, Not Alone](/card/seraphine-not-alone-rad-sp5-005)* (RAD · SP5/005), both with the gold Showcase gem.
 - **Two corrections.** *[Ntofo Strikes](/card/ntofo-strikes-rad-148-167)* is **148/167** and an Epic. We had 146/167, read under a video caption, and its rarity was a guess. K'Sante's Legend also has an in-set printing, *[Pride of Nazumah 147/167](/card/k-sante-pride-of-nazumah-rad-147-167)*, besides the 172/167 over-number.
-- **All of Riot's gallery.** Every one of the 84 Radiance printings in Riot's card gallery is now in our database, with Riot's own card image and rules text. That includes [Ahri, Confident](/card/ahri-confident-rad-038-167), [Mordekaiser, Dominating](/card/mordekaiser-dominating-rad-137-167), [Ziggs, Short-Fused](/card/ziggs-short-fused-rad-023-167), [Orianna, Mechanical Marvel](/card/orianna-mechanical-marvel-rad-068-167), Riven's signature gear *[Blade of the Exile](/card/blade-of-the-exile-rad-150-167)*, four more battlefields, seven alternate arts and Radiance's first runes. One more correction: Seraphine's chase Legend is the Signature [174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167) only. Riot's gallery shows no unsigned 174/167, so that page now redirects to it.
+- **All of Riot's gallery.** Every one of the 84 Radiance printings in Riot's card gallery is now in our database, with Riot's own card image and rules text. That includes [Ahri, Confident](/card/ahri-confident-rad-038-167), [Mordekaiser, Dominating](/card/mordekaiser-dominating-rad-137-167), [Ziggs, Short-Fused](/card/ziggs-short-fused-rad-023-167), [Orianna, Mechanical Marvel](/card/orianna-mechanical-marvel-rad-068-167), Riven's signature gear *[Blade of the Exile](/card/blade-of-the-exile-rad-150-167)*, four more battlefields, seven alternate arts and Radiance's first runes. One more correction, itself corrected on 2 October: Seraphine's 174 is a pair, the unsigned [174/167](/card/seraphine-starry-eyed-songstress-rad-174-167) that Riot's gallery shows and the Signature [174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167). On 30 September this entry said only the Signature existed and sent the unsigned card's page to it; both pages are back.
 
 **25 – 29 September — the first Preview Season wave: three Legends, and the leaked mechanics in print.** StarCityGames gathered the finished card images shown in Preview Season's first days, and **23 more Radiance cards** in them can be read in full: collector number, rarity gem, domain and text. All 23 are now in our database and in the gallery above.
 
 - **Three Legends.** *[Ekko, Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-139-167)* (Fury/Mind, 139/167) is printed exactly as Riot's first-look article described it. *[Ziggs, Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-141-167)* (Fury/Chaos, 141/167) makes Bomb gear tokens, with his signature spell *Hexplosive Minefield*. *[Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-145-167)* (Calm/Mind, 145/167) turns a friendly gear into a unit. Ziggs and Orianna also have Signature printings, 169\\*/167 and 171\\*/167.
 - **Deploy, Show Off and Disarm are real.** Deploy is on *Pillaged Armory* and *Dockside Lock-Up*, Show Off (two words in print) on *Primordial Roar* and *Rousing Display*, and Disarm on *Kai'Sa, Rebel* and *Disposal Expert*. The reminder text matches the leaked wording.
 - **Champion Units.** *K'Sante, Dauntless* (Calm) and a base printing of *K'Sante, Courageous* (Body, 086/167), *Ekko, Ingenious*, *Kai'Sa, Rebel*, *Evelynn, Consuming* (with a 090a/167 alternate art), *Heimerdinger, Academy Instructor* and *[Seraphine, Not Alone](/card/seraphine-not-alone-rad-138-167)*, which is 138/167 and Epic in the set itself.
-- **Seraphine's Signature.** Her Legend's chase card in these images is **[174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167)**, with Anna Nikonova's signature across the art. *Corrected 30 September:* this entry first called it the signed twin of an unsigned 174/167. Riot's card gallery lists one printing at 174, this one, so there is no separate unsigned card.
+- **Seraphine's Signature.** Her Legend's chase card in these images is **[174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167)**, with Anna Nikonova's signature across the art. It is the signed twin of the unsigned [174/167](/card/seraphine-starry-eyed-songstress-rad-174-167) in Riot's card gallery. *Corrected 2 October:* on 30 September this entry said there was no separate unsigned card; Riot's own image shows there is.
 
 Three more cards in the same round-up were left out of the database at first, because in those images the collector number or rarity gem of *Ahri, Confident*, *Invigorating Bloom* and *Supernova* couldn't be read. *Updated 30 September:* all three are in now, from Riot's own card images. Card-by-card breakdown: **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
 

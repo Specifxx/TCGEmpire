@@ -46,7 +46,7 @@ const RAW: [name: string, extraPrefixes?: string[]][] = [
   ["Ahri"], ["Akali"], ["Akshan"], ["Ambessa"], ["Anivia"], ["Annie"], ["Aphelios"],
   ["Ashe"], ["Azir"], ["Bard"], ["Blitzcrank"], ["Caitlyn"], ["Darius"], ["Diana"],
   ["Dr. Mundo"], ["Draven"], ["Ekko"], ["Evelynn"], ["Ezreal"], ["Fiora"], ["Fizz"],
-  ["Galio"], ["Gangplank"], ["Garen"], ["Heimerdinger"], ["Hwei"], ["Illaoi"],
+  ["Galio"], ["Gangplank"], ["Garen"], ["Graves"], ["Heimerdinger"], ["Hwei"], ["Illaoi"],
   ["Irelia"], ["Ivern"], ["Janna"], ["Jarvan IV"], ["Jax"], ["Jayce"], ["Jhin"], ["Jinx"], ["K'Sante"], ["Kai'Sa"],
   ["Karma"], ["Karthus"], ["Katarina"], ["Kayle"], ["Kayn"], ["Kennen"], ["Kha'Zix"],
   ["Kog'Maw"], ["LeBlanc"], ["Lee Sin"], ["Leona"], ["Lillia"], ["Lucian"], ["Lux"],

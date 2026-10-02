@@ -26,9 +26,6 @@ export const CARD_SLUG_RENAMES: Readonly<Record<string, string>> = {
   // his champion page (lib/champions.ts matches "K'Sante,"). 2026-09-30.
   "pride-of-nazumah-rad-172-167": "k-sante-pride-of-nazumah-rad-172-167",
   "pride-of-nazumah-rad-147-167": "k-sante-pride-of-nazumah-rad-147-167",
-  // An unsigned 174/167 no Riot source shows; the printing is the signed
-  // 174*/167. add-manual-cards.ts retires the row (2026-09-30).
-  "seraphine-starry-eyed-songstress-rad-174-167": "seraphine-starry-eyed-songstress-rad-174s-167",
 };
 
 const REVERSE: Record<string, string> = Object.fromEntries(Object.entries(CARD_SLUG_RENAMES).map(([o, n]) => [n, o]));
