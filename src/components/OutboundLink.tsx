@@ -166,6 +166,8 @@ export function OutboundLink({
     | "card_top_buy"
     | "sticky_buy_bar"
     | "price_table_ebay"
+    | "price_guide_ebay"
+    | "price_guide_tcgplayer"
     | "hot40_ebay";
 }) {
   // Record that a buy link exists on this page (lib/buy-intent.ts). Built so

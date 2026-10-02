@@ -98,6 +98,7 @@ const guideRow = (s: Spec): GuideRow => ({
   n: s.name,
   dn: s.name,
   nn: normalizeSearch(s.name),
+  v: null,
   set: s.set,
   no: s.no,
   dom: s.dom,
@@ -375,10 +376,35 @@ test("the loader: CONTENT_TAG, never HISTORY_TAG; history read at page level, ne
   for (const f of COMPONENTS) assert.doesNotMatch(read(f), /from "@\/lib\/price-guide"/, f);
 });
 
-test("no forbidden columns: demand counters, synthetic market price, TCGplayer", () => {
+// 2026-10-02: TCGplayer and eBay columns were added at the owner's request
+// (DECISIONS.md, "Price guide: TCGplayer and eBay on every row"). Still
+// forbidden: demand counters, the synthetic market price, and the US
+// TCGplayer MARKET reference key (the US column is the buyable listing).
+test("no forbidden columns: demand counters, synthetic market price, TCGplayer market key", () => {
   for (const f of [PAGE, ...COMPONENTS, "src/lib/price-guide-query.ts"]) {
-    assert.doesNotMatch(code(f), /searchCount|viewCount|marketPriceCents|tcgplayer/i, f);
+    assert.doesNotMatch(code(f), /searchCount|viewCount|marketPriceCents|tcgplayer_market|TCGPLAYER_MARKET/i, f);
   }
+  assert.doesNotMatch(code("src/lib/price-guide.ts"), /TCGPLAYER_MARKET_RETAILER|tcgplayer_market/);
+});
+
+test("TCGplayer and eBay on every row: buttons via OutboundLink with their own surfaces, disclosure above", () => {
+  const rows = code("src/components/price-guide/PriceGuideRows.tsx");
+  assert.match(rows, /surface="price_guide_ebay"/);
+  assert.match(rows, /surface="price_guide_tcgplayer"/);
+  assert.match(rows, /ebaySearchUrl\(market, riftboundEbayQuery\(r\.q\), "price-guide"\)/);
+  assert.match(rows, /affiliateUrl\(TCG_SEARCH/);
+  assert.match(rows, /btn-ebay-ghost/);
+  const page = code(PAGE);
+  assert.ok(page.indexOf("<AffiliateDisclosure") < page.indexOf("<PriceGuideTable"), "disclosure sits above the table");
+  // Lowest is never re-ranked by eBay or TCGplayer: no new sorts.
+  assert.doesNotMatch(read("src/lib/price-guide-query.ts"), /"(ebay|tcg)[a-z_]*"/);
+});
+
+test("a plain click on a row opens the quick view; the href stays real", () => {
+  const rows = code("src/components/price-guide/PriceGuideRows.tsx");
+  assert.match(rows, /useQuickView\(\)/);
+  assert.match(rows, /<Link href=\{r\.h\} prefetch=\{false\} onClick=/);
+  assert.match(rows, /e\.metaKey \|\| e\.ctrlKey \|\| e\.shiftKey \|\| e\.altKey \|\| e\.button !== 0/);
 });
 
 test("card links skip prefetch and thumbnails go through cardThumbProps", () => {
@@ -406,9 +432,11 @@ test("price-guide rows ship as compact client props, not a server element tree",
   assert.match(rowsSrc, /^"use client";/);
   assert.match(table, /<PriceGuideRows rows=\{items\.map\(\(it\) => toRowProps\(it, currency\)\)\}/);
   assert.doesNotMatch(table, /<tr key|<td\b/, "row markup belongs in PriceGuideRows");
-  // The client rows import nothing server-side or bundle-heavy.
+  // The client rows import nothing server-side or bundle-heavy: since
+  // 2026-10-02 also QuickView, CardTile's type, OutboundLink and lib/affiliate,
+  // all already in the root layout's bundle.
   const imports = [...rowsSrc.matchAll(/from "([^"]+)"/g)].map((m) => m[1]).sort();
-  assert.deepEqual(imports, ["./PriceGuideChange", "next/link", "react"]);
+  assert.deepEqual(imports, ["../CardTile", "../OutboundLink", "../QuickView", "./PriceGuideChange", "@/lib/affiliate", "next/link", "react"]);
   // No srcSet, and no long utility strings repeated per cell.
   assert.doesNotMatch(code("src/components/price-guide/PriceGuideRows.tsx") + table, /srcSet|sizes=/);
   for (const cls of rowsSrc.matchAll(/className="([^"]+)"/g)) assert.ok(cls[1].length <= 40, `long row class: ${cls[1]}`);

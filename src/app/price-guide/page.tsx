@@ -41,6 +41,7 @@ import { Pagination } from "@/components/Pagination";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PriceGuideNavProvider, PriceGuideBusyRegion } from "@/components/price-guide/PriceGuideNav";
 import { PriceGuideToolbar } from "@/components/price-guide/PriceGuideToolbar";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { PriceGuideTable, type GuideTableItem } from "@/components/price-guide/PriceGuideTable";
 import { PriceGuideSummary } from "@/components/price-guide/PriceGuideSummary";
 
@@ -103,9 +104,13 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: R
 
   const items: GuideTableItem[] = pageRows.map((row) => {
     const p = row.p[mi];
+    const eb = row.eb?.[mi] ?? null;
+    const tc = row.tc?.[mi] ?? null;
     return {
       row,
       price: p != null ? toDisplay(p) : null,
+      ebay: eb != null ? toDisplay(eb) : null,
+      tcg: tc != null ? toDisplay(tc) : null,
       stores: row.s[mi] ?? 0,
       d7: changes?.d7.get(row.id) ?? null,
       d30: changes?.d30.get(row.id) ?? null,
@@ -226,9 +231,11 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: R
                   />
                 ) : (
                   <PriceGuideBusyRegion>
+                    <AffiliateDisclosure partner="both" className="mb-2" />
                     <PriceGuideTable
                       items={items}
                       currency={display}
+                      market={country}
                       sort={sort}
                       showD30={showD30}
                       caption={`Riftbound card prices in ${place}, ${display}, cards ${start} to ${end} of ${sorted.length}`}
@@ -244,8 +251,11 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: R
                 basis{changes === null ? "; the weekly figures are unavailable right now" : ""}.
                 {showD30
                   ? " 30-day change: the same US-dollar basis over about a month, so it is also the same in every market; blank until a card has about a month of weekly prices."
-                  : null} A dash in the price
-                column means no store or eBay seller we track has that printing in stock in {place}.
+                  : null} Lowest: the
+                cheapest in-stock price from any store or eBay seller we track in {place}; a dash means none has that
+                printing in stock. TCGplayer: the cheapest English Near-Mint listing in the US; elsewhere, its US market
+                price converted to {display} as a reference (postage and duty extra), never part of Lowest. eBay: the
+                cheapest listing we track (item price, postage extra); the button searches eBay for the card.
               </p>
 
               <Pagination page={page} totalPages={totalPages} params={flatParams} basePath={PRICE_GUIDE_PATH} />

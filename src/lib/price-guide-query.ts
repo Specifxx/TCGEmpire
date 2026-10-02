@@ -72,6 +72,15 @@ export type PriceGuideRow = {
   p: (number | null)[];
   /** In-stock store counts per market, same order. */
   s: number[];
+  /** variant (credentials for the quick view's display name), or null. */
+  v: string | null;
+  /** Cheapest in-stock eBay item price per market (postage extra), same order;
+   *  null where we track none. Optional: absent on an entry cached before
+   *  2026-10-02's columns (the key is bumped, but a stale memo may hold one). */
+  eb?: (number | null)[];
+  /** The market's TCGplayer figure, same order: the US buyable listing, the
+   *  converted reference elsewhere (2026-10-02, owner's request). */
+  tc?: (number | null)[];
   /** Popularity: a DENSE rank by (searchCount desc, viewCount desc), 1 = most
    *  wanted. The raw counters are never stored or shipped. */
   pop: number;

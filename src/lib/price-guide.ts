@@ -35,6 +35,7 @@ import { buildDuplicateMap } from "./card-duplicates";
 import { cardDisplayName } from "./card-name";
 import { cardImageSrc } from "./card-image-url";
 import { pickPrice } from "./country";
+import { TCGPLAYER_AU_RETAILER, TCGPLAYER_CA_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
 import { normalizeSearch } from "./format";
 import { sevenDayChange } from "./price-table";
 import { getRiseHistory, type RiseHistory } from "./rise-predictor";
@@ -46,7 +47,8 @@ const DAY_MS = 86_400_000;
 // source is part of the key, but a shape change with the same source (a field
 // renamed in the type only) would otherwise serve old entries for a day
 // (the price-table.ts "-v3" precedent).
-export const PRICE_GUIDE_KEY = ["price-guide-rows-v1"];
+// -v2 (2026-10-02): rows gained v / eb / tc.
+export const PRICE_GUIDE_KEY = ["price-guide-rows-v2"];
 /** db.ts rule 3's cap: ~1.45k rows today; a warning fires long before it bites. */
 export const PRICE_GUIDE_MAX_ROWS = 4000;
 const MEMO_TTL_MS = 15 * 60_000; // the /sealed precedent (lib/sealed-import.ts)
@@ -103,6 +105,7 @@ async function computePriceGuideRows(): Promise<PriceGuideRow[]> {
   // One grouped count for every market at once (cards.ts storeCountsByCountry),
   // never a per-card or per-market query.
   const counts = await storeCountsByCountry(keep.map((c) => c.id));
+  const side = await guideSidePrices();
 
   // Popularity as a dense rank: equal demand shares a rank, so the per-market
   // price tie-break in sortGuideRows matches lib/cards.ts's "popular" order.
@@ -136,9 +139,57 @@ async function computePriceGuideRows(): Promise<PriceGuideRow[]> {
     img: cardImageSrc({ imageUrl: c.imageUrl, imageThumbUrl: c.imageThumbUrl }),
     p: GUIDE_MARKETS.map((k) => pickPrice(c, k)),
     s: GUIDE_MARKETS.map((k) => counts.get(c.id)?.[k] ?? 0),
+    v: c.variant,
+    eb: GUIDE_MARKETS.map((_, i) => side.get(c.id)?.eb[i] ?? null),
+    tc: GUIDE_MARKETS.map((_, i) => side.get(c.id)?.tc[i] ?? null),
     pop: pop.get(c.id) ?? 0,
     add: Math.floor(c.createdAt.getTime() / DAY_MS),
   }));
+}
+
+// ── eBay and TCGplayer beside each row (2026-10-02, owner's request) ─────────
+// ONE grouped read inside this loader's own cache: the minimum in-stock,
+// non-foil item price per (card, market, retailer) for the six eBay keys and
+// the TCGplayer keys. ~1,450 cards x ≤11 keys of three small columns, about
+// 0.3–0.5 MB of Prisma JSON per recompute (2–3 a day). Canada's eBay rows are
+// US listings with unquoted international postage (lib/arbitrage.ts), so
+// Canada gets the search button only, as on the homepage table.
+const EBAY_KEYS: Partial<Record<(typeof GUIDE_MARKETS)[number], string>> = { AU: "ebay", US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", EU: "ebay_eu" };
+// The US key is the buyable cheapest-English-NM listing; the others are the
+// converted market price (constants.ts, THE RULE) — a reference, shown in its
+// own labelled column and never in the Lowest figure.
+const TCG_KEYS: Partial<Record<(typeof GUIDE_MARKETS)[number], string>> = {
+  AU: TCGPLAYER_AU_RETAILER,
+  US: "tcgplayer",
+  UK: TCGPLAYER_UK_RETAILER,
+  SG: TCGPLAYER_SG_RETAILER,
+  CA: TCGPLAYER_CA_RETAILER,
+};
+
+async function guideSidePrices(): Promise<Map<string, { eb: (number | null)[]; tc: (number | null)[] }>> {
+  const keyOf = new Map<string, { i: number; ebay: boolean }>();
+  GUIDE_MARKETS.forEach((m, i) => {
+    const e = EBAY_KEYS[m];
+    if (e) keyOf.set(`${m}|${e}`, { i, ebay: true });
+    const t = TCG_KEYS[m];
+    if (t) keyOf.set(`${m}|${t}`, { i, ebay: false });
+  });
+  const retailers = [...new Set([...Object.values(EBAY_KEYS), ...Object.values(TCG_KEYS)])] as string[];
+  const groups = await prisma.retailerPrice.groupBy({
+    by: ["cardId", "country", "retailer"],
+    where: { retailer: { in: retailers }, inStock: true, isFoil: false },
+    _min: { priceCents: true },
+  });
+  const out = new Map<string, { eb: (number | null)[]; tc: (number | null)[] }>();
+  for (const g of groups) {
+    const k = keyOf.get(`${g.country}|${g.retailer}`);
+    const v = g._min.priceCents;
+    if (!k || v == null || v <= 0) continue;
+    let e = out.get(g.cardId);
+    if (!e) out.set(g.cardId, (e = { eb: GUIDE_MARKETS.map(() => null), tc: GUIDE_MARKETS.map(() => null) }));
+    (k.ebay ? e.eb : e.tc)[k.i] = v;
+  }
+  return out;
 }
 
 type RowsMemo = { at: number; data: GuideRow[] | null; inflight: Promise<GuideRow[]> | null; failedAt: number };

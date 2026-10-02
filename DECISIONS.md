@@ -16401,3 +16401,29 @@ use sparingly any remaining quota for pokemon."
 **Not done.** Per-row eBay (needs a cached per-market cheapest-eBay read, the disclosure and ~0.3–0.5 KB a row); facet counts, energy/might ranges and a CSV export; routing `Filters`' Vercel `filter_change` event through `trackEvent`. `revalidate-content.ts` is untouched: a force-dynamic page has no route cache to purge.
 
 **Checked:** typecheck, lint and `npm test`. Page weight measured after `next build` on a seeded local database (figures above; budget ≤450 KB document, ≤200 KB soft-navigation RSC). Not verified here: a production render against the live database, and screenshots at 390, 1024 and 1280.
+
+## Price guide: TCGplayer and eBay on every row, rows open the quick view — 2026-10-02
+
+**Decision.** At the owner's request, every /price-guide row now has three price figures:
+- **Lowest:** the old Price column, renamed. It still sorts by price.
+- **TCGplayer:** a button showing the market's TCGplayer figure.
+- **eBay:** a button showing the cheapest tracked in-stock eBay item price.
+
+A button reads "Search" when there is no figure. A plain click on a card opens the quick view. The `/card/...` href stays, so modified clicks, no-JS readers and crawlers still get the page.
+
+**This partly overrides the brief's "Never add" list**, at the owner's explicit request. Two items on that list no longer hold: TCGplayer columns, and an eBay price beside a cheaper store.
+
+**What still holds:**
+- **No re-ranking.** There are no new sorts or badges, and Lowest is never re-ranked. eBay and TCGplayer sit beside the comparison, not in it.
+- **Lowest stays honest.** It is stores plus eBay, as before. It is clamped to the eBay figure beside it, which is the homepage table's rule.
+- **TCGplayer outside the US is a labelled reference.** Outside the US it is the converted market row (`tcgplayer_au` / `_uk` / `_sg` / `_ca`). It is never part of Lowest, and the footnote says so. In the US it is the buyable cheapest-English-NM `tcgplayer` row, never `tcgplayer_market`. The EU has no TCGplayer row, so it shows "Search".
+- **Canada's eBay shows Search only**, as on the homepage, because its eBay rows are cross-border listings.
+
+**Data cost.**
+- The cached catalogue does one grouped read: the minimum in-stock, non-foil price per (card, country, retailer) over the eBay and TCGplayer keys. It runs inside the catalogue's own cache (CONTENT_TAG, 24 h), so requests still make no database reads. The key is bumped to `price-guide-rows-v2`.
+- The buttons link to affiliate searches built on the client from one keyword string per row, not to stored listing URLs. That keeps the extra page weight to about 100 B a row.
+- The EPN + TCGplayer disclosure (`partner="both"`) sits above the table.
+
+**Columns.** The two new columns take the room that Rarity and Stores had below 2xl. Below 2xl the rarity chip stays in line 2 of the Card cell.
+
+**Tests.** The pins in `tests/price-guide.test.ts` are updated and dated.
