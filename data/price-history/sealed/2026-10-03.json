@@ -122,9 +122,9 @@
     "OGS|Proving Grounds": {
       "AU": 1625,
       "CA": 999,
-      "EU": 895,
+      "EU": 1268,
       "NZ": 9000,
-      "UK": 3009,
+      "UK": 3999,
       "US": 800
     },
     "OGS|Proving Grounds Case": {
@@ -162,7 +162,7 @@
       "EU": 2999
     },
     "RAD|Pre-Rift Event Kit": {
-      "EU": 69500
+      "EU": 99000
     },
     "RAD|Pre-Rift Kit": {
       "CA": 3500,
@@ -232,7 +232,7 @@
       "EU": 2999
     },
     "SFD|Champion Deck (English)": {
-      "EU": 2800
+      "EU": 4000
     },
     "SFD|Champion Deck (Fiora)": {
       "AU": 2499,
@@ -443,7 +443,7 @@
     "VEN|Booster Pack": {
       "AU": 1050,
       "CA": 799,
-      "EU": 795,
+      "EU": 1100,
       "NZ": 1000,
       "SG": 1000,
       "UK": 500,
@@ -502,7 +502,7 @@
     "VEN|Showdown Decks Display": {
       "AU": 5000,
       "CA": 4995,
-      "EU": 4100,
+      "EU": 5800,
       "US": 59900
     },
     "VEN|Sleeved Booster": {
@@ -558,13 +558,16 @@
       "EU": 4200
     },
     "legacyboosterdisplay": {
-      "US": 34945
+      "US": 24000
     },
     "legacyboosterdisplaycase": {
-      "US": 199969
+      "US": 144000
+    },
+    "legacypreriftkit": {
+      "US": 11000
     },
     "legacyvaultbundle": {
-      "US": 11994
+      "US": 11990
     },
     "legacyvaultbundlecase": {
       "US": 144999
@@ -695,7 +698,7 @@
       "EU": 2190
     },
     "riftboundleagueoflegendstcgevelynnvssera": {
-      "UK": 4726
+      "UK": 3499
     },
     "riftboundleagueoflegendstcggiftoftherift": {
       "EU": 11900,
