@@ -837,3 +837,7 @@ longer lands on its entry.
   verification. ESLint skips dot-directories. Checker agents return strings
   and never edit files. [2026-09-18](../DECISIONS.md#L8349),
   [2026-09-21](../DECISIONS.md#L9908), [2026-09-23](../DECISIONS.md#L11201)
+
+## Sister sites
+
+- **A new TCG site starts from [docs/sister-sites/PLAYBOOK.md](sister-sites/PLAYBOOK.md),** with OP Compare as the worked example. Each sister site gets its own Neon database, Vercel project, Stripe account (RiftCompare's reconcile matches subscriptions by email) and eBay keyset (or none). RiftCompare's code is not shared at runtime. [2026-10-03](../DECISIONS.md#L16553)

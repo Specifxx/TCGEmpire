@@ -16549,3 +16549,17 @@ Twelve tests that pinned the old rule are rewritten to pin the new one, not dele
 - The EU exemption in `tests/affiliate-priority.test.ts` emptied.
 
 Deployed at the owner's request, and the price import run straight after so the rows and from-prices are live without waiting for the next scheduled import.
+
+## Sister sites: OP Compare is the worked example, docs/sister-sites is the playbook — 2026-10-03
+
+**Why.** The owner built OP Compare (opcompare.app, repo Specifxx/OpCompare), a One Piece Card Game sister site, from RiftCompare in one session, and wants to repeat the process for another TCG later.
+
+**What.** `docs/sister-sites/` holds:
+- `PLAYBOOK.md`: the step-by-step method. It covers the questions to settle before writing code, the port-vs-fork split, and every build stage with checks and pitfalls. It also has a per-game variation checklist with TCGCSV categories for candidate games, the credentials to reuse vs create, and an acceptance list.
+- `OP-COMPARE-BUILD-LOG.md`: the dated record of the build.
+- `PROMPTS.md`: the reusable agent prompts, including the Claude in Chrome go-live template.
+- `store-discovery/`: dependency-free scripts to find and verify Shopify stores for a new game. They are not run by CI or the app.
+
+**Nothing in RiftCompare's code changed.** Two lessons from the port bear on RiftCompare itself:
+- **A sister site needs its own Stripe account.** RiftCompare's reconcile matches every active subscription in its account by email, so a sister site's subscriber with a RiftCompare login would be granted RiftCompare Premium.
+- **A sister site needs its own eBay keyset.** Otherwise it spends RiftCompare's 5,000-call daily Browse quota.

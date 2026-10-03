@@ -67,6 +67,8 @@ anything under `src/**/pokemon/`, and never point it at a Riftbound database.
 Record non-obvious decisions in `DECISIONS.md` (newest at the bottom), in the
 same style as the entries already there.
 
+Building a site like this for another TCG: start with `docs/sister-sites/PLAYBOOK.md`.
+
 Read `docs/CURRENT-STATE.md` first. It lists the rules and decisions still in
 force, each linked to its entry, so check it before proposing something an
 entry already settled. If your entry changes or reverses one of its bullets,

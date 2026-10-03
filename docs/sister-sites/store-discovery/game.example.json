@@ -1,0 +1,57 @@
+{
+  "_about": "One Piece Card Game config for the store-discovery scripts. Every *Re value is a JavaScript regex source, compiled case-insensitive. Values are the ones OP Compare's 2026-10-03 probe/verify scripts used, lifted into data. Copy this file per game; only this file should change.",
+
+  "game": "One Piece Card Game",
+
+  "_handleRe": "A collection handle (or title) that names the game. Used to pick handles from sitemap_collections_*.xml and /collections.json.",
+  "handleRe": "one-?piece|optcg",
+  "titleRe": "one ?piece|optcg",
+
+  "_conventionalHandles": "Tried even when the sitemap does not list them (some stores hide collections from the sitemap).",
+  "conventionalHandles": [
+    "one-piece-singles", "one-piece-card-game-singles", "one-piece-tcg-singles", "one-piece-single",
+    "one-piece", "one-piece-card-game", "one-piece-tcg", "one-piece-cards", "singles-one-piece",
+    "one-piece-singles-in-stock", "one-piece-promotion-cards"
+  ],
+
+  "_singlesHandleRe": "Handles that look like singles are probed first, before the per-store handle cap bites.",
+  "singlesHandleRe": "single|card|promo|op-?\\d|eb-?\\d|st-?\\d|prb",
+
+  "_skipHandleRe": "Handles never used as registry collections: foreign editions, graded, sealed, accessories, buylists, bulk. Anchored with (^|-) so 'jp' does not kill 'jpeg' and 'fr' does not kill 'free'. Known false positive: Gate Keepers (AU) keeps its singles in 'one-piece-sealed' (hand override on 2026-10-03).",
+  "skipHandleRe": "japan|(^|-)jp(-|$)|jpn|(^|-)jap(-|$)|japonais|japanisch|giappon|chinese|chinesisch|(^|-)cn(-|$)|korean|french|(^|-)fr(-|$)|graded|gegradet|psa|bgs|cgc|slab|sleeve|accessor|playmat|binder|deck-box|sealed|booster-box|booster-pack|boosterpack|(^|-)packs?(-|$)|boxes|(^|-)box(-|$)|display|pre-?order|preorder|vorbestell|figure|(^|-)manga(-|$)|plush|apparel|buylist|(^|-)test(-|$)|(^|-)mnt-|(^|-)tag-\\d|bulk|(^|-)lots?(-|$)|bundle|mystery",
+
+  "_cardNumberRe": "A printed card number. Searched in the product title AND in variant SKUs; the scripts count the two separately because OP Compare's importer number path reads titles only.",
+  "cardNumberRe": "\\b(?:OP|ST|EB|PRB)-?\\d{2}-\\d{3}\\b|\\bP-\\d{3}\\b",
+  "strictCardNumberRe": "\\b(?:OP|ST|EB|PRB)-?\\d{2}-\\d{3}\\b",
+
+  "_foreignRe": "Foreign-edition markers, tested on the TITLE. One Piece ships Japanese, Chinese, Korean and French editions; kana and kanji count too, and so does '(Non-English)' (TCGplayer-style titles: El Duelista, '[OP13-JP-110]'). englishRe ignores 'non-english' via a lookbehind.",
+  "foreignRe": "non-?english|japanese|\\bjp\\b|\\bjpn\\b|\\bjap\\b|日本|[\\u3040-\\u30ff]|japonais|giapponese|japanisch|japon[eé]s|\\bchinese\\b|\\bcn\\b|simplified|korean|\\bkr\\b|\\bfrench\\b|\\bfr\\b|français|francais|\\bvf\\b|\\bfra\\b",
+  "_foreignOptionRe": "Foreign markers tested on option values, variant titles, tags, product_type and body text (looser places, so only whole words).",
+  "foreignOptionRe": "non-?english|\\bjapanese\\b|\\bjaponais\\b|\\bgiapponese\\b|\\bjapanisch\\b|\\bjapon[eé]s\\b|\\bchinese\\b|\\bkorean\\b|\\bfrench\\b|\\bfrançais\\b|\\bfrancais\\b|asia[- ]?english",
+  "englishRe": "(?<!non-?)\\benglish\\b|\\beng?\\b|\\banglais\\b|\\binglese\\b|\\benglisch\\b|\\bingl[eé]s\\b|\\bengels\\b",
+  "_languageOptionRe": "Option names that carry the language as a variant (starzcollectibles.de: 181 of 182 products had 'Sprache').",
+  "languageOptionRe": "^(language|languages|langue|sprache|lingua|idioma|taal)$",
+
+  "_gradedRe": "Grading-company-plus-grade, tested on title AND variant titles (pokemillon.com hid CGC/PSA grades in variants).",
+  "gradedRe": "\\b(?:PSA|BGS|CGC|TAG|ACE|SGC|MNT|ARS|PCA|CCC)\\s?-?\\s?\\d|\\bgraded\\b|\\bslab\\b|\\bgem mint\\b",
+  "_notSingleRe": "Sealed product or accessories that happen to carry a set number (e.g. 'OP-09 Booster Box').",
+  "notSingleRe": "booster box|booster pack|\\bdisplay\\b|\\bcase\\b|sleeves?\\b|playmat|deck box|binder|\\bbundle\\b|mystery|\\blot of\\b|\\bbulk\\b|\\bsealed\\b",
+  "otherGamesRe": "digimon|pok[eé]mon|yu-?gi-?oh|lorcana|magic: the gathering|\\bmtg\\b|dragon ?ball|union arena|gundam|weiss|riftbound|star wars|flesh and blood",
+
+  "_thresholds": "minNumbered: clean (English, ungraded, single, this game) unique products with a card number needed to keep a store; OP Compare and RiftCompare both used 20. maxForeignShare: a collection is dropped when this share of its numbered products is foreign.",
+  "minNumbered": 20,
+  "maxForeignShare": 0.5,
+  "maxHandlesPerStore": 45,
+  "maxCollectionsPerStore": 12,
+  "extraPagesWhenFull": 2,
+
+  "_markets": "Market -> the ISO country sent as Shopify Markets ?country= (what the sister site's importer sends), the currency the sister site shows, and which meta.json countries belong to the market. The store's meta.json country decides its market (RiftCompare DECISIONS 2026-09-23), not its domain or the input file.",
+  "markets": {
+    "US": { "iso": "US", "currency": "USD", "countries": ["US"] },
+    "CA": { "iso": "CA", "currency": "CAD", "countries": ["CA"] },
+    "AU": { "iso": "AU", "currency": "AUD", "countries": ["AU"] },
+    "UK": { "iso": "GB", "currency": "GBP", "countries": ["GB"] },
+    "SG": { "iso": "SG", "currency": "SGD", "countries": ["SG"] },
+    "EU": { "iso": "ES", "currency": "EUR", "countries": ["AT", "BE", "BG", "HR", "CY", "EE", "FI", "FR", "DE", "GR", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PT", "SK", "SI", "ES"] }
+  }
+}
