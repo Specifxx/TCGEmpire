@@ -22,8 +22,11 @@ longer lands on its entry.
   [2026-09-11](../DECISIONS.md#L5195)
 - **One release a day:** `production-deploy.yml` lands an empty `[deploy]`
   commit at 08:00 UTC if anything landed since the last one (GitHub's cron
-  drifts; it has fired at 11:51–13:01). "Run workflow" releases at once.
-  [2026-09-11](../DECISIONS.md#L4871), [2026-09-14](../DECISIONS.md#L6263)
+  drifts; it has fired at 11:51–13:01). Since 2026-10-03 something always
+  has: the import's daily price-history commit, which that release ships.
+  "Run workflow" releases at once.
+  [2026-09-11](../DECISIONS.md#L4871), [2026-09-14](../DECISIONS.md#L6263),
+  [2026-10-03](../DECISIONS.md#L16553)
 - **Sessions never add `[deploy]` on their own**; "push to prod" means land
   on `main` and ride the release. RM9's four days saw 16 marked builds, about
   4 a day, and `egress-audit.yml` now counts them. The log names one standing
@@ -84,10 +87,18 @@ longer lands on its entry.
   collide step names. `maintenance.yml` must stay under GitHub's
   512,000-byte limit (a test fails at 450 KB).
   [2026-09-22](../DECISIONS.md#L10455), [2026-09-23](../DECISIONS.md#L10924)
-- **History is not solved either:** despite the 09-11 ~0 GB/day reading,
-  history projects still neared or hit the cap in about five days (09-17,
-  09-22). [2026-09-11](../DECISIONS.md#L5303),
-  [2026-09-17](../DECISIONS.md#L7710), [2026-09-22](../DECISIONS.md#L10455)
+- **Public price history is files, not Neon (2026-10-03):** the GLOBAL card
+  series and the sealed series are one JSON file per Sydney day in
+  `data/price-history/` (`lib/price-history-store.ts`). Every import writes or
+  replaces the day's file (daily again, no weekly gate), `refresh-prices.yml`
+  commits it to `main` without a deploy marker, and each release bundles the
+  files (`outputFileTracingIncludes`). History-derived caches key on
+  `cardHistoryVersion()`. The history project keeps only the PRIVATE click log
+  (`ClickEvent`); nothing private may ever be written to the files. While the
+  projects held the price history they neared or hit the cap in about five
+  days (09-17, 09-22). [2026-09-11](../DECISIONS.md#L5303),
+  [2026-09-17](../DECISIONS.md#L7710), [2026-09-22](../DECISIONS.md#L10455),
+  [2026-10-03](../DECISIONS.md#L16553)
 - **Never build or run a dev server against production;** use the local seed
   DB. [2026-09-16](../DECISIONS.md#L6598), [2026-09-23](../DECISIONS.md#L11201)
 
@@ -679,7 +690,7 @@ longer lands on its entry.
   (`alertBaselineSeed`, null when not priced), never `pickPrice`.
   [2026-09-25](../DECISIONS.md#L13128), [2026-09-25](../DECISIONS.md#L13394)
 - **Methodology breaks:** `METHODOLOGY_BREAKS` and `dropBreakWindow` live in
-  `lib/price-history.ts`; every per-card PriceHistory reader uses them
+  `lib/price-history.ts`; every per-card price-history reader uses them
   (`tests/methodology-breaks.test.ts`), and the Index and portfolio are
   chain-linked across a break. Rising Cards is the exception: it keeps its
   pre-09-23 signals by the owner's call until cards have five weekly points
@@ -840,4 +851,4 @@ longer lands on its entry.
 
 ## Sister sites
 
-- **A new TCG site starts from [docs/sister-sites/PLAYBOOK.md](sister-sites/PLAYBOOK.md),** with OP Compare as the worked example. Each sister site gets its own Neon database, Vercel project, Stripe account (RiftCompare's reconcile matches subscriptions by email) and eBay keyset (or none). RiftCompare's code is not shared at runtime. [2026-10-03](../DECISIONS.md#L16553)
+- **A new TCG site starts from [docs/sister-sites/PLAYBOOK.md](sister-sites/PLAYBOOK.md),** with OP Compare as the worked example. Each sister site gets its own Neon database, Vercel project, Stripe account (RiftCompare's reconcile matches subscriptions by email) and eBay keyset (or none). RiftCompare's code is not shared at runtime. [2026-10-03](../DECISIONS.md#L16597)

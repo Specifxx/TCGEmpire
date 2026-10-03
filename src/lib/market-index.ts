@@ -24,36 +24,22 @@
 // mechanism as a brand new set arriving. See computeRegionIndex step 4 below for
 // the actual arithmetic.
 //
-// EFFECTIVELY NO TIME WINDOW ON THE READ. PriceHistory now writes one snapshot
-// per card per market at most once every 7 days (HISTORY_MIN_INTERVAL_DAYS in
-// price-import.ts — a cost control adopted after this file was first written).
-// This module used to cap its own read to a rolling 45 days, back when that meant
-// ~45 rows per card; under the current weekly cadence 45 days is only ~6 rows, so
-// the cap was quietly starving the chart of history that already exists for free
-// — Origins-era cards especially have far more than 6 weeks of real snapshots.
-//
-// This history DB has its own 5 GB/month Neon network-transfer allowance (the
-// reason it's a separate project from the operational DB at all — see
-// db-history.ts), and that allowance has been exhausted by real mistakes before
-// (RH5 through RH11 — see scripts/audit-egress.ts's header for the timeline), so
-// "it'll probably be fine" isn't good enough here on its own. The actual bound:
-// reading everything for today's 200 constituents costs at most (weeks tracked ×
-// 200 cards) rows per market, cached for a full week (see getRegionIndex below),
-// which as of this writing (~months of tracked history) is single-digit MB a
-// week — a small fraction of the monthly allowance, and nowhere near the ~1,400-
-// card DAILY scans that caused the original crisis. MAX_LOOKBACK_DAYS below is
-// the belt-and-suspenders version of that argument: a circuit breaker, not a
-// real limit today, so the read stays bounded even after years of accumulated
-// history rather than trusting the current numbers to stay small forever.
-// Verify the real row counts against production with `npx tsx
-// scripts/audit-history.ts` (prints PriceHistory's actual total row count).
+// EFFECTIVELY NO TIME WINDOW ON THE READ. The index reads its basket's whole
+// recorded history (MAX_LOOKBACK_DAYS below is a circuit breaker, not a real
+// cutoff today). It once capped the read to 45 days, which under the weekly
+// snapshots of 2026-08-31 → 2026-10-03 was only ~6 points per card and starved
+// the chart of history that already existed. While the history was a Neon
+// project billed by the byte read, that whole read was the reason for the
+// week-long cache below; since 2026-10-03 it is a local read of the day files
+// bundled with the release (lib/price-history-store.ts), costing no transfer,
+// and the cache key follows the data (cardHistoryVersion) instead of the week.
 import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
-import { dbHistory } from "./db-history";
+import { cardHistoryRows, cardHistoryVersion } from "./price-history-store";
 import { pickPrice, priceField, DEFAULT_COUNTRY, COUNTRIES, type Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
-import { sydneyWeekKey, historySource, dropBreakWindow, METHODOLOGY_BREAKS, type PricePoint } from "./price-history";
+import { historySource, dropBreakWindow, METHODOLOGY_BREAKS, type PricePoint } from "./price-history";
 
 // Moved out of this file on 2026-09-25 (lib/methodology-breaks.ts, re-exported
 // by price-history.ts) so every per-card comparison can reach it too
@@ -61,19 +47,18 @@ import { sydneyWeekKey, historySource, dropBreakWindow, METHODOLOGY_BREAKS, type
 export { METHODOLOGY_BREAKS };
 
 export const INDEX_SIZE = 200;
-// Circuit breaker, not a real limit today (see the file header): at today's
-// weekly write cadence this is ~104 snapshots per card, comfortably more history
-// than the site has accumulated at time of writing. It exists purely so the read
-// stays bounded years from now without anyone having to remember to revisit it.
+// Circuit breaker, not a real limit today (see the file header): two years of
+// daily snapshots, comfortably more history than the site has accumulated at
+// time of writing. It exists purely so the read stays bounded years from now
+// without anyone having to remember to revisit it.
 const MAX_LOOKBACK_DAYS = 730;
 const MAX_WEIGHT_SHARE = 0.2; // no constituent above 20%
-// Realised-volatility lookback, in SNAPSHOTS not days — PriceHistory's write
-// cadence is a runtime cost-control decision (see the file-header note), not a
-// contract this file should hard-code a day-count against. 13 snapshots is
-// ~1 quarter at today's weekly cadence; if the cadence ever changes again this
-// keeps measuring "the last several snapshots" rather than silently mis-sizing
-// the window the way the old `slice(-31)` (~31 DAYS under daily writes) quietly
-// became ~31 WEEKS once writes moved to weekly.
+// Realised-volatility lookback, in SNAPSHOTS not days — the snapshot cadence has
+// changed twice (daily, weekly from 2026-08-31, daily again from 2026-10-03), and
+// the stat is defined as "the last several snapshot-to-snapshot moves", so it
+// counts points rather than hard-coding a day count. 13 daily snapshots is about
+// two weeks; the old `slice(-31)` (~31 DAYS under daily writes) quietly became
+// ~31 WEEKS when writes moved to weekly, which is why this counts snapshots.
 const VOLATILITY_LOOKBACK_POINTS = 13;
 
 export type IndexConstituent = {
@@ -328,13 +313,9 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
   //    CA/EU are historySource()-derived from US/UK (see price-history.ts) — this
   //    read transparently follows that redirect, so a CA or EU Index is exactly
   //    as real as any other market's, just converted.
-  const { source, convert } = historySource(country);
+  const { convert } = historySource(country);
   const cutoff = new Date(Date.now() - MAX_LOOKBACK_DAYS * 86400_000);
-  const hist = await dbHistory.priceHistory.findMany({
-    where: { country: source, cardId: { in: cards.map((c) => c.id) }, day: { gte: cutoff } },
-    orderBy: { day: "asc" },
-    select: { cardId: true, day: true, lowestPriceCents: true },
-  });
+  const hist = cardHistoryRows({ cardIds: cards.map((c) => c.id), since: cutoff });
   if (!hist.length) return null;
 
   const byCard = new Map<string, Map<number, number>>();
@@ -416,17 +397,14 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
  }
 }
 
-// WEEK-scoped cache around the per-region compute, matching PriceHistory's own
-// write cadence (see the file header) — the same fix price-history.ts's own
-// getPriceHistory() needed for the same reason: a day-scoped key was recomputing
-// an unchanged answer up to seven times for nothing. The first request for a
-// given (market, ISO week) reads PriceHistory once; every other caller that
-// week — pages, bots, /api, OG images — gets the cached blob and touches the
-// history DB zero times. Auto-refreshes at the week rollover, so no on-demand
-// ping (CRON_SECRET) is needed.
+// Cached per (market, history version): cardHistoryVersion() changes exactly
+// when a release brings new history, so the first request after such a release
+// computes the index once and every other caller — pages, bots, /api, OG
+// images — gets the cached blob. The basket's operational reads (search counts,
+// live prices) refresh with it. No on-demand ping (CRON_SECRET) is needed.
 function getRegionIndex(country: Country): Promise<MarketIndex | null> {
-  return unstable_cache(() => computeRegionIndex(country), ["rc-region-index", country, sydneyWeekKey()], {
-    revalidate: 8 * 86400, // one week + a day of slack; the week-keyed key is what actually refreshes it
+  return unstable_cache(() => computeRegionIndex(country), ["rc-region-index", country, cardHistoryVersion()], {
+    revalidate: 8 * 86400, // fallback only; the version in the key is what actually refreshes it
     tags: [CONTENT_TAG],
   })();
 }
@@ -435,8 +413,8 @@ function getRegionIndex(country: Country): Promise<MarketIndex | null> {
 // region into one currency-agnostic number (see compositeSeries in git
 // history, 2026-09-02) — removed per request: one region, priced in its own
 // real currency, is a more legible number than a blend across six markets of
-// uneven depth. Week-cached, so the history DB is read at most once per
-// market per week no matter how many pages/bots/API callers hit the index.
+// uneven depth. Cached per history version (getRegionIndex), so it is computed
+// once per market per release no matter how many pages/bots/API callers hit it.
 export async function getMarketIndex(market: Country = DEFAULT_COUNTRY): Promise<MarketIndex | null> {
   return getRegionIndex(market);
 }

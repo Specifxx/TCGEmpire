@@ -358,23 +358,26 @@ export default function MethodologyPage() {
           </p>
         </section>
 
-        {/* Weekly and GLOBAL since 2026-09-05 (price-import.ts snapshot write,
-            HISTORY_MIN_INTERVAL_DAYS in lib/price-history.ts); the break list is
+        {/* GLOBAL since 2026-09-05, weekly 2026-08-31 → 2026-10-03 and daily
+            again since (price-import.ts snapshot write, lib/price-history-store.ts);
+            the break list is
             lib/methodology-breaks.ts. Rising Cards reads across the break by the
             owner's call (lib/rise-predictor.ts, CURRENT-STATE). */}
         <section id="history" className="scroll-mt-header space-y-3">
           <h2 className="text-lg font-bold text-white">Price history and method changes</h2>
           <p>
-            Once a week we record each card&rsquo;s cheapest price across the Australian, US, UK and Singapore
-            markets, converted to US dollars. That single series is every card&rsquo;s price-history chart in
-            every market, converted into your currency, and it is what the{" "}
+            Every day we record each card&rsquo;s cheapest price across the Australian, US, UK and Singapore
+            markets, converted to US dollars (between 31 August and 3 October 2026 we recorded it once a
+            week). That single series is every card&rsquo;s price-history chart in every market, converted
+            into your currency, and it is what the{" "}
             <Link href="/movers" className="text-brand-400 hover:underline">price movers</Link> and the Index
-            compare week to week. It is a worldwide low, not your own market&rsquo;s history.
+            compare over time. It is a worldwide low, not your own market&rsquo;s history. The whole series
+            is public: it is published as one file per day alongside the site&rsquo;s source code.
           </p>
           <p>
             When the way a price is sourced changes, the step it causes is not a market move. On 23 September
             2026 the US TCGplayer row switched from TCGplayer&rsquo;s market price to its cheapest English
-            listing, which is usually lower. Weekly comparisons — movers, 7-day changes, the card-page
+            listing, which is usually lower. Comparisons over time — movers, 7-day changes, the card-page
             narrative — never compare a point from before that switch with one after it, and the Index
             flattens the step. Rising Cards is an exception, by choice: it still reads across the switch,
             because dropping the older points would leave too few weeks to screen on, so a US-sourced card
@@ -471,9 +474,9 @@ export default function MethodologyPage() {
             <p>
               <Link href="/market" className="text-brand-400 hover:underline">The Index</Link> follows the 200
               most-searched cards that have a price in the selected market, each weighted by its searches and
-              capped at 20% so no single card can be the Index. It moves once a week, when a new price
-              snapshot is recorded: each week&rsquo;s change is worked out only from cards priced in both
-              weeks and chained onto the level, which started at 100. The full worked method is in{" "}
+              capped at 20% so no single card can be the Index. It moves once a day, when a new price
+              snapshot is recorded: each snapshot&rsquo;s change is worked out only from cards priced in both
+              it and the one before, and chained onto the level, which started at 100. The full worked method is in{" "}
               <Link href="/guides/understanding-the-riftcompare-index-methodology" className="text-brand-400 hover:underline">
                 our guide to the Index methodology
               </Link>

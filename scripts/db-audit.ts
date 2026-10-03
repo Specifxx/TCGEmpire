@@ -15,7 +15,8 @@
  * Run in CI via .github/workflows/db-audit.yml (needs DATABASE_URL).
  */
 import { prisma } from "../src/lib/db";
-import { dbHistory } from "../src/lib/db-history";
+import { cardHistoryStats } from "../src/lib/price-history-store";
+import { STALE_HISTORY_MS } from "../src/lib/price-history";
 import { cardSlug } from "../src/lib/card-url";
 import { normalizeSearch } from "../src/lib/format";
 import { DOMAIN_KEYS, RARITY_KEYS, CARD_TYPES, SETS } from "../src/lib/constants";
@@ -167,14 +168,14 @@ async function main() {
 
   // ── Freshness ────────────────────────────────────────────────────────────────
   section("Freshness");
-  // dbHistory, NOT prisma: PriceHistory lives in the separate history project
-  // (RH7 — see src/lib/db-history.ts). This read used the OPERATIONAL client,
-  // whose PriceHistory table is deliberately empty (migrate-main-db excludes its
-  // data when copying into RM3), so this check reported a false
-  // "PriceHistory is EMPTY" every run.
-  const hist = await dbHistory.priceHistory.groupBy({ by: ["country"], _max: { day: true }, _count: { _all: true } });
-  for (const h of hist) console.log(`  PriceHistory ${h.country}: ${h._count._all} rows, latest day ${h._max.day?.toISOString().slice(0, 10)}`);
-  if (!hist.length) { issues++; console.log("  ✗ PriceHistory is EMPTY — movers/charts have no data"); }
+  // Price history is day files in this repository since 2026-10-03
+  // (src/lib/price-history-store.ts), not a table: report the checkout's files.
+  // (While it was a table in the history project, this check once read the
+  // OPERATIONAL client and reported a false "PriceHistory is EMPTY" every run.)
+  const hist = cardHistoryStats();
+  console.log(`  Price history: ${hist.points} points for ${hist.cards} cards over ${hist.days} days (${hist.first ?? "—"} → ${hist.last ?? "—"})`);
+  if (!hist.points) { issues++; console.log("  ✗ Price history is EMPTY — movers/charts have no data"); }
+  else if (hist.last && Date.now() - Date.parse(`${hist.last}T00:00:00Z`) > STALE_HISTORY_MS) { issues++; console.log(`  ✗ Newest price-history day is ${hist.last} — older than the movers' staleness limit`); }
   const ebayFresh = cards.filter((c) => c.ebayCheckedAt && Date.now() - c.ebayCheckedAt.getTime() < 28 * 3600_000).length;
   console.log(`  eBay pass reached ${ebayFresh}/${cards.length} cards in the last 28h`);
 

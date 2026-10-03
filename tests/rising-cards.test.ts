@@ -296,33 +296,33 @@ test("a failed load reads 'temporarily unavailable', never 'no price history yet
 
 // ── Egress and failure shape ─────────────────────────────────────────────────
 
-test("history is read by one week-keyed, scope-independent loader; the daily loader never touches it", () => {
+test("history is read by one version-keyed, scope-independent loader; the daily loader never touches it", () => {
   const src = read(LIB);
   const historyLoader = /export function getRiseHistory\(\)[\s\S]*?\n\}/.exec(src)?.[0] ?? "";
-  assert.match(historyLoader, /\["rc-rise-history-v2", sydneyWeekKey\(\)\]/, "keyed on the week only — no scope in the key");
+  // Keyed on the history version (2026-10-03, lib/price-history-store.ts): the
+  // day files only change with a release, so the loader rebuilds exactly then.
+  assert.match(historyLoader, /\["rc-rise-history-v3", cardHistoryVersion\(\)\]/, "keyed on the history only — no scope in the key");
   assert.match(historyLoader, /tags: \[HISTORY_TAG\]/, "not purged by an ordinary import");
   const inputsLoader = /export function getRiseInputs\([\s\S]*?\n\}/.exec(src)?.[0] ?? "";
   assert.match(inputsLoader, /\["rc-rise-inputs", scope, sydneyDayKey\(\)\]/);
   assert.match(inputsLoader, /tags: \[CONTENT_TAG\]/);
   assert.match(inputsLoader, /revalidate: 172800/);
 
-  const reads = [...src.matchAll(/dbHistory\.(?:\w+\.\w+\(|\$queryRaw)/g)];
+  const code = src.replace(/\/\/[^\n]*/g, "");
+  assert.doesNotMatch(code, /dbHistory/, "the history database holds no price history any more");
+  const reads = [...code.matchAll(/cardHistoryRows\(/g)];
   assert.equal(reads.length, 1, "exactly one history read in the file");
   const historyFn = /async function computeRiseHistory\([\s\S]*?\n\}/.exec(src)?.[0] ?? "";
-  assert.match(historyFn, /dbHistory\.\$queryRaw/, "…and it lives in the weekly loader");
-  // Weekly-collapsed in SQL: the 120-day window reaches the legacy DAILY rows,
-  // and shipping them raw to every cold build worker timed the 09-25 build out.
-  assert.match(historyFn, /SELECT DISTINCT ON \("cardId", date_trunc\('week', "day"\)\)/);
-  assert.match(historyFn, /collapseToWeekly\(/, "legacy daily rows are collapsed to weekly before caching");
+  assert.match(historyFn, /cardHistoryRows\(/, "…and it lives in the weekly loader");
+  // One point per week before caching: the model's signals are weekly, and the
+  // series is daily before 2026-08-31 and again from 2026-10-03.
+  assert.match(historyFn, /collapseToWeekly\(/, "daily points are collapsed to weekly before caching");
   // A SUPERSET OF EVERY SCOPE'S UNIVERSE BY CONSTRUCTION: no card list at all
   // (the first cut read the 600 most-searched cards, which a thinner market's
-  // top 400 outruns). Bounded instead by the window — the current pricing
-  // basis, at most 120 days — times the catalogue, with a newest-first row cap
-  // as a circuit breaker.
-  assert.match(historyFn, /const since = riseHistoryStart\(Date\.now\(\)\);/);
-  assert.match(historyFn, /WHERE "country" = \$\{GLOBAL_HISTORY_COUNTRY\} AND "day" >= \$\{since\}/);
-  assert.doesNotMatch(historyFn.replace(/\/\/[^\n]*/g, ""), /cardId: \{ in|prisma\.card\.|HISTORY_SCAN/, "no card list: nothing a universe card can fall outside of");
-  assert.match(historyFn, /LIMIT \$\{HISTORY_ROW_CAP\}/, "a row cap as a circuit breaker");
+  // top 400 outruns). Bounded instead by the window — at most 120 days — times
+  // the catalogue.
+  assert.match(historyFn, /const rows = cardHistoryRows\(\{ since: riseHistoryStart\(Date\.now\(\)\) \}\);/);
+  assert.doesNotMatch(historyFn.replace(/\/\/[^\n]*/g, ""), /cardIds|prisma\.card\.|HISTORY_SCAN/, "no card list: nothing a universe card can fall outside of");
 });
 
 test("the assembly is uncached and calls both loaders directly — never nested", () => {

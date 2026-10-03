@@ -102,7 +102,8 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Full card database, charts & search", account: true, plus: true, premium: true },
   // The Bulk Pricer's paste-a-list pricing lives in the free /deck now.
   { feature: "Deck & list pricer, trade calculator & box EV", account: true, plus: true, premium: true },
-  // Weekly, not daily: /movers compares weekly history points.
+  // "Weekly" as in a 7-day move: /movers compares each card's latest daily
+  // price with its price about seven days earlier.
   { feature: "RiftCompare Index & weekly price movers", account: true, plus: true, premium: true },
   // THE FREE LIMITS (2026-09-28, owner: "charge for the features people use
   // every week"). The numbers are the enforced ones (lib/free-limits.ts, read

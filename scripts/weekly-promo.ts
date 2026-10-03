@@ -29,8 +29,8 @@
  * Friday-evening price refresh, so the numbers are fresh).
  */
 import { prisma } from "../src/lib/db";
-import { dbHistory } from "../src/lib/db-history";
-import { getPriceMovers, historySource, type Mover, type PriceMovers } from "../src/lib/price-history";
+import { cardHistoryStats } from "../src/lib/price-history-store";
+import { getPriceMovers, type Mover, type PriceMovers } from "../src/lib/price-history";
 import { sendEmail, isEmailEnabled } from "../src/lib/email";
 import { formatMoney } from "../src/lib/format";
 import { currencyOf, normalizeCountry, COUNTRIES, type Country } from "../src/lib/country";
@@ -276,22 +276,15 @@ async function main() {
     console.log("[promo] using FIXTURE data (dry-run forced)");
     data = FIXTURE;
   } else {
-    // Cheap explicit query first so a DB misconfiguration fails the workflow
-    // loudly, instead of getPriceMovers' catch-all making it look like a quiet week.
-    //
-    // dbHistory, NOT prisma — and this guard is the reason the bug it was written
-    // to catch went unnoticed for so long. PriceHistory lives in the separate
-    // history project (RH7, see src/lib/db-history.ts); getPriceMovers() below
-    // correctly reads it via dbHistory, but this pre-check queried the
-    // OPERATIONAL database, whose PriceHistory is deliberately empty since the
-    // RM3 cutover. So it returned 0 every Friday and the promo silently skipped
-    // with "no price history yet" — the exact quiet failure the comment above
-    // promises to prevent.
-    // CA/EU have no rows of their own (historySource()-derived from US/UK —
-    // see price-import.ts) — check the market this promo will ACTUALLY read,
-    // or this guard would report a false "no history" the moment CA/EU's own
-    // old rows age past whatever window getPriceMovers reads.
-    const historyRows = await dbHistory.priceHistory.count({ where: { country: historySource(market).source } });
+    // Explicit check first, so a checkout with no price history (the files
+    // are in this repository since 2026-10-03, lib/price-history-store.ts) says
+    // so instead of getPriceMovers' catch-all making it look like a quiet week.
+    // History of this guard: while the history was a Neon project, this check
+    // once queried the OPERATIONAL database, whose PriceHistory was deliberately
+    // empty, so it returned 0 every Friday and the promo silently skipped.
+    // Every market reads the one GLOBAL series (historySource), so one count
+    // covers them all.
+    const historyRows = cardHistoryStats().points;
     if (historyRows === 0) {
       console.log(`[promo] no price history for ${market} yet — nothing to report, skipping.`);
       return;

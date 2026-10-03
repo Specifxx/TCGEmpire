@@ -21,9 +21,10 @@ import { guidesForTool } from "@/lib/content/tool-guides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
-// ISR: PriceHistory gains one snapshot a WEEK (HISTORY_MIN_INTERVAL_DAYS), and
-// the price-refresh workflow purges this path after every import, so a 24-hour
-// window keeps the page fresh without recomputing the aggregation per request.
+// ISR: the price history gains one snapshot a day, and it reaches the site with
+// each daily release (the files in data/price-history, lib/price-history-store.ts),
+// which clears the page cache anyway, so a 24-hour window keeps the page fresh
+// without recomputing the aggregation per request.
 //
 // No inner unstable_cache may declare a shorter TTL than this — see the note on
 // getPriceMovers below. One used to say 600, which quietly made this page
@@ -59,8 +60,8 @@ export const metadata: Metadata = {
 const MOST_SEARCHED_ROWS = FREE_DEMAND_ROWS;
 
 // What every figure on this page is. Not a market's own store prices: the
-// weekly PriceHistory snapshot is the cheapest price found across AU, US, UK and
-// SG that week, converted — so it says so, everywhere the page describes it.
+// daily price-history snapshot is the cheapest price found across AU, US, UK and
+// SG that day, converted — so it says so, everywhere the page describes it.
 const PRICE_BASIS = "the cheapest tracked price across AU/US/UK/SG, converted";
 
 export default async function MoversPage() {
@@ -127,15 +128,15 @@ export default async function MoversPage() {
   const FAQS = [
     {
       q: "Which Riftbound cards are going up in price right now?",
-      a: `The risers list above is the answer, refreshed weekly: it ranks Riftbound singles by how much ${PRICE_BASIS} to ${info.currency}, has moved over roughly the last seven days.`,
+      a: `The risers list above is the answer, refreshed daily: it ranks Riftbound singles by how much ${PRICE_BASIS} to ${info.currency}, has moved over roughly the last seven days.`,
     },
     {
       q: "How often are Riftbound price movers updated?",
-      a: "Weekly. RiftCompare records one price for every tracked card each week — the cheapest across the stores it tracks in Australia, the US, the UK and Singapore, converted to one currency — so a move shows up after the next weekly snapshot.",
+      a: "Daily. RiftCompare records one price for every tracked card each day — the cheapest across the stores it tracks in Australia, the US, the UK and Singapore, converted to one currency — and the lists update with it once a day.",
     },
     {
       q: "How does RiftCompare calculate a price move?",
-      a: "Each card's latest weekly price is compared with its price about seven days earlier. Cards below a minimum value are excluded so a few cents on a bulk common can't top the list, and extreme outliers are filtered out. Prices are only compared on one pricing basis: when the way a price is sourced changes, as it did on 23 September 2026 when the US TCGplayer price moved from market price to the cheapest English listing, a card sits out until it has two weekly prices on the new basis.",
+      a: "Each card's latest daily price is compared with its price about seven days earlier. Cards below a minimum value are excluded so a few cents on a bulk common can't top the list, and extreme outliers are filtered out. Prices are only compared on one pricing basis: when the way a price is sourced changes, as it did on 23 September 2026 when the US TCGplayer price moved from market price to the cheapest English listing, a card sits out until it has two prices on the new basis.",
     },
     {
       q: "What does 'best value' mean on this page?",
@@ -234,7 +235,7 @@ export default async function MoversPage() {
           <div>
             <p className="text-lg font-semibold text-white">No notable movers yet</p>
             <p className="mt-1 text-sm">
-              A move needs two weekly prices on the same basis. Check back after the next weekly update, or
+              A move needs two prices on the same basis. Check back after the next daily update, or
               browse the full database in the meantime.
             </p>
             <Link href="/browse" className="btn-primary mt-4">Card database</Link>
@@ -316,8 +317,8 @@ export default async function MoversPage() {
         <h2 className="text-xl font-extrabold text-white">How RiftCompare tracks price movers</h2>
         <div className="mt-2 max-w-3xl space-y-3 text-sm leading-relaxed text-slate-400">
           <p>
-            Once a week, RiftCompare records one price for every Riftbound card: {PRICE_BASIS} to{" "}
-            {info.currency}. The movers above compare each card&apos;s latest weekly price against its price
+            Every day, RiftCompare records one price for every Riftbound card: {PRICE_BASIS} to{" "}
+            {info.currency}. The movers above compare each card&apos;s latest price against its price
             about seven days earlier to surface the biggest <strong className="text-slate-200">risers</strong> and{" "}
             <strong className="text-slate-200">fallers</strong> of the week, and against its recent high to
             highlight the <strong className="text-slate-200">best-value</strong> buys.

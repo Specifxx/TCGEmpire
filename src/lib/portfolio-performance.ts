@@ -12,8 +12,9 @@
 //
 // Now every step between two snapshots compares only the holdings priced at BOTH
 // of its ends (carry-forward allowed, as before), and a window's move is the
-// product of its steps. PriceHistory is written weekly, so d7 is a single step:
-// exactly "holdings priced at both window endpoints". Over d30's several steps, a
+// product of its steps. While the history was written weekly (2026-08-31 →
+// 2026-10-03) d7 was a single step: exactly "holdings priced at both window
+// endpoints"; with daily snapshots it is several, like d30. Over several steps, a
 // card first priced inside the window never contributes its debut; it joins from
 // its second price, so a real move on a card you hold still counts. This is the
 // RiftCompare Index's own method (chainLinkSeries in market-index.ts), and the
@@ -36,9 +37,9 @@
 // the line. d7/d30 are read off the same ratios, so the chips and the chart
 // always agree.
 //
-// The weekly write cadence (HISTORY_MIN_INTERVAL_DAYS = 7) is also why there is
-// no "1 day" figure: the previous snapshot is a week back, so a "1 day" chip was
-// the 7-day number under another label.
+// There is no "1 day" figure: while snapshots were weekly the previous one was a
+// week back, so a "1 day" chip was the 7-day number under another label. With
+// daily snapshots since 2026-10-03 one would now mean what it says.
 import type { PricePoint } from "./price-history";
 
 export interface PerfHolding {

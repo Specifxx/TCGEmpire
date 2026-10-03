@@ -16550,6 +16550,50 @@ Twelve tests that pinned the old rule are rewritten to pin the new one, not dele
 
 Deployed at the owner's request, and the price import run straight after so the rows and from-prices are live without waiting for the next scheduled import.
 
+## Public price history moves out of Neon into the repository, and is daily again — 2026-10-03
+
+**Why.** The owner asked: "can't we have the history database lie in the github since it's all public anyway?" Then: "for all private history events, use the neon history database, but for all public items like price data, let's just use the github and because of it now we can do daily instead of weekly. lets do that if it is better."
+- **The cost.** The history project used its 5 GB monthly transfer in about four days (`HISTORY_DATABASE_URL_3`, 2026-09-26) on a dataset of a few MB, re-reading the same rows.
+- **Already public.** Every card's chart shows the history, and `/api/v1/card/<slug>/history.json` serves it.
+
+**What moved where.**
+- **Public, to files.** The GLOBAL card series and the sealed series. One JSON file per Sydney day under `data/price-history/cards` and `data/price-history/sealed` (`lib/price-history-store.ts`; the format is in `data/price-history/README.md`).
+- **Private, stays in Neon.** `ClickEvent` stays in the history project (`lib/db-history.ts`), and demand snapshots stay in the operational database. `tests/price-history-store.test.ts` pins every published file to a day, currency/basis and integer cents, so nothing private can ride along.
+- **Backfill.** `export-price-history.yml` (run 37116921536) exported:
+  - 84,976 GLOBAL points for 1,428 cards over 72 days (2026-06-06 → 10-01);
+  - 3,924 sealed points over 10 days.
+
+  Every day read back with Neon's exact count. The pre-09-05 per-market rows and both old tables stay in Neon, unread; nothing writes them now.
+
+**How it reaches the site.**
+- **Publishing.** After each import, `refresh-prices.yml` runs `scripts/publish-price-history.sh`.
+  - It commits only the files that run changed, onto the current `main`, never with a deploy marker (it refuses one). The workflow gains `permissions: contents: write`.
+  - It runs after the revalidate step, whose skip check reads main's newest subject, and before the alert steps.
+- **Bundling.** The daily release bundles the files (`next.config.js` `outputFileTracingIncludes`), so every read is local. Loading takes ~60 ms once per instance; after that, reads come from memory.
+- **Freshness.** History is as fresh as the last release, at most ~1.75 days behind the newest day.
+- **The deploy gate.** `main` now gains a data commit every day, so the 08:00 UTC release runs every day. That is the one-a-day cadence the gate assumes, not an extra build.
+
+**Daily again.** The weekly gate (`HISTORY_MIN_INTERVAL_DAYS`) was the database's cost control, and it is gone. Every import writes or replaces the Sydney day's file, and the day's last run wins.
+- **Card chart.** Plots every recorded day, `take` 400 (it was 60 weekly points).
+- **Daily readers.** Movers, recently updated, the Index and the records board read daily points.
+- **Weekly readers.** Rising Cards and the price guide keep their weekly model through `collapseToWeekly`.
+- **Cache keys.** `cardHistoryVersion()` (newest day, day count, a hash of the newest file) replaces `sydneyWeekKey()` on every history-derived cache. A release with new history recomputes once; one without reuses the entry. The portfolio's history read is no longer cached at all: a big collection's daily series would overflow an entry.
+- **`STALE_HISTORY_MS` stays at 10 days.** The week-collapsed series' newest point can be six days old on a healthy site, before release lag.
+- **Records.** `MIN_DAYS` 3 gains a 14-day `MIN_SPAN_MS`. Otherwise three daily points could set an "all-time" record.
+- **Bucketing speed.** `collapseToWeekly` now buckets a date-only point by date arithmetic. It used to run an Intl format per point, and a local build with daily points spent 5–10 s per worker building the Rising Cards history, enough to trip static generation's 60 s limit. The buckets are identical, pinned over two years of days across both DST changes. The Sydney formatters are built once, not per call.
+- **Copy.** These now say daily, with weekly from 31 August to 3 October 2026: methodology, editorial policy, about, /movers, /market/records, /portfolio, the hub intros and the Index guide.
+
+**Removed.**
+- `ensureHistoryCards`, the Card-row copy that PriceHistory's foreign key needed.
+- Both importers' history-database writes.
+- `card-price-state`'s per-render COUNT against Neon, which is now a memory lookup.
+
+**Rollback.** Revert the reader/writer commit. Neon holds everything up to 2026-10-01; any day written only to files since would need loading back.
+
+**Still open.**
+- The frozen PriceHistory and SealedPriceHistory rows can be dropped from the history project once the files have run for a few weeks.
+- The operational database's burn (RM5) is untouched by this.
+
 ## Sister sites: OP Compare is the worked example, docs/sister-sites is the playbook — 2026-10-03
 
 **Why.** The owner built OP Compare (opcompare.app, repo Specifxx/OpCompare), a One Piece Card Game sister site, from RiftCompare in one session, and wants to repeat the process for another TCG later.

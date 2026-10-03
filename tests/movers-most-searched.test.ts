@@ -108,9 +108,13 @@ test("nothing that links to /movers calls it daily or today's", () => {
   assert.doesNotMatch(moversAd, /updated daily/i, "the /movers house ad says weekly");
 });
 
-test("/movers says weekly, and says what its price is", () => {
+test("/movers says daily, and says what its price is", () => {
   const page = code(read(PAGE));
-  assert.doesNotMatch(page, /\bdaily\b/i, "PriceHistory is weekly; nothing on /movers (FAQ JSON-LD included) may say daily");
+  // Weekly from 2026-08-31 to 2026-10-03, when "daily" anywhere on the page
+  // was false; daily again since (lib/price-history-store.ts), so now it is
+  // "weekly"/"each week" as a recording cadence that would be false.
+  assert.doesNotMatch(page, /records one price for every tracked card each week|next weekly (snapshot|update)|Once a week/i, "the history is daily; nothing on /movers (FAQ JSON-LD included) may say it is recorded weekly");
+  assert.match(page, /Daily\. RiftCompare records one price for every tracked card each day/, "the FAQ answer says how often");
   assert.match(page, /const PRICE_BASIS = "the cheapest tracked price across AU\/US\/UK\/SG, converted";/);
   assert.ok((page.match(/\{PRICE_BASIS\}|\$\{PRICE_BASIS\}/g) ?? []).length >= 3, "the hero, the answer box and the FAQ all describe the price the same way");
   assert.doesNotMatch(page, /lowest in-stock price across every store tracked for/, "the old claim that it was the viewer's own market's stores");

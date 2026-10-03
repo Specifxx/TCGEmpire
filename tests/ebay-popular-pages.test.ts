@@ -88,7 +88,9 @@ test("/movers stays populated through a price-basis switch: the last week before
   assert.match(compute, /basis = "pre-switch";/);
   // Opt-in: every caller but /movers still gets empty lists, as before.
   assert.match(ph, /if \(full\.basis === "pre-switch" && !opts\.preSwitch\) return \{ spiking: \[\], plummeting: \[\], value: \[\] \};/);
-  assert.match(ph, /\["rc-price-movers-v2", country, sydneyWeekKey\(\)\]/, "a new key: the cached value's shape changed");
+  // v2: the cached value's shape changed (basis/asOf). Keyed on the history
+  // version since 2026-10-03 (lib/price-history-store.ts), not the Sydney week.
+  assert.match(ph, /\["rc-price-movers-v2", country, cardHistoryVersion\(\)\]/, "a new key: the cached value's shape changed");
   const page = read("src/app/movers/page.tsx");
   assert.match(page, /getPriceMovers\(country, 50, \{ preSwitch: true \}\)/);
   assert.match(page, /weekTo=\{asOfLabel\}/);

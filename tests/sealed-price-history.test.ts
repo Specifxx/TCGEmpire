@@ -37,24 +37,24 @@ test("SealedPriceHistory exists in the schema, keyed by a bare groupKey (no rela
   assert.match(model, /@@unique\(\[groupKey, country, day\]\)/, "at most one point per group per market per day");
 });
 
-test("sydneyDay and HISTORY_MIN_INTERVAL_DAYS have one canonical home (price-history.ts), not a duplicate definition per writer", () => {
+test("sydneyDay has one canonical home (price-history.ts), and neither writer keeps an interval gate", () => {
   const home = codeOnly(read("src/lib/price-history.ts"));
   assert.match(home, /export function sydneyDay\(/);
-  assert.match(home, /export const HISTORY_MIN_INTERVAL_DAYS = 7/);
+  // Daily since 2026-10-03: the weekly gate (HISTORY_MIN_INTERVAL_DAYS) was the
+  // history database's cost control, and the history is day files now.
+  assert.doesNotMatch(home, /HISTORY_MIN_INTERVAL_DAYS/, "the weekly gate is gone with the database");
 
-  // price-import.ts must IMPORT these, not redefine them — a second definition
-  // could silently diverge (two writers disagreeing about what "a week" means
-  // would make the two tables' cadences drift apart from each other).
+  // Both writers IMPORT sydneyDay, not redefine it — a second definition could
+  // silently diverge (two writers disagreeing about which Sydney day it is
+  // would put the card and sealed points for one import on different days).
   const priceImport = codeOnly(read("src/lib/price-import.ts"));
-  // Allows other named imports on the same line (e.g. GLOBAL_HISTORY_COUNTRY,
-  // added alongside these two for the GLOBAL history write) — the invariant
-  // this test actually cares about is "imported, not redefined locally".
-  assert.match(priceImport, /import\s*\{[^}]*\bsydneyDay\b[^}]*\bHISTORY_MIN_INTERVAL_DAYS\b[^}]*\}\s*from\s*"\.\/price-history"/);
+  assert.match(priceImport, /import\s*\{[^}]*\bsydneyDay\b[^}]*\}\s*from\s*"\.\/price-history"/);
   assert.doesNotMatch(priceImport, /function sydneyDay\(/, "must not redefine sydneyDay locally");
-  assert.doesNotMatch(priceImport, /const HISTORY_MIN_INTERVAL_DAYS/, "must not redefine the constant locally");
+  assert.doesNotMatch(priceImport, /HISTORY_MIN_INTERVAL_DAYS|daysSince/, "no interval gate in the card writer");
 
   const sealedImport = codeOnly(read("src/lib/sealed-import.ts"));
-  assert.match(sealedImport, /import\s*\{[^}]*\bsydneyDay\b[^}]*\bHISTORY_MIN_INTERVAL_DAYS\b[^}]*\}\s*from\s*"\.\/price-history"/);
+  assert.match(sealedImport, /import\s*\{[^}]*\bsydneyDay\b[^}]*\}\s*from\s*"\.\/price-history"/);
+  assert.doesNotMatch(sealedImport, /HISTORY_MIN_INTERVAL_DAYS|daysSince/, "no interval gate in the sealed writer");
 });
 
 test("no import cycle: price-history.ts (the shared home) imports neither price-import.ts nor sealed-import.ts", () => {
@@ -67,7 +67,7 @@ test("no import cycle: price-history.ts (the shared home) imports neither price-
   assert.doesNotMatch(home, /from\s*"\.\/sealed-import"/);
 });
 
-test("writeSealedPriceHistory: weekly-gated, writes through dbHistory (not the operational client), includes pre-orders", () => {
+test("writeSealedPriceHistory: daily, writes the day file (not a database), includes pre-orders", () => {
   const code = codeOnly(read("src/lib/sealed-import.ts"));
   assert.match(code, /export async function writeSealedPriceHistory\(\): Promise<void>/);
 
@@ -75,11 +75,10 @@ test("writeSealedPriceHistory: weekly-gated, writes through dbHistory (not the o
   const fn = code.slice(fnStart, code.indexOf("\n}", fnStart) + 2);
 
   assert.match(fn, /const day = sydneyDay\(\)/);
-  assert.match(fn, /dbHistory\.sealedPriceHistory\.findFirst\(/, "the gate must check ITS OWN table's newest day, not PriceHistory's");
-  assert.match(fn, /daysSince < HISTORY_MIN_INTERVAL_DAYS/);
-  assert.match(fn, /dbHistory\.sealedPriceHistory\.deleteMany\(\{ where: \{ day \} \}\)/, "same day-replace-on-rerun convention as PriceHistory");
-  assert.match(fn, /dbHistory\.sealedPriceHistory\.createMany\(/);
-  assert.doesNotMatch(fn, /\bprisma\.sealedPriceHistory\b/, "must write through the split history DB client, never the operational one");
+  // The day's file under data/price-history/sealed (lib/price-history-store.ts);
+  // a same-day re-run replaces it, the old day-replace-on-rerun convention.
+  assert.match(fn, /writeSealedHistoryDay\(day, snapshot\)/);
+  assert.doesNotMatch(fn, /sealedPriceHistory\./, "neither history database client: the sealed series is public, so it is a file");
 
   // Reads SealedListing directly (not getAllSealedGroups(), which does
   // display-only work this has no use for), with no country filter — a

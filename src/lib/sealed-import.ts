@@ -3,8 +3,8 @@
 // singles importer (price-import.ts) deliberately skips these; this complements it.
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
-import { dbHistory } from "./db-history";
-import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS, cachedOrDirect } from "./price-history";
+import { writeSealedHistoryDay } from "./price-history-store";
+import { sydneyDay, cachedOrDirect } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
 import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, parseProductPage } from "./sealed-stores";
@@ -1401,14 +1401,16 @@ export async function getPreorderGroups(country: Country = DEFAULT_COUNTRY): Pro
 }
 
 /**
- * Weekly snapshot of every sealed group's lowest in-stock price, across every
- * tracked market — the sealed-side counterpart to price-import.ts's own
- * PriceHistory write (see that block for the full weekly-vs-daily cost
- * reasoning; this reuses the exact same constant and day boundary — see
- * sydneyDay/HISTORY_MIN_INTERVAL_DAYS's own comments in price-history.ts —
- * so the two tables share one definition of "a week"). Feeds Rising Sealed
- * (sealed-rise-predictor.ts) — a Sealed Index also fed by this table was
- * removed 2026-09-02 per request, but this writer stayed for Rising Sealed.
+ * Daily snapshot of every sealed group's lowest in-stock price, across every
+ * tracked market — the sealed-side counterpart to price-import.ts's card
+ * snapshot, on the same Sydney day boundary (sydneyDay in price-history.ts).
+ * Written to data/price-history/sealed (lib/price-history-store.ts) since
+ * 2026-10-03, daily; it was a weekly SealedPriceHistory row set in the Neon
+ * history project before, which every history rotation also dropped (DECISIONS.md
+ * 2026-09-24, "Rising Sealed: the history that every rotation dropped"). A
+ * same-day re-run replaces the day's file. A Sealed Index once fed by this
+ * series was removed 2026-09-02 per request; the series is kept so its history
+ * keeps accumulating.
  *
  * PRE-ORDERS ARE INCLUDED HERE, deliberately, unlike getSealedGroups()'s
  * filter — a pre-order's price genuinely moves (often the most interesting
@@ -1428,20 +1430,6 @@ export async function getPreorderGroups(country: Country = DEFAULT_COUNTRY): Pro
 export async function writeSealedPriceHistory(): Promise<void> {
   try {
     const day = sydneyDay();
-    const newest = await dbHistory.sealedPriceHistory.findFirst({
-      orderBy: { day: "desc" },
-      select: { day: true },
-    });
-    const daysSince = newest
-      ? Math.round((day.getTime() - newest.day.getTime()) / 86400_000)
-      : Number.POSITIVE_INFINITY;
-    if (daysSince < HISTORY_MIN_INTERVAL_DAYS) {
-      console.log(
-        `Sealed price history: skipped — last snapshot was ${daysSince} day(s) ago, writing at most every ${HISTORY_MIN_INTERVAL_DAYS}.`
-      );
-      return;
-    }
-
     const rows = await prisma.sealedListing.findMany({
       where: { inStock: true },
       select: { groupKey: true, country: true, priceCents: true, productType: true, setCode: true, retailer: true },
@@ -1475,9 +1463,12 @@ export async function writeSealedPriceHistory(): Promise<void> {
         snapshot.push({ groupKey, country, day, lowestPriceCents });
       }
     }
-    await dbHistory.sealedPriceHistory.deleteMany({ where: { day } });
-    await dbHistory.sealedPriceHistory.createMany({ data: snapshot });
-    console.log(`Sealed price history: recorded ${snapshot.length} points for ${day.toISOString().slice(0, 10)}.`);
+    const written = writeSealedHistoryDay(day, snapshot);
+    console.log(
+      written
+        ? `Sealed price history: recorded ${written.count} points for ${day.toISOString().slice(0, 10)} in ${written.file}.`
+        : "Sealed price history: nothing to record.",
+    );
   } catch (e) {
     // Best-effort, like every other history write — never let a snapshot
     // failure take down the sealed import that already succeeded ahead of it.

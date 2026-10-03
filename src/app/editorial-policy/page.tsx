@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 //                              EBAY_ALWAYS_MARKETS / EBAY_ROTATING_MARKETS, the
 //                              20h/10h catalogue and chase gates, Canada's
 //                              derived "eBay US" rows)
-//   • weekly global history  → lib/price-history.ts (HISTORY_MIN_INTERVAL_DAYS)
+//   • daily global history   → lib/price-history-store.ts (data/price-history)
 //   • page cache windows     → `export const revalidate` on each route
 //   • store checks           → lib/store-health.ts, STORE_ROWS_MAX_AGE_H,
 //                              lib/offer-currency.ts, lib/sealed-offers.ts
@@ -186,9 +186,9 @@ export default function EditorialPolicyPage() {
               <strong className="text-white">eBay auctions ending soon:</strong> every four hours.
             </li>
             <li>
-              <strong className="text-white">Price history:</strong> once a week we record each
+              <strong className="text-white">Price history:</strong> every day we record each
               card&rsquo;s cheapest price across the Australian, US, UK and Singapore markets, in US
-              dollars. Every market&rsquo;s chart, the price movers and the RiftCompare Index read that
+              dollars (between 31 August and 3 October 2026, once a week). Every market&rsquo;s chart, the price movers and the RiftCompare Index read that
               one series, converted into the market&rsquo;s own currency — a worldwide low, not your
               market&rsquo;s own history.
             </li>
@@ -198,7 +198,7 @@ export default function EditorialPolicyPage() {
             </li>
             <li><strong className="text-white">Homepage:</strong> at most an hour old.</li>
             <li>
-              <strong className="text-white">RiftCompare Index:</strong> moves once a week, when a new
+              <strong className="text-white">RiftCompare Index:</strong> moves once a day, when a new
               history snapshot is recorded.
             </li>
           </ul>

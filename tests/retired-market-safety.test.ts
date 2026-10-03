@@ -60,13 +60,16 @@ test("rise-predictor no longer casts a raw PriceHistory.country at all — GLOBA
   assert.ok(!/\(r\.country as Country\)/.test(src), "must not cast PriceHistory.country to Country — there is no per-country row left to read");
   assert.ok(!/raw in COUNTRIES/.test(src), "the per-country guard has nothing left to guard — GLOBAL_HISTORY_COUNTRY is filtered at the query, not validated in app code");
   assert.ok(!/KNOWN_COUNTRIES/.test(src), "KNOWN_COUNTRIES was only ever needed to constrain a per-country query that no longer exists");
-  // (Since 2026-09-25 the one weekly read covers every card, no id list, from
-  // the current pricing basis — tests/rising-cards.test.ts pins the window.)
+  // (Since 2026-09-25 the one weekly read covers every card, no id list —
+  // tests/rising-cards.test.ts pins the window. Since 2026-10-03 it reads the
+  // day files, which hold ONLY the GLOBAL series, so no scope can read anything
+  // else: there is no country column left to filter or misparse.)
   assert.match(
     src,
-    /WHERE "country" = \$\{GLOBAL_HISTORY_COUNTRY\} AND "day" >= \$\{since\}[\s\S]{0,200}const since = riseHistoryStart\(Date\.now\(\)\)|const since = riseHistoryStart\(Date\.now\(\)\);[\s\S]{0,400}WHERE "country" = \$\{GLOBAL_HISTORY_COUNTRY\} AND "day" >= \$\{since\}/,
-    "every scope (GLOBAL included) must filter to the single GLOBAL sentinel at the database"
+    /const rows = cardHistoryRows\(\{ since: riseHistoryStart\(Date\.now\(\)\) \}\)/,
+    "every scope (GLOBAL included) reads the one shared series"
   );
+  assert.doesNotMatch(src.replace(/\/\/[^\n]*/g, ""), /FROM "PriceHistory"|dbHistory/, "no database read of the retired table");
 });
 
 test("getCachedRisingCards degrades to a flagged empty analysis instead of throwing — and never caches the failure", () => {

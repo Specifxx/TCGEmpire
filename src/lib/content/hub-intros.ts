@@ -109,7 +109,7 @@ export const HUB_INTROS: Record<string, HubIntro> = {
   "/tools/rising": {
     paragraphs: [
       "Rising Cards is a screen, not a prediction. It ranks the most-searched cards that have a price in your market on six signals: how often each is picked from search, how fast that is rising, where today's price sits in the card's own recent range, how many stores have it in stock, its change on last week, and how much its price usually moves — a card already up sharply is marked down, not rewarded. Every row gives its reason in one line.",
-      "Demand and stock are read every day. The price signals use the weekly price we record for every card — the cheapest across Australia, the US, the UK and Singapore, converted — with today's price added as the newest point, so the history grows once a week and its latest point moves with each import. [Why Riftbound card prices change](/guides/why-riftbound-card-prices-change) covers what demand can and cannot tell you about a price.",
+      "Demand and stock are read every day. The price signals use one price a week per card, taken from the daily price we record — the cheapest across Australia, the US, the UK and Singapore, converted — with today's price added as the newest point, so the history grows once a week and its latest point moves with each import. [Why Riftbound card prices change](/guides/why-riftbound-card-prices-change) covers what demand can and cannot tell you about a price.",
     ],
   },
   "/tools/demand": {
@@ -145,14 +145,14 @@ export const HUB_INTROS: Record<string, HubIntro> = {
   },
   "/movers": {
     paragraphs: [
-      "The Riftbound singles whose price moved most this week, in three lists: the biggest risers, the biggest drops, and the best value against a card's own recent high. Once a week we record one price per card — the cheapest we track across Australia, the US, the UK and Singapore, converted into one currency — and a move compares it with the price about seven days before.",
+      "The Riftbound singles whose price moved most this week, in three lists: the biggest risers, the biggest drops, and the best value against a card's own recent high. Every day we record one price per card — the cheapest we track across Australia, the US, the UK and Singapore, converted into one currency — and a move compares the latest with the price about seven days before.",
       "A single week is a short window: one tournament result can spike a card that settles once the meta adjusts. [Why Riftbound card prices change](/guides/why-riftbound-card-prices-change) covers what usually sits behind a big move, and [the RiftCompare Index](/market) shows whether the whole market moved or one card did.",
     ],
   },
   "/market": {
     paragraphs: [
       "One number for the Riftbound singles market, like a stock index for the game. Its basket is the most-searched cards on RiftCompare that have a price in the market you pick, each weighted by search volume and capped at 20%, so a chase card moves it more than a bulk common but no single card can carry it.",
-      "The level moves once a week with the price we record for every card — the cheapest across Australia, the US, the UK and Singapore, converted into this market's currency — and is chain-linked from 100: each step counts only cards priced at both ends, so a new set joining the basket does not jump it. [What the RiftCompare Index is](/guides/understanding-the-riftcompare-index-methodology) walks through the formula.",
+      "The level moves once a day with the price we record for every card — the cheapest across Australia, the US, the UK and Singapore, converted into this market's currency — and is chain-linked from 100: each step counts only cards priced at both ends, so a new set joining the basket does not jump it. [What the RiftCompare Index is](/guides/understanding-the-riftcompare-index-methodology) walks through the formula.",
     ],
   },
   "/market/records": {

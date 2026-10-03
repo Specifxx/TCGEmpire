@@ -1,6 +1,6 @@
 import { prisma } from "./db";
 import { hasNoRetailChannel, NO_RETAIL_CHANNEL_SETS } from "./constants";
-import { dbHistory } from "./db-history";
+import { cardHistoryDayCount } from "./price-history-store";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // "Does this card have a price to show?" — and NOTHING about whether to index.
@@ -119,31 +119,12 @@ export async function getCardPriceState(card: { id: string; setCode: string }): 
         where: { cardId: card.id, inStock: true },
         select: { id: true },
       }),
-      // COUNT(DISTINCT day), NOT findMany({ distinct }) — this needs a number,
-      // and it runs on EVERY card page (twice: generateMetadata and the body).
-      //
-      // It was `findMany({ select: { day: true }, distinct: ["day"], take:
-      // MIN_HISTORY_DAYS })`, which reads as "at most 7 rows". Prisma emits
-      // (captured from the query log, 2026-08-22):
-      //
-      //   SELECT "PriceHistory"."id", "PriceHistory"."day" FROM "PriceHistory"
-      //   WHERE "PriceHistory"."cardId" = $1 ORDER BY "id" ASC OFFSET $2
-      //
-      // No DISTINCT, no LIMIT. `distinct` and `take` are BOTH applied in the
-      // client, so this pulled that card's ENTIRE history — one row per (day,
-      // market), growing every day the importer runs, forever — and then threw
-      // all but the count away. On the site's highest-volume page, against the
-      // history project, which has itself now rotated through four transfer
-      // allowances.
-      //
-      // getEmptyCardIds() below already does the same counting in Postgres for
-      // the whole catalogue; this is the single-card version of it.
-      dbHistory
-        .$queryRaw<{ days: bigint }[]>`
-          SELECT COUNT(DISTINCT day) AS days FROM "PriceHistory" WHERE "cardId" = ${card.id}
-        `
-        .then((rows) => Number(rows[0]?.days ?? 0))
-        .catch(() => 0),
+      // How many days of price history the card has, from the day files bundled
+      // with the release (lib/price-history-store.ts). This runs on EVERY card
+      // page, twice (generateMetadata and the body); until 2026-10-03 it was a
+      // COUNT(DISTINCT day) against the Neon history project per render, and
+      // before that a findMany that pulled the card's whole history to count it.
+      Promise.resolve(cardHistoryDayCount(card.id)),
     ]);
     return priceStateFrom(listing != null, days, exempt);
   } catch {

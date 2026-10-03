@@ -1,9 +1,19 @@
 import { PrismaClient } from "@prisma/client";
 import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 
-// A SECOND physical database, reserved for the write-heavy, ever-growing,
-// rarely-fully-queried tables: PriceHistory (daily price snapshots) and
-// ClickEvent (outbound-click log).
+// A SECOND physical database for the PRIVATE history: ClickEvent, the
+// outbound-click log the admin pages read.
+//
+// PUBLIC PRICE HISTORY IS NOT HERE ANY MORE (2026-10-03). PriceHistory and
+// SealedPriceHistory moved to day files in this repository
+// (lib/price-history-store.ts, data/price-history/): they are shown on public
+// pages anyway, a file read costs no transfer, and as tables they burned this
+// project's 5 GB monthly transfer allowance every four or five days. Their rows
+// are still in the project, untouched and unread, and nothing writes them. Do
+// not read them: the files are the source of truth, and daily since the move.
+// Anything private (clicks, anything per-user) must never go to the files.
+//
+// The rest of this header is the history of why this database exists at all.
 //
 // WHY: Neon's free tier caps are PER PROJECT (storage, compute-hours, egress).
 // These two tables grow without bound (new rows every day / every click, and
@@ -139,8 +149,9 @@ if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_4") {
   );
 }
 
-// True when the history tables live in their OWN database. When split, PriceHistory's
-// Card foreign key means card rows must exist there too — see ensureHistoryCards().
+// True when the history tables live in their OWN database (scripts/audit-egress.ts
+// labels its report with it). It mattered most while PriceHistory had a Card
+// foreign key here (the removed ensureHistoryCards() copied card rows when split).
 // Compared against the RESOLVED operational URL, and it must stay that way even
 // now that DATABASE_URL is itself the head of the operational chain. The two are
 // not the same thing: this resolves "the operational database", which today
@@ -236,94 +247,7 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.dbHistory = dbHistory;
 }
 
-// PriceHistory.cardId carries a foreign key to Card, and in a split setup the
-// history database has its OWN (mostly stub) Card table — a snapshot for a card
-// that doesn't exist THERE yet fails the whole createMany. Before writing history
-// rows, copy any missing Card rows from the operational DB. No-op when the history
-// tables share the main database, and cheap otherwise (id-set diff + tiny insert).
-// Returns the ids that are CONFIRMED present in the history DB, so the caller can
-// drop any card it could not copy instead of losing the whole batch to one FK
-// violation. null means "not a split setup" — nothing to filter against.
-export async function ensureHistoryCards(cardIds: string[]): Promise<Set<string> | null> {
-  if (!historyIsSplit || cardIds.length === 0) return null;
-  const { prisma } = await import("./db");
-  const have = await dbHistory.card.findMany({ where: { id: { in: cardIds } }, select: { id: true } });
-  const haveSet = new Set(have.map((c) => c.id));
-  const missing = cardIds.filter((id) => !haveSet.has(id));
-  if (missing.length === 0) return haveSet;
-  const rows = await prisma.card.findMany({ where: { id: { in: missing } } });
-  // Upsert BY ID rather than createMany({ skipDuplicates: true }) — createMany
-  // silently drops a row that collides with ANY unique field, not just id. That
-  // is exactly what happens for a card whose id changed in a catalogue rebuild
-  // but whose slug/externalId still belongs to a stale row left behind in this
-  // history-only Card table: the row we actually need for the FK never gets
-  // inserted, this logged as if every row succeeded (it counted rows ATTEMPTED,
-  // not rows actually written), and the next PriceHistory write for that card
-  // then failed its FK check — silently, every day, since the snapshot write
-  // is best-effort (see the try/catch around it in price-import.ts). Upsert by
-  // id either creates the row we need or throws a specific, diagnosable error
-  // (caught by that same try/catch) instead of a silent no-op.
-  let inserted = 0;
-  let repaired = 0;
-  let failed = 0;
-  for (const row of rows) {
-    // Strip nothing else — Card has no outgoing FKs, so the full row upserts cleanly.
-    try {
-      await dbHistory.card.upsert({ where: { id: row.id }, create: row, update: row });
-      inserted++;
-    } catch (err) {
-      // P2002 = one of Card's OTHER unique columns (slug, externalId) is already
-      // held by a DIFFERENT, older row in this history-only table. Upserting by
-      // id finds no match, falls through to CREATE, and collides.
-      //
-      // This is the same catalogue-rebuild drift the comment above describes,
-      // and switching to upsert only made it VISIBLE — it still threw, and
-      // because that throw escaped this loop it aborted the whole snapshot, so
-      // NO card got a PriceHistory row. Production sat frozen at 2026-08-09 for
-      // eleven days while every import reported success.
-      if (!isUniqueConflict(err)) {
-        failed++;
-        console.warn(`History DB: could not copy card ${row.id}:`, err);
-        continue;
-      }
-      // Free the contested value from whichever stale row holds it. Nulling is
-      // safe and lossless here: Postgres allows many NULLs in a unique column,
-      // this table exists ONLY to satisfy PriceHistory's foreign key, and
-      // nothing reads its slug/externalId — whereas DELETING the stale row
-      // would cascade away the price history attached to it.
-      try {
-        for (const field of ["slug", "externalId"] as const) {
-          const value = row[field];
-          if (!value) continue;
-          await dbHistory.card.updateMany({
-            where: { [field]: value, id: { not: row.id } },
-            data: { [field]: null },
-          });
-        }
-        await dbHistory.card.upsert({ where: { id: row.id }, create: row, update: row });
-        inserted++;
-        repaired++;
-      } catch (err2) {
-        failed++;
-        console.warn(`History DB: card ${row.id} still unresolvable after freeing its unique fields:`, err2);
-      }
-    }
-  }
-  const extra = [repaired ? `${repaired} after clearing a stale row's unique fields` : "", failed ? `${failed} FAILED` : ""]
-    .filter(Boolean)
-    .join(", ");
-  console.log(
-    `History DB: copied ${inserted}/${missing.length} missing card rows (FK for PriceHistory)${extra ? ` — ${extra}` : ""}.`
-  );
-  // Re-read rather than assuming: the caller uses this to decide which rows are
-  // safe to write, and a wrong assumption here costs the entire day's snapshot.
-  const present = await dbHistory.card.findMany({ where: { id: { in: cardIds } }, select: { id: true } });
-  return new Set(present.map((c) => c.id));
-}
-
-// Prisma's unique-constraint violation. Checked by code rather than by message so
-// a Prisma version bump can't silently turn the repair path above back into a
-// hard failure.
-function isUniqueConflict(err: unknown): boolean {
-  return !!err && typeof err === "object" && (err as { code?: string }).code === "P2002";
-}
+// ensureHistoryCards() — which copied Card rows into this database so
+// PriceHistory's foreign key held — was removed on 2026-10-03 with PriceHistory
+// itself: the price history is day files in the repository now
+// (lib/price-history-store.ts) and ClickEvent has no foreign key.

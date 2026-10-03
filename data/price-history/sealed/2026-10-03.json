@@ -1,0 +1,802 @@
+{
+  "day": "2026-10-03",
+  "basis": "Cheapest in-stock price for the sealed product group in each market on this Sydney calendar day, in that market's own currency (cents).",
+  "prices": {
+    "02492025galiofakerriftboundxt12025worlds": {
+      "AU": 599900
+    },
+    "09222025missfortunegumayusiriftboundxt12": {
+      "AU": 260000
+    },
+    "09942025missfortunegumayusiriftboundxt12": {
+      "AU": 260000
+    },
+    "10422025xinzhaoonerriftboundxt12025world": {
+      "AU": 240000
+    },
+    "15762025missfortunegumayusiriftboundxt12": {
+      "AU": 260000
+    },
+    "15842025ambessadoranriftboundxt12025worl": {
+      "AU": 250000
+    },
+    "OGN|Booster Box": {
+      "AU": 40000,
+      "CA": 19999,
+      "EU": 6397,
+      "NZ": 35000,
+      "US": 6095
+    },
+    "OGN|Booster Case": {
+      "AU": 220870,
+      "EU": 80000,
+      "US": 60000
+    },
+    "OGN|Booster Pack": {
+      "AU": 1900,
+      "CA": 1550,
+      "EU": 350,
+      "NZ": 1500,
+      "US": 895
+    },
+    "OGN|Box Set": {
+      "EU": 9999,
+      "UK": 7000
+    },
+    "OGN|Bulk Runes": {
+      "EU": 800
+    },
+    "OGN|Champion Deck": {
+      "AU": 2190,
+      "CA": 1395,
+      "EU": 1767,
+      "NZ": 2999,
+      "SG": 2600,
+      "US": 1999
+    },
+    "OGN|Champion Deck (Jinx)": {
+      "AU": 3000,
+      "CA": 2132,
+      "EU": 799,
+      "NZ": 3000,
+      "SG": 2500,
+      "UK": 1363,
+      "US": 1400
+    },
+    "OGN|Champion Deck (Jinx) Display": {
+      "AU": 3995,
+      "US": 7499
+    },
+    "OGN|Champion Deck (Lee Sin)": {
+      "AU": 3000,
+      "CA": 2499,
+      "EU": 999,
+      "NZ": 3499,
+      "SG": 2500,
+      "UK": 1600,
+      "US": 2533
+    },
+    "OGN|Champion Deck (Lee Sin) Display": {
+      "AU": 4000,
+      "US": 12499
+    },
+    "OGN|Champion Deck (Vi)": {
+      "US": 1999
+    },
+    "OGN|Champion Deck (Viktor)": {
+      "AU": 3250,
+      "CA": 2799,
+      "EU": 799,
+      "NZ": 3499,
+      "SG": 6284,
+      "UK": 3705,
+      "US": 3445
+    },
+    "OGN|Champion Deck (Viktor) Display": {
+      "AU": 3999,
+      "US": 27296
+    },
+    "OGN|Nexus Night Pack": {
+      "AU": 8000,
+      "CA": 5500,
+      "EU": 3500,
+      "SG": 4760,
+      "UK": 2358,
+      "US": 3300
+    },
+    "OGN|Sealed": {
+      "EU": 499,
+      "NZ": 299900
+    },
+    "OGN|Sleeved Booster": {
+      "EU": 1150,
+      "US": 1625
+    },
+    "OGN|Sleeved Booster (Art Set)": {
+      "US": 5799
+    },
+    "OGN|Starter Set": {
+      "CA": 6000,
+      "EU": 1590
+    },
+    "OGS|Proving Grounds": {
+      "AU": 1625,
+      "CA": 999,
+      "EU": 1268,
+      "NZ": 9000,
+      "UK": 3999,
+      "US": 800
+    },
+    "OGS|Proving Grounds Case": {
+      "CA": 42665,
+      "US": 29999
+    },
+    "RAD|Booster Box": {
+      "AU": 20560,
+      "CA": 20267,
+      "EU": 11995,
+      "SG": 18247,
+      "UK": 11300,
+      "US": 12997
+    },
+    "RAD|Booster Case": {
+      "CA": 255995,
+      "EU": 79900,
+      "UK": 75821,
+      "US": 123997
+    },
+    "RAD|Booster Pack": {
+      "EU": 599
+    },
+    "RAD|Bundle": {
+      "AU": 6499,
+      "CA": 8999,
+      "EU": 2890,
+      "UK": 4079,
+      "US": 4496
+    },
+    "RAD|Bundle Case": {
+      "US": 159999
+    },
+    "RAD|Champion Deck": {
+      "EU": 2999
+    },
+    "RAD|Pre-Rift Event Kit": {
+      "EU": 99000
+    },
+    "RAD|Pre-Rift Kit": {
+      "CA": 3500,
+      "EU": 3499,
+      "UK": 2500
+    },
+    "RAD|Sealed": {
+      "EU": 59639
+    },
+    "RAD|Showdown Decks": {
+      "AU": 5580,
+      "CA": 3995,
+      "EU": 2890,
+      "UK": 3239,
+      "US": 4275
+    },
+    "RAD|Showdown Decks Display": {
+      "EU": 4200,
+      "US": 9999
+    },
+    "RAD|Sleeved Booster": {
+      "US": 1999
+    },
+    "SFD|Booster Box": {
+      "AU": 32000,
+      "CA": 15000,
+      "EU": 4995,
+      "NZ": 25000,
+      "SG": 32000,
+      "UK": 7350,
+      "US": 12163
+    },
+    "SFD|Booster Case": {
+      "AU": 187419,
+      "CA": 179402,
+      "EU": 62000,
+      "UK": 102670,
+      "US": 49999
+    },
+    "SFD|Booster Pack": {
+      "CA": 927,
+      "EU": 350,
+      "NZ": 1300,
+      "SG": 1500,
+      "US": 575
+    },
+    "SFD|Bulk Runes": {
+      "US": 1200
+    },
+    "SFD|Bulk Runes Case": {
+      "US": 11825
+    },
+    "SFD|Bundle": {
+      "EU": 5500
+    },
+    "SFD|Champion Deck": {
+      "AU": 2499,
+      "CA": 2132,
+      "NZ": 3500,
+      "SG": 2600,
+      "US": 1700
+    },
+    "SFD|Champion Deck (2 Versiones – IngléS)": {
+      "EU": 2000
+    },
+    "SFD|Champion Deck (Eng)": {
+      "EU": 2999
+    },
+    "SFD|Champion Deck (English)": {
+      "EU": 4000
+    },
+    "SFD|Champion Deck (Fiora)": {
+      "AU": 2499,
+      "CA": 2132,
+      "EU": 1200,
+      "NZ": 3000,
+      "SG": 3865,
+      "UK": 1999,
+      "US": 1999
+    },
+    "SFD|Champion Deck (Fiora) Display": {
+      "AU": 4000,
+      "US": 9889
+    },
+    "SFD|Champion Deck (Rumble)": {
+      "AU": 2499,
+      "CA": 2495,
+      "EU": 1100,
+      "NZ": 3000,
+      "SG": 2500,
+      "UK": 1685,
+      "US": 1700
+    },
+    "SFD|Champion Deck (Rumble) Display": {
+      "AU": 4000,
+      "EU": 10761,
+      "US": 3497
+    },
+    "SFD|Champion Deck (Set 2)": {
+      "UK": 1999
+    },
+    "SFD|Champion Deck (Vi)": {
+      "EU": 1990
+    },
+    "SFD|Champion Deck Display": {
+      "AU": 13500
+    },
+    "SFD|Nexus Night Pack": {
+      "AU": 4999,
+      "EU": 1000,
+      "SG": 2761,
+      "UK": 1185,
+      "US": 1165
+    },
+    "SFD|Pre-Rift Event Kit": {
+      "AU": 9069,
+      "EU": 4925,
+      "US": 187500
+    },
+    "SFD|Pre-Rift Kit": {
+      "AU": 15970,
+      "CA": 9699,
+      "EU": 5499,
+      "UK": 6999,
+      "US": 3000
+    },
+    "SFD|Sealed": {
+      "EU": 395,
+      "NZ": 205000
+    },
+    "SFD|Sleeved Booster": {
+      "EU": 1200,
+      "US": 1185
+    },
+    "SFD|Sleeved Booster (Art Set)": {
+      "US": 4395
+    },
+    "SFD|Starter Set": {
+      "CA": 7111,
+      "EU": 4200,
+      "SG": 6979
+    },
+    "T1S|T1 Signature Edition": {
+      "EU": 150000
+    },
+    "T1S|T1 Signature Edition|EN": {
+      "AU": 109364,
+      "CA": 107803,
+      "EU": 63659,
+      "SG": 97062,
+      "US": 75800
+    },
+    "UNL|Booster Box": {
+      "AU": 23900,
+      "CA": 15000,
+      "EU": 4990,
+      "NZ": 22000,
+      "SG": 22000,
+      "UK": 14499,
+      "US": 6000
+    },
+    "UNL|Booster Case": {
+      "AU": 157070,
+      "CA": 113776,
+      "EU": 63999,
+      "NZ": 125000,
+      "UK": 82270,
+      "US": 80000
+    },
+    "UNL|Booster Pack": {
+      "AU": 1299,
+      "CA": 899,
+      "EU": 695,
+      "NZ": 1000,
+      "SG": 900,
+      "UK": 599,
+      "US": 649
+    },
+    "UNL|Bundle": {
+      "CA": 7495,
+      "EU": 3999,
+      "SG": 4225
+    },
+    "UNL|Champion Deck": {
+      "CA": 1707,
+      "EU": 2099,
+      "NZ": 2500,
+      "UK": 1499,
+      "US": 1399
+    },
+    "UNL|Champion Deck (2 Versiones – IngléS)": {
+      "EU": 1995
+    },
+    "UNL|Champion Deck (English)": {
+      "EU": 2099
+    },
+    "UNL|Champion Deck (Vex)": {
+      "AU": 2999,
+      "CA": 1999,
+      "EU": 1300,
+      "NZ": 3499,
+      "SG": 3092,
+      "UK": 1775,
+      "US": 1500
+    },
+    "UNL|Champion Deck (Vex) Display": {
+      "AU": 3300,
+      "US": 7778
+    },
+    "UNL|Champion Deck (Vi)": {
+      "AU": 2499,
+      "CA": 1707,
+      "EU": 499,
+      "NZ": 3499,
+      "SG": 2128,
+      "UK": 1595,
+      "US": 1300
+    },
+    "UNL|Champion Deck (Vi) Display": {
+      "AU": 4000,
+      "US": 6085
+    },
+    "UNL|Nexus Night Pack": {
+      "CA": 5118,
+      "EU": 50000,
+      "SG": 69787,
+      "UK": 2500,
+      "US": 889
+    },
+    "UNL|Pre-Rift Event Kit": {
+      "CA": 5199,
+      "EU": 2990,
+      "NZ": 5000,
+      "US": 80000
+    },
+    "UNL|Pre-Rift Kit": {
+      "EU": 2990,
+      "NZ": 6200,
+      "UK": 3999,
+      "US": 2997
+    },
+    "UNL|Sealed": {
+      "EU": 400,
+      "NZ": 130000
+    },
+    "UNL|Showdown Decks": {
+      "US": 3499
+    },
+    "UNL|Sleeved Booster": {
+      "EU": 1300,
+      "US": 1001
+    },
+    "UNL|Sleeved Booster (Art Set)": {
+      "US": 2399
+    },
+    "UNL|Starter Set": {
+      "AU": 4000,
+      "EU": 2800,
+      "SG": 1800
+    },
+    "VEN|Booster Box": {
+      "AU": 22000,
+      "CA": 17999,
+      "EU": 5919,
+      "NZ": 21500,
+      "SG": 22000,
+      "UK": 12499,
+      "US": 5500
+    },
+    "VEN|Booster Case": {
+      "AU": 142510,
+      "CA": 142220,
+      "EU": 89000,
+      "NZ": 125000,
+      "UK": 82995,
+      "US": 87450
+    },
+    "VEN|Booster Pack": {
+      "AU": 1050,
+      "CA": 799,
+      "EU": 1100,
+      "NZ": 1000,
+      "SG": 1000,
+      "UK": 500,
+      "US": 599
+    },
+    "VEN|Bundle": {
+      "AU": 6500,
+      "CA": 5995,
+      "EU": 2800,
+      "NZ": 5700,
+      "SG": 4186,
+      "UK": 1615,
+      "US": 4750
+    },
+    "VEN|Bundle Case": {
+      "US": 64898
+    },
+    "VEN|Champion Deck": {
+      "EU": 2499,
+      "US": 3793
+    },
+    "VEN|Champion Deck Display": {
+      "CA": 5395,
+      "EU": 4300
+    },
+    "VEN|Nexus Night Pack": {
+      "US": 1072
+    },
+    "VEN|Pre-Rift Event Kit": {
+      "CA": 6185,
+      "EU": 2999,
+      "UK": 3317,
+      "US": 69999
+    },
+    "VEN|Pre-Rift Kit": {
+      "AU": 6380,
+      "CA": 6185,
+      "EU": 2800,
+      "NZ": 4999,
+      "SG": 7199,
+      "US": 3999
+    },
+    "VEN|Sealed": {
+      "EU": 400,
+      "NZ": 125000
+    },
+    "VEN|Showdown Decks": {
+      "AU": 4499,
+      "CA": 2495,
+      "EU": 1190,
+      "NZ": 6499,
+      "SG": 2511,
+      "UK": 1655,
+      "US": 1499
+    },
+    "VEN|Showdown Decks Display": {
+      "AU": 5000,
+      "CA": 4995,
+      "EU": 5800,
+      "US": 59900
+    },
+    "VEN|Sleeved Booster": {
+      "US": 900
+    },
+    "VEN|Sleeved Booster (Art Set)": {
+      "US": 2250
+    },
+    "VEN|Starter Set": {
+      "EU": 4200
+    },
+    "arcaneboxset": {
+      "EU": 24812
+    },
+    "arcaneimmersivemusicexperiencebooster": {
+      "EU": 7999
+    },
+    "enriftboundleagueoflegendsfiorachampiond": {
+      "EU": 3121
+    },
+    "enriftboundleagueoflegendsrumblechampion": {
+      "EU": 2151
+    },
+    "evelynnvsseraphineshowdowndecks": {
+      "EU": 3395
+    },
+    "frenchoriginesriftboundboosterbox": {
+      "CA": 23999
+    },
+    "frenchoriginesriftboundboosterpack": {
+      "CA": 999
+    },
+    "giftoftheriftbundle": {
+      "US": 28863
+    },
+    "leagueoflegendsbundle24popvinyls": {
+      "AU": 8396
+    },
+    "leagueoflegendsriftboundstarterdecks": {
+      "CA": 3888,
+      "US": 2999
+    },
+    "leagueoflegendsriftboundtcgchampiondeckv": {
+      "CA": 2843
+    },
+    "leagueoflegendsriftboundtcgpreriftkiteng": {
+      "EU": 7414
+    },
+    "leagueoflegendsriftboundtcgvaultbundleen": {
+      "EU": 4399
+    },
+    "leagueoflegendsriftboundtcgzedvsshenshow": {
+      "EU": 4200
+    },
+    "legacyboosterdisplay": {
+      "US": 24000
+    },
+    "legacyboosterdisplaycase": {
+      "US": 144000
+    },
+    "legacypreriftkit": {
+      "US": 11000
+    },
+    "legacyvaultbundle": {
+      "US": 11990
+    },
+    "legacyvaultbundlecase": {
+      "US": 144999
+    },
+    "originsnexusnightpromobooster": {
+      "EU": 1799
+    },
+    "preorderriftboundleagueoflegendstcggifto": {
+      "EU": 14900
+    },
+    "preorderriftboundleagueoflegendstcglegac": {
+      "CA": 2495
+    },
+    "preventariftboundleagueoflegendstcggifto": {
+      "EU": 15000
+    },
+    "provinggrounds": {
+      "EU": 2599
+    },
+    "radiancebooster": {
+      "EU": 550
+    },
+    "radianceboosterbox": {
+      "EU": 12099
+    },
+    "radiancecase6xboosterbox": {
+      "EU": 75000
+    },
+    "radiancevault": {
+      "EU": 3495
+    },
+    "replacementcardbooster": {
+      "EU": 3500
+    },
+    "riftboundarcaneboxset": {
+      "UK": 20870
+    },
+    "riftboundbulkrunescase": {
+      "AU": 14758
+    },
+    "riftboundchampiondeckbricknopack": {
+      "CA": 1000
+    },
+    "riftboundchampiondeckfiora": {
+      "CA": 2132
+    },
+    "riftboundchampiondeckjinx": {
+      "AU": 3250,
+      "CA": 2843,
+      "EU": 1767
+    },
+    "riftboundchampiondeckleesin": {
+      "AU": 3000,
+      "EU": 1767
+    },
+    "riftboundchampiondeckrumble": {
+      "CA": 2500,
+      "EU": 2307
+    },
+    "riftboundchampiondeckset1": {
+      "UK": 1995
+    },
+    "riftboundchampiondeckset3": {
+      "UK": 2000
+    },
+    "riftboundchampiondeckvex": {
+      "AU": 3300,
+      "CA": 2843,
+      "EU": 3290
+    },
+    "riftboundchampiondeckvi": {
+      "AU": 2499,
+      "CA": 1707,
+      "EU": 1976
+    },
+    "riftboundchampiondeckviktor": {
+      "AU": 2190,
+      "CA": 4900,
+      "EU": 2689
+    },
+    "riftboundjinxstarterdeck": {
+      "EU": 2152
+    },
+    "riftboundleagueoflegendsarcaneboxset": {
+      "US": 20000
+    },
+    "riftboundleagueoflegendschampiondeckjinx": {
+      "CA": 2843
+    },
+    "riftboundleagueoflegendschampiondeckvikt": {
+      "CA": 4900
+    },
+    "riftboundleagueoflegendslegacyboosterbox": {
+      "CA": 21999
+    },
+    "riftboundleagueoflegendslegacyboosterpac": {
+      "CA": 2400
+    },
+    "riftboundleagueoflegendslegacychampionde": {
+      "CA": 8995
+    },
+    "riftboundleagueoflegendslegacyshowdownde": {
+      "US": 7999
+    },
+    "riftboundleagueoflegendsshowdowndeckszed": {
+      "CA": 2999
+    },
+    "riftboundleagueoflegendsstarterdeckleesi": {
+      "EU": 2999
+    },
+    "riftboundleagueoflegendstcgcasescellede6": {
+      "EU": 72000
+    },
+    "riftboundleagueoflegendstcgchampiondeckf": {
+      "EU": 3000
+    },
+    "riftboundleagueoflegendstcgchampiondeckj": {
+      "AU": 3300,
+      "EU": 3490
+    },
+    "riftboundleagueoflegendstcgchampiondeckl": {
+      "EU": 2361
+    },
+    "riftboundleagueoflegendstcgchampiondeckr": {
+      "EU": 1990
+    },
+    "riftboundleagueoflegendstcgchampiondeckv": {
+      "EU": 2190
+    },
+    "riftboundleagueoflegendstcgevelynnvssera": {
+      "UK": 3499
+    },
+    "riftboundleagueoflegendstcggiftoftherift": {
+      "EU": 11900,
+      "US": 29999
+    },
+    "riftboundleagueoflegendstcgset1championd": {
+      "UK": 3000
+    },
+    "riftboundleagueoflegendstcgvexchampionde": {
+      "EU": 2250
+    },
+    "riftboundleagueoflegendstcgvichampiondec": {
+      "EU": 2250
+    },
+    "riftboundleagueoflegendstcgzedvsshenshow": {
+      "UK": 1615
+    },
+    "riftboundleagueoflegendstradingcardgamej": {
+      "US": 2500
+    },
+    "riftboundleagueoflegendsunleashboosterbo": {
+      "EU": 6000
+    },
+    "riftboundleesinstarterdeck": {
+      "EU": 2500
+    },
+    "riftboundlegacyboosterdisplaypreorder": {
+      "US": 15999
+    },
+    "riftboundlegacyvaultbundlepreorder": {
+      "US": 4999
+    },
+    "riftboundloltcgvichampiondeck": {
+      "EU": 2000
+    },
+    "riftboundlunarrevelbundle2026": {
+      "EU": 22234
+    },
+    "riftboundpreriftkits": {
+      "EU": 4299
+    },
+    "riftboundshowdowndeckevelynnvsseraphinep": {
+      "CA": 3999
+    },
+    "riftboundshowdowndecksseraphinevsevelynn": {
+      "EU": 3690
+    },
+    "riftboundshowdowndeckzedvsshen": {
+      "CA": 3500,
+      "EU": 2831
+    },
+    "riftboundtcgleagueoflegendschampiondeckv": {
+      "US": 1399
+    },
+    "riftboundtcgspiritforgeboosterdisplay24p": {
+      "EU": 14999
+    },
+    "riftboundvaultbundle": {
+      "EU": 3779
+    },
+    "riftboundvexchampiondeck": {
+      "EU": 3290
+    },
+    "riftboundvichampiondeck": {
+      "EU": 2300
+    },
+    "riftboundvichampiondecken": {
+      "EU": 1799
+    },
+    "riftboundviktorstarterdeck": {
+      "EU": 6310
+    },
+    "riftboundworldsbundle2025": {
+      "US": 4999
+    },
+    "riftboundxt12025worldschampionsignaturee": {
+      "EU": 600000
+    },
+    "riftboundzedvsshenshowdowndecksen": {
+      "EU": 2499
+    },
+    "secretgardenbox": {
+      "US": 29990
+    },
+    "secretgardenboxset": {
+      "EU": 5800
+    },
+    "t1worldschampionsignatureeditionbundle": {
+      "US": 539807
+    },
+    "vexchampiondeck": {
+      "EU": 3290
+    },
+    "worlds25commemorativebooster": {
+      "EU": 1999
+    },
+    "worldsbundle2025": {
+      "EU": 30999
+    }
+  }
+}
