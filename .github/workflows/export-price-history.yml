@@ -1,0 +1,53 @@
+name: Export price history to files
+
+# Copies the PUBLIC price history (the GLOBAL card series and the sealed series)
+# out of the Neon history project into data/price-history/ and commits it to
+# main. See scripts/export-history-files.ts and src/lib/price-history-store.ts.
+#
+# Additive and re-runnable: a day that already has a file keeps it (a file the
+# importer wrote is the authority for its day). Tick "overwrite" to replace
+# existing days with what Neon holds instead.
+#
+# The commit never carries the deploy marker: the files ride the next daily
+# release (scripts/publish-price-history.sh refuses a message containing it).
+#
+# The private history (ClickEvent) is not touched and never leaves Neon.
+
+on:
+  workflow_dispatch:
+    inputs:
+      overwrite:
+        description: "Replace day files that already exist with Neon's rows"
+        type: boolean
+        default: false
+
+concurrency:
+  group: price-history-files
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Export from the history project
+        env:
+          DATABASE_URL: ${{ secrets.RM5 || vars.RM5 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM5 || vars.RM5) && 'RM5' || 'UNSET' }}
+          HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+        run: npx tsx scripts/export-history-files.ts ${{ inputs.overwrite && '--overwrite' || '' }}
+      - name: Commit the files to main
+        run: bash scripts/publish-price-history.sh "export-price-history.yml (run ${{ github.run_id }})"
