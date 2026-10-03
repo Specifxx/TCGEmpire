@@ -50,16 +50,15 @@ test("historySource converts the stored USD figure into the requested market's o
   }
 });
 
-test("price-import.ts writes ONE GLOBAL row per card, the USD-converted minimum across every tracked market", () => {
+test("price-import.ts writes ONE GLOBAL point per card, the USD-converted minimum across every tracked market", () => {
   const code = codeOnly(read("src/lib/price-import.ts"));
   // The old per-country pushes must be gone — a resurrected one anywhere in
-  // the file would silently double-count that market in both the shared
-  // series AND (if this ever regressed) a per-market one.
+  // the file would silently double-count that market in the shared series.
   for (const c of ["AU", "US", "UK", "SG", "CA", "EU"]) {
     assert.doesNotMatch(
       code,
       new RegExp(`rows\\.push\\(\\{ cardId: c\\.id, country: "${c}"`),
-      `${c} must never be pushed as its own PriceHistory row any more`
+      `${c} must never be pushed as its own history row any more`
     );
   }
   // Every tracked market's own price is converted to USD through ONE shared
@@ -67,44 +66,55 @@ test("price-import.ts writes ONE GLOBAL row per card, the USD-converted minimum 
   // conversions that could individually drift.
   assert.match(code, /convertCents\(cents, currencyOf\(country\), "USD"\)/, "expected a uniform per-market USD conversion");
   assert.match(code, /const usdCandidates: number\[\] = \[\]/, "expected the candidate list the minimum is taken over");
-  assert.match(code, /Math\.min\(\.\.\.usdCandidates\)/, "expected the actual cross-market minimum, not an average or a fixed market's price");
-  assert.match(code, /country: GLOBAL_HISTORY_COUNTRY/, "the row written must use the shared GLOBAL sentinel");
+  assert.match(code, /points\.push\(\[c\.id, Math\.min\(\.\.\.usdCandidates\)\]\)/, "expected the actual cross-market minimum, not an average or a fixed market's price");
+  // 2026-10-03: the day's points go to the USD day file (lib/price-history-store.ts),
+  // not to a PriceHistory table.
+  assert.match(code, /writeCardHistoryDay\(day, points\)/, "the day's GLOBAL points are written to the day file");
+  assert.doesNotMatch(code, /dbHistory/, "price history is no longer written to the history database");
   // Live current prices are a SEPARATE, untouched code path — every market
   // still gets written to the Card table on every import.
   assert.match(code, /lowestPriceCentsCa:\s*nCa/, "CA's live current price must still update every import");
   assert.match(code, /lowestPriceCentsEu:\s*nEu/, "EU's live current price must still update every import");
 });
 
-// ── Every real PriceHistory reader must resolve through historySource ────────
+// ── Every real price-history reader must resolve through historySource ──────
 // (market-index.ts's computeRegionIndex is pinned in market-index-restore.test.ts
 // already, alongside the chain-linking it was changed in the same pass as.)
-// None of the tests below needed to change when the write formula did — they
-// assert the QUERY SHAPE (`country: source`, then convert), which historySource
-// keeps completely stable behind its own changed internals. That stability is
-// the whole point of funnelling every reader through one function.
+// Since 2026-10-03 every reader takes its points from the day files
+// (cardHistoryRows in lib/price-history-store.ts, which holds only the GLOBAL
+// USD series), so what is pinned is: the read goes through the store, never
+// the history database, and every price read is converted with historySource's
+// `convert` for the caller's market.
 
-test("price-history.ts's own 3 PriceHistory readers all resolve through historySource", () => {
-  const code = codeOnly(read("src/lib/price-history.ts"));
-  assert.match(code, /where:\s*\{\s*cardId,\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}/, "computePriceHistory");
-  assert.match(code, /where:\s*\{\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}[\s\S]{0,400}orderBy:\s*\{\s*day:\s*"asc"\s*\}[\s\S]{0,600}latestRowDay/, "computePriceMovers");
-  assert.match(code, /where:\s*\{\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}[\s\S]{0,600}latestDay/, "computeRecentlyUpdated");
+const readsThroughStore = (file: string, label: string) => {
+  const code = codeOnly(read(file));
+  assert.match(code, /cardHistoryRows\(/, `${label}: reads the day files`);
+  assert.doesNotMatch(code, /dbHistory\.priceHistory|FROM "PriceHistory"/, `${label}: must not read the retired PriceHistory table`);
+  assert.match(code, /const \{ convert \} = historySource\(country\)/, `${label}: resolves the market's conversion once`);
+  return code;
+};
+
+test("price-history.ts's own 3 readers all read the files and convert through historySource", () => {
+  const code = readsThroughStore("src/lib/price-history.ts", "price-history.ts");
+  assert.match(code, /cardHistoryRows\(\{ cardIds: \[cardId\], since: cutoff \}\)/, "computePriceHistory");
+  assert.match(code, /cardHistoryRows\(\{ since: cutoff \}\)[\s\S]{0,600}latestRowDay/, "computePriceMovers");
+  assert.match(code, /cardHistoryRows\(\{ since: cutoff \}\)[\s\S]{0,600}latestDay/, "computeRecentlyUpdated");
   // Every extracted price is converted at the point it's read, not left raw.
   const convertCalls = code.match(/convert\(r\.lowestPriceCents\)/g) ?? [];
   assert.ok(convertCalls.length >= 3, `expected all 3 readers to convert their rows, found ${convertCalls.length} call site(s)`);
 });
 
 test("premium.ts's portfolio history read resolves through historySource", () => {
-  const code = codeOnly(read("src/lib/premium.ts"));
+  const code = readsThroughStore("src/lib/premium.ts", "premium.ts");
   assert.match(code, /import\s*\{[^}]*historySource[^}]*\}\s*from\s*"\.\/price-history"/);
-  assert.match(code, /const \{ source, convert \} = historySource\(country\)/);
-  assert.match(code, /where:\s*\{\s*country:\s*source,\s*cardId:\s*\{\s*in:\s*cardIds\s*\}/);
-  assert.match(code, /lowestPriceCents:\s*convert\(r\.lowestPriceCents\)/, "the cached rows must be converted before being handed back");
+  assert.match(code, /cardHistoryRows\(\{ cardIds, since: cutoff \}\)/);
+  assert.match(code, /lowestPriceCents:\s*convert\(r\.lowestPriceCents\)/, "the rows must be converted before being handed back");
 });
 
 test("public-api.ts's bulk card summary resolves through historySource", () => {
-  const code = codeOnly(read("src/lib/public-api.ts"));
+  const code = readsThroughStore("src/lib/public-api.ts", "public-api.ts");
   assert.match(code, /import\s*\{[^}]*historySource[^}]*\}\s*from\s*"\.\/price-history"/);
-  assert.match(code, /where:\s*\{\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}/);
+  assert.match(code, /cardHistoryRows\(\{ since: cutoff \}\)/);
 });
 
 // screener.ts's undervalued baseline was pinned here until the Value Finder
@@ -114,46 +124,42 @@ test("rise-predictor.ts's GLOBAL scope reads the same shared series as every sin
   // 2026-09-05: GLOBAL used to read every real per-country row and pick
   // whichever market had the deepest series per card (there was something to
   // pick between). Now there is exactly one series, period, so GLOBAL and a
-  // single market read the identical rows — see tests/retired-market-safety.test.ts
+  // single market read the identical points — see tests/retired-market-safety.test.ts
   // for what that simplification removed (the per-country cast/guard it no
-  // longer needs).
+  // longer needs). The store holds only that series (2026-10-03), so there is
+  // no country filter left to get wrong: one scope-independent read of every
+  // card from riseHistoryStart (tests/rising-cards.test.ts pins the rest).
   const code = codeOnly(read("src/lib/rise-predictor.ts"));
-  assert.match(code, /import\s*\{[^}]*GLOBAL_HISTORY_COUNTRY[^}]*\}\s*from\s*"\.\/price-history"/);
-  // (2026-09-25: one scope-independent weekly read of every card, from the
-  // current pricing basis — no id list; tests/rising-cards.test.ts pins it.)
-  assert.match(
-    code,
-    /WHERE "country" = \$\{GLOBAL_HISTORY_COUNTRY\} AND "day" >= \$\{since\}[\s\S]{0,200}const since = riseHistoryStart\(Date\.now\(\)\)|const since = riseHistoryStart\(Date\.now\(\)\);[\s\S]{0,400}WHERE "country" = \$\{GLOBAL_HISTORY_COUNTRY\} AND "day" >= \$\{since\}/,
-    "every scope must filter to the single GLOBAL sentinel, unconditionally — no more scope-dependent country filter"
-  );
+  assert.match(code, /const rows = cardHistoryRows\(\{ since: riseHistoryStart\(Date\.now\(\)\) \}\)/);
+  assert.doesNotMatch(code, /dbHistory|FROM "PriceHistory"/);
 });
 
-test("weekly-promo.ts's pre-flight history check resolves through historySource", () => {
+test("weekly-promo.ts's pre-flight history check reads the shared series every market reads", () => {
+  // It once queried the OPERATIONAL database (empty PriceHistory) and skipped
+  // every Friday; then the history project. Now the day files, which hold the
+  // one GLOBAL series every market's movers read, so one count covers them all.
   const code = codeOnly(read("scripts/weekly-promo.ts"));
-  assert.match(code, /import\s*\{[^}]*historySource[^}]*\}\s*from\s*"\.\.\/src\/lib\/price-history"/);
-  assert.match(
-    code,
-    /dbHistory\.priceHistory\.count\(\{\s*where:\s*\{\s*country:\s*historySource\(market\)\.source\s*\}\s*\}\)/,
-    "must check the market the promo will ACTUALLY read, or a CA/EU-only history state reports a false 'no history'"
-  );
+  assert.match(code, /const historyRows = cardHistoryStats\(\)\.points/);
+  assert.doesNotMatch(code, /dbHistory/);
 });
 
-test("market-records.ts's two queries both redirect through historySource, using the SAME convert function", () => {
+test("market-records.ts's two passes both convert with the SAME function", () => {
   // The subtle failure mode here isn't a wrong currency — it's the peak/trough
-  // DAY-MATCHING logic (query 2's rows are matched against query 1's aggregate
+  // DAY-MATCHING logic (pass 2's points are matched against pass 1's summary
   // by exact value equality). convert() is deterministic, so converting BOTH
-  // queries' results with the SAME function preserves that equality; converting
+  // passes' results with the SAME function preserves that equality; converting
   // with two different closures (or converting only one side) would silently
   // break every peak/trough day for a derived market.
   const code = codeOnly(read("src/lib/market-records.ts"));
   assert.match(code, /import\s*\{[^}]*historySource[^}]*\}\s*from\s*"\.\/price-history"/);
-  assert.match(code, /const \{ source, convert \} = historySource\(country\)/);
-  assert.match(code, /groupBy\(\{\s*by:\s*\["cardId"\],\s*where:\s*\{\s*country:\s*source\s*\}/);
-  assert.match(code, /findMany\(\{\s*where:\s*\{\s*country:\s*source,\s*cardId:\s*\{\s*in:\s*ids\s*\}/);
+  assert.match(code, /const \{ convert \} = historySource\(country\)/);
+  assert.match(code, /const agg = cardHistorySummaries\(\)/);
+  assert.match(code, /cardHistoryRows\(\{ cardIds: ids \}\)/);
+  assert.doesNotMatch(code, /dbHistory/);
   // Both extraction points use the one `convert` closure resolved above — not a
   // second historySource(...) call, which would still be correct but would
   // defeat the point of this test (proving it's the SAME function both times).
   const convertCalls = code.match(/convert\(/g) ?? [];
-  assert.ok(convertCalls.length >= 3, `expected convert() applied at both query-1 (peak/trough) and query-2 (v) extraction points, found ${convertCalls.length} call(s)`);
+  assert.ok(convertCalls.length >= 3, `expected convert() applied at both pass-1 (peak/trough) and pass-2 (v) extraction points, found ${convertCalls.length} call(s)`);
   assert.doesNotMatch(code, /historySource\(country\)[\s\S]*historySource\(country\)/, "must resolve historySource once and reuse it, not re-derive a second (possibly-inconsistent) convert closure");
 });

@@ -4643,9 +4643,10 @@ It doesn't take much effort either. [Watch](/alerts) the handful of cards you wa
     author: "RiftCompare",
     date: "2026-07-01",
     // 2026-09-26: prices are listings, never sales; the basket is the
-    // most-searched cards, re-derived each time rather than hand-reviewed; the
-    // snapshot is weekly (lib/market-index.ts, lib/price-history.ts).
-    updated: CORRECTED,
+    // most-searched cards, re-derived each time rather than hand-reviewed.
+    // 2026-10-03: the snapshot is daily again, weekly only from 31 August to
+    // 3 October 2026 (lib/price-history-store.ts, lib/market-index.ts).
+    updated: "2026-10-03",
     readMins: 4,
     tags: ["riftcompare-index", "methodology", "riftbound-tcg", "market-data"],
     faq: [
@@ -4671,14 +4672,14 @@ It doesn't take much effort either. [Watch](/alerts) the handful of cards you wa
       },
       {
         q: "Does the RiftCompare Index work for regions outside the US?",
-        a: "The Index defaults to the US market, and AU, UK, SG, CA and EU each run the same five-step computation with their own basket — the most-searched cards with a live price there — on the shared weekly price series, converted into that region's currency at our reference rates. Pick the one you want from the Market selector on [/market](/market).",
+        a: "The Index defaults to the US market, and AU, UK, SG, CA and EU each run the same five-step computation with their own basket — the most-searched cards with a live price there — on the shared daily price series, converted into that region's currency at our reference rates. Pick the one you want from the Market selector on [/market](/market).",
       },
     ],
     body: `## What the RiftCompare Index Actually Measures
 
-The RiftCompare Index is a single number meant to answer one question: *is the Riftbound secondary market, taken as a whole, worth more or less than it used to be?* It is not the price of any one card, and it isn't an average of "everything for sale." It's a tracked basket of specific cards whose combined value is rebased to a starting point, so the week-to-week movement of that basket tells you something about market direction rather than about one chase card getting hot.
+The RiftCompare Index is a single number meant to answer one question: *is the Riftbound secondary market, taken as a whole, worth more or less than it used to be?* It is not the price of any one card, and it isn't an average of "everything for sale." It's a tracked basket of specific cards whose combined value is rebased to a starting point, so the movement of that basket over time tells you something about market direction rather than about one chase card getting hot.
 
-Think of it the way a stock index works. The S&P 500 doesn't tell you what any single company is worth - it tells you whether large-cap US equities broadly went up or down. The Index on [/market](/market) is built the same way for Riftbound singles: a defined group of cards, priced once a week, combined into one line you can watch over time.
+Think of it the way a stock index works. The S&P 500 doesn't tell you what any single company is worth - it tells you whether large-cap US equities broadly went up or down. The Index on [/market](/market) is built the same way for Riftbound singles: a defined group of cards, priced once a day, combined into one line you can watch over time.
 
 This matters because individual card prices are noisy. A single copy listed low because a seller needed cash fast, or high because one shop is asking too much, can make a card's price chart look dramatic without meaning anything about the format or the game's overall health. An index smooths that out by design.
 
@@ -4694,7 +4695,7 @@ The basket is not frozen on a review date. It is worked out fresh from search da
 
 ## How the Index Actually Combines Prices — Chain-Linking
 
-Every card in the basket gets a price snapshot once a week - effectively a weekly "closing price": the cheapest in-stock listing we track for it across our markets, recorded in US dollars. It is a listing price, never a sale price; RiftCompare does not record sales.
+Every card in the basket gets a price snapshot once a day - effectively a daily "closing price" (between 31 August and 3 October 2026 the snapshot was weekly, so that stretch of the chart moves in weekly steps): the cheapest in-stock listing we track for it across our markets, recorded in US dollars. It is a listing price, never a sale price; RiftCompare does not record sales.
 
 The naive way to turn a basket of prices into one number is: average them each snapshot, then rebase the first snapshot to a round starting value like 100. That's how a lot of simple indices work, and it's how an earlier version of this one worked. It has a real flaw, though: the basket isn't fixed forever - it's the 200 most-searched cards *right now*, and that list moves as the metagame shifts and, especially, whenever a new set releases and a wave of newly-revealed cards suddenly gets searched heavily. A plain average jumps the instant a differently-priced card enters or leaves the basket, whether or not anything anyone actually owns changed price at all - which makes the naive version misleading at exactly the moment it matters most, a set launch.
 
@@ -4736,7 +4737,7 @@ The plain-English version above is what you need to interpret the number day to 
 
 That's the whole thing - five steps, no persisted state, recomputed from scratch every time from the raw tracked prices, nothing set-specific hard-coded anywhere in it. Step 5 is the literal answer to "what happens when a new set releases": a card with no price at \`t'\` is outside \`C\` for that step by construction, so it cannot affect \`return\` no matter how differently it's priced from the rest of the basket - it only starts actually moving the number from its first two consecutive tracked prices onward. Notice \`C\` doesn't need to be *most* of the basket - it just needs to be non-empty. An earlier version of this formula also required \`C\` to clear a coverage threshold before trusting a step, on the theory that a thin \`C\` meant an untrustworthy reading. It didn't actually add any protection beyond what the exclusion rule above already gives for free, and it meant the chart started later than the real data did - so it's gone.
 
-**Regions.** The Index defaults to the US market. Every other tracked region (AU, UK, SG, CA, EU) runs the same five-step computation with its own constituents - the most-searched cards with a live price in that market - on the same weekly price series, converted into the region's own currency at our reference rates. Pick one from the Market selector on the page.
+**Regions.** The Index defaults to the US market. Every other tracked region (AU, UK, SG, CA, EU) runs the same five-step computation with its own constituents - the most-searched cards with a live price in that market - on the same daily price series, converted into the region's own currency at our reference rates. Pick one from the Market selector on the page.
 
 ## Index vs. Movers: Two Different Questions
 

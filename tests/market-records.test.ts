@@ -23,37 +23,38 @@ const PAGE = "src/app/market/records/page.tsx";
 // The two tests below are the whole reason the file is shaped the way it is.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("ranking is a server-side aggregate, never a full-table pull", () => {
+test("ranking is one summary per card, never the whole series", () => {
   const src = codeOnly(read(LIB));
-  // groupBy makes Postgres do the scan and return ~one row per CARD. The wire
-  // cost is then bounded by the catalogue (~1,400 tiny rows) instead of by how
-  // deep the history goes.
-  assert.match(src, /dbHistory\.priceHistory\.groupBy\(/, "the ranking pass must aggregate server-side");
-  assert.match(src, /_max:\s*\{[^}]*lowestPriceCents/, "must take the max in the database");
-  assert.match(src, /_min:\s*\{[^}]*lowestPriceCents/, "must take the min in the database");
+  // Pass 1 ranks on {max, min, day count, first/last day} per card. It was a
+  // server-side groupBy while the history was a Neon table (the wire was what
+  // cost); since 2026-10-03 it is cardHistorySummaries() over the day files, and
+  // still the cheap way to rank: no per-card series is built for cards that
+  // cannot make a board.
+  assert.match(src, /const agg = cardHistorySummaries\(\)/, "the ranking pass must use the per-card summaries");
+  assert.match(src, /convert\(r\.maxCents\)/, "peak from the summary's max");
+  assert.match(src, /convert\(r\.minCents\)/, "trough from the summary's min");
+  assert.doesNotMatch(src, /dbHistory/, "records no longer read the history database");
 });
 
-test("the detail query is bounded by the page size, not the catalogue", () => {
+test("the detail read is bounded by the page size, not the catalogue", () => {
   const src = codeOnly(read(LIB));
-  const finds = src.match(/dbHistory\.priceHistory\.findMany\(/g) ?? [];
+  const finds = src.match(/cardHistoryRows\(/g) ?? [];
   assert.equal(finds.length, 1, "expected exactly one detail read");
-  const fn = src.slice(src.indexOf("dbHistory.priceHistory.findMany("));
-  const body = fn.slice(0, fn.indexOf("});"));
-  // Scoped to the SHORTLIST. Without `cardId: { in: ids }` this is the
-  // whole-table read the groupBy above exists to avoid.
-  assert.match(body, /cardId:\s*\{\s*in:\s*ids\s*\}/, "the detail read must be scoped to the shortlisted cards");
+  // Scoped to the SHORTLIST. Without `cardIds: ids` this is the whole-series
+  // read the summary pass exists to avoid.
+  assert.match(src, /cardHistoryRows\(\{ cardIds: ids \}\)/, "the detail read must be scoped to the shortlisted cards");
   // And the shortlist itself must be capped before it gets here.
   assert.match(src, /const over = limit \* 3/, "the shortlist must be a fixed multiple of the page size");
 });
 
-test("records are day-cached, like every other history-derived read", () => {
+test("records are cached per history version, like every other history-derived read", () => {
   const src = codeOnly(read(LIB));
   assert.match(src, /cachedOrDirect\(/, "must use the shared cache helper");
-  assert.match(src, /sydneyWeekKey\(\)/, "the cache key must include the Sydney week");
-  // HISTORY_TAG, not CONTENT_TAG, and deliberately so: PriceHistory is written
-  // weekly, so letting a twice-daily price import purge this would force six
-  // whole-market re-scans a day to rebuild an identical answer. That tag split
-  // is the point of the change — see revalidate-content.ts.
+  assert.match(src, /cardHistoryVersion\(\)/, "the cache key must carry the history version");
+  // HISTORY_TAG, not CONTENT_TAG, and deliberately so: the history only changes
+  // with a release, so letting a twice-daily price import purge this would
+  // rebuild an identical answer. That tag split is the point — see
+  // revalidate-content.ts.
   assert.match(src, /tags:\s*\[HISTORY_TAG\]/, "history reads must not be purged by an ordinary price import");
 });
 
@@ -80,35 +81,19 @@ test("a stale snapshot refuses to publish records at all", () => {
 test("a card needs real history before it can hold a record", () => {
   const src = codeOnly(read(LIB));
   assert.match(src, /const MIN_DAYS = \d+/, "expected a minimum-history floor");
-  assert.match(src, /_count\._all < MIN_DAYS/, "the floor must actually gate the candidate list");
   // Without this, every new set fills the board the day it is added — a card
   // priced on three days has an all-time high by definition and it means
   // nothing.
-  // MIN_DAYS counts SNAPSHOT ROWS, and the snapshot interval is a separate
-  // constant that has already changed once (daily -> weekly, for history-database
-  // cost). Asserting a raw row count therefore encodes the cadence by accident:
-  // the old `min >= 7` silently meant "seven weeks" the moment writes went weekly.
   //
-  // Assert the thing actually intended instead — how much ELAPSED history a
-  // record needs behind it — by multiplying the floor by the real interval. This
-  // now fails correctly in both directions: too few snapshots, or a cadence
-  // change that makes the existing floor meaningless.
-  const min = Number(/const MIN_DAYS = (\d+)/.exec(src)![1]);
-  // Canonical home is price-history.ts (2026-09-02) — shared with
-  // sealed-import.ts's own weekly writer, so price-import.ts imports it
-  // rather than defining it locally. See price-history.ts's own comment for
-  // why: price-import.ts already imports FROM sealed-import.ts, so defining
-  // this constant in either writer instead of the neutral price-history.ts
-  // would have closed a real import cycle.
-  const historySrc = read("src/lib/price-history.ts");
-  const intervalMatch = /export const HISTORY_MIN_INTERVAL_DAYS = (\d+)/.exec(historySrc);
-  assert.ok(intervalMatch, "expected HISTORY_MIN_INTERVAL_DAYS in price-history.ts");
-  const interval = Number(intervalMatch![1]);
-  const coverageDays = min * interval;
-  assert.ok(
-    coverageDays >= 14,
-    `MIN_DAYS of ${min} at one snapshot per ${interval} day(s) is only ${coverageDays} days of history — too thin to call anything "all-time"`,
-  );
+  // MIN_DAYS counts SNAPSHOTS, and the snapshot cadence has changed twice
+  // (daily → weekly → daily again on 2026-10-03). A row count alone encodes the
+  // cadence by accident: three rows were three weeks, and are now three days.
+  // So the floor is also an elapsed SPAN, asserted here directly.
+  const span = /const MIN_SPAN_MS = (\d+) \* 86_400_000/.exec(src);
+  assert.ok(span, "expected a minimum span of history, in days");
+  assert.ok(Number(span![1]) >= 14, `a ${span![1]}-day span is too thin to call anything "all-time"`);
+  assert.match(src, /r\.days < MIN_DAYS \|\| r\.lastDay\.getTime\(\) - r\.firstDay\.getTime\(\) < MIN_SPAN_MS/, "both floors gate the candidate list");
+  assert.match(src, /seg\.length < MIN_DAYS \|\| seg\[seg\.length - 1\]\.t - seg\[0\]\.t < MIN_SPAN_MS/, "and the current-basis boards");
 });
 
 test("an absurd drop is treated as our own bad data, not a record", () => {

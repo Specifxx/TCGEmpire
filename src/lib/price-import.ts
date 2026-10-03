@@ -5,12 +5,12 @@
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
-import { dbHistory, ensureHistoryCards } from "./db-history";
+import { writeCardHistoryDay } from "./price-history-store";
 import { DECOMMISSIONED_RETAILERS, RETAILER_LIST, RetailerInfo, STORE_ROWS_MAX_AGE_H } from "./retailers";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
 import { importSealed } from "./sealed-import";
-import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS, GLOBAL_HISTORY_COUNTRY } from "./price-history";
+import { sydneyDay } from "./price-history";
 import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
@@ -2177,35 +2177,29 @@ export async function importPrices(): Promise<ImportSummary> {
 
   // Snapshot today's GLOBAL lowest price per card for the price-over-time
   // chart: the cheapest price found in ANY tracked market that day, converted
-  // to USD cents and written as ONE row (country=GLOBAL_HISTORY_COUNTRY). One
-  // point per card per Sydney day; a same-day re-run (e.g. a deploy) replaces
-  // the day's rows.
+  // to USD cents. One point per card per Sydney day, in that day's file under
+  // data/price-history/cards (lib/price-history-store.ts); a same-day re-run
+  // replaces the day's file, so the last import of the day wins.
   //
   // CHANGED 2026-09-05 from one row per TRACKED MARKET (AU/US/UK/SG) to one
-  // GLOBAL row. 2026-09-02 had already stopped writing CA/EU as pure
-  // currency-converted duplicates of US/UK; this finishes the same idea for
-  // the four markets that were still each getting their own row — every real
-  // reader already resolves through historySource() in price-history.ts,
-  // which now maps EVERY market to this one GLOBAL series and converts the
-  // stored USD figure back to that market's own currency on read, the same
-  // "write once, convert on read" trick CA/EU already used. Live current
-  // prices per market (Card.lowestPriceCents*, above) are completely
-  // unaffected — only the HISTORY archive is consolidated.
+  // GLOBAL point: every reader resolves through historySource() in
+  // price-history.ts, which maps EVERY market to this one series and converts
+  // the stored USD figure back to that market's own currency on read. Live
+  // current prices per market (Card.lowestPriceCents*, above) are unaffected —
+  // only the HISTORY archive is consolidated.
+  //
+  // CHANGED 2026-10-03 from a weekly row set in the Neon history project to a
+  // DAILY file in this repository. The weekly gate was that database's cost
+  // control; a file costs nothing to read. refresh-prices.yml commits the file
+  // to main after the import (scripts/publish-price-history.sh) and the next
+  // release ships it. No history-database Card rows are needed any more either
+  // (the old ensureHistoryCards step): the files have no foreign key, which
+  // also retires the failure where one card with a stale duplicate slug
+  // rejected a whole day's batch.
   try {
     const day = sydneyDay();
-    // Split-history setups: make sure every card exists in the history DB first
-    // (PriceHistory has an FK to Card there too). No-op on single-DB setups.
-    const writable = await ensureHistoryCards(existing.map((c) => c.id));
-    const rows: { cardId: string; country: string; day: Date; lowestPriceCents: number }[] = [];
+    const points: [string, number][] = [];
     for (const c of existing) {
-      // Skip any card the history DB could not be given a Card row for. The
-      // write below is ONE createMany, so a single unsatisfiable foreign key
-      // rejects every row in the batch — that is how one card with a stale
-      // duplicate slug cost eleven days of price history for all ~1,400 cards
-      // while the import kept reporting success. Losing one card's point is a
-      // rounding error; losing the day is not. (null = single-database setup,
-      // where the FK is against the same Card table and always satisfied.)
-      if (writable && !writable.has(c.id)) continue;
       // Convert each tracked market's own lowest price to USD cents, then take
       // the actual minimum across whichever markets have a price today — the
       // cheapest this card is available ANYWHERE, in one common currency.
@@ -2219,43 +2213,14 @@ export async function importPrices(): Promise<ImportSummary> {
         if (cents != null) usdCandidates.push(convertCents(cents, currencyOf(country), "USD"));
       }
       if (usdCandidates.length === 0) continue;
-      rows.push({ cardId: c.id, country: GLOBAL_HISTORY_COUNTRY, day, lowestPriceCents: Math.min(...usdCandidates) });
+      points.push([c.id, Math.min(...usdCandidates)]);
     }
-    // WEEKLY SNAPSHOTS, NOT TWICE-DAILY. This is the history database's cost
-    // control, and it works on both sides of the ledger at once:
-    //
-    //   • fewer writes — this ran on every import, i.e. twice a day, writing
-    //     ~1,400 cards x 6 markets each time;
-    //   • fewer READS, which is the larger half. Every windowed history query is
-    //     "all cards in this market over N days". At one point per week instead
-    //     of one per day, the same window returns roughly a seventh as many rows,
-    //     for every reader — movers, charts, screener, portfolio, public API.
-    //
-    // Gated on the distance from the newest existing snapshot rather than on a
-    // weekday, so a missed run self-heals on the next import instead of waiting
-    // a full week. Date-only arithmetic (`day` is @db.Date) keeps this immune to
-    // the cron drifting by a few hours either side.
-    const newest = await dbHistory.priceHistory.findFirst({
-      orderBy: { day: "desc" },
-      select: { day: true },
-    });
-    const daysSince = newest
-      ? Math.round((day.getTime() - newest.day.getTime()) / 86400_000)
-      : Number.POSITIVE_INFINITY;
-
-    if (daysSince < HISTORY_MIN_INTERVAL_DAYS) {
-      console.log(
-        `Price history: skipped — last snapshot was ${daysSince} day(s) ago, writing at most every ${HISTORY_MIN_INTERVAL_DAYS}.`
-      );
-    } else {
-      await dbHistory.priceHistory.deleteMany({ where: { day } });
-      if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
-      const skipped = writable ? existing.filter((c) => !writable.has(c.id)).length : 0;
-      console.log(
-        `Price history: recorded ${rows.length} GLOBAL points (USD) for ${day.toISOString().slice(0, 10)}` +
-          (skipped ? ` — ${skipped} card(s) skipped: no Card row in the history DB` : "") + "."
-      );
-    }
+    const written = writeCardHistoryDay(day, points);
+    console.log(
+      written
+        ? `Price history: recorded ${written.count} GLOBAL points (USD) for ${day.toISOString().slice(0, 10)} in ${written.file}.`
+        : "Price history: no card had a price today — the day's file was left as it was.",
+    );
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }

@@ -206,8 +206,8 @@ export default async function AboutPage() {
             postage. We always request each store&rsquo;s local price, in its market&rsquo;s currency.
           </p>
           <p>
-            Once a week we also record each card&rsquo;s cheapest price across the Australian, US, UK and
-            Singapore markets, in US dollars. That weekly series powers
+            Every day we also record each card&rsquo;s cheapest price across the Australian, US, UK and
+            Singapore markets, in US dollars. That daily series powers
             the <Link href="/movers" className="text-brand-400 hover:underline">price movers</Link>, the{" "}
             <Link href="/market" className="text-brand-400 hover:underline">RiftCompare Index</Link> and
             every card&rsquo;s price-history chart. Our{" "}

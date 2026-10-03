@@ -11,7 +11,7 @@
 // Each section is built on demand by its own route (/sitemaps/<id>.xml), so a
 // request for one section never runs the other sections' queries.
 import { prisma } from "./db";
-import { dbHistory } from "./db-history";
+import { cardHistoryLatestDay } from "./price-history-store";
 import { SITE_URL } from "./site";
 import { cardImageSrc } from "./card-image-url";
 import { getArticles } from "./articles";
@@ -67,7 +67,7 @@ export const SECTIONS: readonly SectionId[] = ALL_SECTIONS.filter((s) => s !== "
 // real lastmod, but "real" means "true fact about the page", never `new Date()`.
 async function priceDay(): Promise<Date | undefined> {
   try {
-    return (await dbHistory.priceHistory.findFirst({ orderBy: { day: "desc" }, select: { day: true } }))?.day;
+    return cardHistoryLatestDay();
   } catch {
     return undefined;
   }

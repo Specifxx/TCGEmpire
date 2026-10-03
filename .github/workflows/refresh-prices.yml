@@ -49,6 +49,12 @@ concurrency:
   group: refresh-prices
   cancel-in-progress: false
 
+# contents: write lets the last step commit the day's price-history files to
+# main with the default GITHUB_TOKEN (a GITHUB_TOKEN push starts no other
+# workflow, and the commit has no deploy marker, so it never builds on its own).
+permissions:
+  contents: write
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -232,6 +238,19 @@ jobs:
           echo "revalidate -> HTTP ${code:-000}"
           [ "$code" = "200" ] && echo "purged=true" >> "$GITHUB_OUTPUT"
           [ "$code" = "200" ] || echo "Non-200/failed (pages still refresh on their 24h TTL); not failing the run."
+
+      - name: Publish the day's price-history files
+        # The import wrote today's card file and the sealed import today's sealed
+        # file under data/price-history (src/lib/price-history-store.ts). Commit
+        # them to main so the next daily release bundles them: that is the only
+        # way price history reaches the site since 2026-10-03, when it moved out
+        # of the Neon history project. AFTER the revalidate step on purpose: that
+        # step reads main's newest commit subject to tell whether a release is
+        # still coming, and this commit must not change its answer. Before the
+        # alert steps, which may fail without affecting the files. Runs even when
+        # the sealed import failed: the card file is already written and correct.
+        if: ${{ !cancelled() }}
+        run: bash scripts/publish-price-history.sh "refresh-prices.yml (${{ github.event_name }}, run ${{ github.run_id }})"
 
       - name: Free price alerts (daily digest)
         # The daily "all" run: every watch, free and anonymous included, under

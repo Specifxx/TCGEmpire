@@ -1,15 +1,13 @@
 import { prisma } from "./db";
-import { dbHistory } from "./db-history";
+import { cardHistoryRows, cardHistoryVersion } from "./price-history-store";
 import { priceField, pickPrice, currencyOf, COUNTRY_LIST, type Country } from "./country";
 import { ALL_FALLBACK_RETAILERS } from "./constants";
 import { computeSignals } from "./ai-insight";
 import {
   historySource,
-  GLOBAL_HISTORY_COUNTRY,
   cachedOrDirect,
   sydneyDay,
   sydneyDayKey,
-  sydneyWeekKey,
   collapseToWeekly,
   globalLowUsd,
   type PricePoint,
@@ -50,15 +48,17 @@ import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats
 //
 // ── THE EGRESS SHAPE (2026-09-25) ────────────────────────────────────────────
 // Two self-caching loaders and an UNCACHED assembly:
-//   • getRiseHistory() — week-keyed, HISTORY_TAG, scope-independent. EVERY
-//     card's GLOBAL series over the last HISTORY_DAYS (riseHistoryStart()),
-//     collapsed to one point per week before it is cached. No card list, so it
-//     is a superset of every scope's universe by construction: a card missing
-//     from it has no history in the window, never "history we did not load".
-//     ~1,400 cards × at most ~18 weekly points. PriceHistory only changes
-//     weekly and every market reads the same GLOBAL series, so this is read
-//     about once a week instead of once per scope per import purge (7 scopes ×
-//     ~3 purges a day re-read the same ~37k rows before).
+//   • getRiseHistory() — keyed on the history version, HISTORY_TAG,
+//     scope-independent. EVERY card's GLOBAL series over the last HISTORY_DAYS
+//     (riseHistoryStart()), collapsed to one point per week before it is
+//     cached: the model's signals are weekly whatever the snapshot cadence
+//     (daily again since 2026-10-03). No card list, so it is a superset of
+//     every scope's universe by construction: a card missing from it has no
+//     history in the window, never "history we did not load". ~1,400 cards ×
+//     at most ~18 weekly points. Every market reads the same GLOBAL series, so
+//     this is built once per release that brings new history (it was once a
+//     week while history was a database read, and once per scope per import
+//     purge before that).
 //   • getRiseInputs(scope) — day-keyed, CONTENT_TAG: the cheap operational
 //     inputs that do change daily (the scope's universe and live prices, supply,
 //     demand velocity).
@@ -100,9 +100,6 @@ export function parseRiseScope(value: string | null | undefined, fallback: RiseS
 
 const SCAN = 400; // universe per scope: most-searched cards priced in it
 const HISTORY_DAYS = 120;
-// Circuit breaker on the weekly history read, not a real limit: ~1,400 cards ×
-// at most ~18 weekly points is ~25k rows after the SQL-side weekly collapse.
-const HISTORY_ROW_CAP = 60_000;
 // A search-growth percentage over fewer days of demand snapshots is noise on a
 // small base (a card first snapshotted two days ago can read "+300%"), so the
 // growth figure is only quoted once its span reaches this.
@@ -304,8 +301,8 @@ export function getCachedRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
 
 // ── Loader 1: scope-independent weekly history ───────────────────────────────
 export function getRiseHistory(): Promise<RiseHistory> {
-  return cachedOrDirect(() => computeRiseHistory(), ["rc-rise-history-v2", sydneyWeekKey()], {
-    revalidate: 8 * 86400, // one week + a day of slack; the week key is what refreshes it
+  return cachedOrDirect(() => computeRiseHistory(), ["rc-rise-history-v3", cardHistoryVersion()], {
+    revalidate: 8 * 86400, // fallback only; the history version in the key is what refreshes it
     tags: [HISTORY_TAG],
   });
 }
@@ -313,8 +310,8 @@ export function getRiseHistory(): Promise<RiseHistory> {
 // The first day the weekly history load reads. It briefly started at the
 // current pricing basis (the 09-23 break), while the assembly dropped
 // pre-break points; since the owner kept the old signals (see the header,
-// point 3) it is simply the HISTORY_DAYS window: ~1,400 cards × ≤18 weekly points, read about once a
-// week (week-keyed cache). Exported for tests.
+// point 3) it is simply the HISTORY_DAYS window: ~1,400 cards × ≤18 weekly points, built once per
+// release that brings new history. Exported for tests.
 export function riseHistoryStart(now: number): Date {
   return new Date(now - HISTORY_DAYS * DAY_MS);
 }
@@ -323,37 +320,23 @@ async function computeRiseHistory(): Promise<RiseHistory> {
   // No try/catch: a failure must reach getCachedRisingCards, not be cached.
   //
   // EVERY card's GLOBAL series in the window — no card list, deliberately (see
-  // the header): a superset of every scope's universe by construction. Served
-  // by the (country, day) index. PriceHistory lives in the split-off history
-  // database (lib/db-history.ts); every scope reads this one GLOBAL series
-  // (historySource() maps every market to it), converted at assembly time.
-  //
-  // Weekly-collapsed IN THE DATABASE (2026-09-25). Once the window went back to
-  // the full HISTORY_DAYS it reaches the legacy DAILY rows from before
-  // 2026-08-31, so a plain findMany shipped ~60k raw rows (HISTORY_ROW_CAP) to
-  // every cold build worker at once — and the production build that shipped it
-  // timed out at static generation. DISTINCT ON keeps each card's cheapest row
-  // per ISO week, so the wire carries ~1,400 cards × ≤18 weeks (~25k narrow
-  // rows); collapseToWeekly below re-buckets to Sydney weeks, which can only
-  // merge rows further. Served by the (country, day) index.
-  const since = riseHistoryStart(Date.now());
-  const rows = await dbHistory.$queryRaw<{ cardId: string; day: Date; lowestPriceCents: number }[]>`
-    SELECT DISTINCT ON ("cardId", date_trunc('week', "day"))
-           "cardId", "day", "lowestPriceCents"
-    FROM "PriceHistory"
-    WHERE "country" = ${GLOBAL_HISTORY_COUNTRY} AND "day" >= ${since}
-    ORDER BY "cardId", date_trunc('week', "day"), "lowestPriceCents" ASC
-    LIMIT ${HISTORY_ROW_CAP}
-  `;
+  // the header): a superset of every scope's universe by construction. Read
+  // from the day files bundled with the release (lib/price-history-store.ts);
+  // every scope reads this one GLOBAL series (historySource() maps every market
+  // to it), converted at assembly time. (Until 2026-10-03 this was a DISTINCT ON
+  // query against the Neon history project, collapsing to weeks in SQL to keep
+  // ~60k raw rows off the wire; a local read has no wire, so collapseToWeekly
+  // below does all of it.)
+  const rows = cardHistoryRows({ since: riseHistoryStart(Date.now()) });
   const series: RiseHistory["series"] = {};
   const history: RiseHistory = { series };
   const byCard = new Map<string, { day: Date; lowestPriceCents: number }[]>();
   for (const r of rows) (byCard.get(r.cardId) ?? byCard.set(r.cardId, []).get(r.cardId)!).push(r);
 
   // One point per week BEFORE caching (collapseToWeekly also restores oldest-
-  // first order): legacy daily rows from before 2026-08-31 still sit in the
-  // GLOBAL series whenever the window reaches back that far, and made the old
-  // "30d" sparkline mostly August. Stored as [epochDay, cents] to keep the
+  // first order): the series is daily before 2026-08-31 and again from
+  // 2026-10-03, and uncollapsed daily points made the old "30d" sparkline
+  // mostly August. Stored as [epochDay, cents] to keep the
   // entry small (~1,400 cards × ≤18 points ≈ 350 KB, well inside the ~1.2 MB
   // unstable_cache budget in lib/db.ts).
   for (const [cardId, list] of byCard) {

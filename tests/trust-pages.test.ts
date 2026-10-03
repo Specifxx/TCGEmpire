@@ -156,8 +156,11 @@ test("the refresh list matches the importer's real cadence", () => {
   assert.match(importer, /retailerName: "eBay US",[\s\S]{0,80}USD_TO\.CAD/);
   assert.match(policy, /Canada&rsquo;s eBay rows are the US results converted to Canadian dollars/);
 
-  assert.equal(num("src/lib/price-history.ts", "HISTORY_MIN_INTERVAL_DAYS"), 7);
-  assert.match(policy, /once a week we record each card&rsquo;s cheapest price across the Australian, US, UK and Singapore markets, in US dollars/);
+  // Daily since 2026-10-03 (weekly 2026-08-31 → 10-03): every import writes or
+  // replaces the day's file (lib/price-history-store.ts) with no interval gate.
+  assert.doesNotMatch(read("src/lib/price-history.ts"), /HISTORY_MIN_INTERVAL_DAYS =/, "an interval gate came back — re-derive what the policy says");
+  assert.match(read("src/lib/price-import.ts"), /writeCardHistoryDay\(day, points\)/);
+  assert.match(policy, /every day we record each card&rsquo;s cheapest price across the Australian, US, UK and Singapore markets, in US dollars/);
   assert.match(read("src/lib/price-history.ts"), /GLOBAL_LOW_MARKETS: readonly Country\[\] = \["AU", "US", "UK", "SG"\]/);
 
   assert.match(policy, /STORE_ROWS_MAX_AGE_H \/ 24/, "the stale-row window is computed from STORE_ROWS_MAX_AGE_H");

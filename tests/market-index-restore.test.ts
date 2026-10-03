@@ -54,34 +54,35 @@ const codeOnly = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/
 // it. No test below should assume GLOBAL exists.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the core computation caches on sydneyWeekKey, imported from its canonical home", () => {
-  // NOT sydneyDayKey — PriceHistory writes at most once every 7 days (see the
-  // file-header note above), so a day-scoped key recomputed an unchanged answer
-  // up to seven times for nothing. price-history.ts's own getPriceHistory()
-  // already made this exact fix for the same reason; market-index.ts's restored
-  // version hadn't caught up to it until now.
+test("the core computation caches on the history version, imported from the store", () => {
+  // Not a calendar key. The history only changes when a release bundles new
+  // day files (lib/price-history-store.ts, 2026-10-03), so the key follows the
+  // data: cardHistoryVersion(). A week key (2026-08-31 → 10-03) would now serve
+  // last week's Index for six daily releases; a day key would recompute whether
+  // or not anything had moved.
   const src = read("src/lib/market-index.ts");
-  assert.match(src, /import\s*\{[^}]*sydneyWeekKey[^}]*\}\s*from\s*"\.\/price-history"/, "must import, not redefine, the week-key helper");
-  assert.doesNotMatch(codeOnly(src), /sydneyDayKey/, "no day-scoped cache key should survive anywhere in this file");
-  assert.doesNotMatch(codeOnly(src), /export function sydneyWeekKey/, "a second definition would silently diverge from price-history.ts's");
+  assert.match(src, /import\s*\{[^}]*cardHistoryVersion[^}]*\}\s*from\s*"\.\/price-history-store"/);
+  assert.match(codeOnly(src), /\["rc-region-index", country, cardHistoryVersion\(\)\]/);
+  assert.doesNotMatch(codeOnly(src), /sydneyDayKey|sydneyWeekKey/, "no calendar-scoped cache key should survive anywhere in this file");
   assert.equal(INDEX_SIZE, 200);
 });
 
-test("the PriceHistory read uses a generous multi-year circuit breaker, not the old ~6-snapshot 45-day window", () => {
+test("the history read uses a generous multi-year circuit breaker, not the old ~6-snapshot 45-day window", () => {
   const code = codeOnly(read("src/lib/market-index.ts"));
   assert.doesNotMatch(code, /\bWINDOW_DAYS\b/, "the old 45-day rolling-window constant must be gone, not just unused");
   assert.match(code, /const MAX_LOOKBACK_DAYS = (\d+);/, "expected a named, generous lookback bound");
   const days = Number(/const MAX_LOOKBACK_DAYS = (\d+);/.exec(code)![1]);
   assert.ok(days >= 365, `MAX_LOOKBACK_DAYS=${days} is not generous enough to function as a "not a real limit today" backfill`);
-  // The query itself: scoped to the (historySource-resolved) country + this
-  // basket's card ids + the (generous) cutoff. (.*? not [^)]* for the map
-  // callback — cards.map((c) => c.id) nests parens.)
+  // The read itself: this basket's card ids + the (generous) cutoff, from the
+  // day files. (.*? not [^)]* for the map callback — cards.map((c) => c.id)
+  // nests parens.)
   assert.match(
     code,
-    /dbHistory\.priceHistory\.findMany\(\{\s*where:\s*\{\s*country:\s*source,\s*cardId:\s*\{\s*in:\s*cards\.map\(.*?\)\s*\},\s*day:\s*\{\s*gte:\s*cutoff\s*\}/,
+    /cardHistoryRows\(\{\s*cardIds:\s*cards\.map\(.*?\),\s*since:\s*cutoff\s*\}\)/,
     "must be scoped to the basket AND the circuit-breaker cutoff",
   );
-  assert.match(code, /const \{ source, convert \} = historySource\(country\)/, "must resolve CA/EU to their historySource before reading");
+  assert.doesNotMatch(code, /dbHistory/, "the Index no longer reads the history database");
+  assert.match(code, /const \{ convert \} = historySource\(country\)/, "must convert to the market's currency through historySource");
 });
 
 test("the region cache revalidates on a week-plus-slack TTL, matching the week-keyed cache", () => {
@@ -94,29 +95,24 @@ test("the region cache revalidates on a week-plus-slack TTL, matching the week-k
   assert.equal(matches[0][1], "8 * 86400", `found a stale 172800 (2-day) TTL: ${matches[0][0]}`);
 });
 
-test("no surviving 'daily'/'1 day'/'30-day' label claims the index moves faster than it actually does", () => {
-  // A sweep across every user-facing surface this cadence fix touched. Each one
-  // specifically claimed a cadence (daily updates, "1 day", "30-day, daily")
-  // that stopped being true once PriceHistory moved to weekly writes.
+test("no surviving label says the price history is recorded weekly, now that it is daily again", () => {
+  // 2026-09-25 swept the other way: every surface claiming a DAILY cadence
+  // (the Index's "1 day", the /movers FAQ's "daily") went, because snapshots had
+  // moved to weekly. From 2026-10-03 they are daily again (day files in the
+  // repository, lib/price-history-store.ts), so each surface that said "once a
+  // week" now says what is true. (The removed "1 day" tiles were not brought
+  // back: that is a product change, not a correction.)
   const checks: [string, RegExp][] = [
-    ["src/app/market/page.tsx", /\bdaily\b/i],
-    ["src/app/market/page.tsx", /label="1 day"/],
-    ["src/app/market/opengraph-image.tsx", /updated daily/i],
-    ["src/components/IndexStats.tsx", /30-day, daily/],
-    ["src/components/IndexConstituents.tsx", /label="1-day"/],
-    ["src/app/llm/market/route.ts", /\bA daily\b/],
-    ["src/app/llm/market/route.ts", /`- Change: 1d /],
-    ["src/app/llms-full.txt/route.ts", /`- Change: 1d /],
-    ["src/app/api/v1/index.json/route.ts", /\bA daily\b/],
-    // /movers reads the same weekly series (2026-09-25): its hero, metadata and
-    // FAQ answers — emitted as FAQPage JSON-LD — said "daily" until then.
-    ["src/app/movers/page.tsx", /\bdaily\b/i],
-    // The "Latest" tile always equalled "7 days" once snapshots were a week
-    // apart; /market shows 90 days instead.
-    ["src/app/market/page.tsx", /label="Latest"/],
+    ["src/app/methodology/page.tsx", /Once a week we record|moves once a week/],
+    ["src/app/editorial-policy/page.tsx", /once a week we record|moves once a week/],
+    ["src/app/about/page.tsx", /Once a week we also record/],
+    ["src/app/movers/page.tsx", /records one price for every tracked card each week|Once a week, RiftCompare records/],
+    ["src/app/market/records/page.tsx", /now once a week|move once a week/],
+    ["src/lib/content/hub-intros.ts", /Once a week we record|level moves once a week/],
+    ["src/lib/articles.ts", /priced once a week|price snapshot once a week/],
   ];
   for (const [path, pattern] of checks) {
-    assert.doesNotMatch(codeOnly(read(path)), pattern, `${path} still matches ${pattern}`);
+    assert.doesNotMatch(read(path), pattern, `${path} still matches ${pattern}`);
   }
 });
 

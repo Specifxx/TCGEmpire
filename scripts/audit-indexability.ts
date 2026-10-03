@@ -38,7 +38,7 @@
  * Run in CI via .github/workflows/maintenance.yml (task: audit-indexability).
  */
 import { prisma } from "../src/lib/db";
-import { dbHistory } from "../src/lib/db-history";
+import { cardHistoryDayCount, cardHistorySummaries } from "../src/lib/price-history-store";
 import { MIN_HISTORY_DAYS, cardIsSubstantial } from "../src/lib/card-price-state";
 import { NO_RETAIL_CHANNEL_SETS } from "../src/lib/constants";
 import { buildDuplicateMap } from "../src/lib/card-duplicates";
@@ -81,10 +81,9 @@ async function main() {
   let historyCardIds: string[] = [];
   let historyErr = "";
   try {
-    const rows = await dbHistory.$queryRaw<{ cardId: string }[]>`
-      SELECT "cardId" FROM "PriceHistory" GROUP BY "cardId"
-    `;
-    historyCardIds = rows.map((r) => r.cardId);
+    // The day files in this checkout (price history left Neon on 2026-10-03,
+    // src/lib/price-history-store.ts), the same series the card pages read.
+    historyCardIds = cardHistorySummaries().map((r) => r.cardId);
   } catch (e) {
     historyErr = e instanceof Error ? e.message.split("\n")[0] : String(e);
   }
@@ -111,16 +110,7 @@ async function main() {
     (await prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true }, _count: { _all: true } }))
       .map((r) => r.cardId)
   );
-  const richHistory = new Set(
-    historyErr
-      ? []
-      : (
-          await dbHistory.$queryRaw<{ cardId: string }[]>`
-            SELECT "cardId" FROM "PriceHistory"
-            GROUP BY "cardId" HAVING COUNT(DISTINCT day) >= ${MIN_HISTORY_DAYS}
-          `
-        ).map((r) => r.cardId)
-  );
+  const richHistory = new Set(historyErr ? [] : historyCardIds.filter((id) => cardHistoryDayCount(id) >= MIN_HISTORY_DAYS));
 
   // A duplicate printing noindexes too — see the `twin != null` term in
   // app/card/[id]/page.tsx. Same map the page builds, so the count agrees.
@@ -189,5 +179,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    await dbHistory.$disconnect().catch(() => {});
   });

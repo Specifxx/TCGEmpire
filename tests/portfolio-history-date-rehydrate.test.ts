@@ -20,25 +20,28 @@ const SRC = "src/lib/premium.ts";
 // broke. Pin the fix: re-hydrate `day` back into a real Date at the one place
 // this cache is read, so it's true unconditionally rather than needing every
 // future caller to remember the cache can lie.
+//
+// 2026-10-03: the read is no longer cached at all — it comes straight from the
+// day files (lib/price-history-store.ts), and a big collection's daily series
+// would sit far past the unstable_cache size budget anyway. The re-hydration
+// stays, so a cache put back later cannot reintroduce the crash.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("portfolioHistory re-hydrates `day` into a real Date after the cache read", () => {
+test("portfolioHistory reads the day files directly and still re-hydrates `day` into a real Date", () => {
   const code = codeOnly(read(SRC));
   const fnStart = code.indexOf("function portfolioHistory(");
   assert.ok(fnStart >= 0, "expected to find portfolioHistory");
   const fn = code.slice(fnStart, code.indexOf("\n}", fnStart) + 2);
 
-  // cachedOrDirect (2026-09-14) wraps unstable_cache with the same JSON
-  // round-trip characteristics — the Date bug this test pins is unchanged by
-  // that migration, so accept either the direct call or the shared wrapper.
-  assert.match(fn, /unstable_cache|cachedOrDirect/, "must still be a cached read that round-trips through JSON");
+  assert.match(fn, /cardHistoryRows\(\{ cardIds, since: cutoff \}\)/, "reads the shared series from the day files");
+  assert.doesNotMatch(fn, /unstable_cache|cachedOrDirect/, "a local read needs no cache, and a big collection's daily series would overflow one");
   assert.match(
     fn,
     // [^}]* (not a fixed field list) — this test's only concern is the `day`
     // re-hydration; whatever else the row-mapper does (e.g. currency-converting
     // a CA/EU-derived read, added 2026-09-02) isn't this bug's business.
-    /\.then\(\(rows\)\s*=>\s*rows\.map\(\(r\)\s*=>\s*\(\{\s*\.\.\.r,\s*day:\s*new Date\(r\.day\)[^}]*\}\)\)\)/,
-    "must re-wrap every row's day in `new Date(...)` after unstable_cache resolves"
+    /rows\.map\(\(r\)\s*=>\s*\(\{\s*\.\.\.r,\s*day:\s*new Date\(r\.day\)[^}]*\}\)\)/,
+    "must re-wrap every row's day in `new Date(...)`"
   );
 });
 

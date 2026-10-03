@@ -2,33 +2,30 @@
 // recorded in a market, and how far today's price sits from that peak.
 //
 // WHY THIS IS ITS OWN FILE AND NOT A FUNCTION IN price-history.ts. Everything in
-// price-history.ts answers "what happened in the last N days" and reads a WINDOW
-// (computePriceMovers pulls 21 days for the whole market, and that bounded window
-// is load-bearing — see its WINDOW_DAYS note about history-DB egress). A record
-// is the opposite shape of question: it needs the WHOLE series, forever, for
-// every card. Pulling that the same way movers does would read the entire
-// PriceHistory table on every recompute, which is precisely the unbounded read
-// that has exhausted this project's Neon transfer allowance repeatedly.
+// price-history.ts answers "what happened in the last N days" and reads a WINDOW.
+// A record is the opposite shape of question: it needs the WHOLE series, forever,
+// for every card.
 //
-// ── THE EGRESS SHAPE, WHICH IS THE WHOLE DESIGN ─────────────────────────────
-// Two queries, and neither scales with the history table:
+// ── THE SHAPE ────────────────────────────────────────────────────────────────
+// Two passes:
 //
-//   1. A groupBy that aggregates SERVER-SIDE. Postgres scans the market's rows
-//      and returns one row per card — ~1,400 tiny rows carrying {cardId, max,
-//      min, count}, regardless of whether the table holds 45,000 rows or
-//      5,000,000. The scan is the database's problem; the WIRE is what we pay
-//      for, and the wire is bounded by the CATALOGUE, not by history depth.
-//   2. One findMany for ONLY the handful of cards actually being displayed, to
-//      pin the exact day each record was first reached. Bounded by the page
-//      size (~30 cards × ~90 days of small rows), not by the catalogue.
+//   1. A ranking pass over one summary per card — {max, min, day count, newest
+//      day} — from cardHistorySummaries().
+//   2. The full series for ONLY the handful of cards actually being displayed,
+//      to pin the exact day each record was first reached.
 //
-// Everything is then day-cached, so the two queries run once per market per
-// Sydney day no matter how many visitors the page gets.
+// Until 2026-10-03 these were a server-side groupBy and a bounded findMany
+// against the Neon history project, shaped that way because the whole-series
+// read was the unbounded kind that kept exhausting its transfer allowance. The
+// history is now day files bundled with the release (lib/price-history-store.ts),
+// read locally; the two passes stay because they are still the cheap way to
+// rank, and the result is cached per history version so they run once per
+// market per release.
 import { prisma } from "./db";
-import { dbHistory } from "./db-history";
+import { cardHistoryRows, cardHistorySummaries, cardHistoryVersion } from "./price-history-store";
 import { cardTileSelect, withStoreCounts } from "./cards";
 import { DEFAULT_COUNTRY, type Country } from "./country";
-import { cachedOrDirect, sydneyWeekKey, STALE_HISTORY_MS, historySource, dropBreakWindow, currentBasisStart } from "./price-history";
+import { cachedOrDirect, STALE_HISTORY_MS, historySource, dropBreakWindow, currentBasisStart } from "./price-history";
 import { HISTORY_TAG } from "./revalidate-content";
 import type { CardTileData } from "@/components/CardTile";
 
@@ -82,9 +79,12 @@ const EMPTY: AllTimeRecords = { peaks: [], offPeak: [], atLow: [], currentSince:
  * the board fills with cards from the newest set every time one is added, which
  * is exactly the failure mode that makes a records page look broken.
  */
-// Snapshot ROWS, not calendar days — and snapshots are weekly now, so 14 would
-// mean fourteen weeks and empty every records table until December.
+// Snapshot ROWS, not calendar days. While snapshots were weekly (2026-08-31 →
+// 2026-10-03) three rows meant about three weeks; with daily snapshots again it
+// would mean three days, so a card also needs MIN_SPAN_MS between its first and
+// latest point: the two-week span three weekly rows always had.
 const MIN_DAYS = 3;
+const MIN_SPAN_MS = 14 * 86_400_000;
 /** Below this, a percentage move is noise on a bulk common. Matches price-history. */
 const MIN_CENTS = 300;
 /**
@@ -99,7 +99,7 @@ const AT_LOW_TOLERANCE_PCT = 2;
 /**
  * The at-low board needs a real range to be at the bottom OF: the card's high on
  * the same basis must sit at least this far above its low. Without it a card
- * that has not moved for MIN_DAYS weekly snapshots is "at its low" by
+ * that has not moved for MIN_DAYS snapshots is "at its low" by
  * definition (peak = trough = now), and the board fills with flat bulk cards.
  * Same threshold the off-peak board uses for "well under its high".
  */
@@ -139,17 +139,11 @@ const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
 async function computeAllTimeRecords(country: Country, limit: number): Promise<AllTimeRecords> {
   try {
-    const { source, convert } = historySource(country);
-    // ── Query 1: rank every card by aggregate, server-side. ──────────────────
-    // _count is the day count (one row per card/country/day by the model's
-    // unique key), which is what MIN_DAYS gates on.
-    const agg = await dbHistory.priceHistory.groupBy({
-      by: ["cardId"],
-      where: { country: source },
-      _max: { lowestPriceCents: true, day: true },
-      _min: { lowestPriceCents: true },
-      _count: { _all: true },
-    });
+    const { convert } = historySource(country);
+    // ── Pass 1: rank every card on its summary. ──────────────────────────────
+    // `days` is the card's number of recorded days (one point per card per
+    // day), which is what MIN_DAYS gates on.
+    const agg = cardHistorySummaries();
     if (!agg.length) return EMPTY;
 
     // Staleness guard, same rule and threshold as computePriceMovers: the
@@ -157,32 +151,28 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
     // before now. A records board is MORE dangerous when stale than a movers
     // list, because "all-time high" reads as a durable fact rather than a
     // this-week observation — so refuse to serve rather than publish a stale
-    // peak as the current one. _max.day is free here; we already aggregated.
-    const freshest = agg.reduce<Date | null>((max, r) => {
-      const d = r._max.day;
-      return d && (!max || d > max) ? d : max;
-    }, null);
+    // peak as the current one. lastDay is free here; we already summarised.
+    const freshest = agg.reduce<Date | null>((max, r) => (!max || r.lastDay > max ? r.lastDay : max), null);
     if (!freshest || Date.now() - freshest.getTime() > STALE_HISTORY_MS) return EMPTY;
 
     type Cand = { cardId: string; peak: number; trough: number; days: number };
     const cands: Cand[] = [];
     for (const r of agg) {
-      // Converted immediately, same as query 2 below — both use the same
-      // `convert` closure, so the peak/trough EQUALITY match against query 2's
-      // rows (further down) still holds: convert() is deterministic, so
-      // convert(x) === convert(x) regardless of which query read x first.
-      const peak = r._max.lowestPriceCents == null ? null : convert(r._max.lowestPriceCents);
-      const trough = r._min.lowestPriceCents == null ? null : convert(r._min.lowestPriceCents);
-      if (peak == null || trough == null) continue;
+      // Converted immediately, same as pass 2 below — both use the same
+      // `convert` closure, so the peak/trough EQUALITY match against pass 2's
+      // points (further down) still holds: convert() is deterministic, so
+      // convert(x) === convert(x) regardless of which pass read x first.
+      const peak = convert(r.maxCents);
+      const trough = convert(r.minCents);
       if (peak < MIN_CENTS) continue;
-      if (r._count._all < MIN_DAYS) continue;
-      cands.push({ cardId: r.cardId, peak, trough, days: r._count._all });
+      if (r.days < MIN_DAYS || r.lastDay.getTime() - r.firstDay.getTime() < MIN_SPAN_MS) continue;
+      cands.push({ cardId: r.cardId, peak, trough, days: r.days });
     }
     if (!cands.length) return EMPTY;
 
-    // Shortlist BEFORE the detail query, so query 2 stays bounded by the page
+    // Shortlist BEFORE the detail pass, so pass 2 stays bounded by the page
     // size. Over-fetch 3× per board: the off-peak and at-low boards need each
-    // card's CURRENT price, which only query 2 can give, so some shortlisted
+    // card's CURRENT price, which only pass 2 can give, so some shortlisted
     // rows will be filtered out afterwards and the lists must not come up short.
     const over = limit * 3;
     const byPeak = [...cands].sort((a, b) => b.peak - a.peak).slice(0, over);
@@ -198,12 +188,8 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
     for (const c of [...byPeak, ...bySpread]) shortlist.set(c.cardId, c);
     const ids = [...shortlist.keys()];
 
-    // ── Query 2: exact days + today's price, for the shortlist ONLY. ─────────
-    const points = await dbHistory.priceHistory.findMany({
-      where: { country: source, cardId: { in: ids } },
-      orderBy: { day: "asc" },
-      select: { cardId: true, day: true, lowestPriceCents: true },
-    });
+    // ── Pass 2: exact days + today's price, for the shortlist ONLY. ──────────
+    const points = cardHistoryRows({ cardIds: ids });
     type Detail = { now: number; peakDay: string | null; troughDay: string | null };
     const detail = new Map<string, Detail>();
     const seriesById = new Map<string, { t: number; v: number }[]>();
@@ -240,8 +226,8 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
     //     ("off their peak", "at their low"). Those only use points on the
     //     current pricing basis (dropBreakWindow): measured across the 09-23
     //     TCGplayer switch, every affected card read as 25% off its peak and at
-    //     a fresh all-time low. A card needs MIN_DAYS points on the current
-    //     basis before it can appear on them again, and a series that never
+    //     a fresh all-time low. A card needs MIN_DAYS points spanning
+    //     MIN_SPAN_MS on the current basis before it can appear on them again, and a series that never
     //     reached the basis start (dropBreakWindow leaves those untouched) is
     //     left off: its "now" predates the basis, so "since <date>" would be
     //     false for it. Both boards are therefore records SINCE `basisStart`,
@@ -266,7 +252,7 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
       });
 
       const seg = dropBreakWindow(seriesById.get(c.cardId) ?? []);
-      if (seg.length < MIN_DAYS) continue;
+      if (seg.length < MIN_DAYS || seg[seg.length - 1].t - seg[0].t < MIN_SPAN_MS) continue;
       if (basisStart != null && seg[0].t < basisStart) continue;
       let segPeak = seg[0];
       let segTrough = seg[0];
@@ -301,13 +287,11 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
 }
 
 /**
- * Day-cached all-time records for one market.
+ * All-time records for one market, cached per history version.
  *
- * Cached on the Sydney day key, exactly like the market index and the movers
- * feed: PriceHistory gains at most one point per card per day, so recomputing
- * more often than daily would re-run both queries for a result that cannot have
- * changed. CONTENT_TAG so a price import's revalidateContent() still refreshes
- * it the moment new data lands.
+ * Keyed on cardHistoryVersion(), like the market index and the movers feed: the
+ * history only changes when a release brings new day files, so recomputing more
+ * often would re-run both passes for a result that cannot have changed.
  */
 export function getAllTimeRecords(
   country: Country = DEFAULT_COUNTRY,
@@ -315,7 +299,7 @@ export function getAllTimeRecords(
 ): Promise<AllTimeRecords> {
   return cachedOrDirect(
     () => computeAllTimeRecords(country, limit),
-    ["rc-all-time-records", country, String(limit), sydneyWeekKey()],
+    ["rc-all-time-records", country, String(limit), cardHistoryVersion()],
     { revalidate: 8 * 86400, tags: [HISTORY_TAG] },
   );
 }

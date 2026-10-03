@@ -222,15 +222,16 @@ export default async function PortfolioPage() {
                   <>
                     <PriceChart points={portfolio.series} currency={info.currency} />
                     <p className="mt-2 text-[11px] text-slate-500">
-                      Your cards at each weekly price snapshot. A card starts counting toward a move once it has
-                      a price at both ends of a week, so a newly priced card never shows up as a gain, and a change
+                      Your cards at each price snapshot (daily; weekly between 31 Aug and 3 Oct 2026). A card starts
+                      counting toward a move once it has a price at both ends of a step, so a newly priced card never
+                      shows up as a gain, and a change
                       in how we source prices (TCGplayer&apos;s, on 23 Sep 2026) is held flat, as on the{" "}
                       <Link href="/market" className="text-brand-400 hover:underline">RiftCompare Index</Link>.
                     </p>
                   </>
                 ) : (
                   <p className="text-sm text-slate-500">
-                    Your value history starts charting after the next weekly snapshot.
+                    Your value history starts charting after the next daily snapshot.
                   </p>
                 )}
               </div>

@@ -6,64 +6,41 @@
 // extended. Inert until STRIPE_PREMIUM_PRICE_ID is configured.
 import type Stripe from "stripe";
 import { prisma } from "./db";
-import { dbHistory } from "./db-history";
+import { cardHistoryRows } from "./price-history-store";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
 import { investedCents, unitCostCents } from "./collection-cost";
-import { sydneyWeekKey, historySource, cachedOrDirect } from "./price-history";
+import { historySource } from "./price-history";
 import { getMarketIndex, METHODOLOGY_BREAKS } from "./market-index";
 import { portfolioPerformance } from "./portfolio-performance";
-import { HISTORY_TAG } from "./revalidate-content";
 import { stripe, stripeEnabled } from "./stripe";
 import { sendTrialEndingEmail, sendTrialEndingNoChargeEmail, sendCheckoutRecoveryEmail } from "./email";
 import { notify } from "./notifications";
 import { formatMoney } from "./format";
 import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, TIER_NAMES, introFromLine, INTRO_MONTHS, introAmountOffCents, introOfferEnabled, type PremiumTierKey } from "./site";
 
-// The portfolio's PriceHistory read, day-scoped per (exact card set, market). The
-// wishlist itself is fetched fresh above (edits reflect instantly); only the heavy
-// history read is cached — so viewing your portfolio repeatedly in a day reads the
-// history DB once. Keyed by the sorted card-id list so any wishlist change re-keys.
+// The portfolio's price-history read, per (exact card set, market). Read straight
+// from the day files bundled with the release (lib/price-history-store.ts) and
+// NOT cached since 2026-10-03: the cache existed to spare the Neon history
+// project, a local read needs no sparing, and with daily snapshots a big
+// collection's entry (~2,000 cards × a year of days) would sit far past the
+// ~1.2 MB unstable_cache budget (src/lib/db.ts, rule 2) and be silently declined
+// anyway.
 //
-// LIVE CRASH (2026-09-01): "t.day.getTime is not a function". unstable_cache
-// persists its return value as JSON — a real Prisma call hands back genuine
-// Date objects, but a CACHE HIT replays them through a JSON round-trip first,
-// which turns every Date into an ISO string (Date has a toJSON, a plain string
-// does not turn back into a Date on the way out). The type below still says
-// `day: Date` because that's true on a cache MISS, so nothing caught this at
-// compile time — only a warm cache, in production, exposed the lie. Every
-// caller (getPortfolio's `h.day.getTime()`) trusted that type completely.
-// Re-hydrating `day` here, once, at the one place this cache is read, means
-// every consumer gets a real Date either way instead of each one needing to
-// remember to guard against a cache hit that looks identical to a miss until
-// this exact line throws.
-// MIGRATED TO cachedOrDirect (2026-09-14, DECISIONS.md "Find the fifth burn
-// before RM10 dies"). This is genuinely unbounded by design — the whole point
-// is the user's own, complete price history for their own collection — so it
-// cannot be `take`-capped without silently truncating a real customer's chart.
-// A static audit flagged it as the one PER-USER cliff in the app: a ~2,000-
-// card collection at the weekly write cadence is ~26,000 rows, over the ~1.2 MB
-// raw budget rule 2 documents. cachedOrDirect's own oversize check is the
-// correct instrument here — it measures instead of guessing at a cap that
-// would just mean "your portfolio chart is silently missing history" for the
-// site's heaviest collectors.
+// `day` is still re-hydrated with `new Date` below. LIVE CRASH (2026-09-01):
+// "t.day.getTime is not a function" — unstable_cache replays a cached value
+// through JSON, which turns every Date into an ISO string, and only a warm cache
+// in production exposed it. Nothing caches this read now, but the guard costs
+// nothing and keeps getPortfolio's `h.day.getTime()` safe if one is put back.
 function portfolioHistory(
   cardIds: string[],
   country: Country,
   windowDays: number,
 ): Promise<{ cardId: string; day: Date; lowestPriceCents: number }[]> {
-  const { source, convert } = historySource(country);
+  const { convert } = historySource(country);
   const cutoff = new Date(Date.now() - windowDays * 86400_000);
-  return cachedOrDirect(
-    () =>
-      dbHistory.priceHistory.findMany({
-        where: { country: source, cardId: { in: cardIds }, day: { gte: cutoff } },
-        orderBy: { day: "asc" },
-        select: { cardId: true, day: true, lowestPriceCents: true },
-      }),
-    ["rc-portfolio-hist", country, String(windowDays), sydneyWeekKey(), cardIds.join(",")],
-    { revalidate: 8 * 86400, tags: [HISTORY_TAG] },
-  ).then((rows) => rows.map((r) => ({ ...r, day: new Date(r.day), lowestPriceCents: convert(r.lowestPriceCents) })));
+  const rows = cardHistoryRows({ cardIds, since: cutoff });
+  return Promise.resolve(rows.map((r) => ({ ...r, day: new Date(r.day), lowestPriceCents: convert(r.lowestPriceCents) })));
 }
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";

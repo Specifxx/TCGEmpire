@@ -145,7 +145,7 @@ const IMPORTS_DROP =
 // or that another owner is changing. Each needs a reason; a new reader that
 // compares points must import dropBreakWindow instead of joining this list.
 const EXEMPT: Record<string, string> = {
-  "src/lib/price-import.ts": "the writer; it reads only the newest snapshot day to gate the weekly write",
+  "src/lib/price-history-store.ts": "the store itself: it reads and writes the day files and compares nothing",
   "src/lib/sitemap-sections.ts": "reads the newest snapshot day for <lastmod>, nothing else",
   "src/lib/card-price-state.ts": "counts a card's distinct history days to decide indexability",
   "src/lib/public-api.ts":
@@ -157,8 +157,11 @@ const EXEMPT: Record<string, string> = {
   "src/lib/screener.ts": "the Value Finder's loader, deleted with the Value Finder in the same change (only while the file still exists)",
 };
 
-test("every file that reads PriceHistory imports dropBreakWindow, or is exempt with a reason", () => {
-  const readsHistory = /dbHistory\.priceHistory\b|FROM "PriceHistory"/;
+test("every file that reads price history imports dropBreakWindow, or is exempt with a reason", () => {
+  // The history is day files since 2026-10-03 (lib/price-history-store.ts): a
+  // reader calls one of the store's card readers. The old table reads are kept
+  // in the pattern so a regression back onto the database is caught too.
+  const readsHistory = /\bcardHistory(?:Rows|Summaries|DayCount|LatestDay)\(|dbHistory\.priceHistory\b|FROM "PriceHistory"/;
   const offenders: string[] = [];
   const readers: string[] = [];
   for (const file of walk(join(ROOT, "src"))) {
@@ -169,7 +172,7 @@ test("every file that reads PriceHistory imports dropBreakWindow, or is exempt w
     if (rel === "src/lib/price-history.ts") continue; // defines it
     if (EXEMPT[rel]) continue;
     if (!IMPORTS_DROP.test(src)) {
-      offenders.push(`${rel} reads PriceHistory but does not import dropBreakWindow`);
+      offenders.push(`${rel} reads price history but does not import dropBreakWindow`);
     }
   }
   assert.ok(readers.length >= 6, `fixture check: expected the known readers, found ${readers.join(", ")}`);

@@ -51,6 +51,13 @@ through `src/lib/db-chains.ts`; never hand-roll a connection chain in a script
 (`tests/db-chain.test.ts` fails if you do). Free-tier transfer is 5 GB/month
 per project; `.github/workflows/egress-audit.yml` measures where it goes.
 
+Public price history (the card and sealed series) is NOT in Neon: since
+2026-10-03 it is one JSON file per day in `data/price-history/`
+(`src/lib/price-history-store.ts`), written by every import and committed to
+`main` by `refresh-prices.yml`. The history project keeps only private history
+(`ClickEvent`). That directory is published with the source, so never write
+anything private to it.
+
 ## Checks
 
 ```

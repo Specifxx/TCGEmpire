@@ -102,6 +102,18 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // The public price history is day files in the repository
+    // (data/price-history, read with fs by src/lib/price-history-store.ts).
+    // A runtime fs read is invisible to Next's file tracing, so without this the
+    // deployed functions would hold no history at all and every chart, mover
+    // and the Index would come up empty. Every route: the readers sit under
+    // shared libraries (card pages, sitemaps, /api, OG images) and a route that
+    // never reads history only carries a few MB of JSON it does not open.
+    outputFileTracingIncludes: {
+      "/**": ["./data/price-history/**/*.json"],
+    },
+  },
   images: {
     // Lets next/image re-encode (AVIF/WebP) and downsize these hotlinked CDNs
     // instead of shipping their full-resolution source at thumbnail display

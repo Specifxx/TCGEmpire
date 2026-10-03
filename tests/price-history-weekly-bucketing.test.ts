@@ -74,20 +74,23 @@ test("sydneyWeekKey takes an optional date (for bucketing historical rows), defa
   assert.notEqual(a, c, "a date in the following week must produce a different key");
 });
 
-test("computePriceHistory reads a bounded date window, not a row-count take, then buckets and slices", () => {
+test("computePriceHistory reads a bounded date window and plots every recorded day, newest `take` of them", () => {
+  // 2026-10-03: snapshots are daily again (day files, lib/price-history-store.ts),
+  // so the card chart no longer buckets to weeks — it plots every recorded point:
+  // daily before 2026-08-31 and from 2026-10-03, weekly in between. The lesson
+  // of the bucketing fix still holds: bound the read by DATE, not by a row count
+  // at the read, and `take` is generous enough (over a year of daily points)
+  // that "All" is never clipped to a few months of dense rows.
+  // collapseToWeekly (tested above) stays for the rise predictor's weekly model.
   const code = codeOnly(read("src/lib/price-history.ts"));
   const fnStart = code.indexOf("async function computePriceHistory");
   const fn = code.slice(fnStart, code.indexOf("\n}", fnStart) + 2);
 
   assert.match(fn, /const cutoff = new Date\(Date\.now\(\) - MAX_LOOKBACK_DAYS \* 86400_000\)/, "must bound the read by a generous date window");
-
-  const callStart = fn.indexOf("dbHistory.priceHistory.findMany({");
-  const call = fn.slice(callStart, fn.indexOf("});", callStart) + 3);
-  assert.match(call, /where:\s*\{\s*cardId,\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}/);
-  assert.match(call, /orderBy:\s*\{\s*day:\s*"asc"\s*\}/);
-  assert.doesNotMatch(call, /\btake\b/, "must not cap by row-count at the query level any more — that's what let dense legacy-daily rows starve out older history");
-
-  assert.match(fn, /collapseToWeekly\(rows\)\.slice\(-take\)/, "must bucket THEN cap to `take` points, not the other way around");
+  assert.match(fn, /cardHistoryRows\(\{ cardIds: \[cardId\], since: cutoff \}\)\.slice\(-take\)/, "read the window, then keep the newest `take` points");
+  assert.doesNotMatch(fn, /collapseToWeekly/, "the chart plots daily points now");
+  const take = /export function getPriceHistory\(cardId: string, country: Country = DEFAULT_COUNTRY, take = (\d+)\)/.exec(code);
+  assert.ok(take && Number(take[1]) >= 365, "the default `take` must cover more than a year of daily points");
 });
 
 test("MAX_LOOKBACK_DAYS is its own constant here, deliberately independent of the Index engines' identical value", () => {
@@ -103,4 +106,30 @@ test("the chart's empty state no longer claims a daily cadence it doesn't have",
 test("the public per-card history API no longer describes itself as daily", () => {
   const src = codeOnly(read("src/app/api/v1/card/[id]/history.json/route.ts"));
   assert.doesNotMatch(src, /daily price series/i);
+});
+
+test("collapseToWeekly's fast week bucket agrees with sydneyWeekKey on every date-only day, across both DST changes", () => {
+  // collapseToWeekly buckets date-only points (UTC midnight of the Sydney day)
+  // by plain arithmetic instead of formatting each through Intl — formatting
+  // took 5–10 s for the rise predictor's daily points (2026-10-03). The buckets
+  // must be exactly the ones sydneyWeekKey gives.
+  const start = Date.parse("2025-09-01T00:00:00Z");
+  for (let i = 0; i < 2 * 366; i++) {
+    const day = new Date(start + i * 86400_000);
+    const [only] = collapseToWeekly([{ day, lowestPriceCents: 1 }]);
+    const sameWeek = collapseToWeekly([
+      { day, lowestPriceCents: 5 },
+      { day: new Date(`${sydneyWeekKey(day)}T00:00:00Z`), lowestPriceCents: 3 },
+    ]);
+    assert.equal(only.day.getTime(), day.getTime());
+    assert.equal(sameWeek.length, 1, `${day.toISOString().slice(0, 10)} and its sydneyWeekKey Monday must share a bucket`);
+  }
+  // A value that is not a UTC midnight still takes the timezone path:
+  // 20:00 UTC on Sunday 2026-09-06 is Monday 7 Sep in Sydney, the next week.
+  const lateSunday = new Date("2026-09-06T20:00:00Z");
+  const out = collapseToWeekly([
+    { day: lateSunday, lowestPriceCents: 1 },
+    { day: new Date("2026-09-06T00:00:00Z"), lowestPriceCents: 2 },
+  ]);
+  assert.equal(out.length, 2, "Sydney's Monday is a new week even though the UTC date is Sunday");
 });

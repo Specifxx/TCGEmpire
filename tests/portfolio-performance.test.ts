@@ -113,10 +113,14 @@ test("a steady binder charts exactly its raw value — nothing changes when noth
 const codeOnly = (p: string) =>
   readFileSync(join(process.cwd(), p), "utf8").replace(/\{?\/\*[\s\S]*?\*\/\}?/g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
-test("/portfolio has no '1 day' chip and says the history is weekly", () => {
+test("/portfolio has no '1 day' chip and says the history is daily", () => {
   const page = codeOnly("src/app/portfolio/page.tsx");
-  assert.doesNotMatch(page, /label="1 day"/, "the weekly step is not a 1-day move");
-  assert.match(page, /after the next weekly snapshot/);
+  // No "1 day" chip: while snapshots were weekly (2026-08-31 → 10-03) it was the
+  // 7-day move under another label. Snapshots are daily again, so one could be
+  // added now, but that is a product change, not a correction.
+  assert.doesNotMatch(page, /label="1 day"/, "no 1-day chip");
+  assert.match(page, /after the next daily snapshot/);
+  assert.doesNotMatch(page, /weekly price snapshot\. A card/, "the history is not weekly any more");
   assert.doesNotMatch(page, /check back tomorrow/);
   // The dead re-gate branch advertised "Daily history" and paid "unlimited price alerts".
   assert.doesNotMatch(page, /Daily history|unlimited price alerts/);

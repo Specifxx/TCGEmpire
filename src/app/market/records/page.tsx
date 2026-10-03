@@ -71,7 +71,7 @@ const GAPS_CANDIDATES = 500;
 const GAP_MIN_SAVING_CENTS = 500;
 
 const TITLE = "Riftbound All-Time Price Records & Cross-Market Gaps";
-// The records come from the weekly price history and the gaps from prices read
+// The records come from the daily price history and the gaps from prices read
 // twice a day, and a row links to the card's store-by-store comparison, not to
 // a store (2026-09-26: it said "Updated daily" and "linked to a store").
 const DESCRIPTION =
@@ -183,12 +183,11 @@ function RecordsBoard({
         })}
       </ol>
       {/* The series is lib/price-history.ts's GLOBAL one (historySource):
-          the cheapest price across AU/US/UK/SG, written weekly, converted on
-          read. It said "across every tracked store in this market, one point
-          per day" — true of neither the market nor, since the weekly switch,
-          the cadence. */}
+          the cheapest price across AU/US/UK/SG, written daily (weekly from
+          2026-08-31 to 2026-10-03), converted on read. It once said "across
+          every tracked store in this market" — never true of the market. */}
       <p className="mt-2 text-[11px] text-slate-600">
-        Each price comes from the history we record for the card, now once a week: its cheapest in-stock listing across
+        Each price comes from the history we record for the card every day: its cheapest in-stock listing across
         Australia, the US, the UK and Singapore, converted into this market&apos;s currency.
       </p>
     </section>
@@ -322,7 +321,7 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
     },
     {
       q: "How often does this update?",
-      a: "The record boards move once a week, when the new weekly price is recorded. The cross-market gaps read current prices, which our import refreshes twice a day. Every record carries the date it was set, so you can see exactly how current it is.",
+      a: "The record boards move once a day, when the new daily price is recorded. The cross-market gaps read current prices, which our import refreshes twice a day. Every record carries the date it was set, so you can see exactly how current it is.",
     },
   ];
   const faqLd = faqPage(FAQS);
@@ -415,8 +414,8 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
               heading={since ? `Furthest below their high since ${since}` : "Furthest below their all-time high"}
               blurb={
                 since
-                  ? `Cards trading well under their own highest price since ${since}, when the way we source one of our prices changed — earlier prices are not compared with later ones. Measured at each card's latest weekly price.`
-                  : "Cards trading well under their own record, measured at each card's latest weekly price."
+                  ? `Cards trading well under their own highest price since ${since}, when the way we source one of our prices changed — earlier prices are not compared with later ones. Measured at each card's latest recorded price.`
+                  : "Cards trading well under their own record, measured at each card's latest recorded price."
               }
               rows={records.offPeak}
               currency={currency}

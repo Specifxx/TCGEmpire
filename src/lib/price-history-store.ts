@@ -23,8 +23,8 @@
 // every import, in a commit without the deploy marker, so it never builds on its
 // own. The next release bundles them (next.config.js outputFileTracingIncludes)
 // and every read below is a local file read. The site's history is therefore as
-// fresh as the last release: normally the newest Sydney day, never more than
-// about a day and three quarters behind (see STALE_HISTORY_MS).
+// fresh as the last release: normally the newest Sydney day, about a day and
+// three quarters behind at most (STALE_HISTORY_MS in price-history.ts).
 //
 // APPEND-ONLY BY CONSTRUCTION. A day's file is only ever rewritten by a re-run
 // of the import on the same Sydney day (the last run of the day wins, the
@@ -178,9 +178,16 @@ export function cardHistoryDayCount(cardId: string): number {
   return cardIndex().byCard.get(cardId)?.t.length ?? 0;
 }
 
-export type CardHistorySummary = { cardId: string; maxCents: number; minCents: number; days: number; lastDay: Date };
+export type CardHistorySummary = {
+  cardId: string;
+  maxCents: number;
+  minCents: number;
+  days: number;
+  firstDay: Date;
+  lastDay: Date;
+};
 
-/** Per-card max, min, day count and newest day: the records board's ranking pass. */
+/** Per-card max, min, day count, first and newest day: the records board's ranking pass. */
 export function cardHistorySummaries(): CardHistorySummary[] {
   const out: CardHistorySummary[] = [];
   for (const [cardId, s] of cardIndex().byCard) {
@@ -190,6 +197,7 @@ export function cardHistorySummaries(): CardHistorySummary[] {
       maxCents: Math.max(...s.c),
       minCents: Math.min(...s.c),
       days: s.c.length,
+      firstDay: new Date(s.t[0]),
       lastDay: new Date(s.t[s.t.length - 1]),
     });
   }

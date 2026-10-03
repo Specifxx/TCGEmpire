@@ -40,17 +40,21 @@ test("computePriceMovers refuses to serve movers once the freshest snapshot is s
   const staleMatch = /const STALE_HISTORY_MS = (\d+) \* 86400_000/.exec(src);
   assert.ok(staleMatch, "expected STALE_HISTORY_MS in days");
   const staleDays = Number(staleMatch![1]);
-  // Canonical home is price-history.ts itself (2026-09-02) — shared with
-  // sealed-import.ts's own weekly writer; price-import.ts now imports it
-  // rather than defining it locally (see that constant's own comment for why:
-  // price-import.ts already imports FROM sealed-import.ts, so defining this
-  // in either writer would have closed a real import cycle).
-  const intervalMatch = /export const HISTORY_MIN_INTERVAL_DAYS = (\d+)/.exec(src);
-  assert.ok(intervalMatch, "expected HISTORY_MIN_INTERVAL_DAYS in price-history.ts");
-  const interval = Number(intervalMatch![1]);
+  // Snapshots are daily again since 2026-10-03, with no interval gate left —
+  // but two things still make a healthy site's newest point older than a day:
+  //   • the price guide and price-table read the rise predictor's
+  //     WEEK-collapsed series, whose newest point is the week's cheapest day,
+  //     up to 7 days back;
+  //   • the site reads the files the last release bundled, up to ~2 days behind
+  //     the newest snapshot.
+  // A threshold that cannot outlast both switches those features off on a
+  // healthy site, silently.
+  assert.doesNotMatch(src, /export const HISTORY_MIN_INTERVAL_DAYS/, "a write-interval gate came back — re-derive this threshold against it");
+  const WEEK_COLLAPSED_MAX_AGE_DAYS = 7;
+  const RELEASE_LAG_DAYS = 2;
   assert.ok(
-    staleDays > interval,
-    `STALE_HISTORY_MS is ${staleDays} days but snapshots are written every ${interval} — a healthy week would read as stale and movers would silently vanish`,
+    staleDays > WEEK_COLLAPSED_MAX_AGE_DAYS + RELEASE_LAG_DAYS,
+    `STALE_HISTORY_MS is ${staleDays} days, which a healthy week-collapsed series bundled a release late can exceed — the price guide's change columns would silently vanish`,
   );
   // Scoped to the movers function specifically (not just "appears somewhere in
   // the file") — find its body and assert the guard lives inside it, after the
@@ -71,58 +75,20 @@ test("computeRecentlyUpdated refuses to serve updates once the freshest snapshot
   );
 });
 
-test("ensureHistoryCards upserts by id instead of createMany+skipDuplicates", () => {
-  // createMany({ skipDuplicates: true }) is the exact bug: it silently skips a
-  // row that collides on ANY unique column, not just id, so "we copied N rows"
-  // can be a lie. upsert-by-id either creates the row this specific FK needs,
-  // or throws a diagnosable error instead of a silent no-op.
-  const src = read(DB_HISTORY);
-  const fnMatch = src.match(/export async function ensureHistoryCards[\s\S]*?\n}/);
-  assert.ok(fnMatch, "expected to find ensureHistoryCards");
-  const body = fnMatch![0];
-  assert.ok(!/\.createMany\(/.test(body), "ensureHistoryCards must not CALL createMany (skipDuplicates hides the bug) — mentioning it in a comment is fine");
-  assert.match(body, /dbHistory\.card\.upsert\(\{\s*where:\s*\{\s*id:\s*row\.id\s*\}/, "must upsert each row by id");
-  // The log must reflect what actually happened (rows inserted vs rows
-  // attempted) — the original bug was logging rows.length (input size) as if
-  // it were the confirmed write count.
-  assert.match(body, /let inserted = 0/, "must track the real insert count, not just log the input length");
-  assert.match(body, /\$\{inserted\}\/\$\{missing\.length\}/, "the log must show inserted/attempted, not claim full success unconditionally");
-});
-
 // ─────────────────────────────────────────────────────────────────────────────
-// The SECOND act of the same incident. Switching to upsert-by-id made the bug
-// visible but not fixed: Card also has unique `slug` and `externalId`, so a
-// stale row holding this card's slug under a different id makes the CREATE half
-// of the upsert throw P2002. That throw escaped ensureHistoryCards and aborted
-// the whole snapshot, so NO card got a point. Confirmed in the 2026-08-20 07:30
-// import log — "Unique constraint failed on the fields: (`slug`)" followed by
-// "Price-history snapshot failed" — with the history table frozen at
-// 2026-08-09 for eleven days while every run still reported success.
+// The incident's root cause is gone with the database (2026-10-03): the day's
+// points are a file (lib/price-history-store.ts), so there is no Card foreign
+// key for one stale card to violate, and no ensureHistoryCards() copy step to
+// fail. What must stay true is the lesson: one bad card costs one card, never
+// the day. tests/price-history-store.test.ts exercises the store itself.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("a stale duplicate slug cannot abort the whole snapshot", () => {
-  const src = read(DB_HISTORY);
-  const fnMatch = src.match(/export async function ensureHistoryCards[\s\S]*?\n\}/);
-  const body = fnMatch![0];
-  // Per-row isolation: one unusable card must cost one card, not the batch.
-  assert.match(body, /try \{[\s\S]*?await dbHistory\.card\.upsert/, "each row's upsert must be attempted independently");
-  assert.match(src, /function isUniqueConflict/, "expected a P2002 check by CODE, not by message text");
-  assert.match(src, /=== "P2002"/, "unique-constraint detection must key off the Prisma error code");
-  // The repair: free the contested unique value from the stale row rather than
-  // deleting it (deleting cascades away that row's price history).
-  assert.match(body, /for \(const field of \["slug", "externalId"\] as const\)/, "must free BOTH of Card's unique columns");
-  assert.match(body, /updateMany\(\{[\s\S]*?id: \{ not: row\.id \}[\s\S]*?\}\)/, "must clear the value on the OTHER row, never this one");
-  assert.ok(!/dbHistory\.card\.delete/.test(body), "must not delete the stale row — its PriceHistory would cascade away");
-});
-
-test("the snapshot skips uncopyable cards instead of losing the day", () => {
-  const src = read("src/lib/price-import.ts");
-  // ensureHistoryCards reports what actually landed; the caller must use it,
-  // because the write is a single createMany and one bad FK rejects every row.
-  assert.match(src, /const writable = await ensureHistoryCards\(/, "the caller must capture what actually landed");
-  assert.match(src, /if \(writable && !writable\.has\(c\.id\)\) continue;/, "rows for uncopyable cards must be dropped before the batch write");
-  // null means single-database setup — filtering there would drop everything.
-  const dbh = read(DB_HISTORY);
-  assert.match(dbh, /Promise<Set<string> \| null>/, "must distinguish 'nothing to filter' from 'nothing is writable'");
-  assert.match(dbh, /if \(!historyIsSplit \|\| cardIds\.length === 0\) return null;/, "a single-DB setup must return null, not an empty set");
+test("the snapshot write has no foreign key and no copy step to lose the day to", () => {
+  const importer = read("src/lib/price-import.ts").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  assert.doesNotMatch(importer, /ensureHistoryCards|dbHistory/, "the snapshot no longer touches the history database");
+  assert.match(importer, /writeCardHistoryDay\(day, points\)/);
+  assert.doesNotMatch(read(DB_HISTORY), /export async function ensureHistoryCards/, "the card-copy step went with PriceHistory");
+  // The store drops an invalid point and writes the rest, never the whole batch.
+  const store = read("src/lib/price-history-store.ts");
+  assert.match(store, /const clean = \[\.\.\.prices\]\.filter\(/);
 });

@@ -2,14 +2,14 @@
 // query shape the public API needed that no existing helper quite provided.
 //
 // Modeled directly on computePriceMovers's bulk-read in price-history.ts (same
-// table, same window-bounded query, same day-cache): read PriceHistory once for
-// every card in the window, group by card, derive stats in memory. Returns
+// series, same window-bounded read): read the price history once for every card
+// in the window, group by card, derive stats in memory. Returns
 // COMPUTED STATS per card (latest + a few deltas + high/low), not raw daily
 // points — same reason computePriceMovers does: a raw dump for ~1000+ cards is
 // exactly the per-request unbounded-table read db.ts's egress guard exists to
 // catch, where a handful of numbers per card is not.
 import { prisma } from "./db";
-import { dbHistory } from "./db-history";
+import { cardHistoryRows, cardHistoryVersion } from "./price-history-store";
 import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
 import { cachedOrDirect, sydneyDayKey, historySource } from "./price-history";
@@ -59,13 +59,9 @@ function nearest(points: Point[], targetT: number): number {
 }
 
 async function computeBulkCardSummary(country: Country): Promise<BulkCardEntry[]> {
-  const { source, convert } = historySource(country);
+  const { convert } = historySource(country);
   const cutoff = new Date(Date.now() - SUMMARY_WINDOW_DAYS * 86400_000);
-  const rows = await dbHistory.priceHistory.findMany({
-    where: { country: source, day: { gte: cutoff } },
-    orderBy: { day: "asc" },
-    select: { cardId: true, day: true, lowestPriceCents: true },
-  });
+  const rows = cardHistoryRows({ since: cutoff });
   if (!rows.length) return [];
 
   const series = new Map<string, Point[]>();
@@ -119,14 +115,14 @@ async function computeBulkCardSummary(country: Country): Promise<BulkCardEntry[]
   return out;
 }
 
-// Day-scoped cache, same convention as getPriceMovers/getRecentlyUpdated: one
-// whole-market read per market per day, shared across every caller (here, just
-// the public API route, but keeping the same pattern costs nothing and means a
-// second internal consumer could reuse it for free later).
+// Day-scoped cache: one whole-market compute per market per Sydney day, shared
+// across every caller (here, just the public API route). The history version is
+// in the key too, so a release that brings new history refreshes it the same
+// day rather than at the next Sydney midnight.
 export function getBulkCardSummary(country: Country = DEFAULT_COUNTRY): Promise<BulkCardEntry[]> {
   return cachedOrDirect(
     () => computeBulkCardSummary(country),
-    ["rc-public-api-cards", country, sydneyDayKey()],
+    ["rc-public-api-cards", country, sydneyDayKey(), cardHistoryVersion()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   );
 }
