@@ -16614,3 +16614,31 @@ Deployed at the owner's request, and the price import run straight after so the 
 **Rollback.** One commit: RM5 still holds the data. Anything written to RM6 after the cutover is not in RM5.
 
 **Still open.** Six days per project is still a burn. Price history leaving Neon on 2026-10-03 does not touch this database, which never held it. Run `audit-egress` against RM6; `RetailerPrice` remains the first suspect. RM6 must be set in Vercel for Production, Preview and Development, and the build now fails loudly if Production lacks it.
+
+## Search finds sealed products: on /browse, and in the dropdown with a quick view — 2026-10-04
+
+**Why.** The owner: "if I search origins and I click enter, there's no sealed products found … the search bar should work for sealed products as well … and sealed products should also use the quick view open." "origins" showed "0 cards for “origins”" and an eBay box. The dropdown did list sealed products, but Enter goes to `/browse?q=`, which only queries cards. A dropdown sealed row also navigated to `/sealed?q=` while a card row opens its quick view in place.
+
+**What.**
+- **One matcher** (`lib/sealed-search.ts`), pure and shared by the dropdown and /browse.
+  - A product matches when every word of the query appears, in any order, in its name, product type, set code or the set's own name.
+  - Case, punctuation and plurals don't decide it ("booster boxes" finds "Booster Box").
+  - Ranking: the whole phrase in the name first, then every word in the name, then matches that lean on the set or type. Input order is kept within a rank.
+  - The old filter was the whole query as one substring, so "booster box origins" found nothing.
+- **/browse?q=** shows a "Sealed products" section above the cards: up to six `SealedTile`s, each opening the sealed quick view in place, and "See all N sealed products →" to `/sealed?q=`.
+  - The count line reads "0 cards for “origins” · 4 sealed products".
+  - With sealed matches and no cards, a one-line note replaces the "No cards found" panel.
+  - A search that finds a box counts as having results: it gets the compact eBay call, and the full call is only for a search that finds neither.
+  - **It shows only for a plain text search's first page.** It is not shown under a card-only filter (set, rarity, domain, type, printing, price and so on, which a box cannot satisfy) or on page 2+.
+- **The dropdown's sealed rows open the sealed quick view** (`SealedQuickView`, the sealed twin of the card one), with no navigation. The root layout already mounts its provider.
+  - A modifier click, or modifier+Enter, still opens `/sealed?q=` in a new tab.
+  - `/api/search` now returns the whole `SealedGroup` (listings and all) for at most four matches, plus `sealedCurrency`, so the row opens the full price board with no second request.
+- **A market with no sealed rows of its own** (UK, Singapore and so on) falls back to the default market, priced in its currency, the same rule /sealed applies (`loadSealedForSearch`). Before, its dropdown showed no sealed products at all.
+
+**Reverses.** `tests/search-quickview.test.ts` pinned "sealed-product search results are unaffected — they still navigate, by design", scoped so a "make search consistent" pass could not blur the boundary without a decision. This is that decision, so the test now pins the new rule.
+
+**Egress.** No new query. `getSealedGroups` caches itself and is called at page or route level, never inside an `unstable_cache` callback. The sealed read is skipped on the default view, so /browse's cached default view is untouched. A failed read only drops the section.
+
+**Not changed.** Card search still matches card names, so "origins" still finds no single cards: the set's cards are reachable through the Set filter. Searching a card by its set name is a separate change.
+
+**Verified.** With sealed rows seeded in the local database: "origins" gave 0 cards and 4 sealed on /browse and in /api/search, "booster box origins" found the box, "akali" gave cards and no sealed section, and "zzzz" gave the full empty state. In a browser, a sealed tile on /browse and a sealed row in the dropdown both opened the quick view in place (URL unchanged, no page errors).

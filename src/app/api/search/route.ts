@@ -5,14 +5,18 @@ import { normalizeSearch } from "@/lib/format";
 import { buildCardWhere, cardTileSelect } from "@/lib/cards";
 import { parseSearchQuery } from "@/lib/search-query";
 import { getSealedGroups } from "@/lib/sealed-import";
+import { loadSealedForSearch, matchSealedGroups } from "@/lib/sealed-search";
 import { getCountry } from "@/lib/get-country";
-import { priceField } from "@/lib/country";
+import { COUNTRIES, priceField } from "@/lib/country";
 import { didYouMean } from "@/lib/did-you-mean";
 import { getPriceGuideRows } from "@/lib/price-guide";
 
 // Typeahead search for the navbar dropdown. Returns full tile data so a result can
 // open the same instant quick-view modal as the browse grid, plus any matching
-// sealed products (booster boxes/packs/etc.).
+// sealed products (booster boxes/packs/etc.). A sealed match carries its whole
+// price board (the SealedGroup, listings and all) so the dropdown row opens the
+// sealed quick view in place, like a card row does, with no second request
+// (2026-10-04). At most four, so the payload stays a few KB.
 //
 // SEARCH IS UNMETERED FOR EVERYONE — anonymous, free account, Premium alike.
 // A tiered daily allowance (10/100/unlimited, an httpOnly counter cookie) shipped
@@ -39,7 +43,7 @@ export async function GET(req: Request) {
   // should rank Shen at the top, and "shensignature" is a prefix of nothing.
   const nq = normalizeSearch(parsed.name || q);
   const aliasHits = new Set(parsed.aliasSlugs);
-  const [cards, sealedAll] = await Promise.all([
+  const [cards, sealedRead] = await Promise.all([
     prisma.card.findMany({
       where: buildCardWhere({ q }, country),
       // Overfetch, then re-rank below: NAME-PREFIX matches first, then priced.
@@ -57,7 +61,9 @@ export async function GET(req: Request) {
     // every keystroke. getSealedGroups caches itself (per-instance memo plus the
     // shared data cache); wrapping it in another unstable_cache here disabled
     // the shared layer, because Next.js bypasses a cache nested in a cache.
-    getSealedGroups(country),
+    // A market with no sealed rows of its own falls back to the default market,
+    // priced in its currency (loadSealedForSearch), as /sealed does.
+    loadSealedForSearch(country, getSealedGroups),
   ]);
 
   // Prefix matches beat substring matches regardless of price; within each group
@@ -70,23 +76,11 @@ export async function GET(req: Request) {
     .sort((a, b) => rank(a as { slug?: string; nameNormalized?: string }) - rank(b as { slug?: string; nameNormalized?: string }))
     .slice(0, 10);
 
-  const ql = q.toLowerCase();
-  const sealed = sealedAll
-    .filter(
-      (g) =>
-        g.name.toLowerCase().includes(ql) ||
-        g.productType.toLowerCase().includes(ql) ||
-        (g.setCode ?? "").toLowerCase().includes(ql)
-    )
-    .slice(0, 4)
-    .map((g) => ({
-      groupKey: g.groupKey,
-      name: g.name,
-      productType: g.productType,
-      setCode: g.setCode,
-      imageUrl: g.imageUrl,
-      lowestPriceCents: g.lowestPriceCents,
-    }));
+  // Every word of the query, in any order, against the name, type, set code and
+  // the set's own name (lib/sealed-search.ts): "origins" finds the Origins boxes
+  // and "booster box origins" does too. The browse results use the same matcher.
+  const sealed = matchSealedGroups(sealedRead.groups, q).slice(0, 4);
+  const sealedCurrency = COUNTRIES[sealedRead.priceCountry].currency;
 
   // Nothing at all: offer near-miss names ("Did you mean?", 2026-10-02) from
   // the price guide's self-caching catalogue — a warm memo, no new database
@@ -98,5 +92,5 @@ export async function GET(req: Request) {
     if (rows) suggest = didYouMean(parsed.name || q, rows.map((r) => r.n));
   }
 
-  return NextResponse.json({ results: ranked, sealed, ...(suggest.length ? { suggest } : {}) });
+  return NextResponse.json({ results: ranked, sealed, sealedCurrency, ...(suggest.length ? { suggest } : {}) });
 }

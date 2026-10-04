@@ -63,14 +63,18 @@ test("both the typed-results row and the zero-state Trending row route through a
   assert.ok(calls.length >= 5, `expected activateCardLike to be defined once and called from every row + the keyboard path, found ${calls.length} occurrences`);
 });
 
-test("sealed-product search results are unaffected — they still navigate, by design", () => {
-  // Scoped deliberately: the ask (and QuickView's own domain) is card results.
-  // Sealed products have their own, separate SealedQuickViewProvider elsewhere
-  // in the app that this file does not wire up — asserting the boundary here
-  // so a future "just make search consistent" pass doesn't blur it by
-  // accident, without a decision to do so.
+test("sealed-product search results open the sealed quick view too (owner's decision, 2026-10-04)", () => {
+  // This test used to pin the OPPOSITE ("sealed results still navigate, by
+  // design"), scoped on purpose so a "make search consistent" pass could not
+  // blur the boundary without a decision. The owner made that decision:
+  // "sealed products should also use the quick view open". A sealed row now
+  // opens SealedQuickView, the sealed twin of QuickView, from its own provider
+  // (mounted in the root layout beside the card one). The new rule is pinned in
+  // tests/sealed-search.test.ts; this keeps the boundary visible from here.
   const src = read("src/components/SearchBar.tsx");
   const fn = /function activateSealed\([\s\S]*?\n  \}/.exec(src);
   assert.ok(fn, "activateSealed() must exist");
-  assert.match(fn![0], /router\.push\(href\)/, "sealed results should still navigate to /sealed?q=…");
+  assert.match(fn![0], /openSealedQuickView\(s, /, "a sealed result opens the sealed quick view");
+  assert.doesNotMatch(fn![0], /router\.push/, "and no longer navigates away");
+  assert.match(fn![0], /window\.open\(`\/sealed\?q=/, "a modifier click or Enter still opens /sealed in a new tab");
 });

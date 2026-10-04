@@ -394,9 +394,13 @@ test("/browse: a compact eBay search by the count, a full one when nothing match
   assert.match(src, /const q = \(searchParams\.q \?\? ""\)\.trim\(\);/);
   assert.match(
     src,
-    /\{q && total > 0 && \(\s*<EbayBuyCta query=\{q\} freeText compact source="browse-search" pageType="browse" surface="ebay_search"/,
+    /\{q && hasResults && \(\s*<EbayBuyCta query=\{q\} freeText compact source="browse-search" pageType="browse" surface="ebay_search"/,
   );
-  assert.match(src, /\{q && total === 0 && \(\s*<EbayBuyCta query=\{q\} freeText source="browse-no-results" pageType="browse" surface="ebay_search"/);
+  // "Results" are single cards OR matching sealed products (2026-10-04): a search
+  // that finds a box is not a dead end, so it gets the compact one, and the full
+  // call is for a search that found neither.
+  assert.match(src, /const hasResults = total > 0 \|\| sealedMatches\.length > 0;/);
+  assert.match(src, /\{q && !hasResults && \(\s*<EbayBuyCta query=\{q\} freeText source="browse-no-results" pageType="browse" surface="ebay_search"/);
   const countAt = src.indexOf('id="results"');
   const compactAt = src.indexOf('source="browse-search"');
   const gridAt = src.indexOf("cards.map((c) =>");

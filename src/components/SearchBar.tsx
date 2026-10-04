@@ -8,6 +8,9 @@ import { cardDisplayName } from "@/lib/card-name";
 import { trackEvent } from "@/lib/analytics";
 import { sendCardView, type CardViewKind } from "@/lib/card-views";
 import { useQuickView } from "./QuickView";
+import { useSealedQuickView } from "./SealedQuickView";
+import type { SealedGroup } from "@/lib/sealed-import";
+import { formatMoney } from "@/lib/format";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
 import { cardImageAlt } from "@/lib/image-alt";
@@ -37,14 +40,11 @@ const RECENT_SEARCHES_KEY = "rc_recent_searches";
 const MAX_RECENT_SEARCHES = 5;
 
 type Result = CardTileData;
-type SealedResult = {
-  groupKey: string;
-  name: string;
-  productType: string;
-  setCode: string | null;
-  imageUrl: string | null;
-  lowestPriceCents: number | null;
-};
+// A sealed match is the whole SealedGroup (listings and all, /api/search sends
+// it for the top few), so a dropdown row opens the sealed quick view in place
+// with no second request. Over JSON, firstSeenAt arrives as a string; nothing
+// the quick view or this list reads depends on it.
+type SealedResult = SealedGroup;
 
 function loadRecentSearches(): string[] {
   try {
@@ -164,7 +164,8 @@ export function SearchBar({
   const router = useRouter();
   const pathname = usePathname();
   const { open: openQuickView } = useQuickView();
-  const { fmt, price, country } = useCountry();
+  const { open: openSealedQuickView } = useSealedQuickView();
+  const { fmt, price, country, currency: countryCurrency } = useCountry();
   // Starts EMPTY on purpose, and the ?q= prefill arrives in the effect below.
   //
   // This used to be useState(useSearchParams().get("q") ?? ""). In the App
@@ -183,6 +184,9 @@ export function SearchBar({
   const [value, setValue] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [sealed, setSealed] = useState<SealedResult[]>([]);
+  // The currency the sealed prices are in: the visitor's market, or the default
+  // market's when theirs has no sealed rows of its own (/api/search).
+  const [sealedCurrency, setSealedCurrency] = useState<string | null>(null);
   // Near-miss card names the route offers when a query matched nothing.
   const [suggest, setSuggest] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
@@ -349,6 +353,7 @@ export function SearchBar({
         const nextSealed: SealedResult[] = data.sealed ?? [];
         setResults(nextResults);
         setSealed(nextSealed);
+        setSealedCurrency(typeof data.sealedCurrency === "string" ? data.sealedCurrency : null);
         setSuggest(Array.isArray(data.suggest) ? data.suggest : []);
         // A free product-gap report: every distinct, debounced-settled query
         // that came back completely empty. Firing per settled query (not per
@@ -475,19 +480,20 @@ export function SearchBar({
     openQuickView(card);
   }
 
-  // Keyboard-only counterpart to the sealed row's onClick below (which relies
-  // on a real anchor click for navigation) — Enter has no href to fall back
-  // on, so this navigates explicitly.
+  // The sealed twin of activateCardLike: a plain click or Enter opens the sealed
+  // quick view in place (2026-10-04, owner: "sealed products should also use the
+  // quick view open"), where it used to navigate away to /sealed?q=. A modifier
+  // click (mouse) lets the row's real link open /sealed in a new tab natively;
+  // a modifier on keyboard Enter does it here, since Enter has no href-click.
   function activateSealed(s: SealedResult, rank: number, newTab: boolean) {
     trackEvent("search_suggestion_selected", { suggestion_rank: rank, result_type: "sealed", query: value.trim(), variant });
-    const href = `/sealed?q=${encodeURIComponent(s.name)}`;
     if (newTab) {
-      window.open(href, "_blank", "noopener");
+      window.open(`/sealed?q=${encodeURIComponent(s.name)}`, "_blank", "noopener");
       return;
     }
     setOpen(false);
     setActiveIndex(-1);
-    router.push(href);
+    openSealedQuickView(s, sealedCurrency ?? countryCurrency);
   }
 
   // The single place a query actually gets "submitted" — Enter/"See all
@@ -983,12 +989,15 @@ export function SearchBar({
                           aria-selected={active}
                           tabIndex={-1}
                           href={`/sealed?q=${encodeURIComponent(s.name)}`}
-                          onClick={() => {
+                          onClick={(e) => {
                             // Continues the card list's rank rather than restarting
                             // at 1 — see the comment on the card suggestions above.
-                            trackEvent("search_suggestion_selected", { suggestion_rank: idx + 1, result_type: "sealed", query: trimmed, variant });
-                            setOpen(false);
-                            setActiveIndex(-1);
+                            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                              trackEvent("search_suggestion_selected", { suggestion_rank: idx + 1, result_type: "sealed", query: trimmed, variant });
+                              return;
+                            }
+                            e.preventDefault();
+                            activateSealed(s, idx + 1, false);
                           }}
                           className={rowCls(active)}
                         >
@@ -1009,7 +1018,7 @@ export function SearchBar({
                             </div>
                           </div>
                           <div className="shrink-0 text-sm font-bold text-accent">
-                            {s.lowestPriceCents != null ? fmt(s.lowestPriceCents) : "—"}
+                            {s.lowestPriceCents != null ? formatMoney(s.lowestPriceCents, sealedCurrency ?? countryCurrency) : "—"}
                           </div>
                         </Link>
                       </li>

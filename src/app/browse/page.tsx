@@ -12,6 +12,7 @@ import { EbayPicks } from "@/components/EbayPicks";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { SortSelect } from "@/components/SortSelect";
 import { CardTile } from "@/components/CardTile";
+import { SealedTile } from "@/components/SealedTile";
 import { Pagination } from "@/components/Pagination";
 import { PageSizeSelect } from "@/components/PageSizeSelect";
 import { AdSlot } from "@/components/AdSlot";
@@ -26,6 +27,9 @@ import {
   parsePageSize,
 } from "@/lib/cards";
 import { SITE_URL } from "@/lib/site";
+import { getSealedGroups } from "@/lib/sealed-import";
+import { loadSealedForSearch, matchSealedGroups } from "@/lib/sealed-search";
+import { soldOutEverywhere } from "@/lib/sealed-offers";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
@@ -36,6 +40,19 @@ const BROWSE_DEFAULT_SORT = "popular";
 
 /** The free-account prompt sits after this many tiles (fewer on a short page: after the last). */
 const BROWSE_PROMPT_AFTER = 12;
+
+/**
+ * Sealed products shown above the card grid for a text search (2026-10-04, owner:
+ * "if I search origins and I click enter, there's no sealed products found").
+ * More than this link on to /sealed?q= for the rest.
+ */
+const BROWSE_SEALED_SHOWN = 6;
+
+/** Filters that only mean something for single cards: a sealed box has no rarity, domain or printing. */
+const CARD_ONLY_FILTERS = [
+  "domain", "rarity", "type", "set", "variant", "tag", "rules", "rulesSet",
+  "sig", "over", "ult", "promo", "printing", "priced", "min", "max",
+] as const satisfies readonly (keyof CardQuery)[];
 
 // searchParams-driven (filters/pagination), so the route stays dynamic.
 export const dynamic = "force-dynamic";
@@ -204,6 +221,21 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
   // The visitor's own words, for the eBay search beside the results
   // (2026-09-26). Trimmed like generateMetadata's; empty means no search.
   const q = (searchParams.q ?? "").trim();
+  // SEALED PRODUCTS MATCHING THE SAME WORDS, on a plain text search's first page
+  // (not under a card-only filter, which a box cannot satisfy, and not repeated on
+  // page 2+). The same matcher the navbar dropdown uses (lib/sealed-search.ts), so
+  // what the dropdown offered is what Enter shows. getSealedGroups caches itself
+  // (memo + data cache), is called here at page level and never from inside an
+  // unstable_cache callback (egress rule 6), and a failure only drops the section.
+  const wantsSealed = q.length >= 2 && page === 1 && CARD_ONLY_FILTERS.every((k) => !searchParams[k]);
+  const sealedRead = wantsSealed
+    ? await loadSealedForSearch(country, getSealedGroups).catch(() => null)
+    : null;
+  const sealedMatches = sealedRead ? matchSealedGroups(sealedRead.groups, q) : [];
+  const sealedShown = sealedMatches.slice(0, BROWSE_SEALED_SHOWN);
+  const sealedCurrency = sealedRead ? COUNTRIES[sealedRead.priceCountry].currency : COUNTRIES[country].currency;
+  // Whether anything at all answers the search: single cards or sealed products.
+  const hasResults = total > 0 || sealedMatches.length > 0;
   // The tile the free-account prompt follows: the 12th, or the last on a short page.
   const promptAfterId = cards[Math.min(BROWSE_PROMPT_AFTER, cards.length) - 1]?.id;
 
@@ -338,6 +370,12 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
             {searchParams.q && (
               <> for <span className="text-brand-400">“{searchParams.q}”</span></>
             )}
+            {sealedMatches.length > 0 && (
+              <>
+                {" "}· <span className="font-semibold text-white">{sealedMatches.length.toLocaleString()}</span> sealed{" "}
+                {sealedMatches.length === 1 ? "product" : "products"}
+              </>
+            )}
             {total > 0 && <span className="text-slate-600"> · page {page} of {totalPages}</span>}
           </p>
           <div className="flex items-center gap-3">
@@ -354,7 +392,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
             eBay has a listing for them. A client component, so it localises
             with useCountry. Compact here; with no results at all the full one
             below takes its place, as the only way forward. */}
-        {q && total > 0 && (
+        {q && hasResults && (
           <EbayBuyCta query={q} freeText compact source="browse-search" pageType="browse" surface="ebay_search" className="mb-4" />
         )}
 
@@ -367,21 +405,59 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
             buy_click (2026-09-26). */}
         <EbayPicks className="mb-6" pageType="browse" />
 
+        {/* SEALED MATCHES, above the cards: a search like "origins" names a set,
+            and its boxes and packs are often the whole answer. Each tile opens
+            the sealed quick view in place (SealedTile), like a card tile does. */}
+        {sealedShown.length > 0 && (
+          <section aria-labelledby="browse-sealed-heading" className="mb-6">
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="browse-sealed-heading" className="font-display text-lg font-extrabold text-white">
+                Sealed products
+              </h2>
+              <Link href={`/sealed?q=${encodeURIComponent(q)}`} className="text-sm text-brand-400 hover:underline">
+                {sealedMatches.length > sealedShown.length
+                  ? `See all ${sealedMatches.length} sealed products →`
+                  : "Open in Sealed →"}
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
+              {sealedShown.map((g) => (
+                <SealedTile
+                  key={g.groupKey}
+                  group={g}
+                  currency={sealedCurrency}
+                  soldOutEverywhere={soldOutEverywhere(g.listings)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
         {cards.length === 0 ? (
           <>
-            <div className="card-surface grid place-items-center p-16 text-center">
-              <p className="text-lg font-semibold text-white">
-                {total > 0 ? "Nothing on this page" : "No cards found"}
+            {/* With sealed matches above and no single cards, say so in one line
+                instead of a full "No cards found" panel under the answer. */}
+            {total === 0 && sealedMatches.length > 0 ? (
+              <p className="card-surface p-4 text-sm text-slate-400">
+                No single cards match “{q}”. The sealed products above do.{" "}
+                <Link href="/browse" className="text-brand-400 hover:underline">Browse all cards</Link>
               </p>
-              <p className="mt-1 text-sm text-slate-400">
-                {total > 0 ? "Try an earlier page." : "Try adjusting your filters or search."}
-              </p>
-              <Link href="/browse" className="btn-primary mt-4">Reset</Link>
-            </div>
+            ) : (
+              <div className="card-surface grid place-items-center p-16 text-center">
+                <p className="text-lg font-semibold text-white">
+                  {total > 0 ? "Nothing on this page" : "No cards found"}
+                </p>
+                <p className="mt-1 text-sm text-slate-400">
+                  {total > 0 ? "Try an earlier page." : "Try adjusting your filters or search."}
+                </p>
+                <Link href="/browse" className="btn-primary mt-4">Reset</Link>
+              </div>
+            )}
             {/* A search our database has no card for (a typo, a set we have
                 not loaded yet, a product that is not a single) can still be on
-                eBay — the full CTA, since here it is the one route left. */}
-            {q && total === 0 && (
+                eBay — the full CTA, since here it is the one route left. With
+                sealed matches the compact one above already covers it. */}
+            {q && !hasResults && (
               <EbayBuyCta query={q} freeText source="browse-no-results" pageType="browse" surface="ebay_search" className="mt-4" />
             )}
           </>
