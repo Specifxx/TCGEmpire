@@ -204,7 +204,7 @@ jobs:
       # migrate-main-db-rm9-to-rm10 was run twice (once for the bulk copy, once
       # immediately before this flip) and verified every table matching before
       # this shipped.
-      DATABASE_URL: ${{ secrets.RM5 || vars.RM5 }}
+      DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
       # There is only one value now, but this stays for the same reason it did
       # under the old chain: lib/db.ts cannot work this out inside Actions
       # itself (everything collapses into one DATABASE_URL before the job
@@ -283,9 +283,9 @@ jobs:
           # database is set") without it — this step's env block never carried it,
           # so the task has been failing before it could copy a single row. Found
           # 2026-09-02 running the top-up ahead of the RH11 → RH6 cutover. Must be
-          # kept in lockstep with OPERATIONAL_VARS's head (RM5 as of 2026-09-28) —
+          # kept in lockstep with OPERATIONAL_VARS's head (RM6 as of 2026-10-04) —
           # this env var's NAME, not just its value, is what the script looks up.
-          RM5: ${{ secrets.RM5 || vars.RM5 }}
+          RM6: ${{ secrets.RM6 || vars.RM6 }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
@@ -3339,19 +3339,24 @@ jobs:
           # answer "which database is live and what does it hold" pointed at the
           # wrong one. Same class of drift src/lib/db-chains.ts exists to stop.
           # Which name is current is written down in exactly one place; read it
-          # there rather than hard-coding a guess in this label again.
-          probe "RM12 (current)"       "${P_RM12:-}" || true
-          probe "RM10 (retired)"       "${P_RM10:-}" || true
-          probe "RM9 (retired)"        "${P_RM9:-}" || true
-          probe "RM8 (retired)"        "${P_RM8:-}" || true
-          probe "RM7 (retired)"        "${P_RM7:-}" || true
-          probe "RM6 (retired)"        "${P_RM6:-}" || true
-          probe "RM11 (retired)"       "${P_RM11:-}" || true
-          probe "DATABASE_URL_2"       "${P_DATABASE_URL_2:-}" || true
-          probe "DATABASE_URL"         "${P_DATABASE_URL:-}" || true
+          # there rather than hard-coding a guess in this label again. (It drifted
+          # once more: "RM12 (current)" survived the RM3, RM4 and RM5 cutovers, so
+          # since 2026-10-04 the labels carry no status and the live name is
+          # printed from src/lib/db-chains.ts instead.)
+          LIVE_OP=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          echo "Live operational project (OPERATIONAL_VARS head in src/lib/db-chains.ts): ${LIVE_OP:-<could not parse>}"
+          probe "RM6"                  "${P_RM6:-}" || true
           probe "RM5"                  "${P_RM5:-}" || true
           probe "RM4"                  "${P_RM4:-}" || true
           probe "RM3"                  "${P_RM3:-}" || true
+          probe "RM12"                 "${P_RM12:-}" || true
+          probe "RM11"                 "${P_RM11:-}" || true
+          probe "RM10"                 "${P_RM10:-}" || true
+          probe "RM9"                  "${P_RM9:-}" || true
+          probe "RM8"                  "${P_RM8:-}" || true
+          probe "RM7"                  "${P_RM7:-}" || true
+          probe "DATABASE_URL_2"       "${P_DATABASE_URL_2:-}" || true
+          probe "DATABASE_URL"         "${P_DATABASE_URL:-}" || true
           echo ""
           echo "===== HISTORY ROTATION (may carry a full early copy) ====="
           # Also drifted: HISTORY_DATABASE_URL was superseded by _2 on 2026-09-17.
@@ -5548,7 +5553,7 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM5 || vars.RM5 }}
+          DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
           # There is only one value now, but this stays for the same reason it did
           # under the old chain: lib/db.ts cannot work this out inside Actions
           # itself (everything collapses into one DATABASE_URL before the job
@@ -5619,7 +5624,7 @@ jobs:
       - name: Audit sealed price history (read-only)
         if: inputs.task == 'audit-sealed-history'
         env:
-          DATABASE_URL: ${{ secrets.RM5 || vars.RM5 }}
+          DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
           DB_SOURCE_NAME: ${{ (secrets.RM4 || vars.RM4) && 'RM4' || 'UNSET' }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
@@ -5700,7 +5705,7 @@ jobs:
           # correctly, but this env block never forwarded the variable it
           # actually asked for, so the head of the chain read back as unset here even with the
           # secret genuinely configured in Actions).
-          RM5: ${{ secrets.RM5 || vars.RM5 }}
+          RM6: ${{ secrets.RM6 || vars.RM6 }}
         run: npx tsx scripts/probe-history-dbs.ts
 
       # Dry run unless dry_run is explicitly false — the inverse of every other

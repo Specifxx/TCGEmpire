@@ -67,11 +67,11 @@ jobs:
       - name: Import sealed products (stores only)
         id: import
         env:
-          DATABASE_URL: ${{ secrets.RM5 || vars.RM5 }}
+          DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
           # Set explicitly, as refresh-prices.yml does: Actions collapses the
           # chain into one DATABASE_URL before the job starts, so lib/db.ts
           # cannot tell which secret won. See src/lib/db.ts and db-chains.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM5 || vars.RM5) && 'RM5' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM6 || vars.RM6) && 'RM6' || 'UNSET' }}
           # Never eBay from here (see the header). No EBAY_* secret is named.
           EBAY_REFRESH: "false"
         run: |

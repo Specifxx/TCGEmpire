@@ -16593,3 +16593,24 @@ Deployed at the owner's request, and the price import run straight after so the 
 **Still open.**
 - The frozen PriceHistory and SealedPriceHistory rows can be dropped from the history project once the files have run for a few weeks.
 - The operational database's burn (RM5) is untouched by this.
+
+## Operational database cut over from RM5 to RM6 — 2026-10-04
+
+**Why.** The owner: "perform a full migration from RM5 to RM6 as we are at limit". RM5 reached its 5 GB monthly transfer allowance six days after it became the operational database (2026-09-28).
+
+**What.**
+- **RM6 is a recycled project**, last live 2026-08-17..08-20. `probe-databases` found it reachable and behind RM5 on every metric (User 298 vs 439, CollectionCard 1,160 vs 2,530, PriceAlert 158 vs 226, RetailerPrice 90,372 vs 137,627). That makes it an old operational snapshot, safe to overwrite.
+- **`migrate-main-db-rm5-to-rm6`** is the rm4-to-rm5 step with the names moved one along. It restored RM5 over RM6 and verified all 47 public tables row for row (User 439, Card 1,542, RetailerPrice 137,627, DemandSnapshot 79,199). The schema re-push reported "already in sync". It ran again immediately before the flip.
+- **The chain.** `OPERATIONAL_VARS` is now `["RM6"]`. These follow it:
+  - `scripts/build-db-push.sh`;
+  - every workflow's `DATABASE_URL`/`DB_SOURCE_NAME` default, including the two added since the last cutover (`export-price-history.yml`, `sealed-refresh.yml`);
+  - the `RM6:` env forwards in maintenance.yml;
+  - the ci-build service variable;
+  - `package.json`'s preview-import condition.
+- **A production build without RM6 now fails** (`build-db-push.sh`) instead of skipping its schema push. Before, a Vercel production build missing the operational variable went green and served "resolved from NONE": every database-backed page broken. Failing keeps the previous deployment serving until the variable is set.
+- **`probe-databases` no longer labels a project "current".** "RM12 (current)" had survived three cutovers since RM12 was retired. The step now prints the live name from `src/lib/db-chains.ts` and lists every project without a status.
+- **Deployed straight away.** This is the standing exception for a database cutover (CURRENT-STATE, Deploys & egress), and the live project was at its limit.
+
+**Rollback.** One commit: RM5 still holds the data. Anything written to RM6 after the cutover is not in RM5.
+
+**Still open.** Six days per project is still a burn. Price history leaving Neon on 2026-10-03 does not touch this database, which never held it. Run `audit-egress` against RM6; `RetailerPrice` remains the first suspect. RM6 must be set in Vercel for Production, Preview and Development, and the build now fails loudly if Production lacks it.
