@@ -550,6 +550,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <PrivacySettingsLink />
             <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
+          {/* Sister site (owner, 2026-10-04): OP Compare, the same price
+              comparison for the One Piece Card Game, built by the same owner.
+              A plain followed link: it is our own site, not an affiliate. */}
+          <p className="mb-2">
+            Also play One Piece? Compare One Piece Card Game prices on{" "}
+            <a href="https://opcompare.app" target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
+              OP Compare
+            </a>
+            , our sister site.
+          </p>
           {/* Cross-promotion: our other Riftbound side project. Cheeky on purpose —
               per owner request 2026-08-13. */}
           <p className="mb-2">
