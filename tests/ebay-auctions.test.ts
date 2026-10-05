@@ -9,6 +9,9 @@ import {
   AUCTION_ROW_CAP,
   AUCTION_WINDOW_HOURS,
   AUCTION_MIN_USD_CENTS,
+  AUCTION_GRADED_MIN_USD_CENTS,
+  AUCTION_GRADED_QUERY,
+  AUCTION_QUERIES_PER_MARKET,
 } from "../src/lib/ebay-auctions";
 import { EBAY_MAX_LIMIT, EBAY_MARKETPLACE, AUCTION_JUNK } from "../src/lib/ebay";
 import { COUNTRY_LIST } from "../src/lib/country";
@@ -160,7 +163,7 @@ test("lots and sealed product are NOT filtered out — that exclusion belongs to
 // ── Cost ─────────────────────────────────────────────────────────────────────
 
 test("the sweep's worst-case cost is a small, flat share of the daily Browse quota", () => {
-  const perSweep = AUCTION_MARKETS.length * AUCTION_PAGE_CAP;
+  const perSweep = AUCTION_MARKETS.length * AUCTION_PAGE_CAP * AUCTION_QUERIES_PER_MARKET;
   const cron = /- cron: "0 \*\/(\d+) \* \* \*"/.exec(read(WORKFLOW));
   assert.ok(cron, "the workflow must keep an every-N-hours cron");
   const perDay = perSweep * (24 / Number(cron[1]));
@@ -198,7 +201,7 @@ test("the USD floor is converted per market, so it is one real threshold and not
   // ~£500 in the UK (a third higher) and ~A$500 in Australia (a third lower).
   assert.match(code, /const currency = currencyOf\(market\)/);
   assert.match(code, /usdCentsToCountry\(AUCTION_MIN_USD_CENTS, market\)/);
-  assert.match(code, /minPriceCents,\s*\n\s*currency,/, "both must reach the search together");
+  assert.match(code, /minPriceCents: pass\.minCents,\s*\n\s*currency,/, "both must reach the search together");
   // Sanity-check the conversion actually moves the bar in the right direction.
   const gbp = usdCentsToCountry(AUCTION_MIN_USD_CENTS, "UK");
   const aud = usdCentsToCountry(AUCTION_MIN_USD_CENTS, "AU");
@@ -219,8 +222,8 @@ test("an empty board explains the filter instead of implying eBay has no auction
   const src = read(BOARD);
   // A narrow board that renders "no auctions" reads as broken. It must name both
   // bars, and the page must hand it the numbers rather than hardcoding them.
-  assert.match(src, /Nothing above US\$\{minUsd\} closing in the next \{windowHours\} hours/);
-  assert.match(read(PAGE), /windowHours=\{AUCTION_WINDOW_HOURS\} minUsd=\{minUsd\}/);
+  assert.match(src, /Nothing above US\$\{minUsd\} \(US\$\{gradedMinUsd\} for graded slabs\) closing in the next \{windowHours\} hours/);
+  assert.match(read(PAGE), /windowHours=\{AUCTION_WINDOW_HOURS\} minUsd=\{minUsd\} gradedMinUsd=\{gradedMinUsd\}/);
 });
 
 test("the page states the current-bid consequence of a price floor", () => {
@@ -435,4 +438,20 @@ test("the sweep has its own workflow and its own concurrency group", () => {
     /db push[^\n]*--accept-data-loss/,
     "additive only on a schedule — a destructive change must stop the run, not drop a column",
   );
+});
+
+// 2026-10-05: a PSA 10 Jinx (overnumbered showcase 301/298) closed at US$247.50
+// after 43 bids and never reached the board — the single US$500 floor is right
+// for raw cards, wrong for slabs. A second, graded-keyword search now runs per
+// market with a US$100 floor (DECISIONS.md, "Auctions: graded slabs from US$100").
+test("graded slabs get their own lower floor and their own search, deduped with the main one", () => {
+  assert.equal(AUCTION_GRADED_MIN_USD_CENTS, 10_000, "US$100 for slabs");
+  assert.ok(AUCTION_GRADED_MIN_USD_CENTS < AUCTION_MIN_USD_CENTS);
+  assert.equal(AUCTION_QUERIES_PER_MARKET, 2);
+  assert.match(AUCTION_GRADED_QUERY, /Riftbound \(PSA,BGS,CGC,SGC\)/);
+  const code = codeOnly(read(LIB));
+  assert.match(code, /process\.env\.EBAY_AUCTION_GRADED_MIN_USD_CENTS/);
+  assert.match(code, /usdCentsToCountry\(AUCTION_GRADED_MIN_USD_CENTS, market\)/);
+  assert.match(code, /if \(pass\.gradedOnly && !\(it\.grader \|\| isGradedListing\(it\.title\)\)\) continue;/, "raw lots never ride in under the lower bar");
+  assert.match(code, /seen\.set\(it\.itemId,/, "one row per lot across both searches");
 });

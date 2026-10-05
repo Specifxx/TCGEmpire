@@ -12,6 +12,7 @@ import {
   AUCTION_ROW_CAP,
   AUCTION_WINDOW_HOURS,
   AUCTION_MIN_USD_CENTS,
+  AUCTION_GRADED_MIN_USD_CENTS,
   EBAY_SITE_LABEL,
 } from "@/lib/ebay-auctions";
 import { SITE_URL } from "@/lib/site";
@@ -34,7 +35,7 @@ export const revalidate = 1800;
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Chase Auctions Closing Today | RiftCompare" },
   description:
-    "High-value Riftbound auctions on eBay closing within 24 hours — every lot already bid past US$500, sorted by ending soonest, with the bid at our last check, bid count and a live countdown.",
+    "High-value Riftbound auctions on eBay closing within 24 hours — raw cards already bid past US$500 and graded slabs past US$100, sorted by ending soonest, with the bid at our last check, bid count and a live countdown.",
   keywords: [
     "Riftbound auctions",
     "Riftbound eBay auctions",
@@ -62,6 +63,7 @@ export default async function AuctionsPage({ searchParams }: { searchParams: { m
   // The eBay site front, not the market's label: EU is eBay Spain (EBAY_SITE_LABEL).
   const site = EBAY_SITE_LABEL[market];
   const minUsd = Math.round(AUCTION_MIN_USD_CENTS / 100);
+  const gradedMinUsd = Math.round(AUCTION_GRADED_MIN_USD_CENTS / 100);
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -109,7 +111,8 @@ export default async function AuctionsPage({ searchParams }: { searchParams: { m
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           The high-value end of <strong className="text-slate-200">{site}</strong>
           {market === "EU" && <> (eBay has no single European site, so our EU market uses ebay.es)</>} — Riftbound
-          lots already bid past <strong className="text-slate-200">US${minUsd}</strong> and closing within{" "}
+          raw cards already bid past <strong className="text-slate-200">US${minUsd}</strong> and graded slabs past{" "}
+          <strong className="text-slate-200">US${gradedMinUsd}</strong>, closing within{" "}
           <strong className="text-slate-200">{AUCTION_WINDOW_HOURS} hours</strong>, soonest first. The bid at our
           last check (and how long ago that was), how many bids it had drawn, and a countdown that ticks in real
           time. Graded slabs and raw singles together; filter to either below.
@@ -121,7 +124,7 @@ export default async function AuctionsPage({ searchParams }: { searchParams: { m
         <HubIntro path="/auctions" />
       </div>
 
-      <AuctionsBoard rows={rows} market={market} windowHours={AUCTION_WINDOW_HOURS} minUsd={minUsd} />
+      <AuctionsBoard rows={rows} market={market} windowHours={AUCTION_WINDOW_HOURS} minUsd={minUsd} gradedMinUsd={gradedMinUsd} />
 
       {/* The guides behind the board, after it and before the ad. */}
       <RelatedGuides guides={guidesForTool("/auctions")} className="card-surface mt-6 p-5" />

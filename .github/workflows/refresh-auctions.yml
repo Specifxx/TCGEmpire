@@ -9,8 +9,9 @@ name: Refresh auctions
 # schedule — and keeping them separate means a long price import can never delay
 # the board, and a failed sweep can never fail the price run.
 #
-# QUOTA: 6 eBay Browse calls per sweep — one per market, one page each — so
-# 6 × 6 runs = 36 calls/day against eBay's 5,000/day limit, on top of the price
+# QUOTA: 12 eBay Browse calls per sweep — two per market (everything at the
+# $500 bar, then graded slabs from $100, added 2026-10-05), one page each — so
+# 12 × 6 runs = 72 calls/day against eBay's 5,000/day limit, on top of the price
 # importer's ~2,850. Under 1% of the allowance. The per-card auction pass deleted
 # on 2026-08-20 cost ~960 calls/day by comparison.
 #

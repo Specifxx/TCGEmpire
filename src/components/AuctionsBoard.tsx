@@ -263,6 +263,7 @@ export function AuctionsBoard({
   market,
   windowHours,
   minUsd,
+  gradedMinUsd,
 }: {
   rows: AuctionRow[];
   market: string;
@@ -270,6 +271,8 @@ export function AuctionsBoard({
   /** The board's floor in whole USD — shown so an empty board explains itself
    *  rather than reading as "eBay has no Riftbound auctions". */
   minUsd: number;
+  /** The lower floor for graded slabs, in whole USD. */
+  gradedMinUsd: number;
 }) {
   const [sort, setSort] = useState<SortKey>("ending");
   const [grade, setGrade] = useState<GradeKey>("all");
@@ -326,15 +329,15 @@ export function AuctionsBoard({
       <div className="card-surface grid place-items-center p-12 text-center">
         <div>
           <p className="text-base font-semibold text-white">
-            Nothing above US${minUsd} closing in the next {windowHours} hours
+            Nothing above US${minUsd} (US${gradedMinUsd} for graded slabs) closing in the next {windowHours} hours
           </p>
           {/* Says WHY, not just "nothing here". This board is deliberately
               narrow — high-value lots, closing today — so an empty state that
               read as "eBay has no Riftbound auctions" would be plainly false
               and would send people away thinking the page was broken. */}
           <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-slate-400">
-            This board only shows lots whose bidding has already passed{" "}
-            <strong className="text-slate-300">US${minUsd}</strong> and that close within{" "}
+            This board only shows raw cards whose bidding has already passed{" "}
+            <strong className="text-slate-300">US${minUsd}</strong> (graded slabs: <strong className="text-slate-300">US${gradedMinUsd}</strong>) and that close within{" "}
             <strong className="text-slate-300">{windowHours} hours</strong> — the chase end of the market,
             where the clock actually matters. Days go by without one, especially outside the US. There are
             plenty of cheaper Riftbound auctions running; they just aren&rsquo;t what this page is for.

@@ -13,7 +13,7 @@ import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, ebaySearchUrl, ebayLabe
 import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU } from "../src/lib/tcgplayer";
 import { computeMarket } from "../src/lib/market-rows";
 import { COUNTRY_LIST } from "../src/lib/country";
-import { AUCTION_MARKETS, AUCTION_PAGE_CAP } from "../src/lib/ebay-auctions";
+import { AUCTION_MARKETS, AUCTION_PAGE_CAP, AUCTION_QUERIES_PER_MARKET } from "../src/lib/ebay-auctions";
 
 const TCG_MARKETS = [TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU];
 
@@ -578,7 +578,7 @@ const AUCTION_SWEEPS_PER_DAY = (() => {
 // pagination stops on a short page and the Riftbound pool is tens-to-low-
 // hundreds of lots per market — so this overstates, which can only make the
 // budget assertion stricter.
-const AUCTION_CALLS_PER_DAY = AUCTION_MARKETS.length * AUCTION_PAGE_CAP * AUCTION_SWEEPS_PER_DAY;
+const AUCTION_CALLS_PER_DAY = AUCTION_MARKETS.length * AUCTION_PAGE_CAP * AUCTION_QUERIES_PER_MARKET * AUCTION_SWEEPS_PER_DAY;
 
 // Days to exercise. Keyed off the ALWAYS list, never off EBAY_ROTATING_MARKETS:
 // that list is now empty, and `day < EBAY_ROTATING_MARKETS.length` would run

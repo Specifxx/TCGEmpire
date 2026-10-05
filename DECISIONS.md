@@ -16677,3 +16677,21 @@ Deployed at the owner's request, and the price import run straight after so the 
 **Shipping.** No deploy marker. `build-db-push.sh` runs `add-manual-cards.ts` on every production build, so the rows and the eight hosted images arrive together with the 08:00 UTC release. Running the `cards-manual` task first would point eight rows at images not yet deployed.
 
 **Also.** The tracker's reveal log has a 5 October entry (dated updates on the two older "not in the database yet" lines), and the FAQ's Legend answer is current. `public/image-manifest.json` and the AVIF/WebP renditions for the eight images come from `npm run images:optimize`.
+
+## Auctions: graded slabs from US$100 — 2026-10-05
+
+**The miss (owner feedback).** A PSA 10 Jinx, Loose Cannon (overnumbered showcase 301/298) auction ran to 43 bids and closed at US$247.50. It never reached /auctions.
+
+**Why.** The board's one floor is a US$500 current bid, applied inside eBay's own search. That is the right bar for a raw chase card, but a slab trades well below it.
+
+**Decision.** The sweep now makes two searches per market:
+- everything, at US$500, as before;
+- a graded search, `Riftbound (PSA,BGS,CGC,SGC)`, from US$100 (`AUCTION_GRADED_MIN_USD_CENTS`, env `EBAY_AUCTION_GRADED_MIN_USD_CENTS`).
+
+Rows are keyed by `itemId`, so a slab over both bars is kept once. The graded pass keeps only lots that really are slabs, so a raw card whose title says "PSA ready" does not ride in under the lower bar.
+
+**Cost.** 36 -> 72 Browse calls a day, about 1.5% of the allowance. The model in `tests/affiliate-priority.test.ts` now multiplies by `AUCTION_QUERIES_PER_MARKET`.
+
+**Not changed.** Raw lots still need a US$500 bid, so a cheap raw auction is still not on the board. The bar is still the CURRENT bid, so a slab that opens at US$1 appears once bidding passes US$100. The 24-hour window and the four-hour sweep are unchanged. Fixed-price slabs are unaffected; they go through the graded-listing carousel on card pages.
+
+**Page copy.** The lede, the meta description and the empty state now name both bars.

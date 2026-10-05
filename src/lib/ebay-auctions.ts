@@ -8,6 +8,7 @@ import {
   EBAY_MAX_LIMIT,
   isEbayEnabled,
   isEbayRateLimited,
+  isGradedListing,
   primeEbayBudget,
   ebaySpentThisRun,
   searchEbayAuctions,
@@ -108,6 +109,26 @@ export const AUCTION_WINDOW_HOURS = Number(process.env.EBAY_AUCTION_WINDOW_HOURS
  */
 export const AUCTION_MIN_USD_CENTS = Number(process.env.EBAY_AUCTION_MIN_USD_CENTS ?? 50_000);
 
+/**
+ * Minimum CURRENT BID for a GRADED slab (PSA, BGS, CGC, SGC) to make the board:
+ * US$100 (2026-10-05, from a real miss). A PSA 10 Jinx Loose Cannon overnumbered
+ * showcase ran to 43 bids and closed at US$247.50 and never appeared, because
+ * the $500 floor above is the right bar for a raw chase card but a slab trades
+ * far below it: the grading fee and the population make a US$150-400 PSA 10 a
+ * normal, contested lot. Raw lots keep the $500 floor.
+ *
+ * One extra Browse call per market per sweep (a graded-keyword search with this
+ * lower floor), so the model in tests/affiliate-priority.test.ts doubles
+ * (36 -> 72 calls/day, ~1.5% of the allowance). Env-overridable like the others.
+ */
+export const AUCTION_GRADED_MIN_USD_CENTS = Number(process.env.EBAY_AUCTION_GRADED_MIN_USD_CENTS ?? 10_000);
+
+/** eBay reads "(a,b)" as a OR b, so this finds a Riftbound lot naming any grader. */
+export const AUCTION_GRADED_QUERY = "Riftbound (PSA,BGS,CGC,SGC)";
+
+/** Browse queries per market per sweep: the raw/all search and the graded one. */
+export const AUCTION_QUERIES_PER_MARKET = 2;
+
 /** Markets swept. Every market the site prices, so switching market on the
  *  board never lands on an empty page that looks broken. Each is ~1 call. */
 export const AUCTION_MARKETS: Country[] = COUNTRY_LIST.map((c) => c.code);
@@ -182,46 +203,59 @@ export async function sweepAuctionMarket(market: Country): Promise<AuctionSweepS
   const seen = new Map<string, AuctionRow & { endsAtDate: Date }>();
   let ok = false;
 
-  // The $500 bar, in this marketplace's own currency. eBay's price filter is
+  // The bars, in this marketplace's own currency. eBay's price filter is
   // evaluated in the currency you name, and every marketplace quotes its own —
   // so a bare USD figure would mean five different real thresholds. Converted
   // through the site's one indicative rate table (lib/fx.ts), same as every
   // other cross-market reference figure here.
   const currency = currencyOf(market);
   const minPriceCents = usdCentsToCountry(AUCTION_MIN_USD_CENTS, market);
+  const gradedMinPriceCents = usdCentsToCountry(AUCTION_GRADED_MIN_USD_CENTS, market);
 
-  for (let page = 0; page < AUCTION_PAGE_CAP; page++) {
-    if (isEbayRateLimited()) break;
-    const { items, ok: pageOk } = await searchEbayAuctions({
-      marketplace,
-      offset: page * EBAY_MAX_LIMIT,
-      limit: EBAY_MAX_LIMIT,
-      endsWithinHours: AUCTION_WINDOW_HOURS,
-      minPriceCents,
-      currency,
-    });
-    if (!pageOk) break;
-    ok = true;
-    for (const it of items) {
-      seen.set(it.itemId, {
-        itemId: it.itemId,
-        title: it.title,
-        url: it.url,
-        imageUrl: it.imageUrl,
-        currentBidCents: it.currentBidCents,
-        currency: it.currency,
-        bidCount: it.bidCount,
-        endsAt: it.endsAt.toISOString(),
-        endsAtDate: it.endsAt,
-        buyItNowCents: it.buyItNowCents,
-        condition: it.condition,
-        grader: it.grader,
-        grade: it.grade,
+  // Two searches per market: everything at the $500 bar, then graded slabs at
+  // the lower one. Rows are keyed by itemId, so a slab over both bars is kept
+  // once. The second pass keeps ONLY lots that really are slabs (a raw card
+  // whose title says "PSA ready" must not ride in under the lower bar).
+  const passes = [
+    { query: undefined as string | undefined, minCents: minPriceCents, gradedOnly: false },
+    { query: AUCTION_GRADED_QUERY, minCents: gradedMinPriceCents, gradedOnly: true },
+  ];
+  for (const pass of passes) {
+    for (let page = 0; page < AUCTION_PAGE_CAP; page++) {
+      if (isEbayRateLimited()) break;
+      const { items, ok: pageOk } = await searchEbayAuctions({
+        marketplace,
+        offset: page * EBAY_MAX_LIMIT,
+        limit: EBAY_MAX_LIMIT,
+        endsWithinHours: AUCTION_WINDOW_HOURS,
+        query: pass.query,
+        minPriceCents: pass.minCents,
+        currency,
       });
+      if (!pageOk) break;
+      ok = true;
+      for (const it of items) {
+        if (pass.gradedOnly && !(it.grader || isGradedListing(it.title))) continue;
+        seen.set(it.itemId, {
+          itemId: it.itemId,
+          title: it.title,
+          url: it.url,
+          imageUrl: it.imageUrl,
+          currentBidCents: it.currentBidCents,
+          currency: it.currency,
+          bidCount: it.bidCount,
+          endsAt: it.endsAt.toISOString(),
+          endsAtDate: it.endsAt,
+          buyItNowCents: it.buyItNowCents,
+          condition: it.condition,
+          grader: it.grader,
+          grade: it.grade,
+        });
+      }
+      // A short page is the last page — asking for the next one would spend a
+      // call to be told the same thing.
+      if (items.length < EBAY_MAX_LIMIT) break;
     }
-    // A short page is the last page — asking for the next one would spend a
-    // call to be told the same thing.
-    if (items.length < EBAY_MAX_LIMIT) break;
   }
 
   if (!ok) return { market, found: 0, ok: false };
@@ -270,6 +304,7 @@ export async function refreshAuctions(): Promise<AuctionSweepSummary[]> {
   console.log(
     `eBay auctions: sweeping ${AUCTION_MARKETS.length} markets for lots ending within ` +
       `${AUCTION_WINDOW_HOURS}h at or above US$${(AUCTION_MIN_USD_CENTS / 100).toFixed(0)} ` +
+      `(graded slabs from US$${(AUCTION_GRADED_MIN_USD_CENTS / 100).toFixed(0)}) ` +
       `(${AUCTION_PAGE_CAP} page/market max).`,
   );
   const out: AuctionSweepSummary[] = [];
