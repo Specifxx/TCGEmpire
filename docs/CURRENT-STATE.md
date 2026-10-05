@@ -710,8 +710,8 @@ longer lands on its entry.
   [2026-09-25](../DECISIONS.md#L12375)
 - **Hand-catalogued reveals:** a card Riot's gallery doesn't carry yet goes
   in `manual-cards.json` only when its number, rarity gem and text all read
-  off a finished card image. Radiance matches Riot's card gallery, all 84
-  printings: image, name, number, rarity and rules text from the gallery
+  off a finished card image. Radiance matches Riot's card gallery, all 130
+  printings (5 October; 84 on 30 September): image, name, number, rarity and rules text from the gallery
   (text in the importer's [S]/[T]/[N]/[A]/[C] token format), and domain,
   type and stats from the printed card, because the gallery's metadata
   fields are wrong for many Radiance cards. So the scheduled Radiance import
@@ -721,9 +721,9 @@ longer lands on its entry.
   moves, then the card goes, in one transaction; any unique-key clash keeps
   it) or, with no `mergeInto`, kept. A slug moves only through
   `CARD_SLUG_RENAMES`. The gallery import
-  skips a printing already catalogued by hand (same set + number). A card a preview partner shows before Riot's gallery does goes in from that partner's finished English image, self-hosted until Riot's asset exists; a non-English printing alone is not enough. Read the image Riot serves for a number, not only the number: RAD 169, 171 and 174 are each an unsigned overnumber (Riot's image) plus a signed \* twin, and nothing is in `RETIRED` now. Article
+  skips a printing already catalogued by hand (same set + number). A card a preview partner shows before Riot's gallery does goes in from that partner's finished English image, self-hosted until Riot's asset exists; a non-English printing alone is not enough. Read the image Riot serves for a number, not only the number: RAD 169, 171 and 174 are each an unsigned overnumber (Riot's image) plus a signed \* twin (so are 168 and 170), and nothing is in `RETIRED` now. A gallery's own Might and domain are not trusted either (a gear with Might 3, Entrenched Boar "Colorless"): Might is stored for Units only and each new row is checked against the printed card. A watermarked or low-resolution partner image is held back, not hosted. Article
   markdown writes a Signature number as `169\*/167`.
-  [2026-09-29](../DECISIONS.md#L15513), [2026-09-30](../DECISIONS.md#L15766), [2026-09-30](../DECISIONS.md#L15794), [2026-09-30](../DECISIONS.md#L15921), [2026-09-30](../DECISIONS.md#L15941), [2026-10-02](../DECISIONS.md#L16445)
+  [2026-09-29](../DECISIONS.md#L15513), [2026-09-30](../DECISIONS.md#L15766), [2026-09-30](../DECISIONS.md#L15794), [2026-09-30](../DECISIONS.md#L15921), [2026-09-30](../DECISIONS.md#L15941), [2026-10-02](../DECISIONS.md#L16445), [2026-10-05](../DECISIONS.md#L16646)
 - **First-listing and restock alerts:** a watch with a null baseline (no
   price in that market when it was created) gets one "now listed" email when
   the card lists — "open for pre-order" while its set is unreleased, which

@@ -2041,8 +2041,8 @@
     "energyCost": 5,
     "might": 5,
     "description": "The first time I move each turn, [Add] [1][A].\nThe second time I move each turn, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card. (You still pay its costs.)",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/akali-brash.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/akali-brash.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/20997ddaef2cd714c36e5473c156faf331b80b7b-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/20997ddaef2cd714c36e5473c156faf331b80b7b-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-004-brawl",
@@ -2057,8 +2057,8 @@
     "energyCost": 3,
     "might": null,
     "description": "[Action] (Play on your turn or in showdowns.)\nGive a unit [Assault] this turn equal to its Might. (+1 [S] for each instance of Assault while it's an attacker.)",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/brawl.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/brawl.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/38fd13c7522bb47dcc5ce1596aeb6a638087ee09-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/38fd13c7522bb47dcc5ce1596aeb6a638087ee09-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-025-consult-the-heavens",
@@ -2073,8 +2073,8 @@
     "energyCost": 1,
     "might": null,
     "description": "[Reaction] (Play any time, even before spells and abilities resolve.)\nGive a unit [Shield 2] this turn. (+2 [S] while it's a defender.)\n[Predict]. (Look at the top card of your Main Deck. You may recycle it.)",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/consult-the-heavens.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/consult-the-heavens.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/120b20ee26d221cea31f510090cef037e74c023f-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/120b20ee26d221cea31f510090cef037e74c023f-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-079-avalanche",
@@ -2089,8 +2089,8 @@
     "energyCost": 5,
     "might": null,
     "description": "Deal 3 to all units in bases.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/avalanche.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/avalanche.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/7b2103352935061e19cf90036a6aa4cd35ad5922-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/7b2103352935061e19cf90036a6aa4cd35ad5922-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-084-cataclysm",
@@ -2105,8 +2105,8 @@
     "energyCost": 4,
     "might": null,
     "description": "Opponents can't play spells this turn.\nMove a friendly unit to an occupied enemy battlefield.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/cataclysm.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/cataclysm.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/dc551ece6cf007c76a3a16feba5f26fb7dd4ed65-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/dc551ece6cf007c76a3a16feba5f26fb7dd4ed65-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-117-for-demacia",
@@ -2121,8 +2121,8 @@
     "energyCost": 3,
     "might": null,
     "description": "[Reaction] (Play any time, even before spells and abilities resolve.)\nChoose a battlefield. Give friendly units there [Shield 2] this turn. (+2 [S] while they're defenders.)",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/for-demacia.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/for-demacia.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5d119653fcba423c150815de3a412922c4e481e8-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5d119653fcba423c150815de3a412922c4e481e8-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-157-bandle-scouts-academy",
@@ -2137,8 +2137,8 @@
     "energyCost": null,
     "might": null,
     "description": "When you hide a card here, play a Gold gear token exhausted. (It has \"[Reaction][>] Kill this, [T]: [Add] [A].\")",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/bandle-scouts-academy.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/bandle-scouts-academy.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f5bb93e1ad9005fd42a9129b91f72877f1dedbe1-1039x744.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f5bb93e1ad9005fd42a9129b91f72877f1dedbe1-1039x744.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-r04a-body-rune",
@@ -2153,8 +2153,8 @@
     "energyCost": null,
     "might": null,
     "description": null,
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/body-rune-alt-art.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/body-rune-alt-art.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/90b2706af9f1eaf167065087a09a8451f303ffe1-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/90b2706af9f1eaf167065087a09a8451f303ffe1-744x1039.png?accountingTag=RB"
   },
   {
     "_note": "RADIANCE PREVIEW-SEASON REVEALS, 1-2 OCTOBER (added 2026-10-02), AND A CORRECTION TO 30 SEPTEMBER. Riot's card gallery still lists the same 84 Radiance printings (checked 2 Oct, served fresh: cache-control max-age=0), so every new row here is read off a finished English card image published by a preview partner, self-hosted in public/radiance-spoilers/ until Riot's gallery carries it. SOURCES: GamesRadar's exclusive (1 Oct) for Jarvan IV, Martial Paragon 091 and its beach alternate art 091a; VICE's exclusive for High Note 048 (the card render, not the art-only header); riftbound.zone's spoiler images for Coalesced Energy 016, Watchful Curator 037, Portable Portal 087 and Hunting Dog 119; riftbound.gg's card database (static.dotgg.gg renders) for Fanfare 047, Piltovan Guidebot 057, Nazuman Ntofo 071, Graves, Blasting Through 085, Bedeviling Stranger 107, Encore 152 (Seraphine's signature spell, Mind/Order filed Mind), the battlefields Black Market 158 and Hunters' Circle 163 (rotated to landscape), and the K/DA special Evelynn, In Control SP3/005. Fields read off each card exactly as the 30 September note describes; alternate arts and SP printings carry their text without the reminder text they omit in print, as 086a and SP4 do. THE CORRECTION: the 30 September note said Riot's gallery shows only the SIGNED printing at 169, 171 and 174. It does not. Riot's own images for RAD-169/167, RAD-171/167 and RAD-174/167 are the UNSIGNED overnumbers, printed without the asterisk and without a signature (viewed 2 Oct). The signed 169*/171*/174* printings exist too (the StarCityGames round-up, read 29 Sept, and riftbound.gg's RAD-169-STAR/174-STAR renders), so each is a pair, the Vendetta shape. The three unsigned rows are restored with Riot's images, and the three signed rows now use the signed crops instead of Riot's unsigned image. The unsigned Seraphine 174/167 comes back under its original externalId. NOT ADDED: Ekko's Legend overnumber, because two sources disagree about 168/167 (riftbound.gg: Blaine Burgos art with a signed 168*; riftbound.zone: Valentine Tran art) and this file does not choose between them; Last Caress 154, Siren's Song 098 and Trifarian Captain (Simplified Chinese printings only); Evelynn, Agony's Embrace 153 (still Chinese only); Riven (no card shown); the Bomb and Mech tokens (the catalogue carries no tokens)."
@@ -2220,8 +2220,8 @@
     "energyCost": 4,
     "might": 4,
     "description": "Your gear with [Deploy] have [Action]. (They can be played on your turn or in showdowns.)\nWhen I conquer, if there is a friendly gear with [Deploy] here, channel 1 rune exhausted.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/jarvan-iv-martial-paragon.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/jarvan-iv-martial-paragon.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8edacba51db193506e13e1afb6a8509256cdf55c-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8edacba51db193506e13e1afb6a8509256cdf55c-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-091a-jarvan-iv-martial-paragon",
@@ -2236,8 +2236,8 @@
     "energyCost": 4,
     "might": 4,
     "description": "Your gear with [Deploy] have [Action].\nWhen I conquer, if there is a friendly gear with [Deploy] here, channel 1 rune exhausted.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/jarvan-iv-martial-paragon-alt-art.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/jarvan-iv-martial-paragon-alt-art.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/574638f1c7e64e642f8259c8d981a0e4af973b07-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/574638f1c7e64e642f8259c8d981a0e4af973b07-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-048-high-note",
@@ -2252,8 +2252,8 @@
     "energyCost": 3,
     "might": null,
     "description": "[Reaction] (Play any time, even before spells and abilities resolve.)\nGive a unit -[S] this turn equal to the number of exhausted units you control.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/high-note.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/high-note.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/afba3669ea1063dafb0e4c2c766694e00540eb13-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/afba3669ea1063dafb0e4c2c766694e00540eb13-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-016-coalesced-energy",
@@ -2268,8 +2268,8 @@
     "energyCost": 4,
     "might": 4,
     "description": "At the end of your turn, recycle all your runes, then channel 4 runes exhausted.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/coalesced-energy.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/coalesced-energy.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/59e551045ca75d932ff76c4820d873d4a2cde9e8-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/59e551045ca75d932ff76c4820d873d4a2cde9e8-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-037-watchful-curator",
@@ -2284,8 +2284,8 @@
     "energyCost": 3,
     "might": 4,
     "description": "Your gear have [Deflect]. (Opponents must pay [A] to choose each with a spell or ability.)",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/watchful-curator.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/watchful-curator.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5081f81341bb02dfd26c970c09651fcf64a18a04-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5081f81341bb02dfd26c970c09651fcf64a18a04-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-047-fanfare",
@@ -2300,8 +2300,8 @@
     "energyCost": 3,
     "might": null,
     "description": "The next three times you play a unit this turn, draw 1.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/fanfare.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/fanfare.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/75a3d8fbfd8caeabfd5be38513a6624c61f5230f-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/75a3d8fbfd8caeabfd5be38513a6624c61f5230f-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-057-piltovan-guidebot",
@@ -2316,8 +2316,8 @@
     "energyCost": 4,
     "might": 3,
     "description": "When you play a card, you may have my base Might become equal to that card's Energy cost this turn.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/piltovan-guidebot.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/piltovan-guidebot.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/9558ced7593f5a26911eb6e1393aae3289842e20-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/9558ced7593f5a26911eb6e1393aae3289842e20-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-071-nazuman-ntofo",
@@ -2332,8 +2332,8 @@
     "energyCost": 1,
     "might": null,
     "description": "[Equip] [1] ([1]: Attach this to a unit you control.)\n[Shield 2] (+2 [S] while I'm a defender.)",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/nazuman-ntofo.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/nazuman-ntofo.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/9d518a6db3ae174096b09cf80cece2997f685ede-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/9d518a6db3ae174096b09cf80cece2997f685ede-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-085-graves-blasting-through",
@@ -2348,8 +2348,8 @@
     "energyCost": 5,
     "might": 4,
     "description": "When I attack or defend, deal damage equal to my Might to all enemy units here.\nI don't deal combat damage.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/graves-blasting-through.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/graves-blasting-through.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5bc0671f9f78630e2932052bb9f7f42ef2742c86-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5bc0671f9f78630e2932052bb9f7f42ef2742c86-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-087-portable-portal",
@@ -2380,8 +2380,8 @@
     "energyCost": 2,
     "might": 2,
     "description": "[Hidden] (Hide now for [A] to react with later for [0].)\nWhen you play me, choose a battlefield. If there are 4 or more units there, you may return an enemy unit there to its owner's hand.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/bedeviling-stranger.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/bedeviling-stranger.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/d112a706fe957e5cea58ea1e4366ac02e3ba292b-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/d112a706fe957e5cea58ea1e4366ac02e3ba292b-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-119-hunting-dog",
@@ -2412,8 +2412,8 @@
     "energyCost": 3,
     "might": null,
     "description": "Choose two —\n- Deal 2 to a unit.\n- Play two 1 [S] Recruit unit tokens.\n- Give up to two units each +1 [S] this turn.\n- Look at the top 2 cards of your Main Deck, draw 1 and recycle the other.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/encore.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/encore.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/0200aeca5d0a1cca4b8ab5b3f3910207118ee4e4-744x1040.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/0200aeca5d0a1cca4b8ab5b3f3910207118ee4e4-744x1040.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-158-black-market",
@@ -2428,8 +2428,8 @@
     "energyCost": null,
     "might": null,
     "description": "[A][A]: Draw 1. Each player may use this ability once on their turn (even if they don't control this battlefield).",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/black-market.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/black-market.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/9a02ae108f32a8b88be47a94b5f0d39b5a06a6a1-1039x744.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/9a02ae108f32a8b88be47a94b5f0d39b5a06a6a1-1039x744.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-163-hunters-circle",
@@ -2444,8 +2444,8 @@
     "energyCost": null,
     "might": null,
     "description": "For each player, the first unit or gear they play here on their turn costs [1] less.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/hunters-circle.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/hunters-circle.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/e7e25d90506d805f1996e7f751cb5b6baa8ec305-1039x744.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/e7e25d90506d805f1996e7f751cb5b6baa8ec305-1039x744.png?accountingTag=RB"
   },
   {
     "externalId": "spoiler-rad-sp3-evelynn-in-control",
@@ -2459,8 +2459,520 @@
     "isPromo": false,
     "energyCost": 4,
     "might": 4,
+    "description": "[Disarm] (When I attack, give an enemy unit here -1 [S] this turn.)\nWhen I hold, if you control a facedown card here, score 1 point.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f79b82a0a56c2e4af641beb84762abcd6b058195-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f79b82a0a56c2e4af641beb84762abcd6b058195-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-153-evelynn-agonys-embrace",
+    "name": "Evelynn, Agony's Embrace",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "153/167",
+    "domain": "Body",
+    "type": "Legend",
+    "rarity": "Rare",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "Once each turn, when you play a card from face down, draw 1. Then, if it's not your turn, discard 1.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/ca217b57d0e8d2e04e7a35105deaa6be17e854f0-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/ca217b57d0e8d2e04e7a35105deaa6be17e854f0-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-175-evelynn-agonys-embrace",
+    "name": "Evelynn, Agony's Embrace",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "175/167",
+    "domain": "Body",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "Once each turn, when you play a card from face down, draw 1. Then, if it's not your turn, discard 1.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/37ac535445b224fa28f6e27b0d733474a38e369c-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/37ac535445b224fa28f6e27b0d733474a38e369c-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-sp2-akali-brash",
+    "name": "Akali, Brash",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "SP2/005",
+    "domain": "Fury",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": 5,
+    "might": 5,
+    "description": "The first time I move each turn, [Add] [1][A].\nThe second time I move each turn, banish the top card of your Main Deck. Until your next Ending Phase, you may play that card.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f19416576af7d609b525d72884ca42cf8795bf74-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f19416576af7d609b525d72884ca42cf8795bf74-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-r04-body-rune",
+    "name": "Body Rune",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "R04",
+    "domain": "Body",
+    "type": "Rune",
+    "rarity": "Common",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": null,
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/6d78f8e8cf237cc19a8546184501d4be97df29fd-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/6d78f8e8cf237cc19a8546184501d4be97df29fd-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-168-ekko-boy-who-shattered-time",
+    "name": "Ekko, Boy Who Shattered Time",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "168/167",
+    "domain": "Fury",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "[Empower] — [1], [T]\nDisempower me, [T]: Reduce the cost of the next unit you play this turn by [2][A] and give it \"Kill me at end of turn.\"",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/0a921eca1acad149fd4bcb13244e3af25feac488-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/0a921eca1acad149fd4bcb13244e3af25feac488-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-r05-chaos-rune",
+    "name": "Chaos Rune",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "R05",
+    "domain": "Chaos",
+    "type": "Rune",
+    "rarity": "Common",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": null,
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f420625850dc43c96e29b6d85b6581c7ccb6126c-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f420625850dc43c96e29b6d85b6581c7ccb6126c-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-r05a-chaos-rune",
+    "name": "Chaos Rune",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "R05A",
+    "domain": "Chaos",
+    "type": "Rune",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": null,
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/a8ad4d5345a7316ba76689988bcd211d63f66098-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/a8ad4d5345a7316ba76689988bcd211d63f66098-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-026-entrenched-boar",
+    "name": "Entrenched Boar",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "026/167",
+    "domain": "Calm",
+    "type": "Unit",
+    "rarity": "Common",
+    "isPromo": false,
+    "energyCost": 2,
+    "might": 2,
+    "description": "You may have me enter ready. If you do, I can't move this turn.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8d8688f43e219f7f4b5f5fd17cff204dcebc3bdc-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8d8688f43e219f7f4b5f5fd17cff204dcebc3bdc-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-109a-evelynn-in-control",
+    "name": "Evelynn, In Control",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "109a/167",
+    "domain": "Chaos",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": 4,
+    "might": 4,
     "description": "[Disarm]\nWhen I hold, if you control a facedown card here, score 1 point.",
-    "imageUrl": "https://riftcompare.com/radiance-spoilers/evelynn-in-control-sp3.jpg",
-    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/evelynn-in-control-sp3.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/fc73c433c11c858f936a0ee4acf19dd5861d1fee-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/fc73c433c11c858f936a0ee4acf19dd5861d1fee-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-109-evelynn-in-control",
+    "name": "Evelynn, In Control",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "109/167",
+    "domain": "Chaos",
+    "type": "Unit",
+    "rarity": "Rare",
+    "isPromo": false,
+    "energyCost": 4,
+    "might": 4,
+    "description": "[Disarm] (When I attack, give an enemy unit here -1 [S] this turn.)\nWhen I hold, if you control a facedown card here, score 1 point.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8c17158e6153eddb4b56abd8a09cbbd20600b049-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8c17158e6153eddb4b56abd8a09cbbd20600b049-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-162-firelights-hideout",
+    "name": "Firelights' Hideout",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "162/167",
+    "domain": "Colorless",
+    "type": "Battlefield",
+    "rarity": "Uncommon",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "When you conquer here, the next unit you play this turn has [Accelerate]. (You may pay [1] and a Power of its Domain as an additional cost to have it enter ready.)",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f8e2d555ff0dc250de38a1c8924a199dc121f036-1039x744.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f8e2d555ff0dc250de38a1c8924a199dc121f036-1039x744.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-118-herald-of-the-emperor",
+    "name": "Herald of the Emperor",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "118/167",
+    "domain": "Order",
+    "type": "Unit",
+    "rarity": "Common",
+    "isPromo": false,
+    "energyCost": 5,
+    "might": 3,
+    "description": "When you play me, choose a friendly unit. Its base Might becomes 5 this turn.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/a168856002994f7ac67150d991e65152e6434ab6-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/a168856002994f7ac67150d991e65152e6434ab6-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-170-mordekaiser-iron-revenant",
+    "name": "Mordekaiser, Iron Revenant",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "170/167",
+    "domain": "Fury",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "[Reaction][>] Banish a unit or gear from your trash, [T]: [Add] [A]. Spend this Power only to play units or gear.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/57ad15a4a09ffc2038e1b8548d861eb74d46d4f7-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/57ad15a4a09ffc2038e1b8548d861eb74d46d4f7-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-143-mordekaiser-iron-revenant",
+    "name": "Mordekaiser, Iron Revenant",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "143/167",
+    "domain": "Fury",
+    "type": "Legend",
+    "rarity": "Rare",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "[Reaction][>] Banish a unit or gear from your trash, [T]: [Add] [A]. Spend this Power only to play units or gear. (Abilities that add resources can't be reacted to.)",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/90ec3319518771820909592eee963d34dab037bc-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/90ec3319518771820909592eee963d34dab037bc-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-005-lingering-animus",
+    "name": "Lingering Animus",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "005/167",
+    "domain": "Fury",
+    "type": "Unit",
+    "rarity": "Common",
+    "isPromo": false,
+    "energyCost": 2,
+    "might": 2,
+    "description": "I enter ready if a friendly unit or gear died this turn.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5453008d27b3bb4f00941cb5a0d9ca52e4eb0245-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5453008d27b3bb4f00941cb5a0d9ca52e4eb0245-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-110-lulu-whimsical",
+    "name": "Lulu, Whimsical",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "110/167",
+    "domain": "Chaos",
+    "type": "Unit",
+    "rarity": "Rare",
+    "isPromo": false,
+    "energyCost": 3,
+    "might": 3,
+    "description": "When I move, you may have another unit's base Might become 4 this turn.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/defd09480671a1e394725f21b6c3448ebec77913-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/defd09480671a1e394725f21b6c3448ebec77913-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-072-overloaded-traveler",
+    "name": "Overloaded Traveler",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "072/167",
+    "domain": "Body",
+    "type": "Unit",
+    "rarity": "Common",
+    "isPromo": false,
+    "energyCost": 2,
+    "might": 2,
+    "description": "While there's a friendly gear with [Deploy] at my battlefield, I have +1 [S].",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/6db2839d8702b15ab62413028c0321c75e87801c-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/6db2839d8702b15ab62413028c0321c75e87801c-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-058-riptide-mage",
+    "name": "Riptide Mage",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "058/167",
+    "domain": "Mind",
+    "type": "Unit",
+    "rarity": "Uncommon",
+    "isPromo": false,
+    "energyCost": 4,
+    "might": 3,
+    "description": "[Accelerate] (You may pay [1][C] as an additional cost to have me enter ready.)\nWhen you play me, give an enemy unit -3 [S] this turn.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/4e3c24c1c315656772d0bfd8d100bc7893e94994-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/4e3c24c1c315656772d0bfd8d100bc7893e94994-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-014-shimmering-swimmer",
+    "name": "Shimmering Swimmer",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "014/167",
+    "domain": "Fury",
+    "type": "Unit",
+    "rarity": "Uncommon",
+    "isPromo": false,
+    "energyCost": 3,
+    "might": 3,
+    "description": "You may kill a friendly unit or gear as an additional cost to play me.\nWhen you play me, if you paid the additional cost, deal 2 to a unit.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/02ef2a5c93cf60048bb932a709d3a5b17b93bb1d-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/02ef2a5c93cf60048bb932a709d3a5b17b93bb1d-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-097-siren-of-the-shallows",
+    "name": "Siren of the Shallows",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "097/167",
+    "domain": "Chaos",
+    "type": "Unit",
+    "rarity": "Common",
+    "isPromo": false,
+    "energyCost": 2,
+    "might": 1,
+    "description": "[Disarm] (When I attack, give an enemy unit here -1 [S] this turn.)\n[Ganking] (I can move from battlefield to battlefield.)",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/e666029dcebc507cc80435eee17db435305d1361-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/e666029dcebc507cc80435eee17db435305d1361-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-098-sirens-song",
+    "name": "Siren's Song",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "098/167",
+    "domain": "Chaos",
+    "type": "Spell",
+    "rarity": "Common",
+    "isPromo": false,
+    "energyCost": 2,
+    "might": null,
+    "description": "[Reaction] (Play any time, even before spells and abilities resolve.)\nMove an enemy unit that moved this turn.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/742967b3e85f51b242fc04b8db4c4e3cd7b88672-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/742967b3e85f51b242fc04b8db4c4e3cd7b88672-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-128-steadfast-outrider",
+    "name": "Steadfast Outrider",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "128/167",
+    "domain": "Order",
+    "type": "Unit",
+    "rarity": "Uncommon",
+    "isPromo": false,
+    "energyCost": 4,
+    "might": 3,
+    "description": "[Tank] (I must be assigned combat damage first.)\nWhile there are 2 or more other friendly units and/or gear at my battlefield, I have +2 [S].",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/efa8d58e65b1b1f804d37bb51bb67ea52e0b3205-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/efa8d58e65b1b1f804d37bb51bb67ea52e0b3205-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-036-storm-raptor",
+    "name": "Storm Raptor",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "036/167",
+    "domain": "Calm",
+    "type": "Unit",
+    "rarity": "Uncommon",
+    "isPromo": false,
+    "energyCost": 6,
+    "might": 6,
+    "description": "[Deflect] (Opponents must pay [A] to choose me with a spell or ability.)\nWhen a stunned enemy unit here dies, draw 1.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/fc59661dfc70a1fdb393d795c90779a2b5661609-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/fc59661dfc70a1fdb393d795c90779a2b5661609-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-129-trifarian-captain",
+    "name": "Trifarian Captain",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "129/167",
+    "domain": "Order",
+    "type": "Unit",
+    "rarity": "Uncommon",
+    "isPromo": false,
+    "energyCost": 2,
+    "might": 1,
+    "description": "When you play me, look at the top 4 cards of your Main Deck. You may reveal from among them a unit or gear with Energy cost no more than [3] and with Power cost no more than [A] and draw it. Recycle the rest.",
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/914ced10400826a878ed5cf7294207a4e7b542b1-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/914ced10400826a878ed5cf7294207a4e7b542b1-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-017-detonation-amplifier",
+    "name": "Detonation Amplifier",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "017/167",
+    "domain": "Fury",
+    "type": "Gear",
+    "rarity": "Rare",
+    "isPromo": false,
+    "energyCost": 4,
+    "might": null,
+    "description": "[Deploy] (Play this only to a battlefield. When an opponent holds here, kill this.)\nWhen you play this, you may kill another friendly unit or gear to draw 1.\nFriendly [Deathknell] effects here trigger an additional time.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/detonation-amplifier.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/detonation-amplifier.jpg"
+  },
+  {
+    "externalId": "spoiler-rad-027-iridescent-avian",
+    "name": "Iridescent Avian",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "027/167",
+    "domain": "Calm",
+    "type": "Unit",
+    "rarity": "Common",
+    "isPromo": false,
+    "energyCost": 3,
+    "might": 3,
+    "description": "[T]: [Buff] a unit. If it's already buffed, give it +2 [S] this turn instead. (To buff a unit, give it a +1 [S] buff if it doesn't have one.)",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/iridescent-avian.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/iridescent-avian.jpg"
+  },
+  {
+    "externalId": "spoiler-rad-130-battlefield-armorer",
+    "name": "Battlefield Armorer",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "130/167",
+    "domain": "Order",
+    "type": "Unit",
+    "rarity": "Rare",
+    "isPromo": false,
+    "energyCost": 3,
+    "might": 3,
+    "description": "When a friendly gear at a battlefield dies, you may pay [1] to return it to its owner's hand.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/battlefield-armorer.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/battlefield-armorer.jpg"
+  },
+  {
+    "externalId": "spoiler-rad-144-realm-of-death",
+    "name": "Realm of Death",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "144/167",
+    "domain": "Fury",
+    "type": "Spell",
+    "rarity": "Epic",
+    "isPromo": false,
+    "energyCost": 2,
+    "might": null,
+    "description": "Give an enemy unit -2 [S] this turn and a friendly unit +2 [S] this turn. They deal damage equal to their Mights to each other.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/realm-of-death.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/realm-of-death.jpg"
+  },
+  {
+    "externalId": "spoiler-rad-168s-ekko-boy-who-shattered-time",
+    "name": "Ekko, Boy Who Shattered Time",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "168*/167",
+    "domain": "Fury",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "[Empower] — [1], [T]\nDisempower me, [T]: Reduce the cost of the next unit you play this turn by [2][A] and give it \"Kill me at end of turn.\"",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/ekko-boy-who-shattered-time-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/ekko-boy-who-shattered-time-signature.jpg"
+  },
+  {
+    "externalId": "spoiler-rad-170s-mordekaiser-iron-revenant",
+    "name": "Mordekaiser, Iron Revenant",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "170*/167",
+    "domain": "Fury",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "[Reaction][>] Banish a unit or gear from your trash, [T]: [Add] [A]. Spend this Power only to play units or gear.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/mordekaiser-iron-revenant-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/mordekaiser-iron-revenant-signature.jpg"
+  },
+  {
+    "externalId": "spoiler-rad-r01a-fury-rune",
+    "name": "Fury Rune",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "R01A",
+    "domain": "Fury",
+    "type": "Rune",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": null,
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/fury-rune-alt-art.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/fury-rune-alt-art.jpg"
+  },
+  {
+    "externalId": "spoiler-rad-r06a-order-rune",
+    "name": "Order Rune",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "R06A",
+    "domain": "Order",
+    "type": "Rune",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": null,
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/order-rune-alt-art.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/order-rune-alt-art.jpg"
   }
 ]

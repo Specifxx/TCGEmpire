@@ -16642,3 +16642,38 @@ Deployed at the owner's request, and the price import run straight after so the 
 **Not changed.** Card search still matches card names, so "origins" still finds no single cards: the set's cards are reachable through the Set filter. Searching a card by its set name is a separate change.
 
 **Verified.** With sealed rows seeded in the local database: "origins" gave 0 cards and 4 sealed on /browse and in /api/search, "booster box origins" found the box, "akali" gave cards and no sealed section, and "zzzz" gave the full empty state. In a browser, a sealed tile on /browse and a sealed row in the dropdown both opened the quick view in place (URL unchanged, no page errors).
+
+## Radiance: Riot's gallery grows to 130, thirty-two printings go in, and Evelynn's and Mordekaiser's Legends with them — 2026-10-05
+
+**Why.** The owner asked to import the new Radiance cards. Riot's card gallery (`props.pageProps.page.blades[2].cards.items` in the page's `__NEXT_DATA__`) lists **130** Radiance printings; on 30 September it listed 84. Diffed by collector number against our 111 `RAD` rows in `manual-cards.json`:
+
+| Group | Count | What happened |
+| --- | --- | --- |
+| In Riot's gallery, new to us | 24 | Added, image and text from Riot |
+| In Riot's gallery, already ours from a preview partner's image | 22 | Same row; image swapped to Riot's |
+| Ours, not in Riot's gallery | 5 | Kept (signed 169\*, 171\*, 174\*; Portable Portal 087; Hunting Dog 119) |
+| riftbound.gg lists them, Riot's gallery does not | 12 | Eight added, two held, two tokens left out |
+
+**The 24 new printings.** Rows are built by the 30 September rule: image, name, number, rarity and rules text from the gallery (the card image's alt text), and domain, type and stats from the printed card, because the gallery's metadata is wrong for many Radiance cards. This time it was wrong again, and each row was checked against the card image and riftbound.gg:
+
+- **Entrenched Boar (026):** the gallery files it Colorless; the card is Calm (green), and riftbound.gg agrees. The row says Calm.
+- **Legends:** the alt text carries only the epithet, so the champion is put back in front (`lib/legend-name.ts` rule): *Evelynn, Agony's Embrace* (153, 175), *Ekko, Boy Who Shattered Time* (168), *Mordekaiser, Iron Revenant* (143, 170). A dual-domain Legend carries its first domain, as Ekko 139 and Blade of the Exile already do.
+- **Two alt texts differ from the printed card.** Mordekaiser 170's omits "only" (the card says "Spend this Power only to play units or gear"), and Storm Raptor's reads "dies here" where the card says "When a stunned enemy unit here dies". The printed text is used. The Chaos Rune Showcase's "[NO TEXT]" is stored as no text.
+- **Stats.** The gallery's Might is wrong on cards we already hold (Kai'Sa SP4 says 4, the card and riftbound.gg say 5; gear carry 0 or 3), so Might is stored only for Units, and every new Unit's energy and Might were checked against riftbound.gg: all agree.
+- **Rune alternates** are stored with an upper-case letter (`R05A`), as `R02A` to `R04A` already are, though the gallery writes `R05a`.
+
+**The 22 partner-image rows** now use Riot's own card image (names and types checked equal for each). Descriptions are unchanged except Evelynn SP3/005, where Riot's text carries the Disarm reminder. Riot's alt text for Nazuman Ntofo is cut short (no Shield 2 line, though the printed card has it), so that row's text stays. The old partner JPG/WebP/AVIF files stay in `public/radiance-spoilers/`, since the posts still link them.
+
+**Eight cards from riftbound.gg**, which Riot's gallery does not list yet, hosted in `public/radiance-spoilers/` like the earlier partner images, each read off the finished image (number, rarity gem, text): Detonation Amplifier 017, Iridescent Avian 027, Battlefield Armorer 130, Mordekaiser's signature spell Realm of Death 144, signed **168\*** (Ekko) and **170\*** (Mordekaiser), and the Fury (R01A) and Order (R06A) Showcase runes. The signed pair follow the 169\*/171\*/174\* precedent: Riot's image for 168 and 170 is the unsigned overnumber.
+
+**Closes two open items from 2026-10-02.** Ekko's 168: Riot's own image is the Blaine Burgos art, which settles the two-sites-two-arts question. *Siren's Song*, *Trifarian Captain* and Evelynn's *Agony's Embrace* now have English printings from Riot, so they are in. `lib/champions.ts` gains **Lulu** with *Lulu, Whimsical* (110), her first card.
+
+**Left out, on purpose.**
+- **Black Rose Sanctum (159)**: riftbound.gg's only image carries a leaker's watermark ("Revealed by @MrsChimChim"). We do not host that.
+- **Packed Amphitheater (184)**: only a low-resolution capture with a timecode overlay. Both go in from a clean image or Riot's gallery.
+- **Last Caress (154)**: not shown in English anywhere we can read. **The Bomb and Mech tokens (T02, T06)**: the catalogue carries no tokens.
+- **`lib/sets/radiance.ts` is not changed.** Its confirmed/unrevealed Legend split is Riot's announcement, and whether Mordekaiser is one of the nine is not established. The tracker says "Seven Legends are now in print" without a total. The facts-agree test caught a first draft of the FAQ that read as a count; it is reworded.
+
+**Shipping.** No deploy marker. `build-db-push.sh` runs `add-manual-cards.ts` on every production build, so the rows and the eight hosted images arrive together with the 08:00 UTC release. Running the `cards-manual` task first would point eight rows at images not yet deployed.
+
+**Also.** The tracker's reveal log has a 5 October entry (dated updates on the two older "not in the database yet" lines), and the FAQ's Legend answer is current. `public/image-manifest.json` and the AVIF/WebP renditions for the eight images come from `npm run images:optimize`.

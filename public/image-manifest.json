@@ -1113,6 +1113,18 @@
     ],
     "fingerprint": "a398eecdc660602a"
   },
+  "/radiance-spoilers/battlefield-armorer.jpg": {
+    "src": "/radiance-spoilers/battlefield-armorer.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 109352,
+    "webp": "/radiance-spoilers/battlefield-armorer.webp",
+    "webpBytes": 79658,
+    "avif": "/radiance-spoilers/battlefield-armorer.avif",
+    "avifBytes": 55000,
+    "variants": [],
+    "fingerprint": "abba87f871eb4dd8"
+  },
   "/radiance-spoilers/bedeviling-stranger.jpg": {
     "src": "/radiance-spoilers/bedeviling-stranger.jpg",
     "width": 694,
@@ -1218,6 +1230,18 @@
     "variants": [],
     "fingerprint": "9641b592bbb7d42b"
   },
+  "/radiance-spoilers/detonation-amplifier.jpg": {
+    "src": "/radiance-spoilers/detonation-amplifier.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 111722,
+    "webp": "/radiance-spoilers/detonation-amplifier.webp",
+    "webpBytes": 82510,
+    "avif": "/radiance-spoilers/detonation-amplifier.avif",
+    "avifBytes": 57367,
+    "variants": [],
+    "fingerprint": "864afeb37ffb3c08"
+  },
   "/radiance-spoilers/disposal-expert.jpg": {
     "src": "/radiance-spoilers/disposal-expert.jpg",
     "width": 770,
@@ -1241,6 +1265,18 @@
     "avifBytes": 74005,
     "variants": [],
     "fingerprint": "5fac95931f225b35"
+  },
+  "/radiance-spoilers/ekko-boy-who-shattered-time-signature.jpg": {
+    "src": "/radiance-spoilers/ekko-boy-who-shattered-time-signature.jpg",
+    "width": 636,
+    "height": 888,
+    "bytes": 106069,
+    "webp": "/radiance-spoilers/ekko-boy-who-shattered-time-signature.webp",
+    "webpBytes": 70320,
+    "avif": "/radiance-spoilers/ekko-boy-who-shattered-time-signature.avif",
+    "avifBytes": 53224,
+    "variants": [],
+    "fingerprint": "8c3b55513b0e1e72"
   },
   "/radiance-spoilers/ekko-boy-who-shattered-time.jpg": {
     "src": "/radiance-spoilers/ekko-boy-who-shattered-time.jpg",
@@ -1337,6 +1373,18 @@
     "avifBytes": 28556,
     "variants": [],
     "fingerprint": "9c774be2b7d9f56a"
+  },
+  "/radiance-spoilers/fury-rune-alt-art.jpg": {
+    "src": "/radiance-spoilers/fury-rune-alt-art.jpg",
+    "width": 695,
+    "height": 969,
+    "bytes": 96871,
+    "webp": "/radiance-spoilers/fury-rune-alt-art.webp",
+    "webpBytes": 57108,
+    "avif": "/radiance-spoilers/fury-rune-alt-art.avif",
+    "avifBytes": 45612,
+    "variants": [],
+    "fingerprint": "417ffc9a8c9c9177"
   },
   "/radiance-spoilers/graves-blasting-through.jpg": {
     "src": "/radiance-spoilers/graves-blasting-through.jpg",
@@ -1491,6 +1539,18 @@
     "variants": [],
     "fingerprint": "0883a6c39d4fa66c"
   },
+  "/radiance-spoilers/iridescent-avian.jpg": {
+    "src": "/radiance-spoilers/iridescent-avian.jpg",
+    "width": 652,
+    "height": 920,
+    "bytes": 106415,
+    "webp": "/radiance-spoilers/iridescent-avian.webp",
+    "webpBytes": 68910,
+    "avif": "/radiance-spoilers/iridescent-avian.avif",
+    "avifBytes": 49492,
+    "variants": [],
+    "fingerprint": "17b53e9679e3db6e"
+  },
   "/radiance-spoilers/jarvan-iv-martial-paragon-alt-art.jpg": {
     "src": "/radiance-spoilers/jarvan-iv-martial-paragon-alt-art.jpg",
     "width": 744,
@@ -1605,6 +1665,18 @@
     "variants": [],
     "fingerprint": "6fb87cb938da81b1"
   },
+  "/radiance-spoilers/mordekaiser-iron-revenant-signature.jpg": {
+    "src": "/radiance-spoilers/mordekaiser-iron-revenant-signature.jpg",
+    "width": 500,
+    "height": 698,
+    "bytes": 70326,
+    "webp": "/radiance-spoilers/mordekaiser-iron-revenant-signature.webp",
+    "webpBytes": 50554,
+    "avif": "/radiance-spoilers/mordekaiser-iron-revenant-signature.avif",
+    "avifBytes": 39128,
+    "variants": [],
+    "fingerprint": "911a8697b8d85f7d"
+  },
   "/radiance-spoilers/nazuman-ntofo.jpg": {
     "src": "/radiance-spoilers/nazuman-ntofo.jpg",
     "width": 744,
@@ -1628,6 +1700,18 @@
     "avifBytes": 54396,
     "variants": [],
     "fingerprint": "0dba457873babae8"
+  },
+  "/radiance-spoilers/order-rune-alt-art.jpg": {
+    "src": "/radiance-spoilers/order-rune-alt-art.jpg",
+    "width": 500,
+    "height": 700,
+    "bytes": 43241,
+    "webp": "/radiance-spoilers/order-rune-alt-art.webp",
+    "webpBytes": 21576,
+    "avif": "/radiance-spoilers/order-rune-alt-art.avif",
+    "avifBytes": 16282,
+    "variants": [],
+    "fingerprint": "ee523025817179ec"
   },
   "/radiance-spoilers/orianna-lady-of-clockwork-signature.jpg": {
     "src": "/radiance-spoilers/orianna-lady-of-clockwork-signature.jpg",
@@ -1712,6 +1796,18 @@
     "avifBytes": 43986,
     "variants": [],
     "fingerprint": "cec1bf23d849175a"
+  },
+  "/radiance-spoilers/realm-of-death.jpg": {
+    "src": "/radiance-spoilers/realm-of-death.jpg",
+    "width": 794,
+    "height": 1110,
+    "bytes": 116144,
+    "webp": "/radiance-spoilers/realm-of-death.webp",
+    "webpBytes": 69186,
+    "avif": "/radiance-spoilers/realm-of-death.avif",
+    "avifBytes": 51564,
+    "variants": [],
+    "fingerprint": "8685b3e6862e7ed0"
   },
   "/radiance-spoilers/rousing-display.jpg": {
     "src": "/radiance-spoilers/rousing-display.jpg",

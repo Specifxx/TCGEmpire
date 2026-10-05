@@ -49,7 +49,7 @@ const RAW: [name: string, extraPrefixes?: string[]][] = [
   ["Galio"], ["Gangplank"], ["Garen"], ["Graves"], ["Heimerdinger"], ["Hwei"], ["Illaoi"],
   ["Irelia"], ["Ivern"], ["Janna"], ["Jarvan IV"], ["Jax"], ["Jayce"], ["Jhin"], ["Jinx"], ["K'Sante"], ["Kai'Sa"],
   ["Karma"], ["Karthus"], ["Katarina"], ["Kayle"], ["Kayn"], ["Kennen"], ["Kha'Zix"],
-  ["Kog'Maw"], ["LeBlanc"], ["Lee Sin"], ["Leona"], ["Lillia"], ["Lucian"], ["Lux"],
+  ["Kog'Maw"], ["LeBlanc"], ["Lee Sin"], ["Leona"], ["Lillia"], ["Lucian"], ["Lulu"], ["Lux"],
   ["Malzahar"],
   // The three-way split documented above. "Master Yi" is canonical; "Yi" is how
   // the Unit printings are named; "Master" is the seed.ts bug's output.
