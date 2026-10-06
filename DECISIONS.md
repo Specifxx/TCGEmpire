@@ -16695,3 +16695,17 @@ Rows are keyed by `itemId`, so a slab over both bars is kept once. The graded pa
 **Not changed.** Raw lots still need a US$500 bid, so a cheap raw auction is still not on the board. The bar is still the CURRENT bid, so a slab that opens at US$1 appears once bidding passes US$100. The 24-hour window and the four-hour sweep are unchanged. Fixed-price slabs are unaffected; they go through the graded-listing carousel on card pages.
 
 **Page copy.** The lede, the meta description and the empty state now name both bars.
+
+## eBay Picks moves up, directly under the editorial band, on all six homes — 2026-10-06
+
+**Decision (owner).** "Move the ebay chase card ad right below the news and guides on the homepage." eBay Picks (the newest released set's chase cards, each with its cheapest live eBay listing) now sits directly under "Guides, news & market updates" and above Today's Top Deals.
+
+**New order on every home:** hero, editorial band, eBay Picks, Today's Top Deals, price guide, then `HomeSections` (the Pokémon line, the popular carousel, Riftle and the pack simulator, How it works, and the rest).
+
+**All six, not just "/".** The 2026-10-02 decision keeps one structure on "/" and the five region homes, so they move together. If the owner wants "/" alone changed, that is a separate call that breaks that rule.
+
+**How.** `HomeSections` gets a `showEbayPicks` prop (default true), the same way `showTopDeals` works. `page.tsx` and `RegionHome.tsx` render `<EbayPicks pageType="homepage" />` themselves under the band and pass `showEbayPicks={false}`, so it appears once. `tests/home-ebay.test.ts` pins the position and the single render.
+
+**Cost.** None. The same component, the same cached read of eBay listings already captured by the daily import, and no new eBay API call. Only its place on the page changes. Its client half is still split out of the first bundle, though it now sits nearer the top.
+
+**Reverses nothing pinned.** `tests/game-before-money.test.ts` reads `HomeSections`' own source order (Top Deals, eBay Picks, then the playable cards), which has not changed. The homes' running order is the owner's to set.

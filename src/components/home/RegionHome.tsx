@@ -11,6 +11,7 @@ import { HomeSections } from "./HomeSections";
 import { PriceGuideCallout } from "./PriceGuideCallout";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EditorialHub } from "./EditorialHub";
+import { EbayPicks } from "@/components/EbayPicks";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
 // Every market, so the cross-market strips on a region page show them all.
@@ -101,6 +102,10 @@ export async function RegionHome({ region }: { region: Country }) {
           hero"), then Today's Top Deals and the price guide. */}
       <EditorialHub freshness={freshness} market={region} />
 
+      {/* eBay Picks directly under the band, as on "/" (owner, 2026-10-06).
+          HomeSections gets showEbayPicks={false} so it appears once. */}
+      <EbayPicks pageType="homepage" />
+
       {/* Today's Top Deals, then the price guide (2026-10-02, owner: the
           "Riftbound card prices today" table is gone; a link to /price-guide
           takes its place, with Top Deals above it). HomeSections gets
@@ -122,6 +127,7 @@ export async function RegionHome({ region }: { region: Country }) {
         popularCards={popularCards}
         popularItemList
         showTopDeals={false}
+        showEbayPicks={false}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

@@ -7,9 +7,11 @@ import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { newestReleasedSet, setByCode } from "@/lib/constants";
 import type { PickListing } from "./EbayPicksLive";
 
-// Below-the-fold on every page it appears on. Kept SSR'd (ssr: true, the
-// default) — same reviewer/crawler reasoning as FooterAds — just split out of
-// the JS the browser parses before hydrating the above-the-fold content.
+// Below the first screen on most pages it appears on, and second under the hero
+// on the six homes since 2026-10-06 (the editorial band is the only thing above
+// it). Kept SSR'd (ssr: true, the default) — same reviewer/crawler reasoning as
+// FooterAds — just split out of the JS the browser parses before hydrating the
+// above-the-fold content.
 const EbayPicksLive = dynamic(() => import("./EbayPicksLive").then((m) => m.EbayPicksLive));
 
 /**

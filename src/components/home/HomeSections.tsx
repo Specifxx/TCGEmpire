@@ -46,6 +46,9 @@ export interface HomeSectionsProps {
   popularItemList?: boolean;
   /** Render Today's Top Deals here (the region homes). "/" renders it itself, directly under the hero (2026-09-30). */
   showTopDeals?: boolean;
+  /** Render eBay Picks here. All six homes render it themselves, directly under
+   *  the editorial band, and pass false (owner, 2026-10-06). */
+  showEbayPicks?: boolean;
   // ALL FIVE markets, not just `country` — TodaysTopDeals/MarketPulse localise
   // to the VISITOR's own market client-side (useCountry()), which can differ
   // from the page's URL/baseline market (e.g. a bookmarked /au visited by
@@ -74,6 +77,7 @@ export function HomeSections({
   popularCards,
   popularItemList = true,
   showTopDeals = true,
+  showEbayPicks = true,
   topDealsByCountry,
   moversByCountry,
   recentlyUpdated,
@@ -153,8 +157,12 @@ export function HomeSections({
           listing, rather than a generic banner. Held the top slot from
           2026-09-17 (where it replaced the removed Market Pulse) until
           2026-09-21, when Today's Top Deals was moved above it on the owner's
-          instruction — see that section's comment and DECISIONS.md. */}
-      <EbayPicks pageType="homepage" />
+          instruction — see that section's comment and DECISIONS.md.
+          2026-10-06 (owner: "move the ebay chase card ad right below the news
+          and guides"): every home now renders it itself, directly under the
+          editorial band, and passes showEbayPicks={false}. It stays here as the
+          default for any caller that does not. */}
+      {showEbayPicks && <EbayPicks pageType="homepage" />}
 
       {/* Unified popular-cards carousel — the all-time most-popular list, with
           a "Biggest movers" tab and "Recently updated prices" (each once its

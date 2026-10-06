@@ -11,6 +11,7 @@ import { HomeSections } from "@/components/home/HomeSections";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { PriceGuideCallout } from "@/components/home/PriceGuideCallout";
+import { EbayPicks } from "@/components/EbayPicks";
 import { homeMetadata } from "@/lib/home-metadata";
 import { webPage, faqPage, webApplication } from "@/lib/jsonld";
 
@@ -333,6 +334,11 @@ export default async function HomePage() {
           hero"), then Today's Top Deals and the price guide. */}
       <EditorialHub freshness={freshness} />
 
+      {/* eBay Picks (the newest set's chase cards, cheapest live listing each),
+          directly under the editorial band (owner, 2026-10-06). HomeSections
+          gets showEbayPicks={false} so it appears once. */}
+      <EbayPicks pageType="homepage" />
+
       {/* Today's Top Deals, under the editorial band (2026-10-02). HomeSections
           gets showTopDeals={false} so it appears once. */}
       {/* No <Reveal> wrapper: it is in or near the first screen, where a
@@ -376,6 +382,7 @@ export default async function HomePage() {
         popularCards={popularCards}
         popularItemList
         showTopDeals={false}
+        showEbayPicks={false}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

@@ -497,20 +497,22 @@ longer lands on its entry.
   [2026-09-30](../DECISIONS.md#L15905)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417),
   [2026-09-28](../DECISIONS.md#L14549)
-- **Homepage order:** hero, then Today's Top Deals (Biggest savings, Price
-  drops, Rising cards; no tier chips, no Cheapest sealed column), then the
-  editorial band (`EditorialHub`: Start here, Latest news, Market updates; two
-  rows per column on phones), the one-line Pokémon promo while that section is
-  on (`PokemonHomePromo`, all six homes), eBay Picks (the newest released set), the popular
+- **Homepage order (all six homes, owner 10-06):** hero, then the editorial
+  band (`EditorialHub`: Start here, Latest news, Market updates; two rows per
+  column on phones), eBay Picks (the newest released set's chase cards),
+  Today's Top Deals (Biggest savings, Price drops, Rising cards; no tier chips,
+  no Cheapest sealed column), the price-guide link, the one-line Pokémon promo
+  while that section is on (`PokemonHomePromo`, all six homes), the popular
   carousel (its "Most popular" tab back, owner's call; it carries the ItemList
-  on `/`), Riftle/pack-sim, How it works. No price table on `/` since 09-30
-  (the region homes keep theirs). "Cheapest on eBay" is a Deal Finder view since
+  on `/`), Riftle/pack-sim, How it works. No price table on any home (`/` since 09-30, the
+  region homes since 10-02). "Cheapest on eBay" is a Deal Finder view since
   09-30. No Recently viewed on any homepage (owner, 09-28); it stays in the
   search box and on card pages.
   [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
   [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190),
   [2026-09-26](../DECISIONS.md#L14680), [2026-09-28](../DECISIONS.md#L15131),
-  [2026-09-30](../DECISIONS.md#L15971), [2026-10-01](../DECISIONS.md#L16105)
+  [2026-09-30](../DECISIONS.md#L15971), [2026-10-01](../DECISIONS.md#L16105),
+  [2026-10-02](../DECISIONS.md#L16505), [2026-10-06](../DECISIONS.md#L16699)
 - **Overlays:** `ui/Dialog` portals to body; Escape closes only the top
   layer and focus returns to the opener. Corner nudges share one corner
   string. [2026-09-23](../DECISIONS.md#L11348)
