@@ -256,6 +256,185 @@ const PREMIUM_TRIAL_ARTICLE_BILLING = premiumTrialEnabled()
   : "Both tiers run through Stripe and are charged when you subscribe — no free trial, no introductory price, just the price in the table.";
 
 export const ARTICLES: Article[] = [
+  // RADIANCE CHASE CARDS (2026-10-07, owner: "come up with a useful/insightful
+  // blog post on what to expect from radiance in terms of chase cards. I'm
+  // looking at Seraphine and Riven will also be worth a lot"). The post is built
+  // from RiftCompare's own daily price history (data/price-history) read over
+  // Vendetta's launch, and from the Radiance catalogue as it stands. It does NOT
+  // predict a price, because the site's rule is never to (docs/CURRENT-STATE.md,
+  // "Accuracy"): it reports what Vendetta's chase tiers did and where Radiance's
+  // chase run sits against them, and says plainly that Riven's Vendetta chase
+  // print was mid pack. Every figure in the tables is the cheapest in stock
+  // listing across our markets in US dollars on the date shown, median per tier;
+  // re-derive them from the day files before changing a number. The title keeps
+  // clear of "spoiler" (the tracker owns it) and of "leak".
+  {
+    slug: "riftbound-radiance-chase-cards",
+    category: "blog",
+    title: "Riftbound Radiance Chase Cards: What to Expect",
+    excerpt:
+      "Radiance's chase cards so far, and what Vendetta's chase prices did after launch: signed Legends, overnumbered units, specials, Seraphine and Riven.",
+    author: "RiftCompare",
+    date: "2026-10-07",
+    readMins: 9,
+    tags: ["radiance", "chase cards", "prices", "seraphine", "riven", "collecting"],
+    hero: {
+      src: "/radiance-spoilers/seraphine-starry-eyed-songstress.jpg",
+      alt: "Seraphine, Starry-Eyed Songstress, the Riftbound Radiance Legend whose overnumbered 174/167 and signed 174*/167 printings are among the set's chase cards",
+    },
+    summary: [
+      "**Radiance has no prices yet, so this is a map, not a forecast.** We show which chase tiers the set has so far and what the same tiers did in Vendetta, the last set to launch.",
+      "**In Vendetta the money was in the signed Legends.** Nine signed twins made up 72% of what one of each of its 40 chase printings cost on 6 October, and the five dearest chase cards were all signed Legends.",
+      "**Pre release prices were not where Vendetta settled.** The median overnumbered unit cost $177 four days before release and $81 in launch week. The SP1 to SP6 specials fell from $130 to $44.",
+      "**Seraphine's Legend has a signed twin; Riven has no Legend shown yet.** Riven's Vendetta chase print sat in the middle of the pack, so a Riven Legend with a signed twin is the thing to watch for.",
+    ],
+    faq: [
+      {
+        q: "What are the chase cards in Riftbound Radiance?",
+        a: "So far: five signed Legends (Ekko 168*, Ziggs 169*, Mordekaiser 170*, Orianna 171* and Seraphine 174*), eight overnumbered Legends numbered 168 to 176, seven overnumbered units and battlefields numbered 178 to 184, five SP specials numbered out of 005 (Ahri, Akali, Evelynn, Kai'Sa and Seraphine), twelve alternate art units and six alternate art runes. Riot has also announced an Ultimate Rare that has not been shown.",
+      },
+      {
+        q: "Will Seraphine be expensive in Radiance?",
+        a: "We do not predict prices. What the data supports is narrower: Seraphine's Legend has an overnumbered printing and a signed twin, and in Vendetta the signed Legend twins were the dearest cards in the set by a wide margin. She also has an SP special, and Vendetta's equivalent tier, the Crystal Rose cards, lost about half its price after launch week. Radiance has no prices yet.",
+      },
+      {
+        q: "Is there a Riven Legend in Radiance?",
+        a: "None has been shown. Riot's gallery has Riven, Broken Blade (043/167) and a Showcase alternate art, and her signature gear, Blade of the Exile (150/167). Every Legend shown so far has a signature card, which makes a Riven Legend a reasonable reading, but it is an inference and Riot has not said so.",
+      },
+      {
+        q: "Do chase card prices fall after a set releases?",
+        a: "In Vendetta, the median overnumbered unit cost $177 four days before release and $81 in launch week, and the six SP specials went from $130 to $44. That is one set and a handful of early listings, so treat it as a pattern to check against, not a rule.",
+      },
+      {
+        q: "What does the asterisk in a Radiance number mean?",
+        a: "It marks a Signature printing: the overnumbered Legend again, with the artist's signature across the art. Seraphine's is 174*/167, and the unsigned 174/167 is a separate card with its own price.",
+      },
+    ],
+    shop: [
+      { label: "Radiance booster boxes", query: "Riftbound Radiance booster box" },
+      { label: "Seraphine cards", query: "Riftbound Seraphine" },
+      { label: "Riven cards", query: "Riftbound Riven" },
+      { label: "Radiance Vault Bundle", query: "Riftbound Radiance Vault" },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Radiance set page →",
+      blurb: "Every Radiance card as it is revealed, with live prices on each one from release day.",
+    },
+    embeds: [
+      {
+        title: "Radiance's signed Legends so far",
+        note: "The asterisk printings, straight from our database. Prices land from release day.",
+        chaseSet: "RAD",
+        chaseTier: "signature",
+      },
+      {
+        title: "Seraphine in Radiance",
+        note: "Her Legend and its two chase printings, her signature spell, and her three Not Alone printings.",
+        slugs: [
+          "seraphine-starry-eyed-songstress-rad-151-167",
+          "seraphine-starry-eyed-songstress-rad-174-167",
+          "seraphine-starry-eyed-songstress-rad-174s-167",
+          "encore-rad-152-167",
+          "seraphine-not-alone-rad-138-167",
+          "seraphine-not-alone-rad-138a-167",
+          "seraphine-not-alone-rad-sp5-005",
+        ],
+      },
+      {
+        title: "Riven, in Radiance and in Vendetta",
+        note: "What Riot has shown of her so far, next to the Vendetta printings that set her price history.",
+        slugs: [
+          "riven-broken-blade-rad-043-167",
+          "riven-broken-blade-rad-043a-167",
+          "blade-of-the-exile-rad-150-167",
+          "riven-shattered-ven-171",
+          "riven-shattered-ven-041",
+        ],
+      },
+    ],
+    body: `**Radiance releases on 23 October, and no Radiance single has a price yet.** What exists is a chase run Riot has been showing for two weeks, and a complete price history for Vendetta, the last set to launch. This post sets the two side by side. It is not a price prediction, because we do not publish those. It is a map of which cards sit in the tiers where Vendetta's money was, and of what those tiers did after launch.
+
+## The Radiance chase run, as shown so far
+
+As of 7 October our catalogue holds 170 Radiance cards, 43 of them Showcase printings. The chase cards fall into six tiers:
+
+| Tier | What it is | Shown so far |
+| --- | --- | --- |
+| **Signed Legends** | The overnumbered Legend with the artist's signature across the art, numbered with an asterisk | 5: Ekko 168\\*, Ziggs 169\\*, Mordekaiser 170\\*, Orianna 171\\* and Seraphine 174\\* |
+| **Overnumbered Legends** | Numbers 168 to 176, above the 167 card base run | 8 of 9 slots: Ekko, Ziggs, Mordekaiser, Orianna, K'Sante, Seraphine, Evelynn and Jarvan IV. Slot 173 has not been shown |
+| **Overnumbered units and battlefields** | Number 177 and up | 7: K'Sante, Courageous (178), Aphelios (179), Ezreal (180), Yone (181), Kayn (182), Sett (183) and Packed Amphitheater (184). Slot 177 has not been shown |
+| **SP specials** | Five printings numbered out of 005 | 5, one for each K/DA member: Ahri, Akali, Evelynn, Kai'Sa and Seraphine |
+| **Alternate arts** | A letter after the number on an ordinary card | 12 units, such as Riven 043a and Seraphine 138a, and a Showcase for each of the six runes |
+| **Ultimate Rare** | Announced as a tier above overnumbered | None shown |
+
+Two things stand out. The Legend run is close to complete, and only five of its eight overnumbered Legends have a signed twin so far; Vendetta gave all nine of its Legends one. And Riot's rundown said 66 Showcase printings against our 43, a figure that does not reconcile with the printed 167 either (see [what we know about Radiance](/blog/riftbound-radiance-what-we-know)), so read the gap as more to be shown, not as a count.
+
+[[embed:0]]
+
+## What Vendetta's chase prices did after launch
+
+Vendetta released on 31 July 2026 and our daily price history covers its whole life. Every figure below is the cheapest in stock listing for the card across the markets we track, in US dollars, as a median for the tier, on the date shown.
+
+| Tier (cards) | 27 Jul, four days before release | 3 Aug, launch week | 3 Sep | 6 Oct |
+| --- | --- | --- | --- | --- |
+| Overnumbered units (22) | $177 | $81 | $80 | $73 |
+| Overnumbered Legends (9) | $184 | $139 | $176 | $144 |
+| Signed Legends (9) | no prices yet | $707 | $983 | $750 |
+| Crystal Rose, SP1 to SP6 (6) | $130 | $44 | $38 | $22 |
+
+The Crystal Rose cards are Vendetta's Wild Rift crossover alternates (Kai'Sa, Sona, Ahri, Sett, Ezreal and Lux), numbered SP1 to SP6, which makes them the closest thing in that set to Radiance's five SP specials. Four things in the table matter more than the rest.
+
+**1. Pre release prices were not where the set settled.** Four days before release the median overnumbered unit cost $177. In launch week it cost $81, and it has stayed within about ten percent of that since. The Crystal Rose median went from $130 to $44 in the same window. Early prices come from a few listings, and by launch week they had moved.
+
+**2. The money was in the signed Legends.** The nine signed twins made up 72% of what one of each of Vendetta's 40 chase printings cost on 6 October, and the five dearest of all 40 were signed Legends: Akali, Rogue Assassin at $2,807, Zed, Master of Shadows at $1,300, Jayce, Defender of Tomorrow at $1,099, Mel, Soul's Reflection at $766 and Kennen, Heart of the Tempest at $750. A signed twin cost between 3.8 and 8.3 times its unsigned twin, with a median of 5.6 times.
+
+**3. Legends held better than units.** Between four days before release and launch week the median overnumbered Legend lost about a quarter of its price and the median overnumbered unit lost more than half. Since launch week the units have drifted lower, with 11 of 22 down by more than a tenth and 3 up by more than a tenth, while the Legends mostly stood still. Among the signed twins the three dearest rose (Akali by 27%, Jayce by 56%, Zed by 14%) and five of the other six fell by more than a tenth.
+
+**4. The special alternates were the weakest tier.** All six Crystal Rose cards are cheaper than in launch week, by about half at the median, and the cheapest two, Sett and Ezreal, are $11 and $15.
+
+**What this does not tell us.** It is one set. The tiers are small (nine Legends, six specials), the cheapest listing in a thin market can move a card by a quarter in a day, and Radiance has a different mix: more Showcase cards, a new alternate art tier that Vendetta did not have, and an Ultimate Rare slot. Use it as a set of things to check against, not as a forecast.
+
+## Seraphine
+
+Seraphine's Radiance printings are the Legend, [Starry-Eyed Songstress 151/167](/card/seraphine-starry-eyed-songstress-rad-151-167), its overnumbered twin [174/167](/card/seraphine-starry-eyed-songstress-rad-174-167) and the signed [174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167), her signature spell [Encore](/card/encore-rad-152-167), and *Seraphine, Not Alone* in three prints: the base [138/167](/card/seraphine-not-alone-rad-138-167), a Showcase [138a](/card/seraphine-not-alone-rad-138a-167) and the K/DA special [SP5/005](/card/seraphine-not-alone-rad-sp5-005). Counting the T1 Worlds promo of *Not Alone*, that is seven Seraphine printings, plus her signature spell. The [Seraphine post](/blog/riftbound-seraphine-radiance-spoiler) covers how the Legend plays.
+
+[[embed:1]]
+
+Against Vendetta's tiers, her printings land in two very different places:
+
+* **The signed Legend twin is the tier that carried Vendetta.** She has the overnumbered and signed pair, which is the structure of every one of the five dearest Vendetta chase cards. That is a point in her favour as a card to watch, not a price.
+* **The SP special is the tier that faded.** SP5 is one of five K/DA printings, and Vendetta's equivalent tier lost about half its price after launch week. The art can be as good as it likes; the pattern was a crowded special tier settling low.
+* **Supply matters.** The Seraphine vs Evelynn Showdown Decks are Riot's guaranteed way to get her, so her base Legend is likely to be easy to find. Whether any chase printing is in the decks has not been shown, so treat the overnumbered and signed prints as booster pulls until Riot says otherwise.
+
+The honest summary is that Seraphine has the ingredients that Vendetta rewarded, and one tier that Vendetta did not. Evelynn is in the same position, with the difference that no signed twin has been shown for her Legend yet.
+
+## Riven
+
+Riven is the harder case to make from the evidence, and it is worth being plain about why. Radiance's Riven cards so far are [Riven, Broken Blade 043/167](/card/riven-broken-blade-rad-043-167), a Calm Champion Unit and a Rare, with a Showcase alternate art, [043a](/card/riven-broken-blade-rad-043a-167), and her signature gear, [Blade of the Exile 150/167](/card/blade-of-the-exile-rad-150-167). No Riven Legend and no overnumbered Riven has been shown.
+
+[[embed:2]]
+
+Her Vendetta history is the best guide to how her chase prints get priced. *Riven, Shattered* has an overnumbered [171/166](/card/riven-shattered-ven-171) that cost $81 in launch week and costs $81 now. That ranks 17th of Vendetta's 31 overnumbered cards and 10th of its 22 units, against a unit median of $73. It is a solid chase print and not a standout one. Her base card sells for a few cents, and her promo [041a](/card/riven-shattered-ven-041a-166-promo) is listed at $179 by two stores, which is too thin to read.
+
+So the case for a Riven that is worth a lot rests on what has not been shown. Every Legend revealed so far has a signature card, and Riven has one, so a Riven Legend is a reasonable reading of the slot 173 gap. That is an inference, not an announcement. If it arrives with an overnumbered and a signed twin, she would sit in the tier that carried Vendetta. If her chase prints are units and alternate arts, Vendetta's unit tiers are the ones to compare her with.
+
+## What to watch before 23 October
+
+* **Slots 173 and 177.** Whether a ninth Legend or a Riven overnumber appears.
+* **Which Legends get signed twins.** Five of eight so far, against nine of nine in Vendetta.
+* **The Ultimate Rare.** Riot has announced it and shown nothing, and it sits above everything in the table.
+* **Pull rates.** We have not seen any published for Radiance. Our [Box EV calculator](/tools/box-ev) is where they go when they exist.
+* **How early prices move.** If Radiance behaves like Vendetta, the figure you see before release is not the one you will see in launch week.
+
+## If you want one of these cards
+
+Prices for Radiance singles start appearing around [Pre-Rift events on 16 to 22 October](/radiance-preorders) and then on release day. A [free price alert](/alerts) on a specific printing costs nothing and will tell you when it drops to the number you set, which is a better use of the week before release than paying a price that Vendetta's history says tended to fall. Read the number before the name: the signed 174\\*/167 and the unsigned 174/167 are different cards at very different prices.
+
+[[shop]]
+
+For every Radiance card as it is shown, the [live spoiler tracker](/blog/riftbound-radiance-spoilers) logs each reveal with its date, and the [Radiance set page](/sets/radiance) lists the full card list with prices from release day.`,
+  },
   // RADIANCE PREVIEW SEASON, WEEK ONE (2026-09-29). The first wave of finished
   // Preview Season card images, as gathered by StarCityGames' round-up: 23 cards
   // read in full and added to prisma/manual-cards.json (three Legends, the three
@@ -1555,7 +1734,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
     author: "RiftCompare",
     date: "2026-09-21",
-    updated: "2026-10-05",
+    updated: "2026-10-07",
     readMins: 9,
     tags: ["radiance", "spoilers", "card gallery", "news", "release"],
     hero: {
@@ -1614,7 +1793,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
     ],
     body: `This is the **live Riftbound: Radiance spoiler tracker**. The gallery below is drawn from our card database and updates as each official reveal is imported, so it is current the morning after a reveal without anyone editing this page. Under it is a **dated log of everything that has actually been revealed**, the Preview Season schedule, and a clear line between what Riot has shown and what has merely circulated.
 
-**Where things stand today, 5 October 2026:** Preview Season is eleven days old. **Seven Legends are now in print**: Seraphine's, Ekko's, Ziggs', Orianna's and Jarvan IV's, and, in the last few days, Evelynn's and Mordekaiser's, alongside K'Sante's, which surfaced as the season opened. Riot's own card gallery now lists 130 Radiance printings, and every one of them is in the gallery below, with 13 more read off preview partners' card images. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
+**Where things stand today, 7 October 2026:** Preview Season is thirteen days old. **Seven Legends are now in print**: Seraphine's, Ekko's, Ziggs', Orianna's and Jarvan IV's, and, in the last few days, Evelynn's and Mordekaiser's, alongside K'Sante's, which surfaced as the season opened. Riot's own card gallery now lists 164 Radiance printings, and every one of them is in the gallery below, with six more read off preview partners' and riftbound.gg's card images. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
 
 **How this page keeps up:** Riot's official card gallery is checked twice a day, at about 02:30 and 18:30 UTC, and the preview partners' reveals as they land. Each new card is added once its finished card image can be read in full: collector number, rarity gem, domain and text. *Updated 30 September:* this used to say new cards land here automatically. The automatic import is paused while Riot's gallery files some Radiance cards under the wrong domain or type, so each card is now checked by hand before it goes in.
 
@@ -1638,6 +1817,21 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 ## Reveal log: what has actually been shown
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
+
+**7 October — Riot's gallery reaches 164 printings, with Riven's first card, the fifth K/DA special and two held back battlefields.** On 5 October Riot's card gallery listed 130 Radiance printings; today it lists 164. Twenty-six were new to us and are in the database with Riot's own card image and text. Eight cards we had from riftbound.gg now use Riot's image, and one more, Gravity Field, comes from riftbound.gg because Riot's gallery does not list it yet:
+
+- **Riven.** **[Riven, Broken Blade](/card/riven-broken-blade-rad-043-167)** (Calm Champion Unit, Rare, 4 energy, 4 Might, 043/167), with a Showcase alternate art, [043a](/card/riven-broken-blade-rad-043a-167). Each time she becomes exhausted you choose a mode you have not chosen this turn: buff her, spend the buff to stun an enemy unit, or spend it to ready her. Her signature gear, [Blade of the Exile](/card/blade-of-the-exile-rad-150-167), was already in. No Riven Legend has been shown.
+- **The K/DA specials are five.** [Ahri, Confident](/card/ahri-confident-rad-sp1-005) (SP1/005, Calm, Showcase) joins Akali, Evelynn, Kai'Sa and Seraphine at SP2 to SP5.
+- **Two more signature cards.** [Last Caress](/card/last-caress-rad-154-167), Evelynn's signature spell, was shown only as a Simplified Chinese printing on 2 October and is in now from Riot's own image. [The Ball](/card/the-ball-rad-146-167) is Orianna's signature gear: a Deploy gear with Ganking that either draws 1 or deals 2 to enemy units where it is.
+- **Ekko, Revolutionary** ([021](/card/ekko-revolutionary-rad-021-167), Epic, and a Showcase [021a](/card/ekko-revolutionary-rad-021a-167)): he enters ready with Assault, and for a discard and a rune he banishes himself and plays himself to your base, ignoring his cost.
+- **The two battlefields held back on 5 October** are in, from Riot's own images: [Black Rose Sanctum](/card/black-rose-sanctum-rad-159-167) (159, Uncommon) and the Showcase [Packed Amphitheater](/card/packed-amphitheater-rad-184-167) (184).
+- **Fury and Order base runes**, [R01](/card/fury-rune-rad-r01) and [R06](/card/order-rune-rad-r06), complete the six.
+- **Fifteen more cards.** Units: [Demacian Illuminators](/card/demacian-illuminators-rad-131-167), [Drakehound Packmaster](/card/drakehound-packmaster-rad-018-167), [Industrious Mechsmith](/card/industrious-mechsmith-rad-049-167), [Meticulous Restorationist](/card/meticulous-restorationist-rad-120-167), [Mysterious Chronomancer](/card/mysterious-chronomancer-rad-050-167), [Raving Witness](/card/raving-witness-rad-074-167), [Skystrike Squadron](/card/skystrike-squadron-rad-075-167), [Staunch Survivor](/card/staunch-survivor-rad-088-167), [Suave Negotiator](/card/suave-negotiator-rad-099-167) and [The Empyrean](/card/the-empyrean-rad-060-167). Spells: [Ki Burst](/card/ki-burst-rad-028-167), [Rally for War](/card/rally-for-war-rad-007-167), [Scorched Earth](/card/scorched-earth-rad-006-167) and [The Waters' Wage](/card/the-waters-wage-rad-100-167). Gear: [Ephemeral Ward](/card/ephemeral-ward-rad-039-167).
+- **Gravity Field** ([062](/card/gravity-field-rad-062-167), Mind gear, Rare): a Deploy gear that makes opponents pay 1 power to move units to its battlefield, and draws a card when it dies.
+
+Riot's gallery still lists no card above Showcase, so the announced Ultimate Rare has not been shown. For what the chase run looks like so far and what Vendetta's chase prices did after launch, see **[Radiance chase cards: what Vendetta's prices say to expect](/blog/riftbound-radiance-chase-cards)**.
+
+Not in the database yet: the Bomb and Mech tokens, because the catalogue carries no tokens, and the Summoner Skirmish promos riftbound.gg lists for November and December, which have not been printed yet.
 
 **5 October — Riot's gallery jumps from 84 to 130 printings, and Evelynn's and Mordekaiser's Legends are in.** Riot's card gallery listed 84 Radiance printings on 30 September and lists 130 today. Twenty-four of the new printings were new to us and are in the database with Riot's own card image and rules text. Another 22 we already had from preview partners; those pages now show Riot's image too. Eight more come from riftbound.gg's card images, because Riot's gallery does not list them yet:
 

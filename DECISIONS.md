@@ -16709,3 +16709,33 @@ Rows are keyed by `itemId`, so a slab over both bars is kept once. The graded pa
 **Cost.** None. The same component, the same cached read of eBay listings already captured by the daily import, and no new eBay API call. Only its place on the page changes. Its client half is still split out of the first bundle, though it now sits nearer the top.
 
 **Reverses nothing pinned.** `tests/game-before-money.test.ts` reads `HomeSections`' own source order (Top Deals, eBay Picks, then the playable cards), which has not changed. The homes' running order is the owner's to set.
+
+## Radiance: Riot's gallery reaches 164, and a chase cards post built from Vendetta's price history — 2026-10-07
+
+**Why.** The owner asked to update the Radiance gallery and to write "a useful/insightful blog post on what to expect from radiance in terms of chase cards", adding "I'm looking at Seraphine and Riven will also be worth a lot".
+
+**The gallery.** Riot's card gallery lists **164** Radiance printings (130 on 5 October). Diffed by collector number against our 143 rows: 26 new, all added. The same rule as 5 October applies: image, name, number, rarity and text from the gallery, domain, type and stats from the printed card.
+
+- **Riot's metadata was wrong again.** Scorched Earth (006) is filed Colorless and is Fury (red); Industrious Mechsmith (049) is filed Colorless and is Mind (blue); riftbound.gg agrees on both. Detonation Amplifier (017) is filed Chaos and is Fury, so our row stays Fury. riftbound.gg has Meticulous Restorationist (120) as a Gear; the card is a Unit (Might 2).
+- **The Empyrean's alt text** reads "from hand"; the card says "from your hand".
+- **The two battlefields held back on 5 October are in**, from Riot's own images (Black Rose Sanctum 159, the Showcase Packed Amphitheater 184). The watermark and low resolution that kept them out belonged to riftbound.gg's copies, not Riot's.
+- **Eight rows hosted from riftbound.gg now use Riot's image** (087, 119, 017, 027, 130, 144, R01A, R06A). Text and stats already agreed. The five signed Legends (168\*, 169\*, 170\*, 171\*, 174\*) are not in Riot's gallery and stay hosted.
+- **One more riftbound.gg card, Gravity Field (062)**, hosted from a clean image. riftbound.gg's Summoner Skirmish promos for November and December are not added: they are not printed.
+- **Riven, Broken Blade** (043, Rare, and the Showcase 043a) is the first Riven card in the set. No Riven Legend is in any source.
+
+**The post** (`riftbound-radiance-chase-cards`). Its figures come from `data/price-history/`, Vendetta's whole life from 6 June, and each card's id was read from its live card page. The basis is the file's own: the cheapest in stock listing across AU, US, UK and SG in US cents. What it found:
+
+| Tier (Vendetta) | 27 Jul | 3 Aug | 3 Sep | 6 Oct |
+| --- | --- | --- | --- | --- |
+| Overnumbered units (22) | $177 | $81 | $80 | $73 |
+| Overnumbered Legends (9) | $184 | $139 | $176 | $144 |
+| Signed Legends (9) | none | $707 | $983 | $750 |
+| Crystal Rose SP1 to SP6 (6) | $130 | $44 | $38 | $22 |
+
+The nine signed twins are 72% of what one of each of the 40 chase printings costs, and the five dearest are all signed Legends. A signed twin costs 3.8 to 8.3 times its unsigned twin (median 5.6). Riven, Shattered's overnumbered 171/166 is $81, 17th of 31 and 10th of the 22 units against a unit median of $73.
+
+**On the owner's thesis.** The post does not say Seraphine or Riven will be worth a lot. The site's rule is never to predict prices (CURRENT-STATE, "Accuracy"), and the data only half supports it. Seraphine's Legend has the overnumbered and signed pair, the tier that carried Vendetta, and also an SP special, the tier that fell by about half. Riven's Vendetta chase print was mid pack, so the post says her case rests on a Riven Legend that has not been shown, and calls that an inference from every shown Legend having a signature card.
+
+**Limits stated in the post.** One set, small tiers, thin markets. The Showcase count (43 of the 66 Riot announced) is reported as a gap, not as a total. Slots 173 and 177 are called not shown.
+
+**Also.** The tracker has a 7 October log entry and its status paragraph and `updated` are current. `champions.ts` needs no change: Ahri, Ekko, Riven and Evelynn are already in.

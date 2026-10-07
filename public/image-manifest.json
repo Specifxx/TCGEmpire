@@ -1398,6 +1398,18 @@
     "variants": [],
     "fingerprint": "d9b7561d2caa65fc"
   },
+  "/radiance-spoilers/gravity-field.jpg": {
+    "src": "/radiance-spoilers/gravity-field.jpg",
+    "width": 744,
+    "height": 1000,
+    "bytes": 111450,
+    "webp": "/radiance-spoilers/gravity-field.webp",
+    "webpBytes": 63542,
+    "avif": "/radiance-spoilers/gravity-field.avif",
+    "avifBytes": 46825,
+    "variants": [],
+    "fingerprint": "6a0de1c9718a350a"
+  },
   "/radiance-spoilers/heartsteel-aphelios-exalted.jpg": {
     "src": "/radiance-spoilers/heartsteel-aphelios-exalted.jpg",
     "width": 694,
