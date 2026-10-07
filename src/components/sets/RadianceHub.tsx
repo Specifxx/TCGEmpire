@@ -101,7 +101,7 @@ export async function RadianceHub({ country }: { country: Country }) {
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide text-slate-500">New rarity</dt>
-          <dd className="mt-0.5 font-semibold text-white">Ultimate Rare <span className="text-slate-400">(unrevealed)</span></dd>
+          <dd className="mt-0.5 font-semibold text-white">Ultimate Rare <span className="text-slate-400">(Packed Amphitheater)</span></dd>
         </div>
       </dl>
 

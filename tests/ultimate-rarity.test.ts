@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { isUltimate, isOvernumbered, displayRarity, rarityInfo, RARITY_KEYS, chasePrintRarity } from "../src/lib/constants";
 import { printingKind, printingFieldsFrom, PRINTING_DISPLAY } from "../src/lib/content/card-narrative";
-import { poolOf, derivedRates, CHASE_RATES, computeEv, type PoolKey } from "../src/lib/box-ev";
+import { poolOf, derivedRates, CHASE_RATES, computeEv, ULTIMATE_PER_PACK_BY_SET, type PoolKey } from "../src/lib/box-ev";
 import { PULL_RATES } from "../src/lib/pack-composition";
 import { parseSearchQuery } from "../src/lib/search-query";
 import { buildCardWhere } from "../src/lib/cards";
@@ -23,6 +23,32 @@ test("Baron Nashor 238/219 is Unleashed's Ultimate; nothing else is", () => {
   assert.ok(!isUltimate("OGN", "238/298"), "the list is per set");
   // Its number is still an over-number — which is why it needs its own rule.
   assert.ok(isOvernumbered("238/219"));
+});
+
+// 2026-10-07, site owner: "Packed Amphitheater is the ultimate rare". riftbound.gg,
+// 3 October: "the second Ultimate Rare card in Riftbound ... a Battlefield".
+test("Packed Amphitheater 184/167 is Radiance's Ultimate; the base 164/167 is not", () => {
+  assert.ok(isUltimate("RAD", "184/167"));
+  assert.ok(!isUltimate("RAD", "164/167"), "the base battlefield is an ordinary card");
+  assert.ok(!isUltimate("RAD", "183/167"), "the other over-numbers are not");
+  assert.ok(isUltimate("UNL", "238/219"), "Baron is still Unleashed's");
+  const pa = { setCode: "RAD", collectorNumber: "184/167", rarity: "Showcase" };
+  assert.equal(displayRarity(pa), "Ultimate");
+  assert.equal(chasePrintRarity({ ...pa, variant: null, isPromo: false }), "Showcase", "the stored rarity stays Showcase");
+  assert.equal(printingKind(printingFieldsFrom({ ...pa, variant: null, isPromo: false })), "ultimate");
+});
+
+test("box EV: Radiance's Ultimate takes its own reported rate, not the Signature rate", () => {
+  const counts = new Map<PoolKey, number>([["Overnumbered", 7], ["Ultimate", 1]]);
+  const base = derivedRates({ counts, packs: 24, specialsPerBox: 0.33 });
+  assert.equal(base.Ultimate, 1 / 720, "no override: the Signature rate, as before");
+  assert.equal(ULTIMATE_PER_PACK_BY_SET.RAD, 0.00025, "0.025% of packs, 1 in 4,000");
+  const rad = derivedRates({ counts, packs: 24, specialsPerBox: 0.33, ultimatePerPack: ULTIMATE_PER_PACK_BY_SET.RAD });
+  assert.equal(rad.Ultimate, 1 / 4000);
+  assert.equal(rad.Overnumbered, 1 / 72, "nothing else moves");
+  // A set with no Ultimate card pays nothing out, override or not.
+  assert.equal(derivedRates({ counts: new Map([["Overnumbered", 7]]), packs: 24, specialsPerBox: 0.33, ultimatePerPack: 0.00025 }).Ultimate, 0);
+  assert.equal(ULTIMATE_PER_PACK_BY_SET.UNL, undefined, "Unleashed keeps the global rate");
 });
 
 test("it shows as Ultimate rarity, while the stored rarity and the rarity filter are untouched", () => {
@@ -75,7 +101,7 @@ test("the pack simulator rolls the Ultimate from the same table", () => {
 test("it can be found: a filter, a chip, a search word, a badge", () => {
   assert.deepEqual(parseSearchQuery("baron ultimate").filters, { ult: "1" });
   const where = buildCardWhere({ ult: "1" });
-  assert.deepEqual(where.AND, [{ OR: [{ setCode: "UNL", collectorNumber: { startsWith: "238/" } }] }]);
+  assert.deepEqual(where.AND, [{ OR: [{ setCode: "UNL", collectorNumber: { startsWith: "238/" } }, { setCode: "RAD", collectorNumber: { startsWith: "184/" } }] }]);
   assert.match(read("src/components/Filters.tsx"), /label="Ultimate"/);
   assert.match(read("src/components/ActiveFilters.tsx"), /label: "Ultimate"/);
   const tile = read("src/components/CardTile.tsx");

@@ -287,11 +287,12 @@ export const ARTICLES: Article[] = [
       "**In Vendetta the money was in the signed Legends.** Nine signed twins made up 72% of what one of each of its 40 chase printings cost on 6 October, and the five dearest chase cards were all signed Legends.",
       "**Pre release prices were not where Vendetta settled.** The median overnumbered unit cost $177 four days before release and $81 in launch week. The SP1 to SP6 specials fell from $130 to $44.",
       "**Seraphine's Legend has a signed twin; Riven has no Legend shown yet.** Riven's Vendetta chase print sat in the middle of the pack, so a Riven Legend with a signed twin is the thing to watch for.",
+      "**The Ultimate Rare is Packed Amphitheater, a Battlefield.** riftbound.gg reports it at about 0.025% of packs, a quarter of Unleashed's Baron Nashor, which has not traded under $1,100 since our history began.",
     ],
     faq: [
       {
         q: "What are the chase cards in Riftbound Radiance?",
-        a: "So far: five signed Legends (Ekko 168*, Ziggs 169*, Mordekaiser 170*, Orianna 171* and Seraphine 174*), eight overnumbered Legends numbered 168 to 176, seven overnumbered units and battlefields numbered 178 to 184, five SP specials numbered out of 005 (Ahri, Akali, Evelynn, Kai'Sa and Seraphine), twelve alternate art units and six alternate art runes. Riot has also announced an Ultimate Rare that has not been shown.",
+        a: "So far: five signed Legends (Ekko 168*, Ziggs 169*, Mordekaiser 170*, Orianna 171* and Seraphine 174*), eight overnumbered Legends numbered 168 to 176, six overnumbered units numbered 178 to 183, five SP specials numbered out of 005 (Ahri, Akali, Evelynn, Kai'Sa and Seraphine), twelve alternate art units and six alternate art runes. The Ultimate Rare is Packed Amphitheater, a Battlefield numbered 184/167.",
       },
       {
         q: "Will Seraphine be expensive in Radiance?",
@@ -304,6 +305,10 @@ export const ARTICLES: Article[] = [
       {
         q: "Do chase card prices fall after a set releases?",
         a: "In Vendetta, the median overnumbered unit cost $177 four days before release and $81 in launch week, and the six SP specials went from $130 to $44. That is one set and a handful of early listings, so treat it as a pattern to check against, not a rule.",
+      },
+      {
+        q: "What is the Radiance Ultimate Rare?",
+        a: "Packed Amphitheater, a Battlefield numbered 184/167, shown at the Radiance Creator Summit and reported by riftbound.gg on 3 October. It is the second Ultimate Rare after Unleashed's Baron Nashor. riftbound.gg puts it at about 0.025% of Radiance packs, against 0.1% for Baron, which is a second hand figure. Baron has priced between $1,100 and $2,800 in our history.",
       },
       {
         q: "What does the asterisk in a Radiance number mean?",
@@ -363,10 +368,10 @@ As of 7 October our catalogue holds 170 Radiance cards, 43 of them Showcase prin
 | --- | --- | --- |
 | **Signed Legends** | The overnumbered Legend with the artist's signature across the art, numbered with an asterisk | 5: Ekko 168\\*, Ziggs 169\\*, Mordekaiser 170\\*, Orianna 171\\* and Seraphine 174\\* |
 | **Overnumbered Legends** | Numbers 168 to 176, above the 167 card base run | 8 of 9 slots: Ekko, Ziggs, Mordekaiser, Orianna, K'Sante, Seraphine, Evelynn and Jarvan IV. Slot 173 has not been shown |
-| **Overnumbered units and battlefields** | Number 177 and up | 7: K'Sante, Courageous (178), Aphelios (179), Ezreal (180), Yone (181), Kayn (182), Sett (183) and Packed Amphitheater (184). Slot 177 has not been shown |
+| **Overnumbered units** | Number 177 and up | 6: K'Sante, Courageous (178), Aphelios (179), Ezreal (180), Yone (181), Kayn (182) and Sett (183). Slot 177 has not been shown |
 | **SP specials** | Five printings numbered out of 005 | 5, one for each K/DA member: Ahri, Akali, Evelynn, Kai'Sa and Seraphine |
 | **Alternate arts** | A letter after the number on an ordinary card | 12 units, such as Riven 043a and Seraphine 138a, and a Showcase for each of the six runes |
-| **Ultimate Rare** | Announced as a tier above overnumbered | None shown |
+| **Ultimate Rare** | A single card above the overnumbered tier | Packed Amphitheater, a Battlefield, 184/167 |
 
 Two things stand out. The Legend run is close to complete, and only five of its eight overnumbered Legends have a signed twin so far; Vendetta gave all nine of its Legends one. And Riot's rundown said 66 Showcase printings against our 43, a figure that does not reconcile with the printed 167 either (see [what we know about Radiance](/blog/riftbound-radiance-what-we-know)), so read the gap as more to be shown, not as a count.
 
@@ -393,7 +398,15 @@ The Crystal Rose cards are Vendetta's Wild Rift crossover alternates (Kai'Sa, So
 
 **4. The special alternates were the weakest tier.** All six Crystal Rose cards are cheaper than in launch week, by about half at the median, and the cheapest two, Sett and Ezreal, are $11 and $15.
 
-**What this does not tell us.** It is one set. The tiers are small (nine Legends, six specials), the cheapest listing in a thin market can move a card by a quarter in a day, and Radiance has a different mix: more Showcase cards, a new alternate art tier that Vendetta did not have, and an Ultimate Rare slot. Use it as a set of things to check against, not as a forecast.
+**What this does not tell us.** It is one set. The tiers are small (nine Legends, six specials), the cheapest listing in a thin market can move a card by a quarter in a day, and Radiance has a different mix: more Showcase cards, a new alternate art tier that Vendetta did not have, and an Ultimate Rare, Packed Amphitheater. Use it as a set of things to check against, not as a forecast.
+
+## The Ultimate Rare
+
+Radiance's is **[Packed Amphitheater](/card/packed-amphitheater-rad-184-167)**, a Battlefield numbered 184/167 that gives champion units at it +1 Might. It was shown at the Radiance Creator Summit and reported by riftbound.gg on 3 October as the second Ultimate Rare in Riftbound. Riot's own card gallery lists it as Showcase, as it does the first Ultimate, so the page shows it as Ultimate by its number.
+
+The first is Unleashed's **Baron Nashor**, 238/219, and it is the only precedent we have. In our price history, which starts on 6 June, its cheapest in stock listing has never been below $1,100. It was $1,324 on 6 June, $1,551 on 1 August, a peak of $2,800 on 3 September from a thin market, and $1,622 on 6 October. For comparison, the dearest Vendetta chase card on the same basis, a signed Akali, is $2,807.
+
+riftbound.gg reports that an Ultimate Rare appears in about **0.025%** of Radiance packs across the print run, against **0.1%** for Baron: one pack in 4,000 instead of one in 1,000. That is a second hand figure and we have not seen it on Riot's own page, so hold it loosely. Two things do follow from it if it is right. The card is four times scarcer per pack than the only Ultimate that has priced, and it is a Battlefield rather than a champion card. We do not know what those two facts do to the price. The first listings after 23 October will say, and Baron's four figure floor is the number to read them against.
 
 ## Seraphine
 
@@ -423,7 +436,7 @@ So the case for a Riven that is worth a lot rests on what has not been shown. Ev
 
 * **Slots 173 and 177.** Whether a ninth Legend or a Riven overnumber appears.
 * **Which Legends get signed twins.** Five of eight so far, against nine of nine in Vendetta.
-* **The Ultimate Rare.** Riot has announced it and shown nothing, and it sits above everything in the table.
+* **The Ultimate Rare's first listings.** Packed Amphitheater is reported at a quarter of Baron Nashor's pack rate, and Baron has not traded under $1,100 in our history.
 * **Pull rates.** We have not seen any published for Radiance. Our [Box EV calculator](/tools/box-ev) is where they go when they exist.
 * **How early prices move.** If Radiance behaves like Vendetta, the figure you see before release is not the one you will see in launch week.
 
@@ -1525,7 +1538,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
       "**The base run is 167 cards.** Riot announced \"180 (66 Showcase)\", but the first Radiance card seen in print — [Neeko, Blending In](/blog/riftbound-neeko-blending-in-spoiler) — is numbered **167/167**, which is the only card-count figure anyone has actually held. The two do not reconcile yet. The set code is **RAD** (published by Riot, not a guess).",
       "**Nine new champion Legends**: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna are named, three are not. Only one Legend has been fully revealed — **Ekko, Boy Who Shattered Time**, a Fury/Mind Legend built on Empower.",
       "**Every product and its price is public**: booster packs (US$4.99), 24-pack displays (US$120), the Vault (six packs, runes, three foil promo tokens — US$34.99), the Evelynn vs Seraphine Showdown Decks, and a Pre-Rift kit that ships a week early. Full table below.",
-      "**Radiance adds a new Ultimate Rare** — a tier above the overnumbered chase prints. It has not been shown. The card list itself has not been revealed either; anyone posting Radiance decklists today is guessing.",
+      "**Radiance adds a new Ultimate Rare** — a tier above the overnumbered chase prints. *Updated 7 October:* it is Packed Amphitheater, a Battlefield numbered 184/167, shown at the Radiance Creator Summit. The card list itself has not been revealed either; anyone posting Radiance decklists today is guessing.",
     ],
     faq: [
       {
@@ -1558,7 +1571,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
       },
       {
         q: "What is the Radiance Ultimate Rare?",
-        a: "A new chase tier Riot has announced for the set but not yet shown. It sits above the overnumbered treatment, and Riot has said Ultimate Rares will not necessarily appear in every set. The community credits Unleashed's Baron Nashor as the first Ultimate-tier card, which would make Radiance's the second.",
+        a: "A single card above the overnumbered treatment. It is Packed Amphitheater, a Battlefield numbered 184/167, shown at the Radiance Creator Summit and reported by riftbound.gg on 3 October. Riot has said Ultimate Rares will not necessarily appear in every set. The community credits Unleashed's Baron Nashor as the first Ultimate-tier card, which makes Packed Amphitheater the second.",
       },
       {
         q: "Can I see the Radiance card list yet?",
@@ -1606,7 +1619,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
 | **Pre-Rift events** | 16 – 22 October 2026 |
 | **Card count** | **167 base run**, from the printed 167/167 on the first card seen. Riot announced 180 including 66 Showcase; unreconciled |
 | **New champion Legends** | 9 — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, and 3 unrevealed |
-| **New chase tier** | Ultimate Rare (announced, not shown) |
+| **New chase tier** | Ultimate Rare: Packed Amphitheater, 184/167 (shown 3 October) |
 | **Tagline** | "Own the Stage. The World is Watching." |
 | **Card list revealed?** | **No** — one Legend, one T1 promo and one photographed card (Neeko) are all that is known in full |
 
@@ -1649,9 +1662,9 @@ The distributor sheet lists the pack as **7 Commons, 3 Uncommons, 2 foil Rares o
 
 ## The Ultimate Rare
 
-Riot's rundown adds one line that older sets' announcements did not have: Radiance will include **a new Ultimate Rare card**. It has not been shown, and Riot has said Ultimate Rares will not necessarily appear in every set. What is known is where it sits — above the overnumbered treatment, which until now was the top of the ladder short of a Signature print — and that it is a single card, not a tier of dozens.
+Riot's rundown adds one line that older sets' announcements did not have: Radiance will include **a new Ultimate Rare card**. *Updated 7 October:* it is **[Packed Amphitheater](/card/packed-amphitheater-rad-184-167)**, a Battlefield numbered 184/167, shown at the Radiance Creator Summit. riftbound.gg, which reported it on 3 October, puts an Ultimate Rare at about 0.025% of Radiance packs, against 0.1% for Baron Nashor; treat that as a second hand figure until Riot's own page says it. Riot has said Ultimate Rares will not necessarily appear in every set. What was known before the reveal still holds: where it sits — above the overnumbered treatment, which until now was the top of the ladder short of a Signature print — and that it is a single card, not a tier of dozens.
 
-The community credits **Unleashed's Baron Nashor** as Riftbound's first Ultimate-tier card, which would make Radiance's the second ever. Treat the precedent as community record rather than Riot's own framing; Riot's wording is simply "a new Ultimate Rare card." For a set that is already 37% Showcase, one more tier at the very top concentrates a box's value in still fewer slots — the same dynamic that keeps Origins' chase cards expensive, pushed a step further.
+The community credits **Unleashed's Baron Nashor** as Riftbound's first Ultimate-tier card, which makes Packed Amphitheater the second. Treat the precedent as community record rather than Riot's own framing; Riot's wording is simply "a new Ultimate Rare card." For a set that is already 37% Showcase, one more tier at the very top concentrates a box's value in still fewer slots — the same dynamic that keeps Origins' chase cards expensive, pushed a step further.
 
 ## Where Radiance sits in the release order
 
@@ -1824,12 +1837,12 @@ Newest first. Every entry here is something Riot published, printed or displayed
 - **The K/DA specials are five.** [Ahri, Confident](/card/ahri-confident-rad-sp1-005) (SP1/005, Calm, Showcase) joins Akali, Evelynn, Kai'Sa and Seraphine at SP2 to SP5.
 - **Two more signature cards.** [Last Caress](/card/last-caress-rad-154-167), Evelynn's signature spell, was shown only as a Simplified Chinese printing on 2 October and is in now from Riot's own image. [The Ball](/card/the-ball-rad-146-167) is Orianna's signature gear: a Deploy gear with Ganking that either draws 1 or deals 2 to enemy units where it is.
 - **Ekko, Revolutionary** ([021](/card/ekko-revolutionary-rad-021-167), Epic, and a Showcase [021a](/card/ekko-revolutionary-rad-021a-167)): he enters ready with Assault, and for a discard and a rune he banishes himself and plays himself to your base, ignoring his cost.
-- **The two battlefields held back on 5 October** are in, from Riot's own images: [Black Rose Sanctum](/card/black-rose-sanctum-rad-159-167) (159, Uncommon) and the Showcase [Packed Amphitheater](/card/packed-amphitheater-rad-184-167) (184).
+- **The two battlefields held back on 5 October** are in, from Riot's own images: [Black Rose Sanctum](/card/black-rose-sanctum-rad-159-167) (159, Uncommon) and [Packed Amphitheater](/card/packed-amphitheater-rad-184-167) (184), which is **Radiance's Ultimate Rare** (below).
 - **Fury and Order base runes**, [R01](/card/fury-rune-rad-r01) and [R06](/card/order-rune-rad-r06), complete the six.
 - **Fifteen more cards.** Units: [Demacian Illuminators](/card/demacian-illuminators-rad-131-167), [Drakehound Packmaster](/card/drakehound-packmaster-rad-018-167), [Industrious Mechsmith](/card/industrious-mechsmith-rad-049-167), [Meticulous Restorationist](/card/meticulous-restorationist-rad-120-167), [Mysterious Chronomancer](/card/mysterious-chronomancer-rad-050-167), [Raving Witness](/card/raving-witness-rad-074-167), [Skystrike Squadron](/card/skystrike-squadron-rad-075-167), [Staunch Survivor](/card/staunch-survivor-rad-088-167), [Suave Negotiator](/card/suave-negotiator-rad-099-167) and [The Empyrean](/card/the-empyrean-rad-060-167). Spells: [Ki Burst](/card/ki-burst-rad-028-167), [Rally for War](/card/rally-for-war-rad-007-167), [Scorched Earth](/card/scorched-earth-rad-006-167) and [The Waters' Wage](/card/the-waters-wage-rad-100-167). Gear: [Ephemeral Ward](/card/ephemeral-ward-rad-039-167).
 - **Gravity Field** ([062](/card/gravity-field-rad-062-167), Mind gear, Rare): a Deploy gear that makes opponents pay 1 power to move units to its battlefield, and draws a card when it dies.
 
-Riot's gallery still lists no card above Showcase, so the announced Ultimate Rare has not been shown. For what the chase run looks like so far and what Vendetta's chase prices did after launch, see **[Radiance chase cards: what Vendetta's prices say to expect](/blog/riftbound-radiance-chase-cards)**.
+**Packed Amphitheater is the Ultimate Rare.** riftbound.gg reported on 3 October that Riot showed it as the set's Ultimate Rare, the second in Riftbound after Unleashed's Baron Nashor, at the Radiance Creator Summit. Riot's card gallery lists it as Showcase, as it does Baron's 238/219, so our page shows it as Ultimate by number. riftbound.gg puts an Ultimate Rare at about 0.025% of Radiance packs, against 0.1% for Baron; that is a second hand figure. Champion units at its battlefield get +1 Might. For what the chase run looks like so far and what Vendetta's chase prices did after launch, see **[Radiance chase cards: what Vendetta's prices say to expect](/blog/riftbound-radiance-chase-cards)**.
 
 Not in the database yet: the Bomb and Mech tokens, because the catalogue carries no tokens, and the Summoner Skirmish promos riftbound.gg lists for November and December, which have not been printed yet.
 
@@ -1940,7 +1953,7 @@ Two things on a Radiance card carry information beyond the rules text.
 
 These are the open questions Preview Season answers, roughly in the order they matter for buyers:
 
-- **The Ultimate Rare.** Announced and not shown. It sits above the overnumbered treatment, it is a single card rather than a tier, and Riot has said Ultimate Rares will not appear in every set. Which card it is decides where a box's value concentrates.
+- **The Ultimate Rare.** *Settled 7 October: it is Packed Amphitheater, a Battlefield, 184/167.* It sits above the overnumbered treatment, it is a single card rather than a tier, and Riot has said Ultimate Rares will not appear in every set. Which card it was decides where a box's value concentrates.
 - **Evelynn's and Seraphine's text and domains.** The two headline champions of the Showdown Decks and the box art. Evelynn's Chaos placement is reporting, not confirmation, and her Legend has not been seen at all. Seraphine's Legend is now officially revealed (*Starry-Eyed Songstress*, Mind and Order).
 - **Whether Deploy, Showoff and Disarm are real**, and if so how the printed wording compares with the demo table's.
 - **Which existing champions get new printings.** Nothing has been said. A Radiance printing of a champion who already has cards changes that champion's price page, which is why it matters beyond the new-Legend list.
@@ -1950,7 +1963,7 @@ These are the open questions Preview Season answers, roughly in the order they m
 
 Two things move during Preview Season, and neither is singles.
 
-**Pre-order prices move as the chase cards become known.** Stores that priced a display before the reveals adjust once the Ultimate Rare and the headline Legends are public. The **[Radiance pre-order comparison](/radiance-preorders)** tracks every store's price daily through the window, cheapest first in your currency, and **[where to buy Radiance](/blog/where-to-buy-riftbound-radiance)** lists the stores taking pre-orders in each market, plus Riot's own Merch Store draw.
+**Pre-order prices move as the chase cards become known.** Stores that priced a display before the reveals adjust once the Ultimate Rare (now known: Packed Amphitheater) and the headline Legends are public. The **[Radiance pre-order comparison](/radiance-preorders)** tracks every store's price daily through the window, cheapest first in your currency, and **[where to buy Radiance](/blog/where-to-buy-riftbound-radiance)** lists the stores taking pre-orders in each market, plus Riot's own Merch Store draw.
 
 **Older sets move too.** Radiance changes what decks want, which moves Vendetta and Unleashed prices in both directions — up for the cards new archetypes need, down for the ones they replace. **[Price movers](/movers)** shows which is happening rather than predicting it. Singles themselves start trading at Pre-Rift, 16–22 October, when supply is a handful of event boxes and demand is everyone who wants to build immediately; those are almost never the prices a card settles at, and **[why Riftbound card prices change](/guides/why-riftbound-card-prices-change)** explains the mechanism.
 
@@ -10964,7 +10977,7 @@ Since this was first published, Riot's distributor has put a US MSRP on every Ra
 
 Pack pricing is flat: a display costs the same per pack as buying singles packs, so there is no volume discount to chase, and the Vault charges about five dollars over pack price for runes, tokens and a box. The one product with a structural edge is the Pre-Rift seat, because it is the only way to open Radiance before 23 October — which, for a set this Showcase-heavy, is a week of trading before the singles market exists. Store entry fees vary; the arithmetic above is MSRP.
 
-The **Ultimate Rare** is the more important line. Riot has announced one for Radiance — not shown it — and described it as sitting above the overnumbered treatment, with no guarantee that every set gets one. A single card above the existing top of the ladder, in a set that is already 37% Showcase, means the spread between a good box and an ordinary one widens further. That is the chase-density thesis of section 1, with an extra rung added by Riot itself. It is also exactly the profile in which buying singles beats opening for anyone who wants specific cards rather than the lottery ticket.
+The **Ultimate Rare** is the more important line. Riot announced one for Radiance and described it as sitting above the overnumbered treatment, with no guarantee that every set gets one. *Updated 7 October:* it is Packed Amphitheater, a Battlefield, numbered 184/167. A single card above the existing top of the ladder, in a set that is already 37% Showcase, means the spread between a good box and an ordinary one widens further. That is the chase-density thesis of section 1, with an extra rung added by Riot itself. It is also exactly the profile in which buying singles beats opening for anyone who wants specific cards rather than the lottery ticket.
 
 The full product table, with what each contains, is in **[what's confirmed about Radiance](/blog/riftbound-radiance-what-we-know)**; live store pre-order prices, which already sit above and below these MSRPs, are on **[the Radiance pre-order comparison](/radiance-preorders)**.
 

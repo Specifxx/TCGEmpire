@@ -704,9 +704,13 @@ export function isOvernumbered(collectorNumber: string): boolean {
 // the same odds as a signature card"). Its number is an ordinary over-number
 // (238/219), so nothing in the collector number distinguishes it — hence an
 // explicit list, keyed by set code and the number before the slash.
-// Radiance announces an Ultimate Rare of its own; add it here when revealed.
+// Radiance's is Packed Amphitheater, a Battlefield, 184/167 (site owner,
+// 2026-10-07; riftbound.gg, 3 October: "the second Ultimate Rare card in
+// Riftbound", shown at the Radiance Creator Summit). Its stored rarity stays
+// "Showcase" like Baron's. Riot's gallery files it as Showcase too.
 export const ULTIMATE_PRINTS: Record<string, readonly string[]> = {
   UNL: ["238"], // Baron Nashor, 238/219
+  RAD: ["184"], // Packed Amphitheater, 184/167 (not the base 164/167)
 };
 
 export function isUltimate(setCode: string, collectorNumber: string): boolean {

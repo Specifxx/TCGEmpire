@@ -291,6 +291,19 @@ export const DEFAULT_SPECIALS_PER_BOX = 0.33;
 export const SPECIAL_POOLS = ["Showcase"] as const;
 
 /**
+ * A set whose Ultimate Rare is pulled at its own rate rather than "the same odds
+ * as a Signature" (CHASE_RATES.Ultimate, the owner's 2026-09-24 reading of
+ * Baron Nashor). Radiance: riftbound.gg, 3 October 2026, reporting Riot's reveal
+ * of Packed Amphitheater: "on average across the entire Radiance print run, an
+ * Ultimate Rare appears in approximately 0.025% of booster packs (compared to
+ * 0.1% from last time)". 0.025% is 1 pack in 4,000. A second hand figure for
+ * the one set, so it is keyed by set and does not replace the global rate.
+ */
+export const ULTIMATE_PER_PACK_BY_SET: Record<string, number> = {
+  RAD: 0.00025,
+};
+
+/**
  * Expected cards per pack for every pool.
  *
  * Base pools take their slot-count rate. AltArt/Overnumbered/Signature take
@@ -303,12 +316,15 @@ export function derivedRates(opts: {
   counts: Map<PoolKey, number>;
   packs: number;
   specialsPerBox: number;
+  /** A set's own Ultimate rate per pack, where it differs from the Signature rate (ULTIMATE_PER_PACK_BY_SET). */
+  ultimatePerPack?: number;
 }): Record<PoolKey, number> {
-  const { counts, packs, specialsPerBox } = opts;
+  const { counts, packs, specialsPerBox, ultimatePerPack } = opts;
   const rates = {} as Record<PoolKey, number>;
   for (const p of POOL_ORDER) rates[p] = DEFAULT_BASE_RATES[p] ?? 0;
 
   for (const p of CHASE_POOLS) rates[p] = (counts.get(p) ?? 0) > 0 ? CHASE_RATES[p] : 0;
+  if (ultimatePerPack != null && (counts.get("Ultimate") ?? 0) > 0) rates.Ultimate = ultimatePerPack;
 
   const perPack = Math.max(1, packs);
   rates.Showcase = (counts.get("Showcase") ?? 0) > 0 ? specialsPerBox / perPack : 0;

@@ -16739,3 +16739,20 @@ The nine signed twins are 72% of what one of each of the 40 chase printings cost
 **Limits stated in the post.** One set, small tiers, thin markets. The Showcase count (43 of the 66 Riot announced) is reported as a gap, not as a total. Slots 173 and 177 are called not shown.
 
 **Also.** The tracker has a 7 October log entry and its status paragraph and `updated` are current. `champions.ts` needs no change: Ahri, Ekko, Riven and Evelynn are already in.
+
+## Packed Amphitheater (184/167) is Radiance's Ultimate Rare — 2026-10-07
+
+**Decision (owner).** "Packed Amphitheater is the ultimate rare, fix it up immediately and deploy", with riftbound.gg's 3 October article ("Ultimate Rare Card Revealed for Radiance - Packed Amphitheater"). That article says Riot showed it at the Radiance Creator Summit as the second Ultimate Rare in Riftbound, after Unleashed's Baron Nashor, a Battlefield this time.
+
+**What changed.**
+- `ULTIMATE_PRINTS` in `lib/constants.ts` gains `RAD: ["184"]`. The badge, the displayed rarity, the printing kind, the box EV pool, the `ult=1` search filter and the price guide all follow from that one list. The stored rarity stays "Showcase", as Baron's does, and Riot's gallery files both as Showcase. The base Packed Amphitheater, 164/167, is not Ultimate.
+- `RadianceHub` says "Ultimate Rare (Packed Amphitheater)" instead of "(unrevealed)".
+- Every page that called it unshown now says what it is, with a dated update: the what-we-know post (summary, FAQ, table, "The Ultimate Rare" section, "what the reveals will settle", the pre-order paragraph), the product and price post, and the tracker's 7 October entry. The chase cards post gets its own "The Ultimate Rare" section and an FAQ answer.
+
+**Pull rate.** riftbound.gg reports that an Ultimate Rare appears in about 0.025% of Radiance packs, against 0.1% for Baron. The site's box EV model prices every Ultimate at the Signature rate, 1 in 720 packs (the owner's 2026-09-24 reading of Baron), which would overstate Radiance's by about five and a half times. So `ULTIMATE_PER_PACK_BY_SET` gives Radiance 1 in 4,000, passed to `derivedRates` by the calculator. Unleashed and every other set keep the global rate. The pack simulator's `PULL_RATES` is unchanged: it has no Radiance mode.
+
+**What is not confirmed.** The 0.025% is second hand, and we have not seen it on Riot's own page. The posts say so. That Baron is 0.1% on riftbound.gg and 1 in 720 here is an existing gap and is left alone.
+
+**The post's new data.** Baron Nashor's cheapest in stock listing has not been below $1,100 since our history began on 6 June: $1,324 on 6 June, $1,551 on 1 August, a thin market peak of $2,800 on 3 September, $1,622 on 6 October. The post gives it as the only precedent and does not forecast Packed Amphitheater's price.
+
+**Tests.** `tests/ultimate-rarity.test.ts` pins 184 as Ultimate and 164 as not, the override and its Unleashed exception, and the `ult=1` filter's new second clause.

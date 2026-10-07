@@ -19,6 +19,7 @@ import {
   DEFAULT_SPECIALS_PER_BOX,
   SPECIAL_POOLS,
   POOL_LABEL,
+  ULTIMATE_PER_PACK_BY_SET,
   type PoolKey,
 } from "@/lib/box-ev";
 import { PACK_SLOTS } from "@/lib/pack-composition";
@@ -114,7 +115,7 @@ export function BoxEvCalculator({ sets, offers = {} }: { sets: BoxEvSet[]; offer
     if (!set) return null;
     const stats = poolStatsFromPools(set.pools);
     const counts = new Map<PoolKey, number>(set.pools.map((p) => [p.pool, p.total]));
-    const base = derivedRates({ counts, packs, specialsPerBox });
+    const base = derivedRates({ counts, packs, specialsPerBox, ultimatePerPack: ULTIMATE_PER_PACK_BY_SET[set.setCode] });
     const rates = { ...base, ...overrides };
     const priceCents = Math.round((parseFloat(boxPrice) || 0) * 100);
     // The box price is typed in the DISPLAY currency; the model works in USD, so

@@ -550,6 +550,11 @@ longer lands on its entry.
   [2026-09-17](../DECISIONS.md#L7393), [2026-09-17](../DECISIONS.md#L7801)
 - **Set-agnostic code:** nothing names the current set; a new set is a data
   row. [2026-08-27](../DECISIONS.md#L3501), [2026-09-21](../DECISIONS.md#L9560)
+- **Ultimate Rare is an explicit list:** `ULTIMATE_PRINTS` in `lib/constants.ts`
+  (Unleashed 238, Radiance 184, Packed Amphitheater), because an Ultimate
+  print's number is an ordinary over-number. Its stored rarity stays Showcase.
+  A set's own reported pull rate goes in `ULTIMATE_PER_PACK_BY_SET`, not in the
+  global Signature rate. [2026-10-07](../DECISIONS.md#L16743)
 - **Accuracy:** never invent TCG facts, numbers or testimonials, and never
   predict prices. Quote leaks only from photographed cards; half-known cards
   stay out of `manual-cards.json`. [2026-09-18](../DECISIONS.md#L8476),
