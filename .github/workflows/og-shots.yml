@@ -1,0 +1,41 @@
+name: OG screenshots
+
+# One off screenshots of the live site, for designing src/app/opengraph-image.jpg.
+# The environment that designs the share image cannot load https pages in a
+# browser, so a normal runner takes them and uploads them as an artifact. Runs
+# only when asked: workflow_dispatch, or a push that touches request.txt.
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/riftcompare-seo-audit-80cs8l]
+    paths: [".github/og-shots/request.txt"]
+
+permissions:
+  contents: read
+
+jobs:
+  shoot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright (outside the repo)
+        run: |
+          mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw"
+          npm init -y >/dev/null
+          npm i playwright@1.56.1 >/dev/null
+          npx playwright install --with-deps chromium
+      - name: Take the screenshots
+        run: |
+          mkdir -p "$RUNNER_TEMP/work" && cp .github/og-shots/shoot.js "$RUNNER_TEMP/work/"
+          cd "$RUNNER_TEMP/work"
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node shoot.js
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: og-shots
+          path: ${{ runner.temp }}/work/out/*.png
+          retention-days: 3
