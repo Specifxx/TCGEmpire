@@ -16756,3 +16756,15 @@ The nine signed twins are 72% of what one of each of the 40 chase printings cost
 **The post's new data.** Baron Nashor's cheapest in stock listing has not been below $1,100 since our history began on 6 June: $1,324 on 6 June, $1,551 on 1 August, a thin market peak of $2,800 on 3 September, $1,622 on 6 October. The post gives it as the only precedent and does not forecast Packed Amphitheater's price.
 
 **Tests.** `tests/ultimate-rarity.test.ts` pins 184 as Ultimate and 164 as not, the override and its Unleashed exception, and the `ult=1` filter's new second clause.
+
+## The site-wide share image shows the whole site, not the price guide — 2026-10-07
+
+**Decision (owner).** "We need a better thumbnail for riftcompare. It shouldn't be the price guide that's showcased but the website as a whole with an attention grabbing screenshot", then: "for riftcompare.com when the link is generated, that thumbnail for the link". So this is the preview a pasted riftcompare.com link shows (`src/app/opengraph-image.jpg`, 2400×1260, which every page without its own image also inherits).
+
+**What it is.** A real composite of the live site, taken on 7 October: the signed Akali card page in front (the art, the price, and eBay, TCGplayer and Vegas Singles side by side), the Radiance "Latest reveals" row and the homepage behind it, with a plain headline ("Compare Riftbound prices"), a one line description and three short lines (price history, free price alerts, Radiance spoilers). It replaces the 2 October price guide screenshot as the root image only.
+
+**What does not change.** `/price-guide` keeps its own copy of the old image (`src/app/price-guide/opengraph-image.jpg`, now a different file). Routes with a generated image (card pages, sets, the market page, Riftle) keep theirs.
+
+**How it was made.** The design environment cannot load https pages in a browser (it does not trust the egress proxy's certificate), so `.github/workflows/og-shots.yml` takes the screenshots on a normal runner and uploads them as an artifact (`.github/og-shots/shoot.js` lists the pages). Touch `.github/og-shots/request.txt` on the working branch, or run it by hand from the default branch, to re-shoot. The composite itself is plain HTML, 2400×1260, rendered to JPEG.
+
+**What dates it.** The prices and counts in the screenshots are from 7 October, and the Akali card is a signed Vendetta chase card with a four figure price, picked because the comparison fills the frame. Re-shoot when the layout changes noticeably. Social sites cache a link's preview for days; a fresh share may need their debugger's "scrape again".

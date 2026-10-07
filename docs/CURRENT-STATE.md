@@ -550,6 +550,10 @@ longer lands on its entry.
   [2026-09-17](../DECISIONS.md#L7393), [2026-09-17](../DECISIONS.md#L7801)
 - **Set-agnostic code:** nothing names the current set; a new set is a data
   row. [2026-08-27](../DECISIONS.md#L3501), [2026-09-21](../DECISIONS.md#L9560)
+- **Share images:** the site-wide preview is a composite of real screenshots of
+  the whole site (`src/app/opengraph-image.jpg`), not the price guide; `/price-guide`
+  keeps its own. Screenshots come from `.github/workflows/og-shots.yml`, because
+  the design sandbox cannot load https pages. [2026-10-07](../DECISIONS.md#L16760)
 - **Ultimate Rare is an explicit list:** `ULTIMATE_PRINTS` in `lib/constants.ts`
   (Unleashed 238, Radiance 184, Packed Amphitheater), because an Ultimate
   print's number is an ordinary over-number. Its stored rarity stays Showcase.
