@@ -16768,3 +16768,20 @@ The nine signed twins are 72% of what one of each of the 40 chase printings cost
 **How it was made.** The design environment cannot load https pages in a browser (it does not trust the egress proxy's certificate), so `.github/workflows/og-shots.yml` takes the screenshots on a normal runner and uploads them as an artifact (`.github/og-shots/shoot.js` lists the pages). Touch `.github/og-shots/request.txt` on the working branch, or run it by hand from the default branch, to re-shoot. The composite itself is plain HTML, 2400×1260, rendered to JPEG.
 
 **What dates it.** The prices and counts in the screenshots are from 7 October, and the Akali card is a signed Vendetta chase card with a four figure price, picked because the comparison fills the frame. Re-shoot when the layout changes noticeably. Social sites cache a link's preview for days; a fresh share may need their debugger's "scrape again".
+
+## Radiance: Riot's gallery reaches 177, twelve printings go in — 2026-10-08
+
+**Why.** The owner asked to update the Radiance gallery. Riot's card gallery (`props.pageProps.page.blades[2].cards.items` in the page's `__NEXT_DATA__`) lists **177** Radiance printings, up from 164 on 7 October. Diffed by collector number against our 170 `RAD` rows: **12 new**, all added; the five signed Legends (168\*, 169\*, 170\*, 171\*, 174\*) are still ours alone.
+
+**The 12.** Image, name, number, rarity and rules text come from the gallery; domain, type, energy and Might were read off the printed card images:
+
+- **Riven, Deserter** (114 Epic, 114a Showcase): Chaos Champion Unit, 5 energy, 5 Might. Riot's name field says only "Riven"; the printed card and the alt text say *Riven, Deserter* (the epithet-in-front rule). The Showcase's alt text reads "becomes exhausted" on one print and "is exhausted" on the other; the printed Showcase says "becomes exhausted", so both rows use that.
+- Units: War Scout 008 (Fury, Common, 3/2), Firebrand Raider 019 (Fury, Rare, 6/6), Heartening Soul 040 (Calm, Rare, 7/7), Sneaky Zeebles 076 (Body, Common, 2/1).
+- Spells: Life from Stone 029 (Calm), Parallel Convergence 051 (Mind), An Offer You Can't Refuse 101 (Chaos, Uncommon), One-Two Punch 121 (Order).
+- Gear: Titanic Shrine 089 (Body, Rare), Mechanical Bandit 111 (Chaos, Rare).
+
+**Riot's metadata was wrong again.** The gallery files Mechanical Bandit under Fury (the card is Chaos, purple rune) and gives One-Two Punch no domain at all (the card is Order, gold). Every other domain agrees with the printed card. Rarities all match the gem.
+
+**Also.** Gravity Field (062), hosted from riftbound.gg since 7 October, now uses Riot's own image; the hosted file stays in `public/radiance-spoilers/`, since posts may link it. The tracker has an 8 October log entry, and its status paragraph now says 177 printings with only the five signed Legends read from partners.
+
+**Shipping.** No deploy marker. The new rows and the updated image arrive with the production build (`build-db-push.sh` runs `add-manual-cards.ts`), i.e. the 08:00 UTC release. All twelve images are Riot's own CDN URLs, so nothing has to be hosted first.

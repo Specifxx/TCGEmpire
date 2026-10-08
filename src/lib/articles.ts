@@ -1747,7 +1747,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
     author: "RiftCompare",
     date: "2026-09-21",
-    updated: "2026-10-07",
+    updated: "2026-10-08",
     readMins: 9,
     tags: ["radiance", "spoilers", "card gallery", "news", "release"],
     hero: {
@@ -1806,7 +1806,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
     ],
     body: `This is the **live Riftbound: Radiance spoiler tracker**. The gallery below is drawn from our card database and updates as each official reveal is imported, so it is current the morning after a reveal without anyone editing this page. Under it is a **dated log of everything that has actually been revealed**, the Preview Season schedule, and a clear line between what Riot has shown and what has merely circulated.
 
-**Where things stand today, 7 October 2026:** Preview Season is thirteen days old. **Seven Legends are now in print**: Seraphine's, Ekko's, Ziggs', Orianna's and Jarvan IV's, and, in the last few days, Evelynn's and Mordekaiser's, alongside K'Sante's, which surfaced as the season opened. Riot's own card gallery now lists 164 Radiance printings, and every one of them is in the gallery below, with six more read off preview partners' and riftbound.gg's card images. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
+**Where things stand today, 8 October 2026:** Preview Season is fourteen days old. **Seven Legends are now in print**: Seraphine's, Ekko's, Ziggs', Orianna's and Jarvan IV's, and, in the last few days, Evelynn's and Mordekaiser's, alongside K'Sante's, which surfaced as the season opened. Riot's own card gallery now lists 177 Radiance printings, and every one of them is in the gallery below, with the five signed Legends, which Riot's gallery does not list, read off preview partners' and riftbound.gg's card images. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
 
 **How this page keeps up:** Riot's official card gallery is checked twice a day, at about 02:30 and 18:30 UTC, and the preview partners' reveals as they land. Each new card is added once its finished card image can be read in full: collector number, rarity gem, domain and text. *Updated 30 September:* this used to say new cards land here automatically. The automatic import is paused while Riot's gallery files some Radiance cards under the wrong domain or type, so each card is now checked by hand before it goes in.
 
@@ -1830,6 +1830,15 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 ## Reveal log: what has actually been shown
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
+
+**8 October — Riot's gallery reaches 177 printings, with a second Riven and a Gravity Field of Riot's own.** On 7 October Riot's card gallery listed 164 Radiance printings; today it lists 177. Twelve were new to us and are in the database with Riot's own card image:
+
+- **Riven, Deserter** ([114](/card/riven-deserter-rad-114-167), Epic, and a Showcase alternate art, [114a](/card/riven-deserter-rad-114a-167)): a Chaos Champion Unit, 5 energy, 5 Might. Whenever another friendly unit becomes exhausted she gets +1 Might this turn, and you can exhaust a friendly unit to ready a unit, once each turn. That is the set's second Riven card; no Riven Legend has been shown.
+- **Four more units:** [War Scout](/card/war-scout-rad-008-167) (Fury, Common), [Firebrand Raider](/card/firebrand-raider-rad-019-167) (Fury, Rare, 6 energy, 6 Might, enters ready and readies every enemy unit when you play it), [Heartening Soul](/card/heartening-soul-rad-040-167) (Calm, Rare) and [Sneaky Zeebles](/card/sneaky-zeebles-rad-076-167) (Body, Common).
+- **Four spells:** [Life from Stone](/card/life-from-stone-rad-029-167) (Calm), [Parallel Convergence](/card/parallel-convergence-rad-051-167) (Mind), [An Offer You Can't Refuse](/card/an-offer-you-can-t-refuse-rad-101-167) (Chaos, Uncommon) and [One-Two Punch](/card/one-two-punch-rad-121-167) (Order).
+- **Two gear:** [Titanic Shrine](/card/titanic-shrine-rad-089-167) (Body, Rare) and [Mechanical Bandit](/card/mechanical-bandit-rad-111-167) (Chaos, Rare).
+
+Riot's gallery files Mechanical Bandit under Fury and gives One-Two Punch no domain; the printed cards are Chaos and Order, and our rows say so. Gravity Field ([062](/card/gravity-field-rad-062-167)), which came from riftbound.gg on 7 October, now uses Riot's own image. The five signed Legends (168\\*, 169\\*, 170\\*, 171\\*, 174\\*) are still not in Riot's gallery and stay hosted.
 
 **7 October — Riot's gallery reaches 164 printings, with Riven's first card, the fifth K/DA special and two held back battlefields.** On 5 October Riot's card gallery listed 130 Radiance printings; today it lists 164. Twenty-six were new to us and are in the database with Riot's own card image and text. Eight cards we had from riftbound.gg now use Riot's image, and one more, Gravity Field, comes from riftbound.gg because Riot's gallery does not list it yet:
 
