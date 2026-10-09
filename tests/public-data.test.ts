@@ -363,3 +363,23 @@ test("nothing private is in the published snapshot, if one is committed", () => 
     assert.doesNotMatch(raw, /"(email|userId|passwordHash|token|lastViewedAt|ebayCheckedAt)"/, f);
   }
 });
+
+test("the snapshot is bundled only when PUBLIC_DATA_MODE will read it", () => {
+  const load = (mode: string | undefined) => {
+    const saved = process.env.PUBLIC_DATA_MODE;
+    if (mode === undefined) delete process.env.PUBLIC_DATA_MODE;
+    else process.env.PUBLIC_DATA_MODE = mode;
+    try {
+      const p = require.resolve(join(process.cwd(), "next.config.js"));
+      delete require.cache[p];
+      return (require(p) as { experimental: { outputFileTracingIncludes: Record<string, string[]> } }).experimental.outputFileTracingIncludes["/**"];
+    } finally {
+      if (saved === undefined) delete process.env.PUBLIC_DATA_MODE;
+      else process.env.PUBLIC_DATA_MODE = saved;
+    }
+  };
+  assert.deepEqual(load(undefined), ["./data/price-history/**/*.json"]);
+  assert.deepEqual(load("db"), ["./data/price-history/**/*.json"]);
+  assert.ok(load("files").includes("./data/public/**/*.json"));
+  assert.ok(load("fallback").includes("./data/public/**/*.json"));
+});

@@ -100,6 +100,8 @@ const securityHeaders = [
   { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
 ];
 
+const PUBLIC_DATA_BUNDLED = ["files", "fallback"].includes((process.env.PUBLIC_DATA_MODE || "").trim().toLowerCase());
+
 const nextConfig = {
   // Public data as files (src/lib/public-data/, DECISIONS.md 2026-10-09): the
   // router and mode modules import node:fs / node:crypto / node:async_hooks, and
@@ -127,7 +129,10 @@ const nextConfig = {
     // shared libraries (card pages, sitemaps, /api, OG images) and a route that
     // never reads history only carries a few MB of JSON it does not open.
     outputFileTracingIncludes: {
-      "/**": ["./data/price-history/**/*.json", "./data/public/**/*.json"],
+      // data/public/ (~55 MB) only when the build will read it: PUBLIC_DATA_MODE
+      // "files" or "fallback" (src/lib/public-data/mode.ts). In "db" mode no
+      // function needs it, so it stays out of all ~290 function bundles.
+      "/**": ["./data/price-history/**/*.json", ...(PUBLIC_DATA_BUNDLED ? ["./data/public/**/*.json"] : [])],
     },
   },
   images: {

@@ -138,8 +138,9 @@ test("the release bundles the files, and the import publishes them without a dep
   // A runtime fs read is invisible to Next's file tracing: without this include
   // every deployed function would find no history at all.
   const config = require(join(ROOT, "next.config.js"));
-  // Since 2026-10-09 the public data snapshot (data/public/) is bundled beside it.
-  assert.deepEqual(config.experimental?.outputFileTracingIncludes?.["/**"], ["./data/price-history/**/*.json", "./data/public/**/*.json"]);
+  // Since 2026-10-09 the public data snapshot (data/public/) is bundled beside
+  // it, but only when PUBLIC_DATA_MODE will read it (tests/public-data.test.ts).
+  assert.equal(config.experimental?.outputFileTracingIncludes?.["/**"]?.[0], "./data/price-history/**/*.json");
 
   const wf = read(".github/workflows/refresh-prices.yml");
   assert.match(wf, /\npermissions:\n  contents: write\n/);
