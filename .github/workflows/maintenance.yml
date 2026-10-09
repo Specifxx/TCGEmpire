@@ -205,7 +205,7 @@ jobs:
       # migrate-main-db-rm9-to-rm10 was run twice (once for the bulk copy, once
       # immediately before this flip) and verified every table matching before
       # this shipped.
-      DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
+      DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
       # There is only one value now, but this stays for the same reason it did
       # under the old chain: lib/db.ts cannot work this out inside Actions
       # itself (everything collapses into one DATABASE_URL before the job
@@ -284,9 +284,9 @@ jobs:
           # database is set") without it — this step's env block never carried it,
           # so the task has been failing before it could copy a single row. Found
           # 2026-09-02 running the top-up ahead of the RH11 → RH6 cutover. Must be
-          # kept in lockstep with OPERATIONAL_VARS's head (RM6 as of 2026-10-04) —
+          # kept in lockstep with OPERATIONAL_VARS's head (RM7 as of 2026-10-09) —
           # this env var's NAME, not just its value, is what the script looks up.
-          RM6: ${{ secrets.RM6 || vars.RM6 }}
+          RM7: ${{ secrets.RM7 || vars.RM7 }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
@@ -362,7 +362,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM6 || vars.RM6 }}
+          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 }}
         run: |
           set -uo pipefail
 
@@ -737,7 +737,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH11 || vars.RH11 }}
           # Only for the "did RH11 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM6 || vars.RM6 }}
+          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 }}
         run: |
           set -uo pipefail
 
@@ -1809,7 +1809,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH6 || vars.RH6 }}
           # Only for the "did RH6 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM6 || vars.RM6 }}
+          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 }}
         run: |
           set -uo pipefail
 
@@ -1961,7 +1961,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH10 || vars.RH10 }}
           # Only for the "did RH10 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM6 || vars.RM6 }}
+          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 }}
         run: |
           set -uo pipefail
 
@@ -2118,7 +2118,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH9 || vars.RH9 }}
           # Only for the "did RH9 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM6 || vars.RM6 }}
+          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 }}
         run: |
           set -uo pipefail
 
@@ -2302,7 +2302,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_4 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM6 || vars.RM6 }}
+          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 }}
         run: |
           set -uo pipefail
 
@@ -5773,7 +5773,7 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
+          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
           # There is only one value now, but this stays for the same reason it did
           # under the old chain: lib/db.ts cannot work this out inside Actions
           # itself (everything collapses into one DATABASE_URL before the job
@@ -5844,7 +5844,7 @@ jobs:
       - name: Audit sealed price history (read-only)
         if: inputs.task == 'audit-sealed-history'
         env:
-          DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
+          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
           DB_SOURCE_NAME: ${{ (secrets.RM4 || vars.RM4) && 'RM4' || 'UNSET' }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
@@ -5925,7 +5925,7 @@ jobs:
           # correctly, but this env block never forwarded the variable it
           # actually asked for, so the head of the chain read back as unset here even with the
           # secret genuinely configured in Actions).
-          RM6: ${{ secrets.RM6 || vars.RM6 }}
+          RM7: ${{ secrets.RM7 || vars.RM7 }}
         run: npx tsx scripts/probe-history-dbs.ts
 
       # Dry run unless dry_run is explicitly false — the inverse of every other

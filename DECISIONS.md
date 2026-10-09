@@ -16785,3 +16785,17 @@ The nine signed twins are 72% of what one of each of the 40 chase printings cost
 **Also.** Gravity Field (062), hosted from riftbound.gg since 7 October, now uses Riot's own image; the hosted file stays in `public/radiance-spoilers/`, since posts may link it. The tracker has an 8 October log entry, and its status paragraph now says 177 printings with only the five signed Legends read from partners.
 
 **Shipping.** No deploy marker. The new rows and the updated image arrive with the production build (`build-db-push.sh` runs `add-manual-cards.ts`), i.e. the 08:00 UTC release. All twelve images are Riot's own CDN URLs, so nothing has to be hosted first.
+
+## The operational database moves to RM7 — 2026-10-09
+
+**Why.** The owner asked for a full migration to RM7 because RM6 was nearly at its 5 GB monthly transfer allowance, five days after the RM5 -> RM6 cutover on 2026-10-04. The burn is the same every project in this rotation has ended on; the query behind it is still unidentified, so a new project buys time, not a fix. Run audit-egress a few hours after this cutover.
+
+**Check before touching anything.** `probe-databases` (run 37878817523) found RM7 reachable and behind RM6 on every metric: User 308 vs 457, Card 1,429 vs 1,601, RetailerPrice 89,877 vs 138,474, CollectionCard 1,163 vs 2,532, PriceAlert 158 vs 242, SealedListing 2,241 vs 2,907. That is the signature of a rested, recycled project (last live 2026-09-05..09-08), so overwriting it loses nothing.
+
+**Migration.** `migrate-main-db-rm6-to-rm7` is `migrate-main-db-rm5-to-rm6` with the names moved one along; the old task is now LEGACY. Same guards: SOURCE != TARGET, refuse the live chain head without `overwrite_live_db`, dump before touching the target, drop target-only tables, every public table row-count verified, schema re-pushed. It ran twice, the second time just before the flip so writes in between were included. Both runs verified every table row for row (User 457, RetailerPrice 138,474, SealedListing 2,907, EbayAuctionListing 363, DemandSnapshot 87,091) and reported the schema already in sync. `PriceHistory` and `ClickEvent` are not copied: public history is in the repository and `ClickEvent` lives in the history project.
+
+**The flip.** `OPERATIONAL_VARS` is `["RM7"]`. Following it: `build-db-push.sh` (`CURRENT_OP`, and the production-build guard), the `DATABASE_URL` / `DB_SOURCE_NAME` defaults in `refresh-prices`, `refresh-auctions`, `sealed-refresh`, `weekly-promo`, `db-audit`, `egress-audit` and `export-price-history`, the `maintenance.yml` job-level `DATABASE_URL`, `OPERATIONAL_URL` forwards and the probe-history forward, the `ci-build` service variable, and `package.json`'s preview import condition. The migration steps keep naming RM6 as their SOURCE.
+
+**Rollback** is one commit: RM6 still holds the data.
+
+**Deploy.** Deployed right away, as the standing exception to the daily release: a database cutover cannot wait for 08:00 UTC when the live project is at its limit, and until the build runs the app keeps writing to RM6. RM7 must be set in Vercel for Production, Preview and Development; the production build now fails if it is not, which keeps the previous deployment serving.

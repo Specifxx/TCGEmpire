@@ -63,12 +63,12 @@ longer lands on its entry.
 
 ## Databases
 
-- **Live names** (since 2026-10-04; `src/lib/db-chains.ts` is the source of
-  truth): operational `RM6`, one variable, never a chain, because
+- **Live names** (since 2026-10-09; `src/lib/db-chains.ts` is the source of
+  truth): operational `RM7`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
   History: `HISTORY_DATABASE_URL_4`, then `_3`, then `DATABASE_URL`
   (terminal). Never rotate onto `DATABASE_URL`.
-  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422), [2026-09-28](../DECISIONS.md#L15024), [2026-10-04](../DECISIONS.md#L16597)
+  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422), [2026-09-28](../DECISIONS.md#L15024), [2026-10-04](../DECISIONS.md#L16597), [2026-10-09](../DECISIONS.md#L16789)
 - **Migrating:** verify the target live first (a recycled project must trail
   the source on every metric; a new one must be empty). Use a named
   `maintenance.yml` task: it guards SOURCE≠TARGET, dumps before truncating,
