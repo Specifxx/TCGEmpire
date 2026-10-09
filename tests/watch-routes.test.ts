@@ -232,7 +232,7 @@ test("sealed watches: Plus stops at SEALED_WATCH_LIMIT_PLUS with 409; Premium do
 // ── Token kinds ──────────────────────────────────────────────────────────────
 
 test("token kinds: a card token stays v1 and verifies as 'price'; deck and sealed tokens name their kind and act only on their table", async () => {
-  assert.deepEqual([...ALERT_ACTION_KINDS], ["price", "deck", "sealed"]);
+  assert.deepEqual([...ALERT_ACTION_KINDS], ["price", "deck", "sealed", "graded", "auction"]);
   const card = signAlertAction({ alertId: "row1", action: "snooze", now: NOW });
   assert.match(Buffer.from(card.split(".")[0]!, "base64url").toString("utf8"), /^v1\.row1\.snooze\.\.\d+$/, "the pre-2026-09-29 payload, unchanged");
   const v = verifyAlertAction(card, NOW);

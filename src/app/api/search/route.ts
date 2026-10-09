@@ -10,6 +10,7 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField } from "@/lib/country";
 import { didYouMean } from "@/lib/did-you-mean";
 import { getPriceGuideRows } from "@/lib/price-guide";
+import { meterAndStore, quotaContext } from "@/lib/search-quota-server";
 
 // Typeahead search for the navbar dropdown. Returns full tile data so a result can
 // open the same instant quick-view modal as the browse grid, plus any matching
@@ -18,19 +19,37 @@ import { getPriceGuideRows } from "@/lib/price-guide";
 // sealed quick view in place, like a card row does, with no second request
 // (2026-10-04). At most four, so the payload stays a few KB.
 //
-// SEARCH IS UNMETERED FOR EVERYONE — anonymous, free account, Premium alike.
-// A tiered daily allowance (10/100/unlimited, an httpOnly counter cookie) shipped
-// here and was removed after one day in production: it cost ~1.1 pages/visitor
-// and ~40% of buy_click while the gate it powered converted nobody. Search is the
-// site's core value and the top of every funnel that ends in a buy_click — capping
-// it taxed the behaviour we actually want. Do not reintroduce a growth-motivated
-// meter here; if this route ever needs protection it should be genuine
-// abuse/cost limiting via lib/rate-limit.ts, applied by IP and sized so no real
-// user ever reaches it.
+// SEARCH IS METERED BY TIER (2026-10-09, owner): signed out 10 searches a day,
+// a free account 30, Plus 100, Premium unlimited (lib/search-quota.ts). This
+// reverses the 2026-09-28 "keep price comparison fully free" rule for search
+// only, after the owner was shown what the earlier 10/100/unlimited ladder cost
+// (pages/visitor 3.86 -> 2.75, buy clicks ~40% down in about a day). Card, set,
+// champion and store pages stay unmetered, crawlers are never metered, and
+// SEARCH_CAPS=off switches the whole meter off. Store tools that look a card up
+// (Best Basket, the deck pricer, the trade calculator, the collection) pass
+// scope=tool and are not counted.
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();
   if (q.length < 2) return NextResponse.json({ results: [], sealed: [] });
+
+  // The daily allowance. A tool lookup is not a search; everything else is
+  // metered here, and a refused query gets the tier and limit so the dropdown
+  // can say what the next tier gives.
+  let quota: { used: number; limit: number } | undefined;
+  if (searchParams.get("scope") !== "tool") {
+    const ctx = await quotaContext();
+    if (ctx.metered) {
+      const d = meterAndStore(ctx, q);
+      if (!d.allowed) {
+        return NextResponse.json(
+          { results: [], sealed: [], limited: true, tier: ctx.tier, limit: ctx.limit, used: d.used },
+          { headers: { "Cache-Control": "private, no-store" } },
+        );
+      }
+      quota = { used: d.used, limit: ctx.limit as number };
+    }
+  }
 
   const country = getCountry();
   // Same parser and the same WHERE the browse grid uses, so "akali overnumbered",
@@ -92,5 +111,8 @@ export async function GET(req: Request) {
     if (rows) suggest = didYouMean(parsed.name || q, rows.map((r) => r.n));
   }
 
-  return NextResponse.json({ results: ranked, sealed, sealedCurrency, ...(suggest.length ? { suggest } : {}) });
+  return NextResponse.json(
+    { results: ranked, sealed, sealedCurrency, ...(suggest.length ? { suggest } : {}), ...(quota ? { quota } : {}) },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }

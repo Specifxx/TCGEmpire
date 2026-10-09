@@ -24,7 +24,7 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-test("the paid alert step runs AFTER the sealed import, and the paid route runs the three passes independently", () => {
+test("the paid alert step runs AFTER the sealed import, and the paid route runs the four passes independently", () => {
   const wf = read(".github/workflows/refresh-prices.yml");
   const sealedImport = wf.indexOf("- name: Import sealed products");
   const paid = wf.indexOf("- name: Paid price alerts");
@@ -33,7 +33,8 @@ test("the paid alert step runs AFTER the sealed import, and the paid route runs 
   assert.match(route, /runPriceAlerts\(\{\}, \{ scope: "paid" \}\)/);
   assert.match(route, /await runDeckWatches\(\{ sendCap: afterCards \}\)[\s\S]*\.catch\(failed\)/, "a failed deck pass is reported, not fatal to the others");
   assert.match(route, /await runSealedWatches\(\{ sendCap: afterDecks, freshen: fresh \? bustSealedGroups : undefined \}\)[\s\S]*\.catch\(failed\)/);
-  assert.match(route, /decks, sealed \}/, "every pass's summary is in the response");
+  assert.match(route, /await runGradedWatches\(\{ sendCap: afterSealed \}\)[\s\S]*\.catch\(failed\)/, "graded watches (2026-10-09) last, on what is left of the cap");
+  assert.match(route, /decks, sealed, graded \}/, "every pass's summary is in the response");
   // The deck run reads only entitled owners' rows and prices each with one bounded listing read.
   const deck = read("src/lib/deck-watch.ts");
   assert.match(deck, /premiumUntil: \{ gt: now \}/, "the read is trimmed to paid owners");
@@ -53,11 +54,13 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   assert.ok(sealed && deck);
   assert.deepEqual([sealed.account, sealed.plus, sealed.premium], [false, `Up to ${SEALED_WATCH_LIMIT_PLUS}`, "Unlimited"]);
   assert.deepEqual([deck.account, deck.plus, deck.premium], [false, false, true]);
-  assert.ok(features.indexOf(sealed.feature) < features.indexOf(deck.feature) && features.indexOf(deck.feature) === features.length - 2);
+  // Sealed then deck watches, then (2026-10-09) the history, graded and auction rows, then Ad-free.
+  assert.ok(features.indexOf(sealed.feature) < features.indexOf(deck.feature) && features.indexOf(deck.feature) < features.length - 1);
   assert.equal(features[features.length - 1], "Ad-free experience");
   // "nudges-2026-09-29" since the value-first nudges, then "trial-2026-09-30" for the $1 first month (DECISIONS.md, "A $1 first month for both tiers"),
-  // then "signup-inline-2026-09-30" when the sign-up slider was removed ("The sign-up slider is gone"); plans and prices unchanged.
-  assert.equal(PREMIUM_COPY_VERSION, "signup-inline-2026-09-30");
+  // then "signup-inline-2026-09-30" when the sign-up slider was removed ("The sign-up slider is gone"); plans and prices unchanged;
+  // then "search-caps-2026-10-09" when search was metered again and the plans gained history, graded and auction rows.
+  assert.equal(PREMIUM_COPY_VERSION, "search-caps-2026-10-09");
   // Every surface that quotes a watch number reads the constant.
   for (const f of ["src/components/PremiumPricingCards.tsx", "src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);

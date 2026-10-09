@@ -46,7 +46,7 @@ const FIXED = new Set([
 const SCOPED = /^(nav|gate|nudge|limit|tip):[a-z0-9-]{1,32}$/;
 
 /** The at-the-limit surfaces, for tests and the funnel report. */
-export const LIMIT_SURFACES = ["limit:watchlist", "limit:portfolio", "limit:basket"] as const;
+export const LIMIT_SURFACES = ["limit:watchlist", "limit:portfolio", "limit:basket", "limit:search"] as const;
 
 /** The in-context discovery lines (DiscoveryTip), for tests and the funnel report. */
 // (/deck's line is the deck watch form's own gate, gate:deck-watch, and the

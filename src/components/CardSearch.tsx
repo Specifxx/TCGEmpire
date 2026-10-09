@@ -55,7 +55,7 @@ export function CardSearch({
       const ctrl = new AbortController();
       abort.current = ctrl;
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, { signal: ctrl.signal });
+        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}&scope=tool`, { signal: ctrl.signal });
         const data = await res.json();
         setResults((data.results ?? []).slice(0, 8));
         setActive(-1);

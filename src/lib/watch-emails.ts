@@ -323,3 +323,163 @@ export async function sendSealedWatchEmail(to: string, item: SealedWatchItem): P
   const e = buildSealedWatchEmail(item);
   return sendEmail(to, e.subject, e.html, { text: e.text, headers: e.headers });
 }
+
+// ── Graded watch (2026-10-09, lib/graded-watch.ts, Plus) ─────────────────────
+// One email per watch: one grade of one card made a material new low on eBay.
+
+export interface GradedWatchItem {
+  watchId: string;
+  cardName: string;
+  cardUrl: string;
+  grade: string;
+  market: Country;
+  currency: string;
+  priceCents: number;
+  referenceCents: number | null;
+  listingTitle: string;
+  listingUrl: string;
+  checkedAt: Date;
+  actions: WatchActionLinks | null;
+}
+
+function simpleFooter(why: string, links: WatchActionLinks, manage: string, stopLabel: string): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;line-height:1.6;color:#6b7585">
+    ${escapeHtml(why)}<br/>
+    <a href="${escapeHtml(links.stop)}" style="color:#9aa4b2;text-decoration:underline">${escapeHtml(stopLabel)}</a>
+    &nbsp;·&nbsp; <a href="${escapeHtml(links.snooze)}" style="color:#9aa4b2;text-decoration:underline">Snooze 30 days</a>
+    &nbsp;·&nbsp; <a href="${escapeHtml(manage)}" style="color:#9aa4b2;text-decoration:underline">Manage your watches</a><br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+export function buildGradedWatchEmail(item: GradedWatchItem): BuiltWatchEmail {
+  const m = (c: number) => formatMoney(c, item.currency);
+  const price = m(item.priceCents);
+  const subject = `${item.cardName} ${item.grade}: new low ${price} on eBay`;
+  const heading = "A graded card you're watching hit a new low";
+  const preheader = `${item.grade} · ${price} · checked ${checkedLabel(item.checkedAt, item.market)}`;
+  const manage = `${SITE_URL}/watching?${utm("graded-watch")}`;
+  const card = `${item.cardUrl}${item.cardUrl.includes("?") ? "&" : "?"}${utm("graded-watch")}`;
+  const before = item.referenceCents != null ? `Down from ${m(item.referenceCents)}.` : "";
+  const checked = `Checked ${checkedLabel(item.checkedAt, item.market)}.`;
+  const inner = `
+    <tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <strong style="color:#fff;font-size:15px">${escapeHtml(item.cardName)}</strong> <span style="border:1px solid #233047;border-radius:6px;padding:0 5px;font-size:12px;color:#6b7585">${escapeHtml(item.grade)} · ${item.market}</span><br/>
+      <span style="font-size:22px;font-weight:800;color:#34d17e">${escapeHtml(price)}</span> on eBay, the cheapest ${escapeHtml(item.grade)} listing we found.
+      ${before ? `<br/>${escapeHtml(before)}` : ""}
+      <br/><span style="font-size:12px;color:#6b7585">${escapeHtml(item.listingTitle)}</span>
+      <br/><strong style="color:#fff">${escapeHtml(checked)}</strong> <span style="color:#9aa4b2">A listing can sell before you get there.</span>
+    </td></tr>
+    <tr><td style="padding:14px 32px 4px">${emailButton(item.listingUrl, "See it on eBay")}
+      <div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(card)}" style="color:#34d17e;font-weight:700;text-decoration:none">Graded price history on RiftCompare →</a></div></td></tr>
+    <tr><td style="padding:4px 32px 16px;font-size:12px;line-height:1.7;color:#6b7585">
+      Graded listings are read from eBay once a day. The seller's grade and the slab are theirs to describe; check the photos before you buy.
+    </td></tr>`;
+  const text = [
+    heading,
+    `${item.cardName} (${item.grade} · ${item.market}): ${price} on eBay, the cheapest ${item.grade} listing we found.`,
+    before,
+    item.listingTitle,
+    `${checked} A listing can sell before you get there.`,
+    `See it on eBay: ${item.listingUrl}`,
+    `Graded price history: ${card}`,
+    ...(item.actions ? [`Stop watching this grade: ${item.actions.stop}`, `Snooze 30 days: ${item.actions.snooze}`] : []),
+    `Manage your watches: ${manage}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const links = item.actions ?? { stop: manage, snooze: manage };
+  return {
+    subject,
+    heading,
+    preheader,
+    html: emailShell(heading, inner, simpleFooter("You're getting this because you asked RiftCompare to watch this grade (Plus or Premium); graded listings are checked once a day.", links, manage, "Stop watching this grade"), preheader),
+    text,
+    headers: item.actions ? watchHeaders(item.actions) : {},
+  };
+}
+
+export async function sendGradedWatchEmail(to: string, item: GradedWatchItem): Promise<boolean> {
+  const e = buildGradedWatchEmail(item);
+  return sendEmail(to, e.subject, e.html, { text: e.text, headers: e.headers });
+}
+
+// ── Auction alerts (2026-10-09, lib/auction-alerts.ts, Premium) ──────────────
+// One digest per member per run: the live eBay auctions, ending within 24 hours,
+// for cards on their watchlist in their market.
+
+export interface AuctionAlertItem {
+  cardName: string;
+  cardUrl: string;
+  title: string;
+  url: string;
+  currentBidCents: number;
+  currency: string;
+  bidCount: number;
+  endsAt: Date;
+  market: Country;
+}
+
+function endsIn(endsAt: Date, now: Date): string {
+  const mins = Math.max(0, Math.round((endsAt.getTime() - now.getTime()) / 60000));
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  return `${h} h ${mins % 60} min`;
+}
+
+export function buildAuctionAlertEmail(items: AuctionAlertItem[], actions: WatchActionLinks, now: Date = new Date()): BuiltWatchEmail {
+  const first = items[0];
+  const subject =
+    items.length === 1
+      ? `Auction ending soon: ${first.cardName}, ${formatMoney(first.currentBidCents, first.currency)} now`
+      : `${items.length} auctions ending soon for cards you watch`;
+  const heading = items.length === 1 ? "A card you watch is up for auction" : "Cards you watch are up for auction";
+  const preheader = `Ending within 24 hours on eBay · ${first.cardName}${items.length > 1 ? ` and ${items.length - 1} more` : ""}`;
+  const manage = `${SITE_URL}/watching?${utm("auction-alert")}`;
+  const auctions = `${SITE_URL}/auctions?${utm("auction-alert")}`;
+  const rows = items
+    .map(
+      (it) => `<tr><td style="padding:10px 32px 0;font-size:14px;line-height:1.55;color:#b8c0cc">
+      <strong style="color:#fff">${escapeHtml(it.cardName)}</strong> <span style="border:1px solid #233047;border-radius:6px;padding:0 5px;font-size:12px;color:#6b7585">${it.market}</span><br/>
+      <span style="font-size:18px;font-weight:800;color:#34d17e">${escapeHtml(formatMoney(it.currentBidCents, it.currency))}</span>
+      current bid · ${it.bidCount} bid${it.bidCount === 1 ? "" : "s"} · ends in ${escapeHtml(endsIn(it.endsAt, now))}<br/>
+      <span style="font-size:12px;color:#6b7585">${escapeHtml(it.title)}</span><br/>
+      <a href="${escapeHtml(it.url)}" style="color:#34d17e;font-weight:700;text-decoration:none">Bid on eBay →</a>
+    </td></tr>`,
+    )
+    .join("");
+  const inner = `${rows}
+    <tr><td style="padding:16px 32px 4px;font-size:13px"><a href="${escapeHtml(auctions)}" style="color:#34d17e;font-weight:700;text-decoration:none">Every live Riftbound auction →</a></td></tr>
+    <tr><td style="padding:4px 32px 16px;font-size:12px;line-height:1.7;color:#6b7585">
+      Bids are as of our last sweep and move fast near the end. We match auctions to your cards by their eBay titles, so check the listing is the printing you want.
+    </td></tr>`;
+  const text = [
+    heading,
+    ...items.map(
+      (it) => `${it.cardName} (${it.market}): ${formatMoney(it.currentBidCents, it.currency)} current bid, ${it.bidCount} bids, ends in ${endsIn(it.endsAt, now)}. ${it.title}. ${it.url}`,
+    ),
+    `Every live auction: ${auctions}`,
+    "Bids are as of our last sweep. We match auctions to your cards by their eBay titles, so check the listing is the printing you want.",
+    `Stop auction alerts: ${actions.stop}`,
+    `Snooze 30 days: ${actions.snooze}`,
+    `Manage your watches: ${manage}`,
+  ].join("\n");
+  return {
+    subject,
+    heading,
+    preheader,
+    html: emailShell(
+      heading,
+      inner,
+      simpleFooter("You're getting this because you're on Premium and these cards are on your watchlist; live auctions are checked every few hours.", actions, manage, "Stop auction alerts"),
+      preheader,
+    ),
+    text,
+    headers: watchHeaders(actions),
+  };
+}
+
+export async function sendAuctionAlertEmail(to: string, items: AuctionAlertItem[], actions: WatchActionLinks): Promise<boolean> {
+  const e = buildAuctionAlertEmail(items, actions);
+  return sendEmail(to, e.subject, e.html, { text: e.text, headers: e.headers });
+}

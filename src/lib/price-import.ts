@@ -5,7 +5,8 @@
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
-import { writeCardHistoryDay } from "./price-history-store";
+import { writeCardHistoryDay, writeGradedHistoryDay } from "./price-history-store";
+import { gradedSnapshot } from "./graded-history";
 import { DECOMMISSIONED_RETAILERS, RETAILER_LIST, RetailerInfo, STORE_ROWS_MAX_AGE_H } from "./retailers";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
@@ -2223,6 +2224,23 @@ export async function importPrices(): Promise<ImportSummary> {
     );
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
+  }
+
+  // GRADED SLABS (2026-10-09, lib/graded-history.ts): the cheapest live slab per
+  // card and grade, as its own public day file. Reads the whole (small, at most
+  // six rows per card per market) EbayGradedListing table, which is allowed in
+  // an import (db.ts rule 4), so the evening chase pass and the morning
+  // catalogue pass both land in the one file for the day. Never fails the import.
+  try {
+    const fresh = new Date(Date.now() - 72 * 3600_000);
+    const slabs = await prisma.ebayGradedListing.findMany({
+      where: { updatedAt: { gte: fresh } },
+      select: { cardId: true, priceCents: true, currency: true, grader: true, grade: true },
+    });
+    const written = writeGradedHistoryDay(sydneyDay(), gradedSnapshot(slabs));
+    if (written) console.log(`Graded history: ${written.count} card/grade points in ${written.file}.`);
+  } catch (e) {
+    console.warn("Graded-history snapshot failed:", e);
   }
 
   // Snapshot today's cumulative demand counters (search/view) alongside the price

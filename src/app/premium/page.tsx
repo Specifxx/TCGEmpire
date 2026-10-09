@@ -305,8 +305,8 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           {already
             ? "Everything you've unlocked is below. Thanks for supporting RiftCompare."
             : plusLive
-            ? "Comparing prices is free. Plus and Premium watch prices and stock for you, ad-free."
-            : "Comparing prices is free. Premium watches prices and stock for you, ad-free."}
+            ? "Comparing prices is free. Plus and Premium search more, keep longer price history and watch prices and stock for you, ad-free."
+            : "Comparing prices is free. Premium searches without limit, keeps the full price history and watches prices and stock for you, ad-free."}
         </p>
       </div>
 

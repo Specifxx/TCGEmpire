@@ -37,6 +37,7 @@ export function PriceChart({
   upIsGood = false,
   nowOverrideCents,
   rawCardHistory = false,
+  onLockedRange,
 }: {
   points: PricePoint[];
   currency?: string;
@@ -73,9 +74,14 @@ export function PriceChart({
    * movement for weeks.
    */
   rawCardHistory?: boolean;
+  /**
+   * Set when the visitor only has the free 30-day window (lib/history-access.ts):
+   * the 3M and All pills show a lock and call this instead of switching range.
+   */
+  onLockedRange?: () => void;
 }) {
   const label = fmt ?? ((v: number) => formatMoney(v, currency));
-  const [range, setRange] = useState<RangeKey>("ALL");
+  const [range, setRange] = useState<RangeKey>(onLockedRange ? "1M" : "ALL");
   const [hover, setHover] = useState<number | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   // Unique gradient id — two charts can coexist in the DOM (card page + modal).
@@ -192,10 +198,16 @@ export function PriceChart({
             {RANGES.map((r) => (
               <button
                 key={r.key}
-                onClick={() => { setRange(r.key); setHover(null); }}
+                onClick={() => {
+                  if (onLockedRange && r.key !== "1M") return onLockedRange();
+                  setRange(r.key);
+                  setHover(null);
+                }}
+                aria-label={onLockedRange && r.key !== "1M" ? `${r.key === "ALL" ? "All" : r.key}: full history with Plus` : undefined}
                 className={`inline-flex min-h-11 items-center rounded-md px-3 text-[11px] font-semibold [@media(pointer:fine)]:min-h-0 [@media(pointer:fine)]:px-2 [@media(pointer:fine)]:py-0.5 ${range === r.key ? "bg-brand-500/20 text-brand-300" : "text-slate-500 hover:text-slate-300"}`}
               >
                 {r.key === "ALL" ? "All" : r.key}
+                {onLockedRange && r.key !== "1M" && <span aria-hidden="true">&nbsp;🔒</span>}
               </button>
             ))}
           </div>

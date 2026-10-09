@@ -39,6 +39,8 @@ import path from "node:path";
 export const PRICE_HISTORY_DIR = process.env.PRICE_HISTORY_DIR || path.join(process.cwd(), "data", "price-history");
 export const CARD_HISTORY_SUBDIR = "cards";
 export const SEALED_HISTORY_SUBDIR = "sealed";
+// Graded slabs (2026-10-09): per card, the cheapest live eBay slab per grade.
+export const GRADED_HISTORY_SUBDIR = "graded";
 
 const DAY_FILE = /^(\d{4}-\d{2}-\d{2})\.json$/;
 
@@ -46,6 +48,12 @@ export const CARD_HISTORY_BASIS =
   "Cheapest in-stock price for the card across the AU, US, UK and SG markets on this Sydney calendar day, converted to US cents.";
 export const SEALED_HISTORY_BASIS =
   "Cheapest in-stock price for the sealed product group in each market on this Sydney calendar day, in that market's own currency (cents).";
+
+export const GRADED_HISTORY_BASIS =
+  "Cheapest live eBay listing for each grader and grade of the card (PSA 10, BGS 9.5, ...) across the markets searched that day, converted to US cents. Keyed by card id, then by grade.";
+
+export type GradedDayFile = { day: string; currency: "USD"; basis: string; prices: Record<string, Record<string, number>> };
+export type GradedHistoryRow = { cardId: string; grade: string; day: Date; lowestPriceCents: number };
 
 export type CardDayFile = { day: string; currency: "USD"; basis: string; prices: Record<string, number> };
 export type SealedDayFile = { day: string; basis: string; prices: Record<string, Record<string, number>> };
@@ -255,6 +263,45 @@ export function writeSealedHistoryDay(
     prices: sortedObject([...byGroup].map(([g, list]) => [g, sortedObject(list)] as [string, Record<string, number>])),
   };
   return { file: writeAtomic(SEALED_HISTORY_SUBDIR, iso, `${JSON.stringify(file, null, 2)}\n`), count };
+}
+
+/** Writes (or replaces) one Sydney day of the graded-slab series. */
+export function writeGradedHistoryDay(
+  day: Date,
+  rows: Iterable<{ cardId: string; grade: string; usdCents: number }>,
+): { file: string; count: number } | null {
+  const byCard = new Map<string, Map<string, number>>();
+  let count = 0;
+  for (const r of rows) {
+    if (!r.cardId || !r.grade || !Number.isInteger(r.usdCents) || r.usdCents <= 0) continue;
+    const m = byCard.get(r.cardId) ?? byCard.set(r.cardId, new Map()).get(r.cardId)!;
+    const prev = m.get(r.grade);
+    if (prev == null) count++;
+    if (prev == null || r.usdCents < prev) m.set(r.grade, r.usdCents);
+  }
+  if (!count) return null;
+  const iso = isoDay(day);
+  const file: GradedDayFile = {
+    day: iso,
+    currency: "USD",
+    basis: GRADED_HISTORY_BASIS,
+    prices: sortedObject([...byCard].map(([id, m]) => [id, sortedObject(m)] as [string, Record<string, number>])),
+  };
+  return { file: writeAtomic(GRADED_HISTORY_SUBDIR, iso, `${JSON.stringify(file, null, 2)}\n`), count };
+}
+
+/** One card's graded points, oldest first. Read on demand from the day files. */
+export function gradedHistoryRows(cardId: string): GradedHistoryRow[] {
+  const out: GradedHistoryRow[] = [];
+  for (const iso of historyDays(GRADED_HISTORY_SUBDIR)) {
+    const byGrade = readDay<GradedDayFile>(GRADED_HISTORY_SUBDIR, iso)?.prices?.[cardId];
+    if (!byGrade) continue;
+    const day = dayDate(iso);
+    for (const [grade, cents] of Object.entries(byGrade)) {
+      if (Number.isInteger(cents) && cents > 0) out.push({ cardId, grade, day, lowestPriceCents: cents });
+    }
+  }
+  return out;
 }
 
 /** Sealed points, oldest first. Small (tens of groups), so read on demand. */

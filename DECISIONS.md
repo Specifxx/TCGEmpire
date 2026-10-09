@@ -16842,3 +16842,49 @@ The nine signed twins are 72% of what one of each of the 40 chase printings cost
 - `Card` writes by request (the view beacon) still go to Neon and are lost if Neon is down; that only affects popularity ranks.
 
 **Tests:** `tests/public-data.test.ts` covers round trips through the exporter, store and engine, Postgres NULL and ordering semantics, refusals, routing by mode, every cron route wrapped, the browse and search builders against the files, nothing private in the snapshot, and conditional bundling.
+
+## Search is metered again (10 / 30 / 100 / unlimited), and Plus and Premium gain full price history, graded tracking and auction alerts — 2026-10-09
+
+**Owner:** "make more people sign up to premium": a daily search allowance by tier, plus more paid features. The owner first asked for 5 signed out and 10 for a free account, then chose these limits: **signed out 10 searches a day, a free account 30, Plus 100, Premium unlimited.** The three features were picked from a list: full price history, graded price tracking, auction alerts.
+
+**This reverses something, knowingly.** A 10 signed out / 100 free / unlimited Premium ladder shipped once before and was removed after about a day. Core-market pages per visitor fell 3.86 → 2.75, bounce rose 5 points and `buy_click` fell about 40%, and the gate converted almost nobody. `tests/search-uncapped.test.ts` kept it from coming back; it was the only record of those numbers. The owner was shown them before choosing. That test is replaced by `tests/search-limits.test.ts`. "Price comparison stays free with no limit" (2026-09-28, Free limits) still holds for card, set, champion and store pages; it no longer holds for search.
+
+**What counts as a search** (`lib/search-quota.ts`):
+- A distinct query in a UTC day. The typeahead asks as you type, so "ak" → "aka" → "akali" is one search: a query that extends or shortens the last counted one is free. Pressing Enter on the same query does not count again on `/browse`.
+- Paging and filters on `/browse` do not count. The store tools that look cards up (trade calculator, card search in the deck tools, the collection) send `scope=tool` and are never metered.
+- Crawlers (`isBotUserAgent`) are never metered.
+
+**How it is held.** A signed, httpOnly cookie (`rc_sq`, HMAC under the auth secret, `lib/search-quota-cookie.ts`) holds the day, the count, the last query and the account it was earned on. There is no database write per search. Clearing the cookie resets the count. This is an upgrade prompt, not a security boundary. `/api/search` meters and writes the cookie itself. `/browse` is a server component and cannot set a cookie, so it only asks whether the query would be refused and renders the limit panel if so; a small client island (`SearchQuotaTick`) posts to `/api/search/quota` to count it. Search responses are `private, no-store`.
+
+**At the limit** (`SearchLimitPanel`, surface `limit:search`, signup source `search_limit`): signed out gets "Sign up free" and a Plus button; a free account gets Plus; Plus gets Premium. Every version says card pages, sets and price comparison stay free and that searches reset at midnight UTC. The tier table gains "Card searches a day (10 signed out)": 30 / 100 / Unlimited.
+
+**Kill switch: `SEARCH_CAPS=off`** (a Vercel variable, then a redeploy). Everyone is unmetered again and nothing else changes. Watch pages per visitor and `buy_click` against the numbers above. If they fall like last time, this is the lever. `search_limit_shown` and `premium_click` with source `limit:search` show whether the gate converts. `PREMIUM_COPY_VERSION` is `search-caps-2026-10-09`.
+
+**Full price history and CSV (Plus and Premium)** (`lib/history-access.ts`):
+- Signed out and free accounts see the last 30 days on a card's chart (`FREE_HISTORY_DAYS`). 3M and All show a lock and a Plus line (`gate:price-history`).
+- Members read `/api/card/[id]/history/full` and get a CSV from `/api/card/[id]/history.csv`. Both are session-checked, `plus_required` for a free account, and `private, no-store`.
+- The public `/api/card/[id]/history` now returns only the 30-day window plus `olderFrom`.
+- **This is a convenience gate, not secret data.** The series is published in `data/price-history/` and by the open v1 API (`/api/v1/card/[id]/history.json`), which is left uncapped on purpose. Plus buys the full chart in place and the download.
+
+**Graded price tracking (Plus and Premium)** (`lib/graded-history.ts`, `lib/graded-watch.ts`):
+- Every price import now writes the cheapest live slab per card and grade ("PSA 10", "BGS 9.5"), in USD, to a public day file under `data/price-history/graded/`. The source is the `EbayGradedListing` rows the daily eBay pass already writes, updated in the last 72 hours. No new eBay calls. A slab whose title names no grader or grade is left out.
+- History starts with the first import after this ships; nothing is backfilled.
+- On a card's Graded tab, members see a chart per grade and can watch a grade in their market (`GradedWatch`, up to `GRADED_WATCH_LIMIT` 100). Free accounts see a Plus line (`gate:graded-history`).
+- The watch runs in the paid alert route as a fourth pass, after the sealed pass, on what is left of `PAID_SEND_CAP`. It counts in the shared address budget and the alert pauses. The first sighting sets a silent baseline; after that it emails on a material drop (`isMaterialDrop`, the card alerts' own threshold) against the last emailed price, at most once a day per watch.
+- A market with no fresh listing is unknown: the baseline is held and nothing is sent. Stop and snooze links use the new `graded` token kind.
+
+**Auction alerts (Premium)** (`lib/auction-alerts.ts`, `/api/cron/auction-alerts`):
+- After every auction sweep (`refresh-auctions.yml`, about every four hours), a Premium member gets one email when a card on their watchlist has an eBay auction in their market ending within 24 hours. The email shows up to six auctions, soonest first.
+- Each auction goes to an address once (`AuctionAlertSent`, pruned after a week). It shares the alert budget and pauses, opening at most 20 new addresses a run.
+- On by default for Premium. The email's stop link sets `User.auctionAlertsOff` and snooze sets `auctionAlertsSnoozedUntil` (new `auction` token kind).
+- **Matching is by title.** Auction rows carry no card id on purpose (a wrong link is worse than none), so each watched card is matched with `cardIdentityStages(card, { allowGraded: true })`, the eBay price pass's own rules: name, collector number, no lots, no foreign printings. The email says the match is by title. No eBay API calls; it reads what the sweep stored.
+- Plus members' watches are skipped (Premium only, `isPremium(user, "premium")`).
+
+**Schema.** Additive only: `GradedWatch`, `AuctionAlertSent`, and on `User` `auctionAlertsOff Boolean @default(false)` and `auctionAlertsSnoozedUntil DateTime?`. Applied by the workflows' `prisma db push` on their next run.
+
+**Surfaces updated.** Tier table rows (searches; full history with CSV; graded tracking; auction alerts), the slide-in's tool chips, and the /premium sublines ("Comparing prices is free. Plus and Premium search more, keep longer price history and watch prices and stock for you, ad-free.").
+
+**Tests.**
+- `tests/search-limits.test.ts` (new) covers the ladder, typeahead dedupe, the cookie's signature and account binding, the kill switch, bots, `scope=tool`, and that card, set and champion pages import no meter.
+- `tests/premium-features.test.ts` (new) covers the 30-day window and CSV; members-only, no-store routes; grade labels and the snapshot; the graded watch's baseline, drop, cooldown and snooze; title matching; one email per member, sent once, market-only, soonest first; Plus and paused addresses skipped; and the fail-closed route.
+- Updated because they legitimately changed: `watch-routes` (two token kinds), `watches-cron` (four passes, the table's new rows), `free-limits` and `watches-cron` (copy version), `methodology-breaks` (the two new history readers classified), `ebay-graded` (the Graded tab also renders the history), and `premium-tiers` and `premium-slidein` (the new rows and chips).

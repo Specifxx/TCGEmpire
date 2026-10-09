@@ -56,7 +56,9 @@ export type AlertAction = (typeof ALERT_ACTIONS)[number];
 // (every link already in an inbox stays valid); deck and sealed tokens are a
 // "v2" payload that names the kind. Only cards have target actions: a v2
 // token carrying one is malformed.
-export const ALERT_ACTION_KINDS = ["price", "deck", "sealed"] as const;
+// "graded" a GradedWatch (lib/graded-watch.ts) and "auction" a member's auction
+// alerts as a whole, keyed by user id (lib/auction-alerts.ts), both 2026-10-09.
+export const ALERT_ACTION_KINDS = ["price", "deck", "sealed", "graded", "auction"] as const;
 export type AlertActionKind = (typeof ALERT_ACTION_KINDS)[number];
 
 /** How long an emailed action link stays valid. */
@@ -206,6 +208,9 @@ export type AlertActionDb = TargetDb & {
   priceAlert: Pick<typeof prisma.priceAlert, "findUnique" | "deleteMany" | "update">;
   deckWatch: Pick<typeof prisma.deckWatch, "findUnique" | "deleteMany" | "update">;
   sealedWatch: Pick<typeof prisma.sealedWatch, "findUnique" | "deleteMany" | "update">;
+  // Optional so older fakes in tests still type-check; the route passes prisma.
+  gradedWatch?: Pick<typeof prisma.gradedWatch, "findUnique" | "deleteMany" | "update">;
+  user?: Pick<typeof prisma.user, "findUnique" | "update">;
 };
 
 // The outcome the confirmation page renders (?r=…). "ok" = done.
@@ -229,6 +234,33 @@ export async function performAlertAction(db: AlertActionDb, token: string | null
 
   // A deck or sealed watch: stop (delete that one row, idempotently) or snooze.
   // The token's kind picks the table; the id is never looked up anywhere else.
+  // Auction alerts are one switch per member, keyed by the user id.
+  if (v.kind === "auction") {
+    if (!db.user) return { status: 500, outcome: "invalid", body: { error: "Unavailable." } };
+    const found = await db.user.findUnique({ where: { id: v.alertId }, select: { id: true } });
+    if (!found) return { status: 404, outcome: "gone", body: { error: "You're no longer getting auction alerts." } };
+    if (v.action === "stop") {
+      await db.user.update({ where: { id: v.alertId }, data: { auctionAlertsOff: true } });
+      return { status: 200, outcome: "ok", body: { ok: true, kind: v.kind, action: v.action, removed: 1 } };
+    }
+    const until = new Date(now.getTime() + SNOOZE_MS);
+    await db.user.update({ where: { id: v.alertId }, data: { auctionAlertsSnoozedUntil: until } });
+    return { status: 200, outcome: "ok", body: { ok: true, kind: v.kind, action: v.action, snoozedUntil: until.toISOString() } };
+  }
+  if (v.kind === "graded") {
+    if (!db.gradedWatch) return { status: 500, outcome: "invalid", body: { error: "Unavailable." } };
+    const where = { id: v.alertId };
+    const found = await db.gradedWatch.findUnique({ where, select: { id: true } });
+    if (v.action === "stop") {
+      if (found) await db.gradedWatch.deleteMany({ where });
+      return { status: 200, outcome: "ok", body: { ok: true, kind: v.kind, action: v.action, removed: found ? 1 : 0 } };
+    }
+    if (!found) return { status: 404, outcome: "gone", body: { error: "You're no longer watching this." } };
+    const until = new Date(now.getTime() + SNOOZE_MS);
+    await db.gradedWatch.update({ where, data: { snoozedUntil: until } });
+    return { status: 200, outcome: "ok", body: { ok: true, kind: v.kind, action: v.action, snoozedUntil: until.toISOString() } };
+  }
+
   if (v.kind !== "price") {
     const where = { id: v.alertId };
     const found =

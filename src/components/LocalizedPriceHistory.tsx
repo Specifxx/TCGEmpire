@@ -7,6 +7,10 @@ import { currencyOf, type Country } from "@/lib/country";
 import { gbpCentsToEur } from "@/lib/fx";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import type { PricePoint } from "@/lib/price-history";
+import { useMe } from "@/lib/use-me";
+import { usePremiumDialog } from "@/components/PremiumDialog";
+import { PremiumButton } from "@/components/PremiumButton";
+import { FREE_HISTORY_DAYS } from "@/lib/history-access";
 
 // Steam-style localized price history using REAL per-market data — genuinely
 // tracked for AU/US/UK/SG, and historySource()-derived (a currency conversion
@@ -21,11 +25,15 @@ import type { PricePoint } from "@/lib/price-history";
 export function LocalizedPriceHistory({
   cardId,
   initialPoints,
+  initialOlderFrom = null,
   initialCountry,
   rows,
 }: {
   cardId: string;
+  /** The free window: the last FREE_HISTORY_DAYS (lib/history-access.ts). */
   initialPoints: PricePoint[];
+  /** When the series older than the free window starts, or null if there is none. */
+  initialOlderFrom?: number | null;
   initialCountry: Country;
   /** Every market's listings — same data CardPriceMetrics/CardPriceComparison
    *  compute from, so "Now" below can read the identical live cheapest price
@@ -38,17 +46,28 @@ export function LocalizedPriceHistory({
   const [points, setPoints] = useState<PricePoint[]>(initialPoints);
   const [loaded, setLoaded] = useState<Country>(initialCountry);
   const [loading, setLoading] = useState(false);
+  // Plus and Premium read the whole series (./history/full); everyone else the
+  // free 30-day window the page rendered with.
+  const me = useMe();
+  const member = me.loaded && me.premium;
+  const [fullFor, setFullFor] = useState<Country | null>(null);
+  const [older, setOlder] = useState<number | null>(initialOlderFrom);
+  const { open } = usePremiumDialog();
 
   useEffect(() => {
-    if (country === loaded) return;
+    const wantFull = member && fullFor !== country;
+    if (country === loaded && !wantFull) return;
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/card/${encodeURIComponent(cardId)}/history?country=${country}`)
+    const base = `/api/card/${encodeURIComponent(cardId)}/history`;
+    fetch(member ? `${base}/full?country=${country}` : `${base}?country=${country}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!cancelled && d && Array.isArray(d.points)) {
           setPoints(d.points);
           setLoaded(country);
+          if (d.full) setFullFor(country);
+          else setOlder(typeof d.olderFrom === "number" ? d.olderFrom : null);
         }
       })
       .catch(() => {})
@@ -58,7 +77,7 @@ export function LocalizedPriceHistory({
     return () => {
       cancelled = true;
     };
-  }, [country, loaded, cardId]);
+  }, [country, loaded, cardId, member, fullFor]);
 
   // Label with the currency of the data currently shown (not the pending selection),
   // so numbers and currency never disagree mid-fetch. Real history is only ever
@@ -91,8 +110,36 @@ export function LocalizedPriceHistory({
         </span>
       </h2>
       <div className="mt-3">
-        <PriceChart points={chartPoints} currency={currency} nowOverrideCents={liveLowestCents} rawCardHistory />
+        <PriceChart
+          key={member ? "full" : "free"}
+          points={chartPoints}
+          currency={currency}
+          nowOverrideCents={liveLowestCents}
+          rawCardHistory
+          onLockedRange={!member && older != null ? () => open("gate:price-history", { tier: "plus" }) : undefined}
+        />
       </div>
+      {member ? (
+        <p className="mt-3 text-xs text-slate-400">
+          <a
+            href={`/api/card/${encodeURIComponent(cardId)}/history.csv?country=${loaded}`}
+            className="font-semibold text-brand-400 hover:underline"
+            download
+          >
+            Download price history (CSV)
+          </a>
+        </p>
+      ) : older != null ? (
+        <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-slate-400">
+          <span>
+            Showing the last {FREE_HISTORY_DAYS} days. Plus shows the full history since{" "}
+            {new Date(older).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })} and downloads it as CSV.
+          </span>
+          <PremiumButton tier="plus" surface="gate:price-history" className="btn-ghost min-h-11 px-3 text-xs">
+            See full history
+          </PremiumButton>
+        </p>
+      ) : null}
     </section>
   );
 }

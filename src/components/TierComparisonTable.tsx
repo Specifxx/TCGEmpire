@@ -85,6 +85,8 @@
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_MARKETS, SEALED_WATCH_LIMIT_PLUS } from "../lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../lib/free-limits";
 import { SET_GAP_CHUNK } from "../lib/set-gap";
+import { SEARCH_LIMITS, SIGNED_OUT_SEARCHES } from "../lib/search-quota";
+import { FREE_HISTORY_DAYS } from "../lib/history-access";
 
 export type TierRow = {
   feature: string;
@@ -99,7 +101,9 @@ export type TierRow = {
 
 export const TIER_COMPARISON: TierRow[] = [
   { feature: "Compare prices across every store + eBay", account: true, plus: true, premium: true },
-  { feature: "Full card database, charts & search", account: true, plus: true, premium: true },
+  { feature: "Full card database & charts", account: true, plus: true, premium: true },
+  // 2026-10-09 (lib/search-quota.ts): signed out 10 a day, a free account 30.
+  { feature: `Card searches a day (${SIGNED_OUT_SEARCHES} signed out)`, account: `${SEARCH_LIMITS.free}`, plus: `${SEARCH_LIMITS.plus}`, premium: "Unlimited" },
   // The Bulk Pricer's paste-a-list pricing lives in the free /deck now.
   { feature: "Deck & list pricer, trade calculator & box EV", account: true, plus: true, premium: true },
   // "Weekly" as in a 7-day move: /movers compares each card's latest daily
@@ -157,6 +161,11 @@ export const TIER_COMPARISON: TierRow[] = [
   // (lib/alert-limits.ts), never typed here.
   { feature: `Sealed watches — restock, at-RRP (${SEALED_RRP_MARKETS}) and price alerts, checked ${SEALED_CHECK_CADENCE}`, account: false, plus: `Up to ${SEALED_WATCH_LIMIT_PLUS}`, premium: "Unlimited" },
   { feature: "Deck price watch — email when a deck's delivered total drops", account: false, plus: false, premium: true },
+  // 2026-10-09 (owner: "add more premium features"). lib/history-access.ts,
+  // lib/graded-history.ts + lib/graded-watch.ts, lib/auction-alerts.ts.
+  { feature: "Full price history — every day since tracking began, with CSV download", account: `Last ${FREE_HISTORY_DAYS} days`, plus: true, premium: true },
+  { feature: "Graded price tracking — history and new-low alerts for each grade (PSA 10, BGS 9.5…)", account: false, plus: true, premium: true },
+  { feature: "Auction alerts — email when a card you watch has an eBay auction ending within 24 hours", account: false, plus: false, premium: true },
   // Ad-free moved Plus → Premium on 2026-09-14 and back to every paid tier on
   // 2026-09-25 (owner's call — DECISIONS.md, "Plus is ad-free again"): with
   // the half-price intro, $2.49/mo Plus is the entry tier, and "no ads" is

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runPriceAlerts } from "@/lib/price-alerts";
 import { runDeckWatches } from "@/lib/deck-watch";
 import { runSealedWatches } from "@/lib/sealed-watch";
+import { runGradedWatches } from "@/lib/graded-watch";
 import { bustSealedGroups } from "@/lib/sealed-fresh";
 import { PAID_SEND_CAP } from "@/lib/price-alerts";
 import { liveRoute } from "@/lib/public-data/live-route";
@@ -50,8 +51,11 @@ async function handleGET(req: Request) {
   const decks = await runDeckWatches({ sendCap: afterCards }).then((s) => ({ ok: true, ...s })).catch(failed);
   const afterDecks = Math.max(0, afterCards - ("newAddresses" in decks ? decks.newAddresses : 0));
   const sealed = await runSealedWatches({ sendCap: afterDecks, freshen: fresh ? bustSealedGroups : undefined }).then((s) => ({ ok: true, ...s })).catch(failed);
-  const ok = cards.ok && decks.ok && sealed.ok;
-  return NextResponse.json({ ...cards, ok, scope: "paid", decks, sealed }, { status: ok ? 200 : 500 });
+  // 2026-10-09: graded watches (lib/graded-watch.ts), after the sealed pass, on what is left of the cap.
+  const afterSealed = Math.max(0, afterDecks - ("newAddresses" in sealed ? sealed.newAddresses : 0));
+  const graded = await runGradedWatches({ sendCap: afterSealed }).then((s) => ({ ok: true, ...s })).catch(failed);
+  const ok = cards.ok && decks.ok && sealed.ok && graded.ok;
+  return NextResponse.json({ ...cards, ok, scope: "paid", decks, sealed, graded }, { status: ok ? 200 : 500 });
 }
 
 // Public reads ask Neon first: this cron needs the latest import, not the last release (lib/public-data/live-route.ts).

@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getPriceHistory } from "@/lib/price-history";
 import { COUNTRIES, type Country } from "@/lib/country";
+import { olderFrom, recentWindow } from "@/lib/history-access";
 
 // Daily lowest-price history for one card in a given market (in that market's
-// currency). Country comes from the URL (?country=US) so the CDN caches cleanly
-// per (card, market) — not by cookie.
+// currency): the last 30 days, the free window (lib/history-access.ts), plus when
+// the older part starts. Plus and Premium read the whole series from ./full.
+// Country comes from the URL (?country=US) so the CDN caches cleanly per
+// (card, market) — not by cookie.
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   const url = new URL(req.url);
   const c = (url.searchParams.get("country") ?? "AU").toUpperCase();
@@ -24,9 +27,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   });
   if (!card) return NextResponse.json({ points: [] }, { status: 404 });
 
-  const points = await getPriceHistory(card.id, country);
+  const all = await getPriceHistory(card.id, country);
   return NextResponse.json(
-    { points, country },
+    { points: recentWindow(all), olderFrom: olderFrom(all), country },
     { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=86400" } }
   );
 }

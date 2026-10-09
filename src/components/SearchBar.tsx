@@ -19,6 +19,8 @@ import { RecentlyViewedRail } from "./home/RecentlyViewedRail";
 import { OutboundLink } from "./OutboundLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { cardThumbProps } from "@/lib/card-image-url";
+import { SearchLimitPanel } from "./SearchLimitPanel";
+import type { SearchTier } from "@/lib/search-quota";
 
 // How long a focused-but-not-yet-typing field has to stay focused before it
 // counts as "focus with intent" for search_initiated below — long enough that
@@ -189,6 +191,8 @@ export function SearchBar({
   const [sealedCurrency, setSealedCurrency] = useState<string | null>(null);
   // Near-miss card names the route offers when a query matched nothing.
   const [suggest, setSuggest] = useState<string[]>([]);
+  // Set when the day's search allowance is used up (lib/search-quota.ts).
+  const [limited, setLimited] = useState<SearchTier | null>(null);
   const [open, setOpen] = useState(false);
   // Tracked ONLY so the close button can appear the moment the field takes
   // focus. Tapping Search on a phone focuses the box and raises the keyboard,
@@ -338,6 +342,7 @@ export function SearchBar({
       setResults([]);
       setSealed([]);
       setSuggest([]);
+      setLimited(null);
       setLoading(false);
       return;
     }
@@ -349,6 +354,16 @@ export function SearchBar({
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
         const data = await res.json();
+        // Over the day's allowance: show what the next tier gives instead of results.
+        if (data.limited) {
+          setLimited((data.tier as SearchTier) ?? "anon");
+          setResults([]);
+          setSealed([]);
+          setSuggest([]);
+          trackEvent("search_limit_shown", { tier: data.tier, variant });
+          return;
+        }
+        setLimited(null);
         const nextResults: Result[] = data.results ?? [];
         const nextSealed: SealedResult[] = data.sealed ?? [];
         setResults(nextResults);
@@ -860,6 +875,8 @@ export function SearchBar({
               <RecentlyViewedRail />
             </div>
             </>
+          ) : limited && !loading ? (
+            <SearchLimitPanel tier={limited} next={typeof window === "undefined" ? undefined : window.location.pathname} compact />
           ) : results.length === 0 && sealed.length === 0 ? (
             <div>
               <div className="px-4 py-3 text-sm text-slate-400">

@@ -77,6 +77,7 @@ jobs:
             exit 1
           fi
       - name: Sweep auctions
+        id: sweep
         env:
           DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
           DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || 'UNSET' }}
@@ -85,3 +86,18 @@ jobs:
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
         run: npx tsx scripts/import-ebay-auctions.ts
+
+      - name: Premium auction alerts
+        # After a successful sweep only (lib/auction-alerts.ts). Non-fatal: a
+        # missed run is caught by the next sweep, and must never red one.
+        if: ${{ !cancelled() && steps.sweep.outcome == 'success' }}
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret, skipping the auction alert run."
+            exit 0
+          fi
+          curl -s --max-time 120 "$SITE_URL/api/cron/auction-alerts" -H "Authorization: Bearer $CRON_SECRET" || true
+          echo

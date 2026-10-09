@@ -21,6 +21,10 @@ export type AlertBudgetDb = {
   priceAlert: Pick<typeof prisma.priceAlert, "groupBy">;
   deckWatch: Pick<typeof prisma.deckWatch, "findMany">;
   sealedWatch: Pick<typeof prisma.sealedWatch, "groupBy">;
+  // 2026-10-09: graded watches and auction alerts spend the same budget.
+  // Optional so older fakes in tests still fit; production passes prisma.
+  gradedWatch?: Pick<typeof prisma.gradedWatch, "groupBy">;
+  auctionAlertSent?: Pick<typeof prisma.auctionAlertSent, "groupBy">;
 };
 
 /** Distinct addresses emailed by any alert run since `now − windowMs`. Throws on a failed read. */
@@ -47,6 +51,14 @@ export async function recentlyEmailedAddresses(db: AlertBudgetDb, now: Date, win
     take: 1000,
   });
   for (const r of decks) if (r.user?.email) out.add(r.user.email);
+  if (db.gradedWatch) {
+    const graded = await db.gradedWatch.groupBy({ by: ["email"], where: { lastNotifiedAt: { gte: since } }, orderBy: { email: "asc" }, take: 1000 });
+    for (const r of graded) out.add(r.email);
+  }
+  if (db.auctionAlertSent) {
+    const auctions = await db.auctionAlertSent.groupBy({ by: ["email"], where: { sentAt: { gte: since } }, orderBy: { email: "asc" }, take: 1000 });
+    for (const r of auctions) out.add(r.email);
+  }
   return out;
 }
 

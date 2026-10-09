@@ -393,4 +393,9 @@ export function premiumLockInTail(): string {
 // sign-up ask changed, which is what feeds every Premium funnel downstream, so the
 // label separates the $1-trial-with-slider hours from what follows. The Premium
 // slide-in, plans, prices and every Premium surface's copy are unchanged.
-export const PREMIUM_COPY_VERSION = "signup-inline-2026-09-30";
+// search-caps-2026-10-09: search is metered again, 10 signed out / 30 free / 100
+// Plus / unlimited Premium (DECISIONS.md, "Search is metered again: 10 / 30 / 100 /
+// unlimited"), and the plans gain full price history with CSV, graded price
+// tracking (Plus) and auction alerts (Premium): new rows in the tier table and the
+// slide-in. Prices unchanged. The label separates the funnel from the uncapped era.
+export const PREMIUM_COPY_VERSION = "search-caps-2026-10-09";

@@ -31,3 +31,18 @@ exported (daily until late August 2026, then about weekly).
 
 Files are written by the price import (`.github/workflows/refresh-prices.yml`)
 and only ever rewritten by a later run on the same day.
+
+## `graded/YYYY-MM-DD.json`
+
+```json
+{
+  "day": "2026-10-09",
+  "currency": "USD",
+  "basis": "Cheapest live eBay listing for each grader and grade of the card (PSA 10, BGS 9.5, ...) across the markets searched that day, converted to US cents. Keyed by card id, then by grade.",
+  "prices": { "<card id>": { "PSA 10": 48000, "BGS 9.5": 39500 } }
+}
+```
+
+Graded slabs, from 2026-10-09. Only cards worth searching on eBay are covered,
+and the UK, Singapore and EU markets are searched every third day.
+

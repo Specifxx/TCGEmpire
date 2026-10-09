@@ -4,7 +4,8 @@ Last reviewed 2026-09-23, against DECISIONS.md up to and including the
 overlays entry, [2026-09-23](../DECISIONS.md#L11348); the free-limits bullets
 updated on [2026-09-28](../DECISIONS.md#L14549); the trial and tiers bullets on
 [2026-09-30](../DECISIONS.md#L15595); the Pokémon section on
-[2026-10-01](../DECISIONS.md#L16105).
+[2026-10-01](../DECISIONS.md#L16105); the search allowance and paid history,
+graded and auction bullets on [2026-10-09](../DECISIONS.md#L16846).
 
 The short version of [DECISIONS.md](../DECISIONS.md): what still stands,
 with the latest position where an entry was reversed. Each bullet ends with
@@ -222,8 +223,9 @@ longer lands on its entry.
 - **Free limits (2026-09-28, owner: "charge for the features people use every
   week"):** a free account watches up to 10 distinct cards and keeps up to 50
   in its portfolio (`lib/free-limits.ts`, the one source for every route and
-  every quoted number); any paid tier is unlimited; price comparison stays
-  free with no limit. Nobody loses anything: only a NEW card is refused while
+  every quoted number); any paid tier is unlimited; price comparison (card,
+  set, champion and store pages) stays free with no limit. Search no longer
+  does: see the search allowance below ([2026-10-09](../DECISIONS.md#L16846)). Nobody loses anything: only a NEW card is refused while
   at or over the limit, and existing watches, portfolio cards, copies, edits
   and removals keep working, lapsed subscribers included. Every create route
   enforces it (`402 code:"free_limit"`), the anonymous email-only door
@@ -231,6 +233,30 @@ longer lands on its entry.
   that already watches ten is at the limit too), and the import adds up to
   the allowance and reports the rest.
   [2026-09-28](../DECISIONS.md#L14549)
+- **Search allowance (2026-10-09, owner: "make it 10 / 30 / 100 / unlimited";
+  reverses "search is unmetered"):** signed out 10 searches a UTC day, a free
+  account 30, Plus 100, Premium unlimited (`lib/search-quota.ts`). A search is a
+  distinct query: typing "ak" → "akali" is one, paging and filters are free,
+  the store tools send `scope=tool` and crawlers are never metered. The count is
+  a signed httpOnly cookie (`rc_sq`), no database write; `/api/search` counts,
+  `/browse` only refuses and counts through `/api/search/quota`. At the limit,
+  `SearchLimitPanel` (`limit:search`) offers the next tier. The earlier 10 / 100 /
+  unlimited ladder lost pages per visitor 3.86 → 2.75 and ~40% of `buy_click` in
+  a day; **`SEARCH_CAPS=off` plus a redeploy is the kill switch**, so watch those
+  two numbers. `PREMIUM_COPY_VERSION` `search-caps-2026-10-09`.
+  `tests/search-limits.test.ts`. [2026-10-09](../DECISIONS.md#L16846)
+- **Paid history, graded tracking, auction alerts (2026-10-09):** free sees a
+  card's last 30 days (`FREE_HISTORY_DAYS`); Plus and Premium see the whole
+  series and a CSV (`/history/full`, `/history.csv`, `private, no-store`). It is
+  a convenience gate: the series stays public in `data/price-history/` and the
+  v1 API is uncapped. Plus also gets graded history per grade (a public day file
+  in `data/price-history/graded/` from every import, no new eBay calls) and
+  graded watches (`GradedWatch`, the paid route's fourth pass, material new low,
+  once a day). Premium gets auction alerts: one email per sweep when a watched
+  card has an auction in their market ending within 24 h, each auction once
+  (`AuctionAlertSent`), matched by TITLE with the eBay pass's identity rules
+  (`/api/cron/auction-alerts` after `refresh-auctions.yml`). Both share the alert
+  budget and pauses. `tests/premium-features.test.ts`. [2026-10-09](../DECISIONS.md#L16846)
 - **Watches that run for you (2026-09-29, owner: "make premium more
   attractive", "marketed better and highly accessible to new users"):** the
   paid tiers watch prices after every import and email when something is
@@ -369,7 +395,8 @@ longer lands on its entry.
   its tracker line instead. Free account only: no price, gold, Premium, timer,
   modal or dismiss; numbers from `lib/free-limits.ts`; `/login?next=…&src=inline_*`;
   `signup_inline_view` (GA4 only) and `signup_inline_click` by `surface`
-  (`tests/signup-inline.test.ts`). `PREMIUM_COPY_VERSION` `signup-inline-2026-09-30`.
+  (`tests/signup-inline.test.ts`). `PREMIUM_COPY_VERSION` `signup-inline-2026-09-30`
+  (since 10-09 `search-caps-2026-10-09`, the search allowance above).
   [2026-09-30](../DECISIONS.md#L15871)
 - **Corner nudges (value first, 09-29 evening; supersedes "instant" and "on the
   first page"):** only signed-in cards remain. The Premium slide-in (signed in,

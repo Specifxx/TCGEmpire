@@ -194,7 +194,9 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
     TIER_COMPARISON.map((r) => r.feature),
     [
       "Compare prices across every store + eBay",
-      "Full card database, charts & search",
+      // 2026-10-09: search moved to its own row, the daily allowance.
+      "Full card database & charts",
+      "Card searches a day (10 signed out)",
       "Deck & list pricer, trade calculator & box EV",
       "RiftCompare Index & weekly price movers",
       // Free limits since 2026-09-28 (lib/free-limits.ts; pinned in
@@ -220,6 +222,11 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       // before Ad-free, which stays last.
       "Sealed watches — restock, at-RRP (AU/US/UK) and price alerts, checked about every six hours",
       "Deck price watch — email when a deck's delivered total drops",
+      // 2026-10-09, "add more premium features": full history + CSV (Plus),
+      // graded tracking (Plus) and auction alerts (Premium).
+      "Full price history — every day since tracking began, with CSV download",
+      "Graded price tracking — history and new-low alerts for each grade (PSA 10, BGS 9.5…)",
+      "Auction alerts — email when a card you watch has an eBay auction ending within 24 hours",
       "Ad-free experience",
     ],
   );

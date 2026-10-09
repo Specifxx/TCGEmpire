@@ -34,6 +34,9 @@ import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+import { quotaContext, refusedNow } from "@/lib/search-quota-server";
+import { SearchLimitPanel } from "@/components/SearchLimitPanel";
+import { SearchQuotaTick } from "@/components/SearchQuotaTick";
 
 /** /browse opens on "Most popular" (lib/cards.ts buildCardOrderBy). */
 const BROWSE_DEFAULT_SORT = "popular";
@@ -200,6 +203,30 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
   // size ceiling above which Next's Data Cache silently declines to store an
   // entry and every request falls through to the database (see lib/db.ts).
   const isDefaultView = Object.values(searchParams).every((v) => v == null || v === "");
+
+  // THE DAILY SEARCH ALLOWANCE (2026-10-09, lib/search-quota.ts). A text search's
+  // first page is metered like the typeahead: a query already counted today (or
+  // one the dropdown counted as it was typed) is free, a new one counts, and one
+  // past the allowance is refused here BEFORE any query runs. A server component
+  // cannot set a cookie, so <SearchQuotaTick> counts an allowed new search from
+  // the client. Paging and filters on an allowed search are never metered.
+  const searchQ = (searchParams.q ?? "").trim();
+  const quota = searchQ.length >= 2 && page === 1 ? await quotaContext() : null;
+  if (quota && refusedNow(quota, searchQ)) {
+    return (
+      <section className="mx-auto max-w-2xl py-6">
+        <h1 className="font-display text-2xl font-extrabold text-white">Search for “{searchQ}”</h1>
+        <div className="mt-4">
+          <SearchLimitPanel tier={quota.tier} next={`/browse?q=${encodeURIComponent(searchQ)}`} />
+        </div>
+        <p className="mt-4 text-sm text-slate-400">
+          You can still <Link href="/browse" className="text-brand-400 hover:underline">browse every card</Link>, open any{" "}
+          <Link href="/sets" className="text-brand-400 hover:underline">set</Link> or{" "}
+          <Link href="/champions" className="text-brand-400 hover:underline">champion</Link>, and compare prices on every card page.
+        </p>
+      </section>
+    );
+  }
   const runQuery = () =>
     Promise.all([
       prisma.card.count({ where }),
@@ -289,6 +316,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
       <Filters currency={COUNTRIES[country].currency} />
 
       <section className="min-w-0 flex-1">
+        {quota?.metered && <SearchQuotaTick q={searchQ} />}
         {!searchParams.q && (
           <div className="mb-4">
             {/* H1 carries the same exact phrase as the <title> (see

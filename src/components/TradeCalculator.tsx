@@ -572,7 +572,7 @@ function CardPicker({ onAdd }: { onAdd: (r: SearchResult) => void }) {
     }
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}&scope=tool`);
         const data = await res.json();
         setResults((data.results ?? []).slice(0, 8));
       } catch {

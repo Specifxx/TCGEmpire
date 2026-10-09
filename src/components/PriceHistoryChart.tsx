@@ -2,8 +2,11 @@ import { getPriceHistory } from "@/lib/price-history";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import type { MarketRow } from "@/lib/market-rows";
 import { LocalizedPriceHistory } from "./LocalizedPriceHistory";
+import { olderFrom, recentWindow } from "@/lib/history-access";
 
-// Price-history chart on the card page — free for everyone. Real per-market history
+// Price-history chart on the card page. The last 30 days are free for everyone;
+// the full series is Plus (lib/history-access.ts), fetched by the client from
+// /api/card/[id]/history/full because this ISR page cannot know who is looking. Real per-market history
 // exists for every market (AU/US/UK/SG/CA/EU — see getPriceHistory/historySource for
 // how CA/EU get theirs), but this /card route is cookie-free ISR, so we SSR the
 // DEFAULT_COUNTRY series (a real series for crawlers) and let LocalizedPriceHistory
@@ -12,5 +15,13 @@ import { LocalizedPriceHistory } from "./LocalizedPriceHistory";
 // its ISR cache (the regression behind the "Discovered – not indexed" backlog).
 export async function PriceHistoryChart({ cardId, rows }: { cardId: string; rows?: MarketRow[] }) {
   const points = await getPriceHistory(cardId, DEFAULT_COUNTRY);
-  return <LocalizedPriceHistory cardId={cardId} initialPoints={points} initialCountry={DEFAULT_COUNTRY} rows={rows} />;
+  return (
+    <LocalizedPriceHistory
+      cardId={cardId}
+      initialPoints={recentWindow(points)}
+      initialOlderFrom={olderFrom(points)}
+      initialCountry={DEFAULT_COUNTRY}
+      rows={rows}
+    />
+  );
 }

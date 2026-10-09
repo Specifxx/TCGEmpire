@@ -224,6 +224,9 @@ const INDIRECT: Record<string, string> = {
   "src/app/api/card/[id]/history/route.ts":
     "serves a card's recorded points to the client charts (QuickView, LocalizedPriceHistory), whose PriceChart arrow drops the break window (pinned below)",
   "src/app/api/v1/card/[id]/history.json/route.ts": "publishes recorded points to API consumers; dropping any would delete facts",
+  "src/app/api/card/[id]/history/full/route.ts":
+    "the members' whole series for the same LocalizedPriceHistory chart, whose PriceChart arrow drops the break window (pinned below)",
+  "src/app/api/card/[id]/history.csv/route.ts": "a members' CSV of every recorded point; dropping any would delete facts",
 };
 
 test("every getPriceHistory caller imports dropBreakWindow, or is classified with a reason", () => {

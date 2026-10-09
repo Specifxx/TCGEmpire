@@ -330,7 +330,7 @@ export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<vo
     }
     const ctrl = new AbortController();
     const id = setTimeout(() => {
-      fetch(`/api/search?q=${encodeURIComponent(t)}`, { signal: ctrl.signal })
+      fetch(`/api/search?q=${encodeURIComponent(t)}&scope=tool`, { signal: ctrl.signal })
         .then((r) => r.json())
         .then((d) => {
           setResults((d.results ?? []) as SearchCard[]);

@@ -251,7 +251,7 @@ async function WatchAction({
   outcome,
 }: {
   token: string;
-  kind: "deck" | "sealed";
+  kind: "deck" | "sealed" | "graded" | "auction";
   id: string;
   action: AlertAction;
   outcome: AlertActionOutcome | null;
@@ -259,12 +259,22 @@ async function WatchAction({
   const row =
     kind === "deck"
       ? await prisma.deckWatch.findUnique({ where: { id }, select: { name: true, snoozedUntil: true } }).catch(() => null)
-      : await prisma.sealedWatch
-          .findUnique({ where: { id }, select: { groupKey: true, market: true, snoozedUntil: true } })
-          .then((r) => (r ? { name: sealedWatchLabel(r.groupKey), snoozedUntil: r.snoozedUntil } : null))
-          .catch(() => null);
-  const what = row?.name ?? (kind === "deck" ? "this list" : "this sealed product");
-  const noun = kind === "deck" ? "list" : "product";
+      : kind === "graded"
+        ? await prisma.gradedWatch
+            .findUnique({ where: { id }, select: { grade: true, snoozedUntil: true, card: { select: { name: true } } } })
+            .then((r) => (r ? { name: `${r.card.name} (${r.grade})`, snoozedUntil: r.snoozedUntil } : null))
+            .catch(() => null)
+        : kind === "auction"
+          ? await prisma.user
+              .findUnique({ where: { id }, select: { auctionAlertsSnoozedUntil: true } })
+              .then((r) => (r ? { name: "live auctions on your watchlist", snoozedUntil: r.auctionAlertsSnoozedUntil } : null))
+              .catch(() => null)
+          : await prisma.sealedWatch
+              .findUnique({ where: { id }, select: { groupKey: true, market: true, snoozedUntil: true } })
+              .then((r) => (r ? { name: sealedWatchLabel(r.groupKey), snoozedUntil: r.snoozedUntil } : null))
+              .catch(() => null);
+  const what = row?.name ?? (kind === "deck" ? "this list" : kind === "graded" ? "this graded card" : kind === "auction" ? "auction alerts" : "this sealed product");
+  const noun = kind === "deck" ? "list" : kind === "graded" ? "graded card" : kind === "auction" ? "watchlist's auctions" : "product";
 
   if (outcome === "ok" && action === "stop") {
     return (
@@ -307,7 +317,9 @@ async function WatchAction({
     <Shell title={stop ? `Stop watching ${what}?` : `Snooze ${what} for 30 days?`}>
       <p className="mt-2 text-sm leading-relaxed text-slate-300">
         {stop
-          ? `This stops the ${kind === "deck" ? "delivered-price" : "restock, RRP and price"} emails for ${what}. Your other watches are unchanged.`
+          ? kind === "auction"
+            ? "This stops the emails about live eBay auctions for cards on your watchlist. Your price alerts are unchanged."
+            : `This stops the ${kind === "deck" ? "delivered-price" : kind === "graded" ? "new-low" : "restock, RRP and price"} emails for ${what}. Your other watches are unchanged.`
           : `No emails about ${what} for 30 days. It stays on your watches and we keep checking it after every price update.`}
       </p>
       <form method="post" action="/api/alerts/action" className="mt-4">

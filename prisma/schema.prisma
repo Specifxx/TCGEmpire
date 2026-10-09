@@ -183,6 +183,12 @@ model User {
   // chosen (a new session starts on "LP or better"). Additive + nullable.
   basketPrefs         Json?
   sealedWatches       SealedWatch[]
+  // Graded-slab watches (2026-10-09, lib/graded-watch.ts, Plus).
+  gradedWatches       GradedWatch[]
+  // Premium auction alerts (2026-10-09, lib/auction-alerts.ts): on by default for
+  // a Premium member's watchlist; the email's stop link sets Off, snooze sets Until.
+  auctionAlertsOff    Boolean   @default(false)
+  auctionAlertsSnoozedUntil DateTime?
 
   @@index([googleId])
   @@index([discordId])
@@ -419,6 +425,7 @@ model Card {
   collectedBy         CollectionCard[]
   ebayAdListings      EbayAdListing[]
   ebayGradedListings  EbayGradedListing[]
+  gradedWatches       GradedWatch[]
 
   @@index([setCode, collectorNumber])
   @@index([nameNormalized])
@@ -1839,4 +1846,43 @@ model PublishedDeck {
   @@index([status, createdAt])
   @@index([legendSlug])
   @@index([userId, createdAt])
+}
+
+// A Plus member's watch on one grade of one card's graded slabs (2026-10-09,
+// lib/graded-watch.ts): an email when the cheapest live eBay listing for that
+// grade in the member's market makes a material new low. Prices in the market's
+// currency, from EbayGradedListing; the series behind it is the public graded
+// day file (data/price-history/graded/).
+model GradedWatch {
+  id               String    @id @default(cuid())
+  userId           String
+  email            String
+  cardId           String
+  market           String
+  grade            String // "PSA 10", "BGS 9.5" (lib/graded-history.ts gradeLabel)
+  lastLowCents     Int? // the cheapest seen at the last run that saw one
+  lastEmailedCents Int?
+  lastNotifiedAt   DateTime?
+  snoozedUntil     DateTime?
+  createdAt        DateTime  @default(now())
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card             Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId, market, grade])
+  @@index([userId])
+  @@index([cardId])
+  @@index([email])
+}
+
+// One auction emailed to one address (2026-10-09, lib/auction-alerts.ts), so a
+// live auction is never sent twice. Rows older than a week are pruned by the run.
+model AuctionAlertSent {
+  id      String   @id @default(cuid())
+  email   String
+  itemId  String
+  country String
+  sentAt  DateTime @default(now())
+
+  @@unique([email, itemId, country])
+  @@index([sentAt])
 }

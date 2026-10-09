@@ -460,7 +460,7 @@ test("the graded tab, its count and its rows all describe the same market", () =
   // filter two files away. Both ends now name the market.
   assert.match(
     read("src/components/EbayCardPanelLive.tsx"),
-    /content: <EbayGradedLive listings=\{gradedHere\} \/>/,
+    /<EbayGradedLive listings=\{gradedHere\} \/>/,
     "pass the rows the count was taken from",
   );
   assert.match(

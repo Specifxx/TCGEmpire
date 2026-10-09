@@ -1,5 +1,6 @@
 "use client";
 
+import { GradedPriceHistory } from "./GradedPriceHistory";
 import { useEffect, useState } from "react";
 import { EbayTabs, type EbayTab } from "./EbayTabs";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
@@ -93,7 +94,12 @@ export function EbayCardPanelLive({
       key: "graded",
       label: "Graded",
       count: gradedHere.length,
-      content: <EbayGradedLive listings={gradedHere} />,
+      content: (
+        <>
+          <EbayGradedLive listings={gradedHere} />
+          <GradedPriceHistory cardId={cardId} />
+        </>
+      ),
     });
   }
   const active =
