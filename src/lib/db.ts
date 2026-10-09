@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
+import { routeQuery } from "./public-data/route";
 
 // ─── DATA-EGRESS RULES (read before adding queries) ────────────────────────────
 // Neon's free tier has a 5 GB/month NETWORK TRANSFER allowance. DexCompare has
@@ -247,7 +248,10 @@ function makeClient() {
     query: {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
-          const res = await query(args);
+          // Public reads may be answered from the bundled data files instead of
+          // Neon (PUBLIC_DATA_MODE, lib/public-data/mode.ts). In the default
+          // "db" mode this is a straight pass-through.
+          const res = await routeQuery(model, operation, args, query as (a: unknown) => Promise<unknown>);
           if (Array.isArray(res) && res.length >= BIG_RESULT_ROWS) {
             try {
               const bytes = JSON.stringify(res).length;

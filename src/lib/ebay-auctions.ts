@@ -13,6 +13,7 @@ import {
   ebaySpentThisRun,
   searchEbayAuctions,
 } from "./ebay";
+import { withLiveData } from "./public-data/mode";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Live eBay auctions for the whole Riftbound market — the importer and the
@@ -343,7 +344,10 @@ export async function refreshAuctions(): Promise<AuctionSweepSummary[]> {
 export function getLiveAuctions(market: Country): Promise<AuctionRow[]> {
   return cachedOrDirect(
     async () => {
-      const rows = await prisma.ebayAuctionListing
+      // Neon first in every PUBLIC_DATA_MODE: the board is swept every four
+      // hours and a release-old file snapshot would be mostly closed lots. The
+      // files are its fallback when Neon cannot answer (lib/public-data/mode.ts).
+      const rows = await withLiveData(() => prisma.ebayAuctionListing
         .findMany({
           // Upper bound as well as lower, so the page's promise ("closing within
           // N hours") is true of the QUERY and not just of whatever the last
@@ -376,7 +380,7 @@ export function getLiveAuctions(market: Country): Promise<AuctionRow[]> {
         // Fails open: a missing table (the model is new — a deploy pushes the
         // schema, see scripts/build-db-push.sh) or a DB blip renders the empty
         // state, never a 500 on an indexed page.
-        .catch(() => []);
+        .catch(() => []));
       return rows.map(({ updatedAt, ...r }) => ({
         ...r,
         endsAt: r.endsAt.toISOString(),

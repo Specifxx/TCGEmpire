@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runStripeReconcile } from "@/lib/stripe-reconcile";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // Daily Stripe ↔ premiumUntil reconciliation — the safety net under the webhook.
 // All the logic lives in lib/stripe-reconcile.ts so the identical sweep is also
@@ -11,7 +12,7 @@ import { runStripeReconcile } from "@/lib/stripe-reconcile";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120; // seconds
 
-export async function GET(req: Request) {
+async function handleGET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   if (secret && auth !== `Bearer ${secret}`) {
@@ -20,3 +21,6 @@ export async function GET(req: Request) {
   const summary = await runStripeReconcile();
   return NextResponse.json(summary, { status: summary.ok ? 200 : 500 });
 }
+
+// Public reads ask Neon first: this cron needs the latest import, not the last release (lib/public-data/live-route.ts).
+export const GET = liveRoute(handleGET);

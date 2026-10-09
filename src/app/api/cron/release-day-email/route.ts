@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { runReleaseDayBlast, type ReleaseDayAudience } from "@/lib/release-day";
 import { newestReleasedSet } from "@/lib/constants";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // Release-day email blast, run ON VERCEL so it has RESEND_API_KEY — the same
 // environment the weekly digest (/api/cron/newsletter), verification and
@@ -52,5 +53,5 @@ async function handle(req: Request) {
   return NextResponse.json(result, { status: result.ok ? 200 : 400 });
 }
 
-export const GET = handle;
-export const POST = handle;
+export const GET = liveRoute(handle);
+export const POST = liveRoute(handle);

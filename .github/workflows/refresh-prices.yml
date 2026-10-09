@@ -252,6 +252,24 @@ jobs:
         if: ${{ !cancelled() }}
         run: bash scripts/publish-price-history.sh "refresh-prices.yml (${{ github.event_name }}, run ${{ github.run_id }})"
 
+      - name: Export and publish the public data snapshot
+        # data/public/ (src/lib/public-data/): every public table as files, so
+        # the site can serve cards and prices without Neon (PUBLIC_DATA_MODE).
+        # MORNING RUN ONLY (and manual runs): the 08:00 UTC release bundles
+        # whatever main holds, so the 07:00 import's snapshot is the one that
+        # ships; an evening export would be replaced before any release used it,
+        # and every export is a full read of the listings table (~20-30 MB of
+        # transfer). After the history publish, before the alert steps, and
+        # never fatal to them.
+        if: ${{ !cancelled() && steps.import.outcome == 'success' && (github.event_name == 'workflow_dispatch' || github.event.schedule == '0 7 * * *') }}
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || 'UNSET' }}
+        run: |
+          npx tsx scripts/export-public-data.ts
+          bash scripts/publish-public-data.sh "refresh-prices.yml (${{ github.event_name }}, run ${{ github.run_id }})"
+
       - name: Free price alerts (daily digest)
         # The daily "all" run: every watch, free and anonymous included, under
         # the weekly per-address cap (lib/price-alerts.ts AlertScope "all").

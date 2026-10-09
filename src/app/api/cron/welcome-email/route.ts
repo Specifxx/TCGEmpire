@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runWelcomeEmails } from "@/lib/welcome-email";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // Hourly one-time welcome email to new accounts (see lib/welcome-email.ts).
 // Triggered by GitHub Actions — .github/workflows/welcome-email.yml — rather
@@ -17,7 +18,7 @@ function authorized(req: Request): boolean {
   return new URL(req.url).searchParams.get("token") === secret;
 }
 
-export async function GET(req: Request) {
+async function handleGET(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const summary = await runWelcomeEmails();
@@ -27,3 +28,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
+
+// Public reads ask Neon first: this cron needs the latest import, not the last release (lib/public-data/live-route.ts).
+export const GET = liveRoute(handleGET);

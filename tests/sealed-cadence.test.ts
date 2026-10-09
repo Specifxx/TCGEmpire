@@ -196,7 +196,7 @@ test("the fresh read is uncached by construction and reads narrowly", () => {
 test("GET /api/cron/price-alerts/sealed runs ONLY the sealed pass, behind the same bearer secret, with no cache bust", () => {
   const src = read("src/app/api/cron/price-alerts/sealed/route.ts");
   const route = code("src/app/api/cron/price-alerts/sealed/route.ts");
-  assert.match(route, /export async function GET\(req: Request\)/);
+  assert.match(route, /async function handleGET\(req: Request\)[\s\S]*export const GET = liveRoute\(handleGET\)/);
   assert.match(route, /auth !== `Bearer \$\{secret\}`/, "the same auth as the paid route");
   assert.match(route, /status: 401/);
   assert.match(route, /await runSealedWatches\(\{ sendCap: PAID_SEND_CAP, groups: loaders\.groups, preorderGroups: loaders\.preorderGroups \}\)/, "the shared cap, the uncached loaders");

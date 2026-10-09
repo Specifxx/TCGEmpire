@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { postDiscordDaily } from "@/lib/discord";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // Posts the daily Riftle prompt to Discord. Vercel Cron (see vercel.json) fires it
 // at 09:00 UTC, or any scheduler hitting this URL with
@@ -10,7 +11,7 @@ import { postDiscordDaily } from "@/lib/discord";
 // market-report generation is now deleted outright. See lib/discord.ts.)
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
+async function handleGET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   if (secret && auth !== `Bearer ${secret}`) {
@@ -19,3 +20,6 @@ export async function GET(req: Request) {
   const result = await postDiscordDaily();
   return NextResponse.json(result);
 }
+
+// Public reads ask Neon first: this cron needs the latest import, not the last release (lib/public-data/live-route.ts).
+export const GET = liveRoute(handleGET);

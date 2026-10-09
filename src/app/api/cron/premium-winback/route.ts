@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runPremiumWinbackBlast, type PremiumWinbackProvider } from "@/lib/premium-winback";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // One-off "N days of Premium, free, no card" win-back email to recently-
 // registered free accounts, run ON VERCEL so it has the mail keys — same
@@ -41,5 +42,5 @@ async function handle(req: Request) {
   return NextResponse.json(result, { status: result.ok ? 200 : 400 });
 }
 
-export const GET = handle;
-export const POST = handle;
+export const GET = liveRoute(handle);
+export const POST = liveRoute(handle);

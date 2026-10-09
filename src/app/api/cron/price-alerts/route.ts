@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runPriceAlerts, type AlertScope } from "@/lib/price-alerts";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // Wishlist price-alert check. Two callers, both with the
 // Authorization: Bearer <CRON_SECRET> header:
@@ -19,7 +20,7 @@ import { runPriceAlerts, type AlertScope } from "@/lib/price-alerts";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120; // seconds
 
-export async function GET(req: Request) {
+async function handleGET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   if (secret && auth !== `Bearer ${secret}`) {
@@ -34,3 +35,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, scope, error: message }, { status: 500 });
   }
 }
+
+// Public reads ask Neon first: this cron needs the latest import, not the last release (lib/public-data/live-route.ts).
+export const GET = liveRoute(handleGET);

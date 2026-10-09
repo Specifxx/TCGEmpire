@@ -10,6 +10,7 @@
 //
 // Each section is built on demand by its own route (/sitemaps/<id>.xml), so a
 // request for one section never runs the other sections' queries.
+import { publicRead, routeRaw } from "./public-data/route";
 import { prisma } from "./db";
 import { cardHistoryLatestDay } from "./price-history-store";
 import { SITE_URL } from "./site";
@@ -388,13 +389,32 @@ async function sets(): Promise<SitemapEntry[]> {
   // A raw query, not groupBy: "which set" lives on Card, one join away from
   // RetailerPrice, which groupBy alone can't cross — fully static SQL, no
   // interpolated values, so no escaping concern.
-  const lastSeenBySet = await prisma
-    .$queryRaw<{ setCode: string; maxLastSeen: Date | null }[]>`
-      SELECT c."setCode" AS "setCode", MAX(rp."lastSeen") AS "maxLastSeen"
-      FROM "RetailerPrice" rp
-      JOIN "Card" c ON c.id = rp."cardId"
-      GROUP BY c."setCode"
-    `
+  const lastSeenBySet = await routeRaw(
+    // From the public data files when PUBLIC_DATA_MODE says so (routeRaw).
+    () => {
+      const setOf = new Map(
+        publicRead<{ id: string; setCode: string }[]>("Card", "findMany", { select: { id: true, setCode: true } }).map((c) => [c.id, c.setCode]),
+      );
+      const out: { setCode: string; maxLastSeen: Date | null }[] = [];
+      const best = new Map<string, Date>();
+      for (const g of publicRead<{ cardId: string; _max: { lastSeen: Date | null } }[]>("RetailerPrice", "groupBy", { by: ["cardId"], _max: { lastSeen: true } })) {
+        const set = setOf.get(g.cardId);
+        const at = g._max.lastSeen;
+        if (!set || !at) continue;
+        const prev = best.get(set);
+        if (!prev || at > prev) best.set(set, at);
+      }
+      for (const [setCode, maxLastSeen] of best) out.push({ setCode, maxLastSeen });
+      return out;
+    },
+    () =>
+      prisma.$queryRaw<{ setCode: string; maxLastSeen: Date | null }[]>`
+        SELECT c."setCode" AS "setCode", MAX(rp."lastSeen") AS "maxLastSeen"
+        FROM "RetailerPrice" rp
+        JOIN "Card" c ON c.id = rp."cardId"
+        GROUP BY c."setCode"
+      `,
+  )
     .then((rows) => new Map(rows.map((r) => [r.setCode, r.maxLastSeen])))
     .catch(() => new Map<string, Date | null>());
 

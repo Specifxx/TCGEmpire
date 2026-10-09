@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runNewsletterDigest } from "@/lib/newsletter";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // Weekly Index-summary digest to the footer-signup list. Triggered by Vercel
 // Cron (see vercel.json) Friday 21:00 UTC — after the Friday price refresh —
@@ -8,7 +9,7 @@ import { runNewsletterDigest } from "@/lib/newsletter";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120; // seconds
 
-export async function GET(req: Request) {
+async function handleGET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   if (secret && auth !== `Bearer ${secret}`) {
@@ -22,3 +23,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
+
+// Public reads ask Neon first: this cron needs the latest import, not the last release (lib/public-data/live-route.ts).
+export const GET = liveRoute(handleGET);

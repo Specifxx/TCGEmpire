@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runPremiumTrialReminders } from "@/lib/premium";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // Daily "your trial ends soon" email for Plus and Premium trialists (see
 // runPremiumTrialReminders for why this runs on a schedule rather than reacting to
@@ -10,7 +11,7 @@ import { runPremiumTrialReminders } from "@/lib/premium";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-export async function GET(req: Request) {
+async function handleGET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   if (secret && auth !== `Bearer ${secret}`) {
@@ -24,3 +25,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
+
+// Public reads ask Neon first: this cron needs the latest import, not the last release (lib/public-data/live-route.ts).
+export const GET = liveRoute(handleGET);

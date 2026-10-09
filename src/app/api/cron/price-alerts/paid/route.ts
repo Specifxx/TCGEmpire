@@ -4,6 +4,7 @@ import { runDeckWatches } from "@/lib/deck-watch";
 import { runSealedWatches } from "@/lib/sealed-watch";
 import { bustSealedGroups } from "@/lib/sealed-fresh";
 import { PAID_SEND_CAP } from "@/lib/price-alerts";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // The PAID alert run: target-price and below-market alerts for watches owned
 // by a Plus/Premium account (lib/price-alerts.ts AlertScope "paid"), then —
@@ -34,7 +35,7 @@ import { PAID_SEND_CAP } from "@/lib/price-alerts";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // seconds: three passes, each pricing lists or reading groups
 
-export async function GET(req: Request) {
+async function handleGET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   if (secret && auth !== `Bearer ${secret}`) {
@@ -52,3 +53,6 @@ export async function GET(req: Request) {
   const ok = cards.ok && decks.ok && sealed.ok;
   return NextResponse.json({ ...cards, ok, scope: "paid", decks, sealed }, { status: ok ? 200 : 500 });
 }
+
+// Public reads ask Neon first: this cron needs the latest import, not the last release (lib/public-data/live-route.ts).
+export const GET = liveRoute(handleGET);

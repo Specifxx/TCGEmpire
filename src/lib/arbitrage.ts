@@ -29,6 +29,7 @@
 // dedupe within one warm lambda — under Vercel's fan-out every cold instance
 // re-pulled the whole set, which is exactly what has burned through this
 // project's Neon free-tier transfer allowance before.
+import { publicRead, routeRaw } from "./public-data/route";
 import { prisma } from "./db";
 import { COUNTRY_LIST, currencyOf, pickPrice, type Country } from "./country";
 import { RETAILERS } from "./retailers";
@@ -164,13 +165,32 @@ function coalesced<T>(key: string, load: () => Promise<T>): Promise<T> {
 function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow[]> {
   return coalesced(`ebay-rows|${country}|${ebayKey}|${sydneyDayKey()}`, () => cachedOrDirect(
     () =>
-      prisma.$queryRaw<EbayRow[]>`
-        SELECT DISTINCT ON ("cardId")
-               "cardId", "priceCents", "shippingCents", "url"
-        FROM "RetailerPrice"
-        WHERE country = ${country} AND retailer = ${ebayKey} AND "inStock" = true
-        ORDER BY "cardId", ("priceCents" + COALESCE("shippingCents", 0)) ASC, ("shippingCents" IS NULL) ASC
-      `,
+      // From the public data files when PUBLIC_DATA_MODE says so (routeRaw):
+      // the same DISTINCT ON, as a sort and a first-per-card pass in memory.
+      routeRaw(
+        () => {
+          const rows = publicRead<EbayRow[]>("RetailerPrice", "findMany", {
+            where: { country, retailer: ebayKey, inStock: true },
+            select: { cardId: true, priceCents: true, shippingCents: true, url: true },
+          });
+          const total = (r: EbayRow) => r.priceCents + (r.shippingCents ?? 0);
+          const sorted = [...rows].sort(
+            (a, b) =>
+              (a.cardId < b.cardId ? -1 : a.cardId > b.cardId ? 1 : 0) ||
+              total(a) - total(b) ||
+              Number(a.shippingCents == null) - Number(b.shippingCents == null),
+          );
+          return sorted.filter((r, i) => i === 0 || sorted[i - 1].cardId !== r.cardId);
+        },
+        () =>
+          prisma.$queryRaw<EbayRow[]>`
+            SELECT DISTINCT ON ("cardId")
+                   "cardId", "priceCents", "shippingCents", "url"
+            FROM "RetailerPrice"
+            WHERE country = ${country} AND retailer = ${ebayKey} AND "inStock" = true
+            ORDER BY "cardId", ("priceCents" + COALESCE("shippingCents", 0)) ASC, ("shippingCents" IS NULL) ASC
+          `,
+      ),
     ["arb-ebay-rows", country, ebayKey, sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   ));

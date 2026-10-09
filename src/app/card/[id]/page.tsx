@@ -1,3 +1,4 @@
+import { publicRead, routeRaw } from "@/lib/public-data/route";
 import { BanNotice } from "@/components/BanNotice";
 import type { Metadata } from "next";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
@@ -868,18 +869,34 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // if the column ever becomes a parameter.
   const priceCol = priceField(DEFAULT_COUNTRY);
   if (!/^lowestPriceCents(Us|Uk|Sg|Ca)?$/.test(priceCol)) throw new Error(`bad price column: ${priceCol}`);
-  const setStats = await prisma
-    .$queryRaw<{ priced: bigint; cheaper: bigint; median: number | null }[]>`
-      SELECT COUNT(*) AS priced,
-             COUNT(*) FILTER (WHERE ${Prisma.raw(`"${priceCol}"`)} < ${baseline.lowest ?? -1}) AS cheaper,
-             (array_agg(${Prisma.raw(`"${priceCol}"`)} ORDER BY ${Prisma.raw(`"${priceCol}"`)}))[
-               (COUNT(*) / 2)::int + 1
-             ] AS median
-      FROM "Card"
-      WHERE "setCode" = ${card.setCode} AND ${Prisma.raw(`"${priceCol}"`)} IS NOT NULL
-    `
-    .then((rows) => rows[0] ?? null)
-    .catch(() => null);
+  // From the public data files when PUBLIC_DATA_MODE says so (routeRaw): the
+  // same three numbers, computed from the set's priced cards in memory.
+  const setStats = await routeRaw(
+    () => {
+      const prices = publicRead<Record<string, number>[]>("Card", "findMany", {
+        where: { setCode: card.setCode, [priceCol]: { not: null } },
+        orderBy: { [priceCol]: "asc" },
+        select: { [priceCol]: true },
+      }).map((r) => r[priceCol]);
+      if (!prices.length) return null;
+      return {
+        priced: BigInt(prices.length),
+        cheaper: BigInt(prices.filter((p) => p < (baseline.lowest ?? -1)).length),
+        median: prices[Math.floor(prices.length / 2)],
+      };
+    },
+    () =>
+      prisma.$queryRaw<{ priced: bigint; cheaper: bigint; median: number | null }[]>`
+          SELECT COUNT(*) AS priced,
+                 COUNT(*) FILTER (WHERE ${Prisma.raw(`"${priceCol}"`)} < ${baseline.lowest ?? -1}) AS cheaper,
+                 (array_agg(${Prisma.raw(`"${priceCol}"`)} ORDER BY ${Prisma.raw(`"${priceCol}"`)}))[
+                   (COUNT(*) / 2)::int + 1
+                 ] AS median
+          FROM "Card"
+          WHERE "setCode" = ${card.setCode} AND ${Prisma.raw(`"${priceCol}"`)} IS NOT NULL
+        `
+        .then((rows) => rows[0] ?? null),
+  ).catch(() => null);
   const setContext =
     setStats && Number(setStats.priced) > 0 && setStats.median != null && baseline.lowest != null
       ? {

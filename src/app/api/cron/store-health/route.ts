@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkStoreHealth, formatHealthAlerts } from "@/lib/store-health";
 import { postDiscordAlert } from "@/lib/discord";
 import { SITE_URL } from "@/lib/site";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -71,5 +72,5 @@ async function handle(req: Request) {
   }
 }
 
-export const GET = handle;
-export const POST = handle;
+export const GET = liveRoute(handle);
+export const POST = liveRoute(handle);

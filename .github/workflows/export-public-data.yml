@@ -1,0 +1,43 @@
+name: Export public data to files
+
+# Copies every PUBLIC table of the operational database (cards, store listings,
+# sealed listings, eBay listings) into data/public/ and commits it to main
+# (scripts/export-public-data.ts, scripts/publish-public-data.sh). DECISIONS.md,
+# "Public data moves out of Neon into the repository", 2026-10-09.
+#
+# refresh-prices.yml runs the same export after the morning import, so this is
+# for a first snapshot, a re-run after a failure, or a fresh copy before
+# switching PUBLIC_DATA_MODE. Never a deploy: the snapshot rides the next daily
+# release.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: public-data-files
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Export from the operational database
+        env:
+          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || 'UNSET' }}
+        run: npx tsx scripts/export-public-data.ts
+      - name: Commit the snapshot to main
+        run: bash scripts/publish-public-data.sh "export-public-data.yml (run ${{ github.run_id }})"

@@ -192,7 +192,7 @@ test("alert runs follow a SUCCESSFUL, non-push import: free once a day after 07:
   assert.match(step, /curl -s --max-time 120 "\$SITE_URL\/api\/cron\/price-alerts\/paid\$fresh" -H "Authorization: Bearer \$CRON_SECRET" \|\| true/);
   for (const curl of step.match(/curl [^\n]*/g) ?? []) assert.doesNotMatch(curl, /scope=paid/);
   const paidRoute = read("src/app/api/cron/price-alerts/paid/route.ts");
-  assert.match(paidRoute, /export async function GET\(req: Request\)/);
+  assert.match(paidRoute, /async function handleGET\(req: Request\)[\s\S]*export const GET = liveRoute\(handleGET\)/);
   assert.match(paidRoute, /auth !== `Bearer \$\{secret\}`/);
   assert.match(paidRoute, /runPriceAlerts\(\{\}, \{ scope: "paid" \}\)/);
   // The query may carry only ?fresh=1 (an uncached sealed read); never a scope.
@@ -200,7 +200,7 @@ test("alert runs follow a SUCCESSFUL, non-push import: free once a day after 07:
   assert.doesNotMatch(paidRoute.replace(/\/\/.*$/gm, ""), /scope\s*=|\.get\("scope"\)/);
   // The parent route is GET, authenticates that header, and still maps the query (manual runs).
   const route = read("src/app/api/cron/price-alerts/route.ts");
-  assert.match(route, /export async function GET\(req: Request\)/);
+  assert.match(route, /async function handleGET\(req: Request\)[\s\S]*export const GET = liveRoute\(handleGET\)/);
   assert.match(route, /auth !== `Bearer \$\{secret\}`/);
   assert.match(route, /searchParams\.get\("scope"\) === "paid" \? "paid" : "all"/);
   assert.match(route, /runPriceAlerts\(\{\}, \{ scope \}\)/);

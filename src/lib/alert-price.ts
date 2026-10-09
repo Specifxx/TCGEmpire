@@ -1,6 +1,7 @@
 import type { prisma } from "./db";
 import { ALL_FALLBACK_RETAILERS } from "./constants";
 import { alertConditionRank } from "./condition";
+import { withLiveData } from "./public-data/mode";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE ALERT PRICE — what a price alert compares, and the stores it names.
@@ -197,7 +198,7 @@ export function alertBaselineSeed(p: AlertPrice | undefined): {
  * if the read fails: with no prices there is nothing safe to compare, and the
  * caller must not read that as every card selling out.
  */
-export async function computeAlertPrices(
+async function computeAlertPricesInner(
   db: AlertPriceDb,
   pairs: readonly { cardId: string; market: string }[],
   now: Date,
@@ -289,4 +290,17 @@ export async function computeAlertPrices(
     }
   }
   return out;
+}
+
+/**
+ * The price each watch compares against. Reads Neon first in every
+ * PUBLIC_DATA_MODE (lib/public-data/mode.ts): a watch's baseline and the alert
+ * crons must see the same, current listings — a baseline seeded from the last
+ * release's files would make the next fresh check look like a price move, and
+ * ALERT_FRESH_MS would drop day-old file rows anyway.
+ */
+export function computeAlertPrices(
+  ...args: Parameters<typeof computeAlertPricesInner>
+): ReturnType<typeof computeAlertPricesInner> {
+  return withLiveData(() => computeAlertPricesInner(...args));
 }

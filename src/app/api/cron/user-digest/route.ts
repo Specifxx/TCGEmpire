@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runUserDigest, type UserDigestProvider } from "@/lib/user-digest";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // Weekly Index-summary digest to registered accounts that never opted into the
 // newsletter, sent via Brevo by DEFAULT (see lib/email.ts) instead of Resend.
@@ -39,5 +40,5 @@ async function handle(req: Request) {
   }
 }
 
-export const GET = handle;
-export const POST = handle;
+export const GET = liveRoute(handle);
+export const POST = liveRoute(handle);

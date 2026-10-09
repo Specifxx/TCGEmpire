@@ -111,7 +111,7 @@ const nextConfig = {
     // shared libraries (card pages, sitemaps, /api, OG images) and a route that
     // never reads history only carries a few MB of JSON it does not open.
     outputFileTracingIncludes: {
-      "/**": ["./data/price-history/**/*.json"],
+      "/**": ["./data/price-history/**/*.json", "./data/public/**/*.json"],
     },
   },
   images: {

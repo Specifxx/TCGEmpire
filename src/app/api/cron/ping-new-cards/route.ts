@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { revalidateContent } from "@/lib/revalidate-content";
 import { pingAfterCardImport } from "@/lib/indexnow";
 import { setByCode } from "@/lib/constants";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // LAUNCH-WEEK INDEXING: purge the sitemap and ping IndexNow for cards that were
 // just imported.
@@ -99,5 +100,5 @@ async function handle(req: Request) {
   });
 }
 
-export const GET = handle;
-export const POST = handle;
+export const GET = liveRoute(handle);
+export const POST = liveRoute(handle);

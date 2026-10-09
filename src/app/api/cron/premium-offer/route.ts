@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runPremiumOfferBlast, type PremiumOfferProvider } from "@/lib/premium-offer";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // The one-off PRICE-DROP announcement (2026-09-27) to every account not
 // currently paying — see lib/premium-offer.ts. The path keeps its old name
@@ -42,5 +43,5 @@ async function handle(req: Request) {
   return NextResponse.json(result, { status: result.ok ? 200 : 400 });
 }
 
-export const GET = handle;
-export const POST = handle;
+export const GET = liveRoute(handle);
+export const POST = liveRoute(handle);

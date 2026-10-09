@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runSealedWatches } from "@/lib/sealed-watch";
 import { freshSealedLoaders } from "@/lib/sealed-alert-read";
 import { PAID_SEND_CAP } from "@/lib/price-alerts";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // THE SEALED-ONLY ALERT RUN (2026-09-29): the sealed watches (lib/sealed-watch.ts,
 // Plus and Premium) and nothing else. Called by .github/workflows/sealed-refresh.yml
@@ -32,7 +33,7 @@ import { PAID_SEND_CAP } from "@/lib/price-alerts";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120; // seconds: one read per watched market, one send loop
 
-export async function GET(req: Request) {
+async function handleGET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   if (!secret || auth !== `Bearer ${secret}`) {
@@ -44,3 +45,6 @@ export async function GET(req: Request) {
     .catch((e: unknown) => ({ ok: false as const, error: e instanceof Error ? e.message : "run failed" }));
   return NextResponse.json({ ok: sealed.ok, scope: "sealed", sealed }, { status: sealed.ok ? 200 : 500 });
 }
+
+// Public reads ask Neon first: this cron needs the latest import, not the last release (lib/public-data/live-route.ts).
+export const GET = liveRoute(handleGET);

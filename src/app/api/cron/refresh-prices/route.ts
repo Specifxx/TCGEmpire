@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { importPrices } from "@/lib/price-import";
 import { pingAfterPriceRefresh } from "@/lib/indexnow";
 import { revalidateContent } from "@/lib/revalidate-content";
+import { liveRoute } from "@/lib/public-data/live-route";
 
 // Scheduled price refresh. Triggered by Vercel Cron (see vercel.json) or any
 // scheduler hitting this URL with the Authorization: Bearer <CRON_SECRET> header.
@@ -10,7 +11,7 @@ import { revalidateContent } from "@/lib/revalidate-content";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // seconds (requires a plan that allows it)
 
-export async function GET(req: Request) {
+async function handleGET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   // Vercel Cron sends "Authorization: Bearer <CRON_SECRET>" when the env var is set.
@@ -30,3 +31,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
+
+// Public reads ask Neon first: this cron needs the latest import, not the last release (lib/public-data/live-route.ts).
+export const GET = liveRoute(handleGET);
