@@ -101,6 +101,22 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  // Public data as files (src/lib/public-data/, DECISIONS.md 2026-10-09): the
+  // router and mode modules import node:fs / node:crypto / node:async_hooks, and
+  // lib/db.ts (which imports them) is reachable from a few client components via
+  // shared helpers. The browser bundle gets no-op stand-ins instead; no query
+  // ever runs there (@prisma/client is its own browser stub).
+  webpack(config, { isServer, webpack }) {
+    if (!isServer) {
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/(^|[\\/])(route|mode)$/, (resource) => {
+          const inPublicData = /public-data[\\/](route|mode)$/.test(resource.request) || /[\\/]public-data$/.test(resource.context || "");
+          if (inPublicData) resource.request = resource.request.replace(/(route|mode)$/, "$1.browser");
+        }),
+      );
+    }
+    return config;
+  },
   reactStrictMode: true,
   experimental: {
     // The public price history is day files in the repository
