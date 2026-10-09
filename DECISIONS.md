@@ -16799,3 +16799,46 @@ The nine signed twins are 72% of what one of each of the 40 chase printings cost
 **Rollback** is one commit: RM6 still holds the data.
 
 **Deploy.** Deployed right away, as the standing exception to the daily release: a database cutover cannot wait for 08:00 UTC when the live project is at its limit, and until the build runs the app keeps writing to RM6. RM7 must be set in Vercel for Production, Preview and Development; the production build now fails if it is not, which keeps the previous deployment serving.
+
+## Public data moves out of Neon into the repository (built, switched off) — 2026-10-09
+
+**Why (owner).** "It's also good if we just have most of the main database and all the public prices and public data on GitHub anyways, because it reduces the dependency. Say our Neon database gets killed and it goes over limit, then the whole website just fails." Every operational project has hit its 5 GB transfer allowance within 3–5 days, and when one does, every page fails, not only the account pages. Price history already moved to files on 2026-10-03; this does the same for the rest of the public data, behind a switch.
+
+**What is public, and what stays in Neon.**
+- **To files** (`data/public/`): `Card`, `RetailerPrice`, `SealedListing`, `SealedGroupFirstSeen`, `EbayAdListing`, `EbayGradedListing`, and `EbayAuctionListing` as a fallback snapshot.
+- **Stays in Neon:** everything personal or written by a request. That is users, collections, alerts, watches, orders, marketplace, decks, newsletter, tickets, game scores, `DemandSnapshot`, `Counter` (order numbers, alert caps), `RisingSnapshot` (its token is a secret URL), `PriceReport`, `StoreHealthSnapshot` and the click log.
+- **Demand counters.** `Card.searchCount` and `viewCount` are published only as order-preserving dense ranks (0 stays 0). Every "popular" sort and `> 0` filter stays exact, but traffic numbers are not published. `lastViewedAt` and `ebayCheckedAt` are not published.
+
+**How it works.**
+- **Export.** `scripts/export-public-data.ts` reads each public table once, in pages. It writes one file per table, and one listings file per card, so a card page reads one small file. Each file holds one row per line, sorted, with database ids replaced by ids derived from the row's own key, and a listing's `lastSeen` stored only when it differs from its store's import minute.
+- **Verification.** The export reads its own files back through the site's engine and compares every table's row count, every card's listing count and every cheapest price per market with the database. Any mismatch fails the run.
+- **Publishing.** `scripts/publish-public-data.sh` commits the snapshot to main without a deploy marker. `refresh-prices.yml` runs both after the 07:00 import only, because that is the snapshot the 08:00 release ships; an evening export would be replaced before any release used it. `export-public-data.yml` runs it on demand.
+- **First snapshot** (run 37889455297): 1,613 cards, 138,474 listings, 2,907 sealed listings, 6,512 eBay listings. 55 MB raw, 5.5 MB compressed.
+- **Reading.** `lib/db.ts`'s existing query extension sends every read of a public model through `lib/public-data/route.ts`. `lib/public-data/engine.ts` answers the Prisma call shapes this codebase uses: where with AND/OR/NOT, NULL-excluding `not`/`notIn`, insensitive `contains`; relation filters and includes; filtered `_count`; orderBy with Postgres null placement; distinct; skip/take; count, aggregate and groupBy. Anything else is refused (cursor, `having`, a relation to a private model, an unknown operator) and that query goes to Neon, logged once as `[public-data:unsupported]`. Call sites are unchanged.
+- **Raw SQL.** The three public raw-SQL reads have file versions through `routeRaw`: the card page's set median, the Deal Finder's cheapest eBay listing (DISTINCT ON), and the sitemap's per-set lastmod.
+
+**The switch: `PUBLIC_DATA_MODE`** (a Vercel variable, read at build and at run time).
+- `db` (the default, unset): exactly as before. The snapshot is not even bundled.
+- `fallback`: Neon answers. When it cannot (unreachable, over its transfer allowance, timing out), public reads come from the files for a minute at a time. It saves nothing while Neon is healthy, but public pages survive Neon dying.
+- `files`: public reads never touch Neon. Neon serves only private data, writes and refused shapes.
+
+**Readers that always ask Neon first** (in every mode, files only if Neon fails):
+- every `/api/cron` route (`liveRoute`), because the alert, release and digest crons run right after an import and must see that import;
+- `computeAlertPrices`, so a watch's baseline and the alert checks compare the same current listings;
+- the auction board, which is swept every four hours.
+
+**Freshness trade-off in `files` mode.** Prices on the site update once a day, at the 08:00 UTC release (the 07:00 import's snapshot). Today they update after both daily imports. The 19:00 import still updates Neon, so alerts stay twice daily. If twice-daily site prices matter, a second daily release at ~19:30 UTC is now cheap for Neon, because builds read the files, but it is a change to the deploy gate and the owner's call.
+
+**Verified.**
+- A local production build with `PUBLIC_DATA_MODE=files` and no database configured compiled, and prerendered every page from the files: 1,613 cards and live prices on `/`, the region homes and the set pages.
+- `next start` in the same state served `/browse`, search (including did-you-mean), `/price-guide`, `/sealed`, set pages, card pages (17 store rows), `/tools/deal-finder`, `/movers`, `/stores`, `/auctions`, `/cards/all`, champion pages, `/decks`, the sitemap and the v1 price API, all 200 with data.
+- The only failed reads were private tables (`DemandSnapshot`, `Feedback`, `PublishedDeck`), which fail open.
+
+**A bug found by that build.** `lib/db.ts` is reachable from client components (`lib/cards.ts` → `PageSizeSelect`), so the router's `node:` imports broke the browser bundle. Client compilations now swap `route.ts` and `mode.ts` for no-op stand-ins (`next.config.js`). Fixed before any release built the broken commit.
+
+**Not done yet.**
+- The switch has not been flipped; that is the owner's step (`docs/public-data-switchover.md`).
+- Remaining Neon reads in `files` mode are private data, imports, crons, the daily export and refused shapes. The egress audit will show what they cost.
+- `Card` writes by request (the view beacon) still go to Neon and are lost if Neon is down; that only affects popularity ranks.
+
+**Tests:** `tests/public-data.test.ts` covers round trips through the exporter, store and engine, Postgres NULL and ordering semantics, refusals, routing by mode, every cron route wrapped, the browse and search builders against the files, nothing private in the snapshot, and conditional bundling.

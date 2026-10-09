@@ -58,6 +58,14 @@ Public price history (the card and sealed series) is NOT in Neon: since
 (`ClickEvent`). That directory is published with the source, so never write
 anything private to it.
 
+The rest of the PUBLIC data (cards, store listings, sealed and eBay listings)
+is also exported to `data/public/` every morning (`src/lib/public-data/`,
+`scripts/export-public-data.ts`). `PUBLIC_DATA_MODE` (Vercel variable: `db`
+default, `fallback`, `files`) decides whether the site reads it instead of
+Neon; reads route through `lib/db.ts` automatically, so call sites need no
+change. Never add a private model or column to `PUBLIC_MODELS` or the export,
+and keep any cron or alert reader inside `liveRoute` / `withLiveData`.
+
 ## Checks
 
 ```

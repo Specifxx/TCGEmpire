@@ -63,6 +63,12 @@ longer lands on its entry.
 
 ## Databases
 
+- **Public data can be served from files** (`data/public/`, `src/lib/public-data/`):
+  every public table is exported after the 07:00 import and committed without
+  a deploy marker. `PUBLIC_DATA_MODE` (`db` default / `fallback` / `files`)
+  decides whether public reads hit Neon; cron routes, alert baselines and the
+  auction board always ask Neon first. Private data never goes to files.
+  Demand counters are published only as ranks. [2026-10-09](../DECISIONS.md#L16803)
 - **Live names** (since 2026-10-09; `src/lib/db-chains.ts` is the source of
   truth): operational `RM7`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
