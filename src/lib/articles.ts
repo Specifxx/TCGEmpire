@@ -256,6 +256,351 @@ const PREMIUM_TRIAL_ARTICLE_BILLING = premiumTrialEnabled()
   : "Both tiers run through Stripe and are charged when you subscribe — no free trial, no introductory price, just the price in the table.";
 
 export const ARTICLES: Article[] = [
+  // RADIANCE PATCH NOTES, ERRATA AND TOURNAMENT RULES (2026-10-10, owner:
+  // "There's been some updates around riftbound recently, do some research and
+  // make a couple insightful blog posts"). Riot published three documents at
+  // 16:00 UTC on 9 October 2026, all effective with the Pre-Rift on 16 October:
+  // the Core Rules "Radiance Patch Notes" (RFB_ST0526_030_R001), "Radiance
+  // Errata Updates" (four cards) and the "October 2026 Tournament Rules
+  // Changelog". Every rule and erratum below is read from those three pages on
+  // playriftbound.com; the rule numbers are the ones Riot printed. Where Riot
+  // gave no old wording or no reason, the post says so instead of supplying one.
+  // Forbidden Technique and Gutter Guardian are named but not linked: neither is
+  // in the catalogue yet. Inbound link from the Neeko spoiler post's errata note.
+  {
+    slug: "riftbound-radiance-patch-notes-errata",
+    category: "blog",
+    title: "Radiance Patch Notes & Errata, Explained",
+    excerpt:
+      "Riot's Radiance rules update for players: Deploy, Disarm and Show Off in the rules, four errata including Neeko, and tournament changes from 16 October.",
+    author: "RiftCompare",
+    date: "2026-10-10",
+    readMins: 9,
+    tags: ["radiance", "news", "rules", "errata", "tournament", "neeko"],
+    hero: {
+      src: "/radiance-spoilers/neeko-blending-in.jpg",
+      alt: "Neeko, Blending In, the Radiance card whose deckbuilding text Riot changed to 'choose up to 3 different legends' in the 9 October 2026 errata",
+    },
+    summary: [
+      "**Three documents, one date.** On 9 October 2026 Riot published the Radiance core rules patch notes, four card errata and a tournament rules changelog. All of them take effect on **16 October**, the first day of Pre-Rift.",
+      "**Neeko is the card to read twice.** Her errata changes \"choose 3 different legends\" to **\"choose up to 3\"**, the core rules gain a section on deckbuilding decisions because of her, and tournaments add a registration rule for decks that use her.",
+      "**The three new keywords are now rules, not reminder text:** Deploy (gear you play to a battlefield, killed if an opponent holds it), Disarm (an attack trigger that shrinks an enemy unit) and Show Off (reveal or pick a card, locked in at that moment).",
+      "**Riot says none of this is a balance change.** The patch notes state that it does not use rules updates or errata to manage power levels. No card was banned or unbanned.",
+      "**For tournament players:** bluffing about hidden information is now explicitly allowed, loops must be fully deterministic, and outside notes are allowed during sideboarding until opening hands are drawn.",
+    ],
+    faq: [
+      {
+        q: "When do the Riftbound Radiance rules changes take effect?",
+        a: "On 16 October 2026, the first day of Radiance Pre-Rift events. Riot published the core rules patch notes, the Radiance errata and the October 2026 tournament rules changelog together on 9 October 2026, and all three apply from 16 October. Radiance itself releases on 23 October 2026.",
+      },
+      {
+        q: "Which Riftbound cards got errata for Radiance?",
+        a: "Four Radiance cards: Elnuk Herd (\"another friendly unit\" becomes \"a friendly unit\"), Last Caress (parentheses replaced with commas, no change in meaning), Forbidden Technique (\"Banish this\" becomes \"Then banish this\") and Neeko, Blending In (\"choose 3 different legends\" becomes \"choose up to 3 different legends\"). Riot's stated reason is clarity under the rules.",
+      },
+      {
+        q: "Did Neeko, Blending In get changed?",
+        a: "Yes, in one phrase. Her printed text says to choose 3 different legends in addition to your starting legend; the errata makes it \"up to 3\", so you can choose fewer. The core rules also gained a section on decisions made during deckbuilding, starting with Neeko, and the tournament rules added special deck registration requirements for cards like her.",
+      },
+      {
+        q: "Was anything banned in the Radiance update?",
+        a: "No. The 9 October documents contain no bans or unbans, and the patch notes say Riot does not update rules or issue errata to manage power levels. The ban list is a separate announcement.",
+      },
+      {
+        q: "What is the difference between pick and choose in Riftbound?",
+        a: "From Radiance, \"choose\" means targeting and \"pick\" means a choice that does not target. Some Radiance cards already print \"pick\". Riot says this prepares for the Legacy rules update in January 2027.",
+      },
+      {
+        q: "Can you bluff in Riftbound tournaments?",
+        a: "Yes. The October 2026 tournament rules (502.11) state that players may bluff about their private information, such as the cards in their hand.",
+      },
+    ],
+    shop: [
+      { label: "Radiance booster displays", query: "Riftbound Radiance booster box" },
+      { label: "Radiance Pre-Rift kits", query: "Riftbound Radiance Pre-Rift kit" },
+      { label: "Neeko, Blending In", query: "Riftbound Neeko Blending In" },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Every Radiance card →",
+      blurb: "The full Radiance card list, with prices on each card from Pre-Rift and release day.",
+    },
+    embeds: [
+      {
+        title: "The Radiance cards these rules are about",
+        note: "Neeko and Elnuk Herd have errata; Orianna, Primordial Roar, Chronobreak and Transpositionist each have a ruling in the patch notes.",
+        slugs: [
+          "neeko-blending-in-rad-167-167",
+          "elnuk-herd-rad-081-167",
+          "last-caress-rad-154-167",
+          "orianna-lady-of-clockwork-rad-145-167",
+          "primordial-roar-rad-082-167",
+          "chronobreak-rad-140-167",
+          "transpositionist-rad-115-167",
+          "pillaged-armory-rad-073-167",
+        ],
+      },
+    ],
+    body: `**Riot published Radiance's rules update on 9 October 2026, two weeks before the set releases.** It came in three parts: the core rules patch notes, errata for four Radiance cards, and a changelog for the tournament rules. All three take effect on **16 October**, when Pre-Rift events begin. That means the first time most people play Radiance, they will be playing under these rules.
+
+Most of it is careful housekeeping, and Riot says so. The patch notes state that the designers do not change rules or issue errata to manage power levels, and nothing here bans or unbans a card. But a few of the changes affect how cards you will actually play work, and one card, **[Neeko, Blending In](/card/neeko-blending-in-rad-167-167)**, turns up in all three documents. This post goes through what changed, in the order a player will meet it.
+
+## The four errata
+
+Riot gave one reason for all four: the new wording makes the cards easier to understand and clarifies how they work under the rules. Here is each one, printed text first.
+
+| Card | Printed text | Errata text | What it changes |
+| --- | --- | --- | --- |
+| **[Elnuk Herd](/card/elnuk-herd-rad-081-167)** | "give **another** friendly unit +3 Might this turn" | "give **a** friendly unit +3 Might this turn" | The Herd can now buff itself |
+| **[Last Caress](/card/last-caress-rad-154-167)** | "The next unit you play this turn (even from face down) can be played to any battlefield." | "The next unit you play this turn, even from face down, can be played to any battlefield." | Punctuation only |
+| **Forbidden Technique** | "Banish this." | "**Then** banish this." | The banish happens after the card is played from the trash |
+| **Neeko, Blending In** | "choose 3 different legends in addition to your starting legend" | "choose **up to** 3 different legends in addition to your starting legend" | Three is now a maximum, not a requirement |
+
+**Elnuk Herd is the one that changes what a card can do.** It is a 6-energy Body unit with Hidden, and when you play it, it gives a friendly unit +3 Might this turn and recycles itself if it was played from face down. The printed card could not target itself. The errata removes "another", so the Herd can now give itself the +3. That matters most when it is your only unit, which is exactly when a card that recycles itself tends to be played.
+
+**Last Caress** is the opposite case. Moving "even from face down" out of brackets does not change its meaning. The likely reason is that, in Riftbound, text in brackets is usually reminder text that explains a rule and does not add one. Writing the clause without brackets makes it clear that it is part of the card's actual effect.
+
+**Forbidden Technique** gains one word, "Then", and it is about order. The card can be played from the trash, and the old "Banish this." left room to argue about when the banish happened. "Then" puts it after the play. We have not catalogued the card yet, so there is no link here.
+
+## Neeko, three times over
+
+When we wrote up **[Neeko, Blending In](/blog/riftbound-neeko-blending-in-spoiler)** from the first photo of the card, the striking thing was that she breaks the one-Legend rule. If she is in your deck, you name extra Legends at deckbuilding. When you play her, one of them joins your Legend Zone for as long as she is on the board. The 9 October documents deal with her in three separate places.
+
+1. **The errata.** "Choose 3 different legends" becomes "choose **up to** 3". The printed text read as an obligation, so a deck that included her had to commit three extra Legends whether it wanted them or not. Now three is a ceiling. Riot does not say why, beyond clarity, so we will not guess at the motive. The practical effect is that you can choose fewer than three.
+2. **The core rules.** The patch notes add a section on "additional deckbuilding decisions", which explains how choices made while building a deck work, and say it starts with Neeko. A choice made before the game begins has never needed rules before, because no card asked for one.
+3. **The tournament rules.** A new rule, **401.2.a**, sets special deck registration requirements for cards with special deckbuilding rules, and names Neeko as the example. In practice, at an event that collects decklists, the Legends you choose for her go on the registration too.
+
+The patch notes also list a ruling on Neeko that cites rules 103.1, 440.2.a, 440.3.b, 440.3.c and 355.10.g. If you plan to play her at a competitive event, that ruling is worth reading in full on Riot's page.
+
+[[embed:0]]
+
+## Deploy, Disarm and Show Off become rules
+
+Preview Season showed all three new keywords on finished cards (see **[Radiance Preview Week 1](/blog/riftbound-radiance-preview-week-one)**). The patch notes now add them to the rules, and each one gets a definition that settles questions the reminder text left open.
+
+- **Deploy** is a gear keyword. Deploy gear can be played to a battlefield that is friendly, uncontrolled or held by an enemy. It stays there unless it is destroyed, although some effects can move it. If an opponent holds a battlefield where you have Deploy gear, that gear is killed. Riot says the point is to let effects change one battlefield at a time. **[Pillaged Armory](/card/pillaged-armory-rad-073-167)** is one of the first Deploy cards. Our **[Deploy guide](/guides/riftbound-deploy-explained)** has the full list as it grows.
+- **Disarm** is an attack trigger. The first time a unit with Disarm attacks in a combat, an enemy unit at that battlefield gets -1 Might this turn, or -2 for Disarm 2. If a unit has more than one Disarm, they combine into a single trigger that uses their total. More in our **[Disarm guide](/guides/riftbound-disarm-explained)**.
+- **Show Off** has you reveal a matching card from your hand, or pick a friendly card or token on the board that meets the condition. Whatever the card reads from the shown-off object is **locked in when you show it**. So if **[Primordial Roar](/card/primordial-roar-rad-082-167)** shows off a 5-Might unit, it deals 5 damage even if that unit's Might changes before the spell resolves. The patch notes include a ruling on Primordial Roar and shown-off units (832.1.d.1). See our **[Show Off guide](/guides/riftbound-showoff-explained)**.
+
+[[shop]]
+
+## The core rules changes that matter in play
+
+Beyond the keywords, the patch notes list fourteen rules changes. Most only matter to judges, but these change how particular cards play:
+
+- **"Pick" no longer means "choose".** From Radiance, *choose* means targeting and *pick* means a choice that does not target. Some Radiance cards already print "pick". This matters for anything that reacts to being targeted. A card that says pick does not set off those effects. Riot says the change prepares for the Legacy update in January.
+- **Making new choices.** When an effect tells you to make new choices, you remake every decision. You can choose the same options again, but you cannot keep some old decisions and change others. Triggered abilities that care about targeting **trigger again** even if you choose the same target. This replaces a temporary model that the Vendetta FAQ had patched, and Riot says it was not happy with that model.
+- **Empower can stack past the old limit.** An object with an Empower ability can now be Empowered more than once, ignoring the old "not already Empowered" restriction. Activating it at the maximum does nothing, and Riot says that is deliberate. The card behind this is **[Kayle, Justified](/card/kayle-justified-ven-134)**, who reads "I can be Empowered up to three times" and needed an FAQ ruling in Vendetta.
+- **Ignored and negated instructions.** If an instruction mistargets, it is *ignored*, and so is every instruction linked to it. If it fails for any other reason (replaced, skipped or impossible), it is *negated*, and the instructions after it still happen if they can. This writes a Vendetta FAQ fix into the rules, and it decides whether the second half of a card works when the first half fails.
+- **Pending items can't be targeted.** Spells and abilities can no longer target a pending item. Riot cites rare cases involving **[Promising Future](/card/promising-future-ogn-115-298)**.
+- **Requirements and restrictions.** How mandatory requirements combine (Riot cites **[Dragon Roost](/card/dragon-roost-ven-157)**) is now in the rules, along with a new idea, the *restriction*. The example is **[Perched Grimwyrm](/card/perched-grimwyrm-sfd-015-221)**'s "play only to a battlefield you've conquered this turn".
+- **Units can't be attached.** A unit cannot be attached to another object, and a non-unit that becomes a unit while attached falls off at once. The cause is **[Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-145-167)**, the Radiance Legend that turns a friendly gear into a unit with Might equal to its Energy cost. Three of the patch notes' rulings cover her: with attached Equipment, with Deploy gear, and with unit gear in your base.
+- **Copies get their own layer.** Copy effects now come first in the order effects are applied, and making a copy is now a game action of its own. For example, the tokens **[Zilean, Time Mage](/card/zilean-time-mage-unl-086-219)** makes with his replacement effect get their copyable traits as if those traits were printed on them. Traits added from outside, such as the Mech tag from **[Experimental Hexplate](/card/experimental-hexplate-sfd-073-221)**, are not copied.
+- **2v2 scoring is consistent.** The rules for the final point, and for which teams can score, now apply only to a team that controls a battlefield on its own turn or a teammate's, not on an opponent's. Riot says these rules contradicted each other before Vendetta. Radiance finishes aligning them.
+- **"You" during finalisation.** If an instruction checks whether "you" did something, it now checks whether the action happened, not who did it, so a change of control afterwards does not undo it. Riot says players found control changes confusing with these cards.
+
+The patch notes also have rulings for **[Chronobreak](/card/chronobreak-rad-140-167)** (the order of a chain), **[Transpositionist](/card/transpositionist-rad-115-167)** with **[Gangplank, Naval](/card/gangplank-naval-ven-086)**, Gutter Guardian with facedown cards, and Ekko with **[Unlicensed Armory](/card/unlicensed-armory-ogn-023-298)**. Riot's page cites the rule numbers for each.
+
+## The tournament rules changelog
+
+The tournament changelog has 31 entries. Riot describes it as mostly fixing small mistakes and helping judges, which matches what is in it. These are the ones a player is most likely to notice:
+
+| Rule | What changed |
+| --- | --- |
+| **601.3.c.6** | Radiance is added to the Standard sets. No other set changes status in this changelog |
+| **502.11** | Players **may bluff** about their private information |
+| **505.2 to 505.2.b, 505.13** | A loop must be fully deterministic, with no random elements. Riot's page has examples |
+| **416.4 to 416.5** | You may use outside notes during sideboarding and after Battlefields are revealed, until opening hands are drawn, before mulligans |
+| **509.5 to 509.6.b** | Once your opponent has to point out an error, you cannot take back the decision |
+| **508.8** | Tokens must be represented by a card object that clearly shows whether it is ready |
+| **502.4.b** | Players must keep each other informed about extra turns |
+| **401.1.b** | At low-level constructed events, you are normally expected to play the same deck all event unless the organiser allows otherwise |
+| **402.1, 703.10.b** | Removes wording that implied low-level events required deck registration |
+| **703.10.d to 703.10.e** | Knowingly trying to declare the wrong winner is cheating, with a heavier penalty at Professional level |
+| **406.1.c** | A Battlefield revealed in a game you then lose to a penalty can't be used again |
+| **411.3** | Random deck checks happen at the start of a round and check every part of the deck |
+
+Two of these are worth a note. The bluffing rule puts in writing what most players already assumed: you do not have to tell the truth about your hand. The notes rule makes the gap between games more useful, because you can check your sideboard plan against written notes until opening hands are drawn, as long as you stop then.
+
+## What this update does not do
+
+It does not ban anything. The last changes to the ban list took effect on 18 September, and our **[ban list explainer](/guides/riftbound-banlist-explained)** has the current list. It does not change any card's power level, because Riot rules that out in the patch notes. It does not rotate any set out of Standard: the only Standard change is that Radiance joins.
+
+Riot also says that a bigger rules rewrite is coming in January with **Legacy**. It will reformat the rules to make them easier to read, and Riot says it will not change how any mechanic works. A further FAQ article is planned after Radiance releases.
+
+## Before your Pre-Rift
+
+If you are playing a Pre-Rift event between 16 and 22 October, three things are worth knowing before you sit down. Elnuk Herd can now buff itself. Neeko lets you choose fewer than three extra Legends. And a card that says "pick" does not target. Everything else on the list mostly matters if something unusual comes up and you have to call a judge.
+
+For where to play and what a seat costs, our **[Radiance pre-order prices](/radiance-preorders)** page lists Pre-Rift kits and events alongside the sealed product, by store and by market. Every Radiance card above has a **[card page](/sets/radiance)** that starts comparing store prices as listings appear.`,
+  },
+  // RADIANCE PRE-ORDER PRICES, TWO WEEKS LATER (2026-10-10). The follow-up to
+  // "Where to Buy Riftbound Radiance" (24 September), built from our own sealed
+  // listings: every figure is a tracked store's listed price and its in-stock
+  // flag in the public data snapshot generated 9 October 2026 at 15:06 UTC
+  // (data/public/sealed-listings.json, groups RAD|Booster Box, RAD|Bundle +
+  // RAD|Vault — the same Vault Bundle under two store names — RAD|Showdown Decks
+  // and RAD|Pre-Rift Kit). The 24 September figures are the ones that article
+  // printed. "Open" means the store's own page showed the product as available
+  // to order; "closed" means it did not (sold out or pre-orders shut — the flag
+  // cannot tell the two apart, and the post says so). No price prediction, per
+  // the Accuracy rule in docs/CURRENT-STATE.md. Re-derive any number from that
+  // snapshot (git show 1515c7c:data/public/sealed-listings.json) before changing
+  // it. Inbound link from the where-to-buy guide's "Keeping this current" list.
+  {
+    slug: "riftbound-radiance-preorder-prices-two-weeks-later",
+    category: "blog",
+    title: "Radiance Pre-Order Prices, Two Weeks Later",
+    excerpt:
+      "Radiance pre-order prices, 24 September vs 9 October: TCGplayer's premium fell by a third or more, UK boxes fell to £120 and Canada's cheap boxes are gone.",
+    author: "RiftCompare",
+    date: "2026-10-10",
+    readMins: 9,
+    tags: ["radiance", "preorders", "sealed", "prices", "booster box", "where to buy"],
+    hero: {
+      src: "/blog/where-to-buy-riftbound-radiance.jpg",
+      alt: "Riftbound Radiance pre-order prices two weeks before release, with Neeko, Blending In and Seraphine, Starry-Eyed Songstress fanned beside the title",
+    },
+    summary: [
+      "**The marketplace premium fell by a third or more.** TCGplayer's cheapest Radiance Booster Display was about US$227 on 24 September. On 9 October it was **US$149.97**. The Vault Bundle fell from about US$134 to **US$53.83**, and the Showdown Decks from about US$99 to **US$59.01**. All three are still above the US MSRP.",
+      "**The UK fell the most among stores.** Displays were around £150–160 on 24 September. On 9 October five UK stores listed one at **£119.75–£119.99**, and the cheapest open order was **£115** at Roll N Play.",
+      "**Canada went the other way.** 16 of the 20 Canadian display listings we track were closed to orders, including every one under C$245. The four still open were **C$245–C$249.99**.",
+      "**Europe has the most supply.** 17 of 20 eurozone listings were open, from **€119.95**. In Singapore, every store listing we track was closed, and only eBay had a display, at S$189.74.",
+      "**This is a snapshot, not a forecast.** Each figure is a store's own listed price on 9 October 2026, and \"closed\" can mean sold out or pre-orders shut. The [live comparison](/radiance-preorders) updates every day.",
+    ],
+    faq: [
+      {
+        q: "How much is a Riftbound Radiance booster box right now?",
+        a: "On 9 October 2026, the cheapest Radiance Booster Display open to order at a store we track was US$129.97 in the US (Game Nerdz), £115 in the UK (Roll N Play), €119.95 in the eurozone, A$230 in Australia (Mana Market) and C$245 in Canada (EA Collectibles). Singapore had no store open, only an eBay listing at S$189.74. The US distributor MSRP is US$120. Live prices are on RiftCompare's Radiance pre-order page.",
+      },
+      {
+        q: "Have Radiance pre-order prices gone down?",
+        a: "On marketplaces, a lot. TCGplayer's cheapest display went from about US$227 on 24 September to US$149.97 on 9 October, and the Vault Bundle from about US$134 to US$53.83. UK store prices also fell, from around £150–160 to about £120. In Canada the cheaper store pre-orders closed, so the cheapest open display there went up.",
+      },
+      {
+        q: "Is it cheaper to pre-order Radiance or wait for release?",
+        a: "We do not predict prices. What we can say is that, as of 9 October, US, UK and eurozone stores still had displays open (from US$129.97, £115 and €119.95), while TCGplayer's cheapest display, at US$149.97, was still above the US$120 MSRP. In Canada and Singapore, the cheaper store allocations were already closed.",
+      },
+      {
+        q: "How much does a Radiance Pre-Rift event cost?",
+        a: "Stores set their own fees. On 9 October we saw Pre-Rift seats or kits at £25 in the UK (Boards & Swords, Zatu Games), US$25 in the US (Mystery MTG), €34.99 to €42 in the eurozone, C$35 to C$45 in Canada and A$60 in Australia. Pre-Rift events run 16 to 22 October 2026.",
+      },
+      {
+        q: "Why are Radiance boxes so expensive in Canada?",
+        a: "Because the cheaper pre-orders closed first. On 24 September Canadian stores listed displays at C$185–190, and by 9 October listings from C$149.95 to C$229.99 were all closed to orders. The only open listings were C$245 to C$249.99. Our data shows the closures; it cannot tell whether a store sold out or simply stopped taking pre-orders.",
+      },
+    ],
+    shop: [
+      { label: "Radiance booster displays", query: "Riftbound Radiance booster display" },
+      { label: "Radiance Vault Bundle", query: "Riftbound Radiance Vault" },
+      { label: "Seraphine vs Evelynn Showdown Decks", query: "riftbound radiance showdown deck" },
+    ],
+    browseCta: {
+      href: "/radiance-preorders",
+      label: "Compare Radiance pre-order prices →",
+      blurb: "Every tracked store in your market, cheapest first, in your currency, refreshed daily until release day.",
+    },
+    body: `**On 24 September we published a guide to [where to buy Riftbound Radiance](/blog/where-to-buy-riftbound-radiance), with the prices we saw that day.** Two weeks on, with Preview Season over and Pre-Rift a week away, the market looks noticeably different. This post compares the two dates using our own data: every Radiance listing at every store we track, as it stood on **9 October 2026 at 15:06 UTC**.
+
+Two definitions before the numbers. A listing is **open** if the store's own page showed the product as available to order. It is **closed** if the page did not. A closed listing can mean the store sold its allocation or stopped taking pre-orders, and our data cannot tell which. All prices are each store's listed price, before postage, in its own currency.
+
+## The short version
+
+| | 24 September | 9 October |
+| --- | --- | --- |
+| **TCGplayer, cheapest display** | about US$227 | **US$149.97** |
+| **TCGplayer, cheapest Vault Bundle** | about US$134 | **US$53.83** |
+| **TCGplayer, cheapest Showdown Decks** | about US$99 | **US$59.01** |
+| **UK stores, display** | around £150–160 | **£115–£123.50**, three of ten open |
+| **Canadian stores, display** | around C$185–190 | **C$245–C$249.99** open; cheaper listings closed |
+| **Australian stores, display** | A$239.99 | **A$230** open (Mana Market) |
+| **Eurozone stores, display** | about €125 | **€119.95** and up, 17 of 20 open |
+| **Singapore stores, display** | S$160, sold out | every store closed; eBay S$189.74 |
+
+The US distributor MSRP is US$120 for a 24-pack Booster Display, US$34.99 for the Vault Bundle and US$34.99 for the Showdown Decks. No official price has been published outside the US.
+
+## 1. The marketplace premium is mostly gone
+
+Our 24 September guide warned that marketplace prices for an unreleased product are **sellers' asking prices for stock they have not received yet**, and that those prices usually fall once real supply arrives. They fell earlier than that. Two weeks before release, and before any store had shipped a box, TCGplayer's cheapest listings had already dropped a long way:
+
+| Product | 24 Sep | 9 Oct | Change | US MSRP |
+| --- | --- | --- | --- | --- |
+| Booster Display | about US$227 | US$149.97 | about -34% | US$120 |
+| Vault Bundle | about US$134 | US$53.83 | about -60% | US$34.99 |
+| Showdown Decks | about US$99 | US$59.01 | about -40% | US$34.99 |
+
+The Vault Bundle is the clearest example. On 24 September it was listed at almost four times MSRP. On 9 October it was about one and a half times. A display on TCGplayer now costs the same as one at **Miniature Market**, which listed it at US$149.99. Miniature Market itself had been US$139.99 on 24 September.
+
+Why did this happen before release? Our data shows the prices, not the reasons, so the most we can do is offer a likely one. Early marketplace listings come from a few sellers who are confident of their allocation, and they price against nothing. As more sellers confirm their orders and list, the cheapest listing drops toward what stores charge. Even so, the cheapest **US store** display open to order, **US$129.97 at Game Nerdz**, was still US$20 under the cheapest TCGplayer listing. In the US, a store pre-order is still the cheapest way to buy, but by less than it was.
+
+[[shop]]
+
+## 2. The UK fell from about £155 to about £120
+
+UK stores show the biggest change at store level. On 24 September the displays we saw were around **£150–160**. On 9 October, five of the ten UK listings we track were priced between **£119.75 and £119.99**: Card Vault, Zatu Games, Tier Zero Games, Gathering Games and Spellbound Games. So many stores on the same price suggests a common reference point, though we can only see the prices, not why stores chose them.
+
+The catch is that most of those £119.99 listings were closed. Of the ten UK listings, three were open:
+
+- **Roll N Play**, £115, the cheapest open UK display we track
+- **Spellbound Games**, £119.99
+- the cheapest **eBay** listing we track, £123.50
+
+Total Cards had listed a display at £98.96, the lowest UK price we saw, but it was closed. At the top, Monster Card Corner was at £174, also closed. A UK buyer in October should therefore expect about £115–£125 for a display, and should check whether the cheaper listings reopen. Our **[price alerts](/alerts)** can watch a product for you.
+
+## 3. Canada's cheap boxes went first
+
+Canada has more Radiance display listings than any other market we track, 20 in all, and it is the market where the cheap end has emptied out. On 9 October:
+
+- **Closed (16 listings):** Game 3 and [401 Games](/stores/games401) at C$149.95; Card Brawlers, GT Games and [Red Riot Games](/stores/redriotgames) at C$149.99; Crypt MTG at C$159.99; Mad Merchant at C$160; Boutique L'Artefact at C$169.99; Enter the Battlefield at C$179.99; [Hobbiesville](/stores/hobbiesvilleca) at C$189.95; Silver Goblin at C$199.99; Vulcan Collectibles at C$204.99; Sky Fox Games at C$224.99; Card Dynasty and Jack's On Queen at C$229.99; and Banana Games & Hobby at C$249.95.
+- **Open (4 listings):** EA Collectibles at **C$245**, the cheapest eBay listing at C$249.95, Alt F4 at C$249.99 and Face to Face Games at C$249.99.
+
+Every listing under C$245 was closed. On 24 September our guide quoted Hobbiesville at C$189.95 and Sky Fox at C$184.99. Hobbiesville's price has not changed, but its listing is closed. Sky Fox's listing now reads C$224.99 and is closed too.
+
+So the cheapest Radiance display you could order in Canada went from about C$185 to C$245, an increase of about a third. The rise did not come from open listings repricing. The cheaper listings closed one after another until only the dearest were left. For a Canadian buyer, the realistic options now are to pay about C$245, watch whether the closed stores reopen, or wait for release-day stock.
+
+## 4. Europe has the most open listings
+
+The eurozone is the opposite of Canada. Seventeen of its twenty listings were open, and they spread from **€119.95** (EGD Games Meepledin, Factory Cards) through €120 (Fuhrious, G3TCG) and €124.95 (Industria 61, Micelion Games) to a median of **€130**. Only Zillerstore at €115, Mana Vortex Shop at €119.90 and Brickz'n'More at €120 were closed.
+
+The top of the range is worth a note. **[Universe TCG](/stores/universetcg)**, which we quoted at €125 on 24 September, listed its display at **€192** on 9 October. Half the open eurozone listings are at €130 or less, so a price like that is easy to avoid by comparing.
+
+Europe also has the most open Vault Bundles of any market: ten open listings under the Vault name, from **€28.90 at S-Games**, and five more under the Vault Bundle name from €32.95. 
+
+## 5. Australia and Singapore: few listings left
+
+Australia has only four display listings we track. Two were open: **Mana Market at A$230** and the cheapest eBay listing at A$235.93. PokéBox and Vault Games, both at A$239.99, were closed. The A$230 is about A$10 under the A$239.99 we saw on 24 September, but with so few listings, any single store's restock or sell-out moves the cheapest price.
+
+Singapore was already tight on 24 September, when Flagship Games had sold out at S$160. On 9 October **all three Singapore store listings we track were closed**: The Avid Collectors at S$140, Flagship Games at S$160 and Hideout at S$180. The only open listing was eBay, at **S$189.74**. If you are in Singapore and do not already have an order, the eBay price or release-day stock are the options we can see.
+
+## The other products
+
+Booster displays get the attention, but most people's first Radiance purchase is something smaller. Here is the cheapest **open** listing for each, on 9 October:
+
+| Product (US MSRP) | US | UK | Eurozone | Canada | Australia |
+| --- | --- | --- | --- | --- | --- |
+| **Vault Bundle** (US$34.99) | US$45.59 (eBay) | £33.29 (Total Cards) | €28.90 (S-Games) | C$59.99 (Enter the Battlefield) | A$64.99 (Vault Games) |
+| **Showdown Decks** (US$34.99) | US$39.63 (eBay) | £28.29 (Total Cards) | €28.90 (S-Games) | C$39.95 (Banana Games) | A$62.61 (eBay) |
+| **Pre-Rift seat or kit** | US$25 (Mystery MTG) | £25 (Boards & Swords, Zatu Games) | €34.99 (Baruzcard) | C$35 (Mad Merchant) | A$60 (Hobby Collectors Australia) |
+
+The US row stands out. Every US store listing we track for the Showdown Decks was closed, including Fabricator's Forge at US$24.99 and Many Realms and PunkOuter Games at US$34.99, which left eBay and TCGplayer as the open options, both above MSRP. For the Vault Bundle, Kollect Korner at US$49.99 was the one US store still open; Many Realms at US$34.99 and Fabricator's Forge and PunkOuter at US$39.99 were closed. In the UK and the eurozone, both products were open at several stores.
+
+**A Pre-Rift seat is still the cheapest way to open Radiance early.** As our [what we know about Radiance](/blog/riftbound-radiance-what-we-know) post explains, a Pre-Rift kit holds five booster packs, a playable mini-deck with its champion's Legend and Unit, and a promo. At US$25, that is about what the five packs alone cost at MSRP, with the deck and the promo on top. Pre-Rift events run from **16 to 22 October**, and they are played under the [rules update Riot published on 9 October](/blog/riftbound-radiance-patch-notes-errata).
+
+## What this does and does not tell you
+
+It tells you where Radiance could actually be ordered two weeks before release, at what price, and how that differed from two weeks earlier. It does not tell you where prices go next, and we do not publish forecasts. Three limits are worth stating:
+
+- **Store coverage.** These are the stores we track: 68 display listings across six markets. A store we do not track can be cheaper or still open.
+- **Open and closed.** A closed listing may reopen if a store gets more stock, and a store may show a product as open and then cancel orders if its allocation is cut. Read a store's terms before you order.
+- **One moment in time.** These figures are from 9 October at 15:06 UTC. The [live comparison](/radiance-preorders) updates every day, so check it for today's prices.
+
+## If you are buying this week
+
+- **US, UK or eurozone:** stores still have open displays, from US$129.97, £115 and €119.95 on 9 October. Compare on the [pre-order page](/radiance-preorders) and pick a store whose terms you trust.
+- **Canada or Singapore:** the cheap allocations are closed. Decide between today's open price and release-day stock, and set a [price alert](/alerts) so you hear if a closed store reopens.
+- **You want specific cards, not boxes:** singles prices start appearing around Pre-Rift. Our [chase cards post](/blog/riftbound-radiance-chase-cards) shows what Vendetta's chase prices did in launch week. For opening product, the **[Box EV calculator](/tools/box-ev)** is where Radiance's pull rates will go once they are published.
+
+After release, Radiance products move from the pre-order page to **[the sealed comparison](/sealed)**, where the same stores keep being compared every day.`,
+  },
   // RADIANCE CHASE CARDS (2026-10-07, owner: "come up with a useful/insightful
   // blog post on what to expect from radiance in terms of chase cards. I'm
   // looking at Seraphine and Riven will also be worth a lot"). The post is built
@@ -2006,6 +2351,7 @@ We will not run Radiance speculation on any of them. When the reveals land, the 
       "Where to pre-order Riftbound Radiance in the US, UK, Europe, Australia, Canada and Singapore: stores, marketplaces and Riot's Merch Store draw.",
     author: "RiftCompare",
     date: "2026-09-24",
+    updated: "2026-10-10",
     readMins: 10,
     tags: ["radiance", "where to buy", "preorders", "sealed", "prices", "release"],
     hero: {
@@ -2162,6 +2508,7 @@ It depends on what you want from the set.
 Three pages stay current so this guide does not have to:
 
 - **[Radiance pre-order prices](/radiance-preorders)** — every tracked store's live price in your market, cheapest first, until release day, after which Radiance products move to **[the sealed comparison](/sealed)**.
+- **[Radiance pre-order prices, two weeks later](/blog/riftbound-radiance-preorder-prices-two-weeks-later)** — how the prices in this guide had moved by 9 October, market by market.
 - **[The Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)** — every card revealed so far, updated twice a day through Preview Season.
 - **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)** — the set's dates, products and Legends, with sources.
 
@@ -5786,6 +6133,7 @@ If you're running either card, both bans take effect **18 September 2026** — s
       "The first Radiance card photographed in print: Neeko, Blending In, a 6-cost Neutral Champion Unit that hands you three extra Legends.",
     author: "RiftCompare",
     date: "2026-09-19",
+    updated: "2026-10-10",
     readMins: 8,
     tags: ["radiance", "news", "spoilers", "neeko", "deckbuilding"],
     hero: {
@@ -5866,6 +6214,8 @@ And the text:
 > *(Neutral cards can go in decks of any Domain.)*
 > If Neeko is in your deck, choose 3 different legends in addition to your starting legend. *(Different means none match names.)*
 > When you play me, choose one of those Legends and add it to your Legend Zone while I'm on the board.
+
+**Errata, 9 October 2026:** Riot changed "choose 3 different legends" to **"choose up to 3 different legends"**, effective 16 October, so three is now a maximum rather than a requirement. The same update added deckbuilding rules and a tournament registration rule for her: see **[the Radiance patch notes and errata, explained](/blog/riftbound-radiance-patch-notes-errata)**.
 
 [[embed:0]]
 
