@@ -4,18 +4,20 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { listPremiumOfferAudience, runPremiumOfferBlast, DEFAULT_BATCH, type PremiumOfferResult } from "@/lib/premium-offer";
 import { premiumOfferSubject } from "@/lib/email";
-import { PLUS_ANNUAL_AMOUNT, PLUS_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PREMIUM_PRICE_AMOUNT, premiumEffectiveMonthly } from "@/lib/site";
+import { PLUS_PRICE_AMOUNT, PREMIUM_PRICE_AMOUNT, trialDaysPhrase } from "@/lib/site";
+import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "@/lib/premium";
 import { PremiumOfferConsole, type ConsoleRow } from "@/components/admin/PremiumOfferConsole";
 
 export const dynamic = "force-dynamic";
 
 // Admin-only — self-noindex (robots.ts doesn't block /admin) + gated below.
 export const metadata: Metadata = {
-  title: "Price-drop email",
+  title: "Trial promo email",
   robots: { index: false, follow: false },
 };
 
-// The owner's console for the one-off price-drop announcement (2026-09-27):
+// The owner's console for the free-trial promotion (2026-10-12; the one-off
+// price-drop announcement of 2026-09-27 before it):
 // the reach before anything is sent (a dry run on every page load: audience,
 // already sent, remaining, opted out), a test send to one inbox, and the
 // batched send. Until 2026-09-27 this page ran the "month on us" offer; see
@@ -52,17 +54,24 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
       <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
         <Link href={`/admin${keySuffix}`} className="hover:text-slate-300">Admin</Link>
         <span>/</span>
-        <span className="text-slate-300">Price-drop email</span>
+        <span className="text-slate-300">Trial promo email</span>
       </nav>
-      <h1 className="text-2xl font-bold text-white">Price-drop email</h1>
+      <h1 className="text-2xl font-bold text-white">Trial promo email: subscribe now, {trialDaysPhrase(PREMIUM_TRIAL_DAYS)} free</h1>
       <p className="mt-1 max-w-3xl text-sm text-slate-400">
-        One-off announcement of the new prices to every account that isn&apos;t paying — free accounts, lapsed
-        subscribers and cancelled trialists. Subject: <em>&ldquo;{premiumOfferSubject()}&rdquo;</em>. It quotes Premium at{" "}
-        {PREMIUM_PRICE_AMOUNT}/month or {premiumEffectiveMonthly("premium")}/mo billed yearly ({PREMIUM_ANNUAL_AMOUNT}), and
-        Plus at {PLUS_PRICE_AMOUNT}/month or {premiumEffectiveMonthly("plus")}/mo billed yearly ({PLUS_ANNUAL_AMOUNT}), with
-        four subscribe buttons that open checkout for that exact plan. Active Plus/Premium accounts, admins, seed accounts
-        and anyone who opted out of announcements are never emailed, whatever is ticked.
+        One email to every account that could still start a trial. Subject:{" "}
+        <em>&ldquo;{premiumOfferSubject()}&rdquo;</em>. It offers Premium and Plus free for{" "}
+        {trialDaysPhrase(PREMIUM_TRIAL_DAYS)}, then {PREMIUM_PRICE_AMOUNT}/month or {PLUS_PRICE_AMOUNT}/month (yearly
+        buttons too), says a card is required and that we email before the trial ends. Every button opens checkout for
+        that exact plan. Never emailed, whatever is ticked: paying accounts, anyone who already had a trial or has paid
+        before (checkout would not give them one), admins, seed accounts and anyone who opted out of announcements.
+        Accounts that got September&apos;s price-drop email can get this one.
       </p>
+      {!(premiumTrialEnabled() && PREMIUM_TRIAL_FEE_CENTS === 0) && (
+        <p className="mt-2 max-w-3xl rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+          The trial is not free in this deployment (PREMIUM_TRIAL_DAYS / PREMIUM_TRIAL_FEE_CENTS in Vercel), so
+          sending is blocked: the email would promise a trial checkout won&apos;t give. Remove those two variables and redeploy.
+        </p>
+      )}
       <p className="mt-2 max-w-3xl text-sm text-slate-400">
         How to run it: <strong className="text-slate-200">send yourself a test</strong>, check it in your inbox, then{" "}
         <strong className="text-slate-200">send to all pending</strong>. Each send goes out in a batch of {DEFAULT_BATCH}{" "}
@@ -76,13 +85,14 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
         </div>
       ) : (
         <>
-          <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-6">
             {[
               ["Audience", summary.audienceSize ?? 0],
               ["Already sent", summary.alreadySent ?? 0],
               ["Remaining", summary.pending ?? 0],
               ["Opted out", summary.suppressed ?? 0],
               ["Paying (skipped)", summary.paying ?? 0],
+              ["Had a trial (skipped)", summary.hadTrial ?? 0],
             ].map(([label, n]) => (
               <div key={label} className="card-surface p-3">
                 <dt className="text-xs text-slate-500">{label}</dt>

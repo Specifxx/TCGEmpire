@@ -37,10 +37,17 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "./db";
 import { PRICE_DROP_SRC, getLastEmailError, isBrevoEnabled, isEmailEnabled, sendPremiumOfferEmail, type PremiumOfferEmailOpts } from "./email";
-import { NOT_SEED_WHERE, isPremium, isSeedEmail } from "./premium";
+import { NOT_SEED_WHERE, isPremium, isSeedEmail, trialOfferedTo, premiumTrialEnabled, PREMIUM_TRIAL_FEE_CENTS } from "./premium";
 import { SITE_URL } from "./site";
 
-export const PREMIUM_OFFER_CAMPAIGN = "price-drop-2026-09";
+// 2026-10-12: the campaign is the FREE 14-day trial promotion (owner: "the price
+// drop email should be a premium promotion email like subscribe now and get 14
+// days free"). The stamp column is still User.priceDropEmailSentAt; a stamp from
+// before PREMIUM_OFFER_SINCE belongs to the September price-drop email and does
+// NOT count as sent for this campaign, so everyone who got that one is eligible
+// for this one, once.
+export const PREMIUM_OFFER_CAMPAIGN = "trial-14-2026-10";
+export const PREMIUM_OFFER_SINCE = new Date("2026-10-12T00:00:00Z");
 
 export type PremiumOfferProvider = "brevo" | "resend";
 
@@ -53,6 +60,7 @@ export interface PremiumOfferResult {
   paying?: number; // excluded: currently Plus/Premium (isPremium)
   admins?: number; // excluded: admin accounts
   suppressed?: number; // excluded: opted out of announcements
+  hadTrial?: number; // excluded: already used their trial (or, at send time, paid before)
   audienceSize?: number; // in scope after dedupe + exclusions
   alreadySent?: number; // of those, stamped by an earlier run
   pending?: number;
@@ -82,6 +90,9 @@ export interface PriceDropUserRow {
   premiumTier: string | null;
   premiumTierFloor: string | null;
   priceDropEmailSentAt: Date | null;
+  /** A trial already used: checkout would not give them the 14 free days. */
+  trialStartedAt?: Date | null;
+  stripeCustomerId?: string | null;
 }
 
 export interface PriceDropRecipient {
@@ -89,6 +100,7 @@ export interface PriceDropRecipient {
   email: string;
   displayName: string;
   alreadySent: boolean;
+  stripeCustomerId?: string | null;
 }
 
 export interface PriceDropAudience {
@@ -96,6 +108,8 @@ export interface PriceDropAudience {
   admins: number;
   seeds: number;
   suppressed: number;
+  /** Excluded: already had a trial, so the email's offer would not be true for them. */
+  hadTrial: number;
   audience: PriceDropRecipient[];
   pending: PriceDropRecipient[];
 }
@@ -111,8 +125,10 @@ export interface PriceDropAudience {
 export function priceDropAudience(
   rows: PriceDropUserRow[],
   optedOut: Set<string>,
-  opts: { only?: Set<string> | null; resend?: boolean } = {},
+  opts: { only?: Set<string> | null; resend?: boolean; since?: Date } = {},
 ): PriceDropAudience {
+  const since = opts.since ?? PREMIUM_OFFER_SINCE;
+  let hadTrial = 0;
   const only = opts.only && opts.only.size ? opts.only : null;
   const resend = !!opts.resend && only != null;
   let paying = 0;
@@ -141,6 +157,10 @@ export function priceDropAudience(
       paying++;
       continue;
     }
+    if (u.trialStartedAt) {
+      hadTrial++;
+      continue;
+    }
     if (optedOut.has(key)) {
       // Count each opted-out address once, however many accounts share it.
       if (!suppressedKeys.has(key)) suppressed++;
@@ -148,11 +168,17 @@ export function priceDropAudience(
       continue;
     }
     if (byEmail.has(key)) continue;
-    byEmail.set(key, { id: u.id, email: u.email, displayName: u.displayName, alreadySent: u.priceDropEmailSentAt != null });
+    byEmail.set(key, {
+      id: u.id,
+      email: u.email,
+      displayName: u.displayName,
+      alreadySent: u.priceDropEmailSentAt != null && u.priceDropEmailSentAt >= since,
+      stripeCustomerId: u.stripeCustomerId ?? null,
+    });
   }
   const audience = [...byEmail.values()];
   const pending = audience.filter((r) => resend || !r.alreadySent);
-  return { paying, admins, seeds, suppressed, audience, pending };
+  return { paying, admins, seeds, suppressed, hadTrial, audience, pending };
 }
 
 // ── The run ──────────────────────────────────────────────────────────────────
@@ -166,6 +192,8 @@ export interface PriceDropDeps {
   optOutToken(email: string): Promise<string>;
   send(to: string, opts: PremiumOfferEmailOpts): Promise<boolean>;
   stamp(userId: string): Promise<void>;
+  /** Would checkout give this account the free trial? (A past payer would not.) */
+  trialEligible(r: PriceDropRecipient): Promise<boolean>;
   providerConfigured(via: PremiumOfferProvider): boolean;
   lastError(): string | null;
   sleep(ms: number): Promise<void>;
@@ -184,6 +212,8 @@ export const prismaPriceDropDeps: PriceDropDeps = {
         premiumTier: true,
         premiumTierFloor: true,
         priceDropEmailSentAt: true,
+        trialStartedAt: true,
+        stripeCustomerId: true,
       },
     }),
   loadOptedOut: async () => {
@@ -201,6 +231,7 @@ export const prismaPriceDropDeps: PriceDropDeps = {
   stamp: async (userId) => {
     await prisma.user.update({ where: { id: userId }, data: { priceDropEmailSentAt: new Date() } });
   },
+  trialEligible: (r) => trialOfferedTo({ trialStartedAt: null, stripeCustomerId: r.stripeCustomerId ?? null }),
   providerConfigured: (via) => (via === "brevo" ? isBrevoEnabled() : isEmailEnabled()),
   lastError: () => getLastEmailError(),
   sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
@@ -236,6 +267,11 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts, deps: PriceDr
   const limit = opts.limit && opts.limit > 0 ? opts.limit : DEFAULT_BATCH;
   const only = opts.userIds?.length ? new Set(opts.userIds) : null;
 
+  // The email's whole offer is the free trial: never send it while the trial is
+  // off or costs money, because it would promise what checkout will not give.
+  if (!dryRun && (!premiumTrialEnabled() || PREMIUM_TRIAL_FEE_CENTS > 0)) {
+    return { ok: false, dryRun, via, error: "The trial is not free in this deployment (PREMIUM_TRIAL_DAYS / PREMIUM_TRIAL_FEE_CENTS) — the email would promise something checkout won't give" };
+  }
   if (!dryRun && !deps.providerConfigured(via)) {
     return { ok: false, dryRun, via, error: `${via === "brevo" ? "BREVO_API_KEY" : "RESEND_API_KEY"} is not set in this environment — nothing would send` };
   }
@@ -252,6 +288,7 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts, deps: PriceDr
     paying: a.paying,
     admins: a.admins,
     suppressed: a.suppressed,
+    hadTrial: a.hadTrial,
     audienceSize: a.audience.length,
     alreadySent: a.audience.length - a.pending.length,
     pending: a.pending.length,
@@ -262,11 +299,21 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts, deps: PriceDr
   const batch = a.pending.slice(0, limit);
   let sent = 0;
   let failed = 0;
+  let paidBefore = 0;
   const errors = new Set<string>();
   const noteError = (reason: string) => {
     if (errors.size < 5) errors.add(reason);
   };
   for (const r of batch) {
+    // A lapsed payer gets no trial at checkout (trialOfferedTo), so no email
+    // promising one. Checked here, not in the pure audience, because it needs
+    // Stripe; most accounts have no Stripe customer and cost no call. Stamped,
+    // so the next batch does not ask Stripe again.
+    if (r.stripeCustomerId && !(await deps.trialEligible(r).catch(() => false))) {
+      paidBefore++;
+      await deps.stamp(r.id).catch(() => {});
+      continue;
+    }
     // Mint (or reuse) the announcement opt-out token BEFORE sending, so the
     // unsubscribe link is live the moment the email lands.
     const key = r.email.trim().toLowerCase();
@@ -295,12 +342,19 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts, deps: PriceDr
     if (batch.length > 1) await deps.sleep(THROTTLE_MS);
   }
 
-  return { ...base, sent, failed, remaining: a.pending.length - sent, ...(errors.size ? { errors: [...errors] } : {}) };
+  return {
+    ...base,
+    hadTrial: a.hadTrial + paidBefore,
+    sent,
+    failed,
+    remaining: a.pending.length - sent - paidBefore,
+    ...(errors.size ? { errors: [...errors] } : {}),
+  };
 }
 
 // ── Admin console support ────────────────────────────────────────────────────
 
-export type PremiumOfferStatus = "pending" | "sent" | "paying" | "optedOut";
+export type PremiumOfferStatus = "pending" | "sent" | "paying" | "optedOut" | "hadTrial";
 
 export interface PremiumOfferAudienceRow {
   id: string;
@@ -335,6 +389,7 @@ export async function listPremiumOfferAudience(opts?: { take?: number }): Promis
         premiumTier: true,
         premiumTierFloor: true,
         priceDropEmailSentAt: true,
+        trialStartedAt: true,
       },
     }),
     prismaPriceDropDeps.loadOptedOut(),
@@ -350,14 +405,15 @@ export async function listPremiumOfferAudience(opts?: { take?: number }): Promis
   }
   return users.map((u) => {
     const a = priceDropAudience([u], optedOut);
-    const status: PremiumOfferStatus = a.paying ? "paying" : a.suppressed ? "optedOut" : u.priceDropEmailSentAt ? "sent" : "pending";
+    const sentNow = u.priceDropEmailSentAt != null && u.priceDropEmailSentAt >= PREMIUM_OFFER_SINCE;
+    const status: PremiumOfferStatus = a.paying ? "paying" : a.hadTrial ? "hadTrial" : a.suppressed ? "optedOut" : sentNow ? "sent" : "pending";
     return {
       id: u.id,
       email: u.email,
       displayName: u.displayName,
       createdAt: u.createdAt,
       premiumUntil: u.premiumUntil,
-      sentAt: u.priceDropEmailSentAt,
+      sentAt: u.priceDropEmailSentAt != null && u.priceDropEmailSentAt >= PREMIUM_OFFER_SINCE ? u.priceDropEmailSentAt : null,
       clickedAt: lastClick.get(u.id) ?? null,
       status,
     };

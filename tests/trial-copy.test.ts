@@ -20,28 +20,31 @@ import { premiumTrialFee, trialButtonLabel, trialThenLine, trialOfferLead } from
 const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ");
 const ENDS = new Date("2026-10-30T12:00:00Z");
 
-test("the defaults are the $1 first month: 30 days, 100 cents", () => {
-  assert.equal(PREMIUM_TRIAL_DAYS, 30);
-  assert.equal(PREMIUM_TRIAL_FEE_CENTS, 100);
-  assert.equal(premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS), "$1");
-  assert.equal(trialButtonLabel(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS), "Start 30 days for $1");
-  assert.equal(trialThenLine(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, "$2.99/mo"), "First 30 days for $1, then $2.99/mo");
+test("the defaults are a free 14-day trial (2026-10-12; the $1 first month before it)", () => {
+  assert.equal(PREMIUM_TRIAL_DAYS, 14);
+  assert.equal(PREMIUM_TRIAL_FEE_CENTS, 0);
+  assert.equal(trialButtonLabel(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS), "Start 14 days free");
+  assert.match(trialButtonLabel(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS), /14 days free/i);
+  assert.doesNotMatch(trialThenLine(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, "$2.99/mo"), /\$1\b/);
+  // The $1 copy still exists for a fee set in the environment.
+  assert.equal(trialButtonLabel(30, 100), "Start 30 days for $1");
+  assert.equal(trialThenLine(30, 100, "$2.99/mo"), "First 30 days for $1, then $2.99/mo");
 });
 
-test("the env knobs: unset or blank means the default, 0 is the kill switch, junk never turns the trial free", () => {
-  assert.equal(parseTrialEnv(undefined, 30), 30);
-  assert.equal(parseTrialEnv("", 30), 30, "a blank Vercel value is not a kill switch");
-  assert.equal(parseTrialEnv("  ", 30), 30);
-  assert.equal(parseTrialEnv("0", 30), 0, "PREMIUM_TRIAL_DAYS=0 is the kill switch");
-  assert.equal(parseTrialEnv("14", 30), 14, "a leftover 14 wins over the default, which is why it must be removed");
-  assert.equal(parseTrialEnv("abc", 30), 30);
-  assert.equal(parseTrialEnv("-5", 30), 0);
-  assert.equal(parseTrialFeeCents(undefined), 100);
-  assert.equal(parseTrialFeeCents(""), 100, "a blank fee must not silently make the trial free");
-  assert.equal(parseTrialFeeCents("0"), 0, "an explicit 0 is a genuinely free trial");
+test("the env knobs: unset or blank means the default, 0 is the kill switch, a fee under Stripe's minimum becomes $1", () => {
+  assert.equal(parseTrialEnv(undefined, 14), 14);
+  assert.equal(parseTrialEnv("", 14), 14, "a blank Vercel value is not a kill switch");
+  assert.equal(parseTrialEnv("  ", 14), 14);
+  assert.equal(parseTrialEnv("0", 14), 0, "PREMIUM_TRIAL_DAYS=0 is the kill switch");
+  assert.equal(parseTrialEnv("30", 14), 30, "a leftover 30 wins over the default, which is why it must be removed");
+  assert.equal(parseTrialEnv("abc", 14), 14);
+  assert.equal(parseTrialEnv("-5", 14), 0);
+  assert.equal(parseTrialFeeCents(undefined), 0, "free by default");
+  assert.equal(parseTrialFeeCents(""), 0);
+  assert.equal(parseTrialFeeCents("0"), 0);
   assert.equal(parseTrialFeeCents("199"), 199);
-  assert.equal(parseTrialFeeCents("25"), 100, "under Stripe's minimum charge it would fail every checkout: back to the default");
-  assert.equal(parseTrialFeeCents("nope"), 100);
+  assert.equal(parseTrialFeeCents("25"), 100, "under Stripe's minimum charge it would fail every checkout: $1 instead");
+  assert.equal(parseTrialFeeCents("nope"), 0);
 });
 
 test("what a customer paid to start comes off the subscription's own metadata, never the current constant", () => {

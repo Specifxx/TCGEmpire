@@ -111,7 +111,14 @@ longer lands on its entry.
 
 ## Premium & monetisation
 
-- **The $1 first month, no intro (2026-09-30, owner: "Can we do $1 free trial for both
+- **Free 14-day trial (2026-10-12; replaces the $1 first month below):**
+  `PREMIUM_TRIAL_DAYS` 14 and `PREMIUM_TRIAL_FEE_CENTS` 0 by default, card
+  required, prices unchanged. Leave price, trial and pitch alone until two
+  14-day cohorts have matured (late November). `/admin/premium-offer` sends the
+  "Subscribe now and get 14 days free" email to accounts that can still get a
+  trial, and refuses while the trial is not free. `/premium/welcome` leads with
+  watching a card until the account has one. [2026-10-12](../DECISIONS.md#L16934)
+- **Superseded 2026-10-12, kept for its mechanics: the $1 first month, no intro (2026-09-30, owner: "Can we do $1 free trial for both
   pro and premium please? And the trial is for the first month?"):** a PAID trial on
   Stripe's own trial. A first-timer of either tier and either interval pays **$1 at
   checkout** for the first **30 days**, then the plan price (Plus $2.99/mo or

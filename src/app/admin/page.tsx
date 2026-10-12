@@ -35,9 +35,9 @@ const TOOLS: Tool[] = [
   },
   {
     href: "/admin/premium-offer",
-    title: "Price-drop email",
+    title: "Trial promo email",
     icon: "🎁",
-    desc: "Announce the new Premium and Plus prices to every account not paying — see the reach, send yourself a test, then send in daily batches.",
+    desc: "Subscribe now, 14 days free: email every account that can still start a trial — see the reach, send yourself a test, then send in daily batches.",
   },
   {
     href: "/admin/premium-winback",

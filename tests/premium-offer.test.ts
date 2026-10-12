@@ -112,6 +112,7 @@ function fakeDeps(rows: PriceDropUserRow[], optedOut = OPTED_OUT) {
     stamp: async (id) => {
       stamped.push(id);
     },
+    trialEligible: async (r) => r.stripeCustomerId !== "cus_paid_before",
     providerConfigured: () => true,
     lastError: () => "Brevo 500: boom",
     sleep: async () => {},
@@ -189,7 +190,7 @@ test("the prices are the site's own constants (2026-09-26: $3.33 and $2.00 bille
   assert.equal(premiumEffectiveMonthly("plus"), "$2.00");
   assert.equal(annualSavingPct("premium"), 33);
   assert.equal(annualSavingPct("plus"), 33);
-  assert.equal(premiumOfferSubject(), `RiftCompare Premium is now ${PREMIUM_PRICE_AMOUNT} a month`);
+  assert.equal(premiumOfferSubject(), "Try RiftCompare Premium free for 14 days");
   assert.equal(email.subject, premiumOfferSubject());
   for (const body of [email.html, email.text]) {
     for (const amount of [PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT]) {
@@ -232,7 +233,7 @@ test("four subscribe links through /premium/start with tier, plan, src and the c
     assert.equal(u.searchParams.get("tier"), tier);
     assert.equal(u.searchParams.get("plan"), plan);
     assert.equal(u.searchParams.get("src"), "price-drop-email");
-    assert.equal(u.searchParams.get("utm_campaign"), "price-drop-2026-09");
+    assert.equal(u.searchParams.get("utm_campaign"), "trial-14-2026-10");
     assert.equal(u.searchParams.get("utm_source"), "email");
     assert.ok(email.html.includes(url), `the html carries ${tier} ${plan}`);
     assert.ok(email.text.includes(url), `the text part carries ${tier} ${plan}`);
@@ -242,7 +243,7 @@ test("four subscribe links through /premium/start with tier, plan, src and the c
   assert.equal(compare.searchParams.get("src"), "price-drop-email");
   assert.ok(email.html.includes(links.compare));
   assert.equal(PRICE_DROP_SRC, "price-drop-email");
-  assert.equal(PRICE_DROP_CAMPAIGN, "price-drop-2026-09");
+  assert.equal(PRICE_DROP_CAMPAIGN, "trial-14-2026-10");
 });
 
 test("the attribution source is valid end to end: click allow-list, start step, launcher, /premium beacon", () => {
@@ -268,15 +269,43 @@ test("each tier's one-line summary matches the current lineup", () => {
     assert.match(body, /Everything in Plus, plus unlimited target-price alerts/);
     assert.match(body, /Best Basket's store-by-store plan and Buy this list/);
     assert.match(body, /Demand Finder/);
-    assert.match(body, /cancel anytime/i);
+    assert.match(body, /cancel from your account page/i);
   }
 });
 
-test("honest: no deadline, no countdown, no scarcity, no trial promise", () => {
+test("honest: no deadline or scarcity, and the trial's terms are stated (2026-10-12: the email IS the trial offer)", () => {
   for (const body of [email.html, email.text]) {
     assert.doesNotMatch(body, /only \d+ (spots|left|places)|hours left|countdown|hurry|last chance|ends (on|soon)|before \d/i);
-    assert.doesNotMatch(body, /free trial|\$0 today/i);
+    assert.doesNotMatch(body, /\$0 today|no card/i);
+    assert.match(body, /A card is required to start/);
+    assert.match(body, /free for 14 days, then/i, "what it costs after the trial, beside the offer");
+    assert.match(body, /email you a day or two before the trial ends/);
   }
+  assert.match(email.html, /Start 14 days free · Premium/);
+});
+
+test("the trial promo reaches only accounts checkout would give a trial", async () => {
+  const before = new Date("2026-09-28T00:00:00Z");
+  const rows = [
+    user("fresh"),
+    user("had-trial", { trialStartedAt: new Date("2026-09-20T00:00:00Z") }),
+    user("got-price-drop", { priceDropEmailSentAt: before }),
+    user("paid-before", { stripeCustomerId: "cus_paid_before" }),
+  ];
+  const a = priceDropAudience(rows, new Set());
+  assert.equal(a.hadTrial, 1, "an account that used its trial is excluded");
+  assert.deepEqual(a.pending.map((r) => r.id).sort(), ["fresh", "got-price-drop", "paid-before"], "September's price-drop stamp does not count as sent for this campaign");
+  const { deps, sent, stamped } = fakeDeps(rows, new Set());
+  const res = await runPremiumOfferBlast({ dryRun: false }, deps);
+  assert.deepEqual(sent.map((x) => x.to).sort(), ["fresh@example.com", "got-price-drop@example.com"]);
+  assert.ok(stamped.includes("paid-before"), "a past payer is stamped, not emailed, so the next batch skips it without asking Stripe");
+  assert.equal(res.hadTrial, 2);
+  assert.equal(res.remaining, 0);
+});
+
+test("never sent while the trial is off or costs money", () => {
+  const lib = read("src/lib/premium-offer.ts");
+  assert.match(lib, /if \(!dryRun && \(!premiumTrialEnabled\(\) \|\| PREMIUM_TRIAL_FEE_CENTS > 0\)\)/);
 });
 
 test("opt-out: footer link, plain-text link, and one-click List-Unsubscribe headers", () => {

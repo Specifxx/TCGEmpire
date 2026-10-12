@@ -16930,3 +16930,31 @@ Two things this cannot fix, for the owner to decide:
 **Tests.** `tests/radiance-new.test.ts` (new): the badge starts on `newFrom`, Vendetta is not new, and pre-orders, the countdown, the newest released set and the eBay priority are unchanged on 12 October; the surfaces read `showsAsNew`; the counter's two arms.
 
 **Shipping.** No deploy marker; the rows and the badge arrive with the 08:00 UTC release (`build-db-push.sh` runs `add-manual-cards.ts`).
+
+## A free 14-day trial replaces the $1 first month; the admin email becomes the trial promotion — 2026-10-12
+
+Owner, after reading the funnel: "Yes just change the defaults in the code and let's implement all of this and deploy immediately and also the price drop email should be a premium promotion email like subscribe now and get 14 days free in admin console".
+
+**The evidence it rests on** (`funnel-report` and `trial-cancel-report`, run 2026-10-12; small numbers, so pointers rather than proof):
+
+| Week | Accounts | Upgrade clicks | Checkouts started | Subscriptions |
+|---|---:|---:|---:|---:|
+| 08-24 | 55 | 88 | 3 | 3 |
+| 08-31 | 56 | 49 | 7 | 5 |
+| 09-07 | 40 | 62 | 7 | 1 |
+| 09-14 | 31 | 39 | 2 | 2 |
+| 09-21 | 35 | 67 | 7 | 4 |
+| 09-28 | 39 | 87 | 7 | 4 |
+| 10-05 | 23 | 81 | 3 | 3 |
+
+- Subscriptions held at three or four a week; upgrade clicks rose. New accounts fell, from 56 to 23 a week.
+- August, Plus at $4.99 with a 10–14 day free trial: 7 of 7 trials converted. September, Premium at $9.99 with a 14-day free trial: 5 of the 6 that matured were cancelled in the trial, and "too expensive" led the cancellation feedback. The price was cut on 2026-09-26, so price, not the trial, was what failed at $9.99.
+- The $1 first month (2026-09-30) has no matured cohort before about 30 October. Of the 7 trials started under it, 2 never began because the $1 failed at payment (an Australian card's 3-D Secure and then Radar, per the Inbox entry above). A tiny first charge is what banks and Radar treat as card testing.
+- Trialists with an alert or collection cancelled 13% of the time; those with neither, 38%.
+
+**What changed.**
+- `lib/trial-config.ts`: `PREMIUM_TRIAL_DAYS` defaults to **14** and `PREMIUM_TRIAL_FEE_CENTS` to **0** (free; a card is still required, so the trial converts unless cancelled). Every surface already read the two constants through the copy helpers, which say "Start 14 days free" / "First 14 days free, then $2.99/mo" when the fee is 0. A fee set between 1 and 49 cents still becomes $1 (Stripe's minimum). A Vercel `PREMIUM_TRIAL_DAYS` or `PREMIUM_TRIAL_FEE_CENTS` still overrides the default and must be removed. Trials already running keep the terms they started on (`trialFeeCents` on the subscription). Prices are unchanged ($2.99/$4.99 monthly, $23.99/$39.99 yearly): six changes since August meant no single price has been measured, so none is changed now.
+- **Day-one activation.** `/premium/welcome` shows "Do this first: watch the cards you want" (Find cards / Add my collection) until the account has an alert or a collected card. The trial welcome email's first step is now watching a card.
+- **`/admin/premium-offer` is the trial promotion**: subject "Try RiftCompare Premium free for 14 days", heading "Subscribe now and get 14 days free", Premium and Plus blocks with "Start 14 days free" (monthly) and a yearly button, the price after the trial beside each, and "A card is required to start … we email you a day or two before the trial ends … One trial per account." Campaign `trial-14-2026-10`; links keep `src=price-drop-email` so attribution and the click allow-list are unchanged. Audience: accounts not paying, **not already trialled** (`trialStartedAt`), and, checked at send time through `trialOfferedTo`, **never paid before** (a lapsed payer is stamped and skipped). The stamp column is still `priceDropEmailSentAt`; a stamp from before `PREMIUM_OFFER_SINCE` (2026-10-12) is September's price-drop email, so those accounts get this one once. Sending is refused while the trial is off or costs money (the email would promise what checkout does not give), and the page says so.
+
+**How to read it next.** The first 14-day cohort matures from about 26 October. Change nothing about price, trial or pitch before two cohorts have matured (late November), and compare trial starts per upgrade click and trial-to-paid against the August row above.

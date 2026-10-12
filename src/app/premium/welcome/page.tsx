@@ -9,6 +9,7 @@ import { sanitizeBackPath, PREMIUM_WELCOME_PATH } from "@/lib/premium-start";
 import { TIER_COMPARISON } from "@/components/TierComparisonTable";
 import { PremiumActivationPoller } from "@/components/PremiumActivationPoller";
 import { TIER_NAMES, premiumTrialFee } from "@/lib/site";
+import { prisma } from "@/lib/db";
 
 // WHERE STRIPE SENDS A BUYER BACK TO. Replaces /portfolio?upgraded=1, which
 // nothing on the site ever read: the buyer landed on the ordinary free-tier
@@ -111,6 +112,33 @@ export default async function PremiumWelcomePage({
       : []),
   ];
 
+  // DAY-ONE ACTIVATION (2026-10-12). trial-cancel-report: trialists with no
+  // alert and no collection cancelled 38% of the time, those with either 13%.
+  // So the first thing a new member is shown is the step that predicts staying,
+  // and it disappears once they have taken it. One bounded count per visit to a
+  // private, force-dynamic page.
+  const used = await prisma.user
+    .findUnique({ where: { id: user.id }, select: { _count: { select: { priceAlerts: true, collection: true } } } })
+    .then((u) => (u?._count.priceAlerts ?? 0) + (u?._count.collection ?? 0) > 0)
+    .catch(() => true);
+  const firstStep = used ? null : (
+    <div className="mt-4 rounded-xl border border-brand-500/40 bg-brand-500/10 p-4" data-first-step>
+      <p className="text-sm font-bold text-white">Do this first: watch the cards you want</p>
+      <p className="mt-1 text-sm text-slate-300">
+        {tierName} works while you&apos;re away. Watch a few cards you&apos;re after and we email you when one gets
+        cheaper, or add the cards you own to see what your collection is worth.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Link href="/browse" className="btn-primary text-sm">
+          Find cards to watch →
+        </Link>
+        <Link href="/portfolio" className="btn-ghost text-sm">
+          Add my collection
+        </Link>
+      </div>
+    </div>
+  );
+
   const done = (
     <div className="card-surface p-6">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-400">Welcome to {tierName}</p>
@@ -139,6 +167,7 @@ export default async function PremiumWelcomePage({
           time from your account page.
         </p>
       ) : null}
+      {firstStep}
       {unlocked.length > 0 && (
         <>
           <p className="mt-4 text-sm font-semibold text-white">Just unlocked</p>

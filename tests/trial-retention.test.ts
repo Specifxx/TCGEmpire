@@ -127,3 +127,12 @@ test("the report counts a save, which Stripe otherwise erases by clearing the ca
   const script = code("scripts/trial-cancel-report.ts");
   assert.doesNotMatch(script, /\.(create|update|del)\(/, "read-only");
 });
+
+test("day-one activation: the welcome page and trial email lead with watching a card (2026-10-12)", () => {
+  // trial-cancel-report: no alert and no collection → 38% cancelled in trial; either → 13%.
+  const welcome = code("src/app/premium/welcome/page.tsx");
+  assert.match(welcome, /_count: \{ select: \{ priceAlerts: true, collection: true \} \}/);
+  assert.match(welcome, /Do this first: watch the cards you want/);
+  assert.match(welcome, /const firstStep = used \? null :/, "gone once they have taken the step");
+  assert.match(code("src/lib/email.ts"), /step\(1, "Start here: watch the cards you want"/);
+});

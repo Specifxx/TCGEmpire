@@ -13,6 +13,7 @@ import {
   type PremiumTierKey,
 } from "./site";
 import { premiumStartHref } from "./premium-start";
+import { PREMIUM_TRIAL_DAYS } from "./trial-config";
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "./free-limits";
 import { formatMoney } from "./format";
@@ -1379,9 +1380,10 @@ export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: 
     <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       Hi ${name}, everything in ${opts.planName} is unlocked. ${terms}
     </td></tr>
-    ${step(1, "No ads on any page", `Every page is ad-free from now on, on the website and in the app. Nothing to switch on.`)}
-    ${step(2, "Every deal, not just three", `The full Deal Finder lists: every card underpriced vs TCGplayer or vs eBay at a real store, which you can narrow to only the cards you watch or own. ${link("/tools/deal-finder?mine=watch", "Deal&nbsp;Finder&nbsp;→")}`)}
-    ${step(3, "Set a target price", `Watch a card and tell us what you'd pay. After every price update we check every tracked store in your country and email you the store when it's there. ${link("/watching", "Your&nbsp;watchlist&nbsp;→")}`)}
+    ${/* FIRST since 2026-10-12: trialists with an alert or a collection cancelled 13% of the time, those with neither 38% (trial-cancel-report). */ ""}
+    ${step(1, "Start here: watch the cards you want", `Watch a card and tell us what you'd pay. After every price update we check every tracked store in your country and email you the store when it's there. ${link("/browse", "Find&nbsp;cards&nbsp;→")} ${link("/watching", "Your&nbsp;watchlist&nbsp;→")}`)}
+    ${step(2, "No ads on any page", `Every page is ad-free from now on, on the website and in the app. Nothing to switch on.`)}
+    ${step(3, "Every deal, not just three", `The full Deal Finder lists: every card underpriced vs TCGplayer or vs eBay at a real store, which you can narrow to only the cards you watch or own. ${link("/tools/deal-finder?mine=watch", "Deal&nbsp;Finder&nbsp;→")}`)}
     ${step(4, "Watch a sealed product", `Tap the heart on a box: we email you when it is back in stock after selling out everywhere, at RRP, or at your price. Stores are checked ${SEALED_CHECK_CADENCE}, and each email says when. ${link("/sealed", "Sealed&nbsp;products&nbsp;→")}`)}
     ${step(5, "Track a whole set", `Your binder has no card limit now, so a whole set fits. The set checklist shows what's missing and the cheapest listing for each card, before postage. ${link("/portfolio/sets", "Set&nbsp;checklist&nbsp;→")}`)}
     ${
@@ -1439,7 +1441,7 @@ export function escapeHtml(s: string): string {
 // checkout surface (lib/premium-surface.ts) that /admin/premium and
 // scripts/funnel-report.ts group by; the utm_* trio is for GA4.
 export const PRICE_DROP_SRC = "price-drop-email" as const;
-export const PRICE_DROP_CAMPAIGN = "price-drop-2026-09";
+export const PRICE_DROP_CAMPAIGN = "trial-14-2026-10";
 const PRICE_DROP_UTM = `utm_source=email&utm_medium=email&utm_campaign=${PRICE_DROP_CAMPAIGN}`;
 
 /** The four subscribe links, each opening checkout for exactly that tier and plan. */
@@ -1465,8 +1467,16 @@ export interface PremiumOfferEmailOpts {
   via?: "brevo" | "resend";
 }
 
+// 2026-10-12: the campaign became the free-trial promotion (owner: "the price
+// drop email should be a premium promotion email like subscribe now and get 14
+// days free"). The function names stay (the admin console, its API route and
+// the audience code all read them); what it says is the trial. Same honesty
+// rules as above, plus: it says a card is required and what the plan costs
+// after the trial, because a free trial that converts is a charge the reader
+// must see before they start it. lib/premium-offer.ts refuses to send it while
+// the trial is off or costs money.
 export function premiumOfferSubject(): string {
-  return `${SITE_NAME} Premium is now ${PREMIUM_PRICE_AMOUNT} a month`;
+  return `Try ${SITE_NAME} Premium free for ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)}`;
 }
 
 // One tier's price line: "$4.99/month, or $3.33/mo billed yearly ($39.99 a year)".
@@ -1488,8 +1498,9 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
   const greeting = first ? `Hi ${escapeHtml(first)},` : "Hi there,";
   const greetingText = first ? `Hi ${first},` : "Hi there,";
   const links = priceDropLinks();
+  const days = trialDaysPhrase(PREMIUM_TRIAL_DAYS);
   const subject = premiumOfferSubject();
-  const heading = "Premium and Plus now cost less";
+  const heading = `Subscribe now and get ${days} free`;
   const premiumLine = priceDropTierLine("premium");
   const plusLine = priceDropTierLine("plus");
   const hasAnnual = (t: PremiumTierKey) => !!premiumEffectiveMonthly(t);
@@ -1503,11 +1514,11 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
     <tr><td style="padding:8px 32px 8px">
       <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px">
         <div style="font-size:16px;font-weight:800;color:#fff">${TIER_NAMES[tier]}</div>
-        <div style="margin-top:4px;font-size:14px;line-height:1.6;color:#e6ebf2">${line}</div>
+        <div style="margin-top:4px;font-size:14px;line-height:1.6;color:#e6ebf2">Free for ${days}, then ${line}</div>
         <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#b8c0cc">${escapeHtml(includes)}</div>
         <div style="margin-top:10px">
-          ${hasAnnual(tier) ? btn(annualUrl, `${TIER_NAMES[tier]} yearly · ${tierAnnualAmount(tier)}/year`, true) : ""}
-          ${btn(monthlyUrl, `${TIER_NAMES[tier]} monthly · ${tierMonthlyAmount(tier)}/${PREMIUM_PRICE_PERIOD}`, !hasAnnual(tier))}
+          ${btn(monthlyUrl, `Start ${days} free · ${TIER_NAMES[tier]}`, true)}
+          ${hasAnnual(tier) ? btn(annualUrl, `${days} free, then yearly (${tierAnnualAmount(tier)})`, false) : ""}
         </div>
       </div>
     </td></tr>`;
@@ -1515,14 +1526,15 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${greeting}</td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      We've lowered the price of both paid plans on ${SITE_NAME}. Price comparison, your watchlist, new-low emails
-      and your portfolio stay free — the paid plans are for when you want every deal and the cheapest way to buy a
-      whole list.
+      You can now try ${SITE_NAME} Plus or Premium <strong style="color:#fff">free for ${days}</strong>. Watch the cards
+      you want and we email you the store when one hits your price, see every deal instead of the top three, and
+      price a whole deck at the cheapest stores. Price comparison, your watchlist and your portfolio stay free either way.
     </td></tr>
     ${tierBlock("premium", premiumLine, PRICE_DROP_PREMIUM_INCLUDES, links.premiumAnnual, links.premiumMonthly)}
     ${tierBlock("plus", plusLine, PRICE_DROP_PLUS_INCLUDES, links.plusAnnual, links.plusMonthly)}
     <tr><td style="padding:8px 32px 4px;font-size:13px;line-height:1.6;color:#9aa4b2">
-      No contract: cancel anytime from your account page, in a couple of clicks.
+      A card is required to start. Nothing is charged for ${days}; we email you a day or two before the trial ends,
+      and you can cancel from your account page in a couple of clicks before then. One trial per account.
       <a href="${links.compare}" style="color:#34d17e;text-decoration:underline">Compare the plans side by side</a>.
     </td></tr>
     <tr><td style="padding:0 32px 16px"></td></tr>`;
@@ -1530,19 +1542,19 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
   const text = [
     greetingText,
     "",
-    `We've lowered the price of both paid plans on ${SITE_NAME}. Price comparison, your watchlist, new-low emails and your portfolio stay free.`,
+    `You can now try ${SITE_NAME} Plus or Premium free for ${days}. Price comparison, your watchlist and your portfolio stay free either way.`,
     "",
-    `PREMIUM: ${premiumLine}`,
+    `PREMIUM: free for ${days}, then ${premiumLine}`,
     PRICE_DROP_PREMIUM_INCLUDES,
-    ...(hasAnnual("premium") ? [`Premium yearly (${tierAnnualAmount("premium")}/year): ${links.premiumAnnual}`] : []),
-    `Premium monthly (${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}): ${links.premiumMonthly}`,
+    `Start ${days} free (monthly): ${links.premiumMonthly}`,
+    ...(hasAnnual("premium") ? [`Start ${days} free (yearly, ${tierAnnualAmount("premium")}): ${links.premiumAnnual}`] : []),
     "",
-    `PLUS: ${plusLine}`,
+    `PLUS: free for ${days}, then ${plusLine}`,
     PRICE_DROP_PLUS_INCLUDES,
-    ...(hasAnnual("plus") ? [`Plus yearly (${tierAnnualAmount("plus")}/year): ${links.plusAnnual}`] : []),
-    `Plus monthly (${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD}): ${links.plusMonthly}`,
+    `Start ${days} free (monthly): ${links.plusMonthly}`,
+    ...(hasAnnual("plus") ? [`Start ${days} free (yearly, ${tierAnnualAmount("plus")}): ${links.plusAnnual}`] : []),
     "",
-    "No contract: cancel anytime from your account page, in a couple of clicks.",
+    `A card is required to start. Nothing is charged for ${days}; we email you a day or two before the trial ends, and you can cancel from your account page before then. One trial per account.`,
     `Compare the plans: ${links.compare}`,
     "",
     "—",
@@ -1555,7 +1567,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
     "List-Unsubscribe": `<${oneClick}>`,
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
   };
-  const preheader = `Premium ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}, Plus ${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
+  const preheader = `${days} free, then Premium ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD} or Plus ${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
   return { subject, heading, preheader, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl), preheader), text, headers };
 }
 

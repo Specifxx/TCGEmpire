@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-// The interactive half of /admin/premium-offer — the one-off price-drop
-// announcement (2026-09-27; lib/premium-offer.ts). Everything it does goes
+// The interactive half of /admin/premium-offer — the free-trial promotion
+// (2026-10-12; until then the one-off price-drop
+// announcement of 2026-09-27; lib/premium-offer.ts). Everything it does goes
 // through /api/admin/premium-offer (preview / send / test); when the page was
 // opened via the ?key= link rather than an admin session, the key is passed
 // through so the route's dual gate accepts it — same pattern as
@@ -20,10 +21,10 @@ export interface ConsoleRow {
   premiumUntil: string | null;
   sentAt: string | null;
   clickedAt: string | null;
-  status: "pending" | "sent" | "paying" | "optedOut";
+  status: "pending" | "sent" | "paying" | "optedOut" | "hadTrial";
 }
 
-type Filter = "pending" | "sent" | "clicked" | "paying" | "optedOut" | "all";
+type Filter = "pending" | "sent" | "clicked" | "paying" | "optedOut" | "hadTrial" | "all";
 
 interface RunResult {
   ok: boolean;
@@ -35,6 +36,7 @@ interface RunResult {
   paying?: number;
   admins?: number;
   suppressed?: number;
+  hadTrial?: number;
   sent?: number;
   failed?: number;
   remaining?: number;
@@ -47,6 +49,7 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: "clicked", label: "Clicked a link" },
   { id: "paying", label: "Paying now" },
   { id: "optedOut", label: "Opted out" },
+  { id: "hadTrial", label: "Had a trial" },
   { id: "all", label: "Everyone" },
 ];
 
@@ -79,7 +82,7 @@ export function PremiumOfferConsole({
   const [testTo, setTestTo] = useState(adminEmail);
 
   const counts = useMemo(() => {
-    const c = { pending: 0, sent: 0, clicked: 0, paying: 0, optedOut: 0, all: rows.length };
+    const c = { pending: 0, sent: 0, clicked: 0, paying: 0, optedOut: 0, hadTrial: 0, all: rows.length };
     for (const r of rows) {
       c[r.status]++;
       if (r.clickedAt) c.clicked++;
@@ -146,7 +149,7 @@ export function PremiumOfferConsole({
       ? `the ${ids.length} selected account${ids.length === 1 ? "" : "s"}`
       : `the next ${Math.min(batch, pendingTotal)} of ${pendingTotal} accounts not yet emailed`;
     const extra = resend ? ` ${selectedAlreadySent} of them already received it and will get it AGAIN.` : "";
-    if (!window.confirm(`Send the price-drop email (via ${via}) to ${who}?${extra}`)) return;
+    if (!window.confirm(`Send the 14-days-free email (via ${via}) to ${who}?${extra}`)) return;
     setBusy("send");
     setNotice(null);
     try {
@@ -176,7 +179,7 @@ export function PremiumOfferConsole({
     <div className="mt-6 space-y-5">
       {/* ── Campaign controls ─────────────────────────────────────────── */}
       <div className="card-surface p-4">
-        <h2 className="text-sm font-extrabold text-white">Send the price-drop email</h2>
+        <h2 className="text-sm font-extrabold text-white">Send the trial promo email</h2>
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <label className="text-xs text-slate-400">
             Send via
@@ -213,7 +216,7 @@ export function PremiumOfferConsole({
                 <span className="font-bold text-white">{result.dryRun ? "Preview" : "Sent"}</span> · reachable{" "}
                 <span className="num font-bold text-slate-100">{result.audienceSize ?? 0}</span> · pending{" "}
                 <span className="num font-bold text-slate-100">{result.pending ?? 0}</span> · already emailed {result.alreadySent ?? 0} ·
-                skipped as paying {result.paying ?? 0} · admins {result.admins ?? 0} · opted out {result.suppressed ?? 0}
+                skipped as paying {result.paying ?? 0} · admins {result.admins ?? 0} · opted out {result.suppressed ?? 0} · had a trial {result.hadTrial ?? 0}
                 {!result.dryRun && (
                   <>
                     {" "}· <span className="font-bold text-brand-400">sent {result.sent ?? 0}</span> · failed {result.failed ?? 0} ·
@@ -318,6 +321,8 @@ export function PremiumOfferConsole({
                       <span className="chip bg-brand-500/15 text-brand-300">✓ paying until {fmt(r.premiumUntil)}</span>
                     ) : r.status === "optedOut" ? (
                       <span className="chip bg-rose-500/15 text-rose-300">opted out</span>
+                    ) : r.status === "hadTrial" ? (
+                      <span className="chip bg-ink-800 text-slate-500">had a trial</span>
                     ) : r.status === "sent" ? (
                       <span className="chip bg-ink-800 text-slate-400">emailed</span>
                     ) : (
