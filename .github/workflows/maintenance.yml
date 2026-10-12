@@ -74,6 +74,7 @@ on:
           - audit-users      # read-only user/Premium census (no PII printed)
           - apply-intro-to-trialists  # report unless apply=true: attaches the half-price intro to renewing, never-paid monthly trials that began before 2026-09-25 (owner-approved for the one 14-day trialist).
           - ensure-intro-coupons  # WRITES to Stripe (idempotent): creates the "first 3 months half price" coupon for each monthly price if missing, and prints what it will charge.
+          - payment-failures-report # read-only: every Stripe charge in the last 30 days with WHO refused it (Radar block vs bank decline), Radar reason/rule/risk, CVC/postcode checks, card brand/funding/country, 3DS. Customers anonymised as #1, #2.
           - trial-cancel-report  # read-only: Premium trials cancelled mid-trial (cancel_at_period_end), hours to cancel, Stripe feedback, activity before cancelling. Anonymised.
           - funnel-report    # read-only WEEKLY PREMIUM FUNNEL: accounts, signup sources, PremiumClick, trial stamps and entitlement expiries from Postgres, joined to Stripe subscriptions/trials/conversions/churn, bucketed by ISO week for the last 8 (WEEKS= to change). Exists because neither admin page can answer "were more people signing up before?" — /admin/subscriptions' trial->paid is an ALL-TIME ratio with no time dimension, and /admin/accounts only looks back 30 days. Aggregate only, no PII. Writes nothing.
           - grandfather-plus-adfree # ONE-OFF (2026-09-14): pin every CURRENT Plus subscriber to premiumTierFloor='premium' so moving ad-free from Plus to Premium takes nothing away from someone who already paid for it. Idempotent. Report-only unless `apply` is ticked.
@@ -210,7 +211,7 @@ jobs:
       # under the old chain: lib/db.ts cannot work this out inside Actions
       # itself (everything collapses into one DATABASE_URL before the job
       # starts), so the winning name is exported explicitly. See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM4 || vars.RM4) && 'RM4' || 'UNSET' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || 'UNSET' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -5996,6 +5997,14 @@ jobs:
           STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
           STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
         run: npx tsx scripts/trial-cancel-report.ts
+
+      - name: Payment failures report (read-only)
+        # Why did Stripe refuse a member's payment? Radar block vs issuer decline,
+        # per charge. scripts/payment-failures-report.ts.
+        if: inputs.task == 'payment-failures-report'
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        run: npx tsx scripts/payment-failures-report.ts
 
       - name: Give the intro to pre-offer renewing trials (report unless apply)
         # Owner-approved 2026-09-24 for the one 14-day trialist still set to
