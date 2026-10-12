@@ -2092,7 +2092,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
     author: "RiftCompare",
     date: "2026-09-21",
-    updated: "2026-10-08",
+    updated: "2026-10-12",
     readMins: 9,
     tags: ["radiance", "spoilers", "card gallery", "news", "release"],
     hero: {
@@ -2175,6 +2175,15 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 ## Reveal log: what has actually been shown
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
+
+**12 October — Preview Season is over: Riot's gallery reaches 192 printings, with champion units for Mordekaiser, Ziggs and Jarvan IV.** On 8 October Riot's card gallery listed 177 Radiance printings; today it lists 192, and every one is in the database with Riot's own card image:
+
+- **Three champion units, each with a Showcase alternate art.** [Mordekaiser, Twice Slain](/card/mordekaiser-twice-slain-rad-020-167) (Fury, Rare, 7 energy, 5 Might, [020a](/card/mordekaiser-twice-slain-rad-020a-167)): Accelerate and Assault 3, and once each turn, if he would die, you can kill another friendly unit to heal, exhaust and recall him instead. [Ziggs, Explosive](/card/ziggs-explosive-rad-112-167) (Chaos, Rare, 4 energy, 4 Might, [112a](/card/ziggs-explosive-rad-112a-167)) plays Bomb gear tokens to battlefields. [Jarvan IV, Royal Heir](/card/jarvan-iv-royal-heir-rad-133-167) (Order, Rare, 7 energy, 7 Might, [133a](/card/jarvan-iv-royal-heir-rad-133a-167)) has Assault and Tank and pulls a unit to his battlefield when he attacks. All three Legends were already in print, so each now has a unit to go with it.
+- **Four more units:** [Antagonistic Apparatus](/card/antagonistic-apparatus-rad-009-167) (Fury, Uncommon), [Sanctum Conservator](/card/sanctum-conservator-rad-030-167) (Calm, Common), [Wrath of the Freljord](/card/wrath-of-the-freljord-rad-077-167) (Body, Common, 9 energy, 7 Might, Shield 3) and [Party Crasher](/card/party-crasher-rad-122-167) (Order, Common, cheaper for each exhausted unit you control).
+- **Two spells:** [Hush](/card/hush-rad-041-167) (Calm, Rare, a 1 energy Reaction that counters a spell with a Power cost of 2 or more) and [Demon Shade](/card/demon-shade-rad-102-167) (Chaos, Uncommon).
+- **Three gear:** [Resource Extractor](/card/resource-extractor-rad-052-167) (Mind, Common, a Deploy gear that makes Gold), [Scrutinizing Scope](/card/scrutinizing-scope-rad-064-167) (Mind, Rare) and [Bushwhack Trap](/card/bushwhack-trap-rad-108-167) (Chaos, Rare).
+
+Riot's gallery gets four of these wrong, and our rows follow the printed cards: it files Demon Shade and Bushwhack Trap under Fury (both are Chaos, purple), calls Scrutinizing Scope a spell and Bushwhack Trap a unit (both are gear), and gives Hush and Antagonistic Apparatus no domain or type (Calm spell, Fury unit). With the five signed Legends Riot's gallery does not list, that is 197 Radiance printings. Twenty three numbers in the main 167 are still not in Riot's gallery (010, 011, 022, 031, 032, 042, 044, 053, 054, 065, 066, 078, 080, 092, 094, 103, 104, 113, 123, 124, 134, 135 and 149), about two from each domain; they will be added when they appear.
 
 **8 October — Riot's gallery reaches 177 printings, with a second Riven and a Gravity Field of Riot's own.** On 7 October Riot's card gallery listed 164 Radiance printings; today it lists 177. Twelve were new to us and are in the database with Riot's own card image:
 
