@@ -1,3 +1,4 @@
 [
-{"retailer":"npcollectibles","retailerName":"NP Collectibles","title":"The Ball (146/167) (Radiance) (RAD)","url":"https://npcollectibles.com/products/the-ball-146-167-radiance-rad","condition":"Near Mint - Foil","isFoil":false,"priceCents":751200,"shippingCents":null,"currency":"USD","inStock":false,"derived":null,"country":"US"}
+{"retailer":"kanzengames","retailerName":"KanZenGames Sports & Collectibles","title":"The Ball (146/167) (Foil) [Radiance] (RAD)","url":"https://kanzengames.com/products/the-ball-146-167-foil-radiance-rad","condition":"Near Mint - Foil","isFoil":true,"priceCents":25,"shippingCents":null,"currency":"CAD","inStock":false,"derived":null,"country":"CA"},
+{"retailer":"npcollectibles","retailerName":"NP Collectibles","title":"The Ball (146/167) (Radiance) (RAD)","url":"https://npcollectibles.com/products/the-ball-146-167-radiance-rad","condition":"Near Mint - Foil","isFoil":false,"priceCents":749900,"shippingCents":null,"currency":"USD","inStock":false,"derived":null,"country":"US"}
 ]
