@@ -84,7 +84,8 @@ test("checkout and welcome: the trial stated as dated terms, not an undated 'can
   // the fee: "$1.00 today for your first 30 days. We'll email you a day or two
   // before day 30. Then it's … unless you cancel from your account page."
   const checkout = code("src/lib/checkout-params.ts");
-  assert.match(checkout, /\.\.\.\(trial \? \{ custom_text: \{ submit: \{ message: trialCheckoutMessage\(trial, afterTrialPrice\(tier, plan, coupon\)\) \} \} \} : \{\}\)/);
+  // Since 2026-10-12 the note may be followed by the adaptive-pricing currency line.
+  assert.match(checkout, /\.\.\.\(trial\s*\?\s*\{\s*custom_text: \{\s*submit: \{\s*message:\s*trialCheckoutMessage\(trial, afterTrialPrice\(tier, plan, coupon\)\)/);
   assert.match(checkout, /We'll email you a day or two before day \$\{trial\.days\}/);
   assert.match(checkout, /We'll email you a day or two before your \$\{trial\.days\}-day trial ends/, "the free-trial wording, only for a fee of 0");
   const welcome = code("src/app/premium/welcome/page.tsx");

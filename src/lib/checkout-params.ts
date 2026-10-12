@@ -50,6 +50,15 @@ export interface CheckoutParamsInput {
   surface?: string | null;
   /** A sanitized on-site path to return to. */
   back?: string | null;
+  /**
+   * Stripe Adaptive Pricing: show and charge the price in the buyer's own
+   * currency. Stripe's payment report of 2026-10-12 showed an Australian member's
+   * US$1.00 trial fee refused by their bank's 3-D Secure check on one card, then
+   * blocked on a second; a small cross-border charge in a foreign currency is
+   * the classic shape of that decline. The route retries without it if Stripe
+   * refuses the parameter, so it can never stop a checkout opening.
+   */
+  adaptivePricing?: boolean;
 }
 
 /** The plan's price after the trial, in the words the checkout text uses: "$2.99/month" or "$23.99/year". */
@@ -71,6 +80,9 @@ export function trialCheckoutMessage(trial: CheckoutTrial, afterTrial: string): 
     ? `${premiumCurrencySymbol()}${(trial.feeCents / 100).toFixed(2)} today for your first ${trial.days} days. We'll email you a day or two before day ${trial.days}. Then it's ${afterTrial} unless you cancel from your account page.`
     : `Nothing is charged today. We'll email you a day or two before your ${trial.days}-day trial ends. Then it's ${afterTrial} unless you cancel from your account page.`;
 }
+
+/** Appended to the pay-button text when Stripe may show another currency above it. */
+export const ADAPTIVE_PRICING_NOTE = " These amounts are in US dollars; Stripe shows what you pay in your own currency above.";
 
 export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Checkout.SessionCreateParams {
   const { tier, plan, trial, coupon, priceId } = i;
@@ -143,7 +155,19 @@ export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Check
     },
     // Force card collection even though the recurring line is $0 during a trial.
     ...(trial ? { payment_method_collection: "always" as const } : {}),
-    ...(trial ? { custom_text: { submit: { message: trialCheckoutMessage(trial, afterTrialPrice(tier, plan, coupon)) } } } : {}),
+    ...(trial
+      ? {
+          custom_text: {
+            submit: {
+              message:
+                trialCheckoutMessage(trial, afterTrialPrice(tier, plan, coupon)) +
+                (i.adaptivePricing ? ADAPTIVE_PRICING_NOTE : ""),
+            },
+          },
+        }
+      : {}),
+    // Only stated when on: without it, the session follows the Dashboard setting.
+    ...(i.adaptivePricing ? { adaptive_pricing: { enabled: true } } : {}),
     // {CHECKOUT_SESSION_ID} is a Stripe PLACEHOLDER — it must stay literal here;
     // Stripe substitutes the real session id on the redirect. The welcome page
     // re-reads that session and checks it belongs to the viewer before showing

@@ -73,8 +73,21 @@ export function isRateLimited(res: Response): boolean {
 // already here; "CHN" is a different word and `\bcn\b` does not match it. The
 // three-letter ISO-ish forms sellers actually type are now all covered, which
 // matters for singles as much as sealed: both paths read this one pattern.
+//
+// FRENCH ADDED 2026-10-12, from a member's message: "especially in Canada now
+// with the French versions having released ... a lot of booster boxes are going
+// to show as $150 but that's due to French versions becoming available,
+// meanwhile the English versions will still be closer to $300." Riftbound's
+// French print sells at Canadian stores (and Cardmarket) under the same product
+// names, so "Spiritforged Booster Box - French" at C$150 was competing as the
+// cheapest English box. Caught by the word in English or French ("French",
+// "Français", "VF", a standalone "FR"), and by the French set names a French
+// listing uses without any language word (Origines, Déchaînés / Déchaînement,
+// Premiers Pas). The Spanish and French words for the three CJK languages
+// ("Chino", "coreano", "chinois") are here for the same reason: a Spanish-titled
+// eBay listing "Jumbo Booster Box 12 (Chino)" carried none of the English ones.
 export const FOREIGN_LANG =
-  /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]|\b(cn|chn|chs|cht|jp|jpn|kr|kor|chinese|japanese|korean|asia|asian|simplified|traditional|mandarin|cantonese)\b/i;
+  /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]|\b(cn|chn|chs|cht|jp|jpn|kr|kor|chinese|japanese|korean|asia|asian|simplified|traditional|mandarin|cantonese|chino|chinos|coreano|japon[eé]s|chinois|cor[eé]en|japonais|french|fran[cç]ais|fran[cç]aise|vf|fr|origines|d[eé]cha[iî]n[eé]s?|d[eé]cha[iî]nement|premiers\s+pas)\b/i;
 
 // A title indicating a non-English printing — see FOREIGN_LANG above.
 export function isForeignLanguageTitle(title: string | null | undefined): boolean {

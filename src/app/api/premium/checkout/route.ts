@@ -101,7 +101,7 @@ export async function POST(req: Request) {
     // coupon Stripe rejects — deleted in the dashboard while a warm instance
     // still caches its id — can be retried once at full price instead of
     // failing the whole checkout (review, 2026-09-25).
-    const sessionParams = (coupon: string | null): Stripe.Checkout.SessionCreateParams =>
+    const sessionParams = (coupon: string | null, adaptivePricing = true): Stripe.Checkout.SessionCreateParams =>
       buildCheckoutSessionParams({
         userId: user.id,
         email: dbUser?.email,
@@ -114,17 +114,32 @@ export async function POST(req: Request) {
         coupon,
         surface,
         back,
+        adaptivePricing,
       });
+
+    // Adaptive Pricing first (lib/checkout-params.ts says why); if Stripe refuses
+    // that parameter for this account or this mix of line items, the same
+    // checkout opens without it, in the plan's own currency, as before.
+    const create = async (coupon: string | null): Promise<Stripe.Checkout.Session> => {
+      try {
+        return await stripe().checkout.sessions.create(sessionParams(coupon));
+      } catch (e) {
+        const err = e as { param?: string; message?: string };
+        if (!(err.param ?? "").startsWith("adaptive_pricing") && !/adaptive.pricing/i.test(err.message ?? "")) throw e;
+        console.error("adaptive pricing rejected by Stripe — retrying checkout without it:", e);
+        return stripe().checkout.sessions.create(sessionParams(coupon, false));
+      }
+    };
 
     let session: Stripe.Checkout.Session;
     try {
-      session = await stripe().checkout.sessions.create(sessionParams(introCoupon));
+      session = await create(introCoupon);
     } catch (e) {
       const param = (e as { param?: string }).param ?? "";
       if (!introCoupon || !param.startsWith("discounts")) throw e;
       console.error("intro coupon rejected by Stripe — retrying checkout at full price:", e);
       forgetIntroCoupons();
-      session = await stripe().checkout.sessions.create(sessionParams(null));
+      session = await create(null);
     }
     return NextResponse.json({ url: session.url });
   } catch (e) {

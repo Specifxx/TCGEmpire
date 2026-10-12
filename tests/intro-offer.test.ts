@@ -90,7 +90,9 @@ test("checkout: monthly, never-paid accounts get the coupon; codes are not offer
   assert.match(builder, /\.\.\.\(coupon \? \{ discounts: \[\{ coupon \}\] \} : \{ allow_promotion_codes: true \}\)/);
   // A coupon Stripe rejects (deleted in the dashboard, still cached on a warm
   // instance) retries once at full price instead of a 500 (2026-09-25 review).
-  assert.match(route, /param\.startsWith\("discounts"\)[\s\S]*forgetIntroCoupons\(\);[\s\S]*sessionParams\(null\)/);
+  assert.match(route, /param\.startsWith\("discounts"\)[\s\S]*forgetIntroCoupons\(\);[\s\S]*create\(null\)/);
+  // create() is sessionParams() behind the adaptive-pricing retry (2026-10-12).
+  assert.match(route, /stripe\(\)\.checkout\.sessions\.create\(sessionParams\(coupon\)\)/);
   assert.doesNotMatch(builder, /^\s*allow_promotion_codes: true,\s*$/m, "never both — Stripe rejects the session");
   assert.match(builder, /trial_period_days: trial\.days/);
 });

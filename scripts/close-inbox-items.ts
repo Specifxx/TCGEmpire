@@ -1,5 +1,5 @@
 /**
- * Closes the inbox items worked on 2026-09-24, and ONLY those — every row is
+ * Closes the inbox items worked on 2026-10-12, and ONLY those — every row is
  * named by id, with the status it actually earned.
  *
  * WHY IDS AND NOT A SWEEP. "Mark everything as done" is one query, and it is the
@@ -51,32 +51,23 @@ const SUGGESTIONS: Close[] = [];
 // ignore. tests/price-import.test.ts pins the exact title.
 const REPORTS: Close[] = [
   {
-    id: "cmueqk03f0001nq05zyyoonim",
+    id: "cmukh81om0000rivowif71lqa",
     from: "NEW",
     to: "FIXED",
-    what: "Vi, Piltover Enforcer (UNL 229/219, Overnumbered), eBay US$1.99 in six markets",
-    why: "fixed 2026-09-24 (numberMatches no longer reads a bare number that touches someone else's slash); verified 2026-09-26 via diagnose-card — ebay_us now prices the overnumbered chase at US$104.68, and the US$1.99 row is gone",
-  },
-  {
-    id: "cmugzoyfm000014j323g337b7",
-    from: "NEW",
-    to: "FIXED",
-    what: "Falling Star (OGN 029/298), GG Legends US$0.49",
-    why: "the listing was \"Falling Star [Gothic]\", a different, non-Riftbound product filed under our card by name alone. resolveCardId now refuses a bare name match whose bracket note names nothing in our own vocabulary",
+    what: "Fury Rune (VEN R01B promo), eBay US US$7.95",
+    why: "a rune has no printed total, so numberMatches read \"R01b/<anything>\" as a stated match and another set's R01b (\"(R01b/299) Unleashed\", the UK's cheapest at £9.50 on 9 Oct) priced Vendetta's; a two-rune lot (R01b R05b) priced it in the EU. Both refused since 2026-10-12 (tests/wrong-card-reports.test.ts). The reported US$7.95 listing itself had already gone",
   },
 ];
 
-// ── Feedback ─────────────────────────────────────────────────────────────────
-// Nothing to close: all three rows in the queue are already HIDDEN, and all
-// three were genuinely actioned rather than merely hidden — verified in code
-// this pass, not assumed from the status:
-//   • shipping missing from the portfolio → /portfolio's "Replacement cost,
-//     delivered" panel
-//   • duplicates cannot carry different purchase prices → CollectionCard
-//     .costBasisIsTotal (prisma/schema.prisma), whose comment quotes the report
-//   • "Hobby Collectors Australia is throwing off card prices" → the foreignTotal
-//     guard in resolveCardId (lib/price-import.ts), whose comment quotes it too
-const FEEDBACK: Close[] = [];
+const FEEDBACK: Close[] = [
+  {
+    id: "cmv0jpe1n0000y6rd2hl7u3n4",
+    from: "NEW",
+    to: "HIDDEN",
+    what: "\"payment wouldnt go through with multiple cards for a membership\" (3/5, 2026-10-09)",
+    why: "traced with payment-failures-report: an AU card's US$1.00 trial fee failed the bank's 3-D Secure three times, the bank then told Stripe not to retry, and Radar blocked a second card as highest risk after that burst. Checkout now uses Stripe Adaptive Pricing (local currency) from 2026-10-12",
+  },
+];
 
 async function close(
   label: string,

@@ -66,3 +66,27 @@ test("the real card still resolves by its own set/number/condition wording", () 
   assert.equal(resolve("Falling Star [OGN - 029/298]"), "falling-star");
   assert.equal(resolve("Falling Star (Near Mint)"), "falling-star");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2026-09-27 report on /card/fury-rune-ven-r01b-promo (eBay). A rune has no
+// printed total, so "R01b/<anything>" used to count as a stated match, and
+// another set's rune priced Vendetta's. Titles are the live listings of
+// 9 October 2026.
+// ─────────────────────────────────────────────────────────────────────────────
+const venRune = { name: "Fury Rune", setCode: "VEN", number: "R01B", total: "", isSignature: false, isPromo: true };
+
+test("another set's R01b rune does not price Vendetta's", () => {
+  assert.ok(!listingMatchesCard({ ...P, title: "Riftbound Fury Rune (R01b) (R01b/299) Unleashed NM FOIL- Riftbound Promotional" }, venRune));
+});
+
+test("a two-rune lot does not price one rune", () => {
+  assert.ok(!listingMatchesCard({ ...P, title: "Riftbound Rede Fury Purple Chaos Rune Vendetta Nexus Night Promo R01b R05b EN" }, venRune));
+});
+
+test("Vendetta's own R01b promo listings still match", () => {
+  for (const title of [
+    "Fury Rune (R01b) P - Vendetta - Riftbound NEXUS NIGHT PROMO",
+    "Riftbound - Fury Rune, R01b - English - Vendetta Promo Rune",
+    "Riftbound Fury Rune Vendetta Alternate Art R01b Nexus Night Promo Near Mint",
+  ]) assert.ok(listingMatchesCard({ ...P, title }, venRune), title);
+});

@@ -13,7 +13,7 @@ import { headlineOffer, openStoreCount, rankOffers } from "./sealed-offers";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
-import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
+import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
 import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
 import { convertCents } from "./fx";
@@ -113,8 +113,20 @@ export function isTrackableSealedTitle(title: string): boolean {
 // SEALED_TITLE keyed off product words the T1 collection simply doesn't use, so it
 // gets its own clause here rather than another alternation nobody can read.
 function looksSealed(title: string): boolean {
+  // isForeignLanguageTitle: the one language list every price source shares
+  // (scrape-http.ts). SEALED_EXCLUDE only knew the three CJK words in English, so a
+  // French-print box at a Canadian store was grouped with the English ones.
+  return looksSealedAnyLanguage(title) && !isForeignLanguageTitle(title);
+}
+
+function looksSealedAnyLanguage(title: string): boolean {
   return (SEALED_TITLE.test(title) || T1_COLLECTION.test(title)) && !SEALED_EXCLUDE.test(title) && !EVENT_ENTRY.test(title);
 }
+
+// The T1 Signature Edition's Chinese and Korean groups ("…|CN", "…|KR") are
+// deliberately non-English (T1_SEEDS below), so the language check above must
+// not clean them out.
+const LANGUAGE_GROUP = /\|(?:CN|KR)$/;
 
 // A listing that names a weekday or a clock time is a seat at an event, not a
 // product: "Riftbound - Radiance - Pre-Rift - Tuesday Oct 20th - 6:30 PM". Stores
@@ -994,7 +1006,8 @@ export async function cleanupStaleSealed(): Promise<number> {
   const ids = rows
     .filter((r) => {
       // Title filters — TCGplayer's official catalogue is trusted, never title-filter it.
-      if (r.retailer !== "tcgplayer" && (!looksSealed(r.title) || !isRiftboundSealed(r.title))) return true;
+      const titleOk = LANGUAGE_GROUP.test(r.groupKey) ? looksSealedAnyLanguage(r.title) : looksSealed(r.title);
+      if (r.retailer !== "tcgplayer" && (!titleOk || !isRiftboundSealed(r.title))) return true;
       // Price-sanity (every source except TCGplayer's trusted catalogue): drop listings
       // priced implausibly below the trusted price / per-type floor — an accessory, a $1
       // deposit/sample variant, or a mis-listing that escaped the title filter.

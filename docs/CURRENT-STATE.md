@@ -386,6 +386,10 @@ longer lands on its entry.
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
   [2026-09-14](../DECISIONS.md#L6038)
+  Stripe Checkout asks for Adaptive Pricing (the buyer pays in their own
+  currency) and retries without it if Stripe refuses; the pay-button note stays
+  in US dollars and says so. `payment-failures-report` (maintenance) shows why
+  Stripe refused a charge. [2026-10-12](../DECISIONS.md#L16892)
 - **No sign-up slider; sign-up prompts live in the page (09-30; reverses the
   signed-out half of "value first"):** nothing in the layout asks a signed-out
   visitor to sign up. `InlineSignupPrompt` is page content, one per page, below
@@ -644,6 +648,11 @@ longer lands on its entry.
 
 ## Prices & data
 
+- **Only English prints are priced.** `FOREIGN_LANG` (`lib/scrape-http.ts`) is
+  the one non-English list every source reads (singles, store sealed, eBay,
+  Cardmarket, TCGplayer): CJK in any script or word, and French (`french`,
+  `FR`, `VF`, Origines, Déchaînés). Add a language there, never per source.
+  [2026-10-12](../DECISIONS.md#L16892)
 - **TCGplayer is a buyable comparison row in every market but Australia**
   (US `tcgplayer`; UK/SG/CA/EU the same price converted): the cheapest English
   NM listing, else TCGplayer's market (last-sold) price, in stock either way.

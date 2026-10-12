@@ -350,8 +350,23 @@ function numberMatches(title: string, number: string, total: string, setCode: st
   // Prefixed numbers only; an unprefixed one keeps its exact previous behaviour.
   const numToken = prefix ? `${prefix}-?0*${n}` : `0*${n}`;
 
-  const full = title.match(new RegExp(`\\b${numToken}([a-z]?)\\s*\\*?\\s*/\\s*${total}\\b`, "i"));
-  if (full) return (full[1] || "").toLowerCase() === letter;
+  // A card with NO printed total (the rune cycle "R01B", promos numbered without
+  // one) has no "N/total" to confirm, and must not get this check: with total ""
+  // the pattern read "N/<anything>", so "Riftbound Fury Rune (R01b) (R01b/299)
+  // Unleashed" — another set's rune — passed as VEN's R01B and was the cheapest
+  // UK price on its page (wrong-card report, 2026-09-27). Such a card falls
+  // through to the set-named check below, like any number given without a total.
+  if (total) {
+    const full = title.match(new RegExp(`\\b${numToken}([a-z]?)\\s*\\*?\\s*/\\s*${total}\\b`, "i"));
+    if (full) return (full[1] || "").toLowerCase() === letter;
+  }
+
+  // Two different rune numbers in one title ("Fury Purple Chaos Rune … R01b
+  // R05b") is a lot of two runes, priced as one.
+  if (/^r$/i.test(rawPrefix)) {
+    const runes = new Set([...title.matchAll(/\bR-?0*(\d)([ab]?)\b/gi)].map((m) => `${m[1]}${m[2].toLowerCase()}`));
+    if (runes.size > 1) return false;
+  }
 
   if (setMentioned(title, setCode)) {
     // A BARE NUMBER MUST NOT BE HALF OF SOMEONE ELSE'S "N/M" (2026-09-24).

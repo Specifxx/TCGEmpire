@@ -150,3 +150,17 @@ test("the route hands the builder the configured constants, and never builds the
   assert.doesNotMatch(route, /line_items:/, "the session parameters live in lib/checkout-params.ts");
   assert.match(route, /priceCurrencyOf\(priceId\)/, "the fee line's currency is read from the plan Price");
 });
+
+test("adaptive pricing: stated only when asked, and the pay-button note says its amounts are US dollars", () => {
+  const base: CheckoutParamsInput = {
+    userId: "u1", email: "a@b.c", stripeCustomerId: null, tier: "premium", plan: "monthly",
+    priceId: "price_x", currency: "usd", trial: { days: 30, feeCents: 100 }, coupon: null,
+  };
+  const off = buildCheckoutSessionParams(base);
+  assert.equal((off as { adaptive_pricing?: unknown }).adaptive_pricing, undefined);
+  const on = buildCheckoutSessionParams({ ...base, adaptivePricing: true });
+  assert.deepEqual(on.adaptive_pricing, { enabled: true });
+  const note = (p: typeof on) => (p.custom_text?.submit ? (p.custom_text.submit as { message: string }).message : "");
+  assert.match(note(on), /in US dollars; Stripe shows what you pay in your own currency above\.$/);
+  assert.doesNotMatch(note(off), /US dollars/);
+});
