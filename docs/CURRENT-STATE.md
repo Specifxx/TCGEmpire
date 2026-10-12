@@ -587,6 +587,13 @@ longer lands on its entry.
   [2026-09-17](../DECISIONS.md#L7393), [2026-09-17](../DECISIONS.md#L7801)
 - **Set-agnostic code:** nothing names the current set; a new set is a data
   row. [2026-08-27](../DECISIONS.md#L3501), [2026-09-21](../DECISIONS.md#L9560)
+- **"New" is a badge, not a release (2026-10-12):** `SetInfo.newFrom` plus
+  `showsAsNew()` shows an unreleased set as new (homepage tile, sets index, share
+  image) once its list is out; Radiance from 12 Oct. Everything behavioural
+  (pre-orders, release alerts, countdown, `newestReleasedSet`, eBay priority)
+  still reads `comingSoon` and `releasedOn` and changes on the street date. A
+  preview set's count past the announced total reads "N Cards So Far", never
+  "N of 180" and never "All". [2026-10-12](../DECISIONS.md#L16908)
 - **Share images:** the site-wide preview is a composite of real screenshots of
   the whole site (`src/app/opengraph-image.jpg`), not the price guide; `/price-guide`
   keeps its own. Screenshots come from `.github/workflows/og-shots.yml`, because

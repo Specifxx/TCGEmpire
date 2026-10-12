@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { SETS } from "@/lib/constants";
+import { SETS, showsAsNew } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 import { AnswerBox } from "@/components/AnswerBox";
@@ -189,7 +189,7 @@ export default async function SetsIndexPage() {
                     its sealed product is already buyable, or merely because no cards
                     have imported yet; "· new" told the visitor none of that. */}
                 <span className="text-slate-500">
-                  {s.sealedAvailable ? " · sealed live" : s.comingSoon ? " · coming soon" : " · new"}
+                  {showsAsNew(s) ? " · new" : s.sealedAvailable ? " · sealed live" : s.comingSoon ? " · coming soon" : " · new"}
                 </span>
               </Link>
             ))}

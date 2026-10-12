@@ -16904,3 +16904,29 @@ Two things this cannot fix, for the owner to decide:
 - **A UK subscriber's renewal has been blocked every week since 15 September** by the Radar rule "Block if CVC verification fails" (`block_if_wrong_cvc`), on a stored card whose CVC check had failed. That is a Stripe Dashboard setting (Radar → Rules), and the subscriber needs to update their card.
 
 `close-inbox-items` names the report (FIXED) and the feedback (HIDDEN); it is run with `apply` after the release. The contact message has no status column, so it needs no closing. `maintenance.yml`'s `DB_SOURCE_NAME` label still said RM4 after the RM7 cutover; the URL it labelled was already RM7, so only the label changed.
+
+## Radiance: Riot's gallery reaches 192 printings, and Radiance is shown as new while it stays a pre-order set — 2026-10-12
+
+**Owner:** "Can we do an import of the new radiance cards? The full gallery should now be complete so we can remove vendetta from new and radiance is now new and not coming soon."
+
+**The import.** Riot's card gallery lists **192** Radiance printings, up from 177 on 8 October. Diffed by collector number against our 182 `RAD` rows: **15 new**, all added to `prisma/manual-cards.json`; the five signed Legends (168\*, 169\*, 170\*, 171\*, 174\*) are still ours alone, so 197 in all.
+
+- **Champion units with Showcases:** Mordekaiser, Twice Slain (020, 020a; Fury, 7 energy, 5 Might), Ziggs, Explosive (112, 112a; Chaos, 4/4), Jarvan IV, Royal Heir (133, 133a; Order, 7/7). Riot now gives the epithet as `subtitle`; names are "Champion, Epithet" as before.
+- Units: Antagonistic Apparatus 009, Sanctum Conservator 030, Wrath of the Freljord 077, Party Crasher 122. Spells: Hush 041, Demon Shade 102. Gear: Resource Extractor 052, Scrutinizing Scope 064, Bushwhack Trap 108.
+- Text, energy and Might come from the gallery (it now carries `energy` and `might` fields); each was checked against the printed card image. A Showcase takes its base card's text, since the Showcase alt text drops the reminder text.
+
+**Riot's metadata was wrong four times.** The printed cards win: Demon Shade and Bushwhack Trap are Chaos (Riot: Fury); Scrutinizing Scope is gear (Riot: spell); Bushwhack Trap is gear (Riot: unit); Hush (Calm spell) and Antagonistic Apparatus (Fury unit) have no domain or type in the gallery. Rarities match the gems.
+
+**The gallery is not quite complete.** Twenty three numbers in the main 167 are still absent from Riot's gallery: 010, 011, 022, 031, 032, 042, 044, 053, 054, 065, 066, 078, 080, 092, 094, 103, 104, 113, 123, 124, 134, 135, 149, about two from the end of each domain's run. The tracker says so and they go in when they appear.
+
+**"New, not coming soon": a badge, not a release.** The flag the owner meant, `comingSoon`, also drives pre-order labels and `/radiance-preorders`, release-alert sign-ups, the countdown, sealed listings' stock status, and the set page's released branch (which would say "0 cards priced"). Radiance singles have no prices and the street date is still 23 October (Pre-Rift 16 to 22 October). The owner was shown that and chose to show Radiance as the newest set now and keep the pre-order behaviour until the date. So:
+
+- `SetInfo.newFrom` (Radiance: `2026-10-12`) and `showsAsNew()` in `lib/constants.ts`. **Display only.** The homepage set tile becomes a normal link to `/sets/radiance` with a "New" chip instead of "Coming soon", the homepage gallery link drops "shown so far", the sets index says "· new", and the set's share image says "New set".
+- `comingSoon` and `releasedOn` are untouched, so `isPreorderSetCode`, `nextUpcomingSet` (the countdown), `newestReleasedSet` (release-day email, pack sim, sealed callout, eBay Picks) and `pricePrioritySetCodes` change on 23 October exactly as before. The launch runbook's release-day step (drop `comingSoon`, add `recentlyReleased`) is unchanged; drop `newFrom` with `recentlyReleased` once the badge has run its course.
+- Nothing badged Vendetta as new; it stays the newest RELEASED set until 23 October, which is true, so eBay Picks and the sealed page's "Newest set" box keep pointing at its priced singles and in-stock sealed. Radiance has neither yet.
+
+**A counter that had overshot.** The set page title, the hub's "Latest reveals" line and the gallery page counted reveals against Riot's announced 180, so they read "182 of 180" since 8 October and would have read "197 of 180". Past the announced total the count now stands alone ("Card List: 197 Cards So Far", "197 printings revealed"). Still "So Far", never "All": a preview set's list is not known to be complete, and this one is not (`tests/snippets-from-data.test.ts`).
+
+**Tests.** `tests/radiance-new.test.ts` (new): the badge starts on `newFrom`, Vendetta is not new, and pre-orders, the countdown, the newest released set and the eBay priority are unchanged on 12 October; the surfaces read `showsAsNew`; the counter's two arms.
+
+**Shipping.** No deploy marker; the rows and the badge arrive with the 08:00 UTC release (`build-db-push.sh` runs `add-manual-cards.ts`).

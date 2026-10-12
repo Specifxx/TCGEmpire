@@ -196,7 +196,12 @@ export async function generateMetadata({
   const preview = isPreorderSetCode(set.code) && cardCount > 0;
   const revealed = preview ? await getSetRevealCount(set.code) : null;
   const announced = set.announcedCards ?? set.totalCards;
-  const revealLabel = revealed && revealed > 0 && announced ? `${revealed} of ${announced}` : null;
+  // Past Riot's announced total (Radiance: 197 printings against "180 cards" by
+  // 12 Oct, signed and overnumbered prints included) "197 of 180 So Far" reads as
+  // an error, so the count stands alone: "197 Cards So Far" (2026-10-12). Still
+  // "So Far", never "All": a preview set's list is not known to be complete.
+  const revealLabel =
+    revealed && revealed > 0 && announced ? (revealed >= announced ? `${revealed} Cards` : `${revealed} of ${announced}`) : null;
   const fullTitles = preview
     ? [
         ...(revealLabel ? [`Riftbound ${set.name} Card List: ${revealLabel} So Far`] : []),

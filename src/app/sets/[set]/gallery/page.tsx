@@ -179,7 +179,10 @@ export async function generateMetadata({ params }: { params: { set: string } }):
   const announced = set.announcedCards ?? set.totalCards;
   const description = preview
     ? [
-        ...(announced && releaseLabel
+        ...(announced && releaseLabel && total >= announced
+          ? [`Every Riftbound ${set.name} card shown so far, ${total} printings, in one gallery of official card images. Filter by domain, rarity or type. Prices from ${releaseLabel}.`]
+          : []),
+        ...(announced && releaseLabel && total < announced
           ? [`Every Riftbound ${set.name} card shown so far, ${total} of ${announced}, in one gallery of official card images. Filter by domain, rarity or type. Prices from ${releaseLabel}.`]
           : []),
         `Every Riftbound ${set.name} card shown so far, ${total} in all, in one gallery of official card images. Filter by domain, rarity or type.`,
@@ -353,7 +356,7 @@ export default async function SetGalleryPage({ params }: { params: { set: string
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="chip bg-brand-500/15 text-brand-300">
                 <span className="num font-bold">{total.toLocaleString()}</span>&nbsp;
-                {preview && announced ? `of ${announced} cards so far` : "cards shown"}
+                {preview && announced && total < announced ? `of ${announced} cards so far` : "cards shown"}
               </span>
               {preview && releaseLabel && <span className="chip bg-ink-800 text-slate-300">Releases {releaseLabel}</span>}
               {priced > 0 && (

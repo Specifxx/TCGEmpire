@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/db";
-import { setBySlug } from "@/lib/constants";
+import { setBySlug, showsAsNew } from "@/lib/constants";
 
 // Per-set share card: set name + code + a real card count, so a shared
 // /sets/<slug> link unfurls with something specific to that set rather than
@@ -21,7 +21,8 @@ export default async function Image({ params }: { params: { set: string } }) {
     : null;
 
   const name = set?.name ?? "Riftbound";
-  const status = set?.comingSoon ? "Coming soon" : cardCount ? `${cardCount.toLocaleString()} cards tracked` : "Card list & prices";
+  // A pre-release set whose `newFrom` day has come says "New set" (lib/constants.ts showsAsNew).
+  const status = set?.comingSoon ? (showsAsNew(set) ? "New set" : "Coming soon") : cardCount ? `${cardCount.toLocaleString()} cards tracked` : "Card list & prices";
 
   return new ImageResponse(
     (

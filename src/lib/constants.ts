@@ -310,6 +310,17 @@ export interface SetInfo {
    */
   announcedCards?: number;
   recentlyReleased?: boolean;
+  /**
+   * The day an UNRELEASED set started being shown as the newest set (ISO
+   * yyyy-mm-dd): its full card list is out, so the homepage tile and the sets
+   * index say "New" instead of "Coming soon" (2026-10-12, owner: "radiance is now
+   * new and not coming soon"). DISPLAY ONLY, read through showsAsNew(). Every
+   * behaviour keeps reading `comingSoon` and `releasedOn`: pre-order labels,
+   * release alerts, the countdown, eBay quota priority and the release-day email
+   * all still change on the street date. Drop it with `recentlyReleased` once the
+   * badge has run its course.
+   */
+  newFrom?: string;
   releasedOn?: string;
   /**
    * TRUE when `code` is OUR guess, not a code Riot has published.
@@ -373,6 +384,9 @@ export const SETS: SetInfo[] = [
     totalCards: 167,
     announcedCards: 180,
     comingSoon: true,
+    // Shown as "New" from 12 Oct, when Riot's gallery had the full list (192
+    // printings); still a pre-order set until 23 Oct. See `newFrom`.
+    newFrom: "2026-10-12",
     releasedOn: "2026-10-23",
     hubReady: true,
   },
@@ -432,6 +446,17 @@ export function newestReleasedSet(now: Date = new Date()): SetInfo | undefined {
     const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
     return !Number.isNaN(released) && released <= at;
   }).sort((a, b) => (a.releasedOn! < b.releasedOn! ? 1 : -1))[0];
+}
+
+/**
+ * Does this set wear the "New" badge? A just-released set (`recentlyReleased`), or
+ * an unreleased one whose `newFrom` day has come. Badge only: see `newFrom`.
+ */
+export function showsAsNew(s: SetInfo, now: Date = new Date()): boolean {
+  if (s.recentlyReleased) return true;
+  if (!s.newFrom) return false;
+  const from = Date.parse(`${s.newFrom}T00:00:00Z`);
+  return !Number.isNaN(from) && from <= now.getTime();
 }
 
 export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);

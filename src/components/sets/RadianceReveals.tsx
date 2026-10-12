@@ -15,7 +15,15 @@ export function RadianceReveals({ data }: { data: Reveals | null }) {
           Latest reveals
         </h2>
         <p className="num text-sm text-slate-300">
-          <strong className="text-white">{data.revealed}</strong> of {RADIANCE_TOTAL_CARDS} revealed
+          {data.revealed >= RADIANCE_TOTAL_CARDS ? (
+            <>
+              <strong className="text-white">{data.revealed}</strong> printings revealed
+            </>
+          ) : (
+            <>
+              <strong className="text-white">{data.revealed}</strong> of {RADIANCE_TOTAL_CARDS} revealed
+            </>
+          )}
           {data.latestAt && <> · updated {timeAgo(new Date(data.latestAt))}</>}
         </p>
       </div>

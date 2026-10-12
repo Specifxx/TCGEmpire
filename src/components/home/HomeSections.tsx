@@ -10,7 +10,7 @@ import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { PokemonHomePromo } from "@/components/pokemon/PokemonHomePromo";
-import { SETS, hasSetHub, newestReleasedSet, nextUpcomingSet } from "@/lib/constants";
+import { SETS, hasSetHub, newestReleasedSet, nextUpcomingSet, showsAsNew } from "@/lib/constants";
 import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import type { Country } from "@/lib/country";
@@ -241,8 +241,9 @@ export function HomeSections({
             // Radiance from 25 Sep 2026) keeps its "Coming soon" cue but links to
             // its card gallery: every card shown so far, on one page. An
             // unreleased set with no hub yet (no cards, no sealed) stays a
-            // disabled tile.
-            s.comingSoon && !s.sealedAvailable ? (
+            // disabled tile. One whose `newFrom` day has come (Radiance from
+            // 12 Oct, its full list out) is shown like a released set, badged New.
+            s.comingSoon && !s.sealedAvailable && !showsAsNew(s) ? (
               hasSetHub(s) ? (
                 <Link
                   key={s.code}
@@ -272,7 +273,7 @@ export function HomeSections({
               >
                 <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
                   {s.code}
-                  {((s.comingSoon && s.sealedAvailable) || s.recentlyReleased) && (
+                  {((s.comingSoon && s.sealedAvailable) || showsAsNew(s)) && (
                     <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New</span>
                   )}
                 </span>
@@ -294,7 +295,9 @@ export function HomeSections({
               href={`/sets/${nextSet.slug}/gallery`}
               className="font-semibold text-brand-300 underline-offset-2 hover:underline"
             >
-              See every {nextSet.name} card shown so far in the gallery →
+              {showsAsNew(nextSet)
+                ? `See every ${nextSet.name} card in the gallery →`
+                : `See every ${nextSet.name} card shown so far in the gallery →`}
             </Link>
           </p>
         ) : newestSet && (
