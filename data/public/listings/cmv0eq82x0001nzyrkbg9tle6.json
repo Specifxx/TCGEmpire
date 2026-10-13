@@ -1,3 +1,4 @@
 [
-{"retailer":"kanzengames","retailerName":"KanZenGames Sports & Collectibles","title":"Firebrand Raider (019/167) (Foil) [Radiance] (RAD)","url":"https://kanzengames.com/products/firebrand-raider-019-167-foil-radiance-rad","condition":"Near Mint - Foil","isFoil":true,"priceCents":25,"shippingCents":null,"currency":"CAD","inStock":false,"derived":null,"country":"CA"}
+{"retailer":"kanzengames","retailerName":"KanZenGames Sports & Collectibles","title":"Firebrand Raider (019/167) (Foil) [Radiance] (RAD)","url":"https://kanzengames.com/products/firebrand-raider-019-167-foil-radiance-rad","condition":"Near Mint - Foil","isFoil":true,"priceCents":25,"shippingCents":null,"currency":"CAD","inStock":false,"derived":null,"country":"CA"},
+{"retailer":"thistletavern","retailerName":"Thistle Tavern","title":"Firebrand Raider","url":"https://thistletavern.com/products/rift-radiance-firebrand-raider","condition":"Radiance / Normal / 019/167","isFoil":false,"priceCents":100,"shippingCents":null,"currency":"GBP","inStock":false,"derived":null,"country":"UK"}
 ]

@@ -1,3 +1,4 @@
 [
-{"retailer":"npcollectibles","retailerName":"NP Collectibles","title":"The Waters' Wage (100/167) (Radiance) (RAD)","url":"https://npcollectibles.com/products/the-waters-wage-100-167-radiance-rad","condition":"Near Mint","isFoil":false,"priceCents":749900,"shippingCents":null,"currency":"USD","inStock":false,"derived":null,"country":"US"}
+{"retailer":"thistletavern","retailerName":"Thistle Tavern","title":"The Waters' Wage","url":"https://thistletavern.com/products/rift-radiance-the-waters-wage","condition":"Radiance / Normal / 100/167","isFoil":false,"priceCents":25,"shippingCents":null,"currency":"GBP","inStock":false,"derived":null,"country":"UK"},
+{"retailer":"npcollectibles","retailerName":"NP Collectibles","title":"The Waters' Wage (100/167) (Radiance) (RAD)","url":"https://npcollectibles.com/products/the-waters-wage-100-167-radiance-rad","condition":"Near Mint","isFoil":false,"priceCents":752500,"shippingCents":null,"currency":"USD","inStock":false,"derived":null,"country":"US"}
 ]
