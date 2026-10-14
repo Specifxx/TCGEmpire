@@ -1,4 +1,4 @@
 [
 {"retailer":"kanzengames","retailerName":"KanZenGames Sports & Collectibles","title":"Hush (041/167) (Foil) [Radiance] (RAD)","url":"https://kanzengames.com/products/hush-041-167-foil-radiance-rad","condition":"Near Mint - Foil","isFoil":true,"priceCents":25,"shippingCents":null,"currency":"CAD","inStock":false,"derived":null,"country":"CA"},
-{"retailer":"thistletavern","retailerName":"Thistle Tavern","title":"Hush","url":"https://thistletavern.com/products/rift-radiance-hush","condition":"Radiance / Normal / 041/167","isFoil":false,"priceCents":100,"shippingCents":null,"currency":"GBP","inStock":false,"derived":null,"country":"UK"}
+{"retailer":"thistletavern","retailerName":"Thistle Tavern","title":"Hush","url":"https://thistletavern.com/products/rift-radiance-hush","condition":"Radiance / Foil / 041/167","isFoil":false,"priceCents":100,"shippingCents":null,"currency":"GBP","inStock":false,"derived":null,"country":"UK"}
 ]
