@@ -260,6 +260,10 @@ longer lands on its entry.
   a day; **`SEARCH_CAPS=off` plus a redeploy is the kill switch**, so watch those
   two numbers. `PREMIUM_COPY_VERSION` `search-caps-2026-10-09`.
   `tests/search-limits.test.ts`. [2026-10-09](../DECISIONS.md#L16846)
+  **Kept after its first week:** views per session fell 4.12 → 2.76 again, but
+  `buy_click` per 100 sessions rose 35.2 → 50.8 (GA4). Measure with the
+  `impact-report` task. Mobile vignette ads are off in AdSense (owner, 10-14).
+  [2026-10-14](../DECISIONS.md#L17002)
 - **Paid history, graded tracking, auction alerts (2026-10-09):** free sees a
   card's last 30 days (`FREE_HISTORY_DAYS`); Plus and Premium see the whole
   series and a CSV (`/history/full`, `/history.csv`, `private, no-store`). It is

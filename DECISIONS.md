@@ -16998,3 +16998,19 @@ The pattern behind the request is the history this repo keeps recording: RM6, RM
 **What this does not do.** It does not fix a database that is full: it says so, within three hours, with the sentence to say to Claude. Migrating on its own is a destructive, multi-step change (copy, flip the chain, add the new name to Vercel, deploy) that is not made unattended. What does run unattended is the public-data fallback (`PUBLIC_DATA_MODE=fallback`), which keeps public pages serving from the saved copy while the main database is down. The lasting fix for the allowance itself remains `PUBLIC_DATA_MODE=files`.
 
 **The standing rule** (CLAUDE.md): a new scheduled job, external API or limit gets a check, and a new public form calls `notifyOwnerBounded`.
+
+## The search allowance's first week: keep it, buy clicks are up — 2026-10-14
+
+**Owner:** "is that impacting our stats... the buy click events... the number of visitors... should we be getting rid of ads?" The 2026-10-09 entry named the two numbers to watch, because the earlier ladder lost pages per visitor 3.86 → 2.75 and ~40% of `buy_click`.
+
+**Measured, 2–6 Oct against 9–13 Oct (GA4, read by the owner):** sessions 2,391 → 2,587 (+8%); `buy_click` 842 → 1,313, so **35.2 → 50.8 per 100 sessions (+44%)**; views per session 4.12 → 2.76 (−33%); engagement rate 54.5% → 50.1%. `search_limit_shown` fired 124 times for 19 users, under 1% of visitors.
+
+**First-party, 10 Sep–8 Oct against 9–13 Oct (`impact-report`, new):** Search Console clicks 204 → 128 a day, mostly a CTR fall (2.1% → 1.5%) that began on 6–8 Oct, before the allowance shipped and before any visitor can meet it. Card page views per Google click held at 3.5. `search_limit` was the joint-largest signup source (4 of 18 accounts); `limit:search` produced no Premium clicks.
+
+**Decision: keep the allowance.** Pages per visitor fell almost exactly as last time, but the number that pays did the opposite: buy clicks per session rose. The lost views are most likely `/browse` result pages from heavy searchers, not card pages. Confounders, so this is not proof the allowance raised buy clicks: Radiance gallery pages and pre-orders, and the pack simulator doubling. The kill switch stays the lever if `buy_click` per session falls.
+
+**Ads.** Auto ads with anchor, side rail and a mobile vignette were live. The owner switched the **vignette off** in AdSense on 14 Oct (a full-screen ad between pages, the format most likely to cost a buy click); anchor, side rail and in-page stay. Ads stay on: they are what "ad-free" in Plus sells.
+
+**Not changed:** Premium prices and features. The free 14-day trial shipped on 12 Oct, and a second change now would make neither readable.
+
+**Tooling.** `impact-report` (maintenance task, `scripts/impact-report.ts`) prints a daily series of Search Console, card views and searches (`DemandSnapshot`), accounts by source and PremiumClick by surface, with window averages around `CHANGE_DATES`. It has no buy-click column: `ClickEvent` has not been written since `/api/click` became a no-op, so `buy_click` lives only in GA4. Re-run it around 28 Oct for two clean weeks.
