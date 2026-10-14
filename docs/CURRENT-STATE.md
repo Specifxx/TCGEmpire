@@ -19,8 +19,15 @@ longer lands on its entry.
 
 - **Production builds only on `[deploy]` in a commit SUBJECT** (any case; the
   body does not count), via `vercel.json`'s `ignoreCommand`, which fails
-  open. Previews are not gated. [2026-09-11](../DECISIONS.md#L4871),
+  open. [2026-09-11](../DECISIONS.md#L4871),
   [2026-09-11](../DECISIONS.md#L5195)
+- **Previews are off (2026-10-14):** `claude/*` branches never deploy, and any
+  other branch or pull request builds a preview only when the commit SUBJECT
+  carries `[preview]` (any case), added only when the owner asks. A preview
+  build was the full pipeline against the Preview environment's databases
+  (schema push, Singapore import, ~475 prerendered database-backed pages); an
+  unreadable message builds no preview. Production is unchanged.
+  [2026-10-14](../DECISIONS.md#L17091)
 - **One release a day:** `production-deploy.yml` lands an empty `[deploy]`
   commit at 08:00 UTC if anything landed since the last one (GitHub's cron
   drifts; it has fired at 11:51–13:01). Since 2026-10-03 something always

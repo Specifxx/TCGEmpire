@@ -61,14 +61,56 @@ test("an UNKNOWN environment is treated as production and gated (exit 0)", () =>
   assert.equal(r.status, 0, `expected exit 0 (skip), got ${r.status}:\n${r.out}`);
 });
 
-test("PREVIEW and DEVELOPMENT builds are never gated (exit 1, builds)", () => {
-  // A human's non-claude/* branch still gets its preview URL, and
-  // seo-preview-gate.yml still gets its deployment_status event
-  // (docs/build-cost.md). claude/* previews are disabled in vercel.json.
+// ─────────────────────────────────────────────────────────────────────────────
+// PREVIEW AND DEVELOPMENT BUILDS ARE OFF (owner, 2026-10-14: "stop building
+// these pages ahead of time on preview deploys"). A preview build was the full
+// production pipeline against the live databases: the branch's schema pushed
+// by build-db-push.sh, a Singapore price import, ~475 prerendered
+// database-backed pages. It now happens only when the commit SUBJECT carries
+// [preview], which a session adds only when the owner asks for a preview.
+// DECISIONS.md, "Preview builds are off unless a commit asks for one".
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("PREVIEW and DEVELOPMENT builds are skipped by default (exit 0)", () => {
   for (const env of ["preview", "development"]) {
-    const r = runGate("Fix the thing", env);
-    assert.equal(r.status, 1, `expected exit 1 (build) for VERCEL_ENV=${env}, got ${r.status}:\n${r.out}`);
-    assert.match(r.out, /not gated/);
+    const r = runGate("Fix the thing\n\nLonger body.", env);
+    assert.equal(r.status, 0, `expected exit 0 (skip) for VERCEL_ENV=${env}, got ${r.status}:\n${r.out}`);
+    assert.match(r.out, /previews are off/);
+  }
+});
+
+test("a preview builds when its commit SUBJECT carries [preview], case-insensitively (exit 1)", () => {
+  for (const env of ["preview", "development"]) {
+    for (const msg of ["Try the new header [preview]", "[Preview] sidebar rail", "[PREVIEW]", "wip [preview]\n\nA body, ignored either way."]) {
+      const r = runGate(msg, env);
+      assert.equal(r.status, 1, `expected exit 1 (build) for VERCEL_ENV=${env} ${JSON.stringify(msg)}, got ${r.status}:\n${r.out}`);
+    }
+  }
+});
+
+test("[preview] in the BODY builds no preview, and [deploy] is not a preview marker (exit 0)", () => {
+  // The same subject-only rule as [deploy]: this repo's commit bodies explain
+  // the markers, and prose about a marker must never act as one.
+  const body = runGate("Turn previews off\n\nA preview now needs [preview] in the subject.", "preview");
+  assert.equal(body.status, 0, `a body-only mention must NOT build a preview, got ${body.status}:\n${body.out}`);
+  const deploy = runGate("release: scheduled production deploy [deploy]", "preview");
+  assert.equal(deploy.status, 0, `[deploy] on a preview must not build it, got ${deploy.status}:\n${deploy.out}`);
+});
+
+test("an unreadable commit message never builds a preview (exit 0); production still fails open", () => {
+  // Fail-open exists so PRODUCTION can never be stranded; a preview nobody
+  // asked for is exactly what this gate removes.
+  for (const env of ["preview", "development"]) {
+    const r = runGate(undefined, env);
+    assert.equal(r.status, 0, `expected exit 0 (skip) for VERCEL_ENV=${env} with no message, got ${r.status}:\n${r.out}`);
+  }
+  assert.equal(runGate(undefined, "production").status, 1, "production must still fail open");
+});
+
+test("[preview] does not deploy PRODUCTION (exit 0)", () => {
+  for (const env of ["production", undefined]) {
+    const r = runGate("Try the new header [preview]", env);
+    assert.equal(r.status, 0, `expected exit 0 (skip) for VERCEL_ENV=${env ?? "unset"}, got ${r.status}:\n${r.out}`);
   }
 });
 

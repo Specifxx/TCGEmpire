@@ -44,12 +44,27 @@
 # one line nobody writes prose in. Verified against all three real cases at the
 # time of the fix; tests/deploy-cadence.test.ts pins the body case.
 #
-# PREVIEW AND DEVELOPMENT BUILDS ARE NOT GATED. A preview exists because a
-# human pushed a non-automation branch and may open its URL, and
-# .github/workflows/seo-preview-gate.yml consumes its deployment_status event
-# (docs/build-cost.md). The automation-driven preview cost was removed
-# separately — vercel.json disables previews for claude/* branches — so the
-# marker has nothing to add there and would only take the preview URL away.
+# PREVIEW AND DEVELOPMENT BUILDS ARE OFF (owner, 2026-10-14: "stop building
+# these pages ahead of time on preview deploys"). Until then a push to any
+# branch not named claude/* (vercel.json disables those outright), or a pull
+# request from one, made a Preview build, and a Preview build is the full
+# production pipeline pointed at the databases the Preview environment holds
+# (the live ones: every cutover sets them in all three Vercel environments):
+# scripts/build-db-push.sh
+# pushes the BRANCH's Prisma schema to the operational and history projects
+# (--accept-data-loss), package.json's build runs a Singapore price import, and
+# `next build` prerenders ~475 database-backed pages. Next has no switch to skip
+# prerendering a static page (route segment config must be a literal), so the
+# one place that stops all of it is here, before the build starts. A preview
+# or development build now happens only when the commit SUBJECT carries the
+# literal marker  [preview]  (any case), added only when the owner asks for a
+# preview of that commit; it is then a full build, like production. The same
+# SUBJECT-only rule as [deploy]: a body that discusses the marker builds
+# nothing. An unreadable message never builds a preview (no fail-open here:
+# production is the only build that must not be lost). Production is
+# unchanged. The CLI staging deploy (.github/workflows/staging-deploy.yml) never
+# passes through this script. DECISIONS.md, "Preview builds are off unless a
+# commit asks for one", 2026-10-14.
 #
 # WHEN THE ENVIRONMENT IS UNKNOWN (VERCEL_ENV unset), the push is treated as
 # production and gated. The asymmetry is deliberate: gating a preview by
@@ -63,12 +78,7 @@
 set -u
 
 MARKER='[deploy]'
-
-env="${VERCEL_ENV:-}"
-if [ "$env" = "preview" ] || [ "$env" = "development" ]; then
-  echo "[vercel-ignore-build] VERCEL_ENV=$env — preview/development builds are not gated; building."
-  exit 1
-fi
+PREVIEW_MARKER='[preview]'
 
 msg="${VERCEL_GIT_COMMIT_MESSAGE:-}"
 source="VERCEL_GIT_COMMIT_MESSAGE"
@@ -79,6 +89,19 @@ if [ -z "$msg" ]; then
   # way.
   msg="$(git log -1 --format=%B 2>/dev/null || true)"
   source="git log -1"
+fi
+
+env="${VERCEL_ENV:-}"
+if [ "$env" = "preview" ] || [ "$env" = "development" ]; then
+  # See "PREVIEW AND DEVELOPMENT BUILDS ARE OFF" above. Subject only, like the
+  # production marker below.
+  preview_subject="$(printf '%s\n' "$msg" | head -n 1)"
+  if [ -n "$preview_subject" ] && printf '%s' "$preview_subject" | grep -qiF -- "$PREVIEW_MARKER"; then
+    echo "[vercel-ignore-build] VERCEL_ENV=$env and '$PREVIEW_MARKER' in the commit SUBJECT (via $source) — building the preview that was asked for."
+    exit 1
+  fi
+  echo "[vercel-ignore-build] VERCEL_ENV=$env — previews are off (owner, 2026-10-14): no '$PREVIEW_MARKER' in the commit SUBJECT (via $source), skipping. A preview builds only when its commit subject carries $PREVIEW_MARKER."
+  exit 0
 fi
 
 if [ -z "$msg" ]; then

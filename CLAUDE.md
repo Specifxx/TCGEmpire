@@ -8,6 +8,13 @@ the literal marker `[deploy]`, and `.github/workflows/production-deploy.yml`
 lands one such commit a day at 08:00 UTC. The subject only: a body that
 mentions the marker in prose must not deploy, and once did.
 
+**Preview and development builds are off** (owner, 2026-10-14). `claude/*`
+branches get no deployment at all (`vercel.json`), and the same script skips a
+preview of any other branch or pull request unless the commit SUBJECT carries
+`[preview]` (any case). Add `[preview]` only when the owner asks for a preview
+of that commit: it is a full build against the Preview environment's
+databases (schema push, Singapore import, every prerendered page).
+
 Every unnecessary build prerenders ~770 database-backed pages, clears the ISR
 page cache and orphans much of the Data Cache (an `unstable_cache` key
 contains the callback's minified source). At 10–30 pushes a day that alone

@@ -83,8 +83,8 @@ eleven projects in a row; the app's own request traffic measures ~0.12 GB/day.
 `vercel.json` now carries `"ignoreCommand": "bash scripts/vercel-ignore-build.sh"`.
 For a production build the script exits 0 (skip) unless the commit message
 contains `[deploy]`, and fails open (builds) if it cannot read the message at
-all. Preview and development builds are not gated, so a human branch's preview
-URL and the SEO gate's `deployment_status` event survive; an unknown
+all. Preview and development builds were not gated at first, so a human
+branch's preview URL survived (Part 3 below turned them off); an unknown
 `VERCEL_ENV` is treated as production.
 `.github/workflows/production-deploy.yml` supplies the marker once a day with
 an empty commit, and on demand from its *Run workflow* button. Full account in
@@ -93,3 +93,26 @@ an empty commit, and on demand from its *Run workflow* button. Full account in
 **What this gives up:** an immediate deploy on merge. A hotfix needs
 `[deploy]` in its message or a press of the button; everything else waits for
 the 08:00 UTC release. Pinned by `tests/deploy-cadence.test.ts`.
+
+## Part 3 — no preview build unless a commit asks for one (2026-10-14)
+
+Owner: "stop building these pages ahead of time on preview deploys." After
+Parts 1 and 2, a push to any branch NOT named `claude/*` (or a pull request
+from one) still made a Preview build, and a Preview build is the whole
+production pipeline pointed at the databases the Preview environment holds
+(the live ones: every cutover sets them in all three environments):
+`build-db-push.sh` pushes
+the branch's Prisma schema (`--accept-data-loss`), the build command runs the
+Singapore price import above, and `next build` prerenders ~475
+database-backed pages. GitHub's deployment records show 26 Preview builds
+from 23 August to 8 September and two since (21 and 25 September).
+
+`scripts/vercel-ignore-build.sh` now skips every preview and development build
+unless the commit SUBJECT carries `[preview]` (any case), the same rule as
+MTG Compare. The body does not count, an unreadable message builds no
+preview, and production is unchanged. A `[preview]` build is a full build,
+like production, so a session adds the marker only when the owner asks for a
+preview. The SEO gate keeps running on Production deployments. The CLI staging
+deploy (`staging-deploy.yml`) never meets the script. Pinned by
+`tests/deploy-cadence.test.ts`; `DECISIONS.md`, "Preview builds are off unless
+a commit asks for one".
