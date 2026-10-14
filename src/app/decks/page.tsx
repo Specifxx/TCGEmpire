@@ -10,9 +10,10 @@ import { currentTotals, liveDecksOrNull } from "@/lib/published-decks-server";
 import { pageAlternates } from "@/lib/seo";
 
 // The public deck library (2026-09-26, DECISIONS.md "Public decks"). ISR: one
-// render an hour, and publishing revalidates it on demand. Filters and sort
-// run client-side over this list.
-export const revalidate = 3600;
+// render every six hours (an hour until 2026-10-14, DECISIONS.md, "Cached pages
+// refresh every 6 to 24 hours", 2026-10-14), and publishing revalidates it on
+// demand. Filters and sort run client-side over this list.
+export const revalidate = 21600;
 
 // One read of the library per render, shared by generateMetadata and the page
 // (React's request cache, not a data cache: nothing here outlives the render,

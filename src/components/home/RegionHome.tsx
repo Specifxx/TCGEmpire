@@ -43,11 +43,11 @@ const COUNTRY_CODES: Country[] = COUNTRY_LIST.map((c) => c.code);
 // The underlying data reuses the SAME caches "/" already populates
 // (getCachedTopDeals/getPriceMovers/getRecentlyUpdated are all keyed by
 // market, not by route — see their own doc comments), so this costs no
-// extra DB egress beyond what "/" was already computing once an hour.
+// extra DB egress beyond what "/" was already computing once every six hours.
 export async function RegionHome({ region }: { region: Country }) {
   const info = COUNTRIES[region];
   const [
-    { totalCards, statsByCountry, freshness },
+    { totalCards, statsByCountry, freshness, freshnessAt },
     popularCards,
     topDealsArr,
     recentlyUpdated,
@@ -94,13 +94,14 @@ export async function RegionHome({ region }: { region: Country }) {
         statsByCountry={statsByCountry}
         trendingCards={trendingCards}
         freshness={freshness}
+        freshnessAt={freshnessAt}
         region={{ code: region, adjective: info.adjective }}
       />
 
       {/* Guides, news & market updates: directly under the hero on every
           home (owner, 2026-10-02: "should still be at the top under the
           hero"), then Today's Top Deals and the price guide. */}
-      <EditorialHub freshness={freshness} market={region} />
+      <EditorialHub freshness={freshness} freshnessAt={freshnessAt} market={region} />
 
       {/* eBay Picks directly under the band, as on "/" (owner, 2026-10-06).
           HomeSections gets showEbayPicks={false} so it appears once. */}

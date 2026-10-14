@@ -17,9 +17,10 @@ import {
   CONSULT_REPLY_HOURS,
 } from "@/lib/consulting";
 
-// Same hourly cadence as /stores: the only server data here is two counts that
-// move once a day at most, so there is no reason for a per-request render.
-export const revalidate = 3600;
+// Same daily cadence as /stores (hourly until 2026-10-14, DECISIONS.md, "Cached
+// pages refresh every 6 to 24 hours", 2026-10-14): the only server data here is
+// two counts that move once a day at most.
+export const revalidate = 86400;
 
 const CANONICAL = "/stores/consulting";
 const PRICE_LABEL = formatMoney(CONSULT_PRICE_CENTS, CONSULT_CURRENCY_DISPLAY);

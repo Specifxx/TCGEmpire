@@ -15,7 +15,9 @@ export const dynamic = "force-dynamic";
 // in that market already sees (or could see) on the homepage's Top Deals
 // column, so there is nothing here to leak.
 export async function GET(req: Request) {
-  const headers = { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" };
+  // Six hours at the CDN (an hour until 2026-10-14; DECISIONS.md, "Cached pages
+  // refresh every 6 to 24 hours"): the feed it reads changes with each import.
+  const headers = { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" };
   try {
     // normalizeCountry() always resolves to a real, live Country (falls back to
     // DEFAULT_COUNTRY for anything it doesn't recognise), so no separate

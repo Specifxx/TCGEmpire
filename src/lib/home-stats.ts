@@ -23,6 +23,12 @@ export interface HomeStats {
   statsByCountry: Record<Country, MarketStat>;
   freshness: string | null;
   /**
+   * The same moment as an ISO timestamp, so the cached homes can recompute
+   * "Xh ago" after mount (components/home/UpdatedAgo.tsx). Optional: an entry
+   * cached before it existed keeps the server string.
+   */
+  freshnessAt?: string | null;
+  /**
    * Stores with at least one IN-STOCK listing right now, per market — the count
    * the homepage titles quote. Distinct from `stores` (every tracked store that
    * has ever had a row), because "stores we track" and "stores with a live
@@ -87,12 +93,17 @@ async function computeHomeStats(): Promise<HomeStats> {
     totalCards,
     statsByCountry,
     freshness: lastPriceRefresh._max.lastSeen ? timeAgo(lastPriceRefresh._max.lastSeen) : null,
+    freshnessAt: lastPriceRefresh._max.lastSeen ? lastPriceRefresh._max.lastSeen.toISOString() : null,
     liveStoresByCountry: Object.fromEntries(COUNTRY_CODES.map((c) => [c, liveByCountry[c]?.size ?? 0])) as Record<Country, number>,
     liveStoresAll: liveAll.size,
   };
 }
 
+// Six hours, the homes' own TTL (an hour until 2026-10-14; DECISIONS.md,
+// "Cached pages refresh every 6 to 24 hours"). Never shorter than the pages
+// that read it: an inner TTL drags the whole segment down to it (egress rule 5,
+// lib/db.ts). CONTENT_TAG is what refreshes it after each import.
 export const getHomeStats = unstable_cache(computeHomeStats, ["home-stats-v1"], {
-  revalidate: 3600,
+  revalidate: 21600,
   tags: [CONTENT_TAG],
 });

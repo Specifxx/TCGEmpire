@@ -13,7 +13,12 @@ import { nextDatedRelease, assumedStreetInstant, releaseDateLabel } from "@/lib/
 // here names a set in code. It always shows whichever release nextDatedRelease()
 // returns, so it keeps working the day Radiance ships and Legacy becomes next —
 // no edit, no stale embed left pointing at a set that already released.
-export const revalidate = 3600;
+//
+// Six hours, at the CDN too, like /release-dates (an hour until 2026-10-14,
+// DECISIONS.md, "Cached pages refresh every 6 to 24 hours", 2026-10-14): the
+// clock ticks in the browser, and this bounds how long after a street date the
+// widget keeps counting down to it.
+export const revalidate = 21600;
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -26,7 +31,7 @@ export async function GET() {
   return new Response(body, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400",
       // The shell already carries <meta name="robots" content="noindex">; the
       // header covers the case where the widget is fetched as a subresource and
       // the meta tag is never parsed.

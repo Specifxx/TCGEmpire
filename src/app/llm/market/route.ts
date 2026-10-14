@@ -2,9 +2,12 @@ import { getMarketIndex } from "@/lib/market-index";
 import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 
-// Clean markdown version of the RiftCompare Index page, for AI agents (linked from
-// llms.txt and the page's `alternate` type=text/markdown). Cheap for LLMs to ingest.
-export const revalidate = 1800;
+// Clean markdown version of the RiftCompare Index page, for AI agents (linked
+// from llms.txt and the page's `alternate` type=text/markdown). Cheap for LLMs
+// to ingest. A day (30 minutes until 2026-10-14, DECISIONS.md, "Cached pages
+// refresh every 6 to 24 hours", 2026-10-14): the Index moves at most once a
+// day, when a release brings a new history file.
+export const revalidate = 86400;
 
 const md = (lines: string[]) =>
   new Response(lines.join("\n") + "\n", { headers: { "Content-Type": "text/markdown; charset=utf-8" } });

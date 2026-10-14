@@ -11,10 +11,12 @@ import { guidesForTool } from "@/lib/content/tool-guides";
 import { SITE_URL } from "@/lib/site";
 
 // Legend landing pages (2026-09-26): every published deck for one champion's
-// Legend. ISR, an hour; publishing revalidates the legend's page. A legend with
-// no decks yet shows "Publish the first {Legend} deck" and is noindexed until
-// it has one, so no thin page is offered to search.
-export const revalidate = 3600;
+// Legend. ISR, six hours (an hour until 2026-10-14, DECISIONS.md, "Cached pages
+// refresh every 6 to 24 hours", 2026-10-14); publishing revalidates the
+// legend's page. A legend with no decks yet shows "Publish the first {Legend}
+// deck" and is noindexed until it has one, so no thin page is offered to
+// search.
+export const revalidate = 21600;
 
 // Returns NOTHING, deliberately — the same device as /card/[id]: an (empty)
 // generateStaticParams is what makes Next cache each on-demand render for

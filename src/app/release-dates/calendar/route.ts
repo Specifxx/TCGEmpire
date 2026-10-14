@@ -11,7 +11,10 @@ import { nextDatedRelease } from "@/lib/release-calendar";
 // line /release-dates itself carries), so a precise instant would be inventing
 // a time nobody announced. An all-day event on the exact date needs no timezone
 // conversion at all, which a timed one always would.
-export const revalidate = 3600;
+//
+// Six hours, like /release-dates (hourly until 2026-10-14, DECISIONS.md,
+// "Cached pages refresh every 6 to 24 hours", 2026-10-14).
+export const revalidate = 21600;
 
 function icsEscape(s: string): string {
   // RFC 5545 §3.3.11: backslash, semicolon, comma and newline are the only
@@ -77,7 +80,7 @@ export async function GET() {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8; method=PUBLISH",
       "Content-Disposition": `attachment; filename="riftbound-${next.date}.ics"`,
-      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400",
       "X-Robots-Tag": "noindex",
     },
   });

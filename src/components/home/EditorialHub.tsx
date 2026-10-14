@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { UpdatedAgo } from "./UpdatedAgo";
 import type { Country } from "@/lib/country";
 import { getArticles, type Article } from "@/lib/articles";
 import { articleHref } from "@/lib/content/tool-guides";
@@ -69,9 +70,11 @@ function shortDate(iso: string): string {
   return d.toLocaleDateString("en-AU", { day: "numeric", month: "short", ...(sameYear ? {} : { year: "numeric" }), timeZone: "UTC" });
 }
 
-export function EditorialHub({ freshness, market }: {
+export function EditorialHub({ freshness, freshnessAt, market }: {
   /** getHomeStats().freshness, the "Xh ago" the hero already shows. */
   freshness: string | null;
+  /** Its ISO moment, so the cached page can recompute the age (UpdatedAgo). */
+  freshnessAt?: string | null;
   /** A region home's own market; omitted on "/", whose copy is market-neutral. */
   market?: Country;
 }) {
@@ -122,7 +125,7 @@ export function EditorialHub({ freshness, market }: {
         <Column title="Market updates">
           {freshness && (
             <p className="mt-0.5 text-[11px] leading-4 text-slate-500">
-              <span aria-hidden="true" className="text-up">●</span> Prices updated {freshness} · store prices imported twice a day
+              <span aria-hidden="true" className="text-up">●</span> Prices updated <UpdatedAgo iso={freshnessAt} fallback={freshness} /> · store prices imported twice a day
             </p>
           )}
           <ul>

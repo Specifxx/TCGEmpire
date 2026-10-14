@@ -2,11 +2,14 @@ import { getMarketIndex } from "@/lib/market-index";
 import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 
-// Public, machine-readable RiftCompare Index — the citable JSON an AI agent or a
-// third-party dashboard can consume without scraping the page. Referenced as the
-// Dataset `distribution` on /market and from llms.txt.
-// `?market=AU|US|UK|SG|CA|EU`, defaults to US.
-export const revalidate = 1800;
+// Public, machine-readable RiftCompare Index — the citable JSON an AI agent or
+// a third-party dashboard can consume without scraping the page. Referenced as
+// the Dataset `distribution` on /market and from llms.txt.
+// `?market=AU|US|UK|SG|CA|EU`, defaults to US. A day, at the CDN too (30
+// minutes until 2026-10-14, DECISIONS.md, "Cached pages refresh every 6 to 24
+// hours", 2026-10-14): the Index moves at most once a day. It reads ?market, so
+// the header is its only cache.
+export const revalidate = 86400;
 
 function parseMarket(v: string | null): Country {
   const up = (v ?? "").toUpperCase();
@@ -40,7 +43,7 @@ export async function GET(req: Request) {
           "X-Robots-Tag": "noindex",
           // Short TTL: unlike the ready payload below, this state is expected to
           // resolve on its own as history accumulates, so callers should recheck
-          // sooner than the normal 30-minute index cache.
+          // sooner than the normal one-day index cache.
           "Cache-Control": "public, s-maxage=300, stale-while-revalidate=1800",
           "Access-Control-Allow-Origin": "*",
         },
@@ -79,7 +82,7 @@ export async function GET(req: Request) {
     headers: {
       // Crawlable by agents, but never indexed as a page.
       "X-Robots-Tag": "noindex",
-      "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
+      "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400",
       "Access-Control-Allow-Origin": "*",
     },
   });

@@ -6,10 +6,12 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { getArticles } from "@/lib/articles";
 import { SETS } from "@/lib/constants";
 
-// llms-full.txt — a single-file markdown snapshot an agent can ingest in one fetch:
-// the live RiftCompare Index plus the most-searched cards with their lowest AU price.
-// Best-effort: any DB hiccup just omits that block (never throws). Refreshed hourly.
-export const revalidate = 3600;
+// llms-full.txt — a single-file markdown snapshot an agent can ingest in one
+// fetch: the live RiftCompare Index plus the most-searched cards with their
+// lowest AU price. Best-effort: any DB hiccup just omits that block (never
+// throws). Refreshed every six hours (hourly until 2026-10-14, DECISIONS.md,
+// "Cached pages refresh every 6 to 24 hours", 2026-10-14).
+export const revalidate = 21600;
 
 const pct = (p: number | null | undefined) => (p == null ? "—" : `${p > 0 ? "+" : ""}${p}%`);
 

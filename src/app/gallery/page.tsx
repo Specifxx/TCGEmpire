@@ -23,7 +23,12 @@ import { guidesForTool } from "@/lib/content/tool-guides";
 // be a genuine gallery), it links to each one and shows a live, real
 // highlight strip so the page has genuine content of its own rather than
 // being a bare link list.
-export const revalidate = 3600;
+//
+// A day, like /sets and the /cards hubs (an hour until 2026-10-14,
+// DECISIONS.md, "Cached pages refresh every 6 to 24 hours", 2026-10-14): a hub
+// of set links and twelve popular tiles, refreshed on demand after each import
+// through the CONTENT_TAG its tiles' loader carries.
+export const revalidate = 86400;
 
 // One groupBy per render, shared by generateMetadata and the page through
 // React's request cache — the title needs the same per-set counts the set

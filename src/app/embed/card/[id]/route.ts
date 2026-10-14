@@ -19,7 +19,11 @@ import { cardImageAlt } from "@/lib/image-alt";
 // was ever documented for a 5-minute embed badge; matching /embed/index and
 // /embed/release-countdown (both 3600) removes the outlier rather than
 // guessing at a new number.
-export const revalidate = 3600;
+//
+// Six hours since 2026-10-14, at the CDN too (DECISIONS.md, "Cached pages
+// refresh every 6 to 24 hours", 2026-10-14). It reads ?market, so the header is
+// its only cache.
+export const revalidate = 21600;
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -55,7 +59,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": card
-        ? "public, s-maxage=3600, stale-while-revalidate=900"
+        ? "public, s-maxage=21600, stale-while-revalidate=86400"
         : "public, s-maxage=60",
       // The shell already carries <meta name="robots" content="noindex">; the
       // header covers the case where the widget is fetched as a subresource and

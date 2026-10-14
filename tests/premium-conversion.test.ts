@@ -104,7 +104,7 @@ test("the proof route's reader of savingsVsMarketCents falls back to 0 for a sta
 test("the proof endpoint validates its country param and sets a long-lived cache header", () => {
   const src = read("src/app/api/premium/proof/route.ts");
   assert.match(src, /normalizeCountry/, "must resolve an arbitrary query param through the real country normaliser, not trust it raw");
-  assert.match(src, /s-maxage=3600/, "must be cacheable at the edge for a meaningful duration");
+  assert.match(src, /s-maxage=21600/, "must be cacheable at the edge for a meaningful duration (six hours since 2026-10-14)");
   assert.match(src, /getCachedTopDeals/, "must reuse the shared, already-cached feed rather than computing its own");
 });
 

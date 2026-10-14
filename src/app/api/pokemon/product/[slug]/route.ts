@@ -9,8 +9,9 @@ import { allBoards } from "@/lib/pokemon/board";
 // copy; the client picks its market.
 //
 // Reads only getPokemonProduct (self-cached, POKEMON_TAG, purged by the daily
-// import). The CDN keeps a response an hour, so a fresh import shows in the
-// quick view within the hour without a database read per open.
+// import). The CDN keeps a response six hours (an hour until 2026-10-14;
+// DECISIONS.md, "Cached pages refresh every 6 to 24 hours"), so a fresh import
+// shows in the quick view within six hours without a database read per open.
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: Request, { params }: { params: { slug: string } }) {
@@ -21,6 +22,6 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
   const boards = allBoards(detail.name, detail.offers, { page: `/pokemon/sealed/${detail.slug}`, surface: "quickview" });
   return NextResponse.json(
     { slug: detail.slug, name: detail.name, boards },
-    { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=21600" } },
+    { headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" } },
   );
 }

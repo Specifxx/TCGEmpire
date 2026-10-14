@@ -35,7 +35,12 @@ So, for automated sessions:
   "get it live immediately", ask rather than defaulting to `[deploy]`.
 - Do not add `generateStaticParams` prewarming back to database-backed dynamic
   routes, and do not lower a page's `export const revalidate` — see the egress
-  rules at the top of `src/lib/db.ts` before adding any query.
+  rules at the top of `src/lib/db.ts` before adding any query. Since 2026-10-14
+  (owner) no new page, layout or route handler goes under 21600 (six hours):
+  21600 for pages buyers act on, 86400 for slow content. A loader cache under
+  the page drags it down (rule 5), and a route handler that is a plain function
+  on Vercel caches only through its CDN header (DECISIONS.md, "Cached pages
+  refresh every 6 to 24 hours").
 - Never wrap a loader that already caches itself (`getPriceMovers`,
   `getUndervalued`, `getCachedRisingCards`, `getSealedGroups`, `getMarketIndex`,
   the arbitrage loaders…) in another `unstable_cache`, and never call one from

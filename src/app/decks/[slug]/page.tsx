@@ -19,9 +19,11 @@ import { deckTotals, massEntry, type MarketTotals } from "@/lib/published-decks"
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 
-// A published deck (2026-09-26). ISR, an hour; nothing is prerendered at build
-// (no generateStaticParams — CLAUDE.md), and publishing/hiding revalidates it.
-export const revalidate = 3600;
+// A published deck (2026-09-26). ISR, six hours (an hour until 2026-10-14,
+// DECISIONS.md, "Cached pages refresh every 6 to 24 hours", 2026-10-14);
+// nothing is prerendered at build (no generateStaticParams list — CLAUDE.md),
+// and publishing/hiding revalidates it.
+export const revalidate = 21600;
 
 // Returns NOTHING, deliberately — the same device as /card/[id]: an (empty)
 // generateStaticParams is what makes Next cache each on-demand render for

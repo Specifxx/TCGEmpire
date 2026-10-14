@@ -2,12 +2,16 @@ import { getMarketIndex } from "@/lib/market-index";
 import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 
-// Embeddable RiftCompare Index widget — a chrome-free HTML doc (no app layout) that
-// creators, TCG blogs and newsletters can drop into an <iframe>. A live "Index 112
-// ▲ +2.3% (7d)" badge with a sparkline that links back to /market — a compounding
-// backlink + brand-mention engine (and brand mentions are the top AI-citation signal).
-// Route handler so it escapes the root layout and can be framed cross-origin.
-export const revalidate = 1800;
+// Embeddable RiftCompare Index widget — a chrome-free HTML doc (no app layout)
+// that creators, TCG blogs and newsletters can drop into an <iframe>. A live
+// "Index 112 ▲ +2.3% (7d)" badge with a sparkline that links back to /market —
+// a compounding backlink + brand-mention engine (and brand mentions are the top
+// AI-citation signal). Route handler so it escapes the root layout and can be
+// framed cross-origin. A day, at the CDN too (30 minutes until 2026-10-14,
+// DECISIONS.md, "Cached pages refresh every 6 to 24 hours", 2026-10-14): the
+// Index moves at most once a day. It reads ?market, so the header is its only
+// cache.
+export const revalidate = 86400;
 
 function parseMarket(v: string | null): Country {
   const up = (v ?? "").toUpperCase();
@@ -88,6 +92,6 @@ export async function GET(req: Request) {
 </style></head><body>${inner}</body></html>`;
 
   return new Response(html, {
-    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600" },
+    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400" },
   });
 }

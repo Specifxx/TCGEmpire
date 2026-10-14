@@ -6,7 +6,12 @@ import { cardWhereParam } from "@/lib/card-slug-renames";
 
 // Clean markdown version of a card page for AI agents (linked from the card page's
 // `alternate` type=text/markdown). Per-region lowest prices + identity, no HTML.
-export const revalidate = 900;
+//
+// Six hours (15 minutes until 2026-10-14, DECISIONS.md, "Cached pages refresh
+// every 6 to 24 hours", 2026-10-14). A plain function on Vercel (no
+// generateStaticParams), so until then every request read the card from Neon;
+// the CDN header on the answer is the cache.
+export const revalidate = 21600;
 
 // Renamed slugs resolve too (lib/card-slug-renames.ts).
 const whereParam = cardWhereParam;
@@ -43,5 +48,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     `Compare all listings: ${url}`,
     `JSON: ${SITE_URL}/api/v1/card/${card.slug ?? card.id}/prices.json`,
   ];
-  return new Response(lines.join("\n") + "\n", { headers: { "Content-Type": "text/markdown; charset=utf-8" } });
+  return new Response(lines.join("\n") + "\n", {
+    headers: {
+      "Content-Type": "text/markdown; charset=utf-8",
+      "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400",
+    },
+  });
 }

@@ -63,6 +63,7 @@ export function CinematicHero({
   statsByCountry,
   trendingCards,
   freshness,
+  freshnessAt,
   region,
 }: {
   totalCards: number;
@@ -71,9 +72,10 @@ export function CinematicHero({
   // Top slice of the same most-searched-cards signal that powers "Most popular
   // cards" below — rendered as one-click trending chips under the search bar.
   trendingCards: CardTileData[];
-  // Pre-formatted "Xh ago" string — see HeroStats' doc comment for why this is
-  // computed server-side once rather than client-recomputed.
+  // Pre-formatted "Xh ago" string, and the ISO moment it was computed from —
+  // see HeroStats' doc comment for how the two are used.
   freshness: string | null;
+  freshnessAt?: string | null;
   // Present only on a region home page (/au, /uk, /sg, /ca). Swaps the
   // US-first H1/subhead for that region's own and locks the stat block to it —
   // omitted on the real homepage, which keeps its existing US-first copy and
@@ -327,7 +329,7 @@ export function CinematicHero({
 
         {/* One thin stat line, directly under the search field — was 4 bordered
             boxes. */}
-        <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} freshness={freshness} lockCountry={region?.code} />
+        <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} freshness={freshness} freshnessAt={freshnessAt} lockCountry={region?.code} />
 
         {/* EXACTLY ONE secondary action below the search box, per the redesign
             brief: "the search box is the hero", so nothing here competes with

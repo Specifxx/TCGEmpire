@@ -83,7 +83,7 @@ test("publishing: signed-in only, DB daily cap, burst limit, honeypot, on-demand
 test("deck pages: ISR, no build-time prewarming, SEO title, JSON-LD, sitemap", () => {
   for (const f of ["src/app/decks/page.tsx", "src/app/decks/[slug]/page.tsx", "src/app/decks/legend/[legend]/page.tsx"]) {
     const s = readFileSync(f, "utf8");
-    assert.match(s, /export const revalidate = 3600;/, f);
+    assert.match(s, /export const revalidate = 21600;/, f);
     // An EMPTY generateStaticParams is allowed (it is what makes a dynamic
     // segment ISR); one that returns params would prewarm at build.
     const gsp = /export async function generateStaticParams\(\) \{([\s\S]*?)\n\}/.exec(s);

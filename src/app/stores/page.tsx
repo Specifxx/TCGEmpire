@@ -9,7 +9,10 @@ import { CONSULT_DURATION_MIN } from "@/lib/consulting";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
 
-export const revalidate = 3600;
+// A day (an hour until 2026-10-14, DECISIONS.md, "Cached pages refresh every 6
+// to 24 hours", 2026-10-14): the store list and its counts move once a day at
+// most.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "RiftCompare for Stores — Pricing Intelligence for Riftbound Retailers",

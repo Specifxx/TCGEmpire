@@ -8,7 +8,7 @@ import { RegionHome } from "@/components/home/RegionHome";
 // states that share a currency and a customs union, so the stores it ranks are
 // spread across them rather than sitting in one (see lib/country.ts's header
 // note on why the market is drawn that way).
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export function generateMetadata(): Promise<Metadata> {
   return regionMetadata("EU");

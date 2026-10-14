@@ -16,8 +16,10 @@ import { articleHref, guidesForTool } from "@/lib/content/tool-guides";
 // SEO hub for the "Riftbound singles" search intent. Market-neutral, richly
 // internally-linked, indexable — funnels searchers into the database / sets /
 // domains where the live price comparison lives. Deliberately light on DB reads
-// (one cached count) to keep egress negligible.
-export const revalidate = 3600;
+// (one cached count) to keep egress negligible. A day since 2026-10-14, the
+// count's cache with it (DECISIONS.md, "Cached pages refresh every 6 to 24
+// hours", 2026-10-14).
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "Buy Riftbound Singles — Compare Prices | RiftCompare" },
@@ -65,7 +67,7 @@ const FAQS: { q: string; a: string }[] = [
 ];
 
 async function getTotal(): Promise<number> {
-  return unstable_cache(() => prisma.card.count(), ["singles-total"], { revalidate: 3600, tags: [CONTENT_TAG] })().catch(() => 0);
+  return unstable_cache(() => prisma.card.count(), ["singles-total"], { revalidate: 86400, tags: [CONTENT_TAG] })().catch(() => 0);
 }
 
 export default async function SinglesPage() {

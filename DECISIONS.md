@@ -17056,3 +17056,34 @@ Each site links its home and two or three deep pages a Riftbound reader would us
 **What a day costs.** A shared Pokémon product or set link can show a price up to a day old. The section imports daily, and Reddit, Discord and X keep an unfurl for days anyway. The Riftbound card and set images already behave this way (cached until the next daily release).
 
 **Not changed, noted.** `/guides/[slug]/opengraph-image` prerenders 52 images at build from the article files; it reads no database, so it costs build time, not transfer. `/market/opengraph-image` is the one image that reads data at build: the Index, from the history files and the basket's Neon reads (search counts, live prices).
+
+## Cached pages refresh every 6 to 24 hours, not every 10 to 60 minutes — 2026-10-14 (same day, follow-up)
+
+**Owner (14 Oct):** "refresh cached pages less often (prices probably only need refreshing every 6 to 24 hours)."
+
+**The rule now.** No page, layout or route handler exports a `revalidate` under 21,600 (six hours), with one exception below. Six hours for what a buyer acts on (the six homes, decks, pre-orders, release dates, per-card API and embed, llms-full); a day for slow content (galleries, `/learn`, `/singles`, `/stores`, the 404, the Index surfaces, the article mirrors). Nothing was lowered. What already stood at or above six hours stays: 44 exports at a day, five at six hours (the Pokémon section's `POKEMON_TTL` and `/api/v1/sealed.json`), two at two days.
+
+| Before | After | Routes |
+| --- | --- | --- |
+| 600 | 86400 | `/llm/blog/[slug]`, `/llm/guides/[slug]` |
+| 900 | 21600 | `/llm/card/[id]`, `/api/v1/card/[id]/prices.json` |
+| 1800 | 86400 | `/llm/market`, `/api/v1/index.json`, `/embed/index` |
+| 3600 | 21600 | `/`, `/au`, `/uk`, `/sg`, `/ca`, `/eu`, `/decks`, `/decks/[slug]`, `/decks/legend/[legend]`, `/radiance-preorders`, `/release-dates`, `/release-dates/calendar`, `/embed/release-countdown`, `/embed/card/[id]`, `/api/v1/card/[id]/listings.json`, `/llms-full.txt` |
+| 3600 | 86400 | `/gallery`, `/sets/[set]/gallery`, `/learn`, `/singles`, `/stores`, `/stores/consulting`, the root `not-found` |
+| 1800 | 1800 | `/auctions` (kept, see below) |
+
+**What actually decides freshness.** Not these numbers, mostly. Each price import calls `/api/revalidate` (it answered 200 on 13 and 14 Oct), which purges the listed paths and `CONTENT_TAG`; purging a tag also re-renders every ISR page whose render used a tagged entry, which covers the homes and the galleries. The 08:00 UTC release clears the whole page cache once a day. So for the price pages the TTL is the fallback for a missed purge, and the homepage's stated reason for an hour ("only fires when CRON_SECRET is set") no longer holds.
+
+**Loader caches moved where the page would not.** An inner `unstable_cache` TTL shorter than the page becomes the page's (egress rule 5), so a raise alone would have done nothing on four routes. Moved with their pages: `getHomeStats` (1 h to 6 h; the six homes), the set gallery's two caches, `getLearnData` and `/singles`' count (1 h to a day; each used only by its own page). Checked with a local build against the seed database: every one of the 18 prerendered routes that changed has `initialRevalidateSeconds` equal to its new export, and `next start` sends `s-maxage=21600` for a legend page rendered on demand. No other loader changed.
+
+**Route handlers: the header is the cache.** A handler that reads `request.url` (`?market`) or has a dynamic segment without `generateStaticParams` is a plain function on Vercel, so its `revalidate` caches nothing; its CDN `Cache-Control` does. Every such header moved with its export (`s-maxage=21600` or `86400`, `stale-while-revalidate=86400`). The three `/llm/*` mirrors had no header at all and were rendered, with a Neon read for a card, on every request (live: MISS, MISS); they now carry one on their 200 answers (never on a 404, so a post published later is not hidden). Handlers with no `revalidate` export moved too where their header was short: `/api/card/[id]/history` (10 minutes to six hours; the series gains a point once a day), `/api/pokemon/product/[slug]` and `/api/premium/proof` (an hour to six hours), and `/feed.json`'s header now matches its one-day export. Short headers remain only on fallbacks that ask for a quick retry (a 404 or a warming state: one to five minutes).
+
+**"Prices updated 5h ago" stays true.** The homes print the age of the last import, computed at render. At an hour's TTL the frozen string was at most an hour behind; at six it could say "1h ago" seven hours later. `components/home/UpdatedAgo.tsx` renders the server's string (no hydration mismatch, no empty flash) and recomputes it from the import's timestamp after mount, the `CheckedAgo` rule. The editorial policy's "Homepage: at most an hour old" now says "rebuilt after each import, and at most six hours old".
+
+**The exception: `/auctions` keeps 1800.** It reads `searchParams`, so it is dynamic (live: `private, no-store`) and its export is not a page cache. What sets the board's freshness is `getLiveAuctions`' 30-minute data cache, against a sweep every four hours, for lots closing within 24 hours; `tests/ebay-auctions.test.ts` requires the loader to be at least the page. Raising the export alone is inert, and raising the loader to six hours would show a lot up to ten hours after the sweep found it. The owner's call if the board should go slower.
+
+**Left as they are, for the owner.** The dynamic pages read their own short data caches, which this change does not touch: `/sets/[set]` (an hour, and 15 minutes for the Radiance reveal count), `/browse` and `/deck` (an hour), `/portfolio/sets` (an hour), the game APIs (10 minutes). They are per-request pages, not cached pages; their loaders are their freshness.
+
+**Pinned by** `tests/page-ttl-floor.test.ts`: every `export const revalidate` under `src/app` is at least 21600 (`/auctions` named as the exception), every route handler's `s-maxage` is at least 21600 or a one-to-five-minute fallback, `getHomeStats` is not shorter than `/`, and both age lines go through `UpdatedAgo`. Tests that pinned the decks' 3600 and the proof route's `s-maxage=3600` follow.
+
+**Found, not fixed:** `/embed/index` answers 500 in production ("Dynamic server usage: … used `request.url`"), before this change and after it, the same in a local `next start`.

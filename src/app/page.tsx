@@ -64,11 +64,15 @@ const archivo = Archivo({
 // Google gets one coherent global page and every visitor gets cached HTML.
 // Client components localise prices after hydration via CountryProvider.
 //
-// 1h (not 24h): on-demand revalidation via /api/revalidate only fires when
-// CRON_SECRET is set; without it the page would sit stale for days (the market
-// index froze at an old date). An hourly ISR fallback self-heals regardless, and
-// the queries below are a handful of bounded aggregates — cheap to run 24×/day.
-export const revalidate = 3600;
+// 6h (since 2026-10-14; it was 1h). The hourly fallback existed because
+// on-demand revalidation via /api/revalidate only fires when CRON_SECRET is
+// set; it is set (refresh-prices.yml's purge answers 200 after every import),
+// so new prices reach this page when they land, and the TTL only bounds how
+// stale it can get if a purge is missed (DECISIONS.md, "Cached pages refresh
+// every 6 to 24 hours", 2026-10-14). getHomeStats' own TTL moved with it: an
+// inner cache shorter than the page would drag the page back down (egress rule
+// 5, lib/db.ts).
+export const revalidate = 21600;
 
 // Market-neutral metadata (no country in the title) so search results aren't biased
 // to one country — the visible page below is still tailored to the visitor's market.
@@ -272,7 +276,7 @@ export default async function HomePage() {
   const country = DEFAULT_COUNTRY;
   const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
   const [
-    { totalCards, statsByCountry, freshness },
+    { totalCards, statsByCountry, freshness, freshnessAt },
     popularCards,
     topDealsArr,
     recentlyUpdated,
@@ -327,12 +331,13 @@ export default async function HomePage() {
         statsByCountry={statsByCountry}
         trendingCards={popularCards.slice(0, 6)}
         freshness={freshness}
+        freshnessAt={freshnessAt}
       />
 
       {/* Guides, news & market updates: directly under the hero on every
           home (owner, 2026-10-02: "should still be at the top under the
           hero"), then Today's Top Deals and the price guide. */}
-      <EditorialHub freshness={freshness} />
+      <EditorialHub freshness={freshness} freshnessAt={freshnessAt} />
 
       {/* eBay Picks (the newest set's chase cards, cheapest live listing each),
           directly under the editorial band (owner, 2026-10-06). HomeSections

@@ -19,8 +19,12 @@ import {
   type ReleaseEntry,
 } from "@/lib/release-calendar";
 
-// Revalidate hourly so the day count stays honest without a per-request render.
-export const revalidate = 3600;
+// Six hours (hourly until 2026-10-14, DECISIONS.md, "Cached pages refresh every
+// 6 to 24 hours", 2026-10-14). The countdown ticks client-side
+// (ReleaseCountdownTimer); what this bounds is how long after a street date the
+// page keeps naming that set as "next". Not a day, because that flip is the
+// page's whole job on release day.
+export const revalidate = 21600;
 
 // ── Riftbound release dates ──────────────────────────────────────────────────
 // The permanent home for "when does the next Riftbound set come out". It

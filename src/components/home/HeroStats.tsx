@@ -1,6 +1,7 @@
 "use client";
 
 import { useCountry } from "@/components/CountryProvider";
+import { UpdatedAgo } from "@/components/home/UpdatedAgo";
 import type { Country } from "@/lib/country";
 
 // Per-market figures for the hero stat tiles. Serialized for all four markets so the
@@ -38,22 +39,24 @@ export interface MarketStat {
 // following the brief's explicit instruction, not the reason for it.
 //
 // `freshness` is a pre-formatted "Xh ago"-style string, computed SERVER-SIDE
-// once (see app/page.tsx) from the real max(RetailerPrice.lastSeen) and passed
-// down as plain text — deliberately NOT recomputed client-side. This page is
-// ISR-cached, so the server-render timestamp and the moment a visitor hydrates
-// can be up to an hour apart; a component that called timeAgo() again on the
-// client would read a DIFFERENT elapsed time than what the server rendered and
-// throw a hydration mismatch. Baking the string once, like every other server-
-// computed figure on this page, avoids that entirely.
+// once (see app/page.tsx) from the real max(RetailerPrice.lastSeen). The page
+// is ISR-cached for up to six hours, so that string can be hours behind the
+// clock by the time a visitor reads it. UpdatedAgo renders it unchanged on the
+// server and at hydration (calling timeAgo() during render would read a
+// different elapsed time and throw a hydration mismatch), then recomputes it
+// from `freshnessAt` after mount.
 export function HeroStats({
   totalCards,
   statsByCountry,
   freshness,
+  freshnessAt,
   lockCountry,
 }: {
   totalCards: number;
   statsByCountry: Record<Country, MarketStat>;
   freshness?: string | null;
+  /** The import moment behind `freshness`, ISO; see UpdatedAgo. */
+  freshnessAt?: string | null;
   /** Region home pages (/au, /uk, /sg, /ca) show THAT market's own stat on
    *  first paint regardless of the visitor's actual market — the whole point of
    *  a region-specific landing page — so they lock this instead of reading the
@@ -82,7 +85,7 @@ export function HeroStats({
         {freshness && (
           <>
             {" "}
-            · <span aria-hidden="true" className="text-up">●</span> prices updated {freshness}
+            · <span aria-hidden="true" className="text-up">●</span> prices updated <UpdatedAgo iso={freshnessAt} fallback={freshness} />
           </>
         )}
       </p>

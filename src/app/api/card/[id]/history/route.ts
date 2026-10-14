@@ -8,7 +8,9 @@ import { olderFrom, recentWindow } from "@/lib/history-access";
 // currency): the last 30 days, the free window (lib/history-access.ts), plus when
 // the older part starts. Plus and Premium read the whole series from ./full.
 // Country comes from the URL (?country=US) so the CDN caches cleanly per
-// (card, market) — not by cookie.
+// (card, market) — not by cookie. Six hours at the CDN (ten minutes until
+// 2026-10-14; DECISIONS.md, "Cached pages refresh every 6 to 24 hours"): the
+// series gains a point once a day, with the release that bundles it.
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   const url = new URL(req.url);
   const c = (url.searchParams.get("country") ?? "AU").toUpperCase();
@@ -30,6 +32,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const all = await getPriceHistory(card.id, country);
   return NextResponse.json(
     { points: recentWindow(all), olderFrom: olderFrom(all), country },
-    { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=86400" } }
+    { headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" } }
   );
 }

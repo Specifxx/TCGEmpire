@@ -228,5 +228,5 @@ test("the pages stay cacheable: no session read, the same revalidate", () => {
   }
   assert.match(read("src/app/movers/page.tsx"), /export const revalidate = 86400;/);
   assert.match(read("src/app/champions/[slug]/page.tsx"), /export const revalidate = 86400;/);
-  assert.match(read("src/app/decks/[slug]/page.tsx"), /export const revalidate = 3600;/);
+  assert.match(read("src/app/decks/[slug]/page.tsx"), /export const revalidate = 21600;/);
 });

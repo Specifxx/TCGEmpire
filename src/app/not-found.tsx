@@ -52,7 +52,9 @@ import { CONTENT_TAG } from "@/lib/revalidate-content";
 // serving) IS present on 404s, and a 404 is noindex regardless.
 export const metadata = notFoundMetadata();
 
-export const revalidate = 3600;
+// A day, matching the popular-cards cache below (an hour until 2026-10-14,
+// DECISIONS.md, "Cached pages refresh every 6 to 24 hours", 2026-10-14).
+export const revalidate = 86400;
 
 export default async function NotFound() {
   const liveSets = SETS.filter((s) => !s.comingSoon);

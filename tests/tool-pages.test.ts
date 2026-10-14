@@ -260,7 +260,7 @@ test("the Amazon disclosure is Amazon's own wording, and the other partners' lin
 
 test("/decks is noindexed while the library is empty, from the same read the page renders, and fails open", () => {
   const src = read(PAGE["/decks"]);
-  assert.match(src, /export const revalidate = 3600;/, "never lower a page's revalidate");
+  assert.match(src, /export const revalidate = 21600;/, "never lower a page's revalidate");
   // liveDecksOrNull: a failed read is null, not an empty library, so a database
   // blip never caches a noindex for an hour (the champion/store/facet rule).
   assert.match(src, /const loadDecks = cache\(\(\) => liveDecksOrNull\(\)\);/);

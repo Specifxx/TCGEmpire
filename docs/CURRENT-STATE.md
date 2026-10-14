@@ -45,6 +45,15 @@ longer lands on its entry.
   page's TTL is done client-side, like the `/auctions` countdown.
   [2026-09-11](../DECISIONS.md#L4871), [2026-09-11](../DECISIONS.md#L5042),
   [2026-09-16](../DECISIONS.md#L6683)
+- **Page TTLs are six hours or more (owner, 2026-10-14):** `revalidate` 21600
+  for what buyers act on (homes, decks, pre-orders, release dates, per-card API
+  and embeds), 86400 for slow content. The import's purge and the daily release
+  are what refresh prices; the TTL is the fallback. A loader's TTL moves with
+  its page (rule 5), and a route handler that is a plain function on Vercel
+  (reads `request.url`, or a dynamic segment with no `generateStaticParams`)
+  caches through its CDN header, which moves with it. `/auctions` keeps 1800: a
+  dynamic page whose 30-minute data cache matches the 4-hourly sweep.
+  [2026-10-14](../DECISIONS.md#L17060)
 - **Guards:** `cachedOrDirect` logs nested-cache, cache-miss and oversize
   (past ~1.2 MB, where an `unstable_cache` entry silently drops).
   `BIG_RESULT_ROWS` / `_BYTES` are temporarily 200 rows / 400 KB; restore

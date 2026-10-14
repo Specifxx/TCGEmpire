@@ -32,8 +32,8 @@ test("every home has one structure: hero, editorial band, Top Deals, price guide
     assert.match(src, /showTopDeals=\{false\}/, "HomeSections does not render the deals a second time");
   }
   // "/" is market-neutral; a region home leads "Start here" with its own guide.
-  assert.match(code("src/app/page.tsx"), /<EditorialHub freshness=\{freshness\} \/>/);
-  assert.match(code("src/components/home/RegionHome.tsx"), /<EditorialHub freshness=\{freshness\} market=\{region\} \/>/);
+  assert.match(code("src/app/page.tsx"), /<EditorialHub freshness=\{freshness\} freshnessAt=\{freshnessAt\} \/>/);
+  assert.match(code("src/components/home/RegionHome.tsx"), /<EditorialHub freshness=\{freshness\} freshnessAt=\{freshnessAt\} market=\{region\} \/>/);
 });
 
 test("the band replaces the old teaser rows rather than repeating them", () => {

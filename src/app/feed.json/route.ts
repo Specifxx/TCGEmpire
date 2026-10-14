@@ -38,6 +38,6 @@ export async function GET() {
   };
 
   return Response.json(feed, {
-    headers: { "Content-Type": "application/feed+json; charset=utf-8", "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200" },
+    headers: { "Content-Type": "application/feed+json; charset=utf-8", "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400" },
   });
 }

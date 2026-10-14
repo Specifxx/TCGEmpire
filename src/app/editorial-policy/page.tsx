@@ -196,7 +196,7 @@ export default function EditorialPolicyPage() {
               <strong className="text-white">Card pages:</strong> rebuilt after each import, and never
               cached for more than 24 hours.
             </li>
-            <li><strong className="text-white">Homepage:</strong> at most an hour old.</li>
+            <li><strong className="text-white">Homepage:</strong> rebuilt after each import, and at most six hours old.</li>
             <li>
               <strong className="text-white">RiftCompare Index:</strong> moves once a day, when a new
               history snapshot is recorded.

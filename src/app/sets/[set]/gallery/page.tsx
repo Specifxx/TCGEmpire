@@ -41,7 +41,13 @@ import { guidesForSet } from "@/lib/content/related-guides";
 // parent. Prices are localised CLIENT-side by CardTile (useCountry), exactly as the
 // article galleries already do — the server only needs a baseline market for the
 // in-stock store count. This is what keeps a 200-tile page off the dynamic path.
-export const revalidate = 3600;
+//
+// A day, like the /cards facet pages (an hour until 2026-10-14, DECISIONS.md,
+// "Cached pages refresh every 6 to 24 hours", 2026-10-14). Both loaders below
+// carry CONTENT_TAG, so each price import refreshes the page on demand, and
+// both moved to the same day: a shorter inner TTL would drag the page back down
+// (egress rule 5).
+export const revalidate = 86400;
 
 // Hard ceiling on tiles rendered. Vendetta (the page this targets) is ~240 rows
 // including alt-arts and Overnumbers, so it is complete; Origins (~1,000+) would
@@ -87,7 +93,7 @@ const getGalleryCards = unstable_cache(
     }
   },
   ["set-gallery"],
-  { revalidate: 3600, tags: [CONTENT_TAG] },
+  { revalidate: 86400, tags: [CONTENT_TAG] },
 );
 
 // THE PROMO PRINTINGS, which the gallery above deliberately leaves out.
@@ -125,7 +131,7 @@ const getGalleryPromos = unstable_cache(
     }
   },
   ["set-gallery-promos"],
-  { revalidate: 3600, tags: [CONTENT_TAG] },
+  { revalidate: 86400, tags: [CONTENT_TAG] },
 );
 
 export async function generateMetadata({ params }: { params: { set: string } }): Promise<Metadata> {

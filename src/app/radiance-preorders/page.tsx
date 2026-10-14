@@ -36,7 +36,12 @@ import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
 // The page is DATE-DRIVEN and self-retiring: getPreorderGroups() keys off
 // isPreorderSetCode(), so at 23 Oct 2026 these listings graduate into /sealed on
 // their own and this page switches to its released state pointing at live prices.
-export const revalidate = 3600;
+//
+// Six hours (an hour until 2026-10-14, DECISIONS.md, "Cached pages refresh
+// every 6 to 24 hours", 2026-10-14). This page reads getCountry() (cookies and
+// headers), so it renders per request anyway: the value is a ceiling for the
+// segment, not a page cache.
+export const revalidate = 21600;
 
 const SET_CODE = "RAD";
 
