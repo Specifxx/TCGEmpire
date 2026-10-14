@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { buildInboxEmail, capKeys, MAX_PER_DAY, MAX_PER_HOUR } from "../src/lib/ops/notify-owner";
 import { DEFAULT_OWNER_EMAIL, ownerEmail } from "../src/lib/ops/owner";
-import { missingEnv, requiredEnvNames } from "../src/lib/ops/self-report";
+import { missingEnv, requiredEnvNames, siteSelfReport } from "../src/lib/ops/self-report";
 import { OPERATIONAL_VARS } from "../src/lib/db-chains";
 import { PUBLIC_MODELS } from "../src/lib/public-data/models";
 
@@ -98,6 +98,23 @@ test("the site reports missing settings by NAME and never a value", () => {
   assert.ok(!JSON.stringify(missing).includes("super-secret-value"));
   const report = code("src/lib/ops/self-report.ts");
   assert.doesNotMatch(report, /console\.(log|warn|error)/);
+});
+
+test("the site's settings check asks only for what the website reads (first live run, 2026-10-14)", () => {
+  for (const n of ["EBAY_CLIENT_ID", "EBAY_CLIENT_SECRET", "ADMIN_TOKEN"]) assert.ok(!requiredEnvNames().includes(n), `${n} is not a site setting`);
+});
+
+test("a send-only Resend key is a working key, a rejected one is not", async () => {
+  const real = globalThis.fetch;
+  const reply = (status: number, body: unknown) => async () => new Response(JSON.stringify(body), { status });
+  try {
+    globalThis.fetch = reply(401, { statusCode: 401, name: "restricted_api_key", message: "This API key is restricted to only send emails" }) as typeof fetch;
+    assert.equal((await siteSelfReport({ RESEND_API_KEY: "re_x" })).resend.valid, true);
+    globalThis.fetch = reply(401, { statusCode: 401, name: "validation_error", message: "API key is invalid" }) as typeof fetch;
+    assert.equal((await siteSelfReport({ RESEND_API_KEY: "re_x" })).resend.valid, false);
+  } finally {
+    globalThis.fetch = real;
+  }
 });
 
 test("the snapshot table is private and additive", () => {

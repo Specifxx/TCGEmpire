@@ -7,7 +7,10 @@ import type { SiteSelfReport } from "./checks";
 
 /** Settings the live site cannot run without. Names only. */
 export function requiredEnvNames(): string[] {
-  return ["AUTH_SECRET", "CRON_SECRET", "ADMIN_TOKEN", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "RESEND_API_KEY", "EBAY_CLIENT_ID", "EBAY_CLIENT_SECRET", OPERATIONAL_VARS[0]];
+  // Only what the WEBSITE reads. The eBay keys belong to the importers in GitHub Actions (the site never
+  // calls eBay), and ADMIN_TOKEN is an optional ?key= shortcut beside the admin login; both were false
+  // alarms on the first live run (2026-10-14).
+  return ["AUTH_SECRET", "CRON_SECRET", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "RESEND_API_KEY", OPERATIONAL_VARS[0]];
 }
 
 export function missingEnv(env: Record<string, string | undefined> = process.env): string[] {
@@ -21,7 +24,13 @@ async function probe(url: string, headers: Record<string, string>): Promise<{ va
   try {
     const res = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
     if (res.ok) return { valid: true };
-    if (res.status === 401 || res.status === 403) return { valid: false, detail: `HTTP ${res.status}` };
+    if (res.status === 401 || res.status === 403) {
+      // A Resend key with "sending access" only is refused on /domains as restricted_api_key: it is a
+      // working key that may not list domains, not a rejected one.
+      const body = (await res.json().catch(() => null)) as { name?: string } | null;
+      if (body?.name === "restricted_api_key") return { valid: true, detail: "send-only key" };
+      return { valid: false, detail: `HTTP ${res.status}` };
+    }
     return { valid: null, detail: `HTTP ${res.status}` };
   } catch (e) {
     return { valid: null, detail: e instanceof Error ? e.message.slice(0, 80) : "unreachable" };
