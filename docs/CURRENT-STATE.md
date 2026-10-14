@@ -525,6 +525,12 @@ longer lands on its entry.
   `OFF_TOPIC_ROUTES`). The arcade (/games/*, /riftle) is ad-free for everyone:
   no footer pair, no in-page pair, no AdSlot (`AD_FREE_GAME_ROUTES`).
   [2026-09-26](../DECISIONS.md#L14680), [2026-10-01](../DECISIONS.md#L16105), [2026-10-02](../DECISIONS.md#L16478)
+- **Sister sites:** the footer links OP Compare, DexCompare and MTG Compare
+  (`SISTER_SITES`, `lib/sister-sites.ts`), and the cross-game guides and the
+  where-to-buy / price-comparison articles end with a sister-site block
+  (`sisterSitesFor`; at most a third of articles). Plain followed links
+  (`rel="noopener"`); a deep link is added only once it is live there.
+  [2026-10-14](../DECISIONS.md#L17018)
 - **1024–1279 is its own band** (~704px of content): the filter sidebar
   waits for xl, card art is 160px (320 from xl), and stickies use
   `lg:top-36 xl:top-20`. [2026-09-23](../DECISIONS.md#L11201)

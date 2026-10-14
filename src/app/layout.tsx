@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Fragment } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
@@ -8,6 +9,7 @@ import { SideNav } from "@/components/SideNav";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { SISTER_SITES } from "@/lib/sister-sites";
 import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
@@ -550,15 +552,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <PrivacySettingsLink />
             <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
-          {/* Sister site (owner, 2026-10-04): OP Compare, the same price
-              comparison for the One Piece Card Game, built by the same owner.
-              A plain followed link: it is our own site, not an affiliate. */}
+          {/* Sister sites (owner, 2026-10-04 for OP Compare; 2026-10-14 all
+              three): the same price comparison for other games, built by the
+              same owner. Plain followed links: our own sites, not affiliates
+              (lib/sister-sites.ts). */}
           <p className="mb-2">
-            Also play One Piece? Compare One Piece Card Game prices on{" "}
-            <a href="https://opcompare.app" target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
-              OP Compare
-            </a>
-            , our sister site.
+            Also from us, the same price comparison for other games:{" "}
+            {SISTER_SITES.map((s, i) => (
+              <Fragment key={s.key}>
+                {i > 0 && (i === SISTER_SITES.length - 1 ? " and " : ", ")}
+                <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
+                  {s.name}
+                </a>{" "}
+                ({s.game})
+              </Fragment>
+            ))}
+            .
           </p>
           {/* Cross-promotion: our other Riftbound side project. Cheeky on purpose —
               per owner request 2026-08-13. */}

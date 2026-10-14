@@ -1,4 +1,4 @@
 [
 {"retailer":"kanzengames","retailerName":"KanZenGames Sports & Collectibles","title":"Gravity Field (062/167) (Foil) [Radiance] (RAD)","url":"https://kanzengames.com/products/gravity-field-062-167-foil-radiance-rad","condition":"Near Mint - Foil","isFoil":true,"priceCents":25,"shippingCents":null,"currency":"CAD","inStock":false,"derived":null,"country":"CA"},
-{"retailer":"thistletavern","retailerName":"Thistle Tavern","title":"Gravity Field","url":"https://thistletavern.com/products/rift-radiance-gravity-field","condition":"Radiance / Normal / 062/167","isFoil":false,"priceCents":100,"shippingCents":null,"currency":"GBP","inStock":false,"derived":null,"country":"UK"}
+{"retailer":"thistletavern","retailerName":"Thistle Tavern","title":"Gravity Field","url":"https://thistletavern.com/products/rift-radiance-gravity-field","condition":"Radiance / Foil / 062/167","isFoil":false,"priceCents":100,"shippingCents":null,"currency":"GBP","inStock":false,"derived":null,"country":"UK"}
 ]
