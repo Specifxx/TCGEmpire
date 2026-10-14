@@ -80,7 +80,7 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
         run: npx tsx scripts/ops-monitor.ts
       - name: Save the monitor's memory
-        if: always()
+        if: ${{ always() && !inputs.dry_run }}
         uses: actions/cache/save@v4
         with:
           path: .ops-state

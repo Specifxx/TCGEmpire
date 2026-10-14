@@ -97,7 +97,8 @@ export function pushSample(samples: readonly TransferSample[], next: TransferSam
 // ── Ages ─────────────────────────────────────────────────────────────────────
 /** Severity of "this should have happened within warnH hours". */
 export function ageSeverity(ageHours: number, warnH: number, critH: number): Severity {
-  if (!Number.isFinite(ageHours)) return "unknown";
+  // Infinity is "it has never happened" (hoursSince(null)): that is a verdict. Only NaN is "cannot tell".
+  if (Number.isNaN(ageHours)) return "unknown";
   if (ageHours >= critH) return "crit";
   if (ageHours >= warnH) return "warn";
   return "ok";

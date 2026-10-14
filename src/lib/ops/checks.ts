@@ -24,6 +24,7 @@ import {
   recentRatePerDay,
 } from "./thresholds";
 import { NeonApiError, endpointIdFromUrl, findProjectForEndpoint, projectUsage } from "./neon";
+import { COUNTRIES } from "../country";
 
 const iso = (d: OpsDeps) => d.now.toISOString();
 
@@ -313,8 +314,10 @@ export async function priceFreshness(d: OpsDeps): Promise<CheckResult[]> {
   if (!d.db) return [];
   const out: CheckResult[] = [];
   try {
-    const markets = await d.db.priceFreshness();
-    const rows = markets.map((m) => ({ ...m, h: hoursSince(m.newest, d.now) }));
+    // Only the markets the site serves (COUNTRIES). Retired markets keep old rows (NZ was 55 days stale on the
+    // first live run) and must neither alarm nor hide a live market that has none.
+    const found = new Map((await d.db.priceFreshness()).map((m) => [m.country, m]));
+    const rows = (Object.keys(COUNTRIES) as string[]).map((country) => ({ country, newest: found.get(country)?.newest ?? null, h: hoursSince(found.get(country)?.newest ?? null, d.now) }));
     const stale = rows.filter((r) => ageSeverity(r.h, 30, 56) !== "ok");
     const worst = rows.reduce<Severity>((w, r) => {
       const s = ageSeverity(r.h, 30, 56);
@@ -325,12 +328,10 @@ export async function priceFreshness(d: OpsDeps): Promise<CheckResult[]> {
         id: "data:prices",
         area: "data",
         title: "Store prices",
-        severity: rows.length ? worst : "warn",
-        summary: !rows.length
-          ? "No store prices found."
-          : stale.length
-            ? `Out of date: ${stale.map((r) => `${r.country} ${humanAge(r.h)}`).join(", ")}.`
-            : `All ${rows.length} markets updated within ${humanAge(Math.max(...rows.map((r) => r.h)))}.`,
+        severity: worst,
+        summary: stale.length
+          ? `Out of date: ${stale.map((r) => `${r.country} ${r.newest ? humanAge(r.h) : "no prices"}`).join(", ")}.`
+          : `All ${rows.length} markets updated within ${humanAge(Math.max(...rows.map((r) => r.h)))}.`,
         action: worst === "ok" ? undefined : "The price import is not refreshing every market. Tell Claude: \"prices have stopped updating\".",
       }),
     );

@@ -17,6 +17,7 @@ import {
   ebayQuota,
   inboxWaiting,
   neonTransfer,
+  priceFreshness,
   runChecks,
   scheduledJobs,
   siteProbe,
@@ -104,7 +105,8 @@ test("age severity, human ages and the eBay allowance", () => {
   assert.equal(ageSeverity(5, 30, 56), "ok");
   assert.equal(ageSeverity(31, 30, 56), "warn");
   assert.equal(ageSeverity(60, 30, 56), "crit");
-  assert.equal(ageSeverity(Number.POSITIVE_INFINITY, 30, 56), "unknown");
+  assert.equal(ageSeverity(Number.POSITIVE_INFINITY, 30, 56), "crit", "never happened is a verdict");
+  assert.equal(ageSeverity(Number.NaN, 30, 56), "unknown");
   assert.equal(humanAge(0.2), "12 min");
   assert.equal(humanAge(5), "5.0 hours");
   assert.equal(humanAge(72), "3.0 days");
@@ -420,4 +422,21 @@ test("the weekly digest says all healthy, or lists what is flagged, and always s
   assert.match(good.text, /Inbox: 2 feedback/);
   const bad = buildDigestEmail(rep([r("a", "crit"), r("b", "warn"), r("c", "ok")]));
   assert.match(bad.subject, /1 problem need attention/);
+});
+
+test("store prices: only the live markets count; a retired market's old rows never alarm, and a live market with none does", async () => {
+  const fresh = new Date(NOW.getTime() - 5 * 3_600_000);
+  const six = ["AU", "US", "UK", "SG", "CA", "EU"].map((country) => ({ country, newest: fresh, inStock: 100 }));
+  const mk = (rows: { country: string; newest: Date | null; inStock: number }[]) => deps({ db: { priceFreshness: async () => rows } as unknown as OpsDeps["db"] });
+  const retired = { country: "NZ", newest: new Date(NOW.getTime() - 55 * 24 * 3_600_000), inStock: 3 };
+  const ok = (await priceFreshness(mk([...six, retired])))[0]!;
+  assert.equal(ok.id, "data:prices");
+  assert.equal(ok.severity, "ok", "NZ was 55 days stale on the first live run and must not alarm");
+  assert.doesNotMatch(ok.summary, /NZ/);
+  const missing = (await priceFreshness(mk(six.filter((m) => m.country !== "CA"))))[0]!;
+  assert.equal(missing.severity, "crit");
+  assert.match(missing.summary, /CA no prices/);
+  const stale = (await priceFreshness(mk(six.map((m) => (m.country === "UK" ? { ...m, newest: new Date(NOW.getTime() - 40 * 3_600_000) } : m)))))[0]!;
+  assert.equal(stale.severity, "warn");
+  assert.match(stale.summary, /UK 40 hours/);
 });
