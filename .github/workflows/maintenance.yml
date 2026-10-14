@@ -76,7 +76,7 @@ on:
           - ensure-intro-coupons  # WRITES to Stripe (idempotent): creates the "first 3 months half price" coupon for each monthly price if missing, and prints what it will charge.
           - payment-failures-report # read-only: every Stripe charge in the last 30 days with WHO refused it (Radar block vs bank decline), Radar reason/rule/risk, CVC/postcode checks, card brand/funding/country, 3DS. Customers anonymised as #1, #2.
           - trial-cancel-report  # read-only: Premium trials cancelled mid-trial (cancel_at_period_end), hours to cancel, Stripe feedback, activity before cancelling. Anonymised.
-          - impact-report    # read-only DAILY IMPACT REPORT: per UTC day for the last 35 days, Search Console clicks/impressions, card views and searches (DemandSnapshot), outbound buy clicks (ClickEvent), new accounts by source and PremiumClick by surface, plus window averages around a change date (2026-10-09, the search allowance). Answers "did this change cost visitors or buy clicks?" days after it ships, where funnel-report's weeks are too coarse. Aggregate only, writes nothing.
+          - impact-report    # read-only DAILY IMPACT REPORT: per UTC day for the last 35 days, Search Console clicks/impressions, card views and searches (DemandSnapshot), new accounts by source and PremiumClick by surface, plus window averages around a change date (2026-10-09, the search allowance). Answers "did this change cost visitors or sign-ups?" days after it ships, where funnel-report's weeks are too coarse. Aggregate only, writes nothing.
           - funnel-report    # read-only WEEKLY PREMIUM FUNNEL: accounts, signup sources, PremiumClick, trial stamps and entitlement expiries from Postgres, joined to Stripe subscriptions/trials/conversions/churn, bucketed by ISO week for the last 8 (WEEKS= to change). Exists because neither admin page can answer "were more people signing up before?" — /admin/subscriptions' trial->paid is an ALL-TIME ratio with no time dimension, and /admin/accounts only looks back 30 days. Aggregate only, no PII. Writes nothing.
           - grandfather-plus-adfree # ONE-OFF (2026-09-14): pin every CURRENT Plus subscriber to premiumTierFloor='premium' so moving ad-free from Plus to Premium takes nothing away from someone who already paid for it. Idempotent. Report-only unless `apply` is ticked.
           - audit-inbox      # read-only dump of the four /admin/messages queues (contact messages, store suggestions, feedback, wrong-price/card reports). Emails reduced to their domain and IPs never printed — job logs are collaborator-visible and these are the tables where the public typed their own address. ALL=1 via the `apply` input shows every row rather than only open ones.
@@ -5737,14 +5737,6 @@ jobs:
         if: inputs.task == 'impact-report'
         env:
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
-          RH8: ${{ secrets.RH8 || vars.RH8 }}
-          RH7: ${{ secrets.RH7 || vars.RH7 }}
-          RH6: ${{ secrets.RH6 || vars.RH6 }}
-          RH5: ${{ secrets.RH5 || vars.RH5 }}
-          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
-          HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
-          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
-          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           DAYS: "35"
           CHANGE_DATES: "2026-10-09"
         run: npx tsx scripts/impact-report.ts

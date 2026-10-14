@@ -13,12 +13,14 @@
  *               in DemandSnapshot (one per browser per card per day). Snapshots are
  *               taken by the price import, so a day is "since the previous import".
  *   Searches    the same for Card.searchCount
- *   Buy clicks  ClickEvent rows (outbound store clicks), history database
+ *   Buy clicks  NOT HERE. ClickEvent stopped being written when /api/click became a
+ *               no-op (history-database egress), so outbound clicks exist only as GA4's
+ *               buy_click event. Compare buy_click per session in GA4 by hand.
  *   Accounts    new User rows, and those with signupSource = search_limit
  *   Premium     PremiumClick rows: all, the search-limit panel, and checkouts
  *
- * Ratios (buy clicks per 100 Google clicks / per 100 card views) separate "fewer
- * people came" from "the people who came did less".
+ * Ratios (card views and accounts per 100 Google clicks) separate "fewer people
+ * came" from "the people who came did less".
  *
  * NEVER WRITES. Aggregate only — no emails, names, ids or paths reach the log.
  *
@@ -26,7 +28,6 @@
  */
 import { createSign } from "node:crypto";
 import { prisma } from "../src/lib/db";
-import { dbHistory } from "../src/lib/db-history";
 import { NOT_SEED_WHERE } from "../src/lib/premium";
 
 const DAYS = Math.max(7, Math.min(120, Number(process.env.DAYS ?? 35)));
@@ -42,9 +43,6 @@ type Row = {
   gscPos: number | null;
   views: number | null;
   searches: number | null;
-  buy: number;
-  buySingle: number;
-  buySealed: number;
   accounts: number;
   accSearchLimit: number;
   premClicks: number;
@@ -57,9 +55,6 @@ const empty = (): Row => ({
   gscPos: null,
   views: null,
   searches: null,
-  buy: 0,
-  buySingle: 0,
-  buySealed: 0,
   accounts: 0,
   accSearchLimit: 0,
   premClicks: 0,
@@ -153,18 +148,6 @@ async function main() {
     r.searches = ds >= 0 ? ds / gap : null;
   }
 
-  const clicks = await dbHistory.clickEvent.findMany({
-    where: { createdAt: { gte: first } },
-    select: { createdAt: true, kind: true },
-  });
-  for (const c of clicks) {
-    const r = at(c.createdAt);
-    if (!r) continue;
-    r.buy++;
-    if (c.kind === "sealed") r.buySealed++;
-    else r.buySingle++;
-  }
-
   const users = await prisma.user.findMany({
     where: { createdAt: { gte: first }, ...NOT_SEED_WHERE },
     select: { createdAt: true, signupSource: true },
@@ -204,21 +187,21 @@ async function main() {
   // ── Print ───────────────────────────────────────────────────────────────
   const f = (v: number | null, w: number, dp = 0) => (v == null ? "-" : v.toFixed(dp)).padStart(w);
   const head =
-    "day         gClick  gImpr  gPos  views  srch   buy  sngl  seal  acct  aSL  prem  pLS  chk  buy/100g  buy/100v";
+    "day         gClick  gImpr  gPos  views  srch  acct  aSL  prem  pLS  chk  views/g  acct/100g";
   console.log(`\nDaily, UTC (Google columns are Search Console's Pacific day). Change dates: ${CHANGE_DATES.join(", ") || "none"}\n`);
   console.log(head);
   for (const d of days) {
     const r = rows.get(d)!;
     const mark = CHANGE_DATES.includes(d) ? " <" : "";
     console.log(
-      `${d}  ${f(r.gscClicks, 6)} ${f(r.gscImpr, 6)} ${f(r.gscPos, 5, 1)} ${f(r.views, 6)} ${f(r.searches, 5)} ${f(r.buy, 5)} ${f(r.buySingle, 5)} ${f(r.buySealed, 5)} ${f(r.accounts, 5)} ${f(r.accSearchLimit, 4)} ${f(r.premClicks, 5)} ${f(r.premLimitSearch, 4)} ${f(r.checkouts, 4)} ${f(r.gscClicks ? (100 * r.buy) / r.gscClicks : null, 9, 1)} ${f(r.views ? (100 * r.buy) / r.views : null, 9, 1)}${mark}`,
+      `${d}  ${f(r.gscClicks, 6)} ${f(r.gscImpr, 6)} ${f(r.gscPos, 5, 1)} ${f(r.views, 6)} ${f(r.searches, 5)} ${f(r.accounts, 5)} ${f(r.accSearchLimit, 4)} ${f(r.premClicks, 5)} ${f(r.premLimitSearch, 4)} ${f(r.checkouts, 4)} ${f(r.gscClicks && r.views != null ? r.views / r.gscClicks : null, 8, 2)} ${f(r.gscClicks ? (100 * r.accounts) / r.gscClicks : null, 10, 1)}${mark}`,
     );
   }
 
   // Windows: before the first change, and between/after each change. Today is partial and excluded.
   const bounds = [days[0], ...CHANGE_DATES.filter((d) => d > days[0] && d <= days[days.length - 1]), ymd(today)];
   console.log("\nDaily averages per window (today excluded; the last 2 Google days are provisional):\n");
-  console.log("window                     days  gClick   gImpr   views   srch    buy   acct   prem  chk   buy/100g  buy/100v");
+  console.log("window                     days  gClick   gImpr   views   srch   acct   prem  chk  views/g  acct/100g");
   for (let i = 0; i < bounds.length - 1; i++) {
     const ds = days.filter((d) => d >= bounds[i] && d < bounds[i + 1]);
     if (!ds.length) continue;
@@ -226,14 +209,13 @@ async function main() {
       const v = ds.map((d) => pick(rows.get(d)!)).filter((x): x is number => x != null);
       return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
     };
-    const gDays = ds.filter((d) => rows.get(d)!.gscClicks != null);
-    const vDays = ds.filter((d) => rows.get(d)!.views != null);
-    const buyG = gDays.reduce((a, d) => a + rows.get(d)!.buy, 0);
+    // Ratios over the days that have a Google figure, so a provisional tail does not skew them.
+    const gDays = ds.filter((d) => rows.get(d)!.gscClicks != null && rows.get(d)!.views != null);
     const gc = gDays.reduce((a, d) => a + (rows.get(d)!.gscClicks ?? 0), 0);
-    const buyV = vDays.reduce((a, d) => a + rows.get(d)!.buy, 0);
-    const vc = vDays.reduce((a, d) => a + (rows.get(d)!.views ?? 0), 0);
+    const vg = gDays.reduce((a, d) => a + (rows.get(d)!.views ?? 0), 0);
+    const ag = gDays.reduce((a, d) => a + rows.get(d)!.accounts, 0);
     console.log(
-      `${`${bounds[i]}..${ymd(new Date(Date.parse(bounds[i + 1]) - DAY))}`.padEnd(25)} ${String(ds.length).padStart(5)} ${f(avg((r) => r.gscClicks), 7, 1)} ${f(avg((r) => r.gscImpr), 7)} ${f(avg((r) => r.views), 7)} ${f(avg((r) => r.searches), 6)} ${f(avg((r) => r.buy), 6, 1)} ${f(avg((r) => r.accounts), 6, 1)} ${f(avg((r) => r.premClicks), 6, 1)} ${f(avg((r) => r.checkouts), 4, 1)} ${f(gc ? (100 * buyG) / gc : null, 10, 1)} ${f(vc ? (100 * buyV) / vc : null, 9, 1)}`,
+      `${`${bounds[i]}..${ymd(new Date(Date.parse(bounds[i + 1]) - DAY))}`.padEnd(25)} ${String(ds.length).padStart(5)} ${f(avg((r) => r.gscClicks), 7, 1)} ${f(avg((r) => r.gscImpr), 7)} ${f(avg((r) => r.views), 7)} ${f(avg((r) => r.searches), 6)} ${f(avg((r) => r.accounts), 6, 1)} ${f(avg((r) => r.premClicks), 6, 1)} ${f(avg((r) => r.checkouts), 4, 1)} ${f(gc ? vg / gc : null, 8, 2)} ${f(gc ? (100 * ag) / gc : null, 10, 1)}`,
     );
   }
 
@@ -251,7 +233,4 @@ main()
     console.error(e);
     process.exitCode = 1;
   })
-  .finally(async () => {
-    await prisma.$disconnect();
-    await dbHistory.$disconnect();
-  });
+  .finally(() => prisma.$disconnect());
