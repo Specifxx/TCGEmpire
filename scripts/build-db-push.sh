@@ -45,7 +45,12 @@ set -uo pipefail
 # CUT OVER TO RM7 ON 2026-10-09 (RM6 was nearly at its 5 GB monthly transfer
 # allowance five days into service); migrate-main-db-rm6-to-rm7 copied RM6 onto
 # the recycled RM7 and verified every table. See OPERATIONAL_VARS.
-CURRENT_OP="RM7"
+#
+# CUT OVER TO RM8 ON 2026-10-14 (RM7 reached its 5 GB monthly transfer allowance
+# five days into service); migrate-main-db-rm7-to-rm8 copied RM7 onto the
+# recycled RM8 and verified every table (49 tables; User 476, RetailerPrice
+# 138,798). See OPERATIONAL_VARS.
+CURRENT_OP="RM8"
 # CUT OVER TO HISTORY_DATABASE_URL_4 ON 2026-09-26 (HISTORY_DATABASE_URL_3
 # reached its 5 GB monthly transfer allowance four days into service).
 # HISTORY_DATABASE_URL_4 is a RECYCLED project — retired since 2026-08-21 — not
@@ -71,14 +76,14 @@ CURRENT_HIST="HISTORY_DATABASE_URL_4"
 # the app then deployed resolving no database at all ("operational database
 # resolved from NONE"): every DB-backed page broken behind a green build. Failing
 # keeps the previous deployment serving until the variable is set in Vercel.
-if [ "${VERCEL_ENV:-}" = "production" ] && [ -z "${RM7:-}" ]; then
-  echo "::error::[build-db-push] RM7 is not set for this Vercel PRODUCTION build, so the app would deploy with no operational database. Set RM7 in Vercel (Production, Preview and Development) and redeploy. Failing the build so the current deployment keeps serving."
+if [ "${VERCEL_ENV:-}" = "production" ] && [ -z "${RM8:-}" ]; then
+  echo "::error::[build-db-push] RM8 is not set for this Vercel PRODUCTION build, so the app would deploy with no operational database. Set RM8 in Vercel (Production, Preview and Development) and redeploy. Failing the build so the current deployment keeps serving."
   exit 1
 fi
 
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM7:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM7) — skipping schema push."
+   || [ -z "${RM8:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM8) — skipping schema push."
   exit 0
 fi
 
@@ -87,8 +92,8 @@ fi
 # happens to hold while the app (src/lib/db-chains.ts) reads RM3. A green deploy
 # against an un-migrated database is exactly the failure this script exists to
 # prevent.
-export DATABASE_URL="$RM7"
-SOURCE="RM7"
+export DATABASE_URL="$RM8"
+SOURCE="RM8"
 # Name the winner, never the value (it's a credential). There is only one
 # possible value now (the gate above already required RM3 to be set), but this
 # stays as the one line that answers "which database did this build actually

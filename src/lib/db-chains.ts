@@ -98,6 +98,13 @@
  * this project now makes deliberately: no emergency fallback lever, but no more
  * silently-serving-garbage incidents either.
  *
+ * CUT OVER TO RM8 ON 2026-10-14: RM7 reached its 5 GB monthly transfer
+ * allowance five days into service. RM8 is a RECYCLED project (last live
+ * 2026-09-08..09-11); probe-databases found it behind RM7 on every metric
+ * (User 322 vs 476, RetailerPrice 128,993 vs 138,798), and
+ * migrate-main-db-rm7-to-rm8 replaced it with a row-count-verified copy of RM7
+ * (all 49 tables matching; User 476, RetailerPrice 138,798). RM7 is the rollback.
+ *
  * CUT OVER TO RM7 ON 2026-10-09: RM6 came within reach of its 5 GB monthly
  * transfer allowance five days into service. RM7 is a RECYCLED project (last
  * live 2026-09-05..09-08); probe-databases found it behind RM6 on every metric
@@ -124,16 +131,16 @@
  * EbayAuction table whose FK onto Card had blocked the restore) and replaced it
  * with a row-count-verified copy of RM3 (all 42 tables matching, Card 1434).
  *
- * RM3, RM4, RM5, RM6 and RM8 through RM12 and DATABASE_URL_2 are retired and stay out
+ * RM3 through RM7 and RM9 through RM12 and DATABASE_URL_2 are retired and stay out
  * of this chain — available to the migration tasks by explicit name (see
- * migrate-main-db-rm6-to-rm7 and its predecessors in .github/workflows/maintenance.yml).
+ * migrate-main-db-rm7-to-rm8 and its predecessors in .github/workflows/maintenance.yml).
  * DATABASE_URL is ALSO not in this chain anymore: it is read directly by
  * prisma/schema.prisma's env("DATABASE_URL") for local dev and by the Prisma
  * CLI, never by the running app (src/lib/db.ts constructs PrismaClient with an
  * explicit datasourceUrl override), so its presence or absence here has no
  * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM7"] as const;
+export const OPERATIONAL_VARS = ["RM8"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
