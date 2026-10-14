@@ -17014,3 +17014,20 @@ The pattern behind the request is the history this repo keeps recording: RM6, RM
 **Not changed:** Premium prices and features. The free 14-day trial shipped on 12 Oct, and a second change now would make neither readable.
 
 **Tooling.** `impact-report` (maintenance task, `scripts/impact-report.ts`) prints a daily series of Search Console, card views and searches (`DemandSnapshot`), accounts by source and PremiumClick by surface, with window averages around `CHANGE_DATES`. It has no buy-click column: `ClickEvent` has not been written since `/api/click` became a no-op, so `buy_click` lives only in GA4. Re-run it around 28 Oct for two clean weeks.
+
+## Sister sites: all three in the footer, and on the articles where another game is the subject — 2026-10-14
+
+**Owner's traffic plan (14 Oct):** "Cross-link the sister sites. Add a footer or 'Also from us' block on all four sites, and add links from Rift's blog (about 10k visitors a month) to the matching OP/Dex/MTG guides. Rift has the most authority, and links from it are the fastest way to clear OP's 6.3k 'discovered, not indexed' pages." The 2026-10-01 Pokémon-section entry left DexCompare cross-linking as "the owner's call"; this is that call.
+
+**Footer.** The OP Compare sentence (2026-10-04, recorded only in a code comment) becomes one line listing OP Compare, DexCompare and MTG Compare, rendered from `SISTER_SITES` in `src/lib/sister-sites.ts`. The link row the brief pinned is untouched (`tests/site-chrome.test.ts`). The other three sites carry the mirror image, each listing the other three.
+
+**Articles.** `ArticleView` renders a "Collect another game too?" block (`components/SisterSites.tsx`) after Recommended reads, chosen by `sisterSitesFor(article)`:
+- the three cross-game guides written for other players (`one-piece-tcg-to-riftbound`, `pokemon-collector-to-riftbound`, `mtg-to-riftbound`) link their own game's site only;
+- where-to-buy posts (`where-to-buy-*`, `buy-riftbound-cards-*`) and anything tagged "where to buy" or "price comparison" link all three;
+- everything else links none. That is 22 of 110 published articles today; the test fails above a third.
+
+Each site links its home and two or three deep pages a Riftbound reader would use (where-to-buy guides, OP's EB05 pre-order board, MTG's deck pricer, Dex's booster boxes and release calendar). **Every deep link returned 200 on 14 Oct**; a sister site's pages built the same day (OP's EB05 where-to-buy post, Dex's Delta Reign pre-order page, MTG's Star Trek pages) are not linked until they are live there.
+
+**Link terms:** `rel="noopener"`, no nofollow, sponsored or noreferrer — our own sites, no commission, and the referrer attributes the visit — the RiftboundStocks terms (2026-09-28). Not `OutboundLink`: these are not buy clicks.
+
+**Why not every article.** `docs/adsense-remediation.md` (Phase 15) warns that look-alike sites cross-linked sitewide under one AdSense account read as a network of affiliate sites, and recommends keeping cross-links to the footer and About. The footer is sitewide by nature; the article block is limited to the reading where another game's prices are a natural next step. Widening it is a one-line change in `sisterSitesFor`, and should wait until the AdSense review is settled.

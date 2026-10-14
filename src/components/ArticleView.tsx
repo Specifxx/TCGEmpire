@@ -41,6 +41,8 @@ import { setByCode } from "@/lib/constants";
 import { RADIANCE_SET_CODE } from "@/lib/sets/radiance";
 import { PostPriceTable } from "./CardPriceChip";
 import { currentSlug, withSlugAliases } from "@/lib/card-slug-renames";
+import { sisterSitesFor } from "@/lib/sister-sites";
+import { SisterSites } from "./SisterSites";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -781,6 +783,11 @@ export async function ArticleView({ article }: { article: Article }) {
           </div>
         </section>
       )}
+
+      {/* Sister sites (owner, 2026-10-14): the cross-game guides link their
+          game's site, buying and price-comparison reading links all three.
+          Most articles link none (lib/sister-sites.ts). */}
+      <SisterSites sites={sisterSitesFor(article)} />
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-ink-800 pt-4">
         <ArticleShare url={articleUrl} title={article.title} />
