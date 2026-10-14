@@ -1,0 +1,87 @@
+name: Ops monitor
+
+# The site watches itself. Every three hours this checks the things that quietly break
+# a site nobody is looking at (database transfer limits, eBay, store prices, scheduled
+# jobs, the live site, Stripe, email, the inbox), stores the result for /admin/health,
+# and emails the owner ONLY when something needs attention. Sundays it also sends a short
+# "all healthy" digest, so silence is never ambiguous: no Monday email means this has stopped.
+# scripts/ops-monitor.ts has the full account; DECISIONS.md, "The site watches itself", 2026-10-14.
+#
+# WHY HERE AND NOT ON VERCEL. It has to keep working when the database has run out of
+# transfer or a deploy is broken, which are the two ways the site actually stops.
+# Its memory between runs is the Actions cache, not the database it is watching.
+#
+# SETUP (one-time, optional but recommended): add NEON_API_KEY as an Actions secret
+# (Neon console → Account settings → API keys) to watch the monthly transfer limit.
+# Without it the transfer checks say "not connected" and everything else still runs.
+# CRON_SECRET (already used by the other workflows) lets it send mail through the site.
+# An undeliverable URGENT alert fails the job, so GitHub's own failed-run email reaches
+# the owner as a last resort.
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+    - cron: "0 21 * * 0" # Sunday 21:00 UTC = Monday morning in Sydney: the weekly digest
+  workflow_dispatch:
+    inputs:
+      digest:
+        description: "Send the weekly digest now"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Run every check but send no email and save nothing"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ops-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  deployments: read
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Restore the monitor's memory
+        uses: actions/cache/restore@v4
+        with:
+          path: .ops-state
+          key: ops-state-none
+          restore-keys: ops-state-
+      - name: Run the checks
+        env:
+          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || 'UNSET' }}
+          HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_ORG_ID: ${{ secrets.NEON_ORG_ID || vars.NEON_ORG_ID }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OWNER_ALERT_EMAIL: ${{ secrets.OWNER_ALERT_EMAIL || vars.OWNER_ALERT_EMAIL }}
+          GITHUB_TOKEN: ${{ github.token }}
+          OPS_DIGEST: ${{ (github.event.schedule == '0 21 * * 0' || inputs.digest) && '1' || '' }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+        run: npx tsx scripts/ops-monitor.ts
+      - name: Save the monitor's memory
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .ops-state
+          key: ops-state-${{ github.run_id }}-${{ github.run_attempt }}

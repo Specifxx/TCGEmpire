@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { markInboxSeen } from "@/lib/ops/inbox-counts";
 import { SuggestionActions } from "@/components/admin/SuggestionActions";
 import { FeedbackActions } from "@/components/admin/FeedbackActions";
 import { PriceReportActions } from "@/components/admin/PriceReportActions";
@@ -43,6 +44,9 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
 
   // ── Messages ─────────────────────────────────────────────────────────────
   const messages = await prisma.contactMessage.findMany({ orderBy: { createdAt: "desc" }, take: 500 });
+  // Opening the inbox is what "seen" means for contact messages, which have no status
+  // column of their own (lib/ops/inbox-counts.ts): the admin badge counts those since now.
+  await markInboxSeen().catch(() => {});
 
   // ── Store suggestions ────────────────────────────────────────────────────
   type Suggestion = {

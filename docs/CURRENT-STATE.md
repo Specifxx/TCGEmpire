@@ -70,6 +70,14 @@ longer lands on its entry.
   decides whether public reads hit Neon; cron routes, alert baselines and the
   auction board always ask Neon first. Private data never goes to files.
   Demand counters are published only as ranks. [2026-10-09](../DECISIONS.md#L16803)
+- **The site watches itself (2026-10-14):** `ops-monitor.yml` (GitHub Actions, every
+  3 h, Sunday digest) checks Neon transfer limits, eBay, price imports, scheduled
+  jobs, the live site, Stripe, email and the inbox, stores the result for
+  `/admin/health`, and emails the owner only when something needs a look. Its
+  memory is the Actions cache, not the database it watches. Every new public form
+  calls `notifyOwnerBounded` (capped 8/h, 25/day); a new job, API or limit gets a
+  check in `lib/ops/checks.ts`. The Neon rows need the `NEON_API_KEY` Actions secret.
+  `docs/ops-monitor.md`. [2026-10-14](../DECISIONS.md#L16978)
 - **Live names** (since 2026-10-14; `src/lib/db-chains.ts` is the source of
   truth): operational `RM8`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.

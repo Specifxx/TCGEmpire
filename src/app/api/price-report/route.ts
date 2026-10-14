@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
+import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 import { COUNTRIES, currencyOf, type Country } from "@/lib/country";
 import {
   ISSUE_CODES,
@@ -10,8 +11,10 @@ import {
   MAX_NOTE,
   MAX_PAGE,
   REPORT_KINDS,
+  issueLabel,
   type ReportKind,
 } from "@/lib/price-report";
+import { formatMoney } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -177,6 +180,22 @@ export async function POST(req: Request) {
         ip: clientIp(req),
         page: str(body?.page, MAX_PAGE),
       },
+    });
+
+    const what = kind === "card" && cardId ? await prisma.card.findUnique({ where: { id: cardId }, select: { name: true, setCode: true, collectorNumber: true } }).catch(() => null) : null;
+    await notifyOwnerBounded({
+      kind: "price-report",
+      headline: `${retailerName || retailer}: ${issueLabel(issue)}${what ? ` (${what.name})` : ""}`,
+      from: user?.email ?? email(body?.email) ?? "anonymous",
+      fields: [
+        ["What", what ? `${what.name} ${what.setCode} ${what.collectorNumber}` : kind === "sealed" ? `sealed product ${sealedGroupKey}` : cardId],
+        ["Store", `${retailerName || retailer} (${country})`],
+        ["Problem", issueLabel(issue)],
+        ["We showed", shownPriceCents != null ? formatMoney(shownPriceCents, currencyOf(country)) : null],
+        ["They say", actualPriceCents != null ? formatMoney(actualPriceCents, currencyOf(country)) : null],
+        ["Page", str(body?.page, MAX_PAGE)],
+      ],
+      body: str(body?.note, MAX_NOTE),
     });
 
     return NextResponse.json({ ok: true });

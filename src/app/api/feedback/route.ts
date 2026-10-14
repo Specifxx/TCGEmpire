@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { grantPremiumDays, feedbackPremiumActive, FEEDBACK_PREMIUM_DAYS } from "@/lib/premium";
+import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 
 export const dynamic = "force-dynamic";
 
@@ -117,6 +118,20 @@ export async function POST(req: Request) {
         // stranger for one, and only store what they chose to give.
         email: user ? null : cleanEmail(body?.email),
       },
+    });
+
+    // Tell the owner now (lib/ops/notify-owner.ts): bounded, capped, and never able to fail the submission.
+    await notifyOwnerBounded({
+      kind: "feedback",
+      headline: `${rating != null ? `${rating}/5 · ` : ""}${message}`,
+      from: user?.email ?? cleanEmail(body?.email) ?? (user ? "a signed-in account" : "anonymous"),
+      fields: [
+        ["Rating", rating != null ? `${rating}/5` : null],
+        ["Page", cleanStr(body?.page, MAX_PAGE)],
+        ["Source", source],
+        ["Signed in", user ? "yes" : "no"],
+      ],
+      body: message,
     });
 
     // Reward only a signed-in account's FIRST submission, only while the promo

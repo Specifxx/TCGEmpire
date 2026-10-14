@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { RETAILER_LIST } from "@/lib/retailers";
+import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,13 @@ export async function POST(req: Request) {
     if (!existing) {
       await prisma.storeSuggestion.create({
         data: { storeName, storeUrl, country, email: email || null, note: note || null, ip },
+      });
+      await notifyOwnerBounded({
+        kind: "store-suggestion",
+        headline: `${storeName} (${country})`,
+        from: email || "anonymous",
+        fields: [["Store", storeName], ["Website", storeUrl], ["Market", country]],
+        body: note || null,
       });
     }
   } catch {

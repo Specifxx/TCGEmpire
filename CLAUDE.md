@@ -66,6 +66,16 @@ Neon; reads route through `lib/db.ts` automatically, so call sites need no
 change. Never add a private model or column to `PUBLIC_MODELS` or the export,
 and keep any cron or alert reader inside `liveRoute` / `withLiveData`.
 
+## The site watches itself
+
+`.github/workflows/ops-monitor.yml` runs `scripts/ops-monitor.ts` every three hours and
+emails the owner when something needs a look (Neon transfer limits, eBay, price imports,
+scheduled jobs, the live site, Stripe, email, the inbox); `/admin/health` shows the same.
+It runs in GitHub Actions on purpose, so it works when the database or the deploy is what
+broke. **When you add a scheduled job, an external API or anything with a limit, add a check
+for it** in `src/lib/ops/checks.ts` (see `docs/ops-monitor.md`). Every new public form
+must call `notifyOwnerBounded` after saving. The owner is not watching.
+
 ## Checks
 
 ```

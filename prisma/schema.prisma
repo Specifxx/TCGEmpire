@@ -1534,6 +1534,16 @@ model Counter {
   value Int
 }
 
+// The ops monitor's latest report (lib/ops, scripts/ops-monitor.ts), one row keyed
+// "latest", read by /admin/health. PRIVATE: operational detail, never exported to
+// data/public and never in PUBLIC_MODELS. The monitor writes it from GitHub Actions
+// with a best-effort upsert; the page treats a missing row or table as "no report yet".
+model OpsSnapshot {
+  key       String   @id
+  json      Json
+  updatedAt DateTime @updatedAt
+}
+
 // A buyer/seller support request. Emailed to SUPPORT_EMAIL on creation (see
 // lib/support-email.ts) and worked from /admin/support. userId/orderId are soft
 // links (no Prisma relation), matching Order.marketplaceListingId's convention,

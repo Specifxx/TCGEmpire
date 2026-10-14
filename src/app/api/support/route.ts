@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { nextNumber } from "@/lib/order-number";
 import { sendSupportTicketNotification, sendSupportTicketConfirmation } from "@/lib/support-email";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
+import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,14 @@ export async function POST(req: Request) {
   const info = { number, name: d.name, email: d.email, category: d.category, subject: d.subject, message: d.message, orderId: d.orderId ?? null };
   await sendSupportTicketNotification(info).catch(() => {});
   await sendSupportTicketConfirmation(info).catch(() => {});
+  // The support inbox gets the ticket above; the owner gets it too (lib/ops/notify-owner.ts).
+  await notifyOwnerBounded({
+    kind: "support",
+    headline: `RC-${number}: ${d.subject}`,
+    from: `${d.name} <${d.email}>`,
+    fields: [["Category", d.category], ["Order", d.orderId || null]],
+    body: d.message,
+  });
 
   return NextResponse.json({ ok: true, ticket: `RC-${number}` });
 }

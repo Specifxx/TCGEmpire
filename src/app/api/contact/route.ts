@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { parseContactMessage } from "@/lib/contact-message";
+import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 
 export const dynamic = "force-dynamic";
 
@@ -23,5 +24,13 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "Couldn't send that right now — please try again." }, { status: 500 });
   }
+  const d = parsed.data;
+  await notifyOwnerBounded({
+    kind: "contact",
+    headline: d.subject || d.message,
+    from: `${d.name} <${d.email}>`,
+    fields: [["Subject", d.subject]],
+    body: d.message,
+  });
   return NextResponse.json({ ok: true });
 }

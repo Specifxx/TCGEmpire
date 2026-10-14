@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { getLatestReport, SNAPSHOT_STALE_HOURS } from "@/lib/ops/snapshot";
+import { getInboxCounts } from "@/lib/ops/inbox-counts";
+import { countBy, worst } from "@/lib/ops/types";
+import { humanAge } from "@/lib/ops/thresholds";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +25,12 @@ type Tool = { href: string; title: string; icon: string; desc: string };
 // ClickEvent or StorePartner changed. Re-add a tile here if either comes back
 // into regular use.
 const TOOLS: Tool[] = [
+  {
+    href: "/admin/health",
+    title: "Health & limits",
+    icon: "🩺",
+    desc: "Database transfer limits, eBay, store prices, scheduled jobs, Stripe, email and the live site, checked every three hours. You are emailed when something needs a look.",
+  },
   {
     href: "/admin/accounts",
     title: "Accounts",
@@ -105,6 +115,23 @@ export default async function AdminHome({ searchParams }: { searchParams: { key?
   // tool link so you don't have to re-append it every time.
   const suffix = keyOk && !user?.isAdmin ? `?key=${encodeURIComponent(token!)}` : "";
 
+  // One cheap row (the monitor's last report) and five count queries. Both degrade to "nothing to show".
+  const [report, inbox] = await Promise.all([getLatestReport(), getInboxCounts().catch(() => null)]);
+  const ageH = report ? (Date.now() - Date.parse(report.generatedAt)) / 3_600_000 : null;
+  const counts = report ? countBy(report.results) : null;
+  const overall = report ? worst(report.results) : "unknown";
+  const stale = ageH != null && ageH > SNAPSHOT_STALE_HOURS;
+  const strip = !report
+    ? { tone: "border-slate-600 text-slate-300", dot: "bg-slate-500", text: "No health report yet" }
+    : stale
+      ? { tone: "border-rose-500/50 text-rose-200", dot: "bg-rose-500", text: `The monitor has not reported for ${humanAge(ageH!)}` }
+      : overall === "crit"
+        ? { tone: "border-rose-500/50 text-rose-200", dot: "bg-rose-500", text: `${counts!.crit} need${counts!.crit === 1 ? "s" : ""} action` }
+        : overall === "warn"
+          ? { tone: "border-gold/50 text-gold", dot: "bg-gold", text: `${counts!.warn} to keep an eye on` }
+          : { tone: "border-brand-500/40 text-brand-300", dot: "bg-brand-400", text: "Everything is healthy" };
+  const badges: Record<string, number> = { "/admin/messages": inbox?.total ?? 0 };
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="flex items-center gap-2">
@@ -116,7 +143,14 @@ export default async function AdminHome({ searchParams }: { searchParams: { key?
         {user?.email && <> Signed in as <span className="text-slate-300">{user.email}</span>.</>}
       </p>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      <Link href={`/admin/health${suffix}`} className={`mt-5 flex items-center gap-3 rounded-xl border bg-ink-850 px-4 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 ${strip.tone}`}>
+        <span aria-hidden className={`inline-block h-2.5 w-2.5 rounded-full ${strip.dot}`} />
+        {strip.text}
+        {inbox && inbox.total > 0 && <span className="ml-auto rounded-full bg-rose-500 px-2.5 py-0.5 text-xs font-bold text-white">{inbox.total} new in the inbox</span>}
+        <span className={inbox && inbox.total > 0 ? "text-slate-600" : "ml-auto text-slate-600"}>→</span>
+      </Link>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {TOOLS.map((t) => (
           <Link
             key={t.href}
@@ -126,6 +160,7 @@ export default async function AdminHome({ searchParams }: { searchParams: { key?
             <div className="flex items-center gap-2">
               <span className="text-lg" aria-hidden>{t.icon}</span>
               <span className="font-bold text-white">{t.title}</span>
+              {badges[t.href] > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-bold text-white">{badges[t.href]} new</span>}
               <span className="ml-auto text-slate-600">→</span>
             </div>
             <p className="text-xs leading-relaxed text-slate-400">{t.desc}</p>
