@@ -16,18 +16,24 @@ import { POKEMON_OG_SIZE, PokemonBrandOgImage, ProductOgImage, ogImageDataUri } 
 // Never a 500: an unfurl must produce an image. A missing product or a read
 // error draws the brand-only card (200). Only the section being off is a 404.
 //
-// Cached for the loader's six hours, not a year. ImageResponse sends
-// "public, immutable, max-age=31536000" unless told otherwise, and the key must
-// be lowercase to replace it; with it, a CDN would keep a price card for a year.
-// The card drawn after a read error gets one minute instead: a brief database
-// outage must not pin a priceless card in the CDN for six hours.
+// Cached by the CDN for a day, not a year (owner, 2026-10-14: "cache them for a
+// long time (a day or more), instead of drawing them on every request"). This
+// route has no generateStaticParams, so on Vercel it is a plain function, not
+// ISR: the `cache-control` header below is its ONLY cache, and `revalidate`
+// stays at the loaders' POKEMON_TTL so it never claims a TTL the loaders would
+// undercut (egress rule 5). A day matches the data: the Pokémon import runs
+// daily and a share platform keeps an unfurl for days anyway. ImageResponse
+// sends "public, immutable, max-age=31536000" unless told otherwise, and the
+// key must be lowercase to replace it; with it, a CDN would keep a price card
+// for a year. The card drawn after a read error gets one minute instead: a
+// brief database outage must not pin a priceless card in the CDN for a day.
 export const runtime = "nodejs";
 export const revalidate = 21600;
 export const alt = "Pokémon sealed product price on RiftCompare";
 export const size = POKEMON_OG_SIZE;
 export const contentType = "image/png";
 
-const CACHED = "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400";
+const CACHED = "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400";
 const AFTER_ERROR = "public, max-age=0, s-maxage=60";
 
 

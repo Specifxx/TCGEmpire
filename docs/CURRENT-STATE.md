@@ -622,7 +622,11 @@ longer lands on its entry.
 - **Share images:** the site-wide preview is a composite of real screenshots of
   the whole site (`src/app/opengraph-image.jpg`), not the price guide; `/price-guide`
   keeps its own. Screenshots come from `.github/workflows/og-shots.yml`, because
-  the design sandbox cannot load https pages. [2026-10-07](../DECISIONS.md#L16760)
+  the design sandbox cannot load https pages. Every share image is a fixed file,
+  prerendered, or CDN-cached for at least a day (owner, 2026-10-14); a data-backed
+  image route is a function on Vercel, so its response header is its cache, not
+  `revalidate`. [2026-10-07](../DECISIONS.md#L16760),
+  [2026-10-14](../DECISIONS.md#L17035)
 - **Ultimate Rare is an explicit list:** `ULTIMATE_PRINTS` in `lib/constants.ts`
   (Unleashed 238, Radiance 184, Packed Amphitheater), because an Ultimate
   print's number is an ordinary over-number. Its stored rarity stays Showcase.

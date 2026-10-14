@@ -146,8 +146,8 @@ come from pure builders (`home.ts`, `hubs.ts`, `product-facts.ts`,
 fact exists.
 
 **Distribution without links** (communities ban promotion): price share
-cards (`opengraph-image.tsx` beside the product and set pages; 6h CDN header,
-60s after a read error, a brand card instead of a 500); "Copy for Reddit /
+cards (`opengraph-image.tsx` beside the product and set pages; a 24h CDN header
+since 2026-10-14, 60s after a read error, a brand card instead of a 500); "Copy for Reddit /
 Discord" (`CopyPrices`, `src/lib/pokemon/share-text.ts`: a table or bullets,
 no link unless asked).
 

@@ -324,13 +324,16 @@ test("setReleaseLine: pre-orders open only while the set itself is not out", () 
   assert.equal(setReleaseLine({ releasedOn: null }, [pre], NOW), null);
 });
 
-test("both share-card routes: lowercase cache-control (six hours, never immutable), nodejs, the loader's TTL, gated", () => {
+test("both share-card routes: lowercase cache-control (a day, never immutable), nodejs, the loader's TTL, gated", () => {
   for (const f of ["src/app/pokemon/sealed/[slug]/opengraph-image.tsx", "src/app/pokemon/sets/[set]/opengraph-image.tsx"]) {
     const src = readFileSync(f, "utf8");
     const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-    assert.match(code, /const CACHED = "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400";/, f);
+    // A day at the CDN (owner, 2026-10-14: share images cached "a day or more").
+    // The route is a plain function on Vercel (no generateStaticParams), so
+    // this header is its only cache.
+    assert.match(code, /const CACHED = "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400";/, f);
     assert.match(code, /headers: \{ "cache-control": failed \? AFTER_ERROR : CACHED \}/, f);
-    // The card drawn after a read error must not sit in the CDN for six hours.
+    // The card drawn after a read error must not sit in the CDN for a day.
     const afterError = code.match(/const AFTER_ERROR = "([^"]+)";/)?.[1] ?? "";
     const sMaxAge = Number(afterError.match(/s-maxage=(\d+)/)?.[1] ?? NaN);
     assert.ok(sMaxAge > 0 && sMaxAge <= 300, `${f}: AFTER_ERROR "${afterError}"`);

@@ -17031,3 +17031,28 @@ Each site links its home and two or three deep pages a Riftbound reader would us
 **Link terms:** `rel="noopener"`, no nofollow, sponsored or noreferrer — our own sites, no commission, and the referrer attributes the visit — the RiftboundStocks terms (2026-09-28). Not `OutboundLink`: these are not buy clicks.
 
 **Why not every article.** `docs/adsense-remediation.md` (Phase 15) warns that look-alike sites cross-linked sitewide under one AdSense account read as a network of affiliate sites, and recommends keeping cross-links to the footer and About. The footer is sitewide by nature; the article block is limited to the reading where another game's prices are a natural next step. Widening it is a one-line change in `sisterSitesFor`, and should wait until the AdSense review is settled.
+
+## Share images: every one is a fixed file or cached for at least a day — 2026-10-14
+
+**Owner (14 Oct), on the cost of serving the site:** "Social-preview images: make them fixed images, or cache them for a long time (a day or more), instead of drawing them on every request."
+
+**Audit.** Every `opengraph-image.*` under `src/app` (there is no `twitter-image`) and the one route handler that draws a share image, `/api/og`, checked in the source and twice on the live site (`curl -D -`, cache-control and x-vercel-cache):
+
+| Route | What it is | Live, 14 Oct | Verdict |
+| --- | --- | --- | --- |
+| `/opengraph-image.jpg`, `/price-guide/opengraph-image.jpg` | fixed files | `max-age=86400, swr=604800`, PRERENDER then HIT | fixed |
+| blog and guide pages' own images (`/blog/<slug>.jpg`/`.png`) | fixed files in `public/` | `max-age=86400`, MISS then HIT | fixed |
+| `/games`, `/riftle`, `/pokemon` `opengraph-image` | no data, prerendered at build | immutable, PRERENDER then HIT | static |
+| `/market/opengraph-image` | the Index, prerendered at build (reads it once per build) | immutable, PRERENDER then HIT | static |
+| `/guides/[slug]/opengraph-image` | `generateStaticParams` over the article files, 52 at build, no database | immutable, PRERENDER then HIT | static |
+| `/card/[id]`, `/sets/[set]`, `/blog/[slug]`, `/c/[token]`, `/rising/[token]` `opengraph-image` | data, no `generateStaticParams`: a function on Vercel | ImageResponse's default `public, immutable, max-age=31536000`, MISS then HIT | CDN-cached until the next deploy |
+| `/api/og?t=…` (deck, Riftle, deck-cost and pack-pull cards) | reads `searchParams`, no data | the same default header, MISS then HIT (a fresh URL too) | CDN-cached per URL |
+| `/pokemon/sealed/[slug]`, `/pokemon/sets/[set]` `opengraph-image` | data, a function on Vercel, `s-maxage=21600` | `max-age=0` (Vercel strips s-maxage), MISS then HIT | **six hours: changed** |
+
+**What changed.** The two Pokémon price cards' CDN header goes from `s-maxage=21600` to `s-maxage=86400` (the card drawn after a read error keeps its one minute). Nothing else needed a change: no image is drawn per request, and none other is cached for less than a day.
+
+**Why the header and not `revalidate`.** A route with a dynamic segment and no `generateStaticParams` builds as a plain function (ƒ), so on Vercel its `export const revalidate` caches nothing; the only cache is the response header. Every data-backed image here is in that shape and is cached by the CDN through ImageResponse's default header, or the Pokémon cards' own. Their `revalidate` stays at `POKEMON_TTL` (six hours) on purpose: it is the loaders' TTL, and a larger value would only state a cache that egress rule 5 says the loaders would undercut.
+
+**What a day costs.** A shared Pokémon product or set link can show a price up to a day old. The section imports daily, and Reddit, Discord and X keep an unfurl for days anyway. The Riftbound card and set images already behave this way (cached until the next daily release).
+
+**Not changed, noted.** `/guides/[slug]/opengraph-image` prerenders 52 images at build from the article files; it reads no database, so it costs build time, not transfer. `/market/opengraph-image` is the one image that reads data at build: the Index, from the history files and the basket's Neon reads (search counts, live prices).

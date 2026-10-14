@@ -14,16 +14,19 @@ import { SetOgImage } from "@/lib/pokemon/set-og";
 //
 // Reads the US catalogue, the same cached read the section's pages share. An
 // unknown set or a read error draws the brand-only card (200), never a 500;
-// only the section being off is a 404. Cached six hours, not ImageResponse's
-// default year (the lowercase key replaces it); the card drawn after a read
-// error gets one minute, so a brief outage does not pin it in the CDN.
+// only the section being off is a 404. Cached by the CDN for a day (owner,
+// 2026-10-14), not ImageResponse's default year (the lowercase key replaces
+// it); the card drawn after a read error gets one minute, so a brief outage
+// does not pin it in the CDN. No generateStaticParams, so this is a plain
+// function on Vercel and the header is its only cache; `revalidate` stays at
+// the loaders' POKEMON_TTL (see the product card beside the sealed page).
 export const runtime = "nodejs";
 export const revalidate = 21600;
 export const alt = "Pokémon set sealed prices on RiftCompare";
 export const size = POKEMON_OG_SIZE;
 export const contentType = "image/png";
 
-const CACHED = "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400";
+const CACHED = "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400";
 const AFTER_ERROR = "public, max-age=0, s-maxage=60";
 
 export default async function Image({ params }: { params: { set: string } }) {
