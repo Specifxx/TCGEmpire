@@ -510,7 +510,7 @@ longer lands on its entry.
   ranking, so a price tie never goes to eBay. `/editorial-policy`, `/about`,
   `/privacy`, `/terms`, `/methodology`, the homepage, the region homes' FAQ and
   the consulting FAQ name the exception; nothing describes that table as
-  "cheapest first". [2026-10-15](../DECISIONS.md#L17281). Elsewhere
+  "cheapest first". [2026-10-15](../DECISIONS.md#L17282). Elsewhere
   no comparison is re-ranked
   and no true figure (the "+N%" on a dearer eBay row) is hidden; eBay rows keep
   their price position but wear eBay blue (`.btn-ebay`, or `.btn-ebay-ghost` in
@@ -760,7 +760,7 @@ longer lands on its entry.
   is never stock) overrides a JSON-LD `PreOrder`, which states the purchase
   mode, not the stock; an unreadable BCData is not evidence of stock. "Checked
   X ago" (`lastSeen`) means the page was read, not that its stock was judged
-  right. [2026-10-15](../DECISIONS.md#L17215)
+  right. [2026-10-15](../DECISIONS.md#L17216)
 - **Deck lines resolve to the STANDARD printing** (`isStandardPrinting` in
   `lib/deck.ts`): not a promo, alt-art, Signature or overnumbered copy, unless
   no standard one exists or the line pins it (`(VEN-197*)`). Every resolver
@@ -955,7 +955,7 @@ longer lands on its entry.
 - **Declined:** a locked popup ✕; guest checkout (deferred); a Radiance post blitz or paid ads; a static rule-2
   egress test; a static landscape header or
   a 44px desktop switcher; re-ranking eBay above a cheaper store (declined
-  09-26; adopted for the pre-order table only on 10-15, [2026-10-15](../DECISIONS.md#L17281)), an eBay
+  09-26; adopted for the pre-order table only on 10-15, [2026-10-15](../DECISIONS.md#L17282)), an eBay
   "Money Back Guarantee" claim, a card-page "#N of M" eBay module, affiliate
   links in emails. [2026-09-26](../DECISIONS.md#L13751),
   [2026-09-14](../DECISIONS.md#L6134),

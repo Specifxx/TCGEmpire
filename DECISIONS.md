@@ -17198,6 +17198,7 @@ Landed with `[deploy]` at the owner's request ("deploy it immediately when you'r
 - **Proof for creators:** each channel and tip click fires `creator_click` / `creator_tip_click` (GA4 only) with the creator's slug, so each creator can be shown what the listing sent them. Creator links use `rel="noopener"` without `noreferrer`, so creators see riftcompare.com as the referrer in their own analytics.
 - **Applications** post to `/api/contact` with the subject "Creator application: <name> (<platform>)". They are saved to ContactMessage, shown in /admin/messages and emailed to the owner (`notifyOwnerBounded`). No new table.
 - **Homepage:** `CreatorsTeaser`, a slim strip under the popular-cards carousel (faces when there are creators, an invitation while there are none). **Nav:** "Riftbound Creators" moved from Help to Guides & News, beside Community links. Share image: `app/creators/opengraph-image.tsx`.
+- **Above the fold, same day** (owner: "make it more obvious, maybe in the corner, without needing to scroll down"): `CreatorsCornerBadge` in the homepage hero (and the region homes, which share `CinematicHero`). It sits in the top-right corner from sm up, and on a phone as a centred pill above the H1, where a corner badge would cover the headline. The header row was not used: from 1024 to 1279 it has about 5px of slack (see Navbar.tsx), so one more link would clip "Sign up free".
 - Deployed immediately at the owner's request.
 
 ## A K/DA post, and a HEARTSTEEL refresh rather than a third HEARTSTEEL post — 2026-10-15
