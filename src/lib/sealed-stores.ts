@@ -74,6 +74,22 @@ export const SEALED_ONLY_SHOPIFY: ShopifySealedStore[] = [
     currency: "USD",
   },
   {
+    key: "laboitemystere",
+    name: "La Boîte Mystère",
+    // Quebec LGS, CAD storefront (/cart.js, 2026-10-15), suggested by a visitor.
+    // Sealed only: its Riftbound collections hold boxes, decks, sleeves,
+    // playmats and event tickets, no singles. The title gates keep the English
+    // sealed (Radiance Booster Display C$224.99, Showdown Decks C$32.99) and
+    // drop the French prints, accessories and "avant-première" tickets.
+    base: "https://laboitemystere.com",
+    collections: ["riftbound-league-of-legends", "riftbound-radiance"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "CA",
+    currency: "CAD",
+  },
+  {
     // Quebec store, CAD storefront — tracked in the CA market, never the US.
     // Its Radiance Showdown Decks pre-order is in "riftbound-precommandes".
     key: "cryptmtg",
