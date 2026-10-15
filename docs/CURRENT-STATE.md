@@ -747,7 +747,7 @@ longer lands on its entry.
   is never stock) overrides a JSON-LD `PreOrder`, which states the purchase
   mode, not the stock; an unreadable BCData is not evidence of stock. "Checked
   X ago" (`lastSeen`) means the page was read, not that its stock was judged
-  right. [2026-10-15](../DECISIONS.md#L17215)
+  right. [2026-10-15](../DECISIONS.md#L17216)
 - **Deck lines resolve to the STANDARD printing** (`isStandardPrinting` in
   `lib/deck.ts`): not a promo, alt-art, Signature or overnumbered copy, unless
   no standard one exists or the line pins it (`(VEN-197*)`). Every resolver
