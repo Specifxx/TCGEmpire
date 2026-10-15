@@ -779,7 +779,8 @@
     "rarity": "Rare",
     "isPromo": true,
     "energyCost": 3,
-    "might": 4
+    "might": 4,
+    "imageUrl": "https://riftcompare.com/regional-promos/jinx-demolitionist-ogn-030-kr.jpg"
   },
   {
     "externalId": "promo-ogn-076b-yasuo-remorseful-kr-msi",
@@ -792,7 +793,35 @@
     "rarity": "Rare",
     "isPromo": true,
     "energyCost": 6,
-    "might": 6
+    "might": 6,
+    "imageUrl": "https://riftcompare.com/regional-promos/yasuo-remorseful-ogn-076b-kr.jpg"
+  },
+  {
+    "_note": "REGIONAL EXCLUSIVES, PRICED (2026-10-15, owner: \"we want those cards... we want to track those prices as well\"). This reverses the KOREAN EVENT PROMOS note above on two points, deliberately. IMAGES: Riot's own announcement, \"Korea's Rift Opens on September 18\" (playriftbound.com, news_live CDN), shows the Jinx launch-stamp promo, the Yasuo, Remorseful promo by Kim Star and the Korea-only overnumbered Ahri by Allen Song as finished cards. Those official images, cropped to the card, live in public/regional-promos/. PRICES: each of these printings is listed in src/lib/regional-printings.ts, which is the per-card 'this card IS the foreign printing' exemption the note above asked for. Every other card's foreign-language guard is unchanged. The China-exclusive Seraphine has NO IMAGE: no official image was available on 2026-10-15, only fan photos, and borrowing the English 174* art would misstate the printing."
+  },
+  {
+    "externalId": "regional-ogn-303a-ahri-nine-tailed-fox-kr",
+    "name": "Ahri, Nine-Tailed Fox",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "303a/298",
+    "domain": "Calm",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "imageUrl": "https://riftcompare.com/regional-promos/ahri-nine-tailed-fox-ogn-303a-kr.jpg"
+  },
+  {
+    "externalId": "regional-rad-174as-seraphine-starry-eyed-songstress-cn",
+    "name": "Seraphine, Starry-Eyed Songstress",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "174a*/167",
+    "domain": "Mind",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "description": "As an additional cost to play a spell, you may exhaust me and three friendly units to reduce the cost of that spell by [2]."
   },
   {
     "_note": "RADIANCE SPOILER, added 2026-09-19 from a photograph of the physical card. This is the FIRST Radiance card in the catalogue, so it is also the first hard evidence of the set's printed denominator: the card reads 'RAD - 167/167 - EN', which is why setFromTotal() in lib/price-import.ts now maps 167 to RAD and no longer guesses 114/180, and why constants.ts SETS carries totalCards 167 rather than Riot's announced 180. EVERY FIELD IS READ OFF THE CARD except rarity, which was VERIFIED rather than guessed: the bottom-centre rarity gem is an orange pentagon, matched pixel-for-pixel against Sett, Brawler (OGN-164, epic) and against Kayn, Unleashed (OGN-189, rare, a magenta diamond) pulled from cdn.riftscribe.gg. Domain is 'Colorless' — the card's own wording is 'Neutral', but Colorless is the value all 65 existing neutral rows use and what lib/domains.ts, the facet pages and the /browse filters are built on; inventing a second spelling would orphan the card from every one of them. Type tags read 'CHAMPION UNIT - NEEKO - IXTAL'. Artist credit on the card is Luscinia Studio, (c)2026 RGI. REPLACE imageUrl with the RiftScribe CDN art the moment the automated import carries this card — the photo is a stopgap, and `npm run cards:sync` will not overwrite a manual row."
