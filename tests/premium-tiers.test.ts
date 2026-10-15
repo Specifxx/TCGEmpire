@@ -196,7 +196,6 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       "Compare prices across every store + eBay",
       // 2026-10-09: search moved to its own row, the daily allowance.
       "Full card database & charts",
-      "Card searches a day (25 signed out)",
       "Deck & list pricer, trade calculator & box EV",
       "RiftCompare Index & weekly price movers",
       // Free limits since 2026-09-28 (lib/free-limits.ts; pinned in

@@ -123,7 +123,7 @@ test("the wordmark, not a nav control, is what pays for the tablet band", () => 
   assert.doesNotMatch(code, /tracking-tight text-white sm:block/, "the wordmark must not turn back on at sm");
 });
 
-test("Pricing keeps the phone slot Premium had — plain, not gold (2026-09-28)", () => {
+test("the phone slot is the shiny Premium button again (2026-10-15; plain Pricing 09-28 to 10-15)", () => {
   // 2026-09-10: Premium was deliberately put beside Database on phones, gold
   // and shimmering. 2026-09-28: the owner moved upgrade prompts to where a
   // free account hits a limit, "not in popups and headers", so the slot is a
@@ -131,10 +131,13 @@ test("Pricing keeps the phone slot Premium had — plain, not gold (2026-09-28)"
   // must be able to shrink.
   const code = readCode(NAVBAR);
   const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
-  assert.match(row, /<PremiumNavLink/);
+  // 2026-10-15 (owner: "get premium … shiny"): GetPremiumLink, label "Premium"
+  // here (no glyph below xl). Measured in Chromium at 400/414/640/768, touch and
+  // not: no page or nav overflow, button 63-80px, unclipped.
+  assert.match(row, /<GetPremiumLink/);
   assert.match(row, /lg:hidden/);
   // shrink-0 + nowrap, and BOTH are load-bearing — see the next test.
-  const premClass = /<PremiumNavLink[\s\S]*?className="([^"]*)"/.exec(row)?.[1] ?? "";
+  const premClass = /<GetPremiumLink[\s\S]*?className="([^"]*)"/.exec(row)?.[1] ?? "";
   for (const t of ["shrink-0", "whitespace-nowrap", "min-h-11", "min-w-11", "lg:hidden"]) {
     assert.ok(premClass.split(/\s+/).includes(t), `Pricing must keep "${t}" (has: ${premClass})`);
   }
@@ -145,8 +148,7 @@ test("Pricing keeps the phone slot Premium had — plain, not gold (2026-09-28)"
   // entry (nav-groups.ts) reaches the same page.
   assert.match(premClass, /\bhidden\b/);
   assert.match(premClass, /min-\[400px\]:inline-flex/);
-  assert.doesNotMatch(premClass, /text-gold/, "not gold: the header no longer sells Premium");
-  assert.match(row, />\s*Pricing\s*<\/PremiumNavLink>/);
+  assert.match(row, /<GetPremiumLink[\s\S]*?compact/, "the short label in the phone slot");
 });
 
 test("Pricing (was Premium) cannot wrap AND cannot shrink — two screenshots' worth of bugs", () => {

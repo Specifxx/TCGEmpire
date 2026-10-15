@@ -35,9 +35,16 @@ export function searchLimitFor(tier: SearchTier): number | null {
   return tier === "premium" ? null : SEARCH_LIMITS[tier];
 }
 
-/** The kill switch. Anything but "off" leaves the meter on. */
+/**
+ * OFF BY DEFAULT SINCE 2026-10-15 (owner, with nine active subscribers: "let's
+ * just completely remove the search limit. I think that was a bit too greedy …
+ * users will get unlimited searches"). Every search is unmetered unless
+ * SEARCH_CAPS is set to exactly "on"; the meter is kept, dormant, rather than
+ * deleted, so the evidence and the switch stay in one place. DECISIONS.md,
+ * "Premium gets loud: no search limit, a sign-up card, a shiny header button".
+ */
 export function searchCapsEnabled(env: Record<string, string | undefined> = process.env): boolean {
-  return (env.SEARCH_CAPS ?? "").trim().toLowerCase() !== "off";
+  return (env.SEARCH_CAPS ?? "").trim().toLowerCase() === "on";
 }
 
 /** The UTC calendar day, which is when the allowance resets. */

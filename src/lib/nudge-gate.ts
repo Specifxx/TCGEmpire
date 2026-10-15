@@ -61,6 +61,25 @@ export function premiumSlideInEligible({ views, accountAgeMs: age, pathname }: P
   return !pathSkipped(pathname, PREMIUM_SKIP_PATHS);
 }
 
+// ── The signed-out sign-up card (restored 2026-10-15) ───────────────────────
+// Owner, 2026-10-15: "bring the sign up now pop up again to get more people to
+// register … but we should just gate it and make it appear after so many
+// pages, because some people just are annoyed at it." So it never shows on a
+// visit's first pages (and so never over a phone's first page from search,
+// which Google treats as intrusive), and keeps the shared caps: 12 s settle-in,
+// once a session, two dismissals and it stops for good, 7/14-day snoozes.
+// Reverses 2026-09-30's "The sign-up slider is gone" for this one card.
+
+/** From the 4th page view of a visit: three pages of the site first, then the ask. */
+export const SIGNUP_MIN_VIEWS = 4;
+
+/** Not on the sign-in pages, /premium (its own CTAs), or the Pokémon section (a Riftbound account pitch). */
+export const SIGNUP_SKIP_PATHS = ["/login", "/verify", "/premium", "/pokemon", "/admin"] as const;
+
+export function signupCardEligible({ views, pathname }: { views: number; pathname: string | null | undefined }): boolean {
+  return views >= SIGNUP_MIN_VIEWS && !pathSkipped(pathname, SIGNUP_SKIP_PATHS);
+}
+
 // ── The monthly subscriber's annual offer ───────────────────────────────────
 
 /** From the 2nd page view of a session. */

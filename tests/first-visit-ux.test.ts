@@ -16,7 +16,7 @@ import { existsSync } from "node:fs";
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const code = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
-test("no sign-up card interrupts any page view: the slider is gone (2026-09-30), not just gated", () => {
+test("the sign-up card never interrupts a visit's first pages (removed 09-30, restored gated 10-15)", () => {
   // 2026-09-30 went one step further than "value first": the owner removed the
   // signed-out sign-up slider altogether ("Users who don't want to sign up
   // don't have to... we don't want to interfere with that"). Sign-up prompts are
@@ -26,7 +26,10 @@ test("no sign-up card interrupts any page view: the slider is gone (2026-09-30),
   assert.ok(existsSync(join(process.cwd(), "src/lib/nudge-gate.ts")), "the shared gate still serves the signed-in cards");
   // Referrer, device, width: none of them decide anything (they did on 09-24).
   assert.doesNotMatch(code("src/lib/nudge-gate.ts"), /referrer|matchMedia|innerWidth|mobile/i, "the gate has no referrer or device input");
-  assert.doesNotMatch(code("src/lib/nudge-gate.ts"), /signupPromoEligible|SIGNUP_/, "and no sign-up card rules left to revive");
+  // RESTORED 2026-10-15 (owner: "bring the sign up now pop up again … gate it
+  // and make it appear after so many pages"): SignupSlideIn, from the 4th page.
+  assert.doesNotMatch(code("src/lib/nudge-gate.ts"), /signupPromoEligible/, "the old 09-24 gate stays gone");
+  assert.match(code("src/lib/nudge-gate.ts"), /export const SIGNUP_MIN_VIEWS = 4;/, "never before the 4th page of a visit");
 });
 
 test("the Premium slide-in asks later: 3rd page view, a 48-hour-old account, never over an inline paid prompt", () => {

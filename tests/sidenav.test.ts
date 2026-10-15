@@ -260,7 +260,7 @@ test("the rail owns the brand, the search and the whole index; the header owns t
   assert.doesNotMatch(rail, /"\/login"|"\/profile"/, "the rail must not duplicate it");
 
   // Deliberately BOTH: Premium, asked for on each surface separately.
-  assert.match(nav, /<PremiumNavLink className="[^"]*\blg:block\b/);
+  assert.match(nav, /<GetPremiumLink[\s\S]*?\blg:inline-flex\b/);
   assert.match(rail, /href="\/premium"/);
 });
 
@@ -282,7 +282,7 @@ test("the header's desktop row is the curated shortlist the owner named, and not
   for (const [what, pattern] of [
     ["Sealed", /<Link href="\/sealed"[^>]*lg:block/],
     ["Blog", /<Link href="\/blog"[^>]*lg:block/],
-    ["Premium", /<PremiumNavLink className="[^"]*\blg:block\b/],
+    ["Premium", /<GetPremiumLink[\s\S]*?\blg:inline-flex\b/],
     ["Discord", /aria-label="Join our Discord"[\s\S]{0,300}?\blg:grid\b/],
     ["the watchlist", /<HeaderWatchButton className="hidden sm:inline-flex" \/>/],
     ["the theme toggle", /<ThemeToggle className="hidden lg:grid" \/>/],

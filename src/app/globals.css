@@ -785,6 +785,56 @@ body {
    reduced motion it sets `entered` true (and unmounts) immediately rather than
    waiting out a transition that will never visibly run. */
 
+/* ---------------------------------------------------------------------------
+   .premium-cta: the header's "Get Premium" button (GetPremiumLink.tsx).
+   RESTORED 2026-10-15 at the owner's request ("shiny … a gradient and shining,
+   and when you hover over it … even more shiny"), reversing the 2026-09-28
+   removal of .premium-shimmer above. A slow gold gradient drift plus a light
+   sweep every few seconds; hover brightens, glows and speeds the sweep up.
+   Text stays dark on gold (well past 4.5:1). The global prefers-reduced-motion
+   block stops both animations, leaving a still gold button.
+   --------------------------------------------------------------------------- */
+.premium-cta {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  color: #1c1405;
+  background: linear-gradient(110deg, #b0812f 0%, #f3d488 28%, #caa85a 52%, #f8e6ae 76%, #b0812f 100%);
+  background-size: 220% 100%;
+  box-shadow: 0 0 0 1px rgb(248 230 174 / 0.6), 0 0 14px rgb(243 212 136 / 0.35);
+  animation: premium-cta-drift 6s ease-in-out infinite;
+  transition: box-shadow 200ms ease, filter 200ms ease, transform 200ms ease;
+}
+.premium-cta::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.75) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: premium-cta-shine 3.6s ease-in-out infinite;
+}
+.premium-cta > * { position: relative; z-index: 2; }
+.premium-cta:hover,
+.premium-cta:focus-visible {
+  color: #120c02;
+  filter: brightness(1.12) saturate(1.15);
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgb(255 240 190 / 0.9), 0 0 22px rgb(243 212 136 / 0.7), 0 0 40px rgb(202 168 90 / 0.35);
+}
+.premium-cta:hover::after,
+.premium-cta:focus-visible::after { animation-duration: 1.2s; }
+.premium-cta:focus-visible { outline: 2px solid #f8e6ae; outline-offset: 2px; }
+@keyframes premium-cta-drift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes premium-cta-shine {
+  0%, 55% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
 /* Respect users who prefer less motion: neutralise every animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
@@ -802,3 +852,4 @@ body {
      content once it's gone — nothing here is lost by hiding it outright. */
   #nprogress { display: none !important; }
 }
+

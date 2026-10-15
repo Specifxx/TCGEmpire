@@ -251,14 +251,18 @@ test("the header row has the slack to actually RENDER the wider signed-out CTA",
   // And the curated shortlist that is deliberately still here, per the same
   // instruction: "I still want the sealed, the blog, premium, Discord, the
   // watch list, the light and dark mode, the country and the accounts."
-  assert.equal((src.match(/lg:block lg:px-2\.5/g) ?? []).length, 3, "Sealed, Blog and Premium, and nothing more");
+  // Premium is GetPremiumLink since 2026-10-15 (lg:inline-flex, its own class).
+  assert.equal((src.match(/lg:block lg:px-2\.5/g) ?? []).length, 2, "Sealed and Blog, and nothing more");
+  assert.equal((src.match(/<GetPremiumLink\b/g) ?? []).length, 2, "…plus the Premium button (phone slot and lg row)");
   assert.match(src, /aria-label="Join our Discord"[\s\S]{0,300}?\blg:grid\b/, "Discord comes back at lg with the reclaimed slack");
   assert.match(src, /<HeaderWatchButton className="hidden sm:inline-flex" \/>/, "the watchlist is a desktop control again");
 
   // Re-measured in a real browser after the change, the same way the original
   // clip was found: "Log in / Sign up" renders in full at
   // 1024/1032/1040/1048/1056/1279/1280/1440, with 72px of clearance at the
-  // tightest, and no width overflows horizontally.
+  // tightest, and no width overflows horizontally. Re-measured 2026-10-15 with
+  // the shiny Premium button ("Premium" 72px at lg, "✦ Get Premium" 124px from
+  // xl): no page or nav overflow at 1024/1040/1056/1279/1280/1440, touch or not.
 });
 
 test("PriceAlertModal keeps the email path intact — the account option is a reframe, NOT a gate", () => {

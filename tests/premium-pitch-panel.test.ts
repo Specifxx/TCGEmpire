@@ -18,7 +18,7 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // ─────────────────────────────────────────────────────────────────────────────
 
 
-test("the header links to pricing plainly — no gold, no shimmer (2026-09-28)", () => {
+test("the header sells Premium with the shiny GetPremiumLink; rail and menu stay plain (2026-10-15)", () => {
   // Parts 1 and 2 of the 2026-09-10 brief are reversed: the owner moved every
   // upgrade prompt to where a free account hits a limit, "not in popups and
   // headers" (DECISIONS.md, "Free limits: charge for what people use every
@@ -26,11 +26,12 @@ test("the header links to pricing plainly — no gold, no shimmer (2026-09-28)",
   // "Pricing" link to /premium so the plans stay one tap away.
   const code = read("src/components/Navbar.tsx").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
   const leftCluster = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<nav "));
-  assert.match(leftCluster, /<PremiumNavLink/, "/premium stays reachable from the phone header");
-  assert.match(leftCluster, />\s*Pricing\s*</);
-  assert.doesNotMatch(code, /text-gold/, "no gold Premium CTA in the header");
-  assert.doesNotMatch(code, /premium-shimmer/, "the shimmer is gone");
-  assert.match(code, /<PremiumNavLink className="[^"]*\blg:block\b[^"]*"[^>]*>\s*Pricing\s*</, "the desktop link is plain Pricing");
+  // REVERSED FOR THE HEADER 2026-10-15 (owner: "get premium … shiny … a
+  // gradient and shining"): both header slots carry GetPremiumLink, whose
+  // .premium-cta is the gold gradient and light sweep in globals.css.
+  assert.match(leftCluster, /<GetPremiumLink/, "/premium stays reachable from the phone header");
+  assert.match(code, /<GetPremiumLink[\s\S]*?\blg:inline-flex\b/, "and from the desktop row");
+  assert.match(read("src/app/globals.css"), /^\.premium-cta \{/m, "the shiny button style");
   const rail = read("src/components/SideNav.tsx");
   assert.match(rail, /href="\/premium"/, "the rail still links the plans");
   assert.doesNotMatch(rail.slice(rail.indexOf("<PremiumNavLink")), /text-gold|border-gold/, "…without gold");
@@ -40,7 +41,7 @@ test("the header links to pricing plainly — no gold, no shimmer (2026-09-28)",
   const menuLink = menuCode.slice(menuCode.indexOf("<PremiumNavLink"), menuCode.indexOf("</PremiumNavLink>"));
   assert.doesNotMatch(menuLink, /text-gold/, "the account menu's Pricing row is not gold");
   assert.doesNotMatch(read("tailwind.config.ts"), /premium-shimmer/);
-  assert.doesNotMatch(read("src/app/globals.css"), /^\.premium-shimmer/m);
+  assert.doesNotMatch(read("src/app/globals.css"), /^\.premium-shimmer/m, "the old phone-only shimmer stays gone; .premium-cta replaced it");
 });
 
 test("one tagline, on every surface that carries the Premium headline", () => {
