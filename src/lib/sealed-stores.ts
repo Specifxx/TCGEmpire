@@ -235,12 +235,17 @@ export function bigCommerceInStock(html: string): boolean | null {
  * Scoped to the MainProduct element on purpose: a related-product or quick-add
  * card elsewhere on the page could carry the same attribute for a different
  * product. Tags span lines in that theme, so the whole tag is read, not a line.
+ *
+ * Keyed on data-purchase-locked ALONE. data-instore-only describes where the
+ * product is sold, not whether it can be ordered: the store's in-store events
+ * (the Aberdeen Pre-Rift tickets) are bookable online, and a theme that marked
+ * them in-store-only must not turn a bookable ticket "sold out".
  */
 export function isPurchaseLocked(html: string): boolean {
   for (const m of html.matchAll(/<product-info\b[^>]*>/gi)) {
     const tag = m[0];
     if (!/\bid=["']MainProduct-/i.test(tag)) continue;
-    return /\bdata-(?:purchase-locked|instore-only)=["']true["']/i.test(tag);
+    return /\bdata-purchase-locked=["']true["']/i.test(tag);
   }
   return false;
 }

@@ -17276,6 +17276,8 @@ variant `available`; the WooCommerce Store API's `is_in_stock`) already says
 sold out, so the next import marks them correctly with no code change. Radiance
 pre-orders are selling out by the hour in launch week; twice-daily imports are
 the latency, and this entry does not change it.
+**Corrected the same day:** no import reads those stores, so none will mark them;
+see "The audit's "sell-outs" were stores we stopped reading" below.
 
 ---
 
@@ -17388,7 +17390,8 @@ already said so — Shopify collection `products.json` variant `available: false
 or the WooCommerce Store API's `is_in_stock: false` — so they were sell-outs
 since our last read (Radiance pre-orders are selling out by the hour this week),
 which the next import corrects with no code change. Not a parser bug, and not
-treated as one.
+treated as one. **Corrected the same day:** all 23 are at stores no import reads; see
+"The audit's "sell-outs" were stores we stopped reading" below.
 
 **The exception was Thistle Tavern**, and it is not a sell-out. Its Radiance
 Booster Box/Case and Vault pages say **"In-store purchase only"**: no buy
@@ -17412,8 +17415,11 @@ by `REQUEST_DELAY_MS`. It costs one page read per sealed product per run, which
 is why it is opt-in per store rather than applied to every Shopify store.
 Verified on the live pages: the in-store-only Vault reads locked, the orderable
 Showdown Decks page does not, and Game Nerdz's (a different platform) does not.
-`tests/purchase-lock.test.ts` pins both states, either flag alone, the
-related-card trap, and the one-way wiring.
+`tests/purchase-lock.test.ts` pins both states, the related-card trap, and the
+one-way wiring. (Same day, after the full audit: the check keys on
+`data-purchase-locked` alone. It first accepted `data-instore-only` too, but that
+flag says where a product is sold, not whether it can be ordered, and the
+store's bookable in-store event tickets must never read as locked.)
 
 **"In-store only" is stored as not in stock, so the badge says "Sold out".**
 That is imprecise — the product exists, in a shop — but our offer model has
@@ -17441,3 +17447,94 @@ run to apply the BigCommerce fix above.
 - `CLAUDE.md`, CURRENT-STATE and `docs/public-data-switchover.md` no longer say "08:00 UTC".
 
 **What it means.** In files mode the site's prices and catalogue change once a day, when the morning import's snapshot releases (in practice early to mid afternoon UTC while GitHub's cron runs late). A card added to the database shows on the site from the next morning's release. The evening import still updates Neon, so the alert emails stay twice daily. Rolling back is unchanged: `PUBLIC_DATA_MODE=db` and redeploy.
+
+---
+
+## The audit's "sell-outs" were stores we stopped reading; UK/EU sealed prices in dollars — 2026-10-15
+
+Correction to the two entries above ("Game Nerdz: sold out for a week, shown as
+open" and "Thistle Tavern: in-store only, shown as open"). Both said the other
+false-open rows were sell-outs since our last read that **the next import
+corrects with no code change**. That was wrong. The audit's full synthesis,
+read after both were merged, showed that **all 23 of those rows belong to 13
+stores in no registry** (vaultgames, azcardgames, egdgamesmeepledin,
+factorycards, fuhrious, g3skediog3tcg, industria61, jjcollection,
+kardsgreifswald, miceliongames, sgames, tcgfamily, vaultofdelights). No import
+visits them, so no import will ever correct them. The feed values I quoted were
+right ("JJ Collection's `products.json` says sold out"); the conclusion that our
+importer would read them was not checked, and should have been.
+
+**What they did to the pre-order page: nothing false.** Those rows were last
+written 2026-08-23 (EU) or 2026-09-08 (vaultgames), so `offerStock` already
+rendered them "Unknown", never "Pre-order open" (the audit read the stored
+`inStock`, not the page). The only false "open" rows on /radiance-preorders were
+Game Nerdz and Thistle Tavern, both fixed today.
+
+**The wider problem: removed stores keep their rows.** Both importers refresh a
+store by replacing its rows, so a store dropped from the registry is never
+visited again. `DECOMMISSIONED_RETAILERS` purges a removed store only if someone
+adds its key, and when the EU list went from 96 stores to 12 (2026-08-23) and NZ
+was retired, nobody did. In the 2026-10-14 export:
+- **Sealed:** 109 such stores, 935 rows, 390 of them `inStock`. In EU sealed, 618
+  of 825 rows. They are counted in `/sealed` JSON-LD `offerCount` and its
+  "Sold out at every store" check. They also feed `writeSealedPriceHistory`, so
+  the public sealed history has recorded August prices as daily lows since then.
+- **Singles:** 13 store|market pairs, 7,026 rows, 4,206 `inStock`: seven NZ stores
+  and six EU stores. 8 in-stock EU rows show on card pages as live listings
+  ("updated ~7 weeks ago"), and a zillerstore row is the EU "Last seen" headline
+  on 6 cards. `verifyCheapestListings` re-fetches about 1,075 NZ product pages a
+  run from stores we no longer track.
+
+The editorial policy promises the opposite: a store we can't read has its prices
+removed after three days.
+
+**Not purged yet, by design.** A purge was written and then held back. It
+deletes the rows of any retailer that is in no registry, is not an external
+source (eBay, TCGplayer, Cardmarket, CardTrader keep their own cadence; eBay's
+rotating UK/SG/EU singles markets are routinely about 72h old), and whose newest
+row is over `STORE_ROWS_MAX_AGE_H` old. It is scoped to orphans, not "every row
+over 72h", so a registered store that is briefly down is not deleted and then
+counted as a false restock when it recovers. It would remove about 8,000
+production rows, and the session's permission check stopped it pending the
+owner's explicit go-ahead.
+- If approved, the expected effects are: EU `/sealed` drops from about 130
+  products to about 82; about 16 groups gain "Sold out"; and 16 public sealed
+  history series step up on the purge day (EU `OGN|Starter Set` 1590 → 7999),
+  because their lows were stale.
+- The expected non-effects: no email fires (alerts read rows seen within 72h;
+  sealed watches set baselines from open offers only); no ops check trips
+  (none counts rows); no page 404s (store pages come from `RETAILER_LIST`).
+
+**UK and EU sealed prices were in US dollars.** The same synthesis found
+Thistle Tavern's stored prices above live: £50.00 against £35.00 for the Vault,
+£175.00 against £120.00 for the box. The research pass traced it to
+`fetchProducts` in `sealed-import.ts`, which sent Shopify `?country=UK` and
+`?country=EU`. Those are our market codes, not ISO country codes. Shopify ignores
+an unrecognised country, and with Node's `Accept-Language` header a store that
+has a US market then prices by the caller's IP. The import runs on GitHub's US
+machines, so it got US dollars. Confirmed by fetching each request both ways:
+- Thistle Tavern, Monster Card Corner (its £25.99 Showdown Decks stored as
+  "£40.00", which hid the cheapest UK store), Axion Now and Mox in the Hole in
+  the UK;
+- Universe TCG in the EU.
+
+Stores without a US market return their own currency either way, which is why
+only these five showed it. The singles importer has always sent `isoCountry`
+(GB, ES); the sealed one now does too. `tests/sealed-iso-country.test.ts` stubs
+`fetch` to pin GB and ES. It also scans `src/lib` for any `?country=${…}` built
+without `isoCountry`. No migration is needed: the next read of each store
+replaces its rows.
+
+**Same day, smaller:** `isPurchaseLocked` now keys on `data-purchase-locked`
+alone (see the Thistle Tavern entry).
+
+**Left for follow-up, found by the same research:**
+- Thistle's "Booster Pack, Box & Case" product is classified from its title as
+  a pack, but priced from its cheapest *available* variant, the box. Its row is
+  locked, so it shows "Sold out", but at the box price.
+- A registered sealed store that fails to read keeps its rows indefinitely.
+  There is no per-store expiry like the singles importer's.
+- `cleanupStaleSealed`'s reference map skips only the `ebay` key, not `ebay_us`,
+  `ebay_uk` and the other markets.
+
+---
