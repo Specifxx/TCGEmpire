@@ -153,14 +153,15 @@ test("1d: a legacy 'Vault' row joins the Vault Bundle group, and a store in both
 
 // ── 1e: products sorted by cheapest AVAILABLE offer ─────────────────────────
 
-test("1e: products sort by their cheapest open offer; a product with none goes last", () => {
+test("1e: booster boxes and packs lead, then products by their cheapest open offer", () => {
   const vault = group("RAD|Bundle", "Radiance Vault Bundle", [L("manyrealms", 3499, false), L("ebay_us", 4578, true)]);
   const decks = group("RAD|Showdown Decks", "Radiance Showdown Decks", [L("fab", 2499, false), L("tcg", 9861, true)]);
   const pack = group("RAD|Booster Pack", "Radiance Booster Pack", [L("punkouter", 699, false)]);
   const box = group("RAD|Booster Box", "Radiance Booster Box", BOX);
   const order = preorderTableGroups([box, pack, decks, vault]).map((g) => g.groupKey);
-  // Vault's cheapest LISTING (US$34.99) is sold out, so it ranks at US$45.78.
-  assert.deepEqual(order, ["RAD|Bundle", "RAD|Showdown Decks", "RAD|Booster Box", "RAD|Booster Pack"]);
+  // Box and pack lead (owner, 2026-10-15). After them, Vault's cheapest LISTING
+  // (US$34.99) is sold out, so it ranks at US$45.78, ahead of the decks.
+  assert.deepEqual(order, ["RAD|Booster Box", "RAD|Booster Pack", "RAD|Bundle", "RAD|Showdown Decks"]);
   // Structured data / CTAs only get products with an open offer.
   assert.deepEqual(pricedPreorderGroups([pack, box]).map((g) => g.groupKey), ["RAD|Booster Box"]);
 });

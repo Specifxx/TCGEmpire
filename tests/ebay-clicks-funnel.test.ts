@@ -262,7 +262,8 @@ test("/radiance-preorders: strip above the table, panel under it in every state,
   assert.match(src, /ebaySearchUrl\(country, ebaySealedQuery\("Radiance Booster Box", "Booster Box"\), "preorders-strip"\)/);
   // The pinned table call is untouched (tests/radiance-hub.test.ts).
   assert.match(src, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} page="\/radiance-preorders" \/>/);
-  assert.match(src, /The price lists below cover every Radiance product our tracked \{info\.adjective\} stores are\s+taking pre-orders on, each sorted cheapest first, in \{currency\}\./);
+  // Reworded 2026-10-15 when boxes and packs moved to the top of the table.
+  assert.match(src, /every Radiance product our tracked \{info\.adjective\} stores are taking pre-orders\s+on, booster boxes and packs first, each sorted cheapest first, in \{currency\}\./);
 });
 
 test("RadianceHub: the same panel directly under its table and its empty state", () => {

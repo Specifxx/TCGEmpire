@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { RADIANCE_PREVIEW_START, RADIANCE_RELEASE_DATE } from "@/lib/sets/radiance";
+import { RADIANCE_PREVIEW_END, RADIANCE_PREVIEW_START, RADIANCE_RELEASE_DATE } from "@/lib/sets/radiance";
 
 // Slim, dismissible sitewide banner for Radiance preview season (2026-09-24
 // growth pass). Decided on the CLIENT, after mount: the root layout is shared
@@ -12,28 +12,42 @@ import { RADIANCE_PREVIEW_START, RADIANCE_RELEASE_DATE } from "@/lib/sets/radian
 // for anyone who dismissed it (a returning dismissal never paints).
 //
 // Copy by date: before 25 Sep it announces the start; from 25 Sep it points at
-// the reveals; from release day (23 Oct) it is gone for everyone.
+// the reveals; once previews end (after 9 Oct) it points at the pre-order prices
+// for launch week; from release day (23 Oct) it is gone for everyone. The launch
+// phase has its own dismissal key: someone who closed "preview season is on" has
+// not seen the pre-order message (2026-10-15, owner).
 const DISMISS_KEY = "rc_radiance_banner_dismissed";
+const LAUNCH_DISMISS_KEY = "rc_radiance_launch_banner_dismissed";
+
+type Phase = "soon" | "live" | "launch";
+
+function phaseAt(now: number): Phase | null {
+  if (now >= Date.parse(`${RADIANCE_RELEASE_DATE}T00:00:00Z`)) return null;
+  // The day after the last preview day.
+  if (now >= Date.parse(`${RADIANCE_PREVIEW_END}T00:00:00Z`) + 86_400_000) return "launch";
+  return now >= Date.parse(`${RADIANCE_PREVIEW_START}T00:00:00Z`) ? "live" : "soon";
+}
 
 export function RadianceSeasonBanner() {
-  const [phase, setPhase] = useState<"soon" | "live" | null>(null);
+  const [phase, setPhase] = useState<Phase | null>(null);
 
   useEffect(() => {
+    const p = phaseAt(Date.now());
+    if (!p) return;
     try {
-      if (localStorage.getItem(DISMISS_KEY)) return;
+      if (localStorage.getItem(p === "launch" ? LAUNCH_DISMISS_KEY : DISMISS_KEY)) return;
     } catch {
       /* storage blocked — show it; dismissal just won't persist */
     }
-    const now = Date.now();
-    if (now >= Date.parse(`${RADIANCE_RELEASE_DATE}T00:00:00Z`)) return;
-    setPhase(now >= Date.parse(`${RADIANCE_PREVIEW_START}T00:00:00Z`) ? "live" : "soon");
+    setPhase(p);
   }, []);
 
   if (!phase) return null;
   const dismiss = () => {
+    const was = phase;
     setPhase(null);
     try {
-      localStorage.setItem(DISMISS_KEY, "1");
+      localStorage.setItem(was === "launch" ? LAUNCH_DISMISS_KEY : DISMISS_KEY, "1");
     } catch {
       /* fine */
     }
@@ -41,11 +55,15 @@ export function RadianceSeasonBanner() {
 
   return (
     <div role="region" aria-label="Radiance preview season" className="mb-4 flex items-center gap-2 rounded-lg border border-gold/25 bg-gold/10 py-1 pl-3 pr-1 text-xs text-slate-200 sm:text-sm">
-      <Link href="/sets/radiance" className="tap-link min-w-0 flex-1 hover:text-white">
+      <Link href={phase === "launch" ? "/radiance-preorders" : "/sets/radiance"} className="tap-link min-w-0 flex-1 hover:text-white">
         {/* One child: .tap-link is a flex row, which split the label into columns. */}
         <span>
           <span className="font-semibold text-gold">✦ Radiance</span>{" "}
-          {phase === "live" ? "preview season is on — see every card revealed so far →" : "previews start 25 September — follow every reveal →"}
+          {phase === "launch"
+            ? "is out 23 October — compare every store's pre-order price →"
+            : phase === "live"
+              ? "preview season is on — see every card revealed so far →"
+              : "previews start 25 September — follow every reveal →"}
         </span>
       </Link>
       <button type="button" onClick={dismiss} aria-label="Dismiss the Radiance banner" className="tap-icon shrink-0 rounded-md text-slate-400 hover:bg-ink-800 hover:text-white">

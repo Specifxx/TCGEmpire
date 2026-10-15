@@ -60,8 +60,26 @@ export function preorderTableGroups(groups: SealedGroup[]): SealedGroup[] {
   return sortByCheapestOpen(groups.filter((g) => g.listings.length > 0));
 }
 
+// The products most people come for lead the page (owner, 2026-10-15: "move the
+// booster box, the booster packs up to the very top because they're the main
+// ones"). Every other product follows, cheapest open offer first. Within a
+// product nothing changes: its stores are still ranked purely by price and stock.
+export const LEAD_PRODUCT_TYPES = ["Booster Box", "Booster Pack"] as const;
+
+function leadRank(g: SealedGroup): number {
+  const i = (LEAD_PRODUCT_TYPES as readonly string[]).indexOf(g.productType);
+  return i < 0 ? LEAD_PRODUCT_TYPES.length : i;
+}
+
 function sortByCheapestOpen(groups: SealedGroup[]): SealedGroup[] {
-  return [...groups].sort((a, b) => (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity));
+  return [...groups].sort(
+    (a, b) => leadRank(a) - leadRank(b) || (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity),
+  );
+}
+
+/** The in-page anchor for a product's section, for the page's jump links. */
+export function productAnchor(g: Pick<SealedGroup, "groupKey">): string {
+  return `p-${g.groupKey.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
 }
 
 const BADGE: Record<OfferStock, string> = {
@@ -101,7 +119,7 @@ export function PreorderPriceTable({
     <div>
       <p className="text-xs text-slate-500">
         {shown.length} product{shown.length === 1 ? "" : "s"} · {storeCount} store{storeCount === 1 ? "" : "s"} taking
-        pre-orders · sorted by the cheapest open pre-order
+        pre-orders · booster boxes and packs first, then the cheapest open pre-order
       </p>
 
       <div className="mt-4 space-y-4">
@@ -110,7 +128,7 @@ export function PreorderPriceTable({
           const headline = headlineOffer(rows, now);
           const open = openStoreCount(rows, now);
           return (
-            <section key={g.groupKey} className="card-surface overflow-hidden" data-group={g.groupKey}>
+            <section key={g.groupKey} id={productAnchor(g)} className="card-surface scroll-mt-header overflow-hidden" data-group={g.groupKey}>
               <div className="flex items-center justify-between gap-3 border-b border-ink-800 px-4 py-3">
                 <div className="min-w-0">
                   <h3 className="truncate font-bold text-white">{g.name}</h3>

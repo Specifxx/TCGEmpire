@@ -167,7 +167,8 @@ test("RadianceHub is wired into the set page and renders regardless of card coun
 // ── Pre-order table extraction (task 3: reuse an existing component) ───────
 test("the pre-order price table is a single shared component, used by both /radiance-preorders and the hub", () => {
   const preordersPage = read("src/app/radiance-preorders/page.tsx");
-  assert.match(preordersPage, /import \{ PreorderPriceTable, pricedPreorderGroups, preorderTableGroups \} from "@\/components\/PreorderPriceTable"/);
+  // productAnchor (2026-10-15): the page's jump links target the table's own section ids.
+  assert.match(preordersPage, /import \{ PreorderPriceTable, pricedPreorderGroups, preorderTableGroups, productAnchor \} from "@\/components\/PreorderPriceTable"/);
   // Every listed group, sold-out ones included (2026-09-24): the table badges
   // stock itself, so the caller no longer pre-filters to priced groups.
   // `page` (2026-09-26): names the page to EPN's customid and buy_click — the

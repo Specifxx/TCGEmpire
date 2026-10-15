@@ -34,9 +34,11 @@ test("the callout sits on three real Radiance posts and retires with the season"
 
 test("the sitewide banner is slim, dismissible, client-decided and gone on release day", () => {
   const b = read("src/components/RadianceSeasonBanner.tsx");
-  assert.match(b, /localStorage\.getItem\(DISMISS_KEY\)/);
-  assert.match(b, /localStorage\.setItem\(DISMISS_KEY, "1"\)/);
-  assert.match(b, /if \(now >= Date\.parse\(`\$\{RADIANCE_RELEASE_DATE\}T00:00:00Z`\)\) return;/);
+  // Since 2026-10-15 a third, "launch" phase (after previews end) has its own dismissal key.
+  assert.match(b, /localStorage\.getItem\(p === "launch" \? LAUNCH_DISMISS_KEY : DISMISS_KEY\)/);
+  assert.match(b, /localStorage\.setItem\(was === "launch" \? LAUNCH_DISMISS_KEY : DISMISS_KEY, "1"\)/);
+  assert.match(b, /if \(now >= Date\.parse\(`\$\{RADIANCE_RELEASE_DATE\}T00:00:00Z`\)\) return null;/);
+  assert.match(b, /href=\{phase === "launch" \? "\/radiance-preorders" : "\/sets\/radiance"\}/);
   assert.match(b, /aria-label="Dismiss the Radiance banner"/);
   assert.match(read("src/app/layout.tsx"), /<RadianceSeasonBanner \/>/);
 });

@@ -17133,3 +17133,14 @@ Each site links its home and two or three deep pages a Riftbound reader would us
 **What to expect, honestly.** Fewer visitors hit the limit, so `search_limit_shown` and `search_limit` sign-ups fall. Whether bounce and pages per session recover is the open question: with under 1% of visitors meeting the old limit, the limit cannot account for all of that 33% drop. Google clicks fell in the same week for other reasons. Re-run `impact-report` and compare GA4 bounce and `buy_click` per session about a week after this release. If bounce has not moved, the limit was not the cause, and `SEARCH_CAPS=off` is the next test.
 
 Landed with `[deploy]` at the owner's request ("deploy it directly").
+
+## /radiance-preorders for launch week: boxes and packs first, a summary band, a share image — 2026-10-15
+
+**Owner:** "a page we can post to Reddit on Radiance... something we can really index on the Radiance prices and pre-orders... it needs to have a very, very nice thumbnail... move the booster box, the booster packs up to the very top because they're the main ones... make the page styled a bit better." Deployed immediately at the owner's request.
+
+- **Order.** `PreorderPriceTable`'s product order is now Booster Box, then Booster Pack, then every other product by its cheapest open offer (`LEAD_PRODUCT_TYPES`). Within a product nothing changed: stores are still ranked by price and stock. The same order feeds the hub table and the ItemList structured data.
+- **Header.** A summary band computed from the same groups the table draws: booster box from / up to, booster pack from (or "None open yet"), stores taking pre-orders in the market, and open pre-orders. Three Radiance cards from `public/radiance-spoilers` sit beside the heading on wider screens. Under it, one jump chip per product links to the table's sections (`productAnchor`).
+- **Share image.** `src/app/radiance-preorders/opengraph-image.tsx`, static and built once: Radiance card art inlined from `public/`, Inter ExtraBold committed at `assets/fonts/` (OFL) because ImageResponse's bundled font has one weight. It has no price and no live count, since every platform caches a share image.
+- **Sitewide banner.** Preview season ended on 9 October, but the banner still said "preview season is on". From the day after `RADIANCE_PREVIEW_END` it now says "Radiance is out 23 October — compare every store's pre-order price" and links here, with its own dismissal key. It still disappears on release day.
+
+**The numbers for the Reddit post** (`data/public/sealed-listings.json`, 14 October vs the first export on 9 October): Radiance listings at 85 stores and marketplaces across six markets (79 on 9 October), 239 listings, 142 open pre-orders (135). Added that week: Axion Now, Cardmarket, Le Chevalier, Spellroo Gaming, The Games District, Trinket Mage.
