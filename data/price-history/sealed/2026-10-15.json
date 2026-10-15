@@ -120,7 +120,7 @@
     "OGS|Proving Grounds": {
       "AU": 9995,
       "CA": 999,
-      "EU": 888,
+      "EU": 886,
       "NZ": 9000,
       "UK": 2999,
       "US": 800
@@ -135,13 +135,13 @@
       "EU": 11499,
       "SG": 19031,
       "UK": 11500,
-      "US": 12997
+      "US": 14472
     },
     "RAD|Booster Case": {
       "CA": 131121,
       "EU": 66000,
       "UK": 42236,
-      "US": 89985
+      "US": 87000
     },
     "RAD|Booster Pack": {
       "CA": 799,
@@ -158,7 +158,7 @@
       "US": 4999
     },
     "RAD|Bundle Case": {
-      "US": 159998
+      "US": 149900
     },
     "RAD|Champion Deck": {
       "EU": 2999
@@ -214,7 +214,7 @@
       "US": 575
     },
     "SFD|Bulk Runes": {
-      "US": 1250
+      "US": 1200
     },
     "SFD|Bulk Runes Case": {
       "US": 10000
@@ -250,7 +250,7 @@
     },
     "SFD|Champion Deck (Fiora) Display": {
       "AU": 4000,
-      "US": 9000
+      "US": 8514
     },
     "SFD|Champion Deck (Rumble)": {
       "AU": 2299,
@@ -396,7 +396,7 @@
       "EU": 1146,
       "SG": 1479,
       "UK": 1080,
-      "US": 799
+      "US": 750
     },
     "UNL|Pre-Rift Event Kit": {
       "CA": 5139,
@@ -422,7 +422,7 @@
       "US": 1001
     },
     "UNL|Sleeved Booster (Art Set)": {
-      "US": 2399
+      "US": 3398
     },
     "UNL|Starter Set": {
       "AU": 4000,
@@ -435,7 +435,7 @@
       "NZ": 21500,
       "SG": 22000,
       "UK": 11510,
-      "US": 13699
+      "US": 13499
     },
     "VEN|Booster Case": {
       "AU": 136270,
@@ -475,7 +475,7 @@
       "EU": 4300
     },
     "VEN|Nexus Night Pack": {
-      "US": 924
+      "US": 920
     },
     "VEN|Pre-Rift Event Kit": {
       "CA": 6110,
@@ -553,7 +553,7 @@
       "US": 23968
     },
     "legacyboosterdisplaycase": {
-      "US": 144000
+      "US": 141000
     },
     "legacypreriftkit": {
       "US": 11000
