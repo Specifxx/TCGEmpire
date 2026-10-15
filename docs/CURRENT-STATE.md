@@ -708,6 +708,10 @@ longer lands on its entry.
   Cardmarket, TCGplayer): CJK in any script or word, and French (`french`,
   `FR`, `VF`, Origines, Déchaînés). Add a language there, never per source.
   [2026-10-12](../DECISIONS.md#L16892)
+  **The one exception is `lib/regional-printings.ts`:** four cards that exist only
+  in Korean or Chinese (Jinx and Yasuo KR promos, Ahri 303a KR, Seraphine 174a* CN)
+  are priced from eBay listings in their language that name that printing.
+  Add a card there, never loosen `FOREIGN_LANG`. [2026-10-15](../DECISIONS.md#L17148)
 - **TCGplayer is a buyable comparison row in every market but Australia**
   (US `tcgplayer`; UK/SG/CA/EU the same price converted): the cheapest English
   NM listing, else TCGplayer's market (last-sold) price, in stock either way.
