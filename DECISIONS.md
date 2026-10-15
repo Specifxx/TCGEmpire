@@ -17199,6 +17199,7 @@ Landed with `[deploy]` at the owner's request ("deploy it immediately when you'r
 - **Applications** post to `/api/contact` with the subject "Creator application: <name> (<platform>)". They are saved to ContactMessage, shown in /admin/messages and emailed to the owner (`notifyOwnerBounded`). No new table.
 - **Homepage:** `CreatorsTeaser`, a slim strip under the popular-cards carousel (faces when there are creators, an invitation while there are none). **Nav:** "Riftbound Creators" moved from Help to Guides & News, beside Community links. Share image: `app/creators/opengraph-image.tsx`.
 - Deployed immediately at the owner's request.
+
 ## A K/DA post, and a HEARTSTEEL refresh rather than a third HEARTSTEEL post — 2026-10-15
 
 **Owner:** "we probably want like a blog post each on Riftbound KDA cards and Riftbound [HEARTSTEEL] cards… we previously did pretty well with the Crystal Rose card… deploy to main immediately when done."
