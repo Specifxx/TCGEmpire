@@ -21,7 +21,7 @@ import {
 import { PremiumPricingCards } from "@/components/PremiumPricingCards";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { SubscriptionActions } from "@/components/SubscriptionActions";
-import { TierComparisonTable } from "@/components/TierComparisonTable";
+import { PremiumMissingGrid } from "@/components/PremiumMissingGrid";
 import {
   SITE_URL,
   PREMIUM_PRICE_AMOUNT,
@@ -310,6 +310,27 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         </p>
       </div>
 
+      {/* WHAT YOU'RE MISSING, FIRST (2026-10-15, owner: "we need to show what
+          users are missing out on at the very top so like the ticks and crosses
+          must be visible as well as formatted nicely on a phone screen"). This
+          reverses "plans first" (2026-09-29) for the grid only: the ticks and
+          crosses come straight after the hero, the plan cards straight after
+          them. The visitor's own column says "You". Not shown to a Premium
+          member, who has every tick. */}
+      {currentTier !== "premium" && (
+        <section className="mt-4 sm:mt-6" aria-labelledby="whats-missing">
+          <h2 id="whats-missing" className="mb-2 text-center text-base font-extrabold text-white sm:text-lg">
+            {currentTier === "plus" ? "What Premium adds" : user ? "What your free account is missing" : "What you're missing"}
+          </h2>
+          <PremiumMissingGrid
+            you={currentTier === "plus" ? "plus" : "free"}
+            showPlus={plusLive}
+            plusPrice={tierMonthlyAmount("plus")}
+            premiumPrice={PREMIUM_PRICE_AMOUNT}
+          />
+        </section>
+      )}
+
       {/* Pricing */}
       {/* THE LOCK-IN BANNER: only while a real, higher price is announced
           (premiumPriceIncreaseAnnounced — NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT
@@ -520,14 +541,8 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         </p>
       </section>
 
-      {/* Feature comparison — collapsed, and still in the server HTML (a closed
-          <details> keeps its content in the document). */}
-      <details className="card-surface mt-8 rounded-xl border border-ink-700">
-        <summary className="cursor-pointer p-4 text-center text-sm font-bold text-white">Compare every feature</summary>
-        <div className="px-1 pb-2">
-          <TierComparisonTable showPlus={plusLive} tinted />
-        </div>
-      </details>
+      {/* The collapsed full-feature table went on 2026-10-15: the
+          grid at the top is the comparison now. */}
 
       {/* FAQ — rendered visibly (not just as JSON-LD above) so Google honours
           the FAQPage markup. Collapsed, every answer a few lines. */}

@@ -787,48 +787,30 @@ body {
 
 /* ---------------------------------------------------------------------------
    .premium-cta: the header's "Get Premium" button (GetPremiumLink.tsx).
-   RESTORED 2026-10-15 at the owner's request ("shiny … a gradient and shining,
-   and when you hover over it … even more shiny"), reversing the 2026-09-28
-   removal of .premium-shimmer above.
-   REWORKED the same day (owner: "just having the whole thing highlighted is not
-   good … it kind of glows and it's shiny … but it's not like you have a whole
-   thing highlighted. That just makes it look AI generated"): no gold fill. A
-   dark button with a faint gold tint, a thin gold outline that a light sweeps
-   along, gold text with the old shimmer travelling across it in step, and a
-   soft halo that breathes. Hover brightens the halo and speeds the sweep up.
+   RESTORED 2026-10-15 at the owner's request ("shiny … a gradient and shining"),
+   reversing the 2026-09-28 removal of .premium-shimmer above. Reworked twice the
+   same day. First the solid gold fill went ("the whole thing highlighted … looks
+   AI generated"); then the outline and the box glow went too: "I still dont like
+   how you colour the entire box I only want the font to be glowing". So the BOX
+   is invisible: no fill, no border, no shadow. Only the label shines: gold text
+   with the old shimmer travelling through it, and a soft gold glow around the
+   letters that breathes (filter: drop-shadow, which follows the glyphs even with
+   background-clip:text, where text-shadow would paint over the gradient).
+   Hover brightens the glow and speeds the shimmer.
    Text: gold on the dark header (#caa85a, ~8:1), dark gold on the light one
-   (#7a5f14, 5.58:1). The global prefers-reduced-motion block stops all three
-   animations, leaving a still gold outline and gold text.
+   (#7a5f14, 5.58:1). The global prefers-reduced-motion block stops both
+   animations, leaving still gold text with a faint glow.
    --------------------------------------------------------------------------- */
 .premium-cta {
-  position: relative;
-  isolation: isolate;
   color: #caa85a;
-  background: linear-gradient(180deg, rgb(202 168 90 / 0.12), rgb(202 168 90 / 0.03));
-  box-shadow: 0 0 10px rgb(243 212 136 / 0.18), inset 0 0 10px rgb(243 212 136 / 0.06);
+  background: none;
+  transition: transform 200ms ease;
+}
+.premium-cta-label {
+  color: #caa85a;
+  filter: drop-shadow(0 0 4px rgb(243 212 136 / 0.45));
   animation: premium-cta-glow 3.2s ease-in-out infinite;
-  transition: background 200ms ease, transform 200ms ease;
 }
-/* The outline: a gradient border (masked to a 1px ring) whose bright band
-   travels round in step with the text's sheen. */
-.premium-cta::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  padding: 1px;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(110deg, rgb(202 168 90 / 0.65) 0%, rgb(202 168 90 / 0.65) 38%, #fff3cc 50%, rgb(202 168 90 / 0.65) 62%, rgb(202 168 90 / 0.65) 100%);
-  background-size: 250% 100%;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: premium-cta-sweep 4s linear infinite;
-}
-/* The label: gold text with a light passing across it. A separate element,
-   because background-clip:text on the link itself would clip the tint above. */
-.premium-cta-label { color: #caa85a; }
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .premium-cta-label {
     background-image: linear-gradient(110deg, #caa85a 0%, #caa85a 38%, #fff3cc 50%, #caa85a 62%, #caa85a 100%);
@@ -836,41 +818,35 @@ body {
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: premium-cta-sweep 4s linear infinite;
+    animation: premium-cta-sweep 4s linear infinite, premium-cta-glow 3.2s ease-in-out infinite;
   }
 }
 .premium-cta:hover,
-.premium-cta:focus-visible {
-  background: linear-gradient(180deg, rgb(202 168 90 / 0.2), rgb(202 168 90 / 0.06));
-  transform: translateY(-1px);
-  animation: premium-cta-glow-hover 1.6s ease-in-out infinite;
-}
-.premium-cta:hover::before,
-.premium-cta:focus-visible::before,
+.premium-cta:focus-visible { transform: translateY(-1px); }
+/* Hover swaps the glow keyframes for brighter ones (an animated filter would
+   override a plain hover filter) and speeds the shimmer up. */
 .premium-cta:hover .premium-cta-label,
-.premium-cta:focus-visible .premium-cta-label { animation-duration: 1.6s; }
+.premium-cta:focus-visible .premium-cta-label {
+  animation: premium-cta-sweep 1.6s linear infinite, premium-cta-glow-hover 1.6s ease-in-out infinite;
+}
 .premium-cta:focus-visible { outline: 2px solid #f8e6ae; outline-offset: 2px; }
 @keyframes premium-cta-sweep {
   0% { background-position: 180% 50%; }
   100% { background-position: -80% 50%; }
 }
 @keyframes premium-cta-glow {
-  0%, 100% { box-shadow: 0 0 10px rgb(243 212 136 / 0.2), inset 0 0 10px rgb(243 212 136 / 0.06); }
-  50% { box-shadow: 0 0 18px rgb(243 212 136 / 0.4), inset 0 0 12px rgb(243 212 136 / 0.12); }
+  0%, 100% { filter: drop-shadow(0 0 3px rgb(243 212 136 / 0.35)); }
+  50% { filter: drop-shadow(0 0 8px rgb(243 212 136 / 0.75)); }
 }
 @keyframes premium-cta-glow-hover {
-  0%, 100% { box-shadow: 0 0 16px rgb(243 212 136 / 0.4), 0 0 32px rgb(202 168 90 / 0.18), inset 0 0 12px rgb(243 212 136 / 0.12); }
-  50% { box-shadow: 0 0 22px rgb(243 212 136 / 0.55), 0 0 44px rgb(202 168 90 / 0.25), inset 0 0 14px rgb(243 212 136 / 0.16); }
+  0%, 100% { filter: drop-shadow(0 0 6px rgb(243 212 136 / 0.8)) drop-shadow(0 0 12px rgb(202 168 90 / 0.4)); }
+  50% { filter: drop-shadow(0 0 9px rgb(255 240 190 / 0.95)) drop-shadow(0 0 18px rgb(202 168 90 / 0.55)); }
 }
-/* Light theme: the same build in the palette's text gold, so the label keeps
-   5.58:1 on the white header (the highlight dips to 3.59:1 as it passes, as the
-   old shimmer did). */
+/* Light theme: the palette's text gold, and a warmer, smaller glow so the label
+   keeps its 5.58:1 on the white header (the highlight dips to 3.59:1 as it
+   passes, as the old shimmer did). */
 :root[data-theme="light"] .premium-cta,
 :root[data-theme="light"] .premium-cta-label { color: #7a5f14; }
-:root[data-theme="light"] .premium-cta { background: linear-gradient(180deg, rgb(202 168 90 / 0.14), rgb(202 168 90 / 0.05)); }
-:root[data-theme="light"] .premium-cta::before {
-  background-image: linear-gradient(110deg, #b08a2e 0%, #b08a2e 38%, #f3d488 50%, #b08a2e 62%, #b08a2e 100%);
-}
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   :root[data-theme="light"] .premium-cta-label {
     background-image: linear-gradient(110deg, #7a5f14 0%, #7a5f14 38%, #a07c1c 50%, #7a5f14 62%, #7a5f14 100%);

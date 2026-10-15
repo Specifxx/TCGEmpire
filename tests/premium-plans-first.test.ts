@@ -13,11 +13,15 @@ const cards = readFileSync(join(ROOT, "src/components/PremiumPricingCards.tsx"),
 const cta = readFileSync(join(ROOT, "src/components/PremiumCta.tsx"), "utf8");
 const jsx = page.slice(page.indexOf("export default async function PremiumPage"));
 
-test("the plan cards come straight after the hero, before anything else in the body", () => {
+test("the hero, then what you're missing, then the plan cards, before anything else in the body", () => {
+  // 2026-10-15 (owner: "show what users are missing out on at the very top … the
+  // ticks and crosses must be visible as well as formatted nicely on a phone"):
+  // the ticks-and-crosses grid sits between the hero and the cards.
   const h1 = jsx.indexOf("<h1");
+  const grid = jsx.indexOf("<PremiumMissingGrid");
   const pricing = jsx.indexOf("<PremiumPricingCards");
-  assert.ok(h1 > 0 && pricing > h1, "hero, then the cards");
-  for (const later of ['id="what-you-get"', "<TierComparisonTable", "FAQ.map(", "<PremiumProofLine"]) {
+  assert.ok(h1 > 0 && grid > h1 && pricing > grid, "hero, then the grid, then the cards");
+  for (const later of ['id="what-you-get"', "FAQ.map(", "<PremiumProofLine"]) {
     assert.ok(jsx.indexOf(later) > pricing, `${later} must sit below the plan cards`);
   }
   assert.doesNotMatch(jsx, /personaSections|PersonaSection|FEATURES\.map/, "the persona sections and per-feature cards are gone");
@@ -30,9 +34,14 @@ test("the cards are two across at every width, with a compact button, and no Fre
   assert.doesNotMatch(code(cards), /function FreeCard|\$0/, "no $0 anywhere on the cards");
 });
 
-test("the table is collapsed inside a <details> and the FAQ is one accordion built from the same array as the JSON-LD", () => {
-  const at = jsx.indexOf("<TierComparisonTable");
-  assert.match(jsx.slice(Math.max(0, at - 400), at), /<details[\s\S]*Compare every feature/);
+test("the grid is built for a phone, and the FAQ is one accordion built from the same array as the JSON-LD", () => {
+  const grid = readFileSync(join(ROOT, "src/components/PremiumMissingGrid.tsx"), "utf8");
+  assert.doesNotMatch(jsx, /<TierComparisonTable|Compare every feature/, "the collapsed table went; the grid is the comparison");
+  assert.match(grid, /table-fixed/, "fixed columns, so a long caption wraps instead of widening the table");
+  assert.match(grid, /w-\[64px\] sm:w-\[120px\]/, "64px tier columns on a phone");
+  assert.doesNotMatch(grid, /overflow-x-auto|min-w-\[/, "no sideways scroll and no width floor");
+  assert.match(grid, /c\.key === you/, "the visitor's own column says You");
+  assert.match(jsx, /currentTier !== "premium" && \(/, "a Premium member, who has every tick, is not shown the grid");
   assert.match(jsx, /faqPage\(FAQ\)/);
   assert.match(jsx, /FAQ\.map\(/);
   // Seven questions on the live page; the trial, half-price and price-rise entries

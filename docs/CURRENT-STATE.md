@@ -407,12 +407,14 @@ longer lands on its entry.
   /watching's "What you can watch" block (the sealed quick view's watch button
   sells Plus itself, no second line in an overlay); the deck
   watch form and the sealed heart are the ordinary `PremiumButton` gates
-  (`gate:deck-watch`, `gate:sealed-watch`) below the tier. /premium is PLANS FIRST
-  (2026-09-29, owner: "way too wordy... the buttons... at the bottom"): H1, one
-  short subline, the Monthly/Annual toggle and the two plan cards with their
-  buy buttons are the first screen at 390x844 and 1280x720; then "What you get"
-  (one line a feature, Free / Plus / Premium), the table collapsed in a
-  `<details>`, and a seven-question FAQ. No persona sections, per-feature
+  (`gate:deck-watch`, `gate:sealed-watch`) below the tier. /premium opens with
+  WHAT YOU'RE MISSING (2026-10-15, owner: "ticks and crosses … at the very top …
+  formatted nicely on a phone"; reverses plans-first for this one block): H1, one
+  short subline, then `PremiumMissingGrid` (every row a payment changes, ✓ ◐ ✕
+  with short captions, 64px columns on phones, "You" on the visitor's column,
+  "Get ↓" to the cards; not for Premium members), then the plan cards with their
+  buy buttons; then "What you get" (one line a feature, Free / Plus / Premium) and a
+  seven-question FAQ. [2026-10-15](../DECISIONS.md#L17636). No persona sections, per-feature
   cards, CTA band or sticky bar; the page's own content is about 900 words
   (`tests/premium-plans-first.test.ts`). `PREMIUM_COPY_VERSION`
   `premium-2026-09-29c`. [2026-09-29](../DECISIONS.md#L15178),
@@ -592,10 +594,9 @@ longer lands on its entry.
   [2026-09-24](../DECISIONS.md#L11719)
 - **Gold marks Premium**, so a non-Premium action never wears it. The HEADER
   sells it again since 2026-10-15 (owner: "get premium … shiny"): `GetPremiumLink`,
-  `.premium-cta`: a glowing gold outline with a light travelling round it and
-  shimmering gold text, never a solid gold fill (owner, same day: "the whole thing
-  highlighted … looks AI generated"; [2026-10-15](../DECISIONS.md#L17621)); stronger
-  on hover, still under reduced motion. "✦ Get Premium" from xl and "Premium" in the phone slot
+  `.premium-cta`: glowing, shimmering gold TEXT and nothing else: no fill, no
+  outline, no box glow (owner, same day: "I only want the font to be glowing";
+  [2026-10-15](../DECISIONS.md#L17636)); brighter on hover, still under reduced motion. "✦ Get Premium" from xl and "Premium" in the phone slot
   (from 400px) and at lg; "Upgrade" for Plus, plain gold text for Premium. [2026-10-15](../DECISIONS.md#L17561)
   The rail and account menu keep a plain "Pricing" link. No menu spotlight. Signed-out visitors see "Log in" and a primary
   "Sign up free" at every width. The market switcher (flag only below sm) is

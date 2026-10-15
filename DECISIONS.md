@@ -17632,3 +17632,22 @@ Collections come from sitemap discovery. `riftbound-league-of-legends` and `rift
 - Reduced motion: the global block stops all three animations, leaving a still gold outline and gold text.
 
 Previewed on dark and light header mock-ups at rest and on hover before shipping. Same slots, same labels, same who-sees-what as before. `tests/premium-pitch-panel.test.ts` now pins "a faint tint, not a gold fill", the masked ring and the label span.
+
+## /premium opens with what you're missing; the header button is glowing text only — 2026-10-15
+
+**Owner:** "I still dont like how you colour the entire box I only want the font to be glowing. Also I think we need to completely redesign the premium page. The ticks on what plus and premium does are not enough -> we need to show what users are missing out on at the very top so like the ticks and crosses must be visible as well as formatted nicely on a phone screen. Do this and deploy immediately."
+
+**The header button.** `.premium-cta` loses the box entirely: no fill, no outline ring, no box shadow. Only `.premium-cta-label` shines: gold text with the shimmer travelling through it and a soft gold glow around the letters that breathes. The glow is `filter: drop-shadow`, which follows the glyphs under `background-clip: text`, where `text-shadow` would paint over the gradient. Hover swaps to brighter glow keyframes (an animated `filter` overrides a static hover one) and speeds the shimmer to 1.6s. Light theme: #7a5f14 text, 5.58:1. Reduced motion: still gold text with a faint glow. This supersedes the outline version from earlier the same day.
+
+**/premium: the grid first.** A new `PremiumMissingGrid` sits between the hero and the plan cards, under "What you're missing" ("What your free account is missing" when signed in, "What Premium adds" for Plus). Not shown to a Premium member. It is TIER_COMPARISON in a phone-first shape:
+- Every all-ticks row folds into one "Compare prices, search & every free tool" row, so the rest is exactly what a payment changes (`MISSING_ROWS`, the dialog's own omit rule).
+- Short names (`GRID_LABELS`), with a one-line description from sm up.
+- Each cell is an icon (✓ included, ◐ limited, ✕ not included) with a caption of at most twelve characters under it (`shortCaption`: "Full list + only my cards" → "Full list"). A paid column's string counts as limited only when it equals the free one ("Total only", "Top 10").
+- `table-fixed` with 64px tier columns on phones (120px from sm), no width floor and no sideways scroll. Checked at 390 and 440 wide, dark and light, and at 1280.
+- The visitor's own column carries a "You" chip. Each paid column the visitor is not on has a "Get ↓" link to the plan cards (`#top-pricing`).
+
+**What this reverses.** "Plans first" (2026-09-29) put the plan cards straight after the hero so the buy buttons were on the first screen. The owner now wants the ticks and crosses first. The cards follow directly after the grid, and the "Get ↓" links reach them from the grid's header. The collapsed "Compare every feature" table is gone, since the grid is the comparison. "What you get" and the FAQ stay below.
+
+**Tests.** `premium-plans-first` (hero, grid, cards; the grid's phone layout; no Premium-member grid), `premium-pitch-panel` (text-only glow: `background: none`, no box shadow or border, no `::before`/`::after`, `drop-shadow` on the label), `access-tiers` (the grid is built from the shared rows), and a new `premium-missing-grid` (every differing row has a short name; every caption fits a phone column).
+
+**Shipped with `[deploy]`**, as the owner asked.
