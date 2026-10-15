@@ -544,6 +544,48 @@ export async function siteProbe(d: OpsDeps): Promise<CheckResult> {
   return result(d, { id, area: "site", title, severity: "ok", summary: `${pages.length} key pages load with prices (slowest ${(worstMs / 1000).toFixed(1)} s).` });
 }
 
+// ── Partner data ────────────────────────────────────────────────────────────
+
+/**
+ * DexCompare's browse index (www.dexcompare.app/api/browse/<region>), which the Pokémon
+ * section reads for its "Independent stores" lines (DECISIONS.md, 2026-10-15). The
+ * section hides those lines quietly when the index cannot be read, so nothing on the
+ * site would say they had gone: this does. Unreachable is grey (another site's outage,
+ * nothing to do here); a format the section no longer understands is amber.
+ */
+export async function dexcompareIndex(d: OpsDeps): Promise<CheckResult> {
+  const id = "partner:dexcompare";
+  const title = "DexCompare store prices (Pokémon)";
+  let body: unknown;
+  try {
+    const res = await retry(d, async () => {
+      const r = await d.fetch("https://www.dexcompare.app/api/browse/us", { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+      if (r.status >= 500) throw new Error(`HTTP ${r.status}`);
+      return r;
+    });
+    if (!res.ok) return unknown(d, id, "data", title, `DexCompare answered HTTP ${res.status}.`);
+    body = await res.json();
+  } catch (e) {
+    return unknown(d, id, "data", title, `DexCompare could not be reached (${msg(e)}).`);
+  }
+  // The shape the section's parser accepts: version 1, the region, and rows whose
+  // image is a TCGplayer one (the join key). Kept in step with it by the test.
+  const b = (body ?? {}) as { v?: unknown; region?: unknown; rows?: unknown };
+  const rows = Array.isArray(b.rows) ? b.rows : [];
+  const joinable = rows.filter((r) => Array.isArray(r) && typeof r[4] === "string" && /tcgplayer-cdn\.tcgplayer\.com\/product\/\d+_/.test(r[4])).length;
+  if (b.v !== 1 || b.region !== "us" || joinable < 100) {
+    return result(d, {
+      id,
+      area: "data",
+      title,
+      severity: "warn",
+      summary: `DexCompare's index changed: version ${String(b.v)}, ${rows.length} rows, ${joinable} with a TCGplayer image. The Pokémon pages are hiding their store prices.`,
+      action: 'Tell Claude: "DexCompare\'s browse index changed format; update the Pokémon section\'s DexCompare parser" and paste this email.',
+    });
+  }
+  return result(d, { id, area: "data", title, severity: "ok", summary: `${rows.length} US products, ${joinable} joinable by TCGplayer id.` });
+}
+
 // ── Money ───────────────────────────────────────────────────────────────────
 
 export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
@@ -764,6 +806,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("jobs", "site", "Scheduled jobs", () => scheduledJobs(d));
   await add("deploy:production", "site", "Latest production build", () => deployState(d));
   await add("site:live", "site", "Live site", () => siteProbe(d));
+  await add("partner:dexcompare", "data", "DexCompare store prices (Pokémon)", () => dexcompareIndex(d));
 
   await add("stripe", "money", "Stripe", () => stripeChecks(d));
   await add("site:self", "email", "Email and site settings", () => siteSelfChecks(d));

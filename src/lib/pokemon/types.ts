@@ -3,6 +3,7 @@
 
 import type { Country } from "../country";
 import type { PkKind } from "./kinds";
+import type { DexTileFigures } from "./dexcompare";
 
 export type PkSource = "tcgplayer" | "tcgplayer_market" | "ebay" | "cardmarket" | "cardmarket_trend";
 export type PkListingSource = "tcgplayer" | "ebay" | "cardmarket";
@@ -99,6 +100,12 @@ export interface PkTile {
   packCountFrom: "contents" | "name" | null;
   /** lowCents ÷ packCount, in the market's currency; null when either is unknown. */
   perPackCents: number | null;
+  /**
+   * DexCompare's store figures in this market (lib/pokemon/dexcompare.ts), attached
+   * by the grid page from its own cache, never stored in the catalogue. Absent or
+   * null: not joined, or DexCompare could not be read.
+   */
+  dex?: DexTileFigures | null;
 }
 
 export interface PkSetSummary {

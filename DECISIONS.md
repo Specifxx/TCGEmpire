@@ -17133,3 +17133,30 @@ Each site links its home and two or three deep pages a Riftbound reader would us
 **What to expect, honestly.** Fewer visitors hit the limit, so `search_limit_shown` and `search_limit` sign-ups fall. Whether bounce and pages per session recover is the open question: with under 1% of visitors meeting the old limit, the limit cannot account for all of that 33% drop. Google clicks fell in the same week for other reasons. Re-run `impact-report` and compare GA4 bounce and `buy_click` per session about a week after this release. If bounce has not moved, the limit was not the cause, and `SEARCH_CAPS=off` is the next test.
 
 Landed with `[deploy]` at the owner's request ("deploy it directly").
+
+## The Pokémon section shows DexCompare's store prices, and DexCompare links back — 2026-10-15
+
+**Owner:** "the Pokemon section in Rift Compare has really gotten some traction … people have clicked affiliate links and bought items … uplift that section … I kind of want to know how I can connect it to Dex Compare … make things seamless … get more people to click on it, get more people to buy stuff … deploy it immediately." This settles the README's open question ("whether to cross-link, consolidate or keep both is the owner's call"): keep both, connected.
+
+**The gap it fills.** The section prices TCGplayer (US listings) and eBay (~29 products, five markets). Outside the US most product boards said "No listing we track in Australia for this one yet". DexCompare reads 200-odd independent stores in the same markets, which is exactly that missing column.
+
+**The join is exact, never by name.** The section's product id is TCGplayer's productId. DexCompare's product images are TCGplayer's CDN images (`…/product/<productId>_in_1000x1000.jpg`). Measured against the live set pages: 607 of 713 products join (85%). Almost all of the rest are half boxes, retailer exclusives and art variants that DexCompare groups or does not list. An unjoined product links DexCompare's page for its set, and only when DexCompare has that set in that market. It never quotes a price.
+
+**No database, and no new DexCompare endpoint.** `lib/pokemon/dexcompare-data.ts` `getDexMarket(market)` fetches DexCompare's public browse index (`/api/browse/<region>`, CDN-cached there for a day: the file its own search box loads). It parses it into a join table (TCGplayer id → slug, cheapest open price, stores in stock, stores listing it, TCGplayer open) of ~10–95 KB per market, and caches that with `cachedOrDirect` under the section's tag and TTL (21600, so no page TTL inversion). It is listed in `tests/nested-cache.test.ts`. The parser refuses another index version, region or an empty index by throwing inside the cache, so the last good entry keeps serving. The loader catches the error outside the cache, so a page renders without the stores line instead of failing. DexCompare's CDN sees about one request per market per six hours, plus one after each Pokémon import's purge.
+
+**Where it shows.**
+- **Product board and quick view.** An "Independent stores" block: "In stock at 8 of 17 stores · from A$335.00", "Compare 17 stores on DexCompare ↗". It sits under the listings. It moves above them when there are none, or when the cheapest store is below the cheapest listing ("Cheaper at a store"). That badge is never given when TCGplayer is in DexCompare's figure, since DexCompare's US cheapest can be TCGplayer's own price. It is not an offer row. It summarises many stores and its link goes to DexCompare, not to a store, so it is never ranked inside the comparison (the README's "References below the comparison" rule, kept). A pre-order says "Open for pre-order at …", because DexCompare counts a store taking pre-orders as in stock.
+- **The every-market table.** An "At stores" column.
+- **Grids.** On a tile with no tracked listing, "cheapest of 8 stores" becomes the figure, with its price per pack. On a tile that has a listing, a line "8 stores from …" is added. The kind hubs get an "At stores" column that links this site's product page, where the stores sit beside TCGplayer and eBay. Per-pack rankings, hub prose and share text are unchanged: they stay on the section's own sources.
+- **The set page.** "Compare <set> at Australian stores on DexCompare ↗".
+- **The section home.** A band: "Rather buy from a shop? DexCompare … has 550 Pokémon sealed products in stock at Australian stores". The subnav gets a "Store prices ↗" link for the visitor's market.
+
+**Links: a new tab, nofollow, measured.** Every DexCompare link opens a new tab (the visitor keeps this page and its TCGplayer and eBay buttons) and carries `rel="nofollow noopener"`. `lib/sister-sites.ts` keeps FOLLOWED links to the footer and a few articles, because four look-alike sites cross-linked sitewide read as a link network. These are data links on about a thousand product pages, so they are nofollow. UTM `utm_source=riftcompare&utm_campaign=pkmn-<surface>` and the event `pokemon_dexcompare_click` (`surface`, `market`, `product`) measure them.
+
+**The way back.** `/pokemon/tcgplayer/<id>` redirects (307, CDN a day) to the product's page, or to `/pokemon` for an id the catalogue does not carry. It reads only the cached US catalogue. DexCompare's product pages link it ("Price history: TCGplayer's market price … on RiftCompare's Pokémon section ↗", nofollow) for a product with a TCGplayer image from a set released on or after 2020-02-07. That history is what DexCompare deliberately does not store.
+
+**Watched.** The ops monitor's `partner:dexcompare` check reads the US index. It is amber when the format changes (version, region, or fewer than 100 joinable rows), because the pages would hide their store lines without saying so. It is grey when DexCompare cannot be reached.
+
+**Checked** against a local import (TCGCSV, 1,021 products) and DexCompare's live indexes, at 390 and 1280 px, AU / US / UK: no horizontal overflow, every DexCompare link nofollow and in a new tab, the UK hub's booster boxes showing store prices where every row had said "No tracked listing".
+
+Landed with `[deploy]` at the owner's request ("deploy it immediately when you're done").

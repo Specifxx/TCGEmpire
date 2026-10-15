@@ -56,6 +56,7 @@ test("every host touchpoint that renders or lists something is behind the switch
   assert.match(read("src/app/pokemon/layout.tsx"), /if \(!pokemonEnabled\(\)\) notFound\(\);/);
   assert.match(read("src/app/api/pokemon/revalidate/route.ts"), /if \(!pokemonEnabled\(\)\)/);
   assert.match(read("src/app/api/pokemon/product/[slug]/route.ts"), /if \(!pokemonEnabled\(\)\)/);
+  assert.match(read("src/app/pokemon/tcgplayer/[id]/route.ts"), /if \(!pokemonEnabled\(\)\)/);
   assert.match(read("src/lib/pokemon/sitemap.ts"), /if \(!pokemonEnabled\(\)\) return \[\];/);
   // Route handlers and opengraph-image files skip app/pokemon/layout.tsx, so
   // each gates itself.

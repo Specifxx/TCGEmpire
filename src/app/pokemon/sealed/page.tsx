@@ -7,6 +7,8 @@ import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { ebaySearchUrl } from "@/lib/affiliate";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
 import { getPokemonCatalog } from "@/lib/pokemon/data";
+import { getDexMarket } from "@/lib/pokemon/dexcompare-data";
+import { withDex } from "@/lib/pokemon/dexcompare";
 import { SETLESS, SORTS, filterTiles, isFiltered, pageOf, parseBrowse, sealedIndexing, searchTitle, sortTiles, toDisplay } from "@/lib/pokemon/browse";
 import { PK_KINDS } from "@/lib/pokemon/kinds";
 import { pokemonEbayQuery } from "@/lib/pokemon/ebay-query";
@@ -69,7 +71,8 @@ export default async function PokemonSealedPage({ searchParams }: { searchParams
   const all = catalog.tiles;
   const results = sortTiles(filterTiles(all, query), query.sort);
   const { items, page, pages } = pageOf(results, query.page);
-  const shown = toDisplay(items, showEur);
+  // DexCompare's store figures for this page's tiles (self-cached, no database).
+  const shown = toDisplay(withDex(items, await getDexMarket(country)), showEur);
 
   const kindOptions = PK_KINDS.filter((k) => all.some((t) => t.kind === k.id)).map((k) => ({ value: k.id, label: k.plural }));
   const setOptions = [

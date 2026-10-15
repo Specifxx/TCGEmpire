@@ -5,6 +5,8 @@ import { kindInfo } from "@/lib/pokemon/kinds";
 import { formatDay, pokemonImageAlt, sourceWord, thumbOf } from "@/lib/pokemon/format";
 import { formatPerPack } from "@/lib/pokemon/value";
 import type { PkTile } from "@/lib/pokemon/types";
+import { perPackCents } from "@/lib/pokemon/packs";
+import { storesWord } from "@/lib/pokemon/dexcompare";
 import { usePokemonQuickView } from "./PokemonQuickView";
 
 // A Pokémon sealed product on a grid. Built on SealedTile's frame, with one
@@ -30,6 +32,11 @@ export function PokemonTile({
   const kind = kindInfo(tile.kind);
   const thumb = thumbOf(tile.imageUrl);
   const released = formatDay(tile.releasedOn);
+  // DexCompare's stores (lib/pokemon/dexcompare.ts), when the grid attached them.
+  // A store figure only: in the US, DexCompare's cheapest can be TCGplayer's.
+  const dex = tile.dex ?? null;
+  const storesOpen = dex != null && dex.cents != null && dex.inStock > 0;
+  const storePrice = storesOpen && !dex.marketplace ? (dex.cents as number) : null;
 
   return (
     <a
@@ -90,6 +97,45 @@ export function PokemonTile({
             {tile.perPackCents != null && (
               <div className="num mt-0.5 whitespace-nowrap text-[11px] text-slate-300">{formatPerPack(tile.perPackCents, currency)}</div>
             )}
+            {storesOpen && (
+              <div className="mt-1 truncate text-[11px] font-semibold text-emerald-300">
+                {storePrice != null ? (
+                  <>
+                    {storesWord(dex.inStock)} from <span className="num">{formatMoney(storePrice, currency)}</span>
+                  </>
+                ) : (
+                  `${tile.presale ? "At" : "In stock at"} ${storesWord(dex.inStock)}`
+                )}
+              </div>
+            )}
+          </div>
+        ) : storePrice != null && dex ? (
+          // No listing we track here, but independent stores have it (DexCompare):
+          // their cheapest is the figure, and the quick view links the comparison.
+          <div className="mt-auto pt-1">
+            <div className="flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
+              <div className="min-w-0">
+                <div className="text-[11px] text-slate-500">cheapest of {storesWord(dex.inStock)}</div>
+                <div className="num whitespace-nowrap text-lg font-bold text-accent">{formatMoney(storePrice, currency)}</div>
+              </div>
+              {tile.refCents != null && (
+                <div className="shrink-0 text-right text-[11px] leading-tight text-slate-500">
+                  <span className="block">TCGplayer market</span>
+                  <span className="num font-semibold text-slate-300">
+                    {currency === "USD" ? "" : "≈ "}
+                    {formatMoney(tile.refCents, currency)}
+                  </span>
+                </div>
+              )}
+            </div>
+            {perPackCents(storePrice, tile.packCount) != null && (
+              <div className="num mt-0.5 whitespace-nowrap text-[11px] text-slate-300">
+                {formatPerPack(perPackCents(storePrice, tile.packCount) as number, currency)}
+              </div>
+            )}
+            <span className="mt-1.5 inline-block rounded-md bg-emerald-500/15 px-2 py-1 text-[11px] font-semibold text-emerald-300">
+              Compare stores →
+            </span>
           </div>
         ) : (
           // No listing we track in this market (most tins and blisters outside

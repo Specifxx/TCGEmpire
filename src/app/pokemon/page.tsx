@@ -8,6 +8,9 @@ import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
 import { getPokemonCatalog } from "@/lib/pokemon/data";
+import { getDexMarket } from "@/lib/pokemon/dexcompare-data";
+import { withDex } from "@/lib/pokemon/dexcompare";
+import { HomeStoresBand } from "@/components/pokemon/HomeStoresBand";
 import { toDisplay } from "@/lib/pokemon/browse";
 import { pokemonFaq } from "@/lib/pokemon/copy";
 import { pokemonEbayQuery, pokemonSetEbayQuery } from "@/lib/pokemon/ebay-query";
@@ -59,8 +62,8 @@ export default async function PokemonHub() {
   const currency = getDisplayCurrency(country);
   const showEur = country === "UK" && currency === "EUR";
   const place = COUNTRIES[country].place;
-  const raw = await getPokemonCatalog(country);
-  const catalog = { ...raw, tiles: toDisplay(raw.tiles, showEur) };
+  const [raw, dex] = await Promise.all([getPokemonCatalog(country), getDexMarket(country)]);
+  const catalog = { ...raw, tiles: toDisplay(withDex(raw.tiles, dex), showEur) };
   const home = buildHome(catalog, country, new Date().toISOString().slice(0, 10));
   // This market's sources, not catalog.sources: that one is every market's,
   // so it would name Cardmarket in the US and TCGplayer listings in Singapore.
@@ -101,6 +104,8 @@ export default async function PokemonHub() {
       <Breadcrumbs trail={[{ name: "Pokémon", href: "/pokemon" }]} />
 
       <HomeHero stats={home.stats} place={place} converted={currency !== "USD"} />
+
+      <HomeStoresBand market={country} inStockProducts={dex?.inStockProducts ?? null} />
 
       {hasTiles && (
         <>

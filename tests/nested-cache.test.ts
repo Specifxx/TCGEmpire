@@ -73,6 +73,10 @@ const SELF_CACHED = [
   // cachedOrDirect under the "pokemon" tag.
   "getPokemonCatalog",
   "getPokemonProduct",
+  // 2026-10-15: DexCompare's store figures (lib/pokemon/dexcompare-data.ts), a
+  // cachedOrDirect per market over a fetch of DexCompare's browse index.
+  "getDexMarket",
+  "getDexMarkets",
 ];
 
 function walk(dir: string, out: string[] = []): string[] {

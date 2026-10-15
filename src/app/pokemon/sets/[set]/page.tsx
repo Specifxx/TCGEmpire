@@ -7,6 +7,10 @@ import { ldJson, webPage } from "@/lib/jsonld";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
 import { getPokemonCatalog } from "@/lib/pokemon/data";
+import { getDexMarket } from "@/lib/pokemon/dexcompare-data";
+import { dexHref, dexSetSlug, withDex } from "@/lib/pokemon/dexcompare";
+import { DexAnchor } from "@/components/pokemon/DexStores";
+import { COUNTRIES } from "@/lib/country";
 import { sortTiles, toDisplay } from "@/lib/pokemon/browse";
 import { PK_KINDS } from "@/lib/pokemon/kinds";
 import { formatDay } from "@/lib/pokemon/format";
@@ -70,7 +74,12 @@ export default async function PokemonSetPage({ params }: { params: Params }) {
   const country = getCountry();
   const loaded = await load(params.set, country);
   if (!loaded) notFound();
-  const catalog = displayed(loaded.catalog, country);
+  // DexCompare's store figures for the tiles (self-cached, no database), attached
+  // before the display conversion so a UK euro view converts them too, and its
+  // page for this set when it has one in this market.
+  const dexIndex = await getDexMarket(country);
+  const dexSet = dexSetSlug(dexIndex, loaded.set.slug);
+  const catalog = displayed({ ...loaded.catalog, tiles: withDex(loaded.catalog.tiles, dexIndex) }, country);
   const { set } = loaded;
   const facts = setFacts(catalog, set.slug, new Date());
   if (!facts) notFound();
@@ -134,6 +143,20 @@ export default async function PokemonSetPage({ params }: { params: Params }) {
           </p>
           <SetFacts blocks={prose} className="mt-3" />
           {copyTexts.reddit.plain && <CopyPrices className="mt-4" page="pokemon_set" texts={copyTexts} />}
+          {dexSet && (
+            <p className="mt-4 text-sm text-slate-300">
+              Buying from a shop?{" "}
+              <DexAnchor
+                href={dexHref(country, { kind: "set", setSlug: dexSet, setName: set.name }, "set")}
+                surface="set"
+                market={country}
+                className="font-semibold text-emerald-300 hover:underline"
+              >
+                Compare {set.name} at {COUNTRIES[country].adjective} stores on DexCompare ↗
+              </DexAnchor>{" "}
+              <span className="text-slate-500">(our store comparison, in stock first)</span>
+            </p>
+          )}
         </div>
       </section>
 
