@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { formatDay } from "@/lib/pokemon/format";
-import { DEX_REL, dexHref, dexOpen, storesWord, type DexLink, type DexSurface } from "@/lib/pokemon/dexcompare";
+import { DEX_REL, dexHref, storePriceCents, storesWord, type DexLink, type DexSurface } from "@/lib/pokemon/dexcompare";
 
 // The stores line: DexCompare's figures for this product in the visitor's
 // market (lib/pokemon/dexcompare.ts has the join and the why), and the way to
@@ -70,8 +70,8 @@ export function DexStoresBlock({
   /** A pre-order: DexCompare counts a store taking pre-orders as "in stock", which is not what the words would say. */
   preorder?: boolean;
 }) {
-  // Listed nowhere and open nowhere: nothing true to say beyond the board.
-  if (link.kind === "product" && !dexOpen(link) && link.listed === 0) return null;
+  // No store lists it (TCGplayer may: that is already the board's own row): nothing to add.
+  if (link.kind === "product" && link.inStock === 0 && link.listed === 0) return null;
   const adjective = COUNTRIES[market].adjective;
   const href = dexHref(market, link, surface);
   let title: ReactNode;
@@ -81,29 +81,29 @@ export function DexStoresBlock({
     title = `${link.setName} at ${adjective} stores`;
     line = "DexCompare compares this set's sealed products across independent stores, in stock first.";
     button = "Compare stores";
-  } else if (dexOpen(link)) {
-    const where =
-      link.inStock > 0
-        ? `${preorder ? "Open for pre-order" : "In stock"} at ${link.inStock} of ${storesWord(link.listed)}${link.marketplace ? " + TCGplayer" : ""}`
-        : preorder
-          ? "No store takes pre-orders yet; TCGplayer does"
-          : "No store in stock; TCGplayer has it";
+  } else if (link.inStock > 0) {
+    // A price only when it is a store's (storePriceCents): DexCompare's US cheapest can be TCGplayer's.
+    const price = storePriceCents(link);
     title = (
       <>
-        {where} · from <span className="num font-bold text-accent">{money(link.cents as number)}</span>
+        {preorder ? "Open for pre-order" : "In stock"} at {link.inStock} of {storesWord(link.listed)}
+        {price != null && (
+          <>
+            {" "}
+            · from <span className="num font-bold text-accent">{money(price)}</span>
+          </>
+        )}
       </>
     );
     line =
-      link.inStock > 0
+      price != null
         ? `The cheapest ${adjective} store price on DexCompare, our store comparison, with every store's price beside it.`
-        : link.listed > 0
-          ? `DexCompare, our store comparison, lists the ${storesWord(link.listed)} that sell it, so you can see which restocks first.`
-          : "No independent store DexCompare checks lists it yet.";
+        : "DexCompare, our store comparison, has each store's price, TCGplayer's beside them.";
     button = link.listed > 1 ? `Compare ${storesWord(link.listed)}` : "See the store";
   } else {
     title = `Sold out at the ${storesWord(link.listed)} DexCompare checks`;
     line = "Its page lists them, so you can see which store restocks first.";
-    button = "See the stores";
+    button = link.listed > 1 ? "See the stores" : "See the store";
   }
   const checked = link.kind === "product" ? formatDay(link.checkedAt) : null;
 

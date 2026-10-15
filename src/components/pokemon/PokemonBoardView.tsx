@@ -9,7 +9,7 @@ import { formatMoney } from "@/lib/format";
 import { gbpCentsToEur } from "@/lib/fx";
 import { offerStock, offerStockLabel } from "@/lib/sealed-offers";
 import type { PkBoard } from "@/lib/pokemon/types";
-import { dexOpen, type DexLink, type DexSurface } from "@/lib/pokemon/dexcompare";
+import { storePriceCents, type DexLink, type DexSurface } from "@/lib/pokemon/dexcompare";
 import { DexStoresBlock } from "./DexStores";
 
 // One market's Pokémon price board: the comparison, the references beneath it,
@@ -17,8 +17,9 @@ import { DexStoresBlock } from "./DexStores";
 // product page, so the two can never describe a product differently.
 //
 // `dex` is DexCompare's stores line for this market (components/pokemon/
-// DexStores.tsx): under the listings, or above them when there are none or when
-// DexCompare's cheapest store is below the cheapest listing here.
+// DexStores.tsx): under the listings when a store has it, above them when there
+// are none or a store is below the cheapest listing here, and after the eBay
+// search when it only says "sold out" or names the set.
 //
 // Everything arrives built (hrefs included) from lib/pokemon/board.ts on the
 // server. This only formats: in the visitor's own market through useCountry's
@@ -52,9 +53,15 @@ export function PokemonBoardView({
   const best = board.headline;
   // Below the board's own cheapest open listing, and a store's figure: in the
   // US, DexCompare's cheapest can be TCGplayer's, which is already on the board.
-  const dexCheaper =
-    dex?.kind === "product" && dexOpen(dex) && !dex.marketplace && best != null && (dex.cents as number) < best.priceCents;
-  const dexFirst = dex != null && (board.listings.length === 0 || dexCheaper);
+  const dexPrice = dex?.kind === "product" ? storePriceCents(dex) : null;
+  const dexCheaper = dexPrice != null && best != null && dexPrice < best.priceCents;
+  // Where the block goes: first only when a store HAS it and the board has no
+  // listing, or a store is cheaper than every listing; under the listings when
+  // a store has it; after the eBay search when it only says "sold out" or names
+  // the set (nothing to buy there, so it never pushes eBay's button down).
+  const dexStoresOpen = dex?.kind === "product" && dex.inStock > 0;
+  const dexFirst = dexStoresOpen && (board.listings.length === 0 || dexCheaper);
+  const dexLast = dex != null && !dexStoresOpen;
   const stores = dex ? (
     <DexStoresBlock
       market={board.market}
@@ -77,7 +84,7 @@ export function PokemonBoardView({
       {dexFirst && stores}
 
       {board.listings.length === 0 ? (
-        dex ? (
+        dexFirst ? (
           <p className="mt-2 px-1 text-xs text-slate-500">No TCGplayer or eBay listing we track in {place} for this one yet.</p>
         ) : (
           <p className="rounded-lg border border-ink-800 bg-ink-950/40 px-3 py-4 text-sm text-slate-400">
@@ -137,7 +144,7 @@ export function PokemonBoardView({
         </ul>
       )}
 
-      {!dexFirst && stores}
+      {!dexFirst && !dexLast && stores}
 
       {/* The search claims no price and no stock: it is a search, beside the list. */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#0064d2]/40 bg-[#0064d2]/10 px-3 py-2.5">
@@ -157,6 +164,8 @@ export function PokemonBoardView({
           {board.ebaySearch.label} →
         </OutboundLink>
       </div>
+
+      {dexLast && stores}
 
       {board.references.length > 0 && (
         <div className="mt-3">

@@ -29,10 +29,12 @@ const FAILURE_PAUSE_MS = 10 * 60_000;
 const failedAt = new Map<Country, number>();
 
 async function fetchDexMarket(market: Country): Promise<DexMarket> {
-  // no-store: the unstable_cache entry around this is the cache (Next runs the
-  // callback under force-no-store anyway), and the body is ~45-400 KB.
+  // No `cache` option. The unstable_cache entry around this is the cache, and
+  // Next already runs the callback under fetchCache "force-no-store", so the
+  // ~45-400 KB body is never stored twice. An explicit cache: "no-store" here
+  // throws Next's DynamicServerError while an ISR page renders (the product
+  // page), and the stores line would silently be left out of the cached page.
   const res = await fetch(`${DEX_ORIGIN}/api/browse/${DEX_REGION[market]}`, {
-    cache: "no-store",
     headers: { accept: "application/json", "user-agent": "RiftCompare-Pokemon/1 (+https://riftcompare.com/pokemon)" },
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
@@ -52,7 +54,9 @@ export const getDexMarket = cache(async (market: Country): Promise<DexMarket | n
     failedAt.delete(market);
     return table;
   } catch (e) {
-    failedAt.set(market, Date.now());
+    // Next's own control-flow errors (they carry a `digest`) say nothing about
+    // DexCompare, so they never pause the market.
+    if (!(e && typeof e === "object" && typeof (e as { digest?: unknown }).digest === "string")) failedAt.set(market, Date.now());
     console.error(`[pokemon] DexCompare index for ${market} unavailable; stores line left out for 10 minutes`, e);
     return null;
   }

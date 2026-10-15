@@ -553,9 +553,19 @@ export async function siteProbe(d: OpsDeps): Promise<CheckResult> {
  * site would say they had gone: this does. Unreachable is grey (another site's outage,
  * nothing to do here); a format the section no longer understands is amber.
  */
+// A listed Pokémon touchpoint (tests/pokemon-isolation.test.ts, docs/pokemon/README.md's removal table).
+const POKEMON_PATH = "/pokemon";
+
 export async function dexcompareIndex(d: OpsDeps): Promise<CheckResult> {
   const id = "partner:dexcompare";
   const title = "DexCompare store prices (Pokémon)";
+  // Only while the Pokémon section is live: switched off (or removed), nothing reads the index.
+  try {
+    const section = await d.fetch(`${SITE}${POKEMON_PATH}`, { method: "HEAD", headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+    if (section.status === 404) return unknown(d, id, "data", title, "The Pokémon section is off, so nothing reads DexCompare's index.");
+  } catch {
+    /* the site probe reports an unreachable site; carry on and check DexCompare */
+  }
   let body: unknown;
   try {
     const res = await retry(d, async () => {

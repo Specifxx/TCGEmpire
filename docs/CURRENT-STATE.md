@@ -911,8 +911,10 @@ longer lands on its entry.
   reads DexCompare's public browse index; product boards, the quick view, the
   every-market table, tiles, kind hubs, set pages, the home band and the subnav
   show its store figures and link it. It is never an offer row, never ranked in
-  the comparison, and never feeds per-pack rankings or prose. "Cheaper at a store"
-  only when TCGplayer is not in DexCompare's figure. Every DexCompare link opens
+  the comparison, and never feeds per-pack rankings or prose. A price is quoted
+  only as a store's (`storePriceCents`): never when TCGplayer is in DexCompare's
+  figure. A sold-out or set-only block goes after the eBay search. The fetch
+  never passes `cache: "no-store"` (it breaks ISR inside `unstable_cache`). Every DexCompare link opens
   a new tab, `rel="nofollow noopener"`, `pokemon_dexcompare_click`. DexCompare
   links back through `/pokemon/tcgplayer/<id>`. The ops monitor watches the index
   (`partner:dexcompare`). [2026-10-15](../DECISIONS.md#L17137)

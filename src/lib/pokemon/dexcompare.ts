@@ -111,15 +111,31 @@ const SET_SLUG_EXCEPTIONS: Record<string, string> = {
   "champions-path": "champion-s-path",
 };
 
+// DexCompare's set pages in this section's scope (Sword & Shield on), from its
+// lib/sets.ts on 2026-10-15. A set page is linked only when it is here: a
+// product slug's prefix alone is not proof (DexCompare names collections from
+// their titles, so "first-partner-collection-2026-…" products exist while
+// /sets/first-partner-collection-2026 is a 404). A set DexCompare adds later is
+// linked once it is added here; until then its products still join by id.
+export const DEX_SET_SLUGS: ReadonlySet<string> = new Set([
+  "delta-reign", "30th-celebration", "pitch-black", "chaos-rising", "perfect-order", "ascended-heroes", "phantasmal-flames",
+  "mega-evolution", "black-bolt", "white-flare", "destined-rivals", "journey-together", "prismatic-evolutions", "surging-sparks",
+  "stellar-crown", "shrouded-fable", "twilight-masquerade", "temporal-forces", "paldean-fates", "paradox-rift", "scarlet-violet-151",
+  "obsidian-flames", "paldea-evolved", "scarlet-violet", "crown-zenith", "silver-tempest", "lost-origin", "pokemon-go",
+  "astral-radiance", "brilliant-stars", "fusion-strike", "celebrations", "evolving-skies", "chilling-reign", "battle-styles",
+  "shining-fates", "vivid-voltage", "champion-s-path", "darkness-ablaze", "rebel-clash", "sword-shield",
+]);
+
 /**
- * DexCompare's slug for one of this section's sets, when DexCompare lists a
- * joined product of it in this market (its product slugs start with the set's
- * slug; the table holds only joined rows, 85% and more of each index), else
- * null: a set DexCompare does not have yet is never linked.
+ * DexCompare's slug for one of this section's sets: a set page DexCompare has
+ * (DEX_SET_SLUGS) and lists a joined product of in this market (its product
+ * slugs start with the set's slug), else null, so a set link never 404s and
+ * never lands on an empty market.
  */
 export function dexSetSlug(index: DexMarket | null, setSlug: string | null | undefined): string | null {
   if (!index || !setSlug) return null;
   const slug = SET_SLUG_EXCEPTIONS[setSlug] ?? setSlug;
+  if (!DEX_SET_SLUGS.has(slug)) return null;
   const prefix = `${slug}-`;
   for (const row of Object.values(index.byId)) if (row[0].startsWith(prefix)) return slug;
   return null;
@@ -151,6 +167,16 @@ export function dexTileFigures(index: DexMarket | null, id: number): DexTileFigu
 /** The grid's tiles with this market's DexCompare figures attached (null where not joined). */
 export function withDex<T extends { id: number }>(tiles: readonly T[], index: DexMarket | null): (T & { dex: DexTileFigures | null })[] {
   return tiles.map((t) => ({ ...t, dex: dexTileFigures(index, t.id) }));
+}
+
+/**
+ * DexCompare's cheapest price as a STORE price: only when a store has it and
+ * TCGplayer is not in the figure. DexCompare's cheapest includes TCGplayer's
+ * (US), and that one is already on the board as TCGplayer's own row, so it is
+ * never quoted as a store's. Null otherwise: say how many stores, not a price.
+ */
+export function storePriceCents(d: { cents: number | null; inStock: number; marketplace: boolean }): number | null {
+  return d.cents != null && d.inStock > 0 && !d.marketplace ? d.cents : null;
 }
 
 /** Can you buy it at a store (or, in the US, on TCGplayer) by DexCompare's last check? */

@@ -23,6 +23,7 @@ const HOST_TOUCHPOINTS = [
   "src/components/nav-groups.ts", // the gated "Pokémon (beta)" link
   "src/lib/db-chains.ts", // POKEMON_VARS
   "src/lib/nudge-gate.ts", // no Premium slide-in on /pokemon
+  "src/lib/ops/checks.ts", // dexcompareIndex: the section's DexCompare index check, skipped while /pokemon 404s
   "src/lib/sitemap-sections.ts", // the gated "pokemon" section
 ].sort();
 

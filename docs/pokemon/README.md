@@ -96,6 +96,7 @@ by `tests/pokemon-isolation.test.ts`:
 | `src/lib/sitemap-sections.ts` | `"pokemon"` in `ALL_SECTIONS`, the `SECTIONS` filter, `const pokemon = …`, the two imports |
 | `src/components/FooterAds.tsx` | `OFF_TOPIC_ROUTES` (harmless if left) |
 | `src/lib/nudge-gate.ts` | `"/pokemon"` in `PREMIUM_SKIP_PATHS` (harmless if left) |
+| `src/lib/ops/checks.ts` | `dexcompareIndex` and its `runChecks` line, its test in `tests/ops-monitor.test.ts`, and the DexCompare row in `docs/ops-monitor.md` (harmless if left: it goes grey while `/pokemon` 404s) |
 | `src/lib/db-chains.ts` | `POKEMON_VARS` (harmless if left) |
 | `scripts/adsense-audit.ts` | the four `pokemon-*` rows at the top of `TEMPLATES` (harmless if left) |
 | `scripts/template-seo-check.ts` | the six `pokemon-*` rows at the top of `SPECS` (harmless if left) |
@@ -104,7 +105,7 @@ The two scripts are pinned as `SCRIPT_TOUCHPOINTS` in the same test.
 
 Also: the two `generate --schema prisma/pokemon/...` additions in `package.json`
 (`build`, `db:generate`, and the three `pokemon:*` scripts) and in
-`.github/workflows/ci.yml`; `getPokemonCatalog`/`getPokemonProduct` in
+`.github/workflows/ci.yml`; `getPokemonCatalog`/`getPokemonProduct`/`getDexMarket`/`getDexMarkets` in
 `tests/nested-cache.test.ts`; the Pokémon note in `CLAUDE.md`; the rows in
 `docs/seo-keyword-map.md`; the bullet in `docs/CURRENT-STATE.md`. The shared
 `SealedFilters`/`SealedSort` keep their new optional props (defaults are the

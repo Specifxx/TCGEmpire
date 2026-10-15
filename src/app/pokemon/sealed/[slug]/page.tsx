@@ -24,7 +24,7 @@ import { CopyPrices } from "@/components/pokemon/CopyPrices";
 import { offersAsOf } from "@/lib/pokemon/share-text";
 import { getPokemonPosts } from "@/lib/pokemon/blog/index";
 import { getDexMarkets } from "@/lib/pokemon/dexcompare-data";
-import { dexHref, dexLinkFor, dexOpen, storesWord, type DexLink } from "@/lib/pokemon/dexcompare";
+import { dexHref, dexLinkFor, storePriceCents, storesWord, type DexLink } from "@/lib/pokemon/dexcompare";
 import { DexAnchor } from "@/components/pokemon/DexStores";
 import type { Country } from "@/lib/country";
 import type { PkKind } from "@/lib/pokemon/kinds";
@@ -214,7 +214,7 @@ export default async function PokemonProductPage({ params }: { params: Params })
         <p className="mt-1 text-xs text-slate-500">
           The cheapest listing we track in each market, in its own currency, and TCGplayer&apos;s market price beside it
           (converted outside the US, so marked ≈).
-          {anyDex && " Store prices are DexCompare's, our store comparison: the cheapest store with it in stock."}
+          {anyDex && " Stores are DexCompare's, our store comparison: how many have it in stock, and the cheapest of them."}
         </p>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
@@ -223,7 +223,7 @@ export default async function PokemonProductPage({ params }: { params: Params })
                 <th className="py-2 pr-3 font-semibold">Market</th>
                 <th className="py-2 pr-3 font-semibold">Cheapest we track</th>
                 <th className="py-2 pr-3 font-semibold">TCGplayer market</th>
-                {anyDex && <th className="py-2 font-semibold">At stores</th>}
+                {anyDex && <th className="hidden py-2 font-semibold sm:table-cell">At stores</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-800">
@@ -248,11 +248,21 @@ export default async function PokemonProductPage({ params }: { params: Params })
                       ) : (
                         <span className="text-xs text-slate-500">No tracked listing</span>
                       )}
+                      {/* On a phone the stores figure sits here: a fourth column would not fit 360px. */}
+                      {anyDex && dex[c.code] && (
+                        <span className="mt-0.5 block text-xs sm:hidden">
+                          Stores: <StoresFigure market={c.code} link={dex[c.code]} currency={b.currency} product={p.slug} />
+                        </span>
+                      )}
                     </td>
                     <td className="num whitespace-nowrap py-2 pr-3 text-slate-300">
                       {ref ? `${ref.converted ? "≈ " : ""}${formatMoney(ref.priceCents, b.currency)}` : "—"}
                     </td>
-                    {anyDex && <StoresCell market={c.code} link={dex[c.code]} currency={b.currency} product={p.slug} />}
+                    {anyDex && (
+                      <td className="hidden py-2 sm:table-cell">
+                        <StoresFigure market={c.code} link={dex[c.code]} currency={b.currency} product={p.slug} />
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -358,32 +368,26 @@ export default async function PokemonProductPage({ params }: { params: Params })
   );
 }
 
-/** The every-market table's DexCompare cell: the cheapest store and how many have it, linked to DexCompare's page. */
-function StoresCell({ market, link, currency, product }: { market: Country; link: DexLink | null; currency: string; product: string }) {
-  if (!link) return <td className="py-2 text-slate-500">—</td>;
-  const cls = "text-emerald-300 hover:underline";
+/**
+ * The every-market table's DexCompare figure: the cheapest STORE with it and how many have it, linked to DexCompare's page.
+ * A price only when it is a store's (storePriceCents: DexCompare's US cheapest can be TCGplayer's, the row beside it).
+ */
+function StoresFigure({ market, link, currency, product }: { market: Country; link: DexLink | null; currency: string; product: string }) {
+  if (!link || (link.kind === "product" && link.inStock === 0 && link.listed === 0)) return <span className="text-slate-500">—</span>;
+  const cls = "tap-link text-emerald-300 hover:underline";
+  const href = dexHref(market, link, "markets");
+  if (link.kind === "set") {
+    return (
+      <DexAnchor href={href} surface="markets" market={market} product={product} className={`${cls} text-xs`}>
+        The set ↗
+      </DexAnchor>
+    );
+  }
+  const price = storePriceCents(link);
   return (
-    <td className="py-2">
-      {link.kind === "product" && dexOpen(link) ? (
-        <DexAnchor href={dexHref(market, link, "markets")} surface="markets" market={market} product={product} className={cls}>
-          <span className="num whitespace-nowrap font-semibold">{formatMoney(link.cents as number, currency)}</span>{" "}
-          <span className="block whitespace-nowrap text-xs sm:inline">
-            {link.inStock > 0 ? storesWord(link.inStock) : "TCGplayer"} ↗
-          </span>
-        </DexAnchor>
-      ) : link.kind === "product" ? (
-        link.listed > 0 ? (
-          <DexAnchor href={dexHref(market, link, "markets")} surface="markets" market={market} product={product} className={`${cls} text-xs`}>
-            Sold out at {storesWord(link.listed)} ↗
-          </DexAnchor>
-        ) : (
-          <span className="text-slate-500">—</span>
-        )
-      ) : (
-        <DexAnchor href={dexHref(market, link, "markets")} surface="markets" market={market} product={product} className={`${cls} text-xs`}>
-          The set ↗
-        </DexAnchor>
-      )}
-    </td>
+    <DexAnchor href={href} surface="markets" market={market} product={product} className={cls}>
+      {price != null && <span className="num mr-1 whitespace-nowrap font-semibold">{formatMoney(price, currency)}</span>}
+      <span className="whitespace-nowrap text-xs">{link.inStock > 0 ? storesWord(link.inStock) : `Sold out at ${storesWord(link.listed)}`} ↗</span>
+    </DexAnchor>
   );
 }

@@ -10,6 +10,7 @@ import {
   dexSetSlug,
   dexTileFigures,
   parseDexIndex,
+  storePriceCents,
   tcgplayerIdFromImage,
   type DexMarket,
 } from "../src/lib/pokemon/dexcompare";
@@ -84,6 +85,31 @@ test("set slugs that differ between the two sites are mapped", () => {
   assert.equal(dexSetSlug(m, "champions-path"), "champion-s-path");
   assert.equal(dexSetSlug(m, "surging-sparks"), "surging-sparks");
   assert.equal(dexSetSlug(m, "sword-shield-base-set"), null, "mapped, but DexCompare lists nothing of it in this fixture");
+});
+
+test("a set is linked only when DexCompare has a page for it, whatever its product slugs look like", () => {
+  // DexCompare's US index names collection products from their titles: these exist, /us/sets/first-partner-collection-2026 does not.
+  const m = parseDexIndex(
+    {
+      ...AU,
+      rows: [["first-partner-collection-2026-series-1-booster-pack-2", "FPC", "Booster Pack", null, "https://tcgplayer-cdn.tcgplayer.com/product/700001_in_1000x1000.jpg", 499, 2, 3, 0, null]],
+    },
+    "AU",
+  );
+  assert.equal(dexSetSlug(m, "first-partner-collection-2026"), null);
+});
+
+test("a price is a store's only when a store has it and TCGplayer is not in DexCompare's figure", () => {
+  assert.equal(storePriceCents({ cents: 2799, inStock: 3, marketplace: false }), 2799);
+  assert.equal(storePriceCents({ cents: 2729, inStock: 5, marketplace: true }), null, "the US cheapest may be TCGplayer's");
+  assert.equal(storePriceCents({ cents: 1700, inStock: 0, marketplace: true }), null);
+  assert.equal(storePriceCents({ cents: null, inStock: 2, marketplace: false }), null);
+});
+
+test("the loader never passes an explicit cache option to fetch (it throws inside an ISR render's unstable_cache)", () => {
+  const src = readFileSync("src/lib/pokemon/dexcompare-data.ts", "utf8").replace(/\/\/.*$/gm, "");
+  assert.doesNotMatch(src, /cache:\s*["']no-store["']/);
+  assert.doesNotMatch(src, /\bcache:\s*["']/);
 });
 
 test("tile figures and the open rule follow DexCompare's own (a store in stock, or TCGplayer in the US)", () => {
