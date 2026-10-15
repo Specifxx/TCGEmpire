@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { markInboxSeen } from "@/lib/ops/inbox-counts";
 import { SuggestionActions } from "@/components/admin/SuggestionActions";
 import { FeedbackActions } from "@/components/admin/FeedbackActions";
+import { MessageActions } from "@/components/admin/MessageActions";
 import { PriceReportActions } from "@/components/admin/PriceReportActions";
 import { formatMoney } from "@/lib/format";
 import { issueLabel } from "@/lib/price-report";
@@ -202,14 +203,11 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
                   <a href={`mailto:${m.email}`} className="text-accent hover:underline">{m.email}</a>
                 </div>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-200">{m.message}</p>
-                <div className="mt-3">
-                  <a
-                    href={`mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent("Re: " + (m.subject || "RiftCompare feedback"))}`}
-                    className="text-xs font-medium text-brand-400 hover:underline"
-                  >
-                    Reply →
-                  </a>
-                </div>
+                <MessageActions
+                  id={m.id}
+                  adminKey={adminKey}
+                  replyHref={`mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent("Re: " + (m.subject || "RiftCompare feedback"))}`}
+                />
               </li>
             ))}
           </ul>

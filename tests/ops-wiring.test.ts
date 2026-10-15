@@ -171,3 +171,13 @@ test("no check puts a connection string or key into a result", () => {
   assert.ok(textLines.length > 20, "found the result text lines");
   for (const l of textLines) assert.doesNotMatch(l, /\$\{(url|key|secret|basic|token|cid)\}|databaseUrls|process\.env/, l.trim().slice(0, 100));
 });
+
+test("contact messages can be deleted from the inbox, by an admin only", () => {
+  const route = code("src/app/api/admin/messages/route.ts");
+  assert.match(route, /if \(!\(keyOk \|\| user\?\.isAdmin\)\) \{\s*return NextResponse\.json\(\{ error: "Not authorised" \}, \{ status: 404 \}\);/);
+  assert.match(route, /const keyOk = !!token && body\?\.key === token;/);
+  assert.match(route, /prisma\.contactMessage\.deleteMany\(\{ where: \{ id \} \}\)/);
+  const page = code("src/app/admin/messages/page.tsx");
+  assert.match(page, /<MessageActions/);
+  assert.match(code("src/components/admin/MessageActions.tsx"), /confirm\("Delete this message permanently\?"\)/);
+});
