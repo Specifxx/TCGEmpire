@@ -85,7 +85,6 @@
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_MARKETS, SEALED_WATCH_LIMIT_PLUS } from "../lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../lib/free-limits";
 import { SET_GAP_CHUNK } from "../lib/set-gap";
-import { SEARCH_LIMITS, SIGNED_OUT_SEARCHES } from "../lib/search-quota";
 import { FREE_HISTORY_DAYS } from "../lib/history-access";
 
 export type TierRow = {
@@ -102,8 +101,8 @@ export type TierRow = {
 export const TIER_COMPARISON: TierRow[] = [
   { feature: "Compare prices across every store + eBay", account: true, plus: true, premium: true },
   { feature: "Full card database & charts", account: true, plus: true, premium: true },
-  // lib/search-quota.ts: signed out 25 a day, a free account 100 (2026-10-15; was 10 / 30).
-  { feature: `Card searches a day (${SIGNED_OUT_SEARCHES} signed out)`, account: `${SEARCH_LIMITS.free}`, plus: `${SEARCH_LIMITS.plus}`, premium: "Unlimited" },
+  // No search row since 2026-10-15: searching is unlimited for everyone again
+  // (lib/search-quota.ts, owner: "completely remove the search limit").
   // The Bulk Pricer's paste-a-list pricing lives in the free /deck now.
   { feature: "Deck & list pricer, trade calculator & box EV", account: true, plus: true, premium: true },
   // "Weekly" as in a 7-day move: /movers compares each card's latest daily

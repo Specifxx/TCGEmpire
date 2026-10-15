@@ -107,10 +107,16 @@ test("the two remaining corner nudges share one corner and z-tier", () => {
   assert.match(code("src/components/AnnualSwitchNudge.tsx"), CORNER);
 });
 
-test("the nudge gate keeps no sign-up card rules to revive", () => {
-  for (const name of ["signupPromoEligible", "signupEngagedNeededMs", "isLandingPage", "SIGNUP_SKIP_PATHS", "SIGNUP_MIN_VIEWS", "SIGNUP_ENGAGED_MS"]) {
+test("the nudge gate's sign-up rules are page-count only (restored 2026-10-15), not the old engaged-time ones", () => {
+  for (const name of ["signupPromoEligible", "signupEngagedNeededMs", "isLandingPage", "SIGNUP_ENGAGED_MS"]) {
     assert.ok(!(name in gate), `${name} is gone from lib/nudge-gate.ts`);
   }
+  // SignupSlideIn (2026-10-15): from the 4th page, never on sign-in or /premium.
+  const g = gate as unknown as { signupCardEligible: (i: { views: number; pathname: string }) => boolean };
+  assert.equal(g.signupCardEligible({ views: 3, pathname: "/browse" }), false);
+  assert.equal(g.signupCardEligible({ views: 4, pathname: "/browse" }), true);
+  assert.equal(g.signupCardEligible({ views: 9, pathname: "/login" }), false);
+  assert.equal(g.signupCardEligible({ views: 9, pathname: "/premium" }), false);
   assert.doesNotMatch(code("src/lib/nudge-runtime.ts"), /useEngaged/, "the engaged-time clock only the popup read is gone");
 });
 

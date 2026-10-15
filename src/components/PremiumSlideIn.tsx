@@ -154,8 +154,8 @@ export const PITCH_TOOLS: { label: string }[] = [
   // lib/deck-watch.ts), added to the tier table the same day.
   { label: "Sealed watches" },
   { label: "Deck price watch" },
-  // 2026-10-09: the search allowance and the three new paid features.
-  { label: "Card searches" },
+  // 2026-10-09: the three new paid features. ("Card searches" left with the
+  // search allowance on 2026-10-15: searching is unlimited for everyone.)
   { label: "Full price history" },
   { label: "Graded price tracking" },
   { label: "Auction alerts" },

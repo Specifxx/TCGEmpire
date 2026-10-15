@@ -6,7 +6,7 @@ import { HeaderSearchSlot } from "./HeaderSearchSlot";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { NavUser } from "./NavUser";
-import { PremiumNavLink } from "./PremiumNavLink";
+import { GetPremiumLink } from "./GetPremiumLink";
 import { DISCORD_URL } from "@/lib/site";
 import { BrandLogo } from "./BrandLogo";
 import { HeaderMenuButton } from "./HeaderMenuButton";
@@ -109,7 +109,10 @@ export function Navbar() {
           >
             Database
           </Link>
-          {/* PRICING, NOT A GOLD PREMIUM CTA (2026-09-28, owner: "Put the upgrade
+          {/* A SHINY "PREMIUM" CTA AGAIN SINCE 2026-10-15 (owner: "get premium …
+              shiny … constantly catching your attention"; GetPremiumLink). What
+              follows is the 2026-09-28 history it reverses.
+              PRICING, NOT A GOLD PREMIUM CTA (2026-09-28, owner: "Put the upgrade
               prompt where people hit a limit … not in popups and headers").
               This slot carried a gold, shimmering "✦ Premium" from the
               2026-09-10 brief until then; it is now a plain link to /premium,
@@ -124,12 +127,11 @@ export function Navbar() {
               `whitespace-nowrap` + `shrink-0` stay load-bearing: a shrinkable
               label here once wrapped onto two lines and once had the theme
               toggle drawn through it. */}
-          <PremiumNavLink
+          <GetPremiumLink
             surface="nav:navbar"
-            className="hidden min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold text-slate-100 hover:bg-ink-800 hover:text-white min-[400px]:inline-flex sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
-          >
-            Pricing
-          </PremiumNavLink>
+            compact
+            className="hidden min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold min-[400px]:inline-flex sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
+          />
 
           {/* CARD SEARCH, BACK IN THE HEADER AND LEFT-ALIGNED (2026-09-21,
               owner: "bring back ... the search bar 'search for cards' on the
@@ -278,9 +280,10 @@ export function Navbar() {
           <Link href="/tools" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white xl:block xl:px-2.5 [@media(pointer:coarse)]:py-3.5">
             Tools
           </Link>
-          <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5" surface="nav:navbar">
-            Pricing
-          </PremiumNavLink>
+          <GetPremiumLink
+            surface="nav:navbar"
+            className="hidden shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-semibold lg:inline-flex xl:px-2.5 xl:text-sm xl:font-bold [@media(pointer:coarse)]:py-2.5"
+          />
 
           {/* Deck builder — the free "paste a list, price every card" tool. This
               slot held "Decks" (/decks, the meta-deck hub) until 2026-09-12; that

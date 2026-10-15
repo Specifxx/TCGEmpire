@@ -432,8 +432,14 @@ test("the signed-in Premium slide-in is back beside the at-limit prompts; no sig
   assert.match(code("src/components/FreeLimitPanel.tsx"), /limit:/, "the at-limit upgrade prompt is still there");
 });
 
-test("the header, rail and account menu link to /premium plainly — no gold Premium CTA", () => {
-  for (const f of ["src/components/Navbar.tsx", "src/components/SideNav.tsx", "src/components/UserMenu.tsx"]) {
+test("the rail and account menu link to /premium plainly; the header sells it (2026-10-15)", () => {
+  // The HEADER left this rule on 2026-10-15 (owner: "get premium … shiny …
+  // constantly catching your attention"): it carries GetPremiumLink, the gold
+  // .premium-cta, in both slots. The rail and the account menu stay plain.
+  const nav = code("src/components/Navbar.tsx");
+  assert.equal([...nav.matchAll(/<GetPremiumLink\b/g)].length, 2, "the phone slot and the lg row");
+  assert.match(code("src/components/GetPremiumLink.tsx"), /premium-cta/);
+  for (const f of ["src/components/SideNav.tsx", "src/components/UserMenu.tsx"]) {
     const c = code(f);
     const links = [...c.matchAll(/<PremiumNavLink[\s\S]*?<\/PremiumNavLink>/g)].map((m) => m[0]);
     assert.ok(links.length > 0, `${f}: /premium stays reachable`);

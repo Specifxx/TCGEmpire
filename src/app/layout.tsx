@@ -57,6 +57,11 @@ const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").the
 const PremiumSlideIn = dynamic(() => import("@/components/PremiumSlideIn").then((m) => m.PremiumSlideIn), {
   ssr: false,
 });
+// The signed-out sign-up card (restored 2026-10-15): a corner card from the 4th
+// page of a visit, ssr:false like its signed-in sibling above.
+const SignupSlideIn = dynamic(() => import("@/components/SignupSlideIn").then((m) => m.SignupSlideIn), {
+  ssr: false,
+});
 // Retention nudge: offer monthly Premium subscribers a one-click switch to annual.
 // ssr:false and self-gated to premium/monthly users — renders nothing for everyone
 // else.
@@ -400,10 +405,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </main>
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
-                {/* Signed-in, non-Premium browsing nudge. Signed-out visitors
-                    get no corner card at all since 2026-09-30, only the inline
-                    prompts in the pages themselves (InlineSignupPrompt). */}
+                {/* Signed-in, non-Premium browsing nudge, and since 2026-10-15
+                    its signed-out sibling, the sign-up card (from the 4th page
+                    of a visit). The two audiences never overlap. */}
                 <PremiumSlideIn />
+                <SignupSlideIn />
                 {/* Its mirror image: monthly-Premium → annual retention nudge.
                     Mutually exclusive with PremiumSlideIn by `premium` state. */}
                 <AnnualSwitchNudge />

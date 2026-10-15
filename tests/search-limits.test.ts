@@ -38,11 +38,12 @@ test("the ladder: 25 signed out, 100 free, 500 Plus, Premium unlimited (loosened
   assert.equal(searchLimitFor("premium"), null);
 });
 
-test("SEARCH_CAPS=off is the one kill switch", () => {
-  assert.equal(searchCapsEnabled({}), true);
-  assert.equal(searchCapsEnabled({ SEARCH_CAPS: "on" }), true);
+test("searching is unlimited unless SEARCH_CAPS is exactly \"on\" (2026-10-15, owner: \"completely remove the search limit\")", () => {
+  assert.equal(searchCapsEnabled({}), false, "unset: unmetered, for every visitor");
   assert.equal(searchCapsEnabled({ SEARCH_CAPS: "off" }), false);
-  assert.equal(searchCapsEnabled({ SEARCH_CAPS: " OFF " }), false);
+  assert.equal(searchCapsEnabled({ SEARCH_CAPS: "yes" }), false, "only the exact word turns the dormant meter on");
+  assert.equal(searchCapsEnabled({ SEARCH_CAPS: "on" }), true);
+  assert.equal(searchCapsEnabled({ SEARCH_CAPS: " ON " }), true);
 });
 
 test("typing one query is one search; a new query counts; the limit refuses", () => {
@@ -117,12 +118,14 @@ test("/browse refuses a search before querying, and counts an allowed one from t
   assert.match(page, /searchQ\.length >= 2 && page === 1 \? await quotaContext\(\)/, "only a text search's first page is metered");
 });
 
-test("the dropdown shows the limit panel, and /premium lists the allowance", () => {
+test("the dormant limit panel is still wired, but no pricing surface advertises a search limit", () => {
   const bar = read("src/components/SearchBar.tsx");
   assert.match(bar, /if \(data\.limited\)/);
   assert.match(bar, /<SearchLimitPanel tier=\{limited\}/);
   assert.match(read("src/components/SearchLimitPanel.tsx"), /surface="limit:search"/);
-  assert.match(read("src/components/TierComparisonTable.tsx"), /Card searches a day/);
+  // The tier table, the slide-in chips and /premium stopped selling searches on 2026-10-15.
+  assert.doesNotMatch(read("src/components/TierComparisonTable.tsx"), /Card searches a day/);
+  assert.doesNotMatch(read("src/app/premium/page.tsx"), /searches? without limit|search more/);
   // The pages that compare prices are never metered.
   for (const f of ["src/app/card/[id]/page.tsx", "src/app/sets/[set]/page.tsx", "src/app/champions/[slug]/page.tsx"]) {
     assert.doesNotMatch(read(f), /search-quota/, `${f} must not be metered`);

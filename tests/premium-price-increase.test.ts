@@ -325,10 +325,12 @@ test("every literal 'Premium' nav entry point navigates straight to /premium, no
     "src/components/SideNav.tsx",
   ]) {
     const src = read(file);
-    assert.match(src, /PremiumNavLink/, `${file} must use PremiumNavLink, not the dialog, for its "Premium" link`);
+    // Navbar's links go through GetPremiumLink (2026-10-15), itself a PremiumNavLink.
+    assert.match(src, /PremiumNavLink|GetPremiumLink/, `${file} must use PremiumNavLink, not the dialog, for its "Premium" link`);
     assert.ok(!/usePremiumDialog/.test(src), `${file} must no longer import the dialog hook at all`);
   }
   assert.ok(!/usePremiumDialog/.test(read("src/components/CinematicNavMenu.tsx")));
+  assert.match(read("src/components/GetPremiumLink.tsx"), /<PremiumNavLink/);
 });
 
 test("PremiumButton (the gated-tool-wall CTA) still opens the dialog — this instruction never touched it", () => {

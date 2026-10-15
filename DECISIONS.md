@@ -17557,3 +17557,41 @@ alone (see the Thistle Tavern entry).
 **"Booster boxes in Canada show $150 because of French versions" (contact message, 2026-10-09): archived.** Already fixed on 2026-10-12 (the entry "Inbox, 2026-10-12: French prints out of the English prices…"). Re-checked against the 2026-10-15 snapshot: every in-stock Canadian booster box row is English ("(anglais)" is French for English). Contact messages have no status column. Archiving one is the delete the owner added to `/admin/messages` today, which `close-inbox-items` now does for a message named by its exact day and subject, and only when exactly one row matches.
 
 ---
+
+## Premium gets loud: no search limit, a sign-up card, a shiny header button — 2026-10-15
+
+**Owner:** "look at the churn rates … we only have 9 like active subscribers now … I don't think these strategies are working where like the search limit. So let's just completely remove the search limit. I think that was a bit too greedy … bring the sign up now pop up again … but we should just gate it and make it appear after so many pages … premium like the pricing at the very top, in the header … catchy, like get premium … shiny … a gradient and shining, and when you hover over it … even more shiny … we just need more attention grabbers for premium, and also for like plus." This entry reverses three standing rules at the owner's direction.
+
+**1. No search limit.** Reverses "Search is metered again" (2026-10-09) and its 10-15 loosening. `searchCapsEnabled()` now returns true only when `SEARCH_CAPS` is exactly `on`, so by default every visitor and tier searches without limit. The meter (`lib/search-quota*.ts`, `SearchLimitPanel`, the `rc_sq` cookie) is kept dormant, not deleted, so the measured history and the switch stay in one place. Nothing advertises a search limit any more:
+- the tier table loses its "Card searches a day" row;
+- the Premium slide-in loses its "Card searches" chip;
+- /premium's subline no longer says paid tiers "search more".
+
+**2. A signed-out sign-up card, gated by page count.** Reverses "The sign-up slider is gone" (2026-09-30) for one card. `SignupSlideIn` reuses `PremiumSlideIn`'s parts, so the two behave as one system:
+- **When it can show:**
+  - signed out only, after `/api/me` answers;
+  - from the **4th page of a visit** (`SIGNUP_MIN_VIEWS`, `signupCardEligible` in `lib/nudge-gate.ts`), never on `/login`, `/verify`, `/premium`, `/pokemon` or `/admin`;
+  - `NUDGE_DELAY_MS` (12 s) after that, and only at a quiet moment (`armNudge`);
+  - once a session.
+- **When it stops:** two ✕ and it stops for good. A dismissal snoozes it 7 days, a click 14.
+- **What it is:** a bottom-left corner card, never a modal. It offers the free account, with no price: "A free account watches up to 10 cards with a weekly price-drop email, and tracks your collection." The email is weekly because the free digest is weekly (CURRENT-STATE, "Price-drop emails").
+- **Tracking:** `/login?src=signup_card`, with events `signup_card_shown`, `_dismissed` and `_click`.
+- **Why the 4th page:** it answers "some people just are annoyed at it" and keeps a pop-up off a phone's first page from search, which Google counts as intrusive.
+- **What stays:** the in-page `InlineSignupPrompt`.
+- **Checked** in Chromium at 414px: nothing on pages 1–3, the card on page 4 after the delay.
+
+**3. A shiny "Get Premium" in the header.** Reverses "Upgrade prompts live where a limit is hit, not in headers" and "Gold marks Premium … the chrome no longer sells it" (2026-09-28/30) for the header only. Both header slots now carry `GetPremiumLink`, styled `.premium-cta` in `globals.css`:
+- **Look:** a gold gradient that drifts slowly, plus a light sweep every few seconds. On hover it brightens, glows and sweeps faster. Text is dark on gold. `prefers-reduced-motion` stops both animations and leaves a still gold button.
+- **Labels:** "✦ Get Premium" from xl; "Premium" in the phone slot (400px to lg) and the lg row, where the row has about 5px of slack on touch.
+- **Who sees what:** Plus members see "Upgrade", and Premium members a plain gold-text "Premium" link with no shine, so nobody is sold what they already have.
+- **Measured in Chromium** at 360–1440px, with and without touch: no page or nav overflow anywhere. The button is 63–80px on phones, 72px at lg and 124px from xl, and never clipped.
+- **Unchanged:** the rail and the account menu keep their plain "Pricing" links.
+
+**What to watch** (`impact-report`, GA4):
+- pages per visitor and `buy_click`, which the first search limit cost;
+- `signup_card_*` and `sign_up` by `signupSource`;
+- `premium_click` from `nav:navbar`.
+
+The card's 78%-dismissed history (`lib/nudge-timing.ts`) is why it waits for the 4th page rather than showing at once.
+
+---

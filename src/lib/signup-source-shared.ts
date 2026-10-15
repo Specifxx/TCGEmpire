@@ -48,6 +48,10 @@ export const SIGNUP_SOURCES = new Set<string>([
   // The daily search allowance's "Sign up free" (2026-10-09, lib/search-quota.ts),
   // on the typeahead dropdown and /browse. Separate from the retired "gate".
   "search_limit",
+  // The signed-out sign-up card (SignupSlideIn), restored 2026-10-15 after
+  // the 4th page of a visit. Its own value, not the retired "popup", so the
+  // two eras never read as one series.
+  "signup_card",
   // The Premium funnel's own two surfaces (2026-09-13). Before these existed,
   // /premium's signed-out CTA linked straight to /login and its signups recorded
   // as "login" — indistinguishable from someone who typed /login themselves, so

@@ -268,7 +268,8 @@ longer lands on its entry.
   that already watches ten is at the limit too), and the import adds up to
   the allowance and reports the rest.
   [2026-09-28](../DECISIONS.md#L14549)
-- **Search allowance (2026-10-09, owner: "make it 10 / 30 / 100 / unlimited", now 25 / 100 / 500;
+- **Search is unlimited for everyone (2026-10-15, owner: "completely remove the search limit"):** the meter below is dormant; it runs only with `SEARCH_CAPS=on`, and no pricing surface mentions searches. [2026-10-15](../DECISIONS.md#L17561)
+  **Was — search allowance (2026-10-09, owner: "make it 10 / 30 / 100 / unlimited", now 25 / 100 / 500;
   reverses "search is unmetered"):** signed out 10 searches a UTC day, a free
   account 30, Plus 100, Premium unlimited (`lib/search-quota.ts`). A search is a
   distinct query: typing "ak" → "akali" is one, paging and filters are free,
@@ -416,13 +417,14 @@ longer lands on its entry.
   (`tests/premium-plans-first.test.ts`). `PREMIUM_COPY_VERSION`
   `premium-2026-09-29c`. [2026-09-29](../DECISIONS.md#L15178),
   [2026-09-29 plans first](../DECISIONS.md#L15538)
-- **Upgrade prompts live where a limit is hit, not in headers:**
+- **Upgrade prompts live where a limit is hit, and in the header (header since 10-15):**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
   the tool walls — plus, since 09-29 at the owner's request, the restored
   signed-in `PremiumSlideIn`, and a tick on a set page (the same
-  `limit:portfolio` panel, reworded for a set). Header, rail and account menu stay plain
-  "Pricing" links. [2026-09-28](../DECISIONS.md#L14549),
+  `limit:portfolio` panel, reworded for a set). The header carries the shiny
+  `GetPremiumLink` since 2026-10-15 (see "Gold marks Premium"); rail and account
+  menu stay plain "Pricing" links. [2026-10-15](../DECISIONS.md#L17561) [2026-09-28](../DECISIONS.md#L14549),
   [2026-09-29](../DECISIONS.md#L15178)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
@@ -432,9 +434,10 @@ longer lands on its entry.
   currency) and retries without it if Stripe refuses; the pay-button note stays
   in US dollars and says so. `payment-failures-report` (maintenance) shows why
   Stripe refused a charge. [2026-10-12](../DECISIONS.md#L16892)
-- **No sign-up slider; sign-up prompts live in the page (09-30; reverses the
-  signed-out half of "value first"):** nothing in the layout asks a signed-out
-  visitor to sign up. `InlineSignupPrompt` is page content, one per page, below
+- **Sign-up prompts live in the page, plus one gated corner card (card restored 10-15):**
+  `SignupSlideIn`, signed out only, from the 4th page of a visit, 12 s, once a
+  session, two ✕ and it stops (`signupCardEligible`, `src=signup_card`) [2026-10-15](../DECISIONS.md#L17561).
+  Otherwise (09-30) nothing in the layout asks a signed-out visitor to sign up. `InlineSignupPrompt` is page content, one per page, below
   the first screen, signed-out only after `/api/me` answers: `/browse` (after
   the 12th tile), a priced `/deck`, `/decks/[slug]`, `/movers`,
   `/champions/[slug]`. The homepage keeps `AccountStrip` and a released set page
@@ -587,10 +590,12 @@ longer lands on its entry.
   stacks above the badges, which stop short of it.
   [2026-09-18](../DECISIONS.md#L8349), [2026-09-22](../DECISIONS.md#L10260),
   [2026-09-24](../DECISIONS.md#L11719)
-- **Gold marks Premium**, so a non-Premium action never wears it, and the
-  chrome no longer sells it: the header, rail and account menu carry a
-  plain, non-gold "Pricing" link to /premium (phones from 400px; below that,
-  the menu's Premium entry). No shimmer, no menu spotlight. Signed-out visitors see "Log in" and a primary
+- **Gold marks Premium**, so a non-Premium action never wears it. The HEADER
+  sells it again since 2026-10-15 (owner: "get premium … shiny"): `GetPremiumLink`,
+  the gold `.premium-cta` gradient with a light sweep (stronger on hover, still
+  under reduced motion), "✦ Get Premium" from xl and "Premium" in the phone slot
+  (from 400px) and at lg; "Upgrade" for Plus, plain gold text for Premium. [2026-10-15](../DECISIONS.md#L17561)
+  The rail and account menu keep a plain "Pricing" link. No menu spotlight. Signed-out visitors see "Log in" and a primary
   "Sign up free" at every width. The market switcher (flag only below sm) is
   in the header from 360px, and in the menu's top bar below that; on phones
   its panel opens full width under the header. [2026-09-24](../DECISIONS.md#L11756),
