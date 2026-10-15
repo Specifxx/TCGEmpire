@@ -14,7 +14,7 @@ import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, produ
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
-import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
+import { DEFAULT_COUNTRY, currencyOf, isoCountry, type Country } from "./country";
 import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
 import { convertCents } from "./fx";
 import { joinOverlapping, typeLabel } from "./price-report";
@@ -285,7 +285,7 @@ export async function discoverCollections(base: string): Promise<{ riftbound: st
   };
 }
 
-export async function fetchProducts(base: string, handle: string, country: string): Promise<ShopifyProd[]> {
+export async function fetchProducts(base: string, handle: string, country: Country): Promise<ShopifyProd[]> {
   const path = `/collections/${handle}/products.json`;
   const allowed = await robotsAllows(base);
   if (!allowed(path)) return [];
@@ -294,7 +294,14 @@ export async function fetchProducts(base: string, handle: string, country: strin
     if (page > 1) await sleep(REQUEST_DELAY_MS);
     // country=XX forces the store's market price (Shopify Markets serves a different
     // price per country): AUD for AU stores, USD for US stores, etc.
-    const url = `${base}${path}?limit=250&page=${page}&country=${country}&_=${Date.now()}`;
+    //
+    // ISO codes through isoCountry, never our own market codes (2026-10-15). This
+    // line sent "UK" and "EU", which Shopify does not recognise, so a store with a
+    // US market priced the request by the runner's location (GitHub's US machines):
+    // Thistle Tavern, Monster Card Corner, Axion Now and Mox in the Hole were stored
+    // in US dollars as pounds (£40.00 for a £25.99 deck), Universe TCG in dollars as
+    // euros. The singles importer has always used isoCountry (price-import.ts).
+    const url = `${base}${path}?limit=250&page=${page}&country=${isoCountry(country)}&_=${Date.now()}`;
     let res: Response;
     try {
       res = await fetch(url, { headers: { ...UA, "Cache-Control": "no-cache" }, cache: "no-store" });

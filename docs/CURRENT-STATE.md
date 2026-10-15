@@ -510,7 +510,7 @@ longer lands on its entry.
   ranking, so a price tie never goes to eBay. `/editorial-policy`, `/about`,
   `/privacy`, `/terms`, `/methodology`, the homepage, the region homes' FAQ and
   the consulting FAQ name the exception; nothing describes that table as
-  "cheapest first". [2026-10-15](../DECISIONS.md#L17282). Elsewhere
+  "cheapest first". [2026-10-15](../DECISIONS.md#L17284). Elsewhere
   no comparison is re-ranked
   and no true figure (the "+N%" on a dearer eBay row) is hidden; eBay rows keep
   their price position but wear eBay blue (`.btn-ebay`, or `.btn-ebay-ghost` in
@@ -747,11 +747,15 @@ longer lands on its entry.
   [2026-09-30](../DECISIONS.md#L16000)
 - **Stores:** check the match rate before adding one. If a read fails, keep
   yesterday's rows; rows expire after 72h of empty returns, and
-  `DECOMMISSIONED_RETAILERS` purges removed stores. A store's `currency`
-  must match its market or its prices are refused (`lib/offer-currency.ts`).
+  `DECOMMISSIONED_RETAILERS` purges removed stores. Only the keys listed there:
+  a store dropped from the registry without its key added keeps its rows
+  indefinitely (109 sealed and 13 card stores had, 2026-10-15). A store's
+  `currency` must match its market or its prices are refused
+  (`lib/offer-currency.ts`), and every Shopify `?country=` goes through
+  `isoCountry` (GB, ES), never our market code.
   Sealed-only stores go in `lib/sealed-stores.ts`, never `RETAILERS`.
   [2026-09-23](../DECISIONS.md#L11091), [2026-09-23](../DECISIONS.md#L11034),
-  [2026-09-24](../DECISIONS.md#L11971)
+  [2026-09-24](../DECISIONS.md#L11971), [2026-10-15](../DECISIONS.md#L17436)
 - **Sealed offers have three states** (open / sold out / unknown past 72h,
   `lib/sealed-offers.ts`); only open offers set a headline price or a store
   count. [2026-09-24](../DECISIONS.md#L11971). A product page's stock comes
@@ -764,7 +768,7 @@ longer lands on its entry.
   purchase invisibly to its feed opts in with `purchaseLockPages` (Thistle
   Tavern): its in-stock sealed rows' pages are re-read and a
   `data-purchase-locked`/`data-instore-only` main block is stored as not in
-  stock — one-way, never marking anything in stock. [2026-10-15](../DECISIONS.md#L17380)
+  stock — one-way, never marking anything in stock. [2026-10-15](../DECISIONS.md#L17382)
 - **Deck lines resolve to the STANDARD printing** (`isStandardPrinting` in
   `lib/deck.ts`): not a promo, alt-art, Signature or overnumbered copy, unless
   no standard one exists or the line pins it (`(VEN-197*)`). Every resolver
@@ -959,7 +963,7 @@ longer lands on its entry.
 - **Declined:** a locked popup ✕; guest checkout (deferred); a Radiance post blitz or paid ads; a static rule-2
   egress test; a static landscape header or
   a 44px desktop switcher; re-ranking eBay above a cheaper store (declined
-  09-26; adopted for the pre-order table only on 10-15, [2026-10-15](../DECISIONS.md#L17282)), an eBay
+  09-26; adopted for the pre-order table only on 10-15, [2026-10-15](../DECISIONS.md#L17284)), an eBay
   "Money Back Guarantee" claim, a card-page "#N of M" eBay module, affiliate
   links in emails. [2026-09-26](../DECISIONS.md#L13751),
   [2026-09-14](../DECISIONS.md#L6134),
