@@ -17412,8 +17412,11 @@ by `REQUEST_DELAY_MS`. It costs one page read per sealed product per run, which
 is why it is opt-in per store rather than applied to every Shopify store.
 Verified on the live pages: the in-store-only Vault reads locked, the orderable
 Showdown Decks page does not, and Game Nerdz's (a different platform) does not.
-`tests/purchase-lock.test.ts` pins both states, either flag alone, the
-related-card trap, and the one-way wiring.
+`tests/purchase-lock.test.ts` pins both states, the related-card trap, and the
+one-way wiring. (Same day, after the full audit: the check keys on
+`data-purchase-locked` alone. It first accepted `data-instore-only` too, but that
+flag says where a product is sold, not whether it can be ordered, and the
+store's bookable in-store event tickets must never read as locked.)
 
 **"In-store only" is stored as not in stock, so the badge says "Sold out".**
 That is imprecise — the product exists, in a shop — but our offer model has

@@ -33,8 +33,12 @@ test("an orderable main block on the same theme does not", () => {
   assert.equal(isPurchaseLocked(mainTag(false) + `<product-form data-purchase-locked="false">`), false);
 });
 
-test("either flag alone is enough", () => {
-  assert.equal(isPurchaseLocked(mainTag(false, true)), true, "data-instore-only on its own");
+test("only data-purchase-locked locks: in-store-only alone is a bookable in-store event", () => {
+  // The full audit (2026-10-15) found the store's Pre-Rift event tickets are
+  // "in-store" products that are bookable online. Locking on data-instore-only
+  // would mark a bookable ticket sold out; the lock flag is the one that says
+  // the buy button is gone.
+  assert.equal(isPurchaseLocked(mainTag(false, true)), false, "data-instore-only on its own");
   assert.equal(isPurchaseLocked(mainTag(true, false)), true, "data-purchase-locked on its own");
 });
 
