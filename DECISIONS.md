@@ -17278,3 +17278,101 @@ pre-orders are selling out by the hour in launch week; twice-daily imports are
 the latency, and this entry does not change it.
 
 ---
+
+## eBay rows to the top of the pre-order table — 2026-10-15
+
+Owner: *"Move eBay up to the very top even though it is the most expensive, and
+just say eBay may have a lower price. Move all the eBay rows to the top. Deploy
+to production immediately."*
+
+**This REVERSES the 2026-09-26 settled position** ("eBay beside every
+comparison, never inside the ranking"), which had also listed "re-ranking eBay
+above a cheaper store" under *declined*. The owner has now asked for it, for this
+table. Within each product on the pre-order table (`PreorderPriceTable`, shared
+by `/radiance-preorders` and `/sets/radiance`), every OPEN eBay row leads,
+cheapest eBay first, and the store rows follow in their usual price-and-stock
+order (`orderPreorderRows`). A stale or sold-out eBay row is not pinned: a greyed
+"Unknown" at the top of a product would be the worst first impression the table
+could make.
+
+**What did not move, and is what keeps it honest:**
+
+- the product's **headline price is still the cheapest open offer from anyone**,
+  so pinning a dearer eBay row never moves the number a product is sold on;
+- the **"+N%"** over that cheapest offer still shows on the eBay row;
+- every pinned row carries a **"Shown first"** tag beside its "Paid link" tag,
+  and the table's top line says open eBay listings come first — the pin is
+  labelled on the row it moved, not only in a footnote under the last product.
+
+**Where "eBay may have a lower price" went, and why not on the row.** The first
+cut put "Prices vary by seller — eBay may have a lower price than this listing"
+on the eBay row. An adversarial review caught that it did not belong there: the
+stored eBay row is ALREADY the best valid listing the importer found
+(`searchEbaySealed` sorts by DELIVERED cost — item price plus first postage
+option — and keeps the cheapest after the Riftbound, type, set, language,
+accessory and price-floor filters). A listing with a lower ITEM price can exist
+behind higher postage, so the claim was not strictly false, but it pointed the
+reader at a single listing that was chosen precisely for being the best one, and
+any other cheaper listing is one we rejected as not the product, an auction, or
+one posted since the import. The owner's line therefore sits on the per-product **"Search
+eBay for …"** line — a search, which does reach auctions and new listings, so
+"may" is true there: *"eBay may have a lower price — listings change between our
+checks"*. The row says what it is: *"eBay listing at our last check — eBay prices
+change often"*.
+
+**Every public promise of a neutral order was amended, not left false.** The
+site had promised, in many places, that payment never changes an order:
+`/editorial-policy` (three places: the money section, the verification list's
+"Never by what we earn", and "no retailer can pay … to rank higher"), `/about`
+("in every ranked list the cheapest option comes first, full stop"), `/privacy`,
+`/terms` §3, `/methodology#ordering`, and the store-consulting FAQ ("we don't
+change how any store ranks in the comparison for money"). Each now names the one
+labelled exception. The pre-order page's own intro, FAQ (also FAQPage JSON-LD),
+Open Graph description and baked share image said "cheapest first"; the hub FAQ
+(`lib/sets/radiance.ts`, also JSON-LD), the release-dates FAQ and ten article
+links described this table the same way. All were reworded to what the page now
+does — or, for the article links, the ordering clause was simply dropped. The
+"Also on eBay" panel and the strip above the table no longer call the table a
+"price ranking" they sit outside of. The first cut had amended only three of
+these pages; the review found the rest (six majors and four minors, every one
+confirmed by reading the cited lines), and the article sweep found a tenth link
+it had missed.
+
+**A second review round, on the finished diff, found more — and every item was
+real.** Three article "Ready to buy?" blurbs pointing at `/radiance-preorders`
+still said "cheapest first" (the first sweep matched link and claim on the same
+line; a blurb sits a line below its `href`). The homepage ("none of them can buy
+a store a better place in a comparison") and the region homes' FAQ ("lists every
+result cheapest first") now name the exception too. The policy pages' visible
+"Last updated" dates, which `/privacy` itself says is how readers learn of a
+change, are bumped (`lib/static-page-dates.ts`: `/about`, `/privacy`,
+`/editorial-policy`, `/methodology`, `/terms`, `/radiance-preorders`,
+`/release-dates`). "Then every store cheapest first" was itself inexact — a
+sold-out store sinks below a dearer open one — so the copy says "the stores
+taking pre-orders, cheapest first, then unconfirmed and sold-out ones".
+"The price beside each still shows how much dearer it is" was false when an eBay
+row is the cheapest, and now says "how it compares". The headline was quietly
+no longer order-independent: `headlineOffer` keeps the first of equal prices, so
+reading it from the pinned list handed every price tie to eBay; it reads the
+unpinned ranking again, so ties resolve as before the pin (pinned by a test).
+The new 11px search-line text lost its `opacity-80`, which failed contrast
+inside the filled eBay button. Untouched on purpose: claims about CARD
+comparisons and `/sealed` ("cheapest first"), which this change does not
+affect.
+
+**Tests** were re-pointed, not deleted: `tests/ebay-clicks-funnel.test.ts` (the
+order, the footnote, the strip, the panel, and one policy test covering the six
+policy pages — editorial policy, about, privacy, terms, methodology, the
+consulting FAQ — with negative assertions that the retired absolutes are gone
+from visible copy wherever a page had one), `tests/radiance-preorders-correctness.test.ts` (the order, with
+the headline asserted separately), and the new `tests/preorder-ebay-first.test.ts`
+(cheapest eBay first, stale/sold-out eBay not pinned, "Shown first" only on
+pinned rows, the lower-price line only on the search and never on a listing).
+
+**Deployed immediately**, because the owner asked for it: through
+`production-deploy.yml`'s manual run, which lands one release commit, rather
+than a `[deploy]` marker on the change's own subject (a merge commit is what
+Vercel would build, so a marker there would only add to the `[deploy]` count
+CLAUDE.md audits).
+
+---

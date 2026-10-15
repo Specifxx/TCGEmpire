@@ -117,7 +117,7 @@ export default function OgImage() {
               </span>
             </div>
             <div style={{ display: "flex", marginTop: 22, fontSize: 30, color: "#c9d1dc", lineHeight: 1.3 }}>
-              Booster boxes, packs and bundles at every store we track, cheapest first.
+              Booster boxes, packs and bundles at every store we track, side by side.
             </div>
           </div>
 

@@ -43,7 +43,8 @@ export function RadianceEbayPanel({
   country: Country;
   /** Which page renders it — buy_click's page_type and the EPN sources. */
   pageType: keyof typeof SOURCES;
-  /** A store price ranking sits directly above: the sub-line says the panel
+  /** A price table sits directly above (which since 2026-10-15 pins open eBay
+   *  listings first, so it is no longer called a "price ranking"): the sub-line says the panel
    *  is separate from it. False on an empty or released page, where there is
    *  no ranking above to be separate from. */
   besideRanking: boolean;
@@ -56,7 +57,7 @@ export function RadianceEbayPanel({
   return (
     <EbaySearchPanel
       heading="Also on eBay"
-      sub={`Searches of ${label}${besideRanking ? ", separate from the price ranking above" : ""}. eBay sellers set their own prices and dispatch dates — check both on the listing.`}
+      sub={`Searches of ${label}${besideRanking ? ", separate from the listings above" : ""}. eBay sellers set their own prices and dispatch dates — check both on the listing.`}
       country={country}
       pageType={pageType}
       headingLevel={headingLevel}

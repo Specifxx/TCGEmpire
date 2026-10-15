@@ -218,9 +218,10 @@ export default async function AboutPage() {
         </section>
 
         {/* Every revenue source, including the ones the old "How we stay free"
-            left out: subscriptions and paid store consulting. The "cheapest
-            option comes first, full stop" sentence and the eBay one after it
-            are pinned by tests/ebay-clicks-funnel.test.ts. */}
+            left out: subscriptions and paid store consulting. The neutrality
+            sentence (which since 2026-10-15 names the one labelled exception,
+            the Radiance pre-order table pinning open eBay listings first) and
+            the eBay one after it are pinned by tests/ebay-clicks-funnel.test.ts. */}
         <section id="how-it-earns" className="scroll-mt-header space-y-2">
           <h2 className="text-lg font-bold text-white">How RiftCompare earns money</h2>
           <p>
@@ -231,11 +232,14 @@ export default async function AboutPage() {
             <Link href="/stores/consulting" className="text-brand-400 hover:underline">consulting sessions for stores</Link>.
           </p>
           <p>
-            None of that money buys a position. It never changes the prices we show or the order of a
-            price comparison: in every ranked list the cheapest option comes first,
-            full stop. We also link to eBay outside those lists, always labelled. A store that books a
+            With one labelled exception, none of that money buys a position. It never changes the prices we
+            show, and in every ranked list the cheapest option comes first — except on our Radiance
+            pre-order table, where open eBay listings (our main affiliate partner) are shown first within
+            each product, tagged &ldquo;Shown first&rdquo; and marked as paid links, with the price beside
+            them still showing how they compare. We
+            also link to eBay outside those lists, always labelled. A store that books a
             consulting session is paying for advice, not placement, and it appears exactly where its prices
-            put it. The details are in our{" "}
+            put it among the stores. The details are in our{" "}
             <Link href="/editorial-policy#money" className="text-brand-400 hover:underline">editorial policy</Link>{" "}
             and our <Link href="/privacy" className="text-brand-400 hover:underline">privacy policy</Link>.
           </p>

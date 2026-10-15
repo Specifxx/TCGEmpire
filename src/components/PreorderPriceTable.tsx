@@ -13,6 +13,7 @@ import {
   openStoreCount,
   rankOffers,
   type OfferStock,
+  type SealedOffer,
 } from "@/lib/sealed-offers";
 
 // Extracted from /radiance-preorders — the per-product, per-store price card
@@ -33,11 +34,41 @@ import {
 // which put Many Realms' sold-out US$119.99 box at the top of the page.
 // lib/sealed-offers.ts holds the rules; this file only draws them.
 
+// eBay FIRST (2026-10-15, owner: "move all the eBay rows to the top, even though
+// it is the most expensive, and just say eBay may have a lower price"). This
+// REVERSES the 2026-09-26 rule below that "the ranking is untouched": within each
+// product, every OPEN eBay row now leads, cheapest eBay first, and the store rows
+// follow in their usual price-and-stock order (orderPreorderRows). What did NOT
+// change, and is what keeps the reversal honest:
+//  - the headline price is still the cheapest OPEN offer from anyone, so pinning
+//    a dearer eBay row never moves the number the product is sold on;
+//  - the "+N%" over that cheapest offer still shows on the eBay row, so the page
+//    never hides that it is dearer;
+//  - every pinned row carries a "Shown first" tag beside its "Paid link" tag,
+//    and the table's top line says open eBay listings come first — the pin is
+//    labelled WHERE IT HAPPENS, not only in the footnote below the last product;
+//  - the owner's "eBay may have a lower price" sits on the per-product "Search
+//    eBay" line, NOT on the eBay row. The row is already the cheapest valid
+//    listing the importer found (searchEbaySealed sorts by delivered cost and
+//    keeps the best), so "may be lower than this listing" would have been false
+//    there (strictly: it is the best by DELIVERED cost, and the table shows item
+//    price, so a lower item price behind dearer postage can exist — the point
+//    stands that the row was chosen for being the best). A SEARCH also covers
+//    auctions and listings posted since our last check, so "may" is true on it. The row itself says what it is: the listing
+//    at our last check, and that eBay prices change often;
+//  - the footnote, /editorial-policy, /about, /privacy, /terms, /methodology,
+//    the consulting FAQ and every "cheapest first" description of this page
+//    now say this table pins eBay first, instead of promising an order it no
+//    longer has.
+// A stale or sold-out eBay row is NOT pinned: a greyed "Unknown" at the very top
+// of a product would be the worst first impression the table could make.
+//
 // eBay (2026-09-26, "Pushing eBay clicks" in DECISIONS.md). eBay is the site's
 // main affiliate partner and the owner asked for more of its clicks, including
-// where a store is cheaper. The ranking is untouched — every row still sorts by
-// price and stock, and the "+N%" over the cheapest open offer still shows on an
-// eBay row. What changed is presentation, and what sits OUTSIDE the ranked list:
+// where a store is cheaper. The ranking was untouched then (see above for what
+// changed on 2026-10-15) — and the "+N%" over the cheapest open offer still
+// shows on an eBay row. What changed then is presentation, and what sits OUTSIDE
+// the ranked list:
 //  - an open eBay row reads "View on eBay" in eBay blue at the same ghost weight
 //    as its neighbours, so a dearer paid row is never the one filled button;
 //  - every paid row (eBay, TCGplayer) carries the "Paid link" tag, as the card
@@ -63,7 +94,8 @@ export function preorderTableGroups(groups: SealedGroup[]): SealedGroup[] {
 // The products most people come for lead the page (owner, 2026-10-15: "move the
 // booster box, the booster packs up to the very top because they're the main
 // ones"). Every other product follows, cheapest open offer first. Within a
-// product nothing changes: its stores are still ranked purely by price and stock.
+// product, open eBay rows lead (orderPreorderRows, below) and the stores follow,
+// ranked purely by price and stock.
 export const LEAD_PRODUCT_TYPES = ["Booster Box", "Booster Pack"] as const;
 
 function leadRank(g: SealedGroup): number {
@@ -75,6 +107,22 @@ function sortByCheapestOpen(groups: SealedGroup[]): SealedGroup[] {
   return [...groups].sort(
     (a, b) => leadRank(a) - leadRank(b) || (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity),
   );
+}
+
+const isEbayRetailer = (retailer: string) => retailer.startsWith("ebay");
+
+/**
+ * The order a product's rows are drawn in: every OPEN eBay row first (cheapest
+ * eBay first), then everything else in rankOffers' order — open cheapest first,
+ * then unknown, then sold out. See the 2026-10-15 note at the top of this file.
+ */
+export function orderPreorderRows<T extends SealedOffer & { retailer: string }>(
+  rows: readonly T[],
+  now: number = Date.now(),
+): T[] {
+  const ranked = rankOffers(rows, now);
+  const pinned = ranked.filter((r) => isEbayRetailer(r.retailer) && offerStock(r, now) === "open");
+  return [...pinned, ...ranked.filter((r) => !pinned.includes(r))];
 }
 
 /** The in-page anchor for a product's section, for the page's jump links. */
@@ -119,13 +167,18 @@ export function PreorderPriceTable({
     <div>
       <p className="text-xs text-slate-500">
         {shown.length} product{shown.length === 1 ? "" : "s"} · {storeCount} store{storeCount === 1 ? "" : "s"} taking
-        pre-orders · booster boxes and packs first, then the cheapest open pre-order
+        pre-orders · booster boxes and packs first · in each, open eBay listings first (paid links), then stores
+        taking pre-orders cheapest first, then unconfirmed and sold-out ones
       </p>
 
       <div className="mt-4 space-y-4">
         {shown.map((g) => {
-          const rows = rankOffers(g.listings, now);
-          const headline = headlineOffer(rows, now);
+          const rows = orderPreorderRows(g.listings, now);
+          // The cheapest OPEN offer from anyone, read from the UNPINNED ranking:
+          // headlineOffer keeps the first of equal prices, so reading the pinned
+          // list would have handed every price tie to eBay (final review,
+          // 2026-10-15). Ties resolve exactly as they did before the pin.
+          const headline = headlineOffer(rankOffers(g.listings, now), now);
           const open = openStoreCount(rows, now);
           return (
             <section key={g.groupKey} id={productAnchor(g)} className="card-surface scroll-mt-header overflow-hidden" data-group={g.groupKey}>
@@ -165,7 +218,9 @@ export function PreorderPriceTable({
                     isOpen && headline && headline.priceCents > 0
                       ? Math.round(((l.priceCents - headline.priceCents) / headline.priceCents) * 100)
                       : 0;
-                  const isEbay = l.retailer.startsWith("ebay");
+                  const isEbay = isEbayRetailer(l.retailer);
+                  // Exactly the rows orderPreorderRows moved to the top.
+                  const pinned = isEbay && isOpen;
                   const paid = isPaidLink(affiliateUrl(l.url, l.retailer, page));
                   return (
                     <li
@@ -183,7 +238,20 @@ export function PreorderPriceTable({
                           </span>
                           <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
                           {paid && <PaidLinkTag />}
+                          {pinned && (
+                            // The pin, labelled on the row it moved.
+                            <span data-shown-first className="rounded bg-sky-500/10 px-1.5 py-px font-semibold text-sky-300">
+                              Shown first
+                            </span>
+                          )}
                         </span>
+                        {pinned && (
+                          // What the row IS. Not "may be lower than this": it is
+                          // already the cheapest valid listing the importer found.
+                          <span data-ebay-note className="mt-0.5 block text-[11px] text-slate-500">
+                            eBay listing at our last check — eBay prices change often
+                          </span>
+                        )}
                       </span>
                       <span className="flex shrink-0 items-center gap-3">
                         {overPct > 0 && <span className="num text-[11px] text-slate-500">+{overPct}%</span>}
@@ -245,7 +313,14 @@ export function PreorderPriceTable({
                   }
                 >
                   <span className="min-w-0">
-                    Search {label} for {g.name}
+                    <span className="block">
+                      Search {label} for {g.name}
+                    </span>
+                    {/* The owner's line, where it is true: a SEARCH covers
+                        auctions and listings posted since our last check. */}
+                    <span data-ebay-lower className="block text-[11px]">
+                      eBay may have a lower price — listings change between our checks
+                    </span>
                   </span>
                   <span aria-hidden className="shrink-0">
                     →
@@ -270,8 +345,10 @@ export function PreorderPriceTable({
           what the eBay search lines are, since they sit inside each product. */}
       <p className="mt-2 text-[11px] leading-snug text-slate-400">
         Links marked &ldquo;Paid link&rdquo; earn us a commission if you buy through them, at no extra cost to you.
-        Every row above is sorted purely by price and stock, whether it pays us or not. The separate &ldquo;Search
-        eBay&rdquo; links are searches of eBay, not ranked results.
+        Open eBay listings are shown first in each product, tagged &ldquo;Shown first&rdquo;. They are paid links
+        and are often not the cheapest, so compare the price beside each one. Every other row is sorted purely by
+        price and stock, whether it pays us or not. The separate &ldquo;Search eBay&rdquo; links are searches of
+        eBay, not ranked results.
       </p>
       <AffiliateDisclosure partner="both" tight />
     </div>

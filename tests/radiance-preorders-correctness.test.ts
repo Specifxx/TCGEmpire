@@ -105,6 +105,9 @@ test("1a acceptance: the rendered US Booster Box row", () => {
   assert.match(html, /cheapest open · gamenerdz/);
   assert.match(html, /4 stores taking pre-orders/);
   // Many Realms is listed, badged Sold out, and sorted below every open offer.
+  // The open eBay row LEADS (owner, 2026-10-15: eBay rows to the top of each
+  // product) even though Game Nerdz is cheaper — which is why the headline above
+  // is asserted separately and still names Game Nerdz, not eBay.
   const rows = [...html.matchAll(/<li data-stock="(\w+)"[\s\S]*?<\/li>/g)].map((m) => ({
     state: m[1],
     store: m[0].match(/truncate text-sm[^"]*">([^<]+)</)?.[1],
@@ -112,8 +115,8 @@ test("1a acceptance: the rendered US Booster Box row", () => {
   assert.deepEqual(
     rows.map((r) => `${r.store}:${r.state}`),
     [
-      "gamenerdz:open",
       "ebay_us:open",
+      "gamenerdz:open",
       "punkouter:open",
       "tcgplayer:open",
       "manyrealms:soldout",

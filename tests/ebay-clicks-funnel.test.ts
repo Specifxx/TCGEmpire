@@ -135,12 +135,18 @@ const render = (page?: "/radiance-preorders" | "/sets/radiance", groups = [BOX, 
 const section = (html: string, key: string) =>
   html.match(new RegExp(`<section[^>]*data-group="${key.replace("|", "\\|")}"[\\s\\S]*?</section>`))?.[0] ?? "";
 
-test("pre-order table: the ranking is exactly what it was — cheapest open first, eBay where its price puts it", () => {
+// REVERSED 2026-10-15 (owner: "move all the eBay rows to the top, even though it
+// is the most expensive"). This test used to pin "eBay where its price puts it".
+// It now pins the new order AND the three things that keep it honest: the
+// headline is still the cheapest open offer from anyone, the dearer eBay row
+// still shows its "+N%", and the store rows below keep their price order.
+test("pre-order table: open eBay rows lead each product; stores follow in price-and-stock order", () => {
   const box = section(render(), "RAD|Booster Box");
   const rows = [...box.matchAll(/<li data-stock="(\w+)"[\s\S]*?<\/li>/g)].map(
     (m) => `${m[0].match(/truncate text-sm[^"]*">([^<]+)</)?.[1]}:${m[1]}`,
   );
-  assert.deepEqual(rows, ["gamenerdz:open", "ebay_us:open", "tcgplayer:open", "manyrealms:soldout"]);
+  assert.deepEqual(rows, ["ebay_us:open", "gamenerdz:open", "tcgplayer:open", "manyrealms:soldout"]);
+  assert.match(box, /cheapest open · gamenerdz/, "the headline is still the cheapest open offer, not the pinned eBay row");
   // The true figure stays on the dearer eBay row.
   const ebayRow = box.match(/<li data-stock="open"[\s\S]*?ebay_us[\s\S]*?<\/li>/)?.[0] ?? "";
   assert.match(ebayRow, />\+46%</);
@@ -198,7 +204,11 @@ test("pre-order table: the footnote says what is paid and what is ranked, with t
   const html = render();
   assert.match(html, /Every price above is a <strong[^>]*>pre-order<\/strong>/, "the pre-order paragraph stays");
   assert.match(html, /Links marked &ldquo;Paid link&rdquo; earn us a commission|Links marked “Paid link” earn us a commission/);
-  assert.match(html, /Every row above is sorted purely by price and stock, whether it pays us or not\./);
+  // The pinned eBay rows are disclosed as pinned, paid and often dearer; the
+  // neutrality claim now covers only what is still neutral.
+  assert.match(html, /Open eBay listings are shown first in each product, tagged (?:&ldquo;|“)Shown first(?:&rdquo;|”)\. They are paid links\s+and are often not the cheapest/);
+  assert.match(html, /Every other row is sorted purely by price and stock, whether it pays us or not\./);
+  assert.doesNotMatch(html, /Every row above is sorted purely by price/, "no longer true of this table");
   assert.match(html, /are searches of eBay, not ranked results\./);
   assert.match(html, /as an eBay Partner Network affiliate and a TCGplayer affiliate/);
   assert.doesNotMatch(html, /Some store links above are affiliate links/);
@@ -211,7 +221,10 @@ test("'Also on eBay' renders four labelled searches, each with Riftbound and its
     createElement(RadianceEbayPanel, { country: "UK", pageType: "radiance_preorders", besideRanking: true }),
   );
   assert.match(html, /<h2[^>]*>Also on eBay<\/h2>/);
-  assert.match(html, /Searches of eBay UK, separate from the price ranking above\./);
+  // "price ranking" retired 2026-10-15: the table above now pins open eBay
+  // listings first, so it is no longer a pure price ranking to be "separate" from.
+  assert.match(html, /Searches of eBay UK, separate from the listings above\./);
+  assert.doesNotMatch(html, /price ranking/);
   assert.match(html, />Paid link</);
   assert.match(html, /as an eBay Partner Network affiliate/);
   const hrefs = [...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
@@ -258,12 +271,15 @@ test("/radiance-preorders: strip above the table, panel under it in every state,
   assert.match(src, /\n\s*\)\}\n\n(?:\s*\{\/\*[\s\S]*?\*\/\}\n)?\s*<RadianceEbayPanel /);
   // The strip only above a real table, and it says it is outside the ranking.
   assert.match(src, /\{stillUpcoming && listed\.length > 0 && \(\s*<EbaySearchPanel\s+variant="strip"/);
-  assert.match(src, /sub="Not part of the store price ranking below\."/);
+  assert.match(src, /sub="A search of eBay, not a row in the table below\."/);
   assert.match(src, /ebaySearchUrl\(country, ebaySealedQuery\("Radiance Booster Box", "Booster Box"\), "preorders-strip"\)/);
   // The pinned table call is untouched (tests/radiance-hub.test.ts).
   assert.match(src, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} page="\/radiance-preorders" \/>/);
-  // Reworded 2026-10-15 when boxes and packs moved to the top of the table.
-  assert.match(src, /every Radiance product our tracked \{info\.adjective\} stores are taking pre-orders\s+on, booster boxes and packs first, each sorted cheapest first, in \{currency\}\./);
+  // Reworded 2026-10-15 when boxes and packs moved to the top of the table, and
+  // again the same day when open eBay listings were pinned first in each product:
+  // "each sorted cheapest first" stopped being true, so the intro says the order.
+  assert.match(src, /every Radiance product our tracked \{info\.adjective\} stores are taking pre-orders\s+on, booster boxes and packs first, in \{currency\}\. Within each product, open eBay listings are shown first\s+\(they are paid links\), then the stores taking pre-orders, cheapest first\./);
+  assert.doesNotMatch(src, /each sorted cheapest first/);
 });
 
 test("RadianceHub: the same panel directly under its table and its empty state", () => {
@@ -402,18 +418,36 @@ test("sealed: the quick view names the game, and /sealed's set search follows th
 // ── 9. Policy copy ──────────────────────────────────────────────────────────
 
 test("policy copy: the promise is the ORDER of a ranked comparison, and the eBay promotion is disclosed", () => {
-  const policy = read("src/app/editorial-policy/page.tsx");
-  assert.match(policy, /None of it affects the prices we show or the order of any ranked comparison\./);
-  assert.match(policy, /Ranking is\s+by item price, with known postage breaking ties;/);
-  assert.match(policy, /Outside the ranked lists we\s+do promote eBay, our main affiliate partner/);
-  assert.match(policy, /Those are labelled as paid links, sit\s+apart from the ranking, and never change it\./);
-  // The eBay-blue buttons inside ranked lists are disclosed too (review, 2026-09-26).
-  assert.match(policy, /Inside a comparison, an eBay row&apos;s\s+button uses eBay&apos;s own colour/);
+  // AMENDED 2026-10-15: the Radiance pre-order table pins open eBay listings
+  // first, so every public page that promised payment never changes an order now
+  // names that ONE labelled exception instead. Pinned here: the exception is
+  // named everywhere a promise is made, it is the only one, prices are never
+  // affected, and no absolute that is no longer true survives in visible copy.
+  const policy = code("src/app/editorial-policy/page.tsx");
+  assert.match(policy, /None of it affects the prices we show, and with one labelled exception it does not affect\s+the order of any ranked comparison\./);
+  assert.match(policy, /Ranking is by item price, with known postage breaking\s+ties;/);
+  assert.match(policy, /on our Radiance pre-order price table, open eBay listings are shown\s+first within each product, tagged &ldquo;Shown first&rdquo;\./);
+  assert.match(policy, /Never by what we earn —\s+except the one labelled exception on the Radiance pre-order table/);
+  assert.match(policy, /no retailer can pay to appear, to\s+rank higher, or to have a competitor removed\. The one place an order follows commission\s+is the Radiance pre-order table/);
+  assert.match(policy, /Outside the ranked lists we also promote eBay, our\s+main affiliate partner/);
+  assert.match(policy, /an eBay row&apos;s button uses eBay&apos;s own colour/);
   assert.doesNotMatch(policy, /price and postage alone/);
-  const about = read("src/app/about/page.tsx");
-  assert.match(about, /in every ranked list the cheapest option comes first,\s+full stop\. We also link to eBay outside those lists, always labelled\./);
-  assert.match(read("src/app/privacy/page.tsx"), /or the order in which a price comparison is ranked\./);
+  assert.doesNotMatch(policy, /None of it affects the prices we show or the order of any ranked comparison\./, "no longer true");
+
+  const about = code("src/app/about/page.tsx");
+  assert.match(about, /With one labelled exception, none of that money buys a position\./);
+  assert.match(about, /except on our Radiance\s+pre-order table, where open eBay listings/);
+  assert.doesNotMatch(about, /full stop/, "an absolute that is no longer absolute");
+
+  assert.match(code("src/app/privacy/page.tsx"), /with one exception we label where it happens: on our Radiance\s+pre-order table, open eBay listings are shown first within each product/);
+  assert.doesNotMatch(code("src/app/privacy/page.tsx"), /This\s+never affects the prices we show or the order in which a price comparison is ranked\./, "no longer true");
+  assert.match(code("src/app/terms/page.tsx"), /none affects the order in which results are ranked, with one exception labelled where\s+it happens: on the Radiance pre-order table, open eBay listings/);
+  assert.doesNotMatch(code("src/app/terms/page.tsx"), /None of these affects the prices we show\s+or the order in which results are ranked\./);
+  assert.match(code("src/app/methodology/page.tsx"), /The one comparison ordered differently is the\s+Radiance pre-order table/);
+  assert.match(read("src/app/stores/consulting/page.tsx"), /no store can pay to change how it ranks in the comparison/);
+  assert.doesNotMatch(read("src/app/stores/consulting/page.tsx"), /we don't change how any store ranks in the comparison for money/);
 });
+
 
 // ── Repo-wide: no guarantee claims about eBay's programmes ───────────────────
 
