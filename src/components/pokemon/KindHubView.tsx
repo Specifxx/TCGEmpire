@@ -14,6 +14,7 @@ import { Breadcrumbs } from "../Breadcrumbs";
 import { EbaySearchPanel } from "../EbaySearchPanel";
 import { AffiliateDisclosure } from "../AffiliateDisclosure";
 import { EbayRowLink, PaidLinksMarker } from "./PerPackTable";
+import { storePriceCents, storesWord } from "@/lib/pokemon/dexcompare";
 
 // One kind hub (/pokemon/booster-boxes, /elite-trainer-boxes, /booster-bundles):
 // every product of the hub's kinds in one table, the sentences written from
@@ -226,6 +227,9 @@ function HubTable({ tiles, currency, country, perPack }: { tiles: PkTile[]; curr
                   ) : (
                     <span className="text-xs text-slate-500">No tracked listing</span>
                   )}
+                  {/* DexCompare's stores, under the listing rather than in a column of their own: an eighth
+                      column pushed the eBay buttons out of the table at 1280px. */}
+                  <StoresLink tile={t} currency={currency} />
                 </td>
                 <td data-label="Packs" className={`${XL.cell} ${XL.labelled} num xl:text-right`}>
                   {t.packCount ?? "—"}
@@ -265,6 +269,35 @@ function HubTable({ tiles, currency, country, perPack }: { tiles: PkTile[]; curr
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** A hub row's DexCompare line: the cheapest STORE with it in stock and how many, under the listing. */
+function StoresLink({ tile, currency }: { tile: PkTile; currency: string }) {
+  const d = tile.dex;
+  if (!d || (d.inStock === 0 && d.listed === 0)) return null;
+  // Links this site's product page, not DexCompare: its board carries the stores line and DexCompare's link
+  // beside the TCGplayer and eBay listings, so the visitor compares all of them in one place. A price only
+  // when it is a store's (storePriceCents: DexCompare's US cheapest can be TCGplayer's).
+  const price = storePriceCents(d);
+  return (
+    <div className="mt-0.5">
+      <Link href={`/pokemon/sealed/${tile.slug}`} className="tap-link text-xs text-emerald-300 hover:underline">
+        {price != null ? (
+          <>
+            <span className="whitespace-nowrap">{storesWord(d.inStock)} from&nbsp;</span>
+            <span className="num whitespace-nowrap font-semibold">{formatMoney(price, currency)}</span>
+          </>
+        ) : d.inStock > 0 ? (
+          <span className="whitespace-nowrap">
+            {storesWord(d.inStock)}
+            {tile.presale ? "" : " in stock"}
+          </span>
+        ) : (
+          <span className="whitespace-nowrap">Sold out at {storesWord(d.listed)}</span>
+        )}
+      </Link>
     </div>
   );
 }

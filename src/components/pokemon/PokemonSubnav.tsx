@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { dexHomeHref } from "@/lib/pokemon/dexcompare";
+import { useCountry } from "../CountryProvider";
+import { DexAnchor } from "./DexStores";
 
 // The Pokémon section's own navigation strip, under the site header on every
 // /pokemon page (app/pokemon/layout.tsx). The section keeps its links to
@@ -21,6 +24,7 @@ const BLOG_TAB = { href: "/pokemon/blog", label: "Blog" };
 
 export function PokemonSubnav({ showBlog = false }: { showBlog?: boolean }) {
   const pathname = usePathname() ?? "";
+  const { country } = useCountry();
   const active = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
   const tabs = showBlog ? [...TABS, BLOG_TAB] : TABS;
@@ -49,9 +53,15 @@ export function PokemonSubnav({ showBlog = false }: { showBlog?: boolean }) {
           );
         })}
       </nav>
-      <Link href="/" className="tap-link ml-auto text-xs font-semibold text-slate-400 hover:text-white">
-        Riftbound prices →
-      </Link>
+      <span className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1">
+        {/* DexCompare, the owner's store comparison (lib/pokemon/dexcompare.ts), in the visitor's market. */}
+        <DexAnchor href={dexHomeHref(country, "subnav")} surface="subnav" market={country} className="tap-link text-xs font-semibold text-emerald-300 hover:underline">
+          Store prices ↗
+        </DexAnchor>
+        <Link href="/" className="tap-link text-xs font-semibold text-slate-400 hover:text-white">
+          Riftbound prices →
+        </Link>
+      </span>
     </div>
   );
 }

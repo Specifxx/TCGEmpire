@@ -21,6 +21,7 @@ import {
   runChecks,
   scheduledJobs,
   siteProbe,
+  dexcompareIndex,
   stripeChecks,
 } from "../src/lib/ops/checks";
 import { endpointIdFromUrl } from "../src/lib/ops/neon";
@@ -439,4 +440,22 @@ test("store prices: only the live markets count; a retired market's old rows nev
   const stale = (await priceFreshness(mk(six.map((m) => (m.country === "UK" ? { ...m, newest: new Date(NOW.getTime() - 40 * 3_600_000) } : m)))))[0]!;
   assert.equal(stale.severity, "warn");
   assert.match(stale.summary, /UK 40 hours/);
+});
+
+test("DexCompare index: a readable index is ok, a changed format warns, an outage is grey", async () => {
+  const img = (n: number) => `https://tcgplayer-cdn.tcgplayer.com/product/${n}_in_1000x1000.jpg`;
+  const rows = Array.from({ length: 120 }, (_, i) => [`p-${i}`, "P", "Booster Box", "sv8", img(1000 + i), 100, 1, 1, 0, null]);
+  const on = { "https://riftcompare.com/pokemon": () => new Response("", { status: 200 }) };
+  const ok = await dexcompareIndex(deps({ fetch: fakeFetch({ ...on, "https://www.dexcompare.app/api/browse/us": json({ v: 1, region: "us", checkedAt: null, rows }) }).f }));
+  assert.equal(ok.severity, "ok");
+  const changed = await dexcompareIndex(deps({ fetch: fakeFetch({ ...on, "https://www.dexcompare.app/api/browse/us": json({ v: 2, region: "us", rows }) }).f }));
+  assert.equal(changed.severity, "warn");
+  assert.match(changed.action ?? "", /DexCompare parser/);
+  const down = await dexcompareIndex(deps({ fetch: fakeFetch({ ...on, "https://www.dexcompare.app/api/browse/us": () => new Response("x", { status: 503 }) }).f }));
+  assert.equal(down.severity, "unknown");
+  // The section switched off: grey, and DexCompare is not even asked.
+  const off = fakeFetch({ "https://riftcompare.com/pokemon": () => new Response("", { status: 404 }) });
+  const offResult = await dexcompareIndex(deps({ fetch: off.f }));
+  assert.equal(offResult.severity, "unknown");
+  assert.deepEqual(off.calls, ["https://riftcompare.com/pokemon"]);
 });

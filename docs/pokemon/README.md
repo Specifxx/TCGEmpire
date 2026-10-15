@@ -96,6 +96,7 @@ by `tests/pokemon-isolation.test.ts`:
 | `src/lib/sitemap-sections.ts` | `"pokemon"` in `ALL_SECTIONS`, the `SECTIONS` filter, `const pokemon = …`, the two imports |
 | `src/components/FooterAds.tsx` | `OFF_TOPIC_ROUTES` (harmless if left) |
 | `src/lib/nudge-gate.ts` | `"/pokemon"` in `PREMIUM_SKIP_PATHS` (harmless if left) |
+| `src/lib/ops/checks.ts` | `dexcompareIndex` and its `runChecks` line, its test in `tests/ops-monitor.test.ts`, and the DexCompare row in `docs/ops-monitor.md` (harmless if left: it goes grey while `/pokemon` 404s) |
 | `src/lib/db-chains.ts` | `POKEMON_VARS` (harmless if left) |
 | `scripts/adsense-audit.ts` | the four `pokemon-*` rows at the top of `TEMPLATES` (harmless if left) |
 | `scripts/template-seo-check.ts` | the six `pokemon-*` rows at the top of `SPECS` (harmless if left) |
@@ -104,7 +105,7 @@ The two scripts are pinned as `SCRIPT_TOUCHPOINTS` in the same test.
 
 Also: the two `generate --schema prisma/pokemon/...` additions in `package.json`
 (`build`, `db:generate`, and the three `pokemon:*` scripts) and in
-`.github/workflows/ci.yml`; `getPokemonCatalog`/`getPokemonProduct` in
+`.github/workflows/ci.yml`; `getPokemonCatalog`/`getPokemonProduct`/`getDexMarket`/`getDexMarkets` in
 `tests/nested-cache.test.ts`; the Pokémon note in `CLAUDE.md`; the rows in
 `docs/seo-keyword-map.md`; the bullet in `docs/CURRENT-STATE.md`. The shared
 `SealedFilters`/`SealedSort` keep their new optional props (defaults are the
@@ -164,6 +165,7 @@ itself as well as the layout.
 | eBay Browse API | Cheapest matching fixed-price, new listing, deliverable to the market | US, UK, AU, CA, EU (eBay Spain) | SG gets an eBay **search** only (no EPN program; ebay.com.sg reroutes to ebay.com). |
 | Cardmarket public files (game 6) | Lowest listing (any language) + trend | EU (trend also a ≈ reference in the UK) | **Off** until `POKEMON_CARDMARKET=1` (§1). 739 of 1,020 products match today, every match exact or near-exact. |
 | eBay search links | A search of the visitor's own eBay for every product | All six | Zero API cost; the main eBay click surface. |
+| DexCompare (the owner's store comparison) | Each product's cheapest independent-store price, stores in stock and listing it | All six | Read from DexCompare's public browse index, no database (`lib/pokemon/dexcompare.ts`, `dexcompare-data.ts`); joined by TCGplayer productId; shown beside the comparison, never in it. DECISIONS.md 2026-10-15. |
 
 **Scope.** English sealed from Sword & Shield (Feb 2020) to the newest Mega
 Evolution set, pre-orders included: 42 sets, ~1,020 products. Out by design:
@@ -230,6 +232,8 @@ under 50 MB/day.
 | Affiliate clicks | `buy_click` with `page_type` `pokemon_*` (`retailer` `pkmn_*` for tracked rows, `pkmn_ebay_search` / `ebay_search` for searches) |
 | Revenue | EPN: customid contains `pkmn`. TCGplayer (Impact): sharedid starts `pkmn_` |
 | Copy buttons | `pokemon_copy_prices` (`format`, `withLink`, `page`) |
+| DexCompare referrals | `pokemon_dexcompare_click` (`surface`, `market`, `product`); on DexCompare, `utm_source=riftcompare`, `utm_campaign=pkmn-<surface>` |
+| DexCompare → here | sessions with `utm_source=dexcompare` landing through `/pokemon/tcgplayer/<id>` |
 | Pasted links | sessions with `utm_campaign=pkmn-copy` (`utm_source` reddit or discord, `utm_medium=copy`) |
 | Search | Search Console clicks on `/pokemon/*`; submit `/sitemaps/pokemon.xml` |
 
@@ -252,9 +256,11 @@ site's, buy-click rate per session against `/sealed`'s, and EPN earnings per
 - **TCGplayer prices in a downloadable CSV**: not built; pasted tables and bot
   replies show the same figures the pages already do.
 - **Cardmarket off** pending the permission question (§1).
-- **DexCompare.** `/about` links the owner's separate Pokémon site. Two of the
-  owner's sites pricing Pokémon sealed may compete in search; whether to
-  cross-link, consolidate or keep both is the owner's call.
+- **DexCompare.** Decided 2026-10-15 (owner): keep both, connected. This
+  section shows DexCompare's store prices (nofollow links, a new tab) and
+  DexCompare's product pages link back for the price history
+  (`/pokemon/tcgplayer/<id>`). DECISIONS.md, "The Pokémon section shows
+  DexCompare's store prices".
 - **Stores.** Phase 2: the Shopify/WooCommerce scrapers already cover stores
   that sell Pokémon; a Pokémon store pass would match titles with the same
   `kinds.ts` + `distinctiveTokens` rules and write `source: "store:<key>"` rows.

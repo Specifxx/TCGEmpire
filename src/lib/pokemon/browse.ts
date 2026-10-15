@@ -130,6 +130,7 @@ export function toDisplay(tiles: readonly PkTile[], showEur: boolean): PkTile[] 
     // From the converted listing, never the pound figure converted on its own:
     // otherwise the shown price ÷ packs and the shown per-pack differ by a cent.
     perPackCents: t.lowCents != null ? perPackCents(gbpCentsToEur(t.lowCents), t.packCount) : null,
+    ...(t.dex ? { dex: { ...t.dex, cents: t.dex.cents != null ? gbpCentsToEur(t.dex.cents) : null } } : {}),
   }));
 }
 

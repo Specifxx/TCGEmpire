@@ -23,6 +23,10 @@ import { ProductFaq } from "@/components/pokemon/ProductFaq";
 import { CopyPrices } from "@/components/pokemon/CopyPrices";
 import { offersAsOf } from "@/lib/pokemon/share-text";
 import { getPokemonPosts } from "@/lib/pokemon/blog/index";
+import { getDexMarkets } from "@/lib/pokemon/dexcompare-data";
+import { dexHref, dexLinkFor, storePriceCents, storesWord, type DexLink } from "@/lib/pokemon/dexcompare";
+import { DexAnchor } from "@/components/pokemon/DexStores";
+import type { Country } from "@/lib/country";
 import type { PkKind } from "@/lib/pokemon/kinds";
 
 // One Pokémon sealed product: every market's prices, its market-price history
@@ -88,6 +92,16 @@ export default async function PokemonProductPage({ params }: { params: Params })
   } catch (e) {
     console.error("[pokemon] US catalogue read failed; product comparisons left out", e);
   }
+
+  // DexCompare's store figures for every market (lib/pokemon/dexcompare.ts):
+  // self-cached, no database, and null for a market it could not read, which
+  // leaves that market's stores line out.
+  const dexTables = await getDexMarkets(COUNTRY_LIST.map((c) => c.code));
+  const dex = Object.fromEntries(COUNTRY_LIST.map((c) => [c.code, dexLinkFor(dexTables[c.code] ?? null, p)])) as Record<
+    Country,
+    DexLink | null
+  >;
+  const anyDex = COUNTRY_LIST.some((c) => dex[c.code] != null);
 
   const now = Date.now();
   const facts = productFacts(p, usCatalog, now);
@@ -190,7 +204,7 @@ export default async function PokemonProductPage({ params }: { params: Params })
           </p>
 
           <section className="card-surface mt-4 p-4">
-            <PokemonProductBoard boards={boards} preorder={p.presale} />
+            <PokemonProductBoard boards={boards} preorder={p.presale} dex={dex} slug={p.slug} />
           </section>
         </div>
       </div>
@@ -200,6 +214,7 @@ export default async function PokemonProductPage({ params }: { params: Params })
         <p className="mt-1 text-xs text-slate-500">
           The cheapest listing we track in each market, in its own currency, and TCGplayer&apos;s market price beside it
           (converted outside the US, so marked ≈).
+          {anyDex && " Stores are DexCompare's, our store comparison: how many have it in stock, and the cheapest of them."}
         </p>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
@@ -207,7 +222,8 @@ export default async function PokemonProductPage({ params }: { params: Params })
               <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="py-2 pr-3 font-semibold">Market</th>
                 <th className="py-2 pr-3 font-semibold">Cheapest we track</th>
-                <th className="py-2 font-semibold">TCGplayer market</th>
+                <th className="py-2 pr-3 font-semibold">TCGplayer market</th>
+                {anyDex && <th className="hidden py-2 font-semibold sm:table-cell">At stores</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-800">
@@ -232,10 +248,22 @@ export default async function PokemonProductPage({ params }: { params: Params })
                       ) : (
                         <span className="text-xs text-slate-500">No tracked listing</span>
                       )}
+                      {/* On a phone the stores figure sits here: a fourth column would not fit 360px. */}
+                      {anyDex && dex[c.code] && (
+                        <span className="mt-1 block text-xs sm:hidden">
+                          <span className="block text-slate-500">At stores</span>
+                          <StoresFigure market={c.code} link={dex[c.code]} currency={b.currency} product={p.slug} />
+                        </span>
+                      )}
                     </td>
-                    <td className="num whitespace-nowrap py-2 text-slate-300">
+                    <td className="num whitespace-nowrap py-2 pr-3 text-slate-300">
                       {ref ? `${ref.converted ? "≈ " : ""}${formatMoney(ref.priceCents, b.currency)}` : "—"}
                     </td>
+                    {anyDex && (
+                      <td className="hidden py-2 sm:table-cell">
+                        <StoresFigure market={c.code} link={dex[c.code]} currency={b.currency} product={p.slug} />
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -338,5 +366,30 @@ export default async function PokemonProductPage({ params }: { params: Params })
         </section>
       )}
     </div>
+  );
+}
+
+/**
+ * The every-market table's DexCompare figure: the cheapest STORE with it and how many have it, linked to DexCompare's page.
+ * A price only when it is a store's (storePriceCents: DexCompare's US cheapest can be TCGplayer's, the row beside it).
+ */
+function StoresFigure({ market, link, currency, product }: { market: Country; link: DexLink | null; currency: string; product: string }) {
+  if (!link || (link.kind === "product" && link.inStock === 0 && link.listed === 0)) return <span className="text-slate-500">—</span>;
+  // flex-wrap: on a phone the price and the store count share a ~110px cell.
+  const cls = "tap-link flex-wrap gap-x-1 text-emerald-300 hover:underline";
+  const href = dexHref(market, link, "markets");
+  if (link.kind === "set") {
+    return (
+      <DexAnchor href={href} surface="markets" market={market} product={product} className={`${cls} text-xs`}>
+        The set ↗
+      </DexAnchor>
+    );
+  }
+  const price = storePriceCents(link);
+  return (
+    <DexAnchor href={href} surface="markets" market={market} product={product} className={cls}>
+      {price != null && <span className="num whitespace-nowrap font-semibold">{formatMoney(price, currency)}</span>}
+      <span className="text-xs">{link.inStock > 0 ? storesWord(link.inStock) : `Sold out at ${storesWord(link.listed)}`} ↗</span>
+    </DexAnchor>
   );
 }

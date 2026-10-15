@@ -5,7 +5,8 @@ overlays entry, [2026-09-23](../DECISIONS.md#L11348); the free-limits bullets
 updated on [2026-09-28](../DECISIONS.md#L14549); the trial and tiers bullets on
 [2026-09-30](../DECISIONS.md#L15595); the Pokémon section on
 [2026-10-01](../DECISIONS.md#L16105); the search allowance and paid history,
-graded and auction bullets on [2026-10-09](../DECISIONS.md#L16846).
+graded and auction bullets on [2026-10-09](../DECISIONS.md#L16846); the
+Pokémon section's DexCompare connection on [2026-10-15](../DECISIONS.md#L17162).
 
 The short version of [DECISIONS.md](../DECISIONS.md): what still stands,
 with the latest position where an entry was reversed. Each bullet ends with
@@ -548,7 +549,9 @@ longer lands on its entry.
   (`SISTER_SITES`, `lib/sister-sites.ts`), and the cross-game guides and the
   where-to-buy / price-comparison articles end with a sister-site block
   (`sisterSitesFor`; at most a third of articles). Plain followed links
-  (`rel="noopener"`); a deep link is added only once it is live there.
+  (`rel="noopener"`); a deep link is added only once it is live there. The
+  Pokémon section's DexCompare data links are the exception: nofollow, on
+  every Pokémon product page ([2026-10-15](../DECISIONS.md#L17162)).
   [2026-10-14](../DECISIONS.md#L17018)
 - **1024–1279 is its own band** (~704px of content): the filter sidebar
   waits for xl, card art is 160px (320 from xl), and stickies use
@@ -906,6 +909,19 @@ longer lands on its entry.
   communities that ban links: price share cards and copy-as-text buttons, never
   promo posts; the Pokémon Discord app was built and then removed by the owner.
   [2026-10-01](../DECISIONS.md#L16219)
+- **Connected to DexCompare (2026-10-15, owner: "connect it to Dex Compare …
+  seamless"):** keep both sites, joined exactly by TCGplayer productId (DexCompare's
+  TCGplayer images), never by name. `getDexMarket` (self-cached, no database)
+  reads DexCompare's public browse index; product boards, the quick view, the
+  every-market table, tiles, kind hubs, set pages, the home band and the subnav
+  show its store figures and link it. It is never an offer row, never ranked in
+  the comparison, and never feeds per-pack rankings or prose. A price is quoted
+  only as a store's (`storePriceCents`): never when TCGplayer is in DexCompare's
+  figure. A sold-out or set-only block goes after the eBay search. The fetch
+  never passes `cache: "no-store"` (it breaks ISR inside `unstable_cache`). Every DexCompare link opens
+  a new tab, `rel="nofollow noopener"`, `pokemon_dexcompare_click`. DexCompare
+  links back through `/pokemon/tcgplayer/<id>`. The ops monitor watches the index
+  (`partner:dexcompare`). [2026-10-15](../DECISIONS.md#L17162)
 
 ## Removed, declined, kept
 

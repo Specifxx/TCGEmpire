@@ -23,7 +23,7 @@ Emails go to `bill.jyang101@gmail.com` (set `OWNER_ALERT_EMAIL` in Vercel and Gi
 | --- | --- |
 | Databases & limits | Main database answering · main and history database **monthly transfer** (% used, rate, days until it runs out) · age of the safety-net copy of prices |
 | eBay | API keys accepted · daily call allowance · auction sweep · eBay listings freshness |
-| Prices & data | Store prices per market · sealed prices · store scraper health job · daily price history files |
+| Prices & data | Store prices per market · sealed prices · store scraper health job · daily price history files · DexCompare's browse index (the Pokémon section's store prices) |
 | Payments | Stripe key accepted · Stripe webhook enabled and delivering |
 | Email | Resend key accepted · Brevo key accepted |
 | Site & deploys | Five key pages load with prices · latest production build · price import, auction sweep, sealed refresh, store health and daily release jobs (failed or overdue) · required settings present on the site |

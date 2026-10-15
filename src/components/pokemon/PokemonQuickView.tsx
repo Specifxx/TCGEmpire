@@ -11,6 +11,7 @@ import { formatDay, pokemonImageAlt, sourceWord } from "@/lib/pokemon/format";
 import { formatPerPack } from "@/lib/pokemon/value";
 import type { PkBoard, PkTile } from "@/lib/pokemon/types";
 import type { Country } from "@/lib/country";
+import { dexOpen, storesWord, type DexLink } from "@/lib/pokemon/dexcompare";
 import { useCountry } from "../CountryProvider";
 import { OutboundLink } from "../OutboundLink";
 import { AffiliateDisclosure } from "../AffiliateDisclosure";
@@ -26,6 +27,7 @@ import { PokemonBoardView } from "./PokemonBoardView";
 
 type Opened = { tile: PkTile; currency: string };
 type Boards = Record<Country, PkBoard>;
+type Loaded = { boards: Boards; dex: Partial<Record<Country, DexLink | null>> };
 
 const Ctx = createContext<{ open: (tile: PkTile, currency: string) => void }>({ open: () => {} });
 export const usePokemonQuickView = () => useContext(Ctx);
@@ -52,29 +54,34 @@ export function PokemonQuickViewProvider({ children }: { children: React.ReactNo
   );
 }
 
-const cache = new Map<string, Boards>();
+const cache = new Map<string, Loaded>();
 
 function QuickViewPanel({ tile, currency, onClose }: { tile: PkTile; currency: string; onClose: () => void }) {
   const { country } = useCountry();
-  const [boards, setBoards] = useState<Boards | null>(() => cache.get(tile.slug) ?? null);
+  const [loaded, setLoaded] = useState<Loaded | null>(() => cache.get(tile.slug) ?? null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (boards) return;
+    if (loaded) return;
     let alive = true;
     fetch(`/api/pokemon/product/${encodeURIComponent(tile.slug)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((d: { boards: Boards }) => {
-        cache.set(tile.slug, d.boards);
-        if (alive) setBoards(d.boards);
+      .then((d: { boards: Boards; dex?: Loaded["dex"] }) => {
+        const next = { boards: d.boards, dex: d.dex ?? {} };
+        cache.set(tile.slug, next);
+        if (alive) setLoaded(next);
       })
       .catch(() => alive && setFailed(true));
     return () => {
       alive = false;
     };
-  }, [boards, tile.slug]);
+  }, [loaded, tile.slug]);
 
-  const board = boards?.[country];
+  const board = loaded?.boards[country];
+  // The tile's own DexCompare figures (the grid attaches them) answer at once;
+  // the fetched board carries the same, plus the set link for an unjoined product.
+  // A store figure only: in the US, DexCompare's cheapest can be TCGplayer's.
+  const stores = tile.dex && dexOpen(tile.dex) && tile.dex.inStock > 0 && !tile.dex.marketplace ? tile.dex : null;
   const kind = kindInfo(tile.kind);
   const released = formatDay(tile.releasedOn);
   // Built here so the eBay button works before (and without) the fetch. The
@@ -123,6 +130,13 @@ function QuickViewPanel({ tile, currency, onClose }: { tile: PkTile; currency: s
                     </div>
                   )}
                 </>
+              ) : stores ? (
+                <>
+                  <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                    Cheapest of {storesWord(stores.inStock)} · DexCompare
+                  </div>
+                  <div className="num text-2xl font-extrabold text-accent">{formatMoney(stores.cents as number, currency)}</div>
+                </>
               ) : (
                 <div className="text-sm font-semibold text-slate-400">No tracked listing in your market</div>
               )}
@@ -135,7 +149,15 @@ function QuickViewPanel({ tile, currency, onClose }: { tile: PkTile; currency: s
 
         <div className="p-4">
           {board ? (
-            <PokemonBoardView board={board} preorder={tile.presale} pageType="pokemon_quickview" surface="modal" />
+            <PokemonBoardView
+              board={board}
+              preorder={tile.presale}
+              pageType="pokemon_quickview"
+              surface="modal"
+              dex={loaded?.dex[board.market] ?? null}
+              dexSurface="quickview"
+              product={tile.slug}
+            />
           ) : (
             <div className="space-y-3">
               <p className="px-1 text-sm text-slate-400" aria-live="polite">
