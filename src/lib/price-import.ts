@@ -1,4 +1,5 @@
 // Reusable price-import engine. Pulls Riftbound singles from AU Shopify stores'
+import { regionalPrinting } from "./regional-printings";
 // public products.json feeds, matches them to cards, and writes RetailerPrice
 // rows + Card.lowestPriceCents. Called by scripts/import-prices.ts (CLI) and the
 // scheduled /api/cron/refresh-prices route.
@@ -893,7 +894,7 @@ async function fetchWooStoreProducts(store: RetailerInfo): Promise<ShopifyProduc
 }
 
 export async function refreshEbayMarkets(
-  cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean }[]
+  cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean; externalId?: string | null }[]
 ): Promise<number> {
   // Applied HERE rather than in the callers' `orderBy` so no caller can forget
   // it: both the scheduled importer and scripts/refresh-ebay.ts go through this
@@ -1016,6 +1017,7 @@ export async function refreshEbayMarkets(
           total: total ?? "",
           isSignature: c.collectorNumber.includes("*"),
           isPromo: c.isPromo,
+          regional: regionalPrinting(c.externalId),
           marketplace: mkt.marketplace,
           referenceCents: refByCard.get(c.id),
         },
@@ -1214,7 +1216,7 @@ export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promi
     orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
     select: {
       id: true, name: true, setCode: true, collectorNumber: true, isPromo: true,
-      rarity: true, variant: true,
+      rarity: true, variant: true, externalId: true,
     },
   });
   // Both filters: a printing must be twice-daily-worthy AND still pass the
@@ -1265,6 +1267,7 @@ export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promi
           total: total ?? "",
           isSignature: c.collectorNumber.includes("*"),
           isPromo: c.isPromo,
+          regional: regionalPrinting(c.externalId),
           marketplace: mkt.marketplace,
           referenceCents: refByCard.get(c.id),
         },
@@ -1946,6 +1949,8 @@ export async function importPrices(): Promise<ImportSummary> {
         id: true, name: true, setCode: true, collectorNumber: true, isPromo: true,
         // Needed only to compute effective rarity for the filter below.
         rarity: true, variant: true,
+        // lib/regional-printings.ts keys on it.
+        externalId: true,
       },
     });
     // Value floor reference. Read once for the whole pass — TCGplayer is imported

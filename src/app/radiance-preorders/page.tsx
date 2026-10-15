@@ -6,7 +6,11 @@ import { COUNTRIES } from "@/lib/country";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
-import { PreorderPriceTable, pricedPreorderGroups, preorderTableGroups } from "@/components/PreorderPriceTable";
+import { PreorderPriceTable, pricedPreorderGroups, preorderTableGroups, productAnchor } from "@/components/PreorderPriceTable";
+import { offerStock, openStoreCount } from "@/lib/sealed-offers";
+import { formatMoney } from "@/lib/format";
+import type { SealedGroup } from "@/lib/sealed-import";
+import Image from "next/image";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { RadianceEbayPanel } from "@/components/RadianceEbayPanel";
 import { ebayLabel, ebaySealedQuery, ebaySearchUrl } from "@/lib/affiliate";
@@ -49,6 +53,21 @@ const SET_CODE = "RAD";
 function dayMonth(iso: string): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
 }
+
+/** Cheapest and dearest OPEN pre-order for one product, or null when none is open. */
+function openRange(g: SealedGroup | undefined, now: number): { low: number; high: number; stores: number } | null {
+  if (!g) return null;
+  const open = g.listings.filter((l) => offerStock(l, now) === "open").map((l) => l.priceCents);
+  if (!open.length) return null;
+  return { low: Math.min(...open), high: Math.max(...open), stores: openStoreCount(g.listings, now) };
+}
+
+// The three Radiance cards in the page header, the same art as the share image.
+const HEADER_ART = [
+  { src: "/radiance-spoilers/heartsteel-ksante-courageous.jpg", alt: "K'Sante, Courageous, a HEARTSTEEL overnumbered Radiance card" },
+  { src: "/radiance-spoilers/ekko-boy-who-shattered-time.jpg", alt: "Ekko, Boy Who Shattered Time, a Radiance Legend" },
+  { src: "/radiance-spoilers/seraphine-starry-eyed-songstress.jpg", alt: "Seraphine, Starry-Eyed Songstress, a Radiance Legend" },
+];
 
 const FAQS = [
   {
@@ -123,6 +142,14 @@ export default async function RadiancePreordersPage() {
   const priced = pricedPreorderGroups(groups);
   const listed = preorderTableGroups(groups);
   const ebay = ebayLabel(country);
+  // The summary band: computed from the same groups the table draws, so the two
+  // can never disagree. Nothing here is cached separately.
+  const now = Date.now();
+  const allListings = listed.flatMap((g) => g.listings);
+  const storesOpen = openStoreCount(allListings, now);
+  const openOffers = allListings.filter((l) => offerStock(l, now) === "open").length;
+  const box = openRange(listed.find((g) => g.productType === "Booster Box"), now);
+  const pack = openRange(listed.find((g) => g.productType === "Booster Pack"), now);
 
   const ld = ldJson(
     webPage({
@@ -168,19 +195,89 @@ export default async function RadiancePreordersPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       <Breadcrumbs trail={[{ name: "Radiance pre-orders", href: "/radiance-preorders" }]} />
 
-      {/* lnum only, no tnum: body's tabular figures also widen Inter's hyphen,
-          which rendered this label as 'PRE -ORDER' (globals.css prose rule). */}
-      <span className="chip mb-3 inline-flex bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold [font-feature-settings:'lnum'_1]">
-        Pre-order · releases 23 Oct 2026
-      </span>
-      <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">
-        Riftbound Radiance pre-order prices
-      </h1>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Nothing has shipped yet, so every store is simply picking an opening price — and they are picking very
-        different ones. The price lists below cover every Radiance product our tracked {info.adjective} stores are
-        taking pre-orders on, each sorted cheapest first, in {currency}. Prices refresh daily.
-      </p>
+      <header className="relative overflow-hidden rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/10 via-ink-900 to-ink-950 p-5 sm:p-7">
+        <div className="relative z-10 max-w-xl">
+          {/* lnum only, no tnum: body's tabular figures also widen Inter's hyphen,
+              which rendered this label as 'PRE -ORDER' (globals.css prose rule). */}
+          <span className="chip mb-3 inline-flex bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold [font-feature-settings:'lnum'_1]">
+            Pre-order · releases 23 Oct 2026
+          </span>
+          <h1 className="font-display text-2xl font-extrabold text-white sm:text-4xl">
+            Riftbound Radiance pre-order prices
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-slate-300">
+            Nothing has shipped yet, so every store is simply picking an opening price, and they are picking very
+            different ones. Below is every Radiance product our tracked {info.adjective} stores are taking pre-orders
+            on, booster boxes and packs first, each sorted cheapest first, in {currency}. Prices refresh daily.
+          </p>
+        </div>
+        <div aria-hidden className="pointer-events-none absolute -right-6 top-6 hidden h-56 w-72 sm:block">
+          {HEADER_ART.map((a, i) => (
+            <Image
+              key={a.src}
+              src={a.src}
+              alt=""
+              width={132}
+              height={185}
+              className={`absolute rounded-lg shadow-2xl shadow-black/60 ring-1 ${
+                i === 1 ? "left-[70px] top-0 z-10 ring-gold/60" : i === 0 ? "left-0 top-6 -rotate-6 ring-white/10" : "left-[140px] top-6 rotate-6 ring-white/10"
+              }`}
+            />
+          ))}
+        </div>
+
+        {stillUpcoming && listed.length > 0 && (
+          <dl className="relative z-10 mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="rounded-xl bg-black/30 p-3">
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Booster box from</dt>
+              <dd className="num mt-1 text-xl font-extrabold text-gold">
+                {box ? formatMoney(box.low, currency) : <span className="font-sans text-base text-slate-400">None open yet</span>}
+              </dd>
+              {box && box.high > box.low && (
+                <dd className="num text-xs text-slate-400">up to {formatMoney(box.high, currency)}</dd>
+              )}
+            </div>
+            <div className="rounded-xl bg-black/30 p-3">
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Booster pack from</dt>
+              <dd className="num mt-1 text-xl font-extrabold text-gold">
+                {pack ? formatMoney(pack.low, currency) : <span className="font-sans text-base text-slate-400">None open yet</span>}
+              </dd>
+              {pack && pack.high > pack.low && (
+                <dd className="num text-xs text-slate-400">up to {formatMoney(pack.high, currency)}</dd>
+              )}
+            </div>
+            <div className="rounded-xl bg-black/30 p-3">
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Stores taking pre-orders</dt>
+              <dd className="num mt-1 text-xl font-extrabold text-white">{storesOpen}</dd>
+              <dd className="text-xs text-slate-400">in {info.place}</dd>
+            </div>
+            <div className="rounded-xl bg-black/30 p-3">
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Open pre-orders</dt>
+              <dd className="num mt-1 text-xl font-extrabold text-white">{openOffers}</dd>
+              <dd className="text-xs text-slate-400">across {listed.length} products</dd>
+            </div>
+          </dl>
+        )}
+      </header>
+
+      {/* Jump links: one chip per product, in the table's own order, so a reader
+          after the Vault Bundle or a Showdown Deck gets there in one tap. */}
+      {stillUpcoming && listed.length > 1 && (
+        <nav aria-label="Radiance products" className="mt-4 flex flex-wrap gap-2">
+          {listed.map((g) => (
+            <a
+              key={g.groupKey}
+              href={`#${productAnchor(g)}`}
+              className="chip bg-ink-800 text-xs text-slate-200 hover:bg-ink-700 [font-feature-settings:'lnum'_1]"
+            >
+              {g.name.replace(/^(Riftbound[:\s-]*)?Radiance[:\s-]*/i, "") || g.name}
+              {g.lowestPriceCents != null && (
+                <span className="num ml-1.5 text-gold">{formatMoney(g.lowestPriceCents, currency)}</span>
+              )}
+            </a>
+          ))}
+        </nav>
+      )}
 
       {/* eBay, before the ranking but visibly not part of it (2026-09-26,
           "Pushing eBay clicks" in DECISIONS.md). Reddit and search visitors come

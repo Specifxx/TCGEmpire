@@ -58,6 +58,7 @@ on:
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-runes      # read-only census of every set's Rune printings + which lack real art
           - set-rune-art     # attach real English art to placeholder rune printings (OGN 'b' promos, UNL alt arts, SFD Nexus Night) + clear the Chinese-only VEN alt-art prints
+          - promo-art        # give promo/alternate printings their real TCGplayer photo where their image is missing or cloned from another card (scripts/promo-art.ts). Unambiguous matches only; report-only unless `apply` is ticked. Also runs weekly on its own (promo-art.yml).
           - set-official-art # attach Riot's official gallery art to the 4 placeholder printings it publishes (UNL tokens Bird/Brush/Reflection, Vex UNL 055a) — see scripts/set-official-art.ts
           - audit-rarity     # read-only: rarity distribution per set, base prints vs chase prints, + anomalies
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
@@ -5738,6 +5739,10 @@ jobs:
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
           DAYS: "28"
         run: npx tsx scripts/gsc-queries.ts
+
+      - name: Promo art from TCGplayer (report unless apply)
+        if: inputs.task == 'promo-art'
+        run: npx tsx scripts/promo-art.ts ${{ inputs.apply && '--apply' || '' }}
 
       - name: Daily impact report (read-only)
         # Did a change cost visitors, buy clicks or sign-ups? One row per day from

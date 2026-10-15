@@ -2187,7 +2187,7 @@ Newest first. Every entry here is something Riot published, printed or displayed
 - **Two spells:** [Hush](/card/hush-rad-041-167) (Calm, Rare, a 1 energy Reaction that counters a spell with a Power cost of 2 or more) and [Demon Shade](/card/demon-shade-rad-102-167) (Chaos, Uncommon).
 - **Three gear:** [Resource Extractor](/card/resource-extractor-rad-052-167) (Mind, Common, a Deploy gear that makes Gold), [Scrutinizing Scope](/card/scrutinizing-scope-rad-064-167) (Mind, Rare) and [Bushwhack Trap](/card/bushwhack-trap-rad-108-167) (Chaos, Rare).
 
-Riot's gallery gets four of these wrong, and our rows follow the printed cards: it files Demon Shade and Bushwhack Trap under Fury (both are Chaos, purple), calls Scrutinizing Scope a spell and Bushwhack Trap a unit (both are gear), and gives Hush and Antagonistic Apparatus no domain or type (Calm spell, Fury unit). With the five signed Legends Riot's gallery does not list, that is 197 Radiance printings. Twenty three numbers in the main 167 are still not in Riot's gallery (010, 011, 022, 031, 032, 042, 044, 053, 054, 065, 066, 078, 080, 092, 094, 103, 104, 113, 123, 124, 134, 135 and 149), about two from each domain; they will be added when they appear.
+Riot's gallery gets four of these wrong, and our rows follow the printed cards: it files Demon Shade and Bushwhack Trap under Fury (both are Chaos, purple), calls Scrutinizing Scope a spell and Bushwhack Trap a unit (both are gear), and gives Hush and Antagonistic Apparatus no domain or type (Calm spell, Fury unit). With the five signed Legends Riot's gallery does not list, that is 197 Radiance printings. Twenty three numbers in the main 167 are still not in Riot's gallery (010, 011, 022, 031, 032, 042, 044, 053, 054, 065, 066, 078, 080, 092, 094, 103, 104, 113, 123, 124, 134, 135 and 149), about two from each domain; they will be added when they appear. *Update, 15 October:* Riot's gallery now shows all of them, and all 23 are in, with the Riven, The Exile Legend (149 and 173/167), Ekko, Revolutionary (177/167) and the alternate arts of Orianna and Seraphine: 224 Radiance printings. **[The Radiance card list](/blog/riftbound-radiance-card-list)** has every one.
 
 **8 October — Riot's gallery reaches 177 printings, with a second Riven and a Gravity Field of Riot's own.** On 7 October Riot's card gallery listed 164 Radiance printings; today it lists 177. Twelve were new to us and are in the database with Riot's own card image:
 
@@ -12507,14 +12507,14 @@ And if the honest answer turns out to be "less than I hoped" — that is the nor
     summary: [
       "**Radiance is Riftbound's fifth set and launches on 23 October 2026** in English, Simplified Chinese and French on the same day. Pre-Rift events run 16–22 October.",
       "**The main set is numbered to 167.** On top of that come overnumbered Showcase printings (168/167 to 184/167), signed Legends with a `*` number, alternate-art units and runes, and five SP specials.",
-      "**As of 15 October our database holds 197 Radiance printings, including 144 of the 167 main-set numbers.** The rest are not yet confirmed in English. The gallery below fills in as each one is.",
-      "**Eight Legends are confirmed:** Ekko, Ziggs, Mordekaiser, Orianna, K'Sante, Seraphine, Evelynn and Jarvan IV.",
+      "**Every one of the 167 main-set numbers is in our database** (224 Radiance printings in all, as of 15 October), each read off Riot's official card image.",
+      "**Nine Legends:** Ekko, Ziggs, Mordekaiser, Orianna, K'Sante, Seraphine, Evelynn, Jarvan IV and Riven, The Exile.",
       "**Don't buy singles in launch week if you can wait.** Vendetta's median single fell 56% between its first week and October. The full numbers are below.",
     ],
     faq: [
       {
         q: "How many cards are in Riftbound Radiance?",
-        a: "The main set is numbered to 167 (001/167 to 167/167). Overnumbered Showcase printings run from 168/167 to 184/167, and on top of those are signed Legends, alternate-art printings, a cycle of alternate-art runes and five SP specials. Fan trackers quote a total of around 180 cards, but that depends on what you count. Our database holds 197 printings as of 15 October 2026.",
+        a: "The main set is numbered to 167 (001/167 to 167/167). Overnumbered Showcase printings run from 168/167 to 184/167, and on top of those are signed Legends, alternate-art printings, a cycle of alternate-art runes and five SP specials. Fan trackers quote a total of around 180 cards, but that depends on what you count. Our database holds 224 printings as of 15 October 2026.",
       },
       {
         q: "When does Riftbound Radiance release?",
@@ -12522,7 +12522,7 @@ And if the honest answer turns out to be "less than I hoped" — that is the nor
       },
       {
         q: "Who are the Radiance Legends?",
-        a: "Eight are confirmed by Riot: Ekko, Boy Who Shattered Time; Ziggs, Hexplosives Expert; Mordekaiser, Iron Revenant; Orianna, Lady of Clockwork; K'Sante, Pride of Nazumah; Seraphine, Starry-Eyed Songstress; Evelynn, Agony's Embrace; and Jarvan IV, Exemplar of Demacia. Fan trackers list Riven as a ninth that Riot had not confirmed at the time of writing.",
+        a: "Nine: Ekko, Boy Who Shattered Time; Ziggs, Hexplosives Expert; Mordekaiser, Iron Revenant; Orianna, Lady of Clockwork; K'Sante, Pride of Nazumah; Seraphine, Starry-Eyed Songstress; Evelynn, Agony's Embrace; Jarvan IV, Exemplar of Demacia; and Riven, The Exile.",
       },
       {
         q: "What are the new mechanics in Radiance?",
@@ -12580,13 +12580,13 @@ The main set runs from **001/167 to 167/167**. That is the number to use when so
 | Runes | R01 – R06, plus R01A – R06A | The rune cycle and its alternate-art versions |
 | Specials | SP1/005 – SP5/005 | Five special printings outside the main numbering |
 
-As of 15 October our database holds **197 Radiance printings**. That includes **144 of the 167 main-set numbers**; the other 23 have not been confirmed in English yet. Some have been shown in Chinese, and fan trackers fill the gaps with machine translations. We don't list a card until its English name and text are confirmed, because a mistranslated name on a price comparison site sends people searching for a card that doesn't exist. Expect the gaps to close in launch week.
+As of 15 October our database holds **224 Radiance printings**, including **all 167 main-set numbers**. The last 27 went in on 15 October, each card's name, type, domain, cost and text read off Riot's official image rather than taken from the gallery's filters, which still file a few cards wrongly (Burn Away is an Order Spell, not a Body Gear). If you spot a mistake, the report button on every card page reaches us.
 
-The split of what we hold, by type, is **70 units, 33 spells, 23 gear, 10 battlefields and 8 Legends** among the main-set numbers. By rarity it is 43 commons, 38 uncommons, 39 rares and 24 epics. By domain, Fury leads with 26 cards, then Calm and Body with 24 each, Mind with 21, Chaos and Order with 19 each, and 11 Colorless cards.
+The galleries above and the [Radiance set page](/sets/radiance) can be filtered by domain, rarity and type if you want the set's shape at a glance.
 
 ## The Radiance Legends
 
-Eight Legends are confirmed in English:
+Nine Legends:
 
 - **Ekko, Boy Who Shattered Time** – the set's time-twisting headliner, with a signed overnumbered print at 168*/167.
 - **Ziggs, Hexplosives Expert** – explosive gear and minefields; signed at 169*/167.
@@ -12596,8 +12596,9 @@ Eight Legends are confirmed in English:
 - **Seraphine, Starry-Eyed Songstress** – the set's music theme in one card; signed at 174*/167.
 - **Evelynn, Agony's Embrace** – overnumbered at 175/167.
 - **Jarvan IV, Exemplar of Demacia** – overnumbered at 176/167.
+- **Riven, The Exile** – 149/167, and overnumbered at 173/167.
 
-Fan trackers list **Riven** as a ninth Legend. Riot had not confirmed it in English when we wrote this, though Riven units are in the set (Broken Blade at 043/167, Deserter at 114/167). If a Riven Legend is confirmed, it will appear in the gallery above. Each Legend's champion page gathers every printing of that champion across sets. Start with **[Ekko](/champions/ekko)**, **[Seraphine](/champions/seraphine)** or **[K'Sante](/champions/ksante)**.
+Each Legend's champion page gathers every printing of that champion across sets. Start with **[Ekko](/champions/ekko)**, **[Seraphine](/champions/seraphine)** or **[K'Sante](/champions/ksante)**.
 
 ## The new keywords, and where to learn them
 

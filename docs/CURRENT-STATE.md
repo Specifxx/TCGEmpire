@@ -6,7 +6,7 @@ updated on [2026-09-28](../DECISIONS.md#L14549); the trial and tiers bullets on
 [2026-09-30](../DECISIONS.md#L15595); the Pokémon section on
 [2026-10-01](../DECISIONS.md#L16105); the search allowance and paid history,
 graded and auction bullets on [2026-10-09](../DECISIONS.md#L16846); the
-Pokémon section's DexCompare connection on [2026-10-15](../DECISIONS.md#L17137).
+Pokémon section's DexCompare connection on [2026-10-15](../DECISIONS.md#L17162).
 
 The short version of [DECISIONS.md](../DECISIONS.md): what still stands,
 with the latest position where an entry was reversed. Each bullet ends with
@@ -551,7 +551,7 @@ longer lands on its entry.
   (`sisterSitesFor`; at most a third of articles). Plain followed links
   (`rel="noopener"`); a deep link is added only once it is live there. The
   Pokémon section's DexCompare data links are the exception: nofollow, on
-  every Pokémon product page ([2026-10-15](../DECISIONS.md#L17137)).
+  every Pokémon product page ([2026-10-15](../DECISIONS.md#L17162)).
   [2026-10-14](../DECISIONS.md#L17018)
 - **1024–1279 is its own band** (~704px of content): the filter sidebar
   waits for xl, card art is 160px (320 from xl), and stickies use
@@ -711,6 +711,10 @@ longer lands on its entry.
   Cardmarket, TCGplayer): CJK in any script or word, and French (`french`,
   `FR`, `VF`, Origines, Déchaînés). Add a language there, never per source.
   [2026-10-12](../DECISIONS.md#L16892)
+  **The one exception is `lib/regional-printings.ts`:** four cards that exist only
+  in Korean or Chinese (Jinx and Yasuo KR promos, Ahri 303a KR, Seraphine 174a* CN)
+  are priced from eBay listings in their language that name that printing.
+  Add a card there, never loosen `FOREIGN_LANG`. [2026-10-15](../DECISIONS.md#L17148)
 - **TCGplayer is a buyable comparison row in every market but Australia**
   (US `tcgplayer`; UK/SG/CA/EU the same price converted): the cheapest English
   NM listing, else TCGplayer's market (last-sold) price, in stock either way.
@@ -917,7 +921,7 @@ longer lands on its entry.
   never passes `cache: "no-store"` (it breaks ISR inside `unstable_cache`). Every DexCompare link opens
   a new tab, `rel="nofollow noopener"`, `pokemon_dexcompare_click`. DexCompare
   links back through `/pokemon/tcgplayer/<id>`. The ops monitor watches the index
-  (`partner:dexcompare`). [2026-10-15](../DECISIONS.md#L17137)
+  (`partner:dexcompare`). [2026-10-15](../DECISIONS.md#L17162)
 
 ## Removed, declined, kept
 

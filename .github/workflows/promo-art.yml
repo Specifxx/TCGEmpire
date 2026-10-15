@@ -1,0 +1,47 @@
+name: Promo art
+
+# Weekly: give promo and alternate printings their real picture (scripts/promo-art.ts).
+# Promos enter the catalogue as clones of their base card, so they start with the
+# base card's art; TCGplayer photographs every printing, including its promo stamp
+# and alternate art. The script changes only a card whose image is missing or
+# shared with another card, only on an unambiguous match, and logs every change.
+# DECISIONS.md, "Regional exclusives and real promo art", 2026-10-15. Weekly because
+# TCGplayer adds photos for new promos a few weeks after they appear; a manual run
+# (report-only by default) is `maintenance.yml` task `promo-art`.
+
+on:
+  schedule:
+    - cron: "23 5 * * 1" # Mondays 05:23 UTC
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Write the changes (default: report only)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: promo-art
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  promo-art:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Match promo printings to their TCGplayer photos
+        env:
+          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || 'UNSET' }}
+        run: npx tsx scripts/promo-art.ts ${{ (github.event_name == 'schedule' || inputs.apply) && '--apply' || '' }}

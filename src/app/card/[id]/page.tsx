@@ -67,6 +67,7 @@ import { guidesForCard } from "@/lib/content/related-guides";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { cardWhereParam } from "@/lib/card-slug-renames";
 import { getRiftboundStocksLinks, rbsCardUrl } from "@/lib/riftboundstocks";
+import { regionalPrinting } from "@/lib/regional-printings";
 
 // The comparison's ordering in one line, beside the link to /methodology#ordering
 // that explains it: item price first, postage only where the store states it
@@ -344,6 +345,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       setCode: true, setName: true, collectorNumber: true,
       domain: true, type: true, rarity: true,
       variant: true, isOvernumbered: true, isPromo: true,
+      // lib/regional-printings.ts keys on it: the "Korea exclusive" chip.
+      externalId: true,
       orientation: true, energyCost: true, might: true, power: true,
       tags: true, description: true, flavorText: true,
       imageUrl: true, imageThumbUrl: true, blurDataUrl: true, artSeed: true,
@@ -369,6 +372,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   if (card.slug && params.id !== card.slug) permanentRedirect(`/card/${card.slug}`);
 
   const displayName = cardDisplayName(card.name, card);
+  const regional = regionalPrinting(card.externalId);
 
   // Serialize + enrich rows for the client market section. Affiliate URLs and
   // shipping-policy lookups are server-only tables, so they're resolved here once
@@ -1061,6 +1065,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <OvernumberedBadge show={isOvernumbered(card.collectorNumber) && !isUltimate(card.setCode, card.collectorNumber)} />
               <CrystalRoseBadge show={isCrystalRose(card.setCode, card.collectorNumber)} />
               <PromoBadge show={card.isPromo} />
+              {regional && (
+                <span className="chip bg-rose-500/15 font-semibold text-rose-300" title="Printed only in one language and region">
+                  {regional.label}
+                </span>
+              )}
             </div>
             <div className="mt-2 flex flex-wrap items-start justify-between gap-3 sm:mt-3">
               <div className="min-w-0 flex-[1_1_12rem]">

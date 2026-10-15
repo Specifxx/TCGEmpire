@@ -399,6 +399,8 @@ const JOBS: { file: string; title: string; staleH: number }[] = [
   { file: "sealed-refresh.yml", title: "Sealed refresh job", staleH: 36 },
   { file: "store-health.yml", title: "Store health job", staleH: 36 },
   { file: "production-deploy.yml", title: "Daily release job", staleH: 40 },
+  // Weekly (2026-10-15): a week and a day before it reads as late.
+  { file: "promo-art.yml", title: "Promo art job (weekly)", staleH: 200 },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {

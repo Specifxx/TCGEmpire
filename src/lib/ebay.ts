@@ -10,6 +10,7 @@
 // treat results as a secondary signal (lowest Buy-It-Now, AU marketplace).
 
 import { EBAY_CAMPAIGN_ID, ebayAffiliateUrl } from "./affiliate";
+import { titleInRegion, type RegionalPrinting } from "./regional-printings";
 // constants.ts imports nothing at all, so this cannot create a cycle. Using its
 // isCrystalRose() rather than re-testing /^sp\d/ here keeps one definition of
 // what a Crystal Rose printing IS — the same reason classifySealed is shared.
@@ -228,6 +229,14 @@ export function parseGrade(title: string): ParsedGrade {
 // The original combined guard, unchanged in behaviour — every title EXCLUDE
 // matched before still matches.
 const EXCLUDE = new RegExp(`${NOT_A_SINGLE.source}|${GRADED_SLAB.source}`, "i");
+
+// The same exclusion for a REGIONAL printing (lib/regional-printings.ts), minus
+// the language words, which are what its listings must say, and "sealed", which
+// for a promo handed out in a sealed sleeve ("[Sealed] Korea Exclusive Yasuo
+// Promo Card") describes the card, not a booster product. "booster", "pack" and
+// "box" still exclude, so a Korean pack listing can never pass as the promo.
+const NOT_A_SINGLE_REGIONAL = new RegExp(NOT_A_SINGLE.source.replace("sealed|", "").replace("chinese|japanese|korean|", ""), "i");
+const EXCLUDE_REGIONAL = new RegExp(`${NOT_A_SINGLE_REGIONAL.source}|${GRADED_SLAB.source}`, "i");
 
 // Foreign-language / non-English printings that EXCLUDE's English word-list
 // misses — see FOREIGN_LANG's own definition (scrape-http.ts) for the full
@@ -489,6 +498,8 @@ export interface EbayCardIdentity {
   total: string;
   isSignature: boolean;
   isPromo?: boolean;
+  /** Set only for a card that IS a foreign-language printing (lib/regional-printings.ts). */
+  regional?: RegionalPrinting;
 }
 
 /**
@@ -516,7 +527,13 @@ export function cardIdentityStages(
   opts: { allowGraded?: boolean } = {},
 ): { stage: string; pred: (it: any) => boolean }[] {
   const n = parseInt(card.number.replace(/[^0-9]/g, ""), 10);
-  const notThisProduct = opts.allowGraded ? NOT_A_SINGLE : EXCLUDE;
+  const notThisProduct = card.regional
+    ? opts.allowGraded
+      ? NOT_A_SINGLE_REGIONAL
+      : EXCLUDE_REGIONAL
+    : opts.allowGraded
+      ? NOT_A_SINGLE
+      : EXCLUDE;
   return [
     { stage: "has price", pred: (it) => Boolean(it?.price?.value) },
     {
@@ -535,7 +552,20 @@ export function cardIdentityStages(
     },
     // Non-English (Chinese etc.) printings share collector numbers with our
     // English cards but trade much cheaper, so they leak in as the "cheapest".
-    { stage: "not foreign printing", pred: (it) => !isForeignListing(it) },
+    // A REGIONAL printing (lib/regional-printings.ts) inverts this: the foreign
+    // listing is the only listing there is, so it must be in THIS card's language
+    // and name THIS printing. Every other card keeps the guard unchanged.
+    card.regional
+      ? {
+          stage: `in ${card.regional.language} and names this printing`,
+          pred: (it: any) => {
+            const title = it.title ?? "";
+            const r = card.regional!;
+            const located = r.language === "CN" && (it?.itemLocation?.country ?? "") === "CN";
+            return (titleInRegion(title, r.language) || located) && r.match.test(title);
+          },
+        }
+      : { stage: "not foreign printing", pred: (it: any) => !isForeignListing(it) },
     {
       // The collector number is the identity check for a base card. For a
       // SIGNATURE print it is too strict alone: there is exactly one signature
@@ -582,6 +612,9 @@ export function cardIdentityStages(
       pred: (it) => {
         const title = it.title ?? "";
         if (numberMatches(title, card.number, card.total, card.setCode)) return true;
+        // A regional printing's own `match` already named it (stage above). A title
+        // with no number is accepted; one stating a different number is not.
+        if (card.regional) return !STATES_A_COLLECTOR_NUMBER.test(title);
         // Both name-based fallbacks are for listings that give NO number. If the
         // title states one and numberMatches already rejected it above, the seller
         // has identified a different printing — believe them, not the keyword.
@@ -597,7 +630,10 @@ export function cardIdentityStages(
     // Signature ("*") and plain overnumbered share a number — keep them apart.
     {
       stage: `signature flag === ${card.isSignature}`,
-      pred: (it) => titleIsSignature(it.title ?? "", n) === card.isSignature,
+      // A regional printing is told apart by language and its own match, not by
+      // the word "signature" (the Korea-only Ahri carries a printed signature but
+      // no "*"; sellers call it either).
+      pred: (it) => !!card.regional || titleIsSignature(it.title ?? "", n) === card.isSignature,
     },
     // Promo and base share a number too. A promo card matches ONLY promo-marked
     // listings; a base card ONLY non-promo ones.
@@ -628,9 +664,12 @@ function mapEbayItem(it: any): EbayResult {
 /** The Browse `q` for a card. `withGame` appends "Riftbound" (see the note in
  *  searchEbayLowest about why that word is a fallback boundary, not a constant). */
 function buildQuery(
-  card: { name: string; number: string; isSignature: boolean; isPromo?: boolean },
+  card: { name: string; number: string; isSignature: boolean; isPromo?: boolean; regional?: RegionalPrinting },
   withGame: boolean,
 ): string {
+  // A regional printing is searched the way its sellers title it. One query, so
+  // the no-"Riftbound" fallback below never runs for it.
+  if (card.regional) return card.regional.query;
   const num = card.isSignature ? "" : ` ${queryNumberToken(card.number)}`;
   return `${card.name}${num}${card.isSignature ? " signature" : ""}${card.isPromo ? " promo" : ""}${withGame ? " Riftbound" : ""}`;
 }
@@ -670,6 +709,7 @@ export async function searchEbayLowest(
     total: string;
     isSignature: boolean;
     isPromo?: boolean;
+    regional?: RegionalPrinting;
     marketplace?: string; // "EBAY_AU" (default) | "EBAY_US"
     // The card's known value in this market (cheapest tracked STORE price, cents). When
     // present, listings priced absurdly above it are dropped as mismatches — a promo,
