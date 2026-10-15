@@ -17211,3 +17211,69 @@ Landed with `[deploy]` at the owner's request ("deploy it immediately when you'r
 **Also.** The 12 September "biggest release since Origins" post had called K/DA an inference with a caveat; it gets a dated update and a corrected FAQ answer linking the new post, and the spoiler tracker's 7 October entry links it too.
 
 **Shipped with `[deploy]`**, because the owner asked for it to be deployed immediately.
+
+## Game Nerdz: sold out for a week, shown as open — 2026-10-15
+
+Owner, relaying buyer feedback: *"Game Nerdz is already sold out — they have a
+set restock notification — but it says checked two hours ago, and it was sold
+out last week. It probably is just a glitch."*
+
+**The "checked two hours ago" was true; the stock was not.** Game Nerdz is a
+BigCommerce store, read one product page at a time (`lib/sealed-stores.ts`,
+`parseProductPage`). The importer DID read the page every run — so the
+`lastSeen` stamp behind "checked 2h ago" was honest — but it read the wrong
+field. A BigCommerce product configured as a pre-order emits
+`offers.availability: https://schema.org/PreOrder` in its JSON-LD for as long as
+it is a pre-order product: that field states the **purchase mode**, not the
+stock. The live page (fetched 2026-10-15) said "Out of stock", offered only "Set
+Restock Notification", and carried `var BCData = {"product_attributes":
+{"instock":false, "available_to_sell":0, ...}}` — the object BigCommerce's own
+theme JS reads to disable the button. We trusted the JSON-LD, so every daily read
+re-confirmed "Pre-order open" on a box nobody could buy, at US$129.97 near the
+top of the US list, and the live site was still showing it that way when this
+was written.
+
+`readBigCommerceStock()` now reads BCData and it **overrides schema.org whenever
+BCData is present**. Sellable = `instock`, or still taking backorders
+(`unlimited_backorder`, or a positive `available_for_backorder` /
+`available_to_sell`); `purchasable: false` vetoes all of it. **`purchasable:
+true` is not stock** — it was `true` on the same sold-out page — so it can only
+ever say no. Brace-matched rather than regex-sliced, because the page also embeds
+other products' attributes (HTML-escaped, for the related-products widget) and
+only the BCData object describes the product on the URL. A BCData that is
+present but unreadable yields `null` ("not evidence of stock", stored as not in
+stock), NOT a fallback to the JSON-LD — on a BigCommerce page that is exactly
+the field proven not to be stock. The three hardening points (the veto, the
+backorder rule, no fallback) came from an adversarial review of the first cut.
+Verified against the real page: it parses as `available: false`.
+`tests/bigcommerce-stock.test.ts` pins the override, the `purchasable` trap,
+both backorder forms, the related-product blob, unreadable BCData and the live
+page's exact six fields. `tests/offer-currency.test.ts`'s case — a BigCommerce
+page with only a PreOrder JSON-LD reads as available — still holds, because it
+carries no BCData.
+
+**Not a timestamp bug, so the timestamp was left alone.** Both import paths stamp
+`lastSeen` only on a successful read of that store. Changing what "checked"
+means would have hidden the real failure, which was the reading.
+
+**When it lands: the importer, not a site deploy.** Sealed imports run in GitHub
+Actions from `main` (`refresh-prices.yml`), and the page refreshes through
+`/api/revalidate` after each import, so merging before the 07:00 UTC run is what
+fixes the row; no `[deploy]` build is needed for it. `src/lib/sealed-stores.ts`
+is not in that workflow's push-trigger paths, and adding it was considered and
+NOT done here: a push-triggered full import half an hour before the scheduled one
+would spend a second run's eBay Browse calls against the daily budget
+`tests/affiliate-priority.test.ts` models.
+
+**The wider audit ("some sites").** Every Radiance row we showed as open at a
+non-marketplace store — 56 stores, 103 rows, from the 2026-10-14 13:44 UTC
+public export — was checked against its live page, each suspected false-open
+re-checked by three independent skeptics. The flagged Shopify and WooCommerce
+rows examined so far are **sell-outs since our last read, not parser bugs**: the
+exact feed the importer reads (JJ Collection's collection `products.json`
+variant `available`; the WooCommerce Store API's `is_in_stock`) already says
+sold out, so the next import marks them correctly with no code change. Radiance
+pre-orders are selling out by the hour in launch week; twice-daily imports are
+the latency, and this entry does not change it.
+
+---

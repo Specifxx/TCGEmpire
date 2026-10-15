@@ -741,7 +741,13 @@ longer lands on its entry.
   [2026-09-24](../DECISIONS.md#L11971)
 - **Sealed offers have three states** (open / sold out / unknown past 72h,
   `lib/sealed-offers.ts`); only open offers set a headline price or a store
-  count. [2026-09-24](../DECISIONS.md#L11971)
+  count. [2026-09-24](../DECISIONS.md#L11971). A product page's stock comes
+  from the platform's live inventory before schema.org: BigCommerce's BCData
+  (`instock` or a live backorder allowance; `purchasable: false` vetoes, `true`
+  is never stock) overrides a JSON-LD `PreOrder`, which states the purchase
+  mode, not the stock; an unreadable BCData is not evidence of stock. "Checked
+  X ago" (`lastSeen`) means the page was read, not that its stock was judged
+  right. [2026-10-15](../DECISIONS.md#L17215)
 - **Deck lines resolve to the STANDARD printing** (`isStandardPrinting` in
   `lib/deck.ts`): not a promo, alt-art, Signature or overnumbered copy, unless
   no standard one exists or the line pins it (`(VEN-197*)`). Every resolver
