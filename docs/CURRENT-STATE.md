@@ -592,8 +592,10 @@ longer lands on its entry.
   [2026-09-24](../DECISIONS.md#L11719)
 - **Gold marks Premium**, so a non-Premium action never wears it. The HEADER
   sells it again since 2026-10-15 (owner: "get premium … shiny"): `GetPremiumLink`,
-  the gold `.premium-cta` gradient with a light sweep (stronger on hover, still
-  under reduced motion), "✦ Get Premium" from xl and "Premium" in the phone slot
+  `.premium-cta`: a glowing gold outline with a light travelling round it and
+  shimmering gold text, never a solid gold fill (owner, same day: "the whole thing
+  highlighted … looks AI generated"; [2026-10-15](../DECISIONS.md#L17621)); stronger
+  on hover, still under reduced motion. "✦ Get Premium" from xl and "Premium" in the phone slot
   (from 400px) and at lg; "Upgrade" for Plus, plain gold text for Premium. [2026-10-15](../DECISIONS.md#L17561)
   The rail and account menu keep a plain "Pricing" link. No menu spotlight. Signed-out visitors see "Log in" and a primary
   "Sign up free" at every width. The market switcher (flag only below sm) is

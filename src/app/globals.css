@@ -789,50 +789,92 @@ body {
    .premium-cta: the header's "Get Premium" button (GetPremiumLink.tsx).
    RESTORED 2026-10-15 at the owner's request ("shiny … a gradient and shining,
    and when you hover over it … even more shiny"), reversing the 2026-09-28
-   removal of .premium-shimmer above. A slow gold gradient drift plus a light
-   sweep every few seconds; hover brightens, glows and speeds the sweep up.
-   Text stays dark on gold (well past 4.5:1). The global prefers-reduced-motion
-   block stops both animations, leaving a still gold button.
+   removal of .premium-shimmer above.
+   REWORKED the same day (owner: "just having the whole thing highlighted is not
+   good … it kind of glows and it's shiny … but it's not like you have a whole
+   thing highlighted. That just makes it look AI generated"): no gold fill. A
+   dark button with a faint gold tint, a thin gold outline that a light sweeps
+   along, gold text with the old shimmer travelling across it in step, and a
+   soft halo that breathes. Hover brightens the halo and speeds the sweep up.
+   Text: gold on the dark header (#caa85a, ~8:1), dark gold on the light one
+   (#7a5f14, 5.58:1). The global prefers-reduced-motion block stops all three
+   animations, leaving a still gold outline and gold text.
    --------------------------------------------------------------------------- */
 .premium-cta {
   position: relative;
-  overflow: hidden;
   isolation: isolate;
-  color: #1c1405;
-  background: linear-gradient(110deg, #b0812f 0%, #f3d488 28%, #caa85a 52%, #f8e6ae 76%, #b0812f 100%);
-  background-size: 220% 100%;
-  box-shadow: 0 0 0 1px rgb(248 230 174 / 0.6), 0 0 14px rgb(243 212 136 / 0.35);
-  animation: premium-cta-drift 6s ease-in-out infinite;
-  transition: box-shadow 200ms ease, filter 200ms ease, transform 200ms ease;
+  color: #caa85a;
+  background: linear-gradient(180deg, rgb(202 168 90 / 0.12), rgb(202 168 90 / 0.03));
+  box-shadow: 0 0 10px rgb(243 212 136 / 0.18), inset 0 0 10px rgb(243 212 136 / 0.06);
+  animation: premium-cta-glow 3.2s ease-in-out infinite;
+  transition: background 200ms ease, transform 200ms ease;
 }
-.premium-cta::after {
+/* The outline: a gradient border (masked to a 1px ring) whose bright band
+   travels round in step with the text's sheen. */
+.premium-cta::before {
   content: "";
   position: absolute;
-  inset: -2px;
-  z-index: 1;
+  inset: 0;
+  z-index: -1;
+  padding: 1px;
+  border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.75) 50%, transparent 65%);
-  transform: translateX(-120%);
-  animation: premium-cta-shine 3.6s ease-in-out infinite;
+  background: linear-gradient(110deg, rgb(202 168 90 / 0.65) 0%, rgb(202 168 90 / 0.65) 38%, #fff3cc 50%, rgb(202 168 90 / 0.65) 62%, rgb(202 168 90 / 0.65) 100%);
+  background-size: 250% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: premium-cta-sweep 4s linear infinite;
 }
-.premium-cta > * { position: relative; z-index: 2; }
+/* The label: gold text with a light passing across it. A separate element,
+   because background-clip:text on the link itself would clip the tint above. */
+.premium-cta-label { color: #caa85a; }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .premium-cta-label {
+    background-image: linear-gradient(110deg, #caa85a 0%, #caa85a 38%, #fff3cc 50%, #caa85a 62%, #caa85a 100%);
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: premium-cta-sweep 4s linear infinite;
+  }
+}
 .premium-cta:hover,
 .premium-cta:focus-visible {
-  color: #120c02;
-  filter: brightness(1.12) saturate(1.15);
+  background: linear-gradient(180deg, rgb(202 168 90 / 0.2), rgb(202 168 90 / 0.06));
   transform: translateY(-1px);
-  box-shadow: 0 0 0 1px rgb(255 240 190 / 0.9), 0 0 22px rgb(243 212 136 / 0.7), 0 0 40px rgb(202 168 90 / 0.35);
+  animation: premium-cta-glow-hover 1.6s ease-in-out infinite;
 }
-.premium-cta:hover::after,
-.premium-cta:focus-visible::after { animation-duration: 1.2s; }
+.premium-cta:hover::before,
+.premium-cta:focus-visible::before,
+.premium-cta:hover .premium-cta-label,
+.premium-cta:focus-visible .premium-cta-label { animation-duration: 1.6s; }
 .premium-cta:focus-visible { outline: 2px solid #f8e6ae; outline-offset: 2px; }
-@keyframes premium-cta-drift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+@keyframes premium-cta-sweep {
+  0% { background-position: 180% 50%; }
+  100% { background-position: -80% 50%; }
 }
-@keyframes premium-cta-shine {
-  0%, 55% { transform: translateX(-120%); }
-  100% { transform: translateX(120%); }
+@keyframes premium-cta-glow {
+  0%, 100% { box-shadow: 0 0 10px rgb(243 212 136 / 0.2), inset 0 0 10px rgb(243 212 136 / 0.06); }
+  50% { box-shadow: 0 0 18px rgb(243 212 136 / 0.4), inset 0 0 12px rgb(243 212 136 / 0.12); }
+}
+@keyframes premium-cta-glow-hover {
+  0%, 100% { box-shadow: 0 0 16px rgb(243 212 136 / 0.4), 0 0 32px rgb(202 168 90 / 0.18), inset 0 0 12px rgb(243 212 136 / 0.12); }
+  50% { box-shadow: 0 0 22px rgb(243 212 136 / 0.55), 0 0 44px rgb(202 168 90 / 0.25), inset 0 0 14px rgb(243 212 136 / 0.16); }
+}
+/* Light theme: the same build in the palette's text gold, so the label keeps
+   5.58:1 on the white header (the highlight dips to 3.59:1 as it passes, as the
+   old shimmer did). */
+:root[data-theme="light"] .premium-cta,
+:root[data-theme="light"] .premium-cta-label { color: #7a5f14; }
+:root[data-theme="light"] .premium-cta { background: linear-gradient(180deg, rgb(202 168 90 / 0.14), rgb(202 168 90 / 0.05)); }
+:root[data-theme="light"] .premium-cta::before {
+  background-image: linear-gradient(110deg, #b08a2e 0%, #b08a2e 38%, #f3d488 50%, #b08a2e 62%, #b08a2e 100%);
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  :root[data-theme="light"] .premium-cta-label {
+    background-image: linear-gradient(110deg, #7a5f14 0%, #7a5f14 38%, #a07c1c 50%, #7a5f14 62%, #7a5f14 100%);
+  }
 }
 
 /* Respect users who prefer less motion: neutralise every animation/transition. */

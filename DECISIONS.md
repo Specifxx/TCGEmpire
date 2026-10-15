@@ -17617,3 +17617,18 @@ What's dropped:
 Collections come from sitemap discovery. `riftbound-league-of-legends` and `riftbound-radiance` are the fallback. `tests/offer-currency.test.ts` now pins it as a CAD storefront.
 
 ---
+
+## The header Premium button glows instead of being filled gold — 2026-10-15
+
+**Owner:** "I still think you can make the premium button more catchy. Right now, just having the whole thing highlighted is not good. We should make it glowing. We had a pretty good premium button before… it kind of glows and it's shiny… but it's not like you have a whole thing highlighted. That just makes it look AI generated."
+
+**Before.** `.premium-cta` (restored earlier the same day, "Premium gets loud") filled the whole button with a drifting gold gradient and swept a white band across it. The "pretty good button before" was the 2026-09-10 `.premium-shimmer`: gold TEXT with a sheen moving through it, no fill.
+
+**Now.** Both ideas, without the fill:
+- The button is dark with a faint gold tint (12% to 3%), and a thin gold outline: a gradient ring (`::before`, masked to 1px) whose bright band travels round.
+- The label (`.premium-cta-label`, a new span in `GetPremiumLink`) is gold text with the old shimmer moving through it, in step with the outline's band (one `premium-cta-sweep` keyframe, 4s).
+- A soft gold halo breathes (`premium-cta-glow`, 3.2s). Hover brightens it, lifts the button 1px and speeds the sweep to 1.6s.
+- Light theme: the palette's text gold (#7a5f14, 5.58:1 on white; the highlight dips to 3.59:1 as it passes, as the old shimmer did) and a darker gold ring.
+- Reduced motion: the global block stops all three animations, leaving a still gold outline and gold text.
+
+Previewed on dark and light header mock-ups at rest and on hover before shipping. Same slots, same labels, same who-sees-what as before. `tests/premium-pitch-panel.test.ts` now pins "a faint tint, not a gold fill", the masked ring and the label span.

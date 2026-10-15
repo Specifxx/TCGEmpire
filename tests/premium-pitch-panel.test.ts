@@ -32,6 +32,14 @@ test("the header sells Premium with the shiny GetPremiumLink; rail and menu stay
   assert.match(leftCluster, /<GetPremiumLink/, "/premium stays reachable from the phone header");
   assert.match(code, /<GetPremiumLink[\s\S]*?\blg:inline-flex\b/, "and from the desktop row");
   assert.match(read("src/app/globals.css"), /^\.premium-cta \{/m, "the shiny button style");
+  // Reworked the same day (owner: "just having the whole thing highlighted … makes
+  // it look AI generated"): a glowing gold outline and shimmering gold text, never
+  // a solid gold fill.
+  const cta = read("src/app/globals.css").match(/^\.premium-cta \{[^}]*\}/m)![0];
+  assert.match(cta, /background: linear-gradient\(180deg, rgb\(202 168 90 \/ 0\.12\), rgb\(202 168 90 \/ 0\.03\)\)/, "a faint tint, not a gold fill");
+  assert.doesNotMatch(cta, /#f3d488|#b0812f/, "no opaque gold gradient behind the label");
+  assert.match(read("src/app/globals.css"), /^\.premium-cta::before \{[\s\S]*?mask-composite: exclude;/m, "the outline is a masked gradient ring");
+  assert.match(read("src/components/GetPremiumLink.tsx"), /className="premium-cta-label"/, "the label carries the text shimmer");
   const rail = read("src/components/SideNav.tsx");
   assert.match(rail, /href="\/premium"/, "the rail still links the plans");
   assert.doesNotMatch(rail.slice(rail.indexOf("<PremiumNavLink")), /text-gold|border-gold/, "…without gold");

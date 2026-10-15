@@ -32,17 +32,20 @@ export function GetPremiumLink({ className = "", surface, compact = false }: { c
   const upgrade = loaded && tier === "plus";
   return (
     <PremiumNavLink surface={surface} className={`premium-cta ${className}`} title={upgrade ? "Upgrade to Premium" : "Get Premium: every deal, price watches, ad-free"}>
-      <span aria-hidden="true" className="hidden xl:inline">✦</span>
-      {upgrade ? (
-        <span>Upgrade</span>
-      ) : compact ? (
-        <span>Premium</span>
-      ) : (
-        <>
-          <span className="hidden xl:inline">Get Premium</span>
-          <span className="xl:hidden">Premium</span>
-        </>
-      )}
+      {/* One label span carries the gold text and its sheen (.premium-cta-label). */}
+      <span className="premium-cta-label">
+        <span aria-hidden="true" className="hidden xl:inline">✦ </span>
+        {upgrade ? (
+          <span>Upgrade</span>
+        ) : compact ? (
+          <span>Premium</span>
+        ) : (
+          <>
+            <span className="hidden xl:inline">Get Premium</span>
+            <span className="xl:hidden">Premium</span>
+          </>
+        )}
+      </span>
     </PremiumNavLink>
   );
 }
