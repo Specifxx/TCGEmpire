@@ -8,7 +8,7 @@
 // prices. retailers.ts's own header warns about exactly that trap. The sealed
 // importer reads both lists; nothing else reads this one.
 //
-// Two ways in:
+// Three ways in:
 //   - "shopify": the same collection read every Shopify store in RETAILERS
 //     gets (sealed-import.ts), including pre-order collection discovery.
 //   - "product-pages": a fixed list of product URLs, each read for its
@@ -17,6 +17,7 @@
 //     Magento). Every URL was checked against the store's robots.txt, and both
 //     stores ask for Crawl-delay: 10, which `crawlDelayMs` honours. Add a URL
 //     here when the store lists a new product; there is no discovery.
+//   - "feed": a store's own JSON stock feed (FEED_STORES), read whole each run.
 //
 // `currency` is REQUIRED here (optional in RETAILERS, where it defaults to the
 // market's): it is what lib/offer-currency.ts checks before a price is shown in
@@ -110,9 +111,74 @@ export const PRODUCT_PAGE_STORES: ProductPageStore[] = [
   },
 ];
 
+// A store that publishes its own Riftbound stock feed: one JSON document of
+// { game, currency, items: [{ type, name, set_name, language, price, quantity,
+// url, preorder_ships_by? }] }, built from live stock. Read whole each run, so
+// a new product appears without anyone adding a URL (unlike product-pages).
+export interface FeedStore {
+  key: string;
+  name: string;
+  base: string;
+  country: NonNullable<RetailerInfo["country"]>;
+  currency: string;
+  platform: "feed";
+  feedUrl: string;
+}
+
+export const FEED_STORES: FeedStore[] = [
+  {
+    // Suggested by the store itself, 2026-10-15 (/admin/messages): a new web
+    // store from a seller with thousands of Cardmarket sales. Sealed only; the
+    // feed refreshes from live stock at least every 15 minutes. robots.txt
+    // allows it for every crawler except AI-training bots.
+    key: "sephigames",
+    name: "SephiGames",
+    base: "https://sephigames.com",
+    country: "EU",
+    currency: "EUR",
+    platform: "feed",
+    feedUrl: "https://sephigames.com/feed/riftbound.json",
+  },
+];
+
+export interface FeedItem {
+  /** "Riftbound <name>": the feed's names omit the game, which every sealed title gate requires. */
+  title: string;
+  priceCents: number;
+  url: string;
+  inStock: boolean;
+}
+
+/**
+ * The sealed, English items of a store feed, or null when the feed is not
+ * what it claims (wrong game or currency, no items array) — a feed that
+ * cannot be trusted must not replace the store's rows. Pure, for tests.
+ */
+export function parseSealedFeed(data: unknown, currency: string): FeedItem[] | null {
+  const d = data as { game?: unknown; currency?: unknown; items?: unknown } | null;
+  if (!d || d.game !== "riftbound" || d.currency !== currency || !Array.isArray(d.items)) return null;
+  const out: FeedItem[] = [];
+  for (const raw of d.items) {
+    const it = raw as Record<string, unknown>;
+    if (it.type !== "sealed" || it.language !== "en") continue; // English only, as everywhere (DECISIONS.md 2026-10-12)
+    const price = typeof it.price === "number" ? it.price : NaN;
+    const name = typeof it.name === "string" ? it.name.trim() : "";
+    const url = typeof it.url === "string" ? it.url : "";
+    if (!(price > 0) || !name || !/^https:\/\//.test(url)) continue;
+    out.push({
+      title: /riftbound/i.test(name) ? name : `Riftbound ${name}`,
+      priceCents: Math.round(price * 100),
+      url,
+      inStock: typeof it.quantity === "number" && it.quantity > 0,
+    });
+  }
+  return out;
+}
+
 export const SEALED_ONLY_STORES: readonly { key: string; name: string; country: string; currency: string }[] = [
   ...SEALED_ONLY_SHOPIFY,
   ...PRODUCT_PAGE_STORES,
+  ...FEED_STORES,
 ];
 
 export interface ParsedProductPage {

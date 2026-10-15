@@ -7,7 +7,7 @@ import { writeSealedHistoryDay } from "./price-history-store";
 import { sydneyDay, cachedOrDirect } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
-import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, parseProductPage, isPurchaseLocked } from "./sealed-stores";
+import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, FEED_STORES, parseProductPage, parseSealedFeed, isPurchaseLocked } from "./sealed-stores";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { headlineOffer, openStoreCount, rankOffers } from "./sealed-offers";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
@@ -163,6 +163,61 @@ async function fetchText(url: string): Promise<string | null> {
 // Crawl-delay is honoured between requests. A page that fails, or that states
 // a different currency from the store's, keeps that store's existing rows —
 // the same "one bad run keeps yesterday's rows" rule as the Shopify path.
+// Stores that publish their own stock feed (lib/sealed-stores.ts FEED_STORES).
+// Same rules as every other source: the sealed title gates, the per-type price
+// floor, one row per product group, and the store's rows are replaced only on a
+// feed that parsed — a failed or untrustworthy read keeps yesterday's rows.
+async function importFeedStores(): Promise<number> {
+  let count = 0;
+  for (const store of FEED_STORES) {
+    const allowed = await robotsAllows(store.base);
+    if (!allowed(new URL(store.feedUrl).pathname)) {
+      console.warn(`Sealed: ${store.key} robots.txt disallows ${store.feedUrl} — skipped.`);
+      continue;
+    }
+    const text = await fetchText(store.feedUrl);
+    let data: unknown = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+    const items = parseSealedFeed(data, store.currency);
+    if (!items) {
+      console.warn(`Sealed: ${store.key} — feed unreadable or not ${store.currency} Riftbound; rows kept.`);
+      continue;
+    }
+    const rows = new Map<string, Prisma.SealedListingCreateManyInput>();
+    for (const it of items) {
+      if (!isTrackableSealedTitle(it.title)) continue;
+      const setCode = detectSet(it.title);
+      const type = classifySealed(it.title);
+      if (it.priceCents < sealedFloorCents(type)) continue;
+      const groupKey = setCode ? `${setCode}|${type}` : it.title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+      const prev = rows.get(groupKey);
+      if (prev && (prev.inStock || !it.inStock) && prev.priceCents <= it.priceCents) continue;
+      rows.set(groupKey, {
+        groupKey,
+        title: it.title,
+        productType: type,
+        setCode,
+        retailer: store.key,
+        retailerName: store.name,
+        priceCents: it.priceCents,
+        url: it.url,
+        imageUrl: null,
+        country: store.country,
+        inStock: it.inStock,
+      });
+    }
+    await prisma.sealedListing.deleteMany({ where: { retailer: store.key } });
+    if (rows.size) await prisma.sealedListing.createMany({ data: Array.from(rows.values()) });
+    count += rows.size;
+    console.log(`Sealed: ${store.key} — ${rows.size} product(s) from its feed.`);
+  }
+  return count;
+}
+
 async function importProductPageStores(): Promise<number> {
   let count = 0;
   for (const store of PRODUCT_PAGE_STORES) {
@@ -599,6 +654,7 @@ export async function importSealed(): Promise<number> {
   }
 
   count += await importProductPageStores();
+  count += await importFeedStores();
 
   // eBay sealed prices per market (best-effort; skips when rate-limited).
   //

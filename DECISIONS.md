@@ -17538,3 +17538,22 @@ alone (see the Thistle Tavern entry).
   `ebay_uk` and the other markets.
 
 ---
+
+## Inbox, 2026-10-15: SephiGames added by its own feed, Rift Emporium declined, the French-box message archived — 2026-10-15
+
+**Owner:** "address the inbox in the admin dashboard … implement all of them, and deploy immediately … and also just close them as well … archive them." `audit-inbox` showed three open items: no feedback and no price reports.
+
+**SephiGames (store suggestion, EU): added.** A new web store from a seller with a long Cardmarket record. It sells sealed only, and offered a JSON feed built from live stock (`/feed/riftbound.json`, refreshed at least every 15 minutes). That is better than anything else we read: a whole catalogue in one request, with quantity, so stock is never guessed. It is the third way into `lib/sealed-stores.ts`, beside the Shopify and product-page stores: `FEED_STORES`, read by `importFeedStores()`.
+- `parseSealedFeed` rejects a feed for another game or currency, or with no `items`. In that case the store's rows are kept, as with any failed read.
+- It keeps English `sealed` items only. French prints are dropped here as everywhere (the 2026-10-12 entry).
+- Quantity 0 is sold out.
+- Item names omit the game ("Radiance Vault"), so the importer titles them "Riftbound …". Without that, `cleanupStaleSealed`, which deletes any store row whose title fails the Riftbound gate, would have deleted each import's rows straight after writing them.
+- Checked against its live feed: Radiance Booster Box €129.99, Radiance Vault €34.99, Spiritforged Booster Box €159.99, EU market, EUR.
+- robots.txt allows the feed. It blocks only AI-training crawlers, and our importer is not one.
+- `tests/sealed-feed-stores.test.ts`.
+
+**Rift Emporium (store suggestion, US): declined.** The suggested address (`riftempoium.com`) is a typo for `riftemporium.com`. It is a single-page marketplace whose listings load in the browser from its own Supabase database. It has no product feed, and no product page carries a price in its HTML. Reading their backend with the key embedded in their app would not be reading a public feed. Stamped `rejected` with that reason; reconsider if they publish a feed, as SephiGames did.
+
+**"Booster boxes in Canada show $150 because of French versions" (contact message, 2026-10-09): archived.** Already fixed on 2026-10-12 (the entry "Inbox, 2026-10-12: French prints out of the English prices…"). Re-checked against the 2026-10-15 snapshot: every in-stock Canadian booster box row is English ("(anglais)" is French for English). Contact messages have no status column. Archiving one is the delete the owner added to `/admin/messages` today, which `close-inbox-items` now does for a message named by its exact day and subject, and only when exactly one row matches.
+
+---

@@ -756,7 +756,8 @@ longer lands on its entry.
   `currency` must match its market or its prices are refused
   (`lib/offer-currency.ts`), and every Shopify `?country=` goes through
   `isoCountry` (GB, ES), never our market code.
-  Sealed-only stores go in `lib/sealed-stores.ts`, never `RETAILERS`.
+  Sealed-only stores go in `lib/sealed-stores.ts`, never `RETAILERS` (Shopify,
+  product pages, or a store's own JSON feed: `FEED_STORES`, [2026-10-15](../DECISIONS.md#L17542)).
   [2026-09-23](../DECISIONS.md#L11091), [2026-09-23](../DECISIONS.md#L11034),
   [2026-09-24](../DECISIONS.md#L11971), [2026-10-15](../DECISIONS.md#L17453)
 - **Sealed offers have three states** (open / sold out / unknown past 72h,
