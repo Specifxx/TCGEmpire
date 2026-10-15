@@ -76,6 +76,7 @@ on:
           - ensure-intro-coupons  # WRITES to Stripe (idempotent): creates the "first 3 months half price" coupon for each monthly price if missing, and prints what it will charge.
           - payment-failures-report # read-only: every Stripe charge in the last 30 days with WHO refused it (Radar block vs bank decline), Radar reason/rule/risk, CVC/postcode checks, card brand/funding/country, 3DS. Customers anonymised as #1, #2.
           - trial-cancel-report  # read-only: Premium trials cancelled mid-trial (cancel_at_period_end), hours to cancel, Stripe feedback, activity before cancelling. Anonymised.
+          - gsc-queries      # read-only SEARCH CONSOLE QUERY REPORT: top queries, striking-distance queries (position 4-20), rising queries and top pages for the last 28 days, so new articles target searches the site already nearly wins.
           - impact-report    # read-only DAILY IMPACT REPORT: per UTC day for the last 35 days, Search Console clicks/impressions, card views and searches (DemandSnapshot), new accounts by source and PremiumClick by surface, plus window averages around a change date (2026-10-09, the search allowance). Answers "did this change cost visitors or sign-ups?" days after it ships, where funnel-report's weeks are too coarse. Aggregate only, writes nothing.
           - funnel-report    # read-only WEEKLY PREMIUM FUNNEL: accounts, signup sources, PremiumClick, trial stamps and entitlement expiries from Postgres, joined to Stripe subscriptions/trials/conversions/churn, bucketed by ISO week for the last 8 (WEEKS= to change). Exists because neither admin page can answer "were more people signing up before?" — /admin/subscriptions' trial->paid is an ALL-TIME ratio with no time dimension, and /admin/accounts only looks back 30 days. Aggregate only, no PII. Writes nothing.
           - grandfather-plus-adfree # ONE-OFF (2026-09-14): pin every CURRENT Plus subscriber to premiumTierFloor='premium' so moving ad-free from Plus to Premium takes nothing away from someone who already paid for it. Idempotent. Report-only unless `apply` is ticked.
@@ -5730,6 +5731,13 @@ jobs:
           STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
           STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
         run: npx tsx scripts/funnel-report.ts
+
+      - name: Search Console query report (read-only)
+        if: inputs.task == 'gsc-queries'
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          DAYS: "28"
+        run: npx tsx scripts/gsc-queries.ts
 
       - name: Daily impact report (read-only)
         # Did a change cost visitors, buy clicks or sign-ups? One row per day from
