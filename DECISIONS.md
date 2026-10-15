@@ -17595,3 +17595,25 @@ alone (see the Thistle Tavern entry).
 The card's 78%-dismissed history (`lib/nudge-timing.ts`) is why it waits for the 4th page rather than showing at once.
 
 ---
+
+## La Boîte Mystère added, sealed only, in Canada — 2026-10-15
+
+**Owner** forwarded a visitor's suggestion: "another canadian LGS called « La Boîte Mystère » https://laboitemystere.com". Probed the same day:
+- **Platform:** a Shopify store, Canadian dollars (`Shopify.currency` CAD).
+- **robots.txt:** blocks nothing we read.
+- **Stock:** five Riftbound collections with 40 products, none of them singles: booster boxes and displays, champion and showdown decks, sleeves, playmats and in-store event tickets.
+
+So it joins `SEALED_ONLY_SHOPIFY` in the CA market, not `RETAILERS`. In `RETAILERS` it would show as a broken singles store with zero prices.
+
+Run through `isTrackableSealedTitle`, eight titles pass:
+- **Pre-order open:** the Radiance Booster Display (C$224.99) and Showdown Deck Display (C$32.99).
+- **Sold out:** six older English boxes and decks.
+
+What's dropped:
+- the French prints, through the shared language list (2026-10-12);
+- sleeves and playmats;
+- the "l'avant-première" event tickets.
+
+Collections come from sitemap discovery. `riftbound-league-of-legends` and `riftbound-radiance` are the fallback. `tests/offer-currency.test.ts` now pins it as a CAD storefront.
+
+---

@@ -16,7 +16,7 @@ const host = (u: string) => new URL(u).hostname.replace(/^www\./, "");
 
 // Storefronts verified CAD-only (Shopify /cart.js "currency": "CAD"). Whatever
 // market someone registers them in, they must never price in USD.
-const KNOWN_CAD_HOSTS = ["skyfoxgames.com", "cryptmtg.com"];
+const KNOWN_CAD_HOSTS = ["skyfoxgames.com", "cryptmtg.com", "laboitemystere.com"];
 
 test("no tracked store is configured into a market it cannot price in", () => {
   const all = [...RETAILER_LIST.map((r) => ({ key: r.key, country: (r.country ?? "AU") as Country })), ...SEALED_ONLY_STORES.map((s) => ({ key: s.key, country: s.country as Country }))];
