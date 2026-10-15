@@ -10,7 +10,7 @@ Vercel and a production build runs.
 | --- | --- | --- | --- | --- |
 | `db` (unset, today) | Neon | whole site fails | no | after each import (twice a day) |
 | `fallback` | Neon, files when Neon fails | public pages keep working | no | twice a day; daily while Neon is down |
-| `files` | the files only | public pages keep working | yes, most of it | once a day (08:00 UTC release) |
+| `files` | the files only | public pages keep working | yes, most of it | once a day (the release right after the morning import's snapshot) |
 
 In every mode, accounts, collections, alerts, orders and the marketplace stay
 in Neon, and the alert emails still run on the twice-daily imports.
@@ -57,3 +57,13 @@ holds every row; nothing was moved out of it.
 - **The daily export.** It appears as the "Export and publish the public data
   snapshot" step in `refresh-prices.yml`, and as a `data: public data snapshot`
   commit each morning. If it fails, the site keeps the previous day's files.
+
+## When the site's data changes in `files` mode
+
+Once a day. The morning import (`refresh-prices.yml`, scheduled 07:00 UTC but
+started hours late by GitHub) exports the snapshot, commits it, and then
+dispatches the production release, so every release carries that day's
+snapshot. A card added to the database (a new set's import) appears on the
+site with the next morning's snapshot and release. If the import or export
+fails, `production-deploy.yml`'s 22:00 UTC fallback releases whatever `main`
+holds, which is the previous snapshot.

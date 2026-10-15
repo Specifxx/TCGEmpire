@@ -200,3 +200,20 @@ test("the egress audit can now measure the history project too", () => {
   assert.match(wf, /--db=history/, "the scheduled audit must cover the history project");
   assert.match(wf, /RH10: \$\{\{ secrets\.RH10/, "and must pass the current history variable into the job");
 });
+
+test("the daily release follows the public data snapshot, with a late fallback (2026-10-15)", () => {
+  // GitHub started the 07:00 import and the 08:00 release 5-9 hours late, and the
+  // release kept landing minutes BEFORE the snapshot, so files mode served the
+  // previous day's data. The import now dispatches the release after publishing.
+  const prices = readFileSync(join(process.cwd(), ".github/workflows/refresh-prices.yml"), "utf8");
+  const exportAt = prices.indexOf("- name: Export and publish the public data snapshot");
+  const releaseAt = prices.indexOf("- name: Release the snapshot (the daily production deploy)");
+  assert.ok(exportAt > 0 && releaseAt > exportAt, "the release step comes after the export step");
+  assert.match(prices, /id: export\n/);
+  assert.match(prices, /if: \$\{\{ !cancelled\(\) && steps\.export\.outcome == 'success' \}\}/, "only after a successful export");
+  assert.match(prices, /gh workflow run production-deploy\.yml --ref main/);
+  assert.match(prices, /actions: write/, "dispatching a workflow needs actions: write");
+  const wf = readFileSync(join(process.cwd(), WORKFLOW), "utf8");
+  assert.match(wf, /cron: "0 22 \* \* \*"/, "the schedule is the late fallback, not a race with the import");
+  assert.match(wf, /git log --since='20 hours ago' --format=%s \| grep -ciF -- '\[deploy\]'/, "the fallback skips when a release already landed");
+});

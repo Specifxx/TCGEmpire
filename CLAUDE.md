@@ -5,7 +5,9 @@
 Production does **not** build on every push. `vercel.json`'s `ignoreCommand`
 (`scripts/vercel-ignore-build.sh`) skips any commit whose SUBJECT LINE lacks
 the literal marker `[deploy]`, and `.github/workflows/production-deploy.yml`
-lands one such commit a day at 08:00 UTC. The subject only: a body that
+lands one such commit a day, dispatched by the morning price import right after
+it publishes the public data snapshot (fallback: a 22:00 UTC cron that releases
+only if nothing has in 20 hours). The subject only: a body that
 mentions the marker in prose must not deploy, and once did.
 
 **Preview and development builds are off** (owner, 2026-10-14). `claude/*`
@@ -35,7 +37,7 @@ So, for automated sessions:
   own initiative. Ordinary work waits for the daily release; that is the point.
   Explaining the gate in a commit BODY is fine and does not deploy.
 - **"Push to prod" / "ship this" defaults to landing on `main` and riding the
-  daily 08:00 UTC release — it does NOT by itself mean "deploy this exact
+  daily release — it does NOT by itself mean "deploy this exact
   commit right now".** Add `[deploy]` only when the user says the release is
   urgent (can't wait for the next scheduled build), and say so explicitly in
   the summary. If it's ambiguous whether a request means "get it live" or

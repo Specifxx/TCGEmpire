@@ -29,11 +29,14 @@ longer lands on its entry.
   (schema push, Singapore import, ~475 prerendered database-backed pages); an
   unreadable message builds no preview. Production is unchanged.
   [2026-10-14](../DECISIONS.md#L17091)
-- **One release a day:** `production-deploy.yml` lands an empty `[deploy]`
-  commit at 08:00 UTC if anything landed since the last one (GitHub's cron
-  drifts; it has fired at 11:51–13:01). Since 2026-10-03 something always
-  has: the import's daily price-history commit, which that release ships.
-  "Run workflow" releases at once.
+- **One release a day, after the snapshot (2026-10-15):** the morning import
+  (`refresh-prices.yml`) exports and commits the public data snapshot, then
+  dispatches `production-deploy.yml`, which lands an empty `[deploy]` commit;
+  so in `PUBLIC_DATA_MODE=files` every release serves that day's data. The old
+  08:00 cron fired 5 to 9 hours late and beat the snapshot by minutes. The
+  schedule is now a 22:00 UTC fallback that skips if any `[deploy]` landed in
+  the last 20 hours. "Run workflow" releases at once.
+  [2026-10-15](../DECISIONS.md#L17436)
   [2026-09-11](../DECISIONS.md#L4871), [2026-09-14](../DECISIONS.md#L6263),
   [2026-10-03](../DECISIONS.md#L16553)
 - **Sessions never add `[deploy]` on their own**; "push to prod" means land
@@ -755,7 +758,7 @@ longer lands on its entry.
   `isoCountry` (GB, ES), never our market code.
   Sealed-only stores go in `lib/sealed-stores.ts`, never `RETAILERS`.
   [2026-09-23](../DECISIONS.md#L11091), [2026-09-23](../DECISIONS.md#L11034),
-  [2026-09-24](../DECISIONS.md#L11971), [2026-10-15](../DECISIONS.md#L17436)
+  [2026-09-24](../DECISIONS.md#L11971), [2026-10-15](../DECISIONS.md#L17453)
 - **Sealed offers have three states** (open / sold out / unknown past 72h,
   `lib/sealed-offers.ts`); only open offers set a headline price or a store
   count. [2026-09-24](../DECISIONS.md#L11971). A product page's stock comes
