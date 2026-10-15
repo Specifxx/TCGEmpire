@@ -19,8 +19,8 @@ import { meterAndStore, quotaContext } from "@/lib/search-quota-server";
 // sealed quick view in place, like a card row does, with no second request
 // (2026-10-04). At most four, so the payload stays a few KB.
 //
-// SEARCH IS METERED BY TIER (2026-10-09, owner): signed out 10 searches a day,
-// a free account 30, Plus 100, Premium unlimited (lib/search-quota.ts). This
+// SEARCH IS METERED BY TIER (2026-10-09, owner; loosened 2026-10-15 to 25 / 100 / 500): signed out 25 searches a day,
+// a free account 100, Plus 500, Premium unlimited (lib/search-quota.ts). This
 // reverses the 2026-09-28 "keep price comparison fully free" rule for search
 // only, after the owner was shown what the earlier 10/100/unlimited ladder cost
 // (pages/visitor 3.86 -> 2.75, buy clicks ~40% down in about a day). Card, set,

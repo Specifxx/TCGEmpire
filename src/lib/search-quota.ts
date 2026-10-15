@@ -1,6 +1,7 @@
-// Daily search allowance (2026-10-09, owner): signed out 10 a day, a free
-// account 30, Plus 100, Premium unlimited. DECISIONS.md, "Search is metered
-// again: 10 / 30 / 100 / unlimited".
+// Daily search allowance: signed out 25 a day, a free account 100, Plus 500,
+// Premium unlimited (2026-10-15, owner: "be more generous"; was 10 / 30 / 100
+// from 2026-10-09). DECISIONS.md, "Search is metered again: 10 / 30 / 100 /
+// unlimited" and "The search allowance, loosened: 25 / 100 / 500".
 //
 // This REVERSES 2026-09-28's "keep price comparison fully free" for SEARCH
 // ONLY, knowingly: a 10 / 100 / unlimited ladder ran for about a day before
@@ -22,7 +23,7 @@
 // security boundary, and it costs no database write per search. The cookie's
 // signing lives in search-quota-server.ts: this module is shared with client
 // components and must not import node:crypto.
-export const SEARCH_LIMITS = { anon: 10, free: 30, plus: 100 } as const;
+export const SEARCH_LIMITS = { anon: 25, free: 100, plus: 500 } as const;
 export type SearchTier = "anon" | "free" | "plus" | "premium";
 /** The signed-out allowance, named for the pricing table. */
 export const SIGNED_OUT_SEARCHES = SEARCH_LIMITS.anon;

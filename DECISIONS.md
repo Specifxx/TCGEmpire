@@ -17121,3 +17121,15 @@ Each site links its home and two or three deep pages a Riftbound reader would us
 - `/guides/riftbound-regional-championships-2026`: dates, entry, prize money (US$10,000 to Stuttgart's winner; other payouts flagged as unpublished), format, the decks coming in, buying advice, and how the weekend works. The Los Angeles RQ post links to it.
 
 **Not done:** meta rewrites of the low-CTR guides (Empower, ban list, card size). Each already went through the 2026-09-24 CTR pass, and their low CTR is mostly position, not wording.
+
+## The search allowance, loosened: 25 / 100 / 500 — 2026-10-15
+
+**Owner:** "I think we are being a bit too greedy here... traffic definitely has decreased... bounce rate has increased significantly... maybe we should be more generous and increase the limits. I'll let you decide what to increase it on... deploy it directly."
+
+**New ladder: signed out 25 searches a day (was 10), a free account 100 (was 30), Plus 500 (was 100), Premium unlimited.** `SEARCH_LIMITS` in `lib/search-quota.ts`. The tier table, the limit panel's copy and the pitch chips read the constants, so they follow. `PREMIUM_COPY_VERSION` is `search-caps-2026-10-15`.
+
+**Why these numbers.** The first week (2026-10-14 entry) showed the limit was reached by 19 visitors out of ~2,600 sessions, and those visitors produced the gate's sign-ups. So the meter's cost and benefit both sit in a small group of heavy searchers. Ten was low enough that someone comparing a deck's worth of cards hit it in one sitting. Twenty-five covers a normal session of looking cards up; 100 for a free account means signing up practically removes the limit, which makes "sign up free" a strong offer instead of a weak one. Plus at 500 is effectively unlimited for a person. That leaves unlimited as Premium's line on paper but not a reason anyone pays for it, and the plans already have better reasons. The meter stays on, rather than `SEARCH_CAPS=off`, so the sign-up prompt still reaches the heaviest users.
+
+**What to expect, honestly.** Fewer visitors hit the limit, so `search_limit_shown` and `search_limit` sign-ups fall. Whether bounce and pages per session recover is the open question: with under 1% of visitors meeting the old limit, the limit cannot account for all of that 33% drop. Google clicks fell in the same week for other reasons. Re-run `impact-report` and compare GA4 bounce and `buy_click` per session about a week after this release. If bounce has not moved, the limit was not the cause, and `SEARCH_CAPS=off` is the next test.
+
+Landed with `[deploy]` at the owner's request ("deploy it directly").

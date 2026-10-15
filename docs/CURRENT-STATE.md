@@ -264,7 +264,7 @@ longer lands on its entry.
   that already watches ten is at the limit too), and the import adds up to
   the allowance and reports the rest.
   [2026-09-28](../DECISIONS.md#L14549)
-- **Search allowance (2026-10-09, owner: "make it 10 / 30 / 100 / unlimited";
+- **Search allowance (2026-10-09, owner: "make it 10 / 30 / 100 / unlimited", now 25 / 100 / 500;
   reverses "search is unmetered"):** signed out 10 searches a UTC day, a free
   account 30, Plus 100, Premium unlimited (`lib/search-quota.ts`). A search is a
   distinct query: typing "ak" → "akali" is one, paging and filters are free,
@@ -280,6 +280,9 @@ longer lands on its entry.
   `buy_click` per 100 sessions rose 35.2 → 50.8 (GA4). Measure with the
   `impact-report` task. Mobile vignette ads are off in AdSense (owner, 10-14).
   [2026-10-14](../DECISIONS.md#L17002)
+  **Loosened 2026-10-15 (owner: "be more generous") to 25 signed out / 100 free /
+  500 Plus / unlimited Premium**; the numbers above are the first week's.
+  [2026-10-15](../DECISIONS.md#L17125)
 - **Paid history, graded tracking, auction alerts (2026-10-09):** free sees a
   card's last 30 days (`FREE_HISTORY_DAYS`); Plus and Premium see the whole
   series and a CSV (`/history/full`, `/history.csv`, `private, no-store`). It is

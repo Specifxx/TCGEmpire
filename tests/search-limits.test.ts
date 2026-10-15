@@ -30,11 +30,11 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const DAY = "2026-10-09";
 const fresh = (u = ""): QuotaState => ({ d: DAY, n: 0, q: "", u });
 
-test("the ladder: 10 signed out, 30 free, 100 Plus, Premium unlimited", () => {
-  assert.deepEqual(SEARCH_LIMITS, { anon: 10, free: 30, plus: 100 });
-  assert.equal(searchLimitFor("anon"), 10);
-  assert.equal(searchLimitFor("free"), 30);
-  assert.equal(searchLimitFor("plus"), 100);
+test("the ladder: 25 signed out, 100 free, 500 Plus, Premium unlimited (loosened 2026-10-15)", () => {
+  assert.deepEqual(SEARCH_LIMITS, { anon: 25, free: 100, plus: 500 });
+  assert.equal(searchLimitFor("anon"), 25);
+  assert.equal(searchLimitFor("free"), 100);
+  assert.equal(searchLimitFor("plus"), 500);
   assert.equal(searchLimitFor("premium"), null);
 });
 
@@ -91,8 +91,8 @@ test("the cookie is signed: a tampered count is ignored", () => {
 });
 
 test("the limit copy names the next tier", () => {
-  assert.match(limitCopy("anon").next, /Sign up free for 30 a day/);
-  assert.match(limitCopy("free").next, /Plus gives you 100 a day/);
+  assert.match(limitCopy("anon").next, /Sign up free for 100 a day/);
+  assert.match(limitCopy("free").next, /Plus gives you 500 a day/);
   assert.match(limitCopy("plus").next, /Premium searches without a limit/);
 });
 

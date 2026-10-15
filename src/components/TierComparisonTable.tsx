@@ -102,7 +102,7 @@ export type TierRow = {
 export const TIER_COMPARISON: TierRow[] = [
   { feature: "Compare prices across every store + eBay", account: true, plus: true, premium: true },
   { feature: "Full card database & charts", account: true, plus: true, premium: true },
-  // 2026-10-09 (lib/search-quota.ts): signed out 10 a day, a free account 30.
+  // lib/search-quota.ts: signed out 25 a day, a free account 100 (2026-10-15; was 10 / 30).
   { feature: `Card searches a day (${SIGNED_OUT_SEARCHES} signed out)`, account: `${SEARCH_LIMITS.free}`, plus: `${SEARCH_LIMITS.plus}`, premium: "Unlimited" },
   // The Bulk Pricer's paste-a-list pricing lives in the free /deck now.
   { feature: "Deck & list pricer, trade calculator & box EV", account: true, plus: true, premium: true },

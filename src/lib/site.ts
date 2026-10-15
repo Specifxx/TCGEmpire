@@ -398,4 +398,7 @@ export function premiumLockInTail(): string {
 // unlimited"), and the plans gain full price history with CSV, graded price
 // tracking (Plus) and auction alerts (Premium): new rows in the tier table and the
 // slide-in. Prices unchanged. The label separates the funnel from the uncapped era.
-export const PREMIUM_COPY_VERSION = "search-caps-2026-10-09";
+// search-caps-2026-10-15: the allowance loosened to 25 signed out / 100 free / 500
+// Plus / unlimited Premium (owner: traffic and bounce, "be more generous"). The tier
+// table's numbers change with it; nothing else does.
+export const PREMIUM_COPY_VERSION = "search-caps-2026-10-15";
