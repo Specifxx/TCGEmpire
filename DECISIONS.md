@@ -17426,3 +17426,18 @@ re-import (eBay is skipped when it ran within 20 hours), which is also the first
 run to apply the BigCommerce fix above.
 
 ---
+
+## The daily release follows the public data snapshot — 2026-10-15
+
+**Owner:** switched `PUBLIC_DATA_MODE` to `files` and asked to make sure the site actually serves the public data from the files. Then: "Make the change."
+
+**What was checked.** The live site was not yet in files mode: `/card/seraphine-inspiring-rad-065-167`, one of the 27 Radiance printings added after the newest snapshot (14 Oct, 13:44 UTC), rendered fine after the 06:03 deploy, while the file engine returns no row for it (a 404 in files mode). A Vercel variable takes effect only on the next deployment, so the switch had not shipped.
+
+**Why the release had to move.** GitHub starts both "daily" crons 5 to 9 hours late, and the 08:00 release kept landing just before the 07:00 import's snapshot: 12 Oct release 17:12, snapshot 17:13; 13 Oct 15:28 and 15:47; 14 Oct 13:13 and 13:44. In files mode the site serves exactly the snapshot its release bundled, so every release would have shipped the previous day's data: prices one to two days old, and newly imported cards 404 until the next day.
+
+**The change.**
+- `refresh-prices.yml`: after the morning run's export and publish succeed (`steps.export.outcome`), a new step dispatches `production-deploy.yml` (`gh workflow run`, `actions: write`; GITHUB_TOKEN may start `workflow_dispatch` runs). The release now always follows that day's snapshot. Still one release a day.
+- `production-deploy.yml`: the schedule moves from 08:00 to a 22:00 UTC fallback, which also skips when any `[deploy]` subject landed in the last 20 hours. It releases only on a day the import or export failed, shipping the previous snapshot.
+- `CLAUDE.md`, CURRENT-STATE and `docs/public-data-switchover.md` no longer say "08:00 UTC".
+
+**What it means.** In files mode the site's prices and catalogue change once a day, when the morning import's snapshot releases (in practice early to mid afternoon UTC while GitHub's cron runs late). A card added to the database shows on the site from the next morning's release. The evening import still updates Neon, so the alert emails stay twice daily. Rolling back is unchanged: `PUBLIC_DATA_MODE=db` and redeploy.

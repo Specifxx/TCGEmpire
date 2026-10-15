@@ -54,6 +54,8 @@ concurrency:
 # workflow, and the commit has no deploy marker, so it never builds on its own).
 permissions:
   contents: write
+  # Dispatches production-deploy.yml once the morning snapshot is published.
+  actions: write
 
 jobs:
   refresh:
@@ -253,14 +255,14 @@ jobs:
         run: bash scripts/publish-price-history.sh "refresh-prices.yml (${{ github.event_name }}, run ${{ github.run_id }})"
 
       - name: Export and publish the public data snapshot
+        id: export
         # data/public/ (src/lib/public-data/): every public table as files, so
         # the site can serve cards and prices without Neon (PUBLIC_DATA_MODE).
-        # MORNING RUN ONLY (and manual runs): the 08:00 UTC release bundles
-        # whatever main holds, so the 07:00 import's snapshot is the one that
-        # ships; an evening export would be replaced before any release used it,
-        # and every export is a full read of the listings table (~20-30 MB of
-        # transfer). After the history publish, before the alert steps, and
-        # never fatal to them.
+        # MORNING RUN ONLY (and manual runs): the daily release, dispatched by
+        # the next step, bundles this snapshot; an evening export would be
+        # replaced before any release used it, and every export is a full read
+        # of the listings table (~20-30 MB of transfer). After the history
+        # publish, before the alert steps, and never fatal to them.
         if: ${{ !cancelled() && steps.import.outcome == 'success' && (github.event_name == 'workflow_dispatch' || github.event.schedule == '0 7 * * *') }}
         continue-on-error: true
         env:
@@ -269,6 +271,24 @@ jobs:
         run: |
           npx tsx scripts/export-public-data.ts
           bash scripts/publish-public-data.sh "refresh-prices.yml (${{ github.event_name }}, run ${{ github.run_id }})"
+
+      - name: Release the snapshot (the daily production deploy)
+        # THE DAILY RELEASE FOLLOWS THE SNAPSHOT (2026-10-15, DECISIONS.md "The
+        # daily release follows the public data snapshot"). In PUBLIC_DATA_MODE
+        # files the site serves exactly the snapshot its release bundled. The
+        # release used to be its own 08:00 UTC cron, but GitHub starts both
+        # crons 5 to 9 hours late and the release kept landing 20 to 30 minutes
+        # BEFORE this step published, so every release shipped the previous
+        # day's snapshot: prices a day or two old, and new cards 404 until the
+        # day after. Dispatching it here makes the order certain. GITHUB_TOKEN
+        # may start a workflow_dispatch run (the one event it is allowed to);
+        # production-deploy.yml keeps a late scheduled fallback for the day this
+        # step does not run.
+        if: ${{ !cancelled() && steps.export.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run production-deploy.yml --ref main -f reason="today's public data snapshot (refresh-prices run ${{ github.run_id }})"
 
       - name: Free price alerts (daily digest)
         # The daily "all" run: every watch, free and anonymous included, under
