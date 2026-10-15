@@ -92,7 +92,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Will you tell my competitors what I'm doing?",
-    a: `Never. The comparison only ever shows the public prices anyone can already see on your website. Nothing you say on a call goes anywhere, and we don't change how any store ranks in the comparison for money — that neutrality is the only reason the site is worth anything to shoppers.`,
+    a: `Never. The comparison only ever shows the public prices anyone can already see on your website. Nothing you say on a call goes anywhere, and no store can pay to change how it ranks in the comparison — that neutrality is the only reason the site is worth anything to shoppers. (The one order that follows commission is on our Radiance pre-order table, where open eBay listings — eBay is our affiliate partner, not a store client — are shown first and labelled so. No consulting client can buy that.)`,
   },
 ];
 

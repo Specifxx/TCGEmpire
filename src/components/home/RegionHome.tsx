@@ -76,7 +76,7 @@ export async function RegionHome({ region }: { region: Country }) {
   const faqs = [
     {
       q: `Where can I buy Riftbound cards in ${info.place}?`,
-      a: `RiftCompare tracks ${stat.stores} ${info.adjective} ${storeWord} stocking Riftbound: League of Legends TCG singles and sealed product, plus ${ebayLabel(region)}, and lists every result cheapest first by item price. Where a store publishes its postage to ${info.place}, the delivered total is shown beside the price; otherwise postage is added at that store's checkout.`,
+      a: `RiftCompare tracks ${stat.stores} ${info.adjective} ${storeWord} stocking Riftbound: League of Legends TCG singles and sealed product, plus ${ebayLabel(region)}, and lists every result cheapest first by item price (the one exception: on the Radiance pre-order table, open eBay listings are shown first, labelled). Where a store publishes its postage to ${info.place}, the delivered total is shown beside the price; otherwise postage is added at that store's checkout.`,
     },
     {
       q: `Are prices shown in ${info.currency}?`,

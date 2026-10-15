@@ -352,9 +352,12 @@ export default function MethodologyPage() {
             store below a competitor just because that competitor&rsquo;s postage happens to be known upfront
             and theirs isn&rsquo;t. An eBay row sits at its own price position like any other row, its button
             in eBay&rsquo;s own colour with a &ldquo;Paid link&rdquo; tag; nothing is moved up or down for money.
-            Reference prices are never in the list at all. See our{" "}
+            Reference prices are never in the list at all. The one comparison ordered differently is the
+            Radiance pre-order table: there, open eBay listings are shown first within each product, tagged
+            &ldquo;Shown first&rdquo;, then the stores taking pre-orders, cheapest first, then unconfirmed and
+            sold-out ones. See our{" "}
             <Link href="/editorial-policy" className="text-brand-400 hover:underline">editorial &amp; pricing policy</Link>{" "}
-            for how we make money and why it never affects this order.
+            for how we make money, why it never affects a card&rsquo;s comparison, and that one exception.
           </p>
         </section>
 

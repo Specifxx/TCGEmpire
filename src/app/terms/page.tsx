@@ -101,8 +101,10 @@ export default function TermsPage() {
             Amazon Associates), {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions and paid store
             consulting. Some outbound links are
             affiliate links through which we may earn a commission at no extra cost to you; these
-            are marked and disclosed next to the link. None of these affects the prices we show
-            or the order in which results are ranked. See our{" "}
+            are marked and disclosed next to the link. None of these affects the prices we show,
+            and none affects the order in which results are ranked, with one exception labelled where
+            it happens: on the Radiance pre-order table, open eBay listings (eBay is an affiliate
+            partner) are shown first within each product. See our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">Privacy Policy</Link> for how
             advertising and cookies are handled.
           </p>

@@ -144,7 +144,7 @@ export const RADIANCE_FAQ: RadianceFaq[] = [
   },
   {
     q: "Where can I preorder Riftbound Radiance the cheapest?",
-    a: "RiftCompare compares live Radiance preorder prices for the booster display, Showdown Decks, Vault Bundle and Pre-Rift kits across every store it tracks in your market — the US, UK, Australia, Canada, Singapore and the eurozone — cheapest first, in your currency.",
+    a: "RiftCompare compares live Radiance preorder prices for the booster display, Showdown Decks, Vault Bundle and Pre-Rift kits across every store it tracks in your market — the US, UK, Australia, Canada, Singapore and the eurozone — with the cheapest open price for each product shown at the top of its section, in your currency.",
   },
   {
     q: "Can I buy Radiance directly from Riot?",

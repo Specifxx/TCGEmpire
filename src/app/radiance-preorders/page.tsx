@@ -72,7 +72,7 @@ const HEADER_ART = [
 const FAQS = [
   {
     q: "How much does a Riftbound Radiance booster box cost to pre-order?",
-    a: "Pre-order prices vary widely between stores because nothing has shipped yet and stores are setting their own opening price. This page compares every tracked store's live pre-order price in your market, cheapest first, so you can see the real spread rather than the first price you find.",
+    a: "Pre-order prices vary widely between stores because nothing has shipped yet and stores are setting their own opening price. This page compares every tracked store's live pre-order price in your market — open eBay listings first in each product, then the stores taking pre-orders, cheapest first — so you can see the real spread rather than the first price you find.",
   },
   {
     q: "When does Riftbound Radiance release?",
@@ -125,7 +125,7 @@ export const metadata: Metadata = {
   alternates: pageAlternates("/radiance-preorders"),
   openGraph: pageOpenGraph({
     title: "Riftbound Radiance Pre-Order Prices — Compared Across Every Store",
-    description: "Booster boxes, Vault Bundles and Showdown Decks — every tracked store's pre-order price, cheapest first.",
+    description: "Booster boxes, Vault Bundles and Showdown Decks — every tracked store's pre-order price, side by side.",
     url: "/radiance-preorders",
   }),
 };
@@ -208,7 +208,8 @@ export default async function RadiancePreordersPage() {
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
             Nothing has shipped yet, so every store is simply picking an opening price, and they are picking very
             different ones. Below is every Radiance product our tracked {info.adjective} stores are taking pre-orders
-            on, booster boxes and packs first, each sorted cheapest first, in {currency}. Prices refresh daily.
+            on, booster boxes and packs first, in {currency}. Within each product, open eBay listings are shown first
+            (they are paid links), then the stores taking pre-orders, cheapest first. Prices refresh daily.
           </p>
         </div>
         <div aria-hidden className="pointer-events-none absolute -right-6 top-6 hidden h-56 w-72 sm:block">
@@ -290,7 +291,7 @@ export default async function RadiancePreordersPage() {
         <EbaySearchPanel
           variant="strip"
           heading={`Prefer eBay? Search ${ebay} for Radiance booster boxes and displays.`}
-          sub="Not part of the store price ranking below."
+          sub="A search of eBay, not a row in the table below."
           country={country}
           pageType="radiance_preorders"
           className="mt-4"

@@ -133,7 +133,7 @@ function buildFaqs(now: Date): { q: string; a: string }[] {
     if (next.preordersHref) {
       faqs.push({
         q: `Can I pre-order ${next.name} yet?`,
-        a: `Yes — tracked stores are already taking pre-orders, and their opening prices differ a lot. Our pre-order page compares every one of them in your currency, cheapest first, so you can see the real spread rather than taking the first price you find.`,
+        a: `Yes — tracked stores are already taking pre-orders, and their opening prices differ a lot. Our pre-order page compares every one of them in your currency, with the cheapest open price for each product up top, so you can see the real spread rather than taking the first price you find.`,
       });
     }
     const after = upcoming.filter((r) => r !== next);

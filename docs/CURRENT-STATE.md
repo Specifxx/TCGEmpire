@@ -498,7 +498,20 @@ longer lands on its entry.
   from 09-27). [2026-09-26](../DECISIONS.md#L13640),
   [2026-09-26](../DECISIONS.md#L13751)
 - **eBay beside every comparison, never inside the ranking** (owner, 09-26:
-  push eBay clicks even where stores are cheaper). No comparison is re-ranked
+  push eBay clicks even where stores are cheaper) — **with ONE exception since
+  10-15 (owner):** the pre-order table (`PreorderPriceTable`, on
+  `/radiance-preorders` and `/sets/radiance`) pins every OPEN eBay row first in
+  each product (`orderPreorderRows`; stale or sold-out eBay rows are not
+  pinned), each tagged "Shown first" beside "Paid link", the table's top line
+  saying so. The headline stays the cheapest open offer from anyone and the
+  "+N%" stays on the eBay row. "eBay may have a lower price" is on the
+  per-product Search eBay line only — never on a listing, which is already the
+  cheapest valid one the importer found. The headline reads the UNPINNED
+  ranking, so a price tie never goes to eBay. `/editorial-policy`, `/about`,
+  `/privacy`, `/terms`, `/methodology`, the homepage, the region homes' FAQ and
+  the consulting FAQ name the exception; nothing describes that table as
+  "cheapest first". [2026-10-15](../DECISIONS.md#L17281). Elsewhere
+  no comparison is re-ranked
   and no true figure (the "+N%" on a dearer eBay row) is hidden; eBay rows keep
   their price position but wear eBay blue (`.btn-ebay`, or `.btn-ebay-ghost` in
   a list of ghost buttons). Everything else is a labelled "Search …" beside the
@@ -941,7 +954,8 @@ longer lands on its entry.
   [2026-09-21](../DECISIONS.md#L9560), [2026-09-16](../DECISIONS.md#L6683)
 - **Declined:** a locked popup ✕; guest checkout (deferred); a Radiance post blitz or paid ads; a static rule-2
   egress test; a static landscape header or
-  a 44px desktop switcher; re-ranking eBay above a cheaper store, an eBay
+  a 44px desktop switcher; re-ranking eBay above a cheaper store (declined
+  09-26; adopted for the pre-order table only on 10-15, [2026-10-15](../DECISIONS.md#L17281)), an eBay
   "Money Back Guarantee" claim, a card-page "#N of M" eBay module, affiliate
   links in emails. [2026-09-26](../DECISIONS.md#L13751),
   [2026-09-14](../DECISIONS.md#L6134),

@@ -497,7 +497,7 @@ For where to play and what a seat costs, our **[Radiance pre-order prices](/radi
     browseCta: {
       href: "/radiance-preorders",
       label: "Compare Radiance pre-order prices →",
-      blurb: "Every tracked store in your market, cheapest first, in your currency, refreshed daily until release day.",
+      blurb: "Every tracked store in your market, in your currency, refreshed daily until release day.",
     },
     body: `**On 24 September we published a guide to [where to buy Riftbound Radiance](/blog/where-to-buy-riftbound-radiance), with the prices we saw that day.** Two weeks on, with Preview Season over and Pre-Rift a week away, the market looks noticeably different. This post compares the two dates using our own data: every Radiance listing at every store we track, as it stood on **9 October 2026 at 15:06 UTC**.
 
@@ -1448,7 +1448,7 @@ Vendetta is the other guide. Using our daily price history, the median Vendetta 
 
 **If you want to play the card, the original does the same job.** A HEARTSTEEL Aphelios and a Spiritforged Aphelios are the same card at the table. The originals are buyable now, with prices compared across every store we track on each card's page, all linked above.
 
-**Nothing from Radiance is buyable yet.** The set releases **23 October 2026**, and until then there are no Radiance singles to compare. Sealed product is on [pre-order](/radiance-preorders), compared cheapest first in your own currency, and [the set hub](/sets/radiance) switches on live singles prices on release day.
+**Nothing from Radiance is buyable yet.** The set releases **23 October 2026**, and until then there are no Radiance singles to compare. Sealed product is on [pre-order](/radiance-preorders), compared store by store in your own currency, and [the set hub](/sets/radiance) switches on live singles prices on release day.
 
 We do not predict prices, and we are not going to start with a chase print nobody has pulled yet.
 
@@ -1615,7 +1615,7 @@ The same rules as every pre-release card, because they are the ones that keep mo
 
 **Do not buy a K'Sante single yet.** There is no Radiance secondary market — the set does not release until **23 October 2026**. Anything sold as a Pride of Nazumah today is a pre-sale against a card nobody can deliver.
 
-**Know where he is — and is not.** The set's beginner product, the Showdown Decks, is *Seraphine vs. Evelynn*; K'Sante is not in it. That makes **boosters** the route to his cards, which is worth knowing before you buy a precon expecting to open a K'Sante deck. Sealed and pre-order prices are what actually move now, and we compare [Radiance pre-order prices](/radiance-preorders) across every tracked store, cheapest first, in your own currency, with the [sealed comparison](/sealed) covering displays and the Vault.
+**Know where he is — and is not.** The set's beginner product, the Showdown Decks, is *Seraphine vs. Evelynn*; K'Sante is not in it. That makes **boosters** the route to his cards, which is worth knowing before you buy a precon expecting to open a K'Sante deck. Sealed and pre-order prices are what actually move now, and we compare [Radiance pre-order prices](/radiance-preorders) across every tracked store, in your own currency, with the [sealed comparison](/sealed) covering displays and the Vault.
 
 **When singles land, read the number before the name.** With a 172/167 over-number already shown and a base printing still to come, "Pride of Nazumah" will shortly mean more than one object at more than one price — and the HEARTSTEEL K'Sante, Courageous (RAD 178/167) is a different card again. The collector number is what tells them apart, and it is the first thing our matcher reads off a listing. Every K'Sante card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
 
@@ -1799,7 +1799,7 @@ Same three rules as every pre-release card, because they are the ones that save 
 
 **Do not buy a Radiance single yet.** There is no Radiance secondary market — the set does not release until **23 October 2026**. A Seraphine single offered today is a pre-sale against a card nobody can legally deliver, at a price set by hype rather than supply.
 
-**Watch the sealed and pre-order prices instead.** Those are the only Radiance products you can actually buy right now, and they are what moves as the chase cards become known. We compare [Radiance pre-order prices](/radiance-preorders) across every tracked store, cheapest first, in your own currency — and the [sealed comparison](/sealed) is where displays, the Vault and the Showdown Decks are comparable long before any single is.
+**Watch the sealed and pre-order prices instead.** Those are the only Radiance products you can actually buy right now, and they are what moves as the chase cards become known. We compare [Radiance pre-order prices](/radiance-preorders) across every tracked store, in your own currency — and the [sealed comparison](/sealed) is where displays, the Vault and the Showdown Decks are comparable long before any single is.
 
 **When singles do land, read the number before the name.** "Seraphine" is about to mean at least five different objects at five different prices — the Not Alone Champion Unit at 138/167, the Starry-Eyed Songstress Legend at 151/167, its 174/167 over-number and 174\\*/167 Signature, and the T1 collection printing that already exists. The collector number is what tells them apart, and it is the first thing our matcher reads off a listing. Every Radiance card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
 
@@ -2153,7 +2153,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
     browseCta: {
       href: "/radiance-preorders",
       label: "Compare Radiance pre-order prices →",
-      blurb: "Every tracked store's price for boxes, the Vault and the Showdown Decks, cheapest first, in your currency.",
+      blurb: "Every tracked store's price for boxes, the Vault and the Showdown Decks, in your currency.",
     },
     body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, its base run is **167 numbered cards**, it brings **nine new champion Legends** (six named, three not), and it adds a new **Ultimate Rare** chase tier. Since this page was first written Riot has also published the set code, pulled Preview Season's start forward to **25 September**, and revealed the first Legend in full — the distributor sheet has put a price on every product, and, on 19 September, the **first Radiance card was photographed in print**. All of that is below. What is still *not* here is the card list, because it has not been revealed, and the internet is already full of Radiance "leaks" that are nothing of the sort.
 
@@ -2532,7 +2532,7 @@ These are the open questions Preview Season answers, roughly in the order they m
 
 Two things move during Preview Season, and neither is singles.
 
-**Pre-order prices move as the chase cards become known.** Stores that priced a display before the reveals adjust once the Ultimate Rare (now known: Packed Amphitheater) and the headline Legends are public. The **[Radiance pre-order comparison](/radiance-preorders)** tracks every store's price daily through the window, cheapest first in your currency, and **[where to buy Radiance](/blog/where-to-buy-riftbound-radiance)** lists the stores taking pre-orders in each market, plus Riot's own Merch Store draw.
+**Pre-order prices move as the chase cards become known.** Stores that priced a display before the reveals adjust once the Ultimate Rare (now known: Packed Amphitheater) and the headline Legends are public. The **[Radiance pre-order comparison](/radiance-preorders)** tracks every store's price daily through the window, in your currency, and **[where to buy Radiance](/blog/where-to-buy-riftbound-radiance)** lists the stores taking pre-orders in each market, plus Riot's own Merch Store draw.
 
 **Older sets move too.** Radiance changes what decks want, which moves Vendetta and Unleashed prices in both directions — up for the cards new archetypes need, down for the ones they replace. **[Price movers](/movers)** shows which is happening rather than predicting it. Singles themselves start trading at Pre-Rift, 16–22 October, when supply is a handful of event boxes and demand is everyone who wants to build immediately; those are almost never the prices a card settles at, and **[why Riftbound card prices change](/guides/why-riftbound-card-prices-change)** explains the mechanism.
 
@@ -2574,7 +2574,7 @@ We will not run Radiance speculation on any of them. When the reveals land, the 
       alt: "Where to buy Riftbound Radiance — the Neeko, Blending In and Seraphine, Starry-Eyed Songstress cards fanned beside the guide's title, releasing 23 October 2026",
     },
     summary: [
-      "**Pre-order from a local game store or online hobby store** — that is where Radiance is actually on sale today, in every market we track. Our **[Radiance pre-order comparison](/radiance-preorders)** lists every tracked store's price in your currency, cheapest first, refreshed daily.",
+      "**Pre-order from a local game store or online hobby store** — that is where Radiance is actually on sale today, in every market we track. Our **[Radiance pre-order comparison](/radiance-preorders)** lists every tracked store's price in your currency, refreshed daily.",
       "**Riot is not taking pre-orders.** Its Merch Store runs a **draw** for North America and Europe: sign up 25–30 September 2026, and selected entrants may buy one Booster Display each.",
       "**US distributor MSRP:** US$4.99 a pack, US$120 a 24-pack display, US$34.99 for the Vault Bundle and US$34.99 for the Seraphine vs. Evelynn Showdown Decks. Stores outside the US set their own prices.",
       "**Marketplaces cost more before release.** TCGplayer and eBay show sellers' asking prices for stock they have not received yet — on 24 September the cheapest English display on TCGplayer was about US$227 before shipping, against a US$120 MSRP.",
@@ -2583,7 +2583,7 @@ We will not run Radiance speculation on any of them. When the reveals land, the 
     faq: [
       {
         q: "Where can I pre-order Riftbound Radiance?",
-        a: "From local game stores and online hobby stores in each market — in the US, UK, eurozone, Australia, Canada and Singapore, independent stores are where Radiance pre-orders are open. RiftCompare's Radiance pre-order page compares every tracked store's price in your market, cheapest first. Marketplaces such as TCGplayer, eBay and Cardmarket also list it, usually above store prices before release.",
+        a: "From local game stores and online hobby stores in each market — in the US, UK, eurozone, Australia, Canada and Singapore, independent stores are where Radiance pre-orders are open. RiftCompare's Radiance pre-order page compares every tracked store's price in your market. Marketplaces such as TCGplayer, eBay and Cardmarket also list it, usually above store prices before release.",
       },
       {
         q: "Can I buy Riftbound Radiance from Riot directly?",
@@ -2614,13 +2614,13 @@ We will not run Radiance speculation on any of them. When the reveals land, the 
     browseCta: {
       href: "/radiance-preorders",
       label: "Compare Radiance pre-order prices →",
-      blurb: "Every tracked store in your market, cheapest first, in your currency — refreshed daily until release day.",
+      blurb: "Every tracked store in your market, in your currency — refreshed daily until release day.",
     },
     body: `Riftbound: Radiance, the fifth Riftbound set, releases worldwide on **23 October 2026**, and it is already on sale — just not everywhere you would look first. This guide covers **where Radiance can actually be bought today** in each market we track, what each product is, how Riot's own Merch Store draw works, and where the marketplaces fit.
 
 One thing to know before any of it: **stores are the whole market right now.** Riot is not taking pre-orders, Amazon, Target and Walmart had no listing when we checked on 24 September, and the marketplaces are selling stock their sellers have not received yet. The cheapest route to a Radiance box in every market we cover is a store pre-order — and the spread between stores is wide enough that comparing first is worth the minute it takes.
 
-The live version of every price in this guide is on **[the Radiance pre-order comparison](/radiance-preorders)**, which lists each tracked store's current price in your currency, cheapest first, and refreshes daily. The store prices quoted below were read on each store's own page on 24 September 2026. They are examples of the range, not quotes — stores re-price pre-orders often, especially once the chase cards are revealed.
+The live version of every price in this guide is on **[the Radiance pre-order comparison](/radiance-preorders)**, which lists each tracked store's current price in your currency and refreshes daily. The store prices quoted below were read on each store's own page on 24 September 2026. They are examples of the range, not quotes — stores re-price pre-orders often, especially once the chase cards are revealed.
 
 ## What you are buying: the Radiance products
 
@@ -2722,7 +2722,7 @@ It depends on what you want from the set.
 
 Three pages stay current so this guide does not have to:
 
-- **[Radiance pre-order prices](/radiance-preorders)** — every tracked store's live price in your market, cheapest first, until release day, after which Radiance products move to **[the sealed comparison](/sealed)**.
+- **[Radiance pre-order prices](/radiance-preorders)** — every tracked store's live price in your market until release day, after which Radiance products move to **[the sealed comparison](/sealed)**.
 - **[Radiance pre-order prices, two weeks later](/blog/riftbound-radiance-preorder-prices-two-weeks-later)** — how the prices in this guide had moved by 9 October, market by market.
 - **[The Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)** — every card revealed so far, updated twice a day through Preview Season.
 - **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)** — the set's dates, products and Legends, with sources.
@@ -6507,7 +6507,7 @@ Three things worth holding onto.
 
 **Do not buy a Radiance single yet.** There is no Radiance secondary market — the set does not release until **23 October 2026**. Anything offered as a Neeko today is a pre-sale against a card nobody can deliver.
 
-**Watch the sealed price instead.** The set's contents are what you can actually buy right now, and we compare [Radiance pre-order prices](/radiance-preorders) across every tracked store — booster boxes, packs, the Vault and the Showdown Decks, cheapest first, in your own currency.
+**Watch the sealed price instead.** The set's contents are what you can actually buy right now, and we compare [Radiance pre-order prices](/radiance-preorders) across every tracked store — booster boxes, packs, the Vault and the Showdown Decks, in your own currency.
 
 **When singles do land, check the collector number before the name.** With 167 base cards and Showcase printings numbering above them, "Neeko" will shortly mean several different objects at several different prices. The number is what tells them apart. Every Radiance card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
 
@@ -6709,7 +6709,7 @@ A few things worth being deliberate about over the next month.
 
 **Do not buy a premium printing in its first fortnight.** Alt-art and Showcase prints of a spotlighted card are at their most expensive when the spotlight is brightest. With 66 Showcase cards in a 180-card set, Radiance will not be short of them.
 
-**If you want the set itself, pre-orders are already live.** We compare [Radiance pre-order prices](/radiance-preorders) across every tracked store — booster boxes, packs, the Vault and the Showdown Decks — cheapest first, in your own currency.
+**If you want the set itself, pre-orders are already live.** We compare [Radiance pre-order prices](/radiance-preorders) across every tracked store — booster boxes, packs, the Vault and the Showdown Decks — in your own currency.
 
 ## What to watch, and when
 
