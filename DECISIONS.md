@@ -17376,3 +17376,53 @@ Vercel would build, so a marker there would only add to the `[deploy]` count
 CLAUDE.md audits).
 
 ---
+
+## Thistle Tavern: in-store only, shown as open — 2026-10-15
+
+Found by the live audit run for "Game Nerdz: sold out for a week, shown as open"
+(above): every Radiance row we showed as open at a non-marketplace store — 56
+stores, 103 rows — checked against its live page, each suspected false-open
+re-checked by three independent skeptics. **78 rows were genuinely open; 25
+rows at 14 stores were not.** For 24 of the 25 the exact feed our importer reads
+already said so — Shopify collection `products.json` variant `available: false`,
+or the WooCommerce Store API's `is_in_stock: false` — so they were sell-outs
+since our last read (Radiance pre-orders are selling out by the hour this week),
+which the next import corrects with no code change. Not a parser bug, and not
+treated as one.
+
+**The exception was Thistle Tavern**, and it is not a sell-out. Its Radiance
+Booster Box/Case and Vault pages say **"In-store purchase only"**: no buy
+button, a disabled variant input, an "In-store only" badge. Shopify's
+`products.json` said `available: true` and schema.org said `InStock`, so nothing
+the importer read could see it. The only signal is the store's own custom Dawn
+theme markup on the main product block: `<product-info id="MainProduct-…"
+data-instore-only="true" data-purchase-locked="true">`. Its orderable pages (the
+Showdown Decks pre-order, a bookable Pre-Rift ticket) carry
+`data-purchase-locked="false"`.
+
+**`RetailerInfo.purchaseLockPages`** (opt-in, set on Thistle Tavern only): after
+a successful collection read, the sealed importer re-reads each in-stock sealed
+row's product page for that store and stores it as not in stock when
+`isPurchaseLocked()` finds the flag on the `MainProduct-` element. Scoped to that
+element so a related-product card carrying the same attribute for a different
+product cannot lock the page's own. **One-way**: it can only turn a false "open"
+off, never mark anything in stock, and a page that fails to load leaves the row
+exactly as `products.json` said. robots.txt is honoured and requests are spaced
+by `REQUEST_DELAY_MS`. It costs one page read per sealed product per run, which
+is why it is opt-in per store rather than applied to every Shopify store.
+Verified on the live pages: the in-store-only Vault reads locked, the orderable
+Showdown Decks page does not, and Game Nerdz's (a different platform) does not.
+`tests/purchase-lock.test.ts` pins both states, either flag alone, the
+related-card trap, and the one-way wiring.
+
+**"In-store only" is stored as not in stock, so the badge says "Sold out".**
+That is imprecise — the product exists, in a shop — but our offer model has
+three states (open / sold out / unknown) and an online buyer cannot order it.
+A fourth state was not added for one store.
+
+**Lands through the importer.** `src/lib/sealed-import.ts` is in
+`refresh-prices.yml`'s push-trigger paths, so the merge itself starts a
+re-import (eBay is skipped when it ran within 20 hours), which is also the first
+run to apply the BigCommerce fix above.
+
+---

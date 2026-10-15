@@ -59,6 +59,16 @@ export interface RetailerInfo {
   // the market it would be shown in; tests/offer-currency.test.ts fails if a
   // store is configured into a market it cannot price in.
   currency?: string;
+  // SEALED ONLY. The store's theme can lock an orderable-looking product to
+  // in-store purchase, which neither its products.json `available` nor its
+  // schema.org can show — Thistle Tavern's "In-store only" Radiance boxes read
+  // available=true in both while the page had no buy button (2026-10-15;
+  // DECISIONS.md "Thistle Tavern: in-store only, shown as open"). When set, the
+  // sealed importer re-reads each in-stock sealed row's product page for this
+  // store and marks it not in stock if the page is locked (isPurchaseLocked in
+  // lib/sealed-stores.ts). It costs one page read per sealed product per run, so
+  // set it only on a store whose theme has actually been seen doing this.
+  purchaseLockPages?: boolean;
 }
 
 export const RETAILERS: Record<string, RetailerInfo> = {
@@ -974,6 +984,9 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 2500,
     shippingNote: "est. £1.50 · free over £25",
     country: "UK",
+    // Radiance Booster Box/Case and Vault: "In-store purchase only" on the page,
+    // available=true in products.json and InStock in schema.org (2026-10-15).
+    purchaseLockPages: true,
   },
   cardgoblin: {
     key: "cardgoblin",
