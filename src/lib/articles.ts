@@ -1006,6 +1006,194 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
 - **Rules detail.** What a "unit gear" is under Orianna, and how Dockside Lock-Up plays an opponent's banished unit, wait on Radiance's rules update.
 - **Prices.** None of these cards can be bought yet. Each card page starts comparing store prices as listings appear, most likely from the Pre-Rift events on 16–22 October. Until then, **[Radiance pre-order prices](/radiance-preorders)** compares sealed product across stores.`,
   },
+  // K/DA SPECIALS (2026-10-15, owner: a post each on Radiance's K/DA and
+  // HEARTSTEEL cards, "we previously did pretty well with the Crystal Rose
+  // card"). The five K/DA printings are RAD SP1–SP5/005, all in
+  // prisma/manual-cards.json with Riot's own card images. Owns `riftbound kda` /
+  // `k/da cards`, a SIBLING to the HEARTSTEEL posts under docs/seo-keyword-map.md's
+  // band-not-set rule; /sets/radiance stays primary for the set. The pull rate is
+  // riftbound.gg's reporting, attributed, because Riot publishes no rates. Prices
+  // in the body are the 14 October snapshot and dated as such; the embeds are live.
+  {
+    slug: "riftbound-kda-cards",
+    category: "blog",
+    title: "Riftbound K/DA Cards: All 5 Specials & Prices",
+    excerpt:
+      "All five K/DA special cards in Riftbound: Radiance, SP1 to SP5: Ahri, Akali, Evelynn, Kai'Sa and Seraphine. What each does and what to expect on price.",
+    author: "RiftCompare",
+    date: "2026-10-15",
+    readMins: 6,
+    tags: ["radiance", "k/da", "alt art", "collecting", "chase cards"],
+    hero: {
+      src: "/blog/riftbound-kda-cards.jpg",
+      alt: "The five Riftbound: Radiance K/DA special cards fanned out: Ahri, Confident; Akali, Brash; Evelynn, In Control; Kai'Sa, Rebel and Seraphine, Not Alone, numbered SP1 to SP5 of 005",
+    },
+    shop: [
+      { label: "K/DA cards on eBay", query: "Riftbound K/DA" },
+      { label: "Radiance booster displays", query: "Riftbound Radiance booster display" },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "See every Radiance card →",
+      blurb: "The whole Radiance card list, with live prices from release day.",
+    },
+    summary: [
+      "**Riftbound: Radiance has five K/DA cards**, one for each member of Riot's virtual pop group: **Ahri, Akali, Evelynn, Kai'Sa and Seraphine**, numbered **SP1 to SP5 of 005**.",
+      "**Each is a K/DA art printing of a Radiance Champion Unit.** The same card also has a regular print in the main set, so the K/DA version changes nothing about how it plays.",
+      "**It is the first time all five members are in the game.** Ahri and Kai'Sa came in Origins and Akali in Vendetta; Evelynn and Seraphine debut in Radiance.",
+      "**They are not rarer than an alt art**, according to riftbound.gg's reporting: about the same rate as a regular alternate art, never guaranteed in a pack or box. Riot publishes no pull rates.",
+      "**Vendetta's closest equivalent, the six Crystal Rose specials, fell hard after launch:** a median of $130 four days before release, $44 in launch week and $22 by 6 October.",
+    ],
+    embeds: [
+      {
+        title: "The five K/DA specials",
+        note: "SP1 to SP5 of 005, with Riot's own card images. Prices appear on each card as stores list them, most likely from the Pre-Rift events on 16 to 22 October.",
+        slugs: [
+          "ahri-confident-rad-sp1-005",
+          "akali-brash-rad-sp2-005",
+          "evelynn-in-control-rad-sp3-005",
+          "kai-sa-rebel-rad-sp4-005",
+          "seraphine-not-alone-rad-sp5-005",
+        ],
+      },
+      {
+        title: "The same five cards in their main set printings",
+        note: "Same name, cost and rules text as the K/DA versions. Evelynn and Seraphine also have a Showcase alternate art.",
+        slugs: [
+          "ahri-confident-rad-038-167",
+          "akali-brash-rad-015-167",
+          "evelynn-in-control-rad-109-167",
+          "evelynn-in-control-rad-109a-167",
+          "kai-sa-rebel-rad-063-167",
+          "seraphine-not-alone-rad-138-167",
+          "seraphine-not-alone-rad-138a-167",
+        ],
+      },
+      {
+        title: "Vendetta's Crystal Rose specials, priced live",
+        note: "The closest thing Riftbound has had to a K/DA tier: six crossover alternates numbered SP1 to SP6. Click any card for every store's price.",
+        ebaySearch: true,
+        slugs: ["kai-sa-survivor-ven", "sona-harmonious-ven", "ahri-inquisitive-ven", "sett-brawler-ven", "ezreal-prodigy-ven", "lux-crownguard-ven"],
+      },
+      {
+        title: "The K/DA members' most valuable cards today",
+        note: "The signed Legends of the three members already in the game, live. These, not the specials, are where Riftbound's money has been.",
+        ebaySearch: true,
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-303s-298",
+          "ahri-inquisitive-sfd-227s-221",
+          "akali-rogue-assassin-ven-189s-166",
+          "kai-sa-daughter-of-the-void-ogn-299s-298",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Are there K/DA cards in Riftbound?",
+        a: "Yes. Riftbound: Radiance has five K/DA special cards, numbered SP1 to SP5 of 005: Ahri, Confident; Akali, Brash; Evelynn, In Control; Kai'Sa, Rebel and Seraphine, Not Alone. Radiance releases on 23 October 2026.",
+      },
+      {
+        q: "Are the K/DA cards new cards?",
+        a: "They are new printings, not new cards. Each is a K/DA art version of a Radiance Champion Unit that also has a regular print in the main set (038, 015, 109, 063 and 138 of 167), with the same name, cost, Might and rules text.",
+      },
+      {
+        q: "How rare are the Riftbound K/DA cards?",
+        a: "Riot does not publish pull rates. riftbound.gg reports that the special alternate arts turn up at about the same rate as a regular alternate art and are not guaranteed in any pack or box. Treat that as second hand until boxes have been opened in numbers.",
+      },
+      {
+        q: "Why are the K/DA cards numbered SP instead of overnumbered?",
+        a: "Riftbound has used an SP range before: Vendetta's six Crystal Rose cards were numbered SP1 to SP6, and Riot said then that overnumbers are kept for art made for Riftbound. The K/DA cards follow the same pattern with their own SP1 to SP5 range.",
+      },
+      {
+        q: "How much are the K/DA cards worth?",
+        a: "Nothing has a settled price before release. The closest guide is Vendetta's Crystal Rose specials, whose median fell from $130 four days before release to $44 in launch week and $22 by 6 October. Each K/DA card's page compares every store's price as listings appear.",
+      },
+      {
+        q: "Which K/DA member is in Riftbound for the first time?",
+        a: "Two are: Evelynn and Seraphine both debut in Radiance, each with a Legend of her own (Evelynn, Agony's Embrace and Seraphine, Starry-Eyed Songstress). Ahri and Kai'Sa have been in the game since Origins and Akali since Vendetta.",
+      },
+    ],
+    body: `Riftbound: Radiance is a music set, and it was always going to need K/DA. Riot's virtual pop group gets **five special cards**, one for each member, numbered **SP1 to SP5 of 005**. Here is every card, what it does, how it compares with the cards you can already buy, and what Vendetta's Crystal Rose specials say about prices after release.
+
+[[embed:0]]
+
+## The five K/DA cards
+
+| # | Card | Domain | Cost / Might | What it does |
+| --- | --- | --- | --- | --- |
+| SP1 | **[Ahri, Confident](/card/ahri-confident-rad-sp1-005)** | Calm | 4 / 4 | Disarm. When you reduce an enemy unit's Might at her battlefield, she gets +1 Might this turn. |
+| SP2 | **[Akali, Brash](/card/akali-brash-rad-sp2-005)** | Fury | 5 / 5 | The first time she moves each turn, add 1 energy and 1 power. The second time, banish your top card and you may play it until your next Ending Phase. |
+| SP3 | **[Evelynn, In Control](/card/evelynn-in-control-rad-sp3-005)** | Chaos | 4 / 4 | Disarm. When she holds, if you control a facedown card at her battlefield, score 1 point. |
+| SP4 | **[Kai'Sa, Rebel](/card/kai-sa-rebel-rad-sp4-005)** | Mind | 5 / 5 | Disarm. While she is in a showdown, your spells have Reaction. |
+| SP5 | **[Seraphine, Not Alone](/card/seraphine-not-alone-rad-sp5-005)** | Order | 5 / 1 | When you play her or she becomes exhausted, make a 1 Might Recruit token. She has +1 Might for each other exhausted unit you control. |
+
+All five are Champion Units, and Riot's card gallery lists them as Showcase. Three of them carry **Disarm**, one of Radiance's new keywords: when the unit attacks, an enemy unit at that battlefield gets -1 Might this turn.
+
+## The same cards, new art
+
+None of the five is a new card. Each is a K/DA printing of a Radiance Champion Unit that also has a regular print in the main set, with the same name, cost, Might and text:
+
+[[embed:1]]
+
+So the K/DA version is a collector's choice, never a deckbuilding one. A player who wants Kai'Sa, Rebel in a deck needs the Rare at 063, not SP4.
+
+## How each card plays
+
+The art is the draw, but these are real cards, and a couple of them look like they will see play. All of this is read off the card text; nobody has played Radiance in sanctioned events yet.
+
+**Ahri, Confident (SP1)** is a Calm 4 cost, 4 Might unit that rewards shrinking enemies. Her own Disarm does the first point of work when she attacks, which then gives her +1 Might for the turn, so she attacks as a 5 into a unit that is a point smaller than it was. Any other Might reduction at her battlefield, from a spell or another Disarm unit, triggers her again.
+
+**Akali, Brash (SP2)** is a Fury 5 cost, 5 Might unit built around moving. The first move each turn pays for itself with an energy and a power. The second banishes the top card of your Main Deck and lets you play it until your next Ending Phase, which is card advantage for a deck that can move her twice, through Ganking or a movement spell.
+
+**Evelynn, In Control (SP3)** is a Chaos 4 cost, 4 Might unit that scores. If she holds a battlefield where you control a facedown card, you score a point. Radiance has several cards that hide a card at a battlefield, and she pairs with any of them, and her Disarm helps her win the fight to get there.
+
+**Kai'Sa, Rebel (SP4)** is a Mind 5 cost, 5 Might unit that turns every spell you hold into an instant during a showdown. That lets a spell heavy deck keep its answers back until the fight starts, and her Disarm softens the defender first.
+
+**Seraphine, Not Alone (SP5)** is an Order 5 cost unit with 1 printed Might that makes 1 Might Recruit tokens when you play her and each time she becomes exhausted, and gets +1 Might for every other exhausted unit you control. In a deck that exhausts its own units on purpose, she grows the board and herself at once.
+
+## How they're numbered and pulled
+
+The SP numbering is not new. Vendetta's six [Crystal Rose cards](/guides/riftbound-vendetta-crystal-rose-cards), Wild Rift crossover alternates, were numbered **SP1 to SP6**, and Riot explained then that overnumbers are kept for art made for Riftbound. K/DA gets the same treatment with its own five-card range, separate from Radiance's overnumbered Legends and the six [HEARTSTEEL overnumbers](/blog/riftbound-heartsteel-overnumbered-cards).
+
+On rarity, Riot publishes no pull rates. **riftbound.gg reports** that the special alternate arts come up at about the same rate as a regular alternate art, from the same flex slot, and are never guaranteed in a pack or box. If that holds, a K/DA card is a nice pull rather than a box's chase. Treat it as second hand until boxes have been opened in numbers.
+
+## All five members, for the first time
+
+K/DA debuted at the 2018 League of Legends World Championship with **Ahri, Akali, Evelynn and Kai'Sa**, and **Seraphine** joined them for 2020's ALL OUT. In Riftbound, **Ahri** and **Kai'Sa** have been in the game since Origins and **Akali** arrived in Vendetta. **Evelynn** and **Seraphine** debut in Radiance, each with a Legend of her own: [Evelynn, Agony's Embrace](/card/evelynn-agony-s-embrace-rad-153-167) and [Seraphine, Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-151-167). Radiance is the first set where a collector can finish the group.
+
+## The K/DA members' other Radiance cards
+
+The specials are only one corner of the K/DA story in Radiance. Each member has a regular unit in the main set, and the two newcomers get much more:
+
+- **Evelynn** has her Legend, [Agony's Embrace](/card/evelynn-agony-s-embrace-rad-153-167), with an overnumbered twin at [175/167](/card/evelynn-agony-s-embrace-rad-175-167); her signature spell [Last Caress](/card/last-caress-rad-154-167); a second unit, [Evelynn, Consuming](/card/evelynn-consuming-rad-090-167) (Body, Epic) with a Showcase at [090a](/card/evelynn-consuming-rad-090a-167); and In Control at 109 and 109a.
+- **Seraphine** has her Legend, [Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-151-167), its overnumbered twin [174/167](/card/seraphine-starry-eyed-songstress-rad-174-167) and two signed printings, [174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167) and [174a\\*/167](/card/seraphine-starry-eyed-songstress-rad-174as-167); her signature spell [Encore](/card/encore-rad-152-167); a second unit, [Seraphine, Inspiring](/card/seraphine-inspiring-rad-065-167) (Mind, Rare, with Disarm 2) and its Showcase at [065a](/card/seraphine-inspiring-rad-065a-167); and Not Alone at 138 and 138a.
+- **Ahri, Akali and Kai'Sa** each get the one unit in the main set, plus their K/DA special. Their Legends are from earlier sets.
+
+For a collector chasing the group, that makes Seraphine the deepest K/DA member in Radiance by a distance: nine printings of her own counting the special, before her signature spell.
+
+## What to expect on price
+
+The closest thing Riftbound has had to a K/DA tier is Vendetta's Crystal Rose run, and its prices are a warning. Using our daily price history, the median Crystal Rose special cost **$130 four days before Vendetta's release, $44 in launch week, $38 a month later and $22 by 6 October**. Today the dearest two, Kai'Sa and Ahri, are around $70; the other four are around $11 to $20. The full breakdown is in **[Radiance chase cards: what Vendetta's prices say to expect](/blog/riftbound-radiance-chase-cards)**.
+
+[[embed:2]]
+
+K/DA is not Crystal Rose. It is League's best known music act, and a collector who wants the group needs all five cards. But the two tiers share the things that drove Crystal Rose down: the specials are not rare, and in Vendetta the money went to the signed Legends, not the special tier. The K/DA members' own signed Legends show how far apart those tiers sit:
+
+[[embed:3]]
+
+Those are the 14 October US prices behind the live cards above: Ahri's signed Origins Legend at about **$3,711** and her signed Spiritforged Showcase at **$3,334**, Akali's signed Legend at **$2,673** and Kai'Sa's at **$1,900**, against about $70 for the dearest Crystal Rose special. Seraphine's signed Legend, [174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167), is the Radiance card to watch if you want K/DA at the top end.
+
+**If you are buying early**, the Crystal Rose numbers are worth knowing: the first listings before Vendetta's release were the dearest those cards have been. We do not predict prices, so set a [price alert](/alerts) on the K/DA card you want and you will hear when it moves.
+
+## Before you buy a K/DA card
+
+- **Check the number, not just the name.** "Ahri SP" could be Radiance's [Ahri, Confident SP1/005](/card/ahri-confident-rad-sp1-005) or Vendetta's Crystal Rose [Ahri, Inquisitive SP3/006](/card/ahri-inquisitive-ven), and "Kai'Sa SP" could be Radiance's SP4/005 or Vendetta's Crystal Rose SP1/006. The denominator, 005 or 006, tells you which set it is from.
+- **Pre-order or in hand.** Until 23 October, a listing for a K/DA single is a promise to post a card the seller may not have pulled yet. Read the dispatch date.
+- **Language.** Riftbound is printed in more than one language, and our prices compare English printings. A listing that does not say which language it is should be asked about before you pay.
+- **Compare stores.** Each card page lists every store we track that has the card in stock, cheapest first, in your currency, with eBay alongside.
+
+*Card names, numbers, domains and text are from Riot's official Radiance card gallery. Pull rate details are riftbound.gg's reporting, not a Riot figure.*`,
+  },
   // HEARTSTEEL OVERNUMBERED (2026-09-26). Riot's official six-card graphic: every
   // HEARTSTEEL member as an overnumbered Radiance Champion Unit, RAD 178–183/167.
   // Five are REPRINTS of cards legal since OGN/SFD (cross-checked against the
@@ -1024,7 +1212,9 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
       "All six HEARTSTEEL overnumbered Radiance cards, RAD 178–183/167: what each does, which five are reprints, and K'Sante's first Champion Unit.",
     author: "RiftCompare",
     date: "2026-09-26",
-    updated: "2026-10-02",
+    // 15 Oct: Riot's card gallery carries all six with Riot's own images, and a
+    // base-run K'Sante, Courageous (086/167); prices section from our history.
+    updated: "2026-10-15",
     readMins: 9,
     tags: ["radiance", "news", "spoilers", "heartsteel", "collecting", "ksante"],
     hero: {
@@ -1044,7 +1234,7 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
     embeds: [
       {
         title: "All six HEARTSTEEL overnumbered cards, in our database",
-        note: "Added from Riot's graphic on 26 September 2026. The art is cropped from that graphic until Radiance's official card images land; every other field is read off the card.",
+        note: "Added from Riot's graphic on 26 September 2026, and now shown with Riot's own card images from the official Radiance card gallery.",
         slugs: [
           "k-sante-courageous-rad-178-167",
           "aphelios-exalted-rad-179-167",
@@ -1080,6 +1270,7 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
       "**[K'Sante, Courageous](/card/k-sante-courageous-rad-178-167) is the new one:** a 5-energy, 4-Might Body unit with Accelerate and Shield 2 that channels a rune whenever he holds. It is K'Sante's first Champion Unit.",
       "**One reprint's wording changed.** Yone now reads *\"a battlefield that was uncontrolled\"* where the Spiritforged card says *\"an open battlefield\"*. Riot has not said whether that changes how he plays.",
       "**Nothing is buyable yet** — Radiance releases **23 October 2026**. The five originals are on sale today, with live prices below.",
+      "**Update, 15 October:** Riot's card gallery now lists all six with full card images, and confirms a regular **[K'Sante, Courageous at 086/167](/card/k-sante-courageous-rad-086-167)**, so the HEARTSTEEL K'Sante is not the only way to play him. Aphelios and Yone already have Spiritforged overnumbers trading at about **$77 to $80**.",
     ],
     faq: [
       {
@@ -1238,6 +1429,19 @@ HEARTSTEEL is a skin line, and the sheet reads like one. For the five members wh
 
 That is also why this sheet is less of a deckbuilding event than it looks. Five of the six cards change nothing about what you can build; they are new ways to own cards you could already buy. The deckbuilding news is K'Sante — who, counting yesterday's two cards, now has a Legend, a signature spell and a Champion Unit that all point the same way.
 
+## What the final card list changed (15 October)
+
+Riot's official Radiance card gallery now lists all six HEARTSTEEL cards, and our card pages use its full images instead of crops of the graphic. Two things are clearer than they were on 26 September:
+
+- **K'Sante, Courageous has a regular printing.** It is [086/167](/card/k-sante-courageous-rad-086-167), a Body Rare, with a Showcase alternate art at [086a](/card/k-sante-courageous-rad-086a-167). So the new card on this sheet can be played without the HEARTSTEEL print, just like the five reprints.
+- **The gallery files all six as Showcase**, the same as every other overnumbered card in Riftbound. Riot still has not said what rate they come at.
+
+## What overnumbered prints have cost
+
+Two of these cards already have an overnumbered print from Spiritforged, which is the nearest like for like comparison there is. On our 14 October US prices, **[Aphelios, Exalted 224/221](/card/aphelios-exalted-sfd-224-221)** costs about **$77** and **[Yone, Blademaster 233/221](/card/yone-blademaster-sfd-233-221)** about **$80**. Their signed twins, which HEARTSTEEL has no equivalent of, are around $568 and $606.
+
+Vendetta is the other guide. Using our daily price history, the median Vendetta overnumbered unit cost **$177 four days before release, $81 in launch week and $73 by 6 October**. The first listings were the dearest. The full breakdown, tier by tier, is in **[Radiance chase cards: what Vendetta's prices say to expect](/blog/riftbound-radiance-chase-cards)**, and the same pattern for Radiance's other special tier is in **[the K/DA cards](/blog/riftbound-kda-cards)**.
+
 ## What it means if you are buying
 
 **Read the collector number before you pay.** "HEARTSTEEL Kayn" is RAD 182/167. "Kayn, Unleashed" with no number could just as easily be the Origins print, 189/298, which has been on sale since launch. The same goes for every reprint on this sheet: the name alone does not tell you which printing a listing is for, and two printings of one card can be very far apart in price.
@@ -1251,9 +1455,7 @@ We do not predict prices, and we are not going to start with a chase print nobod
 ## What we still don't know
 
 - **Distribution.** Which Radiance product the HEARTSTEEL cards come in, and at what rate.
-- **A base-run K'Sante, Courageous.** Whether the card also has an ordinary printing inside the 167-card run.
 - **Yone's wording.** Whether "a battlefield that was uncontrolled" plays any differently from "an open battlefield".
-- **Final images.** Our card images are crops of Riot's graphic at the resolution it was shared, and will be replaced with the official card art once Radiance's cards reach Riot's card gallery.
 
 Every other Radiance reveal is logged, newest first, on **[the Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)**. All six of these cards are in our database now: [K'Sante](/card/k-sante-courageous-rad-178-167), [Aphelios](/card/aphelios-exalted-rad-179-167), [Ezreal](/card/ezreal-dashing-rad-180-167), [Yone](/card/yone-blademaster-rad-181-167), [Kayn](/card/kayn-unleashed-rad-182-167) and [Sett](/card/sett-kingpin-rad-183-167).`,
   },
@@ -2201,7 +2403,7 @@ Riot's gallery files Mechanical Bandit under Fury and gives One-Two Punch no dom
 **7 October — Riot's gallery reaches 164 printings, with Riven's first card, the fifth K/DA special and two held back battlefields.** On 5 October Riot's card gallery listed 130 Radiance printings; today it lists 164. Twenty-six were new to us and are in the database with Riot's own card image and text. Eight cards we had from riftbound.gg now use Riot's image, and one more, Gravity Field, comes from riftbound.gg because Riot's gallery does not list it yet:
 
 - **Riven.** **[Riven, Broken Blade](/card/riven-broken-blade-rad-043-167)** (Calm Champion Unit, Rare, 4 energy, 4 Might, 043/167), with a Showcase alternate art, [043a](/card/riven-broken-blade-rad-043a-167). Each time she becomes exhausted you choose a mode you have not chosen this turn: buff her, spend the buff to stun an enemy unit, or spend it to ready her. Her signature gear, [Blade of the Exile](/card/blade-of-the-exile-rad-150-167), was already in. No Riven Legend has been shown.
-- **The K/DA specials are five.** [Ahri, Confident](/card/ahri-confident-rad-sp1-005) (SP1/005, Calm, Showcase) joins Akali, Evelynn, Kai'Sa and Seraphine at SP2 to SP5.
+- **The K/DA specials are five.** [Ahri, Confident](/card/ahri-confident-rad-sp1-005) (SP1/005, Calm, Showcase) joins Akali, Evelynn, Kai'Sa and Seraphine at SP2 to SP5. All five, card by card, are in [the K/DA cards post](/blog/riftbound-kda-cards).
 - **Two more signature cards.** [Last Caress](/card/last-caress-rad-154-167), Evelynn's signature spell, was shown only as a Simplified Chinese printing on 2 October and is in now from Riot's own image. [The Ball](/card/the-ball-rad-146-167) is Orianna's signature gear: a Deploy gear with Ganking that either draws 1 or deals 2 to enemy units where it is.
 - **Ekko, Revolutionary** ([021](/card/ekko-revolutionary-rad-021-167), Epic, and a Showcase [021a](/card/ekko-revolutionary-rad-021a-167)): he enters ready with Assault, and for a discard and a rune he banishes himself and plays himself to your base, ignoring his cost.
 - **The two battlefields held back on 5 October** are in, from Riot's own images: [Black Rose Sanctum](/card/black-rose-sanctum-rad-159-167) (159, Uncommon) and [Packed Amphitheater](/card/packed-amphitheater-rad-184-167) (184), which is **Radiance's Ultimate Rare** (below).
@@ -11178,7 +11380,7 @@ We'll be watching Singapore's Top 8 the moment it's final — and reading it the
     date: "2026-09-05",
     // 12 Sep 2026: product MSRPs (distributor sheet), the Ultimate Rare and the
     // Pre-Rift kit's nine-champion structure folded in as a sixth argument.
-    updated: "2026-09-12",
+    updated: "2026-10-15",
     readMins: 9,
     // "radiance" belongs here: every other post in this cluster carries it, and the
     // tag pages are how a reader who lands on one Radiance piece finds the rest.
@@ -11245,7 +11447,7 @@ We'll be watching Singapore's Top 8 the moment it's final — and reading it the
       },
       {
         q: "Will Radiance have K/DA cards?",
-        a: "Riot has not announced any. What is confirmed is that Seraphine and Evelynn debut in Radiance, which would put all five K/DA members — Ahri, Akali, Evelynn, Kai'Sa and Seraphine — in the game for the first time. The K/DA connection is our inference from the champion list, not a Riot announcement.",
+        a: "Yes. When this was written Riot had announced none; Radiance now has five K/DA special cards, numbered SP1 to SP5 of 005: Ahri, Confident; Akali, Brash; Evelynn, In Control; Kai'Sa, Rebel and Seraphine, Not Alone. With Seraphine and Evelynn debuting, all five K/DA members are in the game for the first time. See [the K/DA cards](/blog/riftbound-kda-cards).",
       },
       {
         q: "Can I play the T1 Seraphine card now?",
@@ -11309,6 +11511,8 @@ Those existing three are not marginal cards. Their base Rare printings trade for
 Radiance is the set that completes the group for the first time. A collector who wants all five has had no way to finish, and from 23 October they will.
 
 **A necessary caveat.** Riot has not announced K/DA-themed cards, alternate arts or a K/DA subset in Radiance. What is confirmed is the champion list. The observation that this list completes K/DA is ours, drawn from the roster — not something Riot has said. If you are buying on the expectation of a K/DA treatment tier, you are buying on an inference, and you should size the position accordingly.
+
+**Update, 15 October:** the inference held. Radiance has five K/DA special cards, one for each member, numbered SP1 to SP5 of 005. Every card, and what Vendetta's Crystal Rose specials did to prices after launch, is in **[Riftbound K/DA cards: all 5 specials](/blog/riftbound-kda-cards)**.
 
 ## 3. Seraphine is already trading, and Radiance is her unlock
 

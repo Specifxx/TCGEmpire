@@ -648,6 +648,31 @@
     "variants": [],
     "fingerprint": "3276b25928192f05"
   },
+  "/blog/riftbound-kda-cards.jpg": {
+    "src": "/blog/riftbound-kda-cards.jpg",
+    "width": 1600,
+    "height": 838,
+    "bytes": 124204,
+    "webp": "/blog/riftbound-kda-cards.webp",
+    "webpBytes": 120234,
+    "avif": "/blog/riftbound-kda-cards.avif",
+    "avifBytes": 111972,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-kda-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-kda-cards-768w.webp"
+      },
+      {
+        "w": 1200,
+        "src": "/blog/riftbound-kda-cards-1200w.webp"
+      }
+    ],
+    "fingerprint": "8bc15133cd970a7b"
+  },
   "/blog/riftbound-legacy-key-art.jpg": {
     "src": "/blog/riftbound-legacy-key-art.jpg",
     "width": 1478,
