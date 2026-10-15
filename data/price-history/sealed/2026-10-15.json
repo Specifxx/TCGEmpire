@@ -120,7 +120,7 @@
     "OGS|Proving Grounds": {
       "AU": 9995,
       "CA": 999,
-      "EU": 883,
+      "EU": 888,
       "NZ": 9000,
       "UK": 2999,
       "US": 800
@@ -141,7 +141,7 @@
       "CA": 131121,
       "EU": 66000,
       "UK": 42236,
-      "US": 89987
+      "US": 89985
     },
     "RAD|Booster Pack": {
       "CA": 799,
@@ -158,7 +158,7 @@
       "US": 4999
     },
     "RAD|Bundle Case": {
-      "US": 159999
+      "US": 159998
     },
     "RAD|Champion Deck": {
       "EU": 2999
@@ -182,11 +182,11 @@
       "EU": 2890,
       "SG": 4436,
       "UK": 2399,
-      "US": 2370
+      "US": 3975
     },
     "RAD|Showdown Decks Display": {
       "EU": 4200,
-      "US": 9969
+      "US": 9968
     },
     "RAD|Sleeved Booster": {
       "US": 1999
@@ -281,13 +281,13 @@
       "CA": 1990,
       "SG": 1953,
       "UK": 1185,
-      "US": 1129
+      "US": 1093
     },
     "SFD|Pre-Rift Event Kit": {
       "AU": 8947,
       "CA": 220000,
       "EU": 4925,
-      "US": 154755
+      "US": 150000
     },
     "SFD|Pre-Rift Kit": {
       "AU": 15970,
@@ -302,7 +302,7 @@
     },
     "SFD|Sleeved Booster": {
       "EU": 1200,
-      "US": 1184
+      "US": 1180
     },
     "SFD|Sleeved Booster (Art Set)": {
       "US": 4395
@@ -368,7 +368,7 @@
     "UNL|Champion Deck (Vex)": {
       "AU": 2999,
       "CA": 1999,
-      "EU": 1290,
+      "EU": 1490,
       "NZ": 3499,
       "SG": 3105,
       "UK": 1900,
@@ -396,7 +396,7 @@
       "EU": 1146,
       "SG": 1479,
       "UK": 1080,
-      "US": 800
+      "US": 799
     },
     "UNL|Pre-Rift Event Kit": {
       "CA": 5139,
@@ -475,7 +475,7 @@
       "EU": 4300
     },
     "VEN|Nexus Night Pack": {
-      "US": 671
+      "US": 924
     },
     "VEN|Pre-Rift Event Kit": {
       "CA": 6110,
@@ -497,7 +497,7 @@
     "VEN|Showdown Decks": {
       "AU": 4499,
       "CA": 1919,
-      "EU": 1190,
+      "EU": 904,
       "NZ": 6499,
       "SG": 2926,
       "UK": 1899,
@@ -506,7 +506,7 @@
     "VEN|Showdown Decks Display": {
       "AU": 5000,
       "CA": 4995,
-      "EU": 4000,
+      "EU": 4100,
       "US": 49900
     },
     "VEN|Sleeved Booster": {
