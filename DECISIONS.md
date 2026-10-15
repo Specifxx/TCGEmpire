@@ -17106,3 +17106,18 @@ Each site links its home and two or three deep pages a Riftbound reader would us
 **What it gives up.** A preview URL for a human branch or pull request. Put `[preview]` in a commit subject when one is wanted (it is then a full build, schema push and import included, so only when the owner asks); `staging-deploy.yml` (CLI, production environment, not promoted) is the other way to look at a branch and never meets the script. `seo-preview-gate.yml` keeps running on Production deployments.
 
 **Pinned by** `tests/deploy-cadence.test.ts`: a preview or development build is skipped by default, builds on `[preview]` in the subject in any case, not on `[preview]` in the body or on `[deploy]`, never on an unreadable message, and `[preview]` does not deploy production; the production tests are unchanged. CLAUDE.md's deploy section, CURRENT-STATE and `docs/build-cost.md` (Part 3) say the same.
+
+## Three articles aimed at Search Console's gaps: the Radiance card list, one-year hot takes, the Regional Championships — 2026-10-15
+
+**Owner:** "we need some like couple more insightful blog posts and news and or guides... don't be afraid to have some really wild takes... We need to get our SEO up... think about the best way which blog posts can give us the most SEO."
+
+**Chosen from data, not guesses.** New read-only task `gsc-queries` (`scripts/gsc-queries.ts`) prints Search Console's top queries, the "striking distance" ones (position 4–20) and the rising ones. Over 28 days to 12 October:
+- **"riftbound radiance card list" had 6,500 impressions at position 7.7 and 1.7% CTR**, rising from about 178 to about 395 impressions a day in a week. Its variants ("radiance card list", "all radiance cards", "card gallery") added thousands more. No page was built for that query: Google was offering the spoiler tracker and `/sets/radiance`. Vendetta had a dedicated card-list post; Radiance did not.
+- Organized-play and "is it growing" questions had no current page, and the Regional Championships (Stuttgart 6–8 Nov, Las Vegas 11–13 Dec) are the next search spike.
+
+**What shipped:**
+- `/blog/riftbound-radiance-card-list`, modelled on the Vendetta list: a filterable `setAll: "RAD"` gallery (self-populating), the chase gallery, numbering explained, the eight confirmed Legends, keyword links, and Vendetta's launch-week-to-October price curve from `data/price-history` (median -56%, under $1 -82%, $20+ -17%). It counts 144 of 167 main-set numbers as held. The other 23 are not confirmed in English, and it says so rather than listing fan translations. Linked from the spoiler tracker, the chase post and the Radiance set page's pre-release links. Allowlisted for `ebayPicks` with the Vendetta list.
+- `/blog/riftbound-one-year-hot-takes`, the opinion piece the owner asked for: nine takes, each with its evidence and "what would prove us wrong". The price takes come from our own daily records (June vs October by tier: chase up 22–56% at the median, bulk down 35–45%). The predictions (Azir wins Stuttgart; passing Lorcana in the West in 2027) are labelled as opinions.
+- `/guides/riftbound-regional-championships-2026`: dates, entry, prize money (US$10,000 to Stuttgart's winner; other payouts flagged as unpublished), format, the decks coming in, buying advice, and how the weekend works. The Los Angeles RQ post links to it.
+
+**Not done:** meta rewrites of the low-CTR guides (Empower, ban list, card size). Each already went through the 2026-09-24 CTR pass, and their low CTR is mostly position, not wording.

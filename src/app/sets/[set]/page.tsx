@@ -72,6 +72,7 @@ import { getRiftboundStocksLinks, rbsSetUrl } from "@/lib/riftboundstocks";
 //     missing link would be.
 const PRE_RELEASE_LINKS: Record<string, { href: string; label: string }[]> = {
   radiance: [
+    { href: "/blog/riftbound-radiance-card-list", label: "Card list: every Radiance card" },
     { href: "/blog/riftbound-radiance-spoilers", label: "Spoilers: every card revealed so far" },
     { href: "/blog/riftbound-radiance-what-we-know", label: "Release date & what's confirmed" },
     { href: "/radiance-preorders", label: "Pre-order prices, every store" },

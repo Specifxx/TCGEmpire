@@ -135,6 +135,8 @@ test("it stays opt-in — not silently applied to every article", () => {
   const ALLOWED = new Set([
     // Vendetta spoiler/chase content — readers are shopping by sight.
     "every-riftbound-vendetta-card-revealed",
+    // Its Radiance twin (2026-10-15): the card list readers use to pick printings in launch week.
+    "riftbound-radiance-card-list",
     "riftbound-vendetta-chase-cards-so-far",
     "riftbound-empower-explained",
     // Same reason: a chase-card listicle whose readers arrive to buy a printing,

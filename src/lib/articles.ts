@@ -705,6 +705,8 @@ After release, Radiance products move from the pre-order page to **[the sealed c
     ],
     body: `**Radiance releases on 23 October, and no Radiance single has a price yet.** What exists is a chase run Riot has been showing for two weeks, and a complete price history for Vendetta, the last set to launch. This post sets the two side by side. It is not a price prediction, because we do not publish those. It is a map of which cards sit in the tiers where Vendetta's money was, and of what those tiers did after launch.
 
+For every Radiance card in one place, not just the chase run, see **[the Radiance card list](/blog/riftbound-radiance-card-list)**.
+
 ## The Radiance chase run, as shown so far
 
 As of 7 October our catalogue holds 170 Radiance cards, 43 of them Showcase printings. The chase cards fall into six tiers:
@@ -2150,6 +2152,8 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       },
     ],
     body: `This is the **live Riftbound: Radiance spoiler tracker**. The gallery below is drawn from our card database and updates as each official reveal is imported, so it is current the morning after a reveal without anyone editing this page. Under it is a **dated log of everything that has actually been revealed**, the Preview Season schedule, and a clear line between what Riot has shown and what has merely circulated.
+
+**Looking for the finished list?** Preview Season is over: **[the Radiance card list](/blog/riftbound-radiance-card-list)** has every Radiance card in collector-number order with live prices, and it is the page to bookmark for launch week.
 
 **Where things stand today, 8 October 2026:** Preview Season is fourteen days old. **Seven Legends are now in print**: Seraphine's, Ekko's, Ziggs', Orianna's and Jarvan IV's, and, in the last few days, Evelynn's and Mordekaiser's, alongside K'Sante's, which surfaced as the season opened. Riot's own card gallery now lists 177 Radiance printings, and every one of them is in the gallery below, with the five signed Legends, which Riot's gallery does not list, read off preview partners' and riftbound.gg's card images. The three leaked mechanics, **Deploy, Show Off and Disarm, are printed on finished cards**, so they are no longer leaks. Every card we can read in full, from its collector number to its rarity gem, is in the gallery below; the newest wave, and what each card does, is broken down in **[Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one)**.
 
@@ -8442,6 +8446,8 @@ If you're gearing up for a set's own Pre-Rift week, our **[Vendetta card databas
     },
     body: `Riftbound's competitive scene has its next big stop: the **Riftbound Regional Qualifier: Los Angeles**, running **September 25–27, 2026** at the **Los Angeles Convention Center**. It's the final Regional Qualifier of the year, run by UVS Games, and tickets are on sale now via Eventbrite.
 
+*Update, October 2026:* Rengar, Pridestalker won Los Angeles. The Top 64 earned invitations to the two Regional Championships in Stuttgart and Las Vegas, covered in **[our Regional Championships guide](/guides/riftbound-regional-championships-2026)**.
+
 ## The details
 
 - **Dates:** Friday 25 – Sunday 27 September 2026, 12pm–6pm each day
@@ -12482,6 +12488,474 @@ If you are **selling**, work to cash value, decide between lot and individual sa
 If you are **holding**, put the list in **[the portfolio](/portfolio)** with what you paid, set **[price alerts](/alerts)** on the cards you would sell at the right number, and stop checking. Watching a collection daily is the fastest way to make a bad decision about it.
 
 And if the honest answer turns out to be "less than I hoped" — that is the normal result, it is what the curve in Step 2 predicts, and knowing it accurately is worth considerably more than a comfortable guess.`,
+  },
+  {
+    slug: "riftbound-radiance-card-list",
+    ebayPicks: { setCode: "RAD", heading: "Radiance chase cards on eBay right now" },
+    category: "blog",
+    title: "Riftbound Radiance Card List: Every Card",
+    excerpt:
+      "Every Riftbound Radiance card in number order: Legends, Showcase and overnumbered chase prints, new keywords and live prices ahead of the 23 Oct launch.",
+    author: "RiftCompare",
+    date: "2026-10-15",
+    readMins: 9,
+    tags: ["radiance", "card list", "card gallery", "spoilers", "news"],
+    hero: {
+      src: "/radiance-spoilers/ekko-boy-who-shattered-time.jpg",
+      alt: "Ekko, Boy Who Shattered Time, one of the Legends in the Riftbound Radiance card list",
+    },
+    summary: [
+      "**Radiance is Riftbound's fifth set and launches on 23 October 2026** in English, Simplified Chinese and French on the same day. Pre-Rift events run 16–22 October.",
+      "**The main set is numbered to 167.** On top of that come overnumbered Showcase printings (168/167 to 184/167), signed Legends with a `*` number, alternate-art units and runes, and five SP specials.",
+      "**As of 15 October our database holds 197 Radiance printings, including 144 of the 167 main-set numbers.** The rest are not yet confirmed in English. The gallery below fills in as each one is.",
+      "**Eight Legends are confirmed:** Ekko, Ziggs, Mordekaiser, Orianna, K'Sante, Seraphine, Evelynn and Jarvan IV.",
+      "**Don't buy singles in launch week if you can wait.** Vendetta's median single fell 56% between its first week and October. The full numbers are below.",
+    ],
+    faq: [
+      {
+        q: "How many cards are in Riftbound Radiance?",
+        a: "The main set is numbered to 167 (001/167 to 167/167). Overnumbered Showcase printings run from 168/167 to 184/167, and on top of those are signed Legends, alternate-art printings, a cycle of alternate-art runes and five SP specials. Fan trackers quote a total of around 180 cards, but that depends on what you count. Our database holds 197 printings as of 15 October 2026.",
+      },
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026, in English, Simplified Chinese and French at the same time, the first Riftbound set to launch in all three languages on one day. Pre-Rift events run from 16 to 22 October.",
+      },
+      {
+        q: "Who are the Radiance Legends?",
+        a: "Eight are confirmed by Riot: Ekko, Boy Who Shattered Time; Ziggs, Hexplosives Expert; Mordekaiser, Iron Revenant; Orianna, Lady of Clockwork; K'Sante, Pride of Nazumah; Seraphine, Starry-Eyed Songstress; Evelynn, Agony's Embrace; and Jarvan IV, Exemplar of Demacia. Fan trackers list Riven as a ninth that Riot had not confirmed at the time of writing.",
+      },
+      {
+        q: "What are the new mechanics in Radiance?",
+        a: "Deploy, Show Off and Disarm are the headline new keywords, and returning ones like Accelerate, Assault, Shield, Deflect and Predict show up across the set. Each has its own explainer linked in this article.",
+      },
+      {
+        q: "What is the Radiance Ultimate Rare?",
+        a: "Packed Amphitheater, a Battlefield. Its overnumbered printing is the rarest card in the set.",
+      },
+      {
+        q: "Should I buy Radiance singles on release day?",
+        a: "Only the cards you need straight away. Vendetta's median single lost 56% of its price between its first week and mid-October, and cards under a dollar lost 82%. Chase cards held up much better (down 17% at the median), but even those were cheaper a few weeks in.",
+      },
+    ],
+    shop: [
+      { label: "Radiance booster boxes", query: "Riftbound Radiance booster box" },
+      { label: "Radiance singles on eBay", query: "Riftbound Radiance" },
+    ],
+    embeds: [
+      {
+        title: "Every Radiance card, in collector-number order",
+        note: "Straight from our live database, so new confirmations appear here automatically. Filter by domain, rarity or type; tap any card for its rules text and prices across every store we track.",
+        setAll: "RAD",
+        filterable: true,
+        defaultSort: "number",
+        initialCount: 48,
+      },
+      {
+        title: "The Radiance chase cards: signed and overnumbered",
+        note: "The printings that carry most of a box's value: signed Legends, overnumbered Showcase cards and the SP specials.",
+        chaseSet: "RAD",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Open the full Radiance set page →",
+      blurb: "Sort every Radiance card by price, rarity or number, with live prices in your market.",
+    },
+    body: `Radiance is Riftbound's fifth set and the last of 2026. It launches on **23 October 2026**, and for the first time a Riftbound set arrives in English, Simplified Chinese and French on the same day. This page is the card list: every Radiance card we hold, in collector-number order, with live prices across every store we track. It updates itself: when Riot confirms a card in English and it reaches our database, it appears in the gallery below without anyone editing this page.
+
+If you are here for the spoiler story rather than the list, our **[Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)** has the reveal-by-reveal history, and **[the chase cards breakdown](/blog/riftbound-radiance-chase-cards)** covers what is worth pulling.
+
+[[embed:0]]
+
+## How Radiance is numbered
+
+The main set runs from **001/167 to 167/167**. That is the number to use when someone asks how many cards are in Radiance, but it is not the number of printings you can open, because Riftbound stacks several chase layers on top of the main set:
+
+| Layer | Numbering | What it is |
+| --- | --- | --- |
+| Main set | 001/167 – 167/167 | Commons through Epics, Legends, Battlefields |
+| Alternate art | e.g. 021a/167 | A second art for a main-set card, usually a champion unit |
+| Overnumbered Showcase | 168/167 – 184/167 | Numbered beyond the set: full-art Legends, the HEARTSTEEL units and the Ultimate Rare |
+| Signed | e.g. 168*/167 | A Legend's overnumbered print with the artist's signature stamped on it |
+| Runes | R01 – R06, plus R01A – R06A | The rune cycle and its alternate-art versions |
+| Specials | SP1/005 – SP5/005 | Five special printings outside the main numbering |
+
+As of 15 October our database holds **197 Radiance printings**. That includes **144 of the 167 main-set numbers**; the other 23 have not been confirmed in English yet. Some have been shown in Chinese, and fan trackers fill the gaps with machine translations. We don't list a card until its English name and text are confirmed, because a mistranslated name on a price comparison site sends people searching for a card that doesn't exist. Expect the gaps to close in launch week.
+
+The split of what we hold, by type, is **70 units, 33 spells, 23 gear, 10 battlefields and 8 Legends** among the main-set numbers. By rarity it is 43 commons, 38 uncommons, 39 rares and 24 epics. By domain, Fury leads with 26 cards, then Calm and Body with 24 each, Mind with 21, Chaos and Order with 19 each, and 11 Colorless cards.
+
+## The Radiance Legends
+
+Eight Legends are confirmed in English:
+
+- **Ekko, Boy Who Shattered Time** – the set's time-twisting headliner, with a signed overnumbered print at 168*/167.
+- **Ziggs, Hexplosives Expert** – explosive gear and minefields; signed at 169*/167.
+- **Mordekaiser, Iron Revenant** – the Shadow Isles bruiser; signed at 170*/167.
+- **Orianna, Lady of Clockwork** – Piltover's clockwork control Legend; signed at 171*/167.
+- **K'Sante, Pride of Nazumah** – the Nazuman defender, who also appears as the first Champion Unit among the HEARTSTEEL overnumbers.
+- **Seraphine, Starry-Eyed Songstress** – the set's music theme in one card; signed at 174*/167.
+- **Evelynn, Agony's Embrace** – overnumbered at 175/167.
+- **Jarvan IV, Exemplar of Demacia** – overnumbered at 176/167.
+
+Fan trackers list **Riven** as a ninth Legend. Riot had not confirmed it in English when we wrote this, though Riven units are in the set (Broken Blade at 043/167, Deserter at 114/167). If a Riven Legend is confirmed, it will appear in the gallery above. Each Legend's champion page gathers every printing of that champion across sets. Start with **[Ekko](/champions/ekko)**, **[Seraphine](/champions/seraphine)** or **[K'Sante](/champions/ksante)**.
+
+## The new keywords, and where to learn them
+
+Radiance's rules text leans on a handful of keywords. Counting across every printing we hold, the most common are:
+
+- **Deploy** (27 printings) – the set's signature mechanic. Our **[Deploy explainer](/guides/riftbound-deploy-explained)** walks through how it resolves, with examples.
+- **Accelerate** (9) – pay more to have a unit ready the turn it arrives. See **[Accelerate](/keywords/accelerate)**.
+- **Disarm** (9) – a new answer to equipped and buffed units. See **[the Disarm guide](/guides/riftbound-disarm-explained)**.
+- **Assault** (8), **Shield** (7), **Deflect** (6) and **Tank** (6) – the combat keywords, each with its own page: **[Assault](/keywords/assault)**, **[Shield](/keywords/shield)**, **[Deflect](/keywords/deflect)**, **[Tank](/keywords/tank)**.
+- **Ganking** (7) – units that can move between battlefields. See **[Ganking](/keywords/ganking)**.
+- **Predict** (3) – look at the top of your deck and choose what stays. See **[Predict](/keywords/predict)**.
+- **Show Off** (3 so far) – a payoff that depends on what you've already played this turn. See **[the Show Off guide](/guides/riftbound-showoff-explained)**.
+
+Rules changes take effect with the set. Riot's Radiance patch notes and errata, effective 16 October, are summarised in **[our errata write-up](/blog/riftbound-radiance-patch-notes-errata)**.
+
+## The chase layer
+
+Most of a Radiance box's resale value sits in a few slots: the signed Legends, the overnumbered Showcase cards and the SP specials. The second gallery below collects all of them.
+
+[[embed:1]]
+
+The **Ultimate Rare is Packed Amphitheater**, a Battlefield, and its overnumbered printing is the hardest card in the set to pull. Fan trackers quote odds of roughly one in four thousand packs, which we have not been able to confirm from Riot. The **HEARTSTEEL** overnumbers (K'Sante, Aphelios, Ezreal, Yone, Kayn and Sett at 178–183/167) are the set's most-searched chase cards. Five of them are reprints of existing champions in the band's art, and **[our HEARTSTEEL breakdown](/blog/riftbound-heartsteel-overnumbered-cards)** covers each one.
+
+## When to buy Radiance singles: what Vendetta tells us
+
+We record the cheapest in-stock price of every card every day, so we can say what happened to the last set after launch rather than guess. Comparing **Vendetta's first week on sale (1–7 August 2026) with 9–15 October**:
+
+| Vendetta cards, by first-week price | Cards | Median change since launch week |
+| --- | --- | --- |
+| Under US$1 | 151 | **-82%** |
+| US$1 – US$20 | 50 | **-57%** |
+| US$20 and up | 47 | **-17%** |
+| All cards | 248 | **-56%** |
+
+The lesson is blunt. **Launch-week prices are the worst prices most cards will ever have.** Bulk commons and uncommons collapse as boxes are opened. The mid-range drops by more than half. Even chase cards are usually cheaper a few weeks in, with exceptions: Vendetta's signed Akali (189*/166) is about 10% above its launch week, and signed Jayce rose from around US$707 to around US$1,099.
+
+So, for Radiance:
+
+- **Buy at launch only what you will play in the next two weeks.** A Pre-Rift deck or a Regional Championship list justifies paying the launch premium. Anything you are collecting can wait.
+- **Set price alerts instead of watching.** A **[price alert](/alerts)** on a Radiance card tells you when it falls to your number.
+- **Sealed is a separate decision.** Pre-order box prices by market are in **[our Radiance pre-orders page](/radiance-preorders)**. The **[box EV calculator](/tools/box-ev)** shows whether a box is worth more opened or sealed once singles prices settle.
+- **Try before you buy.** The **[Radiance pack simulator](/games/pack-sim)** opens virtual packs at the set's real rarity mix, which is a cheap way to see what a box actually yields.
+
+## Release dates and where Radiance fits
+
+| Date | What happens |
+| --- | --- |
+| 25 Sep – 9 Oct 2026 | Radiance preview season |
+| 16 Oct 2026 | Radiance rules changes take effect |
+| 16 – 22 Oct 2026 | Pre-Rift events at local stores ([Pre-Rift rules](/guides/riftbound-pre-rift-rules-explained)) |
+| 23 Oct 2026 | Radiance launches in English, Chinese and French |
+| 6 – 8 Nov 2026 | European Regional Championship, Stuttgart, the first event with Radiance legal |
+| 11 – 13 Dec 2026 | North American Regional Championship, Las Vegas |
+| 29 Jan 2027 | Legacy (set 6) launches |
+
+Radiance is the last set before **[Legacy](/blog/riftbound-legacy-spoilers-set-6)**, a much larger set at a reported 346 cards. The full release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**, and the 2027 schedule is in **[the set roadmap](/blog/riftbound-2027-set-roadmap)**.
+
+## Five Radiance cards worth a closer look
+
+A card list is easier to use with a few signposts. These five are the ones we expect people to search for most in launch week:
+
+- **[Neeko, Blending In](/card/neeko-blending-in-rad-167-167)** (167/167) – the last card in the main set and an Epic. Our **[Neeko spoiler write-up](/blog/riftbound-neeko-blending-in-spoiler)** explains why she drew so much attention during previews.
+- **[K'Sante, Courageous](/card/k-sante-courageous-rad-178-167)** (178/167) – the first Champion Unit among the HEARTSTEEL overnumbers and the set's most-discussed chase card.
+- **[Packed Amphitheater](/card/packed-amphitheater-rad-184-167)** (184/167) – the Ultimate Rare.
+- **[Seraphine, Not Alone](/card/seraphine-not-alone-rad-138-167)** (138/167) – an Epic Seraphine that also appears in an alternate-art printing.
+- **[Ekko, Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-168-167)** (168/167) – the overnumbered Ekko Legend, with a signed version on top.
+
+Every one of them is in the galleries above with its live price, and each card page shows the price in your market with a history chart from the first day a store listed it.
+
+## How this list stays accurate
+
+Every card in the galleries comes from our database, which takes its card data from Riot's official gallery. Prices come from the stores and marketplaces we track in Australia, the US, the UK, Canada, Singapore and Europe. A card with no price yet simply has no in-stock listing anywhere we check, which is normal for a set that has not released. If you spot a wrong card, a wrong name or a price that looks off, the **report** button on every card page goes straight to us. We fix card data the same day where we can.`,
+  },
+  {
+    slug: "riftbound-one-year-hot-takes",
+    category: "blog",
+    title: "Riftbound at One Year: 9 Hot Takes",
+    excerpt:
+      "Riftbound turns one this month. Nine opinions, with our price data behind them: five sets in a year is too many, bulk is dead, and Azir wins Stuttgart.",
+    author: "RiftCompare",
+    date: "2026-10-15",
+    readMins: 12,
+    tags: ["opinion", "market analysis", "meta", "organized play", "riftbound"],
+    hero: {
+      src: "/radiance-spoilers/mordekaiser-iron-revenant-signature.jpg",
+      alt: "Mordekaiser, Iron Revenant, the signed Radiance Legend, illustrating Riftbound's first year",
+    },
+    summary: [
+      "**Riftbound launched in English on 31 October 2025.** By 23 October 2026 it will have released five sets in under twelve months: Origins, Spiritforged, Unleashed, Vendetta and Radiance.",
+      "**Our price data shows a two-speed market.** Since June, the median Origins card worth US$20+ rose 22% while the median card under a dollar fell 38%. Chase cards are climbing and bulk is going to zero.",
+      "**Competitive play is big and getting bigger.** The Los Angeles Regional Qualifier drew 2,165 players and a Chengdu National Open 1,835. The first Regional Championship, in Stuttgart on 6–8 November, carries US$50,000 and eight Worlds invitations.",
+      "**Our nine takes, in short:** the release pace is too fast, ban timing is the game's weakest system, a digital client matters more than set 8, bulk is dead, Azir wins Stuttgart, and Riftbound passes Lorcana in the West in 2027.",
+      "**These are opinions.** Each one says what would prove it wrong.",
+    ],
+    faq: [
+      {
+        q: "When did Riftbound come out?",
+        a: "Riftbound launched in English on 31 October 2025, after an earlier Chinese release in August 2025. Its fifth set, Radiance, launches on 23 October 2026.",
+      },
+      {
+        q: "Is Riftbound growing or dying?",
+        a: "By every public measure we can see, growing. Regional Qualifiers drew more than 2,000 players (2,165 in Los Angeles), a Chengdu National Open drew 1,835, and the first Regional Championships carry US$50,000 each. Prices tell a split story, though: chase cards are rising and bulk is falling, which is normal for a game with a lot of product in circulation.",
+      },
+      {
+        q: "Are Riftbound card prices going up or down?",
+        a: "Both, depending on the card. In our daily price records, the median Origins card worth US$20 or more in June 2026 was up 22% by mid-October, and the same tier rose 56% for Spiritforged and 46% for Unleashed. Cards under a dollar fell 35–45% at the median over the same period.",
+      },
+      {
+        q: "When is the first Riftbound World Championship?",
+        a: "Riot has confirmed it for 2027 but had not announced a date or venue at the time of writing. The Top 8 at each Regional Championship (Stuttgart, 6–8 November 2026, and Las Vegas, 11–13 December 2026) earn invitations.",
+      },
+      {
+        q: "What is the best deck in Riftbound right now?",
+        a: "Going into Radiance, the decks winning big events were Rengar, Pridestalker (who won the Los Angeles Regional Qualifier and a 489-player Challenge in Gdańsk), Azir, Emperor of the Sands (who won the Chengdu National Open) and Irelia, Blade Dancer. Radiance becomes legal on 23 October and will move that.",
+      },
+    ],
+    browseCta: {
+      href: "/movers",
+      label: "See this week's biggest price movers →",
+      blurb: "The cards rising and falling fastest right now, in your market.",
+    },
+    body: `Riftbound turns one in a couple of weeks. The English release of Origins was on **31 October 2025**. By the time Radiance lands on **23 October 2026**, the game will have shipped five sets in under a year, run Regional Qualifiers on four continents, and come back to PAX Australia (9–11 October in Melbourne) for a second year of learn-to-play demos.
+
+That is a good moment for opinions. Here are nine. Some are popular, some will annoy people, and each comes with the evidence we have and what would prove it wrong. We run a price-comparison site, so several of them lean on the one thing we have that most commentators don't: **a daily record of the cheapest in-stock price of every Riftbound card since June**.
+
+## 1. Five sets in twelve months is too many
+
+Origins (31 October 2025), Spiritforged (13 February 2026), Unleashed (8 May 2026), Vendetta (31 July 2026) and Radiance (23 October 2026). That is a new set roughly every **twelve weeks**, and the 2027 schedule doesn't slow down: **[Legacy](/blog/riftbound-legacy-spoilers-set-6)** on 29 January 2027 at a reported 346 cards, The Reckoning on 30 April, and two more sets later in the year.
+
+For a competitive player that is fine: new sets are new puzzles. For the casual player who bought a starter deck at PAX last year, it is a treadmill. Each set brings new keywords (Radiance alone brings Deploy, Show Off and Disarm), a new Pre-Rift, a new chase layer and a new pile of cards their friends now play. The game is easy to learn, but keeping up with it is getting hard.
+
+The best sign that Riot knows this is **Proving Grounds 2nd Edition** on 19 February 2027: a refreshed US$40 on-ramp three weeks after Legacy. Entry products are what a publisher reaches for when it worries about getting new players in.
+
+**What would prove us wrong:** if Legacy's 346 cards bring in new players rather than overwhelm returning ones. Watch whether Proving Grounds 2nd Edition sells out or sits on shelves.
+
+## 2. Ban timing is the weakest system in the game
+
+On 18 September Riot banned **Ekko, Recurrent** and **Stacked Deck** in Standard and 2v2. The Los Angeles Regional Qualifier, the **last RQ of the year**, started on 25 September. Players had a week to rebuild for a 2,165-player event that decided Regional Championship invitations.
+
+The bans themselves were defensible. Ekko enabled a Lux infinite combo that Riot called "solitaire-esque", and Stacked Deck was fuelling the Kennen Chaos decks that topped the previous two RQs. The timing was not. Riot's own game director, Dave Guskin, said the date was forced by the tournament calendar and that Riot is looking at better mid-season windows from 2027. That is an admission the system needs work.
+
+Magic moved to announced ban dates for this reason: ban on a published schedule, well clear of major events, so nobody buys into a deck for a tournament and loses it a week out. Riftbound's calendar is now busy enough to need the same. **[Our ban list guide](/guides/riftbound-banlist-explained)** has the current list.
+
+**What would prove us wrong:** a 2027 calendar with fixed, pre-announced ban windows and no surprise waves within three weeks of a Regional Championship.
+
+## 3. A digital client matters more than set 8
+
+League of Legends is played by well over a hundred million people a month, and almost none of them will ever walk into a card shop. TFT and Valorant worked because they lived on the same screen League already does. Riftbound asks a video-game audience to buy cardboard, find a local store and turn up on a Thursday.
+
+Physical TCGs grow online: Magic Arena and Pokémon TCG Pocket are both now on-ramps into their paper games. Riftbound has no official digital client, and nothing on the dated roadmap mentions one. We think a free-to-play client, even a limited one, would add more players than any 2027 set. **[Our longer case for Riftbound's ceiling](/blog/why-riftbound-could-become-a-top-two-tcg)** depends on it.
+
+**What would prove us wrong:** paper attendance keeps climbing through 2027 with no client at all. The RQ numbers so far are a real point against us.
+
+## 4. Bulk is dead, and it isn't coming back
+
+Here is the data take. Comparing the first week of June 2026 with mid-October, by each card's June price:
+
+| Set | Cards under US$1 | US$1 – 20 | US$20 and up |
+| --- | --- | --- | --- |
+| Origins | **-38%** median | -18% | **+22%** |
+| Spiritforged | **-45%** | +1% | **+56%** |
+| Unleashed | **-35%** | -1% | **+46%** |
+
+It's a two-speed market. Chase cards are rising: signed Origins Ahri (303*/298) went from about US$2,185 to about US$3,711 over the summer. Everything at the bottom is sliding towards nothing. Vendetta shows the same thing over a shorter time: its cards under a dollar fell **82%** from launch week to October.
+
+What the numbers show is that the cheapest copy of a common keeps falling as more boxes are opened and more stores list singles. Commons and uncommons are a supply problem, and five sets a year (see take 1) is a lot of supply. If you are holding binders of commons as an investment, sell them now or keep them to play with. **[Our collection-value guide](/guides/how-much-is-your-riftbound-collection-worth)** shows how to price them honestly.
+
+**What would prove us wrong:** a major rotation or reprint policy that takes old commons out of circulation. Nothing on the roadmap suggests one.
+
+## 5. The chase layer is designed for collectors, not players
+
+Radiance has a main set numbered to 167, then overnumbered Showcase cards to 184/167, signed Legends, alternate arts, alternate-art runes and five SP specials. Riot's own set overview counts 66 Showcase cards. Overnumbered and signed cards don't change how the game plays, but they decide what a box is worth.
+
+That is not a moral failing. It is how Pokémon and One Piece fund themselves, and our own chase data (take 4) shows it works. But every chase layer pushes the price of a booster box towards what collectors will pay, not what players will. A player who wants a playset of an Epic is now buying in a market priced by people chasing a 1-in-4,000 Ultimate Rare. **[Our Radiance chase cards guide](/blog/riftbound-radiance-chase-cards)** lists every layer.
+
+**What would prove us wrong:** box prices settling near MSRP after Radiance launches, with competitive staples staying cheap.
+
+## 6. Azir wins Stuttgart
+
+The first Regional Championship is at Messe Stuttgart on **6–8 November**: US$50,000, US$10,000 to the winner and eight invitations to the first World Championship. Radiance becomes legal two weeks before it, so nobody has a settled list.
+
+The last big events before Radiance went **Rengar, Pridestalker** (Los Angeles RQ, won 14-0-2 by DSG Prismaticism; also the 489-player Gdańsk Challenge) and **Azir, Emperor of the Sands** (the Chengdu National Open, 1,835 players, with two more Azirs in the LA Top 8). Our call: **Azir**. He took two of the LA Top 8 seats and won the biggest event of October, and a Legend that wins with a new set's cards bolted on is the one to bet on. Rengar is the popular pick, and the popular pick at a first-of-its-kind event usually has a target on its back.
+
+**What would prove us wrong:** an Azir-free Top 8. We'll report the results either way.
+
+## 7. Australia punches far above its weight
+
+Riftbound came back to the **PAX Australia** Tabletop Hall this month (booth TT1802, Riven, Shattered promos for finishing a demo). Sydney hosted a **Regional Qualifier** in May with a US$25,000 pool. Australian stores sell singles at prices that are often competitive with the US once shipping is counted. Our **[country price comparison](/blog/are-riftbound-cards-cheaper-in-another-country)** shows where.
+
+For a country of 27 million, that is a lot of first-tier attention: a convention presence two years running and a full RQ. We think Riot should give the region a Regional Championship of its own in 2027 rather than sending its best players to Las Vegas.
+
+**What would prove us wrong:** the 2027 Regional Championship schedule leaving Oceania out again with no change in Australian attendance.
+
+## 8. Same-day French is a bigger deal than any card in Radiance
+
+Radiance launches in **English, Simplified Chinese and French on the same day**, a first for Riftbound, and Riot is timing it to Paris Games Week. Vendetta's French release arrives the same day too, catching French up with English and Chinese.
+
+That's a bigger deal than any single card. Europe's first Regional Championship is in Germany, Europe's biggest card markets are France and Germany, and until now French players were a set behind. As we found in our inbox this month, French prints have already been showing up in Canadian price listings. A real European market for Riftbound starts here. **[Our European buying guide](/blog/buy-riftbound-cards-europe)** covers where to buy.
+
+**What would prove us wrong:** French sales that don't change European turnout at Stuttgart and the 2027 RQs.
+
+## 9. Riftbound passes Lorcana in the West in 2027
+
+The big one. Riftbound is drawing 2,000+ players to single Regional Qualifiers in its first year, its competitive circuit pays out tens of thousands per event, and collectors are grading it in volume: one PSA report put September 2026 at nearly 24,000 Riftbound cards graded, more than double the month before.
+
+Our prediction: by the end of 2027, Riftbound is the clear **number four** TCG in Western markets behind Pokémon, Magic and One Piece, ahead of Lorcana on organized-play attendance and singles sales. **[The case for a top-two finish by 2028](/blog/why-riftbound-could-become-a-top-two-tcg)** is the bolder version of this take; this one is the version we'd bet on.
+
+**What would prove us wrong:** take 1 coming true (players leaving because sets come too fast), or take 3 never being fixed.
+
+## What we're watching next
+
+- **Radiance launch week (23 October):** whether prices follow Vendetta's curve. We expect them to, and **[the Radiance card list](/blog/riftbound-radiance-card-list)** tracks every card's price from day one.
+- **Stuttgart (6–8 November):** the first Regional Championship and the first look at a Radiance meta.
+- **Legacy previews:** how Riot handles a 346-card set after five sets in a year.
+
+If you disagree with any of these, **[tell us](/feedback)**. Our best articles have come from readers telling us we were wrong. You can also see the cards behind each take on **[this week's movers](/movers)**, or compare prices for any of them across every store we track in **[the market view](/market)**.`,
+  },
+  {
+    slug: "riftbound-regional-championships-2026",
+    category: "guide",
+    title: "Riftbound Regional Championships 2026 Guide",
+    excerpt:
+      "Stuttgart (6–8 Nov) and Las Vegas (11–13 Dec): who can play, prize money, the Worlds invites, format, and the decks to beat now that Radiance is legal.",
+    author: "RiftCompare",
+    date: "2026-10-15",
+    readMins: 10,
+    tags: ["organized play", "regional championship", "worlds", "meta", "radiance", "riftbound"],
+    hero: {
+      src: "/radiance-spoilers/jarvan-iv-martial-paragon.jpg",
+      alt: "Jarvan IV, Martial Paragon, a Radiance card, illustrating the Riftbound Regional Championships",
+    },
+    summary: [
+      "**Two Regional Championships close out 2026:** Europe at Messe Stuttgart on **6–8 November**, and North America at Convergence Fest in **Las Vegas on 11–13 December** (alongside Teamfight Tactics).",
+      "**Each one is reported at US$50,000**, with US$10,000 to the winner in Stuttgart. The **Top 8 at each one earn invitations** to Riftbound's first World Championship in 2027.",
+      "**Entry is by invitation.** A Top 64 finish at a 2026 Regional Qualifier earns one, and invited players choose which Championship to attend.",
+      "**The format is Standard with Radiance legal.** Radiance launches on 23 October, so Stuttgart is the first big Radiance event anywhere.",
+      "**The decks to beat coming in:** Rengar, Pridestalker; Azir, Emperor of the Sands; and Irelia, Blade Dancer, all winners or finalists at the last big events before Radiance.",
+    ],
+    faq: [
+      {
+        q: "When is the Riftbound Regional Championship?",
+        a: "There are two in 2026: the European Regional Championship at Messe Stuttgart, Germany, on 6–8 November, and the North American Regional Championship at Convergence Fest, Las Vegas, on 11–13 December.",
+      },
+      {
+        q: "How do you qualify for a Riftbound Regional Championship?",
+        a: "By finishing in the Top 64 of a 2026 Regional Qualifier, which earns an invitation. The last Regional Qualifier of the year was Los Angeles on 25–27 September 2026, so the invitation list is now set. Invited players choose which Championship to attend.",
+      },
+      {
+        q: "How much prize money is at a Riftbound Regional Championship?",
+        a: "Each is reported at US$50,000. In Stuttgart the winner takes US$10,000 and 33rd–64th place receive US$250 each. Riot had not published every payout in between at the time of writing.",
+      },
+      {
+        q: "How do you qualify for the Riftbound World Championship?",
+        a: "The Top 8 at each Regional Championship earn invitations to the first Riftbound World Championship, confirmed for 2027. Riot had not announced its date, venue or prize pool at the time of writing.",
+      },
+      {
+        q: "Is Radiance legal at the Regional Championships?",
+        a: "Yes. Radiance launches on 23 October 2026 and is legal in Standard from then, two weeks before Stuttgart. The September 18 ban list (Ekko, Recurrent and Stacked Deck) also applies.",
+      },
+      {
+        q: "Can I watch the Riftbound Regional Championship?",
+        a: "Riot streams its major Riftbound events on the official Riftbound YouTube and Twitch channels, and posts results and decklists on @RiftboundOP on X. Expect the same for both Regional Championships.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Price out a Radiance list →",
+      blurb: "Every Radiance card with live prices across the stores we track, so you can cost a Championship deck before you buy.",
+    },
+    body: `Riftbound's first competitive year ends with its biggest events yet: two **Regional Championships**, each worth a reported US$50,000, each sending its Top 8 to the first **Riftbound World Championship** in 2027. This guide covers both: dates, who can play, prize money, what format to expect, and which decks are likely to be at the top tables now that **Radiance** is legal.
+
+## The two Regional Championships at a glance
+
+| | Europe | North America |
+| --- | --- | --- |
+| Dates | **6–8 November 2026** | **11–13 December 2026** |
+| Venue | Messe Stuttgart (Hall H), Germany | Convergence Fest, Las Vegas, USA |
+| Prize pool | US$50,000 (reported) | US$50,000 (reported) |
+| Winner | US$10,000 | Not yet published |
+| Worlds invitations | Top 8 | Top 8 |
+| Format | Standard, Radiance legal | Standard, Radiance legal |
+| Alongside | Riftbound only | Teamfight Tactics |
+
+Some coverage mentions a separate Chinese Championship. China runs its own circuit through publisher Shining Soul, with its own National Opens, so check the Chinese schedule separately if you play there.
+
+## Who can play
+
+The Regional Championships are **invitation only**. You earned an invitation by finishing in the **Top 64 of a 2026 Regional Qualifier**. The last RQ of the year was **Los Angeles on 25–27 September**, a 2,165-player event, so the list is now closed. Invited players pick which Championship to attend, which is why some North American players are expected in Stuttgart and some Europeans in Las Vegas.
+
+If you missed the RQ circuit, the route back in is **2027**: Riot has said more on the 2027 organized play structure will follow its State of the Game updates. In the meantime, Showdown Series events (Sacramento on 23–24 October, Orlando on 30 October–1 November) and your store's **Nexus Nights** and **Summoner Skirmish** windows are where the competitive scene plays week to week. Radiance's first Skirmish window opens on 9 November.
+
+## Prize money and the road to Worlds
+
+Stuttgart's reported structure pays **US$10,000 to the winner** and **US$250 to each of 33rd–64th place**. Riot had not published every payout in between when we wrote this; one outlet reports US$5,000 for second place, but we have not seen that confirmed. Assume Las Vegas pays on a similar scale until Riot says otherwise.
+
+The bigger prize is the **World Championship invitation** for the Top 8. Riot has confirmed the first Riftbound Worlds for 2027 but not its date, venue or prize pool. Given League of Legends' Worlds is the most-watched esports event in the world, expect Riot to stage it as a showpiece rather than a convention side hall.
+
+## The format: Standard, with Radiance two weeks old
+
+**Radiance launches on 23 October**, so it is legal in Standard for both events. That gives players about **two weeks** of Radiance before Stuttgart, and seven before Las Vegas. Expect Stuttgart to reward whoever reads the new set fastest, and Las Vegas to look more settled.
+
+Three rules changes matter:
+
+- **Radiance's Core Rules patch notes and errata** take effect on 16 October. **[Our errata summary](/blog/riftbound-radiance-patch-notes-errata)** lists every changed card.
+- **The September 18 ban list** removed Ekko, Recurrent and Stacked Deck from Standard and 2v2. **[The full ban list](/guides/riftbound-banlist-explained)** is kept current.
+- **The new keywords:** Deploy, Show Off and Disarm. If you haven't played with them, start with **[the Deploy guide](/guides/riftbound-deploy-explained)**, then **[Show Off](/guides/riftbound-showoff-explained)** and **[Disarm](/guides/riftbound-disarm-explained)**.
+
+## The decks to beat coming in
+
+The last major events before Radiance give us a starting picture:
+
+- **Los Angeles Regional Qualifier (25–27 September, 2,165 players):** won by DSG Prismaticism on **Rengar, Pridestalker**, 14-0-2 and the only undefeated record in the Top 32, beating **Irelia, Blade Dancer** 2-1 in the final. The Top 8 had two Azirs, two Irelias, and one each of Master Yi, Akali and Ornn.
+- **Chengdu National Open (October, 1,835 players):** won by **Azir, Emperor of the Sands**, with Vex and Nasus behind it.
+- **Riftbound Challenge Gdańsk (10 October, 489 players):** won by **Rengar** again, 11-1-1.
+
+That makes **Rengar, Azir and Irelia** the three Legends to plan around. All three are older-set Legends (Rengar from Unleashed, Azir and Irelia from Spiritforged), so the question for Stuttgart is which of them gains most from Radiance's cards, and whether a Radiance Legend can break into the top tier straight away. **[Our view, from the one-year hot takes](/blog/riftbound-one-year-hot-takes):** Azir wins Stuttgart.
+
+You can see every printing of each contender on their champion pages: **[Rengar](/champions/rengar)**, **[Azir](/champions/azir)** and **[Irelia](/champions/irelia)**.
+
+## How a Championship weekend works
+
+If you've only played Nexus Nights, the scale of a Regional Championship is the main adjustment. The structure is the same as the Regional Qualifiers:
+
+- **Swiss rounds first.** Every player plays every round, paired against opponents with the same record. Matches are best-of-three, and a draw is possible when time runs out, which is why records like Prismaticism's 14-0-2 in Los Angeles include draws.
+- **A cut to the Top 8.** After the Swiss rounds, the Top 8 by record play single-elimination quarterfinals, semifinals and a final on Sunday. Those eight players are the ones who earn Worlds invitations, so a Top 8 finish matters more than the trophy itself.
+- **Decklist registration.** You submit your 40-card main deck, rune deck, Legend and battlefields before the event and play exactly that all weekend. Check the registration deadline in your invitation email; with Radiance two weeks old, many players will be finalising lists the night before.
+- **Tiebreakers.** Players on the same record are separated by their opponents' win percentages, so a loss in round one can still make the cut and a strong schedule helps.
+
+Riot's tournament rules changelog for October 2026 sets the current penalties and procedures. Read it before you travel, especially the sections on deck checks and slow play, which are where most game losses at large events come from.
+
+## Radiance cards to test first
+
+We don't know the Radiance meta yet and won't pretend to. But three groups of Radiance cards are the obvious first tests for Championship lists:
+
+1. **Deploy cards in Azir and Irelia shells.** Deploy is Radiance's most common keyword (27 printings in our database), and both Legends reward having extra bodies on the board.
+2. **Disarm as an answer to Rengar.** Rengar's lists lean on buffed and equipped units, which is exactly what Disarm punishes. If Rengar is the deck to beat, Disarm cards will be in sideboards.
+3. **The new Legends.** Eight Radiance Legends are confirmed. History says one or two are tournament-viable straight away and the rest take a few weeks of testing. **[The Radiance card list](/blog/riftbound-radiance-card-list)** has all eight with live prices.
+
+## Building a Championship deck without overpaying
+
+A competitive Riftbound deck is not cheap, and the two weeks after a set launch are the most expensive time to buy one. Our price records show **Vendetta's median single fell 56% between its first week and mid-October**. That is no help if your event is in two weeks, but it changes how you should buy:
+
+1. **Buy the older-set core now.** If you're on Rengar, Azir or Irelia, most of your deck is Unleashed or Spiritforged cards whose prices have settled. Compare them across stores in **[the market view](/market)** and order early: international shipping takes longer than two weeks.
+2. **Buy only the Radiance cards you've tested.** Launch-week Radiance prices will be the highest they get for most cards. Proxy them in testing where your store allows, then buy the few that make the list.
+3. **Use Best Basket.** **[Best Basket](/tools/best-basket)** splits a list across stores to find the cheapest total including shipping, which matters more for a 40-card deck than any single card.
+4. **Check your market.** Prices differ a lot by country. **[Our country comparison](/blog/are-riftbound-cards-cheaper-in-another-country)** shows where each card is cheapest.
+
+## Travel and timing notes
+
+- **Stuttgart:** Messe Stuttgart is next to Stuttgart Airport, and the Friday start means most players arrive Thursday. The event runs six Swiss rounds on Friday, six more on Saturday, then a Top 8 cut, with quarterfinals through the final on Sunday.
+- **Las Vegas:** Convergence Fest runs Riftbound alongside Teamfight Tactics, so expect a crowded hall and a strong side-event programme.
+- **Coverage:** Riot streams its major events on the official Riftbound YouTube and Twitch channels and posts results, standings and decklists on **@RiftboundOP** on X. We will cover both Top 8s and what they mean for prices.
+
+## What happens after
+
+The Regional Championships end Riftbound's first competitive season. **Legacy** previews follow (the set launches on 29 January 2027) and, after it, Riot's first State of the Game of 2027 in February, which is where we expect the 2027 RQ calendar and Worlds details. The **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)** has every dated release, and **[the Radiance card list](/blog/riftbound-radiance-card-list)** has every card that will be legal in Stuttgart.
+
+One thing we're confident about: a strong result at a Regional Championship moves prices. When a Legend wins a big event, its key cards tend to rise in the following days. Set a **[price alert](/alerts)** on any card you're planning to buy before the weekend of 6 November.`,
   },
 ];
 
