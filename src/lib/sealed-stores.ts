@@ -225,6 +225,27 @@ export function bigCommerceInStock(html: string): boolean | null {
 }
 
 /**
+ * True when a Shopify product page's MAIN product block is locked against
+ * online purchase — Thistle Tavern's custom Dawn theme renders "In-store only"
+ * and drops the buy button by putting `data-purchase-locked="true"` and
+ * `data-instore-only="true"` on `<product-info id="MainProduct-…">`, while the
+ * store's products.json says available=true and its schema.org says InStock
+ * (2026-10-15; DECISIONS.md "Thistle Tavern: in-store only, shown as open").
+ *
+ * Scoped to the MainProduct element on purpose: a related-product or quick-add
+ * card elsewhere on the page could carry the same attribute for a different
+ * product. Tags span lines in that theme, so the whole tag is read, not a line.
+ */
+export function isPurchaseLocked(html: string): boolean {
+  for (const m of html.matchAll(/<product-info\b[^>]*>/gi)) {
+    const tag = m[0];
+    if (!/\bid=["']MainProduct-/i.test(tag)) continue;
+    return /\bdata-(?:purchase-locked|instore-only)=["']true["']/i.test(tag);
+  }
+  return false;
+}
+
+/**
  * Price, currency and availability from a product page, schema.org first —
  * except that a platform's own live inventory (BigCommerce's BCData) overrides
  * schema.org's availability, which on pre-order products states the purchase

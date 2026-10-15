@@ -7,7 +7,7 @@ import { writeSealedHistoryDay } from "./price-history-store";
 import { sydneyDay, cachedOrDirect } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
-import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, parseProductPage } from "./sealed-stores";
+import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, parseProductPage, isPurchaseLocked } from "./sealed-stores";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { headlineOffer, openStoreCount, rankOffers } from "./sealed-offers";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
@@ -565,6 +565,25 @@ export async function importSealed(): Promise<number> {
     // Refresh when the scrape succeeded — this also CLEARS stale rows when a
     // previously mis-detected single no longer matches (rows.size can be 0). If
     // the fetch failed entirely (no products at all), keep the existing rows.
+    //
+    // In-store-only locks (RetailerInfo.purchaseLockPages): re-read each in-stock
+    // row's product page and switch it OFF when the theme locks it. One-way on
+    // purpose — this can only remove a false "open", never invent one — and a
+    // page that fails to load leaves the row exactly as products.json said.
+    if (scraped && store.purchaseLockPages && rows.size) {
+      const allowed = await robotsAllows(store.base);
+      let first = true;
+      for (const row of rows.values()) {
+        if (!row.inStock || !allowed(new URL(row.url).pathname)) continue;
+        if (!first) await sleep(REQUEST_DELAY_MS);
+        first = false;
+        const html = await fetchText(row.url);
+        if (html && isPurchaseLocked(html)) {
+          row.inStock = false;
+          console.log(`Sealed: ${store.key} — ${row.title} is locked to in-store purchase; stored as not in stock.`);
+        }
+      }
+    }
     if (scraped) {
       await prisma.sealedListing.deleteMany({ where: { retailer: store.key } });
       if (rows.size) await prisma.sealedListing.createMany({ data: Array.from(rows.values()) });
