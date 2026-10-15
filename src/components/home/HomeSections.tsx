@@ -7,6 +7,7 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { AccountStrip } from "@/components/home/AccountStrip";
 import { WelcomeBack } from "@/components/home/WelcomeBack";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
+import { CreatorsTeaser } from "@/components/home/CreatorsTeaser";
 import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { PokemonHomePromo } from "@/components/pokemon/PokemonHomePromo";
@@ -194,6 +195,15 @@ export function HomeSections({
         storeCount={storeCount}
         storeWord={storeWord}
       />
+
+      {/* Riftbound creators (2026-10-15, owner: "you should be able to quickly
+          navigate or see this page from the home page, maybe a little widget").
+          A slim strip into /creators, high enough to be seen on a first scroll:
+          the featured creators' faces, or an invitation to creators while the
+          list is empty. Static data, no database read. */}
+      <Reveal>
+        <CreatorsTeaser />
+      </Reveal>
 
       {/* Return-visit hooks — Riftle, the pack simulator, and price alerts.
           These were moved ABOVE the commercial run on 2026-09-16, after

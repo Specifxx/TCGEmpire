@@ -17187,3 +17187,15 @@ Landed with `[deploy]` at the owner's request ("deploy it directly").
 **Checked** against a local import (TCGCSV, 1,021 products) and DexCompare's live indexes, at 390 and 1280 px, AU / US / UK: no horizontal overflow, every DexCompare link nofollow and in a new tab, the UK hub's booster boxes showing store prices where every row had said "No tracked listing".
 
 Landed with `[deploy]` at the owner's request ("deploy it immediately when you're done").
+
+## /creators rebuilt as the Riftbound creators hub, with "Buy them a pack" — 2026-10-15
+
+**Owner:** "a section for creators... a very nice, cute page... quickly navigate or see this page from the home page, maybe a little widget... I'm going to reach out to Riftbound creators... get them to include us in their content and reels. In exchange, we list their social media... a little widget or option to donate your favourite Riftbound creator a coffee, or we can call it a pack... deploy it directly to main... put it in production now."
+
+- **The page** (`app/creators/page.tsx`, still static, no database read): a hero with Radiance card art, a featured-creators grid, a "Buy your favourite creator a pack" explainer, what creators get, an application form, the site's own socials, and an FAQ (FAQPage JSON-LD). While the list is empty the grid shows "Your channel here" slots linking to the form. Never an invented creator.
+- **Creators** (`lib/content/creators.ts`, `CREATORS`): name, blurb, any number of channels, an optional tip page, tags, region, main champion and avatar. Still a hand-edited array, empty until the first creator agrees. `CREATOR_PARTNERS` is gone (only this page used it).
+- **"Buy them a pack"** links to the creator's OWN tip page (Ko-fi, Patreon, Buy Me a Coffee...). RiftCompare never handles the money and takes no cut, and the page says so. Taking payments for third parties would make the site a payment intermediary, and nothing here needs that.
+- **Proof for creators:** each channel and tip click fires `creator_click` / `creator_tip_click` (GA4 only) with the creator's slug, so each creator can be shown what the listing sent them. Creator links use `rel="noopener"` without `noreferrer`, so creators see riftcompare.com as the referrer in their own analytics.
+- **Applications** post to `/api/contact` with the subject "Creator application: <name> (<platform>)". They are saved to ContactMessage, shown in /admin/messages and emailed to the owner (`notifyOwnerBounded`). No new table.
+- **Homepage:** `CreatorsTeaser`, a slim strip under the popular-cards carousel (faces when there are creators, an invitation while there are none). **Nav:** "Riftbound Creators" moved from Help to Guides & News, beside Community links. Share image: `app/creators/opengraph-image.tsx`.
+- Deployed immediately at the owner's request.

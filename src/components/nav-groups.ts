@@ -119,6 +119,9 @@ export const NAV_GROUPS: NavGroup[] = [
       // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
       // added on /blog and /guides themselves.
       { href: "/community", label: "Community links", keywords: ["community", "resources", "links", "other sites", "riftbound news", "deck builders", "wikis", "tier list", "meta"], hideInFooter: true },
+      // The creators hub (2026-10-15): beside Community links, where a reader
+      // looking for "who else makes Riftbound content" looks. Moved from Help.
+      { href: "/creators", label: "Riftbound Creators", keywords: ["socials", "social media", "discord", "instagram", "twitter", "x", "facebook", "follow us", "creators", "content creators", "influencers", "partner", "partnership", "youtube", "twitch", "tiktok", "buy a pack", "tip", "donate", "support creators"], hideInFooter: true },
       { href: "/learn", label: "Learn Riftbound", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
       { href: "/authors", label: "Who writes this", keywords: ["authors", "team", "byline", "who writes"] },
       { href: "/editorial-policy", label: "Editorial policy", keywords: ["editorial", "policy", "standards", "corrections"] },
@@ -306,7 +309,6 @@ export const NAV_GROUPS: NavGroup[] = [
       // hideInFooter: that same footer row already carries both on every page.
       { href: "/privacy", label: "Privacy policy", keywords: ["privacy", "privacy policy", "cookies", "personal data", "gdpr", "data protection"], hideInFooter: true },
       { href: "/terms", label: "Terms of service", keywords: ["terms", "terms of service", "terms of use", "tos", "conditions"], hideInFooter: true },
-      { href: "/creators", label: "Socials & Creators", keywords: ["socials", "social media", "discord", "instagram", "twitter", "x", "facebook", "follow us", "creators", "content creators", "influencers", "partner", "partnership", "youtube", "twitch", "tiktok"] },
       // The widget directory. It inherits the "embed" keywords that used to sit
       // on /creators above, which was the closest thing the launcher had to an
       // answer for "embed" and was the wrong page to land on: /creators lists

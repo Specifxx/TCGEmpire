@@ -69,6 +69,11 @@ const GA4_ONLY_EVENTS = new Set([
   "recent_viewed_click",
   "notification_open",
   "riftle_start",
+  // /creators (2026-10-15): per-creator click counts to show each creator what
+  // their listing sent them. GA4 only, like the other high-volume ones above.
+  "creator_click",
+  "creator_tip_click",
+  "creator_apply",
 ]);
 
 export function trackEvent(name: string, params?: Record<string, string | number | boolean | undefined>): void {
