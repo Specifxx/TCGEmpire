@@ -21,7 +21,7 @@ export function HomeStoresBand({ market, inStockProducts }: { market: Country; i
           {inStockProducts
             ? `DexCompare, our store comparison, has ${inStockProducts.toLocaleString("en-US")} Pokémon sealed products in stock at ${adjective} stores, cheapest first.`
             : `DexCompare, our store comparison, prices Pokémon sealed at ${adjective} stores, cheapest first.`}{" "}
-          Every product page here shows its cheapest store too.
+          Our product pages show the cheapest store beside TCGplayer and eBay wherever DexCompare lists the product.
         </p>
       </div>
       <DexAnchor

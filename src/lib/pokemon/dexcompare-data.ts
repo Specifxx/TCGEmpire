@@ -12,6 +12,11 @@
 // serving while there is one, and caught here, so a page renders without the
 // stores line rather than failing. A page rendered in that window shows no
 // stores line until its next refresh.
+//
+// FAIL-FAST: with no good entry (the first read, or the first after the
+// section's import purges its tag), a DexCompare outage would cost every grid
+// request the full timeout. A failure is remembered per market in this
+// instance for FAILURE_PAUSE_MS, and the stores lines are left out at once.
 
 import { cache } from "react";
 import { cachedOrDirect } from "../price-history";
@@ -19,7 +24,9 @@ import type { Country } from "../country";
 import { POKEMON_TAG, POKEMON_TTL } from "./cache-keys";
 import { DEX_ORIGIN, DEX_REGION, parseDexIndex, type DexMarket } from "./dexcompare";
 
-const TIMEOUT_MS = 4000;
+const TIMEOUT_MS = 2500;
+const FAILURE_PAUSE_MS = 10 * 60_000;
+const failedAt = new Map<Country, number>();
 
 async function fetchDexMarket(market: Country): Promise<DexMarket> {
   // no-store: the unstable_cache entry around this is the cache (Next runs the
@@ -35,13 +42,18 @@ async function fetchDexMarket(market: Country): Promise<DexMarket> {
 
 /** One market's DexCompare join table, or null when it cannot be read. Deduped per request. */
 export const getDexMarket = cache(async (market: Country): Promise<DexMarket | null> => {
+  const failed = failedAt.get(market);
+  if (failed != null && Date.now() - failed < FAILURE_PAUSE_MS) return null;
   try {
-    return await cachedOrDirect(() => fetchDexMarket(market), ["pokemon-dex-v1", market], {
+    const table = await cachedOrDirect(() => fetchDexMarket(market), ["pokemon-dex-v1", market], {
       revalidate: POKEMON_TTL,
       tags: [POKEMON_TAG],
     });
+    failedAt.delete(market);
+    return table;
   } catch (e) {
-    console.error(`[pokemon] DexCompare index for ${market} unavailable; stores line left out`, e);
+    failedAt.set(market, Date.now());
+    console.error(`[pokemon] DexCompare index for ${market} unavailable; stores line left out for 10 minutes`, e);
     return null;
   }
 });
