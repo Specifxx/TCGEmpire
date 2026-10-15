@@ -250,8 +250,9 @@ export default async function PokemonProductPage({ params }: { params: Params })
                       )}
                       {/* On a phone the stores figure sits here: a fourth column would not fit 360px. */}
                       {anyDex && dex[c.code] && (
-                        <span className="mt-0.5 block text-xs sm:hidden">
-                          Stores: <StoresFigure market={c.code} link={dex[c.code]} currency={b.currency} product={p.slug} />
+                        <span className="mt-1 block text-xs sm:hidden">
+                          <span className="block text-slate-500">At stores</span>
+                          <StoresFigure market={c.code} link={dex[c.code]} currency={b.currency} product={p.slug} />
                         </span>
                       )}
                     </td>
@@ -374,7 +375,8 @@ export default async function PokemonProductPage({ params }: { params: Params })
  */
 function StoresFigure({ market, link, currency, product }: { market: Country; link: DexLink | null; currency: string; product: string }) {
   if (!link || (link.kind === "product" && link.inStock === 0 && link.listed === 0)) return <span className="text-slate-500">—</span>;
-  const cls = "tap-link text-emerald-300 hover:underline";
+  // flex-wrap: on a phone the price and the store count share a ~110px cell.
+  const cls = "tap-link flex-wrap gap-x-1 text-emerald-300 hover:underline";
   const href = dexHref(market, link, "markets");
   if (link.kind === "set") {
     return (
@@ -386,8 +388,8 @@ function StoresFigure({ market, link, currency, product }: { market: Country; li
   const price = storePriceCents(link);
   return (
     <DexAnchor href={href} surface="markets" market={market} product={product} className={cls}>
-      {price != null && <span className="num mr-1 whitespace-nowrap font-semibold">{formatMoney(price, currency)}</span>}
-      <span className="whitespace-nowrap text-xs">{link.inStock > 0 ? storesWord(link.inStock) : `Sold out at ${storesWord(link.listed)}`} ↗</span>
+      {price != null && <span className="num whitespace-nowrap font-semibold">{formatMoney(price, currency)}</span>}
+      <span className="text-xs">{link.inStock > 0 ? storesWord(link.inStock) : `Sold out at ${storesWord(link.listed)}`} ↗</span>
     </DexAnchor>
   );
 }
