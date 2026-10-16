@@ -59,12 +59,14 @@ export function isAdFreeRoute(pathname: string | null | undefined): boolean {
 //   1. no ad intents anywhere: MOBILE_AD_INTENTS_SCRIPT adds Google's
 //      documented `google-anno-skip` class to <body>, which keeps ad intent
 //      links, anchors and chips off the page;
-//   2. no Google ads at all on the pages people come to DO something on: the
-//      six market homepages (exact paths) and the two list builders, Best
-//      Basket and the deck builder (each with everything under it).
+//   2. no Google ads at all on the two list builders, where people build a
+//      cart: Best Basket and the deck builder (each with everything under it).
+//      The six market homepages were on this list for a few hours; the owner
+//      brought their ads back the same day ("bring back the ads on the home
+//      page"), so a phone's homepage has Auto ads again, still without ad
+//      intents.
 // Desktop is unchanged, and so are the site's own labelled affiliate units.
 export const MOBILE_AD_QUERY = "(max-width: 1023px)";
-export const MOBILE_AD_FREE_PAGES = ["/", "/au", "/uk", "/sg", "/ca", "/eu"] as const;
 export const MOBILE_AD_FREE_ROUTES = ["/tools/best-basket", "/deck"] as const;
 export const AD_INTENTS_SKIP_CLASS = "google-anno-skip";
 
@@ -72,7 +74,7 @@ const under = (pathname: string, r: string) => pathname === r || pathname.starts
 
 export function isMobileAdFreeRoute(pathname: string | null | undefined): boolean {
   if (!pathname) return false;
-  return (MOBILE_AD_FREE_PAGES as readonly string[]).includes(pathname) || MOBILE_AD_FREE_ROUTES.some((r) => under(pathname, r));
+  return MOBILE_AD_FREE_ROUTES.some((r) => under(pathname, r));
 }
 
 function isMobileViewport(): boolean {
@@ -81,14 +83,14 @@ function isMobileViewport(): boolean {
 
 const esc = (r: string) => r.replace(/\//g, "\\/");
 const ROUTE_PATTERN = `^(?:${AD_FREE_GAME_ROUTES.map(esc).join("|")})(?:\\/|$)`;
-const MOBILE_PATTERN = `^(?:(?:${MOBILE_AD_FREE_PAGES.map(esc).join("|")})$|(?:${MOBILE_AD_FREE_ROUTES.map(esc).join("|")})(?:\\/|$))`;
+const MOBILE_PATTERN = `^(?:${MOBILE_AD_FREE_ROUTES.map(esc).join("|")})(?:\\/|$)`;
 const HINT_PATTERN = `(?:^|;\\s*)${AD_FREE_COOKIE}=1(?:;|$)`;
 const MOBILE_TEST = `!!window.matchMedia&&window.matchMedia("${MOBILE_AD_QUERY}").matches`;
 
 // Inlined in <head> by the root layout, BEFORE <AdSenseLoader />. Pauses ad
 // requests for a hinted member anywhere, for everyone in the arcade, and on a
-// phone on the pages above; only the member hint marks <html> (the arcade and
-// those pages keep the site's own placements, which are not AdSense).
+// phone on the list builders above; only the member hint marks <html> (the
+// arcade and those pages keep the site's own placements, which are not AdSense).
 export const AD_FREE_BOOT_SCRIPT = `(function(){try{var h=/${HINT_PATTERN}/.test(document.cookie),l=window.location,g=!!l&&/${ROUTE_PATTERN}/.test(l.pathname),m=!!l&&/${MOBILE_PATTERN}/.test(l.pathname)&&${MOBILE_TEST};if(h||g||m){(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;}if(h){document.documentElement.setAttribute("${AD_FREE_ATTR}","1");}}catch(e){}})();`;
 
 // Inlined as the FIRST child of <body> (the class must be on <body> to keep ad

@@ -5,8 +5,10 @@ import { join } from "node:path";
 
 // Fewer Google ads on a phone (2026-10-16, owner: "reduce the impact of ads on
 // a mobile phone … especially on a homepage … you can't really even set up a
-// cart"). Below 1024px: no ad intents anywhere, and no Google ads at all on the
-// six market homepages, Best Basket and the deck builder. Desktop is unchanged.
+// cart"). Below 1024px: no ad intents anywhere, and no Google ads at all on Best
+// Basket and the deck builder. The homepages had none for a few hours; the owner
+// brought them back the same day ("bring back the ads on the home page").
+// Desktop is unchanged.
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -30,10 +32,11 @@ async function boot(pathname: string, width: number | null, cookie = "") {
   return { attrs, paused: window.adsbygoogle?.pauseAdRequests };
 }
 
-const PHONE_FREE = ["/", "/au", "/uk", "/sg", "/ca", "/eu", "/tools/best-basket", "/tools/best-basket/x", "/deck"];
-const PHONE_ADS = ["/card/x", "/blog/x", "/browse", "/au/x", "/decks", "/decks/x", "/tools/box-ev", "/tools/best-baskets", "/sets/radiance"];
+const PHONE_FREE = ["/tools/best-basket", "/tools/best-basket/x", "/deck", "/deck/x"];
+const HOMEPAGES = ["/", "/au", "/uk", "/sg", "/ca", "/eu"];
+const PHONE_ADS = [...HOMEPAGES, "/card/x", "/blog/x", "/browse", "/au/x", "/decks", "/decks/x", "/tools/box-ev", "/tools/best-baskets", "/sets/radiance"];
 
-test("on a phone the boot script pauses Google ads on the homepages and list builders, and nowhere else", async () => {
+test("on a phone the boot script pauses Google ads on the list builders only; the homepages keep theirs", async () => {
   for (const p of PHONE_FREE) {
     assert.deepEqual(await boot(p, 390), { attrs: {}, paused: 1 }, `${p} at 390px: paused, <html> unmarked`);
     assert.deepEqual(await boot(p, 1023), { attrs: {}, paused: 1 }, `${p} at 1023px (the mobile layout): paused`);
@@ -61,15 +64,17 @@ test("a client navigation on a phone re-decides the pause the same way", async (
   g.window = w;
   g.document = { cookie: "" };
   try {
-    syncAdPause("/");
-    assert.equal(w.adsbygoogle?.pauseAdRequests, 1, "phone homepage");
-    syncAdPause("/card/x");
-    assert.equal(w.adsbygoogle?.pauseAdRequests, 0, "a card page on a phone keeps its ads");
     syncAdPause("/tools/best-basket");
     assert.equal(w.adsbygoogle?.pauseAdRequests, 1, "Best Basket on a phone");
-    w.matchMedia = viewport(1440);
     syncAdPause("/");
-    assert.equal(w.adsbygoogle?.pauseAdRequests, 0, "desktop homepage keeps its ads");
+    assert.equal(w.adsbygoogle?.pauseAdRequests, 0, "the phone homepage has its ads back");
+    syncAdPause("/deck");
+    assert.equal(w.adsbygoogle?.pauseAdRequests, 1, "the deck builder on a phone");
+    syncAdPause("/card/x");
+    assert.equal(w.adsbygoogle?.pauseAdRequests, 0, "a card page on a phone keeps its ads");
+    w.matchMedia = viewport(1440);
+    syncAdPause("/tools/best-basket");
+    assert.equal(w.adsbygoogle?.pauseAdRequests, 0, "desktop Best Basket keeps its ads");
   } finally {
     g.window = had.window;
     g.document = had.document;

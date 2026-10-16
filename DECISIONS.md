@@ -17979,3 +17979,17 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 **What to watch** (`impact-report`, GA4): `signup_card_shown`, `_click` and `_dismissed`, and `sign_up` with `signupSource` = `signup_card`, against the 10-15 days; pages per visitor and `buy_click`, which a prompt that annoys would cost first. If dismissals swamp clicks, the 3rd page is the next step, not the 4th.
 
 **Delivery.** `[deploy]` at the owner's word ("deploy that"). It also releases the mobile-ads commit above, which was waiting for the daily build.
+
+## The homepages get their Google ads back on phones — 2026-10-16
+
+**Owner**, a few hours after "Fewer Google ads on a phone" (above) went live: "Actually bring back the ads on the home page, whatever, bring it back."
+
+**What changed.**
+- `MOBILE_AD_FREE_PAGES` (the six market homepages, `/`, `/au`, `/uk`, `/sg`, `/ca`, `/eu`) is gone. A phone's homepage loads Auto ads again, the in-page units included, the first one above the hero where Google puts it.
+- Best Basket and the deck builder stay paused on phones (`MOBILE_AD_FREE_ROUTES`). They are where people build a cart, which was the owner's other complaint, and the request named only the homepage.
+- **Ad intents stay off on every phone page, the homepage included** (`google-anno-skip`). Those were the tap-to-open ad words and the bottom bar the owner had to keep closing. Its reasons are unchanged, and it was never a homepage setting.
+- Desktop was never changed.
+
+**If the owner wants the homepage exactly as before,** ad intents included, `MOBILE_AD_INTENTS_SCRIPT` would skip the six homepage paths. That is a one-line change, not made here because nothing asked for the clicking back.
+
+**Tests (`mobile-ads`):** the homepages are now in the keeps-its-ads list at 390px, both in the boot script and on a client navigation. Best Basket and `/deck` (and their sub-paths) are still paused there, and nothing is paused at 1024px.

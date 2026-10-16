@@ -583,9 +583,10 @@ longer lands on its entry.
 - **Phones get fewer Google ads (2026-10-16, owner: "reduce the impact of ads
   on a mobile phone"):** below 1024px, no ad intents on any page
   (`google-anno-skip` on `<body>`, `MOBILE_AD_INTENTS_SCRIPT`: no tap-to-open
-  ad words, no bottom intent bar), and Auto ads paused on the six market
-  homepages, Best Basket and the deck builder (`MOBILE_AD_FREE_PAGES` /
-  `MOBILE_AD_FREE_ROUTES`, the arcade's mechanism). Desktop and the site's own
+  ad words, no bottom intent bar), and Auto ads paused on Best Basket and the
+  deck builder (`MOBILE_AD_FREE_ROUTES`, the arcade's mechanism). The
+  homepages keep their Auto ads (owner, same day: "bring back the ads on the
+  home page", [2026-10-16](../DECISIONS.md#L17983)). Desktop and the site's own
   affiliate units are unchanged. Real anchor ads and the in-page ad cap are
   AdSense console settings (anchor "Top only" or off keeps a card page's Buy
   bar clear). [2026-10-16](../DECISIONS.md#L17916)
