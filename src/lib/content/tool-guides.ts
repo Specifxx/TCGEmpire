@@ -269,12 +269,6 @@ export const TOOL_GUIDES = {
       { slug: "riftbound-sets-in-order", reason: "Every set in release order, to place the art you recognise" },
     ],
   },
-  "/games/pairs": {
-    label: "Pairs",
-    guides: [
-      { slug: "league-of-legends-champions-in-riftbound", reason: "Which League champions have cards, and who is on the art" },
-    ],
-  },
   "/games/twenty48": {
     label: "2048",
     guides: [

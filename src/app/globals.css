@@ -1031,6 +1031,87 @@ body {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Seraphine's Piano (/games/seraphines-piano, 2026-10-16). The stage and the
+   landing page's motion: drifting art, twinkling stars, floating notes and
+   cards, a piano that plays itself, shimmering titles. Transform and opacity
+   only (compositor-friendly), and the reduced-motion block below stills it all.
+   --------------------------------------------------------------------------- */
+.sp-drift { animation: sp-drift 18s ease-in-out infinite alternate; }
+@keyframes sp-drift {
+  from { transform: translate(-50%, 0) scale(1.02); }
+  to { transform: translate(-48%, 14px) scale(1.08); }
+}
+.sp-stars,
+.sp-stars::after {
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 62%, #ffd6ec 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 46% 30%, #cfefff 50%, transparent 51%),
+    radial-gradient(1px 1px at 63% 12%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 78% 44%, #ffe9b0 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 72%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 8% 82%, #e3d4ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 54% 86%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 36% 8%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 94% 24%, #ffd6ec 50%, transparent 51%);
+  animation: sp-twinkle 4.2s ease-in-out infinite alternate;
+}
+.sp-stars::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translate(9%, 13%) rotate(8deg);
+  animation-delay: -2.1s;
+}
+@keyframes sp-twinkle { from { opacity: 0.35; } to { opacity: 1; } }
+.sp-rise { animation: sp-rise 480ms cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+@keyframes sp-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.sp-pop { animation: sp-pop 620ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes sp-pop { from { opacity: 0; transform: scale(0.4) rotate(-8deg); } to { opacity: 1; transform: none; } }
+.sp-encore { animation: sp-encore 1.1s ease-in-out infinite; }
+@keyframes sp-encore {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 22px rgba(255, 207, 90, 0.55); }
+  50% { transform: scale(1.07); box-shadow: 0 0 40px rgba(255, 207, 90, 0.9); }
+}
+.sp-shine {
+  background: linear-gradient(110deg, #ff6fb1 0%, #ffd36b 30%, #fff6dc 45%, #5fd8ff 60%, #b18cff 85%, #ff6fb1 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: sp-shine 4s linear infinite;
+}
+@keyframes sp-shine { from { background-position: 0% 50%; } to { background-position: 250% 50%; } }
+.sp-float { animation: sp-float 6s ease-in-out infinite; }
+@keyframes sp-float {
+  0%, 100% { transform: translateY(0) rotate(var(--sp-rot, 0deg)); }
+  50% { transform: translateY(-14px) rotate(calc(var(--sp-rot, 0deg) + 2deg)); }
+}
+.sp-note {
+  position: absolute;
+  bottom: -10%;
+  animation: sp-note var(--sp-dur, 9s) linear infinite;
+  animation-delay: var(--sp-delay, 0s);
+  opacity: 0;
+}
+@keyframes sp-note {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.9; }
+  85% { opacity: 0.7; }
+  100% { transform: translate(var(--sp-x, 30px), -115vh) rotate(25deg); opacity: 0; }
+}
+.sp-key { animation: sp-key 2.4s ease-in-out infinite; animation-delay: var(--sp-delay, 0s); }
+@keyframes sp-key {
+  0%, 70%, 100% { transform: translateY(0); filter: brightness(1); box-shadow: 0 0 0 transparent; }
+  8% { transform: translateY(3px); filter: brightness(1.35); box-shadow: 0 0 26px var(--sp-glow, #ff6fb1); }
+}
+.sp-aurora { animation: sp-aurora 14s ease-in-out infinite alternate; }
+@keyframes sp-aurora {
+  from { transform: translate3d(-6%, -4%, 0) scale(1); }
+  to { transform: translate3d(6%, 4%, 0) scale(1.15); }
+}
+
 /* Respect users who prefer less motion: neutralise every animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }

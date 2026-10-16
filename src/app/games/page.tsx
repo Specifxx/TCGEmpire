@@ -15,7 +15,7 @@ import { cardThumbProps } from "@/lib/card-image-url";
 export const metadata: Metadata = {
   title: "Riftbound Games — Free Daily Puzzles & Arcade",
   description:
-    "Free Riftbound mini-games: Riftle (the daily guess-the-card puzzle), a pack opening simulator, Riftbound 2048, Card Smash, Card Rain, Higher or Lower with live card prices, Price Check, the Zoomed In art quiz and Pairs memory. No signup, endlessly replayable.",
+    "Free Riftbound mini-games: Seraphine's Piano (a Radiance rhythm game), Riftle (the daily guess-the-card puzzle), a pack opening simulator, Riftbound 2048, Card Smash, Higher or Lower with live card prices, Price Check and the Zoomed In art quiz. No signup.",
   keywords: [
     "Riftbound games",
     "Riftle",
@@ -25,13 +25,14 @@ export const metadata: Metadata = {
     "card price game",
     "higher or lower TCG",
     "Riftbound quiz",
-    "Riftbound Card Rain",
+    "Seraphine's Piano",
+    "Riftbound rhythm game",
   ],
   alternates: pageAlternates("/games"),
   openGraph: {
     title: "Riftbound Games — Free Daily Puzzles & Arcade | RiftCompare",
     description:
-      "Riftle, Higher or Lower, Price Check, Zoomed In, Pairs and Card Rain — free Riftbound mini-games built on live card data.",
+      "Seraphine's Piano, Riftle, Higher or Lower, Price Check, Zoomed In and more — free Riftbound mini-games built on live card data.",
     url: `${SITE_URL}/games`,
   },
 };
@@ -93,13 +94,6 @@ const GAMES = [
     accent: "from-purple-500/20 to-ink-850",
   },
   {
-    href: "/games/pairs",
-    name: "Pairs",
-    tag: "Memory",
-    desc: "Classic memory with real card art. Match all eight pairs in the fewest moves.",
-    accent: "from-blue-500/20 to-ink-850",
-  },
-  {
     href: "/games/twenty48",
     name: "Riftbound 2048",
     tag: "Puzzle",
@@ -115,13 +109,20 @@ const GAMES = [
     desc: "Whack-a-mole with cards: tap them as they pop, dodge the bombs, beat the clock. Pricier cards score more.",
     accent: "from-orange-500/20 to-ink-850",
   },
-  {
-    href: "/games/card-rain",
-    name: "Card Rain",
-    tag: "Arcade",
-    desc: "Cards fall from the sky — slide your deck box to catch them, grab the power-ups, don't drop three. Pricier cards score more.",
-    accent: "from-violet-500/20 to-ink-850",
-  },
+];
+
+// The spotlight (2026-10-16): Seraphine's Piano, the Radiance rhythm game, gets
+// its own animated banner above the shelf instead of a tile in it. It replaced
+// Card Rain and Pairs, the two least played games (DECISIONS.md, "Seraphine's Piano").
+const SPOTLIGHT = {
+  href: "/games/seraphines-piano",
+  name: "Seraphine's Piano",
+  tag: "New · Rhythm",
+  desc: "A Riftbound: Radiance rhythm game. Hit the falling notes to play Seraphine's melody, charge an Encore for double points, and climb the leaderboard on three songs.",
+};
+const SPOTLIGHT_ART = [
+  "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/ef6f277389bbb6361ef29a0332cd2cb34d4905aa-744x1039.png?accountingTag=RB",
+  "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/88f6970ac5639bdd47552befcb575a6f73c6dcdb-744x1039.png?accountingTag=RB",
 ];
 
 export default async function GamesPage() {
@@ -150,15 +151,15 @@ export default async function GamesPage() {
     "@type": "ItemList",
     name: "Riftbound Games",
     description:
-      "Free Riftbound mini-games built on live card data — Riftle, Higher or Lower, Price Check, Zoomed In, Pairs, Pack Opening Simulator, Riftbound 2048, Card Smash and Card Rain.",
+      "Free Riftbound mini-games built on live card data — Seraphine's Piano, Riftle, Higher or Lower, Price Check, Zoomed In, Pack Opening Simulator, Riftbound 2048 and Card Smash.",
     url: `${SITE_URL}/games`,
       // Edges back to the site-level graph in app/layout.tsx. Without them this
       // node is an island and the Organization/WebSite entity signals — sameAs,
       // areaServed, knowsAbout — don't propagate to the page.
       isPartOf: { "@id": `${SITE_URL}/#website` },
       publisher: { "@id": `${SITE_URL}/#org` },
-    numberOfItems: GAMES.length,
-    itemListElement: GAMES.map((g, i) => ({
+    numberOfItems: GAMES.length + 1,
+    itemListElement: [SPOTLIGHT, ...GAMES].map((g, i) => ({
       "@type": "ListItem",
       position: i + 1,
       name: g.name,
@@ -205,6 +206,41 @@ export default async function GamesPage() {
           </div>
         </div>
       )}
+
+      {/* SPOTLIGHT: Seraphine's Piano */}
+      <Link
+        href={SPOTLIGHT.href}
+        className="group relative mb-4 block overflow-hidden rounded-3xl border border-white/10 bg-[#0b0620] p-6 transition-transform duration-300 motion-safe:hover:-translate-y-0.5 sm:p-8"
+      >
+        <div aria-hidden className="sp-aurora pointer-events-none absolute -inset-[20%] bg-[radial-gradient(40%_40%_at_20%_40%,rgba(255,111,177,0.35),transparent_70%),radial-gradient(35%_40%_at_80%_30%,rgba(95,216,255,0.25),transparent_70%),radial-gradient(40%_40%_at_60%_90%,rgba(177,140,255,0.3),transparent_70%)]" />
+        <div aria-hidden className="sp-stars pointer-events-none absolute inset-0" />
+        <div className="relative flex items-center gap-6">
+          <div className="min-w-0 flex-1">
+            <span className="chip bg-[#ff6fb1]/20 text-[10px] font-bold uppercase tracking-wide text-[#ff9fcb]">{SPOTLIGHT.tag}</span>
+            <h2 className="sp-shine mt-2 font-display text-3xl font-black sm:text-4xl">{SPOTLIGHT.name}</h2>
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-300">{SPOTLIGHT.desc}</p>
+            <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#ff6fb1] to-[#b18cff] px-5 py-2 text-sm font-extrabold text-white shadow-[0_0_24px_rgba(255,111,177,0.5)] transition-transform group-hover:scale-105">
+              ▶ Play now
+            </span>
+          </div>
+          <div aria-hidden className="relative hidden h-44 w-48 shrink-0 sm:block">
+            {SPOTLIGHT_ART.map((src, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={src}
+                src={src}
+                alt=""
+                aria-hidden="true"
+                width={124}
+                height={173}
+                loading="lazy"
+                className="sp-float absolute top-0 w-[124px] rounded-xl shadow-[0_15px_40px_-10px_rgba(255,111,177,0.6)] ring-1 ring-white/20"
+                style={{ left: i ? 70 : 0, top: i ? 8 : 0, animationDelay: `${i * -3}s`, ["--sp-rot" as string]: i ? "8deg" : "-8deg" }}
+              />
+            ))}
+          </div>
+        </div>
+      </Link>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {GAMES.map((g) => (

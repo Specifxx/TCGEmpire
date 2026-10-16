@@ -56,7 +56,7 @@ test("the search route offers suggestions only on an empty result, from the cach
 });
 
 test("game results scroll into view and the shared author box uses the registry's words", () => {
-  for (const g of ["HigherLower", "PriceCheck", "Zoomed", "Pairs", "SealedBid"]) {
+  for (const g of ["HigherLower", "PriceCheck", "Zoomed", "SealedBid", "SeraphinesPiano"]) {
     assert.match(read(`src/components/games/${g}.tsx`), /<ResultPanel\b/, g);
   }
   const article = read("src/components/ArticleView.tsx");

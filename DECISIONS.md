@@ -17749,3 +17749,47 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 - `keyword-ownership`: the H1 span may carry `rb-flame-live`.
 - `header-search-resize`: the hero box may carry `rb-search-aura`.
 - `mobile-header-fit`: restored.
+
+## Seraphine's Piano replaces Card Rain and Pairs — 2026-10-16
+
+**Owner:** "get rid of the two games that are like the worst performing on the website … come up with a new game … called Seraphine's Piano … related to the upcoming Radiance release … very graphic, very dynamic … the buttons aren't glitchy … the animations are smooth … a very, very nice landing page … part of the game section."
+
+**Which two went, and why those.** `.github/workflows/games-report.yml` (new, dispatch-only, read-only) reads 90 days of Search Console clicks for each `/games/*` page and the `GameScore` rows for each game. On 2026-10-16:
+
+| Game | Clicks · impressions | Players (all time · 30 days) |
+|---|---|---|
+| Pack Simulator | 124 · 1705 | — |
+| Price Check | 1 · 114 | 5 · 1 |
+| Card Smash | 0 · 52 | 8 · 1 |
+| Higher or Lower | 0 · 44 | 32 · 0 |
+| Pairs | 0 · 44 | 10 · 0 |
+| Riftbound 2048 | 0 · 35 | 13 · 2 |
+| Sealed Bid | 0 · 33 | 4 · 2 |
+| Zoomed In | 0 · 3 | 18 · 1 |
+| Card Rain | 0 · 2 | 4 · 1 |
+
+- Card Rain is last on search (2 impressions) and joint last on players (4).
+- Pairs has no clicks and nobody played it in 30 days.
+- Sealed Bid has fewer players than Pairs but is newer, is still being played, and is the only game about sealed prices, so it stays.
+- Both routes 301 to `/games/seraphines-piano` (as the old `/games/space-invaders` now does), so their few links land on the new game. Their `GameScore` rows are left in the table; nothing reads them.
+
+**The game.** A four-lane rhythm game on Seraphine's piano. Notes fall to the keys; each hit plays its note of the melody, so playing well is the music.
+- Three songs named for her Radiance cards: Starry-Eyed (Easy, 92 bpm), Encore (Normal, 108) and Not Alone (Hard, 124, with two-key chords). Each card's art fronts its song.
+- Charts come from a seeded generator (`lib/seraphine-piano.ts`), so a song never changes and the leaderboard is fair. The melody is a walk over the lanes in C pentatonic, over each song's chord progression.
+- The seeds are chosen so every lane carries its share, and no lane has two notes within 0.2s. `tests/seraphines-piano.test.ts` pins both.
+- Scoring: Perfect, Great and Good windows of ±55, 100 and 150 ms, and a combo multiplier up to ×4.
+- A Harmony bar ends the run if it drains. An Encore meter, once charged, doubles points for six seconds.
+- Grades run S to D. The best score is kept per song, and the leaderboard key is `seraphines-piano`.
+
+**What "smooth" meant in the build.**
+- One clock: `AudioContext.currentTime`. The notes, the judging and the backing track (pad, kick and hat, scheduled 0.3s ahead) all read it, so the picture and the sound cannot drift apart.
+- One canvas, drawn by a `requestAnimationFrame` loop from refs. React re-renders only when the phase changes or the Encore becomes ready, never per frame. Note sprites are pre-rendered.
+- Input is `pointerdown` (no click delay, `touch-none` on the stage) and `keydown` (D F J K or 1–4, Space for Encore, Esc to pause).
+- Leaving the tab pauses the game and suspends the audio context, so the song resumes exactly where it stopped.
+- The sound is synthesised (piano, pad, drums and a convolution reverb), so there are no audio files to fetch.
+
+**The landing page** is the page:
+- An animated hero: aurora, stars, rising notes, three floating cards and a piano that plays itself.
+- The stage, then how to play, then a gallery of her Radiance cards linking their card pages, the Seraphine spoiler and K/DA posts, `/sets/radiance` and pre-orders. Then an FAQ.
+- The `/games` hub gains an animated spotlight banner above the grid.
+- One small card read by slug, `revalidate = 86400`. It is ad-free like the rest of the arcade. All the motion is CSS above the reduced-motion block (`.sp-*`).

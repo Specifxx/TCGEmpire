@@ -258,14 +258,24 @@ const nextConfig = {
         destination: "/deck",
         permanent: true,
       },
-      // The arcade's shooter was replaced by Card Rain, a falling-card catcher,
-      // a week after it shipped — a different game, so it got a route that
-      // actually describes it rather than a "Space Invaders" URL serving
-      // something else. 301 rather than 404 so the week of indexing and any
-      // shared links land on the game that replaced it.
+      // Retired arcade games, each 301'd to the game that replaced it so any
+      // indexed or shared link lands on a live game: the Space Invaders shooter
+      // (replaced by Card Rain, 2026-09-10), then Card Rain and Pairs (the two
+      // least played, retired 2026-10-16 for Seraphine's Piano). Space Invaders
+      // points straight at the new game rather than through a second hop.
       {
         source: "/games/space-invaders",
-        destination: "/games/card-rain",
+        destination: "/games/seraphines-piano",
+        permanent: true,
+      },
+      {
+        source: "/games/card-rain",
+        destination: "/games/seraphines-piano",
+        permanent: true,
+      },
+      {
+        source: "/games/pairs",
+        destination: "/games/seraphines-piano",
         permanent: true,
       },
       // The daily-market-wrap archive, the auto-generated market reports and the

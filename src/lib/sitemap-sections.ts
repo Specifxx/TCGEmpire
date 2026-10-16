@@ -187,7 +187,6 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/higher-lower") },
     { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/price-check") },
     { url: `${SITE_URL}/games/zoomed`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/zoomed") },
-    { url: `${SITE_URL}/games/pairs`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/pairs") },
     // The pack simulator is not a minor mini-game any more: it is the page
     // targeting "riftbound pack opening simulator", it carries the sourced pack
     // structure and pull-rate tables, and the incumbent at #1 (riftcore.app)
@@ -196,7 +195,7 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/games/pack-sim`, changeFrequency: "weekly", priority: 0.8, lastModified: staticPageDate("/games/pack-sim") },
     { url: `${SITE_URL}/games/twenty48`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/twenty48") },
     { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/card-smash") },
-    { url: `${SITE_URL}/games/card-rain`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/card-rain") },
+    { url: `${SITE_URL}/games/seraphines-piano`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/seraphines-piano") },
     { url: `${SITE_URL}/games/sealed-bid`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/games/sealed-bid") },
     // The editorial hubs, the pages the owner's brief puts first. Each changes
     // whenever an article in its category is published or updated, and its
