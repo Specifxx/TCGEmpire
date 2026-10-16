@@ -587,7 +587,11 @@ longer lands on its entry.
   deck builder (`MOBILE_AD_FREE_ROUTES`, the arcade's mechanism). The
   homepages keep their Auto ads (owner, same day: "bring back the ads on the
   home page", [2026-10-16](../DECISIONS.md#L17983)). Desktop and the site's own
-  affiliate units are unchanged. Real anchor ads and the in-page ad cap are
+  affiliate units are unchanged. A Google slot that will not fill never leaves a
+  blank hole: `ins.adsbygoogle[data-ad-status="unfilled"]` (Google's documented
+  rule) and any not-filled slot under `data-ads-paused` are `display: none`; a
+  slot still waiting to fill, or filled, is never hidden
+  ([2026-10-16](../DECISIONS.md#L18017)). Real anchor ads and the in-page ad cap are
   AdSense console settings (anchor "Top only" or off keeps a card page's Buy
   bar clear). [2026-10-16](../DECISIONS.md#L17916)
 - **RiftCompare Coins (`/coins`) are free and Premium-only:** tasks earn pulls,

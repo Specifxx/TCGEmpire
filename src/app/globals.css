@@ -868,6 +868,25 @@ body {
   display: none !important;
 }
 
+/* Google's own ad slots never leave a blank hole (2026-10-16, owner, a phone
+   screenshot of /au with ~460px of nothing between the header and the hero:
+   "a massive gap between the very top and the hero").
+   1. An unfilled slot. AdSense collapses one only when that causes no reflow,
+      i.e. only off-screen; an empty slot in view "keeps its size as a blank
+      space". Auto ads sometimes put a 390px in-page unit at the very top of a
+      phone homepage, above the hero, so an unfilled one there is that gap.
+      This selector is Google's documented fix (AdSense Help 10762946). It
+      matches only once AdSense has answered "unfilled", never a slot still
+      waiting to fill, so it cannot stop an ad from loading.
+   2. A slot while ad requests are paused (an ad-free member, the arcade, a
+      phone's list builders: lib/ad-free-boot.ts stamps data-ads-paused with
+      the pause). If Auto ads placed a slot before the pause took hold, it
+      waits for a request that never comes. A filled ad is never hidden. */
+ins.adsbygoogle[data-ad-status="unfilled"],
+:root[data-ads-paused] ins.adsbygoogle:not([data-ad-status="filled"]) {
+  display: none !important;
+}
+
 /* ── The `motion-safe:` convention (P0 motion pass, 2026-09-16) ──────────────
    Every hidden/entering state introduced from here on is written with a
    `motion-safe:` prefix — e.g. `motion-safe:opacity-0 motion-safe:translate-y-2`

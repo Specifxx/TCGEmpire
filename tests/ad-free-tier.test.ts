@@ -166,7 +166,7 @@ test("both maintenance tasks are registered and runnable", () => {
 // rc_adfree hint cookie + an inline boot script close both (lib/ad-free-boot.ts).
 
 test("the ad-free boot script pauses AdSense and marks <html> for a hinted member, and does nothing otherwise", async () => {
-  const { AD_FREE_BOOT_SCRIPT, AD_FREE_ATTR } = await import("../src/lib/ad-free-boot");
+  const { AD_FREE_BOOT_SCRIPT, AD_FREE_ATTR, ADS_PAUSED_ATTR } = await import("../src/lib/ad-free-boot");
   const run = (cookie: string) => {
     const attrs: Record<string, string> = {};
     const window: { adsbygoogle?: unknown[] & { pauseAdRequests?: number } } = {};
@@ -174,8 +174,10 @@ test("the ad-free boot script pauses AdSense and marks <html> for a hinted membe
     new Function("window", "document", AD_FREE_BOOT_SCRIPT)(window, document);
     return { attrs, paused: window.adsbygoogle?.pauseAdRequests };
   };
-  assert.deepEqual(run("theme=light; rc_adfree=1"), { attrs: { [AD_FREE_ATTR]: "1" }, paused: 1 });
-  assert.deepEqual(run("rc_adfree=1"), { attrs: { [AD_FREE_ATTR]: "1" }, paused: 1 });
+  // data-ads-paused (2026-10-16) goes with every pause: globals.css hides a
+  // Google slot that will now never fill.
+  assert.deepEqual(run("theme=light; rc_adfree=1"), { attrs: { [ADS_PAUSED_ATTR]: "1", [AD_FREE_ATTR]: "1" }, paused: 1 });
+  assert.deepEqual(run("rc_adfree=1"), { attrs: { [ADS_PAUSED_ATTR]: "1", [AD_FREE_ATTR]: "1" }, paused: 1 });
   assert.deepEqual(run("theme=dark"), { attrs: {}, paused: undefined }, "no hint: the loader runs untouched");
   assert.deepEqual(run("xrc_adfree=1; rc_adfree=0"), { attrs: {}, paused: undefined });
 });
@@ -205,7 +207,7 @@ test("every site ad placement is hidden under the hint until React takes over", 
 // ungated loader, so the boot script and every client navigation pause them.
 
 test("the boot script pauses ad requests on /games and /riftle for every visitor, and nowhere else", async () => {
-  const { AD_FREE_BOOT_SCRIPT, AD_FREE_ATTR } = await import("../src/lib/ad-free-boot");
+  const { AD_FREE_BOOT_SCRIPT, AD_FREE_ATTR, ADS_PAUSED_ATTR } = await import("../src/lib/ad-free-boot");
   const run = (pathname: string, cookie = "") => {
     const attrs: Record<string, string> = {};
     const window: { location: { pathname: string }; adsbygoogle?: unknown[] & { pauseAdRequests?: number } } = { location: { pathname } };
@@ -214,12 +216,12 @@ test("the boot script pauses ad requests on /games and /riftle for every visitor
     return { attrs, paused: window.adsbygoogle?.pauseAdRequests };
   };
   for (const p of ["/games", "/games/", "/games/seraphines-piano", "/games/pack-sim", "/riftle"]) {
-    assert.deepEqual(run(p), { attrs: {}, paused: 1 }, `${p}: paused, <html> unmarked`);
+    assert.deepEqual(run(p), { attrs: { [ADS_PAUSED_ATTR]: "1" }, paused: 1 }, `${p}: paused, marked paused, not ad-free`);
   }
   for (const p of ["/", "/card/x", "/gamestop", "/riftles", "/blog/games"]) {
     assert.deepEqual(run(p), { attrs: {}, paused: undefined }, `${p}: the loader runs untouched`);
   }
-  assert.deepEqual(run("/", "rc_adfree=1"), { attrs: { [AD_FREE_ATTR]: "1" }, paused: 1 }, "a member is still paused everywhere");
+  assert.deepEqual(run("/", "rc_adfree=1"), { attrs: { [ADS_PAUSED_ATTR]: "1", [AD_FREE_ATTR]: "1" }, paused: 1 }, "a member is still paused everywhere");
 });
 
 test("a client navigation re-decides the pause, and the arcade never un-pauses for a non-member", async () => {

@@ -38,8 +38,8 @@ const PHONE_ADS = [...HOMEPAGES, "/card/x", "/blog/x", "/browse", "/au/x", "/dec
 
 test("on a phone the boot script pauses Google ads on the list builders only; the homepages keep theirs", async () => {
   for (const p of PHONE_FREE) {
-    assert.deepEqual(await boot(p, 390), { attrs: {}, paused: 1 }, `${p} at 390px: paused, <html> unmarked`);
-    assert.deepEqual(await boot(p, 1023), { attrs: {}, paused: 1 }, `${p} at 1023px (the mobile layout): paused`);
+    assert.deepEqual(await boot(p, 390), { attrs: { "data-ads-paused": "1" }, paused: 1 }, `${p} at 390px: paused, not marked ad-free`);
+    assert.deepEqual(await boot(p, 1023), { attrs: { "data-ads-paused": "1" }, paused: 1 }, `${p} at 1023px (the mobile layout): paused`);
   }
   for (const p of PHONE_ADS) {
     assert.deepEqual(await boot(p, 390), { attrs: {}, paused: undefined }, `${p} at 390px keeps its ads`);
@@ -136,4 +136,45 @@ test("the loader stays ungated: phones are paused, never stripped of the loader 
   const layout = read("src/app/layout.tsx");
   assert.ok(layout.indexOf("__html: AD_FREE_BOOT_SCRIPT") < layout.indexOf("<AdSenseLoader />"));
   assert.match(read("src/components/AdSenseLoader.tsx"), /return <script async src=\{ADSENSE_LOADER_SRC\} crossOrigin="anonymous" \/>;/);
+});
+
+// The "massive gap" above a phone homepage's hero (2026-10-16, owner): an
+// in-view Google slot that is unfilled keeps its size as blank space, and a slot
+// placed before a pause took hold waits for a request that never comes.
+test("Google slots that will not fill collapse; a filled ad is never hidden", () => {
+  const css = read("src/app/globals.css");
+  const rule = /ins\.adsbygoogle\[data-ad-status="unfilled"\],\s*\n:root\[data-ads-paused\] ins\.adsbygoogle:not\(\[data-ad-status="filled"\]\) \{\s*display: none !important;\s*\}/;
+  assert.match(css, rule, "Google's documented unfilled selector, plus not-filled slots while paused");
+  // Nothing else hides Google's ins elements: a slot still waiting to fill must
+  // stay visible, or it measures zero width and can never fill.
+  const others = [...css.matchAll(/[^{}]*ins\.adsbygoogle[^{}]*\{[^}]*display:\s*none/g)];
+  assert.equal(others.length, 1, "exactly one rule hides Google slots");
+});
+
+test("every pause stamps data-ads-paused, and releasing it removes the stamp", async () => {
+  const { syncAdPause, ADS_PAUSED_ATTR } = await import("../src/lib/ad-free-boot");
+  const g = globalThis as unknown as { window?: unknown; document?: unknown };
+  const had = { window: g.window, document: g.document };
+  const attrs = new Map<string, string>();
+  const w: Omit<AdsWin, "location"> = { matchMedia: viewport(390) };
+  g.window = w;
+  g.document = {
+    cookie: "",
+    documentElement: { setAttribute: (k: string, v: string) => attrs.set(k, v), removeAttribute: (k: string) => attrs.delete(k) },
+  };
+  try {
+    syncAdPause("/games/pack-sim");
+    assert.equal(attrs.get(ADS_PAUSED_ATTR), "1", "the arcade");
+    syncAdPause("/card/x");
+    assert.equal(attrs.has(ADS_PAUSED_ATTR), false, "released on a page with ads");
+    syncAdPause("/tools/best-basket");
+    assert.equal(attrs.get(ADS_PAUSED_ATTR), "1", "a phone's list builder");
+    syncAdPause("/", true);
+    assert.equal(attrs.get(ADS_PAUSED_ATTR), "1", "an ad-free member");
+    syncAdPause("/", false);
+    assert.equal(attrs.has(ADS_PAUSED_ATTR), false, "a phone homepage keeps its ads");
+  } finally {
+    g.window = had.window;
+    g.document = had.document;
+  }
 });

@@ -18013,3 +18013,30 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 - at 390px, the ✕ is the element under its own centre, a tap removes the banner, and it stays gone after a reload.
 
 **Tests (`radiance-preview-season`):** the homepage list comes from `REGION_HOME_PATH`; the layout's copy steps aside there; the hero renders its own right after the creators badge; the sm offset is set.
+
+## No blank hole above the hero: Google slots that will not fill collapse — 2026-10-16
+
+**Owner**, with a phone screenshot of `/au`: about 460px of nothing between the header and the hero. "How come there's sometimes a massive gap between the very top and the hero when I load on phone? … fix this as soon as possible and deploy it."
+
+**Cause.** Auto ads sometimes place a 390px in-page unit at the very top of a phone homepage, above the hero. This morning's live measurement found one at y=159 on `/`. Whether a page view gets that unit varies (12 fresh loads this afternoon had none). The trouble starts when the unit does not fill:
+- AdSense collapses an unfilled unit only when that causes no reflow, which means only off-screen. One in view "keeps its size as a blank space" (AdSense Help 10762946). That is the gap.
+- A second path leaves the same hole. When ad requests are paused (an ad-free member, the arcade, a phone's list builders), a slot Auto ads placed before the pause took hold waits for a request that never comes. One masquerade run this morning showed exactly that: a 390px slot, "done", with 0 ad requests.
+
+**Fix: CSS only, nothing about ad requests changes.** One rule in `globals.css`:
+- `ins.adsbygoogle[data-ad-status="unfilled"]` is Google's documented selector. It matches only after AdSense has answered "unfilled". A slot still waiting to fill stays visible, because a hidden slot measures zero width and can never fill (the deadlock others have hit).
+- `:root[data-ads-paused] ins.adsbygoogle:not([data-ad-status="filled"])` covers the paused case. The boot script and `syncAdPause` now stamp `data-ads-paused` with every pause and remove it with every release. A filled ad is never hidden, even while paused.
+- `unfill-optimized` units (Google's own "Discover more" fill) are not empty and stay.
+
+**Checked** on the local build served as riftcompare.com at 390px, with Google slots planted above the `/au` hero:
+- pending: shown, hero at 581;
+- unfilled: hidden, hero back at 125, directly under the header;
+- filled: shown;
+- unfill-optimized: shown;
+- paused and pending: hidden;
+- paused and filled: shown.
+
+A real card page still made 3 ad requests and showed its filled 390px unit; its one unfilled unit collapsed to 0.
+
+**Not fixable here.** While a slot above the hero is still loading on a slow connection, it is blank until the ad paints. The only way to keep Auto ads from placing there at all is the AdSense console: Auto ads → Excluded areas, picking the area above the hero on a homepage.
+
+**Tests (`mobile-ads`, `ad-free-tier`):** the one CSS rule, and that no other rule hides Google slots; every pause stamps `data-ads-paused` and every release removes it; the boot script's stamps for members, the arcade and the list builders.

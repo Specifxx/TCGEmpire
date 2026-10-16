@@ -29,6 +29,9 @@
 export const AD_FREE_COOKIE = "rc_adfree";
 export const AD_FREE_COOKIE_MAX_AGE = 60 * 60 * 24 * 31;
 export const AD_FREE_ATTR = "data-adfree";
+// Stamped on <html> whenever ad requests are paused, for any reason; globals.css
+// then hides any Google slot that has not filled (2026-10-16).
+export const ADS_PAUSED_ATTR = "data-ads-paused";
 
 // The arcade is ad-free for EVERY visitor, not just paid members (2026-10-02 for
 // the site's own placements; 2026-10-16, owner: "get rid of all the ads on the
@@ -89,9 +92,11 @@ const MOBILE_TEST = `!!window.matchMedia&&window.matchMedia("${MOBILE_AD_QUERY}"
 
 // Inlined in <head> by the root layout, BEFORE <AdSenseLoader />. Pauses ad
 // requests for a hinted member anywhere, for everyone in the arcade, and on a
-// phone on the list builders above; only the member hint marks <html> (the
-// arcade and those pages keep the site's own placements, which are not AdSense).
-export const AD_FREE_BOOT_SCRIPT = `(function(){try{var h=/${HINT_PATTERN}/.test(document.cookie),l=window.location,g=!!l&&/${ROUTE_PATTERN}/.test(l.pathname),m=!!l&&/${MOBILE_PATTERN}/.test(l.pathname)&&${MOBILE_TEST};if(h||g||m){(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;}if(h){document.documentElement.setAttribute("${AD_FREE_ATTR}","1");}}catch(e){}})();`;
+// phone on the list builders above. Any pause stamps data-ads-paused on <html>
+// (globals.css hides a Google slot that will now never fill); only the member
+// hint stamps data-adfree, which hides the site's own placements (the arcade
+// and those pages keep them: they are not AdSense).
+export const AD_FREE_BOOT_SCRIPT = `(function(){try{var h=/${HINT_PATTERN}/.test(document.cookie),l=window.location,g=!!l&&/${ROUTE_PATTERN}/.test(l.pathname),m=!!l&&/${MOBILE_PATTERN}/.test(l.pathname)&&${MOBILE_TEST};if(h||g||m){(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;document.documentElement.setAttribute("${ADS_PAUSED_ATTR}","1");}if(h){document.documentElement.setAttribute("${AD_FREE_ATTR}","1");}}catch(e){}})();`;
 
 // Inlined as the FIRST child of <body> (the class must be on <body> to keep ad
 // intent anchors away, and <body> does not exist yet when the <head> script
@@ -123,7 +128,13 @@ export function syncAdPause(pathname: string | null | undefined, adFree?: boolea
     const w = window as unknown as AdsWindow;
     const ads = (w.adsbygoogle = w.adsbygoogle ?? []) as NonNullable<AdsWindow["adsbygoogle"]>;
     const mobile = isMobileAdFreeRoute(pathname) && isMobileViewport();
-    ads.pauseAdRequests = isAdFreeRoute(pathname) || mobile || (adFree ?? hinted()) ? 1 : 0;
+    const paused = isAdFreeRoute(pathname) || mobile || (adFree ?? hinted());
+    ads.pauseAdRequests = paused ? 1 : 0;
+    const root = document.documentElement;
+    if (root) {
+      if (paused) root.setAttribute(ADS_PAUSED_ATTR, "1");
+      else root.removeAttribute(ADS_PAUSED_ATTR);
+    }
   } catch {
     /* no window or cookies blocked: the boot script's choice stands */
   }
