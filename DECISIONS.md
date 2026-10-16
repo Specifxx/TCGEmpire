@@ -17913,7 +17913,151 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 
 **Not done:** an ops-monitor check (there is no external service or quota behind it) and a leaderboard (a collection is personal).
 
-## The store audit: 59 stores added, 2 dead and 105 ghost stores purged, 5 moved to sealed-only, 3 Canadian stores filed under the wrong market — 2026-10-16
+## Fewer Google ads on a phone: no ad intents, and no ads at all on the homepages and list builders — 2026-10-16
+
+**Owner:** "Can we also reduce the amount of ads on the website for mobile users? … very hard to use, especially on a homepage … you have to constantly be clicking to get rid of it and you can't really even set up a cart."
+
+**What a phone got, measured on the live site at 390px the same day.** Headless Chromium through the session proxy, an Android Chrome user agent, scrolled through each page.
+- **Homepage.** Auto ads placed four in-page units of 310 to 390px each. The first sat directly under the header, above the hero. Unfilled, it turned into a full-width "Discover more" search box. A fifth, hidden, was an overlay placeholder.
+- **Ad intents, on every page.** Google turned words in the site's own copy into links with a newspaper icon: "card", "deck" and "prices" in Best Basket's intro. Tapping one opens a search-ad dialog, and on a price list those links look like the site's own. An ad-intent anchor bar ("Read Economics ✕", "Shop Shelving ✕") also sat on the bottom edge. On a card page it sat directly above the Buy bar. Each new page brought the bar back, which is the "constantly clicking".
+- **The site's own units.** These were labelled and static: EbayPicks, the card page's eBay and TCGplayer pair, one house promo, and the footer pair. Nothing in them needs dismissing.
+
+**What changed, below 1024px only.** That is the desktop rail's breakpoint, the layout a phone or tablet gets; Google draws its own desktop line for overlays at 1000px.
+1. **No ad intents anywhere.** `MOBILE_AD_INTENTS_SCRIPT` is the first child of `<body>`. It adds `google-anno-skip`, Google's documented opt-out class (AdSense Help 13829157 and 13829511), to `<body>`. On the body, that keeps ad intent links, anchors and chips off the page.
+   - A `MutationObserver` puts the class back. When a first visit's hydration fails (the known #418/#423 from Google's scripts), React re-renders the root and resets `<body>`'s attributes. That dropped the class in the measurement.
+   - `<body>` carries `suppressHydrationWarning` for this one class.
+2. **No Google ads on the pages people come to do something on.** These are the six market homepages (`/`, `/au`, `/uk`, `/sg`, `/ca`, `/eu`, exact paths), Best Basket (`/tools/best-basket`) and the deck builder (`/deck`, not `/decks`), each with everything under it (`MOBILE_AD_FREE_PAGES`, `MOBILE_AD_FREE_ROUTES`).
+   - The mechanism is the arcade's: the `<head>` boot script sets `pauseAdRequests = 1` before the loader runs. `syncAdPause` re-decides it on every client navigation.
+
+**Checked against real AdSense.** The local build was served to Chromium as riftcompare.com by request routing, with the published client id.
+- At 390px, the homepage and Best Basket made 0 ad requests. The card page still made its 3 and placed its in-page units, with 0 intent links.
+- Best Basket on the live HTML with only the class added: 22 intent elements before, none after.
+- The hydration warnings on `/` are the same count with the change stashed; they predate it.
+
+**Not changed.**
+- **Desktop.** Every page keeps its Auto ads and ad intents.
+- **The site's own labelled affiliate units.** They are the main earner and are not what needed dismissing.
+- **The loader.** It stays ungated (verification and the EEA consent message).
+- **Served ads are never hidden with CSS.**
+- **Card pages, blog posts and the rest on a phone** keep their in-page Auto ads. The owner asked to reduce, not remove.
+
+**Console-only, for the owner.** Code cannot reach these.
+- A real AdSense anchor ad (`data-ad-hi`, unfilled for the headless browser) can still fill on a phone's other pages and would sit over a card page's Buy bar. Ad-intent anchors only fill when it doesn't.
+- In AdSense → Ads → the site → Auto ads, set Overlay formats → Anchor ads to "Top only", or off. Banner ads → "Maximum number of ads on a page" caps the rest.
+
+**Found on the way: Halloween dropped on a failed hydration.** The live phone homepage fails hydration on some first loads (#418/#423, 7 errors). It does so with Auto ads' implementation blocked too, so it is not this change's cause, and it is not fixed here. React's root re-render then resets `<html>`'s attributes. `data-theme` comes back (ThemeProvider re-sets it), but `data-season` did not: the visitor lost the theme. `SEASON_BOOT_SCRIPT` now carries the same small observer and puts the attribute back. The underlying mismatch is still open: in dev, the only warning names `ConsentDefaults`' inline script.
+
+**Tests (`mobile-ads`, plus one in `season`):**
+- The boot script pauses on exactly those pages at 390 and 1023px, and nowhere at 1024px or without `matchMedia`.
+- `syncAdPause` agrees on navigation.
+- The intents script adds the class on a phone only, and re-adds it after a reset or on a replacement `<body>`.
+- It is `<body>`'s first child, and the loader stays ungated.
+- The season is put back after `<html>`'s attributes are cleared.
+
+## The sign-up card asks from the 2nd page, not the 4th — 2026-10-16
+
+**Owner**, right after phones lost most Google ads: "After reducing the amount of ads you can add the sign up slider back to get users to sign up and deploy that."
+
+**It was already back, but few ever saw it.** `SignupSlideIn` (restored 2026-10-15, "Premium gets loud") was live and working. In a fresh signed-out phone session on the live site it appeared on the 4th page. But a visit averages about three pages (views per session 2.76–4.12 in the 10-14 search-limit read), so the 4th-page gate kept it from most visitors. A signed-in owner never sees it at all.
+
+**What changed.**
+- `SIGNUP_MIN_VIEWS` is 2: the card can show from a visit's 2nd page.
+- **Still never on the landing page.** That keeps the 2026-09-24 rule ("First visit from Reddit/Discord: no sign-up prompt on the first page"). It also keeps a pop-up off a phone visitor's first page from search, which Google counts as an intrusive interstitial.
+- **Everything else is as on 10-15:**
+  - signed out only, after `/api/me` answers;
+  - 12 s and a quiet moment (`armNudge`), once a session;
+  - a 7-day snooze after ✕, 14 days after a click, and gone for good after two ✕;
+  - never on `/login`, `/verify`, `/premium`, `/pokemon` or `/admin`;
+  - a bottom-left corner card, never a modal.
+- **The ad change is what makes room for it.** On a phone the bottom edge no longer carries Google's ad-intent bar on any page (the entry above). The homepage, Best Basket and the deck builder carry no Google ads at all, so the card no longer competes with a ✕ the visitor has just closed.
+- **"Sign up free" is dark ink on orange** (`text-ink-950`), like the header's Sign up (`.btn-primary`). White on the rebrand's #ef7d00 was about 2.9:1. The light theme keeps it dark through the existing `.bg-brand-500.text-ink-950` rule.
+
+**`PREMIUM_COPY_VERSION` is `signup-card-2026-10-16`.** This is a frequency change, and CURRENT-STATE's "Measure changes" says bump. It also separates the 4th-page day from what follows.
+
+**Checked** locally in Chromium at 390px, signed out: no card on the landing page after 17 s; on the 2nd page the card after its delay; once a session after that. "Sign up free" measured rgb(10, 8, 22) on rgb(239, 125, 0).
+
+**What to watch** (`impact-report`, GA4): `signup_card_shown`, `_click` and `_dismissed`, and `sign_up` with `signupSource` = `signup_card`, against the 10-15 days; pages per visitor and `buy_click`, which a prompt that annoys would cost first. If dismissals swamp clicks, the 3rd page is the next step, not the 4th.
+
+**Delivery.** `[deploy]` at the owner's word ("deploy that"). It also releases the mobile-ads commit above, which was waiting for the daily build.
+
+## The homepages get their Google ads back on phones — 2026-10-16
+
+**Owner**, a few hours after "Fewer Google ads on a phone" (above) went live: "Actually bring back the ads on the home page, whatever, bring it back."
+
+**What changed.**
+- `MOBILE_AD_FREE_PAGES` (the six market homepages, `/`, `/au`, `/uk`, `/sg`, `/ca`, `/eu`) is gone. A phone's homepage loads Auto ads again, the in-page units included, the first one above the hero where Google puts it.
+- Best Basket and the deck builder stay paused on phones (`MOBILE_AD_FREE_ROUTES`). They are where people build a cart, which was the owner's other complaint, and the request named only the homepage.
+- **Ad intents stay off on every phone page, the homepage included** (`google-anno-skip`). Those were the tap-to-open ad words and the bottom bar the owner had to keep closing. Its reasons are unchanged, and it was never a homepage setting.
+- Desktop was never changed.
+
+**If the owner wants the homepage exactly as before,** ad intents included, `MOBILE_AD_INTENTS_SCRIPT` would skip the six homepage paths. That is a one-line change, not made here because nothing asked for the clicking back.
+
+**Tests (`mobile-ads`):** the homepages are now in the keeps-its-ads list at 390px, both in the boot script and on a client navigation. Best Basket and `/deck` (and their sub-paths) are still paused there, and nothing is paused at 1024px.
+
+## The Radiance banner sits inside the homepage hero — 2026-10-16
+
+**Owner**, with a screenshot of the hero's top edge cutting through the banner: "I still need to fix this annoying overlap, can we bring it inside the hero."
+
+**Why it overlapped.** `RadianceSeasonBanner` renders at the top of `<main>` on every page. On the six market homepages the next thing is `CinematicHero`, a full-bleed breakout with `-mt-6`. That pull-up was there to tighten the gap above the hero, and it slid the hero's band over the banner's bottom edge.
+
+**What changed.**
+- The banner takes a `placement` prop. The layout's copy (`page`) returns nothing on the homepage paths, `Object.values(REGION_HOME_PATH)`, so the list cannot drift from the routes.
+- `CinematicHero` renders its own copy (`hero`) as the first thing after `CreatorsCornerBadge`.
+- **How the hero copy looks:** centred, `max-w-xl`, a dark glass strip (`bg-ink-950/85`, gold border) so the hero's decorations don't show through. From sm it starts 32px lower, clear of the creators badge, which sits absolute in the hero's top-right corner.
+- **Unchanged:** the dismissal keys, the copy by phase, the links, and the release-day cut-off. Every other page keeps the banner at the top of `<main>`. The hero's `-mt-6` is untouched.
+
+**Checked** locally in Chromium at 390 (`/` and `/au`), 768 and 1634px:
+- one banner, inside `#rc-hero`, clear of the creators badge;
+- no horizontal scroll;
+- on `/browse`, one banner, at the top of `<main>` as before;
+- at 390px, the ✕ is the element under its own centre, a tap removes the banner, and it stays gone after a reload.
+
+**Tests (`radiance-preview-season`):** the homepage list comes from `REGION_HOME_PATH`; the layout's copy steps aside there; the hero renders its own right after the creators badge; the sm offset is set.
+
+## The import stops purging pages the files serve — 2026-10-16
+
+**Owner**, with Vercel's numbers for 10–17 October: ISR writes are the largest line ($2.42 of $6.58, 606K write units). `/card/[id]` made 43K of 49K write units in 12 hours: 5.2K writes for 1.1K reads over 1.3K paths, no time-based revalidation and one tag revalidation. "Find why long-tail card pages get rewritten so often", and find out why `/pokemon/sealed/[slug]` (1.4K writes for 163 reads) is there.
+
+**Why each card page is written about twice a day.** A card page is a ~370 KB HTML document plus a ~180 KB RSC payload, about 70 ISR write units each time it renders (the 07:00 purge comment's "~75" was right). It renders once per visited path after each event that empties the cache. There were two such events a day:
+- **the daily release**, which starts every deployment with an empty page cache;
+- **the 19:00 import's `/api/revalidate`**, which purges `/card/[id]` and every other price page.
+
+In `PUBLIC_DATA_MODE=files` (live since 15 October) the second one changes nothing a visitor can see. The pages read the snapshot their release bundled, so the purge re-rendered every visited card page with exactly the data it already showed. That was about half of the site's ISR writes. The 07:00 purge was already skipped because a release follows it. The single "tag revalidation" in Vercel's view is this purge: `revalidatePath` is a tag underneath.
+
+**What changed.**
+- **`/api/revalidate` answers 202 "skipped" in files mode** (`importPurgeIsNoop()`, `src/lib/revalidate-content.ts`), unless the caller passes `?force=1`.
+  - `refresh-prices.yml` logs the skip. `purged` stays false, so the paid alert pass takes its own fresh read (`?fresh=1`), as on a skipped morning run.
+  - The manual `revalidate-now` maintenance task passes `force=1`.
+  - Back in `db` or `fallback` mode, every purge runs as before.
+- **The Pokémon section's TTL is a day** (`POKEMON_TTL`, and the four routes that carried 21600). Its import purges `/pokemon` after both daily runs, so the six-hour timer only re-rendered ~1,000 mostly noindex product pages for crawlers between imports.
+- **Prefetch is off on the remaining long link lists:**
+  - the set checklist (`SetTracker`), the index constituents and the article market tables and embeds;
+  - the deck builder, published decks, the deck library and the ban list;
+  - the recently viewed rail on every card page;
+  - the Pokémon lists.
+
+  A visible `<Link>` to an ISR page fetches its whole ~180 KB RSC payload, and an uncached target renders and writes on the prefetch alone. `CardTile` and most grids already had it off.
+- **robots.txt no longer lets crawlers walk query-string URLs** (`Disallow: /*?`).
+  - No sitemap URL has one, and every page that reads one canonicalises to its clean URL.
+  - Explicit Allows keep `/_next/` (assets carry `?dpl=`; Google needs them to render), the share images (`opengraph-image?<hash>`, which Twitterbot fetches under robots.txt) and the icons.
+  - `BLOCKED_BOTS` adds ten backlink, data and minor-engine crawlers. AhrefsBot and SemrushBot stay allowed (`tests/critical-path.test.ts`).
+
+**Why `/pokemon/sealed/[slug]` exists.** It is the Pokémon sealed beta of 1 October ("The Pokémon sealed section (beta)"). It was built to answer "do people use it?" before DexCompare existed as its own site. 163 product reads a week is the answer so far, and since 15 October its pages already defer to DexCompare's store prices. **The owner's call, not made here:**
+- turn it off with one variable (`NEXT_PUBLIC_POKEMON_SECTION`; `docs/pokemon/README.md` §2);
+- or 301 `/pokemon/*` to the matching DexCompare pages.
+
+**Not done, with the reason.**
+- **The other half of each card page's weight is not data.** 97 KB of the 183 KB RSC payload is 62 client-component import rows, each listing ~20 chunk files. 41 KB of that is Vercel Skew Protection's `?dpl=` suffix on every chunk URL, and the same rows are inlined in the HTML again.
+  - Turning Skew Protection off (a Vercel project setting) cuts each card write by about 15%. The cost is that a tab open across a release reloads on its next navigation instead of finishing it.
+  - Merging the layout's dozen providers into one client component would cut the rows further. It touches every page, so it is left for a change of its own.
+- **CDN caching instead of ISR for card pages** (a `Cache-Control`/`CDN-Cache-Control` header on a dynamic render) would make writes free. But Vercel's CDN cache is per region and also cold after each release, and a page cannot set its own headers in the App Router. With one render per card per day left, ISR is close to break-even, not a loss: the deploy, not the TTL, now sets the write rate.
+
+**What to watch** (Vercel Observability → ISR, 24 h after the release that ships this):
+- `/card/[id]` writes per path should fall from ~4 to ~2 per 12 h (one render after the release, one per HTML/RSC pair). Write units should roughly halve.
+- No tag revalidation should appear at the 19:00 run.
+- `refresh-prices.yml`'s log should read "Skipped: files mode".
+
+## The store audit: 59 stores added, 2 dead and 105 ghost stores purged, 5 moved to sealed-only, 2 Canadian stores filed under the wrong market — 2026-10-16
 
 **Owner:** "take a look at all the stores … I'm sure there's a lot of stores that have shown up … stores that … might have been decommissioned … let's take a look at all the stores and … any stores that are new and popular and … get rid of the stores that … have been dead."
 
@@ -17937,7 +18081,7 @@ Every candidate was vetted the same way: its own collection list, then its Riftb
 - They keep their keys, so their sealed rows carry on.
 - **The new `SINGLES_RETIRED_RETAILERS`** purges only their card rows, which nothing reads any more and which would never expire. `DECOMMISSIONED_RETAILERS` would have purged their sealed rows too.
 
-**Three Canadian stores filed under the wrong market.** Each was a Toronto-area store charging CAD:
+**Canadian stores filed under the wrong market.** Two Ontario stores charging CAD, and a third checked:
 - **Chonky Collectibles (SG → CA).** Ships to Canada only. Read with `?country=SG`, every one of its 932 singles reads sold out, so it priced nothing in Singapore for weeks. The 2026-09-25 postage probe had already noted "a Toronto store". As CA: 595 in stock across its four set collections (it was reading only Origins), 99% matched.
 - **The CG Realm (US → CA).** Windsor, Ontario; ships to Canada only. Its 1,020 "in stock" US listings were Shopify's currency conversion of stock no US buyer could order. Its no-post postage override goes, and it is measured in Canada (C$4.00).
 - **NexPack Collectibles stays in the US**, because it really ships there: its US listing is a measured cross-border one, with duties noted. Its home CAD storefront is added to CA as `npcollectiblesca`, the same precedent as Danireon's US/CA pair.

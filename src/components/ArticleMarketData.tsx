@@ -114,7 +114,7 @@ export async function ArticleMarketData({ country }: { country: Country }) {
             <ul className="mt-2 space-y-1 text-sm">
               {cheap.map((c) => (
                 <li key={String(c.id)} className="flex justify-between gap-3">
-                  <Link href={cardHref(c as never)} className="truncate text-brand-400 hover:underline">
+                  <Link prefetch={false} href={cardHref(c as never)} className="truncate text-brand-400 hover:underline">
                     {String(c.name)}
                   </Link>
                   <span className="num shrink-0 text-slate-400">
@@ -131,7 +131,7 @@ export async function ArticleMarketData({ country }: { country: Country }) {
             <ul className="mt-2 space-y-1 text-sm">
               {dear.map((c) => (
                 <li key={String(c.id)} className="flex justify-between gap-3">
-                  <Link href={cardHref(c as never)} className="truncate text-brand-400 hover:underline">
+                  <Link prefetch={false} href={cardHref(c as never)} className="truncate text-brand-400 hover:underline">
                     {String(c.name)}
                   </Link>
                   <span className="num shrink-0 text-slate-400">

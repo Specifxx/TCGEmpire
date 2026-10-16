@@ -12,7 +12,7 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 test("the sign-up card is signed-out only, gated by page count, and mounted once in the layout", () => {
   const src = read("src/components/SignupSlideIn.tsx");
   assert.match(src, /const signedOut = loaded && answered === true && !user;/, "only after /api/me really answered, never for a member");
-  assert.match(src, /signupCardEligible\(\{ views, pathname \}\)/, "the 4th-page gate (lib/nudge-gate.ts)");
+  assert.match(src, /signupCardEligible\(\{ views, pathname \}\)/, "the 2nd-page gate (lib/nudge-gate.ts)");
   assert.match(src, /armNudge\(\{\s*delayMs: NUDGE_DELAY_MS,/, "the shared 12 s settle-in and quiet-moment rules");
   assert.match(src, /readNum\(ls, DISMISS_COUNT\) >= MAX_NUDGE_DISMISSALS/, "two dismissals and it stops for good");
   assert.match(src, /ss\?\.getItem\(SESSION_SEEN\) === "1"/, "once a session");

@@ -21,7 +21,7 @@ import { SetOgImage } from "@/lib/pokemon/set-og";
 // function on Vercel and the header is its only cache; `revalidate` stays at
 // the loaders' POKEMON_TTL (see the product card beside the sealed page).
 export const runtime = "nodejs";
-export const revalidate = 21600;
+export const revalidate = 86400;
 export const alt = "Pokémon set sealed prices on RiftCompare";
 export const size = POKEMON_OG_SIZE;
 export const contentType = "image/png";

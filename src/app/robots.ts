@@ -31,8 +31,28 @@ const CITATION_BOTS = [
 ];
 
 // Bulk scrapers that neither cite back nor feed a corpus anyone answers from —
-// no upside, so blocked.
-const BLOCKED_BOTS = ["Bytespider", "meta-externalagent", "Meta-ExternalAgent"];
+// no upside, so blocked. The second line (2026-10-16) is backlink, data and
+// minor-engine crawlers: they render page after page of the long tail for
+// someone else's index and send no visitors. AhrefsBot and SemrushBot stay
+// allowed (the owner's own SEO tools; tests/critical-path.test.ts). A bot that
+// ignores robots.txt needs the Vercel Firewall instead (DECISIONS.md, "The
+// import stops purging pages the files serve").
+const BLOCKED_BOTS = [
+  "Bytespider", "meta-externalagent", "Meta-ExternalAgent",
+  "MJ12bot", "DotBot", "PetalBot", "DataForSeoBot", "BLEXBot", "Barkrowler", "serpstatbot", "SeekportBot", "ImagesiftBot", "Timpibot",
+];
+
+// QUERY-STRING URLS ARE NOT CRAWLED (2026-10-16). No sitemap URL carries a
+// query string, and every page that reads one (/browse, /sealed, /price-guide,
+// /market, /auctions, /sets/[set] filters, the tools) canonicalises to its
+// clean URL, so a crawler walking ?sort= / ?page= / ?utm_ variants only buys
+// renders and cache writes. The ALLOWS keep what a crawler needs that does
+// carry a query: Next's assets (?dpl=, without them Google cannot render a
+// page), the share images (og:image is ".../opengraph-image?<hash>", and
+// Twitterbot obeys robots.txt) and the icons. The longest matching rule wins,
+// so each Allow beats "/*?".
+const QUERY_DISALLOW = "/*?";
+const QUERY_ALLOWS = ["/_next/", "/*opengraph-image", "/*twitter-image", "/icon", "/apple-icon"];
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -42,7 +62,7 @@ export default function robots(): MetadataRoute.Robots {
         // Allow the public data API (/api/v1/*) for everyone — it carries an
         // `X-Robots-Tag: noindex` header so it's fetchable by agents/dashboards but
         // never indexed as a page. Everything else under /api/ stays blocked.
-        allow: ["/", "/api/v1/"],
+        allow: ["/", "/api/v1/", ...QUERY_ALLOWS],
         // Block ONLY machine endpoints. Account/utility/admin PAGES are kept out
         // of the index with a `noindex` meta tag instead of a robots Disallow —
         // because a Disallow stops Google from ever crawling the page, so it never
@@ -50,15 +70,15 @@ export default function robots(): MetadataRoute.Robots {
         // Console "Blocked by robots.txt" and "Indexed, though blocked by
         // robots.txt" buckets. Leaving these pages crawlable lets Google read the
         // noindex and drop them cleanly (as "Excluded by noindex tag").
-        disallow: ["/api/"],
+        disallow: ["/api/", QUERY_DISALLOW],
       },
       {
         // AI citation/search crawlers: public content + the agent-readable surfaces.
         // Allow /api/v1/ (the public data API) and llms.txt; keep the rest of /api/
         // (auth/account/machine routes) blocked — Allow is more specific, so it wins.
         userAgent: CITATION_BOTS,
-        allow: ["/", "/api/v1/", "/llms.txt", "/llms-full.txt"],
-        disallow: ["/api/"],
+        allow: ["/", "/api/v1/", "/llms.txt", "/llms-full.txt", ...QUERY_ALLOWS],
+        disallow: ["/api/", QUERY_DISALLOW],
       },
       {
         // Non-citing bulk scrapers: no crawl.

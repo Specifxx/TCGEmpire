@@ -493,6 +493,7 @@ test("every tier surface quotes the limits from the constants, and price compari
   // "nudges-2026-09-29" since the value-first nudges, then "trial-2026-09-30" for the $1 first month (DECISIONS.md, "A $1 first month for both tiers"),
   // then "signup-inline-2026-09-30" when the sign-up slider was removed ("The sign-up slider is gone"); plans and prices unchanged;
   // then "search-caps-2026-10-09" when search was metered again and the plans gained history, graded and auction rows.
-  // then "search-caps-2026-10-15" when the allowance was loosened to 25 / 100 / 500.
-  assert.equal(PREMIUM_COPY_VERSION, "search-caps-2026-10-15");
+  // then "search-caps-2026-10-15" when the allowance was loosened to 25 / 100 / 500,
+  // then "signup-card-2026-10-16" when the sign-up card moved to the 2nd page.
+  assert.equal(PREMIUM_COPY_VERSION, "signup-card-2026-10-16");
 });
