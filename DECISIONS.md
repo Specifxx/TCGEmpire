@@ -17862,3 +17862,53 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 - The boot script pauses on `/games`, `/games/…` and `/riftle` and nowhere else (`/gamestop` and `/blog/games` are untouched).
 - `syncAdPause` pauses on the way in and releases on the way out.
 - The `/api/me` sync keeps the arcade paused.
+
+## RiftCompare Coins: a free gacha collection for Premium members — 2026-10-16
+
+**Owner**, passing on George's idea and his twelve coin designs: "Turn these into virtual coins that premium members can get by completing tasks such as building wishlists, sharing prices … or clicking links … or daily repeat sign ins, friend referrals". Then the owner's own note: "Make it gacha".
+
+**What it is.** `/coins`: twelve champion coins (George's sheet, cut into `public/coins/<id>.webp`) in four rarities.
+- Rarities: 5 Common, 4 Rare, 2 Epic and 1 Legendary (Ahri).
+- Tasks earn **pulls**. A pull reveals one coin at random. Duplicates become **shards**, and 10 shards buy a pull.
+- Odds: Common 60%, Rare 28%, Epic 10%, Legendary 2%. Every coin is equally likely within its rarity.
+- Pity: an Epic or better within 10 pulls, and the Legendary within 50. The odds and pity rules are printed in full on the page.
+- The rules are pure (`lib/coins.ts`, tested). The roll happens on the server with `crypto.randomInt` (`lib/coins-server.ts`), never in the browser.
+
+**Never for sale.**
+- Coins, pulls and shards can't be bought, sold or cashed out, and the page says so.
+- No payment code sits anywhere near a pull; `tests/coins.test.ts` fails if Stripe or checkout appears in the coin files.
+- A paid pull would turn a collection into a loot box, and that is a different product with legal exposure in several markets. Don't add one.
+
+**Premium (top tier) only** (`COIN_TIER`; admins count, as everywhere). It is a reason to pay, so it is a row in `TIER_COMPARISON`, the /premium grid and `PITCH_TOOLS`. Everyone else sees the collection locked, with a Premium link. One constant moves it to every paid tier if the owner prefers.
+
+**The tasks, and where each is checked:**
+
+| Task | Pulls | Cap | Recorded by |
+|---|---|---|---|
+| Welcome gift | 3 | once | claim on first visit |
+| Daily check-in | 1 | 1/day | claim (UTC day key) |
+| 7-day streak | +2 | every 7th consecutive day | the check-in |
+| Build your watchlist | 1 | 3/day, once per card ever | `/api/alerts/watchlist` POST (`rewardWatch`) |
+| Share a price | 1 | 2/day | `ShareButton` → claim |
+| Visit a store | 1 | 3/day | `OutboundLink` → claim |
+| Refer a friend | 5 | once per friend | `applyReferral` (`rewardReferral`), alongside the existing +3 days |
+
+- Watching a card and a referral are recorded server-side, where they happen.
+- Sharing and store visits are only visible in the browser, so `lib/coins-client.ts` claims them with a beacon. It sends nothing unless `/api/me` says the tier is Premium and today's local count is under the cap, so ordinary visitors make no request.
+- The server re-checks the tier, the cap and a rate limit on every claim. The worst a scripted member can do is the published cap: five extra pulls a day.
+
+**Idempotent by construction.**
+- `CoinTask` is unique on (userId, task, key). The task row and the wallet increment are one batch transaction, so a replayed claim fails on the key and pays nothing.
+- A pull is an `updateMany` conditional on the `pullsMade` it read (an optimistic lock), so two pulls at once can't share one pull or one pity state. The loser re-reads and tries again.
+- No interactive transactions, matching the rest of the codebase.
+
+**Egress.** Every query is one member's rows by key (a wallet row, at most twelve owned rows, today's task rows). `/coins` itself is a static shell (`revalidate = 86400`, no database at render, `noindex`) and loads the member's state from `/api/coins` after load.
+
+**The reveal** (`components/coins/CoinCollection.tsx`, `.cn-*` in `globals.css`) is a fixed sequence so a slow answer never stutters it:
+- The coin's back starts charging the instant the button is pressed (the request runs in parallel) and holds for at least 1.15s.
+- It takes on the rarity's colour, flips on Y over 0.95s, then bursts: sparks, a shockwave, and a flash for the Legendary.
+- It uses transform and opacity only, and sits above the reduced-motion block.
+
+**Names.** The champions are named from George's art. The fourth coin, a dark armoured knight, is called Mordekaiser; if George meant someone else, rename it in `COINS` and the file.
+
+**Not done:** an ops-monitor check (there is no external service or quota behind it) and a leaderboard (a collection is personal).

@@ -6,6 +6,7 @@ import { outboundRel } from "@/lib/affiliate";
 import { markBuyClick, registerBuyLink } from "@/lib/buy-intent";
 import { reportOutboundConversion } from "@/lib/google-ads";
 import { readEntrySource } from "@/lib/entry-source";
+import { earnCoin } from "@/lib/coins-client";
 
 // An outbound "buy" link. Used to also fire a click beacon (to /api/click) for
 // eBay retailer keys so click counts could be verified in our own DB — that
@@ -203,6 +204,9 @@ export function OutboundLink({
     // v2 state GA4 already runs under (see GoogleAnalytics.tsx). Reports the same
     // click as a conversion so paid Search campaigns can optimise toward it.
     reportOutboundConversion();
+    // RiftCompare Coins: visiting a store is a task. A no-op for anyone but a
+    // Premium member under today's cap (lib/coins-client.ts).
+    earnCoin("visit");
     // Inside the native app, open retailer links in the system browser so the user
     // leaves our WebView (and can come back), instead of getting stuck on the
     // store's site. On the web this branch never runs — it's a normal link.

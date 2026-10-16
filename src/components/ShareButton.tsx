@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { earnCoin } from "@/lib/coins-client";
 
 // Copy-the-link button — TCG communities share cards in Discord constantly
 // (user feedback), so the permanent URL gets a one-tap copy.
@@ -14,6 +15,8 @@ export function ShareButton({ className, responsive = false }: { className?: str
         try {
           await navigator.clipboard.writeText(window.location.href);
           setCopied(true);
+          // RiftCompare Coins: sharing a price is a task (lib/coins-client.ts).
+          earnCoin("share");
           setTimeout(() => setCopied(false), 2000);
         } catch {
           /* clipboard unavailable — ignore */

@@ -159,6 +159,7 @@ export const PITCH_TOOLS: { label: string }[] = [
   { label: "Full price history" },
   { label: "Graded price tracking" },
   { label: "Auction alerts" },
+  { label: "RiftCompare Coins" },
 ];
 
 // A contextual heading/line, keyed by the CURRENT page, instead of the one

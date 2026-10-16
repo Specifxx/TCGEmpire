@@ -578,6 +578,10 @@ longer lands on its entry.
   Auto ads' requests paused there by the boot script and on every client
   navigation (`syncAdPause`, [2026-10-16](../DECISIONS.md#L17845)).
   [2026-09-26](../DECISIONS.md#L14680), [2026-10-01](../DECISIONS.md#L16105), [2026-10-02](../DECISIONS.md#L16478)
+- **RiftCompare Coins (`/coins`) are free and Premium-only:** tasks earn pulls,
+  a server-side roll reveals one of twelve coins (odds and pity printed on the
+  page), and nothing about them is ever sold. Every reward is idempotent on
+  `CoinTask`'s unique key. [2026-10-16](../DECISIONS.md#L17866)
 - **The arcade's line-up is chosen by data:** `games-report.yml` (dispatch-only)
   gives each game's search clicks and players; the two weakest (Card Rain,
   Pairs) were replaced by Seraphine's Piano, a Radiance rhythm game timed on
