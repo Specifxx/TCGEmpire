@@ -139,6 +139,16 @@ longer lands on its entry.
 
 ## Premium & monetisation
 
+- **Creator codes (2026-10-16, owner):** a creator applies at `/creators/apply`,
+  the owner approves in `/admin/affiliates` (an `Affiliate` plus a Stripe
+  promotion code on the shared 20%-off, forever coupon). Subscribers get 20% off
+  through `/r/CODE`, `/premium?code=`, the code box on /premium (all set the
+  `rc_aff` cookie checkout reads) or by typing it at Stripe. Checkout stamps
+  `affiliateCode` on the session and subscription; the webhook records one
+  referral per subscription and one 20% `AffiliateCommission` per paid invoice,
+  after entitlement and never fatal. The intro coupon, when on, keeps the one
+  discount slot. Paid out by hand ("Mark paid"). All four tables private.
+  [2026-10-16](../DECISIONS.md#L17655)
 - **Free 14-day trial (2026-10-12; replaces the $1 first month below):**
   `PREMIUM_TRIAL_DAYS` 14 and `PREMIUM_TRIAL_FEE_CENTS` 0 by default, card
   required, prices unchanged. Leave price, trial and pitch alone until two

@@ -87,7 +87,9 @@ test("checkout: monthly, never-paid accounts get the coupon; codes are not offer
   const route = read("src/app/api/premium/checkout/route.ts");
   const builder = read("src/lib/checkout-params.ts");
   assert.match(route, /introOfferEnabled\(\) && plan === "monthly" && !\(await hasEverPaid\(dbUser\?\.stripeCustomerId\)\)/);
-  assert.match(builder, /\.\.\.\(coupon \? \{ discounts: \[\{ coupon \}\] \} : \{ allow_promotion_codes: true \}\)/);
+  // One discount slot: the intro coupon, else a creator code's discount (2026-10-16), else codes typed at Stripe.
+  assert.match(builder, /const discounts = coupon \? \[\{ coupon \}\] : affiliateDiscount \? \[affiliateDiscount\] : null;/);
+  assert.match(builder, /\.\.\.\(discounts \? \{ discounts \} : \{ allow_promotion_codes: true \}\)/);
   // A coupon Stripe rejects (deleted in the dashboard, still cached on a warm
   // instance) retries once at full price instead of a 500 (2026-09-25 review).
   assert.match(route, /param\.startsWith\("discounts"\)[\s\S]*forgetIntroCoupons\(\);[\s\S]*create\(null\)/);

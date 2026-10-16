@@ -18,7 +18,7 @@ import { ownerEmail } from "./owner";
 export const MAX_PER_HOUR = 8;
 export const MAX_PER_DAY = 25;
 
-export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support";
+export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate";
 
 export interface InboxItem {
   kind: InboxKind;
@@ -37,7 +37,11 @@ const LABEL: Record<InboxKind, string> = {
   "store-suggestion": "Store suggestion",
   "price-report": "Wrong-price report",
   support: "Support ticket",
+  affiliate: "Creator code application",
 };
+
+/** Where the email's button goes: creator applications are reviewed in /admin/affiliates. */
+const inboxHref = (kind: InboxKind) => `${SITE_URL}${kind === "affiliate" ? "/admin/affiliates" : "/admin/messages"}`;
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}…` : s);
 const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();
@@ -59,12 +63,12 @@ export function buildInboxEmail(item: InboxItem): { subject: string; html: strin
         ? `<tr><td style="padding:10px 32px 6px"><div style="background:#0b0e14;border:1px solid #233047;border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.6;color:#e6ebf2;white-space:pre-wrap">${escapeHtml(clip(item.body.trim(), 2000))}</div></td></tr>`
         : ""
     }
-    <tr><td style="padding:12px 32px 22px"><a href="${SITE_URL}/admin/messages" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open the inbox →</a></td></tr>`;
+    <tr><td style="padding:12px 32px 22px"><a href="${inboxHref(item.kind)}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open the inbox →</a></td></tr>`;
   const text = [
     `${label}${item.from ? ` from ${item.from}` : ""}`,
     ...rows.map(([k, v]) => `${k}: ${clip(oneLine(v), 300)}`),
     item.body ? `\n${clip(item.body.trim(), 2000)}` : "",
-    `\nInbox: ${SITE_URL}/admin/messages`,
+    `\nInbox: ${inboxHref(item.kind)}`,
   ]
     .filter(Boolean)
     .join("\n");

@@ -68,6 +68,12 @@ const TOOLS: Tool[] = [
     desc: "Paid store consulting sessions — who booked, what they want out of the hour, and who filled in the form but never finished checkout.",
   },
   {
+    href: "/admin/affiliates",
+    title: "Creator codes",
+    icon: "🎟️",
+    desc: "Creator code applications, each creator's code and sign-ups, and the 20% commission owed on every payment made with it.",
+  },
+  {
     href: "/admin/messages",
     title: "Inbox",
     icon: "✉️",

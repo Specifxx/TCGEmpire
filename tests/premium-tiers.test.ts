@@ -111,8 +111,9 @@ test("checkout stamps tier on BOTH the session and the subscription metadata", (
   // lib/premium-surface.ts — and rides alongside tier on both objects.
   // `intro` (2026-09-24) flags a checkout carrying the half-price intro coupon;
   // `trialFeeCents` (2026-09-30) is what a trial cost to start.
-  assert.match(src, /metadata:\s*\{\s*kind:\s*"premium",\s*userId:\s*i\.userId,\s*trial:[\s\S]*?tier,(\s*\.\.\.surfaceMeta,?)?\s*\}/, "session metadata must carry tier");
-  assert.match(src, /subscription_data:\s*\{[\s\S]{0,1200}metadata:\s*\{\s*userId:\s*i\.userId,\s*tier,(\s*intro:[^,]*,)?(\s*\.\.\.\(trial \? \{ trialFeeCents: String\(fee\) \} : \{\}\),)?(\s*\.\.\.surfaceMeta,?)?\s*\}/, "subscription_data.metadata must ALSO carry tier");
+  // `...affiliateMeta` (2026-10-16) is the creator code, on both objects too.
+  assert.match(src, /metadata:\s*\{\s*kind:\s*"premium",\s*userId:\s*i\.userId,\s*trial:[\s\S]*?tier,(\s*\.\.\.surfaceMeta,?)?(\s*\.\.\.affiliateMeta,?)?\s*\}/, "session metadata must carry tier");
+  assert.match(src, /subscription_data:\s*\{[\s\S]{0,1200}metadata:\s*\{\s*userId:\s*i\.userId,\s*tier,(\s*intro:[^,]*,)?(\s*\.\.\.\(trial \? \{ trialFeeCents: String\(fee\) \} : \{\}\),)?(\s*\.\.\.surfaceMeta,?)?(\s*\.\.\.affiliateMeta,?)?\s*\}/, "subscription_data.metadata must ALSO carry tier");
   // The lock-in guarantee test (premium-price-increase.test.ts) already pins
   // `price: priceId` — confirm the tier/plan resolution feeds that same var.
   assert.match(read("src/app/api/premium/checkout/route.ts"), /const priceId = priceIdFor\(tier, plan\)/);

@@ -222,6 +222,7 @@ async function core(): Promise<SitemapEntry[]> {
     // still links it, so it remains crawlable and the link graph is untouched.
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/about") },
     { url: `${SITE_URL}/creators`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/creators") },
+    { url: `${SITE_URL}/creators/apply`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/creators/apply") },
     // The widget directory. Submitted rather than left to the footer because it
     // is the page partnership outreach links to, and the whole point of that
     // outreach is that another site's webmaster lands here and copies a snippet.

@@ -1896,3 +1896,76 @@ model AuctionAlertSent {
   @@unique([email, itemId, country])
   @@index([sentAt])
 }
+
+// ── Creator affiliate codes (2026-10-16, owner) ─────────────────────────────
+// A Riftbound creator applies at /creators/apply; the owner approves in
+// /admin/affiliates, which creates their code (and its Stripe promotion code on
+// the shared 20%-off coupon). A subscriber who uses the code gets 20% off; every
+// paid invoice on that subscription records the creator's 20% commission. All
+// PRIVATE: never in PUBLIC_MODELS or the public export (lib/creator-affiliate.ts).
+model AffiliateApplication {
+  id            String    @id @default(cuid())
+  name          String
+  email         String
+  platform      String
+  channelUrl    String
+  audience      String?
+  preferredCode String?
+  message       String?
+  status        String    @default("pending") // pending | approved | rejected
+  affiliateId   String?
+  createdAt     DateTime  @default(now())
+  reviewedAt    DateTime?
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+model Affiliate {
+  id                    String                @id @default(cuid())
+  name                  String
+  email                 String
+  // Upper case, letters and digits (lib/creator-affiliate-code.ts normaliseAffiliateCode).
+  code                  String                @unique
+  percentOff            Int                   @default(20)
+  commissionPercent     Int                   @default(20)
+  // The Stripe promotion code that carries `code` on Stripe's own checkout page.
+  stripePromotionCodeId String?
+  active                Boolean               @default(true)
+  createdAt             DateTime              @default(now())
+  referrals             AffiliateReferral[]
+  commissions           AffiliateCommission[]
+}
+
+// One subscription a creator's code started (or was entered on).
+model AffiliateReferral {
+  id                   String                @id @default(cuid())
+  affiliateId          String
+  userId               String?
+  stripeSubscriptionId String                @unique
+  stripeCustomerId     String?
+  createdAt            DateTime              @default(now())
+  affiliate            Affiliate             @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  commissions          AffiliateCommission[]
+
+  @@index([affiliateId])
+}
+
+// One paid invoice on a referred subscription: what the subscriber paid and
+// the creator's share of it. One row per invoice, so webhook retries are safe.
+model AffiliateCommission {
+  id              String             @id @default(cuid())
+  affiliateId     String
+  referralId      String?
+  stripeInvoiceId String             @unique
+  amountPaidCents Int
+  currency        String
+  commissionCents Int
+  paidOut         Boolean            @default(false)
+  paidOutAt       DateTime?
+  createdAt       DateTime           @default(now())
+  affiliate       Affiliate          @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  referral        AffiliateReferral? @relation(fields: [referralId], references: [id], onDelete: SetNull)
+
+  @@index([affiliateId, paidOut])
+}

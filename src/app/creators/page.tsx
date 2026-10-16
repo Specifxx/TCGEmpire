@@ -252,6 +252,17 @@ export default function CreatorsPage() {
         </p>
       </section>
 
+      {/* Creator codes (2026-10-16): the paid programme has its own page. */}
+      <section className="mt-10 rounded-3xl border border-gold/30 bg-gold/[0.06] p-6 sm:p-8">
+        <h2 className="text-2xl font-extrabold text-white">Earn with your own code</h2>
+        <p className="mt-1 text-sm leading-relaxed text-slate-300">
+          Get a RiftCompare creator code: your audience gets 20% off Plus and Premium, and you earn 20% of every payment they make.
+        </p>
+        <Link href="/creators/apply" className="btn-primary mt-4 inline-flex min-h-11 items-center px-5">
+          Apply for a creator code →
+        </Link>
+      </section>
+
       {/* Apply */}
       <section id="apply" className="mt-10 scroll-mt-header rounded-3xl border border-brand-500/25 bg-gradient-to-br from-brand-500/10 via-ink-900 to-ink-900 p-6 sm:p-8">
         <h2 className="text-2xl font-extrabold text-white">Get featured</h2>

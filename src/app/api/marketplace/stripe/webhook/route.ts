@@ -16,6 +16,7 @@ import {
 import { CONSULT_DURATION_MIN, CONSULT_REPLY_HOURS, CONSULT_SCHEDULING_URL } from "@/lib/consulting";
 import { sendConsultConfirmationEmail, sendConsultOwnerAlertEmail } from "@/lib/email";
 import { CONTACT_EMAIL, SITE_URL } from "@/lib/site";
+import { recordAffiliateCheckout, recordAffiliateCommission } from "@/lib/creator-affiliate";
 
 export const dynamic = "force-dynamic";
 // Stripe needs the raw, unparsed body to verify the signature.
@@ -80,7 +81,10 @@ export async function POST(req: Request) {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded": {
         const session = event.data.object as Stripe.Checkout.Session;
-        if (session.metadata?.kind === "premium") await premiumStarted(session);
+        if (session.metadata?.kind === "premium") {
+          await premiumStarted(session);
+          await creatorReferral(session, event.id);
+        }
         // The paid store consulting session (/stores/consulting) — the one
         // non-subscription checkout on the account.
         else if (session.metadata?.kind === "store_consult") await consultBookingPaid(session, event.id);
@@ -253,6 +257,27 @@ async function refundTrialFee(session: Stripe.Checkout.Session) {
   }
 }
 
+// ── Creator codes (2026-10-16, lib/creator-affiliate.ts) ───────────────────────
+// Recorded AFTER entitlement and never fatal to it: a failure is logged with the
+// [affiliate] tag and the event still succeeds, so a bug here can never cost a
+// subscriber their access or make Stripe retry an entitlement write. Both writes
+// are idempotent (one referral per subscription, one commission per invoice).
+async function creatorReferral(session: Stripe.Checkout.Session, eventId: string) {
+  try {
+    await recordAffiliateCheckout(session);
+  } catch (e) {
+    console.error(`[affiliate] stripe webhook ${eventId}: referral not recorded:`, e);
+  }
+}
+
+async function creatorCommission(invoice: unknown, sub: unknown, eventId: string) {
+  try {
+    await recordAffiliateCommission(invoice, sub);
+  } catch (e) {
+    console.error(`[affiliate] stripe webhook ${eventId}: commission not recorded:`, e);
+  }
+}
+
 // Renewal invoices: resolve the subscription across payload generations, then
 // the user (subscription metadata → stored customer id), then extend.
 async function premiumRenewed(invoice: unknown, eventId: string) {
@@ -267,6 +292,7 @@ async function premiumRenewed(invoice: unknown, eventId: string) {
     throw e; // 500 → Stripe retries
   }
   await stampFromSubscription(sub, eventId, customerIdOf(invoice));
+  await creatorCommission(invoice, sub, eventId);
 }
 
 async function premiumSubscriptionChanged(sub: unknown, eventId: string) {

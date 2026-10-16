@@ -8,6 +8,10 @@ import { introOfferEnabled } from "@/lib/site";
 import { buildCheckoutSessionParams } from "@/lib/checkout-params";
 import { parseCheckoutSelection, sanitizeBackPath } from "@/lib/premium-start";
 import { isPremiumSurface } from "@/lib/premium-surface";
+import { cookies } from "next/headers";
+import { affiliateCheckoutDiscount, findActiveAffiliate } from "@/lib/creator-affiliate";
+import { AFFILIATE_COOKIE } from "@/lib/creator-affiliate-code";
+import type { CheckoutAffiliate } from "@/lib/checkout-params";
 
 export const dynamic = "force-dynamic";
 
@@ -91,6 +95,20 @@ export async function POST(req: Request) {
     });
   }
 
+  // A creator code (2026-10-16, lib/creator-affiliate.ts): the one /premium's
+  // code box or a creator's /r/CODE link remembered, else one sent in the body.
+  // If its Stripe discount cannot be read the checkout still opens, at full
+  // price but with the code stamped, so the creator is still credited.
+  let affiliate: CheckoutAffiliate | null = null;
+  const creator = await findActiveAffiliate(cookies().get(AFFILIATE_COOKIE)?.value ?? body?.affiliateCode).catch(() => null);
+  if (creator) {
+    const discount = await affiliateCheckoutDiscount(creator).catch((e) => {
+      console.error("[affiliate] creator code discount unavailable — checkout continues without it:", e);
+      return null;
+    });
+    affiliate = { code: creator.code, percentOff: creator.percentOff, discount };
+  }
+
   try {
     // The one-time fee line must be in the plan Price's own currency (Stripe
     // refuses mixed currencies in one Checkout), so a paid trial reads it off the
@@ -101,6 +119,7 @@ export async function POST(req: Request) {
     // coupon Stripe rejects — deleted in the dashboard while a warm instance
     // still caches its id — can be retried once at full price instead of
     // failing the whole checkout (review, 2026-09-25).
+    let dropAffiliateDiscount = false;
     const sessionParams = (coupon: string | null, adaptivePricing = true): Stripe.Checkout.SessionCreateParams =>
       buildCheckoutSessionParams({
         userId: user.id,
@@ -112,6 +131,7 @@ export async function POST(req: Request) {
         currency,
         trial: trialEligible ? { days: PREMIUM_TRIAL_DAYS, feeCents: PREMIUM_TRIAL_FEE_CENTS } : null,
         coupon,
+        affiliate: affiliate && dropAffiliateDiscount ? { ...affiliate, discount: null } : affiliate,
         surface,
         back,
         adaptivePricing,
@@ -136,9 +156,10 @@ export async function POST(req: Request) {
       session = await create(introCoupon);
     } catch (e) {
       const param = (e as { param?: string }).param ?? "";
-      if (!introCoupon || !param.startsWith("discounts")) throw e;
-      console.error("intro coupon rejected by Stripe — retrying checkout at full price:", e);
-      forgetIntroCoupons();
+      if (!(introCoupon || affiliate?.discount) || !param.startsWith("discounts")) throw e;
+      console.error("discount rejected by Stripe — retrying checkout at full price:", e);
+      if (introCoupon) forgetIntroCoupons();
+      dropAffiliateDiscount = true;
       session = await create(null);
     }
     return NextResponse.json({ url: session.url });

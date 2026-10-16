@@ -85,7 +85,7 @@ test("checkout and welcome: the trial stated as dated terms, not an undated 'can
   // before day 30. Then it's … unless you cancel from your account page."
   const checkout = code("src/lib/checkout-params.ts");
   // Since 2026-10-12 the note may be followed by the adaptive-pricing currency line.
-  assert.match(checkout, /\.\.\.\(trial\s*\?\s*\{\s*custom_text: \{\s*submit: \{\s*message:\s*trialCheckoutMessage\(trial, afterTrialPrice\(tier, plan, coupon\)\)/);
+  assert.match(checkout, /\.\.\.\(trial\s*\?\s*\{\s*custom_text: \{\s*submit: \{\s*message:\s*trialCheckoutMessage\(trial, afterTrialPrice\(tier, plan, coupon(, affiliateDiscount \? i\.affiliate!\.percentOff : 0)?\)\)/);
   assert.match(checkout, /We'll email you a day or two before day \$\{trial\.days\}/);
   assert.match(checkout, /We'll email you a day or two before your \$\{trial\.days\}-day trial ends/, "the free-trial wording, only for a fee of 0");
   const welcome = code("src/app/premium/welcome/page.tsx");

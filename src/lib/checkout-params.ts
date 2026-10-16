@@ -25,6 +25,20 @@
 // A returning customer (`trial: null`) gets the plain checkout: no trial, no fee.
 import type Stripe from "stripe";
 import { SITE_URL, TIER_NAMES, introPriceLine, premiumCurrencySymbol, tierAnnualAmount, tierMonthlyAmount, type PremiumTierKey } from "./site";
+import { discountedAmount } from "./creator-affiliate-code";
+
+/**
+ * A creator code at checkout (2026-10-16, lib/creator-affiliate.ts). `code` is
+ * always stamped on the session and the subscription, which is how every later
+ * payment is credited to the creator. `discount` is the Stripe discount to apply,
+ * or null when the intro coupon already holds the one discount slot (the code
+ * still earns the creator their commission then).
+ */
+export interface CheckoutAffiliate {
+  code: string;
+  percentOff: number;
+  discount: { promotion_code: string } | { coupon: string } | null;
+}
 
 export interface CheckoutTrial {
   /** Trial length in days (>= 1). */
@@ -47,6 +61,8 @@ export interface CheckoutParamsInput {
   trial: CheckoutTrial | null;
   /** The intro half-price coupon id, or null (off by default since 2026-09-26). */
   coupon: string | null;
+  /** A creator code, or null. */
+  affiliate?: CheckoutAffiliate | null;
   surface?: string | null;
   /** A sanitized on-site path to return to. */
   back?: string | null;
@@ -62,8 +78,9 @@ export interface CheckoutParamsInput {
 }
 
 /** The plan's price after the trial, in the words the checkout text uses: "$2.99/month" or "$23.99/year". */
-export function afterTrialPrice(tier: PremiumTierKey, plan: "monthly" | "annual", coupon: string | null): string {
-  return plan === "annual" ? `${tierAnnualAmount(tier)}/year` : coupon ? introPriceLine(tier) : `${tierMonthlyAmount(tier)}/month`;
+export function afterTrialPrice(tier: PremiumTierKey, plan: "monthly" | "annual", coupon: string | null, percentOff = 0): string {
+  const cut = (a: string) => (percentOff > 0 ? discountedAmount(a, percentOff) : a);
+  return plan === "annual" ? `${cut(tierAnnualAmount(tier))}/year` : coupon ? introPriceLine(tier) : `${cut(tierMonthlyAmount(tier))}/month`;
 }
 
 /**
@@ -87,6 +104,11 @@ export const ADAPTIVE_PRICING_NOTE = " These amounts are in US dollars; Stripe s
 export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Checkout.SessionCreateParams {
   const { tier, plan, trial, coupon, priceId } = i;
   const surfaceMeta: { surface?: string } = i.surface ? { surface: i.surface } : {};
+  // The creator code rides on both metadata blocks; its discount takes the one
+  // discount slot only when the intro coupon does not.
+  const affiliateMeta: { affiliateCode?: string } = i.affiliate ? { affiliateCode: i.affiliate.code } : {};
+  const affiliateDiscount = !coupon && i.affiliate?.discount ? i.affiliate.discount : null;
+  const discounts = coupon ? [{ coupon }] : affiliateDiscount ? [affiliateDiscount] : null;
   const fee = trial?.feeCents ?? 0;
 
   // ONE-TIME line: only for a paid trial. Inline price_data (no `recurring`) in the
@@ -126,6 +148,7 @@ export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Check
       intro: coupon ? "1" : "0",
       tier,
       ...surfaceMeta,
+      ...affiliateMeta,
     },
     subscription_data: {
       // Stamped here too (not just on the session) because session metadata
@@ -141,6 +164,7 @@ export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Check
         intro: coupon ? "1" : "0",
         ...(trial ? { trialFeeCents: String(fee) } : {}),
         ...surfaceMeta,
+        ...affiliateMeta,
       },
       // A first-timer's trial, the same length on both tiers and both plans (annual
       // just converts to the yearly price after it ends). A card is required up
@@ -160,7 +184,7 @@ export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Check
           custom_text: {
             submit: {
               message:
-                trialCheckoutMessage(trial, afterTrialPrice(tier, plan, coupon)) +
+                trialCheckoutMessage(trial, afterTrialPrice(tier, plan, coupon, affiliateDiscount ? i.affiliate!.percentOff : 0)) +
                 (i.adaptivePricing ? ADAPTIVE_PRICING_NOTE : ""),
             },
           },
@@ -175,8 +199,8 @@ export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Check
     success_url: `${SITE_URL}/premium/welcome?session_id={CHECKOUT_SESSION_ID}${i.back ? `&back=${encodeURIComponent(i.back)}` : ""}`,
     cancel_url: `${SITE_URL}${i.back ?? "/premium"}`,
     // Stripe refuses `discounts` together with allow_promotion_codes, so a
-    // checkout carrying the intro offer takes no second code; everyone else can
-    // still enter one.
-    ...(coupon ? { discounts: [{ coupon }] } : { allow_promotion_codes: true }),
+    // checkout carrying the intro offer or a creator code takes no second code;
+    // everyone else can still enter one (a creator code typed there works too).
+    ...(discounts ? { discounts } : { allow_promotion_codes: true }),
   };
 }

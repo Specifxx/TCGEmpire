@@ -22,6 +22,10 @@ import { PremiumPricingCards } from "@/components/PremiumPricingCards";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { SubscriptionActions } from "@/components/SubscriptionActions";
 import { PremiumMissingGrid } from "@/components/PremiumMissingGrid";
+import { cookies } from "next/headers";
+import { CreatorCodeBox } from "@/components/CreatorCodeBox";
+import { findActiveAffiliate } from "@/lib/creator-affiliate";
+import { AFFILIATE_COOKIE, normaliseAffiliateCode } from "@/lib/creator-affiliate-code";
 import {
   SITE_URL,
   PREMIUM_PRICE_AMOUNT,
@@ -183,7 +187,7 @@ const FAQ: { q: string; a: string }[] = [
     : []),
 ];
 
-export default async function PremiumPage({ searchParams }: { searchParams?: { keep?: string } }) {
+export default async function PremiumPage({ searchParams }: { searchParams?: { keep?: string; code?: string } }) {
   const user = await getCurrentUser();
   const already = isPremium(user);
   const checkoutLive = premiumCheckoutEnabled();
@@ -231,6 +235,10 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   const currentTier = premiumTierOf(user);
   // The half-price intro, quoted only to viewers checkout would give it to.
   const introEligible = !already && (await introEligibleFor(dbUser));
+  // A creator code remembered from a creator's link (/r/CODE) or the code box
+  // (lib/creator-affiliate.ts). One indexed read, only when the cookie is set.
+  const savedCode = !already ? normaliseAffiliateCode(cookies().get(AFFILIATE_COOKIE)?.value) : null;
+  const creator = savedCode ? await findActiveAffiliate(savedCode).catch(() => null) : null;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -367,6 +375,14 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           <p className="mx-auto mt-3 max-w-2xl text-center text-[11px] text-slate-400">
             {user ? "Cancel anytime · secure checkout by Stripe" : "Sign in on the next screen, checkout opens straight after · Cancel anytime · secure checkout by Stripe"}
           </p>
+
+          {/* Creator codes (2026-10-16): 20% off at checkout. */}
+          <div className="mt-3">
+            <CreatorCodeBox
+              initial={creator ? { code: creator.code, name: creator.name, percentOff: creator.percentOff } : null}
+              fromUrl={normaliseAffiliateCode(searchParams?.code)}
+            />
+          </div>
         </>
       )}
 
