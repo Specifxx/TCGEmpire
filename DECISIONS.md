@@ -17913,7 +17913,7 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 
 **Not done:** an ops-monitor check (there is no external service or quota behind it) and a leaderboard (a collection is personal).
 
-## The store audit: 61 stores added, 2 dead and 105 ghost stores purged, 5 moved to sealed-only, 3 Canadian stores filed under the wrong market — 2026-10-16
+## The store audit: 59 stores added, 2 dead and 105 ghost stores purged, 5 moved to sealed-only, 3 Canadian stores filed under the wrong market — 2026-10-16
 
 **Owner:** "take a look at all the stores … I'm sure there's a lot of stores that have shown up … stores that … might have been decommissioned … let's take a look at all the stores and … any stores that are new and popular and … get rid of the stores that … have been dead."
 
@@ -17947,7 +17947,7 @@ Every candidate was vetted the same way: its own collection list, then its Riftb
 - Monster Card Corner: per-set collections, including Radiance singles listed ahead of release.
 - 7th City: three promo collections.
 
-**Added (61)**, each 80–100% matched, mostly 95%+:
+**Added (59)**, each 80–100% matched, mostly 95%+:
 
 | Market | Stores |
 |---|---|
@@ -17955,17 +17955,17 @@ Every candidate was vetted the same way: its own collection list, then its Riftb
 | US (9) | DK's Cards (803), The Hub TCG (711), Tier 1 Games (703), The Vault Game Store (697), Spanky's (280), Card Father (182), Game Grid Idaho Falls (161), QuickTCG (70), All Access (57) |
 | UK (3) | Archeron Games (1,418), eTOYSWORLD (530), The TCG Group (106) |
 | SG (3) | 1Collectibles (861), Mana Pro (749), SC Collection (690) |
-| CA (34) | KadOone (1,432), 3 Mana (1,139), Fantasy Forged (1,003), Claw Me Baby, Prestige, Kunai, Abyss, Draw for Turn, The Drop, Torchlight, Kingdom Titans, Le Coin du Jeu, Amuse N Games, Cartes Léo, Emmett's, Manta, NexPack CA, Geek & Co., Anime Alley, Jeux 3 Dragons, PvP Shoppe, Twin Moons, Screen Free Games, Common Box, Sunny Hobbies, PokéJeux, Mana Confluence, 203 Collectibles, Abby Boardwalk, Negative Zone, The Side Deck, MasterSet, New Realm, Springer (plus Chonky and The CG Realm, moved in) |
+| CA (32) | KadOone (1,432), 3 Mana (1,139), Fantasy Forged (1,003), Claw Me Baby, Kunai, Abyss, Draw for Turn, The Drop, Torchlight, Kingdom Titans, Le Coin du Jeu, Amuse N Games, Cartes Léo, Emmett's, Manta, NexPack CA, Geek & Co., Anime Alley, Jeux 3 Dragons, PvP Shoppe, Screen Free Games, Common Box, Sunny Hobbies, PokéJeux, Mana Confluence, 203 Collectibles, Abby Boardwalk, Negative Zone, The Side Deck, MasterSet, New Realm, Springer (plus Chonky and The CG Realm, moved in) |
 | EU (4) | SpellNexus (1,247), Shopponi (1,046), Fire and Dice (658), Cards Beyond (359; a Prague store that charges EUR to a Spanish cart) |
 
 Canada is most of it. Its Riftbound web-shop scene has grown fastest since the 2026-09-09 sweep, and much of it is in and around Markham.
 
-The registry goes from 172 to 226 stores. Every Shopify `products.json` call is a few pages a store, so an import goes from about 20 to about 26 minutes against `refresh-prices.yml`'s 90-minute limit.
+The registry goes from 172 to 224 stores. Every Shopify `products.json` call is a few pages a store, so an import goes from about 20 to about 26 minutes against `refresh-prices.yml`'s 90-minute limit.
 
-**Postage** was measured for every new and moved store (`probe-shipping-rates.ts --store=…`, merged by `build-shipping-rates.ts`). Raptor Games ships (Tuesdays and Fridays) but shows rates only inside checkout. It is on the labelled estimate (`status: "unmeasured"`), not "no-post", so it stays in Best Basket.
+**Postage** was measured for every new and moved store (`probe-shipping-rates.ts --store=…`, merged by `build-shipping-rates.ts`). Raptor Games ships (Tuesdays and Fridays) but shows rates only inside checkout. It is on the labelled estimate (`status: "unmeasured"`), not "no-post", so it stays in Best Basket. PvP Shoppe (ships to CA and the US, rates only in checkout) is the same.
 
 **Not added, and why:**
-- **Columbus Card Shop** (its site: "Our online store is not currently accepting orders").
+- **Columbus Card Shop** (its site: "Our online store is not currently accepting orders"), and two that cleared the bar but do not post: **Prestige Games** ("We currently do not offer shipping") and **Twin Moons** ("we only offer store pick up"). A price nobody outside the town can order is not a comparison.
 - **MERCHANT** (merchanttcg.com, about 900 singles). It sells English and French as variants of one product, and the importer's variant pick has no language filter, so a French copy could price the English card. It needs a variant language gate first.
 - **Otakura.** Its titles carry no collector numbers: 0% matched.
 - **Plenty of Games' own domain.** It is the store already tracked through its myshopify address.

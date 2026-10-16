@@ -114,6 +114,9 @@ export const SHIPPING_OVERRIDES: Record<string, ShippingOverride> = {
   // yet /cart/shipping_rates.json was empty at all eight capitals on
   // 2026-10-16: rates come from a checkout app. On the estimate, not dropped.
   raptorgames: { status: "unmeasured", note: "Posts (Tuesdays and Fridays), but its rates are only shown inside checkout" },
+  // PvP Shoppe (Markham) ships to Canada and the US (/meta.json), but
+  // /cart/shipping_rates.json was empty at every Canadian address, 2026-10-16.
+  pvpshoppe: { status: "unmeasured", note: "Ships to Canada and the US, but its rates are only shown inside checkout" },
   // ── Stores that do not post (at all, or to this market) ──
   // Each re-probed 2026-09-25 (every cart empty at New York, San Francisco,
   // Dallas and Chicago) and checked through the Storefront API (no delivery

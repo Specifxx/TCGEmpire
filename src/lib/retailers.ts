@@ -2492,17 +2492,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$8.00",
     country: "CA",
   },
-  // Unionville ON; 885 in stock, 98% matched.
-  prestigegames: {
-    key: "prestigegames",
-    name: "Prestige Games",
-    base: "https://prestigegames.ca",
-    collections: ["riftbound-singles"],
-    shippingFlatCents: 800,
-    freeOverCents: 0,
-    shippingNote: "est. C$8.00",
-    country: "CA",
-  },
   // Windsor ON; 873 in stock, 98% matched.
   kunaigames: {
     key: "kunaigames",
@@ -2575,17 +2564,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     name: "PvP Shoppe",
     base: "https://pvpshoppe.com",
     collections: ["riftbound-instock", "riftbound-singles-legend"],
-    shippingFlatCents: 800,
-    freeOverCents: 0,
-    shippingNote: "est. C$8.00",
-    country: "CA",
-  },
-  // Richmond Hill ON; 367 in stock, 99% matched.
-  twinmoonstcg: {
-    key: "twinmoonstcg",
-    name: "Twin Moons Cards & Games",
-    base: "https://twinmoonstcg.com",
-    collections: ["riftbound"],
     shippingFlatCents: 800,
     freeOverCents: 0,
     shippingNote: "est. C$8.00",

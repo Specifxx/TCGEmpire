@@ -26,7 +26,7 @@ Months: [October 2026](#october-2026) · [September 2026](#september-2026) · [A
 
 | Date | Entry | Line |
 | --- | --- | ---: |
-| 2026-10-16 | [The store audit: 61 stores added, 2 dead and 105 ghost stores purged, 5 moved to sealed-only, 3 Canadian stores filed under the wrong market](../DECISIONS.md#L17916) | 17916 |
+| 2026-10-16 | [The store audit: 59 stores added, 2 dead and 105 ghost stores purged, 5 moved to sealed-only, 3 Canadian stores filed under the wrong market](../DECISIONS.md#L17916) | 17916 |
 | 2026-10-16 | [RiftCompare Coins: a free gacha collection for Premium members](../DECISIONS.md#L17866) | 17866 |
 | 2026-10-16 | [The arcade pauses Auto ads too](../DECISIONS.md#L17845) | 17845 |
 | 2026-10-16 | [Halloween ("Nocturne is coming"), scroll-driven motion, and Riftbound 2048 retired](../DECISIONS.md#L17797) | 17797 |

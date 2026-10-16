@@ -47,6 +47,7 @@ test("Chonky Collectibles and The CG Realm are the Ontario stores they are", () 
   assert.ok(c.collections.length >= 4);
   assert.equal(RETAILERS.cgrealm.country, "CA", "ships to Canada only: its US prices were a conversion no US buyer could order");
   assert.ok(!RETAILERS.columbuscardshop, "its online store is not taking orders");
+  for (const k of ["prestigegames", "twinmoonstcg"]) assert.ok(!RETAILERS[k], `${k} is pickup only`);
 });
 
 test("the audit's additions are in the market they charge in", () => {
