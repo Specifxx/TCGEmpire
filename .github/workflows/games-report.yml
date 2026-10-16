@@ -1,0 +1,71 @@
+name: Games report (read-only)
+
+# How each /games/* mini-game is doing (2026-10-16, owner: "get rid of the two
+# games that are like the worst performing"). Read-only: Google Search clicks
+# and impressions per game page over 28 days, and how many signed-in players
+# have a saved best score per game (GameScore), all-time and in the last 30
+# days. Prints to the job log and the run summary; writes nothing.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Search traffic per game page (28 days)
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+        run: |
+          node <<'JS'
+          const crypto = require("crypto"); const fs = require("fs");
+          if (!process.env.GSC_SA_KEY) { console.log("No GSC_SA_KEY"); process.exit(0); }
+          const sa = JSON.parse(process.env.GSC_SA_KEY);
+          const site = encodeURIComponent("https://riftcompare.com/");
+          const b64 = (b) => Buffer.from(b).toString("base64").replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+          const day = (n) => new Date(Date.now() - n*864e5).toISOString().slice(0,10);
+          (async () => {
+            const now = Math.floor(Date.now()/1000);
+            const h = b64(JSON.stringify({alg:"RS256",typ:"JWT"}));
+            const c = b64(JSON.stringify({iss:sa.client_email,scope:"https://www.googleapis.com/auth/webmasters.readonly",aud:"https://oauth2.googleapis.com/token",iat:now,exp:now+3600}));
+            const s = crypto.createSign("RSA-SHA256"); s.update(h+"."+c);
+            const r = await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",assertion:h+"."+c+"."+b64(s.sign(sa.private_key))})});
+            const at = (await r.json()).access_token;
+            const res = await fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${site}/searchAnalytics/query`,{method:"POST",headers:{Authorization:"Bearer "+at,"Content-Type":"application/json"},body:JSON.stringify({startDate:day(28),endDate:day(2),dimensions:["page"],dimensionFilterGroups:[{filters:[{dimension:"page",operator:"contains",expression:"/games"}]}],rowLimit:100})});
+            const rows = ((await res.json()).rows || []).sort((a,b)=>b.clicks-a.clicks||b.impressions-a.impressions);
+            const out = ["## Search traffic per game page (28 days)", ...rows.map(r=>`- ${r.keys[0].replace("https://riftcompare.com","")} — ${r.clicks} clicks · ${r.impressions} impr · pos ${r.position.toFixed(1)}`)];
+            console.log(out.join("\n")); fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, out.join("\n")+"\n");
+          })().catch(e => { console.error(e); });
+          JS
+      - name: Saved scores per game
+        env:
+          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
+        run: |
+          cat > /tmp/games.ts <<'TS'
+          import { PrismaClient } from "@prisma/client";
+          import { appendFileSync } from "node:fs";
+          const p = new PrismaClient();
+          (async () => {
+            const since = new Date(Date.now() - 30 * 864e5);
+            const all = await p.gameScore.groupBy({ by: ["game"], _count: { _all: true }, orderBy: { game: "asc" } });
+            const recent = await p.gameScore.groupBy({ by: ["game"], where: { updatedAt: { gte: since } }, _count: { _all: true }, orderBy: { game: "asc" } });
+            const rooms = await p.gameRoom.count({ where: { createdAt: { gte: since } } });
+            const r = new Map(recent.map((x) => [x.game, x._count._all]));
+            const out = ["## Players with a saved score", ...all.sort((a, b) => b._count._all - a._count._all).map((x) => `- ${x.game} — ${x._count._all} all-time · ${r.get(x.game) ?? 0} in 30 days`), `- sealed-bid rooms created in 30 days (rooms are purged after their TTL): ${rooms}`];
+            console.log(out.join("\n"));
+            appendFileSync(process.env.GITHUB_STEP_SUMMARY!, out.join("\n") + "\n");
+            await p.$disconnect();
+          })();
+          TS
+          cp /tmp/games.ts ./games-report.tmp.ts && npx tsx ./games-report.tmp.ts
