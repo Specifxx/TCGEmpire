@@ -5,7 +5,8 @@
 // node tests can read the same list as the session (lib/auth.ts) without
 // importing next/headers: an env-listed admin is entitled everywhere the
 // session says so, including when the alert cron decides who gets paid alerts.
-export const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "mastermisclick@gmail.com,bill.jyang101@gmail.com")
+// georgelu721@gmail.com added 2026-10-16 (owner: "Make georgelu721@gmail.com an admin").
+export const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "mastermisclick@gmail.com,bill.jyang101@gmail.com,georgelu721@gmail.com")
   .split(",")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
