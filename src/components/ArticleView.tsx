@@ -180,7 +180,7 @@ function CardCloseUpFig({ cu, card }: { cu: ArticleCloseUp; card?: CardTileData 
         {card.slug && (
           <>
             {" "}
-            <Link href={`/card/${card.slug}`} className="text-brand-400 hover:underline">
+            <Link prefetch={false} href={`/card/${card.slug}`} className="text-brand-400 hover:underline">
               (view {card.name} →)
             </Link>
           </>

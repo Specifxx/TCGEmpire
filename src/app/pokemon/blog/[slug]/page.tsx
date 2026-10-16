@@ -19,8 +19,8 @@ import { PokemonPostView } from "@/components/pokemon/PokemonPostView";
 // Drafts render only where draftVisible() is true (development, Vercel
 // preview), with a banner and noindex,nofollow; in production a draft is a
 // 404. A catalogue read error throws, so ISR keeps serving the last good page
-// rather than caching an error or a 404 for six hours.
-export const revalidate = 21600;
+// rather than caching an error or a 404 for a day.
+export const revalidate = 86400;
 
 // An EMPTY list: each post is rendered and cached on its first visit, none at
 // build (CLAUDE.md: no prewarming of database-backed routes).

@@ -24,7 +24,7 @@ export function HomeBelowMarket({ rows, currency, asOf }: { rows: BelowMarketRow
         {rows.map(({ tile: t, pctUnder }) => (
           <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
             <div className="min-w-0">
-              <Link href={`/pokemon/sealed/${t.slug}`} className="tap-link-block font-semibold text-slate-200 hover:text-brand-300 hover:underline">
+              <Link prefetch={false} href={`/pokemon/sealed/${t.slug}`} className="tap-link-block font-semibold text-slate-200 hover:text-brand-300 hover:underline">
                 <span className="line-clamp-2">{t.name}</span>
               </Link>
               <div className="truncate text-xs text-slate-500">{t.setName ?? "No set"}</div>

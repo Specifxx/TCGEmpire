@@ -50,7 +50,7 @@ export function ProductFacts({ facts, prose }: { facts: Facts; prose: ProseBlock
                       {r.isThis ? (
                         <span className="font-semibold text-white">{r.name}</span>
                       ) : (
-                        <Link href={`/pokemon/sealed/${r.slug}`} className="text-brand-400 hover:underline">
+                        <Link prefetch={false} href={`/pokemon/sealed/${r.slug}`} className="text-brand-400 hover:underline">
                           {r.name}
                         </Link>
                       )}

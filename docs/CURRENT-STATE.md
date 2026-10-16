@@ -70,10 +70,14 @@ longer lands on its entry.
   `BIG_RESULT_ROWS` / `_BYTES` are temporarily 200 rows / 400 KB; restore
   500 / 1 MB once audit-egress has measured the fix.
   [2026-09-14](../DECISIONS.md#L6263)
-- **Left alone on purpose:** card pages purge after each of the two daily
-  imports, and the 5-minute keep-warm stays (compute, not transfer). Still
-  the owner's call: purging once a day, and narrowing `refresh-prices.yml`'s
-  `push` trigger, which starts a full import when an importer file changes.
+- **No import purge in files mode (2026-10-16):** with `PUBLIC_DATA_MODE=files`
+  the pages serve the release's snapshot, so `/api/revalidate` answers 202
+  "skipped" (`importPurgeIsNoop`) unless `?force=1`; the daily release is what
+  refreshes them. In `db`/`fallback` mode card pages purge after each import as
+  before. The 5-minute keep-warm stays (compute, not transfer). Still the
+  owner's call: narrowing `refresh-prices.yml`'s `push` trigger, and the
+  Pokémon section (off, or 301 to DexCompare).
+  [2026-10-16](../DECISIONS.md#L18017)
   [2026-09-11](../DECISIONS.md#L4871), [2026-09-11](../DECISIONS.md#L5303),
   [2026-09-11](../DECISIONS.md#L5370), [2026-09-23](../DECISIONS.md#L11091)
 - **The burn is still unidentified.** RM9, RM10 and RM12 all went live after

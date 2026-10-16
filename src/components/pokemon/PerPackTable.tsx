@@ -166,7 +166,7 @@ export function PerPackTable({
 function ProductCell({ tile, showKind }: { tile: PkTile; showKind: boolean }) {
   return (
     <span className="inline-block min-w-0 align-top">
-      <Link href={`/pokemon/sealed/${tile.slug}`} className="font-semibold text-white hover:text-brand-300 hover:underline">
+      <Link prefetch={false} href={`/pokemon/sealed/${tile.slug}`} className="font-semibold text-white hover:text-brand-300 hover:underline">
         {tile.name}
       </Link>
       <span className="block text-xs text-slate-500">

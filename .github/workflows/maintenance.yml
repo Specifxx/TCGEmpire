@@ -272,8 +272,10 @@ jobs:
             echo "::error::No CRON_SECRET secret — cannot revalidate."
             exit 1
           fi
+          # ?force=1: an explicit purge runs even in PUBLIC_DATA_MODE=files, where
+          # the import's own purge is skipped (lib/revalidate-content.ts).
           code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 -X POST \
-            "$SITE_URL/api/revalidate" -H "Authorization: Bearer $CRON_SECRET" || true)
+            "$SITE_URL/api/revalidate?force=1" -H "Authorization: Bearer $CRON_SECRET" || true)
           echo "revalidate -> HTTP ${code:-000}"
           [ "$code" = "200" ]
 

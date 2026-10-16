@@ -204,7 +204,7 @@ function HubTable({ tiles, currency, country, perPack }: { tiles: PkTile[]; curr
             return (
               <tr key={t.id} className={XL.row}>
                 <td className={`${XL.cell} col-span-full xl:min-w-[13rem]`}>
-                  <Link href={`/pokemon/sealed/${t.slug}`} className="font-semibold text-white hover:text-brand-300 hover:underline">
+                  <Link prefetch={false} href={`/pokemon/sealed/${t.slug}`} className="font-semibold text-white hover:text-brand-300 hover:underline">
                     {t.name}
                   </Link>
                   <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
@@ -283,7 +283,7 @@ function StoresLink({ tile, currency }: { tile: PkTile; currency: string }) {
   const price = storePriceCents(d);
   return (
     <div className="mt-0.5">
-      <Link href={`/pokemon/sealed/${tile.slug}`} className="tap-link text-xs text-emerald-300 hover:underline">
+      <Link prefetch={false} href={`/pokemon/sealed/${tile.slug}`} className="tap-link text-xs text-emerald-300 hover:underline">
         {price != null ? (
           <>
             <span className="whitespace-nowrap">{storesWord(d.inStock)} from&nbsp;</span>

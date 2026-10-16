@@ -342,7 +342,7 @@ test("both share-card routes: lowercase cache-control (a day, never immutable), 
     assert.doesNotMatch(code, /immutable/, f);
     assert.doesNotMatch(code, /"Cache-Control"/, `${f}: a capitalised key would sit beside Next's default, not replace it`);
     assert.match(code, /export const runtime = "nodejs";/, f);
-    assert.match(code, /export const revalidate = 21600;/, f);
+    assert.match(code, /export const revalidate = 86400;/, f);
     assert.match(code, /if \(!pokemonEnabled\(\)\) notFound\(\);/, f);
     assert.match(code, /PokemonBrandOgImage/, `${f}: a missing item draws the brand card, never a 500`);
   }
