@@ -43,6 +43,8 @@ import { storeCountsByCountry } from "@/lib/cards";
 import { RADIANCE_FAQ } from "@/lib/sets/radiance";
 import { faqPage } from "@/lib/jsonld";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { ChaseWatchCta } from "@/components/ChaseWatchCta";
+import { getRadianceChaseCards } from "@/lib/radiance-watch";
 import { guidesForSet } from "@/lib/content/related-guides";
 import { getRiftboundStocksLinks, rbsSetUrl } from "@/lib/riftboundstocks";
 
@@ -321,6 +323,7 @@ export default async function SetPage({
   if (!set) notFound();
 
   const country = getCountry();
+  const chaseCards = set.slug === "radiance" ? await getRadianceChaseCards() : [];
   // Sister-site link map (lib/riftboundstocks.ts): started now, awaited at
   // render; never rejects, null when unreachable.
   const rbsLinks = getRiftboundStocksLinks();
@@ -618,6 +621,9 @@ export default async function SetPage({
           header, and again after the first major section (the reveals strip).
           No capture here — RadianceHub already carries the release-day form. */}
       {set.slug === "radiance" && <RadiancePreorderCta placement="top" />}
+      {/* "Follow the chase cards" (2026-10-16 growth pass): one click makes an
+          account already watching Radiance's Signature and over-numbered cards. */}
+      {set.slug === "radiance" && chaseCards.length > 0 && <ChaseWatchCta cards={chaseCards} released={!set.comingSoon} />}
       {set.slug === "radiance" && <RadianceReveals data={radianceReveals} />}
       {set.slug === "radiance" && <RadiancePreorderCta placement="section" />}
       {set.slug === "radiance" && <RadianceHub country={country} />}

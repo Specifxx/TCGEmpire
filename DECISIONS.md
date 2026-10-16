@@ -18154,3 +18154,51 @@ A real card page still made 3 ad requests and showed its filled 390px unit; its 
 **Not fixable here.** While a slot above the hero is still loading on a slow connection, it is blank until the ad paints. The only way to keep Auto ads from placing there at all is the AdSense console: Auto ads → Excluded areas, picking the area above the hero on a homepage.
 
 **Tests (`mobile-ads`, `ad-free-tier`):** the one CSS rule, and that no other rule hides Google slots; every pause stamps `data-ads-paused` and every release removes it; the boot script's stamps for members, the arcade and the list builders.
+
+## Growth: meet readers where they are (chase-card watch, pull tracker, outreach kit) — 2026-10-16
+
+**Owner:** "I need more people to register … I'm not getting anyone register for premium … be my marketing specialist … if I use meta ads … my customer acquisition cost is more than … a customer pays in a lifetime … come up with something … we haven't done before." Plus: "anything that needs to get deployed, deploy it."
+
+**What the numbers said** (`funnel-report`, `impact-report`, `gsc-queries`, `audit-users`, all run 2026-10-16):
+- **Accounts and money:** 480 real accounts, 16 active Premium, US$46.59 MRR.
+- **New accounts a week:** 55, 56, 40, 31, 35, 39, then 23 (24 Aug → 5 Oct).
+- **Google clicks a day:** 204 (12 Sep–8 Oct) → 130 (9–15 Oct). Accounts per 100 Google clicks held at 2.4–2.6, so sign-ups fell with traffic. The removed popup (122 of the last 290 accounts) was the other part.
+- **Activation within 7 days:** alert sign-ups 100%, header/login 26–30%, the popup 12%.
+- **Search:** about four in five visits are readers. Top pages in 28 days: the Radiance spoilers post (733 clicks), leaked mechanics (359), the Deploy / Disarm / Show Off explainers (643) and the card list (292). Price searches brought 41 clicks.
+
+**Diagnosis.** The site asked readers to compare prices. What they wanted was to follow a set. Paid ads were tried and "didn't pencil" (MARKETING-PLAN), and at a lifetime value of tens of dollars they still cannot. Premium's price, trial and pitch stay frozen until the 14-day cohorts mature (2026-10-12 entry). So the levers are the top of the funnel and activation, which is what feeds Premium (trialists with an alert or card cancel 13% of the time, against 38% without).
+
+**1. "Follow Radiance's chase cards"** (`components/ChaseWatchCta.tsx`, `lib/radiance-watch.ts`):
+- **What it does.** One Google or Discord click makes a free account that is already watching eight chase cards (five Signatures, three over-numbered Legends), with emails when each gets its first price and when it drops. Signed in, it is one "Watch all 8" click.
+- **Where it sits.** It replaces the email box after the intro on every Radiance post, so a post still asks once. It also sits on `/sets/radiance` and its gallery. The email-only newsletter stays behind "Just email me instead". Page content, never a popup.
+- **Mechanism.** `SignupWelcome`'s pending watch now takes a list (`cardIds`, capped at 12, stopping at the free limit), so the existing one-card path is unchanged.
+- **Why eight.** Eight fits the free watchlist of ten, and a free member who uses the rest meets the upgrade panel sooner.
+- **Attribution.** Source `radiance_watch`; event `chase_watch_all`.
+
+**2. The pull tracker** (`/tools/pull-tracker/<set>`, `lib/pull-tracker.ts`, `components/PullTracker.tsx`):
+- **What it does.** Tap what a box or pack gave you; it values each card at the cheapest in-stock store price in your market and compares the total with what you paid (pre-filled for Radiance from the cheapest open box pre-order). Your pulls are kept in the browser.
+- **Saving.** "Save to my binder" sends the pulls through the collection import's printing-aware CSV path in one request (source `pull_tracker`; signed out, it finishes after sign-in).
+- **Sharing.** "Share" makes `/tools/pull-tracker/<set>/s/<code>`. The code is the pulls, the price paid and the market, base64url-encoded into one path segment, so a shared result needs no database row, carries nothing private, and is an ordinary ISR page (21600, `noindex`). Its preview uses the generic `/api/og` card ("Radiance pulls · US$X · from a US$Y buy").
+- **Timing.** Pre-Rift weekend (17–20 Oct) and release day (23 Oct) are when everyone opens boxes.
+- **Data.** One read per set (`getPullSetCards`, cached 21600, promos excluded). Five set pages are in the sitemap; there is no static prewarming.
+
+**3. The outreach kit, made easy to send.** `docs/GROWTH-PLAYBOOK-2026-10.md` gives the owner, in order:
+- a launch post for the tracker
+- turning on the Discord bot (its install link is still hidden: `NEXT_PUBLIC_DISCORD_APP_ID` unset)
+- a Claude-in-Chrome prompt that works through the stores one at a time (report link, store page, a drafted note shown for approval before sending)
+- a creator-recruiting prompt for the code programme
+- the Brevo check
+
+The store contact list (public contact pages and emails of the 224 tracked stores) went to the owner as a file, not into the repo: it holds email addresses, and the repo publishes `data/`.
+
+**Not done, deliberately:**
+- No popup on the landing page.
+- No paid ads.
+- No Premium price, trial or pitch change.
+- No email blast: the stores are contacted one at a time, with approval.
+- The Deploy / Disarm explainer readers (the second-largest group) still get the general email box. A "learn to play → build your first deck for $X" hook for them is the next candidate.
+
+**Read it** around 28 Oct:
+- `impact-report` with `CHANGE_DATES=2026-10-17`: accounts per 100 Google clicks (2.5 before).
+- `funnel-report`: the `radiance_watch` and `pull_tracker` source rows and their activation.
+- GA4: `pull_share` counts, which are the distribution.

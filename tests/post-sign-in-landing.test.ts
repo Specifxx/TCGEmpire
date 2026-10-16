@@ -40,8 +40,11 @@ test("a new account returned to its page gets one quiet 'account ready' toast po
   const w = code("src/components/SignupWelcome.tsx");
   assert.match(w, /markSignupSession\(\);/);
   assert.match(w, /if \(pathname !== "\/dashboard"\) \{\s*setToast\("Your free account is ready\."\);\s*setToastAction\(\{ href: "\/dashboard", label: "Get set up →" \}\);/);
-  // A completed pending watch is more specific, so its toast takes over and drops the action.
-  assert.equal((w.match(/setToastAction\(null\);/g) ?? []).length, 2);
+  // A completed pending watch is more specific, so its toast takes over and drops
+  // the action (one path since 2026-10-16, when a single card and the chase-card
+  // list became one loop; a list's toast then offers "See them →").
+  assert.equal((w.match(/setToastAction\(null\);/g) ?? []).length, 1);
+  assert.match(w, /setToastAction\(\{ href: "\/watching", label: "See them →" \}\);/);
   assert.match(w, /action=\{\s*toastAction \?/);
 });
 

@@ -450,6 +450,12 @@ longer lands on its entry.
   currency) and retries without it if Stripe refuses; the pay-button note stays
   in US dollars and says so. `payment-failures-report` (maintenance) shows why
   Stripe refused a charge. [2026-10-12](../DECISIONS.md#L16892)
+- **Growth levers (2026-10-16), no paid ads:** Radiance posts and set pages
+  lead with "Follow Radiance's chase cards" (one OAuth click = an account
+  already watching 8 cards, `radiance_watch`); the pull tracker
+  (`/tools/pull-tracker/<set>`, `pull_tracker`) shares results by a link that
+  carries the pulls, no database row. The owner's outreach list is
+  `docs/GROWTH-PLAYBOOK-2026-10.md`. [2026-10-16](../DECISIONS.md#L18158)
 - **Sign-up prompts live in the page, plus one gated corner card (card restored 10-15):**
   `SignupSlideIn`, signed out only, from the 2nd page of a visit (never the
   landing page; the 4th until 10-16), 12 s, once a session, two ✕ and it stops

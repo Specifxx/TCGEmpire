@@ -76,7 +76,9 @@ test("SignupWelcome completes a watch stashed before the OAuth round trip", () =
   // took the account path in the alert modal had a pending watch too.
   assert.match(src, /localStorage\.getItem\(PENDING_WATCH_KEY\)/);
   assert.match(src, /localStorage\.removeItem\(PENDING_WATCH_KEY\)/);
-  // `{ onLimit }` (2026-09-28): at the free watchlist limit the toast says the
-  // card wasn't added.
-  assert.match(src, /watch\(pending\.cardId, pending\.market as Country, \{ onLimit \}\)/);
+  // `onLimit` (2026-09-28): at the free watchlist limit the toast says the
+  // card wasn't added. Since 2026-10-16 the stash may hold a list (the chase
+  // cards); one card is the same path with a list of one.
+  assert.match(src, /const ok = await watch\(id, market, \{ onLimit: /);
+  assert.match(src, /pending\.cardId \? \[pending\.cardId\]/);
 });

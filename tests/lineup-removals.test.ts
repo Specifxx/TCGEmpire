@@ -113,7 +113,7 @@ test("the tools index lists only the kept tools, with the badges their gates ear
   const src = read("src/app/tools/page.tsx");
   const groups = src.slice(src.indexOf("const GROUPS"), src.indexOf("export default function"));
   const hrefs = [...groups.matchAll(/href: "([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(hrefs, ["/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand", "/portfolio/sets", "/tools/box-ev", "/sealed", "/deck", "/trade", "/tools/selling-fees"]);
+  assert.deepEqual(hrefs, ["/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand", "/portfolio/sets", "/tools/box-ev", "/tools/pull-tracker/radiance", "/sealed", "/deck", "/trade", "/tools/selling-fees"]);
   const badgeFor = (href: string) => {
     const at = groups.indexOf(`href: "${href}"`);
     return /badge: ([^,\n]+),/.exec(groups.slice(at, groups.indexOf("}", at)))?.[1];

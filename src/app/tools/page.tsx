@@ -143,6 +143,11 @@ const GROUPS: ToolGroup[] = [
         desc: "Is ripping a booster box worth it? Compare a box's price against the expected pull value.",
       },
       {
+        href: "/tools/pull-tracker/radiance",
+        title: "Pull tracker",
+        desc: "Opened a box? Tap what you pulled, see what it is worth against what you paid, save it to your binder or share it.",
+      },
+      {
         href: "/sealed",
         title: "Sealed prices",
         desc: `Booster boxes, packs, Proving Grounds and bundles priced across stores, with an in-stock-at-MSRP flag — and, with Plus, a watch that emails you on a restock or at RRP, checked ${SEALED_CHECK_CADENCE}.`,

@@ -219,6 +219,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // too: its free top-10 strip answers them for everyone.
       { href: "/tools/demand", label: "Demand Finder", keywords: ["demand", "most viewed", "most searched", "popular cards", "what players are searching for", "search trends"] },
       { href: "/tools/box-ev", label: "Box EV Calc", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
+      { href: "/tools/pull-tracker/radiance", label: "Pull Tracker", keywords: ["pulls", "what did i pull", "box value", "pack opening", "log my pulls", "radiance pulls"] },
       { href: "/tools/selling-fees", label: "Selling Fee Calc", keywords: ["tcgplayer fees", "ebay fees", "selling fees", "net proceeds", "marketplace commission"] },
       { href: "/tools", label: "All Tools", keywords: ["tools", "calculators", "utilities"] },
     ],

@@ -59,6 +59,8 @@ export const SIGNUP_SOURCES = new Set<string>([
   "premium_cta", // the /premium pricing-card button
   "premium_dialog", // the tool blur-wall upsell dialog
   "coins", // /coins' "Sign in" for a signed-out visitor (2026-10-16, RiftCompare Coins)
+  "radiance_watch", // "Follow Radiance's chase cards" on Radiance posts and set pages (2026-10-16 growth pass)
+  "pull_tracker", // the pull tracker's "Save to my binder" (2026-10-16 growth pass)
   // "Create a free account" on Deal Finder / Rising Cards' signed-out preview,
   // which promises the top three (2026-09-23). Separate from "gate", which is
   // retired, so the two can never be read as one series.

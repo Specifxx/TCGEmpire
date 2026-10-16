@@ -36,6 +36,8 @@ import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { isCurrentSetCode } from "@/lib/constants";
 import { resolveArticleCardMentions } from "@/lib/card-mentions-server";
 import { ReleaseAlertSignup } from "./ReleaseAlertSignup";
+import { ChaseWatchCta } from "./ChaseWatchCta";
+import { getRadianceChaseCards } from "@/lib/radiance-watch";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { setByCode } from "@/lib/constants";
 import { RADIANCE_SET_CODE } from "@/lib/sets/radiance";
@@ -303,6 +305,10 @@ export async function ArticleView({ article }: { article: Article }) {
   // rule does not expire.
   const preorderCta = carriesRadiancePreorderCta(article);
   const radianceAlertOpen = !!setByCode(RADIANCE_SET_CODE)?.comingSoon;
+  // Radiance posts lead with "Follow the chase cards" instead of the email box
+  // (2026-10-16 growth pass, components/ChaseWatchCta.tsx): their readers came
+  // for the spoilers, and one click makes an account that is already watching.
+  const chaseCards = article.tags.includes("radiance") ? await getRadianceChaseCards() : [];
 
   // All galleries: `embeds` (positioned in the body via [[embed:N]] markers) plus
   // the legacy single `embed` (always rendered after the body). Close-ups reuse the
@@ -545,7 +551,11 @@ export async function ArticleView({ article }: { article: Article }) {
             return (
               <Fragment key={i}>
                 {intro.trim() ? <Markdown content={intro} cards={cards} /> : null}
-                <ArticleSignupCta placement="article_intro" radianceSeason={radianceSeason} />
+                {chaseCards.length ? (
+                  <ChaseWatchCta cards={chaseCards} released={!radianceSeason} className="my-6" />
+                ) : (
+                  <ArticleSignupCta placement="article_intro" radianceSeason={radianceSeason} />
+                )}
                 {firstSection.trim() ? <Markdown content={firstSection} cards={cards} /> : null}
                 {preorderCta && <RadiancePreorderCta placement="section" withSignup />}
                 {afterFirst.trim() ? <Markdown content={afterFirst} cards={cards} /> : null}

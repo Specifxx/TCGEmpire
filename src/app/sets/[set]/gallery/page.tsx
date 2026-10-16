@@ -16,6 +16,8 @@ import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar"
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { ChaseWatchCta } from "@/components/ChaseWatchCta";
+import { getRadianceChaseCards } from "@/lib/radiance-watch";
 import { guidesForSet } from "@/lib/content/related-guides";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -228,7 +230,11 @@ export default async function SetGalleryPage({ params }: { params: { set: string
   const set = setBySlug(params.set);
   if (!set) notFound();
 
-  const [cards, promos] = await Promise.all([getGalleryCards(set.code), getGalleryPromos(set.code)]);
+  const [cards, promos, chaseCards] = await Promise.all([
+    getGalleryCards(set.code),
+    getGalleryPromos(set.code),
+    set.slug === "radiance" ? getRadianceChaseCards() : Promise.resolve([]),
+  ]);
   const total = cards.length;
   const capped = total >= MAX_TILES;
   const priced = cards.filter((c) => c.lowestPriceCents != null).length;
@@ -381,6 +387,8 @@ export default async function SetGalleryPage({ params }: { params: { set: string
           </div>
         </div>
       </section>
+
+      {set.slug === "radiance" && chaseCards.length > 0 && <ChaseWatchCta cards={chaseCards} released={!preview} />}
 
       {total === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">

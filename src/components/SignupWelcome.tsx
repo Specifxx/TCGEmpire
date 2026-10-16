@@ -91,7 +91,7 @@ function SignupWelcomeInner() {
   // is why it keys off the signed-in state, not the welcome param.
   useEffect(() => {
     if (!loaded || !user || claimed.current) return;
-    let pending: { cardId?: string; market?: string } | null = null;
+    let pending: { cardId?: string; cardIds?: string[]; market?: string; label?: string } | null = null;
     try {
       const raw = localStorage.getItem(PENDING_WATCH_KEY);
       if (raw) pending = JSON.parse(raw);
@@ -99,23 +99,38 @@ function SignupWelcomeInner() {
     } catch {
       /* private mode / corrupt stash — nothing to complete */
     }
-    if (!pending?.cardId || !pending.market) return;
+    if (!pending?.market) return;
+    // One card (the card page's alert) or several (ChaseWatchCta's "follow the
+    // chase cards", 2026-10-16). Capped: a stash is client-written.
+    const ids = (Array.isArray(pending.cardIds) ? pending.cardIds : pending.cardId ? [pending.cardId] : [])
+      .filter((x): x is string => typeof x === "string" && x.length > 0 && x.length <= 64)
+      .slice(0, 12);
+    if (!ids.length) return;
     claimed.current = true;
+    const market = pending.market as Country;
+    const label = typeof pending.label === "string" ? pending.label.slice(0, 60) : null;
     // At the free watchlist limit the card is not added, and the toast says
     // so plainly (no upsell here: the upgrade panel belongs to the heart the
     // member taps next, lib/free-limits.ts).
-    const onLimit = (l: { limit: number }) => {
-      setToastAction(null);
-      setToast(`That card wasn't added — your watchlist is at the free limit of ${l.limit} cards.`);
-      setTimeout(() => setToast(null), 6000);
-    };
-    void watch(pending.cardId, pending.market as Country, { onLimit }).then((ok) => {
-      if (ok) {
-        setToastAction(null);
-        setToast("Watching that card ✓ — it's on your watchlist");
-        setTimeout(() => setToast(null), 5000);
+    void (async () => {
+      let added = 0;
+      let limitHit: number | null = null;
+      for (const id of ids) {
+        const ok = await watch(id, market, { onLimit: (l: { limit: number }) => (limitHit = l.limit) });
+        if (ok) added++;
+        if (limitHit !== null) break;
       }
-    });
+      setToastAction(null);
+      if (ids.length === 1) {
+        setToast(added ? "Watching that card ✓ — it's on your watchlist" : limitHit !== null ? `That card wasn't added — your watchlist is at the free limit of ${limitHit} cards.` : null);
+      } else if (added) {
+        setToast(`Following ${added} ${label ?? "cards"} ✓ — we'll email you when their prices move`);
+        setToastAction({ href: "/watching", label: "See them →" });
+      } else if (limitHit !== null) {
+        setToast(`Those cards weren't added — your watchlist is at the free limit of ${limitHit} cards.`);
+      }
+      setTimeout(() => setToast(null), 6000);
+    })();
   }, [loaded, user, watch]);
 
   return (
