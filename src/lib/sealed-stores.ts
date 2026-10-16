@@ -102,6 +102,74 @@ export const SEALED_ONLY_SHOPIFY: ShopifySealedStore[] = [
     country: "CA",
     currency: "CAD",
   },
+  // ── Moved here from RETAILERS, 2026-10-16 (store audit) ───────────────────
+  // Each one's Riftbound collections hold sealed product, accessories and
+  // event tickets, and few or no matchable singles, so as a singles store each
+  // read as broken. Same keys, so their sealed rows carry on; their old card
+  // rows are purged by SINGLES_RETIRED_RETAILERS (lib/retailers.ts).
+  {
+    // Live: 47 products, 23 in stock, none a single; never had a single row.
+    key: "hobbycollectorsaustralia",
+    name: "Hobby Collectors Australia",
+    base: "https://hobbycollectorsaustralia.com.au",
+    collections: ["riftbound-league-of-legends-tcg", "riftbound-league-of-legends-tcg-origins"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "AU",
+    currency: "AUD",
+  },
+  {
+    // Zatu (board-game.co.uk): 30 products, 7 in stock, all sealed.
+    key: "zatugames",
+    name: "Zatu Games",
+    base: "https://www.board-game.co.uk",
+    collections: ["riftbound"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "UK",
+    currency: "GBP",
+  },
+  {
+    // 28 products, 11 in stock, two of them singles (the rest sleeves and boxes).
+    key: "goblingaming",
+    name: "Goblin Gaming",
+    base: "https://www.goblingaming.co.uk",
+    collections: ["riftbound"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "UK",
+    currency: "GBP",
+  },
+  {
+    // Its `riftbound-single` collection has been empty since July; the general
+    // one holds decks, boxes and playmats.
+    key: "gamerslodge",
+    name: "The Gamers Lodge",
+    base: "https://thegamerslodge.com",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "UK",
+    currency: "GBP",
+  },
+  {
+    // Its singles are titled "Riftbound: Single Card - Ambessa, Matriarch of
+    // War (V.3 - Signed Showcase) 196*", with no set total, and never matched a
+    // card (0 rows since it was added). Its sealed and event range is real.
+    key: "rollnplay",
+    name: "Roll N Play",
+    base: "https://rollnplay.co.uk",
+    collections: ["riftbound", "riftbound-booster-box", "riftbound-packs", "riftbound-starter-decks"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "UK",
+    currency: "GBP",
+  },
 ];
 
 export const PRODUCT_PAGE_STORES: ProductPageStore[] = [

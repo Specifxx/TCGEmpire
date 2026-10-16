@@ -312,25 +312,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. $2.00 · free over $50",
   }, // registry sweep 2026-09-09: 494 in-stock singles, cur=AUD
-  hobbycollectorsaustralia: {
-    key: "hobbycollectorsaustralia",
-    name: "Hobby Collectors Australia",
-    base: "https://hobbycollectorsaustralia.com.au",
-    collections: ["riftbound-league-of-legends-tcg", "riftbound-league-of-legends-tcg-origins"],
-    shippingFlatCents: 200,
-    freeOverCents: 5000,
-    shippingNote: "est. $2.00 · free over $50",
-    // NO RIFTBOUND SINGLES (verified live 2026-09-10). Both handles above hold
-    // sealed product and accessories only, and the store's own
-    // `riftbound-league-of-legends-singles` collection exists but is EMPTY. The
-    // "51 in-stock singles" this line used to claim was the bug reported through
-    // the portfolio feedback form, not stock: the store shelves every game's
-    // singles in `all-singles-one-piece-pokemon-riftbound`, whose handle says
-    // "riftbound", so discovery pulled in 676 Pokémon/One Piece cards and
-    // resolveCardId's OGN default matched them to Riftbound cards by collector
-    // NUMERATOR alone. See OTHER_TCG_HANDLE and foreignTotal in price-import.ts.
-    // Kept in the list for its sealed stock and in case the singles shelf fills.
-  }, // registry sweep 2026-09-09: sealed only, cur=AUD
   reefsidegames: {
     key: "reefsidegames",
     name: "Reefside Games",
@@ -1048,31 +1029,14 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. £1.95 · free over £20",
     country: "UK",
   },
-  zatugames: {
-    key: "zatugames",
-    name: "Zatu Games",
-    base: "https://www.board-game.co.uk",
-    collections: ["riftbound"],
-    shippingFlatCents: 199,
-    freeOverCents: 5000,
-    shippingNote: "est. £1.99 · free over £50",
-    country: "UK",
-  },
-  goblingaming: {
-    key: "goblingaming",
-    name: "Goblin Gaming",
-    base: "https://www.goblingaming.co.uk",
-    collections: ["riftbound"],
-    shippingFlatCents: 199,
-    freeOverCents: 3000,
-    shippingNote: "est. £1.99 · free over £30",
-    country: "UK",
-  },
   monstercardcorner: {
     key: "monstercardcorner",
     name: "Monster Card Corner",
     base: "https://monstercardcorner.co.uk",
-    collections: ["riftbound-league-of-legends-tcg"],
+    // 2026-10-16 store audit: its singles moved out of the general collection
+    // (now sealed only) into per-set ones. Radiance singles are listed ahead of
+    // release; Origins is sold out today.
+    collections: ["riftbound-origins-singles", "riftbound-radiance-singles"],
     shippingFlatCents: 120,
     freeOverCents: 2000,
     shippingNote: "est. £1.20 · free over £20",
@@ -1198,47 +1162,19 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. £1.50 · free over £30",
     country: "UK",
   },
-  rollnplay: {
-    key: "rollnplay",
-    name: "Roll N Play",
-    base: "https://rollnplay.co.uk",
-    collections: ["riftbound"], // probe: 55 in stock
-    shippingFlatCents: 150,
-    freeOverCents: 3000,
-    shippingNote: "est. £1.50 · free over £30",
-    country: "UK",
-  },
-  gamerslodge: {
-    key: "gamerslodge",
-    name: "The Gamers Lodge",
-    base: "https://thegamerslodge.com",
-    collections: ["riftbound-single"], // probe: 13 in stock
-    shippingFlatCents: 150,
-    freeOverCents: 3000,
-    shippingNote: "est. £1.50 · free over £30",
-    country: "UK",
-  },
   // The two below stock Riftbound ORGANIZED-PLAY PROMO singles rather than a
   // general singles range — a small catalogue, but real cards at real GBP prices
   // (e.g. Knightly's "Jinx - Loose Cannon (251)" at £62.57), and promos are
   // exactly where a comparison site earns its keep. 7th City's 46 promo cards
   // were all out of stock at probe time, so it yields nothing until they restock
   // — tracked, never fabricated, same as the SG stores below.
-  knightlygaming: {
-    key: "knightlygaming",
-    name: "Knightly Gaming",
-    base: "https://knightlygaming.co.uk",
-    collections: ["riftbound-organized-play-promotional-cards-opp"],
-    shippingFlatCents: 150,
-    freeOverCents: 3000,
-    shippingNote: "est. £1.50 · free over £30",
-    country: "UK",
-  },
   seventhcity: {
     key: "seventhcity",
     name: "7th City Collectables",
     base: "https://7thcitycollectables.com",
-    collections: ["riftbound-promotional-cards"],
+    // 2026-10-16 store audit: promos are split across three collections now
+    // (47 products, 10 in stock, all matched).
+    collections: ["riftbound-promotional-cards", "riftbound-judge-promotional-cards", "riftbound-organized-play-promotional-cards"],
     shippingFlatCents: 150,
     freeOverCents: 3000,
     shippingNote: "est. £1.50 · free over £30",
@@ -1254,7 +1190,9 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     key: "tierzerogames",
     name: "Tier Zero Games",
     base: "https://tierzerogames.com",
-    collections: ["riftbound-singles"],
+    // 2026-10-16 store audit: `riftbound-singles` returns no products now; the
+    // singles are in `riftbound-single` (207 products, 94% matched).
+    collections: ["riftbound-single", "riftbound-singles"],
     shippingFlatCents: 150,
     freeOverCents: 2500,
     shippingNote: "est. £1.50 · free over £25",
@@ -1433,16 +1371,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // empty or fully sold out — 1,318 Riftbound products cataloged, every one out
   // of stock at probe time — so it prices nothing today and populates the
   // moment it restocks (tracked, never fabricated).
-  chonkycollectibles: {
-    key: "chonkycollectibles",
-    name: "Chonky Collectibles",
-    base: "https://chonkycollectibles.com",
-    collections: ["riftbound-origins-singles"],
-    shippingFlatCents: 250,
-    freeOverCents: 6000,
-    shippingNote: "est. S$2.50 · free over S$60",
-    country: "SG",
-  },
   // ---- SG leads checked and NOT added ----------------------------------------
   //   - cardscentral.com, duellerspoint.com, cardconnectsg.com, metagamestcg.com
   //     — real SG shops openly selling Riftbound SINGLES, but none is Shopify
@@ -1512,18 +1440,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     name: "Invasion Inc",
     base: "https://invasioncnc.ca",
     collections: ["riftbound-singles"],
-    shippingFlatCents: 299,
-    freeOverCents: 7500,
-    shippingNote: "est. C$2.99 · free over C$75",
-    country: "CA",
-  },
-  obsidiangames: {
-    key: "obsidiangames",
-    name: "Obsidian Games",
-    base: "https://obsidiangames.ca",
-    // Handle really is "-1"-suffixed (a duplicated collection on their store) —
-    // not a typo. Auto-discovery finds it either way.
-    collections: ["riftbound-singles-1", "riftbound-singles"],
     shippingFlatCents: 299,
     freeOverCents: 7500,
     shippingNote: "est. C$2.99 · free over C$75",
@@ -2099,6 +2015,21 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$2.99 · free over C$75",
     country: "CA",
   }, // registry sweep 2026-09-09: 12 in-stock singles, cur=CAD
+  // Moved from SG on 2026-10-16 (store audit). A Toronto store: CAD at
+  // checkout, ships to Canada only (/meta.json), and the 2026-09-25 postage
+  // probe already said so. Read with ?country=SG its every card was sold out,
+  // which is why it priced nothing for weeks. As CA: 595 of 932 singles in
+  // stock across the four set collections, 99% matched.
+  chonkycollectibles: {
+    key: "chonkycollectibles",
+    name: "Chonky Collectibles",
+    base: "https://chonkycollectibles.com",
+    collections: ["riftbound-origins-singles", "riftbound-spiritforged-singles", "riftbound-unleashed-singles", "vendetta-singles"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "CA",
+  },
   // ---- Canadian leads checked and NOT added ----------------------------------
   // Registry sweep (2026-09-09): 248 untracked CA registry domains probed beyond
   // this hand-built list; 216 rejected or already tracked under another domain.
@@ -2341,6 +2272,12 @@ export const RETAILER_LIST = Object.values(RETAILERS);
 //            "stale: no successful fetch in 202h" with 138 listings still live.
 export const DECOMMISSIONED_RETAILERS: readonly string[] = ["e4cards"];
 
+// Stores moved from RETAILERS to lib/sealed-stores.ts: their SINGLES rows must
+// go (nothing reads them for singles any more, so they would never expire) but
+// their sealed rows are still refreshed under the same key, so they are not
+// DECOMMISSIONED. 2026-10-16 store audit (DECISIONS.md, "The store audit").
+export const SINGLES_RETIRED_RETAILERS: readonly string[] = ["hobbycollectorsaustralia", "zatugames", "goblingaming", "gamerslodge", "rollnplay"];
+
 // Past this age, a store that returns no products has its rows expired rather
 // than kept. One bad run keeps yesterday's prices; three days is a store that
 // has stopped answering, and a price nobody can buy at. Above store-health's 30h
@@ -2392,14 +2329,14 @@ const STORES_WITH_POLICY = new Set([
   // shows the estimate rather than risking a link to a page nobody's checked.
   // UK
   "thistletavern", "cardgoblin", "axionnow", "spellboundgames", "totalcards",
-  "boardsandswords", "forbiddenplanet", "zatugames", "goblingaming",
+  "boardsandswords", "forbiddenplanet",
   "monstercardcorner",
   // UK round 2 — each fetched this session and confirmed to serve a real
   // /policies/shipping-policy page. The other four of that batch (Evolution,
   // Living Realms, Roll N Play, Knightly Gaming) 404 there and are deliberately
   // left out, so they keep showing the estimate rather than linking a dead page.
   "yardsgames", "redsun", "dicesaloon", "impactleague", "bulwarkgames",
-  "unioncounty", "moxinthehole", "gamerslodge", "seventhcity",
+  "unioncounty", "moxinthehole", "seventhcity",
   // SG — the first Singapore entry here. Only this one of the round-5 batch
   // publishes a policy page; the rest (incl. the big three singles catalogues) 404.
   "tefuda",

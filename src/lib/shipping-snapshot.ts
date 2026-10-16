@@ -191,9 +191,8 @@ export const SHIPPING_OVERRIDES: Record<string, ShippingOverride> = {
   goattcg: { freeFromCents: 8000, freeNote: "a 'FREE SHIPPING' checkout discount (S$79.00 still pays)" },
   tefuda: { freeFromCents: 3000, freeNote: "a 'FREE SG SHIPPING' checkout discount (S$29.50 still pays)" },
   // ── Thresholds the probe's rungs only bracket, narrowed from the store's own words ──
-  // A discarded run measured it and the clean run's thin stock could not reach
-  // it (its £50 rung stopped at £49.95, the next cart was £755.95).
-  rollnplay: { freeFromCents: 5450, freeNote: "over about £50 (a £54.50 cart went free on the first UK run; £49.95 still paid)" },
+  // (Roll N Play's £54.50 threshold left with the store, 2026-10-16: it is
+  // tracked for sealed only now, and postage here prices singles baskets.)
   // Banner "FREE Shipping On Orders $75+ (48 States)"; no Riftbound cart exists
   // between $73.00 (paid $9.00) and $80.50 (free). Its policy page's $150 is stale.
   knightandday: { freeFromCents: 7500, freeNote: "on orders of $75+ to the lower 48 (its site banner; a $73.00 cart still paid $9.00, $80.50 went free)" },

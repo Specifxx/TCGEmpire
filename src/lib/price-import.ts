@@ -8,7 +8,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { writeCardHistoryDay, writeGradedHistoryDay } from "./price-history-store";
 import { gradedSnapshot } from "./graded-history";
-import { DECOMMISSIONED_RETAILERS, RETAILER_LIST, RetailerInfo, STORE_ROWS_MAX_AGE_H } from "./retailers";
+import { DECOMMISSIONED_RETAILERS, RETAILER_LIST, RetailerInfo, SINGLES_RETIRED_RETAILERS, STORE_ROWS_MAX_AGE_H } from "./retailers";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
 import { importSealed } from "./sealed-import";
@@ -1729,6 +1729,13 @@ export async function importPrices(): Promise<ImportSummary> {
         `Purged ${purged.count} card + ${purgedSealed.count} sealed rows from decommissioned stores (${DECOMMISSIONED_RETAILERS.join(", ")}).`,
       );
     }
+  }
+
+  // Stores now tracked for sealed only (lib/sealed-stores.ts): their card rows
+  // go, their sealed rows stay. Idempotent like the purge above.
+  if (SINGLES_RETIRED_RETAILERS.length) {
+    const purged = await prisma.retailerPrice.deleteMany({ where: { retailer: { in: [...SINGLES_RETIRED_RETAILERS] } } });
+    if (purged.count) console.log(`Purged ${purged.count} card rows from stores now tracked for sealed only (${SINGLES_RETIRED_RETAILERS.join(", ")}).`);
   }
 
   for (const store of RETAILER_LIST) {
