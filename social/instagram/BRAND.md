@@ -12,7 +12,7 @@ Riot publishes no public brand guide, so these values are matched by eye.
 
 | Element | Riftbound does | We do |
 |---|---|---|
-| Wordmark | Chunky condensed caps, orange→gold gradient, swirl replacing the O | `RIFT ⟳OMPARE` in Anton with the same gradient; our green swirl C (`public/logo-c.png`) recoloured orange takes the swirl's place |
+| Wordmark | Chunky condensed caps, orange→gold gradient, swirl replacing the O | `⟳IFT COMPARE` in Anton with the same gradient; our swirl R (`public/logo-r-green.png`, the current mark) recoloured orange is the R |
 | Sub-lockup | "LEAGUE of LEGENDS" in white classical serif caps, small "of" | "RIFTBOUND price TRACKER" in Cinzel, small gold "price" |
 | Ribbon | "TRADING CARD GAME" in a thin gold bracket bar | "EVERY STORE · ONE SEARCH" in the same bar, dark-backed |
 | Background | Marbled energy swirl (icy blue/white on navy; Vendetta used red/green) | SVG turbulence marble, `#05070f → #0b1833 → #a9dcff` |
@@ -67,3 +67,5 @@ Fonts (all SIL Open Font License, in `fonts/`): Anton, Cinzel, Montserrat.
 > RiftCompare is fan-made and isn't endorsed by Riot Games.
 >
 > #Riftbound #RiftboundTCG #rbradiance #Evelynn #LeagueOfLegends #TCG
+
+The old RC logo (`public/logo-rc.png`, `logo-c.png`) is retired. Use only the swirl R, green in badges and orange-gold inside the wordmark.

@@ -35,22 +35,24 @@ body { background: #222; font-family: "Montserrat", sans-serif; color: var(--par
     linear-gradient(to bottom, rgba(5,7,15,.55), transparent 22%, transparent 70%, rgba(5,7,15,.85));
 }
 
-/* ── Wordmark: RIFT + swirl-C + OMPARE, orange→gold like the game's own lockup ── */
+/* ── Wordmark: swirl-R + IFT COMPARE, orange→gold like the game's own lockup.
+   The swirl R is the site's mark (public/logo-r-green.png, as BrandLogo.tsx
+   uses it), recoloured through a mask the way Riftbound's swirl sits in its O. ── */
 .lockup { position: absolute; left: 0; right: 0; top: 64px; display: flex; flex-direction: column; align-items: center; }
 .wordmark {
-  display: flex; align-items: flex-end; gap: 4px;
+  display: flex; align-items: flex-end;
   font-family: "Anton"; font-size: 132px; line-height: .86; letter-spacing: -1px;
   filter: drop-shadow(0 3px 0 #7a2d00) drop-shadow(0 10px 18px rgba(0,0,0,.6));
 }
-.wordmark .t, .wordmark .c {
+.wordmark .t, .wordmark .r {
   background: linear-gradient(180deg, var(--rift-gold) 0%, #ffb02e 38%, var(--rift-orange) 70%, #e2550c 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.wordmark .gap { width: 22px; }
-.wordmark .c {
-  width: 96px; height: 114px; margin: 0 2px 0 4px;
-  -webkit-mask: url(../../public/logo-c.png) center / contain no-repeat;
-  mask: url(../../public/logo-c.png) center / contain no-repeat;
+.wordmark .gap { width: 30px; }
+.wordmark .r {
+  width: 126px; height: 124px; margin: 0 -4px 0 0;
+  -webkit-mask: url(../../public/logo-r-green.png) center bottom / contain no-repeat;
+  mask: url(../../public/logo-r-green.png) center bottom / contain no-repeat;
   background-clip: border-box; -webkit-background-clip: border-box;
 }
 .sub {
@@ -94,7 +96,12 @@ body { background: #222; font-family: "Montserrat", sans-serif; color: var(--par
   font-weight: 700; font-size: 26px; color: var(--muted); letter-spacing: 1px;
 }
 .handle { display: flex; align-items: center; gap: 14px; color: #fff; font-weight: 800; font-size: 32px; }
-.handle img { height: 48px; }
+.handle .mark {
+  width: 50px; height: 50px; display: inline-block;
+  background: linear-gradient(#34d17e, #1ea65c);
+  -webkit-mask: url(../../public/logo-r-green.png) center / contain no-repeat;
+  mask: url(../../public/logo-r-green.png) center / contain no-repeat;
+}
 
 /* ── Price panel ── */
 .panel {
