@@ -9,6 +9,7 @@ import { TrendingChips } from "./TrendingChips";
 import { RiftEmbers } from "./RiftEmbers";
 import { BrandLogo } from "@/components/BrandLogo";
 import { NocturneComing } from "./NocturneComing";
+import { HalloweenDecor } from "./HalloweenDecor";
 import type { CardTileData } from "@/components/CardTile";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
 
@@ -105,6 +106,8 @@ export function CinematicHero({
           <div className="rb-vortex" />
         </div>
         <RiftEmbers />
+        {/* Above the embers' dark, so the jack-o'-lanterns glow through it. */}
+        <HalloweenDecor />
         <div className="rb-paranoia absolute inset-0" />
       </div>
 

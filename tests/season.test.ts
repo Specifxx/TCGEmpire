@@ -112,3 +112,18 @@ test("scroll motion is scroll-driven, guarded, and declared before the reduced-m
   assert.match(reveal, /CSS\.supports\("animation-timeline: view\(\)"\)/, "the observer path steps aside where CSS does it");
   assert.match(reveal, /stagger \? "rb-sd-stagger" : "rb-sd"/);
 });
+
+test("the Halloween set dressing is season-gated decoration: hidden by default, aria-hidden, cached art", () => {
+  const css = read("src/app/globals.css");
+  assert.match(css, /\.rb-decor,\s*\n\.rb-rail-web \{\s*display: none;/);
+  assert.match(css, /:root\[data-season="halloween"\] \.rb-decor,\s*\n:root\[data-season="halloween"\] \.rb-rail-web \{\s*display: block;/);
+  const decor = read("src/components/home/HalloweenDecor.tsx");
+  assert.match(decor, /if \(!seasonMarkupLive\("halloween"\)\) return null;/);
+  assert.match(decor, /<div className="rb-decor" aria-hidden="true">/);
+  assert.match(read("src/components/home/CinematicHero.tsx"), /<HalloweenDecor \/>/);
+  assert.match(read("src/components/SideNav.tsx"), /<span aria-hidden="true" className="rb-rail-web" \/>/);
+  for (const f of ["public/brand/cobweb.svg", "public/brand/pumpkin.svg"]) {
+    const svg = read(f);
+    assert.ok(svg.startsWith("<svg") && svg.length < 4000, `${f} stays a small vector file`);
+  }
+});

@@ -1032,7 +1032,8 @@ longer lands on its entry.
 - **Seasons and scroll motion (2026-10-16):** a season is a local-date window
   (`lib/season.ts`; Halloween 16-31 Oct) stamped as `data-season` on `<html>`
   before paint, so it starts and ends with no deploy; `?season=halloween|off`
-  previews it. Season markup lives in its own component (`NocturneComing`).
+  previews it. Season markup lives in its own components (`NocturneComing`,
+  `HalloweenDecor`), so a season comes out by deleting them.
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired

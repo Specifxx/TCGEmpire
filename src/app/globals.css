@@ -1154,6 +1154,89 @@ body {
 }
 :root[data-theme="light"] .rb-nocturne b { color: #2e1065; }
 :root[data-theme="light"] .rb-nocturne span { color: #5b21b6; }
+/* Set dressing (HalloweenDecor.tsx, SideNav): cobwebs in the hero's top
+   corners and the rail's, candlelit jack-o'-lanterns in the hero's bottom
+   corners. The web is a mask (public/brand/cobweb.svg) so each theme tints it;
+   the left one starts where the rail ends (--sidenav-w), not under it. */
+.rb-decor,
+.rb-rail-web {
+  display: none;
+}
+:root[data-season="halloween"] .rb-decor,
+:root[data-season="halloween"] .rb-rail-web {
+  display: block;
+}
+.rb-web,
+.rb-rail-web {
+  position: absolute;
+  top: 0;
+  aspect-ratio: 1;
+  background-color: rgb(225 220 255 / 0.34);
+  -webkit-mask: url(/brand/cobweb.svg) 0 0 / contain no-repeat;
+  mask: url(/brand/cobweb.svg) 0 0 / contain no-repeat;
+  pointer-events: none;
+}
+.rb-web {
+  width: clamp(92px, 13vw, 200px);
+}
+.rb-web-l {
+  left: var(--sidenav-w);
+}
+.rb-web-r,
+.rb-rail-web {
+  right: 0;
+  transform: scaleX(-1);
+}
+.rb-rail-web {
+  width: 76px;
+  z-index: 1;
+  background-color: rgb(225 220 255 / 0.22);
+}
+:root[data-theme="light"] .rb-web,
+:root[data-theme="light"] .rb-rail-web {
+  background-color: rgb(60 40 110 / 0.3);
+}
+.rb-pumpkins {
+  position: absolute;
+  bottom: 4px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+.rb-pumpkins-l {
+  left: calc(var(--sidenav-w) + 14px);
+}
+.rb-pumpkins-r {
+  right: 14px;
+}
+.rb-pumpkin {
+  display: block;
+  width: clamp(40px, 5.2vw, 84px);
+  aspect-ratio: 100 / 92;
+  background: url(/brand/pumpkin.svg) center / contain no-repeat;
+  filter: drop-shadow(0 0 10px rgb(255 140 30 / 0.5));
+  animation: rb-candle 2.6s ease-in-out infinite;
+}
+.rb-pumpkin-sm {
+  width: clamp(28px, 3.4vw, 54px);
+  animation-delay: -1.1s;
+}
+@keyframes rb-candle {
+  0%, 100% { filter: drop-shadow(0 0 10px rgb(255 140 30 / 0.5)); }
+  30% { filter: drop-shadow(0 0 16px rgb(255 160 40 / 0.75)); }
+  34% { filter: drop-shadow(0 0 7px rgb(255 130 30 / 0.4)); }
+  62% { filter: drop-shadow(0 0 18px rgb(255 170 50 / 0.8)); }
+}
+@media (max-width: 639.98px) {
+  /* Small and tucked into the corners: the market toggle runs almost the full
+     width at the bottom of the phone hero. */
+  .rb-pumpkin-sm { display: none; }
+  .rb-pumpkin { width: 30px; }
+  .rb-pumpkins { bottom: 2px; }
+  .rb-pumpkins-l { left: 6px; }
+  .rb-pumpkins-r { right: 6px; }
+}
+
 /* Two slanted, glowing eyes that blink. */
 .rb-eyes {
   display: inline-flex;

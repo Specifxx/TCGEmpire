@@ -17772,7 +17772,12 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
   - "Riftbound" glows violet;
   - "Nocturne is coming · see his price before he finds you" links to his real card (`/card/nocturne-horrifying-ogn-194-298`, the only Nocturne printing).
 - **The callout's placement:** it is its own component (`NocturneComing`), like `CreatorsCornerBadge`, so the hero's one secondary link stays its only one (`internal-linking`) and the season comes out by deleting one file.
-- **Sitewide:** the R mark flickers like a jack-o'-lantern.
+- **Sitewide:** the R mark flickers like a jack-o'-lantern, and on desktop a cobweb hangs in the rail's top corner.
+- **The usual Halloween things** (owner, same day: "the pumpkins, the bats, the cobwebs, the spiders"):
+  - **Cobwebs and pumpkins** (`HalloweenDecor`, decoration under the content): cobwebs in the hero's two top corners, the left one starting where the rail ends, and candlelit jack-o'-lanterns in its two bottom corners, flickering. The art is two cached SVG files: `public/brand/cobweb.svg`, used as a mask so each theme tints it, and `public/brand/pumpkin.svg`.
+  - **Spiders** (in the embers canvas): one hangs from each corner web on its silk. It bobs, bolts up the thread when the pointer comes within reach, and creeps back down.
+  - **Bats:** they cross on their own, and a click lets two out.
+  - **Phones:** the eyes sit out, because the content runs edge to edge and there is no dark margin, so they would peer out from behind the chips. The pumpkins shrink into the corners, clear of the market toggle.
 - **Unchanged colours:** buy buttons stay green, eBay blue, Premium gold.
 
 **Scroll motion is scroll-driven.**

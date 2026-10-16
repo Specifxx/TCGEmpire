@@ -12,7 +12,9 @@ import { useEffect, useRef } from "react";
 // going to come get you"): violet and ghost-blue wisps join the embers, the
 // hero sits in Nocturne's dark with the pointer as the only light, his eyes
 // open somewhere in the dark (and are gone the moment the light reaches
-// them), and bats cross the sky now and then.
+// them), bats cross the sky now and then (and burst out of a click), and a
+// spider hangs from each corner cobweb (HalloweenDecor), scuttling up its
+// thread when the pointer comes near and creeping back down after.
 //
 // Built so it costs the page nothing it cares about:
 //   - pure decoration on a <canvas> behind the content, aria-hidden and
@@ -43,6 +45,14 @@ interface Bat {
   size: number;
   phase: number;
   bob: number;
+}
+interface Spider {
+  ax: number; // thread's x
+  oy: number; // where the thread leaves the web
+  len: number; // current thread length
+  rest: number; // the length it creeps back down to
+  phase: number;
+  scaredUntil: number;
 }
 interface Eyes {
   x: number;
@@ -112,6 +122,7 @@ export function RiftEmbers() {
     let x0 = 0;
     let motes: Mote[] = [];
     let bats: Bat[] = [];
+    let spiders: Spider[] = [];
     let nextBat = 240;
     const eyes: Eyes = { x: 0, y: 0, a: 0, target: 0, until: 0, next: 120, blinkAt: 0 };
     const pointer = { x: 0, y: 0, tx: 0, ty: 0, on: 0, target: 0, lastSpark: 0 };
@@ -174,6 +185,14 @@ export function RiftEmbers() {
       while (embers.length < want) embers.push(ember(false));
       embers.length = want;
       motes = embers.concat(sparks);
+      // One spider under each corner web (globals.css .rb-web: clamp(92px,
+      // 13vw, 200px) wide), hanging from about a third of the way into it.
+      const web = Math.min(200, Math.max(92, window.innerWidth * 0.13));
+      const small = w < 640;
+      spiders = [
+        { ax: x0 + web * 0.42, oy: web * 0.3, rest: (small ? 46 : 80) + Math.random() * (small ? 20 : 50) },
+        { ax: w - web * 0.5, oy: web * 0.36, rest: (small ? 70 : 120) + Math.random() * (small ? 30 : 70) },
+      ].map((sp, i) => ({ ...sp, len: spiders[i]?.len ?? sp.rest, phase: Math.random() * Math.PI * 2, scaredUntil: 0 }));
       if (!pointer.on) {
         pointer.x = pointer.tx = (x0 + w) / 2;
         pointer.y = pointer.ty = h * 0.35;
@@ -210,6 +229,9 @@ export function RiftEmbers() {
     // His eyes open in the dark, away from the light, blink once, and close.
     // If the light comes within reach they are gone at once.
     const drawEyes = (dt: number) => {
+      // On a phone the hero's content runs edge to edge, so there is no dark
+      // margin for them to open in; they would peer out from behind the chips.
+      if (w < 640) return;
       if (t >= eyes.next && eyes.target === 0 && eyes.a < 0.02) {
         // Somewhere in the outer thirds, upper two-thirds of the hero, and not
         // where the pointer is.
@@ -321,6 +343,63 @@ export function RiftEmbers() {
       ctx.restore();
     };
 
+    // A spider on its silk: it bobs, and bolts up the thread if the pointer
+    // comes within reach, then creeps back down to where it was.
+    const drawSpiders = (dt: number) => {
+      const k = w < 640 ? 0.8 : 1;
+      ctx.save();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = 1;
+      for (const sp of spiders) {
+        const bodyY = sp.oy + sp.len;
+        if (pointer.on > 0.2 && Math.hypot(pointer.x - sp.ax, pointer.y - bodyY) < 130) sp.scaredUntil = t + 110;
+        const target = t < sp.scaredUntil ? 4 : sp.rest + Math.sin(t * 0.03 + sp.phase) * 9;
+        sp.len += (target - sp.len) * (target < sp.len ? 0.16 : 0.012) * dt;
+        const y = sp.oy + sp.len;
+        const x = sp.ax + Math.sin(t * 0.02 + sp.phase) * 2.5;
+        // The thread.
+        ctx.strokeStyle = theme === "dark" ? "rgba(225,220,255,0.45)" : "rgba(60,40,110,0.45)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(sp.ax, sp.oy);
+        ctx.lineTo(x, y - 9 * k);
+        ctx.stroke();
+        // Eight legs, four a side, twitching.
+        ctx.strokeStyle = theme === "dark" ? "#120a22" : "#2a1650";
+        ctx.lineWidth = 1.5 * k;
+        ctx.shadowColor = theme === "dark" ? "rgba(167,139,250,0.65)" : "rgba(0,0,0,0)";
+        ctx.shadowBlur = theme === "dark" ? 5 : 0;
+        for (const side of [-1, 1]) {
+          for (let i = 0; i < 4; i++) {
+            const wig = Math.sin(t * 0.25 + i * 1.3 + side) * (t < sp.scaredUntil ? 2.2 : 0.8);
+            ctx.beginPath();
+            ctx.moveTo(x + side * 2.5 * k, y + (i * 1.6 - 1) * k);
+            ctx.lineTo(x + side * (9 + i * 1.3) * k, y + (-6 + i * 3.4 + wig) * k);
+            ctx.lineTo(x + side * (13 + i * 1.6) * k, y + (3 + i * 4.4 + wig) * k);
+            ctx.stroke();
+          }
+        }
+        // Abdomen (up, on the thread), head (down), two ember eyes.
+        ctx.fillStyle = theme === "dark" ? "#120a22" : "#2a1650";
+        ctx.beginPath();
+        ctx.ellipse(x, y - 4 * k, 6.2 * k, 7.6 * k, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x, y + 5 * k, 4 * k, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowColor = "rgba(255,90,40,0.9)";
+        ctx.shadowBlur = 4;
+        ctx.fillStyle = "#ff6a3d";
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(x + side * 1.6 * k, y + 6.3 * k, 0.95 * k, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+    };
+
     let t = 0;
     const draw = (dt: number) => {
       ctx.clearRect(0, 0, w, h);
@@ -378,9 +457,12 @@ export function RiftEmbers() {
         ctx.drawImage(sprites[m.kind % sprites.length], m.x - size / 2, m.y - size / 2, size, size);
       }
 
-      if (halloween && !reduced) {
-        drawBats(dt);
-        drawEyes(dt);
+      if (halloween) {
+        drawSpiders(dt);
+        if (!reduced) {
+          drawBats(dt);
+          drawEyes(dt);
+        }
       }
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = "source-over";
@@ -433,6 +515,12 @@ export function RiftEmbers() {
     const onDown = (e: PointerEvent) => {
       const p = local(e);
       for (let i = 0; i < 22 && motes.length < 260; i++) motes.push(spark(p.x, p.y, 2.6));
+      // In the season a click also lets a couple of bats out, one each way.
+      if (halloween && bats.length < 12) {
+        for (const dir of [-1, 1]) {
+          bats.push({ x: p.x, y: p.y, vx: dir * (2.6 + Math.random() * 1.4), size: 8 + Math.random() * 5, phase: Math.random() * Math.PI * 2, bob: 0.8 + Math.random() * 0.6 });
+        }
+      }
     };
 
     const ro = new ResizeObserver(() => {
