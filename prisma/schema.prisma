@@ -1969,3 +1969,49 @@ model AffiliateCommission {
 
   @@index([affiliateId, paidOut])
 }
+
+// ── RiftCompare Coins (DECISIONS.md, "RiftCompare Coins", 2026-10-16) ────────
+// A Premium member's coin collection: pulls earned from tasks, spent to reveal
+// one of twelve champion coins (lib/coins.ts). Private, like every per-user
+// table: never in PUBLIC_MODELS or the public export. Nothing here is bought.
+
+// One row per member: what they can spend, and the pity counters.
+model CoinWallet {
+  userId         String   @id
+  pulls          Int      @default(0)
+  shards         Int      @default(0)
+  // Every pull ever made. Also the optimistic-lock version a pull checks.
+  pullsMade      Int      @default(0)
+  sinceEpic      Int      @default(0)
+  sinceLegendary Int      @default(0)
+  streak         Int      @default(0)
+  // The UTC day ("2026-10-16") of the last check-in.
+  lastCheckIn    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// One task paid out. The unique key is what makes every reward idempotent:
+// "once" for the welcome gift, the day for a check-in, "card:<id>" for a
+// watched card, "<day>:<n>" for a capped daily task, the friend's id for a referral.
+model CoinTask {
+  id        String   @id @default(cuid())
+  userId    String
+  task      String
+  key       String
+  pulls     Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, task, key])
+  @@index([userId, createdAt])
+}
+
+// How many of each coin a member holds (twelve rows at most).
+model CoinOwned {
+  userId  String
+  coinId  String
+  count   Int      @default(0)
+  firstAt DateTime @default(now())
+
+  @@id([userId, coinId])
+}

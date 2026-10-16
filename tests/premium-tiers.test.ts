@@ -227,6 +227,8 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       "Full price history — every day since tracking began, with CSV download",
       "Graded price tracking — history and new-low alerts for each grade (PSA 10, BGS 9.5…)",
       "Auction alerts — email when a card you watch has an eBay auction ending within 24 hours",
+      // 2026-10-16: RiftCompare Coins (Premium).
+      "RiftCompare Coins — earn free pulls and collect twelve champion coins",
       "Ad-free experience",
     ],
   );

@@ -10,6 +10,7 @@ import { cookies } from "next/headers";
 import { prisma } from "./db";
 import { grantPremiumDays, REFERRAL_PREMIUM_DAYS } from "./premium";
 import { REFERRAL_COOKIE } from "./referral-cookie";
+import { rewardReferral } from "./coins-server";
 
 export { REFERRAL_COOKIE };
 
@@ -32,6 +33,9 @@ export async function applyReferral(newUserId: string): Promise<void> {
     // Called exactly once per new signup (cookie is cleared above), so it's one grant
     // per referred user. No-op when REFERRAL_PREMIUM_DAYS=0.
     await grantPremiumDays(referrer.id, REFERRAL_PREMIUM_DAYS).catch(() => {});
+    // And five coin pulls, if the referrer is a Premium member (RiftCompare
+    // Coins, lib/coins-server.ts). Keyed by the new account, so once per friend.
+    await rewardReferral(referrer.id, newUserId);
   } catch {
     // Referral is a bonus, never a gate — swallow everything.
   }

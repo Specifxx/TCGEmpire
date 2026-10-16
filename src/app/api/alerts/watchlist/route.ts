@@ -9,6 +9,7 @@ import { getCountry } from "@/lib/get-country";
 import { alertBaselineSeed, alertPairKey, computeAlertPrices } from "@/lib/alert-price";
 import { FREE_LIMIT_STATUS, freeLimitBody } from "@/lib/free-limits";
 import { watchAllowance } from "@/lib/free-limits-server";
+import { rewardWatch } from "@/lib/coins-server";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The ACCOUNT-scoped half of price watches.
@@ -171,5 +172,9 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ ok: true, id: item.id });
+  // RiftCompare Coins: a Premium member earns a pull for each new card watched,
+  // up to three a day (lib/coins-server.ts). Best-effort; never fails the watch.
+  const coins = await rewardWatch(user, card.id);
+
+  return NextResponse.json({ ok: true, id: item.id, coins });
 }
