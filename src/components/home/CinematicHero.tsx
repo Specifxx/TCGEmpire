@@ -6,6 +6,7 @@ import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { SearchBar } from "@/components/SearchBar";
 import { HeroStats, type MarketStat } from "./HeroStats";
 import { TrendingChips } from "./TrendingChips";
+import { RiftEmbers } from "./RiftEmbers";
 import { BrandLogo } from "@/components/BrandLogo";
 import type { CardTileData } from "@/components/CardTile";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
@@ -87,9 +88,17 @@ export function CinematicHero({
   const otherMarkets = otherMarketsList(region?.code ?? "US");
   return (
     <ParallaxShell>
-      {/* ── Background (flat terminal panel) ─────────────────────────────────── */}
-      <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-        <div className="absolute inset-0 bg-ink-950 border-b border-ink-800" />
+      {/* ── Background: the official section teal fading into the page ────────
+          (.rb-hero-band, 2026-10-16 rebrand), a slow vortex of rift light
+          behind the headline (.rb-vortex, after the Riftbound emblem) and
+          the embers (RiftEmbers: drifting sparks that part around the pointer,
+          owner 2026-10-16 "glowing … particles … interactive"). All of it is
+          decoration behind the content; reduced motion stills it. overflow-
+          hidden keeps the vortex and sparks inside the band. */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
+        <div className="rb-hero-band absolute inset-0 bg-ink-950 border-b border-ink-800" />
+        <div className="rb-vortex" />
+        <RiftEmbers />
       </div>
 
       {/* NOTHING FLANKS THE HERO, deliberately. Two vertical affiliate rails sat
@@ -139,7 +148,7 @@ export function CinematicHero({
         <div className="animate-fade-in [animation-delay:80ms] hidden items-center justify-center gap-2 sm:flex">
           <BrandLogo className="h-8 w-8" />
           <span className="text-lg font-extrabold tracking-tight text-white">
-            Rift<span className="text-brand-400">Compare</span>
+            Rift<span className="rb-flame-text">Compare</span>
           </span>
         </div>
         {/* Kinetic headline — US-FIRST, not market-neutral. This page is cached
@@ -220,8 +229,10 @@ export function CinematicHero({
             The buy-intent line that held the H1 since 09-17 is kept, verbatim,
             as the lead of the subhead below. DECISIONS.md, 2026-09-24. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto max-w-4xl text-2xl font-extrabold sm:mt-4 sm:text-3xl leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
-          <span className="text-brand-400">Riftbound</span> Card Prices{region ? ` in ${SHORT_PLACE[region.code]}` : ""}
+          <span className="rb-flame-text rb-flame-live">Riftbound</span> Card Prices{region ? ` in ${SHORT_PLACE[region.code]}` : ""}
         </h1>
+        {/* The official divider ornament under the headline (globals.css). */}
+        <div aria-hidden="true" className="rb-divider mx-auto mt-3 hidden w-48 sm:flex"><i /></div>
         {/* "Price check" ADDED 2026-09-17 — the homepage is the declared owner of
             `riftbound price check` (docs/seo-keyword-map.md; see page.tsx's
             description comment for why that query had no owner but a mini-game).

@@ -23,26 +23,37 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Clean, low-saturation dark palette (CSFloat-style): near-black surfaces,
-        // cool grey borders, restrained accents — no neon.
+        // Riftbound's deep teal-navy (2026-10-16 rebrand): the official site's
+        // #013951 taken darker, so prices still sit on a near-black ground.
         ink: {
-          950: v("ink-950"), // dark #0a0c10
-          900: v("ink-900"), // dark #0e1116
-          850: v("ink-850"), // dark #13171f
-          800: v("ink-800"), // dark #191e28
-          700: v("ink-700"), // dark #252b38
-          600: v("ink-600"), // dark #333b4d
+          950: v("ink-950"), // dark #04131c
+          900: v("ink-900"), // dark #071a25
+          850: v("ink-850"), // dark #0b2230
+          800: v("ink-800"), // dark #102b3b
+          700: v("ink-700"), // dark #1d3c4e
+          600: v("ink-600"), // dark #2f566a
         },
-        // The single sharp accent — RiftCompare green, used sparingly for primary
-        // actions + active states. Everything else stays neutral graphite.
+        // The single sharp accent — Riftbound orange (lib/brand.ts), used
+        // sparingly for primary actions + active states. It replaced the
+        // RiftCompare green on 2026-10-16. Gold still means Premium.
         brand: {
-          DEFAULT: "#1ea65c",
-          // 400 is the LINK shade (text-brand-400, ~300 usages). #34d17e is fine
+          DEFAULT: "#ef7d00",
+          // 400 is the LINK shade (text-brand-400, ~300 usages). #f29733 is fine
           // on dark ink and unreadable on white, so it alone is themed; 500/600
           // are fills and borders and stay fixed.
-          400: v("brand-400"), // dark #34d17e
-          500: "#1ea65c",
-          600: "#188a4c",
+          400: v("brand-400"), // dark #f29733
+          500: "#ef7d00",
+          600: "#c86400",
+        },
+        // The BUY green (owner, 2026-10-16: "TCGplayer and eBay and things that
+        // we highlight … shouldn't change … the premium button"): the
+        // pre-rebrand brand green, kept for what spends money — every store's
+        // buy button (`.btn-buy`), Premium's subscribe and checkout, and the
+        // Cheapest / savings chips beside them. eBay keeps its own blue, and the
+        // header's Premium link its gold. Fixed in both themes, like the fills.
+        buy: {
+          DEFAULT: "#1ea65c",
+          400: "#34d17e",
         },
         // Muted greys, LIFTED to clear WCAG AA on this palette's surfaces.
         //
@@ -66,7 +77,7 @@ const config: Config = {
           300: v("slate-300"), // dark: stock #cbd5e1
           400: v("slate-400"), // dark: stock #94a3b8
           500: v("slate-500"), // dark #8593a6 (lifted, see above)
-          600: v("slate-600"), // dark #76828f (lifted, see above)
+          600: v("slate-600"), // dark #80909c (lifted again for the teal ink, 2026-10-16)
           700: v("slate-700"), // dark: stock #334155
           800: v("slate-800"), // dark: stock #1e293b
           900: v("slate-900"), // dark: stock #0f172a
@@ -102,10 +113,10 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
-        // Headings: Fraunces, a sharp flared serif — the Beaufort-style look-alike
-        // (see the note in layout.tsx). Applied via the `h1`-`h3` base-style rule in
-        // globals.css, not per-component, so it lands sitewide in one place. Body
-        // copy stays Inter — the Spiegel-style look-alike.
+        // Headings: Cinzel, the Beaufort-style look-alike (see the note in
+        // layout.tsx). Applied via the `h1`-`h3` base-style rule in globals.css,
+        // not per-component, so it lands sitewide in one place. Body copy stays
+        // Inter.
         display: ["var(--font-display)", "Georgia", "Cambria", "Times New Roman", "serif"],
         // Monospace — prices, tickers, tabular figures (the terminal voice).
         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],

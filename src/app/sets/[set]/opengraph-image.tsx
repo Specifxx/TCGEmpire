@@ -12,7 +12,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "RiftCompare — Riftbound set card list & prices";
 
-const GREEN = "#34d17e";
+const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 
 export default async function Image({ params }: { params: { set: string } }) {
   const set = setBySlug(params.set);
@@ -34,7 +34,7 @@ export default async function Image({ params }: { params: { set: string } }) {
           flexDirection: "column",
           justifyContent: "center",
           padding: "72px",
-          background: "linear-gradient(135deg, #0b0f17 0%, #101826 55%, #0c2018 100%)",
+          background: "linear-gradient(135deg, #04131c 0%, #062436 55%, #013951 100%)",
           fontFamily: "sans-serif",
         }}
       >
@@ -48,8 +48,8 @@ export default async function Image({ params }: { params: { set: string } }) {
               height: 64,
               flexShrink: 0,
               borderRadius: 16,
-              background: GREEN,
-              color: "#06130c",
+              background: BRAND,
+              color: "#1e3043",
               fontSize: 42,
               fontWeight: 800,
               marginRight: 18,
@@ -59,14 +59,14 @@ export default async function Image({ params }: { params: { set: string } }) {
           </div>
           <div style={{ display: "flex", fontSize: 40, fontWeight: 800, letterSpacing: -1 }}>
             <span style={{ color: "#ffffff" }}>Rift</span>
-            <span style={{ color: GREEN }}>Compare</span>
+            <span style={{ color: BRAND }}>Compare</span>
           </div>
         </div>
 
         <div style={{ display: "flex", marginTop: 48, fontSize: 84, fontWeight: 800, color: "#ffffff", letterSpacing: -2 }}>
           Riftbound {name}
         </div>
-        <div style={{ display: "flex", marginTop: 18, fontSize: 34, color: GREEN, fontWeight: 700 }}>
+        <div style={{ display: "flex", marginTop: 18, fontSize: 34, color: BRAND, fontWeight: 700 }}>
           {status}
         </div>
         <div style={{ display: "flex", marginTop: 20, fontSize: 24, color: "#8b95a5" }}>

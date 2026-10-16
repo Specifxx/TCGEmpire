@@ -20,7 +20,7 @@ export function GET(req: Request) {
   const stat = clip(searchParams.get("s"), 16); // big highlighted figure
   const label = clip(searchParams.get("l"), 40); // small line under the stat
   const sub = clip(searchParams.get("b"), 90) || "Riftbound prices, games & tools";
-  const accent = HEX.test(searchParams.get("c") ?? "") ? searchParams.get("c")! : "#34d17e";
+  const accent = HEX.test(searchParams.get("c") ?? "") ? searchParams.get("c")! : "#f29733";
 
   return new ImageResponse(
     (
@@ -32,7 +32,7 @@ export function GET(req: Request) {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 80px",
-          background: "linear-gradient(135deg, #0b0f17 0%, #101826 55%, #0c2018 100%)",
+          background: "linear-gradient(135deg, #04131c 0%, #062436 55%, #013951 100%)",
           fontFamily: "sans-serif",
         }}
       >
@@ -47,7 +47,7 @@ export function GET(req: Request) {
               height: 64,
               borderRadius: 16,
               background: accent,
-              color: "#06130c",
+              color: "#1e3043",
               fontSize: 40,
               fontWeight: 800,
               marginRight: 20,

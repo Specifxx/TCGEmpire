@@ -95,8 +95,8 @@ export function PremiumPitchPanel({
       <div className="relative px-4 pb-3 pt-3.5">
         <div className="flex items-center gap-2">
           <BrandLogo className="h-6 w-6" />
-          <span className="font-display text-base font-extrabold italic tracking-tight text-white">
-            Rift<span className="text-brand-400">compare</span>
+          <span className="text-base font-extrabold italic tracking-tight text-white">
+            Rift<span className="rb-flame-text">compare</span>
           </span>
         </div>
         {badge ? <div className="mt-1.5">{badge}</div> : null}

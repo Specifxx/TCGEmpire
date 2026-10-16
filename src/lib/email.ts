@@ -177,10 +177,10 @@ function layout(heading: string, body: string, cta: { label: string; url: string
   return `<!doctype html><html><head>${EMAIL_HEAD}</head><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 8px"><tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#131a26;border:1px solid #233047;border-radius:16px">
-      <tr><td style="padding:28px 32px 6px"><div style="font-size:22px;font-weight:800;color:#fff">Rift<span style="color:#34d17e">Compare</span></div></td></tr>
+      <tr><td style="padding:28px 32px 6px"><div style="font-size:22px;font-weight:800;color:#fff">Rift<span style="color:#ef7d00">Compare</span></div></td></tr>
       <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
       <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">${body}</td></tr>
-      <tr><td style="padding:4px 32px 26px"><a href="${cta.url}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${cta.label}</a></td></tr>
+      <tr><td style="padding:4px 32px 26px"><a href="${cta.url}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${cta.label}</a></td></tr>
       <tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">RiftCompare · Riftbound card price comparison.<br/>If you didn't request this, you can safely ignore this email.</td></tr>
     </table></td></tr></table></body></html>`;
 }
@@ -520,7 +520,7 @@ function storeBlock(store: AlertStore, currency: string): string {
   return `
       <div style="margin-top:6px;padding:8px 10px;background:#0f1622;border:1px solid #233047;border-radius:10px">
         <div style="display:inline-block;vertical-align:middle;max-width:100%;margin:2px 8px 2px 0;font-size:13px;line-height:1.5;color:#b8c0cc"><strong style="color:#fff">${escapeHtml(store.name)}</strong> · ${escapeHtml(storePriceText(store, currency))}</div>
-        <a href="${escapeHtml(store.url)}" style="display:inline-block;vertical-align:middle;margin:2px 0;background:#34d17e;color:#06210f;font-size:13px;font-weight:700;text-decoration:none;padding:6px 14px;border-radius:8px">Buy</a>
+        <a href="${escapeHtml(store.url)}" style="display:inline-block;vertical-align:middle;margin:2px 0;background:#ef7d00;color:#1e3043;font-size:13px;font-weight:700;text-decoration:none;padding:6px 14px;border-radius:8px">Buy</a>
       </div>`;
 }
 
@@ -638,7 +638,7 @@ function alertFooterText(links: Pick<AlertAddressLinks, "pause" | "deleteAll">):
 }
 
 const button = (href: string, label: string) =>
-  `<a href="${escapeHtml(href)}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${label}</a>`;
+  `<a href="${escapeHtml(href)}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${label}</a>`;
 /** The green button, for the watch emails in lib/watch-emails.ts. */
 export const emailButton = button;
 
@@ -671,9 +671,9 @@ export function buildPriceDropEmail(items: PriceDropItem[], unsubToken: string, 
   const inner = `
     ${intro ? `<tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">${intro}</td></tr>` : ""}
     <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%">${full.map((i) => dropRow(i, campaign)).join("")}${compact.map((i) => compactRow(i, campaign)).join("")}</table>
-    ${moreLine ? `<div style="margin-top:8px;font-size:13px"><a href="${escapeHtml(links.manage)}" style="color:#34d17e;font-weight:700;text-decoration:none">${moreLine} →</a></div>` : ""}</td></tr>
+    ${moreLine ? `<div style="margin-top:8px;font-size:13px"><a href="${escapeHtml(links.manage)}" style="color:#f29733;font-weight:700;text-decoration:none">${moreLine} →</a></div>` : ""}</td></tr>
     <tr><td style="padding:4px 32px 20px">${button(links.manage, "Manage your watchlist")}
-    ${paid ? `<div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(dealFinder)}" style="color:#34d17e;font-weight:700;text-decoration:none">Your watched cards in Deal Finder →</a></div>` : ""}</td></tr>
+    ${paid ? `<div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(dealFinder)}" style="color:#f29733;font-weight:700;text-decoration:none">Your watched cards in Deal Finder →</a></div>` : ""}</td></tr>
     ${anonymous ? accountCtaBlock("price-drop", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
   const text = [
     heading,
@@ -802,7 +802,7 @@ export function accountCtaBlock(campaign: string, line?: string): string {
   return `<tr><td style="padding:4px 32px 20px">
     <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px">
       <div style="font-size:13px;line-height:1.5;color:#b8c0cc">${copy}</div>
-      <a href="${url}" style="display:inline-block;margin-top:10px;border:1px solid #34d17e;color:#34d17e;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">Create your free account</a>
+      <a href="${url}" style="display:inline-block;margin-top:10px;border:1px solid #ef7d00;color:#f29733;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">Create your free account</a>
     </div>
   </td></tr>`;
 }
@@ -819,7 +819,7 @@ export function emailShell(heading: string, inner: string, footer: string, prehe
   return `<!doctype html><html><head>${EMAIL_HEAD}</head><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">${pre}
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 8px"><tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:520px;background:#131a26;border:1px solid #233047;border-radius:16px">
-      <tr><td style="padding:28px 32px 6px"><div style="font-size:22px;font-weight:800;color:#fff">Rift<span style="color:#34d17e">Compare</span></div></td></tr>
+      <tr><td style="padding:28px 32px 6px"><div style="font-size:22px;font-weight:800;color:#fff">Rift<span style="color:#ef7d00">Compare</span></div></td></tr>
       <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
       ${inner}
       ${footer}
@@ -970,7 +970,7 @@ export async function sendReleaseDayEmail(
     <tr><td style="padding:0 32px 4px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#132a1e;border:1px solid #2f6b4a;border-radius:12px">
         <tr><td style="padding:16px 18px">
-          <div style="display:inline-block;background:#34d17e;color:#06210f;font-size:11px;font-weight:800;letter-spacing:.6px;padding:3px 8px;border-radius:5px">OUT NOW</div>
+          <div style="display:inline-block;background:#ef7d00;color:#1e3043;font-size:11px;font-weight:800;letter-spacing:.6px;padding:3px 8px;border-radius:5px">OUT NOW</div>
           <div style="font-size:17px;font-weight:700;color:#fff;margin-top:10px;line-height:1.4">
             ${setName} has landed — and every card is already priced.
           </div>
@@ -1006,7 +1006,7 @@ export async function sendReleaseDayEmail(
 
     <!-- Primary CTA -->
     <tr><td align="center" style="padding:14px 32px 6px">
-      <a href="${setUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:800;font-size:15px;text-decoration:none;padding:14px 30px;border-radius:10px">See every ${setName} price →</a>
+      <a href="${setUrl}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:800;font-size:15px;text-decoration:none;padding:14px 30px;border-radius:10px">See every ${setName} price →</a>
     </td></tr>
     <tr><td align="center" style="padding:0 32px 24px;font-size:12px;color:#6b7585">
       or <a href="${browseUrl}" style="color:#9aa4b2;text-decoration:underline">browse the whole database</a>
@@ -1102,7 +1102,7 @@ export function buildTrialEndingEmail(opts: {
       Your RiftCompare ${planName} trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>.${paid} Unless you cancel
       before then, the card on file will be charged ${charge} and your subscription continues automatically.
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Manage subscription</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Manage subscription</a></td></tr>`;
   const heading = "Your trial is ending soon";
   return {
     subject: `Your RiftCompare ${planName} trial ends ${dateLabel}`,
@@ -1145,7 +1145,7 @@ export function buildTrialEndingNoChargeEmail(opts: {
     <tr><td style="padding:0 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       If you'd like to keep it${keepLine ? `, it's ${keepLine}` : ""} — one click on your account page. Otherwise there's nothing to do.
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?keep=1#keep" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Keep ${planName}</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?keep=1#keep" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Keep ${planName}</a></td></tr>`;
   const heading = "Your trial ends soon";
   return {
     subject: `Your RiftCompare ${planName} trial ends ${dateLabel} — no further charge`,
@@ -1231,7 +1231,7 @@ export function buildCheckoutRecoveryEmail(
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}</ul>
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?src=recovery" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Finish setting up ${name}</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?src=recovery" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Finish setting up ${name}</a></td></tr>`;
   return {
     subject:
       trialDays > 0
@@ -1282,7 +1282,7 @@ const WELCOME_UTM = "utm_source=email&utm_medium=email&utm_campaign=welcome";
 export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; heading: string; html: string } {
   const name = escapeHtml(opts.displayName.trim().split(/\s+/)[0] || "there");
   const link = (path: string, label: string) =>
-    `<a href="${SITE_URL}${path}${path.includes("?") ? "&" : "?"}${WELCOME_UTM}" style="color:#34d17e;font-weight:700;text-decoration:none">${label}</a>`;
+    `<a href="${SITE_URL}${path}${path.includes("?") ? "&" : "?"}${WELCOME_UTM}" style="color:#f29733;font-weight:700;text-decoration:none">${label}</a>`;
   // The first-month fee (2026-09-30): it is charged today, so this never says
   // "free" or "you pay nothing" unless PREMIUM_TRIAL_FEE_CENTS really is 0.
   const trialLine =
@@ -1367,7 +1367,7 @@ export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: 
   const name = escapeHtml(opts.displayName.trim().split(/\s+/)[0] || "there");
   const dateLabel = opts.endsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const link = (path: string, label: string) =>
-    `<a href="${SITE_URL}${path}${path.includes("?") ? "&" : "?"}${WELCOME_TRIAL_UTM}" style="color:#34d17e;font-weight:700;text-decoration:none">${label}</a>`;
+    `<a href="${SITE_URL}${path}${path.includes("?") ? "&" : "?"}${WELCOME_TRIAL_UTM}" style="color:#f29733;font-weight:700;text-decoration:none">${label}</a>`;
   const step = (n: number, title: string, body: string) =>
     `<tr><td style="padding:6px 32px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <strong style="color:#e6ebf2">${n}. ${title}</strong><br/>${body}
@@ -1507,8 +1507,8 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
 
   const btn = (url: string, label: string, primary: boolean) =>
     primary
-      ? `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;background:#34d17e;color:#06210f;font-weight:700;font-size:13px;text-decoration:none;padding:10px 16px;border-radius:10px">${label}</a>`
-      : `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;border:1px solid #34d17e;color:#34d17e;font-weight:700;font-size:13px;text-decoration:none;padding:9px 15px;border-radius:10px">${label}</a>`;
+      ? `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;background:#ef7d00;color:#1e3043;font-weight:700;font-size:13px;text-decoration:none;padding:10px 16px;border-radius:10px">${label}</a>`
+      : `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;border:1px solid #ef7d00;color:#f29733;font-weight:700;font-size:13px;text-decoration:none;padding:9px 15px;border-radius:10px">${label}</a>`;
 
   const tierBlock = (tier: PremiumTierKey, line: string, includes: string, annualUrl: string, monthlyUrl: string) => `
     <tr><td style="padding:8px 32px 8px">
@@ -1535,7 +1535,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
     <tr><td style="padding:8px 32px 4px;font-size:13px;line-height:1.6;color:#9aa4b2">
       A card is required to start. Nothing is charged for ${days}; we email you a day or two before the trial ends,
       and you can cancel from your account page in a couple of clicks before then. One trial per account.
-      <a href="${links.compare}" style="color:#34d17e;text-decoration:underline">Compare the plans side by side</a>.
+      <a href="${links.compare}" style="color:#f29733;text-decoration:underline">Compare the plans side by side</a>.
     </td></tr>
     <tr><td style="padding:0 32px 16px"></td></tr>`;
 
@@ -1611,7 +1611,7 @@ export function buildPremiumWinbackEmail(opts: PremiumWinbackEmailOpts): { subje
       Click below once to switch it on for your account. The link works once, and it's live for the next
       ${opts.claimWindowDays} days.
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${opts.claimUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Claim my ${opts.days} free days</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${opts.claimUrl}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Claim my ${opts.days} free days</a></td></tr>`;
 
   return { subject: premiumWinbackSubject(opts.days), heading, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl)) };
 }
@@ -1652,7 +1652,7 @@ export interface ConsultConfirmationOpts {
 export async function sendConsultConfirmationEmail(to: string, opts: ConsultConfirmationOpts): Promise<boolean> {
   const paid = formatMoney(opts.amountCents, opts.currency.toUpperCase());
   const next = opts.schedulingUrl
-    ? `<tr><td style="padding:4px 32px 24px"><a href="${opts.schedulingUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Pick your time</a></td></tr>`
+    ? `<tr><td style="padding:4px 32px 24px"><a href="${opts.schedulingUrl}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Pick your time</a></td></tr>`
     : `<tr><td style="padding:4px 32px 20px;font-size:14px;line-height:1.6;color:#b8c0cc">
         We'll reply within ${opts.replyHours} hours with a couple of times that work${
           opts.preferredTimes ? `, starting from the windows you gave us: <em style="color:#e8eaee">${opts.preferredTimes}</em>` : ""
@@ -1668,7 +1668,7 @@ export async function sendConsultConfirmationEmail(to: string, opts: ConsultConf
       <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.7;color:#b8c0cc">
         <div><span style="color:#6b7585">Paid</span> &nbsp;<strong style="color:#fff">${paid} ${opts.currency.toUpperCase()}</strong></div>
         <div><span style="color:#6b7585">Session</span> &nbsp;${opts.durationMin} minutes, one-to-one, video call</div>
-        ${opts.invoiceUrl ? `<div style="margin-top:8px"><a href="${opts.invoiceUrl}" style="color:#34d17e;text-decoration:underline">Download your tax invoice</a></div>` : ""}
+        ${opts.invoiceUrl ? `<div style="margin-top:8px"><a href="${opts.invoiceUrl}" style="color:#f29733;text-decoration:underline">Download your tax invoice</a></div>` : ""}
       </div>
     </td></tr>
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
@@ -1708,7 +1708,7 @@ export async function sendConsultOwnerAlertEmail(
     <tr><td style="padding:8px 32px 16px">
       <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.8">
         ${row("Store", opts.storeName)}
-        ${opts.storeUrl ? row("Site", `<a href="${opts.storeUrl}" style="color:#34d17e">${opts.storeUrl}</a>`) : ""}
+        ${opts.storeUrl ? row("Site", `<a href="${opts.storeUrl}" style="color:#f29733">${opts.storeUrl}</a>`) : ""}
         ${row("Contact", `${opts.contactName} &lt;${opts.email}&gt;`)}
         ${row("Market", opts.country)}
         ${row("Paid", `${formatMoney(opts.amountCents, opts.currency.toUpperCase())} ${opts.currency.toUpperCase()}`)}
@@ -1722,7 +1722,7 @@ export async function sendConsultOwnerAlertEmail(
           </td></tr>`
         : ""
     }
-    <tr><td style="padding:4px 32px 24px"><a href="${opts.adminUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Open bookings</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${opts.adminUrl}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Open bookings</a></td></tr>`;
   return sendEmail(
     to,
     `💼 Consulting booked: ${opts.storeName} (${formatMoney(opts.amountCents, opts.currency.toUpperCase())})`,
@@ -1752,7 +1752,7 @@ export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string, s
       the cards that dropped, and where the best value is across AU, US, UK, SG, CA and EU stores.
       The next edition lands this Saturday morning (Sydney time).
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;
   return sendEmail(to, `You're on the ${SITE_NAME} weekly Index summary`, emailShell("Welcome aboard", inner, newsletterFooter(unsubUrl)));
 }
 
@@ -1808,7 +1808,7 @@ export async function sendPriceReportFixedEmail(to: string, opts: PriceReportFix
       Thanks — the ${escapeHtml(what)} you reported for <strong style="color:#fff">${item}</strong> has been fixed.
       It can take up to a day to show everywhere on the site.
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${escapeHtml(opts.url)}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See it on ${SITE_NAME}</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${escapeHtml(opts.url)}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See it on ${SITE_NAME}</a></td></tr>`;
   return sendEmail(
     to,
     `Fixed: the ${what} you reported for ${opts.itemName}`,

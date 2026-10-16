@@ -1,29 +1,13 @@
-// The "R" mark, recoloured from its flat brand-green PNG into a two-tone green
-// depth gradient via a CSS mask, so the underlying asset (a single flat colour
-// on transparent) stays untouched. Interpolated `in oklch` (not the sRGB
-// default) purely for a cleaner ramp between the two greens — no amber/red here:
-// the Vendetta homepage block now reserves #e5484d exclusively for Vendetta, so
-// the permanent, sitewide nav mark can't also spend that red as decoration. This
-// is the site's one deliberate gradient accent — small, decorative, and not
-// carrying any data meaning — so no other element should reach for a gradient
-// without first removing this one.
+// The swirl "R" mark, in the Riftbound gold-to-orange (2026-10-16 rebrand;
+// DECISIONS.md, "The Riftbound rebrand"). A CSS mask over the `--rc-flame`
+// gradient (globals.css .rb-mark): the shape is public/brand/r-mark.svg, traced
+// from the original logo-r-green.png, so the light theme darkens the gradient
+// with one variable and the SVG is fetched once and cached.
+//
+// The wordmark beside it is live text, as it always was ("Rift" + "Compare",
+// mixed case, owner 2026-10-16): only "Compare" changed, from brand green to
+// the same gradient (.rb-flame-text). That gradient is the site's decoration
+// for the logo and the homepage H1's "Riftbound"; buttons and chips stay flat.
 export function BrandLogo({ className = "h-9 w-9" }: { className?: string }) {
-  return (
-    <span
-      role="img"
-      aria-label="RiftCompare logo"
-      className={`inline-block shrink-0 ${className}`}
-      style={{
-        backgroundImage: "linear-gradient(in oklch, #34d17e, #1ea65c)",
-        WebkitMaskImage: "url(/logo-r-green.png)",
-        maskImage: "url(/logo-r-green.png)",
-        WebkitMaskSize: "contain",
-        maskSize: "contain",
-        WebkitMaskRepeat: "no-repeat",
-        maskRepeat: "no-repeat",
-        WebkitMaskPosition: "center",
-        maskPosition: "center",
-      }}
-    />
-  );
+  return <span role="img" aria-label="RiftCompare logo" className={`rb-mark ${className}`} />;
 }

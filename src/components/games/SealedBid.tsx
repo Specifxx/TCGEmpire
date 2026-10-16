@@ -761,7 +761,7 @@ function Auction({
                   step={1}
                   value={amount}
                   onChange={(e) => setAmount(Number(e.target.value))}
-                  className="w-full accent-[#1ea65c]"
+                  className="w-full accent-[#ef7d00]"
                   aria-label="Bid amount"
                 />
                 <input

@@ -39,10 +39,12 @@ export type EbaySearchMap = Record<string, { url: string; label: string } | null
 // What changes is the COLOUR only: the row's POSITION never does. The table
 // stays sorted by item price, the cheapest row keeps its "Cheapest" chip and
 // accent price, and a dearer eBay row sits exactly where its price puts it.
+// The green is `.btn-buy`, not the site's primary: the 2026-10-16 rebrand made
+// the primary button orange and kept every purchase button as it was.
 // Reuses the shared `.btn` base (layout/sizing) from globals.css. Exported so
 // QuickView's compact price list uses the exact same treatment.
 export function buyButtonClass(retailer: string): string {
-  return retailer.startsWith("ebay") ? "btn-ebay" : "btn-primary";
+  return retailer.startsWith("ebay") ? "btn-ebay" : "btn-buy";
 }
 export function buyButtonLabel(retailer: string): string {
   if (retailer.startsWith("ebay")) return "Buy on eBay →";
@@ -470,7 +472,7 @@ export function CardPriceComparison({
                         badge draws the eye there, the same way a highlighted price
                         naturally pulls clicks. */}
                     {i === 0 && prices.length > 1 && (
-                      <span className="chip shrink-0 bg-brand-500/20 text-[10px] font-bold uppercase tracking-wide text-brand-300">
+                      <span className="chip shrink-0 bg-buy/20 text-[10px] font-bold uppercase tracking-wide text-brand-300">
                         Cheapest
                       </span>
                     )}
@@ -510,7 +512,7 @@ export function CardPriceComparison({
                         </span>
                       ) : null;
                     })()}
-                    <span className="text-brand-400">● In stock</span>
+                    <span className="text-up">● In stock</span>
                     <span>
                       {p.ship == null ? "postage at checkout" : p.ship === 0 ? "free postage" : `+ ${fmt(p.ship)} postage`}
                     </span>

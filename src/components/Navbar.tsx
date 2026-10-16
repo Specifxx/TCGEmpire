@@ -57,7 +57,7 @@ export function Navbar() {
                 brand, and still tappable. The word returns at lg where the row
                 has the width for it. */}
             <span className="hidden text-lg font-extrabold tracking-tight text-white lg:block">
-              Rift<span className="text-brand-400">Compare</span>
+              Rift<span className="rb-flame-text">Compare</span>
             </span>
           </Link>
           {/* BROWSE — ONE LINK, VISIBLE AT EVERY WIDTH. Reported as "the database

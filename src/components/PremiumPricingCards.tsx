@@ -132,7 +132,7 @@ export function PremiumPricingCards({
           >
             <span className="whitespace-nowrap">Annual</span>
             {savePct > 0 && (
-              <span className="rounded-full bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-extrabold text-brand-400">Save {savePct}%</span>
+              <span className="rounded-full bg-buy/15 px-1.5 py-0.5 text-[10px] font-extrabold text-up">Save {savePct}%</span>
             )}
           </button>
         </div>

@@ -1,5 +1,5 @@
 // Generate the legacy favicon.ico (16/32/48 — Google-recommended multiples of 48)
-// and an apple-touch-icon from the green-R tile, so the favicon is discoverable via
+// and an apple-touch-icon from the orange-R tile, so the favicon is discoverable via
 // every path Google/browsers check (/favicon.ico + <link rel=icon> + apple-icon).
 import { Jimp } from "jimp";
 import { writeFileSync } from "node:fs";

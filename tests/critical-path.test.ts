@@ -30,8 +30,9 @@ test("the monospace font is not preloaded ahead of the stylesheet", () => {
   assert.ok(mono, "expected the JetBrains_Mono() call");
   assert.match(mono, /preload:\s*false/, "mono font must carry preload: false");
   // The H1 face and the body face stay preloaded — they ARE the first paint.
-  const fraunces = /const fraunces = Fraunces\(\{[\s\S]*?\}\)/.exec(src)?.[0] ?? "";
-  assert.ok(!/preload:\s*false/.test(fraunces), "the display font must stay preloaded (it is the LCP on article pages)");
+  const display = /const cinzel = Cinzel\(\{[\s\S]*?\}\)/.exec(src)?.[0] ?? "";
+  assert.ok(display, "expected the Cinzel() call (the heading face since the 2026-10-16 rebrand)");
+  assert.ok(!/preload:\s*false/.test(display), "the display font must stay preloaded (it is the LCP on article pages)");
 });
 
 test("robots.txt never blocks the crawlers that matter", () => {

@@ -8,7 +8,7 @@ export const alt = "Riftbound Games on RiftCompare — five free mini-games";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const GREEN = "#34d17e";
+const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 const TILES = [
   { name: "Riftle", sub: "Daily card puzzle", c: "#34d17e" },
   { name: "Higher or Lower", sub: "Price streak game", c: "#f5a524" },
@@ -28,7 +28,7 @@ export default function OgImage() {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "64px 72px",
-          background: "linear-gradient(135deg, #0b0f17 0%, #101826 55%, #0c2018 100%)",
+          background: "linear-gradient(135deg, #04131c 0%, #062436 55%, #013951 100%)",
           fontFamily: "sans-serif",
         }}
       >
@@ -43,8 +43,8 @@ export default function OgImage() {
                 width: 72,
                 height: 72,
                 borderRadius: 18,
-                background: GREEN,
-                color: "#06130c",
+                background: BRAND,
+                color: "#1e3043",
                 fontSize: 46,
                 fontWeight: 800,
                 marginRight: 20,
@@ -54,11 +54,11 @@ export default function OgImage() {
             </div>
             <div style={{ display: "flex", fontSize: 60, fontWeight: 800, letterSpacing: -2 }}>
               <span style={{ color: "#ffffff" }}>Rift</span>
-              <span style={{ color: GREEN }}>Compare</span>
+              <span style={{ color: BRAND }}>Compare</span>
               <span style={{ color: "#7c8696", marginLeft: 18 }}>Games</span>
             </div>
           </div>
-          <div style={{ display: "flex", fontSize: 26, fontWeight: 700, color: GREEN }}>5 free games</div>
+          <div style={{ display: "flex", fontSize: 26, fontWeight: 700, color: BRAND }}>5 free games</div>
         </div>
 
         {/* Tiles */}
@@ -92,7 +92,7 @@ export default function OgImage() {
           <div style={{ display: "flex", fontSize: 30, color: "#cbd5e1" }}>
             Built on live Riftbound card data — no signup, play forever
           </div>
-          <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: GREEN }}>riftcompare.com/games</div>
+          <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: BRAND }}>riftcompare.com/games</div>
         </div>
       </div>
     ),

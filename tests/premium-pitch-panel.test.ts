@@ -83,7 +83,7 @@ test("one tagline, on every surface that carries the Premium headline", () => {
 
 test("/premium's CTA is one big green button, with the price in the line beneath it", () => {
   const src = read("src/components/PremiumCta.tsx");
-  assert.match(src, /const CTA_BTN = "btn-primary/, "the CTA must use the site's green primary-action class");
+  assert.match(src, /const CTA_BTN = "btn-buy/, "the CTA must use the buy green (the pre-rebrand primary, kept for purchases on 2026-10-16)");
   assert.ok(!/bg-gold/.test(src), "this one component drops gold for green — see its own header for why the split is deliberate");
   assert.match(src, /w-full/, "the button must be full-bleed so it dominates the card");
 

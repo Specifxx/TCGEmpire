@@ -11,19 +11,27 @@
      renders pixel-identically. The light set is further down under
      `:root[data-theme="light"]`; src/lib/theme-shared.ts explains the switch
      and tests/theme.test.ts pins that both sets define every variable. */
-  --c-ink-950: 10 12 16;
-  --c-ink-900: 14 17 22;
-  --c-ink-850: 19 23 31;
-  --c-ink-800: 25 30 40;
-  --c-ink-700: 37 43 56;
-  --c-ink-600: 51 59 77;
-  --c-brand-400: 52 209 126;
+  /* Riftbound's deep teal-navy (2026-10-16 rebrand, DECISIONS.md "The
+     Riftbound rebrand"). The official site sits on #013951 with #336073
+     rules; these surfaces are that hue taken darker, because a price table
+     reads better on a near-black ground and the 4.5:1 text guarantees below
+     have to hold on every one of them. #336073 itself is ink-600's neighbour,
+     and the hero band (.rb-hero-band) shows the true #013951. */
+  --c-ink-950: 4 19 28;
+  --c-ink-900: 7 26 37;
+  --c-ink-850: 11 34 48;
+  --c-ink-800: 16 43 59;
+  --c-ink-700: 29 60 78;
+  --c-ink-600: 47 86 106;
+  /* Orange text on the dark surfaces: #F29733, the official button hover. */
+  --c-brand-400: 242 151 51;
   --c-slate-100: 241 245 249;
   --c-slate-200: 226 232 240;
   --c-slate-300: 203 213 225;
   --c-slate-400: 148 163 184;
   --c-slate-500: 133 147 166;
-  --c-slate-600: 118 130 143;
+  /* Lifted again for the teal surfaces: #76828f measured 4.17:1 on ink-850. */
+  --c-slate-600: 128 144 156;
   --c-slate-700: 51 65 85;
   --c-slate-800: 30 41 59;
   --c-slate-900: 15 23 42;
@@ -50,15 +58,19 @@
   --c-lime-300: 190 242 100;
   --c-purple-300: 216 180 254;
   --c-blue-300: 147 197 253;
-  --page-bg: #0b0e14;
-  --page-fg: #e8eaee;
+  --page-bg: #05161f;
+  --page-fg: #e8eef1;
+  /* The wordmark gradient (lib/brand.ts FLAME_STOPS): gold at the top to the
+     Riftbound orange by 58% of the height. Painted through the logo masks and
+     .rb-flame-text; decoration only, never a button. */
+  --rc-flame: linear-gradient(180deg, #d7a63e 0%, #ef7d00 58%, #ef7d00 100%);
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.02), 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 12px rgba(0, 0, 0, 0.45);
   /* The scrolled header's drop (NavbarShell SCROLLED, tailwind `shadow-header`). */
   --shadow-header: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --scroll-track: #0f131c;
-  --scroll-thumb: #2c3650;
-  --scroll-thumb-hover: #3a4564;
+  --scroll-track: #071a25;
+  --scroll-thumb: #1d3c4e;
+  --scroll-thumb-hover: #2f566a;
   /* Reserved width for the persistent desktop SideNav (components/SideNav.tsx),
      0 by default so every element that pads/positions against it (the header,
      main, the footer ad zone, the footer itself, CinematicHero's full-bleed
@@ -97,6 +109,7 @@
    4.5:1 still clears it on the light surfaces (pinned in tests/theme.test.ts).
    brand-400 (the link colour) and the gain/loss reds and greens darken for
    the same reason; brand-500/600 fills and the bg-black overlays don't move.
+   Surfaces carry a faint teal cast, the light side of the Riftbound palette.
    Since 2026-09-23 the rose/red/emerald/amber/sky/lime/purple/blue TEXT shades
    darken too (their fills stay Tailwind stock): the stock pastels measured
    1.02-2.8:1 here (/sealed 'Sold out' rose-300 1.44:1, the Riftle hint
@@ -105,13 +118,14 @@
    4.54:1 on each family's own 15-20% tint. */
 :root[data-theme="light"] {
   color-scheme: light;
-  --c-ink-950: 244 246 248;
+  --c-ink-950: 242 246 248;
   --c-ink-900: 255 255 255;
-  --c-ink-850: 238 241 245;
-  --c-ink-800: 226 230 236;
-  --c-ink-700: 207 213 222;
-  --c-ink-600: 180 188 200;
-  --c-brand-400: 21 122 69;
+  --c-ink-850: 233 240 243;
+  --c-ink-800: 219 229 234;
+  --c-ink-700: 195 210 218;
+  --c-ink-600: 165 185 196;
+  /* #EF7D00 is 2.6:1 on white; links take a burnt orange (5.07:1 on ink-850). */
+  --c-brand-400: 163 76 0;
   --c-slate-100: 15 23 42;
   --c-slate-200: 30 41 59;
   --c-slate-300: 51 65 85;
@@ -125,7 +139,7 @@
   --c-gold: 122 95 20;
   --c-up: 22 101 52;
   --c-down: 190 18 60;
-  --c-white: 11 15 20;
+  --c-white: 6 26 36;
   --c-rose-200: 136 19 55;
   --c-rose-300: 159 18 57;
   --c-rose-400: 190 18 60;
@@ -143,16 +157,18 @@
   --c-lime-300: 63 98 18;
   --c-purple-300: 107 33 168;
   --c-blue-300: 30 64 175;
-  --page-bg: #f4f6f8;
-  --page-fg: #0b0f14;
+  --page-bg: #f2f6f8;
+  --page-fg: #061a24;
+  /* The same gold-to-orange, a step darker so the logo holds on white. */
+  --rc-flame: linear-gradient(180deg, #b8862a 0%, #e06f00 58%, #e06f00 100%);
   --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
   --shadow-glow: 0 4px 12px rgba(16, 24, 40, 0.12);
   /* A soft 12px lift, not the dark theme's 30px black drop: that one measured a
      grey band ~45px deep under the header on the #f4f6f8 page (202 → 237). */
   --shadow-header: 0 4px 12px rgba(16, 24, 40, 0.08);
-  --scroll-track: #eef1f5;
-  --scroll-thumb: #cfd5de;
-  --scroll-thumb-hover: #b4bcc8;
+  --scroll-track: #e9f0f3;
+  --scroll-thumb: #c3d2da;
+  --scroll-thumb-hover: #a5b9c4;
 }
 
 html,
@@ -208,49 +224,22 @@ body {
   font-feature-settings: "lnum" 1;
 }
 
-/* Headings: Fraunces — a sharp, high-contrast, slightly flared serif chosen as a
-   free look-alike for Beaufort for LoL's bold titling character (the genuine
-   Beaufort file is Riot's proprietary, licensed font — there is no legitimate
-   third-party source for it). Heavy weight + tight tracking for a bold, sharp
-   display voice; h1 goes to the heaviest cut for maximum presence. */
+/* Headings: Cinzel, a Roman titling serif, as the free stand-in for Beaufort
+   for LoL, which the official Riftbound site sets every heading in (Riot's
+   licensed font, with no legitimate third-party source). Cinzel draws lowercase
+   as small capitals, so a heading reads in caps the way the official ones do
+   while a long card name or article title keeps its word shapes; nothing here
+   forces text-transform. It replaced Fraunces on 2026-10-16 (DECISIONS.md, "The
+   Riftbound rebrand"), and with it the homepage's sans override: the official
+   site keeps its sans for the logo alone, and RiftCompare's logo text is Inter
+   (BrandLogo.tsx). Cinzel is wider than Fraunces, so the tracking is 0. */
 h1, h2, h3 {
   font-family: var(--font-display), Georgia, serif;
   font-weight: 700;
-  letter-spacing: -0.01em;
 }
 
 h1 {
-  font-weight: 900;
-}
-
-/* HOMEPAGE ONLY — swaps the flared serif above for a heavy neutral grotesque,
-   matching the official Riftbound wordmark lockup (which is set in a bold sans,
-   not a serif). Scoped to the `.rb-display-sans` wrapper applied in
-   src/app/page.tsx, so the rest of the site keeps the Fraunces titling voice.
-   The face itself (--font-riftbound / Archivo) is imported by that same file.
-
-   Deliberately does NOT force text-transform: uppercase. The reference lockup is
-   a single short word; this page's h1 is a full sentence ("Compare Riftbound
-   card prices across AU, US & UK stores"), and setting a string that long in
-   tracked-out caps hurts legibility badly — the same reason .rb-eyebrow below is
-   opt-in for short labels rather than applied to headings wholesale. Use
-   .rb-eyebrow where you want the tracked all-caps treatment. */
-.rb-display-sans h1,
-.rb-display-sans h2,
-.rb-display-sans h3 {
-  font-family: var(--font-riftbound), var(--font-sans), system-ui, sans-serif;
-  /* Tighter than the serif's -0.01em: a heavy grotesque at display sizes needs
-     more negative tracking to read as one solid mass rather than loose letters. */
-  letter-spacing: -0.025em;
-}
-
-/* The homepage's tracked eyebrows ('Trending', 'Recently viewed') follow its sans
-   titling voice too. Everywhere else .rb-eyebrow keeps the Fraunces serif.
-   (2026-09-23: 'TRENDING' was the one serif label in the sans hero, beside the
-   sans 'SHOPPING FROM'.) Specificity (0,2,0) beats .rb-eyebrow below, and only
-   the face changes: tracking, caps, size and colour stay. */
-.rb-display-sans .rb-eyebrow {
-  font-family: var(--font-riftbound), var(--font-sans), system-ui, sans-serif;
+  font-weight: 800;
 }
 
 /* "Eyebrow" micro-heading — the tracked, uppercase treatment the official site
@@ -316,12 +305,13 @@ html {
    near-black in light mode, and its ink inverting with it keeps .btn-accent
    readable as a dark button. */
 :root[data-theme="light"] .btn-primary,
+:root[data-theme="light"] .btn-buy,
 :root[data-theme="light"] .bg-brand-500.text-ink-950,
 :root[data-theme="light"] .bg-gold.text-ink-950,
 :root[data-theme="light"] .bg-gold\/85.text-ink-950 {
   color: #0a0c10;
 }
-/* Solid gold and bright-green FILLS keep their dark-theme colour: the light
+/* Solid gold and bright-orange FILLS keep their dark-theme colour: the light
    palette darkens `gold` and `brand-400` for text legibility, but a badge or
    button filled with them carries dark ink and needs the bright version. The
    translucent tints (bg-gold/10 etc.) are separate classes and correctly use
@@ -333,12 +323,16 @@ html {
   background-color: rgb(202 168 90 / 0.85);
 }
 :root[data-theme="light"] .bg-brand-400 {
-  background-color: #34d17e;
+  background-color: #f29733;
 }
 /* .btn-primary's hover shade is brand-400, which the light palette darkens for
-   link legibility — dark ink on dark green would be 2:1. Hover to a lighter
-   green instead. */
+   link legibility — dark ink on burnt orange would be 3:1. Hover to the
+   official lighter orange instead, as in the dark theme. */
 :root[data-theme="light"] .btn-primary:hover {
+  background-color: #f29733;
+}
+/* The buy button's light hover, as the green primary button had it. */
+:root[data-theme="light"] .btn-buy:hover {
   background-color: #27b868;
 }
 
@@ -369,13 +363,20 @@ html {
   .btn {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-fast active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 aria-busy:pointer-events-none aria-busy:opacity-70;
   }
-  /* Primary action: flat, solid RiftCompare green — the one accent. No gradient/glow. */
-  /* Dark ink on the green, not white. White on #1ea65c measures 3.15:1 — the
-     brand green is a BRIGHT accent, and bright accents take dark text. Near-black
-     on it measures 6.2:1, and the hover lightens to brand-400 (9.9:1) rather than
-     darkening, which reads better on a dark UI anyway. */
+  /* Primary action: flat, solid Riftbound orange (#EF7D00) — the one accent.
+     No gradient/glow: the official buttons are flat too. */
+  /* Dark ink on the orange, not white. White on #EF7D00 measures 2.6:1 — a
+     BRIGHT accent takes dark text, as the official buttons set it (navy on
+     orange). The near-black teal ink measures 6.8:1, and the hover lightens to
+     brand-400, #F29733 (8.3:1), the official hover shade. */
   .btn-primary {
     @apply btn bg-brand-500 text-ink-950 hover:bg-brand-400;
+  }
+  /* A purchase: a store's buy button, Premium's checkout. The green every
+     retailer CTA wore before the rebrand, kept on purpose (tailwind.config.ts
+     `buy`), so the buttons that earn are exactly as they were. */
+  .btn-buy {
+    @apply btn bg-buy text-ink-950 hover:bg-buy-400;
   }
   .btn-ghost {
     @apply btn border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600 hover:bg-ink-800;
@@ -593,6 +594,81 @@ html {
   }
 }
 
+/* In the components layer on purpose: the call sites size and gate these with
+   utilities (`hidden sm:flex`, `h-8`), and an unlayered `display` here beats
+   `hidden` (it once drew a hidden logo into the phone header). */
+@layer components {
+  /* ── Brand mark (2026-10-16 rebrand) ───────────────────────────────────────
+     The R is a MASK, not a picture: public/brand/r-mark.svg (the swirl R,
+     traced from logo-r-green.png) is a black shape, and the element paints
+     --rc-flame through it. So the light theme darkens the gradient with one
+     variable and the SVG is fetched once and cached for every page.
+     BrandLogo.tsx is the only consumer. */
+  .rb-mark {
+    display: inline-block;
+    flex-shrink: 0;
+    background-image: var(--rc-flame);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-image: url(/brand/r-mark.svg);
+    mask-image: url(/brand/r-mark.svg);
+  }
+
+  /* The same gradient on live text: "Compare" in the logo, and "Riftbound" in
+     the homepage H1, as the official wordmark colours it. The plain `color` is
+     the fallback where background-clip:text is unsupported, and what
+     forced-colours modes keep. */
+  .rb-flame-text {
+    color: rgb(var(--c-brand-400));
+  }
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .rb-flame-text {
+      background-image: var(--rc-flame);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  /* The homepage hero's backdrop: the official section teal (#013951) at the top,
+     falling into the page colour, as playriftbound.com fades its masthead. Light
+     theme: a pale teal wash instead. */
+  .rb-hero-band {
+    background-image: linear-gradient(180deg, #013951 0%, rgb(1 57 81 / 0.55) 45%, rgb(var(--c-ink-950)) 100%);
+  }
+  :root[data-theme="light"] .rb-hero-band {
+    background-image: linear-gradient(180deg, #d6e6ed 0%, rgb(var(--c-ink-950)) 100%);
+  }
+
+  /* The official divider: a hairline that fades in from both sides to a diamond
+     with a diamond cut out of it. Decorative; aria-hidden at the call site. */
+  .rb-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .rb-divider::before,
+  .rb-divider::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+  }
+  .rb-divider::before { background-image: linear-gradient(90deg, transparent, #ef7d00); }
+  .rb-divider::after { background-image: linear-gradient(270deg, transparent, #ef7d00); }
+  .rb-divider > i {
+    width: 9px;
+    height: 9px;
+    transform: rotate(45deg);
+    border: 2px solid #ef7d00;
+    outline: 1px solid #ef7d00;
+    outline-offset: 2px;
+  }
+}
+
 @layer components {
   /* Flat terminal panel: hairline border, square-ish corners, quiet elevation. */
   .card-surface {
@@ -784,6 +860,108 @@ body {
    src/lib/motion.ts's usePresence() is the JS half of the same contract: under
    reduced motion it sets `entered` true (and unmounts) immediately rather than
    waiting out a transition that will never visibly run. */
+
+/* ---------------------------------------------------------------------------
+   Homepage hero motion (owner, 2026-10-16: "the homepage can be a bit nicer …
+   animated stuff … glowing … particles … interactive"). Three pieces, all
+   decoration, all stilled by the reduced-motion block at the end of this file:
+     .rb-vortex       a slow swirl of rift light behind the headline, after the
+                      Riftbound vortex emblem (CinematicHero's background layer);
+     .rb-flame-live   a sheen that crosses "Riftbound" in the H1 every few
+                      seconds, over the wordmark gradient, with a soft glow;
+     .rb-search-aura  a glow ring around the hero search that turns slowly and
+                      brightens while the box has focus.
+   The embers are a canvas (components/home/RiftEmbers.tsx), not CSS.
+   --------------------------------------------------------------------------- */
+.rb-vortex {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: min(1040px, 160vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgb(239 125 0 / 0.34) 38deg,
+    transparent 92deg,
+    rgb(215 166 62 / 0.24) 150deg,
+    transparent 205deg,
+    rgb(56 189 248 / 0.18) 268deg,
+    transparent 330deg
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent 14%, #000 38%, #000 56%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 14%, #000 38%, #000 56%, transparent 100%);
+  filter: blur(22px);
+  will-change: transform;
+  animation: rb-vortex-spin 56s linear infinite;
+}
+:root[data-theme="light"] .rb-vortex {
+  opacity: 0.6;
+}
+@keyframes rb-vortex-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .rb-flame-live {
+    background-image:
+      linear-gradient(100deg, transparent 0%, transparent 42%, rgb(255 240 210 / 0.85) 50%, transparent 58%, transparent 100%),
+      var(--rc-flame);
+    background-size: 260% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    background-position: 170% 0, 0 0;
+    filter: drop-shadow(0 0 16px rgb(239 125 0 / 0.35));
+    animation: rb-flame-sheen 7s ease-in-out 1.2s infinite;
+  }
+  :root[data-theme="light"] .rb-flame-live {
+    filter: drop-shadow(0 0 10px rgb(224 111 0 / 0.18));
+  }
+}
+@keyframes rb-flame-sheen {
+  0%, 62% { background-position: 170% 0, 0 0; }
+  100% { background-position: -70% 0, 0 0; }
+}
+
+/* The ring is a pseudo-element behind the input (z-index -1 inside the hero's
+   z-20 search wrapper, which is a stacking context), so nothing about the input
+   or its dropdown moves. The angle is a registered custom property so the
+   gradient itself turns; where @property is unsupported the ring is still. */
+@property --rb-aura {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.rb-search-aura::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border-radius: 9px;
+  background: conic-gradient(from var(--rb-aura), rgb(239 125 0 / 0.0), rgb(239 125 0 / 0.75), rgb(215 166 62 / 0.5), rgb(56 189 248 / 0.35), rgb(239 125 0 / 0.0) 70%, rgb(239 125 0 / 0.0));
+  filter: blur(8px);
+  opacity: 0.55;
+  transition: opacity 200ms ease;
+  animation: rb-aura-turn 6s linear infinite;
+  pointer-events: none;
+}
+.rb-search-aura:focus-within::before,
+.rb-search-aura:hover::before {
+  opacity: 0.95;
+}
+@keyframes rb-aura-turn {
+  to { --rb-aura: 360deg; }
+}
+
+/* Trending chips glow orange under the pointer. */
+.rb-glow-hover {
+  transition: border-color 150ms ease, color 150ms ease, box-shadow 200ms ease;
+}
+.rb-glow-hover:hover,
+.rb-glow-hover:focus-visible {
+  box-shadow: 0 0 0 1px rgb(239 125 0 / 0.35), 0 0 18px rgb(239 125 0 / 0.28);
+}
 
 /* ---------------------------------------------------------------------------
    .premium-cta: the header's "Get Premium" button (GetPremiumLink.tsx).

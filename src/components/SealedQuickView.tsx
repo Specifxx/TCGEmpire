@@ -154,7 +154,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
             {listings.length === 0 ? (
               <div className="p-4 text-center text-sm text-slate-400">
                 <p>No store is listing this right now.</p>
-                <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="btn-primary mt-3 inline-flex text-xs">
+                <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="btn-buy mt-3 inline-flex text-xs">
                   Search on eBay →
                 </OutboundLink>
               </div>
@@ -169,7 +169,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-semibold text-white">{l.retailerName}</div>
                         <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
-                          <span className={isOpen ? "text-brand-400" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>
+                          <span className={isOpen ? "text-up" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>
                           <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
                         </div>
                       </div>
@@ -184,7 +184,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                         kind="sealed"
                         className={
                           isOpen
-                            ? `px-3 py-1.5 text-xs ${isBest ? "btn-accent" : "btn-primary"}`
+                            ? `px-3 py-1.5 text-xs ${isBest ? "btn-accent" : "btn-buy"}`
                             : "px-3 py-1.5 text-xs text-slate-500 underline-offset-2 hover:underline"
                         }
                       >

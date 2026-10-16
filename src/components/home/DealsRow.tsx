@@ -91,7 +91,7 @@ function DealCard({ deal, index, currency, country }: { deal: Deal; index: numbe
       <div className="mt-1.5 flex items-baseline justify-between gap-1">
         <span className="num text-base font-extrabold text-accent">{formatMoney(deal.priceCents, currency)}</span>
         {deal.pctLabel != null && (
-          <span className="chip num shrink-0 bg-brand-500/15 text-[11px] text-brand-300">
+          <span className="chip num shrink-0 bg-buy/15 text-[11px] text-brand-300">
             {deal.dealType === "savings-vs-market" ? `Save ${deal.pctLabel}%` : `−${deal.pctLabel}%`}
           </span>
         )}

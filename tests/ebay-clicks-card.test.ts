@@ -39,7 +39,7 @@ test("buyButtonClass: eBay rows wear eBay blue, every other retailer keeps the o
     assert.equal(buyButtonClass(r), "btn-ebay", r);
   }
   for (const r of ["tcgplayer", "tcgplayer_uk", "cherrycollectables", "cardtrader", ""]) {
-    assert.equal(buyButtonClass(r), "btn-primary", r || "(empty)");
+    assert.equal(buyButtonClass(r), "btn-buy", r || "(empty)");
   }
   // The label rule is the same prefix test, so the two can never disagree.
   assert.equal(buyButtonLabel("ebay_au"), "Buy on eBay →");

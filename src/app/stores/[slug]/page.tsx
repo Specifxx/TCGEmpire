@@ -236,7 +236,7 @@ export default async function StorePage({ params }: { params: { slug: string } }
             href={store.base}
             target="_blank"
             rel="sponsored nofollow noopener noreferrer"
-            className="btn-primary text-sm"
+            className="btn-buy text-sm"
           >
             Visit {store.name} →
           </a>

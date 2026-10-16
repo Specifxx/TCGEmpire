@@ -8,6 +8,8 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const HIT = "#34d17e";
+// The brand tile and URL (2026-10-16 rebrand); HIT stays green, it is a solved square.
+const BRAND = "#f29733";
 const MISS = "#232a36";
 const ROWS: number[][] = [
   // 1 = green, 0 = dark — an "almost solved" board for flavour.
@@ -28,7 +30,7 @@ export default function OgImage() {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "70px 80px",
-          background: "linear-gradient(135deg, #0b0f17 0%, #101826 55%, #0c2018 100%)",
+          background: "linear-gradient(135deg, #04131c 0%, #062436 55%, #013951 100%)",
           fontFamily: "sans-serif",
         }}
       >
@@ -43,8 +45,8 @@ export default function OgImage() {
                 width: 84,
                 height: 84,
                 borderRadius: 20,
-                background: HIT,
-                color: "#06130c",
+                background: BRAND,
+                color: "#1e3043",
                 fontSize: 56,
                 fontWeight: 800,
                 marginRight: 24,
@@ -68,7 +70,7 @@ export default function OgImage() {
               marginTop: 36,
               fontSize: 30,
               fontWeight: 700,
-              color: HIT,
+              color: BRAND,
             }}
           >
             riftcompare.com/riftle

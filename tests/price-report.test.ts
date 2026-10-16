@@ -433,7 +433,7 @@ test("the thank-you email is transactional, on-brand, and escapes what it is giv
   assert.ok(!/<script>/.test(mail.html), "nothing reporter-supplied may reach the HTML raw");
   assert.match(mail.html, /href="https:\/\/riftcompare\.com\/sealed\?set=VEN&amp;type=Booster%20Box"/, "links to the item");
   // The standard shell and footer, and nothing marketing.
-  assert.match(mail.html, /Rift<span style="color:#34d17e">Compare<\/span>/);
+  assert.match(mail.html, /Rift<span style="color:#ef7d00">Compare<\/span>/);
   assert.match(mail.html, /RiftCompare · Riftbound card price comparison\./);
   assert.ok(
     !/Unsubscribe|Create your free account|utm_/i.test(mail.html),

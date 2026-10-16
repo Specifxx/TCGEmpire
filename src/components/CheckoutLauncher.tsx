@@ -98,7 +98,7 @@ export function CheckoutLauncher({
       {/* Always rendered, never only-on-error: an auto-redirect that a popup
           blocker, a slow network or a back-button return has swallowed leaves
           an otherwise blank screen with nothing to press. */}
-      <button onClick={() => void launch()} disabled={busy} className="btn-primary mt-4 w-full py-3 text-center text-base">
+      <button onClick={() => void launch()} disabled={busy} className="btn-buy mt-4 w-full py-3 text-center text-base">
         {busy ? "Opening checkout…" : "Continue to checkout →"}
       </button>
 

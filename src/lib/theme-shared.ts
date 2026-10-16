@@ -36,7 +36,7 @@ export const THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 // Browser-chrome colour (<meta name="theme-color">) per theme. Dark matches
 // layout.tsx's `viewport.themeColor`; ThemeToggle rewrites the meta on flip.
-export const THEME_COLOR: Record<ThemeMode, string> = { dark: "#0b0e14", light: "#f4f6f8" };
+export const THEME_COLOR: Record<ThemeMode, string> = { dark: "#05161f", light: "#f2f6f8" };
 
 export function isThemeMode(v: unknown): v is ThemeMode {
   return v === "dark" || v === "light";

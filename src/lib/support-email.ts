@@ -27,7 +27,7 @@ export async function sendSupportTicketNotification(t: SupportTicketInfo): Promi
     </td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;color:#fff">From: ${t.name} &lt;${t.email}&gt;</td></tr>
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc;white-space:pre-wrap">${escapeHtml(t.message)}</td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/admin/support" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Open in admin →</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/admin/support" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Open in admin →</a></td></tr>`;
   return sendEmail(SUPPORT_EMAIL, `[RC-${t.number}] ${t.subject}`, emailShell("New support ticket", inner, footer()));
 }
 

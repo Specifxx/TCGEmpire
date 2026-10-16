@@ -17673,3 +17673,79 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 **Tests.** `tests/creator-affiliate.test.ts` (new): the terms; code normalising; commission maths; application validation; checkout with a code (promotion code as the discount, the code on both metadata objects, discounted pay-button price), and with the intro coupon (the coupon keeps the slot, the creator still credited); promotion codes found in old and new payload shapes; the webhook's order, idempotency and non-fatal handling; privacy and the admin gates; rate limits, owner notification, the share link's cookie and checkout reading it. Updated for the new metadata and discount slot: `intro-offer`, `premium-tiers`, `trial-retention`.
 
 **Shipped with `[deploy]`**, as the owner asked.
+
+## The Riftbound rebrand: teal-navy, Riftbound orange, a real wordmark — 2026-10-16
+
+**Owner:** "I really want to change the branding of Rift Compare, like in terms of the colors … match the branding of Riftbound … the logo needs to be orange now … Rift Compare should be like the orange gradient that Riftbound uses … show me some screenshots of what the new site might look like before I deploy it to main." The owner also supplied a mockup: the swirl R standing in for the R of "RIFT COMPARE", in heavy condensed capitals, in an orange gradient.
+
+**What the official brand actually is** (read from playriftbound.com's CSS and its theme object on 2026-10-16, not from memory):
+- **Colours.** Primary `#EF7D00`, buttons hover to `#F29733`, sections on teal `#013951`, navy `#1E3043` as the ink on orange, `#336073` rules. The site has no glows, gradients on UI or textures.
+- **Logo.** A vertical gradient from `#D7A63E` gold at the top to `#EF7D00` by ~58% of the letter height, solid below, no bevel or glow.
+- **Type.** Headings in Beaufort for LoL (uppercase, heavy); body in TT Norms Pro Compact. Both are Riot's licensed fonts.
+- **Motifs.** Flat sharp buttons, and a divider that fades into a diamond with a diamond cut out of it.
+
+**What changed:**
+- **Palette (`globals.css`, `tailwind.config.ts`).** The ink ramp moved from neutral graphite to the official teal taken darker (`#04131c` … `#2f566a`), so prices still sit on a near-black ground. `brand` is the official orange: `500` `#ef7d00` for fills, `400` `#f29733` for text on dark, `#a34c00` in light (5.07:1 on ink-850), `600` `#c86400`. `slate-600` was lifted again to `#80909c` (the old `#76828f` measured 4.17:1 on the new ink-850). The light theme's surfaces carry a faint teal cast. `up`, `down` and `gold` did not move: a gain is still green, and gold still means Premium.
+- **Logo.** `public/brand/r-mark.svg` is the swirl R traced (potrace) from `logo-r-green.png`. `public/brand/wordmark.svg` is that R plus "IFT COMPARE" set in Oswald Bold and converted to outlines (HarfBuzz for the kerning), as in the mockup. Oswald, not the mockup's heavier Anton, because its weight and proportions are the closest match to the RIFTBOUND letters. Both SVGs are CSS masks over `--rc-flame` (the official gradient), so the light theme darkens the logo with one variable, the SVG is cached once for every page, and no font is loaded for the logo. `BrandWordmark` shows the full lockup in the rail, the phone menu, the hero and the Premium panel. The phone header keeps the R alone, because that row has no room (`mobile-header-fit`).
+- **The layer trap.** The mask classes live in `@layer components`. Unlayered, `.rb-wordmark{display:inline-block}` beat `hidden` and drew the whole wordmark into the phone header, over Log in and Database. `mobile-header-fit` now checks the layer.
+- **Headings.** Cinzel replaced Fraunces as the Beaufort stand-in. It draws lowercase as small capitals, so headings read in caps like the official ones and long titles keep their word shapes, with no `text-transform`. The homepage's Archivo override (`.rb-display-sans`) is gone. It existed because "the official lockup is a sans", but the official site uses a sans only for its logo, and the logo is now `wordmark.svg`. That is one font fewer on `/`. Body text stays Inter.
+- **Hero.** A teal band fades from the official `#013951` into the page (`.rb-hero-band`). "Riftbound" in the H1 wears the wordmark gradient (`.rb-flame-text`), and the official diamond divider sits under the H1 from sm (`.rb-divider`).
+- **Icons.** `icon.png`, `icon-512.png`, `favicon.ico` and `apple-icon.png` are the orange R on a teal tile. Regenerate them with `scripts/logo-orange.ts`, then `logo-favicon.ts`, then `favicons.ts`.
+- **Off-site surfaces.** Share images use the orange tile and accent on a teal gradient. A green that means something stays green: Hot 40 price moves, Riftle's solved squares, market deltas. Email buttons, links and the text logo are orange. Prices, "back to normal", the ops `ok` severity and newsletter falls stay green. The store badge is orange; badges stores already pasted stay green, since they are copies on the stores' own sites.
+- **Stock stays green.** "● In stock" on the card page and in the sealed quick view used `text-brand-400`, so the rebrand would have turned it orange, which reads as a warning. Both now use `text-up`.
+- **Constants.** `lib/brand.ts` holds the brand hexes for code that cannot read Tailwind tokens.
+
+**Left as it was, for the owner to decide:**
+- **Domain colours** (`lib/constants.ts`) are card data, not RiftCompare's brand. They are close to the official ones, but Order is grey here and yellow (`#CAAD16`) officially.
+- **The 197 blog hero images** bake in the green R (`scripts/gen-blog-heroes.ts` reads `logo-r-green.png`). Regenerating them with `logo-r-orange.png` is a separate pass. So is the native app's store icon (`scripts/gen-mobile-assets.ts`).
+- **Body font.** Inter stays. The official TT Norms Pro Compact is licensed; Archivo at ~87.5% width is the closest free substitute, but changing the body face moves every measured header width.
+- **Buttons.** The official buttons are square-cornered and uppercase. Ours keep 4px corners and sentence case, because uppercase widens every label in the measured header rows.
+
+**Not deployed.** It is on `claude/intelligent-cray-4pygcm` with no deploy marker. The owner asked to see screenshots before it goes to `main`.
+
+**Tests.**
+- `theme` re-pins the dark palette, and the WCAG checks pass unchanged on the new surfaces.
+- `critical-path` checks that the Cinzel call stays preloaded.
+- `keyword-ownership` checks the H1's `rb-flame-text` span.
+- `price-report` checks the email wordmark colour.
+- `mobile-header-fit` checks the `BrandWordmark` gate and its layer.
+
+## The rebrand, after the owner's review: mixed-case logo, buy buttons keep their green, a hero that moves — 2026-10-16
+
+**Owner, on the preview above:** "the Rift Compare text … is now in all caps, but before it wasn't … keep the same format as before, but the logo and the color changes … some of the colors we shouldn't change, like TCGplayer and eBay and things that we highlight … the premium button, that's very important as well … generally all the plain colors … should change … the homepage can be a bit nicer … animated stuff … glowing … particles … interactive."
+
+**The logo is text again.**
+- The SVG "R + IFT COMPARE" lockup (`public/brand/wordmark.svg`, `BrandWordmark`) is gone. Every logo is the markup it was before the rebrand: the R mark beside "Rift" + "Compare" in Inter extrabold, mixed case.
+- Only the colours moved. The R is the orange mask, and "Compare" wears the wordmark gradient (`.rb-flame-text`) instead of brand green.
+- The phone menu and the Premium panel had set the word in `font-display`, which is now Cinzel and would draw it in small capitals, so those two use the body face.
+- `scripts/brand-mark.py` (formerly `brand-wordmark.py`) builds only `public/brand/r-mark.svg` now. The `mobile-header-fit` test is back to its pre-rebrand form.
+
+**Purchases keep the old green (`buy`, `.btn-buy`).**
+- The pre-rebrand primary (`#1ea65c`, hover `#34d17e`, dark ink; light hover `#27b868`) is now a token of its own, for what spends money:
+  - every store's buy button: `buyButtonClass`, TCGplayer's and Cardmarket's price boxes, the sealed quick view's offers, a store page's "Visit";
+  - Premium's subscribe and checkout buttons (`PremiumCta`, `CheckoutLauncher`, the win-back claim);
+  - the Cheapest and savings chips beside them.
+- eBay keeps its blue, the header's Premium link its gold, and the TCGplayer banner its sky.
+- Everything else that was "the one green" (sign-up, alerts, links, filters, nav) is the Riftbound orange.
+- **Why it is not simply orange.** These are the buttons that earn. The 2026-09-26 audit gave every retailer one colour so the top row's button reads as the thing to click. The owner asked for them unchanged, and `PremiumCta`'s own history records the owner asking for "a big green button".
+
+**The hero moves.**
+- **Embers** (`components/home/RiftEmbers.tsx`): a canvas behind the hero content.
+  - About 36-150 sparks in the orange, gold and hextech blue drift up through the hero.
+  - They part around the pointer, a soft glow follows it, and a click or tap throws a burst.
+  - It is decoration only: aria-hidden, pointer-events none, with passive listeners on the hero section, so links and search behave as before.
+  - It starts when the browser is idle after load, draws only while the hero is visible and the tab is open, and paints one still frame under reduced motion.
+- **The vortex** (`.rb-vortex`): a blurred conic swirl of orange, gold and blue that turns once a minute behind the headline, after the Riftbound emblem.
+- **The headline**: "Riftbound" in the H1 gets a sheen across the gradient every seven seconds, with a soft glow (`.rb-flame-live`).
+- **Search and chips**: the hero search has a slowly turning glow ring that brightens on hover and focus (`.rb-search-aura`). It needs `@property`, and where that is unsupported the ring stays still. The trending chips glow on hover (`.rb-glow-hover`).
+- All of the CSS sits above the reduced-motion block, which still ends `globals.css`.
+
+**Not changed:** Cinzel headings stay. The owner's note was about the logo text; the headings are the Beaufort stand-in from the entry above.
+
+**Tests:**
+- `theme`: the `.btn-buy` light rules and the `buy` token.
+- `ebay-clicks-card`: non-eBay rows are `btn-buy`.
+- `premium-pitch-panel`: the CTA is `btn-buy`.
+- `keyword-ownership`: the H1 span may carry `rb-flame-live`.
+- `header-search-resize`: the hero box may carry `rb-search-aura`.
+- `mobile-header-fit`: restored.

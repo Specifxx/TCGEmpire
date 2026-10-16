@@ -215,7 +215,7 @@ export function SideNav() {
         <BrandLogo />
         <span className="min-w-0">
           <span className="block truncate text-sm font-extrabold tracking-tight text-white">
-            Rift<span className="text-brand-400">Compare</span>
+            Rift<span className="rb-flame-text">Compare</span>
           </span>
           {/* The visitor's own market — the context every price on the site is
               quoted in, and the one piece of state worth showing permanently. */}

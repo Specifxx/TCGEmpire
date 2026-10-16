@@ -294,8 +294,8 @@ export function CinematicNavMenu() {
             <div className="sticky -top-4 z-10 -mx-5 -mt-5 flex items-center justify-between gap-4 rounded-t-lg border-b border-ink-800 bg-ink-900 px-5 pb-3 pt-5 sm:-top-8 sm:-mx-8 sm:-mt-8 sm:px-8 sm:pb-4 sm:pt-8">
               <Link href="/" onClick={close} className="flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                 <BrandLogo />
-                <span className="font-display text-lg font-extrabold text-white">
-                  Rift<span className="text-brand-400">Compare</span>
+                <span className="text-lg font-extrabold tracking-tight text-white">
+                  Rift<span className="rb-flame-text">Compare</span>
                 </span>
               </Link>
               {/* The market switcher, below 360px only: under that the header
