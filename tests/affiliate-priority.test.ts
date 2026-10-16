@@ -549,7 +549,10 @@ const RETRY_RATE = 0.25;
 const JOB_TIMEOUT_MIN = Number(
   /timeout-minutes:\s*(\d+)/.exec(readFileSync(".github/workflows/refresh-prices.yml", "utf8"))![1],
 );
-const STORE_IMPORT_MIN = 18; // the store pass that runs before eBay in the same job
+// The store pass that runs before eBay in the same job. 18 until the 2026-10-16
+// store audit took the registry from 172 to 224 stores; 30 is the measured
+// growth rounded up (an overstatement only makes the fit assertion stricter).
+const STORE_IMPORT_MIN = 30;
 
 // ── The /auctions sweep (added 2026-09-16) ───────────────────────────────────
 // A market-wide auction board, and the reason it is modelled here rather than

@@ -18097,14 +18097,21 @@ Every candidate was vetted the same way: its own collection list, then its Riftb
 |---|---|
 | AU (8) | Eternal Magic (1,513 in stock), Blacklist Cards (1,272), Turtle TCG (547), One Place TCS (353), Kollecter (266), Crit Hit (237), Raptor Games (189), The Card Cave (145) |
 | US (9) | DK's Cards (803), The Hub TCG (711), Tier 1 Games (703), The Vault Game Store (697), Spanky's (280), Card Father (182), Game Grid Idaho Falls (161), QuickTCG (70), All Access (57) |
-| UK (3) | Archeron Games (1,418), eTOYSWORLD (530), The TCG Group (106) |
+| UK (3) | Archeron Games (388 cards; it lists each copy as its own product, 1,418 in all), eTOYSWORLD (530), The TCG Group (106) |
 | SG (3) | 1Collectibles (861), Mana Pro (749), SC Collection (690) |
 | CA (32) | KadOone (1,432), 3 Mana (1,139), Fantasy Forged (1,003), Claw Me Baby, Kunai, Abyss, Draw for Turn, The Drop, Torchlight, Kingdom Titans, Le Coin du Jeu, Amuse N Games, Cartes Léo, Emmett's, Manta, NexPack CA, Geek & Co., Anime Alley, Jeux 3 Dragons, PvP Shoppe, Screen Free Games, Common Box, Sunny Hobbies, PokéJeux, Mana Confluence, 203 Collectibles, Abby Boardwalk, Negative Zone, The Side Deck, MasterSet, New Realm, Springer (plus Chonky and The CG Realm, moved in) |
 | EU (4) | SpellNexus (1,247), Shopponi (1,046), Fire and Dice (658), Cards Beyond (359; a Prague store that charges EUR to a Spanish cart) |
 
 Canada is most of it. Its Riftbound web-shop scene has grown fastest since the 2026-09-09 sweep, and much of it is in and around Markham.
 
-The registry goes from 172 to 224 stores. Every Shopify `products.json` call is a few pages a store, so an import goes from about 20 to about 26 minutes against `refresh-prices.yml`'s 90-minute limit.
+The registry goes from 172 to 224 stores.
+
+**The first import with them** (push run 38923977533, 2026-10-16) was clean:
+- It purged 5,973 card and 920 sealed rows from the decommissioned stores, and 34 card rows from the five now sealed-only.
+- Every new store priced cards, with no errors, blocks or currency refusals.
+- It took 84 minutes end to end: 57 for prices and 26 for sealed, because the sealed pass visits every singles store too.
+
+**The job limit goes from 90 to 120 minutes.** Runs were already 58–82 minutes before the audit (prices 43–62, sealed 14–19), so a heavy eBay day would now cross 90 and kill the run before the snapshot and the daily release. The limit is a ceiling, not a cost. `tests/affiliate-priority.test.ts`'s store-pass figure moves from 18 to 30 minutes.
 
 **Postage** was measured for every new and moved store (`probe-shipping-rates.ts --store=…`, merged by `build-shipping-rates.ts`). Raptor Games ships (Tuesdays and Fridays) but shows rates only inside checkout. It is on the labelled estimate (`status: "unmeasured"`), not "no-post", so it stays in Best Basket. PvP Shoppe (ships to CA and the US, rates only in checkout) is the same.
 
