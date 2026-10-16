@@ -18244,3 +18244,28 @@ AdSense's own report gives RPM by page. The test is in `docs/GROWTH-PLAYBOOK-202
 - stopped if cost per visit is above earnings per visit after two weeks
 
 To keep paid visits apart from organic ones, `lib/entry-source.ts` now classifies any `utm_source` ending in `_ads` as a new `ads` entry bucket. Before this, `reddit_ads` would have counted as organic Reddit.
+
+## Nothing paid that nobody uses: Trade Roast, the AI card insight, Speed Insights — 2026-10-16
+
+**Owner:** "Trade roast can we get rid of for the 10th. And anything that costs money and is not being used remove it." This follows "Ten features nobody used" above, which had kept Trade Roast. `/community` stays deleted.
+
+**What costs money, from the code:**
+- **AI model calls.** These were the only metered third-party API in the code; eBay, CardTrader, Cardmarket, Search Console and IndexNow are free.
+- **Vercel usage.** The 2026-09-25 bill was Observability Events $7.17, ISR writes $4.97, CPU $3.47, transfer $2.35, invocations $1.26, Web Analytics $1.25 and Speed Insights $0.65.
+- **Stripe** takes fees only on revenue.
+- **Neon and GitHub Actions** are on free plans (a public repository).
+
+**Removed:**
+- **Trade Roast** (`/api/trade-roast`, the "Roast this trade" button). Also its rule-based Trade Gremlin line (`lib/trade-gremlin.ts`): the box existed to hold the roast. The trade calculator's values, value percentages and cash difference are unchanged.
+- **The AI card insight** (`/api/card/[id]/insight`, `components/AiInsight.tsx`, `lib/ai-insight.ts`). No page rendered it, but the endpoint was public: a crawler could make it call Claude Opus on every card. `computeSignals`, its free deterministic part, moved to `lib/price-signals.ts` for the rise predictor.
+- **The `@anthropic-ai/sdk` dependency.** The site now makes no AI call at all. `/editorial-policy` says so, and `/privacy` no longer names Anthropic or Google as a recipient.
+- **Vercel Speed Insights.** It is billed per event and nothing reads it: neither the ops monitor nor any report. Core Web Vitals still come from Search Console and PageSpeed.
+
+**Kept, though it costs something:**
+- **Vercel Web Analytics** ($1.25). It is the page-view dashboard the owner can see without GA4.
+- **The 5-minute keep-warm.** It is about 17k invocations a month; cold starts were a real complaint (2026-09-11).
+- **The `/auctions` sweep.** It uses free eBay calls.
+
+**Only the owner can do these (dashboard settings, not code):**
+- Turn off Vercel Observability Plus (Settings → Observability), the largest line at $7.17 (2026-09-25).
+- Delete `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` from Vercel's environment variables, and revoke the Anthropic key.

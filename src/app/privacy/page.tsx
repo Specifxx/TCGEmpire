@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 //                         List-Unsubscribe headers, AlertMute
 //   • payments          → Stripe checkout for subscriptions (and store consulting,
 //                         sold until 2026-10-16; its bookings are still held)
-//   • AI                → /api/trade-roast sends the trade's card names and totals
+//   • AI                → none since 2026-10-16 (the Trade Roast was retired)
 // tests/trust-pages.test.ts pins the cookie names and providers to that code.
 export default function PrivacyPage() {
   const jsonLd = {
@@ -282,7 +282,7 @@ export default function PrivacyPage() {
             If you are signed in and analytics is allowed, we also send Google Analytics an opaque
             identifier for your account, so visits from your phone and your computer count as one
             person. It is a one-way code derived from your account, never your email address or your
-            name, and it is cleared when you sign out. Vercel Analytics and Speed Insights set no
+            name, and it is cleared when you sign out. Vercel Analytics sets no
             cookies.
           </p>
         </section>
@@ -334,18 +334,12 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-bold text-white">Who processes your data</h2>
           <p>We rely on these services to run the Site, each for the part named:</p>
           <ul className="list-disc space-y-1 pl-5">
-            <li><strong className="text-white">Vercel</strong> — hosting, and Vercel Analytics and Speed Insights.</li>
+            <li><strong className="text-white">Vercel</strong> — hosting, and Vercel Analytics.</li>
             <li><strong className="text-white">Neon</strong> — the database that stores accounts, alerts and prices.</li>
             <li><strong className="text-white">Google</strong> — sign-in, Google Analytics, AdSense and its consent message.</li>
             <li><strong className="text-white">Discord</strong> — sign-in.</li>
             <li><strong className="text-white">Stripe</strong> — payments and invoices.</li>
             <li><strong className="text-white">Resend and Brevo</strong> — sending email.</li>
-            <li>
-              <strong className="text-white">Anthropic or Google</strong> — only if you ask the Trade
-              Gremlin on the <Link href="/trade" className="text-brand-400 hover:underline">trade calculator</Link>{" "}
-              for its verdict: the card names and totals of that trade are sent to an AI model to write
-              the joke. Nothing that identifies you is included.
-            </li>
           </ul>
         </section>
 

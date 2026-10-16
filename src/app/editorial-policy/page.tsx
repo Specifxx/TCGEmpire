@@ -28,8 +28,8 @@ export const metadata: Metadata = {
 //   • store checks           → lib/store-health.ts, STORE_ROWS_MAX_AGE_H,
 //                              lib/offer-currency.ts, lib/sealed-offers.ts
 //   • affiliate marking      → outboundRel() in lib/affiliate.ts
-//   • what is generated      → lib/content/card-narrative.ts; the one request-
-//                              time AI feature is /api/trade-roast
+//   • what is generated      → lib/content/card-narrative.ts; no request-time
+//                              AI call exists since 2026-10-16 (Trade Roast retired)
 // tests/trust-pages.test.ts pins the numbers typed below to those constants.
 // The authorship statement is the owner's own wording (2026-09-26, "Blog and
 // tools, joined up" in DECISIONS.md) and replaced "written by people".
@@ -128,15 +128,13 @@ export default function EditorialPolicyPage() {
               then edited and fact-checked by Bill, as above. The figures they quote are the ones our
               importer recorded.
             </li>
-            {/* The only live model call a visitor can trigger: /api/trade-roast
-                (lib/ai-insight.ts llmText). AiInsight exists but is rendered on
-                no page. tests/ai-labelling.test.ts pins the on-page label. */}
+            {/* The Trade Gremlin's AI roast, the one live model call a visitor
+                could trigger, was retired on 2026-10-16 (DECISIONS.md, "Nothing
+                paid that nobody uses"). tests/trust-pages.test.ts pins this. */}
             <li>
-              <strong className="text-white">AI-written text while you browse</strong> — one feature
-              only: the Trade Gremlin&rsquo;s joke verdict on the{" "}
-              <Link href="/trade" className="text-brand-400 hover:underline">trade calculator</Link>,
-              which is labelled as AI-generated where it appears. No price, card description or
-              article is written by an AI model when you open a page.
+              <strong className="text-white">Nothing is written by AI while you browse.</strong> No
+              price, card description, tool result or article is written by an AI model when you open
+              a page or use a tool.
             </li>
           </ul>
         </section>

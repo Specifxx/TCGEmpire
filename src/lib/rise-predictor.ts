@@ -2,7 +2,7 @@ import { prisma } from "./db";
 import { cardHistoryRows, cardHistoryVersion } from "./price-history-store";
 import { priceField, pickPrice, currencyOf, COUNTRY_LIST, type Country } from "./country";
 import { ALL_FALLBACK_RETAILERS } from "./constants";
-import { computeSignals } from "./ai-insight";
+import { computeSignals } from "./price-signals";
 import {
   historySource,
   cachedOrDirect,

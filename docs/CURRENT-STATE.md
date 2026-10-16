@@ -1034,6 +1034,10 @@ longer lands on its entry.
   store consulting, Sealed Bid, Card Smash, Zoomed In, Price Check and
   `/community`. Their tables stay (no drops); every page 301s
   (`tests/feature-cleanup.test.ts`). The Pokémon section stays (owner).
+- **No AI calls, no Speed Insights (2026-10-16):** Trade Roast (and its
+  Gremlin box) and the unrendered AI card insight are gone with the Anthropic
+  SDK; the site makes no model call. Speed Insights is removed (billed, unread).
+  Web Analytics and the keep-warm stay. [2026-10-16](../DECISIONS.md#L18248)
   [2026-10-16](../DECISIONS.md#L18206)
 - **Declined:** a locked popup ✕; guest checkout (deferred); a Radiance post blitz; open-ended paid ads (a measured test is allowed, 2026-10-16); a static rule-2
   egress test; a static landscape header or

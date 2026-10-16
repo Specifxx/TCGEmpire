@@ -625,7 +625,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NativeShell />
         {/* Stashes an inbound ?ref=<userId> into a cookie for referral credit. */}
         <ReferralCapture />
-        {/* Vercel Analytics + Speed Insights, held until the same consent signal
+        {/* Vercel Analytics, held until the same consent signal
             the ad tags use resolves (Consent Mode v2 defaults everything denied).
             Outside the consent message's scope this mounts after a short grace
             period, so non-EEA measurement is unaffected. */}

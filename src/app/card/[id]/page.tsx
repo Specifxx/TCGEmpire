@@ -1442,9 +1442,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               permanently: this template's whole point is the buy button in
               the price table above, and quasi-financial "AI thinks the price
               will drop" copy sitting next to a purchase CTA undercuts the
-              action we want. AiInsight itself is untouched and still used
-              elsewhere — it's just gated off every surface with a buy button
-              (this page and QuickView). */}
+              action we want. AiInsight itself was deleted on 2026-10-16 with
+              its paid model call. */}
 
           {/* In-content ad — below the price table the visitor came for, so it never
               gets between them and the prices. Suppressed entirely on a page with

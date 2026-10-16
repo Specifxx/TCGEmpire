@@ -218,7 +218,6 @@ test("the exemption list names only files that exist, or the one being deleted",
 const INDIRECT: Record<string, string> = {
   "src/app/card/[id]/page.tsx":
     "hands the series to the narrative (card-narrative.ts trajectory() drops, pinned below) and draws nothing comparative itself",
-  "src/app/api/card/[id]/insight/route.ts": "hands the series to getInsight (lib/ai-insight.ts), which drops before computeSignals — pinned below",
   "src/components/PriceHistoryChart.tsx":
     "draws every recorded point as a chart; the step is visible in the line itself, and PriceChart's ▲/▼ arrow drops the break window (rawCardHistory, pinned below)",
   "src/app/api/card/[id]/history/route.ts":
@@ -259,8 +258,6 @@ test("the consumers the indirect readers hand points to really drop them", () =>
   // Prisma with it — must not be.
   assert.match(narrative, /import \{ dropBreakWindow \} from "@\/lib\/methodology-breaks";/);
   assert.doesNotMatch(narrative, /from "@\/lib\/price-history"|from "\.\.\/price-history"/);
-  const insight = code(read("src/lib/ai-insight.ts"));
-  assert.match(insight, /computeSignals\(dropBreakWindow\(points\)\)/, "getInsight drops before it scores");
 });
 
 // ── Records since the basis ──────────────────────────────────────────────────

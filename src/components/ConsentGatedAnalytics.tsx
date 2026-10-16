@@ -1,10 +1,9 @@
 "use client";
 
 import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { useConsent } from "@/lib/use-consent";
 
-// Vercel Analytics / Speed Insights, gated on the SAME consent signal as every
+// Vercel Analytics, gated on the SAME consent signal as every
 // other tag on the site. The decision logic lives in lib/use-consent.ts so the
 // Meta Pixel can't drift onto a different rule — see that file's header.
 //
@@ -17,8 +16,8 @@ export function ConsentGatedAnalytics() {
   return (
     <>
       <Analytics />
-      {/* Billed per event; a 10% sample is plenty for Core Web Vitals trends. */}
-      <SpeedInsights sampleRate={0.1} />
+      {/* Speed Insights was removed on 2026-10-16: billed per event and read by
+          no one (DECISIONS.md, "Nothing paid that nobody uses"). */}
     </>
   );
 }

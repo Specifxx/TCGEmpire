@@ -4,11 +4,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ogPriceLines, ogMarketsFooter, type OgPriceCard } from "../src/lib/og-price";
 import { COUNTRIES, DEFAULT_COUNTRY } from "../src/lib/country";
-import { TRADE_CURRENCIES } from "../src/lib/trade-gremlin";
 
 // The /card share image printed the AU column as "from A$…" to everyone, and its
-// footer listed five markets without EU. The trade roast rejected CAD, EUR and
-// SGD with a 400 the calculator swallowed. See lib/og-price.ts, lib/trade-gremlin.ts.
+// footer listed five markets without EU. See lib/og-price.ts.
 
 const none: OgPriceCard = {
   lowestPriceCents: null,
@@ -69,29 +67,3 @@ test("the /card OG route reads every market column and no longer hard-codes a fo
   assert.doesNotMatch(src, /AU · US · UK/);
 });
 
-test("the trade roast accepts every market's currency", () => {
-  for (const c of Object.values(COUNTRIES)) {
-    assert.ok((TRADE_CURRENCIES as readonly string[]).includes(c.currency), `${c.code}'s ${c.currency} is rejected`);
-  }
-  const route = readFileSync(join(process.cwd(), "src/app/api/trade-roast/route.ts"), "utf8");
-  assert.match(route, /z\.enum\(TRADE_CURRENCIES\)/);
-});
-
-test("POST /api/trade-roast with EUR returns 200 with text", async () => {
-  // Force the rules path: no LLM call from a test.
-  delete process.env.ANTHROPIC_API_KEY;
-  delete process.env.GEMINI_API_KEY;
-  const { POST } = await import("../src/app/api/trade-roast/route");
-  for (const currency of ["EUR", "CAD", "SGD"]) {
-    const res = await POST(
-      new Request("http://localhost/api/trade-roast", {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-forwarded-for": `10.0.0.${currency.length}${currency.charCodeAt(0)}` },
-        body: JSON.stringify({ giveCents: 1000, getCents: 2500, currency, yours: ["A"], theirs: ["B"] }),
-      })
-    );
-    assert.equal(res.status, 200, currency);
-    const body = (await res.json()) as { text: string | null };
-    assert.ok(body.text && body.text.length > 0, `${currency}: empty roast`);
-  }
-});
