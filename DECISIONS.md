@@ -18115,6 +18115,11 @@ The registry goes from 172 to 224 stores.
 
 **Postage** was measured for every new and moved store (`probe-shipping-rates.ts --store=…`, merged by `build-shipping-rates.ts`). Raptor Games ships (Tuesdays and Fridays) but shows rates only inside checkout. It is on the labelled estimate (`status: "unmeasured"`), not "no-post", so it stays in Best Basket. PvP Shoppe (ships to CA and the US, rates only in checkout) is the same.
 
+**A matcher gap found by the first import: "Charm - Origins #43".** The import flagged four tracked stores matching few of their products. Three were sealed and accessories their collections also hold (Red Sun, Level Up Games, Ace Collectibles), which correctly match nothing. The fourth, The Nerd Merchant, titles every single as "Name - Set #N", with no "/total", and 443 of its 731 matched nothing. `parseNumber` now reads a set name with its collector number straight after it. It ignores sleeves, playmats, packs and the like, and keeps the Astral Radiance guard.
+- A first, looser version (any "#n" in a title that named a set) priced Thistle Tavern's and Many Realms' "Radiance Art Sleeves #4" and "Radiance Playmat #2" as Radiance cards 4 and 2. It was caught by diffing the old and new matcher over 15,107 live titles from 17 stores.
+- The final rule changes nothing in that sample except The Nerd Merchant's 433 gains, and each gain's set and number equal the card it matched.
+- `tests/set-hash-number.test.ts` pins both halves.
+
 **Not added, and why:**
 - **Columbus Card Shop** (its site: "Our online store is not currently accepting orders"), and two that cleared the bar but do not post: **Prestige Games** ("We currently do not offer shipping") and **Twin Moons** ("we only offer store pick up"). A price nobody outside the town can order is not a comparison.
 - **MERCHANT** (merchanttcg.com, about 900 singles). It sells English and French as variants of one product, and the importer's variant pick has no language filter, so a French copy could price the English card. It needs a variant language gate first.

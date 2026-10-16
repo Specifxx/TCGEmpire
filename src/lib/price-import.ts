@@ -85,6 +85,8 @@ function nameKey(s: string): string {
 }
 function cleanProductName(title: string): string {
   return title
+    // A "#43" collector number is never part of a card's name (parseNumber reads it).
+    .replace(/#\s*\d{1,3}[a-z]?(?![\w*])/g, " ")
     .replace(/\([^)]*\)/g, " ")
     .replace(/\[[^\]]*\]/g, " ")
     .replace(STOP, " ");
@@ -123,6 +125,12 @@ const RUNE_BARE = new RegExp(String.raw`\bR\d{1,3}[a-z]?\b`, "i");
 // pattern is anchored to this so a "XX-123" fragment can never invent a set.
 const SET_CODES = new Set(SETS.map((s) => s.code.toUpperCase()));
 
+// "Origins #43", "Spiritforged #218": a set name with its collector number
+// straight after it (parseNumber). Radiance keeps SET_FROM_TITLE's guard against
+// Pokémon's "Astral Radiance".
+const SET_HASH_NUMBER = /\b(origins|proving\s*grounds|spirit\s*forged|unleashed|vendetta|(?<!astral\s)radiance)\s*#\s*(\d{1,3})([a-z]?)(?![\w*])/i;
+const ACCESSORY_TITLE = /sleeve|playmat|play\s*mat|deck\s*box|binder|portfolio|booster|display|\bpack\b|bundle|\bvault\b|\btin\b/i;
+
 function parseNumber(title: string): { setCode: string | null; key: string; total: string } | null {
   const pref = title.match(/\b([A-Za-z]{2,4})\s*-\s*(\d+)([a-z*]*)\s*\/\s*(\d+)/);
   if (pref) return { setCode: pref[1].toUpperCase(), key: numKey(pref[2] + pref[3]), total: pref[4] };
@@ -151,6 +159,19 @@ function parseNumber(title: string): { setCode: string | null; key: string; tota
     // total stays "" so setFromTotal() declines — the set comes from the explicit
     // prefix, which is the only evidence this shape carries.
     return { setCode: noTotal[1].toUpperCase(), key: numKey(noTotal[2] + noTotal[3]), total: "" };
+  }
+  // SET NAME + "#number" with no "/total" — "Charm - Origins #43" (The Nerd
+  // Merchant, 2026-10-16: 443 of its 731 singles matched nothing). The number
+  // must follow the set name directly, as a collector number does. A looser
+  // first version (any "#n" anywhere in a title naming a set) priced Thistle
+  // Tavern's "Radiance Art Sleeves #4" and "Radiance Playmat #2" as Radiance
+  // cards 4 and 2, which is exactly the wrong-printing price the set-code
+  // branch above refuses to risk. Accessories never qualify, and a lone "#12"
+  // with no set name is a lot number or a SKU, never evidence of a printing.
+  const hash = title.match(SET_HASH_NUMBER);
+  if (hash && !ACCESSORY_TITLE.test(title)) {
+    const named = SET_FROM_TITLE.find(([re]) => re.test(hash[1]));
+    if (named) return { setCode: named[1], key: numKey(hash[2] + hash[3]), total: "" };
   }
   // No "/total" anywhere — the shape a rune number has. `total` stays "" so
   // setFromTotal() simply declines and the set still has to come from the title.
