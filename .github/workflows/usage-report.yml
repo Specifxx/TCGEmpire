@@ -54,7 +54,7 @@ jobs:
               const path = new URL(r.keys[0]).pathname.replace(/\/$/, "") || "/";
               const seg = path.split("/").filter(Boolean);
               // Two levels for sections whose children are separate features (/tools/x, /games/x, /api/x).
-              const key = seg.length === 0 ? "/" : ["tools","games","embed","stores","cards","admin","premium","radiance-preorders"].includes(seg[0]) && seg[1] ? `/${seg[0]}/${seg[1]}` : `/${seg[0]}`;
+              const key = seg.length === 0 ? "/" : ["tools","games","embed","cards","admin","premium","api"].includes(seg[0]) && seg[1] ? `/${seg[0]}/${seg[1]}` : `/${seg[0]}`;
               const a = agg.get(key) || { clicks: 0, impressions: 0, pages: 0 };
               a.clicks += r.clicks; a.impressions += r.impressions; a.pages += 1; agg.set(key, a);
             }
@@ -67,7 +67,7 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
         run: |
-          cat > /tmp/usage.ts <<'TS'
+          cat > ./usage-report.tmp.ts <<'TS'
           import { Prisma, PrismaClient } from "@prisma/client";
           import { appendFileSync } from "node:fs";
           const p = new PrismaClient() as any;
@@ -90,4 +90,4 @@ jobs:
             await p.$disconnect();
           })();
           TS
-          npx tsx /tmp/usage.ts
+          npx tsx ./usage-report.tmp.ts
