@@ -16,6 +16,9 @@ import { hotListName, weekMove, type RisingSnapshotPick } from "@/lib/rising-sna
 export const HOT40_SIZE = { width: 1200, height: 630 };
 
 const GREEN = "#34d17e";
+// The brand mark and name (2026-10-16 rebrand, lib/brand.ts ORANGE_LIGHT).
+// GREEN above stays: it is a price move, not the brand.
+const BRAND = "#f29733";
 const ROSE = "#fb7185";
 const SLATE = "#94a3b8";
 
@@ -85,13 +88,13 @@ export function Hot40Image({ picks, dateLabel }: { picks: RisingSnapshotPick[]; 
       alignItems: "center",
       justifyContent: "space-between",
       padding: "48px 60px",
-      background: "linear-gradient(135deg, #0b0f17 0%, #101826 55%, #0c2018 100%)",
+      background: "linear-gradient(135deg, #04131c 0%, #062436 55%, #013951 100%)",
       fontFamily: "sans-serif",
     }}
   >
     {/* ── Left: the list's name, its leader, then the runners-up ─────── */}
     <div style={{ display: "flex", flexDirection: "column", width: 700 }}>
-      <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: GREEN, letterSpacing: -0.5 }}>{name}</div>
+      <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: BRAND, letterSpacing: -0.5 }}>{name}</div>
 
       {top ? (
         <div style={{ display: "flex", flexDirection: "column", marginTop: 14 }}>
@@ -104,8 +107,8 @@ export function Hot40Image({ picks, dateLabel }: { picks: RisingSnapshotPick[]; 
                 width: 40,
                 height: 40,
                 borderRadius: 9,
-                background: GREEN,
-                color: "#06210f",
+                background: BRAND,
+                color: "#1e3043",
                 fontSize: 24,
                 fontWeight: 900,
               }}

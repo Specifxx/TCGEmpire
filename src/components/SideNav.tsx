@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { NavIcon } from "./NavIcon";
 import { NAV_GROUPS } from "./nav-groups";
 import { searchNav } from "./nav-search";
-import { BrandLogo } from "./BrandLogo";
+import { BrandWordmark } from "./BrandLogo";
 import { useCountry } from "./CountryProvider";
 import { useMe } from "@/lib/use-me";
 import { COUNTRIES } from "@/lib/country";
@@ -212,11 +212,8 @@ export function SideNav() {
         aria-label="RiftCompare home"
         className="flex h-[calc(4rem+1px)] shrink-0 items-center gap-2.5 border-b border-ink-800 px-3 transition-colors hover:bg-ink-800/60"
       >
-        <BrandLogo />
         <span className="min-w-0">
-          <span className="block truncate text-sm font-extrabold tracking-tight text-white">
-            Rift<span className="text-brand-400">Compare</span>
-          </span>
+          <BrandWordmark className="mb-1 block h-6" />
           {/* The visitor's own market — the context every price on the site is
               quoted in, and the one piece of state worth showing permanently. */}
           <span className="block truncate text-[11px] text-slate-500">{COUNTRIES[country].label}</span>

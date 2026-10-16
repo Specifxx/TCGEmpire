@@ -207,7 +207,7 @@ async function sendReconcileAlert(extended: ReconcileExtension[], unmatched: Rec
     );
   }
   rows.push(
-    `<tr><td style="padding:18px 32px 24px"><a href="${SITE_URL}/admin/accounts" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Open admin accounts →</a></td></tr>`
+    `<tr><td style="padding:18px 32px 24px"><a href="${SITE_URL}/admin/accounts" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Open admin accounts →</a></td></tr>`
   );
   const subject = unmatched.length
     ? `[RiftCompare] ${unmatched.length} paying subscription${unmatched.length === 1 ? "" : "s"} with no account`

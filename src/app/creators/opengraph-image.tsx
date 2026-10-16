@@ -18,7 +18,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const PINK = "#f0abfc";
-const GREEN = "#34d17e";
+const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 const CARDS = [
   "seraphine-starry-eyed-songstress.jpg",
   "ekko-boy-who-shattered-time.jpg",
@@ -79,8 +79,8 @@ export default function OgImage() {
                 width: 52,
                 height: 52,
                 borderRadius: 14,
-                background: GREEN,
-                color: "#06130c",
+                background: BRAND,
+                color: "#1e3043",
                 fontSize: 34,
                 fontWeight: 800,
                 marginRight: 14,
@@ -90,7 +90,7 @@ export default function OgImage() {
             </div>
             <div style={{ display: "flex", fontSize: 38, fontWeight: 800, letterSpacing: -1 }}>
               <span style={{ color: "#ffffff" }}>Rift</span>
-              <span style={{ color: GREEN }}>Compare</span>
+              <span style={{ color: BRAND }}>Compare</span>
             </div>
           </div>
 

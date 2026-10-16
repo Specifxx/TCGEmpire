@@ -35,7 +35,7 @@ function item(r: CheckResult, label?: string): string {
     <div style="border:1px solid #233047;border-left:3px solid ${COLOR[r.severity]};border-radius:10px;padding:12px 14px">
       ${tag}<div style="font-size:15px;font-weight:700;color:#fff">${escapeHtml(r.title)}</div>
       <div style="margin-top:4px;font-size:14px;line-height:1.55;color:#b8c0cc">${escapeHtml(r.summary)}</div>
-      ${r.action ? `<div style="margin-top:8px;font-size:13px;line-height:1.55;color:#e6ebf2;background:#0b0e14;border-radius:8px;padding:9px 11px"><strong style="color:#34d17e">What to do:</strong> ${escapeHtml(r.action)}</div>` : ""}
+      ${r.action ? `<div style="margin-top:8px;font-size:13px;line-height:1.55;color:#e6ebf2;background:#0b0e14;border-radius:8px;padding:9px 11px"><strong style="color:#f29733">What to do:</strong> ${escapeHtml(r.action)}</div>` : ""}
     </div>
   </td></tr>`;
 }
@@ -76,7 +76,7 @@ export function buildAlertEmail(plan: AlertPlan): BuiltOpsEmail {
   if (plan.recoveries.length) {
     inner += `<tr><td style="padding:12px 32px 4px;font-size:13px;color:#b8c0cc"><strong style="color:#34d17e">Back to normal:</strong> ${plan.recoveries.map((r) => escapeHtml(r.title)).join(", ")}</td></tr>`;
   }
-  inner += `<tr><td style="padding:12px 32px 22px"><a href="${HEALTH_URL}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open the health dashboard →</a></td></tr>`;
+  inner += `<tr><td style="padding:12px 32px 22px"><a href="${HEALTH_URL}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open the health dashboard →</a></td></tr>`;
 
   const text = [
     urgent.length ? `${plural(urgent.length, "thing")} to look at.` : "Everything flagged earlier is healthy again.",
@@ -130,8 +130,8 @@ export function buildDigestEmail(report: OpsReport): BuiltOpsEmail {
       inner += `<tr><td style="padding:3px 32px;font-size:13px;line-height:1.5;color:#b8c0cc">${dot(r.severity)}<strong style="color:#e6ebf2">${escapeHtml(r.title)}</strong> — ${escapeHtml(r.summary)}</td></tr>`;
     }
   }
-  inner += `<tr><td style="padding:14px 32px 4px;font-size:13px;color:#b8c0cc"><strong style="color:#e6ebf2">Inbox:</strong> ${escapeHtml(inboxLine(report.inbox))} <a href="${INBOX_URL}" style="color:#34d17e">Open</a></td></tr>`;
-  inner += `<tr><td style="padding:12px 32px 22px"><a href="${HEALTH_URL}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open the health dashboard →</a></td></tr>`;
+  inner += `<tr><td style="padding:14px 32px 4px;font-size:13px;color:#b8c0cc"><strong style="color:#e6ebf2">Inbox:</strong> ${escapeHtml(inboxLine(report.inbox))} <a href="${INBOX_URL}" style="color:#f29733">Open</a></td></tr>`;
+  inner += `<tr><td style="padding:12px 32px 22px"><a href="${HEALTH_URL}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open the health dashboard →</a></td></tr>`;
 
   const text = [
     problems.length ? `${plural(problems.length, "check")} flagged, ${counts.ok} healthy.` : `All ${counts.ok} checks are healthy.`,

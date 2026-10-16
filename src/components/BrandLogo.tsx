@@ -1,29 +1,21 @@
-// The "R" mark, recoloured from its flat brand-green PNG into a two-tone green
-// depth gradient via a CSS mask, so the underlying asset (a single flat colour
-// on transparent) stays untouched. Interpolated `in oklch` (not the sRGB
-// default) purely for a cleaner ramp between the two greens — no amber/red here:
-// the Vendetta homepage block now reserves #e5484d exclusively for Vendetta, so
-// the permanent, sitewide nav mark can't also spend that red as decoration. This
-// is the site's one deliberate gradient accent — small, decorative, and not
-// carrying any data meaning — so no other element should reach for a gradient
-// without first removing this one.
+// RiftCompare's marks, in the Riftbound gold-to-orange (2026-10-16 rebrand;
+// DECISIONS.md, "The Riftbound rebrand"). Both are CSS masks over the
+// `--rc-flame` gradient (globals.css .rb-mark / .rb-wordmark), so the SVG
+// shapes in public/brand/ are fetched once and cached, the light theme darkens
+// the gradient with one variable, and no font is loaded for the logo.
+//
+// The gradient is the site's one decorative gradient besides the H1's
+// "Riftbound" (.rb-flame-text), which wears the same one on purpose: together
+// they are the logo. Buttons and chips stay flat.
+
+/** The swirl "R" alone: the compact mark (phone header, icons in copy). */
 export function BrandLogo({ className = "h-9 w-9" }: { className?: string }) {
-  return (
-    <span
-      role="img"
-      aria-label="RiftCompare logo"
-      className={`inline-block shrink-0 ${className}`}
-      style={{
-        backgroundImage: "linear-gradient(in oklch, #34d17e, #1ea65c)",
-        WebkitMaskImage: "url(/logo-r-green.png)",
-        maskImage: "url(/logo-r-green.png)",
-        WebkitMaskSize: "contain",
-        maskSize: "contain",
-        WebkitMaskRepeat: "no-repeat",
-        maskRepeat: "no-repeat",
-        WebkitMaskPosition: "center",
-        maskPosition: "center",
-      }}
-    />
-  );
+  return <span role="img" aria-label="RiftCompare logo" className={`rb-mark ${className}`} />;
+}
+
+/** The full lockup: the swirl R standing in for the R of "RIFT COMPARE", as
+ *  the owner's mockup draws it. Size it by height; the width follows the
+ *  artwork's aspect ratio. */
+export function BrandWordmark({ className = "h-7" }: { className?: string }) {
+  return <span role="img" aria-label="RiftCompare" className={`rb-wordmark ${className}`} />;
 }

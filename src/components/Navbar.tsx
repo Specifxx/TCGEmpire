@@ -8,7 +8,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { NavUser } from "./NavUser";
 import { GetPremiumLink } from "./GetPremiumLink";
 import { DISCORD_URL } from "@/lib/site";
-import { BrandLogo } from "./BrandLogo";
+import { BrandLogo, BrandWordmark } from "./BrandLogo";
 import { HeaderMenuButton } from "./HeaderMenuButton";
 import { HeaderWatchButton } from "./HeaderWatchButton";
 
@@ -56,9 +56,7 @@ export function Navbar() {
                 destination: the mark beside it is still the home link, still the
                 brand, and still tappable. The word returns at lg where the row
                 has the width for it. */}
-            <span className="hidden text-lg font-extrabold tracking-tight text-white lg:block">
-              Rift<span className="text-brand-400">Compare</span>
-            </span>
+            <BrandWordmark className="hidden h-7 lg:block" />
           </Link>
           {/* BROWSE — ONE LINK, VISIBLE AT EVERY WIDTH. Reported as "the database
               button is gone on mobile phone, that's the most important one" and

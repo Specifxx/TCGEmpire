@@ -287,7 +287,7 @@ export function buildSealedWatchEmail(item: SealedWatchItem): BuiltWatchEmail {
       <br/><strong style="color:#fff">${escapeHtml(checked)}</strong> <span style="color:#9aa4b2">Stock can sell out again before you get there.</span>
     </td></tr>
     <tr><td style="padding:14px 32px 4px">${emailButton(item.store.url, `Buy at ${escapeHtml(item.store.name)}`)}
-      <div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(sealed)}" style="color:#34d17e;font-weight:700;text-decoration:none">Compare every store on /sealed →</a></div></td></tr>
+      <div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(sealed)}" style="color:#f29733;font-weight:700;text-decoration:none">Compare every store on /sealed →</a></div></td></tr>
     <tr><td style="padding:4px 32px 16px;font-size:12px;line-height:1.7;color:#6b7585">
       ${escapeHtml(SEALED_CADENCE_NOTE)} The store's checkout is final. RRP is the price Riot sets.<br/>
       ${actions ? `<a href="${escapeHtml(actions.stop)}" style="color:#9aa4b2;text-decoration:underline">Stop watching this product</a> &nbsp;·&nbsp; <a href="${escapeHtml(actions.snooze)}" style="color:#9aa4b2;text-decoration:underline">Snooze 30 days</a>` : ""}
@@ -371,7 +371,7 @@ export function buildGradedWatchEmail(item: GradedWatchItem): BuiltWatchEmail {
       <br/><strong style="color:#fff">${escapeHtml(checked)}</strong> <span style="color:#9aa4b2">A listing can sell before you get there.</span>
     </td></tr>
     <tr><td style="padding:14px 32px 4px">${emailButton(item.listingUrl, "See it on eBay")}
-      <div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(card)}" style="color:#34d17e;font-weight:700;text-decoration:none">Graded price history on RiftCompare →</a></div></td></tr>
+      <div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(card)}" style="color:#f29733;font-weight:700;text-decoration:none">Graded price history on RiftCompare →</a></div></td></tr>
     <tr><td style="padding:4px 32px 16px;font-size:12px;line-height:1.7;color:#6b7585">
       Graded listings are read from eBay once a day. The seller's grade and the slab are theirs to describe; check the photos before you buy.
     </td></tr>`;
@@ -444,12 +444,12 @@ export function buildAuctionAlertEmail(items: AuctionAlertItem[], actions: Watch
       <span style="font-size:18px;font-weight:800;color:#34d17e">${escapeHtml(formatMoney(it.currentBidCents, it.currency))}</span>
       current bid · ${it.bidCount} bid${it.bidCount === 1 ? "" : "s"} · ends in ${escapeHtml(endsIn(it.endsAt, now))}<br/>
       <span style="font-size:12px;color:#6b7585">${escapeHtml(it.title)}</span><br/>
-      <a href="${escapeHtml(it.url)}" style="color:#34d17e;font-weight:700;text-decoration:none">Bid on eBay →</a>
+      <a href="${escapeHtml(it.url)}" style="color:#f29733;font-weight:700;text-decoration:none">Bid on eBay →</a>
     </td></tr>`,
     )
     .join("");
   const inner = `${rows}
-    <tr><td style="padding:16px 32px 4px;font-size:13px"><a href="${escapeHtml(auctions)}" style="color:#34d17e;font-weight:700;text-decoration:none">Every live Riftbound auction →</a></td></tr>
+    <tr><td style="padding:16px 32px 4px;font-size:13px"><a href="${escapeHtml(auctions)}" style="color:#f29733;font-weight:700;text-decoration:none">Every live Riftbound auction →</a></td></tr>
     <tr><td style="padding:4px 32px 16px;font-size:12px;line-height:1.7;color:#6b7585">
       Bids are as of our last sweep and move fast near the end. We match auctions to your cards by their eBay titles, so check the listing is the printing you want.
     </td></tr>`;

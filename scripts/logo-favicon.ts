@@ -1,12 +1,14 @@
-// Build the app icon / favicon: the RC mark on a dark rounded tile. Outputs a raster
-// PNG (Google Search + browser tabs need raster, not SVG).
+// Build the app icon / favicon: the R mark in the Riftbound flame gradient on a
+// teal rounded tile (2026-10-16 rebrand; run scripts/logo-orange.ts first).
+// Outputs a raster PNG (Google Search + browser tabs need raster, not SVG).
 //   src/app/icon.png    -> the favicon (Next serves it at /icon.png)
 //   public/icon-512.png -> stable URL for the Organization JSON-LD logo
 import { Jimp } from "jimp";
 
 const S = 512, RAD = 112;
-const C1 = { r: 0x16, g: 0x27, b: 0x3f }; // top-left
-const C2 = { r: 0x0a, g: 0x13, b: 0x20 }; // bottom-right
+// Riftbound's section teal (#013951) into the site's darkest ink (#04131c).
+const C1 = { r: 0x01, g: 0x39, b: 0x51 }; // top-left
+const C2 = { r: 0x04, g: 0x13, b: 0x1c }; // bottom-right
 
 function inRounded(x: number, y: number) {
   const rx = Math.min(x, S - 1 - x), ry = Math.min(y, S - 1 - y);
@@ -29,7 +31,7 @@ async function main() {
       d[i + 3] = 255;
     }
   }
-  const mark = await Jimp.read("public/logo-r-green.png");
+  const mark = await Jimp.read("public/logo-r-orange.png");
   mark.resize({ h: Math.round(S * 0.70) });
   const x = Math.round((S - mark.bitmap.width) / 2);
   const y = Math.round((S - mark.bitmap.height) / 2);

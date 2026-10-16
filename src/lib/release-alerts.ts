@@ -176,7 +176,7 @@ export function buildReleaseEmail(
 export function renderReleaseEmailHtml(e: BuiltReleaseEmail, token: string, shell: (h: string, inner: string, footer: string, pre?: string) => string): string {
   const inner =
     e.lines.map((l) => `<tr><td style="padding:6px 32px;font-size:15px;line-height:1.55;color:#d6dbe3">${esc(l)}</td></tr>`).join("") +
-    `<tr><td style="padding:14px 32px 8px"><a href="${esc(e.cta.url)}" style="display:inline-block;background:#34d17e;color:#06210f;font-size:15px;font-weight:700;text-decoration:none;padding:10px 18px;border-radius:10px">${esc(e.cta.label)}</a></td></tr>`;
+    `<tr><td style="padding:14px 32px 8px"><a href="${esc(e.cta.url)}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-size:15px;font-weight:700;text-decoration:none;padding:10px 18px;border-radius:10px">${esc(e.cta.label)}</a></td></tr>`;
   const footer = `<tr><td style="padding:18px 32px 26px;font-size:12px;line-height:1.5;color:#7d8796">You asked us to email you about this release. This alert sends at most two emails. <a href="${esc(releaseStopUrl(token))}" style="color:#9aa4b2">Unsubscribe</a></td></tr>`;
   return shell(esc(e.heading), inner, footer, e.lines[0]);
 }

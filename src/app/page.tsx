@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Archivo } from "next/font/google";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { getCachedTopDeals, type TopDeals } from "@/lib/top-deals";
@@ -40,24 +39,11 @@ import { webPage, faqPage, webApplication } from "@/lib/jsonld";
 // after nothing consumed it would be a regression with no upside. The hero now
 // needs NO data beyond the stats it already renders.
 
-// Homepage titling face — a heavy neutral grotesque matching the official
-// Riftbound wordmark lockup ("RIFTBOUND / LEAGUE OF LEGENDS TRADING CARD GAME"),
-// which is set in a bold sans rather than the flared serif the rest of the site
-// uses for headings (Fraunces — see layout.tsx). Archivo is the closest free,
-// properly-licensed analog: same wide, solid, poster-weight grotesque character.
-//
-// Declared HERE rather than in layout.tsx on purpose: next/font only injects and
-// preloads a face on the routes that actually reference it, so scoping the
-// import to this file keeps the extra download off every other page. The var is
-// applied to the homepage wrapper below and inherited by its children (the hero
-// lives in a separate component), then consumed by the `.rb-display-sans` rule
-// in globals.css.
-const archivo = Archivo({
-  subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
-  variable: "--font-riftbound",
-  display: "swap",
-});
+// No homepage-only titling face any more: Archivo and the `.rb-display-sans`
+// override went with the 2026-10-16 rebrand (DECISIONS.md, "The Riftbound
+// rebrand"). The official site sets its headings in its titling serif and
+// keeps a sans for the logo alone, so this page's headings follow the rest of
+// the site (Cinzel, layout.tsx) and the logo is BrandWordmark.
 
 // REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
 // indexed copy names all four markets, data is fetched for the AU baseline) so
@@ -324,7 +310,7 @@ export default async function HomePage() {
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
 
   return (
-    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
+    <div className="flex flex-col gap-10">
       {/* Cinematic full-bleed hero — search-first (see CinematicHero + Task 3). */}
       <CinematicHero
         totalCards={totalCards}

@@ -118,9 +118,15 @@ test("the wordmark, not a nav control, is what pays for the tablet band", () => 
   // WORD to lg covers it with room — and it is the only thing in the row that is
   // decoration rather than a destination. The mark stays: still the home link,
   // still tappable, still the brand.
+  // Since the 2026-10-16 rebrand the word is BrandWordmark, an SVG lockup, not
+  // text; the gate is the same, and it is a utility, so .rb-wordmark lives in
+  // globals.css's components layer where `hidden` can beat its display.
   const code = readCode(NAVBAR);
-  assert.match(code, /<span className="hidden text-lg font-extrabold tracking-tight text-white lg:block">/);
-  assert.doesNotMatch(code, /tracking-tight text-white sm:block/, "the wordmark must not turn back on at sm");
+  assert.match(code, /<BrandWordmark className="hidden h-7 lg:block" \/>/);
+  assert.doesNotMatch(code, /<BrandWordmark className="[^"]*sm:block/, "the wordmark must not turn back on at sm");
+  const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
+  const layer = css.indexOf("@layer components {", css.indexOf("Brand marks (2026-10-16 rebrand)") - 400);
+  assert.ok(layer >= 0 && layer < css.indexOf(".rb-wordmark {"), ".rb-wordmark must sit inside @layer components");
 });
 
 test("the phone slot is the shiny Premium button again (2026-10-15; plain Pricing 09-28 to 10-15)", () => {

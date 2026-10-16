@@ -22,8 +22,9 @@ keep working.
 
 | Token | Dark value | Use |
 |---|---|---|
-| `ink-950`…`ink-600` | `#0a0c10`→`#333b4d` | Backgrounds, borders, surfaces — the neutral graphite scale |
-| `brand` / `brand-400` | `#1ea65c` / `#34d17e` | The one sharp accent. `brand-400` is the link/text shade; `500`/`600` are fills and borders |
+| `ink-950`…`ink-600` | `#04131c`→`#2f566a` | Backgrounds, borders, surfaces — Riftbound's teal-navy, darkened (2026-10-16 rebrand) |
+| `brand` / `brand-400` | `#ef7d00` / `#f29733` | The one sharp accent, Riftbound orange. `brand-400` is the link/text shade (`#a34c00` in light); `500`/`600` are fills and borders. Dark ink on the fill, never white |
+| `--rc-flame` | `#d7a63e`→`#ef7d00` | The official wordmark gradient. The logo masks (`.rb-mark`, `.rb-wordmark`) and the H1's `.rb-flame-text` only — never a button |
 | `slate-100`…`slate-900` | lifted off Tailwind stock | Secondary text. **Lifted for contrast** — stock `slate-500`/`600` measured under 4.5:1 on this palette's surfaces; these replacements clear it with margin. Never reach for an un-themed grey |
 | `accent` | `#eef1f5` | High-contrast numerals — prices, tickers |
 | `gold` | `#caa85a` | Reserved for genuine gold/foil semantics (Premium, rarity). Never generic UI chrome |

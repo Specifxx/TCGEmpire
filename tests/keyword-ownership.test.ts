@@ -142,7 +142,7 @@ test("the homepage H1 is the head term; the BUY query moves to the subhead, and 
   const hero = read(HERO);
   assert.match(
     hero,
-    /<span className="text-brand-400">Riftbound<\/span> Card Prices\{region \?/,
+    /<span className="rb-flame-text">Riftbound<\/span> Card Prices\{region \?/,
     "the hero H1 must carry the head term",
   );
   assert.match(hero, />Buy Riftbound cards at the best price<\/strong>/, "the buy phrase leads the subhead");

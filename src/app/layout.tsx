@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fragment } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
+import { Inter, JetBrains_Mono, Cinzel } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
@@ -88,16 +88,16 @@ const ReferralCapture = dynamic(() => import("@/components/ReferralCapture").the
   ssr: false,
 });
 
-// PREVIEW BRANCH — emulates the official Riftbound/League of Legends site's
-// typographic DNA (a sharp, flared serif for titling over a clean humanist sans
-// for body/UI) using free, properly-licensed fonts. Riot's actual "Beaufort for
-// LoL" and "Spiegel" are proprietary, custom-commissioned typefaces — there is no
-// legitimate self-hosted or hotlinked @font-face source for them on a third-party
-// site, so this uses look-alikes instead:
-//   Headings — Fraunces: a sharp, high-contrast, slightly flared serif at a heavy
-//     weight. Closest free analog to Beaufort's bold titling character.
-//   Body/UI  — Inter: a clean, highly legible humanist grotesque — the same
-//     family Spiegel itself is often compared to.
+// Emulates the official Riftbound site's typographic DNA (a Roman titling serif
+// for every heading over a clean sans for body/UI) using free, properly-licensed
+// fonts. Riot's actual "Beaufort for LoL" (headings) and "TT Norms Pro Compact"
+// (body) are licensed typefaces — there is no legitimate self-hosted or
+// hotlinked @font-face source for them on a third-party site, so this uses
+// look-alikes instead:
+//   Headings — Cinzel: Roman capitals with small-cap lowercase, the closest free
+//     analog to Beaufort's titling (2026-10-16 rebrand; it replaced Fraunces).
+//   Body/UI  — Inter: a clean, highly legible grotesque.
+// The logo is not a font at all: public/brand/wordmark.svg, outlines.
 // Exposed as CSS vars wired into Tailwind. display: "swap" — the brand fonts
 // ALWAYS render (consistent on every load) rather than "optional" which silently
 // keeps the system fallback whenever the font misses the ~100ms first-paint
@@ -110,14 +110,13 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 // render-blocking CSS for the first 600ms of every page load. The mono face only
 // dresses numbers — never the H1 that is the LCP on article pages — so it can
 // arrive with the stylesheet and swap in; adjustFontFallback keeps the widths
-// matched, so the swap does not move anything. Inter (body) and Fraunces (the
+// matched, so the swap does not move anything. Inter (body) and Cinzel (the
 // H1) stay preloaded.
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap", preload: false });
-// Sharp flared serif for headings only — the Beaufort-style look-alike (see note above).
-const fraunces = Fraunces({
+// Roman titling serif for headings only — the Beaufort-style look-alike (see note above).
+const cinzel = Cinzel({
   subsets: ["latin"],
-  weight: ["600", "700", "900"],
-  style: ["normal"],
+  weight: ["700", "800"],
   variable: "--font-display",
   display: "swap",
 });
@@ -203,7 +202,7 @@ export const metadata: Metadata = {
 
 // Brand chrome colour for the browser UI / installed-PWA theme (matches the
 // site's ink-950 background). Paired with the web manifest (app/manifest.ts).
-export const viewport: Viewport = { themeColor: "#0b0e14" };
+export const viewport: Viewport = { themeColor: "#05161f" };
 
 const orgJsonLd = {
   "@context": "https://schema.org",
@@ -296,7 +295,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}
+      className={`${inter.variable} ${jetbrainsMono.variable} ${cinzel.variable}`}
       // The theme boot script below stamps data-theme on this element before
       // React hydrates; React must not report that as a mismatch. (A second
       // script used to stamp data-sidenav here too — removed with the rail's
@@ -374,7 +373,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             2px, no spinner (the fade in template.tsx is the rest of the
             feedback). zIndex 200 matches the skip link's own z-[200] above —
             it must win over every overlay's backdrop, including a modal. */}
-        <NextTopLoader color="#34d17e" height={2} showSpinner={false} shadow={false} zIndex={200} />
+        <NextTopLoader color="#ef7d00" height={2} showSpinner={false} shadow={false} zIndex={200} />
         <PremiumProvider>
         <PremiumDialogProvider>
         <CountryProvider initial={DEFAULT_COUNTRY}>

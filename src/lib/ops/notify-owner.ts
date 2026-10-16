@@ -63,7 +63,7 @@ export function buildInboxEmail(item: InboxItem): { subject: string; html: strin
         ? `<tr><td style="padding:10px 32px 6px"><div style="background:#0b0e14;border:1px solid #233047;border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.6;color:#e6ebf2;white-space:pre-wrap">${escapeHtml(clip(item.body.trim(), 2000))}</div></td></tr>`
         : ""
     }
-    <tr><td style="padding:12px 32px 22px"><a href="${inboxHref(item.kind)}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open the inbox →</a></td></tr>`;
+    <tr><td style="padding:12px 32px 22px"><a href="${inboxHref(item.kind)}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open the inbox →</a></td></tr>`;
   const text = [
     `${label}${item.from ? ` from ${item.from}` : ""}`,
     ...rows.map(([k, v]) => `${k}: ${clip(oneLine(v), 300)}`),

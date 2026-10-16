@@ -932,13 +932,13 @@
     "src": "/icon-512.png",
     "width": 512,
     "height": 512,
-    "bytes": 13104,
+    "bytes": 16505,
     "webp": "/icon-512.webp",
-    "webpBytes": 8534,
-    "fingerprint": "59be25fd82882739",
-    "variants": [],
+    "webpBytes": 9972,
     "avif": "/icon-512.avif",
-    "avifBytes": 6457
+    "avifBytes": 8017,
+    "variants": [],
+    "fingerprint": "d5c3a10719fb4168"
   },
   "/logo-c.png": {
     "src": "/logo-c.png",
@@ -2608,5 +2608,17 @@
     "variants": [],
     "avif": "/vendetta-synergy-loop.avif",
     "avifBytes": 23578
+  },
+  "/logo-r-orange.png": {
+    "src": "/logo-r-orange.png",
+    "width": 359,
+    "height": 353,
+    "bytes": 6566,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "2fb851b83444b0c6"
   }
 }

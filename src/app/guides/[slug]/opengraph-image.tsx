@@ -9,7 +9,7 @@ export const alt = "RiftCompare Guide";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const GREEN = "#34d17e";
+const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 
 export default function Image({ params }: { params: { slug: string } }) {
   const a = getArticle(params.slug);
@@ -32,7 +32,7 @@ export default function Image({ params }: { params: { slug: string } }) {
           justifyContent: "space-between",
           padding: "64px 72px",
           background:
-            "linear-gradient(135deg, #0b0f17 0%, #101826 55%, #0c2018 100%)",
+            "linear-gradient(135deg, #04131c 0%, #062436 55%, #013951 100%)",
           fontFamily: "sans-serif",
         }}
       >
@@ -46,8 +46,8 @@ export default function Image({ params }: { params: { slug: string } }) {
               width: 56,
               height: 56,
               borderRadius: 14,
-              background: GREEN,
-              color: "#06130c",
+              background: BRAND,
+              color: "#1e3043",
               fontSize: 34,
               fontWeight: 800,
               marginRight: 18,
@@ -71,9 +71,9 @@ export default function Image({ params }: { params: { slug: string } }) {
               display: "flex",
               padding: "6px 18px",
               borderRadius: 999,
-              background: "rgba(52,209,126,0.15)",
-              border: `2px solid ${GREEN}`,
-              color: GREEN,
+              background: "rgba(239,125,0,0.15)",
+              border: `2px solid ${BRAND}`,
+              color: BRAND,
               fontSize: 22,
               fontWeight: 800,
               textTransform: "uppercase",

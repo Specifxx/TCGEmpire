@@ -510,7 +510,7 @@ export function CardPriceComparison({
                         </span>
                       ) : null;
                     })()}
-                    <span className="text-brand-400">● In stock</span>
+                    <span className="text-up">● In stock</span>
                     <span>
                       {p.ship == null ? "postage at checkout" : p.ship === 0 ? "free postage" : `+ ${fmt(p.ship)} postage`}
                     </span>

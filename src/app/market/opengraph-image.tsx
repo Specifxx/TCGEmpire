@@ -34,7 +34,7 @@ export default async function Image() {
   // The "·" and "—" used in the other OG routes are fine: both are in the
   // standard Latin set the embedded font covers.
   const deltaText = d7 == null ? "" : `${up ? "+" : d7 < 0 ? "-" : ""}${Math.abs(d7)}% (7d)`;
-  const accent = "#34d17e";
+  const accent = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 
   return new ImageResponse(
     (
@@ -46,7 +46,7 @@ export default async function Image() {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 80px",
-          background: "linear-gradient(135deg, #0b0f17 0%, #101826 55%, #0c2018 100%)",
+          background: "linear-gradient(135deg, #04131c 0%, #062436 55%, #013951 100%)",
           fontFamily: "sans-serif",
         }}
       >
@@ -60,7 +60,7 @@ export default async function Image() {
               height: 60,
               borderRadius: 15,
               background: accent,
-              color: "#06130c",
+              color: "#1e3043",
               fontSize: 38,
               fontWeight: 800,
               marginRight: 18,
