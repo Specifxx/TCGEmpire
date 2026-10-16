@@ -133,7 +133,7 @@ function PctBadge({ deal }: { deal: Deal }) {
       : deal.dealType === "rising-cards"
       ? `Score ${deal.pctLabel}`
       : `−${deal.pctLabel}%`;
-  return <span className="chip num shrink-0 bg-brand-500/15 text-brand-300">{text}</span>;
+  return <span className="chip num shrink-0 bg-buy/15 text-brand-300">{text}</span>;
 }
 
 function DealRow({ deal, currency, country }: { deal: Deal; currency: string; country: Country }) {

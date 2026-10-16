@@ -19,19 +19,20 @@ import { recallPremiumSurface } from "@/lib/premium-surface";
 // This is a deliberate, scoped exception to the gold-for-Premium convention,
 // not drift. Gold is this site's Premium IDENTITY — the badges, the "Best
 // value" ribbon, the nav link, the dialog's own buttons all keep it. But green
-// (brand-500) is the site's single primary-ACTION accent, the same one every
-// other "do the thing" button on the site uses, so it reads as "go" in a way
-// gold never did. This component renders only on /premium, so the split is
+// reads as "go" in a way gold never did. Since the 2026-10-16 rebrand the
+// site's primary accent is orange and this green is `btn-buy`, the colour every
+// purchase keeps (a store's buy button, this checkout): the owner asked for the
+// buttons that earn to stay exactly as they were. This component renders only on /premium, so the split is
 // exactly one page deep. PremiumDialog.tsx and PremiumButton.tsx are untouched
 // and still gold — see the dialog's own header on why its panel stays "not the
 // green bubble look".
 //
-// btn-primary already carries the tap-target floor and the hover; the extra
+// btn-buy already carries the tap-target floor and the hover; the extra
 // utilities make it full-bleed and a size up. Tailwind's utilities layer
 // outranks the @layer components defaults, so these win over .btn's px/py/text.
 // text-center + leading-tight because this label wraps to two lines in the
 // narrower of the two pricing cards; without them the second line sits badly.
-const CTA_BTN = "btn-primary w-full py-3.5 text-center text-base leading-tight";
+const CTA_BTN = "btn-buy w-full py-3.5 text-center text-base leading-tight";
 
 // The Premium subscribe button. Three states: checkout live (Stripe hosted
 // checkout), signed out (straight to /premium/start, which IS the sign-in step

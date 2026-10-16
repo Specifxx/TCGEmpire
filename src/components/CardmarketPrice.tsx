@@ -61,7 +61,7 @@ export function CardmarketPrice({
           href={href}
           retailer={isEu ? "cardmarket_eu" : "cardmarket"}
           country={isEu ? "EU" : "UK"}
-          className="btn-primary shrink-0 text-sm"
+          className="btn-buy shrink-0 text-sm"
         >
           Check on Cardmarket →
         </OutboundLink>

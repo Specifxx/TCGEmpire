@@ -111,10 +111,14 @@ test("the light palette keeps the accessibility guarantees the dark one makes (4
   // Dark ink on bright fills stays dark in the light theme (text-ink-950 would
   // otherwise invert to near-white on the green button and gold badges), the
   // fills themselves stay bright, and the button's hover stays a light orange.
-  assert.match(CSS, /:root\[data-theme="light"\] \.btn-primary,\s*\n\s*:root\[data-theme="light"\] \.bg-brand-500\.text-ink-950,\s*\n\s*:root\[data-theme="light"\] \.bg-gold\.text-ink-950,[\s\S]*?\{\s*color: #0a0c10;/);
+  assert.match(CSS, /:root\[data-theme="light"\] \.btn-primary,\s*\n\s*:root\[data-theme="light"\] \.btn-buy,\s*\n\s*:root\[data-theme="light"\] \.bg-brand-500\.text-ink-950,\s*\n\s*:root\[data-theme="light"\] \.bg-gold\.text-ink-950,[\s\S]*?\{\s*color: #0a0c10;/);
   assert.match(CSS, /:root\[data-theme="light"\] \.bg-gold \{\s*background-color: #caa85a;/);
   assert.match(CSS, /:root\[data-theme="light"\] \.bg-brand-400 \{\s*background-color: #f29733;/);
   assert.match(CSS, /:root\[data-theme="light"\] \.btn-primary:hover \{\s*background-color: #f29733;/);
+  // The buy green (every store's buy button, Premium's checkout) is the
+  // pre-rebrand primary, light hover included (owner, 2026-10-16).
+  assert.match(CSS, /:root\[data-theme="light"\] \.btn-buy:hover \{\s*background-color: #27b868;/);
+  assert.match(CFG, /buy: \{\s*DEFAULT: "#1ea65c",\s*400: "#34d17e",/);
 });
 
 test("the light palette is actually light and the dark one actually dark", () => {

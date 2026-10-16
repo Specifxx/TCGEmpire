@@ -43,7 +43,7 @@ import { webPage, faqPage, webApplication } from "@/lib/jsonld";
 // override went with the 2026-10-16 rebrand (DECISIONS.md, "The Riftbound
 // rebrand"). The official site sets its headings in its titling serif and
 // keeps a sans for the logo alone, so this page's headings follow the rest of
-// the site (Cinzel, layout.tsx) and the logo is BrandWordmark.
+// the site (Cinzel, layout.tsx).
 
 // REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
 // indexed copy names all four markets, data is fetched for the AU baseline) so

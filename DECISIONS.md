@@ -17709,3 +17709,43 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 - `keyword-ownership` checks the H1's `rb-flame-text` span.
 - `price-report` checks the email wordmark colour.
 - `mobile-header-fit` checks the `BrandWordmark` gate and its layer.
+
+## The rebrand, after the owner's review: mixed-case logo, buy buttons keep their green, a hero that moves — 2026-10-16
+
+**Owner, on the preview above:** "the Rift Compare text … is now in all caps, but before it wasn't … keep the same format as before, but the logo and the color changes … some of the colors we shouldn't change, like TCGplayer and eBay and things that we highlight … the premium button, that's very important as well … generally all the plain colors … should change … the homepage can be a bit nicer … animated stuff … glowing … particles … interactive."
+
+**The logo is text again.**
+- The SVG "R + IFT COMPARE" lockup (`public/brand/wordmark.svg`, `BrandWordmark`) is gone. Every logo is the markup it was before the rebrand: the R mark beside "Rift" + "Compare" in Inter extrabold, mixed case.
+- Only the colours moved. The R is the orange mask, and "Compare" wears the wordmark gradient (`.rb-flame-text`) instead of brand green.
+- The phone menu and the Premium panel had set the word in `font-display`, which is now Cinzel and would draw it in small capitals, so those two use the body face.
+- `scripts/brand-mark.py` (formerly `brand-wordmark.py`) builds only `public/brand/r-mark.svg` now. The `mobile-header-fit` test is back to its pre-rebrand form.
+
+**Purchases keep the old green (`buy`, `.btn-buy`).**
+- The pre-rebrand primary (`#1ea65c`, hover `#34d17e`, dark ink; light hover `#27b868`) is now a token of its own, for what spends money:
+  - every store's buy button: `buyButtonClass`, TCGplayer's and Cardmarket's price boxes, the sealed quick view's offers, a store page's "Visit";
+  - Premium's subscribe and checkout buttons (`PremiumCta`, `CheckoutLauncher`, the win-back claim);
+  - the Cheapest and savings chips beside them.
+- eBay keeps its blue, the header's Premium link its gold, and the TCGplayer banner its sky.
+- Everything else that was "the one green" (sign-up, alerts, links, filters, nav) is the Riftbound orange.
+- **Why it is not simply orange.** These are the buttons that earn. The 2026-09-26 audit gave every retailer one colour so the top row's button reads as the thing to click. The owner asked for them unchanged, and `PremiumCta`'s own history records the owner asking for "a big green button".
+
+**The hero moves.**
+- **Embers** (`components/home/RiftEmbers.tsx`): a canvas behind the hero content.
+  - About 36-150 sparks in the orange, gold and hextech blue drift up through the hero.
+  - They part around the pointer, a soft glow follows it, and a click or tap throws a burst.
+  - It is decoration only: aria-hidden, pointer-events none, with passive listeners on the hero section, so links and search behave as before.
+  - It starts when the browser is idle after load, draws only while the hero is visible and the tab is open, and paints one still frame under reduced motion.
+- **The vortex** (`.rb-vortex`): a blurred conic swirl of orange, gold and blue that turns once a minute behind the headline, after the Riftbound emblem.
+- **The headline**: "Riftbound" in the H1 gets a sheen across the gradient every seven seconds, with a soft glow (`.rb-flame-live`).
+- **Search and chips**: the hero search has a slowly turning glow ring that brightens on hover and focus (`.rb-search-aura`). It needs `@property`, and where that is unsupported the ring stays still. The trending chips glow on hover (`.rb-glow-hover`).
+- All of the CSS sits above the reduced-motion block, which still ends `globals.css`.
+
+**Not changed:** Cinzel headings stay. The owner's note was about the logo text; the headings are the Beaufort stand-in from the entry above.
+
+**Tests:**
+- `theme`: the `.btn-buy` light rules and the `buy` token.
+- `ebay-clicks-card`: non-eBay rows are `btn-buy`.
+- `premium-pitch-panel`: the CTA is `btn-buy`.
+- `keyword-ownership`: the H1 span may carry `rb-flame-live`.
+- `header-search-resize`: the hero box may carry `rb-search-aura`.
+- `mobile-header-fit`: restored.

@@ -1,21 +1,13 @@
-// RiftCompare's marks, in the Riftbound gold-to-orange (2026-10-16 rebrand;
-// DECISIONS.md, "The Riftbound rebrand"). Both are CSS masks over the
-// `--rc-flame` gradient (globals.css .rb-mark / .rb-wordmark), so the SVG
-// shapes in public/brand/ are fetched once and cached, the light theme darkens
-// the gradient with one variable, and no font is loaded for the logo.
+// The swirl "R" mark, in the Riftbound gold-to-orange (2026-10-16 rebrand;
+// DECISIONS.md, "The Riftbound rebrand"). A CSS mask over the `--rc-flame`
+// gradient (globals.css .rb-mark): the shape is public/brand/r-mark.svg, traced
+// from the original logo-r-green.png, so the light theme darkens the gradient
+// with one variable and the SVG is fetched once and cached.
 //
-// The gradient is the site's one decorative gradient besides the H1's
-// "Riftbound" (.rb-flame-text), which wears the same one on purpose: together
-// they are the logo. Buttons and chips stay flat.
-
-/** The swirl "R" alone: the compact mark (phone header, icons in copy). */
+// The wordmark beside it is live text, as it always was ("Rift" + "Compare",
+// mixed case, owner 2026-10-16): only "Compare" changed, from brand green to
+// the same gradient (.rb-flame-text). That gradient is the site's decoration
+// for the logo and the homepage H1's "Riftbound"; buttons and chips stay flat.
 export function BrandLogo({ className = "h-9 w-9" }: { className?: string }) {
   return <span role="img" aria-label="RiftCompare logo" className={`rb-mark ${className}`} />;
-}
-
-/** The full lockup: the swirl R standing in for the R of "RIFT COMPARE", as
- *  the owner's mockup draws it. Size it by height; the width follows the
- *  artwork's aspect ratio. */
-export function BrandWordmark({ className = "h-7" }: { className?: string }) {
-  return <span role="img" aria-label="RiftCompare" className={`rb-wordmark ${className}`} />;
 }

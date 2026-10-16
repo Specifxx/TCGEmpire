@@ -575,7 +575,7 @@ function QuickViewModal({
                         <div className="flex min-w-0 flex-wrap items-center gap-1.5 gap-y-0.5">
                           <span className="min-w-0 truncate text-sm font-semibold text-white">{p.retailerName}</span>
                           {i === 0 && inStock.length > 1 && (
-                            <span className="chip shrink-0 bg-brand-500/20 text-[9px] font-bold uppercase tracking-wide text-brand-300">
+                            <span className="chip shrink-0 bg-buy/20 text-[9px] font-bold uppercase tracking-wide text-brand-300">
                               Cheapest
                             </span>
                           )}

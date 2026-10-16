@@ -45,6 +45,16 @@ const config: Config = {
           500: "#ef7d00",
           600: "#c86400",
         },
+        // The BUY green (owner, 2026-10-16: "TCGplayer and eBay and things that
+        // we highlight … shouldn't change … the premium button"): the
+        // pre-rebrand brand green, kept for what spends money — every store's
+        // buy button (`.btn-buy`), Premium's subscribe and checkout, and the
+        // Cheapest / savings chips beside them. eBay keeps its own blue, and the
+        // header's Premium link its gold. Fixed in both themes, like the fills.
+        buy: {
+          DEFAULT: "#1ea65c",
+          400: "#34d17e",
+        },
         // Muted greys, LIFTED to clear WCAG AA on this palette's surfaces.
         //
         // Tailwind's stock slate-500 (#64748b) measures 4.11:1 on ink-950 and

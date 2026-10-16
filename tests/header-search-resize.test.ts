@@ -44,7 +44,9 @@ test("both header rows still go through HeaderSearchSlot", () => {
 
 test("the desktop card search is wide, not the old max-w-sm", () => {
   const search = codeOnly(read("src/components/SearchBar.tsx"));
-  assert.match(search, /isHero \? "mx-auto w-full max-w-2xl" : "w-full max-w-xl"/, "the nav variant fills the slack the left cluster has");
+  // The hero box may carry decoration first (rb-search-aura, its glow ring since
+  // 2026-10-16); the widths are what this pins.
+  assert.match(search, /isHero \? "(?:[a-z-]+ )?mx-auto w-full max-w-2xl" : "w-full max-w-xl"/, "the nav variant fills the slack the left cluster has");
   const nav = codeOnly(read("src/components/Navbar.tsx"));
   assert.match(nav, /className="input w-full max-w-xl"/, "the Suspense fallback must be the same width, or the row jumps on hydration");
 });

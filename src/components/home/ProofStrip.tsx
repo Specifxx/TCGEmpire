@@ -81,7 +81,7 @@ export function ProofStrip({ pickByCountry }: { pickByCountry: Record<Country, P
               }`}
             >
               {i === 0 && (
-                <span className="chip bg-brand-500 text-[10px] font-bold text-ink-950">Cheapest</span>
+                <span className="chip bg-buy text-[10px] font-bold text-ink-950">Cheapest</span>
               )}
               <span className="line-clamp-1 text-[11px] text-slate-400">{s.retailerName}</span>
               <span className="num text-base font-extrabold text-white sm:text-lg">{fmt(s.deliveredCents)}</span>

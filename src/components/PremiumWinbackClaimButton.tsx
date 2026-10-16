@@ -55,7 +55,7 @@ export function PremiumWinbackClaimButton({ days }: { days: number }) {
 
   return (
     <div className="mt-4">
-      <button onClick={claim} disabled={state === "claiming"} className="btn-primary">
+      <button onClick={claim} disabled={state === "claiming"} className="btn-buy">
         {state === "claiming" ? "Claiming…" : `Claim my ${days} free days`}
       </button>
       {state === "error" && error && <p role="alert" className="mt-3 text-sm text-rose-400">{error}</p>}

@@ -1016,14 +1016,19 @@ longer lands on its entry.
   [2026-09-12](../DECISIONS.md#L5530)
 - **Brand (2026-10-16):** Riftbound's palette, read from playriftbound.com:
   teal-navy ink, orange `#ef7d00` as the one accent (`brand-*`; `#f29733` as
-  text on dark), Cinzel headings (the Beaufort stand-in), Inter body. The logo is
-  `public/brand/wordmark.svg` / `r-mark.svg` used as CSS masks over the
-  `--rc-flame` gold-to-orange gradient. That gradient is decoration only (the
-  logo, the H1's "Riftbound"); buttons stay flat. Gold still means Premium, and
-  a green that means something (gains, in stock, price falls) stays green. The
-  mask classes live in `@layer components`, or they beat `hidden`.
-  `lib/brand.ts` holds the hexes for OG images and email.
-  [2026-10-16](../DECISIONS.md#L17677)
+  text on dark), Cinzel headings (the Beaufort stand-in), Inter body. The logo
+  is the R mark (`public/brand/r-mark.svg`, a CSS mask over the `--rc-flame`
+  gold-to-orange gradient) beside "Rift" + "Compare" as live mixed-case text,
+  "Compare" in the same gradient (owner: not all caps). The gradient is
+  decoration only (the logo, the H1's "Riftbound"). Purchases keep the
+  pre-rebrand green, `buy` / `.btn-buy`: every store's buy button, Premium's
+  checkout, the Cheapest and savings chips. eBay stays blue, the header's
+  Premium link gold, and a green that means something (gains, in stock) green.
+  The homepage hero moves (RiftEmbers, `.rb-vortex`, `.rb-flame-live`,
+  `.rb-search-aura`), stilled by reduced motion. Mask classes live in
+  `@layer components`, or they beat `hidden`. `lib/brand.ts` holds the hexes
+  for OG images and email.
+  [2026-10-16](../DECISIONS.md#L17677), [2026-10-16](../DECISIONS.md#L17713)
 - **Details:** `.scroll-mt-header` goes on the element carrying the id.
   Fields are 16px on phones. Every `outline-none` has a `focus-visible:`
   ring. Motion uses `usePresence()`, no library. `SearchBar` must not use

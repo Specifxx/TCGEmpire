@@ -95,7 +95,7 @@ export function TcgMarketPrice({
           href={href}
           retailer="tcgplayer"
           country={country}
-          className="btn-primary shrink-0 text-sm"
+          className="btn-buy shrink-0 text-sm"
         >
           Check on TCGplayer →
         </OutboundLink>

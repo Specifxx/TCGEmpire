@@ -67,7 +67,7 @@ function TrendingChip({ c }: { c: CardTileData }) {
       // cell left that name 154px of the 157px it needs; the label is
       // centred, so the 2px is invisible. The inner `truncate` stays as the
       // last resort at 320.
-      className="chip min-h-11 min-w-0 justify-center border border-ink-700 bg-ink-900 px-2 text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
+      className="rb-glow-hover chip min-h-11 min-w-0 justify-center border border-ink-700 bg-ink-900 px-2 text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
     >
       <span className="truncate">{cardDisplayName(c.name, c)}</span>
     </Link>

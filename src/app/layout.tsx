@@ -97,7 +97,6 @@ const ReferralCapture = dynamic(() => import("@/components/ReferralCapture").the
 //   Headings — Cinzel: Roman capitals with small-cap lowercase, the closest free
 //     analog to Beaufort's titling (2026-10-16 rebrand; it replaced Fraunces).
 //   Body/UI  — Inter: a clean, highly legible grotesque.
-// The logo is not a font at all: public/brand/wordmark.svg, outlines.
 // Exposed as CSS vars wired into Tailwind. display: "swap" — the brand fonts
 // ALWAYS render (consistent on every load) rather than "optional" which silently
 // keeps the system fallback whenever the font misses the ~100ms first-paint

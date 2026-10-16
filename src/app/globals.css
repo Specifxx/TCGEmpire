@@ -231,8 +231,8 @@ body {
    while a long card name or article title keeps its word shapes; nothing here
    forces text-transform. It replaced Fraunces on 2026-10-16 (DECISIONS.md, "The
    Riftbound rebrand"), and with it the homepage's sans override: the official
-   site keeps its sans for the logo alone, which is what public/brand/
-   wordmark.svg is now. Cinzel is wider than Fraunces, so the tracking is 0. */
+   site keeps its sans for the logo alone, and RiftCompare's logo text is Inter
+   (BrandLogo.tsx). Cinzel is wider than Fraunces, so the tracking is 0. */
 h1, h2, h3 {
   font-family: var(--font-display), Georgia, serif;
   font-weight: 700;
@@ -305,6 +305,7 @@ html {
    near-black in light mode, and its ink inverting with it keeps .btn-accent
    readable as a dark button. */
 :root[data-theme="light"] .btn-primary,
+:root[data-theme="light"] .btn-buy,
 :root[data-theme="light"] .bg-brand-500.text-ink-950,
 :root[data-theme="light"] .bg-gold.text-ink-950,
 :root[data-theme="light"] .bg-gold\/85.text-ink-950 {
@@ -329,6 +330,10 @@ html {
    official lighter orange instead, as in the dark theme. */
 :root[data-theme="light"] .btn-primary:hover {
   background-color: #f29733;
+}
+/* The buy button's light hover, as the green primary button had it. */
+:root[data-theme="light"] .btn-buy:hover {
+  background-color: #27b868;
 }
 
 /* Data-coloured text: domain, rarity, condition and grader chips. The hex is
@@ -366,6 +371,12 @@ html {
      brand-400, #F29733 (8.3:1), the official hover shade. */
   .btn-primary {
     @apply btn bg-brand-500 text-ink-950 hover:bg-brand-400;
+  }
+  /* A purchase: a store's buy button, Premium's checkout. The green every
+     retailer CTA wore before the rebrand, kept on purpose (tailwind.config.ts
+     `buy`), so the buttons that earn are exactly as they were. */
+  .btn-buy {
+    @apply btn bg-buy text-ink-950 hover:bg-buy-400;
   }
   .btn-ghost {
     @apply btn border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600 hover:bg-ink-800;
@@ -584,18 +595,16 @@ html {
 }
 
 /* In the components layer on purpose: the call sites size and gate these with
-   utilities (`hidden lg:block`, `h-7`), and an unlayered `display` here beat
-   `hidden` and drew the full wordmark into the phone header. */
+   utilities (`hidden sm:flex`, `h-8`), and an unlayered `display` here beats
+   `hidden` (it once drew a hidden logo into the phone header). */
 @layer components {
-  /* ── Brand marks (2026-10-16 rebrand) ──────────────────────────────────────
-     The logo is a MASK, not a picture: public/brand/r-mark.svg (the swirl R) and
-     public/brand/wordmark.svg (R + "IFT COMPARE" in Oswald Bold outlines) are
-     black shapes, and the element paints --rc-flame through them. So the light
-     theme darkens the gradient with one variable, the SVG is fetched once and
-     cached for every page, and no font is loaded for the logo. BrandLogo.tsx is
-     the only consumer. */
-  .rb-mark,
-  .rb-wordmark {
+  /* ── Brand mark (2026-10-16 rebrand) ───────────────────────────────────────
+     The R is a MASK, not a picture: public/brand/r-mark.svg (the swirl R,
+     traced from logo-r-green.png) is a black shape, and the element paints
+     --rc-flame through it. So the light theme darkens the gradient with one
+     variable and the SVG is fetched once and cached for every page.
+     BrandLogo.tsx is the only consumer. */
+  .rb-mark {
     display: inline-block;
     flex-shrink: 0;
     background-image: var(--rc-flame);
@@ -605,21 +614,14 @@ html {
     mask-position: center;
     -webkit-mask-size: contain;
     mask-size: contain;
-  }
-  .rb-mark {
     -webkit-mask-image: url(/brand/r-mark.svg);
     mask-image: url(/brand/r-mark.svg);
   }
-  .rb-wordmark {
-    /* The SVG's own aspect ratio (6377 x 939.6), so a height alone sizes it. */
-    aspect-ratio: 6.787;
-    -webkit-mask-image: url(/brand/wordmark.svg);
-    mask-image: url(/brand/wordmark.svg);
-  }
 
-  /* The same gradient on live text: "Riftbound" in the homepage H1, as the
-     official wordmark colours it. The plain `color` is the fallback where
-     background-clip:text is unsupported, and what forced-colours modes keep. */
+  /* The same gradient on live text: "Compare" in the logo, and "Riftbound" in
+     the homepage H1, as the official wordmark colours it. The plain `color` is
+     the fallback where background-clip:text is unsupported, and what
+     forced-colours modes keep. */
   .rb-flame-text {
     color: rgb(var(--c-brand-400));
   }
@@ -858,6 +860,108 @@ body {
    src/lib/motion.ts's usePresence() is the JS half of the same contract: under
    reduced motion it sets `entered` true (and unmounts) immediately rather than
    waiting out a transition that will never visibly run. */
+
+/* ---------------------------------------------------------------------------
+   Homepage hero motion (owner, 2026-10-16: "the homepage can be a bit nicer …
+   animated stuff … glowing … particles … interactive"). Three pieces, all
+   decoration, all stilled by the reduced-motion block at the end of this file:
+     .rb-vortex       a slow swirl of rift light behind the headline, after the
+                      Riftbound vortex emblem (CinematicHero's background layer);
+     .rb-flame-live   a sheen that crosses "Riftbound" in the H1 every few
+                      seconds, over the wordmark gradient, with a soft glow;
+     .rb-search-aura  a glow ring around the hero search that turns slowly and
+                      brightens while the box has focus.
+   The embers are a canvas (components/home/RiftEmbers.tsx), not CSS.
+   --------------------------------------------------------------------------- */
+.rb-vortex {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: min(1040px, 160vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgb(239 125 0 / 0.34) 38deg,
+    transparent 92deg,
+    rgb(215 166 62 / 0.24) 150deg,
+    transparent 205deg,
+    rgb(56 189 248 / 0.18) 268deg,
+    transparent 330deg
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent 14%, #000 38%, #000 56%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 14%, #000 38%, #000 56%, transparent 100%);
+  filter: blur(22px);
+  will-change: transform;
+  animation: rb-vortex-spin 56s linear infinite;
+}
+:root[data-theme="light"] .rb-vortex {
+  opacity: 0.6;
+}
+@keyframes rb-vortex-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .rb-flame-live {
+    background-image:
+      linear-gradient(100deg, transparent 0%, transparent 42%, rgb(255 240 210 / 0.85) 50%, transparent 58%, transparent 100%),
+      var(--rc-flame);
+    background-size: 260% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    background-position: 170% 0, 0 0;
+    filter: drop-shadow(0 0 16px rgb(239 125 0 / 0.35));
+    animation: rb-flame-sheen 7s ease-in-out 1.2s infinite;
+  }
+  :root[data-theme="light"] .rb-flame-live {
+    filter: drop-shadow(0 0 10px rgb(224 111 0 / 0.18));
+  }
+}
+@keyframes rb-flame-sheen {
+  0%, 62% { background-position: 170% 0, 0 0; }
+  100% { background-position: -70% 0, 0 0; }
+}
+
+/* The ring is a pseudo-element behind the input (z-index -1 inside the hero's
+   z-20 search wrapper, which is a stacking context), so nothing about the input
+   or its dropdown moves. The angle is a registered custom property so the
+   gradient itself turns; where @property is unsupported the ring is still. */
+@property --rb-aura {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.rb-search-aura::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border-radius: 9px;
+  background: conic-gradient(from var(--rb-aura), rgb(239 125 0 / 0.0), rgb(239 125 0 / 0.75), rgb(215 166 62 / 0.5), rgb(56 189 248 / 0.35), rgb(239 125 0 / 0.0) 70%, rgb(239 125 0 / 0.0));
+  filter: blur(8px);
+  opacity: 0.55;
+  transition: opacity 200ms ease;
+  animation: rb-aura-turn 6s linear infinite;
+  pointer-events: none;
+}
+.rb-search-aura:focus-within::before,
+.rb-search-aura:hover::before {
+  opacity: 0.95;
+}
+@keyframes rb-aura-turn {
+  to { --rb-aura: 360deg; }
+}
+
+/* Trending chips glow orange under the pointer. */
+.rb-glow-hover {
+  transition: border-color 150ms ease, color 150ms ease, box-shadow 200ms ease;
+}
+.rb-glow-hover:hover,
+.rb-glow-hover:focus-visible {
+  box-shadow: 0 0 0 1px rgb(239 125 0 / 0.35), 0 0 18px rgb(239 125 0 / 0.28);
+}
 
 /* ---------------------------------------------------------------------------
    .premium-cta: the header's "Get Premium" button (GetPremiumLink.tsx).

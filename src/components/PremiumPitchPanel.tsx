@@ -40,7 +40,7 @@
 // Presentational only — no hooks, no fetch — so it renders inside the server
 // tree or a client nudge alike.
 
-import { BrandLogo, BrandWordmark } from "./BrandLogo";
+import { BrandLogo } from "./BrandLogo";
 import { TierComparisonTable } from "./TierComparisonTable";
 
 export function PremiumPitchPanel({
@@ -94,7 +94,10 @@ export function PremiumPitchPanel({
 
       <div className="relative px-4 pb-3 pt-3.5">
         <div className="flex items-center gap-2">
-          <BrandWordmark className="h-5" />
+          <BrandLogo className="h-6 w-6" />
+          <span className="text-base font-extrabold italic tracking-tight text-white">
+            Rift<span className="rb-flame-text">compare</span>
+          </span>
         </div>
         {badge ? <div className="mt-1.5">{badge}</div> : null}
         <p className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-400">

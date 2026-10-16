@@ -154,7 +154,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
             {listings.length === 0 ? (
               <div className="p-4 text-center text-sm text-slate-400">
                 <p>No store is listing this right now.</p>
-                <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="btn-primary mt-3 inline-flex text-xs">
+                <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="btn-buy mt-3 inline-flex text-xs">
                   Search on eBay →
                 </OutboundLink>
               </div>
@@ -184,7 +184,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                         kind="sealed"
                         className={
                           isOpen
-                            ? `px-3 py-1.5 text-xs ${isBest ? "btn-accent" : "btn-primary"}`
+                            ? `px-3 py-1.5 text-xs ${isBest ? "btn-accent" : "btn-buy"}`
                             : "px-3 py-1.5 text-xs text-slate-500 underline-offset-2 hover:underline"
                         }
                       >
