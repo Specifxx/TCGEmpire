@@ -578,6 +578,15 @@ longer lands on its entry.
   Auto ads' requests paused there by the boot script and on every client
   navigation (`syncAdPause`, [2026-10-16](../DECISIONS.md#L17845)).
   [2026-09-26](../DECISIONS.md#L14680), [2026-10-01](../DECISIONS.md#L16105), [2026-10-02](../DECISIONS.md#L16478)
+- **Phones get fewer Google ads (2026-10-16, owner: "reduce the impact of ads
+  on a mobile phone"):** below 1024px, no ad intents on any page
+  (`google-anno-skip` on `<body>`, `MOBILE_AD_INTENTS_SCRIPT`: no tap-to-open
+  ad words, no bottom intent bar), and Auto ads paused on the six market
+  homepages, Best Basket and the deck builder (`MOBILE_AD_FREE_PAGES` /
+  `MOBILE_AD_FREE_ROUTES`, the arcade's mechanism). Desktop and the site's own
+  affiliate units are unchanged. Real anchor ads and the in-page ad cap are
+  AdSense console settings (anchor "Top only" or off keeps a card page's Buy
+  bar clear). [2026-10-16](../DECISIONS.md#L17866)
 - **The arcade's line-up is chosen by data:** `games-report.yml` (dispatch-only)
   gives each game's search clicks and players; the two weakest (Card Rain,
   Pairs) were replaced by Seraphine's Piano, a Radiance rhythm game timed on
@@ -1039,7 +1048,9 @@ longer lands on its entry.
 - **Seasons and scroll motion (2026-10-16):** a season is a local-date window
   (`lib/season.ts`; Halloween 16-31 Oct) stamped as `data-season` on `<html>`
   before paint, so it starts and ends with no deploy; `?season=halloween|off`
-  previews it. Season markup lives in its own components (`NocturneComing`,
+  previews it. Anything a boot script stamps outside React's props needs an
+  observer to survive a failed hydration, which resets `<html>`/`<body>`
+  attributes ([2026-10-16](../DECISIONS.md#L17866)). Season markup lives in its own components (`NocturneComing`,
   `HalloweenDecor`), so a season comes out by deleting them.
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where

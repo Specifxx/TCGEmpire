@@ -50,6 +50,34 @@ test("the boot script agrees with seasonAt(), takes a ?season= override, and nev
   assert.doesNotThrow(() => vm.runInContext(SEASON_BOOT_SCRIPT, vm.createContext({})));
 });
 
+test("the season survives a failed hydration resetting <html>'s attributes", () => {
+  const attrs = new Map<string, string>();
+  let callback: () => void = () => {};
+  let opts: unknown;
+  class FakeObserver {
+    constructor(cb: () => void) {
+      callback = cb;
+    }
+    observe(_: unknown, o: unknown) {
+      opts = o;
+    }
+  }
+  const ctx = vm.createContext({
+    Date: function () {
+      return new Date(2026, 9, 20, 12);
+    },
+    location: { search: "" },
+    MutationObserver: FakeObserver,
+    document: { documentElement: { setAttribute: (k: string, v: string) => attrs.set(k, v), getAttribute: (k: string) => attrs.get(k) ?? null } },
+  });
+  vm.runInContext(SEASON_BOOT_SCRIPT, ctx);
+  assert.equal(attrs.get("data-season"), "halloween");
+  assert.equal(JSON.stringify(opts), JSON.stringify({ attributes: true, attributeFilter: ["data-season"] }));
+  attrs.clear(); // what React's root re-render does to <html>
+  callback();
+  assert.equal(attrs.get("data-season"), "halloween", "put back");
+});
+
 test("the layout runs the season boot script in <head>", () => {
   const layout = read("src/app/layout.tsx");
   const head = layout.slice(layout.indexOf("<head>"), layout.indexOf("</head>"));

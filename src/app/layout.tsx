@@ -8,7 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { SEASON_BOOT_SCRIPT } from "@/lib/season";
-import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free-boot";
+import { AD_FREE_BOOT_SCRIPT, MOBILE_AD_INTENTS_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { SISTER_SITES } from "@/lib/sister-sites";
 import { QuickViewProvider } from "@/components/QuickView";
@@ -354,7 +354,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             from the visitor's own date, before first paint. lib/season.ts. */}
         <script dangerouslySetInnerHTML={{ __html: SEASON_BOOT_SCRIPT }} />
       </head>
-      <body className="min-h-screen bg-ink-950">
+      {/* suppressHydrationWarning: MOBILE_AD_INTENTS_SCRIPT below may add one
+          class (google-anno-skip) before React hydrates. */}
+      <body className="min-h-screen bg-ink-950" suppressHydrationWarning>
+        {/* On a phone or tablet: no Google ad intents (tap-to-open ad words,
+            the bottom ad-intent bar). First in <body>, since the class has to
+            be on it. lib/ad-free-boot.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: MOBILE_AD_INTENTS_SCRIPT }} />
         {/* Skip link: lets keyboard/AT users bypass the navbar and jump straight
             to content. Visually hidden until focused (WCAG 2.4.1 Level A).
             focus:min-h-11 + flex/items-center: measured ~36px tall once

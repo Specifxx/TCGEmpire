@@ -17862,3 +17862,44 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 - The boot script pauses on `/games`, `/games/…` and `/riftle` and nowhere else (`/gamestop` and `/blog/games` are untouched).
 - `syncAdPause` pauses on the way in and releases on the way out.
 - The `/api/me` sync keeps the arcade paused.
+
+## Fewer Google ads on a phone: no ad intents, and no ads at all on the homepages and list builders — 2026-10-16
+
+**Owner:** "Can we also reduce the amount of ads on the website for mobile users? … very hard to use, especially on a homepage … you have to constantly be clicking to get rid of it and you can't really even set up a cart."
+
+**What a phone got, measured on the live site at 390px the same day.** Headless Chromium through the session proxy, an Android Chrome user agent, scrolled through each page.
+- **Homepage.** Auto ads placed four in-page units of 310 to 390px each. The first sat directly under the header, above the hero. Unfilled, it turned into a full-width "Discover more" search box. A fifth, hidden, was an overlay placeholder.
+- **Ad intents, on every page.** Google turned words in the site's own copy into links with a newspaper icon: "card", "deck" and "prices" in Best Basket's intro. Tapping one opens a search-ad dialog, and on a price list those links look like the site's own. An ad-intent anchor bar ("Read Economics ✕", "Shop Shelving ✕") also sat on the bottom edge. On a card page it sat directly above the Buy bar. Each new page brought the bar back, which is the "constantly clicking".
+- **The site's own units.** These were labelled and static: EbayPicks, the card page's eBay and TCGplayer pair, one house promo, and the footer pair. Nothing in them needs dismissing.
+
+**What changed, below 1024px only.** That is the desktop rail's breakpoint, the layout a phone or tablet gets; Google draws its own desktop line for overlays at 1000px.
+1. **No ad intents anywhere.** `MOBILE_AD_INTENTS_SCRIPT` is the first child of `<body>`. It adds `google-anno-skip`, Google's documented opt-out class (AdSense Help 13829157 and 13829511), to `<body>`. On the body, that keeps ad intent links, anchors and chips off the page.
+   - A `MutationObserver` puts the class back. When a first visit's hydration fails (the known #418/#423 from Google's scripts), React re-renders the root and resets `<body>`'s attributes. That dropped the class in the measurement.
+   - `<body>` carries `suppressHydrationWarning` for this one class.
+2. **No Google ads on the pages people come to do something on.** These are the six market homepages (`/`, `/au`, `/uk`, `/sg`, `/ca`, `/eu`, exact paths), Best Basket (`/tools/best-basket`) and the deck builder (`/deck`, not `/decks`), each with everything under it (`MOBILE_AD_FREE_PAGES`, `MOBILE_AD_FREE_ROUTES`).
+   - The mechanism is the arcade's: the `<head>` boot script sets `pauseAdRequests = 1` before the loader runs. `syncAdPause` re-decides it on every client navigation.
+
+**Checked against real AdSense.** The local build was served to Chromium as riftcompare.com by request routing, with the published client id.
+- At 390px, the homepage and Best Basket made 0 ad requests. The card page still made its 3 and placed its in-page units, with 0 intent links.
+- Best Basket on the live HTML with only the class added: 22 intent elements before, none after.
+- The hydration warnings on `/` are the same count with the change stashed; they predate it.
+
+**Not changed.**
+- **Desktop.** Every page keeps its Auto ads and ad intents.
+- **The site's own labelled affiliate units.** They are the main earner and are not what needed dismissing.
+- **The loader.** It stays ungated (verification and the EEA consent message).
+- **Served ads are never hidden with CSS.**
+- **Card pages, blog posts and the rest on a phone** keep their in-page Auto ads. The owner asked to reduce, not remove.
+
+**Console-only, for the owner.** Code cannot reach these.
+- A real AdSense anchor ad (`data-ad-hi`, unfilled for the headless browser) can still fill on a phone's other pages and would sit over a card page's Buy bar. Ad-intent anchors only fill when it doesn't.
+- In AdSense → Ads → the site → Auto ads, set Overlay formats → Anchor ads to "Top only", or off. Banner ads → "Maximum number of ads on a page" caps the rest.
+
+**Found on the way: Halloween dropped on a failed hydration.** The live phone homepage fails hydration on some first loads (#418/#423, 7 errors). It does so with Auto ads' implementation blocked too, so it is not this change's cause, and it is not fixed here. React's root re-render then resets `<html>`'s attributes. `data-theme` comes back (ThemeProvider re-sets it), but `data-season` did not: the visitor lost the theme. `SEASON_BOOT_SCRIPT` now carries the same small observer and puts the attribute back. The underlying mismatch is still open: in dev, the only warning names `ConsentDefaults`' inline script.
+
+**Tests (`mobile-ads`, plus one in `season`):**
+- The boot script pauses on exactly those pages at 390 and 1023px, and nowhere at 1024px or without `matchMedia`.
+- `syncAdPause` agrees on navigation.
+- The intents script adds the class on a phone only, and re-adds it after a reset or on a replacement `<body>`.
+- It is `<body>`'s first child, and the loader stays ungated.
+- The season is put back after `<html>`'s attributes are cleared.
