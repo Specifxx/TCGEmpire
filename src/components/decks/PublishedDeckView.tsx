@@ -139,7 +139,7 @@ export function PublishedDeckView(props: {
             <li key={l.card.id} className="flex items-start gap-3 p-3">
               <span className="num w-7 shrink-0 pt-0.5 text-right font-bold text-slate-300">{l.qty}×</span>
               <span className="min-w-0 flex-1">
-                <Link href={swapped ? swapped.href : l.card.href} className="block font-semibold text-white hover:text-brand-300">
+                <Link prefetch={false} href={swapped ? swapped.href : l.card.href} className="block font-semibold text-white hover:text-brand-300">
                   {l.card.name}
                 </Link>
                 <span className="block text-xs text-slate-500">

@@ -67,7 +67,13 @@ jobs:
     # minutes, with 90 leaving real headroom for a slow store or an eBay backoff.
     # tests/affiliate-priority.test.ts reads this number and fails if the market
     # rotation grows past what it allows.
-    timeout-minutes: 90
+    # 120, not 90 (2026-10-16, the store audit: 172 -> 224 stores). Whole runs
+    # were already 58-82 minutes before it (prices 43-62, sealed 14-19), and the
+    # first run with the new stores took 84 (prices 57, sealed 26: the sealed
+    # pass visits every singles store too). A heavy eBay day on top would cross
+    # 90 and kill the run before the snapshot and the daily release. A ceiling,
+    # not a cost: a run only uses the minutes it needs.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -239,6 +245,11 @@ jobs:
             "$SITE_URL/api/revalidate" -H "Authorization: Bearer $CRON_SECRET" || true)
           echo "revalidate -> HTTP ${code:-000}"
           [ "$code" = "200" ] && echo "purged=true" >> "$GITHUB_OUTPUT"
+          # 202: PUBLIC_DATA_MODE=files, so the pages serve the release's snapshot
+          # and nothing was purged (lib/revalidate-content.ts importPurgeIsNoop);
+          # today's prices reach them with the next release. `purged` stays false,
+          # so the paid alert step below takes its own fresh read.
+          if [ "$code" = "202" ]; then echo "Skipped: files mode, the pages change only with a release."; exit 0; fi
           [ "$code" = "200" ] || echo "Non-200/failed (pages still refresh on their 24h TTL); not failing the run."
 
       - name: Publish the day's price-history files

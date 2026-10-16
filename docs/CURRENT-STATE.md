@@ -70,10 +70,14 @@ longer lands on its entry.
   `BIG_RESULT_ROWS` / `_BYTES` are temporarily 200 rows / 400 KB; restore
   500 / 1 MB once audit-egress has measured the fix.
   [2026-09-14](../DECISIONS.md#L6263)
-- **Left alone on purpose:** card pages purge after each of the two daily
-  imports, and the 5-minute keep-warm stays (compute, not transfer). Still
-  the owner's call: purging once a day, and narrowing `refresh-prices.yml`'s
-  `push` trigger, which starts a full import when an importer file changes.
+- **No import purge in files mode (2026-10-16):** with `PUBLIC_DATA_MODE=files`
+  the pages serve the release's snapshot, so `/api/revalidate` answers 202
+  "skipped" (`importPurgeIsNoop`) unless `?force=1`; the daily release is what
+  refreshes them. In `db`/`fallback` mode card pages purge after each import as
+  before. The 5-minute keep-warm stays (compute, not transfer). Still the
+  owner's call: narrowing `refresh-prices.yml`'s `push` trigger, and the
+  Pokémon section (off, or 301 to DexCompare).
+  [2026-10-16](../DECISIONS.md#L18017)
   [2026-09-11](../DECISIONS.md#L4871), [2026-09-11](../DECISIONS.md#L5303),
   [2026-09-11](../DECISIONS.md#L5370), [2026-09-23](../DECISIONS.md#L11091)
 - **The burn is still unidentified.** RM9, RM10 and RM12 all went live after
@@ -591,7 +595,7 @@ longer lands on its entry.
   blank hole: `ins.adsbygoogle[data-ad-status="unfilled"]` (Google's documented
   rule) and any not-filled slot under `data-ads-paused` are `display: none`; a
   slot still waiting to fill, or filled, is never hidden
-  ([2026-10-16](../DECISIONS.md#L18017)). Real anchor ads and the in-page ad cap are
+  ([2026-10-16](../DECISIONS.md#L18131)). Real anchor ads and the in-page ad cap are
   AdSense console settings (anchor "Top only" or off keeps a card page's Buy
   bar clear). [2026-10-16](../DECISIONS.md#L17916)
 - **RiftCompare Coins (`/coins`) are free and Premium-only:** tasks earn pulls,
@@ -797,14 +801,19 @@ longer lands on its entry.
   yesterday's rows; rows expire after 72h of empty returns, and
   `DECOMMISSIONED_RETAILERS` purges removed stores. Only the keys listed there:
   a store dropped from the registry without its key added keeps its rows
-  indefinitely (109 sealed and 13 card stores had, 2026-10-15). A store's
+  indefinitely (the 105 such ghost stores were purged on 2026-10-16). A store
+  moved to sealed-only goes in `SINGLES_RETIRED_RETAILERS` instead, which drops
+  its card rows and keeps its sealed ones. Vet a store by its live match rate
+  and where it ships from (`/meta.json`): Canadian stores sat in the US
+  and SG markets until 2026-10-16 (two of them). A store's
   `currency` must match its market or its prices are refused
   (`lib/offer-currency.ts`), and every Shopify `?country=` goes through
   `isoCountry` (GB, ES), never our market code.
   Sealed-only stores go in `lib/sealed-stores.ts`, never `RETAILERS` (Shopify,
   product pages, or a store's own JSON feed: `FEED_STORES`, [2026-10-15](../DECISIONS.md#L17542)).
   [2026-09-23](../DECISIONS.md#L11091), [2026-09-23](../DECISIONS.md#L11034),
-  [2026-09-24](../DECISIONS.md#L11971), [2026-10-15](../DECISIONS.md#L17453)
+  [2026-09-24](../DECISIONS.md#L11971), [2026-10-15](../DECISIONS.md#L17453),
+  [2026-10-16](../DECISIONS.md#L18060)
 - **Sealed offers have three states** (open / sold out / unknown past 72h,
   `lib/sealed-offers.ts`); only open offers set a headline price or a store
   count. [2026-09-24](../DECISIONS.md#L11971). A product page's stock comes

@@ -334,9 +334,12 @@ test("a US free-shipping threshold starts at the measured free cart, never a gue
   assert.match(real(75).note ?? "", /lower 48/);
 });
 
-test("the US gap re-probe: four stores that quoted nothing post nowhere, and each says why", () => {
+test("the US gap re-probe: three stores that quoted nothing post nowhere, and each says why", () => {
+  // The fourth, cgrealm, was a Windsor, Ontario store that covers Canada only:
+  // it moved to the CA market on 2026-10-16 and is measured there.
+  assert.equal(SHIPPING_SNAPSHOT.stores.cgrealm.market, "CA");
+  assert.equal(SHIPPING_SNAPSHOT.stores.cgrealm.status, "measured");
   for (const [key, why] of [
-    ["cgrealm", /cover Canada only/],
     ["larrysgamestore", /site banner says 'We are currently doing in-store pickup only/],
     ["punkouter", /not in its own checkout \('Shipping not available'\)/],
     ["atomilicollectables", /no ship-to countries\): local pickup in Houston only/],

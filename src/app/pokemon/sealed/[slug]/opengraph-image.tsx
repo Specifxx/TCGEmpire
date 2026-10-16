@@ -28,7 +28,7 @@ import { POKEMON_OG_SIZE, PokemonBrandOgImage, ProductOgImage, ogImageDataUri } 
 // for a year. The card drawn after a read error gets one minute instead: a
 // brief database outage must not pin a priceless card in the CDN for a day.
 export const runtime = "nodejs";
-export const revalidate = 21600;
+export const revalidate = 86400;
 export const alt = "Pokémon sealed product price on RiftCompare";
 export const size = POKEMON_OG_SIZE;
 export const contentType = "image/png";

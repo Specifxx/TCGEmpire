@@ -24,6 +24,7 @@ export function RecentlyViewedRail({ exclude, className }: { exclude?: string; c
           <li key={c.id}>
             <Link
               href={cardHref(c)}
+              prefetch={false}
               onClick={() => trackEvent("recent_viewed_click", { card_id: c.id, rank: i + 1 })}
               className="chip border border-ink-700 bg-ink-900 py-1 pl-1 text-slate-300 transition-colors hover:border-brand-500/60 hover:text-white"
             >

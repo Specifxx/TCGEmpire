@@ -312,25 +312,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. $2.00 · free over $50",
   }, // registry sweep 2026-09-09: 494 in-stock singles, cur=AUD
-  hobbycollectorsaustralia: {
-    key: "hobbycollectorsaustralia",
-    name: "Hobby Collectors Australia",
-    base: "https://hobbycollectorsaustralia.com.au",
-    collections: ["riftbound-league-of-legends-tcg", "riftbound-league-of-legends-tcg-origins"],
-    shippingFlatCents: 200,
-    freeOverCents: 5000,
-    shippingNote: "est. $2.00 · free over $50",
-    // NO RIFTBOUND SINGLES (verified live 2026-09-10). Both handles above hold
-    // sealed product and accessories only, and the store's own
-    // `riftbound-league-of-legends-singles` collection exists but is EMPTY. The
-    // "51 in-stock singles" this line used to claim was the bug reported through
-    // the portfolio feedback form, not stock: the store shelves every game's
-    // singles in `all-singles-one-piece-pokemon-riftbound`, whose handle says
-    // "riftbound", so discovery pulled in 676 Pokémon/One Piece cards and
-    // resolveCardId's OGN default matched them to Riftbound cards by collector
-    // NUMERATOR alone. See OTHER_TCG_HANDLE and foreignTotal in price-import.ts.
-    // Kept in the list for its sealed stock and in case the singles shelf fills.
-  }, // registry sweep 2026-09-09: sealed only, cur=AUD
   reefsidegames: {
     key: "reefsidegames",
     name: "Reefside Games",
@@ -372,6 +353,94 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "flat $10 bubble mailer · no free-shipping threshold",
   }, // suggested by the store owner via /stores/suggest 2026-09-20; probed live the same day: 986 products in /collections/riftbound, products.json 200 with ?country=AU, robots.txt Allow: /
 
+  // ---- Added 2026-10-16, store audit (registry sweep + research; DECISIONS.md,
+  // "The store audit"). Each one's live feed was run through resolveCardId()
+  // against the catalogue snapshot; the figure is in-stock singles, matched.
+  // Postage is measured (shipping-rates.json); the flat figure is only the
+  // labelled fallback.
+  // Swan View WA; 1,513 in stock, 98% matched.
+  eternalmagic: {
+    key: "eternalmagic",
+    name: "Eternal Magic",
+    base: "https://eternalmagic.cc",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. $8.00",
+  },
+  // Thomastown VIC; 1,272 in stock, 99% matched.
+  blacklistcards: {
+    key: "blacklistcards",
+    name: "Blacklist Cards",
+    base: "https://blacklistcards.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. $8.00",
+  },
+  // Melbourne; 237 in stock, 99% matched.
+  crithit: {
+    key: "crithit",
+    name: "Crit Hit",
+    base: "https://crithit.com.au",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. $8.00",
+  },
+  // Wynnum QLD; 189 in stock, 94% matched.
+  raptorgames: {
+    key: "raptorgames",
+    name: "Raptor Games",
+    base: "https://raptorgames.com",
+    collections: ["riftbound-league-of-legends-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. $8.00",
+  },
+
+  // Store audit, 2026-10-16, second batch (the rest of the registry sweep).
+  // Orange NSW; 547 in stock, 99% matched.
+  turtletcg: {
+    key: "turtletcg",
+    name: "Turtle TCG",
+    base: "https://turtletcg.com.au",
+    collections: ["riftbound-league-of-legends-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. $8.00",
+  },
+  // Port Macquarie NSW; 353 in stock, 99% matched.
+  oneplacetcs: {
+    key: "oneplacetcs",
+    name: "One Place Trading Card Store",
+    base: "https://oneplacetcs.com.au",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. $8.00",
+  },
+  // Bayswater VIC; 266 in stock, 80% matched.
+  kollecter: {
+    key: "kollecter",
+    name: "Kollecter",
+    base: "https://kollecter.com.au",
+    collections: ["riftbound-singles-all", "riftbound-singles-spiritforged", "riftbound-singles-unleashed"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. $8.00",
+  },
+  // Northcote VIC; 145 in stock, all matched.
+  thecardcave: {
+    key: "thecardcave",
+    name: "The Card Cave",
+    base: "https://thecardcave.com.au",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. $8.00",
+  },
+
   // ---- United States stores (country: "US"; prices in USD; uses eBay US) --------
   // The US market is much deeper — these carry thousands of in-stock singles between
   // them. Collections are mostly auto-discovered; an explicit singles handle is given
@@ -394,16 +463,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingFlatCents: 199,
     freeOverCents: 5000,
     shippingNote: "est. US$1.99 · free over US$50",
-    country: "US",
-  },
-  cgrealm: {
-    key: "cgrealm",
-    name: "The CG Realm",
-    base: "https://thecgrealm.com",
-    collections: ["riftbound"],
-    shippingFlatCents: 200,
-    freeOverCents: 5000,
-    shippingNote: "est. US$2.00 · free over US$50",
     country: "US",
   },
   danireon: {
@@ -970,6 +1029,113 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     currency: "CAD",
   },
 
+  // ---- Added 2026-10-16, store audit (registry sweep + research; DECISIONS.md,
+  // "The store audit"). Each one's live feed was run through resolveCardId()
+  // against the catalogue snapshot; the figure is in-stock singles, matched.
+  // Postage is measured (shipping-rates.json); the flat figure is only the
+  // labelled fallback.
+  // Richmond; 803 in stock, 100% matched.
+  dkscards: {
+    key: "dkscards",
+    name: "DK's Cards",
+    base: "https://dkscards.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+  // Grove City OH; 182 in stock, 93% matched.
+  cardfathertcg: {
+    key: "cardfathertcg",
+    name: "Card Father TCG",
+    base: "https://cardfathertcg.com",
+    collections: ["riftbound-league-of-legends-trading-card-game-singles", "riftbound-vendetta"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+  // Idaho Falls; 161 in stock, 93% matched.
+  gamegridif: {
+    key: "gamegridif",
+    name: "Game Grid Idaho Falls",
+    base: "https://gamegridif.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+  // Green Bay WI; 57 in stock, 95% matched.
+  allaccesscardshop: {
+    key: "allaccesscardshop",
+    name: "All Access Card Shop",
+    base: "https://allaccesscardshop.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+
+  // Store audit, 2026-10-16, second batch (the rest of the registry sweep).
+  // Gilroy CA; 711 in stock, 100% matched.
+  thehubtcg: {
+    key: "thehubtcg",
+    name: "The Hub TCG",
+    base: "https://thehubtcg.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+  // Temecula CA; 703 in stock, 98% matched.
+  tier1games: {
+    key: "tier1games",
+    name: "Tier 1 Games",
+    base: "https://tier1games.com",
+    collections: ["riftbound-league-of-legends-trading-card-game-all-products"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+  // Greensburg PA; 697 in stock, 99% matched.
+  vaultgamestore: {
+    key: "vaultgamestore",
+    name: "The Vault Game Store",
+    base: "https://vaultgamestore.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+  // Kansas City; 280 in stock, 98% matched.
+  spankyscardshop: {
+    key: "spankyscardshop",
+    name: "Spanky's Card Shop",
+    base: "https://spankyscardshop.com",
+    collections: ["riftbound-vendetta-singles"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+  // Somerset NJ; 70 in stock, all matched.
+  quicktcg: {
+    key: "quicktcg",
+    name: "QuickTCG",
+    base: "https://quicktcg.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+
   // ---- United Kingdom stores (country: "UK"; prices in GBP via ?country=GB; uses eBay UK) ----
   // Riftbound singles are still thin on UK Shopify shops — the biggest UK chains (Magic
   // Madhouse, Chaos Cards, Big Orbit, Element Games, Wayland) aren't Shopify so can't be
@@ -1048,31 +1214,14 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. £1.95 · free over £20",
     country: "UK",
   },
-  zatugames: {
-    key: "zatugames",
-    name: "Zatu Games",
-    base: "https://www.board-game.co.uk",
-    collections: ["riftbound"],
-    shippingFlatCents: 199,
-    freeOverCents: 5000,
-    shippingNote: "est. £1.99 · free over £50",
-    country: "UK",
-  },
-  goblingaming: {
-    key: "goblingaming",
-    name: "Goblin Gaming",
-    base: "https://www.goblingaming.co.uk",
-    collections: ["riftbound"],
-    shippingFlatCents: 199,
-    freeOverCents: 3000,
-    shippingNote: "est. £1.99 · free over £30",
-    country: "UK",
-  },
   monstercardcorner: {
     key: "monstercardcorner",
     name: "Monster Card Corner",
     base: "https://monstercardcorner.co.uk",
-    collections: ["riftbound-league-of-legends-tcg"],
+    // 2026-10-16 store audit: its singles moved out of the general collection
+    // (now sealed only) into per-set ones. Radiance singles are listed ahead of
+    // release; Origins is sold out today.
+    collections: ["riftbound-origins-singles", "riftbound-radiance-singles"],
     shippingFlatCents: 120,
     freeOverCents: 2000,
     shippingNote: "est. £1.20 · free over £20",
@@ -1198,47 +1347,19 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. £1.50 · free over £30",
     country: "UK",
   },
-  rollnplay: {
-    key: "rollnplay",
-    name: "Roll N Play",
-    base: "https://rollnplay.co.uk",
-    collections: ["riftbound"], // probe: 55 in stock
-    shippingFlatCents: 150,
-    freeOverCents: 3000,
-    shippingNote: "est. £1.50 · free over £30",
-    country: "UK",
-  },
-  gamerslodge: {
-    key: "gamerslodge",
-    name: "The Gamers Lodge",
-    base: "https://thegamerslodge.com",
-    collections: ["riftbound-single"], // probe: 13 in stock
-    shippingFlatCents: 150,
-    freeOverCents: 3000,
-    shippingNote: "est. £1.50 · free over £30",
-    country: "UK",
-  },
   // The two below stock Riftbound ORGANIZED-PLAY PROMO singles rather than a
   // general singles range — a small catalogue, but real cards at real GBP prices
   // (e.g. Knightly's "Jinx - Loose Cannon (251)" at £62.57), and promos are
   // exactly where a comparison site earns its keep. 7th City's 46 promo cards
   // were all out of stock at probe time, so it yields nothing until they restock
   // — tracked, never fabricated, same as the SG stores below.
-  knightlygaming: {
-    key: "knightlygaming",
-    name: "Knightly Gaming",
-    base: "https://knightlygaming.co.uk",
-    collections: ["riftbound-organized-play-promotional-cards-opp"],
-    shippingFlatCents: 150,
-    freeOverCents: 3000,
-    shippingNote: "est. £1.50 · free over £30",
-    country: "UK",
-  },
   seventhcity: {
     key: "seventhcity",
     name: "7th City Collectables",
     base: "https://7thcitycollectables.com",
-    collections: ["riftbound-promotional-cards"],
+    // 2026-10-16 store audit: promos are split across three collections now
+    // (47 products, 10 in stock, all matched).
+    collections: ["riftbound-promotional-cards", "riftbound-judge-promotional-cards", "riftbound-organized-play-promotional-cards"],
     shippingFlatCents: 150,
     freeOverCents: 3000,
     shippingNote: "est. £1.50 · free over £30",
@@ -1254,10 +1375,51 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     key: "tierzerogames",
     name: "Tier Zero Games",
     base: "https://tierzerogames.com",
-    collections: ["riftbound-singles"],
+    // 2026-10-16 store audit: `riftbound-singles` returns no products now; the
+    // singles are in `riftbound-single` (207 products, 94% matched).
+    collections: ["riftbound-single", "riftbound-singles"],
     shippingFlatCents: 150,
     freeOverCents: 2500,
     shippingNote: "est. £1.50 · free over £25",
+    country: "UK",
+  },
+
+  // ---- Added 2026-10-16, store audit (registry sweep + research; DECISIONS.md,
+  // "The store audit"). Each one's live feed was run through resolveCardId()
+  // against the catalogue snapshot; the figure is in-stock singles, matched.
+  // Postage is measured (shipping-rates.json); the flat figure is only the
+  // labelled fallback.
+  // Hull; 1,418 in stock, 99% matched.
+  archerongames: {
+    key: "archerongames",
+    name: "Archeron Games",
+    base: "https://archerongames.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 0,
+    shippingNote: "est. £2.50",
+    country: "UK",
+  },
+  // 530 in stock, 97% matched.
+  etoysworld: {
+    key: "etoysworld",
+    name: "eTOYSWORLD",
+    base: "https://www.etoysworld.co.uk",
+    collections: ["riftbound-singles", "riftbound-promotional-cards"],
+    shippingFlatCents: 250,
+    freeOverCents: 0,
+    shippingNote: "est. £2.50",
+    country: "UK",
+  },
+  // Bath; 106 in stock, all matched.
+  thetcggroup: {
+    key: "thetcggroup",
+    name: "The TCG Group",
+    base: "https://thetcggroup.co.uk",
+    collections: ["riftbound-single", "unleashed-riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 0,
+    shippingNote: "est. £2.50",
     country: "UK",
   },
 
@@ -1433,16 +1595,47 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // empty or fully sold out — 1,318 Riftbound products cataloged, every one out
   // of stock at probe time — so it prices nothing today and populates the
   // moment it restocks (tracked, never fabricated).
-  chonkycollectibles: {
-    key: "chonkycollectibles",
-    name: "Chonky Collectibles",
-    base: "https://chonkycollectibles.com",
-    collections: ["riftbound-origins-singles"],
-    shippingFlatCents: 250,
-    freeOverCents: 6000,
-    shippingNote: "est. S$2.50 · free over S$60",
+  // ---- Added 2026-10-16, store audit (registry sweep + research; DECISIONS.md,
+  // "The store audit"). Each one's live feed was run through resolveCardId()
+  // against the catalogue snapshot; the figure is in-stock singles, matched.
+  // Postage is measured (shipping-rates.json); the flat figure is only the
+  // labelled fallback.
+  // 861 in stock, 100% matched; its Chinese-language collection is not read.
+  onecollectiblestcg: {
+    key: "onecollectiblestcg",
+    name: "1Collectibles",
+    base: "https://1collectiblestcg.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 300,
+    freeOverCents: 0,
+    shippingNote: "est. S$3.00",
     country: "SG",
   },
+
+  // Store audit, 2026-10-16, second batch (the rest of the registry sweep).
+  // 749 in stock, 98% matched. Back under its old key.
+  manapro: {
+    key: "manapro",
+    name: "Mana Pro",
+    base: "https://sg-manapro.com",
+    collections: ["riftbound-league-of-legends-trading-card-game"],
+    shippingFlatCents: 300,
+    freeOverCents: 0,
+    shippingNote: "est. S$3.00",
+    country: "SG",
+  },
+  // 690 in stock, 99% matched. Back under its old key.
+  sccollection: {
+    key: "sccollection",
+    name: "SC Collection",
+    base: "https://sc-collection.sg",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 300,
+    freeOverCents: 0,
+    shippingNote: "est. S$3.00",
+    country: "SG",
+  },
+
   // ---- SG leads checked and NOT added ----------------------------------------
   //   - cardscentral.com, duellerspoint.com, cardconnectsg.com, metagamestcg.com
   //     — real SG shops openly selling Riftbound SINGLES, but none is Shopify
@@ -1512,18 +1705,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     name: "Invasion Inc",
     base: "https://invasioncnc.ca",
     collections: ["riftbound-singles"],
-    shippingFlatCents: 299,
-    freeOverCents: 7500,
-    shippingNote: "est. C$2.99 · free over C$75",
-    country: "CA",
-  },
-  obsidiangames: {
-    key: "obsidiangames",
-    name: "Obsidian Games",
-    base: "https://obsidiangames.ca",
-    // Handle really is "-1"-suffixed (a duplicated collection on their store) —
-    // not a typo. Auto-discovery finds it either way.
-    collections: ["riftbound-singles-1", "riftbound-singles"],
     shippingFlatCents: 299,
     freeOverCents: 7500,
     shippingNote: "est. C$2.99 · free over C$75",
@@ -2099,6 +2280,395 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$2.99 · free over C$75",
     country: "CA",
   }, // registry sweep 2026-09-09: 12 in-stock singles, cur=CAD
+  // Moved from SG on 2026-10-16 (store audit). A Toronto store: CAD at
+  // checkout, ships to Canada only (/meta.json), and the 2026-09-25 postage
+  // probe already said so. Read with ?country=SG its every card was sold out,
+  // which is why it priced nothing for weeks. As CA: 595 of 932 singles in
+  // stock across the four set collections, 99% matched.
+  chonkycollectibles: {
+    key: "chonkycollectibles",
+    name: "Chonky Collectibles",
+    base: "https://chonkycollectibles.com",
+    collections: ["riftbound-origins-singles", "riftbound-spiritforged-singles", "riftbound-unleashed-singles", "vendetta-singles"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "CA",
+  },
+  // ---- Added 2026-10-16, store audit (registry sweep + research; DECISIONS.md,
+  // "The store audit"). Each one's live feed was run through resolveCardId()
+  // against the catalogue snapshot; the figure is in-stock singles, matched.
+  // Postage is measured (shipping-rates.json); the flat figure is only the
+  // labelled fallback.
+  // Orangeville ON; 1,003 in stock, 99% matched.
+  fantasyforged: {
+    key: "fantasyforged",
+    name: "Fantasy Forged",
+    base: "https://fantasyforged.ca",
+    collections: ["riftbound-singles", "riftbound-unleashed"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Longueuil QC; 1,139 in stock, 82% matched (misses are tokens and sealed).
+  "3mana": {
+    key: "3mana",
+    name: "3 Mana",
+    base: "https://3mana.ca",
+    collections: ["riftbound-single"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Markham ON; 960 in stock, 99% matched.
+  clawmebaby: {
+    key: "clawmebaby",
+    name: "Claw Me Baby",
+    base: "https://clawmebaby.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Montréal; 863 in stock, 99% matched.
+  abyssgamestore: {
+    key: "abyssgamestore",
+    name: "Abyss Game Store",
+    base: "https://abyssgamestore.com",
+    collections: ["riftbound-singles-in-stock", "riftbound-singles-all"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Richmond BC; 827 in stock, 100% matched.
+  drawforturn: {
+    key: "drawforturn",
+    name: "Draw for Turn",
+    base: "https://drawforturn.ca",
+    collections: ["riftbound-singles", "riftbound-promos"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Chicoutimi QC; 708 in stock, 99% matched.
+  kingdomtitans: {
+    key: "kingdomtitans",
+    name: "Kingdom Titans",
+    base: "https://kingdomtitans.cards",
+    collections: ["riftbound-league-of-legends"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Terrebonne QC; 689 in stock, 99% matched.
+  lecoindujeu: {
+    key: "lecoindujeu",
+    name: "Le Coin du Jeu",
+    base: "https://lecoindujeu.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Winnipeg; 673 in stock, 98% matched.
+  amusengames: {
+    key: "amusengames",
+    name: "Amuse N Games",
+    base: "https://amusengames.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Lachute QC; 672 in stock, 97% matched.
+  cartesleo: {
+    key: "cartesleo",
+    name: "Cartes Léo",
+    base: "https://cartesleo.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Etobicoke ON; 664 in stock, 98% matched.
+  emmettstoystop: {
+    key: "emmettstoystop",
+    name: "Emmett's Toy Stop",
+    base: "https://emmettstoystop.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Toronto; 610 in stock, 100% matched.
+  animealley: {
+    key: "animealley",
+    name: "Anime Alley",
+    base: "https://animealley.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Rosemère QC; 524 in stock, 98% matched.
+  jeux3dragons: {
+    key: "jeux3dragons",
+    name: "Jeux 3 Dragons",
+    base: "https://3dragons.ca",
+    collections: ["riftbound-origins-singles", "riftbound-spiritforged-singles", "riftbound-unleashed-singles", "most-recent-riftbound-set"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Edmonton; 338 in stock, 94% matched.
+  commonboxgames: {
+    key: "commonboxgames",
+    name: "Common Box Games",
+    base: "https://commonboxgames.com",
+    collections: ["riftbound-product"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Edmonton; 280 in stock, 100% matched.
+  "203collectibles": {
+    key: "203collectibles",
+    name: "203 Collectibles",
+    base: "https://203collectibles.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Abbotsford BC; 268 in stock, 97% matched.
+  abbyboardwalk: {
+    key: "abbyboardwalk",
+    name: "Abby Boardwalk",
+    base: "https://abbyboardwalk.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+
+  // Moved from US on 2026-10-16 (store audit). A Windsor, Ontario store: CAD,
+  // ships to Canada only (/meta.json), and quoted no postage to any US address
+  // on 2026-09-25. Its US prices were Shopify's currency conversion of a stock
+  // no US buyer could order (1,020 "in stock" on the US market).
+  cgrealm: {
+    key: "cgrealm",
+    name: "The CG Realm",
+    base: "https://thecgrealm.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 400,
+    freeOverCents: 0,
+    shippingNote: "est. C$4.00",
+    country: "CA",
+  },
+  // Store audit, 2026-10-16, second batch (the rest of the registry sweep).
+  // Markham ON; 1,432 in stock, 99% matched.
+  kadoone: {
+    key: "kadoone",
+    name: "KadOone",
+    base: "https://kadoone.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Windsor ON; 873 in stock, 98% matched.
+  kunaigames: {
+    key: "kunaigames",
+    name: "Kunai Games",
+    base: "https://kunaigames.com",
+    collections: ["riftbound-1"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Richmond BC; 827 in stock, 98% matched.
+  thedropcardshop: {
+    key: "thedropcardshop",
+    name: "The Drop Card Shop",
+    base: "https://thedropcardshop.com",
+    collections: ["riftbound-origins", "riftbound-spiritforged", "riftbound-unleashed", "riftbound-vendetta"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // 758 in stock, 99% matched.
+  torchlightgh: {
+    key: "torchlightgh",
+    name: "Torchlight Games and Hobbies",
+    base: "https://torchlightgh.com",
+    collections: ["singles-riftbound"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Markham ON; 655 in stock, all matched (the "-copy" handle is its full singles list).
+  mantatrading: {
+    key: "mantatrading",
+    name: "Manta Trading",
+    base: "https://mantatrading.com",
+    collections: ["riftbound-singles-origins-copy"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Markham ON; 650 in stock, all matched. The same store as `npcollectibles` (US), which is its cross-border US listing; this is its home CAD storefront.
+  npcollectiblesca: {
+    key: "npcollectiblesca",
+    name: "NexPack Collectibles",
+    base: "https://npcollectibles.ca",
+    collections: ["riftbound-origin-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Côte-Saint-Luc QC; 613 in stock, 98% matched.
+  geekandco: {
+    key: "geekandco",
+    name: "Geek & Co.",
+    base: "https://geekandco.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Markham ON; 468 in stock, 97% matched.
+  pvpshoppe: {
+    key: "pvpshoppe",
+    name: "PvP Shoppe",
+    base: "https://pvpshoppe.com",
+    collections: ["riftbound-instock", "riftbound-singles-legend"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Surrey BC; 348 in stock, 92% matched. Held back on 2026-09-09 for want of a Riftbound collection; it has one now.
+  screenfreegames: {
+    key: "screenfreegames",
+    name: "Screen Free Games",
+    base: "https://screenfreegames.com",
+    collections: ["riftbound-singles-1", "riftbound-spritforged", "riftbound-unleashed"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Toronto; 325 in stock, 85% matched.
+  sunnyhobbies: {
+    key: "sunnyhobbies",
+    name: "Sunny Hobbies",
+    base: "https://sunnyhobbies.com",
+    collections: ["riftbound-singles-tcg"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // 315 in stock, 99% matched (the handle's spelling is the store's).
+  pokejeux: {
+    key: "pokejeux",
+    name: "PokéJeux",
+    base: "https://pokejeux.ca",
+    collections: ["all-rfitbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Gatineau QC; 285 in stock, 99% matched.
+  manaconfluence: {
+    key: "manaconfluence",
+    name: "Mana Confluence",
+    base: "https://manaconfluence.com",
+    collections: ["riftbound-singles-in-stock"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Toronto; 243 in stock, 99% matched.
+  negativezonecomics: {
+    key: "negativezonecomics",
+    name: "Negative Zone Comics",
+    base: "https://negativezonecomics.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Montréal; 197 in stock, all matched.
+  thesidedeck: {
+    key: "thesidedeck",
+    name: "The Side Deck",
+    base: "https://thesidedeck.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Markham ON; 196 in stock, 95% matched.
+  masterset: {
+    key: "masterset",
+    name: "MasterSet Co.",
+    base: "https://masterset.ca",
+    collections: ["riftbound-singles", "riftbound-spiritforged"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Vaughan ON; 126 in stock, 95% matched.
+  newrealmgames: {
+    key: "newrealmgames",
+    name: "New Realm Games",
+    base: "https://newrealmgames.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+  // Markham ON; 137 in stock, 84% matched.
+  springerhobbies: {
+    key: "springerhobbies",
+    name: "Springer Hobbies",
+    base: "https://springerhobbies.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 800,
+    freeOverCents: 0,
+    shippingNote: "est. C$8.00",
+    country: "CA",
+  },
+
   // ---- Canadian leads checked and NOT added ----------------------------------
   // Registry sweep (2026-09-09): 248 untracked CA registry domains probed beyond
   // this hand-built list; 216 rejected or already tracked under another domain.
@@ -2307,6 +2877,58 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "EU",
   },
 
+  // ---- Added 2026-10-16, store audit (registry sweep + research; DECISIONS.md,
+  // "The store audit"). Each one's live feed was run through resolveCardId()
+  // against the catalogue snapshot; the figure is in-stock singles, matched.
+  // Postage is measured (shipping-rates.json); the flat figure is only the
+  // labelled fallback.
+  // Broni, Italy; 658 in stock, 89% matched. Back after the 2026-08-23 cut, which it did not clear then.
+  fireanddice: {
+    key: "fireanddice",
+    name: "Fire and Dice",
+    base: "https://fireanddice.it",
+    collections: ["riftbound-single", "unleashed-riftbound"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. €5.00",
+    country: "EU",
+  },
+  // Prague; a Czech store that charges EUR to a ?country=ES cart (/cart.js); 359 in stock, 92% matched.
+  cardsbeyond: {
+    key: "cardsbeyond",
+    name: "Cards Beyond",
+    base: "https://cardsbeyond.com",
+    collections: ["riftbound-origins-singles", "riftbound-spiritforged-singles", "riftbound-common-cards", "riftbound-rare-cards", "riftbound-epic-cards", "riftbound-alternate-art-cards", "riftbound-overnumbered-cards", "riftbound-rune-cards"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. €5.00",
+    country: "EU",
+  },
+
+  // Store audit, 2026-10-16, second batch (the rest of the registry sweep).
+  // Spain; 1,247 in stock, 96% matched.
+  spellnexus: {
+    key: "spellnexus",
+    name: "SpellNexus",
+    base: "https://spellnexus.com",
+    collections: ["riftbound-single", "unleashed-riftbound"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. €5.00",
+    country: "EU",
+  },
+  // Turin, Italy; 1,046 in stock, 90% matched.
+  shopponistore: {
+    key: "shopponistore",
+    name: "Shopponi Store",
+    base: "https://shopponistore.com",
+    collections: ["carte-singole-riftbound"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. €5.00",
+    country: "EU",
+  },
+
   // ---- Eurozone leads found and NOT added ------------------------------------
   //   - latiendascum.com — the store that ASKED to be listed (an inbound request
   //     naming the Spanish market, 2026-08-23), and the reason this market exists
@@ -2339,7 +2961,59 @@ export const RETAILER_LIST = Object.values(RETAILERS);
 //            the store's collection sitemap has no Riftbound handle at all (it
 //            now lists MTG, Pokémon and events only). store-health had it
 //            "stale: no successful fetch in 202h" with 138 listings still live.
-export const DECOMMISSIONED_RETAILERS: readonly string[] = ["e4cards"];
+//   knightlygaming, obsidiangames  2026-10-16 store audit — 3 products each,
+//            none in stock (Knightly's one collection is OP promos; Obsidian's
+//            singles collections were last touched in June).
+//   The 105 GHOST stores below, 2026-10-16 (owner: "get rid of the stores that
+//            … have been dead"): dropped from the registry when the EU list went
+//            from 96 stores to 12 (2026-08-23), when NZ was retired, and in
+//            earlier sealed passes, but never listed here, so their rows stayed.
+//            With the two below, the 2026-10-15 export held 7,026 of their card
+//            rows (4,206 "in stock") and 935 sealed (390), last written in
+//            August or September. This is
+//            the purge DECISIONS.md "The audit's 'sell-outs' were stores we
+//            stopped reading" (2026-10-15) held back for the owner's go-ahead.
+//            Four of the 109 ghosts are back in the registry and are not here:
+//            fireanddice (EU), onecollectiblestcg, manapro and sccollection (SG).
+export const DECOMMISSIONED_RETAILERS: readonly string[] = [
+  "e4cards",
+  "knightlygaming",
+  "obsidiangames",
+  // AU (3)
+  "goodgames", "shuffled", "vaultgames",
+  // CA (1)
+  "blackknight",
+  // EU (78)
+  "azcardgames", "baruzcard", "battlebear", "boostertcg", "breakthecase", "brickznmore",
+  "cardcorner", "cardcrack", "cardknights", "cardverse", "cardzone", "cityofcards",
+  "collectorstore", "coolupcards", "dctrading", "drawphase", "egdgamesmeepledin", "elius",
+  "elturnoextra", "exchangeplayinvest", "factorycards", "freakcorp", "freakshowstore",
+  "frikigalaxy", "fuhrious", "fumetteriageco", "g3skediog3tcg", "gamersacademy", "gamestcg",
+  "garajeux", "grillecards", "hobbyshopwargames", "holoplazatcg", "houseofgames", "ikigaicomics",
+  "industria61", "isengard", "jjcollection", "jupiterjuegos", "kardsgreifswald", "laescotilla",
+  "laroccawargaming", "lecoindesbarons", "lepotoryko", "lmshandel", "lotusvalley", "loufoque",
+  "ludusbelli", "mabasso", "magicomens", "manavortexshop", "maxireves", "metamorfo",
+  "metamorphcenter", "miceliongames", "montalfan", "mulligantiendamulligan", "outpostbrussels",
+  "ozjuegos", "panterland", "planeswalkersvalencia", "sarumangames", "sgames", "shoptcg",
+  "side7", "tcgfamily", "tcglevel", "templarsarena", "thebigbanggames", "threestones", "topdeck",
+  "treasurehub", "tsukicenter", "uproma", "vaultofdelights", "venturagames", "versusgamecenter",
+  "zillerstore",
+  // NZ (10)
+  "beagames", "calicokeep", "cardbotnz", "cardmasters", "cardmerchant", "gameroost", "gamingdna",
+  "ironknight", "shuffleandcut", "tcgcollectornz",
+  // SG (5)
+  "avidcollectors", "flagshipgames", "gameacademia", "greyogre", "onemtg",
+  // UK (5)
+  "cardvault", "gatheringgames", "harlequins", "nostalgiatcg", "travellingman",
+  // US (3)
+  "151collectables", "millenniumgames", "totalescape",
+];
+
+// Stores moved from RETAILERS to lib/sealed-stores.ts: their SINGLES rows must
+// go (nothing reads them for singles any more, so they would never expire) but
+// their sealed rows are still refreshed under the same key, so they are not
+// DECOMMISSIONED. 2026-10-16 store audit (DECISIONS.md, "The store audit").
+export const SINGLES_RETIRED_RETAILERS: readonly string[] = ["hobbycollectorsaustralia", "zatugames", "goblingaming", "gamerslodge", "rollnplay"];
 
 // Past this age, a store that returns no products has its rows expired rather
 // than kept. One bad run keeps yesterday's prices; three days is a store that
@@ -2392,14 +3066,14 @@ const STORES_WITH_POLICY = new Set([
   // shows the estimate rather than risking a link to a page nobody's checked.
   // UK
   "thistletavern", "cardgoblin", "axionnow", "spellboundgames", "totalcards",
-  "boardsandswords", "forbiddenplanet", "zatugames", "goblingaming",
+  "boardsandswords", "forbiddenplanet",
   "monstercardcorner",
   // UK round 2 — each fetched this session and confirmed to serve a real
   // /policies/shipping-policy page. The other four of that batch (Evolution,
   // Living Realms, Roll N Play, Knightly Gaming) 404 there and are deliberately
   // left out, so they keep showing the estimate rather than linking a dead page.
   "yardsgames", "redsun", "dicesaloon", "impactleague", "bulwarkgames",
-  "unioncounty", "moxinthehole", "gamerslodge", "seventhcity",
+  "unioncounty", "moxinthehole", "seventhcity",
   // SG — the first Singapore entry here. Only this one of the round-5 batch
   // publishes a policy page; the rest (incl. the big three singles catalogues) 404.
   "tefuda",

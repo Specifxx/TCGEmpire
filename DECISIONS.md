@@ -18014,6 +18014,120 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 
 **Tests (`radiance-preview-season`):** the homepage list comes from `REGION_HOME_PATH`; the layout's copy steps aside there; the hero renders its own right after the creators badge; the sm offset is set.
 
+## The import stops purging pages the files serve — 2026-10-16
+
+**Owner**, with Vercel's numbers for 10–17 October: ISR writes are the largest line ($2.42 of $6.58, 606K write units). `/card/[id]` made 43K of 49K write units in 12 hours: 5.2K writes for 1.1K reads over 1.3K paths, no time-based revalidation and one tag revalidation. "Find why long-tail card pages get rewritten so often", and find out why `/pokemon/sealed/[slug]` (1.4K writes for 163 reads) is there.
+
+**Why each card page is written about twice a day.** A card page is a ~370 KB HTML document plus a ~180 KB RSC payload, about 70 ISR write units each time it renders (the 07:00 purge comment's "~75" was right). It renders once per visited path after each event that empties the cache. There were two such events a day:
+- **the daily release**, which starts every deployment with an empty page cache;
+- **the 19:00 import's `/api/revalidate`**, which purges `/card/[id]` and every other price page.
+
+In `PUBLIC_DATA_MODE=files` (live since 15 October) the second one changes nothing a visitor can see. The pages read the snapshot their release bundled, so the purge re-rendered every visited card page with exactly the data it already showed. That was about half of the site's ISR writes. The 07:00 purge was already skipped because a release follows it. The single "tag revalidation" in Vercel's view is this purge: `revalidatePath` is a tag underneath.
+
+**What changed.**
+- **`/api/revalidate` answers 202 "skipped" in files mode** (`importPurgeIsNoop()`, `src/lib/revalidate-content.ts`), unless the caller passes `?force=1`.
+  - `refresh-prices.yml` logs the skip. `purged` stays false, so the paid alert pass takes its own fresh read (`?fresh=1`), as on a skipped morning run.
+  - The manual `revalidate-now` maintenance task passes `force=1`.
+  - Back in `db` or `fallback` mode, every purge runs as before.
+- **The Pokémon section's TTL is a day** (`POKEMON_TTL`, and the four routes that carried 21600). Its import purges `/pokemon` after both daily runs, so the six-hour timer only re-rendered ~1,000 mostly noindex product pages for crawlers between imports.
+- **Prefetch is off on the remaining long link lists:**
+  - the set checklist (`SetTracker`), the index constituents and the article market tables and embeds;
+  - the deck builder, published decks, the deck library and the ban list;
+  - the recently viewed rail on every card page;
+  - the Pokémon lists.
+
+  A visible `<Link>` to an ISR page fetches its whole ~180 KB RSC payload, and an uncached target renders and writes on the prefetch alone. `CardTile` and most grids already had it off.
+- **robots.txt no longer lets crawlers walk query-string URLs** (`Disallow: /*?`).
+  - No sitemap URL has one, and every page that reads one canonicalises to its clean URL.
+  - Explicit Allows keep `/_next/` (assets carry `?dpl=`; Google needs them to render), the share images (`opengraph-image?<hash>`, which Twitterbot fetches under robots.txt) and the icons.
+  - `BLOCKED_BOTS` adds ten backlink, data and minor-engine crawlers. AhrefsBot and SemrushBot stay allowed (`tests/critical-path.test.ts`).
+
+**Why `/pokemon/sealed/[slug]` exists.** It is the Pokémon sealed beta of 1 October ("The Pokémon sealed section (beta)"). It was built to answer "do people use it?" before DexCompare existed as its own site. 163 product reads a week is the answer so far, and since 15 October its pages already defer to DexCompare's store prices. **The owner's call, not made here:**
+- turn it off with one variable (`NEXT_PUBLIC_POKEMON_SECTION`; `docs/pokemon/README.md` §2);
+- or 301 `/pokemon/*` to the matching DexCompare pages.
+
+**Not done, with the reason.**
+- **The other half of each card page's weight is not data.** 97 KB of the 183 KB RSC payload is 62 client-component import rows, each listing ~20 chunk files. 41 KB of that is Vercel Skew Protection's `?dpl=` suffix on every chunk URL, and the same rows are inlined in the HTML again.
+  - Turning Skew Protection off (a Vercel project setting) cuts each card write by about 15%. The cost is that a tab open across a release reloads on its next navigation instead of finishing it.
+  - Merging the layout's dozen providers into one client component would cut the rows further. It touches every page, so it is left for a change of its own.
+- **CDN caching instead of ISR for card pages** (a `Cache-Control`/`CDN-Cache-Control` header on a dynamic render) would make writes free. But Vercel's CDN cache is per region and also cold after each release, and a page cannot set its own headers in the App Router. With one render per card per day left, ISR is close to break-even, not a loss: the deploy, not the TTL, now sets the write rate.
+
+**What to watch** (Vercel Observability → ISR, 24 h after the release that ships this):
+- `/card/[id]` writes per path should fall from ~4 to ~2 per 12 h (one render after the release, one per HTML/RSC pair). Write units should roughly halve.
+- No tag revalidation should appear at the 19:00 run.
+- `refresh-prices.yml`'s log should read "Skipped: files mode".
+
+## The store audit: 59 stores added, 2 dead and 105 ghost stores purged, 5 moved to sealed-only, 2 Canadian stores filed under the wrong market — 2026-10-16
+
+**Owner:** "take a look at all the stores … I'm sure there's a lot of stores that have shown up … stores that … might have been decommissioned … let's take a look at all the stores and … any stores that are new and popular and … get rid of the stores that … have been dead."
+
+**How each store was judged.** Every tracked store's in-stock count came from the 2026-10-15 public export (singles and sealed). Every weak one was then read live and run through the importer's own `resolveCardId()` against the catalogue snapshot (a scratch script; the counts below are its output). New stores came from two places:
+- `scripts/sweep-registry.ts --markets AU,US,UK,SG,CA,EU` over the official UVS locator: 3,328 domains read and 210 cleared the bar. 404 were rate-limited or unreachable, so a `--resume` run may find a few more.
+- A research pass for popular stores the locator may miss (big retailers, Google results, the community's recommendations).
+
+Every candidate was vetted the same way: its own collection list, then its Riftbound singles collections read with the market's `?country=`, and the share of in-stock singles the importer matches. Its checkout currency was checked (`/cart.js`), and so was where it is and ships to (`/meta.json`). The figure on each new `RETAILERS` entry is that measurement.
+
+**The sweep's own "thin" flag on tracked stores is not evidence.** It counts titles its singles heuristic recognises, so it called Forbidden Planet (83 in stock), Mana Market (497) and Thistle Tavern (705) thin. Nothing was removed on it.
+
+**Removed (2):** Knightly Gaming (UK; one OP-promo collection, 3 products, none in stock) and Obsidian Games (CA; 3 products, none in stock, collections untouched since June). Both go into `DECOMMISSIONED_RETAILERS`.
+
+**Ghost stores purged (105).** These are stores dropped from the registry without their keys being decommissioned: the 2026-08-23 EU cut (96 → 12), the NZ retirement, and earlier sealed passes. They are the 13 card and 109 sealed stores the 2026-10-15 entry found still showing August prices, a purge that entry held back for the owner's go-ahead. This request is that go-ahead.
+- All 105 go into `DECOMMISSIONED_RETAILERS`. With the four that came back, they held 7,026 card rows (4,206 "in stock") and 935 sealed rows (390).
+- **Back in the registry** under their old keys, so not purged: Fire and Dice (EU) and 1Collectibles, Mana Pro and SC Collection (SG).
+- The expected effects are the ones that entry listed: EU `/sealed` drops by about a third, about 16 groups gain "Sold out", and some public sealed history series step up on the purge day because their lows were stale. No email fires and no page 404s.
+
+**Moved to sealed-only (5):** Hobby Collectors Australia, Zatu, Goblin Gaming, The Gamers Lodge and Roll N Play.
+- Each one's Riftbound collections hold boxes, decks, accessories and event tickets, with few or no matchable singles. Roll N Play's singles ("Single Card - Ambessa … 196*") have never matched a card. As singles stores they read as broken, against the CURRENT-STATE rule that sealed-only stores belong in `lib/sealed-stores.ts`.
+- They keep their keys, so their sealed rows carry on.
+- **The new `SINGLES_RETIRED_RETAILERS`** purges only their card rows, which nothing reads any more and which would never expire. `DECOMMISSIONED_RETAILERS` would have purged their sealed rows too.
+
+**Canadian stores filed under the wrong market.** Two Ontario stores charging CAD, and a third checked:
+- **Chonky Collectibles (SG → CA).** Ships to Canada only. Read with `?country=SG`, every one of its 932 singles reads sold out, so it priced nothing in Singapore for weeks. The 2026-09-25 postage probe had already noted "a Toronto store". As CA: 595 in stock across its four set collections (it was reading only Origins), 99% matched.
+- **The CG Realm (US → CA).** Windsor, Ontario; ships to Canada only. Its 1,020 "in stock" US listings were Shopify's currency conversion of stock no US buyer could order. Its no-post postage override goes, and it is measured in Canada (C$4.00).
+- **NexPack Collectibles stays in the US**, because it really ships there: its US listing is a measured cross-border one, with duties noted. Its home CAD storefront is added to CA as `npcollectiblesca`, the same precedent as Danireon's US/CA pair.
+
+**Collections the stores had renamed** (we were reading empty or stale ones):
+- Tier Zero: `riftbound-single`.
+- Monster Card Corner: per-set collections, including Radiance singles listed ahead of release.
+- 7th City: three promo collections.
+
+**Added (59)**, each 80–100% matched, mostly 95%+:
+
+| Market | Stores |
+|---|---|
+| AU (8) | Eternal Magic (1,513 in stock), Blacklist Cards (1,272), Turtle TCG (547), One Place TCS (353), Kollecter (266), Crit Hit (237), Raptor Games (189), The Card Cave (145) |
+| US (9) | DK's Cards (803), The Hub TCG (711), Tier 1 Games (703), The Vault Game Store (697), Spanky's (280), Card Father (182), Game Grid Idaho Falls (161), QuickTCG (70), All Access (57) |
+| UK (3) | Archeron Games (388 cards; it lists each copy as its own product, 1,418 in all), eTOYSWORLD (530), The TCG Group (106) |
+| SG (3) | 1Collectibles (861), Mana Pro (749), SC Collection (690) |
+| CA (32) | KadOone (1,432), 3 Mana (1,139), Fantasy Forged (1,003), Claw Me Baby, Kunai, Abyss, Draw for Turn, The Drop, Torchlight, Kingdom Titans, Le Coin du Jeu, Amuse N Games, Cartes Léo, Emmett's, Manta, NexPack CA, Geek & Co., Anime Alley, Jeux 3 Dragons, PvP Shoppe, Screen Free Games, Common Box, Sunny Hobbies, PokéJeux, Mana Confluence, 203 Collectibles, Abby Boardwalk, Negative Zone, The Side Deck, MasterSet, New Realm, Springer (plus Chonky and The CG Realm, moved in) |
+| EU (4) | SpellNexus (1,247), Shopponi (1,046), Fire and Dice (658), Cards Beyond (359; a Prague store that charges EUR to a Spanish cart) |
+
+Canada is most of it. Its Riftbound web-shop scene has grown fastest since the 2026-09-09 sweep, and much of it is in and around Markham.
+
+The registry goes from 172 to 224 stores.
+
+**The first import with them** (push run 38923977533, 2026-10-16) was clean:
+- It purged 5,973 card and 920 sealed rows from the decommissioned stores, and 34 card rows from the five now sealed-only.
+- Every new store priced cards, with no errors, blocks or currency refusals.
+- It took 84 minutes end to end: 57 for prices and 26 for sealed, because the sealed pass visits every singles store too.
+
+**The job limit goes from 90 to 120 minutes.** Runs were already 58–82 minutes before the audit (prices 43–62, sealed 14–19), so a heavy eBay day would now cross 90 and kill the run before the snapshot and the daily release. The limit is a ceiling, not a cost. `tests/affiliate-priority.test.ts`'s store-pass figure moves from 18 to 30 minutes.
+
+**Postage** was measured for every new and moved store (`probe-shipping-rates.ts --store=…`, merged by `build-shipping-rates.ts`). Raptor Games ships (Tuesdays and Fridays) but shows rates only inside checkout. It is on the labelled estimate (`status: "unmeasured"`), not "no-post", so it stays in Best Basket. PvP Shoppe (ships to CA and the US, rates only in checkout) is the same.
+
+**A matcher gap found by the first import: "Charm - Origins #43".** The import flagged four tracked stores matching few of their products. Three were sealed and accessories their collections also hold (Red Sun, Level Up Games, Ace Collectibles), which correctly match nothing. The fourth, The Nerd Merchant, titles every single as "Name - Set #N", with no "/total", and 443 of its 731 matched nothing. `parseNumber` now reads a set name with its collector number straight after it. It ignores sleeves, playmats, packs and the like, and keeps the Astral Radiance guard.
+- A first, looser version (any "#n" in a title that named a set) priced Thistle Tavern's and Many Realms' "Radiance Art Sleeves #4" and "Radiance Playmat #2" as Radiance cards 4 and 2. It was caught by diffing the old and new matcher over 15,107 live titles from 17 stores.
+- The final rule changes nothing in that sample except The Nerd Merchant's 433 gains, and each gain's set and number equal the card it matched.
+- `tests/set-hash-number.test.ts` pins both halves.
+
+**Not added, and why:**
+- **Columbus Card Shop** (its site: "Our online store is not currently accepting orders"), and two that cleared the bar but do not post: **Prestige Games** ("We currently do not offer shipping") and **Twin Moons** ("we only offer store pick up"). A price nobody outside the town can order is not a comparison.
+- **MERCHANT** (merchanttcg.com, about 900 singles). It sells English and French as variants of one product, and the importer's variant pick has no language filter, so a French copy could price the English card. It needs a variant language gate first.
+- **Otakura.** Its titles carry no collector numbers: 0% matched.
+- **Plenty of Games' own domain.** It is the store already tracked through its myshopify address.
+- **Good Games' main domain.** Sealed only, and its feed served HTML. Its ghost rows are purged.
+- **Non-Shopify stores** the research named (Star City Games, CoolStuffInc, Magic Madhouse, Chaos Cards, Big Orbit, Cards Central, Games Island, Play-In, and five CrystalCommerce stores). Each needs an adapter. One CrystalCommerce adapter would cover five stores, and that is the next platform worth building.
+
 ## No blank hole above the hero: Google slots that will not fill collapse — 2026-10-16
 
 **Owner**, with a phone screenshot of `/au`: about 460px of nothing between the header and the hero. "How come there's sometimes a massive gap between the very top and the hero when I load on phone? … fix this as soon as possible and deploy it."
