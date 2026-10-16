@@ -88,7 +88,7 @@ export function DeckLibrary({ decks, legends, domains }: { decks: LibraryDeck[];
             const total = totalFor(d.totals, country);
             return (
               <li key={d.slug}>
-                <Link href={`/decks/${d.slug}`} className="card-surface flex h-full flex-col gap-1 p-4 transition-colors hover:border-brand-500/60">
+                <Link prefetch={false} href={`/decks/${d.slug}`} className="card-surface flex h-full flex-col gap-1 p-4 transition-colors hover:border-brand-500/60">
                   <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{d.legendName}</span>
                   <span className="font-bold text-white">{d.title}</span>
                   <span className="text-xs text-slate-400">

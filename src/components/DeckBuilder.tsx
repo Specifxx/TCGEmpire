@@ -523,7 +523,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
                       <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <Link href={cardHref(l.card)} className="font-medium text-white hover:text-brand-400">
+                      <Link prefetch={false} href={cardHref(l.card)} className="font-medium text-white hover:text-brand-400">
                         {cardDisplayName(l.card.name, l.card)}
                       </Link>
                       <div className="text-xs text-slate-500">

@@ -464,7 +464,7 @@ test("no Pokémon blog file names a banned Riftbound import, even in a comment",
 test("caching: a post is ISR at the catalogue's TTL with an empty generateStaticParams; the index reads no catalogue", () => {
   const post = stripComments(readFileSync(join(ROOT, "src/app/pokemon/blog/[slug]/page.tsx"), "utf8"));
   assert.equal(Number(/export const revalidate = (\d+);/.exec(post)?.[1]), POKEMON_TTL);
-  assert.equal(POKEMON_TTL, 21600);
+  assert.equal(POKEMON_TTL, 86400);
   assert.match(post, /export function generateStaticParams\(\): \{ slug: string \}\[\] \{\s*return \[\];\s*\}/);
   assert.equal((post.match(/getPokemonCatalog\(/g) ?? []).length, 1, "one catalogue read");
   assert.match(post, /getPokemonCatalog\("US"\)/);

@@ -332,7 +332,7 @@ function Row({
         <OwnedTick cardId={c.id} cardName={c.name} variant="row" />
       </div>
       <div className="min-w-0 flex-1">
-        <Link href={cardHref(c)} className="block truncate text-sm font-semibold text-slate-100 hover:text-brand-300 hover:underline">
+        <Link prefetch={false} href={cardHref(c)} className="block truncate text-sm font-semibold text-slate-100 hover:text-brand-300 hover:underline">
           {cardDisplayName(c.name, c)}
         </Link>
         <p className="text-xs text-slate-500">

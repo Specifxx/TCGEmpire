@@ -36,7 +36,7 @@ import type { PkKind } from "@/lib/pokemon/kinds";
 // The reads are getPokemonProduct and, for the comparisons, the US catalogue the
 // grid pages share; both are cached for exactly this page's TTL under the
 // "pokemon" tag the daily import purges.
-export const revalidate = 21600;
+export const revalidate = 86400;
 
 // An EMPTY list, as /card/[id] has: it is what makes Next cache each product
 // page on its first visit (ISR) instead of rendering every request, while
@@ -58,7 +58,7 @@ const POSTS_BY_KIND: Record<string, readonly PkKind[]> = {
 // FAIL-OPEN (DECISIONS D14): only a product that is not in the catalogue is a
 // 404. A read error is thrown, never caught into notFound(): ISR then keeps
 // serving the last good page, and a first render fails with a 500, which is
-// neither cached for six hours nor read by a crawler as "gone".
+// neither cached for a day nor read by a crawler as "gone".
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   if (!pokemonEnabled()) return notFoundMetadata();
   if (!isPokemonSlug(params.slug)) return notFoundMetadata("Product");

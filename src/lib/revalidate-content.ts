@@ -1,5 +1,6 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { SECTIONS } from "./sitemap-sections";
+import { publicDataMode } from "./public-data/mode";
 
 // On-demand ISR revalidation, invoked after the daily/twice-daily price import
 // writes new data. This is the freshness half of the "don't hammer Neon" strategy:
@@ -26,6 +27,21 @@ export const CONTENT_TAG = "content";
 // moves to a weekly cadence (see lib/price-history.ts). Purging this tag is now a
 // deliberate act — nothing on the import path fires it.
 export const HISTORY_TAG = "history";
+
+// THE IMPORT'S PURGE IS A NO-OP IN FILES MODE (2026-10-16, DECISIONS.md "The
+// import stops purging pages the files serve").
+//
+// With PUBLIC_DATA_MODE=files every public page reads the data snapshot its
+// release bundled (lib/public-data/), so an import that writes Neon cannot
+// change a single price on them until the next release, which rebuilds the
+// whole page cache anyway. The purge was then pure cost: the 19:00 import
+// re-rendered every visited /card/* page (~550 KB of HTML + RSC, ~70 ISR write
+// units each) with exactly the data it already showed, about half the site's
+// ISR writes. /api/revalidate now answers 202 "skipped" in files mode unless
+// the caller passes ?force=1 (the manual revalidate-now task does).
+export function importPurgeIsNoop(): boolean {
+  return publicDataMode() === "files";
+}
 
 export function revalidateContent(): string[] {
   // GENUINELY STATIC / ISR pages (no cookie or searchParams read). Passing the

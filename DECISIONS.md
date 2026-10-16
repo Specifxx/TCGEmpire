@@ -18013,3 +18013,46 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 - at 390px, the ✕ is the element under its own centre, a tap removes the banner, and it stays gone after a reload.
 
 **Tests (`radiance-preview-season`):** the homepage list comes from `REGION_HOME_PATH`; the layout's copy steps aside there; the hero renders its own right after the creators badge; the sm offset is set.
+
+## The import stops purging pages the files serve — 2026-10-16
+
+**Owner**, with Vercel's numbers for 10–17 October: ISR writes are the largest line ($2.42 of $6.58, 606K write units). `/card/[id]` made 43K of 49K write units in 12 hours: 5.2K writes for 1.1K reads over 1.3K paths, no time-based revalidation and one tag revalidation. "Find why long-tail card pages get rewritten so often", and find out why `/pokemon/sealed/[slug]` (1.4K writes for 163 reads) is there.
+
+**Why each card page is written about twice a day.** A card page is a ~370 KB HTML document plus a ~180 KB RSC payload, about 70 ISR write units each time it renders (the 07:00 purge comment's "~75" was right). It renders once per visited path after each event that empties the cache. There were two such events a day:
+- **the daily release**, which starts every deployment with an empty page cache;
+- **the 19:00 import's `/api/revalidate`**, which purges `/card/[id]` and every other price page.
+
+In `PUBLIC_DATA_MODE=files` (live since 15 October) the second one changes nothing a visitor can see. The pages read the snapshot their release bundled, so the purge re-rendered every visited card page with exactly the data it already showed. That was about half of the site's ISR writes. The 07:00 purge was already skipped because a release follows it. The single "tag revalidation" in Vercel's view is this purge: `revalidatePath` is a tag underneath.
+
+**What changed.**
+- **`/api/revalidate` answers 202 "skipped" in files mode** (`importPurgeIsNoop()`, `src/lib/revalidate-content.ts`), unless the caller passes `?force=1`.
+  - `refresh-prices.yml` logs the skip. `purged` stays false, so the paid alert pass takes its own fresh read (`?fresh=1`), as on a skipped morning run.
+  - The manual `revalidate-now` maintenance task passes `force=1`.
+  - Back in `db` or `fallback` mode, every purge runs as before.
+- **The Pokémon section's TTL is a day** (`POKEMON_TTL`, and the four routes that carried 21600). Its import purges `/pokemon` after both daily runs, so the six-hour timer only re-rendered ~1,000 mostly noindex product pages for crawlers between imports.
+- **Prefetch is off on the remaining long link lists:**
+  - the set checklist (`SetTracker`), the index constituents and the article market tables and embeds;
+  - the deck builder, published decks, the deck library and the ban list;
+  - the recently viewed rail on every card page;
+  - the Pokémon lists.
+
+  A visible `<Link>` to an ISR page fetches its whole ~180 KB RSC payload, and an uncached target renders and writes on the prefetch alone. `CardTile` and most grids already had it off.
+- **robots.txt no longer lets crawlers walk query-string URLs** (`Disallow: /*?`).
+  - No sitemap URL has one, and every page that reads one canonicalises to its clean URL.
+  - Explicit Allows keep `/_next/` (assets carry `?dpl=`; Google needs them to render), the share images (`opengraph-image?<hash>`, which Twitterbot fetches under robots.txt) and the icons.
+  - `BLOCKED_BOTS` adds ten backlink, data and minor-engine crawlers. AhrefsBot and SemrushBot stay allowed (`tests/critical-path.test.ts`).
+
+**Why `/pokemon/sealed/[slug]` exists.** It is the Pokémon sealed beta of 1 October ("The Pokémon sealed section (beta)"). It was built to answer "do people use it?" before DexCompare existed as its own site. 163 product reads a week is the answer so far, and since 15 October its pages already defer to DexCompare's store prices. **The owner's call, not made here:**
+- turn it off with one variable (`NEXT_PUBLIC_POKEMON_SECTION`; `docs/pokemon/README.md` §2);
+- or 301 `/pokemon/*` to the matching DexCompare pages.
+
+**Not done, with the reason.**
+- **The other half of each card page's weight is not data.** 97 KB of the 183 KB RSC payload is 62 client-component import rows, each listing ~20 chunk files. 41 KB of that is Vercel Skew Protection's `?dpl=` suffix on every chunk URL, and the same rows are inlined in the HTML again.
+  - Turning Skew Protection off (a Vercel project setting) cuts each card write by about 15%. The cost is that a tab open across a release reloads on its next navigation instead of finishing it.
+  - Merging the layout's dozen providers into one client component would cut the rows further. It touches every page, so it is left for a change of its own.
+- **CDN caching instead of ISR for card pages** (a `Cache-Control`/`CDN-Cache-Control` header on a dynamic render) would make writes free. But Vercel's CDN cache is per region and also cold after each release, and a page cannot set its own headers in the App Router. With one render per card per day left, ISR is close to break-even, not a loss: the deploy, not the TTL, now sets the write rate.
+
+**What to watch** (Vercel Observability → ISR, 24 h after the release that ships this):
+- `/card/[id]` writes per path should fall from ~4 to ~2 per 12 h (one render after the release, one per HTML/RSC pair). Write units should roughly halve.
+- No tag revalidation should appear at the 19:00 run.
+- `refresh-prices.yml`'s log should read "Skipped: files mode".

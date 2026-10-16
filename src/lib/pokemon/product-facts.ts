@@ -120,7 +120,7 @@ export function productFacts(p: PkProductDetail, catalogIn: PkCatalog | null, no
   const boards = allBoards(p.name, p.offers, { page: `/pokemon/sealed/${p.slug}`, surface: "product", now: nowMs });
   // The comparisons rank this product's fresh figures against the catalogue's.
   // A warm instance's catalogue memo can outlive the import's purge by up to
-  // 15 minutes, and an ISR page rendered then keeps the mix for six hours; so
+  // 15 minutes, and an ISR page rendered then keeps the mix until the next purge; so
   // the catalogue is used only when its tile for this product agrees with the
   // product's own US headline (same import), and is otherwise left out, as on
   // a read error.
