@@ -41,10 +41,12 @@ test("no store is in both registries, and every key is unique", () => {
   assert.equal(new Set(RETAILER_LIST.map((r) => r.key)).size, RETAILER_LIST.length);
 });
 
-test("Chonky Collectibles is the Toronto store it is, read across its set collections", () => {
+test("Chonky Collectibles and The CG Realm are the Ontario stores they are", () => {
   const c = RETAILERS.chonkycollectibles;
   assert.equal(c.country, "CA", "with ?country=SG every card reads sold out");
   assert.ok(c.collections.length >= 4);
+  assert.equal(RETAILERS.cgrealm.country, "CA", "ships to Canada only: its US prices were a conversion no US buyer could order");
+  assert.ok(!RETAILERS.columbuscardshop, "its online store is not taking orders");
 });
 
 test("the audit's additions are in the market they charge in", () => {

@@ -109,6 +109,11 @@ export function roundAtCheckout(cents: number, rounding: ShippingOverride["check
 // Facts the probe cannot read from /cart/shipping_rates.json, each checked by
 // hand on 2026-09-25 and recorded in the probe runs' notes. A rebuild keeps them.
 export const SHIPPING_OVERRIDES: Record<string, ShippingOverride> = {
+  // ── Stores that post, but whose rates the cart API does not show ──
+  // Raptor Games (Brisbane) ships Tuesdays and Fridays (its shipping policy),
+  // yet /cart/shipping_rates.json was empty at all eight capitals on
+  // 2026-10-16: rates come from a checkout app. On the estimate, not dropped.
+  raptorgames: { status: "unmeasured", note: "Posts (Tuesdays and Fridays), but its rates are only shown inside checkout" },
   // ── Stores that do not post (at all, or to this market) ──
   // Each re-probed 2026-09-25 (every cart empty at New York, San Francisco,
   // Dallas and Chicago) and checked through the Storefront API (no delivery
@@ -120,9 +125,9 @@ export const SHIPPING_OVERRIDES: Record<string, ShippingOverride> = {
   },
   evolutiontcg: { status: "no-post", note: "Collection from the store only (its site banner); no postage quoted to any UK address" },
   tcgclubhouse: { status: "no-post", note: "Offered no delivery at all when measured (the store is away 15 Sep – 1 Oct 2026)" },
-  // /meta.json: Windsor, Ontario, CAD, ships_to_countries ['CA']; Toronto gets 8 rates from C$4.00.
-  cgrealm: { status: "no-post", note: "A Windsor, Ontario store (CAD) whose shipping zones cover Canada only: quoted no postage to any US address" },
-  chonkycollectibles: { status: "no-post", note: "A Toronto store whose shipping policy ships to Canada only" },
+  // (cgrealm and chonkycollectibles were here as "no-post": Canadian stores
+  // tracked in the US and SG markets. Both moved to CA on 2026-10-16 and are
+  // measured there; DECISIONS.md, "The store audit".)
   espercards: {
     status: "no-post",
     note: "Quoted no postage to any Canadian address we tried and publishes no shipping policy (pickup only, or rates only inside checkout)",

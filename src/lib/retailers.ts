@@ -423,16 +423,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$1.99 · free over US$50",
     country: "US",
   },
-  cgrealm: {
-    key: "cgrealm",
-    name: "The CG Realm",
-    base: "https://thecgrealm.com",
-    collections: ["riftbound"],
-    shippingFlatCents: 200,
-    freeOverCents: 5000,
-    shippingNote: "est. US$2.00 · free over US$50",
-    country: "US",
-  },
   danireon: {
     key: "danireon",
     name: "Danireon Cards & Games",
@@ -1041,17 +1031,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     name: "All Access Card Shop",
     base: "https://allaccesscardshop.com",
     collections: ["riftbound-singles"],
-    shippingFlatCents: 500,
-    freeOverCents: 0,
-    shippingNote: "est. $5.00",
-    country: "US",
-  },
-  // Hilliard OH; 57 in stock, 91% matched.
-  columbuscardshop: {
-    key: "columbuscardshop",
-    name: "Columbus Card Shop",
-    base: "https://columbuscardshop.com",
-    collections: ["riftbound-league-of-legends-singles"],
     shippingFlatCents: 500,
     freeOverCents: 0,
     shippingNote: "est. $5.00",
@@ -2364,6 +2343,20 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "CA",
   },
 
+  // Moved from US on 2026-10-16 (store audit). A Windsor, Ontario store: CAD,
+  // ships to Canada only (/meta.json), and quoted no postage to any US address
+  // on 2026-09-25. Its US prices were Shopify's currency conversion of a stock
+  // no US buyer could order (1,020 "in stock" on the US market).
+  cgrealm: {
+    key: "cgrealm",
+    name: "The CG Realm",
+    base: "https://thecgrealm.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 400,
+    freeOverCents: 0,
+    shippingNote: "est. C$4.00",
+    country: "CA",
+  },
   // ---- Canadian leads checked and NOT added ----------------------------------
   // Registry sweep (2026-09-09): 248 untracked CA registry domains probed beyond
   // this hand-built list; 216 rejected or already tracked under another domain.
