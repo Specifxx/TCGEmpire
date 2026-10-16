@@ -17993,3 +17993,23 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 **If the owner wants the homepage exactly as before,** ad intents included, `MOBILE_AD_INTENTS_SCRIPT` would skip the six homepage paths. That is a one-line change, not made here because nothing asked for the clicking back.
 
 **Tests (`mobile-ads`):** the homepages are now in the keeps-its-ads list at 390px, both in the boot script and on a client navigation. Best Basket and `/deck` (and their sub-paths) are still paused there, and nothing is paused at 1024px.
+
+## The Radiance banner sits inside the homepage hero — 2026-10-16
+
+**Owner**, with a screenshot of the hero's top edge cutting through the banner: "I still need to fix this annoying overlap, can we bring it inside the hero."
+
+**Why it overlapped.** `RadianceSeasonBanner` renders at the top of `<main>` on every page. On the six market homepages the next thing is `CinematicHero`, a full-bleed breakout with `-mt-6`. That pull-up was there to tighten the gap above the hero, and it slid the hero's band over the banner's bottom edge.
+
+**What changed.**
+- The banner takes a `placement` prop. The layout's copy (`page`) returns nothing on the homepage paths, `Object.values(REGION_HOME_PATH)`, so the list cannot drift from the routes.
+- `CinematicHero` renders its own copy (`hero`) as the first thing after `CreatorsCornerBadge`.
+- **How the hero copy looks:** centred, `max-w-xl`, a dark glass strip (`bg-ink-950/85`, gold border) so the hero's decorations don't show through. From sm it starts 32px lower, clear of the creators badge, which sits absolute in the hero's top-right corner.
+- **Unchanged:** the dismissal keys, the copy by phase, the links, and the release-day cut-off. Every other page keeps the banner at the top of `<main>`. The hero's `-mt-6` is untouched.
+
+**Checked** locally in Chromium at 390 (`/` and `/au`), 768 and 1634px:
+- one banner, inside `#rc-hero`, clear of the creators badge;
+- no horizontal scroll;
+- on `/browse`, one banner, at the top of `<main>` as before;
+- at 390px, the ✕ is the element under its own centre, a tap removes the banner, and it stays gone after a reload.
+
+**Tests (`radiance-preview-season`):** the homepage list comes from `REGION_HOME_PATH`; the layout's copy steps aside there; the hero renders its own right after the creators badge; the sm offset is set.

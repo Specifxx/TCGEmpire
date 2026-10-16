@@ -42,3 +42,12 @@ test("the sitewide banner is slim, dismissible, client-decided and gone on relea
   assert.match(b, /aria-label="Dismiss the Radiance banner"/);
   assert.match(read("src/app/layout.tsx"), /<RadianceSeasonBanner \/>/);
 });
+
+test("on the homepages the banner sits inside the hero, not above it where the hero overlapped it", () => {
+  const b = read("src/components/RadianceSeasonBanner.tsx");
+  // 2026-10-16, owner: "fix this annoying overlap, can we bring it inside the hero".
+  assert.match(b, /const HERO_HOME_PATHS: readonly string\[\] = Object\.values\(REGION_HOME_PATH\);/, "every market homepage, from one list");
+  assert.match(b, /if \(placement === "page" && pathname && HERO_HOME_PATHS\.includes\(pathname\)\) return null;/, "the layout's copy steps aside there");
+  assert.match(read("src/components/home/CinematicHero.tsx"), /<CreatorsCornerBadge \/>\s*\{\/\*[\s\S]*?\*\/\}\s*<RadianceSeasonBanner placement="hero" \/>/, "the hero renders its own, at the top");
+  assert.match(b, /sm:mt-8/, "clear of the absolute creators badge from sm");
+});

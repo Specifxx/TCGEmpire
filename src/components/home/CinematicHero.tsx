@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { CreatorsCornerBadge } from "./CreatorsCornerBadge";
+import { RadianceSeasonBanner } from "@/components/RadianceSeasonBanner";
 import Link from "next/link";
 import { ParallaxRoot } from "./ParallaxRoot";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
@@ -147,6 +148,9 @@ export function CinematicHero({
         {/* The creators hub, above the fold (2026-10-15, owner): top-right
             corner from sm, a centred pill above the headline on a phone. */}
         <CreatorsCornerBadge />
+        {/* Radiance launch week (gone on release day): inside the hero on the
+            homepages, where the layout's copy above was overlapped. */}
+        <RadianceSeasonBanner placement="hero" />
         {/* Brand mark, centered above the headline — the nav's own logo sits
             in the fixed header, but this is the FIRST thing painted (the
             hero often IS the first viewport, above the header having
