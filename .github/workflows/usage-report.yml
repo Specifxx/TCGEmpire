@@ -1,0 +1,93 @@
+name: Feature usage report (read-only)
+
+# Which features people actually use (2026-10-16, owner: "find the top 10 most
+# useless features and delete all of them"). Read-only: Google Search clicks
+# and impressions over 90 days grouped by route section, and the row count of
+# every table, all-time and created in the last 30 days (where the table has a
+# createdAt). Counts only, no rows, no personal data. Writes nothing.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Search traffic by route section (90 days)
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+        run: |
+          node <<'JS'
+          const crypto = require("crypto"); const fs = require("fs");
+          if (!process.env.GSC_SA_KEY) { console.log("No GSC_SA_KEY"); process.exit(0); }
+          const sa = JSON.parse(process.env.GSC_SA_KEY);
+          const site = encodeURIComponent("https://riftcompare.com/");
+          const b64 = (b) => Buffer.from(b).toString("base64").replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+          const day = (n) => new Date(Date.now() - n*864e5).toISOString().slice(0,10);
+          (async () => {
+            const now = Math.floor(Date.now()/1000);
+            const h = b64(JSON.stringify({alg:"RS256",typ:"JWT"}));
+            const c = b64(JSON.stringify({iss:sa.client_email,scope:"https://www.googleapis.com/auth/webmasters.readonly",aud:"https://oauth2.googleapis.com/token",iat:now,exp:now+3600}));
+            const s = crypto.createSign("RSA-SHA256"); s.update(h+"."+c);
+            const r = await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",assertion:h+"."+c+"."+b64(s.sign(sa.private_key))})});
+            const at = (await r.json()).access_token;
+            const rows = [];
+            for (let start = 0; start < 25000; start += 5000) {
+              const res = await fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${site}/searchAnalytics/query`,{method:"POST",headers:{Authorization:"Bearer "+at,"Content-Type":"application/json"},body:JSON.stringify({startDate:day(92),endDate:day(2),dimensions:["page"],rowLimit:5000,startRow:start})});
+              const got = (await res.json()).rows || [];
+              rows.push(...got);
+              if (got.length < 5000) break;
+            }
+            const agg = new Map();
+            for (const r of rows) {
+              const path = new URL(r.keys[0]).pathname.replace(/\/$/, "") || "/";
+              const seg = path.split("/").filter(Boolean);
+              // Two levels for sections whose children are separate features (/tools/x, /games/x, /api/x).
+              const key = seg.length === 0 ? "/" : ["tools","games","embed","stores","cards","admin","premium","radiance-preorders"].includes(seg[0]) && seg[1] ? `/${seg[0]}/${seg[1]}` : `/${seg[0]}`;
+              const a = agg.get(key) || { clicks: 0, impressions: 0, pages: 0 };
+              a.clicks += r.clicks; a.impressions += r.impressions; a.pages += 1; agg.set(key, a);
+            }
+            const out = [`## Search traffic by route section, 90 days (${rows.length} pages)`, "| section | clicks | impressions | pages |", "|---|---:|---:|---:|",
+              ...[...agg].sort((a,b)=>b[1].clicks-a[1].clicks||b[1].impressions-a[1].impressions).map(([k,v])=>`| ${k} | ${v.clicks} | ${v.impressions} | ${v.pages} |`)];
+            console.log(out.join("\n")); fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, out.join("\n")+"\n");
+          })().catch(e => { console.error(e); });
+          JS
+      - name: Rows per table (all time and last 30 days)
+        env:
+          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
+        run: |
+          cat > /tmp/usage.ts <<'TS'
+          import { Prisma, PrismaClient } from "@prisma/client";
+          import { appendFileSync } from "node:fs";
+          const p = new PrismaClient() as any;
+          (async () => {
+            const since = new Date(Date.now() - 30 * 864e5);
+            const out = ["## Rows per table", "| table | all time | last 30 days |", "|---|---:|---:|"];
+            for (const m of Prisma.dmmf.datamodel.models) {
+              const key = m.name[0].toLowerCase() + m.name.slice(1);
+              const hasCreated = m.fields.some((f) => f.name === "createdAt");
+              try {
+                const all = await p[key].count();
+                const recent = hasCreated ? await p[key].count({ where: { createdAt: { gte: since } } }) : "-";
+                out.push(`| ${m.name} | ${all} | ${recent} |`);
+              } catch (e) {
+                out.push(`| ${m.name} | error | ${String((e as Error).message).slice(0, 60)} |`);
+              }
+            }
+            console.log(out.join("\n"));
+            if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, out.join("\n") + "\n");
+            await p.$disconnect();
+          })();
+          TS
+          npx tsx /tmp/usage.ts
