@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
-import { syncAdFree } from "@/lib/ad-free-boot";
+import { syncAdFree, syncAdPause } from "@/lib/ad-free-boot";
 
 // Whether ads are hidden for the current viewer, read by the ad components so
 // they get an ad-free site without each placement doing its own lookup.
@@ -30,6 +31,13 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loaded && answered) syncAdFree(adFree);
   }, [adFree, loaded, answered]);
+  // The arcade is ad-free for everyone (lib/ad-free-boot.ts): a client
+  // navigation into /games or /riftle holds Auto ads' requests, and one out
+  // releases them again (unless the visitor is a hinted member).
+  const pathname = usePathname();
+  useEffect(() => {
+    syncAdPause(pathname);
+  }, [pathname]);
   return <PremiumContext.Provider value={adFree}>{children}</PremiumContext.Provider>;
 }
 

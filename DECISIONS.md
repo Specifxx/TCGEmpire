@@ -17793,3 +17793,24 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 - The stage, then how to play, then a gallery of her Radiance cards linking their card pages, the Seraphine spoiler and K/DA posts, `/sets/radiance` and pre-orders. Then an FAQ.
 - The `/games` hub gains an animated spotlight banner above the grid.
 - One small card read by slug, `revalidate = 86400`. It is ad-free like the rest of the arcade. All the motion is CSS above the reduced-motion block (`.sp-*`).
+
+## The arcade pauses Auto ads too — 2026-10-16
+
+**Owner:** "Get rid of all the ads on the games pages and Seraphine's Piano as it may ruin the experience."
+
+**What was still showing.** Since 2026-10-02 the site's own placements have rendered nothing on `/games/*` and `/riftle` (`AD_FREE_GAME_ROUTES`): no footer pair, no in-page pair, no `AdSlot`. A curl of the live pages confirms it, with no `data-ad-placement` and no `rc-ad-zone`. But the AdSense loader is on every page, ungated, and Auto ads place their own units. Those were the ads in the games.
+
+**The fix uses the same switch the paid tiers use.** `adsbygoogle.pauseAdRequests = 1` is Google's own hold on the loader's requests (`lib/ad-free-boot.ts`, 2026-09-25).
+- The inline boot script now sets it on any arcade path, for every visitor, before the async loader can run. The `rc_adfree` member hint still pauses everywhere. Only the hint marks `<html>`, because the arcade has no site placements to hide.
+- `PremiumProvider` calls `syncAdPause(pathname)` on every client navigation. Into the arcade pauses; out releases, unless the visitor is a member. `syncAdFree` no longer un-pauses an arcade page when `/api/me` says a visitor isn't ad-free.
+- `AD_FREE_GAME_ROUTES` moved to `lib/ad-free-boot.ts`, so the inline script, the navigation sync and `FooterAds` share one list. `FooterAds` re-exports it.
+
+**Not changed.**
+- The loader stays ungated. It is the verification tag and the consent transport (`AdSenseLoader.tsx`, `adsense:guard`).
+- Already-served Auto ads are never hidden with CSS, because hiding a served ad is a policy problem; pausing requests is the sanctioned route.
+- **The one gap.** An anchor or side-rail ad that Google placed on a non-game page can stay on screen through a client navigation into the arcade. No new requests are made there. Excluding `/games/*` and `/riftle` under Page exclusions in the AdSense console would close it at Google's end too.
+
+**Tests (`ad-free-tier`):**
+- The boot script pauses on `/games`, `/games/…` and `/riftle` and nowhere else (`/gamestop` and `/blog/games` are untouched).
+- `syncAdPause` pauses on the way in and releases on the way out.
+- The `/api/me` sync keeps the arcade paused.

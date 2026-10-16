@@ -6,6 +6,7 @@ import { EbayAd } from "./EbayAd";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { usePremium } from "./PremiumProvider";
 import { useCountry } from "./CountryProvider";
+import { AD_FREE_GAME_ROUTES } from "@/lib/ad-free-boot";
 
 // Routes that carry NO footer banner pair (owner decision, 2026-09-26, "Blog
 // and tools, joined up" in DECISIONS.md). These are the policy and trust pages
@@ -35,8 +36,10 @@ export const OFF_TOPIC_ROUTES = ["/pokemon"] as const;
 
 // The arcade (2026-10-02, owner, from Reddit feedback: "Nice banner ads bro").
 // Games are ad-free for everyone, not just Plus: no footer pair, no in-page
-// pair, no AdSense slot. Ads stay on the pages where people are buying.
-export const AD_FREE_GAME_ROUTES = ["/games", "/riftle"] as const;
+// pair, no AdSense slot, and (2026-10-16) no Auto ads either — the list lives in
+// lib/ad-free-boot.ts, whose boot script pauses ad requests on these routes.
+// Ads stay on the pages where people are buying.
+export { AD_FREE_GAME_ROUTES };
 
 export function footerBannersAllowed(pathname: string | null): boolean {
   if (!pathname) return true;

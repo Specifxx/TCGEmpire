@@ -574,7 +574,9 @@ longer lands on its entry.
   renders no banner pair on /about, /authors(/*), /contact, /editorial-policy,
   /methodology, /privacy, /support and /terms, nor on `/pokemon` (another game:
   `OFF_TOPIC_ROUTES`). The arcade (/games/*, /riftle) is ad-free for everyone:
-  no footer pair, no in-page pair, no AdSlot (`AD_FREE_GAME_ROUTES`).
+  no footer pair, no in-page pair, no AdSlot (`AD_FREE_GAME_ROUTES`), and
+  Auto ads' requests paused there by the boot script and on every client
+  navigation (`syncAdPause`, [2026-10-16](../DECISIONS.md#L17797)).
   [2026-09-26](../DECISIONS.md#L14680), [2026-10-01](../DECISIONS.md#L16105), [2026-10-02](../DECISIONS.md#L16478)
 - **The arcade's line-up is chosen by data:** `games-report.yml` (dispatch-only)
   gives each game's search clicks and players; the two weakest (Card Rain,

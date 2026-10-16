@@ -198,3 +198,52 @@ test("every site ad placement is hidden under the hint until React takes over", 
     assert.match(read(`src/components/${f}.tsx`), /data-ad-placement=""/, `${f} is marked`);
   }
 });
+
+// ── The arcade pauses Auto ads for everyone (2026-10-16, owner: "get rid of
+// all the ads on the games pages and Seraphine's Piano") ─────────────────────
+// Its own placements were already gone (2026-10-02); Auto ads came from the
+// ungated loader, so the boot script and every client navigation pause them.
+
+test("the boot script pauses ad requests on /games and /riftle for every visitor, and nowhere else", async () => {
+  const { AD_FREE_BOOT_SCRIPT, AD_FREE_ATTR } = await import("../src/lib/ad-free-boot");
+  const run = (pathname: string, cookie = "") => {
+    const attrs: Record<string, string> = {};
+    const window: { location: { pathname: string }; adsbygoogle?: unknown[] & { pauseAdRequests?: number } } = { location: { pathname } };
+    const document = { cookie, documentElement: { setAttribute: (k: string, v: string) => (attrs[k] = v) } };
+    new Function("window", "document", AD_FREE_BOOT_SCRIPT)(window, document);
+    return { attrs, paused: window.adsbygoogle?.pauseAdRequests };
+  };
+  for (const p of ["/games", "/games/", "/games/seraphines-piano", "/games/pack-sim", "/riftle"]) {
+    assert.deepEqual(run(p), { attrs: {}, paused: 1 }, `${p}: paused, <html> unmarked`);
+  }
+  for (const p of ["/", "/card/x", "/gamestop", "/riftles", "/blog/games"]) {
+    assert.deepEqual(run(p), { attrs: {}, paused: undefined }, `${p}: the loader runs untouched`);
+  }
+  assert.deepEqual(run("/", "rc_adfree=1"), { attrs: { [AD_FREE_ATTR]: "1" }, paused: 1 }, "a member is still paused everywhere");
+});
+
+test("a client navigation re-decides the pause, and the arcade never un-pauses for a non-member", async () => {
+  const { syncAdPause, isAdFreeRoute } = await import("../src/lib/ad-free-boot");
+  const g = globalThis as unknown as { window?: unknown; document?: unknown };
+  const had = { window: g.window, document: g.document };
+  const w: { adsbygoogle?: unknown[] & { pauseAdRequests?: number } } = {};
+  g.window = w;
+  g.document = { cookie: "" };
+  try {
+    syncAdPause("/games/seraphines-piano");
+    assert.equal(w.adsbygoogle?.pauseAdRequests, 1);
+    syncAdPause("/sets/radiance");
+    assert.equal(w.adsbygoogle?.pauseAdRequests, 0, "leaving the arcade releases them");
+    syncAdPause("/riftle", false);
+    assert.equal(w.adsbygoogle?.pauseAdRequests, 1, "not ad-free, but in the arcade");
+    syncAdPause("/", true);
+    assert.equal(w.adsbygoogle?.pauseAdRequests, 1, "a member");
+  } finally {
+    g.window = had.window;
+    g.document = had.document;
+  }
+  assert.equal(isAdFreeRoute("/gamestop"), false);
+  const provider = code("src/components/PremiumProvider.tsx");
+  assert.match(provider, /const pathname = usePathname\(\);\s*useEffect\(\(\) => \{\s*syncAdPause\(pathname\);\s*\}, \[pathname\]\);/);
+  assert.match(read("src/lib/ad-free-boot.ts"), /syncAdPause\(typeof window === "undefined" \? null : window\.location\.pathname, adFree\);/, "the /api/me answer keeps the arcade paused");
+});
