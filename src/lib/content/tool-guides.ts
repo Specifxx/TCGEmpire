@@ -269,12 +269,6 @@ export const TOOL_GUIDES = {
       { slug: "riftbound-sets-in-order", reason: "Every set in release order, to place the art you recognise" },
     ],
   },
-  "/games/pairs": {
-    label: "Pairs",
-    guides: [
-      { slug: "league-of-legends-champions-in-riftbound", reason: "Which League champions have cards, and who is on the art" },
-    ],
-  },
 } as const satisfies Record<string, ToolEntry>;
 
 export type ToolRoute = keyof typeof TOOL_GUIDES;

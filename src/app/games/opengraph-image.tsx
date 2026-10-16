@@ -14,7 +14,7 @@ const TILES = [
   { name: "Higher or Lower", sub: "Price streak game", c: "#f5a524" },
   { name: "Price Check", sub: "Guess the price", c: "#e5484d" },
   { name: "Zoomed In", sub: "Name the art", c: "#a855f7" },
-  { name: "Pairs", sub: "Memory match", c: "#3b82f6" },
+  { name: "Seraphine's Piano", sub: "Rhythm game", c: "#ff6fb1" },
 ];
 
 export default function OgImage() {

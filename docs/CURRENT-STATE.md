@@ -576,6 +576,11 @@ longer lands on its entry.
   `OFF_TOPIC_ROUTES`). The arcade (/games/*, /riftle) is ad-free for everyone:
   no footer pair, no in-page pair, no AdSlot (`AD_FREE_GAME_ROUTES`).
   [2026-09-26](../DECISIONS.md#L14680), [2026-10-01](../DECISIONS.md#L16105), [2026-10-02](../DECISIONS.md#L16478)
+- **The arcade's line-up is chosen by data:** `games-report.yml` (dispatch-only)
+  gives each game's search clicks and players; the two weakest (Card Rain,
+  Pairs) were replaced by Seraphine's Piano, a Radiance rhythm game timed on
+  the Web Audio clock and drawn on one rAF canvas. Retired game routes 301 to
+  it. [2026-10-16](../DECISIONS.md#L17753)
 - **Sister sites:** the footer links OP Compare, DexCompare and MTG Compare
   (`SISTER_SITES`, `lib/sister-sites.ts`), and the cross-game guides and the
   where-to-buy / price-comparison articles end with a sister-site block
@@ -1037,7 +1042,7 @@ longer lands on its entry.
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired
-  (`/games/twenty48` → `/games`). [2026-10-16](../DECISIONS.md#L17753)
+  (`/games/twenty48` → `/games`). [2026-10-16](../DECISIONS.md#L17797)
 - **Details:** `.scroll-mt-header` goes on the element carrying the id.
   Fields are 16px on phones. Every `outline-none` has a `focus-visible:`
   ring. Motion uses `usePresence()`, no library. `SearchBar` must not use

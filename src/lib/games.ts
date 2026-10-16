@@ -16,16 +16,16 @@ export const GAMES: Record<string, GameMeta> = {
   "higher-lower": { label: "Higher or Lower", dir: "desc", min: 0, max: 200, unit: "streak" },
   "price-check": { label: "Price Check", dir: "desc", min: 0, max: 500, unit: "pts" },
   zoomed: { label: "Zoomed In", dir: "desc", min: 0, max: 10, unit: "pts" },
-  pairs: { label: "Pairs", dir: "asc", min: 8, max: 400, unit: "moves" },
   // Riftbound 2048 ("twenty48") was retired on 2026-10-16 (owner: "get rid of
   // riftbound 2048"). Its old GameScore rows stay, orphaned, like space-invaders'.
   "card-smash": { label: "Card Smash", dir: "desc", min: 0, max: 100_000, unit: "pts" },
-  // Replaced the short-lived "space-invaders" shooter (2026-09-03 → 2026-09-10)
-  // with a falling-card catcher. A NEW key, deliberately: the two games score
-  // nothing alike, so carrying the old board over would rank shooter scores
-  // against catcher scores. The old rows stay in GameScore, orphaned and
-  // invisible — no lookup can reach a key that isn't in this table.
-  "card-rain": { label: "Card Rain", dir: "desc", min: 0, max: 100_000, unit: "pts" },
+  // Card Rain and Pairs were retired on 2026-10-16 (the two least played games:
+  // DECISIONS.md, "Seraphine's Piano"), as "space-invaders" was before them. Their
+  // rows stay in GameScore, orphaned and invisible: no lookup can reach a key
+  // that isn't in this table.
+  // A rhythm game (lib/seraphine-piano.ts). A hard song with every combo and
+  // Encore lands in the low hundreds of thousands; the cap is a generous guard.
+  "seraphines-piano": { label: "Seraphine's Piano", dir: "desc", min: 0, max: 2_000_000, unit: "pts" },
   // The score IS the win streak (not guesses used) — a loss resets the client's
   // streak to 0 before it would ever be submitted, so min: 1 is just a guard,
   // never a value this leaderboard is expected to actually clamp.

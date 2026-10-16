@@ -123,7 +123,10 @@ test("the sitemap's priorities follow one scheme", () => {
   for (const p of ["/contact", "/support", "/privacy", "/terms"]) check(p, "monthly", 0.4);
   // The arcade mini-games 0.5 (pack-sim and sealed-bid carry real editorial
   // and keep their own values; pack-sim's is pinned in pack-composition.test.ts).
-  for (const g of ["higher-lower", "price-check", "zoomed", "pairs", "card-smash", "card-rain"]) check(`/games/${g}`, "monthly", 0.5);
+  // Card Rain and Pairs retired 2026-10-16, and Riftbound 2048 the same day;
+  // Seraphine's Piano, the spotlight game, is 0.6.
+  for (const g of ["higher-lower", "price-check", "zoomed", "card-smash"]) check(`/games/${g}`, "monthly", 0.5);
+  check("/games/seraphines-piano", "monthly", 0.6);
   // Articles.
   assert.match(SITEMAP, /changeFrequency: "monthly" as const,\s*priority: 0\.7,\s*lastModified: new Date\(`\$\{a\.updated \?\? a\.date\}/);
 });
@@ -140,19 +143,19 @@ test("/decks is submitted only when a deck is live, because an empty library is 
 
 // ── The six arcade mini-games ───────────────────────────────────────────────
 
-const MINI_GAMES = ["card-smash", "higher-lower", "pairs", "price-check", "zoomed"] as const;
+const MINI_GAMES = ["card-smash", "higher-lower", "price-check", "zoomed"] as const;
 
 // 2026-10-02 (owner, from Reddit feedback): the arcade is ad-free for every
 // visitor. No in-page pair, no AdSense slot, and no footer pair on /games/* or
 // /riftle. Ads stay on the buying pages.
 test("the arcade is ad-free: no in-page pair, no AdSlot, no footer pair", () => {
-  const pages = [...MINI_GAMES.map((g) => `src/app/games/${g}/page.tsx`), "src/app/games/page.tsx", "src/app/games/sealed-bid/page.tsx", "src/app/games/card-rain/page.tsx", "src/app/riftle/page.tsx"];
+  const pages = [...MINI_GAMES.map((g) => `src/app/games/${g}/page.tsx`), "src/app/games/page.tsx", "src/app/games/sealed-bid/page.tsx", "src/app/games/seraphines-piano/page.tsx", "src/app/riftle/page.tsx"];
   for (const f of pages) {
     const page = codeOnly(read(f));
     assert.doesNotMatch(page, /<(TcgplayerAd|EbayAd|AdSlot)\b/, `${f}: no ad unit`);
   }
   assert.doesNotMatch(codeOnly(read("src/components/games/shared.tsx")), /<AdSlot\b/, "GameShell carries no AdSlot");
-  for (const path of ["/games", "/games/pairs", "/games/sealed-bid", "/riftle"]) {
+  for (const path of ["/games", "/games/seraphines-piano", "/games/sealed-bid", "/riftle"]) {
     assert.equal(footerBannersAllowed(path), false, `${path} must render no footer pair`);
   }
   assert.equal(footerBannersAllowed("/gamestop"), true, "a prefix is not a route");
