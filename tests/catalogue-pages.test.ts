@@ -11,7 +11,6 @@ import { SET_GUIDES, guidesForCard, guidesForChampion, guidesForSet, type CardFo
 import { TOOL_GUIDES, articleHref } from "../src/lib/content/tool-guides";
 import { GET as llmsTxt } from "../src/app/llms.txt/route";
 import { GET as aiPlugin } from "../src/app/.well-known/ai-plugin.json/route";
-import { GET as mcpManifest } from "../src/app/.well-known/mcp.json/route";
 
 // The catalogue and price pages, joined to the writing that explains them
 // (DECISIONS.md, "Blog and tools, joined up", 2026-09-26): the card list, set
@@ -214,9 +213,6 @@ test("llms.txt and the discovery manifests name six markets, the weekly Index an
   assert.match(plugin.description_for_model, /weekly market index/);
   assert.doesNotMatch(`${plugin.description_for_human} ${plugin.description_for_model}`, /delivered cost|real shipping cost|daily market index/i);
 
-  const mcp = (await mcpManifest().json()) as { servers: { description: string }[] };
-  assert.doesNotMatch(mcp.servers[0].description, /delivered cost/i);
-  assert.doesNotMatch(code("src/app/api/mcp/route.ts"), /total delivered cost/i);
 });
 
 // ── Market lists ─────────────────────────────────────────────────────────────

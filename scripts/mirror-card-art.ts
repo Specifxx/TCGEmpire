@@ -228,7 +228,7 @@ function writeMissingModule(failed: { id: string; stem: string }[]) {
 // CardArt instead of emitting an <img> that 404s.
 //
 // This ships in the client bundle (CardImage is pulled in by QuickView and
-// SellForm), which is the whole reason the main URL rewrite is a pure string
+// others), which is the whole reason the main URL rewrite is a pure string
 // function with no lookup table: a short exception list costs a couple of KB,
 // a full 950-entry table would not be worth it. tests/card-image-url.test.ts
 // caps how long this may get.

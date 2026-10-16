@@ -8,7 +8,6 @@ import { AccountStrip } from "@/components/home/AccountStrip";
 import { WelcomeBack } from "@/components/home/WelcomeBack";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { CreatorsTeaser } from "@/components/home/CreatorsTeaser";
-import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { PokemonHomePromo } from "@/components/pokemon/PokemonHomePromo";
 import { SETS, hasSetHub, newestReleasedSet, nextUpcomingSet, showsAsNew } from "@/lib/constants";
@@ -360,14 +359,6 @@ export function HomeSections({
           that the owner placed above this whole component, directly under the
           price table — see its header and "Blog and tools, joined up" in
           DECISIONS.md. */}
-
-      {/* Community directory teaser — RiftCompare isn't the only Riftbound site
-          worth knowing about; this points at /community's curated, unpaid
-          directory of news, wikis, deck builders, tier lists and video: the
-          "further reading" that follows our own writing in the band above. */}
-      <Reveal>
-        <CommunityTeaser />
-      </Reveal>
 
       {/* Real, consented, approved reviews — renders NOTHING until there are at
           least a few genuine ones (see ReviewsSection). No placeholder state on

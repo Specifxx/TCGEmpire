@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homeDescription, homeTitle, regionHomeTitle } from "../src/lib/seo";
 import { join } from "node:path";
 
@@ -41,7 +41,6 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const BROWSE = "src/app/browse/page.tsx";
 const HOME = "src/app/page.tsx";
 const HERO = "src/components/home/CinematicHero.tsx";
-const GAME = "src/app/games/price-check/page.tsx";
 const MAP = "docs/seo-keyword-map.md";
 
 // ── `riftbound card list` → /browse ─────────────────────────────────────────
@@ -178,16 +177,9 @@ test("root's H1 names no market; the four region pages' H1s each name their own"
   assert.ok(!/at the best price in the US/.test(hero), "root must not hard-code a market back into the H1");
 });
 
-test("the price-check MINI-GAME no longer reads as the site's answer to the query", () => {
-  const title = /title: "([^"]+)"/.exec(read(GAME))?.[1] ?? "";
-  assert.ok(title, "expected a title on the game page");
-  assert.ok(/Game/.test(title), `the game's title must say so — got "${title}"`);
-  // The specific failure being guarded: "Riftbound" and "price check" adjacent
-  // in a game's title. Word order in the current title puts "Game" between them.
-  assert.ok(
-    !/riftbound[\s—-]+price check/i.test(title),
-    `a game title must not carry the "riftbound price check" adjacency — got "${title}"`,
-  );
+test("the price-check MINI-GAME is gone, so no game competes for the query", () => {
+  // Retired 2026-10-16 (DECISIONS.md, "Ten features nobody used").
+  assert.ok(!existsSync(join(process.cwd(), "src/app/games/price-check/page.tsx")));
 });
 
 test("the BULK price-check query moved to /deck with the Bulk Pricer, and doesn't claim the single-card one", () => {

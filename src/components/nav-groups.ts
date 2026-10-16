@@ -36,9 +36,8 @@ export interface NavGroupLink {
    * Keep this link OUT of the footer site-map (it still appears in the launcher,
    * the rail, the phone menu and llms.txt). The launcher is the complete index
    * of the site; the footer is a curated four-column block that has to stay a
-   * readable height. Used for three kinds of link: the secondary mini-games,
-   * whose hub (/games) is in the footer already; /community, for column balance
-   * (see its entry); and the privacy policy and terms, which the footer's
+   * readable height. Used for two kinds of link: the secondary mini-games,
+   * whose hub (/games) is in the footer already; and the privacy policy and terms, which the footer's
    * always-visible link row in layout.tsx already carries on every page, so a
    * second copy in the site map would only repeat them.
    */
@@ -118,7 +117,6 @@ export const NAV_GROUPS: NavGroup[] = [
       // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
       // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
       // added on /blog and /guides themselves.
-      { href: "/community", label: "Community links", keywords: ["community", "resources", "links", "other sites", "riftbound news", "deck builders", "wikis", "tier list", "meta"], hideInFooter: true },
       // The creators hub (2026-10-15): beside Community links, where a reader
       // looking for "who else makes Riftbound content" looks. Moved from Help.
       { href: "/creators", label: "Riftbound Creators", keywords: ["socials", "social media", "discord", "instagram", "twitter", "x", "facebook", "follow us", "creators", "content creators", "influencers", "partner", "partnership", "youtube", "twitch", "tiktok", "buy a pack", "tip", "donate", "support creators"], hideInFooter: true },
@@ -198,12 +196,8 @@ export const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: "/riftle", label: "Riftle (daily)", keywords: ["riftle", "wordle", "daily", "puzzle", "guess the card"] },
       { href: "/games/pack-sim", label: "Pack Simulator", keywords: ["pack sim", "pack opening", "open packs", "rip packs", "simulator"] },
-      { href: "/games/price-check", label: "Price Check", keywords: ["price check", "guess the price"], hideInFooter: true },
       { href: "/games/higher-lower", label: "Higher or Lower", keywords: ["higher lower", "higher or lower"], hideInFooter: true },
-      { href: "/games/card-smash", label: "Card Smash", keywords: ["card smash", "whack a mole", "reflex"], hideInFooter: true },
-      { href: "/games/zoomed", label: "Zoomed In", keywords: ["zoomed", "guess the card", "art quiz"], hideInFooter: true },
       { href: "/games/seraphines-piano", label: "Seraphine's Piano", keywords: ["seraphine", "piano", "rhythm game", "music game", "radiance game"] },
-      { href: "/games/sealed-bid", label: "Sealed Bid", keywords: ["sealed bid", "multiplayer", "auction", "play with friends", "party game"], hideInFooter: true },
       { href: "/games", label: "All Games", keywords: ["games", "play", "fun", "quiz", "minigames"] },
     ],
   },
@@ -285,11 +279,6 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "RiftCompare for Stores",
         keywords: ["for stores", "retailers", "my store", "i own a store", "b2b", "sell riftbound", "repricing", "repricing report", "store report", "lgs", "game store", "shop owner"],
       },
-      {
-        href: "/stores/consulting",
-        label: "Book a consulting session",
-        keywords: ["consulting", "consultancy", "consultant", "book a session", "pricing help", "pricing strategy", "advice", "one on one", "paid session", "store pricing", "what should i charge"],
-      },
     ],
   },
   {
@@ -358,7 +347,7 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
 // deliberately kept within roughly 8-15 links of each other; a column at twice
 // its neighbours' height leaves a ragged block of whitespace under the other
 // three. Links flagged `hideInFooter` (the secondary mini-games, whose /games
-// hub is here; /community; and the privacy policy and terms, which the
+// hub is here; and the privacy policy and terms, which the
 // footer's own link row carries) are dropped: the launcher is the complete
 // index, the footer is a curated block.
 const byTitle = Object.fromEntries(

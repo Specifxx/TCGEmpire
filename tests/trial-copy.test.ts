@@ -185,7 +185,7 @@ test("/premium stays short: one line per plan card, one trial FAQ entry, the buy
 
 test("terms section 8 states the $1 trial factually and invents no refund policy", () => {
   const terms = stripComments(readFileSync(join(SRC, "app/terms/page.tsx"), "utf8"));
-  const s8 = terms.slice(terms.indexOf("8. Plus and Premium subscriptions"), terms.indexOf("9. Store consulting"));
+  const s8 = terms.slice(terms.indexOf("8. Plus and Premium subscriptions"), terms.indexOf("9. Disclaimer"));
   assert.match(s8, /is charged when you start/, "the fee is charged up front");
   assert.match(s8, /Unless you cancel before day \{PREMIUM_TRIAL_DAYS\}, the plan&apos;s price for the period you chose/, "the plan price starts on day 30 unless cancelled");
   assert.match(s8, /We email you a day or two before day/, "the reminder");

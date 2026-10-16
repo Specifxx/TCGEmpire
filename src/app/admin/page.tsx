@@ -62,12 +62,6 @@ const TOOLS: Tool[] = [
     desc: "MRR, churn, LTV, plan mix and cohort retention — the revenue read, straight from Stripe.",
   },
   {
-    href: "/admin/consulting",
-    title: "Consulting bookings",
-    icon: "💼",
-    desc: "Paid store consulting sessions — who booked, what they want out of the hour, and who filled in the form but never finished checkout.",
-  },
-  {
     href: "/admin/affiliates",
     title: "Creator codes",
     icon: "🎟️",

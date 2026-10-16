@@ -31,9 +31,10 @@ Google traffic (down about a third) plus the popup's removal on 30 Sep, which
 had been the biggest single source (122 of 290 accounts), though the least
 active one.
 
-**Paid ads do not pay.** At US$4.99 a month and a handful of paying members, a
-customer is worth tens of dollars, and earlier ads "produced barely any clicks
-at a cost that didn't pencil" (MARKETING-PLAN). This playbook spends nothing.
+**Paid ads can pay, through AdSense (corrected the same day).** Judged on
+Premium alone they cannot: at US$4.99 a month a customer is worth tens of
+dollars. But AdSense pays for every page a visitor reads, so a paid visit
+earns before anyone signs up. See "A paid-ads test" below.
 
 ## What was built (2026-10-16)
 
@@ -88,13 +89,7 @@ share result rather than the homepage. Draft:
 Add `?utm_source=reddit` to the tracker link (the site reads it as the entry
 source).
 
-### 2. Turn on the Discord price bot (15 min)
-
-`docs/OWNER-CHECKLIST.md`, step 5. Until `NEXT_PUBLIC_DISCORD_APP_ID` is set,
-`/embed` hides the bot's install link. That is the one built channel where
-other people's communities carry RiftCompare for free.
-
-### 3. Tell the stores they are listed (Chrome prompt, ~1 hour for the first 30)
+### 2. Tell the stores they are listed (Chrome prompt, ~1 hour for the first 30)
 
 224 stores are tracked, 59 of them added today. A store that learns it is
 listed, and gets a badge and its own repricing report, has every reason to
@@ -129,7 +124,7 @@ holds store emails).
 >    login or a payment.
 > 5. Keep a running list of who was contacted and how.
 
-### 4. Recruit three creators for codes (Chrome prompt, 30 min)
+### 3. Recruit three creators for codes (Chrome prompt, 30 min)
 
 The creator code programme is built (20% off for their audience, 20% to them)
 and has no creators yet.
@@ -147,15 +142,47 @@ and has no creators yet.
 > here: riftcompare.com/creators/apply. Happy to set up your code today."
 > Show me each message before sending.
 
-### 5. Brevo "Authorised IPs" (3 min, if not already done)
+### 4. Brevo "Authorised IPs" (3 min, if not already done)
 
 `docs/OWNER-CHECKLIST.md`, step 1. The admin promo emails (the trial offer to
 free members) only reach everyone once it is off. Price alerts go through
 Resend and are unaffected.
 
+### 5. A paid-ads test (two weeks, small fixed budget)
+
+A paid click pays for itself when it costs less than the visit earns:
+
+> **earned per visit = pages per visit × page RPM ÷ 1000 + sign-up rate × value of a sign-up**
+
+- **Page RPM:** AdSense → Reports → by page.
+- **Pages per visit:** GA4.
+- **Sign-up rate:** 2.5 per 100 Google visits today.
+
+Run it like this:
+1. **Find the break-even click price.** Read the RPM of the Radiance card list
+   and the spoilers post; they are where readers stay longest. With those numbers,
+   the break-even cost per click is the formula above. Bid under it.
+2. **Spend a fixed amount.** For example US$5 a day for 14 days, on one channel.
+   Reddit ads targeting r/riftboundtcg and the League subreddits are the closest
+   audience. Google Search on "riftbound radiance cards" is the other option.
+   Point every ad at one of those two pages, never the homepage or Premium.
+3. **Tag every link** `?utm_source=reddit_ads&utm_medium=cpc` (or
+   `google_ads`). GA4 → Reports → Acquisition → Traffic acquisition, filtered to
+   that source, gives the visits, pages per visit and `sign_up` events. The
+   site's own click events tag these visits `entry: ads`, kept apart from organic
+   Reddit and Google. AdSense → Reports → by URL channel or page gives what those
+   pages earned.
+4. **Stop or scale.** After two weeks, compare spend with (AdSense earnings on
+   those pages from that traffic + sign-ups). Stop if a visit costs more than it
+   earns; raise the budget in steps if it earns more.
+
+Keep the ads on free pages: that is where the AdSense money is, and Premium's
+price, trial and pitch are frozen until late November anyway.
+
 ## What not to do
 
-- **No paid ads** at this price. Revisit if lifetime value passes US$60.
+- **No paid ads without the test above.** No open-ended budget, and never to
+  the homepage or the Premium page.
 - **No popup back on the landing page.** It brought sign-ups that did nothing
   (12% active), and Google treats a first-page phone popup as intrusive.
 - **No change to Premium price, trial or pitch before late November,** when

@@ -100,7 +100,7 @@ test("/about counts stores from RETAILER_LIST and drops the stale lines", () => 
 
 test("/about lists every way the site earns and links the pages that explain it", () => {
   const about = text(ABOUT);
-  for (const s of ["Google AdSense", "eBay Partner Network", "Impact", "Amazon Associate", "TIER_NAMES.plus", "TIER_NAMES.premium", 'href="/stores/consulting"']) {
+  for (const s of ["Google AdSense", "eBay Partner Network", "Impact", "Amazon Associate", "TIER_NAMES.plus", "TIER_NAMES.premium"]) {
     assert.ok(about.includes(s), `/about must name ${s}`);
   }
   for (const href of ["/editorial-policy", "/methodology", "/blog", "/guides", "/tools", "/stores/tracked"]) {
@@ -110,7 +110,7 @@ test("/about lists every way the site earns and links the pages that explain it"
 
 // ── /editorial-policy ─────────────────────────────────────────────────────────
 
-test("/editorial-policy names every revenue source and discloses consulting as a conflict", () => {
+test("/editorial-policy names every revenue source", () => {
   const policy = text(POLICY);
   for (const s of [
     "Google AdSense",
@@ -119,16 +119,10 @@ test("/editorial-policy names every revenue source and discloses consulting as a
     "Amazon Associates",
     "as an Amazon Associate we earn from qualifying purchases",
     "Plus and Premium subscriptions",
-    "consulting",
-    'href="/stores/consulting"',
-    "conflict of interest",
-    "booking a session changes nothing about how that store appears or ranks",
   ]) {
     assert.ok(policy.includes(s), `/editorial-policy must say "${s}"`);
   }
   assert.doesNotMatch(policy, /marketplace fees/i, "the peer-to-peer marketplace was removed on 2026-08-26");
-  // The consulting page makes the same promise the policy repeats.
-  assert.match(text("src/app/stores/consulting/page.tsx"), /changes nothing about how your store ranks/);
 });
 
 test("the refresh list matches the importer's real cadence", () => {
@@ -284,7 +278,7 @@ test("/privacy names the analytics, sign-in, email and payment services the code
   assert.match(privacy, /Resend/);
   assert.match(privacy, /Brevo/);
   assert.match(privacy, /Stripe/);
-  assert.match(privacy, /store consulting sessions are processed by/);
+  assert.match(privacy, /store\s+consulting sessions\) are processed by/, "past consulting bookings are still disclosed");
   const ai = read("src/lib/ai-insight.ts");
   assert.match(ai, /@anthropic-ai\/sdk/);
   assert.match(ai, /GEMINI_API_KEY/);
@@ -312,12 +306,11 @@ test("every cookie /privacy names is one the code sets, under that name", () => 
 
 // ── /terms ────────────────────────────────────────────────────────────────────
 
-test("/terms covers store consulting, published decks and the snapshot basis, numbered in order", () => {
+test("/terms covers published decks and the snapshot basis, numbered in order", () => {
   const terms = text(TERMS);
-  assert.match(terms, /9\. Store consulting/);
-  assert.match(terms, /href="\/stores\/consulting"/);
-  assert.match(text("src/app/stores/consulting/page.tsx"), /15 minutes in/, "the refund promise /terms repeats lives there");
-  assert.match(terms, /15 minutes into the session/);
+  // Store consulting (section 9) was retired on 2026-10-16 (DECISIONS.md,
+  // "Ten features nobody used"), and the sections after it renumbered.
+  assert.doesNotMatch(terms, /Store consulting|\/stores\/consulting/);
   assert.match(terms, /Published decks are public/);
   assert.match(terms, /we may hide a deck that breaches these Terms/);
   assert.match(read("src/app/api/admin/decks/route.ts"), /"hidden"/);

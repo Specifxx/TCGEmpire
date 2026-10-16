@@ -113,7 +113,7 @@ test("the webhook route wires those pure decisions to the database, refunds a re
   assert.match(src, /stripe\(\)\.refunds\.create\(\{ payment_intent: pi/);
   // No premium branch reads the amount or the payment status to decide "trial".
   const premiumPart = src
-    .slice(src.indexOf("async function premiumStarted"), src.indexOf("// ── Store consulting"))
+    .slice(src.indexOf("async function premiumStarted"))
     .replace(/^\s*\/\/.*$/gm, "");
   assert.doesNotMatch(premiumPart, /amount_total|payment_status|no_payment_required/);
   // The grace path (subscription unreadable) still trusts only checkout's own stamp.

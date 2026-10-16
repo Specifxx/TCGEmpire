@@ -4,8 +4,9 @@ import { SITE_URL } from "@/lib/site";
 // OpenAI itself retired the ChatGPT plugin store this manifest was built for,
 // but the shape is still checked by a number of agent frameworks/tool-loaders
 // as a generic "does this site describe an API" signal, and it costs nothing
-// to keep serving alongside the MCP manifest below — it points at the exact
-// same OpenAPI description either way.
+// to keep serving: it points at the OpenAPI description. (The MCP server and
+// its manifest were retired on 2026-10-16, DECISIONS.md "Ten features nobody
+// used".)
 export const revalidate = 86400;
 
 export function GET() {

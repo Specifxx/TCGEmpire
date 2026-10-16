@@ -450,12 +450,17 @@ longer lands on its entry.
   currency) and retries without it if Stripe refuses; the pay-button note stays
   in US dollars and says so. `payment-failures-report` (maintenance) shows why
   Stripe refused a charge. [2026-10-12](../DECISIONS.md#L16892)
-- **Growth levers (2026-10-16), no paid ads:** Radiance posts and set pages
+- **Growth levers (2026-10-16):** Radiance posts and set pages
   lead with "Follow Radiance's chase cards" (one OAuth click = an account
   already watching 8 cards, `radiance_watch`); the pull tracker
   (`/tools/pull-tracker/<set>`, `pull_tracker`) shares results by a link that
   carries the pulls, no database row. The owner's outreach list is
   `docs/GROWTH-PLAYBOOK-2026-10.md`. [2026-10-16](../DECISIONS.md#L18158)
+- **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
+  so a paid click is worth its page views plus any sign-up. The test (small
+  fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket
+  `ads`, stop after two weeks if a visit costs more than it earns) is in the
+  growth playbook. [2026-10-16](../DECISIONS.md#L18206)
 - **Sign-up prompts live in the page, plus one gated corner card (card restored 10-15):**
   `SignupSlideIn`, signed out only, from the 2nd page of a visit (never the
   landing page; the 4th until 10-16), 12 s, once a session, two ✕ and it stops
@@ -538,8 +543,8 @@ longer lands on its entry.
   per-product Search eBay line only — never on a listing, which is already the
   cheapest valid one the importer found. The headline reads the UNPINNED
   ranking, so a price tie never goes to eBay. `/editorial-policy`, `/about`,
-  `/privacy`, `/terms`, `/methodology`, the homepage, the region homes' FAQ and
-  the consulting FAQ name the exception; nothing describes that table as
+  `/privacy`, `/terms`, `/methodology`, the homepage and the region homes' FAQ
+  name the exception; nothing describes that table as
   "cheapest first". [2026-10-15](../DECISIONS.md#L17284). Elsewhere
   no comparison is re-ranked
   and no true figure (the "+N%" on a dearer eBay row) is hidden; eBay rows keep
@@ -1024,7 +1029,13 @@ longer lands on its entry.
   "Embed this live price" (`/embed` still offers the widgets); the per-card
   eBay auction pass. [2026-09-17](../DECISIONS.md#L7959),
   [2026-09-21](../DECISIONS.md#L9560), [2026-09-16](../DECISIONS.md#L6683)
-- **Declined:** a locked popup ✕; guest checkout (deferred); a Radiance post blitz or paid ads; a static rule-2
+- **Ten features deleted (2026-10-16):** the Discord price bot and daily
+  Discord post, marketplace leftovers, the Shopify cart API, the MCP server,
+  store consulting, Sealed Bid, Card Smash, Zoomed In, Price Check and
+  `/community`. Their tables stay (no drops); every page 301s
+  (`tests/feature-cleanup.test.ts`). The Pokémon section stays (owner).
+  [2026-10-16](../DECISIONS.md#L18206)
+- **Declined:** a locked popup ✕; guest checkout (deferred); a Radiance post blitz; open-ended paid ads (a measured test is allowed, 2026-10-16); a static rule-2
   egress test; a static landscape header or
   a 44px desktop switcher; re-ranking eBay above a cheaper store (declined
   09-26; adopted for the pre-order table only on 10-15, [2026-10-15](../DECISIONS.md#L17284)), an eBay

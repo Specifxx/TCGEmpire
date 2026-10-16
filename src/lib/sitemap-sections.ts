@@ -180,31 +180,20 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/gallery`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/champions`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5, lastModified: day },
-    // The paid B2B session. Low volume by nature, but it is the page that
-    // answers "riftbound store pricing" style queries from the shop side, and
-    // the only commercial page on the site aimed at a business rather than a
-    // player. /stores/consulting/confirmed is deliberately absent — it is a
-    // post-payment, noindex page keyed to a Stripe session id.
-    { url: `${SITE_URL}/stores/consulting`, changeFrequency: "monthly", priority: 0.5, lastModified: day },
     { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/higher-lower") },
-    { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/price-check") },
-    { url: `${SITE_URL}/games/zoomed`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/zoomed") },
     // The pack simulator is not a minor mini-game any more: it is the page
     // targeting "riftbound pack opening simulator", it carries the sourced pack
     // structure and pull-rate tables, and the incumbent at #1 (riftcore.app)
     // serves an empty SPA shell that canonicalises to its own homepage. Rated
     // like the other flagship tools rather than like Riftle.
     { url: `${SITE_URL}/games/pack-sim`, changeFrequency: "weekly", priority: 0.8, lastModified: staticPageDate("/games/pack-sim") },
-    { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/card-smash") },
     { url: `${SITE_URL}/games/seraphines-piano`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/seraphines-piano") },
-    { url: `${SITE_URL}/games/sealed-bid`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/games/sealed-bid") },
     // The editorial hubs, the pages the owner's brief puts first. Each changes
     // whenever an article in its category is published or updated, and its
     // lastmod is that newest article, so the date stays honest whatever this
     // frequency hint says.
     { url: `${SITE_URL}/guides`, changeFrequency: "daily", priority: 0.8, lastModified: latestGuide },
     { url: `${SITE_URL}/blog`, changeFrequency: "daily", priority: 0.8, lastModified: latestBlog },
-    { url: `${SITE_URL}/community`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/community") },
     // The release calendar. This slot used to be a per-set countdown URL that had
     // to be swapped here every launch (/vendetta-countdown, then
     // /radiance-countdown — both now 301, see next.config.js), and a redirecting

@@ -116,7 +116,7 @@ export default async function AboutPage() {
           <p>
             {SITE_NAME} is built and run by one person: <strong className="text-white">Bill</strong>, its
             founder. There is no team behind the name and no separate support desk. Bill keeps the price
-            imports running, looks after the tools, takes the store consulting sessions and reads what is
+            imports running, looks after the tools and reads what is
             sent to{" "}
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>.
             Where this site says &ldquo;we&rdquo;, that is who it means.
@@ -218,7 +218,7 @@ export default async function AboutPage() {
         </section>
 
         {/* Every revenue source, including the ones the old "How we stay free"
-            left out: subscriptions and paid store consulting. The neutrality
+            left out: subscriptions. The neutrality
             sentence (which since 2026-10-15 names the one labelled exception,
             the Radiance pre-order table pinning open eBay listings first) and
             the eBay one after it are pinned by tests/ebay-clicks-funnel.test.ts. */}
@@ -227,9 +227,8 @@ export default async function AboutPage() {
           <p>
             {SITE_NAME} is paid for by display advertising from Google AdSense; by affiliate commissions from
             eBay (through the eBay Partner Network), TCGplayer (through Impact) and Amazon (as an Amazon
-            Associate), which we may earn when you buy through one of our links, at no extra cost to you; by{" "}
-            {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions; and by paid one-to-one{" "}
-            <Link href="/stores/consulting" className="text-brand-400 hover:underline">consulting sessions for stores</Link>.
+            Associate), which we may earn when you buy through one of our links, at no extra cost to you; and by{" "}
+            {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions.
           </p>
           <p>
             With one labelled exception, none of that money buys a position. It never changes the prices we
@@ -237,9 +236,8 @@ export default async function AboutPage() {
             pre-order table, where open eBay listings (our main affiliate partner) are shown first within
             each product, tagged &ldquo;Shown first&rdquo; and marked as paid links, with the price beside
             them still showing how they compare. We
-            also link to eBay outside those lists, always labelled. A store that books a
-            consulting session is paying for advice, not placement, and it appears exactly where its prices
-            put it among the stores. The details are in our{" "}
+            also link to eBay outside those lists, always labelled. No store can pay for its place in a
+            comparison. The details are in our{" "}
             <Link href="/editorial-policy#money" className="text-brand-400 hover:underline">editorial policy</Link>{" "}
             and our <Link href="/privacy" className="text-brand-400 hover:underline">privacy policy</Link>.
           </p>

@@ -23,8 +23,8 @@
 // maps any RiftScribe card URL onto that copy with pure string work.
 //
 // PURE STRING WORK IS THE REQUIREMENT, not an implementation detail. CardImage
-// is pulled into the client bundle by its client-component callers (QuickView,
-// SellForm), so anything this module imports ships to the browser: a lookup
+// is pulled into the client bundle by its client-component callers (QuickView
+// and others), so anything this module imports ships to the browser: a lookup
 // table of 950 mirrored stems would be ~33 KB of dead JavaScript on every page.
 // The rewrite is therefore UNCONDITIONAL, and what makes that safe is coverage:
 // tests/card-image-url.test.ts fails unless every card in the dataset has a

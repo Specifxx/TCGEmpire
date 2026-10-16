@@ -141,10 +141,6 @@ export default function GuidesPage() {
               className="font-semibold text-brand-300 underline-offset-2 hover:underline"
             >
               where to buy Riftbound cards in {info.place} →
-            </Link>{" "}
-            Looking for the wider community?{" "}
-            <Link href="/community" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
-              See community links →
             </Link>
           </p>
         </div>

@@ -91,15 +91,6 @@ test("the homepage's next-set line links the tracker, resolved from the calendar
     "NextSetCountdownCard must name no set");
 });
 
-test("the daily Discord post features the upcoming set's tracker", () => {
-  const discord = read("src/lib/discord.ts");
-  assert.match(discord, /spoilersHrefForSet\(upcoming\.code\)/);
-  // Led ahead of the Riftle prompt during the window, and the Riftle-only post
-  // is still what ships once the set lands.
-  assert.match(discord, /embeds: spoilers \? \[spoilers, riftle\] : \[riftle\]/);
-  assert.ok(!/radiance/i.test(code("src/lib/discord.ts")), "the daily post must name no set");
-});
-
 test("the Friday promo pack carries the tracker on all three channels", () => {
   const promo = read("scripts/weekly-promo.ts");
   assert.match(promo, /function spoilerPromo\(/);

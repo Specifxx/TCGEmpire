@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { COUNTRIES, DEFAULT_COUNTRY, normalizeCountry } from "../src/lib/country";
+import { COUNTRIES, normalizeCountry } from "../src/lib/country";
 
 // Outreach-ready assets (2026-09-25): the things the first outreach emails point
 // at have to exist and say true things before anyone is sent there.
@@ -26,24 +26,11 @@ test("/embed states the card widget's real default market", () => {
   assert.match(src, new RegExp(`Defaults to ${COUNTRIES[normalizeCountry(null)].place}\\.`, "i"));
 });
 
-test("the Discord install section on /embed is gated on NEXT_PUBLIC_DISCORD_APP_ID", () => {
-  const src = read("src/app/embed/page.tsx");
-  assert.match(src, /process\.env\.NEXT_PUBLIC_DISCORD_APP_ID/);
-  assert.match(src, /\{DISCORD_INSTALL_URL && \(/, "section renders only with an app id");
-  assert.match(src, /https:\/\/discord\.com\/oauth2\/authorize\?client_id=\$\{encodeURIComponent\(DISCORD_APP_ID\)\}&scope=applications\.commands/);
-  assert.match(src, /export const revalidate = 86400;/, "the page stays static");
-  assert.doesNotMatch(src, /<iframe src="https:\/\/discord/);
-  assert.match(read(".env.example"), /^# NEXT_PUBLIC_DISCORD_APP_ID=/m);
-});
-
-test("the Discord bot names the market it computes and uses the card-art mirror", () => {
-  const src = read("src/app/api/discord/interactions/route.ts");
-  assert.doesNotMatch(src, /AU market/);
-  assert.match(src, /getPriceMovers\(DEFAULT_COUNTRY, 3\)/);
-  assert.match(src, /footer: \{ text: `\$\{COUNTRIES\[DEFAULT_COUNTRY\]\.label\} market · updated daily · riftcompare\.com` \}/);
-  assert.equal(`${COUNTRIES[DEFAULT_COUNTRY].label} market`, "United States market");
-  assert.match(src, /cardImageSrc\(card, \{ absolute: true \}\)/);
-  assert.doesNotMatch(src, /thumbnail: \{ url: card\.imageThumbUrl \}/);
+test("the Discord price bot is retired: no endpoint, no install section", () => {
+  // DECISIONS.md, "Ten features nobody used" (2026-10-16): it was never
+  // registered, so its install button never rendered.
+  assert.ok(!existsSync(join(process.cwd(), "src/app/api/discord/interactions/route.ts")));
+  assert.doesNotMatch(read("src/app/embed/page.tsx"), /DISCORD_APP_ID|discord\.com\/oauth2/);
 });
 
 test("the outreach kit's deck-link recipe matches how the deck page decodes ?list=", () => {

@@ -74,8 +74,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: true });
       }
 
-      // Scoped to `not FIXED`, the same shape as the consult webhook's
-      // `status: { not: "paid" }`: of two clicks racing from two admin tabs, only
+      // Scoped to `not FIXED`: of two clicks racing from two admin tabs, only
       // the one that actually flips the row sends, so a report is one email.
       const flipped = await prisma.priceReport.updateMany({
         where: { id, status: { not: "FIXED" } },

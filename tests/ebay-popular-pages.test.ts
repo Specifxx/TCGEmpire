@@ -94,7 +94,7 @@ test("/movers stays populated through a price-basis switch: the last week before
   const page = read("src/app/movers/page.tsx");
   assert.match(page, /getPriceMovers\(country, 50, \{ preSwitch: true \}\)/);
   assert.match(page, /weekTo=\{asOfLabel\}/);
-  for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx", "src/lib/top-deals.ts", "src/app/games/page.tsx", "src/lib/newsletter.ts", "src/lib/user-digest.ts", "src/app/api/discord/interactions/route.ts"]) {
+  for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx", "src/lib/top-deals.ts", "src/app/games/page.tsx", "src/lib/newsletter.ts", "src/lib/user-digest.ts"]) {
     assert.doesNotMatch(read(f), /preSwitch/, `${f} shows a mover's price as today's, so it must not opt in`);
   }
   // The panels name the week instead of saying "this week".

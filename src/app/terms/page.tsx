@@ -10,13 +10,12 @@ export const metadata: Metadata = {
   title: "Terms of Service",
   description:
     `The terms of using ${SITE_NAME}: what our price comparison does and does not guarantee, how ` +
-    `affiliate links work, accounts, published decks, subscriptions and store consulting.`,
+    `affiliate links work, accounts, published decks and subscriptions.`,
   alternates: pageAlternates("/terms"),
 };
 
-// 2026-09-26 ("Blog and tools, joined up" in DECISIONS.md): added the paid store
-// consulting sold at /stores/consulting (its refund promise is that page's own),
-// player-published decks (/decks, hidden via /api/admin/decks), and the
+// 2026-09-26 ("Blog and tools, joined up" in DECISIONS.md): added player-published
+// decks (/decks, hidden via /api/admin/decks) and the
 // twice-daily snapshot basis of every price. No governing-law clause: nothing
 // in the repo states a jurisdiction, and choosing one is the owner's call.
 export default function TermsPage() {
@@ -52,8 +51,7 @@ export default function TermsPage() {
             {SITE_NAME} provides price-comparison information, a card database, tools and games for the
             Riftbound trading card game. The Site is provided free of charge for personal,
             non-commercial use, except where a paid feature is clearly offered: the {TIER_NAMES.plus} and{" "}
-            {TIER_NAMES.premium} subscriptions (section 8) and paid consulting sessions for stores
-            (section 9).
+            {TIER_NAMES.premium} subscriptions (section 8).
           </p>
         </section>
 
@@ -98,8 +96,7 @@ export default function TermsPage() {
           <p>
             The Site is supported by third-party advertising (including Google AdSense), affiliate
             commissions (through the eBay Partner Network, TCGplayer&rsquo;s programme on Impact and
-            Amazon Associates), {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions and paid store
-            consulting. Some outbound links are
+            Amazon Associates), {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions. Some outbound links are
             affiliate links through which we may earn a commission at no extra cost to you; these
             are marked and disclosed next to the link. None of these affects the prices we show,
             and none affects the order in which results are ranked, with one exception labelled where
@@ -250,28 +247,8 @@ export default function TermsPage() {
           </p>
         </section>
 
-        {/* The refund promise is the consulting page's own FAQ ("15 minutes in
-            ... we'll refund the whole thing"); the price and length come from
-            lib/consulting.ts on that page, so they are referred to, not typed. */}
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">9. Store consulting</h2>
-          <p>
-            Stores can book a paid one-to-one consulting session at{" "}
-            <Link href="/stores/consulting" className="text-brand-400 hover:underline">/stores/consulting</Link>.
-            Its price, length and what it covers are stated on that page before you pay. Payment is taken
-            by Stripe, which issues a tax invoice. Each booking is for one session; there is no
-            subscription.
-          </p>
-          <p>
-            If, 15 minutes into the session, it isn&rsquo;t worth your time, say so on the call and the
-            whole fee is refunded. The session is advice, not a promised result: nobody can guarantee what
-            a pricing change does to a store&rsquo;s sales. Booking a session has no effect on how any
-            store appears or ranks on the Site, and nothing said in a session is published.
-          </p>
-        </section>
-
-        <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">10. Disclaimer &amp; limitation of liability</h2>
+          <h2 className="text-lg font-bold text-white">9. Disclaimer &amp; limitation of liability</h2>
           <p>
             The Site is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo;, without warranties of
             any kind. To the maximum extent permitted by law, {SITE_NAME} is not liable for any loss
@@ -282,7 +259,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">11. Changes</h2>
+          <h2 className="text-lg font-bold text-white">10. Changes</h2>
           <p>
             We may update these Terms from time to time. Material changes are reflected by the &ldquo;last
             updated&rdquo; date above; continued use of the Site means you accept the updated Terms.
@@ -290,7 +267,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">12. Contact</h2>
+          <h2 className="text-lg font-bold text-white">11. Contact</h2>
           <p>
             Questions about these Terms? Email{" "}
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>{" "}

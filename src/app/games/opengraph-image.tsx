@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 // emoji fetches) so it's generated once at build — also the image Reddit/Discord
 // unfurl when the /games link is shared. No emoji here: ImageResponse has no emoji
 // font unless one is fetched, so they'd render as blank gaps.
-export const alt = "Riftbound Games on RiftCompare — five free mini-games";
+export const alt = "Riftbound Games on RiftCompare — four free mini-games";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -12,8 +12,7 @@ const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 const TILES = [
   { name: "Riftle", sub: "Daily card puzzle", c: "#34d17e" },
   { name: "Higher or Lower", sub: "Price streak game", c: "#f5a524" },
-  { name: "Price Check", sub: "Guess the price", c: "#e5484d" },
-  { name: "Zoomed In", sub: "Name the art", c: "#a855f7" },
+  { name: "Pack Simulator", sub: "Rip virtual packs", c: "#34b3d1" },
   { name: "Seraphine's Piano", sub: "Rhythm game", c: "#ff6fb1" },
 ];
 

@@ -30,7 +30,6 @@ export const metadata: Metadata = {
 //   • affiliate marking      → outboundRel() in lib/affiliate.ts
 //   • what is generated      → lib/content/card-narrative.ts; the one request-
 //                              time AI feature is /api/trade-roast
-//   • consulting             → app/stores/consulting/page.tsx
 // tests/trust-pages.test.ts pins the numbers typed below to those constants.
 // The authorship statement is the owner's own wording (2026-09-26, "Blog and
 // tools, joined up" in DECISIONS.md) and replaced "written by people".
@@ -296,8 +295,7 @@ export default function EditorialPolicyPage() {
             {SITE_NAME} is funded by display advertising (including Google AdSense); affiliate
             commissions — we are a member of the eBay Partner Network, TCGplayer&rsquo;s affiliate
             programme (run through Impact) and the Amazon Associates programme, and as an Amazon
-            Associate we earn from qualifying purchases; Plus and Premium subscriptions; and paid
-            one-to-one consulting sessions for stores. Outbound links that earn us a commission are
+            Associate we earn from qualifying purchases; and Plus and Premium subscriptions. Outbound links that earn us a commission are
             marked <code className="rounded bg-ink-800 px-1 text-xs">rel=&quot;sponsored&quot;</code> and
             disclosed in plain language next to the link.
           </p>
@@ -329,29 +327,13 @@ export default function EditorialPolicyPage() {
             <Link href="/privacy" className="text-brand-400 hover:underline">privacy policy</Link>{" "}
             for what advertising and analytics cookies are set and how to opt out.
           </p>
-          {/* Paid store consulting (lib/consulting.ts) is the first time a store
-              we compare can pay us at all — DECISIONS.md called it "the first real
-              conflict this site has had". Disclosed here, with the separation the
-              consulting page itself promises (its FAQ and "What this isn't"). */}
-          <p>
-            <strong className="text-white">Stores can pay us for advice, and that is a potential
-            conflict of interest.</strong> We sell stores a one-to-one consulting session on their
-            pricing, their position in their market and what to stock (
-            <Link href="/stores/consulting" className="text-brand-400 hover:underline">store consulting</Link>
-            ), held by Bill. It is the only way an independent store we compare can pay{" "}
-            {SITE_NAME} — none of them pays us a commission — so it is kept apart from everything a
-            shopper sees: booking a session changes nothing about how that store appears or ranks in
-            the comparison, the comparison only ever shows the public prices anyone can see on a
-            store&rsquo;s own website, and nothing said on a call is published.
-          </p>
         </section>
 
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-white">Independence</h2>
           <p>
             We are not affiliated with, endorsed by, or sponsored by Riot Games. No retailer we
-            compare owns any part of {SITE_NAME}, and beyond the affiliate programmes and consulting
-            sessions described above we have no commercial arrangement with one. We do not accept
+            compare owns any part of {SITE_NAME}, and beyond the affiliate programmes described above we have no commercial arrangement with one. We do not accept
             payment for editorial coverage, and we do not publish sponsored posts.
           </p>
           <p>

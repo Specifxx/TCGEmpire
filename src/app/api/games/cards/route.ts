@@ -9,8 +9,8 @@ export const dynamic = "force-dynamic";
 
 // Random priced cards for the arcade games (/games/*): a sample of cards that
 // have BOTH a live price in the viewer's market and a real image. One endpoint
-// powers every game — Higher or Lower and Price Check use the prices, Zoomed In
-// and Pairs just want the art. Prices are public on the site anyway, so shipping
+// powers the price games (Higher or Lower today; Price Check, Zoomed In and
+// Pairs used it too before they were retired). Prices are public on the site anyway, so shipping
 // them to the client is fine (these are casual games, not contests).
 const idsForMarket = unstable_cache(
   async (field: ReturnType<typeof priceField>) => {

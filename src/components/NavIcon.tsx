@@ -60,7 +60,7 @@ export type NavIconName =
   | "home"
   | "menu"
   // Added for the "For stores" nav group (2026-09-21) — the B2B side of the
-  // site (/stores, /stores/consulting). A shopfront, NOT another box: the
+  // site (/stores). A shopfront, NOT another box: the
   // `collection` glyph above is already a lidded box, and at 4rem the rail
   // identifies a group by silhouette alone (tests/nav-icon.test.ts).
   | "store";

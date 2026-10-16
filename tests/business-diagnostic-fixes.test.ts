@@ -271,11 +271,12 @@ test("the homepage no longer promotes Best Basket or the inline newsletter card 
   // Best Basket stays reachable from the card page, deck builder and /tools
   // (see the tests right below and access-tiers.test.ts); the newsletter form
   // stays in the footer. Only the homepage-specific placements are gone, in
-  // favour of the new /community teaser (community.test.ts).
+  // favour of a /community teaser, itself retired 2026-10-16 with the page
+  // (DECISIONS.md, "Ten features nobody used").
   const src = read("src/components/home/HomeSections.tsx");
   assert.doesNotMatch(src, /href="\/tools\/best-basket"/);
   assert.doesNotMatch(src, /<NewsletterSignup/);
-  assert.match(src, /<CommunityTeaser \/>/);
+  assert.doesNotMatch(src, /CommunityTeaser/);
 });
 
 test("the /stores pitch page counts real tracked stores (RETAILER_LIST), not every distinct retailer key ever seen", () => {

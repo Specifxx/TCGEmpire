@@ -285,6 +285,18 @@ const nextConfig = {
         destination: "/games",
         permanent: true,
       },
+      // Price Check, Zoomed In, Card Smash and Sealed Bid went the same day
+      // (DECISIONS.md, "Ten features nobody used"): one or two Google clicks
+      // each in 90 days. Nothing replaced them, so they land on the arcade.
+      { source: "/games/price-check", destination: "/games", permanent: true },
+      { source: "/games/zoomed", destination: "/games", permanent: true },
+      { source: "/games/card-smash", destination: "/games", permanent: true },
+      { source: "/games/sealed-bid", destination: "/games", permanent: true },
+      // Store consulting (one booking ever) and the community links page (two
+      // Google clicks in 90 days) went with them.
+      { source: "/stores/consulting", destination: "/stores", permanent: true },
+      { source: "/stores/consulting/confirmed", destination: "/stores", permanent: true },
+      { source: "/community", destination: "/", permanent: true },
       // The daily-market-wrap archive, the auto-generated market reports and the
       // RiftCompare Index have all been retired. 301 any surviving inbound/indexed
       // /market/wrap links to the price movers page — the closest live surface —

@@ -44,6 +44,9 @@ test("entry buckets: search, social, our own emails, internal, direct, other", (
   assert.equal(classifyEntry("", HOST, "?utm_source=email&utm_medium=email"), "email");
   assert.equal(classifyEntry("", HOST, "?utm_source=newsletter"), "email");
   assert.equal(classifyEntry("", HOST, "?utm_source=discord-bot"), "discord");
+  // Paid campaigns are their own bucket, never mixed into organic Reddit or search.
+  assert.equal(classifyEntry("https://www.reddit.com/", HOST, "?utm_source=reddit_ads&utm_medium=cpc"), "ads");
+  assert.equal(classifyEntry("https://www.google.com/", HOST, "?utm_source=google_ads"), "ads");
   assert.equal(classifyEntry(`https://${HOST}/blog`, HOST, ""), "internal");
   assert.equal(classifyEntry("", HOST, ""), "direct");
   assert.equal(classifyEntry("https://example.org/", HOST, ""), "other");

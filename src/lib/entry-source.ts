@@ -20,7 +20,7 @@
 // Reddit and Discord apps often open links with NO referrer at all — a link
 // posted as `…?utm_source=reddit` is the only way those visits are attributed.
 
-export type EntrySource = "reddit" | "discord" | "search" | "social" | "email" | "internal" | "direct" | "other";
+export type EntrySource = "reddit" | "discord" | "search" | "social" | "email" | "ads" | "internal" | "direct" | "other";
 
 const KEY = "rc_entry";
 
@@ -43,7 +43,11 @@ const BUCKETS: [EntrySource, RegExp][] = [
 // utm_source=email (lib/email.ts) or utm_source=newsletter (the release-day
 // and weekly mail), and the Discord bot utm_source=discord-bot — so those land
 // as "email" and "discord" rather than as a referrer-less "direct".
+// Paid campaigns (utm_source=reddit_ads, google_ads…) come FIRST, so a paid
+// Reddit visit is never counted as an organic Reddit one (2026-10-16 paid-ads
+// test, docs/GROWTH-PLAYBOOK-2026-10.md).
 const UTM: [EntrySource, RegExp][] = [
+  ["ads", /_ads$|^ads$/],
   ["reddit", /^reddit/],
   ["discord", /^discord/],
   ["email", /^(email|newsletter)$/],

@@ -14,11 +14,11 @@ export interface GameMeta {
 
 export const GAMES: Record<string, GameMeta> = {
   "higher-lower": { label: "Higher or Lower", dir: "desc", min: 0, max: 200, unit: "streak" },
-  "price-check": { label: "Price Check", dir: "desc", min: 0, max: 500, unit: "pts" },
-  zoomed: { label: "Zoomed In", dir: "desc", min: 0, max: 10, unit: "pts" },
   // Riftbound 2048 ("twenty48") was retired on 2026-10-16 (owner: "get rid of
   // riftbound 2048"). Its old GameScore rows stay, orphaned, like space-invaders'.
-  "card-smash": { label: "Card Smash", dir: "desc", min: 0, max: 100_000, unit: "pts" },
+  // Price Check, Zoomed In, Card Smash and Sealed Bid went the same day
+  // (DECISIONS.md, "Ten features nobody used"): one to two Google clicks each in
+  // 90 days. Their GameScore rows, and Sealed Bid's GameRoom rows, stay orphaned.
   // Card Rain and Pairs were retired on 2026-10-16 (the two least played games:
   // DECISIONS.md, "Seraphine's Piano"), as "space-invaders" was before them. Their
   // rows stay in GameScore, orphaned and invisible: no lookup can reach a key
@@ -30,11 +30,6 @@ export const GAMES: Record<string, GameMeta> = {
   // streak to 0 before it would ever be submitted, so min: 1 is just a guard,
   // never a value this leaderboard is expected to actually clamp.
   riftle: { label: "Riftle", dir: "desc", min: 1, max: 1000, unit: "win streak" },
-  // Multiplayer. Unlike every board above, this score is computed SERVER-side at
-  // the end of a room (lib/sealed-bid.ts → submitScore), never posted by the
-  // client. The cap is generous: 1,000 Shards + a full vault of chase cards +
-  // every bonus is still well under it.
-  "sealed-bid": { label: "Sealed Bid", dir: "desc", min: 0, max: 50_000, unit: "pts" },
 };
 
 export function isGameKey(k: string): k is keyof typeof GAMES {

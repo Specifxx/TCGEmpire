@@ -15,7 +15,7 @@ import { cardThumbProps } from "@/lib/card-image-url";
 export const metadata: Metadata = {
   title: "Riftbound Games — Free Daily Puzzles & Arcade",
   description:
-    "Free Riftbound mini-games: Seraphine's Piano (a Radiance rhythm game), Riftle (the daily guess-the-card puzzle), a pack opening simulator, Card Smash, Higher or Lower with live card prices, Price Check and the Zoomed In art quiz. No signup.",
+    "Free Riftbound mini-games: Seraphine's Piano (a Radiance rhythm game), Riftle (the daily guess-the-card puzzle), a pack opening simulator and Higher or Lower with live card prices. No signup.",
   keywords: [
     "Riftbound games",
     "Riftle",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Riftbound Games — Free Daily Puzzles & Arcade | RiftCompare",
     description:
-      "Seraphine's Piano, Riftle, Higher or Lower, Price Check, Zoomed In and more — free Riftbound mini-games built on live card data.",
+      "Seraphine's Piano, Riftle, the pack opening simulator and Higher or Lower: free Riftbound mini-games built on live card data.",
     url: `${SITE_URL}/games`,
   },
 };
@@ -52,7 +52,7 @@ const GAMES = [
     // SECOND, and featured, so it gets the wide hero tile. It is the only game
     // here targeting a head term of its own ("riftbound pack opening
     // simulator") and it carries the sourced pack-structure and pull-rate
-    // tables — it earns the position that the other six mini-games do not.
+    // tables — it earns the position that the other mini-games do not.
     href: "/games/pack-sim",
     name: "Pack Opening Simulator",
     tag: "Rip packs",
@@ -61,43 +61,12 @@ const GAMES = [
     featured: true,
   },
   {
-    // The one MULTIPLAYER game on the shelf, and the only one where the price
-    // knowledge the rest of the arcade teaches is played AGAINST other people —
-    // so it gets the third wide tile, right under the two daily habits.
-    href: "/games/sealed-bid",
-    name: "Sealed Bid",
-    tag: "NEW · Multiplayer 2–6",
-    desc: "The blind auction where nobody sees the price. Real cards, live prices hidden, one sealed bid a round — outguess your friends and build the richest vault.",
-    accent: "from-amber-500/25 to-ink-850",
-    featured: true,
-  },
-  {
     href: "/games/higher-lower",
     name: "Higher or Lower",
     tag: "Streak",
     desc: "Which card costs more? Live prices, one mistake ends the run. How long can you last?",
     accent: "from-gold/25 to-ink-850",
-  },
-  {
-    href: "/games/price-check",
-    name: "Price Check",
-    tag: "5 rounds",
-    desc: "The Price Is Right, for Riftbound: guess each card's market price, score by closeness.",
-    accent: "from-rose-500/20 to-ink-850",
-  },
-  {
-    href: "/games/zoomed",
-    name: "Zoomed In",
-    tag: "Art quiz",
-    desc: "Name the card from a tiny patch of its art. Zoom out once if you must — at half points.",
-    accent: "from-purple-500/20 to-ink-850",
-  },
-  {
-    href: "/games/card-smash",
-    name: "Card Smash",
-    tag: "Reflex",
-    desc: "Whack-a-mole with cards: tap them as they pop, dodge the bombs, beat the clock. Pricier cards score more.",
-    accent: "from-orange-500/20 to-ink-850",
+    featured: true,
   },
 ];
 
@@ -141,7 +110,7 @@ export default async function GamesPage() {
     "@type": "ItemList",
     name: "Riftbound Games",
     description:
-      "Free Riftbound mini-games built on live card data — Seraphine's Piano, Riftle, Higher or Lower, Price Check, Zoomed In, Pack Opening Simulator and Card Smash.",
+      "Free Riftbound mini-games built on live card data — Seraphine's Piano, Riftle, Higher or Lower and the Pack Opening Simulator.",
     url: `${SITE_URL}/games`,
       // Edges back to the site-level graph in app/layout.tsx. Without them this
       // node is an island and the Organization/WebSite entity signals — sameAs,

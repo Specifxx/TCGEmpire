@@ -249,26 +249,6 @@ export const TOOL_GUIDES = {
       { slug: "why-riftbound-card-prices-change", reason: "Why one card costs ten times another" },
     ],
   },
-  "/games/price-check": {
-    label: "Price Check",
-    guides: [
-      { slug: "why-riftbound-card-prices-change", reason: "The forces behind a card's price, for sharper guesses" },
-      { slug: "riftbound-variant-glossary", reason: "Why two printings of the same card can be priced far apart" },
-    ],
-  },
-  "/games/card-smash": {
-    label: "Card Smash",
-    guides: [
-      { slug: "most-valuable-riftbound-cards", reason: "What makes a card valuable, from chase rares to Signature printings" },
-    ],
-  },
-  "/games/zoomed": {
-    label: "Zoomed",
-    guides: [
-      { slug: "riftbound-variant-glossary", reason: "The alt arts and special printings behind the art you are guessing" },
-      { slug: "riftbound-sets-in-order", reason: "Every set in release order, to place the art you recognise" },
-    ],
-  },
 } as const satisfies Record<string, ToolEntry>;
 
 export type ToolRoute = keyof typeof TOOL_GUIDES;

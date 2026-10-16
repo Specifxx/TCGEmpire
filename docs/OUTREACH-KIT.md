@@ -25,7 +25,7 @@ keep, and none of them costs anything to give:
 | Who | What they get | What we ask for |
 |---|---|---|
 | A tracked store | Their private repricing report — every listing of theirs that another shop beats | That they paste the ready-made "Prices tracked on RiftCompare" badge waiting under the report |
-| A community site | A live widget (price badge, market index, release countdown), or the price bot for their Discord | Nothing beyond using it; the plain link under each widget snippet is the only part search engines credit |
+| A community site | A live widget (price badge, market index, release countdown) | Nothing beyond using it; the plain link under each widget snippet is the only part search engines credit |
 | A creator | Free price research for whatever they're making | Nothing at all |
 
 None of these asks a creator to weigh anything up, which is the part that made
@@ -132,20 +132,12 @@ staff channel, or the site owner's X account.
 > ends with one plain text link under the widget — optional, but it's how the
 > embed credits the source.
 >
-> If you run a Discord, there's also a free price bot on the same page:
-> `/price card: …` answers with the cheapest price in every market, and `/movers`
-> posts the week's biggest risers and drops.
->
 > The countdown one might be the most useful to you right now, with Radiance
 > landing on 23 October. No obligation and no catch — if a widget would be more
 > useful in a shape we haven't built, tell me and I'll look at building it.
 >
 > {Your name}
 > riftcompare.com
-
-**Leave the Discord paragraph out until the bot's install section is live on
-`/embed`** — it renders only once `NEXT_PUBLIC_DISCORD_APP_ID` is set (see
-`docs/OWNER-CHECKLIST.md`).
 
 **For a deck database, add this paragraph** before the sign-off. It uses the deck
 page's existing `?list=` import, so it needs no code from us and none from them
@@ -214,9 +206,8 @@ then they will have said yes, which is the whole difference.
 
 **A store says thanks and nothing else.** Reply once, briefly, and ask a real
 question: *"Out of interest — how do you set your Riftbound prices at the moment?"*
-That answer is worth more than the link. It is also exactly the conversation the
-$250 session exists to have, so if they describe a problem you can solve in an
-hour, say so plainly and send `/stores/consulting`. Do not lead with it.
+That answer is worth more than the link. (The paid consulting session this used
+to lead to was retired on 2026-10-16.)
 
 **A store asks to be removed from the comparison.** Remove them, immediately and
 without arguing. Say it's done and that they're welcome back any time.
@@ -259,9 +250,8 @@ target assumes most of these go nowhere.
 | Store report links | `/admin/store-partners` | Pick store → *Create report link* → copy. The link is the password |
 | Widget directory | `/embed` | Three widgets, copy-paste snippets |
 | Store badge | Under each store's report, and on `/stores/<slug>` | Pre-filled with the store's link. Shown only at 5+ in-stock listings |
-| Discord price-bot install link | `/embed`, "For Discord servers" | Visible only once `NEXT_PUBLIC_DISCORD_APP_ID` is set in Vercel |
 | Retailer hub | `/stores` | What we do for stores, free listing |
-| Consulting | `/stores/consulting` | $250 AUD, 60 minutes, tax invoice issued |
 | Creator list | `/creators` | Confirmed partnerships ONLY. Currently empty. Adding an entry is a code change |
 | Radiance tracker | `/blog/riftbound-radiance-spoilers` | The preview-season hook |
 | Who already earns from us | `/admin/clicks` | Outbound clicks per store — the warmest targets |
+

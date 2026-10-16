@@ -129,8 +129,8 @@ export function getBulkCardSummary(country: Country = DEFAULT_COUNTRY): Promise<
 
 const cardWhereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
 
-// Shared by /api/v1/card/[id]/prices.json and the MCP get_card_prices tool —
-// one query, one response shape, so the two surfaces can't drift apart.
+// Read by /api/v1/card/[id]/prices.json (the MCP tool that shared it was
+// retired on 2026-10-16).
 export async function getCardPricesData(idOrSlug: string) {
   const card = await prisma.card
     .findFirst({
@@ -167,7 +167,7 @@ export async function getCardPricesData(idOrSlug: string) {
   };
 }
 
-// Shared by /api/v1/card/[id]/listings.json and the MCP cheapest_listing tool —
+// Read by /api/v1/card/[id]/listings.json:
 // the full per-store comparison table, cheapest item price first (postage only
 // breaks ties — lib/market-rows.ts computeMarket). Same
 // query + enrichment (affiliateUrl, shippingPolicyUrl, effectiveShippingCents)

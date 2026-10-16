@@ -444,8 +444,6 @@ test("policy copy: the promise is the ORDER of a ranked comparison, and the eBay
   assert.match(code("src/app/terms/page.tsx"), /none affects the order in which results are ranked, with one exception labelled where\s+it happens: on the Radiance pre-order table, open eBay listings/);
   assert.doesNotMatch(code("src/app/terms/page.tsx"), /None of these affects the prices we show\s+or the order in which results are ranked\./);
   assert.match(code("src/app/methodology/page.tsx"), /The one comparison ordered differently is the\s+Radiance pre-order table/);
-  assert.match(read("src/app/stores/consulting/page.tsx"), /no store can pay to change how it ranks in the comparison/);
-  assert.doesNotMatch(read("src/app/stores/consulting/page.tsx"), /we don't change how any store ranks in the comparison for money/);
 });
 
 

@@ -3,8 +3,7 @@ import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 
 // Public per-store listing grid for one card — the full multi-vendor comparison
 // table, not just the single lowest price /api/v1/card/[id]/prices.json gives.
-// The query + response shape live in lib/public-api.ts's getCardListingsData,
-// shared with the MCP cheapest_listing tool so the two can't drift apart. Six
+// The query + response shape live in lib/public-api.ts's getCardListingsData. Six
 // hours, at the CDN too (an hour until 2026-10-14, DECISIONS.md, "Cached pages
 // refresh every 6 to 24 hours", 2026-10-14); it reads ?market, so the header is
 // its only cache.

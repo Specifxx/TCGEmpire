@@ -98,7 +98,7 @@ export function GET() {
   lines.push(`- [Per-card listings (JSON)](${abs("/api/v1/card/<id>/listings.json")}?market=US): every store's listing for one card in one market, cheapest first by item price (\`ship\` is null where the store quotes postage only at checkout) — pass \`?market=\`.`);
   lines.push(`- [Card search (JSON)](${abs("/api/cards")}?q=<query>&market=US): free-text search with filters and pagination — pass \`?market=\` for a deterministic, cacheable, cross-origin response.`);
   lines.push(`- [OpenAPI spec](${abs("/openapi.json")}) · [API reference](${abs("/api/docs")}): every endpoint above, described with request/response schemas — no API key required, no rate limit currently enforced.`);
-  lines.push(`- [MCP server](${abs("/api/mcp")}) (Streamable HTTP, no auth): \`search_cards\`, \`get_card_prices\`, \`cheapest_listing\`, \`list_sets\` — the same data as tool calls instead of HTTP requests. Discovery manifests: [${abs("/.well-known/mcp.json")}](${abs("/.well-known/mcp.json")}) · [${abs("/.well-known/ai-plugin.json")}](${abs("/.well-known/ai-plugin.json")}).`);
+  lines.push(`- [Plugin manifest](${abs("/.well-known/ai-plugin.json")}): points agent tool-loaders at the OpenAPI spec above.`);
   lines.push(`- [RSS feed](${abs("/feed.xml")}) · [JSON feed](${abs("/feed.json")}): new articles.`);
   lines.push("");
 

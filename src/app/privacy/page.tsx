@@ -25,7 +25,8 @@ export const metadata: Metadata = {
 //                         ConsentGatedAnalytics.tsx
 //   • email             → lib/email.ts (Resend; Brevo for the account digest),
 //                         List-Unsubscribe headers, AlertMute
-//   • payments          → Stripe checkout for subscriptions and store consulting
+//   • payments          → Stripe checkout for subscriptions (and store consulting,
+//                         sold until 2026-10-16; its bookings are still held)
 //   • AI                → /api/trade-roast sends the trade's card names and totals
 // tests/trust-pages.test.ts pins the cookie names and providers to that code.
 export default function PrivacyPage() {
@@ -85,9 +86,9 @@ export default function PrivacyPage() {
               and email address where you give them.
             </li>
             <li>
-              <strong className="text-white">Store consulting bookings</strong> — for a store that books a
-              session: the store&rsquo;s name and website, a contact name, email address and market, and
-              any goals or preferred times you add. Stripe collects the billing address and any tax number
+              <strong className="text-white">Store consulting bookings</strong> — for a store that booked a
+              session while we offered them (until October 2026): the store&rsquo;s name and website, a contact name, email address and market, and
+              any goals or preferred times it added. Stripe collected the billing address and any tax number
               for the invoice.
             </li>
             <li>
@@ -168,8 +169,7 @@ export default function PrivacyPage() {
               We use third-party advertising on this Site, including Google AdSense.
             </strong>{" "}
             RiftCompare is funded by advertising, affiliate commissions (see below),{" "}
-            {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions and paid consulting sessions for
-            stores.
+            {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions.
           </p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
@@ -314,8 +314,8 @@ export default function PrivacyPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">Payments</h2>
           <p>
-            {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions and store consulting sessions are
-            processed by{" "}
+            {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions (and, until October 2026, store
+            consulting sessions) are processed by{" "}
             <a
               href="https://stripe.com/privacy"
               className="text-brand-400 hover:underline"

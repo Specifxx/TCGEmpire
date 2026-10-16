@@ -17,7 +17,7 @@
  * details box and did nothing. The chevron is a flex item with self-start, so it
  * stays one line tall and rotate-90 pivots beside the first line rather than
  * swinging onto a wrapped question; pl-9 lines the answer up with the question.
- * The same pattern is copied on /alerts, /stores/consulting and ArticleFaq.
+ * The same pattern is copied on /alerts and ArticleFaq.
  */
 const DEFAULT_HEADING = "Frequently asked questions";
 

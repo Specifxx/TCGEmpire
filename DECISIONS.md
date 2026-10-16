@@ -18202,3 +18202,45 @@ The store contact list (public contact pages and emails of the 224 tracked store
 - `impact-report` with `CHANGE_DATES=2026-10-17`: accounts per 100 Google clicks (2.5 before).
 - `funnel-report`: the `radiance_watch` and `pull_tracker` source rows and their activation.
 - GA4: `pull_share` counts, which are the distribution.
+
+## Ten features nobody used, deleted; paid ads back on the table — 2026-10-16
+
+**Owner:** "We are actually making money from Adsense so paid ads are useful still. We can also start deleting useless features like the discord bot. Let's clean up the website. Find the top 10 most useless features and delete all of them." Then: "The Pokemon section we keep."
+
+**How they were picked.** The new read-only `usage-report.yml` was used: Google clicks and impressions by route section over 90 days, and the row count of every table, all time and in the last 30 days. An inventory of every feature found what nothing imports. A feature went if it had next to no use AND something to maintain (an API, a cron, a Stripe branch, legal copy). The ten:
+
+| # | Feature | Evidence | Removed |
+|---|---|---|---|
+| 1 | Discord price bot (`/price`, `/movers`) and the daily Discord post | Never registered: `NEXT_PUBLIC_DISCORD_APP_ID` unset, so its install section never rendered. The daily post's `DISCORD_WEBHOOK_URL` is unset in production, so it never posted. | `api/discord/interactions`, `api/cron/discord-daily` and its Vercel cron, `scripts/register-discord-commands.ts`, the `/embed` section, the owner-checklist step. `postDiscordAlert` stays (store-health). |
+| 2 | Marketplace leftovers | The marketplace UI went 2026-08-26. The listings API had one caller (a Cancel button nothing rendered); `SellForm` and `lib/listings.ts` were imported nowhere. 0 listings in 30 days. | `api/listings`, `SellForm.tsx`, `lib/listings.ts`, `CancelListingButton` |
+| 3 | Shopify cart API | 0 callers. Inert without env vars that were never set. | `api/shopify/{cart,products}`, `lib/shopify.ts` |
+| 4 | MCP server | Linked only from `llms.txt`. It duplicated the `/api/v1` JSON endpoints and the OpenAPI spec, which stay. | `api/mcp`, `/.well-known/mcp.json`, the `@modelcontextprotocol/sdk` dependency. `ai-plugin.json` stays (it points at the OpenAPI spec). |
+| 5 | Store consulting | One booking ever, 6 search impressions in 90 days. It added a Stripe webhook branch, two emails, an admin page and a section of the terms. | `/stores/consulting` (+`confirmed`), its API, admin page, form, `lib/consulting.ts`, the emails, the webhook branch. The `/stores` card is gone. Terms §9 is removed and renumbered. `/about` and `/editorial-policy` no longer list it. `/privacy` still discloses the bookings already held. |
+| 6 | Sealed Bid (multiplayer) | 1 Google click in 90 days; 1 `GameRoom` row ever | page, API, engine, test |
+| 7 | Card Smash | 0 clicks | page, component |
+| 8 | Zoomed In | 0 clicks | page, component |
+| 9 | Price Check | 2 clicks | page, component |
+| 10 | Community links page | 2 clicks; a home teaser of outbound links | `/community`, the home teaser, the blog and guides links, `lib/content/community.ts` |
+
+**Kept, though small:** the Pokémon section (owner). Also kept, because each has a job: Higher or Lower (the arcade's last price game), the pull tracker and chase watch (one day old), Trade Roast (inside `/trade`, which has 64 clicks), the Hot 40 (`RisingSnapshot` is still being written), store partner reports (the outreach kit uses them) and Coins.
+
+**No table is dropped.** `GameRoom`, `ConsultBooking`, the marketplace models and their rows stay, orphaned, as Card Rain's `GameScore` rows did. A schema drop is a separate decision with nothing to gain on free-tier storage. The game keys left `lib/games.ts`, so their scores are unreachable.
+
+**Every public URL 301s** (`next.config.js`):
+- the four games → `/games`
+- consulting → `/stores`
+- `/community` → `/`
+
+`tests/feature-cleanup.test.ts` pins the deletions, the redirects, the nav, the sitemap and the webhook.
+
+**Paid ads: the 2026-10-16 growth entry's "no paid ads" is reversed to "test, measured".** That entry judged ads against Premium's lifetime value alone. The owner points out that AdSense pays, so a paid visit also earns its page views. A click pays for itself when its cost is below what the visit earns:
+
+`pages per visit × AdSense RPM ÷ 1000 + sign-up rate × value of a sign-up`
+
+AdSense's own report gives RPM by page. The test is in `docs/GROWTH-PLAYBOOK-2026-10.md`:
+- a small fixed budget
+- landing on the highest-RPM pages that readers already stay on (the Radiance card list and spoilers)
+- `utm_source` tagged, read against AdSense page RPM and `funnel-report`
+- stopped if cost per visit is above earnings per visit after two weeks
+
+To keep paid visits apart from organic ones, `lib/entry-source.ts` now classifies any `utm_source` ending in `_ads` as a new `ads` entry bucket. Before this, `reddit_ads` would have counted as organic Reddit.

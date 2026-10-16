@@ -18,7 +18,6 @@ const readCode = (p: string) => read(p).replace(/(^|[^:])\/\/.*$/gm, "$1").repla
 
 const DB_ROUTES = [
   "src/app/api/collection/route.ts",
-  "src/app/api/listings/route.ts",
   "src/app/api/notifications/route.ts",
   "src/app/api/riftle/route.ts",
 ];
@@ -30,14 +29,6 @@ for (const route of DB_ROUTES) {
     assert.match(code, /catch\s*\{[\s\S]*?status:\s*500/, "a catch path must return a JSON error with status 500");
   });
 }
-
-test("the listings DELETE (cancel-a-listing) path is wrapped too, not just POST", () => {
-  const code = readCode("src/app/api/listings/route.ts");
-  const deleteAt = code.indexOf("export async function DELETE");
-  assert.ok(deleteAt >= 0, "expected a DELETE handler");
-  const body = code.slice(deleteAt);
-  assert.match(body, /try\s*\{/, "DELETE must also be wrapped — cancelling a listing is real-money-adjacent");
-});
 
 test("MyCollection distinguishes a failed fetch from a genuinely empty collection", () => {
   const code = readCode("src/components/MyCollection.tsx");

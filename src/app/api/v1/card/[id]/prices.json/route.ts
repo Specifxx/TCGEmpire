@@ -3,8 +3,7 @@ import { getCardPricesData } from "@/lib/public-api";
 // Public, machine-readable per-region lowest prices for one card.
 // Agent/dashboard friendly; referenced from the card page and llms.txt. `?id`
 // accepts slug or id. The query + response shape live in lib/public-api.ts's
-// getCardPricesData, shared with the MCP get_card_prices tool so the two can't
-// drift apart. Six hours, at the CDN too (15 minutes until 2026-10-14,
+// getCardPricesData. Six hours, at the CDN too (15 minutes until 2026-10-14,
 // DECISIONS.md, "Cached pages refresh every 6 to 24 hours", 2026-10-14).
 export const revalidate = 21600;
 

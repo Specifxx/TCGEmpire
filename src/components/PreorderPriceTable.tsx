@@ -57,7 +57,7 @@ import {
 //    auctions and listings posted since our last check, so "may" is true on it. The row itself says what it is: the listing
 //    at our last check, and that eBay prices change often;
 //  - the footnote, /editorial-policy, /about, /privacy, /terms, /methodology,
-//    the consulting FAQ and every "cheapest first" description of this page
+//    and every "cheapest first" description of this page
 //    now say this table pins eBay first, instead of promising an order it no
 //    longer has.
 // A stale or sold-out eBay row is NOT pinned: a greyed "Unknown" at the very top
