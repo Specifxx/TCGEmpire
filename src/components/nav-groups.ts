@@ -201,7 +201,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/games/price-check", label: "Price Check", keywords: ["price check", "guess the price"], hideInFooter: true },
       { href: "/games/higher-lower", label: "Higher or Lower", keywords: ["higher lower", "higher or lower"], hideInFooter: true },
       { href: "/games/card-smash", label: "Card Smash", keywords: ["card smash", "whack a mole", "reflex"], hideInFooter: true },
-      { href: "/games/twenty48", label: "Riftbound 2048", keywords: ["2048", "twenty48", "merge"], hideInFooter: true },
       { href: "/games/zoomed", label: "Zoomed In", keywords: ["zoomed", "guess the card", "art quiz"], hideInFooter: true },
       { href: "/games/seraphines-piano", label: "Seraphine's Piano", keywords: ["seraphine", "piano", "rhythm game", "music game", "radiance game"] },
       { href: "/games/sealed-bid", label: "Sealed Bid", keywords: ["sealed bid", "multiplayer", "auction", "play with friends", "party game"], hideInFooter: true },

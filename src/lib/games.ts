@@ -16,7 +16,8 @@ export const GAMES: Record<string, GameMeta> = {
   "higher-lower": { label: "Higher or Lower", dir: "desc", min: 0, max: 200, unit: "streak" },
   "price-check": { label: "Price Check", dir: "desc", min: 0, max: 500, unit: "pts" },
   zoomed: { label: "Zoomed In", dir: "desc", min: 0, max: 10, unit: "pts" },
-  twenty48: { label: "Riftbound 2048", dir: "desc", min: 0, max: 1_000_000, unit: "pts" },
+  // Riftbound 2048 ("twenty48") was retired on 2026-10-16 (owner: "get rid of
+  // riftbound 2048"). Its old GameScore rows stay, orphaned, like space-invaders'.
   "card-smash": { label: "Card Smash", dir: "desc", min: 0, max: 100_000, unit: "pts" },
   // Card Rain and Pairs were retired on 2026-10-16 (the two least played games:
   // DECISIONS.md, "Seraphine's Piano"), as "space-invaders" was before them. Their

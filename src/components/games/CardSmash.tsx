@@ -156,7 +156,7 @@ export function CardSmash() {
         <span className={`font-bold tabular-nums ${timeLeft <= 10 ? "text-rose-400" : "text-slate-300"}`}>⏱ {timeLeft}s</span>
       </div>
 
-      {/* Height-capped under the sticky header on landscape phones; see the same class on Twenty48.tsx's board. */}
+      {/* Height-capped under the sticky header on landscape phones. */}
       <div className="relative mx-auto aspect-square w-full max-w-md supports-[height:100svh]:max-w-[min(28rem,calc(100svh-9rem))] rounded-xl bg-ink-900 p-2">
         <div className="grid h-full grid-cols-3 grid-rows-3 gap-2">
           {Array.from({ length: GRID }).map((_, cell) => {

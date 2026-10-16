@@ -196,6 +196,9 @@ export function SideNav() {
       aria-label="Site navigation"
       className="fixed left-0 top-0 z-rail hidden h-screen w-[var(--sidenav-w)] flex-col border-r border-ink-800 bg-ink-900 lg:flex"
     >
+      {/* Halloween: a cobweb in the rail's top corner, on every page while the
+          season lasts (globals.css .rb-rail-web; lib/season.ts). */}
+      <span aria-hidden="true" className="rb-rail-web" />
       {/* ── Brand ─────────────────────────────────────────────────────────
           The rail owns the brand from lg up, because it runs the full page
           height and reaches the top-left corner the header's own mark used to
