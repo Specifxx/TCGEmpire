@@ -781,14 +781,19 @@ longer lands on its entry.
   yesterday's rows; rows expire after 72h of empty returns, and
   `DECOMMISSIONED_RETAILERS` purges removed stores. Only the keys listed there:
   a store dropped from the registry without its key added keeps its rows
-  indefinitely (109 sealed and 13 card stores had, 2026-10-15). A store's
+  indefinitely (the 105 such ghost stores were purged on 2026-10-16). A store
+  moved to sealed-only goes in `SINGLES_RETIRED_RETAILERS` instead, which drops
+  its card rows and keeps its sealed ones. Vet a store by its live match rate
+  and where it ships from (`/meta.json`): three Canadian stores sat in the US
+  and SG markets until 2026-10-16. A store's
   `currency` must match its market or its prices are refused
   (`lib/offer-currency.ts`), and every Shopify `?country=` goes through
   `isoCountry` (GB, ES), never our market code.
   Sealed-only stores go in `lib/sealed-stores.ts`, never `RETAILERS` (Shopify,
   product pages, or a store's own JSON feed: `FEED_STORES`, [2026-10-15](../DECISIONS.md#L17542)).
   [2026-09-23](../DECISIONS.md#L11091), [2026-09-23](../DECISIONS.md#L11034),
-  [2026-09-24](../DECISIONS.md#L11971), [2026-10-15](../DECISIONS.md#L17453)
+  [2026-09-24](../DECISIONS.md#L11971), [2026-10-15](../DECISIONS.md#L17453),
+  [2026-10-16](../DECISIONS.md#L17916)
 - **Sealed offers have three states** (open / sold out / unknown past 72h,
   `lib/sealed-offers.ts`); only open offers set a headline price or a store
   count. [2026-09-24](../DECISIONS.md#L11971). A product page's stock comes

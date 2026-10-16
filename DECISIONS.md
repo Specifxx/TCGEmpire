@@ -17912,3 +17912,62 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 **Names.** The champions are named from George's art. The fourth coin, a dark armoured knight, is called Mordekaiser; if George meant someone else, rename it in `COINS` and the file.
 
 **Not done:** an ops-monitor check (there is no external service or quota behind it) and a leaderboard (a collection is personal).
+
+## The store audit: 61 stores added, 2 dead and 105 ghost stores purged, 5 moved to sealed-only, 3 Canadian stores filed under the wrong market — 2026-10-16
+
+**Owner:** "take a look at all the stores … I'm sure there's a lot of stores that have shown up … stores that … might have been decommissioned … let's take a look at all the stores and … any stores that are new and popular and … get rid of the stores that … have been dead."
+
+**How each store was judged.** Every tracked store's in-stock count came from the 2026-10-15 public export (singles and sealed). Every weak one was then read live and run through the importer's own `resolveCardId()` against the catalogue snapshot (a scratch script; the counts below are its output). New stores came from two places:
+- `scripts/sweep-registry.ts --markets AU,US,UK,SG,CA,EU` over the official UVS locator: 3,328 domains read and 210 cleared the bar. 404 were rate-limited or unreachable, so a `--resume` run may find a few more.
+- A research pass for popular stores the locator may miss (big retailers, Google results, the community's recommendations).
+
+Every candidate was vetted the same way: its own collection list, then its Riftbound singles collections read with the market's `?country=`, and the share of in-stock singles the importer matches. Its checkout currency was checked (`/cart.js`), and so was where it is and ships to (`/meta.json`). The figure on each new `RETAILERS` entry is that measurement.
+
+**The sweep's own "thin" flag on tracked stores is not evidence.** It counts titles its singles heuristic recognises, so it called Forbidden Planet (83 in stock), Mana Market (497) and Thistle Tavern (705) thin. Nothing was removed on it.
+
+**Removed (2):** Knightly Gaming (UK; one OP-promo collection, 3 products, none in stock) and Obsidian Games (CA; 3 products, none in stock, collections untouched since June). Both go into `DECOMMISSIONED_RETAILERS`.
+
+**Ghost stores purged (105).** These are stores dropped from the registry without their keys being decommissioned: the 2026-08-23 EU cut (96 → 12), the NZ retirement, and earlier sealed passes. They are the 13 card and 109 sealed stores the 2026-10-15 entry found still showing August prices, a purge that entry held back for the owner's go-ahead. This request is that go-ahead.
+- All 105 go into `DECOMMISSIONED_RETAILERS`. With the four that came back, they held 7,026 card rows (4,206 "in stock") and 935 sealed rows (390).
+- **Back in the registry** under their old keys, so not purged: Fire and Dice (EU) and 1Collectibles, Mana Pro and SC Collection (SG).
+- The expected effects are the ones that entry listed: EU `/sealed` drops by about a third, about 16 groups gain "Sold out", and some public sealed history series step up on the purge day because their lows were stale. No email fires and no page 404s.
+
+**Moved to sealed-only (5):** Hobby Collectors Australia, Zatu, Goblin Gaming, The Gamers Lodge and Roll N Play.
+- Each one's Riftbound collections hold boxes, decks, accessories and event tickets, with few or no matchable singles. Roll N Play's singles ("Single Card - Ambessa … 196*") have never matched a card. As singles stores they read as broken, against the CURRENT-STATE rule that sealed-only stores belong in `lib/sealed-stores.ts`.
+- They keep their keys, so their sealed rows carry on.
+- **The new `SINGLES_RETIRED_RETAILERS`** purges only their card rows, which nothing reads any more and which would never expire. `DECOMMISSIONED_RETAILERS` would have purged their sealed rows too.
+
+**Three Canadian stores filed under the wrong market.** Each was a Toronto-area store charging CAD:
+- **Chonky Collectibles (SG → CA).** Ships to Canada only. Read with `?country=SG`, every one of its 932 singles reads sold out, so it priced nothing in Singapore for weeks. The 2026-09-25 postage probe had already noted "a Toronto store". As CA: 595 in stock across its four set collections (it was reading only Origins), 99% matched.
+- **The CG Realm (US → CA).** Windsor, Ontario; ships to Canada only. Its 1,020 "in stock" US listings were Shopify's currency conversion of stock no US buyer could order. Its no-post postage override goes, and it is measured in Canada (C$4.00).
+- **NexPack Collectibles stays in the US**, because it really ships there: its US listing is a measured cross-border one, with duties noted. Its home CAD storefront is added to CA as `npcollectiblesca`, the same precedent as Danireon's US/CA pair.
+
+**Collections the stores had renamed** (we were reading empty or stale ones):
+- Tier Zero: `riftbound-single`.
+- Monster Card Corner: per-set collections, including Radiance singles listed ahead of release.
+- 7th City: three promo collections.
+
+**Added (61)**, each 80–100% matched, mostly 95%+:
+
+| Market | Stores |
+|---|---|
+| AU (8) | Eternal Magic (1,513 in stock), Blacklist Cards (1,272), Turtle TCG (547), One Place TCS (353), Kollecter (266), Crit Hit (237), Raptor Games (189), The Card Cave (145) |
+| US (9) | DK's Cards (803), The Hub TCG (711), Tier 1 Games (703), The Vault Game Store (697), Spanky's (280), Card Father (182), Game Grid Idaho Falls (161), QuickTCG (70), All Access (57) |
+| UK (3) | Archeron Games (1,418), eTOYSWORLD (530), The TCG Group (106) |
+| SG (3) | 1Collectibles (861), Mana Pro (749), SC Collection (690) |
+| CA (34) | KadOone (1,432), 3 Mana (1,139), Fantasy Forged (1,003), Claw Me Baby, Prestige, Kunai, Abyss, Draw for Turn, The Drop, Torchlight, Kingdom Titans, Le Coin du Jeu, Amuse N Games, Cartes Léo, Emmett's, Manta, NexPack CA, Geek & Co., Anime Alley, Jeux 3 Dragons, PvP Shoppe, Twin Moons, Screen Free Games, Common Box, Sunny Hobbies, PokéJeux, Mana Confluence, 203 Collectibles, Abby Boardwalk, Negative Zone, The Side Deck, MasterSet, New Realm, Springer (plus Chonky and The CG Realm, moved in) |
+| EU (4) | SpellNexus (1,247), Shopponi (1,046), Fire and Dice (658), Cards Beyond (359; a Prague store that charges EUR to a Spanish cart) |
+
+Canada is most of it. Its Riftbound web-shop scene has grown fastest since the 2026-09-09 sweep, and much of it is in and around Markham.
+
+The registry goes from 172 to 226 stores. Every Shopify `products.json` call is a few pages a store, so an import goes from about 20 to about 26 minutes against `refresh-prices.yml`'s 90-minute limit.
+
+**Postage** was measured for every new and moved store (`probe-shipping-rates.ts --store=…`, merged by `build-shipping-rates.ts`). Raptor Games ships (Tuesdays and Fridays) but shows rates only inside checkout. It is on the labelled estimate (`status: "unmeasured"`), not "no-post", so it stays in Best Basket.
+
+**Not added, and why:**
+- **Columbus Card Shop** (its site: "Our online store is not currently accepting orders").
+- **MERCHANT** (merchanttcg.com, about 900 singles). It sells English and French as variants of one product, and the importer's variant pick has no language filter, so a French copy could price the English card. It needs a variant language gate first.
+- **Otakura.** Its titles carry no collector numbers: 0% matched.
+- **Plenty of Games' own domain.** It is the store already tracked through its myshopify address.
+- **Good Games' main domain.** Sealed only, and its feed served HTML. Its ghost rows are purged.
+- **Non-Shopify stores** the research named (Star City Games, CoolStuffInc, Magic Madhouse, Chaos Cards, Big Orbit, Cards Central, Games Island, Play-In, and five CrystalCommerce stores). Each needs an adapter. One CrystalCommerce adapter would cover five stores, and that is the next platform worth building.
