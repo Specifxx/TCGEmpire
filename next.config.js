@@ -268,6 +268,13 @@ const nextConfig = {
         destination: "/games/card-rain",
         permanent: true,
       },
+      // Riftbound 2048 was retired on 2026-10-16 (owner: "get rid of riftbound
+      // 2048"). No game replaced it, so its URL lands on the arcade.
+      {
+        source: "/games/twenty48",
+        destination: "/games",
+        permanent: true,
+      },
       // The daily-market-wrap archive, the auto-generated market reports and the
       // RiftCompare Index have all been retired. 301 any surviving inbound/indexed
       // /market/wrap links to the price movers page — the closest live surface —

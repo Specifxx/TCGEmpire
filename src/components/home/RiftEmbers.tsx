@@ -8,6 +8,12 @@ import { useEffect, useRef } from "react";
 // around the pointer, a soft glow follows it, and a click or tap throws a burst
 // of sparks.
 //
+// Halloween (html[data-season="halloween"], lib/season.ts; owner: "Nocturne is
+// going to come get you"): violet and ghost-blue wisps join the embers, the
+// hero sits in Nocturne's dark with the pointer as the only light, his eyes
+// open somewhere in the dark (and are gone the moment the light reaches
+// them), and bats cross the sky now and then.
+//
 // Built so it costs the page nothing it cares about:
 //   - pure decoration on a <canvas> behind the content, aria-hidden and
 //     pointer-events:none; the pointer listeners sit on the hero section,
@@ -17,23 +23,47 @@ import { useEffect, useRef } from "react";
 //   - prefers-reduced-motion paints one still frame and stops;
 //   - no library: one rAF loop over ~36-150 sprites.
 
-type Kind = 0 | 1 | 2; // orange, gold, teal
+type Theme = "dark" | "light";
 interface Mote {
   x: number;
   y: number;
   vx: number;
   vy: number;
   r: number;
-  kind: Kind;
+  kind: number; // index into the palette
   phase: number;
   sway: number;
   life: number; // sparks only: frames left; Infinity for drifting embers
   max: number;
 }
+interface Bat {
+  x: number;
+  y: number;
+  vx: number;
+  size: number;
+  phase: number;
+  bob: number;
+}
+interface Eyes {
+  x: number;
+  y: number;
+  a: number; // current opacity
+  target: number;
+  until: number; // t at which they close
+  next: number; // t at which the next pair opens
+  blinkAt: number;
+}
 
-const COLORS: Record<"dark" | "light", [string, string, string]> = {
-  dark: ["239,125,0", "242,180,90", "56,189,248"],
-  light: ["224,111,0", "184,134,42", "3,105,161"],
+// [rgb, weight] per palette entry; weights pick a mote's colour.
+const PALETTES: Record<"rift" | "halloween", Record<Theme, [string, number][]>> = {
+  rift: {
+    dark: [["239,125,0", 0.68], ["242,180,90", 0.22], ["56,189,248", 0.1]],
+    light: [["224,111,0", 0.68], ["184,134,42", 0.22], ["3,105,161", 0.1]],
+  },
+  halloween: {
+    dark: [["239,125,0", 0.4], ["167,139,250", 0.32], ["125,211,252", 0.14], ["242,180,90", 0.14]],
+    light: [["224,111,0", 0.42], ["109,40,217", 0.34], ["3,105,161", 0.12], ["184,134,42", 0.12]],
+  },
 };
 
 function sprite(rgb: string): HTMLCanvasElement {
@@ -61,18 +91,38 @@ export function RiftEmbers() {
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const root = document.documentElement;
-    let theme: "dark" | "light" = root.getAttribute("data-theme") === "light" ? "light" : "dark";
-    let sprites = COLORS[theme].map(sprite);
+    let theme: Theme = "dark";
+    let halloween = false;
+    let palette: [string, number][] = [];
+    let sprites: HTMLCanvasElement[] = [];
+    const readMode = () => {
+      theme = root.getAttribute("data-theme") === "light" ? "light" : "dark";
+      halloween = root.getAttribute("data-season") === "halloween";
+      palette = PALETTES[halloween ? "halloween" : "rift"][theme];
+      sprites = palette.map(([rgb]) => sprite(rgb));
+    };
+    readMode();
 
     let w = 0;
     let h = 0;
     let dpr = 1;
+    // The hero runs the full window width, but from lg the side rail covers
+    // its left edge (--sidenav-w). Anything that has to be SEEN (the eyes, the
+    // centre of the dark) is placed in the visible part, from x0 to w.
+    let x0 = 0;
     let motes: Mote[] = [];
+    let bats: Bat[] = [];
+    let nextBat = 240;
+    const eyes: Eyes = { x: 0, y: 0, a: 0, target: 0, until: 0, next: 120, blinkAt: 0 };
     const pointer = { x: 0, y: 0, tx: 0, ty: 0, on: 0, target: 0, lastSpark: 0 };
 
-    const pickKind = (): Kind => {
-      const r = Math.random();
-      return r < 0.68 ? 0 : r < 0.9 ? 1 : 2;
+    const pickKind = (): number => {
+      let r = Math.random();
+      for (let i = 0; i < palette.length; i++) {
+        r -= palette[i][1];
+        if (r <= 0) return i;
+      }
+      return 0;
     };
     const ember = (spawnBelow: boolean): Mote => ({
       x: Math.random() * w,
@@ -97,7 +147,7 @@ export function RiftEmbers() {
         vx: Math.cos(a) * v,
         vy: Math.sin(a) * v - 0.4,
         r: 0.6 + Math.random() * 1.4,
-        kind: Math.random() < 0.75 ? 0 : 1,
+        kind: halloween ? (Math.random() < 0.5 ? 0 : 1) : Math.random() < 0.75 ? 0 : 1,
         phase: Math.random() * Math.PI * 2,
         sway: 0,
         life,
@@ -115,6 +165,9 @@ export function RiftEmbers() {
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const rail = getComputedStyle(root).getPropertyValue("--sidenav-w").trim();
+      const remPx = parseFloat(getComputedStyle(root).fontSize) || 16;
+      x0 = rail.endsWith("rem") ? parseFloat(rail) * remPx : parseFloat(rail) || 0;
       const want = Math.max(36, Math.min(150, Math.round((w * h) / 8000)));
       const embers = motes.filter((m) => m.life === Infinity);
       const sparks = motes.filter((m) => m.life !== Infinity);
@@ -122,20 +175,164 @@ export function RiftEmbers() {
       embers.length = want;
       motes = embers.concat(sparks);
       if (!pointer.on) {
-        pointer.x = pointer.tx = w / 2;
+        pointer.x = pointer.tx = (x0 + w) / 2;
         pointer.y = pointer.ty = h * 0.35;
       }
+    };
+
+    // ── Halloween pieces ────────────────────────────────────────────────────
+    // Nocturne's dark: the hero's edges in shadow, with a pool of light around
+    // the pointer cut out of it (destination-out), drawn BEFORE the embers so
+    // they still glow inside the dark.
+    const drawDark = () => {
+      if (theme !== "dark") return;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = 1;
+      const cx = (x0 + w) / 2;
+      const vw = w - x0;
+      const g = ctx.createRadialGradient(cx, h * 0.4, Math.min(vw, h) * 0.2, cx, h * 0.4, Math.max(vw, h) * 0.7);
+      g.addColorStop(0, "rgba(6,3,14,0)");
+      g.addColorStop(1, "rgba(6,3,14,0.78)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      if (pointer.on > 0.01) {
+        ctx.globalCompositeOperation = "destination-out";
+        const R = 230;
+        const l = ctx.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, R);
+        l.addColorStop(0, `rgba(0,0,0,${0.85 * pointer.on})`);
+        l.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = l;
+        ctx.fillRect(pointer.x - R, pointer.y - R, R * 2, R * 2);
+        ctx.globalCompositeOperation = "source-over";
+      }
+    };
+
+    // His eyes open in the dark, away from the light, blink once, and close.
+    // If the light comes within reach they are gone at once.
+    const drawEyes = (dt: number) => {
+      if (t >= eyes.next && eyes.target === 0 && eyes.a < 0.02) {
+        // Somewhere in the outer thirds, upper two-thirds of the hero, and not
+        // where the pointer is.
+        for (let tries = 0; tries < 8; tries++) {
+          const side = Math.random() < 0.5 ? 0.05 + Math.random() * 0.17 : 0.78 + Math.random() * 0.17;
+          const x = x0 + (w - x0) * side;
+          const y = h * (0.15 + Math.random() * 0.5);
+          if (pointer.on < 0.1 || Math.hypot(x - pointer.x, y - pointer.y) > 300) {
+            eyes.x = x;
+            eyes.y = y;
+            eyes.target = 1;
+            eyes.until = t + 260 + Math.random() * 120;
+            eyes.blinkAt = t + 110 + Math.random() * 60;
+            break;
+          }
+        }
+      }
+      if (eyes.target === 1 && (t >= eyes.until || (pointer.on > 0.3 && Math.hypot(eyes.x - pointer.x, eyes.y - pointer.y) < 230))) {
+        const fled = t < eyes.until;
+        eyes.target = 0;
+        eyes.next = t + (fled ? 200 : 240) + Math.random() * 200;
+      }
+      const rate = eyes.target === 1 ? 0.025 : 0.08; // they open slowly and vanish fast
+      eyes.a += (eyes.target - eyes.a) * rate * dt;
+      if (eyes.a < 0.01) return;
+      const blink = Math.abs(t - eyes.blinkAt) < 5 ? 0.12 : 1;
+      ctx.save();
+      // A pool of shadow first, so the eyes sit in a face you cannot see.
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = eyes.a * (theme === "dark" ? 0.7 : 0.25);
+      const shade = ctx.createRadialGradient(eyes.x, eyes.y + 6, 0, eyes.x, eyes.y + 6, 90);
+      shade.addColorStop(0, theme === "dark" ? "rgba(3,1,8,1)" : "rgba(46,16,101,0.6)");
+      shade.addColorStop(1, "rgba(3,1,8,0)");
+      ctx.fillStyle = shade;
+      ctx.fillRect(eyes.x - 90, eyes.y - 84, 180, 180);
+      ctx.globalCompositeOperation = theme === "dark" ? "lighter" : "source-over";
+      ctx.globalAlpha = eyes.a * (theme === "dark" ? 1 : 0.85);
+      ctx.shadowColor = theme === "dark" ? "rgba(56,189,248,1)" : "rgba(76,29,149,0.7)";
+      ctx.fillStyle = theme === "dark" ? "#e0f2fe" : "#3b0764";
+      // Twice: a wide halo, then a tight bright core.
+      for (const blur of [26, 8]) {
+        ctx.shadowBlur = blur;
+        for (const s of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(eyes.x + s * 21, eyes.y, 13, 4.6 * blink, s * -0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    };
+
+    // Bats now and then: a few silhouettes flapping across the sky.
+    const drawBats = (dt: number) => {
+      if (t >= nextBat) {
+        const n = 1 + Math.floor(Math.random() * 3);
+        const fromLeft = Math.random() < 0.5;
+        const y0 = h * (0.08 + Math.random() * 0.3);
+        for (let i = 0; i < n; i++) {
+          bats.push({
+            x: fromLeft ? -40 - i * 50 : w + 40 + i * 50,
+            y: y0 + (Math.random() - 0.5) * 60,
+            vx: (fromLeft ? 1 : -1) * (2.2 + Math.random() * 1.2),
+            size: 9 + Math.random() * 8,
+            phase: Math.random() * Math.PI * 2,
+            bob: 0.6 + Math.random() * 0.8,
+          });
+        }
+        nextBat = t + 520 + Math.random() * 420;
+      }
+      ctx.save();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = theme === "dark" ? 0.92 : 0.7;
+      ctx.fillStyle = theme === "dark" ? "#120a22" : "#3b1d6e";
+      ctx.shadowColor = theme === "dark" ? "rgba(167,139,250,0.7)" : "rgba(0,0,0,0)";
+      ctx.shadowBlur = theme === "dark" ? 6 : 0;
+      for (let i = bats.length - 1; i >= 0; i--) {
+        const b = bats[i];
+        b.x += b.vx * dt;
+        b.y += Math.sin(t * 0.08 + b.phase) * b.bob * dt;
+        if (b.x < -120 || b.x > w + 120) {
+          bats.splice(i, 1);
+          continue;
+        }
+        const s = b.size;
+        const flap = Math.sin(t * 0.45 + b.phase); // -1..1
+        const tip = -s * 0.2 - flap * s * 0.75; // wingtip height
+        const dir = b.vx > 0 ? 1 : -1;
+        ctx.beginPath();
+        // Left wing, body, right wing, as one scalloped silhouette.
+        ctx.moveTo(b.x, b.y);
+        ctx.quadraticCurveTo(b.x - s * 0.5, b.y + tip * 0.4, b.x - s * 1.6, b.y + tip);
+        ctx.quadraticCurveTo(b.x - s * 1.1, b.y + s * 0.15, b.x - s * 0.9, b.y + s * 0.35);
+        ctx.quadraticCurveTo(b.x - s * 0.5, b.y + s * 0.1, b.x - s * 0.3, b.y + s * 0.45);
+        ctx.quadraticCurveTo(b.x, b.y + s * 0.3, b.x + s * 0.3, b.y + s * 0.45);
+        ctx.quadraticCurveTo(b.x + s * 0.5, b.y + s * 0.1, b.x + s * 0.9, b.y + s * 0.35);
+        ctx.quadraticCurveTo(b.x + s * 1.1, b.y + s * 0.15, b.x + s * 1.6, b.y + tip);
+        ctx.quadraticCurveTo(b.x + s * 0.5, b.y + tip * 0.4, b.x, b.y);
+        ctx.fill();
+        // Head with two ears, leaning the way it flies.
+        ctx.beginPath();
+        ctx.ellipse(b.x + dir * s * 0.05, b.y + s * 0.05, s * 0.22, s * 0.3, 0, 0, Math.PI * 2);
+        ctx.moveTo(b.x - s * 0.15, b.y - s * 0.15);
+        ctx.lineTo(b.x - s * 0.1, b.y - s * 0.45);
+        ctx.lineTo(b.x, b.y - s * 0.2);
+        ctx.lineTo(b.x + s * 0.1, b.y - s * 0.45);
+        ctx.lineTo(b.x + s * 0.15, b.y - s * 0.15);
+        ctx.fill();
+      }
+      ctx.restore();
     };
 
     let t = 0;
     const draw = (dt: number) => {
       ctx.clearRect(0, 0, w, h);
-      ctx.globalCompositeOperation = theme === "dark" ? "lighter" : "source-over";
 
       // The glow that follows the pointer, easing in and out as it arrives/leaves.
       pointer.on += (pointer.target - pointer.on) * 0.06 * dt;
       pointer.x += (pointer.tx - pointer.x) * 0.08 * dt;
       pointer.y += (pointer.ty - pointer.y) * 0.08 * dt;
+
+      if (halloween) drawDark();
+
+      ctx.globalCompositeOperation = theme === "dark" ? "lighter" : "source-over";
       if (pointer.on > 0.01) {
         const R = 260;
         ctx.globalAlpha = (theme === "dark" ? 0.2 : 0.12) * pointer.on;
@@ -178,7 +375,12 @@ export function RiftEmbers() {
         }
         const size = m.r * 8;
         ctx.globalAlpha = alpha * (theme === "dark" ? 1 : 0.75);
-        ctx.drawImage(sprites[m.kind], m.x - size / 2, m.y - size / 2, size, size);
+        ctx.drawImage(sprites[m.kind % sprites.length], m.x - size / 2, m.y - size / 2, size, size);
+      }
+
+      if (halloween && !reduced) {
+        drawBats(dt);
+        drawEyes(dt);
       }
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = "source-over";
@@ -204,8 +406,10 @@ export function RiftEmbers() {
       raf = 0;
     };
 
+    // Pointer position in the canvas's own coordinates. The canvas drifts with
+    // the scroll parallax (.rb-depth-mid), so measure it, not the section.
     const local = (e: PointerEvent) => {
-      const rect = host.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
       return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
     const onMove = (e: PointerEvent) => {
@@ -243,10 +447,10 @@ export function RiftEmbers() {
     });
     const onVisibility = () => (document.hidden ? stop() : start());
     const mo = new MutationObserver(() => {
-      const next = root.getAttribute("data-theme") === "light" ? "light" : "dark";
-      if (next !== theme) {
-        theme = next;
-        sprites = COLORS[theme].map(sprite);
+      const before = `${theme}/${halloween}`;
+      readMode();
+      if (`${theme}/${halloween}` !== before) {
+        for (const m of motes) m.kind = pickKind();
         if (reduced) draw(1);
       }
     });
@@ -260,7 +464,7 @@ export function RiftEmbers() {
       host.addEventListener("pointerdown", onDown, { passive: true });
       document.addEventListener("visibilitychange", onVisibility);
     }
-    mo.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    mo.observe(root, { attributes: true, attributeFilter: ["data-theme", "data-season"] });
 
     // Start once the page is idle, so the first paint is the content's alone.
     type IdleWindow = Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
@@ -281,5 +485,5 @@ export function RiftEmbers() {
     };
   }, []);
 
-  return <canvas ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full" />;
+  return <canvas ref={ref} aria-hidden="true" className="rb-depth-mid pointer-events-none absolute inset-0 h-full w-full" />;
 }

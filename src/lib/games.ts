@@ -17,7 +17,8 @@ export const GAMES: Record<string, GameMeta> = {
   "price-check": { label: "Price Check", dir: "desc", min: 0, max: 500, unit: "pts" },
   zoomed: { label: "Zoomed In", dir: "desc", min: 0, max: 10, unit: "pts" },
   pairs: { label: "Pairs", dir: "asc", min: 8, max: 400, unit: "moves" },
-  twenty48: { label: "Riftbound 2048", dir: "desc", min: 0, max: 1_000_000, unit: "pts" },
+  // Riftbound 2048 ("twenty48") was retired on 2026-10-16 (owner: "get rid of
+  // riftbound 2048"). Its old GameScore rows stay, orphaned, like space-invaders'.
   "card-smash": { label: "Card Smash", dir: "desc", min: 0, max: 100_000, unit: "pts" },
   // Replaced the short-lived "space-invaders" shooter (2026-09-03 → 2026-09-10)
   // with a falling-card catcher. A NEW key, deliberately: the two games score

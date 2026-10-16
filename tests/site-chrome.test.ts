@@ -4,7 +4,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BANNER_FREE_ROUTES, footerBannersAllowed } from "../src/components/FooterAds";
 import { STATIC_PAGE_DATE_PATHS } from "../src/lib/static-page-dates";
-import { RARITIES, RARITY_KEYS, ULTIMATE_RARITY } from "../src/lib/constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The site's chrome after the AdSense "low value content" brief (2026-09-26,
@@ -124,7 +123,7 @@ test("the sitemap's priorities follow one scheme", () => {
   for (const p of ["/contact", "/support", "/privacy", "/terms"]) check(p, "monthly", 0.4);
   // The arcade mini-games 0.5 (pack-sim and sealed-bid carry real editorial
   // and keep their own values; pack-sim's is pinned in pack-composition.test.ts).
-  for (const g of ["higher-lower", "price-check", "zoomed", "pairs", "twenty48", "card-smash", "card-rain"]) check(`/games/${g}`, "monthly", 0.5);
+  for (const g of ["higher-lower", "price-check", "zoomed", "pairs", "card-smash", "card-rain"]) check(`/games/${g}`, "monthly", 0.5);
   // Articles.
   assert.match(SITEMAP, /changeFrequency: "monthly" as const,\s*priority: 0\.7,\s*lastModified: new Date\(`\$\{a\.updated \?\? a\.date\}/);
 });
@@ -141,7 +140,7 @@ test("/decks is submitted only when a deck is live, because an empty library is 
 
 // ── The six arcade mini-games ───────────────────────────────────────────────
 
-const MINI_GAMES = ["card-smash", "higher-lower", "pairs", "price-check", "twenty48", "zoomed"] as const;
+const MINI_GAMES = ["card-smash", "higher-lower", "pairs", "price-check", "zoomed"] as const;
 
 // 2026-10-02 (owner, from Reddit feedback): the arcade is ad-free for every
 // visitor. No in-page pair, no AdSense slot, and no footer pair on /games/* or
@@ -189,21 +188,17 @@ test("each mini-game explains itself in 150+ words, then links the guides behind
   }
 });
 
-test("Riftbound 2048 climbs the real rarity ladder, and names no rarity Riftbound lacks", () => {
-  const src = read("src/components/games/Twenty48.tsx");
-  const ladder = src.slice(src.indexOf("const LADDER = ["), src.indexOf("];", src.indexOf("const LADDER = [")));
-  const rungs = [...ladder.matchAll(/name: "([^"]+)", color: "(#[0-9a-f]{6})"/g)].map((m) => ({ name: m[1], color: m[2] }));
-  const real = [...RARITY_KEYS.map((k) => RARITIES[k]), ULTIMATE_RARITY];
-  assert.deepEqual(
-    rungs.slice(0, real.length),
-    real.map((r) => ({ name: r.label, color: r.color })),
-    "the first rungs are the site's own rarity badges, in their colours",
-  );
-  // The game's own tiers past Ultimate are numbered, never a name that could
-  // pass for a printed rarity. Legend and Champion are card TYPES; Mythic is
-  // not in Riftbound at all.
-  for (const r of rungs.slice(real.length)) assert.match(r.name, /^Ultimate [IVX]+$/, `"${r.name}"`);
-  for (const f of ["src/components/games/Twenty48.tsx", "src/app/games/twenty48/page.tsx", "src/app/games/page.tsx"]) {
-    assert.doesNotMatch(codeOnly(read(f)), /\b(Legend|Champion|Mythic|Ascendant|Transcendent)\b/, `${f} names a rarity Riftbound does not have`);
+test("Riftbound 2048 is retired: no page, no registry entry, no links, and its URL 301s to the arcade", () => {
+  // Owner, 2026-10-16: "get rid of riftbound 2048".
+  for (const p of ["src/components/games/Twenty48.tsx", "src/app/games/twenty48/page.tsx"]) {
+    assert.ok(!existsSync(join(process.cwd(), p)), `${p} should be gone`);
   }
+  assert.doesNotMatch(read("src/lib/games.ts"), /^\s*twenty48:/m, "no leaderboard entry");
+  for (const f of ["src/components/nav-groups.ts", "src/app/games/page.tsx", "src/lib/sitemap-sections.ts", "src/lib/content/tool-guides.ts"]) {
+    assert.doesNotMatch(read(f), /\/games\/twenty48|Riftbound 2048/, `${f} still links the retired game`);
+  }
+  const cfg = read("next.config.js");
+  const at = cfg.indexOf('source: "/games/twenty48"');
+  assert.ok(at > 0, "the old URL must redirect");
+  assert.match(cfg.slice(at, at + 120), /destination: "\/games",\s*permanent: true/);
 });

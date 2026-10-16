@@ -41,6 +41,11 @@ export function Reveal({
     // later and cause exactly the flash-of-motion this layout effect exists to
     // avoid.
     if (prefersReducedMotion() || !("IntersectionObserver" in window)) return; // leave content visible
+    // Where the browser has scroll timelines, globals.css's .rb-sd /
+    // .rb-sd-stagger (on the markup below) already tie the reveal to the scroll
+    // position itself, on the compositor: no observer, and nothing to undo if
+    // the visitor scrolls back (owner, 2026-10-16: "super duper smooth").
+    if (typeof CSS !== "undefined" && CSS.supports("animation-timeline: view()")) return;
 
     // Hide before paint so the reveal animates from the hidden state.
     el.classList.add(stagger ? "reveal-stagger" : "reveal-init");
@@ -76,7 +81,7 @@ export function Reveal({
   }, [stagger, delayMs, once]);
 
   return (
-    <div ref={ref} className={className}>
+    <div ref={ref} className={`${stagger ? "rb-sd-stagger" : "rb-sd"}${className ? ` ${className}` : ""}`}>
       {children}
     </div>
   );

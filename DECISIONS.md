@@ -17749,3 +17749,46 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 - `keyword-ownership`: the H1 span may carry `rb-flame-live`.
 - `header-search-resize`: the hero box may carry `rb-search-aura`.
 - `mobile-header-fit`: restored.
+
+## Halloween ("Nocturne is coming"), scroll-driven motion, and Riftbound 2048 retired — 2026-10-16
+
+**Owner:** "I really like the fire crackers, can we add some scroll animations too and make it super duper smooth. Also since Halloween is coming up can we brand it so that it's Halloween themed? Like Nocturne is going to come get you? … Also get rid of riftbound 2048."
+
+**A season is a date window, decided in the browser.**
+- `lib/season.ts` defines Halloween as 16-31 October in the visitor's local time.
+- `SEASON_BOOT_SCRIPT`, inline in `<head>` beside the theme script, stamps `data-season="halloween"` on `<html>` before first paint. Everything seasonal keys off that attribute, so on 1 November the site is the Riftbound theme again with no deploy.
+- **Why the browser decides:** pages are cached for 6-24 hours, so a server-side date check would switch the season up to a day late.
+- The server only decides whether season-only markup is in the HTML at all (`seasonMarkupLive`, a day of slack either side).
+- `?season=halloween` and `?season=off` override it for a page load, for previews and checks.
+
+**What Halloween looks like.**
+- **Dark theme:** the ink ramp turns from teal to a violet night of the same lightness, so every 4.5:1 guarantee holds (`tests/season.test.ts` measures it; the tightest pair is the loss red on ink-850 at 5.29:1). The light theme keeps its surfaces and takes only the accents.
+- **The hero:**
+  - its band is a violet sky, and the vortex turns violet and orange;
+  - the embers become pumpkin orange with violet and ghost-blue wisps;
+  - Nocturne's dark covers the edges, and the pointer is the only light;
+  - his eyes open somewhere in the dark (in the visible part, not behind the side rail), blink and close, and vanish at once if the light reaches them;
+  - bats cross the sky now and then;
+  - "Riftbound" glows violet;
+  - "Nocturne is coming · see his price before he finds you" links to his real card (`/card/nocturne-horrifying-ogn-194-298`, the only Nocturne printing).
+- **The callout's placement:** it is its own component (`NocturneComing`), like `CreatorsCornerBadge`, so the hero's one secondary link stays its only one (`internal-linking`) and the season comes out by deleting one file.
+- **Sitewide:** the R mark flickers like a jack-o'-lantern.
+- **Unchanged colours:** buy buttons stay green, eBay blue, Premium gold.
+
+**Scroll motion is scroll-driven.**
+- Each animation's progress is the scroll position itself (CSS scroll and view timelines), run on the compositor with no script per frame. Only transform and opacity move, so it cannot lag a fling.
+- **The hero:** its words rise and fade as you scroll past. The vortex sinks behind them (parallax) and the embers sink at half that rate. In the season, the dark closes in.
+- **Sections:** sections ease up as they enter. `Reveal` puts `.rb-sd` / `.rb-sd-stagger` on its markup and steps aside where `CSS.supports("animation-timeline: view()")`; elsewhere (Firefox today) its IntersectionObserver fade runs as before.
+- **Today's Top Deals and the price-guide callout:** they get the same pure-CSS reveal on the homepage. It needs no hydration, so the old reason for keeping a fade off them does not apply.
+- **Not wrapped:** eBay Picks, which `home-ebay` pins directly under the editorial band.
+- **Stagger:** children share their block's named view timeline, because a horizontal carousel's cards never move vertically in their own scroller and a per-card `view()` would never progress there.
+- **Offset:** the entry offset is 26px, the old reveal's, because `MarketSectionNav`'s jump targets are tuned to it.
+- **Reduced motion:** gets none of it.
+- **No scroll-jacking:** there is no smooth-scroll library. Native scrolling stays native, and the smoothness comes from never running work on the scroll.
+
+**Riftbound 2048 is retired.**
+- Removed: the page and component, its leaderboard key (old `GameScore` rows stay orphaned, as space-invaders' did), the menu entry, the games hub card and metadata, the sitemap, the static page date and the tool-guides entry.
+- `/games/twenty48` redirects permanently to `/games`, since no game replaced it.
+- `site-chrome` now checks that it stays gone.
+
+**Not deployed.** On `claude/intelligent-cray-4pygcm`; the owner asked for previews before `main`.

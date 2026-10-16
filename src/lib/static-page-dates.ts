@@ -37,7 +37,6 @@ const STATIC_PAGE_DATES: Record<string, string> = {
   "/games/zoomed": "2026-09-26",
   "/games/pairs": "2026-09-26",
   "/games/pack-sim": "2026-08-10",
-  "/games/twenty48": "2026-09-26",
   "/games/card-smash": "2026-09-26",
   "/games/card-rain": "2026-09-10",
   "/games/sealed-bid": "2026-09-10",

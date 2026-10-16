@@ -1029,6 +1029,14 @@ longer lands on its entry.
   `@layer components`, or they beat `hidden`. `lib/brand.ts` holds the hexes
   for OG images and email.
   [2026-10-16](../DECISIONS.md#L17677), [2026-10-16](../DECISIONS.md#L17713)
+- **Seasons and scroll motion (2026-10-16):** a season is a local-date window
+  (`lib/season.ts`; Halloween 16-31 Oct) stamped as `data-season` on `<html>`
+  before paint, so it starts and ends with no deploy; `?season=halloween|off`
+  previews it. Season markup lives in its own component (`NocturneComing`).
+  Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
+  opacity only) under `@supports` and no-preference; `Reveal` steps aside where
+  it runs. No scroll-jacking library. Riftbound 2048 is retired
+  (`/games/twenty48` → `/games`). [2026-10-16](../DECISIONS.md#L17753)
 - **Details:** `.scroll-mt-header` goes on the element carrying the id.
   Fields are 16px on phones. Every `outline-none` has a `focus-visible:`
   ring. Motion uses `usePresence()`, no library. `SearchBar` must not use

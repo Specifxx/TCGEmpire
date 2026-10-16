@@ -275,12 +275,6 @@ export const TOOL_GUIDES = {
       { slug: "league-of-legends-champions-in-riftbound", reason: "Which League champions have cards, and who is on the art" },
     ],
   },
-  "/games/twenty48": {
-    label: "2048",
-    guides: [
-      { slug: "understanding-riftbound-card-rarity", reason: "The real rarity tiers and special printings in the game" },
-    ],
-  },
 } as const satisfies Record<string, ToolEntry>;
 
 export type ToolRoute = keyof typeof TOOL_GUIDES;

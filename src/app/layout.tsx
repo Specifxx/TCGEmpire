@@ -7,6 +7,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
+import { SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { SISTER_SITES } from "@/lib/sister-sites";
@@ -295,8 +296,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} ${cinzel.variable}`}
-      // The theme boot script below stamps data-theme on this element before
-      // React hydrates; React must not report that as a mismatch. (A second
+      // The theme and season boot scripts below stamp data-theme / data-season
+      // on this element before React hydrates; React must not report that as a
+      // mismatch. (A second
       // script used to stamp data-sidenav here too — removed with the rail's
       // collapsed mode on 2026-09-21; the rail has one width now.)
       suppressHydrationWarning
@@ -348,6 +350,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             light), so the page never flashes the wrong palette. Generated in
             src/lib/theme-shared.ts. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        {/* Seasonal theme (Halloween until 31 October): data-season on <html>
+            from the visitor's own date, before first paint. lib/season.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: SEASON_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-ink-950">
         {/* Skip link: lets keyboard/AT users bypass the navbar and jump straight

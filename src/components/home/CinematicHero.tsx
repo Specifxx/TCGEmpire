@@ -8,6 +8,7 @@ import { HeroStats, type MarketStat } from "./HeroStats";
 import { TrendingChips } from "./TrendingChips";
 import { RiftEmbers } from "./RiftEmbers";
 import { BrandLogo } from "@/components/BrandLogo";
+import { NocturneComing } from "./NocturneComing";
 import type { CardTileData } from "@/components/CardTile";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
 
@@ -97,8 +98,14 @@ export function CinematicHero({
           hidden keeps the vortex and sparks inside the band. */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
         <div className="rb-hero-band absolute inset-0 bg-ink-950 border-b border-ink-800" />
-        <div className="rb-vortex" />
+        {/* Depth layers for the scroll parallax (globals.css, "Scroll
+            motion"): the vortex sinks slowest, the embers at half its pace,
+            and in the Halloween season the dark closes in (.rb-paranoia). */}
+        <div className="rb-depth-slow absolute inset-0">
+          <div className="rb-vortex" />
+        </div>
         <RiftEmbers />
+        <div className="rb-paranoia absolute inset-0" />
       </div>
 
       {/* NOTHING FLANKS THE HERO, deliberately. Two vertical affiliate rails sat
@@ -133,7 +140,7 @@ export function CinematicHero({
           to center within. The inner container-app div's own `w-full` was
           providing this before there were two nested divs; now both need it. */}
       <div className="w-full pl-[var(--sidenav-w)]">
-      <div className="container-app relative z-10 w-full py-5 text-center sm:py-10">
+      <div className="rb-hero-content container-app relative z-10 w-full py-5 text-center sm:py-10">
         {/* The creators hub, above the fold (2026-10-15, owner): top-right
             corner from sm, a centred pill above the headline on a phone. */}
         <CreatorsCornerBadge />
@@ -145,6 +152,8 @@ export function CinematicHero({
             previously named the site itself at a glance. Reuses BrandLogo
             verbatim (same mark, same mask technique) rather than a new
             asset/component. */}
+        {/* Halloween (until 31 October): "Nocturne is coming". */}
+        <NocturneComing />
         <div className="animate-fade-in [animation-delay:80ms] hidden items-center justify-center gap-2 sm:flex">
           <BrandLogo className="h-8 w-8" />
           <span className="text-lg font-extrabold tracking-tight text-white">

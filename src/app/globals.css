@@ -171,6 +171,25 @@
   --scroll-thumb-hover: #a5b9c4;
 }
 
+/* ── Palette: HALLOWEEN (dark theme only) ────────────────────────────────
+   data-season="halloween" (lib/season.ts, until 31 October) moves the teal
+   night to a violet one: same lightness ramp, so every 4.5:1 guarantee above
+   still holds (tests/season.test.ts measures it; the tightest pair is the
+   loss red on ink-850 at 5.29:1). The light theme keeps its surfaces and only
+   takes the accents further down. */
+:root[data-season="halloween"]:not([data-theme="light"]) {
+  --c-ink-950: 10 8 22;
+  --c-ink-900: 16 12 32;
+  --c-ink-850: 22 17 43;
+  --c-ink-800: 30 23 56;
+  --c-ink-700: 47 37 80;
+  --c-ink-600: 74 60 116;
+  --page-bg: #0c0a1a;
+  --scroll-track: #100c20;
+  --scroll-thumb: #2f2550;
+  --scroll-thumb-hover: #4a3c74;
+}
+
 html,
 body {
   background-color: var(--page-bg);
@@ -961,6 +980,200 @@ body {
 .rb-glow-hover:hover,
 .rb-glow-hover:focus-visible {
   box-shadow: 0 0 0 1px rgb(239 125 0 / 0.35), 0 0 18px rgb(239 125 0 / 0.28);
+}
+
+/* ---------------------------------------------------------------------------
+   Scroll motion (owner, 2026-10-16: "scroll animations … super duper smooth").
+   Scroll-DRIVEN, not scroll-triggered: each animation's progress is the scroll
+   position itself (CSS scroll/view timelines), so the browser runs it on the
+   compositor with no script per frame and it can never lag or stutter behind
+   a fling. Only transform and opacity move. Browsers without scroll timelines
+   (Firefox today) keep the old IntersectionObserver reveal (Reveal.tsx), and
+   reduced motion gets none of it.
+     .rb-hero-content  the hero's words rise and fade as you scroll past;
+     .rb-depth-slow    the vortex sinks behind them (parallax);
+     .rb-depth-mid     the embers, at half that depth;
+     .rb-paranoia      Halloween only: the dark closes in as you scroll on;
+     .rb-sd            a block eases up into place as it enters the screen;
+     .rb-sd-stagger    its direct children follow one another in.
+   --------------------------------------------------------------------------- */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .rb-hero-content {
+      animation: rb-hero-rise linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 70vh;
+    }
+    .rb-depth-slow {
+      animation: rb-depth-slow linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 90vh;
+    }
+    .rb-depth-mid {
+      animation: rb-depth-mid linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 90vh;
+    }
+    .rb-paranoia {
+      animation: rb-paranoia linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 60vh;
+    }
+    /* The block's own visibility is the timeline, named so its children can
+       share it: a horizontal carousel's cards never move vertically inside
+       their own scroller, so a per-card view() would never progress there. */
+    .rb-sd,
+    .rb-sd-stagger {
+      view-timeline-name: --rb-sd;
+    }
+    .rb-sd {
+      animation: rb-sd-in linear both;
+      animation-timeline: --rb-sd;
+      animation-range: entry 0% entry 240px;
+    }
+    .rb-sd-stagger > * {
+      animation: rb-sd-in linear both;
+      animation-timeline: --rb-sd;
+      animation-range: entry 0% entry 240px;
+    }
+    .rb-sd-stagger > :nth-child(2) { animation-range: entry 30px entry 270px; }
+    .rb-sd-stagger > :nth-child(3) { animation-range: entry 60px entry 300px; }
+    .rb-sd-stagger > :nth-child(4) { animation-range: entry 90px entry 330px; }
+    .rb-sd-stagger > :nth-child(5) { animation-range: entry 120px entry 360px; }
+    .rb-sd-stagger > :nth-child(n + 6) { animation-range: entry 150px entry 390px; }
+  }
+}
+@keyframes rb-hero-rise {
+  to { transform: translate3d(0, -64px, 0); opacity: 0.2; }
+}
+@keyframes rb-depth-slow {
+  to { transform: translate3d(0, 120px, 0) scale(1.12); }
+}
+@keyframes rb-depth-mid {
+  to { transform: translate3d(0, 60px, 0); }
+}
+@keyframes rb-paranoia {
+  to { opacity: 1; }
+}
+@keyframes rb-sd-in {
+  /* 26px, the old reveal's offset: MarketSectionNav's jump targets are tuned
+     to it. */
+  from { opacity: 0; transform: translate3d(0, 26px, 0) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Halloween (data-season="halloween", lib/season.ts; until 31 October).
+   "Nocturne is coming": the hero's night turns violet, Nocturne's eyes open
+   in the dark and bats cross it (both RiftEmbers), the dark closes in as you
+   scroll (.rb-paranoia), and a line under the logo sends you to his card.
+   Everything here keys off the attribute, so on 1 November the site is
+   exactly the Riftbound theme again with no deploy.
+   --------------------------------------------------------------------------- */
+.rb-nocturne,
+.rb-paranoia {
+  display: none;
+}
+:root[data-season="halloween"] .rb-paranoia {
+  display: block;
+  opacity: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 40%, transparent 0%, rgb(6 3 14 / 0.55) 55%, rgb(6 3 14 / 0.9) 100%);
+}
+:root[data-season="halloween"][data-theme="light"] .rb-paranoia {
+  background: radial-gradient(ellipse 70% 60% at 50% 40%, transparent 0%, rgb(46 16 101 / 0.12) 60%, rgb(46 16 101 / 0.28) 100%);
+}
+:root[data-season="halloween"]:not([data-theme="light"]) .rb-hero-band {
+  background-image:
+    radial-gradient(ellipse 75% 70% at 50% 0%, #2c1352 0%, rgb(44 19 82 / 0.45) 45%, transparent 78%),
+    linear-gradient(180deg, #150a2a 0%, rgb(21 10 42 / 0.6) 50%, rgb(var(--c-ink-950)) 100%);
+}
+:root[data-season="halloween"][data-theme="light"] .rb-hero-band {
+  background-image: linear-gradient(180deg, #e6dcfa 0%, #f1ecfb 45%, rgb(var(--c-ink-950)) 100%);
+}
+:root[data-season="halloween"] .rb-vortex {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgb(139 92 246 / 0.38) 40deg,
+    transparent 95deg,
+    rgb(239 125 0 / 0.3) 155deg,
+    transparent 210deg,
+    rgb(125 211 252 / 0.16) 270deg,
+    transparent 330deg
+  );
+}
+:root[data-season="halloween"] .rb-flame-live {
+  filter: drop-shadow(0 0 14px rgb(239 125 0 / 0.5)) drop-shadow(0 0 30px rgb(139 92 246 / 0.4));
+}
+/* The R mark flickers like a jack-o'-lantern, sitewide, while it lasts. */
+:root[data-season="halloween"] .rb-mark {
+  animation: rb-lantern 3.4s ease-in-out infinite;
+}
+@keyframes rb-lantern {
+  0%, 100% { filter: drop-shadow(0 0 3px rgb(239 125 0 / 0.55)); }
+  42% { filter: drop-shadow(0 0 7px rgb(239 125 0 / 0.85)); }
+  48% { filter: drop-shadow(0 0 2px rgb(239 125 0 / 0.35)); }
+  56% { filter: drop-shadow(0 0 8px rgb(255 170 60 / 0.9)); }
+}
+:root[data-season="halloween"] .rb-nocturne {
+  display: inline-flex;
+}
+.rb-nocturne {
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(139 92 246 / 0.45);
+  background: rgb(21 10 42 / 0.55);
+  padding: 0.4rem 0.9rem 0.4rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ddd6fe;
+  box-shadow: 0 0 22px rgb(139 92 246 / 0.25);
+  transition: box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease;
+}
+.rb-nocturne:hover,
+.rb-nocturne:focus-visible {
+  border-color: rgb(167 139 250 / 0.85);
+  box-shadow: 0 0 30px rgb(139 92 246 / 0.45);
+  transform: translateY(-1px);
+}
+.rb-nocturne b {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #f5f3ff;
+}
+.rb-nocturne span {
+  color: #c4b5fd;
+  font-weight: 500;
+}
+:root[data-theme="light"] .rb-nocturne {
+  background: rgb(245 243 255 / 0.85);
+  color: #4c1d95;
+  border-color: rgb(109 40 217 / 0.4);
+}
+:root[data-theme="light"] .rb-nocturne b { color: #2e1065; }
+:root[data-theme="light"] .rb-nocturne span { color: #5b21b6; }
+/* Two slanted, glowing eyes that blink. */
+.rb-eyes {
+  display: inline-flex;
+  gap: 4px;
+  transform: translateY(-1px);
+}
+.rb-eyes i {
+  display: block;
+  width: 9px;
+  height: 4px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  box-shadow: 0 0 6px 1px rgb(56 189 248 / 0.9);
+  animation: rb-blink 4.6s ease-in-out infinite;
+}
+.rb-eyes i:first-child { transform: rotate(14deg); }
+.rb-eyes i:last-child { transform: rotate(-14deg); }
+@keyframes rb-blink {
+  0%, 90%, 100% { scale: 1 1; }
+  93% { scale: 1 0.1; }
 }
 
 /* ---------------------------------------------------------------------------
