@@ -401,4 +401,8 @@ export function premiumLockInTail(): string {
 // search-caps-2026-10-15: the allowance loosened to 25 signed out / 100 free / 500
 // Plus / unlimited Premium (owner: traffic and bounce, "be more generous"). The tier
 // table's numbers change with it; nothing else does.
-export const PREMIUM_COPY_VERSION = "search-caps-2026-10-15";
+// signup-card-2026-10-16: the signed-out sign-up card asks from the 2nd page of a
+// visit, not the 4th (owner: "add the sign up slider back to get users to sign
+// up"), the day phones lost most Google ads. A frequency change, so the funnel
+// gets its own era; no plan, price or Premium wording changes.
+export const PREMIUM_COPY_VERSION = "signup-card-2026-10-16";

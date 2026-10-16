@@ -19,7 +19,8 @@ import { usePresence } from "@/lib/motion";
 // card only; the in-page InlineSignupPrompt stays as it was.
 //
 // Built on the same parts as PremiumSlideIn, so the two behave as one system:
-//   - eligible from the visit's 4th page (lib/nudge-gate.ts signupCardEligible),
+//   - eligible from the visit's 2nd page (lib/nudge-gate.ts signupCardEligible;
+//     the 4th until 2026-10-16, owner: "add the sign up slider back"),
 //     never on the sign-in pages, /premium or /pokemon;
 //   - NUDGE_DELAY_MS (12 s) after eligibility, and only at a quiet moment: never
 //     over a dialog, mid-typing or mid-scroll (lib/nudge-runtime.ts armNudge);
@@ -145,7 +146,7 @@ export function SignupSlideIn() {
             <Link
               href={`/login?next=${encodeURIComponent(next)}&src=signup_card`}
               onClick={accept}
-              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-brand-500 px-3 py-2 text-xs font-bold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-brand-500 px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
             >
               Sign up free
             </Link>

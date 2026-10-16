@@ -447,8 +447,10 @@ longer lands on its entry.
   in US dollars and says so. `payment-failures-report` (maintenance) shows why
   Stripe refused a charge. [2026-10-12](../DECISIONS.md#L16892)
 - **Sign-up prompts live in the page, plus one gated corner card (card restored 10-15):**
-  `SignupSlideIn`, signed out only, from the 4th page of a visit, 12 s, once a
-  session, two ✕ and it stops (`signupCardEligible`, `src=signup_card`) [2026-10-15](../DECISIONS.md#L17561).
+  `SignupSlideIn`, signed out only, from the 2nd page of a visit (never the
+  landing page; the 4th until 10-16), 12 s, once a session, two ✕ and it stops
+  (`signupCardEligible`, `src=signup_card`) [2026-10-15](../DECISIONS.md#L17561),
+  [2026-10-16](../DECISIONS.md#L17957). `PREMIUM_COPY_VERSION` `signup-card-2026-10-16`.
   Otherwise (09-30) nothing in the layout asks a signed-out visitor to sign up. `InlineSignupPrompt` is page content, one per page, below
   the first screen, signed-out only after `/api/me` answers: `/browse` (after
   the 12th tile), a priced `/deck`, `/decks/[slug]`, `/movers`,

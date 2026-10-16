@@ -111,10 +111,11 @@ test("the nudge gate's sign-up rules are page-count only (restored 2026-10-15), 
   for (const name of ["signupPromoEligible", "signupEngagedNeededMs", "isLandingPage", "SIGNUP_ENGAGED_MS"]) {
     assert.ok(!(name in gate), `${name} is gone from lib/nudge-gate.ts`);
   }
-  // SignupSlideIn (2026-10-15): from the 4th page, never on sign-in or /premium.
+  // SignupSlideIn (2026-10-15; from the 2nd page since 10-16): never on the
+  // landing page, never on sign-in or /premium.
   const g = gate as unknown as { signupCardEligible: (i: { views: number; pathname: string }) => boolean };
-  assert.equal(g.signupCardEligible({ views: 3, pathname: "/browse" }), false);
-  assert.equal(g.signupCardEligible({ views: 4, pathname: "/browse" }), true);
+  assert.equal(g.signupCardEligible({ views: 1, pathname: "/browse" }), false);
+  assert.equal(g.signupCardEligible({ views: 2, pathname: "/browse" }), true);
   assert.equal(g.signupCardEligible({ views: 9, pathname: "/login" }), false);
   assert.equal(g.signupCardEligible({ views: 9, pathname: "/premium" }), false);
   assert.doesNotMatch(code("src/lib/nudge-runtime.ts"), /useEngaged/, "the engaged-time clock only the popup read is gone");

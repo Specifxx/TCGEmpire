@@ -27,9 +27,10 @@ test("the sign-up card never interrupts a visit's first pages (removed 09-30, re
   // Referrer, device, width: none of them decide anything (they did on 09-24).
   assert.doesNotMatch(code("src/lib/nudge-gate.ts"), /referrer|matchMedia|innerWidth|mobile/i, "the gate has no referrer or device input");
   // RESTORED 2026-10-15 (owner: "bring the sign up now pop up again … gate it
-  // and make it appear after so many pages"): SignupSlideIn, from the 4th page.
+  // and make it appear after so many pages"): SignupSlideIn, from the 4th page;
+  // from the 2nd since 2026-10-16 (owner: "add the sign up slider back").
   assert.doesNotMatch(code("src/lib/nudge-gate.ts"), /signupPromoEligible/, "the old 09-24 gate stays gone");
-  assert.match(code("src/lib/nudge-gate.ts"), /export const SIGNUP_MIN_VIEWS = 4;/, "never before the 4th page of a visit");
+  assert.match(code("src/lib/nudge-gate.ts"), /export const SIGNUP_MIN_VIEWS = 2;/, "never on the page a visit lands on");
 });
 
 test("the Premium slide-in asks later: 3rd page view, a 48-hour-old account, never over an inline paid prompt", () => {

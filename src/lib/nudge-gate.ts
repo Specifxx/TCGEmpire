@@ -70,8 +70,11 @@ export function premiumSlideInEligible({ views, accountAgeMs: age, pathname }: P
 // once a session, two dismissals and it stops for good, 7/14-day snoozes.
 // Reverses 2026-09-30's "The sign-up slider is gone" for this one card.
 
-/** From the 4th page view of a visit: three pages of the site first, then the ask. */
-export const SIGNUP_MIN_VIEWS = 4;
+/** From the 2nd page view of a visit: never on the page someone lands on, so a
+ *  phone visitor from search never meets it first (2026-10-16, owner: "add the
+ *  sign up slider back to get users to sign up"; it was the 4th page, which most
+ *  visits never reach). */
+export const SIGNUP_MIN_VIEWS = 2;
 
 /** Not on the sign-in pages, /premium (its own CTAs), or the Pokémon section (a Riftbound account pitch). */
 export const SIGNUP_SKIP_PATHS = ["/login", "/verify", "/premium", "/pokemon", "/admin"] as const;

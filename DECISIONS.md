@@ -17953,3 +17953,29 @@ Previewed on dark and light header mock-ups at rest and on hover before shipping
 - The intents script adds the class on a phone only, and re-adds it after a reset or on a replacement `<body>`.
 - It is `<body>`'s first child, and the loader stays ungated.
 - The season is put back after `<html>`'s attributes are cleared.
+
+## The sign-up card asks from the 2nd page, not the 4th — 2026-10-16
+
+**Owner**, right after phones lost most Google ads: "After reducing the amount of ads you can add the sign up slider back to get users to sign up and deploy that."
+
+**It was already back, but few ever saw it.** `SignupSlideIn` (restored 2026-10-15, "Premium gets loud") was live and working. In a fresh signed-out phone session on the live site it appeared on the 4th page. But a visit averages about three pages (views per session 2.76–4.12 in the 10-14 search-limit read), so the 4th-page gate kept it from most visitors. A signed-in owner never sees it at all.
+
+**What changed.**
+- `SIGNUP_MIN_VIEWS` is 2: the card can show from a visit's 2nd page.
+- **Still never on the landing page.** That keeps the 2026-09-24 rule ("First visit from Reddit/Discord: no sign-up prompt on the first page"). It also keeps a pop-up off a phone visitor's first page from search, which Google counts as an intrusive interstitial.
+- **Everything else is as on 10-15:**
+  - signed out only, after `/api/me` answers;
+  - 12 s and a quiet moment (`armNudge`), once a session;
+  - a 7-day snooze after ✕, 14 days after a click, and gone for good after two ✕;
+  - never on `/login`, `/verify`, `/premium`, `/pokemon` or `/admin`;
+  - a bottom-left corner card, never a modal.
+- **The ad change is what makes room for it.** On a phone the bottom edge no longer carries Google's ad-intent bar on any page (the entry above). The homepage, Best Basket and the deck builder carry no Google ads at all, so the card no longer competes with a ✕ the visitor has just closed.
+- **"Sign up free" is dark ink on orange** (`text-ink-950`), like the header's Sign up (`.btn-primary`). White on the rebrand's #ef7d00 was about 2.9:1. The light theme keeps it dark through the existing `.bg-brand-500.text-ink-950` rule.
+
+**`PREMIUM_COPY_VERSION` is `signup-card-2026-10-16`.** This is a frequency change, and CURRENT-STATE's "Measure changes" says bump. It also separates the 4th-page day from what follows.
+
+**Checked** locally in Chromium at 390px, signed out: no card on the landing page after 17 s; on the 2nd page the card after its delay; once a session after that. "Sign up free" measured rgb(10, 8, 22) on rgb(239, 125, 0).
+
+**What to watch** (`impact-report`, GA4): `signup_card_shown`, `_click` and `_dismissed`, and `sign_up` with `signupSource` = `signup_card`, against the 10-15 days; pages per visitor and `buy_click`, which a prompt that annoys would cost first. If dismissals swamp clicks, the 3rd page is the next step, not the 4th.
+
+**Delivery.** `[deploy]` at the owner's word ("deploy that"). It also releases the mobile-ads commit above, which was waiting for the daily build.
