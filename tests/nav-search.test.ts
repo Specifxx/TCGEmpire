@@ -54,7 +54,6 @@ const MUST_FIND: [query: string, href: string][] = [
   ["domain", "/domains"],
   ["keyword", "/keywords"],
   ["glossary", "/keywords"],
-  ["2048", "/games/twenty48"],
   ["pack sim", "/games/pack-sim"],
   ["expected value", "/tools/box-ev"],
   ["how to play", "/learn"],

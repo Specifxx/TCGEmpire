@@ -15,12 +15,11 @@ import { cardThumbProps } from "@/lib/card-image-url";
 export const metadata: Metadata = {
   title: "Riftbound Games — Free Daily Puzzles & Arcade",
   description:
-    "Free Riftbound mini-games: Seraphine's Piano (a Radiance rhythm game), Riftle (the daily guess-the-card puzzle), a pack opening simulator, Riftbound 2048, Card Smash, Higher or Lower with live card prices, Price Check and the Zoomed In art quiz. No signup.",
+    "Free Riftbound mini-games: Seraphine's Piano (a Radiance rhythm game), Riftle (the daily guess-the-card puzzle), a pack opening simulator, Card Smash, Higher or Lower with live card prices, Price Check and the Zoomed In art quiz. No signup.",
   keywords: [
     "Riftbound games",
     "Riftle",
     "Riftbound pack simulator",
-    "Riftbound 2048",
     "Riftbound daily game",
     "card price game",
     "higher or lower TCG",
@@ -94,15 +93,6 @@ const GAMES = [
     accent: "from-purple-500/20 to-ink-850",
   },
   {
-    href: "/games/twenty48",
-    name: "Riftbound 2048",
-    tag: "Puzzle",
-    // "all the way to Legend" until 2026-09-26: Legend is a card type, not a
-    // rarity. The game's ladder is the site's real rarities first (Twenty48.tsx).
-    desc: "Slide and merge cards up the rarity ladder — two Commons make an Uncommon, all the way to Ultimate and beyond. Arrow keys or swipe.",
-    accent: "from-cyan-500/20 to-ink-850",
-  },
-  {
     href: "/games/card-smash",
     name: "Card Smash",
     tag: "Reflex",
@@ -151,7 +141,7 @@ export default async function GamesPage() {
     "@type": "ItemList",
     name: "Riftbound Games",
     description:
-      "Free Riftbound mini-games built on live card data — Seraphine's Piano, Riftle, Higher or Lower, Price Check, Zoomed In, Pack Opening Simulator, Riftbound 2048 and Card Smash.",
+      "Free Riftbound mini-games built on live card data — Seraphine's Piano, Riftle, Higher or Lower, Price Check, Zoomed In, Pack Opening Simulator and Card Smash.",
     url: `${SITE_URL}/games`,
       // Edges back to the site-level graph in app/layout.tsx. Without them this
       // node is an island and the Organization/WebSite entity signals — sameAs,

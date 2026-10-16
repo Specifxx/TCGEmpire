@@ -193,7 +193,6 @@ async function core(): Promise<SitemapEntry[]> {
     // serves an empty SPA shell that canonicalises to its own homepage. Rated
     // like the other flagship tools rather than like Riftle.
     { url: `${SITE_URL}/games/pack-sim`, changeFrequency: "weekly", priority: 0.8, lastModified: staticPageDate("/games/pack-sim") },
-    { url: `${SITE_URL}/games/twenty48`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/twenty48") },
     { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/games/card-smash") },
     { url: `${SITE_URL}/games/seraphines-piano`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/seraphines-piano") },
     { url: `${SITE_URL}/games/sealed-bid`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/games/sealed-bid") },

@@ -333,11 +333,20 @@ export default async function HomePage() {
       {/* Today's Top Deals, under the editorial band (2026-10-02). HomeSections
           gets showTopDeals={false} so it appears once. */}
       {/* No <Reveal> wrapper: it is in or near the first screen, where a
-          scroll-in fade would hide real content until hydration. */}
-      {anyDeals && <TodaysTopDeals dealsByCountry={topDealsByCountry} />}
+          scroll-in fade would hide real content until hydration. The .rb-sd
+          wrapper is different: pure CSS, tied to the scroll position, so it
+          needs no hydration and anything already on screen is already in
+          place (globals.css, "Scroll motion"). */}
+      {anyDeals && (
+        <div className="rb-sd">
+          <TodaysTopDeals dealsByCountry={topDealsByCountry} />
+        </div>
+      )}
 
       {/* The price guide, under Top Deals (2026-10-02, owner). */}
-      <PriceGuideCallout totalCards={totalCards} />
+      <div className="rb-sd">
+        <PriceGuideCallout totalCards={totalCards} />
+      </div>
 
 
       {/* REMOVED 2026-09-30: "Riftbound card prices today", the price table
