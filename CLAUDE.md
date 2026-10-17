@@ -58,8 +58,8 @@ So, for automated sessions:
 
 ## Databases
 
-Two Neon projects: operational and history. The live names rotate (RM8 and
-`HISTORY_DATABASE_URL_4` as of 2026-10-14) — `OPERATIONAL_VARS` / the history
+Two Neon projects: operational and history. The live names rotate (RM9 and
+`HISTORY_DATABASE_URL_4` as of 2026-10-17) — `OPERATIONAL_VARS` / the history
 chain in `src/lib/db-chains.ts` are the source of truth, not this file. Both resolve
 through `src/lib/db-chains.ts`; never hand-roll a connection chain in a script
 (`tests/db-chain.test.ts` fails if you do). Free-tier transfer is 5 GB/month

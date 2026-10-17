@@ -60,12 +60,12 @@ jobs:
       # instead of dropping a column on a schedule.
       - name: Sync database schema (additive)
         env:
-          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
           # RM10 is the only operational variable (2026-09-14 cutover — see
           # src/lib/db-chains.ts). Set explicitly because Actions collapses
           # everything into one DATABASE_URL before the job starts, so
           # process.env-based resolution cannot see which secret won.
-          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
         run: |
           if [ -z "${DATABASE_URL:-}" ]; then
             echo "::error::No database URL configured — cannot sync schema."
@@ -79,8 +79,8 @@ jobs:
       - name: Sweep auctions
         id: sweep
         env:
-          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
-          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || 'UNSET' }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
           # eBay is optional — the sweep exits cleanly if these aren't set.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}

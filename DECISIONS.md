@@ -18402,3 +18402,22 @@ It says plainly that Packed Amphitheater (the Ultimate Rare battlefield) was the
 - ISR: `/card/[id]` should show no writes.
 - Edge Requests: card pages with `x-vercel-cache: HIT`.
 - Functions: `/card/[id]` invocations equal to the CDN misses.
+
+## The operational database moves to RM9 — 2026-10-17
+
+Owner: "perform a full migration to RM9 as we are at limit for RM8". RM8 had been live since 2026-10-14, three days, shorter than RM6 and RM7 (five each). The rotation buys days, not a fix; the lever that cuts Neon's transfer is still `PUBLIC_DATA_MODE=files` (`docs/public-data-switchover.md`).
+
+**A name collision first.** RM9 is on its third term (2026-08-23..08-26 and 2026-09-11..09-14), so `maintenance.yml` already held a 2026-09-11 step with the task name `migrate-main-db-rm8-to-rm9` and the step name "Migrate main (operational) database to RM9". Two steps behind one `if: inputs.task == …` would both run. The legacy step was removed and the new one took its name; it is in git history at `1f5528f6`.
+
+**Before touching anything.** `probe-databases` (2026-10-17) found RM9 reachable and behind the live RM8 on every table that holds user data: User 347 vs 483, CollectionCard 1,389 vs 2,602, PriceAlert 204 vs 285, Card 1,431 vs 1,667, RetailerPrice 131,008 vs 183,510; MarketplaceListing, Order and SellerProfile equal (57, 9, 3). It was ahead on one table, SealedListing (2,703 vs 2,684). The task's own comment says to stop and look at any table where the target is ahead. SealedListing is a scrape cache: `importSealed()` deletes and rewrites each store's rows on every run (`src/lib/sealed-import.ts`), so RM9's extra rows were mid-September shop listings that had since been replaced. Nothing unique was lost to `--clean`.
+
+**The task.** `migrate-main-db-rm8-to-rm9`, generated from the RM7 → RM8 step with the names moved one along and checked by `tests/migration-source-target.test.ts`: source RM8, target RM9, the same guards. RM7 → RM8 is relabelled LEGACY. Run from the working branch by `workflow_dispatch`, so the chain head it guards was still RM8.
+
+**The runs.**
+- Pass 1 (05:45 UTC) restored cleanly (`pg_restore` exit 0) but two tables differed at the count: Notification 135 vs 133, SealedListing 2,642 vs 2,682. A `sealed-refresh` run (05:23–05:46) was rewriting listings on RM8 during the copy, and two notifications were written in the same two minutes. The step stops before the schema push on any mismatch, as it should.
+- Pass 2 ran once nothing was importing. All 57 tables matched (User 483, Card 1,667, RetailerPrice 183,510, CollectionCard 2,602, Notification 135, SealedListing 2,642, DemandSnapshot 100,169), and `prisma db push` reported the schema already in sync.
+- Lesson: run the copy between imports. `sealed-refresh` (01:00 and 13:00 UTC), `refresh-prices` (07:00, 19:00) and `refresh-auctions` (every four hours) all start late, so check Actions for an in-progress import before the final pass.
+
+**The flip.** `OPERATIONAL_VARS = ["RM9"]` in `src/lib/db-chains.ts`; `CURRENT_OP` and the production gate in `scripts/build-db-push.sh`; every workflow's `DATABASE_URL`, `OPERATIONAL_URL`, `DB_SOURCE_NAME` and `RM9` forward, including the four workflows added since the last cutover (`ops-monitor`, `promo-art`, `games-report`, `usage-report`); `ci-build.yml`'s service variable; `package.json`'s preview condition; `tests/ops-wiring.test.ts`. A Vercel production build without `RM9` set **fails** (the 2026-10-04 guard), so the previous deployment keeps serving until it is set. Rollback is one commit: RM8 still holds the data.
+
+**Writes in the gap.** Anything written to RM8 between pass 2 and the new build going live is not on RM9: a few minutes of signups, alerts and notifications. Pause admin sends during the cutover.

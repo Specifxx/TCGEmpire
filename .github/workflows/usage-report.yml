@@ -65,7 +65,7 @@ jobs:
           JS
       - name: Rows per table (all time and last 30 days)
         env:
-          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           cat > ./usage-report.tmp.ts <<'TS'
           import { Prisma, PrismaClient } from "@prisma/client";
