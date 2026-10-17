@@ -132,7 +132,7 @@
       "CA": 149726,
       "EU": 65000,
       "UK": 42251,
-      "US": 89766
+      "US": 89699
     },
     "RAD|Booster Pack": {
       "CA": 799,
@@ -201,7 +201,7 @@
       "US": 575
     },
     "SFD|Bulk Runes": {
-      "US": 1250
+      "US": 1200
     },
     "SFD|Bulk Runes Case": {
       "US": 10000
@@ -506,7 +506,7 @@
       "EU": 2480
     },
     "legacyboosterdisplay": {
-      "US": 23949
+      "US": 23947
     },
     "legacyboosterdisplaycase": {
       "US": 141000
