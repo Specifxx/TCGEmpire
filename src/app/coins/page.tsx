@@ -4,17 +4,19 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CoinCollection } from "@/components/coins/CoinCollection";
 import { coinArt } from "@/lib/coins";
 
-// /coins — RiftCompare Coins (2026-10-16, owner, from George's design: "Turn
-// these into virtual coins that premium members can get by completing tasks…
-// Make it gacha"). DECISIONS.md, "RiftCompare Coins". A static shell around a
+// /coins — Riftcoins and Rift Slots. RiftCompare Coins began 2026-10-16 as a
+// Premium gacha (owner, from George's design); on 2026-10-17 it became
+// Riftcoins, a currency every signed-in member earns and spends on the slot (a
+// champion coin and a chance at a profile badge) or a free week of Premium.
+// DECISIONS.md, "RiftCompare Coins" and "Riftcoins". A static shell around a
 // client collection: no database read at render, so the page is cached a day;
-// the member's own coins load from /api/coins.
+// the member's own state loads from /api/coins.
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "RiftCompare Coins: Collect All Twelve Champions",
+  title: "Riftcoins & Rift Slots: Earn Coins, Win Badges, Get Free Premium",
   description:
-    "Premium members earn free pulls by checking in, building a watchlist, sharing prices and inviting friends, then collect twelve champion coins.",
+    "Earn Riftcoins by checking in, playing the arcade and building a watchlist. Spin Rift Slots for champion coins and profile badges, or redeem a free week of Premium.",
   alternates: pageAlternates("/coins"),
   // A member's own page. Not disallowed in robots.txt, so the noindex is read.
   robots: { index: false, follow: true },
@@ -30,16 +32,17 @@ const HERO = [
 export default function CoinsPage() {
   return (
     <div className="container-app max-w-5xl space-y-8 py-6">
-      <Breadcrumbs trail={[{ name: "RiftCompare Coins", href: "/coins" }]} />
+      <Breadcrumbs trail={[{ name: "Riftcoins", href: "/coins" }]} />
 
       <header className="relative overflow-hidden rounded-3xl border border-[#ffcc4d]/20 bg-[#0b0814] px-5 pb-8 pt-10 text-center sm:px-10">
         <div aria-hidden="true" className="sp-aurora pointer-events-none absolute -inset-1/4 bg-[radial-gradient(circle_at_30%_30%,rgba(255,204,77,0.22),transparent_45%),radial-gradient(circle_at_75%_60%,rgba(200,107,255,0.2),transparent_45%)]" />
         <div aria-hidden="true" className="sp-stars pointer-events-none absolute inset-0 opacity-70" />
         <div className="relative">
-          <p className="text-[11px] font-black uppercase tracking-[0.35em] text-[#ffcc4d]">A Premium collection</p>
-          <h1 className="sp-shine mt-2 font-display text-4xl font-black leading-tight sm:text-6xl">RiftCompare Coins</h1>
+          <p className="text-[11px] font-black uppercase tracking-[0.35em] text-[#ffcc4d]">Free for every member</p>
+          <h1 className="sp-shine mt-2 font-display text-4xl font-black leading-tight sm:text-6xl">Riftcoins</h1>
           <p className="mx-auto mt-3 max-w-xl text-sm text-slate-300 sm:text-base">
-            Twelve champions, four rarities. Earn pulls by using the site, pull a coin, and see who answers. Collect the set.
+            Earn Riftcoins by using the site and playing the arcade. Spin Rift Slots for twelve champion coins and six profile badges, or cash in for a free week of
+            Premium.
           </p>
         </div>
         <div aria-hidden="true" className="relative mx-auto mt-6 h-40 max-w-md sm:h-52">

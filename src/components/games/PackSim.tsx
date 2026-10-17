@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { earnArcade } from "@/lib/coins-client";
 import { formatMoney } from "@/lib/format";
 import { RARITIES } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
@@ -93,6 +94,10 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
   const total = pack ? pack.reduce((s, c) => s + (c.priceCents ?? 0), 0) : 0;
   const bestPull = pack && pack.length ? pack.reduce((a, b) => ((b.priceCents ?? 0) > (a.priceCents ?? 0) ? b : a)) : null;
   const allRevealed = pack != null && revealed >= pack.length;
+  // A fully opened pack is a finished game: Riftcoins, once a day (lib/coins-client.ts).
+  useEffect(() => {
+    if (allRevealed) earnArcade("pack-sim");
+  }, [allRevealed]);
 
   // Map to the shared RunRecap shape (it wants a non-null price).
   const recapCards: GameCard[] = (pack ?? []).map((c) => ({

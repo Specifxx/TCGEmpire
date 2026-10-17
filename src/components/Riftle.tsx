@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { earnArcade } from "@/lib/coins-client";
 import { track } from "@vercel/analytics";
 // Import from the server-free shared module — importing the VALUE RIFTLE_HINT_GATES
 // from "@/lib/riftle" dragged prisma into this client bundle and crashed the page
@@ -245,12 +246,12 @@ export function Riftle() {
       setRows(nextRows);
       setInput("");
       if (d.feedback.correct) {
-        setDone("win"); setAnswer(d.card ?? null); persist(nextRows, "win", d.card ?? null); finish(true);
+        setDone("win"); setAnswer(d.card ?? null); persist(nextRows, "win", d.card ?? null); finish(true); earnArcade("riftle");
         track("riftle_finish", { mode, result: "win", guesses: nextRows.length });
       } else if (nextRows.length >= attempts) {
         const revealUrl = mode === "unlimited" && seed ? `/api/riftle?reveal=1&seed=${encodeURIComponent(seed)}` : "/api/riftle?reveal=1";
         const rev = await fetch(revealUrl).then((r) => r.json()).catch(() => null);
-        setDone("lose"); setAnswer(rev?.card ?? null); persist(nextRows, "lose", rev?.card ?? null); finish(false);
+        setDone("lose"); setAnswer(rev?.card ?? null); persist(nextRows, "lose", rev?.card ?? null); finish(false); earnArcade("riftle");
         track("riftle_finish", { mode, result: "lose", guesses: nextRows.length });
       } else {
         persist(nextRows, null, null);

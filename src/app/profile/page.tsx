@@ -9,6 +9,8 @@ import { MyCollection } from "@/components/MyCollection";
 import { ReferralLinkCard } from "@/components/ReferralLinkCard";
 import { REFERRAL_PREMIUM_DAYS } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
+import { equippedBadge } from "@/lib/coins-server";
+import { RiftBadge } from "@/components/coins/RiftBadge";
 
 export const metadata: Metadata = { robots: { index: false } }; // auth/utility — never indexed
 
@@ -18,7 +20,11 @@ export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/profile");
 
-  const account = await prisma.user.findUnique({ where: { id: user.id }, select: { googleId: true, discordId: true } });
+  const [account, badge] = await Promise.all([
+    prisma.user.findUnique({ where: { id: user.id }, select: { googleId: true, discordId: true } }),
+    // The profile badge won on Rift Slots (Riftcoins, 2026-10-17). One row by key.
+    equippedBadge(user.id).catch(() => null),
+  ]);
 
   // Password sign-in was removed; Google and Discord are the only ways in, so a
   // "Password" row here would advertise a method nothing can use. The column is
@@ -41,8 +47,18 @@ export default async function ProfilePage() {
             </div>
           )}
           <div>
-            <h1 className="text-xl font-extrabold text-white">{user.displayName}</h1>
+            <h1 className="flex items-center gap-2 text-xl font-extrabold text-white">
+              {user.displayName}
+              {badge && (
+                <span title={`${badge.name} badge: ${badge.motto}`} className="inline-flex">
+                  <RiftBadge badge={badge} size={28} />
+                </span>
+              )}
+            </h1>
             <p className="text-sm text-slate-400">{user.email}</p>
+            <Link href="/coins" className="mt-1 inline-block text-xs font-bold text-[#ffcc4d] hover:underline">
+              {badge ? "Riftcoins & badges →" : "✦ Earn Riftcoins and win a profile badge →"}
+            </Link>
           </div>
         </div>
         <LogoutButton />

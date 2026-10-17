@@ -37,7 +37,7 @@ export const GRID_LABELS: Record<string, { name: string; detail: string }> = {
   "Full price history — every day since tracking began, with CSV download": { name: "Full price history", detail: "Every day since tracking began, with CSV download" },
   "Graded price tracking — history and new-low alerts for each grade (PSA 10, BGS 9.5…)": { name: "Graded price tracking", detail: "History and alerts for PSA 10, BGS 9.5 and more" },
   "Auction alerts — email when a card you watch has an eBay auction ending within 24 hours": { name: "Auction alerts", detail: "eBay auctions on your cards, ending in 24 hours" },
-  "RiftCompare Coins — earn free pulls and collect twelve champion coins": { name: "RiftCompare Coins", detail: "Earn free pulls and collect twelve champion coins" },
+  "Riftcoins — earned on every task for Rift Slots and a free week of Premium": { name: "Double Riftcoins", detail: "Twice the Riftcoins on every task" },
   "Ad-free experience": { name: "No ads", detail: "The whole site, ad-free" },
 };
 

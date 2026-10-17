@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { earnArcade } from "@/lib/coins-client";
 import { formatMoney } from "@/lib/format";
 import { GameLoading, GameResultExtras, GameShell, RunRecap, cardUrl, useBestScore, useGameCards, useShare, type GameCard, ResultPanel } from "./shared";
 
@@ -91,12 +92,16 @@ export function HigherLower() {
       if (!right) {
         record(streak);
         setPhase("over");
+        earnArcade("higher-lower");
         return;
       }
       const next = streak + 1;
       setStreak(next);
       record(next);
-      if (pos + 1 >= cards!.length) setPhase("beat-deck");
+      if (pos + 1 >= cards!.length) {
+        setPhase("beat-deck");
+        earnArcade("higher-lower");
+      }
       else { setPos(pos + 1); setPhase("guess"); }
     }, REVEAL_MS);
   }

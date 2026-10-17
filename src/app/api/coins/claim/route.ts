@@ -2,21 +2,24 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
-import { CLIENT_CLAIMABLE, type TaskId } from "@/lib/coins";
-import { claimTask, coinsEnabledFor } from "@/lib/coins-server";
+import { ARCADE_GAMES, CLIENT_CLAIMABLE, type TaskId } from "@/lib/coins";
+import { claimTask, coinsEnabledFor, premiumBoost } from "@/lib/coins-server";
 
 export const dynamic = "force-dynamic";
 
-const schema = z.object({ task: z.enum(CLIENT_CLAIMABLE as unknown as [TaskId, ...TaskId[]]) });
+const schema = z.object({
+  task: z.enum(CLIENT_CLAIMABLE as unknown as [TaskId, ...TaskId[]]),
+  game: z.enum(ARCADE_GAMES).optional(),
+});
 
 // POST — claim a task the browser completes (welcome, daily check-in, share a
-// price, visit a store). Every one is capped and idempotent server-side
-// (lib/coins-server.ts claimTask), so a replayed request pays nothing. Sent as
-// a sendBeacon from share and store clicks, hence the text/plain body tolerance.
+// price, visit a store, finish an arcade game). Every one is capped and
+// idempotent server-side (lib/coins-server.ts claimTask), so a replayed request
+// pays nothing. Sent as a sendBeacon from share, store and game-over moments,
+// hence the text/plain body tolerance.
 export async function POST(req: Request) {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
-  if (!coinsEnabledFor(user)) return NextResponse.json({ error: "Coins are a Premium perk" }, { status: 403 });
+  if (!user || !coinsEnabledFor(user)) return NextResponse.json({ error: "Sign in to earn Riftcoins" }, { status: 401 });
 
   const rl = rateLimit(`coins:claim:${user.id}`, 20, 60_000);
   if (!rl.ok) return tooManyRequests(rl.retryAfter);
@@ -25,6 +28,6 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-  const result = await claimTask(user.id, parsed.data.task);
+  const result = await claimTask(user.id, parsed.data.task, premiumBoost(user), { game: parsed.data.game });
   return NextResponse.json({ ok: true, ...result }, { headers: { "Cache-Control": "no-store" } });
 }

@@ -165,8 +165,10 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Full price history — every day since tracking began, with CSV download", account: `Last ${FREE_HISTORY_DAYS} days`, plus: true, premium: true },
   { feature: "Graded price tracking — history and new-low alerts for each grade (PSA 10, BGS 9.5…)", account: false, plus: true, premium: true },
   { feature: "Auction alerts — email when a card you watch has an eBay auction ending within 24 hours", account: false, plus: false, premium: true },
-  // 2026-10-16 (owner): RiftCompare Coins, the Premium collection (lib/coins-server.ts COIN_TIER).
-  { feature: "RiftCompare Coins — earn free pulls and collect twelve champion coins", account: false, plus: false, premium: true },
+  // 2026-10-16 (owner): RiftCompare Coins, then a Premium-only collection. 2026-10-17
+  // (owner): Riftcoins for every signed-in member, Premium earning double
+  // (lib/coins.ts PREMIUM_BOOST). DECISIONS.md, "Riftcoins".
+  { feature: "Riftcoins — earned on every task for Rift Slots and a free week of Premium", account: "Earn 1×", plus: "Earn 1×", premium: "Earn 2×" },
   // Ad-free moved Plus → Premium on 2026-09-14 and back to every paid tier on
   // 2026-09-25 (owner's call — DECISIONS.md, "Plus is ad-free again"): with
   // the half-price intro, $2.49/mo Plus is the entry tier, and "no ads" is

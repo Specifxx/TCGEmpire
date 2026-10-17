@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { earnArcade } from "@/lib/coins-client";
 import {
   ENCORE_GAIN,
   ENCORE_SECONDS,
@@ -417,6 +418,7 @@ export function SeraphinesPiano({ art }: { art: Record<SongId, PianoCardArt | nu
     });
     setEncoreReady(false);
     setPhase("results");
+    earnArcade("seraphines-piano");
     trackEvent("game_complete", {
       game: "seraphines-piano",
       song: run.song.id,

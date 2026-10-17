@@ -18456,3 +18456,45 @@ The code cannot do these: Google documents `data-overlays="bottom"` only to move
 **What to watch:**
 - AdSense mobile page RPM and earnings, against the week before.
 - GA4 pages per visit on phones and `buy_click`, which an unusable phone page costs first.
+
+## Riftcoins: a currency every member earns, spent on Rift Slots and a free week of Premium — 2026-10-17
+
+**Owner:** "people should be able to collect riftcoins / And use them to play the profile badge/coin slot game, or the general games on the site, or get free premium or something". Asked three questions first, and the owner picked:
+- **Who earns:** every signed-in member, not only Premium.
+- **The arcade:** games stay free and *earn* Riftcoins. Charging to play would gate the games behind a sign-in and cut the search traffic they bring.
+- **Free Premium:** about a month of steady daily use buys 7 days, once a month.
+
+**What it is.** RiftCompare Coins (2026-10-16) was a Premium-only gacha: tasks paid pulls, and a pull revealed one of twelve champion coins. It is now built on **Riftcoins**:
+- **Earning.** Every task pays Riftcoins instead of pulls (`TASKS` in `lib/coins.ts`): welcome 50, daily check-in 10, 7-day streak 30, each arcade game finished 5 (once per game per day, four games), watch a card 5 (3/day), share 5 (2/day), visit a store 5 (3/day), referral 100. Premium members earn `PREMIUM_BOOST` (2×) on all of them. That is the Premium perk now, and the tier table row says so ("Earn 1× / 1× / 2×").
+- **Rift Slots.** A spin costs `SPIN_COST` (50). Three reels land on a champion coin, rolled by the unchanged `roll()` with its odds and pity. Each spin also has a 10% chance at one of six **profile badges**, one per Riftbound domain, with a pity of 15 spins, and a badge you don't have always comes before a repeat. A pull left from the old tasks still buys a spin, and so do 10 shards. A repeat badge pays 3 shards.
+- **Profile badge.** A member equips one badge it has won (`/api/coins/badge`). It shows beside the name on `/profile`. Badges are SVG (`components/coins/RiftBadge.tsx`), so no art was needed.
+- **Free Premium.** `PREMIUM_REDEEM_COST` (1,200) buys `PREMIUM_REDEEM_DAYS` (7) through `grantPremiumDays`, once per calendar month (`CoinTask` task `redeem`, key `YYYY-MM`). Steady use earns about 35–45 a day, so that is about a month (`tests/coins.test.ts` pins 25–40 days steady, and at least 14 with every cap hit).
+
+**Only for accounts without a paid plan (Plus included).** Stripe renewals only ever extend `premiumUntil` (`extendedPremiumUntil`), so days redeemed on top of a subscription would mostly vanish inside the period already being paid for. Offering them would be a button that quietly does nothing. A Plus member would also keep the Plus tier, because `grantPremiumDays` keeps an active tier. A member on a paid plan sees "spend your Riftcoins on spins instead".
+
+**The rule that keeps this a game, not gambling.** Earlier: "a paid pull would turn a collection into a loot box". The same reasoning now covers the slot:
+- Riftcoins come only from doing things. They are never sold and never won at random.
+- A spin pays only collectibles (coins, badges, shards), never Riftcoins and never Premium. Shards only buy spins.
+- So nothing of value is ever won by chance, and nothing random is ever paid for with money. `tests/coins.test.ts` fails if `spin()` increments Riftcoins or calls `grantPremium`, or if payment code appears in any coin file. Don't add a Riftcoin payout to the slot, and don't sell Riftcoins.
+
+**Idempotent and race-safe, as before.**
+- Every reward is a `CoinTask` row plus a wallet increment in one batch. The arcade key is `<day>:<game>`, so replaying a game pays nothing.
+- A spin is an `updateMany` conditional on the `pullsMade` it read and on the balance it spends.
+- A redemption is the month's row plus a conditional debit (`where riftcoins >= cost`) in one transaction. A second one fails on the key, a short balance on the debit, and a failed grant refunds.
+
+**Arcade hooks.** `earnArcade(game)` (`lib/coins-client.ts`) is called at each game-over moment: Higher or Lower when the run ends or the deck is beaten, Pack Sim's effect on a fully opened pack, Seraphine's Piano's `finish()`, and Riftle's win and lose lines. Riftle's are not in its restore path, so reloading a finished day doesn't claim again. Like share and visit, it sends a beacon only for a signed-in member (`/api/me`), and only once per game per day from local storage. The server's key is the rule.
+
+**Schema (additive; the build's `prisma db push` applies it).**
+- `CoinWallet`: `riftcoins`, `sinceBadge`, `badge`.
+- `CoinTask`: `riftcoins` (and `pulls` now defaults to 0).
+- New `BadgeOwned (userId, badgeId)`.
+- All private, none in `PUBLIC_MODELS`.
+
+**Egress.** Unchanged in kind: one member's rows by key. `/coins` is still a static shell cached a day. `/profile` adds one wallet row by key.
+
+**Checked in a browser** (dev server, the member's API responses faked) at 1280px and 390px: idle reels, the blurred spin, reels landing, the reveal with "New profile badge", badges with "Show on profile", and the Premium card stacked on a phone.
+
+**Not done.**
+- A public profile page, so for now a badge is seen only by its owner on `/profile`.
+- An ops-monitor check. There is no external service or limit behind this.
+- A leaderboard.

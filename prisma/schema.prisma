@@ -1987,6 +1987,14 @@ model CoinWallet {
   streak         Int      @default(0)
   // The UTC day ("2026-10-16") of the last check-in.
   lastCheckIn    String?
+  // Riftcoins (2026-10-17): the currency every member earns from tasks and
+  // games, spent on spins and on a week of Premium. Never bought, never won at
+  // random (lib/coins.ts, "THE RULE THAT KEEPS THIS A GAME").
+  riftcoins      Int      @default(0)
+  // Spins since the last profile badge (the badge pity counter).
+  sinceBadge     Int      @default(0)
+  // The badge shown on the member's profile (a BADGES id), or none.
+  badge          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
@@ -1999,7 +2007,10 @@ model CoinTask {
   userId    String
   task      String
   key       String
-  pulls     Int
+  // Pulls paid (the 2026-10-16 tasks) or Riftcoins paid (from 2026-10-17);
+  // a Premium redemption records the Riftcoins it spent as a negative.
+  pulls     Int      @default(0)
+  riftcoins Int      @default(0)
   createdAt DateTime @default(now())
 
   @@unique([userId, task, key])
@@ -2014,4 +2025,13 @@ model CoinOwned {
   firstAt DateTime @default(now())
 
   @@id([userId, coinId])
+}
+
+// The profile badges a member has won on the slot (six rows at most).
+model BadgeOwned {
+  userId  String
+  badgeId String
+  firstAt DateTime @default(now())
+
+  @@id([userId, badgeId])
 }

@@ -626,10 +626,13 @@ longer lands on its entry.
   ([2026-10-16](../DECISIONS.md#L18131)). Real anchor ads and the in-page ad cap are
   AdSense console settings (anchor "Top only" or off keeps a card page's Buy
   bar clear). [2026-10-16](../DECISIONS.md#L17916)
-- **RiftCompare Coins (`/coins`) are free and Premium-only:** tasks earn pulls,
-  a server-side roll reveals one of twelve coins (odds and pity printed on the
-  page), and nothing about them is ever sold. Every reward is idempotent on
-  `CoinTask`'s unique key. [2026-10-16](../DECISIONS.md#L17866)
+- **Riftcoins (`/coins`) are for every signed-in member, Premium earning 2×:**
+  tasks and finished arcade games pay Riftcoins; Riftcoins buy Rift Slots spins
+  (a champion coin, odds and pity printed, plus a chance at a profile badge) or
+  7 days of Premium once a month for accounts without a paid plan. Riftcoins are
+  never sold and never won: a spin pays only coins, badges and shards. Every
+  reward is idempotent on `CoinTask`'s unique key. [2026-10-16](../DECISIONS.md#L17866),
+  [2026-10-17](../DECISIONS.md#L18460)
 - **The arcade's line-up is chosen by data:** `games-report.yml` (dispatch-only)
   gives each game's search clicks and players; the two weakest (Card Rain,
   Pairs) were replaced by Seraphine's Piano, a Radiance rhythm game timed on
