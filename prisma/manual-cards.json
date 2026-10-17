@@ -112,7 +112,9 @@
     "isPromo": false,
     "energyCost": 4,
     "might": 4,
-    "description": "When you attach an Equipment to me, choose one that hasn't been chosen this turn —\n- Ready 2 runes.\n- Channel 1 rune exhausted.\n- [Buff] a friendly unit."
+    "description": "When you attach an Equipment to me, choose one that hasn't been chosen this turn —\n- Ready 2 runes.\n- Channel 1 rune exhausted.\n- [Buff] a friendly unit.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/aphelios-exalted-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/aphelios-exalted-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-180-ezreal-dashing",
@@ -172,7 +174,9 @@
     "isPromo": false,
     "energyCost": 5,
     "might": 5,
-    "description": "[Weaponmaster]\nWhen I conquer a battlefield that was uncontrolled, deal damage equal to my Might to an enemy unit in a base."
+    "description": "[Weaponmaster]\nWhen I conquer a battlefield that was uncontrolled, deal damage equal to my Might to an enemy unit in a base.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/yone-blademaster-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/yone-blademaster-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-182-kayn-unleashed",
@@ -202,7 +206,9 @@
     "isPromo": false,
     "energyCost": 6,
     "might": 6,
-    "description": "[Ganking]\nIf I have moved twice this turn, I don't take damage."
+    "description": "[Ganking]\nIf I have moved twice this turn, I don't take damage.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/kayn-unleashed-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/kayn-unleashed-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-183-sett-kingpin",
@@ -4425,7 +4431,9 @@
     "isPromo": false,
     "energyCost": null,
     "might": null,
-    "description": "Units you play to battlefields you control enter ready."
+    "description": "Units you play to battlefields you control enter ready.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/riven-the-exile-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/riven-the-exile-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-177-ekko-revolutionary",
