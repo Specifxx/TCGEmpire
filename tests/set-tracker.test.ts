@@ -9,6 +9,7 @@ import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { freeLimitPitch } from "../src/components/FreeLimitPanel";
 import { isPreorderSetCode } from "../src/lib/constants";
 import { numberWithoutTotal } from "../src/lib/set-scope";
+import { TICK_ROWS, hasTick } from "../src/components/PremiumTicks";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE SET TRACKER'S WIRING (2026-09-29, DECISIONS.md, "Set tracker"): the
@@ -163,10 +164,12 @@ test("/portfolio links to the checklist, and the tier table row is the enforced 
   assert.ok(row);
   assert.deepEqual([row.account, row.plus, row.premium], [`Up to ${FREE_PORTFOLIO_LIMIT} cards`, "Whole sets, no limit", "Whole sets, no limit"]);
   assert.match(read("src/components/PremiumSlideIn.tsx"), /\{ label: "Set tracker" \}/);
+  // /premium (2026-10-17): the ticks row says the limit goes on a paid tier, and
+  // the first FAQ answer says the set checklist is free.
   const premium = read("src/app/premium/page.tsx");
-  assert.match(premium, /text: "No watchlist or portfolio limit, so whole sets fit"/, "the What you get line for Plus");
-  assert.match(premium, /text: "Set checklist: what's missing, cheapest listing to finish"/, "the free set checklist line");
-  assert.match(premium, /q: "Do I have to pay to see what my set is missing\?"/);
+  const unlimited = TICK_ROWS.find((r) => r.name === "Unlimited watchlist & portfolio")!;
+  assert.deepEqual((["free", "plus", "premium"] as const).map((t) => hasTick(unlimited.from, t)), [false, true, true]);
+  assert.match(premium, /q: "What's free\?"[\s\S]{0,300}a set checklist/, "the free set checklist");
 });
 
 test("the price guide row and the tile carry the tick, and only when the set is open", () => {

@@ -21,7 +21,7 @@ import {
 import { PremiumPricingCards } from "@/components/PremiumPricingCards";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { SubscriptionActions } from "@/components/SubscriptionActions";
-import { PremiumMissingGrid } from "@/components/PremiumMissingGrid";
+import { PremiumTicks } from "@/components/PremiumTicks";
 import { cookies } from "next/headers";
 import { CreatorCodeBox } from "@/components/CreatorCodeBox";
 import { findActiveAffiliate } from "@/lib/creator-affiliate";
@@ -53,7 +53,6 @@ import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { faqPage, ldJson } from "@/lib/jsonld";
 import { PremiumRecoveryBeacon } from "@/components/PremiumRecoveryBeacon";
-import { PremiumProofLine } from "@/components/PremiumProofLine";
 
 export const dynamic = "force-dynamic";
 
@@ -63,44 +62,10 @@ export const metadata: Metadata = {
   alternates: pageAlternates("/premium"),
 };
 
-// WHAT YOU GET (2026-09-29, owner: "way too wordy now"). One line per feature, in
-// plain words, grouped by the tier that FIRST includes it. It replaced the four
-// persona sections and the eleven per-feature paragraph cards (about 2,600
-// words); the table below has the full accounting and the FAQ the definitions.
-// Every number is the enforced constant (free-limits.ts, alert-limits.ts), never
-// typed. Nothing here predicts a price, names a saving, counts down or says
-// "worth": the only saving figure on the site is Best Basket's own computed one
-// on the viewer's own list. A feature is listed only when it is live. `href` is
-// where a MEMBER who has the feature can open it (never a wall: a Plus member is
-// not linked to a Premium tool); a visitor who has not bought sees plain text.
-type WhatYouGet = { text: string; href: string; tier: "free" | "plus" | "premium" };
-const WHAT_YOU_GET: WhatYouGet[] = [
-  { tier: "free", text: "Compare prices across every store, always free", href: "/browse" },
-  { tier: "free", text: `Watch ${FREE_WATCHLIST_LIMIT} cards, with weekly new-low emails`, href: "/watching" },
-  { tier: "free", text: `Portfolio of ${FREE_PORTFOLIO_LIMIT} cards, with its replacement cost`, href: "/portfolio" },
-  { tier: "free", text: "Set checklist: what's missing, cheapest listing to finish", href: "/portfolio/sets" },
-  { tier: "free", text: "Top 3 of Deal Finder and Rising Cards", href: "/tools/deal-finder" },
-  { tier: "free", text: "Deck pricer, trade calculator and box EV", href: "/deck" },
-  { tier: "free", text: "Best Basket: your own list's total", href: "/tools/best-basket" },
-  { tier: "plus", text: "No ads, on the website and in the app", href: "/dashboard" },
-  { tier: "plus", text: "No watchlist or portfolio limit, so whole sets fit", href: "/portfolio/sets" },
-  { tier: "plus", text: `Target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards`, href: "/watching" },
-  { tier: "plus", text: `Sealed watches for ${SEALED_WATCH_LIMIT_PLUS} products: restock, RRP, your price`, href: "/sealed" },
-  { tier: "plus", text: "Full Deal Finder and Rising Cards lists", href: "/tools/deal-finder" },
-  { tier: "premium", text: "Unlimited target-price alerts and sealed watches", href: "/watching" },
-  { tier: "premium", text: `Deck price watch: ${DECK_WATCH_LIMIT} saved lists, emailed at your price`, href: "/tools/best-basket" },
-  { tier: "premium", text: "Best Basket: which store to buy each card from", href: "/tools/best-basket" },
-  { tier: "premium", text: "Finish this set: a store plan for what's missing", href: "/portfolio/sets" },
-  { tier: "premium", text: "Minimum condition, so no heavily played copies", href: "/tools/best-basket" },
-  // Demand Finder stays Premium but sits last and is described as what it counts:
-  // searches, never "what to buy before it spikes" (2026-09-29, the personas pass).
-  { tier: "premium", text: "Demand Finder: what players search for and open most", href: "/tools/demand" },
-];
-
 // The Product JSON-LD's per-tier descriptions: each names only what that tier
 // really gets (TIER_COMPARISON's rows), so a rich result can't credit Plus
 // with Premium's list tools or leave its ad-free benefit out.
-const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio (so a whole set fits in the set tracker), target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP or at your price, checked ${SEALED_CHECK_CADENCE}), and the full Deal Finder and Rising Cards lists.`;
+const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio (so a whole set fits in the set tracker), target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP in ${SEALED_RRP_MARKETS}, or at your price, checked ${SEALED_CHECK_CADENCE}), and the full Deal Finder and Rising Cards lists.`;
 const PREMIUM_OFFER_DESCRIPTION = `Premium: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, Best Basket's store-by-store plan for the cheapest delivered order (at the minimum condition you set), Buy this list for a deck, watchlist or binder, the store-by-store plan for what a set is missing, and Demand Finder's most searched and most viewed cards.`;
 const PREMIUM_STANDALONE_DESCRIPTION =
   "No ads on any page, an unlimited watchlist and portfolio, target-price alerts, sealed watches, a deck price watch, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.";
@@ -110,20 +75,18 @@ const PREMIUM_STANDALONE_DESCRIPTION =
 // account never disagree on how a date reads.
 const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 
-// The FAQ, seven questions and answers of about forty words (2026-09-29, owner:
-// "way too wordy"; it was twenty-odd questions and ~2,000 words). The Plus/Premium
-// definitions moved into the "What you get" list, one line each. Every answer is
-// built from the SAME site.ts / premium.ts / limits constants the rest of the page
-// uses, never a second hand-typed copy, so a price or limit change can't leave
-// this FAQ quietly wrong. Rendered visibly AND as FAQPage JSON-LD from THIS array
-// (Google honours the schema only when the same Q&A is on the page). The three
-// questions behind a switch (a trial, the half-price offer, an announced price
-// rise) exist only while that switch is on, so they are the disclosure for it and
-// the live page carries seven.
+// The FAQ (2026-10-17, owner: "way too convoluted… seventy percent simpler"):
+// four questions, plus the ones that exist only while their switch is on (a
+// trial, the half-price offer, an announced price rise), which are the
+// disclosure for it. What each plan includes is the ticks table, said once, so
+// no answer here restates a plan. Every answer is built from the SAME site.ts /
+// premium.ts / limits constants the rest of the page uses, and it is rendered
+// visibly AND as FAQPage JSON-LD from THIS array (Google honours the schema only
+// when the same Q&A is on the page).
 const FAQ: { q: string; a: string }[] = [
   {
-    q: "I'm new — what do I actually get?",
-    a: `Price comparison is free for everyone, with no limit. A free account adds a watchlist (${FREE_WATCHLIST_LIMIT} cards), a portfolio (${FREE_PORTFOLIO_LIMIT}) and a set checklist. Plus and Premium watch prices for you and email when your number is met.`,
+    q: "What's free?",
+    a: `Comparing prices is free for everyone, with no limit. A free account adds a watchlist (${FREE_WATCHLIST_LIMIT} cards), a portfolio (${FREE_PORTFOLIO_LIMIT}) and a set checklist.`,
   },
   ...(premiumTrialEnabled()
     ? [
@@ -154,24 +117,8 @@ const FAQ: { q: string; a: string }[] = [
     }.`,
   },
   {
-    q: "Is Plus really ad-free?",
-    a: `Yes. Plus and Premium both remove every ad, on the website and in the app, from the moment you subscribe${premiumPlusEnabled() ? `. At ${tierMonthlyAmount("plus")}/mo Plus is the cheapest way to browse without ads` : ""}.`,
-  },
-  {
     q: "What happens to cards I already track?",
     a: `You keep them all. The free limits (${FREE_WATCHLIST_LIMIT} watched cards, ${FREE_PORTFOLIO_LIMIT} portfolio cards) only stop you adding a NEW card, and nothing is deleted if a subscription ends. Only a new card needs ${premiumPlusEnabled() ? "Plus" : "Premium"}.`,
-  },
-  {
-    q: "Do I have to pay to see what my set is missing?",
-    a: `No. A free account can tick up to ${FREE_PORTFOLIO_LIMIT} cards, see its progress and the missing list, and export it. Plus removes the ${FREE_PORTFOLIO_LIMIT}-card limit so a whole set fits.`,
-  },
-  {
-    q: "What does minimum condition do?",
-    a: "Premium only. Best Basket, Buy this list and the deck price watch use just the listings at or above the grade you choose. A card with none in stock at that grade shows as not covered.",
-  },
-  {
-    q: "Do you predict prices or tell me when to buy?",
-    a: "No. Rising Cards and Deal Finder show what stores charge today, and Demand Finder shows what people are searching for. Watches only tell you when a price, restock or listing matches something you set.",
   },
   // Only while a real, higher price is announced (2026-09-26): with none
   // decided, the old answer ("the price goes up as the site grows, your rate
@@ -295,69 +242,40 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         }}
       />
 
-      {/* PLANS FIRST (2026-09-29, owner: "way too wordy now and the buttons to get
-          premium are at the bottom of the page and you have to scroll"). Above
-          the fold, in this order: one line, one short subline, the Monthly /
-          Annual toggle (monthly by default) and the two plan cards with their
-          buy buttons, at 390x844 and at 1280x720. Nothing else sits between the
-          heading and the buttons for a visitor who has not bought: no chip, no
-          second subline, no proof line, no persona section. What you get, the
-          table and the FAQ follow, compact, below. A member sees their own tier
-          and account card in this same spot instead of the cards. The hero says
-          what is free before what is paid and quotes no price or saving figure. */}
+      {/* 70% SIMPLER (2026-10-17, owner: "way too convoluted… a lot of double up
+          on information… what's really useful is the comparison of the ticks and
+          the crosses"). DECISIONS.md, "/premium, 70% simpler". For a visitor who
+          has not bought, in this order: one line, one subline, the Monthly /
+          Annual toggle, the two plan cards with their buy buttons, the ticks
+          table (inside PremiumPricingCards, so the toggle drives its prices),
+          the creator code, three short questions. The "What you get" list, the
+          what-you're-missing grid with its captions and half marks, the proof
+          line and the second copy of the fine print all went: the table says
+          what each plan includes, once. A member sees their own tier and
+          account card in this same spot instead of the cards. The hero says
+          what is free before what is paid and quotes no price or saving figure.
+
+          google-anno-skip keeps Google's ad-intent chips out of the sales copy
+          (ad-free-boot.ts, AD_INTENTS_SKIP_CLASS). */}
+      <div className="google-anno-skip">
       <div className="text-center">
         <h1 className="font-display text-2xl font-extrabold leading-tight text-white sm:text-4xl">
           {already ? `You're ${TIER_NAMES[currentTier ?? "premium"]}` : "Know what you're missing. Buy it for less."}
         </h1>
-        <p className="mx-auto mt-2 max-w-2xl text-sm leading-snug text-slate-300 sm:mt-3 sm:text-base">
+        <p className="mx-auto mt-2 max-w-xl text-sm leading-snug text-slate-300 sm:mt-3 sm:text-base">
           {already
-            ? "Everything you've unlocked is below. Thanks for supporting RiftCompare."
+            ? "Thanks for supporting RiftCompare."
             : plusLive
-            ? "Comparing prices and searching are free. Plus and Premium keep longer price history and watch prices and stock for you, ad-free."
-            : "Comparing prices and searching are free. Premium keeps the full price history and watches prices and stock for you, ad-free."}
+            ? "Comparing prices is free. Plus and Premium remove the ads and watch prices for you."
+            : "Comparing prices is free. Premium removes the ads and watches prices for you."}
         </p>
       </div>
 
-      {/* WHAT YOU'RE MISSING, FIRST (2026-10-15, owner: "we need to show what
-          users are missing out on at the very top so like the ticks and crosses
-          must be visible as well as formatted nicely on a phone screen"). This
-          reverses "plans first" (2026-09-29) for the grid only: the ticks and
-          crosses come straight after the hero, the plan cards straight after
-          them. The visitor's own column says "You". Not shown to a Premium
-          member, who has every tick. */}
-      {currentTier !== "premium" && (
-        <section className="mt-4 sm:mt-6" aria-labelledby="whats-missing">
-          <h2 id="whats-missing" className="mb-2 text-center text-base font-extrabold text-white sm:text-lg">
-            {currentTier === "plus" ? "What Premium adds" : user ? "What your free account is missing" : "What you're missing"}
-          </h2>
-          <PremiumMissingGrid
-            you={currentTier === "plus" ? "plus" : "free"}
-            showPlus={plusLive}
-            plusPrice={tierMonthlyAmount("plus")}
-            premiumPrice={PREMIUM_PRICE_AMOUNT}
-          />
-        </section>
-      )}
-
-      {/* Pricing */}
-      {/* THE LOCK-IN BANNER: only while a real, higher price is announced
-          (premiumPriceIncreaseAnnounced — NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT
-          set above today's price), and now BELOW the cards so it can never push
-          the buttons off the first screen. From 2026-09-22 it rendered in both
-          states, the steady one saying "the price goes up as the site grows,
-          your rate doesn't". On 2026-09-26 the owner CUT the price and moved
-          existing subscribers down onto the new Prices, so that copy promised
-          protection from a rise nobody had decided — retired, see lib/site.ts's
-          lock-in block and DECISIONS.md, 2026-09-26.
-
-          It stays inside the `!already` gate: someone who is already a member
-          has nothing to "lock in", and the banner would read as a threat to
-          the rate they already hold. */}
       {!already && (
         <>
           {/* /dashboard and MoversToolsCta link here. scroll-mt-header is the
               header-aware anchor offset (globals.css). */}
-          <div id="top-pricing" className="scroll-mt-header mt-3 sm:mt-6">
+          <div id="top-pricing" className="scroll-mt-header mt-5 sm:mt-7">
             <PremiumPricingCards
               plusLive={plusLive}
               plusAnnualLive={plusAnnualLive}
@@ -386,26 +304,20 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         </>
       )}
 
-      {!already && (
-        <>
-          {premiumPriceIncreaseAnnounced() && (
-            <div className="mx-auto mt-4 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
-              <p className="text-sm font-bold text-gold">{premiumLockInHeadline()}</p>
-              <p className="mt-1 text-xs text-gold/80 [[data-theme=light]_&]:text-gold">
-                New subscribers will pay {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} once the change takes
-                effect. Subscribe today and keep {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for as long as your
-                subscription stays active — no action needed later.
-              </p>
-            </div>
-          )}
-          {premiumPriceIncreaseAnnounced() && (
-            <p className="mx-auto mt-1 max-w-2xl text-center text-[11px] font-medium text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
-          )}
-
-          {/* Client island, renders nothing until it resolves — see its own
-              comment. Below the cards, so its arrival never moves a button. */}
-          <PremiumProofLine />
-        </>
+      {/* THE LOCK-IN BANNER: announced-only, below the cards, never to a
+          member (DECISIONS.md, 2026-09-26). */}
+      {!already && premiumPriceIncreaseAnnounced() && (
+        <div className="mx-auto mt-4 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
+          <p className="text-sm font-bold text-gold">{premiumLockInHeadline()}</p>
+          <p className="mt-1 text-xs text-gold/80 [[data-theme=light]_&]:text-gold">
+            New subscribers will pay {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} once the change takes
+            effect. Subscribe today and keep {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for as long as your
+            subscription stays active — no action needed later.
+          </p>
+        </div>
+      )}
+      {!already && premiumPriceIncreaseAnnounced() && (
+        <p className="mx-auto mt-1 max-w-2xl text-center text-[11px] font-medium text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
       )}
 
       {/* Your subscription — real account detail, not just "you're Premium".
@@ -505,69 +417,19 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         </div>
       )}
 
-      {/* WHAT YOU GET — one line per feature, grouped by the tier that first
-          includes it, two columns from sm up. Replaces the persona sections and
-          the per-feature cards (owner, 2026-09-29). */}
-      <section className="mt-8" aria-labelledby="what-you-get">
-        <h2 id="what-you-get" className="mb-3 text-center text-lg font-extrabold text-white">What you get</h2>
-        <div className="space-y-4">
-          {(plusLive
-            ? (["free", "plus", "premium"] as const)
-            : (["free", "premium"] as const)
-          ).map((group) => {
-            const items = WHAT_YOU_GET.filter((f) => (plusLive ? f.tier === group : group === "free" ? f.tier === "free" : f.tier !== "free"));
-            const heading =
-              group === "free"
-                ? "Free account"
-                : `${TIER_NAMES[group]} · ${tierMonthlyAmount(group)}/mo`;
-            const includes = group === "free" ? (user ? "" : "no card needed") : group === "plus" ? "everything in Free, and" : plusLive ? "everything in Plus, and" : "everything in Free, and";
-            return (
-              <div key={group} className="card-surface rounded-xl border border-ink-700 p-3 sm:p-4">
-                <div className="mb-2 flex flex-wrap items-baseline gap-x-2">
-                  <h3 className={`text-sm font-extrabold ${group === "premium" ? "text-gold" : "text-white"}`}>{heading}</h3>
-                  <span className="text-xs text-slate-500">{includes}</span>
-                  {group === "free" && !user && (
-                    <Link href="/login?next=/premium" className="ml-auto text-xs font-semibold text-brand-400 hover:underline">
-                      Create a free account →
-                    </Link>
-                  )}
-                </div>
-                <ul className="grid grid-cols-1 gap-x-6 gap-y-1.5 text-[13px] text-slate-300 sm:grid-cols-2">
-                  {items.map((f) => {
-                    const canOpen = already && (f.tier !== "premium" || currentTier !== "plus");
-                    return (
-                      <li key={f.text} className="flex items-start gap-2 [font-feature-settings:'lnum'_1]">
-                        <span className={`font-bold ${group === "premium" ? "text-gold" : "text-brand-400"}`}>✓</span>
-                        {canOpen ? (
-                          <Link href={f.href} className="hover:text-white hover:underline">{f.text}</Link>
-                        ) : (
-                          <span>{f.text}</span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
-        <p className="mt-3 text-center text-xs text-slate-500">
-          RRP is the price Riot sets, shown for {SEALED_RRP_MARKETS}. Delivered means item price plus postage. Sealed products are
-          checked {SEALED_CHECK_CADENCE}.
-        </p>
-      </section>
-
-      {/* The collapsed full-feature table went on 2026-10-15: the
-          grid at the top is the comparison now. */}
+      {/* A Plus member sees what Premium adds, as the same ticks. */}
+      {already && currentTier === "plus" && (
+        <section className="mx-auto mt-8 max-w-3xl" aria-label="What Premium adds">
+          <PremiumTicks showPlus prices={{ plus: `${tierMonthlyAmount("plus")}/mo`, premium: `${PREMIUM_PRICE_AMOUNT}/mo` }} you="plus" selected="premium" />
+        </section>
+      )}
 
       {/* FAQ — rendered visibly (not just as JSON-LD above) so Google honours
-          the FAQPage markup. Collapsed, every answer a few lines. */}
+          the FAQPage markup. p-3 sits on the <summary>, so the whole card is the
+          toggle (2026-09-23). */}
       <section className="mt-8" aria-labelledby="premium-faq">
         <h2 id="premium-faq" className="mb-3 text-center text-lg font-extrabold text-white">Questions</h2>
         <div className="mx-auto max-w-2xl space-y-2">
-          {/* p-3 sits on the <summary>, not the <details>, so the whole card is
-              the toggle: a tap in the padding band used to hit the details box
-              and do nothing (2026-09-23). The native marker stays. */}
           {FAQ.map((f) => (
             <details key={f.q} className="card-surface rounded-xl border border-ink-700">
               <summary className="cursor-pointer p-3 text-sm font-semibold text-white">{f.q}</summary>
@@ -575,30 +437,18 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
             </details>
           ))}
         </div>
-        <p className="mt-3 text-center text-xs text-slate-500">
-          Every feature in detail:{" "}
-          <Link href="/blog/riftcompare-premium-explained" className="text-brand-400 hover:underline">
-            RiftCompare Plus and Premium, explained
-          </Link>
-          .
-        </p>
       </section>
 
       {/* Footer note */}
       <p className="mx-auto mt-6 max-w-xl text-center text-xs leading-relaxed text-slate-500">
         {already ? (
           <>Update your card or cancel anytime via &ldquo;Manage subscription&rdquo; above. </>
-        ) : trialAvailable ? (
-          <>
-            The {PREMIUM_TRIAL_FEE_CENTS > 0 ? `${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} trial` : "free trial"} needs a card and converts to the plan you picked
-            {plusLive ? <> — {tierMonthlyAmount("plus")}/{PREMIUM_PRICE_PERIOD} for Plus, {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for Premium</> : <> ({PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD})</>}
-            {" "}after {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} unless you cancel first
-            {introEligible ? <> — at half price for the first {INTRO_MONTHS} months on a monthly plan</> : null}. We email
-            you a day or two before you&apos;re charged.{" "}
-          </>
         ) : null}
-        <Link href="/contact" className="text-slate-400 hover:underline">Questions? Get in touch</Link>.
+        <Link href="/blog/riftcompare-premium-explained" className="text-slate-400 hover:underline">Every feature, explained</Link>
+        {" · "}
+        <Link href="/contact" className="text-slate-400 hover:underline">Get in touch</Link>
       </p>
+      </div>
     </div>
   );
 }

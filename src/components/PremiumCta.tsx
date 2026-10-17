@@ -129,7 +129,9 @@ export function PremiumCta({
             {trialButtonLabel(trialDays, trialFeeCents)}&nbsp;→
           </Link>
           <p className="mt-2 text-[11px] leading-snug text-slate-400">
-            Create a free account in one tap — no card needed for that. {trialDisclosure(trialDays, trialFeeCents, thenPrice)}
+            {/* compact: the page says "sign in on the next screen" once, under both cards. */}
+            {compact ? null : "Create a free account in one tap — no card needed for that. "}
+            {trialDisclosure(trialDays, trialFeeCents, thenPrice)}
           </p>
         </div>
       );

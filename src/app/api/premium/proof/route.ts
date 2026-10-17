@@ -4,7 +4,7 @@ import { getCachedTopDeals } from "@/lib/top-deals";
 
 export const dynamic = "force-dynamic";
 
-// Live value-proof numbers for /premium's proof strip (PremiumProofLine; the
+// Live value-proof numbers for /premium's proof strip (PremiumProofLine, retired 2026-10-17 — nothing calls this now; the
 // signed-in slide-in that also read it was removed on 2026-09-28) — a small
 // public JSON endpoint rather than a server component so a CLIENT component
 // can fetch it lazily. Backed entirely by the SAME 1h

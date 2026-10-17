@@ -197,10 +197,12 @@ test("the Premium dialog and /premium show the SAME tier table, from one source"
   const page = read("src/app/premium/page.tsx");
 
   assert.match(shared, /export const TIER_COMPARISON/, "the rows must be exported from the shared module");
-  // /premium renders the same rows through PremiumMissingGrid since 2026-10-15
-  // (the grid imports TIER_COMPARISON; it never retypes a row).
-  assert.match(page, /<PremiumMissingGrid/, "/premium renders the grid");
-  assert.match(read("src/components/PremiumMissingGrid.tsx"), /import \{ TIER_COMPARISON, DIALOG_OMIT_FEATURES, type TierRow \} from "\.\/TierComparisonTable"/, "…built from the shared rows");
+  // /premium renders the same rows as ticks through PremiumTicks since 2026-10-17
+  // (it imports TIER_COMPARISON and computes every mark from it; it never retypes
+  // a row). The plan cards render it; a Plus member's page renders it alone.
+  assert.match(read("src/components/PremiumPricingCards.tsx"), /<PremiumTicks/, "/premium's plan cards render the ticks");
+  assert.match(page, /<PremiumTicks/, "…and a Plus member sees them too");
+  assert.match(read("src/components/PremiumTicks.tsx"), /import \{ TIER_COMPARISON, type TierRow \} from "\.\/TierComparisonTable"/, "…built from the shared rows");
   for (const [file, name] of [[dialog, "the dialog"], [page, "/premium"]] as const) {
     if (file === dialog) assert.match(file, /TierComparisonTable/, `${name} must render the shared table`);
     assert.doesNotMatch(

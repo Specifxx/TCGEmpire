@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PremiumCta } from "./PremiumCta";
+import { PremiumTicks } from "./PremiumTicks";
 import {
   TIER_NAMES,
   tierMonthlyAmount,
@@ -16,7 +17,6 @@ import {
   INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 
 // The /premium pricing section, rebuilt 2026-09-11 to match the layout at
 // mtgstocks.com/go-premium (owner: "copy their formatting and pillars") —
@@ -44,11 +44,11 @@ import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } fr
 // premium are at the bottom of the page and you have to scroll"). The cards are
 // the first thing under the hero, TWO across at every width (a phone gets two
 // narrow columns, not two stacked cards, so both buy buttons sit inside a
-// 390x844 first screen), each with a name, the real price, ONE tagline, four
-// bullets of a few words, and the button. The Free card is gone: what is free is
-// the first group of the page's "What you get" list, and the cards sell only
-// what is bought. Everything else on those cards (the monthly default, the
-// real price, the trial and intro lines behind their switches) is unchanged.
+// 390x844 first screen), each with a name, the real price, ONE tagline and the
+// button. The Free card is gone: the cards sell only what is bought.
+// (2026-10-17: the four bullets went too, and the ticks table now sits under
+// the cards inside this component, so the toggle drives its prices. DECISIONS.md,
+// "/premium, 70% simpler".)
 //
 // A CLIENT COMPONENT, not inline in page.tsx, because the toggle needs real
 // state and page.tsx is a server component (it reads the session and Stripe).
@@ -95,6 +95,11 @@ export function PremiumPricingCards({
   // A tier with no annual price of its own still falls back to monthly display
   // regardless of this default — see PaidTierCard's own effectiveCycle guard.
   const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
+  // The picked plan lights its card and its column in the ticks table below.
+  // Premium by default: it is the recommended plan.
+  const [picked, setPicked] = useState<PremiumTierKey>("premium");
+  const shownMonthly = (tier: PremiumTierKey, live: boolean) =>
+    `${cycle === "annual" && live ? premiumEffectiveMonthly(tier) || tierMonthlyAmount(tier) : tierMonthlyAmount(tier)}/mo`;
   const premiumSave = annualSavingPct("premium");
   const plusSave = annualSavingPct("plus");
   // The badge shows whichever live tier's saving is real — they're both ~33%
@@ -146,7 +151,8 @@ export function PremiumPricingCards({
           <PaidTierCard
             tier="plus"
             tagline="No ads, and price watches"
-            features={PLUS_FEATURES}
+            picked={picked === "plus"}
+            onPick={() => setPicked("plus")}
             cycle={cycle}
             annualLiveForTier={plusAnnualLive}
             checkoutLive={checkoutLive}
@@ -162,8 +168,9 @@ export function PremiumPricingCards({
         <PaidTierCard
           tier="premium"
           tagline={plusLive ? "Plans which stores to buy from" : "The full toolkit"}
-          features={plusLive ? PREMIUM_FEATURES_ON_PLUS : PREMIUM_FEATURES_STANDALONE}
           highlight
+          picked={picked === "premium"}
+          onPick={() => setPicked("premium")}
           cycle={cycle}
           annualLiveForTier={annualLive}
           checkoutLive={checkoutLive}
@@ -175,49 +182,32 @@ export function PremiumPricingCards({
           introEligible={introEligible}
         />
       </div>
+
+      {/* The comparison, ticks and crosses only (PremiumTicks' own header). Its
+          prices follow the Monthly / Annual toggle and its lit column follows
+          the picked card; tapping a column header picks that plan. */}
+      <div className="mx-auto mt-5 max-w-3xl">
+        <PremiumTicks
+          showPlus={plusLive}
+          prices={{ plus: shownMonthly("plus", plusAnnualLive), premium: shownMonthly("premium", annualLive) }}
+          selected={picked}
+          onSelect={(t) => t !== "free" && setPicked(t)}
+        />
+      </div>
     </div>
   );
 }
 
-// THE LINEUP — the same entitlements as TIER_COMPARISON's rows, in a few words
-// each, four bullets a card (owner, 2026-09-29: "3–4 bullets of ≤8 words").
-// Plus LEADS with "No ads on any page": it is the benefit a first-time payer
-// understands without a tour, and every surface that describes Plus must say so
-// (tests/ad-free-tier.test.ts). Every number is the enforced constant. The full
-// list, feature by feature, is the page's "What you get" and the table.
-//
-// The trial is NOT a feature row (it was one, "N-day free trial", until the $1 first
-// month of 2026-09-30): the card carries ONE line under the price instead,
-// "First 30 days for $1, then $2.99/month", and only for a viewer who would really
-// get it. Four bullets a card, as the owner asked.
-const PLUS_FEATURES = [
-  "No ads on any page",
-  "No watchlist or portfolio limit",
-  `Target alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards`,
-  `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products`,
-];
-// Two different lists depending on whether Plus exists to build on top of —
-// same reasoning TIER_COMPARISON's own header gives for keeping one row set
-// rather than two near-duplicate copies of the feature list.
-const PREMIUM_FEATURES_ON_PLUS = [
-  "Everything in Plus, no ads",
-  `Deck price watch on up to ${DECK_WATCH_LIMIT} lists`,
-  "Store-by-store plan for any list",
-  "Unlimited alerts and Demand Finder",
-];
-const PREMIUM_FEATURES_STANDALONE = [
-  "No ads on any page",
-  "No watchlist or portfolio limit",
-  `Deck price watch on up to ${DECK_WATCH_LIMIT} lists`,
-  "Unlimited alerts, sealed watches, Demand Finder",
-  "Store-by-store plan for any list",
-];
-
+// NO FEATURE BULLETS ON THE CARDS (2026-10-17, owner: "there's a lot of double
+// up on information"). A card is the plan's name, its real price, one tagline,
+// the trial or intro line where it applies, and the button. What each plan
+// includes is the ticks table right under the cards, said once.
 function PaidTierCard({
   tier,
   tagline,
-  features,
   highlight = false,
+  picked,
+  onPick,
   cycle,
   annualLiveForTier,
   checkoutLive,
@@ -230,8 +220,9 @@ function PaidTierCard({
 }: {
   tier: PremiumTierKey;
   tagline: string;
-  features: string[];
   highlight?: boolean;
+  picked: boolean;
+  onPick: () => void;
   cycle: "monthly" | "annual";
   annualLiveForTier: boolean;
   checkoutLive: boolean;
@@ -260,20 +251,24 @@ function PaidTierCard({
   // The trial line is a claim about THIS viewer: someone who already used their
   // trial (or with trials switched off) must not be promised one.
   const showTrial = trialAvailable && trialDays > 0;
-  const features_ = features;
 
   return (
     <div
-      className={`card-surface relative flex flex-col overflow-hidden rounded-2xl ${
-        highlight ? "border-2 border-gold/60 shadow-[0_8px_24px_rgba(0,0,0,0.35)]" : "border border-ink-700"
+      onClick={onPick}
+      className={`card-surface relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 transition ${highlight ? "bg-gold/[0.06]" : ""} ${
+        picked
+          ? highlight
+            ? "border-gold/70 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+            : "border-brand-500/70 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+          : "border-ink-700 opacity-90 hover:opacity-100"
       }`}
     >
       {highlight && (
-        <span className="absolute right-0 top-0 hidden rounded-bl-lg bg-gold px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-ink-950 sm:block">
-          Recommended
+        <span className="absolute right-0 top-0 rounded-bl-lg bg-gold px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-wider text-ink-950 sm:px-2 sm:text-[9px]">
+          Best value
         </span>
       )}
-      <div className={`border-b border-ink-800 px-2.5 py-2.5 text-center sm:px-5 sm:py-4 ${highlight ? "bg-gold/10" : "bg-ink-900"}`}>
+      <div className="px-2.5 pb-1 pt-4 text-center sm:px-5 sm:pt-5">
         <div className={`text-base font-extrabold ${highlight ? "text-gold" : "text-white"}`}>{TIER_NAMES[tier]}</div>
         <div className="flex items-baseline justify-center gap-1">
           <span className="num text-2xl font-extrabold text-white sm:text-3xl">{headline}</span>
@@ -301,15 +296,7 @@ function PaidTierCard({
           </p>
         )}
       </div>
-      <div className="flex flex-1 flex-col justify-between gap-2.5 px-2.5 py-2.5 sm:px-5 sm:py-4">
-        <ul className="space-y-1.5 text-left text-[12px] leading-snug text-slate-300 sm:text-[13px]">
-          {features_.map((f) => (
-            <li key={f} className="flex items-start gap-1.5 [font-feature-settings:'lnum'_1]">
-              <span className={`font-bold ${highlight ? "text-gold" : "text-brand-400"}`}>✓</span>
-              <span>{f}</span>
-            </li>
-          ))}
-        </ul>
+      <div className="flex flex-1 flex-col justify-end px-2.5 py-2.5 sm:px-5 sm:py-4">
         <PremiumCta
           compact
           checkoutLive={checkoutLive}

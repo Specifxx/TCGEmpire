@@ -409,4 +409,6 @@ export function premiumLockInTail(): string {
 // out, 3 s after the page settles: the owner's Akali art, the Free vs Premium
 // table and Google/Discord into checkout (owner: "bring back the Akali sign-in
 // slider"). A new surface and a new audience, so a new era; prices unchanged.
-export const PREMIUM_COPY_VERSION = "akali-slider-2026-10-17";
+// "premium-simple-2026-10-17": /premium cut to plan cards and a ticks-only table
+// (DECISIONS.md, "/premium, 70% simpler"); prices unchanged.
+export const PREMIUM_COPY_VERSION = "premium-simple-2026-10-17";

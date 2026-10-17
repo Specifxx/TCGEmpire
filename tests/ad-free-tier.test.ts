@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
+import { TICK_ROWS, hasTick } from "../src/components/PremiumTicks";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -52,17 +53,17 @@ test("the ad components gate on adFree, which is computed at the plus minimum", 
   assert.ok(!/const \{ premium \} = useMe\(\)/.test(provider), "reading `premium` here would give ad-free back to every Plus account");
 });
 
-test("both paid tiers' feature lists sell ad-free, and Plus LEADS with it", () => {
+test("both paid tiers sell ad-free, and Plus LEADS with it", () => {
+  // 2026-10-17 (/premium, 70% simpler): the cards lost their bullets, so the
+  // claim lives in Plus's tagline and the ticks table. "No ads" is the first
+  // row after the free one, ticked for both paid tiers, the benefit a
+  // first-time payer understands without a tour.
   const cards = code("src/components/PremiumPricingCards.tsx");
-  const plusList = cards.slice(cards.indexOf("const PLUS_FEATURES"), cards.indexOf("const PREMIUM_FEATURES_ON_PLUS"));
-  // 2026-09-25 lineup: "No ads on any page" is Plus's first bullet, the benefit
-  // a first-time payer understands without a tour.
-  assert.match(plusList, /const PLUS_FEATURES = \[\s*"No ads on any page",/, "PLUS_FEATURES must lead with ad-free");
-  const premiumLists = cards.slice(cards.indexOf("const PREMIUM_FEATURES_ON_PLUS"), cards.indexOf("function PaidTierCard"));
-  const onPlus = premiumLists.slice(0, premiumLists.indexOf("const PREMIUM_FEATURES_STANDALONE"));
-  const standalone = premiumLists.slice(premiumLists.indexOf("const PREMIUM_FEATURES_STANDALONE"));
-  assert.match(onPlus, /no ads/i, "Premium-on-Plus must say it keeps Plus's ad-free");
-  assert.match(standalone, /No ads on any page/, "standalone Premium must advertise ad-free");
+  assert.match(cards, /tier="plus"\s+tagline="No ads, and price watches"/, "Plus's tagline leads with ad-free");
+  assert.equal(TICK_ROWS[1].name, "No ads");
+  assert.equal(hasTick(TICK_ROWS[1].from, "plus"), true);
+  assert.equal(hasTick(TICK_ROWS[1].from, "premium"), true);
+  assert.equal(hasTick(TICK_ROWS[1].from, "free"), false);
   assert.ok(!/Premium adds an ad-free site/.test(code("src/app/premium/page.tsx")), "/premium must not sell ad-free as Premium-only");
 });
 

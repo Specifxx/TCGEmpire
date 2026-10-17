@@ -9,6 +9,7 @@ import { createSealedWatch, isRealSealedStore, sealedOfferState } from "../src/l
 import { buildDeckWatchEmail, buildSealedWatchEmail } from "../src/lib/watch-emails";
 import { verifyAlertAction } from "../src/lib/alert-actions";
 import { NOW, deckHarness, deckRow, group, hoursAgo, offer, premium, plus, sealedHarness, sealedRow } from "./helpers/watch-harness";
+import { TICK_ROWS } from "../src/components/PremiumTicks";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Review fixes for "Premium works while you're away" (2026-09-29): per-address
@@ -227,13 +228,15 @@ test("the workflow asks for a fresh sealed read whenever it did not purge, and t
 // ── F3 (review 2): every tier summary names both watches ─────────────────────
 
 test("the /premium tier lists name sealed watches and the deck price watch, with their limits from the constants", () => {
-  // The FAQ's tier summaries ("What's free vs…", "Which plan is worth it?") went on
-  // 2026-09-29 with the wordy page: "What you get" is now the one summary, a line
-  // per feature, and it must still name both watches and quote their limits.
+  // Since 2026-10-17 (/premium, 70% simpler) the page's tier summaries are the
+  // ticks rows (no numbers, by the owner's rule) and the per-tier Offer
+  // descriptions in its JSON-LD, which name both watches and quote their limits.
   const premiumPage = read("src/app/premium/page.tsx");
-  assert.match(premiumPage, /tier: "plus", text: `Sealed watches for \$\{SEALED_WATCH_LIMIT_PLUS\} products: restock, RRP, your price`/);
-  assert.match(premiumPage, /tier: "premium", text: `Deck price watch: \$\{DECK_WATCH_LIMIT\} saved lists, emailed at your price`/);
-  assert.match(premiumPage, /tier: "premium", text: "Unlimited target-price alerts and sealed watches"/);
+  assert.match(premiumPage, /sealed watches on up to \$\{SEALED_WATCH_LIMIT_PLUS\} products/);
+  assert.match(premiumPage, /a deck price watch \(up to \$\{DECK_WATCH_LIMIT\} saved lists/);
+  assert.match(premiumPage, /unlimited target-price alerts and sealed watches/);
+  const rows = TICK_ROWS.map((r) => r.name);
+  assert.ok(rows.includes("Sealed restock & price alerts") && rows.includes("Deck price watch"), "the ticks name both watches");
   const tools = read("src/app/tools/page.tsx");
   const faq = tools.slice(tools.indexOf('q: "Do I need an account'), tools.indexOf('q: "', tools.indexOf('q: "Do I need an account') + 10));
   const [plusBranch, premiumBranch] = faq.split("\n        : `");

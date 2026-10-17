@@ -18456,3 +18456,69 @@ The code cannot do these: Google documents `data-overlays="bottom"` only to move
 **What to watch:**
 - AdSense mobile page RPM and earnings, against the week before.
 - GA4 pages per visit on phones and `buy_click`, which an unusable phone page costs first.
+
+## /premium, 70% simpler — 2026-10-17
+
+**Owner:** "we really need to fix our premium page … way too convoluted … significantly simpler, like seventy percent simpler … a lot of double up on information … what's really useful is the comparison of the ticks and the crosses … it should only be ticks and crosses, there shouldn't be anything else in there, it just confuses the buyer … cut down a lot … it needs to look better … dynamic … see how other people do it, and then implement and deploy directly to production."
+
+**Before** (live, signed out): 4,616px and 928 words at 1280, 5,328px and 760 words at 390. What it was saying, and how many times:
+- **What each plan includes, three times.** First the what-you're-missing grid (17 rows with ✓, ◐ and ✕ marks, a caption under most cells, and a description line under each row from sm up). Then four bullets on each plan card. Then the "What you get" list (18 lines in three groups).
+- **The trial terms, three times.** A line on each card, the disclosure under each button, and a paragraph in the footer.
+- **Plus extras:** a proof line, an RRP note, and seven always-on FAQ questions.
+
+**How others do it** (pricing-page write-ups by Schematic, Genesys Growth and others):
+- Two or three plans.
+- One highlighted plan ("Best value").
+- One feature comparison table under the cards instead of long per-card lists.
+- A short FAQ.
+
+The owner's ticks-only rule is the extreme of the last point: a cell is a mark, not a caption.
+
+**After** (local `next dev`, no ads served, so not exactly like for like): 2,950px at 1280 and 3,124px at 390; 272 words in `<main>` (from 928 / 760). For a visitor who has not bought, in order:
+1. The H1 and a one-line subline.
+2. The Monthly / Annual toggle.
+3. Two plan cards: name, real price, one tagline, the trial or intro line, and the button with its disclosure. No feature bullets.
+4. **The ticks table** (`PremiumTicks`).
+5. The Stripe line and the creator code.
+6. Three always-on FAQ questions: what's free, how to cancel, cards I already track. The trial, half-price and price-rise entries appear only while their switches are on.
+7. A footer with the long read and contact links.
+
+**Removed:**
+- `WHAT_YOU_GET`.
+- `PremiumMissingGrid` and its test. It had no other reader.
+- `PremiumProofLine`. `api/premium/proof` stays, with its tests; nothing on the site calls it now.
+- The footer's copy of the trial terms. The disclosure required by card-network rules stays under each button.
+- The compact button's "Create a free account in one tap" line. The page says "Sign in on the next screen" once, under both cards.
+
+**The table, `src/components/PremiumTicks.tsx`.** Twelve rows, ✓ or ✕ only:
+- **Every paid tier ticks:** compare prices (Free too), no ads, unlimited watchlist & portfolio, target-price alerts, full Deal Finder & Rising Cards, full price history + CSV, graded tracking, sealed restock & price alerts.
+- **Premium only:** store-by-store buying plan, deck price watch, eBay auction alerts, full Demand Finder.
+
+**The marks are computed from `TIER_COMPARISON`, never typed.** Each row names its source row.
+- Free gets a tick only for a flat `true`.
+- A paid tier gets one for anything but `false`, unless its value is Free's own limited value. Plus's "Top 10 searched" Demand Finder is a cross for that reason.
+- So a tick is always true of the whole row name. Rows where Free gets a limited version are named for the full thing ("Unlimited…", "Full…"), and Free's limited version is a cross.
+- `tests/premium-ticks.test.ts` holds every mark to that rule and pins the grid the owner sees.
+
+`TIER_COMPARISON` itself is unchanged. The dialog, articles and emails still read it.
+
+**Dynamic:**
+- The table sits inside `PremiumPricingCards`, so its header prices follow the toggle: $2.00 / $3.33 a month on annual.
+- Picking a card, or tapping a column header, lights that plan's card border and its column. Premium is picked by default.
+- A Plus member gets the same table on their membership page with "You" on the Plus column. A Premium member, who has every tick, gets none.
+
+**Wording changes:**
+- The "Sealed" row says "price alerts", not "RRP". RRP exists only in AU/US/UK, and a mark cannot carry that qualifier. The Plus Offer's JSON-LD description now says "at RRP in ${SEALED_RRP_MARKETS}".
+- The first row says "Compare prices across every store", not "& search", because search is metered by tier.
+- The page wrapper carries `google-anno-skip`, which keeps Google's ad-intent chips ("Read Economics") out of the sales copy.
+
+**`PREMIUM_COPY_VERSION` → `premium-simple-2026-10-17`.** Conversion before and after splits on it. Prices are unchanged.
+
+**Verified in Chromium against `next dev`** at 390×844 and 1280×800:
+- On a phone, both buy buttons sit on the first screen.
+- No sideways scroll.
+- Annual, then Plus: the header reads $2.00/mo and $3.33/mo, and the Plus column is lit.
+
+**What to watch:**
+- `premium_signin_step` and `premium_checkout_started` per /premium view, on the new copy version against `akali-slider-2026-10-17`.
+- Scroll depth on /premium.

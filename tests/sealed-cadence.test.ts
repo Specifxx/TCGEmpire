@@ -322,7 +322,9 @@ test("'at RRP' is qualified wherever it is promised: it exists only where lib/ms
   for (const f of ["src/components/SealedWatchButton.tsx", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /SEALED_RRP_ONLY/, `${f} says where at-RRP exists`);
   }
-  // /premium's note under "What you get" names the RRP markets from the constant
-  // (the pricing cards no longer list sealed alerts' RRP wording).
-  assert.match(read("src/app/premium/page.tsx"), /RRP is the price Riot sets, shown for \{SEALED_RRP_MARKETS\}/);
+  // /premium's only RRP promise is the Plus offer's JSON-LD description, which
+  // names the markets from the constant; the ticks row promises no RRP at all
+  // (2026-10-17, "/premium, 70% simpler").
+  assert.match(read("src/app/premium/page.tsx"), /at RRP in \$\{SEALED_RRP_MARKETS\}/);
+  assert.doesNotMatch(read("src/components/PremiumTicks.tsx"), /RRP/);
 });

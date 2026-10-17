@@ -114,7 +114,7 @@ test("every tier surface sells it as Premium", () => {
     "src/app/premium/page.tsx",
     "src/lib/sitemap-sections.ts",
     "src/app/llms.txt/route.ts",
-    "src/components/PremiumPricingCards.tsx",
+    "src/components/PremiumTicks.tsx",
     "src/components/MostSearchedStrip.tsx",
   ]) {
     assert.match(code(read(file)), /\/tools\/demand|Demand Finder/, `${file} should list Demand Finder`);

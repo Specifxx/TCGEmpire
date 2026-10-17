@@ -495,6 +495,7 @@ test("every tier surface quotes the limits from the constants, and price compari
   // then "search-caps-2026-10-09" when search was metered again and the plans gained history, graded and auction rows.
   // then "search-caps-2026-10-15" when the allowance was loosened to 25 / 100 / 500,
   // then "signup-card-2026-10-16" when the sign-up card moved to the 2nd page,
-  // then "akali-slider-2026-10-17" when one Akali slider replaced both corner cards.
-  assert.equal(PREMIUM_COPY_VERSION, "akali-slider-2026-10-17");
+  // then "akali-slider-2026-10-17" when one Akali slider replaced both corner cards,
+  // then "premium-simple-2026-10-17" when /premium became plan cards and a ticks-only table.
+  assert.equal(PREMIUM_COPY_VERSION, "premium-simple-2026-10-17");
 });

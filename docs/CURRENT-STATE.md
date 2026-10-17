@@ -424,18 +424,17 @@ longer lands on its entry.
   /watching's "What you can watch" block (the sealed quick view's watch button
   sells Plus itself, no second line in an overlay); the deck
   watch form and the sealed heart are the ordinary `PremiumButton` gates
-  (`gate:deck-watch`, `gate:sealed-watch`) below the tier. /premium opens with
-  WHAT YOU'RE MISSING (2026-10-15, owner: "ticks and crosses … at the very top …
-  formatted nicely on a phone"; reverses plans-first for this one block): H1, one
-  short subline, then `PremiumMissingGrid` (every row a payment changes, ✓ ◐ ✕
-  with short captions, 64px columns on phones, "You" on the visitor's column,
-  "Get ↓" to the cards; not for Premium members), then the plan cards with their
-  buy buttons; then "What you get" (one line a feature, Free / Plus / Premium) and a
-  seven-question FAQ. [2026-10-15](../DECISIONS.md#L17636). No persona sections, per-feature
-  cards, CTA band or sticky bar; the page's own content is about 900 words
-  (`tests/premium-plans-first.test.ts`). `PREMIUM_COPY_VERSION`
-  `premium-2026-09-29c`. [2026-09-29](../DECISIONS.md#L15178),
-  [2026-09-29 plans first](../DECISIONS.md#L15538)
+  (`gate:deck-watch`, `gate:sealed-watch`) below the tier. /premium is 70%
+  simpler (2026-10-17, owner: "only ticks and crosses … cut down a lot"): H1,
+  one subline, the Monthly / Annual toggle, two plan cards (price, tagline,
+  trial line, button; no bullets), then `PremiumTicks`: twelve rows, ✓ or ✕
+  only, computed from `TIER_COMPARISON` (`tests/premium-ticks.test.ts`), header
+  prices following the toggle and the picked plan's column lit; then the creator
+  code and a three-question FAQ (plus the switch-gated ones). No "What you get",
+  no missing-grid, no proof line, no second copy of the trial terms, no persona
+  sections, CTA band or sticky bar (`tests/premium-plans-first.test.ts`).
+  `PREMIUM_COPY_VERSION` `premium-simple-2026-10-17`.
+  [2026-10-17](../DECISIONS.md#L18460), [2026-09-29 plans first](../DECISIONS.md#L15538)
 - **Upgrade prompts live where a limit is hit, and in the header (header since 10-15):**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
@@ -482,7 +481,7 @@ longer lands on its entry.
 - **Sign-up prompts in the page:** the signed-out corner card (`SignupSlideIn`,
   10-15 and 10-16) was replaced on 10-17 by the Akali slider above
   [2026-10-15](../DECISIONS.md#L17561), [2026-10-16](../DECISIONS.md#L17957).
-  `PREMIUM_COPY_VERSION` `akali-slider-2026-10-17`. `InlineSignupPrompt` is page content, one per page, below
+  `PREMIUM_COPY_VERSION` was `akali-slider-2026-10-17` (now `premium-simple-2026-10-17`, the /premium rebuild). `InlineSignupPrompt` is page content, one per page, below
   the first screen, signed-out only after `/api/me` answers: `/browse` (after
   the 12th tile), a priced `/deck`, `/decks/[slug]`, `/movers`,
   `/champions/[slug]`. The homepage keeps `AccountStrip` and a released set page

@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { getArticles } from "../src/lib/articles";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { SIGNUP_SOURCES } from "../src/lib/signup-source-shared";
+import { TICK_ROWS, hasTick } from "../src/components/PremiumTicks";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Deal Finder and Rising Cards have THREE levels of access (2026-09-23):
@@ -149,20 +150,12 @@ test("every tier table says Top 3 for the free account", () => {
 const STALE = /Premium only|#1 pick|top result only|Free shows only the top pick|only the top pick|single best result|single best row|single-best-pick/i;
 
 test("nothing still describes the old access for these two tools", () => {
+  // /premium (2026-10-17, ticks only): one row for both tools, named for the
+  // FULL lists, so Free's top three is a cross and every paid tier a tick.
   const premiumPage = read("src/app/premium/page.tsx");
-  // /premium's "What you get" has one line per tier for these two tools (the
-  // per-feature paragraph cards went on 2026-09-29): the free line names the top
-  // three, the Plus line the full lists, and neither describes the old access.
-  const lineFor = (tier: string, text: RegExp) => {
-    const line = premiumPage.split("\n").find((l) => l.includes(`tier: "${tier}"`) && text.test(l));
-    assert.ok(line, `expected a ${tier} What you get line matching ${text}`);
-    return line!;
-  };
-  const freeLine = lineFor("free", /Deal Finder and Rising Cards/);
-  const plusLine = lineFor("plus", /Deal Finder and Rising Cards/);
-  for (const line of [freeLine, plusLine]) assert.ok(!STALE.test(line), "/premium's pitch describes old access");
-  assert.match(freeLine, /Top 3 of Deal Finder and Rising Cards/, "the free line names the top three");
-  assert.match(plusLine, /Full Deal Finder and Rising Cards lists/, "the Plus line names the full lists");
+  const full = TICK_ROWS.find((r) => r.name === "Full Deal Finder & Rising Cards")!;
+  assert.deepEqual((["free", "plus", "premium"] as const).map((t) => hasTick(full.from, t)), [false, true, true]);
+  assert.ok(!STALE.test(premiumPage) && !STALE.test(read("src/components/PremiumTicks.tsx")), "/premium's pitch describes old access");
   const article = getArticles().find((a) => a.slug === "riftcompare-premium-explained")!;
   // Matched by name, not number: the 2026-09-25 rewrite reordered the sections.
   for (const section of ["Rising Cards", "Deal Finder"]) {

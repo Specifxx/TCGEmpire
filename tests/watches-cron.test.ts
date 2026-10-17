@@ -62,26 +62,22 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   // then "search-caps-2026-10-09" when search was metered again and the plans gained history, graded and auction rows.
   // then "search-caps-2026-10-15" when the allowance was loosened to 25 / 100 / 500,
   // then "signup-card-2026-10-16" when the sign-up card moved to the 2nd page,
-  // then "akali-slider-2026-10-17" when one Akali slider replaced both corner cards.
-  assert.equal(PREMIUM_COPY_VERSION, "akali-slider-2026-10-17");
+  // then "akali-slider-2026-10-17" when one Akali slider replaced both corner cards,
+  // then "premium-simple-2026-10-17" when /premium became plan cards and a ticks-only table.
+  assert.equal(PREMIUM_COPY_VERSION, "premium-simple-2026-10-17");
   // Every surface that quotes a watch number reads the constant.
-  for (const f of ["src/components/PremiumPricingCards.tsx", "src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
+  for (const f of ["src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);
     assert.match(read(f), /SEALED_WATCH_LIMIT_PLUS/, `${f} quotes the sealed watch limit from the constant`);
   }
   // Premium's card says what it adds in one short tagline (the long one went on
   // 2026-09-29: "Plans the order: which stores, what postage, at the condition you'll play, and a deck price watch").
   assert.match(read("src/components/PremiumPricingCards.tsx"), /Plans which stores to buy from/);
-  assert.match(read("src/components/PremiumPricingCards.tsx"), /Deck price watch on up to \$\{DECK_WATCH_LIMIT\} lists/);
-  // The definitions a newcomer needs, on /premium: the FAQ's first answer, and
-  // each watch defined in its own "What you get" line (the two "What is a … watch?"
-  // FAQ entries were folded into those lines on 2026-09-29).
+  // The definitions a newcomer needs, on /premium (2026-10-17, "/premium, 70%
+  // simpler"): the FAQ's first answer, the ticks rows, and the long read linked
+  // for every feature in detail. The "What you get" lines went.
   const page = read("src/app/premium/page.tsx");
-  assert.match(page, /q: "I'm new — what do I actually get\?"/);
-  assert.match(page, /Deck price watch: \$\{DECK_WATCH_LIMIT\} saved lists, emailed at your price/);
-  assert.match(page, /Sealed watches for \$\{SEALED_WATCH_LIMIT_PLUS\} products: restock, RRP, your price/);
-  assert.match(page, /RRP is the price Riot sets/);
-  assert.match(page, /item price plus postage/);
+  assert.match(page, /q: "What's free\?"/);
   assert.match(page, /riftcompare-premium-explained/, "the long read is linked");
   assert.equal(DECK_WATCH_LIMIT, 10);
 });
