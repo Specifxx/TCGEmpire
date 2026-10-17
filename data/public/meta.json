@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "generatedAt": "2026-10-17T02:29:59.576Z",
+  "generatedAt": "2026-10-17T04:31:41.705Z",
   "source": "RM8",
   "counts": {
     "Card": 1667,
@@ -9,7 +9,7 @@
     "SealedGroupFirstSeen": 644,
     "EbayAdListing": 4950,
     "EbayGradedListing": 1786,
-    "EbayAuctionListing": 134
+    "EbayAuctionListing": 215
   },
   "seen": {
     "RetailerPrice": {
