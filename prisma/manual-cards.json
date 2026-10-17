@@ -33,7 +33,9 @@
     "isPromo": false,
     "energyCost": null,
     "might": null,
-    "description": "[1], [T]: Give a friendly unit \"I have [Assault] equal to my [Shield]\" this turn."
+    "description": "[1], [T]: Give a friendly unit \"I have [Assault] equal to my [Shield]\" this turn.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/k-sante-pride-of-nazumah-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/k-sante-pride-of-nazumah-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-146-ntofo-strikes",
@@ -144,7 +146,9 @@
     "isPromo": false,
     "energyCost": 4,
     "might": 3,
-    "description": "When I attack or defend, deal damage equal to my Might to an enemy unit here.\nI don't deal combat damage.\n[C]: [Action] — Move me to your base."
+    "description": "When I attack or defend, deal damage equal to my Might to an enemy unit here.\nI don't deal combat damage.\n[C]: [Action] — Move me to your base.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/ezreal-dashing-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/ezreal-dashing-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-181-yone-blademaster",
@@ -2108,7 +2112,9 @@
     "isPromo": false,
     "energyCost": null,
     "might": null,
-    "description": "When you play a gear with [Deploy], you may exhaust me and pay [A] to move a friendly unit to that battlefield."
+    "description": "When you play a gear with [Deploy], you may exhaust me and pay [A] to move a friendly unit to that battlefield.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/jarvan-iv-exemplar-of-demacia-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/jarvan-iv-exemplar-of-demacia-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-r02-calm-rune",
@@ -2656,7 +2662,9 @@
     "isPromo": false,
     "energyCost": null,
     "might": null,
-    "description": "Once each turn, when you play a card from face down, draw 1. Then, if it's not your turn, discard 1."
+    "description": "Once each turn, when you play a card from face down, draw 1. Then, if it's not your turn, discard 1.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/evelynn-agonys-embrace-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/evelynn-agonys-embrace-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-sp2-akali-brash",

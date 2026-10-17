@@ -1026,6 +1026,7 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
     date: "2026-10-17",
     readMins: 9,
     tags: ["radiance", "chase cards", "signature", "collecting", "seraphine", "heartsteel"],
+    // 17 Oct, later: photos of 172*, 175*, 176* and 180* added to the gallery.
     hero: {
       src: "/blog/riftbound-radiance-seraphine-signature.jpg",
       alt: "Seraphine, Starry-Eyed Songstress, the Riftbound: Radiance Signature 174*/167 signed by Anna Nikonova, in front of the Riven 173*, Kayn 182*, Yone 181* and Aphelios 179* Signatures",
@@ -1058,6 +1059,10 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
           "ziggs-hexplosives-expert-rad-169s-167",
           "mordekaiser-iron-revenant-rad-170s-167",
           "orianna-lady-of-clockwork-rad-171s-167",
+          "k-sante-pride-of-nazumah-rad-172s-167",
+          "evelynn-agony-s-embrace-rad-175s-167",
+          "jarvan-iv-exemplar-of-demacia-rad-176s-167",
+          "ezreal-dashing-rad-180s-167",
         ],
       },
     ],
@@ -1160,7 +1165,7 @@ Every overnumbered Legend in Radiance has a signed twin, and so does every HEART
 - **[Riven 173\\*](/card/riven-the-exile-rad-173s-167)**: The Exile, art by Charles Liu. Her unsigned [173/167](/card/riven-the-exile-rad-173-167) was the dearest Legend overnumber in our snapshot at US$1,200, which makes the signed one the likeliest to challenge Seraphine.
 - **[Mordekaiser 170\\*](/card/mordekaiser-iron-revenant-rad-170s-167)**: the only Radiance Signature with a live listing in our data on 16 October, at AU$1,499.95 on eBay Australia.
 - **[Ekko 168\\*](/card/ekko-boy-who-shattered-time-rad-168s-167)**, **[Ziggs 169\\*](/card/ziggs-hexplosives-expert-rad-169s-167)** and **[Orianna 171\\*](/card/orianna-lady-of-clockwork-rad-171s-167)**: the first three Signatures Riot showed, in Preview Season's first week. No listings yet.
-- **[K'Sante 172\\*](/card/k-sante-pride-of-nazumah-rad-172s-167)**, **[Evelynn 175\\*](/card/evelynn-agony-s-embrace-rad-175s-167)** and **[Jarvan IV 176\\*](/card/jarvan-iv-exemplar-of-demacia-rad-176s-167)**: in the catalogue, waiting on a clear image and a first listing.
+- **[K'Sante 172\\*](/card/k-sante-pride-of-nazumah-rad-172s-167)** (signed by Valentine Tran), **[Evelynn 175\\*](/card/evelynn-agony-s-embrace-rad-175s-167)** (Suzaki) and **[Jarvan IV 176\\*](/card/jarvan-iv-exemplar-of-demacia-rad-176s-167)** (Herman Ng): shown below from photos of real cards, waiting on a first listing.
 - **HEARTSTEEL, [178\\*](/card/k-sante-courageous-rad-178s-167) to [183\\*](/card/sett-kingpin-rad-183s-167)**: K'Sante, Aphelios, Ezreal, Yone, Kayn and Sett, each signed with the member's name. Their unsigned overnumbers were already among the dearest Radiance cards: [Kayn 182/167](/card/kayn-unleashed-rad-182-167) at US$663.75 and [Yone 181/167](/card/yone-blademaster-rad-181-167) at US$642.02.
 
 ## Buy the single, or open boxes?

@@ -18372,7 +18372,7 @@ The Seraphine 174\* photo was not used: the scan already on the site is flat and
 
 It says plainly that Packed Amphitheater (the Ultimate Rare battlefield) was the dearest single listing that day, at US$2,999.99, and that no store had listed the signed 174\* yet. It also says Riot publishes no pull rates. Prices are dated to the 16 October snapshot; the embeds are live. The K/DA, HEARTSTEEL and chase-card posts link to it.
 
-**Still without card art:** 172\*, 175\*, 176\*, 178\*, 180\* and 183\*. They stay out of the homepage chase strip until they have images.
+**Still without card art:** 178\* and 183\* (the HEARTSTEEL K'Sante and Sett). They stay out of the homepage chase strip until they have images. The owner's files for 172\*, 175\*, 176\* and 180\* arrived later the same day; they were cropped the same way.
 
 **Later the same day:** the owner supplied the Chinese-exclusive Seraphine 174a\* (Simplified Chinese, art by BlackVIII), a flat scan used as is. It joins the "Follow Radiance's chase cards" list (`lib/radiance-watch.ts`) in place of the unsigned K'Sante 172, as that file's comment had planned for when it had an image. The post's first gallery shows it beside the English 174\*.
 

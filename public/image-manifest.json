@@ -1375,6 +1375,18 @@
     "variants": [],
     "fingerprint": "8a5107e989cfea4c"
   },
+  "/radiance-spoilers/evelynn-agonys-embrace-signature.jpg": {
+    "src": "/radiance-spoilers/evelynn-agonys-embrace-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 83176,
+    "webp": "/radiance-spoilers/evelynn-agonys-embrace-signature.webp",
+    "webpBytes": 49474,
+    "avif": "/radiance-spoilers/evelynn-agonys-embrace-signature.avif",
+    "avifBytes": 37600,
+    "variants": [],
+    "fingerprint": "1537ee802fa17dc4"
+  },
   "/radiance-spoilers/evelynn-consuming-alt-art.jpg": {
     "src": "/radiance-spoilers/evelynn-consuming-alt-art.jpg",
     "width": 771,
@@ -1410,6 +1422,18 @@
     "avifBytes": 41542,
     "variants": [],
     "fingerprint": "f383116de2171c82"
+  },
+  "/radiance-spoilers/ezreal-dashing-signature.jpg": {
+    "src": "/radiance-spoilers/ezreal-dashing-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 113307,
+    "webp": "/radiance-spoilers/ezreal-dashing-signature.webp",
+    "webpBytes": 79068,
+    "avif": "/radiance-spoilers/ezreal-dashing-signature.avif",
+    "avifBytes": 53500,
+    "variants": [],
+    "fingerprint": "fe36893062548055"
   },
   "/radiance-spoilers/fanfare.jpg": {
     "src": "/radiance-spoilers/fanfare.jpg",
@@ -1624,6 +1648,18 @@
     "variants": [],
     "fingerprint": "17b53e9679e3db6e"
   },
+  "/radiance-spoilers/jarvan-iv-exemplar-of-demacia-signature.jpg": {
+    "src": "/radiance-spoilers/jarvan-iv-exemplar-of-demacia-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 116741,
+    "webp": "/radiance-spoilers/jarvan-iv-exemplar-of-demacia-signature.webp",
+    "webpBytes": 98848,
+    "avif": "/radiance-spoilers/jarvan-iv-exemplar-of-demacia-signature.avif",
+    "avifBytes": 64943,
+    "variants": [],
+    "fingerprint": "1abfe5e3b0cec408"
+  },
   "/radiance-spoilers/jarvan-iv-martial-paragon-alt-art.jpg": {
     "src": "/radiance-spoilers/jarvan-iv-martial-paragon-alt-art.jpg",
     "width": 744,
@@ -1647,6 +1683,18 @@
     "avifBytes": 78808,
     "variants": [],
     "fingerprint": "92349795d48a85f0"
+  },
+  "/radiance-spoilers/k-sante-pride-of-nazumah-signature.jpg": {
+    "src": "/radiance-spoilers/k-sante-pride-of-nazumah-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 101384,
+    "webp": "/radiance-spoilers/k-sante-pride-of-nazumah-signature.webp",
+    "webpBytes": 66548,
+    "avif": "/radiance-spoilers/k-sante-pride-of-nazumah-signature.avif",
+    "avifBytes": 46706,
+    "variants": [],
+    "fingerprint": "d046b06dbb9f3955"
   },
   "/radiance-spoilers/kaisa-rebel.jpg": {
     "src": "/radiance-spoilers/kaisa-rebel.jpg",
