@@ -739,6 +739,18 @@
     "variants": [],
     "fingerprint": "77ebaad72d4c70f6"
   },
+  "/blog/riftbound-radiance-seraphine-signature.jpg": {
+    "src": "/blog/riftbound-radiance-seraphine-signature.jpg",
+    "width": 1200,
+    "height": 630,
+    "bytes": 117526,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/blog/riftbound-radiance-seraphine-signature.avif",
+    "avifBytes": 96594,
+    "variants": [],
+    "fingerprint": "88cafda83bff345c"
+  },
   "/blog/riftbound-radiance-what-we-know.png": {
     "src": "/blog/riftbound-radiance-what-we-know.png",
     "width": 1200,
@@ -964,6 +976,18 @@
     "avif": null,
     "avifBytes": null
   },
+  "/logo-r-orange.png": {
+    "src": "/logo-r-orange.png",
+    "width": 359,
+    "height": 353,
+    "bytes": 6566,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "2fb851b83444b0c6"
+  },
   "/logo-r.png": {
     "src": "/logo-r.png",
     "width": 372,
@@ -1104,6 +1128,18 @@
     "avifBytes": 41113,
     "variants": [],
     "fingerprint": "6e5b0fcfa875a980"
+  },
+  "/radiance-spoilers/aphelios-exalted-signature.jpg": {
+    "src": "/radiance-spoilers/aphelios-exalted-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 107369,
+    "webp": "/radiance-spoilers/aphelios-exalted-signature.webp",
+    "webpBytes": 105056,
+    "avif": "/radiance-spoilers/aphelios-exalted-signature.avif",
+    "avifBytes": 84396,
+    "variants": [],
+    "fingerprint": "acd7b090f779ebfe"
   },
   "/radiance-spoilers/avalanche.jpg": {
     "src": "/radiance-spoilers/avalanche.jpg",
@@ -1624,6 +1660,18 @@
     "variants": [],
     "fingerprint": "ea662be13f0f38e6"
   },
+  "/radiance-spoilers/kayn-unleashed-signature.jpg": {
+    "src": "/radiance-spoilers/kayn-unleashed-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 119796,
+    "webp": "/radiance-spoilers/kayn-unleashed-signature.webp",
+    "webpBytes": 102550,
+    "avif": "/radiance-spoilers/kayn-unleashed-signature.avif",
+    "avifBytes": 75352,
+    "variants": [],
+    "fingerprint": "a32e1852feaeb3b9"
+  },
   "/radiance-spoilers/ksante-courageous.jpg": {
     "src": "/radiance-spoilers/ksante-courageous.jpg",
     "width": 771,
@@ -1846,6 +1894,18 @@
     "variants": [],
     "fingerprint": "8685b3e6862e7ed0"
   },
+  "/radiance-spoilers/riven-the-exile-signature.jpg": {
+    "src": "/radiance-spoilers/riven-the-exile-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 120625,
+    "webp": "/radiance-spoilers/riven-the-exile-signature.webp",
+    "webpBytes": 107296,
+    "avif": "/radiance-spoilers/riven-the-exile-signature.avif",
+    "avifBytes": 82935,
+    "variants": [],
+    "fingerprint": "a7ac502d67d21f47"
+  },
   "/radiance-spoilers/rousing-display.jpg": {
     "src": "/radiance-spoilers/rousing-display.jpg",
     "width": 590,
@@ -1906,6 +1966,18 @@
     "variants": [],
     "fingerprint": "5a3748222c987652"
   },
+  "/radiance-spoilers/yone-blademaster-signature.jpg": {
+    "src": "/radiance-spoilers/yone-blademaster-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 110780,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/radiance-spoilers/yone-blademaster-signature.avif",
+    "avifBytes": 91609,
+    "variants": [],
+    "fingerprint": "1244faacab0ab36f"
+  },
   "/radiance-spoilers/zero-point-inflection.jpg": {
     "src": "/radiance-spoilers/zero-point-inflection.jpg",
     "width": 772,
@@ -1941,6 +2013,42 @@
     "avifBytes": 48402,
     "variants": [],
     "fingerprint": "15ffa058c46d4c38"
+  },
+  "/regional-promos/ahri-nine-tailed-fox-ogn-303a-kr.jpg": {
+    "src": "/regional-promos/ahri-nine-tailed-fox-ogn-303a-kr.jpg",
+    "width": 744,
+    "height": 1033,
+    "bytes": 117692,
+    "webp": "/regional-promos/ahri-nine-tailed-fox-ogn-303a-kr.webp",
+    "webpBytes": 114516,
+    "avif": "/regional-promos/ahri-nine-tailed-fox-ogn-303a-kr.avif",
+    "avifBytes": 83734,
+    "variants": [],
+    "fingerprint": "7705dccecc40fa73"
+  },
+  "/regional-promos/jinx-demolitionist-ogn-030-kr.jpg": {
+    "src": "/regional-promos/jinx-demolitionist-ogn-030-kr.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 116952,
+    "webp": "/regional-promos/jinx-demolitionist-ogn-030-kr.webp",
+    "webpBytes": 105434,
+    "avif": "/regional-promos/jinx-demolitionist-ogn-030-kr.avif",
+    "avifBytes": 72485,
+    "variants": [],
+    "fingerprint": "8dee3e27eae3c5c4"
+  },
+  "/regional-promos/yasuo-remorseful-ogn-076b-kr.jpg": {
+    "src": "/regional-promos/yasuo-remorseful-ogn-076b-kr.jpg",
+    "width": 744,
+    "height": 1038,
+    "bytes": 122638,
+    "webp": "/regional-promos/yasuo-remorseful-ogn-076b-kr.webp",
+    "webpBytes": 113162,
+    "avif": "/regional-promos/yasuo-remorseful-ogn-076b-kr.avif",
+    "avifBytes": 87237,
+    "variants": [],
+    "fingerprint": "26cbc193f401ae6b"
   },
   "/rune-variants/body-rune-ogn-126b.jpg": {
     "src": "/rune-variants/body-rune-ogn-126b.jpg",
@@ -2608,17 +2716,5 @@
     "variants": [],
     "avif": "/vendetta-synergy-loop.avif",
     "avifBytes": 23578
-  },
-  "/logo-r-orange.png": {
-    "src": "/logo-r-orange.png",
-    "width": 359,
-    "height": 353,
-    "bytes": 6566,
-    "webp": null,
-    "webpBytes": null,
-    "avif": null,
-    "avifBytes": null,
-    "variants": [],
-    "fingerprint": "2fb851b83444b0c6"
   }
 }

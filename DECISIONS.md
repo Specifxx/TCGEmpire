@@ -18356,3 +18356,20 @@ The old inline-paid-prompt skips (`/tools`, `/portfolio`, `/watching`, `/sealed`
 - `premium_slidein_shown`, `premium_slidein_click` and `premium_slidein_dismissed` (now with `signed_in`)
 - sign-ups with source `premium_slider`
 - bounce and pages per visitor
+
+## Radiance Signatures: owner photos as interim card art, and Seraphine 174* as the chase — 2026-10-17
+
+**Owner:** "use these images as the signature ones … in the interim before they're uploaded … the ultimate chase one, I would say, is the Seraphine one … make a blog post … I'm gonna keep giving you more signature cards."
+
+**Card art.** The owner's photos of real Signature cards were cropped and perspective-corrected to Riot's 744×1039 card size. They are stored next to the other Signature images as `public/radiance-spoilers/<name>-signature.{jpg,webp,avif}`. Four are new: Riven 173\*, Aphelios 179\*, Yone 181\* and Kayn 182\*. `prisma/manual-cards.json` points each card at its image, loaded by `cards-manual`. When Riot's own image arrives, it replaces the photo the same way.
+
+The Seraphine 174\* photo was not used: the scan already on the site is flat and sharper. Two later photos (Evelynn 175\* and Ekko 168\*) arrived inline only, not as files, so they could not be cropped. Ekko 168\* already has a clean image.
+
+**The post.** `/blog/riftbound-radiance-seraphine-signature` names the signed Seraphine Legend as Radiance's chase card, per the owner. The case:
+- she is the set's headline champion and her Legend is played, not only collected;
+- the unsigned 174 was already AU$500 / £414 on 16 October;
+- the Chinese-exclusive signed 174a\* was listed from US$1,299.99.
+
+It says plainly that Packed Amphitheater (the Ultimate Rare battlefield) was the dearest single listing that day, at US$2,999.99, and that no store had listed the signed 174\* yet. It also says Riot publishes no pull rates. Prices are dated to the 16 October snapshot; the embeds are live. The K/DA, HEARTSTEEL and chase-card posts link to it.
+
+**Still without card art:** 172\*, 175\*, 176\*, 178\*, 180\*, 183\* and 174a\*. They stay out of the homepage chase strip until they have images.
