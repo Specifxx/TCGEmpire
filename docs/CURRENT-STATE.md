@@ -103,20 +103,22 @@ longer lands on its entry.
   calls `notifyOwnerBounded` (capped 8/h, 25/day); a new job, API or limit gets a
   check in `lib/ops/checks.ts`. The Neon rows need the `NEON_API_KEY` Actions secret.
   `docs/ops-monitor.md`. [2026-10-14](../DECISIONS.md#L16978)
-- **Live names** (since 2026-10-14; `src/lib/db-chains.ts` is the source of
-  truth): operational `RM8`, one variable, never a chain, because
+- **Live names** (since 2026-10-17; `src/lib/db-chains.ts` is the source of
+  truth): operational `RM9`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
   History: `HISTORY_DATABASE_URL_4`, then `_3`, then `DATABASE_URL`
   (terminal). Never rotate onto `DATABASE_URL`.
-  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422), [2026-09-28](../DECISIONS.md#L15024), [2026-10-04](../DECISIONS.md#L16597), [2026-10-09](../DECISIONS.md#L16789), [2026-10-14](../DECISIONS.md#L16962)
+  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422), [2026-09-28](../DECISIONS.md#L15024), [2026-10-04](../DECISIONS.md#L16597), [2026-10-09](../DECISIONS.md#L16789), [2026-10-14](../DECISIONS.md#L16962), [2026-10-17](../DECISIONS.md#L18406)
 - **Migrating:** verify the target live first (a recycled project must trail
   the source on every metric; a new one must be empty). Use a named
   `maintenance.yml` task: it guards SOURCE≠TARGET, dumps before truncating,
   verifies every row count, runs twice and ends with `prisma db push`
-  "already in sync". Flip the chain only after the data verifies; the owner
+  "already in sync". Run the final pass between imports: a sealed refresh
+  mid-copy fails the count. A recycled name can collide with its own old
+  task; replace the legacy step, never keep two. Flip the chain only after the data verifies; the owner
   sets the variable in all three Vercel environments.
   [2026-09-12](../DECISIONS.md#L5439),
-  [2026-09-14](../DECISIONS.md#L6203), [2026-09-18](../DECISIONS.md#L8523)
+  [2026-09-14](../DECISIONS.md#L6203), [2026-09-18](../DECISIONS.md#L8523), [2026-10-17](../DECISIONS.md#L18406)
 - **These move with the chain:** `build-db-push.sh`, the `db.ts` /
   `db-history.ts` warnings, each workflow's `DB_SOURCE_NAME`, its
   `OPERATIONAL_URL` guard and env-var names, and the probe labels; migration

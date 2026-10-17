@@ -98,6 +98,16 @@
  * this project now makes deliberately: no emergency fallback lever, but no more
  * silently-serving-garbage incidents either.
  *
+ * CUT OVER TO RM9 ON 2026-10-17: RM8 reached its 5 GB monthly transfer
+ * allowance three days into service. RM9 is a RECYCLED project on its third term
+ * (last live 2026-09-11..09-14); probe-databases found it behind RM8 on every
+ * table that holds user data (User 347 vs 483, CollectionCard 1,389 vs 2,602,
+ * PriceAlert 204 vs 285, RetailerPrice 131,008 vs 183,510) and ahead only on
+ * SealedListing (2,703 vs 2,684), a scrape cache every import wipes and
+ * rewrites. migrate-main-db-rm8-to-rm9 replaced it with a row-count-verified
+ * copy of RM8 (all 57 tables matching; User 483, RetailerPrice 183,510).
+ * RM8 is the rollback.
+ *
  * CUT OVER TO RM8 ON 2026-10-14: RM7 reached its 5 GB monthly transfer
  * allowance five days into service. RM8 is a RECYCLED project (last live
  * 2026-09-08..09-11); probe-databases found it behind RM7 on every metric
@@ -131,16 +141,16 @@
  * EbayAuction table whose FK onto Card had blocked the restore) and replaced it
  * with a row-count-verified copy of RM3 (all 42 tables matching, Card 1434).
  *
- * RM3 through RM7 and RM9 through RM12 and DATABASE_URL_2 are retired and stay out
+ * RM3 through RM8 and RM10 through RM12 and DATABASE_URL_2 are retired and stay out
  * of this chain — available to the migration tasks by explicit name (see
- * migrate-main-db-rm7-to-rm8 and its predecessors in .github/workflows/maintenance.yml).
+ * migrate-main-db-rm8-to-rm9 and its predecessors in .github/workflows/maintenance.yml).
  * DATABASE_URL is ALSO not in this chain anymore: it is read directly by
  * prisma/schema.prisma's env("DATABASE_URL") for local dev and by the Prisma
  * CLI, never by the running app (src/lib/db.ts constructs PrismaClient with an
  * explicit datasourceUrl override), so its presence or absence here has no
  * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM8"] as const;
+export const OPERATIONAL_VARS = ["RM9"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
