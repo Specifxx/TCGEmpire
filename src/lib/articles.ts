@@ -1038,9 +1038,10 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
     embeds: [
       {
         title: "Seraphine's Legend, from base to Signature",
-        note: "The base Legend, the overnumbered printing and the signed one. The same card, three rarities apart.",
+        note: "The signed English 174*, the Chinese-exclusive signed 174a* with its own art, the overnumbered printing and the base Legend.",
         slugs: [
           "seraphine-starry-eyed-songstress-rad-174s-167",
+          "seraphine-starry-eyed-songstress-rad-174as-167",
           "seraphine-starry-eyed-songstress-rad-174-167",
           "seraphine-starry-eyed-songstress-rad-151-167",
         ],
@@ -1120,7 +1121,7 @@ Radiance's base run stops at 167. Every number above it is a chase printing, and
 
 - **174/167** is the overnumbered Legend: new art, foil, numbered above the set.
 - **174\\*/167** is the **Signature**: the same overnumbered card with the artist's signature in foil. That is the one to chase.
-- **174a\\*/167** is a signed **alternate**: the Chinese-exclusive Seraphine, sold in that market only.
+- **174a\\*/167** is a signed **alternate**: the Chinese-exclusive Seraphine, printed in Simplified Chinese (the *SC* after the number) with entirely different art by BlackVIII, a sea-themed Seraphine among goldfish and jellyfish. It is sold in that market only.
 
 When you buy, read the number in the listing's photos, not just the title. A seller can write "signature" on an unsigned 174.
 

@@ -8,21 +8,22 @@
 // week, the old popup's 12%).
 //
 // Eight, inside the free watchlist (FREE_WATCHLIST_LIMIT, 10), so a new account
-// takes them all and keeps two slots of its own: five Signature printings and
-// three over-numbered Legends, the cards the reveal posts lead with (the 174a*
-// Signature joins once it has a card image). By slug, which is stable; a slug
+// takes them all and keeps two slots of its own: six Signature printings and
+// two over-numbered Legends, the cards the reveal posts lead with. The Chinese-
+// exclusive Seraphine 174a* joined on 2026-10-17 with its card image, in place
+// of the unsigned K'Sante 172.
 // that stops resolving simply drops out of the strip.
 import { prisma } from "./db";
 
 export const RADIANCE_CHASE_SLUGS = [
   "seraphine-starry-eyed-songstress-rad-174s-167",
+  "seraphine-starry-eyed-songstress-rad-174as-167",
   "ekko-boy-who-shattered-time-rad-168s-167",
   "ziggs-hexplosives-expert-rad-169s-167",
   "mordekaiser-iron-revenant-rad-170s-167",
   "orianna-lady-of-clockwork-rad-171s-167",
   "seraphine-starry-eyed-songstress-rad-174-167",
   "riven-the-exile-rad-173-167",
-  "k-sante-pride-of-nazumah-rad-172-167",
 ] as const;
 
 export interface ChaseCard {
