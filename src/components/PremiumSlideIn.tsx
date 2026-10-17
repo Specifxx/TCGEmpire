@@ -21,7 +21,7 @@ import {
 } from "@/lib/site";
 import { SEALED_CHECK_CADENCE } from "@/lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
-import { TierComparisonTable } from "./TierComparisonTable";
+import { PremiumTicks } from "./PremiumTicks";
 import { PREMIUM_SLIDER_DELAY_MS, PREMIUM_SLIDER_SNOOZE_MS, SNOOZE_AFTER_CLICK_MS } from "@/lib/nudge-timing";
 import { premiumSliderEligible } from "@/lib/nudge-gate";
 import { armNudge } from "@/lib/nudge-runtime";
@@ -280,6 +280,9 @@ async function fetchPersonalCopy(): Promise<{ heading: string; line: string } | 
 // dismissal snoozes it for PREMIUM_SLIDER_SNOOZE_MS; never on sign-in, checkout,
 // the arcade or the Pokémon section (lib/nudge-gate.ts premiumSliderEligible).
 const ART = "/premium/premium-pitch.webp";
+// The five rows the slider shows, by PremiumTicks name: what a first payment
+// changes most, in /premium's own words and marks.
+const SLIDER_ROWS = ["No ads", "Unlimited watchlist & portfolio", "Target-price alerts", "Full Deal Finder & Rising Cards", "Store-by-store buying plan"];
 
 export function PremiumSlideIn() {
   const { user, premium, premiumCheckout, premiumPlus, trialEligible, trialDays, trialFeeCents, introEligible, loaded, answered, providers } = useMe();
@@ -399,10 +402,10 @@ export function PremiumSlideIn() {
       (premiumPlus
         ? "Plus and Premium are ad-free. Plus shows every deal and emails you at your price; Premium buys your whole list for less."
         : "Premium shows every deal, buys your whole list for less, and is ad-free."))
-    : "Sign in with Google or Discord, then choose Premium. Your free account keeps your watchlist either way.";
+    : "Sign in, then choose Premium. Your free account keeps your watchlist either way.";
   const cta = trialEligible && trialDays > 0 ? `${trialButtonLabel(trialDays, trialFeeCents)} →` : "Unlock Premium →";
   const priceLine = PREMIUM_PRICE_AMOUNT ? (
-    <p className="mt-1.5 text-[11px] text-slate-300">
+    <p className="mt-1 text-[11px] leading-snug text-slate-300">
       {trialEligible && trialDays > 0 ? (
         <>
           <span className="font-extrabold text-white">{trialOfferLead(trialDays, trialFeeCents)}</span>
@@ -411,7 +414,8 @@ export function PremiumSlideIn() {
         </>
       ) : (
         <>
-          <span className="font-bold text-white">{introFromLine("premium", introEligible)}</span> · {premiumLockInTail()}
+          <span className="font-bold text-white">{introFromLine("premium", introEligible)}</span>
+          <span className="hidden sm:inline"> · {premiumLockInTail()}</span>
         </>
       )}
     </p>
@@ -423,14 +427,20 @@ export function PremiumSlideIn() {
     <div
       role="region"
       aria-label="RiftCompare Premium"
-      className={`above-bottombar fixed left-4 z-[70] w-[calc(100%-2rem)] max-w-[22rem] transition-[opacity,transform] duration-slow ease-out sm:w-[22rem] ${
+      className={`above-bottombar fixed left-4 z-[70] w-[calc(100%-2rem)] max-w-[20rem] transition-[opacity,transform] duration-slow ease-out sm:w-[20rem] ${
         entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"
       }`}
     >
-      <div className="flex max-h-[min(82dvh,calc(100dvh-9.5rem))] flex-col overflow-hidden rounded-xl [@media(max-height:520px)]:overflow-y-auto border border-gold/50 bg-ink-950 shadow-2xl">
+      {/* 70% SIMPLER (2026-10-17, owner: "the premium slider should also be 70%
+          simpler and smaller on phone"). DECISIONS.md, "/premium, 70% simpler".
+          Header (Akali, "Never overpay", the price line), five ticks rows Free
+          vs Premium, and the ask. The page's context line shows from sm up
+          only; no kicker, no seventeen-row scrolling table, no "Not now" (the
+          ✕ and Escape dismiss). About 330px tall on a 390px phone. */}
+      <div className="flex max-h-[calc(100dvh-9.5rem)] flex-col overflow-hidden rounded-xl border border-gold/50 bg-ink-950 shadow-2xl [@media(max-height:520px)]:overflow-y-auto">
         {/* Header: Akali on the right, under a scrim, the pitch on the left. */}
         <div className="relative shrink-0 overflow-hidden">
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-[62%]">
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-[58%]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={ART} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover object-[38%_26%]" />
             <div
@@ -441,7 +451,6 @@ export function PremiumSlideIn() {
               }}
             />
           </div>
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent" />
           <button
             onClick={dismiss}
             aria-label="Dismiss"
@@ -449,68 +458,40 @@ export function PremiumSlideIn() {
           >
             ✕
           </button>
-          <div className="relative px-4 pb-2.5 pt-3" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.85)" }}>
-            <div className="flex items-center gap-2">
-              <span className="font-display text-sm font-extrabold italic tracking-tight text-white">
-                Rift<span className="text-brand-400">compare</span>
-              </span>
-              <span className="rounded border border-gold/60 bg-ink-950/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold">
-                Premium
-              </span>
-            </div>
-            <p className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-300 [@media(max-height:700px)]:hidden">Spend less on every order.</p>
-            <h2 className="mt-1.5 font-display text-[20px] font-extrabold uppercase italic leading-[0.95] tracking-tight text-white">
-              Never
-              <br />
-              <span className="text-[24px] text-brand-400">Overpay</span>
-              <br />
-              <span className="text-[12px] text-slate-200">for a Riftbound card</span>
+          <div className="relative px-3.5 pb-2 pt-2.5" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.85)" }}>
+            <span className="rounded border border-gold/60 bg-ink-950/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold">
+              RiftCompare Premium
+            </span>
+            <h2 className="mt-1.5 font-display text-[19px] font-extrabold uppercase italic leading-none tracking-tight text-white">
+              Never <span className="text-brand-400">overpay</span>
             </h2>
             {priceLine}
             {premiumPriceIncreaseAnnounced() && (
-              <p className="mt-1.5 text-[10px] font-semibold text-gold">
+              <p className="mt-1 text-[10px] font-semibold text-gold">
                 Price increasing soon: lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to {PREMIUM_NEXT_PRICE_AMOUNT}
               </p>
             )}
           </div>
         </div>
 
-        {/* The comparison: the only part that scrolls, never squeezed below
-            about three rows (a 360x640 phone squeezed it to nothing). On a
-            landscape phone there is no room for it: the card shows the pitch
-            and the buttons, and scrolls as a whole if it must. */}
-        <div className="min-h-[6.5rem] flex-1 overflow-y-auto overscroll-contain [@media(max-height:520px)]:hidden border-y border-ink-800 bg-ink-950/60 px-3 py-2.5">
-          <p className="px-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            {user && premiumPlus ? "Free vs Plus vs Premium" : "Free vs Premium"}, at a glance
-          </p>
-          <div className="mt-1.5 overflow-hidden rounded-lg border border-ink-800">
-            <TierComparisonTable compact showPlus={!!user && premiumPlus} />
-          </div>
+        {/* Five rows of the /premium ticks, Free vs Premium. */}
+        <div className="shrink-0 px-3 pb-2">
+          <PremiumTicks dense showPlus={false} prices={{ plus: "", premium: "" }} selected="premium" only={SLIDER_ROWS} />
         </div>
 
         {/* The ask: always visible. */}
-        <div className="shrink-0 bg-ink-900 px-4 pb-3 pt-2.5">
-          {/* Optional on a short phone, where the buttons say it already. */}
-          <p className="text-[11px] leading-snug text-slate-400 [@media(max-height:700px)]:hidden">{line}</p>
+        <div className="shrink-0 border-t border-ink-800 bg-ink-900 px-3.5 pb-3 pt-2">
+          <p className="hidden text-[11px] leading-snug text-slate-400 sm:block">{line}</p>
           {user ? (
             <button
               onClick={accept}
-              className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+              className="mt-1 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
             >
               {cta}
             </button>
           ) : (
-            <div className="mt-1">
-              <AuthForm providers={providers} bare compact source="premium_slider" next={next} onProviderClick={providerClick} />
-            </div>
+            <AuthForm providers={providers} bare compact row source="premium_slider" next={next} onProviderClick={providerClick} />
           )}
-          <button
-            type="button"
-            onClick={dismiss}
-            className="mt-1 min-h-11 w-full rounded-lg px-3 py-2 text-center text-xs font-semibold text-slate-400 hover:bg-ink-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
-          >
-            Not now
-          </button>
         </div>
       </div>
     </div>

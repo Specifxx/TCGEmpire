@@ -18522,3 +18522,20 @@ The owner's ticks-only rule is the extreme of the last point: a cell is a mark, 
 **What to watch:**
 - `premium_signin_step` and `premium_checkout_started` per /premium view, on the new copy version against `akali-slider-2026-10-17`.
 - Scroll depth on /premium.
+
+**The slider too** (owner, the same afternoon: "the premium slider should also be 70% simpler and smaller on phone"). It renders `PremiumTicks` in a new `dense` mode with five rows, Free vs Premium: no ads, unlimited watchlist, target-price alerts, full Deal Finder, store-by-store plan. Dense mode uses tighter rows, no price line in the header, and a `short` label per row ("Unlimited watchlist" for "Unlimited watchlist & portfolio") so each fits on one line.
+
+**Removed:**
+- The 17-row `TierComparisonTable` that scrolled inside the card.
+- The "Spend less on every order" kicker.
+- The second line of the heading.
+- The "Not now" button. The ✕ (44px) and Escape still dismiss.
+- On a phone, the page's context line and the "cancel anytime" tail of the price line.
+
+**Changed:**
+- Google and Discord sit side by side (`AuthForm`'s new `row`, which drops their footnote).
+- The card is 20rem wide, down from 22rem.
+
+**Measured** on a 390×844 phone with the same dev server, signed out: 352×692 before (82% of the screen), 320×384 now. On a desktop: 352×648 before, 320×415 now.
+
+`tests/premium-slidein.test.ts` pins the five rows to real `TICK_ROWS` names.

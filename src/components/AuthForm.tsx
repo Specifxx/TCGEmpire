@@ -42,6 +42,7 @@ export function AuthForm({
   providers,
   bare = false,
   compact = false,
+  row = false,
   cancelHref,
   source,
   next,
@@ -62,6 +63,10 @@ export function AuthForm({
   // TWICE inside a card whose excessive height pushed its own close button
   // off-screen on a phone. Height here is not cosmetic — it was the bug.
   compact?: boolean;
+  // The two provider buttons side by side, named by provider alone, with no
+  // footnote: the Premium slider's ask (2026-10-17, owner: "smaller on phone").
+  // Implies compact.
+  row?: boolean;
   // Standalone /login only (bare's modal already has its own close button). A
   // visitor who lands here off a gated feature, unasked, previously had no way
   // out but the browser Back button — a dead end matching the exact pattern
@@ -168,14 +173,14 @@ export function AuthForm({
 
         {/* Only render a provider's button when its env keys are configured, so we
             never show a button that just redirects back with an error. */}
-        <div className="mt-5 flex flex-col gap-2.5">
+        <div className={row ? "mt-2 flex gap-2" : "mt-5 flex flex-col gap-2.5"}>
           {providers.includes("google") && (
             <a
               href={oauthHref("google")}
               onClick={() => onProviderClick("google")}
-              className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-[#ffffff] py-2.5 text-sm font-semibold text-[#0a0c10] hover:brightness-95"
+              className={`flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-[#ffffff] py-2.5 text-sm font-semibold text-[#0a0c10] hover:brightness-95 ${row ? "min-h-11 flex-1" : ""}`}
             >
-              <GoogleIcon /> Continue with Google
+              <GoogleIcon /> {row ? "Google" : "Continue with Google"}
             </a>
           )}
           {providers.includes("discord") && (
@@ -184,9 +189,9 @@ export function AuthForm({
               onClick={() => onProviderClick("discord")}
               // text-[#ffffff], not text-white: `white` is the themed token (near-black
               // ink in light, 4.17:1 on the blurple). Same rule as Google's button above.
-              className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-[#ffffff] hover:brightness-110"
+              className={`flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-[#ffffff] hover:brightness-110 ${row ? "min-h-11 flex-1" : ""}`}
             >
-              <DiscordIcon /> Continue with Discord
+              <DiscordIcon /> {row ? "Discord" : "Continue with Discord"}
             </a>
           )}
         </div>
@@ -200,9 +205,11 @@ export function AuthForm({
           </p>
         )}
 
-        <p className={`${compact ? "mt-3" : "mt-5"} text-center text-xs text-slate-500`}>
-          New here? Either button creates your account on the spot.
-        </p>
+        {!row && (
+          <p className={`${compact ? "mt-3" : "mt-5"} text-center text-xs text-slate-500`}>
+            New here? Either button creates your account on the spot.
+          </p>
+        )}
         {/* The password-migration note is genuinely useful on /login, where
             someone actively troubleshooting sign-in has room to read it. In an
             embedded dialog it is four lines of edge-case prose that push the

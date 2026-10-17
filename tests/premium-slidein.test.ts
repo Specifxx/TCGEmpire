@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { MAX_NUDGE_DISMISSALS } from "../src/lib/nudge-timing";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { TICK_ROWS } from "../src/components/PremiumTicks";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 // Comments describe what the component deliberately does NOT do (e.g. "never
@@ -162,21 +163,27 @@ test("the slider makes no proof request: the comparison table is the pitch", () 
   assert.doesNotMatch(code, /api\/premium\/proof/);
 });
 
-test("the Akali slider: the owner's art, the Free vs Premium table, and the ask always in view", () => {
+test("the Akali slider: the owner's art, five ticks rows, and the ask always in view", () => {
+  // 2026-10-17 (owner: "the premium slider should also be 70% simpler and smaller
+  // on phone"): five rows of /premium's own ticks, Free vs Premium, in place of
+  // the seventeen-row scrolling table; 384px tall on a 390x844 phone, from 692.
   const code = codeOnly(read(SRC));
   assert.match(code, /const ART = "\/premium\/premium-pitch\.webp";/, "the Akali art is back");
   assert.match(code, /<img src=\{ART\} alt="" aria-hidden="true"/, "decorative, with the alt attribute the build guard requires");
-  assert.match(code, /<TierComparisonTable compact/, "the real comparison table, not a hand-written list");
-  // Header and buttons never scroll; only the table does.
-  assert.match(code, /flex max-h-\[min\(82dvh,calc\(100dvh-9\.5rem\)\)\] flex-col/);
-  assert.match(code, /min-h-\[6\.5rem\] flex-1 overflow-y-auto/, "the table is the only scrolling part, never squeezed away");
-  assert.ok(code.indexOf("<TierComparisonTable") < code.indexOf("<AuthForm"), "table, then the sign-in buttons");
+  assert.match(code, /<PremiumTicks dense showPlus=\{false\}[^>]*only=\{SLIDER_ROWS\}/, "the real ticks, computed from TIER_COMPARISON, not a hand-written list");
+  const names = new Set(TICK_ROWS.map((r) => r.name));
+  const rows = [...read(SRC).match(/const SLIDER_ROWS = \[([^\]]+)\]/)![1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  assert.equal(rows.length, 5, "five rows");
+  for (const r of rows) assert.ok(names.has(r), `${r} is a PremiumTicks row`);
+  assert.doesNotMatch(code, /TierComparisonTable|Not now|overflow-y-auto overscroll-contain/, "no long table, no second dismiss button, nothing scrolls inside");
+  assert.match(code, /flex max-h-\[calc\(100dvh-9\.5rem\)\] flex-col/, "never taller than the space between the header and the tab bar");
+  assert.ok(code.indexOf("<PremiumTicks") < code.indexOf("<AuthForm"), "ticks, then the sign-in buttons");
 });
 
-test("a corner card that fits a phone: 22rem at most, inset 1rem, clear of the tab bar", () => {
+test("a corner card that fits a phone: 20rem at most, inset 1rem, clear of the tab bar", () => {
   const code = codeOnly(read(SRC));
-  assert.match(code, /w-\[calc\(100%-2rem\)\] max-w-\[22rem\]/, "never edge to edge on a phone");
-  assert.match(code, /sm:w-\[22rem\]/, "a fixed card on a desktop");
+  assert.match(code, /w-\[calc\(100%-2rem\)\] max-w-\[20rem\]/, "never edge to edge on a phone");
+  assert.match(code, /sm:w-\[20rem\]/, "a fixed card on a desktop");
   assert.match(code, /above-bottombar fixed left-4/, "a bottom-left card that clears the tab bar");
 });
 

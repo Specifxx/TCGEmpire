@@ -24,16 +24,17 @@ import { TIER_COMPARISON, type TierRow } from "./TierComparisonTable";
 
 export type TickTier = "free" | "plus" | "premium";
 
-export const TICK_ROWS: { name: string; from: string | null }[] = [
+// `short` is the dense (slider) label, for the rows the slider shows.
+export const TICK_ROWS: { name: string; from: string | null; short?: string }[] = [
   { name: "Compare prices across every store", from: null },
   { name: "No ads", from: "Ad-free experience" },
-  { name: "Unlimited watchlist & portfolio", from: "Watchlist & new-low alerts" },
+  { name: "Unlimited watchlist & portfolio", from: "Watchlist & new-low alerts", short: "Unlimited watchlist" },
   { name: "Target-price alerts", from: "Target-price alerts after every price update" },
-  { name: "Full Deal Finder & Rising Cards", from: "Deal Finder" },
+  { name: "Full Deal Finder & Rising Cards", from: "Deal Finder", short: "Full Deal Finder" },
   { name: "Full price history + CSV", from: "Full price history — every day since tracking began, with CSV download" },
   { name: "Graded price tracking", from: "Graded price tracking — history and new-low alerts for each grade (PSA 10, BGS 9.5…)" },
   { name: "Sealed restock & price alerts", from: "Sealed watches" },
-  { name: "Store-by-store buying plan", from: "Best Basket — cheapest delivered order for a list" },
+  { name: "Store-by-store buying plan", from: "Best Basket — cheapest delivered order for a list", short: "Store-by-store plan" },
   { name: "Deck price watch", from: "Deck price watch — email when a deck's delivered total drops" },
   { name: "eBay auction alerts", from: "Auction alerts — email when a card you watch has an eBay auction ending within 24 hours" },
   { name: "Full Demand Finder", from: "Demand Finder — most searched & viewed cards" },
@@ -54,13 +55,14 @@ export function hasTick(from: string | null, tier: TickTier): boolean {
   return v === true || v !== r.account;
 }
 
-function Mark({ yes }: { yes: boolean }) {
+function Mark({ yes, dense }: { yes: boolean; dense?: boolean }) {
+  const size = dense ? "h-5 w-5 text-[11px]" : "h-6 w-6 text-[13px]";
   return yes ? (
-    <span aria-label="Included" className="inline-grid h-6 w-6 place-items-center rounded-full bg-buy/15 text-[13px] font-black text-up">
+    <span aria-label="Included" className={`inline-grid ${size} place-items-center rounded-full bg-buy/15 font-black text-up`}>
       ✓
     </span>
   ) : (
-    <span aria-label="Not included" className="inline-grid h-6 w-6 place-items-center text-[13px] font-bold text-slate-600">
+    <span aria-label="Not included" className={`inline-grid ${size} place-items-center font-bold text-slate-600`}>
       ✕
     </span>
   );
@@ -72,6 +74,8 @@ export function PremiumTicks({
   selected,
   you,
   onSelect,
+  only,
+  dense = false,
 }: {
   showPlus: boolean;
   /** The column header's price line, e.g. { plus: "$2.99/mo", premium: "$4.99/mo" }. */
@@ -81,7 +85,13 @@ export function PremiumTicks({
   /** The viewer's own tier, captioned "You". */
   you?: TickTier;
   onSelect?: (tier: TickTier) => void;
+  /** A subset of TICK_ROWS by name, in TICK_ROWS order (the Premium slider shows five). */
+  only?: string[];
+  /** Tighter rows and no price line, for the slider. */
+  dense?: boolean;
 }) {
+  const rows = only ? TICK_ROWS.filter((r) => only.includes(r.name)) : TICK_ROWS;
+  const cellY = dense ? "py-1" : "py-2";
   const cols: { key: TickTier; name: string; price: string }[] = [
     { key: "free", name: "Free", price: "No card" },
     ...(showPlus ? [{ key: "plus" as const, name: "Plus", price: prices.plus }] : []),
@@ -90,42 +100,42 @@ export function PremiumTicks({
   const lit = (k: TickTier) =>
     k === selected ? (k === "premium" ? "bg-gold/[0.09]" : "bg-brand-500/[0.07]") : "";
   return (
-    <div className="card-surface overflow-hidden rounded-2xl border border-ink-700">
+    <div className={dense ? "overflow-hidden rounded-lg border border-ink-800" : "card-surface overflow-hidden rounded-2xl border border-ink-700"}>
       <table className="w-full table-fixed border-collapse">
         <caption className="sr-only">What each plan includes</caption>
         <colgroup>
           <col />
           {cols.map((c) => (
-            <col key={c.key} className="w-[68px] sm:w-[120px]" />
+            <col key={c.key} className={dense ? (c.key === "premium" ? "w-[72px]" : "w-[44px]") : "w-[68px] sm:w-[120px]"} />
           ))}
         </colgroup>
         <thead>
           <tr className="border-b border-ink-700">
-            <th scope="col" className="px-3 py-3 text-left align-bottom text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Compare plans
+            <th scope="col" className={`px-3 ${dense ? "py-1.5" : "py-3"} text-left align-bottom text-[11px] font-bold uppercase tracking-wider text-slate-500`}>
+              {dense ? "" : "Compare plans"}
             </th>
             {cols.map((c) => (
-              <th key={c.key} scope="col" className={`px-1 py-3 text-center align-bottom transition-colors ${lit(c.key)}`}>
+              <th key={c.key} scope="col" className={`px-1 ${dense ? "py-1.5" : "py-3"} text-center align-bottom transition-colors ${lit(c.key)}`}>
                 {onSelect && c.key !== "free" ? (
                   <button type="button" onClick={() => onSelect(c.key)} aria-pressed={c.key === selected} className="w-full">
-                    <ColHead name={c.name} price={c.price} tier={c.key} you={you === c.key} />
+                    <ColHead name={c.name} price={dense ? null : c.price} tier={c.key} you={you === c.key} />
                   </button>
                 ) : (
-                  <ColHead name={c.name} price={c.price} tier={c.key} you={you === c.key} />
+                  <ColHead name={c.name} price={dense ? null : c.price} tier={c.key} you={you === c.key} />
                 )}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {TICK_ROWS.map((r) => (
+          {rows.map((r) => (
             <tr key={r.name} className="border-b border-ink-800 last:border-0">
-              <th scope="row" className="px-3 py-2.5 text-left text-[13px] font-semibold leading-snug text-slate-200 sm:text-sm">
-                {r.name}
+              <th scope="row" className={`${dense ? "px-2.5 py-1 text-[12px]" : "px-3 py-2.5 text-[13px] sm:text-sm"} text-left font-semibold leading-snug text-slate-200`}>
+                {dense ? (r.short ?? r.name) : r.name}
               </th>
               {cols.map((c) => (
-                <td key={c.key} className={`px-1 py-2 text-center transition-colors ${lit(c.key)}`}>
-                  <Mark yes={hasTick(r.from, c.key)} />
+                <td key={c.key} className={`px-1 ${cellY} text-center transition-colors ${lit(c.key)}`}>
+                  <Mark yes={hasTick(r.from, c.key)} dense={dense} />
                 </td>
               ))}
             </tr>
@@ -136,7 +146,7 @@ export function PremiumTicks({
   );
 }
 
-function ColHead({ name, price, tier, you }: { name: string; price: string; tier: TickTier; you: boolean }) {
+function ColHead({ name, price, tier, you }: { name: string; price: string | null; tier: TickTier; you: boolean }) {
   return (
     <>
       {you && (
@@ -147,7 +157,7 @@ function ColHead({ name, price, tier, you }: { name: string; price: string; tier
       <span className={`block text-[13px] font-extrabold sm:text-sm ${tier === "premium" ? "text-gold" : tier === "plus" ? "text-white" : "text-slate-300"}`}>
         {name}
       </span>
-      <span className="num block text-[10px] font-semibold text-slate-500 sm:text-xs">{price}</span>
+      {price && <span className="num block text-[10px] font-semibold text-slate-500 sm:text-xs">{price}</span>}
     </>
   );
 }

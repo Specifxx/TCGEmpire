@@ -473,11 +473,13 @@ longer lands on its entry.
   growth playbook. [2026-10-16](../DECISIONS.md#L18206)
 - **The Akali slider (2026-10-17):** one corner Premium card for everyone not
   Premium, signed in or out, 3 s after the page settles, once a session, a
-  dismissal snoozes it 3 days. Akali art, the Free vs Premium table, and signed
-  out Google/Discord straight into `/premium/start` (source `premium_slider`).
+  dismissal snoozes it 3 days. Akali art, five `PremiumTicks` rows Free vs
+  Premium (since 10-17's "70% simpler": 320×384 on a phone, from 352×692; no
+  scrolling table, no "Not now"), and signed out Google/Discord side by side
+  straight into `/premium/start` (source `premium_slider`).
   It replaced the signed-out sign-up card and the 3rd-page/48-hour gate; off
   sign-in, checkout, the arcade, widgets, admin and Pokémon.
-  [2026-10-17](../DECISIONS.md#L18317)
+  [2026-10-17](../DECISIONS.md#L18317), [2026-10-17 smaller](../DECISIONS.md#L18460)
 - **Sign-up prompts in the page:** the signed-out corner card (`SignupSlideIn`,
   10-15 and 10-16) was replaced on 10-17 by the Akali slider above
   [2026-10-15](../DECISIONS.md#L17561), [2026-10-16](../DECISIONS.md#L17957).

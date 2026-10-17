@@ -94,7 +94,8 @@ test("one corner Premium card for everyone: the Akali slider (2026-10-17)", () =
   assert.match(slide, /delayMs: PREMIUM_SLIDER_DELAY_MS/);
   assert.equal(NUDGE_DELAY_MS, 12_000, "the annual offer keeps its own delay");
   // Signed out, Google and Discord go straight into Premium checkout.
-  assert.match(slide, /<AuthForm providers=\{providers\} bare compact source="premium_slider" next=\{next\}/);
+  // (side by side since 2026-10-17, the smaller slider: `row`)
+  assert.match(slide, /<AuthForm providers=\{providers\} bare compact row source="premium_slider" next=\{next\}/);
   assert.match(slide, /\/premium\/start\?tier=premium&plan=monthly&back=/);
   assert.ok(SIGNUP_SOURCES.has("premium_slider"));
 });
