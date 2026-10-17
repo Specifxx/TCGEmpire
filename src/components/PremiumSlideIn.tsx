@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMe } from "@/lib/use-me";
-import { useCountry } from "./CountryProvider";
 import { trackEvent, firePremiumClickBeacon } from "@/lib/analytics";
 import {
   PREMIUM_PRICE_AMOUNT,
@@ -22,13 +21,13 @@ import {
 } from "@/lib/site";
 import { SEALED_CHECK_CADENCE } from "@/lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
-import { PremiumPitchPanel } from "./PremiumPitchPanel";
-import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
-import { PREMIUM_SKIP_PATHS, accountAgeMs, premiumSlideInEligible } from "@/lib/nudge-gate";
-import { armNudge, useSessionViews } from "@/lib/nudge-runtime";
+import { TierComparisonTable } from "./TierComparisonTable";
+import { PREMIUM_SLIDER_DELAY_MS, PREMIUM_SLIDER_SNOOZE_MS, SNOOZE_AFTER_CLICK_MS } from "@/lib/nudge-timing";
+import { premiumSliderEligible } from "@/lib/nudge-gate";
+import { armNudge } from "@/lib/nudge-runtime";
 import { usePresence } from "@/lib/motion";
 import { isSignupSession } from "@/lib/signup-session";
-import { Skeleton } from "./ui/Skeleton";
+import { AuthForm } from "./AuthForm";
 
 // REMOVED 2026-09-28 WITH THE FREE LIMITS, RESTORED 2026-09-29. The owner's
 // free-limits brief put the upgrade prompt "where people hit a limit … not in
@@ -92,15 +91,15 @@ const SNOOZE_UNTIL = "rc_prem_slidein_until"; // localStorage: epoch ms; don't s
 // a second copy of these numbers. MAX_DISMISSALS stays as a local alias because this file reads
 // it in five places and the shorter name is what those lines were written
 // around; the VALUE has exactly one home.
-const MAX_DISMISSALS = MAX_NUDGE_DISMISSALS;
+
 
 // Where it never shows: the sign-in pages, /premium itself (they're already
 // there), and every page with its own inline paid prompt. Whole-segment
 // prefixes, from lib/nudge-gate.ts.
-const SKIP_PATHS = PREMIUM_SKIP_PATHS;
+
 // Its own per-session page-view count (signed-in views only), so it never
 // depends on the sign-up card's counter existing.
-const PV_KEY = "rc_prem_slidein_pv";
+
 
 // REDESIGNED 2026-08-30. Conversion was low and the old copy had also drifted
 // out of date — a hand-written sentence naming three tools (Bulk Pricer, Value
@@ -258,87 +257,62 @@ async function fetchPersonalCopy(): Promise<{ heading: string; line: string } | 
   return Promise.race([request, timeout]);
 }
 
+// THE AKALI SLIDER, BACK FOR EVERYONE (2026-10-17, owner: "bring back the Akali
+// sign-in slider that prompts you to buy premium … all the comparison of the
+// premium features … prompts you to sign in first with Google or Discord …
+// even for signed-out accounts … show up after a couple seconds … we don't need
+// two separate sign-up sliders"). DECISIONS.md, "The Akali slider returns".
+//
+// ONE card for every visitor who is not Premium. It replaces both the signed-in
+// Premium card and the signed-out sign-up card (SignupSlideIn, deleted):
+//   • the owner's 2026-09-10 comp — Akali bleeding behind a dark scrim, the
+//     wordmark, a PREMIUM badge and "Never overpay" (public/premium/
+//     premium-pitch.webp, retired 2026-09-15 and restored here);
+//   • the real Free vs Premium tick/✗ table (TierComparisonTable, compact), the
+//     same rows /premium renders, so the comparison cannot drift;
+//   • signed out: Google and Discord, straight into Premium checkout
+//     (/premium/start: sign-in is a step inside checkout, 2026-09-13), and the
+//     account it makes is free either way; signed in: the checkout button.
+// THE LAYOUT IS THE MOBILE FIX: header and buttons never scroll (a flex column
+// capped below the sticky header and the bottom tab bar), only the table does,
+// so the ✕ and the sign-in buttons are always on screen on a 360px phone.
+// Timing: PREMIUM_SLIDER_DELAY_MS after the page settles, once a session, and a
+// dismissal snoozes it for PREMIUM_SLIDER_SNOOZE_MS; never on sign-in, checkout,
+// the arcade or the Pokémon section (lib/nudge-gate.ts premiumSliderEligible).
+const ART = "/premium/premium-pitch.webp";
+
 export function PremiumSlideIn() {
-  const { user, premium, premiumCheckout, premiumPlus, trialEligible, trialDays, trialFeeCents, introEligible, loaded } = useMe();
-  const { country } = useCountry();
+  const { user, premium, premiumCheckout, premiumPlus, trialEligible, trialDays, trialFeeCents, introEligible, loaded, answered, providers } = useMe();
   const router = useRouter();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
-  // Same shared primitive AnnualSwitchNudge uses — one definition of "how a
-  // corner nudge enters/exits" instead of copies of the double-rAF +
-  // setTimeout trick.
   const { mounted, entered } = usePresence(shown, 250);
   const contextPitch = contextPitchFor(pathname);
-  // Live "N cards below TCGplayer market right now" proof line (a count — no
-  // dollar total, 2026-09-25). Fetched from the shared,
-  // already-cached homepage feed (see api/premium/proof) — ONLY once `shown`
-  // flips true, never on mount, so a visitor who never triggers the slide-in
-  // never causes this request at all.
-  const [proof, setProof] = useState<{ deals: number } | null>(null);
-  const proofFetched = useRef(false);
-  // Distinguishes "still fetching" from "fetched, nothing worth showing" —
-  // proof itself stays null in both cases, but only the first should render
-  // a skeleton; the second should render nothing, same as it always did.
-  const [proofSettled, setProofSettled] = useState(false);
-  // PERSONAL COPY (2026-09-23; lib/premium-nudge.ts). "4 cards you watch are
-  // underpriced right now" beats any per-page pitch, so when the account's own
-  // cards are in Deal Finder or Rising Cards it REPLACES the heading and line.
-  // Fetched once, when the card appears (never on mount, so an account that
-  // never sees the card never costs the read), and raced against
-  // PERSONAL_WAIT_MS. The card does NOT wait for it (2026-09-29): it shows when
-  // its timer fires with the per-page or generic pitch, and the personal line
-  // replaces it if it arrives within PERSONAL_WAIT_MS — during or just after
-  // the 250 ms entrance. Later than that it is dropped, so it never changes
-  // under someone already reading.
   const [personal, setPersonal] = useState<{ heading: string; line: string } | null>(null);
   const personalFetched = useRef(false);
-
-  // Signed-in page views this session (one per distinct route; a reload is not
-  // another page). 0 until this route is counted.
-  const views = useSessionViews(PV_KEY, pathname, loaded && !!user);
-  // Account age from /api/me's createdAt. Unknown fails closed.
-  const ageMs = accountAgeMs(user?.createdAt);
+  const signedOut = loaded && answered === true && !user;
   const eligible =
-    loaded && !!user && !premium && premiumCheckout && premiumSlideInEligible({ views, accountAgeMs: ageMs, pathname });
-
-  const [details, setDetails] = useState(false);
+    loaded && premiumCheckout && !premium && (signedOut || !!user) && premiumSliderEligible({ pathname }) && (!signedOut || providers.length > 0);
 
   useEffect(() => {
     if (!eligible || shown) return;
-
     let ls: Storage | null = null;
     let ss: Storage | null = null;
     try {
       ls = window.localStorage;
       ss = window.sessionStorage;
     } catch {
-      /* storage blocked — treat as "no prior state", the caps below all fail open to showing once */
+      /* storage blocked: no prior state, so it may show once */
     }
-
-    // NEVER IN THE SIGN-UP SESSION (2026-09-29): the tab where the account was
-    // just created gets no Premium ask at all — the first thing after making a
-    // free account must not be a request to pay (the 2026-09-23 "Premium after
-    // sign-up" rule, which the page-load timing had overridden). The next
-    // visit is an ordinary one. lib/signup-session.ts.
     if (isSignupSession()) return;
-
-    // Hard caps, cheapest first.
-    if (readNum(ls, DISMISS_COUNT) >= MAX_DISMISSALS) return; // a firm no is permanent
-    if (Date.now() < readNum(ls, SNOOZE_UNTIL)) return; // snoozed
+    if (Date.now() < readNum(ls, SNOOZE_UNTIL)) return;
     try {
-      if (ss?.getItem(SESSION_SEEN) === "1") return; // already shown this session
+      if (ss?.getItem(SESSION_SEEN) === "1") return;
     } catch {
       /* ignore */
     }
-    // The page-view gate (3rd view), the 48-hour account age and the skipped
-    // paths are `eligible` above (lib/nudge-gate.ts). armNudge waits
-    // NUDGE_DELAY_MS, cancelled if the visitor navigates (this cleanup), opens a
-    // dialog or drawer or focuses a text field, and fires only at a quiet moment
-    // (not over a dialog, not within 10 s of one closing, not mid-scroll or
-    // mid-typing). None of that burns the session's one showing: SESSION_SEEN is
-    // written only when the card really appears.
     return armNudge({
-      delayMs: NUDGE_DELAY_MS,
+      delayMs: PREMIUM_SLIDER_DELAY_MS,
       onFire: () => {
         try {
           ss?.setItem(SESSION_SEEN, "1");
@@ -350,91 +324,64 @@ export function PremiumSlideIn() {
     });
   }, [eligible, shown, pathname]);
 
-  // The personal line, once the card is up (see PERSONAL COPY above). The
-  // impression is recorded when the race settles, so `context` says which
-  // pitch the reader actually got.
+  // Signed-in members get their own line (their cards, or this page's tool);
+  // the impression is recorded once that settles, as before.
   useEffect(() => {
     if (!shown || personalFetched.current) return;
     personalFetched.current = true;
     let cancelled = false;
-    void fetchPersonalCopy().then((mine) => {
+    const mine = user ? fetchPersonalCopy() : Promise.resolve(null);
+    void mine.then((m) => {
       if (cancelled) return;
-      if (mine) setPersonal(mine);
+      if (m) setPersonal(m);
       trackEvent("premium_slidein_shown", {
         path: pathname ?? "/",
+        signed_in: !!user,
         trial_eligible: trialEligible,
-        context: mine ? "personal" : (contextPitch?.tool ?? undefined),
+        context: m ? "personal" : (contextPitch?.tool ?? undefined),
         copy: PREMIUM_COPY_VERSION,
       });
     });
     return () => {
       cancelled = true;
     };
-  }, [shown, pathname, trialEligible, contextPitch]);
+  }, [shown, pathname, trialEligible, contextPitch, user]);
 
-  // Fetch the live proof numbers only once the visitor has opened "See what's
-  // included" — never speculatively on mount or on show, since the line lives
-  // inside the disclosure and most visitors never open it.
-  useEffect(() => {
-    if (!shown || !details || proofFetched.current) return;
-    proofFetched.current = true;
-    let cancelled = false;
-    fetch(`/api/premium/proof?country=${country}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (cancelled || !d) return;
-        if (typeof d.deals === "number") {
-          setProof({ deals: d.deals });
-        }
-      })
-      .catch(() => {
-        /* best-effort — no proof line is a fine fallback */
-      })
-      .finally(() => {
-        if (!cancelled) setProofSettled(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [shown, details, country]);
-
-  // usePresence(shown, 250) now owns letting the exit transition finish
-  // before actually unmounting.
   const hide = useCallback(() => setShown(false), []);
-
   const dismiss = useCallback(() => {
     hide();
     try {
-      window.localStorage.setItem(DISMISS_COUNT, String(readNum(window.localStorage, DISMISS_COUNT) + 1));
-      window.localStorage.setItem(SNOOZE_UNTIL, String(Date.now() + SNOOZE_AFTER_DISMISS_MS));
+      window.localStorage.setItem(SNOOZE_UNTIL, String(Date.now() + PREMIUM_SLIDER_SNOOZE_MS));
     } catch {
       /* ignore */
     }
-    trackEvent("premium_slidein_dismissed", {});
-  }, [hide]);
-
-  const accept = useCallback(() => {
-    trackEvent("premium_slidein_click", {
-      trial_eligible: trialEligible,
-      context: personal ? "personal" : (contextPitch?.tool ?? undefined),
-      copy: PREMIUM_COPY_VERSION,
-    });
-    firePremiumClickBeacon("slidein"); // its own source since 2026-09-23 (was "button", shared with every nav link) — lib/premium-surface.ts
+    trackEvent("premium_slidein_dismissed", { signed_in: !!user });
+  }, [hide, user]);
+  const snoozeAfterClick = useCallback(() => {
     try {
-      // Engaged, not rejected: a long snooze rather than a dismissal strike, so
-      // not buying THIS time doesn't burn one of their two permanent no's.
       window.localStorage.setItem(SNOOZE_UNTIL, String(Date.now() + SNOOZE_AFTER_CLICK_MS));
     } catch {
       /* ignore */
     }
+  }, []);
+  const accept = useCallback(() => {
+    trackEvent("premium_slidein_click", {
+      signed_in: true,
+      trial_eligible: trialEligible,
+      context: personal ? "personal" : (contextPitch?.tool ?? undefined),
+      copy: PREMIUM_COPY_VERSION,
+    });
+    firePremiumClickBeacon("slidein");
+    snoozeAfterClick();
     hide();
-    router.push("/premium"); // straight to the page — no dialog in between (2026-09-06)
-  }, [hide, router, trialEligible, contextPitch, personal]);
+    router.push("/premium");
+  }, [hide, router, trialEligible, contextPitch, personal, snoozeAfterClick]);
+  const providerClick = useCallback(() => {
+    trackEvent("premium_slidein_click", { signed_in: false, copy: PREMIUM_COPY_VERSION });
+    firePremiumClickBeacon("slidein");
+    snoozeAfterClick();
+  }, [snoozeAfterClick]);
 
-  // Esc closes it — non-trapping, because this is not a modal. Ignored while a
-  // real dialog is open (2026-09-23): that Escape belongs to the dialog, and
-  // dismissing here as well would silently burn one of the two permanent
-  // dismissal strikes.
   useEffect(() => {
     if (!shown) return;
     const onKey = (e: KeyboardEvent) => {
@@ -446,35 +393,21 @@ export function PremiumSlideIn() {
 
   if (!mounted) return null;
 
-  const heading =
-    personal?.heading ?? contextPitch?.heading ?? (trialEligible && trialDays > 0 ? trialOfferLead(trialDays, trialFeeCents) : "Never overpay for a Riftbound card");
-  const bodyLine =
-    personal?.line ??
-    contextPitch?.line ??
-    (premiumPlus
-      ? "You've been comparing prices. Plus and Premium are ad-free: Plus shows every deal and emails you when a card you watch hits your price, and Premium buys your whole list for less:"
-      : "You've been comparing prices — Premium shows every deal, buys your whole list for less, and is ad-free:");
+  const line = user
+    ? (personal?.line ??
+      contextPitch?.line ??
+      (premiumPlus
+        ? "Plus and Premium are ad-free. Plus shows every deal and emails you at your price; Premium buys your whole list for less."
+        : "Premium shows every deal, buys your whole list for less, and is ad-free."))
+    : "Sign in with Google or Discord, then choose Premium. Your free account keeps your watchlist either way.";
   const cta = trialEligible && trialDays > 0 ? `${trialButtonLabel(trialDays, trialFeeCents)} →` : "Unlock Premium →";
-
-  // ONE PRICE LINE. Two framings by design, not an oversight (2026-09-09):
-  // • trialEligible (true for nearly every logged-in free visitor): the number
-  //   that's actually true right now ("First 30 days for $1", the $1 first month
-  //   of 2026-09-30) and the plan price it turns into, "then from $2.99/mo". The
-  //   Premium dialog and the checkout page's own disclosure state the full
-  //   terms before any card is charged.
-  // • !trialEligible (already used a trial, or trials are off — the default
-  //   since 2026-09-26): the real recurring price + premiumLockInTail
-  //   ("cancel anytime" unless an increase is announced).
   const priceLine = PREMIUM_PRICE_AMOUNT ? (
-    <p className="text-xs text-slate-400">
+    <p className="mt-1.5 text-[11px] text-slate-300">
       {trialEligible && trialDays > 0 ? (
         <>
-          <span className="text-sm font-extrabold text-white">{trialOfferLead(trialDays, trialFeeCents)}</span>
+          <span className="font-extrabold text-white">{trialOfferLead(trialDays, trialFeeCents)}</span>
           <> · then from {premiumPlus ? tierMonthlyAmount("plus") : PREMIUM_PRICE_AMOUNT}/mo</>
-          {/* The intro offer (lib/site.ts), stated beside the trial. */}
-          {introOfferEnabled() && introEligible && (
-            <> · then {tierIntroMonthlyAmount()}/mo for {INTRO_MONTHS} months (half price)</>
-          )}
+          {introOfferEnabled() && introEligible && <> · then {tierIntroMonthlyAmount()}/mo for {INTRO_MONTHS} months</>}
         </>
       ) : (
         <>
@@ -483,118 +416,102 @@ export function PremiumSlideIn() {
       )}
     </p>
   ) : null;
+  const back = pathname ?? "/";
+  const next = `/premium/start?tier=premium&plan=monthly&back=${encodeURIComponent(back)}`;
 
   return (
-    // Bottom-LEFT so it never collides with the bottom-right feedback pill
-    // (FeedbackWidget, above-bottombar right-4). `.above-bottombar` clears the
-    // mobile bottom tab bar (0 on desktop, where it's a plain corner inset);
-    // z-[70] keeps it under every real modal (feedback panel z-85, premium
-    // dialog z-120) while sitting above page chrome. AnnualSwitchNudge shares
-    // this corner and z-tier — safe, since its audience (monthly Premium) and
-    // this one (signed in, no paid tier) never overlap. (The signed-out
-    // SignupPromoPopup shared it too until its removal on 2026-09-30.)
-    // A bottom CARD, never a full-width overlay: 20rem at most, so on a phone
-    // the page stays visible beside and above it. The un-entered state uses
-    // motion-safe: only, so under prefers-reduced-motion it simply appears.
     <div
       role="region"
-      aria-label="RiftCompare Premium offer"
-      className={`above-bottombar fixed left-4 z-[70] w-[calc(100%-2rem)] transition-[opacity,transform] duration-slow ease-out ${
-        details ? "max-w-[23rem] sm:w-[23rem]" : "max-w-[20rem] sm:w-80"
-      } ${
+      aria-label="RiftCompare Premium"
+      className={`above-bottombar fixed left-4 z-[70] w-[calc(100%-2rem)] max-w-[22rem] transition-[opacity,transform] duration-slow ease-out sm:w-[22rem] ${
         entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"
       }`}
     >
-      {/* Collapsed it is ~190px and 20rem wide; OPEN it widens to 23rem so the tier
-          table fits with its Premium column visible (at 20rem "Unlimited" was cut
-          off at the edge). The max-h + scroll is for the OPEN disclosure
-          (the tier table) and for short viewports, and the header is sticky so
-          the ✕ never scrolls away (the short-phone incident the removed
-          sign-up popup once had). */}
-      <div className="relative max-h-[min(80dvh,calc(100dvh-9.5rem))] overflow-y-auto overflow-x-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center gap-2 bg-ink-900 py-1 pl-4 pr-1">
-          <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
-            Premium
-          </span>
-          <span className="min-w-0 flex-1 text-[13px] font-semibold leading-snug text-slate-100">{heading}</span>
-          {/* 44px at every width (min-h-11/min-w-11 over .tap-icon's 36px on
-              desktop; 48px on a coarse pointer already). */}
+      <div className="flex max-h-[min(82dvh,calc(100dvh-9.5rem))] flex-col overflow-hidden rounded-xl [@media(max-height:520px)]:overflow-y-auto border border-gold/50 bg-ink-950 shadow-2xl">
+        {/* Header: Akali on the right, under a scrim, the pitch on the left. */}
+        <div className="relative shrink-0 overflow-hidden">
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-[62%]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={ART} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover object-[38%_26%]" />
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  "linear-gradient(90deg, #0e1116 0%, rgba(14,17,22,0.82) 26%, rgba(14,17,22,0.30) 62%, rgba(14,17,22,0.12) 100%)",
+              }}
+            />
+          </div>
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent" />
           <button
             onClick={dismiss}
             aria-label="Dismiss"
-            className="tap-icon min-h-11 min-w-11 shrink-0 self-start rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+            className="tap-icon absolute right-1 top-1 z-10 min-h-11 min-w-11 rounded-lg bg-ink-950/50 text-slate-200 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
             ✕
           </button>
+          <div className="relative px-4 pb-2.5 pt-3" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.85)" }}>
+            <div className="flex items-center gap-2">
+              <span className="font-display text-sm font-extrabold italic tracking-tight text-white">
+                Rift<span className="text-brand-400">compare</span>
+              </span>
+              <span className="rounded border border-gold/60 bg-ink-950/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold">
+                Premium
+              </span>
+            </div>
+            <p className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-300 [@media(max-height:700px)]:hidden">Spend less on every order.</p>
+            <h2 className="mt-1.5 font-display text-[20px] font-extrabold uppercase italic leading-[0.95] tracking-tight text-white">
+              Never
+              <br />
+              <span className="text-[24px] text-brand-400">Overpay</span>
+              <br />
+              <span className="text-[12px] text-slate-200">for a Riftbound card</span>
+            </h2>
+            {priceLine}
+            {premiumPriceIncreaseAnnounced() && (
+              <p className="mt-1.5 text-[10px] font-semibold text-gold">
+                Price increasing soon: lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to {PREMIUM_NEXT_PRICE_AMOUNT}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="px-4 pb-1.5 pt-0.5">
-          {priceLine}
-          {/* Same real, decided increase the dialog and /premium announce (see
-              lib/site.ts), sized down to one line for this low-intrusion card.
-              ONLY while an increase is announced: from 2026-09-22 it also
-              showed "Price rises as the site grows — lock in $X for good" in
-              the steady state, retired with the 2026-09-26 price cut (the
-              price had just gone down; no rise is decided). */}
-          {premiumPriceIncreaseAnnounced() && (
-            <p className="mt-2 rounded-md border border-gold/40 bg-gold/10 px-2 py-1.5 text-[11px] font-semibold text-gold">
-              Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
-              {PREMIUM_NEXT_PRICE_AMOUNT}
-            </p>
-          )}
-          <div className="mt-2 flex items-center gap-2">
+
+        {/* The comparison: the only part that scrolls, never squeezed below
+            about three rows (a 360x640 phone squeezed it to nothing). On a
+            landscape phone there is no room for it: the card shows the pitch
+            and the buttons, and scrolls as a whole if it must. */}
+        <div className="min-h-[6.5rem] flex-1 overflow-y-auto overscroll-contain [@media(max-height:520px)]:hidden border-y border-ink-800 bg-ink-950/60 px-3 py-2.5">
+          <p className="px-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            {user && premiumPlus ? "Free vs Plus vs Premium" : "Free vs Premium"}, at a glance
+          </p>
+          <div className="mt-1.5 overflow-hidden rounded-lg border border-ink-800">
+            <TierComparisonTable compact showPlus={!!user && premiumPlus} />
+          </div>
+        </div>
+
+        {/* The ask: always visible. */}
+        <div className="shrink-0 bg-ink-900 px-4 pb-3 pt-2.5">
+          {/* Optional on a short phone, where the buttons say it already. */}
+          <p className="text-[11px] leading-snug text-slate-400 [@media(max-height:700px)]:hidden">{line}</p>
+          {user ? (
             <button
               onClick={accept}
-              className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+              className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
             >
               {cta}
             </button>
-            <button
-              onClick={dismiss}
-              className="min-h-11 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-500 transition hover:bg-ink-800 hover:text-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
-            >
-              Not now
-            </button>
-          </div>
-          {/* THE DISCLOSURE: everything that used to be on the card by default
-              (the per-page pitch line, the live proof, the tier table) is one
-              tap away instead of in the way. A button, not <details>, so it
-              carries aria-expanded and the same focus ring as the rest. */}
+          ) : (
+            <div className="mt-1">
+              <AuthForm providers={providers} bare compact source="premium_slider" next={next} onProviderClick={providerClick} />
+            </div>
+          )}
           <button
             type="button"
-            onClick={() => setDetails((v) => !v)}
-            aria-expanded={details}
-            aria-controls="premium-slidein-details"
-            className="mt-0.5 flex min-h-11 w-full items-center justify-between rounded-lg px-1 text-xs font-semibold text-slate-300 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+            onClick={dismiss}
+            className="mt-1 min-h-11 w-full rounded-lg px-3 py-2 text-center text-xs font-semibold text-slate-400 hover:bg-ink-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
-            See what&apos;s included
-            <span aria-hidden="true" className="text-slate-500">{details ? "▴" : "▾"}</span>
+            Not now
           </button>
         </div>
-        {details && (
-          <div id="premium-slidein-details" className="border-t border-ink-800">
-            <div className="px-4 pt-3">
-              <p className="text-xs leading-relaxed text-slate-400">{bodyLine}</p>
-              {/* Live proof — real numbers, not a made-up urgency line. Renders
-                  nothing until the fetch resolves (or if there's too little to
-                  make a real case, or it fails), so this can only ever make the
-                  pitch stronger, never weaker or slower to appear. */}
-              {proof === null && !proofSettled ? (
-                <Skeleton className="mt-1.5 h-3.5 w-48" />
-              ) : (
-                proof &&
-                proof.deals >= 5 && (
-                  <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
-                    {/* A count, never a dollar total: summed gaps are a savings
-                        figure, which the pitch rules ban (QA, 2026-09-25). */}
-                    <span className="font-bold text-white">{proof.deals} cards below TCGplayer market</span> on Deal
-                    Finder right now.
-                  </p>
-                )
-              )}
-            </div>
-            <PremiumPitchPanel tableOnly showPlus={premiumPlus} />
-          </div>
-        )}
       </div>
     </div>
   );

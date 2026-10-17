@@ -494,6 +494,7 @@ test("every tier surface quotes the limits from the constants, and price compari
   // then "signup-inline-2026-09-30" when the sign-up slider was removed ("The sign-up slider is gone"); plans and prices unchanged;
   // then "search-caps-2026-10-09" when search was metered again and the plans gained history, graded and auction rows.
   // then "search-caps-2026-10-15" when the allowance was loosened to 25 / 100 / 500,
-  // then "signup-card-2026-10-16" when the sign-up card moved to the 2nd page.
-  assert.equal(PREMIUM_COPY_VERSION, "signup-card-2026-10-16");
+  // then "signup-card-2026-10-16" when the sign-up card moved to the 2nd page,
+  // then "akali-slider-2026-10-17" when one Akali slider replaced both corner cards.
+  assert.equal(PREMIUM_COPY_VERSION, "akali-slider-2026-10-17");
 });

@@ -49,7 +49,8 @@ test("every corner nudge waits the shared delay before showing, through the shar
     // The show timer is armNudge (lib/nudge-runtime.ts), and the delay handed to
     // it must be the shared constant, used directly.
     assert.match(code, /armNudge\(\{/, `${f} must use the shared show timer`);
-    assert.match(code, /delayMs: NUDGE_DELAY_MS/, `${f} must use the shared delay as the show timer, not merely import it`);
+    // The Akali slider has its own shorter clock (2026-10-17), also from lib/nudge-timing.ts.
+    assert.match(code, /delayMs: (NUDGE_DELAY_MS|PREMIUM_SLIDER_DELAY_MS)/, `${f} must use a shared delay as the show timer, not merely import it`);
   }
 });
 
@@ -105,8 +106,8 @@ test("the delay is a timing change only — every frequency cap is untouched", (
   // keeps its own eligibility and frequency rules; this pins the ones that
   // would be easiest to lose while editing the timer next to them.
   const slide = readCode("src/components/PremiumSlideIn.tsx");
-  assert.match(slide, /premiumSlideInEligible\(/, "the slide-in still asks the shared eligibility gate");
-  assert.match(slide, /MAX_DISMISSALS = MAX_NUDGE_DISMISSALS/, "and keeps the shared two-dismissal cap");
+  assert.match(slide, /premiumSliderEligible\(/, "the slider still asks its eligibility gate");
+  assert.match(slide, /PREMIUM_SLIDER_SNOOZE_MS/, "and a dismissal snoozes it");
 
   const annual = readCode("src/components/AnnualSwitchNudge.tsx");
   assert.match(annual, /MIN_MONTHS/, "the annual nudge still requires tenure");

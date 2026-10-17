@@ -469,12 +469,17 @@ longer lands on its entry.
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket
   `ads`, stop after two weeks if a visit costs more than it earns) is in the
   growth playbook. [2026-10-16](../DECISIONS.md#L18206)
-- **Sign-up prompts live in the page, plus one gated corner card (card restored 10-15):**
-  `SignupSlideIn`, signed out only, from the 2nd page of a visit (never the
-  landing page; the 4th until 10-16), 12 s, once a session, two ✕ and it stops
-  (`signupCardEligible`, `src=signup_card`) [2026-10-15](../DECISIONS.md#L17561),
-  [2026-10-16](../DECISIONS.md#L17957). `PREMIUM_COPY_VERSION` `signup-card-2026-10-16`.
-  Otherwise (09-30) nothing in the layout asks a signed-out visitor to sign up. `InlineSignupPrompt` is page content, one per page, below
+- **The Akali slider (2026-10-17):** one corner Premium card for everyone not
+  Premium, signed in or out, 3 s after the page settles, once a session, a
+  dismissal snoozes it 3 days. Akali art, the Free vs Premium table, and signed
+  out Google/Discord straight into `/premium/start` (source `premium_slider`).
+  It replaced the signed-out sign-up card and the 3rd-page/48-hour gate; off
+  sign-in, checkout, the arcade, widgets, admin and Pokémon.
+  [2026-10-17](../DECISIONS.md#L18317)
+- **Sign-up prompts in the page:** the signed-out corner card (`SignupSlideIn`,
+  10-15 and 10-16) was replaced on 10-17 by the Akali slider above
+  [2026-10-15](../DECISIONS.md#L17561), [2026-10-16](../DECISIONS.md#L17957).
+  `PREMIUM_COPY_VERSION` `akali-slider-2026-10-17`. `InlineSignupPrompt` is page content, one per page, below
   the first screen, signed-out only after `/api/me` answers: `/browse` (after
   the 12th tile), a priced `/deck`, `/decks/[slug]`, `/movers`,
   `/champions/[slug]`. The homepage keeps `AccountStrip` and a released set page
@@ -484,19 +489,14 @@ longer lands on its entry.
   (`tests/signup-inline.test.ts`). `PREMIUM_COPY_VERSION` `signup-inline-2026-09-30`
   (since 10-09 `search-caps-2026-10-09`, the search allowance above).
   [2026-09-30](../DECISIONS.md#L15871)
-- **Corner nudges (value first, 09-29 evening; supersedes "instant" and "on the
-  first page"):** only signed-in cards remain. The Premium slide-in (signed in,
-  no paid tier) waits for the session's 3rd view and an account older than 48 h,
-  skips `/tools`, `/portfolio`, `/watching`, `/sealed`, `/pokemon`, and is a compact card
-  (about 23% of a phone's height) with the tier table behind "See what's
-  included". It and `AnnualSwitchNudge` wait `NUDGE_DELAY_MS` = 12 s from
-  eligibility, cancel on a dialog, drawer, focused text field or navigation, and
-  never appear within 10 s of a dialog closing (`lib/nudge-gate.ts`,
-  `lib/nudge-runtime.ts`). What stays: 2 dismissals per device, the 7/14-day
-  snoozes, the slide-in's once per session, and no slide-in in the sign-up
-  session. Do not add an instant or first-page path back: an instant card
-  measured 78% dismissed and Google treats a pop-up over a phone's first page
-  as intrusive. [2026-09-16](../DECISIONS.md#L7031),
+- **Corner nudges:** the Premium card is the Akali slider since 10-17 (above;
+  the owner chose a 3 s, every-visitor card knowing an instant card once
+  measured 78% dismissed and that Google treats a pop-up over a phone's first
+  page as intrusive). `AnnualSwitchNudge` keeps the 09-29 rules:
+  `NUDGE_DELAY_MS` = 12 s, 2 dismissals per device, 7/14-day snoozes. Both
+  cancel on a dialog, drawer, focused text field or navigation and never appear
+  within 10 s of a dialog closing (`lib/nudge-gate.ts`, `lib/nudge-runtime.ts`),
+  and the slider never shows in the sign-up session. [2026-09-16](../DECISIONS.md#L7031),
   [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089),
   [2026-09-27](../DECISIONS.md#L14536), [2026-09-28](../DECISIONS.md#L14549),
   [2026-09-29](../DECISIONS.md#L15178), [2026-09-29](../DECISIONS.md#L15281),

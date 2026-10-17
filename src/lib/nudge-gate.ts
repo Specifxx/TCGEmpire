@@ -1,28 +1,16 @@
 // WHEN A CORNER NUDGE MAY APPEAR AT ALL. Pure, so tests/nudge-gate.test.ts
 // pins every branch. DECISIONS.md, "Nudges: value first", 2026-09-29.
 //
-// The rule behind every number here: a visitor is shown what the site does
-// BEFORE they are asked for anything, and a "no" is respected. So the signed-in
-// Premium card waits until the account has had time to get something out of the
-// free tier.
+// Since 2026-10-17 there is one corner Premium card, the Akali slider, for
+// every visitor who is not Premium, signed in or out ("The Akali slider
+// returns", DECISIONS.md). It has no page-view or account-age gate, only the
+// pages it stays off (premiumSliderEligible, at the bottom). The signed-in
+// card's 3rd-page / 48-hour gate and the signed-out sign-up card's 2nd-page
+// gate went with it. The monthly subscriber's annual offer keeps its own gate.
 //
-// There is no signed-out corner card any more: the sign-up slider was removed
-// on 2026-09-30 ("The sign-up slider is gone: sign-up prompts live in the page",
-// DECISIONS.md), along with its first-page, engaged-time and sign-in-intent
-// rules. Signed-out visitors meet InlineSignupPrompt in the page instead, which
-// needs no gate because it never interrupts anything.
-//
-// lib/nudge-timing.ts holds the shared settle-in delay (NUDGE_DELAY_MS) and the
-// dismissal caps and snoozes; this file holds the ELIGIBILITY rules those sit
-// on top of. lib/nudge-runtime.ts is the browser half (timers, watchers).
-
-// ── The Premium slide-in (signed in, no paid tier, checkout on) ─────────────
-
-/** Not on the session's first two page views: eligible from the 3rd. */
-export const PREMIUM_MIN_VIEWS = 3;
-
-/** A new account's job is setup (WelcomeChecklist), not a purchase: 48 hours from User.createdAt. */
-export const PREMIUM_MIN_ACCOUNT_AGE_MS = 48 * 3_600_000;
+// lib/nudge-timing.ts holds the delays, dismissal caps and snoozes; this file
+// holds the ELIGIBILITY rules those sit on top of. lib/nudge-runtime.ts is the
+// browser half (timers, watchers).
 
 /** Whole-word path prefixes: "/tools" matches /tools and /tools/x, not /toolsmith. */
 export function pathSkipped(pathname: string | null | undefined, skips: readonly string[]): boolean {
@@ -30,15 +18,6 @@ export function pathSkipped(pathname: string | null | undefined, skips: readonly
   return skips.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
-/**
- * The Premium card's skipped paths: the sign-in pages, /premium itself, and
- * every page that already carries its OWN inline paid prompt (the tools' blur
- * walls and limit panels, the watchlist/portfolio Plus upsell, the sealed
- * watches). Stacking a corner card on those is asking twice for one thing.
- */
-// "/pokemon" (2026-10-01): the Pokémon section sells nothing of Premium's, which
-// is all Riftbound, so a Premium card there would be an ad for another game.
-export const PREMIUM_SKIP_PATHS = ["/login", "/verify", "/premium", "/tools", "/portfolio", "/watching", "/sealed", "/pokemon"] as const;
 
 /** Milliseconds since `createdAt` (an ISO string or Date), or null when it is missing or unreadable. */
 export function accountAgeMs(createdAt: string | Date | null | undefined, now: number = Date.now()): number | null {
@@ -47,41 +26,6 @@ export function accountAgeMs(createdAt: string | Date | null | undefined, now: n
   return Number.isFinite(t) ? Math.max(0, now - t) : null;
 }
 
-export interface PremiumGateInput {
-  /** Signed-in page views this session, the current one included. */
-  views: number;
-  /** accountAgeMs(); null (unknown) fails CLOSED: no ask without knowing how new they are. */
-  accountAgeMs: number | null;
-  pathname: string | null | undefined;
-}
-
-export function premiumSlideInEligible({ views, accountAgeMs: age, pathname }: PremiumGateInput): boolean {
-  if (views < PREMIUM_MIN_VIEWS) return false;
-  if (age === null || age < PREMIUM_MIN_ACCOUNT_AGE_MS) return false;
-  return !pathSkipped(pathname, PREMIUM_SKIP_PATHS);
-}
-
-// ── The signed-out sign-up card (restored 2026-10-15) ───────────────────────
-// Owner, 2026-10-15: "bring the sign up now pop up again to get more people to
-// register … but we should just gate it and make it appear after so many
-// pages, because some people just are annoyed at it." So it never shows on a
-// visit's first pages (and so never over a phone's first page from search,
-// which Google treats as intrusive), and keeps the shared caps: 12 s settle-in,
-// once a session, two dismissals and it stops for good, 7/14-day snoozes.
-// Reverses 2026-09-30's "The sign-up slider is gone" for this one card.
-
-/** From the 2nd page view of a visit: never on the page someone lands on, so a
- *  phone visitor from search never meets it first (2026-10-16, owner: "add the
- *  sign up slider back to get users to sign up"; it was the 4th page, which most
- *  visits never reach). */
-export const SIGNUP_MIN_VIEWS = 2;
-
-/** Not on the sign-in pages, /premium (its own CTAs), or the Pokémon section (a Riftbound account pitch). */
-export const SIGNUP_SKIP_PATHS = ["/login", "/verify", "/premium", "/pokemon", "/admin"] as const;
-
-export function signupCardEligible({ views, pathname }: { views: number; pathname: string | null | undefined }): boolean {
-  return views >= SIGNUP_MIN_VIEWS && !pathSkipped(pathname, SIGNUP_SKIP_PATHS);
-}
 
 // ── The monthly subscriber's annual offer ───────────────────────────────────
 
@@ -136,4 +80,16 @@ export function isTextEntry(el: { tagName?: string; type?: string; isContentEdit
   if (tag === "TEXTAREA" || tag === "SELECT") return true;
   if (tag === "INPUT") return !NON_TEXT_INPUT_TYPES.has((el.type ?? "text").toLowerCase());
   return false;
+}
+
+// ── The Akali slider (2026-10-17) ───────────────────────────────────────────
+// One card for every visitor who is not Premium, signed in or out (owner: "even
+// for signed-out accounts, it should just be there … after a couple seconds").
+// No page-view or account-age gate any more; it stays off the pages where it
+// would interrupt the thing someone came to do: signing in or paying, the
+// ad-free arcade, embedded widgets, admin and the separate Pokémon section.
+export const PREMIUM_SLIDER_SKIP_PATHS = ["/login", "/verify", "/premium", "/games", "/riftle", "/embed", "/admin", "/pokemon"] as const;
+
+export function premiumSliderEligible({ pathname }: { pathname: string | null | undefined }): boolean {
+  return !pathSkipped(pathname, PREMIUM_SLIDER_SKIP_PATHS);
 }

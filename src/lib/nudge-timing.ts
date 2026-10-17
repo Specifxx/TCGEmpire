@@ -89,3 +89,16 @@ export const NUDGE_DELAY_MS = 12_000;
 export const MAX_NUDGE_DISMISSALS = 2;
 export const SNOOZE_AFTER_DISMISS_MS = 7 * 864e5; // 7 days
 export const SNOOZE_AFTER_CLICK_MS = 14 * 864e5; // 14 days
+
+/**
+ * THE AKALI SLIDER'S OWN CLOCK (2026-10-17, owner: "it just show up after,
+ * like, a couple seconds"). Three seconds after the page settles (armNudge still
+ * waits for a quiet moment: no typing, scrolling or open dialog), once a
+ * session; a dismissal snoozes it for three days, and a click for
+ * SNOOZE_AFTER_CLICK_MS. It replaces both corner cards it overrides
+ * (PremiumSlideIn's 12 s and the sign-up card's), so NUDGE_DELAY_MS now times
+ * only AnnualSwitchNudge.
+ */
+export const PREMIUM_SLIDER_DELAY_MS = 3_000;
+export const PREMIUM_SLIDER_SNOOZE_MS = 3 * 864e5; // 3 days
+

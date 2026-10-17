@@ -18313,3 +18313,46 @@ They are added when a listing or a Riot image shows them. The price importer alr
 Sealed copy still reads `isPreorderSetCode()`: boxes ship on 23 Oct, so the intro still links the pre-order comparison. This is Vendetta's precedent ("treated as released" when singles traded early), applied to the card pages only. The release date in `SETS` stays the true 23 Oct.
 
 **Deployed** with `[deploy]` because the owner asked for it.
+
+## The Akali slider returns: one Premium card for everyone, three seconds in — 2026-10-17
+
+**Owner:** "bring back the Akali sign-in slider that … prompts you to buy premium … all the comparison of the premium features … prompts you to sign in first with Google or Discord … well-wrapped on mobile as well as desktop … even for signed-out accounts … show up after, like, a couple seconds … we don't need two separate sign-up sliders."
+
+**What it is.** `components/PremiumSlideIn.tsx`, rebuilt as one bottom-left card for every visitor who is not Premium, signed in or out:
+- the owner's 2026-09-10 comp: Akali (`public/premium/premium-pitch.webp`) under a dark scrim, the wordmark, a PREMIUM badge, "Never overpay for a Riftbound card" and the price line;
+- the real Free vs Premium table (`TierComparisonTable`, compact; Free vs Plus vs Premium for a signed-in member when Plus is on);
+- signed out: Google and Discord (`AuthForm`, source `premium_slider`), whose `next` is `/premium/start?tier=premium&plan=monthly&back=<page>`, so sign-in is a step inside checkout and the account it creates is free either way;
+- signed in: the checkout button (`/premium`), with the personal or per-page line as before.
+
+**What it reverses.**
+- **The art:** retired on 2026-09-15 ("doesn't really mean anything"). Restored by name.
+- **The signed-out sign-up card** (`SignupSlideIn`, restored 2026-10-15): deleted, so there is one corner card, not two. Its 2nd-page gate goes with it.
+- **The signed-in card's gate:** the 3rd page and the 48-hour account age go. So do the 12 s wait, the compact "See what's included" disclosure and the permanent two-dismissal cap.
+- **The Premium pitch freeze** (2026-10-12, to late November) does not hold for this card: the owner asked for it. Prices, trial and plans are unchanged.
+
+**Timing** (`lib/nudge-timing.ts`):
+- `PREMIUM_SLIDER_DELAY_MS`: 3 s after the page settles. `armNudge` still waits for a quiet moment: no typing, scrolling or open dialog.
+- Once a session.
+- A dismissal snoozes it for 3 days (`PREMIUM_SLIDER_SNOOZE_MS`); a click for 14.
+- Never in the session someone signs up.
+
+**Where it stays off** (`premiumSliderEligible`):
+- sign-in and checkout (`/login`, `/verify`, `/premium`)
+- the ad-free arcade (`/games`, `/riftle`)
+- embedded widgets, admin and the Pokémon section
+
+The old inline-paid-prompt skips (`/tools`, `/portfolio`, `/watching`, `/sealed`) are gone: the owner wants it everywhere.
+
+**Mobile, measured in Chromium.** The card is a flex column capped at `min(82dvh, 100dvh − 9.5rem)`. The art header and the buttons never scroll; only the table does, with a floor of about three rows. On a short phone, two optional lines hide. On a landscape phone the table hides and the card scrolls as a whole. No size scrolls the page sideways.
+
+| Viewport | Card height | ✕ and buttons visible |
+|---|---|---|
+| 390×844 | 692 px | yes |
+| 360×640 | 486 px | yes, table scrolls inside |
+| 1280×860 | 705 px | yes |
+| 844×390 (landscape) | 238 px | ✕ visible; card scrolls to the buttons |
+
+**The cost, stated.** A card covering most of a phone's first screen from search is what Google calls an intrusive interstitial. The 09-29 entry measured an instant card at 78% dismissed, with bounce up and pages per visitor down. The owner chose it knowing that. `PREMIUM_COPY_VERSION` is `akali-slider-2026-10-17`, so GA4 can compare against the previous era:
+- `premium_slidein_shown`, `premium_slidein_click` and `premium_slidein_dismissed` (now with `signed_in`)
+- sign-ups with source `premium_slider`
+- bounce and pages per visitor

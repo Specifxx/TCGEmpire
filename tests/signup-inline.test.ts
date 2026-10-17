@@ -5,8 +5,7 @@ import { join, relative } from "node:path";
 
 import { INLINE_SIGNUP_SURFACES, SIGNUP_SOURCES } from "../src/lib/signup-source-shared";
 import * as gate from "../src/lib/nudge-gate";
-import { PREMIUM_MIN_ACCOUNT_AGE_MS, PREMIUM_MIN_VIEWS } from "../src/lib/nudge-gate";
-import { NUDGE_DELAY_MS } from "../src/lib/nudge-timing";
+import { NUDGE_DELAY_MS, PREMIUM_SLIDER_DELAY_MS } from "../src/lib/nudge-timing";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE SIGN-UP SLIDER IS GONE: SIGN-UP PROMPTS LIVE IN THE PAGE (2026-09-30,
@@ -64,7 +63,7 @@ function promptBlocks(file: string): string[] {
   return out;
 }
 
-// ── 1. No signed-out slider; the Premium slide-in unchanged ─────────────────
+// ── 1. No sign-up popup; one Premium slider (the Akali slider, 2026-10-17) ──
 
 test("the layout mounts no signed-out sign-up nudge, and the file is gone", () => {
   const layout = read("src/app/layout.tsx");
@@ -80,23 +79,24 @@ test("the layout mounts no signed-out sign-up nudge, and the file is gone", () =
   }
 });
 
-test("the Premium slide-in stays mounted, once, with its behaviour unchanged", () => {
+test("one corner Premium card for everyone: the Akali slider (2026-10-17)", () => {
   const layout = code("src/app/layout.tsx");
   assert.match(layout, /const PremiumSlideIn = dynamic\(\(\) => import\("@\/components\/PremiumSlideIn"\)/);
-  assert.match(layout, /<PremiumSlideIn \/>/);
   assert.equal(layout.split("<PremiumSlideIn").length - 1, 1, "mounted once");
+  assert.doesNotMatch(layout, /SignupSlideIn/, "the separate signed-out card is gone");
+  assert.ok(!exists("src/components/SignupSlideIn.tsx"));
   assert.match(layout, /<AnnualSwitchNudge \/>/, "the annual offer stays too");
 
   const slide = code("src/components/PremiumSlideIn.tsx");
-  // Signed in, no paid tier, checkout on, through the shared gate.
-  assert.match(slide, /loaded && !!user && !premium && premiumCheckout && premiumSlideInEligible\(\{ views, accountAgeMs: ageMs, pathname \}\)/);
-  // The 3rd view, the 48-hour account, the 12 s delay.
-  assert.equal(PREMIUM_MIN_VIEWS, 3);
-  assert.equal(PREMIUM_MIN_ACCOUNT_AGE_MS, 48 * 3_600_000);
-  assert.equal(NUDGE_DELAY_MS, 12_000);
-  assert.match(slide, /delayMs: NUDGE_DELAY_MS/);
-  // Still the compact card.
-  assert.match(slide, /max-w-\[20rem\] sm:w-80/, "compact when collapsed");
+  // Signed in or signed out, not Premium, checkout on, through the slider's gate.
+  assert.match(slide, /loaded && premiumCheckout && !premium && \(signedOut \|\| !!user\) && premiumSliderEligible\(\{ pathname \}\)/);
+  assert.equal(PREMIUM_SLIDER_DELAY_MS, 3_000);
+  assert.match(slide, /delayMs: PREMIUM_SLIDER_DELAY_MS/);
+  assert.equal(NUDGE_DELAY_MS, 12_000, "the annual offer keeps its own delay");
+  // Signed out, Google and Discord go straight into Premium checkout.
+  assert.match(slide, /<AuthForm providers=\{providers\} bare compact source="premium_slider" next=\{next\}/);
+  assert.match(slide, /\/premium\/start\?tier=premium&plan=monthly&back=/);
+  assert.ok(SIGNUP_SOURCES.has("premium_slider"));
 });
 
 test("the two remaining corner nudges share one corner and z-tier", () => {
@@ -107,17 +107,10 @@ test("the two remaining corner nudges share one corner and z-tier", () => {
   assert.match(code("src/components/AnnualSwitchNudge.tsx"), CORNER);
 });
 
-test("the nudge gate's sign-up rules are page-count only (restored 2026-10-15), not the old engaged-time ones", () => {
-  for (const name of ["signupPromoEligible", "signupEngagedNeededMs", "isLandingPage", "SIGNUP_ENGAGED_MS"]) {
+test("the nudge gate's old sign-up and Premium page-count rules are gone", () => {
+  for (const name of ["signupPromoEligible", "signupEngagedNeededMs", "isLandingPage", "SIGNUP_ENGAGED_MS", "signupCardEligible", "premiumSlideInEligible", "PREMIUM_MIN_VIEWS"]) {
     assert.ok(!(name in gate), `${name} is gone from lib/nudge-gate.ts`);
   }
-  // SignupSlideIn (2026-10-15; from the 2nd page since 10-16): never on the
-  // landing page, never on sign-in or /premium.
-  const g = gate as unknown as { signupCardEligible: (i: { views: number; pathname: string }) => boolean };
-  assert.equal(g.signupCardEligible({ views: 1, pathname: "/browse" }), false);
-  assert.equal(g.signupCardEligible({ views: 2, pathname: "/browse" }), true);
-  assert.equal(g.signupCardEligible({ views: 9, pathname: "/login" }), false);
-  assert.equal(g.signupCardEligible({ views: 9, pathname: "/premium" }), false);
   assert.doesNotMatch(code("src/lib/nudge-runtime.ts"), /useEngaged/, "the engaged-time clock only the popup read is gone");
 });
 

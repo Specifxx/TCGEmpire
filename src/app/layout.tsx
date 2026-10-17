@@ -48,19 +48,12 @@ import NextTopLoader from "nextjs-toploader";
 const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").then((m) => m.PriceAlertModal), {
   ssr: false,
 });
-// Low-intrusion Premium nudge for logged-in non-Premium users (a corner slide-in,
-// not a modal). ssr:false — it renders nothing until the 3rd page of a session (and
-// a 48-hour-old account), so there's nothing for a crawler to see and no reason to
-// ship it server-side. Removed 2026-09-28 (upgrade prompts moved to the free
-// limits), restored 2026-09-29 and made compact and later the same day ("Nudges:
-// value first"): the at-the-limit prompts stay too, and the header keeps its plain
-// "Pricing" link.
+// The Akali slider (2026-10-17): one corner Premium card for every visitor who
+// is not Premium, signed in or out, a few seconds after the page settles
+// (components/PremiumSlideIn.tsx). ssr:false: it renders nothing on the server,
+// so there is nothing for a crawler to see. It replaced the signed-out sign-up
+// card (SignupSlideIn), so there is one corner card, not two.
 const PremiumSlideIn = dynamic(() => import("@/components/PremiumSlideIn").then((m) => m.PremiumSlideIn), {
-  ssr: false,
-});
-// The signed-out sign-up card (restored 2026-10-15): a corner card from the 4th
-// page of a visit, ssr:false like its signed-in sibling above.
-const SignupSlideIn = dynamic(() => import("@/components/SignupSlideIn").then((m) => m.SignupSlideIn), {
   ssr: false,
 });
 // Retention nudge: offer monthly Premium subscribers a one-click switch to annual.
@@ -414,11 +407,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </main>
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
-                {/* Signed-in, non-Premium browsing nudge, and since 2026-10-15
-                    its signed-out sibling, the sign-up card (from the 4th page
-                    of a visit). The two audiences never overlap. */}
+                {/* The Akali slider: everyone who is not Premium. */}
                 <PremiumSlideIn />
-                <SignupSlideIn />
                 {/* Its mirror image: monthly-Premium → annual retention nudge.
                     Mutually exclusive with PremiumSlideIn by `premium` state. */}
                 <AnnualSwitchNudge />

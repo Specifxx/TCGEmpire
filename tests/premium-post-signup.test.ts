@@ -123,7 +123,7 @@ test("where the nudge appears: watchlist, portfolio, and the slide-in", () => {
 
   const slide = code("src/components/PremiumSlideIn.tsx");
   assert.match(slide, /const PERSONAL_WAIT_MS = 600;/);
-  assert.match(slide, /personal\?\.heading \?\? contextPitch\?\.heading/, "personal copy outranks the per-page pitch");
+  assert.match(slide, /personal\?\.line \?\?\s*contextPitch\?\.line/, "personal copy outranks the per-page pitch");
   // Since 2026-09-29 the card shows on page load and does NOT wait for the
   // personal line: the show timer marks the session and shows, and the line is
   // fetched once the card is up, then recorded with the impression.
@@ -131,8 +131,10 @@ test("where the nudge appears: watchlist, portfolio, and the slide-in", () => {
   // dialog or a focused field, and it fires only over no open dialog.)
   const timer = slide.slice(slide.indexOf("return armNudge({"), slide.indexOf("}, [eligible, shown, pathname]);"));
   assert.ok(timer.length > 0 && !timer.includes("fetchPersonalCopy"), "the show timer never waits on the personal line");
-  assert.match(timer, /delayMs: NUDGE_DELAY_MS/, "the shared delay");
+  assert.match(timer, /delayMs: PREMIUM_SLIDER_DELAY_MS/, "the slider's shared delay (lib/nudge-timing.ts, 2026-10-17)");
   assert.ok(timer.indexOf("SESSION_SEEN") < timer.indexOf("setShown(true)"), "the session's one showing is claimed only when the card really appears");
   const after = slide.slice(slide.indexOf("if (!shown || personalFetched.current) return;"));
-  assert.match(after, /void fetchPersonalCopy\(\)\.then\(\(mine\) => \{[\s\S]*?if \(mine\) setPersonal\(mine\);[\s\S]*?trackEvent\("premium_slidein_shown"/, "fetched after the card is up; impression records which pitch showed");
+  // Signed in only (a signed-out visitor has no cards to be personal about).
+  assert.match(after, /const mine = user \? fetchPersonalCopy\(\) : Promise\.resolve\(null\);/);
+  assert.match(after, /void mine\.then\(\(m\) => \{[\s\S]*?if \(m\) setPersonal\(m\);[\s\S]*?trackEvent\("premium_slidein_shown"/, "fetched after the card is up; impression records which pitch showed");
 });

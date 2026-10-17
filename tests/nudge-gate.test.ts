@@ -6,17 +6,15 @@ import { join } from "node:path";
 import {
   ANNUAL_MIN_VIEWS,
   DIALOG_QUIET_MS,
-  PREMIUM_MIN_ACCOUNT_AGE_MS,
-  PREMIUM_MIN_VIEWS,
-  PREMIUM_SKIP_PATHS,
+  PREMIUM_SLIDER_SKIP_PATHS,
   accountAgeMs,
   isTextEntry,
   pathSkipped,
-  premiumSlideInEligible,
+  premiumSliderEligible,
   quietWaitMs,
   type QuietInput,
 } from "../src/lib/nudge-gate";
-import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "../src/lib/nudge-timing";
+import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, PREMIUM_SLIDER_DELAY_MS, PREMIUM_SLIDER_SNOOZE_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "../src/lib/nudge-timing";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // "Nudges: value first" (DECISIONS.md, 2026-09-29). These run the ELIGIBILITY
@@ -32,9 +30,10 @@ const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
 test("the constants are the owner's rules, in one place", () => {
-  assert.equal(NUDGE_DELAY_MS, 12_000);
-  assert.equal(PREMIUM_MIN_VIEWS, 3);
-  assert.equal(PREMIUM_MIN_ACCOUNT_AGE_MS, 48 * HOUR);
+  assert.equal(NUDGE_DELAY_MS, 12_000, "the annual offer's delay");
+  // The Akali slider (2026-10-17): a few seconds, then a three-day snooze.
+  assert.equal(PREMIUM_SLIDER_DELAY_MS, 3_000);
+  assert.equal(PREMIUM_SLIDER_SNOOZE_MS, 3 * DAY);
   assert.equal(ANNUAL_MIN_VIEWS, 2);
   assert.equal(DIALOG_QUIET_MS, 10_000);
   // The caps and snoozes the nudges keep, unchanged by this pass.
@@ -43,23 +42,7 @@ test("the constants are the owner's rules, in one place", () => {
   assert.equal(SNOOZE_AFTER_CLICK_MS, 14 * DAY);
 });
 
-// ── The Premium slide-in ────────────────────────────────────────────────────
-
-const OLD = 3 * DAY;
-
-test("premium slide-in: not on the session's first two page views, from the 3rd", () => {
-  assert.equal(premiumSlideInEligible({ views: 1, accountAgeMs: OLD, pathname: "/browse" }), false);
-  assert.equal(premiumSlideInEligible({ views: 2, accountAgeMs: OLD, pathname: "/browse" }), false);
-  assert.equal(premiumSlideInEligible({ views: 3, accountAgeMs: OLD, pathname: "/browse" }), true);
-  assert.equal(premiumSlideInEligible({ views: 0, accountAgeMs: OLD, pathname: "/browse" }), false, "route not counted yet");
-});
-
-test("premium slide-in: not for an account under 48 hours old; unknown age fails closed", () => {
-  assert.equal(premiumSlideInEligible({ views: 5, accountAgeMs: 47 * HOUR + 59 * 60_000, pathname: "/" }), false);
-  assert.equal(premiumSlideInEligible({ views: 5, accountAgeMs: 48 * HOUR, pathname: "/" }), true);
-  assert.equal(premiumSlideInEligible({ views: 5, accountAgeMs: 0, pathname: "/" }), false);
-  assert.equal(premiumSlideInEligible({ views: 5, accountAgeMs: null, pathname: "/" }), false, "no createdAt, no ask");
-});
+// ── The Akali slider ────────────────────────────────────────────────────────
 
 test("pathSkipped matches whole path segments only", () => {
   const skips = ["/login", "/premium"];
@@ -76,19 +59,14 @@ test("accountAgeMs reads /api/me's ISO createdAt and never invents an age", () =
   for (const bad of [null, undefined, "", "not a date"]) assert.equal(accountAgeMs(bad as string | null | undefined, now), null, String(bad));
 });
 
-test("premium slide-in: never on a page with its own inline paid prompt, or on the sign-in pages", () => {
-  for (const p of [
-    "/tools", "/tools/deal-finder", "/tools/best-basket", "/portfolio", "/portfolio/sets", "/watching", "/sealed", "/sealed/x",
-    "/premium", "/login", "/verify",
-  ]) {
-    assert.equal(premiumSlideInEligible({ views: 9, accountAgeMs: OLD, pathname: p }), false, p);
+test("the Akali slider: everywhere but sign-in, checkout, the arcade, widgets, admin and Pokémon", () => {
+  for (const p of ["/premium", "/premium/start", "/login", "/verify", "/games", "/games/seraphines-piano", "/riftle", "/embed/card/x", "/admin", "/pokemon"]) {
+    assert.equal(premiumSliderEligible({ pathname: p }), false, p);
   }
-  for (const p of ["/", "/browse", "/card/some-card", "/deck", "/movers", "/blog/x", "/toolsmith", "/watchingx"]) {
-    assert.equal(premiumSlideInEligible({ views: 9, accountAgeMs: OLD, pathname: p }), true, p);
+  for (const p of ["/", "/browse", "/card/some-card", "/deck", "/movers", "/blog/x", "/tools/deal-finder", "/sealed", "/portfolio", "/gamesx"]) {
+    assert.equal(premiumSliderEligible({ pathname: p }), true, p);
   }
-  for (const p of ["/login", "/verify", "/premium", "/tools", "/portfolio", "/watching", "/sealed"]) {
-    assert.ok((PREMIUM_SKIP_PATHS as readonly string[]).includes(p), `${p} is in the list`);
-  }
+  assert.ok((PREMIUM_SLIDER_SKIP_PATHS as readonly string[]).includes("/premium"));
 });
 
 // ── Never mid-task ──────────────────────────────────────────────────────────

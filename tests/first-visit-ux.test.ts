@@ -30,24 +30,15 @@ test("the sign-up card never interrupts a visit's first pages (removed 09-30, re
   // and make it appear after so many pages"): SignupSlideIn, from the 4th page;
   // from the 2nd since 2026-10-16 (owner: "add the sign up slider back").
   assert.doesNotMatch(code("src/lib/nudge-gate.ts"), /signupPromoEligible/, "the old 09-24 gate stays gone");
-  assert.match(code("src/lib/nudge-gate.ts"), /export const SIGNUP_MIN_VIEWS = 2;/, "never on the page a visit lands on");
+  // 2026-10-17: the separate sign-up card is gone; the Akali slider asks everyone.
 });
 
-test("the Premium slide-in asks later: 3rd page view, a 48-hour-old account, never over an inline paid prompt", () => {
+test("the Akali slider: once a session, never in the sign-up session, off the sign-in and checkout pages", () => {
   const slide = code("src/components/PremiumSlideIn.tsx");
-  assert.match(slide, /const views = useSessionViews\(PV_KEY, pathname, loaded && !!user\);/, "its own signed-in page count");
-  assert.match(slide, /const ageMs = accountAgeMs\(user\?\.createdAt\);/, "account age from /api/me's createdAt");
-  assert.match(
-    slide,
-    /loaded && !!user && !premium && premiumCheckout && premiumSlideInEligible\(\{ views, accountAgeMs: ageMs, pathname \}\)/,
-    "signed-in accounts without Premium only, through the gate",
-  );
+  assert.match(slide, /premiumSliderEligible\(\{ pathname \}\)/, "through the slider's own gate");
   assert.match(slide, /if \(ss\?\.getItem\(SESSION_SEEN\) === "1"\) return;/, "once per session");
-  assert.match(slide, /const SKIP_PATHS = PREMIUM_SKIP_PATHS;/);
   assert.match(slide, /if \(isSignupSession\(\)\) return;/, "and never in the sign-up session");
-  // The account age reaches the client from a column getCurrentUser already selects.
-  assert.match(code("src/app/api/me/route.ts"), /createdAt: user\.createdAt \? new Date\(user\.createdAt\)\.toISOString\(\) : null/);
-  assert.match(code("src/lib/auth.ts"), /lastActiveAt: true, activeDays: true, createdAt: true/, "no new query: createdAt was already selected");
+  assert.match(slide, /if \(Date\.now\(\) < readNum\(ls, SNOOZE_UNTIL\)\) return;/, "a dismissal snoozes it");
 });
 
 test("hero stats render the server's final numbers, with no count-up", () => {

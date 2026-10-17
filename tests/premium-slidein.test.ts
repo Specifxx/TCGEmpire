@@ -42,20 +42,14 @@ test("it is NON-MODAL: it yields to real modals and never blocks them", () => {
   assert.doesNotMatch(code, /body\.style\.overflow\s*=\s*["']hidden["']/, "must not lock page scroll");
 });
 
-test("frequency is capped hard across sessions, not just per session", () => {
+test("frequency: once a session, a dismissal snoozes it for days, a click for a fortnight", () => {
   const code = codeOnly(read(SRC));
-  // The VALUE moved to lib/nudge-timing.ts on 2026-09-14 so SignupPromoPopup (removed 2026-09-30)
-  // could adopt the same cap from one definition instead of a second copy of
-  // the number. Assert it there, and that this file actually consumes it —
-  // pinning the literal here would have blocked the de-duplication.
-  assert.equal(MAX_NUDGE_DISMISSALS, 2, "two dismissals must be a permanent no");
-  assert.match(code, /MAX_DISMISSALS = MAX_NUDGE_DISMISSALS/, "the slide-in must use the shared cap, not its own copy");
-  assert.match(code, />= MAX_DISMISSALS\) return/, "and must actually enforce it");
-  assert.match(code, /localStorage/, "the lifetime dismissal count / snooze must survive the session");
-  assert.match(code, /sessionStorage/, "must also cap to once per browser session");
-  // A snooze window after both a dismiss and an engaged click.
-  assert.match(code, /SNOOZE_AFTER_DISMISS_MS/, "a dismiss must snooze it");
-  assert.match(code, /SNOOZE_AFTER_CLICK_MS/, "engaging the CTA must snooze it (not burn a permanent strike)");
+  // The Akali slider (2026-10-17): no permanent two-strike cap any more (owner:
+  // "it should just be there"), but still never twice in a session.
+  assert.match(code, /sessionStorage/, "must cap to once per browser session");
+  assert.match(code, /localStorage/, "the snooze must survive the session");
+  assert.match(code, /PREMIUM_SLIDER_SNOOZE_MS/, "a dismiss snoozes it");
+  assert.match(code, /SNOOZE_AFTER_CLICK_MS/, "engaging the CTA snoozes it");
 });
 
 test("the CTA navigates straight to /premium, and still fires the click beacon itself (2026-09-06)", () => {
@@ -163,63 +157,36 @@ test("every CONTEXT_PITCH names a real PITCH_TOOLS tool, so it can't drift the w
   }
 });
 
-test("the live proof line is fetched only after the card appears AND its disclosure is opened, never on mount", () => {
+test("the slider makes no proof request: the comparison table is the pitch", () => {
   const code = codeOnly(read(SRC));
-  // The proof-fetch effect must be gated on `shown` (its own dependency array
-  // includes it) — a fetch that could fire unconditionally on mount would run
-  // for every eligible visitor whether or not the slide-in ever appears.
-  const effectAt = code.indexOf("api/premium/proof");
-  assert.ok(effectAt >= 0, "expected a fetch to api/premium/proof");
-  const before = code.slice(Math.max(0, effectAt - 400), effectAt);
-  // Since 2026-09-29 the proof line lives inside "See what's included", so the
-  // request waits for that tap too: most visitors never open it.
-  assert.match(before, /if \(!shown \|\| !details \|\| proofFetched\.current\) return;/, "the proof fetch must bail out until `shown` is true and the disclosure is open");
+  assert.doesNotMatch(code, /api\/premium\/proof/);
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// COMPACT (2026-09-29, "Nudges: value first"). At 390x844 it was ~740px tall and
-// scrolled inside itself; it is now a headline, one price line, the button pair
-// and a "See what's included" disclosure that opens the tier table on demand.
-// The rendered heights were measured in a real browser (DECISIONS.md, the
-// entry's Measured section); these pin the structure that produces them.
-// ─────────────────────────────────────────────────────────────────────────────
-
-test("compact: the tier table and the long copy are behind a 'See what's included' disclosure", () => {
-  const src = read(SRC);
-  const code = codeOnly(src);
-  assert.match(code, /See what&apos;s included/, "the disclosure button");
-  assert.match(code, /aria-expanded=\{details\}/, "announced as expandable");
-  assert.match(code, /aria-controls="premium-slidein-details"/);
-  assert.match(code, /const \[details, setDetails\] = useState\(false\);/, "closed by default");
-  // The table is INSIDE the disclosure, after its opening condition…
-  const openAt = code.indexOf("{details && (");
-  assert.ok(openAt > 0, "the disclosure body is conditional");
-  const tableAt = code.indexOf("<PremiumPitchPanel tableOnly");
-  assert.ok(tableAt > openAt, "the tier table renders only when opened");
-  // …and so are the per-page pitch line and the proof line.
-  assert.ok(code.indexOf("{bodyLine}") > openAt, "the long per-page line waits behind the disclosure");
-  // The default card has no full pitch panel, table or chip row.
-  assert.doesNotMatch(code.slice(0, openAt), /<PremiumPitchPanel|TierComparisonTable|PITCH_TOOLS\.map/, "nothing tall above the disclosure");
+test("the Akali slider: the owner's art, the Free vs Premium table, and the ask always in view", () => {
+  const code = codeOnly(read(SRC));
+  assert.match(code, /const ART = "\/premium\/premium-pitch\.webp";/, "the Akali art is back");
+  assert.match(code, /<img src=\{ART\} alt="" aria-hidden="true"/, "decorative, with the alt attribute the build guard requires");
+  assert.match(code, /<TierComparisonTable compact/, "the real comparison table, not a hand-written list");
+  // Header and buttons never scroll; only the table does.
+  assert.match(code, /flex max-h-\[min\(82dvh,calc\(100dvh-9\.5rem\)\)\] flex-col/);
+  assert.match(code, /min-h-\[6\.5rem\] flex-1 overflow-y-auto/, "the table is the only scrolling part, never squeezed away");
+  assert.ok(code.indexOf("<TierComparisonTable") < code.indexOf("<AuthForm"), "table, then the sign-in buttons");
 });
 
-test("compact: a small corner card, never a full-width overlay or tall panel", () => {
+test("a corner card that fits a phone: 22rem at most, inset 1rem, clear of the tab bar", () => {
   const code = codeOnly(read(SRC));
-  assert.match(code, /max-w-\[20rem\]/, "at most 20rem wide on a phone");
-  assert.match(code, /sm:w-80/, "a fixed small card on a desktop");
-  assert.doesNotMatch(code, /max-w-sm/, "not the old 24rem panel");
-  assert.match(code, /details \? "max-w-\[23rem\] sm:w-\[23rem\]" : "max-w-\[20rem\] sm:w-80"/, "widens to 23rem only while the tier table is open, so its Premium column is not clipped");
+  assert.match(code, /w-\[calc\(100%-2rem\)\] max-w-\[22rem\]/, "never edge to edge on a phone");
+  assert.match(code, /sm:w-\[22rem\]/, "a fixed card on a desktop");
   assert.match(code, /above-bottombar fixed left-4/, "a bottom-left card that clears the tab bar");
-  assert.match(code, /max-h-\[min\(80dvh,calc\(100dvh-9\.5rem\)\)\]/, "a rail for the OPEN disclosure and for short viewports");
 });
 
-test("its ✕ is at least 44px, labelled, sticky, and Escape closes it", () => {
+test("its ✕ is at least 44px, labelled, never scrolls away, and Escape closes it", () => {
   const code = codeOnly(read(SRC));
   const btn = code.slice(code.indexOf("onClick={dismiss}"), code.indexOf("✕"));
   assert.match(btn, /aria-label="Dismiss"/);
   assert.match(btn, /min-h-11 min-w-11/, "44px at every width");
-  assert.match(code, /sticky top-0/, "the ✕ never scrolls away");
+  assert.match(code, /relative shrink-0 overflow-hidden/, "the ✕ sits in the header, which never scrolls");
   assert.match(code, /e\.key === "Escape"/, "Escape closes it");
-  // Every dismiss control is a button with a real handler, none of it timed.
   assert.doesNotMatch(code, /disabled=\{/, "no disabled control on the card");
 });
 
