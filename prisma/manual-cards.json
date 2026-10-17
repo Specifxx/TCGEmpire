@@ -242,7 +242,9 @@
     "isPromo": false,
     "energyCost": 4,
     "might": 5,
-    "description": "[Tank]\nI get +1 [S] for each buffed friendly unit at my battlefield."
+    "description": "[Tank]\nI get +1 [S] for each buffed friendly unit at my battlefield.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/sett-kingpin-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/sett-kingpin-signature.jpg"
   },
   {
     "externalId": "promo-ogn-151-lee-sin-centered-op",

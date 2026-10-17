@@ -1063,6 +1063,7 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
           "evelynn-agony-s-embrace-rad-175s-167",
           "jarvan-iv-exemplar-of-demacia-rad-176s-167",
           "ezreal-dashing-rad-180s-167",
+          "sett-kingpin-rad-183s-167",
         ],
       },
     ],

@@ -2014,6 +2014,18 @@
     "variants": [],
     "fingerprint": "2d30e98e280f7ed1"
   },
+  "/radiance-spoilers/sett-kingpin-signature.jpg": {
+    "src": "/radiance-spoilers/sett-kingpin-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 121494,
+    "webp": "/radiance-spoilers/sett-kingpin-signature.webp",
+    "webpBytes": 111530,
+    "avif": "/radiance-spoilers/sett-kingpin-signature.avif",
+    "avifBytes": 95886,
+    "variants": [],
+    "fingerprint": "99307915f2a83b80"
+  },
   "/radiance-spoilers/watchful-curator.jpg": {
     "src": "/radiance-spoilers/watchful-curator.jpg",
     "width": 644,
