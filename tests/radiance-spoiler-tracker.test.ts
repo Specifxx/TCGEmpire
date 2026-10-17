@@ -73,7 +73,7 @@ test("the surfaces a Radiance visitor lands on link to the tracker", () => {
   // (Neeko, 2026-09-19) removed every cluster link from the hub — verified on
   // the live page after the tracker shipped. Both branches must map them.
   assert.equal((hub.match(/preReleaseLinks\.map\(/g) ?? []).length, 2, "pre-release links must render in the empty AND the has-cards branch");
-  const hasCardsBranch = hub.slice(hub.indexOf("{set.comingSoon && ("), hub.indexOf("<ActiveFilters"));
+  const hasCardsBranch = hub.slice(hub.indexOf("{!live && ("), hub.indexOf("<ActiveFilters"));
   assert.ok(hasCardsBranch.includes("preReleaseLinks.map("), "the comingSoon banner in the has-cards branch must list the pre-release links");
   assert.ok(read("docs/seo-keyword-map.md").includes(link), "keyword map must record the tracker as the spoilers owner");
 });

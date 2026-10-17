@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getChaseCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
-import { newestReleasedSet, setByCode } from "@/lib/constants";
+import { featuredSet, setByCode } from "@/lib/constants";
 import type { PickListing } from "./EbayPicksLive";
 
 // Below the first screen on most pages it appears on, and second under the hero
@@ -79,8 +79,11 @@ async function loadPicks(setCode: string, limit: number): Promise<PickListing[]>
 // ("nothing names the current set", CURRENT-STATE). Released, not upcoming: a
 // pre-release set has no priced singles to pick from, and the empty result
 // would only ever show the fallback search.
+// 2026-10-17: featuredSet() instead, which is the upcoming set once its "New"
+// window opens (Radiance from 12 Oct, when its singles were already trading),
+// so the homepage sold Vendetta chase cards for a week less than it would have.
 function defaultSet(): { code: string; name: string } {
-  const s = newestReleasedSet();
+  const s = featuredSet();
   return s ? { code: s.code, name: s.name } : { code: "VEN", name: "Vendetta" };
 }
 

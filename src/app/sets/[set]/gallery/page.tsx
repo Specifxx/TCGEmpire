@@ -11,7 +11,7 @@ import { CardTile } from "@/components/CardTile";
 import { cardTileSelect, trimTileArtFallback } from "@/lib/cards";
 import type { CardTileData } from "@/components/CardTile";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { DOMAIN_KEYS, hasSetHub, isPreorderSetCode, setBySlug, SETS } from "@/lib/constants";
+import { DOMAIN_KEYS, hasSetHub, isPreorderSetCode, setBySlug, SETS, singlesLive } from "@/lib/constants";
 import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -163,7 +163,9 @@ export async function generateMetadata({ params }: { params: { set: string } }):
   // and the description dates the prices. It never says "Revealed" or
   // "Spoilers": docs/seo-keyword-map.md gives those to the spoiler tracker,
   // and "Card List" to /sets/<slug>. Released sets keep the ladder below.
-  const preview = isPreorderSetCode(set.code) && total > 0;
+  // Not once its singles trade (singlesLive, 2026-10-17): the full list is in
+  // and priced, so the gallery reads as a released set's.
+  const preview = isPreorderSetCode(set.code) && total > 0 && !singlesLive(set);
   const releaseLabel = set.releasedOn
     ? new Date(`${set.releasedOn}T00:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "long", timeZone: "UTC" })
     : null;
@@ -241,7 +243,9 @@ export default async function SetGalleryPage({ params }: { params: { set: string
 
   // Pre-release (the same gate generateMetadata uses): the copy counts what is
   // here so far and dates the prices, rather than claiming a complete, priced set.
-  const preview = isPreorderSetCode(set.code) && total > 0;
+  // Not once its singles trade (singlesLive, 2026-10-17): the full list is in
+  // and priced, so the gallery reads as a released set's.
+  const preview = isPreorderSetCode(set.code) && total > 0 && !singlesLive(set);
   const announced = set.announcedCards ?? set.totalCards ?? null;
   const releaseLabel = set.releasedOn
     ? new Date(`${set.releasedOn}T00:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })

@@ -39,6 +39,10 @@ export interface HomeSectionsProps {
   storeCount: number;
   storeWord: string;
   popularCards: CardTileData[];
+  /** The featured set's chase cards (lib/cheapest-cards.ts getSetChaseTiles):
+   *  the popular-cards strip's first tab when there are any. */
+  chaseCards?: CardTileData[];
+  chaseSet?: { name: string; slug: string } | null;
   /** Emit the "Most popular Riftbound cards" ItemList JSON-LD. False where the
    *  page's "Riftbound card prices today" table already lists these cards and
    *  owns that markup (2026-09-24); the carousel came back on 2026-09-26 as a
@@ -75,6 +79,8 @@ export function HomeSections({
   storeCount,
   storeWord,
   popularCards,
+  chaseCards = [],
+  chaseSet = null,
   popularItemList = true,
   showTopDeals = true,
   showEbayPicks = true,
@@ -188,6 +194,7 @@ export function HomeSections({
           behind the two commercial units, and is still the section that sends
           the most visitors into card pages. */}
       <PopularCardsCarousel
+        chase={chaseSet ? { cards: chaseCards, setName: chaseSet.name, setSlug: chaseSet.slug } : null}
         allTime={popularCards}
         movers={biggestMovers}
         recentlyUpdated={recentlyUpdatedCards}

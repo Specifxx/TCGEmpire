@@ -28,7 +28,7 @@ import { priceField, COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
-import { SETS, isPreorderSetCode, setBySlug } from "@/lib/constants";
+import { SETS, isPreorderSetCode, setBySlug, singlesLive } from "@/lib/constants";
 import { getSetRevealCount } from "@/lib/set-reveal-count";
 import { preordersHrefForSet } from "@/lib/release-calendar";
 import { RadianceHub } from "@/components/sets/RadianceHub";
@@ -196,7 +196,11 @@ export async function generateMetadata({
   // the announced total instead — "Card List" still leads, and it never says
   // "Revealed" or "Spoilers", which docs/seo-keyword-map.md gives to the
   // /blog/riftbound-radiance-spoilers tracker. Released sets keep the ladder.
-  const preview = isPreorderSetCode(set.code) && cardCount > 0;
+  // 2026-10-17: a pre-order set whose singles already trade (singlesLive: its
+  // "New" day has passed) gets the released ladder, "All N Cards + Prices" —
+  // Radiance's full list is in and its singles are priced (DECISIONS.md,
+  // "Radiance leads the site").
+  const preview = isPreorderSetCode(set.code) && cardCount > 0 && !singlesLive(set);
   const revealed = preview ? await getSetRevealCount(set.code) : null;
   const announced = set.announcedCards ?? set.totalCards;
   // Past Riot's announced total (Radiance: 197 printings against "180 cards" by
@@ -463,7 +467,11 @@ export default async function SetPage({
   // this route is force-dynamic with a memoised default view shared by every
   // visitor and a session read here would break that memo. tests/set-tracker.test.ts
   // pins it.
-  const trackerOpen = totalInSet > 0 && !isPreorderSetCode(set.code);
+  const trackerOpen = totalInSet > 0 && (!isPreorderSetCode(set.code) || singlesLive(set));
+  // Singles on sale (released, or trading ahead of release: lib/constants.ts
+  // singlesLive). Everything on this page about card PRICES reads this, not
+  // set.comingSoon; sealed pre-order copy still reads comingSoon.
+  const live = singlesLive(set);
   // Pre-order comparison page for THIS set, while it is still upcoming. Read from
   // the release calendar rather than hardcoded, so this template never names a
   // set and the link retires itself on release day (see preordersHrefForSet).
@@ -541,7 +549,7 @@ export default async function SetPage({
             Riftbound {set.name} card list &amp; prices
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-            {set.comingSoon ? (
+            {!live ? (
               <>
                 Riftbound <strong className="text-slate-200">{set.name}</strong> is new.
                 {fullyRevealed
@@ -557,7 +565,11 @@ export default async function SetPage({
                 )}
               </>
             ) : (
-              <>The complete Riftbound <strong className="text-slate-200">{set.name}</strong> card list — all {totalInSet.toLocaleString()} cards, sortable and filterable, with live prices compared across stores so you can find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated twice a day — switch your country at the top to see local prices.</>
+              <>The complete Riftbound <strong className="text-slate-200">{set.name}</strong> card list — all {totalInSet.toLocaleString()} cards, sortable and filterable, with live prices compared across stores so you can find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated twice a day — switch your country at the top to see local prices.
+                {preordersHref && (
+                  <> Sealed {set.name} product is still on pre-order — <Link href={preordersHref} className="text-brand-300 underline-offset-2 hover:underline">compare every store&apos;s pre-order price</Link>.</>
+                )}
+              </>
             )}
           </p>
 
@@ -585,7 +597,7 @@ export default async function SetPage({
 
           {/* Count pills. Released sets show cards + priced; an unreleased set with
               revealed cards gets a green NEW pill + the revealed count instead. */}
-          {!set.comingSoon ? (
+          {live ? (
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="chip bg-brand-500/15 text-brand-300">
                 <CountUp value={totalInSet} className="num font-bold" />&nbsp;cards
@@ -623,7 +635,7 @@ export default async function SetPage({
       {set.slug === "radiance" && <RadiancePreorderCta placement="top" />}
       {/* "Follow the chase cards" (2026-10-16 growth pass): one click makes an
           account already watching Radiance's Signature and over-numbered cards. */}
-      {set.slug === "radiance" && chaseCards.length > 0 && <ChaseWatchCta cards={chaseCards} released={!set.comingSoon} />}
+      {set.slug === "radiance" && chaseCards.length > 0 && <ChaseWatchCta cards={chaseCards} released={live} />}
       {set.slug === "radiance" && <RadianceReveals data={radianceReveals} />}
       {set.slug === "radiance" && <RadiancePreorderCta placement="section" />}
       {set.slug === "radiance" && <RadianceHub country={country} />}
@@ -681,7 +693,7 @@ export default async function SetPage({
           <Filters basePath={`/sets/${set.slug}`} hideSet currency={COUNTRIES[country].currency} />
 
           <section className="min-w-0 flex-1">
-            {set.comingSoon && (
+            {!live && (
               <div className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3 text-sm text-slate-300">
                 {fullyRevealed ? (
                   <><strong className="text-emerald-300">All revealed.</strong> Every one of the {completeAt} official {set.name} cards is confirmed below — live store prices appear here the moment singles go on sale.</>
@@ -803,7 +815,7 @@ export default async function SetPage({
           cheapest cards, the rarity filling its top ten); the method sentences
           around it are shared on purpose. Released sets only: a set still in preview has no prices
           to read, and its reading list is PRE_RELEASE_LINKS above. */}
-      {!set.comingSoon && totalInSet > 0 && (
+      {live && totalInSet > 0 && (
         <section aria-labelledby="set-read-h" className="card-surface p-5 sm:p-6">
           <h2 id="set-read-h" className="text-xl font-extrabold text-white">How to read {set.name} prices</h2>
           <div className="mt-2 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
@@ -841,7 +853,7 @@ export default async function SetPage({
           </div>
         </section>
       )}
-      {!set.comingSoon && <RelatedGuides guides={guidesForSet(set.code)} className="card-surface p-5" />}
+      {live && <RelatedGuides guides={guidesForSet(set.code)} className="card-surface p-5" />}
 
       <EbayPicks
         pageType="set_hub"

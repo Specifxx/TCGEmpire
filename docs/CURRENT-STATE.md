@@ -456,6 +456,14 @@ longer lands on its entry.
   (`/tools/pull-tracker/<set>`, `pull_tracker`) shares results by a link that
   carries the pulls, no database row. The owner's outreach list is
   `docs/GROWTH-PLAYBOOK-2026-10.md`. [2026-10-16](../DECISIONS.md#L18158)
+- **Radiance leads (2026-10-17):** `featuredSet()` (upcoming set from its
+  `newFrom`, else newest released) drives eBay Picks and the homepage strip's
+  first tab, "<set> chase cards" (`getSetChaseTiles`, art only); "Most popular"
+  is second. `singlesLive()` (released, or past `newFrom`) gates every card-price
+  surface on `/sets/<slug>` and its gallery; sealed copy keeps
+  `isPreorderSetCode()`. Signatures (`*`) are in no official feed: add them to
+  `prisma/manual-cards.json` with their own `externalId`.
+  [2026-10-17](../DECISIONS.md#L18273)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
   so a paid click is worth its page views plus any sign-up. The test (small
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket

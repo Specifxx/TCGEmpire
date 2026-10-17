@@ -94,6 +94,35 @@ function chaseSortTier(name: string): number {
 // feature). Only tops up with the next most valuable (PRICED) non-signature
 // cards if the set has fewer Signatures than `limit` — never invents a price,
 // never hides a real Signature to make room for something else.
+// The homepage's chase-cards tab (2026-10-17, owner: "on the very front page …
+// what we want to feature is the Radiance chase cards"). One set's most valuable
+// printings that have card art: Signatures (*), overnumbered, alternate-art and
+// special Showcase cards, dearest first in `country` (unpriced last), then the
+// set's dearest priced cards if the chase printings run short. Unlike
+// getChaseCards (eBay Picks), a card without an image never gets a tile here.
+export async function getSetChaseTiles(setCode: string, limit = 16, country: Country = DEFAULT_COUNTRY): Promise<CardTileData[]> {
+  const baseWhere = buildCardWhere({ set: setCode }, country);
+  const chase = (await prisma.card.findMany({
+    where: {
+      ...baseWhere,
+      imageThumbUrl: { not: null },
+      OR: [{ rarity: "Showcase" }, { collectorNumber: { contains: "*" } }],
+      NOT: { type: "Rune" },
+    },
+    orderBy: buildCardOrderBy("price_desc", country),
+    take: limit,
+    select: cardTileSelect(country),
+  })) as CardTileData[];
+  if (chase.length >= limit) return withStoreCounts(chase);
+  const rest = (await prisma.card.findMany({
+    where: { ...buildCardWhere({ set: setCode, priced: "1" }, country), imageThumbUrl: { not: null }, id: { notIn: chase.map((c) => c.id) } },
+    orderBy: buildCardOrderBy("price_desc", country),
+    take: limit - chase.length,
+    select: cardTileSelect(country),
+  })) as CardTileData[];
+  return withStoreCounts([...chase, ...rest]);
+}
+
 export async function getChaseCards(limit = 8, country: Country = DEFAULT_COUNTRY, setCode?: string): Promise<CardTileData[]> {
   const baseWhere = buildCardWhere({ set: setCode }, country);
   const signatures = (await prisma.card.findMany({

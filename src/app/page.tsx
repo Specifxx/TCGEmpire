@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getPopularCards } from "@/lib/cheapest-cards";
+import { getPopularCards, getSetChaseTiles } from "@/lib/cheapest-cards";
+import { featuredSet } from "@/lib/constants";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { getCachedTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
@@ -261,12 +262,16 @@ export default async function HomePage() {
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
   const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
+  // The set whose chase cards lead the popular-cards strip: Radiance from its
+  // "New" day (lib/constants.ts featuredSet), the next set on its own.
+  const chaseSet = featuredSet();
   const [
     { totalCards, statsByCountry, freshness, freshnessAt },
     popularCards,
     topDealsArr,
     recentlyUpdated,
     moversArr,
+    chaseCards,
   ] = await Promise.all([
     // Per-market stat tiles + the "Prices updated Xh ago" freshness signal —
     // shared with the 4 region home pages (see lib/home-stats.ts) so they read
@@ -299,6 +304,8 @@ export default async function HomePage() {
     // six fresh DB scans. moversByCountry[country] (the baseline) also feeds the
     // popular-cards carousel's "Movers" tab below, unchanged from before.
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
+    // The featured set's chase printings, dearest first (16 rows).
+    chaseSet ? getSetChaseTiles(chaseSet.code, 16, country) : Promise.resolve([]),
   ]);
   const storeCount = statsByCountry[country].stores;
   const storeWord = storeCount === 1 ? "store" : "stores";
@@ -380,6 +387,8 @@ export default async function HomePage() {
         // The "Most popular" shelf is back (owner, 2026-09-26) and carries the
         // ItemList for these cards now the price table is gone (2026-09-30).
         popularCards={popularCards}
+        chaseCards={chaseCards}
+        chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
         showTopDeals={false}
         showEbayPicks={false}

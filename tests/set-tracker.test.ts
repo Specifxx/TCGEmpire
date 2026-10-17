@@ -34,7 +34,7 @@ test("/sets/[set] never imports cookies or the session: the owned overlay is cli
   assert.match(c, /<SetOwnedStatus /);
   assert.match(c, /ticks=\{trackerOpen\}/);
   // Released sets only, decided by the date, not by the flag that outlives release day.
-  assert.match(c, /const trackerOpen = totalInSet > 0 && !isPreorderSetCode\(set\.code\)/);
+  assert.match(c, /const trackerOpen = totalInSet > 0 && \(!isPreorderSetCode\(set\.code\) \|\| singlesLive\(set\)\)/, "opens on release, or once singles trade (2026-10-17)");
   // The queries the page makes are the ones it made before: no new read was added.
   assert.equal((c.match(/prisma\./g) ?? []).length, 6, "the same six prisma calls as before the tracker");
   assert.doesNotMatch(c, /generateStaticParams/);

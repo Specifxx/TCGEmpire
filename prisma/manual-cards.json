@@ -22,6 +22,20 @@
     "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/9d0d05c7427684aae952f5b66d7e724374c14ccc-744x1039.png?accountingTag=RB"
   },
   {
+    "externalId": "spoiler-rad-172s-ksante-pride-of-nazumah",
+    "name": "K'Sante, Pride of Nazumah",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "172*/167",
+    "domain": "Calm",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "[1], [T]: Give a friendly unit \"I have [Assault] equal to my [Shield]\" this turn."
+  },
+  {
     "externalId": "spoiler-rad-146-ntofo-strikes",
     "name": "Ntofo Strikes",
     "setCode": "RAD",
@@ -57,6 +71,20 @@
     "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/299741933964a0953312d7c2cc0919501d28bc98-744x1039.png?accountingTag=RB"
   },
   {
+    "externalId": "spoiler-rad-178s-ksante-courageous",
+    "name": "K'Sante, Courageous",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "178*/167",
+    "domain": "Body",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": 5,
+    "might": 4,
+    "description": "[Accelerate]\n[Shield 2]\nWhen I hold, channel 1 rune."
+  },
+  {
     "externalId": "spoiler-rad-179-aphelios-exalted",
     "name": "Aphelios, Exalted",
     "setCode": "RAD",
@@ -71,6 +99,20 @@
     "description": "When you attach an Equipment to me, choose one that hasn't been chosen this turn —\n- Ready 2 runes.\n- Channel 1 rune exhausted.\n- [Buff] a friendly unit.",
     "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/d1ffd27d5777e08178ab9a9aad0943b8d72af98b-744x1039.png?accountingTag=RB",
     "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/d1ffd27d5777e08178ab9a9aad0943b8d72af98b-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-179s-aphelios-exalted",
+    "name": "Aphelios, Exalted",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "179*/167",
+    "domain": "Calm",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": 4,
+    "might": 4,
+    "description": "When you attach an Equipment to me, choose one that hasn't been chosen this turn —\n- Ready 2 runes.\n- Channel 1 rune exhausted.\n- [Buff] a friendly unit."
   },
   {
     "externalId": "spoiler-rad-180-ezreal-dashing",
@@ -89,6 +131,20 @@
     "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/262da39c80211046e27a839c50d210d19592267c-744x1039.png?accountingTag=RB"
   },
   {
+    "externalId": "spoiler-rad-180s-ezreal-dashing",
+    "name": "Ezreal, Dashing",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "180*/167",
+    "domain": "Mind",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": 4,
+    "might": 3,
+    "description": "When I attack or defend, deal damage equal to my Might to an enemy unit here.\nI don't deal combat damage.\n[C]: [Action] — Move me to your base."
+  },
+  {
     "externalId": "spoiler-rad-181-yone-blademaster",
     "name": "Yone, Blademaster",
     "setCode": "RAD",
@@ -103,6 +159,20 @@
     "description": "[Weaponmaster]\nWhen I conquer a battlefield that was uncontrolled, deal damage equal to my Might to an enemy unit in a base.",
     "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/1b40d15346ef3770703148402e875d24f5feef5b-744x1039.png?accountingTag=RB",
     "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/1b40d15346ef3770703148402e875d24f5feef5b-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-181s-yone-blademaster",
+    "name": "Yone, Blademaster",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "181*/167",
+    "domain": "Body",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": 5,
+    "might": 5,
+    "description": "[Weaponmaster]\nWhen I conquer a battlefield that was uncontrolled, deal damage equal to my Might to an enemy unit in a base."
   },
   {
     "externalId": "spoiler-rad-182-kayn-unleashed",
@@ -121,6 +191,20 @@
     "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/df2fbb56c0d56c6c4e310edb17f0c2ae7a9d9e97-744x1039.png?accountingTag=RB"
   },
   {
+    "externalId": "spoiler-rad-182s-kayn-unleashed",
+    "name": "Kayn, Unleashed",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "182*/167",
+    "domain": "Chaos",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": 6,
+    "might": 6,
+    "description": "[Ganking]\nIf I have moved twice this turn, I don't take damage."
+  },
+  {
     "externalId": "spoiler-rad-183-sett-kingpin",
     "name": "Sett, Kingpin",
     "setCode": "RAD",
@@ -135,6 +219,20 @@
     "description": "[Tank]\nI get +1 [S] for each buffed friendly unit at my battlefield.",
     "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/fbc2c6a0a0ea33b58c9cfbdc91c6c229b02a90da-744x1039.png?accountingTag=RB",
     "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/fbc2c6a0a0ea33b58c9cfbdc91c6c229b02a90da-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-183s-sett-kingpin",
+    "name": "Sett, Kingpin",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "183*/167",
+    "domain": "Order",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": 4,
+    "might": 5,
+    "description": "[Tank]\nI get +1 [S] for each buffed friendly unit at my battlefield."
   },
   {
     "externalId": "promo-ogn-151-lee-sin-centered-op",
@@ -1991,6 +2089,20 @@
     "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/5eb1418a7485194f5249c4f4a5a247b21b7daf5b-744x1039.png?accountingTag=RB"
   },
   {
+    "externalId": "spoiler-rad-176s-jarvan-iv-exemplar-of-demacia",
+    "name": "Jarvan IV, Exemplar of Demacia",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "176*/167",
+    "domain": "Body",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "When you play a gear with [Deploy], you may exhaust me and pay [A] to move a friendly unit to that battlefield."
+  },
+  {
     "externalId": "spoiler-rad-r02-calm-rune",
     "name": "Calm Rune",
     "setCode": "RAD",
@@ -2523,6 +2635,20 @@
     "description": "Once each turn, when you play a card from face down, draw 1. Then, if it's not your turn, discard 1.",
     "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/37ac535445b224fa28f6e27b0d733474a38e369c-744x1039.png?accountingTag=RB",
     "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/37ac535445b224fa28f6e27b0d733474a38e369c-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-175s-evelynn-agonys-embrace",
+    "name": "Evelynn, Agony's Embrace",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "175*/167",
+    "domain": "Body",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "Once each turn, when you play a card from face down, draw 1. Then, if it's not your turn, discard 1."
   },
   {
     "externalId": "spoiler-rad-sp2-akali-brash",
@@ -4286,6 +4412,20 @@
     "description": "Units you play to battlefields you control enter ready.",
     "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8cec0480427b3646cb48cb2e3fe3a02b629f7aeb-744x1039.png?accountingTag=RB",
     "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8cec0480427b3646cb48cb2e3fe3a02b629f7aeb-744x1039.png?accountingTag=RB"
+  },
+  {
+    "externalId": "spoiler-rad-173s-riven-the-exile",
+    "name": "Riven, The Exile",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "173*/167",
+    "domain": "Calm",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "Units you play to battlefields you control enter ready."
   },
   {
     "externalId": "spoiler-rad-177-ekko-revolutionary",

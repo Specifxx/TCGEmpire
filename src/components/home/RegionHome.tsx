@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getPopularCards } from "@/lib/cheapest-cards";
+import { getPopularCards, getSetChaseTiles } from "@/lib/cheapest-cards";
+import { featuredSet } from "@/lib/constants";
 import { getHomeStats } from "@/lib/home-stats";
 import { getCachedTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
@@ -46,18 +47,22 @@ const COUNTRY_CODES: Country[] = COUNTRY_LIST.map((c) => c.code);
 // extra DB egress beyond what "/" was already computing once every six hours.
 export async function RegionHome({ region }: { region: Country }) {
   const info = COUNTRIES[region];
+  // The set whose chase cards lead the popular-cards strip (lib/constants.ts featuredSet).
+  const chaseSet = featuredSet();
   const [
     { totalCards, statsByCountry, freshness, freshnessAt },
     popularCards,
     topDealsArr,
     recentlyUpdated,
     moversArr,
+    chaseCards,
   ] = await Promise.all([
     getHomeStats(),
     getPopularCards(12, region),
     Promise.all(COUNTRY_CODES.map((c) => getCachedTopDeals(c))),
     getRecentlyUpdated(region, 24),
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
+    chaseSet ? getSetChaseTiles(chaseSet.code, 16, region) : Promise.resolve([]),
   ]);
   const trendingCards = popularCards.slice(0, 6);
   const stat = statsByCountry[region];
@@ -126,6 +131,8 @@ export async function RegionHome({ region }: { region: Country }) {
         // The "Most popular" shelf carries the ItemList now the price table
         // is gone (2026-10-02, as on "/" since 2026-09-30).
         popularCards={popularCards}
+        chaseCards={chaseCards}
+        chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
         showTopDeals={false}
         showEbayPicks={false}

@@ -79,7 +79,7 @@ test("set pages: 'Card List: All N Cards + Prices' leads, and the grid is not pu
   const ladder = src.slice(src.indexOf("const fullTitles = preview"), src.indexOf("const fullTitle ="));
   const previewArm = ladder.slice(0, ladder.indexOf("    : ["));
   const releasedArm = ladder.slice(ladder.indexOf("    : ["));
-  assert.match(src, /const preview = isPreorderSetCode\(set\.code\) && cardCount > 0;/);
+  assert.match(src, /const preview = isPreorderSetCode\(set\.code\) && cardCount > 0 && !singlesLive\(set\);/);
   assert.match(previewArm, /Card List: \$\{revealLabel\} So Far/);
   assert.doesNotMatch(previewArm, /All \$\{|\+ Prices|Price Guide|Revealed|Spoilers/);
   assert.match(releasedArm, /Card List: All \$\{cardCount\} Cards \+ Prices/);

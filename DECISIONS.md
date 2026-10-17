@@ -18269,3 +18269,47 @@ To keep paid visits apart from organic ones, `lib/entry-source.ts` now classifie
 **Only the owner can do these (dashboard settings, not code):**
 - Turn off Vercel Observability Plus (Settings → Observability), the largest line at $7.17 (2026-09-25).
 - Delete `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` from Vercel's environment variables, and revoke the Anthropic key.
+
+## Radiance leads the site: every Signature in, chase cards on the homepage, singles treated as live — 2026-10-17
+
+**Owner:** "do an import of all the new Radiance cards … a lot of signatures in Radiance that are missing … I don't see any of the HEARTSTEEL signatures … on the very front page … feature the Radiance chase cards … one of the tabs … Radiance chase card and you can click most popular cards … everything needs to be tailored for Radiance now." And: "deploy all this to main".
+
+**What was missing.** Riot's card gallery (playriftbound.com, `__NEXT_DATA__`) and TCGplayer's Radiance catalogue both list 219 singles, all already in the catalogue:
+- 167 base cards
+- 18 alternate arts
+- the 168–184 overnumbers
+- SP1–5
+- 12 runes
+
+Neither lists a Signature (`*`) printing. That is why no import ever added them: Radiance's six Signatures had been entered by hand from preview images.
+
+Riot's HEARTSTEEL announcement says the six cards come "both OVN and OVN Signature editions" (esportnow.gg, riftbound.zone). Radiance's Legend coverage says each of the nine Legends has a signed overnumber, the same pattern as Origins (303\*) and Spiritforged (223\*–239\*).
+
+**Added** to `prisma/manual-cards.json`, ten Signatures:
+- **Legends:** 172\* K'Sante, 173\* Riven, 175\* Evelynn, 176\* Jarvan IV
+- **HEARTSTEEL:** 178\*–183\* (K'Sante, Aphelios, Ezreal, Yone, Kayn, Sett)
+
+Each copies its unsigned twin's fields. Each has its own `externalId` (`…-178s-…`), so it never upserts over the twin. There is no image yet; a tile without art is kept out of the homepage strip, as 174a\* already was.
+
+**Not added:**
+- 177\* (Ekko, Revolutionary): no source shows a signed one.
+- K/DA SP Signatures: none are shown either.
+
+They are added when a listing or a Riot image shows them. The price importer already reads the asterisk, so the Signatures price as soon as stores list them.
+
+**Loaded by** `maintenance.yml` → `cards-manual`, then `export-public-data.yml`, so the files-mode snapshot carries them before the release.
+
+**`featuredSet()`** (`lib/constants.ts`) is the upcoming set once its `newFrom` day has passed, else the newest released set. It is Radiance from 12 Oct and does not change on 23 Oct. Two surfaces read it:
+- **eBay Picks** used `newestReleasedSet()`, so it was still selling Vendetta chase cards on every home page.
+- **The homepage strip's new first tab**, "Radiance chase cards" (`getSetChaseTiles`: Showcase and Signature printings with card art, dearest first, 16 rows, one query per six-hour render). "Most popular" is the second tab. The tab never names the set in code.
+
+**`singlesLive()`** is true when a set is released, or when it is a pre-order set past its `newFrom`. Since 16 Oct, 149 Radiance cards are priced in the US. `/sets/radiance` and its gallery now read it instead of `comingSoon` for everything about card prices:
+- the "All N Cards + Prices" title
+- the priced intro and count pills
+- "How to read prices"
+- related guides
+- the set tracker
+
+Sealed copy still reads `isPreorderSetCode()`: boxes ship on 23 Oct, so the intro still links the pre-order comparison. This is Vendetta's precedent ("treated as released" when singles traded early), applied to the card pages only. The release date in `SETS` stays the true 23 Oct.
+
+**Deployed** with `[deploy]` because the owner asked for it.

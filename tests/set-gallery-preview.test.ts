@@ -66,7 +66,7 @@ test("some preview description fits in 155 characters for every set name", () =>
 test("the preview branch keys off the pre-order window and a real count", () => {
   // Both halves: generateMetadata and the page body. `total > 0` keeps a set
   // with nothing imported on the noindexed empty branch.
-  const gates = GALLERY.match(/const preview = isPreorderSetCode\(set\.code\) && total > 0;/g) ?? [];
+  const gates = GALLERY.match(/const preview = isPreorderSetCode\(set\.code\) && total > 0 && !singlesLive\(set\);/g) ?? [];
   assert.equal(gates.length, 2, "metadata and page must share the same preview gate");
 });
 

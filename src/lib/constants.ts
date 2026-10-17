@@ -488,6 +488,34 @@ export function nextUpcomingSet(now: Date = new Date()): SetInfo | undefined {
 }
 
 /**
+ * Are this set's SINGLES on sale? Released, or a pre-order set whose "New" day
+ * has passed: Riot's gallery has the full list and stores are already pricing
+ * singles (Radiance from 12 Oct 2026; 149 of its cards were priced in the US on
+ * 16 Oct). Card-price surfaces read this; sealed pre-order labels keep reading
+ * isPreorderSetCode(), because boxes still ship on release day. Vendetta's
+ * singles traded early the same way ("treated as released", SETS above).
+ */
+export function singlesLive(s: SetInfo, now: Date = new Date()): boolean {
+  return !s.comingSoon || showsAsNew(s, now);
+}
+
+/**
+ * The set the site LEADS with: the upcoming set once its "New" window has opened
+ * (`newFrom` — Riot's gallery has the full list and singles are trading), else
+ * the newest released one. Radiance from 12 Oct 2026; on 23 Oct it is the newest
+ * released set anyway, so the answer does not change on release day, and it
+ * moves to the next set on that set's own `newFrom`. Surfaces that sell a set's
+ * chase cards (the homepage's eBay Picks and chase tab) read this, not
+ * newestReleasedSet(), so they stop selling last set's cards the week a new one
+ * arrives (owner, 2026-10-17: "everything needs to be tailored for Radiance now").
+ */
+export function featuredSet(now: Date = new Date()): SetInfo | undefined {
+  const next = nextUpcomingSet(now);
+  if (next && showsAsNew(next, now)) return next;
+  return newestReleasedSet(now);
+}
+
+/**
  * Has this set code NOT shipped yet? — i.e. anything a store sells for it today is
  * a PRE-ORDER, not stock it can post you.
  *

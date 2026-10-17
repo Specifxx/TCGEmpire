@@ -48,13 +48,22 @@ type Tab = {
 // homepage's browse section. Removed rather than demoted: /sets/vendetta is the
 // page for set-scoped popularity, and HomeSections no longer fetches the extra
 // set-scoped query per home render at all.
+//
+// THE FEATURED SET'S CHASE CARDS LEAD AGAIN (2026-10-17, owner: "on the very
+// front page … what we want to feature is the Radiance chase cards … and you can
+// click most popular cards"). Unlike the Vendetta tab above, this one is not a
+// set's popularity but its chase printings (Signatures, overnumbered, alternate
+// art), and the set is chosen by date, not named here (featuredSet() in
+// lib/constants.ts), so it moves to the next set by itself.
 export function PopularCardsCarousel({
+  chase,
   allTime,
   movers,
   recentlyUpdated,
   storeCount,
   storeWord,
 }: {
+  chase?: { cards: CardTileData[]; setName: string; setSlug: string } | null;
   allTime: CardTileData[];
   movers: CardWithDelta[];
   recentlyUpdated: CardWithDelta[];
@@ -62,6 +71,19 @@ export function PopularCardsCarousel({
   storeWord: string;
 }) {
   const tabs: Tab[] = [
+    ...(chase && chase.cards.length > 0
+      ? [
+          {
+            key: "chase",
+            label: `${chase.setName} chase cards`,
+            heading: `${chase.setName} chase cards`,
+            description: `The most valuable ${chase.setName} printings right now: Signatures, overnumbered and alternate-art cards, with the cheapest price across ${storeCount} ${storeWord}.`,
+            allHref: `/sets/${chase.setSlug}`,
+            allLabel: `All ${chase.setName} cards →`,
+            cards: chase.cards,
+          },
+        ]
+      : []),
     // Back on every homepage (2026-09-26, the owner's call: "I kind of like
     // the previous one better with the most popular cards"). It was dropped on
     // 2026-09-24 when the "Riftbound card prices today" table took the same
