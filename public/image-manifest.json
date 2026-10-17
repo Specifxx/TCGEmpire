@@ -751,6 +751,18 @@
     "variants": [],
     "fingerprint": "88cafda83bff345c"
   },
+  "/blog/riftbound-radiance-signature-cards.jpg": {
+    "src": "/blog/riftbound-radiance-signature-cards.jpg",
+    "width": 1200,
+    "height": 630,
+    "bytes": 113791,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/blog/riftbound-radiance-signature-cards.avif",
+    "avifBytes": 105826,
+    "variants": [],
+    "fingerprint": "bdf625fc04ebf67f"
+  },
   "/blog/riftbound-radiance-what-we-know.png": {
     "src": "/blog/riftbound-radiance-what-we-know.png",
     "width": 1200,
