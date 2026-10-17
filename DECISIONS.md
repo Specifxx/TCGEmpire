@@ -18373,3 +18373,32 @@ The Seraphine 174\* photo was not used: the scan already on the site is flat and
 It says plainly that Packed Amphitheater (the Ultimate Rare battlefield) was the dearest single listing that day, at US$2,999.99, and that no store had listed the signed 174\* yet. It also says Riot publishes no pull rates. Prices are dated to the 16 October snapshot; the embeds are live. The K/DA, HEARTSTEEL and chase-card posts link to it.
 
 **Still without card art:** 172\*, 175\*, 176\*, 178\*, 180\*, 183\* and 174a\*. They stay out of the homepage chase strip until they have images.
+
+## Card pages leave ISR for the CDN — 2026-10-17
+
+**Owner:** "ISR writes is taking a lot of costs on Vercel… it's costing like almost $10 a day. So we need to significantly reduce the cost." Rift keeps its daily release; the other sites release weekly unless marked.
+
+**Why ISR was the expensive cache here.** A card page is ~370 KB of HTML plus ~180 KB of RSC: about 70 ISR write units, billed per 8 KB, every time it is written.
+- Every release starts with an empty ISR cache, so each card a crawler or visitor reached was written again every day. Extra `[deploy]` releases on the same day each added another write: there were five on 16 October.
+- A write costs about $0.00028. A render is about $0.00001–0.00004 of CPU and transfer. So for a page read about as often as it is written, which is the long tail, ISR cost about twenty renders a write.
+- The previous entry removed the evening purge. This removes the write itself.
+
+**The change.**
+- `/card/[id]` is `force-dynamic`, with no `revalidate` and no `generateStaticParams`.
+- `next.config.js` sends `Vercel-CDN-Cache-Control: public, s-maxage=86400, stale-while-revalidate=86400` for `/card/:id` (`CARD_CDN_CACHE`). Vercel's CDN reads it before the page's own `private, no-store`, keeps the copy for free and never forwards the header to the browser.
+- In files mode the data only changes with a release, which empties the CDN. So a card is never more than a day behind its release, the same bound as the old 24-hour ISR life.
+- Verified live on DexCompare the same day with the same header from `next.config.js`:
+  - a second request was a HIT (age 2 s, then 4 s);
+  - an `RSC: 1` request was cached apart from the HTML (Next's `Vary`), so it cannot poison a page.
+- **`tests/card-cdn.test.ts`.** One copy serves everyone, so the page must read nothing per visitor. The test walks the page's server imports and the root layout. It fails on `next/headers`, `getCountry()`, `getCurrentUser()` or a session read. It flags `/premium` when pointed there, and passes the card page.
+
+**What it costs instead.** A CDN miss is a render. The CDN keeps a copy per region, so a card seen from two regions renders twice where ISR wrote once. At about a twentieth of a write per render, that is still a large saving. `revalidateContent()` still lists `/card/[id]`; on a dynamic page that purge does nothing, and the files-mode skip already stops it.
+
+**Not changed:**
+- The ~770 pages a build prerenders (guides, blog, hubs). They are written once per release, not per visit.
+- The Pokémon section, whose fate is the owner's call (2026-10-16 entry).
+
+**What to watch** (Vercel Observability, a day after the release):
+- ISR: `/card/[id]` should show no writes.
+- Edge Requests: card pages with `x-vercel-cache: HIT`.
+- Functions: `/card/[id]` invocations equal to the CDN misses.

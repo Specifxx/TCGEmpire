@@ -102,6 +102,8 @@ const securityHeaders = [
 
 const PUBLIC_DATA_BUNDLED = ["files", "fallback"].includes((process.env.PUBLIC_DATA_MODE || "").trim().toLowerCase());
 
+const CARD_CDN_CACHE = "public, s-maxage=86400, stale-while-revalidate=86400";
+
 const nextConfig = {
   // Public data as files (src/lib/public-data/, DECISIONS.md 2026-10-09): the
   // router and mode modules import node:fs / node:crypto / node:async_hooks, and
@@ -569,6 +571,18 @@ const nextConfig = {
         // tests/static-image-caching.test.ts pins the ordering for that reason.
         source: "/card-art/:file.webp",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        // THE CDN COPY OF THE CARD PAGES (2026-10-17, DECISIONS.md "Card pages
+        // leave ISR for the CDN"). The page is force-dynamic; Vercel's CDN reads
+        // Vercel-CDN-Cache-Control before the page's own `private, no-store` and
+        // never forwards it to the browser. A day, plus a day stale: the data
+        // changes with the daily release, which empties the CDN. Only a page
+        // that reads nothing per visitor may be here (tests/card-cdn.test.ts).
+        // The pattern is the page alone (one segment): /card/<slug>/opengraph-image
+        // and other children keep their own headers.
+        source: "/card/:id",
+        headers: [{ key: "Vercel-CDN-Cache-Control", value: CARD_CDN_CACHE }],
       },
     ];
   },

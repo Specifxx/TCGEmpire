@@ -56,6 +56,7 @@ longer lands on its entry.
   page's TTL is done client-side, like the `/auctions` countdown.
   [2026-09-11](../DECISIONS.md#L4871), [2026-09-11](../DECISIONS.md#L5042),
   [2026-09-16](../DECISIONS.md#L6683)
+- **Card pages are cached by the CDN, not ISR (2026-10-17):** `/card/[id]` is `force-dynamic` with `Vercel-CDN-Cache-Control` (a day, plus a day stale) from `next.config.js`; nothing in its tree may read the visitor (`tests/card-cdn.test.ts`). An ISR write of a card was ~70 units after every release. [2026-10-17](../DECISIONS.md#L18377)
 - **Page TTLs are six hours or more (owner, 2026-10-14):** `revalidate` 21600
   for what buyers act on (homes, decks, pre-orders, release dates, per-card API
   and embeds), 86400 for slow content. The import's purge and the daily release

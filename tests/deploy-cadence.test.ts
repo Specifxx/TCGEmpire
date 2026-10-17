@@ -173,13 +173,12 @@ test("the scheduled release workflow supplies the marker the gate looks for", ()
 
 test("card pages are not prerendered at build", () => {
   // 200 full card renders per deploy, against both Neon projects, thrown away
-  // by the same deploy's cache clear. The route is still ISR: an empty list
-  // with dynamicParams (default true) means "render on first request".
+  // by the same deploy's cache clear. Since 2026-10-17 the route is
+  // force-dynamic and kept by the CDN (tests/card-cdn.test.ts), so there is no
+  // generateStaticParams at all: nothing is rendered at build.
   const src = read("src/app/card/[id]/page.tsx");
-  const fn = /export (?:async )?function generateStaticParams\([^)]*\)[^{]*\{([\s\S]*?)\n\}/.exec(src)?.[1] ?? "";
-  assert.ok(fn, "generateStaticParams not found in the card page");
-  assert.match(fn, /return \[\];/, "generateStaticParams must return [] — no build-time card renders");
-  assert.doesNotMatch(fn, /prisma\./, "generateStaticParams must not query the database at build");
+  assert.match(src, /^export const dynamic = "force-dynamic";$/m);
+  assert.doesNotMatch(src, /^export (?:async )?function generateStaticParams/m, "no build-time card renders");
   assert.doesNotMatch(src, /export const dynamicParams\s*=\s*false/, "dynamicParams=false would 404 every card");
 });
 

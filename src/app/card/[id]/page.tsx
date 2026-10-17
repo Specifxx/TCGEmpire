@@ -74,37 +74,27 @@ import { regionalPrinting } from "@/lib/regional-printings";
 // (lib/market-rows.ts computeMarket).
 const HOW_WE_COMPARE = "Cheapest first by item price, with the delivered total shown where the store publishes its postage.";
 
-// REAL ISR: no cookie/header reads anywhere in this route's tree — the page is
-// rendered once on the AU baseline and served from cache to every visitor and
-// crawler. The market-dependent UI (metrics, store list, eBay fallback) ships ALL
-// markets' rows to a client component that localises after hydration, so switching
-// country never needs a server render. This is the fix for GSC's "Discovered –
-// currently not indexed" backlog: Googlebot gets fast cached 200s instead of a
-// full per-request render on every one of ~1,200 card URLs.
-export const revalidate = 86400;
-
-// NOTHING IS PRERENDERED AT BUILD — every card renders on its first request and
-// is then cached by `revalidate` (dynamicParams is on by default, so an empty
-// list here means "on demand", not "404").
+// ONE COPY PER CARD, KEPT BY VERCEL'S CDN (2026-10-17, DECISIONS.md "Card pages
+// leave ISR for the CDN"). No cookie/header reads anywhere in this route's tree
+// (tests/card-cdn.test.ts walks it): the page is rendered on the AU baseline and
+// one CDN copy serves every visitor and crawler. The market-dependent UI
+// (metrics, store list, eBay fallback) ships ALL markets' rows to a client
+// component that localises after hydration, so switching country never needs a
+// server render. Googlebot still gets fast cached 200s, which is what fixed GSC's
+// "Discovered – currently not indexed" backlog.
 //
-// This used to prewarm the 200 most-searched cards at build so their first
-// crawl hit the cache. That was ~200 full card renders — the widest read on the
-// site, all retailer rows for the card plus six tile queries plus its history —
-// against BOTH Neon projects, on EVERY deploy, and main was receiving 10–30
-// pushes a day. The renders never appeared in Vercel's function metrics, which
-// is how the deploy cadence stayed invisible while eleven projects were
-// exhausted at ~2 GB/day (see scripts/vercel-ignore-build.sh's header and
-// DECISIONS.md, 2026-09-11). The cost was also pointless: a new deployment
-// clears the Full Route Cache anyway, so the prewarmed pages were being thrown
-// away and re-rendered on their next hit regardless.
+// Rendered per request (force-dynamic) and kept by the CDN for a day plus a day
+// of stale-while-revalidate (next.config.js, CARD_CDN_CACHE), never ISR: a card
+// page is ~550 KB of HTML + RSC, ~70 ISR write units (billed per 8 KB) every
+// time it was written, and every release emptied the ISR cache, so each visited
+// card was written again every day. A CDN copy costs nothing to keep and a
+// render about a twentieth of a write. In PUBLIC_DATA_MODE=files the data only
+// changes with a release, and a release empties the CDN too.
 //
-// The trade: the first visitor to each card after a deploy waits for one
-// render instead of getting a cached page. Deploys now happen once a day
-// (.github/workflows/production-deploy.yml), so that is ≤1 cold render per
-// card per day — the same cost the page's own 24h TTL already implied.
-export function generateStaticParams(): { id: string }[] {
-  return [];
-}
+// NOTHING IS PRERENDERED AT BUILD (it used to prewarm the 200 most-searched
+// cards: ~200 full renders against both Neon projects on every deploy, thrown
+// away by the same deploy's cache clear; DECISIONS.md, 2026-09-11).
+export const dynamic = "force-dynamic";
 
 // Accept either the slug ("vayne-hunter-sfd-223-221") or the legacy cuid.
 // Renamed slugs resolve too (lib/card-slug-renames.ts).
