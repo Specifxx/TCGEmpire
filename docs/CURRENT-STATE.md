@@ -492,6 +492,12 @@ longer lands on its entry.
   (`tests/signup-inline.test.ts`). `PREMIUM_COPY_VERSION` `signup-inline-2026-09-30`
   (since 10-09 `search-caps-2026-10-09`, the search allowance above).
   [2026-09-30](../DECISIONS.md#L15871)
+- **Phones (below 1024px):** no ad intents (`google-anno-skip`), no vignette
+  on a tapped link (`data-google-vignette="false"` set in the capture phase
+  before the loader), and no Google ads on Best Basket, `/deck` and `/sets/*`
+  (`MOBILE_AD_FREE_ROUTES`). Everything else keeps its Auto ads; desktop is
+  unchanged. Anchor ads and the ad load are console settings.
+  [2026-10-17](../DECISIONS.md#L18428)
 - **Corner nudges:** the Premium card is the Akali slider since 10-17 (above;
   the owner chose a 3 s, every-visitor card knowing an instant card once
   measured 78% dismissed and that Google treats a pop-up over a phone's first

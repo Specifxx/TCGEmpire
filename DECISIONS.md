@@ -18424,3 +18424,35 @@ Owner: "perform a full migration to RM9 as we are at limit for RM8". RM8 had bee
 **The flip.** `OPERATIONAL_VARS = ["RM9"]` in `src/lib/db-chains.ts`; `CURRENT_OP` and the production gate in `scripts/build-db-push.sh`; every workflow's `DATABASE_URL`, `OPERATIONAL_URL`, `DB_SOURCE_NAME` and `RM9` forward, including the four workflows added since the last cutover (`ops-monitor`, `promo-art`, `games-report`, `usage-report`); `ci-build.yml`'s service variable; `package.json`'s preview condition; `tests/ops-wiring.test.ts`. A Vercel production build without `RM9` set **fails** (the 2026-10-04 guard), so the previous deployment keeps serving until it is set. Rollback is one commit: RM8 still holds the data.
 
 **Writes in the gap.** Anything written to RM8 between pass 2 and the new build going live is not on RM9: a few minutes of signups, alerts and notifications. Pause admin sends during the cutover.
+
+## Phones: no vignette on a tap, no Google ads in the set grids — 2026-10-17
+
+**Owner:** "a really big complaint in the community is the ads … on mobile phone, it's like almost unusable … the ads are like overloading it … fix where it's more usable on mobile phones, and deploy this immediately. Or if you need me to tweak some AdSense settings, give me a … Chrome extension prompt."
+
+**Measured on the live site at 390px** with an Android Chrome user agent, scrolled to the bottom (headless, so most units came back unfilled):
+- **Set pages:** `/sets/radiance` got 8 in-page Auto ads units of about 370px each, through its card grid; `/sets/vendetta` got 3.
+- **Other pages:** most got 1 to 3. Card pages got 1, near the bottom.
+- **Overlays:** a headless browser never triggers a vignette (the full-screen ad Google shows when a link is tapped) or an anchor ad, so neither shows up in the measurement. Both are what a real phone gets on every page, and they are the likeliest "unusable".
+
+**Changed, below 1024px only** (`lib/ad-free-boot.ts`):
+1. **No vignette on a tap.** `MOBILE_NO_VIGNETTE_SCRIPT`, in `<head>` before the AdSense loader, listens in the capture phase on `window` for `pointerdown`, `touchstart`, `mousedown` and `click`. It sets `data-google-vignette="false"` on the tapped link, which is Google's documented per-link opt-out (AdSense Help 17016693). Because it registers before the loader, it runs before any listener Google adds.
+   - It marks at the moment of the tap, not every link up front, so the HTML React hydrates is unchanged.
+   - Checked in Chromium: at 390px a tapped card link carries the attribute; at 1280px nothing is marked.
+2. **No Google ads on the set pages.** `/sets` and everything under it join `MOBILE_AD_FREE_ROUTES`, with the same pause the list builders use (`pauseAdRequests` in the boot script, `syncAdPause` on navigation).
+
+**Not changed:**
+- **Desktop.** It keeps vignettes and every Auto ads unit.
+- **Card pages, blog posts, guides, the homepage, `/browse` and the rest on a phone** keep their in-page Auto ads. That is where the AdSense revenue the owner wants kept comes from.
+- **No served ad is hidden with CSS.**
+
+**Console, for the owner** (given as a Claude-in-Chrome prompt):
+- Turn anchor ads off.
+- Turn off "additional vignette triggers" (vignettes on navigation the per-link opt-out does not cover).
+- Lower the Auto ads ad load a step.
+- Report the "Max ads per page" setting if the account has one.
+
+The code cannot do these: Google documents `data-overlays="bottom"` only to move anchors, and it would switch them back on.
+
+**What to watch:**
+- AdSense mobile page RPM and earnings, against the week before.
+- GA4 pages per visit on phones and `buy_click`, which an unusable phone page costs first.

@@ -69,8 +69,19 @@ export function isAdFreeRoute(pathname: string | null | undefined): boolean {
 //      page"), so a phone's homepage has Auto ads again, still without ad
 //      intents.
 // Desktop is unchanged, and so are the site's own labelled affiliate units.
+//
+// 2026-10-17 (owner: "on mobile phone, it's like almost unusable … the ads are
+// like overloading it"), two more, phones only (DECISIONS.md, "Phones: no
+// vignette on a tap, no ads in the set grids"):
+//   3. no vignette ads on a tap: MOBILE_NO_VIGNETTE_SCRIPT marks the link a
+//      visitor taps with Google's documented data-google-vignette="false"
+//      before Google's own click handler sees it, so tapping a card or a store
+//      no longer throws a full-screen ad first;
+//   4. no Google ads on the set pages (/sets and everything under it), where
+//      Auto ads put eight units into the Radiance card grid at 390px.
 export const MOBILE_AD_QUERY = "(max-width: 1023px)";
-export const MOBILE_AD_FREE_ROUTES = ["/tools/best-basket", "/deck"] as const;
+export const MOBILE_AD_FREE_ROUTES = ["/tools/best-basket", "/deck", "/sets"] as const;
+export const NO_VIGNETTE_ATTR = "data-google-vignette";
 export const AD_INTENTS_SKIP_CLASS = "google-anno-skip";
 
 const under = (pathname: string, r: string) => pathname === r || pathname.startsWith(`${r}/`);
@@ -111,6 +122,18 @@ export const AD_FREE_BOOT_SCRIPT = `(function(){try{var h=/${HINT_PATTERN}/.test
 // <body>'s attributes to its props, which dropped the class in the
 // measurement. The observer puts it back on that <body>, or on a new one.
 export const MOBILE_AD_INTENTS_SCRIPT = `(function(){try{if(${MOBILE_TEST}){var c="${AD_INTENTS_SKIP_CLASS}",d=document,k=function(){var b=d.body;if(b&&!b.classList.contains(c))b.classList.add(c)};k();var O=window.MutationObserver;if(O){var o=new O(k);o.observe(d.documentElement,{childList:true});o.observe(d.body,{attributes:true,attributeFilter:["class"]})}}}catch(e){}})();`;
+
+// Inlined in <head> right after AD_FREE_BOOT_SCRIPT, so its listeners are
+// registered before the AdSense loader (async) and therefore before Google's.
+// On a phone, the link under a tap, press or click gets
+// data-google-vignette="false" (AdSense Help: "add data-google-vignette=false
+// to a link's anchor tag to prevent that link from triggering vignettes") in
+// the CAPTURE phase on window, which runs before any listener Google adds on
+// the document or the link. Marked at the moment of the tap rather than by
+// rewriting every link up front, so nothing differs from the server HTML when
+// React hydrates. Decided once per page load; a link already carrying the
+// attribute is left alone.
+export const MOBILE_NO_VIGNETTE_SCRIPT = `(function(){try{if(${MOBILE_TEST}){var m=function(e){var t=e.target;if(t&&t.nodeType===3)t=t.parentElement;var a=t&&t.closest?t.closest("a"):null;if(a&&!a.hasAttribute("${NO_VIGNETTE_ATTR}"))a.setAttribute("${NO_VIGNETTE_ATTR}","false")};["pointerdown","touchstart","mousedown","click"].forEach(function(n){window.addEventListener(n,m,{capture:true,passive:true})})}}catch(e){}})();`;
 
 type AdsWindow = { adsbygoogle?: unknown[] & { pauseAdRequests?: number } };
 
