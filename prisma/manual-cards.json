@@ -33,7 +33,9 @@
     "isPromo": false,
     "energyCost": null,
     "might": null,
-    "description": "[1], [T]: Give a friendly unit \"I have [Assault] equal to my [Shield]\" this turn."
+    "description": "[1], [T]: Give a friendly unit \"I have [Assault] equal to my [Shield]\" this turn.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/k-sante-pride-of-nazumah-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/k-sante-pride-of-nazumah-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-146-ntofo-strikes",
@@ -144,7 +146,9 @@
     "isPromo": false,
     "energyCost": 4,
     "might": 3,
-    "description": "When I attack or defend, deal damage equal to my Might to an enemy unit here.\nI don't deal combat damage.\n[C]: [Action] — Move me to your base."
+    "description": "When I attack or defend, deal damage equal to my Might to an enemy unit here.\nI don't deal combat damage.\n[C]: [Action] — Move me to your base.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/ezreal-dashing-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/ezreal-dashing-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-181-yone-blademaster",
@@ -238,7 +242,9 @@
     "isPromo": false,
     "energyCost": 4,
     "might": 5,
-    "description": "[Tank]\nI get +1 [S] for each buffed friendly unit at my battlefield."
+    "description": "[Tank]\nI get +1 [S] for each buffed friendly unit at my battlefield.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/sett-kingpin-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/sett-kingpin-signature.jpg"
   },
   {
     "externalId": "promo-ogn-151-lee-sin-centered-op",
@@ -925,7 +931,9 @@
     "type": "Legend",
     "rarity": "Showcase",
     "isPromo": false,
-    "description": "As an additional cost to play a spell, you may exhaust me and three friendly units to reduce the cost of that spell by [2]."
+    "description": "As an additional cost to play a spell, you may exhaust me and three friendly units to reduce the cost of that spell by [2].",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/seraphine-starry-eyed-songstress-174a-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/seraphine-starry-eyed-songstress-174a-signature.jpg"
   },
   {
     "_note": "RADIANCE SPOILER, added 2026-09-19 from a photograph of the physical card. This is the FIRST Radiance card in the catalogue, so it is also the first hard evidence of the set's printed denominator: the card reads 'RAD - 167/167 - EN', which is why setFromTotal() in lib/price-import.ts now maps 167 to RAD and no longer guesses 114/180, and why constants.ts SETS carries totalCards 167 rather than Riot's announced 180. EVERY FIELD IS READ OFF THE CARD except rarity, which was VERIFIED rather than guessed: the bottom-centre rarity gem is an orange pentagon, matched pixel-for-pixel against Sett, Brawler (OGN-164, epic) and against Kayn, Unleashed (OGN-189, rare, a magenta diamond) pulled from cdn.riftscribe.gg. Domain is 'Colorless' — the card's own wording is 'Neutral', but Colorless is the value all 65 existing neutral rows use and what lib/domains.ts, the facet pages and the /browse filters are built on; inventing a second spelling would orphan the card from every one of them. Type tags read 'CHAMPION UNIT - NEEKO - IXTAL'. Artist credit on the card is Luscinia Studio, (c)2026 RGI. REPLACE imageUrl with the RiftScribe CDN art the moment the automated import carries this card — the photo is a stopgap, and `npm run cards:sync` will not overwrite a manual row."
@@ -2106,7 +2114,9 @@
     "isPromo": false,
     "energyCost": null,
     "might": null,
-    "description": "When you play a gear with [Deploy], you may exhaust me and pay [A] to move a friendly unit to that battlefield."
+    "description": "When you play a gear with [Deploy], you may exhaust me and pay [A] to move a friendly unit to that battlefield.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/jarvan-iv-exemplar-of-demacia-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/jarvan-iv-exemplar-of-demacia-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-r02-calm-rune",
@@ -2654,7 +2664,9 @@
     "isPromo": false,
     "energyCost": null,
     "might": null,
-    "description": "Once each turn, when you play a card from face down, draw 1. Then, if it's not your turn, discard 1."
+    "description": "Once each turn, when you play a card from face down, draw 1. Then, if it's not your turn, discard 1.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/evelynn-agonys-embrace-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/evelynn-agonys-embrace-signature.jpg"
   },
   {
     "externalId": "spoiler-rad-sp2-akali-brash",

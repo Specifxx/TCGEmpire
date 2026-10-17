@@ -1009,6 +1009,243 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
 - **Rules detail.** What a "unit gear" is under Orianna, and how Dockside Lock-Up plays an opponent's banished unit, wait on Radiance's rules update.
 - **Prices.** None of these cards can be bought yet. Each card page starts comparing store prices as listings appear, most likely from the Pre-Rift events on 16–22 October. Until then, **[Radiance pre-order prices](/radiance-preorders)** compares sealed product across stores.`,
   },
+  // EVERY RADIANCE SIGNATURE (2026-10-17, owner: "a blog post on all the
+  // signature cards in Radiance … with all those embedded … highly SEO
+  // indexable … a really nice thumbnail so I can post it on Reddit"). Owns
+  // `radiance signature cards`, `riftbound signature cards`, `radiance signed
+  // cards` and the per-number `1NN*` queries as a set; the Seraphine post keeps
+  // `seraphine signature` / `radiance chase card` (docs/seo-keyword-map.md).
+  // Neither Riot's gallery nor TCGplayer lists Radiance Signatures, so the list
+  // is ours: manual-cards.json, images from Riot or owner photos of real cards.
+  // Prices are the 17 October snapshot, dated; the embeds are live.
+  {
+    slug: "riftbound-radiance-signature-cards",
+    category: "blog",
+    title: "Every Riftbound Radiance Signature Card (16)",
+    excerpt:
+      "All 16 Riftbound: Radiance Signature cards, 168* to 183*/167: every signed Legend and HEARTSTEEL card, who signed it, what it does and the first prices.",
+    author: "RiftCompare",
+    date: "2026-10-17",
+    readMins: 12,
+    tags: ["radiance", "signature", "chase cards", "collecting", "heartsteel", "price guide"],
+    hero: {
+      src: "/blog/riftbound-radiance-signature-cards.jpg",
+      alt: "All the Riftbound: Radiance Signature cards: the signed Legends 168* to 176* on the top row, the HEARTSTEEL Signatures and the Chinese-exclusive Seraphine 174a* below, with Seraphine 174*/167 in front",
+    },
+    shop: [
+      { label: "Radiance Signatures on eBay", query: "Riftbound Radiance signature" },
+      { label: "HEARTSTEEL Signatures on eBay", query: "Riftbound HEARTSTEEL signature" },
+      { label: "Radiance booster displays", query: "Riftbound Radiance booster display" },
+    ],
+    embeds: [
+      {
+        title: "The nine signed Legends, 168* to 176*",
+        note: "Each overnumbered Legend in Radiance has a Signature twin, signed by the artist who painted it.",
+        slugs: [
+          "ekko-boy-who-shattered-time-rad-168s-167",
+          "ziggs-hexplosives-expert-rad-169s-167",
+          "mordekaiser-iron-revenant-rad-170s-167",
+          "orianna-lady-of-clockwork-rad-171s-167",
+          "k-sante-pride-of-nazumah-rad-172s-167",
+          "riven-the-exile-rad-173s-167",
+          "seraphine-starry-eyed-songstress-rad-174s-167",
+          "evelynn-agony-s-embrace-rad-175s-167",
+          "jarvan-iv-exemplar-of-demacia-rad-176s-167",
+        ],
+      },
+      {
+        title: "The six HEARTSTEEL Signatures, 178* to 183*",
+        note: "Signed with the band member's own name rather than the artist's. K'Sante 178* joins the gallery when we have a photo of it.",
+        slugs: [
+          "k-sante-courageous-rad-178s-167",
+          "aphelios-exalted-rad-179s-167",
+          "ezreal-dashing-rad-180s-167",
+          "yone-blademaster-rad-181s-167",
+          "kayn-unleashed-rad-182s-167",
+          "sett-kingpin-rad-183s-167",
+        ],
+      },
+      {
+        title: "Seraphine, twice signed",
+        note: "The English 174* and the Simplified Chinese 174a*, a different painting by BlackVIII sold in China only.",
+        slugs: ["seraphine-starry-eyed-songstress-rad-174s-167", "seraphine-starry-eyed-songstress-rad-174as-167"],
+      },
+    ],
+    itemList: {
+      name: "Riftbound: Radiance Signature cards",
+      items: [
+        { name: "Ekko, Boy Who Shattered Time (RAD 168*/167)", description: "Signed Legend, art by Blaine Burgos", url: `${SITE_URL}/card/ekko-boy-who-shattered-time-rad-168s-167` },
+        { name: "Ziggs, Hexplosives Expert (RAD 169*/167)", description: "Signed Legend, art by Kindlejack", url: `${SITE_URL}/card/ziggs-hexplosives-expert-rad-169s-167` },
+        { name: "Mordekaiser, Iron Revenant (RAD 170*/167)", description: "Signed Legend, art by Taylor Jansen", url: `${SITE_URL}/card/mordekaiser-iron-revenant-rad-170s-167` },
+        { name: "Orianna, Lady of Clockwork (RAD 171*/167)", description: "Signed Legend, art by Anh Dang", url: `${SITE_URL}/card/orianna-lady-of-clockwork-rad-171s-167` },
+        { name: "K'Sante, Pride of Nazumah (RAD 172*/167)", description: "Signed Legend, art by Valentine Tran", url: `${SITE_URL}/card/k-sante-pride-of-nazumah-rad-172s-167` },
+        { name: "Riven, The Exile (RAD 173*/167)", description: "Signed Legend, art by Charles Liu", url: `${SITE_URL}/card/riven-the-exile-rad-173s-167` },
+        { name: "Seraphine, Starry-Eyed Songstress (RAD 174*/167)", description: "Signed Legend, art by Anna Nikonova", url: `${SITE_URL}/card/seraphine-starry-eyed-songstress-rad-174s-167` },
+        { name: "Seraphine, Starry-Eyed Songstress (RAD 174a*/167, Chinese exclusive)", description: "Signed alternate Legend, art by BlackVIII", url: `${SITE_URL}/card/seraphine-starry-eyed-songstress-rad-174as-167` },
+        { name: "Evelynn, Agony's Embrace (RAD 175*/167)", description: "Signed Legend, art by Suzaki", url: `${SITE_URL}/card/evelynn-agony-s-embrace-rad-175s-167` },
+        { name: "Jarvan IV, Exemplar of Demacia (RAD 176*/167)", description: "Signed Legend, art by Herman Ng", url: `${SITE_URL}/card/jarvan-iv-exemplar-of-demacia-rad-176s-167` },
+        { name: "K'Sante, Courageous (RAD 178*/167)", description: "HEARTSTEEL Signature, art by Luscinia Studio", url: `${SITE_URL}/card/k-sante-courageous-rad-178s-167` },
+        { name: "Aphelios, Exalted (RAD 179*/167)", description: "HEARTSTEEL Signature, art by Luscinia Studio", url: `${SITE_URL}/card/aphelios-exalted-rad-179s-167` },
+        { name: "Ezreal, Dashing (RAD 180*/167)", description: "HEARTSTEEL Signature, art by Luscinia Studio", url: `${SITE_URL}/card/ezreal-dashing-rad-180s-167` },
+        { name: "Yone, Blademaster (RAD 181*/167)", description: "HEARTSTEEL Signature, art by Luscinia Studio", url: `${SITE_URL}/card/yone-blademaster-rad-181s-167` },
+        { name: "Kayn, Unleashed (RAD 182*/167)", description: "HEARTSTEEL Signature, art by Luscinia Studio", url: `${SITE_URL}/card/kayn-unleashed-rad-182s-167` },
+        { name: "Sett, Kingpin (RAD 183*/167)", description: "HEARTSTEEL Signature, art by Luscinia Studio", url: `${SITE_URL}/card/sett-kingpin-rad-183s-167` },
+      ],
+    },
+    summary: [
+      "**Riftbound: Radiance has 16 Signature cards:** the nine overnumbered Legends signed by their artists (168\\* to 176\\*/167), the six HEARTSTEEL Champion Units signed with the band members' names (178\\* to 183\\*/167), and a Chinese-exclusive Seraphine, 174a\\*.",
+      "**The asterisk is the Signature.** 174/167 is Seraphine's overnumbered Legend; 174\\*/167 is the same card with the signature in foil. Riot's card gallery and TCGplayer list none of them, which is why this list exists.",
+      "**First prices, 17 October:** the cheapest listings we track had **Ziggs 169\\*** at US$5,000, **Seraphine 174\\*** at US$3,606.53, **Evelynn 175\\*** at US$2,778.40 and **Ezreal 180\\*** at US$2,500. Seven had no listing yet.",
+      "**The chase is Seraphine 174\\*.** She is Radiance's headline champion; the [Seraphine Signature post](/blog/riftbound-radiance-seraphine-signature) explains why.",
+      "**These are opening prices from a week before release** (23 October 2026). One unsigned overnumber, Riven 173, fell from US$1,200 to US$500 in a single day.",
+    ],
+    faq: [
+      {
+        q: "How many Signature cards are in Riftbound: Radiance?",
+        a: "Sixteen that we know of: a Signature of each of the nine overnumbered Legends (168* to 176*/167), one of each of the six HEARTSTEEL Champion Units (178* to 183*/167), and the Chinese-exclusive signed Seraphine, 174a*/167. Ekko, Revolutionary (177/167), the one overnumbered unit outside HEARTSTEEL, has no Signature that we have seen.",
+      },
+      {
+        q: "What is a Signature card in Riftbound?",
+        a: "A signed printing of an overnumbered card: the same art as the overnumbered version, with a signature printed in foil across it and an asterisk after the collector number. Radiance's Legend Signatures carry the artist's signature; the HEARTSTEEL ones carry the band member's name.",
+      },
+      {
+        q: "What is the most expensive Radiance Signature?",
+        a: "On 17 October the dearest listing we tracked was Ziggs, Hexplosives Expert 169*/167 at US$5,000, ahead of Seraphine 174* at US$3,606.53 and Evelynn 175* at US$2,778.40. These are the first listings from the Pre-Rift week, before Radiance's 23 October release, and early asking prices move by the day.",
+      },
+      {
+        q: "Which Radiance Signature is the chase card?",
+        a: "Seraphine, Starry-Eyed Songstress 174*/167. Seraphine is the set's headline champion, her Legend is played as well as collected, and her unsigned overnumber was already over US$300 before release.",
+      },
+      {
+        q: "Are the HEARTSTEEL Signatures signed by the artist?",
+        a: "No. All six HEARTSTEEL cards are illustrated by Luscinia Studio, and each Signature carries the name of the band member on it: Aphelios, Ezreal, Yone, Kayn, Sett and K'Sante. The nine Legend Signatures are signed by the artists who painted them.",
+      },
+      {
+        q: "Why aren't Radiance Signatures on TCGplayer or Riot's card gallery?",
+        a: "Neither listed any Signature printings when Radiance's singles began trading. Riot's gallery shows the 219 regular and overnumbered printings; TCGplayer's catalogue matched it. RiftCompare added the Signatures by hand, with Riot's own images or photos of real cards, so their prices can be compared from the first listing.",
+      },
+      {
+        q: "What is Seraphine 174a*?",
+        a: "A Simplified Chinese Signature of Seraphine's Legend with entirely different art, by BlackVIII: Seraphine underwater among goldfish and jellyfish. It is sold in China only, so it reaches English-language buyers through eBay and importers. It was listed from US$1,299.99 on 17 October.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Every Radiance card, with live prices →",
+      blurb: "The full Radiance card list, Signatures included, compared across every store we track.",
+    },
+    body: `**Riftbound: Radiance has 16 Signature cards, and no official list of them.** Riot's card gallery shows Radiance's 219 regular and overnumbered printings; TCGplayer's catalogue matched it when singles began trading. Neither lists a single Signature. This is the full list: every signed Radiance card, who signed it, what it does, and what the first listings asked.
+
+Every card below is in our catalogue with its own page, and each page compares store prices as listings appear. The card images are Riot's own where Riot has shown the card, and photos of real cards where it has not.
+
+## What a Signature is
+
+Radiance's base run stops at 167, the number printed after the slash on every card. Everything numbered above it is a chase printing:
+
+- **Overnumbered (174/167):** new art, foil, numbered above the set.
+- **Signature (174\\*/167):** the same overnumbered card with a signature printed in foil across the art, and an **asterisk** after the number. That asterisk is the difference between a few hundred dollars and a few thousand.
+- **Signed alternate (174a\\*/167):** a letter before the asterisk marks a different version of the signed card. Radiance has one, the Chinese-exclusive Seraphine.
+
+Radiance's Signatures come in two kinds. The nine **Legend Signatures** are signed by the artist who painted the card: Anna Nikonova's name is on Seraphine, Kindlejack's on Ziggs. The six **HEARTSTEEL Signatures** are signed in character, with the band member's name scrawled across the art the way a K-pop photocard is.
+
+## Radiance Signature prices on 17 October
+
+The cheapest listing we track for each, in US dollars unless marked, from our 17 October snapshot, with the unsigned overnumber beside it:
+
+| Card | Signature | Signed | Unsigned |
+|---|---|---|---|
+| [Ziggs, Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-169s-167) | 169\\* | US$5,000 | US$275 |
+| [Seraphine, Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-174s-167) | 174\\* | US$3,606.53 | US$335 |
+| [Evelynn, Agony's Embrace](/card/evelynn-agony-s-embrace-rad-175s-167) | 175\\* | US$2,778.40 | US$327.18 |
+| [Ezreal, Dashing](/card/ezreal-dashing-rad-180s-167) | 180\\* | US$2,500 | US$500 |
+| [Mordekaiser, Iron Revenant](/card/mordekaiser-iron-revenant-rad-170s-167) | 170\\* | US$1,950 | AU$1,000 |
+| [Kayn, Unleashed](/card/kayn-unleashed-rad-182s-167) | 182\\* | US$1,800 | US$247.51 |
+| [Seraphine (Chinese exclusive)](/card/seraphine-starry-eyed-songstress-rad-174as-167) | 174a\\* | US$1,299.99 | — |
+| [Jarvan IV, Exemplar of Demacia](/card/jarvan-iv-exemplar-of-demacia-rad-176s-167) | 176\\* | US$999 | US$90 |
+| [Yone, Blademaster](/card/yone-blademaster-rad-181s-167) | 181\\* | US$679.99 | US$450 |
+| [Ekko, Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-168s-167) | 168\\* | not yet listed | US$209.23 |
+| [Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-171s-167) | 171\\* | not yet listed | US$140 |
+| [K'Sante, Pride of Nazumah](/card/k-sante-pride-of-nazumah-rad-172s-167) | 172\\* | not yet listed | US$100 |
+| [Riven, The Exile](/card/riven-the-exile-rad-173s-167) | 173\\* | not yet listed | US$500 |
+| [K'Sante, Courageous](/card/k-sante-courageous-rad-178s-167) | 178\\* | not yet listed | US$199 |
+| [Aphelios, Exalted](/card/aphelios-exalted-rad-179s-167) | 179\\* | not yet listed | US$201.37 |
+| [Sett, Kingpin](/card/sett-kingpin-rad-183s-167) | 183\\* | not yet listed | US$340 |
+
+Read the signed column as asking prices, not values. These are the first listings of a set that is not out yet, from a handful of sellers each, and opening prices move by the day: Riven's unsigned 173/167 was US$1,200 on 16 October and US$500 a day later. The gap between signed and unsigned is the useful part. Where both are listed, the Signature asks between about one and a half times (Yone) and eighteen times (Ziggs) the overnumber, and that ratio is a better guide to what a Signature is worth than any single price.
+
+## The nine signed Legends
+
+A Legend is the card a Riftbound deck is built around, so a signed Legend is the one chase card a player can also sit down and play with. Every overnumbered Legend in Radiance has one.
+
+[[embed:0]]
+
+**[Ekko, Boy Who Shattered Time 168\\*](/card/ekko-boy-who-shattered-time-rad-168s-167)**, art by **Blaine Burgos**. Ekko's Legend is an Empower card: disempower him and he makes the next unit you play cheaper, at the price of that unit dying at the end of the turn. His Signature was one of the first three Riot showed, in Preview Season's first week.
+
+**[Ziggs, Hexplosives Expert 169\\*](/card/ziggs-hexplosives-expert-rad-169s-167)**, art by **Kindlejack**. Ziggs plays Bomb gear tokens onto battlefields, and Kindlejack's painting is one of the set's loudest: neon purple, green and red. It carried the highest asking price of any Radiance Signature on 17 October, at US$5,000.
+
+**[Mordekaiser, Iron Revenant 170\\*](/card/mordekaiser-iron-revenant-rad-170s-167)**, art by **Taylor Jansen**. Mordekaiser banishes cards from your trash to make power for units and gear. His was the first Radiance Signature we saw listed, on eBay Australia at AU$1,499.95 on 16 October.
+
+**[Orianna, Lady of Clockwork 171\\*](/card/orianna-lady-of-clockwork-rad-171s-167)**, art by **Anh Dang**. Orianna turns a gear into a unit with Might equal to its cost, which makes Radiance's expensive gear into large bodies. One of the first three Signatures Riot revealed.
+
+**[K'Sante, Pride of Nazumah 172\\*](/card/k-sante-pride-of-nazumah-rad-172s-167)**, art by **Valentine Tran**. A Calm Legend that gives a friendly unit Assault equal to its Shield for a turn. The painting is all shadow and gold light, and Valentine Tran's signature runs in teal across K'Sante's chest.
+
+**[Riven, The Exile 173\\*](/card/riven-the-exile-rad-173s-167)**, art by **Charles Liu**. Riven's Legend makes units you play to battlefields you control enter ready. Her unsigned overnumber was the dearest Radiance Legend on 16 October; the signed one had no listing yet.
+
+**[Seraphine, Starry-Eyed Songstress 174\\*](/card/seraphine-starry-eyed-songstress-rad-174s-167)**, art by **Anna Nikonova**. Seraphine lets you exhaust her and three units to make a spell cost 2 less. She leads the Evelynn vs Seraphine Showdown Decks, and her Signature is the chase card of the set: **[why Seraphine is Radiance's chase card](/blog/riftbound-radiance-seraphine-signature)**.
+
+**[Evelynn, Agony's Embrace 175\\*](/card/evelynn-agony-s-embrace-rad-175s-167)**, art by **Suzaki**. Evelynn draws a card when you play one from face down, once each turn. Suzaki signs in black across the painting rather than in coloured foil, which makes this one easy to recognise in a listing. Third among the Legends on 17 October, behind Ziggs and Seraphine, at US$2,778.40 and AU$4,170.70.
+
+**[Jarvan IV, Exemplar of Demacia 176\\*](/card/jarvan-iv-exemplar-of-demacia-rad-176s-167)**, art by **Herman Ng**. Jarvan moves a friendly unit to a battlefield when you play a gear with Deploy there. His unsigned overnumber was the cheapest Legend overnumber on 17 October at US$90, while the Signature asked US$999, eleven times as much.
+
+## The six HEARTSTEEL Signatures
+
+HEARTSTEEL's six overnumbered Champion Units are Radiance's other headline: the League of Legends boy band, painted by **Luscinia Studio** like a sheet of K-pop photocards, stickers and all. Each has a Signature, and each is signed with the member's own name rather than the studio's.
+
+[[embed:1]]
+
+**[K'Sante, Courageous 178\\*](/card/k-sante-courageous-rad-178s-167)**. The one new card in the group: a 5-energy, 4-Might unit with Accelerate and Shield 2 that channels a rune when he holds. Its Signature is the last Radiance Signature we have no photo of; it joins the gallery when we do.
+
+**[Aphelios, Exalted 179\\*](/card/aphelios-exalted-rad-179s-167)**. A reprint of the Spiritforged Aphelios, who chooses a bonus each time you attach an Equipment to him. His signature, "APHELIOS" in rainbow foil, runs across his chest under a pink crescent moon.
+
+**[Ezreal, Dashing 180\\*](/card/ezreal-dashing-rad-180s-167)**. Ezreal deals damage equal to his Might when he attacks or defends, instead of combat damage. His Signature is the dearest HEARTSTEEL card so far, at US$2,500, with a doodled cat and a "love" sticker beside the signature.
+
+**[Yone, Blademaster 181\\*](/card/yone-blademaster-rad-181s-167)**. Weaponmaster, and damage to an enemy unit in a base when he conquers an uncontrolled battlefield. His Signature asked US$679.99, the smallest premium over its unsigned twin of any Radiance card.
+
+**[Kayn, Unleashed 182\\*](/card/kayn-unleashed-rad-182s-167)**. Ganking, and no damage if he has moved twice this turn. The signature, "KAYN" under a doodled face, is drawn over his arm in silver foil. US$1,800 on 17 October.
+
+**[Sett, Kingpin 183\\*](/card/sett-kingpin-rad-183s-167)**. Tank, and +1 Might for each buffed friendly unit at his battlefield. The orange card with the "#BOSS" speech bubble, signed "SETT" in pink and teal. No listing yet.
+
+The full story of the band's cards, which five are reprints and why K'Sante's is new, is in **[the HEARTSTEEL overnumbered cards](/blog/riftbound-heartsteel-overnumbered-cards)**.
+
+## Seraphine, twice signed
+
+[[embed:2]]
+
+Seraphine is the only champion with two Signatures. The English **174\\*** is Anna Nikonova's Seraphine mid-song. The **174a\\*** is a separate card printed in Simplified Chinese, marked *SC* after the number, with a completely different painting by **BlackVIII**: Seraphine underwater among goldfish and jellyfish. It is sold in China only, so English-language collectors buy it through eBay and importers. It was listed from US$1,299.99 on 17 October, against US$3,606.53 for the English Signature.
+
+## Which Radiance Signatures to watch
+
+Three patterns stand out from the first week of prices.
+
+**Players set the floor, collectors set the ceiling.** The Legend Signatures are cards people will play: a Legend is in every deck built around that champion. The HEARTSTEEL Signatures are collected for the band. Seraphine and Evelynn, who are both played and collected through K/DA, sit near the top of the list.
+
+**The cheap overnumber is not a cheap Signature.** Jarvan IV's unsigned 176 was US$90 and his Signature US$999. A Signature's price follows how few exist, not what the card does.
+
+**Early prices fall.** Vendetta, the set before Radiance, is the best guide: its median overnumbered unit cost $177 four days before release, $81 in launch week and $73 two months later. **[Radiance chase cards: what Vendetta's prices say to expect](/blog/riftbound-radiance-chase-cards)** has the full numbers. If you want a Signature to keep rather than to flip, the weeks after 23 October are likely to be cheaper than this one.
+
+## Before you buy a Signature
+
+- **Check the asterisk on the card itself**, in a photo of the bottom-left corner, not in the listing title.
+- **Look for the foil signature at an angle.** A flat photo can hide it.
+- **Match the language code.** *EN* is the English print; *SC* is the Chinese 174a\\*, a different card at a different price.
+- **Prefer photos of the real card** in a hand, sleeve or top loader over stock images.
+
+The **[Seraphine Signature post](/blog/riftbound-radiance-seraphine-signature)** goes through each check with examples. Every card above has its own page that compares store prices side by side, and a free account emails you when a Signature you are watching is listed or drops in price.
+
+## Where to see Radiance's other chase cards
+
+The Signatures are the top of Radiance's chase cards, not all of them. **[Packed Amphitheater 184/167](/card/packed-amphitheater-rad-184-167)**, the Ultimate Rare battlefield, was listed at US$2,999.99 on 16 October. The five **[K/DA special cards](/blog/riftbound-kda-cards)**, SP1 to SP5, are Radiance's other limited art. And the **[Radiance card list](/sets/radiance)** has every printing in the set, with live prices from every store we track.`,
+  },
   // SERAPHINE SIGNATURE (2026-10-17, owner: "the ultimate chase one, I would
   // say, is the Seraphine one … make a blog post"). Owns `seraphine signature`,
   // `radiance signature cards` and `174*`; /blog/riftbound-radiance-chase-cards
@@ -1024,8 +1261,10 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
       "Seraphine, Starry-Eyed Songstress 174*/167 is the Riftbound: Radiance card collectors are chasing. Every Radiance Signature so far, and what they cost.",
     author: "RiftCompare",
     date: "2026-10-17",
+    updated: "2026-10-17", // first Signature prices; links the all-Signatures post
     readMins: 9,
     tags: ["radiance", "chase cards", "signature", "collecting", "seraphine", "heartsteel"],
+    // 17 Oct, later: photos of 172*, 175*, 176* and 180* added to the gallery.
     hero: {
       src: "/blog/riftbound-radiance-seraphine-signature.jpg",
       alt: "Seraphine, Starry-Eyed Songstress, the Riftbound: Radiance Signature 174*/167 signed by Anna Nikonova, in front of the Riven 173*, Kayn 182*, Yone 181* and Aphelios 179* Signatures",
@@ -1038,9 +1277,10 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
     embeds: [
       {
         title: "Seraphine's Legend, from base to Signature",
-        note: "The base Legend, the overnumbered printing and the signed one. The same card, three rarities apart.",
+        note: "The signed English 174*, the Chinese-exclusive signed 174a* with its own art, the overnumbered printing and the base Legend.",
         slugs: [
           "seraphine-starry-eyed-songstress-rad-174s-167",
+          "seraphine-starry-eyed-songstress-rad-174as-167",
           "seraphine-starry-eyed-songstress-rad-174-167",
           "seraphine-starry-eyed-songstress-rad-151-167",
         ],
@@ -1057,13 +1297,18 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
           "ziggs-hexplosives-expert-rad-169s-167",
           "mordekaiser-iron-revenant-rad-170s-167",
           "orianna-lady-of-clockwork-rad-171s-167",
+          "k-sante-pride-of-nazumah-rad-172s-167",
+          "evelynn-agony-s-embrace-rad-175s-167",
+          "jarvan-iv-exemplar-of-demacia-rad-176s-167",
+          "ezreal-dashing-rad-180s-167",
+          "sett-kingpin-rad-183s-167",
         ],
       },
     ],
     summary: [
       "**[Seraphine, Starry-Eyed Songstress 174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167)** is Radiance's chase card: the signed overnumbered printing of the set's headline Legend, art and signature by Anna Nikonova.",
       "**A Signature is the asterisk.** 174/167 is the overnumbered Legend; 174\\*/167 is the same art carrying the artist's signature in foil, the rarest way to own the card.",
-      "**What it costs today:** no store lists the signed 174\\* yet. The unsigned 174/167 was AU$500 and £414 in our 16 October snapshot, and the Chinese-exclusive signed alternate, 174a\\*, was listed on eBay from US$1,299.99.",
+      "**What it costs:** the first listing of the signed 174\\* we tracked, on 17 October, asked **US$3,606.53**. The unsigned 174/167 was AU$500 and £414 on 16 October, and the Chinese-exclusive signed alternate, 174a\\*, was listed from US$1,299.99.",
       "**Radiance has more Signatures than any list shows.** Riot's card gallery and TCGplayer list none of them. Our catalogue has 16, one for each of the nine overnumbered Legends and the six HEARTSTEEL cards, plus 174a\\*.",
       "**Radiance releases 23 October 2026.** Expect the first listings to be the dearest: the median Vendetta overnumbered unit went from $177 four days before release to $81 in launch week.",
     ],
@@ -1078,7 +1323,7 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
       },
       {
         q: "How much is the Seraphine Signature worth?",
-        a: "No store we track listed the signed 174*/167 when this was written, so it has no price yet. For scale, on 16 October the unsigned overnumbered 174/167 was AU$500 and £414, and the Chinese-exclusive signed 174a*/167 was listed on eBay from US$1,299.99. The card page compares every store's price as listings appear.",
+        a: "The first listing we tracked, on 17 October, asked US$3,606.53 for the signed 174*/167. That is an opening asking price a week before release, not a settled value. For scale, on 16 October the unsigned overnumbered 174/167 was AU$500 and £414, and the Chinese-exclusive signed 174a*/167 was listed on eBay from US$1,299.99. The card page compares every store's price as listings appear.",
       },
       {
         q: "Which Radiance cards have Signatures?",
@@ -1120,7 +1365,7 @@ Radiance's base run stops at 167. Every number above it is a chase printing, and
 
 - **174/167** is the overnumbered Legend: new art, foil, numbered above the set.
 - **174\\*/167** is the **Signature**: the same overnumbered card with the artist's signature in foil. That is the one to chase.
-- **174a\\*/167** is a signed **alternate**: the Chinese-exclusive Seraphine, sold in that market only.
+- **174a\\*/167** is a signed **alternate**: the Chinese-exclusive Seraphine, printed in Simplified Chinese (the *SC* after the number) with entirely different art by BlackVIII, a sea-themed Seraphine among goldfish and jellyfish. It is sold in that market only.
 
 When you buy, read the number in the listing's photos, not just the title. A seller can write "signature" on an unsigned 174.
 
@@ -1137,7 +1382,7 @@ Radiance singles started trading at the Pre-Rift events, a week before release. 
 | [Yone, Blademaster](/card/yone-blademaster-rad-181-167) (HEARTSTEEL) | 181/167 | US$642.02 |
 | [Seraphine, Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-174-167) (unsigned) | 174/167 | AU$500, £414.19 |
 
-No store we track had the signed 174\\* listed yet. If the unsigned printing is already at AU$500, the signed one will open well above it.
+The signed 174\\* was not listed on 16 October. On 17 October its first listing asked **US$3,606.53**, about ten times the unsigned printing. Every Radiance Signature's first price is in **[all 16 Radiance Signature cards](/blog/riftbound-radiance-signature-cards)**.
 
 The first listings of a new set are the dearest. The median Vendetta overnumbered unit cost $177 four days before release and $81 in launch week: **[Radiance chase cards: what Vendetta's prices say to expect](/blog/riftbound-radiance-chase-cards)** has the numbers. Watching the card costs nothing, and the price alert emails you when it drops.
 ## How to spot a real Signature in a listing
@@ -1149,7 +1394,7 @@ Signatures are where the money is, so they are where listings get careless. Four
 3. **The language code.** *EN* is the English print. The Chinese-exclusive 174a\\* is a different card with its own number and its own price; a listing that mixes them up is pricing the wrong card.
 4. **Who took the photo.** A real card photographed in a hand, a sleeve or a top loader beats a stock image every time. A seller who uses Riot's preview image for a Signature does not have the card in front of them.
 
-Our card pages match listings on the number, asterisk included, so the signed and unsigned printings never share a price. That is also why the [Seraphine Signature page](/card/seraphine-starry-eyed-songstress-rad-174s-167) is empty today: no store we track has listed the asterisk yet.
+Our card pages match listings on the number, asterisk included, so the signed and unsigned printings never share a price. That is why the [Seraphine Signature page](/card/seraphine-starry-eyed-songstress-rad-174s-167) shows only listings that carry the asterisk.
 
 ## The Radiance Signatures, champion by champion
 
@@ -1158,8 +1403,8 @@ Every overnumbered Legend in Radiance has a signed twin, and so does every HEART
 - **[Seraphine 174\\*](/card/seraphine-starry-eyed-songstress-rad-174s-167)** and the Chinese-exclusive **[174a\\*](/card/seraphine-starry-eyed-songstress-rad-174as-167)**: the chase. The signed alternate was listed on eBay from US$1,299.99 to US$4,555.55 on 16 October.
 - **[Riven 173\\*](/card/riven-the-exile-rad-173s-167)**: The Exile, art by Charles Liu. Her unsigned [173/167](/card/riven-the-exile-rad-173-167) was the dearest Legend overnumber in our snapshot at US$1,200, which makes the signed one the likeliest to challenge Seraphine.
 - **[Mordekaiser 170\\*](/card/mordekaiser-iron-revenant-rad-170s-167)**: the only Radiance Signature with a live listing in our data on 16 October, at AU$1,499.95 on eBay Australia.
-- **[Ekko 168\\*](/card/ekko-boy-who-shattered-time-rad-168s-167)**, **[Ziggs 169\\*](/card/ziggs-hexplosives-expert-rad-169s-167)** and **[Orianna 171\\*](/card/orianna-lady-of-clockwork-rad-171s-167)**: the first three Signatures Riot showed, in Preview Season's first week. No listings yet.
-- **[K'Sante 172\\*](/card/k-sante-pride-of-nazumah-rad-172s-167)**, **[Evelynn 175\\*](/card/evelynn-agony-s-embrace-rad-175s-167)** and **[Jarvan IV 176\\*](/card/jarvan-iv-exemplar-of-demacia-rad-176s-167)**: in the catalogue, waiting on a clear image and a first listing.
+- **[Ekko 168\\*](/card/ekko-boy-who-shattered-time-rad-168s-167)**, **[Ziggs 169\\*](/card/ziggs-hexplosives-expert-rad-169s-167)** and **[Orianna 171\\*](/card/orianna-lady-of-clockwork-rad-171s-167)**: the first three Signatures Riot showed, in Preview Season's first week. Ziggs 169\\* was the first of them listed, at US$5,000 on 17 October.
+- **[K'Sante 172\\*](/card/k-sante-pride-of-nazumah-rad-172s-167)** (signed by Valentine Tran), **[Evelynn 175\\*](/card/evelynn-agony-s-embrace-rad-175s-167)** (Suzaki) and **[Jarvan IV 176\\*](/card/jarvan-iv-exemplar-of-demacia-rad-176s-167)** (Herman Ng): shown below from photos of real cards, waiting on a first listing.
 - **HEARTSTEEL, [178\\*](/card/k-sante-courageous-rad-178s-167) to [183\\*](/card/sett-kingpin-rad-183s-167)**: K'Sante, Aphelios, Ezreal, Yone, Kayn and Sett, each signed with the member's name. Their unsigned overnumbers were already among the dearest Radiance cards: [Kayn 182/167](/card/kayn-unleashed-rad-182-167) at US$663.75 and [Yone 181/167](/card/yone-blademaster-rad-181-167) at US$642.02.
 
 ## Buy the single, or open boxes?
@@ -1182,7 +1427,7 @@ Radiance releases on **23 October 2026**, and listings will multiply over the fo
 
 ## Every Radiance Signature
 
-Riot's card gallery and TCGplayer list none of Radiance's Signatures, so we added them by hand: one for each of the nine overnumbered Legends (168\\* to 176\\*) and each of the six HEARTSTEEL cards (178\\* to 183\\*), plus Seraphine's 174a\\*. The images below are Riot's own or photos of real cards; the rest join as they are shown.
+Riot's card gallery and TCGplayer list none of Radiance's Signatures, so we added them by hand (every one, card by card, is in **[all 16 Radiance Signature cards](/blog/riftbound-radiance-signature-cards)**): one for each of the nine overnumbered Legends (168\\* to 176\\*) and each of the six HEARTSTEEL cards (178\\* to 183\\*), plus Seraphine's 174a\\*. The images below are Riot's own or photos of real cards; the rest join as they are shown.
 
 [[embed:1]]
 

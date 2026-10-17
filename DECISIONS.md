@@ -18372,7 +18372,9 @@ The Seraphine 174\* photo was not used: the scan already on the site is flat and
 
 It says plainly that Packed Amphitheater (the Ultimate Rare battlefield) was the dearest single listing that day, at US$2,999.99, and that no store had listed the signed 174\* yet. It also says Riot publishes no pull rates. Prices are dated to the 16 October snapshot; the embeds are live. The K/DA, HEARTSTEEL and chase-card posts link to it.
 
-**Still without card art:** 172\*, 175\*, 176\*, 178\*, 180\*, 183\* and 174a\*. They stay out of the homepage chase strip until they have images.
+**Still without card art:** 178\* (the HEARTSTEEL K'Sante); Sett 183\* followed from the owner's photo. They stay out of the homepage chase strip until they have images. The owner's files for 172\*, 175\*, 176\* and 180\* arrived later the same day; they were cropped the same way.
+
+**Later the same day:** the owner supplied the Chinese-exclusive Seraphine 174a\* (Simplified Chinese, art by BlackVIII), a flat scan used as is. It joins the "Follow Radiance's chase cards" list (`lib/radiance-watch.ts`) in place of the unsigned K'Sante 172, as that file's comment had planned for when it had an image. The post's first gallery shows it beside the English 174\*.
 
 ## Card pages leave ISR for the CDN — 2026-10-17
 
@@ -18416,8 +18418,41 @@ Owner: "perform a full migration to RM9 as we are at limit for RM8". RM8 had bee
 **The runs.**
 - Pass 1 (05:45 UTC) restored cleanly (`pg_restore` exit 0) but two tables differed at the count: Notification 135 vs 133, SealedListing 2,642 vs 2,682. A `sealed-refresh` run (05:23–05:46) was rewriting listings on RM8 during the copy, and two notifications were written in the same two minutes. The step stops before the schema push on any mismatch, as it should.
 - Pass 2 ran once nothing was importing. All 57 tables matched (User 483, Card 1,667, RetailerPrice 183,510, CollectionCard 2,602, Notification 135, SealedListing 2,642, DemandSnapshot 100,169), and `prisma db push` reported the schema already in sync.
+- A final pass at 09:51 UTC, just before the flip landed on `main`, matched again on all 57 tables (identical counts: nothing had been written in between). It ran from the working branch, whose chain already named RM9, so it needed `overwrite_live_db`; production was still on RM8, so nothing live was overwritten.
 - Lesson: run the copy between imports. `sealed-refresh` (01:00 and 13:00 UTC), `refresh-prices` (07:00, 19:00) and `refresh-auctions` (every four hours) all start late, so check Actions for an in-progress import before the final pass.
 
 **The flip.** `OPERATIONAL_VARS = ["RM9"]` in `src/lib/db-chains.ts`; `CURRENT_OP` and the production gate in `scripts/build-db-push.sh`; every workflow's `DATABASE_URL`, `OPERATIONAL_URL`, `DB_SOURCE_NAME` and `RM9` forward, including the four workflows added since the last cutover (`ops-monitor`, `promo-art`, `games-report`, `usage-report`); `ci-build.yml`'s service variable; `package.json`'s preview condition; `tests/ops-wiring.test.ts`. A Vercel production build without `RM9` set **fails** (the 2026-10-04 guard), so the previous deployment keeps serving until it is set. Rollback is one commit: RM8 still holds the data.
 
 **Writes in the gap.** Anything written to RM8 between pass 2 and the new build going live is not on RM9: a few minutes of signups, alerts and notifications. Pause admin sends during the cutover.
+
+## Phones: no vignette on a tap, no Google ads in the set grids — 2026-10-17
+
+**Owner:** "a really big complaint in the community is the ads … on mobile phone, it's like almost unusable … the ads are like overloading it … fix where it's more usable on mobile phones, and deploy this immediately. Or if you need me to tweak some AdSense settings, give me a … Chrome extension prompt."
+
+**Measured on the live site at 390px** with an Android Chrome user agent, scrolled to the bottom (headless, so most units came back unfilled):
+- **Set pages:** `/sets/radiance` got 8 in-page Auto ads units of about 370px each, through its card grid; `/sets/vendetta` got 3.
+- **Other pages:** most got 1 to 3. Card pages got 1, near the bottom.
+- **Overlays:** a headless browser never triggers a vignette (the full-screen ad Google shows when a link is tapped) or an anchor ad, so neither shows up in the measurement. Both are what a real phone gets on every page, and they are the likeliest "unusable".
+
+**Changed, below 1024px only** (`lib/ad-free-boot.ts`):
+1. **No vignette on a tap.** `MOBILE_NO_VIGNETTE_SCRIPT`, in `<head>` before the AdSense loader, listens in the capture phase on `window` for `pointerdown`, `touchstart`, `mousedown` and `click`. It sets `data-google-vignette="false"` on the tapped link, which is Google's documented per-link opt-out (AdSense Help 17016693). Because it registers before the loader, it runs before any listener Google adds.
+   - It marks at the moment of the tap, not every link up front, so the HTML React hydrates is unchanged.
+   - Checked in Chromium: at 390px a tapped card link carries the attribute; at 1280px nothing is marked.
+2. **No Google ads on the set pages.** `/sets` and everything under it join `MOBILE_AD_FREE_ROUTES`, with the same pause the list builders use (`pauseAdRequests` in the boot script, `syncAdPause` on navigation).
+
+**Not changed:**
+- **Desktop.** It keeps vignettes and every Auto ads unit.
+- **Card pages, blog posts, guides, the homepage, `/browse` and the rest on a phone** keep their in-page Auto ads. That is where the AdSense revenue the owner wants kept comes from.
+- **No served ad is hidden with CSS.**
+
+**Console, for the owner** (given as a Claude-in-Chrome prompt):
+- Turn anchor ads off.
+- Turn off "additional vignette triggers" (vignettes on navigation the per-link opt-out does not cover).
+- Lower the Auto ads ad load a step.
+- Report the "Max ads per page" setting if the account has one.
+
+The code cannot do these: Google documents `data-overlays="bottom"` only to move anchors, and it would switch them back on.
+
+**What to watch:**
+- AdSense mobile page RPM and earnings, against the week before.
+- GA4 pages per visit on phones and `buy_click`, which an unusable phone page costs first.

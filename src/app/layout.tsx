@@ -8,7 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { SEASON_BOOT_SCRIPT } from "@/lib/season";
-import { AD_FREE_BOOT_SCRIPT, MOBILE_AD_INTENTS_SCRIPT } from "@/lib/ad-free-boot";
+import { AD_FREE_BOOT_SCRIPT, MOBILE_AD_INTENTS_SCRIPT, MOBILE_NO_VIGNETTE_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { SISTER_SITES } from "@/lib/sister-sites";
 import { QuickViewProvider } from "@/components/QuickView";
@@ -328,6 +328,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             and BEFORE the loader, which is async and so cannot run first. The
             loader itself stays ungated. See lib/ad-free-boot.ts. */}
         <script dangerouslySetInnerHTML={{ __html: AD_FREE_BOOT_SCRIPT }} />
+        {/* On a phone or tablet, a tapped link never triggers a full-screen
+            vignette ad. Before the loader, so its listeners run first. */}
+        <script dangerouslySetInnerHTML={{ __html: MOBILE_NO_VIGNETTE_SCRIPT }} />
         {/* The AdSense loader: ownership verification + Auto ads + the EEA/UK/CH
             consent message, on every page, ungated. See the component header. */}
         <AdSenseLoader />

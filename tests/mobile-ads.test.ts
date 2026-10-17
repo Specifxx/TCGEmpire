@@ -32,9 +32,9 @@ async function boot(pathname: string, width: number | null, cookie = "") {
   return { attrs, paused: window.adsbygoogle?.pauseAdRequests };
 }
 
-const PHONE_FREE = ["/tools/best-basket", "/tools/best-basket/x", "/deck", "/deck/x"];
+const PHONE_FREE = ["/tools/best-basket", "/tools/best-basket/x", "/deck", "/deck/x", "/sets", "/sets/radiance", "/sets/radiance/gallery"];
 const HOMEPAGES = ["/", "/au", "/uk", "/sg", "/ca", "/eu"];
-const PHONE_ADS = [...HOMEPAGES, "/card/x", "/blog/x", "/browse", "/au/x", "/decks", "/decks/x", "/tools/box-ev", "/tools/best-baskets", "/sets/radiance"];
+const PHONE_ADS = [...HOMEPAGES, "/card/x", "/blog/x", "/browse", "/au/x", "/decks", "/decks/x", "/tools/box-ev", "/tools/best-baskets", "/setsx", "/sealed"];
 
 test("on a phone the boot script pauses Google ads on the list builders only; the homepages keep theirs", async () => {
   for (const p of PHONE_FREE) {
@@ -177,4 +177,64 @@ test("every pause stamps data-ads-paused, and releasing it removes the stamp", a
     g.window = had.window;
     g.document = had.document;
   }
+});
+
+// ── No vignette on a tap (2026-10-17) ───────────────────────────────────────
+
+type Listener = (e: { target: unknown }) => void;
+function vignetteWin(width: number | null) {
+  const listeners: Record<string, { fn: Listener; opts: unknown }[]> = {};
+  const win = {
+    ...(width === null ? {} : { matchMedia: viewport(width) }),
+    addEventListener: (n: string, fn: Listener, opts: unknown) => (listeners[n] ??= []).push({ fn, opts }),
+  };
+  return { win, listeners };
+}
+function link(attrs: Record<string, string> = {}) {
+  const a = {
+    attrs,
+    hasAttribute: (k: string) => k in attrs,
+    setAttribute: (k: string, v: string) => (attrs[k] = v),
+    closest: (sel: string) => (sel === "a" ? a : null),
+  };
+  return a;
+}
+
+test("on a phone a tapped link is marked data-google-vignette=false before Google's handler, in the capture phase", async () => {
+  const { MOBILE_NO_VIGNETTE_SCRIPT } = await import("../src/lib/ad-free-boot");
+  const { win, listeners } = vignetteWin(390);
+  new Function("window", MOBILE_NO_VIGNETTE_SCRIPT)(win);
+  for (const n of ["pointerdown", "touchstart", "mousedown", "click"]) {
+    assert.equal(listeners[n]?.length, 1, `${n} is listened for`);
+    assert.deepEqual(listeners[n][0].opts, { capture: true, passive: true });
+  }
+  // A tap on text inside the link (a text node's parent is the element).
+  const a = link();
+  const span = { closest: (sel: string) => (sel === "a" ? a : null) };
+  listeners.pointerdown[0].fn({ target: { nodeType: 3, parentElement: span } });
+  assert.equal(a.attrs["data-google-vignette"], "false");
+  // A link that already says something keeps it; a tap outside a link does nothing.
+  const own = link({ "data-google-vignette": "true" });
+  listeners.click[0].fn({ target: own });
+  assert.equal(own.attrs["data-google-vignette"], "true");
+  assert.doesNotThrow(() => listeners.click[0].fn({ target: { closest: () => null } }));
+  assert.doesNotThrow(() => listeners.click[0].fn({ target: null }));
+});
+
+test("desktop and browsers without matchMedia keep vignettes: no listeners at all", async () => {
+  const { MOBILE_NO_VIGNETTE_SCRIPT } = await import("../src/lib/ad-free-boot");
+  for (const w of [1024, 1440, null]) {
+    const { win, listeners } = vignetteWin(w);
+    new Function("window", MOBILE_NO_VIGNETTE_SCRIPT)(win);
+    assert.deepEqual(listeners, {}, `width ${w}`);
+  }
+});
+
+test("the vignette script runs in <head> before the AdSense loader, so its listeners are first", () => {
+  const layout = read("src/app/layout.tsx");
+  const boot = layout.indexOf("<script dangerouslySetInnerHTML={{ __html: AD_FREE_BOOT_SCRIPT }} />");
+  const vig = layout.indexOf("<script dangerouslySetInnerHTML={{ __html: MOBILE_NO_VIGNETTE_SCRIPT }} />");
+  const loader = layout.indexOf("<AdSenseLoader />");
+  assert.ok(boot > 0 && vig > boot && loader > vig, "boot script, then the vignette opt-out, then the loader");
+  assert.ok(vig < layout.indexOf("</head>"), "in <head>");
 });

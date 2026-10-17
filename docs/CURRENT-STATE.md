@@ -56,7 +56,7 @@ longer lands on its entry.
   page's TTL is done client-side, like the `/auctions` countdown.
   [2026-09-11](../DECISIONS.md#L4871), [2026-09-11](../DECISIONS.md#L5042),
   [2026-09-16](../DECISIONS.md#L6683)
-- **Card pages are cached by the CDN, not ISR (2026-10-17):** `/card/[id]` is `force-dynamic` with `Vercel-CDN-Cache-Control` (a day, plus a day stale) from `next.config.js`; nothing in its tree may read the visitor (`tests/card-cdn.test.ts`). An ISR write of a card was ~70 units after every release. [2026-10-17](../DECISIONS.md#L18377)
+- **Card pages are cached by the CDN, not ISR (2026-10-17):** `/card/[id]` is `force-dynamic` with `Vercel-CDN-Cache-Control` (a day, plus a day stale) from `next.config.js`; nothing in its tree may read the visitor (`tests/card-cdn.test.ts`). An ISR write of a card was ~70 units after every release. [2026-10-17](../DECISIONS.md#L18379)
 - **Page TTLs are six hours or more (owner, 2026-10-14):** `revalidate` 21600
   for what buyers act on (homes, decks, pre-orders, release dates, per-card API
   and embeds), 86400 for slow content. The import's purge and the daily release
@@ -108,7 +108,7 @@ longer lands on its entry.
   `resolveVar()` takes the first SET variable, not the first healthy one.
   History: `HISTORY_DATABASE_URL_4`, then `_3`, then `DATABASE_URL`
   (terminal). Never rotate onto `DATABASE_URL`.
-  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422), [2026-09-28](../DECISIONS.md#L15024), [2026-10-04](../DECISIONS.md#L16597), [2026-10-09](../DECISIONS.md#L16789), [2026-10-14](../DECISIONS.md#L16962), [2026-10-17](../DECISIONS.md#L18406)
+  [2026-09-14](../DECISIONS.md#L6203), [2026-09-22](../DECISIONS.md#L10455), [2026-09-25](../DECISIONS.md#L12637), [2026-09-26](../DECISIONS.md#L14422), [2026-09-28](../DECISIONS.md#L15024), [2026-10-04](../DECISIONS.md#L16597), [2026-10-09](../DECISIONS.md#L16789), [2026-10-14](../DECISIONS.md#L16962), [2026-10-17](../DECISIONS.md#L18408)
 - **Migrating:** verify the target live first (a recycled project must trail
   the source on every metric; a new one must be empty). Use a named
   `maintenance.yml` task: it guards SOURCE≠TARGET, dumps before truncating,
@@ -118,7 +118,7 @@ longer lands on its entry.
   task; replace the legacy step, never keep two. Flip the chain only after the data verifies; the owner
   sets the variable in all three Vercel environments.
   [2026-09-12](../DECISIONS.md#L5439),
-  [2026-09-14](../DECISIONS.md#L6203), [2026-09-18](../DECISIONS.md#L8523), [2026-10-17](../DECISIONS.md#L18406)
+  [2026-09-14](../DECISIONS.md#L6203), [2026-09-18](../DECISIONS.md#L8523), [2026-10-17](../DECISIONS.md#L18408)
 - **These move with the chain:** `build-db-push.sh`, the `db.ts` /
   `db-history.ts` warnings, each workflow's `DB_SOURCE_NAME`, its
   `OPERATIONAL_URL` guard and env-var names, and the probe labels; migration
@@ -492,6 +492,12 @@ longer lands on its entry.
   (`tests/signup-inline.test.ts`). `PREMIUM_COPY_VERSION` `signup-inline-2026-09-30`
   (since 10-09 `search-caps-2026-10-09`, the search allowance above).
   [2026-09-30](../DECISIONS.md#L15871)
+- **Phones (below 1024px):** no ad intents (`google-anno-skip`), no vignette
+  on a tapped link (`data-google-vignette="false"` set in the capture phase
+  before the loader), and no Google ads on Best Basket, `/deck` and `/sets/*`
+  (`MOBILE_AD_FREE_ROUTES`). Everything else keeps its Auto ads; desktop is
+  unchanged. Anchor ads and the ad load are console settings.
+  [2026-10-17](../DECISIONS.md#L18428)
 - **Corner nudges:** the Premium card is the Akali slider since 10-17 (above;
   the owner chose a 3 s, every-visitor card knowing an instant card once
   measured 78% dismissed and that Google treats a pop-up over a phone's first
