@@ -22,7 +22,7 @@
     },
     "cmsmrj4yz000ikx4mypxon1ko": {
       "BGS 10": 987258,
-      "BGS 9.5": 479761,
+      "BGS 9.5": 450085,
       "PSA 10": 658106
     },
     "cmsmrj4zd000kkx4mqap0n0yh": {
@@ -57,7 +57,7 @@
       "PSA 10": 13900
     },
     "cmsmrsr4r002e2ouxtzxrq7fp": {
-      "PSA 10": 29116,
+      "PSA 10": 29999,
       "PSA 9": 4999
     },
     "cmsmrsrg1002g2ouxeuzm7eb4": {
@@ -150,7 +150,7 @@
       "PSA 10": 800000
     },
     "cmsmrtux5009e2ouxy5cajuoi": {
-      "PSA 10": 57213
+      "PSA 10": 41103
     },
     "cmsmrtv2t009f2ouxtml6p4v3": {
       "BGS 10": 600000,
@@ -190,7 +190,6 @@
       "PSA 10": 57500
     },
     "cmsmrtwng009p2ouxtvzzmxl8": {
-      "BGS 10": 710000,
       "PSA 10": 400000
     },
     "cmsmrtwt9009q2ouxlqo7tx6h": {
@@ -246,14 +245,14 @@
       "PSA 10": 52713
     },
     "cmsmrv4qc00hg2oux0tk88az1": {
-      "PSA 10": 375367,
+      "PSA 10": 350001,
       "PSA 9": 184878
     },
     "cmsmrv51o00hi2ouxn930i3tc": {
       "BGS 10": 139241,
       "BGS 9": 84624,
-      "BGS 9.5": 92379,
-      "PSA 10": 110000,
+      "BGS 9.5": 87500,
+      "PSA 10": 180000,
       "PSA 9": 62052
     },
     "cmsmrv57c00hj2ouxyjs797c9": {
@@ -289,7 +288,7 @@
       "PSA 10": 32690
     },
     "cmsmrv6rx00ht2ouxzvzt8d41": {
-      "PSA 10": 95000
+      "PSA 10": 90000
     },
     "cmsmrv6xk00hu2ouxmaibi9c9": {
       "BGS 9.5": 9000
@@ -409,7 +408,7 @@
       "PSA 10": 95000
     },
     "cmsmrwiay00q62ouxtnqj8wag": {
-      "BGS 10": 395000,
+      "BGS 10": 250000,
       "PSA 10": 299999
     },
     "cmsmrwigm00q72oux65gdklgo": {
@@ -427,7 +426,7 @@
     "cmsmrwjes00qd2oux65ls2ni9": {
       "BGS 9": 241686,
       "BGS 9.5": 341120,
-      "PSA 10": 335829
+      "PSA 10": 302332
     },
     "cmsms3552000211ehab5le80n": {
       "BGS 10": 57449,
@@ -494,8 +493,7 @@
       "BGS 9.5": 94756
     },
     "cmsmscety0017bsjx38kea5r8": {
-      "BGS 9.5": 380000,
-      "PSA 10": 450000
+      "BGS 9.5": 380000
     },
     "cmsmscev5001absjx5sedx36x": {
       "BGS 10": 450000,

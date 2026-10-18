@@ -35,7 +35,7 @@
     "OGN|Booster Pack": {
       "AU": 1900,
       "CA": 1699,
-      "US": 1299
+      "US": 900
     },
     "OGN|Box Set": {
       "EU": 10228,
@@ -56,7 +56,7 @@
       "EU": 750,
       "SG": 2500,
       "UK": 1685,
-      "US": 1399
+      "US": 1400
     },
     "OGN|Champion Deck (Jinx) Display": {
       "AU": 2900,
@@ -93,7 +93,7 @@
       "AU": 8000,
       "EU": 3500,
       "UK": 2999,
-      "US": 4498
+      "US": 4497
     },
     "OGN|Sealed": {
       "EU": 499
@@ -123,16 +123,16 @@
     "RAD|Booster Box": {
       "AU": 23000,
       "CA": 19495,
-      "EU": 10998,
+      "EU": 10990,
       "SG": 19124,
       "UK": 11000,
       "US": 11999
     },
     "RAD|Booster Case": {
       "CA": 149791,
-      "EU": 65000,
+      "EU": 64990,
       "UK": 42158,
-      "US": 89774
+      "US": 89773
     },
     "RAD|Booster Pack": {
       "CA": 799,
@@ -145,13 +145,13 @@
       "EU": 3400,
       "SG": 6783,
       "UK": 2999,
-      "US": 4863
+      "US": 4859
     },
     "RAD|Bundle Case": {
       "US": 79966
     },
     "RAD|Pre-Rift Event Kit": {
-      "EU": 3100,
+      "EU": 2999,
       "US": 5499
     },
     "RAD|Pre-Rift Kit": {
@@ -162,15 +162,15 @@
       "US": 1500
     },
     "RAD|Sealed": {
-      "EU": 540
+      "EU": 550
     },
     "RAD|Showdown Decks": {
       "AU": 5500,
       "CA": 3499,
-      "EU": 3230,
+      "EU": 3190,
       "SG": 5017,
       "UK": 2199,
-      "US": 2630
+      "US": 3499
     },
     "RAD|Showdown Decks Display": {
       "EU": 15072,
@@ -237,7 +237,7 @@
     "SFD|Champion Deck (Rumble)": {
       "AU": 800,
       "CA": 2495,
-      "EU": 1100,
+      "EU": 990,
       "SG": 2500,
       "UK": 1685,
       "US": 1700
@@ -269,7 +269,7 @@
       "AU": 15970,
       "CA": 9489,
       "EU": 5499,
-      "UK": 2500,
+      "UK": 7500,
       "US": 3000
     },
     "SFD|Sealed": {
@@ -299,7 +299,7 @@
     "UNL|Booster Box": {
       "AU": 24000,
       "CA": 21999,
-      "EU": 9990,
+      "EU": 9999,
       "SG": 24000,
       "UK": 14110,
       "US": 6000
@@ -314,7 +314,7 @@
     "UNL|Booster Pack": {
       "AU": 1200,
       "CA": 899,
-      "US": 640
+      "US": 649
     },
     "UNL|Bundle": {
       "EU": 5995
@@ -359,12 +359,12 @@
       "EU": 50000,
       "SG": 69716,
       "UK": 1080,
-      "US": 400
+      "US": 500
     },
     "UNL|Pre-Rift Event Kit": {
       "CA": 5199,
       "EU": 4500,
-      "US": 79999
+      "US": 75000
     },
     "UNL|Pre-Rift Kit": {
       "CA": 4948,
@@ -394,14 +394,14 @@
       "EU": 12500,
       "SG": 24000,
       "UK": 11999,
-      "US": 13299
+      "US": 13199
     },
     "VEN|Booster Case": {
       "AU": 136270,
       "CA": 119999,
       "EU": 84290,
       "UK": 75130,
-      "US": 84499
+      "US": 84000
     },
     "VEN|Booster Pack": {
       "AU": 999,
@@ -409,7 +409,7 @@
       "EU": 795,
       "SG": 1000,
       "UK": 499,
-      "US": 500
+      "US": 596
     },
     "VEN|Bundle": {
       "AU": 6500,
@@ -470,7 +470,7 @@
       "EU": 24823
     },
     "arcaneimmersivemusicexperiencebooster": {
-      "EU": 7399
+      "EU": 7000
     },
     "championdeckjinxriftboundleagueoflegends": {
       "CA": 2403
@@ -482,7 +482,7 @@
       "EU": 1614
     },
     "giftoftheriftbundle": {
-      "US": 28763
+      "US": 28760
     },
     "leagueoflegendsbundle24popvinyls": {
       "AU": 8396
@@ -497,11 +497,17 @@
     "leagueoflegendsriftboundtcgvaultbundleen": {
       "EU": 4399
     },
+    "legacyboosterbox": {
+      "EU": 14990
+    },
     "legacyboosterdisplay": {
       "US": 23488
     },
     "legacyboosterdisplaycase": {
       "US": 141000
+    },
+    "legacyvault": {
+      "EU": 3990
     },
     "legacyvaultbundle": {
       "US": 11970
@@ -666,6 +672,24 @@
       "CA": 1909,
       "EU": 2098
     },
+    "riftboundslabcaitlyn068aarcaneboxsetcgcp": {
+      "CA": 34999
+    },
+    "riftboundslabheimerdinger111aarcaneboxse": {
+      "CA": 39999
+    },
+    "riftboundslabjinx202barcaneboxsetcgc10ge": {
+      "CA": 39999
+    },
+    "riftboundslabvi036aarcaneboxsetcgc9mint2": {
+      "CA": 14999
+    },
+    "riftboundslabviktor247barcaneboxsetcgcpr": {
+      "CA": 24999
+    },
+    "riftboundslabwarwick159aarcaneboxsetcgcp": {
+      "CA": 29999
+    },
     "riftboundtcgfiorachampiondeck": {
       "CA": 3535
     },
@@ -714,7 +738,7 @@
       "US": 454220
     },
     "worlds25commemorativebooster": {
-      "EU": 1699
+      "EU": 1499
     },
     "worldsbundle2025": {
       "EU": 39900
