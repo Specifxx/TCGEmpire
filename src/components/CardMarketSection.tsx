@@ -16,6 +16,7 @@ import { normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/con
 import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { isPaidLink } from "@/lib/affiliate";
 import { playedDiscounts, playedDiscountText } from "@/lib/played-discount";
+import { lastKnownLabel, lastKnownTitle, type LastKnownPrice } from "@/lib/last-known-price";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
 // the AU baseline (no cookie reads server-side — that's what makes the route
@@ -56,23 +57,29 @@ function Metric({
   label,
   value,
   highlight,
+  muted,
   sub,
+  title,
   className,
 }: {
   label: string;
   value: string;
   highlight?: boolean;
+  /** A figure that is NOT a live price (the last known price): the secondary
+   *  text colour, never the price accent. Wins over `highlight`. */
+  muted?: boolean;
   sub?: string;
+  title?: string;
   className?: string;
 }) {
   return (
-    <div className={`rounded-lg bg-ink-900 p-2 sm:p-3 ${className ?? ""}`}>
+    <div className={`rounded-lg bg-ink-900 p-2 sm:p-3 ${className ?? ""}`} title={title}>
       <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
       {/* text-base until 2xl (was text-lg, 2026-09-23): 18px JetBrains Mono is
           ~10.8px a character, so "US$3,297.87" (≈116px) cannot fit the ~110px
           content box of a 4-up tile at 1280–~1310. 16px fits at every width,
           and from 1536 the tiles have at least 175px of content. */}
-      <div className={`num text-base font-bold 2xl:text-lg ${highlight ? "text-accent" : "text-white"}`}>{value}</div>
+      <div className={`num text-base font-bold 2xl:text-lg ${muted ? "text-slate-400" : highlight ? "text-accent" : "text-white"}`}>{value}</div>
       {sub && <div className="num text-[11px] text-slate-500">{sub}</div>}
     </div>
   );
@@ -192,11 +199,16 @@ export function CardPriceMetrics({
   energyCost,
   might,
   power,
+  lastKnown = null,
 }: {
   rows: MarketRow[];
   energyCost: number | null;
   might: number | null;
   power: number | null;
+  /** The newest recorded price from the card's history, in DEFAULT_COUNTRY's
+   *  currency, already gated by the server (lib/last-known-price.ts
+   *  cardHeadlineLastKnown). Shown only where the tile would read "—". */
+  lastKnown?: LastKnownPrice | null;
 }) {
   // PINNED TO DEFAULT_COUNTRY — never useCountry()'s live, visitor-following
   // country. This is the headline stat block directly under the H1: the one
@@ -228,6 +240,12 @@ export function CardPriceMetrics({
     () => (m.storeCount > 0 ? null : stockElsewhere(rows, DEFAULT_COUNTRY, COUNTRY_LIST)),
     [rows, m.storeCount],
   );
+
+  // LAST KNOWN PRICE (2026-10-18): only where this tile would otherwise read
+  // "—" (no live price and no "last seen" listing), and the server only sends
+  // one while no market has the card in stock. Muted, never the accent, and the
+  // words under it say what it is: a recorded price, not one to pay today.
+  const known = m.lowest == null && m.lastSeen == null ? lastKnown : null;
 
   // The column count follows the card page's DETAILS column, not the viewport
   // (2026-09-23; was grid-cols-3 → sm:grid-cols-4, which clipped the price by
@@ -266,13 +284,24 @@ export function CardPriceMetrics({
           old and recomputed at hydration is a mismatch waiting to happen. The
           exact date is already on the out-of-stock row lower down, which IS
           guarded. */}
-      <Metric
-        label={m.lowest == null && m.lastSeen ? `Last seen · ${place}` : `Cheapest price · ${place}`}
-        value={m.lowest != null ? fmt(m.lowest) : m.lastSeen ? fmt(m.lastSeen.priceCents) : "—"}
-        sub={m.lowest == null && m.lastSeen ? "out of stock" : undefined}
-        highlight
-        className="col-span-3 md:col-span-1 lg:col-span-3 xl:col-span-1"
-      />
+      {known ? (
+        <Metric
+          label={`No live price · ${place}`}
+          value={fmt(known.cents)}
+          sub={lastKnownLabel(known.day)}
+          title={lastKnownTitle(known.day)}
+          muted
+          className="col-span-3 md:col-span-1 lg:col-span-3 xl:col-span-1"
+        />
+      ) : (
+        <Metric
+          label={m.lowest == null && m.lastSeen ? `Last seen · ${place}` : `Cheapest price · ${place}`}
+          value={m.lowest != null ? fmt(m.lowest) : m.lastSeen ? fmt(m.lastSeen.priceCents) : "—"}
+          sub={m.lowest == null && m.lastSeen ? "out of stock" : undefined}
+          highlight
+          className="col-span-3 md:col-span-1 lg:col-span-3 xl:col-span-1"
+        />
+      )}
       <Metric
         label={`In stock at · ${place}`}
         value={`${m.storeCount} ${m.storeCount === 1 ? "store" : "stores"}`}

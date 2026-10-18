@@ -68,6 +68,7 @@ import { RelatedGuides } from "@/components/RelatedGuides";
 import { cardWhereParam } from "@/lib/card-slug-renames";
 import { getRiftboundStocksLinks, rbsCardUrl } from "@/lib/riftboundstocks";
 import { regionalPrinting } from "@/lib/regional-printings";
+import { cardHeadlineLastKnown, lastKnownDayLabel } from "@/lib/last-known-price";
 
 // The comparison's ordering in one line, beside the link to /methodology#ordering
 // that explains it: item price first, postage only where the store states it
@@ -770,6 +771,12 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // genuine price-trend paragraph below. Same cache key as the chart's own fetch
   // (default take=60), so this never doubles the week's history read.
   const history = await getPriceHistory(card.id, DEFAULT_COUNTRY);
+  // LAST KNOWN PRICE (2026-10-18, lib/last-known-price.ts): the newest day of
+  // this same series, for the headline tile ONLY, and only while that tile would
+  // read "—" and no market has the card in stock. Display-only by rule: it never
+  // reaches the JSON-LD, the metadata, the FAQ, the narrative, the similar /
+  // cheaper rails or anything that ranks (tests/last-known-price.test.ts).
+  const lastKnown = cardHeadlineLastKnown(rows, DEFAULT_COUNTRY, history);
   const rbsHref = rbsCardUrl(await rbsLinks, card.slug);
   // The Radiance release alert (lib/release-alerts.ts) runs while the set is
   // still "coming soon" in SETS; the signup route refuses any other set.
@@ -1096,7 +1103,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <CardTopBuy rows={rows} displayName={displayName} />
 
             {/* Market-localised metrics (SSR = AU baseline; client reconciles). */}
-            <CardPriceMetrics rows={rows} energyCost={card.energyCost} might={card.might} power={card.power} />
+            <CardPriceMetrics rows={rows} energyCost={card.energyCost} might={card.might} power={card.power} lastKnown={lastKnown} />
 
             {/* The page's primary conversion, next to the cheapest price
                 (2026-09-24 growth pass): one-click OAuth that creates the
@@ -1179,6 +1186,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                     there is no launch price to compare. The only market this printing can have is
                     resale. We track that too: a price appears here as soon as a copy changes hands
                     somewhere we can see it.
+                    {lastKnown &&
+                      ` The last price we recorded for it, on ${lastKnownDayLabel(lastKnown.day)}, is shown above as a guide only.`}
                   </>
                 ) : (
                   <>
@@ -1189,9 +1198,15 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         internal threshold at them that means nothing outside this
                         codebase, and that a future change would falsify again. */}
                     None of the stores we track in Australia, the United States, the
-                    United Kingdom, Singapore, Canada or the EU has this printing in stock today, and we
-                    have no recorded price history for it yet — so there is nothing
-                    honest to compare. We check every store twice a day; this page fills in on its own
+                    United Kingdom, Singapore, Canada or the EU has this printing in stock today
+                    {/* One recorded day is not a history to compare (MIN_HISTORY_DAYS),
+                        but it is a price we recorded, and the headline shows it as
+                        the last known price — so this must not say "no recorded
+                        price" above a figure that is one. */}
+                    {lastKnown
+                      ? `, so there is nothing to compare. The last price we recorded for it, on ${lastKnownDayLabel(lastKnown.day)}, is shown above as a guide only, not a price you can pay today.`
+                      : ", and we have no recorded price history for it yet — so there is nothing honest to compare."}{" "}
+                    We check every store twice a day; this page fills in on its own
                     the moment one lists it.
                   </>
                 )}

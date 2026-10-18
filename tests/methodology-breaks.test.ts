@@ -217,11 +217,11 @@ test("the exemption list names only files that exist, or the one being deleted",
 // (or imports dropBreakWindow itself).
 const INDIRECT: Record<string, string> = {
   "src/app/card/[id]/page.tsx":
-    "hands the series to the narrative (card-narrative.ts trajectory() drops, pinned below) and draws nothing comparative itself",
+    "hands the series to the narrative (card-narrative.ts trajectory() drops, pinned below) and draws nothing comparative itself; the headline's last known price reads only the newest point and compares nothing",
   "src/components/PriceHistoryChart.tsx":
     "draws every recorded point as a chart; the step is visible in the line itself, and PriceChart's ▲/▼ arrow drops the break window (rawCardHistory, pinned below)",
   "src/app/api/card/[id]/history/route.ts":
-    "serves a card's recorded points to the client charts (QuickView, LocalizedPriceHistory), whose PriceChart arrow drops the break window (pinned below)",
+    "serves a card's recorded points to the client charts (QuickView, LocalizedPriceHistory), whose PriceChart arrow drops the break window (pinned below), and the newest point as the quick view's last known price, which compares nothing",
   "src/app/api/v1/card/[id]/history.json/route.ts": "publishes recorded points to API consumers; dropping any would delete facts",
   "src/app/api/card/[id]/history/full/route.ts":
     "the members' whole series for the same LocalizedPriceHistory chart, whose PriceChart arrow drops the break window (pinned below)",

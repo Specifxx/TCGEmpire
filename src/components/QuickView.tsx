@@ -29,6 +29,8 @@ import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
 import type { PricePoint } from "@/lib/price-history";
+import { lastKnownLabel, lastKnownPrice, lastKnownTitle, type LastKnownPrice } from "@/lib/last-known-price";
+import { hasAnyMarketPrice } from "@/lib/market-rows";
 import { Dialog } from "./ui/Dialog";
 import { Spinner } from "./ui/Skeleton";
 import { pushRecentCard } from "@/lib/recently-viewed";
@@ -147,6 +149,10 @@ function QuickViewModal({
   const [graded, setGraded] = useState<GradedRow[]>([]);
   const [ebayCheckedAt, setEbayCheckedAt] = useState<string | null>(null);
   const [history, setHistory] = useState<PricePoint[] | null>(null);
+  // The history series' newest recorded day for the market it was fetched for
+  // (the history route's `lastKnown`), so a late response for another market is
+  // never shown under this one. Display-only: see lib/last-known-price.ts.
+  const [recorded, setRecorded] = useState<{ country: string; price: LastKnownPrice | null } | null>(null);
   const [coll, setColl] = useState<"idle" | "saving" | "added" | "full" | "signin" | "error">("idle");
   const [collFoil, setCollFoil] = useState(false);
   // The free portfolio limit, when "Add to collection" hit it (lib/free-limits.ts).
@@ -208,7 +214,15 @@ function QuickViewModal({
     // Region-specific price history (its own currency), keyed by URL for clean caching.
     fetch(`/api/card/${ref}/history?country=${country}`)
       .then((r) => r.json())
-      .then((d) => { if (alive) setHistory(d.points ?? []); })
+      .then((d) => {
+        if (!alive) return;
+        setHistory(d.points ?? []);
+        const lk = d.lastKnown;
+        setRecorded({
+          country,
+          price: lk && typeof lk.cents === "number" && typeof lk.day === "string" ? { cents: lk.cents, day: lk.day } : null,
+        });
+      })
       .catch(() => { if (alive) setHistory([]); });
     return () => {
       alive = false;
@@ -387,12 +401,32 @@ function QuickViewModal({
               <PriceWatchButton cardId={card.id} variant="responsive" limitInline />
             </div>
 
-            <div className="mt-3 rounded-lg bg-ink-950/50 p-3">
-              <div className="text-[11px] uppercase tracking-wide text-slate-500">Cheapest price</div>
-              <div className="text-2xl font-extrabold text-accent">
-                {lowest != null ? fmt(lowest) : "—"}
-              </div>
-            </div>
+            {/* LAST KNOWN PRICE (2026-10-18, lib/last-known-price.ts): where this
+                box would read "—", once the listings have loaded and show no
+                market with the card in stock (and the tile's own per-market
+                columns agree, so a failed listings fetch can never pass for
+                "nothing in stock"), the history's newest recorded day for this
+                market. Muted, never the accent, labelled in words. */}
+            {(() => {
+              const known =
+                lowest == null && !hasAnyMarketPrice(card) && prices != null && recorded?.country === country
+                  ? lastKnownPrice({ slotIsEmpty: true, rows: prices, recorded: recorded.price })
+                  : null;
+              return known ? (
+                <div className="mt-3 rounded-lg bg-ink-950/50 p-3" title={lastKnownTitle(known.day)}>
+                  <div className="text-[11px] uppercase tracking-wide text-slate-500">No live price</div>
+                  <div className="text-2xl font-extrabold text-slate-400">{fmt(known.cents)}</div>
+                  <div className="text-[11px] text-slate-500">{lastKnownLabel(known.day)}</div>
+                </div>
+              ) : (
+                <div className="mt-3 rounded-lg bg-ink-950/50 p-3">
+                  <div className="text-[11px] uppercase tracking-wide text-slate-500">Cheapest price</div>
+                  <div className="text-2xl font-extrabold text-accent">
+                    {lowest != null ? fmt(lowest) : "—"}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Always-present eBay buy-path — the widest singles inventory in every
                 market and our commission source; sits above the local comparison.
