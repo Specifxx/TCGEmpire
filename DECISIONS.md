@@ -18539,3 +18539,40 @@ The owner's ticks-only rule is the extreme of the last point: a cell is a mark, 
 **Measured** on a 390×844 phone with the same dev server, signed out: 352×692 before (82% of the screen), 320×384 now. On a desktop: 352×648 before, 320×415 now.
 
 `tests/premium-slidein.test.ts` pins the five rows to real `TICK_ROWS` names.
+
+## Last known price where a card has none — 2026-10-18
+
+**Owner:** "There's a lot of cards on all these websites with no prices, but in history they did have a price. So maybe we could still have a price on the card, but we make it a different color, and in very fine print, it's like last known price. So last known price is when a card doesn't have a price. But obviously the last known price can be a very good indicator of what price is right now."
+
+**What a visitor sees.** Where the card page's headline tile read "—", it now reads, for a card with history:
+- the label "No live price · the United States";
+- the newest recorded price, in the secondary text colour (`text-slate-400`), never the price accent;
+- the fine print "Last known price · 15 Oct 2026" under it, and a tooltip saying what it is.
+
+The quick view's price box does the same in the visitor's own market. When the no-listings explainer is showing (fewer than two recorded days), it no longer says "no recorded price history" above a figure that is one: it says the last price we recorded is shown above as a guide only.
+
+**The series: the one the chart already draws.** `getPriceHistory(card.id, market)`, the GLOBAL card series in `data/price-history/` converted by `historySource()`. It is the site's only per-card history: since 2026-09-05 every market reads that one series (the cheapest in-stock price across AU, US, UK and SG, in US cents), and the chart under the headline labels it the market's "Price history". So the figure is that series' newest day:
+- same card id, so another printing's points never enter it;
+- one figure across finishes, like the headline (the history never split by finish);
+- the market's own currency through the chart's conversion. The headline is pinned to the US, so it is US dollars.
+
+The card page already read this series for the chart and the narrative (one cached read per card per release). Nothing new is read: no query, no file, no cache entry. The quick view gets it as one more field, `lastKnown`, on the history response it already fetched.
+
+**The one guard the shared series needs: nothing in stock anywhere.** It shows only where the tile would read "—" (no live price and no out-of-stock listing for "Last seen"), and only while no market has the card in stock (reference rows aside). The series is the cheapest of four markets, so for a card in stock in Australia today the newest point is today's Australian price. In the US headline that would be another market's live price wearing a "last known" label. Such a card keeps "—" and the store tile's "N stores in …" line, which is the better answer for it.
+
+**Measured against the 2026-10-17 public snapshot and the history to 2026-10-18** (1,667 cards; the real gate run over `data/public/listings/`): 32 card pages had "—" in the headline.
+- 12 now show a last known price: the six NN1 rune promos and Void Seeker's (US$0.99, 15 Oct), three T1S promos, and two Radiance Signatures whose only point is the history's newest day (the snapshot is a day older than the history; live, those two have a price).
+- 8 keep "—" because another market has them in stock.
+- 12 have no history and keep "—".
+- Cards with a US out-of-stock listing keep "Last seen", as before.
+
+**Display only, by rule** (`lib/last-known-price.ts`, its own name and shape, never `lowest`). It is never a sort key, ranking, filter, index, mover, deal, alert, basket, collection value, eBay comparison, "cheapest"/"from" claim, JSON-LD offer, title, meta description, share image, sitemap or index decision, and it is never written into `data/public/` or `data/price-history/`. `tests/last-known-price.test.ts` pins it:
+- **Selection and gate:** the newest day wins, another printing's newer points never stand in, the market's conversion applies, and it is null when the market has a live price (a foil copy included), a "Last seen" listing, stock elsewhere, or no history.
+- **Render:** the tile is muted and labelled, never "Cheapest", and a live price always wins.
+- **Allowlist:** only five display-path files may name it.
+- **Card page:** the metadata, JSON-LD, FAQ, narrative and rail queries never read it.
+
+**Not done:**
+- **Card tiles and list rows** ("No price yet"). Tiles read `Card.lowestPriceCents*` through `cardTileSelect`, from Neon or `data/public/cards.json`, and carry no history. Doing it cheaply needs a precomputed field: a `Card.lastKnownPriceCents` plus day, written forward by the import, exported to `cards.json`, added to `cardTileSelect` and `CardTileData`, and kept out of every sort and filter that reads those columns. That is a schema change plus an importer change, and editing the importer starts a full import. Reading the history index per tile at request time is ruled out.
+- **The per-market table and the comparison's "No prices found yet" panel.** A shared series would print one number in six currencies as six markets' facts.
+- **The Pokémon section.** Its history is its own database's TCGplayer market series, and it is off by default.

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getPriceHistory } from "@/lib/price-history";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { olderFrom, recentWindow } from "@/lib/history-access";
+import { newestRecordedPrice } from "@/lib/last-known-price";
 
 // Daily lowest-price history for one card in a given market (in that market's
 // currency): the last 30 days, the free window (lib/history-access.ts), plus when
@@ -30,8 +31,12 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   if (!card) return NextResponse.json({ points: [] }, { status: 404 });
 
   const all = await getPriceHistory(card.id, country);
+  // `lastKnown`: the series' newest recorded day, which can be older than the
+  // free window. Only the quick view reads it, and only to show a muted "Last
+  // known price · <day>" where its price box would read "—" and no market has
+  // the card in stock (lib/last-known-price.ts). Never a current price.
   return NextResponse.json(
-    { points: recentWindow(all), olderFrom: olderFrom(all), country },
+    { points: recentWindow(all), olderFrom: olderFrom(all), lastKnown: newestRecordedPrice(all), country },
     { headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" } }
   );
 }

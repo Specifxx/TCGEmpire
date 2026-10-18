@@ -874,6 +874,18 @@ longer lands on its entry.
   320w/480w renditions via `cardImageSrcSet`/`cardThumbProps`; only the
   card-detail hero loads the 744px file. `/browse` defaults to "Most popular". [2026-09-13](../DECISIONS.md#L5750),
   [2026-09-22](../DECISIONS.md#L10857)
+- **Last known price (2026-10-18, owner):** where the card page's headline
+  would read "—" (no live price, no "Last seen" listing) and no market has the
+  card in stock, it shows the newest day of the card's own history series (the
+  chart's, `getPriceHistory`) in the secondary text colour under "No live
+  price", with "Last known price · 15 Oct 2026" as text; the quick view does the
+  same. A card stocked in another market keeps "—": the shared series' newest
+  point would be that market's live price. Display only (`lib/last-known-price.ts`):
+  never a sort, filter, index, mover, deal, alert, basket, value, eBay
+  comparison, "cheapest"/"from" claim, JSON-LD, title, description, share image,
+  sitemap or export field (`tests/last-known-price.test.ts`). Tiles and lists
+  still say "No price yet"; that needs a column the import writes forward.
+  [2026-10-18](../DECISIONS.md#L18543)
 - **Portfolio value never includes shipping.** Price-drop emails: at most one
   digest per address per week, except Plus/Premium target, below-market and
   restock alerts, which run after both daily imports (refresh-prices.yml's
