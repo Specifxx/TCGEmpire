@@ -18576,3 +18576,42 @@ The card page already read this series for the chart and the narrative (one cach
 - **Card tiles and list rows** ("No price yet"). Tiles read `Card.lowestPriceCents*` through `cardTileSelect`, from Neon or `data/public/cards.json`, and carry no history. Doing it cheaply needs a precomputed field: a `Card.lastKnownPriceCents` plus day, written forward by the import, exported to `cards.json`, added to `cardTileSelect` and `CardTileData`, and kept out of every sort and filter that reads those columns. That is a schema change plus an importer change, and editing the importer starts a full import. Reading the history index per tile at request time is ruled out.
 - **The per-market table and the comparison's "No prices found yet" panel.** A shared series would print one number in six currencies as six markets' facts.
 - **The Pokémon section.** Its history is its own database's TCGplayer market series, and it is off by default.
+
+## BeachesTCG added, sealed only, in Australia — 2026-10-19
+
+**Owner:** "Can we add this website to the stores for all the relevant compare sites? I think they might only do sealed products, not sure about singles. Australian. https://beachestcg.com.au/"
+
+Probed the same day:
+- **Platform:** a Shopify store (`qf1nsm-k0.myshopify.com`), Australian dollars. Its `/meta.json` puts it in Mona Vale, NSW, shipping to Australia only.
+- **robots.txt:** Shopify's default, which blocks nothing we read (the sitemaps and `/collections/<handle>/products.json`).
+- **Stock:** one Riftbound collection, `riftbound-tcg`, with 7 products and no singles. Four are sealed: booster displays of Unleashed, Spiritforged and Vendetta, and a Spiritforged booster pack, all sold out. Three are event tickets: a Vendetta Pre-Rift seat, the weekly 1v1 Nexus Nights and a Radiance prerelease.
+
+So it joins `SEALED_ONLY_SHOPIFY` in the AU market as `beachestcg`, not `RETAILERS`, where it would read as a broken singles store. The singles importer never visits it. It is named "BeachesTCG", as its own site writes it.
+
+**Dry run.** The real `importSealed()` was run with `fetch` answering from the store's saved responses (and a 404 for every other host), and with `globalThis.prisma` preset to a recorder, so no database client was ever created. Sitemap discovery found only `riftbound-tcg`, and the two conventional pre-order handles came back empty. The import would write four rows, each into a group the AU market already has (10 to 22 store rows each):
+
+| Store title | Group | Price | Stock |
+|---|---|---|---|
+| Riftbound – Booster Display – Unleashed | `UNL\|Booster Box` | A$199.99 | sold out |
+| Riftbound – Booster Display – Spiritforged | `SFD\|Booster Box` | A$189.99 | sold out |
+| Riftbound Vendetta booster box pre order | `VEN\|Booster Box` | A$209.99 | sold out |
+| Riftbound SpiritForged booster pack | `SFD\|Booster Pack` | A$9.99 | sold out |
+
+The three tickets are dropped by the existing gates:
+- "VENDETTA Riftbound Pre-Rift 25th July @ 10am" names a clock time, so it is a seat (`EVENT_ENTRY`).
+- "Riftbound 1v1 Nexus Nights" is not a Nexus Night *pack*.
+- "Riftbound Radience pre release" (their spelling) names no sealed product.
+
+**No matcher change.** Each naming difference ("Booster Display – Spiritforged", "SpiritForged", "booster box pre order") already reads as the right product. `tests/beaches-tcg.test.ts` pins the entry, the collection scope and all seven real titles.
+
+**Postage is not published, so none is recorded.** The store has no Shopify shipping policy (`/policies/shipping-policy` is a 404). Its terms say "Shipping costs and estimated delivery times are provided at checkout", and the home page says "Shipping Australia Wide". It gets the sealed-only stores' "shipping at checkout" note and no guessed figures. The checkout probe (`shipping-rates.json`) measures only `RETAILERS`, as for every other sealed-only store.
+
+**The rollout needs no gate.** An older deployment shows a row from a store key it doesn't know like any other store's row:
+- `storeCurrency` returns null for it, so the currency guard lets it through;
+- the row carries its own name and URL, and nothing looks the key up.
+
+In files mode the pages read the snapshot their own release bundled, and that release carries this code. All four rows are sold out, so until Beaches restocks no headline price, store count, history point or alert moves.
+
+**Monitoring.** Per-store health (`store-health.ts`) reads singles rows only and leaves sealed-only stores out by design. The ops monitor's `data:sealed` check covers sealed freshness as a whole, as it does for the other 12 sealed-only stores. A registered sealed store that stops reading still keeps its rows (the 2026-10-15 follow-up list).
+
+**Left open.** A future Pre-Rift ticket titled with a date but no weekday or time ("Radiance Pre-Rift 31st October") would be typed as a Pre-Rift Kit. The store tags its tickets `Event`, and two of the three have the product type `Event Entry`, but the importer reads neither field. That is the gate to add if it happens.
