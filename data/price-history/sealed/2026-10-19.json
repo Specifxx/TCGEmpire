@@ -35,7 +35,7 @@
     "OGN|Booster Pack": {
       "AU": 1900,
       "CA": 1699,
-      "US": 1299
+      "US": 500
     },
     "OGN|Box Set": {
       "EU": 10228,
@@ -93,7 +93,7 @@
       "AU": 8000,
       "EU": 3500,
       "UK": 2999,
-      "US": 4496
+      "US": 3499
     },
     "OGN|Sealed": {
       "EU": 499
@@ -103,7 +103,7 @@
       "US": 1700
     },
     "OGN|Sleeved Booster (Art Set)": {
-      "US": 5770
+      "US": 5799
     },
     "OGN|Starter Set": {
       "CA": 6000,
@@ -126,13 +126,13 @@
       "EU": 10990,
       "SG": 19124,
       "UK": 11000,
-      "US": 11999
+      "US": 14331
     },
     "RAD|Booster Case": {
       "CA": 149791,
       "EU": 64990,
       "UK": 42158,
-      "US": 89772
+      "US": 89988
     },
     "RAD|Booster Pack": {
       "CA": 799,
@@ -174,7 +174,7 @@
     },
     "RAD|Showdown Decks Display": {
       "EU": 15072,
-      "US": 9769
+      "US": 9768
     },
     "RAD|Sleeved Booster": {
       "US": 1999
@@ -303,7 +303,7 @@
       "EU": 9999,
       "SG": 24000,
       "UK": 14110,
-      "US": 15500
+      "US": 16500
     },
     "UNL|Booster Case": {
       "AU": 140430,
@@ -332,7 +332,7 @@
     },
     "UNL|Champion Deck (Vex)": {
       "AU": 2900,
-      "CA": 1999,
+      "CA": 2544,
       "EU": 1390,
       "SG": 3120,
       "UK": 1999,
@@ -381,7 +381,7 @@
     },
     "UNL|Sleeved Booster": {
       "EU": 1599,
-      "US": 1130
+      "US": 1149
     },
     "UNL|Sleeved Booster (Art Set)": {
       "US": 2999
@@ -410,12 +410,12 @@
       "EU": 795,
       "SG": 1000,
       "UK": 499,
-      "US": 595
+      "US": 594
     },
     "VEN|Bundle": {
       "AU": 6500,
       "CA": 5995,
-      "EU": 2900,
+      "EU": 2990,
       "SG": 4182,
       "UK": 1615,
       "US": 3995
