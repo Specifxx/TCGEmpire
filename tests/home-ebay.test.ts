@@ -19,14 +19,15 @@ const code = (p: string) => read(p).replace(/(^|[^:])\/\/.*$/gm, "$1").replace(/
 // second band on every home: hero, editorial band, eBay Picks, Today's Top
 // Deals, price guide. All six share one structure (DECISIONS.md, 2026-10-02),
 // so "/" and the five region homes move together.
-test("eBay Picks renders once, inside HomeSections, after the chase cards (2026-10-19)", () => {
+test("eBay Picks sits directly under the hero, above Today's Top Deals, on all six homes, and renders once", () => {
+  // Owner, 2026-10-19: "ebay chase cards should be at the top above todays top deals".
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = code(f);
-    assert.doesNotMatch(src, /<EbayPicks/, `${f}: the home no longer renders it itself`);
-    assert.match(src, /showTopDeals=\{false\}\n\s*showEbayPicks\n/, `${f}: HomeSections renders it`);
+    const hero = src.indexOf("<CinematicHero");
+    const picks = src.indexOf("<EbayPicks");
+    assert.ok(hero >= 0 && hero < picks && picks < src.indexOf("<TodaysTopDeals"), `${f}: hero, Picks, Top Deals`);
+    assert.match(src, /showTopDeals=\{false\}\n\s*showEbayPicks=\{false\}/, `${f}: HomeSections must not render it a second time`);
   }
-  const s = code("src/components/home/HomeSections.tsx");
-  assert.ok(s.indexOf("<PopularCardsCarousel") < s.indexOf("{showEbayPicks && <EbayPicks"), "after the chase cards");
   const sections = code("src/components/home/HomeSections.tsx");
   assert.match(sections, /showEbayPicks = true,/, "any other caller still gets the unit");
   assert.match(sections, /\{showEbayPicks && <EbayPicks pageType="homepage" \/>\}/);

@@ -18696,3 +18696,5 @@ Removed from the homepage:
 - **The price guide callout** (`PriceGuideCallout`). /price-guide keeps its sidebar link.
 
 The four tests that pinned the old order now pin this one.
+
+**Same day, follow-up** (owner: "ebay chase cards should be at the top above todays top deals actually"). eBay Picks moved to directly under the hero, above Today's Top Deals, on "/" and the region homes. HomeSections is back to `showEbayPicks={false}`. The rest of the order above is unchanged.

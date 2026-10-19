@@ -10,6 +10,7 @@ import { ebayLabel } from "@/lib/affiliate";
 import { CinematicHero } from "./CinematicHero";
 import { HomeSections } from "./HomeSections";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
+import { EbayPicks } from "@/components/EbayPicks";
 import { EditorialHub } from "./EditorialHub";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
@@ -101,6 +102,10 @@ export async function RegionHome({ region }: { region: Country }) {
         region={{ code: region, adjective: info.adjective }}
       />
 
+      {/* eBay Picks directly under the hero, above Today's Top Deals, as on "/"
+          (owner, 2026-10-19). HomeSections gets showEbayPicks={false}. */}
+      <EbayPicks pageType="homepage" />
+
       {/* Today's Top Deals straight under the hero, as on "/" (owner's tidy-up,
           2026-10-19): the editorial band moved to the bottom of the page and
           the price guide callout went. HomeSections gets showTopDeals={false}
@@ -122,7 +127,7 @@ export async function RegionHome({ region }: { region: Country }) {
         chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
         showTopDeals={false}
-        showEbayPicks
+        showEbayPicks={false}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

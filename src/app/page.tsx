@@ -10,6 +10,7 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
+import { EbayPicks } from "@/components/EbayPicks";
 import { homeMetadata } from "@/lib/home-metadata";
 import { webPage, faqPage, webApplication } from "@/lib/jsonld";
 
@@ -325,6 +326,12 @@ export default async function HomePage() {
         freshnessAt={freshnessAt}
       />
 
+      {/* eBay Picks (the newest set's chase cards, cheapest live listing
+          each) directly under the hero, above Today's Top Deals (owner,
+          2026-10-19: "ebay chase cards should be at the top above todays top
+          deals"). HomeSections gets showEbayPicks={false} so it appears once. */}
+      <EbayPicks pageType="homepage" />
+
       {/* Today's Top Deals, straight under the hero since 2026-10-19 (owner's
           tidy-up: the editorial band moved to the bottom of the page and the
           price guide callout went). HomeSections gets showTopDeals={false} so
@@ -375,7 +382,7 @@ export default async function HomePage() {
         chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
         showTopDeals={false}
-        showEbayPicks
+        showEbayPicks={false}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}
