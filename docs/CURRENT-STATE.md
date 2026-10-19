@@ -647,6 +647,12 @@ longer lands on its entry.
 - **1024–1279 is its own band** (~704px of content): the filter sidebar
   waits for xl, card art is 160px (320 from xl), and stickies use
   `lg:top-36 xl:top-20`. [2026-09-23](../DECISIONS.md#L11201)
+- **The filter panels open with a search box** (`FilterSearch`, on /browse,
+  set pages, /sealed and /pokemon/sealed; not /price-guide, whose toolbar
+  searches). It writes the page's own `q` with every filter kept, on Enter or
+  its button only. On /browse that is the same metered search as the header's.
+  `q` is the search, not a facet: no chip, no count, and "Clear" keeps it and
+  the sort (`clearedFilters`). [2026-10-19](../DECISIONS.md#L18619)
 - **No mobile bottom tab bar** (fixed-bottom UI cannot track browser chrome)
   **and no notification bell** (build a `/notifications` page rather than
   restore it). One control opens `CinematicNavMenu` below lg.

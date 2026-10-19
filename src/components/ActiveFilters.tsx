@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { SYMBOL } from "@/lib/format";
+import { clearedFilters } from "@/lib/filter-params";
 
 const CSV_KEYS = ["domain", "rarity", "type", "set"];
 
@@ -77,13 +78,10 @@ export function ActiveFilters({ basePath = "/browse", currency }: { basePath?: s
     go(next);
   }
 
+  // Keeps the search and the order: `q` is not a chip here, so "Clear all"
+  // cannot be what removes it (the panels' search box has its own Clear).
   function clearAll() {
-    const next = new URLSearchParams();
-    const q = params.get("q");
-    if (q) next.set("q", q);
-    const sort = params.get("sort");
-    if (sort) next.set("sort", sort);
-    go(next);
+    go(clearedFilters(params.toString()));
   }
 
   return (

@@ -13,7 +13,9 @@ import {
   rarityInfo,
 } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
+import { applyKeyword, clearedFilters, hrefWith } from "@/lib/filter-params";
 import { useCountry } from "./CountryProvider";
+import { FilterSearch } from "./FilterSearch";
 
 function toggleCsv(current: string | null, value: string): string {
   const set = new Set(current ? current.split(",").filter(Boolean) : []);
@@ -35,12 +37,18 @@ export function Filters({
   hideSet = false,
   hidePreorderSets = false,
   currency,
+  search = true,
 }: {
   basePath?: string;
   hideSet?: boolean;
   /** Leave unreleased (pre-order) sets out of the Set facet, for pages that never list their rows. */
   hidePreorderSets?: boolean;
   currency?: string;
+  /**
+   * The keyword box at the top of the panel (FilterSearch). Off only where the
+   * page already has its own box for the same `q`: /price-guide's toolbar.
+   */
+  search?: boolean;
 }) {
   const setOptions = hidePreorderSets ? SETS.filter((s) => !isPreorderSetCode(s.code)) : SETS;
   // Pages pass their server-side market (which honours /browse's ?market=), so
@@ -71,12 +79,18 @@ export function Filters({
     const qs = next.toString();
     setOptimistic(qs); // instant: the checkbox flips immediately
     if (facet) track("filter_change", { facet });
-    startTransition(() => router.push(qs ? `${basePath}?${qs}` : basePath)); // data loads in the background
+    startTransition(() => router.push(hrefWith(basePath, next))); // data loads in the background
   }
 
+  // Clears the facets and keeps the search and the order, as the chip row's
+  // "Clear all" does (lib/filter-params.ts clearedFilters). This pushed the bare
+  // path until 2026-10-19, so the panel's Clear also threw away a search.
   function clearAll() {
-    setOptimistic("");
-    startTransition(() => router.push(basePath));
+    const next = clearedFilters(optimistic);
+    setOptimistic(next.toString());
+    setMin("");
+    setMax("");
+    startTransition(() => router.push(hrefWith(basePath, next)));
   }
 
   function isActive(key: string, value: string) {
@@ -145,6 +159,21 @@ export function Filters({
               </button>
             )}
           </div>
+
+          {/* What `q` matches on /browse and /sets/[set] (lib/cards.ts
+              buildCardWhere): the card name, the collector number and a few
+              printing and facet words ("signature", "legend"). Not a set name
+              or rules text, so the placeholder promises neither. */}
+          {search && (
+            <FilterSearch
+              id="filters-q"
+              action={basePath}
+              current={sp.get("q") ?? ""}
+              placeholder="Card name or number…"
+              onApply={(text) => update((p) => applyKeyword(p, text), "search")}
+              blurOnApply={mobileOpen}
+            />
+          )}
 
           {/* The MARKET column's currency, not a display currency: min/max filter
               priceField(country) (lib/cards.ts buildCardWhere), so a US visitor

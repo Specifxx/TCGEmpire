@@ -18615,3 +18615,22 @@ In files mode the pages read the snapshot their own release bundled, and that re
 **Monitoring.** Per-store health (`store-health.ts`) reads singles rows only and leaves sealed-only stores out by design. The ops monitor's `data:sealed` check covers sealed freshness as a whole, as it does for the other 12 sealed-only stores. A registered sealed store that stops reading still keeps its rows (the 2026-10-15 follow-up list).
 
 **Left open.** A future Pre-Rift ticket titled with a date but no weekday or time ("Radiance Pre-Rift 31st October") would be typed as a Pre-Rift Kit. The store tags its tickets `Event`, and two of the three have the product type `Event Entry`, but the importer reads neither field. That is the gate to add if it happens.
+
+## A search box inside the filter panels — 2026-10-19
+
+**Owner:** "In the database, when you have the filters, there should be a search bar in the filters as well — a filter by just keywords — so you don't need to use the search bar at the top of the website."
+
+The header search sends `/browse?q=` alone, so it dropped every ticked filter. The panels now open with a "Search" box (`FilterSearch`) that writes the same `q` and keeps every other parameter, back at page 1 (`applyKeyword`, `lib/filter-params.ts`).
+
+- **Where.** The card panel on `/browse` and `/sets/[set]`, and the sealed panel on `/sealed` and `/pokemon/sealed`. Each of those pages already read `q` on the server: `buildCardWhere` for the first two, the groups /sealed already loads, and `filterTiles` for Pokémon. Nothing new is queried or cached, and no `revalidate` moved.
+- **Not on `/price-guide`** (`Filters search={false}`). Its toolbar beside the table already searches the same `q`, and two boxes would fight over it.
+- **What the placeholders promise.** Cards: "Card name or number…". `buildCardWhere` matches the name, the collector number and a few printing and facet words ("signature", "legend"), never a set name or rules text. Sealed: "Product name…".
+- **Applied on Enter or the button, never per keystroke.** On /browse every applied search is a server render: two uncached Postgres queries plus the sealed match. With `SEARCH_CAPS=on`, a word corrected mid-way ("jinx" → "jax") would also count twice. The panel's price boxes already wait for Apply. Submitting the words already in force does nothing.
+- **The same metered search, not a way round it.** The box only writes the URL. /browse meters a first-page `q` whatever wrote it (`quotaContext`, `refusedNow`, `SearchQuotaTick`); the meter is dormant since 2026-10-15. A set page's `q` searches that one set and stays unmetered, like the rest of the set page (`tests/search-limits.test.ts`).
+- **`q` is the search, not a facet.** It gets no chip and no count, and "Clear" keeps it in both panels and the chip row (`clearedFilters` keeps `q` and `sort`). The chip row already worked this way. The card panel's Clear pushed the bare path and threw the search away, and the sealed panel's dropped the sort. The box's own Clear button is how a search goes. Clear now also empties the price boxes.
+- **Fixed on the way.** The sealed panel kept a stale `?page=` when a filter changed, and /pokemon/sealed has pages. It now starts at page 1, like the card panel.
+- **Sync.** The box follows the URL's `q` (the header search, back and forward) and leaves unsubmitted text alone on any other navigation.
+
+**Checked** in Chromium at 1440px and 390px against a dev server with `PUBLIC_DATA_MODE=files` and no database: /browse, /sealed, /sets/origins and /price-guide. No sideways scroll on phones.
+
+**Tests.** `tests/filter-search.test.ts` pins the URL rules, each panel's rendered box, the submit-only behaviour, the metering path and every page's `q`. `tests/pokemon-board.test.ts` pins the Pokémon half.

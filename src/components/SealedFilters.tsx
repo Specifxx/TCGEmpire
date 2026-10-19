@@ -2,6 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { applyKeyword, clearedFilters, hrefWith } from "@/lib/filter-params";
+import { FilterSearch } from "./FilterSearch";
 
 // Faceted sidebar filter for /sealed — the same pattern as the card database
 // Filters, with sealed-relevant facets (product type, set, price, stock).
@@ -62,18 +64,21 @@ export function SealedFilters({
   function update(mutate: (p: URLSearchParams) => void) {
     const next = new URLSearchParams(optimistic);
     mutate(next);
-    const qs = next.toString();
-    setOptimistic(qs);
-    startTransition(() => router.push(qs ? `${basePath}?${qs}` : basePath));
+    // A changed filter starts at page 1, as in the card panel: /pokemon/sealed
+    // pages its results, and kept a stale ?page= here until 2026-10-19.
+    next.delete("page");
+    setOptimistic(next.toString());
+    startTransition(() => router.push(hrefWith(basePath, next)));
   }
 
+  // Clears the facets and keeps the search and the order (lib/filter-params.ts
+  // clearedFilters), like the card panel and the chip row.
   function clearAll() {
-    const next = new URLSearchParams();
-    const q = sp.get("q");
-    if (q) next.set("q", q);
-    const qs = next.toString();
-    setOptimistic(qs);
-    startTransition(() => router.push(qs ? `${basePath}?${qs}` : basePath));
+    const next = clearedFilters(optimistic);
+    setOptimistic(next.toString());
+    setMin("");
+    setMax("");
+    startTransition(() => router.push(hrefWith(basePath, next)));
   }
 
   function isActive(key: string, value: string) {
@@ -126,6 +131,18 @@ export function SealedFilters({
               </button>
             )}
           </div>
+
+          {/* `q` on /sealed matches the product name, its type and its set code;
+              on /pokemon/sealed every word must be in the name, set or kind
+              (lib/pokemon/browse.ts filterTiles). Both start from the name. */}
+          <FilterSearch
+            id="sealed-filters-q"
+            action={basePath}
+            current={sp.get("q") ?? ""}
+            placeholder="Product name…"
+            onApply={(text) => update((p) => applyKeyword(p, text))}
+            blurOnApply={mobileOpen}
+          />
 
           <Section title={`Price (${currency})`} defaultOpen>
             <div className="flex items-center gap-2">
