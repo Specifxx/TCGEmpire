@@ -1732,6 +1732,18 @@
     "variants": [],
     "fingerprint": "a32e1852feaeb3b9"
   },
+  "/radiance-spoilers/ksante-courageous-signature.jpg": {
+    "src": "/radiance-spoilers/ksante-courageous-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 116292,
+    "webp": "/radiance-spoilers/ksante-courageous-signature.webp",
+    "webpBytes": 97724,
+    "avif": "/radiance-spoilers/ksante-courageous-signature.avif",
+    "avifBytes": 71258,
+    "variants": [],
+    "fingerprint": "7eb7ee1b7c870463"
+  },
   "/radiance-spoilers/ksante-courageous.jpg": {
     "src": "/radiance-spoilers/ksante-courageous.jpg",
     "width": 771,

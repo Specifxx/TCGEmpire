@@ -85,7 +85,7 @@
     "energyCost": 5,
     "might": 4,
     "description": "[Accelerate]\n[Shield 2]\nWhen I hold, channel 1 rune."
-  },
+  , "imageUrl": "https://riftcompare.com/radiance-spoilers/ksante-courageous-signature.jpg"},
   {
     "externalId": "spoiler-rad-179-aphelios-exalted",
     "name": "Aphelios, Exalted",
