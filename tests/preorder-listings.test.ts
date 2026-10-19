@@ -111,7 +111,7 @@ test("pre-orders are kept off the pages that mean 'buyable today'", () => {
   );
   assert.match(
     src,
-    /export async function getPreorderGroups[\s\S]*?return all\.filter\(\(g\) => isPreorderSetCode\(g\.setCode\)\)/,
+    /export async function getPreorderGroups[\s\S]*?return (withLiveStock\()?all\.filter\(\(g\) => isPreorderSetCode\(g\.setCode\)\)/,
     "getPreorderGroups must return only pre-orders",
   );
   // The unfiltered builder must not be exported — that is the only way a caller

@@ -18634,3 +18634,27 @@ The header search sends `/browse?q=` alone, so it dropped every ticked filter. T
 **Checked** in Chromium at 1440px and 390px against a dev server with `PUBLIC_DATA_MODE=files` and no database: /browse, /sealed, /sets/origins and /price-guide. No sideways scroll on phones.
 
 **Tests.** `tests/filter-search.test.ts` pins the URL rules, each panel's rendered box, the submit-only behaviour, the metering path and every page's `q`. `tests/pokemon-board.test.ts` pins the Pokémon half.
+
+## Pre-order headlines are re-checked at the store — 2026-10-19
+
+**Owner**, forwarding a buyer: "You gotta start manually checking these posts before your AI posts them. Your $119 is sold out." And: "a lot of our preorder products are sold out."
+
+**What happened.** On 19 October, /radiance-preorders showed "US$119.99 cheapest open · The Vault Game Store · Pre-order open" for the US Radiance Booster Display. Vault had sold out: its `/products/….js` answered `available: false`, and the page itself said "Sold out".
+- The importer's stock rule was right. The public snapshot behind the page was exported at 12:59 UTC on 18 October, when Vault was still open.
+- The site serves sealed stock from that daily snapshot (`PUBLIC_DATA_MODE=files`), through `getAllSealedGroups`' 48-hour cache, and it moves only with the daily release.
+- So a pre-order that sells out after the morning export stays "open" on our pages for a day or more. Pre-orders sell out in hours.
+- The 2026-09-24 fix ("Sold-out pre-orders ranked as the cheapest") still holds. It stops a row *stored* as sold out from leading. This bug is a row stored as open that no longer is.
+
+**Measured** the same morning, against the live stores: 101 open Radiance store rows in the snapshot. 90 could be checked through Shopify's product endpoint, and 1 had flipped (Vault). It was the US headline. The other 11 were Cardmarket (403), non-Shopify stores or 404s.
+
+**The fix.** `getPreorderGroups()`, the one loader behind every pre-order surface (/radiance-preorders, /sets/radiance, the Radiance pre-order CTA and its box prices, the pull tracker, release alerts, sealed watches), now passes its groups through `withLiveStock` (`src/lib/preorder-live-stock.ts`):
+- For each product, it asks the store about the three cheapest OPEN store offers, the ones that become the headline. It uses Shopify's `/products/<handle>.js` `available`, the same flag the importer reads.
+- An offer its store now calls unavailable becomes "Sold out", stamped with the check's time. The product's headline price and open-store count are then recomputed with the shared rules in `lib/sealed-offers.ts`.
+
+**Limits:**
+- **One-way.** A non-Shopify store, a timeout or any answer but a clear `false` leaves the row as stored. A sold-out row is never asked about, so this never reopens one.
+- **Marketplaces are never asked.** eBay, TCGplayer and Cardmarket keep their own feeds.
+- **Each answer is cached for 21600 s,** the pages' own revalidate. Lower would drag the pages under six hours (CLAUDE.md, rule 5). A sell-out now reaches the headline within about six hours of the next page regeneration, not a day or more.
+- Rows below the cheapest three keep their stored state until the next import and export.
+
+`tests/preorder-live-stock.test.ts`. Checked against the 18 October snapshot and the live stores for the US: the Radiance box headline moves from Vault's US$119.99 (now marked sold out) to US$142.95, which its store confirms open.

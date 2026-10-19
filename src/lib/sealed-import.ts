@@ -10,6 +10,7 @@ import { RETAILER_LIST, type RetailerInfo } from "./retailers";
 import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, FEED_STORES, parseProductPage, parseSealedFeed, isPurchaseLocked } from "./sealed-stores";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { headlineOffer, openStoreCount, rankOffers } from "./sealed-offers";
+import { withLiveStock } from "./preorder-live-stock";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
@@ -1492,7 +1493,9 @@ export async function getSealedGroups(country: Country = DEFAULT_COUNTRY): Promi
  */
 export async function getPreorderGroups(country: Country = DEFAULT_COUNTRY): Promise<SealedGroup[]> {
   const all = await getAllSealedGroups(country);
-  return all.filter((g) => isPreorderSetCode(g.setCode));
+  // Pre-orders sell out within hours, faster than the daily snapshot moves: the
+  // cheapest open offers are re-checked at the store (lib/preorder-live-stock.ts).
+  return withLiveStock(all.filter((g) => isPreorderSetCode(g.setCode)));
 }
 
 /**
