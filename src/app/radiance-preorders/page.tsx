@@ -208,8 +208,9 @@ export default async function RadiancePreordersPage() {
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
             Nothing has shipped yet, so every store is simply picking an opening price, and they are picking very
             different ones. Below is every Radiance product our tracked {info.adjective} stores are taking pre-orders
-            on, booster boxes and packs first, in {currency}. Within each product, open eBay listings are shown first
-            (they are paid links), then the stores taking pre-orders, cheapest first. Prices refresh daily.
+            on, booster boxes and packs first, in {currency}. Within each product, an eBay search comes first, then open eBay
+            listings (both paid links), then the stores taking pre-orders, cheapest first. Sold-out stores are left
+            out.
           </p>
         </div>
         <div aria-hidden className="pointer-events-none absolute -right-6 top-6 hidden h-56 w-72 sm:block">
@@ -280,29 +281,8 @@ export default async function RadiancePreordersPage() {
         </nav>
       )}
 
-      {/* eBay, before the ranking but visibly not part of it (2026-09-26,
-          "Pushing eBay clicks" in DECISIONS.md). Reddit and search visitors come
-          here for pre-orders, where a store is usually cheaper, so the eBay rows
-          inside the table rarely get the click; this strip offers eBay to the
-          reader who prefers it, and its sub-line says it is outside the ranking.
-          Only above a real table: with nothing listed there is no ranking below
-          to be separate from, and "Also on eBay" under the empty state covers it. */}
-      {stillUpcoming && listed.length > 0 && (
-        <EbaySearchPanel
-          variant="strip"
-          heading={`Prefer eBay? Search ${ebay} for Radiance booster boxes and displays.`}
-          sub="A search of eBay, not a row in the table below."
-          country={country}
-          pageType="radiance_preorders"
-          className="mt-4"
-          links={[
-            {
-              label: "Search eBay →",
-              href: ebaySearchUrl(country, ebaySealedQuery("Radiance Booster Box", "Booster Box"), "preorders-strip"),
-            },
-          ]}
-        />
-      )}
+      {/* The eBay strip that sat here went on 2026-10-19 (owner): each
+          product now opens with its own eBay search row (PreorderPriceTable). */}
 
       {listed.length > 0 ? (
         <div className="mt-4">

@@ -167,13 +167,18 @@ export function PreorderPriceTable({
     <div>
       <p className="text-xs text-slate-500">
         {shown.length} product{shown.length === 1 ? "" : "s"} · {storeCount} store{storeCount === 1 ? "" : "s"} taking
-        pre-orders · booster boxes and packs first · in each, open eBay listings first (paid links), then stores
-        taking pre-orders cheapest first, then unconfirmed and sold-out ones
+        pre-orders · booster boxes and packs first · in each, an eBay search, then open eBay listings (paid links),
+        then stores taking pre-orders cheapest first
       </p>
 
       <div className="mt-4 space-y-4">
         {shown.map((g) => {
-          const rows = orderPreorderRows(g.listings, now);
+          // OPEN OFFERS ONLY (2026-10-19, owner: "some of the other stores might
+          // be out of stock so make sure they're removed"). A sold-out or
+          // unconfirmed row is no longer drawn; the product's count says how
+          // many were left out.
+          const rows = orderPreorderRows(g.listings, now).filter((l) => offerStock(l, now) === "open");
+          const hidden = g.listings.length - rows.length;
           // The cheapest OPEN offer from anyone, read from the UNPINNED ranking:
           // headlineOffer keeps the first of equal prices, so reading the pinned
           // list would have handed every price tie to eBay (final review,
@@ -189,7 +194,7 @@ export function PreorderPriceTable({
                     {open > 0
                       ? `${open} store${open === 1 ? "" : "s"} taking pre-orders`
                       : "No store is taking pre-orders right now"}
-                    {rows.length > open ? ` · ${rows.length - open} sold out or unconfirmed` : ""}
+                    {hidden > 0 ? ` · ${hidden} sold out or unconfirmed, not shown` : ""}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 text-right">
@@ -209,6 +214,34 @@ export function PreorderPriceTable({
                       email for a pre-order that sells out — lib/sealed-watch.ts. */}
                   <SealedWatchButton groupKey={g.groupKey} name={g.name} market={country} compact />
                 </div>
+              </div>
+              {/* THE eBAY SEARCH, FIRST (2026-10-19, owner: "have the ebay link at
+                  the very top of the price rows and make it look similar to a
+                  price row except different colour. And get rid of the Paid
+                  link"). Shaped like a row, tinted eBay blue, and still a SEARCH:
+                  it names no price, so it never reads as a ranked offer. The
+                  commission disclosure is the paragraph under the table. */}
+              <div data-ebay-search className="flex items-center justify-between gap-3 border-b border-ink-800 bg-sky-500/10 px-4 py-2.5">
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold text-sky-200">
+                    Search {label} for {g.name}
+                  </span>
+                  <span data-ebay-lower className="mt-0.5 block text-[11px] text-sky-300/80">
+                    eBay may have a lower price — listings change between our checks
+                  </span>
+                </span>
+                <OutboundLink
+                  href={ebaySearchUrl(country, ebaySealedQuery(g.name, g.productType), searchSource)}
+                  retailer="ebay_search"
+                  country={country}
+                  kind="sealed"
+                  cardName={g.name}
+                  pageType={pageType}
+                  surface="ebay_search"
+                  className="btn-ebay-ghost shrink-0 px-2.5 py-1 text-xs"
+                >
+                  Search eBay
+                </OutboundLink>
               </div>
               <ul className="divide-y divide-ink-800">
                 {rows.map((l, rank) => {
@@ -291,42 +324,6 @@ export function PreorderPriceTable({
                   );
                 })}
               </ul>
-              {/* OUTSIDE the ranked <ul> on purpose: a search of eBay, not a
-                  result, so it can never read as a row of the comparison. */}
-              <div
-                data-ebay-search
-                className={`flex items-center gap-2 border-t border-ink-800 ${headline ? "px-4" : "p-3"}`}
-              >
-                <PaidLinkTag className="shrink-0" />
-                <OutboundLink
-                  href={ebaySearchUrl(country, ebaySealedQuery(g.name, g.productType), searchSource)}
-                  retailer="ebay_search"
-                  country={country}
-                  kind="sealed"
-                  cardName={g.name}
-                  pageType={pageType}
-                  surface="ebay_search"
-                  className={
-                    headline
-                      ? "flex min-h-11 min-w-0 flex-1 items-center justify-between gap-3 text-sm text-sky-300 underline-offset-2 hover:underline"
-                      : "btn-ebay min-w-0 flex-1"
-                  }
-                >
-                  <span className="min-w-0">
-                    <span className="block">
-                      Search {label} for {g.name}
-                    </span>
-                    {/* The owner's line, where it is true: a SEARCH covers
-                        auctions and listings posted since our last check. */}
-                    <span data-ebay-lower className="block text-[11px]">
-                      eBay may have a lower price — listings change between our checks
-                    </span>
-                  </span>
-                  <span aria-hidden className="shrink-0">
-                    →
-                  </span>
-                </OutboundLink>
-              </div>
             </section>
           );
         })}
@@ -334,9 +331,8 @@ export function PreorderPriceTable({
 
       <p className="mt-4 text-xs leading-relaxed text-slate-500">
         Every price above is a <strong className="text-slate-300">pre-order</strong> — the store is taking payment
-        or a deposit now for stock that ships after release. &ldquo;Sold out&rdquo; means the store&apos;s own page
-        said so when we last checked; &ldquo;Unknown&rdquo; means we have not been able to re-read it for three
-        days. Pre-order prices move before release, and store terms
+        or a deposit now for stock that ships after release. A store that was sold out at our last check, or that
+        we have not been able to re-read for three days, is left out. Pre-order prices move before release, and store terms
         differ, so confirm both at checkout.
       </p>
       {/* The per-link half of the disclosure is the "Paid link" tag on each paid
@@ -344,11 +340,12 @@ export function PreorderPriceTable({
           disclosure for the eBay and TCGplayer links (2026-09-26). It also says
           what the eBay search lines are, since they sit inside each product. */}
       <p className="mt-2 text-[11px] leading-snug text-slate-400">
-        Links marked &ldquo;Paid link&rdquo; earn us a commission if you buy through them, at no extra cost to you.
+        Links marked &ldquo;Paid link&rdquo;, and the blue &ldquo;Search eBay&rdquo; row at the top of each product,
+        earn us a commission if you buy through them, at no extra cost to you.
         Open eBay listings are shown first in each product, tagged &ldquo;Shown first&rdquo;. They are paid links
         and are often not the cheapest, so compare the price beside each one. Every other row is sorted purely by
-        price and stock, whether it pays us or not. The separate &ldquo;Search eBay&rdquo; links are searches of
-        eBay, not ranked results.
+        price, whether it pays us or not, and only offers open at our last check are listed. The &ldquo;Search
+        eBay&rdquo; rows are searches of eBay, not ranked results.
       </p>
       <AffiliateDisclosure partner="both" tight />
     </div>

@@ -28,8 +28,26 @@
 import { headlineOffer, offerStock, openStoreCount } from "./sealed-offers";
 import type { SealedGroup } from "./sealed-import";
 
-/** How many open store offers per product are re-checked, cheapest first. */
-export const LIVE_CHECKS_PER_GROUP = 3;
+/** How many open store offers per product are re-checked, cheapest first.
+ *  Every open one since 2026-10-19 (owner: "some of the other stores might be
+ *  out of stock so make sure they're removed"); 20 is a ceiling, not a target. */
+export const LIVE_CHECKS_PER_GROUP = 20;
+
+/**
+ * Offers the OWNER has seen sold out that the store's own feed and page still
+ * call orderable (a pre-order app or a cart-side limit the store's Shopify data
+ * does not show). Matched on the product URL; each entry lapses on `until`, so a
+ * restock is never hidden for long. Add one only from a real report.
+ */
+export const REPORTED_SOLD_OUT: { url: string; reported: string; until: string }[] = [
+  // Shippin Texas, US Radiance Booster Display, reported by the owner on 2026-10-19.
+  { url: "https://shippintexas.com/products/radiance-booster-display-rad-711365", reported: "2026-10-19", until: "2026-10-26" },
+];
+
+function reportedSoldOut(url: string, now: number): boolean {
+  const bare = url.split("?")[0].replace(/\/$/, "");
+  return REPORTED_SOLD_OUT.some((r) => r.url === bare && now < Date.parse(`${r.until}T00:00:00Z`));
+}
 const TIMEOUT_MS = 4000;
 const REVALIDATE_S = 21600;
 
@@ -79,13 +97,13 @@ export async function withLiveStock(
 ): Promise<SealedGroup[]> {
   return Promise.all(
     groups.map(async (g) => {
+      const reported = g.listings.filter((l) => offerStock(l, now) === "open" && reportedSoldOut(l.url, now));
       const candidates = g.listings
-        .filter((l) => !MARKETPLACE.test(l.retailer) && offerStock(l, now) === "open")
+        .filter((l) => !MARKETPLACE.test(l.retailer) && offerStock(l, now) === "open" && !reported.includes(l))
         .sort((a, b) => a.priceCents - b.priceCents)
         .slice(0, LIVE_CHECKS_PER_GROUP);
-      if (!candidates.length) return g;
       const answers = await Promise.all(candidates.map((l) => check(l.url)));
-      const gone = new Set(candidates.filter((_, i) => answers[i] === false).map((l) => l.url));
+      const gone = new Set([...reported, ...candidates.filter((_, i) => answers[i] === false)].map((l) => l.url));
       if (!gone.size) return g;
       const checkedAt = new Date(now).toISOString();
       const listings = g.listings.map((l) => (gone.has(l.url) ? { ...l, inStock: false, lastSeen: checkedAt } : l));

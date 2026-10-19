@@ -145,7 +145,9 @@ test("pre-order table: open eBay rows lead each product; stores follow in price-
   const rows = [...box.matchAll(/<li data-stock="(\w+)"[\s\S]*?<\/li>/g)].map(
     (m) => `${m[0].match(/truncate text-sm[^"]*">([^<]+)</)?.[1]}:${m[1]}`,
   );
-  assert.deepEqual(rows, ["ebay_us:open", "gamenerdz:open", "tcgplayer:open", "manyrealms:soldout"]);
+  // Sold-out rows are left out since 2026-10-19 (owner: "make sure they're removed").
+  assert.deepEqual(rows, ["ebay_us:open", "gamenerdz:open", "tcgplayer:open"]);
+  assert.match(box, /1 sold out or unconfirmed, not shown/);
   assert.match(box, /cheapest open · gamenerdz/, "the headline is still the cheapest open offer, not the pinned eBay row");
   // The true figure stays on the dearer eBay row.
   const ebayRow = box.match(/<li data-stock="open"[\s\S]*?ebay_us[\s\S]*?<\/li>/)?.[0] ?? "";
@@ -169,29 +171,27 @@ test("pre-order table: every paid row carries the Paid link tag, a plain store r
   assert.doesNotMatch(li("gamenerdz"), /Paid link/);
 });
 
-test("pre-order table: the per-product eBay search sits OUTSIDE the ranked list, and is a search", () => {
+test("pre-order table: the per-product eBay search is the first row, tinted eBay blue, a search with no Paid link tag", () => {
+  // 2026-10-19 (owner: "have the ebay link at the very top of the price rows and
+  // make it look similar to a price row except different colour. And get rid of
+  // the Paid link").
   const box = section(render(), "RAD|Booster Box");
-  const ulEnd = box.indexOf("</ul>");
+  const ulStart = box.indexOf("<ul");
   const search = box.indexOf("data-ebay-search");
-  assert.ok(ulEnd > 0 && search > ulEnd, "after </ul>, inside the product's <section>");
-  assert.doesNotMatch(box.slice(0, ulEnd), /data-ebay-search|Search eBay for/);
-  const line = box.slice(search);
-  assert.match(line, />Paid link</);
+  assert.ok(search > 0 && search < ulStart, "above the ranked rows, inside the product's <section>");
+  const line = box.slice(search, ulStart);
+  assert.doesNotMatch(line, />Paid link</);
+  assert.match(line, /bg-sky-500\/10 px-4 py-2\.5/, "a row's shape, eBay's tint");
   assert.match(line, /Search eBay for Radiance Booster Box/);
+  assert.match(line, /eBay may have a lower price/);
+  assert.doesNotMatch(line, /US\$\d/, "a search names no price");
   const href = line.match(/href="([^"]+)"/)?.[1] ?? "";
   assert.equal(nkw(href), "Riftbound Radiance Booster (box,display)");
   assert.match(customid(href), /preorders-product/);
-  // Quiet while a store has an open offer: no filled eBay button.
-  assert.doesNotMatch(line, /class="btn-ebay /);
-  assert.match(line, /min-h-11[^"]*text-sky-300/);
-});
-
-test("pre-order table: 'Sold out everywhere' makes the eBay search the filled button", () => {
+  assert.match(line, /class="btn-ebay-ghost shrink-0/);
   const pack = section(render(), "RAD|Booster Pack");
   assert.match(pack, /Sold out everywhere/);
-  const line = pack.slice(pack.indexOf("data-ebay-search"));
-  assert.match(line, /class="btn-ebay min-w-0 flex-1"/);
-  assert.equal(nkw(line.match(/href="([^"]+)"/)?.[1] ?? ""), "Riftbound Radiance Booster Pack");
+  assert.equal(nkw(pack.slice(pack.indexOf("data-ebay-search")).match(/href="([^"]+)"/)?.[1] ?? ""), "Riftbound Radiance Booster Pack");
 });
 
 test("pre-order table: the hub reports its own EPN source", () => {
@@ -203,13 +203,13 @@ test("pre-order table: the hub reports its own EPN source", () => {
 test("pre-order table: the footnote says what is paid and what is ranked, with the network disclosure", () => {
   const html = render();
   assert.match(html, /Every price above is a <strong[^>]*>pre-order<\/strong>/, "the pre-order paragraph stays");
-  assert.match(html, /Links marked &ldquo;Paid link&rdquo; earn us a commission|Links marked “Paid link” earn us a commission/);
+  assert.match(html, /Links marked (?:&ldquo;|“)Paid link(?:&rdquo;|”), and the blue (?:&ldquo;|“)Search eBay(?:&rdquo;|”) row at the top of each product,\s+earn us a commission/);
   // The pinned eBay rows are disclosed as pinned, paid and often dearer; the
   // neutrality claim now covers only what is still neutral.
   assert.match(html, /Open eBay listings are shown first in each product, tagged (?:&ldquo;|“)Shown first(?:&rdquo;|”)\. They are paid links\s+and are often not the cheapest/);
-  assert.match(html, /Every other row is sorted purely by price and stock, whether it pays us or not\./);
+  assert.match(html, /Every other row is sorted purely by price, whether it pays us or not, and only offers open at our last check are listed\./);
   assert.doesNotMatch(html, /Every row above is sorted purely by price/, "no longer true of this table");
-  assert.match(html, /are searches of eBay, not ranked results\./);
+  assert.match(html, /rows are searches of eBay, not ranked results\./);
   assert.match(html, /as an eBay Partner Network affiliate and a TCGplayer affiliate/);
   assert.doesNotMatch(html, /Some store links above are affiliate links/);
 });
@@ -257,28 +257,18 @@ test("the released-sets search is a cross-sell: hidden for ad-free members", () 
   assert.match(src, /from released sets`,\s*href: [^\n]+\n\s*promo: true,/);
 });
 
-test("/radiance-preorders: strip above the table, panel under it in every state, then the capture", () => {
+test("/radiance-preorders: no strip above the table, panel under it in every state, then the capture", () => {
   const src = read("src/app/radiance-preorders/page.tsx");
-  const strip = src.indexOf('variant="strip"');
   const table = src.indexOf("<PreorderPriceTable ");
   const empty = src.indexOf("Radiance is out — see live prices");
   const panel = src.indexOf('<RadianceEbayPanel country={country} pageType="radiance_preorders"');
   const capture = src.indexOf('<div id="notify"');
-  assert.ok(strip > 0 && strip < table, "the strip precedes the ranking");
-  assert.ok(table < empty && empty < panel, "the panel follows the table AND the empty-state card");
+  // The "Prefer eBay?" strip went on 2026-10-19 (owner): each product opens with its own eBay row.
+  assert.doesNotMatch(src, /variant="strip"|Prefer eBay\?/);
+  assert.ok(table > 0 && table < empty && empty < panel, "the panel follows the table AND the empty-state card");
   assert.ok(panel < capture, "…and precedes the release-day capture");
-  // Not inside either branch of the listed/empty ternary: it renders in every state.
   assert.match(src, /\n\s*\)\}\n\n(?:\s*\{\/\*[\s\S]*?\*\/\}\n)?\s*<RadianceEbayPanel /);
-  // The strip only above a real table, and it says it is outside the ranking.
-  assert.match(src, /\{stillUpcoming && listed\.length > 0 && \(\s*<EbaySearchPanel\s+variant="strip"/);
-  assert.match(src, /sub="A search of eBay, not a row in the table below\."/);
-  assert.match(src, /ebaySearchUrl\(country, ebaySealedQuery\("Radiance Booster Box", "Booster Box"\), "preorders-strip"\)/);
-  // The pinned table call is untouched (tests/radiance-hub.test.ts).
   assert.match(src, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} page="\/radiance-preorders" \/>/);
-  // Reworded 2026-10-15 when boxes and packs moved to the top of the table, and
-  // again the same day when open eBay listings were pinned first in each product:
-  // "each sorted cheapest first" stopped being true, so the intro says the order.
-  assert.match(src, /every Radiance product our tracked \{info\.adjective\} stores are taking pre-orders\s+on, booster boxes and packs first, in \{currency\}\. Within each product, open eBay listings are shown first\s+\(they are paid links\), then the stores taking pre-orders, cheapest first\./);
   assert.doesNotMatch(src, /each sorted cheapest first/);
 });
 

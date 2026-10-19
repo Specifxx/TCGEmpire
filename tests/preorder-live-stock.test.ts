@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { withLiveStock, shopifyProductJsUrl, LIVE_CHECKS_PER_GROUP } from "../src/lib/preorder-live-stock";
+import { withLiveStock, shopifyProductJsUrl, LIVE_CHECKS_PER_GROUP, REPORTED_SOLD_OUT } from "../src/lib/preorder-live-stock";
 import type { SealedGroup } from "../src/lib/sealed-import";
 
 // 2026-10-19 (owner, forwarding a buyer: "Your $119 is sold out"). The pre-order
@@ -55,12 +55,22 @@ test("one-way: an unclear answer, an error or an open answer never changes a row
   assert.ok(!asked.some((u) => u.includes("gone")), "a sold-out row is never asked, so it is never reopened");
 });
 
-test("only the cheapest few open store offers are asked, never a marketplace", async () => {
+test("every open store offer is asked (up to the ceiling), never a marketplace", async () => {
   const asked: string[] = [];
   const g = group([row("a", 1), row("b", 2), row("c", 3), row("d", 4), row("ebay_uk", 0), row("tcgplayer", 0), row("cardmarket", 0)]);
   await withLiveStock([g], async (url) => (asked.push(url), true), NOW);
-  assert.equal(asked.length, LIVE_CHECKS_PER_GROUP);
-  assert.deepEqual(asked.map((u) => new URL(u).hostname[0]), ["a", "b", "c"]);
+  assert.deepEqual(asked.map((u) => new URL(u).hostname[0]), ["a", "b", "c", "d"]);
+  assert.equal(LIVE_CHECKS_PER_GROUP, 20);
+});
+
+test("an owner-reported sell-out is sold out until its entry lapses, whatever the store's feed says", async () => {
+  const st = { ...row("shippintexas", 14295), url: REPORTED_SOLD_OUT[0].url };
+  const g = group([st, row("nerdz", 15000)]);
+  const [out] = await withLiveStock([g], async () => true, Date.parse("2026-10-20T00:00:00Z"));
+  assert.equal(out.listings[0].inStock, false);
+  assert.equal(out.lowestPriceCents, 15000);
+  const [later] = await withLiveStock([g], async () => true, Date.parse(`${REPORTED_SOLD_OUT[0].until}T00:00:01Z`));
+  assert.equal(later, g, "lapsed: the store's own answer stands again");
 });
 
 test("the Shopify product endpoint is derived only from a product URL", () => {

@@ -18658,3 +18658,18 @@ The header search sends `/browse?q=` alone, so it dropped every ticked filter. T
 - Rows below the cheapest three keep their stored state until the next import and export.
 
 `tests/preorder-live-stock.test.ts`. Checked against the 18 October snapshot and the live stores for the US: the Radiance box headline moves from Vault's US$119.99 (now marked sold out) to US$142.95, which its store confirms open.
+
+**Same day, second report** (owner: "Shippin Texas is also sold out … some of the other stores might be out of stock so make sure they're removed").
+
+**Shippin Texas,** the new US headline at US$142.95, still reads as orderable to us.
+- Its Shopify feed says `available: true`, and its product page renders "Add to cart" with no sold-out mark.
+- Whatever stops the order (likely a cart-side limit) is invisible to any check we can run.
+- Its URL goes in a new owner-reported list, `REPORTED_SOLD_OUT` in `preorder-live-stock.ts`. Each entry carries a report date and an `until` date (one week here) that lapses on its own, so a restock is never hidden for long. Add an entry only from a real report.
+
+**Changed:**
+- **Every open store offer is re-checked** at the store, not just the three cheapest: `LIVE_CHECKS_PER_GROUP` 20, a ceiling.
+- **The pre-order table lists open offers only.** Sold-out and unconfirmed rows are left out, and the product line counts them ("N sold out or unconfirmed, not shown"). This reverses the 2026-09-24 choice to show sold-out stores greyed out.
+- **The per-product "Search eBay" line is the first row of each product.**
+  - It is shaped like a price row, tinted eBay blue, with a "Search eBay" button, and still names no price.
+  - It has no "Paid link" tag (owner: "get rid of the Paid link"). The footnote under the table now names the blue row as a commission link.
+- **The "Prefer eBay?" strip above the table is gone.** Each product's own row replaces it.

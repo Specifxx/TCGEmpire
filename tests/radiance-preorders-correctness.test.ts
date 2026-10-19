@@ -119,16 +119,12 @@ test("1a acceptance: the rendered US Booster Box row", () => {
       "gamenerdz:open",
       "punkouter:open",
       "tcgplayer:open",
-      "manyrealms:soldout",
-      "miniaturemarket:soldout",
-      "wulfgaming:soldout",
     ],
   );
-  const manyRealms = html.match(/<li data-stock="soldout"[\s\S]*?manyrealms[\s\S]*?<\/li>/)?.[0] ?? "";
-  assert.match(manyRealms, />Sold out</);
-  assert.match(manyRealms, /opacity-60/, "greyed out");
-  assert.doesNotMatch(manyRealms, /btn-/, "no buy-button emphasis on a sold-out offer");
-  assert.match(manyRealms, /<time dateTime="2026-09-24T12:00:00\.000Z"/, "per-offer checked stamp");
+  // Sold-out offers are left out since 2026-10-19 (owner: "make sure they're
+  // removed"); the product line counts them.
+  assert.doesNotMatch(html, /manyrealms|data-stock="soldout"/);
+  assert.match(html, /3 sold out or unconfirmed, not shown/);
 });
 
 // ── 1d: one Vault row ───────────────────────────────────────────────────────

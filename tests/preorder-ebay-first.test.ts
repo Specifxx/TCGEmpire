@@ -51,7 +51,8 @@ test("rendered: eBay leads, labelled on the row; the headline is still the cheap
   const stores = [...html.matchAll(/<li data-stock="(\w+)"[\s\S]*?<\/li>/g)].map(
     (m) => m[0].match(/truncate text-sm[^"]*">([^<]+)</)?.[1],
   );
-  assert.deepEqual(stores, ["ebay_us", "storeA", "ebay_uk"]);
+  // The stale eBay row is left out since 2026-10-19 (open offers only).
+  assert.deepEqual(stores, ["ebay_us", "storeA"]);
   assert.match(html, /cheapest open · storeA/, "pinning eBay never moves the headline price");
   const ebayRow = html.match(/<li data-stock="open"[\s\S]*?ebay_us[\s\S]*?<\/li>/)?.[0] ?? "";
   assert.match(ebayRow, />\+46%</, "the dearer eBay row still says how much dearer");
@@ -61,7 +62,7 @@ test("rendered: eBay leads, labelled on the row; the headline is still the cheap
   // The table's own top line says how it is ordered.
   // Stores taking orders, cheapest first, THEN the unconfirmed and sold-out ones
   // — "every store cheapest first" was inexact (final review, 2026-10-15).
-  assert.match(html, /in each, open eBay listings first \(paid links\), then stores\s+taking pre-orders cheapest first, then unconfirmed and sold-out ones/);
+  assert.match(html, /in each, an eBay search, then open eBay listings \(paid links\),\s+then stores taking pre-orders cheapest first/);
 });
 
 test("the row says what it IS; 'eBay may have a lower price' is on the SEARCH, where it is true", () => {
@@ -79,8 +80,9 @@ test("the row says what it IS; 'eBay may have a lower price' is on the SEARCH, w
     listings: [L("storeA", 13000), L("ebay_us", 19000)],
   } as unknown as SealedGroup;
   const html = renderToStaticMarkup(createElement(PreorderPriceTable, { groups: [group], country: "US", currency: "USD", now: NOW }));
-  const ul = html.slice(0, html.indexOf("</ul>"));
-  const search = html.slice(html.indexOf("data-ebay-search"));
+  // Since 2026-10-19 the search is the first row, above the <ul> of offers.
+  const ul = html.slice(html.indexOf("<ul"), html.indexOf("</ul>"));
+  const search = html.slice(html.indexOf("data-ebay-search"), html.indexOf("<ul"));
   assert.match(ul, /data-ebay-note[^>]*>eBay listing at our last check — eBay prices change often</);
   assert.doesNotMatch(html, /lower price than this listing/);
   assert.doesNotMatch(ul, /may have a lower price/, "never on a specific listing");
