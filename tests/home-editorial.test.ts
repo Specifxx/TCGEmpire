@@ -22,10 +22,12 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const code = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 const HUB = "src/components/home/EditorialHub.tsx";
 
-test("every home has one structure: hero, editorial band, Top Deals, price guide, HomeSections", () => {
+test("every home has one structure: hero, Top Deals, HomeSections, then the editorial band at the bottom", () => {
+  // 2026-10-19 (owner): the band moved to the very bottom and the price guide callout went.
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = code(f);
-    const order = ["<CinematicHero", "<EditorialHub", "<TodaysTopDeals", "<PriceGuideCallout", "<HomeSections"].map((t) => src.indexOf(t));
+    assert.doesNotMatch(src, /<PriceGuideCallout/);
+    const order = ["<CinematicHero", "<TodaysTopDeals", "<HomeSections", "<EditorialHub"].map((t) => src.indexOf(t));
     assert.ok(order[0] >= 0 && order.every((v, i) => i === 0 || v > order[i - 1]), `${f}: ${order}`);
     assert.equal(src.split("<EditorialHub").length - 1, 1, `${f}: one band`);
     assert.doesNotMatch(src, /<PriceTodayTable|getPriceTable\(/);

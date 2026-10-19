@@ -10,8 +10,6 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
-import { PriceGuideCallout } from "@/components/home/PriceGuideCallout";
-import { EbayPicks } from "@/components/EbayPicks";
 import { homeMetadata } from "@/lib/home-metadata";
 import { webPage, faqPage, webApplication } from "@/lib/jsonld";
 
@@ -327,18 +325,10 @@ export default async function HomePage() {
         freshnessAt={freshnessAt}
       />
 
-      {/* Guides, news & market updates: directly under the hero on every
-          home (owner, 2026-10-02: "should still be at the top under the
-          hero"), then Today's Top Deals and the price guide. */}
-      <EditorialHub freshness={freshness} freshnessAt={freshnessAt} />
-
-      {/* eBay Picks (the newest set's chase cards, cheapest live listing each),
-          directly under the editorial band (owner, 2026-10-06). HomeSections
-          gets showEbayPicks={false} so it appears once. */}
-      <EbayPicks pageType="homepage" />
-
-      {/* Today's Top Deals, under the editorial band (2026-10-02). HomeSections
-          gets showTopDeals={false} so it appears once. */}
+      {/* Today's Top Deals, straight under the hero since 2026-10-19 (owner's
+          tidy-up: the editorial band moved to the bottom of the page and the
+          price guide callout went). HomeSections gets showTopDeals={false} so
+          it appears once. */}
       {/* No <Reveal> wrapper: it is in or near the first screen, where a
           scroll-in fade would hide real content until hydration. The .rb-sd
           wrapper is different: pure CSS, tied to the scroll position, so it
@@ -349,12 +339,6 @@ export default async function HomePage() {
           <TodaysTopDeals dealsByCountry={topDealsByCountry} />
         </div>
       )}
-
-      {/* The price guide, under Top Deals (2026-10-02, owner). */}
-      <div className="rb-sd">
-        <PriceGuideCallout totalCards={totalCards} />
-      </div>
-
 
       {/* REMOVED 2026-09-30: "Riftbound card prices today", the price table
           (PriceTodayTable, lib/price-table.ts), on the owner's instruction ("get
@@ -391,7 +375,7 @@ export default async function HomePage() {
         chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
         showTopDeals={false}
-        showEbayPicks={false}
+        showEbayPicks
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}
@@ -473,6 +457,11 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Guides, news & market updates, at the very bottom since 2026-10-19
+          (owner: "move the guides, news, and market updates to the very
+          bottom"). They sat directly under the hero from 2026-10-02. */}
+      <EditorialHub freshness={freshness} freshnessAt={freshnessAt} />
 
       {/* The homepage is the site's canonical entity landing page and carried
           no node describing itself — only an FAQPage, unlinked to the

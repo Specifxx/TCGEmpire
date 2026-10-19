@@ -20,7 +20,19 @@ import { PremiumNavLink } from "./PremiumNavLink";
 // `short` is the label where the row has no room for three words: the phone
 // slot and the lg row (tests/mobile-header-fit.test.ts). From xl the inline
 // search gives up the width and the full "Get Premium" shows.
-export function GetPremiumLink({ className = "", surface, compact = false }: { className?: string; surface: string; compact?: boolean }) {
+// `full` (the homepage hero, 2026-10-19) always reads "✦ Get Premium": the hero
+// has the room the header rows do not.
+export function GetPremiumLink({
+  className = "",
+  surface,
+  compact = false,
+  full = false,
+}: {
+  className?: string;
+  surface: string;
+  compact?: boolean;
+  full?: boolean;
+}) {
   const { tier, loaded } = useMe();
   if (loaded && tier === "premium") {
     return (
@@ -34,9 +46,11 @@ export function GetPremiumLink({ className = "", surface, compact = false }: { c
     <PremiumNavLink surface={surface} className={`premium-cta ${className}`} title={upgrade ? "Upgrade to Premium" : "Get Premium: every deal, price watches, ad-free"}>
       {/* One label span carries the gold text and its sheen (.premium-cta-label). */}
       <span className="premium-cta-label">
-        <span aria-hidden="true" className="hidden xl:inline">✦ </span>
+        <span aria-hidden="true" className={full ? "" : "hidden xl:inline"}>✦ </span>
         {upgrade ? (
           <span>Upgrade</span>
+        ) : full ? (
+          <span>Get Premium</span>
         ) : compact ? (
           <span>Premium</span>
         ) : (

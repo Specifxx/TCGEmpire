@@ -29,14 +29,15 @@ test("no change is invented: too few points, stale data, outliers and zero bases
   assert.equal(sevenDayChange([{ t: now - 8 * DAY, v: 0 }, { t: now - DAY, v: 900 }], now), null);
 });
 
-test("every home: Today's Top Deals, then the price guide link; no price table anywhere", () => {
+test("every home: Today's Top Deals, then HomeSections; no price table and no price guide callout", () => {
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = read(f);
     assert.doesNotMatch(src, /<PriceTodayTable|getPriceTable\(/, f);
+    // The price guide callout left the homepage on 2026-10-19 (owner).
+    assert.doesNotMatch(src, /<PriceGuideCallout/, f);
     const deals = src.indexOf("<TodaysTopDeals");
-    const guide = src.indexOf("<PriceGuideCallout");
     const rest = src.indexOf("<HomeSections");
-    assert.ok(deals > 0 && deals < guide && guide < rest, `${f}: deals < price guide < HomeSections`);
+    assert.ok(deals > 0 && deals < rest, `${f}: deals < HomeSections`);
     assert.match(src, /showTopDeals=\{false\}/, `${f}: the deals render once`);
   }
   const c = read("src/components/home/PriceGuideCallout.tsx");

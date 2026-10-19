@@ -9,10 +9,8 @@ import { COUNTRY_GUIDE_SLUGS } from "@/lib/seo";
 import { ebayLabel } from "@/lib/affiliate";
 import { CinematicHero } from "./CinematicHero";
 import { HomeSections } from "./HomeSections";
-import { PriceGuideCallout } from "./PriceGuideCallout";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EditorialHub } from "./EditorialHub";
-import { EbayPicks } from "@/components/EbayPicks";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
 // Every market, so the cross-market strips on a region page show them all.
@@ -103,22 +101,11 @@ export async function RegionHome({ region }: { region: Country }) {
         region={{ code: region, adjective: info.adjective }}
       />
 
-      {/* Guides, news & market updates: directly under the hero on every
-          home (owner, 2026-10-02: "should still be at the top under the
-          hero"), then Today's Top Deals and the price guide. */}
-      <EditorialHub freshness={freshness} freshnessAt={freshnessAt} market={region} />
-
-      {/* eBay Picks directly under the band, as on "/" (owner, 2026-10-06).
-          HomeSections gets showEbayPicks={false} so it appears once. */}
-      <EbayPicks pageType="homepage" />
-
-      {/* Today's Top Deals, then the price guide (2026-10-02, owner: the
-          "Riftbound card prices today" table is gone; a link to /price-guide
-          takes its place, with Top Deals above it). HomeSections gets
-          showTopDeals={false} below so the deals render once. */}
+      {/* Today's Top Deals straight under the hero, as on "/" (owner's tidy-up,
+          2026-10-19): the editorial band moved to the bottom of the page and
+          the price guide callout went. HomeSections gets showTopDeals={false}
+          so the deals render once. */}
       {topDealsAny && <TodaysTopDeals dealsByCountry={topDealsByCountry} />}
-      <PriceGuideCallout totalCards={totalCards} />
-
 
       {/* The full "/" feature set — Top Deals, eBay Picks, popular cards, How
           It Works, Explore, reviews, partners — see HomeSections.tsx and this
@@ -135,7 +122,7 @@ export async function RegionHome({ region }: { region: Country }) {
         chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
         showTopDeals={false}
-        showEbayPicks={false}
+        showEbayPicks
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}
@@ -193,6 +180,9 @@ export async function RegionHome({ region }: { region: Country }) {
           ))}
         </div>
       </section>
+
+      {/* Guides, news & market updates at the very bottom (owner, 2026-10-19). */}
+      <EditorialHub freshness={freshness} freshnessAt={freshnessAt} market={region} />
 
       <script
         type="application/ld+json"

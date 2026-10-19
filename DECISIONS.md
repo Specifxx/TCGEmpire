@@ -18673,3 +18673,26 @@ The header search sends `/browse?q=` alone, so it dropped every ticked filter. T
   - It is shaped like a price row, tinted eBay blue, with a "Search eBay" button, and still names no price.
   - It has no "Paid link" tag (owner: "get rid of the Paid link"). The footnote under the table now names the blue row as a commission link.
 - **The "Prefer eBay?" strip above the table is gone.** Each product's own row replaces it.
+
+## Homepage tidy-up — 2026-10-19
+
+**Owner:** "get rid of the creator bar … get rid of how RiftCompare works … move the guides, news, and market updates to the very bottom … welcome back … just above the pack opening simulator, the Riftle and watching a card … the Radiance is coming … right below today's top deals … get rid of the price guide … put the chase cards above the Pokémon … in the hero … a little get premium button."
+
+The order on "/" and on the five region homes, top down:
+1. **Hero,** with a gold "✦ Get Premium" (`GetPremiumLink full`, surface `nav:hero`). A Premium member sees a plain link instead.
+2. **Today's Top Deals.**
+3. **The Radiance countdown** (`NextSetCountdownCard`). It used to sit after the set grid.
+4. **The popular-cards carousel,** whose Radiance chase cards tab leads.
+5. **eBay Picks.** HomeSections renders it now (`showEbayPicks`), not the home itself.
+6. **The Pokémon promo.**
+7. **Welcome back,** then the pack simulator, Riftle and watch cards.
+8. **The set grid, reviews, the account strip and partners.**
+9. **About and FAQ.**
+10. **Guides, news & market updates** (`EditorialHub`), now at the very bottom. They sat directly under the hero from 2026-10-02.
+
+Removed from the homepage:
+- **The creators strip** (`CreatorsTeaser`). The hero's creators badge stays.
+- **"How RiftCompare works"** (`HowItWorks`).
+- **The price guide callout** (`PriceGuideCallout`). /price-guide keeps its sidebar link.
+
+The four tests that pinned the old order now pin this one.

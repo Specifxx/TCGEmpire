@@ -3,11 +3,9 @@ import dynamic from "next/dynamic";
 import { Reveal } from "@/components/Reveal";
 import { EbayPicks } from "@/components/EbayPicks";
 import { ReviewsSection } from "@/components/ReviewsSection";
-import { HowItWorks } from "@/components/home/HowItWorks";
 import { AccountStrip } from "@/components/home/AccountStrip";
 import { WelcomeBack } from "@/components/home/WelcomeBack";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
-import { CreatorsTeaser } from "@/components/home/CreatorsTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { PokemonHomePromo } from "@/components/pokemon/PokemonHomePromo";
 import { SETS, hasSetHub, newestReleasedSet, nextUpcomingSet, showsAsNew } from "@/lib/constants";
@@ -154,21 +152,30 @@ export function HomeSections({
         </Reveal>
       )}
 
-      {/* The Pokémon section's one line (2026-10-01, owner's request), on all
-          six homes: after Top Deals and the editorial band, never above them.
-          Renders nothing while the section is off (lib/pokemon/flag.ts). */}
-      <PokemonHomePromo />
-
-      {/* eBay Picks — the newest set's chase cards with their cheapest live
-          listing, rather than a generic banner. Held the top slot from
-          2026-09-17 (where it replaced the removed Market Pulse) until
-          2026-09-21, when Today's Top Deals was moved above it on the owner's
-          instruction — see that section's comment and DECISIONS.md.
-          2026-10-06 (owner: "move the ebay chase card ad right below the news
-          and guides"): every home now renders it itself, directly under the
-          editorial band, and passes showEbayPicks={false}. It stays here as the
-          default for any caller that does not. */}
-      {showEbayPicks && <EbayPicks pageType="homepage" />}
+      {/* THE 2026-10-19 ORDER (owner: "we're just tidying it up"): Top Deals,
+          the Radiance countdown, the chase cards, eBay Picks, Pokémon, then
+          Welcome back above the pack simulator, Riftle and watch cards. The
+          creators strip (the hero carries creators) and "How RiftCompare works"
+          went; the editorial band moved to the bottom of the page. */}
+      {/* Next-set countdown ("Radiance is coming"), right under Today's Top
+          Deals since 2026-10-19 (owner's tidy-up of the homepage). New-set
+          searches are the biggest organic traffic spikes in TCGs. Hides itself
+          once nothing upcoming is announced. */}
+      {showNextSetCard && (
+        <Reveal>
+          {/* preorders passed down 2026-09-17: Market Pulse used to carry the
+              homepage's ONLY link to /radiance-preorders, and removing it would
+              have silently dropped the pre-order CTA from the homepage six
+              weeks before Radiance ships. This card is already the "next set"
+              slot, so the link belongs here rather than being lost as
+              collateral from a layout change nobody intended that way. */}
+          <NextSetCountdownCard
+            set={nextSet}
+            preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
+            spoilers={spoilersHref ? { href: spoilersHref, setName: nextSet!.name } : null}
+          />
+        </Reveal>
+      )}
 
       {/* Unified popular-cards carousel — the all-time most-popular list, with
           a "Biggest movers" tab and "Recently updated prices" (each once its
@@ -202,14 +209,25 @@ export function HomeSections({
         storeWord={storeWord}
       />
 
-      {/* Riftbound creators (2026-10-15, owner: "you should be able to quickly
-          navigate or see this page from the home page, maybe a little widget").
-          A slim strip into /creators, high enough to be seen on a first scroll:
-          the featured creators' faces, or an invitation to creators while the
-          list is empty. Static data, no database read. */}
-      <Reveal>
-        <CreatorsTeaser />
-      </Reveal>
+      {/* eBay Picks — the newest set's chase cards with their cheapest live
+          listing, rather than a generic banner. Held the top slot from
+          2026-09-17 (where it replaced the removed Market Pulse) until
+          2026-09-21, when Today's Top Deals was moved above it on the owner's
+          instruction — see that section's comment and DECISIONS.md.
+          2026-10-06 (owner: "move the ebay chase card ad right below the news
+          and guides"): every home now renders it itself, directly under the
+          editorial band, and passes showEbayPicks={false}. It stays here as the
+          default for any caller that does not. */}
+      {showEbayPicks && <EbayPicks pageType="homepage" />}
+
+      {/* The Pokémon section's one line (2026-10-01, owner's request), on all
+          six homes: after Top Deals and the editorial band, never above them.
+          Renders nothing while the section is off (lib/pokemon/flag.ts). */}
+      <PokemonHomePromo />
+
+      {/* Welcome back, directly above the return-visit cards (owner,
+          2026-10-19). Signed-in only; AccountStrip below is its signed-out twin. */}
+      <WelcomeBack />
 
       {/* Return-visit hooks — Riftle, the pack simulator, and price alerts.
           These were moved ABOVE the commercial run on 2026-09-16, after
@@ -234,12 +252,6 @@ export function HomeSections({
       <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:[&>*:last-child]:col-span-2 min-[1440px]:grid-cols-3 min-[1440px]:[&>*:last-child]:col-span-1">
         <ReturnVisitCards newestSetName={newestSet?.name} />
       </Reveal>
-
-      {/* How it works — orients first-time visitors to the search → compare → buy
-          mechanic. After the commercial sections (deals, popular cards, movers):
-          those are the stronger differentiator and shouldn't sit behind an
-          explainer. */}
-      <HowItWorks totalCards={totalCards} />
 
       {/* Explore — sets + domains consolidated into one entry point */}
       <section>
@@ -338,28 +350,6 @@ export function HomeSections({
             would actually have cost something. */}
       </section>
 
-      {/* Next-set countdown — new-set hype, right after Explore (which already
-          shows the upcoming set as a "Coming soon" tile above): new-set
-          searches are the biggest organic traffic spikes in TCGs, so this
-          captures that intent instead of waiting for a visitor to find
-          /release-dates on their own. Hides itself once nothing upcoming
-          is announced. */}
-      {showNextSetCard && (
-        <Reveal>
-          {/* preorders passed down 2026-09-17: Market Pulse used to carry the
-              homepage's ONLY link to /radiance-preorders, and removing it would
-              have silently dropped the pre-order CTA from the homepage six
-              weeks before Radiance ships. This card is already the "next set"
-              slot, so the link belongs here rather than being lost as
-              collateral from a layout change nobody intended that way. */}
-          <NextSetCountdownCard
-            set={nextSet}
-            preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
-            spoilers={spoilersHref ? { href: spoilersHref, setName: nextSet!.name } : null}
-          />
-        </Reveal>
-      )}
-
       {/* REMOVED 2026-09-26: the "Latest from the blog" and "Guides &
           explainers" rows that sat here, about nine phone screens down. They
           are replaced, not duplicated, by the editorial band (EditorialHub)
@@ -377,7 +367,6 @@ export function HomeSections({
           tier and hides itself for members; WelcomeBack is its signed-in
           twin and hides itself for everyone else. Exactly one renders. */}
       <AccountStrip />
-      <WelcomeBack />
 
       {/* Approved partners + affiliate disclosure. Client component (reads
           useCountry() itself) so every visitor's eBay click here is tagged

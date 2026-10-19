@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { CreatorsCornerBadge } from "./CreatorsCornerBadge";
 import { RadianceSeasonBanner } from "@/components/RadianceSeasonBanner";
 import Link from "next/link";
+import { GetPremiumLink } from "@/components/GetPremiumLink";
 import { ParallaxRoot } from "./ParallaxRoot";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { SearchBar } from "@/components/SearchBar";
@@ -400,6 +401,13 @@ export function CinematicHero({
           >
             All {totalCards.toLocaleString()} cards in the database →
           </Link>
+          {/* A small Get Premium in the hero (owner, 2026-10-19), the header's
+              gold button at the same weight; a Premium member sees a plain link. */}
+          <GetPremiumLink
+            surface="nav:hero"
+            full
+            className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-lg px-4 text-sm font-semibold"
+          />
           <CountryHeroToggle />
         </div>
       </div>

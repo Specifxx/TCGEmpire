@@ -102,7 +102,10 @@ test("the homepage's commercial-vs-playable order is the owner's, and is asserte
   // of the page" is not. They used to sit above the editorial run too; since
   // 2026-09-26 that run is a band above HomeSections by the owner's decision
   // (see the note above), so it is no longer below them to assert against.
-  assert.ok(play < code.indexOf("<HowItWorks"), "Riftle/pack-sim must stay above the explainer and everything below it");
+  // "How RiftCompare works" left the homepage on 2026-10-19 (owner); the
+  // playable cards still sit above the set grid.
+  assert.ok(!code.includes("<HowItWorks"), "the explainer is gone (owner, 2026-10-19)");
+  assert.ok(play < code.indexOf("Explore the database"), "Riftle/pack-sim stay above the set grid");
   assert.doesNotMatch(code, /<LatestPosts/, "the editorial run moved above HomeSections (owner, 2026-09-26), not back under the games");
 });
 
