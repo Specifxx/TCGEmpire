@@ -5,6 +5,7 @@ import { cmFigures, cmKey, matchCardmarket, cardmarketPokemonUrl } from "../src/
 import { filterTiles, isFiltered, pageOf, parseBrowse, sortTiles, toDisplay } from "../src/lib/pokemon/browse";
 import { pokemonFaq, sourceList } from "../src/lib/pokemon/copy";
 import { convertCents } from "../src/lib/fx";
+import { applyKeyword, KEYWORD_MAX } from "../src/lib/filter-params";
 import type { PkOfferRow, PkTile } from "../src/lib/pokemon/types";
 import { perPackCents } from "../src/lib/pokemon/packs";
 
@@ -156,6 +157,20 @@ const tile = (over: Partial<PkTile>): PkTile => ({
   packCountFrom: null,
   perPackCents: null,
   ...over,
+});
+
+test("browse: the sealed panel's search box (lib/filter-params.ts) lands as a parsed q on page 1, the other filters kept", () => {
+  const p = new URLSearchParams("type=etb&instock=1&sort=price_asc&page=3");
+  applyKeyword(p, "  phantasmal  ");
+  const q = parseBrowse(Object.fromEntries(p));
+  assert.equal(q.q, "phantasmal");
+  assert.equal(q.page, 1, "a new search starts at page 1");
+  assert.deepEqual(q.kinds, ["etb"]);
+  assert.equal(q.inStock, true);
+  assert.equal(q.sort, "price_asc");
+  assert.ok(isFiltered(q), "so the view is noindex, like any searched view");
+  // The box sends at most what this page reads, so nothing is cut unseen.
+  assert.equal(parseBrowse({ q: "x".repeat(200) }).q.length, KEYWORD_MAX);
 });
 
 test("browse: parsing, filtering, featured order, paging and the UK euro display", () => {

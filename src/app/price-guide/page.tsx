@@ -177,7 +177,10 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: R
           <PriceGuideSummary stats={stats} sets={bySet} currency={display} place={place} />
 
           <div className="mt-6 flex flex-col gap-6 xl:flex-row">
-            <Filters basePath={PRICE_GUIDE_PATH} currency={display} hidePreorderSets />
+            {/* No keyword box in the panel here: the toolbar beside it already
+                searches the guide (PriceGuideToolbar), and two boxes would
+                write the one `q`. */}
+            <Filters basePath={PRICE_GUIDE_PATH} currency={display} hidePreorderSets search={false} />
 
             <section id="results" aria-label="Price list" className="min-w-0 flex-1 scroll-mt-header">
               <PriceGuideNavProvider>

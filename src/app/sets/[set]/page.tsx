@@ -340,6 +340,8 @@ export default async function SetPage({
   const orderBy = buildCardOrderBy(searchParams.sort ?? "name", country);
   const size = parsePageSize(searchParams.size);
   const page = parsePageNum(searchParams.page);
+  // The words typed in the filter panel's search box, for the count line.
+  const searchQ = (searchParams.q ?? "").trim();
 
   // EGRESS: same fix as /browse (also force-dynamic, also both the landing page
   // for a set AND a deep crawl surface). The DEFAULT view — no filters, sort or
@@ -729,6 +731,11 @@ export default async function SetPage({
               <p className="text-sm text-slate-400">
                 <span className="font-semibold text-white">{total.toLocaleString()}</span>{" "}
                 {total === 1 ? "card" : "cards"}
+                {/* The panel's keyword box narrows the set's grid (buildCardWhere
+                    reads `q`; never metered: a set page is not a site search). */}
+                {searchQ && (
+                  <> for <span className="text-brand-400">“{searchQ}”</span></>
+                )}
                 {total > 0 && <span className="text-slate-600"> · page {page} of {totalPages}</span>}
               </p>
               <div className="flex items-center gap-3">
