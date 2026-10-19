@@ -102,6 +102,25 @@ export const SEALED_ONLY_SHOPIFY: ShopifySealedStore[] = [
     country: "CA",
     currency: "CAD",
   },
+  {
+    // Mona Vale (Sydney's Northern Beaches) LGS, added at the owner's request,
+    // 2026-10-19. AUD storefront that ships within Australia only (/meta.json).
+    // Sealed only: its one Riftbound collection holds booster displays, a
+    // booster pack and event tickets, no singles. The title gates keep the
+    // displays and the pack and drop every ticket ("Pre-Rift 25th July @ 10am"
+    // names a clock time; "Nexus Nights" and "Radience pre release" name no
+    // sealed product). Postage is not published: no Shopify shipping policy,
+    // and its terms say shipping costs "are provided at checkout".
+    key: "beachestcg",
+    name: "BeachesTCG",
+    base: "https://beachestcg.com.au",
+    collections: ["riftbound-tcg"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "AU",
+    currency: "AUD",
+  },
   // ── Moved here from RETAILERS, 2026-10-16 (store audit) ───────────────────
   // Each one's Riftbound collections hold sealed product, accessories and
   // event tickets, and few or no matchable singles, so as a singles store each
