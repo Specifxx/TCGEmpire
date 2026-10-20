@@ -18713,3 +18713,5 @@ The four tests that pinned the old order now pin this one.
 **Open question for the owner.** If the seller is connected to RiftCompare, the box should say so ("our own listing" or "a partner's listing"). "Featured listing" plus "Paid link" is right for a listing we merely chose and earn commission on; it is not the full disclosure for one we sell ourselves.
 
 `tests/featured-listing.test.ts`.
+
+**Same day, follow-up** (owner: "Featured listing should show up in the quick view as well"). The card quick view (`QuickView.tsx`) renders the same `FeaturedListingBox` from the same `featuredListingFor(card.slug)`, under the cheapest price and above the eBay tabs. It has no image there, because the quick view already shows the card, and clicks report as page type `quickview`. The box's side note is shortened to "Not part of the comparison" so it fits a phone.

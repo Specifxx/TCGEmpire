@@ -19,6 +19,8 @@ import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, isPaidLink, riftboundEbayQuery } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
+import { FeaturedListingBox } from "./FeaturedListingBox";
+import { featuredListingFor } from "@/lib/featured-listings";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
 import { EbayTabs, type EbayTab } from "./EbayTabs";
@@ -426,6 +428,13 @@ function QuickViewModal({
                   </div>
                 </div>
               );
+            })()}
+
+            {/* The card page's featured listing, here too (owner, 2026-10-19;
+                lib/featured-listings.ts). Labelled and above the comparison. */}
+            {(() => {
+              const featured = featuredListingFor(card.slug);
+              return featured ? <FeaturedListingBox listing={featured} className="mt-3" pageType="quickview" /> : null;
             })()}
 
             {/* Always-present eBay buy-path — the widest singles inventory in every
