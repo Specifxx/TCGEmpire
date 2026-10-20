@@ -245,7 +245,7 @@ export function CinematicHero({
             matching the titles and the price lists that outrank us for it.
             The buy-intent line that held the H1 since 09-17 is kept, verbatim,
             as the lead of the subhead below. DECISIONS.md, 2026-09-24. */}
-        <h1 className="animate-fade-in [animation-delay:160ms] mx-auto max-w-4xl text-2xl font-extrabold sm:mt-4 sm:text-3xl leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
+        <h1 className="mx-auto max-w-4xl text-2xl font-extrabold sm:mt-4 sm:text-3xl leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
           <span className="rb-flame-text rb-flame-live">Riftbound</span> Card Prices{region ? ` in ${SHORT_PLACE[region.code]}` : ""}
         </h1>
         {/* The official divider ornament under the headline (globals.css). */}
@@ -267,12 +267,15 @@ export function CinematicHero({
             The sentence therefore lands all four of this page's target phrases
             in ~45 words, none of them duplicating the title: "price check",
             "buy Riftbound cards", "Riftbound prices", and the market list. */}
-        <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-2 max-w-2xl text-base text-slate-300 sm:mt-4">
+        <p className="mx-auto mt-2 max-w-2xl text-base text-slate-300 sm:mt-4">
           <strong className="block text-base font-semibold text-white sm:text-xl">Buy Riftbound cards at the best price</strong>
-          {/* Phones (2026-09-26): the explanatory sentence is CSS-hidden below
-              sm so the trending list and the price table start on the first
-              screen; it stays in the HTML for every width. */}
-          <span className="hidden sm:inline">Price check any card and find the cheapest place to buy — live Riftbound prices from
+          {/* VISIBLE ON PHONES AGAIN (2026-10-20, owner: the hero text "doesn't
+              show up on Google"). It was display:none below sm from 2026-09-26,
+              and Google indexes the PHONE render first, so the page's
+              price-check sentence was hidden text there. Shown at text-sm on
+              phones, full size from sm. The headline and this paragraph also
+              lost their fade-in, so neither starts invisible. */}
+          <span className="mt-1 block text-sm leading-snug sm:mt-0 sm:inline sm:text-base">Price check any card and find the cheapest place to buy — live Riftbound prices from
           every {heroAdjective} retailer we track, plus five more markets in their own currency: {otherMarkets}, updated daily.</span>
         </p>
 

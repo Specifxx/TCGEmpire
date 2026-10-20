@@ -18731,3 +18731,20 @@ Both codes were checked live: `/r/CODE` redirects with `?code=`, which happens o
 **How a code shows.** `Creator` gains an optional `code` ({ code, percentOff }). The card shows a dashed gold "CODE · 20% off Premium" row linking to `/r/CODE`, which applies the discount and credits the creator. Clicks go to GA4 as `creator_code_click`.
 
 The blurbs say only what we know: the platform, and "pack rips" from Josh's handle. Give each creator a line in their own words when they send one, plus an avatar for `public/creators/`.
+
+## Homepage hero: no hidden text on phones, no fade on the headline — 2026-10-20
+
+**Owner:** "how do we get all the text in the hero indexed", and, after being told to search Google for the exact hero sentence, "doesn't show up on google".
+
+**Finding:**
+- Every hero line is in the server HTML (fetched as Googlebot).
+- But the page's price-check sentence ("Price check any card and find the cheapest place to buy — live Riftbound prices from …") was `hidden sm:inline`, display:none below 640px, since 2026-09-26.
+- Google indexes the phone render first, so on the render that counts the sentence was hidden text.
+- The H1 and that paragraph also started at opacity 0 (`animate-fade-in`, 160/240 ms delays).
+
+**Changed:**
+- The sentence is visible on phones (`text-sm`), full size from sm. That costs about four lines on a 390px screen; the trending chips still sit above the fold.
+- The H1 and the subhead paragraph lose `animate-fade-in`.
+- The decorative elements keep their fades: the brand line, the search box and the browse link.
+
+After the release, use URL Inspection → Request indexing in Search Console. Google re-reads the page on its own schedule otherwise.
