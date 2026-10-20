@@ -337,7 +337,7 @@ export default async function SetGalleryPage({ params }: { params: { set: string
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }} />
       {total > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
 
-      <section className="card-surface animate-fade-up relative overflow-hidden">
+      <section className="card-surface relative overflow-hidden">
         <div className="relative border-l-2 border-brand-500 bg-ink-900 px-6 py-8">
           <Breadcrumbs
             trail={[

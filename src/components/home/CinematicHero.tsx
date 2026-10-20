@@ -162,7 +162,7 @@ export function CinematicHero({
             asset/component. */}
         {/* Halloween (until 31 October): "Nocturne is coming". */}
         <NocturneComing />
-        <div className="animate-fade-in [animation-delay:80ms] hidden items-center justify-center gap-2 sm:flex">
+        <div className="hidden items-center justify-center gap-2 sm:flex">
           <BrandLogo className="h-8 w-8" />
           <span className="text-lg font-extrabold tracking-tight text-white">
             Rift<span className="rb-flame-text">Compare</span>
@@ -342,7 +342,7 @@ export function CinematicHero({
             search on its own row below xl, so the hero's was a second search box
             stacked right under it. Desktop keeps the hero search as the primary
             action. */}
-        <div className="relative z-20 animate-fade-in [animation-delay:300ms] mt-6 hidden sm:block">
+        <div className="relative z-20 mt-6 hidden sm:block">
           <Suspense fallback={<div className="input mx-auto h-12 max-w-2xl" />}>
             {/* trendingCards feeds the box's own zero-state dropdown (focused +
                 empty — see SearchBar's doc comment) in addition to the
@@ -388,7 +388,7 @@ export function CinematicHero({
             problem. Both destinations are still one click away everywhere on
             the site; they just don't need a second, competing home in the
             hero above the fold. */}
-        <div className="animate-fade-in [animation-delay:360ms] mt-6 flex flex-col items-center gap-2">
+        <div className="mt-6 flex flex-col items-center gap-2">
           {/* tap-link: this is the hero's one surviving secondary action, so its
               hit area needs the same 44/48px floor every other tap target on the
               page gets — a plain text link with no padding measured ~20px tall,
