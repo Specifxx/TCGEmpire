@@ -952,6 +952,30 @@
     ],
     "fingerprint": "213eef05a1fda4be"
   },
+  "/creators/keishun.jpg": {
+    "src": "/creators/keishun.jpg",
+    "width": 400,
+    "height": 400,
+    "bytes": 25151,
+    "webp": "/creators/keishun.webp",
+    "webpBytes": 16296,
+    "avif": "/creators/keishun.avif",
+    "avifBytes": 11156,
+    "variants": [],
+    "fingerprint": "f4a1a1ee4afc0e04"
+  },
+  "/creators/ripsbyjosh.jpg": {
+    "src": "/creators/ripsbyjosh.jpg",
+    "width": 400,
+    "height": 400,
+    "bytes": 29912,
+    "webp": "/creators/ripsbyjosh.webp",
+    "webpBytes": 20578,
+    "avif": "/creators/ripsbyjosh.avif",
+    "avifBytes": 14455,
+    "variants": [],
+    "fingerprint": "ac1c93edbf044d94"
+  },
   "/icon-512.png": {
     "src": "/icon-512.png",
     "width": 512,
