@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guestAccountFor } from "@/lib/guest-checkout";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { stripe, stripeEnabled, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
@@ -140,7 +141,20 @@ export async function POST(req: Request) {
 // checkout session itself completing is real signal the charge likely landed;
 // a successfully-read non-entitled subscription now grants nothing, ever.
 async function premiumStarted(session: Stripe.Checkout.Session) {
-  const userId = session.metadata?.userId ?? session.client_reference_id;
+  let userId = session.metadata?.userId ?? session.client_reference_id;
+  // A guest checkout (lib/guest-checkout.ts): no account at checkout time. The
+  // email Stripe collected names (or creates) it, and the subscription is
+  // stamped with that userId so renewals and changes resolve it directly.
+  if (!userId && session.metadata?.guest === "1") {
+    const account = await guestAccountFor(session.customer_details?.email ?? session.customer_email);
+    userId = account?.userId ?? null;
+    const guestSubId = typeof session.subscription === "string" ? session.subscription : null;
+    if (userId && guestSubId) {
+      await stripe()
+        .subscriptions.update(guestSubId, { metadata: { userId } })
+        .catch((e) => console.error(`stripe webhook: could not stamp userId on guest subscription ${guestSubId}:`, e));
+    }
+  }
   if (!userId) {
     console.error("stripe webhook: premium checkout with no userId (session", session.id, ")");
     return;

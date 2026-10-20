@@ -22,11 +22,14 @@ export const INLINE_SIGNUP_SURFACES = [
   "inline_published_deck", // /decks/[slug], under the deck's list
   "inline_movers", // /movers, after the lists
   "inline_champion", // /champions/[slug], after the champion's printings
+  "inline_card", // /card/[id], under the markets table (2026-10-20)
 ] as const;
 export type InlineSignupSurface = (typeof INLINE_SIGNUP_SURFACES)[number];
 
 export const SIGNUP_SOURCES = new Set<string>([
   "navbar",
+  // An account created by a guest Premium checkout (2026-10-20, lib/guest-checkout.ts).
+  "guest_checkout",
   // RETIRED 2026-09-30 with the sign-up popup ("The sign-up slider is gone").
   // Kept, like "gate" below, so accounts that carry it and a cookie set just
   // before the deploy still parse.

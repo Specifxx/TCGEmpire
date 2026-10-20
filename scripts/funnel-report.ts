@@ -101,6 +101,19 @@ async function main() {
       const rows = await prisma.premiumClick.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true, source: true } });
       return rows.map((r) => ({ ...r, surface: null }));
     });
+  // Signed in or out at the moment of the click (PremiumClick.userId is null for
+  // a signed-out visitor): where the funnel loses people before Stripe
+  // (2026-10-20, "Premium without signing in first").
+  const byState = await prisma.premiumClick
+    .groupBy({ by: ["source"], where: { createdAt: { gte: since }, userId: null }, _count: { _all: true } })
+    .catch(() => []);
+  const signedOutClicks = byState.filter((r) => r.source !== "checkout").reduce((n, r) => n + r._count._all, 0);
+  const signedOutCheckouts = byState.filter((r) => r.source === "checkout").reduce((n, r) => n + r._count._all, 0);
+  const allClicks = clicks.filter((c) => c.source !== "checkout").length;
+  const allCheckouts = clicks.filter((c) => c.source === "checkout").length;
+  console.log(
+    `Premium clicks signed out: ${signedOutClicks} of ${allClicks} · checkout starts signed out (guest checkout, since 2026-10-20): ${signedOutCheckouts} of ${allCheckouts}\n`,
+  );
   for (const c of clicks) {
     bump(c.createdAt.getTime(), (r) => {
       r.premiumClicks++;

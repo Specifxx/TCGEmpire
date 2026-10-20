@@ -39,6 +39,7 @@ const PLACEMENTS: Record<string, string> = {
   "src/app/decks/[slug]/page.tsx": "inline_published_deck",
   "src/app/movers/page.tsx": "inline_movers",
   "src/app/champions/[slug]/page.tsx": "inline_champion",
+  "src/components/CardSignupPrompt.tsx": "inline_card",
 };
 
 function walk(dir: string, out: string[] = []): string[] {

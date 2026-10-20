@@ -89,6 +89,38 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // Smart-shopping / value tools (several Premium).
+    title: "Deals & value",
+    icon: "deals",
+    links: [
+      { href: "/tools/deal-finder", label: "Deal Finder", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced", "undervalued", "best value"] },
+      { href: "/tools/rising", label: "Rising Cards", keywords: ["rising", "hot", "momentum", "spiking", "going up"] },
+      { href: "/tools/best-basket", label: "Best Basket", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"] },
+      // Premium (2026-09-25). "most searched" and "popular cards" stay /movers'
+      // too: its free top-10 strip answers them for everyone.
+      { href: "/tools/demand", label: "Demand Finder", keywords: ["demand", "most viewed", "most searched", "popular cards", "what players are searching for", "search trends"] },
+      { href: "/tools/box-ev", label: "Box EV Calc", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
+      { href: "/tools/pull-tracker/radiance", label: "Pull Tracker", keywords: ["pulls", "what did i pull", "box value", "pack opening", "log my pulls", "radiance pulls"] },
+      { href: "/tools/selling-fees", label: "Selling Fee Calc", keywords: ["tcgplayer fees", "ebay fees", "selling fees", "net proceeds", "marketplace commission"] },
+      { href: "/tools", label: "All Tools", keywords: ["tools", "calculators", "utilities"] },
+    ],
+  },
+  {
+    // The signed-in user's own stuff + the upgrade.
+    title: "Your collection",
+    icon: "collection",
+    links: [
+      // Labelled "My Portfolio" until 2026-09-16. The route stays /portfolio (it is
+      // noindex, so nothing SEO rides on the label) and "portfolio" stays a search
+      // keyword, so anyone who types it still lands here.
+      { href: "/portfolio", label: "My Binder", keywords: ["collection", "my cards", "holdings", "portfolio", "binder", "what is mine worth"] },
+      { href: "/watching", label: "My Watchlist", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"] },
+      { href: "/alerts", label: "Price Alerts", keywords: ["alerts", "price alerts", "notify me", "notifications", "email me", "price drop"] },
+      { href: "/coins", label: "RiftCompare Coins", keywords: ["coins", "collect", "gacha", "pulls", "rewards", "daily check in", "champion coins"] },
+      { href: "/premium", label: "Premium", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"] },
+    ],
+  },
+  {
     // Our original editorial work. Promoted out of the footer-only position it
     // used to occupy — see PRIMARY_NAV below and Navbar.tsx. A reviewer (or a
     // reader) landing on a programmatic price page needs a one-click path to
@@ -199,38 +231,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/games/higher-lower", label: "Higher or Lower", keywords: ["higher lower", "higher or lower"], hideInFooter: true },
       { href: "/games/seraphines-piano", label: "Seraphine's Piano", keywords: ["seraphine", "piano", "rhythm game", "music game", "radiance game"] },
       { href: "/games", label: "All Games", keywords: ["games", "play", "fun", "quiz", "minigames"] },
-    ],
-  },
-  {
-    // Smart-shopping / value tools (several Premium).
-    title: "Deals & value",
-    icon: "deals",
-    links: [
-      { href: "/tools/deal-finder", label: "Deal Finder", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced", "undervalued", "best value"] },
-      { href: "/tools/rising", label: "Rising Cards", keywords: ["rising", "hot", "momentum", "spiking", "going up"] },
-      { href: "/tools/best-basket", label: "Best Basket", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"] },
-      // Premium (2026-09-25). "most searched" and "popular cards" stay /movers'
-      // too: its free top-10 strip answers them for everyone.
-      { href: "/tools/demand", label: "Demand Finder", keywords: ["demand", "most viewed", "most searched", "popular cards", "what players are searching for", "search trends"] },
-      { href: "/tools/box-ev", label: "Box EV Calc", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
-      { href: "/tools/pull-tracker/radiance", label: "Pull Tracker", keywords: ["pulls", "what did i pull", "box value", "pack opening", "log my pulls", "radiance pulls"] },
-      { href: "/tools/selling-fees", label: "Selling Fee Calc", keywords: ["tcgplayer fees", "ebay fees", "selling fees", "net proceeds", "marketplace commission"] },
-      { href: "/tools", label: "All Tools", keywords: ["tools", "calculators", "utilities"] },
-    ],
-  },
-  {
-    // The signed-in user's own stuff + the upgrade.
-    title: "Your collection",
-    icon: "collection",
-    links: [
-      // Labelled "My Portfolio" until 2026-09-16. The route stays /portfolio (it is
-      // noindex, so nothing SEO rides on the label) and "portfolio" stays a search
-      // keyword, so anyone who types it still lands here.
-      { href: "/portfolio", label: "My Binder", keywords: ["collection", "my cards", "holdings", "portfolio", "binder", "what is mine worth"] },
-      { href: "/watching", label: "My Watchlist", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"] },
-      { href: "/alerts", label: "Price Alerts", keywords: ["alerts", "price alerts", "notify me", "notifications", "email me", "price drop"] },
-      { href: "/coins", label: "RiftCompare Coins", keywords: ["coins", "collect", "gacha", "pulls", "rewards", "daily check in", "champion coins"] },
-      { href: "/premium", label: "Premium", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"] },
     ],
   },
   {

@@ -61,7 +61,11 @@ export default async function PremiumWelcomePage({
   try {
     const s = await stripe().checkout.sessions.retrieve(sessionId, { expand: ["subscription", "subscription.items.data.price"] });
     const ownerId = s.metadata?.userId ?? s.client_reference_id;
-    if (s.metadata?.kind !== "premium" || ownerId !== user.id) redirect("/premium");
+    // A guest checkout (2026-10-20) has no owner id on the session: it belongs
+    // to whoever signed in with the email Stripe collected for it.
+    const guestEmail = s.metadata?.guest === "1" ? (s.customer_details?.email ?? "").trim().toLowerCase() : "";
+    const owns = guestEmail ? guestEmail === user.email.toLowerCase() : ownerId === user.id;
+    if (s.metadata?.kind !== "premium" || !owns) redirect("/premium");
     tier = normalizeTier(s.metadata?.tier);
     trial = s.metadata?.trial === "1";
     trialFeeCents = Math.max(0, Math.floor(Number(s.metadata?.trialFeeCents) || 0));

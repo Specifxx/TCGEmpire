@@ -36,9 +36,12 @@ const at = (t: string) => {
   return i;
 };
 
-test("Decks and Games outrank the money tools in the nav", () => {
-  assert.ok(at("Decks") < at("Deals & value"), "building a deck should come before the deal finder");
-  assert.ok(at("Games") < at("Deals & value"), "playing should come before the selling-fee calculator");
+test("the rail leads with Prices, Deals & value, then Your collection (owner, 2026-10-20)", () => {
+  // Reverses the 2026-09-16 "games before money" order of the rail, on the
+  // owner's instruction: "it should be prices, then deals and value, then your
+  // collection, then everything else".
+  assert.ok(at("Prices") < at("Deals & value") && at("Deals & value") < at("Your collection"));
+  assert.ok(at("Your collection") < at("Decks") && at("Your collection") < at("Games"));
 });
 
 test("…but Prices still leads, because that IS the product", () => {

@@ -67,6 +67,7 @@ import { guidesForCard } from "@/lib/content/related-guides";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { cardWhereParam } from "@/lib/card-slug-renames";
 import { featuredListingFor } from "@/lib/featured-listings";
+import { CardSignupPrompt } from "@/components/CardSignupPrompt";
 import { FeaturedListingBox } from "@/components/FeaturedListingBox";
 import { getRiftboundStocksLinks, rbsCardUrl } from "@/lib/riftboundstocks";
 import { regionalPrinting } from "@/lib/regional-printings";
@@ -1461,6 +1462,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           {/* In-content ad — below the price table the visitor came for, so it never
               gets between them and the prices. Suppressed entirely on a page with
               no price data (see AdSlot: no units on noindex/thin pages). */}
+          <CardSignupPrompt cardName={card.name} className="mt-6" />
           <AdSlot className="mt-6" height={120} pageIsThin={priceState.isEmpty} />
 
           {/* Rarity/variant summary as its own labelled section — the facts (Showcase,

@@ -183,9 +183,11 @@ test("PremiumCta's signed-out CTA attributes the signup and records the funnel s
   assert.match(src, /trackEvent\("premium_signin_step"/, "the signed-out click had no event at all before this");
   assert.match(src, /premiumStartHref\(\{ tier, plan, src: "premium-page" \}\)/);
   // The required disclosures still live in the same branch as the trial claim.
+  // Since 2026-10-20 the signed-out button opens a guest checkout (no account first).
   const signedOutAt = src.indexOf("if (!signedIn)");
   const signedOutBlock = src.slice(signedOutAt, src.indexOf("if (!checkoutLive)"));
-  assert.match(signedOutBlock, /no card needed/i);
+  assert.match(signedOutBlock, /onStartClick\(\); void subscribe\(\);/);
+  assert.match(signedOutBlock, /No account needed to start/);
   // "A card is required. $1 today for your first 30 days, then …" (lib/site.ts trialDisclosure).
   assert.match(signedOutBlock, /trialDisclosure\(trialDays, trialFeeCents, thenPrice\)/);
   assert.match(trialDisclosure(30, 100, "$2.99/month"), /card is required/i);
@@ -216,7 +218,9 @@ test("/premium/welcome proves the Stripe session belongs to the viewer before it
   // (2026-09-24) now with the subscription expanded, for the dated trial timeline.
   assert.match(src, /checkout\.sessions\.retrieve\(sessionId(, \{ expand: \[[^\]]*\] \})?\)/, "the session must be re-read from Stripe, never trusted from the URL");
   assert.match(src, /s\.metadata\?\.userId \?\? s\.client_reference_id/);
-  assert.match(src, /ownerId !== user\.id\) redirect\("\/premium"\)/,
+  // A guest checkout (2026-10-20) is owned by the email Stripe collected.
+  assert.match(src, /const owns = guestEmail \? guestEmail === user\.email\.toLowerCase\(\) : ownerId === user\.id;/);
+  assert.match(src, /!owns\) redirect\("\/premium"\)/,
     "anyone can put any cs_ id in this URL — a mismatch must reveal nothing");
   assert.match(src, /if \(!sessionId\) redirect\("\/premium"\)/);
   assert.match(src, /sanitizeBackPath\(searchParams\.back\)/);

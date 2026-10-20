@@ -89,7 +89,7 @@ test("all three checkout callers send the remembered surface, and the route vali
   }
   const route = read("src/app/api/premium/checkout/route.ts");
   assert.match(route, /const surface = isPremiumSurface\(body\?\.surface\)/, "validated before it touches the DB or Stripe");
-  assert.match(route, /premiumClick\.create\(\{ data: \{ userId: user\.id, source: "checkout", surface, tier \} \}\)/);
+  assert.match(route, /premiumClick\.create\(\{ data: \{ userId: user\?\.id \?\? null, source: "checkout", surface, tier \} \}\)/);
   // Stamped by the pure session builder (lib/checkout-params.ts, 2026-09-30), which
   // the route hands the validated surface.
   assert.match(route, /buildCheckoutSessionParams\(\{[\s\S]*?\bsurface,/, "the route passes the validated surface to the builder");

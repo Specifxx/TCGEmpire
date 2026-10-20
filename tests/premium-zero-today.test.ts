@@ -102,8 +102,8 @@ test("/premium treats a signed-out, never-trialed visitor as trial-available, an
 
 test("PremiumCta's signed-out state sells the trial when one is available, honestly", () => {
   const src = read("src/components/PremiumCta.tsx");
-  assert.match(src, /Create a free account/, "expected a trial-specific signed-out CTA label");
-  assert.match(src, /no card needed/i, "signing up itself must still be free and cardless");
+  // 2026-10-20: no account first (guest checkout); the line says you sign in after paying.
+  assert.match(src, /No account needed to start: you sign in with Google or Discord after paying/);
   // The disclosure that a card IS required once the trial itself starts must
   // sit in the same signed-out branch as any trial claim — otherwise "Start 30
   // days for $1" would read as needing nothing at all.

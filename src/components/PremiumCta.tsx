@@ -123,25 +123,28 @@ export function PremiumCta({
       // small print discloses what a card-gated trial owes the buyer: a card is
       // required, what is charged today, and when the plan price starts. The
       // plan card above already names the tier and its real price.
+      // Straight to Stripe, no account first (2026-10-20, lib/guest-checkout.ts).
       return (
         <div className="w-full">
-          <Link href={startHref} onClick={onStartClick} className={CTA_BTN}>
-            {trialButtonLabel(trialDays, trialFeeCents)}&nbsp;→
-          </Link>
+          <button type="button" onClick={() => { onStartClick(); void subscribe(); }} disabled={busy} className={CTA_BTN}>
+            {busy ? "Opening checkout…" : <>{trialButtonLabel(trialDays, trialFeeCents)}&nbsp;→</>}
+          </button>
           <p className="mt-2 text-[11px] leading-snug text-slate-400">
-            {/* compact: the page says "sign in on the next screen" once, under both cards. */}
-            {compact ? null : "Create a free account in one tap — no card needed for that. "}
+            {/* No account needed first since 2026-10-20: you sign in after paying. */}
+            {compact ? null : "No account needed to start: you sign in with Google or Discord after paying. "}
             {trialDisclosure(trialDays, trialFeeCents, thenPrice)}
           </p>
+          {error && <p role="alert" className="mt-2 text-xs text-rose-400">{error}</p>}
         </div>
       );
     }
     if (compact) {
       return (
         <div className="w-full">
-          <Link href={startHref} onClick={onStartClick} className={CTA_BTN}>
-            Get {TIER_NAMES[tier]}&nbsp;→
-          </Link>
+          <button type="button" onClick={() => { onStartClick(); void subscribe(); }} disabled={busy} className={CTA_BTN}>
+            {busy ? "Opening checkout…" : <>Get {TIER_NAMES[tier]}&nbsp;→</>}
+          </button>
+          {error && <p role="alert" className="mt-2 text-xs text-rose-400">{error}</p>}
         </div>
       );
     }

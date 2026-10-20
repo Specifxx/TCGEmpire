@@ -18,9 +18,13 @@ export const dynamic = "force-dynamic";
 // Start a RiftCompare Premium subscription via Stripe's hosted Checkout.
 // Entitlement is granted by the webhook (invoice.paid → premiumUntil = period
 // end), so a user is only ever premium for time that's actually been paid.
+//
+// SIGNED OUT IS ALLOWED since 2026-10-20 (a guest checkout, lib/guest-checkout.ts):
+// Stripe collects the email and the webhook ties the subscription to that
+// email's account. The sign-in step before paying was where most of the
+// Premium page's visitors stopped (DECISIONS.md, "Premium without signing in first").
 export async function POST(req: Request) {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
   if (!premiumCheckoutEnabled()) {
     return NextResponse.json({ error: "Premium checkout isn't configured yet" }, { status: 503 });
   }
@@ -30,7 +34,7 @@ export async function POST(req: Request) {
   // upgrade, prorated) and a Premium member has nothing to buy. /premium/start
   // redirects these people too, but this is the real fence: the route is
   // reachable directly.
-  if (isPremium(user) && !user.isAdmin) {
+  if (user && isPremium(user) && !user.isAdmin) {
     return NextResponse.json(
       { error: "You already have a subscription — manage it from /premium" },
       { status: 409 }
@@ -56,7 +60,7 @@ export async function POST(req: Request) {
   // cancel paths return them there instead of dumping them on /premium.
   const back = sanitizeBackPath(body?.back);
 
-  const dbUser = await prisma.user.findUnique({
+  const dbUser = !user ? null : await prisma.user.findUnique({
     where: { id: user.id },
     select: { stripeCustomerId: true, email: true, trialStartedAt: true },
   });
@@ -69,7 +73,7 @@ export async function POST(req: Request) {
   // surface it came from, so the funnel report can say which surfaces produce
   // checkouts and not just clicks — and the tier, so the recovery email names
   // the plan that was abandoned (lib/premium.ts runCheckoutRecovery).
-  prisma.premiumClick.create({ data: { userId: user.id, source: "checkout", surface, tier } }).catch(() => {});
+  prisma.premiumClick.create({ data: { userId: user?.id ?? null, source: "checkout", surface, tier } }).catch(() => {});
 
   // One trial per account, on EITHER tier and EITHER plan (annual trials convert
   // to the yearly price after the trial). Since 2026-09-30 it is a PAID trial: the
@@ -122,7 +126,7 @@ export async function POST(req: Request) {
     let dropAffiliateDiscount = false;
     const sessionParams = (coupon: string | null, adaptivePricing = true): Stripe.Checkout.SessionCreateParams =>
       buildCheckoutSessionParams({
-        userId: user.id,
+        userId: user?.id ?? null,
         email: dbUser?.email,
         stripeCustomerId: dbUser?.stripeCustomerId,
         tier,

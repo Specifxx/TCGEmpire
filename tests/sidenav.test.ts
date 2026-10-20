@@ -224,7 +224,9 @@ test("Prices and Guides & News are open on a first visit, and the default is ide
   }
   const guides = NAV_GROUPS.find((g) => g.title === "Guides & News")!;
   assert.deepEqual(guides.links.slice(0, 2).map((l) => l.href), ["/guides", "/blog"], "its first two links are the guides and the blog");
-  assert.equal(NAV_GROUPS[1].title, "Guides & News", "second in the rail, right under Prices");
+  // Fourth since 2026-10-20 (owner: Prices, Deals & value, Your collection first),
+  // and still open by default, so its links are still in the server HTML.
+  assert.deepEqual(NAV_GROUPS.slice(0, 4).map((g) => g.title), ["Prices", "Deals & value", "Your collection", "Guides & News"]);
   // Derived from NAV_GROUPS rather than written out, so it cannot drift when a
   // group is added.
   assert.match(code, /NAV_GROUPS\.map\(\(g\) => g\.title\)\.filter\(\(t\) => !DEFAULT_OPEN_GROUPS\.includes\(t\)\)/);

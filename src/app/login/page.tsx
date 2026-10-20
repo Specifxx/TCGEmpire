@@ -51,6 +51,9 @@ const GAMES_LINE = "Create a free account to save your scores to the leaderboard
 const SET_TRACKER_LINE = `Create a free account to tick the cards you own and see what a set is missing, with the cheapest listing for each. Free for your first ${FREE_PORTFOLIO_LIMIT} cards.`;
 function contextLineFor(next: string): string | undefined {
   const path = next.split(/[?#]/)[0];
+  // After a guest checkout (2026-10-20, lib/guest-checkout.ts): payment is done,
+  // and signing in with the same email is what unlocks it.
+  if (path === "/premium/welcome") return "Payment received. Sign in with Google or Discord using the email you paid with, and your Premium is ready.";
   if (CONTEXT_LINES[path]) return CONTEXT_LINES[path];
   if (path === "/portfolio/sets" || path.startsWith("/portfolio/sets/") || path.startsWith("/sets/")) return SET_TRACKER_LINE;
   if (path === "/games" || path.startsWith("/games/") || path === "/riftle") return GAMES_LINE;

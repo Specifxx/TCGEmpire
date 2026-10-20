@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GuestCheckoutButton } from "@/components/GuestCheckoutButton";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -137,6 +138,15 @@ export default async function PremiumStartPage({
             source={src === "dialog" ? "premium_dialog" : "premium_cta"}
             next={selfHref}
           />
+        </div>
+        {/* Or skip the account (2026-10-20, lib/guest-checkout.ts). */}
+        <div className="mt-4 border-t border-ink-800 pt-4">
+          <GuestCheckoutButton tier={tier} plan={plan} back={back} className="btn-ghost w-full text-sm">
+            Continue without an account →
+          </GuestCheckoutButton>
+          <p className="mt-1.5 text-center text-[11px] text-slate-500">
+            Pay first, then sign in with the same email to use {tierName}.
+          </p>
         </div>
         <p className="mt-4 text-center text-xs text-slate-500">
           Not ready? <Link href="/premium" className="text-brand-400 hover:underline">Compare the plans first →</Link>

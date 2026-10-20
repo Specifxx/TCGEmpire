@@ -291,7 +291,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           </div>
 
           <p className="mx-auto mt-3 max-w-2xl text-center text-[11px] text-slate-400">
-            {user ? "Cancel anytime · secure checkout by Stripe" : "Sign in on the next screen, checkout opens straight after · Cancel anytime · secure checkout by Stripe"}
+            {user ? "Cancel anytime · secure checkout by Stripe" : "No account needed to start · sign in after paying · Cancel anytime · secure checkout by Stripe"}
           </p>
 
           {/* Creator codes (2026-10-16): 20% off at checkout. */}

@@ -18748,3 +18748,35 @@ The blurbs say only what we know: the platform, and "pack rips" from Josh's hand
 - The decorative elements keep their fades: the brand line, the search box and the browse link.
 
 After the release, use URL Inspection → Request indexing in Search Console. Google re-reads the page on its own schedule otherwise.
+
+## Premium without signing in first — 2026-10-20
+
+**Owner:** "why has no one signed up for premium recently? fix", then "let's do all of this and deploy".
+
+**What the reports said** (funnel-report, impact-report, payment-failures-report, run on 20 October):
+
+| | September weeks | Week of 5 Oct | Week of 12 Oct |
+|---|---|---|---|
+| New accounts | ~38 | 23 | 20 |
+| Clicks to /premium | ~60 | 81 | 88 |
+| Checkout starts | ~6 | 3 | 2 |
+| Subscriptions | ~3 | 3 | 1 |
+
+- **Fewer accounts.** Google clicks fell from 200/day to 156/day after 9 October. The sign-up popup, the biggest source (31 accounts in the two weeks before it went), was removed on 30 September and nothing replaced it.
+- **Clicks rarely reach Stripe.** Every signed-out visitor had to sign in with Google or Discord before checkout.
+- **Card declines.** On 9 October two Australian buyers failed 3-D Secure, and their banks then blocked retries: 9 attempts between them, both lost.
+
+**Changed:**
+1. **Guest checkout.** `api/premium/checkout` accepts a signed-out visitor.
+   - The session is stamped `guest: "1"` with no userId, and Stripe collects the email.
+   - On `checkout.session.completed`, `guestAccountFor()` (`lib/guest-checkout.ts`) finds the account with that email or creates one (`signupSource: "guest_checkout"`). The webhook then stamps that userId on the subscription so renewals resolve directly.
+   - The welcome page sends a signed-out buyer to /login ("Payment received. Sign in … using the email you paid with"). It recognises a guest session by that email.
+   - Linking by an email typed at Stripe is safe here because an account can only be opened by an OAuth provider that verified the address. A guest checkout never *creates* an admin-address account.
+   - The /premium buy buttons now open Stripe directly for signed-out visitors. /premium/start, reached from the other buttons, keeps sign-in and adds "Continue without an account".
+2. **Card pages get the in-page free-account prompt** (`CardSignupPrompt`, surface `inline_card`, signed-out only). Card pages are the busiest pages, and this is the one placement besides the existing five.
+3. **The funnel report shows signed-out clicks and checkout starts.** `PremiumClick.userId` already recorded it; the report never printed it.
+4. **Apple Pay, Google Pay and Link** are a Stripe dashboard setting, so they were left to the owner (Claude-in-Chrome prompt).
+
+**Also: the sidebar order** (owner, same day: "it should be prices, then deals and value, then your collection, then everything else"). `NAV_GROUPS` now runs Prices, Deals & value, Your collection, Guides & News, the card database, Decks, Games, Miscellaneous, For stores, Help. This reverses 2026-09-16's games-before-money order of the rail. Guides & News stays open by default, so its links stay in the server HTML.
+
+**What to watch:** `premium_checkout_started{guest}`, subscriptions per week in funnel-report, and `guest_checkout` accounts.

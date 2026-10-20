@@ -48,7 +48,10 @@ export interface CheckoutTrial {
 }
 
 export interface CheckoutParamsInput {
-  userId: string;
+  /** null = a GUEST checkout (2026-10-20): no account yet. Stripe collects the
+   *  email, and the webhook ties the subscription to that email's account,
+   *  creating it if needed (lib/guest-checkout.ts). */
+  userId: string | null;
   email: string | null | undefined;
   stripeCustomerId: string | null | undefined;
   tier: PremiumTierKey;
@@ -134,15 +137,15 @@ export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Check
     // `line_items: [{ price: priceId`, and the webhook reads items[0]).
     line_items: [{ price: priceId, quantity: 1 }, ...feeLines],
     // Reuse the Stripe customer when we have one, so renewals stay linked.
-    ...(i.stripeCustomerId ? { customer: i.stripeCustomerId } : { customer_email: i.email ?? undefined }),
-    client_reference_id: i.userId,
+    ...(i.stripeCustomerId ? { customer: i.stripeCustomerId } : i.email ? { customer_email: i.email } : {}),
+    ...(i.userId ? { client_reference_id: i.userId } : {}),
     // `trial` and `trialFeeCents` are what the WEBHOOK'S first read of the session
     // sees; it decides whether a trial happened from the SUBSCRIPTION's own status
     // and trial_end, never from the amount charged or the session's payment_status
     // (a $1 trial checkout is "paid", amount_total 100).
     metadata: {
       kind: "premium",
-      userId: i.userId,
+      ...(i.userId ? { userId: i.userId } : { guest: "1" }),
       trial: trial ? "1" : "0",
       ...(trial ? { trialFeeCents: String(fee) } : {}),
       intro: coupon ? "1" : "0",
@@ -159,7 +162,7 @@ export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Check
       // `surface` rides on the SUBSCRIPTION too, which is the object the funnel
       // report lists.
       metadata: {
-        userId: i.userId,
+        ...(i.userId ? { userId: i.userId } : { guest: "1" }),
         tier,
         intro: coupon ? "1" : "0",
         ...(trial ? { trialFeeCents: String(fee) } : {}),
