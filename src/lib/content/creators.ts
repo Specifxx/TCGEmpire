@@ -50,6 +50,10 @@ export interface Creator {
   avatar?: string;
   /** ISO date the listing went live. Newest first. */
   since: string;
+  /** Their RiftCompare creator code (an active Affiliate row, /admin/affiliates),
+   *  shown as "20% off Premium" and linked through riftcompare.com/r/CODE, which
+   *  credits them. Only a code that is live: an inactive one gives no discount. */
+  code?: { code: string; percentOff: number };
 }
 
 // Empty until the first creator agrees (outreach starts 2026-10-15). Example:
@@ -67,7 +71,26 @@ export interface Creator {
 //     champion: "Ahri",
 //     since: "2026-10-20",
 //   },
-export const CREATORS: Creator[] = [];
+// Creators with a creator code (2026-10-19, owner: "add the creators we have
+// onboarded with a creator code to the public creators page").
+export const CREATORS: Creator[] = [
+  {
+    slug: "keishun",
+    name: "Keishun",
+    blurb: "Riftbound content on Instagram. Our first creator partner.",
+    links: [{ platform: "Instagram", url: "https://www.instagram.com/keishun.riftbound/", handle: "@keishun.riftbound" }],
+    code: { code: "KEISHUN20", percentOff: 20 },
+    since: "2026-10-19",
+  },
+  {
+    slug: "ripsbyjosh",
+    name: "Josh",
+    blurb: "Riftbound pack rips on Instagram.",
+    links: [{ platform: "Instagram", url: "https://www.instagram.com/ripsbyjosh/", handle: "@ripsbyjosh" }],
+    code: { code: "JOSH20", percentOff: 20 },
+    since: "2026-10-20",
+  },
+];
 
 /** Newest listing first. */
 export function featuredCreators(list: readonly Creator[] = CREATORS): Creator[] {

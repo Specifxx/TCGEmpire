@@ -82,6 +82,22 @@ export function CreatorCard({ creator, index = 0 }: { creator: Creator; index?: 
           })}
         </div>
 
+        {creator.code && (
+          // Their code, through their share link (/r/CODE), which applies the
+          // discount and credits them. A first-party link: no affiliate network.
+          <a
+            href={`/r/${creator.code.code}`}
+            onClick={() => trackEvent("creator_code_click", { creator: creator.slug, code: creator.code!.code })}
+            className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-dashed border-gold/50 bg-gold/10 px-3 py-2 text-sm hover:bg-gold/15"
+          >
+            <span className="text-slate-300">
+              <span className="font-mono font-extrabold tracking-wider text-gold">{creator.code.code}</span>
+              <span className="ml-2 text-xs">{creator.code.percentOff}% off Premium</span>
+            </span>
+            <span aria-hidden className="text-gold">→</span>
+          </a>
+        )}
+
         <div className="mt-auto pt-5">
           {creator.tipUrl ? (
             <a

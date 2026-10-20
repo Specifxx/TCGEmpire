@@ -73,6 +73,7 @@ const GA4_ONLY_EVENTS = new Set([
   // their listing sent them. GA4 only, like the other high-volume ones above.
   "creator_click",
   "creator_tip_click",
+  "creator_code_click",
   "creator_apply",
 ]);
 

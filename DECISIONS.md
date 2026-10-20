@@ -18715,3 +18715,19 @@ The four tests that pinned the old order now pin this one.
 `tests/featured-listing.test.ts`.
 
 **Same day, follow-up** (owner: "Featured listing should show up in the quick view as well"). The card quick view (`QuickView.tsx`) renders the same `FeaturedListingBox` from the same `featuredListingFor(card.slug)`, under the cheapest price and above the eBay tabs. It has no image there, because the quick view already shows the card, and clicks report as page type `quickview`. The box's side note is shortened to "Not part of the comparison" so it fits a phone.
+
+## Creators with a creator code, on /creators — 2026-10-20
+
+**Owner:** "add the creators we have onboarded with a creator code to the public creators page", and "JOSH20 is also active".
+
+The public page reads the hand-curated `CREATORS` list (`lib/content/creators.ts`), not the `Affiliate` table. That table holds private fields (email, commissions) and is not in the public data export, so a creator is listed by adding them to the list.
+
+**Listed so far:**
+- Keishun, KEISHUN20 (instagram.com/keishun.riftbound).
+- Josh, JOSH20 (instagram.com/ripsbyjosh).
+
+Both codes were checked live: `/r/CODE` redirects with `?code=`, which happens only for an active code. The tracking parameters on the pasted Instagram links (`psln`, `rpxt`) were dropped.
+
+**How a code shows.** `Creator` gains an optional `code` ({ code, percentOff }). The card shows a dashed gold "CODE · 20% off Premium" row linking to `/r/CODE`, which applies the discount and credits the creator. Clicks go to GA4 as `creator_code_click`.
+
+The blurbs say only what we know: the platform, and "pack rips" from Josh's handle. Give each creator a line in their own words when they send one, plus an avatar for `public/creators/`.
