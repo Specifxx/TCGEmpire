@@ -18698,3 +18698,18 @@ Removed from the homepage:
 The four tests that pinned the old order now pin this one.
 
 **Same day, follow-up** (owner: "ebay chase cards should be at the top above todays top deals actually"). eBay Picks moved to directly under the hero, above Today's Top Deals, on "/" and the region homes. HomeSections is back to `showEbayPicks={false}`. The rest of the order above is unchanged.
+
+## A featured eBay listing on a card page — 2026-10-19
+
+**Owner:** "Promote this listing on riftcompare please. For the specific Seraphine card. Find a way so it's promoted and deploy." The link (ebay.io/m/Q19KMv) resolves to eBay AU item 117475654360. eBay serves an error page to any scripted fetch, so the details came from Browse's getItem (maintenance task `diagnose-ebay-item`): "Riftbound Radiance Seraphine, Starry-Eyed Songstress SIGNATURE 174*/167", ungraded, Buy It Now, A$4,690.70, seller bc-cards, Kellyville AU.
+
+**How it is promoted.** `src/lib/featured-listings.ts` holds hand-picked listings; `FeaturedListingBox` renders one on its card's page (/card/seraphine-starry-eyed-songstress-rad-174s-167).
+- **Placement:** directly above the price comparison, in a gold-bordered box. It is never a row of the comparison, so the ordering promise in /methodology#ordering is untouched.
+- **Labels:** "Featured listing", "Paid link", and "Not part of the price comparison below".
+- **Price:** eBay's figure at the 20 October check, with the date and "open it for today's price". It is not a live price.
+- **Link:** EPN-tagged through `affiliateUrl` (customid `rc-au-ebay_au-featured-card`). Clicks report as `surface: "featured_listing"`.
+- **Lapses on 20 November** (`until`), so a sold listing is not promoted for long.
+
+**Open question for the owner.** If the seller is connected to RiftCompare, the box should say so ("our own listing" or "a partner's listing"). "Featured listing" plus "Paid link" is right for a listing we merely chose and earn commission on; it is not the full disclosure for one we sell ourselves.
+
+`tests/featured-listing.test.ts`.

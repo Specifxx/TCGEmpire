@@ -169,7 +169,8 @@ export function OutboundLink({
     | "price_table_ebay"
     | "price_guide_ebay"
     | "price_guide_tcgplayer"
-    | "hot40_ebay";
+    | "hot40_ebay"
+    | "featured_listing";
 }) {
   // Record that a buy link exists on this page (lib/buy-intent.ts). Built so
   // the signup popup (removed 2026-09-30) could stay off the buy path; kept as

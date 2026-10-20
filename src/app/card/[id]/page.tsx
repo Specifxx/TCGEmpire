@@ -66,6 +66,8 @@ import {
 import { guidesForCard } from "@/lib/content/related-guides";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { cardWhereParam } from "@/lib/card-slug-renames";
+import { featuredListingFor } from "@/lib/featured-listings";
+import { FeaturedListingBox } from "@/components/FeaturedListingBox";
 import { getRiftboundStocksLinks, rbsCardUrl } from "@/lib/riftboundstocks";
 import { regionalPrinting } from "@/lib/regional-printings";
 import { cardHeadlineLastKnown, lastKnownDayLabel } from "@/lib/last-known-price";
@@ -780,6 +782,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const rbsHref = rbsCardUrl(await rbsLinks, card.slug);
   // The Radiance release alert (lib/release-alerts.ts) runs while the set is
   // still "coming soon" in SETS; the signup route refuses any other set.
+  const featured = featuredListingFor(card.slug);
   const isRadianceCard = card.setCode === RADIANCE_SET_CODE && !!setByCode(card.setCode)?.comingSoon;
 
   // ── Editorial narrative ────────────────────────────────────────────────────
@@ -1265,6 +1268,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               section so the route itself stays cookie-free and ISR-cacheable. An
               explicit H2 here (rather than just the component's own internal
               heading) gives this block its own crawlable section signal. */}
+          {/* A featured eBay listing, owner-chosen (lib/featured-listings.ts,
+              2026-10-19): labelled, and above and apart from the comparison
+              so it never reads as one of its rows. */}
+          {featured && <FeaturedListingBox listing={featured} imageUrl={cardImageSrc(card, { absolute: true })} />}
+
           <section className="mt-4 sm:mt-6">
             <h2 className="sr-only">Price history &amp; where to buy {card.name}</h2>
             {/* How the list below is ordered, and where that is explained in
