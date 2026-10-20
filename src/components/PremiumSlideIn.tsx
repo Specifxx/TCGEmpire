@@ -22,6 +22,7 @@ import {
 import { SEALED_CHECK_CADENCE } from "@/lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 import { PremiumTicks } from "./PremiumTicks";
+import { isBotUserAgent } from "@/lib/card-views";
 import { PREMIUM_SLIDER_DELAY_MS, PREMIUM_SLIDER_SNOOZE_MS, SNOOZE_AFTER_CLICK_MS } from "@/lib/nudge-timing";
 import { premiumSliderEligible } from "@/lib/nudge-gate";
 import { armNudge } from "@/lib/nudge-runtime";
@@ -308,6 +309,9 @@ export function PremiumSlideIn() {
       /* storage blocked: no prior state, so it may show once */
     }
     if (isSignupSession()) return;
+    // Never cover a crawler's render (2026-10-20): Googlebot smartphone saw this
+    // card over the hero 3 s in, an intrusive mobile interstitial.
+    if (isBotUserAgent(navigator.userAgent)) return;
     if (Date.now() < readNum(ls, SNOOZE_UNTIL)) return;
     try {
       if (ss?.getItem(SESSION_SEEN) === "1") return;

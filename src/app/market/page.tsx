@@ -191,7 +191,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
       />
 
       {/* Breadcrumb + hero — flat panel with a brand accent rule */}
-      <section className="card-surface animate-fade-up overflow-hidden border-l-2 border-brand-500 bg-ink-900">
+      <section className="card-surface overflow-hidden border-l-2 border-brand-500 bg-ink-900">
         <div className="px-6 py-8">
           <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-slate-300">Home</Link>

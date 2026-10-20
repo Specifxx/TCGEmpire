@@ -1009,7 +1009,7 @@ ins.adsbygoogle[data-ad-status="unfilled"],
    a fling. Only transform and opacity move. Browsers without scroll timelines
    (Firefox today) keep the old IntersectionObserver reveal (Reveal.tsx), and
    reduced motion gets none of it.
-     .rb-hero-content  the hero's words rise and fade as you scroll past;
+     (.rb-hero-content's scroll fade was removed 2026-10-20, owner.)
      .rb-depth-slow    the vortex sinks behind them (parallax);
      .rb-depth-mid     the embers, at half that depth;
      .rb-paranoia      Halloween only: the dark closes in as you scroll on;
@@ -1018,11 +1018,6 @@ ins.adsbygoogle[data-ad-status="unfilled"],
    --------------------------------------------------------------------------- */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .rb-hero-content {
-      animation: rb-hero-rise linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 70vh;
-    }
     .rb-depth-slow {
       animation: rb-depth-slow linear both;
       animation-timeline: scroll(root);
@@ -1062,9 +1057,6 @@ ins.adsbygoogle[data-ad-status="unfilled"],
     .rb-sd-stagger > :nth-child(n + 6) { animation-range: entry 150px entry 390px; }
   }
 }
-@keyframes rb-hero-rise {
-  to { transform: translate3d(0, -64px, 0); opacity: 0.2; }
-}
 @keyframes rb-depth-slow {
   to { transform: translate3d(0, 120px, 0) scale(1.12); }
 }
@@ -1077,8 +1069,10 @@ ins.adsbygoogle[data-ad-status="unfilled"],
 @keyframes rb-sd-in {
   /* 26px, the old reveal's offset: MarketSectionNav's jump targets are tuned
      to it. */
-  from { opacity: 0; transform: translate3d(0, 26px, 0) scale(0.985); }
-  to { opacity: 1; transform: none; }
+  /* Transform only (2026-10-20, mobile indexing): no opacity, so a block
+     the bot or a phone has not scrolled to is never painted invisible. */
+  from { transform: translate3d(0, 26px, 0); }
+  to { transform: none; }
 }
 
 /* ---------------------------------------------------------------------------

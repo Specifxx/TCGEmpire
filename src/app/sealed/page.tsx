@@ -257,7 +257,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
       </nav>
 
       {/* Compact hero: flat panel with a brand accent rule. */}
-      <section className="card-surface animate-fade-up mb-5 overflow-hidden border-l-2 border-brand-500 bg-ink-900">
+      <section className="card-surface mb-5 overflow-hidden border-l-2 border-brand-500 bg-ink-900">
         <div className="px-6 py-8">
           <h1 className="text-2xl font-extrabold text-white">Sealed Products</h1>
           {/* How to read a tile, what MSRP means and the guides (2026-09-26,

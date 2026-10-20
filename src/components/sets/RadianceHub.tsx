@@ -64,7 +64,7 @@ export async function RadianceHub({ country }: { country: Country }) {
   const nextIdx = TIMELINE.findIndex((t) => new Date(`${t.end ?? t.start}T23:59:59Z`).getTime() >= now);
 
   return (
-    <section className="card-surface animate-fade-up p-6">
+    <section className="card-surface p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-xl font-extrabold text-white">Riftbound Radiance — what&apos;s confirmed</h2>
         <span className="chip bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold">

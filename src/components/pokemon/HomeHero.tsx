@@ -22,7 +22,7 @@ export function HomeHero({
   const line = heroLine(stats, place, converted);
 
   return (
-    <section className="card-surface animate-fade-up mb-6 overflow-hidden border-l-2 border-rose-500 bg-ink-900">
+    <section className="card-surface mb-6 overflow-hidden border-l-2 border-rose-500 bg-ink-900">
       <div className="px-5 py-7 sm:px-6">
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Pokémon Sealed Prices</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">{line}</p>
