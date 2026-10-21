@@ -2015,3 +2015,18 @@ model CoinOwned {
 
   @@id([userId, coinId])
 }
+
+// A deck shared from the visual deck builder (/deck-builder, 2026-10-21): a
+// six-character code (riftcompare.com/d/CODE) for a list. One row per distinct
+// list (`listHash`), so sharing the same deck twice returns the same code.
+// Public by design: anyone with the code can open the list. No account, no
+// email, nothing personal is stored.
+model DeckShare {
+  code      String   @id
+  listHash  String   @unique
+  // The deck as text, the builder's own export format (zone headers + "3 Name (SET-NUM)").
+  list      String
+  title     String?
+  views     Int      @default(0)
+  createdAt DateTime @default(now())
+}

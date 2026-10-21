@@ -18780,3 +18780,39 @@ After the release, use URL Inspection → Request indexing in Search Console. Go
 **Also: the sidebar order** (owner, same day: "it should be prices, then deals and value, then your collection, then everything else"). `NAV_GROUPS` now runs Prices, Deals & value, Your collection, Guides & News, the card database, Decks, Games, Miscellaneous, For stores, Help. This reverses 2026-09-16's games-before-money order of the rail. Guides & News stays open by default, so its links stay in the server HTML.
 
 **What to watch:** `premium_checkout_started{guest}`, subscriptions per week in funnel-report, and `guest_checkout` accounts.
+
+## A visual deck builder — 2026-10-21
+
+**Owner:** "make a deck builder feature … not just a deck pricer … very, very visual … drag, click, hover over cards and it shows a preview … recommendations … the restrictions … how much your side deck is … save it for later … share code … 6 digits … as many features as you possibly can … free."
+
+**What it is.** /deck-builder (`components/deck-builder/VisualDeckBuilder.tsx`). The rules live in pure `lib/deck-builder.ts`, which the client, the share API and `tests/deck-builder.test.ts` all run. /deck stays the paste-a-list pricer, now labelled "Deck Pricer" in the rail under "Deck Builder".
+
+**Card browser** (one entry per card name):
+- Search; type, domain, cost and set filters; sort by popular, name, cost or cheapest; "fits my domains".
+- Click to add; shift-click for the side deck; drag onto any zone, or drag a deck card back to the browser to remove it.
+- Hover for a large preview with type, domain, energy, might and price.
+- The Legend's Champion units are badged.
+
+**Zones and rules** (as /guides/how-a-riftbound-deck-is-built publishes them):
+- **Zones:** Legend 1; Champion 1, a unit of the Legend's champion, tied by the name before the comma; main deck 39 plus the Champion = 40; Runes 12; Battlefields 3, all different; side deck up to 10.
+- **Copy limit:** at most 3 of a card across main, Champion and side.
+- **Hard limits refuse with a message.** The rules check lists the rest and shows "Tournament-legal" when there are none.
+- **Domains are only warned about.** Our card data gives a Legend one domain, not the pair it allows, so the builder cannot enforce the pair: it warns past two domains, when the Legend's own domain is missing, or when Runes don't match.
+
+**Stats and tools:**
+- Energy curve, type split and domains.
+- Deck price: the cheapest printing of each name in the visitor's market, with missing copies counted.
+- Auto-fill runes, in proportion to the deck's two domains.
+- Sample opening hand of 4, and undo (50 steps).
+- Import/export text (zone headers plus "3 Name (SET-NUM)"; /deck parses it too), copy list, and "Find the cheapest way to buy it" (Best Basket `?list=`).
+- Recommendations: Legends first, then the Legend's Champions, then cards in the deck's domains, ranked by RiftCompare views + searches, preferring the emptiest cost slot of 1–5.
+
+**Saving and sharing:**
+- The working deck autosaves to localStorage; Save keeps named decks in the browser.
+- Share creates a **six-character code** from a 31-character alphabet with no 0/O/1/I/L, so a code survives being read aloud.
+- Codes are stored in the new `DeckShare` table (code, listHash unique, list, title). The same list gets the same code. Rate-limited to 20 shares an hour per IP. Nothing personal is stored.
+- riftcompare.com/d/CODE opens the deck in the builder (noindex), and the builder has a "Have a deck code?" box.
+
+**Caching.** The catalog is /api/deck-builder/cards: public card columns through the public-data routing, cached 86400 s at the CDN, 518 KB raw. The page and /d/CODE revalidate daily.
+
+**Promotion.** Thumbnail at public/blog/riftbound-deck-builder.jpg: a real screenshot of an imported Ahri deck, tournament-legal, with a hover preview. It doubles as the page's OG image. Reddit copy is given to the owner to post.

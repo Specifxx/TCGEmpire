@@ -11,6 +11,7 @@
 // teaches Google to stop trusting <lastmod> entirely.
 const STATIC_PAGE_DATES: Record<string, string> = {
   "/deck": "2026-09-26",
+  "/deck-builder": "2026-10-21",
   "/trade": "2026-09-26",
   "/riftle": "2026-08-10",
   "/tools": "2026-09-26",

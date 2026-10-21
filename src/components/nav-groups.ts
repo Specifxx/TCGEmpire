@@ -195,7 +195,9 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    // Decks and Games sit ABOVE the money tools on purpose (2026-09-16).
+    // (Superseded 2026-10-20: the owner put Prices, Deals & value and Your
+    // collection first. The 2026-09-16 reasoning below is kept as history.)
+    // Decks and Games sat ABOVE the money tools on purpose (2026-09-16).
     //
     // Reader feedback, more than once: "simply a too greedy/capitalistic/money
     // focused site for a card GAME for me". Measured on the live site before
@@ -217,7 +219,9 @@ export const NAV_GROUPS: NavGroup[] = [
       // "& Pricer" since 2026-09-25: the Bulk Pricer folded into /deck
       // (/bulk-pricer 301s here), so this is the list-pricing page too — and
       // the label is what a bare "prices" query in ⌘K ranks on.
-      { href: "/deck", label: "Deck Builder & Pricer", keywords: ["build a deck", "deck price", "brew", "deck cost", "decklist", "meta", "decks", "bulk", "price a list", "paste a list", "bulk price checker"] },
+      // The visual builder (2026-10-21) leads; /deck stays the paste-a-list pricer.
+      { href: "/deck-builder", label: "Deck Builder", keywords: ["build a deck", "deck builder", "deckbuilder", "visual deck builder", "drag and drop", "brew", "share deck", "deck code", "sideboard", "side deck"] },
+      { href: "/deck", label: "Deck Pricer", keywords: ["deck price", "deck cost", "decklist", "meta", "decks", "bulk", "price a list", "paste a list", "bulk price checker"] },
       { href: "/decks", label: "Deck Library", keywords: ["decks", "decklists", "riftbound decks", "published decks", "budget decks", "legend decks"] },
       { href: "/trade", label: "Trade Calculator", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
     ],
