@@ -18816,3 +18816,5 @@ After the release, use URL Inspection → Request indexing in Search Console. Go
 **Caching.** The catalog is /api/deck-builder/cards: public card columns through the public-data routing, cached 86400 s at the CDN, 518 KB raw. The page and /d/CODE revalidate daily.
 
 **Promotion.** Thumbnail at public/blog/riftbound-deck-builder.jpg: a real screenshot of an imported Ahri deck, tournament-legal, with a hover preview. It doubles as the page's OG image. Reddit copy is given to the owner to post.
+
+**Same day, follow-up** (owner: "allow users to import decks"). Import now has its own button at the top of the deck panel ("Import a deck: paste any list"). It reads "3x Name", "x3 Name", "Name x3", "Name (3)" and bulleted lines as well as "3 Name (SET-NUM)", with zone headers optional.

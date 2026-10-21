@@ -402,7 +402,13 @@ export function textToDeck(text: string, catalog: BuilderCard[]): { deck: DeckZo
       zone = HEADER_TO_ZONE[h];
       continue;
     }
-    const m = line.match(/^(\d{1,2})\s*x?\s+(.+?)\s*(?:\(([A-Za-z0-9]+)-([A-Za-z0-9*]+)\))?$/) ?? line.match(/^()(.+?)\s*(?:\(([A-Za-z0-9]+)-([A-Za-z0-9*]+)\))?$/);
+    // "3 Name", "3x Name", "x3 Name", "Name x3", "Name (3)", with or without "(SET-NUM)".
+    const clean = line.replace(/^[-*•]\s*/, "");
+    const tail = clean.match(/^(.+?)\s+(?:x\s*(\d{1,2})|\((\d{1,2})\))$/i);
+    const m =
+      clean.match(/^x?(\d{1,2})\s*x?\s+(.+?)\s*(?:\(([A-Za-z0-9]+)-([A-Za-z0-9*]+)\))?$/i) ??
+      (tail ? ["", tail[2] ?? tail[3], tail[1], undefined, undefined] : null) ??
+      clean.match(/^()(.+?)\s*(?:\(([A-Za-z0-9]+)-([A-Za-z0-9*]+)\))?$/);
     if (!m) continue;
     const qty = Math.max(1, Math.min(12, Number(m[1]) || 1));
     const name = m[2].trim();

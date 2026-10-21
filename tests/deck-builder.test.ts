@@ -121,3 +121,12 @@ test("share codes are six readable characters; the same list hashes the same", (
   assert.equal(listHash("a\nb"), listHash("a\nb"));
   assert.notEqual(listHash("a\nb"), listHash("a\nc"));
 });
+
+test("import reads the common list shapes from other sites", () => {
+  const r = textToDeck("Legend:\n1x Jinx, Loose Cannon\n\n- Get Excited x3\nAnnie, Fiery (2)\nx2 Chaos Thing", all);
+  assert.deepEqual(r.unmatched, []);
+  assert.equal(r.deck.legend["1"], 1);
+  assert.equal(r.deck.main["4"], 3);
+  assert.equal(r.deck.main["3"], 2);
+  assert.equal(r.deck.main["5"], 2);
+});

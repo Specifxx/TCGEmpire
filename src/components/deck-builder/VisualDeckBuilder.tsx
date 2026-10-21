@@ -495,6 +495,16 @@ export function VisualDeckBuilder({ initialList, initialTitle, sharedCode }: { i
         {/* ── DECK ── */}
         <aside aria-label="Your deck" className={`${mobileTab === "deck" ? "" : "hidden"} lg:block`}>
           <div className="space-y-3 lg:sticky lg:top-20">
+            {/* Import, up front (owner, 2026-10-21: "allow users to import decks"). */}
+            <button
+              onClick={() => {
+                setImportText("");
+                setImportOpen(true);
+              }}
+              className="btn-primary w-full text-sm"
+            >
+              ⇪ Import a deck: paste any list
+            </button>
             <div className="card-surface p-3">
               <div className="flex items-center gap-2">
                 <input
@@ -749,7 +759,10 @@ export function VisualDeckBuilder({ initialList, initialTitle, sharedCode }: { i
         <div role="dialog" aria-label="Import or export a deck list" className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4" onClick={() => setImportOpen(false)}>
           <div className="card-surface w-full max-w-lg p-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-extrabold text-white">Import / export</h3>
-            <p className="mt-1 text-xs text-slate-400">Paste any list (“3 Card Name” per line, zone headers optional), or copy this one.</p>
+            <p className="mt-1 text-xs text-slate-400">
+              Paste a deck from anywhere: “3 Card Name”, “3x Card Name” or “Card Name x3”, one per line. Zone headers like “Legend:” or “Side deck:”
+              are optional. Every card is priced as soon as it loads.
+            </p>
             <textarea value={importText} onChange={(e) => setImportText(e.target.value)} rows={14} className="input mt-2 w-full font-mono text-xs" />
             <div className="mt-3 flex gap-2">
               <button onClick={doImport} className="btn-primary flex-1">Load this list</button>
