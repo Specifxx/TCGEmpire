@@ -1449,7 +1449,7 @@ The HEARTSTEEL Signatures are signed in character: Aphelios, Kayn and Yone each 
       "All five K/DA special cards in Riftbound: Radiance, SP1 to SP5: Ahri, Akali, Evelynn, Kai'Sa and Seraphine. What each does and what to expect on price.",
     author: "RiftCompare",
     date: "2026-10-15",
-    updated: "2026-10-17", // linked to the Seraphine Signature post
+    updated: "2026-10-21", // linked to the K/DA Couture Collection post
     readMins: 6,
     tags: ["radiance", "k/da", "alt art", "collecting", "chase cards"],
     hero: {
@@ -1541,7 +1541,9 @@ The HEARTSTEEL Signatures are signed in character: Aphelios, Kayn and Yone each 
         a: "Two are: Evelynn and Seraphine both debut in Radiance, each with a Legend of her own (Evelynn, Agony's Embrace and Seraphine, Starry-Eyed Songstress). Ahri and Kai'Sa have been in the game since Origins and Akali since Vendetta.",
       },
     ],
-    body: `Riftbound: Radiance is a music set, and it was always going to need K/DA. Riot's virtual pop group gets **five special cards**, one for each member, numbered **SP1 to SP5 of 005**. Here is every card, what it does, how it compares with the cards you can already buy, and what Vendetta's Crystal Rose specials say about prices after release.
+    body: `**Update, 21 October:** Riot has announced the **Riftbound x K/DA Couture Collection**, a $150 bundle with four new K/DA Legend cards, sold by drawing from 27 October. **[Our Couture Collection guide](/blog/riftbound-kda-couture-collection)** has the dates, the contents and how the drawing works.
+
+Riftbound: Radiance is a music set, and it was always going to need K/DA. Riot's virtual pop group gets **five special cards**, one for each member, numbered **SP1 to SP5 of 005**. Here is every card, what it does, how it compares with the cards you can already buy, and what Vendetta's Crystal Rose specials say about prices after release.
 
 [[embed:0]]
 
@@ -1623,6 +1625,199 @@ Those are the 14 October US prices behind the live cards above: Ahri's signed Or
 *Card names, numbers, domains and text are from Riot's official Radiance card gallery. Pull rate details are riftbound.gg's reporting, not a Riot figure.*
 
 **Update, 17 October:** the signed Seraphine Legend, 174\\*/167, is Radiance's chase card. What the asterisk means, what it cost on 16 October and every Radiance Signature are in **[Radiance chase card: the Seraphine Signature](/blog/riftbound-radiance-seraphine-signature)**.`,
+  },
+  // K/DA COUTURE COLLECTION (2026-10-21, owner: "include something to do with
+  // the K/DA bundle on the site for SEO and keeping the site updated"). Every
+  // fact is Riot's own: the product drawing FAQ at playriftbound.com
+  // (/en-us/news/announcements/product-drawing-faq/), published 21 October 2026.
+  // Owns `kda couture collection`, `riftbound kda bundle`, `kda drawing`; the
+  // five K/DA specials stay with /blog/riftbound-kda-cards.
+  {
+    slug: "riftbound-kda-couture-collection",
+    category: "blog",
+    title: "Riftbound K/DA Couture Collection Guide",
+    excerpt:
+      "Riot's $150 K/DA Couture Collection: what's in the bundle, the 27 to 30 October drawing, how the drawing works, and what its cards are worth.",
+    author: "RiftCompare",
+    date: "2026-10-21",
+    readMins: 8,
+    tags: ["k/da", "radiance", "merch", "collecting", "drawing"],
+    hero: {
+      src: "/blog/riftbound-kda-couture-collection.jpg",
+      alt: "The Riftbound x K/DA Couture Collection laid out: four K/DA Legend cards, the K/DA playmat, deck box, sleeves, four metal D12 dice and the FIRESTARTER KiT keychain (image: Riot Games)",
+    },
+    shop: [
+      { label: "K/DA Riftbound on eBay", query: "Riftbound K/DA" },
+      { label: "Packed Amphitheater", query: "Riftbound Packed Amphitheater" },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "See every Radiance card →",
+      blurb: "The whole Radiance card list, with live prices from every store we track.",
+    },
+    summary: [
+      "**The Riftbound x K/DA Couture Collection is a $150 bundle** (plus shipping) sold through the Riot Merch Store, and only to people drawn in Riot's product drawing.",
+      "**Inside:** four K/DA Legend cards with new Fortiche artwork (Evelynn, Ahri, Akali and Kai'Sa), the Packed Amphitheater Battlefield, a playmat, deck box, 75 sleeves, four metal D12 dice and the FIRESTARTER KiT keychain.",
+      "**Drawing dates:** registration opens **27 October at 16:00 UTC** (9:00 AM PT) and closes **30 October at 16:00 UTC**. Riot emails the first people drawn from **3 November**.",
+      "**If you're drawn**, you get a 24-hour link to buy. Anyone who doesn't buy is replaced by a new random draw, in waves, until the stock is gone.",
+      "**The cards' current printings are cheap**, from about 13 cents to US$2. The K/DA art versions are new printings, and nothing is known yet about what they'll be worth.",
+    ],
+    embeds: [
+      {
+        title: "The four Legends and the Battlefield in the bundle, current printings",
+        note: "The Couture Collection's cards are new K/DA art printings of these. These are the printings you can already buy, priced live at every store we track.",
+        slugs: [
+          "evelynn-agony-s-embrace-rad-153-167",
+          "ahri-nine-tailed-fox-ogn-255-298",
+          "akali-rogue-assassin-ven-139",
+          "kai-sa-daughter-of-the-void-ogn-247-298",
+          "packed-amphitheater-rad-164-167",
+        ],
+      },
+      {
+        title: "The same Legends' signed printings",
+        note: "Where the money in these Legends actually is today. Packed Amphitheater's Ultimate Rare, 184/167, is here too.",
+        ebaySearch: true,
+        slugs: [
+          "evelynn-agony-s-embrace-rad-175s-167",
+          "ahri-nine-tailed-fox-ogn-303s-298",
+          "akali-rogue-assassin-ven-189s-166",
+          "kai-sa-daughter-of-the-void-ogn-299s-298",
+          "packed-amphitheater-rad-184-167",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "What is the Riftbound K/DA Couture Collection?",
+        a: "A premium Riftbound x K/DA bundle from Riot, themed on K/DA's FIRESTARTER era. It has four collectible K/DA Legend cards with new artwork by Fortiche (Evelynn, Agony's Embrace; Ahri, Nine-Tailed Fox; Akali, Rogue Assassin; Kai'Sa, Daughter of the Void), the Packed Amphitheater Battlefield, a K/DA playmat, deck box, 75 card sleeves, four metal D12 dice and the FIRESTARTER KiT keychain with its user manual.",
+      },
+      {
+        q: "How much is the K/DA Couture Collection?",
+        a: "$150.00 plus shipping and handling, according to Riot's drawing FAQ. It is sold only through the Riot Merch Store, to people selected in the product drawing.",
+      },
+      {
+        q: "When is the K/DA Couture Collection drawing?",
+        a: "Registration opens on 27 October 2026 at 16:00 UTC (9:00 AM Pacific Time) and closes on 30 October 2026 at 16:00 UTC. Riot starts emailing the people it draws on 3 November 2026, and each has 24 hours to buy.",
+      },
+      {
+        q: "How does Riot's product drawing work?",
+        a: "You register during the window. Riot draws names at random, with checks that each account is real. If you're drawn you get an email with a link to a cart, valid for 24 hours. If you don't buy, the stock goes back and Riot draws someone new from the people not yet selected, in waves until it sells out.",
+      },
+      {
+        q: "When will the K/DA Couture Collection ship?",
+        a: "Riot says it expects to begin fulfilling orders within one to three business days after they're placed, and also that drawn items begin fulfilment on the product's wide release day. Fulfilment means processing, packing and shipping, not a delivery date.",
+      },
+      {
+        q: "Are the K/DA Couture Collection cards worth anything?",
+        a: "The four Legends and Packed Amphitheater are new K/DA art printings, so they have no sales history yet. The ordinary printings of the same cards sell for between about 13 cents and US$2 at the stores RiftCompare tracks; the signed printings of the same Legends sell for thousands. We will track the K/DA printings once they are listed.",
+      },
+    ],
+    body: `Riot has opened the next Riftbound product drawing: the **Riftbound x K/DA: Couture Collection**, a premium bundle themed on K/DA's FIRESTARTER era. It is not sold in stores. You register for a drawing, and if your name comes up you get 24 hours to buy it from the Riot Merch Store. This page sets out everything Riot has published about it, in one place, with the dates converted for every market we cover and live prices for the cards it contains.
+
+Everything below comes from Riot's own **[Couture Collection drawing FAQ](https://playriftbound.com/en-us/news/announcements/product-drawing-faq/)**, published on 21 October 2026. Where Riot hasn't said something, we say so rather than guess.
+
+## What's in the K/DA Couture Collection
+
+Riot describes the bundle as pulling "back the curtain on a new stage for K/DA: the tabletop", with all-new artwork by **Fortiche**, the studio behind *Arcane*. Inside the box:
+
+| Item | Details |
+|---|---|
+| **4 collectible Legend cards** | New K/DA artwork: Evelynn, Agony's Embrace; Ahri, Nine-Tailed Fox; Akali, Rogue Assassin; Kai'Sa, Daughter of the Void |
+| **1 collectible Battlefield card** | Packed Amphitheater |
+| **K/DA Limited Edition Playmat** | One |
+| **K/DA Limited Edition Deck Box** | One |
+| **K/DA Limited Edition Card Sleeves** | One pack of 75 |
+| **K/DA Limited Edition D12 Metal Dice** | Four |
+| **FIRESTARTER KiT Keychain** | With its user manual. It connects to your phone to play K/DA's newest single and its official music video |
+
+Four of the five K/DA members get a Legend card. Seraphine, the fifth, isn't one of the bundle's Legends. Her K/DA card is the Radiance special **[Seraphine, Not Alone SP5/005](/card/seraphine-not-alone-rad-sp5-005)**, one of the five K/DA specials in the set itself, which **[our K/DA cards post](/blog/riftbound-kda-cards)** covers in full.
+
+The Battlefield is a fitting choice. **Packed Amphitheater** is Radiance's concert-venue Battlefield, and its Ultimate Rare printing, **[184/167](/card/packed-amphitheater-rad-184-167)**, is one of the set's most expensive cards.
+
+## How much it costs
+
+Riot's FAQ prices the Couture Collection at **$150.00 plus shipping and handling**. That is the figure on Riot's US page; check the Riot Merch Store in your own region for its local price, since Riot hasn't published the others in the FAQ.
+
+## The drawing dates, in your time zone
+
+Riot gives the times in Pacific Time. On 27 and 30 October, Pacific Time is still on daylight saving (UTC−7), so 9:00 AM PT is **16:00 UTC**:
+
+| | Pacific (Riot's time) | UTC | London | Sydney | Singapore |
+|---|---|---|---|---|---|
+| **Registration opens** | 27 Oct, 9:00 AM | 27 Oct, 16:00 | 27 Oct, 4:00 PM | 28 Oct, 3:00 AM | 28 Oct, 12:00 AM |
+| **Registration closes** | 30 Oct, 9:00 AM | 30 Oct, 16:00 | 30 Oct, 4:00 PM | 31 Oct, 3:00 AM | 31 Oct, 12:00 AM |
+| **First emails to people drawn** | From 3 Nov | | | | |
+
+In Australia and Singapore the window opens and closes in the early hours of the following day, so set a reminder the evening before. You have the whole three-day window to register; there is no advantage in being first.
+
+## How Riot's product drawing works
+
+Riftbound uses a drawing system for some products on the Riot Merch Store. For the Couture Collection, Riot's rules are:
+
+1. **Register during the window.** That puts your name in the drawing. Registering does not commit you to buying anything.
+2. **Riot draws at random.** The selection is "entirely random", with several layers of checks that each account is real and not fraudulent.
+3. **If you're drawn, you get an email** with a link to a shopping cart holding the products you were drawn for. The first emails go out from 3 November.
+4. **You have 24 hours to buy.** After that the link stops working.
+5. **If you don't buy, someone else gets the chance.** The stock goes back to the store and Riot draws again, only from people who haven't been selected for that product yet. Riot keeps drawing in waves until the stock is gone.
+
+If you're drawn for more than one product, you can remove the ones you don't want from your cart, but Riot warns that removing an item is final and can't be undone.
+
+### Two things to check before 27 October
+
+Riot asks everyone to do two things before registration opens:
+
+* **Make sure riotgames.com emails reach you.** Check that they aren't going to spam or junk, because a missed email is a missed 24-hour window.
+* **Make sure you can sign in to your Riot account.** If you can't, use Riot's account recovery or contact Player Support before the window opens, not after you've been drawn.
+
+## When it ships
+
+Riot's FAQ says two things about fulfilment. It expects to "begin fulfilling orders within 1-3 business days after they're placed", where fulfilment means processing, packing and shipping, not a delivery date. Separately, it says drawn items "will begin fulfillment the day of the product's wide release". Riot hasn't published a wide release date for the Couture Collection, so if you're drawn, expect the shipping email around the time the product goes wide rather than a fixed date.
+
+## Are the cards worth anything?
+
+The Couture Collection's cards are **new printings**: the same four Legends and the same Battlefield, with new K/DA art. They have never been sold, so there is no price for them yet, and we won't guess one. What we can show is what the existing printings of the same cards cost today, priced live at every store RiftCompare tracks:
+
+* **[Evelynn, Agony's Embrace](/card/evelynn-agony-s-embrace-rad-153-167)** is a Radiance Legend. Her signed printing, **[175\\*/167](/card/evelynn-agony-s-embrace-rad-175s-167)**, is one of the set's chase cards.
+* **[Ahri, Nine-Tailed Fox](/card/ahri-nine-tailed-fox-ogn-255-298)** is an Origins Legend, and the signed **[303\\*/298](/card/ahri-nine-tailed-fox-ogn-303s-298)** is among the most expensive Origins cards.
+* **[Akali, Rogue Assassin](/card/akali-rogue-assassin-ven-139)** is a Vendetta Legend, with a signed **[189\\*/166](/card/akali-rogue-assassin-ven-189s-166)**.
+* **[Kai'Sa, Daughter of the Void](/card/kai-sa-daughter-of-the-void-ogn-247-298)** is an Origins Legend, with a signed **[299\\*/298](/card/kai-sa-daughter-of-the-void-ogn-299s-298)**.
+* **[Packed Amphitheater](/card/packed-amphitheater-rad-164-167)** is Radiance's concert Battlefield.
+
+The ordinary printings sell for between about 13 cents and US$2. The signed printings sell for thousands. A bundle-exclusive art printing usually lands somewhere between those two, but how far up depends on how many bundles exist and how many people want them, and Riot hasn't said how many it is making. The honest summary is that the bundle's value is mostly in the K/DA accessories and the art. The card pages above will show the K/DA printings' prices once stores list them.
+
+## Playing the Legends
+
+All four Legends are tournament-legal Riftbound cards, so a K/DA printing plays exactly like the regular one. Each sets a deck's identity and its Champion. If you want to try one before the box arrives, you can build a deck around any of them in **[the free deck builder](/deck-builder)**, which checks the deck-building rules as you go and prices every card in your currency.
+
+## K/DA in Riftbound so far
+
+The Couture Collection is the third place K/DA has turned up in Riftbound:
+
+* **The five K/DA specials** in Radiance, numbered SP1 to SP5 of 005, one for each member. They're in **[our K/DA cards post](/blog/riftbound-kda-cards)**.
+* **Seraphine's Signature**, **[174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167)**, Radiance's top chase card. The **[Seraphine Signature post](/blog/riftbound-radiance-seraphine-signature)** has the details.
+* **The Couture Collection**, this bundle: new K/DA art for four Legends, sold only by drawing.
+
+## Should you enter?
+
+Registering costs nothing and commits you to nothing, so if you'd consider paying $150 for the bundle, there's no reason not to put your name in. You only decide whether to buy once you've been drawn, and you have 24 hours to make up your mind.
+
+A few things are worth weighing before you do:
+
+* **Most of the value is in the accessories.** A K/DA playmat, a deck box, 75 sleeves and four metal dice are things you'd use every time you play. If you'd buy a premium playmat and sleeves anyway, the bundle is easier to justify.
+* **The cards are a known quantity to play with.** The four Legends are already in print and already legal, so the K/DA versions don't give you anything new at the table. They're a collector's printing of cards you can play today for a couple of dollars.
+* **Shipping is extra.** Riot quotes $150 plus shipping and handling, and for buyers outside the US that can add a noticeable amount. Check the total in the cart before you pay.
+* **Resale is a gamble.** Bundles sold by drawing often appear on eBay soon after they ship, sometimes above the store price and sometimes below it once everyone who wanted one has one. Riot hasn't said how many it is making, so nobody knows yet which way this one will go. Buy it because you want it, not as an investment.
+
+If you're not drawn in the first wave, don't assume you've missed out. Riot keeps drawing new names as people decline or let their 24 hours run out, so the waves can run for a while after 3 November.
+
+## Keep an eye on your inbox
+
+The single most common way to miss a drawn product is the email itself. Riot's purchase link arrives by email, it's only valid for 24 hours, and it comes from riotgames.com. Add that address to your contacts or safe senders before 27 October, check your spam and promotions folders from 3 November, and make sure the email address on your Riot account is one you actually read.
+
+## What we'll update
+
+This page follows Riot's announcements. We'll add the K/DA printings' prices as soon as they're listed, and any change Riot makes to the dates, the price or the regions. For the rest of Radiance, the **[pre-order page](/radiance-preorders)** compares every store's price, and the **[Radiance card list](/sets/radiance)** has every printing with live prices.`,
   },
   // HEARTSTEEL OVERNUMBERED (2026-09-26). Riot's official six-card graphic: every
   // HEARTSTEEL member as an overnumbered Radiance Champion Unit, RAD 178–183/167.
