@@ -18818,3 +18818,5 @@ After the release, use URL Inspection → Request indexing in Search Console. Go
 **Promotion.** Thumbnail at public/blog/riftbound-deck-builder.jpg: a real screenshot of an imported Ahri deck, tournament-legal, with a hover preview. It doubles as the page's OG image. Reddit copy is given to the owner to post.
 
 **Same day, follow-up** (owner: "allow users to import decks"). Import now has its own button at the top of the deck panel ("Import a deck: paste any list"). It reads "3x Name", "x3 Name", "Name x3", "Name (3)" and bulleted lines as well as "3 Name (SET-NUM)", with zone headers optional.
+
+**Ended 2026-10-22** (owner: "get rid of the featured listing now"). `FEATURED_LISTINGS` is empty. The box, the list and the quick-view hook stay in place for the next one.

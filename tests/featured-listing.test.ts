@@ -8,11 +8,9 @@ import { FEATURED_LISTINGS, featuredListingFor } from "../src/lib/featured-listi
 // "A featured eBay listing on a card page".
 const read = (f: string) => readFileSync(join(__dirname, "..", f), "utf8");
 
-test("the Seraphine Signature listing is featured on its own card page until it lapses", () => {
-  const f = featuredListingFor("seraphine-starry-eyed-songstress-rad-174s-167", Date.parse("2026-10-21T00:00:00Z"));
-  assert.equal(f?.itemId, "117475654360");
-  assert.equal(featuredListingFor("seraphine-starry-eyed-songstress-rad-174-167", Date.parse("2026-10-21T00:00:00Z")), null, "only that printing");
-  assert.equal(featuredListingFor(f!.cardSlug, Date.parse(`${f!.until}T00:00:00Z`)), null, "lapses on its until date");
+test("no listing is featured now; the Seraphine Signature promotion ended on 22 October", () => {
+  assert.equal(FEATURED_LISTINGS.length, 0);
+  assert.equal(featuredListingFor("seraphine-starry-eyed-songstress-rad-174s-167"), null);
 });
 
 test("every entry is an eBay listing with a dated price check and an end date", () => {

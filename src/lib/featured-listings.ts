@@ -34,22 +34,10 @@ export interface FeaturedListing {
   until: string;
 }
 
-export const FEATURED_LISTINGS: FeaturedListing[] = [
-  {
-    cardSlug: "seraphine-starry-eyed-songstress-rad-174s-167",
-    itemId: "117475654360",
-    url: "https://www.ebay.com.au/itm/117475654360",
-    retailer: "ebay_au",
-    title: "Riftbound Radiance Seraphine, Starry-Eyed Songstress SIGNATURE 174*/167",
-    priceCents: 469070,
-    currency: "AUD",
-    condition: "Ungraded",
-    seller: "bc-cards",
-    location: "Kellyville, NSW, Australia",
-    checked: "2026-10-20",
-    until: "2026-11-20",
-  },
-];
+// Empty since 2026-10-22 (owner: "get rid of the featured listing now for the
+// Seraphine Radiance sig card"). The Seraphine 174* listing (eBay AU
+// 117475654360) ran 20 to 22 October.
+export const FEATURED_LISTINGS: FeaturedListing[] = [];
 
 /** The live featured listing for a card page, or null. */
 export function featuredListingFor(cardSlug: string | null | undefined, now: number = Date.now()): FeaturedListing | null {
