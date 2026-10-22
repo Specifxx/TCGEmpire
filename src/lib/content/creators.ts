@@ -92,6 +92,28 @@ export const CREATORS: Creator[] = [
     code: { code: "JOSH20", percentOff: 20 },
     since: "2026-10-20",
   },
+  {
+    slug: "riftsandbounds",
+    name: "Matt",
+    blurb: "Educational Riftbound TCG content and theory videos.",
+    links: [{ platform: "Instagram", url: "https://www.instagram.com/riftsandbounds/", handle: "@riftsandbounds" }],
+    avatar: "/creators/riftsandbounds.jpg",
+    tags: ["Theory", "Education"],
+    since: "2026-10-22",
+  },
+  {
+    slug: "riftbound-felipe",
+    name: "Felipe Ponce",
+    blurb: "Riftbound content creator, on the road to the Stuttgart Regional.",
+    links: [
+      { platform: "Instagram", url: "https://www.instagram.com/riftbound.felipe/", handle: "@riftbound.felipe" },
+      { platform: "Website", url: "https://linktr.ee/felipe.ponce", handle: "linktr.ee/felipe.ponce" },
+    ],
+    avatar: "/creators/riftbound-felipe.jpg",
+    tags: ["Competitive"],
+    region: "UK",
+    since: "2026-10-22",
+  },
 ];
 
 /** Newest listing first. */

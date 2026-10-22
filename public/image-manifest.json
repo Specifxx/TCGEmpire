@@ -527,6 +527,27 @@
     ],
     "fingerprint": "027bfb2831227774"
   },
+  "/blog/riftbound-deck-builder.jpg": {
+    "src": "/blog/riftbound-deck-builder.jpg",
+    "width": 1200,
+    "height": 630,
+    "bytes": 105241,
+    "webp": "/blog/riftbound-deck-builder.webp",
+    "webpBytes": 98302,
+    "avif": "/blog/riftbound-deck-builder.avif",
+    "avifBytes": 72627,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-deck-builder-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-deck-builder-768w.webp"
+      }
+    ],
+    "fingerprint": "a9c6e96366377185"
+  },
   "/blog/riftbound-deploy-explained.png": {
     "src": "/blog/riftbound-deploy-explained.png",
     "width": 1200,
@@ -672,6 +693,27 @@
       }
     ],
     "fingerprint": "8bc15133cd970a7b"
+  },
+  "/blog/riftbound-kda-couture-collection.jpg": {
+    "src": "/blog/riftbound-kda-couture-collection.jpg",
+    "width": 1200,
+    "height": 630,
+    "bytes": 119028,
+    "webp": "/blog/riftbound-kda-couture-collection.webp",
+    "webpBytes": 82982,
+    "avif": "/blog/riftbound-kda-couture-collection.avif",
+    "avifBytes": 56341,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-kda-couture-collection-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-kda-couture-collection-768w.webp"
+      }
+    ],
+    "fingerprint": "1b2c17abd70465ff"
   },
   "/blog/riftbound-legacy-key-art.jpg": {
     "src": "/blog/riftbound-legacy-key-art.jpg",
@@ -963,6 +1005,30 @@
     "avifBytes": 11156,
     "variants": [],
     "fingerprint": "f4a1a1ee4afc0e04"
+  },
+  "/creators/riftbound-felipe.jpg": {
+    "src": "/creators/riftbound-felipe.jpg",
+    "width": 240,
+    "height": 240,
+    "bytes": 9252,
+    "webp": "/creators/riftbound-felipe.webp",
+    "webpBytes": 5644,
+    "avif": "/creators/riftbound-felipe.avif",
+    "avifBytes": 4172,
+    "variants": [],
+    "fingerprint": "98e9e9334006741a"
+  },
+  "/creators/riftsandbounds.jpg": {
+    "src": "/creators/riftsandbounds.jpg",
+    "width": 240,
+    "height": 240,
+    "bytes": 7590,
+    "webp": "/creators/riftsandbounds.webp",
+    "webpBytes": 4582,
+    "avif": "/creators/riftsandbounds.avif",
+    "avifBytes": 3576,
+    "variants": [],
+    "fingerprint": "5d432ad42eb6aacd"
   },
   "/creators/ripsbyjosh.jpg": {
     "src": "/creators/ripsbyjosh.jpg",

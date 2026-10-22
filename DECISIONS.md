@@ -18820,3 +18820,9 @@ After the release, use URL Inspection → Request indexing in Search Console. Go
 **Same day, follow-up** (owner: "allow users to import decks"). Import now has its own button at the top of the deck panel ("Import a deck: paste any list"). It reads "3x Name", "x3 Name", "Name x3", "Name (3)" and bulleted lines as well as "3 Name (SET-NUM)", with zone headers optional.
 
 **Ended 2026-10-22** (owner: "get rid of the featured listing now"). `FEATURED_LISTINGS` is empty. The box, the list and the quick-view hook stay in place for the next one.
+
+**Same day, 2026-10-22** (owner: "lets add this guy as a creator too and deploy"). Added two more creators, without codes, because neither has an active one (checked live through /r/CODE):
+- **Matt** (@riftsandbounds): "educational Riftbound TCG content and theory videos", in his own bio's words.
+- **Felipe Ponce** (@riftbound.felipe, linktr.ee/felipe.ponce, Bristol UK, Stuttgart Regional).
+
+Avatars are cropped from the owner's screenshots of their Instagram profiles.
