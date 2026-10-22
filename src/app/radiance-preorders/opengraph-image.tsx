@@ -10,7 +10,9 @@ import { join } from "node:path";
 // platform that fetches it and would go stale; "every store, compared daily" is
 // true for as long as the page exists.
 export const runtime = "nodejs";
-export const alt = "Riftbound Radiance pre-order prices: booster boxes, packs and bundles compared across every store";
+// Released copy since 2026-10-22 (owner: "Radiance is out now"): the image is
+// built once per deploy, and every deploy from here on is after release day.
+export const alt = "Riftbound Radiance booster box prices: booster boxes, packs and bundles compared across every store";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -106,14 +108,14 @@ export default function OgImage() {
                 letterSpacing: 2,
               }}
             >
-              OUT 23 OCTOBER 2026
+              OUT NOW
             </div>
             <div style={{ display: "flex", flexDirection: "column", marginTop: 22 }}>
               <span style={{ fontSize: 78, fontWeight: 800, color: "#ffffff", letterSpacing: -3, lineHeight: 1 }}>
                 Radiance
               </span>
               <span style={{ fontSize: 56, fontWeight: 800, color: GOLD, letterSpacing: -2, lineHeight: 1.1 }}>
-                pre-order prices
+                booster box prices
               </span>
             </div>
             <div style={{ display: "flex", marginTop: 22, fontSize: 30, color: "#c9d1dc", lineHeight: 1.3 }}>

@@ -479,6 +479,12 @@ longer lands on its entry.
   `isPreorderSetCode()`. Signatures (`*`) are in no official feed: add them to
   `prisma/manual-cards.json` with their own `externalId`.
   [2026-10-17](../DECISIONS.md#L18273)
+- **Radiance is released (2026-10-22):** no set is `comingSoon`; RAD is
+  `recentlyReleased`. Every release check uses `streetDateStartMs()` (midnight
+  AEDT on the street date), never midnight UTC. `/radiance-preorders` stays live
+  in its released state (booster box prices). All 219 official printings plus 16
+  Signatures are in the catalogue; all nine Legends are named everywhere
+  (`RADIANCE_LEGENDS_CONFIRMED`). [2026-10-22](../DECISIONS.md#L18959)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
   so a paid click is worth its page views plus any sign-up. The test (small
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket

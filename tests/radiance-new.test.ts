@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { isPreorderSetCode, nextUpcomingSet, newestReleasedSet, pricePrioritySetCodes, setByCode, showsAsNew } from "../src/lib/constants";
+import { withRadianceUpcoming } from "./helpers/upcoming-set";
 
 // Radiance is shown as "New" from 12 Oct 2026, when Riot's gallery had its list
 // (owner: "radiance is now new and not coming soon"), but stays a pre-order set
@@ -12,15 +13,28 @@ const RAD = setByCode("RAD")!;
 const ON = new Date("2026-10-12T09:00:00Z");
 
 test("Radiance wears the New badge from newFrom, and nothing else moves before the street date", () => {
-  assert.equal(showsAsNew(RAD, new Date("2026-10-11T23:59:00Z")), false);
-  assert.equal(showsAsNew(RAD, ON), true);
-  assert.equal(showsAsNew(setByCode("VEN")!, ON), false, "Vendetta is no longer new");
-  // Display only: pre-orders, the countdown, the newest released set and the eBay quota keep the date.
-  assert.equal(RAD.comingSoon, true);
-  assert.equal(isPreorderSetCode("RAD", ON), true);
-  assert.equal(nextUpcomingSet(ON)?.code, "RAD");
-  assert.equal(newestReleasedSet(ON)?.code, "VEN");
-  assert.deepEqual(pricePrioritySetCodes(ON), []);
+  // As Radiance was flagged before release (helpers/upcoming-set.ts).
+  withRadianceUpcoming(() => {
+    assert.equal(showsAsNew(RAD, new Date("2026-10-11T23:59:00Z")), false);
+    assert.equal(showsAsNew(RAD, ON), true);
+    assert.equal(showsAsNew(setByCode("VEN")!, ON), false, "Vendetta is no longer new");
+    // Display only: pre-orders, the countdown, the newest released set and the eBay quota keep the date.
+    assert.equal(RAD.comingSoon, true);
+    assert.equal(isPreorderSetCode("RAD", ON), true);
+    assert.equal(nextUpcomingSet(ON)?.code, "RAD");
+    assert.equal(newestReleasedSet(ON)?.code, "VEN");
+    assert.deepEqual(pricePrioritySetCodes(ON), []);
+  });
+});
+
+test("released (2026-10-22, owner): Radiance is New by recentlyReleased, and nothing is coming soon", () => {
+  assert.ok(!RAD.comingSoon);
+  assert.equal(RAD.newFrom, undefined, "newFrom went with comingSoon");
+  assert.equal(RAD.recentlyReleased, true);
+  assert.equal(showsAsNew(RAD), true);
+  assert.equal(isPreorderSetCode("RAD"), false);
+  assert.equal(nextUpcomingSet(), undefined, "no set is announced-and-unreleased");
+  assert.equal(newestReleasedSet()?.code, "RAD");
 });
 
 test("the homepage tile, the sets index and the share image read showsAsNew", () => {

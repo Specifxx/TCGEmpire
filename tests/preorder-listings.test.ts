@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { isPreorderSetCode } from "../src/lib/constants";
 import { classifySealed, isTrackableSealedTitle } from "../src/lib/sealed-import";
 import { setCodeFromSetName } from "../src/lib/tcgplayer";
+import { withRadianceUpcoming } from "./helpers/upcoming-set";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -19,18 +20,30 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // below, because losing any one of them turns a real feature into a false claim
 // about a product nobody can ship.
 
+// Radiance as it was flagged before release (helpers/upcoming-set.ts): the date
+// rule is what the next set runs on, so it stays pinned.
 test("an unreleased set reads as pre-order, and a shipped one does not", () => {
   // Radiance: 23 Oct 2026.
-  assert.equal(isPreorderSetCode("RAD", new Date("2026-08-15T00:00:00Z")), true);
+  withRadianceUpcoming(() => {
+    assert.equal(isPreorderSetCode("RAD", new Date("2026-08-15T00:00:00Z")), true);
+  });
   assert.equal(isPreorderSetCode("VEN", new Date("2026-08-15T00:00:00Z")), false, "Vendetta shipped 31 Jul 2026");
   assert.equal(isPreorderSetCode("OGN", new Date("2026-08-15T00:00:00Z")), false);
 });
 
 test("the pre-order flag retires itself on release day — no code change needed", () => {
   // The day before, and the day after. This is the whole reason the helper takes
-  // `now` rather than reading the clock: the rollover is the behaviour.
-  assert.equal(isPreorderSetCode("RAD", new Date("2026-10-22T00:00:00Z")), true, "still a pre-order the day before");
-  assert.equal(isPreorderSetCode("RAD", new Date("2026-10-24T00:00:00Z")), false, "released — no longer a pre-order");
+  // `now` rather than reading the clock: the rollover is the behaviour. Release
+  // day starts at midnight AEDT (streetDateStartMs), 13:00 UTC the day before.
+  withRadianceUpcoming(() => {
+    assert.equal(isPreorderSetCode("RAD", new Date("2026-10-22T00:00:00Z")), true, "still a pre-order the day before");
+    assert.equal(isPreorderSetCode("RAD", new Date("2026-10-22T12:59:59Z")), true, "11:59 pm in Sydney, 22 Oct");
+    assert.equal(isPreorderSetCode("RAD", new Date("2026-10-22T13:00:00Z")), false, "midnight in Sydney, 23 Oct");
+    assert.equal(isPreorderSetCode("RAD", new Date("2026-10-24T00:00:00Z")), false, "released — no longer a pre-order");
+  });
+  // And as flagged today: released, comingSoon gone, never a pre-order again.
+  assert.equal(isPreorderSetCode("RAD", new Date("2026-08-15T00:00:00Z")), false, "RAD is no longer flagged comingSoon");
+  assert.equal(isPreorderSetCode("RAD"), false);
 });
 
 test("an unknown set code is treated as released, not as a pre-order", () => {

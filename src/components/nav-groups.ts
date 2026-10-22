@@ -72,9 +72,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/sealed", label: "Sealed Products", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"] },
       // Label deliberately omits the word "prices": nav search scores the label, and
       // "Radiance pre-order prices" outranked the Bulk Pricer on a bare "prices"
-      // query (caught by tests/nav-search.test.ts). The pre-order keywords below
-      // still carry every intent that should land here.
-      { href: "/radiance-preorders", label: "Radiance pre-orders", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
+      // query (caught by tests/nav-search.test.ts). Was "Radiance pre-orders" →
+      // /radiance-preorders until release (2026-10-22, owner: "Radiance is out
+      // now"); the old pre-order keywords still land a searcher on the set.
+      { href: "/sets/radiance", label: "Radiance (new set)", keywords: ["radiance", "new set", "set 5", "radiance booster box", "preorder", "pre-order", "radiance preorder"] },
       { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"] },
       { href: "/movers", label: "Weekly Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "most searched", "popular cards"] },
       { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"] },

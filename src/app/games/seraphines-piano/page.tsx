@@ -160,7 +160,7 @@ const FAQS = [
   },
   {
     q: "Who is Seraphine in Riftbound?",
-    a: "Seraphine debuts in Riftbound: Radiance (release 23 October 2026) with her Legend, Starry-Eyed Songstress, two champion units, Not Alone and Inspiring, and her signature spell Encore. Not Alone also has a K/DA special printing.",
+    a: "Seraphine debuts in Riftbound: Radiance (released 23 October 2026) with her Legend, Starry-Eyed Songstress, two champion units, Not Alone and Inspiring, and her signature spell Encore. Not Alone also has a K/DA special printing.",
   },
 ];
 
@@ -340,7 +340,7 @@ export default async function SeraphinesPianoPage() {
             <div>
               <h2 className="font-display text-3xl font-extrabold text-white">Seraphine in Radiance</h2>
               <p className="mt-1 max-w-2xl text-sm text-slate-400">
-                Each song is named for one of her cards. Radiance releases on 23 October 2026, and every card page compares store prices as listings appear.
+                Each song is named for one of her cards. Radiance released on 23 October 2026, and every card page compares live store prices.
               </p>
             </div>
             <Link href="/blog/riftbound-seraphine-radiance-spoiler" className="text-sm font-semibold text-[#ff9fcb] hover:underline">
@@ -381,8 +381,8 @@ export default async function SeraphinesPianoPage() {
               the K/DA specials
             </Link>{" "}
             and{" "}
-            <Link href="/radiance-preorders" className="text-[#ff9fcb] hover:underline">
-              Radiance pre-order prices
+            <Link href={`/sealed?set=RAD`} className="text-[#ff9fcb] hover:underline">
+              Radiance booster box prices
             </Link>
             .
           </p>

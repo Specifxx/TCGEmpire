@@ -1,4 +1,4 @@
-import test from "node:test";
+import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -21,6 +21,7 @@ import { parseBasketRequest } from "../src/lib/basket-request";
 import { FREE_PLANS_PER_MONTH } from "../src/lib/basket-meter";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { DECK_LINE_CAP } from "../src/lib/deck";
+import { withRadianceUpcoming } from "./helpers/upcoming-set";
 import { RETAILERS } from "../src/lib/retailers";
 import type { ChecklistCard } from "../src/lib/set-scope";
 
@@ -340,7 +341,16 @@ test("an unknown set is refused before any read", async () => {
 test("Radiance is refused until it releases, with how many revealed cards have no listing yet and no denominator", async () => {
   const revealed = [priced(100), ebayOnly(), nothing(), priced(300, { isPromo: true })];
   const { d, calls } = deps(revealed);
-  const res = await loadSetGapLines("u", "RAD", "base", "US", {}, buy, d);
+  // loadSetGapLines reads the real clock, so the pre-release state is
+  // reconstructed: 1 Oct 2026, with Radiance flagged as it was then
+  // (helpers/upcoming-set.ts). It released on 23 Oct.
+  mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-01T00:00:00Z") });
+  let res: Awaited<ReturnType<typeof loadSetGapLines>>;
+  try {
+    res = await withRadianceUpcoming(() => loadSetGapLines("u", "RAD", "base", "US", {}, buy, d));
+  } finally {
+    mock.timers.reset();
+  }
   assert.equal(res.ok, false);
   if (res.ok) return;
   assert.equal(res.reason, "preorder");

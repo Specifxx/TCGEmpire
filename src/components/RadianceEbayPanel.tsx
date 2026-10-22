@@ -76,7 +76,7 @@ export function RadianceEbayPanel({
           href: ebaySearchUrl(country, "Riftbound Radiance (pack,bundle,vault)", src.bundle),
         },
         {
-          label: `Search ${label} for booster boxes from released sets`,
+          label: `Search ${label} for booster boxes from earlier sets`,
           href: ebaySearchUrl(country, "Riftbound booster (box,display) -Radiance", src.released),
           promo: true,
         },

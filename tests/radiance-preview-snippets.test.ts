@@ -31,14 +31,26 @@ test("the reveal count is cached, tagged, non-promo, and wraps a raw count", () 
 
 test("/radiance-preorders: 'Booster Box' in a title and description that fit", () => {
   const src = read(PREORDERS);
-  const title = src.match(/title: \{ absolute: "([^"]+)" \}/)?.[1];
-  const desc = src.match(/description:\s*"([^"]+)"/)?.[1];
-  assert.ok(title && desc);
-  assert.ok(title.length <= 60, title);
-  assert.match(title, /Booster Box/);
-  assert.doesNotMatch(title, /\$|£|€/, "no price: the page renders in the visitor's currency");
-  assert.ok(desc.length <= 155, `${desc.length}`);
-  assert.match(desc, /^Radiance booster box/);
+  // Two metadata sets since release (2026-10-22): generateMetadata picks the
+  // released one once isPreorderSetCode("RAD") is false. Both must fit.
+  assert.match(src, /export function generateMetadata\(\): Metadata \{\s*return isPreorderSetCode\(SET_CODE\) \? PREORDER_METADATA : RELEASED_METADATA;/);
+  const titles = [...src.matchAll(/title: \{ absolute: "([^"]+)" \}/g)].map((m) => m[1]);
+  const descs = [...src.matchAll(/^  description:\s*"([^"]+)"/gm)].map((m) => m[1]);
+  assert.equal(titles.length, 2);
+  assert.equal(descs.length, 2);
+  for (const title of titles) {
+    assert.ok(title.length <= 60, title);
+    assert.match(title, /Booster Box/);
+    assert.doesNotMatch(title, /\$|£|€/, "no price: the page renders in the visitor's currency");
+  }
+  for (const desc of descs) {
+    assert.ok(desc.length <= 155, `${desc.length}`);
+    assert.match(desc, /^Radiance booster box/);
+  }
+  const released = src
+    .slice(src.indexOf("const RELEASED_METADATA"), src.indexOf("const PREORDER_METADATA"))
+    .replaceAll('"/radiance-preorders"', ""); // the URL itself is unchanged
+  assert.doesNotMatch(released, /pre-?order/i, "the released title and description sell no pre-order");
 });
 
 test("/radiance-preorders promises no sealed price alert, and #notify lands on the capture", () => {

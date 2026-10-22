@@ -55,11 +55,11 @@ test("no unverified fact sneaks in — specifically no K/DA anywhere in the modu
 // at a PAX West livestream. Pinning the corrected count (not the brief's) so a
 // future edit doesn't quietly revert to the stale figure the brief shipped
 // with. See src/lib/sets/radiance.ts's header for the sourcing.
-test("legend count reflects Orianna's later confirmation, not the original brief's stale 5/4", () => {
-  assert.equal(RADIANCE_LEGENDS_CONFIRMED.length, 6, "Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV AND Orianna");
-  assert.equal(RADIANCE_LEGENDS_UNREVEALED, 3);
+test("all nine Legends are confirmed since release (Orianna's PAX West confirmation, then the last three)", () => {
+  assert.equal(RADIANCE_LEGENDS_CONFIRMED.length, 9);
+  assert.equal(RADIANCE_LEGENDS_UNREVEALED, 0);
   const names = RADIANCE_LEGENDS_CONFIRMED.map((l) => l.name);
-  assert.deepEqual(names, ["Seraphine", "Evelynn", "Ekko", "Ziggs", "Jarvan IV", "Orianna"]);
+  assert.deepEqual(names, ["Seraphine", "Evelynn", "Ekko", "Ziggs", "Jarvan IV", "Orianna", "Mordekaiser", "K'Sante", "Riven"]);
   // Every legend needs a unique, URL-safe slug — it's both the chip's id
   // anchor and its query-filter link.
   const slugs = RADIANCE_LEGENDS_CONFIRMED.map((l) => l.slug);
@@ -70,8 +70,8 @@ test("legend count reflects Orianna's later confirmation, not the original brief
 test("release-calendar.ts's Radiance champions list carries the same correction (site-wide consistency)", () => {
   const radiance = RELEASES.find((r) => r.code === "RAD");
   assert.ok(radiance);
-  assert.deepEqual(radiance!.champions, ["Seraphine", "Evelynn", "Ekko", "Ziggs", "Jarvan IV", "Orianna"]);
-  assert.match(radiance!.note, /Six champion Legends/, "the note's own wording must agree with the list length");
+  assert.deepEqual(radiance!.champions, ["Seraphine", "Evelynn", "Ekko", "Ziggs", "Jarvan IV", "Orianna", "Mordekaiser", "K'Sante", "Riven"]);
+  assert.match(radiance!.note, /Nine champion Legends/, "the note's own wording must agree with the list length");
 });
 
 test("the Showdown Deck fact matches the brief exactly: two 56-card decks, two boosters, two playmats, one rulebook, $34.99", () => {
@@ -92,13 +92,16 @@ test("the FAQ has exactly 7 entries, each self-consistent with the data module",
   assert.ok(draw);
   assert.match(draw!.a, /25 to 30 September 2026/);
   assert.match(draw!.a, /North America and Europe/);
-  const preorder = RADIANCE_FAQ.find((f) => /preorder Riftbound Radiance the cheapest/i.test(f.q));
+  // "preorder" until release; "buy" since 23 Oct 2026 (the set is out).
+  const preorder = RADIANCE_FAQ.find((f) => /buy Riftbound Radiance the cheapest/i.test(f.q));
+  assert.ok(preorder);
+  assert.doesNotMatch(preorder!.a, /preorder|pre-order/i, "a released set's FAQ does not sell pre-orders");
   assert.doesNotMatch(preorder!.a, /every US store|delivered cost/, "the page compares every market, by item price");
   const legendsFaq = RADIANCE_FAQ.find((f) => /which champions/i.test(f.q));
   assert.ok(legendsFaq);
-  assert.match(legendsFaq!.a, /Six legends are confirmed/);
+  assert.match(legendsFaq!.a, /^Nine:/);
   assert.match(legendsFaq!.a, /Orianna/);
-  assert.match(legendsFaq!.a, /three more unrevealed/);
+  assert.doesNotMatch(legendsFaq!.a, /unrevealed/);
   const cardCountFaq = RADIANCE_FAQ.find((f) => /how many cards/i.test(f.q));
   assert.ok(cardCountFaq);
   assert.match(cardCountFaq!.a, /180 cards/);

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { featuredSet, isPreorderSetCode, setByCode, singlesLive } from "../src/lib/constants";
+import { withRadianceUpcoming } from "./helpers/upcoming-set";
 
 // 2026-10-17 (owner: "everything needs to be tailored for Radiance now … get all
 // the signatures on the database … on the very front page … feature the Radiance
@@ -11,9 +12,15 @@ import { featuredSet, isPreorderSetCode, setByCode, singlesLive } from "../src/l
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
 test("featuredSet() is the upcoming set from its New day, and never names one in code", () => {
-  assert.equal(featuredSet(new Date("2026-10-01T00:00:00Z"))?.code, "VEN", "before Radiance's newFrom, the newest released set");
-  assert.equal(featuredSet(new Date("2026-10-12T12:00:00Z"))?.code, "RAD", "from 12 Oct, Radiance");
-  assert.equal(featuredSet(new Date("2026-10-23T12:00:00Z"))?.code, "RAD", "unchanged on release day");
+  // As Radiance was flagged before release (helpers/upcoming-set.ts).
+  withRadianceUpcoming(() => {
+    assert.equal(featuredSet(new Date("2026-10-01T00:00:00Z"))?.code, "VEN", "before Radiance's newFrom, the newest released set");
+    assert.equal(featuredSet(new Date("2026-10-12T12:00:00Z"))?.code, "RAD", "from 12 Oct, Radiance");
+    assert.equal(featuredSet(new Date("2026-10-23T12:00:00Z"))?.code, "RAD", "unchanged on release day");
+  });
+  // As flagged since release: the newest released set.
+  assert.equal(featuredSet(new Date("2026-10-23T12:00:00Z"))?.code, "RAD", "released");
+  assert.equal(featuredSet()?.code, "RAD");
   assert.match(read("src/components/EbayPicks.tsx"), /const s = featuredSet\(\);/);
 });
 
@@ -49,9 +56,15 @@ test("the homepage strip leads with the featured set's chase cards, and Most pop
 test("Radiance's singles are live before release day; its sealed product is still a pre-order", () => {
   const rad = setByCode("RAD")!;
   const week = new Date("2026-10-17T12:00:00Z");
-  assert.equal(singlesLive(rad, new Date("2026-10-01T00:00:00Z")), false, "not before its New day");
-  assert.equal(singlesLive(rad, week), true);
-  assert.equal(isPreorderSetCode("RAD", week), true, "boxes still ship on 23 Oct");
+  // As Radiance was flagged before release (helpers/upcoming-set.ts).
+  withRadianceUpcoming(() => {
+    assert.equal(singlesLive(rad, new Date("2026-10-01T00:00:00Z")), false, "not before its New day");
+    assert.equal(singlesLive(rad, week), true);
+    assert.equal(isPreorderSetCode("RAD", week), true, "boxes still ship on 23 Oct");
+  });
+  // Released: live, and not a pre-order, whatever the date.
+  assert.equal(singlesLive(rad), true);
+  assert.equal(isPreorderSetCode("RAD"), false);
   assert.equal(singlesLive(setByCode("VEN")!, week), true, "a released set is always live");
   const hub = read("src/app/sets/[set]/page.tsx");
   assert.match(hub, /const live = singlesLive\(set\);/);

@@ -13,6 +13,7 @@ import { SEALED_WATCH_LIMIT_PLUS, sealedWatchLimit } from "../src/lib/alert-limi
 import { buildSealedWatchEmail, rrpGapText, sealedWatchCopy } from "../src/lib/watch-emails";
 import { verifyAlertAction } from "../src/lib/alert-actions";
 import { NOW, daysAgo, hoursAgo, free, group, lapsed, offer, plus, premium, sealedHarness, sealedRow } from "./helpers/watch-harness";
+import { withRadianceUpcoming } from "./helpers/upcoming-set";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SEALED WATCHES (lib/sealed-watch.ts, 2026-09-29): restock after ≥5h sold
@@ -135,7 +136,8 @@ test("a PRE-ORDER set never emails 'at RRP' (its RRP is unknown), a released set
     groups: [group([offer(14400)], { groupKey: "RAD|Booster Box", name: "Radiance Booster Box", setCode: "RAD" })],
     now: new Date("2026-10-10T09:00:00Z"), // before Radiance's 23 Oct release
   });
-  const s = await pre.run();
+  // As Radiance was flagged before release (helpers/upcoming-set.ts).
+  const s = await withRadianceUpcoming(() => pre.run());
   assert.equal(s.rrp, 0, "no at-RRP trigger for a pre-order group");
   assert.ok(!pre.sent.some((m) => m.item.kind === "sealed_rrp"));
   assert.ok(!pre.sent.some((m) => m.item.rrpCents != null), "no RRP line on any email for a pre-order group");

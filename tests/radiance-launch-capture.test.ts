@@ -74,10 +74,12 @@ test("the article capture keeps the article's mt-8 rhythm where the pre-order se
   // On the what-we-know post (cta.href === "/radiance-preorders") that section
   // does not render, and at mt-4 the capture sat 16px under the FAQ accordion
   // and 32px above "Ready to buy?", reading as part of the FAQ (d1440,
-  // 2026-09-23). The two conditions must stay the same expression.
+  // 2026-09-23). The two conditions must stay the same expression. Since
+  // release (2026-10-22) both read the post's AUTHORED cta: the rendered one
+  // swaps /radiance-preorders for the sealed comparison after release day.
   const src = read("src/components/ArticleView.tsx");
-  assert.match(src, /article\.tags\.includes\("radiance"\) && cta\.href !== "\/radiance-preorders" && \(/);
-  assert.match(src, /<div className=\{cta\.href !== "\/radiance-preorders" \? "mt-4" : "mt-8"\}>\s*<NewsletterSignup\b[^>]*source="radiance-launch"/);
+  assert.match(src, /article\.tags\.includes\("radiance"\) && authoredCta\.href !== "\/radiance-preorders" && \(/);
+  assert.match(src, /<div className=\{authoredCta\.href !== "\/radiance-preorders" \? "mt-4" : "mt-8"\}>\s*<NewsletterSignup\b[^>]*source="radiance-launch"/);
 });
 
 test("the card's email field leaves room for the ghost button on a 390px phone", () => {
@@ -109,7 +111,11 @@ test("the API whitelists radiance-launch, within the schema's 20-character cap",
 test("isBeforeRadianceRelease is true before 23 Oct 2026 and false on and after it", () => {
   assert.equal(RADIANCE_RELEASE_DATE, "2026-10-23");
   assert.equal(isBeforeRadianceRelease(new Date("2026-09-23T12:00:00Z")), true);
-  assert.equal(isBeforeRadianceRelease(new Date("2026-10-22T23:59:59Z")), true);
+  // Release day starts at midnight in eastern Australia (streetDateStartMs,
+  // AEDT = UTC+11), i.e. 13:00 UTC on 22 Oct — not midnight UTC.
+  assert.equal(isBeforeRadianceRelease(new Date("2026-10-22T12:59:59Z")), true);
+  assert.equal(isBeforeRadianceRelease(new Date("2026-10-22T13:00:00Z")), false);
+  assert.equal(isBeforeRadianceRelease(new Date("2026-10-22T23:59:59Z")), false);
   assert.equal(isBeforeRadianceRelease(new Date("2026-10-23T00:00:00Z")), false);
   assert.equal(isBeforeRadianceRelease(new Date("2026-10-23T12:00:00Z")), false);
   assert.equal(isBeforeRadianceRelease(new Date("2026-11-30T00:00:00Z")), false);

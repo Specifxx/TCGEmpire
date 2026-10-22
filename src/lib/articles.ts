@@ -716,7 +716,7 @@ As of 7 October our catalogue holds 170 Radiance cards, 43 of them Showcase prin
 | Tier | What it is | Shown so far |
 | --- | --- | --- |
 | **Signed Legends** | The overnumbered Legend with the artist's signature across the art, numbered with an asterisk | 5: Ekko 168\\*, Ziggs 169\\*, Mordekaiser 170\\*, Orianna 171\\* and Seraphine 174\\* |
-| **Overnumbered Legends** | Numbers 168 to 176, above the 167 card base run | 8 of 9 slots: Ekko, Ziggs, Mordekaiser, Orianna, K'Sante, Seraphine, Evelynn and Jarvan IV. Slot 173 has not been shown |
+| **Overnumbered Legends** | Numbers 168 to 176, above the 167 card base run | All 9 slots: Ekko, Ziggs, Mordekaiser, Orianna, K'Sante, Riven, Seraphine, Evelynn and Jarvan IV |
 | **Overnumbered units** | Number 177 and up | 6: K'Sante, Courageous (178), Aphelios (179), Ezreal (180), Yone (181), Kayn (182) and Sett (183). Slot 177 has not been shown |
 | **SP specials** | Five printings numbered out of 005 | 5, one for each K/DA member: Ahri, Akali, Evelynn, Kai'Sa and Seraphine |
 | **Alternate arts** | A letter after the number on an ordinary card | 12 units, such as Riven 043a and Seraphine 138a, and a Showcase for each of the six runes |
@@ -890,7 +890,7 @@ For every Radiance card as it is shown, the [live spoiler tracker](/blog/riftbou
     faq: [
       {
         q: "Which Riftbound Radiance Legends have been revealed?",
-        a: "Six are confirmed by name — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — out of nine. Four have Legend cards in print as of 29 September 2026: Starry-Eyed Songstress for Seraphine (Mind/Order), Boy Who Shattered Time for Ekko (Fury/Mind), Hexplosives Expert for Ziggs (Fury/Chaos) and Lady of Clockwork for Orianna (Calm/Mind). K'Sante's Legend, Pride of Nazumah, has also been shown. Evelynn's and Jarvan IV's Legend cards have not been shown in full, and three Legends are still unannounced.",
+        a: "Nine: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven. Every one has its Legend card in print in Radiance, released 23 October 2026: for example Starry-Eyed Songstress for Seraphine (Mind/Order), Boy Who Shattered Time for Ekko (Fury/Mind), Hexplosives Expert for Ziggs (Fury/Chaos), Lady of Clockwork for Orianna (Calm/Mind) and Pride of Nazumah for K'Sante.",
       },
       {
         q: "Are Deploy, Show Off and Disarm confirmed for Radiance?",
@@ -2415,7 +2415,7 @@ This site's whole value on a leak is drawing the line between what is on the car
 
 Three things move because of this.
 
-**Seraphine goes from "card exists, Legend doesn't" to a fully sketched champion.** Until now her only concrete card was Not Alone, and her Legend was rumour. Both halves are now visible, and they point the same way. Of the six confirmed Legends, she and Ekko are the two whose game plan you can actually describe.
+**Seraphine goes from "card exists, Legend doesn't" to a fully sketched champion.** Until now her only concrete card was Not Alone, and her Legend was rumour. Both halves are now visible, and they point the same way. Of the nine Legends, she and Ekko are the two whose game plan you can actually describe.
 
 **The music theme keeps hardening.** Seraphine and Evelynn are two thirds of K/DA's front line; Ekko fronted True Damage; the [22 September contents graphic put HEARTSTEEL in the set](/blog/riftbound-radiance-colorless-champion-unit). A go-wide "sing them into being" engine is exactly the flavour you would expect the K/DA headliner to carry, and it is one more sign the music roster is the spine of Radiance rather than a coat of paint.
 
@@ -2713,7 +2713,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
     summary: [
       "**Radiance releases 23 October 2026** — the fifth Riftbound set. **Preview Season opens 25 September** at the Regional Qualifier: Los Angeles and runs to 9 October; Pre-Rift events are 16–22 October.",
       "**The base run is 167 cards.** Riot announced \"180 (66 Showcase)\", but the first Radiance card seen in print — [Neeko, Blending In](/blog/riftbound-neeko-blending-in-spoiler) — is numbered **167/167**, which is the only card-count figure anyone has actually held. The two do not reconcile yet. The set code is **RAD** (published by Riot, not a guess).",
-      "**Nine new champion Legends**: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna are named, three are not. Only one Legend has been fully revealed — **Ekko, Boy Who Shattered Time**, a Fury/Mind Legend built on Empower.",
+      "**Nine new champion Legends**: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven. Only one Legend has been fully revealed — **Ekko, Boy Who Shattered Time**, a Fury/Mind Legend built on Empower.",
       "**Every product and its price is public**: booster packs (US$4.99), 24-pack displays (US$120), the Vault (six packs, runes, three foil promo tokens — US$34.99), the Evelynn vs Seraphine Showdown Decks, and a Pre-Rift kit that ships a week early. Full table below.",
       "**Radiance adds a new Ultimate Rare** — a tier above the overnumbered chase prints. *Updated 7 October:* it is Packed Amphitheater, a Battlefield numbered 184/167, shown at the Radiance Creator Summit. The card list itself has not been revealed either; anyone posting Radiance decklists today is guessing.",
     ],
@@ -2736,7 +2736,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
       },
       {
         q: "Which champions are in Riftbound Radiance?",
-        a: "Nine new champion Legends in total. Six are named — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna, the last confirmed at a PAX West livestream — and three are still unrevealed. The Pre-Rift kit's mini-decks come in nine champion variations, one per new Legend, which is how the total is known before the last three names are. The full card list has not been published, so which existing champions get new printings is not yet known.",
+        a: "Nine new champion Legends: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven. The Pre-Rift kit's mini-decks came in nine champion variations, one per new Legend. The full card list is in Riot's gallery and on our Radiance set page.",
       },
       {
         q: "What does Ekko's Radiance Legend do?",
@@ -2783,7 +2783,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
       label: "Compare Radiance pre-order prices →",
       blurb: "Every tracked store's price for boxes, the Vault and the Showdown Decks, in your currency.",
     },
-    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, its base run is **167 numbered cards**, it brings **nine new champion Legends** (six named, three not), and it adds a new **Ultimate Rare** chase tier. Since this page was first written Riot has also published the set code, pulled Preview Season's start forward to **25 September**, and revealed the first Legend in full — the distributor sheet has put a price on every product, and, on 19 September, the **first Radiance card was photographed in print**. All of that is below. What is still *not* here is the card list, because it has not been revealed, and the internet is already full of Radiance "leaks" that are nothing of the sort.
+    body: `**Riftbound: Radiance released on 23 October 2026.** It is Set 5, its base run is **167 numbered cards**, it brings **nine new champion Legends** (all nine now known), and it adds a new **Ultimate Rare** chase tier. Since this page was first written Riot has also published the set code, pulled Preview Season's start forward to **25 September**, and revealed the first Legend in full — the distributor sheet has put a price on every product, and, on 19 September, the **first Radiance card was photographed in print**. All of that is below. What is still *not* here is the card list, because it has not been revealed, and the internet is already full of Radiance "leaks" that are nothing of the sort.
 
 ## Radiance at a glance
 
@@ -2795,7 +2795,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
 | **Preview Season** | 25 September – 9 October 2026 |
 | **Pre-Rift events** | 16 – 22 October 2026 |
 | **Card count** | **167 base run**, from the printed 167/167 on the first card seen. Riot announced 180 including 66 Showcase; unreconciled |
-| **New champion Legends** | 9 — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, and 3 unrevealed |
+| **New champion Legends** | 9 — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven |
 | **New chase tier** | Ultimate Rare: Packed Amphitheater, 184/167 (shown 3 October) |
 | **Tagline** | "Own the Stage. The World is Watching." |
 | **Card list revealed?** | **No** — one Legend, one T1 promo and one photographed card (Neeko) are all that is known in full |
@@ -2857,7 +2857,7 @@ The **Showcase density** is the figure still resting on Riot's announcement alon
 
 ## The nine champions — and the one Legend Riot has actually shown
 
-Riot has confirmed six new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs**, **Jarvan IV** and **Orianna** — and said three more are still to be revealed. The total is nine, and it is now pinned down from a second direction: the Pre-Rift kit's mini-decks come in **nine champion variations**, one per new Legend.
+Radiance has nine new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs**, **Jarvan IV**, **Orianna**, **Mordekaiser**, **K'Sante** and **Riven**, the last three revealed in Riot's full card gallery before release. The total is nine, and it is now pinned down from a second direction: the Pre-Rift kit's mini-decks come in **nine champion variations**, one per new Legend.
 
 All six named champions are League of Legends champions without an existing Riftbound Legend, so each one is a genuine debut rather than a reprint. Riot hasn't said whether the same is true of the remaining three.
 
@@ -2946,7 +2946,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       },
       {
         q: "Which Legends are in Radiance?",
-        a: "Riot's announcement counts nine new champion Legends for the set. Six were confirmed at the start of Preview Season (Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna) and three were unrevealed. Seven Legends are now in print: Seraphine (Starry-Eyed Songstress), Ekko (Boy Who Shattered Time), Ziggs (Hexplosives Expert), Orianna (Lady of Clockwork), Jarvan IV (Exemplar of Demacia) and, since 5 October, Evelynn (Agony's Embrace) and Mordekaiser (Iron Revenant). K'Sante's Legend, Pride of Nazumah, has also been shown, though Riot has not formally counted him among the nine.",
+        a: "Nine new champion Legends, all in print since Radiance released on 23 October 2026: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven. Six were confirmed at the start of Preview Season; Evelynn's and Mordekaiser's Legends followed on 5 October, and K'Sante's and Riven's complete the nine in Riot's full gallery.",
       },
       {
         q: "Are the Deploy, Showoff and Disarm leaks real?",
@@ -3398,7 +3398,7 @@ For stores in general rather than Radiance specifically, **[where to buy Riftbou
       },
       {
         q: "How many champion Legends does Riftbound Radiance have?",
-        a: "Nine. Six are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — and three are unrevealed. Neeko is not among the confirmed six, and the Neeko card photographed so far is a Champion Unit rather than a Legend.",
+        a: "Nine: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven (the last three were revealed in Riot's full card gallery before release). Neeko is not among them, and the Neeko card photographed so far is a Champion Unit rather than a Legend.",
       },
       {
         q: "When does Riftbound Radiance release?",
@@ -3508,7 +3508,7 @@ If the leak is right, one of those three is what the blurred line says. If it is
 
 Worth stating plainly, because a redacted list invites people to fill in the gaps:
 
-- **It does not name the remaining champions.** Radiance carries nine champion Legends. Six are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — and three are unrevealed. Neeko is not among the confirmed six, and her printed card is a Champion Unit, not a Legend.
+- **It does not name the remaining champions.** Radiance carries nine champion Legends. At the time six were confirmed and three were unrevealed; all nine are known now: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven. Neeko is not among them, and her printed card is a Champion Unit, not a Legend.
 - **It does not confirm the leaked mechanic names.**
 - **It says nothing about rarity, print runs or prices.** Radiance has not released. There are no Radiance singles prices to report, because there are no Radiance singles.
 - **It does not change the set's size.** The base run is 167 numbered cards — Neeko's 167/167 settles that — against Riot's announcement figure of 180 including 66 Showcase prints.
@@ -3554,7 +3554,7 @@ Five things worth checking as the redactions come off, in rough order of how muc
 1. **Whether the Colorless Champion Unit line resolves to Neeko** or to a second card. If it is a second card, Radiance has two domain-free champion cards, which would be a much bigger design statement than one.
 2. **Whether K'Sante gets a card.** His absence is the clearest gap in the HEARTSTEEL line-up.
 3. **The name of the new set mechanic**, and whether it matches any of the three leaked candidates.
-4. **The three unrevealed Legends.** Six of nine are named; the remaining three are the last real unknown about the set's shape.
+4. **The last three Legends.** Six of nine were named at the time; Mordekaiser, K'Sante and Riven completed the nine in Riot's full gallery before release.
 5. **Whether Neeko turns out to have a Legend card as well as her Champion Unit.** The graphic lists her name separately from the Colorless line, and champions can appear as both.
 
 ## What we are doing about it
@@ -7139,7 +7139,7 @@ Three things worth holding onto.
 
 **When singles do land, check the collector number before the name.** With 167 base cards and Showcase printings numbering above them, "Neeko" will shortly mean several different objects at several different prices. The number is what tells them apart. Every Radiance card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
 
-For everything else that is genuinely confirmed about the set — dates, products, prices, the Legends named so far — our [what we know about Radiance](/blog/riftbound-radiance-what-we-know) page is kept current and keeps leaks separate from facts.`,
+For everything else that is genuinely confirmed about the set — dates, products, prices, its nine Legends — our [what we know about Radiance](/blog/riftbound-radiance-what-we-know) page is kept current and keeps leaks separate from facts.`,
   },
   // HEARTSTEEL comeback post, written the day "LIVE MY LIFE" landed (18 Sep
   // 2026). THE ANGLE IS THE FACT-CHECK, and it is the one thing on this topic
@@ -7262,7 +7262,7 @@ That matters for this game because Riftbound's next set is, in everything but na
 
 ## Radiance was a pop-star set before HEARTSTEEL showed up
 
-**[Riftbound: Radiance](/sets/radiance) releases 23 October 2026**, with 180 cards — **66 of them Showcase prints**, which is a very large proportion and will be relevant in a moment. Of the nine champion Legends the set will carry, six have been named: **Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna**. The set's Showdown Decks product is, literally, *Seraphine vs. Evelynn*. And on 22 September a redacted Radiance contents graphic put **HEARTSTEEL** on the list outright — [what that graphic does and does not settle](/blog/riftbound-radiance-colorless-champion-unit).
+**[Riftbound: Radiance](/sets/radiance) releases 23 October 2026**, with 180 cards — **66 of them Showcase prints**, which is a very large proportion and will be relevant in a moment. Radiance carries nine champion Legends: **Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven**. The set's Showdown Decks product is, literally, *Seraphine vs. Evelynn*. And on 22 September a redacted Radiance contents graphic put **HEARTSTEEL** on the list outright — [what that graphic does and does not settle](/blog/riftbound-radiance-colorless-champion-unit).
 
 Seraphine and Evelynn are two thirds of K/DA's front line. Ekko fronted True Damage. Before a single HEARTSTEEL image surfaced, Radiance was already stacked with Riot's music roster. Our full rundown of [what is actually confirmed about Radiance](/blog/riftbound-radiance-what-we-know) tracks the rest, and the separately-sourced [Deploy, Showoff and Disarm leak](/blog/riftbound-radiance-leaked-mechanics) covers the mechanics side.
 
@@ -7319,7 +7319,7 @@ We keep this split explicit on every leak story, and this one needs it more than
 
 *Update, 26 September:* the product question is answered. Riot's official graphic shows all six HEARTSTEEL cards as **Radiance overnumbered Champion Units, RAD 178/167 to 183/167** — Yone included — and five of the six are exactly what this post said the Kayn was: existing cards in new art. The sixth is K'Sante's, and it is a new card, *K'Sante, Courageous*. The whole sheet is broken down in **[our HEARTSTEEL overnumbered post](/blog/riftbound-heartsteel-overnumbered-cards)**. The rest of this section is kept as written on 18 September.
 
-**Confirmed:** HEARTSTEEL's comeback and the 18 September release of "LIVE MY LIFE"; the group's six champions; HEARTSTEEL 2026 skins for all six; that League's Season 3 Act 2 is music-themed with multiple bands returning. On the Riftbound side: Radiance's 23 October 2026 release, its 180 cards and 66 Showcase prints, the Seraphine vs. Evelynn Showdown Decks, and the six legends named so far.
+**Confirmed:** HEARTSTEEL's comeback and the 18 September release of "LIVE MY LIFE"; the group's six champions; HEARTSTEEL 2026 skins for all six; that League's Season 3 Act 2 is music-themed with multiple bands returning. On the Riftbound side: Radiance's 23 October 2026 release, its 180 cards and 66 Showcase prints, the Seraphine vs. Evelynn Showdown Decks, and its nine Legends.
 
 **Shown, but not announced:** the video itself is where the cards appear. Stills from "LIVE MY LIFE" show HEARTSTEEL-art Riftbound cards for **five** of the band's six members — Kayn, Ezreal, Aphelios, Sett and K'Sante — laid out on a table between shots. **Yone is the one member not shown in the stills we have seen.** That is a sighting in official Riot footage, which is a great deal stronger than a leak; it is still not a product announcement, and none of the five has been shown with a legible set code, collector number or rarity.
 
@@ -9823,7 +9823,7 @@ This post is the buyer's-eye view: what is coming, when, and which of it should 
 
 | Set | # | Release | Cards | The short version |
 | --- | --- | --- | --- | --- |
-| **Radiance** | 5 | 23 Oct 2026 | 180 | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna, +3 unrevealed; a step up in size from Vendetta |
+| **Radiance** | 5 | 23 Oct 2026 | 180 | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven; a step up in size from Vendetta |
 | **Legacy** | 6 | 29 Jan 2027 | ~346 | Region-driven themes across six factions; built for draft; new pack composition |
 | *(boxed decks)* | — | Feb 2027 | — | Four new decks built around Legacy champions |
 | **The Reckoning** | 7 | 30 Apr 2027 | ~264 | Centred on League's biggest champions |
@@ -9834,7 +9834,7 @@ Two things stand out before any of the detail. First, the cadence is roughly qua
 
 ## Radiance (Set 5) — 23 October 2026
 
-Radiance is the near-term one, and the only set on this list you will be buying this year. It brings Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna, plus three more champions still unrevealed, in a confirmed 180-card pool (66 Showcase) — a step up from [Vendetta's](/sets/vendetta) 166.
+Radiance is the near-term one, and the only set on this list you will be buying this year. It brings Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven in a 180-card pool (66 Showcase) — a step up from [Vendetta's](/sets/vendetta) 166.
 
 The pattern we have watched through four launches now is consistent enough to plan around: sealed is at its most expensive in the launch window, chase singles spike hardest in the first fortnight, and the mid-value playables drift down for about a month as supply catches up. [Why Riftbound prices change](/guides/why-riftbound-card-prices-change) sets out the mechanics behind that.
 
@@ -10264,7 +10264,7 @@ Once it is on sale, the Vault will be price-compared the same way as every other
       },
       {
         q: "When is the next Riftbound set?",
-        a: "Radiance, 23 October 2026 — a confirmed 180 cards (66 Showcase), with six new champion Legends confirmed so far and three more still unrevealed: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna.",
+        a: "Radiance, released 23 October 2026 — 180 cards (66 Showcase), with nine new champion Legends: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven.",
       },
       {
         q: "Which Riftbound set has the most cards?",
@@ -10311,7 +10311,7 @@ Unleashed is the one worth a closer look if you're buying rather than just catal
 
 ## What's next: Radiance and beyond
 
-[Radiance](/release-dates) — Set 5 — is dated for **23 October 2026** with a confirmed 180 cards (66 Showcase) and six new champion Legends named so far — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more still unrevealed. It's the only future set with a real, Riot-confirmed release date right now.
+[Radiance](/sets/radiance) — Set 5 — released on **23 October 2026** with 180 cards (66 Showcase) and nine new champion Legends: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven.
 
 Beyond Radiance, Riot has mapped out the rest of 2027 — Legacy (Set 6, 29 Jan 2027, its biggest set yet at roughly 346 cards), The Reckoning (Set 7, 30 Apr 2027), and two further unnamed sets pencilled in for Q3 and Q4 2027. Rather than repeat those details here — and risk them drifting out of sync if Riot's dates move — the full breakdown, with what each set means for buyers, lives in the **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)**.
 
@@ -10931,7 +10931,7 @@ That's the whole shape of it. Two players build decks, take turns, and use their
 
 ## How it connects to the game you already know
 
-The connection isn't just cosmetic. Real League of Legends champions are the actual playable Legend cards — **Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn, Jhin** and dozens more already have real, released Riftbound cards, and every new set adds champions who didn't have cards before. Radiance, the next confirmed set, adds six more: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna.
+The connection isn't just cosmetic. Real League of Legends champions are the actual playable Legend cards — **Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn, Jhin** and dozens more already have real, released Riftbound cards, and every new set adds champions who didn't have cards before. Radiance, released 23 October 2026, adds nine more: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven.
 
 If you're wondering whether your specific main made the cut, the [champions page](/champions) is a live, always-current list — every League champion with a Riftbound card, how many cards they have, and what those cards cost right now.
 
@@ -10978,7 +10978,7 @@ If you already play a card game, **[Magic to Riftbound](/guides/mtg-to-riftbound
     summary: [
       "**Dozens of League of Legends champions already have real Riftbound cards** as Legends — the champion that anchors a deck — with more added in every new set.",
       "**Recognisable names already in the game** include Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn and Jhin.",
-      "**Radiance, the next set, adds nine new Legends** — six named so far: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna.",
+      "**Radiance, released 23 October 2026, adds nine new Legends**: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven.",
       "The exact, always-current list — every champion with a card, how many, and live prices — is on the [champions page](/champions), not a static list that goes stale.",
     ],
     faq: [
@@ -11000,7 +11000,7 @@ If you already play a card game, **[Magic to Riftbound](/guides/mtg-to-riftbound
       },
       {
         q: "Do champions get new cards in every Riftbound set?",
-        a: "Existing champions can get additional printings and treatments, and each new set has historically introduced champions who didn't have a Riftbound card before — Radiance, the next set, adds nine, six of them named so far: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna.",
+        a: "Existing champions can get additional printings and treatments, and each new set has historically introduced champions who didn't have a Riftbound card before — Radiance, released 23 October 2026, adds nine: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven.",
       },
     ],
     browseCta: {
@@ -11900,7 +11900,7 @@ If neither of those describes how you use the site, the free tier — which stil
       "**Kennen was the most-played legend at the Regional Qualifier: Barcelona** (21–23 Aug, a record 2,224 players) at 12.7% of the field — and still lost the final to Ornn, a legend nobody was building around going in.",
       "**Losing the final doesn't make Kennen a bad deck**: it was the most-played legend in the room and put three copies into the Top 8, which is exactly why every serious Day 2 competitor spent Swiss preparing to beat it specifically — and one of them did.",
       "**The Regional Qualifier: Singapore is running right now** (4–6 Sept) — Southeast Asia's biggest organised Riftbound event so far. Day 1's results aren't final as of writing, and this article doesn't invent ones that don't exist yet.",
-      "**Radiance releases 23 October 2026** with six confirmed champions — Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs, Orianna — and real, sourced marketing signals (a shared Showdown Deck, booster box art) already show which two get top billing.",
+      "**Radiance released 23 October 2026** with nine new champion Legends — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven — and real, sourced marketing signals (a shared Showdown Deck, booster box art) already show which two get top billing.",
       "Want to price any of these lists yourself? **[Paste one into the deck builder](/deck)** — every card priced live in your own market, cheapest store first.",
     ],
     faq: [
@@ -11918,7 +11918,7 @@ If neither of those describes how you use the site, the free tier — which stil
       },
       {
         q: "Which Riftbound Radiance champions has Riot confirmed?",
-        a: "Six so far, of nine total Legend slots: Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs and Orianna (confirmed later, at a PAX West livestream). Three more are set to be revealed during Preview Season, which opens 25 September 2026 at the Regional Qualifier: Los Angeles and runs through 9 October, ahead of Radiance's 23 October street date.",
+        a: "Nine Legend slots, all filled: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven. Orianna was confirmed at a PAX West livestream, and the last three during Preview Season (25 September to 9 October), ahead of Radiance's 23 October 2026 release.",
       },
       {
         q: "Which Radiance champions is Riot actually promoting hardest?",
@@ -11974,7 +11974,7 @@ The mechanics actually deciding those games are Vendetta's own: **[Flow](/guides
 
 Tournament results move the meta round to round. A new set moves it once and doesn't move back. **[Radiance](/blog/riftbound-radiance-what-we-know)** — Riot's fifth Riftbound set — releases **23 October 2026**: 180 confirmed cards, 66 of them Showcase treatments (a ~37% Showcase share, the highest of any set so far). Preview Season opens **25 September, at the Regional Qualifier: Los Angeles itself**, and runs through **9 October**, with Pre-Rift events **16–22 October** immediately before street date. That means the first official reveals land in the same room as the last qualifier of the season — the same weekend the game's most invested players go from "which Vendetta deck do I bring" to "which Radiance deck do I build."
 
-Nine Legend slots, six confirmed so far: **Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs** and **Orianna**, with three more to be revealed during Preview Season. The one gameplay detail actually confirmed today is Ekko's Legend, *Ekko, Boy Who Shattered Time*: a **Fury/Mind** Legend whose ability is built on Empower — disempower Ekko to discount your next unit by 2 energy and 1 power, and that unit dies at end of turn. (*Ekko, Ingenious* is his Champion Unit; only its art has been shown.) That's a real design signal in its own right — Radiance is extending Empower rather than retiring it the moment a new set lands, which is one more reason Singapore's Empower-heavy decklists are worth watching now rather than treating as a lame-duck mechanic on its way out.
+Nine Legend slots: **Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs, Orianna, Mordekaiser, K'Sante** and **Riven** (the last three revealed during Preview Season). The one gameplay detail actually confirmed today is Ekko's Legend, *Ekko, Boy Who Shattered Time*: a **Fury/Mind** Legend whose ability is built on Empower — disempower Ekko to discount your next unit by 2 energy and 1 power, and that unit dies at end of turn. (*Ekko, Ingenious* is his Champion Unit; only its art has been shown.) That's a real design signal in its own right — Radiance is extending Empower rather than retiring it the moment a new set lands, which is one more reason Singapore's Empower-heavy decklists are worth watching now rather than treating as a lame-duck mechanic on its way out.
 
 Radiance isn't the only structural shift on the calendar, either — just the next one. [Legacy](/guides/riftbound-sets-in-order), Riot's Set 6, ships 29 January 2027 as the largest set announced so far and the first designed specifically for draft, changing pack composition itself: a common slot becomes a Legend-or-Battlefield slot. That's a bigger structural change than any single champion reveal, and it's one more reason "the meta" is worth thinking of as something that keeps moving on a schedule, not settling once and staying settled.
 
@@ -11993,7 +11993,7 @@ Put together, those five aren't a guess at who'll be good — they're simply whe
 We deliberately don't predict what individual cards will do — see [why Riftbound prices actually change](/guides/why-riftbound-card-prices-change) for the real mechanics behind that, instead of a guess dressed up as one. What's actually actionable right now:
 
 - **If you're building for the rest of the Vendetta season**, Kennen is still the deck to beat — one lost final is a data point, not a pattern — and [the deck builder](/deck) prices any published list live, cheapest store first, in your own currency; a Viktor or Master Yi shell comes in at a fraction of Kennen's cost to assemble.
-- **If you're buying into Radiance**, the six confirmed champions are the safest early read on where new demand lands first — [compare Radiance preorders](/radiance-preorders) rather than guessing at singles prices for cards that haven't even been revealed yet.
+- **If you're buying into Radiance**, the nine new champions are the safest read on where new demand lands first — [compare Radiance card prices](/sets/radiance) rather than guessing at singles prices for cards that haven't even been revealed yet.
 - **If you just want to know what's shipping and when**, without a hard-coded countdown that goes stale the day it's wrong, [the release calendar](/release-dates) rolls itself forward automatically as each date passes — Radiance, Legacy and everything Riot has announced beyond it.
 
 We'll be watching Singapore's Top 8 the moment it's final — and reading it the same way we read Barcelona: from the actual decklists, not a guess at what they'll say.`,
@@ -12071,7 +12071,7 @@ We'll be watching Singapore's Top 8 the moment it's final — and reading it the
       },
       {
         q: "Which champions debut in Radiance?",
-        a: "Six are named so far — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more still unrevealed, so nine is the expected total. Origins, Spirit Forged and Unleashed each debuted twelve; Vendetta debuted nine.",
+        a: "Nine: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven. Origins, Spirit Forged and Unleashed each debuted twelve; Vendetta debuted nine.",
       },
       {
         q: "Will Radiance have K/DA cards?",
@@ -12105,7 +12105,7 @@ For Origins, Spirit Forged and Unleashed, the headline figure is the **base run*
 | [Vendetta](/sets/vendetta) | 166 | not published | — | 9 |
 | **[Radiance](/sets/radiance)** | **~114** | **66** | **180** | **9 expected** |
 
-*Radiance's base run is arithmetic, not a Riot figure: 180 minus 66. Champion debuts are champions receiving their first Riftbound Legend card, counted from our own card database; Radiance has six named so far with three more unrevealed. The 24-card Proving Grounds starter set is excluded.*
+*Radiance's base run is arithmetic, not a Riot figure: 180 minus 66. Champion debuts are champions receiving their first Riftbound Legend card, counted from our own card database; Radiance has nine. The 24-card Proving Grounds starter set is excluded.*
 
 So the honest position is that Radiance is the smallest main set to date on base cards, and that it is not bigger than Vendetta once both numbers are counted the same way. If "biggest" means "most cards", this post ends here.
 
@@ -12189,7 +12189,7 @@ The full product table, with what each contains, is in **[what's confirmed about
 
 ## What this means if you are buying
 
-- **If you want to play:** the champion debuts are the reason to care — six named, three still unrevealed. If Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV or Orianna is your main, this is your set, and singles will be the cheap way in a few weeks after release rather than on day one.
+- **If you want to play:** the champion debuts are the reason to care — nine new Legends. If Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante or Riven is your main, this is your set, and singles will be the cheap way in a few weeks after release rather than on day one.
 - **If you want to open sealed:** wait for real prices and run [box EV](/tools/box-ev) against the singles market. A 37% Showcase share makes the variance between boxes higher than in any previous set, which is exactly when buying singles beats opening.
 - **If you are tracking the K/DA thesis:** the three existing members are already priced. Set a [price alert](/alerts) on them rather than checking manually — if Radiance does ship a K/DA tier, the existing three are likely to move on the announcement, not on release day.
 - **If you are selling:** the window between reveal season and release is usually when interest in the *previous* set is weakest. [Movers](/movers) will show you whether that is happening to Vendetta.

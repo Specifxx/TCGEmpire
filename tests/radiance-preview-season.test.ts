@@ -32,13 +32,19 @@ test("the callout sits on three real Radiance posts and retires with the season"
   assert.equal(isBeforeRadianceRelease(new Date("2026-10-23T00:00:01Z")), false);
 });
 
-test("the sitewide banner is slim, dismissible, client-decided and gone on release day", () => {
+test("the sitewide banner is slim, dismissible, client-decided, says 'out' from release day, then goes", () => {
   const b = read("src/components/RadianceSeasonBanner.tsx");
-  // Since 2026-10-15 a third, "launch" phase (after previews end) has its own dismissal key.
-  assert.match(b, /localStorage\.getItem\(p === "launch" \? LAUNCH_DISMISS_KEY : DISMISS_KEY\)/);
-  assert.match(b, /localStorage\.setItem\(was === "launch" \? LAUNCH_DISMISS_KEY : DISMISS_KEY, "1"\)/);
-  assert.match(b, /if \(now >= Date\.parse\(`\$\{RADIANCE_RELEASE_DATE\}T00:00:00Z`\)\) return null;/);
-  assert.match(b, /href=\{phase === "launch" \? "\/radiance-preorders" : "\/sets\/radiance"\}/);
+  // Since 2026-10-15 a "launch" phase (after previews end) has its own dismissal
+  // key, and since release (2026-10-22, owner: "Radiance is out now") so does
+  // the "out" phase, which runs from the start of release day in Australia
+  // until OUT_UNTIL.
+  assert.match(b, /const keyFor = \(p: Phase\) => \(p === "out" \? OUT_DISMISS_KEY : p === "launch" \? LAUNCH_DISMISS_KEY : DISMISS_KEY\);/);
+  assert.match(b, /localStorage\.getItem\(keyFor\(p\)\)/);
+  assert.match(b, /localStorage\.setItem\(keyFor\(was\), "1"\)/);
+  assert.match(b, /if \(now >= streetDateStartMs\(OUT_UNTIL\)\) return null;/);
+  assert.match(b, /if \(now >= streetDateStartMs\(RADIANCE_RELEASE_DATE\)\) return "out";/);
+  assert.match(b, /href=\{phase === "launch" \? "\/radiance-preorders" : phase === "out" \? "\/sets\/radiance\/gallery" : "\/sets\/radiance"\}/);
+  assert.doesNotMatch(b.slice(b.indexOf('phase === "out"\n')), /^\s*\? "is out 23 October/, "the out phase never says pre-order");
   assert.match(b, /aria-label="Dismiss the Radiance banner"/);
   assert.match(read("src/app/layout.tsx"), /<RadianceSeasonBanner \/>/);
 });

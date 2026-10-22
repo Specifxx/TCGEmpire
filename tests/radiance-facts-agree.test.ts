@@ -141,6 +141,13 @@ test("every Legend radiance.ts confirms is spelled the same way in the articles"
     for (const line of prose(a).split(/\n|(?<=[.!?])\s+(?=[A-Z*])/)) {
       const present = names.filter((n) => line.includes(n));
       if (present.length < 4) continue;
+      // A list of LEGENDS says so: a "Champion Units" row naming the same
+      // champions' unit cards is not a Legend list (2026-10-22, once K'Sante's
+      // Legend joined the confirmed list his Champion Unit row tripped this).
+      if (!/Legend/i.test(line)) continue;
+      // A dated "*Update, 15 October:*" note logs which CARDS arrived when; it
+      // names printings, not the set's Legend list.
+      if (/^\s*\*Update,/.test(line)) continue;
       // A list separates its names with commas; prose pairs them with "and".
       if (present.filter((n) => line.includes(`${n},`)).length < 2) continue;
       checked++;

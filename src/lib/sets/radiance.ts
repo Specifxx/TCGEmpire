@@ -34,6 +34,11 @@ export const RADIANCE_LEGENDS_CONFIRMED: RadianceLegend[] = [
   { name: "Ziggs", slug: "ziggs" },
   { name: "Jarvan IV", slug: "jarvan-iv" },
   { name: "Orianna", slug: "orianna" },
+  // The last three, in Riot's full gallery (and our catalogue) by release day
+  // (2026-10-22): all nine are known now.
+  { name: "Mordekaiser", slug: "mordekaiser" },
+  { name: "K'Sante", slug: "ksante" },
+  { name: "Riven", slug: "riven" },
 ];
 // 9 Legends total across the set (same figure the original brief used) —
 // only which ones are confirmed vs. still unrevealed has moved.
@@ -127,8 +132,8 @@ export interface RadianceFaq {
 // one array, so the two can never say different things.
 export const RADIANCE_FAQ: RadianceFaq[] = [
   {
-    q: "When does Riftbound Radiance release?",
-    a: "Radiance releases worldwide on October 23, 2026. Card previews begin September 25, with Pre-Rift early-play events running October 16–22.",
+    q: "When did Riftbound Radiance release?",
+    a: "Radiance released worldwide on October 23, 2026. Card previews ran from September 25, and Pre-Rift early-play events ran October 16–22.",
   },
   {
     q: "How many cards are in Riftbound Radiance?",
@@ -136,23 +141,23 @@ export const RADIANCE_FAQ: RadianceFaq[] = [
   },
   {
     q: "Which champions (legends) are in Riftbound Radiance?",
-    a: "Six legends are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more unrevealed at the start of preview season.",
+    a: "Nine: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven.",
   },
   {
     q: "What are the Radiance Showdown Decks?",
     a: `"Showdown Decks: Seraphine vs. Evelynn" includes two 56-card preconstructed decks, two booster packs, two playmats and a rulebook, at $34.99 MSRP.`,
   },
   {
-    q: "Where can I preorder Riftbound Radiance the cheapest?",
-    a: "RiftCompare compares live Radiance preorder prices for the booster display, Showdown Decks, Vault Bundle and Pre-Rift kits across every store it tracks in your market — the US, UK, Australia, Canada, Singapore and the eurozone — with the cheapest open price for each product shown at the top of its section, in your currency.",
+    q: "Where can I buy Riftbound Radiance the cheapest?",
+    a: "RiftCompare compares live Radiance prices for every single and for the booster display, Showdown Decks and Vault Bundle across every store it tracks in your market — the US, UK, Australia, Canada, Singapore and the eurozone — cheapest first, in your currency.",
   },
   {
     q: "Can I buy Radiance directly from Riot?",
-    a: "Only through a draw. Riot's Merch Store takes sign-ups from 25 to 30 September 2026 in North America and Europe; entrants selected from about 5 October may buy one Radiance Booster Display each, shipping from release day. Everywhere else, and for every other product, it is a store or a marketplace.",
+    a: "Only through a draw, and it has closed. Riot's Merch Store took sign-ups from 25 to 30 September 2026 in North America and Europe, and selected entrants could buy one Radiance Booster Display each. Everywhere else, and for every other product, it is a store or a marketplace.",
   },
   {
     q: "How often do Radiance prices update on RiftCompare?",
-    a: "Daily through preview season and launch. Singles appear within hours of reveal, each with a full store-by-store breakdown and price history.",
+    a: "Store prices refresh twice a day. Every Radiance card has its own page with a store-by-store breakdown and price history.",
   },
 ];
 

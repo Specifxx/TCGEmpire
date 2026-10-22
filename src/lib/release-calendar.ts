@@ -113,10 +113,10 @@ export const RELEASES: ReleaseEntry[] = [
     // Riot's original 5-Legend Set 5 announcement. See src/lib/sets/radiance.ts's
     // header for the sourcing (riftbound.gg, dated 2026-09-14) and why this list
     // carries 6 rather than the original 5.
-    champions: ["Seraphine", "Evelynn", "Ekko", "Ziggs", "Jarvan IV", "Orianna"],
+    champions: ["Seraphine", "Evelynn", "Ekko", "Ziggs", "Jarvan IV", "Orianna", "Mordekaiser", "K'Sante", "Riven"],
     preordersHref: "/radiance-preorders",
     spoilersHref: "/blog/riftbound-radiance-spoilers",
-    note: "Riot's Set 5 — 167 numbered cards, with Showcase treatments numbered above them (Riot's announcement said 180 including 66 Showcase; the first card to surface is printed 167/167). A step up from Vendetta. Six champion Legends are named so far, with three more still unrevealed.",
+    note: "Riot's Set 5 — 167 numbered cards, with Showcase treatments numbered above them (Riot's announcement said 180 including 66 Showcase; the first card to surface is printed 167/167). A step up from Vendetta. Nine champion Legends.",
   },
   {
     name: "Legacy",

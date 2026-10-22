@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { FIRST_CONTACT_SEND_CAP, FIRST_PRICE_SEND_CAP, isFirstPrice } from "../src/lib/price-alerts";
 import { dropRow, priceDropCopy, type PriceDropItem } from "../src/lib/email";
 import { daysAgo, harness, listing, row } from "./helpers/alert-harness";
+import { withRadianceUpcoming } from "./helpers/upcoming-set";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // "Get a price alert" on a card no store lists yet: a null → priced move sends
@@ -50,7 +51,8 @@ test("a card from an unreleased set is labelled a PRE-ORDER, and never becomes t
     now: PRE_RIFT,
     stores: [listing("card-a", 1299, { lastSeen: new Date(PRE_RIFT.getTime() - 3600_000) })],
   });
-  const s = await h2.run();
+  // Radiance as it was flagged before release (helpers/upcoming-set.ts).
+  const s = await withRadianceUpcoming(() => h2.run());
   assert.equal(s.listed, 1);
   assert.equal(s.preorders, 1);
   const item = h2.items()[0]!;

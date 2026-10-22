@@ -113,7 +113,9 @@ test("sets released before we started dating them are never prioritised", () => 
 test("Radiance gets no priority before its release date, and gets it after", () => {
   const RAD = SETS.find((s) => s.code === "RAD")!;
   assert.equal(RAD.releasedOn, "2026-10-23");
-  assert.equal(RAD.comingSoon, true);
+  // Released (2026-10-22, owner): comingSoon is gone. The window reads only
+  // releasedOn, so the flag never mattered to it.
+  assert.ok(!RAD.comingSoon);
 
   // Announced but unreleased — Vendetta still owns the window here.
   assert.deepEqual(pricePrioritySetCodes(day("2026-08-04")), ["VEN"]);

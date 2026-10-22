@@ -18984,3 +18984,16 @@ ensure we have all the cards."
   signed one.
 - **Not done here:** the release-day email (`release-day-email.yml`) is manual and
   dry-run by default; sending it is the owner's call.
+- **All nine Legends named.** `RADIANCE_LEGENDS_CONFIRMED` adds Mordekaiser,
+  K'Sante and Riven (all in the gallery and the catalogue); the release calendar,
+  the hub FAQ and every article line that said "six named, three unrevealed" now
+  say nine. `tests/radiance-facts-agree` skips "Champion Units" rows and dated
+  "*Update, …*" notes, which name printings, not the Legend list.
+- **`/radiance-preorders` stays live** in a released state (Radiance booster box
+  prices, released FAQ and metadata, "Out now"), not 301'd: SET-LAUNCH-RUNBOOK
+  calls it self-retiring and about 25 articles plus Reddit posts link it. The nav
+  entry becomes "Radiance (new set)" → /sets/radiance. Radiance-tagged articles
+  swap their pre-order CTAs for released ones at render time.
+- **Left for the owner:** the policy pages' "Radiance pre-order table" eBay
+  exception (that table no longer renders), the spoiler tracker's title, and the
+  future-tense prose still inside older article bodies.

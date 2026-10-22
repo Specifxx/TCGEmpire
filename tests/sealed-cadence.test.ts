@@ -10,6 +10,7 @@ import { buildSealedWatchEmail, type SealedWatchKind } from "../src/lib/watch-em
 import { checkedLabel } from "../src/lib/email";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { NOW, group, hoursAgo, offer, plus, premium, lapsed, sealedHarness, sealedRow } from "./helpers/watch-harness";
+import { withRadianceUpcoming } from "./helpers/upcoming-set";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SEALED WATCHES CHECKED ABOUT EVERY SIX HOURS (2026-09-29, DECISIONS.md
@@ -164,10 +165,14 @@ test("one read per market for a pass, shared by the shipped and the pre-order si
   };
   const BEFORE_RADIANCE = new Date("2026-10-01T00:00:00Z"); // NOW is after the 23 Oct release
   const loaders = freshSealedLoaders(BEFORE_RADIANCE, all as never);
-  const shipped = await loaders.groups("US");
-  const pre = await loaders.preorderGroups("US");
-  await loaders.groups("US");
-  await loaders.groups("AU");
+  // As Radiance was flagged before release (helpers/upcoming-set.ts).
+  const [shipped, pre] = await withRadianceUpcoming(async () => {
+    const shipped = await loaders.groups("US");
+    const pre = await loaders.preorderGroups("US");
+    await loaders.groups("US");
+    await loaders.groups("AU");
+    return [shipped, pre] as const;
+  });
   assert.deepEqual(reads, ["US", "AU"], "each market is read once");
   assert.deepEqual(shipped.map((g) => g.groupKey), ["OGN|Booster Box"]);
   assert.deepEqual(pre.map((g) => g.groupKey), ["RAD|Booster Box"], "Radiance is a pre-order before its release date");

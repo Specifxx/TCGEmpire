@@ -21,6 +21,7 @@ import {
   RADIANCE_PRODUCTS,
   RADIANCE_FAQ,
   isBeforeRadianceRelease,
+  RADIANCE_SET_CODE,
 } from "@/lib/sets/radiance";
 
 // The visible content hub for /sets/radiance while singles are still in
@@ -53,7 +54,13 @@ const TIMELINE = [
 
 export async function RadianceHub({ country }: { country: Country }) {
   const currency = getDisplayCurrency(country);
-  const groups = await getPreorderGroups(country).catch(() => []);
+  // Released (from the start of 23 Oct in Australia, isBeforeRadianceRelease):
+  // the pre-order table, its link and the release-day capture go, and the
+  // products section points at the live sealed and singles prices instead.
+  // getPreorderGroups() would return [] by then anyway; not calling it saves
+  // the read (2026-10-22, owner: "Radiance is out now").
+  const preRelease = isBeforeRadianceRelease();
+  const groups = preRelease ? await getPreorderGroups(country).catch(() => []) : [];
   const listed = preorderTableGroups(groups);
 
   // Which timeline step is "next" from today, so it can carry the gold accent
@@ -66,9 +73,11 @@ export async function RadianceHub({ country }: { country: Country }) {
   return (
     <section className="card-surface p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-xl font-extrabold text-white">Riftbound Radiance — what&apos;s confirmed</h2>
+        <h2 className="font-display text-xl font-extrabold text-white">
+          {preRelease ? <>Riftbound Radiance — what&apos;s confirmed</> : <>Riftbound Radiance — set facts</>}
+        </h2>
         <span className="chip bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold">
-          Set 5 · releases {fmtDate(RADIANCE_RELEASE_DATE)}
+          Set 5 · {preRelease ? "releases" : "released"} {fmtDate(RADIANCE_RELEASE_DATE)}
         </span>
       </div>
       <p className="mt-1 text-sm italic text-slate-400">&ldquo;{RADIANCE_TAGLINE}&rdquo;</p>
@@ -96,7 +105,9 @@ export async function RadianceHub({ country }: { country: Country }) {
         <div>
           <dt className="text-xs uppercase tracking-wide text-slate-500">Legends</dt>
           <dd className="mt-0.5 font-semibold text-white">
-            {RADIANCE_LEGENDS_CONFIRMED.length} of {RADIANCE_LEGENDS_TOTAL} confirmed
+            {RADIANCE_LEGENDS_UNREVEALED > 0
+              ? <>{RADIANCE_LEGENDS_CONFIRMED.length} of {RADIANCE_LEGENDS_TOTAL} confirmed</>
+              : <>{RADIANCE_LEGENDS_TOTAL}</>}
           </dd>
         </div>
         <div>
@@ -109,7 +120,9 @@ export async function RadianceHub({ country }: { country: Country }) {
           page's filtered card view, so it resolves to real cards the moment
           they're revealed and imported. */}
       <div className="mt-6">
-        <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400">Confirmed legends</h3>
+        <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400">
+          {RADIANCE_LEGENDS_UNREVEALED > 0 ? "Confirmed legends" : "Legends"}
+        </h3>
         <div className="mt-2 flex flex-wrap gap-2">
           {RADIANCE_LEGENDS_CONFIRMED.map((legend) => (
             <Link
@@ -121,9 +134,11 @@ export async function RadianceHub({ country }: { country: Country }) {
               {legend.name}
             </Link>
           ))}
-          <span className="chip border border-ink-700 px-3 py-1.5 text-sm text-slate-400">
-            +{RADIANCE_LEGENDS_UNREVEALED} unrevealed
-          </span>
+          {RADIANCE_LEGENDS_UNREVEALED > 0 && (
+            <span className="chip border border-ink-700 px-3 py-1.5 text-sm text-slate-400">
+              +{RADIANCE_LEGENDS_UNREVEALED} unrevealed
+            </span>
+          )}
         </div>
       </div>
 
@@ -142,7 +157,14 @@ export async function RadianceHub({ country }: { country: Country }) {
           ))}
         </ul>
 
-        {listed.length > 0 ? (
+        {!preRelease ? (
+          <p className="mt-4 text-sm text-slate-400">
+            Radiance is out, so its sealed product is priced alongside every other set&apos;s.{" "}
+            <Link href={`/sealed?set=${RADIANCE_SET_CODE}`} className="text-brand-300 underline-offset-2 hover:underline">
+              Compare every store&apos;s Radiance sealed price →
+            </Link>
+          </p>
+        ) : listed.length > 0 ? (
           <div className="mt-4">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pre-order prices, every store</h4>
             <div className="mt-2">
@@ -160,9 +182,15 @@ export async function RadianceHub({ country }: { country: Country }) {
             country is the server's (the set page reads it per request), so the
             hrefs are built here. */}
         <RadianceEbayPanel country={country} pageType="set_hub" besideRanking={listed.length > 0} headingLevel={3} className="mt-4" />
-        <Link href="/radiance-preorders" className="mt-3 inline-block text-sm font-semibold text-brand-300 underline-offset-2 hover:underline">
-          Compare every store&apos;s pre-order price →
-        </Link>
+        {preRelease ? (
+          <Link href="/radiance-preorders" className="mt-3 inline-block text-sm font-semibold text-brand-300 underline-offset-2 hover:underline">
+            Compare every store&apos;s pre-order price →
+          </Link>
+        ) : (
+          <Link href="/sets/radiance#price-guide" className="mt-3 inline-block text-sm font-semibold text-brand-300 underline-offset-2 hover:underline">
+            See every Radiance card&apos;s live price →
+          </Link>
+        )}
       </div>
 
       {/* Release timeline */}

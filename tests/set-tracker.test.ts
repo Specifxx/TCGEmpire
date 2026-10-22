@@ -10,6 +10,7 @@ import { freeLimitPitch } from "../src/components/FreeLimitPanel";
 import { isPreorderSetCode } from "../src/lib/constants";
 import { numberWithoutTotal } from "../src/lib/set-scope";
 import { TICK_ROWS, cellValue } from "../src/components/PremiumTicks";
+import { withRadianceUpcoming } from "./helpers/upcoming-set";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE SET TRACKER'S WIRING (2026-09-29, DECISIONS.md, "Set tracker"): the
@@ -103,8 +104,12 @@ test("the set-page limit panel says nobody loses what they have, and carries no 
 
 test("Radiance: 'N revealed' with no denominator, percentage, bar or cost until it is released", () => {
   const RAD = new Date("2026-10-01T00:00:00Z");
-  assert.equal(isPreorderSetCode("RAD", RAD), true);
-  assert.equal(isPreorderSetCode("RAD", new Date("2026-10-24T00:00:00Z")), false, "opens by the date, not by a flag");
+  // As Radiance was flagged before release (helpers/upcoming-set.ts).
+  withRadianceUpcoming(() => {
+    assert.equal(isPreorderSetCode("RAD", RAD), true);
+    assert.equal(isPreorderSetCode("RAD", new Date("2026-10-24T00:00:00Z")), false, "opens by the date, not by a flag");
+  });
+  assert.equal(isPreorderSetCode("RAD"), false, "released: the full tracker is open");
   assert.equal(isPreorderSetCode("OGN", RAD), false);
   for (const f of ["src/app/portfolio/sets/page.tsx", "src/app/portfolio/sets/[set]/page.tsx"]) {
     assert.match(code(f), /isPreorderSetCode\(set\.code\)/, f);

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getPreorderGroups } from "@/lib/sealed-import";
+import { getPreorderGroups, getSealedGroups } from "@/lib/sealed-import";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -104,7 +104,46 @@ const FAQS = [
   },
 ];
 
-export const metadata: Metadata = {
+// After release (2026-10-22, owner: "Radiance is out now ... nothing is coming
+// soon anymore"): the pre-order questions describe a window that has closed, so
+// the page's visible FAQ and its FAQPage JSON-LD switch to these together.
+const RELEASED_FAQS = [
+  {
+    q: "When did Riftbound Radiance release?",
+    a: "23 October 2026. Radiance is the fifth Riftbound set; Riot announced 180 cards, 66 of them Showcase treatments, with a base numbered run of 167 and the Showcase printings numbered above it.",
+  },
+  {
+    q: "Where are Radiance booster box prices now?",
+    a: "Radiance has released, so its booster boxes, packs, Vault Bundles and Showdown Decks are priced alongside every other set on the sealed comparison, store by store in your currency, and every Radiance single has live prices on the Radiance card list.",
+  },
+  FAQS[4],
+  FAQS[5],
+  {
+    q: "Can I still buy Radiance from Riot directly?",
+    a: `Riot's Merch Store ran a draw rather than taking pre-orders: sign-ups ran from ${dayMonth(RADIANCE_MERCH_DRAW.signupOpens)} to ${dayMonth(RADIANCE_MERCH_DRAW.signupCloses)} 2026, ${RADIANCE_MERCH_DRAW.regions} only, with ${RADIANCE_MERCH_DRAW.limit}. It has closed; everyone else buys from a store or a marketplace.`,
+  },
+];
+
+// The page's title and description follow the release (generateMetadata, not
+// a constant), like its body: a "Pre-Order Prices" title on a set that has
+// shipped would promise a comparison the page no longer carries.
+export function generateMetadata(): Metadata {
+  return isPreorderSetCode(SET_CODE) ? PREORDER_METADATA : RELEASED_METADATA;
+}
+
+const RELEASED_METADATA: Metadata = {
+  title: { absolute: "Riftbound Radiance Booster Box Prices" },
+  description:
+    "Radiance booster box, Vault Bundle and pack prices from every tracked store, in your currency, refreshed daily. Released 23 October 2026.",
+  alternates: pageAlternates("/radiance-preorders"),
+  openGraph: pageOpenGraph({
+    title: "Riftbound Radiance Booster Box Prices — Every Store",
+    description: "Radiance is out: booster boxes, Vault Bundles and Showdown Decks compared across every tracked store.",
+    url: "/radiance-preorders",
+  }),
+};
+
+const PREORDER_METADATA: Metadata = {
   // "BOOSTER BOX" IN THE TITLE (2026-09-25). docs/seo-keyword-map.md gives this
   // page `radiance booster box price`, it ranks 13.8 for it, and the phrase was
   // in neither the 72-character title nor the 204-character description —
@@ -137,6 +176,15 @@ export default async function RadiancePreordersPage() {
   const set = setByCode(SET_CODE);
   const stillUpcoming = isPreorderSetCode(SET_CODE);
   const groups = stillUpcoming ? await getPreorderGroups(country) : [];
+  // Released: the shipped Radiance products, from the same self-caching loader
+  // /sealed reads (never wrapped in another cache — CLAUDE.md), cheapest first.
+  const releasedGroups = stillUpcoming
+    ? []
+    : (await getSealedGroups(country).catch(() => []))
+        .filter((g) => g.setCode === SET_CODE && g.lowestPriceCents != null)
+        .sort((a, b) => (a.lowestPriceCents ?? 0) - (b.lowestPriceCents ?? 0))
+        .slice(0, 12);
+  const faqs = stillUpcoming ? FAQS : RELEASED_FAQS;
   // `priced` (an open offer exists) feeds the structured data; `listed` (any
   // offer at all) feeds the visible table, which shows sold-out stores too.
   const priced = pricedPreorderGroups(groups);
@@ -153,10 +201,11 @@ export default async function RadiancePreordersPage() {
 
   const ld = ldJson(
     webPage({
-      name: "Riftbound Radiance Pre-Order Prices",
+      name: stillUpcoming ? "Riftbound Radiance Pre-Order Prices" : "Riftbound Radiance Booster Box Prices",
       href: "/radiance-preorders",
-      description:
-        "Pre-order price comparison for Riftbound: Radiance sealed products across every tracked store, updated daily.",
+      description: stillUpcoming
+        ? "Pre-order price comparison for Riftbound: Radiance sealed products across every tracked store, updated daily."
+        : "Riftbound: Radiance sealed product prices across every tracked store, updated daily.",
       type: "CollectionPage",
     }),
     // PreOrder availability, never InStock — none of this has shipped. Emitting
@@ -187,31 +236,39 @@ export default async function RadiancePreordersPage() {
           })),
         }
       : null,
-    faqPage(FAQS),
+    faqPage(faqs),
   );
 
   return (
     <div className="mx-auto max-w-4xl">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
-      <Breadcrumbs trail={[{ name: "Radiance pre-orders", href: "/radiance-preorders" }]} />
+      <Breadcrumbs trail={[{ name: stillUpcoming ? "Radiance pre-orders" : "Radiance booster box prices", href: "/radiance-preorders" }]} />
 
       <header className="relative overflow-hidden rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/10 via-ink-900 to-ink-950 p-5 sm:p-7">
         <div className="relative z-10 max-w-xl">
           {/* lnum only, no tnum: body's tabular figures also widen Inter's hyphen,
               which rendered this label as 'PRE -ORDER' (globals.css prose rule). */}
           <span className="chip mb-3 inline-flex bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold [font-feature-settings:'lnum'_1]">
-            Pre-order · releases 23 Oct 2026
+            {stillUpcoming ? "Pre-order · releases 23 Oct 2026" : "Out now · released 23 Oct 2026"}
           </span>
           <h1 className="font-display text-2xl font-extrabold text-white sm:text-4xl">
-            Riftbound Radiance pre-order prices
+            {stillUpcoming ? "Riftbound Radiance pre-order prices" : "Riftbound Radiance booster box prices"}
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-300">
-            Nothing has shipped yet, so every store is simply picking an opening price, and they are picking very
-            different ones. Below is every Radiance product our tracked {info.adjective} stores are taking pre-orders
-            on, booster boxes and packs first, in {currency}. Within each product, an eBay search comes first, then open eBay
-            listings (both paid links), then the stores taking pre-orders, cheapest first. Sold-out stores are left
-            out.
-          </p>
+          {stillUpcoming ? (
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              Nothing has shipped yet, so every store is simply picking an opening price, and they are picking very
+              different ones. Below is every Radiance product our tracked {info.adjective} stores are taking pre-orders
+              on, booster boxes and packs first, in {currency}. Within each product, an eBay search comes first, then open eBay
+              listings (both paid links), then the stores taking pre-orders, cheapest first. Sold-out stores are left
+              out.
+            </p>
+          ) : (
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              Radiance is out. Its booster boxes, packs, Vault Bundles and Showdown Decks are now priced alongside every
+              other set at our tracked {info.adjective} stores, in {currency}, and every Radiance single has a live price
+              too.
+            </p>
+          )}
         </div>
         <div aria-hidden className="pointer-events-none absolute -right-6 top-6 hidden h-56 w-72 sm:block">
           {HEADER_ART.map((a, i) => (
@@ -295,7 +352,7 @@ export default async function RadiancePreordersPage() {
       ) : (
         <div className="card-surface mt-5 p-6">
           <h2 className="font-bold text-white">
-            {stillUpcoming ? "No Radiance pre-orders tracked yet" : "Radiance is out — see live prices"}
+            {stillUpcoming ? "No Radiance pre-orders tracked yet" : "Radiance sealed prices, cheapest first"}
           </h2>
           {stillUpcoming ? (
             <>
@@ -316,10 +373,33 @@ export default async function RadiancePreordersPage() {
               </p>
             </>
           ) : (
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-              Radiance has released, so its products are priced alongside every other set —{" "}
-              <Link href="/sealed" className="text-brand-400 hover:underline">
-                see live sealed prices
+            <>
+            {releasedGroups.length > 0 && (
+              <ul className="mt-3 divide-y divide-white/5 text-sm">
+                {releasedGroups.map((g) => (
+                  <li key={g.groupKey}>
+                    <Link
+                      href={`/sealed?set=${SET_CODE}&type=${encodeURIComponent(g.productType)}`}
+                      className="flex items-baseline justify-between gap-3 py-2 text-slate-200 hover:text-white"
+                    >
+                      <span className="min-w-0">
+                        {g.name}
+                        <span className="text-xs text-slate-500">
+                          {" "}· {g.storeCount} store{g.storeCount === 1 ? "" : "s"}
+                        </span>
+                      </span>
+                      <span className="num shrink-0 font-semibold text-gold">
+                        from {formatMoney(g.lowestPriceCents ?? 0, currency)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
+              {releasedGroups.length > 0 ? "Every store's price for each product is on " : "Radiance has released, so its products are priced alongside every other set — "}
+              <Link href={`/sealed?set=${SET_CODE}`} className="text-brand-400 hover:underline">
+                {releasedGroups.length > 0 ? "the sealed comparison" : "see live sealed prices"}
               </Link>{" "}
               or{" "}
               <Link href={`/sets/${set?.slug ?? "radiance"}`} className="text-brand-400 hover:underline">
@@ -327,6 +407,7 @@ export default async function RadiancePreordersPage() {
               </Link>
               .
             </p>
+            </>
           )}
         </div>
       )}
@@ -372,7 +453,7 @@ export default async function RadiancePreordersPage() {
         <h2 className="text-xl font-extrabold text-white">What each Radiance product is</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           Contents are from the retailer sheet; list prices are the US distributor MSRP. Riot has not published a price
-          and no MSRP outside the US has been announced — the prices above are what stores are actually asking.
+          and no MSRP outside the US has been announced — the prices {stillUpcoming ? "above" : "on the sealed comparison"} are what stores are actually asking.
         </p>
         <dl className="mt-4 grid gap-3 sm:grid-cols-2">
           {RADIANCE_PRODUCTS.map((p) => (
@@ -466,14 +547,14 @@ export default async function RadiancePreordersPage() {
 
       <div className="mt-8 flex flex-wrap gap-2 text-sm">
         <Link href="/blog/where-to-buy-riftbound-radiance" className="btn-ghost">Where to buy Radiance</Link>
-        <Link href="/blog/riftbound-radiance-spoilers" className="btn-ghost">Radiance spoilers so far</Link>
+        <Link href="/blog/riftbound-radiance-spoilers" className="btn-ghost">{stillUpcoming ? "Radiance spoilers so far" : "Every Radiance card revealed"}</Link>
         <Link href="/release-dates" className="btn-ghost">Riftbound release dates</Link>
         <Link href="/blog/riftbound-radiance-what-we-know" className="btn-ghost">What&apos;s confirmed about Radiance</Link>
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>
         <Link href="/tools/box-ev" className="btn-ghost">Is a box worth opening?</Link>
       </div>
 
-      <HubFaq faqs={FAQS} />
+      <HubFaq faqs={faqs} />
     </div>
   );
 }

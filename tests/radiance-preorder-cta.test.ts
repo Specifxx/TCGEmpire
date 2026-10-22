@@ -81,7 +81,9 @@ test("the price is the cheapest OPEN Booster Box offer in the visitor's market, 
 });
 
 test("from release day the block drops the pre-order framing and links to the set's prices", () => {
-  assert.equal(isBeforeRadianceRelease(new Date("2026-10-22T23:59:59Z")), true);
+  // Release day begins at midnight AEDT (streetDateStartMs): 13:00 UTC on 22 Oct.
+  assert.equal(isBeforeRadianceRelease(new Date("2026-10-22T12:59:59Z")), true);
+  assert.equal(isBeforeRadianceRelease(new Date("2026-10-22T13:00:00Z")), false);
   assert.equal(isBeforeRadianceRelease(new Date("2026-10-23T00:00:00Z")), false);
   const cta = read("src/components/RadiancePreorderCta.tsx");
   assert.match(cta, /if \(!isBeforeRadianceRelease\(\)\) \{[\s\S]*?href="\/sets\/radiance#price-guide"/);

@@ -12,6 +12,7 @@ import { offerStock } from "../src/lib/sealed-offers";
 import type { SealedGroup } from "../src/lib/sealed-import";
 import { PreorderPriceTable } from "../src/components/PreorderPriceTable";
 import { RadianceEbayPanel } from "../src/components/RadianceEbayPanel";
+import { withRadianceUpcoming } from "./helpers/upcoming-set";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pushing eBay clicks, P1: the Radiance pre-order funnel, sealed, articles and
@@ -73,15 +74,21 @@ test("ebaySealedQuery: the OR group survives the affiliate URL builder", () => {
 
 test("isCurrentSetCode: unreleased, or released within the window", () => {
   assert.equal(CURRENT_SET_WINDOW_DAYS, 45);
-  // Radiance before its 23 Oct 2026 release: a pre-order set is current.
-  assert.equal(isCurrentSetCode("RAD", new Date("2026-09-26T12:00:00Z")), true);
-  // …and after it, for 45 days.
+  // Radiance before its 23 Oct 2026 release, as it was flagged then
+  // (helpers/upcoming-set.ts): a pre-order set is current.
+  withRadianceUpcoming(() => {
+    assert.equal(isCurrentSetCode("RAD", new Date("2026-09-26T12:00:00Z")), true);
+  });
+  // …and after it, for 45 days, counted from the start of release day in
+  // Australia (streetDateStartMs: 22 Oct 13:00 UTC).
   assert.equal(isCurrentSetCode("RAD", new Date("2026-10-23T12:00:00Z")), true);
-  assert.equal(isCurrentSetCode("RAD", new Date("2026-12-07T00:00:00Z")), true, "day 45");
-  assert.equal(isCurrentSetCode("RAD", new Date("2026-12-07T00:00:01Z")), false, "past day 45");
-  // Vendetta (31 Jul 2026): current through 14 Sep, not on 26 Sep.
+  assert.equal(isCurrentSetCode("RAD", new Date("2026-12-06T13:00:00Z")), true, "day 45");
+  assert.equal(isCurrentSetCode("RAD", new Date("2026-12-06T13:00:01Z")), false, "past day 45");
+  // Vendetta (31 Jul 2026, so from 30 Jul 13:00 UTC): current through 13 Sep
+  // 13:00 UTC (14 Sep in Sydney), not on 26 Sep.
   assert.equal(isCurrentSetCode("VEN", new Date("2026-08-20T00:00:00Z")), true);
-  assert.equal(isCurrentSetCode("VEN", new Date("2026-09-14T00:00:00Z")), true);
+  assert.equal(isCurrentSetCode("VEN", new Date("2026-09-13T12:00:00Z")), true);
+  assert.equal(isCurrentSetCode("VEN", new Date("2026-09-14T00:00:00Z")), false);
   assert.equal(isCurrentSetCode("VEN", new Date("2026-09-26T00:00:00Z")), false);
 });
 
@@ -238,7 +245,7 @@ test("'Also on eBay' renders four labelled searches, each with Riftbound and its
     ["preorders-singles", "preorders-box", "preorders-bundle", "preorders-released-sealed"],
   );
   assert.match(html, /Search eBay UK for Radiance singles/);
-  assert.match(html, /Search eBay UK for booster boxes from released sets/);
+  assert.match(html, /Search eBay UK for booster boxes from earlier sets/);
   // Nothing claims a price, a stock level, or a guarantee.
   assert.doesNotMatch(html, /cheaper|in stock|guarantee/i);
 });
@@ -254,13 +261,13 @@ test("'Also on eBay' drops 'separate from the ranking above' where there is no r
 
 test("the released-sets search is a cross-sell: hidden for ad-free members", () => {
   const src = read("src/components/RadianceEbayPanel.tsx");
-  assert.match(src, /from released sets`,\s*href: [^\n]+\n\s*promo: true,/);
+  assert.match(src, /from earlier sets`,\s*href: [^\n]+\n\s*promo: true,/);
 });
 
 test("/radiance-preorders: no strip above the table, panel under it in every state, then the capture", () => {
   const src = read("src/app/radiance-preorders/page.tsx");
   const table = src.indexOf("<PreorderPriceTable ");
-  const empty = src.indexOf("Radiance is out — see live prices");
+  const empty = src.indexOf("Radiance sealed prices, cheapest first");
   const panel = src.indexOf('<RadianceEbayPanel country={country} pageType="radiance_preorders"');
   const capture = src.indexOf('<div id="notify"');
   // The "Prefer eBay?" strip went on 2026-10-19 (owner): each product opens with its own eBay row.
@@ -330,13 +337,16 @@ test("pre-order CTA after release: the section placement keeps a singles-only eB
 
 test("article end: 'Search eBay for Radiance' beside the comparison, ghost weight, disclosed", () => {
   const view = read("src/components/ArticleView.tsx");
-  const start = view.indexOf('article.tags.includes("radiance") && cta.href !== "/radiance-preorders" && (');
+  const start = view.indexOf('article.tags.includes("radiance") && authoredCta.href !== "/radiance-preorders" && (');
   const end = view.indexOf("</section>", start);
   const block = view.slice(start, end);
   assert.ok(start > 0);
   const compare = block.indexOf("Compare Radiance preorder prices</Link>");
   const ebay = block.indexOf("<EbayCountryLink");
   assert.ok(compare > 0 && ebay > compare, "the store comparison stays first and primary");
+  // From release day the same block's primary is the set's live card prices.
+  const released = block.indexOf('See Radiance card prices</Link>');
+  assert.ok(released > 0 && ebay > released, "after release, still a store comparison first");
   assert.match(block, /source="article-preorder-end"/);
   assert.match(block, /label="Search \{ebay\} for Radiance"/);
   assert.match(block, /surface="preorder_cta_ebay"/);

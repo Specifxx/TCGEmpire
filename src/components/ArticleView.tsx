@@ -295,11 +295,26 @@ const DEFAULT_BROWSE_CTA = {
   blurb: "Compare live prices for every Riftbound single across every store we track.",
 };
 
+// A post whose "Ready to buy?" pointed at the Radiance pre-order comparison
+// gets this instead from release day (2026-10-22, owner: "Radiance is out
+// now"): the boxes it compared are priced on /sealed now. The post's own
+// browseCta in lib/articles.ts is left as written, so the swap needs no
+// per-article edit and the pre-release copy stays exactly as it was.
+const RADIANCE_RELEASED_CTA = {
+  href: `/sealed?set=${RADIANCE_SET_CODE}`,
+  label: "Compare Radiance booster box prices →",
+  blurb: "Radiance is out: every tracked store's price for boxes, the Vault and the Showdown Decks, in your currency.",
+};
+
 export async function ArticleView({ article }: { article: Article }) {
   const related = relatedArticles(article);
-  const cta = article.browseCta ?? DEFAULT_BROWSE_CTA;
-  const tools = articleTools(article.slug, cta.href);
   const radianceSeason = isBeforeRadianceRelease();
+  // `authoredCta` is what the post asked for; `cta` is what renders. The
+  // "Buying Radiance?" block below still keys on the authored one, so a post
+  // whose own CTA was the pre-order page never gets both.
+  const authoredCta = article.browseCta ?? DEFAULT_BROWSE_CTA;
+  const cta = !radianceSeason && authoredCta.href === "/radiance-preorders" ? RADIANCE_RELEASED_CTA : authoredCta;
+  const tools = articleTools(article.slug, cta.href);
   // Every Radiance news post (lib/sets/radiance.ts carriesRadiancePreorderCta).
   // The block itself switches to "see Radiance prices" on release day, so the
   // rule does not expire.
@@ -667,16 +682,28 @@ export async function ArticleView({ article }: { article: Article }) {
           buy there. Ghost weight in eBay blue, so the store comparison stays
           the primary; client-localised (EbayCountryLink) because this page is
           ISR and cookie-free; its disclosure sits directly under both. */}
-      {article.tags.includes("radiance") && cta.href !== "/radiance-preorders" && (
+      {/* From release day (isBeforeRadianceRelease false, 2026-10-22 owner:
+          "Radiance is out now") the same block asks "Buying Radiance?" and
+          points at the set's live card prices and its sealed prices instead. */}
+      {article.tags.includes("radiance") && authoredCta.href !== "/radiance-preorders" && (
         <section className="card-surface mt-8 flex flex-wrap items-center justify-between gap-3 border-brand-500/30 bg-brand-500/5 p-5">
           <div>
-            <h2 className="font-bold text-white">Pre-ordering Radiance?</h2>
+            <h2 className="font-bold text-white">{radianceSeason ? "Pre-ordering Radiance?" : "Buying Radiance?"}</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Opening prices already differ a lot between stores — see the real spread before you order.
+              {radianceSeason
+                ? "Opening prices already differ a lot between stores — see the real spread before you order."
+                : "Radiance is out. Every card and box is priced at every tracked store — see the real spread before you buy."}
             </p>
           </div>
           <div className="flex max-w-full flex-wrap gap-2">
-            <Link href="/radiance-preorders" className="btn-primary max-w-full text-center">Compare Radiance preorder prices</Link>
+            {radianceSeason ? (
+              <Link href="/radiance-preorders" className="btn-primary max-w-full text-center">Compare Radiance preorder prices</Link>
+            ) : (
+              <>
+                <Link href="/sets/radiance#price-guide" className="btn-primary max-w-full text-center">See Radiance card prices</Link>
+                <Link href={`/sealed?set=${RADIANCE_SET_CODE}`} className="btn-ghost max-w-full text-center">Radiance sealed prices</Link>
+              </>
+            )}
             <EbayCountryLink
               query="Riftbound Radiance"
               source="article-preorder-end"
@@ -713,7 +740,7 @@ export async function ArticleView({ article }: { article: Article }) {
       {/* Skipped on the pre-order CTA pages: their mid-article CTA already
           carries this exact capture. */}
       {article.tags.includes("radiance") && isBeforeRadianceRelease() && !preorderCta && (
-        <div className={cta.href !== "/radiance-preorders" ? "mt-4" : "mt-8"}>
+        <div className={authoredCta.href !== "/radiance-preorders" ? "mt-4" : "mt-8"}>
           <NewsletterSignup
             siteName="RiftCompare"
             variant="card"
