@@ -62,9 +62,9 @@ export function PremiumButton({
   // Only once /api/me has answered, so signed_in is the real answer.
   const signedIn = !!user;
   useEffect(() => {
-    if (!loaded || !surface || !/^(gate|limit):/.test(surface) || premium) return;
+    if (!loaded || !surface || !/^(gate|limit):/.test(surface) || (premium && tier === "premium")) return;
     trackUpgradeOpen(upgradeContext(surface, marketFromCookie(), signedIn), { inline: true, surface });
-  }, [loaded, surface, signedIn, premium]);
+  }, [loaded, surface, signedIn, premium, tier]);
   return (
     <button type="button" onClick={() => open(surface, { tier: sellTier })} className={className ?? GOLD}>
       {children ?? (
