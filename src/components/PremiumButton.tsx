@@ -37,7 +37,7 @@ export function PremiumButton({
   tier?: PremiumTierKey;
 }) {
   const { open } = usePremiumDialog();
-  const { user, premium, tier, trialing, interval, trialEligible, trialDays, trialFeeCents, introEligible, premiumPlus, premiumAnnual, premiumCheckout } = useMe();
+  const { user, premium, tier, trialing, interval, trialEligible, trialDays, trialFeeCents, introEligible, premiumPlus, premiumAnnual, premiumCheckout, loaded } = useMe();
   // A Plus subscriber hitting a Premium-only gate is already paying — the
   // pitch is an upgrade, not a first subscription, and it names the real
   // recurring price rather than a trial (they've already had theirs). The
@@ -59,11 +59,12 @@ export function PremiumButton({
   const priceLabel = sellTier === "plus" ? `${tierMonthlyAmount("plus")}/mo` : PREMIUM_PRICE_LABEL;
   // A button on a wall (gate:/limit:) IS an inline paywall prompt: its showing
   // is an upgrade_dialog_open, once per surface per tab (lib/upgrade-intent.ts).
+  // Only once /api/me has answered, so signed_in is the real answer.
   const signedIn = !!user;
   useEffect(() => {
-    if (!surface || !/^(gate|limit):/.test(surface) || premium) return;
+    if (!loaded || !surface || !/^(gate|limit):/.test(surface) || premium) return;
     trackUpgradeOpen(upgradeContext(surface, marketFromCookie(), signedIn), { inline: true, surface });
-  }, [surface, signedIn, premium]);
+  }, [loaded, surface, signedIn, premium]);
   return (
     <button type="button" onClick={() => open(surface, { tier: sellTier })} className={className ?? GOLD}>
       {children ?? (

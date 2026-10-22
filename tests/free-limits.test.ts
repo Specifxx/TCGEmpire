@@ -407,7 +407,13 @@ test("the basket saving line: real money at or above $1, no saving claim below i
     assert.equal(basketSavingPitch(small, fmt, { plusMember: false, priceLabel: "x" }), null, `${small}: no saving claim`);
   }
   const ui = code("src/components/BestBasket.tsx");
-  assert.match(ui, /basketSavingPitch\(r\.savedCents, fmt, \{ plusMember: premium && tier === "plus", priceLabel: PREMIUM_PRICE_LABEL \}\)/, "the user's own computed saving, nothing else");
+  assert.match(
+    ui,
+    /basketSavingPitch\(r\.savedCents, fmt, \{\s*plusMember: premium && tier === "plus",\s*priceLabel: PREMIUM_PRICE_LABEL,\s*freePlansLeft: freePlans && onReveal \? left : 0,\s*\}\)/,
+    "the user's own computed saving, nothing else"
+  );
+  // With a free plan left this month (2026-10-22) the line points at it instead of asking for money.
+  assert.match(basketSavingPitch(1420, fmt, { plusMember: false, priceLabel: "x", freePlansLeft: 2 })!, /saves you \$14\.20[\s\S]*one of your free plans below\./);
   assert.match(ui, /<PremiumButton surface="limit:basket" \/>/);
 });
 

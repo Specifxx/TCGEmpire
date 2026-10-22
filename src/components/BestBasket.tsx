@@ -977,7 +977,11 @@ function PreviewCard({
   // THE UPGRADE LEADS WITH THIS LIST'S OWN SAVING (lib/basket-saving.ts,
   // 2026-09-28), and only when it is at least a whole unit of the list's
   // currency; below that, the plain line with no money claim.
-  const pitch = basketSavingPitch(r.savedCents, fmt, { plusMember: premium && tier === "plus", priceLabel: PREMIUM_PRICE_LABEL });
+  const pitch = basketSavingPitch(r.savedCents, fmt, {
+    plusMember: premium && tier === "plus",
+    priceLabel: PREMIUM_PRICE_LABEL,
+    freePlansLeft: freePlans && onReveal ? left : 0,
+  });
   return (
     <div className="card-surface p-5">
       <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Your delivered total</div>

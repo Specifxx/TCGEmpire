@@ -18,10 +18,13 @@ export const BASKET_SAVING_MIN_CENTS = 100;
 export function basketSavingPitch(
   savedCents: number,
   fmt: (cents: number) => string,
-  opts: { plusMember: boolean; priceLabel: string },
+  opts: { plusMember: boolean; priceLabel: string; freePlansLeft?: number },
 ): string | null {
   if (!Number.isFinite(savedCents) || savedCents < BASKET_SAVING_MIN_CENTS) return null;
   const lead = `The store-by-store plan saves you ${fmt(savedCents)} on this list compared with buying each card's cheapest copy separately.`;
+  // With a free plan left this month (lib/basket-meter.ts) the plan is one click
+  // away below, so the line does not ask for money.
+  if (opts.freePlansLeft && opts.freePlansLeft > 0) return `${lead} Open it with one of your free plans below.`;
   // A Plus member already pays: this is an upgrade, and PremiumButton quotes
   // the switch price on their own billing interval.
   return opts.plusMember ? `${lead} Upgrade to Premium to unlock it.` : `${lead} Unlock it for ${opts.priceLabel}.`;
