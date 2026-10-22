@@ -19,7 +19,7 @@
 // count on a page whose whole purpose is accuracy would be worse than the
 // deviation. Re-verify against riftbound.gg/radiance/ before trusting this
 // file if much more time has passed since 2026-09-14.
-import { setByCode } from "../constants";
+import { setByCode, streetDateStartMs } from "../constants";
 
 export interface RadianceLegend {
   name: string;
@@ -65,7 +65,7 @@ export const RADIANCE_PRERIFT_END = "2026-10-22";
  * render time; a page cached a day either side of the boundary is acceptable.
  */
 export function isBeforeRadianceRelease(now: Date = new Date()): boolean {
-  return now.getTime() < Date.parse(`${RADIANCE_RELEASE_DATE}T00:00:00Z`);
+  return now.getTime() < streetDateStartMs(RADIANCE_RELEASE_DATE);
 }
 
 // Riot's announced total (Showcase included), read from SETS rather than typed

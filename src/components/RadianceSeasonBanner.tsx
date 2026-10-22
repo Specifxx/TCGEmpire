@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { RADIANCE_PREVIEW_END, RADIANCE_PREVIEW_START, RADIANCE_RELEASE_DATE } from "@/lib/sets/radiance";
 import { REGION_HOME_PATH } from "@/lib/seo";
+import { streetDateStartMs } from "@/lib/constants";
 
 // Slim, dismissible sitewide banner for Radiance preview season (2026-09-24
 // growth pass). Decided on the CLIENT, after mount: the root layout is shared
@@ -18,13 +19,23 @@ import { REGION_HOME_PATH } from "@/lib/seo";
 // for launch week; from release day (23 Oct) it is gone for everyone. The launch
 // phase has its own dismissal key: someone who closed "preview season is on" has
 // not seen the pre-order message (2026-10-15, owner).
+//
+// OUT (2026-10-22, owner: "Radiance is out now so can we update the site wide").
+// From the start of release day in Australia (streetDateStartMs) it says the set
+// is out and points at live prices for every card, with its own dismissal key,
+// for three launch weeks; then it is gone for everyone.
 const DISMISS_KEY = "rc_radiance_banner_dismissed";
 const LAUNCH_DISMISS_KEY = "rc_radiance_launch_banner_dismissed";
+const OUT_DISMISS_KEY = "rc_radiance_out_banner_dismissed";
+const OUT_UNTIL = "2026-11-13";
 
-type Phase = "soon" | "live" | "launch";
+type Phase = "soon" | "live" | "launch" | "out";
 
-function phaseAt(now: number): Phase | null {
-  if (now >= Date.parse(`${RADIANCE_RELEASE_DATE}T00:00:00Z`)) return null;
+const keyFor = (p: Phase) => (p === "out" ? OUT_DISMISS_KEY : p === "launch" ? LAUNCH_DISMISS_KEY : DISMISS_KEY);
+
+export function phaseAt(now: number): Phase | null {
+  if (now >= streetDateStartMs(OUT_UNTIL)) return null;
+  if (now >= streetDateStartMs(RADIANCE_RELEASE_DATE)) return "out";
   // The day after the last preview day.
   if (now >= Date.parse(`${RADIANCE_PREVIEW_END}T00:00:00Z`) + 86_400_000) return "launch";
   return now >= Date.parse(`${RADIANCE_PREVIEW_START}T00:00:00Z`) ? "live" : "soon";
@@ -45,7 +56,7 @@ export function RadianceSeasonBanner({ placement = "page" }: { placement?: "page
     const p = phaseAt(Date.now());
     if (!p) return;
     try {
-      if (localStorage.getItem(p === "launch" ? LAUNCH_DISMISS_KEY : DISMISS_KEY)) return;
+      if (localStorage.getItem(keyFor(p))) return;
     } catch {
       /* storage blocked — show it; dismissal just won't persist */
     }
@@ -58,7 +69,7 @@ export function RadianceSeasonBanner({ placement = "page" }: { placement?: "page
     const was = phase;
     setPhase(null);
     try {
-      localStorage.setItem(was === "launch" ? LAUNCH_DISMISS_KEY : DISMISS_KEY, "1");
+      localStorage.setItem(keyFor(was), "1");
     } catch {
       /* fine */
     }
@@ -67,7 +78,7 @@ export function RadianceSeasonBanner({ placement = "page" }: { placement?: "page
   return (
     <div
       role="region"
-      aria-label="Radiance preview season"
+      aria-label={phase === "out" ? "Radiance is out" : "Radiance preview season"}
       className={
         placement === "hero"
           ? // In the hero: centred and narrower, a dark glass strip so it reads
@@ -77,11 +88,13 @@ export function RadianceSeasonBanner({ placement = "page" }: { placement?: "page
           : "mb-4 flex items-center gap-2 rounded-lg border border-gold/25 bg-gold/10 py-1 pl-3 pr-1 text-xs text-slate-200 sm:text-sm"
       }
     >
-      <Link href={phase === "launch" ? "/radiance-preorders" : "/sets/radiance"} className="tap-link min-w-0 flex-1 hover:text-white">
+      <Link href={phase === "launch" ? "/radiance-preorders" : phase === "out" ? "/sets/radiance/gallery" : "/sets/radiance"} className="tap-link min-w-0 flex-1 hover:text-white">
         {/* One child: .tap-link is a flex row, which split the label into columns. */}
         <span>
           <span className="font-semibold text-gold">✦ Radiance</span>{" "}
-          {phase === "launch"
+          {phase === "out"
+            ? "is out now — live prices for every card, every store →"
+            : phase === "launch"
             ? "is out 23 October — compare every store's pre-order price →"
             : phase === "live"
               ? "preview season is on — see every card revealed so far →"

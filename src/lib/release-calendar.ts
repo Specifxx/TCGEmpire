@@ -1,4 +1,4 @@
-import { SETS, isPreorderSetCode } from "./constants";
+import { SETS, isPreorderSetCode, streetDateStartMs } from "./constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE RIFTBOUND RELEASE CALENDAR — every release Riot has announced, in order.
@@ -247,7 +247,9 @@ const FIRST_DATED = RELEASES.findIndex((r) => r.date != null);
 function isOut(entry: ReleaseEntry, index: number, at: number): boolean {
   if (entry.window) return false;
   if (entry.date) {
-    const t = Date.parse(`${entry.date}T00:00:00Z`);
+    // From the start of the street date in Australia (constants.ts
+    // streetDateStartMs), the same moment every other release check uses.
+    const t = streetDateStartMs(entry.date);
     return !Number.isNaN(t) && t <= at;
   }
   return FIRST_DATED >= 0 && index < FIRST_DATED;
@@ -334,5 +336,5 @@ export function spoilersHrefForSet(code: string | undefined, now: Date = new Dat
   const entry = RELEASES.find((r) => r.code === code);
   if (!entry?.spoilersHref) return null;
   if (!entry.date) return entry.spoilersHref;
-  return Date.parse(`${entry.date}T00:00:00Z`) > now.getTime() ? entry.spoilersHref : null;
+  return streetDateStartMs(entry.date) > now.getTime() ? entry.spoilersHref : null;
 }

@@ -18955,3 +18955,32 @@ vocabulary), `tier_required`, `market`, `signed_in`, plus `plan` and
 `billing_period` on a click. No email, user id or other personal data. An inline
 prompt fires once per surface per tab session, so a page that re-renders cannot
 flood the Vercel event quota; the dialog fires on every open.
+
+## Radiance is released (2026-10-22)
+
+Owner, the evening of 22 Oct UTC (release morning in Australia): "Radiance is out
+now so can we update the site wide? And nothing is coming soon anymore. Also
+ensure we have all the cards."
+
+- **The flag, not the date.** RAD drops `comingSoon` and `newFrom` and gains
+  `recentlyReleased` (the "New" badge for the launch weeks). Every pre-order label,
+  countdown, "Coming soon" tile and "Upcoming" listing keys off `comingSoon`,
+  `isPreorderSetCode` or `nextUpcomingSet`, so they all flip at once.
+- **Release moments start in Australia.** Every "has this set released?" check
+  parsed `${date}T00:00:00Z`, so Radiance would have read as unreleased until
+  11:00 on release morning in Sydney, and a deploy before midnight UTC would have
+  prerendered pre-release pages for the whole ISR window. `streetDateStartMs()`
+  (constants.ts) is midnight AEDT on the date, used by constants.ts, the release
+  calendar, the countdown card and `isBeforeRadianceRelease`. Display dates are
+  unchanged ("23 October 2026").
+- **The banner** gets an "out" phase until 13 Nov: "Radiance is out now — live
+  prices for every card, every store →" to the set gallery, with its own
+  dismissal key.
+- **All the cards.** Re-scraped Riot's gallery (scripts/fetch-set-official.ts):
+  219 Radiance printings, and every one is in the catalogue with a matching name
+  and rarity (167 base, 18 alternate arts, the 168–184 overnumbers, SP1–5, 12
+  runes), plus 16 hand-added Signatures (168\*–176\*, 174a\*, 178\*–183\*). Every printing has an image and a price
+  in the public snapshot. 177\* (Ekko) is still not added: no source shows a
+  signed one.
+- **Not done here:** the release-day email (`release-day-email.yml`) is manual and
+  dry-run by default; sending it is the owner's call.

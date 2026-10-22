@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { SetInfo } from "@/lib/constants";
+import { streetDateStartMs, type SetInfo } from "@/lib/constants";
 
 // New-set hype line. Names no set: sourced via lib/constants.ts's
 // nextUpcomingSet(), the same "point at the next one without naming it" pattern
@@ -46,7 +46,7 @@ export function NextSetCountdownCard({
 }) {
   if (!set) return null; // nothing upcoming and announced — nothing to promote
 
-  const releaseMs = set.releasedOn ? Date.parse(`${set.releasedOn}T00:00:00Z`) : NaN;
+  const releaseMs = streetDateStartMs(set.releasedOn);
   const hasDate = !Number.isNaN(releaseMs);
   const days = hasDate ? Math.max(0, Math.ceil((releaseMs - Date.now()) / 86_400_000)) : null;
   if (days === 0) return null; // released — Explore's "New" tile covers it now

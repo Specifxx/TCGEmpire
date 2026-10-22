@@ -383,14 +383,32 @@ export const SETS: SetInfo[] = [
     // gets priced as an Origins card.
     totalCards: 167,
     announcedCards: 180,
-    comingSoon: true,
-    // Shown as "New" from 12 Oct, when Riot's gallery had the full list (192
-    // printings); still a pre-order set until 23 Oct. See `newFrom`.
-    newFrom: "2026-10-12",
+    // RELEASED 23 Oct 2026 (owner, the evening of 22 Oct UTC, already release
+    // morning in Australia: "Radiance is out now … nothing is coming soon
+    // anymore"). comingSoon and newFrom are gone, so every pre-order label,
+    // countdown and "Upcoming" listing drops it; recentlyReleased keeps the "New"
+    // badge for the launch weeks. Release moments are judged from the start of
+    // the street date in Australia (streetDateStartMs), so it reads as out here
+    // from midnight AEDT, not from midnight UTC eleven hours later.
+    recentlyReleased: true,
     releasedOn: "2026-10-23",
     hubReady: true,
   },
 ];
+
+/**
+ * The moment a street date BEGINS for this site: midnight on that date in
+ * eastern Australia (AEDT, UTC+11), the first market we cover to reach any
+ * given date. Riot publishes days, not hours (release-calendar.ts), and a set
+ * whose release day has started for our biggest market is out. Every "has this
+ * set released?" check reads this, never `${date}T00:00:00Z`, which made
+ * Radiance read as unreleased until 11:00 on release morning in Sydney.
+ * (2026-10-22, DECISIONS.md "Radiance is released".)
+ */
+export function streetDateStartMs(isoDate: string | null | undefined): number {
+  if (!isoDate) return NaN;
+  return Date.parse(`${isoDate}T00:00:00+11:00`);
+}
 
 // How long after release a set keeps first claim on the eBay quota. Two months:
 // long enough to cover the window where a new set's prices move daily and the
@@ -421,7 +439,7 @@ export function pricePrioritySetCodes(now: Date = new Date()): string[] {
   const cutoff = at - PRICE_PRIORITY_WINDOW_DAYS * 86_400_000;
   return SETS.filter((s) => {
     if (!s.releasedOn) return false;
-    const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
+    const released = streetDateStartMs(s.releasedOn);
     // An unparseable date must not silently grant a permanent head start.
     if (Number.isNaN(released)) return false;
     return released >= cutoff && released <= at;
@@ -443,7 +461,7 @@ export function newestReleasedSet(now: Date = new Date()): SetInfo | undefined {
   const at = now.getTime();
   return SETS.filter((s) => {
     if (!s.releasedOn) return false;
-    const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
+    const released = streetDateStartMs(s.releasedOn);
     return !Number.isNaN(released) && released <= at;
   }).sort((a, b) => (a.releasedOn! < b.releasedOn! ? 1 : -1))[0];
 }
@@ -477,7 +495,7 @@ export function nextUpcomingSet(now: Date = new Date()): SetInfo | undefined {
   return SETS.filter((s) => {
     if (!s.comingSoon) return false;
     if (!s.releasedOn) return true;
-    const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
+    const released = streetDateStartMs(s.releasedOn);
     return Number.isNaN(released) || released > at;
   }).sort((a, b) => {
     if (!a.releasedOn && !b.releasedOn) return 0;
@@ -533,7 +551,7 @@ export function isPreorderSetCode(code: string | null | undefined, now: Date = n
   const set = setByCode(code);
   if (!set?.comingSoon) return false;
   if (!set.releasedOn) return true; // announced, no date — still unreleased
-  const released = Date.parse(`${set.releasedOn}T00:00:00Z`);
+  const released = streetDateStartMs(set.releasedOn);
   return Number.isNaN(released) || released > now.getTime();
 }
 
@@ -558,7 +576,7 @@ export function isCurrentSetCode(code: string | null | undefined, now: Date = ne
   if (isPreorderSetCode(code, now)) return true;
   const releasedOn = setByCode(code)?.releasedOn;
   if (!releasedOn) return false;
-  const released = Date.parse(`${releasedOn}T00:00:00Z`);
+  const released = streetDateStartMs(releasedOn);
   if (Number.isNaN(released)) return false;
   const at = now.getTime();
   return released <= at && at - released <= CURRENT_SET_WINDOW_DAYS * 86_400_000;
