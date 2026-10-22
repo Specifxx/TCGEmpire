@@ -87,7 +87,7 @@ const FAQS = [
     a: "No. A pre-order price is what the store is asking today, and stores do change them before release — up or down — as allocations firm up. We refresh these daily, and nothing here is a commitment from the store or from us. Always confirm the price and the store's pre-order terms at checkout.",
   },
   {
-    q: "Do you include postage in the pre-order comparison?",
+    q: "Do you include postage in the price comparison?",
     a: "The prices shown are the store's listed item price. Each store's page lists its postage as measured from its own checkout (singles orders), and the Best Basket tool factors those rates in when you are buying several cards at once. A sealed box usually ships as a parcel, so check the store's checkout for it.",
   },
   {

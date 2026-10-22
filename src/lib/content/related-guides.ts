@@ -96,7 +96,7 @@ export const SET_GUIDES: Readonly<Record<string, readonly GuideRef[]>> = {
   RAD: [
     { slug: "riftbound-radiance-what-we-know", reason: "Radiance's release date, products and everything Riot has confirmed so far" },
     { slug: "riftbound-radiance-spoilers", reason: "Every Radiance card officially revealed so far, with a dated reveal log" },
-    { slug: "where-to-buy-riftbound-radiance", reason: "Where to pre-order Radiance in each of the six markets we cover" },
+    { slug: "where-to-buy-riftbound-radiance", reason: "Where to buy Radiance in each of the six markets we cover" },
   ],
 };
 
