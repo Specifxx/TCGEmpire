@@ -71,7 +71,9 @@ test("the policy and trust pages carry no footer banner pair; every other route 
 });
 
 test("FooterAds never renders a banner without its disclosure line", () => {
-  const src = codeOnly(read("src/components/FooterAds.tsx"));
+  // Whole-line // comments go first: one of them names "/premium/*", which the
+  // block-comment pass would otherwise read as an opening /* and swallow code.
+  const src = codeOnly(read("src/components/FooterAds.tsx").replace(/^\s*\/\/.*$/gm, ""));
   // One early return covers both reasons for no banners, so the zone (both
   // banners AND the combined line under them) goes or stays as a whole.
   assert.match(src, /if \(adFree \|\| !footerBannersAllowed\(pathname\)\) return null;/);
@@ -81,6 +83,15 @@ test("FooterAds never renders a banner without its disclosure line", () => {
   const line = zone.indexOf('<AffiliateDisclosure partner="both"');
   assert.ok(ebay > 0 && tcg > ebay && line > tcg, "eBay, then TCGplayer, then the one disclosure line for both");
   assert.equal(src.match(/<(EbayAd|TcgplayerAd) /g)?.length, 2, "no other banner path in the component");
+});
+
+test("no footer banner pair (and so no disclosure line) on /premium and below", async () => {
+  // 2026-10-22 (owner): a page selling an ad-free plan does not open on two ads.
+  // The early return above drops banners and line together, so the invariant holds.
+  const { SALES_ROUTES, footerBannersAllowed } = await import("../src/components/FooterAds");
+  assert.deepEqual([...SALES_ROUTES], ["/premium"]);
+  for (const p of ["/premium", "/premium/welcome", "/premium/start"]) assert.equal(footerBannersAllowed(p), false, p);
+  for (const p of ["/", "/trade", "/premiums", "/cards/jinx"]) assert.equal(footerBannersAllowed(p), true, p);
 });
 
 // ── Sitemap ─────────────────────────────────────────────────────────────────

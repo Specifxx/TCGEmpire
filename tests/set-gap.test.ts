@@ -18,6 +18,7 @@ import {
 } from "../src/lib/set-gap";
 import { loadSetGapLines, loadSetGapPrices, type SetGapBuy, type SetGapDeps } from "../src/lib/basket-server";
 import { parseBasketRequest } from "../src/lib/basket-request";
+import { FREE_PLANS_PER_MONTH } from "../src/lib/basket-meter";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { DECK_LINE_CAP } from "../src/lib/deck";
 import { RETAILERS } from "../src/lib/retailers";
@@ -417,12 +418,15 @@ test("the stale 'no notion of missing cards' comment is gone", () => {
 
 // ── The table, the button and the copy ───────────────────────────────────────
 
-test("the tier table row: totals below Premium, the store-by-store plan for Premium, the 200 from the constant", () => {
+test("the tier table row: the shared monthly plans below Premium, unlimited for Premium, the 200 from the constant", () => {
+  // 2026-10-22 (lib/basket-meter.ts): Finish this set shares Best Basket's
+  // FREE_PLANS_PER_MONTH below Premium; the chunk moved into the feature name.
   const row = TIER_COMPARISON.find((r) => r.feature.startsWith("Finish this set"));
   assert.ok(row, "the row exists");
-  assert.equal(row!.account, "Total and saving preview");
-  assert.equal(row!.plus, row!.account, "Plus sees what a free account sees");
-  assert.equal(row!.premium, `Store-by-store plan, up to ${SET_GAP_CHUNK} cards`);
+  assert.equal(row!.account, `Same ${FREE_PLANS_PER_MONTH} plans`);
+  assert.equal(row!.plus, row!.account, "Plus shares a free account's allowance");
+  assert.equal(row!.premium, "Unlimited");
+  assert.ok(row!.feature.endsWith(`postage included, up to ${SET_GAP_CHUNK} cards a plan`), "the enforced chunk, in the row name");
   assert.doesNotMatch(code("src/components/TierComparisonTable.tsx"), /up to 200 cards/, "the chunk is the constant, not typed");
   assert.match(read("src/components/PremiumSlideIn.tsx"), /\{ label: "Finish this set" \}/);
 });

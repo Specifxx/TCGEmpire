@@ -6,6 +6,7 @@ import { isPremiumClickSource, TIP_SURFACES, WATCH_GATE_SURFACES } from "../src/
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { DECK_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../src/lib/alert-limits";
 import { PREMIUM_COPY_VERSION } from "../src/lib/site";
+import { planBullets, planTagline } from "../src/lib/premium-plan-copy";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // "Premium works while you're away" (2026-09-29): the cron wiring, the tier
@@ -52,7 +53,7 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   const sealed = TIER_COMPARISON.find((r) => r.feature.startsWith("Sealed watches"))!;
   const deck = TIER_COMPARISON.find((r) => r.feature.startsWith("Deck price watch"))!;
   assert.ok(sealed && deck);
-  assert.deepEqual([sealed.account, sealed.plus, sealed.premium], [false, `Up to ${SEALED_WATCH_LIMIT_PLUS}`, "Unlimited"]);
+  assert.deepEqual([sealed.account, sealed.plus, sealed.premium], [false, `${SEALED_WATCH_LIMIT_PLUS} products`, "Unlimited"]);
   assert.deepEqual([deck.account, deck.plus, deck.premium], [false, false, true]);
   // Sealed then deck watches, then (2026-10-09) the history, graded and auction rows, then Ad-free.
   assert.ok(features.indexOf(sealed.feature) < features.indexOf(deck.feature) && features.indexOf(deck.feature) < features.length - 1);
@@ -63,8 +64,10 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   // then "search-caps-2026-10-15" when the allowance was loosened to 25 / 100 / 500,
   // then "signup-card-2026-10-16" when the sign-up card moved to the 2nd page,
   // then "akali-slider-2026-10-17" when one Akali slider replaced both corner cards,
-  // then "premium-simple-2026-10-17" when /premium became plan cards and a ticks-only table.
-  assert.equal(PREMIUM_COPY_VERSION, "premium-simple-2026-10-17");
+  // then "premium-simple-2026-10-17" when /premium became plan cards and a ticks-only table,
+  // then "premium-limits-2026-10-22" when the table showed real limits, the cards
+  // regained taglines and bullets, and Best Basket gave 3 free plans a month.
+  assert.equal(PREMIUM_COPY_VERSION, "premium-limits-2026-10-22");
   // Every surface that quotes a watch number reads the constant.
   for (const f of ["src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);
@@ -72,7 +75,11 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   }
   // Premium's card says what it adds in one short tagline (the long one went on
   // 2026-09-29: "Plans the order: which stores, what postage, at the condition you'll play, and a deck price watch").
-  assert.match(read("src/components/PremiumPricingCards.tsx"), /Plans which stores to buy from/);
+  // Since 2026-10-22 the tagline and bullets live in lib/premium-plan-copy.ts, and
+  // the deck price watch is one of Premium's bullets in every market.
+  assert.match(read("src/components/PremiumPricingCards.tsx"), /tagline=\{plusLive \? planTagline\("premium", market\)/);
+  assert.equal(planTagline("premium", "AU"), "Everything in Plus, plus the cheapest delivered order");
+  for (const m of ["US", "AU"]) assert.ok(planBullets("premium", m).some((b) => /^Deck price watch/.test(b)), `deck watch bullet (${m})`);
   // The definitions a newcomer needs, on /premium (2026-10-17, "/premium, 70%
   // simpler"): the FAQ's first answer, the ticks rows, and the long read linked
   // for every feature in detail. The "What you get" lines went.

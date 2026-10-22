@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { getArticles } from "../src/lib/articles";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { SIGNUP_SOURCES } from "../src/lib/signup-source-shared";
-import { TICK_ROWS, hasTick } from "../src/components/PremiumTicks";
+import { TICK_ROWS, cellValue } from "../src/components/PremiumTicks";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Deal Finder and Rising Cards have THREE levels of access (2026-09-23):
@@ -131,9 +131,10 @@ test("every tier table says Top 3 for the free account", () => {
     return row!.split("|").slice(2, -1).map((c) => c.trim());
   };
   // The article's table is rendered FROM TIER_COMPARISON since 2026-09-25, so
-  // these read the same answer the /premium table gives.
-  assert.deepEqual(cellsFor("Deal Finder"), ["Top 3", "Full list + only my cards", "Full list + only my cards"]);
-  assert.deepEqual(cellsFor("Rising Cards"), ["Top 3", "Full list", "Full list"]);
+  // these read the same answer the /premium table gives. Short cells since
+  // 2026-10-22: "Full" is the whole list.
+  assert.deepEqual(cellsFor("Deal Finder"), ["Top 3", "Full", "Full"]);
+  assert.deepEqual(cellsFor("Rising Cards"), ["Top 3", "Full", "Full"]);
   // Rising Sealed (which kept a single free "Top pick") left the product on
   // 2026-09-25; no table may still carry its row.
   assert.ok(!rows.some((r) => r.startsWith("| Rising Sealed |")), "the Rising Sealed row must be gone");
@@ -150,11 +151,12 @@ test("every tier table says Top 3 for the free account", () => {
 const STALE = /Premium only|#1 pick|top result only|Free shows only the top pick|only the top pick|single best result|single best row|single-best-pick/i;
 
 test("nothing still describes the old access for these two tools", () => {
-  // /premium (2026-10-17, ticks only): one row for both tools, named for the
-  // FULL lists, so Free's top three is a cross and every paid tier a tick.
+  // /premium (2026-10-22, real limits): one row for both tools, Free's cell is
+  // its top three and every paid tier gets the full list.
   const premiumPage = read("src/app/premium/page.tsx");
-  const full = TICK_ROWS.find((r) => r.name === "Full Deal Finder & Rising Cards")!;
-  assert.deepEqual((["free", "plus", "premium"] as const).map((t) => hasTick(full.from, t)), [false, true, true]);
+  const both = TICK_ROWS.find((r) => r.name === "Deal Finder & Rising Cards")!;
+  assert.ok(both, "the Deal Finder & Rising Cards row");
+  assert.deepEqual((["free", "plus", "premium"] as const).map((t) => cellValue(both.from, t)), ["Top 3", "Full", "Full"]);
   assert.ok(!STALE.test(premiumPage) && !STALE.test(read("src/components/PremiumTicks.tsx")), "/premium's pitch describes old access");
   const article = getArticles().find((a) => a.slug === "riftcompare-premium-explained")!;
   // Matched by name, not number: the 2026-09-25 rewrite reordered the sections.

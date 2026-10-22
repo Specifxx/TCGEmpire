@@ -496,6 +496,8 @@ test("every tier surface quotes the limits from the constants, and price compari
   // then "search-caps-2026-10-15" when the allowance was loosened to 25 / 100 / 500,
   // then "signup-card-2026-10-16" when the sign-up card moved to the 2nd page,
   // then "akali-slider-2026-10-17" when one Akali slider replaced both corner cards,
-  // then "premium-simple-2026-10-17" when /premium became plan cards and a ticks-only table.
-  assert.equal(PREMIUM_COPY_VERSION, "premium-simple-2026-10-17");
+  // then "premium-simple-2026-10-17" when /premium became plan cards and a ticks-only table,
+  // then "premium-limits-2026-10-22" when the table showed real limits, the cards
+  // regained taglines and bullets, and Best Basket gave 3 free plans a month.
+  assert.equal(PREMIUM_COPY_VERSION, "premium-limits-2026-10-22");
 });

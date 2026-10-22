@@ -301,6 +301,8 @@ export function BestBasket({
       }
       const built = d as Result;
       setResult(built);
+      // A reveal is the same basket again (its plan): counted once, by its run.
+      if (reveal) return;
       const size = listSize(built, tab, Math.min(listLines, DECK_LINE_CAP));
       trackEvent("best_basket_build", {
         source: tab,
