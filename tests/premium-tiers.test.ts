@@ -14,6 +14,8 @@ import {
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, annualSavingPct, premiumFromLine, premiumEffectiveMonthly, premiumMoneyNum } from "../src/lib/site";
 import { PLUS_TARGET_ALERT_LIMIT, targetAlertLimit } from "../src/lib/alert-limits";
+import { FREE_PLANS_PER_MONTH } from "../src/lib/basket-meter";
+import { SET_GAP_CHUNK } from "../src/lib/set-gap";
 import { planSwitchPriceLabel } from "../src/lib/plan-switch-price";
 import { billingStateFor, forgetBillingState } from "../src/lib/billing-state";
 import { DASHBOARD_TOOLS, dashboardToolOpens } from "../src/lib/dashboard-tools";
@@ -208,10 +210,12 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       "Deal Finder",
       "Rising Cards",
       "Target-price alerts after every price update",
-      "Best Basket — cheapest delivered order for a list",
+      // Renamed 2026-10-22 for the plan the row now meters (lib/basket-meter.ts).
+      "Best Basket — store-by-store plan for the cheapest delivered order",
       "Buy this list — deck or watchlist, skipping cards you own",
       // 2026-09-29: Best Basket's set source, the plan for what a set is missing.
-      "Finish this set — store-by-store plan for what's missing, postage included",
+      // The chunk is the enforced one since 2026-10-22, never typed.
+      `Finish this set — store-by-store plan for what's missing, postage included, up to ${SET_GAP_CHUNK} cards a plan`,
       // 2026-09-29: the lowest condition the plan and the deck watch may use.
       "Minimum condition — NM only or LP or better, in the plan and the deck watch",
       // Premium again from later on 2026-09-25, with the Premium rows and
@@ -259,34 +263,38 @@ test("TIER_COMPARISON's paid columns agree with the real gates", () => {
     const r = row(feature);
     assert.equal(r.account, "Top 3");
     assert.equal(r.plus, r.premium, `${feature}: Plus gets the same list as Premium`);
-    assert.match(String(r.plus), /^Full list/);
+    assert.equal(r.plus, "Full", "short cells since 2026-10-22: the whole list");
     assert.doesNotMatch(read(file), /isPremium\(user,\s*"premium"\)/, `${file} must not require the premium minimum — Plus gets the full list here`);
   }
 
   // Target alerts: the quoted ceiling IS the enforced one.
   const targets = row("Target-price alerts after every price update");
   assert.equal(targets.account, false);
-  assert.equal(targets.plus, `Up to ${PLUS_TARGET_ALERT_LIMIT}`);
+  assert.equal(targets.plus, `${PLUS_TARGET_ALERT_LIMIT} cards`);
   assert.equal(targets.premium, "Unlimited");
   assert.equal(targetAlertLimit(null), 0, "a free account sets no target");
   assert.equal(targetAlertLimit("plus"), PLUS_TARGET_ALERT_LIMIT);
   assert.equal(targetAlertLimit("premium"), Number.POSITIVE_INFINITY);
 
-  // Best Basket and Buy this list: the per-store plan is Premium's, gated on
-  // the premium minimum in the API. Sending a deck or the watchlist in with
-  // "skip copies I own" is open to every signed-in account — the request
-  // parser takes no tier (behavioural check in best-basket-redesign) — so a
-  // free or Plus account's cell is its own total, not a dash.
-  const basket = row("Best Basket — cheapest delivered order for a list");
-  assert.equal(basket.plus, basket.account, "Plus sees the same own-list total as a free account");
-  assert.equal(basket.premium, "Store-by-store plan");
+  // Best Basket and Buy this list (2026-10-22, lib/basket-meter.ts): the
+  // store-by-store plan is unlimited on the premium minimum in the API, and
+  // FREE_PLANS_PER_MONTH a UTC month for any other signed-in account, Plus
+  // included. Sending a deck or the watchlist in with "skip copies I own" is
+  // open to every signed-in account — the request parser takes no tier
+  // (behavioural check in best-basket-redesign).
+  const basket = row("Best Basket — store-by-store plan for the cheapest delivered order");
+  assert.equal(basket.account, `${FREE_PLANS_PER_MONTH} plans a month`, "the quoted allowance IS the metered one");
+  assert.equal(basket.plus, basket.account, "Plus shares the free account's monthly allowance");
+  assert.equal(basket.premium, "Unlimited");
   const buy = row("Buy this list — deck or watchlist, skipping cards you own");
-  assert.equal(buy.account, "Your total");
+  assert.equal(buy.account, `Same ${FREE_PLANS_PER_MONTH} plans`);
   assert.equal(buy.plus, buy.account);
-  assert.equal(buy.premium, "Store-by-store plan");
+  assert.equal(buy.premium, "Unlimited");
   const route = read("src/app/api/basket/route.ts");
-  assert.match(route, /const full = isPremium\(user,\s*"premium"\)/, "the Best Basket API must require the premium minimum for the plan");
-  assert.match(route, /if \(!full\) \{\s*const preview = basketPreview\(/, "…and everyone else gets the preview");
+  assert.match(route, /const full = isPremium\(user,\s*"premium"\)/, "the Best Basket API must require the premium minimum for the unlimited plan");
+  assert.match(route, /const reveal = !full && request\.reveal;/, "below Premium a plan is a reveal…");
+  assert.match(route, /takeFreePlan\(meter, user\.id\)/, "…that spends one of the month's free plans, server-side");
+  assert.match(route, /if \(!full\) \{\s*const preview = basketPreview\(/, "…and an ordinary run below Premium gets the preview");
   assert.doesNotMatch(read("src/lib/basket-request.ts"), /isPremium|premiumTierOf|user/, "what may be sent never depends on the tier");
 
   // Demand Finder: the premium minimum on the page; below it, the free
@@ -465,7 +473,11 @@ test("the dialog's tier toggle still defaults to monthly — the smaller of its 
   assert.match(src, /useState<"monthly" \| "annual">\("monthly"\)/, "the dialog must default to the monthly plan");
 });
 
-test("/premium's billing-cycle toggle defaults to MONTHLY, same as the dialog", () => {
+test("/premium's billing-cycle toggle defaults to ANNUAL when an annual plan is live (the dialog stays monthly)", () => {
+  // REVERSED AGAIN 2026-10-22 (owner): /premium opens on the annual cycle when
+  // any annual plan is live, with the per-month equivalent as the headline;
+  // the dialog is unchanged and still monthly (the test above). History:
+  //
   // REVERSED 2026-09-14. From 2026-09-11 this defaulted to annual so the prices
   // would "look cheaper at initial glance". The per-month figure did get
   // smaller — but both buy buttons carry the selected cycle, so the live page
@@ -477,10 +489,16 @@ test("/premium's billing-cycle toggle defaults to MONTHLY, same as the dialog", 
   // dialog's own words: defaulting to annual shows a BIGGER number to someone
   // who has not decided to pay anything yet. Both surfaces finally agree.
   const src = read("src/components/PremiumPricingCards.tsx");
+  assert.doesNotMatch(src, /useState<"monthly" \| "annual">\("monthly"\)/, "/premium no longer opens on monthly");
   assert.match(
     src,
-    /useState<"monthly" \| "annual">\("monthly"\)/,
-    "the opening ask must be the monthly price, not a yearly commitment",
+    /const anyAnnualLive = annualLive \|\| \(plusLive && plusAnnualLive\);/,
+    "the annual default keys off whether ANY annual plan is live",
+  );
+  assert.match(
+    src,
+    /useState<"monthly" \| "annual">\(anyAnnualLive \? "annual" : "monthly"\)/,
+    "annual when an annual plan is live, monthly when none is (never a dead annual tab)",
   );
   assert.match(src, /effectiveCycle/, "a tier without its own annual price must still fall back to monthly display");
 });
@@ -539,7 +557,7 @@ test("the dashboard's tool list tags each tool with the tier that opens it in fu
   assert.equal(cell("Deal Finder"), "Top 3");
   assert.equal(byTitle["Deal Finder"].freeTaste, "Top 3 free");
   assert.equal(byTitle["Rising Cards"].freeTaste, "Top 3 free");
-  assert.equal(cell("Best Basket — cheapest delivered order for a list"), "Your total");
+  assert.equal(cell("Best Basket — store-by-store plan for the cheapest delivered order"), `${FREE_PLANS_PER_MONTH} plans a month`);
   assert.equal(byTitle["Best Basket"].freeTaste, "See your total free");
   assert.equal(cell("Demand Finder — most searched & viewed cards"), "Top 10 searched");
   assert.equal(byTitle["Demand Finder"].freeTaste, "Top 10 free");

@@ -16,6 +16,7 @@ import { BestBasket, type BasketSetOption, type BasketSetStart, type BasketSourc
 import { RARITY_KEYS, SETS, isPreorderSetCode, setBySlug } from "@/lib/constants";
 import { parseScope } from "@/lib/set-scope";
 import { SET_GAP_CHUNK } from "@/lib/set-gap";
+import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { loadBasketPrefs } from "@/lib/basket-server";
 import { initialMinCondition, storedMinCondition } from "@/lib/basket-condition";
 import { headers } from "next/headers";
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "Is Best Basket free?",
-    a: "Partly. Any signed-in account can see its own delivered total — what the list costs delivered, from how many stores, and how much less that is than buying each card's cheapest copy separately — up to 5 times a day. The store-by-store plan, with the best one-store and two-store orders beside it and a link for every card, is a RiftCompare Premium tool.",
+    a: `Mostly. Any signed-in account can see its own delivered total — what the list costs delivered, from how many stores, and how much less that is than buying each card's cheapest copy separately — up to 5 times a day, and ${FREE_PLANS_PER_MONTH} full store-by-store plans a month (the best one-store and two-store orders beside it and a link for every card), shared with Buy this list and Finish this set. A plan counts only when you open it, and the allowance resets on the 1st of each month (UTC). RiftCompare Premium plans without a limit.`,
   },
   {
     q: "Does it account for shipping?",
@@ -67,11 +68,11 @@ const FAQS = [
   },
   {
     q: "Can Best Basket plan the rest of a set?",
-    a: `Yes. Choose "Finish a set" (or press "Plan the purchase" on your set checklist), pick the set and whether to count the base set or every printing we track, and it prices the cards you are missing, one copy each, with everything you own left out. You can limit it to one rarity and leave out cards dearer than a price you set. Any signed-in account sees the total, postage and store count for its own list; Premium shows which store to buy each card from, at the minimum condition you set. One plan holds up to ${SET_GAP_CHUNK} cards: if you are missing more, it plans the ${SET_GAP_CHUNK} cheapest first, says how many more are not included, and offers the next ${SET_GAP_CHUNK}. Cards no tracked store has in stock are listed apart and are not in the total. It prices non-foil listings only, and a set that has not been released has nothing to plan yet.`,
+    a: `Yes. Choose "Finish a set" (or press "Plan the purchase" on your set checklist), pick the set and whether to count the base set or every printing we track, and it prices the cards you are missing, one copy each, with everything you own left out. You can limit it to one rarity and leave out cards dearer than a price you set. Any signed-in account sees the total, postage and store count for its own list, and can open the store-by-store plan as one of its ${FREE_PLANS_PER_MONTH} free plans a month; Premium shows it every time, at the minimum condition you set. One plan holds up to ${SET_GAP_CHUNK} cards: if you are missing more, it plans the ${SET_GAP_CHUNK} cheapest first, says how many more are not included, and offers the next ${SET_GAP_CHUNK}. Cards no tracked store has in stock are listed apart and are not in the total. It prices non-foil listings only, and a set that has not been released has nothing to plan yet.`,
   },
   {
     q: "Do I need Premium just to price a list, not buy it?",
-    a: "No — the free deck and list pricer at /deck needs no account at all if you only want per-card prices. Premium is only needed for Best Basket's store-by-store plan.",
+    a: `No — the free deck and list pricer at /deck needs no account at all if you only want per-card prices. A free account gets ${FREE_PLANS_PER_MONTH} store-by-store plans a month; Premium is only needed for more.`,
   },
 ];
 
@@ -114,8 +115,9 @@ function selfHref(sp: Params): string {
 
 export default async function BestBasketPage({ searchParams }: { searchParams: Params }) {
   const user = await getCurrentUser();
-  // The store-by-store plan is PREMIUM (see lib/premium.ts); any account gets
-  // the preview. The route enforces the same split — this only picks the UI.
+  // The store-by-store plan is PREMIUM's on every run (see lib/premium.ts); any
+  // other account gets the preview and FREE_PLANS_PER_MONTH reveals a month
+  // (lib/basket-meter.ts). The route enforces both — this only picks the UI.
   const premium = isPremium(user, "premium");
   const country = getCountry();
   const info = COUNTRIES[country];
@@ -214,7 +216,8 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           lowest price per card, but the lowest <strong className="text-slate-200">delivered total</strong> across {info.adjective}{" "}
           stores once each store&apos;s real postage is counted — measured from its own checkout, not guessed. Buying each card from
           its cheapest store usually spreads your order over a dozen stores and buries you in postage; this searches for a better
-          split. With Premium it shows that split store by store, beside the best one-store and two-store orders.
+          split. It shows that split store by store, beside the best one-store and two-store orders: {FREE_PLANS_PER_MONTH} plans a month
+          with a free account, as many as you like with Premium.
         </p>
       </div>
 
@@ -241,7 +244,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           <h2 className="text-lg font-extrabold text-white">Sign in to price your list, delivered</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
             A free account shows what your list costs delivered, from how many stores, and how much less that is than buying each
-            card&apos;s cheapest copy. Premium adds the store-by-store plan.
+            card&apos;s cheapest copy, plus {FREE_PLANS_PER_MONTH} store-by-store plans a month. Premium plans without a limit.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             <Link

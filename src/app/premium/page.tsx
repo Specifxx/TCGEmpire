@@ -17,7 +17,12 @@ import {
   introEligibleFor,
   PREMIUM_TRIAL_DAYS,
   PREMIUM_TRIAL_FEE_CENTS,
+  FEEDBACK_PREMIUM_DAYS,
+  REFERRAL_PREMIUM_DAYS,
 } from "@/lib/premium";
+import { getCountry } from "@/lib/get-country";
+import { premiumHeroLine } from "@/lib/premium-plan-copy";
+import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { PremiumPricingCards } from "@/components/PremiumPricingCards";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { SubscriptionActions } from "@/components/SubscriptionActions";
@@ -65,8 +70,8 @@ export const metadata: Metadata = {
 // The Product JSON-LD's per-tier descriptions: each names only what that tier
 // really gets (TIER_COMPARISON's rows), so a rich result can't credit Plus
 // with Premium's list tools or leave its ad-free benefit out.
-const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio (so a whole set fits in the set tracker), target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP in ${SEALED_RRP_MARKETS}, or at your price, checked ${SEALED_CHECK_CADENCE}), and the full Deal Finder and Rising Cards lists.`;
-const PREMIUM_OFFER_DESCRIPTION = `Premium: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, Best Basket's store-by-store plan for the cheapest delivered order (at the minimum condition you set), Buy this list for a deck, watchlist or binder, the store-by-store plan for what a set is missing, and Demand Finder's most searched and most viewed cards.`;
+const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio (so a whole set fits in the set tracker), target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP in ${SEALED_RRP_MARKETS}, or at your price, checked ${SEALED_CHECK_CADENCE}), the full Deal Finder and Rising Cards lists, and ${FREE_PLANS_PER_MONTH} store-by-store Best Basket plans a month.`;
+const PREMIUM_OFFER_DESCRIPTION = `Premium: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, unlimited store-by-store plans for the cheapest delivered order (Best Basket, Buy this list and Finish this set, at the minimum condition you set; a free account or Plus gets ${FREE_PLANS_PER_MONTH} a month), and Demand Finder's most searched and most viewed cards.`;
 const PREMIUM_STANDALONE_DESCRIPTION =
   "No ads on any page, an unlimited watchlist and portfolio, target-price alerts, sealed watches, a deck price watch, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.";
 
@@ -86,7 +91,33 @@ const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", mon
 const FAQ: { q: string; a: string }[] = [
   {
     q: "What's free?",
-    a: `Comparing prices is free for everyone, with no limit. A free account adds a watchlist (${FREE_WATCHLIST_LIMIT} cards), a portfolio (${FREE_PORTFOLIO_LIMIT}) and a set checklist.`,
+    a: `Comparing prices is free for everyone, with no limit. A free account adds a watchlist (${FREE_WATCHLIST_LIMIT} cards), a portfolio (${FREE_PORTFOLIO_LIMIT}), a set checklist and ${FREE_PLANS_PER_MONTH} store-by-store Best Basket plans a month.`,
+  },
+  // The three below reuse the Premium explainer's FAQ wording
+  // (riftcompare-premium-explained), owner's request 2026-10-22.
+  {
+    q: "Is price comparison free?",
+    a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder and list pricer, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Plus and Premium are about no ads, the full deal lists, the watches that run for you, and the list tools.",
+  },
+  ...(FEEDBACK_PREMIUM_DAYS > 0 || REFERRAL_PREMIUM_DAYS > 0
+    ? [
+        {
+          q: "Can I get Premium for free?",
+          a: [
+            "You can earn free Premium, no card required:",
+            FEEDBACK_PREMIUM_DAYS > 0 ? `submit feedback once at riftcompare.com/feedback and it unlocks ${FEEDBACK_PREMIUM_DAYS === 7 ? "a full week" : `${FEEDBACK_PREMIUM_DAYS} days`} automatically` : "",
+            FEEDBACK_PREMIUM_DAYS > 0 && REFERRAL_PREMIUM_DAYS > 0 ? "or" : "",
+            REFERRAL_PREMIUM_DAYS > 0 ? `share your referral link from your profile and every friend who creates a free account earns you ${REFERRAL_PREMIUM_DAYS} days` : "",
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .replace(/: or /, ": ") + ".",
+        },
+      ]
+    : []),
+  {
+    q: "Can I switch from Plus to Premium?",
+    a: `Yes, from this page once you're subscribed: "Upgrade to Premium" switches your plan straight away, on the same monthly or annual cycle, and bills only the difference for the rest of the period you've paid for. During a free trial the switch opens once the trial has converted.`,
   },
   ...(premiumTrialEnabled()
     ? [
@@ -136,6 +167,9 @@ const FAQ: { q: string; a: string }[] = [
 
 export default async function PremiumPage({ searchParams }: { searchParams?: { keep?: string; code?: string } }) {
   const user = await getCurrentUser();
+  // The visitor's market (the existing country resolution, no new geo lookup):
+  // US leads with the watches, everywhere else with Best Basket.
+  const market = getCountry();
   const already = isPremium(user);
   const checkoutLive = premiumCheckoutEnabled();
   const dbUser = user
@@ -265,9 +299,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <p className="mx-auto mt-2 max-w-xl text-sm leading-snug text-slate-300 sm:mt-3 sm:text-base">
           {already
             ? "Thanks for supporting RiftCompare."
-            : plusLive
-            ? "Comparing prices is free. Plus and Premium remove the ads and watch prices for you."
-            : "Comparing prices is free. Premium removes the ads and watches prices for you."}
+            : premiumHeroLine(market, plusLive)}
         </p>
       </div>
 
@@ -287,6 +319,8 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
               trialDays={PREMIUM_TRIAL_DAYS}
               trialFeeCents={PREMIUM_TRIAL_FEE_CENTS}
               introEligible={introEligible}
+              market={market}
+              afterCards={<NoCardOptions signedIn={!!user} />}
             />
           </div>
 
@@ -409,7 +443,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           <Link href="/tools/deal-finder" className="btn-ghost">Deal Finder</Link>
           <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>
           <Link href="/watching" className="btn-ghost">Watchlist &amp; target alerts</Link>
-          {currentTier !== "plus" && <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>}
+          <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>
           {currentTier !== "plus" && <Link href="/tools/demand" className="btn-ghost">Demand Finder</Link>}
           <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
           <Link href="/portfolio/sets" className="btn-ghost">Set checklist</Link>
@@ -450,5 +484,40 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
       </p>
       </div>
     </div>
+  );
+}
+
+// NOT READY TO ADD A CARD? (2026-10-22, owner): the two no-card ways to Premium
+// that already exist (lib/premium.ts FEEDBACK_PREMIUM_DAYS, REFERRAL_PREMIUM_DAYS),
+// one low-key line right under the plan cards (PremiumPricingCards' afterCards).
+function NoCardOptions({ signedIn }: { signedIn: boolean }) {
+  if (!(FEEDBACK_PREMIUM_DAYS > 0 || REFERRAL_PREMIUM_DAYS > 0)) return null;
+  return (
+            <p className="mx-auto mt-2 max-w-2xl text-center text-xs text-slate-400" data-no-card-options>
+              Not ready to add a card?{" "}
+              {FEEDBACK_PREMIUM_DAYS > 0 && (
+                <>
+                  <Link href="/feedback" className="font-semibold text-slate-200 underline-offset-2 hover:underline">
+                    Send us feedback
+                  </Link>{" "}
+                  for {FEEDBACK_PREMIUM_DAYS === 7 ? "a free week" : `${FEEDBACK_PREMIUM_DAYS} free days`} of Premium
+                </>
+              )}
+              {FEEDBACK_PREMIUM_DAYS > 0 && REFERRAL_PREMIUM_DAYS > 0 ? ", or " : ""}
+              {REFERRAL_PREMIUM_DAYS > 0 && (
+                <>
+                  share{" "}
+                  <Link
+                    href={signedIn ? "/profile" : "/login?next=%2Fprofile"}
+                    rel={signedIn ? undefined : "nofollow"}
+                    className="font-semibold text-slate-200 underline-offset-2 hover:underline"
+                  >
+                    your referral link
+                  </Link>{" "}
+                  for {REFERRAL_PREMIUM_DAYS} days of Premium per friend who signs up
+                </>
+              )}
+              .
+            </p>
   );
 }

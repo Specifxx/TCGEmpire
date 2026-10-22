@@ -214,9 +214,10 @@ test("the Premium dialog and /premium show the SAME tier table, from one source"
   assert.doesNotMatch(dialog, /const FEATURES\s*:/, "the dialog's hand-written perk list is superseded by the table");
 
   // Rows that are neither a flat yes nor a flat no stay strings — rounding
-  // "Full list" up to a plain tick would lose the Plus-vs-Premium distinction
-  // this table exists to draw.
-  assert.match(shared, /account: "Top 3", plus: "Full list", premium: "Full list"/);
+  // them to a plain tick would lose the distinction this table exists to draw.
+  // Short cells since 2026-10-22 (owner: "show actual limits"): "Full" is the
+  // whole list, beside the free account's "Top 3".
+  assert.match(shared, /account: "Top 3", plus: "Full", premium: "Full"/);
 
   // THE FREE COLUMN ON THESE TWO IS "Top 3" (2026-09-23). A signed-in free
   // account sees the top three rows of each — both pages query at that size
@@ -293,7 +294,7 @@ test("every dialog-only row override names a row that actually exists", async ()
   }
   assert.ok(shown.some((r) => r.feature === "Ad-free experience"), "the dialog must show that Plus is ad-free");
   // The binary collapse only ever ticks a paid column that already gets the
-  // FULL thing — never Best Basket, whose Plus cell is only "Your total".
+  // FULL thing — never Best Basket, whose Plus cell is a monthly allowance.
   for (const f of DIALOG_BINARY_FEATURES) {
     const r = TIER_COMPARISON.find((x) => x.feature === f)!;
     assert.equal(r.plus, r.premium, `${f}: collapsing both paid cells to ✓ is only honest when they are equal`);

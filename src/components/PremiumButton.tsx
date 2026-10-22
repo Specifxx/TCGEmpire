@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePremiumDialog } from "./PremiumDialog";
+import { marketFromCookie, trackUpgradeOpen, upgradeContext } from "@/lib/upgrade-intent";
 import { useMe } from "@/lib/use-me";
 import { PREMIUM_PRICE_LABEL, trialButtonLabel, introOfferEnabled, tierIntroMonthlyAmount, tierMonthlyAmount, INTRO_MONTHS, type PremiumTierKey } from "@/lib/site";
 import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
@@ -55,6 +57,13 @@ export function PremiumButton({
   // Premium and the label must say Premium's price.
   const sellTier: PremiumTierKey = gateTier === "plus" && premiumPlus ? "plus" : "premium";
   const priceLabel = sellTier === "plus" ? `${tierMonthlyAmount("plus")}/mo` : PREMIUM_PRICE_LABEL;
+  // A button on a wall (gate:/limit:) IS an inline paywall prompt: its showing
+  // is an upgrade_dialog_open, once per surface per tab (lib/upgrade-intent.ts).
+  const signedIn = !!user;
+  useEffect(() => {
+    if (!surface || !/^(gate|limit):/.test(surface) || premium) return;
+    trackUpgradeOpen(upgradeContext(surface, marketFromCookie(), signedIn), { inline: true, surface });
+  }, [surface, signedIn, premium]);
   return (
     <button type="button" onClick={() => open(surface, { tier: sellTier })} className={className ?? GOLD}>
       {children ?? (

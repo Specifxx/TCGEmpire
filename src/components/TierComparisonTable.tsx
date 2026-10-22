@@ -29,8 +29,10 @@
 //   Buy this list        list, its watchlist or its binder, with "skip copies
 //                        I own" (not for the binder, which prices
 //                        replacement), and gets back its own total. The
-//                        store-by-store plan for any of them needs
-//                        isPremium(user, "premium").
+//                        store-by-store plan for any of them is unlimited
+//                        for isPremium(user, "premium") and
+//                        FREE_PLANS_PER_MONTH a UTC month for any other
+//                        signed-in account (lib/basket-meter.ts, 2026-10-22).
 //   Demand Finder        tools/demand: isPremium(user, "premium") sees the
 //                        top 25 by searches and by views, 7 or 30 days;
 //                        everyone else the /movers strip's top 10 most
@@ -50,8 +52,9 @@
 //   Finish this set      lib/set-gap.ts + Best Basket's "set" source: any
 //                        signed-in account gets its own total and saving
 //                        (basketPreview), the store-by-store plan is
-//                        isPremium(user, "premium"); SET_GAP_CHUNK cards a
-//                        plan (2026-09-29)
+//                        Premium's without limit and shares the
+//                        FREE_PLANS_PER_MONTH allowance below it;
+//                        SET_GAP_CHUNK cards a plan (2026-09-29)
 //   Ad-free              /api/me adFree = isPremium(user) — any paid tier
 //   Watchlist, Portfolio lib/free-limits.ts: a free account adds up to
 //                        FREE_WATCHLIST_LIMIT / FREE_PORTFOLIO_LIMIT distinct
@@ -86,6 +89,11 @@ import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../lib/free-limits";
 import { SET_GAP_CHUNK } from "../lib/set-gap";
 import { FREE_HISTORY_DAYS } from "../lib/history-access";
+import { FREE_PLANS_PER_MONTH } from "../lib/basket-meter";
+
+// Best Basket, Buy this list and Finish this set share one plan output and one
+// monthly allowance below Premium (lib/basket-meter.ts, 2026-10-22).
+const FREE_PLANS_CELL = `${FREE_PLANS_PER_MONTH} plans a month`;
 
 export type TierRow = {
   feature: string;
@@ -125,26 +133,30 @@ export const TIER_COMPARISON: TierRow[] = [
   // "Top 3" since 2026-09-23: a signed-in free account sees the top three rows
   // of each (queried at that size — see FREE_PREVIEW_ROWS in both pages). They
   // were a flat "no" from 2026-09-22, and "Top pick" before that.
-  { feature: "Deal Finder", account: "Top 3", plus: "Full list + only my cards", premium: "Full list + only my cards" },
-  { feature: "Rising Cards", account: "Top 3", plus: "Full list", premium: "Full list" },
+  // Short cells since 2026-10-22 (owner: "show actual limits instead of bare
+  // ticks"): "Full" is the whole list, and a paid tier's Deal Finder adds "only
+  // my cards", which the feature name says.
+  { feature: "Deal Finder", account: "Top 3", plus: "Full", premium: "Full" },
+  { feature: "Rising Cards", account: "Top 3", plus: "Full", premium: "Full" },
   // Checked after both daily price imports, with no weekly cap. The number
   // is the enforced one (lib/alert-limits.ts), never typed here.
-  { feature: "Target-price alerts after every price update", account: false, plus: `Up to ${PLUS_TARGET_ALERT_LIMIT}`, premium: "Unlimited" },
+  { feature: "Target-price alerts after every price update", account: false, plus: `${PLUS_TARGET_ALERT_LIMIT} cards`, premium: "Unlimited" },
   // Every signed-in account sees its own delivered total, store count and
-  // saving; which store to buy each card from is Premium's, withheld in the
-  // API response rather than merely hidden.
-  { feature: "Best Basket — cheapest delivered order for a list", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
+  // saving on every run. Which store to buy each card from (the plan) is
+  // unlimited on Premium and FREE_PLANS_PER_MONTH a month below it, counted
+  // server-side when a plan is shown (2026-10-22, lib/basket-meter.ts).
+  { feature: "Best Basket — store-by-store plan for the cheapest delivered order", account: FREE_PLANS_CELL, plus: FREE_PLANS_CELL, premium: "Unlimited" },
   // Sending a deck or the watchlist in, skipping owned copies, is open to every
   // account (lib/basket-request.ts takes no tier); what Premium adds is the
   // plan for it. The binder is a source too, but it prices replacement, so it
   // is not named here beside "skipping cards you own".
-  { feature: "Buy this list — deck or watchlist, skipping cards you own", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
+  { feature: "Buy this list — deck or watchlist, skipping cards you own", account: `Same ${FREE_PLANS_PER_MONTH} plans`, plus: `Same ${FREE_PLANS_PER_MONTH} plans`, premium: "Unlimited" },
   // FINISH THIS SET (2026-09-29, lib/set-gap.ts): Best Basket's fourth source, the
   // cards a member is MISSING from one set. The same split as the row above: any
   // signed-in account sees its own total and Best Basket's own computed saving
   // (the route withholds every store name, line and link), Premium gets the
   // store-by-store plan. The 200 is the enforced chunk (SET_GAP_CHUNK), never typed.
-  { feature: "Finish this set — store-by-store plan for what's missing, postage included", account: "Total and saving preview", plus: "Total and saving preview", premium: `Store-by-store plan, up to ${SET_GAP_CHUNK} cards` },
+  { feature: `Finish this set — store-by-store plan for what's missing, postage included, up to ${SET_GAP_CHUNK} cards a plan`, account: `Same ${FREE_PLANS_PER_MONTH} plans`, plus: `Same ${FREE_PLANS_PER_MONTH} plans`, premium: "Unlimited" },
   // MINIMUM CONDITION (2026-09-29, lib/basket-condition.ts): Premium sets the
   // lowest condition the plan, Buy this list and the deck watch may use. Below
   // Premium the total counts every condition and says how many played copies it
@@ -158,11 +170,11 @@ export const TIER_COMPARISON: TierRow[] = [
   // THE WATCHES THAT RUN WHILE YOU'RE AWAY (2026-09-29, DECISIONS.md "Premium
   // works while you're away"). Both numbers are the enforced ones
   // (lib/alert-limits.ts), never typed here.
-  { feature: `Sealed watches — restock, at-RRP (${SEALED_RRP_MARKETS}) and price alerts, checked ${SEALED_CHECK_CADENCE}`, account: false, plus: `Up to ${SEALED_WATCH_LIMIT_PLUS}`, premium: "Unlimited" },
+  { feature: `Sealed watches — restock, at-RRP (${SEALED_RRP_MARKETS}) and price alerts, checked ${SEALED_CHECK_CADENCE}`, account: false, plus: `${SEALED_WATCH_LIMIT_PLUS} products`, premium: "Unlimited" },
   { feature: "Deck price watch — email when a deck's delivered total drops", account: false, plus: false, premium: true },
   // 2026-10-09 (owner: "add more premium features"). lib/history-access.ts,
   // lib/graded-history.ts + lib/graded-watch.ts, lib/auction-alerts.ts.
-  { feature: "Full price history — every day since tracking began, with CSV download", account: `Last ${FREE_HISTORY_DAYS} days`, plus: true, premium: true },
+  { feature: "Full price history — every day since tracking began, with CSV download", account: `${FREE_HISTORY_DAYS} days`, plus: "Full + CSV", premium: "Full + CSV" },
   { feature: "Graded price tracking — history and new-low alerts for each grade (PSA 10, BGS 9.5…)", account: false, plus: true, premium: true },
   { feature: "Auction alerts — email when a card you watch has an eBay auction ending within 24 hours", account: false, plus: false, premium: true },
   // 2026-10-16 (owner): RiftCompare Coins, the Premium collection (lib/coins-server.ts COIN_TIER).

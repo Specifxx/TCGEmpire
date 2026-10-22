@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { lastUpgradeFeature, marketFromCookie, tierRequiredFor, trackUpgradeCta } from "@/lib/upgrade-intent";
 import { firePremiumClickBeacon, trackEvent } from "@/lib/analytics";
 import { PREMIUM_COPY_VERSION, TIER_NAMES, type PremiumTierKey } from "@/lib/site";
 import type { StartSrc } from "@/lib/premium-start";
@@ -54,6 +55,17 @@ export function CheckoutLauncher({
       via: "start",
       copy: PREMIUM_COPY_VERSION,
     });
+    // The dialog's signed-out path reaches checkout only through here (a new
+    // account, then /premium/start), so its upgrade_cta_click fires here. The
+    // /premium page's signed-out click fired its own before sign-in.
+    if (src === "dialog") {
+      const feature = lastUpgradeFeature();
+      trackUpgradeCta(
+        { feature, tier_required: tierRequiredFor(feature), market: (marketFromCookie() ?? "unknown").toUpperCase(), signed_in: true },
+        tier,
+        plan
+      );
+    }
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",

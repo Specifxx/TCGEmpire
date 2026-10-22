@@ -168,6 +168,9 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // /pricing → /premium (2026-10-22, owner: "Redirect /pricing to /premium
+      // (301)"). statusCode, not `permanent`, which would answer 308.
+      { source: "/pricing", destination: "/premium", statusCode: 301 },
       // /decks is a live route again (2026-09-26, DECISIONS.md "Public decks"):
       // the PLAYER-PUBLISHED deck library. The 2026-09-12 redirects that sent
       // every /decks URL to /deck (after the hand-copied meta decks were

@@ -41,10 +41,16 @@ export const OFF_TOPIC_ROUTES = ["/pokemon"] as const;
 // Ads stay on the pages where people are buying.
 export { AD_FREE_GAME_ROUTES };
 
+// The plans page (2026-10-22, owner: "remove the eBay and TCGplayer promo ad
+// blocks from /premium"). A page selling an ad-free plan should not open on two
+// ads; with no affiliate link left on it, the disclosure line goes with them.
+// /premium/* (start, welcome, claim) included.
+export const SALES_ROUTES = ["/premium"] as const;
+
 export function footerBannersAllowed(pathname: string | null): boolean {
   if (!pathname) return true;
   const under = (r: string) => pathname === r || pathname.startsWith(`${r}/`);
-  return !BANNER_FREE_ROUTES.some(under) && !OFF_TOPIC_ROUTES.some(under) && !AD_FREE_GAME_ROUTES.some(under);
+  return !BANNER_FREE_ROUTES.some(under) && !OFF_TOPIC_ROUTES.some(under) && !AD_FREE_GAME_ROUTES.some(under) && !SALES_ROUTES.some(under);
 }
 
 // Client wrapper for the site-wide footer affiliate banners. The layout used

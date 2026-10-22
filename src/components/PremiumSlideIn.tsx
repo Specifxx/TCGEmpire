@@ -283,7 +283,7 @@ async function fetchPersonalCopy(): Promise<{ heading: string; line: string } | 
 const ART = "/premium/premium-pitch.webp";
 // The five rows the slider shows, by PremiumTicks name: what a first payment
 // changes most, in /premium's own words and marks.
-const SLIDER_ROWS = ["No ads", "Unlimited watchlist & portfolio", "Target-price alerts", "Full Deal Finder & Rising Cards", "Store-by-store buying plan"];
+const SLIDER_ROWS = ["No ads", "Watchlist", "Target-price alerts", "Deal Finder & Rising Cards", "Best Basket & Buy this list plans"];
 
 export function PremiumSlideIn() {
   const { user, premium, premiumCheckout, premiumPlus, trialEligible, trialDays, trialFeeCents, introEligible, loaded, answered, providers } = useMe();

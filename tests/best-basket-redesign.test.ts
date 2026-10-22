@@ -677,7 +677,7 @@ test("nothing in Best Basket is cached: every answer is per user", () => {
 test("skipOwned subtracts owned copies (and doesn't apply to the binder itself)", () => {
   // Behavioural: the parser takes no account, so what it returns is what ANY
   // signed-in caller may send — the tier only decides the answer.
-  assert.deepEqual(parseBasketRequest({ source: "watchlist", skipOwned: true }), { source: "watchlist", skipOwned: true, text: "", picked: [], minCondition: "any", saveMinCondition: false, setCode: "", scope: "base", rarity: null, maxPriceCents: null, after: null });
+  assert.deepEqual(parseBasketRequest({ source: "watchlist", skipOwned: true }), { source: "watchlist", skipOwned: true, text: "", picked: [], minCondition: "any", saveMinCondition: false, setCode: "", scope: "base", rarity: null, maxPriceCents: null, after: null, reveal: false });
   assert.equal(parseBasketRequest({ source: "deck", skipOwned: true, text: "1 Jinx" }).skipOwned, true);
   assert.equal(parseBasketRequest({ source: "binder", skipOwned: true }).skipOwned, false, "the binder prices replacement; skip is ignored");
   assert.equal(parseBasketRequest({ source: "nonsense" }).source, "deck");
@@ -731,6 +731,19 @@ test("the UI: tracked store links, the free preview's own-numbers copy, and its 
   assert.match(ui, /Your list: \{fmt\(r\.totalCents\)\} delivered from \{stores\}\. Premium shows which store to buy each card from\./);
   assert.match(ui, /Buying each card&apos;s cheapest copy is already the cheapest way for\s+this list\./);
   assert.match(ui, /<PremiumButton surface="limit:basket" \/>/);
+  // THE MONTH'S FREE PLANS (2026-10-22, lib/basket-meter.ts): the number is the
+  // metered constant, never typed; the preview offers the plan while some are
+  // left (spending one is a second run with reveal), and the upgrade once spent.
+  assert.match(ui, /import \{ FREE_PLANS_PER_MONTH, resetLabel, type FreePlans \} from "@\/lib\/basket-meter";/);
+  assert.match(ui, /Without Premium: your delivered total 5 times a day, and \{FREE_PLANS_PER_MONTH\} store-by-store plans a month/);
+  assert.match(ui, /Premium is unlimited\./);
+  assert.doesNotMatch(ui, /\b3 store-by-store plans\b/, "the allowance is read from the constant");
+  assert.match(ui, /onReveal=\{\(\) => void run\(\{ reveal: true \}\)\}/, "the preview's plan button re-runs the same inputs as a reveal");
+  assert.match(ui, /\{freePlans && left > 0 && onReveal \? \(/);
+  assert.match(ui, /"Show the store-by-store plan"/);
+  const spent = ui.slice(ui.indexOf("data-free-plan-spent"), ui.indexOf("<PostageFooter postage={postage}"));
+  assert.match(spent, /free store-by-store plans this month\. They reset on/, "a spent allowance says when it comes back");
+  assert.match(spent, /<PremiumButton surface="limit:basket" \/>/, "…and offers the upgrade");
   assert.match(ui, /Skip copies I already own/);
   for (const t of ["Paste a list", "My watchlist", "My binder", "Finish a set"]) assert.ok(ui.includes(t), `tab "${t}"`);
   for (const t of ["Cheapest split", "Best single store", "Best two stores"]) assert.ok(ui.includes(t), `plan card "${t}"`);
@@ -741,7 +754,11 @@ test("the UI: tracked store links, the free preview's own-numbers copy, and its 
   // …including one still in flight: a response for older inputs is dropped.
   const touched = ui.slice(ui.indexOf("function touched()"), ui.indexOf("\n  }", ui.indexOf("function touched()")));
   assert.match(touched, /reqSeq\.current\+\+/);
-  const run = ui.slice(ui.indexOf("async function run()"), ui.indexOf("setResult(built)"));
+  const runAt = ui.indexOf("async function run(opts: { reveal?: boolean } = {})");
+  assert.ok(runAt > -1, "expected run(opts)");
+  const run = ui.slice(runAt, ui.indexOf("setResult(built)"));
+  // Only Premium never reveals: its run is already the plan.
+  assert.match(run, /const reveal = !full && !!opts\.reveal;/);
   assert.match(run, /const seq = \+\+reqSeq\.current;/);
   assert.match(run, /if \(seq !== reqSeq\.current\) return;/);
   // …and a market switch (router.refresh() keeps client state) clears it too.

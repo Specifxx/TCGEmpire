@@ -1,26 +1,22 @@
 import { TIER_COMPARISON, type TierRow } from "./TierComparisonTable";
 
-// THE /premium COMPARISON — TICKS AND CROSSES, NOTHING ELSE (2026-10-17, owner:
-// "that comparison it should only be ticks and crosses there shouldn't be
-// anything else in there like it just confuses the buyer and also like it
-// should be cut down a lot"). DECISIONS.md, "/premium, 70% simpler".
+// THE /premium COMPARISON — REAL LIMITS, FROM THE BLOG'S OWN LIST (2026-10-22,
+// owner: "make the comparison table honest and specific … show actual limits
+// instead of bare ✓/✕"). Supersedes the ticks-only table of 2026-10-17
+// ("/premium, 70% simpler"): a ✓ for Plus's 25 target alerts and Premium's
+// unlimited ones said the same thing about two different plans. DECISIONS.md,
+// "/premium shows each plan's real limits".
 //
-// Twelve rows, each a short name a buyer reads at a glance. No captions ("Top
-// 3", "Up to 50"), no half marks, no descriptions: a cell is ✓ or ✕.
-//
-// THE MARKS ARE COMPUTED, NEVER TYPED. Each row names the TIER_COMPARISON row it
-// stands for (`from`), and a tier gets a tick only when it has the WHOLE thing
-// the row's name says:
-//   - Free: only a flat `true` (a limit such as "25 cards" or "Top 3" is a
-//     cross, which is why those rows are named "Unlimited…" and "Full…");
-//   - a paid tier: anything but `false`, unless it is the same limited value
-//     Free has (Plus's "Top 10 searched" Demand Finder is Free's, so ✕).
-// tests/premium-ticks.test.ts holds every name to that rule, so a tier change
-// in TIER_COMPARISON moves the tick here without anyone retyping it.
+// EVERY CELL IS READ, NEVER TYPED. Each row names the TIER_COMPARISON row it
+// stands for (`from`, the list the Premium explainer's table is rendered from),
+// and a cell is that row's value: `true` a ✓, `false` an em dash, a string the
+// limit itself ("10 cards", "Top 3", "3 plans a month"). A limit changed in
+// lib/free-limits.ts or lib/alert-limits.ts moves here and in the article at
+// once. tests/premium-ticks.test.ts holds every row to its source.
 //
 // A server-safe component (no hooks): PremiumPricingCards renders it under the
-// plan cards with the selected plan's column lit, and /premium renders it alone
-// for a Plus member, whose column says "You".
+// plan cards with the selected plan's column lit, /premium renders it alone for a
+// Plus member (column "You"), and the slide-in shows five rows, dense.
 
 export type TickTier = "free" | "plus" | "premium";
 
@@ -28,42 +24,45 @@ export type TickTier = "free" | "plus" | "premium";
 export const TICK_ROWS: { name: string; from: string | null; short?: string }[] = [
   { name: "Compare prices across every store", from: null },
   { name: "No ads", from: "Ad-free experience" },
-  { name: "Unlimited watchlist & portfolio", from: "Watchlist & new-low alerts", short: "Unlimited watchlist" },
+  { name: "Watchlist", from: "Watchlist & new-low alerts" },
+  { name: "Portfolio", from: "Portfolio — value, P&L, CSV & replacement cost" },
+  { name: "Deal Finder & Rising Cards", from: "Deal Finder" },
+  { name: "Price history", from: "Full price history" },
   { name: "Target-price alerts", from: "Target-price alerts after every price update" },
-  { name: "Full Deal Finder & Rising Cards", from: "Deal Finder", short: "Full Deal Finder" },
-  { name: "Full price history + CSV", from: "Full price history — every day since tracking began, with CSV download" },
-  { name: "Graded price tracking", from: "Graded price tracking — history and new-low alerts for each grade (PSA 10, BGS 9.5…)" },
-  { name: "Sealed restock & price alerts", from: "Sealed watches" },
-  { name: "Store-by-store buying plan", from: "Best Basket — cheapest delivered order for a list", short: "Store-by-store plan" },
-  { name: "Deck price watch", from: "Deck price watch — email when a deck's delivered total drops" },
-  { name: "eBay auction alerts", from: "Auction alerts — email when a card you watch has an eBay auction ending within 24 hours" },
-  { name: "Full Demand Finder", from: "Demand Finder — most searched & viewed cards" },
+  { name: "Sealed watches", from: "Sealed watches" },
+  { name: "Best Basket & Buy this list plans", from: "Best Basket — store-by-store plan", short: "Best Basket plans" },
+  { name: "Finish this set plans", from: "Finish this set" },
+  { name: "Minimum condition", from: "Minimum condition" },
+  { name: "Deck price watch", from: "Deck price watch" },
+  { name: "Graded price tracking", from: "Graded price tracking" },
+  { name: "eBay auction alerts", from: "Auction alerts" },
+  { name: "Demand Finder", from: "Demand Finder" },
+  { name: "RiftCompare Coins", from: "RiftCompare Coins" },
 ];
 
 function sourceRow(from: string): TierRow | undefined {
   return TIER_COMPARISON.find((r) => r.feature === from || r.feature.startsWith(from));
 }
 
-/** ✓ only when the tier has the whole of what the row's name says. */
-export function hasTick(from: string | null, tier: TickTier): boolean {
+/** What a tier's cell holds for a row: TIER_COMPARISON's own value. */
+export function cellValue(from: string | null, tier: TickTier): boolean | string {
   if (from === null) return true;
   const r = sourceRow(from);
   if (!r) return false;
-  if (tier === "free") return r.account === true;
-  const v = tier === "plus" ? r.plus : r.premium;
-  if (v === false) return false;
-  return v === true || v !== r.account;
+  return tier === "free" ? r.account : tier === "plus" ? r.plus : r.premium;
 }
 
-function Mark({ yes, dense }: { yes: boolean; dense?: boolean }) {
+function Mark({ v, dense }: { v: boolean | string; dense?: boolean }) {
   const size = dense ? "h-5 w-5 text-[11px]" : "h-6 w-6 text-[13px]";
-  return yes ? (
+  if (typeof v === "string")
+    return <span className={`inline-block font-semibold leading-tight text-slate-200 ${dense ? "text-[10px]" : "text-[11px] sm:text-xs"}`}>{v}</span>;
+  return v ? (
     <span aria-label="Included" className={`inline-grid ${size} place-items-center rounded-full bg-buy/15 font-black text-up`}>
       ✓
     </span>
   ) : (
     <span aria-label="Not included" className={`inline-grid ${size} place-items-center font-bold text-slate-600`}>
-      ✕
+      —
     </span>
   );
 }
@@ -106,7 +105,7 @@ export function PremiumTicks({
         <colgroup>
           <col />
           {cols.map((c) => (
-            <col key={c.key} className={dense ? (c.key === "premium" ? "w-[72px]" : "w-[44px]") : "w-[68px] sm:w-[120px]"} />
+            <col key={c.key} className={dense ? (c.key === "premium" ? "w-[72px]" : "w-[56px]") : "w-[72px] sm:w-[120px]"} />
           ))}
         </colgroup>
         <thead>
@@ -135,7 +134,7 @@ export function PremiumTicks({
               </th>
               {cols.map((c) => (
                 <td key={c.key} className={`px-1 ${cellY} text-center transition-colors ${lit(c.key)}`}>
-                  <Mark yes={hasTick(r.from, c.key)} dense={dense} />
+                  <Mark v={cellValue(r.from, c.key)} dense={dense} />
                 </td>
               ))}
             </tr>
