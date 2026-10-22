@@ -69,11 +69,9 @@ const GA4_ONLY_EVENTS = new Set([
   "recent_viewed_click",
   "notification_open",
   "riftle_start",
-  // /creators (2026-10-15): per-creator click counts to show each creator what
-  // their listing sent them. GA4 only, like the other high-volume ones above.
-  "creator_click",
-  "creator_tip_click",
-  "creator_code_click",
+  // creator_click / creator_tip_click / creator_code_click go to Vercel too since
+  // 2026-10-22 (owner: track each creator's clicks in Vercel). They are outbound
+  // clicks on one page, a handful a day, not usage telemetry.
   "creator_apply",
 ]);
 

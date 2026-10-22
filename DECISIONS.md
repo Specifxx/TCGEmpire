@@ -18841,3 +18841,12 @@ and email the owner (`creator-profile` inbox kind). Name, slug, avatar and creat
 code stay owner-only. /creators reads the rows once per regeneration; a database
 failure falls back to the static cards. Same day: `ofTheWeek` on a Creator lists
 it first with a "Creator of the week" badge (riftsandbounds first).
+
+## Creator clicks are counted in Vercel Analytics (2026-10-22)
+
+Owner: "track how many clicks each creator has gotten in vercel". `creator_click`,
+`creator_tip_click` and `creator_code_click` leave GA4_ONLY_EVENTS (lib/analytics.ts)
+and now also go to Vercel as custom events with a `creator` property (the slug;
+`creator_click` also carries `platform`). They were GA4-only for the Vercel event
+quota, but they are outbound clicks on one page, a few a day, so the cost is
+negligible. `creator_apply` stays GA4-only.
