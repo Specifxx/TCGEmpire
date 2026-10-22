@@ -336,6 +336,21 @@ function directProgramUrl(u: URL): string | null {
   return fn ? fn(u) : null;
 }
 
+// STORE LINKS SAY WHERE THE VISITOR CAME FROM (2026-10-22, owner: "yes please add
+// it we need it", after seeing TCGSnoop's `?utm_source=tcgsnoop` on a store link).
+// Our anchors are `noreferrer`, so without this a store's analytics files our
+// visitors under "direct" and cannot see what RiftCompare sends them. A store link
+// with no affiliate program gets utm_source=riftcompare, utm_medium=referral and
+// utm_campaign=<the page type>. A utm_source already on the URL is left alone.
+export function withStoreUtm(u: URL, page = "home"): string {
+  if (!u.searchParams.has("utm_source")) {
+    u.searchParams.set("utm_source", "riftcompare");
+    u.searchParams.set("utm_medium", "referral");
+    u.searchParams.set("utm_campaign", page);
+  }
+  return u.toString();
+}
+
 // Append our affiliate identifier to an outbound product link.
 //   Priority: eBay EPN → Amazon Associates → TCGplayer (Impact) → per-store DIRECT
 //   program → plain link.
@@ -394,6 +409,7 @@ export function affiliateUrl(
     // A signed per-store direct program (none yet) rewrites the URL here.
     const direct = directProgramUrl(u);
     if (direct) return direct;
+    return withStoreUtm(u, page);
   } catch {
     /* not an absolute URL — leave it untouched */
   }

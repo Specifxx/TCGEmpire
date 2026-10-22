@@ -18870,3 +18870,13 @@ the month's visitors from Vercel Analytics and the month's affiliate profit at
 edit page, so "where's our payment?" has an answer they can check. Paid by hand.
 Traffic share, not exact attributed sales: eBay's customid could do per-creator
 sales later, but this needs nothing from the networks.
+
+## Store links carry utm_source=riftcompare (2026-10-22)
+
+Owner, after seeing TCGSnoop tag store links `?utm_source=tcgsnoop`: "yes please add
+it we need it". Our outbound anchors are `noreferrer`, so a store's own analytics
+filed RiftCompare visitors as direct traffic and could not see what we send them,
+which is the evidence a store feed or partnership conversation needs.
+`affiliateUrl` now adds `utm_source=riftcompare&utm_medium=referral&utm_campaign=<page
+type>` to any store link with no affiliate program (eBay, Amazon, TCGplayer Impact
+and direct programs keep their own tagging; an existing utm_source is left alone).

@@ -269,9 +269,9 @@ test("a very long placement cannot overflow the sub-id limit", () => {
   assert.ok(s.length <= 60, `${s.length} chars`);
 });
 
-test("non-affiliate hosts are returned untouched", () => {
+test("non-affiliate hosts only gain our UTM tags (2026-10-22)", () => {
   const plain = "https://cherrycollectables.com.au/products/thing";
-  assert.equal(affiliateUrl(plain, "cherry", "https://riftcompare.com/card/x"), plain);
+  assert.equal(affiliateUrl(plain, "cherry", "https://riftcompare.com/card/x"), `${plain}?utm_source=riftcompare&utm_medium=referral&utm_campaign=card`);
 });
 
 test("ebayAffiliateUrl still works without a source (existing call sites)", () => {
