@@ -2030,3 +2030,21 @@ model DeckShare {
   views     Int      @default(0)
   createdAt DateTime @default(now())
 }
+
+// A creator's own edits to their /creators card (2026-10-22). The card's base
+// is the hand-curated list in lib/content/creators.ts; a row here, keyed by the
+// same slug, overrides the fields the creator may change. The owner issues a
+// private edit link from /admin/creators; only its SHA-256 is stored.
+model CreatorProfileEdit {
+  slug          String   @id
+  editTokenHash String   @unique
+  blurb         String?
+  // JSON: [{ platform, url, handle? }], validated by lib/content/creator-edit.ts.
+  links         String?
+  tipUrl        String?
+  // Comma-separated, at most three.
+  tags          String?
+  region        String?
+  editedAt      DateTime?
+  createdAt     DateTime @default(now())
+}

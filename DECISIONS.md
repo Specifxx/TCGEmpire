@@ -18826,3 +18826,18 @@ After the release, use URL Inspection → Request indexing in Search Console. Go
 - **Felipe Ponce** (@riftbound.felipe, linktr.ee/felipe.ponce, Bristol UK, Stuttgart Regional).
 
 Avatars are cropped from the owner's screenshots of their Instagram profiles.
+
+## Creators edit their own card through a private link (2026-10-22)
+
+Owner: "for future have the ability for creators to add it themselves". CREATORS
+(lib/content/creators.ts) still decides WHO is listed, since each partnership is
+agreed by a person. What a listed creator can change is their own card's content:
+blurb, links, tip page, tags, region. The owner makes a private link at
+/admin/creators (`/creators/edit/<token>`; only the token's sha256 is stored in
+`CreatorProfileEdit`, and a new link revokes the old). Saves are validated in
+lib/content/creator-edit.ts (each link must be https on its platform's domain, with
+share-sheet tracking params such as `si` and `igsh` stripped), revalidate /creators,
+and email the owner (`creator-profile` inbox kind). Name, slug, avatar and creator
+code stay owner-only. /creators reads the rows once per regeneration; a database
+failure falls back to the static cards. Same day: `ofTheWeek` on a Creator lists
+it first with a "Creator of the week" badge (riftsandbounds first).

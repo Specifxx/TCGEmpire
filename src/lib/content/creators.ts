@@ -48,6 +48,8 @@ export interface Creator {
   champion?: string;
   /** A square avatar they supplied, in public/creators/. Initials are used without one. */
   avatar?: string;
+  /** Creator of the week (owner's pick): listed first with a badge. One at a time. */
+  ofTheWeek?: boolean;
   /** ISO date the listing went live. Newest first. */
   since: string;
   /** Their RiftCompare creator code (an active Affiliate row, /admin/affiliates),
@@ -94,9 +96,14 @@ export const CREATORS: Creator[] = [
   },
   {
     slug: "riftsandbounds",
+    ofTheWeek: true,
     name: "Matt",
     blurb: "Educational Riftbound TCG content and theory videos.",
-    links: [{ platform: "Instagram", url: "https://www.instagram.com/riftsandbounds/", handle: "@riftsandbounds" }],
+    links: [
+      { platform: "YouTube", url: "https://www.youtube.com/@riftsandboundstcg", handle: "@riftsandboundstcg" },
+      { platform: "TikTok", url: "https://www.tiktok.com/@rifts.and.bounds", handle: "@rifts.and.bounds" },
+      { platform: "Instagram", url: "https://www.instagram.com/riftsandbounds/", handle: "@riftsandbounds" },
+    ],
     avatar: "/creators/riftsandbounds.jpg",
     tags: ["Theory", "Education"],
     since: "2026-10-22",
@@ -114,11 +121,22 @@ export const CREATORS: Creator[] = [
     region: "UK",
     since: "2026-10-22",
   },
+  {
+    slug: "ramenjuice",
+    name: "ramenjuice",
+    blurb: "Just a simple man with a Riftbound addiction: pack openings and Riftbound content from Sydney.",
+    links: [
+      { platform: "Instagram", url: "https://www.instagram.com/ramenjuice_rb/", handle: "@ramenjuice_rb" },
+      { platform: "Website", url: "https://beacons.ai/ramenjuice", handle: "beacons.ai/ramenjuice" },
+    ],
+    region: "AU",
+    since: "2026-10-22",
+  },
 ];
 
-/** Newest listing first. */
+/** Creator of the week first, then newest listing first. */
 export function featuredCreators(list: readonly Creator[] = CREATORS): Creator[] {
-  return [...list].sort((a, b) => b.since.localeCompare(a.since));
+  return [...list].sort((a, b) => Number(!!b.ofTheWeek) - Number(!!a.ofTheWeek) || b.since.localeCompare(a.since));
 }
 
 export const PLATFORM_STYLE: Record<CreatorPlatform, { bg: string; fg: string }> = {

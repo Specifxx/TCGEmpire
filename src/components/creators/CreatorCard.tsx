@@ -46,6 +46,9 @@ export function CreatorCard({ creator, index = 0 }: { creator: Creator; index?: 
           )}
         </div>
 
+        {creator.ofTheWeek && (
+          <span className="chip mt-3 bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold">★ Creator of the week</span>
+        )}
         <h3 className="mt-3 text-lg font-extrabold text-white">{creator.name}</h3>
         <p className="mt-1 text-sm leading-relaxed text-slate-400">{creator.blurb}</p>
 

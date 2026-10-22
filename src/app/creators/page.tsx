@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
-import { featuredCreators } from "@/lib/content/creators";
+import { getCreators } from "@/lib/content/creators-server";
 import { CreatorCard, PackIcon } from "@/components/creators/CreatorCard";
 import { CreatorApplyForm } from "@/components/creators/CreatorApplyForm";
 import { HubFaq } from "@/components/HubFaq";
@@ -84,8 +84,8 @@ const HERO_ART = [
   { src: "/radiance-spoilers/heartsteel-ksante-courageous.jpg", cls: "left-[176px] top-10 rotate-[11deg]" },
 ];
 
-export default function CreatorsPage() {
-  const creators = featuredCreators();
+export default async function CreatorsPage() {
+  const creators = await getCreators();
   const ld = ldJson(
     {
       "@context": "https://schema.org",

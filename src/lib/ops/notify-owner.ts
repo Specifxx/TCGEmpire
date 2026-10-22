@@ -18,7 +18,7 @@ import { ownerEmail } from "./owner";
 export const MAX_PER_HOUR = 8;
 export const MAX_PER_DAY = 25;
 
-export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate";
+export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate" | "creator-profile";
 
 export interface InboxItem {
   kind: InboxKind;
@@ -38,10 +38,11 @@ const LABEL: Record<InboxKind, string> = {
   "price-report": "Wrong-price report",
   support: "Support ticket",
   affiliate: "Creator code application",
+  "creator-profile": "Creator profile edit",
 };
 
 /** Where the email's button goes: creator applications are reviewed in /admin/affiliates. */
-const inboxHref = (kind: InboxKind) => `${SITE_URL}${kind === "affiliate" ? "/admin/affiliates" : "/admin/messages"}`;
+const inboxHref = (kind: InboxKind) => `${SITE_URL}${kind === "affiliate" ? "/admin/affiliates" : kind === "creator-profile" ? "/admin/creators" : "/admin/messages"}`;
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}…` : s);
 const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();
