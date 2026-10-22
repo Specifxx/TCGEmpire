@@ -81,6 +81,15 @@ export function trackEvent(name: string, params?: Record<string, string | number
     : undefined;
   if (!GA4_ONLY_EVENTS.has(name)) vercelTrack(name, cleaned);
   if (typeof window !== "undefined") window.gtag?.("event", name, cleaned);
+  // A buy click by a visitor a creator sent counts toward that creator's revenue
+  // share (lib/creator-payout.ts). Only those visitors carry the cookie.
+  if (name === "buy_click" && typeof document !== "undefined" && document.cookie.includes("rc_creator=")) {
+    try {
+      navigator.sendBeacon?.("/api/creators/buy-click");
+    } catch {
+      /* best effort */
+    }
+  }
 }
 
 // Fire-and-forget "someone clicked a Premium CTA" beacon, recorded server-side

@@ -18850,3 +18850,23 @@ and now also go to Vercel as custom events with a `creator` property (the slug;
 `creator_click` also carries `platform`). They were GA4-only for the Vercel event
 quota, but they are outbound clicks on one page, a few a day, so the cost is
 negligible. `creator_apply` stays GA4-only.
+
+## Creators earn a share of affiliate profit from the traffic they send (2026-10-22)
+
+Owner: few people buy Premium, so a creator code's 20% Premium commission earns a
+creator little; instead "if they're bringing 20,000 visitors … and we have 40,000 in
+total … we give them 25% of that". So each listed creator gets a traffic link,
+`riftcompare.com/c/<slug>` (optional `?to=/path`), and a monthly payout:
+
+    affiliate profit × (their visitors ÷ all visitors) × share % (default 25)
+
+Their visitors are counted by us: one per browser per 30 days (the `rc_creator`
+cookie), bots skipped, as a `CreatorDailyStat` row per creator per day. Buy clicks
+by those visitors are counted too (a beacon from `trackEvent("buy_click")` only when
+the cookie is present). The all-site denominator stays out of our database (counting
+every visit is the egress the click beacon was switched off for): the owner enters
+the month's visitors from Vercel Analytics and the month's affiliate profit at
+/admin/creators (`CreatorPayoutMonth`). Creators see the same table on their private
+edit page, so "where's our payment?" has an answer they can check. Paid by hand.
+Traffic share, not exact attributed sales: eBay's customid could do per-creator
+sales later, but this needs nothing from the networks.

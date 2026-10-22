@@ -2048,3 +2048,27 @@ model CreatorProfileEdit {
   editedAt      DateTime?
   createdAt     DateTime @default(now())
 }
+
+// Creator revenue share (2026-10-22, DECISIONS.md "Creators earn a share of affiliate
+// profit from the traffic they send"). One row per creator per UTC day: visitors who
+// arrived through riftcompare.com/c/<slug> (first visit per browser per 30 days) and
+// buy clicks those visitors made. Low volume by construction.
+model CreatorDailyStat {
+  slug      String
+  day       String // YYYY-MM-DD, UTC
+  visits    Int    @default(0)
+  buyClicks Int    @default(0)
+
+  @@id([slug, day])
+}
+
+// The month's totals the owner enters at /admin/creators: all-site visitors (from
+// Vercel Analytics) and affiliate profit. A creator's payout is computed from these.
+model CreatorPayoutMonth {
+  month                 String   @id // YYYY-MM
+  totalVisitors         Int
+  affiliateRevenueCents Int
+  sharePct              Int      @default(25)
+  currency              String   @default("AUD")
+  updatedAt             DateTime @updatedAt
+}
