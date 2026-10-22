@@ -30,7 +30,7 @@ export default async function CreatorEditPage({ params }: { params: { token: str
       <section className="mt-6 rounded-xl border border-ink-700 p-4">
         <h2 className="font-bold text-white">Your traffic and earnings</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Share this link in your bio and videos: <code className="text-white">{SITE_URL}/c/{base.slug}</code> (add{" "}
+          Share this link in your bio and videos: <code className="text-white">{SITE_URL}/go/{base.slug}</code> (add{" "}
           <code>?to=/radiance-preorders</code> or any page to land there). Each month you get {DEFAULT_SHARE_PCT}% of our affiliate profit
           from your share of our visitors. Visitors are counted once per browser per 30 days; the payout appears once the month is closed.
         </p>

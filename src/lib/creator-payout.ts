@@ -4,7 +4,7 @@
 //
 //   payout = affiliate profit × (their visitors ÷ all visitors) × share %
 //
-// Their visitors are counted by us (/c/<slug>, CreatorDailyStat). All visitors and
+// Their visitors are counted by us (/go/<slug>, CreatorDailyStat). All visitors and
 // the month's affiliate profit come from Vercel Analytics and the affiliate
 // dashboards, which the owner enters once a month at /admin/creators. Paid by hand,
 // like creator-code commission. Pure, so tests and both pages share it.

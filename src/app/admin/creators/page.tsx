@@ -48,7 +48,7 @@ export default async function AdminCreatorsPage({ searchParams }: { searchParams
               </div>
               <CreatorEditLinkButton slug={c.slug} adminKey={keyOk ? token! : ""} />
               <div className="w-full text-xs text-slate-400">
-                Traffic link: <code>{SITE_URL}/c/{c.slug}</code>
+                Traffic link: <code>{SITE_URL}/go/{c.slug}</code>
                 <div className="mt-2"><CreatorEarnings rows={earnings.get(c.slug) ?? []} /></div>
               </div>
             </li>

@@ -6,7 +6,7 @@ import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-// A creator's traffic link, riftcompare.com/c/<slug> (lib/creator-payout.ts). Counts
+// A creator's traffic link, riftcompare.com/go/<slug> (lib/creator-payout.ts). Counts
 // one visitor per browser per 30 days (the rc_creator cookie, which also credits the
 // visitor's buy clicks) and opens the homepage, or `?to=/a/path` on this site.
 export async function GET(req: Request, { params }: { params: { slug: string } }) {

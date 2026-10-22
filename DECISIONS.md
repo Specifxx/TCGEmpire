@@ -18856,7 +18856,7 @@ negligible. `creator_apply` stays GA4-only.
 Owner: few people buy Premium, so a creator code's 20% Premium commission earns a
 creator little; instead "if they're bringing 20,000 visitors … and we have 40,000 in
 total … we give them 25% of that". So each listed creator gets a traffic link,
-`riftcompare.com/c/<slug>` (optional `?to=/path`), and a monthly payout:
+`riftcompare.com/go/<slug>` (optional `?to=/path`), and a monthly payout:
 
     affiliate profit × (their visitors ÷ all visitors) × share % (default 25)
 
