@@ -14,6 +14,7 @@ import { loadBinderHoldings, loadOwnedQty, loadSetGapLines, loadStoreListings, l
 import { nothingPricedMessage, NOT_STOCKED_LIST_CAP, setGapFields, type SetGapAnswer } from "@/lib/set-gap";
 import { COUNTRIES } from "@/lib/country";
 import type { MinCondition } from "@/lib/basket-condition";
+import { FREE_PLANS_PER_MONTH, freePlansState, meterMonth, prismaMeterStore, resetLabel, takeFreePlan, type FreePlans } from "@/lib/basket-meter";
 import { basketStoresFor, postageContextFor, postageOptionsFrom, type PostageOptions } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
@@ -81,6 +82,16 @@ export const dynamic = "force-dynamic";
 // nothing at the floor is not covered (`unbuyable`), never filled with a played
 // copy. `saveMinCondition` remembers the choice (User.basketPrefs), Premium's too.
 //
+// THREE FREE PLANS A MONTH (2026-10-22, lib/basket-meter.ts). Below Premium a
+// run is the totals view, as above, now carrying `freePlans` (used, limit,
+// reset). `reveal: true` asks for the store-by-store plan: it takes one of the
+// month's FREE_PLANS_PER_MONTH from the BasketPlanUsage row (a conditional
+// increment, so concurrent reveals cannot overspend), answers exactly what
+// Premium gets, priced at "any" condition, and hands the use back if the plan
+// priced nothing. With none left it answers 402 with the state, and the page
+// keeps the totals view on screen. A reveal is metered by the month, not by the
+// five totals a day, so it skips that limiter (never the attempts one).
+//
 // RATE LIMITS. Premium: 30 an hour. Without Premium: 5 TOTALS a day — a run
 // that comes back without one (a 400 such as an empty watchlist, a 503, a list
 // where nothing matched or nothing is in stock) hands its slot back, so a
@@ -108,7 +119,10 @@ export async function POST(req: Request) {
     const tries = rateLimit(`basket-try:${user.id}`, 20, HOUR);
     if (!tries.ok) return tooManyRequests(tries.retryAfter);
   }
-  const rl = full ? rateLimit(`basket-premium:${user.id}`, 30, HOUR) : rateLimit(`basket:${user.id}`, 5, DAY);
+  // Read before the limiter so a reveal can skip the five-a-day one.
+  const request = parseBasketRequest(await req.json().catch(() => null));
+  const reveal = !full && request.reveal;
+  const rl = full ? rateLimit(`basket-premium:${user.id}`, 30, HOUR) : reveal ? { ok: true, retryAfter: 0 } : rateLimit(`basket:${user.id}`, 5, DAY);
   if (!rl.ok) {
     return NextResponse.json(
       {
@@ -123,12 +137,47 @@ export async function POST(req: Request) {
   const country = getCountry();
   const params = new URL(req.url).searchParams;
   const postageOpts = postageOptionsFrom(country, params.get("region"), params.get("tracked"));
-  const request = parseBasketRequest(await req.json().catch(() => null));
+  const meter = prismaMeterStore(prisma);
+
+  if (reveal) {
+    const take = await takeFreePlan(meter, user.id).catch(() => null);
+    if (!take) return NextResponse.json({ error: "Couldn't check your free plans just now. Try again in a minute." }, { status: 503 });
+    if (!take.ok) {
+      return NextResponse.json(
+        {
+          error: `You've used your ${FREE_PLANS_PER_MONTH} free store-by-store plans this month. They reset on ${resetLabel(new Date(take.state.resetsAt))} (UTC).`,
+          freePlans: take.state,
+        },
+        { status: 402 }
+      );
+    }
+    const out = await buildBasket(user.id, true, request, "any", country, postageOpts);
+    let freePlans: FreePlans = take.state;
+    if (!out.priced) {
+      // Nothing was planned: the use goes back.
+      await meter.giveBack(user.id, meterMonth()).catch(() => null);
+      freePlans = { ...freePlans, used: Math.max(0, freePlans.used - 1) };
+    }
+    return withFreePlans(out.res, freePlans);
+  }
+
   const out = await buildBasket(user.id, full, request, full ? request.minCondition : "any", country, postageOpts);
   if (full && request.saveMinCondition && out.res.status === 200) void saveMinConditionPref(user.id, request.minCondition);
   // Only a run that came back with a total counts against the free five.
   if (!full && !out.priced) refundRateLimit(`basket:${user.id}`);
+  if (!full && out.res.status === 200) {
+    const state = await freePlansState(meter, user.id).catch(() => null);
+    if (state) return withFreePlans(out.res, state);
+  }
   return out.res;
+}
+
+// The month's free plans ride on a below-Premium answer, so the page can offer
+// the plan (or say when the allowance resets) without a second request.
+async function withFreePlans(res: NextResponse, freePlans: FreePlans): Promise<NextResponse> {
+  if (res.status !== 200) return res;
+  const body = await res.json();
+  return NextResponse.json({ ...body, freePlans }, { headers: { "Cache-Control": "no-store" } });
 }
 
 const fail = (error: string, status: number): Outcome => ({ res: NextResponse.json({ error }, { status }), priced: false });

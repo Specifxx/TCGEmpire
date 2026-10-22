@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PremiumCta } from "./PremiumCta";
 import { PremiumTicks } from "./PremiumTicks";
+import { planBullets, planTagline } from "@/lib/premium-plan-copy";
 import {
   TIER_NAMES,
   tierMonthlyAmount,
@@ -66,6 +67,8 @@ export function PremiumPricingCards({
   trialDays,
   trialFeeCents,
   introEligible = true,
+  market = "AU",
+  afterCards = null,
 }: {
   plusLive: boolean;
   plusAnnualLive: boolean;
@@ -79,6 +82,10 @@ export function PremiumPricingCards({
   trialFeeCents: number;
   /** Would checkout attach the half-price intro (never paid)? lib/premium.ts introEligibleFor. */
   introEligible?: boolean;
+  /** The visitor's market (lib/get-country.ts): US leads with alerts, the rest with Best Basket. */
+  market?: string;
+  /** Server-rendered lines that belong right under the cards (the no-card options). */
+  afterCards?: React.ReactNode;
 }) {
   const anyAnnualLive = annualLive || (plusLive && plusAnnualLive);
   // MONTHLY IS THE DEFAULT (2026-09-14, reversing the annual default of
@@ -94,7 +101,13 @@ export function PremiumPricingCards({
   //
   // A tier with no annual price of its own still falls back to monthly display
   // regardless of this default — see PaidTierCard's own effectiveCycle guard.
-  const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
+  //
+  // ANNUAL IS THE DEFAULT AGAIN (2026-10-22, owner: "Default the billing toggle
+  // to Annual. Show per-month equivalents and Save 33%"). The trial line still
+  // shows under each card in the annual branch (it was the 2026-09-14 worry), so
+  // the zero-cost first step stays visible; monthly is one tap away.
+  // DECISIONS.md, "/premium shows each plan's real limits".
+  const [cycle, setCycle] = useState<"monthly" | "annual">(anyAnnualLive ? "annual" : "monthly");
   // The picked plan lights its card and its column in the ticks table below.
   // Premium by default: it is the recommended plan.
   const [picked, setPicked] = useState<PremiumTierKey>("premium");
@@ -150,7 +163,8 @@ export function PremiumPricingCards({
         {plusLive && (
           <PaidTierCard
             tier="plus"
-            tagline="No ads, and price watches"
+            tagline={planTagline("plus", market)}
+            bullets={planBullets("plus", market)}
             picked={picked === "plus"}
             onPick={() => setPicked("plus")}
             cycle={cycle}
@@ -167,7 +181,8 @@ export function PremiumPricingCards({
 
         <PaidTierCard
           tier="premium"
-          tagline={plusLive ? "Plans which stores to buy from" : "The full toolkit"}
+          tagline={plusLive ? planTagline("premium", market) : "The full toolkit"}
+          bullets={planBullets("premium", market)}
           highlight
           picked={picked === "premium"}
           onPick={() => setPicked("premium")}
@@ -182,6 +197,8 @@ export function PremiumPricingCards({
           introEligible={introEligible}
         />
       </div>
+
+      {afterCards}
 
       {/* The comparison, ticks and crosses only (PremiumTicks' own header). Its
           prices follow the Monthly / Annual toggle and its lit column follows
@@ -198,13 +215,16 @@ export function PremiumPricingCards({
   );
 }
 
-// NO FEATURE BULLETS ON THE CARDS (2026-10-17, owner: "there's a lot of double
-// up on information"). A card is the plan's name, its real price, one tagline,
-// the trial or intro line where it applies, and the button. What each plan
-// includes is the ticks table right under the cards, said once.
+// FOUR BULLETS ON EACH CARD AGAIN (2026-10-22, owner), reversing 2026-10-17's
+// "no bullets": a card is the plan's name, its real price (per month under
+// annual), one tagline, three or four bullets saying what the plan is FOR
+// (lib/premium-plan-copy.ts, from the same limit constants as the table), the
+// trial or intro line where it applies, and the button. The table below still
+// carries every limit.
 function PaidTierCard({
   tier,
   tagline,
+  bullets = [],
   highlight = false,
   picked,
   onPick,
@@ -220,6 +240,7 @@ function PaidTierCard({
 }: {
   tier: PremiumTierKey;
   tagline: string;
+  bullets?: string[];
   highlight?: boolean;
   picked: boolean;
   onPick: () => void;
@@ -265,7 +286,7 @@ function PaidTierCard({
     >
       {highlight && (
         <span className="absolute right-0 top-0 rounded-bl-lg bg-gold px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-wider text-ink-950 sm:px-2 sm:text-[9px]">
-          Best value
+          Most features
         </span>
       )}
       <div className="px-2.5 pb-1 pt-4 text-center sm:px-5 sm:pt-5">
@@ -274,7 +295,17 @@ function PaidTierCard({
           <span className="num text-2xl font-extrabold text-white sm:text-3xl">{headline}</span>
           <span className="text-sm text-slate-400">/mo</span>
         </div>
-        <p className="mt-0.5 text-[11px] leading-snug text-slate-400">{tagline}</p>
+        <p className="mt-0.5 text-[11px] font-semibold leading-snug text-slate-300 sm:text-xs">{tagline}</p>
+        {bullets.length > 0 && (
+          <ul className="mx-auto mt-2 space-y-1 text-left text-[11px] leading-snug text-slate-300 sm:max-w-[16rem] sm:text-xs" data-plan-bullets>
+            {bullets.map((b) => (
+              <li key={b} className="flex gap-1.5">
+                <span aria-hidden className={highlight ? "text-gold" : "text-brand-400"}>✓</span>
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+        )}
         {/* The trial survives BOTH cycles. This used to be an either/or, so
             selecting annual replaced the trial line with "Billed as
             $79.99/year" — the strongest and the scariest line on the card

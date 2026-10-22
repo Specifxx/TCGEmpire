@@ -24,6 +24,7 @@ import { cardThumbProps } from "@/lib/card-image-url";
 import { useMe } from "@/lib/use-me";
 import { basketSavingPitch } from "@/lib/basket-saving";
 import { PREMIUM_PRICE_LABEL } from "@/lib/site";
+import { FREE_PLANS_PER_MONTH, resetLabel, type FreePlans } from "@/lib/basket-meter";
 import { SET_SCOPES, type SetScope } from "@/lib/set-scope";
 import { RARITY_KEYS, rarityInfo } from "@/lib/constants";
 import { SET_GAP_CHUNK, nextChunkLabel, setGapNote, type SetGapSummary } from "@/lib/set-gap";
@@ -76,7 +77,8 @@ interface FullResult extends BasketPreview {
   notStocked?: { name: string; setCode: string; collectorNumber: string }[];
 }
 // A non-Premium answer to the set source adds counts only: no store, line or link.
-type Result = (BasketPreview & { setGap?: SetGapSummary }) | FullResult;
+// Below Premium every answer also carries the month's free plans (lib/basket-meter.ts).
+type Result = ((BasketPreview & { setGap?: SetGapSummary }) | FullResult) & { freePlans?: FreePlans };
 const isFull = (r: Result): r is FullResult => "plan" in r;
 
 type PlanKey = "split" | "single" | "two";
@@ -167,6 +169,11 @@ export function BestBasket({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
+  // THREE FREE PLANS A MONTH (lib/basket-meter.ts): below Premium a run shows the
+  // totals; "Show the store-by-store plan" re-runs the same inputs with
+  // `reveal: true`, which is what spends one. The state is the server's.
+  const [freePlans, setFreePlans] = useState<FreePlans | null>(null);
+  const [revealing, setRevealing] = useState(false);
   const [shown, setShown] = useState<PlanKey>("split");
   // Bumped by every run and every input change: a response that comes back
   // for an older request is dropped, not shown under inputs it doesn't match.
@@ -256,11 +263,14 @@ export function BestBasket({
     void run();
   }
 
-  async function run() {
+  async function run(opts: { reveal?: boolean } = {}) {
+    const reveal = !full && !!opts.reveal;
     const seq = ++reqSeq.current;
     setLoading(true);
     setError(null);
-    setResult(null);
+    // A reveal keeps the totals on screen until the plan arrives (or is refused).
+    if (!reveal) setResult(null);
+    setRevealing(reveal);
     setShown("split");
     const q = new URLSearchParams();
     if (delivery.current.region) q.set("region", delivery.current.region);
@@ -275,6 +285,7 @@ export function BestBasket({
           source: tab,
           skipOwned: tab === "set" || (tab !== "binder" && skipOwned),
           ...(full ? { minCondition: floor.current, saveMinCondition: saveMin } : {}),
+          ...(reveal ? { reveal: true } : {}),
           ...(tab === "deck" ? { text: pasteText, lines: picked.map((p) => ({ cardId: p.card.id, qty: p.qty })) } : {}),
           ...(tab === "set"
             ? { set: setCode, scope: setScope, rarity: setRarity || undefined, maxPriceCents: ceilingCents ?? undefined, after: chunkStart.current ?? undefined }
@@ -283,12 +294,15 @@ export function BestBasket({
       });
       const d = await res.json().catch(() => null);
       if (seq !== reqSeq.current) return; // the inputs changed while it ran
+      if (d?.freePlans) setFreePlans(d.freePlans as FreePlans);
       if (!res.ok || !d) {
         setError(d?.error ?? "Something went wrong — try again.");
         return;
       }
       const built = d as Result;
       setResult(built);
+      // A reveal is the same basket again (its plan): counted once, by its run.
+      if (reveal) return;
       const size = listSize(built, tab, Math.min(listLines, DECK_LINE_CAP));
       trackEvent("best_basket_build", {
         source: tab,
@@ -302,7 +316,10 @@ export function BestBasket({
     } catch {
       if (seq === reqSeq.current) setError("Network error — try again.");
     } finally {
-      if (seq === reqSeq.current) setLoading(false);
+      if (seq === reqSeq.current) {
+        setLoading(false);
+        setRevealing(false);
+      }
     }
   }
 
@@ -584,7 +601,8 @@ export function BestBasket({
           </button>
           {!full && (
             <span className="text-xs text-slate-500">
-              Without Premium you see your own delivered total, 5 times a day. Premium shows which store to buy each card from.
+              Without Premium: your delivered total 5 times a day, and {FREE_PLANS_PER_MONTH} store-by-store plans a month
+              {freePlans ? ` (${Math.max(0, freePlans.limit - freePlans.used)} left this month)` : ""}. Premium is unlimited.
             </span>
           )}
         </div>
@@ -596,7 +614,18 @@ export function BestBasket({
       </div>
 
       {result && result.setGap && <SetGapNotes gap={result.setGap} place={COUNTRIES[country].place} fmt={fmt} full={full} onNext={nextChunk} busy={loading} />}
-      {result && !isFull(result) && <PreviewCard r={result} fmt={fmt} adjective={adjective} overCap={overCap} postage={postageView} />}
+      {result && !isFull(result) && (
+        <PreviewCard
+          r={result}
+          fmt={fmt}
+          adjective={adjective}
+          overCap={overCap}
+          postage={postageView}
+          freePlans={freePlans}
+          revealing={revealing}
+          onReveal={() => void run({ reveal: true })}
+        />
+      )}
       {result && !isFull(result) && tab === "deck" && (
         <DiscoveryTip id="basket-watch" surface="tip:basket" tier="premium" cta="See Premium">
           Premium can watch this deck&apos;s price for you: it re-prices the list after every price update and emails you when the
@@ -604,6 +633,12 @@ export function BestBasket({
         </DiscoveryTip>
       )}
 
+      {result && isFull(result) && !full && freePlans && (
+        <p data-free-plan-used className="rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2 text-xs text-slate-300">
+          Free plan {Math.min(freePlans.used, freePlans.limit)} of {freePlans.limit} this month · resets {resetLabel(new Date(freePlans.resetsAt))} (UTC).
+          Premium plans without a limit.
+        </p>
+      )}
       {result && isFull(result) && (
         <FullResultView
           r={result}
@@ -914,14 +949,21 @@ function PreviewCard({
   adjective,
   overCap,
   postage,
+  freePlans = null,
+  revealing = false,
+  onReveal,
 }: {
   r: BasketPreview;
   fmt: (c: number) => string;
   adjective: string;
   overCap: boolean;
   postage: PostageView;
+  freePlans?: FreePlans | null;
+  revealing?: boolean;
+  onReveal?: () => void;
 }) {
   const { premium, tier } = useMe();
+  const left = freePlans ? Math.max(0, freePlans.limit - freePlans.used) : 0;
   if (r.covered === 0) {
     return (
       <div className="card-surface p-5 text-sm text-slate-300">
@@ -935,7 +977,11 @@ function PreviewCard({
   // THE UPGRADE LEADS WITH THIS LIST'S OWN SAVING (lib/basket-saving.ts,
   // 2026-09-28), and only when it is at least a whole unit of the list's
   // currency; below that, the plain line with no money claim.
-  const pitch = basketSavingPitch(r.savedCents, fmt, { plusMember: premium && tier === "plus", priceLabel: PREMIUM_PRICE_LABEL });
+  const pitch = basketSavingPitch(r.savedCents, fmt, {
+    plusMember: premium && tier === "plus",
+    priceLabel: PREMIUM_PRICE_LABEL,
+    freePlansLeft: freePlans && onReveal ? left : 0,
+  });
   return (
     <div className="card-surface p-5">
       <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Your delivered total</div>
@@ -981,9 +1027,33 @@ function PreviewCard({
       <Coverage r={r} />
       {overCap && <ResultCapNote />}
       <UnmatchedList unmatched={r.unmatched} />
-      <div className="mt-4">
-        <PremiumButton surface="limit:basket" />
-      </div>
+      {/* THE MONTH'S FREE PLANS (lib/basket-meter.ts): one is spent only here, on
+          the click that shows the store-by-store plan. Spent: the upgrade, with
+          how many were used and when they come back. */}
+      {freePlans && left > 0 && onReveal ? (
+        <div className="mt-4 flex flex-wrap items-center gap-3" data-free-plan-offer>
+          <button type="button" onClick={onReveal} disabled={revealing} className="btn-primary text-sm disabled:opacity-50">
+            {revealing ? "Building your plan…" : "Show the store-by-store plan"}
+          </button>
+          <span className="text-xs text-slate-400">
+            Uses 1 of your {freePlans.limit} free plans this month ({left} left).
+          </span>
+        </div>
+      ) : freePlans ? (
+        <div className="mt-4 rounded-lg border border-gold/30 bg-gold/[0.06] p-3" data-free-plan-spent>
+          <p className="text-sm text-slate-200">
+            You&apos;ve used {Math.min(freePlans.used, freePlans.limit)} of {freePlans.limit} free store-by-store plans this month. They reset on{" "}
+            {resetLabel(new Date(freePlans.resetsAt))} (UTC). Premium plans as many lists as you like.
+          </p>
+          <div className="mt-2">
+            <PremiumButton surface="limit:basket" />
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4">
+          <PremiumButton surface="limit:basket" />
+        </div>
+      )}
       <PostageFooter postage={postage} className="mt-4 text-left" />
     </div>
   );

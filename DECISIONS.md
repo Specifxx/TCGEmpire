@@ -18880,3 +18880,78 @@ which is the evidence a store feed or partnership conversation needs.
 `affiliateUrl` now adds `utm_source=riftcompare&utm_medium=referral&utm_campaign=<page
 type>` to any store link with no affiliate program (eBay, Amazon, TCGplayer Impact
 and direct programs keep their own tagging; an existing utm_source is left alone).
+
+## Best Basket: three free plans a month (2026-10-22)
+
+Owner: free signed-in accounts get 3 full store-by-store plans per calendar month,
+covering Best Basket, Buy this list and Finish this set (one plan output, one
+allowance). Premium stays unlimited. Plus gets the same 3 as a free account (the
+owner's table reads "3 a month / same / Unlimited"; before today Plus had totals
+only, so Plus gains, never loses). Signed out keeps no tool, as before: the page
+asks for an account.
+
+- **Counted on reveal, not on run.** A run still answers the totals view (the five
+  totals a day are unchanged), now with `freePlans` (used, limit, reset date). The
+  plan is a second request, `reveal: true`, the "Show the store-by-store plan"
+  button; only that spends one, and a reveal that priced nothing gives it back.
+  Spent, the page keeps the totals and says how many were used and that they reset
+  on the 1st (UTC), beside the upgrade button.
+- **Server-side and tamper-resistant.** `BasketPlanUsage` (user, UTC month, count)
+  in the operational database. A use is taken with `updateMany(where count < 3,
+  increment)`, which Postgres re-checks under the row lock, so ten concurrent
+  reveals take exactly three (`tests/basket-meter.test.ts`). Nothing the client
+  holds is trusted. A reveal is priced at "any" condition (minimum condition stays
+  Premium's) and skips the five-a-day limiter, never the attempts one.
+- **Links.** The plan's store links were already built by `planBasket` through
+  `affiliateUrl` (eBay EPN, TCGplayer Impact, the store UTM tag); a revealed plan
+  is the same code path, so nothing new was needed and no parameter changed.
+- **Copy** reads `FREE_PLANS_PER_MONTH` everywhere it is described:
+  `TIER_COMPARISON` (and so the explainer's table and /premium's), the Best Basket
+  page and FAQ, /tools, llms.txt, the articles, the movers CTA and the downgrade
+  note. The portfolio's replacement-cost plan (`gate:replacement-plan`) is a
+  separate surface and stays Premium's.
+
+## /premium shows each plan's real limits (2026-10-22)
+
+Owner's brief, partly reversing "/premium, 70% simpler" (2026-10-17) and the
+monthly default (2026-09-14):
+
+- **The comparison shows limits, not ticks.** `PremiumTicks` cells are now
+  `TIER_COMPARISON`'s own values ("10 cards / Unlimited", "Top 3 / Full", "30 days
+  / Full + CSV", "25 cards", "10 products", "3 plans a month / Unlimited"), so the
+  table and the Premium explainer's table are one list. A tick for Plus's 25
+  target alerts and Premium's unlimited ones said the same thing about two
+  different plans. Sixteen rows, including minimum condition, Coins and Finish
+  this set. The cells were shortened in `TIER_COMPARISON` itself.
+- **Annual is the default toggle**, with the per-month equivalent ($2.00 Plus,
+  $3.33 Premium, from `premiumEffectiveMonthly`) and "Save 33%". The 2026-09-14
+  worry was the trial line vanishing under annual; it no longer does (each card
+  keeps "N days free, then $X/yr"). The dialog stays monthly.
+- **Cards say what each plan is for again**: a tagline and four bullets from
+  `lib/premium-plan-copy.ts` (limits from the constants). Premium's badge is "Most
+  features", not "Best value".
+- **US vs everywhere else**, from `getCountry()` (no new geo lookup): US leads with
+  target alerts, the deck price watch, sealed restock/RRP alerts and graded
+  tracking; AU/UK/EU/SG/CA lead with Best Basket's postage-aware cheapest order.
+- **No footer eBay/TCGplayer pair on /premium** (`SALES_ROUTES` in
+  `FooterAds.tsx`): a page selling an ad-free plan opened on two ads. No affiliate
+  link is left on the page, so the disclosure line goes with them.
+- **"Not ready to add a card?"** under the cards: feedback for a free week
+  (`FEEDBACK_PREMIUM_DAYS`) and the referral link (`REFERRAL_PREMIUM_DAYS` per
+  friend), existing mechanisms only. Three FAQ questions added from the
+  explainer's wording. `/pricing` 301s to `/premium` (`statusCode: 301`, since
+  `permanent` would answer 308).
+
+## Upgrade-intent events (2026-10-22)
+
+Owner: measure which walls make people want to pay, without re-enabling the
+first-party click table. Two Vercel Analytics custom events (`lib/upgrade-intent.ts`,
+through `trackEvent`, so GA4 gets them too): `upgrade_dialog_open` when the Premium
+dialog opens or an inline paywall prompt shows (a `gate:`/`limit:` `PremiumButton`,
+including Best Basket's spent allowance), and `upgrade_cta_click` on a click
+through to checkout (the dialog, the /premium cards, and the signed-out /premium
+and dialog paths). Properties: `feature` (mapped from the existing surface
+vocabulary), `tier_required`, `market`, `signed_in`, plus `plan` and
+`billing_period` on a click. No email, user id or other personal data. An inline
+prompt fires once per surface per tab session, so a page that re-renders cannot
+flood the Vercel event quota; the dialog fires on every open.

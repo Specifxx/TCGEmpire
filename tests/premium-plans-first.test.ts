@@ -33,10 +33,16 @@ test("the cards are two across at every width, with a compact button, and no Fre
   assert.doesNotMatch(code(cards), /function FreeCard|\$0/, "no $0 anywhere on the cards");
 });
 
-test("the table is ticks and crosses only, built for a phone", () => {
+test("the table shows each plan's real limits, built for a phone", () => {
+  // Since 2026-10-22 (DECISIONS.md "/premium shows each plan's real limits") a
+  // cell is a ✓, a dash, or the short limit itself ("10 cards", "Top 3"), read
+  // from TIER_COMPARISON (tests/premium-ticks.test.ts). The tier columns grew
+  // from 68px to 72px on a phone to hold those strings.
   const body = code(ticks);
   assert.match(body, /table-fixed/);
-  assert.match(body, /w-\[68px\] sm:w-\[120px\]/, "68px tier columns on a phone");
+  assert.match(body, /w-\[72px\] sm:w-\[120px\]/, "72px tier columns on a phone");
+  assert.match(body, /c\.key === "premium" \? "w-\[72px\]" : "w-\[56px\]"/, "the dense (slider) columns: 56px, Premium 72px");
+  assert.match(body, /<Mark v=\{cellValue\(r\.from, c\.key\)\}/, "every cell is the source row's value");
   assert.doesNotMatch(body, /overflow-x-auto|min-w-\[/, "no sideways scroll and no width floor");
   assert.doesNotMatch(body, /◐|shortCaption|detail:/, "no half marks, captions or descriptions");
   // A Plus member sees what Premium adds; a Premium member, who has every tick, does not.
@@ -46,11 +52,20 @@ test("the table is ticks and crosses only, built for a phone", () => {
 test("a short FAQ, one accordion built from the same array as the JSON-LD", () => {
   assert.match(jsx, /faqPage\(FAQ\)/);
   assert.match(jsx, /FAQ\.map\(/);
-  // Three always-on questions; the trial, half-price and price-rise entries exist
-  // only while their switch is on.
+  // Five always-on questions since 2026-10-22 ("Is price comparison free?" and
+  // "Can I switch from Plus to Premium?" joined, from the Premium explainer's
+  // FAQ); the free-Premium, trial, half-price and price-rise entries exist only
+  // while their switch (or reward) is on.
   const faq = page.slice(page.indexOf("const FAQ:"), page.indexOf("export default async function"));
-  const always = faq.replace(/\.\.\.\([a-zA-Z]+\(\)\s*\?\s*\[[\s\S]*?\]\s*:\s*\[\]\),/g, "");
-  assert.ok((always.match(/\n {4}q: /g) ?? []).length <= 4, "at most four always-on FAQ questions");
+  const always = faq.replace(/\.\.\.\([^?\n]+\?\s*\[[\s\S]*?\]\s*:\s*\[\]\),/g, "");
+  const alwaysQs = [...always.matchAll(/\n {4}q: "([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(
+    alwaysQs,
+    ["What's free?", "Is price comparison free?", "Can I switch from Plus to Premium?", "How do I cancel?", "What happens to cards I already track?"],
+    "five always-on FAQ questions, in this order",
+  );
+  // "Can I get Premium for free?" only while a reward actually grants days.
+  assert.match(faq, /\.\.\.\(FEEDBACK_PREMIUM_DAYS > 0 \|\| REFERRAL_PREMIUM_DAYS > 0\s*\?\s*\[\s*\{\s*q: "Can I get Premium for free\?"/);
 });
 
 test("no repeated CTA band and no popup or sticky bar on /premium", () => {

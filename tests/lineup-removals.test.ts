@@ -132,7 +132,10 @@ test("the tools index lists only the kept tools, with the badges their gates ear
   const faq = code(src).slice(code(src).indexOf("const FAQS"), code(src).indexOf("interface Tool"));
   assert.doesNotMatch(faq, /single best result|top pick|value finder|bulk pricer|rising sealed/i);
   assert.match(faq, /show nothing when you're signed out, the top 3 with a free account, and every row with \$\{LIST_BADGE\}, which is also ad-free/);
-  assert.match(faq, /Best Basket shows your own list's delivered total with a free account; the store-by-store plan is part of Premium/);
+  // 2026-10-22: a free account (and Plus) gets FREE_PLANS_PER_MONTH plans a month,
+  // read from lib/basket-meter.ts, never typed; Premium plans without a limit.
+  assert.match(faq, /Best Basket shows your own list's delivered total with a free account, plus \$\{FREE_PLANS_PER_MONTH\} store-by-store plans a month; Premium plans without a limit/);
+  assert.doesNotMatch(faq, /the store-by-store plan is part of Premium/, "the plan is no longer Premium-only");
   assert.match(faq, /Demand Finder shows everyone the top 10 most searched cards of the week; its full most-searched and most-viewed lists are part of Premium/);
 });
 

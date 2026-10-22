@@ -40,6 +40,9 @@ export interface BasketRequest {
   rarity: string | null;
   maxPriceCents: number | null;
   after: SetGapCursor | null;
+  // Show the store-by-store plan (2026-10-22, lib/basket-meter.ts). Below Premium
+  // this takes one of the month's free plans; Premium's runs are always the plan.
+  reveal: boolean;
 }
 
 // A pasted or picked quantity, clamped server-side whatever the client sends.
@@ -76,5 +79,6 @@ export function parseBasketRequest(raw: unknown): BasketRequest {
     rarity: source === "set" ? rarity : null,
     maxPriceCents: source === "set" && ceiling > 0 && ceiling <= 10_000_000 ? ceiling : null,
     after: source === "set" ? parseCursor(body.after) : null,
+    reveal: body.reveal === true,
   };
 }

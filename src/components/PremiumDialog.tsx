@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useMe, invalidateMe } from "@/lib/use-me";
 import { trackEvent, firePremiumClickBeacon } from "@/lib/analytics";
 import { recallPremiumSurface } from "@/lib/premium-surface";
+import { lastUpgradeFeature, marketFromCookie, tierRequiredFor, trackUpgradeCta, trackUpgradeOpen, upgradeContext } from "@/lib/upgrade-intent";
 import { AuthForm } from "./AuthForm";
 import { premiumStartHref } from "@/lib/premium-start";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
@@ -59,17 +60,27 @@ export function usePremiumDialog() {
 const GOLD_BTN =
   "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-ink-950 transition hover:brightness-110 disabled:opacity-50 aria-busy:pointer-events-none aria-busy:opacity-70";
 
+// The click's context: the feature the dialog was last opened for in this tab.
+function clickContext(signedIn: boolean) {
+  const feature = lastUpgradeFeature();
+  return { feature, tier_required: tierRequiredFor(feature), market: (marketFromCookie() ?? "unknown").toUpperCase(), signed_in: signedIn };
+}
+
 export function PremiumDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [initialTier, setInitialTier] = useState<PremiumTierKey>("premium");
+  const { user: me } = useMe();
+  const signedIn = !!me;
   const open = useCallback((surface?: string, opts?: PremiumDialogOpenOpts) => {
     setInitialTier(opts?.tier === "plus" ? "plus" : "premium");
     setIsOpen(true);
+    // upgrade_dialog_open (lib/upgrade-intent.ts): no personal data.
+    trackUpgradeOpen(upgradeContext(surface, marketFromCookie(), signedIn));
     // Fire-and-forget premium-interest beacon (who clicked Premium, and from
     // which surface). The shared helper is keepalive, swallows failures, and
     // remembers the surface for the tab so checkout can carry it.
     firePremiumClickBeacon(surface ?? "dialog");
-  }, []);
+  }, [signedIn]);
   const close = useCallback(() => setIsOpen(false), []);
   return (
     <PremiumDialogContext.Provider value={{ open }}>
@@ -123,6 +134,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
     // Fired BEFORE the fetch — dual-destination (see PremiumCta.tsx's own
     // comment on why this event isn't in GA4_ONLY_EVENTS).
     trackEvent("premium_checkout_started", { plan: selected, tier: sellTier, trial_eligible: trialEligible, source: "dialog", copy: PREMIUM_COPY_VERSION });
+    trackUpgradeCta(clickContext(!!user), sellTier, selected);
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
@@ -148,6 +160,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
     setBusy(true);
     setError(null);
     trackEvent("premium_tier_upgrade_started", { source: "dialog", copy: PREMIUM_COPY_VERSION });
+    trackUpgradeCta(clickContext(true), "premium", interval === "year" ? "annual" : "monthly");
     try {
       const res = await fetch("/api/premium/upgrade", { method: "POST" });
       const d = await res.json().catch(() => ({}));

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
-import { TICK_ROWS, hasTick } from "../src/components/PremiumTicks";
+import { TICK_ROWS, cellValue } from "../src/components/PremiumTicks";
+import { planBullets, planTagline } from "../src/lib/premium-plan-copy";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -54,16 +55,23 @@ test("the ad components gate on adFree, which is computed at the plus minimum", 
 });
 
 test("both paid tiers sell ad-free, and Plus LEADS with it", () => {
-  // 2026-10-17 (/premium, 70% simpler): the cards lost their bullets, so the
-  // claim lives in Plus's tagline and the ticks table. "No ads" is the first
-  // row after the free one, ticked for both paid tiers, the benefit a
-  // first-time payer understands without a tour.
+  // 2026-10-22: the cards carry a tagline and three or four bullets again
+  // (lib/premium-plan-copy.ts). Plus's tagline names no ads in every market,
+  // "No ads" is one of its bullets (first outside the US, where target alerts
+  // lead), and "No ads" is still the first row after the free one in the
+  // comparison, ticked for both paid tiers.
   const cards = code("src/components/PremiumPricingCards.tsx");
-  assert.match(cards, /tier="plus"\s+tagline="No ads, and price watches"/, "Plus's tagline leads with ad-free");
+  assert.match(cards, /tier="plus"[\s\S]{0,80}tagline=\{planTagline\("plus", market\)\}/, "Plus's card takes its tagline from the shared copy");
+  for (const market of ["US", "AU", "GB", null]) {
+    assert.match(planTagline("plus", market), /no ads/i, `Plus's tagline names no ads (${market})`);
+    assert.ok(planBullets("plus", market).includes("No ads"), `Plus's bullets say "No ads" (${market})`);
+  }
+  assert.equal(planBullets("plus", "AU")[0], "No ads", "outside the US, Plus leads with ad-free");
+  assert.match(planBullets("plus", "US")[0], /^Target-price alerts/, "in the US, target alerts lead (the market's own pitch)");
   assert.equal(TICK_ROWS[1].name, "No ads");
-  assert.equal(hasTick(TICK_ROWS[1].from, "plus"), true);
-  assert.equal(hasTick(TICK_ROWS[1].from, "premium"), true);
-  assert.equal(hasTick(TICK_ROWS[1].from, "free"), false);
+  assert.equal(cellValue(TICK_ROWS[1].from, "plus"), true);
+  assert.equal(cellValue(TICK_ROWS[1].from, "premium"), true);
+  assert.equal(cellValue(TICK_ROWS[1].from, "free"), false);
   assert.ok(!/Premium adds an ad-free site/.test(code("src/app/premium/page.tsx")), "/premium must not sell ad-free as Premium-only");
 });
 

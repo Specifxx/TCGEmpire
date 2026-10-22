@@ -93,8 +93,9 @@ test("best_basket_build fires once a basket is actually built, with the fields t
   // market because the saving is expected to differ by both, and savedCents
   // because no savings figure may be published until its median is measured.
   const src = read("src/components/BestBasket.tsx");
-  const start = src.indexOf("async function run()");
-  assert.ok(start > -1, "expected a run() function");
+  // Since 2026-10-22 run() takes { reveal } (a free plan spent below Premium).
+  const start = src.indexOf("async function run(opts: { reveal?: boolean } = {})");
+  assert.ok(start > -1, "expected a run(opts) function");
   const end = src.indexOf("\n  }", src.indexOf("try {", start));
   const body = src.slice(start, end);
   const at = body.indexOf('trackEvent("best_basket_build", {');

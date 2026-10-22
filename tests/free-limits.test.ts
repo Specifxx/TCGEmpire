@@ -407,7 +407,13 @@ test("the basket saving line: real money at or above $1, no saving claim below i
     assert.equal(basketSavingPitch(small, fmt, { plusMember: false, priceLabel: "x" }), null, `${small}: no saving claim`);
   }
   const ui = code("src/components/BestBasket.tsx");
-  assert.match(ui, /basketSavingPitch\(r\.savedCents, fmt, \{ plusMember: premium && tier === "plus", priceLabel: PREMIUM_PRICE_LABEL \}\)/, "the user's own computed saving, nothing else");
+  assert.match(
+    ui,
+    /basketSavingPitch\(r\.savedCents, fmt, \{\s*plusMember: premium && tier === "plus",\s*priceLabel: PREMIUM_PRICE_LABEL,\s*freePlansLeft: freePlans && onReveal \? left : 0,\s*\}\)/,
+    "the user's own computed saving, nothing else"
+  );
+  // With a free plan left this month (2026-10-22) the line points at it instead of asking for money.
+  assert.match(basketSavingPitch(1420, fmt, { plusMember: false, priceLabel: "x", freePlansLeft: 2 })!, /saves you \$14\.20[\s\S]*one of your free plans below\./);
   assert.match(ui, /<PremiumButton surface="limit:basket" \/>/);
 });
 
@@ -496,6 +502,8 @@ test("every tier surface quotes the limits from the constants, and price compari
   // then "search-caps-2026-10-15" when the allowance was loosened to 25 / 100 / 500,
   // then "signup-card-2026-10-16" when the sign-up card moved to the 2nd page,
   // then "akali-slider-2026-10-17" when one Akali slider replaced both corner cards,
-  // then "premium-simple-2026-10-17" when /premium became plan cards and a ticks-only table.
-  assert.equal(PREMIUM_COPY_VERSION, "premium-simple-2026-10-17");
+  // then "premium-simple-2026-10-17" when /premium became plan cards and a ticks-only table,
+  // then "premium-limits-2026-10-22" when the table showed real limits, the cards
+  // regained taglines and bullets, and Best Basket gave 3 free plans a month.
+  assert.equal(PREMIUM_COPY_VERSION, "premium-limits-2026-10-22");
 });

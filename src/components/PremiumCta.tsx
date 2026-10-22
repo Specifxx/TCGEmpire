@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { lastUpgradeFeature, marketFromCookie, tierRequiredFor, trackUpgradeCta } from "@/lib/upgrade-intent";
 import { trackEvent } from "@/lib/analytics";
 import { markSignupSource } from "@/lib/signup-source";
 import { premiumStartHref } from "@/lib/premium-start";
@@ -87,6 +88,7 @@ export function PremiumCta({
     // to both GA4 and Vercel (not added to GA4_ONLY_EVENTS), unlike the
     // high-volume impression events elsewhere in the Premium funnel.
     trackEvent("premium_checkout_started", { plan, tier, trial_eligible: trialEligible, source: "premium-page", copy: PREMIUM_COPY_VERSION });
+    trackUpgradeCta(premiumPageContext(true), tier, plan);
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
@@ -113,6 +115,7 @@ export function PremiumCta({
   // sign_in_click event, so this is the one extra call needed.
   const onStartClick = () => {
     trackEvent("premium_signin_step", { tier, plan, source: "premium-page", copy: PREMIUM_COPY_VERSION });
+    trackUpgradeCta(premiumPageContext(false), tier, plan);
     markSignupSource("premium_cta");
   };
   const startHref = premiumStartHref({ tier, plan, src: "premium-page" });
@@ -193,4 +196,11 @@ export function PremiumCta({
       )}
     </div>
   );
+}
+
+// upgrade_cta_click from /premium itself: the feature a gate sent this tab here
+// for, else "other" (lib/upgrade-intent.ts).
+function premiumPageContext(signedIn: boolean) {
+  const feature = lastUpgradeFeature();
+  return { feature, tier_required: tierRequiredFor(feature), market: (marketFromCookie() ?? "unknown").toUpperCase(), signed_in: signedIn };
 }

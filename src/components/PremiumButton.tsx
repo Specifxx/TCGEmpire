@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePremiumDialog } from "./PremiumDialog";
+import { marketFromCookie, trackUpgradeOpen, upgradeContext } from "@/lib/upgrade-intent";
 import { useMe } from "@/lib/use-me";
 import { PREMIUM_PRICE_LABEL, trialButtonLabel, introOfferEnabled, tierIntroMonthlyAmount, tierMonthlyAmount, INTRO_MONTHS, type PremiumTierKey } from "@/lib/site";
 import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
@@ -35,7 +37,7 @@ export function PremiumButton({
   tier?: PremiumTierKey;
 }) {
   const { open } = usePremiumDialog();
-  const { user, premium, tier, trialing, interval, trialEligible, trialDays, trialFeeCents, introEligible, premiumPlus, premiumAnnual, premiumCheckout } = useMe();
+  const { user, premium, tier, trialing, interval, trialEligible, trialDays, trialFeeCents, introEligible, premiumPlus, premiumAnnual, premiumCheckout, loaded } = useMe();
   // A Plus subscriber hitting a Premium-only gate is already paying — the
   // pitch is an upgrade, not a first subscription, and it names the real
   // recurring price rather than a trial (they've already had theirs). The
@@ -55,6 +57,14 @@ export function PremiumButton({
   // Premium and the label must say Premium's price.
   const sellTier: PremiumTierKey = gateTier === "plus" && premiumPlus ? "plus" : "premium";
   const priceLabel = sellTier === "plus" ? `${tierMonthlyAmount("plus")}/mo` : PREMIUM_PRICE_LABEL;
+  // A button on a wall (gate:/limit:) IS an inline paywall prompt: its showing
+  // is an upgrade_dialog_open, once per surface per tab (lib/upgrade-intent.ts).
+  // Only once /api/me has answered, so signed_in is the real answer.
+  const signedIn = !!user;
+  useEffect(() => {
+    if (!loaded || !surface || !/^(gate|limit):/.test(surface) || (premium && tier === "premium")) return;
+    trackUpgradeOpen(upgradeContext(surface, marketFromCookie(), signedIn), { inline: true, surface });
+  }, [loaded, surface, signedIn, premium, tier]);
   return (
     <button type="button" onClick={() => open(surface, { tier: sellTier })} className={className ?? GOLD}>
       {children ?? (

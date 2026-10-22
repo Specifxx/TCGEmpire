@@ -203,10 +203,12 @@ longer lands on its entry.
   (25) cards and sealed watches on up to `SEALED_WATCH_LIMIT_PLUS` (10)
   products, checked about every six hours (2026-09-29). Premium, $4.99/mo or
   $39.99/yr, adds unlimited targets and sealed watches, the deck price watch
-  (up to `DECK_WATCH_LIMIT`, 10, saved lists), Best Basket's store-by-store
-  plan (for a pasted list, deck, watchlist, binder or a set's missing cards,
-  and behind the portfolio's replacement cost) at the minimum condition the
-  member sets, and
+  (up to `DECK_WATCH_LIMIT`, 10, saved lists), unlimited Best Basket
+  store-by-store plans (for a pasted list, deck, watchlist, binder or a set's
+  missing cards, and behind the portfolio's replacement cost) at the minimum
+  condition the member sets (below Premium, free and Plus alike:
+  `FREE_PLANS_PER_MONTH`, 3, plans a UTC month, counted server-side on reveal in
+  `BasketPlanUsage`, [2026-10-22](../DECISIONS.md#L18884)), and
   **Demand Finder**
   (`/tools/demand`, `isPremium(user, "premium")`: top 25 most searched and
   most viewed, 7 or 30 days). Below Premium, Plus included, Demand Finder
@@ -415,8 +417,9 @@ longer lands on its entry.
   Basket's own saving on its own list plus `setGap` COUNTS (no store, line, link
   or card name; `setGapFields`), store names, lines and URLs are Premium's, no
   other saving figure anywhere. Radiance answers 400 "N revealed cards have no
-  store listing yet" until it releases (no denominator). Table cell "Total and
-  saving preview" / "Store-by-store plan, up to 200 cards".
+  store listing yet" until it releases (no denominator). Table cell "Same 3 plans" /
+  "Unlimited" since 2026-10-22 (the monthly free plans are shared with Best
+  Basket).
   [2026-09-29](../DECISIONS.md#L15397)
 - **Every paid feature is discoverable where it lives, inline, never a
   popup:** `DiscoveryTip` (`tip:*` surfaces) is one dismissable sentence for
@@ -424,17 +427,26 @@ longer lands on its entry.
   /watching's "What you can watch" block (the sealed quick view's watch button
   sells Plus itself, no second line in an overlay); the deck
   watch form and the sealed heart are the ordinary `PremiumButton` gates
-  (`gate:deck-watch`, `gate:sealed-watch`) below the tier. /premium is 70%
-  simpler (2026-10-17, owner: "only ticks and crosses … cut down a lot"): H1,
-  one subline, the Monthly / Annual toggle, two plan cards (price, tagline,
-  trial line, button; no bullets), then `PremiumTicks`: twelve rows, ✓ or ✕
-  only, computed from `TIER_COMPARISON` (`tests/premium-ticks.test.ts`), header
-  prices following the toggle and the picked plan's column lit; then the creator
-  code and a three-question FAQ (plus the switch-gated ones). No "What you get",
+  (`gate:deck-watch`, `gate:sealed-watch`) below the tier. /premium (2026-10-17's "70% simpler", revised
+  2026-10-22): H1, a market-specific subline (US leads with alerts, elsewhere
+  with Best Basket), the Annual / Monthly toggle (annual default, per-month
+  equivalents, "Save 33%"), two plan cards (price, tagline, four bullets from
+  `lib/premium-plan-copy.ts`, trial line, button; Premium badged "Most
+  features"), a "Not ready to add a card?" line (feedback week, referral days),
+  then `PremiumTicks`: sixteen rows whose cells are `TIER_COMPARISON`'s real
+  limits, not ticks (`tests/premium-ticks.test.ts`), header prices following the
+  toggle and the picked plan's column lit; then the creator code and the FAQ. No
+  footer ad pair on /premium (`SALES_ROUTES`); `/pricing` 301s here.
+  [2026-10-22](../DECISIONS.md#L18914) No "What you get",
   no missing-grid, no proof line, no second copy of the trial terms, no persona
   sections, CTA band or sticky bar (`tests/premium-plans-first.test.ts`).
-  `PREMIUM_COPY_VERSION` `premium-simple-2026-10-17`.
+  `PREMIUM_COPY_VERSION` `premium-limits-2026-10-22`.
   [2026-10-17](../DECISIONS.md#L18460), [2026-09-29 plans first](../DECISIONS.md#L15538)
+- **Upgrade intent is measured with two Vercel events, no click table:**
+  `upgrade_dialog_open` (dialog opens; inline gate/limit prompts once per surface
+  per tab) and `upgrade_cta_click` (click through to checkout), with feature,
+  tier_required, market, signed_in (+ plan, billing_period); never personal data.
+  [2026-10-22](../DECISIONS.md#L18945)
 - **Upgrade prompts live where a limit is hit, and in the header (header since 10-15):**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
@@ -445,8 +457,9 @@ longer lands on its entry.
   menu stay plain "Pricing" links. [2026-10-15](../DECISIONS.md#L17561) [2026-09-28](../DECISIONS.md#L14549),
   [2026-09-29](../DECISIONS.md#L15178)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when
-  signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
-  real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
+  signed out; OAuth only). `/premium` defaults to ANNUAL (per-month equivalent
+  headlined, since 2026-10-22, [2026-10-22](../DECISIONS.md#L18914); the dialog stays
+  monthly) and never headlines `$0`. [2026-09-13](../DECISIONS.md#L5890),
   [2026-09-14](../DECISIONS.md#L6038)
   Stripe Checkout asks for Adaptive Pricing (the buyer pays in their own
   currency) and retries without it if Stripe refuses; the pay-button note stays
@@ -483,7 +496,7 @@ longer lands on its entry.
 - **Sign-up prompts in the page:** the signed-out corner card (`SignupSlideIn`,
   10-15 and 10-16) was replaced on 10-17 by the Akali slider above
   [2026-10-15](../DECISIONS.md#L17561), [2026-10-16](../DECISIONS.md#L17957).
-  `PREMIUM_COPY_VERSION` was `akali-slider-2026-10-17` (now `premium-simple-2026-10-17`, the /premium rebuild). `InlineSignupPrompt` is page content, one per page, below
+  `PREMIUM_COPY_VERSION` was `akali-slider-2026-10-17` (then `premium-simple-2026-10-17`, now `premium-limits-2026-10-22`, the /premium rebuild). `InlineSignupPrompt` is page content, one per page, below
   the first screen, signed-out only after `/api/me` answers: `/browse` (after
   the 12th tile), a priced `/deck`, `/decks/[slug]`, `/movers`,
   `/champions/[slug]`. The homepage keeps `AccountStrip` and a released set page

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { useRouter } from "next/navigation";
 import { trackEvent } from "@/lib/analytics";
 import { invalidateMe } from "@/lib/use-me";
@@ -165,7 +166,7 @@ export function SubscriptionActions({
             </button>
             <p className="mt-1 text-[11px] text-slate-500">
               Takes effect now. The unused part of this period is credited against your next invoice; Best
-              Basket&apos;s store-by-store plan, Buy this list and Demand Finder lock, and target alerts go back to{" "}
+              Basket&apos;s store-by-store plans go back to {FREE_PLANS_PER_MONTH} a month, Demand Finder locks, and target alerts go back to{" "}
               {PLUS_TARGET_ALERT_LIMIT} cards. Plus stays ad-free.
             </p>
           </div>

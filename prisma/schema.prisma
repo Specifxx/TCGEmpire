@@ -2072,3 +2072,16 @@ model CreatorPayoutMonth {
   currency              String   @default("AUD")
   updatedAt             DateTime @updatedAt
 }
+
+// Free store-by-store plans (2026-10-22, DECISIONS.md "Best Basket: three free
+// plans a month"). One row per account per UTC calendar month: how many full
+// plans a non-Premium account has revealed. Incremented with a conditional
+// update (count < limit) so concurrent reveals cannot overspend it.
+model BasketPlanUsage {
+  userId    String
+  month     String // YYYY-MM, UTC
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@id([userId, month])
+}

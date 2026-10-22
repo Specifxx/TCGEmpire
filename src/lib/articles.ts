@@ -12,6 +12,7 @@ import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "./free-limits";
 import { SET_GAP_CHUNK } from "./set-gap";
 import { TIER_COMPARISON } from "../components/TierComparisonTable";
+import { FREE_PLANS_PER_MONTH } from "./basket-meter";
 import { RETAILER_LIST, retailerCountry } from "./retailers";
 
 // The Premium explainer's prices, read from lib/site.ts rather than typed into
@@ -5863,7 +5864,7 @@ Consolidate the same list into, say, 3 or 4 stores instead, and you often come o
 RiftCompare has two related tools, and it's worth knowing which one you actually want:
 
 - **[The deck pricer](/deck)** — free, no account needed. Prices every card in a list at its own cheapest store and adds it up. Good for a quick "what's this deck worth" check.
-- **[Best Basket](/tools/best-basket)** — your own list's delivered total with a free account, the store-by-store plan with Premium. Solves the harder, more useful question: what's the cheapest way to actually *buy* the list, once you stop pretending shipping is free.
+- **[Best Basket](/tools/best-basket)** — your own list's delivered total and ${FREE_PLANS_PER_MONTH} store-by-store plans a month with a free account, every plan with Premium. Solves the harder, more useful question: what's the cheapest way to actually *buy* the list, once you stop pretending shipping is free.
 
 If you're pricing a list out of curiosity, the deck pricer is enough. If you're actually about to place an order, Best Basket is the one that saves you real money.
 
@@ -11665,7 +11666,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       `**Comparing Riftbound card prices is free, with no limit and no account.** RiftCompare has two paid tiers on top: Plus at ${PLUS_PRICE_AMOUNT}/mo and Premium at ${PREMIUM_PRICE_AMOUNT}/mo (each with an annual option at roughly a ${annualSavingPct()}% saving), billed through Stripe${PREMIUM_TRIAL_ARTICLE_SUMMARY}, and you can cancel anytime.`,
       `**Plus and Premium watch prices for you.** Plus is no ads, an unlimited watchlist and portfolio, every deal in Deal Finder and Rising Cards, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, and sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products: an email when a box is back in stock, at RRP, or at your price (checked ${SEALED_CHECK_CADENCE}). With no card limit, a whole set fits in the set checklist.`,
       `**Premium plans the order.** Everything in Plus, plus Best Basket's store-by-store plan for a deck, a list or the rest of a set (which stores, with each store's postage counted), at the minimum condition you set, and a deck price watch: save up to ${DECK_WATCH_LIMIT} lists and we re-price each one delivered after every price update and email you when the total reaches your price. Also unlimited target alerts and sealed watches, Buy this list, and Demand Finder.`,
-      `**A free account is genuinely useful**: a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist showing what each set is missing and the cheapest listing to finish it, the top 3 of each deal list and your own Best Basket total. Cards you already track past a limit stay; only new ones need Plus.`,
+      `**A free account is genuinely useful**: a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist showing what each set is missing and the cheapest listing to finish it, the top 3 of each deal list and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Cards you already track past a limit stay; only new ones need Plus.`,
       "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
     browseCta: {
@@ -11692,7 +11693,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "Is the cost to finish what I would actually pay?",
-        a: "It's the cheapest in-stock store listing for each missing card in your country, before postage. Cards no tracked store has in stock are counted separately with no price, and eBay is left out. Premium's Finish this set plan picks stores and adds measured postage.",
+        a: `It's the cheapest in-stock store listing for each missing card in your country, before postage. Cards no tracked store has in stock are counted separately with no price, and eBay is left out. The Finish this set plan (${FREE_PLANS_PER_MONTH} a month free, unlimited with Premium) picks stores and adds measured postage.`,
       },
       {
         q: "How many cards can Finish this set plan at once?",
@@ -11712,7 +11713,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "What's the difference between a free account, Plus and Premium?",
-        a: `A free account (no card, just an email) adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards (value history, cost-basis P&L, CSV export and its delivered replacement cost) with a set checklist of what each set is missing, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total. Plus removes every ad and both limits (so a whole set fits in the checklist), and adds the full Deal Finder and Rising Cards lists, the "only my cards" filter, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards and sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products. Premium adds the deck price watch, unlimited target alerts and sealed watches, Best Basket's store-by-store plan (at the minimum condition you set, and for the rest of a set), Buy this list and Demand Finder on top of everything in Plus. Anyone can see the top 10 most searched cards of the week on the price movers page.`,
+        a: `A free account (no card, just an email) adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards (value history, cost-basis P&L, CSV export and its delivered replacement cost) with a set checklist of what each set is missing, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Plus removes every ad and both limits (so a whole set fits in the checklist), and adds the full Deal Finder and Rising Cards lists, the "only my cards" filter, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards and sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products. Premium adds the deck price watch, unlimited target alerts and sealed watches, Best Basket's store-by-store plan (at the minimum condition you set, and for the rest of a set), Buy this list and Demand Finder on top of everything in Plus. Anyone can see the top 10 most searched cards of the week on the price movers page.`,
       },
       {
         q: "What happens to cards I already track if I'm over the free limit?",
@@ -11749,8 +11750,8 @@ We built the price tracking, the price history, and the alerts specifically beca
         { name: "Deal Finder", description: "Underpriced vs TCGplayer and Underpriced vs eBay in full, filterable to only the cards you watch or own; Cheapest on eBay is free for everyone.", url: "/tools/deal-finder" },
         { name: "Rising Cards", description: "Cards ranked by demand and price-timing signals, with the reason each one ranks.", url: "/tools/rising" },
         { name: "Set checklist", description: `What your binder is missing from a set and the cheapest listing for each card — free for your first ${FREE_PORTFOLIO_LIMIT} cards, no limit with Plus.`, url: "/portfolio/sets" },
-        { name: "Best Basket", description: "The cheapest delivered order for a whole list across your country's stores, postage included, at the minimum condition you set (Premium).", url: "/tools/best-basket" },
-        { name: "Finish this set", description: `The store-by-store plan for the cards a set is missing, up to ${SET_GAP_CHUNK} at a time, with each store's postage counted (Premium).`, url: "/portfolio/sets" },
+        { name: "Best Basket", description: `The cheapest delivered order for a whole list across your country's stores, postage included: ${FREE_PLANS_PER_MONTH} store-by-store plans a month free, unlimited with Premium (which also sets a minimum condition).`, url: "/tools/best-basket" },
+        { name: "Finish this set", description: `The store-by-store plan for the cards a set is missing, up to ${SET_GAP_CHUNK} at a time, with each store's postage counted (shares the ${FREE_PLANS_PER_MONTH} free plans a month; unlimited with Premium).`, url: "/portfolio/sets" },
         { name: "Demand Finder", description: "The cards players are searching for and opening most on RiftCompare, over 7 or 30 days (Premium; the top 10 most searched are free).", url: "/tools/demand" },
       ],
     },

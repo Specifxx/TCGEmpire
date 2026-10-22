@@ -4,12 +4,12 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { RunBudget, WATCH_EMAILS_PER_ADDRESS } from "../src/lib/alert-budget";
 import { PAID_SEND_CAP } from "../src/lib/price-alerts";
-import { SEALED_WATCH_HARD_CAP, sealedWatchCeiling, sealedWatchLimit } from "../src/lib/alert-limits";
+import { SEALED_WATCH_HARD_CAP, SEALED_WATCH_LIMIT_PLUS, sealedWatchCeiling, sealedWatchLimit } from "../src/lib/alert-limits";
 import { createSealedWatch, isRealSealedStore, sealedOfferState } from "../src/lib/sealed-watch";
 import { buildDeckWatchEmail, buildSealedWatchEmail } from "../src/lib/watch-emails";
 import { verifyAlertAction } from "../src/lib/alert-actions";
 import { NOW, deckHarness, deckRow, group, hoursAgo, offer, premium, plus, sealedHarness, sealedRow } from "./helpers/watch-harness";
-import { TICK_ROWS } from "../src/components/PremiumTicks";
+import { TICK_ROWS, cellValue } from "../src/components/PremiumTicks";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Review fixes for "Premium works while you're away" (2026-09-29): per-address
@@ -229,14 +229,18 @@ test("the workflow asks for a fresh sealed read whenever it did not purge, and t
 
 test("the /premium tier lists name sealed watches and the deck price watch, with their limits from the constants", () => {
   // Since 2026-10-17 (/premium, 70% simpler) the page's tier summaries are the
-  // ticks rows (no numbers, by the owner's rule) and the per-tier Offer
-  // descriptions in its JSON-LD, which name both watches and quote their limits.
+  // comparison rows and the per-tier Offer descriptions in its JSON-LD, which
+  // name both watches and quote their limits. Since 2026-10-22 the rows show
+  // each plan's real limit, read from the constants via TIER_COMPARISON.
   const premiumPage = read("src/app/premium/page.tsx");
   assert.match(premiumPage, /sealed watches on up to \$\{SEALED_WATCH_LIMIT_PLUS\} products/);
   assert.match(premiumPage, /a deck price watch \(up to \$\{DECK_WATCH_LIMIT\} saved lists/);
   assert.match(premiumPage, /unlimited target-price alerts and sealed watches/);
   const rows = TICK_ROWS.map((r) => r.name);
-  assert.ok(rows.includes("Sealed restock & price alerts") && rows.includes("Deck price watch"), "the ticks name both watches");
+  assert.ok(rows.includes("Sealed watches") && rows.includes("Deck price watch"), "the rows name both watches");
+  const sealedRow = TICK_ROWS.find((r) => r.name === "Sealed watches")!;
+  assert.equal(cellValue(sealedRow.from, "plus"), `${SEALED_WATCH_LIMIT_PLUS} products`, "Plus's sealed limit, from the constant");
+  assert.equal(cellValue(sealedRow.from, "premium"), "Unlimited");
   const tools = read("src/app/tools/page.tsx");
   const faq = tools.slice(tools.indexOf('q: "Do I need an account'), tools.indexOf('q: "', tools.indexOf('q: "Do I need an account') + 10));
   const [plusBranch, premiumBranch] = faq.split("\n        : `");

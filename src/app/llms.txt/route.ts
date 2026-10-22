@@ -1,4 +1,5 @@
 import { NAV_GROUPS } from "@/components/nav-groups";
+import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { SITE_URL, tierMonthlyAmount, premiumTrialFee, trialDaysPhrase } from "@/lib/site";
 import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "@/lib/trial-config";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
@@ -29,7 +30,7 @@ const DESC: Record<string, string> = {
   "/stores/tracked": "The stores whose public prices RiftCompare tracks and compares.",
   "/tools/deal-finder": "Deal Finder, three tabs: Underpriced vs TCGplayer (every card a store or eBay seller sells below TCGplayer's US market price, with a store filter), Cheapest on eBay (cards whose cheapest eBay listing beats every tracked store; free for everyone) and Underpriced vs eBay (cards a store sells below the cheapest eBay listing). The two Underpriced lists show the top 3 with a free account; the full lists, filterable to your watchlist or binder, with Plus.",
   "/tools/rising": "Ranks cards by search demand, stores in stock and where the price sits in its own recent range, with the reason for each pick. A screen, not a prediction; not financial advice.",
-  "/tools/best-basket": "Best Basket: the cheapest delivered order for a list of cards across your country's stores, postage and free-shipping thresholds included, beside the best one-store and two-store orders. Your own total with a free account; the store-by-store plan with Premium.",
+  "/tools/best-basket": `Best Basket: the cheapest delivered order for a list of cards across your country's stores, postage and free-shipping thresholds included, beside the best one-store and two-store orders. Your own total and ${FREE_PLANS_PER_MONTH} store-by-store plans a month with a free account or Plus; unlimited plans with Premium.`,
   "/tools/demand": "Demand Finder: the Riftbound cards most searched and most viewed on RiftCompare over the last 7 or 30 days, counted once per browser per card per day. The top 10 most searched this week are free (also on /movers); the full lists with Premium.",
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
   "/tools/selling-fees": "Net proceeds calculator for selling on TCGplayer or eBay: stacks commission, processing and shipping.",
