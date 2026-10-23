@@ -9,7 +9,7 @@ import {
   shouldEmailSealedRrp,
   shouldEmailSealedTarget,
 } from "../src/lib/sealed-watch";
-import { SEALED_WATCH_LIMIT_PLUS, sealedWatchLimit } from "../src/lib/alert-limits";
+import { FREE_SEALED_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS, sealedWatchLimit } from "../src/lib/alert-limits";
 import { buildSealedWatchEmail, rrpGapText, sealedWatchCopy } from "../src/lib/watch-emails";
 import { verifyAlertAction } from "../src/lib/alert-actions";
 import { NOW, daysAgo, hoursAgo, free, group, lapsed, offer, plus, premium, sealedHarness, sealedRow } from "./helpers/watch-harness";
@@ -28,7 +28,8 @@ test("the numbers and the pure rules", () => {
   assert.equal(SEALED_WATCH_LIMIT_PLUS, 10);
   assert.equal(sealedWatchLimit("plus"), 10);
   assert.equal(sealedWatchLimit("premium"), Number.POSITIVE_INFINITY);
-  assert.equal(sealedWatchLimit(null), 0);
+  assert.equal(sealedWatchLimit(null), FREE_SEALED_WATCH_LIMIT, "a free account watches one (2026-10-23)");
+  assert.equal(FREE_SEALED_WATCH_LIMIT, 1);
   assert.equal(SEALED_RESTOCK_MIN_SOLDOUT_MS, 5 * 3_600_000, "retuned from 20h: the check now runs about every six hours");
   assert.equal(SEALED_RESTOCK_COOLDOWN_MS, 6 * 3_600_000);
   assert.equal(SEALED_WATCH_COOLDOWN_MS, 24 * 3_600_000);
@@ -200,10 +201,12 @@ test("unknown state decides nothing; a missing product is skipped; pre-order gro
   assert.deepEqual(plain.groupCalls, ["groups:US"], "no pre-order read when every key is present");
 });
 
-test("entitlement and the Plus cap: lapsed and free owners are skipped untouched, Plus evaluates its oldest 10, Premium all", async () => {
+test("entitlement and the caps: a lapsed or free owner's oldest watch is evaluated and the rest skipped untouched, Plus evaluates its oldest 10, Premium all", async () => {
   const rows = [
-    sealedRow("gone", lapsed, { lastPriceCents: 16000 }),
-    sealedRow("never", free, { lastPriceCents: 16000 }),
+    sealedRow("gone", lapsed, { userId: "u-lapsed", lastPriceCents: 16000, createdAt: new Date(NOW.getTime() - 200 * 3_600_000) }),
+    sealedRow("gone2", lapsed, { userId: "u-lapsed", lastPriceCents: 16000, createdAt: new Date(NOW.getTime() - 199 * 3_600_000) }),
+    sealedRow("never", free, { userId: "u-free", lastPriceCents: 16000, createdAt: new Date(NOW.getTime() - 200 * 3_600_000) }),
+    sealedRow("never2", free, { userId: "u-free", lastPriceCents: 16000, createdAt: new Date(NOW.getTime() - 199 * 3_600_000) }),
     ...Array.from({ length: SEALED_WATCH_LIMIT_PLUS + 2 }, (_, i) =>
       sealedRow(`p${i}`, plus, { userId: "u-plus", lastPriceCents: 16000, createdAt: new Date(NOW.getTime() - (100 - i) * 3_600_000) }),
     ),
@@ -211,10 +214,11 @@ test("entitlement and the Plus cap: lapsed and free owners are skipped untouched
   ];
   const h = sealedHarness(rows, { groups: [group([offer(15000)])] });
   const s = await h.run();
-  assert.equal(s.lapsed, 2);
+  assert.equal(s.lapsed, 2, "each free account's second watch is kept but not evaluated");
   assert.equal(s.overLimit, 2, "Plus's two newest rows are kept but not evaluated");
-  assert.equal(s.drops, SEALED_WATCH_LIMIT_PLUS + SEALED_WATCH_LIMIT_PLUS + 2);
-  assert.ok(!h.writes.some((w) => w.id === "gone" || w.id === "never" || w.id === "p10" || w.id === "p11"));
+  assert.equal(s.drops, 2 + SEALED_WATCH_LIMIT_PLUS + SEALED_WATCH_LIMIT_PLUS + 2, "the free accounts' one watch each drops too");
+  assert.ok(h.writes.some((w) => w.id === "gone") && h.writes.some((w) => w.id === "never"), "the oldest free watch is checked");
+  assert.ok(!h.writes.some((w) => w.id === "gone2" || w.id === "never2" || w.id === "p10" || w.id === "p11"));
 });
 
 test("snoozed and paused advance their baseline without an email; a failed groups read aborts the pass unwritten", async () => {

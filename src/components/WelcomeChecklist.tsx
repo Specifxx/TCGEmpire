@@ -117,8 +117,9 @@ export function WelcomeChecklist() {
           </>
         ) : (
           <>
-            Premium watches prices for you: your own target price on cards, sealed products back in stock or at RRP, and a whole
-            deck&apos;s delivered price. It also removes the card limits, so a whole set fits, and plans the order, store by store,
+            Your free account sets its own target price on one card and watches one sealed product. Premium watches prices for
+            you everywhere: a target on every card, every sealed product back in stock or at RRP, and a whole deck&apos;s
+            delivered price. It also removes the card limits, so a whole set fits, and plans the order, store by store,
             at the condition you&apos;ll play.
           </>
         )}{trialOffer ? (trialFeeCents > 0 ? ` Cancel before day ${trialDays} and you pay nothing more.` : " Cancel before the trial ends and you pay nothing.") : ""}

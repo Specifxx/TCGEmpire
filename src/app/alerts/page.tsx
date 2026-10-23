@@ -8,7 +8,7 @@ import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
-import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
+import { FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
 import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // Watchlists & price alerts had no page of their own. The FEATURE shipped long
@@ -24,8 +24,9 @@ import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 // Mint ITEM price at a store, no postage — so nothing here may say "shipping
 // included" (it did, three times, until 2026-09-25); the email adds each
 // store's postage and delivered total beside it (lib/email.ts). Free alerts
-// are the weekly digest; the Plus target price is its own trigger, checked
-// after each price update. The one-tap links, snooze and pause are
+// are the weekly digest; the target price is its own trigger, checked after
+// each price update for a paid tier and after the morning one for a free
+// account's one target (FREE_TARGET_ALERT_LIMIT, 2026-10-23). The one-tap links, snooze and pause are
 // lib/alert-actions.ts and lib/alert-mute.ts. The Plus limit is quoted from
 // lib/alert-limits.ts, the constant the route enforces.
 
@@ -62,7 +63,7 @@ const FAQS = [
   },
   {
     q: "Do price alerts cost anything?",
-    a: `No. Watchlists and new-low alerts are free on up to ${FREE_WATCHLIST_LIMIT} cards and need only an account (or just an email) so we have somewhere to send the notification. ${PLUS_ON_SALE ? "Plus and Premium watch" : "Premium watches"} unlimited cards; if you already watch more than ${FREE_WATCHLIST_LIMIT}, you keep them all and only a new card needs ${ENTRY_TIER_NAME}. Setting your own target price on a card is part of ${ENTRY_TIER_NAME}, which is also ad-free.`,
+    a: `No. Watchlists and new-low alerts are free on up to ${FREE_WATCHLIST_LIMIT} cards and need only an account (or just an email) so we have somewhere to send the notification. ${PLUS_ON_SALE ? "Plus and Premium watch" : "Premium watches"} unlimited cards; if you already watch more than ${FREE_WATCHLIST_LIMIT}, you keep them all and only a new card needs ${ENTRY_TIER_NAME}. A free account can also set its own target price on ${FREE_TARGET_ALERT_LIMIT} card and watch one sealed product; a target on every card is part of ${ENTRY_TIER_NAME}, which is also ad-free.`,
   },
   {
     q: "Which price triggers the alert?",
@@ -75,7 +76,7 @@ const FAQS = [
   },
   {
     q: "How often are prices checked?",
-    a: `Prices are imported twice a day. New-low alerts are checked once a day, straight after the morning import; ${ENTRY_TIER_NAME} target-price, below-market and back-in-stock alerts are checked after both. A drop is picked up on the next check rather than instantly — Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions`,
+    a: `Prices are imported twice a day. New-low alerts, and a free account's one target price, are checked once a day, straight after the morning import; ${ENTRY_TIER_NAME} target-price, below-market and back-in-stock alerts are checked after both. A drop is picked up on the next check rather than instantly — Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions`,
 
   },
   {
@@ -183,7 +184,7 @@ export default function AlertsPage() {
         ))}
       </ol>
 
-      <h2 className="mt-10 text-xl font-extrabold text-white">Your own target price, with {ENTRY_TIER_NAME}</h2>
+      <h2 className="mt-10 text-xl font-extrabold text-white">Your own target price: one free, every card with {ENTRY_TIER_NAME}</h2>
       <div className="card-surface mt-3 p-4 text-sm leading-relaxed text-slate-300">
         <p>
           Know what you&apos;d pay?{" "}
@@ -195,7 +196,8 @@ export default function AlertsPage() {
           ) : (
             <>Premium members can type a price on any watched card — &ldquo;Notify me at&rdquo; — with no limit on how many.</>
           )}{" "}
-          After each of the two daily price
+          A free account sets one, on any card it watches, checked after the morning price update. For{" "}
+          {ENTRY_TIER_NAME}, after each of the two daily price
           updates we check every store we track in that card&apos;s market, and when the lowest in-stock price is at
           or below your number we email you straight away, without the weekly wait: the card, the price, the store
           and a link to the listing. It fires once, then again only if the price falls another 10% — or if it goes
@@ -242,7 +244,7 @@ export default function AlertsPage() {
               <td className="border-b border-ink-800 px-3 py-2 text-slate-300">The watch button — no price to set</td>
             </tr>
             <tr className="odd:bg-ink-900/40">
-              <td className="border-b border-ink-800 px-3 py-2 font-semibold text-white">Target price ({ENTRY_TIER_NAME})</td>
+              <td className="border-b border-ink-800 px-3 py-2 font-semibold text-white">Target price (1 free, every card with {ENTRY_TIER_NAME})</td>
               <td className="border-b border-ink-800 px-3 py-2 text-slate-300">Being emailed when a card reaches the price you set</td>
               <td className="border-b border-ink-800 px-3 py-2 text-slate-300">&ldquo;Notify me at&rdquo; on your watchlist</td>
             </tr>

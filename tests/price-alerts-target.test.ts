@@ -158,23 +158,30 @@ test("paid triggers hold for 24h after an email about the same card, then fire",
   assert.equal(later.sent.length, 1);
 });
 
-test("a lapsed subscription ignores its target: the watch runs the free rules", async () => {
-  const rowFor = (id: string, lastNotifiedAt: Date | null) =>
-    owned(id, lapsed, { targetCents: 1000, lastPriceCents: 1200, lastNotifiedAt, lowestEmailedCents: 1500, price: 950 });
-  const quiet = harness([rowFor("a", daysAgo(2))]);
-  const s1 = await quiet.run();
-  assert.equal(quiet.sent.length, 0);
-  assert.equal(s1.targets, 0);
-  assert.equal(s1.drops, 1);
-  assert.equal(s1.deferred, 1);
-  assert.equal(quiet.writes.length, 0, "baseline held for the next digest");
-  const open = harness([rowFor("b", daysAgo(8))]);
-  await open.run();
-  assert.equal(open.items()[0]!.kind, "drop");
-  const f = harness([owned("c", free, { targetCents: 1000, lastPriceCents: 1200, lastNotifiedAt: daysAgo(2), price: 950 })]);
-  const s3 = await f.run();
-  assert.equal(s3.targets, 0);
-  assert.equal(s3.deferred, 1);
+test("a free or lapsed account's ONE target fires (2026-10-23); its others run the free rules", async () => {
+  for (const user of [lapsed, free]) {
+    // The oldest target is honoured: at 950 under a 1000 target, outside the cooldown, it sends at once.
+    const one = harness([owned("a", user, { targetCents: 1000, lastPriceCents: 1200, lastNotifiedAt: daysAgo(2), lowestEmailedCents: 1500, price: 950 })]);
+    const s1 = await one.run();
+    assert.equal(s1.targets, 1);
+    assert.equal(one.sent.length, 1);
+    assert.equal(one.items()[0]!.kind, "target");
+
+    // A second, newer target on the same account is stored but inert: that watch runs the free rules.
+    const two = harness([
+      owned("old", user, { userId: "u-one", targetCents: 1000, lastPriceCents: 1200, lastNotifiedAt: daysAgo(2), price: 1300, createdAt: daysAgo(40) }),
+      owned("new", user, { userId: "u-one", cardId: "c-new", targetCents: 1000, lastPriceCents: 1200, lastNotifiedAt: daysAgo(2), lowestEmailedCents: 1500, price: 950, createdAt: daysAgo(10) }),
+    ]);
+    const s2 = await two.run();
+    assert.equal(s2.targets, 0, "the newer target is past the free one");
+    assert.equal(s2.drops, 1);
+    assert.equal(s2.deferred, 1, "…so its drop waits out the week like any free drop");
+
+    // The paid run never reads a free account's rows: its one target is the daily run's.
+    const paid = harness([owned("a", user, { targetCents: 1000, lastPriceCents: 1200, lastNotifiedAt: daysAgo(2), price: 950 })]);
+    await paid.run("paid");
+    assert.equal(paid.sent.length, 0);
+  }
 });
 
 test("a hit with the price unmoved is still recorded, and never re-sends", async () => {
@@ -223,8 +230,9 @@ test("an ADMIN_EMAILS account is entitled in the cron exactly as in the session"
   const paid = harness(rows);
   await paid.run("paid");
   assert.ok(JSON.stringify(paid.alertQueries[0]!.where).includes(adminEmail));
-  const other = harness([owned("x", { ...admin, email: "someone@example.com" }, { targetCents: 1000, lastPriceCents: 1200, price: 950 })]);
-  assert.equal((await other.run()).targets, 0);
+  // Not an admin: a free account, so only its oldest target is honoured.
+  const other = harness(rows.map((r) => ({ ...r, user: { ...admin, email: "someone@example.com" } })));
+  assert.equal((await other.run()).targets, 1);
 });
 
 test("a paid run still applies the weekly cap to an entitled watch's plain drops", async () => {

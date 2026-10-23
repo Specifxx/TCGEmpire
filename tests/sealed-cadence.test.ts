@@ -102,15 +102,19 @@ test("the restock cooldown: an email in the last 6h holds a restock (baseline ke
   assert.equal(drop.sent.length, 0);
 });
 
-test("the sealed pass skips lapsed owners untouched and never evaluates an eBay listing", async () => {
+test("the sealed pass skips a lapsed owner's rows past its one free watch untouched and never evaluates an eBay listing", async () => {
   const h = sealedHarness(
-    [sealedRow("gone", lapsed, { lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(9) }), sealedRow("ok", plus, { lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(9) })],
+    [
+      sealedRow("first", lapsed, { userId: "u-lapsed", lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(9), createdAt: hoursAgo(300) }),
+      sealedRow("gone", lapsed, { userId: "u-lapsed", lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(9), createdAt: hoursAgo(200) }),
+      sealedRow("ok", plus, { lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(9) }),
+    ],
     { groups: [group([offer(15000)])] },
   );
   const s = await h.run();
   assert.equal(s.lapsed, 1);
-  assert.equal(h.writeFor("gone"), undefined, "a lapsed owner's row is not touched");
-  assert.equal(h.sent.length, 1);
+  assert.equal(h.writeFor("gone"), undefined, "a lapsed owner's second row is not touched");
+  assert.equal(h.sent.length, 2, "the lapsed owner's oldest watch (now its free one) and Plus's restock both send");
   const ebay = sealedHarness([sealedRow("s1", plus, { lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(9) })], {
     groups: [group([offer(15000, { inStock: false }), offer(9000, { retailer: "ebay_us", retailerName: "eBay" })])],
   });

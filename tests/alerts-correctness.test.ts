@@ -141,7 +141,7 @@ test("/alerts: no shipping claim, the real weekly cadence, and a Plus section qu
   assert.doesNotMatch(page, /shipping included|including shipping|lowest live total/i);
   assert.match(page, /At most one email a week, only when a card hits a new low/);
   assert.doesNotMatch(page, /your very first alert on a card arrives as soon as it drops/, "the cap is per address, not per card");
-  assert.match(page, /import \{ PLUS_TARGET_ALERT_LIMIT \} from "@\/lib\/alert-limits"/);
+  assert.match(page, /import \{ FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT \} from "@\/lib\/alert-limits"/);
   // Plus is off sale since 2026-10-23: the section sells ENTRY_TIER_NAME
   // (Premium, unlimited), and quotes Plus's shared limit only while Plus is sold.
   assert.match(page, /\{PLUS_ON_SALE \? \([\s\S]{0,200}on up to\{" "\}\s*\{PLUS_TARGET_ALERT_LIMIT\} cards/);

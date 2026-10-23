@@ -274,7 +274,8 @@ export function shouldEmailDrop(opts: {
 }
 
 /**
- * THE TARGET-PRICE TRIGGER (Plus and Premium). Fires when the alert price is at
+ * THE TARGET-PRICE TRIGGER (Plus and Premium, and a free account's one since
+ * 2026-10-23 — honouredTargetIds with FREE_TARGET_ALERT_LIMIT). Fires when the alert price is at
  * or under the member's target and the target is ARMED (targetEmailedCents
  * null: never fired, or re-armed because a run saw the price above the target
  * or sold out, or the member changed it). Once fired it fires again only at a
@@ -535,7 +536,9 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
     const user: EntitlementUser | null = a.user ? { ...a.user, isAdmin: a.user.isAdmin || isAdminEmail(a.user.email) } : null;
     const ok = a.userId != null && user != null && isPremium(user);
     entitled.set(a.id, ok);
-    if (a.userId == null || user == null || a.targetCents == null) continue;
+    // Grouping targets by account only; this skips nobody's email.
+    const ownsTarget = a.userId != null && user != null && a.targetCents != null;
+    if (!ownsTarget) continue;
     const group = targetRowsByUser.get(a.userId!) ?? { user: user!, rows: [] };
     group.rows.push(a);
     targetRowsByUser.set(a.userId!, group);

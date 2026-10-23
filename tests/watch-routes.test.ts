@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createDeckWatch, deleteDeckWatch, listDeckWatches, updateDeckWatch, type DeckWatchRouteDb } from "../src/lib/deck-watch";
 import { createSealedWatch, deleteSealedWatch, listSealedWatches, updateSealedWatch, type SealedWatchRouteDb } from "../src/lib/sealed-watch";
-import { DECK_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../src/lib/alert-limits";
+import { DECK_WATCH_LIMIT, FREE_SEALED_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../src/lib/alert-limits";
 import {
   ALERT_ACTION_KINDS,
   performAlertAction,
@@ -168,13 +168,21 @@ test("deck watches: the eleventh list is refused with 409 and the real count", a
 
 // ── Sealed watches: any paid tier, Plus capped, owner only ───────────────────
 
-test("sealed watches: create / update / delete need a paid tier to create or edit a target (402 for free and lapsed); snooze and stop are any owner's; Plus works; ownership; the unique key updates instead", async () => {
-  const { db, rows } = sealedDb();
+test("sealed watches: a free or lapsed account creates ONE (402 past it, 2026-10-23); target, snooze and stop are any owner's; Plus works; ownership; the unique key updates instead", async () => {
   for (const who of [free, lapsed]) {
-    const res = await createSealedWatch(db, u("x", who), { groupKey: "OGN|Booster Box" }, "US");
-    assert.equal(res.status, 402, who.premiumTier);
-    assert.equal(res.body.tier, "plus");
+    const own = sealedDb();
+    const first = await createSealedWatch(own.db, u("x", who), { groupKey: "OGN|Booster Box" }, "US");
+    assert.equal(first.status, 201, `${who.premiumTier}: the first sealed watch is free`);
+    const again = await createSealedWatch(own.db, u("x", who), { groupKey: "OGN|Booster Box", targetCents: 14000 }, "US");
+    assert.equal(again.status, 200, "re-watching the same product edits it, never counts as a second");
+    const second = await createSealedWatch(own.db, u("x", who), { groupKey: "SFD|Booster Box" }, "US");
+    assert.equal(second.status, 402);
+    assert.equal(second.body.code, "free_alert_limit");
+    assert.equal(second.body.limit, FREE_SEALED_WATCH_LIMIT);
+    assert.match(String(second.body.error), /Free accounts get 1 sealed watch/);
+    assert.equal(own.rows.length, 1);
   }
+  const { db, rows } = sealedDb();
   assert.equal((await createSealedWatch(db, u("p", plus), {}, "US")).status, 400, "which product?");
   assert.equal((await createSealedWatch(db, u("p", plus), { groupKey: "<script>" }, "US")).status, 400);
   const created = await createSealedWatch(db, u("p", plus), { groupKey: "OGN|Booster Box", targetCents: 14000 }, "US");
@@ -194,7 +202,7 @@ test("sealed watches: create / update / delete need a paid tier to create or edi
   assert.equal(rows.length, 2);
 
   assert.equal((await updateSealedWatch(db, u("q", premium), "s1", { targetCents: 1 }, NOW)).status, 404, "not the owner");
-  assert.equal((await updateSealedWatch(db, u("p", free), "s1", { targetCents: 1 }, NOW)).status, 402);
+  assert.equal((await updateSealedWatch(db, u("p", free), "s1", { targetCents: 1 }, NOW)).status, 200, "a free owner sets the target on its watch");
   assert.equal((await updateSealedWatch(db, u("p", lapsed), "s1", { snoozeDays: 30 }, NOW)).status, 200, "a lapsed owner can snooze");
   assert.equal((await updateSealedWatch(db, u("q", free), "s1", { snoozeDays: 30 }, NOW)).status, 404, "…only their own");
   assert.equal((await updateSealedWatch(db, u("p", plus), "s1", { snoozeDays: 0 }, NOW)).status, 200);

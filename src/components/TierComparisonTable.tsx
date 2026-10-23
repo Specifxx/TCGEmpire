@@ -143,7 +143,7 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Rising Cards", account: "Top 3", plus: "Full", premium: "Full" },
   // Checked after both daily price imports, with no weekly cap. The number
   // is the enforced one (lib/alert-limits.ts), never typed here.
-  { feature: "Target-price alerts after every price update", account: `${FREE_TARGET_ALERT_LIMIT} card`, plus: `${PLUS_TARGET_ALERT_LIMIT} cards`, premium: "Unlimited" },
+  { feature: "Target-price alerts after every price update", account: `${FREE_TARGET_ALERT_LIMIT} card, daily`, plus: `${PLUS_TARGET_ALERT_LIMIT} cards`, premium: "Unlimited" },
   // Every signed-in account sees its own delivered total, store count and
   // saving on every run. Which store to buy each card from (the plan) is
   // unlimited on Premium and FREE_PLANS_PER_MONTH a month below it, counted

@@ -13,7 +13,7 @@ import {
 } from "../src/lib/premium";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, annualSavingPct, premiumFromLine, premiumEffectiveMonthly, premiumMoneyNum } from "../src/lib/site";
-import { PLUS_TARGET_ALERT_LIMIT, targetAlertLimit } from "../src/lib/alert-limits";
+import { FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT, targetAlertLimit } from "../src/lib/alert-limits";
 import { FREE_PLANS_PER_MONTH } from "../src/lib/basket-meter";
 import { SET_GAP_CHUNK } from "../src/lib/set-gap";
 import { planSwitchPriceLabel } from "../src/lib/plan-switch-price";
@@ -272,10 +272,11 @@ test("TIER_COMPARISON's paid columns agree with the real gates", () => {
 
   // Target alerts: the quoted ceiling IS the enforced one.
   const targets = row("Target-price alerts after every price update");
-  assert.equal(targets.account, false);
+  assert.equal(targets.account, `${FREE_TARGET_ALERT_LIMIT} card, daily`, "a free account gets one, checked after the daily import (2026-10-23)");
   assert.equal(targets.plus, `${PLUS_TARGET_ALERT_LIMIT} cards`);
   assert.equal(targets.premium, "Unlimited");
-  assert.equal(targetAlertLimit(null), 0, "a free account sets no target");
+  assert.equal(targetAlertLimit(null), FREE_TARGET_ALERT_LIMIT, "a free account sets one target");
+  assert.equal(FREE_TARGET_ALERT_LIMIT, 1);
   assert.equal(targetAlertLimit("plus"), PLUS_TARGET_ALERT_LIMIT);
   assert.equal(targetAlertLimit("premium"), Number.POSITIVE_INFINITY);
 

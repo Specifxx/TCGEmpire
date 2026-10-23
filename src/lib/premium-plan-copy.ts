@@ -35,7 +35,7 @@ export function planBullets(tier: "plus" | "premium", market: string | null | un
   }
   if (!PLUS_ON_SALE) {
     // One plan: the outcomes first, in the order the market buys.
-    const alerts = "An email the moment a card or sealed box hits your price";
+    const alerts = "An email the moment a card, a sealed box or a whole deck hits your price";
     const basket = "The cheapest delivered order for any deck or list, every time";
     const deals = "Every deal below market, not just the top 3";
     const collection = "Unlimited watchlist and collection, with full price history";

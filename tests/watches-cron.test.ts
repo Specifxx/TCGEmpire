@@ -4,7 +4,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { isPremiumClickSource, TIP_SURFACES, WATCH_GATE_SURFACES } from "../src/lib/premium-surface";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
-import { DECK_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../src/lib/alert-limits";
+import { DECK_WATCH_LIMIT, FREE_SEALED_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../src/lib/alert-limits";
 import { PREMIUM_COPY_VERSION } from "../src/lib/site";
 import { planBullets, planTagline } from "../src/lib/premium-plan-copy";
 
@@ -53,7 +53,7 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   const sealed = TIER_COMPARISON.find((r) => r.feature.startsWith("Sealed watches"))!;
   const deck = TIER_COMPARISON.find((r) => r.feature.startsWith("Deck price watch"))!;
   assert.ok(sealed && deck);
-  assert.deepEqual([sealed.account, sealed.plus, sealed.premium], [false, `${SEALED_WATCH_LIMIT_PLUS} products`, "Unlimited"]);
+  assert.deepEqual([sealed.account, sealed.plus, sealed.premium], [`${FREE_SEALED_WATCH_LIMIT} product`, `${SEALED_WATCH_LIMIT_PLUS} products`, "Unlimited"]);
   assert.deepEqual([deck.account, deck.plus, deck.premium], [false, false, true]);
   // Sealed then deck watches, then (2026-10-09) the history, graded and auction rows, then Ad-free.
   assert.ok(features.indexOf(sealed.feature) < features.indexOf(deck.feature) && features.indexOf(deck.feature) < features.length - 1);
@@ -68,7 +68,8 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   // then "premium-limits-2026-10-22" when the table showed real limits, the cards
   // regained taglines and bullets, and Best Basket gave 3 free plans a month.
   // then "one-plan-2026-10-23" when Plus went off sale and Premium went back to $9.99
-  assert.equal(PREMIUM_COPY_VERSION, "one-plan-2026-10-23");
+  // then "rebrand-2026-10-23": the "Never overpay" promise, live proof and outcome cards
+  assert.equal(PREMIUM_COPY_VERSION, "rebrand-2026-10-23");
   // Every surface that quotes a watch number reads the constant.
   for (const f of ["src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);
@@ -80,9 +81,10 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   // 2026-09-29: "Plans the order: which stores, what postage, at the condition you'll play, and a deck price watch").
   // Since 2026-10-22 the tagline and bullets live in lib/premium-plan-copy.ts, and
   // the deck price watch is one of Premium's bullets in every market.
-  assert.match(read("src/components/PremiumPricingCards.tsx"), /tagline=\{plusLive \? planTagline\("premium", market\)/);
-  assert.equal(planTagline("premium", "AU"), "Everything in Plus, plus the cheapest delivered order");
-  for (const m of ["US", "AU"]) assert.ok(planBullets("premium", m).some((b) => /^Deck price watch/.test(b)), `deck watch bullet (${m})`);
+  assert.match(read("src/components/PremiumPricingCards.tsx"), /tagline=\{planTagline\("premium", market\)\}/);
+  assert.equal(planTagline("premium", "AU"), "Never overpay for Riftbound again", "one plan since 2026-10-23: the promise is the tagline");
+  // One plan (2026-10-23): the deck watch is inside the alerts outcome bullet.
+  for (const m of ["US", "AU"]) assert.ok(planBullets("premium", m).some((b) => /whole deck/.test(b)), `deck watch bullet (${m})`);
   // The definitions a newcomer needs, on /premium (2026-10-17, "/premium, 70%
   // simpler"): the FAQ's first answer, the ticks rows, and the long read linked
   // for every feature in detail. The "What you get" lines went.
@@ -136,7 +138,9 @@ test("the watch buttons never nest a button in a button, and sell the right tier
   const watchAt = tile.indexOf("<SealedWatchButton");
   assert.ok(watchAt >= 0 && watchAt < buttonAt, "the heart is a sibling before the tile's button, never inside it");
   const btn = code("src/components/SealedWatchButton.tsx");
-  assert.match(btn, /if \(!user \|\| !premium\) \{/, "below Plus, the same spot sells Plus");
+  assert.match(btn, /if \(!user\) \{/, "signed out, the same spot sells the tier (sign in first)");
+  assert.match(btn, /const freeInUse = !!user && !premium && !watching && \(refused \|\| \(rows\?\.length \?\? 0\) >= FREE_SEALED_WATCH_LIMIT\)/, "a free account's first watch works; the upgrade shows only once it is in use");
+  assert.match(btn, /if \(freeInUse\) \{[\s\S]*?<PremiumButton surface="gate:sealed-watch"/);
   assert.match(btn, /e\.stopPropagation\(\)/, "a tap on the heart never opens the quick view");
   const form = code("src/components/DeckWatchForm.tsx");
   assert.match(form, /const isPremium = !!user && premium && tier === "premium";/, "Plus is not enough for a deck watch");

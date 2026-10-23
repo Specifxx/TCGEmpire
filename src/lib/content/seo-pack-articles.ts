@@ -1033,7 +1033,7 @@ This is our own tool, so treat this page as a spec sheet with the limitations in
 | Deal finder | Cards a store or eBay seller in your market is selling below TCGplayer's market price | [Deal Finder](${L.dealFinder}) |
 | Basket optimisation | Cheapest split of a wantlist across stores, priced with each store's measured postage | [Best Basket](${L.bestBasket}) |
 | Sealed EV | What a box is worth against singles | [Box EV](${L.boxEv}) |
-| Price alerts | An email when a watched card hits a new low; Premium adds a target price of your own | [Alerts](${L.alerts}) |
+| Price alerts | An email when a watched card hits a new low, and a target price of your own on one card; Premium sets a target on every card | [Alerts](${L.alerts}) |
 | Trade valuation | Both sides of a swap at live prices | [Trade calculator](${L.trade}) |
 
 ## What it doesn't do

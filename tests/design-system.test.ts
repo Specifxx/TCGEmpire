@@ -333,7 +333,8 @@ test("price-alert surfaces describe only the triggers lib/price-alerts.ts runs",
   assert.match(priceAlerts, /targetCents: true/, "…and the cron must read the column");
   const alerts = readCode("src/app/alerts/page.tsx");
   // ENTRY_TIER_NAME: "Plus" while Plus is sold, "Premium" since it went off sale (2026-10-23).
-  assert.match(alerts, /Your own target price, with \{ENTRY_TIER_NAME\}/, "/alerts may describe target prices only as the paid feature they are");
+  // Since 2026-10-23 a free account sets one target ("Free accounts get one alert"); every card is the paid tier's.
+  assert.match(alerts, /Your own target price: one free, every card with \{ENTRY_TIER_NAME\}/, "/alerts describes the free one and the paid tier as they are");
   // The trigger is Card.lowestPriceCents*, an item price: never "shipping included".
   assert.doesNotMatch(alerts, /shipping included|including shipping/i);
   // An ad has no business promising an alert mechanism at all.

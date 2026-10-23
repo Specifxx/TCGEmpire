@@ -335,8 +335,9 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                 {/* The Plus target price, on the watch just created. Only for a
                     signed-in account subscribing its OWN address: the subscribe
                     route links the row to the account only then, and the
-                    target is saved on that account's row. Free accounts see
-                    the field disabled beside the Plus gate, which closes this
+                    target is saved on that account's row. A free account sets
+                    its one target here (2026-10-23); once that one is on
+                    another card the field shows the upgrade, which closes this
                     modal before opening the upgrade dialog. */}
                 {user && pendingCardId && subscribed && subscribed.email === user.email.toLowerCase() && (
                   <TargetPriceField

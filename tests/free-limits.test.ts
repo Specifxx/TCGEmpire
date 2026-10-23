@@ -506,5 +506,6 @@ test("every tier surface quotes the limits from the constants, and price compari
   // then "premium-limits-2026-10-22" when the table showed real limits, the cards
   // regained taglines and bullets, and Best Basket gave 3 free plans a month.
   // then "one-plan-2026-10-23" when Plus went off sale and Premium went back to $9.99
-  assert.equal(PREMIUM_COPY_VERSION, "one-plan-2026-10-23");
+  // then "rebrand-2026-10-23": the "Never overpay" promise, live proof and outcome cards
+  assert.equal(PREMIUM_COPY_VERSION, "rebrand-2026-10-23");
 });

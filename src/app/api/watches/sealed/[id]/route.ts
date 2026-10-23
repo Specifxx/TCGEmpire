@@ -4,8 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { deleteSealedWatch, updateSealedWatch } from "@/lib/sealed-watch";
 
-// One sealed watch: PATCH (target, snooze) and DELETE (stop). Owner and a paid
-// tier only — lib/sealed-watch.ts.
+// One sealed watch: PATCH (target, snooze) and DELETE (stop). The owner only,
+// at any tier (a free account's one watch included) — lib/sealed-watch.ts.
 export const dynamic = "force-dynamic";
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {

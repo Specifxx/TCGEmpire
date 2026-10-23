@@ -200,7 +200,8 @@ test("the watchlist shows an over-limit target as not active, by the cron's own 
 
 test("the modal's target field fetches its own 'N of 25 used' count; the watchlist passes it", () => {
   const field = readFileSync(join(process.cwd(), "src/components/TargetPriceField.tsx"), "utf8");
-  assert.match(field, /const needCount = used === undefined && loaded && !!user && premium && finiteLimit != null;/);
+  // A free account (its one) and Plus both have a count to show; Premium has no limit.
+  assert.match(field, /const needCount = used === undefined && loaded && !!user && finiteLimit != null;/);
   assert.match(field, /fetch\("\/api\/alerts\/watchlist\?targets=1", \{ cache: "no-store" \}\)/);
   const route = readFileSync(join(process.cwd(), "src/app/api/alerts/watchlist/route.ts"), "utf8");
   const branch = route.slice(route.indexOf('searchParams.get("targets") === "1"'), route.indexOf("const country = getCountry()"));

@@ -303,6 +303,17 @@ longer lands on its entry.
   that already watches ten is at the limit too), and the import adds up to
   the allowance and reports the rest.
   [2026-09-28](../DECISIONS.md#L14549)
+- **Free accounts get one alert (2026-10-23, owner: "One free alert is the
+  strongest hook"):** a free signed-in account (a lapsed one included) sets
+  ONE target price on a card and keeps ONE sealed watch
+  (`FREE_TARGET_ALERT_LIMIT`, `FREE_SEALED_WATCH_LIMIT`; `targetAlertLimit(null)`
+  and `sealedWatchLimit(null)` are 1). Past it the routes answer `402
+  code:"free_alert_limit"` and the field / heart show the `gate:target-limit` /
+  `gate:sealed-watch` PremiumButton; never before. The oldest one is live
+  (`honouredTargetIds`; the sealed run's per-owner ceiling). A free card target
+  is checked by the daily "all" run, not the paid runs; the sealed run reads
+  every owner's watches, capped. Signed-out visitors sign in first.
+  [2026-10-23](../DECISIONS.md#L19200)
 - **Search is unlimited for everyone (2026-10-15, owner: "completely remove the search limit"):** the meter below is dormant; it runs only with `SEARCH_CAPS=on`, and no pricing surface mentions searches. [2026-10-15](../DECISIONS.md#L17561)
   **Was — search allowance (2026-10-09, owner: "make it 10 / 30 / 100 / unlimited", now 25 / 100 / 500;
   reverses "search is unmetered"):** signed out 10 searches a UTC day, a free
@@ -338,8 +349,8 @@ longer lands on its entry.
 - **Watches that run for you (2026-09-29, owner: "make premium more
   attractive", "marketed better and highly accessible to new users"):** the
   paid tiers watch prices after every import and email when something is
-  worth acting on. **Sealed watches** (Plus up to `SEALED_WATCH_LIMIT_PLUS`,
-  10; Premium unlimited, ceiling `SEALED_WATCH_HARD_CAP` 200;
+  worth acting on. **Sealed watches** (free: one, since 2026-10-23, above;
+  Plus up to `SEALED_WATCH_LIMIT_PLUS`, 10; Premium unlimited, ceiling `SEALED_WATCH_HARD_CAP` 200;
   `lib/sealed-watch.ts`): a restock after ≥5h sold out at every fresh real
   store (the clock starts when the member starts watching), at or under RRP
   (`lib/msrp.ts`), the member's target, or a material drop — real stores only,
@@ -456,7 +467,7 @@ longer lands on its entry.
   [2026-10-22](../DECISIONS.md#L18914) No "What you get",
   no missing-grid, no proof line, no second copy of the trial terms, no persona
   sections, CTA band or sticky bar (`tests/premium-plans-first.test.ts`).
-  `PREMIUM_COPY_VERSION` `one-plan-2026-10-23`.
+  `PREMIUM_COPY_VERSION` `rebrand-2026-10-23`.
   [2026-10-17](../DECISIONS.md#L18460), [2026-09-29 plans first](../DECISIONS.md#L15538)
 - **Upgrade intent is measured with two Vercel events, no click table:**
   `upgrade_dialog_open` (dialog opens; inline gate/limit prompts once per surface
@@ -934,7 +945,8 @@ longer lands on its entry.
   [2026-10-18](../DECISIONS.md#L18543)
 - **Portfolio value never includes shipping.** Price-drop emails: at most one
   digest per address per week, except Plus/Premium target, below-market and
-  restock alerts, which run after both daily imports (refresh-prices.yml's
+  restock alerts (and a free account's one target, which rides the daily
+  "all" run), which run after both daily imports (refresh-prices.yml's
   `/price-alerts/paid` step). The free `all` run is a refresh-prices.yml step
   straight after the 07:00 import (no vercel.json cron), or a manual run with
   `free_alerts` ticked. Both are gated `!cancelled() && steps.import.outcome ==

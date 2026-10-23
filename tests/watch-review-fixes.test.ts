@@ -167,7 +167,7 @@ test("Premium sealed watches stop at SEALED_WATCH_HARD_CAP: create refuses, the 
   assert.equal(sealedWatchLimit("premium"), Number.POSITIVE_INFINITY, "the marketing ladder still says unlimited");
   assert.equal(sealedWatchCeiling("premium"), SEALED_WATCH_HARD_CAP);
   assert.equal(sealedWatchCeiling("plus"), 10);
-  assert.equal(sealedWatchCeiling(null), 0);
+  assert.equal(sealedWatchCeiling(null), 1, "a free account: its one watch (2026-10-23)");
   const db = { sealedWatch: { count: async () => SEALED_WATCH_HARD_CAP, findFirst: async () => null, create: async () => ({}), update: async () => ({}), findMany: async () => [], deleteMany: async () => ({ count: 0 }) } };
   const res = await createSealedWatch(db as never, { id: "p", email: "p@example.com", ...premium }, { groupKey: "OGN|Booster Box" }, "US");
   assert.equal(res.status, 409);
@@ -262,6 +262,6 @@ test("/watching shows the Sealed and Decks sections to a lapsed owner who still 
   for (const f of ["src/components/SealedWatchList.tsx", "src/components/DeckWatchList.tsx"]) {
     const c = code(f);
     assert.match(c, /data-lapsed-note/, `${f} says the watches resume on resubscribing`);
-    assert.match(c, /disabled=\{lapsed\}/, `${f} turns the target edit off for a lapsed owner`);
+    assert.match(c, f.includes("Sealed") ? /disabled=\{inert\}/ : /disabled=\{lapsed\}/, `${f} turns the target edit off where the run does not check the row`);
   }
 });

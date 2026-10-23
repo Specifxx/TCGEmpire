@@ -10,7 +10,9 @@ import { liveRoute } from "@/lib/public-data/live-route";
 // The PAID alert run: target-price and below-market alerts for watches owned
 // by a Plus/Premium account (lib/price-alerts.ts AlertScope "paid"), then —
 // since 2026-09-29 — the DECK PRICE WATCHES (lib/deck-watch.ts, Premium) and
-// the SEALED WATCHES (lib/sealed-watch.ts, Plus and Premium). Called by
+// the SEALED WATCHES (lib/sealed-watch.ts, Plus and Premium, and a free
+// account's one since 2026-10-23 — a free account's one card target is the
+// daily "all" run's, lib/price-alerts.ts). Called by
 // .github/workflows/refresh-prices.yml right after each of the two daily
 // price imports AND the sealed import (the step order matters: the sealed
 // pass reads the groups the sealed import just wrote — and ?fresh=1, sent by

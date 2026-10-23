@@ -19196,3 +19196,53 @@ for us already.
 **Not changed, recommended:** research puts collector tiers at US$5–8/mo
 (~US$59/yr); $9.99 is above every peer but Card Ladder. Worth testing a lower
 price or a no-card reverse trial once the redesign has a few weeks of data.
+
+## Free accounts get one alert (2026-10-23)
+
+Owner, from the conversion research above: "One free alert is the strongest
+hook." Competitors gate alerts entirely; our own funnel has the sealed-watch
+gate as the most-clicked feature paywall (48 clicks in 8 weeks) and alert-modal
+signups activating at 100%. So a free account should feel an alert land in its
+inbox before it is asked to pay.
+
+- **A free signed-in account gets ONE target-price alert on a card and ONE
+  sealed watch** (restock, at-RRP, target, drop): `FREE_TARGET_ALERT_LIMIT` and
+  `FREE_SEALED_WATCH_LIMIT` (1) in `lib/alert-limits.ts`, so
+  `targetAlertLimit(null)` and `sealedWatchLimit(null)` are 1. Premium stays
+  unlimited (sealed ceiling `SEALED_WATCH_HARD_CAP` 200); grandfathered Plus
+  keeps 25 / 10. Signed-out visitors are unchanged: they sign in first. A
+  LAPSED member is a free account, so its OLDEST target and oldest sealed
+  watch come back to life (the rest stay stored and inert, as before).
+- **Routes.** `applyTargetPrice` no longer 403s a free account; past its one it
+  answers the upgrade-style `402 code:"free_alert_limit"` ("Free accounts get 1
+  target-price alert…"), while a paid tier at its limit keeps the 409. Editing
+  or clearing the one it holds is never blocked. `createSealedWatch` creates a
+  free account's first and 402s (same code) on another product; re-watching
+  the same product edits it. Editing a sealed target no longer needs a paid
+  tier (the run decides what is live). The email one-tap target links stay
+  paid-only: a free row's email still carries the upsell link instead.
+- **The runs.** Cards: `runPriceAlerts` groups targets for EVERY account row
+  (not only entitled ones) and honours the oldest `targetAlertLimit(tier)` with
+  `honouredTargetIds`; a free row's honoured target is the only paid trigger it
+  gets (below-market and the paid restock stay entitled-only) and it is exempt
+  from the weekly cap like any target. The "paid" read stays trimmed to paid
+  owners, so a free account's target is checked by the daily "all" run after
+  the 07:00 import, not after both imports — no new read. Sealed: the run's
+  read was filtered to paid owners at the query; it now reads every watch
+  (still oldest first, `take: SEALED_WATCH_READ_CAP`, each owner capped at 200
+  by the create route) and drops a free owner's rows past the one in memory
+  (`summary.lapsed`).
+- **UI.** `TargetPriceField` is a working field for a free account (with "N of
+  1 used"); only once the one is on another card does it disable and show
+  "Your free alert is in use — Premium watches every card" with the
+  `gate:target-limit` PremiumButton. `SealedWatchButton` toggles for any
+  signed-in account and shows the `gate:sealed-watch` PremiumButton only when
+  a free account's one watch is on another product (or after a 402).
+  `useSealedWatches` now reads `/api/watches/sealed` for every signed-in
+  viewer (one bounded `take: 500` read per page, not per tile). /watching shows
+  a free account's Sealed section and names its watches, with the rows past
+  the one marked "Not checked".
+- **Copy.** `TIER_COMPARISON`: "1 card" and "1 product" in the free column;
+  /alerts, /tools, /watching, llms.txt, the dashboard tile, the watch button
+  tooltip, the welcome checklist and the Premium explainer article say a free
+  account gets one of each.

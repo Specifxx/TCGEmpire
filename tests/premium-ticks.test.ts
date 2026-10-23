@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { TICK_ROWS, cellValue, type TickTier } from "../src/components/PremiumTicks";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../src/lib/free-limits";
-import { PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../src/lib/alert-limits";
+import { FREE_SEALED_WATCH_LIMIT, FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../src/lib/alert-limits";
 import { FREE_HISTORY_DAYS } from "../src/lib/history-access";
 import { FREE_PLANS_PER_MONTH } from "../src/lib/basket-meter";
 
@@ -50,8 +50,8 @@ test("the cells the owner sees", () => {
     Portfolio: `${FREE_PORTFOLIO_LIMIT} cards/Unlimited/Unlimited`,
     "Deal Finder & Rising Cards": "Top 3/Full/Full",
     "Price history": `${FREE_HISTORY_DAYS} days/Full + CSV/Full + CSV`,
-    "Target-price alerts": `—/${PLUS_TARGET_ALERT_LIMIT} cards/Unlimited`,
-    "Sealed watches": `—/${SEALED_WATCH_LIMIT_PLUS} products/Unlimited`,
+    "Target-price alerts": `${FREE_TARGET_ALERT_LIMIT} card, daily/${PLUS_TARGET_ALERT_LIMIT} cards/Unlimited`,
+    "Sealed watches": `${FREE_SEALED_WATCH_LIMIT} product/${SEALED_WATCH_LIMIT_PLUS} products/Unlimited`,
     "Best Basket & Buy this list plans": `${plans}/${plans}/Unlimited`,
     "Finish this set plans": `${same}/${same}/Unlimited`,
     "Minimum condition": "—/—/✓",
