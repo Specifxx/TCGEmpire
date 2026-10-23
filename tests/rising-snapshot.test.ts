@@ -219,7 +219,7 @@ test("the social card draws a dash, not a green +0.0%, when there is no week mov
   assert.match(legacy, /\+26\.1% 30 days/);
 });
 
-test("the public page reads both payload shapes, and sells Plus, not Premium", () => {
+test("the public page reads both payload shapes, and sells the plan that unlocks the list (ENTRY_TIER_NAME)", () => {
   const src = read("src/app/rising/[token]/page.tsx");
   assert.match(src, /const legacy = isLegacySnapshot\(data\);/);
   assert.match(src, /<Pct v=\{weekMove\(p\)\} \/>/, "the week move renders null as a dash");
@@ -230,7 +230,8 @@ test("the public page reads both payload shapes, and sells Plus, not Premium", (
   assert.match(src, /const rankedFrom = rankedFromCount\(data\);/);
   assert.doesNotMatch(src, /\{data\.qualifying\.toLocaleString\(\)\} most-searched/, "the footer counts the ranked set");
   assert.doesNotMatch(src, /part of Premium/);
-  assert.match(src, /part of[\s\S]{0,12}Plus, which also removes ads from every page/, "a surface that describes Plus says it is ad-free");
+  // ENTRY_TIER_NAME: Plus while it is sold, Premium since Plus went off sale (2026-10-23).
+  assert.match(src, /part of[\s\S]{0,12}\{ENTRY_TIER_NAME\}, which also removes ads from every page/, "a surface that describes the paid plan says it is ad-free");
 });
 
 test("a failed load is refused, never frozen into a public snapshot", () => {

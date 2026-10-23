@@ -434,4 +434,5 @@ export function premiumLockInTail(): string {
 // "premium-simple-2026-10-17": /premium cut to plan cards and a ticks-only table
 // (DECISIONS.md, "/premium, 70% simpler"); prices unchanged.
 // "premium-limits-2026-10-22": real limits in the table, annual default, card bullets
-export const PREMIUM_COPY_VERSION = "premium-limits-2026-10-22";
+// "one-plan-2026-10-23": Premium only at $9.99/$79.99, 30-day free trial, Plus off sale
+export const PREMIUM_COPY_VERSION = "one-plan-2026-10-23";

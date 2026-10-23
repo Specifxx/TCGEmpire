@@ -163,7 +163,8 @@ test("actions: paid rows get target links, free rows the Plus link — and every
   const noTarget = dropRow(VARIANTS.below_market!);
   assert.match(noTarget, /Target 10% under this price \(A\$16\.56\)/, "no target yet: 10% under the price");
   const free = dropRow(VARIANTS.drop!);
-  assert.match(free, /Set a target price with Plus/);
+  // Plus is off sale since 2026-10-23: the free row's upsell names Premium.
+  assert.match(free, /Set a target price with Premium/);
   assert.doesNotMatch(free, /Set target at|Lower target|Target 10%/);
   for (const m of free.matchAll(/href="([^"]*alerts\/action\?t=[^"]*)"/g)) {
     assert.ok(m[1]!.startsWith(`${SITE_URL}/alerts/action?t=`), "actions land on the confirmation page, never act on GET");
@@ -305,7 +306,7 @@ test("the confirmation names the cards, their market and today's price, and stat
     assert.match(part, /not in stock at a store yet/);
     assert.match(part, /and 10 more\./);
     assert.match(part, /At most one email a week for free alerts/);
-    assert.match(part, /Plus and Premium target, below-market and restock alerts can arrive after each price update/);
+    assert.match(part, /Target, below-market and restock alerts on a paid plan can arrive after each price update/);
   }
   assert.match(email.html, /Manage these alerts/);
   assert.match(email.html, /\/api\/market\?m=AU/);

@@ -142,8 +142,10 @@ test("/alerts: no shipping claim, the real weekly cadence, and a Plus section qu
   assert.match(page, /At most one email a week, only when a card hits a new low/);
   assert.doesNotMatch(page, /your very first alert on a card arrives as soon as it drops/, "the cap is per address, not per card");
   assert.match(page, /import \{ PLUS_TARGET_ALERT_LIMIT \} from "@\/lib\/alert-limits"/);
-  assert.match(page, /on up to \{PLUS_TARGET_ALERT_LIMIT\} cards/);
-  assert.match(page, /Plus is ad-free/, "every surface that describes Plus says it is ad-free");
+  // Plus is off sale since 2026-10-23: the section sells ENTRY_TIER_NAME
+  // (Premium, unlimited), and quotes Plus's shared limit only while Plus is sold.
+  assert.match(page, /\{PLUS_ON_SALE \? \([\s\S]{0,200}on up to\{" "\}\s*\{PLUS_TARGET_ALERT_LIMIT\} cards/);
+  assert.match(page, /\{ENTRY_TIER_NAME\} is ad-free/, "every surface that describes the paid plan says it is ad-free");
   assert.match(page, /Can I watch a card with no price yet\?/);
 });
 
@@ -222,7 +224,7 @@ test("the target field: market currency, PATCH on blur, Plus count; free sees it
   assert.match(field, /const disabled = !premium \|\|/);
   assert.match(
     field,
-    /<PremiumButton\s+tier="plus"\s+surface="gate:target-alert"[\s\S]*?>\s*Set your own price with Plus\s*<\/PremiumButton>/,
+    /<PremiumButton\s+tier="plus"\s+surface="gate:target-alert"[\s\S]*?>\s*Set your own price with \{ENTRY_TIER_NAME\}\s*<\/PremiumButton>/,
   );
   assert.match(field, /Notify me at/);
   // Both surfaces render it.
@@ -246,10 +248,11 @@ test("Plus copy on /watching and the watchlist: ad-free, the real limit, the bel
   assert.doesNotMatch(wl, /the moment it gets cheaper/);
   assert.match(wl, /when it hits a new low, naming the cheapest store — at most one email a week/);
   const alerts = code("src/app/alerts/page.tsx");
-  assert.match(alerts, /Plus has two exceptions/);
+  assert.match(alerts, /\$\{ENTRY_TIER_NAME\} has two exceptions/);
   assert.match(alerts, /below TCGplayer market at a new low/);
   assert.match(alerts, /carries any other new lows/);
-  assert.doesNotMatch(alerts, /own price on any watched card/);
+  // Plus is capped, so "any watched card" may only ever be said of Premium.
+  assert.doesNotMatch(alerts, /Plus members can (also )?type (their own|a) price on any watched card[^\n]{0,40}\.["`]/);
   const field = code("src/components/TargetPriceField.tsx");
   assert.match(field, /new-low and below-market alerts/);
 });

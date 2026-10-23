@@ -93,7 +93,9 @@ test("the cookie is signed: a tampered count is ignored", () => {
 
 test("the limit copy names the next tier", () => {
   assert.match(limitCopy("anon").next, /Sign up free for 100 a day/);
-  assert.match(limitCopy("free").next, /Plus gives you 500 a day/);
+  // Plus is off sale since 2026-10-23 (PLUS_ON_SALE): the next tier is Premium.
+  assert.match(limitCopy("anon").next, /or get Premium for unlimited searches/);
+  assert.match(limitCopy("free").next, /^Premium searches without a limit\.$/);
   assert.match(limitCopy("plus").next, /Premium searches without a limit/);
 });
 

@@ -177,7 +177,10 @@ test("switch-to-annual and the new upgrade route guard on price id, not interval
   const upgradeSrc = read("src/app/api/premium/upgrade/route.ts");
   assert.match(upgradeSrc, /tierFromPriceId\(price\.id\) === "premium"/, "the upgrade route's idempotency guard must be tier-based");
   assert.match(upgradeSrc, /always_invoice/, "an upgrade must bill the prorated difference now, not defer it");
-  assert.match(upgradeSrc, /premiumPlusEnabled\(\)/, "must 503 while Plus isn't configured at all");
+  // plusConfigured, not premiumPlusEnabled (2026-10-23): Plus is off sale but
+  // its grandfathered members must still be able to move up to Premium.
+  assert.match(upgradeSrc, /if \(!plusConfigured\(\)\)/, "must 503 while Plus isn't configured at all");
+  assert.doesNotMatch(upgradeSrc, /premiumPlusEnabled\(\)/, "Plus being off sale must not block a Plus member's upgrade");
 });
 
 test("comp grants only write the tier when creating access, never when extending an active period", () => {
@@ -354,7 +357,7 @@ test("a Plus trialist is never offered an upgrade the route would refuse", () =>
   assert.match(plusBranch, /\{trialing \? \(/, "the dialog's Plus branch must check the trial first");
   assert.ok(plusBranch.indexOf("{trialing ? (") < plusBranch.indexOf("onClick={upgradeTier}"), "the upgrade button is the NOT-trialing arm");
   assert.match(read("src/components/PremiumButton.tsx"), /const upgradeLater = isPlusUpgrade && trialing;/);
-  assert.match(read("src/app/dashboard/page.tsx"), /isPlus && premiumPlusEnabled\(\) && !billing\.trialing/);
+  assert.match(read("src/app/dashboard/page.tsx"), /isPlus && plusConfigured\(\) && !billing\.trialing/);
 });
 
 test("billingStateFor reads Stripe once per paying customer, and never for anyone else", async () => {
@@ -624,7 +627,10 @@ test("the subscription actions card states the money consequence of every button
   assert.match(src, /"\/api\/premium\/upgrade"/);
   assert.match(src, /"\/api\/premium\/downgrade"/);
   assert.match(src, /"\/api\/premium\/switch-to-annual"/);
-  assert.match(src, /canUpgrade = plusLive && tier === "plus"/, "only a Plus member can upgrade");
+  // upgradeLive (Plus configured), not plusLive (Plus on sale): a grandfathered
+  // Plus member keeps the upgrade after Plus went off sale (2026-10-23).
+  assert.match(src, /canUpgrade = upgradeLive && tier === "plus"/, "only a Plus member can upgrade");
+  assert.match(read("src/app/premium/page.tsx"), /upgradeLive=\{plusConfigured\(\) && !user\.premiumTierFloor\}/);
   assert.match(src, /canDowngrade = plusLive && tier === "premium"/, "only a Premium member can move down");
   assert.match(src, /canGoAnnual = annualAvailable && interval === "month"/, "annual is only offered to a monthly subscriber");
   // The three consequence lines must match what the routes actually do — the

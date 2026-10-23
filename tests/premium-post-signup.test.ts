@@ -26,7 +26,7 @@ test("welcome checklist: the Premium step is optional, earned, and never shown t
   assert.match(src, /const trialOffer = trialEligible && trialDays > 0;/);
   // 2026-09-30: the offer is the $1 first month, stated from the shared helper
   // and the configured fee (never "free" while the fee is above zero).
-  assert.match(src, /trialOffer \? `Plus or Premium: \$\{trialOfferLead\(trialDays, trialFeeCents\)\.replace\(\/\^First\/, "first"\)\}` : "See what Premium adds"/);
+  assert.match(src, /trialOffer \? `\$\{PLUS_ON_SALE \? "Plus or Premium" : "Premium"\}: \$\{trialOfferLead\(trialDays, trialFeeCents\)\.replace\(\/\^First\/, "first"\)\}` : "See what Premium adds"/);
   assert.match(src, /trialFeeCents > 0 \? ` Cancel before day \$\{trialDays\} and you pay nothing more\.` : " Cancel before the trial ends and you pay nothing\."/);
   assert.match(src, /<PremiumButton surface="checklist" \/>/, "attributed to the checklist");
   assert.doesNotMatch(src, /from "\.\/ui\/Dialog"/, "still inline, never a modal");

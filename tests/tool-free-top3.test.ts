@@ -120,10 +120,12 @@ test("every tier table says Top 3 for the free account", () => {
   const article = getArticles().find((a) => a.slug === "riftcompare-premium-explained");
   assert.ok(article, "expected the Premium explainer article");
   const rows = article!.body.split("\n").filter((l) => l.trim().startsWith("| "));
-  // No "No account" column (2026-09-22): every row is Feature + 3 tiers.
+  // No "No account" column (2026-09-22). No Plus column while Plus is off sale
+  // (2026-10-23, PLUS_ON_SALE): every row is Feature + Free account + Premium.
   assert.ok(!rows[0].includes("No account"), "the No account column must stay gone");
+  assert.ok(!/\| Plus \|/.test(rows[0]), "no Plus column while Plus is off sale");
   for (const r of rows.filter((l) => /^\| (Deal Finder|Rising Cards|Ad-free experience) \|/.test(l))) {
-    assert.equal(r.split("|").length - 2, 4, `row has the wrong number of cells: ${r}`);
+    assert.equal(r.split("|").length - 2, 3, `row has the wrong number of cells: ${r}`);
   }
   const cellsFor = (feature: string) => {
     const row = rows.find((r) => r.startsWith(`| ${feature} |`));
@@ -133,13 +135,13 @@ test("every tier table says Top 3 for the free account", () => {
   // The article's table is rendered FROM TIER_COMPARISON since 2026-09-25, so
   // these read the same answer the /premium table gives. Short cells since
   // 2026-10-22: "Full" is the whole list.
-  assert.deepEqual(cellsFor("Deal Finder"), ["Top 3", "Full", "Full"]);
-  assert.deepEqual(cellsFor("Rising Cards"), ["Top 3", "Full", "Full"]);
+  assert.deepEqual(cellsFor("Deal Finder"), ["Top 3", "Full"]);
+  assert.deepEqual(cellsFor("Rising Cards"), ["Top 3", "Full"]);
   // Rising Sealed (which kept a single free "Top pick") left the product on
   // 2026-09-25; no table may still carry its row.
   assert.ok(!rows.some((r) => r.startsWith("| Rising Sealed |")), "the Rising Sealed row must be gone");
   assert.ok(!TIER_COMPARISON.some((r) => r.feature.startsWith("Rising Sealed")), "…from TIER_COMPARISON too");
-  assert.deepEqual(cellsFor("Ad-free experience"), ["—", "✓", "✓"], "ad-free is on both paid tiers (2026-09-25)");
+  assert.deepEqual(cellsFor("Ad-free experience"), ["—", "✓"], "ad-free is on Premium (and on every paid tier, 2026-09-25)");
 });
 
 // Promises that were true at some point and are not now: "Premium only" (09-22

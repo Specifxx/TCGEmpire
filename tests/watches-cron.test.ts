@@ -67,12 +67,15 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   // then "premium-simple-2026-10-17" when /premium became plan cards and a ticks-only table,
   // then "premium-limits-2026-10-22" when the table showed real limits, the cards
   // regained taglines and bullets, and Best Basket gave 3 free plans a month.
-  assert.equal(PREMIUM_COPY_VERSION, "premium-limits-2026-10-22");
+  // then "one-plan-2026-10-23" when Plus went off sale and Premium went back to $9.99
+  assert.equal(PREMIUM_COPY_VERSION, "one-plan-2026-10-23");
   // Every surface that quotes a watch number reads the constant.
   for (const f of ["src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);
-    assert.match(read(f), /SEALED_WATCH_LIMIT_PLUS/, `${f} quotes the sealed watch limit from the constant`);
+    // The Premium explainer quotes no Plus limit since Plus went off sale (2026-10-23).
+    if (f !== "src/lib/articles.ts") assert.match(read(f), /SEALED_WATCH_LIMIT_PLUS/, `${f} quotes the sealed watch limit from the constant`);
   }
+  assert.doesNotMatch(read("src/lib/articles.ts"), /up to \d+ (sealed )?products/, "no typed sealed watch limit in the articles");
   // Premium's card says what it adds in one short tagline (the long one went on
   // 2026-09-29: "Plans the order: which stores, what postage, at the condition you'll play, and a deck price watch").
   // Since 2026-10-22 the tagline and bullets live in lib/premium-plan-copy.ts, and

@@ -19123,3 +19123,32 @@ report, a "Verified store" mark with the store's own description and promo on it
   plan exists (`docs/ops-monitor.md`).
 - **Not done:** `scripts/restore-accounts.ts` does not copy `StorePartner` or
   `StorePlanSubscription` (neither did it before); both are private and never exported.
+
+## One paid plan again: Premium at $9.99 (2026-10-23)
+
+Owner: "make premium $9.99 again … plus adds like no value at all. So let's just
+get rid of plus and just have premium … grandfather the people who are currently
+paying $4.99", and then "offer like one month free for premium instead of 14
+days". Supersedes the two-tier lineup (2026-09-25), the 2026-09-26 cut and the
+14-day trial (2026-10-12).
+
+- **Premium is $9.99/mo or $79.99/yr** (site.ts defaults; the charge comes from
+  STRIPE_PREMIUM_PRICE_ID / _ANNUAL_PRICE_ID, which the owner repoints at NEW
+  Prices). Stripe never re-prices a subscription by itself, so everyone paying
+  $4.99/$39.99 stays there: grandfathering is simply not migrating them. Their
+  old Price ids go in STRIPE_PREMIUM_LEGACY_PRICE_IDS (reporting only; an
+  unknown Price already reads as Premium).
+- **The free trial is 30 days** (`PREMIUM_TRIAL_DAYS` default), still card-gated.
+  A Vercel `PREMIUM_TRIAL_DAYS` would override it and must be removed.
+- **Plus is off sale, not deleted.** `PLUS_ON_SALE = false` (site.ts) makes
+  `premiumPlusEnabled()` false, so nothing sells, quotes or offers a switch down
+  to Plus. STRIPE_PLUS_PRICE_ID / _ANNUAL_PRICE_ID STAY SET so
+  `tierFromPriceId` keeps reading existing Plus subscribers as Plus; they keep
+  what they pay for and can still upgrade (`plusConfigured()` gates the upgrade
+  route, not `premiumPlusEnabled()`). `ENTRY_TIER_NAME` is "Premium" while Plus
+  is off, so every gate that used to sell Plus now names Premium; the Premium
+  explainer article is Premium-only with a short "What about Plus?" note.
+  Re-enabling Plus is one line.
+- **A Stores plan** at $79.99/mo sits beside it (entry above).
+- `PREMIUM_COPY_VERSION` "one-plan-2026-10-23", so funnel numbers before and
+  after split cleanly.

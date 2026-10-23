@@ -166,6 +166,12 @@ longer lands on its entry.
   after entitlement and never fatal. The intro coupon, when on, keeps the one
   discount slot. Paid out by hand ("Mark paid"). All four tables private.
   [2026-10-16](../DECISIONS.md#L17655)
+- **One paid plan again (2026-10-23, supersedes the trial and tier bullets
+  below):** Premium $9.99/mo or $79.99/yr with a free 30-day card-gated trial;
+  existing $4.99/$39.99 subscribers are grandfathered by not migrating them.
+  Plus is off sale (`PLUS_ON_SALE = false`) but its Price ids stay set so Plus
+  members keep Plus and can upgrade. Stores plan $79.99/mo for retailers.
+  [2026-10-23](../DECISIONS.md#L19127)
 - **Free 14-day trial (2026-10-12; replaces the $1 first month below):**
   `PREMIUM_TRIAL_DAYS` 14 and `PREMIUM_TRIAL_FEE_CENTS` 0 by default, card
   required, prices unchanged. Leave price, trial and pitch alone until two
@@ -450,7 +456,7 @@ longer lands on its entry.
   [2026-10-22](../DECISIONS.md#L18914) No "What you get",
   no missing-grid, no proof line, no second copy of the trial terms, no persona
   sections, CTA band or sticky bar (`tests/premium-plans-first.test.ts`).
-  `PREMIUM_COPY_VERSION` `premium-limits-2026-10-22`.
+  `PREMIUM_COPY_VERSION` `one-plan-2026-10-23`.
   [2026-10-17](../DECISIONS.md#L18460), [2026-09-29 plans first](../DECISIONS.md#L15538)
 - **Upgrade intent is measured with two Vercel events, no click table:**
   `upgrade_dialog_open` (dialog opens; inline gate/limit prompts once per surface

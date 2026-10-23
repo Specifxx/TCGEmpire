@@ -101,7 +101,7 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/tools/deal-finder",
         title: "Deal Finder",
-        desc: `Underpriced vs TCGplayer, Cheapest on eBay and Underpriced vs eBay: three lists of the cards a real store or eBay sells for less — narrowed, with ${LIST_BADGE}, to only the cards you watch or own.`,
+        desc: "Underpriced vs TCGplayer, Cheapest on eBay and Underpriced vs eBay: three lists of the cards a real store or eBay sells for less — narrowed, with " + LIST_BADGE + ", to only the cards you watch or own.",
         badge: LIST_BADGE,
       },
       {

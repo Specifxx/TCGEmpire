@@ -193,12 +193,18 @@ test("the prices are the site's own constants (2026-10-23: $6.67 billed yearly)"
   assert.equal(premiumOfferSubject(), "Try RiftCompare Premium free for 30 days");
   assert.equal(email.subject, premiumOfferSubject());
   for (const body of [email.html, email.text]) {
-    for (const amount of [PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT]) {
+    for (const amount of [PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT]) {
       assert.ok(body.includes(amount), `must state ${amount}`);
     }
     assert.ok(body.includes(`${premiumEffectiveMonthly("premium")}/mo billed yearly (${PREMIUM_ANNUAL_AMOUNT} a year)`));
-    assert.ok(body.includes(`${premiumEffectiveMonthly("plus")}/mo billed yearly (${PLUS_ANNUAL_AMOUNT} a year)`));
+    // Plus is off sale since 2026-10-23 (PLUS_ON_SALE): the email sells Premium
+    // alone and quotes no Plus price.
+    for (const amount of [PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT]) {
+      assert.ok(!body.includes(amount), `must not quote Plus's ${amount}`);
+    }
+    assert.doesNotMatch(body, /\bPlus\b/, "no Plus offer");
   }
+  assert.doesNotMatch(email.preheader, /\bPlus\b/);
   // lib/email.ts types no price: every figure is interpolated.
   const src = read("src/lib/email.ts");
   const region = src.slice(src.indexOf("One-off price-drop announcement"), src.indexOf("export async function sendPremiumOfferEmail"));
@@ -219,11 +225,14 @@ test("a yearly plan's per-month figure never appears without 'billed yearly'", (
   assert.ok(!email.subject.includes(premiumEffectiveMonthly("premium")), "the subject quotes the monthly price, never a bare per-month-of-a-year figure");
 });
 
-test("four subscribe links through /premium/start with tier, plan, src and the campaign, plus a compare link", () => {
+test("the Premium subscribe links through /premium/start with tier, plan, src and the campaign, plus a compare link", () => {
   const links = priceDropLinks();
+  // Plus's links still exist (re-enabling Plus is one line) but the email
+  // carries none while Plus is off sale (2026-10-23).
+  for (const url of [links.plusAnnual, links.plusMonthly]) {
+    assert.ok(!email.html.includes(url) && !email.text.includes(url), "no Plus checkout link while Plus is off sale");
+  }
   const expect = [
-    [links.plusAnnual, "plus", "annual"],
-    [links.plusMonthly, "plus", "monthly"],
     [links.premiumAnnual, "premium", "annual"],
     [links.premiumMonthly, "premium", "monthly"],
   ] as const;
@@ -263,10 +272,11 @@ test("the attribution source is valid end to end: click allow-list, start step, 
 test("each tier's one-line summary matches the current lineup", () => {
   for (const body of [email.html, email.text]) {
     assert.match(body, /No ads on any page/);
-    assert.ok(body.includes(`target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards`));
+    assert.ok(!body.includes(`target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards`), "Plus's capped line is not sold");
     assert.match(body, /only my cards/);
     assert.match(body, /full Rising Cards list/);
-    assert.match(body, /Everything in Plus, plus unlimited target-price alerts/);
+    assert.match(body, /unlimited target-price alerts and sealed watches/);
+    assert.doesNotMatch(body, /Everything in Plus/, "Premium is described on its own while Plus is off sale");
     assert.match(body, /Best Basket's store-by-store plan and Buy this list/);
     assert.match(body, /Demand Finder/);
     assert.match(body, /cancel from your account page/i);

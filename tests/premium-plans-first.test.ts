@@ -58,10 +58,12 @@ test("a short FAQ, one accordion built from the same array as the JSON-LD", () =
   // while their switch (or reward) is on.
   const faq = page.slice(page.indexOf("const FAQ:"), page.indexOf("export default async function"));
   const always = faq.replace(/\.\.\.\([^?\n]+\?\s*\[[\s\S]*?\]\s*:\s*\[\]\),/g, "");
-  const alwaysQs = [...always.matchAll(/\n {4}q: "([^"]+)"/g)].map((m) => m[1]);
+  // The Plus question is addressed to a CURRENT Plus member since Plus went off
+  // sale (2026-10-23): the off-sale wording is the second arm of a PLUS_ON_SALE ternary.
+  const alwaysQs = [...always.matchAll(/\n {4}q: (?:PLUS_ON_SALE \? "[^"]+" : )?"([^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual(
     alwaysQs,
-    ["What's free?", "Is price comparison free?", "Can I switch from Plus to Premium?", "How do I cancel?", "What happens to cards I already track?"],
+    ["What's free?", "Is price comparison free?", "I'm on Plus. Can I switch to Premium?", "How do I cancel?", "What happens to cards I already track?"],
     "five always-on FAQ questions, in this order",
   );
   // "Can I get Premium for free?" only while a reward actually grants days.
