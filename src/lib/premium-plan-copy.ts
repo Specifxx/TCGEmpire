@@ -26,9 +26,15 @@ export const PREMIUM_PROMISE = "Never overpay for Riftbound again";
 // thing Premium actually does — Best Basket's delivered total across the stores
 // we track. "Find", not "get": we compare, the buyer still buys. The promise
 // above stays the plan's tagline and the dialog's headline.
-export const PREMIUM_HERO_HEADLINE = "Find the lowest delivered price for every Riftbound card you buy";
+//
+// KEPT SHORT ON PURPOSE (Lighthouse, 2026-10-23): a longer headline ("…for every
+// Riftbound card you buy") outgrew the subline on a phone and became the page's
+// LCP element, which then waited on the Cinzel swap — about 1.2 s of render
+// delay, LCP 7.5 s under Lighthouse's throttling against the old page's 2.5–8 s.
+// At this length the subline stays the largest element, as it was before.
+export const PREMIUM_HERO_HEADLINE = "Find the lowest delivered price";
 export const PREMIUM_HERO_SUBLINE =
-  "Premium prices your whole list across every store we track, emails you the moment a card, box or deck hits your price, and shows every card selling below market. Comparing prices stays free for everyone.";
+  "Premium prices your whole Riftbound list across every store we track, emails you the moment a card, box or deck hits your price, and shows every card selling below market. Comparing prices stays free for everyone.";
 
 export function planTagline(tier: "plus" | "premium", _market?: string | null): string {
   if (tier === "plus") return "Watches prices for you, with no ads";

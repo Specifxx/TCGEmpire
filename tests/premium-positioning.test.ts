@@ -101,7 +101,7 @@ test("the tagline is present on the surface that carries it, and /premium leads 
   // rebranded around never overpaying").
   // Since the conversion redesign (2026-10-23, DECISIONS.md "/premium, rebuilt to
   // convert, honestly") the H1 is the promise made concrete — still a saving the
-  // reader makes ("Find the lowest delivered price…"), never an edge over other
+  // reader makes ("Find the lowest delivered price."), never an edge over other
   // buyers — and the page <title> states the price and trial instead of the
   // tagline. The promise stays the plan card's tagline (planTagline) and the dialog's.
   assert.match(code("src/app/premium/page.tsx"), /\$\{PREMIUM_HERO_HEADLINE\}\./);
