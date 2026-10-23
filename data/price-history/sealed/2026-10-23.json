@@ -21,7 +21,7 @@
       "AU": 199900
     },
     "OGN|Booster Box": {
-      "AU": 40000,
+      "AU": 44900,
       "CA": 37495,
       "EU": 6173,
       "UK": 13999,
@@ -34,7 +34,7 @@
     },
     "OGN|Booster Pack": {
       "AU": 1900,
-      "CA": 1699,
+      "CA": 1599,
       "US": 1299
     },
     "OGN|Box Set": {
@@ -93,7 +93,7 @@
       "EU": 3500,
       "SG": 5595,
       "UK": 2999,
-      "US": 4489
+      "US": 4139
     },
     "OGN|Sealed": {
       "EU": 499
@@ -126,20 +126,21 @@
       "EU": 9999,
       "SG": 22000,
       "UK": 10500,
-      "US": 13375
+      "US": 13399
     },
     "RAD|Booster Case": {
       "EU": 67000,
       "UK": 41921,
-      "US": 84894
+      "US": 84799
     },
     "RAD|Booster Pack": {
+      "AU": 1000,
       "CA": 799,
       "UK": 499,
       "US": 724
     },
     "RAD|Bundle": {
-      "AU": 6500,
+      "AU": 5999,
       "CA": 5495,
       "EU": 2999,
       "SG": 5220,
@@ -176,7 +177,7 @@
       "AU": 5570,
       "CA": 4499,
       "EU": 12927,
-      "US": 8789
+      "US": 8778
     },
     "RAD|Sleeved Booster": {
       "US": 1999
@@ -200,11 +201,10 @@
       "AU": 2000,
       "CA": 999,
       "SG": 1300,
-      "UK": 499,
       "US": 575
     },
     "SFD|Bulk Runes": {
-      "US": 1699
+      "US": 1200
     },
     "SFD|Bulk Runes Case": {
       "US": 10000
@@ -267,7 +267,7 @@
       "AU": 8868,
       "CA": 220000,
       "EU": 4925,
-      "US": 150000
+      "US": 140000
     },
     "SFD|Pre-Rift Kit": {
       "AU": 15970,
@@ -306,7 +306,7 @@
       "EU": 10000,
       "SG": 22000,
       "UK": 11999,
-      "US": 14999
+      "US": 14998
     },
     "UNL|Booster Case": {
       "AU": 140430,
@@ -417,7 +417,7 @@
     },
     "VEN|Bundle": {
       "AU": 6500,
-      "CA": 5995,
+      "CA": 4999,
       "EU": 2990,
       "SG": 3730,
       "UK": 2150,
@@ -733,11 +733,23 @@
     "riftboundtcgleagueoflegendschampiondeckv": {
       "US": 1500
     },
+    "riftboundtcglegacychampiondecksetof4preo": {
+      "CA": 8994
+    },
+    "riftboundtcglegacyvaultpreorder": {
+      "CA": 6499
+    },
     "riftboundtcglunarnewyear2026ireliabundle": {
       "CA": 37925
     },
     "riftboundtcgrumblechampiondeck": {
       "CA": 3199
+    },
+    "riftboundtcgshowdowndeckevelynnvsseraphi": {
+      "CA": 3794
+    },
+    "riftboundtcgthereckoningboosterboxpreord": {
+      "CA": 18999
     },
     "riftboundviktorstarterdeck": {
       "EU": 6406
