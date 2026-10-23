@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
+import { cardThumbProps } from "@/lib/card-image-url";
 import type { Deal } from "@/lib/top-deals";
 import { CtaZone } from "./PremiumPageClient";
 
@@ -45,8 +46,10 @@ export function PremiumDealsTeaser({
             <div className="h-[70px] w-[50px] shrink-0 overflow-hidden rounded-md bg-ink-800">
               {d.imageUrl && (
                 // Plain <img>, same reason as TodaysTopDeals: deal images come from hosts next/image has no entry for.
+                // cardThumbProps: the small rendition and a srcset, as TodaysTopDeals does — the
+                // raw imageUrl is the full 744×1039 art (~1.1 MB a card) for a 50×70 slot.
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={d.imageUrl} alt={d.title} width={50} height={70} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                <img {...cardThumbProps({ imageThumbUrl: d.imageUrl }, "50px")} alt={d.title} width={50} height={70} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               )}
             </div>
             <div className="min-w-0 flex-1">
