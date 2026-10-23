@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { PremiumCta } from "./PremiumCta";
-import { PremiumTicks } from "./PremiumTicks";
+import { PremiumTicks, TICK_ROWS } from "./PremiumTicks";
 import { planBullets, planTagline } from "@/lib/premium-plan-copy";
+import { trackEvent } from "@/lib/analytics";
+import { annualMonthsFree } from "@/lib/premium-page";
 import {
   TIER_NAMES,
   tierMonthlyAmount,
@@ -69,6 +71,7 @@ export function PremiumPricingCards({
   introEligible = true,
   market = "AU",
   afterCards = null,
+  tickRows,
 }: {
   plusLive: boolean;
   plusAnnualLive: boolean;
@@ -86,6 +89,12 @@ export function PremiumPricingCards({
   market?: string;
   /** Server-rendered lines that belong right under the cards (the no-card options). */
   afterCards?: React.ReactNode;
+  /**
+   * The comparison's headline rows (PremiumTicks `only`), 2026-10-23: the
+   * features that decide a purchase, with every other row one tap away under
+   * "All features". Unset shows every row, as before.
+   */
+  tickRows?: string[];
 }) {
   const anyAnnualLive = annualLive || (plusLive && plusAnnualLive);
   // MONTHLY IS THE DEFAULT (2026-09-14, reversing the annual default of
@@ -119,6 +128,12 @@ export function PremiumPricingCards({
   // by design (DECISIONS.md), so this only ever differs while one tier's
   // annual price is configured and the other's isn't.
   const savePct = annualLive ? premiumSave : plusSave;
+  // "≈ 4 months free" — computed from the same two display prices as the badge.
+  const monthsFree = annualLive ? annualMonthsFree("premium") : 0;
+  const pickCycle = (c: "monthly" | "annual") => {
+    if (c !== cycle) trackEvent("premium_billing_toggle", { cycle: c });
+    setCycle(c);
+  };
 
   return (
     <div>
@@ -132,7 +147,7 @@ export function PremiumPricingCards({
             type="button"
             role="tab"
             aria-selected={cycle === "monthly"}
-            onClick={() => setCycle("monthly")}
+            onClick={() => pickCycle("monthly")}
             className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-center text-sm font-bold transition ${
               cycle === "monthly" ? "bg-ink-800 text-white shadow-sm" : "text-slate-400 hover:bg-ink-800/60"
             }`}
@@ -143,7 +158,7 @@ export function PremiumPricingCards({
             type="button"
             role="tab"
             aria-selected={cycle === "annual"}
-            onClick={() => setCycle("annual")}
+            onClick={() => pickCycle("annual")}
             className={`flex min-h-11 flex-1 flex-wrap items-center justify-center gap-x-1.5 rounded-lg px-3 text-center text-sm font-bold transition ${
               cycle === "annual" ? "bg-ink-800 text-white shadow-sm" : "text-slate-400 hover:bg-ink-800/60"
             }`}
@@ -154,6 +169,11 @@ export function PremiumPricingCards({
             )}
           </button>
         </div>
+      )}
+      {anyAnnualLive && savePct > 0 && monthsFree > 0 && (
+        <p className="mt-1.5 text-center text-xs font-semibold text-slate-300" data-months-free>
+          Annual: Save {savePct}% ≈ {monthsFree} months free
+        </p>
       )}
 
       {/* Two columns at every width: a phone gets two narrow cards side by
@@ -204,12 +224,34 @@ export function PremiumPricingCards({
           prices follow the Monthly / Annual toggle and its lit column follows
           the picked card; tapping a column header picks that plan. */}
       <div className="mx-auto mt-5 max-w-3xl">
+        {tickRows && (
+          <h2 id="premium-compare" className="mb-2 text-center font-display text-xl font-extrabold text-white sm:text-2xl">
+            Free vs Premium
+          </h2>
+        )}
         <PremiumTicks
           showPlus={plusLive}
           prices={{ plus: shownMonthly("plus", plusAnnualLive), premium: shownMonthly("premium", annualLive) }}
           selected={picked}
           onSelect={(t) => t !== "free" && setPicked(t)}
+          only={tickRows}
         />
+        {tickRows && (
+          <details className="mt-2">
+            <summary className="mx-auto w-fit cursor-pointer rounded px-2 py-1 text-center text-xs font-semibold text-brand-400 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400">
+              Every other feature and limit
+            </summary>
+            <div className="mt-2">
+              <PremiumTicks
+                only={TICK_ROWS.map((r) => r.name).filter((n) => !tickRows.includes(n))}
+                showPlus={plusLive}
+                prices={{ plus: shownMonthly("plus", plusAnnualLive), premium: shownMonthly("premium", annualLive) }}
+                selected={picked}
+                onSelect={(t) => t !== "free" && setPicked(t)}
+              />
+            </div>
+          </details>
+        )}
       </div>
     </div>
   );

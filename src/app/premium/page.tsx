@@ -22,8 +22,17 @@ import {
   REFERRAL_PREMIUM_DAYS,
 } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
-import { premiumHeroLine, PREMIUM_PROMISE, isUsMarket } from "@/lib/premium-plan-copy";
-import { PremiumBenefits, PremiumProofStrip, type PremiumProof } from "@/components/premium/PremiumValue";
+import { premiumHeroLine, PREMIUM_HERO_HEADLINE, PREMIUM_HERO_SUBLINE } from "@/lib/premium-plan-copy";
+import { PremiumProofStrip, type PremiumProof } from "@/components/premium/PremiumValue";
+import { PremiumDealsTeaser } from "@/components/premium/PremiumDealsTeaser";
+import { PremiumSavingsDemo } from "@/components/premium/PremiumSavingsDemo";
+import { PremiumAlertPreview } from "@/components/premium/PremiumAlertPreview";
+import { CtaZone, PremiumFaqList, PremiumPageView, PremiumStickyCta } from "@/components/premium/PremiumPageClient";
+import { PremiumCta } from "@/components/PremiumCta";
+import { paysForItself, teaserDeals } from "@/lib/premium-page";
+import { PREMIUM_TESTIMONIALS } from "@/lib/content/premium-testimonials";
+import { formatMoney } from "@/lib/format";
+import { STORE_PLAN_AMOUNT } from "@/lib/store-plan";
 import { getHomeStats } from "@/lib/home-stats";
 import { getCachedTopDeals } from "@/lib/top-deals";
 import { COUNTRIES } from "@/lib/country";
@@ -51,6 +60,9 @@ import {
   premiumLockInHeadline,
   introFromLine,
   premiumTrialFee,
+  premiumEffectiveMonthly,
+  annualSavingPct,
+  trialButtonLabel,
   introOfferEnabled,
   introPriceLine,
   introAmountOffCents,
@@ -58,22 +70,42 @@ import {
   INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_MARKETS, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import {
+  DECK_WATCH_LIMIT,
+  FREE_SEALED_WATCH_LIMIT,
+  FREE_TARGET_ALERT_LIMIT,
+  PLUS_TARGET_ALERT_LIMIT,
+  SEALED_CHECK_CADENCE,
+  SEALED_RRP_MARKETS,
+  SEALED_WATCH_LIMIT_PLUS,
+} from "@/lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
-import { pageAlternates } from "@/lib/seo";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { faqPage, ldJson } from "@/lib/jsonld";
 import { PremiumRecoveryBeacon } from "@/components/PremiumRecoveryBeacon";
 
 export const dynamic = "force-dynamic";
 
+// The prices are US dollars (lib/site.ts display amounts, read from the same
+// env-overridable constants as the pricing cards). "$9.99" reads as local
+// dollars in AU, CA and SG, so the metadata says US$.
+const usd = (amount: string) => (amount.startsWith("$") ? `US${amount}` : amount);
+const PRICE_LINE = premiumAnnualEnabled()
+  ? `${usd(PREMIUM_PRICE_AMOUNT)}/month or ${usd(PREMIUM_ANNUAL_AMOUNT)}/year (${usd(premiumEffectiveMonthly())}/mo)`
+  : `${usd(PREMIUM_PRICE_AMOUNT)}/month`;
+const TRIAL_LINE = premiumTrialEnabled() && PREMIUM_TRIAL_FEE_CENTS === 0 ? `${PREMIUM_TRIAL_DAYS} days free, ` : "";
+const META_TITLE = `RiftCompare Premium: ${TRIAL_LINE ? `${PREMIUM_TRIAL_DAYS} days free, then ` : ""}${usd(PREMIUM_PRICE_AMOUNT)}/mo`;
+// Premium-only while Plus is off sale (PLUS_ON_SALE, 2026-10-23).
+const META_DESCRIPTION = PLUS_ON_SALE
+  ? "Compare Riftbound card prices across every store, free, and track what your binder is missing. Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium) a whole deck's delivered total re-priced after every update, the store-by-store plan for a deck or the rest of a set, at the condition you'll play. No ads on either."
+  : `The lowest delivered price for your whole Riftbound list, alerts when a card, sealed box or deck hits your price, every card below market, and no ads. ${PRICE_LINE}; ${TRIAL_LINE}cancel anytime. Comparing prices stays free.`;
+
 export const metadata: Metadata = {
-  title: "RiftCompare Premium — never overpay for a Riftbound card",
-  // Premium-only while Plus is off sale (PLUS_ON_SALE, 2026-10-23).
-  description: PLUS_ON_SALE
-    ? "Compare Riftbound card prices across every store, free, and track what your binder is missing. Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium) a whole deck's delivered total re-priced after every update, the store-by-store plan for a deck or the rest of a set, at the condition you'll play. No ads on either."
-    : "Compare Riftbound card prices across every store, free, and track what your binder is missing. Premium watches prices for you: your own target price on cards, sealed products back in stock or at RRP, a whole deck's delivered total re-priced after every update, and the store-by-store plan for a deck or the rest of a set, at the condition you'll play. No ads.",
+  title: META_TITLE,
+  description: META_DESCRIPTION,
   alternates: pageAlternates("/premium"),
+  openGraph: pageOpenGraph({ title: META_TITLE, description: META_DESCRIPTION, url: "/premium" }),
 };
 
 // The Product JSON-LD's per-tier descriptions: each names only what that tier
@@ -97,20 +129,60 @@ const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", mon
 // premium.ts / limits constants the rest of the page uses, and it is rendered
 // visibly AND as FAQPage JSON-LD from THIS array (Google honours the schema only
 // when the same Q&A is on the page).
-const FAQ: { q: string; a: string }[] = [
+// The FAQ (2026-10-17, owner: "way too convoluted… seventy percent simpler").
+// REORDERED 2026-10-23 (the conversion redesign, DECISIONS.md "/premium, rebuilt
+// to convert, honestly"): the trial and cancel answers first, since they are
+// what a buyer checks before a card goes in, then the honest "only a few cards?"
+// answer, then the rest. Every answer is still built from the SAME site.ts /
+// premium.ts / limits constants the rest of the page uses, and rendered visibly
+// AND as FAQPage JSON-LD from THIS array. `id` is the anchor (#faq-<id>) and the
+// analytics key (premium_faq_open), never free text.
+const FAQ: { id: string; q: string; a: string }[] = [
+  ...(premiumTrialEnabled()
+    ? [
+        {
+          id: "trial",
+          q: PREMIUM_TRIAL_FEE_CENTS > 0 ? `How do the first ${PREMIUM_TRIAL_DAYS} days for ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} work?` : `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
+          // Charged-today first, then the plan price, then the way out; never "free"
+          // while the fee is above zero, and no refund promise either way.
+          a: `${PREMIUM_TRIAL_FEE_CENTS > 0 ? `You pay ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} today and everything in your plan unlocks for ${PREMIUM_TRIAL_DAYS} days.` : `Everything in your plan unlocks at once and nothing is charged today.`} A card is required. We email you a day or two before day ${PREMIUM_TRIAL_DAYS}, then ${
+            introOfferEnabled()
+              ? `${premiumPlusEnabled() ? `${introPriceLine("plus")} for Plus or ` : ""}${introPriceLine("premium")}${premiumPlusEnabled() ? " for Premium" : ""} on the monthly plan`
+              : `${premiumPlusEnabled() ? `${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} for Plus or ` : ""}${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}${premiumPlusEnabled() ? " for Premium" : ""}`
+          } (${introFromLine()}), or the annual rate, unless you cancel first from this page. Cancel before day ${PREMIUM_TRIAL_DAYS} and the plan price is never charged; you keep access to day ${PREMIUM_TRIAL_DAYS} either way.`,
+        },
+      ]
+    : []),
   {
+    id: "cancel",
+    q: "How do I cancel?",
+    a: `Use "Manage subscription" on this page to open Stripe's billing portal and cancel in a couple of clicks. You keep access until the end of the period you paid for${
+      premiumTrialEnabled() ? ` (cancel before day ${PREMIUM_TRIAL_DAYS} of a trial and the plan price is never charged)` : ""
+    }.`,
+  },
+  {
+    id: "few-cards",
+    q: "Is Premium worth it if I only buy a few cards?",
+    // Honest by design: for a light buyer the free tools may be enough, and
+    // the answer says so (2026-10-23, the conversion redesign).
+    a: `Maybe not, and that's fine. Comparing prices is free with no limit, and a free account gets ${FREE_PLANS_PER_MONTH} store-by-store Best Basket plans a month, ${FREE_TARGET_ALERT_LIMIT} card price alert and ${FREE_SEALED_WATCH_LIMIT} sealed watch, which can be all a few singles a month needs. Premium earns its price when you buy whole decks or long lists (where splitting the order and counting each store's postage makes the most difference), when you want alerts on many cards, boxes or decks, or when you hunt below-market deals.${
+      premiumTrialEnabled() && PREMIUM_TRIAL_FEE_CENTS === 0 ? ` Price your own list first (in the demo on this page, or with the free Best Basket plans), or try it free for ${PREMIUM_TRIAL_DAYS} days and cancel if it doesn't pay for itself.` : " Price your own list first, in the demo on this page or with the free Best Basket plans."
+    }`,
+  },
+  {
+    id: "free",
     q: "What's free?",
     a: `Comparing prices is free for everyone, with no limit. A free account adds a watchlist (${FREE_WATCHLIST_LIMIT} cards), a portfolio (${FREE_PORTFOLIO_LIMIT}), a set checklist and ${FREE_PLANS_PER_MONTH} store-by-store Best Basket plans a month.`,
   },
-  // The three below reuse the Premium explainer's FAQ wording
-  // (riftcompare-premium-explained), owner's request 2026-10-22.
   {
+    id: "comparison-free",
     q: "Is price comparison free?",
     a: `Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder and list pricer, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. ${PLUS_ON_SALE ? "Plus and Premium are" : "Premium is"} about no ads, the full deal lists, the watches that run for you, and the list tools.`,
   },
   ...(FEEDBACK_PREMIUM_DAYS > 0 || REFERRAL_PREMIUM_DAYS > 0
     ? [
         {
+          id: "earn-free",
           q: "Can I get Premium for free?",
           a: [
             "You can earn free Premium, no card required:",
@@ -127,41 +199,29 @@ const FAQ: { q: string; a: string }[] = [
   {
     // Addressed to a CURRENT Plus member: Plus is off sale since 2026-10-23
     // but its grandfathered members keep it and can still move up.
-    q: PLUS_ON_SALE ? "Can I switch from Plus to Premium?" : "I'm on Plus. Can I switch to Premium?",
-    a: `Yes${PLUS_ON_SALE ? "" : ". Plus is no longer sold, but you keep it for as long as you stay subscribed, and you can move up"}, from this page once you're subscribed: "Upgrade to Premium" switches your plan straight away, on the same monthly or annual cycle, and bills only the difference for the rest of the period you've paid for. During a free trial the switch opens once the trial has converted.`,
+    id: "plus",
+    // While Plus is off sale its members get every Premium feature at their
+    // Plus price (lib/premium.ts effectiveTier, 2026-10-23), so there is
+    // nothing to switch to: the answer says what they now have.
+    q: PLUS_ON_SALE ? "Can I switch from Plus to Premium?" : "I'm on Plus. What happens to my plan?",
+    a: PLUS_ON_SALE
+      ? `Yes, from this page once you're subscribed: "Upgrade to Premium" switches your plan straight away, on the same monthly or annual cycle, and bills only the difference for the rest of the period you've paid for. During a free trial the switch opens once the trial has converted.`
+      : "Plus is no longer sold, and you now get everything in Premium at the Plus price you already pay, for as long as you stay subscribed. There's nothing to do and nothing changes on your bill.",
   },
-  ...(premiumTrialEnabled()
-    ? [
-        {
-          q: PREMIUM_TRIAL_FEE_CENTS > 0 ? `How do the first ${PREMIUM_TRIAL_DAYS} days for ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} work?` : `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
-          // Charged-today first, then the plan price, then the way out; never "free"
-          // while the fee is above zero, and no refund promise either way.
-          a: `${PREMIUM_TRIAL_FEE_CENTS > 0 ? `You pay ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} today and everything in your plan unlocks for ${PREMIUM_TRIAL_DAYS} days.` : `Everything in your plan unlocks at once and nothing is charged today.`} A card is required. We email you a day or two before day ${PREMIUM_TRIAL_DAYS}, then ${
-            introOfferEnabled()
-              ? `${premiumPlusEnabled() ? `${introPriceLine("plus")} for Plus or ` : ""}${introPriceLine("premium")}${premiumPlusEnabled() ? " for Premium" : ""} on the monthly plan`
-              : `${premiumPlusEnabled() ? `${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} for Plus or ` : ""}${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}${premiumPlusEnabled() ? " for Premium" : ""}`
-          } (${introFromLine()}), or the annual rate, unless you cancel first from this page. Cancel before day ${PREMIUM_TRIAL_DAYS} and the plan price is never charged; you keep access to day ${PREMIUM_TRIAL_DAYS} either way.`,
-        },
-      ]
-    : []),
+  {
+    id: "tracked",
+    q: "What happens to cards I already track?",
+    a: `You keep them all. The free limits (${FREE_WATCHLIST_LIMIT} watched cards, ${FREE_PORTFOLIO_LIMIT} portfolio cards) only stop you adding a NEW card, and nothing is deleted if a subscription ends. Only a new card needs ${premiumPlusEnabled() ? "Plus" : "Premium"}.`,
+  },
   ...(introOfferEnabled()
     ? [
         {
+          id: "intro",
           q: `What is the half-price offer?`,
           a: `New subscribers on a monthly plan pay half price for their first ${INTRO_MONTHS} months (${tierIntroMonthlyAmount("premium")}/mo for Premium${premiumPlusEnabled() ? `, ${tierIntroMonthlyAmount("plus")}/mo for Plus` : ""}), applied automatically at checkout. Annual plans keep their normal price.`,
         },
       ]
     : []),
-  {
-    q: "How do I cancel?",
-    a: `Use "Manage subscription" on this page to open Stripe's billing portal and cancel in a couple of clicks. You keep access until the end of the period you paid for${
-      premiumTrialEnabled() ? ` (cancel before day ${PREMIUM_TRIAL_DAYS} of a trial and the plan price is never charged)` : ""
-    }.`,
-  },
-  {
-    q: "What happens to cards I already track?",
-    a: `You keep them all. The free limits (${FREE_WATCHLIST_LIMIT} watched cards, ${FREE_PORTFOLIO_LIMIT} portfolio cards) only stop you adding a NEW card, and nothing is deleted if a subscription ends. Only a new card needs ${premiumPlusEnabled() ? "Plus" : "Premium"}.`,
-  },
   // Only while a real, higher price is announced (2026-09-26): with none
   // decided, the old answer ("the price goes up as the site grows, your rate
   // doesn't") promised protection from a rise that isn't coming, days after
@@ -169,6 +229,7 @@ const FAQ: { q: string; a: string }[] = [
   ...(premiumPriceIncreaseAnnounced()
     ? [
         {
+          id: "price-rise",
           q: "Does my price ever go up?",
           a: premiumLockInLine(),
         },
@@ -176,24 +237,56 @@ const FAQ: { q: string; a: string }[] = [
     : []),
 ];
 
+// The comparison's headline rows (PremiumTicks names; every other row sits
+// under "Every other feature and limit"): what decides a purchase — free price
+// comparison and the basics against Premium's delivered order, alerts, deals,
+// unlimited tracking with history and no ads. Cells are TIER_COMPARISON's own.
+const HEADLINE_TICK_ROWS = [
+  "Compare prices across every store",
+  "Best Basket & Buy this list plans",
+  "Target-price alerts",
+  "Sealed watches",
+  "Deck price watch",
+  "Deal Finder & Rising Cards",
+  "Watchlist",
+  "Portfolio",
+  "Price history",
+  "No ads",
+];
+
+// "six markets", from the markets the site really prices (lib/country.ts).
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+const MARKET_COUNT = Object.keys(COUNTRIES).length;
+const MARKET_COUNT_WORD = NUMBER_WORDS[MARKET_COUNT] ?? String(MARKET_COUNT);
+const MARKET_NAMES = Object.values(COUNTRIES)
+  .map((c) => c.place)
+  .join(", ")
+  .replace(/, ([^,]*)$/, " and $1");
+
 export default async function PremiumPage({ searchParams }: { searchParams?: { keep?: string; code?: string } }) {
   const user = await getCurrentUser();
   // The visitor's market (the existing country resolution, no new geo lookup):
   // US leads with the watches, everywhere else with Best Basket.
   const market = getCountry();
-  // Live proof for the value section (components/premium/PremiumValue.tsx):
-  // both loaders are the homepage's own caches, read directly (never wrapped),
-  // and a failure just leaves the proof out.
+  // Live proof and the deals teaser: both loaders are the homepage's own caches,
+  // read directly (never wrapped), once, and a failure just leaves their
+  // sections out. A member sees neither.
+  const currency = COUNTRIES[market].currency;
+  const [stats, deals] = isPremium(user)
+    ? [null, null]
+    : await Promise.all([getHomeStats().catch(() => null), getCachedTopDeals(market).catch(() => null)]);
   const proof: PremiumProof | null = isPremium(user)
     ? null
-    : await Promise.all([getHomeStats().catch(() => null), getCachedTopDeals(market).catch(() => null)]).then(([stats, deals]) => ({
+    : {
         stores: stats?.liveStoresAll ?? null,
         listings: stats ? Object.values(stats.statsByCountry).reduce((n, m) => n + (m?.inStock ?? 0), 0) || null : null,
         dealsBelowMarket: deals?.savingsVsMarketTotal ?? 0,
         dealsGapCents: deals?.savingsVsMarketCents ?? 0,
         topDeal: deals?.savingsVsMarket?.[0] ?? null,
-        currency: COUNTRIES[market].currency,
-      }));
+        currency,
+      };
+  const teaser = teaserDeals(deals?.savingsVsMarket);
+  const pays = paysForItself(teaser, currency);
   const already = isPremium(user);
   const checkoutLive = premiumCheckoutEnabled();
   const dbUser = user
@@ -244,6 +337,14 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   // (lib/creator-affiliate.ts). One indexed read, only when the cookie is set.
   const savedCode = !already ? normaliseAffiliateCode(cookies().get(AFFILIATE_COOKIE)?.value) : null;
   const creator = savedCode ? await findActiveAffiliate(savedCode).catch(() => null) : null;
+  // The hero's checkout button: the annual plan when there is one (the pricing
+  // section's own default), its price quoted under it; monthly is one tap away.
+  const heroPlan: "monthly" | "annual" = annualLive ? "annual" : "monthly";
+  // US$, not "$": the deals beside it are in the visitor's own currency (A$, C$…).
+  const heroPriceLabel = usd(heroPlan === "annual" ? annualCompact : introEligible && introOfferEnabled() ? introPriceLine("premium") : compactPrice);
+  const heroEffective = usd(premiumEffectiveMonthly());
+  // "Free" is said only where checkout would really start a free trial.
+  const freeTrialShown = !already && trialAvailable && PREMIUM_TRIAL_DAYS > 0 && PREMIUM_TRIAL_FEE_CENTS === 0;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -300,78 +401,121 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         }}
       />
 
-      {/* 70% SIMPLER (2026-10-17, owner: "way too convoluted… a lot of double up
-          on information… what's really useful is the comparison of the ticks and
-          the crosses"). DECISIONS.md, "/premium, 70% simpler". For a visitor who
-          has not bought, in this order: one line, one subline, the Monthly /
-          Annual toggle, the two plan cards with their buy buttons, the ticks
-          table (inside PremiumPricingCards, so the toggle drives its prices),
-          the creator code, three short questions. The "What you get" list, the
-          what-you're-missing grid with its captions and half marks, the proof
-          line and the second copy of the fine print all went: the table says
-          what each plan includes, once. A member sees their own tier and
-          account card in this same spot instead of the cards. The hero says
-          what is free before what is paid and quotes no price or saving figure.
+      {/* THE CONVERSION REDESIGN (2026-10-23, DECISIONS.md "/premium, rebuilt to
+          convert, honestly"; supersedes the plans-first order of 2026-09-29 and
+          "/premium, 70% simpler"). For a visitor who has not bought, in this
+          order: the outcome headline, live stats, ONE checkout button with its
+          terms; then proof they can check (today's top deals, a demo on their
+          own list, the pays-for-itself line only when today's numbers support
+          it); then the plans, the comparison, a sample alert and the FAQ.
+          EVERY NUMBER IS LIVE OR COMPUTED from configured prices; anything
+          unavailable is left out. A member sees their own tier and account
+          card instead, unchanged.
 
           google-anno-skip keeps Google's ad-intent chips out of the sales copy
           (ad-free-boot.ts, AD_INTENTS_SKIP_CLASS). */}
       <div className="google-anno-skip">
-      {/* THE REBRAND (2026-10-23, DECISIONS.md "Premium, rebranded around never
-          overpaying"): one promise, said first, then live proof. Comparing
-          prices stays free and the subline says so. */}
-      <div className="text-center">
+      <div id="premium-hero" className="text-center">
         {!already && (
           <span className="chip mb-2 inline-flex bg-gold/15 text-[11px] font-extrabold uppercase tracking-widest text-gold">
             ✦ RiftCompare Premium
           </span>
         )}
-        <h1 className="font-display text-3xl font-extrabold leading-tight text-white sm:text-5xl">
-          {already ? `You're ${TIER_NAMES[currentTier ?? "premium"]}` : `${PREMIUM_PROMISE}.`}
+        <h1 className="mx-auto max-w-3xl font-display text-3xl font-extrabold leading-tight text-white sm:text-5xl">
+          {already ? `You're ${TIER_NAMES[currentTier ?? "premium"]}` : `${PREMIUM_HERO_HEADLINE}.`}
         </h1>
         <p className="mx-auto mt-2 max-w-2xl text-sm leading-snug text-slate-300 sm:mt-3 sm:text-lg">
-          {already
-            ? "Thanks for supporting RiftCompare."
-            : plusLive
-              ? premiumHeroLine(market, plusLive)
-              : "Premium watches every store we track, in six markets and on eBay, and emails you the moment a card or box hits your price. Comparing prices stays free for everyone."}
+          {already ? "Thanks for supporting RiftCompare." : plusLive ? premiumHeroLine(market, plusLive) : PREMIUM_HERO_SUBLINE}
         </p>
-        {!already && trialAvailable && PREMIUM_TRIAL_DAYS > 0 && PREMIUM_TRIAL_FEE_CENTS === 0 && (
-          <p className="mt-3 text-sm font-bold text-up" data-premium-trial-hero>
-            {PREMIUM_TRIAL_DAYS} days free · cancel in two clicks
-          </p>
-        )}
         {proof && <PremiumProofStrip proof={proof} />}
-      </div>
-
-      {!already && (
-        <>
-          {/* /dashboard and MoversToolsCta link here. scroll-mt-header is the
-              header-aware anchor offset (globals.css). */}
-          <div id="top-pricing" className="scroll-mt-header mt-5 sm:mt-7">
-            <PremiumPricingCards
-              plusLive={plusLive}
-              plusAnnualLive={plusAnnualLive}
-              annualLive={annualLive}
+        {!already && (
+          <CtaZone location="hero" className="mx-auto mt-5 max-w-sm">
+            <PremiumCta
+              compact
               checkoutLive={checkoutLive}
               signedIn={!!user}
               trialEligible={trialEligible}
               trialAvailable={trialAvailable}
+              priceLabel={heroPriceLabel}
               trialDays={PREMIUM_TRIAL_DAYS}
               trialFeeCents={PREMIUM_TRIAL_FEE_CENTS}
-              introEligible={introEligible}
-              market={market}
-              afterCards={
-                <>
-                  <NoCardOptions signedIn={!!user} />
-                  {proof && <PremiumBenefits proof={proof} us={isUsMarket(market)} />}
-                </>
-              }
+              plan={heroPlan}
+              tier="premium"
             />
-          </div>
+            {freeTrialShown && (
+              <p className="mt-2 text-sm font-bold text-up" data-premium-trial-hero>
+                Card required. We email you before you&apos;re charged. Cancel in two clicks.
+              </p>
+            )}
+            <p className="mt-1.5 text-xs text-slate-400">
+              {heroPlan === "annual" ? (
+                <>
+                  {freeTrialShown ? "Then " : ""}
+                  {heroPriceLabel} ({heroEffective}/mo, save {annualSavingPct()}%) ·{" "}
+                </>
+              ) : null}
+              <a href="#top-pricing" className="font-semibold text-slate-300 underline-offset-2 hover:underline" data-no-cta-track>
+                {heroPlan === "annual" ? `or ${usd(PREMIUM_PRICE_AMOUNT)}/mo monthly` : "See the plan"}
+              </a>
+            </p>
+          </CtaZone>
+        )}
+        {!already && (
+          <CtaZone location="secondary" className="mx-auto mt-3 max-w-2xl space-y-1">
+            <NoCardOptions signedIn={!!user} />
+            <p className="text-xs text-slate-400" data-stores-crosslink>
+              Run a store?{" "}
+              <Link href="/stores" className="font-semibold text-slate-200 underline-offset-2 hover:underline">
+                The Stores plan includes Premium
+              </Link>{" "}
+              ({STORE_PLAN_AMOUNT}/month).
+            </p>
+          </CtaZone>
+        )}
+      </div>
 
-          <p className="mx-auto mt-3 max-w-2xl text-center text-[11px] text-slate-400">
-            {user ? "Cancel anytime · secure checkout by Stripe" : "No account needed to start · sign in after paying · Cancel anytime · secure checkout by Stripe"}
-          </p>
+      {!already && (
+        <>
+          <PremiumPageView signedIn={!!user} />
+
+          <PremiumDealsTeaser deals={teaser} total={deals?.savingsVsMarketTotal ?? 0} currency={currency} />
+
+          <PremiumSavingsDemo exampleNames={teaser.map((d) => d.title)} />
+
+          {/* "Pays for itself": only when today's average gap on the top deals
+              is above a month of Premium (lib/premium-page.ts paysForItself). */}
+          {pays && (
+            <p className="mx-auto mt-6 max-w-xl rounded-xl border border-up/30 bg-up/10 px-4 py-3 text-center text-sm text-slate-200" data-premium-pays>
+              Today&apos;s top {pays.dealCount} deals average <strong className="text-up">{formatMoney(pays.avgSavingCents, currency)}</strong> below market per card.
+              One of them covers a month of Premium ({usd(PREMIUM_PRICE_AMOUNT)}
+              {currency === "USD" ? "" : `, ≈ ${formatMoney(pays.monthlyInMarketCents, currency)}`}).
+            </p>
+          )}
+
+          {/* /dashboard and MoversToolsCta link here. scroll-mt-header is the
+              header-aware anchor offset (globals.css). */}
+          <section id="top-pricing" aria-labelledby="premium-pricing" className="scroll-mt-header mt-10">
+            <h2 id="premium-pricing" className="mb-3 text-center font-display text-xl font-extrabold text-white sm:text-2xl">
+              {freeTrialShown ? `Start with ${PREMIUM_TRIAL_DAYS} days free` : "One plan, everything included"}
+            </h2>
+            <CtaZone location="pricing">
+              <PremiumPricingCards
+                plusLive={plusLive}
+                plusAnnualLive={plusAnnualLive}
+                annualLive={annualLive}
+                checkoutLive={checkoutLive}
+                signedIn={!!user}
+                trialEligible={trialEligible}
+                trialAvailable={trialAvailable}
+                trialDays={PREMIUM_TRIAL_DAYS}
+                trialFeeCents={PREMIUM_TRIAL_FEE_CENTS}
+                introEligible={introEligible}
+                market={market}
+                tickRows={HEADLINE_TICK_ROWS}
+                afterCards={<ReassuranceStrip freeTrial={freeTrialShown} signedIn={!!user} />}
+              />
+            </CtaZone>
+          </section>
 
           {/* Creator codes (2026-10-16): 20% off at checkout. */}
           <div className="mt-3">
@@ -380,6 +524,44 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
               fromUrl={normaliseAffiliateCode(searchParams?.code)}
             />
           </div>
+
+          <PremiumAlertPreview deal={teaser[0] ?? null} currency={currency} />
+
+          {/* Real proof only: member quotes from lib/content/premium-testimonials.ts,
+              which is empty until a member gives permission. Empty → nothing. */}
+          {PREMIUM_TESTIMONIALS.length > 0 && (
+            <section aria-labelledby="premium-quotes" className="mx-auto mt-10 max-w-3xl" data-premium-testimonials>
+              <h2 id="premium-quotes" className="text-center font-display text-xl font-extrabold text-white sm:text-2xl">
+                From Premium members
+              </h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {PREMIUM_TESTIMONIALS.map((t) => (
+                  <figure key={t.quote} className="card-surface rounded-2xl border border-ink-700 p-4">
+                    <blockquote className="text-sm leading-relaxed text-slate-200">&ldquo;{t.quote}&rdquo;</blockquote>
+                    <figcaption className="mt-2 text-xs font-semibold text-slate-400">
+                      {t.name}
+                      {t.detail ? ` · ${t.detail}` : ""}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <p className="mx-auto mt-8 max-w-xl text-center text-sm font-semibold text-slate-300" data-premium-markets>
+            Premium works across {MARKET_COUNT_WORD} markets ({MARKET_NAMES}) and eBay.
+          </p>
+
+          <PremiumStickyCta
+            label={freeTrialShown ? trialButtonLabel(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS) : "Get Premium"}
+            terms={
+              freeTrialShown
+                ? `Card required · then ${heroPriceLabel}${heroPlan === "annual" ? ` (${heroEffective}/mo)` : ""} · cancel in two clicks`
+                : `${heroPriceLabel}${heroPlan === "annual" ? ` (${heroEffective}/mo)` : ""} · cancel anytime`
+            }
+            heroId="premium-hero"
+            pricingId="top-pricing"
+          />
         </>
       )}
 
@@ -454,6 +636,12 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
                   floored account is never offered a downgrade that its floor
                   would silently undo. Both would be real money changing hands
                   for no change in access. */}
+              {/* A grandfathered Plus member: Premium access, Plus price. */}
+              {subDetails.tier === "plus" && currentTier === "premium" && (
+                <p className="text-xs text-slate-400" data-plus-grandfathered>
+                  You keep your original Plus price, with everything in Premium included.
+                </p>
+              )}
               <SubscriptionActions
                 tier={currentTier ?? subDetails.tier}
                 interval={subDetails.interval}
@@ -507,16 +695,9 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
       {/* FAQ — rendered visibly (not just as JSON-LD above) so Google honours
           the FAQPage markup. p-3 sits on the <summary>, so the whole card is the
           toggle (2026-09-23). */}
-      <section className="mt-8" aria-labelledby="premium-faq">
+      <section id="faq" className="scroll-mt-header mt-10" aria-labelledby="premium-faq">
         <h2 id="premium-faq" className="mb-3 text-center text-lg font-extrabold text-white">Questions</h2>
-        <div className="mx-auto max-w-2xl space-y-2">
-          {FAQ.map((f) => (
-            <details key={f.q} className="card-surface rounded-xl border border-ink-700">
-              <summary className="cursor-pointer p-3 text-sm font-semibold text-white">{f.q}</summary>
-              <p className="px-3 pb-3 text-sm leading-relaxed text-slate-400">{f.a}</p>
-            </details>
-          ))}
-        </div>
+        <PremiumFaqList items={FAQ} />
       </section>
 
       {/* Footer note */}
@@ -530,6 +711,32 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
       </p>
       </div>
     </div>
+  );
+}
+
+// The reassurance strip under the plan card: the trial, the reminder email, the
+// way out (linking to the cancel answer) and who takes the payment. Each claim
+// is shown only while it is true for this viewer.
+function ReassuranceStrip({ freeTrial, signedIn }: { freeTrial: boolean; signedIn: boolean }) {
+  const items: React.ReactNode[] = [
+    freeTrial ? `${PREMIUM_TRIAL_DAYS} days free` : null,
+    freeTrial ? "We email you before you're charged" : null,
+    <a key="cancel" href="#faq-cancel" className="underline-offset-2 hover:underline" data-no-cta-track>
+      Cancel in two clicks
+    </a>,
+    "Secure payment by Stripe",
+    "Prices in US dollars",
+    signedIn ? null : "No account needed to start",
+  ].filter(Boolean);
+  return (
+    <ul className="mx-auto mt-3 flex max-w-2xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] font-semibold text-slate-300 sm:text-xs" data-premium-reassurance>
+      {items.map((it, i) => (
+        <li key={i} className="flex items-center gap-1">
+          <span aria-hidden className="text-up">✓</span>
+          {it}
+        </li>
+      ))}
+    </ul>
   );
 }
 
