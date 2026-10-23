@@ -57,6 +57,7 @@ longer lands on its entry.
   [2026-09-11](../DECISIONS.md#L4871), [2026-09-11](../DECISIONS.md#L5042),
   [2026-09-16](../DECISIONS.md#L6683)
 - **Card pages are cached by the CDN, not ISR (2026-10-17):** `/card/[id]` is `force-dynamic` with `Vercel-CDN-Cache-Control` (a day, plus a day stale) from `next.config.js`; nothing in its tree may read the visitor (`tests/card-cdn.test.ts`). An ISR write of a card was ~70 units after every release. [2026-10-17](../DECISIONS.md#L18379)
+- **Share pages and images (2026-10-23):** `/d/[code]` and `/tools/pull-tracker/[set]/s/[code]` are `force-dynamic` with the card page's CDN header (`SHARE_PAGES`); `images.minimumCacheTTL` is a month; Web Analytics `beforeSend` drops localhost, `*.vercel.app`, webdriver, bots and the owner (`?notrack=1`, `?notrack=0` undoes). [2026-10-23](../DECISIONS.md#L19079), [2026-10-23](../DECISIONS.md#L19093), [2026-10-23](../DECISIONS.md#L19101)
 - **Page TTLs are six hours or more (owner, 2026-10-14):** `revalidate` 21600
   for what buyers act on (homes, decks, pre-orders, release dates, per-card API
   and embeds), 86400 for slow content. The import's purge and the daily release

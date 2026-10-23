@@ -10,8 +10,11 @@ import { isPullSet, parseShareCode, pullKey, summarisePulls } from "@/lib/pull-t
 
 // A shared pull result (lib/pull-tracker.ts). Everything on it comes from the
 // link and the public catalogue. Not indexed: a share is a person's result, not
-// a page for search. Each distinct link is an ordinary ISR page.
-export const revalidate = 21600;
+// a page for search. Each distinct link was its own ISR page; it now renders
+// per request and the CDN keeps it (next.config.js SHARE_PAGES, DECISIONS.md
+// "Share pages leave ISR for the CDN"). Nothing here may read the visitor
+// (tests/card-cdn.test.ts).
+export const dynamic = "force-dynamic";
 
 async function load(params: { set: string; code: string }) {
   const set = setBySlug(params.set);

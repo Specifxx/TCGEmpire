@@ -103,6 +103,10 @@ const securityHeaders = [
 const PUBLIC_DATA_BUNDLED = ["files", "fallback"].includes((process.env.PUBLIC_DATA_MODE || "").trim().toLowerCase());
 
 const CARD_CDN_CACHE = "public, s-maxage=86400, stale-while-revalidate=86400";
+// Share links (2026-10-23, DECISIONS.md "Share pages leave ISR for the CDN"):
+// one page per visitor-made code, so ISR wrote one entry per code. force-dynamic
+// pages with the same CDN copy as a card page; tests/card-cdn.test.ts.
+const SHARE_PAGES = ["/d/:code", "/tools/pull-tracker/:set/s/:code"];
 
 const nextConfig = {
   // Public data as files (src/lib/public-data/, DECISIONS.md 2026-10-09): the
@@ -138,6 +142,10 @@ const nextConfig = {
     },
   },
   images: {
+    // A month on the optimised copy (2026-10-23, DECISIONS.md "Optimised images
+    // keep a month"): card art and product photos never change at a URL, and the
+    // default 4 hours re-optimised (and re-fetched) each one six times a day.
+    minimumCacheTTL: 2678400,
     // Lets next/image re-encode (AVIF/WebP) and downsize these hotlinked CDNs
     // instead of shipping their full-resolution source at thumbnail display
     // size. cdn.riftscribe.gg (card art for the bulk-imported catalogue),
@@ -587,6 +595,7 @@ const nextConfig = {
         source: "/card/:id",
         headers: [{ key: "Vercel-CDN-Cache-Control", value: CARD_CDN_CACHE }],
       },
+      ...SHARE_PAGES.map((source) => ({ source, headers: [{ key: "Vercel-CDN-Cache-Control", value: CARD_CDN_CACHE }] })),
     ];
   },
 };

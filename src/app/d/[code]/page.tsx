@@ -8,7 +8,11 @@ import { normaliseShareCode } from "@/lib/deck-builder";
 // A shared deck: riftcompare.com/d/CODE opens it in the visual deck builder
 // (lib/deck-builder.ts). A shared list never changes, so a day's cache is safe.
 // noindex: these are visitors' own decks, not pages for search.
-export const revalidate = 86400;
+// Every share code was its own ISR page (one write per code, emptied by each
+// release); it now renders per request and the CDN keeps it a day
+// (next.config.js SHARE_PAGES, DECISIONS.md "Share pages leave ISR for the CDN").
+// Nothing here may read the visitor (tests/card-cdn.test.ts).
+export const dynamic = "force-dynamic";
 
 async function load(raw: string) {
   const code = normaliseShareCode(raw);

@@ -19075,3 +19075,40 @@ position 7.6; AdSense rejected the site for low-value content).
   except that a priced BASE card whose winner lost "Price" takes the full-name price
   rung if it fits 60. Priced cards' descriptions lead with "<name> price: from X at
   N stores, cheapest first".
+
+## Share pages leave ISR for the CDN (2026-10-23)
+
+- **What:** `/d/[code]` (shared decks) and `/tools/pull-tracker/[set]/s/[code]` (shared
+  pull results) are `force-dynamic` with the card page's `Vercel-CDN-Cache-Control`
+  (`SHARE_PAGES` in `next.config.js`; a day, plus a day stale).
+- **Why:** both are one page per visitor-made code, an unbounded set, so ISR wrote a
+  fresh entry for every code a link was opened with, and every release emptied them.
+  The team's Vercel bill (Oct 10–Nov 10, all projects) has ISR Writes at 2.19M; no
+  per-project figure is available here (no Vercel token), so this is the code audit,
+  not a measurement. The other dynamic routes are small fixed sets prerendered by
+  `generateStaticParams` and stay ISR.
+- **Guard:** `tests/card-cdn.test.ts` walks each share page's server imports and the
+  root layout for visitor reads, as it does for the card page.
+
+## Optimised images keep a month (2026-10-23)
+
+- **What:** `images.minimumCacheTTL` is 2678400 (31 days).
+- **Why:** the four allow-listed hosts serve fixed art and product photos at fixed
+  URLs; Next's default (4 hours) re-optimised each image and re-fetched its source
+  from the remote host up to six times a day. Card grids already use the committed
+  `/card-art` renditions, which are not affected.
+
+## Web Analytics drops bots, previews and the owner (2026-10-23)
+
+- **What:** `<Analytics beforeSend>` (still mounted once, from the root layout, behind
+  consent) returns null for localhost / 127.0.0.1 / `*.vercel.app`, `navigator.webdriver`,
+  a bot-like user agent, and `localStorage["va-disable"] === "1"`. Visiting any page with
+  `?notrack=1` sets it and `?notrack=0` clears it (`lib/analytics-filter.ts`,
+  `tests/analytics-filter.test.ts`). Web Analytics itself stays (2026-10-16).
+- **Custom events are unchanged:** `track()` calls (Riftle, Top Deals, Filters, Feedback,
+  Trending chips) and the 104 `trackEvent()` calls are all read in funnels; none was
+  clearly unneeded.
+- **Not changed, already settled:** robots.txt keeps AhrefsBot/SemrushBot (the owner's
+  SEO tools) and CCBot/GPTBot/ClaudeBot (AI visibility); the build gate
+  (`[deploy]`/`[preview]` subject markers) is stricter than a branch/docs filter; there is
+  no middleware; the import purge is already a no-op in files mode (2026-10-16).
