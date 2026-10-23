@@ -79,7 +79,7 @@ test("pages: cached six hours, shares kept out of the index, and the tracker is 
   assert.match(page, /export const revalidate = 21600;/);
   assert.doesNotMatch(page, /generateStaticParams/, "no static prewarming of a database-backed route");
   const share = read("src/app/tools/pull-tracker/[set]/s/[code]/page.tsx");
-  assert.match(share, /export const revalidate = 21600;/);
+  assert.match(share, /^export const dynamic = "force-dynamic";$/m); // CDN-cached share page (tests/card-cdn.test.ts)
   assert.match(share, /robots: \{ index: false, follow: true \}/);
   assert.match(read("src/lib/pull-tracker-server.ts"), /\{ revalidate: 21600, tags: \[CONTENT_TAG\] \}/, "no loader cache under its pages' TTL");
   assert.match(read("src/components/nav-groups.ts"), /href: "\/tools\/pull-tracker\/radiance"/);

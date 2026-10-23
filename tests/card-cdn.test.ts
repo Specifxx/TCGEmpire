@@ -65,3 +65,31 @@ test("nothing the card page's server render reaches reads the visitor (one CDN c
   }
   assert.deepEqual(offenders, [], "a per-visitor read here would put one visitor's page in every visitor's CDN copy");
 });
+
+// SHARE PAGES LEAVE ISR FOR THE CDN (2026-10-23, DECISIONS.md). One page per
+// visitor-made share code, so the same rule as a card page applies.
+const SHARE_PAGES: [string, string][] = [
+  ["src/app/d/[code]/page.tsx", "/d/:code"],
+  ["src/app/tools/pull-tracker/[set]/s/[code]/page.tsx", "/tools/pull-tracker/:set/s/:code"],
+];
+
+test("share pages render per request with the card page's CDN copy, read no visitor", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const cfg = require(join(ROOT, "next.config.js")) as { headers: () => Promise<{ source: string; headers: { key: string; value: string }[] }[]> };
+  const rules = await cfg.headers();
+  for (const [page, source] of SHARE_PAGES) {
+    const src = read(page);
+    assert.match(src, /^export const dynamic = "force-dynamic";$/m, page);
+    assert.doesNotMatch(src, /^export const revalidate\b/m, page);
+    assert.deepEqual(rules.find((h) => h.source === source)?.headers, [{ key: "Vercel-CDN-Cache-Control", value: "public, s-maxage=86400, stale-while-revalidate=86400" }], source);
+    const offenders: string[] = [];
+    for (const f of serverClosure([page, "src/app/layout.tsx"])) {
+      const s = read(f).replace(/\/\/.*$/gm, "");
+      if (/from ["']next\/headers["']/.test(s)) offenders.push(`${f}: imports next/headers`);
+      const call = /(?<![.\w])(getCountry|getCurrentUser|getSessionUser|readSession)\s*\(/.exec(s);
+      if (call) offenders.push(`${f}: calls ${call[1]}()`);
+      if (/searchParams/.test(s) && f === page) offenders.push(`${f}: reads searchParams`);
+    }
+    assert.deepEqual(offenders, [], page);
+  }
+});
