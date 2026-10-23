@@ -96,7 +96,11 @@ test("the tagline is present on the surface that carries it, and /premium leads 
   // owner-approved line is "Know what you're missing. Buy it for less.", which is
   // still a saving the reader makes, not an advantage over other buyers. The old
   // tagline stays on the dialog, and in /premium's page <title>.
-  assert.match(code("src/app/premium/page.tsx"), /Know what you're missing\. Buy it for less\./, "/premium must carry the hero line");
+  // Since 2026-10-23 the hero is the one promise, "Never overpay for Riftbound
+  // again." (PREMIUM_PROMISE, lib/premium-plan-copy.ts; DECISIONS.md "Premium,
+  // rebranded around never overpaying").
+  assert.match(code("src/app/premium/page.tsx"), /\$\{PREMIUM_PROMISE\}\./);
+  assert.match(code("src/lib/premium-plan-copy.ts"), /PREMIUM_PROMISE = "Never overpay for Riftbound again"/);
   assert.match(code("src/app/premium/page.tsx"), /never overpay for a Riftbound card/, "/premium's title still carries the tagline");
   for (const file of [
     "src/components/PremiumDialog.tsx",
@@ -104,7 +108,7 @@ test("the tagline is present on the surface that carries it, and /premium leads 
     // free account and names no price. PremiumSlideIn and its graphic
     // PremiumPitchPanel carried it until both were removed on 2026-09-28.
   ]) {
-    assert.match(code(file), /Never overpay for a Riftbound card/, `${file} must carry the tagline`);
+    assert.match(code(file), /\{PREMIUM_PROMISE\}/, `${file} must carry the tagline`);
   }
 });
 

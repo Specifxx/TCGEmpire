@@ -181,7 +181,7 @@ export function PremiumPricingCards({
 
         <PaidTierCard
           tier="premium"
-          tagline={plusLive ? planTagline("premium", market) : "The full toolkit"}
+          tagline={planTagline("premium", market)}
           bullets={planBullets("premium", market)}
           highlight
           picked={picked === "premium"}

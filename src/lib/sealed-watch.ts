@@ -2,9 +2,9 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { COUNTRIES, currencyOf, type Country } from "./country";
 import { isPremium, premiumTierOf, type EntitlementUser } from "./premium";
-import { isAdminEmail, ADMIN_EMAILS } from "./admin-emails";
+import { isAdminEmail } from "./admin-emails";
 import { ENTRY_TIER_NAME } from "./site";
-import { sealedWatchLimit, sealedWatchCeiling, SEALED_WATCH_LIMIT_PLUS, SEALED_WATCH_HARD_CAP } from "./alert-limits";
+import { sealedWatchLimit, sealedWatchCeiling, FREE_SEALED_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS, SEALED_WATCH_HARD_CAP } from "./alert-limits";
 import { ALERT_BUDGET_WINDOW_MS, PAID_SEND_CAP, alertDailyBudget, isMaterialDrop, liveWatermark } from "./price-alerts";
 import { recentlyEmailedAddresses, RunBudget, WATCH_EMAILS_PER_ADDRESS } from "./alert-budget";
 import { pausedAddresses } from "./alert-mute";
@@ -21,7 +21,8 @@ import { clampTargetCents } from "./target-price";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SEALED WATCHES — Plus and Premium (2026-09-29, DECISIONS.md "Premium works
-// while you're away").
+// while you're away"), and one for a free account (2026-10-23, "Free accounts
+// get one alert").
 // ─────────────────────────────────────────────────────────────────────────────
 // One sealed product (a SealedListing groupKey, as /sealed groups them) in one
 // market. After the sealed import the PAID alert run reads the self-cached
@@ -57,8 +58,9 @@ import { clampTargetCents } from "./target-price";
 // (lib/sealed-alert-read.ts) so the public /sealed page and CONTENT_TAG caches
 // are never purged four extra times a day. "About": GitHub cron drifts.
 //
-// Lapsed owners are skipped untouched; Plus rows past SEALED_WATCH_LIMIT_PLUS
-// (oldest first) are kept but not evaluated. Snoozed watches and paused
+// Free and lapsed owners get their oldest FREE_SEALED_WATCH_LIMIT watch (one,
+// 2026-10-23) evaluated and the rest skipped untouched; Plus rows past
+// SEALED_WATCH_LIMIT_PLUS (oldest first) are kept but not evaluated. Snoozed watches and paused
 // addresses advance their baseline with no email.
 
 // FIVE hours, not six, for a check that runs about every six: a sell-out is
@@ -185,7 +187,7 @@ export interface SealedWatchRunDeps {
 
 export interface SealedWatchRunSummary {
   watches: number;
-  lapsed: number;
+  lapsed: number; // free or lapsed owners' rows past their one free watch — kept, not evaluated
   overLimit: number; // Plus rows past SEALED_WATCH_LIMIT_PLUS — kept, not evaluated
   legacyMarket: number;
   missing: number; // watched products no longer in the groups
@@ -229,18 +231,13 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
     drops: 0, cooldown: 0, snoozed: 0, paused: 0, deferred: 0, budgetDeferred: 0, addressDeferred: 0, newAddresses: 0, emails: 0, updated: 0, held: 0,
   };
 
+  // EVERY account's watches, oldest first, capped (SEALED_WATCH_READ_CAP). The
+  // read was trimmed to paid owners until a free account got one sealed watch
+  // (2026-10-23, DECISIONS.md "Free accounts get one alert"); a free or lapsed
+  // owner's rows past that one are dropped below by the same ceiling as Plus's.
+  // Every owner holds at most SEALED_WATCH_HARD_CAP rows (the create route), so
+  // the read stays bounded by the table itself and the cap.
   const rows = await db.sealedWatch.findMany({
-    where: {
-      user: {
-        is: {
-          OR: [
-            { isAdmin: true },
-            { premiumUntil: { gt: now } },
-            ...(ADMIN_EMAILS.length ? [{ email: { in: ADMIN_EMAILS, mode: "insensitive" as const } }] : []),
-          ],
-        },
-      },
-    },
     orderBy: { createdAt: "asc" },
     take: SEALED_WATCH_READ_CAP,
     select: {
@@ -263,19 +260,19 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
   });
   summary.watches = rows.length;
 
-  // Entitlement and the Plus cap (oldest first), then the markets to read.
+  // Entitlement and the tier's cap (oldest first), then the markets to read. A
+  // free or lapsed owner is tier null: its oldest FREE_SEALED_WATCH_LIMIT row is
+  // live, the rest count as `lapsed` (kept, not evaluated, not written).
   const perUser = new Map<string, number>();
   const live: (typeof rows[number] & { market: Country })[] = [];
   for (const w of rows) {
     const user: EntitlementUser = { ...w.user, isAdmin: w.user.isAdmin || isAdminEmail(w.user.email) };
-    if (!isPremium(user)) {
-      summary.lapsed++;
-      continue;
-    }
+    const paid = isPremium(user);
     const n = (perUser.get(w.userId) ?? 0) + 1;
     perUser.set(w.userId, n);
     if (n > sealedWatchCeiling(premiumTierOf(user))) {
-      summary.overLimit++;
+      if (paid) summary.overLimit++;
+      else summary.lapsed++;
       continue;
     }
     if (!isSupportedMarket(w.market)) {
@@ -520,17 +517,26 @@ const SEALED_WATCH_SELECT = {
 const GROUP_KEY = /^[A-Za-z0-9|_\- .]{1,80}$/;
 const asInt = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.round(v) : typeof v === "string" && /^\d+$/.test(v) ? Number(v) : null);
 
-function notPlus(): WatchRouteResult {
-  return { status: 402, body: { error: `Sealed watches are part of ${ENTRY_TIER_NAME}.`, code: "tier_required", tier: "plus" } };
+function freeWatchInUse(count: number): WatchRouteResult {
+  return {
+    status: 402,
+    body: {
+      error: `Free accounts get ${FREE_SEALED_WATCH_LIMIT} sealed watch, and yours is in use. Stop it to watch this one, or move to ${ENTRY_TIER_NAME} to watch every product.`,
+      code: "free_alert_limit",
+      tier: "premium",
+      limit: FREE_SEALED_WATCH_LIMIT,
+      count,
+    },
+  };
 }
 
 /**
- * POST: watch one product in the viewer's market. 402 without a paid tier; on
- * Plus, 409 at SEALED_WATCH_LIMIT_PLUS. Watching a product already watched
- * updates its target instead (unique per user, product and market).
+ * POST: watch one product in the viewer's market. A free account gets
+ * FREE_SEALED_WATCH_LIMIT (402, code "free_alert_limit", past it); on Plus, 409
+ * at SEALED_WATCH_LIMIT_PLUS. Watching a product already watched updates its
+ * target instead (unique per user, product and market).
  */
 export async function createSealedWatch(db: SealedWatchRouteDb, user: RouteUser, raw: unknown, market: Country): Promise<WatchRouteResult> {
-  if (!isPremium(user)) return notPlus();
   const body = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const groupKey = typeof body.groupKey === "string" && GROUP_KEY.test(body.groupKey) ? body.groupKey : null;
   if (!groupKey) return { status: 400, body: { error: "Which product?" } };
@@ -550,6 +556,7 @@ export async function createSealedWatch(db: SealedWatchRouteDb, user: RouteUser,
   const ceiling = sealedWatchCeiling(tier);
   const count = await db.sealedWatch.count({ where: { userId: user.id } });
   if (count >= ceiling) {
+    if (!isPremium(user)) return freeWatchInUse(count);
     if (tier === "premium") {
       return { status: 409, body: { error: `Sealed watches stop at ${SEALED_WATCH_HARD_CAP} products per account. Stop one to add another.`, code: "limit", limit: SEALED_WATCH_HARD_CAP, count } };
     }
@@ -571,12 +578,13 @@ export async function listSealedWatches(db: SealedWatchRouteDb, user: RouteUser)
 }
 
 /**
- * PATCH: change the target (re-arms it) or snooze / unsnooze. The owner only.
- * Editing the target is Plus's; SNOOZING needs no entitlement, so a lapsed
- * owner can quiet a watch that would resume when they resubscribe.
+ * PATCH: change the target (re-arms it) or snooze / unsnooze. The owner only,
+ * whatever the tier (2026-10-23): a free account sets the target on its one
+ * watch, and a lapsed owner can quiet a watch that would resume when they
+ * resubscribe. The run decides which rows are live, so editing an inert row
+ * changes nothing that is emailed.
  */
 export async function updateSealedWatch(db: SealedWatchRouteDb, user: RouteUser, id: string, raw: unknown, now: Date = new Date()): Promise<WatchRouteResult> {
-  if (raw && typeof raw === "object" && "targetCents" in raw && !isPremium(user)) return notPlus();
   const row = await db.sealedWatch.findFirst({ where: { id, userId: user.id }, select: { id: true } });
   if (!row) return { status: 404, body: { error: "That watch isn't on your list." } };
   const body = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;

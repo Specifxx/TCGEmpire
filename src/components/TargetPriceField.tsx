@@ -4,12 +4,14 @@ import { useEffect, useId, useState } from "react";
 import { useMe } from "@/lib/use-me";
 import { currencyOf, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
-import { targetAlertLimit } from "@/lib/alert-limits";
+import { FREE_ALERT_IN_USE, targetAlertLimit } from "@/lib/alert-limits";
 import { centsToInput, clampTargetCents, parseMoneyInput } from "@/lib/target-price";
 import { PremiumButton } from "./PremiumButton";
 import { ENTRY_TIER_NAME } from "@/lib/site";
 
-// "NOTIFY ME AT $__" — the Plus target price on one watch (2026-09-25 lineup).
+// "NOTIFY ME AT $__" — the target price on one watch (2026-09-25 lineup; one
+// for a free account since 2026-10-23, DECISIONS.md "Free accounts get one
+// alert").
 // Rendered on each /watching tile, each watchlist-drawer row, and in the
 // PriceAlertModal once a signed-in watch exists.
 //
@@ -26,8 +28,11 @@ import { ENTRY_TIER_NAME } from "@/lib/site";
 //     who moved to Plus) is stored but not emailed on: the parent passes
 //     active={false} (lib/target-price.ts honouredTargetIds, the cron's own
 //     rule) and the field says so instead of promising an email.
-//   • A free account sees the same field DISABLED with the Plus gate beside it
-//     — the feature is visible where it would be used, never a dead end.
+//   • A free account gets the SAME working field for its one target
+//     (FREE_TARGET_ALERT_LIMIT), with "N of 1 used". Only once that one is in
+//     use, on another card, is the field disabled with the upgrade beside it
+//     (PremiumButton, surface gate:target-limit) — and the route's 402 says
+//     the same if the count was stale.
 //   • Signed out: nothing (the parents only render it for accounts).
 export function TargetPriceField({
   cardId,
@@ -68,13 +73,14 @@ export function TargetPriceField({
     if (used != null) setUsedNow(used);
   }, [used]);
 
-  const limit = targetAlertLimit(tier);
+  // A free account is tier null: its one target.
+  const limit = targetAlertLimit(premium ? tier : null);
   const finiteLimit = Number.isFinite(limit) ? limit : null;
 
   // No count from the parent (the alert modal): ask for it, once, and only
-  // when there is a count to show — a Plus member. Free accounts see the gate
-  // and Premium has no limit, so neither costs a request.
-  const needCount = used === undefined && loaded && !!user && premium && finiteLimit != null;
+  // when there is a count to show — a free account or a Plus member. Premium
+  // has no limit, so it costs no request.
+  const needCount = used === undefined && loaded && !!user && finiteLimit != null;
   useEffect(() => {
     if (!needCount) return;
     let cancelled = false;
@@ -90,9 +96,10 @@ export function TargetPriceField({
   }, [needCount]);
 
   if (!loaded || !user) return null;
-  // A Plus member at the limit, on a watch with no target yet: the field would
-  // only 409, so say so and offer the tier that lifts it.
-  const atLimit = premium && finiteLimit != null && usedNow != null && usedNow >= finiteLimit && saved == null;
+  // At the limit, on a watch with no target yet (a free account's one is on
+  // another card, or Plus's 25 are in use): the field would only be refused, so
+  // say so and offer the tier that lifts it.
+  const atLimit = finiteLimit != null && usedNow != null && usedNow >= finiteLimit && saved == null;
 
   async function save(cents: number | null) {
     if (cents === saved) {
@@ -106,7 +113,7 @@ export function TargetPriceField({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ market, targetCents: cents }),
     }).catch(() => null);
-    const data = (await res?.json().catch(() => null)) as { used?: number; error?: string } | null;
+    const data = (await res?.json().catch(() => null)) as { used?: number; error?: string; code?: string } | null;
     if (res?.ok) {
       setSaved(cents);
       setStatus("saved");
@@ -116,6 +123,12 @@ export function TargetPriceField({
       // Put the last saved value back, so the field never shows a number that
       // isn't the one we'll alert on.
       setText(centsToInput(saved));
+      // The free alert is in use elsewhere (a stale count): show the upgrade line.
+      if (res?.status === 402 && typeof data?.used === "number") {
+        setUsedNow(data.used);
+        setStatus("idle");
+        return;
+      }
       setStatus("error");
       setError(data?.error ?? "Couldn't save that — try again.");
     }
@@ -128,7 +141,7 @@ export function TargetPriceField({
     void save(cents);
   }
 
-  const disabled = !premium || atLimit || status === "saving";
+  const disabled = atLimit || status === "saving";
 
   return (
     <div className={className}>
@@ -168,16 +181,15 @@ export function TargetPriceField({
         </div>
       </form>
       <p id={`${id}-note`} className="mt-1 text-[11px] leading-snug text-slate-500" aria-live="polite">
-        {!premium ? (
-          <span onClickCapture={onUpgradeClick}>
-            <PremiumButton
-              tier="plus"
-              surface="gate:target-alert"
-              className="font-semibold text-gold underline-offset-2 hover:underline"
-            >
-              Set your own price with {ENTRY_TIER_NAME}
-            </PremiumButton>
-          </span>
+        {atLimit && !premium ? (
+          <>
+            {FREE_ALERT_IN_USE}{" "}
+            <span onClickCapture={onUpgradeClick}>
+              <PremiumButton surface="gate:target-limit" className="font-semibold text-gold underline-offset-2 hover:underline">
+                See {ENTRY_TIER_NAME}
+              </PremiumButton>
+            </span>
+          </>
         ) : atLimit ? (
           <>
             All {finiteLimit} target prices are in use — clear one, or{" "}
@@ -199,9 +211,13 @@ export function TargetPriceField({
                   ? "Target cleared."
                   : `Saved. We'll email you, naming the store, when it's ${formatMoney(saved, currency)} or less.`
                 : saved == null
-                  ? "Leave empty for new-low and below-market alerts only."
+                  ? premium
+                    ? "Leave empty for new-low and below-market alerts only."
+                    : "Your free target-price alert: we email you when a store has it at your price."
                   : !active
-                    ? "Not active: over your Plus limit. Clear another target to switch this one on."
+                    ? premium
+                      ? "Not active: over your Plus limit. Clear another target to switch this one on."
+                      : "Not active: your free alert is on another card. Clear that one to switch this on."
                     : "We email you, naming the store, when it's at or below this."}
             {finiteLimit != null && usedNow != null && (
               <span className="num"> · {usedNow} of {finiteLimit} used</span>

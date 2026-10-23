@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { applyTargetPrice, type TargetDb } from "../src/lib/target-alerts";
-import { PLUS_TARGET_ALERT_LIMIT } from "../src/lib/alert-limits";
+import { FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT } from "../src/lib/alert-limits";
 import { MAX_TARGET_CENTS, clampTargetCents, parseMoneyInput, centsToInput, honouredTargetIds } from "../src/lib/target-price";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -40,12 +40,27 @@ function stub(opts: { others?: number; row?: { targetCents: number | null } | nu
   return { db: db as unknown as TargetDb, calls, update: () => calls.find((c) => c.op === "updateMany")?.args as { where: unknown; data: Record<string, unknown> } | undefined };
 }
 
-test("403 for a free account, and for a lapsed one — before any read", async () => {
+test("a free (or lapsed) account sets its ONE target; the second is the upgrade-style 402", async () => {
   for (const user of [free, lapsed]) {
-    const s = stub();
-    const r = await applyTargetPrice(s.db, user, "card-1", { market: "US", targetCents: 1000 });
-    assert.equal(r.status, 403);
-    assert.equal(s.calls.length, 0, "a free account's request never touches the table");
+    const first = stub({ others: 0, row: { targetCents: null } });
+    const ok = await applyTargetPrice(first.db, user, "card-1", { market: "US", targetCents: 1000 });
+    assert.equal(ok.status, 200, "the first target is free");
+    assert.equal(ok.body.limit, FREE_TARGET_ALERT_LIMIT);
+    assert.equal(first.update()!.data.targetCents, 1000);
+
+    const full = stub({ others: FREE_TARGET_ALERT_LIMIT });
+    const r = await applyTargetPrice(full.db, user, "card-2", { market: "US", targetCents: 1000 });
+    assert.equal(r.status, 402);
+    assert.equal(r.body.code, "free_alert_limit");
+    assert.match(String(r.body.error), /Free accounts get 1 target-price alert/);
+    assert.match(String(r.body.error), /Premium/);
+    assert.equal(full.update(), undefined, "nothing written at the free limit");
+
+    // Editing or clearing the one it holds is never blocked.
+    const edit = stub({ others: 0, row: { targetCents: 900 } });
+    assert.equal((await applyTargetPrice(edit.db, user, "card-1", { market: "US", targetCents: 800 })).status, 200);
+    const clear = stub({ others: FREE_TARGET_ALERT_LIMIT, row: { targetCents: null } });
+    assert.equal((await applyTargetPrice(clear.db, user, "card-2", { market: "US", targetCents: null })).status, 200);
   }
 });
 
@@ -175,7 +190,7 @@ test("honouredTargetIds: the oldest watches' targets win, ties broken by id; non
 
 test("the watchlist shows an over-limit target as not active, by the cron's own rule", () => {
   const wl = readFileSync(join(process.cwd(), "src/components/Watchlist.tsx"), "utf8");
-  assert.match(wl, /honouredTargetIds\(visible, premium \? targetAlertLimit\(tier\) : 0\)/);
+  assert.match(wl, /honouredTargetIds\(visible, targetAlertLimit\(premium \? tier : null\)\)/);
   assert.equal(wl.match(/active=\{targetActive/g)?.length, 2, "both layouts pass it");
   const field = readFileSync(join(process.cwd(), "src/components/TargetPriceField.tsx"), "utf8");
   assert.match(field, /Not active: over your Plus limit/);

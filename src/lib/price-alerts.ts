@@ -76,7 +76,7 @@ export interface AlertRunSummary {
   listed: number; // watches that got their FIRST alert price in their market (pre-orders included)
   preorders: number; // …of which the card's set has not released yet
   restocks: number; // watches back in stock after being sold out for RESTOCK_MIN_SOLDOUT_MS
-  targets: number; // entitled watches at or below their own target, worth telling (sent or deferred)
+  targets: number; // honoured targets (paid, or a free account's one) at or below, worth telling (sent or deferred)
   belowMarket: number; // entitled watches ≥ BELOW_MARKET_MIN_PCT under TCGplayer market, material vs the reference
   suppressed: number; // drops NOT emailed: not material against the reference — anti-spam
   outlierHeld: number; // new lows > OUTLIER_DROP_PCT under the last price, held for one run
@@ -521,17 +521,21 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
   };
 
   // ENTITLEMENT, once per row. A lapsed subscription is simply not entitled:
-  // its targets are ignored and the watch runs the free rules.
+  // the watch runs the free rules (plus the free account's one target, below).
   const entitled = new Map<string, boolean>();
-  // The target each entitled row may use: none when over targetAlertLimit and
+  // The target each ACCOUNT row may use: none when over targetAlertLimit and
   // not one of the oldest (honouredTargetIds — the rule the watchlist shows).
+  // A free or lapsed account is tier null, so its oldest FREE_TARGET_ALERT_LIMIT
+  // (one) target is live (2026-10-23, DECISIONS.md "Free accounts get one
+  // alert"). Anonymous rows never carry a target. A free account's rows are
+  // outside the "paid" read, so its target is checked by the daily "all" run.
   const honouredTarget = new Map<string, number>();
   const targetRowsByUser = new Map<string, { user: EntitlementUser; rows: Row[] }>();
   for (const a of alerts) {
     const user: EntitlementUser | null = a.user ? { ...a.user, isAdmin: a.user.isAdmin || isAdminEmail(a.user.email) } : null;
     const ok = a.userId != null && user != null && isPremium(user);
     entitled.set(a.id, ok);
-    if (!ok || a.targetCents == null) continue;
+    if (a.userId == null || user == null || a.targetCents == null) continue;
     const group = targetRowsByUser.get(a.userId!) ?? { user: user!, rows: [] };
     group.rows.push(a);
     targetRowsByUser.set(a.userId!, group);
@@ -776,15 +780,17 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
     const ref = alertReference(refOpts);
     let cand: Candidate | null = null;
 
-    // PAID TRIGGERS first, for entitled rows.
-    if (entitled.get(a.id)) {
-      const target = honouredTarget.get(a.id) ?? null;
-      const below = belowMarketSignal({ ...refOpts, country: a.market, current, tcg: tcgByMarket.get(a.market)?.get(a.card.id) });
+    // PAID TRIGGERS first: every one for entitled rows; for a free account's
+    // row, only its one honoured target.
+    const isPaid = entitled.get(a.id) === true;
+    const target = honouredTarget.get(a.id) ?? null;
+    if (isPaid || target != null) {
+      const below = isPaid ? belowMarketSignal({ ...refOpts, country: a.market, current, tcg: tcgByMarket.get(a.market)?.get(a.card.id) }) : null;
       let item: PriceDropItem | null = null;
       if (shouldEmailTarget({ current, targetCents: target, targetEmailedCents: a.targetEmailedCents })) {
         summary.targets++;
         item = buildItem(a, ap, "target", ref, { targetCents: target });
-      } else if (restock) {
+      } else if (isPaid && restock) {
         summary.restocks++;
         item = buildItem(a, ap, isPreorderSetCode(a.card.setCode, now) ? "preorder" : "restock", { cents: prev, basis: "before_soldout" }, { soldOutAt: a.soldOutAt });
       } else if (below) {

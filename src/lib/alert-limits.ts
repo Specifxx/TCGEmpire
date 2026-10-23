@@ -2,20 +2,27 @@
 // tier (2026-09-25 premium lineup). Plain watches and the weekly new-low
 // email are free for every account — up to FREE_WATCHLIST_LIMIT distinct cards
 // on a free account, unlimited on any paid tier (lib/free-limits.ts,
-// 2026-09-28); the target trigger is the paid one, and only Plus has a ceiling. Premium's "unlimited" is
-// the ladder the rest of the category uses (MTGStocks, Pricempire, Market
-// Movers) — see DECISIONS.md, "Premium lineup: fewer tools, each one worth
-// paying for".
+// 2026-09-28). The target trigger is the paid one with ONE free taste: a free
+// signed-in account may put a target on FREE_TARGET_ALERT_LIMIT card (owner,
+// 2026-10-23 — DECISIONS.md, "Free accounts get one alert": the alert landing
+// in the inbox is the hook, and competitors gate alerts entirely). Premium's
+// "unlimited" is the ladder the rest of the category uses (MTGStocks,
+// Pricempire, Market Movers) — see DECISIONS.md, "Premium lineup: fewer tools,
+// each one worth paying for". Grandfathered Plus keeps its 25.
+//
+// A `null` tier here is a SIGNED-IN free account (a lapsed member included):
+// signed-out visitors never reach a limit — they sign in first.
 //
 // Shared by the PATCH route that sets a target (the enforcement) and every
 // surface that quotes the number (tier table, pricing cards, watchlist), so
 // the promise and the check can never drift apart.
 export const PLUS_TARGET_ALERT_LIMIT = 25;
+export const FREE_TARGET_ALERT_LIMIT = 1;
 
 export function targetAlertLimit(tier: "plus" | "premium" | null | undefined): number {
   if (tier === "premium") return Number.POSITIVE_INFINITY;
   if (tier === "plus") return PLUS_TARGET_ALERT_LIMIT;
-  return 0;
+  return FREE_TARGET_ALERT_LIMIT;
 }
 
 // ── Deck price watches and sealed watches (2026-09-29, "Premium works while
@@ -32,16 +39,18 @@ export function deckWatchLimit(tier: "plus" | "premium" | null | undefined): num
 }
 
 // A SEALED WATCH (restock, at-RRP, target and drop emails for one sealed
-// product in one market) is Plus and Premium: Plus up to
+// product in one market): a free signed-in account gets FREE_SEALED_WATCH_LIMIT
+// (2026-10-23, "Free accounts get one alert"), grandfathered Plus up to
 // SEALED_WATCH_LIMIT_PLUS, Premium unlimited — the same ladder as targets.
 // The run reads the self-cached sealed groups once per market whatever the
 // count, so unlimited costs nothing extra.
 export const SEALED_WATCH_LIMIT_PLUS = 10;
+export const FREE_SEALED_WATCH_LIMIT = 1;
 
 export function sealedWatchLimit(tier: "plus" | "premium" | null | undefined): number {
   if (tier === "premium") return Number.POSITIVE_INFINITY;
   if (tier === "plus") return SEALED_WATCH_LIMIT_PLUS;
-  return 0;
+  return FREE_SEALED_WATCH_LIMIT;
 }
 
 // HOW OFTEN A SEALED WATCH IS CHECKED, as copy (2026-09-29). Four store reads a
@@ -72,3 +81,9 @@ export const SEALED_WATCH_HARD_CAP = 200;
 export function sealedWatchCeiling(tier: "plus" | "premium" | null | undefined): number {
   return Math.min(sealedWatchLimit(tier), SEALED_WATCH_HARD_CAP);
 }
+
+// THE AT-LIMIT LINE a free account sees where its one alert is spent (the
+// field, the sealed button, the routes' 402). One wording, so the prompt and
+// the refusal match.
+export const FREE_ALERT_IN_USE = "Your free alert is in use — Premium watches every card.";
+export const FREE_SEALED_WATCH_IN_USE = "Your free sealed watch is in use — Premium watches every product.";

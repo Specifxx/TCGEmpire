@@ -132,10 +132,11 @@ export function Watchlist({
   // Distinct cards (a card watched in two markets is one), the free limit's unit.
   const watchedCards = new Set(visible.map((it) => it.cardId)).size;
   // Which of those targets the cron actually emails on: all of them, unless the
-  // account holds more than its tier allows (a Premium member now on Plus) —
-  // then the oldest watches' targets, by the cron's own rule. Recomputed on
-  // every save, so clearing one switches the next one on here at once.
-  const honoured = honouredTargetIds(visible, premium ? targetAlertLimit(tier) : 0);
+  // account holds more than its tier allows (a Premium member now on Plus, a
+  // lapsed member on the free one) — then the oldest watches' targets, by the
+  // cron's own rule. Recomputed on every save, so clearing one switches the
+  // next one on here at once. A free account is tier null: its one target.
+  const honoured = honouredTargetIds(visible, targetAlertLimit(premium ? tier : null));
   const targetActive = (it: WatchItem) => it.targetCents == null || honoured.has(it.id);
   const onTargetSaved = (id: string, cents: number | null) =>
     setItems((prev) => (prev ? prev.map((it) => (it.id === id ? { ...it, targetCents: cents } : it)) : prev));

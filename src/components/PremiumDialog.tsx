@@ -15,6 +15,7 @@ import { Spinner } from "./ui/Skeleton";
 import { TrialPriceBlock } from "./TrialPriceBlock";
 import { TierComparisonTable } from "./TierComparisonTable";
 import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
+import { PREMIUM_PROMISE } from "@/lib/premium-plan-copy";
 import {
   PREMIUM_PRICE_LABEL,
   PREMIUM_PRICE_AMOUNT,
@@ -301,11 +302,11 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
         </div>
 
         <div className="px-5 py-5">
-          <h2 id="premium-dialog-title" className="text-lg font-extrabold text-white">Never overpay for a Riftbound card</h2>
+          <h2 id="premium-dialog-title" className="text-lg font-extrabold text-white">{PREMIUM_PROMISE}</h2>
           <p className="mt-1 text-sm text-slate-400">
             {premiumPlus
               ? "Plus and Premium are ad-free. Plus tracks whole sets with no card limit and emails you when a card or a box you watch hits your price; Premium plans the order, store by store, at the condition you'll play. Price comparison and the set checklist stay free."
-              : "Premium is ad-free, tracks whole sets, shows every deal, and plans your whole list store by store at the condition you'll play. Price comparison and the set checklist stay free."}
+              : "An email the moment a card or box hits your price, every deal below market, and the cheapest delivered order for any list. No ads. Comparing prices stays free."}
           </p>
 
           {/* The lock-in banner: ONLY while a real, higher price is announced

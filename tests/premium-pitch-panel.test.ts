@@ -57,7 +57,11 @@ test("the header sells Premium with the shiny GetPremiumLink; rail and menu stay
 test("one tagline, on every surface that carries the Premium headline", () => {
   // /premium's hero is "Know what you're missing. Buy it for less." since the
   // personas pass (2026-09-29); the tagline stays on the dialog and in the page title.
-  assert.match(read("src/app/premium/page.tsx"), /Know what you're missing\. Buy it for less\./);
+  // Since 2026-10-23 the hero is the one promise, "Never overpay for Riftbound
+  // again." (PREMIUM_PROMISE, lib/premium-plan-copy.ts; DECISIONS.md "Premium,
+  // rebranded around never overpaying").
+  assert.match(read("src/app/premium/page.tsx"), /\$\{PREMIUM_PROMISE\}\./);
+  assert.match(read("src/lib/premium-plan-copy.ts"), /PREMIUM_PROMISE = "Never overpay for Riftbound again"/);
   for (const retired of [/[Pp]ower tools for buyers/, /unfair edge/i]) {
     assert.ok(!retired.test(read("src/app/premium/page.tsx")), `/premium still carries a retired tagline (${retired})`);
   }
@@ -74,7 +78,7 @@ test("one tagline, on every surface that carries the Premium headline", () => {
     // saving the reader makes rather than an advantage over other buyers. See
     // DECISIONS.md and tests/premium-positioning.test.ts, which guards the tone
     // the new line establishes. "Power tools for buyers" was the one before that.
-    assert.match(src, /Never overpay for a Riftbound card/, `${file} must carry the current tagline`);
+    assert.match(src, /\{PREMIUM_PROMISE\}/, `${file} must carry the current tagline`);
     for (const retired of [/[Pp]ower tools for buyers/, /unfair edge/i]) {
       assert.ok(!retired.test(src), `${file} still carries a retired tagline (${retired})`);
     }

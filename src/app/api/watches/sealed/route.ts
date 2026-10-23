@@ -5,9 +5,10 @@ import { getCountry } from "@/lib/get-country";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { createSealedWatch, listSealedWatches } from "@/lib/sealed-watch";
 
-// SEALED WATCHES (Plus and Premium, 2026-09-29): one sealed product in the
+// SEALED WATCHES (Plus and Premium, 2026-09-29; one on a free account since
+// 2026-10-23): one sealed product in the
 // viewer's market, checked by the paid alert run after each sealed import
-// (lib/sealed-watch.ts). Entitlement (402 without a paid tier), the Plus cap
+// (lib/sealed-watch.ts). The free limit (402 past the one), the Plus cap
 // (409, SEALED_WATCH_LIMIT_PLUS) and ownership live there; this is transport.
 export const dynamic = "force-dynamic";
 

@@ -24,7 +24,9 @@
 //                        ?mine=watch|own ("only my cards") is honoured only
 //                        for a paid tier.
 //   Target-price alerts  lib/alert-limits.ts targetAlertLimit(tier) — the
-//                        same constant the route that sets a target enforces
+//                        same constant the route that sets a target enforces;
+//                        FREE_TARGET_ALERT_LIMIT (one) on a free account
+//                        (2026-10-23), checked by the daily run
 //   Best Basket,         api/basket: any signed-in account can send a pasted
 //   Buy this list        list, its watchlist or its binder, with "skip copies
 //                        I own" (not for the binder, which prices
@@ -38,8 +40,9 @@
 //                        everyone else the /movers strip's top 10 most
 //                        searched this week (lib/demand-view.ts).
 //   Sealed watches       lib/sealed-watch.ts: restock, at-RRP, target and drop
-//                        emails for a sealed product; any paid tier, Plus up
-//                        to SEALED_WATCH_LIMIT_PLUS (lib/alert-limits.ts).
+//                        emails for a sealed product; FREE_SEALED_WATCH_LIMIT
+//                        (one) on a free account (2026-10-23), Plus up to
+//                        SEALED_WATCH_LIMIT_PLUS (lib/alert-limits.ts).
 //                        Checked about every six hours (SEALED_CHECK_CADENCE:
 //                        four store reads a day), never "instant".
 //   Deck price watch     lib/deck-watch.ts: a saved list re-priced delivered
@@ -85,7 +88,7 @@
 // that are neither a flat yes nor a flat no are the honest part of the table and
 // must stay strings rather than being rounded to a tick.
 
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_MARKETS, SEALED_WATCH_LIMIT_PLUS } from "../lib/alert-limits";
+import { DECK_WATCH_LIMIT, FREE_SEALED_WATCH_LIMIT, FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_MARKETS, SEALED_WATCH_LIMIT_PLUS } from "../lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../lib/free-limits";
 import { SET_GAP_CHUNK } from "../lib/set-gap";
 import { FREE_HISTORY_DAYS } from "../lib/history-access";
@@ -140,7 +143,7 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Rising Cards", account: "Top 3", plus: "Full", premium: "Full" },
   // Checked after both daily price imports, with no weekly cap. The number
   // is the enforced one (lib/alert-limits.ts), never typed here.
-  { feature: "Target-price alerts after every price update", account: false, plus: `${PLUS_TARGET_ALERT_LIMIT} cards`, premium: "Unlimited" },
+  { feature: "Target-price alerts after every price update", account: `${FREE_TARGET_ALERT_LIMIT} card`, plus: `${PLUS_TARGET_ALERT_LIMIT} cards`, premium: "Unlimited" },
   // Every signed-in account sees its own delivered total, store count and
   // saving on every run. Which store to buy each card from (the plan) is
   // unlimited on Premium and FREE_PLANS_PER_MONTH a month below it, counted
@@ -170,7 +173,7 @@ export const TIER_COMPARISON: TierRow[] = [
   // THE WATCHES THAT RUN WHILE YOU'RE AWAY (2026-09-29, DECISIONS.md "Premium
   // works while you're away"). Both numbers are the enforced ones
   // (lib/alert-limits.ts), never typed here.
-  { feature: `Sealed watches — restock, at-RRP (${SEALED_RRP_MARKETS}) and price alerts, checked ${SEALED_CHECK_CADENCE}`, account: false, plus: `${SEALED_WATCH_LIMIT_PLUS} products`, premium: "Unlimited" },
+  { feature: `Sealed watches — restock, at-RRP (${SEALED_RRP_MARKETS}) and price alerts, checked ${SEALED_CHECK_CADENCE}`, account: `${FREE_SEALED_WATCH_LIMIT} product`, plus: `${SEALED_WATCH_LIMIT_PLUS} products`, premium: "Unlimited" },
   { feature: "Deck price watch — email when a deck's delivered total drops", account: false, plus: false, premium: true },
   // 2026-10-09 (owner: "add more premium features"). lib/history-access.ts,
   // lib/graded-history.ts + lib/graded-watch.ts, lib/auction-alerts.ts.

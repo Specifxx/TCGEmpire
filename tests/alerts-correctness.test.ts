@@ -212,19 +212,20 @@ test("alert runs follow a SUCCESSFUL, non-push import: free once a day after 07:
   assert.deepEqual(crons.filter((c) => c.path.startsWith("/api/cron/price-alerts")), []);
 });
 
-test("the target field: market currency, PATCH on blur, Plus count; free sees it disabled beside the Plus gate", () => {
+test("the target field: market currency, PATCH on blur, the count; free sets its one, and sees the upgrade only at the limit", () => {
   const field = code("src/components/TargetPriceField.tsx");
   assert.match(field, /currencyOf\(market as Country\)/);
   assert.match(field, /method: "PATCH"/);
   assert.match(field, /body: JSON\.stringify\(\{ market, targetCents: cents \}\)/);
   assert.match(field, /onBlur=\{/);
   assert.match(field, /clampTargetCents\(parsed\)/);
-  assert.match(field, /targetAlertLimit\(tier\)/);
+  assert.match(field, /targetAlertLimit\(premium \? tier : null\)/);
   assert.match(field, /\{usedNow\} of \{finiteLimit\} used/);
-  assert.match(field, /const disabled = !premium \|\|/);
+  assert.match(field, /const disabled = atLimit \|\| status === "saving"/, "a free account's first target is never disabled");
+  assert.doesNotMatch(field, /surface="gate:target-alert"/, "no paywall before the free alert is used");
   assert.match(
     field,
-    /<PremiumButton\s+tier="plus"\s+surface="gate:target-alert"[\s\S]*?>\s*Set your own price with \{ENTRY_TIER_NAME\}\s*<\/PremiumButton>/,
+    /atLimit && !premium \? \([\s\S]*?\{FREE_ALERT_IN_USE\}[\s\S]*?<PremiumButton surface="gate:target-limit"/,
   );
   assert.match(field, /Notify me at/);
   // Both surfaces render it.

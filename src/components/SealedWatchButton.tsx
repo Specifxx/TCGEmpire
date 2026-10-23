@@ -6,15 +6,19 @@ import { useSealedWatches } from "@/lib/use-sealed-watches";
 import { useCountryMaybe } from "./CountryProvider";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { PremiumButton } from "./PremiumButton";
-import { SEALED_CHECK_CADENCE, SEALED_RRP_ONLY, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import { FREE_SEALED_WATCH_IN_USE, FREE_SEALED_WATCH_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_ONLY, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 import { ENTRY_TIER_NAME } from "@/lib/site";
 
-// "Watch this sealed product" (2026-09-29): a toggle for a Plus/Premium
-// member — an email when it is back in stock after selling out everywhere,
-// when a store has it at RRP, at the member's target, or on a material drop
-// (lib/sealed-watch.ts). For everyone else the same spot sells Plus through
-// the site-wide PremiumButton (surface gate:sealed-watch), with one honest
-// line; never a popup of its own. `compact` is the /sealed tile's icon.
+// "Watch this sealed product" (2026-09-29): a toggle for any signed-in account
+// — an email when it is back in stock after selling out everywhere, when a
+// store has it at RRP, at the target, or on a material drop
+// (lib/sealed-watch.ts). A FREE account gets FREE_SEALED_WATCH_LIMIT (one,
+// 2026-10-23, DECISIONS.md "Free accounts get one alert"): the toggle works for
+// its first; on another product once that one is in use (or after the route's
+// 402) the same spot sells Premium through the site-wide PremiumButton
+// (surface gate:sealed-watch), with one honest line. A signed-out visitor sees
+// that button as before (it asks them to sign in). Never a popup of its own.
+// `compact` is the /sealed tile's icon.
 export function SealedWatchButton({
   groupKey,
   name,
@@ -32,14 +36,17 @@ export function SealedWatchButton({
   const { user, loaded, premium } = useMe();
   const ctx = useCountryMaybe(); // always called: hooks must not be conditional
   const country = market ?? ctx?.country ?? DEFAULT_COUNTRY;
-  const { rowFor, watch, unwatch, loaded: watchesLoaded } = useSealedWatches();
+  const { rows, rowFor, watch, unwatch, loaded: watchesLoaded } = useSealedWatches();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [refused, setRefused] = useState(false);
   if (!loaded) return null;
   const row = rowFor(country, groupKey);
   const watching = !!row;
+  // A free account whose one watch is on another product (or the route said so).
+  const freeInUse = !!user && !premium && !watching && (refused || (rows?.length ?? 0) >= FREE_SEALED_WATCH_LIMIT);
 
-  if (!user || !premium) {
+  if (!user) {
     if (compact) {
       return (
         <PremiumButton tier="plus" surface="gate:sealed-watch" className={`tap-icon rounded-full bg-ink-950/80 text-slate-300 hover:text-white ${className}`}>
@@ -58,6 +65,25 @@ export function SealedWatchButton({
     );
   }
 
+  if (freeInUse) {
+    if (compact) {
+      return (
+        <PremiumButton surface="gate:sealed-watch" className={`tap-icon rounded-full bg-ink-950/80 text-slate-300 hover:text-white ${className}`}>
+          <span aria-hidden="true">♡</span>
+          <span className="sr-only">{FREE_SEALED_WATCH_IN_USE}</span>
+        </PremiumButton>
+      );
+    }
+    return (
+      <div className={className}>
+        <p className="text-xs text-slate-400">{FREE_SEALED_WATCH_IN_USE}</p>
+        <div className="mt-1.5">
+          <PremiumButton surface="gate:sealed-watch" />
+        </div>
+      </div>
+    );
+  }
+
   async function toggle(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -68,7 +94,8 @@ export function SealedWatchButton({
       if (row) await unwatch(row.id);
       else {
         const out = await watch(groupKey);
-        if (!out.ok) {
+        if (!out.ok && out.status === 402) setRefused(true);
+        else if (!out.ok) {
           setNote(
             out.status === 409
               ? `Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} sealed products. Stop one on your watchlist, or move to Premium for unlimited.`

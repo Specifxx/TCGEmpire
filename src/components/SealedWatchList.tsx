@@ -6,12 +6,15 @@ import { useSealedWatches } from "@/lib/use-sealed-watches";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, type Country } from "@/lib/country";
 import { TargetInput } from "./DeckWatchList";
-import { SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import { FREE_SEALED_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 import { ENTRY_TIER_NAME } from "@/lib/site";
 
-// The "Sealed" section of /watching (Plus and Premium, 2026-09-29): every
-// sealed product the paid run checks (lib/sealed-watch.ts) with its target,
-// snooze and stop. `names` come from the page's own getSealedGroups read for
+// The "Sealed" section of /watching (Plus and Premium, 2026-09-29; one product
+// on a free account since 2026-10-23): every sealed product the run checks
+// (lib/sealed-watch.ts) with its target, snooze and stop. `lapsed` = the viewer
+// is not a paying member (free, or a plan that ended): the run checks only the
+// OLDEST FREE_SEALED_WATCH_LIMIT rows (the list is oldest first, as the run
+// reads it), so those stay editable and the rest are marked not checked. `names` come from the page's own getSealedGroups read for
 // the viewer's market (a key with no name is a product no longer tracked
 // here, or one watched in another market).
 export interface SealedWatchName {
@@ -23,7 +26,7 @@ export interface SealedWatchName {
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 export function SealedWatchList({ names, limit, lapsed = false }: { names: Record<string, SealedWatchName>; limit: number | null; lapsed?: boolean }) {
-  const { rows, update, unwatch } = useSealedWatches({ force: lapsed });
+  const { rows, update, unwatch } = useSealedWatches();
   const [error, setError] = useState<string | null>(null);
   if (!rows) return <p className="text-sm text-slate-500">Loading…</p>;
   if (rows.length === 0) {
@@ -35,15 +38,20 @@ export function SealedWatchList({ names, limit, lapsed = false }: { names: Recor
         </Link>{" "}
         (or in its quick view) and we email you when it is back in stock after selling out everywhere, when a store has it at RRP,
         at your target, or on a real drop — checked after every price update.
-        {limit != null ? ` Plus watches up to ${SEALED_WATCH_LIMIT_PLUS}; Premium has no limit.` : ""}
+        {lapsed
+          ? ` A free account watches ${FREE_SEALED_WATCH_LIMIT} product; ${ENTRY_TIER_NAME} watches every one.`
+          : limit != null
+            ? ` Plus watches up to ${SEALED_WATCH_LIMIT_PLUS}; Premium has no limit.`
+            : ""}
       </p>
     );
   }
   return (
     <div>
-      {lapsed && (
+      {lapsed && rows.length > FREE_SEALED_WATCH_LIMIT && (
         <p className="mb-2 text-xs leading-relaxed text-amber-300" data-lapsed-note>
-          Your plan has ended, so these are not being checked or emailed. They resume if you rejoin {ENTRY_TIER_NAME}; stop any you no longer want.
+          A free account has {FREE_SEALED_WATCH_LIMIT} sealed watch checked — your oldest, at the top. The rest are not being checked or
+          emailed; they resume with {ENTRY_TIER_NAME}. Stop any you no longer want.
         </p>
       )}
       {error && (
@@ -52,7 +60,9 @@ export function SealedWatchList({ names, limit, lapsed = false }: { names: Recor
         </p>
       )}
       <ul className="divide-y divide-ink-800">
-        {rows.map((r) => {
+        {rows.map((r, i) => {
+          // Past a free account's one: kept, not checked (the run's own rule).
+          const inert = lapsed && i >= FREE_SEALED_WATCH_LIMIT;
           const cur = currencyOf(r.market as Country);
           const m = (c: number) => formatMoney(c, cur);
           const info = names[r.groupKey];
@@ -63,6 +73,7 @@ export function SealedWatchList({ names, limit, lapsed = false }: { names: Recor
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-white">{info?.name ?? r.groupKey.split("|").filter(Boolean).join(" ")}</span>
                   <span className="chip bg-ink-800 text-[10px] text-slate-400">{r.market}</span>
+                  {inert && <span className="chip bg-ink-800 text-[10px] text-slate-400">Not checked</span>}
                   {snoozed && <span className="chip bg-amber-500/15 text-[10px] text-amber-300">Snoozed until {day(r.snoozedUntil!)}</span>}
                 </div>
                 <div className="mt-0.5 text-xs text-slate-400">
@@ -78,7 +89,7 @@ export function SealedWatchList({ names, limit, lapsed = false }: { names: Recor
                   Target ({cur})
                   <TargetInput
                     cents={r.targetCents}
-                    disabled={lapsed}
+                    disabled={inert}
                     onSave={async (c) => {
                       const out = await update(r.id, { targetCents: c });
                       setError(out.ok ? null : ((out.body?.error as string | undefined) ?? "Couldn't save that."));
@@ -98,7 +109,7 @@ export function SealedWatchList({ names, limit, lapsed = false }: { names: Recor
       </ul>
       <p className="mt-2 text-[11px] text-slate-500">
         {rows.length} {rows.length === 1 ? "product" : "products"}
-        {limit != null ? ` of ${limit}` : ""}. A target emails you at or under that price; without one, restocks, RRP and real drops still do.
+        {limit != null && !lapsed ? ` of ${limit}` : ""}. A target emails you at or under that price; without one, restocks, RRP and real drops still do.
       </p>
     </div>
   );

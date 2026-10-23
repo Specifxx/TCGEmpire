@@ -7,8 +7,9 @@ import { trackEvent } from "./analytics";
 // Shared client-side view of "which sealed products am I watching?" — the
 // sealed twin of use-watchlist.ts, module-level for the same reason: a watch
 // button sits on every /sealed tile, so one request per page, not per tile,
-// and only for a signed-in PAID viewer (/api/me first; a free account or a
-// signed-out visitor makes no request — the button sells Plus instead).
+// and only for a signed-in viewer (/api/me first; a signed-out visitor makes no
+// request — the button asks them to sign in). Since 2026-10-23 a free account
+// has one sealed watch, so its button needs its rows too (is that one in use?).
 //
 // Keys are `${market}|${groupKey}`: a watch is per product per market.
 
@@ -29,10 +30,10 @@ function publish() {
   for (const fn of subscribers) fn(snapshot);
 }
 
-function load(force = false): Promise<SealedWatchRow[] | null> {
+function load(): Promise<SealedWatchRow[] | null> {
   if (!inflight) {
     inflight = fetchMe()
-      .then((me) => (me.user && (me.premium || force) ? fetch("/api/watches/sealed", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)) : null))
+      .then((me) => (me.user ? fetch("/api/watches/sealed", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)) : null))
       .then((d: { watches?: SealedWatchRow[] } | null) => (d ? d.watches ?? [] : null))
       .catch(() => null)
       .then((r) => {
@@ -58,20 +59,17 @@ export interface SealedWatchOutcome {
   body: Record<string, unknown> | null;
 }
 
-// `force` (the /watching list only): read the account's rows even when it is not
-// entitled now, so a lapsed member can see and stop what would resume when they
-// resubscribe. The per-tile buttons never pass it, so a free account still makes
-// no request from /sealed.
-export function useSealedWatches(opts: { force?: boolean } = {}) {
-  const force = opts.force === true;
+// Every signed-in account reads its rows (a free account has one watch, a
+// lapsed member sees and stops what would resume when they resubscribe).
+export function useSealedWatches() {
   const [state, setState] = useState<SealedWatchRow[] | null>(rows);
   useEffect(() => {
     subscribers.add(setState);
-    void load(force).then(setState);
+    void load().then(setState);
     return () => {
       subscribers.delete(setState);
     };
-  }, [force]);
+  }, []);
   const keys = state ? new Set(state.map((r) => sealedWatchKey(r.market, r.groupKey))) : null;
   return {
     rows: state,

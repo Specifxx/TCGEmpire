@@ -9,7 +9,7 @@ import { PremiumNudgeCard } from "@/components/PremiumNudgeCard";
 import { getPremiumNudge, nudgeCopy as watchedNudgeCopy } from "@/lib/premium-nudge";
 import { isPremium, premiumCheckoutEnabled, premiumTierOf } from "@/lib/premium";
 import { PLUS_ON_SALE, ENTRY_TIER_NAME } from "@/lib/site";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_ONLY, SEALED_WATCH_LIMIT_PLUS, sealedWatchLimit } from "@/lib/alert-limits";
+import { DECK_WATCH_LIMIT, FREE_SEALED_WATCH_LIMIT, FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_ONLY, SEALED_WATCH_LIMIT_PLUS, sealedWatchLimit } from "@/lib/alert-limits";
 import { getCountry } from "@/lib/get-country";
 import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { getSealedGroups } from "@/lib/sealed-import";
@@ -68,22 +68,23 @@ export default async function WatchingPage() {
     isPremium(user) || premiumCheckoutEnabled() ? await getPremiumNudge(user.id, getCountry()).catch(() => null) : null;
   const nudgeCopy = nudge ? watchedNudgeCopy(nudge, "watched", isPremium(user) ? "member" : "free") : null;
   const onPremium = member && premiumTierOf(user) === "premium";
-  // Names for the member's sealed watches, from the self-cached groups read
-  // (called directly — it caches itself; never wrapped). Members only: a free
-  // account has no sealed watches to name.
-  const sealedNames: Record<string, SealedWatchName> = {};
-  if (member) {
-    const groups = await getSealedGroups(country).catch(() => []);
-    for (const g of groups) sealedNames[g.groupKey] = { name: g.name, lowestPriceCents: g.lowestPriceCents, msrpCents: g.msrpCents };
-  }
   const sealedLimit = sealedWatchLimit(premiumTierOf(user));
-  // A LAPSED owner keeps their sealed and deck watches (nothing is emailed),
-  // and must be able to see and stop them: two cheap indexed counts, only for
-  // an account that is not entitled to the section.
+  // A FREE or LAPSED owner keeps their sealed and deck watches (a free account's
+  // oldest sealed watch is still checked, 2026-10-23; the rest are not), and
+  // must be able to see and stop them: two cheap indexed counts, only for an
+  // account that is not entitled to the section.
   const [lapsedSealed, lapsedDecks] = await Promise.all([
     member ? 0 : prisma.sealedWatch.count({ where: { userId: user.id } }).catch(() => 0),
     onPremium ? 0 : prisma.deckWatch.count({ where: { userId: user.id } }).catch(() => 0),
   ]);
+  // Names for the sealed watches, from the self-cached groups read (called
+  // directly — it caches itself; never wrapped). Only when there is a sealed
+  // section to name: a member, or a free account holding a watch.
+  const sealedNames: Record<string, SealedWatchName> = {};
+  if (member || lapsedSealed > 0) {
+    const groups = await getSealedGroups(country).catch(() => []);
+    for (const g of groups) sealedNames[g.groupKey] = { name: g.name, lowestPriceCents: g.lowestPriceCents, msrpCents: g.msrpCents };
+  }
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -104,8 +105,9 @@ export default async function WatchingPage() {
             email is the weekly digest — a new low at least 5% and 50 minor
             units under the price we last emailed (for 30 days, then the drop
             anchor: where the price stood before the slide), a first listing (labelled pre-order before release) or a
-            restock; the paid triggers — a target (Plus: PLUS_TARGET_ALERT_LIMIT
-            cards, Premium: any), a card at least 15% below TCGplayer market,
+            restock; the paid triggers — a target (free: FREE_TARGET_ALERT_LIMIT
+            card, checked by the daily run; Plus: PLUS_TARGET_ALERT_LIMIT cards,
+            Premium: any), a card at least 15% below TCGplayer market,
             and restocks — send after each price update, without the weekly
             wait. Snooze and pause are lib/alert-actions.ts and
             lib/alert-mute.ts. Plus is described as ad-free wherever it is
@@ -123,12 +125,14 @@ export default async function WatchingPage() {
             </>
           ) : (
             <>
+              Your free account sets its own price on {FREE_TARGET_ALERT_LIMIT} card below, and we email you when a
+              store has it there.{" "}
               {PLUS_ON_SALE ? (
                 <>With Plus (ad-free), set your own price on up to {PLUS_TARGET_ALERT_LIMIT} cards and hear as soon as</>
               ) : (
-                <>With Premium (ad-free), set your own price on any card you watch and hear as soon as</>
+                <>With Premium (ad-free), set your own price on every card you watch and hear as soon as</>
               )}{" "}
-              it&apos;s met, and when one drops below TCGplayer market.
+              it&apos;s met, after every price update, and when one drops below TCGplayer market.
             </>
           )}{" "}
           Every alert email has one-tap links to stop watching a card or snooze it for 30 days, and you can pause all alert
@@ -154,11 +158,11 @@ export default async function WatchingPage() {
         <ul className="mt-2 grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
           <li>
             <strong className="text-white">Cards</strong> — free, up to {FREE_WATCHLIST_LIMIT}. An email when a card you watch hits a new
-            low at a store. <strong className="text-white">A target</strong> ({quotePlus ? `Plus: ${PLUS_TARGET_ALERT_LIMIT} cards, Premium: any` : "Premium, any card"}) is your
+            low at a store. <strong className="text-white">A target</strong> ({quotePlus ? `free: ${FREE_TARGET_ALERT_LIMIT} card, Plus: ${PLUS_TARGET_ALERT_LIMIT}, Premium: any` : `free: ${FREE_TARGET_ALERT_LIMIT} card, Premium: any`}) is your
             own price: we email you as soon as a store has it there.
           </li>
           <li>
-            <strong className="text-white">Sealed products</strong> — {quotePlus ? `Plus (up to ${SEALED_WATCH_LIMIT_PLUS}) and Premium (any)` : "Premium, any number"}. Tap the
+            <strong className="text-white">Sealed products</strong> — {quotePlus ? `free: ${FREE_SEALED_WATCH_LIMIT}, Plus: up to ${SEALED_WATCH_LIMIT_PLUS}, Premium: any` : `free: ${FREE_SEALED_WATCH_LIMIT} product, Premium: any number`}. Tap the
             heart on a box on /sealed: an email when it is back in stock after selling out everywhere, at RRP (the price Riot sets;
             {SEALED_RRP_ONLY}), or at your price. Checked {SEALED_CHECK_CADENCE}, and every email says when the store was last read; a Discord stock bot
             may be faster.

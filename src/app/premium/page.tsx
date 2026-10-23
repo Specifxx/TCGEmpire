@@ -22,7 +22,11 @@ import {
   REFERRAL_PREMIUM_DAYS,
 } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
-import { premiumHeroLine } from "@/lib/premium-plan-copy";
+import { premiumHeroLine, PREMIUM_PROMISE, isUsMarket } from "@/lib/premium-plan-copy";
+import { PremiumBenefits, PremiumProofStrip, type PremiumProof } from "@/components/premium/PremiumValue";
+import { getHomeStats } from "@/lib/home-stats";
+import { getCachedTopDeals } from "@/lib/top-deals";
+import { COUNTRIES } from "@/lib/country";
 import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { PremiumPricingCards } from "@/components/PremiumPricingCards";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
@@ -177,6 +181,19 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   // The visitor's market (the existing country resolution, no new geo lookup):
   // US leads with the watches, everywhere else with Best Basket.
   const market = getCountry();
+  // Live proof for the value section (components/premium/PremiumValue.tsx):
+  // both loaders are the homepage's own caches, read directly (never wrapped),
+  // and a failure just leaves the proof out.
+  const proof: PremiumProof | null = isPremium(user)
+    ? null
+    : await Promise.all([getHomeStats().catch(() => null), getCachedTopDeals(market).catch(() => null)]).then(([stats, deals]) => ({
+        stores: stats?.liveStoresAll ?? null,
+        listings: stats ? Object.values(stats.statsByCountry).reduce((n, m) => n + (m?.inStock ?? 0), 0) || null : null,
+        dealsBelowMarket: deals?.savingsVsMarketTotal ?? 0,
+        dealsGapCents: deals?.savingsVsMarketCents ?? 0,
+        topDeal: deals?.savingsVsMarket?.[0] ?? null,
+        currency: COUNTRIES[market].currency,
+      }));
   const already = isPremium(user);
   const checkoutLive = premiumCheckoutEnabled();
   const dbUser = user
@@ -299,15 +316,31 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           google-anno-skip keeps Google's ad-intent chips out of the sales copy
           (ad-free-boot.ts, AD_INTENTS_SKIP_CLASS). */}
       <div className="google-anno-skip">
+      {/* THE REBRAND (2026-10-23, DECISIONS.md "Premium, rebranded around never
+          overpaying"): one promise, said first, then live proof. Comparing
+          prices stays free and the subline says so. */}
       <div className="text-center">
-        <h1 className="font-display text-2xl font-extrabold leading-tight text-white sm:text-4xl">
-          {already ? `You're ${TIER_NAMES[currentTier ?? "premium"]}` : "Know what you're missing. Buy it for less."}
+        {!already && (
+          <span className="chip mb-2 inline-flex bg-gold/15 text-[11px] font-extrabold uppercase tracking-widest text-gold">
+            ✦ RiftCompare Premium
+          </span>
+        )}
+        <h1 className="font-display text-3xl font-extrabold leading-tight text-white sm:text-5xl">
+          {already ? `You're ${TIER_NAMES[currentTier ?? "premium"]}` : `${PREMIUM_PROMISE}.`}
         </h1>
-        <p className="mx-auto mt-2 max-w-xl text-sm leading-snug text-slate-300 sm:mt-3 sm:text-base">
+        <p className="mx-auto mt-2 max-w-2xl text-sm leading-snug text-slate-300 sm:mt-3 sm:text-lg">
           {already
             ? "Thanks for supporting RiftCompare."
-            : premiumHeroLine(market, plusLive)}
+            : plusLive
+              ? premiumHeroLine(market, plusLive)
+              : "Premium watches every store we track, in six markets and on eBay, and emails you the moment a card or box hits your price. Comparing prices stays free for everyone."}
         </p>
+        {!already && trialAvailable && PREMIUM_TRIAL_DAYS > 0 && PREMIUM_TRIAL_FEE_CENTS === 0 && (
+          <p className="mt-3 text-sm font-bold text-up" data-premium-trial-hero>
+            {PREMIUM_TRIAL_DAYS} days free · cancel in two clicks
+          </p>
+        )}
+        {proof && <PremiumProofStrip proof={proof} />}
       </div>
 
       {!already && (
@@ -327,7 +360,12 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
               trialFeeCents={PREMIUM_TRIAL_FEE_CENTS}
               introEligible={introEligible}
               market={market}
-              afterCards={<NoCardOptions signedIn={!!user} />}
+              afterCards={
+                <>
+                  <NoCardOptions signedIn={!!user} />
+                  {proof && <PremiumBenefits proof={proof} us={isUsMarket(market)} />}
+                </>
+              }
             />
           </div>
 

@@ -1,12 +1,13 @@
 import { z } from "zod";
 import type { prisma } from "./db";
 import { isPremium, premiumTierOf, type EntitlementUser } from "./premium";
-import { targetAlertLimit } from "./alert-limits";
+import { FREE_TARGET_ALERT_LIMIT, targetAlertLimit } from "./alert-limits";
 import { ENTRY_TIER_NAME } from "./site";
 import { MAX_TARGET_CENTS, MIN_TARGET_CENTS } from "./target-price";
 
-// SET OR CLEAR THE TARGET PRICE ON ONE WATCH ("Notify me at $X", Plus and
-// Premium; 2026-09-25 premium lineup). The body of
+// SET OR CLEAR THE TARGET PRICE ON ONE WATCH ("Notify me at $X"; 2026-09-25
+// premium lineup, and since 2026-10-23 one for a free account — DECISIONS.md,
+// "Free accounts get one alert"). The body of
 // PATCH /api/alerts/watchlist/[cardId], here rather than in the route file
 // because a route may export only its handlers — and this is the part worth
 // testing against a stub client (tests/target-alert-route.test.ts). The route
@@ -15,16 +16,18 @@ import { MAX_TARGET_CENTS, MIN_TARGET_CENTS } from "./target-price";
 // One watch = one (card, market) row, so the market is required: a card
 // watched in AU and US can carry a different target in each currency.
 //
-//   403 not a paying member · 400 bad body · 409 at the tier's limit
+//   400 bad body · 402 a FREE account at its one target (the upgrade-style
+//   refusal, code "free_alert_limit") · 409 a paid tier at its limit
 //   (lib/alert-limits.ts — Plus 25, Premium unlimited) · 404 not a watch of
 //   this account · 200 { ok, targetCents, used, limit }.
 //
 // Scoping every read and write by userId is the ownership check, as in DELETE.
 // The limit counts this account's OTHER watches that carry a target, so
 // editing an existing target never trips it. A changed target re-arms only the
-// target's own watermark (targetEmailedCents), never the shared one. The cron honours a target only
-// while the account is entitled (lib/price-alerts.ts), so a lapsed member's
-// stored targets are inert, not deleted.
+// target's own watermark (targetEmailedCents), never the shared one. The cron honours
+// an account's oldest `targetAlertLimit(tier)` targets (lib/price-alerts.ts,
+// honouredTargetIds), so a lapsed member keeps its oldest one live as a free
+// account and the rest are inert, not deleted.
 
 export const targetBodySchema = z.object({
   market: z.enum(["AU", "US", "UK", "SG", "CA", "EU"]),
@@ -51,10 +54,6 @@ export async function applyTargetPrice(
   // The watchlist's own PATCH passes nothing — a target typed there re-arms.
   opts: { seedFiredAtCents?: number | null } = {},
 ): Promise<TargetResult> {
-  if (!isPremium(user)) {
-    return { status: 403, body: { error: `Target prices are part of ${ENTRY_TIER_NAME}.` } };
-  }
-
   const parsed = targetBodySchema.safeParse(rawBody);
   if (!parsed.success) {
     return {
@@ -64,10 +63,23 @@ export async function applyTargetPrice(
   }
   const { market, targetCents } = parsed.data;
 
-  const limit = targetAlertLimit(premiumTierOf(user));
+  // A free (or lapsed) account is tier null: FREE_TARGET_ALERT_LIMIT.
+  const paid = isPremium(user);
+  const limit = targetAlertLimit(paid ? premiumTierOf(user) : null);
   const others = await db.priceAlert.count({
     where: { userId: user.id, targetCents: { not: null }, NOT: { cardId, market } },
   });
+  if (targetCents != null && others >= limit && !paid) {
+    return {
+      status: 402,
+      body: {
+        error: `Free accounts get ${FREE_TARGET_ALERT_LIMIT} target-price alert, and yours is in use. Clear it to set this one, or move to ${ENTRY_TIER_NAME} for alerts on every card you watch.`,
+        code: "free_alert_limit",
+        used: others,
+        limit,
+      },
+    };
+  }
   if (targetCents != null && others >= limit) {
     return {
       status: 409,

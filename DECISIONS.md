@@ -19152,3 +19152,47 @@ days". Supersedes the two-tier lineup (2026-09-25), the 2026-09-26 cut and the
 - **A Stores plan** at $79.99/mo sits beside it (entry above).
 - `PREMIUM_COPY_VERSION` "one-plan-2026-10-23", so funnel numbers before and
   after split cleanly.
+
+## Premium, rebranded around never overpaying (2026-10-23)
+
+Owner: "make premium more appealing … do some research … what are some very
+successful websites doing … do a complete rebrand of the premium feature and
+deploy it straight to production."
+
+**What the data said.** funnel-report, last 8 weeks: ~480 Premium clicks, two
+thirds signed out, ~40 checkout starts (≈8%), MRR US$46.59. The navbar sends
+most clicks; the strongest FEATURE gate is the sealed-watch one (48), then price
+history (18). Alert-led signups activate at 100%. So the leak is the /premium
+page itself, and what people reach for is alerts.
+
+**What the research said** (MTGStocks, MTGGoldfish, PriceCharting, Collectr,
+Card Ladder, Archidekt/Moxfield; RevenueCat 2026 benchmarks): paid tiers that
+sell lead with OUTCOMES that save money (alerts, below-market deals), prove it
+with live numbers, keep the free product genuinely useful, and give one taste of
+the thing being sold (one free alert). Annual default and long trials are right
+for us already.
+
+**What changed.**
+- One promise everywhere: "Never overpay for Riftbound again"
+  (`PREMIUM_PROMISE`, lib/premium-plan-copy.ts): the /premium H1, the plan
+  card's tagline, the dialog headline. The slide-in already said "Never overpay".
+- /premium: a gold "RiftCompare Premium" eyebrow, the promise, a plain subline
+  ("watches every store we track, in six markets and on eBay, and emails you the
+  moment a card or box hits your price; comparing prices stays free"), "30 days
+  free · cancel in two clicks" (only while the trial is free and offered), and a
+  LIVE proof strip (stores watched, live listings, refreshed twice a day, cards
+  below market now) from getHomeStats() and getCachedTopDeals(), the homepage's
+  own caches read directly, so nothing new reads the database.
+- "What Premium does for you": four outcome cards (alerts, every deal, track
+  everything, the cheapest whole order), each saying what free gets, ordered by
+  market (US leads with alerts), with one live below-market deal and the board's
+  real total gap. No invented numbers, testimonials or member counts; a missing
+  or zero figure is left out.
+- The single plan card's bullets are outcomes, not features.
+- Free accounts get ONE target-price alert and ONE sealed watch (entry below).
+- Kept the name "Premium": links, emails, Stripe and search all carry it, and
+  the data puts the leak on the page, not the name.
+
+**Not changed, recommended:** research puts collector tiers at US$5–8/mo
+(~US$59/yr); $9.99 is above every peer but Card Ladder. Worth testing a lower
+price or a no-card reverse trial once the redesign has a few weeks of data.
