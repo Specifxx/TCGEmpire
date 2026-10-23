@@ -183,18 +183,20 @@ const CHECKS: Check[] = [
   // is asserted rather than any particular price or store.
   {
     path: "/radiance-preorders",
-    label: "Radiance pre-order comparison",
+    // Released 2026-10-23: the page is the Radiance booster box price list
+    // now, no pre-order copy or PreOrder schema (DECISIONS.md "Radiance is released").
+    label: "Radiance booster box prices (was the pre-order comparison)",
     optional: true,
-    must: ["Pre-order", "schema.org/PreOrder", '"@type":"FAQPage"'],
-    mustNot: ["schema.org/InStock"],
+    must: ["booster box prices", '"@type":"FAQPage"'],
+    mustNot: ["schema.org/PreOrder"],
     minText: 600,
     // The PreOrder ItemList is emitted only for PRICED pre-order listings,
     // and the seed has none. The InStock ban above still applies.
-    seed: { must: ["Pre-order", '"@type":"FAQPage"'] },
+    seed: { must: ["booster box prices", '"@type":"FAQPage"'] },
   },
   {
     path: "/sets/radiance",
-    label: "upcoming set hub",
+    label: "Radiance set hub (released 2026-10-23)",
     optional: true,
     // Asserts the hub (RadianceHub), which renders whatever the card count.
     // This used to demand "Get ready for Radiance", the heading of the
@@ -213,9 +215,11 @@ const CHECKS: Check[] = [
     // 2026-10-23) will fail ci-build on this string alone — drop it from the
     // seed list below in that same PR, rather than reading it as a seed or
     // build regression.
-    must: ["Radiance", "Riftbound Radiance — what"],
+    // Released: the hub heading is "Riftbound Radiance — set facts" and the
+    // pre-release "Get ready for Radiance" block is gone, as forecast above.
+    must: ["Radiance", "Riftbound Radiance — set facts"],
     minText: 300,
-    seed: { must: ["Radiance", "Riftbound Radiance — what", "Get ready for Radiance"] },
+    seed: { must: ["Radiance", "Riftbound Radiance — set facts"] },
   },
   {
     path: "/embed/release-countdown",
