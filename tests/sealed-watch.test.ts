@@ -201,7 +201,11 @@ test("unknown state decides nothing; a missing product is skipped; pre-order gro
   assert.deepEqual(plain.groupCalls, ["groups:US"], "no pre-order read when every key is present");
 });
 
-test("entitlement and the caps: a lapsed or free owner's oldest watch is evaluated and the rest skipped untouched, Plus evaluates its oldest 10, Premium all", async () => {
+test("entitlement and the caps: a lapsed or free owner's oldest watch is evaluated and the rest skipped untouched; a billed-Plus owner is treated as Premium and evaluates all, as Premium does", async () => {
+  // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
+  // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so the
+  // old SEALED_WATCH_LIMIT_PLUS cap no longer leaves a Plus member's newest
+  // watches unevaluated. sealedWatchLimit("plus") itself is unchanged (above).
   const rows = [
     sealedRow("gone", lapsed, { userId: "u-lapsed", lastPriceCents: 16000, createdAt: new Date(NOW.getTime() - 200 * 3_600_000) }),
     sealedRow("gone2", lapsed, { userId: "u-lapsed", lastPriceCents: 16000, createdAt: new Date(NOW.getTime() - 199 * 3_600_000) }),
@@ -215,10 +219,11 @@ test("entitlement and the caps: a lapsed or free owner's oldest watch is evaluat
   const h = sealedHarness(rows, { groups: [group([offer(15000)])] });
   const s = await h.run();
   assert.equal(s.lapsed, 2, "each free account's second watch is kept but not evaluated");
-  assert.equal(s.overLimit, 2, "Plus's two newest rows are kept but not evaluated");
-  assert.equal(s.drops, 2 + SEALED_WATCH_LIMIT_PLUS + SEALED_WATCH_LIMIT_PLUS + 2, "the free accounts' one watch each drops too");
+  assert.equal(s.overLimit, 0, "no Plus cap while a billed-Plus account reads as Premium");
+  assert.equal(s.drops, 2 + 2 * (SEALED_WATCH_LIMIT_PLUS + 2), "the free accounts' one watch each, and every Plus and Premium watch");
   assert.ok(h.writes.some((w) => w.id === "gone") && h.writes.some((w) => w.id === "never"), "the oldest free watch is checked");
-  assert.ok(!h.writes.some((w) => w.id === "gone2" || w.id === "never2" || w.id === "p10" || w.id === "p11"));
+  assert.ok(!h.writes.some((w) => w.id === "gone2" || w.id === "never2"), "the free accounts' second watches are untouched");
+  assert.ok(h.writes.some((w) => w.id === "p10") && h.writes.some((w) => w.id === "p11"), "the billed-Plus account's newest watches are evaluated");
 });
 
 test("snoozed and paused advance their baseline without an email; a failed groups read aborts the pass unwritten", async () => {

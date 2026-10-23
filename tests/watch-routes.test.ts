@@ -89,9 +89,9 @@ function sealedDb(seed: Record<string, unknown>[] = []) {
 
 // ── Deck watches: Premium only, owner only, DECK_WATCH_LIMIT ─────────────────
 
-test("deck watches: create / update / delete need Premium to create or edit (402 for free, Plus and lapsed); snooze and stop are any owner's; only the owner's rows", async () => {
+test("deck watches: create / update / delete need Premium to create or edit (402 for free and lapsed; a billed-Plus account counts as Premium); snooze and stop are any owner's; only the owner's rows", async () => {
   const { db, rows, calls } = deckDb();
-  for (const who of [free, plus, lapsed]) {
+  for (const who of [free, lapsed]) {
     const res = await createDeckWatch(db, u("x", who), { name: "d", listText: "3 Alpha" }, "US");
     assert.equal(res.status, 402, who.premiumTier);
     assert.equal(res.body.code, "tier_required");
@@ -120,7 +120,7 @@ test("deck watches: create / update / delete need Premium to create or edit (402
   rows[0]!.lastEmailedCents = 17_000;
   const other = await updateDeckWatch(db, u("someone-else", premium), "d1", { targetCents: 5 }, NOW);
   assert.equal(other.status, 404, "not the owner: as if it did not exist");
-  assert.equal((await updateDeckWatch(db, u("owner", plus), "d1", { targetCents: 5000 }, NOW)).status, 402);
+  assert.equal((await updateDeckWatch(db, u("owner", free), "d1", { targetCents: 5000 }, NOW)).status, 402);
   const upd = await updateDeckWatch(db, u("owner", premium), "d1", { targetCents: 15_000 }, NOW);
   assert.equal(upd.status, 200);
   assert.equal(rows[0]!.targetCents, 15_000);
@@ -153,6 +153,17 @@ test("deck watches: create / update / delete need Premium to create or edit (402
   assert.equal((await deleteDeckWatch(db, u("owner", premium), "d1")).status, 404);
   assert.equal(rows.length, 2);
   assert.ok(calls.some((c) => c.startsWith("delete:d1:true")));
+
+  // A billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE
+  // false) since 2026-10-23 — effectiveTier; DECISIONS.md, "Plus members get
+  // Premium" — so it creates and edits deck watches like any Premium member.
+  const plusDeck = deckDb();
+  const pc = await createDeckWatch(plusDeck.db, u("plus-owner", plus), { name: "d", listText: "3 Alpha" }, "US");
+  assert.equal(pc.status, 201, "a billed-Plus member creates a deck watch");
+  assert.equal(plusDeck.rows[0]!.userId, "plus-owner");
+  assert.equal((await updateDeckWatch(plusDeck.db, u("plus-owner", plus), "d1", { targetCents: 5000 }, NOW)).status, 200, "…and edits its target");
+  assert.equal(plusDeck.rows[0]!.targetCents, 5000);
+  assert.equal((await listDeckWatches(plusDeck.db, u("plus-owner", plus))).body.limit, DECK_WATCH_LIMIT, "the Premium deck cap applies");
 });
 
 test("deck watches: the eleventh list is refused with 409 and the real count", async () => {
@@ -215,7 +226,9 @@ test("sealed watches: a free or lapsed account creates ONE (402 past it, 2026-10
 
   const list = await listSealedWatches(db, u("p", plus));
   assert.equal((list.body.watches as unknown[]).length, 2);
-  assert.equal(list.body.limit, SEALED_WATCH_LIMIT_PLUS);
+  // A billed-Plus account reads as Premium while Plus is off sale (DECISIONS.md,
+  // "Plus members get Premium", 2026-10-23): no Plus cap to quote.
+  assert.equal(list.body.limit, null, "billed Plus: no limit to quote, as for Premium");
   assert.equal((await listSealedWatches(db, u("p", premium))).body.limit, null, "Premium: no limit to quote");
 
   assert.equal((await deleteSealedWatch(db, u("q", premium), "s1")).status, 404);
@@ -226,13 +239,15 @@ test("sealed watches: a free or lapsed account creates ONE (402 past it, 2026-10
   assert.equal(rows.length, 1);
 });
 
-test("sealed watches: Plus stops at SEALED_WATCH_LIMIT_PLUS with 409; Premium does not", async () => {
+test("sealed watches: a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false) and is not stopped at SEALED_WATCH_LIMIT_PLUS; Premium is not either", async () => {
+  // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
+  // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so
+  // the old Plus cap no longer returns 409.
   const seed = Array.from({ length: SEALED_WATCH_LIMIT_PLUS }, (_, i) => ({ id: `s${i}`, userId: "p", email: "p@example.com", market: "US", groupKey: `k${i}` }));
-  const { db } = sealedDb(seed);
+  const { db, rows } = sealedDb(seed);
   const res = await createSealedWatch(db, u("p", plus), { groupKey: "new" }, "US");
-  assert.equal(res.status, 409);
-  assert.equal(res.body.code, "limit");
-  assert.equal(res.body.limit, SEALED_WATCH_LIMIT_PLUS);
+  assert.equal(res.status, 201, "a billed-Plus member past the old Plus cap is not refused");
+  assert.equal(rows.length, SEALED_WATCH_LIMIT_PLUS + 1);
   const prem = sealedDb(seed.map((r) => ({ ...r, userId: "q" })));
   assert.equal((await createSealedWatch(prem.db, u("q", premium), { groupKey: "new" }, "US")).status, 201);
 });

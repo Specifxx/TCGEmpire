@@ -122,7 +122,7 @@ test("every surface that states the post-trial price states the intro too — ea
   assert.match(start, /plan === "monthly" && introOfferEnabled\(\) && !paid/);
   assert.match(start, /We'll email you a day or two before you're charged/);
   const page = read("src/app/premium/page.tsx");
-  assert.match(page, /\.\.\.\(introOfferEnabled\(\)\s*\?\s*\[\s*\{\s*q: `What is the half-price offer\?`/);
+  assert.match(page, /\.\.\.\(introOfferEnabled\(\)\s*\?\s*\[\s*\{\s*(id: "intro",\s*)?q: `What is the half-price offer\?`/);
   // The explainer is prose, so it can't follow the switch: it states the
   // default (no trial, no intro) and must be edited by hand to re-arm either.
   const article = read("src/lib/articles.ts");

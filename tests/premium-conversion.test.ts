@@ -122,8 +122,10 @@ test("the proof endpoint never throws — it degrades to zeroes", () => {
 test("/premium renders an FAQPage via faqPage(), and the same Q&A is rendered visibly", () => {
   const src = read("src/app/premium/page.tsx");
   assert.match(src, /faqPage\(FAQ\)/, "expected the FAQPage schema to be built from the real FAQ array");
-  assert.match(src, /FAQ\.map\(/, "the FAQ must also be rendered as real content — Google only honours FAQPage when it matches visible copy");
-  const faqMatch = src.match(/const FAQ: \{ q: string; a: string \}\[\] = \[([\s\S]*?)\n\];/);
+  // Rendered visibly through PremiumFaqList (2026-10-23), which maps the same array.
+  assert.match(src, /<PremiumFaqList items=\{FAQ\} \/>/, "the FAQ must also be rendered as real content — Google only honours FAQPage when it matches visible copy");
+  assert.match(read("src/components/premium/PremiumPageClient.tsx"), /items\.map\(/, "…by mapping every item");
+  const faqMatch = src.match(/const FAQ: \{ id: string; q: string; a: string \}\[\] = \[([\s\S]*?)\n\];/);
   assert.ok(faqMatch, "expected a FAQ array declaration");
   const count = (faqMatch![1].match(/q: /g) ?? []).length;
   assert.ok(count >= 4, `expected a real FAQ (>=4 entries), found ${count}`);

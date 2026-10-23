@@ -170,8 +170,19 @@ longer lands on its entry.
   below):** Premium $9.99/mo or $79.99/yr with a free 30-day card-gated trial;
   existing $4.99/$39.99 subscribers are grandfathered by not migrating them.
   Plus is off sale (`PLUS_ON_SALE = false`) but its Price ids stay set so Plus
-  members keep Plus and can upgrade. Stores plan $79.99/mo for retailers.
-  [2026-10-23](../DECISIONS.md#L19127)
+  members are still recognised and billed at their Plus price; while it is off
+  sale they get everything in Premium (`effectiveTier` reads billed Plus as
+  Premium, read-time only; billing still resolves tier from the Price).
+  Stores plan $79.99/mo for retailers.
+  [2026-10-23](../DECISIONS.md#L19127), [2026-10-23](../DECISIONS.md#L19306)
+- **/premium converts on proof, not pressure (2026-10-23):** hero with one
+  checkout button and its terms, then today's real top deals (rest locked, no
+  data behind the blur), a read-only Best Basket demo (`/api/premium/demo`,
+  totals only, 10 lines), a pays-for-itself line only when today's deals beat a
+  month's price, the plan card, a focused table, an "Example alert", the FAQ.
+  Every number is live or computed from config (`lib/premium-page.ts`);
+  testimonials only from `lib/content/premium-testimonials.ts`, empty until a
+  member agrees. [2026-10-23](../DECISIONS.md#L19250)
 - **Free 14-day trial (2026-10-12; replaces the $1 first month below):**
   `PREMIUM_TRIAL_DAYS` 14 and `PREMIUM_TRIAL_FEE_CENTS` 0 by default, card
   required, prices unchanged. Leave price, trial and pitch alone until two
@@ -262,7 +273,10 @@ longer lands on its entry.
   `STRIPE_PLUS_LEGACY_PRICE_IDS` (`STRIPE_PREMIUM_LEGACY_PRICE_IDS` is only
   for reporting), and the maintenance steps that read tiers get those
   secrets. A `premiumTierFloor` only raises a paid tier, never grants one.
-  Never reuse a Price across tiers: the new Premium amounts equal the old Plus
+  While `PLUS_ON_SALE` is false, `effectiveTier` reads billed Plus as Premium,
+  so every Plus-only limit on this page (25 targets, 10 sealed watches, 100
+  searches, no deck watch…) currently applies to nobody
+  ([2026-10-23](../DECISIONS.md#L19306)). Never reuse a Price across tiers: the new Premium amounts equal the old Plus
   ones, so they are new Prices. Ad-free is enforced client-side too: the eBay
   carousel and the app's AdMob banner check `adFree`, and the `rc_adfree`
   boot script pauses ad requests before the (ungated) loader. **Set

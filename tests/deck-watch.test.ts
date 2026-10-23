@@ -14,7 +14,7 @@ import { DECK_WATCH_LIMIT, deckWatchLimit } from "../src/lib/alert-limits";
 import { WATERMARK_TTL_MS } from "../src/lib/price-alerts";
 import { buildDeckWatchEmail, deckWatchCopy } from "../src/lib/watch-emails";
 import { verifyAlertAction } from "../src/lib/alert-actions";
-import { NOW, daysAgo, hoursAgo, deckHarness, deckRow, lapsed, plus, premium } from "./helpers/watch-harness";
+import { NOW, daysAgo, hoursAgo, deckHarness, deckRow, free, lapsed, plus, premium } from "./helpers/watch-harness";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DECK PRICE WATCH (lib/deck-watch.ts, 2026-09-29): a Premium member's saved
@@ -150,7 +150,7 @@ test("with no target, a material drop emails; a sub-5% move is stored but silent
   assert.match(deckWatchCopy(loud.sent[0]!.item).subject, /less$/);
 });
 
-test("snoozed: no email, baseline advances; a lapsed owner is skipped untouched; Plus never runs; a failed read aborts the pass unwritten", async () => {
+test("snoozed: no email, baseline advances; a lapsed or free owner is skipped untouched; a billed-Plus owner runs as Premium; a failed read aborts the pass unwritten", async () => {
   const probe = deckHarness([], { listings: LISTINGS });
   const t = await total(probe);
   const snoozed = deckHarness([deckRow("w1", premium, { targetCents: t, snoozedUntil: daysAgo(-10) })], { listings: LISTINGS });
@@ -160,12 +160,21 @@ test("snoozed: no email, baseline advances; a lapsed owner is skipped untouched;
   assert.equal(snoozed.writeFor("w1")!.lastTotalCents, t);
   assert.equal(snoozed.writeFor("w1")!.lastEmailedCents, undefined);
 
-  const gone = deckHarness([deckRow("w1", lapsed, { targetCents: t }), deckRow("w2", plus, { targetCents: t })], { listings: LISTINGS });
+  const gone = deckHarness([deckRow("w1", lapsed, { targetCents: t }), deckRow("w2", free, { targetCents: t })], { listings: LISTINGS });
   const s2 = await gone.run();
-  assert.equal(s2.lapsed, 2, "a lapsed subscriber and a Plus member alike");
+  assert.equal(s2.lapsed, 2, "a lapsed subscriber and a free account alike");
   assert.equal(gone.sent.length, 0);
   assert.equal(gone.writes.length, 0, "rows kept, nothing written");
   assert.equal(gone.listingQueries.length, 0, "no read for an owner who is not entitled");
+
+  // A billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE
+  // false) since 2026-10-23 — effectiveTier; DECISIONS.md, "Plus members get
+  // Premium" — so its deck watch is priced and its met target emailed.
+  const plusRun = deckHarness([deckRow("w2", plus, { targetCents: t })], { listings: LISTINGS });
+  const s3 = await plusRun.run();
+  assert.equal(s3.lapsed, 0, "a billed-Plus owner is not skipped");
+  assert.equal(plusRun.sent.length, 1, "the met target is emailed, as for Premium");
+  assert.equal(plusRun.writeFor("w2")!.lastTotalCents, t);
 
   const failing = deckHarness([deckRow("w1", premium, { targetCents: t })], { listings: LISTINGS, listingsFail: true });
   await assert.rejects(() => failing.run(), /db down/);

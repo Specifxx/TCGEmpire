@@ -214,15 +214,18 @@ test("targets: an anonymous or free watch can't set one (403); Plus can, and re-
   assert.equal(plus.rows[0]!.targetEmailedCents, null, "a changed target re-arms");
 });
 
-test("the Plus target limit is enforced server-side; Premium is unlimited", async () => {
+test("a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false): no target limit; Premium is unlimited", async () => {
+  // Plus is off sale, and since 2026-10-23 a billed "plus" reads as Premium at
+  // its Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"),
+  // so the old 25-target Plus cap no longer stops a Plus member here.
   const full = Array.from({ length: PLUS_TARGET_ALERT_LIMIT }, (_, i) =>
     watch({ id: `t${i}`, cardId: `c${i}`, userId: "u1", user: account("plus"), targetCents: 500 }),
   );
   const s = stub([...full, watch({ userId: "u1", user: account("plus") })]);
   const r = await performAlertAction(s.db, tok("target-set", 1840), NOW);
-  assert.equal(r.status, 409);
-  assert.equal(r.outcome, "limit");
-  assert.equal(s.rows.find((x) => x.id === "row1")!.targetCents, null);
+  assert.equal(r.status, 200, "a billed-Plus account past the old Plus cap is not refused");
+  assert.equal(r.outcome, "ok");
+  assert.equal(s.rows.find((x) => x.id === "row1")!.targetCents, 1840);
 
   const prem = stub([...full.map((w) => ({ ...w, user: account("premium") })), watch({ userId: "u1", user: account("premium") })]);
   const ok = await performAlertAction(prem.db, tok("target-set", 1840), NOW);
