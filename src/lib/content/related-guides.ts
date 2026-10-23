@@ -83,6 +83,16 @@ export function mechanicGuideForCard(c: CardForGuides): { slug: string; name: st
 // ~400 words: a "read next" that is a caption and an embed reads as filler.
 type GuideRef = { slug: string; reason: string };
 
+/** The Radiance tier guide that lists this card, or null (alt art first: an
+ *  "a" Legend is priced in the alt-art guide's table too). */
+function radianceTierGuide(c: CardForGuides): GuideRef | null {
+  if (c.setCode !== "RAD") return null;
+  if (c.variant === "a") return { slug: "riftbound-radiance-alt-art-cards", reason: "Every Radiance alt art next to its base card, with release-day prices" };
+  if (c.type === "Legend") return { slug: "riftbound-radiance-legends", reason: "All nine Radiance Legends in every printing, base to signed, with release-day prices" };
+  if (c.rarity === "Epic") return { slug: "riftbound-radiance-epic-cards", reason: "All 28 Radiance Epics with release-day prices, dearest first" };
+  return null;
+}
+
 export const SET_GUIDES: Readonly<Record<string, readonly GuideRef[]>> = {
   OGN: [{ slug: "whats-in-the-riftbound-origins-set", reason: "Origins broken down by rarity, domain and card type, counted from our own catalogue" }],
   OGS: [{ slug: "riftbound-sets-in-order", reason: "Where Proving Grounds, the smallest set, sits among the others, with each set's card count" }],
@@ -215,6 +225,16 @@ const RULES: Rule[] = [
     match: [],
     preferOnly: true,
     reason: (c) => `${mechanicGuideForCard(c)?.name} is printed on this card — how the mechanic works, step by step`,
+  },
+  // Radiance's release-day tier guides (2026-10-23): a RAD Legend, Epic or alt
+  // art links the guide that prices its whole tier. Before the generic rarity
+  // rule, because the tier guide names this card and the rarity guide does not.
+  {
+    when: (c) => radianceTierGuide(c) != null,
+    prefer: (c) => [radianceTierGuide(c)?.slug ?? ""],
+    match: [],
+    preferOnly: true,
+    reason: (c) => radianceTierGuide(c)?.reason ?? "",
   },
   {
     when: (c) => c.isSignature || c.rarity === "Showcase" || c.variant != null,

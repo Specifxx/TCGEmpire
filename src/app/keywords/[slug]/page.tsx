@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { KEYWORDS, keywordBySlug } from "@/lib/keywords";
+import { KEYWORDS, KEYWORD_THIN_THRESHOLD, keywordBySlug, keywordCardWhere } from "@/lib/keywords";
 import { getArticle } from "@/lib/articles";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -39,9 +39,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const answer = kw.directAnswer.replace(/\s+/g, " ").trim();
   const lead = answer.length > 96 ? `${answer.slice(0, answer.lastIndexOf(" ", 96)).replace(/[,;:.]$/, "")}…` : answer;
   const description = `${lead} Plus every card printed with ${kw.name}, live-priced.`;
+  // Thin keyword pages (fewer than KEYWORD_THIN_THRESHOLD cards) are noindexed;
+  // -1 on a failed count keeps the page indexable rather than guessing.
+  const total = await prisma.card.count({ where: keywordCardWhere(kw) }).catch(() => -1);
   return {
     title: { absolute: title },
     description,
+    ...(total >= 0 && total < KEYWORD_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
     alternates: pageAlternates(`/keywords/${kw.slug}`),
     keywords: [
       `riftbound ${kw.name.toLowerCase()} keyword`,
@@ -68,11 +72,7 @@ export default async function KeywordPage({ params }: { params: { slug: string }
   //
   // `rulesExclude` drops cards whose only marker is another keyword's reminder
   // text (Weaponmaster's "you may [Equip]…"), in the list and the count alike.
-  const where = {
-    ...(kw.set ? { setCode: kw.set } : {}),
-    description: { contains: kw.rulesContain },
-    ...(kw.rulesExclude?.length ? { NOT: kw.rulesExclude.map((x) => ({ description: { contains: x } })) } : {}),
-  };
+  const where = keywordCardWhere(kw);
   const [cards, total] = await Promise.all([
     prisma.card.findMany({
       where,

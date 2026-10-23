@@ -262,6 +262,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     statBit,
     priceBit,
     aliases,
+    ...(hasPrice
+      ? { priceLead: { from: fmtBaselineMoney(lowestCents!), stores, facts: `${card.domain} ${card.rarity} ${card.type.toLowerCase()}` } }
+      : {}),
   });
 
   // ── Index only what's worth indexing ─────────────────────────────────────
@@ -294,7 +297,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const noindex = twin != null;
 
   return {
-    title: { absolute: `${title} | RiftCompare` },
+    title: { absolute: title },
     description,
     ...(noindex ? { robots: { index: false, follow: true } } : {}),
     // pageAlternates(), not a bare object: a hand-rolled `alternates` here

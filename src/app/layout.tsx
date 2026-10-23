@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Fragment } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Inter, JetBrains_Mono, Cinzel } from "next/font/google";
@@ -564,19 +563,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               three): the same price comparison for other games, built by the
               same owner. Plain followed links: our own sites, not affiliates
               (lib/sister-sites.ts). */}
-          <p className="mb-2">
-            Also from us, the same price comparison for other games:{" "}
-            {SISTER_SITES.map((s, i) => (
-              <Fragment key={s.key}>
-                {i > 0 && (i === SISTER_SITES.length - 1 ? " and " : ", ")}
-                <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
-                  {s.name}
-                </a>{" "}
-                ({s.game})
-              </Fragment>
-            ))}
-            .
-          </p>
+          {/* "Compare other TCGs" (2026-10-23 SEO sprint): the same three
+              followed links, now with descriptive anchors (the game's price
+              query) instead of the brand alone, under a labelled heading. */}
+          <nav aria-label="Compare other TCGs" className="mb-2">
+            <p className="mb-1 font-semibold text-slate-300">Compare other TCGs</p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1">
+              {SISTER_SITES.map((s) => (
+                <li key={s.key}>
+                  <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
+                    {s.anchor}
+                  </a>{" "}
+                  <span className="text-slate-500">on {s.name}</span>
+                </li>
+              ))}
+            </ul>
+          </nav>
           {/* Cross-promotion: our other Riftbound side project. Cheeky on purpose —
               per owner request 2026-08-13. */}
           <p className="mb-2">

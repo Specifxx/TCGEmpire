@@ -18,7 +18,7 @@ import { cardImageSrc } from "./card-image-url";
 import { getArticles } from "./articles";
 import { SETS } from "./constants";
 import { DOMAIN_PAGES } from "./domains";
-import { KEYWORDS } from "./keywords";
+import { KEYWORDS, KEYWORD_THIN_THRESHOLD, keywordCardWhere } from "./keywords";
 import { CHAMPIONS, championCardWhere, CHAMPION_THIN_THRESHOLD } from "./champions";
 import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } from "./facets";
 import { STORE_PAGES, STORE_THIN_THRESHOLD } from "./store-pages";
@@ -458,12 +458,21 @@ async function keywords(): Promise<SitemapEntry[]> {
   // Only keywords with verified rules text (see lib/keywords.ts); the rest of the
   // glossary index isn't a separate URL. Each page carries a live "every card
   // with this keyword" list, so it's price-bearing like the other card hubs.
-  return KEYWORDS.map((k) => ({
+  const entry = (k: (typeof KEYWORDS)[number]): SitemapEntry => ({
     url: `${SITE_URL}/keywords/${k.slug}`,
-    changeFrequency: "weekly" as const,
+    changeFrequency: "weekly",
     priority: 0.7,
     lastModified: day,
-  }));
+  });
+  try {
+    const counts = await Promise.all(KEYWORDS.map((k) => prisma.card.count({ where: keywordCardWhere(k) })));
+    // Thin keyword pages are noindexed at the page level (KEYWORD_THIN_THRESHOLD);
+    // submitting them would ask Google to index URLs we tell it not to.
+    return KEYWORDS.filter((_, i) => counts[i] >= KEYWORD_THIN_THRESHOLD).map(entry);
+  } catch (e) {
+    console.error("sitemap/keywords: count query failed, listing all keywords:", e);
+    return KEYWORDS.map(entry);
+  }
 }
 
 async function facets(): Promise<SitemapEntry[]> {

@@ -13,6 +13,11 @@
 import { shortCardName } from "./card-name";
 import { PRINTING_DISPLAY, PRINTING_PROSE, type PrintingKind } from "./content/card-narrative";
 
+// The ladder still CHOOSES as though " | RiftCompare" followed (so ~1,200
+// titles keep their text), but since the 2026-10-23 CTR pass (owner-approved)
+// the page renders the title with no suffix, and a priced card whose winning
+// rung had to drop the word "Price" takes the first price rung that fits 60
+// on its own (end of cardTitle).
 const SUFFIX = " | RiftCompare";
 
 /** Google truncates around here; the root layout appends SUFFIX via `absolute`. */
@@ -194,7 +199,12 @@ export function cardTitle(input: CardTitleInput): string {
   // does not. Rung ORDER expresses what we would rather keep; it is not a claim
   // about length, so it must not decide the overflow case. Ties keep the earlier
   // rung, so this changes nothing for any card that has a fitting candidate.
-  return ladder.find(titleFits) ?? ladder.reduce((a, b) => (b.length < a.length ? b : a));
+  const chosen = ladder.find(titleFits) ?? ladder.reduce((a, b) => (b.length < a.length ? b : a));
+  if (hasPrice && kind === "base" && !chosen.includes(" Price")) {
+    const pricedRung = ladder.find((t) => t.includes(" Price — Riftbound ") && !t.includes("(") && t.length <= TITLE_MAX);
+    if (pricedRung) return pricedRung;
+  }
+  return chosen;
 }
 
 export interface CardDescriptionInput {
@@ -210,6 +220,10 @@ export interface CardDescriptionInput {
   priceBit: string;
   /** Community nicknames for this exact printing (lib/content/card-aliases.ts). */
   aliases?: string[];
+  /** Priced cards (2026-10-23 CTR pass): lead with the price instead of the
+   *  rules text. `from` is the formatted baseline low, `facts` the "Calm Epic
+   *  gear" stat line. */
+  priceLead?: { from: string; stores: number; facts: string };
 }
 
 /**
@@ -240,7 +254,11 @@ export function cardMetaDescription(input: CardDescriptionInput): string {
 
   const special = kind !== "base";
   let description: string;
-  if (textBit) {
+  if (input.priceLead) {
+    const { from, stores, facts } = input.priceLead;
+    const printing = special ? `, the ${PRINTING_PROSE[kind]} printing` : "";
+    description = `${displayName} price: from ${from} at ${stores} ${stores === 1 ? "store" : "stores"}, cheapest first, in six markets. ${facts}${printing}, Riftbound ${identCode}. Updated daily.`;
+  } else if (textBit) {
     description = special
       ? `${displayName} — ${statBit}, the ${PRINTING_PROSE[kind]} printing (Riftbound ${identCode}). ${textBit} ${priceBit}`
       : `${displayName} — ${statBit} (Riftbound ${identCode}). ${textBit} ${priceBit}`;

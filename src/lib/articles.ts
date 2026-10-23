@@ -6,6 +6,7 @@ import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PLUS_PRICE_AMOUN
 import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "./trial-config";
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
+import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
@@ -152,6 +153,9 @@ export interface Article {
   // side effect of writing the file.
   draft?: boolean;
   title: string;
+  /** The full rendered <title>, used as-is with no " — RiftCompare" suffix,
+   *  when it differs from the H1 `title` (2026-10-23 CTR pass, owner-approved). */
+  seoTitle?: string;
   excerpt: string;
   author: string;
   date: string; // ISO (YYYY-MM-DD) — first published
@@ -1023,8 +1027,9 @@ The round-up also shows two tokens, a **Bomb** (Ziggs') and a **Mech** (Heimerdi
     slug: "riftbound-radiance-signature-cards",
     category: "blog",
     title: "Every Riftbound Radiance Signature Card (16)",
+    seoTitle: "Radiance Signature Cards: All 16 Signed Prints + Prices",
     excerpt:
-      "All 16 Riftbound: Radiance Signature cards, 168* to 183*/167: every signed Legend and HEARTSTEEL card, who signed it, what it does and the first prices.",
+      "Radiance signature cards: all 16 signed prints, 168* to 183*/167 plus 174a*, who signed each and release-day prices, cheapest first. Updated daily.",
     author: "RiftCompare",
     date: "2026-10-17",
     readMins: 12,
@@ -2920,8 +2925,9 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
     slug: "riftbound-radiance-spoilers",
     category: "blog",
     title: "Riftbound Radiance Spoilers: Live Card Tracker",
+    seoTitle: "Riftbound Radiance Spoilers: All 235 Cards, Now Priced",
     excerpt:
-      "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
+      "Riftbound Radiance spoilers in one gallery: every card Riot revealed, dated, now with release-day prices from 58 stores. Updated daily.",
     author: "RiftCompare",
     date: "2026-09-21",
     updated: "2026-10-12",
@@ -3772,12 +3778,13 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
   {
     slug: "riftbound-deploy-explained",
     category: "guide",
-    title: "Riftbound Deploy Explained: Leaked Mechanic",
+    title: "Riftbound Deploy Explained: Official Rules",
+    seoTitle: "Riftbound Deploy Explained: Rules + Every Deploy Card",
     excerpt:
-      "Lose the battlefield, lose the card outright: the leaked Deploy wording in full, why it's a riskier trade than Equip, and what Riot has yet to confirm.",
+      "Riftbound Deploy, now in Riot's 9 Oct rules: how Deploy gear works, when an opponent kills it, how it differs from Equip, and all 27 Deploy cards priced.",
     author: "RiftCompare",
     date: "2026-09-08",
-    updated: "2026-09-29",
+    updated: "2026-10-23",
     readMins: 5,
     tags: ["radiance", "mechanics", "deploy", "leak", "spoilers", "guide"],
     hero: {
@@ -3785,6 +3792,7 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
       alt: "Riftbound Deploy — a Radiance Gear keyword, first leaked at PAX West and now printed on Radiance cards",
     },
     summary: [
+      "**Official since Riot's 9 October patch notes.** The Radiance core rules define Deploy (in effect from 16 October); the details are in [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata).",
       "**Deploy is a leaked Gear keyword from Riftbound: Radiance**, reportedly tied to holding one specific battlefield rather than being attached to a unit.",
       "**Lose the battlefield, lose the card**: the leaked wording says an opponent taking that battlefield kills the Gear outright, not just switches it off.",
       "**It's the opposite risk profile from [Equip](/keywords/equip)**, which stays functional on its unit regardless of what's happening on the board.",
@@ -3795,13 +3803,13 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
       { q: "How does the Deploy mechanic work?", a: "As leaked: you play the Gear to a battlefield rather than to a unit or your base. While you hold that battlefield, it grants a benefit (the leak doesn't say what kind). If an opponent takes the battlefield, the Gear is killed outright." },
       { q: "What happens if I lose the battlefield a Deploy gear is on?", a: "Per the leaked wording, the Gear is killed — not deactivated or returned to hand, but removed from the game the way any killed permanent would be." },
       { q: "How is Deploy different from Equip?", a: "Equip attaches a Gear card to a unit, and it stays functional regardless of board state. Deploy, as leaked, attaches to a battlefield instead of a unit, and is destroyed if you lose control of that battlefield — a much higher-risk trade for whatever benefit it grants." },
-      { q: "Is Deploy confirmed by Riot?", a: "Yes, in print. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, and since Preview Season opened on 25 September it has appeared on finished Radiance cards: Pillaged Armory and Dockside Lock-Up." },
+      { q: "Is Deploy confirmed by Riot?", a: "Yes. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, appeared on finished Radiance cards from Preview Season (25 September), and Riot's Radiance core rules patch notes of 9 October 2026 add it to the rules, in effect from 16 October." },
       { q: "How is Deploy different from Showoff and Disarm?", a: "Deploy is a Gear keyword about holding a battlefield; Showoff is a modal reveal effect triggered on play; Disarm weakens an enemy unit's Might on attack. All three reportedly leaked together but don't appear designed to combo directly, unlike Vendetta's Empower/Flow/Burn." },
     ],
     browseCta: {
       href: "/blog/riftbound-radiance-leaked-mechanics",
       label: "See the full Radiance mechanics leak →",
-      blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
+      blurb: "Deploy, Showoff and Disarm together, with the source photo and where the three mechanics were first seen.",
     },
     embeds: [
       {
@@ -3812,13 +3820,15 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
         take: 8,
       },
     ],
-    body: `*Status, 29 September 2026: confirmed in print.* Deploy is on two finished Radiance cards, [Pillaged Armory](/card/pillaged-armory-rad-073-167) and [Dockside Lock-Up](/card/dockside-lock-up-rad-136-167), and both are Gear, as the leak said. The printed reminder text — *"Play this only to a battlefield. When an opponent holds here, kill this."* — is the leaked rule in fewer words. What the leak left vague, the benefit, turns out to be each card's own text: Pillaged Armory buffs a friendly unit when played and whenever you conquer there, and Dockside Lock-Up banishes a unit and, once you hold, brings it back for free. The gallery below shows both, the card-by-card read is in [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one), and the rest of this page is the analysis as written before the cards existed.*
+    body: `*Status, 23 October 2026: official.* Riot's Radiance core rules patch notes, published on 9 October 2026 and in effect from 16 October, add Deploy to the rules: Deploy is a gear keyword. Deploy gear can be played to a battlefield that is friendly, uncontrolled or held by an enemy, and stays there unless it is destroyed (some effects can move it). If an opponent holds a battlefield where you have Deploy gear, that gear is killed. The rest of this page was written from the PAX West leak and is kept as the record of what was known then; where it says "reportedly" or "as leaked", the rules now settle it. Every change in the update is in [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata).
+
+*Status, 29 September 2026: confirmed in print.* Deploy is on two finished Radiance cards, [Pillaged Armory](/card/pillaged-armory-rad-073-167) and [Dockside Lock-Up](/card/dockside-lock-up-rad-136-167), and both are Gear, as the leak said. The printed reminder text — *"Play this only to a battlefield. When an opponent holds here, kill this."* — is the leaked rule in fewer words. What the leak left vague, the benefit, turns out to be each card's own text: Pillaged Armory buffs a friendly unit when played and whenever you conquer there, and Dockside Lock-Up banishes a unit and, once you hold, brings it back for free. The gallery below shows both, the card-by-card read is in [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one), and the rest of this page is the analysis as written before the cards existed.*
 
 **Deploy is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what would need to happen before we'd treat any of it as settled.
 
 > "Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear."
 
-## How Deploy reportedly works
+## How Deploy works
 
 1. **Play the Gear to a battlefield**, not to your base or a unit — Deploy appears to be a location-bound Gear keyword rather than a unit attachment.
 2. **It grants a benefit while you hold that battlefield.** The leaked text doesn't specify what kind of benefit — a stat boost, an ongoing effect, or something else entirely could all fit "grant benefits."
@@ -3844,7 +3854,7 @@ Picture a simplified sequence, purely to illustrate the mechanic rather than to 
 
 A Riftbound game is played across **[three Battlefields](/guides/how-a-riftbound-deck-is-built)**, and control of each one shifts over the course of a match rather than being settled once at the start. That structure changes what "commit a Deploy Gear to a battlefield" actually means in practice: you're not choosing a location in a vacuum, you're choosing which of three ongoing fights to stake a whole card's worth of risk on. A battlefield you're already winning is a much safer target for a Deploy Gear than one that's actively contested, since the risk of losing the card outright tracks directly with how likely you are to lose that specific fight. If the leak holds up, reading the board's three battlefields correctly before committing a Deploy Gear will likely matter as much as anything printed on the card itself.
 
-## Building around Deploy, if the leak holds up
+## Building around Deploy
 
 Riftbound already has two keywords built around battlefield control that a Deploy card would naturally want to pair with:
 
@@ -3857,9 +3867,9 @@ None of this is a confirmed archetype — it's a reasonable read of how Deploy w
 
 Full-set spoiler seasons — every card in a set revealed on a schedule — are how Riftbound has confirmed mechanics for each of its previous releases. A leak like this one sits ahead of that process entirely: it's a photograph of internal-facing reference material rather than a scheduled reveal, which is why real, quotable wording can surface months before a set goes through its own proper preview cycle. That gap between "photographed once at a convention" and "spoiled on schedule with card art and Core Rules-verified wording" is exactly the gap this page is being careful to flag throughout.
 
-## What would actually confirm Deploy
+## How Deploy went from leak to rules
 
-Three things would move Deploy from "leaked" to "confirmed" in our own coverage: an official Riot channel — a dev blog, a verified social post, or a proper spoiler-season card reveal — showing the keyword; a physical or digital card image with Deploy printed on it in final form; or wording that can be checked against an updated Core Rules PDF, the same bar **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** eventually cleared for Vendetta. Any one of those would be enough. A second demo-table photo, even from a different convention, would not — it would still be the same category of unofficial sighting this article is already treating carefully.
+All three of the tests below have now been met, the last by Riot's 9 October patch notes. As written before Preview Season: Three things would move Deploy from "leaked" to "confirmed" in our own coverage: an official Riot channel — a dev blog, a verified social post, or a proper spoiler-season card reveal — showing the keyword; a physical or digital card image with Deploy printed on it in final form; or wording that can be checked against an updated Core Rules PDF, the same bar **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** eventually cleared for Vendetta. Any one of those would be enough. A second demo-table photo, even from a different convention, would not — it would still be the same category of unofficial sighting this article is already treating carefully.
 
 ## How Deploy compares to Showoff and Disarm
 
@@ -3867,17 +3877,18 @@ Deploy is one of three mechanics in the same leak. **[Showoff](/guides/riftbound
 
 ## Is Deploy officially confirmed?
 
-Yes, in print. When this page was written, Deploy was known only from a fan photo of Riot's own demo reference material at PAX West. Since Preview Season opened on 25 September it has appeared on finished Radiance cards, [Pillaged Armory](/card/pillaged-armory-rad-073-167) and [Dockside Lock-Up](/card/dockside-lock-up-rad-136-167), which is the evidence this page said it was waiting for: an official card image with the keyword printed on it. There is still nothing to buy until Radiance's Pre-Rift events on 16–22 October and release on 23 October; until then the trackable prices are **[Radiance's sealed pre-orders](/radiance-preorders)**, and each card page above gets live prices as stores list it.`,
+Yes. Riot's Radiance core rules patch notes (9 October 2026, in effect from 16 October) define it; see [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata). Before that it was confirmed in print. When this page was written, Deploy was known only from a fan photo of Riot's own demo reference material at PAX West. Since Preview Season opened on 25 September it has appeared on finished Radiance cards, [Pillaged Armory](/card/pillaged-armory-rad-073-167) and [Dockside Lock-Up](/card/dockside-lock-up-rad-136-167), which is the evidence this page said it was waiting for: an official card image with the keyword printed on it. There is still nothing to buy until Radiance's Pre-Rift events on 16–22 October and release on 23 October; until then the trackable prices are **[Radiance's sealed pre-orders](/radiance-preorders)**, and each card page above gets live prices as stores list it.`,
   },
   {
     slug: "riftbound-showoff-explained",
     category: "guide",
-    title: "Riftbound Showoff Explained: Leaked Mechanic",
+    title: "Riftbound Show Off Explained: Official Rules",
+    seoTitle: "Riftbound Show Off Explained: Official Rules + Cards",
     excerpt:
-      "Reveal from hand or point at a friendly card: what Riftbound's leaked Showoff keyword reportedly does, how it differs from Vision, and what's unconfirmed.",
+      "Riftbound Show Off, now official: reveal or pick a card and lock it in, how it differs from Vision, and every Show Off card with live prices.",
     author: "RiftCompare",
     date: "2026-09-08",
-    updated: "2026-09-29",
+    updated: "2026-10-23",
     readMins: 5,
     tags: ["radiance", "mechanics", "showoff", "leak", "spoilers", "guide"],
     hero: {
@@ -3885,6 +3896,7 @@ Yes, in print. When this page was written, Deploy was known only from a fan phot
       alt: "Riftbound Show Off — a Radiance reveal mechanic, first leaked as Showoff at PAX West and now printed on Radiance cards",
     },
     summary: [
+      "**Official since Riot's 9 October patch notes.** The Radiance core rules define Show Off (in effect from 16 October); the details are in [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata).",
       "**Showoff is a leaked, modal reveal effect from Riftbound: Radiance** — reveal a card from hand, or point at a qualifying friendly card, and the payoff scales with what you showed.",
       "**It's different from [Vision](/keywords/vision)**, Riftbound's existing reveal mechanic: Vision looks at the top of your own deck, while Showoff reportedly checks your hand or board instead.",
       "**The criteria are printed after the keyword.** Primordial Roar shows off *a unit*; Rousing Display shows off *a card with Energy cost 7 or more*. Each card sets its own.",
@@ -3895,13 +3907,13 @@ Yes, in print. When this page was written, Deploy was known only from a fan phot
       { q: "How does the Showoff mechanic work?", a: "As leaked: when you play a Showoff card, you may either reveal a card from your hand or point at a friendly card already in play that meets whatever criteria is printed on the Showoff card. The effect then changes depending on what you showed." },
       { q: "What does 'meets the listed criteria' mean for Showoff?", a: "Each card prints its own criteria straight after the keyword. On Primordial Roar it is 'Show Off a unit'; on Rousing Display it is 'Show Off a card with Energy cost 7 or more'. You meet it by revealing a matching card from your hand or picking a matching friendly card on the board." },
       { q: "How is Showoff different from Vision?", a: "Vision triggers a Predict, looking at the top card of your own Main Deck. Showoff, as leaked, instead looks at a card you already have — in hand or already in play — rather than the top of your deck." },
-      { q: "Is Showoff confirmed by Riot?", a: "Yes, in print. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, and since Preview Season opened on 25 September it has appeared on finished Radiance cards: Primordial Roar and Rousing Display." },
+      { q: "Is Showoff confirmed by Riot?", a: "Yes. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, appeared on finished Radiance cards from Preview Season (25 September), and Riot's Radiance core rules patch notes of 9 October 2026 add it to the rules, in effect from 16 October." },
       { q: "How is Showoff different from Deploy and Disarm?", a: "Showoff is a modal reveal effect triggered on play; Deploy is a Gear keyword tied to holding a battlefield; Disarm weakens an enemy unit's Might on attack. All three reportedly leaked together but don't appear designed to combo directly." },
     ],
     browseCta: {
       href: "/blog/riftbound-radiance-leaked-mechanics",
       label: "See the full Radiance mechanics leak →",
-      blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
+      blurb: "Deploy, Showoff and Disarm together, with the source photo and where the three mechanics were first seen.",
     },
     embeds: [
       {
@@ -3912,13 +3924,15 @@ Yes, in print. When this page was written, Deploy was known only from a fan phot
         take: 8,
       },
     ],
-    body: `*Status, 29 September 2026: confirmed in print, as **Show Off** — two words.* It is on two finished Radiance spells, [Primordial Roar](/card/primordial-roar-rad-082-167) and [Rousing Display](/card/rousing-display-rad-127-167). The reminder text reads *"As you play this, you may reveal a unit from your hand or pick a friendly unit"*, and the "listed criteria" this page could only guess at are printed straight after the keyword: Primordial Roar shows off *a unit* and deals damage equal to its Might; Rousing Display shows off *a card with Energy cost 7 or more* and doubles its Recruit tokens from two to four. The gallery below shows both, the card-by-card read is in [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one), and the rest of this page is the analysis as written before the cards existed.*
+    body: `*Status, 23 October 2026: official.* Riot's Radiance core rules patch notes, published on 9 October 2026 and in effect from 16 October, add Show Off to the rules: Show Off has you reveal a matching card from your hand, or pick a friendly card or token on the board that meets the condition, and whatever the card reads from the shown-off object is locked in when you show it. The rest of this page was written from the PAX West leak and is kept as the record of what was known then; where it says "reportedly" or "as leaked", the rules now settle it. Every change in the update is in [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata).
+
+*Status, 29 September 2026: confirmed in print, as **Show Off** — two words.* It is on two finished Radiance spells, [Primordial Roar](/card/primordial-roar-rad-082-167) and [Rousing Display](/card/rousing-display-rad-127-167). The reminder text reads *"As you play this, you may reveal a unit from your hand or pick a friendly unit"*, and the "listed criteria" this page could only guess at are printed straight after the keyword: Primordial Roar shows off *a unit* and deals damage equal to its Might; Rousing Display shows off *a card with Energy cost 7 or more* and doubles its Recruit tokens from two to four. The gallery below shows both, the card-by-card read is in [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one), and the rest of this page is the analysis as written before the cards existed.*
 
 **Showoff is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what's still missing before it can be judged properly.
 
 > "As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off."
 
-## How Showoff reportedly works
+## How Showoff works
 
 1. **Play the card.** Showoff triggers as part of playing it, not later.
 2. **Choose one of two options**: reveal a card from your hand, or point at a friendly card already in play — either way, the chosen card has to meet whatever criteria is printed on the Showoff card itself.
@@ -3938,7 +3952,7 @@ Since no confirmed Showoff card exists yet, the exact printed criteria are unkno
 
 The leaked wording gives you a genuine choice, not just one method of triggering Showoff: reveal a card from your hand, or point at a friendly card already on the board that meets the criteria. Those are meaningfully different resources to draw from. Revealing from hand works even on an otherwise empty board, but costs you information — your opponent now knows a card you're holding. Pointing at a card already in play costs nothing extra in information (it's already visible), but only works if you actually have a qualifying card out already. A deck that curves out unit after unit will likely lean on the board option more often; a deck holding up reactive cards in hand will likely lean on the reveal option instead — assuming, again, that this wording survives to an actual printed card.
 
-## Building around Showoff, if the leak holds up
+## Building around Showoff
 
 Modal reveal effects generally reward a deck that can reliably meet the checked criteria on demand — a mono-domain-heavy build, a curve stacked toward one card type, or a board that reliably has a big Might stat to point at. Which of those actually applies to Showoff depends entirely on the criteria Riot ends up printing, so treat any specific deckbuilding advice here as provisional until a real card lands. What's less speculative is the general shape of the incentive: any Showoff card rewards consistency in whatever it's checking for, the same way every existing criteria-based effect in this genre does, so a deck built around a narrower, more focused gameplan will generally get more mileage from a Showoff card than a deck spread thin across many card types and domains.
 
@@ -3958,23 +3972,24 @@ The leaked wording says "you *may* reveal" — meaning Showoff, as leaked, is op
 
 Showoff is one of three mechanics in the same leak. **[Deploy](/guides/riftbound-deploy-explained)** is a Gear keyword tied to holding a battlefield; **[Disarm](/guides/riftbound-disarm-explained)** weakens an enemy unit's Might when the Disarm unit attacks. Of the three, Showoff is the only one that triggers purely off what you already have rather than off board position or combat, which is part of why the three don't appear designed to combo directly with each other the way Vendetta's Empower, Flow and Burn were — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source photo and all three side by side.
 
-## What would actually confirm Showoff
+## How Showoff went from leak to rules
 
-The same three things that would confirm any of these leaked mechanics apply here: an official Riot channel — a dev blog, a verified social post, or a proper spoiler-season reveal — showing the keyword; a real card image with Showoff printed on it in final form; or wording checked against an updated Core Rules PDF, the bar **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** eventually cleared for Vendetta. A second demo-table sighting alone would not clear that bar — it would still be the same category of unofficial photo this page is already treating carefully.
+All three of the tests below have now been met, the last by Riot's 9 October patch notes. As written before Preview Season: The same three things that would confirm any of these leaked mechanics apply here: an official Riot channel — a dev blog, a verified social post, or a proper spoiler-season reveal — showing the keyword; a real card image with Showoff printed on it in final form; or wording checked against an updated Core Rules PDF, the bar **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** eventually cleared for Vendetta. A second demo-table sighting alone would not clear that bar — it would still be the same category of unofficial photo this page is already treating carefully.
 
 ## Is Showoff officially confirmed?
 
-Yes, in print. When this page was written, Showoff was known only from a fan photo of Riot's own demo reference material at PAX West. Since Preview Season opened on 25 September it has appeared on finished Radiance cards, [Primordial Roar](/card/primordial-roar-rad-082-167) and [Rousing Display](/card/rousing-display-rad-127-167), which is the evidence this page said it was waiting for: an official card image with the keyword printed on it. There is still nothing to buy until Radiance's Pre-Rift events on 16–22 October and release on 23 October; until then the trackable prices are **[Radiance's sealed pre-orders](/radiance-preorders)**, and each card page above gets live prices as stores list it.`,
+Yes. Riot's Radiance core rules patch notes (9 October 2026, in effect from 16 October) define it; see [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata). Before that it was confirmed in print. When this page was written, Showoff was known only from a fan photo of Riot's own demo reference material at PAX West. Since Preview Season opened on 25 September it has appeared on finished Radiance cards, [Primordial Roar](/card/primordial-roar-rad-082-167) and [Rousing Display](/card/rousing-display-rad-127-167), which is the evidence this page said it was waiting for: an official card image with the keyword printed on it. There is still nothing to buy until Radiance's Pre-Rift events on 16–22 October and release on 23 October; until then the trackable prices are **[Radiance's sealed pre-orders](/radiance-preorders)**, and each card page above gets live prices as stores list it.`,
   },
   {
     slug: "riftbound-disarm-explained",
     category: "guide",
-    title: "Riftbound Disarm Explained: Leaked Mechanic",
+    title: "Riftbound Disarm Explained: Official Rules",
+    seoTitle: "Riftbound Disarm Explained: Official Rules + Cards",
     excerpt:
-      "What Riftbound's leaked Disarm keyword reportedly does, how it compares to the existing Assault keyword, and why it isn't Riot-confirmed yet.",
+      "Riftbound Disarm, confirmed in Riot's Radiance rules: what the attack trigger does, how it differs from Assault, and every Disarm card with prices.",
     author: "RiftCompare",
     date: "2026-09-08",
-    updated: "2026-09-29",
+    updated: "2026-10-23",
     readMins: 5,
     tags: ["radiance", "mechanics", "disarm", "leak", "spoilers", "guide"],
     hero: {
@@ -3982,6 +3997,7 @@ Yes, in print. When this page was written, Showoff was known only from a fan pho
       alt: "Riftbound Disarm — a Radiance combat keyword, first leaked at PAX West and now printed on Radiance cards",
     },
     summary: [
+      "**Official since Riot's 9 October patch notes.** The Radiance core rules define Disarm (in effect from 16 October); the details are in [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata).",
       "**Disarm is a leaked combat mechanic from Riftbound: Radiance**, reportedly weakening an enemy unit's Might when the Disarm unit attacks.",
       "**It's the reported mirror image of [Assault](/keywords/assault)**: Assault gives the attacker +X Might; Disarm instead lowers an enemy unit's Might — a debuff aimed outward rather than a self-buff.",
       "**It reportedly pairs with direct-damage spells** like Falling Star — shrink a blocker's Might first, and a fixed amount of damage goes further toward lethal.",
@@ -3992,13 +4008,13 @@ Yes, in print. When this page was written, Showoff was known only from a fan pho
       { q: "How does the Disarm mechanic work?", a: "As leaked: when a unit with Disarm attacks, it decreases the Might of an enemy unit present at that battlefield. It reads as a repeatable, built-in unit ability rather than a one-time removal spell." },
       { q: "Is Disarm the opposite of Assault?", a: "That's how the leak's own source frames it, and the wording supports the comparison: Assault gives the attacker +X Might while attacking — a self-buff. Disarm, as leaked, instead lowers an enemy unit's Might when this unit attacks — a debuff aimed at the opponent's board." },
       { q: "Does Disarm work with direct damage spells?", a: "The leak's own source suggests pairing Disarm with direct-damage spells like Falling Star — a real Fury-domain Spell from the Origins set. Shrinking a blocker's Might first would make a fixed amount of direct damage go further toward actually killing it, though Disarm's exact numbers aren't known yet." },
-      { q: "Is Disarm confirmed by Riot?", a: "Yes, in print. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, and since Preview Season opened on 25 September it has appeared on finished Radiance cards: Kai'Sa, Rebel and Disposal Expert." },
+      { q: "Is Disarm confirmed by Riot?", a: "Yes. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, appeared on finished Radiance cards from Preview Season (25 September), and Riot's Radiance core rules patch notes of 9 October 2026 add it to the rules, in effect from 16 October." },
       { q: "How is Disarm different from Deploy and Showoff?", a: "Disarm weakens an enemy unit's Might on attack; Deploy is a Gear keyword tied to holding a battlefield; Showoff is a modal reveal effect triggered on play. All three reportedly leaked together but don't appear designed to combo directly." },
     ],
     browseCta: {
       href: "/blog/riftbound-radiance-leaked-mechanics",
       label: "See the full Radiance mechanics leak →",
-      blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
+      blurb: "Deploy, Showoff and Disarm together, with the source photo and where the three mechanics were first seen.",
     },
     embeds: [
       {
@@ -4009,13 +4025,15 @@ Yes, in print. When this page was written, Showoff was known only from a fan pho
         take: 8,
       },
     ],
-    body: `*Status, 29 September 2026: confirmed in print.* Disarm is on two finished Radiance units, [Kai'Sa, Rebel](/card/kai-sa-rebel-rad-063-167) and [Disposal Expert](/card/disposal-expert-rad-093-167), with the reminder text *"When I attack, give an enemy unit here -1 Might this turn."* That is the leaked rule, with two details the leak did not show: the Might loss lasts for the turn, and, like Assault, Disarm takes a number — Disposal Expert has **Disarm 2**, for -2. The gallery below shows both, the card-by-card read is in [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one), and the rest of this page is the analysis as written before the cards existed.*
+    body: `*Status, 23 October 2026: official.* Riot's Radiance core rules patch notes, published on 9 October 2026 and in effect from 16 October, add Disarm to the rules: Disarm is an attack trigger. The first time a unit with Disarm attacks in a combat, an enemy unit at that battlefield gets -1 Might this turn, or -2 for Disarm 2; several instances of Disarm combine into one trigger that uses their total. The rest of this page was written from the PAX West leak and is kept as the record of what was known then; where it says "reportedly" or "as leaked", the rules now settle it. Every change in the update is in [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata).
+
+*Status, 29 September 2026: confirmed in print.* Disarm is on two finished Radiance units, [Kai'Sa, Rebel](/card/kai-sa-rebel-rad-063-167) and [Disposal Expert](/card/disposal-expert-rad-093-167), with the reminder text *"When I attack, give an enemy unit here -1 Might this turn."* That is the leaked rule, with two details the leak did not show: the Might loss lasts for the turn, and, like Assault, Disarm takes a number — Disposal Expert has **Disarm 2**, for -2. The gallery below shows both, the card-by-card read is in [Radiance Preview Season, week one](/blog/riftbound-radiance-preview-week-one), and the rest of this page is the analysis as written before the cards existed.*
 
 **Disarm is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how it reportedly compares to an existing keyword, and what's still unknown.
 
 > "When this unit attacks, decrease the Might of an enemy unit here."
 
-## How Disarm reportedly works
+## How Disarm works
 
 1. **Trigger condition: the Disarm unit attacks.** The effect is tied to attacking, not to being played or to any other timing.
 2. **Effect: it lowers an enemy unit's Might** present at that battlefield.
@@ -4055,13 +4073,13 @@ It's worth being precise about the boundaries of the leaked wording, since it's 
 
 Disarm is one of three mechanics in the same leak. **[Deploy](/guides/riftbound-deploy-explained)** is a Gear keyword tied to holding a battlefield; **[Showoff](/guides/riftbound-showoff-explained)** is a modal reveal effect triggered on play. Of the three, Disarm is the only one that triggers off combat specifically, which is part of why they don't appear designed to combo directly with each other the way Vendetta's Empower, Flow and Burn were — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source photo and all three side by side.
 
-## What would actually confirm Disarm
+## How Disarm went from leak to rules
 
-The same bar applies here as to the other two leaked mechanics: an official Riot channel — a dev blog, a verified social post, or a proper spoiler-season reveal — showing the keyword; a real card image with Disarm printed on it in final form; or wording checked against an updated Core Rules PDF, the standard **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** eventually cleared for Vendetta. A second demo-table sighting, even from a different event, would not clear that bar on its own — it would still be the same category of unofficial photo this page is already treating carefully throughout.
+All three of the tests below have now been met, the last by Riot's 9 October patch notes. As written before Preview Season: The same bar applies here as to the other two leaked mechanics: an official Riot channel — a dev blog, a verified social post, or a proper spoiler-season reveal — showing the keyword; a real card image with Disarm printed on it in final form; or wording checked against an updated Core Rules PDF, the standard **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** eventually cleared for Vendetta. A second demo-table sighting, even from a different event, would not clear that bar on its own — it would still be the same category of unofficial photo this page is already treating carefully throughout.
 
 ## Is Disarm officially confirmed?
 
-Yes, in print. When this page was written, Disarm was known only from a fan photo of Riot's own demo reference material at PAX West. Since Preview Season opened on 25 September it has appeared on finished Radiance cards, [Kai'Sa, Rebel](/card/kai-sa-rebel-rad-063-167) and [Disposal Expert](/card/disposal-expert-rad-093-167), which is the evidence this page said it was waiting for: an official card image with the keyword printed on it. There is still nothing to buy until Radiance's Pre-Rift events on 16–22 October and release on 23 October; until then the trackable prices are **[Radiance's sealed pre-orders](/radiance-preorders)**, and each card page above gets live prices as stores list it.`,
+Yes. Riot's Radiance core rules patch notes (9 October 2026, in effect from 16 October) define it; see [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata). Before that it was confirmed in print. When this page was written, Disarm was known only from a fan photo of Riot's own demo reference material at PAX West. Since Preview Season opened on 25 September it has appeared on finished Radiance cards, [Kai'Sa, Rebel](/card/kai-sa-rebel-rad-063-167) and [Disposal Expert](/card/disposal-expert-rad-093-167), which is the evidence this page said it was waiting for: an official card image with the keyword printed on it. There is still nothing to buy until Radiance's Pre-Rift events on 16–22 October and release on 23 October; until then the trackable prices are **[Radiance's sealed pre-orders](/radiance-preorders)**, and each card page above gets live prices as stores list it.`,
   },
   // ── Gradient sleeves. A genuine accessory-search topic with zero prior coverage
   // on this site. Kept factual and specific to what's actually verifiable (card
@@ -12577,6 +12595,7 @@ What makes it interesting is that it is the first Riftbound set to change what a
 We will update this page as previews land from Convergence Fest onward. Until then, watch [release dates](/release-dates) for the countdown and [movers](/movers) for what the market does to Radiance on the way.`,
   },
   ...SEO_PACK_ARTICLES,
+  ...RADIANCE_TIER_GUIDES,
   {
     slug: "riftbound-gift-of-the-rift-bundle",
     category: "blog",
@@ -13326,8 +13345,9 @@ And if the honest answer turns out to be "less than I hoped" — that is the nor
     ebayPicks: { setCode: "RAD", heading: "Radiance chase cards on eBay right now" },
     category: "blog",
     title: "Riftbound Radiance Card List: Every Card",
+    seoTitle: "Radiance Card Numbers Explained: 167, a, * and SP",
     excerpt:
-      "Every Riftbound Radiance card in number order: Legends, Showcase and overnumbered chase prints, new keywords and live prices ahead of the 23 Oct launch.",
+      "How Riftbound Radiance is numbered: main set to 167, alt arts (a), signed (*), overnumbers to 184 and SP specials, and Vendetta's post-launch prices.",
     author: "RiftCompare",
     date: "2026-10-15",
     readMins: 9,
@@ -13451,6 +13471,8 @@ Rules changes take effect with the set. Riot's Radiance patch notes and errata, 
 Most of a Radiance box's resale value sits in a few slots: the signed Legends, the overnumbered Showcase cards and the SP specials. The second gallery below collects all of them.
 
 [[embed:1]]
+
+Below the chase layer, Radiance's tiers each have a price guide from release day: **[all 28 Epic cards](/guides/riftbound-radiance-epic-cards)**, **[the 19 alt arts](/guides/riftbound-radiance-alt-art-cards)** and **[the nine Legends in every printing](/guides/riftbound-radiance-legends)**.
 
 The **Ultimate Rare is Packed Amphitheater**, a Battlefield, and its overnumbered printing is the hardest card in the set to pull. Fan trackers quote odds of roughly one in four thousand packs, which we have not been able to confirm from Riot. The **HEARTSTEEL** overnumbers (K'Sante, Aphelios, Ezreal, Yone, Kayn and Sett at 178–183/167) are the set's most-searched chase cards. Five of them are reprints of existing champions in the band's art, and **[our HEARTSTEEL breakdown](/blog/riftbound-heartsteel-overnumbered-cards)** covers each one.
 

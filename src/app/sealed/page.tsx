@@ -223,7 +223,11 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
     itemListElement: groups
       .filter((g) => g.lowestPriceCents != null && g.listings.some((l) => l.inStock))
       .map((g, i) => {
-        const inStockCount = g.listings.filter((l) => l.inStock).length;
+        const inStock = g.listings.filter((l) => l.inStock);
+        const inStockCount = inStock.length;
+        // highPrice: the dearest in-stock listing the tile's comparison shows,
+        // never below lowPrice (the group's low can come from a fresher read).
+        const highCents = Math.max(g.lowestPriceCents!, ...inStock.map((l) => l.priceCents));
         return {
           "@type": "ListItem",
           position: i + 1,
@@ -236,6 +240,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
               "@type": "AggregateOffer",
               priceCurrency: currency,
               lowPrice: (g.lowestPriceCents! / 100).toFixed(2),
+              highPrice: (highCents / 100).toFixed(2),
               offerCount: inStockCount,
               availability: "https://schema.org/InStock",
             },

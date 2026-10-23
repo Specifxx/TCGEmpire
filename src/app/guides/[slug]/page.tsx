@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     // layout's title template) — see
     // the identical note in blog/[slug]/page.tsx for why the longer, category-
     // naming suffix was dropped.
-    title: { absolute: `${a.title} — RiftCompare` },
+    title: { absolute: a.seoTitle ?? `${a.title} — RiftCompare` },
     description,
     // Reachable by direct URL for review, but never indexed while unfinished.
     ...(a.draft ? { robots: { index: false, follow: true } } : {}),

@@ -874,6 +874,31 @@ export const KEYWORDS: KeywordEntry[] = [
 export const keywordBySlug = (slug: string): KeywordEntry | undefined =>
   KEYWORDS.find((k) => k.slug === slug.toLowerCase());
 
+/**
+ * The card predicate a keyword page lists ("every card with this keyword"),
+ * shared by the page, its metadata and the keywords sitemap so the three can
+ * never disagree about how many cards a page shows.
+ */
+export function keywordCardWhere(kw: KeywordEntry) {
+  return {
+    ...(kw.set ? { setCode: kw.set } : {}),
+    description: { contains: kw.rulesContain },
+    ...(kw.rulesExclude?.length ? { NOT: kw.rulesExclude.map((x) => ({ description: { contains: x } })) } : {}),
+  };
+}
+
+/**
+ * Thin-page threshold (2026-10-23 audit, DECISIONS.md "Thin keyword pages
+ * leave the index"). A keyword page is a one-paragraph direct answer, a link to
+ * the keyword's full guide and the live card list. Under this many cards the
+ * list is empty or one row, and the page measured 107–206 words of main
+ * content: a near-duplicate stub of the guide it links to. Those pages render
+ * `noindex, follow` and stay out of sitemaps/keywords.xml; the guide is the
+ * indexed page for the query. They return by themselves once enough printed
+ * cards carry the keyword. Same shape as FACET_THIN_THRESHOLD.
+ */
+export const KEYWORD_THIN_THRESHOLD = 5;
+
 // Full name catalogue for the /keywords hub's "one-page glossary" view — sourced
 // from a competitive audit of riftbound.gg's glossary and runeweave.com's facet
 // list, i.e. real printed Riftbound keyword names. Only the slugs present in

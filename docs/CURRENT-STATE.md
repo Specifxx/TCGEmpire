@@ -747,6 +747,11 @@ longer lands on its entry.
   [2026-09-24](../DECISIONS.md#L11756), [2026-09-27](../DECISIONS.md#L14908)
   [2026-09-17](../DECISIONS.md#L7894), [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9222), [2026-09-22](../DECISIONS.md#L10403)
+- **Thin keyword pages are noindexed:** a `/keywords/<slug>` page listing fewer
+  than `KEYWORD_THIN_THRESHOLD` (5) cards renders `noindex, follow` and is left
+  out of `sitemaps/keywords.xml`; its guide is the indexed page. Facets use
+  `FACET_THIN_THRESHOLD`, champions `CHAMPION_THIN_THRESHOLD`.
+  [2026-10-23](../DECISIONS.md#L19025)
 - **Card pages are always indexable** (09-17 reversed Phase 7a); only
   `getCanonicalTwin` duplicates are noindexed. Card titles aim for 60
   characters, but uniqueness beats length.

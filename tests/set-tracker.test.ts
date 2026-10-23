@@ -38,7 +38,9 @@ test("/sets/[set] never imports cookies or the session: the owned overlay is cli
   // Released sets only, decided by the date, not by the flag that outlives release day.
   assert.match(c, /const trackerOpen = totalInSet > 0 && \(!isPreorderSetCode\(set\.code\) \|\| singlesLive\(set\)\)/, "opens on release, or once singles trade (2026-10-17)");
   // The queries the page makes are the ones it made before: no new read was added.
-  assert.equal((c.match(/prisma\./g) ?? []).length, 6, "the same six prisma calls as before the tracker");
+  // Seven since 2026-10-23: the description's per-set store count (one groupBy
+  // in generateMetadata, not part of the tracker).
+  assert.equal((c.match(/prisma\./g) ?? []).length, 7, "the same prisma calls as before the tracker, plus the description's store count");
   assert.doesNotMatch(c, /generateStaticParams/);
 });
 
