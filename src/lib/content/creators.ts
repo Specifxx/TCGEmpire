@@ -132,6 +132,52 @@ export const CREATORS: Creator[] = [
     region: "AU",
     since: "2026-10-22",
   },
+  // Four more, from their Instagram profiles (owner, 2026-10-23).
+  {
+    slug: "bigbarontcg",
+    name: "Big Baron",
+    blurb: "Riftbound TCG player and investor.",
+    links: [
+      { platform: "Instagram", url: "https://www.instagram.com/bigbarontcg/", handle: "@bigbarontcg" },
+      { platform: "Website", url: "https://www.whatnot.com/invite/bigbarontrading", handle: "Whatnot: bigbarontrading" },
+    ],
+    avatar: "/creators/bigbarontcg.jpg",
+    tags: ["Investing"],
+    since: "2026-10-23",
+  },
+  {
+    slug: "riftrawktcg",
+    name: "Lou.Rawk",
+    blurb: "Riftbound creator from Seattle.",
+    links: [{ platform: "Instagram", url: "https://www.instagram.com/riftrawktcg/", handle: "@riftrawktcg" }],
+    avatar: "/creators/riftrawktcg.jpg",
+    region: "US",
+    since: "2026-10-23",
+  },
+  {
+    slug: "secretnumber",
+    name: "Secret Number Riftbound",
+    blurb: "Riftbound content from Vancouver.",
+    links: [
+      { platform: "Instagram", url: "https://www.instagram.com/secretnumberriftbound/", handle: "@secretnumberriftbound" },
+      { platform: "Website", url: "https://linktr.ee/secretnumbercards", handle: "linktr.ee/secretnumbercards" },
+    ],
+    avatar: "/creators/secretnumber.jpg",
+    region: "CA",
+    since: "2026-10-23",
+  },
+  {
+    slug: "deckdemon",
+    name: "Deck Demon",
+    blurb: "Helping you win more Riftbound games: tips, meta, RQ clips and strategy.",
+    links: [
+      { platform: "Instagram", url: "https://www.instagram.com/deckdemon_/", handle: "@deckdemon_" },
+      { platform: "Website", url: "https://deckdemon.com", handle: "deckdemon.com" },
+    ],
+    avatar: "/creators/deckdemon.jpg",
+    tags: ["Strategy", "Competitive"],
+    since: "2026-10-23",
+  },
 ];
 
 /** Creator of the week first, then newest listing first. */
