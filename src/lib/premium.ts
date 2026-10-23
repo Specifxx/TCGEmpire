@@ -740,8 +740,18 @@ export type EntitlementUser = {
 // billing keeps writing the true tier, and this is where a promise that
 // outranks it gets applied — once, at read time, so there is no second copy of
 // the truth to drift or to re-pin after a renewal.
+//
+// PLUS MEMBERS GET PREMIUM, AT THEIR PLUS PRICE (2026-10-23, owner: "make sure
+// the people who were plus are also now premium but grandfathered"). While Plus
+// is off sale, a billed "plus" reads as "premium" HERE, at read time, and
+// nowhere else: the webhook keeps writing the true billed tier, every billing
+// route (checkout, switch-to-annual, upgrade, the portal) resolves the tier from
+// the Stripe Price itself (tierFromPriceId), and no subscription is touched, so
+// each member keeps paying exactly what they pay today. Turning PLUS_ON_SALE
+// back on restores the old split. DECISIONS.md, "Plus members get Premium".
 export function effectiveTier(user: EntitlementUser): PremiumTier {
-  const billed = normalizeTier(user.premiumTier);
+  const billedRaw = normalizeTier(user.premiumTier);
+  const billed: PremiumTier = !PLUS_ON_SALE && billedRaw === "plus" ? "premium" : billedRaw;
   // Only an explicit "plus"/"premium" string is a floor; null/garbage is none.
   // normalizeTier can't do this job — it maps anything unrecognized to
   // "premium", which would turn an empty column into a free upgrade for all.

@@ -19,7 +19,7 @@ import { basketPreview, optimizeBasket, type BasketCard } from "../src/lib/baske
 import { basketStoresFor, postageOptionsFrom } from "../src/lib/shipping";
 import { createDeckWatch, priceDeckList, updateDeckWatch, type DeckWatchRouteDb } from "../src/lib/deck-watch";
 import { buildDeckWatchEmail } from "../src/lib/watch-emails";
-import { NOW, deckHarness, deckRow, premium, plus } from "./helpers/watch-harness";
+import { NOW, deckHarness, deckRow, free, premium, plus } from "./helpers/watch-harness";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MINIMUM CONDITION (2026-09-29, lib/basket-condition.ts). Best Basket, Buy this
@@ -282,7 +282,9 @@ test("changing a watch's floor re-baselines it and never emails a false drop; an
   const same = await updateDeckWatch(db, me("o", premium), "d1", { minCondition: "lp" }, NOW);
   assert.equal(same.status, 200);
   assert.equal(rows[0]!.lastTotalCents, 10_000, "the same floor keeps its baseline");
-  assert.equal((await updateDeckWatch(db, me("o", plus), "d1", { minCondition: "nm" }, NOW)).status, 402, "editing the floor is Premium's");
+  assert.equal((await updateDeckWatch(db, me("o", free), "d1", { minCondition: "nm" }, NOW)).status, 402, "editing the floor is Premium's");
+  assert.equal(rows[0]!.minCondition, "lp", "a refused edit writes nothing");
+  assert.equal(rows[0]!.lastTotalCents, 10_000);
   assert.equal((await updateDeckWatch(db, me("o", premium), "d1", { minCondition: "shiny" }, NOW)).status, 400);
   const res = await updateDeckWatch(db, me("o", premium), "d1", { minCondition: "any" }, NOW);
   assert.equal(res.status, 200);
@@ -300,6 +302,16 @@ test("changing a watch's floor re-baselines it and never emails a false drop; an
   const base = h.writeFor("d1")!.lastTotalCents as number;
   const h2 = deckHarness([deckRow("d1", premium, { minCondition: null, targetCents: null, lastTotalCents: base + 2_000 })], { listings: LISTINGS });
   assert.equal((await h2.run()).drops, 1);
+
+  // A billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE
+  // false) since 2026-10-23 — effectiveTier; DECISIONS.md, "Plus members get
+  // Premium" — so it may change the floor, and the change re-baselines.
+  const plusDb = routeDb([
+    { id: "d2", userId: "o", market: "US", name: "Deck", listText: "3 Alpha\n1 Beta", minCondition: "lp", targetCents: null, lastTotalCents: 10_000, lastEmailedCents: 9_800, lastNotifiedAt: NOW, snoozedUntil: null },
+  ]);
+  assert.equal((await updateDeckWatch(plusDb.db, me("o", plus), "d2", { minCondition: "nm" }, NOW)).status, 200, "a billed-Plus member edits the floor as Premium");
+  assert.equal(plusDb.rows[0]!.minCondition, "nm");
+  assert.equal(plusDb.rows[0]!.lastTotalCents, null, "re-baselined");
 });
 
 // ── What Best Basket remembers ───────────────────────────────────────────────

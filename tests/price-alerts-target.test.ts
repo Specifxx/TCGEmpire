@@ -253,17 +253,21 @@ test("PAID_SEND_CAP defers the overflow of new digests, baselines held", async (
   assert.equal(h.writes.length, PAID_SEND_CAP);
 });
 
-test("a Plus account's targets beyond its limit are not honoured; Premium has no limit", async () => {
+test("a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false): every target honoured; Premium has no limit", async () => {
+  // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
+  // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so
+  // the old 25-target Plus cap no longer drops a Plus member's newest targets.
+  // The free account's one-target cap is covered above.
   const many = (user: User) =>
     Array.from({ length: PLUS_TARGET_ALERT_LIMIT + 2 }, (_, i) =>
       row(`t${i}`, { email: "member@example.com", userId: "u-member", user, targetCents: 1000, lastPriceCents: 900, price: 900, createdAt: daysAgo(i) }),
     );
   const p = harness(many(plus));
   const sp = await p.run();
-  assert.equal(sp.targets, PLUS_TARGET_ALERT_LIMIT);
+  assert.equal(sp.targets, PLUS_TARGET_ALERT_LIMIT + 2, "no Plus cap while Plus reads as Premium");
   assert.equal(p.sent.length, 1, "one digest per address");
   const hitIds = new Set(p.items().map((i) => i.cardId));
-  assert.ok(!hitIds.has("card-t0") && !hitIds.has("card-t1"), "the two newest watches are the ones left out");
+  assert.ok(hitIds.has("card-t0") && hitIds.has("card-t1"), "the two newest watches are honoured too");
   assert.ok(hitIds.has(`card-t${PLUS_TARGET_ALERT_LIMIT + 1}`), "the oldest is honoured");
   const q = harness(many(premium));
   assert.equal((await q.run()).targets, PLUS_TARGET_ALERT_LIMIT + 2);

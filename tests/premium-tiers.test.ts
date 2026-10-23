@@ -12,7 +12,7 @@ import {
   grantPremiumDays,
 } from "../src/lib/premium";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
-import { PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, annualSavingPct, premiumFromLine, premiumEffectiveMonthly, premiumMoneyNum } from "../src/lib/site";
+import { PLUS_ON_SALE, PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, annualSavingPct, premiumFromLine, premiumEffectiveMonthly, premiumMoneyNum } from "../src/lib/site";
 import { FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT, targetAlertLimit } from "../src/lib/alert-limits";
 import { FREE_PLANS_PER_MONTH } from "../src/lib/basket-meter";
 import { SET_GAP_CHUNK } from "../src/lib/set-gap";
@@ -61,10 +61,14 @@ test("isPremium's min argument defaults to plus, so every pre-existing call site
   const future = new Date(now + 86_400_000);
   const past = new Date(now - 86_400_000);
 
-  // A Plus subscriber: entitled at the default (plus) threshold, not at premium.
+  // A billed-Plus subscriber: entitled at the default (plus) threshold. While
+  // Plus is off sale (PLUS_ON_SALE=false) a billed "plus" reads as Premium —
+  // grandfathered at the Plus price — so it passes a premium-only gate too.
+  // DECISIONS.md, "Plus members get Premium" (2026-10-23).
   const plusUser = { premiumUntil: future, premiumTier: "plus" };
+  assert.equal(PLUS_ON_SALE, false, "this test pins the off-sale behaviour; revisit it if Plus goes back on sale");
   assert.equal(isPremium(plusUser), true, "isPremium(user) with no min arg must mean ANY paid tier");
-  assert.equal(isPremium(plusUser, "premium"), false, "a Plus subscriber must not pass a premium-only gate");
+  assert.equal(isPremium(plusUser, "premium"), true, "a billed-Plus subscriber is treated as Premium while Plus is off sale");
 
   // A Premium subscriber: entitled at both thresholds.
   const premiumUser = { premiumUntil: future, premiumTier: "premium" };
@@ -87,7 +91,10 @@ test("isPremium's min argument defaults to plus, so every pre-existing call site
 test("premiumTierOf names the real tier, or null when not entitled", () => {
   const future = new Date(Date.now() + 86_400_000);
   const past = new Date(Date.now() - 86_400_000);
-  assert.equal(premiumTierOf({ premiumUntil: future, premiumTier: "plus" }), "plus");
+  // A billed-Plus account is named Premium while Plus is off sale — grandfathered
+  // at its Plus price (DECISIONS.md, "Plus members get Premium").
+  assert.equal(PLUS_ON_SALE, false);
+  assert.equal(premiumTierOf({ premiumUntil: future, premiumTier: "plus" }), "premium");
   assert.equal(premiumTierOf({ premiumUntil: future, premiumTier: "premium" }), "premium");
   assert.equal(premiumTierOf({ premiumUntil: past, premiumTier: "plus" }), null);
   assert.equal(premiumTierOf(null), null);
@@ -715,11 +722,21 @@ test("a tier floor raises the effective tier without touching what billing wrote
   // No floor, or a junk value, changes nothing. A junk floor must NOT be run
   // through normalizeTier, which maps anything unrecognized to "premium" — an
   // empty or malformed column would then be a free upgrade for everyone.
-  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus" }), "plus");
-  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: null }), "plus");
-  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: "" }), "plus");
-  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: "PREMIUM" }), "plus");
-  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: "nonsense" }), "plus");
+  //
+  // While Plus is off sale a billed "plus" already reads as "premium" on its
+  // own (DECISIONS.md, "Plus members get Premium", 2026-10-23), so through
+  // effectiveTier these all land on "premium" whatever the floor says; the
+  // expectation follows PLUS_ON_SALE so the junk-floor guard is exercised again
+  // the moment Plus goes back on sale. The source check below pins the guard
+  // itself meanwhile.
+  const billedPlusReadsAs = PLUS_ON_SALE ? "plus" : "premium";
+  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus" }), billedPlusReadsAs);
+  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: null }), billedPlusReadsAs);
+  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: "" }), billedPlusReadsAs);
+  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: "PREMIUM" }), billedPlusReadsAs);
+  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: "nonsense" }), billedPlusReadsAs);
+  const effSrc = read("src/lib/premium.ts").match(/export function effectiveTier[\s\S]*?\n}\n/)?.[0] ?? "";
+  assert.match(effSrc, /premiumTierFloor === "plus" \|\| user\.premiumTierFloor === "premium"/, "the floor must be an exact-string match, never normalizeTier");
 
   // A floor raises a tier; it never GRANTS one. A lapsed account with a floor
   // is still not entitled to anything.

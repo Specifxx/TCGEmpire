@@ -81,17 +81,20 @@ test("400 for anything but whole cents in range, or null", async () => {
   }
 });
 
-test(`409 at the Plus limit (${PLUS_TARGET_ALERT_LIMIT}), counting only the account's OTHER targets`, async () => {
+test(`a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false): no 409 at the old Plus limit (${PLUS_TARGET_ALERT_LIMIT}); the count is of the account's OTHER targets`, async () => {
+  // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
+  // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so
+  // the old 25-target cap no longer refuses a Plus member.
   const s = stub({ others: PLUS_TARGET_ALERT_LIMIT });
   const r = await applyTargetPrice(s.db, plus, "card-1", { market: "US", targetCents: 1000 });
-  assert.equal(r.status, 409);
-  assert.equal(r.body.limit, PLUS_TARGET_ALERT_LIMIT);
-  assert.match(String(r.body.error), /Premium/);
-  assert.equal(s.update(), undefined, "nothing written at the limit");
+  assert.equal(r.status, 200, "a billed-Plus account past the old Plus cap is not refused");
+  assert.equal(r.body.limit, null, "unlimited, as for Premium");
+  assert.equal(r.body.used, PLUS_TARGET_ALERT_LIMIT + 1);
+  assert.equal(s.update()!.data.targetCents, 1000);
   const count = s.calls.find((c) => c.op === "count")!.args as { where: Record<string, unknown> };
   assert.deepEqual(count.where, { userId: "u1", targetCents: { not: null }, NOT: { cardId: "card-1", market: "US" } });
 
-  // Editing a target already counted (the other 24 + this one) is never blocked.
+  // Editing a target already counted (the others + this one) still counts it once.
   const edit = stub({ others: PLUS_TARGET_ALERT_LIMIT - 1, row: { targetCents: 900 } });
   const e = await applyTargetPrice(edit.db, plus, "card-1", { market: "US", targetCents: 1000 });
   assert.equal(e.status, 200);

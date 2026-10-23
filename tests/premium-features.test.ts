@@ -165,9 +165,15 @@ test("a Premium member gets one email with their market's matching auctions, soo
   assert.equal(s2.emails, 0);
 });
 
-test("Plus is not Premium, and a paused address is skipped", async () => {
-  const plus = await runAuctionAlerts({ db: auctionDb({ premiumTier: "plus" }).db, now: NOW, dailyBudget: 100, send: async () => assert.fail("Plus has no auction alerts") });
-  assert.equal(plus.lapsed, 1);
+test("a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false), and a paused address is skipped", async () => {
+  // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
+  // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so a
+  // Plus member gets the same auction email a Premium member does.
+  const plusSends: string[] = [];
+  const plus = await runAuctionAlerts({ db: auctionDb({ premiumTier: "plus" }).db, now: NOW, dailyBudget: 100, send: async (to) => (plusSends.push(to), true) });
+  assert.equal(plus.lapsed, 0, "a billed-Plus member is not skipped as unentitled");
+  assert.equal(plus.emails, 1);
+  assert.deepEqual(plusSends, ["fan@example.com"]);
   const paused = await runAuctionAlerts({ db: auctionDb({ paused: ["fan@example.com"] }).db, now: NOW, dailyBudget: 100, send: async () => assert.fail("paused") });
   assert.equal(paused.paused, 1);
 });
