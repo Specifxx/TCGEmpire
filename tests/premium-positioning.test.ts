@@ -99,9 +99,16 @@ test("the tagline is present on the surface that carries it, and /premium leads 
   // Since 2026-10-23 the hero is the one promise, "Never overpay for Riftbound
   // again." (PREMIUM_PROMISE, lib/premium-plan-copy.ts; DECISIONS.md "Premium,
   // rebranded around never overpaying").
-  assert.match(code("src/app/premium/page.tsx"), /\$\{PREMIUM_PROMISE\}\./);
+  // Since the conversion redesign (2026-10-23, DECISIONS.md "/premium, rebuilt to
+  // convert, honestly") the H1 is the promise made concrete — still a saving the
+  // reader makes ("Find the lowest delivered price…"), never an edge over other
+  // buyers — and the page <title> states the price and trial instead of the
+  // tagline. The promise stays the plan card's tagline (planTagline) and the dialog's.
+  assert.match(code("src/app/premium/page.tsx"), /\$\{PREMIUM_HERO_HEADLINE\}\./);
   assert.match(code("src/lib/premium-plan-copy.ts"), /PREMIUM_PROMISE = "Never overpay for Riftbound again"/);
-  assert.match(code("src/app/premium/page.tsx"), /never overpay for a Riftbound card/, "/premium's title still carries the tagline");
+  assert.match(code("src/lib/premium-plan-copy.ts"), /return PLUS_ON_SALE \? "Everything in Plus, plus the cheapest delivered order" : PREMIUM_PROMISE;/, "the plan card's tagline is the promise");
+  assert.doesNotMatch(code("src/lib/premium-plan-copy.ts"), /PREMIUM_HERO_HEADLINE = "[^"]*(edge|beat|outsmart)/i, "a saving, not an advantage over other buyers");
+  assert.match(code("src/app/premium/page.tsx"), /const META_TITLE = `RiftCompare Premium: /, "/premium's title states the plan");
   for (const file of [
     "src/components/PremiumDialog.tsx",
     // SignupPromoPopup (removed 2026-09-30) was deliberately NOT here from 2026-09-16: it sold the

@@ -173,7 +173,9 @@ test("/premium stays short: one line per plan card, one trial FAQ entry, the buy
   assert.match(cta, /trialButtonLabel\(trialDays, trialFeeCents\)/);
   const page = stripComments(readFileSync(join(SRC, "app/premium/page.tsx"), "utf8"));
   const faq = page.slice(page.indexOf("const FAQ:"), page.indexOf("export default async function PremiumPage"));
-  assert.equal((faq.match(/premiumTrialEnabled\(\)/g) ?? []).length, 2, "one FAQ entry behind the trial switch, plus the cancel answer's own clause");
+  // Three since 2026-10-23: the "only a few cards?" answer offers the trial only while it is on, and free.
+  assert.equal((faq.match(/premiumTrialEnabled\(\)/g) ?? []).length, 3, "one FAQ entry behind the trial switch, plus the cancel and few-cards answers' own clauses");
+  assert.match(faq, /premiumTrialEnabled\(\) && PREMIUM_TRIAL_FEE_CENTS === 0 \? ` Price your own list first/, "the few-cards answer says 'free' only for a free trial");
   assert.match(faq, /You pay \$\{premiumTrialFee\(PREMIUM_TRIAL_FEE_CENTS\)\} today/);
   assert.match(faq, /A card is required\. We email you a day or two before day/);
   assert.match(faq, /you keep access to day \$\{PREMIUM_TRIAL_DAYS\} either way/);

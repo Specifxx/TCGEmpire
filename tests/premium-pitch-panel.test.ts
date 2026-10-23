@@ -60,8 +60,12 @@ test("one tagline, on every surface that carries the Premium headline", () => {
   // Since 2026-10-23 the hero is the one promise, "Never overpay for Riftbound
   // again." (PREMIUM_PROMISE, lib/premium-plan-copy.ts; DECISIONS.md "Premium,
   // rebranded around never overpaying").
-  assert.match(read("src/app/premium/page.tsx"), /\$\{PREMIUM_PROMISE\}\./);
+  // Since the conversion redesign (2026-10-23, DECISIONS.md "/premium, rebuilt to
+  // convert, honestly") /premium's H1 is the promise made concrete,
+  // PREMIUM_HERO_HEADLINE; the promise stays the plan card's tagline and the dialog's.
+  assert.match(read("src/app/premium/page.tsx"), /\$\{PREMIUM_HERO_HEADLINE\}\./);
   assert.match(read("src/lib/premium-plan-copy.ts"), /PREMIUM_PROMISE = "Never overpay for Riftbound again"/);
+  assert.match(read("src/lib/premium-plan-copy.ts"), /PREMIUM_HERO_HEADLINE = "Find the lowest delivered price for every Riftbound card you buy"/);
   for (const retired of [/[Pp]ower tools for buyers/, /unfair edge/i]) {
     assert.ok(!retired.test(read("src/app/premium/page.tsx")), `/premium still carries a retired tagline (${retired})`);
   }
