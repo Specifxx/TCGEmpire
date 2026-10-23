@@ -34,6 +34,8 @@ export interface OpsDeps {
     ebayAdsNewest(): Promise<Date | null>;
     storeHealthNewest(): Promise<Date | null>;
     inbox(): Promise<InboxCounts>;
+    /** Stores plans (lib/store-plan.ts): how many exist, and the paid ones not yet linked to a tracked store. */
+    storePlans?(): Promise<{ total: number; unlinked: { storeName: string; createdAt: Date; activeUntil: Date | null }[] }>;
   };
 
   /** Files from a checkout of the repository; absent on the website. */

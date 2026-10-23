@@ -7,6 +7,7 @@ import { formatMoney } from "@/lib/format";
 import { currencyOf, type Country } from "@/lib/country";
 import { TargetInput } from "./DeckWatchList";
 import { SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import { ENTRY_TIER_NAME } from "@/lib/site";
 
 // The "Sealed" section of /watching (Plus and Premium, 2026-09-29): every
 // sealed product the paid run checks (lib/sealed-watch.ts) with its target,
@@ -42,7 +43,7 @@ export function SealedWatchList({ names, limit, lapsed = false }: { names: Recor
     <div>
       {lapsed && (
         <p className="mb-2 text-xs leading-relaxed text-amber-300" data-lapsed-note>
-          Your plan has ended, so these are not being checked or emailed. They resume if you rejoin Plus; stop any you no longer want.
+          Your plan has ended, so these are not being checked or emailed. They resume if you rejoin {ENTRY_TIER_NAME}; stop any you no longer want.
         </p>
       )}
       {error && (

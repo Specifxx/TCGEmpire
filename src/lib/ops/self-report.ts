@@ -13,10 +13,21 @@ export function requiredEnvNames(): string[] {
   return ["AUTH_SECRET", "CRON_SECRET", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "RESEND_API_KEY", OPERATIONAL_VARS[0]];
 }
 
-export function missingEnv(env: Record<string, string | undefined> = process.env): string[] {
+/** What the site knows about itself beyond its environment (read by the route, passed in). */
+export interface SelfFacts {
+  /** StorePlanSubscription rows; null when the count could not be read. */
+  storePlanSubscriptions?: number | null;
+}
+
+export function missingEnv(env: Record<string, string | undefined> = process.env, facts: SelfFacts = {}): string[] {
   const missing = requiredEnvNames().filter((n) => !(env[n] ?? "").trim());
   // The history database: any one name in its chain counts.
   if (!HISTORY_VARS.some((n) => (env[n] ?? "").trim())) missing.push(HISTORY_VARS[0]);
+  // The Stores plan (lib/store-plan.ts): optional until a store has bought it,
+  // then required — without it renewals stop extending the plan (the webhook
+  // also matches on metadata, but the checkout and the sales page switch off)
+  // and paying stores lose their report.
+  if ((facts.storePlanSubscriptions ?? 0) > 0 && !(env.STRIPE_STORE_PRICE_ID ?? "").trim()) missing.push("STRIPE_STORE_PRICE_ID");
   return missing;
 }
 
@@ -37,7 +48,7 @@ async function probe(url: string, headers: Record<string, string>): Promise<{ va
   }
 }
 
-export async function siteSelfReport(env: Record<string, string | undefined> = process.env): Promise<SiteSelfReport> {
+export async function siteSelfReport(env: Record<string, string | undefined> = process.env, facts: SelfFacts = {}): Promise<SiteSelfReport> {
   const resendKey = env.RESEND_API_KEY;
   const brevoKey = env.BREVO_API_KEY;
   const [resend, brevo] = await Promise.all([
@@ -48,6 +59,6 @@ export async function siteSelfReport(env: Record<string, string | undefined> = p
     ok: true,
     resend: { configured: !!resendKey, ...resend },
     brevo: { configured: !!brevoKey, ...brevo },
-    missingEnv: missingEnv(env),
+    missingEnv: missingEnv(env, facts),
   };
 }

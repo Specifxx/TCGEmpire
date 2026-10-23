@@ -154,7 +154,7 @@ test("every remaining 'free trial' / '$0 today' / 'nothing charged' line is the 
       // The feedback / referral grants ("nothing charged" on a free week of Premium, no card) are not the trial.
       if (/Neither of these requires ever entering a payment method/.test(line)) return;
       const around = lines.slice(Math.max(0, i - 12), i + 1).join("\n");
-      if (!FEE_GUARD.test(around) && !/^\s*(?:\/\/|\*)/.test(line) && !/"No — Plus and Premium are billed from the day/.test(line) && !/no free trial/i.test(line)) {
+      if (!FEE_GUARD.test(around) && !/^\s*(?:\/\/|\*)/.test(line) && !/"No — (?:Plus and Premium are|Premium is) billed from the day/.test(line) && !/no free trial/i.test(line)) {
         found.push(`${rel}:${i + 1}: ${line.trim().slice(0, 100)}`);
       }
       if (!allowed.has(rel)) found.push(`${rel}: not on the allow-list: ${line.trim().slice(0, 100)}`);

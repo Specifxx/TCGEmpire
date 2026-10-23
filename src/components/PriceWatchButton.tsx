@@ -6,6 +6,7 @@ import { useWatchlist } from "@/lib/use-watchlist";
 import type { FreeLimitBody } from "@/lib/free-limits";
 import { useCountry } from "./CountryProvider";
 import { FreeLimitPanel, FreeLimitPopover } from "./FreeLimitPanel";
+import { PLUS_ON_SALE } from "@/lib/site";
 
 // "Watch this card's price" — and, now, "stop watching it".
 //
@@ -102,7 +103,9 @@ export function PriceWatchButton({
   // and Premium watch sealed products and whole decks too — one line, no popup.
   const hint = watching
     ? "You'll get an email when the price drops — click to stop"
-    : "Watch this card: a free email when its price hits a new low (free accounts: up to 10 cards). Plus adds your own target price and sealed-product watches; Premium watches a whole deck's delivered price.";
+    : PLUS_ON_SALE
+      ? "Watch this card: a free email when its price hits a new low (free accounts: up to 10 cards). Plus adds your own target price and sealed-product watches; Premium watches a whole deck's delivered price."
+      : "Watch this card: a free email when its price hits a new low (free accounts: up to 10 cards). Premium adds your own target price, sealed-product watches and a whole deck's delivered price.";
 
   if (variant === "full" || variant === "responsive") {
     const responsive = variant === "responsive";

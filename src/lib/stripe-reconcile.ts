@@ -12,6 +12,8 @@ import {
   priceIdFromSubscription,
   userIdFromSubscription,
 } from "./stripe-entitlement";
+import { STORE_PLAN_PRICE_ID, isStorePlanSubscription } from "./store-plan";
+import { extendStorePlan } from "./store-plan-db";
 
 // Stripe ↔ premiumUntil reconciliation — the safety net under the webhook, and
 // the self-healing half of the Naron incident fix (Aug 2026).
@@ -98,6 +100,12 @@ export async function runStripeReconcile({ notify = true }: { notify?: boolean }
         const until = entitledUntilFromSubscription(sub);
         if (!until) continue;
         const customerId = customerIdOf(sub);
+        // A Stores plan (lib/store-plan.ts) also carries its own paid-through
+        // date; heal a missed renewal webhook for it too (extend-only, and never
+        // fatal to the Premium reconcile below).
+        if (isStorePlanSubscription(sub, STORE_PLAN_PRICE_ID, priceIdFromSubscription(sub))) {
+          await extendStorePlan(sub.id, until).catch((e) => console.error(`stripe-reconcile: Stores plan ${sub.id} not extended:`, e));
+        }
 
         // Resolve the account three ways, in order of reliability: the userId
         // stamped into subscription metadata at checkout, the stored customer

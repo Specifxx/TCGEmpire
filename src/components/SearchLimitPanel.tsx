@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { PremiumButton } from "./PremiumButton";
 import { limitCopy, type SearchTier } from "@/lib/search-quota";
+import { ENTRY_TIER_NAME } from "@/lib/site";
 
 // Shown where a search is refused for the day (lib/search-quota.ts): the
 // typeahead dropdown and /browse. It says what the next tier gives and keeps
@@ -21,12 +22,12 @@ export function SearchLimitPanel({ tier, next, compact = false }: { tier: Search
               Sign up free
             </Link>
             <PremiumButton tier="plus" surface="limit:search" className="btn-ghost min-h-11 px-4">
-              Get Plus
+              Get {ENTRY_TIER_NAME}
             </PremiumButton>
           </>
         ) : tier === "free" ? (
           <PremiumButton tier="plus" surface="limit:search" className="btn-primary min-h-11 px-4">
-            Get Plus
+            Get {ENTRY_TIER_NAME}
           </PremiumButton>
         ) : (
           <PremiumButton tier="premium" surface="limit:search" className="btn-primary min-h-11 px-4">

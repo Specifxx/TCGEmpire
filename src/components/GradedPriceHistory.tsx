@@ -6,6 +6,7 @@ import { PriceChart } from "./PriceChart";
 import { PremiumButton } from "./PremiumButton";
 import { useMe } from "@/lib/use-me";
 import type { PricePoint } from "@/lib/price-history";
+import { ENTRY_TIER_NAME } from "@/lib/site";
 
 // Graded price tracking (2026-10-09, Plus; lib/graded-history.ts and
 // lib/graded-watch.ts): under the card page's Graded tab, the cheapest live slab
@@ -51,7 +52,7 @@ export function GradedPriceHistory({ cardId }: { cardId: string }) {
   if (!member) {
     return (
       <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-ink-800 pt-3 text-xs text-slate-400">
-        <span>Plus tracks each grade&apos;s price over time and emails you when a PSA 10 or BGS 9.5 hits a new low.</span>
+        <span>{ENTRY_TIER_NAME} tracks each grade&apos;s price over time and emails you when a PSA 10 or BGS 9.5 hits a new low.</span>
         <PremiumButton tier="plus" surface="gate:graded-history" className="btn-ghost min-h-11 px-3 text-xs">
           Track graded prices
         </PremiumButton>

@@ -27,6 +27,8 @@
 // panel and every tier table / FAQ / email that quotes a number read the SAME
 // constants, so the promise and the check can never drift apart.
 
+import { ENTRY_TIER_NAME } from "./site";
+
 export const FREE_WATCHLIST_LIMIT = 10;
 export const FREE_PORTFOLIO_LIMIT = 50;
 
@@ -65,7 +67,7 @@ export function freeLimitBody(kind: FreeLimitKind, count: number): FreeLimitBody
   const limit = FREE_LIMITS[kind];
   const what = kind === "watchlist" ? "watch" : "add to your portfolio";
   return {
-    error: `${freeLimitHeadline(kind, count)} Upgrade to Plus to ${what} more cards.`,
+    error: `${freeLimitHeadline(kind, count)} Upgrade to ${ENTRY_TIER_NAME} to ${what} more cards.`,
     code: "free_limit",
     kind,
     limit,

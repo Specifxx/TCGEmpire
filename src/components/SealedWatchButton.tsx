@@ -7,6 +7,7 @@ import { useCountryMaybe } from "./CountryProvider";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { PremiumButton } from "./PremiumButton";
 import { SEALED_CHECK_CADENCE, SEALED_RRP_ONLY, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
+import { ENTRY_TIER_NAME } from "@/lib/site";
 
 // "Watch this sealed product" (2026-09-29): a toggle for a Plus/Premium
 // member — an email when it is back in stock after selling out everywhere,
@@ -43,13 +44,13 @@ export function SealedWatchButton({
       return (
         <PremiumButton tier="plus" surface="gate:sealed-watch" className={`tap-icon rounded-full bg-ink-950/80 text-slate-300 hover:text-white ${className}`}>
           <span aria-hidden="true">♡</span>
-          <span className="sr-only">Watch this product with Plus</span>
+          <span className="sr-only">Watch this product with {ENTRY_TIER_NAME}</span>
         </PremiumButton>
       );
     }
     return (
       <div className={className}>
-        <p className="text-xs text-slate-400">Plus emails you when this is back in stock, at RRP, or at your price, checked {SEALED_CHECK_CADENCE}. At-RRP alerts: {SEALED_RRP_ONLY}.</p>
+        <p className="text-xs text-slate-400">{ENTRY_TIER_NAME} emails you when this is back in stock, at RRP, or at your price, checked {SEALED_CHECK_CADENCE}. At-RRP alerts: {SEALED_RRP_ONLY}.</p>
         <div className="mt-1.5">
           <PremiumButton tier="plus" surface="gate:sealed-watch" />
         </div>

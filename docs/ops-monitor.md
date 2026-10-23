@@ -10,7 +10,7 @@ reasoning.
 | | |
 | --- | --- |
 | **Alert email** | Sent when a check turns amber or red (once), gets worse, stays open for a day (red) or three (amber), or recovers. Each item says what is wrong and what to do; most end with a sentence to paste to Claude. |
-| **Instant inbox email** | Every contact message, feedback, wrong-price report, store suggestion and support ticket is emailed the moment it is submitted. At most 8 an hour and 25 a day, so spam cannot use up the email allowance; the rest still land in the inbox. |
+| **Instant inbox email** | Every contact message, feedback, wrong-price report, store suggestion and support ticket is emailed the moment it is submitted, as is every Stores plan purchase and every edit a paying store makes to its store page text. At most 8 an hour and 25 a day, so spam cannot use up the email allowance; the rest still land in the inbox. |
 | **Weekly email** (Monday, Sydney morning) | "All healthy" or what is flagged, plus the inbox count. **If it does not arrive, the monitor has stopped.** |
 | **/admin** | A status strip at the top and a red "N new" on the Inbox tile. |
 | **/admin/health** | Every check, with bars for the Neon limits and the eBay allowance. |
@@ -24,9 +24,9 @@ Emails go to `bill.jyang101@gmail.com` (set `OWNER_ALERT_EMAIL` in Vercel and Gi
 | Databases & limits | Main database answering · main and history database **monthly transfer** (% used, rate, days until it runs out) · age of the safety-net copy of prices |
 | eBay | API keys accepted · daily call allowance · auction sweep · eBay listings freshness |
 | Prices & data | Store prices per market · sealed prices · store scraper health job · daily price history files · DexCompare's browse index (the Pokémon section's store prices) |
-| Payments | Stripe key accepted · Stripe webhook enabled and delivering |
+| Payments | Stripe key accepted · Stripe webhook enabled and delivering · a paid **Stores plan** waiting more than two days to be linked to its tracked store (amber: "A store paid for the Stores plan and has no report yet" — link it at `/admin/store-partners`) |
 | Email | Resend key accepted · Brevo key accepted |
-| Site & deploys | Five key pages load with prices · latest production build · price import, auction sweep, sealed refresh, store health and daily release jobs (failed or overdue) · required settings present on the site |
+| Site & deploys | Five key pages load with prices · latest production build · price import, auction sweep, sealed refresh, store health and daily release jobs (failed or overdue) · required settings present on the site (including `STRIPE_STORE_PRICE_ID` once any Stores plan exists) |
 | Inbox | Anything waiting more than two days |
 
 A check that cannot run (a key is not set, an API is unreachable) shows grey and

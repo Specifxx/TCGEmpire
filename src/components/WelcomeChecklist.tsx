@@ -11,7 +11,7 @@ import { PremiumButton } from "./PremiumButton";
 import Link from "next/link";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 import { isSignupSession } from "@/lib/signup-session";
-import { trialOfferLead } from "@/lib/site";
+import { trialOfferLead, PLUS_ON_SALE } from "@/lib/site";
 
 const DISMISS_KEY = "rc_welcome_dismissed";
 // Written by SignupWelcome.tsx the moment a ?welcome landing fires — not read
@@ -105,12 +105,23 @@ export function WelcomeChecklist() {
   const premiumStep = (
     <div className="min-w-0 flex-1">
       <p className="text-sm font-semibold text-white">
-        {trialOffer ? `Plus or Premium: ${trialOfferLead(trialDays, trialFeeCents).replace(/^First/, "first")}` : "See what Premium adds"}
+        {trialOffer ? `${PLUS_ON_SALE ? "Plus or Premium" : "Premium"}: ${trialOfferLead(trialDays, trialFeeCents).replace(/^First/, "first")}` : "See what Premium adds"}
       </p>
       <p className="text-xs text-slate-500">
-        Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium)
-        a whole deck&apos;s delivered price. Plus also removes the card limits, so a whole set fits; Premium plans the order, store
-        by store, at the condition you&apos;ll play.{trialOffer ? (trialFeeCents > 0 ? ` Cancel before day ${trialDays} and you pay nothing more.` : " Cancel before the trial ends and you pay nothing.") : ""}
+        {/* Premium alone while Plus is off sale (PLUS_ON_SALE, 2026-10-23). */}
+        {PLUS_ON_SALE ? (
+          <>
+            Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium)
+            a whole deck&apos;s delivered price. Plus also removes the card limits, so a whole set fits; Premium plans the order, store
+            by store, at the condition you&apos;ll play.
+          </>
+        ) : (
+          <>
+            Premium watches prices for you: your own target price on cards, sealed products back in stock or at RRP, and a whole
+            deck&apos;s delivered price. It also removes the card limits, so a whole set fits, and plans the order, store by store,
+            at the condition you&apos;ll play.
+          </>
+        )}{trialOffer ? (trialFeeCents > 0 ? ` Cancel before day ${trialDays} and you pay nothing more.` : " Cancel before the trial ends and you pay nothing.") : ""}
       </p>
       <div className="mt-2">
         <PremiumButton surface="checklist" />
@@ -186,8 +197,10 @@ export function WelcomeChecklist() {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-white">Watch a card</p>
             <p className="text-xs text-slate-500">
-              Free: up to {FREE_WATCHLIST_LIMIT} cards, an email when one hits a new low. Plus also watches sealed products (back in
-              stock, at RRP); Premium watches a whole deck&apos;s delivered price.
+              Free: up to {FREE_WATCHLIST_LIMIT} cards, an email when one hits a new low.{" "}
+              {PLUS_ON_SALE
+                ? "Plus also watches sealed products (back in stock, at RRP); Premium watches a whole deck's delivered price."
+                : "Premium also watches sealed products (back in stock, at RRP) and a whole deck's delivered price."}
             </p>
             {!watchDone && (
               <div className="mt-2 max-w-sm">

@@ -7,6 +7,7 @@ import { formatMoney } from "@/lib/format";
 import { targetAlertLimit } from "@/lib/alert-limits";
 import { centsToInput, clampTargetCents, parseMoneyInput } from "@/lib/target-price";
 import { PremiumButton } from "./PremiumButton";
+import { ENTRY_TIER_NAME } from "@/lib/site";
 
 // "NOTIFY ME AT $__" — the Plus target price on one watch (2026-09-25 lineup).
 // Rendered on each /watching tile, each watchlist-drawer row, and in the
@@ -174,7 +175,7 @@ export function TargetPriceField({
               surface="gate:target-alert"
               className="font-semibold text-gold underline-offset-2 hover:underline"
             >
-              Set your own price with Plus
+              Set your own price with {ENTRY_TIER_NAME}
             </PremiumButton>
           </span>
         ) : atLimit ? (

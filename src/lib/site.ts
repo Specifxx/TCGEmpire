@@ -63,6 +63,22 @@ export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERI
 // $4.99/$39.99 until 2026-09-26, then $2.99/$23.99 (same cut as Premium's).
 // Subscribers still on the OLD Plus Prices resolve to Plus through
 // STRIPE_PLUS_LEGACY_PRICE_IDS (lib/premium.ts tierFromPriceId).
+// PLUS IS OFF SALE from 2026-10-23 (owner: "plus adds like no value at all. So
+// let's just get rid of plus and just have premium"). DECISIONS.md, "One paid
+// plan again: Premium at $9.99". Off sale, not deleted: STRIPE_PLUS_PRICE_ID /
+// _ANNUAL_PRICE_ID stay set so tierFromPriceId (lib/premium.ts) still reads the
+// existing Plus subscribers as Plus — they keep what they pay for, grandfathered,
+// and can still upgrade to Premium. Nothing sells Plus, quotes Plus or offers a
+// switch down to it while this is false; turning it back on is this one line.
+// Lives here (client-safe, no DB) so articles, the comparison table and client
+// components read the same flag; lib/premium.ts re-exports it.
+export const PLUS_ON_SALE = false;
+// The plan a visitor is told to buy for what Plus used to unlock (no ads, the
+// full deal lists, target alerts, sealed watches, no free limits): "Plus" while
+// Plus is on sale, "Premium" (which includes all of it) while it is not. For
+// upsell copy only — a sentence addressed to a CURRENT Plus member still says
+// "Plus".
+export const ENTRY_TIER_NAME: "Plus" | "Premium" = PLUS_ON_SALE ? "Plus" : "Premium";
 export const PLUS_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PLUS_PRICE_AMOUNT || "$2.99";
 export const PLUS_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PLUS_ANNUAL_AMOUNT || "$23.99";
 

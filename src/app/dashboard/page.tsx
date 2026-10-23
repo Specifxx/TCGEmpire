@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { premiumCheckoutEnabled, premiumPlusEnabled, premiumAnnualEnabled, premiumTierOf, getPortfolio } from "@/lib/premium";
+import { premiumCheckoutEnabled, plusConfigured, premiumAnnualEnabled, premiumTierOf, getPortfolio } from "@/lib/premium";
 import { billingStateFor } from "@/lib/billing-state";
 import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
-import { TIER_NAMES } from "@/lib/site";
+import { TIER_NAMES, ENTRY_TIER_NAME } from "@/lib/site";
 import { DASHBOARD_TOOLS, dashboardToolOpens } from "@/lib/dashboard-tools";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { NavIcon } from "@/components/NavIcon";
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
   // every paid tool has a free taste — but a future entry without one must
   // still render honestly rather than as an open link into a wall.
   const lockedTools = tools.filter((t) => !t.opens && !t.freeTaste);
-  const canUpgrade = isFree ? premiumCheckoutEnabled() : isPlus && premiumPlusEnabled() && !billing.trialing;
+  const canUpgrade = isFree ? premiumCheckoutEnabled() : isPlus && plusConfigured() && !billing.trialing;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -162,7 +162,8 @@ export default async function DashboardPage() {
                   <span className="text-sm font-semibold text-brand-400">{t.freeTaste} →</span>
                   {t.tier !== "free" && (
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                      Full {t.tier === "plus" ? "list" : "plan"}: {TIER_NAMES[t.tier]}
+                      {/* A Plus-level tool is SOLD as Premium while Plus is off sale (ENTRY_TIER_NAME). */}
+                      Full {t.tier === "plus" ? "list" : "plan"}: {t.tier === "plus" ? ENTRY_TIER_NAME : TIER_NAMES[t.tier]}
                     </span>
                   )}
                 </span>
@@ -175,7 +176,7 @@ export default async function DashboardPage() {
             <p className="flex-1 text-sm leading-relaxed text-slate-500">{t.desc}</p>
             <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
               <NavIcon name="lock" className="h-3.5 w-3.5" />
-              {t.tier === "free" ? "Free" : TIER_NAMES[t.tier]}
+              {t.tier === "free" ? "Free" : t.tier === "plus" ? ENTRY_TIER_NAME : TIER_NAMES[t.tier]}
             </span>
           </div>
         ))}

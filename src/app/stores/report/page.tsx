@@ -5,6 +5,11 @@ import { Prisma } from "@prisma/client";
 import { formatMoney } from "@/lib/format";
 import { storeBySlug, storeSlug, STORE_THIN_THRESHOLD } from "@/lib/store-pages";
 import { storeBadgeHtml } from "@/lib/store-badge";
+import { planPartnerActive } from "@/lib/store-plan";
+import { planOfPartner } from "@/lib/store-plan-db";
+import { getTopDemand } from "@/lib/demand";
+import { RETAILER_LIST } from "@/lib/retailers";
+import { COUNTRIES, pickPrice, type Country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +32,23 @@ export default async function StoreReportPage({ searchParams }: { searchParams: 
         <h1 className="mt-2 text-xl font-extrabold text-white">This report link isn&apos;t valid</h1>
         <p className="mt-2 text-sm text-slate-400">
           Check the link we emailed you, or request access for your store.
+        </p>
+        <Link href="/stores" className="btn-primary mt-4 inline-block">RiftCompare for Stores →</Link>
+      </div>
+    );
+  }
+
+  // A partner made from a paid Stores plan (lib/store-plan.ts) keeps its report
+  // while the plan is paid, plus three days' grace. A pilot partner (no plan)
+  // is unchanged: planOfPartner returns null and planPartnerActive says yes.
+  if (!planPartnerActive(await planOfPartner(partner), new Date())) {
+    return (
+      <div className="mx-auto max-w-md py-16 text-center">
+        <p className="text-3xl" aria-hidden>🔒</p>
+        <h1 className="mt-2 text-xl font-extrabold text-white">Your Stores plan has ended</h1>
+        <p className="mt-2 text-sm text-slate-400">
+          This report is part of the Stores plan, which is no longer paid for {partner.name}. Subscribe again and the
+          same link starts working straight away.
         </p>
         <Link href="/stores" className="btn-primary mt-4 inline-block">RiftCompare for Stores →</Link>
       </div>
@@ -141,6 +163,38 @@ export default async function StoreReportPage({ searchParams }: { searchParams: 
 
   const Money = ({ cents }: { cents: number }) => <>{formatMoney(cents)}</>;
 
+  // "What buyers are searching for" (the Stores plan, 2026-10-23): the week's
+  // most-searched cards, from the SAME self-cached, day-keyed loader the /movers
+  // strip uses (lib/demand.ts getTopDemand — one cached entry for every reader,
+  // no new query on this page). Demand is global; the price side is this
+  // store's own market: its cheapest in-stock copy (from `mine`, already
+  // loaded) against the market's cheapest (the card's per-market lowest price,
+  // carried on the cached rows). Bounded at DEMAND_ROWS.
+  const DEMAND_ROWS = 20;
+  const market = ((RETAILER_LIST.find((r) => r.key === partner.retailer)?.country ?? "AU") as Country);
+  const currency = COUNTRIES[market]?.currency;
+  const demand = await getTopDemand(7, 25);
+  const myCheapest = new Map<string, number>();
+  for (const m of mine) {
+    const was = myCheapest.get(m.cardId);
+    if (was == null || m.priceCents < was) myCheapest.set(m.cardId, m.priceCents);
+  }
+  const searched = demand.bySearch.slice(0, DEMAND_ROWS).map((d) => {
+    const marketCents = pickPrice(d.card, market);
+    const mineCents = myCheapest.get(d.card.id) ?? null;
+    return {
+      id: d.card.id,
+      name: d.card.name,
+      href: `/card/${d.card.slug ?? d.card.id}`,
+      sub: `${d.card.setCode} ${d.card.collectorNumber}`,
+      searches: d.searches,
+      mineCents,
+      marketCents,
+      gapPct: mineCents != null && marketCents ? Math.round(((mineCents - marketCents) / marketCents) * 100) : null,
+    };
+  });
+  const searchedInStock = searched.filter((r) => r.mineCents != null).length;
+
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
@@ -196,6 +250,63 @@ export default async function StoreReportPage({ searchParams }: { searchParams: 
           <p className="card-surface p-6 text-center text-sm text-slate-500">No wide-margin wins right now.</p>
         ) : (
           <ReportTable rows={headroom.slice(0, 50)} gapLabel="Under by" gapClass="text-brand-400" />
+        )}
+      </section>
+
+      {/* What buyers are searching for — see the note above `searched`. */}
+      <section className="mb-8">
+        <h2 className="mb-1 text-lg font-extrabold text-white">🔎 What buyers are searching for</h2>
+        <p className="mb-3 text-xs text-slate-500">
+          The cards searched most on RiftCompare this week, against your stock and the cheapest price in{" "}
+          {COUNTRIES[market]?.place ?? "your market"}.
+          {searched.length > 0 && <> You have {searchedInStock} of these {searched.length} in stock.</>}
+        </p>
+        {searched.length === 0 ? (
+          <p className="card-surface p-6 text-center text-sm text-slate-500">Search data isn&apos;t available right now. It returns with the next daily update.</p>
+        ) : (
+          <div className="card-surface overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
+                  <th className="px-4 py-2.5 font-semibold">Card</th>
+                  <th className="px-2 py-2.5 text-right font-semibold">Searches</th>
+                  <th className="px-2 py-2.5 text-right font-semibold">Your cheapest</th>
+                  <th className="px-2 py-2.5 text-right font-semibold">Market cheapest</th>
+                  <th className="px-4 py-2.5 text-right font-semibold">You vs market</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-800">
+                {searched.map((r) => (
+                  <tr key={r.id} className="hover:bg-ink-900/50">
+                    <td className="px-4 py-2">
+                      <Link href={r.href} className="font-semibold text-white hover:text-brand-300">{r.name}</Link>
+                      <span className="block text-[11px] text-slate-500">{r.sub}</span>
+                    </td>
+                    <td className="num px-2 py-2 text-right text-slate-300">{r.searches.toLocaleString()}</td>
+                    <td className="px-2 py-2 text-right">
+                      {r.mineCents != null ? (
+                        <span className="font-semibold text-white">{formatMoney(r.mineCents, currency)}</span>
+                      ) : (
+                        <span className="text-xs text-slate-500">Not in stock</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-right text-slate-300">
+                      {r.marketCents ? formatMoney(r.marketCents, currency) : <span className="text-xs text-slate-500">None in stock</span>}
+                    </td>
+                    <td className="px-4 py-2 text-right text-xs font-bold">
+                      {r.gapPct == null ? (
+                        <span className="text-slate-500">—</span>
+                      ) : r.gapPct <= 0 ? (
+                        <span className="text-brand-400">Cheapest</span>
+                      ) : (
+                        <span className="text-rose-400">+{r.gapPct}%</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 

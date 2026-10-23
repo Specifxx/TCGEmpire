@@ -9,6 +9,7 @@ import {
   trialOfferedTo,
   premiumAnnualEnabled,
   premiumPlusEnabled,
+  plusConfigured,
   plusAnnualEnabled,
   premiumTierOf,
   getPremiumSubscriptionDetails,
@@ -33,6 +34,7 @@ import { findActiveAffiliate } from "@/lib/creator-affiliate";
 import { AFFILIATE_COOKIE, normaliseAffiliateCode } from "@/lib/creator-affiliate-code";
 import {
   SITE_URL,
+  PLUS_ON_SALE,
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_PRICE_PERIOD,
   PREMIUM_ANNUAL_AMOUNT,
@@ -63,7 +65,10 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "RiftCompare Premium — never overpay for a Riftbound card",
-  description: "Compare Riftbound card prices across every store, free, and track what your binder is missing. Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium) a whole deck's delivered total re-priced after every update, the store-by-store plan for a deck or the rest of a set, at the condition you'll play. No ads on either.",
+  // Premium-only while Plus is off sale (PLUS_ON_SALE, 2026-10-23).
+  description: PLUS_ON_SALE
+    ? "Compare Riftbound card prices across every store, free, and track what your binder is missing. Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium) a whole deck's delivered total re-priced after every update, the store-by-store plan for a deck or the rest of a set, at the condition you'll play. No ads on either."
+    : "Compare Riftbound card prices across every store, free, and track what your binder is missing. Premium watches prices for you: your own target price on cards, sealed products back in stock or at RRP, a whole deck's delivered total re-priced after every update, and the store-by-store plan for a deck or the rest of a set, at the condition you'll play. No ads.",
   alternates: pageAlternates("/premium"),
 };
 
@@ -97,7 +102,7 @@ const FAQ: { q: string; a: string }[] = [
   // (riftcompare-premium-explained), owner's request 2026-10-22.
   {
     q: "Is price comparison free?",
-    a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder and list pricer, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Plus and Premium are about no ads, the full deal lists, the watches that run for you, and the list tools.",
+    a: `Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder and list pricer, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. ${PLUS_ON_SALE ? "Plus and Premium are" : "Premium is"} about no ads, the full deal lists, the watches that run for you, and the list tools.`,
   },
   ...(FEEDBACK_PREMIUM_DAYS > 0 || REFERRAL_PREMIUM_DAYS > 0
     ? [
@@ -116,8 +121,10 @@ const FAQ: { q: string; a: string }[] = [
       ]
     : []),
   {
-    q: "Can I switch from Plus to Premium?",
-    a: `Yes, from this page once you're subscribed: "Upgrade to Premium" switches your plan straight away, on the same monthly or annual cycle, and bills only the difference for the rest of the period you've paid for. During a free trial the switch opens once the trial has converted.`,
+    // Addressed to a CURRENT Plus member: Plus is off sale since 2026-10-23
+    // but its grandfathered members keep it and can still move up.
+    q: PLUS_ON_SALE ? "Can I switch from Plus to Premium?" : "I'm on Plus. Can I switch to Premium?",
+    a: `Yes${PLUS_ON_SALE ? "" : ". Plus is no longer sold, but you keep it for as long as you stay subscribed, and you can move up"}, from this page once you're subscribed: "Upgrade to Premium" switches your plan straight away, on the same monthly or annual cycle, and bills only the difference for the rest of the period you've paid for. During a free trial the switch opens once the trial has converted.`,
   },
   ...(premiumTrialEnabled()
     ? [
@@ -413,6 +420,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
                 tier={currentTier ?? subDetails.tier}
                 interval={subDetails.interval}
                 plusLive={plusLive && !user.premiumTierFloor}
+                upgradeLive={plusConfigured() && !user.premiumTierFloor}
                 annualAvailable={subDetails.tier === "plus" ? plusAnnualLive : annualLive}
                 targetAnnualAvailable={(currentTier ?? subDetails.tier) === "plus" ? annualLive : plusAnnualLive}
                 canManageBilling={checkoutLive}

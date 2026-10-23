@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, PLUS_ON_SALE, ENTRY_TIER_NAME } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { AnswerBox } from "@/components/AnswerBox";
 import { AlertsSignupCta } from "@/components/AlertsSignupCta";
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "How do I set a price alert for a Riftbound card?",
-    a: `Open the card's page or its quick view and tap the watch button — a free alert needs no price. We check the cheapest Near Mint (or unstated-condition) copy at the stores we track once a day, after the morning price update. You hear when it falls by at least 5% (and at least 50 cents or pence) from the price we last emailed you — or, if we haven't emailed you about that card in the last 30 days, from where it stood before it started falling, so a slow slide in small steps still adds up to an alert. If no store has the card yet, we email you when it's first listed instead, and if it sells out we email you when it's back. Plus members can also type their own price on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards (every card on Premium).`,
+    a: `Open the card's page or its quick view and tap the watch button — a free alert needs no price. We check the cheapest Near Mint (or unstated-condition) copy at the stores we track once a day, after the morning price update. You hear when it falls by at least 5% (and at least 50 cents or pence) from the price we last emailed you — or, if we haven't emailed you about that card in the last 30 days, from where it stood before it started falling, so a slow slide in small steps still adds up to an alert. If no store has the card yet, we email you when it's first listed instead, and if it sells out we email you when it's back. ${PLUS_ON_SALE ? `Plus members can also type their own price on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards (every card on Premium).` : "Premium members can also type their own price on any watched card."}`,
   },
   {
     q: "Can I watch a card with no price yet?",
@@ -62,7 +62,7 @@ const FAQS = [
   },
   {
     q: "Do price alerts cost anything?",
-    a: `No. Watchlists and new-low alerts are free on up to ${FREE_WATCHLIST_LIMIT} cards and need only an account (or just an email) so we have somewhere to send the notification. Plus and Premium watch unlimited cards; if you already watch more than ${FREE_WATCHLIST_LIMIT}, you keep them all and only a new card needs Plus. Setting your own target price on a card is part of Plus, which is also ad-free.`,
+    a: `No. Watchlists and new-low alerts are free on up to ${FREE_WATCHLIST_LIMIT} cards and need only an account (or just an email) so we have somewhere to send the notification. ${PLUS_ON_SALE ? "Plus and Premium watch" : "Premium watches"} unlimited cards; if you already watch more than ${FREE_WATCHLIST_LIMIT}, you keep them all and only a new card needs ${ENTRY_TIER_NAME}. Setting your own target price on a card is part of ${ENTRY_TIER_NAME}, which is also ad-free.`,
   },
   {
     q: "Which price triggers the alert?",
@@ -70,11 +70,13 @@ const FAQS = [
   },
   {
     q: "How often will I actually get emailed?",
-    a: "At most one email a week, only when a card hits a new low, is first listed or is back in stock. Every card you watch is still checked daily, but if you'd already had an alert email in the last 7 days, the next one waits for the following week. It waits with the price it found: if the price has recovered by then, there's nothing to tell you and no email goes. If you haven't had one in the last 7 days, the next one is sent straight away. Plus has two exceptions, emailed as soon as they happen: your own target price being met, and a watched card dropping below TCGplayer market at a new low (at least 15% under). Either one also carries any other new lows on your watchlist, in the same email.",
+    a: `At most one email a week, only when a card hits a new low, is first listed or is back in stock. Every card you watch is still checked daily, but if you'd already had an alert email in the last 7 days, the next one waits for the following week. It waits with the price it found: if the price has recovered by then, there's nothing to tell you and no email goes. If you haven't had one in the last 7 days, the next one is sent straight away. ${ENTRY_TIER_NAME} has two exceptions, emailed as soon as they happen: your own target price being met, and a watched card dropping below TCGplayer market at a new low (at least 15% under). Either one also carries any other new lows on your watchlist, in the same email`,
+
   },
   {
     q: "How often are prices checked?",
-    a: "Prices are imported twice a day. New-low alerts are checked once a day, straight after the morning import; Plus target-price, below-market and back-in-stock alerts are checked after both. A drop is picked up on the next check rather than instantly — Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions.",
+    a: `Prices are imported twice a day. New-low alerts are checked once a day, straight after the morning import; ${ENTRY_TIER_NAME} target-price, below-market and back-in-stock alerts are checked after both. A drop is picked up on the next check rather than instantly — Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions`,
+
   },
   {
     q: "What's in an alert email?",
@@ -82,7 +84,7 @@ const FAQS = [
   },
   {
     q: "How do I stop, snooze or pause alert emails?",
-    a: "Every card in an alert email has one-tap links: 'Stop watching' removes that card, and 'Snooze 30 days' stops emails about it for a month while we keep checking its price. Plus and Premium members also get a one-tap target 10% under the price in the email (or under their current target, if that is lower). Each link opens a short confirmation page first, so a mail app scanning links can't change anything. The footer's 'Pause alert emails' stops every price-alert email to your address and keeps your watchlist and targets; your inbox's own Unsubscribe button does the same. While paused or snoozed we still check prices, but nothing piles up: when you resume, you hear about news from then on, not a backlog. You can resume from the same page or from your watchlist. Deleting all your watches is a separate, explicit button on that page.",
+    a: "Every card in an alert email has one-tap links: 'Stop watching' removes that card, and 'Snooze 30 days' stops emails about it for a month while we keep checking its price. Members on a paid plan also get a one-tap target 10% under the price in the email (or under their current target, if that is lower). Each link opens a short confirmation page first, so a mail app scanning links can't change anything. The footer's 'Pause alert emails' stops every price-alert email to your address and keeps your watchlist and targets; your inbox's own Unsubscribe button does the same. While paused or snoozed we still check prices, but nothing piles up: when you resume, you hear about news from then on, not a backlog. You can resume from the same page or from your watchlist. Deleting all your watches is a separate, explicit button on that page.",
   },
   {
     q: "Can I track cards I already own instead?",
@@ -117,7 +119,7 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
         <Link href="/movers" className="text-brand-400 underline">
           the weekly movers
         </Link>{" "}
-        if you want to know whether now is a spike before you start. (Plus members can also set a price of their
+        if you want to know whether now is a spike before you start. ({ENTRY_TIER_NAME} members can also set a price of their
         own — see below.)
       </>
     ),
@@ -159,7 +161,7 @@ export default function AlertsPage() {
         <p>
           A watchlist is a list of Riftbound cards you want; a price alert is an email when one drops to a new low — at
           most one email a week. Both are free, with no price to set, on up to {FREE_WATCHLIST_LIMIT} cards (unlimited
-          with Plus). The
+          with {ENTRY_TIER_NAME}). The
           trigger is the cheapest Near Mint copy in stock at the stores we track for your market — never an eBay
           listing or a played copy. That is the item price, before postage, so every alert names up to three stores
           with their postage and delivered total, and links each listing.
@@ -181,11 +183,19 @@ export default function AlertsPage() {
         ))}
       </ol>
 
-      <h2 className="mt-10 text-xl font-extrabold text-white">Your own target price, with Plus</h2>
+      <h2 className="mt-10 text-xl font-extrabold text-white">Your own target price, with {ENTRY_TIER_NAME}</h2>
       <div className="card-surface mt-3 p-4 text-sm leading-relaxed text-slate-300">
         <p>
-          Know what you&apos;d pay? Plus members can type a price on any watched card — &ldquo;Notify me at&rdquo; —
-          on up to {PLUS_TARGET_ALERT_LIMIT} cards, or every card on Premium. After each of the two daily price
+          Know what you&apos;d pay?{" "}
+          {PLUS_ON_SALE ? (
+            <>
+              Plus members can type a price on any watched card — &ldquo;Notify me at&rdquo; — on up to{" "}
+              {PLUS_TARGET_ALERT_LIMIT} cards, or every card on Premium.
+            </>
+          ) : (
+            <>Premium members can type a price on any watched card — &ldquo;Notify me at&rdquo; — with no limit on how many.</>
+          )}{" "}
+          After each of the two daily price
           updates we check every store we track in that card&apos;s market, and when the lowest in-stock price is at
           or below your number we email you straight away, without the weekly wait: the card, the price, the store
           and a link to the listing. It fires once, then again only if the price falls another 10% — or if it goes
@@ -200,9 +210,9 @@ export default function AlertsPage() {
           along in the same email, so you never wait a week behind an email that is going out anyway.
         </p>
         <p className="mt-2">
-          Plus is ad-free, too.{" "}
+          {ENTRY_TIER_NAME} is ad-free, too.{" "}
           <Link href="/premium" className="text-brand-400 underline">
-            See Plus
+            See {ENTRY_TIER_NAME}
           </Link>
           .
         </p>
@@ -232,7 +242,7 @@ export default function AlertsPage() {
               <td className="border-b border-ink-800 px-3 py-2 text-slate-300">The watch button — no price to set</td>
             </tr>
             <tr className="odd:bg-ink-900/40">
-              <td className="border-b border-ink-800 px-3 py-2 font-semibold text-white">Target price (Plus)</td>
+              <td className="border-b border-ink-800 px-3 py-2 font-semibold text-white">Target price ({ENTRY_TIER_NAME})</td>
               <td className="border-b border-ink-800 px-3 py-2 text-slate-300">Being emailed when a card reaches the price you set</td>
               <td className="border-b border-ink-800 px-3 py-2 text-slate-300">&ldquo;Notify me at&rdquo; on your watchlist</td>
             </tr>

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { prisma } from "./db";
 import { isPremium, premiumTierOf, type EntitlementUser } from "./premium";
 import { targetAlertLimit } from "./alert-limits";
+import { ENTRY_TIER_NAME } from "./site";
 import { MAX_TARGET_CENTS, MIN_TARGET_CENTS } from "./target-price";
 
 // SET OR CLEAR THE TARGET PRICE ON ONE WATCH ("Notify me at $X", Plus and
@@ -51,7 +52,7 @@ export async function applyTargetPrice(
   opts: { seedFiredAtCents?: number | null } = {},
 ): Promise<TargetResult> {
   if (!isPremium(user)) {
-    return { status: 403, body: { error: "Target prices are part of Plus." } };
+    return { status: 403, body: { error: `Target prices are part of ${ENTRY_TIER_NAME}.` } };
   }
 
   const parsed = targetBodySchema.safeParse(rawBody);

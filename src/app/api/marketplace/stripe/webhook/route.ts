@@ -15,6 +15,9 @@ import {
   userIdFromSubscription,
 } from "@/lib/stripe-entitlement";
 import { recordAffiliateCheckout, recordAffiliateCommission } from "@/lib/creator-affiliate";
+import { STORE_PLAN_PRICE_ID, isStorePlanSubscription, subscriptionIdOf, validateStoreName, validateStoreUrl } from "@/lib/store-plan";
+import { extendStorePlan, recordStorePlanStart } from "@/lib/store-plan-db";
+import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 
 export const dynamic = "force-dynamic";
 // Stripe needs the raw, unparsed body to verify the signature.
@@ -83,6 +86,10 @@ export async function POST(req: Request) {
           await premiumStarted(session);
           await creatorReferral(session, event.id);
         }
+        // The Stores plan (lib/store-plan.ts): its own branch, at the bottom of
+        // this file. Premium for the buyer comes through stampFromSubscription,
+        // the same path every renewal takes.
+        if (session.metadata?.kind === "store") await storePlanStarted(session);
         // Store consulting ("store_consult") was retired on 2026-10-16
         // (DECISIONS.md, "Ten features nobody used"); no checkout creates one now.
         break;
@@ -324,6 +331,10 @@ async function stampFromSubscription(sub: unknown, eventId: string, fallbackCust
   const until = entitledUntilFromSubscription(sub);
   if (!until) return; // canceled/incomplete — earns nothing new, keeps paid time
 
+  // A Stores plan renewal also moves the plan's own paid-through date
+  // (extend-only). Never fatal to the Premium stamp below.
+  if (isStorePlanSubscription(sub, STORE_PLAN_PRICE_ID, priceIdFromSubscription(sub))) await storePlanRenewed(sub, until, eventId);
+
   const customerId = customerIdOf(sub) ?? fallbackCustomerId;
   let userId = userIdFromSubscription(sub);
   if (!userId && customerId) {
@@ -367,4 +378,76 @@ async function stampPremium(userId: string, until: Date, customerId: string | nu
       ...(tierChange ? { premiumTier: tier } : {}),
     },
   });
+}
+
+// ── The Stores plan (2026-10-23, lib/store-plan.ts) ───────────────────────────
+// A retailer's $79.99/month plan. It INCLUDES Premium for the buying account:
+// tierFromPriceId resolves any price that is not a Plus price to "premium", so
+// stampFromSubscription grants it exactly as for a Premium subscription, and
+// renews it the same way. What this branch adds is the StorePlanSubscription
+// row the owner links to a tracked store at /admin/store-partners, and the
+// email telling the owner a store has paid. Nothing here touches a comparison.
+
+async function storePlanStarted(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.userId ?? session.client_reference_id;
+  const subId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id ?? null;
+  if (!userId || !subId) {
+    console.error(`stripe webhook: Stores plan checkout ${session.id} has no ${userId ? "subscription id" : "userId"}`);
+    return;
+  }
+  let sub: Stripe.Subscription;
+  try {
+    sub = await stripe().subscriptions.retrieve(subId);
+  } catch (e) {
+    console.error(`stripe webhook: Stores plan subscription read failed for checkout ${session.id}:`, e);
+    throw e; // 500 → Stripe retries; nothing has been written yet
+  }
+  const customerId = customerIdOf(session) ?? customerIdOf(sub);
+  // Null when Stripe says the subscription is not paid (yet): the row is still
+  // recorded, as "payment pending", and invoice.paid extends it when it lands.
+  const until = entitledUntilFromSubscription(sub);
+  const name = validateStoreName(session.metadata?.storeName);
+  const url = validateStoreUrl(session.metadata?.storeUrl);
+  const storeName = name.ok ? name.value : (session.metadata?.storeName ?? "").slice(0, 80) || "Unnamed store";
+  const storeUrl = url.ok ? url.value : (session.metadata?.storeUrl ?? "").slice(0, 200);
+
+  const { created } = await recordStorePlanStart({ userId, stripeSubscriptionId: subId, stripeCustomerId: customerId, storeName, storeUrl, activeUntil: until });
+
+  // The billing portal on /stores/account needs the customer on the account,
+  // even while the first payment is still pending (stampPremium links it too,
+  // but only once the subscription is entitled).
+  if (customerId) {
+    await prisma.user
+      .updateMany({ where: { id: userId, stripeCustomerId: null }, data: { stripeCustomerId: customerId } })
+      .catch((e) => console.error(`stripe webhook: could not link customer ${customerId} to ${userId}:`, e));
+  }
+  // Premium for the buyer: the one stamping path renewals use.
+  await stampFromSubscription(sub, `checkout ${session.id}`, customerId);
+
+  if (created) {
+    const buyer = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } }).catch(() => null);
+    await notifyOwnerBounded({
+      kind: "store-plan",
+      headline: `${storeName} bought the Stores plan`,
+      from: buyer?.email ?? null,
+      fields: [
+        ["Store", storeName],
+        ["Website", storeUrl],
+        ["Buyer", buyer?.email ?? userId],
+        ["Paid until", until ? until.toISOString().slice(0, 10) : "payment pending"],
+        ["Next step", "Link it to the tracked store at /admin/store-partners — that emails the buyer their report link."],
+      ],
+    });
+  }
+}
+
+async function storePlanRenewed(sub: unknown, until: Date, eventId: string) {
+  const subId = subscriptionIdOf(sub);
+  if (!subId) return;
+  try {
+    await extendStorePlan(subId, until);
+  } catch (e) {
+    // The daily reconcile (lib/stripe-reconcile.ts) extends it again.
+    console.error(`stripe webhook ${eventId}: Stores plan ${subId} not extended:`, e);
+  }
 }

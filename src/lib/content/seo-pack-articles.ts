@@ -383,7 +383,7 @@ Default to proxy bidding for the majority of purchases. Reserve sniping for auct
 
 Instead of checking local stores one by one, you get a single view of what US stores, eBay sellers and TCGplayer are asking for the card you are bidding on, cheapest first by item price, with the delivered total shown where the store publishes its postage. [Auctions ending soon](${L.auctions}) lists high-value Riftbound auctions on eBay closing within the day, and the [Deal Finder](${L.dealFinder}) lists the cards stores and eBay sellers are listing below TCGplayer's market price, so you know what a fair buy looks like before you bid.
 
-Buying often enough that the research time adds up? A free account shows the top 3 of the Deal Finder; [RiftCompare Plus](${L.premium}) shows every row with no ads, and Premium adds [Best Basket](${L.bestBasket})'s store-by-store plan for buying a whole list. Run a store? [We track store prices too](${L.stores}) — and you can see [every store in the comparison](${L.tracked}).`,
+Buying often enough that the research time adds up? A free account shows the top 3 of the Deal Finder; [RiftCompare Premium](${L.premium}) shows every row with no ads, and adds [Best Basket](${L.bestBasket})'s store-by-store plan for buying a whole list. Run a store? [We track store prices too](${L.stores}) — and you can see [every store in the comparison](${L.tracked}).`,
   },
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -910,7 +910,7 @@ Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a s
       },
       {
         q: "Is RiftCompare free to use?",
-        a: "Yes. Browsing the card database, comparing prices and setting price alerts are free. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows every row with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list, and Demand Finder.",
+        a: "Yes. Browsing the card database, comparing prices and setting price alerts are free. A free account adds the top 3 of Deal Finder and Rising Cards; Premium shows every row with no ads, and adds Best Basket's store-by-store plan for buying a whole list, and Demand Finder.",
       },
       {
         q: "How often do the prices update?",
@@ -998,7 +998,7 @@ Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [how to choose 
       },
       {
         q: "Is RiftCompare free?",
-        a: "Yes. The card database, price comparison, movers dashboard and price alerts are free. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows every row with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list, and Demand Finder.",
+        a: "Yes. The card database, price comparison, movers dashboard and price alerts are free. A free account adds the top 3 of Deal Finder and Rising Cards; Premium shows every row with no ads, and adds Best Basket's store-by-store plan for buying a whole list, and Demand Finder.",
       },
       {
         q: "Does RiftCompare sell cards?",
@@ -1033,7 +1033,7 @@ This is our own tool, so treat this page as a spec sheet with the limitations in
 | Deal finder | Cards a store or eBay seller in your market is selling below TCGplayer's market price | [Deal Finder](${L.dealFinder}) |
 | Basket optimisation | Cheapest split of a wantlist across stores, priced with each store's measured postage | [Best Basket](${L.bestBasket}) |
 | Sealed EV | What a box is worth against singles | [Box EV](${L.boxEv}) |
-| Price alerts | An email when a watched card hits a new low; Plus adds a target price of your own | [Alerts](${L.alerts}) |
+| Price alerts | An email when a watched card hits a new low; Premium adds a target price of your own | [Alerts](${L.alerts}) |
 | Trade valuation | Both sides of a swap at live prices | [Trade calculator](${L.trade}) |
 
 ## What it doesn't do

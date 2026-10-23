@@ -92,7 +92,7 @@ export type Valid<T> = { ok: true; value: T } | { ok: false; error: string };
 // Control characters (incl. newlines) collapse to spaces: everything here is one
 // line of plain text, rendered escaped by React and never as HTML.
 const clean = (v: unknown): string =>
-  typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f  ]+/g, " ").replace(/\s+/g, " ").trim() : "";
+  typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ").replace(/\s+/g, " ").trim() : "";
 
 export function validateStoreName(v: unknown): Valid<string> {
   const s = clean(v);

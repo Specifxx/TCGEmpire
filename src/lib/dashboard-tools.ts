@@ -1,4 +1,4 @@
-import type { PremiumTierKey } from "./site";
+import { PLUS_ON_SALE, ENTRY_TIER_NAME, type PremiumTierKey } from "./site";
 import { FREE_PORTFOLIO_LIMIT } from "./free-limits";
 
 // The member dashboard's tool list (app/dashboard/page.tsx). A lib module, not
@@ -52,7 +52,9 @@ export const DASHBOARD_TOOLS: DashTool[] = [
   },
   {
     title: "Watchlist & target alerts",
-    desc: "A free email when a card you watch hits a new low. Plus adds your own target price and sealed-product watches (back in stock, at RRP); Premium watches a whole deck's delivered price.",
+    desc: PLUS_ON_SALE
+      ? "A free email when a card you watch hits a new low. Plus adds your own target price and sealed-product watches (back in stock, at RRP); Premium watches a whole deck's delivered price."
+      : "A free email when a card you watch hits a new low. Premium adds your own target price, sealed-product watches (back in stock, at RRP) and a whole deck's delivered price.",
     href: "/watching",
     tier: "free",
   },
@@ -66,7 +68,7 @@ export const DASHBOARD_TOOLS: DashTool[] = [
   // opens for every account; the tier gates are Plus's no-limit and Premium's plan.
   {
     title: "Set checklist",
-    desc: `What your binder is missing from a set, and the cheapest listing for each card. Free for your first ${FREE_PORTFOLIO_LIMIT} cards; Plus removes the limit.`,
+    desc: `What your binder is missing from a set, and the cheapest listing for each card. Free for your first ${FREE_PORTFOLIO_LIMIT} cards; ${ENTRY_TIER_NAME} removes the limit.`,
     href: "/portfolio/sets",
     tier: "free",
   },

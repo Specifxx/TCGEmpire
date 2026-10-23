@@ -293,7 +293,11 @@ export default function EditorialPolicyPage() {
             {SITE_NAME} is funded by display advertising (including Google AdSense); affiliate
             commissions — we are a member of the eBay Partner Network, TCGplayer&rsquo;s affiliate
             programme (run through Impact) and the Amazon Associates programme, and as an Amazon
-            Associate we earn from qualifying purchases; and Plus and Premium subscriptions. Outbound links that earn us a commission are
+            Associate we earn from qualifying purchases; Plus and Premium subscriptions; and the{" "}
+            <Link href="/stores" className="text-brand-400 hover:underline">Stores plan</Link>, which a retailer buys
+            for a private report on its own prices and a &ldquo;Verified store&rdquo; mark on its own store page. A
+            store on the Stores plan is compared exactly like every other store: nothing it pays for changes its
+            place in any comparison. Outbound links that earn us a commission are
             marked <code className="rounded bg-ink-800 px-1 text-xs">rel=&quot;sponsored&quot;</code> and
             disclosed in plain language next to the link.
           </p>

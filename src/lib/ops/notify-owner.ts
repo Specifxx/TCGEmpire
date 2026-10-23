@@ -18,7 +18,7 @@ import { ownerEmail } from "./owner";
 export const MAX_PER_HOUR = 8;
 export const MAX_PER_DAY = 25;
 
-export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate" | "creator-profile";
+export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate" | "creator-profile" | "store-plan";
 
 export interface InboxItem {
   kind: InboxKind;
@@ -39,10 +39,13 @@ const LABEL: Record<InboxKind, string> = {
   support: "Support ticket",
   affiliate: "Creator code application",
   "creator-profile": "Creator profile edit",
+  // A Stores plan bought (the webhook) or a paying store's page text edited (/api/stores/profile).
+  "store-plan": "Stores plan purchase",
 };
 
-/** Where the email's button goes: creator applications are reviewed in /admin/affiliates. */
-const inboxHref = (kind: InboxKind) => `${SITE_URL}${kind === "affiliate" ? "/admin/affiliates" : kind === "creator-profile" ? "/admin/creators" : "/admin/messages"}`;
+/** Where the email's button goes: creator applications are reviewed in /admin/affiliates, Stores plans linked in /admin/store-partners. */
+const inboxHref = (kind: InboxKind) =>
+  `${SITE_URL}${kind === "affiliate" ? "/admin/affiliates" : kind === "creator-profile" ? "/admin/creators" : kind === "store-plan" ? "/admin/store-partners" : "/admin/messages"}`;
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}…` : s);
 const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();

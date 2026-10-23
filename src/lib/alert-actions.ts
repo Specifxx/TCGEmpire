@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { authSecret } from "./auth-secret";
-import { SITE_URL } from "./site";
+import { SITE_URL, ENTRY_TIER_NAME } from "./site";
 import { isAdminEmail } from "./admin-emails";
 import { isPremium, type EntitlementUser } from "./premium";
 import { applyTargetPrice, type TargetDb } from "./target-alerts";
@@ -308,10 +308,10 @@ export async function performAlertAction(db: AlertActionDb, token: string | null
 
   // target-set / target-down: an account's watch only, and only while entitled.
   if (!row.userId || !row.user) {
-    return { status: 403, outcome: "no-account", body: { error: "Target prices need a Plus account." } };
+    return { status: 403, outcome: "no-account", body: { error: `Target prices need a ${ENTRY_TIER_NAME} account.` } };
   }
   const user: EntitlementUser & { id: string } = { ...row.user, id: row.userId, isAdmin: row.user.isAdmin || isAdminEmail(row.user.email) };
-  if (!isPremium(user)) return { status: 403, outcome: "not-plus", body: { error: "Target prices are part of Plus." } };
+  if (!isPremium(user)) return { status: 403, outcome: "not-plus", body: { error: `Target prices are part of ${ENTRY_TIER_NAME}.` } };
   // Stored already fired at the current alert price when the new target is at
   // or above it (applyTargetPrice seedFiredAtCents): the member tapped this
   // while looking at that price, so it is not news at the next run.

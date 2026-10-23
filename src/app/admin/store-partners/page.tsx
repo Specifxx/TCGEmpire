@@ -7,6 +7,7 @@ import { SITE_URL } from "@/lib/site";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { StorePartnerForm } from "@/components/admin/StorePartnerForm";
+import { guessRetailerKey, storePlanStatus } from "@/lib/store-plan";
 
 export const dynamic = "force-dynamic";
 
@@ -40,13 +41,26 @@ export default async function AdminStorePartnersPage({ searchParams }: { searchP
   const user = await getCurrentUser();
   if (!(keyOk || user?.isAdmin)) notFound(); // don't reveal the page exists
 
-  const [partners, listingCounts] = await Promise.all([
+  const [partners, listingCounts, unlinkedPlans] = await Promise.all([
     prisma.storePartner.findMany({ orderBy: { createdAt: "desc" }, take: 300 }),
     // One grouped aggregate rather than a count per store — 168 retailers would
     // otherwise be 168 round trips on an uncached force-dynamic page (egress
     // rule 3, src/lib/db.ts).
     prisma.retailerPrice.groupBy({ by: ["retailer"], _count: { _all: true } }),
+    // Paid Stores plans (lib/store-plan.ts) not yet tied to a tracked store.
+    // The ops monitor warns when one waits more than two days.
+    prisma.storePlanSubscription.findMany({
+      where: { partnerId: null },
+      orderBy: { createdAt: "asc" },
+      take: 50,
+      select: { id: true, userId: true, storeName: true, storeUrl: true, activeUntil: true, createdAt: true },
+    }),
   ]);
+  const buyers = unlinkedPlans.length
+    ? await prisma.user.findMany({ where: { id: { in: unlinkedPlans.map((p) => p.userId) } }, select: { id: true, email: true } })
+    : [];
+  const buyerEmail = new Map(buyers.map((b) => [b.id, b.email]));
+  const now = new Date();
 
   const countByKey = new Map(listingCounts.map((r) => [r.retailer, r._count._all]));
 
@@ -79,6 +93,47 @@ export default async function AdminStorePartnersPage({ searchParams }: { searchP
         </p>
       </div>
 
+      {unlinkedPlans.length > 0 && (
+        <section className="card-surface overflow-hidden border border-gold/40">
+          <h2 className="border-b border-ink-800 px-4 py-3 text-sm font-extrabold text-white">
+            Stores plans waiting to be linked ({unlinkedPlans.length})
+          </h2>
+          <p className="px-4 pt-3 text-xs text-slate-500">
+            These stores paid for the Stores plan. Confirm which tracked store each one is (check the website matches
+            the buyer&apos;s email domain if in doubt), then link it: that creates the report link and emails it to them.
+          </p>
+          <ul className="divide-y divide-ink-900">
+            {unlinkedPlans.map((plan) => {
+              const status = storePlanStatus({ activeUntil: plan.activeUntil, partnerId: null }, now);
+              return (
+                <li key={plan.id} className="grid gap-3 px-4 py-4 md:grid-cols-[1fr_1.4fr]">
+                  <div className="text-xs">
+                    <p className="font-semibold text-white">{plan.storeName}</p>
+                    <a href={plan.storeUrl} target="_blank" rel="noopener noreferrer nofollow" className="break-all text-brand-400 hover:underline">
+                      {plan.storeUrl}
+                    </a>
+                    <p className="mt-1 text-slate-400">Buyer: {buyerEmail.get(plan.userId) ?? plan.userId}</p>
+                    <p className="text-slate-500">
+                      Bought {dateFmt.format(plan.createdAt)} ·{" "}
+                      {status === "payment-pending"
+                        ? "payment not confirmed yet"
+                        : status === "ended"
+                          ? `ended (paid until ${dateFmt.format(plan.activeUntil!)})`
+                          : `paid until ${dateFmt.format(plan.activeUntil!)}`}
+                    </p>
+                  </div>
+                  <StorePartnerForm
+                    adminKey={keyOk ? searchParams.key : undefined}
+                    retailers={retailers.map(({ key, name, listings }) => ({ key, name, listings }))}
+                    plan={{ id: plan.id, storeName: plan.storeName, suggestedRetailer: guessRetailerKey(plan.storeUrl, RETAILER_LIST) }}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <StorePartnerForm
         adminKey={keyOk ? searchParams.key : undefined}
         retailers={retailers.map(({ key, name, listings }) => ({ key, name, listings }))}
@@ -99,6 +154,7 @@ export default async function AdminStorePartnersPage({ searchParams }: { searchP
                   <th className="px-4 py-2 font-semibold">Market</th>
                   <th className="px-4 py-2 font-semibold">Listings</th>
                   <th className="px-4 py-2 font-semibold">Created</th>
+                  <th className="px-4 py-2 font-semibold">Plan</th>
                   <th className="px-4 py-2 font-semibold">Report link</th>
                 </tr>
               </thead>
@@ -118,6 +174,7 @@ export default async function AdminStorePartnersPage({ searchParams }: { searchP
                         {info ? info.listings.toLocaleString() : "—"}
                       </td>
                       <td className="px-4 py-2 text-slate-500">{dateFmt.format(p.createdAt)}</td>
+                      <td className="px-4 py-2 text-slate-500">{p.planSubscriptionId ? "Stores plan" : "Pilot"}</td>
                       <td className="px-4 py-2">
                         <code className="break-all font-mono text-[10px] text-slate-400">
                           {`${SITE_URL}/stores/report?token=${p.token}`}

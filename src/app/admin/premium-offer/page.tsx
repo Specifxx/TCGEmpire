@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { listPremiumOfferAudience, runPremiumOfferBlast, DEFAULT_BATCH, type PremiumOfferResult } from "@/lib/premium-offer";
 import { premiumOfferSubject } from "@/lib/email";
-import { PLUS_PRICE_AMOUNT, PREMIUM_PRICE_AMOUNT, trialDaysPhrase } from "@/lib/site";
+import { PLUS_PRICE_AMOUNT, PREMIUM_PRICE_AMOUNT, trialDaysPhrase, PLUS_ON_SALE } from "@/lib/site";
 import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "@/lib/premium";
 import { PremiumOfferConsole, type ConsoleRow } from "@/components/admin/PremiumOfferConsole";
 
@@ -59,9 +59,9 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
       <h1 className="text-2xl font-bold text-white">Trial promo email: subscribe now, {trialDaysPhrase(PREMIUM_TRIAL_DAYS)} free</h1>
       <p className="mt-1 max-w-3xl text-sm text-slate-400">
         One email to every account that could still start a trial. Subject:{" "}
-        <em>&ldquo;{premiumOfferSubject()}&rdquo;</em>. It offers Premium and Plus free for{" "}
-        {trialDaysPhrase(PREMIUM_TRIAL_DAYS)}, then {PREMIUM_PRICE_AMOUNT}/month or {PLUS_PRICE_AMOUNT}/month (yearly
-        buttons too), says a card is required and that we email before the trial ends. Every button opens checkout for
+        <em>&ldquo;{premiumOfferSubject()}&rdquo;</em>. It offers {PLUS_ON_SALE ? "Premium and Plus" : "Premium (Plus is off sale)"} free for{" "}
+        {trialDaysPhrase(PREMIUM_TRIAL_DAYS)}, then {PREMIUM_PRICE_AMOUNT}/month{PLUS_ON_SALE ? ` or ${PLUS_PRICE_AMOUNT}/month` : ""} (yearly
+        button too), says a card is required and that we email before the trial ends. Every button opens checkout for
         that exact plan. Never emailed, whatever is ticked: paying accounts, anyone who already had a trial or has paid
         before (checkout would not give them one), admins, seed accounts and anyone who opted out of announcements.
         Accounts that got September&apos;s price-drop email can get this one.

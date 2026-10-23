@@ -3,6 +3,7 @@ import { prisma } from "./db";
 import { COUNTRIES, currencyOf, type Country } from "./country";
 import { isPremium, premiumTierOf, type EntitlementUser } from "./premium";
 import { isAdminEmail, ADMIN_EMAILS } from "./admin-emails";
+import { ENTRY_TIER_NAME } from "./site";
 import { sealedWatchLimit, sealedWatchCeiling, SEALED_WATCH_LIMIT_PLUS, SEALED_WATCH_HARD_CAP } from "./alert-limits";
 import { ALERT_BUDGET_WINDOW_MS, PAID_SEND_CAP, alertDailyBudget, isMaterialDrop, liveWatermark } from "./price-alerts";
 import { recentlyEmailedAddresses, RunBudget, WATCH_EMAILS_PER_ADDRESS } from "./alert-budget";
@@ -520,7 +521,7 @@ const GROUP_KEY = /^[A-Za-z0-9|_\- .]{1,80}$/;
 const asInt = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.round(v) : typeof v === "string" && /^\d+$/.test(v) ? Number(v) : null);
 
 function notPlus(): WatchRouteResult {
-  return { status: 402, body: { error: "Sealed watches are part of Plus.", code: "tier_required", tier: "plus" } };
+  return { status: 402, body: { error: `Sealed watches are part of ${ENTRY_TIER_NAME}.`, code: "tier_required", tier: "plus" } };
 }
 
 /**

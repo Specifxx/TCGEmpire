@@ -15,7 +15,7 @@ import { PremiumButton } from "@/components/PremiumButton";
 import { HubIntro } from "@/components/HubIntro";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
-import { SITE_URL, tierMonthlyAmount } from "@/lib/site";
+import { SITE_URL, tierMonthlyAmount, PLUS_ON_SALE, ENTRY_TIER_NAME } from "@/lib/site";
 import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
 import { cardThumbProps } from "@/lib/card-image-url";
@@ -28,7 +28,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Rising Cards — Riftbound Cards With Rising Demand | RiftCompare" },
   description:
-    "Riftbound cards ranked by demand and price-timing signals: search interest that is high or rising on cards whose price hasn't moved up yet, with the reason for every pick. Free accounts see the top three; Plus shows every pick, ad-free. Not financial advice.",
+    "Riftbound cards ranked by demand and price-timing signals: search interest that is high or rising on cards whose price hasn't moved up yet, with the reason for every pick. Free accounts see the top three; Premium shows every pick, ad-free. Not financial advice.",
   keywords: ["riftbound rising cards", "riftbound card demand", "riftbound cards going up", "riftbound trending cards"],
   alternates: pageAlternates("/tools/rising"),
   openGraph: { title: "Rising Cards — Riftbound cards with rising demand", url: `${SITE_URL}/tools/rising` },
@@ -56,8 +56,8 @@ const RISING_FAQS = [
     a: "No. It is a screen of public price and demand data, not a prediction, and no track record is published yet. Use it as a starting point and check a card's full price history before you buy.",
   },
   {
-    q: "Do I need Plus?",
-    a: `Not to start. A free account shows the top three ranked picks with their reasons. Plus (${tierMonthlyAmount("plus")}/month) shows every ranked pick, in every market or Global, and removes ads from every page.`,
+    q: `Do I need ${ENTRY_TIER_NAME}?`,
+    a: `Not to start. A free account shows the top three ranked picks with their reasons. ${ENTRY_TIER_NAME} (${tierMonthlyAmount(PLUS_ON_SALE ? "plus" : "premium")}/month) shows every ranked pick, in every market or Global, and removes ads from every page.`,
   },
   {
     q: "How often does it update?",
@@ -333,7 +333,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             <div>
               <p className="text-sm font-bold text-white">See the top 3 rising cards, free</p>
               <p className="mx-auto mt-0.5 max-w-sm text-xs text-slate-400">
-                A free account shows the three highest-ranked picks and why each one ranks. Plus shows all{" "}
+                A free account shows the three highest-ranked picks and why each one ranks. {ENTRY_TIER_NAME} shows all{" "}
                 {Math.min(40, analysis.picks.length)}, in every market or Global, with no ads on any page.
               </p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
@@ -382,7 +382,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
               <p className="text-sm text-slate-300">
                 <strong className="text-white">{hiddenCount} more ranked picks</strong>
-                {where} — Plus shows every one with no ads, and can email you when one hits your price.
+                {where} — {ENTRY_TIER_NAME} shows every one with no ads, and can email you when one hits your price.
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 <PremiumButton tier="plus" surface="gate:rising" />

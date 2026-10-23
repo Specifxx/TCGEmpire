@@ -18,6 +18,8 @@ import {
   introOfferEnabled,
   tierIntroMonthlyAmount,
   INTRO_MONTHS,
+  PLUS_ON_SALE,
+  ENTRY_TIER_NAME,
 } from "@/lib/site";
 import { SEALED_CHECK_CADENCE } from "@/lib/alert-limits";
 import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
@@ -182,12 +184,15 @@ export const PITCH_TOOLS: { label: string }[] = [
 // pins this) — the same discipline PITCH_TOOLS's own header comment already
 // holds itself to, so this can't silently drift the way the old hand-written
 // sentence did.
+// Plus is off sale since 2026-10-23 (PLUS_ON_SALE): each line names the plan a
+// visitor can actually buy for it — ENTRY_TIER_NAME is "Premium" while Plus is off.
+const AD_FREE_TOO = PLUS_ON_SALE ? "Plus and Premium are ad-free, too." : "Premium is ad-free, too.";
 const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: string }[] = [
   {
     prefixes: ["/sealed"],
     tool: "Sealed watches",
     heading: "Sealed watches email you when a box is back or at RRP",
-    line: `Heart a booster box or bundle and Plus emails you when a real store has it back in stock, when it's at RRP where we publish one, or at your own price. Stores are checked ${SEALED_CHECK_CADENCE} and every email says when.`,
+    line: `Heart a booster box or bundle and ${ENTRY_TIER_NAME} emails you when a real store has it back in stock, when it's at RRP where we publish one, or at your own price. Stores are checked ${SEALED_CHECK_CADENCE} and every email says when.`,
   },
   // 2026-09-29 (personas pass). The set tracker is free within the 50-card
   // portfolio, so this line is where card 51 becomes Plus: it says what is free
@@ -196,7 +201,7 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
     prefixes: ["/portfolio/sets", "/sets"],
     tool: "Set tracker",
     heading: "Set tracker: see what your set is missing, and the cheapest listing to finish it",
-    line: `Tick the cards in your binder to see what a set is missing and the cheapest listing for each, free for your first ${FREE_PORTFOLIO_LIMIT} cards. Plus removes the limit so a whole set fits; nobody loses cards they already have. Premium plans the store-by-store order for the rest.`,
+    line: `Tick the cards in your binder to see what a set is missing and the cheapest listing for each, free for your first ${FREE_PORTFOLIO_LIMIT} cards. ${ENTRY_TIER_NAME} removes the limit so a whole set fits; nobody loses cards they already have. Premium plans the store-by-store order for the rest.`,
   },
   {
     prefixes: ["/tools/best-basket"],
@@ -214,19 +219,19 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
     prefixes: ["/card/"],
     tool: "Target-price alerts",
     heading: "Target-price alerts email you when this card hits your price",
-    line: "Set the price you'd pay on a card you watch. After every price update we check every tracked store in your country and email you the store and the link. Plus and Premium are ad-free, too.",
+    line: `Set the price you'd pay on a card you watch. After every price update we check every tracked store in your country and email you the store and the link. ${AD_FREE_TOO}`,
   },
   {
     prefixes: ["/watching", "/portfolio"],
     tool: "Deal Finder",
     heading: "Deal Finder shows which of your cards are cheap right now",
-    line: "Every card underpriced vs TCGplayer or vs eBay at a real store, narrowed to the cards you watch or own. Plus and Premium are ad-free, too.",
+    line: `Every card underpriced vs TCGplayer or vs eBay at a real store, narrowed to the cards you watch or own. ${AD_FREE_TOO}`,
   },
   {
     prefixes: ["/movers", "/market"],
     tool: "Rising Cards",
     heading: "Rising Cards shows which cards players are searching for, and why each one ranks",
-    line: "Ranked by search demand and stores in stock, with the reason for each pick. Your free account shows the top three; Plus shows every pick, and goes ad-free. A screen, not a prediction or financial advice.",
+    line: `Ranked by search demand and stores in stock, with the reason for each pick. Your free account shows the top three; ${ENTRY_TIER_NAME} shows every pick, and goes ad-free. A screen, not a prediction or financial advice.`,
   },
 ];
 

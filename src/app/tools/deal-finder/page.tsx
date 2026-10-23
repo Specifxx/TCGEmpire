@@ -38,7 +38,7 @@ import { RegionToggle } from "@/components/RegionToggle";
 import { ArbitrageFilters } from "@/components/ArbitrageFilters";
 import { CardQuickLink } from "@/components/CardQuickLink";
 import type { CardTileData } from "@/components/CardTile";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, ENTRY_TIER_NAME } from "@/lib/site";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
@@ -52,7 +52,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Deal Finder — Underpriced vs TCGplayer & eBay | RiftCompare" },
   description:
-    "Riftbound cards a store or eBay seller in your market is selling for less than TCGplayer's US market price, the cards whose cheapest copy is on eBay, and the cards a store sells for less than eBay. Updated daily, with direct links. Cheapest on eBay is free; free accounts see the top three of the others, Plus every one.",
+    "Riftbound cards a store or eBay seller in your market is selling for less than TCGplayer's US market price, the cards whose cheapest copy is on eBay, and the cards a store sells for less than eBay. Updated daily, with direct links. Cheapest on eBay is free; free accounts see the top three of the others, Premium every one.",
   alternates: pageAlternates("/tools/deal-finder"),
   openGraph: { title: "Riftbound Deal Finder — Underpriced vs TCGplayer & eBay", url: `${SITE_URL}/tools/deal-finder` },
 };
@@ -162,7 +162,7 @@ const DEAL_FAQS = [
   },
   {
     q: "Do I need to pay to use it?",
-    a: "Not to start. Cheapest on eBay is free for everyone, no account needed. For the other two lists a free account shows the top three cards, updated daily; Plus shows every one, with the store filter, sorting and a filter for just the cards you watch or own, takes the ads off every page, and can email you when a watched card hits your price. Price comparison, the card database, price movers and the deck builder are free for everyone.",
+    a: "Not to start. Cheapest on eBay is free for everyone, no account needed. For the other two lists a free account shows the top three cards, updated daily; Premium shows every one, with the store filter, sorting and a filter for just the cards you watch or own, takes the ads off every page, and can email you when a watched card hits your price. Price comparison, the card database, price movers and the deck builder are free for everyone.",
   },
 ];
 
@@ -812,7 +812,7 @@ function LockedPreview() {
               Create a free account
             </Link>
             <PremiumButton surface="gate:deal-finder" tier="plus" className="btn-ghost text-sm">
-              See Plus
+              See {ENTRY_TIER_NAME}
             </PremiumButton>
           </div>
         </div>

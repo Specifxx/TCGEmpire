@@ -16,7 +16,7 @@ export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Riftbound Creator Codes: Earn 20% With RiftCompare",
-  description: `Make Riftbound content? Get your own RiftCompare code. Your audience gets ${AFFILIATE_PERCENT_OFF}% off Plus and Premium, and you earn ${AFFILIATE_COMMISSION_PERCENT}% of every payment they make.`,
+  description: `Make Riftbound content? Get your own RiftCompare code. Your audience gets ${AFFILIATE_PERCENT_OFF}% off Premium, and you earn ${AFFILIATE_COMMISSION_PERCENT}% of every payment they make.`,
   alternates: pageAlternates("/creators/apply"),
   openGraph: pageOpenGraph({
     title: "Riftbound creator codes on RiftCompare",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "What does my audience get?",
-    a: `${AFFILIATE_PERCENT_OFF}% off RiftCompare Plus or Premium, on every payment for as long as they stay subscribed. It works on monthly and annual plans.`,
+    a: `${AFFILIATE_PERCENT_OFF}% off RiftCompare Premium, on every payment for as long as they stay subscribed. It works on monthly and annual plans.`,
   },
   {
     q: "What do I earn?",
@@ -58,7 +58,7 @@ export default function CreatorCodesPage() {
         <p className="text-xs font-bold uppercase tracking-widest text-gold">For Riftbound creators</p>
         <h1 className="mt-2 font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl">Get your own RiftCompare code</h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
-          Your audience gets <strong className="text-white">{AFFILIATE_PERCENT_OFF}% off</strong> Plus and Premium. You earn{" "}
+          Your audience gets <strong className="text-white">{AFFILIATE_PERCENT_OFF}% off</strong> Premium. You earn{" "}
           <strong className="text-white">{AFFILIATE_COMMISSION_PERCENT}% of every payment</strong> they make, for as long as they stay subscribed.
         </p>
         <Link href="#apply" className="btn-primary mt-5 inline-flex min-h-11 items-center px-6">

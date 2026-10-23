@@ -26,6 +26,19 @@ const opsDb = (): NonNullable<OpsDeps["db"]> => ({
   ebayAdsNewest: async () => (await prisma.ebayAdListing.aggregate({ _max: { updatedAt: true } }))._max.updatedAt,
   storeHealthNewest: async () => (await prisma.storeHealthSnapshot.aggregate({ _max: { day: true } }))._max.day,
   inbox: getInboxCounts,
+  // Two small reads on a table of a few rows: a count, and the unlinked ones (capped).
+  storePlans: async () => {
+    const [total, unlinked] = await Promise.all([
+      prisma.storePlanSubscription.count(),
+      prisma.storePlanSubscription.findMany({
+        where: { partnerId: null, activeUntil: { not: null } },
+        select: { storeName: true, createdAt: true, activeUntil: true },
+        orderBy: { createdAt: "asc" },
+        take: 20,
+      }),
+    ]);
+    return { total, unlinked };
+  },
 });
 
 function repoFiles(root: string): NonNullable<OpsDeps["repo"]> {

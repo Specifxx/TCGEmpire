@@ -11,6 +11,7 @@ import { useMe } from "@/lib/use-me";
 import { usePremiumDialog } from "@/components/PremiumDialog";
 import { PremiumButton } from "@/components/PremiumButton";
 import { FREE_HISTORY_DAYS } from "@/lib/history-access";
+import { ENTRY_TIER_NAME } from "@/lib/site";
 
 // Steam-style localized price history using REAL per-market data — genuinely
 // tracked for AU/US/UK/SG, and historySource()-derived (a currency conversion
@@ -132,7 +133,7 @@ export function LocalizedPriceHistory({
       ) : older != null ? (
         <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-slate-400">
           <span>
-            Showing the last {FREE_HISTORY_DAYS} days. Plus shows the full history since{" "}
+            Showing the last {FREE_HISTORY_DAYS} days. {ENTRY_TIER_NAME} shows the full history since{" "}
             {new Date(older).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })} and downloads it as CSV.
           </span>
           <PremiumButton tier="plus" surface="gate:price-history" className="btn-ghost min-h-11 px-3 text-xs">

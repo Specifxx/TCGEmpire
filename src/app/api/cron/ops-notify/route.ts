@@ -3,6 +3,7 @@ import { sendEmail, sendEmailBrevo, isBrevoEnabled, getLastEmailError } from "@/
 import { ownerEmail } from "@/lib/ops/owner";
 import { siteSelfReport } from "@/lib/ops/self-report";
 import { liveRoute } from "@/lib/public-data/live-route";
+import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -25,7 +26,10 @@ function authorized(req: Request): boolean {
 
 async function handleGET(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json(await siteSelfReport());
+  // One count on a tiny table: whether any Stores plan exists, which makes
+  // STRIPE_STORE_PRICE_ID required (lib/ops/self-report.ts). Unreadable → not counted.
+  const storePlanSubscriptions = await prisma.storePlanSubscription.count().catch(() => null);
+  return NextResponse.json(await siteSelfReport(process.env, { storePlanSubscriptions }));
 }
 
 const MAX_BODY = 300_000;

@@ -20,6 +20,7 @@ import { weekAgoLabel } from "@/lib/rising-movement";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure, PaidLinkTag } from "@/components/AffiliateDisclosure";
 import { affiliateUrl } from "@/lib/affiliate";
+import { ENTRY_TIER_NAME } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -312,7 +313,7 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
         <p className="mt-1 text-sm leading-relaxed text-slate-300">
           Rising Cards re-ranks every day as search demand and stock change; price history updates weekly. Every price
           on RiftCompare is free to browse, a free account shows the top three picks, and the full list is part of
-          Plus, which also removes ads from every page.
+          {ENTRY_TIER_NAME}, which also removes ads from every page.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link href="/tools/rising" className="btn-primary text-sm">See today&apos;s rising cards →</Link>

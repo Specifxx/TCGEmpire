@@ -18,15 +18,21 @@ import { useState } from "react";
 export function StorePartnerForm({
   adminKey,
   retailers,
+  plan,
 }: {
   adminKey?: string;
+  // Linking a paid Stores plan (lib/store-plan.ts) instead of minting a pilot
+  // link: the plan's id, the name the buyer gave, and the tracked store whose
+  // website matches theirs, if any. The route then emails the buyer the link.
+  plan?: { id: string; storeName: string; suggestedRetailer: string | null };
   // Every tracked retailer key with its live listing count, so the operator
   // picks from what the price data actually contains rather than guessing a
   // key — the API rejects a key with no rows, and this stops that round trip.
   retailers: { key: string; name: string; listings: number }[];
 }) {
-  const [retailer, setRetailer] = useState("");
-  const [name, setName] = useState("");
+  const [retailer, setRetailer] = useState(plan?.suggestedRetailer ?? "");
+  const [name, setName] = useState(plan?.storeName ?? "");
+  const [emailedTo, setEmailedTo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,11 +50,19 @@ export function StorePartnerForm({
       const res = await fetch("/api/admin/store-partners", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ retailer, name: name.trim(), ...(adminKey ? { key: adminKey } : {}) }),
+        body: JSON.stringify({
+          retailer,
+          name: name.trim(),
+          ...(plan ? { planSubscriptionId: plan.id } : {}),
+          ...(adminKey ? { key: adminKey } : {}),
+        }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) setError(data?.error ?? `failed (${res.status})`);
-      else setUrl(data.reportUrl as string);
+      else {
+        setUrl(data.reportUrl as string);
+        setEmailedTo(typeof data.emailedTo === "string" ? data.emailedTo : null);
+      }
     } catch {
       setError("network error");
     } finally {
@@ -57,19 +71,28 @@ export function StorePartnerForm({
   }
 
   return (
-    <div className="card-surface p-4">
-      <h2 className="text-sm font-extrabold text-white">Create a report link</h2>
-      <p className="mt-1 text-xs text-slate-500">
-        Generates that store&apos;s private &ldquo;where you&apos;re beaten on price&rdquo; report and gives you a link
-        to paste into an email. The link is the password &mdash; anyone who has it can open the report, so send it to
-        the store and nowhere else. It does not expire.
-      </p>
+    <div className={plan ? "" : "card-surface p-4"}>
+      {plan ? (
+        <p className="text-xs text-slate-500">
+          Pick the tracked store this plan is for. Linking creates its report link and emails it to the buyer; the
+          report locks by itself three days after the plan stops being paid.
+        </p>
+      ) : (
+        <>
+          <h2 className="text-sm font-extrabold text-white">Create a report link</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Generates that store&apos;s private &ldquo;where you&apos;re beaten on price&rdquo; report and gives you a
+            link to paste into an email. The link is the password &mdash; anyone who has it can open the report, so send
+            it to the store and nowhere else. It does not expire.
+          </p>
+        </>
+      )}
 
-      <label className="mt-3 block text-xs font-semibold text-slate-400" htmlFor="sp-retailer">
+      <label className="mt-3 block text-xs font-semibold text-slate-400" htmlFor={`sp-retailer${plan ? `-${plan.id}` : ""}`}>
         Store
       </label>
       <select
-        id="sp-retailer"
+        id={`sp-retailer${plan ? `-${plan.id}` : ""}`}
         className="input mt-1 w-full text-xs"
         value={retailer}
         disabled={busy}
@@ -97,11 +120,11 @@ export function StorePartnerForm({
         </p>
       )}
 
-      <label className="mt-3 block text-xs font-semibold text-slate-400" htmlFor="sp-name">
+      <label className="mt-3 block text-xs font-semibold text-slate-400" htmlFor={`sp-name${plan ? `-${plan.id}` : ""}`}>
         Name on the report
       </label>
       <input
-        id="sp-name"
+        id={`sp-name${plan ? `-${plan.id}` : ""}`}
         className="input mt-1 w-full text-xs"
         value={name}
         disabled={busy}
@@ -113,17 +136,23 @@ export function StorePartnerForm({
       <button
         type="button"
         className="btn-primary mt-3 text-xs"
-        disabled={busy || !retailer || !name.trim()}
+        disabled={busy || !retailer || !name.trim() || (!!plan && !!url)}
         onClick={create}
       >
-        {busy ? "Creating…" : "Create report link"}
+        {busy ? (plan ? "Linking…" : "Creating…") : plan ? "Link and email the report" : "Create report link"}
       </button>
 
       {error && <p className="mt-2 text-xs text-rose-300">{error}</p>}
 
       {url && (
         <div className="mt-3 rounded-lg border border-brand-500/40 bg-brand-500/10 p-3">
-          <p className="text-xs font-semibold text-brand-300">Link created. Copy it into your email:</p>
+          <p className="text-xs font-semibold text-brand-300">
+            {plan
+              ? emailedTo
+                ? `Linked, and emailed to ${emailedTo}. The link, in case they ask:`
+                : "Linked, but the email to the buyer did not send. Send them this link yourself:"
+              : "Link created. Copy it into your email:"}
+          </p>
           <code className="mt-1 block break-all font-mono text-[11px] text-slate-300">{url}</code>
           <button
             type="button"

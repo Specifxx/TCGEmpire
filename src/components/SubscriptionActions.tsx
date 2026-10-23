@@ -32,6 +32,7 @@ export function SubscriptionActions({
   tier,
   interval,
   plusLive,
+  upgradeLive = plusLive,
   annualAvailable,
   targetAnnualAvailable = true,
   canManageBilling,
@@ -41,7 +42,12 @@ export function SubscriptionActions({
 }: {
   tier: PremiumTierKey;
   interval: "month" | "year" | null;
+  /** Plus is on sale: gates the switch DOWN to Plus. */
   plusLive: boolean;
+  /** Plus exists (plusConfigured), on sale or not: gates a Plus member's
+   *  upgrade, which grandfathered Plus members keep after Plus went off sale
+   *  (2026-10-23). Defaults to plusLive. */
+  upgradeLive?: boolean;
   annualAvailable: boolean;
   /** The OTHER tier (the one a switch moves to) has its own annual price. The
    *  switch routes keep the subscriber's interval, falling back to monthly
@@ -91,7 +97,7 @@ export function SubscriptionActions({
   // 400 and "Cancel" was the only control that worked (2026-09-24). A trialist
   // changes plan in the portal-free way — keep or let the trial end — until a
   // mid-trial switch has been verified against Stripe on a test clock.
-  const canUpgrade = plusLive && tier === "plus" && !trialing && !keep;
+  const canUpgrade = upgradeLive && tier === "plus" && !trialing && !keep;
   const canDowngrade = plusLive && tier === "premium" && !trialing && !keep;
   const canGoAnnual = annualAvailable && interval === "month" && !trialing && !keep;
   const savePct = annualSavingPct(tier);

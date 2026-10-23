@@ -3,7 +3,7 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
-import { premiumPlusEnabled, tierFromPriceId, priceIdFor, introDiscountsForPriceChange } from "@/lib/premium";
+import { plusConfigured, tierFromPriceId, priceIdFor, introDiscountsForPriceChange } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,9 @@ export const dynamic = "force-dynamic";
 export async function POST() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
-  if (!premiumPlusEnabled()) {
+  // plusConfigured, not premiumPlusEnabled: Plus is off sale since 2026-10-23
+  // but its grandfathered members must still be able to move up to Premium.
+  if (!plusConfigured()) {
     return NextResponse.json({ error: "Upgrading isn't configured yet" }, { status: 503 });
   }
 

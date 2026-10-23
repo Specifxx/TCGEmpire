@@ -17,7 +17,7 @@ import { stripe, stripeEnabled } from "./stripe";
 import { sendTrialEndingEmail, sendTrialEndingNoChargeEmail, sendCheckoutRecoveryEmail } from "./email";
 import { notify } from "./notifications";
 import { formatMoney } from "./format";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, TIER_NAMES, introFromLine, INTRO_MONTHS, introAmountOffCents, introOfferEnabled, type PremiumTierKey } from "./site";
+import { PLUS_ON_SALE, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, TIER_NAMES, introFromLine, INTRO_MONTHS, introAmountOffCents, introOfferEnabled, type PremiumTierKey } from "./site";
 
 // The portfolio's price-history read, per (exact card set, market). Read straight
 // from the day files bundled with the release (lib/price-history-store.ts) and
@@ -63,16 +63,21 @@ export function normalizeTier(v: unknown): PremiumTier {
 }
 export const PLUS_PRICE_ID = process.env.STRIPE_PLUS_PRICE_ID ?? "";
 export const PLUS_ANNUAL_PRICE_ID = process.env.STRIPE_PLUS_ANNUAL_PRICE_ID ?? "";
-// PLUS IS OFF SALE from 2026-10-23 (owner: "plus adds like no value at all. So
-// let's just get rid of plus and just have premium"). DECISIONS.md, "One paid
-// plan again: Premium at $9.99". Off sale, not deleted: STRIPE_PLUS_PRICE_ID /
-// _ANNUAL_PRICE_ID stay set so tierFromPriceId (below) still reads the existing
-// Plus subscribers as Plus — they keep what they pay for, grandfathered, and can
-// still upgrade to Premium. Nothing sells Plus, quotes Plus or offers a switch
-// down to it while this is false; turning it back on is this one line.
-export const PLUS_ON_SALE = false;
+// PLUS IS OFF SALE from 2026-10-23: PLUS_ON_SALE lives in lib/site.ts (no DB
+// import, so articles and client components can read it too) and is re-exported
+// here. See its comment there.
+export { PLUS_ON_SALE };
+// Plus EXISTS in Stripe (its Price is set), whether or not it is on sale: the
+// test for anything that serves a member who already has Plus, above all the
+// one-click upgrade to Premium (api/premium/upgrade, the dashboard's and
+// /premium's upgrade buttons). Grandfathered Plus members must be able to move
+// up after Plus went off sale; only SELLING Plus (checkout, quotes, the switch
+// down) reads premiumPlusEnabled().
+export function plusConfigured(): boolean {
+  return premiumCheckoutEnabled() && Boolean(PLUS_PRICE_ID);
+}
 export function premiumPlusEnabled(): boolean {
-  return PLUS_ON_SALE && premiumCheckoutEnabled() && Boolean(PLUS_PRICE_ID);
+  return PLUS_ON_SALE && plusConfigured();
 }
 export function plusAnnualEnabled(): boolean {
   return premiumPlusEnabled() && Boolean(PLUS_ANNUAL_PRICE_ID);

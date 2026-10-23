@@ -25,6 +25,7 @@ import {
 } from "./thresholds";
 import { NeonApiError, endpointIdFromUrl, findProjectForEndpoint, projectUsage } from "./neon";
 import { COUNTRIES } from "../country";
+import { STORE_PLAN_LINK_SLA_HOURS, unlinkedTooLong } from "../store-plan";
 
 const iso = (d: OpsDeps) => d.now.toISOString();
 
@@ -681,6 +682,42 @@ export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
   return out;
 }
 
+// A store that paid for the Stores plan gets nothing until the owner links it
+// to a tracked store at /admin/store-partners (that is what emails the report
+// link). The webhook emails the owner at purchase; this is the reminder when
+// that email was missed. Whether STRIPE_STORE_PRICE_ID is still set while plans
+// exist is the site's own "Site settings" check (lib/ops/self-report.ts), since
+// that variable lives in Vercel, not here.
+export async function storePlansUnlinked(d: OpsDeps): Promise<CheckResult> {
+  const id = "stores:unlinked";
+  const title = "Stores plan: stores waiting for their report";
+  if (!d.db?.storePlans) return unknown(d, id, "money", title, "No database connection from here.");
+  try {
+    const { total, unlinked } = await d.db.storePlans();
+    const late = unlinked.filter((u) => unlinkedTooLong({ ...u, partnerId: null }, d.now));
+    if (!late.length) {
+      return result(d, {
+        id,
+        area: "money",
+        title,
+        severity: "ok",
+        summary: total ? `${total} Stores plan${total === 1 ? "" : "s"}; none waiting more than ${STORE_PLAN_LINK_SLA_HOURS / 24} days for a report.` : "No Stores plans yet.",
+      });
+    }
+    const names = late.slice(0, 5).map((u) => u.storeName).join(", ");
+    return result(d, {
+      id,
+      area: "money",
+      title,
+      severity: "warn",
+      summary: `A store paid for the Stores plan and has no report yet: ${late.length} waiting more than ${STORE_PLAN_LINK_SLA_HOURS / 24} days (${names}).`,
+      action: "Open /admin/store-partners, pick the tracked store for each plan under \"Stores plans waiting to be linked\" and link it — that emails them their report. Or tell Claude: \"a Stores plan is waiting to be linked\".",
+    });
+  } catch (e) {
+    return unknown(d, id, "money", title, `Could not read it (${msg(e)}).`);
+  }
+}
+
 // ── Email and configuration, as the website itself sees them ────────────────
 // The mail keys live in Vercel, not in GitHub, so this asks the site (GET
 // /api/cron/ops-notify) what IT can see. The reply names variables, never values.
@@ -821,6 +858,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("partner:dexcompare", "data", "DexCompare store prices (Pokémon)", () => dexcompareIndex(d));
 
   await add("stripe", "money", "Stripe", () => stripeChecks(d));
+  await add("stores:unlinked", "money", "Stores plan: stores waiting for their report", () => storePlansUnlinked(d));
   await add("site:self", "email", "Email and site settings", () => siteSelfChecks(d));
   await add("inbox:waiting", "inbox", "Inbox", () => inboxWaiting(d));
   return out;

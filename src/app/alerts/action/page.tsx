@@ -8,6 +8,7 @@ import { cardHref } from "@/lib/card-url";
 import { isPremium } from "@/lib/premium";
 import { isAdminEmail } from "@/lib/admin-emails";
 import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
+import { PLUS_ON_SALE, ENTRY_TIER_NAME } from "@/lib/site";
 
 // THE CONFIRMATION STEP for a one-tap link in a price-alert email
 // (lib/alert-actions.ts). Mail scanners and link prefetchers GET every link in
@@ -162,13 +163,14 @@ export default async function AlertActionPage({ searchParams }: { searchParams: 
     }
     if (outcome === "not-plus" || outcome === "no-account") {
       return (
-        <Shell title="Target prices are part of Plus">
+        <Shell title={`Target prices are part of ${ENTRY_TIER_NAME}`}>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
-            Plus (ad-free) lets you set your own price on up to {PLUS_TARGET_ALERT_LIMIT} watched cards and emails you as soon as
+            {ENTRY_TIER_NAME} (ad-free) lets you set your own price on{" "}
+            {PLUS_ON_SALE ? `up to ${PLUS_TARGET_ALERT_LIMIT} watched cards` : "any watched card"} and emails you as soon as
             it&apos;s met, after every price update. Your free alerts keep working either way.
           </p>
           <Link href="/premium?src=alert-action" className="btn-primary mt-4">
-            See Plus
+            See {ENTRY_TIER_NAME}
           </Link>
         </Shell>
       );
@@ -189,13 +191,14 @@ export default async function AlertActionPage({ searchParams }: { searchParams: 
 
   if (isTarget(v.action) && !entitled) {
     return (
-      <Shell title="Set your own price with Plus">
+      <Shell title={`Set your own price with ${ENTRY_TIER_NAME}`}>
         <p className="mt-2 text-sm leading-relaxed text-slate-300">
-          Target prices are part of Plus (ad-free): set your own price on up to {PLUS_TARGET_ALERT_LIMIT} watched cards and hear
+          Target prices are part of {ENTRY_TIER_NAME} (ad-free): set your own price on{" "}
+          {PLUS_ON_SALE ? `up to ${PLUS_TARGET_ALERT_LIMIT} watched cards` : "any watched card"} and hear
           as soon as it&apos;s met, after every price update. Your free alerts for {cardName} keep working either way.
         </p>
         <Link href="/premium?src=alert-action" className="btn-primary mt-4">
-          See Plus
+          See {ENTRY_TIER_NAME}
         </Link>
       </Shell>
     );

@@ -228,7 +228,9 @@ export default async function AboutPage() {
             {SITE_NAME} is paid for by display advertising from Google AdSense; by affiliate commissions from
             eBay (through the eBay Partner Network), TCGplayer (through Impact) and Amazon (as an Amazon
             Associate), which we may earn when you buy through one of our links, at no extra cost to you; and by{" "}
-            {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions.
+            {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions; and by the{" "}
+            <Link href="/stores" className="text-brand-400 hover:underline">Stores plan</Link>, a subscription
+            retailers buy for a private report on their own prices.
           </p>
           <p>
             With one labelled exception, none of that money buys a position. It never changes the prices we
@@ -237,7 +239,7 @@ export default async function AboutPage() {
             each product, tagged &ldquo;Shown first&rdquo; and marked as paid links, with the price beside
             them still showing how they compare. We
             also link to eBay outside those lists, always labelled. No store can pay for its place in a
-            comparison. The details are in our{" "}
+            comparison, including a store on the Stores plan. The details are in our{" "}
             <Link href="/editorial-policy#money" className="text-brand-400 hover:underline">editorial policy</Link>{" "}
             and our <Link href="/privacy" className="text-brand-400 hover:underline">privacy policy</Link>.
           </p>
@@ -253,7 +255,7 @@ export default async function AboutPage() {
             <Link href="/guides/understanding-the-riftcompare-index-methodology" className="text-brand-400 hover:underline">
               our Index methodology guide
             </Link>
-            ; for what Plus and Premium add, read{" "}
+            ; for what Premium adds, read{" "}
             <Link href="/blog/riftcompare-premium-explained" className="text-brand-400 hover:underline">
               Premium explained
             </Link>

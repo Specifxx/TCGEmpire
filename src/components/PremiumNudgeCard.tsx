@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PremiumButton } from "./PremiumButton";
 import { memberNudgeHref } from "@/lib/premium-nudge";
+import { ENTRY_TIER_NAME } from "@/lib/site";
 
 // The personal nudge — "4 cards you watch are underpriced right now" — as a
 // card. Copy comes from lib/premium-nudge.ts nudgeCopy(), which returns null
@@ -33,7 +34,7 @@ export function PremiumNudgeCard({
   return (
     <section
       className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3 ${className}`}
-      aria-label={member ? "Your cards in our lists" : "What Plus would show you"}
+      aria-label={member ? "Your cards in our lists" : `What ${ENTRY_TIER_NAME} would show you`}
     >
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold text-white">

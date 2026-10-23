@@ -17,7 +17,7 @@ import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { HubIntro } from "@/components/HubIntro";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, ENTRY_TIER_NAME } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 
 // searchParams-driven (q/type/set/min/max/instock/atmsrp/sort), so the route is
@@ -324,8 +324,8 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
           </div>
           {/* One inline line for a signed-in free account (2026-09-29), never
               a popup: the heart on every tile is a Plus feature. */}
-          <DiscoveryTip id="sealed" surface="tip:sealed" tier="plus" cta="See Plus" className="mb-4">
-            Plus can email you when a box is back in stock or at RRP — tap the heart on a product to watch it.
+          <DiscoveryTip id="sealed" surface="tip:sealed" tier="plus" cta={`See ${ENTRY_TIER_NAME}`} className="mb-4">
+            {ENTRY_TIER_NAME} can email you when a box is back in stock or at RRP — tap the heart on a product to watch it.
           </DiscoveryTip>
           {groups.length === 0 ? (
             <div className="card-surface grid place-items-center p-16 text-center text-slate-400">

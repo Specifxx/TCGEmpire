@@ -2,14 +2,14 @@
 // input), rendered with the lightweight <Markdown> component. To publish a new
 // article, add an entry here.
 import { BANLIST_UPDATED, BANNED_CARDS } from "./banlist";
-import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT, annualSavingPct, premiumEffectiveMonthly, premiumMoneyNum, premiumTrialFee, trialDaysPhrase } from "./site";
+import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PLUS_ON_SALE, annualSavingPct, premiumEffectiveMonthly, premiumMoneyNum, premiumTrialFee, trialDaysPhrase } from "./site";
 import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "./trial-config";
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
-import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
+import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE } from "./alert-limits";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "./free-limits";
 import { SET_GAP_CHUNK } from "./set-gap";
 import { TIER_COMPARISON } from "../components/TierComparisonTable";
@@ -20,15 +20,23 @@ import { RETAILER_LIST, retailerCountry } from "./retailers";
 // the prose (2026-09-26 price cut: every hand-typed $9.99/$79.99 here had to be
 // found by a test and edited by hand on each of the three earlier changes).
 const PREMIUM_YEAR_AT_MONTHLY = `$${(premiumMoneyNum(PREMIUM_PRICE_AMOUNT) * 12).toFixed(2)}`;
-const PLUS_YEAR_AT_MONTHLY = `$${(premiumMoneyNum(PLUS_PRICE_AMOUNT) * 12).toFixed(2)}`;
 
 // The Premium explainer's comparison table, rendered from TIER_COMPARISON
 // itself (2026-09-25) — the same rows /premium and the upgrade dialog show, so
 // the article can no longer describe a lineup the site has moved past (it
 // carried the retired Value Finder / Rising Sealed rows until this). A
-// function declaration so it is hoisted above the ARTICLES literal.
+// function declaration so it is hoisted above the ARTICLES literal. The Plus
+// column shows only while Plus is on sale (PLUS_ON_SALE, lib/site.ts — off since
+// 2026-10-23), the same rule as /premium's showPlus.
 function premiumTierTableMarkdown(): string {
   const cell = (v: boolean | string) => (v === true ? "✓" : v === false ? "—" : v);
+  if (!PLUS_ON_SALE) {
+    return [
+      "| Feature | Free account | Premium |",
+      "| --- | --- | --- |",
+      ...TIER_COMPARISON.map((r) => `| ${r.feature} | ${cell(r.account)} | ${cell(r.premium)} |`),
+    ].join("\n");
+  }
   return [
     "| Feature | Free account | Plus | Premium |",
     "| --- | --- | --- | --- |",
@@ -248,17 +256,17 @@ const PREMIUM_TRIAL_ARTICLE_PRICE_TAIL = premiumTrialEnabled()
   ? PREMIUM_TRIAL_FEE_CENTS > 0
     ? `A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)}, and the price above starts after that unless you cancel.`
     : `A first-time subscriber gets ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} free, and the price above starts after that unless you cancel.`
-  : "Both are charged from the day you subscribe: there's no free trial and no introductory price, just the price above.";
+  : "It's charged from the day you subscribe: there's no free trial and no introductory price, just the price above.";
 const PREMIUM_TRIAL_ARTICLE_FAQ = premiumTrialEnabled()
   ? PREMIUM_TRIAL_FEE_CENTS > 0
-    ? `Yes, and it isn't free: your first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} of Plus or Premium cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)}, charged when you start (a card is required). After ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} the plan's normal price starts (Plus ${PLUS_PRICE_AMOUNT}/month or ${PLUS_ANNUAL_AMOUNT}/year, Premium ${PREMIUM_PRICE_AMOUNT}/month or ${PREMIUM_ANNUAL_AMOUNT}/year) unless you cancel first, and we email you a day or two before. Cancel any time before day ${PREMIUM_TRIAL_DAYS} from your account page and the plan price is never charged; you keep access until the ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} are up. It's limited to one per account and one per card. To try Premium without paying, there are two free ways: a week for sending us feedback, or 3 days for each friend you refer (see below).`
-    : `Yes: ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} free (a card is required), then the plan's normal price unless you cancel first. We email you a day or two before it ends.`
-  : "No — Plus and Premium are billed from the day you subscribe, so there's no trial to remember to cancel. You can cancel anytime from your account and keep access to the end of the period you paid for. To try Premium without paying, there are two free ways: a week for sending us feedback, or 3 days for each friend you refer (see below).";
+    ? `Yes, and it isn't free: your first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} of Premium cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)}, charged when you start (a card is required). After ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} the plan's normal price starts (${PREMIUM_PRICE_AMOUNT}/month or ${PREMIUM_ANNUAL_AMOUNT}/year) unless you cancel first, and we email you a day or two before. Cancel any time before day ${PREMIUM_TRIAL_DAYS} from your account page and the plan price is never charged; you keep access until the ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} are up. It's limited to one per account and one per card. To try Premium without paying, there are two free ways: a week for sending us feedback, or 3 days for each friend you refer (see below).`
+    : `Yes: ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} of Premium free (a card is required), then ${PREMIUM_PRICE_AMOUNT}/month or ${PREMIUM_ANNUAL_AMOUNT}/year, whichever you chose, unless you cancel first. We email you a day or two before it ends.`
+  : "No — Premium is billed from the day you subscribe, so there's no trial to remember to cancel. You can cancel anytime from your account and keep access to the end of the period you paid for. To try Premium without paying, there are two free ways: a week for sending us feedback, or 3 days for each friend you refer (see below).";
 const PREMIUM_TRIAL_ARTICLE_BILLING = premiumTrialEnabled()
   ? PREMIUM_TRIAL_FEE_CENTS > 0
-    ? `Both tiers run through Stripe. A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)}, and the price in the table starts after that unless you cancel; there is no other introductory price.`
-    : `Both tiers run through Stripe. A first-time subscriber gets ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} free, and the price in the table starts after that unless you cancel; there is no other introductory price.`
-  : "Both tiers run through Stripe and are charged when you subscribe — no free trial, no introductory price, just the price in the table.";
+    ? `Premium runs through Stripe. A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)}, and the price in the table starts after that unless you cancel; there is no other introductory price.`
+    : `Premium runs through Stripe. A first-time subscriber gets ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} free, and the price in the table starts after that unless you cancel; there is no other introductory price.`
+  : "Premium runs through Stripe and is charged when you subscribe — no free trial, no introductory price, just the price in the table.";
 
 export const ARTICLES: Article[] = [
   // RADIANCE PATCH NOTES, ERRATA AND TOURNAMENT RULES (2026-10-10, owner:
@@ -5898,7 +5906,7 @@ It matters least for a single chase card or a short shopping list of two or thre
 
 **[Open Best Basket](/tools/best-basket)**, paste in a decklist — your own, or one copied from a published tournament report — and see the store split for yourself. If you'd rather just price a list with no account, **[the deck pricer](/deck)** does that part for free.`,
     faq: [
-      { q: "Is Best Basket free?", a: "Partly. Any signed-in account can run it on its own list and see the delivered total, how many stores it takes and the saving against buying each card's cheapest copy separately. Which store to buy each card from is part of RiftCompare Premium, along with Buy this list and everything in Plus." },
+      { q: "Is Best Basket free?", a: "Partly. Any signed-in account can run it on its own list and see the delivered total, how many stores it takes and the saving against buying each card's cheapest copy separately. Which store to buy each card from is part of RiftCompare Premium, along with Buy this list, the full deal lists and target-price alerts." },
       { q: "Does Best Basket account for shipping?", a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket searches combinations of the stores that stock your list, counting each store's shipping cost and free-shipping threshold, and shows the cheapest delivered order beside the best one-store and two-store orders." },
       { q: "What can I paste into Best Basket?", a: "Any decklist in standard list format, or your watchlist or binder sent in from your RiftCompare account. It matches by set and collector number where given, then by card name, and lists any line it can't match." },
       { q: "Do I need Premium just to price a list, not buy it?", a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices, and any signed-in account sees Best Basket's delivered total for its own list. Premium is only needed for the store-by-store plan." },
@@ -6059,7 +6067,7 @@ Manually checking five or six retailers for every card you want doesn't scale, w
 ### A Practical Workflow
 
 1. Start from the cards you actually want - a deck list, a chase card, a set you are completing - in [the card database](/browse).
-2. Open each card's page to see every tracked store's price for it side by side, and check the [Deal Finder](/tools/deal-finder) for cards listed below TCGplayer's market price. A free account shows its top 3; Plus shows the full list.
+2. Open each card's page to see every tracked store's price for it side by side, and check the [Deal Finder](/tools/deal-finder) for cards listed below TCGplayer's market price. A free account shows its top 3; Premium shows the full list.
 3. Before acting, ask why the gap exists. If you can't come up with a plausible reason (stale listing, regional pricing, sealed-vs-singles drift), treat that as a yellow flag rather than a bargain - sometimes a "cheap" listing is cheap because it's out of stock, misprinted, or a different card variant entirely.
 4. Factor in the full cost: postage (a cheap card from a store you are not otherwise ordering from often costs more delivered), import costs if it ships from another market, and return risk. A gap that looks like 20% often shrinks to single digits once real costs are included. For a whole list, [Best Basket](/tools/best-basket) prices every store combination with each store's measured postage.
 
@@ -8998,7 +9006,7 @@ Buying from outside the eurozone? RiftCompare also covers **[Australia](/blog/bu
       },
       {
         q: "Is RiftCompare free to use?",
-        a: "Yes. The card database, price comparison, price-drop alerts and the weekly price movers are free with no account needed. A free account adds the top 3 of Deal Finder and Rising Cards; Plus shows the full lists with no ads, and Premium adds Best Basket's store-by-store plan for buying a whole list, and Demand Finder.",
+        a: "Yes. The card database, price comparison, price-drop alerts and the weekly price movers are free with no account needed. A free account adds the top 3 of Deal Finder and Rising Cards; Premium shows the full lists with no ads, and adds Best Basket's store-by-store plan for buying a whole list, and Demand Finder.",
       },
     ],
     hero: {
@@ -11652,28 +11660,31 @@ We built the price tracking, the price history, and the alerts specifically beca
 `,
   },
   {
-    // Rewritten 2026-09-29 in a plain, feature-by-feature style for someone
-    // who has never used the site (DECISIONS.md, "Premium works while you're
-    // away"), with the deck price watch and the sealed watches added; it was
-    // rewritten 2026-09-25 for the lineup and Demand Finder's return. The
-    // comparison table is built from TIER_COMPARISON itself
-    // (premiumTierTableMarkdown), so this article can no longer drift from
-    // /premium and the upsell dialog; the prices and saving are re-derived
-    // from lib/site.ts by tests/premium-price-increase.test.ts. The trial (the $1
-    // first month of 2026-09-30) is stated from the same PREMIUM_TRIAL_DAYS /
-    // PREMIUM_TRIAL_FEE_CENTS checkout reads (lib/trial-config.ts), so the kill
-    // switch turns it back into "no trial" on the next build. The half-price
-    // intro is off by default, and this article says there is no other intro
-    // price; turning NEXT_PUBLIC_PREMIUM_INTRO_OFFER back on needs this article
-    // edited by hand — tests/premium-price-increase.test.ts fails until it is.
+    // Rewritten 2026-10-23 as a Premium-only explainer (owner: "Plus adds like
+    // no value at all. Get rid of Plus and just have Premium"; DECISIONS.md,
+    // "One paid plan again: Premium at $9.99"). Plus is off sale (PLUS_ON_SALE,
+    // lib/site.ts) and its features are all in Premium; existing Plus members
+    // keep it, grandfathered, which the price section and one FAQ say once.
+    // Before that it was the "Plus and Premium" explainer (2026-09-29 plain,
+    // feature-by-feature rewrite; 2026-09-25 lineup). The comparison table is
+    // built from TIER_COMPARISON itself (premiumTierTableMarkdown, which drops
+    // the Plus column while Plus is off sale), so this article can no longer
+    // drift from /premium and the upsell dialog; the prices and saving are
+    // re-derived from lib/site.ts by tests/premium-price-increase.test.ts. The
+    // trial is stated from the same PREMIUM_TRIAL_DAYS / PREMIUM_TRIAL_FEE_CENTS
+    // checkout reads (lib/trial-config.ts), so the kill switch turns it back
+    // into "no trial" on the next build. The half-price intro is off by
+    // default, and this article says there is no other intro price; turning
+    // NEXT_PUBLIC_PREMIUM_INTRO_OFFER back on needs this article edited by hand
+    // — tests/premium-price-increase.test.ts fails until it is.
     slug: "riftcompare-premium-explained",
     category: "blog",
-    title: "Plus and Premium: Every Feature Explained",
+    title: "RiftCompare Premium: Every Feature Explained",
     excerpt:
-      "What's free on RiftCompare, and what Plus and Premium add, one feature at a time: the set checklist, alerts, sealed watches, store plans and more.",
+      "What's free on RiftCompare, and what Premium adds, one feature at a time: the set checklist, alerts, sealed watches, store plans and more.",
     author: "RiftCompare",
     date: "2026-08-20",
-    updated: "2026-09-30",
+    updated: "2026-10-23",
     readMins: 10,
     tags: ["premium", "pricing", "tools", "deal finder", "best basket", "demand finder", "price alerts", "sealed", "set tracker"],
     hero: {
@@ -11681,25 +11692,29 @@ We built the price tracking, the price history, and the alerts specifically beca
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
     },
     summary: [
-      `**Comparing Riftbound card prices is free, with no limit and no account.** RiftCompare has two paid tiers on top: Plus at ${PLUS_PRICE_AMOUNT}/mo and Premium at ${PREMIUM_PRICE_AMOUNT}/mo (each with an annual option at roughly a ${annualSavingPct()}% saving), billed through Stripe${PREMIUM_TRIAL_ARTICLE_SUMMARY}, and you can cancel anytime.`,
-      `**Plus and Premium watch prices for you.** Plus is no ads, an unlimited watchlist and portfolio, every deal in Deal Finder and Rising Cards, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, and sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products: an email when a box is back in stock, at RRP, or at your price (checked ${SEALED_CHECK_CADENCE}). With no card limit, a whole set fits in the set checklist.`,
-      `**Premium plans the order.** Everything in Plus, plus Best Basket's store-by-store plan for a deck, a list or the rest of a set (which stores, with each store's postage counted), at the minimum condition you set, and a deck price watch: save up to ${DECK_WATCH_LIMIT} lists and we re-price each one delivered after every price update and email you when the total reaches your price. Also unlimited target alerts and sealed watches, Buy this list, and Demand Finder.`,
-      `**A free account is genuinely useful**: a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist showing what each set is missing and the cheapest listing to finish it, the top 3 of each deal list and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Cards you already track past a limit stay; only new ones need Plus.`,
+      `**Comparing Riftbound card prices is free, with no limit and no account.** On top of that there is one paid plan, Premium, at ${PREMIUM_PRICE_AMOUNT}/mo or ${PREMIUM_ANNUAL_AMOUNT}/yr (roughly a ${annualSavingPct()}% saving on the annual plan), billed through Stripe${PREMIUM_TRIAL_ARTICLE_SUMMARY}, and you can cancel anytime.`,
+      `**Premium watches prices for you.** No ads, an unlimited watchlist and portfolio, every deal in Deal Finder and Rising Cards, and target-price alerts and sealed watches with no limit: an email when a card reaches your price, or when a box is back in stock, at RRP, or at your price (checked ${SEALED_CHECK_CADENCE}). With no card limit, a whole set fits in the set checklist.`,
+      `**Premium also plans the order.** Best Basket's store-by-store plan for a deck, a list or the rest of a set (which stores, with each store's postage counted), at the minimum condition you set, and a deck price watch: save up to ${DECK_WATCH_LIMIT} lists and we re-price each one delivered after every price update and email you when the total reaches your price. Also Buy this list, and Demand Finder.`,
+      `**A free account is genuinely useful**: a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist showing what each set is missing and the cheapest listing to finish it, the top 3 of each deal list and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Cards you already track past a limit stay; only new ones need Premium.`,
       "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
     browseCta: {
       href: "/premium",
-      label: "See RiftCompare Plus and Premium →",
-      blurb: "Full pricing, the live feature list, and the tier comparison table.",
+      label: "See RiftCompare Premium →",
+      blurb: "Full pricing, the live feature list, and the comparison table.",
     },
     faq: [
       {
         q: "How much does RiftCompare Premium cost?",
-        a: `Premium is ${PREMIUM_PRICE_AMOUNT}/month, or ${PREMIUM_ANNUAL_AMOUNT}/year if you pay annually (about ${premiumEffectiveMonthly()}/month, a ${annualSavingPct()}% saving versus paying monthly — ${PREMIUM_YEAR_AT_MONTHLY} over a year). There's also a cheaper Plus tier at ${PLUS_PRICE_AMOUNT}/month (or ${PLUS_ANNUAL_AMOUNT}/year), which is ad-free and has the full deal lists, target alerts and sealed watches — see below for the split. ${PREMIUM_TRIAL_ARTICLE_PRICE_TAIL}`,
+        a: `Premium is ${PREMIUM_PRICE_AMOUNT}/month, or ${PREMIUM_ANNUAL_AMOUNT}/year if you pay annually (about ${premiumEffectiveMonthly()}/month, a ${annualSavingPct()}% saving versus paying monthly — ${PREMIUM_YEAR_AT_MONTHLY} over a year). It is the only paid plan. ${PREMIUM_TRIAL_ARTICLE_PRICE_TAIL}`,
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
-        a: `Everything in Plus — no ads on any page, the full Deal Finder and Rising Cards lists, target-price alerts and sealed watches — plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), unlimited target alerts and sealed watches (Plus has ${PLUS_TARGET_ALERT_LIMIT} and ${SEALED_WATCH_LIMIT_PLUS}), Best Basket's store-by-store plan for the cheapest delivered order (at the minimum condition you set), Finish this set for the cards a set is missing, Buy this list for a deck, your watchlist or your binder, the plan behind your portfolio's replacement cost, and Demand Finder — the cards players are searching for and opening most, over 7 or 30 days.`,
+        a: `No ads on any page, an unlimited watchlist and portfolio, the full Deal Finder and Rising Cards lists, target-price alerts and sealed watches with no limit, a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), Best Basket's store-by-store plan for the cheapest delivered order (at the minimum condition you set), Finish this set for the cards a set is missing, Buy this list for a deck, your watchlist or your binder, the plan behind your portfolio's replacement cost, the full price history with CSV download, graded price tracking, and Demand Finder — the cards players are searching for and opening most, over 7 or 30 days.`,
+      },
+      {
+        q: "What happened to RiftCompare Plus?",
+        a: "Plus, the cheaper paid plan, is no longer sold: since 23 October 2026 there is one paid plan, Premium, and everything Plus included is part of it. If you're already on Plus you keep it, with everything it included, until you cancel, and you can move up to Premium from the /premium page whenever you like.",
       },
       {
         q: "What is a deck price watch?",
@@ -11707,7 +11722,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "Do I have to pay to see what my set is missing?",
-        a: `No. A free account can tick up to ${FREE_PORTFOLIO_LIMIT} cards, see its progress and the missing list, and export it. Plus removes the ${FREE_PORTFOLIO_LIMIT}-card limit so a whole set fits. If you already hold more than that you keep all of them; the limit only stops adding a new card.`,
+        a: `No. A free account can tick up to ${FREE_PORTFOLIO_LIMIT} cards, see its progress and the missing list, and export it. Premium removes the ${FREE_PORTFOLIO_LIMIT}-card limit so a whole set fits. If you already hold more than that you keep all of them; the limit only stops adding a new card.`,
       },
       {
         q: "Is the cost to finish what I would actually pay?",
@@ -11723,19 +11738,19 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "What is a sealed watch?",
-        a: `A Plus and Premium feature for booster boxes, bundles, Proving Grounds and other sealed products. Tap the heart on a product on the sealed page and RiftCompare emails you when it is back in stock after being sold out at every store it tracks for several hours, when a store has it at or under RRP (the price Riot sets), when it reaches a price you set, or when it drops for real — checked ${SEALED_CHECK_CADENCE} (a Discord stock bot may be faster), a restock email at most once every six hours per product and the others at most once a day, and never from an eBay listing. Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} products; Premium has no limit.`,
+        a: `A Premium feature for booster boxes, bundles, Proving Grounds and other sealed products. Tap the heart on a product on the sealed page and RiftCompare emails you when it is back in stock after being sold out at every store it tracks for several hours, when a store has it at or under RRP (the price Riot sets), when it reaches a price you set, or when it drops for real — checked ${SEALED_CHECK_CADENCE} (a Discord stock bot may be faster), a restock email at most once every six hours per product and the others at most once a day, and never from an eBay listing. Premium has no limit on how many products you watch.`,
       },
       {
         q: "Is price comparison free without Premium?",
-        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder and list pricer, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Plus and Premium are about no ads, the full deal lists, the watches that run for you, and the list tools covered above.",
+        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder and list pricer, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Premium is about no ads, the full deal lists, the watches that run for you, and the list tools covered above.",
       },
       {
-        q: "What's the difference between a free account, Plus and Premium?",
-        a: `A free account (no card, just an email) adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards (value history, cost-basis P&L, CSV export and its delivered replacement cost) with a set checklist of what each set is missing, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Plus removes every ad and both limits (so a whole set fits in the checklist), and adds the full Deal Finder and Rising Cards lists, the "only my cards" filter, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards and sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products. Premium adds the deck price watch, unlimited target alerts and sealed watches, Best Basket's store-by-store plan (at the minimum condition you set, and for the rest of a set), Buy this list and Demand Finder on top of everything in Plus. Anyone can see the top 10 most searched cards of the week on the price movers page.`,
+        q: "What's the difference between a free account and Premium?",
+        a: `A free account (no card, just an email) adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low emails, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards (value history, cost-basis P&L, CSV export and its delivered replacement cost) with a set checklist of what each set is missing, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Premium removes every ad and both limits (so a whole set fits in the checklist), and adds the full Deal Finder and Rising Cards lists, the "only my cards" filter, target-price alerts and sealed watches with no limit, the deck price watch, Best Basket's store-by-store plan without a monthly limit (at the minimum condition you set, and for the rest of a set), Buy this list and Demand Finder. Anyone can see the top 10 most searched cards of the week on the price movers page.`,
       },
       {
         q: "What happens to cards I already track if I'm over the free limit?",
-        a: `You keep every one. The free limits (${FREE_WATCHLIST_LIMIT} watched cards, ${FREE_PORTFOLIO_LIMIT} portfolio cards) only stop you adding a NEW card: everything you already track stays, your alerts keep firing and your portfolio keeps its value, and you can still edit quantities, conditions and prices or remove cards. Adding copies of a card you already have is never blocked. The same applies if a Plus or Premium subscription ends: nothing is deleted, and a deck or sealed watch simply waits until you subscribe again.`,
+        a: `You keep every one. The free limits (${FREE_WATCHLIST_LIMIT} watched cards, ${FREE_PORTFOLIO_LIMIT} portfolio cards) only stop you adding a NEW card: everything you already track stays, your alerts keep firing and your portfolio keeps its value, and you can still edit quantities, conditions and prices or remove cards. Adding copies of a card you already have is never blocked. The same applies if a subscription ends: nothing is deleted, and a deck or sealed watch simply waits until you subscribe again.`,
       },
       {
         q: premiumTrialEnabled() ? (PREMIUM_TRIAL_FEE_CENTS > 0 ? "Is there a trial?" : "Is there a free trial?") : "Is there a free trial?",
@@ -11749,8 +11764,8 @@ We built the price tracking, the price history, and the alerts specifically beca
         a: "Yes. Cancel anytime from your account and your benefits run through to the end of the period you already paid for — there's no lock-in and no penalty.",
       },
       {
-        q: "Does Plus remove ads on RiftCompare?",
-        a: "Yes — Plus and Premium both do. Every page is ad-free, on the website and in the app, the moment you're on either paid plan. It's automatic; there's nothing to switch on separately.",
+        q: "Does Premium remove ads on RiftCompare?",
+        a: "Yes. Every page is ad-free, on the website and in the app, the moment you're on Premium (or on Plus, if you already have it). It's automatic; there's nothing to switch on separately.",
       },
       {
         q: "What happened to the Value Finder, Bulk Pricer, Rising Sealed and Condition Calculator?",
@@ -11758,77 +11773,75 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
     ],
     itemList: {
-      name: "What's included with RiftCompare Plus and Premium",
+      name: "What's included with RiftCompare Premium",
       items: [
-        { name: "Ad-free site", description: "No ads on any page, on the website and in the app — Plus and Premium.", url: "/premium" },
-        { name: "Unlimited watchlist and portfolio", description: `Free accounts watch up to ${FREE_WATCHLIST_LIMIT} cards and keep up to ${FREE_PORTFOLIO_LIMIT} in a portfolio; Plus and Premium have no limit.`, url: "/watching" },
+        { name: "Ad-free site", description: "No ads on any page, on the website and in the app.", url: "/premium" },
+        { name: "Unlimited watchlist and portfolio", description: `Free accounts watch up to ${FREE_WATCHLIST_LIMIT} cards and keep up to ${FREE_PORTFOLIO_LIMIT} in a portfolio; Premium has no limit.`, url: "/watching" },
         { name: "Target-price alerts", description: "Set the price you'd pay on a watched card; after every price update we email you the store when it's there.", url: "/watching" },
-        { name: "Sealed watches", description: `An email when a sealed product is back in stock, at RRP, or at your price — Plus (up to ${SEALED_WATCH_LIMIT_PLUS}) and Premium (unlimited).`, url: "/sealed" },
-        { name: "Deck price watch", description: `A saved list re-priced delivered after every price update, emailed when the total reaches your price — Premium, up to ${DECK_WATCH_LIMIT} lists.`, url: "/tools/best-basket" },
+        { name: "Sealed watches", description: "An email when a sealed product is back in stock, at RRP, or at your price, with no limit on how many products you watch.", url: "/sealed" },
+        { name: "Deck price watch", description: `A saved list re-priced delivered after every price update, emailed when the total reaches your price — up to ${DECK_WATCH_LIMIT} lists.`, url: "/tools/best-basket" },
         { name: "Deal Finder", description: "Underpriced vs TCGplayer and Underpriced vs eBay in full, filterable to only the cards you watch or own; Cheapest on eBay is free for everyone.", url: "/tools/deal-finder" },
         { name: "Rising Cards", description: "Cards ranked by demand and price-timing signals, with the reason each one ranks.", url: "/tools/rising" },
-        { name: "Set checklist", description: `What your binder is missing from a set and the cheapest listing for each card — free for your first ${FREE_PORTFOLIO_LIMIT} cards, no limit with Plus.`, url: "/portfolio/sets" },
+        { name: "Set checklist", description: `What your binder is missing from a set and the cheapest listing for each card — free for your first ${FREE_PORTFOLIO_LIMIT} cards, no limit with Premium.`, url: "/portfolio/sets" },
         { name: "Best Basket", description: `The cheapest delivered order for a whole list across your country's stores, postage included: ${FREE_PLANS_PER_MONTH} store-by-store plans a month free, unlimited with Premium (which also sets a minimum condition).`, url: "/tools/best-basket" },
         { name: "Finish this set", description: `The store-by-store plan for the cards a set is missing, up to ${SET_GAP_CHUNK} at a time, with each store's postage counted (shares the ${FREE_PLANS_PER_MONTH} free plans a month; unlimited with Premium).`, url: "/portfolio/sets" },
-        { name: "Demand Finder", description: "The cards players are searching for and opening most on RiftCompare, over 7 or 30 days (Premium; the top 10 most searched are free).", url: "/tools/demand" },
+        { name: "Demand Finder", description: "The cards players are searching for and opening most on RiftCompare, over 7 or 30 days (the top 10 most searched are free).", url: "/tools/demand" },
       ],
     },
-    body: `If you have never used RiftCompare, here is the whole thing in two sentences. **Comparing Riftbound card prices is free**: every card, every store we track in your country, plus eBay, with the delivered total (the item price plus postage) wherever the store publishes its postage — no account, no limit. **Plus and Premium watch prices for you**, so you stop checking: your own target price on a card, a sealed box that comes back in stock or lands at RRP, and, with Premium, a whole deck's delivered total, each checked after every price update (sealed products about every six hours) and emailed to you when it's there. The site also shows what your binder is missing from a set, free.
+    body: `If you have never used RiftCompare, here is the whole thing in two sentences. **Comparing Riftbound card prices is free**: every card, every store we track in your country, plus eBay, with the delivered total (the item price plus postage) wherever the store publishes its postage — no account, no limit. **Premium watches prices for you**, so you stop checking: your own target price on a card, a sealed box that comes back in stock or lands at RRP, and a whole deck's delivered total, each checked after every price update (sealed products about every six hours) and emailed to you when it's there. The site also shows what your binder is missing from a set, free.
 
 This post goes through what you get, one feature at a time, with nothing rounded up or left vague. Two words you'll see a lot: **delivered** means the item price plus postage, and **RRP** is the recommended retail price — the price Riot sets.
 
-## How much does RiftCompare Plus / Premium cost?
+## How much does RiftCompare Premium cost?
 
 | Plan | Price | Works out to |
 | --- | --- | --- |
-| Plus, monthly | ${PLUS_PRICE_AMOUNT}/month | ${PLUS_PRICE_AMOUNT}/month |
-| Plus, annual | ${PLUS_ANNUAL_AMOUNT}/year | ≈ ${premiumEffectiveMonthly("plus")}/month (**${annualSavingPct("plus")}% off**, vs ${PLUS_YEAR_AT_MONTHLY}/yr paying monthly) |
 | Premium, monthly | ${PREMIUM_PRICE_AMOUNT}/month | ${PREMIUM_PRICE_AMOUNT}/month |
 | Premium, annual | ${PREMIUM_ANNUAL_AMOUNT}/year | ≈ ${premiumEffectiveMonthly()}/month (**${annualSavingPct()}% off**, vs ${PREMIUM_YEAR_AT_MONTHLY}/yr paying monthly) |
 
-${PREMIUM_TRIAL_ARTICLE_BILLING} You can move from Plus to Premium, prorated, from the /premium page once your first payment has gone through, and cancel anytime: your benefits run to the end of the period you already paid for.
+${PREMIUM_TRIAL_ARTICLE_BILLING} You can cancel anytime: your benefits run to the end of the period you already paid for.
 
-## What's free, what needs a free account, and what needs Plus or Premium
+**What about Plus?** Plus, the cheaper plan, is no longer sold: since 23 October 2026 Premium is the only paid plan, and it includes everything Plus did. If you're already on Plus, nothing changes unless you want it to — you keep Plus until you cancel, and you can move up to Premium, prorated, from the /premium page.
+
+## What's free, what needs a free account, and what needs Premium
 
 This is the same table the /premium page and the upgrade dialog show, generated from the same list — not a marketing simplification.
 
 ${premiumTierTableMarkdown()}
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every collector eventually wants (a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards, a portfolio of up to ${FREE_PORTFOLIO_LIMIT}, the top three of each deal list and your own Best Basket total), and the set checklist below. Plus takes the ads away and the limits off, shows every deal, and watches cards and sealed products for you. Premium adds the store-by-store plans, the minimum condition, the deck price watch and Demand Finder.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every collector eventually wants (a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards, a portfolio of up to ${FREE_PORTFOLIO_LIMIT}, the top three of each deal list and your own Best Basket total), and the set checklist below. Premium takes the ads away and the limits off, shows every deal, watches cards, sealed products and whole decks for you, and adds the store-by-store plans, the minimum condition and Demand Finder.
 
 ## What's free: the set checklist
 
-**What it does:** tick what's in your binder and see how far through a set you are, what's missing, and the cheapest listing for each missing card in your country. Count the base set, or every printing we track (alt-arts, overnumbered prints and Signatures), and export the missing list. Importing a CSV of your binder, with the printing kept, is free. **What it costs:** it's free for your first ${FREE_PORTFOLIO_LIMIT} cards; Plus removes the limit so a whole set fits, and nobody loses cards they already have. **What the number means:** the cost to finish is the cheapest in-stock store listing today for each missing card, before postage; cards no tracked store has in stock are counted separately, and eBay is left out. Radiance shows how many cards are revealed so far until the set is complete, never a percentage. **When you'd use it:** you're completing a set and want to know what's left without keeping a spreadsheet. Open it at [/portfolio/sets](/portfolio/sets).
+**What it does:** tick what's in your binder and see how far through a set you are, what's missing, and the cheapest listing for each missing card in your country. Count the base set, or every printing we track (alt-arts, overnumbered prints and Signatures), and export the missing list. Importing a CSV of your binder, with the printing kept, is free. **What it costs:** it's free for your first ${FREE_PORTFOLIO_LIMIT} cards; Premium removes the limit so a whole set fits, and nobody loses cards they already have. **What the number means:** the cost to finish is the cheapest in-stock store listing today for each missing card, before postage; cards no tracked store has in stock are counted separately, and eBay is left out. Radiance shows how many cards are revealed so far until the set is complete, never a percentage. **When you'd use it:** you're completing a set and want to know what's left without keeping a spreadsheet. Open it at [/portfolio/sets](/portfolio/sets).
 
-## What Plus adds
+## What Premium adds
 
 ### 1. No ads on any page
 
-**What it does:** removes every ad on every page — card pages, set lists, guides and the app — from the moment you subscribe. Nothing to switch on. **When you'd use it:** you use the site every week. It's the first thing Plus does because it's the benefit that needs no explaining.
+**What it does:** removes every ad on every page — card pages, set lists, guides and the app — from the moment you subscribe. Nothing to switch on. **When you'd use it:** you use the site every week. It's listed first because it's the benefit that needs no explaining.
 
 ### 2. An unlimited watchlist and portfolio
 
-**What it does:** a free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} cards in its portfolio; Plus and Premium remove both limits. If you already track more than that, nothing is taken away: every card you have stays, alerts keep firing and the portfolio keeps valuing — only adding a new card needs a paid plan. **When you'd use it:** you've hit the eleventh card you want to watch, or the fifty-first you own, which is where a whole set stops fitting in the set checklist.
+**What it does:** a free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} cards in its portfolio; Premium removes both limits. If you already track more than that, nothing is taken away: every card you have stays, alerts keep firing and the portfolio keeps valuing — only adding a new card needs Premium. **When you'd use it:** you've hit the eleventh card you want to watch, or the fifty-first you own, which is where a whole set stops fitting in the set checklist.
 
 ### 3. Target-price alerts
 
-**What it does:** every account can watch a card and get an email when it hits a new low. Plus adds the price **you** set: tell us what you'd pay for a watched card, and after every price update we check every tracked store in your country and email you the store and a link to the listing when it's there, with no weekly cap. The email quotes the item price and says when postage is extra. Plus covers up to ${PLUS_TARGET_ALERT_LIMIT} cards at a time; Premium has no limit. **When you'd use it:** you know what a card is worth to you and don't want to check every day.
+**What it does:** every account can watch a card and get an email when it hits a new low. Premium adds the price **you** set: tell us what you'd pay for a watched card, and after every price update we check every tracked store in your country and email you the store and a link to the listing when it's there, with no weekly cap and no limit on how many cards. The email quotes the item price and says when postage is extra. **When you'd use it:** you know what a card is worth to you and don't want to check every day.
 
 ### 4. Sealed watches
 
-**What it does:** tap the heart on a booster box, bundle, Proving Grounds set or any other product on [sealed](/sealed) (or in its quick view), and we email you when it is **back in stock** after being sold out at every store we track for several hours, when a store has it **at or under RRP**, when it reaches **your own price**, or when it **drops for real** (at least 5% and a whole unit below the last price we told you). Sealed products are checked **${SEALED_CHECK_CADENCE}**, not instantly, and a Discord stock bot may be faster. A restock email comes at most once every six hours per product, the others at most once a day, and never from an eBay listing — only a store you can actually order from. The email names the price, the RRP and the gap ("$118, RRP $120"), the store and, in bold, when we last read that listing, because stock can sell out again before you get there. Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} products; Premium has no limit. **When you'd use it:** a box sold out at launch, or every listing is over RRP, and you'd rather be told than keep checking.
+**What it does:** tap the heart on a booster box, bundle, Proving Grounds set or any other product on [sealed](/sealed) (or in its quick view), and we email you when it is **back in stock** after being sold out at every store we track for several hours, when a store has it **at or under RRP**, when it reaches **your own price**, or when it **drops for real** (at least 5% and a whole unit below the last price we told you). Sealed products are checked **${SEALED_CHECK_CADENCE}**, not instantly, and a Discord stock bot may be faster. A restock email comes at most once every six hours per product, the others at most once a day, and never from an eBay listing — only a store you can actually order from. The email names the price, the RRP and the gap ("$118, RRP $120"), the store and, in bold, when we last read that listing, because stock can sell out again before you get there. There's no limit on how many products you watch. **When you'd use it:** a box sold out at launch, or every listing is over RRP, and you'd rather be told than keep checking.
 
 ### 5. Deal Finder — underpriced vs TCGplayer and vs eBay
 
-**What it does:** lists every Riftbound card that a real store or eBay is selling for less than TCGplayer's US market price, converted into your currency and ranked by how far below it sits — the **Underpriced vs TCGplayer** tab. Filter it to the stores you actually buy from, or to eBay alone. A second tab, **Underpriced vs eBay**, lists the cards a store sells for less than the cheapest eBay listing, and a third, **Cheapest on eBay**, is free for everyone. With Plus you can also narrow it to **only the cards on your watchlist or in your binder** — the quickest way to see whether anything you actually want is cheap right now. A free account sees the top three of each Underpriced list; Plus and Premium get the full, sortable lists. **When you'd use it:** before you buy anything.
+**What it does:** lists every Riftbound card that a real store or eBay is selling for less than TCGplayer's US market price, converted into your currency and ranked by how far below it sits — the **Underpriced vs TCGplayer** tab. Filter it to the stores you actually buy from, or to eBay alone. A second tab, **Underpriced vs eBay**, lists the cards a store sells for less than the cheapest eBay listing, and a third, **Cheapest on eBay**, is free for everyone. With Premium you can also narrow it to **only the cards on your watchlist or in your binder** — the quickest way to see whether anything you actually want is cheap right now. A free account sees the top three of each Underpriced list; Premium gets the full, sortable lists. **When you'd use it:** before you buy anything.
 
 TCGplayer's market price is a US sales-based reference, so treat it as a yardstick rather than a guarantee, and check the listing before you pay; store prices are the item price, with postage added at checkout.
 
 ### 6. Rising Cards — the full list
 
-**What it does:** ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. It is a screen, not a prediction or financial advice. A free account sees the top three picks, each with the reason it ranks; Plus unlocks the full ranked list for every market RiftCompare tracks. **When you'd use it:** you're deciding what to pick up next and want to see what other players are looking at.
-
-## What Premium adds on top
+**What it does:** ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. It is a screen, not a prediction or financial advice. A free account sees the top three picks, each with the reason it ranks; Premium unlocks the full ranked list for every market RiftCompare tracks. **When you'd use it:** you're deciding what to pick up next and want to see what other players are looking at.
 
 ### 7. Deck price watch
 
@@ -11838,7 +11851,7 @@ TCGplayer's market price is a US sales-based reference, so treat it as a yardsti
 
 **What it does:** answers the question that matters when you're buying more than one card: what's the cheapest way to actually buy the whole list, postage included? Send it a decklist or your watchlist (or your binder, to see what re-buying it would cost, delivered), and it searches combinations of your country's stores for the lowest delivered total — each store's postage and free-shipping threshold counted — and shows the best one-store and two-store orders beside it, because sometimes one parcel is worth a little more. Cards it can't match or can't find in stock are listed, never silently dropped.
 
-Any signed-in account sees its own list's delivered total, how many stores it takes and the saving against buying each card's cheapest copy separately — in money, from your own list, so you can see whether the plan pays for itself on the first order. Premium shows which store to buy each card from, with the links. **When you'd use it:** buying a whole deck or list. It helps most outside the US, where the stores RiftCompare tracks each charge their own postage.
+Any signed-in account sees its own list's delivered total, how many stores it takes and the saving against buying each card's cheapest copy separately — in money, from your own list, so you can see whether the plan pays for itself on the first order — and gets ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Premium shows which store to buy each card from, with the links, every time. **When you'd use it:** buying a whole deck or list. It helps most outside the US, where the stores RiftCompare tracks each charge their own postage.
 
 ### 9. Minimum condition
 
@@ -11879,10 +11892,10 @@ Neither of these requires ever entering a payment method. If Premium turns out t
 
 ## Who should actually pay for it
 
-Being straightforward here, since the point of this post is accuracy over hype: if you only ever check a handful of card prices before buying, the free account already does that job completely — you'd be paying for features you won't use. The two paid tiers are for two kinds of buyer:
+Being straightforward here, since the point of this post is accuracy over hype: if you only ever check a handful of card prices before buying, the free account already does that job completely — you'd be paying for features you won't use. Premium is for two kinds of buyer:
 
-1. **Plus is for buying singles and sealed regularly** — it takes the ads away, shows every card below TCGplayer market, and emails you when a card you watch reaches your price or a box you want is back at RRP.
-2. **Premium is for buying a whole deck or list, without checking every day** — the deck price watch tells you when the whole thing is at your price, and Best Basket and Buy this list turn it into the cheapest delivered order across your country's stores, skipping what you already own. It also opens Demand Finder in full.
+1. **You buy singles and sealed regularly** — Premium takes the ads away, shows every card below TCGplayer market, and emails you when a card you watch reaches your price or a box you want is back at RRP.
+2. **You buy a whole deck or list, without checking every day** — the deck price watch tells you when the whole thing is at your price, and Best Basket and Buy this list turn it into the cheapest delivered order across your country's stores, skipping what you already own. It also opens Demand Finder in full.
 
 If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts on up to ${FREE_WATCHLIST_LIMIT} cards and a portfolio tracker for up to ${FREE_PORTFOLIO_LIMIT} — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
 `,

@@ -11,7 +11,14 @@ export const dynamic = "force-dynamic";
 // cancel before the charge the reminder warns of). Requires the Customer Portal to be enabled once in
 // the Stripe dashboard; until then this returns a clear error and the UI falls back
 // to the "manage via your receipt email / contact us" path.
-export async function POST() {
+// Where the portal's "return" link goes: /premium, or /stores/account for a
+// Stores plan buyer (the only other page with this button). A fixed allow-list,
+// never a URL from the request.
+const RETURN_PATHS = new Set(["/premium", "/stores/account"]);
+
+export async function POST(req: Request) {
+  const body = (await req.json().catch(() => null)) as { back?: unknown } | null;
+  const back = typeof body?.back === "string" && RETURN_PATHS.has(body.back) ? body.back : "/premium";
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
   if (!stripeEnabled()) {
@@ -29,7 +36,7 @@ export async function POST() {
   try {
     const session = await stripe().billingPortal.sessions.create({
       customer: dbUser.stripeCustomerId,
-      return_url: `${SITE_URL}/premium`,
+      return_url: `${SITE_URL}${back}`,
     });
     return NextResponse.json({ url: session.url });
   } catch (e) {

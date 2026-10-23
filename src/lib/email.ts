@@ -2,6 +2,8 @@ import {
   SITE_NAME,
   SITE_URL,
   TIER_NAMES,
+  PLUS_ON_SALE,
+  ENTRY_TIER_NAME,
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_PRICE_PERIOD,
   premiumEffectiveMonthly,
@@ -510,7 +512,7 @@ function actionItems(item: PriceDropItem): { label: string; url: string }[] {
     const x = formatMoney(a.targetDown.cents, cur);
     out.push({ label: a.hasTarget ? `Lower target to ${x}` : `Target 10% under this price (${x})`, url: a.targetDown.url });
   }
-  if (a.upsell) out.push({ label: "Set a target price with Plus", url: a.upsell });
+  if (a.upsell) out.push({ label: `Set a target price with ${ENTRY_TIER_NAME}`, url: a.upsell });
   return out;
 }
 
@@ -623,7 +625,7 @@ export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro:
 function alertFooter(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): string {
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;line-height:1.6;color:#6b7585">
     You're getting this because you asked RiftCompare to watch these cards for price changes. Free alerts come at most once a week;
-    Plus and Premium target, below-market and restock alerts can arrive after each price update.<br/>
+    Target, below-market and restock alerts on a paid plan can arrive after each price update.<br/>
     <a href="${escapeHtml(links.pause)}" style="color:#9aa4b2;text-decoration:underline">Pause alert emails (your watchlist is kept)</a>
     &nbsp;·&nbsp; <a href="${escapeHtml(links.deleteAll)}" style="color:#9aa4b2;text-decoration:underline">Delete all my watches</a><br/>
     RiftCompare · Riftbound card price comparison.
@@ -631,7 +633,7 @@ function alertFooter(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): str
 }
 function alertFooterText(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): string {
   return [
-    "You're getting this because you asked RiftCompare to watch these cards for price changes. Free alerts come at most once a week; Plus and Premium target, below-market and restock alerts can arrive after each price update.",
+    "You're getting this because you asked RiftCompare to watch these cards for price changes. Free alerts come at most once a week; Target, below-market and restock alerts on a paid plan can arrive after each price update.",
     `Pause alert emails (your watchlist is kept): ${links.pause}`,
     `Delete all my watches: ${links.deleteAll}`,
   ].join("\n");
@@ -752,7 +754,7 @@ export function buildAlertConfirmationEmail(cards: AlertConfirmationCard[], tota
     )
     .join("");
   const cadence =
-    `At most one email a week for free alerts: when a card falls at least ${DROP_MIN_PCT}% (and at least ${minDrop}) to a new low, when it's first listed or opens for pre-order, and when it's back in stock. Each email names the stores and their postage. Plus and Premium target, below-market and restock alerts can arrive after each price update.`;
+    `At most one email a week for free alerts: when a card falls at least ${DROP_MIN_PCT}% (and at least ${minDrop}) to a new low, when it's first listed or opens for pre-order, and when it's back in stock. Each email names the stores and their postage. Target, below-market and restock alerts on a paid plan can arrive after each price update.`;
   const count = total === 1 ? "this card" : `these ${total} cards`;
   const inner = `
     <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">You're all set. We're watching ${count}:</td></tr>
@@ -1218,15 +1220,21 @@ export function buildCheckoutRecoveryEmail(
         ? `Your first ${trialDaysPhrase(trialDays)} are still ${premiumTrialFee(trialFeeCents)}. After that, ${name} is ${fromLine}.`
         : `Your ${trialDays}-day free trial is still available — $0 today, then ${fromLine}.`
       : `${name} is ${fromLine}.`;
+  // Plus is off sale since 2026-10-23 (PLUS_ON_SALE): a Premium abandoner is no
+  // longer pointed at it, and the pitch names Premium alone.
   const otherPlan =
     tier === "premium"
-      ? "Prefer something lighter? Plus is the cheaper plan, on the same page."
+      ? PLUS_ON_SALE
+        ? "Prefer something lighter? Plus is the cheaper plan, on the same page."
+        : ""
       : "Buying a whole deck? Premium adds Best Basket's store-by-store plan and Demand Finder, on the same page.";
+  const bothPitch =
+    PLUS_ON_SALE || tier === "plus"
+      ? "Plus and Premium are both ad-free and show every deal; Premium also works out the cheapest way to buy a whole want-list or decklist, postage included."
+      : "Premium is ad-free, shows every deal, and works out the cheapest way to buy a whole want-list or decklist, postage included.";
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You started signing up for RiftCompare ${name} but didn't finish checkout. ${trialLine} Plus and Premium are
-      both ad-free and show every deal; Premium also works out the cheapest way to buy a whole want-list or decklist,
-      postage included. ${otherPlan}
+      You started signing up for RiftCompare ${name} but didn't finish checkout. ${trialLine} ${bothPitch} ${otherPlan}
     </td></tr>
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}</ul>
@@ -1306,7 +1314,7 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
     <tr><td style="padding:14px 32px 22px">
       <div style="border:1px solid #6b5a1f;border-radius:12px;padding:14px 16px;background:#1a1810">
         <div style="font-size:13px;line-height:1.55;color:#d8cfa8">
-          <strong style="color:#f3c969">Want every deal, not just the top three?</strong> Plus and Premium both come with:
+          <strong style="color:#f3c969">Want every deal, not just the top three?</strong> ${PLUS_ON_SALE ? "Plus and Premium both come with" : "Premium comes with"}:
           <ul style="margin:6px 0;padding-left:18px">
             <li>No ads on any page</li>
             <li>No limit on your watchlist or portfolio, so a whole set fits in the set checklist</li>
@@ -1314,7 +1322,7 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
             <li>An email naming the store when a card you watch hits your target price</li>
             <li>Sealed watches: an email when a box is back in stock or at RRP (the price Riot sets), checked ${SEALED_CHECK_CADENCE}</li>
           </ul>
-          Premium plans the order: Best Basket's store-by-store plan for your deck, watchlist or the rest of a set,
+          ${PLUS_ON_SALE ? "Premium plans" : "It also plans"} the order: Best Basket's store-by-store plan for your deck, watchlist or the rest of a set,
           skipping the cards you already own, at the minimum condition you set. It also adds a deck price watch,
           which re-prices a saved list after every price update and emails you when its delivered total reaches your
           price, and Demand Finder, the full list of what people are searching for. ${trialLine}
@@ -1489,7 +1497,11 @@ function priceDropTierLine(tier: PremiumTierKey): string {
 // What each tier includes — the 2026-09-25 lineup as TierComparisonTable and
 // PremiumPricingCards state it (Plus leads with "no ads": tests/ad-free-tier.test.ts).
 export const PRICE_DROP_PLUS_INCLUDES = `No ads on any page, every deal in Deal Finder (including "only my cards"), the full Rising Cards list, target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards, and sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP, or at your price).`;
-export const PRICE_DROP_PREMIUM_INCLUDES = `Everything in Plus, plus unlimited target-price alerts and sealed watches, a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), Best Basket's store-by-store plan and Buy this list for your deck or watchlist, and Demand Finder: the cards players search for and open most.`;
+// While Plus is off sale (PLUS_ON_SALE, 2026-10-23) the email sells Premium
+// alone, so Premium's line names everything rather than "everything in Plus".
+export const PRICE_DROP_PREMIUM_INCLUDES = PLUS_ON_SALE
+  ? `Everything in Plus, plus unlimited target-price alerts and sealed watches, a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), Best Basket's store-by-store plan and Buy this list for your deck or watchlist, and Demand Finder: the cards players search for and open most.`
+  : `No ads on any page, every deal in Deal Finder (including "only my cards"), the full Rising Cards list, unlimited target-price alerts and sealed watches (back in stock, at RRP, or at your price), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), Best Basket's store-by-store plan and Buy this list for your deck or watchlist, and Demand Finder: the cards players search for and open most.`;
 
 export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail {
   // A display name that is really just an email address reads oddly after
@@ -1526,36 +1538,40 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${greeting}</td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You can now try ${SITE_NAME} Plus or Premium <strong style="color:#fff">free for ${days}</strong>. Watch the cards
+      You can now try ${SITE_NAME} ${PLUS_ON_SALE ? "Plus or Premium" : "Premium"} <strong style="color:#fff">free for ${days}</strong>. Watch the cards
       you want and we email you the store when one hits your price, see every deal instead of the top three, and
       price a whole deck at the cheapest stores. Price comparison, your watchlist and your portfolio stay free either way.
     </td></tr>
     ${tierBlock("premium", premiumLine, PRICE_DROP_PREMIUM_INCLUDES, links.premiumAnnual, links.premiumMonthly)}
-    ${tierBlock("plus", plusLine, PRICE_DROP_PLUS_INCLUDES, links.plusAnnual, links.plusMonthly)}
+    ${PLUS_ON_SALE ? tierBlock("plus", plusLine, PRICE_DROP_PLUS_INCLUDES, links.plusAnnual, links.plusMonthly) : ""}
     <tr><td style="padding:8px 32px 4px;font-size:13px;line-height:1.6;color:#9aa4b2">
       A card is required to start. Nothing is charged for ${days}; we email you a day or two before the trial ends,
       and you can cancel from your account page in a couple of clicks before then. One trial per account.
-      <a href="${links.compare}" style="color:#f29733;text-decoration:underline">Compare the plans side by side</a>.
+      <a href="${links.compare}" style="color:#f29733;text-decoration:underline">${PLUS_ON_SALE ? "Compare the plans side by side" : "See everything Premium includes"}</a>.
     </td></tr>
     <tr><td style="padding:0 32px 16px"></td></tr>`;
 
   const text = [
     greetingText,
     "",
-    `You can now try ${SITE_NAME} Plus or Premium free for ${days}. Price comparison, your watchlist and your portfolio stay free either way.`,
+    `You can now try ${SITE_NAME} ${PLUS_ON_SALE ? "Plus or Premium" : "Premium"} free for ${days}. Price comparison, your watchlist and your portfolio stay free either way.`,
     "",
     `PREMIUM: free for ${days}, then ${premiumLine}`,
     PRICE_DROP_PREMIUM_INCLUDES,
     `Start ${days} free (monthly): ${links.premiumMonthly}`,
     ...(hasAnnual("premium") ? [`Start ${days} free (yearly, ${tierAnnualAmount("premium")}): ${links.premiumAnnual}`] : []),
-    "",
-    `PLUS: free for ${days}, then ${plusLine}`,
-    PRICE_DROP_PLUS_INCLUDES,
-    `Start ${days} free (monthly): ${links.plusMonthly}`,
-    ...(hasAnnual("plus") ? [`Start ${days} free (yearly, ${tierAnnualAmount("plus")}): ${links.plusAnnual}`] : []),
+    ...(PLUS_ON_SALE
+      ? [
+          "",
+          `PLUS: free for ${days}, then ${plusLine}`,
+          PRICE_DROP_PLUS_INCLUDES,
+          `Start ${days} free (monthly): ${links.plusMonthly}`,
+          ...(hasAnnual("plus") ? [`Start ${days} free (yearly, ${tierAnnualAmount("plus")}): ${links.plusAnnual}`] : []),
+        ]
+      : []),
     "",
     `A card is required to start. Nothing is charged for ${days}; we email you a day or two before the trial ends, and you can cancel from your account page before then. One trial per account.`,
-    `Compare the plans: ${links.compare}`,
+    `${PLUS_ON_SALE ? "Compare the plans" : "See everything Premium includes"}: ${links.compare}`,
     "",
     "—",
     `You're getting this because you have a ${SITE_NAME} account. This is a one-off product announcement, not a subscription.`,
@@ -1567,7 +1583,9 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
     "List-Unsubscribe": `<${oneClick}>`,
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
   };
-  const preheader = `${days} free, then Premium ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD} or Plus ${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
+  const preheader = PLUS_ON_SALE
+    ? `${days} free, then Premium ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD} or Plus ${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`
+    : `${days} free, then Premium ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
   return { subject, heading, preheader, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl), preheader), text, headers };
 }
 

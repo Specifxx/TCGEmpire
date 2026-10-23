@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { dropBreakWindow } from "@/lib/methodology-breaks";
 import type { PricePoint } from "@/lib/price-history";
+import { ENTRY_TIER_NAME } from "@/lib/site";
 
 // Interactive price-history chart (Steam / CSFloat style): scatter-line with a
 // hover crosshair + tooltip showing the exact price on any day, range toggles, and
@@ -203,7 +204,7 @@ export function PriceChart({
                   setRange(r.key);
                   setHover(null);
                 }}
-                aria-label={onLockedRange && r.key !== "1M" ? `${r.key === "ALL" ? "All" : r.key}: full history with Plus` : undefined}
+                aria-label={onLockedRange && r.key !== "1M" ? `${r.key === "ALL" ? "All" : r.key}: full history with ${ENTRY_TIER_NAME}` : undefined}
                 className={`inline-flex min-h-11 items-center rounded-md px-3 text-[11px] font-semibold [@media(pointer:fine)]:min-h-0 [@media(pointer:fine)]:px-2 [@media(pointer:fine)]:py-0.5 ${range === r.key ? "bg-brand-500/20 text-brand-300" : "text-slate-500 hover:text-slate-300"}`}
               >
                 {r.key === "ALL" ? "All" : r.key}

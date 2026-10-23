@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { PremiumButton } from "@/components/PremiumButton";
 import { useMe } from "@/lib/use-me";
-import { TIER_NAMES } from "@/lib/site";
+import { TIER_NAMES, PLUS_ON_SALE, ENTRY_TIER_NAME } from "@/lib/site";
 import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
 
 // Client island for the (static, ISR) /movers page: turns its habitual price-checkers
@@ -59,10 +59,10 @@ export function MoversToolsCta() {
 
   return (
     <section className="card-surface relative overflow-hidden p-5">
-      <span className="chip absolute right-4 top-4 bg-slate-500/15 text-slate-200">Plus</span>
+      <span className={`chip absolute right-4 top-4 ${PLUS_ON_SALE ? "bg-slate-500/15 text-slate-200" : "bg-gold/15 text-gold"}`}>{ENTRY_TIER_NAME}</span>
       <h2 className="text-lg font-bold text-white">Know what a card should cost</h2>
       <p className="mt-1 max-w-xl text-sm text-slate-400">
-        Movers tell you a price changed. Plus tells you whether today&apos;s price is a good one: the{" "}
+        Movers tell you a price changed. {ENTRY_TIER_NAME} tells you whether today&apos;s price is a good one: the{" "}
         <strong className="text-slate-200">Deal Finder</strong> lists every card underpriced vs TCGplayer or vs eBay at a
         real store, and <strong className="text-slate-200">Rising Cards</strong> ranks cards by demand and price-timing signals
         — the full lists, with no ads on any page.

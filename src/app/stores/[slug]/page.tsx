@@ -15,6 +15,7 @@ import { SITE_URL } from "@/lib/site";
 import { COUNTRY_GUIDE_SLUGS, pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { getArticles } from "@/lib/articles";
 import { articleHref } from "@/lib/content/tool-guides";
+import { verifiedStoreProfile } from "@/lib/store-plan-db";
 
 export const revalidate = 86400;
 
@@ -116,7 +117,13 @@ export default async function StorePage({ params }: { params: { slug: string } }
 
   const country = (store.country ?? "AU") as Country;
   const info = COUNTRIES[country];
-  const { count, min, max, cheapest } = await storeStats(store.key);
+  const [{ count, min, max, cheapest }, verified] = await Promise.all([
+    storeStats(store.key),
+    // The Stores plan's Verified mark and the store's own words (lib/store-plan.ts).
+    // Shown in the header only: never in a price row, and nothing on this page
+    // or any other is ordered by it.
+    verifiedStoreProfile(store.key),
+  ]);
   const policyUrl = shippingPolicyUrl(store.key);
   const siblings = STORE_PAGES.filter((s) => (s.country ?? "AU") === country && s.slug !== store.slug);
   // The market's buying guide and the all-markets one, for "Is it the
@@ -153,6 +160,18 @@ export default async function StorePage({ params }: { params: { slug: string } }
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
           {storePageName(store, info.label)} — Riftbound singles, live prices &amp; stock
         </h1>
+        {verified && (
+          <div className="mt-3 max-w-3xl rounded-xl border border-brand-500/30 bg-brand-500/5 p-4">
+            <p className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="chip bg-brand-500/15 font-bold uppercase tracking-wide text-brand-300">✓ Verified store</span>
+              <span className="text-slate-500">
+                We&apos;ve confirmed who runs {store.name}; the words below are theirs. Being verified never changes where their prices rank.
+              </span>
+            </p>
+            {verified.about && <p className="mt-2 text-sm leading-relaxed text-slate-300">{verified.about}</p>}
+            {verified.promo && <p className="mt-1.5 text-sm font-semibold text-gold">{verified.promo}</p>}
+          </div>
+        )}
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           {count > 0 ? (
             <>
@@ -291,7 +310,7 @@ export default async function StorePage({ params }: { params: { slug: string } }
         <Link href="/stores" className="text-brand-400 hover:underline">
           See your live pricing position
         </Link>{" "}
-        — free repricing report for tracked stores.
+        — a live repricing report for your store, on the Stores plan.
       </p>
 
       {/* "Add this badge" (2026-09-24): the store-owner reader above, given

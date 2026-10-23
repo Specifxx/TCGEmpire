@@ -28,6 +28,9 @@ export type InlineSignupSurface = (typeof INLINE_SIGNUP_SURFACES)[number];
 
 export const SIGNUP_SOURCES = new Set<string>([
   "navbar",
+  // The Stores plan (2026-10-23): the subscribe form on /stores and the
+  // signed-out /stores/account page.
+  "stores_plan",
   // An account created by a guest Premium checkout (2026-10-20, lib/guest-checkout.ts).
   "guest_checkout",
   // RETIRED 2026-09-30 with the sign-up popup ("The sign-up slider is gone").

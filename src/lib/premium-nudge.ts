@@ -29,6 +29,7 @@ import { defaultTcgBuyKeys, getTcgDealRanks } from "./arbitrage";
 import { hrefFor } from "./deal-finder-href";
 import { getCachedRisingCards } from "./rise-predictor";
 import type { Country } from "./country";
+import { ENTRY_TIER_NAME } from "./site";
 
 // Same number as FREE_PREVIEW_ROWS in the Deal Finder and Rising Cards pages —
 // a hit at or above it is one the free account can already see.
@@ -181,7 +182,9 @@ export function memberNudgeHref(kind: "deal" | "rising"): string {
 }
 
 // Plus is ad-free, and every surface that describes Plus says so (lineup spec).
-export const PLUS_GATE_LINE = "Plus shows every one with no ads, and can email you when one hits your price.";
+// Names the plan a visitor can buy: Premium while Plus is off sale (2026-10-23,
+// ENTRY_TIER_NAME in lib/site.ts). The constant keeps its name for its callers.
+export const PLUS_GATE_LINE = `${ENTRY_TIER_NAME} shows every one with no ads, and can email you when one hits your price.`;
 
 export function nudgeCopy(
   nudge: PremiumNudge,
@@ -209,7 +212,7 @@ export function nudgeCopy(
       `Ranked by demand and price-timing signals${ex?.kind === "rising" ? ` — including ${ex.name}` : ""}.`,
     ];
     if (free && c.risingFree > 0) parts.push(`${c.risingFree === c.rising ? (c.rising === 1 ? "It's" : "All are") : n(c.risingFree, "is", "are")} in your free top 3.`);
-    if (free) parts.push("Plus shows every pick, with no ads.");
+    if (free) parts.push(`${ENTRY_TIER_NAME} shows every pick, with no ads.`);
     return { heading, line: parts.join(" "), kind: "rising" };
   }
   return null;

@@ -146,6 +146,16 @@ longer lands on its entry.
 
 ## Premium & monetisation
 
+- **The Stores plan (2026-10-23, owner):** US$79.99/month (`STRIPE_STORE_PRICE_ID`,
+  displayed amount `NEXT_PUBLIC_STORE_PLAN_AMOUNT`) for a retailer: the repricing
+  report with "what buyers are searching for", a Verified mark with the store's own
+  text on `/stores/<slug>`, and Premium for the buying account (via the existing
+  `stampFromSubscription`). The owner links each paid plan to its tracked store at
+  `/admin/store-partners`, which emails the report link; the report locks three days
+  after the plan lapses. **Nothing a store pays for changes its place in any
+  comparison** — never read the plan from a comparison or ranking. Checkout refuses a
+  Stripe Price dearer than the page. Pilot partners keep free reports.
+  [2026-10-23](../DECISIONS.md#L19079)
 - **Creator codes (2026-10-16, owner):** a creator applies at `/creators/apply`,
   the owner approves in `/admin/affiliates` (an `Affiliate` plus a Stripe
   promotion code on the shared 20%-off, forever coupon). Subscribers get 20% off

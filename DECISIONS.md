@@ -19075,3 +19075,51 @@ position 7.6; AdSense rejected the site for low-value content).
   except that a priced BASE card whose winner lost "Price" takes the full-name price
   rung if it fits 60. Priced cards' descriptions lead with "<name> price: from X at
   N stores, cheapest first".
+
+## The Stores plan: $79.99 a month for Riftbound retailers (2026-10-23)
+
+Owner: "add some features for stores", as a self-serve US$79.99/month plan. The
+repricing report (`/stores/report`) had been a free, hand-minted pilot. It is now the
+core of a paid plan, with three additions: "What buyers are searching for" in the
+report, a "Verified store" mark with the store's own description and promo on its
+`/stores/<slug>` page, and Premium for the buying account.
+
+- **The hard rule: nothing a store pays for changes its place in any comparison.**
+  No comparison, ranking or price row reads the plan (`tests/store-plan.test.ts` pins
+  `lib/market-rows.ts`). The mark and the store's text sit in the store page's header,
+  never in its price table. `/stores` says so in bold above the price, and `/about` and
+  `/editorial-policy#money` name the plan as a revenue source with the same rule.
+- **Flow.** `/stores` form (signed in; the ISR page asks `/api/me`, never reads the
+  session) → `POST /api/stores/checkout` → Stripe Checkout (subscription, no trial,
+  metadata `kind: "store"` on the session and subscription) → the webhook's
+  `storePlanStarted` records a `StorePlanSubscription` and emails the owner (inbox kind
+  `store-plan`) → the owner links it to a tracked store under "Stores plans waiting to
+  be linked" at `/admin/store-partners`, which creates the `StorePartner`
+  (`planSubscriptionId` = the plan row's id) and emails the buyer the report link →
+  the buyer manages billing, sees status and edits their page text at `/stores/account`.
+  The linking step is by hand on purpose: a store's website is not proof it is the
+  tracked retailer key, and a wrong link hands one store another's report.
+- **Never charge more than the page says.** The checkout reads the Stripe Price first
+  and refuses (503, logged) unless it is a monthly USD recurring price at most
+  `STORE_PLAN_AMOUNT` (`NEXT_PUBLIC_STORE_PLAN_AMOUNT`, default "$79.99"). Both values
+  are config; a dashboard edit that raises the Price switches checkout off rather than
+  overcharging.
+- **Premium comes free with it, through the existing path.** `tierFromPriceId` reads
+  any non-Plus price as "premium", so `stampFromSubscription` grants and renews Premium
+  for a Stores subscription exactly as for a Premium one; `storePlanStarted` calls it
+  rather than a second stamping path. Every Premium branch is unchanged.
+- **Paid-through and lapse.** `activeUntil` comes off the subscription and is
+  extend-only (one conditional `updateMany`), moved by `stampFromSubscription` (renewal
+  and subscription events, matched on `STRIPE_STORE_PRICE_ID` or the `kind: "store"`
+  stamp) and by the daily reconcile. The report, the profile editor and the Verified
+  mark stop three days after it passes (`planPartnerActive`). Pilot partners (no
+  `planSubscriptionId`) are untouched and keep their free reports.
+- **Search demand costs no new query.** The report's new section reads the same
+  self-cached, day-keyed `getTopDemand(7, 25)` entry the `/movers` strip uses (top 20
+  shown), and the store's stock from the listings the page already loaded. Demand is
+  global; prices are the store's market.
+- **Ops.** `stores:unlinked` warns when a paid plan has waited more than two days for
+  its report; the site's own settings check requires `STRIPE_STORE_PRICE_ID` once any
+  plan exists (`docs/ops-monitor.md`).
+- **Not done:** `scripts/restore-accounts.ts` does not copy `StorePartner` or
+  `StorePlanSubscription` (neither did it before); both are private and never exported.

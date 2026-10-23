@@ -101,7 +101,7 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/tools/deal-finder",
         title: "Deal Finder",
-        desc: "Underpriced vs TCGplayer, Cheapest on eBay and Underpriced vs eBay: three lists of the cards a real store or eBay sells for less — narrowed, with Plus, to only the cards you watch or own.",
+        desc: `Underpriced vs TCGplayer, Cheapest on eBay and Underpriced vs eBay: three lists of the cards a real store or eBay sells for less — narrowed, with ${LIST_BADGE}, to only the cards you watch or own.`,
         badge: LIST_BADGE,
       },
       {
@@ -131,7 +131,7 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/portfolio/sets",
         title: "Set checklist",
-        desc: `Tick what's in your binder and see what a set is missing and the cheapest listing for each card, before postage. Free for your first ${FREE_PORTFOLIO_LIMIT} cards; Plus removes the limit.`,
+        desc: `Tick what's in your binder and see what a set is missing and the cheapest listing for each card, before postage. Free for your first ${FREE_PORTFOLIO_LIMIT} cards; ${LIST_BADGE} removes the limit.`,
       },
     ],
   },
@@ -151,7 +151,7 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/sealed",
         title: "Sealed prices",
-        desc: `Booster boxes, packs, Proving Grounds and bundles priced across stores, with an in-stock-at-MSRP flag — and, with Plus, a watch that emails you on a restock or at RRP, checked ${SEALED_CHECK_CADENCE}.`,
+        desc: `Booster boxes, packs, Proving Grounds and bundles priced across stores, with an in-stock-at-MSRP flag — and, with ${LIST_BADGE}, a watch that emails you on a restock or at RRP, checked ${SEALED_CHECK_CADENCE}.`,
       },
     ],
   },

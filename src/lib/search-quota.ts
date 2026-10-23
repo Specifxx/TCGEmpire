@@ -23,6 +23,8 @@
 // security boundary, and it costs no database write per search. The cookie's
 // signing lives in search-quota-server.ts: this module is shared with client
 // components and must not import node:crypto.
+import { PLUS_ON_SALE } from "./site";
+
 export const SEARCH_LIMITS = { anon: 25, free: 100, plus: 500 } as const;
 export type SearchTier = "anon" | "free" | "plus" | "premium";
 /** The signed-out allowance, named for the pricing table. */
@@ -112,12 +114,15 @@ export function limitCopy(tier: SearchTier): { headline: string; next: string } 
   if (tier === "anon")
     return {
       headline: `You've used today's ${SEARCH_LIMITS.anon} free searches.`,
-      next: `Sign up free for ${SEARCH_LIMITS.free} a day, or get Plus for ${SEARCH_LIMITS.plus}.`,
+      // Plus is off sale since 2026-10-23 (PLUS_ON_SALE): the paid step is Premium.
+      next: PLUS_ON_SALE
+        ? `Sign up free for ${SEARCH_LIMITS.free} a day, or get Plus for ${SEARCH_LIMITS.plus}.`
+        : `Sign up free for ${SEARCH_LIMITS.free} a day, or get Premium for unlimited searches.`,
     };
   if (tier === "free")
     return {
       headline: `You've used today's ${SEARCH_LIMITS.free} searches.`,
-      next: `Plus gives you ${SEARCH_LIMITS.plus} a day, and Premium is unlimited.`,
+      next: PLUS_ON_SALE ? `Plus gives you ${SEARCH_LIMITS.plus} a day, and Premium is unlimited.` : "Premium searches without a limit.",
     };
   return {
     headline: `You've used today's ${SEARCH_LIMITS.plus} searches.`,

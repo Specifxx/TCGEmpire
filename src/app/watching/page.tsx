@@ -8,6 +8,7 @@ import { NavIcon } from "@/components/NavIcon";
 import { PremiumNudgeCard } from "@/components/PremiumNudgeCard";
 import { getPremiumNudge, nudgeCopy as watchedNudgeCopy } from "@/lib/premium-nudge";
 import { isPremium, premiumCheckoutEnabled, premiumTierOf } from "@/lib/premium";
+import { PLUS_ON_SALE, ENTRY_TIER_NAME } from "@/lib/site";
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_ONLY, SEALED_WATCH_LIMIT_PLUS, sealedWatchLimit } from "@/lib/alert-limits";
 import { getCountry } from "@/lib/get-country";
 import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
@@ -59,6 +60,9 @@ export default async function WatchingPage() {
   // (lib/premium-nudge.ts). Never fails the page.
   const member = isPremium(user);
   const onPlus = member && premiumTierOf(user) === "plus";
+  // Quote Plus's limits only while Plus is sold, or to a member who has it
+  // (Plus is off sale since 2026-10-23, PLUS_ON_SALE).
+  const quotePlus = PLUS_ON_SALE || onPlus;
   const country = getCountry();
   const nudge =
     isPremium(user) || premiumCheckoutEnabled() ? await getPremiumNudge(user.id, getCountry()).catch(() => null) : null;
@@ -119,7 +123,11 @@ export default async function WatchingPage() {
             </>
           ) : (
             <>
-              With Plus (ad-free), set your own price on up to {PLUS_TARGET_ALERT_LIMIT} cards and hear as soon as
+              {PLUS_ON_SALE ? (
+                <>With Plus (ad-free), set your own price on up to {PLUS_TARGET_ALERT_LIMIT} cards and hear as soon as</>
+              ) : (
+                <>With Premium (ad-free), set your own price on any card you watch and hear as soon as</>
+              )}{" "}
               it&apos;s met, and when one drops below TCGplayer market.
             </>
           )}{" "}
@@ -146,18 +154,18 @@ export default async function WatchingPage() {
         <ul className="mt-2 grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
           <li>
             <strong className="text-white">Cards</strong> — free, up to {FREE_WATCHLIST_LIMIT}. An email when a card you watch hits a new
-            low at a store. <strong className="text-white">A target</strong> (Plus: {PLUS_TARGET_ALERT_LIMIT} cards, Premium: any) is your
+            low at a store. <strong className="text-white">A target</strong> ({quotePlus ? `Plus: ${PLUS_TARGET_ALERT_LIMIT} cards, Premium: any` : "Premium, any card"}) is your
             own price: we email you as soon as a store has it there.
           </li>
           <li>
-            <strong className="text-white">Sealed products</strong> — Plus (up to {SEALED_WATCH_LIMIT_PLUS}) and Premium (any). Tap the
+            <strong className="text-white">Sealed products</strong> — {quotePlus ? `Plus (up to ${SEALED_WATCH_LIMIT_PLUS}) and Premium (any)` : "Premium, any number"}. Tap the
             heart on a box on /sealed: an email when it is back in stock after selling out everywhere, at RRP (the price Riot sets;
             {SEALED_RRP_ONLY}), or at your price. Checked {SEALED_CHECK_CADENCE}, and every email says when the store was last read; a Discord stock bot
             may be faster.
             {!member && (
               <div className="mt-1.5">
                 <PremiumButton tier="plus" surface="tip:watching" className="text-xs font-semibold text-brand-300 hover:underline">
-                  See Plus →
+                  See {ENTRY_TIER_NAME} →
                 </PremiumButton>
               </div>
             )}
