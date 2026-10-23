@@ -94,6 +94,12 @@ export type Deal = {
   // card and has no QuickView equivalent (it already goes straight to an
   // outbound buy link, which is the correct click target for a sealed product).
   card: CardTileData | null;
+  // savings-vs-market only (2026-10-23, /premium's deals teaser): the store or
+  // eBay seller behind priceCents, and whether that price already includes
+  // postage (an eBay row with stated postage). Optional so every other deal
+  // type, and every existing reader, is unchanged.
+  storeName?: string | null;
+  postageIncluded?: boolean;
 };
 
 // One "Cheapest on eBay" row (2026-09-26). Its own shape rather than a Deal: the
@@ -163,6 +169,10 @@ export function savingsVsMarketDeal(it: ArbItem): Deal {
     refCents: it.marketCents,
     note: "vs TCGplayer market",
     card: it.card,
+    // ebayBuyLabel carries its postage note ("eBay + postage", "eBay (delivered)");
+    // the name alone here, postageIncluded says the rest.
+    storeName: it.buyStoreName.replace(/ \+ .*$| \(delivered\)$/, "") || null,
+    postageIncluded: it.postageIncluded,
   };
 }
 

@@ -21,6 +21,15 @@ export const isUsMarket = (market: string | null | undefined) => (market ?? "").
 // and our own funnel agrees (the sealed-watch gate is the most-clicked paywall).
 export const PREMIUM_PROMISE = "Never overpay for Riftbound again";
 
+// /premium's headline (2026-10-23, the conversion redesign; DECISIONS.md
+// "/premium, rebuilt to convert, honestly"): the promise made concrete, as the
+// thing Premium actually does — Best Basket's delivered total across the stores
+// we track. "Find", not "get": we compare, the buyer still buys. The promise
+// above stays the plan's tagline and the dialog's headline.
+export const PREMIUM_HERO_HEADLINE = "Find the lowest delivered price for every Riftbound card you buy";
+export const PREMIUM_HERO_SUBLINE =
+  "Premium prices your whole list across every store we track, emails you the moment a card, box or deck hits your price, and shows every card selling below market. Comparing prices stays free for everyone.";
+
 export function planTagline(tier: "plus" | "premium", _market?: string | null): string {
   if (tier === "plus") return "Watches prices for you, with no ads";
   return PLUS_ON_SALE ? "Everything in Plus, plus the cheapest delivered order" : PREMIUM_PROMISE;
