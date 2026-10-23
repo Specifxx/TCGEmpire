@@ -216,6 +216,9 @@ export async function generateMetadata({
         `${set.name} Card List So Far`,
       ]
     : [
+        // 2026-10-23 CTR pass (owner-approved): brand-free, the count and the
+        // "cheapest first" hook up front. The "+ Prices" rung stays next.
+        ...(cardCount > 0 ? [`${set.name} Card List: All ${cardCount} Cards, Cheapest First`] : []),
         ...(cardCount > 0 ? [`Riftbound ${set.name} Card List: All ${cardCount} Cards + Prices`] : []),
         ...(cardCount > 0 ? [`Riftbound ${set.name} Card List & Price Guide (All ${cardCount} Cards)`] : []),
         `Riftbound ${set.name} Card List & Price Guide`,
@@ -257,6 +260,18 @@ export async function generateMetadata({
       : []),
     `Every Riftbound ${set.name} card revealed so far, with rarity, domain and card text, added as official reveals land.`,
   ];
+  // Stores with an in-stock listing of this set (any market, each store once),
+  // for the description's hook; null on failure drops that rung.
+  const setStores =
+    !preview && cardCount > 0
+      ? await prisma.retailerPrice
+          .groupBy({
+            by: ["retailer"],
+            where: { inStock: true, card: { setCode: set.code }, NOT: [{ retailer: { startsWith: "ebay" } }, { retailer: { startsWith: "marketguide" } }] },
+          })
+          .then((r) => r.length)
+          .catch(() => null)
+      : null;
   const descCandidates = preview
     ? previewDescCandidates
     : cardCount === 0
@@ -270,6 +285,9 @@ export async function generateMetadata({
           // and reinforces it for the ones that could. Both phrasings describe
           // the same page honestly: a list of every card in the set with what
           // each one currently costs.
+          ...(setStores
+            ? [`Riftbound ${set.name} card list: all ${cardCount} printings with prices compared across ${setStores} stores in six markets, cheapest first. Updated daily.`]
+            : []),
           `The complete Riftbound ${set.name} card list and price guide — every card with live prices compared across stores to find the cheapest singles. Updated daily.`,
           `The complete Riftbound ${set.name} card list and price guide — every card with live prices compared across stores. Updated daily.`,
           `The complete Riftbound ${set.name} card list — every card with images, plus live prices compared across stores to find the cheapest singles. Updated daily.`,

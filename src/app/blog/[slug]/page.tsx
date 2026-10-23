@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       absolute:
         a.slug === MOST_EXPENSIVE_SLUG
           ? mostExpensiveTitle(await topMostExpensive())
-          : `${a.title} — RiftCompare`,
+          : a.seoTitle ?? `${a.title} — RiftCompare`,
     },
     description,
     ...(isDraft ? { robots: { index: false, follow: true } } : {}),

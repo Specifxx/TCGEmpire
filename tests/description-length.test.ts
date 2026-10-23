@@ -70,7 +70,7 @@ const TITLE_RENDERED_MAX = 60;
 const TITLE_BUDGET = 1;
 
 test("no new article titles that get cut in the search result", () => {
-  const over = ARTICLES.filter((a) => a.title.length + TITLE_SUFFIX > TITLE_RENDERED_MAX);
+  const over = ARTICLES.filter((a) => (a.seoTitle ? a.seoTitle.length : a.title.length + TITLE_SUFFIX) > TITLE_RENDERED_MAX);
   assert.ok(
     over.length <= TITLE_BUDGET,
     `${over.length} titles render over ${TITLE_RENDERED_MAX} chars, up from the budgeted ${TITLE_BUDGET}: ` +

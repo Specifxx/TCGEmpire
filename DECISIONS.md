@@ -19063,3 +19063,15 @@ position 7.6; AdSense rejected the site for low-value content).
   and followed (`SisterSite.anchor`).
 - **Titles were proposed, not changed** (owner: propose only). Note for whoever applies
   them: store counts may not go in titles other than the homes' (`no-store-count-in-titles`).
+- **Titles applied (owner approved the table, same day).** Six articles get an
+  `Article.seoTitle` (the full rendered `<title>`, no suffix; the H1 keeps `title`):
+  the spoiler tracker, the Radiance card-list post, the signature post and the Deploy,
+  Disarm and Show Off guides, whose "Leaked Mechanic" titles and bodies now say the
+  9 Oct core rules patch notes made them rules (status line, summary, FAQ, the
+  "confirmed?" sections; the leak-era text stays as the record). Released set pages
+  lead with "<Set> Card List: All N Cards, Cheapest First" and a description that
+  counts the stores stocking the set (one `groupBy`). Card pages render with no
+  " | RiftCompare" suffix; the ladder still chooses with it (titles keep their text),
+  except that a priced BASE card whose winner lost "Price" takes the full-name price
+  rung if it fits 60. Priced cards' descriptions lead with "<name> price: from X at
+  N stores, cheapest first".
