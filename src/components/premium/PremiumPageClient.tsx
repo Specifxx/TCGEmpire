@@ -96,7 +96,7 @@ export function PremiumStickyCta({ label, terms, heroId, pricingId }: { label: s
   return (
     <div
       aria-hidden={!show}
-      className={`fixed inset-x-0 bottom-0 z-40 border-t border-ink-700 bg-ink-950/95 pl-4 pr-16 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 backdrop-blur motion-safe:transition-transform motion-safe:duration-200 sm:hidden ${
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-ink-700 bg-ink-950/95 pl-4 pr-16 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 motion-safe:transition-transform motion-safe:duration-200 sm:hidden ${
         show ? "translate-y-0" : "pointer-events-none translate-y-full"
       }`}
       data-premium-sticky
