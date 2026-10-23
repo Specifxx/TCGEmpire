@@ -341,12 +341,16 @@ export async function discoverCollections(base: string): Promise<{ riftbound: st
   };
 }
 
-export async function fetchProducts(base: string, handle: string, country: Country): Promise<ShopifyProd[]> {
+/** Pages of 250 read per collection. A store whose Riftbound products sit deep in
+ *  a big general collection sets its own `maxPages` (lib/sealed-stores.ts). */
+export const DEFAULT_COLLECTION_PAGES = 10;
+
+export async function fetchProducts(base: string, handle: string, country: Country, maxPages = DEFAULT_COLLECTION_PAGES): Promise<ShopifyProd[]> {
   const path = `/collections/${handle}/products.json`;
   const allowed = await robotsAllows(base);
   if (!allowed(path)) return [];
   const all: ShopifyProd[] = [];
-  for (let page = 1; page <= 10; page++) {
+  for (let page = 1; page <= maxPages; page++) {
     if (page > 1) await sleep(REQUEST_DELAY_MS);
     // country=XX forces the store's market price (Shopify Markets serves a different
     // price per country): AUD for AU stores, USD for US stores, etc.
@@ -560,7 +564,9 @@ export async function importSealed(): Promise<number> {
     // `strict` marks a batch read from a general pre-order collection, whose
     // titles must name Riftbound outright (STRICT_RIFTBOUND) — see
     // PREORDER_COLLECTION.
-    const batches: { products: ShopifyProd[]; strict: boolean }[] = [];
+    // `own` marks the store's own configured/Riftbound collections: a read of one
+    // licenses the replace below even when it is read strictly (strictTitles).
+    const batches: { products: ShopifyProd[]; strict: boolean; own?: boolean }[] = [];
     if (store.platform === "woocommerce") {
       batches.push({ products: await fetchWooSealedProducts(store), strict: false });
     } else {
@@ -570,7 +576,14 @@ export async function importSealed(): Promise<number> {
       const found = await discoverCollections(store.base);
       const handles = Array.from(new Set([...found.riftbound, ...(store.collections ?? [])]));
       if (!handles.length) continue;
-      for (const handle of handles) batches.push({ products: await fetchProducts(store.base, handle, cc), strict: false });
+      // A configured collection on a sealed-only store may be a big general one
+      // (The Games Corner's "tcgs", Riftbound on page 12): its own page budget.
+      // `strictTitles`: that collection carries every game, so its titles must
+      // name Riftbound outright — the loose hint let "Magic the Gathering Origins
+      // Booster Box" through as an Origins box.
+      const own = store as { maxPages?: number; strictTitles?: boolean };
+      const pages = own.maxPages ?? DEFAULT_COLLECTION_PAGES;
+      for (const handle of handles) batches.push({ products: await fetchProducts(store.base, handle, cc, pages), strict: !!own.strictTitles, own: true });
       // Pre-order collections are read AFTER the Riftbound ones, so a product in
       // both is taken from the Riftbound collection first (`seen` below).
       for (const handle of found.preorder.filter((h) => !handles.includes(h))) {
@@ -578,11 +591,11 @@ export async function importSealed(): Promise<number> {
       }
     }
 
-    for (const { products, strict } of batches) {
+    for (const { products, strict, own: ownBatch } of batches) {
       // A pre-order collection that yields nothing (or 404s) must not count as
       // a successful read — it would license the delete-and-replace below on a
       // store whose real collections failed.
-      if (products.length && !strict) scraped = true;
+      if (products.length && (!strict || ownBatch)) scraped = true;
       for (const p of products) {
         if (seen.has(p.handle)) continue;
         const title = p.title ?? "";

@@ -39,6 +39,13 @@ export type ShopifySealedStore = RetailerInfo & {
   currency: string;
   country: NonNullable<RetailerInfo["country"]>;
   platform?: "shopify";
+  /** Pages of 250 to read per configured collection (default 10). Only for a
+   *  store whose Riftbound products sit deep in a big general collection. */
+  maxPages?: number;
+  /** Titles from the configured collections must name Riftbound outright
+   *  (STRICT_RIFTBOUND), as pre-order collections' do. Set it for a store whose
+   *  configured collection is a general, every-game one. */
+  strictTitles?: boolean;
 };
 
 // Shopify stores, sealed only. Probed 2026-09-24: storefront currency from
@@ -115,6 +122,28 @@ export const SEALED_ONLY_SHOPIFY: ShopifySealedStore[] = [
     name: "BeachesTCG",
     base: "https://beachestcg.com.au",
     collections: ["riftbound-tcg"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "AU",
+    currency: "AUD",
+  },
+  {
+    // The Games Corner (Parramatta, NSW, per its /meta.json), added at the owner's request, 2026-10-23.
+    // AUD Shopify store, sealed and accessories only (no singles). It has no
+    // Riftbound collection: its 43 Riftbound products (UVS/Riot boxes, packs,
+    // Vaults, decks, sleeves, playmats) sit in the general "tcgs" collection of
+    // ~3,750 products, sorted A–Z, so "Riftbound …" lands on page 12 of 15 at
+    // 250 a page. maxPages 20 reads all of it with headroom; every title still
+    // has to name Riftbound (strictTitles) and pass the sealed gates. Postage is quoted at checkout.
+    key: "thegamescorner",
+    name: "The Games Corner",
+    base: "https://www.thegamescorner.com.au",
+    collections: ["tcgs"],
+    maxPages: 20,
+    // "tcgs" holds every game: Magic's and Pokémon's "Origins" boxes pass the
+    // loose Riftbound hint, so every title must say Riftbound.
+    strictTitles: true,
     shippingFlatCents: 0,
     freeOverCents: 0,
     shippingNote: "shipping at checkout",

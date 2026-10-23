@@ -18997,3 +18997,27 @@ ensure we have all the cards."
 - **Left for the owner:** the policy pages' "Radiance pre-order table" eBay
   exception (that table no longer renders), the spoiler tracker's title, and the
   future-tense prose still inside older article bodies.
+
+## The Games Corner: a sealed store read deep and strictly (2026-10-23)
+
+Owner: "add games corner to our store list and import" thegamescorner.com.au. An
+AUD Shopify store (Parramatta, per its /meta.json) with 43 Riftbound products,
+all sealed or accessories, so it goes in `SEALED_ONLY_SHOPIFY`, not RETAILERS
+(a singles store with no singles reads as broken).
+
+It has no Riftbound collection. Every Riftbound product sits in "tcgs", an
+every-game collection of ~3,750 products sorted A–Z, on page 12 of 15, past
+the importer's ten-page read. Two new per-store options, used only here:
+
+- `maxPages` (20): pages of 250 read per configured collection.
+- `strictTitles`: the collection's titles must name Riftbound outright
+  (STRICT_RIFTBOUND), as pre-order collections' already do. Read loosely, the
+  dry run let in nine other games' boxes, "Magic the Gathering Origins Booster
+  Box" and Pokémon's "Ancient Origins" among them, as Origins product. A strict
+  read of the store's OWN collection still licenses its delete-and-replace
+  (`own` on the batch); a strict pre-order read still never does.
+
+Dry run on the live store: 25 sealed products kept (booster boxes and packs for
+every set, Vaults, Champion and Showdown decks, Pre-Rift kits, Proving Grounds);
+sleeves, playmats, bulk runes and the hanging booster dropped by the existing
+sealed gates; no other game's product.

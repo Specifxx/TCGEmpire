@@ -28,7 +28,9 @@ test("what a mixed pre-order collection yields must name Riftbound outright", ()
   assert.match(src, /const STRICT_RIFTBOUND = \/riftbound\|league\\s\*of\\s\*legends\/i;/);
   assert.match(src, /if \(strict && !STRICT_RIFTBOUND\.test\(title\)\) continue;/);
   // An empty or failed pre-order read must never license the store's delete-and-replace.
-  assert.match(src, /if \(products\.length && !strict\) scraped = true;/);
+  // A strict PRE-ORDER batch still never licenses the replace; a store's own
+  // collection read strictly (strictTitles, 2026-10-23) does.
+  assert.match(src, /if \(products\.length && \(!strict \|\| ownBatch\)\) scraped = true;/);
 });
 
 test("the Vault Bundle is one product, whatever the store calls it", () => {
