@@ -19246,3 +19246,75 @@ inbox before it is asked to pay.
   /alerts, /tools, /watching, llms.txt, the dashboard tile, the watch button
   tooltip, the welcome checklist and the Premium explainer article say a free
   account gets one of each.
+
+## /premium, rebuilt to convert, honestly (2026-10-23)
+
+Owner's brief: redesign /premium "so it converts far better, while keeping
+everything honest", as a presentation and client-side change only (no Stripe,
+env, checkout, webhook, legacy-price or Plus-handling change). The funnel data
+behind it: about 480 Premium clicks in eight weeks, 323 of them signed out,
+about 40 checkout starts. The plans-first page of 2026-09-29 put the buy button
+on the first screen but gave a signed-out visitor nothing to check before
+paying.
+
+- **Order.** Hero (the outcome headline `PREMIUM_HERO_HEADLINE`, the live
+  stats strip, ONE checkout button with "Card required. We email you before
+  you're charged. Cancel in two clicks." and the price under it), then proof
+  the visitor can check: today's top 3 below-market deals with the rest
+  locked, a "Try it free" demo on their own list, and a pays-for-itself line
+  only when today's numbers support it. Then the plan card (annual default,
+  "Save 33% ≈ 4 months free"), a reassurance strip, a focused Free vs Premium
+  table (every other row one tap away), an example alert, the markets line and
+  the FAQ (trial and cancel first, plus a truthful "Is Premium worth it if I
+  only buy a few cards?" that says the free tools may be enough). A phone gets
+  a sticky bar after the hero, hidden over the plans; it links to the plans
+  rather than opening checkout, so checkout is always reached from a button
+  with the full terms beside it. The feedback-week and referral routes and a
+  "Run a store? The Stores plan includes Premium" link sit quietly under the
+  hero button. PremiumBenefits (the four outcome cards) is no longer rendered:
+  the table and the proof sections say the same things with real data.
+- **Every number is live or computed.** Stats: `getHomeStats()`. Deals:
+  `getCachedTopDeals()` (read once, never wrapped; its sources cache
+  themselves). Months free, "Save 33%" and the per-month figure: computed from
+  the `lib/site.ts` display prices (`lib/premium-page.ts`). Pays-for-itself:
+  the average gap of the top deals, shown only when it is above one month of
+  Premium after converting the US$ price with `lib/fx.ts`. The locked rows are
+  placeholder shapes, never data. Testimonials live in
+  `lib/content/premium-testimonials.ts`, empty, and the slot renders nothing
+  until a member gives written permission to be quoted.
+- **What could not be done honestly.** The deals feed carries the cheapest
+  LISTING price, not a delivered one, so the teaser says "+ postage" unless the
+  row already includes it; delivered totals come only from Best Basket (the
+  demo). Alerts are "the moment a price update finds it" (twice a day), so
+  the page never says "instant".
+- **The demo is a new read-only route,** `app/api/premium/demo`: Best Basket's
+  own parser, listings read and solver (`parseDeckList`, `resolveDeckLines`,
+  `loadStoreListings`, `planBasket`) called as `/api/basket` calls them, none of
+  them changed. At most 10 lines and 4 copies a line, 10 runs an hour per IP,
+  totals only (no store, line or link), nothing saved. No account needed, so it
+  is a taste, not a way around the free plans' meter.
+- **Deal store names.** `savingsVsMarketDeal` now also carries `storeName` and
+  `postageIncluded` (optional fields, from the ArbItem it already had), so the
+  teaser and the example alert can name the store.
+- **Analytics,** through `trackEvent`: `premium_page_view`, `premium_faq_open`
+  and `premium_billing_toggle` (GA4 only), `premium_cta_click {location}` and
+  `premium_demo_run` (counts only) to both. No personal data.
+- **Metadata** states the plan: title "RiftCompare Premium: 30 days free, then
+  US$9.99/mo", a description with both prices, and a `/premium` share image
+  drawn from the same constants.
+
+## Plus members get Premium (2026-10-23)
+
+Owner: "because we changed it make sure the people who were plus are also now
+premium but grandfathered". While Plus is off sale (`PLUS_ON_SALE = false`),
+`effectiveTier()` in `lib/premium.ts` reads a billed `"plus"` as `"premium"`.
+That is the only change: it is read-time, like the tier floor, so the webhook
+still writes the true billed tier, and every billing route (checkout,
+switch-to-annual, upgrade, downgrade, the portal) still resolves the tier from
+the Stripe Price (`tierFromPriceId`). No subscription is touched and each Plus
+member keeps paying their Plus price. Every gate that asks for Premium
+(`isPremium(user, "premium")`, the alert, watch and deck limits, the runs'
+caps) now lets them through, `/api/me` names them Premium, and /premium shows
+them "You're Premium" with "You keep your original Plus price, with everything
+in Premium included" and no upgrade button. The FAQ's Plus answer says so.
+Turning `PLUS_ON_SALE` back on restores the old split.
