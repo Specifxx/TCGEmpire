@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Radiance square video</title>
+<!--
+  RiftCompare feed video: Riftbound Radiance, the set in general. 1080x1080,
+  38 s, rendered frame by frame by social/instagram/render-reel.mjs. Owner's
+  brief (2026-10-23): square, calm music, "smooth and subtle" motion, the top 20
+  on the cover (cover.html) and the video about Radiance in general.
+  Motion: fade-ups, slow drift, crossfades. No flashes, slams or spinning rays.
+  The one price (Seraphine 174*) is the cheapest listing in data/public at
+  2026-10-23 02:07 UTC, before postage. Scenes:
+     0  title     4.5 the set     9.5 nine Legends     15 K/DA + HEARTSTEEL
+  20.5 keywords  25.5 boosters    30  the chase card   34 CTA, to 38
+-->
+<style>
+@font-face { font-family: "Anton"; src: url(../../fonts/Anton.woff2) format("woff2"); }
+@font-face { font-family: "Cinzel"; src: url(../../fonts/Cinzel.woff2) format("woff2"); font-weight: 400 900; }
+@font-face { font-family: "Montserrat"; src: url(../../fonts/Montserrat.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: "Montserrat"; src: url(../../fonts/Montserrat-Italic.woff2) format("woff2"); font-weight: 100 900; font-style: italic; }
+:root { --void: #0a0612; --gold: #ffcf5a; --filigree: #d4a94f; --pink: #ffb3e0; --text: #fbeefc; --muted: #c9b6d6; --green: #34d17e; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1080px; overflow: hidden; background: var(--void); font-family: "Montserrat", sans-serif; color: var(--text); }
+.bg { position: absolute; inset: -120px; background: url(img/bg-21.jpg) center / cover; opacity: .32; filter: saturate(.75) blur(3px); }
+.bg2 { background-image: url(img/bg-43.jpg); }
+.shade { position: absolute; inset: 0; background: radial-gradient(ellipse 85% 75% at 50% 45%, rgba(10,6,18,.5), rgba(10,6,18,.93)); }
+.frame { position: absolute; inset: 16px; border: 2px solid rgba(212,169,79,.45); border-radius: 20px; box-shadow: inset 0 0 0 6px rgba(10,6,18,.55), inset 0 0 0 7px rgba(212,169,79,.18); z-index: 5; pointer-events: none; }
+.scene { position: absolute; inset: 0; opacity: 0; }
+.abs { position: absolute; }
+.center { left: 0; right: 0; text-align: center; }
+.kicker { font-family: "Cinzel"; font-weight: 900; letter-spacing: 9px; color: var(--filigree); font-size: 26px; }
+.title { font-family: "Anton"; line-height: 1; background: linear-gradient(180deg, #fff 0%, #ffe3f3 45%, #ff8fcd 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.gold { background: linear-gradient(180deg, #fff1c4 0%, #ffcf5a 55%, #e0951f 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.h2 { font-family: "Anton"; font-size: 76px; line-height: 1; letter-spacing: .5px; }
+.muted { color: var(--muted); font-weight: 600; }
+.card { border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 2px rgba(255,207,90,.7), 0 14px 34px rgba(0,0,0,.6), 0 0 40px rgba(255,124,196,.18); background: #000; }
+.card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.stat { width: 400px; height: 220px; border-radius: 20px; text-align: center; padding-top: 26px; background: rgba(10,6,18,.78); border: 2px solid rgba(212,169,79,.5); }
+.stat .n { font-family: "Anton"; font-size: 120px; line-height: 1; }
+.stat .l { margin-top: 6px; font-size: 26px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+.glass { background: rgba(10,6,18,.8); border: 2px solid rgba(212,169,79,.42); border-radius: 20px; }
+.kw { padding: 22px 32px; margin-bottom: 18px; }
+.kw b { font-family: "Anton"; font-size: 48px; letter-spacing: 1.5px; color: var(--gold); font-weight: 400; }
+.kw p { margin-top: 4px; font-size: 27px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.row { display: flex; align-items: center; gap: 24px; padding: 8px 30px; margin-bottom: 10px; }
+.row .q { font-family: "Anton"; font-size: 60px; width: 80px; text-align: center; }
+.row .t { font-size: 34px; font-weight: 800; }
+.row .t small { display: block; font-size: 21px; font-weight: 600; color: var(--muted); }
+.name { margin-top: 8px; font-size: 19px; font-weight: 800; white-space: nowrap; }
+.cta { display: inline-block; padding: 22px 56px; border-radius: 16px; background: var(--green); color: #04140b; font-weight: 900; font-size: 54px; box-shadow: 0 0 0 3px rgba(10,6,18,.9), 0 0 0 6px var(--filigree), 0 16px 44px rgba(52,209,126,.3); }
+.wordmark { display: flex; align-items: flex-end; justify-content: center; font-family: "Anton"; line-height: .86; filter: drop-shadow(0 3px 0 #5a1600) drop-shadow(0 10px 18px rgba(0,0,0,.6)); }
+.grad { background: linear-gradient(180deg, #ffe27a 0%, #ffb02e 40%, #ff7a1a 72%, #e2550c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.rmark { -webkit-mask: url(img/logo-r-green.png) center bottom / contain no-repeat; mask: url(img/logo-r-green.png) center bottom / contain no-repeat; background: linear-gradient(180deg, #ffe27a 0%, #ffb02e 40%, #ff7a1a 72%, #e2550c 100%); }
+</style>
+</head>
+<body>
+<div class="bg" data-drift></div>
+<div class="bg bg2" data-show="19.5 38.5" data-drift></div>
+<div class="shade"></div>
+<div class="frame"></div>
+
+<!-- 1. Title 0–4.5 -->
+<section class="scene" data-scene="0 4.5">
+  <div class="abs" style="left: 290px; top: 80px; width: 500px; height: 698px; opacity: .22; filter: blur(2px);" data-zoom><div class="card" style="width:100%;height:100%"><img src="img/01.jpg"></div></div>
+  <div class="abs center kicker" style="top: 330px;" data-in="0.3">RIFTBOUND</div>
+  <div class="abs center title" style="top: 380px; font-size: 210px;" data-in="0.6">RADIANCE</div>
+  <div class="abs center" style="top: 612px; font-size: 38px; font-weight: 800;" data-in="1.3">Out now · 23 October 2026</div>
+  <div class="abs center muted" style="top: 680px; font-size: 30px; font-style: italic; color: var(--pink);" data-in="1.9">“Own the Stage. The World is Watching.”</div>
+</section>
+
+<!-- 2. The set 4.5–9.5 -->
+<section class="scene" data-scene="4.5 9.5">
+  <div class="abs center kicker" style="top: 120px;" data-in="4.8">THE SET</div>
+  <div class="abs center h2 title" style="top: 160px;" data-in="4.9">Radiance in numbers</div>
+  <div class="abs stat" style="left: 120px; top: 300px;" data-in="5.3"><div class="n gold" data-count="167" data-from="5.3">167</div><div class="l">cards</div></div>
+  <div class="abs stat" style="left: 560px; top: 300px;" data-in="5.6"><div class="n title" data-count="9" data-from="5.6">9</div><div class="l">Legends</div></div>
+  <div class="abs stat" style="left: 120px; top: 560px;" data-in="5.9"><div class="n title" data-count="16" data-from="5.9">16</div><div class="l">Signatures</div></div>
+  <div class="abs stat" style="left: 560px; top: 560px;" data-in="6.2"><div class="n gold" data-count="1" data-from="6.2">1</div><div class="l">Ultimate Rare</div></div>
+  <div class="abs center muted" style="top: 830px; font-size: 27px;" data-in="6.8">Plus alt arts, overnumbers and five K/DA specials</div>
+</section>
+
+<!-- 3. Nine Legends 9.5–15 -->
+<section class="scene" data-scene="9.5 15">
+  <div class="abs center kicker" style="top: 70px;" data-in="9.8">MEET THE</div>
+  <div class="abs center h2 title" style="top: 108px;" data-in="9.9">Nine Legends</div>
+  <div class="abs" id="legends" style="left: 150px; top: 205px; width: 780px; display: grid; grid-template-columns: repeat(3, 1fr); row-gap: 12px;"></div>
+</section>
+
+<!-- 4. K/DA + HEARTSTEEL 15–20.5 -->
+<section class="scene" data-scene="15 20.5">
+  <div class="abs center kicker" style="top: 70px;" data-in="15.3">THE HEADLINERS</div>
+  <div class="abs center h2 title" style="top: 108px;" data-in="15.4">K/DA &amp; HEARTSTEEL</div>
+  <div class="abs center" style="top: 210px; font-size: 26px; font-weight: 800; color: var(--pink);" data-in="15.7">K/DA specials · SP1–SP5</div>
+  <div class="abs" id="kda" style="left: 0; right: 0; top: 255px; display: flex; justify-content: center; gap: 22px;"></div>
+  <div class="abs center" style="top: 600px; font-size: 26px; font-weight: 800; color: var(--gold);" data-in="17.2">HEARTSTEEL Signatures · 178*–183*</div>
+  <div class="abs" id="hs" style="left: 0; right: 0; top: 648px; display: flex; justify-content: center; gap: 16px;"></div>
+</section>
+
+<!-- 5. Keywords 20.5–25.5 -->
+<section class="scene" data-scene="20.5 25.5">
+  <div class="abs center kicker" style="top: 110px;" data-in="20.8">NEW TO THE GAME</div>
+  <div class="abs center h2 title" style="top: 148px;" data-in="20.9">Three new keywords</div>
+  <div class="abs" style="left: 110px; right: 110px; top: 280px;">
+    <div class="glass kw" data-in="21.3"><b>DEPLOY</b><p>Gear you can play to a battlefield, even one an enemy holds.</p></div>
+    <div class="glass kw" data-in="21.8"><b>SHOW OFF</b><p>Reveal a matching card from your hand, or pick one on the board, to meet its condition.</p></div>
+    <div class="glass kw" data-in="22.3"><b>DISARM</b><p>When this unit attacks, an enemy unit there gets −1 Might this turn.</p></div>
+  </div>
+</section>
+
+<!-- 6. Boosters 25.5–30 -->
+<section class="scene" data-scene="25.5 30">
+  <div class="abs center kicker" style="top: 110px;" data-in="25.8">OPENING PACKS?</div>
+  <div class="abs center h2 title" style="top: 148px;" data-in="25.9">In every 14-card booster</div>
+  <div class="abs" style="left: 200px; right: 200px; top: 285px;">
+    <div class="glass row" data-in="26.2"><span class="q gold">7</span><span class="t">Commons</span></div>
+    <div class="glass row" data-in="26.45"><span class="q gold">3</span><span class="t">Uncommons</span></div>
+    <div class="glass row" data-in="26.7"><span class="q title">2</span><span class="t">Foil Rares or better</span></div>
+    <div class="glass row" data-in="26.95"><span class="q title">1</span><span class="t">Foil of any rarity<small>where Showcase cards turn up</small></span></div>
+    <div class="glass row" data-in="27.2"><span class="q gold">1</span><span class="t">Token</span></div>
+  </div>
+  <div class="abs center muted" style="top: 905px; font-size: 25px;" data-in="27.7">24 packs a display · Riot hasn't published pull rates</div>
+</section>
+
+<!-- 7. The chase card 30–34 -->
+<section class="scene" data-scene="30 34">
+  <div class="abs" style="left: 110px; top: 150px; width: 470px; height: 656px;" data-in="30.3" data-zoom><div class="card" style="width:100%;height:100%; box-shadow: 0 0 0 3px rgba(255,207,90,.85), 0 18px 44px rgba(0,0,0,.7), 0 0 70px rgba(255,124,196,.3);"><img src="img/01.jpg"></div></div>
+  <div class="abs" style="left: 620px; right: 90px; top: 270px;">
+    <div class="kicker" style="font-size: 24px; letter-spacing: 6px;" data-in="30.6">THE CHASE CARD</div>
+    <div style="margin-top: 14px; font-size: 46px; font-weight: 900; line-height: 1.1;" data-in="30.8">Seraphine, Starry-Eyed Songstress</div>
+    <div style="margin-top: 12px; font-family: Cinzel; font-weight: 900; font-size: 24px; letter-spacing: 3px; color: var(--gold);" data-in="31.0">SIGNATURE · 174*</div>
+    <div style="margin-top: 26px; font-size: 22px; font-weight: 800; letter-spacing: 2px; color: var(--muted);" data-in="31.3">FROM</div>
+    <div style="font-family: Anton; font-size: 76px; line-height: 1; color: var(--green);" data-in="31.3"><span data-usd="2312.54" data-from="31.3">US$0</span></div>
+    <div class="muted" style="margin-top: 8px; font-size: 21px;" data-in="31.5">cheapest listing, 23 Oct, before postage</div>
+    <div style="margin-top: 30px; font-size: 25px; font-weight: 800; color: var(--pink);" data-in="32.1">The full top 20 is on our cover and in the caption</div>
+  </div>
+</section>
+
+<!-- 8. CTA 34–38 -->
+<section class="scene" data-scene="34 38.5">
+  <div class="abs center" style="top: 300px;" data-in="34.3">
+    <div class="wordmark" style="font-size: 130px;"><span class="rmark" style="width:126px;height:122px;margin-right:-4px"></span><span class="grad">IFT</span><span style="width:26px"></span><span class="grad">COMPARE</span></div>
+  </div>
+  <div class="abs center" style="top: 440px; font-family: Cinzel; font-weight: 900; font-size: 34px; letter-spacing: 5px;" data-in="34.6">RIFTBOUND <span style="color: var(--gold); font-size: 24px;">PRICE</span> TRACKER</div>
+  <div class="abs center" style="top: 530px; font-size: 42px; font-weight: 900; line-height: 1.25;" data-in="35.0">Every Radiance card. Every store.<br><span style="color: var(--green)">One search.</span></div>
+  <div class="abs center" style="top: 690px;" data-in="35.5"><span class="cta">riftcompare.com</span></div>
+  <div class="abs center muted" style="top: 840px; font-size: 26px; color: var(--pink);" data-in="35.9">Free set tracker · 230+ stores · link in bio</div>
+  <div class="abs center" style="left: 90px; right: 90px; top: 920px; font-size: 17px; color: #8f7ca0; line-height: 1.4;" data-in="36.2">RiftCompare is fan-made and isn't endorsed by Riot Games. Riftbound and its card art © Riot Games.</div>
+</section>
+
+<script src="top20.js"></script>
+<script>
+window.REEL = { width: 1080, height: 1080, duration: 38 };
+const S = 1000; // seconds → ms
+const EASE = "cubic-bezier(.22,.61,.36,1)"; // a gentle ease-out
+
+// The nine Legends (top20.json ranks: every Legend Signature, and Riven's
+// overnumber 173, since her Signature has no reliable listing).
+const LEGENDS = [["06", "Ekko"], ["03", "Ziggs"], ["09", "Mordekaiser"], ["16", "Orianna"], ["04", "K'Sante"], ["17", "Riven"], ["01", "Seraphine"], ["02", "Evelynn"], ["11", "Jarvan IV"]];
+const lg = document.getElementById("legends");
+LEGENDS.forEach(([img, name], i) => lg.insertAdjacentHTML("beforeend",
+  `<div style="text-align:center" data-in="${(10.3 + i * 0.18).toFixed(2)}"><div class="card" style="width:170px;height:237px;margin:0 auto"><img src="img/${img}.jpg"></div><div class="name">${name}</div></div>`));
+const KDA = ["seraphine-not-alone", "kaisa-rebel", "akali-brash", "evelynn-in-control-sp3"];
+KDA.forEach((f, i) => document.getElementById("kda").insertAdjacentHTML("beforeend",
+  `<div class="card" style="width:218px;height:304px" data-in="${(15.9 + i * 0.2).toFixed(2)}"><img src="img/${f}.jpg"></div>`));
+["05", "10", "12", "13", "14", "15"].forEach((f, i) => document.getElementById("hs").insertAdjacentHTML("beforeend",
+  `<div class="card" style="width:150px;height:209px" data-in="${(17.4 + i * 0.15).toFixed(2)}"><img src="img/${f}.jpg"></div>`));
+
+// Scenes crossfade over 0.6 s at each end.
+for (const el of document.querySelectorAll("[data-scene]")) {
+  const [a, b] = el.dataset.scene.split(" ").map(Number);
+  const len = (b - a) * S, f = 600 / len;
+  el.animate([{ opacity: 0 }, { opacity: 1, offset: f }, { opacity: 1, offset: 1 - f }, { opacity: 0 }], { duration: len, delay: a * S, fill: "both" });
+}
+// The second background fades in once, for the second half.
+for (const el of document.querySelectorAll("[data-show]")) {
+  const [a] = el.dataset.show.split(" ").map(Number);
+  el.animate([{ opacity: 0 }, { opacity: 0.32 }], { duration: 1500, delay: a * S, fill: "both" });
+}
+// Elements fade up 24 px, slowly.
+for (const el of document.querySelectorAll("[data-in]")) {
+  el.animate([{ opacity: 0, transform: "translateY(24px)" }, { opacity: 1, transform: "translateY(0)" }], { duration: 800, delay: Number(el.dataset.in) * S, easing: EASE, fill: "both" });
+}
+// Art breathes: a slow 4% push-in across its scene.
+for (const el of document.querySelectorAll("[data-zoom]")) {
+  const [a, b] = el.closest("[data-scene]").dataset.scene.split(" ").map(Number);
+  el.firstElementChild.animate([{ transform: "scale(1)" }, { transform: "scale(1.04)" }], { duration: (b - a) * S, delay: a * S, fill: "both", easing: "linear" });
+}
+// Backgrounds drift the whole time.
+for (const el of document.querySelectorAll("[data-drift]")) {
+  el.animate([{ transform: "translate(0,0) scale(1.02)" }, { transform: "translate(-40px,-30px) scale(1.08)" }], { duration: 38 * S, fill: "both" });
+}
+
+// Count-ups follow the frame clock.
+const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+const counters = [...document.querySelectorAll("[data-count]")];
+const prices = [...document.querySelectorAll("[data-usd]")];
+const fmt = (v) => "US$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+window.onReelFrame = (ms) => {
+  const t = ms / S;
+  for (const el of counters) el.textContent = String(Math.round(Number(el.dataset.count) * ease((t - Number(el.dataset.from)) / 1.0)));
+  for (const el of prices) el.textContent = fmt(Number(el.dataset.usd) * ease((t - Number(el.dataset.from)) / 1.2));
+};
+window.onReelFrame(0);
+</script>
+</body>
+</html>

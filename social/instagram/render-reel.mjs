@@ -1,6 +1,7 @@
 // Render a reel: social/instagram/reels/<name>/index.html → frames → MP4 (H.264 + AAC).
 //   node social/instagram/render-reel.mjs social/instagram/reels/<name> [fps]
-// The page declares window.REEL = { width, height, duration } and uses CSS or
+// The page declares window.REEL = { width, height, duration } (1080x1920 for a
+// reel, 1080x1080 for a square feed video) and uses CSS or
 // Web Animations only. Each frame pauses every animation and seeks it to the
 // frame's time, so the output is exact and repeatable, never a screen
 // recording. If the folder has soundtrack.wav it is muxed in.
@@ -24,7 +25,8 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
 await page.goto(pathToFileURL(path.join(dir, "index.html")).href, { waitUntil: "networkidle" });
 await page.evaluate(() => document.fonts.ready);
-const { duration } = await page.evaluate(() => window.REEL);
+const { duration, width = 1080, height = 1920 } = await page.evaluate(() => window.REEL);
+await page.setViewportSize({ width, height });
 await page.evaluate(() => document.getAnimations().forEach((a) => a.pause()));
 
 const total = Math.round(duration * fps);
