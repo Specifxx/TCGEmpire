@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Radiance release reel</title>
+<!--
+  RiftCompare reel: Radiance is out (2026-10-23). 1080x1920, 30 s, rendered
+  frame by frame by social/instagram/render-reel.mjs. Every cue sits on a 120 BPM
+  grid (0.5 s) so soundtrack.wav hits each cut. All prices: the cheapest listing
+  in data/public at 2026-10-23 02:07 UTC, before postage (the site's posting
+  rules: never "worth", no urgency). Scenes:
+    0.0  hook: RADIANCE IS OUT          3.0  the set in numbers
+    7.0  "the chase list" title         8.0  #5 … #1 (2 s each, #1 3 s)
+   19.0  cracking packs                23.0  pulled something? tracker
+   26.0  CTA + disclaimer, to 30.0
+-->
+<style>
+@font-face { font-family: "Anton"; src: url(../../fonts/Anton.woff2) format("woff2"); }
+@font-face { font-family: "Cinzel"; src: url(../../fonts/Cinzel.woff2) format("woff2"); font-weight: 400 900; }
+@font-face { font-family: "Montserrat"; src: url(../../fonts/Montserrat.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: "Montserrat"; src: url(../../fonts/Montserrat-Italic.woff2) format("woff2"); font-weight: 100 900; font-style: italic; }
+
+:root {
+  --void: #07030f; --plum: #1a0730; --magenta: #ff3ea5; --pink: #ffb3e0;
+  --gold: #ffcf5a; --gold-deep: #e08a12; --filigree: #d4a94f; --ice: #a9dcff;
+  --electric: #7b3dff; --rc-green: #34d17e; --text: #fbeefc; --muted: #c9b6d6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--void); }
+body { font-family: "Montserrat", sans-serif; color: var(--text); }
+.stage { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
+.abs { position: absolute; }
+.center { left: 0; right: 0; text-align: center; }
+
+/* ── background: three marbles that cross-fade and drift ── */
+.bg { position: absolute; left: -110px; top: -190px; width: 1300px; height: 2300px; background-size: cover; z-index: -3; }
+.shade { position: absolute; inset: 0; z-index: -2;
+  background: radial-gradient(ellipse 80% 55% at 50% 45%, rgba(7,3,15,.35), rgba(7,3,15,.82) 70%, rgba(7,3,15,.96)),
+              linear-gradient(to bottom, rgba(7,3,15,.6), transparent 25%, transparent 70%, rgba(7,3,15,.9)); }
+@keyframes drift { from { transform: translate(0,0) scale(1.04) rotate(0deg); } to { transform: translate(-60px,-120px) scale(1.12) rotate(3deg); } }
+@keyframes bgshow { 0% { opacity: 0 } 6% { opacity: 1 } 94% { opacity: 1 } 100% { opacity: 0 } }
+
+/* ── a scene is on screen for exactly its window ── */
+.scene { position: absolute; inset: 0; opacity: 0; }
+@keyframes show { 0% { opacity: 0 } 0.01% { opacity: 1 } 99.99% { opacity: 1 } 100% { opacity: 0 } }
+
+/* ── type ── */
+.wordmark { display: flex; align-items: flex-end; justify-content: center; font-family: "Anton"; line-height: .86;
+  filter: drop-shadow(0 4px 0 #6a1a00) drop-shadow(0 12px 22px rgba(0,0,0,.7)); }
+.grad { background: linear-gradient(180deg, #ffe27a 0%, #ffb02e 40%, #ff7a1a 72%, #e2550c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.rmark { -webkit-mask: url(img/logo-r-green.png) center bottom / contain no-repeat; mask: url(img/logo-r-green.png) center bottom / contain no-repeat;
+  background: linear-gradient(180deg, #ffe27a 0%, #ffb02e 40%, #ff7a1a 72%, #e2550c 100%); }
+.cinzel { font-family: "Cinzel"; font-weight: 900; letter-spacing: 4px; }
+.outline { font-weight: 900; text-transform: uppercase; color: #fff; -webkit-text-stroke: 9px var(--electric); paint-order: stroke fill;
+  text-shadow: 0 0 34px rgba(255,62,165,.85), 0 8px 0 #2a0a55; }
+.hot { font-family: "Anton"; background: linear-gradient(180deg, #fff 0%, #ffd6f0 30%, #ff3ea5 70%, #b0157a 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 30px rgba(255,62,165,.7)) drop-shadow(0 10px 0 #3b0640); }
+.ribbon { display: inline-block; padding: 12px 54px; font-family: "Cinzel"; font-weight: 900; font-size: 34px; letter-spacing: 8px; color: var(--gold);
+  border-top: 3px solid var(--filigree); border-bottom: 3px solid var(--filigree);
+  background: linear-gradient(90deg, rgba(7,3,15,.3), rgba(7,3,15,.92) 50%, rgba(7,3,15,.3)); position: relative; }
+.ribbon::before, .ribbon::after { content: ""; position: absolute; top: 50%; width: 140px; height: 3px; background: var(--filigree); }
+.ribbon::before { right: 100%; } .ribbon::after { left: 100%; }
+
+/* ── motion vocabulary ── */
+@keyframes slam { 0% { transform: scale(2.6); opacity: 0; filter: blur(14px); } 55% { transform: scale(.94); opacity: 1; filter: blur(0); } 75% { transform: scale(1.03); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes rise { from { transform: translateY(70px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes drop { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes pop { 0% { transform: scale(.3); opacity: 0; } 70% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
+@keyframes out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.12); filter: blur(10px); } }
+@keyframes flash { 0% { opacity: 0 } 10% { opacity: .95 } 100% { opacity: 0 } }
+@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+@keyframes pulse { 0%, 100% { opacity: .55; transform: scale(1) } 50% { opacity: 1; transform: scale(1.06) } }
+@keyframes cardin { 0% { transform: translateY(260px) rotateX(38deg) rotateZ(-8deg) scale(.7); opacity: 0; filter: blur(12px) brightness(2.2); }
+  60% { transform: translateY(-18px) rotateX(-4deg) rotateZ(1deg) scale(1.03); opacity: 1; filter: blur(0) brightness(1.25); }
+  100% { transform: translateY(0) rotateX(0) rotateZ(0) scale(1); opacity: 1; filter: none; } }
+@keyframes hover { 0%, 100% { transform: translateY(0) rotateY(-5deg) } 50% { transform: translateY(-14px) rotateY(5deg) } }
+@keyframes sweep { from { transform: translateX(-130%) skewX(-18deg) } to { transform: translateX(230%) skewX(-18deg) } }
+@keyframes kick { 0% { transform: scale(1) } 12% { transform: scale(1.035) } 100% { transform: scale(1) } }
+@keyframes float { from { transform: translateY(0) } to { transform: translateY(-1900px) } }
+
+.flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 42%, #fff, #ffd6f0 35%, rgba(255,62,165,.0) 75%); opacity: 0; pointer-events: none; z-index: 20; }
+.rays { position: absolute; left: 50%; top: 42%; width: 2600px; height: 2600px; margin: -1300px 0 0 -1300px; z-index: -1;
+  background: repeating-conic-gradient(from 0deg, rgba(255,62,165,.20) 0 6deg, transparent 6deg 18deg); -webkit-mask: radial-gradient(circle, #000 10%, transparent 60%); mask: radial-gradient(circle, #000 10%, transparent 60%); }
+.spark { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 14px 4px rgba(255,179,224,.9); }
+
+/* ── the stat tiles ── */
+.tile { position: absolute; width: 440px; height: 330px; border-radius: 22px; text-align: center; padding-top: 34px;
+  background: linear-gradient(180deg, rgba(26,7,48,.9), rgba(7,3,15,.94)); border: 3px solid var(--filigree);
+  box-shadow: inset 0 0 0 9px rgba(7,3,15,.7), inset 0 0 0 11px rgba(212,169,79,.35), 0 24px 60px rgba(0,0,0,.6); }
+.tile .n { font-family: "Anton"; font-size: 170px; line-height: 1; }
+.tile .l { margin-top: 10px; font-size: 34px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+
+/* ── a chase card ── */
+.card { position: absolute; left: 50%; width: 600px; height: 838px; margin-left: -300px; perspective: 1400px; }
+.card .face { position: absolute; inset: 0; border-radius: 30px; overflow: hidden;
+  box-shadow: 0 0 0 4px rgba(255,207,90,.9), 0 0 90px 24px rgba(255,62,165,.5), 0 40px 80px rgba(0,0,0,.8); }
+.card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card .shine { position: absolute; top: -10%; bottom: -10%; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); mix-blend-mode: screen; }
+.rank { font-family: "Anton"; font-size: 360px; line-height: 1; color: transparent; -webkit-text-stroke: 6px rgba(255,207,90,.55); }
+.cname { font-size: 58px; font-weight: 900; text-transform: uppercase; line-height: 1.02; text-shadow: 0 4px 18px rgba(0,0,0,.9); }
+.cmeta { margin-top: 10px; font-family: "Cinzel"; font-weight: 900; font-size: 28px; letter-spacing: 4px; color: var(--gold); }
+.price { display: inline-flex; align-items: baseline; gap: 18px; margin-top: 18px; padding: 14px 34px; border-radius: 16px; background: rgba(7,3,15,.86); border: 2px solid rgba(52,209,126,.6); }
+.price .from { font-size: 28px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+.price .v { font-family: "Anton"; font-size: 92px; color: var(--rc-green); text-shadow: 0 0 26px rgba(52,209,126,.55); }
+.small { font-size: 26px; font-weight: 700; color: var(--muted); }
+
+/* ── pack rows ── */
+.row { display: flex; align-items: center; gap: 28px; padding: 8px 34px; margin-bottom: 12px; border-radius: 18px; background: rgba(7,3,15,.82); border: 2px solid rgba(212,169,79,.45); }
+.row .q { font-family: "Anton"; font-size: 72px; width: 110px; text-align: center; }
+.row .t { font-size: 40px; font-weight: 800; }
+.row .t small { display: block; font-size: 26px; font-weight: 600; color: var(--muted); }
+.glass { background: rgba(7,3,15,.82); border: 2px solid rgba(212,169,79,.45); border-radius: 26px; }
+.cta { display: inline-block; padding: 30px 70px; border-radius: 20px; background: var(--rc-green); color: #04140b; font-weight: 900; font-size: 68px;
+  box-shadow: 0 0 0 4px rgba(7,3,15,.9), 0 0 0 8px var(--filigree), 0 20px 60px rgba(52,209,126,.45); }
+.pill { display: inline-block; padding: 10px 26px; margin: 6px; border-radius: 999px; border: 2px solid var(--filigree); font-family: "Anton"; font-size: 44px; color: var(--gold); background: rgba(7,3,15,.8); }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <!-- Backgrounds: one marble per act, cross-faded, always drifting. -->
+  <div class="bg" style="background-image:url(img/bg-7.jpg); animation: bgshow 7.6s linear 0s both, drift 30s linear 0s both;"></div>
+  <div class="bg" style="background-image:url(img/bg-21.jpg); animation: bgshow 12.6s linear 7s both, drift 30s linear -7s both;"></div>
+  <div class="bg" style="background-image:url(img/bg-43.jpg); animation: bgshow 11.4s linear 18.6s both, drift 30s linear -18s both;"></div>
+  <div class="shade"></div>
+  <div id="sparks"></div>
+
+  <!-- ═══ 1. HOOK 0–3 ═══ -->
+  <section class="scene" style="animation: show 3s linear 0s both;">
+    <div class="rays" style="animation: spin 24s linear 0s both, fadein .6s ease-out .15s both;"></div>
+    <div class="abs center" style="top: 210px; animation: drop .5s ease-out .3s both;">
+      <div class="wordmark" style="font-size: 92px;"><span class="rmark" style="width:88px;height:86px;margin-right:-3px"></span><span class="grad">IFT</span><span style="width:20px"></span><span class="grad">COMPARE</span></div>
+    </div>
+    <div class="abs center cinzel" style="top: 560px; font-size: 58px; color: #fff; letter-spacing: 14px; animation: rise .5s ease-out .1s both;">RIFTBOUND</div>
+    <div class="abs center hot" style="top: 640px; font-size: 290px; line-height: .9; animation: slam .6s cubic-bezier(.2,.9,.3,1) .15s both, kick .5s ease-out 1.15s both, kick .5s ease-out 2.15s both;">RADIANCE</div>
+    <div class="abs center outline" style="top: 925px; font-size: 200px; line-height: 1; animation: slam .55s cubic-bezier(.2,.9,.3,1) .65s both;">IS OUT</div>
+    <div class="abs center" style="top: 1205px; animation: pop .45s ease-out 1.15s both;"><span class="ribbon">23 OCTOBER 2026</span></div>
+    <div class="abs center" style="top: 1330px; font-size: 40px; font-weight: 800; color: var(--pink); animation: rise .45s ease-out 1.6s both;">Here's your chase list 👇</div>
+    <div class="flash" style="animation: flash .7s ease-out .15s both;"></div>
+  </section>
+
+  <!-- ═══ 2. THE SET 3–7 ═══ -->
+  <section class="scene" style="animation: show 4s linear 3s both;">
+    <div class="abs center cinzel" style="top: 250px; font-size: 44px; color: var(--gold); letter-spacing: 10px; animation: rise .45s ease-out 3.05s both;">THE SET</div>
+    <div class="abs center outline" style="top: 310px; font-size: 128px; animation: slam .5s ease-out 3.05s both;">In numbers</div>
+    <div class="tile" style="left: 80px; top: 560px; animation: pop .45s ease-out 3.5s both;"><div class="n grad" data-count="167" data-from="3.5">167</div><div class="l">card set</div></div>
+    <div class="tile" style="left: 560px; top: 560px; animation: pop .45s ease-out 4.0s both;"><div class="n hot" data-count="9" data-from="4.0">9</div><div class="l">Legends</div></div>
+    <div class="tile" style="left: 80px; top: 930px; animation: pop .45s ease-out 4.5s both;"><div class="n hot" data-count="16" data-from="4.5">16</div><div class="l">Signatures</div></div>
+    <div class="tile" style="left: 560px; top: 930px; animation: pop .45s ease-out 5.0s both;"><div class="n grad" data-count="1" data-from="5.0">1</div><div class="l">Ultimate Rare</div></div>
+    <div class="abs center" style="top: 1310px; animation: rise .45s ease-out 5.5s both;">
+      <div class="small" style="font-size: 30px; letter-spacing: 6px; color: var(--gold);">NEW KEYWORDS</div>
+      <div style="margin-top: 12px;"><span class="pill">DEPLOY</span><span class="pill">DISARM</span><span class="pill">SHOW OFF</span></div>
+    </div>
+    <div class="flash" style="animation: flash .5s ease-out 3s both;"></div>
+  </section>
+
+  <!-- ═══ 3. CHASE TITLE 7–8 ═══ -->
+  <section class="scene" style="animation: show 1s linear 7s both;">
+    <div class="rays" style="animation: spin 18s linear 0s both;"></div>
+    <div class="abs center cinzel" style="top: 640px; font-size: 54px; color: var(--gold); letter-spacing: 12px; animation: rise .35s ease-out 7s both;">THE</div>
+    <div class="abs center hot" style="top: 720px; font-size: 250px; line-height: .9; animation: slam .45s ease-out 7.05s both;">CHASE</div>
+    <div class="abs center outline" style="top: 960px; font-size: 150px; animation: slam .45s ease-out 7.25s both;">LIST</div>
+    <div class="abs center small" style="top: 1170px; font-size: 32px; animation: fadein .3s ease-out 7.4s both;">The 5 dearest Radiance cards · cheapest listing today</div>
+    <div class="flash" style="animation: flash .5s ease-out 7s both;"></div>
+  </section>
+
+  <!-- ═══ 4. COUNTDOWN 8–19 (filled by the template below) ═══ -->
+  <div id="chase"></div>
+
+  <!-- ═══ 5. PACKS 19–23 ═══ -->
+  <section class="scene" style="animation: show 4s linear 19s both;">
+    <div class="abs" style="left: 640px; top: 230px; width: 330px; height: 461px; transform: rotate(9deg); animation: fadein .5s ease-out 19.2s both;">
+      <div class="card" style="left:0; margin:0; width:330px; height:461px;"><div class="face"><img src="img/kaisa-rebel.jpg"></div></div></div>
+    <div class="abs" style="left: 110px; top: 250px; width: 330px; height: 461px; transform: rotate(-9deg); animation: fadein .5s ease-out 19.3s both;">
+      <div class="card" style="left:0; margin:0; width:330px; height:461px;"><div class="face"><img src="img/akali-brash.jpg"></div></div></div>
+    <div class="abs" style="left: 375px; top: 200px; width: 330px; height: 461px; animation: pop .5s ease-out 19.4s both;">
+      <div class="card" style="left:0; margin:0; width:330px; height:461px;"><div class="face"><img src="img/seraphine-not-alone.jpg"></div></div></div>
+    <div class="abs center outline" style="top: 690px; font-size: 96px; white-space: nowrap; animation: slam .5s ease-out 19.05s both;">Cracking packs?</div>
+    <div class="abs center small" style="top: 815px; font-size: 34px; color: var(--pink); animation: fadein .3s ease-out 19.4s both;">What's in every 14-card booster</div>
+    <div class="abs" style="left: 110px; right: 110px; top: 885px;">
+      <div class="row" style="animation: rise .35s ease-out 19.6s both;"><span class="q grad">7</span><span class="t">Commons</span></div>
+      <div class="row" style="animation: rise .35s ease-out 19.85s both;"><span class="q grad">3</span><span class="t">Uncommons</span></div>
+      <div class="row" style="animation: rise .35s ease-out 20.1s both;"><span class="q hot">2</span><span class="t">Foil Rares or better</span></div>
+      <div class="row" style="animation: rise .35s ease-out 20.35s both;"><span class="q hot">1</span><span class="t">Foil of any rarity<small>where the Showcase hits live</small></span></div>
+      <div class="row" style="animation: rise .35s ease-out 20.6s both;"><span class="q grad">1</span><span class="t">Token</span></div>
+    </div>
+    <div class="abs center small" style="top: 1592px; font-size: 28px; animation: fadein .4s ease-out 21.2s both;">24 packs a display. Riot publishes no pull rates.</div>
+    <div class="flash" style="animation: flash .5s ease-out 19s both;"></div>
+  </section>
+
+  <!-- ═══ 6. TRACKER 23–26 ═══ -->
+  <section class="scene" style="animation: show 3s linear 23s both;">
+    <div class="abs center outline" style="top: 330px; font-size: 128px; line-height: 1.05; animation: slam .5s ease-out 23.05s both;">Pulled<br>something?</div>
+    <div class="abs glass" style="left: 90px; right: 90px; top: 690px; padding: 50px 56px; animation: rise .45s ease-out 23.5s both;">
+      <div style="font-size: 52px; font-weight: 900; line-height: 1.15;">Tick it in the <span style="color: var(--rc-green)">free</span> set tracker.</div>
+      <div style="margin-top: 22px; font-size: 38px; font-weight: 600; color: var(--muted); line-height: 1.35;">See what's left to collect and the cheapest listing for every missing card.</div>
+    </div>
+    <div class="abs glass" style="left: 90px; right: 90px; top: 1130px; padding: 44px 56px; animation: rise .45s ease-out 24.2s both;">
+      <div style="font-size: 46px; font-weight: 900; line-height: 1.2;">Compare <span class="grad" style="font-family: Anton; font-size: 64px;">230+</span> stores</div>
+      <div style="margin-top: 14px; font-family: Anton; font-size: 48px; letter-spacing: 4px; color: var(--gold);">AU · US · UK · EU · CA · SG</div>
+    </div>
+    <div class="flash" style="animation: flash .5s ease-out 23s both;"></div>
+  </section>
+
+  <!-- ═══ 7. CTA 26–30 ═══ -->
+  <section class="scene" style="animation: show 4.01s linear 26s both;">
+    <div class="rays" style="animation: spin 30s linear 0s both, fadein .8s ease-out 26s both;"></div>
+    <div class="abs center" style="top: 470px; animation: slam .6s ease-out 26.05s both;">
+      <div class="wordmark" style="font-size: 172px;"><span class="rmark" style="width:166px;height:160px;margin-right:-5px"></span><span class="grad">IFT</span><span style="width:34px"></span><span class="grad">COMPARE</span></div>
+    </div>
+    <div class="abs center cinzel" style="top: 650px; font-size: 50px; color: #fff; letter-spacing: 6px; animation: rise .4s ease-out 26.4s both;">RIFTBOUND <span style="color: var(--gold); font-size: 34px;">PRICE</span> TRACKER</div>
+    <div class="abs center" style="top: 820px; font-size: 56px; font-weight: 900; line-height: 1.2; animation: rise .45s ease-out 26.8s both;">Every Radiance card.<br>Every store. <span style="color: var(--rc-green)">One search.</span></div>
+    <div class="abs center" style="top: 1060px; animation: pop .5s ease-out 27.3s both, kick .5s ease-out 28s both, kick .5s ease-out 29s both;"><span class="cta">riftcompare.com</span></div>
+    <div class="abs center small" style="top: 1260px; font-size: 32px; color: var(--pink); animation: fadein .4s ease-out 27.7s both;">Free · link in bio</div>
+    <div class="abs center small" style="left: 80px; right: 80px; top: 1400px; font-size: 22px; line-height: 1.45; color: #9d8aae; animation: fadein .4s ease-out 27.9s both;">
+      Prices: cheapest listing on 23 Oct 2026, before postage. RiftCompare is fan-made and isn't endorsed by Riot Games.<br>Riftbound and its card art © Riot Games.</div>
+    <div class="flash" style="animation: flash .6s ease-out 26s both;"></div>
+  </section>
+</div>
+
+<script>
+window.REEL = { width: 1080, height: 1920, duration: 30 };
+
+// The countdown: #5 to #1. Cheapest listing, data/public, 2026-10-23 02:07 UTC.
+const CHASE = [
+  { rank: 5, img: "ezreal-dashing-signature", name: "Ezreal, Dashing", meta: "HEARTSTEEL SIGNATURE · 180*", usd: 1200.00 },
+  { rank: 4, img: "k-sante-pride-of-nazumah-signature", name: "K'Sante, Pride of Nazumah", meta: "LEGEND SIGNATURE · 172*", usd: 1304.33 },
+  { rank: 3, img: "ziggs-hexplosives-expert-signature", name: "Ziggs, Hexplosives Expert", meta: "LEGEND SIGNATURE · 169*", usd: 1600.00 },
+  { rank: 2, img: "evelynn-agonys-embrace-signature", name: "Evelynn, Agony's Embrace", meta: "LEGEND SIGNATURE · 175*", usd: 1799.00 },
+  { rank: 1, img: "seraphine-starry-eyed-songstress-signature", name: "Seraphine, Starry-Eyed Songstress", meta: "LEGEND SIGNATURE · 174*", usd: 2312.54 },
+];
+const host = document.getElementById("chase");
+CHASE.forEach((c, i) => {
+  const t0 = 8 + i * 2;              // each card owns two beats of the bar…
+  const len = c.rank === 1 ? 3 : 2;  // …and the top card three
+  const s = document.createElement("section");
+  s.className = "scene";
+  s.style.animation = `show ${len}s linear ${t0}s both`;
+  s.innerHTML = `
+    ${c.rank === 1 ? `<div class="rays" style="animation: spin 14s linear 0s both, fadein .4s ease-out ${t0}s both;"></div>` : ""}
+    <div class="abs center rank" style="top: 110px; animation: pop .4s ease-out ${t0}s both;">#${c.rank}</div>
+    <div class="card" style="top: 300px; animation: cardin .55s cubic-bezier(.2,.9,.3,1) ${t0 + 0.05}s both, out .3s ease-in ${t0 + len - 0.3}s forwards;">
+      <div style="position:absolute; inset:0; animation: hover 2.4s ease-in-out ${t0}s infinite both;">
+        <div class="face"><img src="img/${c.img}.jpg"><div class="shine" style="animation: sweep .9s ease-in-out ${t0 + 0.45}s both;"></div></div>
+      </div>
+    </div>
+    <div class="abs center" style="top: 1160px; animation: rise .35s ease-out ${t0 + 0.3}s both, out .3s ease-in ${t0 + len - 0.3}s forwards;">
+      <div class="cname">${c.name}</div>
+      <div class="cmeta">${c.meta}</div>
+      <div class="price"><span class="from">from</span><span class="v" data-usd="${c.usd}" data-from="${t0 + 0.45}">US$0</span></div>
+      <div class="small" style="margin-top: 12px;">cheapest listing today · before postage</div>
+    </div>
+    <div class="flash" style="animation: flash ${c.rank === 1 ? 0.9 : 0.45}s ease-out ${t0}s both;"></div>`;
+  host.appendChild(s);
+});
+
+// Sparks drifting up the whole time (each loops; the seek handles the loop).
+const sp = document.getElementById("sparks");
+for (let i = 0; i < 34; i++) {
+  const d = document.createElement("div");
+  d.className = "spark";
+  const x = (i * 97) % 1080, size = 4 + (i * 7) % 9, dur = 7 + (i % 6);
+  d.style.cssText = `left:${x}px; top:${1950 + (i * 131) % 600}px; width:${size}px; height:${size}px; opacity:${0.35 + (i % 5) * 0.12}; animation: float ${dur}s linear ${-(i * 0.9)}s infinite;`;
+  sp.appendChild(d);
+}
+
+// Count-ups, driven by the frame clock so every frame is exact.
+const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+const counters = [...document.querySelectorAll("[data-count]")];
+const prices = [...document.querySelectorAll("[data-usd]")];
+const fmt = (v) => "US$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+window.onReelFrame = (ms) => {
+  const t = ms / 1000;
+  for (const el of counters) el.textContent = String(Math.round(Number(el.dataset.count) * ease((t - Number(el.dataset.from)) / 0.6)));
+  for (const el of prices) el.textContent = fmt(Number(el.dataset.usd) * ease((t - Number(el.dataset.from)) / 0.7));
+};
+window.onReelFrame(0);
+</script>
+</body>
+</html>
