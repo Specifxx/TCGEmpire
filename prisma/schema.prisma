@@ -218,8 +218,37 @@ model StorePartner {
   name      String // display name for the report header
   token     String   @unique // secret access token (capability URL)
   createdAt DateTime @default(now())
+  // The Stores plan (2026-10-23, DECISIONS.md "The Stores plan"). A partner made
+  // from a paid plan carries its subscription; a pilot partner (made by hand
+  // before the plan existed) has none and stays open. `about` and `promo` are
+  // the store's own words on its /stores/<slug> page, shown with a "Verified
+  // store" mark while the plan is active. None of it changes a comparison.
+  planSubscriptionId String?   @unique
+  about              String?
+  promo              String?
+  profileUpdatedAt   DateTime?
 
   @@index([retailer])
+}
+
+// A Stores plan subscription ($79.99/mo, STRIPE_STORE_PRICE_ID). Created by the
+// webhook when checkout completes, BEFORE the owner has confirmed which tracked
+// store it is: `partnerId` is set when the owner links it to a retailer key at
+// /admin/store-partners, which is what unlocks the report. `activeUntil` is
+// the paid-through date off the Stripe subscription (extend-only, like
+// premiumUntil); the report locks three days after it passes.
+model StorePlanSubscription {
+  id                   String    @id @default(cuid())
+  userId               String
+  stripeSubscriptionId String    @unique
+  stripeCustomerId     String?
+  storeName            String
+  storeUrl             String
+  activeUntil          DateTime?
+  partnerId            String?   @unique
+  createdAt            DateTime  @default(now())
+
+  @@index([userId])
 }
 
 // A FROZEN, PUBLIC copy of the Rising Cards screener, minted by an admin.

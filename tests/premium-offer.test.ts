@@ -185,12 +185,12 @@ const email = buildPremiumOfferEmail({
   oneClickUrl: "https://riftcompare.com/api/announcements/unsubscribe?token=abc",
 });
 
-test("the prices are the site's own constants (2026-09-26: $3.33 and $2.00 billed yearly)", () => {
-  assert.equal(premiumEffectiveMonthly("premium"), "$3.33");
+test("the prices are the site's own constants (2026-10-23: $6.67 billed yearly)", () => {
+  assert.equal(premiumEffectiveMonthly("premium"), "$6.67");
   assert.equal(premiumEffectiveMonthly("plus"), "$2.00");
   assert.equal(annualSavingPct("premium"), 33);
   assert.equal(annualSavingPct("plus"), 33);
-  assert.equal(premiumOfferSubject(), "Try RiftCompare Premium free for 14 days");
+  assert.equal(premiumOfferSubject(), "Try RiftCompare Premium free for 30 days");
   assert.equal(email.subject, premiumOfferSubject());
   for (const body of [email.html, email.text]) {
     for (const amount of [PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PLUS_PRICE_AMOUNT, PLUS_ANNUAL_AMOUNT]) {
@@ -278,10 +278,10 @@ test("honest: no deadline or scarcity, and the trial's terms are stated (2026-10
     assert.doesNotMatch(body, /only \d+ (spots|left|places)|hours left|countdown|hurry|last chance|ends (on|soon)|before \d/i);
     assert.doesNotMatch(body, /\$0 today|no card/i);
     assert.match(body, /A card is required to start/);
-    assert.match(body, /free for 14 days, then/i, "what it costs after the trial, beside the offer");
+    assert.match(body, /free for 30 days, then/i, "what it costs after the trial, beside the offer");
     assert.match(body, /email you a day or two before the trial ends/);
   }
-  assert.match(email.html, /Start 14 days free · Premium/);
+  assert.match(email.html, /Start 30 days free · Premium/);
 });
 
 test("the trial promo reaches only accounts checkout would give a trial", async () => {

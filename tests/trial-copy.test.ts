@@ -20,11 +20,11 @@ import { premiumTrialFee, trialButtonLabel, trialThenLine, trialOfferLead } from
 const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ");
 const ENDS = new Date("2026-10-30T12:00:00Z");
 
-test("the defaults are a free 14-day trial (2026-10-12; the $1 first month before it)", () => {
-  assert.equal(PREMIUM_TRIAL_DAYS, 14);
+test("the defaults are a free 30-day trial (2026-10-23; 14 days before, the $1 first month before that)", () => {
+  assert.equal(PREMIUM_TRIAL_DAYS, 30);
   assert.equal(PREMIUM_TRIAL_FEE_CENTS, 0);
-  assert.equal(trialButtonLabel(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS), "Start 14 days free");
-  assert.match(trialButtonLabel(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS), /14 days free/i);
+  assert.equal(trialButtonLabel(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS), "Start 30 days free");
+  assert.match(trialButtonLabel(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS), /30 days free/i);
   assert.doesNotMatch(trialThenLine(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, "$2.99/mo"), /\$1\b/);
   // The $1 copy still exists for a fee set in the environment.
   assert.equal(trialButtonLabel(30, 100), "Start 30 days for $1");

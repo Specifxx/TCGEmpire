@@ -47,9 +47,9 @@ test("today's decided price is what the site actually announces, with no increas
   // no announced future increase) so a careless edit changes it loudly rather
   // than silently. The cut is exactly the edit that would have announced a
   // FAKE increase had PREMIUM_NEXT_PRICE_AMOUNT stayed a hand-typed "$9.99".
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$4.99");
-  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$39.99");
-  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$4.99");
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$9.99", "$9.99 again from 2026-10-23");
+  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$79.99");
+  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$9.99");
   assert.equal(premiumPriceIncreaseAnnounced(), false);
 });
 
@@ -119,7 +119,7 @@ test("with no announcement live, the helpers say only what is true: cancel anyti
   // protection from a rise nobody had decided. The steady state now says the
   // one thing that is unconditionally true.
   assert.equal(premiumLockInLine(), "No contract: cancel anytime from your account page, in a couple of clicks.");
-  assert.equal(premiumLockInHeadline(), "Premium is $4.99/month — cancel anytime");
+  assert.equal(premiumLockInHeadline(), "Premium is $9.99/month — cancel anytime");
   for (const copy of [premiumLockInLine(), premiumLockInHeadline()]) {
     assert.doesNotMatch(copy, /lock|goes up|rises|rise|increas/i, `steady state must not imply a coming increase: "${copy}"`);
   }
@@ -300,9 +300,8 @@ test("the Premium-explained article states the price the site actually charges, 
   // Retired by the 2026-09-26 cut: Premium's $9.99/$79.99 and the half-price
   // intro. ($4.99 and $39.99 are legitimately still in the article — they are
   // today's Premium prices, which were Plus's before the cut.)
-  assert.ok(!haystack.includes("$9.99"), "article must not still quote the retired $9.99 price anywhere");
-  assert.ok(!haystack.includes("$79.99"), "article must not still quote the retired $79.99 annual price anywhere");
-  assert.ok(!haystack.includes("$119.88"), "article must not still quote the old $119.88 paying-monthly total");
+  // $9.99/$79.99 are today's prices again (2026-10-23); the cut's $39.99 annual is retired.
+  assert.ok(!haystack.includes("$39.99"), "article must not still quote the retired $39.99 annual price anywhere");
   assert.ok(!/half price for their first|3-day free trial/i.test(haystack), "no trial or intro while both are off");
 });
 

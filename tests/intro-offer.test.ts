@@ -33,9 +33,9 @@ test("half price is the price's cents halved, rounded so the charge rounds down"
   assert.equal(introAmountOffCents(499), 250);
   assert.equal(499 - introAmountOffCents(499), 249, "Plus $4.99 → $2.49");
   // …and on today's (2026-09-26) prices, should the env ever re-arm the offer.
-  assert.equal(tierIntroMonthlyAmount("premium"), "$2.49");
+  assert.equal(tierIntroMonthlyAmount("premium"), "$4.99", "$9.99 again from 2026-10-23");
   assert.equal(tierIntroMonthlyAmount("plus"), "$1.49");
-  assert.equal(introPriceLine("premium"), "$2.49/mo for your first 3 months, then $4.99/mo");
+  assert.equal(introPriceLine("premium"), "$4.99/mo for your first 3 months, then $9.99/mo");
   assert.equal(INTRO_MONTHS, 3);
 });
 
@@ -56,12 +56,12 @@ test("the intro offer is OFF by default: only NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1 
   assert.match(route.slice(Math.max(0, callAt - 200), callAt), /if \(introOfferEnabled\(\) && plan === "monthly"/, "…and it sits inside the intro switch");
 });
 
-test("the trial is ON by default as a free 14-day trial, env can still change or kill it (2026-10-12)", () => {
-  assert.equal(PREMIUM_TRIAL_DAYS, 14);
+test("the trial is ON by default as a free 30-day trial, env can still change or kill it (2026-10-23)", () => {
+  assert.equal(PREMIUM_TRIAL_DAYS, 30);
   assert.equal(PREMIUM_TRIAL_FEE_CENTS, 0);
   assert.equal(premiumTrialEnabled(), true);
   const cfg = read("src/lib/trial-config.ts");
-  assert.match(cfg, /parseTrialEnv\(process\.env\.PREMIUM_TRIAL_DAYS, 14\)/, "the default is 14, the env can still set a length (0 = the kill switch)");
+  assert.match(cfg, /parseTrialEnv\(process\.env\.PREMIUM_TRIAL_DAYS, 30\)/, "the default is 30 (one month free, 2026-10-23), the env can still set a length (0 = the kill switch)");
   assert.match(cfg, /parseTrialFeeCents\(process\.env\.PREMIUM_TRIAL_FEE_CENTS\)/);
   assert.match(read("src/lib/premium.ts"), /export \{ PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS,/, "premium.ts is where every server caller imports them from");
   // Checkout adds trial_period_days only for a trial-eligible account, which

@@ -63,8 +63,16 @@ export function normalizeTier(v: unknown): PremiumTier {
 }
 export const PLUS_PRICE_ID = process.env.STRIPE_PLUS_PRICE_ID ?? "";
 export const PLUS_ANNUAL_PRICE_ID = process.env.STRIPE_PLUS_ANNUAL_PRICE_ID ?? "";
+// PLUS IS OFF SALE from 2026-10-23 (owner: "plus adds like no value at all. So
+// let's just get rid of plus and just have premium"). DECISIONS.md, "One paid
+// plan again: Premium at $9.99". Off sale, not deleted: STRIPE_PLUS_PRICE_ID /
+// _ANNUAL_PRICE_ID stay set so tierFromPriceId (below) still reads the existing
+// Plus subscribers as Plus — they keep what they pay for, grandfathered, and can
+// still upgrade to Premium. Nothing sells Plus, quotes Plus or offers a switch
+// down to it while this is false; turning it back on is this one line.
+export const PLUS_ON_SALE = false;
 export function premiumPlusEnabled(): boolean {
-  return premiumCheckoutEnabled() && Boolean(PLUS_PRICE_ID);
+  return PLUS_ON_SALE && premiumCheckoutEnabled() && Boolean(PLUS_PRICE_ID);
 }
 export function plusAnnualEnabled(): boolean {
   return premiumPlusEnabled() && Boolean(PLUS_ANNUAL_PRICE_ID);

@@ -39,13 +39,19 @@ export const SITE_URL = "https://riftcompare.com";
 // is the first change that ALSO moves existing subscribers: the owner moves
 // them DOWN onto the new Prices from their next renewal, in the Stripe
 // dashboard. Nothing in this codebase re-prices a subscription by itself.
-export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$4.99";
+// $9.99 / $79.99 AGAIN from 2026-10-23 (owner: "make premium $9.99 again … get
+// rid of plus and just have premium … grandfather the people who are currently
+// paying $4.99"). DECISIONS.md, "One paid plan again: Premium at $9.99". The
+// NEW Prices are STRIPE_PREMIUM_PRICE_ID / _ANNUAL_PRICE_ID; subscribers on the
+// $4.99/$39.99 Prices stay on them (Stripe never re-prices a subscription by
+// itself) and are listed in STRIPE_PREMIUM_LEGACY_PRICE_IDS.
+export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$9.99";
 export const PREMIUM_PRICE_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_PRICE_PERIOD || "month";
 export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || `${PREMIUM_PRICE_AMOUNT}/mo`;
 
 // Annual plan (display only; the actual charge comes from the Stripe annual price,
 // enabled via STRIPE_PREMIUM_ANNUAL_PRICE_ID — see lib/premium.ts).
-export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$39.99";
+export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$79.99";
 export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERIOD || "year";
 
 // ── Plus: the second, cheaper paid tier (2026-09-11) ────────────────────────

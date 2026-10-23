@@ -20,7 +20,9 @@ export function parseTrialEnv(raw: string | undefined, fallback: number): number
   const n = Number(raw);
   return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : fallback;
 }
-export const PREMIUM_TRIAL_DAYS = parseTrialEnv(process.env.PREMIUM_TRIAL_DAYS, 14);
+// 30 days from 2026-10-23 (owner: "offer like one month free for premium
+// instead of 14 days … that's more attractive"). Still free, still card-gated.
+export const PREMIUM_TRIAL_DAYS = parseTrialEnv(process.env.PREMIUM_TRIAL_DAYS, 30);
 export function premiumTrialEnabled(): boolean {
   return PREMIUM_TRIAL_DAYS > 0;
 }
