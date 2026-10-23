@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { STATIC_PAGE_DATES } from "@/lib/static-page-dates";
 import { pageAlternates } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { embedAttributionHtml, storeBadgeHtml } from "@/lib/store-badge";
 
 export const revalidate = 86400;
@@ -125,6 +126,7 @@ export default function EmbedDirectoryPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <div>
+        <Breadcrumbs trail={[{ name: "Embed widgets", href: "/embed" }]} />
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Free Riftbound widgets for your site</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           Three live widgets you can drop into any page with one line of HTML. They pull current data from{" "}

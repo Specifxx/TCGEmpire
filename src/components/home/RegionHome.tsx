@@ -169,7 +169,7 @@ export async function RegionHome({ region }: { region: Country }) {
           {faqs.map((f) => (
             <details key={f.q} className="group py-1">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
-                <span>{f.q}</span>
+                <h3 className="text-base font-semibold">{f.q}</h3>
                 <svg
                   className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180"
                   viewBox="0 0 24 24"

@@ -19021,3 +19021,45 @@ Dry run on the live store: 25 sealed products kept (booster boxes and packs for
 every set, Vaults, Champion and Showdown decks, Pre-Rift kits, Proving Grounds);
 sleeves, playmats, bulk runes and the hanging booster dropped by the existing
 sealed gates; no other game's product.
+
+## Thin keyword pages leave the index; Radiance tier guides; FAQ questions are headings — 2026-10-23
+
+SEO sprint (owner's brief: Search Console 28d 5.2K clicks, 279K impressions, 1.9% CTR,
+position 7.6; AdSense rejected the site for low-value content).
+
+- **Audit of the keywords, facets and domains sitemaps** (live, 23 Oct; words inside
+  `<main>`, distinct `/card/` links). Domains: 1,259–3,579 words, 92–304 cards. Facets:
+  892–1,188 words, 60 cards each (every facet already clears `FACET_THIN_THRESHOLD`).
+  Keywords: the 30 pages split cleanly. A keyword page is a one-paragraph answer, a link
+  to the keyword's own guide and the live card list; with fewer than five cards it measured
+  107–206 words (eight pages listed **no** card at all: Burn, Backline, Legion, Level,
+  Buff, Mighty, Unique, Repeat), a stub of the guide it points to.
+- **The rule:** `KEYWORD_THIN_THRESHOLD = 5` (`lib/keywords.ts`). Under it a keyword page
+  renders `noindex, follow` and `sitemaps/keywords.xml` leaves it out, the same shape as
+  facets and champions. 14 of 30 dropped on the 23 Oct data (the eight above plus Hunt,
+  Add, Temporary, Vision, Predict, Stun); they come back by themselves when more printed
+  cards carry the keyword. The guide stays the indexed page for "riftbound <keyword>".
+  A failed count keeps the page indexable rather than guessing. `keywordCardWhere()` is
+  the one predicate for the page, its metadata and the sitemap.
+- **Why `sitemaps/pokemon.xml` is on riftcompare.com:** the Pokémon sealed section
+  (2026-10-01 entries above) lives under `/pokemon` on this domain and its sitemap section
+  exists while `NEXT_PUBLIC_POKEMON_SECTION=1` (`SECTIONS` filter). It lists the home,
+  hubs and set pages (48 URLs), not product pages, which stay noindex until
+  `POKEMON_INDEX_PRODUCTS=1`. Not changed here (the section's own rules, `docs/pokemon/README.md`).
+- **Three Radiance guides for queries no page owned**, release-day figures from
+  `data/public`, dated in the copy, no forecast: `/guides/riftbound-radiance-epic-cards`,
+  `/guides/riftbound-radiance-alt-art-cards`, `/guides/riftbound-radiance-legends`
+  (`lib/content/radiance-tier-guides.ts`, keyword-map rows). Card pages link back:
+  a RAD Legend, Epic or "a" printing gets its tier guide in Related guides
+  (`radianceTierGuide`, `lib/content/related-guides.ts`).
+- **Structured data:** most of the brief already shipped (Organization + WebSite from the
+  root layout, FAQPage on the homes, BreadcrumbList on every sitemapped page but `/` and
+  `/embed`, Product + AggregateOffer on card pages). Added: the homepage and region-home FAQ
+  questions are `<h3>`s (were `<span>`s inside `<summary>`), `/embed` gets `<Breadcrumbs>`,
+  and the `/sealed` ItemList's AggregateOffer gains `highPrice` (dearest in-stock listing).
+  The homepage gets no one-item BreadcrumbList. Riftbound has no per-sealed-product page.
+- **Footer:** the sister line became a labelled "Compare other TCGs" block whose anchors
+  name the game's price query ("One Piece card prices on OP Compare"), still footer-only
+  and followed (`SisterSite.anchor`).
+- **Titles were proposed, not changed** (owner: propose only). Note for whoever applies
+  them: store counts may not go in titles other than the homes' (`no-store-count-in-titles`).

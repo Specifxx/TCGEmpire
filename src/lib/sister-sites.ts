@@ -20,6 +20,9 @@ export interface SisterSite {
   url: string;
   /** The game, as a reader would say it: "One Piece", "Pokémon", "Magic". */
   game: string;
+  /** Descriptive anchor text for the footer's "Compare other TCGs" block:
+   *  the query a player of that game would type, not the brand alone. */
+  anchor: string;
   /** What it compares, for a short line under its name. */
   what: string;
   /** The pages a Riftbound reader would want from it, deepest-useful first. */
@@ -32,6 +35,7 @@ export const SISTER_SITES: SisterSite[] = [
     name: "OP Compare",
     url: "https://opcompare.app",
     game: "One Piece",
+    anchor: "One Piece card prices",
     what: "One Piece Card Game singles and sealed prices across stores in the US, AU, UK, CA, SG and the EU",
     links: [
       { label: "Where to buy One Piece cards", href: "https://opcompare.app/guides/where-to-buy-one-piece-cards" },
@@ -44,6 +48,7 @@ export const SISTER_SITES: SisterSite[] = [
     name: "DexCompare",
     url: "https://www.dexcompare.app",
     game: "Pokémon",
+    anchor: "Pokémon TCG sealed prices",
     what: "Pokémon booster box, Elite Trainer Box and bundle prices across independent stores in seven markets",
     links: [
       { label: "Pick your country", href: "https://www.dexcompare.app/" },
@@ -56,6 +61,7 @@ export const SISTER_SITES: SisterSite[] = [
     name: "MTG Compare",
     url: "https://mtgcompare.app",
     game: "Magic",
+    anchor: "Magic: The Gathering card prices",
     what: "Magic: The Gathering singles and sealed prices across stores, with a deck pricer",
     links: [
       { label: "Where to buy Magic cards", href: "https://mtgcompare.app/guides/where-to-buy-magic-cards" },

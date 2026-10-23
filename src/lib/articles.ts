@@ -6,6 +6,7 @@ import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PLUS_PRICE_AMOUN
 import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "./trial-config";
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
+import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
@@ -12577,6 +12578,7 @@ What makes it interesting is that it is the first Riftbound set to change what a
 We will update this page as previews land from Convergence Fest onward. Until then, watch [release dates](/release-dates) for the countdown and [movers](/movers) for what the market does to Radiance on the way.`,
   },
   ...SEO_PACK_ARTICLES,
+  ...RADIANCE_TIER_GUIDES,
   {
     slug: "riftbound-gift-of-the-rift-bundle",
     category: "blog",
@@ -13451,6 +13453,8 @@ Rules changes take effect with the set. Riot's Radiance patch notes and errata, 
 Most of a Radiance box's resale value sits in a few slots: the signed Legends, the overnumbered Showcase cards and the SP specials. The second gallery below collects all of them.
 
 [[embed:1]]
+
+Below the chase layer, Radiance's tiers each have a price guide from release day: **[all 28 Epic cards](/guides/riftbound-radiance-epic-cards)**, **[the 19 alt arts](/guides/riftbound-radiance-alt-art-cards)** and **[the nine Legends in every printing](/guides/riftbound-radiance-legends)**.
 
 The **Ultimate Rare is Packed Amphitheater**, a Battlefield, and its overnumbered printing is the hardest card in the set to pull. Fan trackers quote odds of roughly one in four thousand packs, which we have not been able to confirm from Riot. The **HEARTSTEEL** overnumbers (K'Sante, Aphelios, Ezreal, Yone, Kayn and Sett at 178–183/167) are the set's most-searched chase cards. Five of them are reprints of existing champions in the band's art, and **[our HEARTSTEEL breakdown](/blog/riftbound-heartsteel-overnumbered-cards)** covers each one.
 
