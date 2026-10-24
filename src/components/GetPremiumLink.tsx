@@ -22,14 +22,19 @@ import { PremiumNavLink } from "./PremiumNavLink";
 // search gives up the width and the full "Get Premium" shows.
 // `full` (the homepage hero, 2026-10-19) always reads "✦ Get Premium": the hero
 // has the room the header rows do not.
+//
+// "PRICING" IN THE HEADER (2026-10-24, owner: "change the word in the header
+// from premium to pricing"). The header's label is "Pricing" for everyone —
+// signed out, free, Plus and members alike — with the same shine for anyone
+// not yet on Premium. The hero's `full` button keeps "Get Premium".
 export function GetPremiumLink({
   className = "",
   surface,
-  compact = false,
   full = false,
 }: {
   className?: string;
   surface: string;
+  /** Kept for callers; the header label is one word ("Pricing") at every width now. */
   compact?: boolean;
   full?: boolean;
 }) {
@@ -37,28 +42,16 @@ export function GetPremiumLink({
   if (loaded && tier === "premium") {
     return (
       <PremiumNavLink surface={surface} className={`${className} font-semibold text-gold hover:bg-ink-800`}>
-        Premium
+        {full ? "Premium" : "Pricing"}
       </PremiumNavLink>
     );
   }
-  const upgrade = loaded && tier === "plus";
   return (
-    <PremiumNavLink surface={surface} className={`premium-cta ${className}`} title={upgrade ? "Upgrade to Premium" : "Get Premium: every deal, price watches, ad-free"}>
+    <PremiumNavLink surface={surface} className={`premium-cta ${className}`} title="Pricing: Premium, every deal, price watches, ad-free">
       {/* One label span carries the gold text and its sheen (.premium-cta-label). */}
       <span className="premium-cta-label">
         <span aria-hidden="true" className={full ? "" : "hidden xl:inline"}>✦ </span>
-        {upgrade ? (
-          <span>Upgrade</span>
-        ) : full ? (
-          <span>Get Premium</span>
-        ) : compact ? (
-          <span>Premium</span>
-        ) : (
-          <>
-            <span className="hidden xl:inline">Get Premium</span>
-            <span className="xl:hidden">Premium</span>
-          </>
-        )}
+        {full ? <span>Get Premium</span> : <span>Pricing</span>}
       </span>
     </PremiumNavLink>
   );

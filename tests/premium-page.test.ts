@@ -148,13 +148,25 @@ test("FAQ: trial and cancel first, the few-cards answer added, Plus answer kept"
   assert.match(page, /Is Premium worth it if I only buy a few cards\?/);
 });
 
-test("hero CTA carries its terms; secondary paths and the Stores cross-link exist", () => {
+test("hero: the user's price first, the CTA carries its terms; the Stores link sits low and unpriced", () => {
   assert.match(page, /Card required\. We email you before you&apos;re charged\. Cancel in two clicks\./);
-  assert.match(page, /The Stores plan includes Premium/);
+  // The Premium price block comes straight after the subline, before the stats and the button (2026-10-24).
+  const jsx = page.slice(page.indexOf("export default async function PremiumPage"));
+  const price = jsx.indexOf("data-premium-hero-price");
+  assert.ok(price > jsx.indexOf("<h1") && price < jsx.indexOf("<PremiumProofStrip") && price < jsx.indexOf("<PremiumCta"), "user price at the very top");
+  // The Stores plan: linked below the plans, never priced on this page.
   assert.match(page, /href="\/stores"/);
-  assert.match(page, /STORE_PLAN_AMOUNT/, "the Stores price comes from its config");
+  assert.ok(jsx.indexOf("data-stores-crosslink") > jsx.indexOf('id="top-pricing"'), "the Stores link sits below the plans");
+  assert.doesNotMatch(page, /STORE_PLAN_AMOUNT/, "no Stores price on /premium");
   for (const f of ["PremiumDealsTeaser", "PremiumSavingsDemo", "PremiumAlertPreview", "PremiumPageClient"]) {
     const src = readFileSync(new URL(`../src/components/premium/${f}.tsx`, import.meta.url), "utf8");
     assert.doesNotMatch(src, /\$\d/, `${f}: no price typed into a new component`);
   }
+});
+
+test("the header's link reads Pricing (2026-10-24); the homepage hero keeps Get Premium", () => {
+  const link = readFileSync(new URL("../src/components/GetPremiumLink.tsx", import.meta.url), "utf8");
+  assert.match(link, /\{full \? <span>Get Premium<\/span> : <span>Pricing<\/span>\}/);
+  assert.match(link, /\{full \? "Premium" : "Pricing"\}/);
+  assert.doesNotMatch(link, /<span className="hidden xl:inline">Get Premium<\/span>/);
 });

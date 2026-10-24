@@ -732,8 +732,8 @@ longer lands on its entry.
   sells it again since 2026-10-15 (owner: "get premium … shiny"): `GetPremiumLink`,
   `.premium-cta`: glowing, shimmering gold TEXT and nothing else: no fill, no
   outline, no box glow (owner, same day: "I only want the font to be glowing";
-  [2026-10-15](../DECISIONS.md#L17636)); brighter on hover, still under reduced motion. "✦ Get Premium" from xl and "Premium" in the phone slot
-  (from 400px) and at lg; "Upgrade" for Plus, plain gold text for Premium. [2026-10-15](../DECISIONS.md#L17561)
+  [2026-10-15](../DECISIONS.md#L17636)); brighter on hover, still under reduced motion. Its label is "Pricing" at every width since 2026-10-24
+  (plain gold text for a member; the homepage hero's button keeps "Get Premium"). [2026-10-15](../DECISIONS.md#L17561), [2026-10-24](../DECISIONS.md#L19322)
   The rail and account menu keep a plain "Pricing" link. No menu spotlight. Signed-out visitors see "Log in" and a primary
   "Sign up free" at every width. The market switcher (flag only below sm) is
   in the header from 360px, and in the menu's top bar below that; on phones
