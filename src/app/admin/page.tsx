@@ -56,6 +56,12 @@ const TOOLS: Tool[] = [
     desc: "Send recently-registered free accounts a single-use link that grants a few days of Premium instantly — no card, no checkout, no manual grant step.",
   },
   {
+    href: "/admin/earnings",
+    title: "Earnings",
+    icon: "💰",
+    desc: "Every source in one place — Stripe, TCGplayer, eBay Partner Network, AdSense and Mediavine — for today, 7, 30 and 90 days and all time, each and combined.",
+  },
+  {
     href: "/admin/subscriptions",
     title: "Subscription metrics",
     icon: "📊",

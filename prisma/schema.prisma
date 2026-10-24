@@ -2114,3 +2114,18 @@ model BasketPlanUsage {
 
   @@id([userId, month])
 }
+
+// Earnings entered by hand on /admin/earnings (2026-10-24), for a source with no
+// API (Mediavine). One row per entry: the day it was earned, in that currency.
+// Private (admin only); never in the public export.
+model ManualEarning {
+  id          String   @id @default(cuid())
+  source      String // "mediavine"
+  day         String // YYYY-MM-DD
+  amountCents Int
+  currency    String   @default("USD")
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([source, day])
+}

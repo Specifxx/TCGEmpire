@@ -19368,3 +19368,48 @@ we did for Josh and Kayshun."
   - A code typed on the creator in the data still wins.
   - A code switched off in /admin/affiliates disappears at the next daily
     refresh.
+
+## One earnings dashboard (2026-10-24)
+
+Owner: "I need a centralized … page within the admin dashboard where I can see my
+earnings from … Stripe subscription, TCG player, eBay partner network, and like
+my ads network, whether it's AdSense or Mediavine … the 1 day view, the 1 week
+view, the 30 day view, and the 90 day view, the total earns view … the individual
+earnings, but also … the combined ones."
+
+`/admin/earnings` (admin or ADMIN_TOKEN only, noindex). One table: every source
+× today / 7 / 30 / 90 days / all time, plus a combined row. A combined chart for
+the picked range (by day; by month for all time), stacked by source. USD or AUD.
+
+- **Where each figure comes from** (`lib/earnings/sources.ts`, parsers in
+  `lib/earnings/core.ts`):
+  - **Stripe:** balance transactions since `EARNINGS_SINCE` (default
+    2026-01-01). Net of Stripe's fee, minus refunds, disputes and Stripe's own
+    billing fees. Payouts, transfers and top-ups are moving money, not earning
+    it, so they are left out.
+  - **TCGplayer:** the Impact partner Actions API, in 30-day windows. Payout by
+    event day; reversed actions are excluded and pending ones are shown as
+    pending.
+  - **eBay Partner Network:** the "Performance by Day" report
+    (`api.partner.ebay.com/Mediapartners/{SID}/Reports/ebay_partner_perf_by_day.json`,
+    from eBay's "Partner Reporting via the New API Endpoints" guide), in 90-day
+    windows. Earnings plus other earnings, in each checkout site's currency.
+  - **AdSense:** the Management API v2 `reports:generate`, `ESTIMATED_EARNINGS`
+    by `DATE`, in USD, using an OAuth refresh token.
+  - **Mediavine:** it has no reporting API, so its earnings are typed into a new
+    private `ManualEarning` table from the dashboard.
+- **Days** are Sydney calendar days for the sources that give timestamps (Stripe,
+  Impact). EPN and AdSense days are taken as their reports give them.
+- **Combined totals** convert at the site's reference rates (`lib/fx.ts`), so
+  they are a guide, not accounting. Each cell also shows the native amounts.
+- **Each source is guarded on its own.** A source that is not set up shows "Not
+  connected" with the keys it needs. A failing one shows its error, with
+  anything key-shaped scrubbed out. Results are memoised for 30 minutes per
+  instance; "Refresh" bypasses the memo.
+- **Neon reads:** none, except the small manual table.
+- **Ops monitor:** `/api/cron/ops-notify` now reports each source's status. The
+  monitor raises amber "Earnings dashboard sources" when a connected source
+  fails.
+- **Credentials** are server-only Vercel variables (`IMPACT_*`, `EPN_*`,
+  `ADSENSE_API_*`, listed in `.env.example`). Until the owner adds them, only
+  Stripe and Mediavine show figures.

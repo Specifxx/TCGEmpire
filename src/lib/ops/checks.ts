@@ -726,6 +726,8 @@ export interface SiteSelfReport {
   resend: { configured: boolean; valid: boolean | null; detail?: string };
   brevo: { configured: boolean; valid: boolean | null; detail?: string };
   missingEnv: string[];
+  /** The earnings dashboard's sources (/admin/earnings): status only, never a value. Absent on an older site. */
+  earnings?: { key: string; status: "ok" | "not-configured" | "error"; detail?: string }[];
 }
 
 export async function siteSelfChecks(d: OpsDeps): Promise<CheckResult[]> {
@@ -786,6 +788,24 @@ export async function siteSelfChecks(d: OpsDeps): Promise<CheckResult[]> {
       action: rep.missingEnv.length ? `Add ${rep.missingEnv.join(", ")} to Vercel → Settings → Environment Variables (Production), then redeploy. Or tell Claude what is missing.` : undefined,
     }),
   );
+  // The earnings dashboard's reporting APIs (2026-10-24): a source that is set up
+  // but failing is a warning; one not set up yet is only noted.
+  if (rep.earnings) {
+    const broken = rep.earnings.filter((e) => e.status === "error");
+    const off = rep.earnings.filter((e) => e.status === "not-configured").map((e) => e.key);
+    out.push(
+      result(d, {
+        id: "earnings:sources",
+        area: "site",
+        title: "Earnings dashboard sources",
+        severity: broken.length ? "warn" : "ok",
+        summary: broken.length
+          ? `Failing: ${broken.map((e) => `${e.key} (${e.detail ?? "error"})`).join("; ")}.`
+          : `All connected sources answer.${off.length ? ` Not set up: ${off.join(", ")}.` : ""}`,
+        action: broken.length ? "Open /admin/earnings to see the error, and check that source's API keys in Vercel. Or tell Claude: \"the earnings dashboard has an error\"." : undefined,
+      }),
+    );
+  }
   return out;
 }
 

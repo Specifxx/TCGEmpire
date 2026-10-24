@@ -146,6 +146,12 @@ longer lands on its entry.
 
 ## Premium & monetisation
 
+- **Earnings dashboard (2026-10-24):** `/admin/earnings` shows Stripe, TCGplayer
+  (Impact API), eBay Partner Network (Performance by Day report), AdSense
+  (Management API) and Mediavine (entered by hand) for today / 7 / 30 / 90 days /
+  all time, each and combined, at the site's reference FX rates. Each source is
+  guarded alone and shows "Not connected" until its server-only keys are set; the
+  ops monitor flags a connected source that fails. [2026-10-24](../DECISIONS.md#L19372)
 - **The Stores plan (2026-10-23, owner):** US$79.99/month (`STRIPE_STORE_PRICE_ID`,
   displayed amount `NEXT_PUBLIC_STORE_PLAN_AMOUNT`) for a retailer: the repricing
   report with "what buyers are searching for", a Verified mark with the store's own
