@@ -19336,3 +19336,35 @@ premium to pricing."
 - **Header.** `GetPremiumLink` reads "Pricing" at every width and for every
   visitor (the same gold shine for anyone not on Premium, plain gold text for a
   member). The homepage hero's own button (`full`) keeps "Get Premium".
+
+## Creator of the week rotates every Wednesday (2026-10-24)
+
+Owner: "the creators of the week … should rotate every week on a Wednesday …
+just make it like rotate randomly … a lot of the creators have like creator
+codes. We probably should put their codes on the creators page as well, just like
+we did for Josh and Kayshun."
+
+- **Rotation.** `ofTheWeek` is no longer set by hand. `featuredCreators()`
+  computes it from `creatorOfTheWeek(slugs, rotationWeek())`
+  (`lib/content/creators.ts`):
+  - The week turns at 00:00 Wednesday, Australia/Sydney.
+  - Within each cycle of N weeks (N = the number of creators), the order is a
+    seeded shuffle. It looks random, but everyone gets a week before anyone gets
+    a second, and nobody runs two weeks in a row, including across a cycle
+    boundary.
+  - Every server computes the same pick with nothing stored. Adding a creator
+    reshuffles the current cycle.
+  - /creators keeps its daily `revalidate` (not lowered, per CLAUDE.md), so a new
+    pick shows within a day of the turn. The homepage teaser and /admin/creators
+    use the same function.
+- **Creator codes.** `getCreators()` reads the active Affiliate rows (code, name,
+  percentOff; never the email) and `attachCreatorCodes()` puts each on its
+  creator's card:
+  - A code matches when the affiliate's name, or the code minus its trailing
+    digits ("KEISHUN20" → "keishun"), equals the creator's slug, name or a
+    handle, ignoring case and punctuation.
+  - An ambiguous match (one code fitting two creators, or two codes fitting one
+    creator) shows nothing.
+  - A code typed on the creator in the data still wins.
+  - A code switched off in /admin/affiliates disappears at the next daily
+    refresh.
