@@ -24,6 +24,7 @@ Emails go to `bill.jyang101@gmail.com` (set `OWNER_ALERT_EMAIL` in Vercel and Gi
 | Databases & limits | Main database answering · main and history database **monthly transfer** (% used, rate, days until it runs out) · age of the safety-net copy of prices |
 | eBay | API keys accepted · daily call allowance · auction sweep · eBay listings freshness |
 | Prices & data | Store prices per market · sealed prices · store scraper health job · daily price history files · DexCompare's browse index (the Pokémon section's store prices) |
+| Earnings | Every source the earnings dashboard (`/admin/earnings`) is connected to still answers: Stripe, TCGplayer (Impact), eBay Partner Network, AdSense. Amber when a connected one fails; one not set up yet is only noted. |
 | Payments | Stripe key accepted · Stripe webhook enabled and delivering · a paid **Stores plan** waiting more than two days to be linked to its tracked store (amber: "A store paid for the Stores plan and has no report yet" — link it at `/admin/store-partners`) |
 | Email | Resend key accepted · Brevo key accepted |
 | Site & deploys | Five key pages load with prices · latest production build · price import, auction sweep, sealed refresh, store health and daily release jobs (failed or overdue) · required settings present on the site (including `STRIPE_STORE_PRICE_ID` once any Stores plan exists) |

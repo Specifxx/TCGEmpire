@@ -4,6 +4,7 @@ import { ownerEmail } from "@/lib/ops/owner";
 import { siteSelfReport } from "@/lib/ops/self-report";
 import { liveRoute } from "@/lib/public-data/live-route";
 import { prisma } from "@/lib/db";
+import { earningsHealth } from "@/lib/earnings/sources";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -29,7 +30,16 @@ async function handleGET(req: Request) {
   // One count on a tiny table: whether any Stores plan exists, which makes
   // STRIPE_STORE_PRICE_ID required (lib/ops/self-report.ts). Unreadable → not counted.
   const storePlanSubscriptions = await prisma.storePlanSubscription.count().catch(() => null);
-  return NextResponse.json(await siteSelfReport(process.env, { storePlanSubscriptions }));
+  // The earnings dashboard's sources: which are set up and whether they answer
+  // (status and the API's error text only; lib/earnings/sources.ts). Uses the same
+  // 30-minute memo as the dashboard, so this adds at most one read per source.
+  // Capped at 20 s (this route has 30): a slow source leaves the earnings line out
+  // rather than costing the rest of the report.
+  const earnings = await Promise.race([
+    earningsHealth().catch(() => undefined),
+    new Promise<undefined>((r) => setTimeout(() => r(undefined), 20_000)),
+  ]);
+  return NextResponse.json({ ...(await siteSelfReport(process.env, { storePlanSubscriptions })), earnings });
 }
 
 const MAX_BODY = 300_000;

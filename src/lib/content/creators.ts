@@ -48,7 +48,8 @@ export interface Creator {
   champion?: string;
   /** A square avatar they supplied, in public/creators/. Initials are used without one. */
   avatar?: string;
-  /** Creator of the week (owner's pick): listed first with a badge. One at a time. */
+  /** Creator of the week: listed first with a badge. One at a time. Computed by
+   *  featuredCreators() from the weekly rotation (creatorOfTheWeek), never set by hand. */
   ofTheWeek?: boolean;
   /** ISO date the listing went live. Newest first. */
   since: string;
@@ -96,7 +97,6 @@ export const CREATORS: Creator[] = [
   },
   {
     slug: "riftsandbounds",
-    ofTheWeek: true,
     name: "Matt",
     blurb: "Educational Riftbound TCG content and theory videos.",
     links: [
@@ -180,9 +180,119 @@ export const CREATORS: Creator[] = [
   },
 ];
 
-/** Creator of the week first, then newest listing first. */
-export function featuredCreators(list: readonly Creator[] = CREATORS): Creator[] {
-  return [...list].sort((a, b) => Number(!!b.ofTheWeek) - Number(!!a.ofTheWeek) || b.since.localeCompare(a.since));
+// ── Creator of the week: a random weekly rotation (owner, 2026-10-24) ─────────
+// "they should rotate every week on a Wednesday … just make it like rotate
+// randomly". DECISIONS.md, "Creator of the week rotates every Wednesday".
+//
+// The week turns at 00:00 on Wednesday, Sydney time (the owner's clock). Within
+// each cycle of N weeks (N creators) the order is a seeded shuffle, so the pick
+// looks random but everyone gets a week before anyone gets a second, the same
+// creator never runs two weeks in a row, and every server agrees on the pick
+// with no stored state. A creator added mid-cycle reshuffles that cycle.
+// /creators re-renders daily (revalidate 86400), so the new pick shows within a
+// day of the turn.
+export const ROTATION_TIME_ZONE = "Australia/Sydney";
+// A Wednesday: week 0 of the rotation.
+const ROTATION_EPOCH_DAY = Date.UTC(2026, 9, 21) / 86_400_000;
+
+/** Days since 1970-01-01 of the calendar date it is in `timeZone` at `now`. */
+function localDayNumber(now: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+  return Date.UTC(get("year"), get("month") - 1, get("day")) / 86_400_000;
+}
+
+/** Whole Wednesday-to-Wednesday weeks since the rotation began, in Sydney time. */
+export function rotationWeek(now: Date = new Date()): number {
+  return Math.floor((localDayNumber(now, ROTATION_TIME_ZONE) - ROTATION_EPOCH_DAY) / 7);
+}
+
+// A small seeded PRNG (mulberry32), so a shuffle is the same on every server.
+function seeded(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function cycleOrder(slugs: readonly string[], cycle: number): string[] {
+  const order = [...slugs].sort();
+  const rand = seeded(cycle * 2654435761 + 12345);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
+
+/** The slug of the creator of the week `week` (rotationWeek()), or null with no creators. */
+export function creatorOfTheWeek(slugs: readonly string[], week: number): string | null {
+  const n = slugs.length;
+  if (!n) return null;
+  if (n === 1) return slugs[0];
+  const cycle = Math.floor(week / n);
+  const pos = week - cycle * n;
+  const order = cycleOrder(slugs, cycle);
+  // No back-to-back weeks across a cycle boundary: if this cycle would open with
+  // the creator who closed the last one, swap its first two.
+  const prevLast = cycleOrder(slugs, cycle - 1)[n - 1];
+  if (order[0] === prevLast) [order[0], order[1]] = [order[1], order[0]];
+  return order[pos];
+}
+
+/** Creator of the week (this week's rotation) first, then newest listing first. */
+export function featuredCreators(list: readonly Creator[] = CREATORS, now: Date = new Date()): Creator[] {
+  const pick = creatorOfTheWeek(
+    list.map((c) => c.slug),
+    rotationWeek(now),
+  );
+  return list
+    .map((c) => ({ ...c, ofTheWeek: c.slug === pick }))
+    .sort((a, b) => Number(b.ofTheWeek) - Number(a.ofTheWeek) || b.since.localeCompare(a.since));
+}
+
+// ── Creator codes, matched from the Affiliate table (owner, 2026-10-24) ──────
+// "a lot of the creators have creator codes. We probably should put their codes
+// on the creators page as well". Codes are made in /admin/affiliates and live in
+// the database, so /creators reads the ACTIVE ones (code, name and discount only;
+// lib/content/creators-server.ts) and attaches each to the creator it belongs to.
+// A code matches a creator when the affiliate's name, or the code minus its
+// trailing digits ("KEISHUN20" → "keishun"), equals the creator's slug, name or
+// one of their handles, ignoring case and punctuation. Ambiguity shows nothing:
+// a code that would match two creators, or a creator two codes would match, is
+// left off rather than guessed. A `code` typed on a creator above always wins.
+export interface ActiveCode {
+  code: string;
+  name: string;
+  percentOff: number;
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+function creatorKeys(c: Creator): Set<string> {
+  const keys = [c.slug, c.name, ...c.links.map((l) => l.handle ?? "")].map(norm).filter((k) => k.length >= 3);
+  return new Set(keys);
+}
+
+function codeKeys(a: ActiveCode): string[] {
+  return [norm(a.name), norm(a.code.replace(/\d+$/, ""))].filter((k) => k.length >= 3);
+}
+
+export function attachCreatorCodes(list: readonly Creator[], codes: readonly ActiveCode[]): Creator[] {
+  const keys = list.map(creatorKeys);
+  const owners = codes.map((a) => {
+    const ak = codeKeys(a);
+    return list.map((_, i) => i).filter((i) => ak.some((k) => keys[i].has(k)));
+  });
+  return list.map((c, i) => {
+    if (c.code) return c;
+    const mine = codes.filter((_, j) => owners[j].length === 1 && owners[j][0] === i);
+    return mine.length === 1 ? { ...c, code: { code: mine[0].code, percentOff: mine[0].percentOff } } : c;
+  });
 }
 
 export const PLATFORM_STYLE: Record<CreatorPlatform, { bg: string; fg: string }> = {
