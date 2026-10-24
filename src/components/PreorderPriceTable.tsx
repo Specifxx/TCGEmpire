@@ -142,6 +142,7 @@ export function PreorderPriceTable({
   currency,
   page = "/radiance-preorders",
   now = Date.now(),
+  released = false,
 }: {
   groups: SealedGroup[];
   country: Country;
@@ -153,7 +154,11 @@ export function PreorderPriceTable({
   page?: "/radiance-preorders" | "/sets/radiance";
   /** Injected for tests; the page renders at request/ISR time. */
   now?: number;
+  /** After the set's street date (2026-10-24): the same rows, but an open row
+   *  is an IN-STOCK offer, not a pre-order, and the copy says so. */
+  released?: boolean;
 }) {
+  const taking = released ? "in stock" : "taking pre-orders";
   const pageType = page === "/sets/radiance" ? "set_hub" : "radiance_preorders";
   // EPN customid segment for the per-product search line, one per page.
   const searchSource = page === "/sets/radiance" ? "set-hub-product" : "preorders-product";
@@ -166,9 +171,9 @@ export function PreorderPriceTable({
   return (
     <div>
       <p className="text-xs text-slate-500">
-        {shown.length} product{shown.length === 1 ? "" : "s"} · {storeCount} store{storeCount === 1 ? "" : "s"} taking
-        pre-orders · booster boxes and packs first · in each, an eBay search, then open eBay listings (paid links),
-        then stores taking pre-orders cheapest first
+        {shown.length} product{shown.length === 1 ? "" : "s"} · {storeCount} store{storeCount === 1 ? "" : "s"} {taking}
+        {" "}· booster boxes and packs first · in each, an eBay search, then open eBay listings (paid links),
+        then stores {taking} cheapest first
       </p>
 
       <div className="mt-4 space-y-4">
@@ -192,8 +197,10 @@ export function PreorderPriceTable({
                   <h3 className="truncate font-bold text-white">{g.name}</h3>
                   <p className="mt-0.5 text-xs text-slate-500">
                     {open > 0
-                      ? `${open} store${open === 1 ? "" : "s"} taking pre-orders`
-                      : "No store is taking pre-orders right now"}
+                      ? `${open} store${open === 1 ? "" : "s"} ${taking}`
+                      : released
+                        ? "No store has it in stock right now"
+                        : "No store is taking pre-orders right now"}
                     {hidden > 0 ? ` · ${hidden} sold out or unconfirmed, not shown` : ""}
                   </p>
                 </div>
@@ -267,7 +274,7 @@ export function PreorderPriceTable({
                         </span>
                         <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px]">
                           <span className={`rounded px-1.5 py-px font-semibold ${BADGE[state]}`}>
-                            {offerStockLabel(state, true)}
+                            {offerStockLabel(state, !released)}
                           </span>
                           <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
                           {paid && <PaidLinkTag />}
@@ -317,7 +324,7 @@ export function PreorderPriceTable({
                                 : "btn-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
                           }
                         >
-                          {!isOpen ? "View" : isEbay ? "View on eBay" : "Pre-order"}
+                          {!isOpen ? "View" : isEbay ? "View on eBay" : released ? "Buy" : "Pre-order"}
                         </OutboundLink>
                       </span>
                     </li>
@@ -329,12 +336,21 @@ export function PreorderPriceTable({
         })}
       </div>
 
-      <p className="mt-4 text-xs leading-relaxed text-slate-500">
-        Every price above is a <strong className="text-slate-300">pre-order</strong> — the store is taking payment
-        or a deposit now for stock that ships after release. A store that was sold out at our last check, or that
-        we have not been able to re-read for three days, is left out. Pre-order prices move before release, and store terms
-        differ, so confirm both at checkout.
-      </p>
+      {released ? (
+        <p className="mt-4 text-xs leading-relaxed text-slate-500">
+          Every price above is a store&apos;s listed item price for stock it showed as{" "}
+          <strong className="text-slate-300">in stock</strong> at our last check. A store that was sold out then, or
+          that we have not been able to re-read for three days, is left out. Prices and postage differ, so confirm
+          both at checkout.
+        </p>
+      ) : (
+        <p className="mt-4 text-xs leading-relaxed text-slate-500">
+          Every price above is a <strong className="text-slate-300">pre-order</strong> — the store is taking payment
+          or a deposit now for stock that ships after release. A store that was sold out at our last check, or that
+          we have not been able to re-read for three days, is left out. Pre-order prices move before release, and store terms
+          differ, so confirm both at checkout.
+        </p>
+      )}
       {/* The per-link half of the disclosure is the "Paid link" tag on each paid
           row and search line; this is the plain-language half, then the network
           disclosure for the eBay and TCGplayer links (2026-09-26). It also says
