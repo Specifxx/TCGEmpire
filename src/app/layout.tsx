@@ -25,6 +25,7 @@ import { FooterNav } from "@/components/FooterNav";
 import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
+import { MediavineLoader } from "@/components/MediavineLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
@@ -333,6 +334,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* The AdSense loader: ownership verification + Auto ads + the EEA/UK/CH
             consent message, on every page, ungated. See the component header. */}
         <AdSenseLoader />
+        {/* Journey by Mediavine: site verification + its ads, on every page,
+            ungated. See the component header. */}
+        <MediavineLoader />
         {/* Ad/consent origins — shaving a round-trip off the loader and the
             consent message, which is what the 0-impression message needed. */}
         <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="" />
