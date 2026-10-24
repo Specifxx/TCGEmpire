@@ -523,7 +523,8 @@ longer lands on its entry.
 - **Radiance is released (2026-10-22):** no set is `comingSoon`; RAD is
   `recentlyReleased`. Every release check uses `streetDateStartMs()` (midnight
   AEDT on the street date), never midnight UTC. `/radiance-preorders` stays live
-  in its released state (booster box prices). All 219 official printings plus 16
+  in its released state: every Radiance product's in-stock store offers,
+  cheapest first, same URL, no redirect ([2026-10-24](../DECISIONS.md#L19340)). All 219 official printings plus 16
   Signatures are in the catalogue; all nine Legends are named everywhere
   (`RADIANCE_LEGENDS_CONFIRMED`). [2026-10-22](../DECISIONS.md#L18959)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,

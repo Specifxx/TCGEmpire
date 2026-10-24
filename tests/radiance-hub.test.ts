@@ -176,7 +176,7 @@ test("the pre-order price table is a single shared component, used by both /radi
   // stock itself, so the caller no longer pre-filters to priced groups.
   // `page` (2026-09-26): names the page to EPN's customid and buy_click — the
   // table used to report every click as the homepage's.
-  assert.match(preordersPage, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} page="\/radiance-preorders" \/>/);
+  assert.match(preordersPage, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} page="\/radiance-preorders" released=\{!stillUpcoming\} \/>/);
   // The old inline per-store <li> markup must be gone from the page now that
   // it lives in the shared component — otherwise there are two copies to drift.
   assert.doesNotMatch(preordersPage, /rows\.map\(\(l\) => \{/);

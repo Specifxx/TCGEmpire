@@ -132,10 +132,15 @@ test("pre-orders are kept off the pages that mean 'buyable today'", () => {
   assert.ok(!/export async function getAllSealedGroups/.test(src), "the unfiltered builder must stay private");
 });
 
-test("the pre-order page declares PreOrder availability, never InStock", () => {
+test("the pre-order page declares PreOrder availability before release, InStock only after", () => {
   const page = read("src/app/radiance-preorders/page.tsx");
-  assert.match(page, /schema\.org\/PreOrder/, "structured data must say PreOrder");
-  assert.ok(!/schema\.org\/InStock/.test(page), "must never claim InStock for an unshipped product");
+  // 2026-10-24: InStock only behind the date-driven release switch.
+  assert.match(
+    page,
+    /availability: stillUpcoming \? "https:\/\/schema\.org\/PreOrder" : "https:\/\/schema\.org\/InStock"/,
+    "structured data must say PreOrder until release",
+  );
+  assert.equal(page.match(/schema\.org\/InStock/g)?.length, 1, "InStock appears only in the released branch");
 });
 
 test("the release page's pre-order promise now points somewhere real", () => {
