@@ -19337,6 +19337,28 @@ premium to pricing."
   visitor (the same gold shine for anyone not on Premium, plain gold text for a
   member). The homepage hero's own button (`full`) keeps "Get Premium".
 
+## /radiance-preorders becomes the Radiance prices page, in place (2026-10-24)
+
+Owner: Radiance released on 23 October; make /radiance-preorders a Radiance
+prices page (booster box, packs, bundles, in-stock store prices cheapest first).
+
+- **Same URL, no redirect.** The page already ranks for "radiance booster box
+  price" and carries Reddit and newsletter links; a 308 to a new route would
+  spend that on a rename. It keeps its canonical, sitemap entry and share
+  image (already "booster box prices", OUT NOW).
+- **Date-driven.** The switch is still `isPreorderSetCode("RAD")` (street date
+  via `streetDateStartMs`). Released, the page reads every RAD group from
+  `getSealedGroups` (self-caching, not wrapped) instead of `getPreorderGroups`,
+  and draws them with the same `PreorderPriceTable`, now `released`: open rows
+  are "In stock" with a "Buy" button, only open offers are drawn, sold-out stores
+  left out, boxes and packs first. The summary band and jump links show in both
+  states. JSON-LD says `InStock` only in the released branch, `PreOrder` before
+  (`tests/preorder-listings.test.ts`).
+- **Copy.** Title "Riftbound Radiance Booster Box Prices" (37 chars, no store
+  count), meta 141 chars, H1 "Riftbound Radiance booster box prices"; the
+  "Nothing has shipped yet" paragraph is pre-release only. `revalidate` stays
+  21600.
+
 ## Creator of the week rotates every Wednesday (2026-10-24)
 
 Owner: "the creators of the week … should rotate every week on a Wednesday …

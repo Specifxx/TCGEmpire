@@ -151,7 +151,7 @@ longer lands on its entry.
   (Management API) and Mediavine (entered by hand) for today / 7 / 30 / 90 days /
   all time, each and combined, at the site's reference FX rates. Each source is
   guarded alone and shows "Not connected" until its server-only keys are set; the
-  ops monitor flags a connected source that fails. [2026-10-24](../DECISIONS.md#L19372)
+  ops monitor flags a connected source that fails. [2026-10-24](../DECISIONS.md#L19394)
 - **The Stores plan (2026-10-23, owner):** US$79.99/month (`STRIPE_STORE_PRICE_ID`,
   displayed amount `NEXT_PUBLIC_STORE_PLAN_AMOUNT`) for a retailer: the repricing
   report with "what buyers are searching for", a Verified mark with the store's own
@@ -529,7 +529,8 @@ longer lands on its entry.
 - **Radiance is released (2026-10-22):** no set is `comingSoon`; RAD is
   `recentlyReleased`. Every release check uses `streetDateStartMs()` (midnight
   AEDT on the street date), never midnight UTC. `/radiance-preorders` stays live
-  in its released state (booster box prices). All 219 official printings plus 16
+  in its released state: every Radiance product's in-stock store offers,
+  cheapest first, same URL, no redirect ([2026-10-24](../DECISIONS.md#L19340)). All 219 official printings plus 16
   Signatures are in the catalogue; all nine Legends are named everywhere
   (`RADIANCE_LEGENDS_CONFIRMED`). [2026-10-22](../DECISIONS.md#L18959)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,

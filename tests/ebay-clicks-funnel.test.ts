@@ -267,7 +267,7 @@ test("the released-sets search is a cross-sell: hidden for ad-free members", () 
 test("/radiance-preorders: no strip above the table, panel under it in every state, then the capture", () => {
   const src = read("src/app/radiance-preorders/page.tsx");
   const table = src.indexOf("<PreorderPriceTable ");
-  const empty = src.indexOf("Radiance sealed prices, cheapest first");
+  const empty = src.indexOf("No Radiance stock tracked in your market yet");
   const panel = src.indexOf('<RadianceEbayPanel country={country} pageType="radiance_preorders"');
   const capture = src.indexOf('<div id="notify"');
   // The "Prefer eBay?" strip went on 2026-10-19 (owner): each product opens with its own eBay row.
@@ -275,7 +275,7 @@ test("/radiance-preorders: no strip above the table, panel under it in every sta
   assert.ok(table > 0 && table < empty && empty < panel, "the panel follows the table AND the empty-state card");
   assert.ok(panel < capture, "…and precedes the release-day capture");
   assert.match(src, /\n\s*\)\}\n\n(?:\s*\{\/\*[\s\S]*?\*\/\}\n)?\s*<RadianceEbayPanel /);
-  assert.match(src, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} page="\/radiance-preorders" \/>/);
+  assert.match(src, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} page="\/radiance-preorders" released=\{!stillUpcoming\} \/>/);
   assert.doesNotMatch(src, /each sorted cheapest first/);
 });
 
@@ -461,4 +461,24 @@ test("no page or component claims an eBay guarantee or buyer protection", () => 
   walk(join(process.cwd(), "src/components"));
   walk(join(process.cwd(), "src/app"));
   assert.deepEqual(offenders, []);
+});
+
+// After release (2026-10-24, DECISIONS.md "/radiance-preorders becomes the
+// Radiance prices page"): the same table, but open rows are in-stock offers.
+test("released PreorderPriceTable labels open rows in stock, never pre-order", () => {
+  const html = renderToStaticMarkup(
+    createElement(PreorderPriceTable, { groups: [BOX, PACK], country: "US", currency: "USD", now: NOW, released: true }),
+  );
+  assert.match(html, /In stock/);
+  assert.match(html, />Buy</);
+  assert.doesNotMatch(html, /Pre-order open|taking pre-orders|>Pre-order</);
+  assert.doesNotMatch(html, /manyrealms/, "sold-out stores stay out");
+});
+
+test("/radiance-preorders after release reads every Radiance product, not pre-order flags only", () => {
+  const src = readFileSync(join(process.cwd(), "src/app/radiance-preorders/page.tsx"), "utf8");
+  assert.match(src, /getSealedGroups\(country\)[^;]*setCode === SET_CODE/);
+  assert.match(src, /released=\{!stillUpcoming\}/);
+  assert.match(src, /title: \{ absolute: "Riftbound Radiance Booster Box Prices" \}/);
+  assert.ok("Riftbound Radiance Booster Box Prices".length < 60);
 });

@@ -30,6 +30,8 @@ const ADS_SCRIPT_SRC = [
   "https://fundingchoicesmessages.google.com",
   "https://www.googletagservices.com",
   "https://adservice.google.com",
+  // Journey by Mediavine (components/MediavineLoader.tsx).
+  "https://scripts.mediavine.com",
 ];
 const ADS_FRAME_SRC = [
   "https://googleads.g.doubleclick.net",

@@ -113,8 +113,8 @@ const RELEASED_FAQS = [
     a: "23 October 2026. Radiance is the fifth Riftbound set; Riot announced 180 cards, 66 of them Showcase treatments, with a base numbered run of 167 and the Showcase printings numbered above it.",
   },
   {
-    q: "Where are Radiance booster box prices now?",
-    a: "Radiance has released, so its booster boxes, packs, Vault Bundles and Showdown Decks are priced alongside every other set on the sealed comparison, store by store in your currency, and every Radiance single has live prices on the Radiance card list.",
+    q: "How much is a Riftbound Radiance booster box?",
+    a: "It depends on the store. This page lists every tracked store with a Radiance booster box, pack, Vault Bundle or Showdown Deck in stock in your market, in your currency, cheapest first, refreshed daily; sold-out stores are left out. The same prices sit alongside every other set on the sealed comparison, and every Radiance single has live prices on the Radiance card list.",
   },
   FAQS[4],
   FAQS[5],
@@ -134,7 +134,7 @@ export function generateMetadata(): Metadata {
 const RELEASED_METADATA: Metadata = {
   title: { absolute: "Riftbound Radiance Booster Box Prices" },
   description:
-    "Radiance booster box, Vault Bundle and pack prices from every tracked store, in your currency, refreshed daily. Released 23 October 2026.",
+    "Radiance booster box, pack and Vault Bundle prices, in-stock store offers cheapest first, in your currency, refreshed daily. Out 23 Oct 2026.",
   alternates: pageAlternates("/radiance-preorders"),
   openGraph: pageOpenGraph({
     title: "Riftbound Radiance Booster Box Prices — Every Store",
@@ -175,15 +175,13 @@ export default async function RadiancePreordersPage() {
   const currency = getDisplayCurrency(country);
   const set = setByCode(SET_CODE);
   const stillUpcoming = isPreorderSetCode(SET_CODE);
-  const groups = stillUpcoming ? await getPreorderGroups(country) : [];
-  // Released: the shipped Radiance products, from the same self-caching loader
-  // /sealed reads (never wrapped in another cache — CLAUDE.md), cheapest first.
-  const releasedGroups = stillUpcoming
-    ? []
-    : (await getSealedGroups(country).catch(() => []))
-        .filter((g) => g.setCode === SET_CODE && g.lowestPriceCents != null)
-        .sort((a, b) => (a.lowestPriceCents ?? 0) - (b.lowestPriceCents ?? 0))
-        .slice(0, 12);
+  // Released (2026-10-24, owner: "make /radiance-preorders switch from a
+  // pre-order page to a Radiance prices page"): every shipped Radiance product,
+  // from the same self-caching loader /sealed reads (never wrapped in another
+  // cache — CLAUDE.md), drawn by the same table, IN-STOCK offers cheapest first.
+  const groups = stillUpcoming
+    ? await getPreorderGroups(country)
+    : (await getSealedGroups(country).catch(() => [])).filter((g) => g.setCode === SET_CODE);
   const faqs = stillUpcoming ? FAQS : RELEASED_FAQS;
   // `priced` (an open offer exists) feeds the structured data; `listed` (any
   // offer at all) feeds the visible table, which shows sold-out stores too.
@@ -208,14 +206,13 @@ export default async function RadiancePreordersPage() {
         : "Riftbound: Radiance sealed product prices across every tracked store, updated daily.",
       type: "CollectionPage",
     }),
-    // PreOrder availability, never InStock — none of this has shipped. Emitting
-    // InStock here would be a false availability signal to Google Shopping and to
-    // any agent reading the page, for a product no store can post today.
+    // PreOrder availability before release, never InStock — none of it had
+    // shipped. After release the open offers ARE in-stock listings.
     priced.length
       ? {
           "@context": "https://schema.org",
           "@type": "ItemList",
-          name: "Riftbound Radiance pre-orders",
+          name: stillUpcoming ? "Riftbound Radiance pre-orders" : "Riftbound Radiance sealed prices",
           url: `${SITE_URL}/radiance-preorders`,
           itemListElement: priced.slice(0, 30).map((g, i) => ({
             "@type": "ListItem",
@@ -226,7 +223,7 @@ export default async function RadiancePreordersPage() {
               ...(g.imageUrl ? { image: g.imageUrl } : {}),
               offers: {
                 "@type": "AggregateOffer",
-                availability: "https://schema.org/PreOrder",
+                availability: stillUpcoming ? "https://schema.org/PreOrder" : "https://schema.org/InStock",
                 priceCurrency: currency,
                 lowPrice: ((g.lowestPriceCents ?? 0) / 100).toFixed(2),
                 // Stores with an OPEN offer — a sold-out listing is not an offer.
@@ -264,9 +261,10 @@ export default async function RadiancePreordersPage() {
             </p>
           ) : (
             <p className="mt-2 text-sm leading-relaxed text-slate-300">
-              Radiance is out. Its booster boxes, packs, Vault Bundles and Showdown Decks are now priced alongside every
-              other set at our tracked {info.adjective} stores, in {currency}, and every Radiance single has a live price
-              too.
+              Radiance is out. Below is every Radiance booster box, pack, Vault Bundle and Showdown Deck our tracked{" "}
+              {info.adjective} stores have in stock, booster boxes and packs first, in {currency}. Within each product,
+              an eBay search comes first, then open eBay listings (both paid links), then the stores with stock,
+              cheapest first. Sold-out stores are left out.
             </p>
           )}
         </div>
@@ -285,12 +283,12 @@ export default async function RadiancePreordersPage() {
           ))}
         </div>
 
-        {stillUpcoming && listed.length > 0 && (
+        {listed.length > 0 && (
           <dl className="relative z-10 mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div className="rounded-xl bg-black/30 p-3">
               <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Booster box from</dt>
               <dd className="num mt-1 text-xl font-extrabold text-gold">
-                {box ? formatMoney(box.low, currency) : <span className="font-sans text-base text-slate-400">None open yet</span>}
+                {box ? formatMoney(box.low, currency) : <span className="font-sans text-base text-slate-400">{stillUpcoming ? "None open yet" : "None in stock"}</span>}
               </dd>
               {box && box.high > box.low && (
                 <dd className="num text-xs text-slate-400">up to {formatMoney(box.high, currency)}</dd>
@@ -299,19 +297,19 @@ export default async function RadiancePreordersPage() {
             <div className="rounded-xl bg-black/30 p-3">
               <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Booster pack from</dt>
               <dd className="num mt-1 text-xl font-extrabold text-gold">
-                {pack ? formatMoney(pack.low, currency) : <span className="font-sans text-base text-slate-400">None open yet</span>}
+                {pack ? formatMoney(pack.low, currency) : <span className="font-sans text-base text-slate-400">{stillUpcoming ? "None open yet" : "None in stock"}</span>}
               </dd>
               {pack && pack.high > pack.low && (
                 <dd className="num text-xs text-slate-400">up to {formatMoney(pack.high, currency)}</dd>
               )}
             </div>
             <div className="rounded-xl bg-black/30 p-3">
-              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Stores taking pre-orders</dt>
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{stillUpcoming ? "Stores taking pre-orders" : "Stores with stock"}</dt>
               <dd className="num mt-1 text-xl font-extrabold text-white">{storesOpen}</dd>
               <dd className="text-xs text-slate-400">in {info.place}</dd>
             </div>
             <div className="rounded-xl bg-black/30 p-3">
-              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Open pre-orders</dt>
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{stillUpcoming ? "Open pre-orders" : "In-stock offers"}</dt>
               <dd className="num mt-1 text-xl font-extrabold text-white">{openOffers}</dd>
               <dd className="text-xs text-slate-400">across {listed.length} products</dd>
             </div>
@@ -321,7 +319,7 @@ export default async function RadiancePreordersPage() {
 
       {/* Jump links: one chip per product, in the table's own order, so a reader
           after the Vault Bundle or a Showdown Deck gets there in one tap. */}
-      {stillUpcoming && listed.length > 1 && (
+      {listed.length > 1 && (
         <nav aria-label="Radiance products" className="mt-4 flex flex-wrap gap-2">
           {listed.map((g) => (
             <a
@@ -346,13 +344,13 @@ export default async function RadiancePreordersPage() {
           {/* PreorderPriceTable's own product headings are <h3> (it also renders
               inside RadianceHub's "Products & preorders" <h2>), so this page needs
               its own enclosing <h2> or h1 -> h3 skips a level. */}
-          <h2 className="sr-only">Radiance pre-order prices by product</h2>
-          <PreorderPriceTable groups={listed} country={country} currency={currency} page="/radiance-preorders" />
+          <h2 className="sr-only">Radiance {stillUpcoming ? "pre-order prices" : "prices"} by product</h2>
+          <PreorderPriceTable groups={listed} country={country} currency={currency} page="/radiance-preorders" released={!stillUpcoming} />
         </div>
       ) : (
         <div className="card-surface mt-5 p-6">
           <h2 className="font-bold text-white">
-            {stillUpcoming ? "No Radiance pre-orders tracked yet" : "Radiance sealed prices, cheapest first"}
+            {stillUpcoming ? "No Radiance pre-orders tracked yet" : "No Radiance stock tracked in your market yet"}
           </h2>
           {stillUpcoming ? (
             <>
@@ -374,32 +372,10 @@ export default async function RadiancePreordersPage() {
             </>
           ) : (
             <>
-            {releasedGroups.length > 0 && (
-              <ul className="mt-3 divide-y divide-white/5 text-sm">
-                {releasedGroups.map((g) => (
-                  <li key={g.groupKey}>
-                    <Link
-                      href={`/sealed?set=${SET_CODE}&type=${encodeURIComponent(g.productType)}`}
-                      className="flex items-baseline justify-between gap-3 py-2 text-slate-200 hover:text-white"
-                    >
-                      <span className="min-w-0">
-                        {g.name}
-                        <span className="text-xs text-slate-500">
-                          {" "}· {g.storeCount} store{g.storeCount === 1 ? "" : "s"}
-                        </span>
-                      </span>
-                      <span className="num shrink-0 font-semibold text-gold">
-                        from {formatMoney(g.lowestPriceCents ?? 0, currency)}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
-              {releasedGroups.length > 0 ? "Every store's price for each product is on " : "Radiance has released, so its products are priced alongside every other set — "}
+              Radiance has released, so its products are priced alongside every other set —{" "}
               <Link href={`/sealed?set=${SET_CODE}`} className="text-brand-400 hover:underline">
-                {releasedGroups.length > 0 ? "the sealed comparison" : "see live sealed prices"}
+                see live sealed prices
               </Link>{" "}
               or{" "}
               <Link href={`/sets/${set?.slug ?? "radiance"}`} className="text-brand-400 hover:underline">
@@ -453,7 +429,7 @@ export default async function RadiancePreordersPage() {
         <h2 className="text-xl font-extrabold text-white">What each Radiance product is</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           Contents are from the retailer sheet; list prices are the US distributor MSRP. Riot has not published a price
-          and no MSRP outside the US has been announced — the prices {stillUpcoming ? "above" : "on the sealed comparison"} are what stores are actually asking.
+          and no MSRP outside the US has been announced — the prices above are what stores are actually asking.
         </p>
         <dl className="mt-4 grid gap-3 sm:grid-cols-2">
           {RADIANCE_PRODUCTS.map((p) => (

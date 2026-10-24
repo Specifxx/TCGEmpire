@@ -533,6 +533,8 @@ const PARTNER_RECORDS: string[] = [
   "video.unrulymedia.com, 5672421953199218469, RESELLER",
   "yahoo.com, 57289, RESELLER, e1a5b5b6e3255540",
   "zetaglobal.net, 891, RESELLER",
+  // Journey by Mediavine (added 2026-10-24), as Mediavine asked for it.
+  "google.com, pub-1601477034266482, RESELLER, f08c47fec0942fa0",
 ];
 // ── END PARTNER RECORDS ─────────────────────────────────────────────────────
 
