@@ -19318,3 +19318,21 @@ caps) now lets them through, `/api/me` names them Premium, and /premium shows
 them "You're Premium" with "You keep your original Plus price, with everything
 in Premium included" and no upgrade button. The FAQ's Plus answer says so.
 Turning `PLUS_ON_SALE` back on restores the old split.
+
+## "Pricing" in the header, and the users' price first on /premium (2026-10-24)
+
+Owner, the day after the /premium redesign: "Can we not advertise the 79.99
+price for stores first on the premium page? Our main customers are users so
+that pricing should be at the very top. Also change the word in the header from
+premium to pricing."
+
+- **/premium.** Premium's own price now sits straight under the headline, before
+  the stats and the button: the per-month figure large ("US$6.67/mo"), then
+  "billed yearly at US$79.99/yr (save 33%) · or US$9.99 monthly · first 30 days
+  free", all from the `lib/site.ts` display constants. The small price line
+  under the hero button went (the button's own disclosure still states the
+  price). The Stores cross-link moved from under the hero button to the foot of
+  the page, and no longer quotes the Stores price: /stores does.
+- **Header.** `GetPremiumLink` reads "Pricing" at every width and for every
+  visitor (the same gold shine for anyone not on Premium, plain gold text for a
+  member). The homepage hero's own button (`full`) keeps "Get Premium".

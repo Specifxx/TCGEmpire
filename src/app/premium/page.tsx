@@ -32,7 +32,6 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { paysForItself, teaserDeals } from "@/lib/premium-page";
 import { PREMIUM_TESTIMONIALS } from "@/lib/content/premium-testimonials";
 import { formatMoney } from "@/lib/format";
-import { STORE_PLAN_AMOUNT } from "@/lib/store-plan";
 import { getHomeStats } from "@/lib/home-stats";
 import { getCachedTopDeals } from "@/lib/top-deals";
 import { COUNTRIES } from "@/lib/country";
@@ -427,6 +426,30 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <p className="mx-auto mt-2 max-w-2xl text-sm leading-snug text-slate-300 sm:mt-3 sm:text-lg">
           {already ? "Thanks for supporting RiftCompare." : plusLive ? premiumHeroLine(market, plusLive) : PREMIUM_HERO_SUBLINE}
         </p>
+        {/* THE USER'S PRICE FIRST (2026-10-24, owner: "our main customers are users
+            so that pricing should be at the very top"). Premium's own price, from
+            the lib/site.ts display constants, sits straight under the promise. */}
+        {!already && (
+          <div className="mt-4" data-premium-hero-price>
+            <p className="flex items-baseline justify-center gap-1.5">
+              <span className="num text-4xl font-extrabold text-white sm:text-5xl">{heroPlan === "annual" ? heroEffective : heroPriceLabel}</span>
+              {heroPlan === "annual" && <span className="text-base font-semibold text-slate-300">/mo</span>}
+            </p>
+            <p className="mt-1 text-sm text-slate-300">
+              {heroPlan === "annual" ? (
+                <>
+                  billed yearly at {heroPriceLabel} (save {annualSavingPct()}%) ·{" "}
+                  <a href="#top-pricing" className="font-semibold text-slate-200 underline-offset-2 hover:underline">
+                    or {usd(PREMIUM_PRICE_AMOUNT)} monthly
+                  </a>
+                </>
+              ) : (
+                "billed monthly"
+              )}
+              {freeTrialShown ? <span className="font-bold text-up"> · first {PREMIUM_TRIAL_DAYS} days free</span> : null}
+            </p>
+          </div>
+        )}
         {proof && <PremiumProofStrip proof={proof} />}
         {!already && (
           <CtaZone location="hero" className="mx-auto mt-5 max-w-sm">
@@ -447,29 +470,11 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
                 Card required. We email you before you&apos;re charged. Cancel in two clicks.
               </p>
             )}
-            <p className="mt-1.5 text-xs text-slate-400">
-              {heroPlan === "annual" ? (
-                <>
-                  {freeTrialShown ? "Then " : ""}
-                  {heroPriceLabel} ({heroEffective}/mo, save {annualSavingPct()}%) ·{" "}
-                </>
-              ) : null}
-              <a href="#top-pricing" className="font-semibold text-slate-300 underline-offset-2 hover:underline" data-no-cta-track>
-                {heroPlan === "annual" ? `or ${usd(PREMIUM_PRICE_AMOUNT)}/mo monthly` : "See the plan"}
-              </a>
-            </p>
           </CtaZone>
         )}
         {!already && (
           <CtaZone location="secondary" className="mx-auto mt-3 max-w-2xl space-y-1">
             <NoCardOptions signedIn={!!user} />
-            <p className="text-xs text-slate-400" data-stores-crosslink>
-              Run a store?{" "}
-              <Link href="/stores" className="font-semibold text-slate-200 underline-offset-2 hover:underline">
-                The Stores plan includes Premium
-              </Link>{" "}
-              ({STORE_PLAN_AMOUNT}/month).
-            </p>
           </CtaZone>
         )}
       </div>
@@ -551,6 +556,17 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           <p className="mx-auto mt-8 max-w-xl text-center text-sm font-semibold text-slate-300" data-premium-markets>
             Premium works across {MARKET_COUNT_WORD} markets ({MARKET_NAMES}) and eBay.
           </p>
+
+          {/* For retailers, at the foot of the page and without its price (2026-10-24,
+              owner: the users' price comes first; the Stores plan is on /stores). */}
+          <CtaZone location="secondary" className="mx-auto mt-4 max-w-xl text-center">
+            <p className="text-xs text-slate-400" data-stores-crosslink>
+              Run a store?{" "}
+              <Link href="/stores" className="font-semibold text-slate-200 underline-offset-2 hover:underline">
+                See the Stores plan, which includes Premium →
+              </Link>
+            </p>
+          </CtaZone>
 
           <PremiumStickyCta
             label={freeTrialShown ? trialButtonLabel(PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS) : "Get Premium"}
