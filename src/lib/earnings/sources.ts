@@ -3,14 +3,19 @@ import { stripe, stripeEnabled } from "@/lib/stripe";
 import {
   adsenseDays,
   dayIn,
-  epnDays,
+  epnDailyParts,
+  impactActionDays,
+  impactActions,
+  reportRecords,
+  uniqueActions,
+  uniqueRecords,
+  type ImpactAction,
   epnTransactions,
   latestPerSale,
   reportShape,
   tagDays,
   txnDays,
   type EpnTxn,
-  impactDays,
   mergeDays,
   stripeDays,
   windows,
@@ -65,23 +70,60 @@ const fetchStripe: Fetcher = async () => {
 };
 
 // ── TCGplayer via Impact ─────────────────────────────────────────────────────
+// WHICH DATE THE WINDOWS FILTER (2026-10-25). Impact's partner Actions docs: with
+// no StartDate/EndDate (the action's LAST-UPDATED date) the list returns only
+// the past 7 days, and that pair may span at most 45 days. Filtering on the
+// event date alone risked exactly that silent 7-day cut. So the windows walk the
+// last-updated date from EARNINGS_SINCE to now: every action has one
+// last-updated date, so each lands in some window, and the windows overlap by a
+// second at each seam, with actions folded by Id (uniqueActions). Days still
+// come from EventDate. If Impact ever refuses those parameters, the old
+// event-date query runs instead.
+const isoSec = (ms: number) => new Date(ms).toISOString().slice(0, 19) + "Z";
+
+async function impactPages(sid: string, headers: Record<string, string>, query: (from: string, to: string) => string): Promise<ImpactAction[]> {
+  const out: ImpactAction[] = [];
+  for (const [from, to] of windows(EARNINGS_SINCE, dayIn(Date.now()), 44)) {
+    let url: string | null = `https://api.impact.com/Mediapartners/${encodeURIComponent(sid)}/Actions?${query(from, to)}&PageSize=1000`;
+    for (let page = 0; url && page < 50; page++) {
+      const json = (await getJson(url, { headers })) as { "@nextpageuri"?: string } | null;
+      out.push(...impactActions(json));
+      const next: string | undefined = json?.["@nextpageuri"];
+      url = next ? `https://api.impact.com${next}` : null;
+    }
+  }
+  return uniqueActions(out);
+}
+
 const fetchImpact: Fetcher = async () => {
   const sid = process.env.IMPACT_ACCOUNT_SID;
   const token = process.env.IMPACT_AUTH_TOKEN;
   if (!sid || !token) return notConfigured("Set IMPACT_ACCOUNT_SID and IMPACT_AUTH_TOKEN (Impact → Settings → API).");
   const headers = { Authorization: basic(sid, token), Accept: "application/json" };
-  const days: DayAmount[] = [];
-  for (const [from, to] of windows(EARNINGS_SINCE, dayIn(Date.now()), 30)) {
-    let url: string | null =
-      `https://api.impact.com/Mediapartners/${encodeURIComponent(sid)}/Actions?ActionDateStart=${from}T00:00:00Z&ActionDateEnd=${to}T23:59:59Z&PageSize=1000`;
-    for (let page = 0; url && page < 20; page++) {
-      const json = (await getJson(url, { headers })) as { "@nextpageuri"?: string } | null;
-      days.push(...impactDays(json));
-      const next: string | undefined = json?.["@nextpageuri"];
-      url = next ? `https://api.impact.com${next}` : null;
-    }
+  let actions: ImpactAction[];
+  let how = "by last-updated date";
+  try {
+    actions = await impactPages(sid, headers, (from, to) => {
+      const end = Math.min(Date.parse(`${to}T00:00:00Z`) + 86_400_000, Date.now());
+      return `StartDate=${isoSec(Date.parse(`${from}T00:00:00Z`) - 1000)}&EndDate=${isoSec(end)}`;
+    });
+  } catch (e) {
+    console.error("[earnings] impact update-date query failed, using event dates:", e);
+    how = "by event date (the update-date query was refused)";
+    actions = await impactPages(sid, headers, (from, to) => `ActionDateStart=${from}T00:00:00Z&ActionDateEnd=${to}T23:59:59Z`);
   }
-  return { status: "ok", days: mergeDays(days) };
+  actions = actions.filter((a) => a.day >= EARNINGS_SINCE);
+  const count = (st: string) => actions.filter((a) => a.state === st).length;
+  return {
+    status: "ok",
+    days: impactActionDays(actions),
+    checks: [
+      { label: `Approved (${count("APPROVED")} actions)`, counted: true, days: impactActionDays(actions, ["APPROVED"]) },
+      { label: `Pending (${actions.length - count("APPROVED") - count("REVERSED")} actions)`, counted: true, days: impactActionDays(actions, ["PENDING"]) },
+      { label: `Reversed (${count("REVERSED")} actions, not counted)`, counted: false, days: impactActionDays(actions, ["REVERSED"]) },
+    ],
+    detail: `${actions.length} actions, fetched ${how}. Payouts in each action's own currency.`,
+  };
 };
 
 // ── eBay Partner Network ─────────────────────────────────────────────────────
@@ -131,9 +173,11 @@ const fetchEpn: Fetcher = async () => {
   const headers = { Authorization: basic(sid, token), Accept: "application/json" };
 
   const dailyRun = (async () => {
-    const days: DayAmount[] = [];
-    const shape = await epnPages(sid, headers, EPN_DAILY_REPORT, "CAMPAIGN_ID=0&CHECKOUT_SITE=0", (j) => days.push(...epnDays(j, EPN_CURRENCY)));
-    return { days: mergeDays(days), ...shape };
+    const records: Record<string, unknown>[] = [];
+    const shape = await epnPages(sid, headers, EPN_DAILY_REPORT, "CAMPAIGN_ID=0&CHECKOUT_SITE=0", (j) => records.push(...reportRecords(j)));
+    const unique = uniqueRecords(records);
+    const parts = epnDailyParts(unique, EPN_CURRENCY);
+    return { days: mergeDays([...parts.earnings, ...parts.other]), parts, duplicates: records.length - unique.length, ...shape };
   })();
   const tdrRun = (async () => {
     let lastError: unknown = null;
@@ -167,7 +211,17 @@ const fetchEpn: Fetcher = async () => {
   if (t) parts.push(`Transaction report ${EPN_CURRENCY} ${money2(sumCents(tdrDays))} from ${t.sales.length} sales (${t.records} records).`);
   else if (tdr.status === "rejected") parts.push(`Transaction report unavailable (${tdr.reason instanceof Error ? scrubSecrets(tdr.reason.message).slice(0, 80) : "failed"}), so no tag breakdown.`);
   parts.push("New sales take up to 48 hours to appear.");
-  return { status: "ok", days, tags, detail: parts.join(" ") };
+  if (d?.duplicates) parts.push(`${d.duplicates} repeated daily rows ignored.`);
+  const checks: NonNullable<SourceResult["checks"]> = [];
+  if (d?.days.length) {
+    checks.push({ label: "Daily report · Earnings column", counted: true, days: d.parts.earnings });
+    checks.push({ label: "Daily report · Other earnings column", counted: true, days: d.parts.other });
+  }
+  if (t) {
+    checks.push({ label: `Transaction report · ${t.sales.length} sales (latest record of each)`, counted: !d?.days.length, days: tdrDays });
+    checks.push({ label: "Transaction report · of which pending", counted: false, days: tdrDays.map((x) => ({ ...x, cents: x.pendingCents ?? 0 })) });
+  }
+  return { status: "ok", days, tags, checks, detail: parts.join(" ") };
 };
 
 // ── Google AdSense ───────────────────────────────────────────────────────────

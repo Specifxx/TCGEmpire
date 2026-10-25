@@ -42,6 +42,10 @@ export interface SourceResult {
   days: DayAmount[];
   /** Earnings split by the tracking tag each sale carried (eBay's customid), per day. */
   tags?: TagDay[];
+  /** The pieces behind the total, in the network's own currency, so it can be
+   *  matched line by line against the network's dashboard (e.g. Earnings vs Other
+   *  earnings, approved vs pending). Informational: `days` is what is counted. */
+  checks?: { label: string; counted: boolean; days: DayAmount[] }[];
   /** When this source's data was fetched (ms). */
   fetchedAt: number;
 }
@@ -193,21 +197,53 @@ export function stripeDays(txns: readonly StripeTxn[]): DayAmount[] {
 }
 
 // ── TCGplayer via Impact: the partner Actions API ───────────────────────────
-// One action per conversion: Payout (string, major units), Currency, EventDate
-// (ISO), State PENDING | APPROVED | REVERSED. Reversed actions pay nothing.
-export function impactDays(json: unknown): DayAmount[] {
+// One action per conversion: Payout (string, major units, in the action's
+// Currency), EventDate (ISO), State PENDING | APPROVED | REVERSED. Reversed
+// actions pay nothing. The same action can arrive twice when the windows that
+// fetch it overlap, so actions are folded by Id first (impactActions).
+export interface ImpactAction {
+  id: string | null;
+  day: string;
+  state: string;
+  currency: string;
+  cents: number;
+}
+
+export function impactActions(json: unknown): ImpactAction[] {
   const actions = (json as { Actions?: unknown[] } | null)?.Actions ?? [];
-  const rows: DayAmount[] = [];
+  const out: ImpactAction[] = [];
   for (const a of actions as Record<string, unknown>[]) {
-    const state = String(a.State ?? "").toUpperCase();
-    if (state === "REVERSED") continue;
-    const date = String(a.EventDate ?? a.ActionDate ?? "");
-    const t = Date.parse(date);
+    const t = Date.parse(String(a.EventDate ?? a.ActionDate ?? ""));
     if (!Number.isFinite(t)) continue;
-    const cents = toCents(a.Payout);
-    rows.push({ day: dayIn(t), currency: String(a.Currency ?? "USD").toUpperCase(), cents, pendingCents: state === "APPROVED" ? 0 : cents });
+    out.push({
+      id: a.Id != null && String(a.Id) ? String(a.Id) : null,
+      day: dayIn(t),
+      state: String(a.State ?? "").toUpperCase(),
+      currency: String(a.Currency ?? "USD").toUpperCase(),
+      cents: toCents(a.Payout),
+    });
   }
-  return mergeDays(rows);
+  return out;
+}
+
+/** One entry per action Id (the last one seen wins); actions without an Id stand alone. */
+export function uniqueActions(actions: readonly ImpactAction[]): ImpactAction[] {
+  const byId = new Map<string, ImpactAction>();
+  const loose: ImpactAction[] = [];
+  for (const a of actions) (a.id ? byId.set(a.id, a) : loose.push(a));
+  return [...byId.values(), ...loose];
+}
+
+export function impactActionDays(actions: readonly ImpactAction[], states: readonly string[] = ["APPROVED", "PENDING"]): DayAmount[] {
+  return mergeDays(
+    actions
+      .filter((a) => states.includes(a.state) || (states.includes("PENDING") && !["APPROVED", "PENDING", "REVERSED"].includes(a.state)))
+      .map((a) => ({ day: a.day, currency: a.currency, cents: a.cents, pendingCents: a.state === "APPROVED" ? 0 : a.cents })),
+  );
+}
+
+export function impactDays(json: unknown): DayAmount[] {
+  return impactActionDays(uniqueActions(impactActions(json)));
 }
 
 // ── eBay Partner Network: the Performance by Day report ─────────────────────
@@ -215,6 +251,10 @@ export function impactDays(json: unknown): DayAmount[] {
 // site, with Earnings (and OtherEarnings) in that site's currency. The JSON is
 // Impact-style ({ Records: [...] }); the parser also accepts a bare array and
 // lower-case keys, so a format change shows as a zero, not a crash.
+export function reportRecords(json: unknown): Record<string, unknown>[] {
+  return recordsOf(json);
+}
+
 function recordsOf(json: unknown): Record<string, unknown>[] {
   if (Array.isArray(json)) return json as Record<string, unknown>[];
   const o = (json ?? {}) as Record<string, unknown>;
@@ -262,14 +302,37 @@ export function reportShape(json: unknown): { rows: number; columns: string[] } 
 // column wins if eBay ever sends one; otherwise the account currency
 // (EPN_CURRENCY, AUD by default) applies to every row.
 export function epnDays(json: unknown, accountCurrency = "AUD"): DayAmount[] {
-  const rows: DayAmount[] = [];
-  for (const r of recordsOf(json)) {
+  const { earnings, other } = epnDailyParts(reportRecords(json), accountCurrency);
+  return mergeDays([...earnings, ...other]);
+}
+
+/** The daily report's two money columns kept apart: Earnings and OtherEarnings. */
+export function epnDailyParts(records: readonly Record<string, unknown>[], accountCurrency = "AUD"): { earnings: DayAmount[]; other: DayAmount[] } {
+  const earnings: DayAmount[] = [];
+  const other: DayAmount[] = [];
+  for (const r of records) {
     const day = reportDay(pick(r, "Date", "EventDate", "Day", "ReportDate", "TransactionDate"));
     if (!day) continue;
     const currency = String(pick(r, "Currency", "CurrencyCode", "EarningsCurrency") ?? accountCurrency).toUpperCase();
-    rows.push({ day, currency, cents: toCents(pick(r, "Earnings", "TotalEarnings", "Commission")) + toCents(pick(r, "OtherEarnings")) });
+    earnings.push({ day, currency, cents: toCents(pick(r, "Earnings", "TotalEarnings", "Commission")) });
+    other.push({ day, currency, cents: toCents(pick(r, "OtherEarnings")) });
   }
-  return mergeDays(rows);
+  return { earnings: mergeDays(earnings), other: mergeDays(other) };
+}
+
+/** Exact-duplicate report rows (same values in every column) counted once: a row
+ *  that comes back twice, from an overlapping window or a repeated page, is the
+ *  same row, never a second day of earnings. */
+export function uniqueRecords(records: readonly Record<string, unknown>[]): Record<string, unknown>[] {
+  const seen = new Set<string>();
+  const out: Record<string, unknown>[] = [];
+  for (const r of records) {
+    const k = JSON.stringify(Object.keys(r).sort().map((key) => [key, r[key]]));
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(r);
+  }
+  return out;
 }
 
 // ── eBay Transaction Detail report: one sale, many records ──────────────────

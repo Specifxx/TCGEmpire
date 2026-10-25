@@ -9,6 +9,7 @@ import {
   SOURCE_LABELS,
   dayIn,
   isRangeKey,
+  rangeStart,
   seriesFor,
   tagBreakdown,
   totalFor,
@@ -83,6 +84,15 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
   const ebay = sources.find((s) => s.key === "ebay");
   const ebayTags = ebay?.tags ? tagBreakdown(ebay.tags, range, today, display) : [];
   const ebayTagTotal = ebayTags.reduce((n, g) => n + g.cents, 0);
+  // Checking a total against the network's own dashboard (2026-10-25): the exact
+  // days this range covers, and each source's pieces in the network's currency.
+  const spanFrom = rangeStart(range, today) ?? EARNINGS_SINCE;
+  const nativeText = (native: Record<string, number>) =>
+    Object.entries(native)
+      .filter(([, c]) => c)
+      .map(([cur, c]) => formatMoney(c, cur))
+      .join(" + ") || formatMoney(0, display);
+  const checked = sources.filter((s) => s.checks?.length);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -240,6 +250,33 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
           ) : (
             <p className="mt-2 text-sm text-slate-500">No eBay sales in this range.</p>
           )}
+        </section>
+      )}
+      {/* Each network's pieces, to match against its own dashboard */}
+      {checked.length > 0 && (
+        <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-earnings-checks>
+          <h2 className="text-sm font-extrabold text-white">Check against each network&apos;s dashboard</h2>
+          <p className="mt-1 text-xs text-slate-400">
+            {RANGES.find((r) => r.key === range)!.label} = {spanFrom} to {today} (Sydney days; eBay and AdSense dates are in their own time zone). Set the same dates on the network&apos;s dashboard. Amounts are in the network&apos;s own currency, unconverted.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {checked.map((s) => (
+              <div key={s.key} className="rounded-xl border border-ink-700 p-3 text-sm">
+                <div className="flex justify-between gap-2 font-semibold text-white">
+                  <span>{SOURCE_LABELS[s.key]}</span>
+                  <span className="num">{nativeText(totalFor(s.days, range, today, display).native)}</span>
+                </div>
+                <ul className="mt-2 space-y-1 text-xs">
+                  {s.checks!.map((c) => (
+                    <li key={c.label} className="flex justify-between gap-2">
+                      <span className={c.counted ? "text-slate-300" : "text-slate-500"}>{c.label}</span>
+                      <span className={`num ${c.counted ? "text-slate-200" : "text-slate-500"}`}>{nativeText(totalFor(c.days, range, today, display).native)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </section>
       )}
       {/* Costs × every range, then profit */}
