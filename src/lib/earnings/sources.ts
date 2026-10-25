@@ -4,6 +4,7 @@ import {
   adsenseDays,
   dayIn,
   epnDays,
+  reportShape,
   impactDays,
   mergeDays,
   stripeDays,
@@ -23,7 +24,7 @@ import {
 //
 // NONE OF THIS READS NEON except Mediavine's manual entries (one small table).
 // The external APIs are each bounded: Stripe pages of 100 balance transactions
-// since EARNINGS_SINCE (capped), Impact in 30-day windows, EPN in 90-day windows,
+// since EARNINGS_SINCE (capped), Impact in 30-day windows, EPN in 31-day windows (paged),
 // AdSense in one request.
 
 const TTL_MS = 30 * 60_000;
@@ -83,17 +84,60 @@ const fetchImpact: Fetcher = async () => {
 // (2026-10-25, the dashboard showed the API's error); EPN_DAILY_REPORT overrides
 // it without a code change if eBay renames it again.
 export const EPN_DAILY_REPORT = /^[a-z0-9_]+$/.test(process.env.EPN_DAILY_REPORT ?? "") ? process.env.EPN_DAILY_REPORT! : "ebay_partner_perf_by_day_v2";
+// The request follows eBay's own guide ("Partner Reporting via the New API
+// Endpoints"): CAMPAIGN_ID=0 and CHECKOUT_SITE=0 ask for every campaign and site.
+// Without them the report answered 200 with no rows (2026-10-25: "Connected" and
+// $0 for hours after the keys went in). If the daily report still has nothing,
+// the Transaction Detail report (one row per sale, EventDate + Earnings) is read
+// instead, and a response whose columns don't parse says so rather than showing $0.
+const EPN_TDR_REPORTS = ["ebay_partner_transaction_detail", "ebay_partner_transaction_detail_v2"];
+
+async function epnReport(sid: string, headers: Record<string, string>, report: string, params: string): Promise<{ days: DayAmount[]; rows: number; columns: string[] }> {
+  const days: DayAmount[] = [];
+  let rows = 0;
+  let columns: string[] = [];
+  for (const [from, to] of windows(EARNINGS_SINCE, dayIn(Date.now()), 31)) {
+    let url: string | null = `https://api.partner.ebay.com/Mediapartners/${encodeURIComponent(sid)}/Reports/${report}.json?${params}&START_DATE=${from}&END_DATE=${to}`;
+    for (let page = 0; url && page < 20; page++) {
+      const json = (await getJson(url, { headers })) as { "@nextpageuri"?: string } | null;
+      const shape = reportShape(json);
+      rows += shape.rows;
+      if (!columns.length) columns = shape.columns;
+      days.push(...epnDays(json));
+      const next: string | undefined = json?.["@nextpageuri"];
+      url = next ? `https://api.partner.ebay.com${next}` : null;
+    }
+  }
+  return { days: mergeDays(days), rows, columns };
+}
+
 const fetchEpn: Fetcher = async () => {
   const sid = process.env.EPN_ACCOUNT_SID;
   const token = process.env.EPN_AUTH_TOKEN;
   if (!sid || !token) return notConfigured("Set EPN_ACCOUNT_SID and EPN_AUTH_TOKEN (eBay Partner Network → cloud icon → API).");
   const headers = { Authorization: basic(sid, token), Accept: "application/json" };
-  const days: DayAmount[] = [];
-  for (const [from, to] of windows(EARNINGS_SINCE, dayIn(Date.now()), 90)) {
-    const url = `https://api.partner.ebay.com/Mediapartners/${encodeURIComponent(sid)}/Reports/${EPN_DAILY_REPORT}.json?START_DATE=${from}&END_DATE=${to}`;
-    days.push(...epnDays(await getJson(url, { headers })));
+  const daily = await epnReport(sid, headers, EPN_DAILY_REPORT, "CAMPAIGN_ID=0&CHECKOUT_SITE=0");
+  if (daily.days.length) return { status: "ok", days: daily.days, detail: "Transactions can take up to 48 hours to appear." };
+  let tdr: Awaited<ReturnType<typeof epnReport>> | null = null;
+  let tdrError = "";
+  for (const report of EPN_TDR_REPORTS) {
+    try {
+      tdr = await epnReport(sid, headers, report, "STATUS=APPROVED&STATUS=PENDING&CHECKOUT_SITE=0&CAMPAIGN_ID=0");
+      break;
+    } catch (e) {
+      tdrError = e instanceof Error ? scrubSecrets(e.message).slice(0, 120) : "failed";
+    }
   }
-  return { status: "ok", days: mergeDays(days), detail: "Transactions can take up to 48 hours to appear." };
+  if (tdr?.days.length) return { status: "ok", days: tdr.days, detail: "From eBay's transaction report. Transactions can take up to 48 hours to appear." };
+  const unread = [daily, tdr].find((r) => r && r.rows > 0);
+  if (unread) {
+    return { status: "error", days: [], detail: `eBay sent ${unread.rows} rows but no date/earnings column was readable. Columns: ${unread.columns.join(", ").slice(0, 200)}` };
+  }
+  return {
+    status: "ok",
+    days: [],
+    detail: `Connected, but eBay reports no earnings since ${EARNINGS_SINCE} (daily report and transaction report both empty${tdrError ? `; transaction report: ${tdrError}` : ""}). New sales take up to 48 hours to appear.`,
+  };
 };
 
 // ── Google AdSense ───────────────────────────────────────────────────────────

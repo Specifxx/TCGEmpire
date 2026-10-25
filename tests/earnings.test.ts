@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   addDays,
   adsenseDays,
@@ -204,4 +205,24 @@ test("costs: the pre-filled entry is what the owner said, seeded once, and the r
   assert.match(route, /data: \{ removedAt: new Date\(\) \}/, "delete keeps the row");
   const pub = readFileSync(new URL("../src/lib/public-data/models.ts", import.meta.url), "utf8");
   assert.doesNotMatch(pub, /manualCost|ManualCost/);
+});
+
+test("eBay: report dates parse in ISO, US and written-out forms; the shape names columns, never values", async () => {
+  const { reportDay, reportShape } = await import("../src/lib/earnings/core");
+  assert.equal(reportDay("2026-10-24T00:00:00-07:00"), "2026-10-24");
+  assert.equal(reportDay("10/24/2026"), "2026-10-24");
+  assert.equal(reportDay("Oct 24, 2026"), "2026-10-24");
+  assert.equal(reportDay("October 4 2026"), "2026-10-04");
+  assert.equal(reportDay("13/40/2026"), null);
+  assert.equal(reportDay("soon"), null);
+  const days = epnDays({ Records: [{ Date: "10/24/2026", CheckoutSite: "AU", Earnings: "$1.50" }, { EventDate: "Oct 24, 2026", CheckoutSite: "AU", Earnings: "0.50" }] });
+  assert.deepEqual(days, [{ day: "2026-10-24", currency: "AUD", cents: 200, pendingCents: 0 }]);
+  assert.deepEqual(reportShape({ Records: [{ Date: "x", Earnings: "9" }] }), { rows: 1, columns: ["Date", "Earnings"] });
+  assert.deepEqual(reportShape({ Records: [] }), { rows: 0, columns: [] });
+});
+
+test("eBay: the daily report is asked for every campaign and checkout site, as eBay's guide does", () => {
+  const src = readFileSync(join(process.cwd(), "src/lib/earnings/sources.ts"), "utf8");
+  assert.match(src, /EPN_DAILY_REPORT, "CAMPAIGN_ID=0&CHECKOUT_SITE=0"/);
+  assert.match(src, /ebay_partner_transaction_detail/);
 });
