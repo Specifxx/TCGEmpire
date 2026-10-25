@@ -42,6 +42,6 @@ jobs:
       - run: npx prisma generate
       - name: Match promo printings to their TCGplayer photos
         env:
-          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
-          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
         run: npx tsx scripts/promo-art.ts ${{ (github.event_name == 'schedule' || inputs.apply) && '--apply' || '' }}

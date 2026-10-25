@@ -139,8 +139,8 @@ test("the admin pages are admin-only and degrade to 'nothing yet' instead of fai
 
 test("the monitor workflow runs on the live database, every few hours, and digests on Sundays", () => {
   const wf = read(".github/workflows/ops-monitor.yml");
-  assert.match(wf, /DATABASE_URL: \$\{\{ secrets\.RM9 \|\| vars\.RM9 \}\}/, "tests/db-chain.test.ts keeps this on the chain head");
-  assert.match(wf, /DB_SOURCE_NAME: \$\{\{ \(secrets\.RM9 \|\| vars\.RM9\) && 'RM9' \|\| 'UNSET' \}\}/);
+  assert.match(wf, /DATABASE_URL: \$\{\{ secrets\.RM10 \|\| vars\.RM10 \}\}/, "tests/db-chain.test.ts keeps this on the chain head");
+  assert.match(wf, /DB_SOURCE_NAME: \$\{\{ \(secrets\.RM10 \|\| vars\.RM10\) && 'RM10' \|\| 'UNSET' \}\}/);
   assert.match(wf, /cron: "17 \*\/3 \* \* \*"/);
   assert.match(wf, /cron: "0 21 \* \* 0"/);
   assert.match(wf, /OPS_DIGEST: \$\{\{ \(github\.event\.schedule == '0 21 \* \* 0' \|\| inputs\.digest\) && '1' \|\| '' \}\}/);
