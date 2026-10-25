@@ -29,3 +29,12 @@ test("a stored edit overrides content but never name, slug or code", () => {
   assert.equal(applyEdit(c, { ...row, links: "not json" }), c);
   assert.equal(applyEdit(c, { ...row, editedAt: null }), c);
 });
+
+test("an Email link is a clean mailto: with the address as its handle", () => {
+  assert.equal(cleanLinkUrl("Email", " Me@Example.com "), "mailto:me@example.com");
+  assert.equal(cleanLinkUrl("Email", "mailto:me@example.com?subject=hi"), "mailto:me@example.com");
+  assert.equal(cleanLinkUrl("Email", "javascript:alert(1)@x.com"), null);
+  assert.equal(cleanLinkUrl("Email", "not an email"), null);
+  const v = validateProfileEdit({ blurb: "Pack openings weekly", links: [{ platform: "Email", url: "me@example.com" }] });
+  assert.ok(v.ok && v.edit.links[0].url === "mailto:me@example.com" && v.edit.links[0].handle === "me@example.com");
+});
