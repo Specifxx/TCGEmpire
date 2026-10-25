@@ -4,7 +4,12 @@ import {
   adsenseDays,
   dayIn,
   epnDays,
+  epnTransactions,
+  latestPerSale,
   reportShape,
+  tagDays,
+  txnDays,
+  type EpnTxn,
   impactDays,
   mergeDays,
   stripeDays,
@@ -86,14 +91,19 @@ const fetchImpact: Fetcher = async () => {
 export const EPN_DAILY_REPORT = /^[a-z0-9_]+$/.test(process.env.EPN_DAILY_REPORT ?? "") ? process.env.EPN_DAILY_REPORT! : "ebay_partner_perf_by_day_v2";
 // The request follows eBay's own guide ("Partner Reporting via the New API
 // Endpoints"): CAMPAIGN_ID=0 and CHECKOUT_SITE=0 ask for every campaign and site.
-// Without them the report answered 200 with no rows (2026-10-25: "Connected" and
-// $0 for hours after the keys went in). If the daily report still has nothing,
-// the Transaction Detail report (one row per sale, EventDate + Earnings) is read
-// instead, and a response whose columns don't parse says so rather than showing $0.
+// Two reports are read side by side (2026-10-25):
+//   • Performance by Day — eBay's own daily sums, the headline figure;
+//   • Transaction Detail — one row per sale RECORD, folded to the latest record
+//     per sale (lib/earnings/core.ts latestPerSale), which carries the customid
+//     the tag breakdown needs. If the daily report is empty its sums stand in.
+// Every amount is in the EPN account's currency (EPN_CURRENCY, AUD unless set):
+// eBay reports all earnings in the currency chosen at sign-up.
+export const EPN_CURRENCY = /^[A-Z]{3}$/.test((process.env.EPN_CURRENCY ?? "").trim().toUpperCase())
+  ? (process.env.EPN_CURRENCY ?? "").trim().toUpperCase()
+  : "AUD";
 const EPN_TDR_REPORTS = ["ebay_partner_transaction_detail", "ebay_partner_transaction_detail_v2"];
 
-async function epnReport(sid: string, headers: Record<string, string>, report: string, params: string): Promise<{ days: DayAmount[]; rows: number; columns: string[] }> {
-  const days: DayAmount[] = [];
+async function epnPages(sid: string, headers: Record<string, string>, report: string, params: string, onPage: (json: unknown) => void): Promise<{ rows: number; columns: string[] }> {
   let rows = 0;
   let columns: string[] = [];
   for (const [from, to] of windows(EARNINGS_SINCE, dayIn(Date.now()), 31)) {
@@ -103,41 +113,61 @@ async function epnReport(sid: string, headers: Record<string, string>, report: s
       const shape = reportShape(json);
       rows += shape.rows;
       if (!columns.length) columns = shape.columns;
-      days.push(...epnDays(json));
+      onPage(json);
       const next: string | undefined = json?.["@nextpageuri"];
       url = next ? `https://api.partner.ebay.com${next}` : null;
     }
   }
-  return { days: mergeDays(days), rows, columns };
+  return { rows, columns };
 }
+
+const money2 = (cents: number) => (cents / 100).toFixed(2);
+const sumCents = (days: readonly DayAmount[]) => days.reduce((n, d) => n + d.cents, 0);
 
 const fetchEpn: Fetcher = async () => {
   const sid = process.env.EPN_ACCOUNT_SID;
   const token = process.env.EPN_AUTH_TOKEN;
   if (!sid || !token) return notConfigured("Set EPN_ACCOUNT_SID and EPN_AUTH_TOKEN (eBay Partner Network → cloud icon → API).");
   const headers = { Authorization: basic(sid, token), Accept: "application/json" };
-  const daily = await epnReport(sid, headers, EPN_DAILY_REPORT, "CAMPAIGN_ID=0&CHECKOUT_SITE=0");
-  if (daily.days.length) return { status: "ok", days: daily.days, detail: "Transactions can take up to 48 hours to appear." };
-  let tdr: Awaited<ReturnType<typeof epnReport>> | null = null;
-  let tdrError = "";
-  for (const report of EPN_TDR_REPORTS) {
-    try {
-      tdr = await epnReport(sid, headers, report, "STATUS=APPROVED&STATUS=PENDING&CHECKOUT_SITE=0&CAMPAIGN_ID=0");
-      break;
-    } catch (e) {
-      tdrError = e instanceof Error ? scrubSecrets(e.message).slice(0, 120) : "failed";
+
+  const dailyRun = (async () => {
+    const days: DayAmount[] = [];
+    const shape = await epnPages(sid, headers, EPN_DAILY_REPORT, "CAMPAIGN_ID=0&CHECKOUT_SITE=0", (j) => days.push(...epnDays(j, EPN_CURRENCY)));
+    return { days: mergeDays(days), ...shape };
+  })();
+  const tdrRun = (async () => {
+    let lastError: unknown = null;
+    for (const report of EPN_TDR_REPORTS) {
+      try {
+        const records: EpnTxn[] = [];
+        const shape = await epnPages(sid, headers, report, "STATUS=APPROVED&STATUS=PENDING&CHECKOUT_SITE=0&CAMPAIGN_ID=0", (j) => records.push(...epnTransactions(j, EPN_CURRENCY)));
+        return { sales: latestPerSale(records), records: records.length, ...shape };
+      } catch (e) {
+        lastError = e;
+      }
     }
+    throw lastError;
+  })();
+  const [daily, tdr] = await Promise.allSettled([dailyRun, tdrRun]);
+  if (daily.status === "rejected" && tdr.status === "rejected") throw daily.reason;
+  const d = daily.status === "fulfilled" ? daily.value : null;
+  const t = tdr.status === "fulfilled" ? tdr.value : null;
+  const tdrDays = t ? txnDays(t.sales) : [];
+  const days = d?.days.length ? d.days : tdrDays;
+  const tags = t?.sales.length ? tagDays(t.sales) : undefined;
+
+  if (!days.length) {
+    const unread = [d, t].find((r) => r && r.rows > 0);
+    if (unread) return { status: "error", days: [], detail: `eBay sent ${unread.rows} rows but no date/earnings column was readable. Columns: ${unread.columns.join(", ").slice(0, 200)}` };
+    return { status: "ok", days: [], detail: `Connected, but eBay reports no earnings since ${EARNINGS_SINCE}. New sales take up to 48 hours to appear.` };
   }
-  if (tdr?.days.length) return { status: "ok", days: tdr.days, detail: "From eBay's transaction report. Transactions can take up to 48 hours to appear." };
-  const unread = [daily, tdr].find((r) => r && r.rows > 0);
-  if (unread) {
-    return { status: "error", days: [], detail: `eBay sent ${unread.rows} rows but no date/earnings column was readable. Columns: ${unread.columns.join(", ").slice(0, 200)}` };
-  }
-  return {
-    status: "ok",
-    days: [],
-    detail: `Connected, but eBay reports no earnings since ${EARNINGS_SINCE} (daily report and transaction report both empty${tdrError ? `; transaction report: ${tdrError}` : ""}). New sales take up to 48 hours to appear.`,
-  };
+  // Both totals side by side, so a mismatch with eBay's own dashboard is visible.
+  const parts = [`Amounts in ${EPN_CURRENCY}, your EPN account currency (set EPN_CURRENCY if yours differs).`];
+  if (d?.days.length) parts.push(`Daily report all-time ${EPN_CURRENCY} ${money2(sumCents(d.days))}.`);
+  if (t) parts.push(`Transaction report ${EPN_CURRENCY} ${money2(sumCents(tdrDays))} from ${t.sales.length} sales (${t.records} records).`);
+  else if (tdr.status === "rejected") parts.push(`Transaction report unavailable (${tdr.reason instanceof Error ? scrubSecrets(tdr.reason.message).slice(0, 80) : "failed"}), so no tag breakdown.`);
+  parts.push("New sales take up to 48 hours to appear.");
+  return { status: "ok", days, tags, detail: parts.join(" ") };
 };
 
 // ── Google AdSense ───────────────────────────────────────────────────────────

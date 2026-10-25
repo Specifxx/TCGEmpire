@@ -10,6 +10,7 @@ import {
   dayIn,
   isRangeKey,
   seriesFor,
+  tagBreakdown,
   totalFor,
   type EarningsSourceKey,
   type RangeKey,
@@ -78,6 +79,10 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
     .findMany({ orderBy: { day: "desc" }, take: 50, select: { id: true, source: true, day: true, amountCents: true, currency: true, note: true } })
     .catch(() => []);
   const oldest = Math.min(...sources.map((s) => s.fetchedAt));
+  // eBay by tracking tag (2026-10-25, owner): one EPN account, every site's links.
+  const ebay = sources.find((s) => s.key === "ebay");
+  const ebayTags = ebay?.tags ? tagBreakdown(ebay.tags, range, today, display) : [];
+  const ebayTagTotal = ebayTags.reduce((n, g) => n + g.cents, 0);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -194,6 +199,49 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
           </tbody>
         </table>
       </div>
+      {/* eBay by tracking tag: site prefix, then each full tag */}
+      {ebay?.tags && (
+        <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-ebay-tags>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-extrabold text-white">eBay by tag · {RANGES.find((r) => r.key === range)!.label}</h2>
+            <span className="text-xs text-slate-400">From eBay&apos;s transaction report, one row per sale. Open a site to see each tag.</span>
+          </div>
+          {ebayTags.length ? (
+            <div className="mt-3 divide-y divide-ink-800 rounded-xl border border-ink-700 text-sm">
+              {ebayTags.map((g) => (
+                <details key={g.key || "none"} className="group">
+                  <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 hover:bg-ink-800/40 [&::-webkit-details-marker]:hidden">
+                    <span aria-hidden className="text-slate-500 transition-transform group-open:rotate-90">›</span>
+                    <span className="flex-1">
+                      <span className="font-semibold text-white">{g.label}</span>
+                      <span className="ml-2 font-mono text-[11px] text-slate-500">{g.key ? `${g.key}…` : "(none)"}</span>
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {g.sales} {g.sales === 1 ? "sale" : "sales"}
+                    </span>
+                    <span className="w-12 text-right text-xs text-slate-400">{ebayTagTotal ? Math.round((g.cents / ebayTagTotal) * 100) : 0}%</span>
+                    <span className="num w-28 text-right font-bold text-white">{money(g.cents)}</span>
+                  </summary>
+                  <ul className="border-t border-ink-800 bg-ink-900/60 px-3 py-2">
+                    {g.tags.map((t) => (
+                      <li key={t.tag || "none"} className="flex items-center gap-3 py-1 pl-6 text-xs">
+                        <span className="flex-1 font-mono text-slate-300">{t.tag || "(no tag)"}</span>
+                        <span className="text-slate-500">{t.sales}</span>
+                        <span className="num w-28 text-right text-slate-200">
+                          {money(t.cents)}
+                          {t.pendingCents > 0 ? <span className="ml-1 text-slate-500">({money(t.pendingCents)} pending)</span> : null}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-slate-500">No eBay sales in this range.</p>
+          )}
+        </section>
+      )}
       {/* Costs × every range, then profit */}
       <div className="card-surface mt-4 overflow-x-auto rounded-2xl border border-ink-700">
         <table className="w-full min-w-[640px] text-sm">
