@@ -79,6 +79,10 @@ const fetchImpact: Fetcher = async () => {
 };
 
 // ── eBay Partner Network ─────────────────────────────────────────────────────
+// The daily report's id. eBay retired "ebay_partner_perf_by_day" for "_v2"
+// (2026-10-25, the dashboard showed the API's error); EPN_DAILY_REPORT overrides
+// it without a code change if eBay renames it again.
+export const EPN_DAILY_REPORT = /^[a-z0-9_]+$/.test(process.env.EPN_DAILY_REPORT ?? "") ? process.env.EPN_DAILY_REPORT! : "ebay_partner_perf_by_day_v2";
 const fetchEpn: Fetcher = async () => {
   const sid = process.env.EPN_ACCOUNT_SID;
   const token = process.env.EPN_AUTH_TOKEN;
@@ -86,7 +90,7 @@ const fetchEpn: Fetcher = async () => {
   const headers = { Authorization: basic(sid, token), Accept: "application/json" };
   const days: DayAmount[] = [];
   for (const [from, to] of windows(EARNINGS_SINCE, dayIn(Date.now()), 90)) {
-    const url = `https://api.partner.ebay.com/Mediapartners/${encodeURIComponent(sid)}/Reports/ebay_partner_perf_by_day.json?START_DATE=${from}&END_DATE=${to}`;
+    const url = `https://api.partner.ebay.com/Mediapartners/${encodeURIComponent(sid)}/Reports/${EPN_DAILY_REPORT}.json?START_DATE=${from}&END_DATE=${to}`;
     days.push(...epnDays(await getJson(url, { headers })));
   }
   return { status: "ok", days: mergeDays(days), detail: "Transactions can take up to 48 hours to appear." };
