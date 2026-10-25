@@ -16,10 +16,11 @@ import { EARNINGS_SINCE, scrubSecrets } from "./sources";
 //     one). Vercel has no billing API for a team's own plan, so Vercel Pro is an
 //     entry too.
 //
-// Two entries are pre-filled once (SEEDS), from what the owner said: Vercel Pro
-// since the repository's first commit (2026-06-05, as far back as its history
-// goes) and the ~US$200 of Reddit/Meta ads as one entry. A removed entry keeps
-// its row (removedAt), so a seed is never re-added after the owner deletes it.
+// One entry is pre-filled once (SEEDS): the ~US$200 of Reddit/Meta ads the owner
+// mentioned. Vercel and Anthropic are entered from their real invoices, month by
+// month (the owner fills them with a Claude in Chrome prompt; docs/
+// earnings-dashboard-setup.md), so no estimate is seeded for them. A removed
+// entry keeps its row (removedAt), so a seed is never re-added once deleted.
 
 export interface CostLine {
   key: string; // "anthropic-api" or "entry:<id>"
@@ -32,16 +33,6 @@ export interface CostLine {
 }
 
 const SEEDS: { seedKey: string; label: string; category: string; amountCents: number; currency: string; startDay: string; recurrence: CostRecurrence; note: string }[] = [
-  {
-    seedKey: "vercel-pro",
-    label: "Vercel Pro",
-    category: "Hosting",
-    amountCents: 2000,
-    currency: "USD",
-    startDay: "2026-06-05",
-    recurrence: "monthly",
-    note: "US$20/month per seat, from the site's first commit. Edit if your Vercel invoices differ (extra seats or usage).",
-  },
   {
     seedKey: "ads-reddit-meta-2026",
     label: "Reddit + Meta ads",

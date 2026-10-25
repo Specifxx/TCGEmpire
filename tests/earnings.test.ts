@@ -193,9 +193,9 @@ test("costs: Anthropic's cost report (USD cents as decimal strings) by day", asy
   assert.deepEqual(anthropicCostDays(null), []);
 });
 
-test("costs: the pre-filled entries are what the owner said, seeded once, and the routes are admin-only", () => {
+test("costs: the pre-filled entry is what the owner said, seeded once, and the routes are admin-only", () => {
   const costs = readFileSync(new URL("../src/lib/earnings/costs.ts", import.meta.url), "utf8");
-  assert.match(costs, /seedKey: "vercel-pro",[\s\S]*?amountCents: 2000,[\s\S]*?startDay: "2026-06-05",[\s\S]*?recurrence: "monthly"/);
+  assert.doesNotMatch(costs, /seedKey: "vercel-pro"/, "Vercel comes from its invoices, not an estimate");
   assert.match(costs, /seedKey: "ads-reddit-meta-2026",[\s\S]*?amountCents: 20000,[\s\S]*?recurrence: "once"/);
   assert.match(costs, /createMany\(\{ data: SEEDS, skipDuplicates: true \}\)/, "seeded once: a removed seed keeps its row and its seedKey");
   assert.match(costs, /where: \{ removedAt: null \}/);

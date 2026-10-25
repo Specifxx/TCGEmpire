@@ -19475,10 +19475,11 @@ as my vercel history allows".
     entry. Past months keep the old price.
   - **"Remove"** sets `removedAt` instead of deleting the row.
 - **Pre-filled once** (keyed by `seedKey`, so a removed seed is never re-added):
-  - Vercel Pro, US$20/month from 2026-06-05. That is the repository's first
-    commit, the furthest back the site's history goes.
-  - Reddit + Meta ads, US$200, as one entry dated 2026-10-15.
-  - The Claude plan's price is not known, so it is not pre-filled; the owner
-    adds it on the page.
+  only the Reddit + Meta ads, US$200, as one entry dated 2026-10-15. The owner
+  then asked for the real Vercel and Anthropic spend instead of an estimate
+  ("the total spend on Vercel and the total spend on Anthropic is all used on
+  RiftCompare"), month by month, entered by a Claude in Chrome prompt from the
+  invoices (`docs/earnings-dashboard-setup.md`, Part 5). So no Vercel or Claude
+  plan estimate is seeded: each invoice is a one-off entry on its date.
 - **Ops:** the Anthropic cost source joins the earnings sources in the
   ops-monitor report.

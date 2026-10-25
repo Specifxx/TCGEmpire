@@ -155,8 +155,8 @@ longer lands on its entry.
   Costs sit under it with a profit row: Anthropic API usage automatic (Admin
   API cost report); Vercel Pro, any Claude plan and ads are entries (once /
   monthly / yearly, stop-and-replace on a plan change; no billing API exists for
-  them). Vercel Pro US$20/mo since 2026-06-05 and US$200 of ads are pre-filled
-  once. [2026-10-25](../DECISIONS.md#L19446)
+  them). Vercel and Anthropic are entered from their invoices month by month;
+  only the US$200 of ads is pre-filled. [2026-10-25](../DECISIONS.md#L19446)
 - **The Stores plan (2026-10-23, owner):** US$79.99/month (`STRIPE_STORE_PRICE_ID`,
   displayed amount `NEXT_PUBLIC_STORE_PLAN_AMOUNT`) for a retailer: the repricing
   report with "what buyers are searching for", a Verified mark with the store's own
