@@ -245,11 +245,35 @@ const pick = (r: Record<string, unknown>, ...names: string[]) => {
   return undefined;
 };
 
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const ymd = (y: number, m: number, d: number) =>
+  m >= 1 && m <= 12 && d >= 1 && d <= 31 ? `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}` : null;
+
+/** A report's date cell as YYYY-MM-DD: ISO ("2026-10-24", "2026-10-24T…"), US
+ *  ("10/24/2026", EPN's own CSV style) or written out ("Oct 24, 2026"). */
+export function reportDay(v: unknown): string | null {
+  const s = String(v ?? "").trim();
+  let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (m) return ymd(+m[1], +m[2], +m[3]);
+  m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s);
+  if (m) return ymd(+m[3], +m[1], +m[2]);
+  m = /^([a-z]{3})[a-z]*\.? (\d{1,2}),? (\d{4})/i.exec(s);
+  if (m && MONTHS.includes(m[1].toLowerCase())) return ymd(+m[3], MONTHS.indexOf(m[1].toLowerCase()) + 1, +m[2]);
+  return null;
+}
+
+/** How many rows a report response holds and their column names (never values),
+ *  so an unreadable eBay report can say what it got instead of showing $0. */
+export function reportShape(json: unknown): { rows: number; columns: string[] } {
+  const recs = recordsOf(json);
+  return { rows: recs.length, columns: recs.length ? Object.keys(recs[0]).slice(0, 20) : [] };
+}
+
 export function epnDays(json: unknown): DayAmount[] {
   const rows: DayAmount[] = [];
   for (const r of recordsOf(json)) {
-    const day = String(pick(r, "Date", "EventDate", "Day", "ReportDate") ?? "").slice(0, 10);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
+    const day = reportDay(pick(r, "Date", "EventDate", "Day", "ReportDate", "TransactionDate"));
+    if (!day) continue;
     const site = String(pick(r, "CheckoutSite", "Site", "Program", "Marketplace") ?? "US").toUpperCase();
     const currency = String(pick(r, "Currency", "CurrencyCode", "EarningsCurrency") ?? EPN_SITE_CURRENCY[site] ?? "USD").toUpperCase();
     rows.push({ day, currency, cents: toCents(pick(r, "Earnings", "TotalEarnings", "Commission")) + toCents(pick(r, "OtherEarnings")) });
