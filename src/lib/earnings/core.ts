@@ -351,21 +351,26 @@ export function tagDays(txns: readonly EpnTxn[]): TagDay[] {
   return [...m.values()].sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : a.tag.localeCompare(b.tag)));
 }
 
-/** Known tag prefixes, longest first so "pkmn" wins over a shorter match. */
-export const TAG_GROUPS: { prefix: string; label: string }[] = [
-  { prefix: "pkmn", label: "Pokémon (on RiftCompare)" },
-  { prefix: "dex", label: "Pokémon (DexCompare)" },
-  { prefix: "rc", label: "RiftCompare (Riftbound)" },
-  { prefix: "op", label: "One Piece" },
-];
+// GROUPED BY PREFIX, NOT BY A LIST (2026-10-25, owner: "as I add more sites …
+// MTG … Gundam … Lorcana … just take the first couple of letters and use that
+// as a split"). Every site starts its tags with its own short prefix and a
+// separator (`rc-au-ebay`, `op-…`, `dex-…`), so the group is the letters before
+// the first separator, and a new site's tags appear as their own group with no
+// code change. A tag with no separator groups by its first three characters.
+// TAG_NAMES only adds a friendly name next to a prefix; it never decides a group.
+export const TAG_NAMES: Record<string, string> = {
+  rc: "RiftCompare (Riftbound)",
+  pkmn: "Pokémon on RiftCompare",
+  dex: "DexCompare (Pokémon)",
+  op: "One Piece",
+};
 
 export function tagGroup(tag: string): { key: string; label: string } {
   const t = tag.trim().toLowerCase();
   if (!t) return { key: "", label: "No tag" };
-  const known = TAG_GROUPS.find((g) => t === g.prefix || t.startsWith(g.prefix));
-  if (known) return { key: known.prefix, label: known.label };
-  const seg = /^[a-z0-9]+/.exec(t)?.[0] ?? t;
-  return { key: seg, label: seg.toUpperCase() };
+  const m = /^([a-z0-9]+)[-_.\s/:|]/.exec(t);
+  const key = m ? m[1] : t.slice(0, 3);
+  return { key, label: TAG_NAMES[key] ?? key.toUpperCase() };
 }
 
 export interface TagGroupTotal {
