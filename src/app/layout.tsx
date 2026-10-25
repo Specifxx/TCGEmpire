@@ -48,14 +48,6 @@ import NextTopLoader from "nextjs-toploader";
 const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").then((m) => m.PriceAlertModal), {
   ssr: false,
 });
-// The Akali slider (2026-10-17): one corner Premium card for every visitor who
-// is not Premium, signed in or out, a few seconds after the page settles
-// (components/PremiumSlideIn.tsx). ssr:false: it renders nothing on the server,
-// so there is nothing for a crawler to see. It replaced the signed-out sign-up
-// card (SignupSlideIn), so there is one corner card, not two.
-const PremiumSlideIn = dynamic(() => import("@/components/PremiumSlideIn").then((m) => m.PremiumSlideIn), {
-  ssr: false,
-});
 // Retention nudge: offer monthly Premium subscribers a one-click switch to annual.
 // ssr:false and self-gated to premium/monthly users — renders nothing for everyone
 // else.
@@ -413,10 +405,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </main>
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
-                {/* The Akali slider: everyone who is not Premium. */}
-                <PremiumSlideIn />
-                {/* Its mirror image: monthly-Premium → annual retention nudge.
-                    Mutually exclusive with PremiumSlideIn by `premium` state. */}
+                {/* The corner Premium slider (PremiumSlideIn) went on 2026-10-25
+                    (owner: "get rid of the slider … it's not working"); the
+                    header's Pricing link carries a short callout instead
+                    (PricingNudge). Monthly-Premium → annual retention nudge: */}
                 <AnnualSwitchNudge />
 
                 {/* Converts the OAuth callback's one-time ?welcome= param into

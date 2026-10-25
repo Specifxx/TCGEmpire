@@ -129,6 +129,7 @@ export function Navbar() {
               toggle drawn through it. */}
           <GetPremiumLink
             surface="nav:navbar"
+            nudge
             compact
             className="hidden min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold min-[400px]:inline-flex sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
           />
@@ -282,6 +283,7 @@ export function Navbar() {
           </Link>
           <GetPremiumLink
             surface="nav:navbar"
+            nudge
             className="hidden shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-semibold lg:inline-flex xl:px-2.5 xl:text-sm xl:font-bold [@media(pointer:coarse)]:py-2.5"
           />
 

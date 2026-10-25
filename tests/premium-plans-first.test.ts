@@ -20,18 +20,15 @@ const ticks = readFileSync(join(ROOT, "src/components/PremiumTicks.tsx"), "utf8"
 const cta = readFileSync(join(ROOT, "src/components/PremiumCta.tsx"), "utf8");
 const jsx = page.slice(page.indexOf("export default async function PremiumPage"));
 
-test("the hero and its button, the live proof, then the plan cards with the ticks under them, then the FAQ", () => {
+test("the headline, then the plan table with the ticks under it, and nothing after (2026-10-25)", () => {
   const h1 = jsx.indexOf("<h1");
-  const heroCta = jsx.indexOf("<PremiumCta");
-  const deals = jsx.indexOf("<PremiumDealsTeaser");
-  const demo = jsx.indexOf("<PremiumSavingsDemo");
-  const pricing = jsx.indexOf("<PremiumPricingCards");
-  const faq = jsx.indexOf("<PremiumFaqList items={FAQ}");
-  assert.ok(h1 > 0 && heroCta > h1 && deals > heroCta && demo > deals && pricing > demo && faq > pricing, "hero + button, proof, cards, FAQ");
-  assert.ok(cards.indexOf("<PremiumTicks") > cards.indexOf("<PaidTierCard"), "the ticks table sits under the cards");
+  const pricing = jsx.indexOf("<PremiumPlanTable");
+  assert.ok(h1 > 0 && pricing > h1, "headline, then the plans");
+  const t = readFileSync(join(ROOT, "src/components/premium/PremiumPlanTable.tsx"), "utf8");
+  assert.ok(t.indexOf("<PremiumTicks") > t.indexOf("<PlanCard"), "the ticks table sits under the cards");
   // The things that said the same thing again are gone.
-  assert.doesNotMatch(page, /WHAT_YOU_GET|id="what-you-get"|PremiumMissingGrid|PremiumProofLine|TierComparisonTable/);
-  assert.doesNotMatch(cards, /PLUS_FEATURES|PREMIUM_FEATURES_ON_PLUS|PREMIUM_FEATURES_STANDALONE|features\.map/, "no feature bullets on the cards");
+  assert.doesNotMatch(page, /WHAT_YOU_GET|id="what-you-get"|PremiumMissingGrid|PremiumProofLine|TierComparisonTable|PremiumDealsTeaser|PremiumSavingsDemo|PremiumFaqList/);
+  assert.doesNotMatch(cards, /PLUS_FEATURES|PREMIUM_FEATURES_ON_PLUS|PREMIUM_FEATURES_STANDALONE|features\.map/, "no feature bullets on the Plus-era cards");
 });
 
 test("the cards are two across at every width, with a compact button, and no Free card", () => {
@@ -57,48 +54,12 @@ test("the table shows each plan's real limits, built for a phone", () => {
   assert.match(jsx, /already && currentTier === "plus" && \(/);
 });
 
-test("a short FAQ, one accordion built from the same array as the JSON-LD", () => {
-  assert.match(jsx, /faqPage\(FAQ\)/);
-  assert.match(jsx, /<PremiumFaqList items=\{FAQ\} \/>/);
-  // Since 2026-10-23 the trial and cancel answers come first (what a buyer checks
-  // before a card goes in), then the honest "only a few cards?" answer. The
-  // free-Premium, trial, half-price and price-rise entries exist only while their
-  // switch (or reward) is on.
-  const faq = page.slice(page.indexOf("const FAQ:"), page.indexOf("export default async function"));
-  const always = faq.replace(/\.\.\.\([^?\n]+\?\s*\[[\s\S]*?\]\s*:\s*\[\]\),/g, "");
-  // The Plus question is addressed to a CURRENT Plus member since Plus went off
-  // sale (2026-10-23): the off-sale wording is the second arm of a PLUS_ON_SALE ternary.
-  const alwaysQs = [...always.matchAll(/\n {4}q: (?:PLUS_ON_SALE \? "[^"]+" : )?"([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(
-    alwaysQs,
-    [
-      "How do I cancel?",
-      "Is Premium worth it if I only buy a few cards?",
-      "What's free?",
-      "Is price comparison free?",
-      "I'm on Plus. What happens to my plan?",
-      "What happens to cards I already track?",
-    ],
-    "six always-on FAQ questions, in this order",
-  );
-  // The trial answer, while a trial is on, is the very first entry.
-  assert.ok(faq.indexOf('id: "trial"') < faq.indexOf('id: "cancel"'));
-  // "Can I get Premium for free?" only while a reward actually grants days.
-  assert.match(faq, /\.\.\.\(FEEDBACK_PREMIUM_DAYS > 0 \|\| REFERRAL_PREMIUM_DAYS > 0\s*\?\s*\[\s*\{\s*id: "earn-free",\s*q: "Can I get Premium for free\?"/);
-});
-
-test("no repeated CTA band and no popup; the one sticky bar is phone-only and links to the plan", () => {
+test("no repeated CTA band, no sticky bar and no popup on /premium", () => {
   assert.doesNotMatch(jsx, /Ready to upgrade/i);
-  assert.equal((jsx.match(/<PremiumPricingCards/g) ?? []).length, 1, "one set of plan cards");
+  assert.equal((jsx.match(/<PremiumPlanTable/g) ?? []).length, 1, "one set of plan cards");
+  assert.doesNotMatch(jsx, /PremiumStickyCta/, "the sticky bar went on 2026-10-25");
   // (PremiumTicks is left out: its "table-fixed" is a column layout, not a sticky bar.)
   assert.doesNotMatch(code(page) + code(cards), /position:\s*fixed|\bfixed\b|createPortal|role="dialog"/);
-  // The mobile sticky CTA (2026-10-23): sm:hidden, shown after the hero, hidden
-  // over the plans, and it links to them rather than opening checkout itself.
-  const client = readFileSync(join(ROOT, "src/components/premium/PremiumPageClient.tsx"), "utf8");
-  assert.match(client, /fixed inset-x-0 bottom-0[^"`]*sm:hidden/);
-  assert.match(client, /const show = heroGone && !pricingIn/);
-  assert.match(client, /href=\{`#\$\{pricingId\}`\}/);
-  assert.equal((code(client).match(/\bfixed\b/g) ?? []).length, 1, "one fixed element");
 });
 
 function code(s: string): string {

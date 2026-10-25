@@ -48,11 +48,11 @@ test("a new account returned to its page gets one quiet 'account ready' toast po
   assert.match(w, /action=\{\s*toastAction \?/);
 });
 
-test("the Premium slide-in stays away for the whole sign-up session", () => {
-  const slide = code("src/components/PremiumSlideIn.tsx");
+test("the header's Premium callout stays away for the whole sign-up session", () => {
+  const slide = code("src/components/PricingNudge.tsx");
   const guard = slide.indexOf("if (isSignupSession()) return;");
   assert.ok(guard > 0, "guarded");
-  assert.ok(guard < slide.indexOf("return armNudge("), "before the show timer is armed");
+  assert.ok(guard < slide.indexOf("armNudge({"), "before the show timer is armed");
 });
 
 test("isSignupSession: the session flag, or the ?welcome landing before it is written", async () => {

@@ -15,7 +15,8 @@ const code = (p: string) =>
     .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
     .replace(/^\s*\/\/.*$/gm, "");
 
-const SLIDE = "src/components/PremiumSlideIn.tsx";
+// The header callout that replaced the corner slider on 2026-10-25.
+const SLIDE = "src/components/PricingNudge.tsx";
 const ANNUAL = "src/components/AnnualSwitchNudge.tsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -34,7 +35,7 @@ const ANNUAL = "src/components/AnnualSwitchNudge.tsx";
 // arriving quietly later, because it will come back.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the cap has exactly one definition, and the slide-in consumes it", () => {
+test("the cap has exactly one definition, and the nudges consume it", () => {
   assert.equal(MAX_NUDGE_DISMISSALS, 2, "two firm no's is a no");
   assert.equal(SNOOZE_AFTER_DISMISS_MS, 7 * 864e5, "a week of quiet after a dismissal");
   assert.equal(SNOOZE_AFTER_CLICK_MS, 14 * 864e5, "a fortnight after an engaged click");
@@ -77,8 +78,13 @@ test("no corner nudge may gate, delay or disable its own close control", () => {
 
 // ── Every corner card is easy to close (2026-09-29, "Nudges: value first") ──
 
-test("both corner cards: a labelled ≥44px ✕, Escape that yields to an open dialog, and no slide under reduced motion", () => {
-  for (const f of [SLIDE, ANNUAL]) {
+test("the corner card: a labelled ≥44px ✕, Escape that yields to an open dialog, and no slide under reduced motion", () => {
+  // The header callout (SLIDE) shares the ✕ and Escape rules, below; it is not a corner card.
+  const nudge = code(SLIDE);
+  assert.match(nudge, /aria-label="Dismiss"/);
+  assert.match(nudge, /min-h-11 min-w-11/);
+  assert.match(nudge, /e\.key === "Escape" && document\.body\.dataset\.rcDialog !== "1"/);
+  for (const f of [ANNUAL]) {
     const src = code(f);
     const btn = src.slice(src.lastIndexOf("<button", src.indexOf("✕")), src.indexOf("✕"));
     assert.match(btn, /aria-label="Dismiss"/, `${f}: the ✕ is labelled`);

@@ -436,4 +436,5 @@ export function premiumLockInTail(): string {
 // "premium-limits-2026-10-22": real limits in the table, annual default, card bullets
 // "one-plan-2026-10-23": Premium only at $9.99/$79.99, 30-day free trial, Plus off sale
 // "rebrand-2026-10-23": "Never overpay for Riftbound again", live proof, outcome cards, one free alert
-export const PREMIUM_COPY_VERSION = "rebrand-2026-10-23";
+// "one-table-2026-10-25": /premium is one plan table (Monthly, Annual) and the Free vs Premium comparison
+export const PREMIUM_COPY_VERSION = "one-table-2026-10-25";

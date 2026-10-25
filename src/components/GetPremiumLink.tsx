@@ -2,6 +2,7 @@
 
 import { useMe } from "@/lib/use-me";
 import { PremiumNavLink } from "./PremiumNavLink";
+import { PricingNudge } from "./PricingNudge";
 
 // THE HEADER'S PREMIUM CALL TO ACTION (2026-10-15, owner, with nine active
 // subscribers and churn high: "premium … at the very top, in the header … catchy,
@@ -31,12 +32,15 @@ export function GetPremiumLink({
   className = "",
   surface,
   full = false,
+  nudge = false,
 }: {
   className?: string;
   surface: string;
   /** Kept for callers; the header label is one word ("Pricing") at every width now. */
   compact?: boolean;
   full?: boolean;
+  /** The header's Pricing link carries the "Try our Premium features" callout (PricingNudge). */
+  nudge?: boolean;
 }) {
   const { tier, loaded } = useMe();
   if (loaded && tier === "premium") {
@@ -47,12 +51,13 @@ export function GetPremiumLink({
     );
   }
   return (
-    <PremiumNavLink surface={surface} className={`premium-cta ${className}`} title="Pricing: Premium, every deal, price watches, ad-free">
+    <PremiumNavLink surface={surface} className={`premium-cta ${nudge ? "relative" : ""} ${className}`} title="Pricing: Premium, every deal, price watches, ad-free">
       {/* One label span carries the gold text and its sheen (.premium-cta-label). */}
       <span className="premium-cta-label">
         <span aria-hidden="true" className={full ? "" : "hidden xl:inline"}>✦ </span>
         {full ? <span>Get Premium</span> : <span>Pricing</span>}
       </span>
+      {nudge && <PricingNudge />}
     </PremiumNavLink>
   );
 }

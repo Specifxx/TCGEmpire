@@ -121,8 +121,8 @@ test("every surface that states the post-trial price states the intro too — ea
   assert.match(start, /introPriceLine\(tier\)/);
   assert.match(start, /plan === "monthly" && introOfferEnabled\(\) && !paid/);
   assert.match(start, /We'll email you a day or two before you're charged/);
-  const page = read("src/app/premium/page.tsx");
-  assert.match(page, /\.\.\.\(introOfferEnabled\(\)\s*\?\s*\[\s*\{\s*(id: "intro",\s*)?q: `What is the half-price offer\?`/);
+  // /premium's intro FAQ went with the FAQ (2026-10-25); the Monthly plan card says it.
+  assert.match(read("src/components/premium/PremiumPlanTable.tsx"), /intro \? `First \$\{INTRO_MONTHS\} months \$\{tierIntroMonthlyAmount\("premium"\)\}\/mo, half price`/);
   // The explainer is prose, so it can't follow the switch: it states the
   // default (no trial, no intro) and must be edited by hand to re-arm either.
   const article = read("src/lib/articles.ts");

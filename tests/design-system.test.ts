@@ -456,9 +456,9 @@ test("the watchlist is its own header control, opening a drawer and carrying the
 
 test("every fixed bottom-corner surface (the two nudges, the feedback FAB, ui/Toast) clears the banner via .above-bottombar", () => {
   // The signed-out SignupPromoPopup was one of these until its removal on
-  // 2026-09-30 ("The sign-up slider is gone"); PremiumSlideIn is back in its place.
+  // 2026-09-30 ("The sign-up slider is gone"); PremiumSlideIn followed it on
+  // 2026-10-25 (the header's PricingNudge replaced it, anchored to the link).
   for (const rel of [
-    "src/components/PremiumSlideIn.tsx",
     "src/components/AnnualSwitchNudge.tsx",
     "src/components/FeedbackWidget.tsx",
     "src/components/ui/Toast.tsx",

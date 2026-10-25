@@ -419,18 +419,18 @@ test("the basket saving line: real money at or above $1, no saving claim below i
 
 // ── No popup or header upsells ─────────────────────────────────────────────
 
-test("the signed-in Premium slide-in is back beside the at-limit prompts; no signed-out popup", () => {
+test("no corner Premium slider and no signed-out popup; the header callout and the at-limit prompts remain", () => {
   // Removed with the free limits on 2026-09-28 ("not in popups and headers");
   // restored 2026-09-29 at the owner's request ("make the sign up and premium
   // slider instant. I want to bring the instant feature back"). Only the
   // slide-in came back: the header, rail and account menu stay plain "Pricing"
   // links (next test), and the at-limit prompts stay where the limit is hit.
-  for (const f of ["src/components/PremiumSlideIn.tsx", "src/components/PremiumPitchPanel.tsx", "src/app/api/premium/nudge/route.ts"]) {
-    assert.ok(existsSync(join(ROOT, f)), `${f} restored`);
-  }
+  // REMOVED AGAIN 2026-10-25 (owner: "get rid of the slider, premium slider, it's
+  // not working"): the header's Pricing link carries a short callout instead.
+  assert.ok(!existsSync(join(ROOT, "src/components/PremiumSlideIn.tsx")), "the slider is gone");
   const layout = code("src/app/layout.tsx");
-  assert.match(layout, /<PremiumSlideIn \/>/, "mounted once, in the layout");
-  assert.equal(layout.split("<PremiumSlideIn").length - 1, 1);
+  assert.doesNotMatch(layout, /<PremiumSlideIn/, "not mounted");
+  assert.match(code("src/components/GetPremiumLink.tsx"), /<PricingNudge \/>/, "the callout rides the Pricing link");
   // The signed-out sign-up popup stayed beside it until 2026-09-30, when the
   // owner removed it altogether: sign-up prompts are page content now
   // (InlineSignupPrompt; tests/signup-inline.test.ts).
@@ -475,14 +475,9 @@ test("every tier surface quotes the limits from the constants, and price compari
   const compare = row("Compare prices across every store + eBay");
   assert.deepEqual([compare.account, compare.plus, compare.premium], [true, true, true], "price comparison: free for everyone");
 
-  const page = read("src/app/premium/page.tsx");
-  assert.match(page, /q: "What happens to cards I already track\?"/);
-  assert.match(page, /You keep them all/);
-  assert.match(page, /free for everyone, with no limit/);
-  // (PremiumPricingCards.tsx left this list on 2026-09-29: the Free card is gone
-  // from the cards, so /premium's "What you get" and FAQ, in page.tsx, quote it.)
+  // /premium carries no FAQ since 2026-10-25 ("one plan table and one
+  // comparison"): its limits are the comparison's cells, read from TIER_COMPARISON.
   for (const f of [
-    "src/app/premium/page.tsx",
     "src/lib/articles.ts",
     "src/app/llms.txt/route.ts",
     "src/lib/email.ts",
@@ -507,5 +502,6 @@ test("every tier surface quotes the limits from the constants, and price compari
   // regained taglines and bullets, and Best Basket gave 3 free plans a month.
   // then "one-plan-2026-10-23" when Plus went off sale and Premium went back to $9.99
   // then "rebrand-2026-10-23": the "Never overpay" promise, live proof and outcome cards
-  assert.equal(PREMIUM_COPY_VERSION, "rebrand-2026-10-23");
+  // then "one-table-2026-10-25": /premium is the plan table and the comparison, nothing else
+  assert.equal(PREMIUM_COPY_VERSION, "one-table-2026-10-25");
 });

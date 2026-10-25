@@ -227,7 +227,6 @@ test("in the steady state no surface renders the lock-in banner, the FAQ entry o
   assert.match(page.slice(Math.max(0, bannerAt - 300), bannerAt), /premiumPriceIncreaseAnnounced\(\) && \(/, "/premium banner is announced-only");
   const captionAt = page.lastIndexOf("{premiumLockInLine()}");
   assert.match(page.slice(Math.max(0, captionAt - 300), captionAt), /premiumPriceIncreaseAnnounced\(\) && \(/, "/premium caption is announced-only");
-  assert.match(page, /\.\.\.\(premiumPriceIncreaseAnnounced\(\)\s*\?\s*\[\s*\{\s*(id: "price-rise",\s*)?q: "Does my price ever go up\?"/, "the FAQ entry is announced-only");
 
   const dialog = read("src/components/PremiumDialog.tsx");
   for (const call of ["{premiumLockInHeadline()}", "{premiumLockInLine()}"]) {

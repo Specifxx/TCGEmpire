@@ -186,14 +186,13 @@ longer lands on its entry.
   Premium, read-time only; billing still resolves tier from the Price).
   Stores plan $79.99/mo for retailers.
   [2026-10-23](../DECISIONS.md#L19127), [2026-10-23](../DECISIONS.md#L19306)
-- **/premium converts on proof, not pressure (2026-10-23):** hero with one
-  checkout button and its terms, then today's real top deals (rest locked, no
-  data behind the blur), a read-only Best Basket demo (`/api/premium/demo`,
-  totals only, 10 lines), a pays-for-itself line only when today's deals beat a
-  month's price, the plan card, a focused table, an "Example alert", the FAQ.
-  Every number is live or computed from config (`lib/premium-page.ts`);
-  testimonials only from `lib/content/premium-testimonials.ts`, empty until a
-  member agrees. [2026-10-23](../DECISIONS.md#L19250)
+- **/premium is one plan table and one comparison (2026-10-25, replaces the
+  10-23 proof page):** headline, then `PremiumPlanTable` (Annual, lit and
+  "Best value", and Monthly, each with its own button; the trial said once, in
+  the button's small print), one terms line, a collapsed creator-code box, then
+  Free vs Premium. No hero button, proof, teaser, demo, example alert, sticky bar
+  or FAQ (and so no FAQPage). Every number from `lib/site.ts`.
+  `PREMIUM_COPY_VERSION` `one-table-2026-10-25`. [2026-10-25](../DECISIONS.md#L19587)
 - **Free 14-day trial (2026-10-12; replaces the $1 first month below):**
   `PREMIUM_TRIAL_DAYS` 14 and `PREMIUM_TRIAL_FEE_CENTS` 0 by default, card
   required, prices unchanged. Leave price, trial and pitch alone until two
@@ -492,8 +491,8 @@ longer lands on its entry.
   [2026-10-22](../DECISIONS.md#L18914) No "What you get",
   no missing-grid, no proof line, no second copy of the trial terms, no persona
   sections, CTA band or sticky bar (`tests/premium-plans-first.test.ts`).
-  `PREMIUM_COPY_VERSION` `rebrand-2026-10-23`.
-  [2026-10-17](../DECISIONS.md#L18460), [2026-09-29 plans first](../DECISIONS.md#L15538)
+  Superseded for Premium-only by the one-table page (2026-10-25, above); this
+  layout renders only while Plus is on sale. [2026-10-17](../DECISIONS.md#L18460), [2026-09-29 plans first](../DECISIONS.md#L15538)
 - **Upgrade intent is measured with two Vercel events, no click table:**
   `upgrade_dialog_open` (dialog opens; inline gate/limit prompts once per surface
   per tab) and `upgrade_cta_click` (click through to checkout), with feature,
@@ -502,8 +501,8 @@ longer lands on its entry.
 - **Upgrade prompts live where a limit is hit, and in the header (header since 10-15):**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
-  the tool walls — plus, since 09-29 at the owner's request, the restored
-  signed-in `PremiumSlideIn`, and a tick on a set page (the same
+  the tool walls — plus the header's Pricing callout (`PricingNudge`, since
+  10-25; the corner `PremiumSlideIn` is gone), and a tick on a set page (the same
   `limit:portfolio` panel, reworded for a set). The header carries the shiny
   `GetPremiumLink` since 2026-10-15 (see "Gold marks Premium"); rail and account
   menu stay plain "Pricing" links. [2026-10-15](../DECISIONS.md#L17561) [2026-09-28](../DECISIONS.md#L14549),
@@ -551,7 +550,11 @@ longer lands on its entry.
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket
   `ads`, stop after two weeks if a visit costs more than it earns) is in the
   growth playbook. [2026-10-16](../DECISIONS.md#L18206)
-- **The Akali slider (2026-10-17):** one corner Premium card for everyone not
+- **The Akali slider is gone (2026-10-25):** replaced by `PricingNudge`, a
+  "Try our Premium features" callout with an arrow under the header's Pricing
+  link, on the slider's own rules (3 s, once a session, 3-day snooze, its page
+  gate, never in the sign-up session), gone after 9 s. [2026-10-25](../DECISIONS.md#L19587)
+  Before it, (2026-10-17): one corner Premium card for everyone not
   Premium, signed in or out, 3 s after the page settles, once a session, a
   dismissal snoozes it 3 days. Akali art, five `PremiumTicks` rows Free vs
   Premium (since 10-17's "70% simpler": 320×384 on a phone, from 352×692; no
@@ -579,7 +582,8 @@ longer lands on its entry.
   (`MOBILE_AD_FREE_ROUTES`). Everything else keeps its Auto ads; desktop is
   unchanged. Anchor ads and the ad load are console settings.
   [2026-10-17](../DECISIONS.md#L18428)
-- **Corner nudges:** the Premium card is the Akali slider since 10-17 (above;
+- **Corner nudges:** only `AnnualSwitchNudge` since 10-25 (the Premium card
+  became the header callout, above). The Premium card was the Akali slider 10-17 to 10-25 (above;
   the owner chose a 3 s, every-visitor card knowing an instant card once
   measured 78% dismissed and that Google treats a pop-up over a phone's first
   page as intrusive). `AnnualSwitchNudge` keeps the 09-29 rules:
@@ -611,7 +615,7 @@ longer lands on its entry.
   `/dashboard` (`POST_SIGN_IN_FALLBACK`), never `/profile`. A new account gets
   "Welcome" and the setup checklist first there, or a one-time "Your free
   account is ready — Get set up →" toast on the page it returned to, and no
-  Premium slide-in for the rest of that session (`lib/signup-session.ts`).
+  Premium callout for the rest of that session (`lib/signup-session.ts`).
   [2026-09-29](../DECISIONS.md#L15313)
 - **Sign-up attribution:** /login keeps the clicked source
   (`readSignupSource`) rather than overwriting it with "login", and every

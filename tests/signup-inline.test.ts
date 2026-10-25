@@ -80,32 +80,24 @@ test("the layout mounts no signed-out sign-up nudge, and the file is gone", () =
   }
 });
 
-test("one corner Premium card for everyone: the Akali slider (2026-10-17)", () => {
+test("no corner Premium card: the header's Pricing link carries the callout (2026-10-25)", () => {
   const layout = code("src/app/layout.tsx");
-  assert.match(layout, /const PremiumSlideIn = dynamic\(\(\) => import\("@\/components\/PremiumSlideIn"\)/);
-  assert.equal(layout.split("<PremiumSlideIn").length - 1, 1, "mounted once");
-  assert.doesNotMatch(layout, /SignupSlideIn/, "the separate signed-out card is gone");
+  assert.doesNotMatch(layout, /<PremiumSlideIn/, "the Akali slider is gone (owner: \"it's not working\")");
+  assert.ok(!exists("src/components/PremiumSlideIn.tsx"));
+  assert.doesNotMatch(layout, /SignupSlideIn/, "the separate signed-out card stays gone");
   assert.ok(!exists("src/components/SignupSlideIn.tsx"));
-  assert.match(layout, /<AnnualSwitchNudge \/>/, "the annual offer stays too");
-
-  const slide = code("src/components/PremiumSlideIn.tsx");
-  // Signed in or signed out, not Premium, checkout on, through the slider's gate.
-  assert.match(slide, /loaded && premiumCheckout && !premium && \(signedOut \|\| !!user\) && premiumSliderEligible\(\{ pathname \}\)/);
+  assert.match(layout, /<AnnualSwitchNudge \/>/, "the annual offer stays");
+  const nudge = code("src/components/PricingNudge.tsx");
+  assert.match(nudge, /if \(!loaded \|\| tier === "premium" \|\| !premiumCheckout\) return;/, "anyone not on Premium, checkout on");
   assert.equal(PREMIUM_SLIDER_DELAY_MS, 3_000);
-  assert.match(slide, /delayMs: PREMIUM_SLIDER_DELAY_MS/);
+  assert.match(nudge, /delayMs: PREMIUM_SLIDER_DELAY_MS/);
   assert.equal(NUDGE_DELAY_MS, 12_000, "the annual offer keeps its own delay");
-  // Signed out, Google and Discord go straight into Premium checkout.
-  // (side by side since 2026-10-17, the smaller slider: `row`)
-  assert.match(slide, /<AuthForm providers=\{providers\} bare compact row source="premium_slider" next=\{next\}/);
-  assert.match(slide, /\/premium\/start\?tier=premium&plan=monthly&back=/);
-  assert.ok(SIGNUP_SOURCES.has("premium_slider"));
+  assert.match(code("src/components/Navbar.tsx"), /surface="nav:navbar"\s+nudge/, "on the header's Pricing link");
 });
 
-test("the two remaining corner nudges share one corner and z-tier", () => {
-  // Moved here from tests/signup-slidein.test.ts (deleted with the popup it
-  // pinned): globals.css's .above-bottombar + .left-4 rule depends on it.
+test("the remaining corner nudge keeps its corner and z-tier", () => {
+  // globals.css's .above-bottombar + .left-4 rule depends on it.
   const CORNER = /above-bottombar fixed left-4 z-\[70\]/;
-  assert.match(code("src/components/PremiumSlideIn.tsx"), CORNER);
   assert.match(code("src/components/AnnualSwitchNudge.tsx"), CORNER);
 });
 

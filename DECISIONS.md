@@ -19583,3 +19583,30 @@ The owner's "Arion and Kali" are Akali and Ahri, each with a Champion playmat. T
 **Legacy is 239 cards, not 346.** Riot's products-and-sets page reads "Cards: 239 (93 Showcase)", checked directly on 25 October. 346 was a third-party figure our Legacy, roadmap and Radiance posts had repeated, including the spoilers post's argument that Origins (352) out-sized Legacy (346). Every mention is corrected; the spoilers post now calls Legacy a mid-sized set (a base run of about 146) with the largest Showcase run so far. `tests/set-sizes.test.ts` accepts 239 beside the 346 the posts now quote only to correct. The calendar's "Legacy boxed decks" row is Riot's Proving Grounds 2nd Edition (19 February 2027, US$40), renamed but left undated.
 
 **Not changed:** Riot's page now also says Radiance is "167 (61 Showcase)", where the site carries the earlier "180 (66 Showcase)" as `announcedCards`. That is a separate correction across the Radiance pages.
+
+## /premium is one plan table and one comparison; the Premium slider is gone — 2026-10-25
+
+Owner: "way too much going on … there doesn't need to be a repeat of information … those buttons are important, but we just need one at the very top … an annual and monthly plan table, and then the comparison between features, and that's it. Nothing else … think of a better way of visually representing it so that people are more hooked … the premium slide is not working … create a little cool animation with an arrow pointing to the pricing after a couple of seconds delay … get rid of the slider."
+
+**The page.** For anyone not subscribed, /premium is now:
+- the headline and one subline;
+- `PremiumPlanTable`: two plan cards side by side, each with its own button. **Annual** comes first, lit with a slow gold border (`.plan-glow`), a "Best value" ribbon, the per-month price and "Save 33%". **Monthly** follows, with the half-price intro line when checkout would give it;
+- one line of terms (cancel in two clicks, Stripe, US dollars);
+- a collapsed "Have a creator code?", open when a code is remembered;
+- Free vs Premium (`PremiumTicks`), with every other row folded under "Every other feature and limit".
+
+**What went:**
+- the hero price block and hero button;
+- the live-proof strip, deals teaser and savings demo;
+- the pays-for-itself line and the example alert;
+- the testimonials slot, the markets line, the Stores link and the phone sticky bar;
+- the "Not ready to add a card?" line and the FAQ, with its FAQPage JSON-LD, since Google honours that schema only for a visible FAQ.
+
+The trial is said once: in each button's own small print (`PremiumCta`), which states what is charged today and when. The cards' second trial line and the terms line's third copy are gone. No toggle: with two cards side by side the choice is the table. The Product JSON-LD stays. Members see their tier and account card as before. While Plus is on sale the old `PremiumPricingCards` still renders, since two tiers need the toggle. `PREMIUM_COPY_VERSION` is `one-table-2026-10-25`. The components only the old page used (`PremiumDealsTeaser`, `PremiumSavingsDemo`, `PremiumAlertPreview`, `PremiumValue`) are left in place, unused, for now.
+
+**The slider.** `PremiumSlideIn`, the corner card since 10-17, is removed: the component, its mount in the layout and its own test. In its place `PricingNudge` rides the header's Pricing link (`GetPremiumLink nudge`):
+- a small "✦ Try our Premium features" callout with a bobbing gold arrow up at the link;
+- it uses the slider's own rules: the shared 3 s timer (`armNudge`, which waits out dialogs and focused fields), the slider's page gate, once a session, never in the sign-up session, a 3-day snooze on ✕, and Escape;
+- gone again after 9 s. The whole callout is the link, so a tap opens /premium.
+
+The phone and desktop copies of the link both mount, so only the copy actually laid out may fire (`getClientRects()`). It is centred under the link so it fits a phone's left-hand link and a desktop's right-hand one. Analytics: `pricing_nudge_view`, `_click`, `_dismiss`.
