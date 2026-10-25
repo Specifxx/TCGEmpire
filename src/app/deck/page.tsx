@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { pickPrice, priceField, COUNTRIES } from "@/lib/country";
 import { gbpCentsToEur } from "@/lib/fx";
-import { parseDeckList, resolveDeckLines } from "@/lib/deck";
+import { parseDeckList, resolveDeckLines, DECK_LINE_CAP, FREE_BULK_LINES } from "@/lib/deck";
 import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -156,9 +156,10 @@ export default async function DeckPage({ searchParams }: { searchParams: { list?
         <HubIntro path="/deck" />
         <p className="mt-1 text-sm text-slate-400">
           Paste a Riftbound decklist — or any list of card names — and get every card matched with the cheapest
-          {" "}{info.adjective} price and a full total. It&apos;s also a free bulk price checker: plain names work without
+          {" "}{info.adjective} price and a full total. It&apos;s also a bulk price checker: plain names work without
           quantities, anything we can&apos;t match is listed rather than dropped, and you can search and add cards or change
-          quantities as you go.
+          quantities as you go. Lists up to {FREE_BULK_LINES} lines are free; Premium prices a whole binder or collection, up
+          to {DECK_LINE_CAP} lines at once.
         </p>
       </div>
       {/* The guides behind building and buying a deck, after the builder and

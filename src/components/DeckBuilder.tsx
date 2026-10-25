@@ -17,6 +17,7 @@ import { DeckPublishPanel } from "./decks/DeckPublishPanel";
 import { DeckWatchForm } from "./DeckWatchForm";
 import { InlineSignupPrompt } from "./InlineSignupPrompt";
 import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+import { PremiumButton } from "./PremiumButton";
 
 // The deck builder and list pricer — the free, no-account tool behind /deck.
 //
@@ -145,6 +146,8 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Set when the API priced only the free FREE_BULK_LINES of a longer list.
+  const [bulkLimit, setBulkLimit] = useState<{ limit: number; lines: number } | null>(null);
   const [shared, setShared] = useState<"copied" | "address-bar" | null>(null);
   const [preview, setPreview] = useState<DeckBuilderCard | null>(null);
   const [search, setSearch] = useState<{ n: number; q: string; target: SearchTarget }>({ n: 0, q: "", target: null });
@@ -171,7 +174,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: deck }),
       });
-      const data: { items?: ApiItem[]; truncated?: boolean; error?: string } = await res.json().catch(() => ({}));
+      const data: { items?: ApiItem[]; truncated?: boolean; bulkLimit?: { limit: number; lines: number }; error?: string } = await res.json().catch(() => ({}));
       if (!res.ok || !data.items) {
         setError(data.error ?? "Couldn't price that list just now — try again in a moment.");
         return;
@@ -194,6 +197,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
       setUnmatched(missed);
       setPriced(true);
       setDirty(false);
+      setBulkLimit(data.bulkLimit ?? null);
       setPreview(nextLines[0]?.card ?? null);
       const matchedLines = data.items.length - missed.length;
       setNotice(
@@ -476,6 +480,22 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
           </p>
         )}
         {notice && hasList && <p className="text-xs text-slate-400">{notice}</p>}
+
+        {/* Bulk pricing past a deck is Premium's (2026-10-25, lib/deck.ts
+            FREE_BULK_LINES): the first lines are priced, the rest wait. */}
+        {bulkLimit && (
+          <div className="rounded-xl border border-gold/40 bg-gold/5 p-4" data-bulk-limit>
+            <p className="text-sm font-semibold text-white">
+              Priced the first {bulkLimit.limit} of {bulkLimit.lines} lines.
+            </p>
+            <p className="mt-1 text-xs text-slate-300">
+              Pricing a whole binder or collection at once is a Premium feature, up to 200 lines a list, along with unlimited Best Basket plans.
+            </p>
+            <div className="mt-3">
+              <PremiumButton surface="limit:bulk" />
+            </div>
+          </div>
+        )}
 
         {/* Search-to-add. Remounted (key) with a query when "search for this" is used on a line. */}
         <div ref={searchBox} className="card-surface p-4">

@@ -222,6 +222,8 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       "Target-price alerts after every price update",
       // Renamed 2026-10-22 for the plan the row now meters (lib/basket-meter.ts).
       "Best Basket — store-by-store plan for the cheapest delivered order",
+      // 2026-10-25: bulk pricing past a deck is Premium's (lib/deck.ts FREE_BULK_LINES).
+      "Bulk price a list — paste a binder or collection, every card priced",
       "Buy this list — deck or watchlist, skipping cards you own",
       // 2026-09-29: Best Basket's set source, the plan for what a set is missing.
       // The chunk is the enforced one since 2026-10-22, never typed.

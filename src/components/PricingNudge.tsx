@@ -116,7 +116,7 @@ export function PricingNudge() {
         <span className="pricing-nudge-arrow block text-xl leading-none text-gold">▲</span>
       </span>
       <span className="block text-sm font-extrabold text-white">✦ Try our Premium features</span>
-      <span className="mt-0.5 block text-xs font-medium leading-snug text-slate-300">Every deal, price alerts and no ads. See the plans →</span>
+      <span className="mt-0.5 block text-xs font-medium leading-snug text-slate-300">Unlimited Best Basket, bulk pricing, price alerts and no ads. See the plans →</span>
       {/* A span, not a <button>: the callout sits inside the Pricing link, and
           interactive content can't nest in an <a>. */}
       <span

@@ -68,10 +68,12 @@ test("both paid tiers sell ad-free, and Plus LEADS with it", () => {
   }
   assert.equal(planBullets("plus", "AU")[0], "No ads", "outside the US, Plus leads with ad-free");
   assert.match(planBullets("plus", "US")[0], /^Target-price alerts/, "in the US, target alerts lead (the market's own pitch)");
-  assert.equal(TICK_ROWS[1].name, "No ads");
-  assert.equal(cellValue(TICK_ROWS[1].from, "plus"), true);
-  assert.equal(cellValue(TICK_ROWS[1].from, "premium"), true);
-  assert.equal(cellValue(TICK_ROWS[1].from, "free"), false);
+  assert.equal(TICK_ROWS[1].name, "Best Basket & Buy this list plans");
+  const noAds = TICK_ROWS.find((r) => r.name === "No ads");
+  assert.ok(noAds);
+  assert.equal(cellValue(noAds.from, "plus"), true);
+  assert.equal(cellValue(noAds.from, "premium"), true);
+  assert.equal(cellValue(noAds.from, "free"), false);
   assert.ok(!/Premium adds an ad-free site/.test(code("src/app/premium/page.tsx")), "/premium must not sell ad-free as Premium-only");
 });
 

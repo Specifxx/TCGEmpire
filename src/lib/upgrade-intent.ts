@@ -18,6 +18,7 @@ import { trackEvent } from "./analytics";
 
 export const UPGRADE_FEATURES = [
   "best_basket",
+  "bulk_pricer",
   "target_alerts",
   "deal_finder",
   "rising",
@@ -38,6 +39,7 @@ const BY_SURFACE: Record<string, UpgradeFeature> = {
   "tip:basket": "best_basket",
   "gate:best-basket": "best_basket",
   "gate:replacement-plan": "best_basket",
+  "limit:bulk": "bulk_pricer",
   "gate:target-limit": "target_alerts",
   "gate:target-alert": "target_alerts",
   "gate:deal-finder": "deal_finder",

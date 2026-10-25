@@ -245,7 +245,10 @@ longer lands on its entry.
   missing cards, and behind the portfolio's replacement cost) at the minimum
   condition the member sets (below Premium, free and Plus alike:
   `FREE_PLANS_PER_MONTH`, 3, plans a UTC month, counted server-side on reveal in
-  `BasketPlanUsage`, [2026-10-22](../DECISIONS.md#L18884)), and
+  `BasketPlanUsage`, [2026-10-22](../DECISIONS.md#L18884); Best Basket is
+  the first Premium row on /premium), bulk pricing past a deck (/deck prices
+  `FREE_BULK_LINES`, 60, card lines below Premium and `DECK_LINE_CAP`, 200, for
+  Premium; `limit:bulk`, [2026-10-25](../DECISIONS.md#L19614)), and
   **Demand Finder**
   (`/tools/demand`, `isPremium(user, "premium")`: top 25 most searched and
   most viewed, 7 or 30 days). Below Premium, Plus included, Demand Finder

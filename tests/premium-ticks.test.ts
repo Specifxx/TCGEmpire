@@ -6,6 +6,7 @@ import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../src/lib/free-limi
 import { FREE_SEALED_WATCH_LIMIT, FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../src/lib/alert-limits";
 import { FREE_HISTORY_DAYS } from "../src/lib/history-access";
 import { FREE_PLANS_PER_MONTH } from "../src/lib/basket-meter";
+import { DECK_LINE_CAP, FREE_BULK_LINES } from "../src/lib/deck";
 
 // /premium's comparison (2026-10-22, DECISIONS.md "/premium shows each plan's real
 // limits") supersedes the ticks-only table of 2026-10-17: a cell is the
@@ -22,7 +23,8 @@ test("every row names a real TIER_COMPARISON row (or is the free-for-everyone ro
     assert.ok(source(r.from!), `${r.name}: no row ${r.from}`);
   }
   assert.equal(new Set(TICK_ROWS.map((r) => r.name)).size, TICK_ROWS.length, "row names are unique");
-  assert.ok(TICK_ROWS.length <= 16, "sixteen rows at most");
+  // Seventeen since 2026-10-25 (bulk pricing).
+  assert.ok(TICK_ROWS.length <= 17, "seventeen rows at most");
 });
 
 test("a cell is the source row's value, never typed: true/false stay marks, strings stay the limit", () => {
@@ -45,6 +47,8 @@ test("the cells the owner sees", () => {
   const same = `Same ${FREE_PLANS_PER_MONTH} plans`;
   assert.deepEqual(cells, {
     "Compare prices across every store": "✓/✓/✓",
+    "Best Basket & Buy this list plans": `${plans}/${plans}/Unlimited`,
+    "Bulk price a list": `${FREE_BULK_LINES} lines/${FREE_BULK_LINES} lines/${DECK_LINE_CAP} lines`,
     "No ads": "—/✓/✓",
     Watchlist: `${FREE_WATCHLIST_LIMIT} cards/Unlimited/Unlimited`,
     Portfolio: `${FREE_PORTFOLIO_LIMIT} cards/Unlimited/Unlimited`,
@@ -52,7 +56,6 @@ test("the cells the owner sees", () => {
     "Price history": `${FREE_HISTORY_DAYS} days/Full + CSV/Full + CSV`,
     "Target-price alerts": `${FREE_TARGET_ALERT_LIMIT} card, daily/${PLUS_TARGET_ALERT_LIMIT} cards/Unlimited`,
     "Sealed watches": `${FREE_SEALED_WATCH_LIMIT} product/${SEALED_WATCH_LIMIT_PLUS} products/Unlimited`,
-    "Best Basket & Buy this list plans": `${plans}/${plans}/Unlimited`,
     "Finish this set plans": `${same}/${same}/Unlimited`,
     "Minimum condition": "—/—/✓",
     "Deck price watch": "—/—/✓",
