@@ -278,3 +278,34 @@ test("eBay: the daily report is asked for every campaign and checkout site, as e
   assert.match(src, /EPN_DAILY_REPORT, "CAMPAIGN_ID=0&CHECKOUT_SITE=0"/);
   assert.match(src, /ebay_partner_transaction_detail/);
 });
+
+test("TCGplayer: an action fetched twice (overlapping windows) counts once; reversed never counts", async () => {
+  const { impactActions, uniqueActions, impactActionDays } = await import("../src/lib/earnings/core");
+  const page = {
+    Actions: [
+      { Id: "1", Payout: "2.00", Currency: "USD", EventDate: "2026-10-20T01:00:00Z", State: "APPROVED" },
+      { Id: "2", Payout: "1.00", Currency: "USD", EventDate: "2026-10-20T02:00:00Z", State: "PENDING" },
+      { Id: "3", Payout: "5.00", Currency: "USD", EventDate: "2026-10-20T03:00:00Z", State: "REVERSED" },
+    ],
+  };
+  const acts = uniqueActions([...impactActions(page), ...impactActions(page)]);
+  assert.equal(acts.length, 3);
+  assert.deepEqual(impactActionDays(acts), [{ day: "2026-10-20", currency: "USD", cents: 300, pendingCents: 100 }]);
+  assert.equal(impactActionDays(acts, ["REVERSED"])[0].cents, 500);
+});
+
+test("TCGplayer: the windows walk Impact's last-updated date (StartDate/EndDate), not only the event date", () => {
+  const src = readFileSync(join(process.cwd(), "src/lib/earnings/sources.ts"), "utf8");
+  assert.match(src, /StartDate=\$\{isoSec/);
+  assert.match(src, /windows\(EARNINGS_SINCE, dayIn\(Date\.now\(\)\), 44\)/, "Impact allows at most 45 days per StartDate/EndDate pair");
+});
+
+test("eBay daily report: a repeated row counts once; Earnings and Other earnings are kept apart for checking", async () => {
+  const { uniqueRecords, epnDailyParts } = await import("../src/lib/earnings/core");
+  const row = { Date: "2026-10-20", CheckoutSite: "US", Earnings: "3.00", OtherEarnings: "0.50" };
+  const recs = uniqueRecords([row, { ...row }, { ...row, CheckoutSite: "AU" }]);
+  assert.equal(recs.length, 2);
+  const parts = epnDailyParts(recs, "AUD");
+  assert.deepEqual(parts.earnings, [{ day: "2026-10-20", currency: "AUD", cents: 600, pendingCents: 0 }]);
+  assert.deepEqual(parts.other, [{ day: "2026-10-20", currency: "AUD", cents: 100, pendingCents: 0 }]);
+});

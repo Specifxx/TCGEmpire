@@ -19518,3 +19518,17 @@ Owner: the dashboard showed about 2,500 all-time from eBay, against about 1,500 
 **The transaction report would have double-counted adjustments.** eBay's field glossary says an adjusted sale gets an updated record whose `Earnings` is the sale's new final value, with `DeltaEarnings` holding the change. Summing every record counts an adjusted sale twice. Records are folded to the latest per `EpnTransactionId` (by `UpdateDate`) first (`latestPerSale` in `src/lib/earnings/core.ts`).
 
 **Two reports, side by side.** Performance by Day is eBay's own daily sum and stays the headline. The Transaction Detail report, folded to one record per sale, carries each click's `customid`, so it drives the new "eBay by tag" section. That section groups by site prefix (the letters before the first separator, so a new site needs no code change; `TAG_NAMES` only adds friendly names), then lists each full tag. The connection line prints both reports' all-time totals and the sale and record counts, so a mismatch with eBay's own dashboard shows on the page rather than hiding in a sum.
+
+## Earnings: TCGplayer's 7-day trap, repeated rows, and a check against each network — 2026-10-25
+
+Owner: eBay showed about 149 on the dashboard against about 143 on eBay's own dashboard ("something might be doubled up"), and "for TCG player as well, just double check to see if there are any gaps … fix them and deploy".
+
+**TCGplayer could silently miss everything older than a week.** Impact's partner Actions docs say that without `StartDate`/`EndDate`, the action's last-updated date, the list returns only the past 7 days, and that pair may span at most 45 days. We filtered on the event date alone (`ActionDateStart`/`End`). The windows now walk the last-updated date from `EARNINGS_SINCE` to now in 44-day steps. Every action has exactly one last-updated date, so each lands in a window. The windows overlap by a second, and actions are folded by `Id` (`uniqueActions`). Days still come from `EventDate`. If Impact refuses the parameters, the old event-date query runs, and the connection line says which way it was fetched.
+
+**Repeated rows count once.** A daily eBay row identical in every column to one already seen is ignored, and the connection line reports how many were (`uniqueRecords`). With `CAMPAIGN_ID=0` the report is aggregated per day and site, so two identical rows can only be the same row twice.
+
+**The rest of the eBay gap needs the real numbers, so the page now shows them.** No eBay or Impact credentials exist outside Vercel, so the live reports cannot be read from a session. The likely remaining causes are both visible on the page now:
+- **Range edges.** Our ranges end on today's Sydney date; eBay's dashboard uses its own time zone and usually ends yesterday.
+- **The Other earnings column.** It is counted, but eBay's headline may not include it.
+
+A new "Check against each network's dashboard" panel prints the selected range's exact dates and each piece in the network's own currency: eBay's Earnings and Other earnings columns and the transaction report total, and TCGplayer approved, pending and reversed (not counted).
