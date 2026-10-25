@@ -12,7 +12,7 @@ import { cardTileSelect, trimTileArtFallback } from "@/lib/cards";
 import type { CardTileData } from "@/components/CardTile";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { DOMAIN_KEYS, hasSetHub, isPreorderSetCode, setBySlug, SETS, singlesLive } from "@/lib/constants";
-import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
+import { preordersHrefForSet, releaseDateLabel as calendarDateLabel, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
@@ -399,9 +399,19 @@ export default async function SetGalleryPage({ params }: { params: { set: string
           <div>
             <p className="text-lg font-semibold text-white">No {set.name} cards yet</p>
             <p className="mt-1 text-sm">
-              This gallery fills in automatically as {set.name} cards are imported.
+              {/* A coming-soon set with nothing revealed yet (Legacy from
+                  2026-10-25) says when it lands and where its pre-orders are. */}
+              {isPreorderSetCode(set.code) && calendarDateLabel(set.releasedOn)
+                ? <>Riftbound {set.name} releases {calendarDateLabel(set.releasedOn)}. This gallery fills in automatically as its cards are revealed.</>
+                : <>This gallery fills in automatically as {set.name} cards are imported.</>}
             </p>
-            <Link href="/browse" className="btn-primary mt-4">Card database</Link>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              {preordersHref && (
+                <Link href={preordersHref} className="btn-primary">Compare {set.name} pre-orders →</Link>
+              )}
+              {set.comingSoon && <Link href="/release-dates" className="btn-ghost">When does it release?</Link>}
+              <Link href="/browse" className={preordersHref ? "btn-ghost" : "btn-primary"}>Card database</Link>
+            </div>
           </div>
         </div>
       ) : (

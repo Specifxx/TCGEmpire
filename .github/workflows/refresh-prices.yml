@@ -381,7 +381,7 @@ jobs:
           curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts/paid$fresh" -H "Authorization: Bearer $CRON_SECRET" || true
           echo
 
-      - name: Release alerts (Radiance)
+      - name: Release alerts (Radiance, Legacy)
         # The set release alert (lib/release-alerts.ts, 2026-09-26): at most two
         # emails per signed-up address — once singles of the set get a store
         # price in their market, once if a sold-out pre-order restocks — capped
@@ -399,6 +399,11 @@ jobs:
             exit 0
           fi
           curl -s --max-time 120 "$SITE_URL/api/cron/release-alerts?set=RAD" -H "Authorization: Bearer $CRON_SECRET" || true
+          echo
+          # Legacy (2026-10-25): signups on /legacy-preorders and /sets/legacy.
+          # Sends nothing until a Legacy pre-order restocks or its singles get
+          # store prices; until then the run is two cheap reads.
+          curl -s --max-time 120 "$SITE_URL/api/cron/release-alerts?set=LGC" -H "Authorization: Bearer $CRON_SECRET" || true
           echo
 
       - name: Alert baselines after a push re-import (no email)

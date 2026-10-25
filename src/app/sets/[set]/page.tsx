@@ -30,8 +30,9 @@ import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, isPreorderSetCode, setBySlug, singlesLive } from "@/lib/constants";
 import { getSetRevealCount } from "@/lib/set-reveal-count";
-import { preordersHrefForSet } from "@/lib/release-calendar";
+import { preordersHrefForSet, releaseDateLabel as calendarDateLabel } from "@/lib/release-calendar";
 import { RadianceHub } from "@/components/sets/RadianceHub";
+import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
 import { RadiancePreorderCta } from "@/components/RadiancePreorderCta";
 import { SetPriceGuide } from "@/components/sets/SetPriceGuide";
 import { SetOwnedProvider, SetOwnedStatus, SetTickLayer } from "@/components/SetOwned";
@@ -82,6 +83,14 @@ const PRE_RELEASE_LINKS: Record<string, { href: string; label: string }[]> = {
     { href: "/release-dates", label: "Countdown & release calendar" },
     { href: "/blog/riftbound-radiance-biggest-release-since-origins", label: "Why this release matters" },
     { href: "/blog/riftbound-radiance-leaked-mechanics", label: "Leaked mechanics, hedged" },
+    { href: "/guides/riftbound-pre-rift-rules-explained", label: "Pre-Rift event rules" },
+  ],
+  // Coming soon since 2026-10-25; every link is a page that exists today.
+  legacy: [
+    { href: "/legacy-preorders", label: "Pre-order prices, every store" },
+    { href: "/blog/riftbound-legacy-spoilers-set-6", label: "Spoilers: what Riot has shown" },
+    { href: "/blog/riftbound-legacy-pack-changes-and-card-templating", label: "How Legacy packs change" },
+    { href: "/release-dates", label: "Countdown & release calendar" },
     { href: "/guides/riftbound-pre-rift-rules-explained", label: "Pre-Rift event rules" },
   ],
 };
@@ -500,6 +509,8 @@ export default async function SetPage({
   // that is actually buyable today.
   const preordersHref = preordersHrefForSet(set.code);
   const preReleaseLinks = set.comingSoon ? PRE_RELEASE_LINKS[set.slug] ?? [] : [];
+  // "29 January 2027", only while the street date is still ahead.
+  const streetDate = isPreorderSetCode(set.code) ? calendarDateLabel(set.releasedOn) : null;
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -571,7 +582,13 @@ export default async function SetPage({
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             {!live ? (
               <>
-                Riftbound <strong className="text-slate-200">{set.name}</strong> is new.
+                {/* A set announced but not yet revealed (Legacy from 2026-10-25:
+                    zero cards, months out) is not "new"; say when it lands. */}
+                {totalInSet === 0 && streetDate ? (
+                  <>Riftbound <strong className="text-slate-200">{set.name}</strong> releases {streetDate}.</>
+                ) : (
+                  <>Riftbound <strong className="text-slate-200">{set.name}</strong> is new.</>
+                )}
                 {fullyRevealed
                   ? <> All {completeAt} {set.name} cards are officially confirmed and listed below — live store prices land the moment singles release.</>
                   : totalInSet > 0
@@ -666,7 +683,7 @@ export default async function SetPage({
       {totalInSet === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           <div>
-            <p className="text-lg font-semibold text-white">New: {set.name} singles are on the way</p>
+            <p className="text-lg font-semibold text-white">{set.comingSoon ? "Coming soon" : "New"}: {set.name} singles are on the way</p>
             <p className="mt-1 text-sm">
               {set.sealedAvailable
                 ? <>We&apos;ll have the full singles list with live prices as soon as {set.name} drops — its sealed products are buyable right now.</>
@@ -703,6 +720,14 @@ export default async function SetPage({
                   ))}
                 </ul>
               </div>
+            )}
+
+            {/* The set release alert (lib/release-alerts.ts), for any set still
+                coming soon with nothing to show yet (Legacy from 2026-10-25).
+                Set-generic: the API accepts any comingSoon code, and the email's
+                pre-order link comes from the release calendar. */}
+            {set.comingSoon && (
+              <ReleaseAlertSignup setCode={set.code} setName={set.name} source="set" className="mx-auto mt-6 max-w-md text-left" />
             )}
           </div>
         </div>

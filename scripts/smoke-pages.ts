@@ -195,6 +195,17 @@ const CHECKS: Check[] = [
     seed: { must: ["booster box prices", '"@type":"FAQPage"'] },
   },
   {
+    // Legacy (2026-10-25), unreleased until 29 Jan 2027: pre-order copy, and
+    // never InStock for a product nobody has shipped.
+    path: "/legacy-preorders",
+    label: "Legacy pre-order comparison",
+    optional: true,
+    must: ["pre-order prices", '"@type":"FAQPage"'],
+    mustNot: ["schema.org/InStock"],
+    minText: 600,
+    seed: { must: ["pre-order prices", '"@type":"FAQPage"'] },
+  },
+  {
     path: "/sets/radiance",
     label: "Radiance set hub (released 2026-10-23)",
     optional: true,

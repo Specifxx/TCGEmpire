@@ -120,11 +120,22 @@ export const RELEASES: ReleaseEntry[] = [
   },
   {
     name: "Legacy",
+    // In SETS since 2026-10-25 (coming soon), so the row links /sets/legacy and
+    // its pre-order page, which retires on the street date like Radiance's did.
+    code: "LGC",
+    preordersHref: "/legacy-preorders",
     date: "2027-01-29",
-    cards: 346,
-    approxCards: true,
+    // 239, Showcase included, NOT the ~346 this row carried until 2026-10-25.
+    // Riot's own rundown (playriftbound.com, "Products and Sets into 2027",
+    // re-read 2026-10-25) states "Card count: 239 (93 Showcase)"; 346 was a
+    // third-party figure. Same shape as The Reckoning's 264 below (Riot's
+    // total, Showcase included). The printed base run is not known until a
+    // card surfaces, so SETS carries no totalCards for LGC yet.
+    cards: 239,
+    // The eight Legends Riot named; it says "four more" are still to come.
+    champions: ["Ashe", "Garen", "Heimerdinger", "Illaoi", "Karma", "Lux", "Tryndamere", "Vladimir"],
     spoilersHref: "/blog/riftbound-legacy-spoilers-set-6",
-    note: "Riot's Set 6 — the largest set announced so far, the first designed specifically for draft, and the one that changes pack composition (a common slot becomes a Legend-or-Battlefield slot).",
+    note: "Riot's Set 6 — 239 cards (93 of them Showcase), the first Riftbound set built for draft, and the one that changes pack composition: one Common slot becomes a Legend-or-Battlefield slot at roughly 50/50, so a pack holds six Commons instead of seven. Pre-Rift runs 22–28 January 2027.",
   },
   {
     name: "Legacy boxed decks",

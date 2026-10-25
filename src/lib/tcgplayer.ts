@@ -88,6 +88,10 @@ export function setCodeFromSetName(setName?: string): string | null {
   // FOREIGN_RADIANCE in lib/sealed-import.ts, which drops those titles outright.
   // Excluded here as well so the set signal is wrong in neither layer.
   if (/radiance/.test(s) && !/astral/.test(s)) return "RAD";
+  // Legacy (2026-10-25). Safe as a bare word here, unlike in a store title:
+  // this reads TCGplayer's setName inside the Riftbound product line only
+  // (fetchTcgplayerSealed / fetchTcgplayerProducts), where "Legacy" is the set.
+  if (/\blegacy\b/.test(s)) return "LGC";
   if (/origins/.test(s)) return "OGN";
   return null;
 }

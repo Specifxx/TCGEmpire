@@ -81,7 +81,25 @@ test("signup API: explicit action only, coming-soon sets only, unsubscribe is PO
   const cron = readFileSync("src/app/api/cron/release-alerts/route.ts", "utf8");
   assert.match(cron, /Bearer \$\{secret\}/);
   const wf = readFileSync(".github/workflows/refresh-prices.yml", "utf8");
-  assert.match(wf, /name: Release alerts \(Radiance\)\n[\s\S]*?github\.event_name != 'push'[\s\S]*?\/api\/cron\/release-alerts\?set=RAD/);
+  assert.match(wf, /name: Release alerts \(Radiance, Legacy\)\n[\s\S]*?github\.event_name != 'push'[\s\S]*?\/api\/cron\/release-alerts\?set=RAD[\s\S]*?\/api\/cron\/release-alerts\?set=LGC/);
+});
+
+test("the restock email links the set's own pre-order page, never another set's", () => {
+  const restock = [{ kind: "restock" as const, market: "US" as const, products: ["Legacy Booster Box"] }];
+  const lgc = buildReleaseEmail("Legacy", "/sets/legacy", restock, "/legacy-preorders");
+  assert.equal(lgc.cta.url, "https://riftcompare.com/legacy-preorders");
+  // No pre-order page known: the set page, not /radiance-preorders.
+  assert.equal(buildReleaseEmail("Legacy", "/sets/legacy", restock).cta.url, "https://riftcompare.com/sets/legacy");
+  const run = readFileSync("src/lib/release-alerts-run.ts", "utf8");
+  assert.match(run, /RELEASES\.find\(\(r\) => r\.code === setCode\)\?\.preordersHref/);
+  // Code only: the header comment still names where the signups sit.
+  const emailCode = readFileSync("src/lib/release-alerts.ts", "utf8").replace(/^\s*\/\/[^\n]*$/gm, "");
+  assert.doesNotMatch(emailCode, /\/radiance-preorders/);
+});
+
+test("Legacy's signup sits on /legacy-preorders and on a coming-soon set page", () => {
+  assert.match(readFileSync("src/app/legacy-preorders/page.tsx", "utf8"), /<ReleaseAlertSignup setCode=\{SET_CODE\} setName="Legacy" source="preorders"/);
+  assert.match(readFileSync("src/app/sets/[set]/page.tsx", "utf8"), /set\.comingSoon && \(\s*<ReleaseAlertSignup setCode=\{set\.code\} setName=\{set\.name\} source="set"/);
 });
 
 test("the signup is on Radiance posts, /radiance-preorders and Radiance card pages", () => {

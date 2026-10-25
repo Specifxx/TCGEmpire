@@ -202,6 +202,10 @@ async function core(): Promise<SitemapEntry[]> {
     // set-agnostic, so this line stays put through every future launch.
     { url: `${SITE_URL}/release-dates`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/release-dates") },
     { url: `${SITE_URL}/radiance-preorders`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/radiance-preorders") },
+    // Legacy's pre-order page (2026-10-25). Indexable from day one, unlike
+    // /sets/legacy: it carries real content (Riot's product list, the
+    // distributor's contents, the FAQ) even before a store lists a pre-order.
+    { url: `${SITE_URL}/legacy-preorders`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/legacy-preorders") },
     // /feedback is NOT submitted: src/app/feedback/page.tsx sets
     // robots: { index: false, follow: true } (AdSense remediation § Phase 7 —
     // /contact already covers the same intent with real content). Submitting a

@@ -27,6 +27,12 @@ interface ShopifyVar { price: string; available: boolean }
 // product need not.
 interface ShopifyProd { title: string; handle: string; variants: ShopifyVar[]; images?: ShopifyImg[]; url?: string }
 
+// The whole-title lookahead is what makes this safe: "Legacy" counts only when
+// the same title also carries a Riftbound marker, wherever in the title it sits
+// ("Riftbound Legacy Booster Box", "Legacy - Booster Display PREORDER |
+// Riftbound"). Exported for tests.
+export const LEGACY_TITLE = /^(?=[\s\S]*\b(?:riftbound|league\s*of\s*legends)\b)[\s\S]*\blegacy\b|\bLGC\b/i;
+
 const SET_FROM_TITLE: [RegExp, string][] = [
   [/proving\s*grounds|\bOGS\b/i, "OGS"],
   [/spirit\s*forged|\bSFD\b/i, "SFD"],
@@ -37,11 +43,19 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   // other set word, but ordering it late costs nothing and guards against a
   // future title carrying both.
   [/\bradiance\b|\bRAD\b/i, "RAD"],
+  // Legacy (2026-10-25). "legacy" is an ordinary English word and another
+  // game's format name (MTG's Legacy, "Legacy of …" Yu-Gi-Oh sets), so the word
+  // alone is not enough: it names the set only in a title that ALSO says
+  // Riftbound or League of Legends (LEGACY_TITLE). The bare code is unambiguous.
+  // After Proving Grounds on purpose: "Riftbound … Legacy - Proving Grounds Box
+  // Set (2nd Edition)" is the Proving Grounds product, not a Legacy one. Ahead
+  // of Origins for the same reason as Radiance.
+  [LEGACY_TITLE, "LGC"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
 const SET_NAMES: Record<string, string> = {
   OGN: "Origins", OGS: "Proving Grounds", SFD: "Spiritforged", UNL: "Unleashed", VEN: "Vendetta",
-  RAD: "Radiance",
+  RAD: "Radiance", LGC: "Legacy",
 };
 
 // A sealed product must be identifiably RIFTBOUND. Other games slip in when a store
@@ -384,7 +398,8 @@ export async function fetchProducts(base: string, handle: string, country: Count
 // group identically. Re-exported for callers of this module.
 export { typeLabel };
 
-function detectSet(title: string): string | null {
+/** The set a sealed title names, or null. Exported for tests (Legacy's word guard). */
+export function detectSet(title: string): string | null {
   return SET_FROM_TITLE.find(([re]) => re.test(title))?.[1] ?? null;
 }
 
@@ -394,7 +409,11 @@ function detectSet(title: string): string | null {
 // Champions that have Champion Decks (parens form on TCGplayer; free-form in store
 // titles like "… Champion Deck - Vex" or "Jinx Champion Deck"). Longest names first
 // so "Viktor"/"Vex" win before the short "Vi".
-const CHAMPIONS = /\b(Lee\s*Sin|Viktor|Rumble|Fiora|Garen|Annie|Lux|Master\s*Yi|Jinx|Vex|Vi)\b/i;
+// Tryndamere and Ashe since 2026-10-25: Legacy's four Champion Decks are
+// Tryndamere, Ashe, Lux and Garen (Riot's rundown), and stores already list
+// them ("Riftbound Legacy Champion Deck Ashe English (PRESALE)"). Without them
+// two different decks would share one "LGC|Champion Deck" group and one price.
+const CHAMPIONS = /\b(Lee\s*Sin|Tryndamere|Viktor|Rumble|Fiora|Garen|Annie|Ashe|Lux|Master\s*Yi|Jinx|Vex|Vi)\b/i;
 
 // The sealed types whose identity a listing's OWN title can be trusted to
 // state, used by the eBay pass to reject a result that belongs to a different
