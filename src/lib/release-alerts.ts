@@ -1,7 +1,9 @@
 // "Tell me when this set lands" — the set-level release alert (2026-09-26).
 //
 // Signed up on every Radiance post, /radiance-preorders and every Radiance card
-// page (components/ReleaseAlertSignup). Stored in SetReleaseAlert — a new alert
+// page (components/ReleaseAlertSignup); since 2026-10-25 also on
+// /legacy-preorders and any coming-soon /sets/<slug> with no cards yet (source
+// "set"). Nothing here names a set. Stored in SetReleaseAlert — a new alert
 // TYPE, deliberately not a PriceAlert (see the schema comment). At most TWO
 // emails per address and set, ever:
 //
@@ -27,8 +29,8 @@ import { formatMoney } from "./format";
 
 export const RELEASE_ALERT_SEND_CAP = 40;
 
-export type ReleaseAlertSource = "article" | "preorders" | "card" | "card_unlisted";
-export const RELEASE_ALERT_SOURCES: readonly ReleaseAlertSource[] = ["article", "preorders", "card", "card_unlisted"];
+export type ReleaseAlertSource = "article" | "preorders" | "card" | "card_unlisted" | "set";
+export const RELEASE_ALERT_SOURCES: readonly ReleaseAlertSource[] = ["article", "preorders", "card", "card_unlisted", "set"];
 
 export interface ReleaseAlertRow {
   id: string;
@@ -137,6 +139,10 @@ export function buildReleaseEmail(
   setName: string,
   setPath: string,
   notices: (SinglesNotice | RestockNotice)[],
+  /** The set's pre-order page (its release-calendar row's preordersHref); the
+   *  set page when it has none. Was hard-coded to Radiance's pre-order page,
+   *  which would have sent a Legacy restock email there. */
+  preordersPath: string = setPath,
 ): BuiltReleaseEmail {
   const singles = notices.find((n): n is SinglesNotice => n.kind === "singles");
   const restock = notices.find((n): n is RestockNotice => n.kind === "restock");
@@ -168,7 +174,7 @@ export function buildReleaseEmail(
   const cta = singles?.card
     ? { label: `Compare ${singles.card.name} prices`, url: `${SITE_URL}${singles.card.href}` }
     : restock && !singles
-      ? { label: `See ${setName} pre-orders`, url: `${SITE_URL}/radiance-preorders` }
+      ? { label: `See ${setName} pre-orders`, url: `${SITE_URL}${preordersPath}` }
       : { label: `See ${setName} prices`, url: `${SITE_URL}${setPath}` };
   return { subject, heading: subject, lines, cta };
 }

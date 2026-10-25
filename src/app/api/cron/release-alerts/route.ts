@@ -5,7 +5,8 @@ import { liveRoute } from "@/lib/public-data/live-route";
 // The set release-alert run (lib/release-alerts.ts). Called by
 // .github/workflows/refresh-prices.yml after each scheduled price import, with
 // the same Authorization: Bearer <CRON_SECRET> as the price-alert runs.
-// ?set=RAD (default RAD, the only set with signups today); ?dry=1 counts
+// ?set=RAD (the default) or ?set=LGC (Legacy, signups from 2026-10-25; the
+// workflow calls both); ?dry=1 counts
 // without sending or writing.
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;

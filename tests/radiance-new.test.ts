@@ -33,7 +33,10 @@ test("released (2026-10-22, owner): Radiance is New by recentlyReleased, and not
   assert.equal(RAD.recentlyReleased, true);
   assert.equal(showsAsNew(RAD), true);
   assert.equal(isPreorderSetCode("RAD"), false);
-  assert.equal(nextUpcomingSet(), undefined, "no set is announced-and-unreleased");
+  // Legacy is the next set since 2026-10-25 (coming soon, no "New" day): it
+  // takes the countdown, and Radiance stays the set the site leads with.
+  assert.equal(nextUpcomingSet()?.code, "LGC", "Legacy is the announced-and-unreleased set");
+  assert.equal(showsAsNew(nextUpcomingSet()!), false, "Legacy is Coming soon, not New");
   assert.equal(newestReleasedSet()?.code, "RAD");
 });
 

@@ -394,6 +394,38 @@ export const SETS: SetInfo[] = [
     releasedOn: "2026-10-23",
     hubReady: true,
   },
+  // Set 6, from the same Riot rundown (lib/release-calendar.ts carries the
+  // sourced facts: 29 Jan 2027, 239 cards with 93 Showcase, the first set built
+  // for draft, one Common slot becoming a Legend-or-Battlefield slot). Added
+  // 2026-10-25 (owner, two days after Radiance shipped: "we need to create a
+  // coming soon for Legacy … just in advance"), so it renders exactly as
+  // Radiance did before its preview season: a disabled "Coming soon" tile in the
+  // homepage's "By set" grid, a chip under "Upcoming & unreleased" on /sets, the
+  // /release-dates countdown, and /legacy-preorders.
+  //
+  // "LGC" IS RIOT'S CODE, from the same rundown that confirmed RAD (see the RAD
+  // comment above), so no codeProvisional.
+  //
+  // Deliberately NOT set, each for a reason:
+  //   • totalCards — the PRINTED denominator (the "x/167" on a card). No Legacy
+  //     card has surfaced, and setFromTotal() in lib/price-import.ts and
+  //     lib/tcgplayer.ts routes a listing's "x/NNN" by it; a guessed number
+  //     would mis-route real listings the day one appears.
+  //   • newFrom / sealedAvailable — nothing is out yet. (Sealed PRE-ORDERS are
+  //     already listed; they go to /legacy-preorders, not /sealed.)
+  //   • hubReady — /sets/legacy has no content hub, so it stays noindex while it
+  //     has zero cards (the documented rule; see hubReady's own comment). Build
+  //     a sourced hub first, then flip it, the way Radiance did.
+  {
+    code: "LGC",
+    name: "Legacy",
+    slug: "legacy",
+    comingSoon: true,
+    // Riot's announced total, Showcase included ("239 (93 Showcase)"), the same
+    // kind of figure as Radiance's 180. Never used for price matching.
+    announcedCards: 239,
+    releasedOn: "2027-01-29",
+  },
 ];
 
 /**

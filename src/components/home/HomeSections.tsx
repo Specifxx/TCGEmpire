@@ -258,12 +258,13 @@ export function HomeSections({
         <h2 className="mb-4 text-xl font-extrabold text-white">Explore the database</h2>
 
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">By set</div>
-        {/* SETS has 6 entries: 2 × 3 on phones, 3 × 2 from sm, one row of 6 at
-            xl — DECISIONS "Grid density" moved this grid to 6 columns to avoid
-            a lonely second row, and it regressed to `lg:grid-cols-5` ([5,1],
-            RAD alone) when the section moved here. xl rather than lg because
-            from lg the 17rem rail leaves only ~704px of content (2026-09-23). */}
-        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        {/* SETS has 7 entries since Legacy went up as coming soon (2026-10-25):
+            2 columns on phones with the last tile (the newest set, always last
+            in SETS) spanning the row, 4 + 3 from sm, one row of 7 at xl.
+            DECISIONS "Grid density" is the rule: no lonely second row. It was 6
+            columns ([5,1] regressed it once, RAD alone); xl rather than lg
+            because from lg the 17rem rail leaves only ~704px (2026-09-23). */}
+        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
           {SETS.map((s) =>
             // An unreleased set in its preview season (comingSoon + hubReady,
             // Radiance from 25 Sep 2026) keeps its "Coming soon" cue but links to
@@ -286,7 +287,9 @@ export function HomeSections({
                 </Link>
               ) : (
                 <div key={s.code} className="card-surface flex flex-col gap-1 p-4 opacity-60" aria-disabled>
-                  <span className="flex items-center gap-2 text-lg font-bold text-white">
+                  {/* flex-wrap: at seven across (xl) a tile is ~95px inside, and
+                      "LGC" plus the chip no longer fit on one line. */}
+                  <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
                     {s.code}
                     <span className="chip bg-gold/20 text-gold">Coming soon</span>
                   </span>

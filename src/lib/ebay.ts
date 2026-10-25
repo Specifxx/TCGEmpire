@@ -303,6 +303,9 @@ const SET_NAMES: Record<string, string> = {
   // here would let an Astral Radiance listing CONFIRM a Riftbound card's set and
   // price it. Riftbound Radiance is never called "Astral Radiance".
   RAD: "(?<!astral\\s)radiance",
+  // Only ever asked about an LGC card's own listing (setMentioned(title, "LGC")),
+  // whose eBay search already says Riftbound, so the bare word is enough here.
+  LGC: "\\blegacy\\b",
 };
 
 function delivered(it: any): number {

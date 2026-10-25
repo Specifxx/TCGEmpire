@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
-import { SETS, DOMAIN_KEYS, domainInfo } from "@/lib/constants";
+import { SETS, DOMAIN_KEYS, domainInfo, hasSetHub } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { COUNTRY_GUIDE_SLUGS, pageAlternates } from "@/lib/seo";
@@ -157,9 +157,12 @@ export default async function SinglesPage() {
         <h2 className="mb-4 text-xl font-extrabold text-white">Riftbound singles by set</h2>
         {/* Same 6-set grid as the homepage's "By set": 3 × 2 from sm, one row
             of 6 at xl. `lg:grid-cols-5` left RAD alone on a second row from
-            1024 (2026-09-23); xl, not lg, because of the 17rem desktop rail. */}
+            1024 (2026-09-23); xl, not lg, because of the 17rem desktop rail.
+            Only sets with a page worth linking (hasSetHub): a coming-soon set
+            with no singles yet (Legacy, from 2026-10-25) is not a "singles" link
+            — it keeps the grid at six, and its tile lives on the homepage. */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-          {SETS.map((s) => (
+          {SETS.filter(hasSetHub).map((s) => (
             <Link
               key={s.code}
               href={`/sets/${s.slug}`}

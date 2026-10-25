@@ -1,5 +1,6 @@
 import { prisma } from "./db";
 import { setByCode, isPreorderSetCode } from "./constants";
+import { RELEASES } from "./release-calendar";
 import { priceField, type Country } from "./country";
 import { cardHref } from "./card-url";
 import { getPreorderGroups } from "./sealed-import";
@@ -118,6 +119,9 @@ export async function runReleaseAlerts(setCode: string, opts: { dryRun?: boolean
 
   // ── Compose one email per address ───────────────────────────────────────────
   const setPath = `/sets/${set.slug}`;
+  // The set's own pre-order page from the release calendar (/radiance-preorders,
+  // /legacy-preorders), so a restock email never names another set's page.
+  const preordersPath = RELEASES.find((r) => r.code === setCode)?.preordersHref ?? setPath;
   let budget = RELEASE_ALERT_SEND_CAP;
   for (const [email, own] of groupByEmail(live)) {
     const notices: (SinglesNotice | RestockNotice)[] = [];
@@ -139,7 +143,7 @@ export async function runReleaseAlerts(setCode: string, opts: { dryRun?: boolean
     }
     budget--;
     const token = own[0].unsubToken;
-    const built = buildReleaseEmail(set.name, setPath, notices);
+    const built = buildReleaseEmail(set.name, setPath, notices, preordersPath);
     if (opts.dryRun) {
       summary.sent++;
       continue;
