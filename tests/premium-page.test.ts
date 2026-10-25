@@ -126,11 +126,6 @@ test("demo route: capped, rate limited, read-only, totals only", () => {
   assert.doesNotMatch(route, /plan:|alternatives:|stores:/, "never returns the store-by-store plan");
 });
 
-test("testimonials: empty by default, and the slot renders nothing when empty", () => {
-  assert.equal(PREMIUM_TESTIMONIALS.length, 0);
-  assert.match(page, /PREMIUM_TESTIMONIALS\.length > 0 &&/);
-});
-
 test("honesty: example content is labelled, no fabricated proof patterns", () => {
   const preview = readFileSync(new URL("../src/components/premium/PremiumAlertPreview.tsx", import.meta.url), "utf8");
   assert.match(preview, />\s*Example alert\s*</);
@@ -139,29 +134,27 @@ test("honesty: example content is labelled, no fabricated proof patterns", () =>
   }
 });
 
-test("FAQ: trial and cancel first, the few-cards answer added, Plus answer kept", () => {
-  const ids = [...page.matchAll(/id: "([a-z-]+)",\n/g)].map((m) => m[1]);
-  assert.deepEqual(ids.slice(0, 3), ["trial", "cancel", "few-cards"]);
-  assert.ok(ids.includes("plus"));
-  // A Plus member is told what they have now: Premium at their Plus price.
-  assert.match(page, /you now get everything in Premium at the Plus price you already pay/);
-  assert.match(page, /Is Premium worth it if I only buy a few cards\?/);
-});
-
-test("hero: the user's price first, the CTA carries its terms; the Stores link sits low and unpriced", () => {
-  assert.match(page, /Card required\. We email you before you&apos;re charged\. Cancel in two clicks\./);
-  // The Premium price block comes straight after the subline, before the stats and the button (2026-10-24).
+test("one plan table at the top, nothing said twice: no proof strip, teaser, demo, alert preview, sticky bar or FAQ", () => {
+  // 2026-10-25, owner: "way too much going on … we just need one at the very top
+  // … an annual and monthly plan table, and then the comparison between features,
+  // and that's it". DECISIONS.md, "/premium is one plan table and one comparison".
   const jsx = page.slice(page.indexOf("export default async function PremiumPage"));
-  const price = jsx.indexOf("data-premium-hero-price");
-  assert.ok(price > jsx.indexOf("<h1") && price < jsx.indexOf("<PremiumProofStrip") && price < jsx.indexOf("<PremiumCta"), "user price at the very top");
-  // The Stores plan: linked below the plans, never priced on this page.
-  assert.match(page, /href="\/stores"/);
-  assert.ok(jsx.indexOf("data-stores-crosslink") > jsx.indexOf('id="top-pricing"'), "the Stores link sits below the plans");
-  assert.doesNotMatch(page, /STORE_PLAN_AMOUNT/, "no Stores price on /premium");
-  for (const f of ["PremiumDealsTeaser", "PremiumSavingsDemo", "PremiumAlertPreview", "PremiumPageClient"]) {
-    const src = readFileSync(new URL(`../src/components/premium/${f}.tsx`, import.meta.url), "utf8");
-    assert.doesNotMatch(src, /\$\d/, `${f}: no price typed into a new component`);
+  const h1 = jsx.indexOf("<h1");
+  const table = jsx.indexOf("<PremiumPlanTable");
+  assert.ok(h1 > 0 && table > h1, "the plan table straight under the headline");
+  for (const gone of ["PremiumProofStrip", "PremiumDealsTeaser", "PremiumSavingsDemo", "PremiumAlertPreview", "PremiumStickyCta", "PremiumFaqList", "data-premium-hero-price", "data-stores-crosslink", "PREMIUM_TESTIMONIALS"]) {
+    assert.ok(!jsx.includes(gone), `${gone} is gone from /premium`);
   }
+  assert.equal((jsx.match(/<PremiumCta\b/g) ?? []).length, 0, "no hero button: the plan cards hold the only buttons");
+  assert.match(page, /data-premium-terms/, "the terms, said once");
+  assert.doesNotMatch(page, /STORE_PLAN_AMOUNT/, "no Stores price on /premium");
+  // The plan table: Annual (lit) and Monthly, each with its own button, then Free vs Premium.
+  const t = readFileSync(new URL("../src/components/premium/PremiumPlanTable.tsx", import.meta.url), "utf8");
+  assert.match(t, /name="Annual"[\s\S]*?plan="annual"[\s\S]*?name="Monthly"[\s\S]*?plan="monthly"/);
+  assert.equal((t.match(/<PremiumCta\b/g) ?? []).length, 2, "one button per plan");
+  assert.match(t, /Free vs Premium/);
+  assert.match(t, /plan-glow/, "the annual card's animated border");
+  assert.doesNotMatch(t, /\$\d/, "no price typed in: every number from lib/site.ts");
 });
 
 test("the header's link reads Pricing (2026-10-24); the homepage hero keeps Get Premium", () => {

@@ -163,23 +163,16 @@ test("every remaining 'free trial' / '$0 today' / 'nothing charged' line is the 
   assert.deepEqual(found, [], `unguarded free-trial wording:\n${found.join("\n")}`);
 });
 
-test("/premium stays short: one line per plan card, one trial FAQ entry, the buy buttons say 'Start 30 days for $1'", () => {
-  const cards = readFileSync(join(SRC, "components/PremiumPricingCards.tsx"), "utf8");
-  assert.equal((cards.match(/data-trial-offer/g) ?? []).length, 1, "one trial line, in the one card component both tiers use");
-  assert.match(cards, /trialThenLine\(trialDays, trialFeeCents,/);
-  assert.doesNotMatch(stripComments(cards), /free trial/i, "the cards never call the $1 first month a free trial");
-  assert.doesNotMatch(stripComments(cards), /"N-day free trial"/, "the old trial feature bullet is gone: four bullets a card");
+test("/premium stays short: the trial said once, in the buy button, which says 'Start 30 days for $1'", () => {
+  // One plan table since 2026-10-25 (PremiumPlanTable): each card states the trial
+  // in one line through trialThenLine, and the page has no FAQ to say it again.
+  const table = readFileSync(join(SRC, "components/premium/PremiumPlanTable.tsx"), "utf8");
+  // The trial is said once, in the button's small print (PremiumCta), not again under the price.
+  assert.doesNotMatch(stripComments(table), /trialThenLine|data-trial-offer/, "no second trial line on the cards");
+  assert.doesNotMatch(stripComments(table), /free trial/i, "the cards never call the $1 first month a free trial");
   const cta = readFileSync(join(SRC, "components/PremiumCta.tsx"), "utf8");
   assert.match(cta, /trialButtonLabel\(trialDays, trialFeeCents\)/);
   const page = stripComments(readFileSync(join(SRC, "app/premium/page.tsx"), "utf8"));
-  const faq = page.slice(page.indexOf("const FAQ:"), page.indexOf("export default async function PremiumPage"));
-  // Three since 2026-10-23: the "only a few cards?" answer offers the trial only while it is on, and free.
-  assert.equal((faq.match(/premiumTrialEnabled\(\)/g) ?? []).length, 3, "one FAQ entry behind the trial switch, plus the cancel and few-cards answers' own clauses");
-  assert.match(faq, /premiumTrialEnabled\(\) && PREMIUM_TRIAL_FEE_CENTS === 0 \? ` Price your own list first/, "the few-cards answer says 'free' only for a free trial");
-  assert.match(faq, /You pay \$\{premiumTrialFee\(PREMIUM_TRIAL_FEE_CENTS\)\} today/);
-  assert.match(faq, /A card is required\. We email you a day or two before day/);
-  assert.match(faq, /you keep access to day \$\{PREMIUM_TRIAL_DAYS\} either way/);
-  assert.doesNotMatch(faq, /you are never charged|(?<!plan price is )never charged/i, "the $1 is charged: only the plan price is avoided by cancelling");
   // The account card names what was paid.
   assert.match(page, /Trial · \$\{premiumTrialFee\(subDetails\.trialFeeCents\)\} paid/);
   assert.match(page, /Converts to \{subscriptionChargeLine\(subDetails\)/);

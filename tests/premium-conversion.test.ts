@@ -119,16 +119,12 @@ test("the proof endpoint never throws — it degrades to zeroes", () => {
 // /premium: FAQ (visible + schema) and proof strip.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("/premium renders an FAQPage via faqPage(), and the same Q&A is rendered visibly", () => {
+test("/premium has no FAQ since 2026-10-25, so it claims no FAQPage either", () => {
+  // Google honours FAQPage only when the same Q&A is on the page; the FAQ went
+  // with "/premium is one plan table and one comparison", and so did its schema.
   const src = read("src/app/premium/page.tsx");
-  assert.match(src, /faqPage\(FAQ\)/, "expected the FAQPage schema to be built from the real FAQ array");
-  // Rendered visibly through PremiumFaqList (2026-10-23), which maps the same array.
-  assert.match(src, /<PremiumFaqList items=\{FAQ\} \/>/, "the FAQ must also be rendered as real content — Google only honours FAQPage when it matches visible copy");
-  assert.match(read("src/components/premium/PremiumPageClient.tsx"), /items\.map\(/, "…by mapping every item");
-  const faqMatch = src.match(/const FAQ: \{ id: string; q: string; a: string \}\[\] = \[([\s\S]*?)\n\];/);
-  assert.ok(faqMatch, "expected a FAQ array declaration");
-  const count = (faqMatch![1].match(/q: /g) ?? []).length;
-  assert.ok(count >= 4, `expected a real FAQ (>=4 entries), found ${count}`);
+  assert.doesNotMatch(src, /faqPage\(|PremiumFaqList|const FAQ:/);
+  assert.match(src, /"@type": "Product"/, "the Product offer stays");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

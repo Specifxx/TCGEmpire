@@ -438,7 +438,6 @@ test("the tier table row: the shared monthly plans below Premium, unlimited for 
   assert.equal(row!.premium, "Unlimited");
   assert.ok(row!.feature.endsWith(`postage included, up to ${SET_GAP_CHUNK} cards a plan`), "the enforced chunk, in the row name");
   assert.doesNotMatch(code("src/components/TierComparisonTable.tsx"), /up to 200 cards/, "the chunk is the constant, not typed");
-  assert.match(read("src/components/PremiumSlideIn.tsx"), /\{ label: "Finish this set" \}/);
 });
 
 test("'Plan the purchase' sits under the missing list, hands over set, scope and rarity, and is off for Radiance", () => {

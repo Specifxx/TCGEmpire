@@ -291,7 +291,7 @@ test("the copy says 'about every six hours' everywhere the cadence is named, and
   for (const f of ["src/app/premium/page.tsx", "src/components/SealedWatchButton.tsx", "src/app/watching/page.tsx", "src/app/llms.txt/route.ts", "src/lib/articles.ts", "src/components/TierComparisonTable.tsx"]) {
     assert.match(read(f), /SEALED_CHECK_CADENCE/, `${f} quotes the cadence from the constant`);
   }
-  for (const f of ["src/app/premium/page.tsx", "src/components/SealedWatchButton.tsx", "src/app/watching/page.tsx", "src/lib/watch-emails.ts", "src/lib/alert-limits.ts", "src/components/PremiumSlideIn.tsx"]) {
+  for (const f of ["src/app/premium/page.tsx", "src/components/SealedWatchButton.tsx", "src/app/watching/page.tsx", "src/lib/watch-emails.ts", "src/lib/alert-limits.ts"]) {
     const src = code(f);
     assert.doesNotMatch(src, /first in line|beat the bots|instant sealed|instant restock|instantly (email|tell)/i, `${f} promises no speed`);
   }

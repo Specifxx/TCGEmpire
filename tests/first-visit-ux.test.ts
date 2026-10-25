@@ -33,12 +33,13 @@ test("the sign-up card never interrupts a visit's first pages (removed 09-30, re
   // 2026-10-17: the separate sign-up card is gone; the Akali slider asks everyone.
 });
 
-test("the Akali slider: once a session, never in the sign-up session, off the sign-in and checkout pages", () => {
-  const slide = code("src/components/PremiumSlideIn.tsx");
+test("the header's Pricing callout: once a session, never in the sign-up session, off the sign-in and checkout pages", () => {
+  // Replaced the corner Premium slider on 2026-10-25 (PricingNudge).
+  const slide = code("src/components/PricingNudge.tsx");
   assert.match(slide, /premiumSliderEligible\(\{ pathname \}\)/, "through the slider's own gate");
-  assert.match(slide, /if \(ss\?\.getItem\(SESSION_SEEN\) === "1"\) return;/, "once per session");
+  assert.match(slide, /if \(read\("session", SESSION_KEY\)\) return;/, "once per session");
   assert.match(slide, /if \(isSignupSession\(\)\) return;/, "and never in the sign-up session");
-  assert.match(slide, /if \(Date\.now\(\) < readNum\(ls, SNOOZE_UNTIL\)\) return;/, "a dismissal snoozes it");
+  assert.match(slide, /Date\.now\(\) - snoozed < PREMIUM_SLIDER_SNOOZE_MS/, "a dismissal snoozes it");
 });
 
 test("hero stats render the server's final numbers, with no count-up", () => {

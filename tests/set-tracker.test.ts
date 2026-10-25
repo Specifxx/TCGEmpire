@@ -170,15 +170,11 @@ test("/portfolio links to the checklist, and the tier table row is the enforced 
   const row = TIER_COMPARISON.find((r) => r.feature.startsWith("Set tracker"))!;
   assert.ok(row);
   assert.deepEqual([row.account, row.plus, row.premium], [`Up to ${FREE_PORTFOLIO_LIMIT} cards`, "Whole sets, no limit", "Whole sets, no limit"]);
-  assert.match(read("src/components/PremiumSlideIn.tsx"), /\{ label: "Set tracker" \}/);
   // /premium (2026-10-22, real limits): the Portfolio row shows the enforced free
-  // limit and "Unlimited" on a paid tier, and the first FAQ answer says the set
-  // checklist is free.
-  const premium = read("src/app/premium/page.tsx");
+  // limit and "Unlimited" on a paid tier. (Its FAQ went on 2026-10-25.)
   const portfolio = TICK_ROWS.find((r) => r.name === "Portfolio")!;
   assert.ok(portfolio, "the Portfolio row");
   assert.deepEqual((["free", "plus", "premium"] as const).map((t) => cellValue(portfolio.from, t)), [`${FREE_PORTFOLIO_LIMIT} cards`, "Unlimited", "Unlimited"]);
-  assert.match(premium, /q: "What's free\?"[\s\S]{0,300}a set checklist/, "the free set checklist");
 });
 
 test("the price guide row and the tile carry the tick, and only when the set is open", () => {

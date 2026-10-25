@@ -28,7 +28,7 @@ const readCode = (p: string) =>
 // ─────────────────────────────────────────────────────────────────────────────
 
 const NUDGES = [
-  "src/components/PremiumSlideIn.tsx", // signed-in free: Premium (removed 2026-09-28, restored 2026-09-29)
+  "src/components/PricingNudge.tsx", // not on Premium: the header's "Try our Premium features" callout (replaced PremiumSlideIn, 2026-10-25)
   "src/components/AnnualSwitchNudge.tsx", // monthly subscriber: switch to annual
 ];
 const RUNTIME = "src/lib/nudge-runtime.ts";
@@ -76,7 +76,7 @@ test("a pending show is cancelled if the visitor navigates away first", () => {
   // timer.
   for (const f of NUDGES) {
     const code = readCode(f);
-    assert.match(code, /return armNudge\(\{|stopTimer\?\.\(\)/, `${f} must clean up its pending show on unmount/route change`);
+    assert.match(code, /return armNudge\(\{|stopTimer\?\.\(\)|const stop = armNudge\(\{[\s\S]*?stop\(\);/, `${f} must clean up its pending show on unmount/route change`);
   }
   const runtime = readCode(RUNTIME);
   const arm = runtime.slice(runtime.indexOf("export function armNudge"), runtime.indexOf("// ── Page views this visit"));
@@ -105,8 +105,8 @@ test("the delay is a timing change only — every frequency cap is untouched", (
   // Waiting longer must not quietly become "shows to more people". Each nudge
   // keeps its own eligibility and frequency rules; this pins the ones that
   // would be easiest to lose while editing the timer next to them.
-  const slide = readCode("src/components/PremiumSlideIn.tsx");
-  assert.match(slide, /premiumSliderEligible\(/, "the slider still asks its eligibility gate");
+  const slide = readCode("src/components/PricingNudge.tsx");
+  assert.match(slide, /premiumSliderEligible\(/, "the callout asks the slider's eligibility gate");
   assert.match(slide, /PREMIUM_SLIDER_SNOOZE_MS/, "and a dismissal snoozes it");
 
   const annual = readCode("src/components/AnnualSwitchNudge.tsx");
