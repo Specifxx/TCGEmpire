@@ -19483,3 +19483,10 @@ as my vercel history allows".
   plan estimate is seeded: each invoice is a one-off entry on its date.
 - **Ops:** the Anthropic cost source joins the earnings sources in the
   ops-monitor report.
+- **Scope: every Vercel charge, for all sites (2026-10-25).** The owner uses
+  this dashboard as the source of truth for all their sites ("everything spent
+  in vercel counts towards costs. Even domains that aren't Riftcompare"). So
+  costs include every Vercel invoice in every account or team, plus every domain
+  bought or renewed through Vercel for any site. The entry prompt
+  (`docs/earnings-dashboard-setup.md`, Part 5) collects all of it and keeps a
+  domain charge once when it also appears on an invoice.
