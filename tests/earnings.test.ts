@@ -92,21 +92,24 @@ test("Impact (TCGplayer): payouts by event day; reversed pays nothing; pending t
   assert.deepEqual(impactDays(null), []);
 });
 
-test("eBay Partner Network: Performance by Day rows, earnings in each checkout site's currency", () => {
-  const days = epnDays({
-    Records: [
-      { Date: "2026-10-22", CheckoutSite: "US", Earnings: "3.20", OtherEarnings: "0.30" },
-      { Date: "2026-10-22", CheckoutSite: "AU", Earnings: "1.10" },
-      { Date: "2026-10-23", CheckoutSite: "UK", Earnings: "0" },
-      { Date: "bad", CheckoutSite: "US", Earnings: "5" },
-    ],
-  });
-  assert.deepEqual(days, [
-    { day: "2026-10-22", currency: "USD", cents: 350, pendingCents: 0 },
-    { day: "2026-10-22", currency: "AUD", cents: 110, pendingCents: 0 },
-  ]);
+test("eBay Partner Network: Performance by Day rows, all in the account's ONE currency whatever the checkout site", () => {
+  const days = epnDays(
+    {
+      Records: [
+        { Date: "2026-10-22", CheckoutSite: "US", Earnings: "3.20", OtherEarnings: "0.30" },
+        { Date: "2026-10-22", CheckoutSite: "AU", Earnings: "1.10" },
+        { Date: "2026-10-23", CheckoutSite: "UK", Earnings: "0" },
+        { Date: "bad", CheckoutSite: "US", Earnings: "5" },
+      ],
+    },
+    "AUD",
+  );
+  // The bug this pins (2026-10-25): US rows were labelled USD and converted to AUD a
+  // second time, ~1.5x too much. eBay reports every row in the account currency.
+  assert.deepEqual(days, [{ day: "2026-10-22", currency: "AUD", cents: 460, pendingCents: 0 }]);
   // A bare array and lower-case keys parse the same; an unknown shape is empty, not a crash.
   assert.equal(epnDays([{ date: "2026-10-22", checkoutsite: "US", earnings: "1" }])[0].cents, 100);
+  assert.equal(epnDays([{ date: "2026-10-22", earnings: "1" }], "USD")[0].currency, "USD");
   assert.deepEqual(epnDays({ unexpected: true }), []);
 });
 
@@ -165,6 +168,52 @@ test("eBay: the daily report is the v2 id (overridable), and v2-style column nam
     { day: "2026-10-23", currency: "AUD", cents: 250, pendingCents: 0 },
     { day: "2026-10-23", currency: "USD", cents: 125, pendingCents: 0 },
   ]);
+});
+
+test("eBay transactions: an adjusted sale counts once, at its latest record", async () => {
+  const { epnTransactions, latestPerSale, txnDays } = await import("../src/lib/earnings/core");
+  const recs = epnTransactions({
+    Records: [
+      { EpnTransactionId: "A", EventDate: "2026-10-20T10:00:00-07:00", UpdateDate: "2026-10-20T10:00:00-07:00", Earnings: "1.00", Status: "Pending", CustomId: "rc-au-ebay" },
+      { EpnTransactionId: "A", EventDate: "2026-10-20T10:00:00-07:00", UpdateDate: "2026-10-22T09:00:00-07:00", Earnings: "0.90", DeltaEarnings: "-0.10", Status: "Approved", CustomId: "rc-au-ebay" },
+      { EpnTransactionId: "B", EventDate: "2026-10-21T08:00:00-07:00", UpdateDate: "2026-10-21T08:00:00-07:00", Earnings: "2.00", Status: "Pending", CustomId: "op-us-card" },
+    ],
+  });
+  assert.equal(recs.length, 3);
+  const sales = latestPerSale(recs);
+  assert.equal(sales.length, 2);
+  assert.deepEqual(txnDays(sales), [
+    { day: "2026-10-20", currency: "AUD", cents: 90, pendingCents: 0 },
+    { day: "2026-10-21", currency: "AUD", cents: 200, pendingCents: 200 },
+  ]);
+});
+
+test("eBay by tag: grouped by the tag's site prefix, then each full tag, within the range", async () => {
+  const { tagGroup, tagBreakdown, tagDays } = await import("../src/lib/earnings/core");
+  assert.equal(tagGroup("rc-au-ebay").key, "rc");
+  assert.equal(tagGroup("OP-us-card").key, "op");
+  assert.equal(tagGroup("dexcompare-x").key, "dex");
+  assert.equal(tagGroup("pkmn-kindhub").key, "pkmn");
+  assert.equal(tagGroup("").label, "No tag");
+  assert.deepEqual(tagGroup("zz-thing"), { key: "zz", label: "ZZ" });
+  const t = (day: string, tag: string, cents: number) => ({ id: tag + day, day, tag, pending: false, currency: "AUD", cents, updated: "" });
+  const rows = tagDays([t("2026-10-24", "rc-au-ebay", 300), t("2026-10-24", "rc-us-card", 100), t("2026-10-25", "op-au-x", 500), t("2026-01-02", "rc-au-ebay", 999)]);
+  const g = tagBreakdown(rows, "7d", "2026-10-25", "AUD");
+  assert.deepEqual(
+    g.map((x) => [x.key, x.cents, x.sales]),
+    [
+      ["op", 500, 1],
+      ["rc", 400, 2],
+    ],
+  );
+  assert.deepEqual(
+    g[1].tags.map((x) => [x.tag, x.cents]),
+    [
+      ["rc-au-ebay", 300],
+      ["rc-us-card", 100],
+    ],
+  );
+  assert.equal(tagBreakdown(rows, "all", "2026-10-25", "AUD").find((x) => x.key === "rc")!.cents, 1399);
 });
 
 // ── Costs (2026-10-25) ──────────────────────────────────────────────────────

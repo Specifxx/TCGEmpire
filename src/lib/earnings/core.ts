@@ -40,6 +40,8 @@ export interface SourceResult {
   /** What went wrong, or what to set up. Never a secret. */
   detail?: string;
   days: DayAmount[];
+  /** Earnings split by the tracking tag each sale carried (eBay's customid), per day. */
+  tags?: TagDay[];
   /** When this source's data was fetched (ms). */
   fetchedAt: number;
 }
@@ -213,23 +215,6 @@ export function impactDays(json: unknown): DayAmount[] {
 // site, with Earnings (and OtherEarnings) in that site's currency. The JSON is
 // Impact-style ({ Records: [...] }); the parser also accepts a bare array and
 // lower-case keys, so a format change shows as a zero, not a crash.
-export const EPN_SITE_CURRENCY: Record<string, string> = {
-  US: "USD",
-  UK: "GBP",
-  GB: "GBP",
-  AU: "AUD",
-  CA: "CAD",
-  CH: "CHF",
-  DE: "EUR",
-  FR: "EUR",
-  IT: "EUR",
-  ES: "EUR",
-  NL: "EUR",
-  AT: "EUR",
-  BE: "EUR",
-  IE: "EUR",
-};
-
 function recordsOf(json: unknown): Record<string, unknown>[] {
   if (Array.isArray(json)) return json as Record<string, unknown>[];
   const o = (json ?? {}) as Record<string, unknown>;
@@ -269,16 +254,156 @@ export function reportShape(json: unknown): { rows: number; columns: string[] } 
   return { rows: recs.length, columns: recs.length ? Object.keys(recs[0]).slice(0, 20) : [] };
 }
 
-export function epnDays(json: unknown): DayAmount[] {
+// ONE CURRENCY PER ACCOUNT (2026-10-25). EPN reports every earning in the
+// currency the partner chose at sign-up, whatever eBay site the sale was on. The
+// first version labelled each row with its checkout site's currency (US → USD,
+// UK → GBP), so an AUD account's US sales were converted up a second time: the
+// owner saw ~2,500 all-time against ~1,500 on eBay's own dashboard. A currency
+// column wins if eBay ever sends one; otherwise the account currency
+// (EPN_CURRENCY, AUD by default) applies to every row.
+export function epnDays(json: unknown, accountCurrency = "AUD"): DayAmount[] {
   const rows: DayAmount[] = [];
   for (const r of recordsOf(json)) {
     const day = reportDay(pick(r, "Date", "EventDate", "Day", "ReportDate", "TransactionDate"));
     if (!day) continue;
-    const site = String(pick(r, "CheckoutSite", "Site", "Program", "Marketplace") ?? "US").toUpperCase();
-    const currency = String(pick(r, "Currency", "CurrencyCode", "EarningsCurrency") ?? EPN_SITE_CURRENCY[site] ?? "USD").toUpperCase();
+    const currency = String(pick(r, "Currency", "CurrencyCode", "EarningsCurrency") ?? accountCurrency).toUpperCase();
     rows.push({ day, currency, cents: toCents(pick(r, "Earnings", "TotalEarnings", "Commission")) + toCents(pick(r, "OtherEarnings")) });
   }
   return mergeDays(rows);
+}
+
+// ── eBay Transaction Detail report: one sale, many records ──────────────────
+// eBay's glossary: an adjusted sale gets an UPDATED RECORD whose Earnings is the
+// sale's new final value (DeltaEarnings is the change). Summing every record
+// counts an adjusted sale twice, so records are folded to the latest per
+// EpnTransactionId (by UpdateDate) before anything is added up.
+export interface EpnTxn {
+  id: string | null;
+  day: string;
+  tag: string; // the click's customid, "" when none
+  pending: boolean;
+  currency: string;
+  cents: number;
+  updated: string;
+}
+
+export function epnTransactions(json: unknown, accountCurrency = "AUD"): EpnTxn[] {
+  const out: EpnTxn[] = [];
+  for (const r of recordsOf(json)) {
+    const day = reportDay(pick(r, "EventDate", "Date", "TransactionDate"));
+    if (!day) continue;
+    const id = String(pick(r, "EpnTransactionId", "EbayCheckoutTransactionId", "TransactionId") ?? "").trim() || null;
+    out.push({
+      id,
+      day,
+      tag: String(pick(r, "CustomId", "CustomID", "SubId") ?? "").trim(),
+      pending: /pending/i.test(String(pick(r, "Status") ?? "")),
+      currency: String(pick(r, "Currency", "CurrencyCode", "EarningsCurrency") ?? accountCurrency).toUpperCase(),
+      cents: toCents(pick(r, "Earnings", "TotalEarnings", "Commission")),
+      updated: String(pick(r, "UpdateDate", "EventDate") ?? ""),
+    });
+  }
+  return out;
+}
+
+/** The latest record of each sale (a record without an id stands alone). */
+export function latestPerSale(txns: readonly EpnTxn[]): EpnTxn[] {
+  const byId = new Map<string, EpnTxn>();
+  const loose: EpnTxn[] = [];
+  for (const t of txns) {
+    if (!t.id) loose.push(t);
+    else {
+      const prev = byId.get(t.id);
+      if (!prev || Date.parse(t.updated) >= Date.parse(prev.updated) || !Number.isFinite(Date.parse(prev.updated))) byId.set(t.id, t);
+    }
+  }
+  return [...byId.values(), ...loose];
+}
+
+export function txnDays(txns: readonly EpnTxn[]): DayAmount[] {
+  return mergeDays(txns.map((t) => ({ day: t.day, currency: t.currency, cents: t.cents, pendingCents: t.pending ? t.cents : 0 })));
+}
+
+// ── Earnings by tracking tag (2026-10-25, owner: "drill down into the eBay
+// earnings by the first two letters, first three letters of the tag … OP, then
+// it's One Piece. If it's Dex, then it's Pokemon") ──────────────────────────
+// One EPN account serves every site, each tagging its links' customid with its
+// own prefix (RiftCompare: `rc-<market>-<placement>`, lib/affiliate.ts).
+export interface TagDay {
+  day: string;
+  tag: string;
+  currency: string;
+  cents: number;
+  pendingCents: number;
+  sales: number;
+}
+
+export function tagDays(txns: readonly EpnTxn[]): TagDay[] {
+  const m = new Map<string, TagDay>();
+  for (const t of txns) {
+    const k = `${t.day}|${t.tag}|${t.currency}`;
+    const row = m.get(k) ?? { day: t.day, tag: t.tag, currency: t.currency, cents: 0, pendingCents: 0, sales: 0 };
+    row.cents += t.cents;
+    if (t.pending) row.pendingCents += t.cents;
+    row.sales += 1;
+    m.set(k, row);
+  }
+  return [...m.values()].sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : a.tag.localeCompare(b.tag)));
+}
+
+/** Known tag prefixes, longest first so "pkmn" wins over a shorter match. */
+export const TAG_GROUPS: { prefix: string; label: string }[] = [
+  { prefix: "pkmn", label: "Pokémon (on RiftCompare)" },
+  { prefix: "dex", label: "Pokémon (DexCompare)" },
+  { prefix: "rc", label: "RiftCompare (Riftbound)" },
+  { prefix: "op", label: "One Piece" },
+];
+
+export function tagGroup(tag: string): { key: string; label: string } {
+  const t = tag.trim().toLowerCase();
+  if (!t) return { key: "", label: "No tag" };
+  const known = TAG_GROUPS.find((g) => t === g.prefix || t.startsWith(g.prefix));
+  if (known) return { key: known.prefix, label: known.label };
+  const seg = /^[a-z0-9]+/.exec(t)?.[0] ?? t;
+  return { key: seg, label: seg.toUpperCase() };
+}
+
+export interface TagGroupTotal {
+  key: string;
+  label: string;
+  cents: number;
+  pendingCents: number;
+  sales: number;
+  native: Record<string, number>;
+  tags: { tag: string; cents: number; pendingCents: number; sales: number }[];
+}
+
+/** Tag groups for a range, biggest first, each with its full tags (in `display`). */
+export function tagBreakdown(rows: readonly TagDay[], range: RangeKey, today: string, display: string): TagGroupTotal[] {
+  const groups = new Map<string, TagGroupTotal>();
+  const tagMaps = new Map<string, Map<string, { tag: string; cents: number; pendingCents: number; sales: number }>>();
+  for (const r of rows) {
+    if (!inRange(r.day, range, today)) continue;
+    const g = tagGroup(r.tag);
+    const grp = groups.get(g.key) ?? { ...g, cents: 0, pendingCents: 0, sales: 0, native: {}, tags: [] };
+    const cents = toDisplay(r.cents, r.currency, display);
+    const pend = toDisplay(r.pendingCents, r.currency, display);
+    grp.cents += cents;
+    grp.pendingCents += pend;
+    grp.sales += r.sales;
+    grp.native[r.currency] = (grp.native[r.currency] ?? 0) + r.cents;
+    groups.set(g.key, grp);
+    const tm = tagMaps.get(g.key) ?? new Map();
+    const t = tm.get(r.tag) ?? { tag: r.tag, cents: 0, pendingCents: 0, sales: 0 };
+    t.cents += cents;
+    t.pendingCents += pend;
+    t.sales += r.sales;
+    tm.set(r.tag, t);
+    tagMaps.set(g.key, tm);
+  }
+  return [...groups.values()]
+    .map((g) => ({ ...g, tags: [...(tagMaps.get(g.key)?.values() ?? [])].sort((a, b) => b.cents - a.cents) }))
+    .sort((a, b) => b.cents - a.cents);
 }
 
 // ── AdSense Management API v2: reports:generate ─────────────────────────────

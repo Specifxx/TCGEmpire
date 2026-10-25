@@ -19508,3 +19508,13 @@ Owner: "perform a full migration to RM10 as we are at limit." RM9 had been live 
 **The flip.** `OPERATIONAL_VARS = ["RM10"]` in `src/lib/db-chains.ts`; `CURRENT_OP` and the production gate in `scripts/build-db-push.sh`; every workflow's `DATABASE_URL`, `OPERATIONAL_URL`, `DB_SOURCE_NAME` and `RM10` forward; `ci-build.yml`'s service variable; `package.json`'s preview condition; `tests/ops-wiring.test.ts`. A Vercel production build without `RM10` set **fails** (the 2026-10-04 guard), so the previous deployment keeps serving until it is set. Rollback is one commit: RM9 still holds the data.
 
 **Writes in the gap.** Anything written to RM9 between the final pass and the new build going live is not on RM10: a few minutes of signups, alerts and notifications.
+
+## eBay earnings: one account currency, one record per sale, and a split by tag — 2026-10-25
+
+Owner: the dashboard showed about 2,500 all-time from eBay, against about 1,500 on eBay's own dashboard; and "drill down into the eBay earnings by the first two letters, first three letters of the tag … OP, then it's One Piece. If it's Dex, then it's Pokemon".
+
+**The currency was wrong.** EPN reports every earning in the one currency the partner picked at sign-up (it cannot be changed later), whichever eBay site the sale happened on. The first parser labelled each row with its checkout site's currency (US → USD, UK → GBP, AU → AUD), so for an AUD account every US sale was converted to AUD a second time, about 1.5× too much. Now every eBay row is in `EPN_CURRENCY`, AUD unless that Vercel variable says otherwise. A currency column in the response, if eBay ever sends one, still wins.
+
+**The transaction report would have double-counted adjustments.** eBay's field glossary says an adjusted sale gets an updated record whose `Earnings` is the sale's new final value, with `DeltaEarnings` holding the change. Summing every record counts an adjusted sale twice. Records are folded to the latest per `EpnTransactionId` (by `UpdateDate`) first (`latestPerSale` in `src/lib/earnings/core.ts`).
+
+**Two reports, side by side.** Performance by Day is eBay's own daily sum and stays the headline. The Transaction Detail report, folded to one record per sale, carries each click's `customid`, so it drives the new "eBay by tag" section. That section groups by site prefix (`rc` RiftCompare, `pkmn` Pokémon on RiftCompare, `dex` DexCompare, `op` One Piece; anything else by its first segment), then lists each full tag. The connection line prints both reports' all-time totals and the sale and record counts, so a mismatch with eBay's own dashboard shows on the page rather than hiding in a sum.
