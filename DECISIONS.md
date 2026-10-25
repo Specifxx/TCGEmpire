@@ -19552,3 +19552,34 @@ Owner, two days after Radiance released: "we need to create a coming soon for Le
 
 **Layout.** SETS has seven rows, so the homepage "By set" grid is 2 columns on phones (the last tile spans the row), 4 + 3 from sm and one row of 7 at xl. /singles lists only sets with a page worth linking (`hasSetHub`), so it keeps its six.
 
+
+## Metal cards, Radiance's organized-play promos, and Legacy's real card count — 2026-10-25
+
+Owner: "capture more Radiance keywords … blog posts on Radiance Nexus Nights … the summoner skirmish, playmats, the promo cards … add the medal prize wall cards … tag them as medal card … eBay prices … and graded … a blog post on all the metal cards". A research pass (Google autocomplete, competitor pages, Riot's own announcements) set the targets, now in `docs/seo-keyword-map.md`.
+
+**"Medal" cards are metal cards.** "riftbound medal" autocompletes to "riftbound metal cards", and every source says metal. TCGplayer's "Organized Play Promotional Cards" set lists 86 metal printings: 49 Prize Wall ("Plated Legend", non-foil, traded for 40 Prize Wall tickets) and 37 Best Of ("Foil Plated Legend", one per Legend per event). Each is now a card of its own (`src/lib/metal-cards.ts`):
+- `externalId: "tcg-<productId>"`, so TCGplayer prices it from its own product and never by collector number, which it shares with the base card.
+- Tags `metal,prize wall` or `metal,best of`.
+- Its own slug, `…-metal-prize-wall` / `…-metal-best-of`, through a new optional `slug` on manual cards. Name, set and number alone cannot tell the three printings apart.
+
+24 were already in the database as plain `-promo` cards from `add-tcg-printings`. They keep their URLs and gain the tags.
+
+**Base cards were exposed to metal listings.** eBay matching tells a promo from its base card by the word "promo", and sellers title metal cards "Metal" or "Prize Wall", so nothing stopped a $3,000 metal listing pricing a $1 base card. Now:
+- Every non-metal card refuses a title that says metal.
+- A metal card searches `<name> metal` and accepts only titles that say metal and don't name the other kind. Graded slabs follow the same identity.
+- TCGplayer's promo base-sibling fallback skips metal cards, so an unlisted metal Ahri shows no TCGplayer price rather than the base Ahri's.
+- Pages label them "Metal Prize Wall" / "Metal Best Of" (`cardCredentials`).
+
+**Radiance's organized-play promos,** from Riot's own images in "The Radiance Overview":
+- Summoner Skirmish 1: Graves 085 P, and Akali 015 P stamped Top 8.
+- Summoner Skirmish 2: Lulu 110 P, and Ahri 038 P stamped Top 8.
+- The Pre-Rift Heimerdinger 132 (TCGplayer 724468).
+- Nexus Night: the Lulu 110a P and runes R01b–R06b. Their art is cropped from Riot's banner images into `public/nexus-night-promos/`, the same pattern as Vendetta's.
+
+The owner's "Arion and Kali" are Akali and Ahri, each with a Champion playmat. The 24-card Nexus Night pool is listed in the post, not added as cards: Riot has not shown how those promos are numbered.
+
+**Every Radiance printing was already in.** A fresh scrape of Riot's gallery (219 printings) matched our 219 rows by collector number exactly. The 16 Signatures are on top, and the live set page shows 235.
+
+**Legacy is 239 cards, not 346.** Riot's products-and-sets page reads "Cards: 239 (93 Showcase)", checked directly on 25 October. 346 was a third-party figure our Legacy, roadmap and Radiance posts had repeated, including the spoilers post's argument that Origins (352) out-sized Legacy (346). Every mention is corrected; the spoilers post now calls Legacy a mid-sized set (a base run of about 146) with the largest Showcase run so far. `tests/set-sizes.test.ts` accepts 239 beside the 346 the posts now quote only to correct. The calendar's "Legacy boxed decks" row is Riot's Proving Grounds 2nd Edition (19 February 2027, US$40), renamed but left undated.
+
+**Not changed:** Riot's page now also says Radiance is "167 (61 Showcase)", where the site carries the earlier "180 (66 Showcase)" as `announcedCards`. That is a separate correction across the Radiance pages.

@@ -676,6 +676,18 @@ Each Riftbound season has run the same pattern: a Nexus Night pool with one chas
 
 The pattern matters if you collect. A season's promos are only printed while the season runs, so once Legacy arrives on 29 January 2027, the Radiance promo pool closes.
 
+## Where to play for them
+
+All of the organized-play promos above come through local game stores that run Riftbound events. Nexus Night runs weekly on whichever night each store chooses, and Summoner Skirmish is a single store tournament in each window, so ask your store which nights and dates it is running before the season gets busy.
+
+## Buying a Radiance promo: a checklist
+
+- **Ask for the bottom-left corner.** The P in the code line is the quickest proof that a card is the promo, not the pack card.
+- **Check the stamp on Top 8 cards.** Akali and Ahri are only worth the Top 8 premium with the stamp visible.
+- **Buy the runes as a set.** Six singles from six sellers cost more postage, and a mixed set is harder to resell.
+- **Compare across stores.** Promos turn up at singles stores as well as on eBay and TCGplayer, often at very different prices; each promo's card page lists them side by side.
+- **Wait for the season to end if you are not in a hurry.** Promos are most plentiful while events are still running.
+
 ## What Radiance promos are worth
 
 Promos are printed in far smaller numbers than pack cards, and organized-play promos stop being made when the season ends. Historically:
@@ -816,9 +828,51 @@ What you cannot count on: any particular alternate art, any overnumbered card, a
 
 Radiance's pack is the last of its shape. **Legacy, out 29 January 2027**, replaces one of the seven Common slots with a slot that is roughly a 50/50 Legend or Battlefield, so a Legacy pack has six Commons. Showcase Legends and Battlefields stay in the overnumbered slot. If you are deciding whether to open Radiance or wait, the **[Legacy pre-orders](/legacy-preorders)** page compares what stores are already asking.
 
+## What to do with what you pull
+
+Most of a display is cards you will never play. A sensible order:
+
+- **Sleeve the chase slot straight away.** Overnumbered cards and K/DA specials lose value fast with a scratch or a bent corner, and a card you might grade needs to be kept flat from the moment it leaves the pack.
+- **Check every rare against its live price** before deciding what to keep. Many Radiance Rares and Epics are worth more than the pack that held them; many are worth far less.
+- **Group the bulk by set number.** Commons and uncommons sell best as a complete or near-complete set, and a numbered stack makes the gaps easy to see.
+- **Keep the runes.** Alternate-art runes are in demand from players finishing a deck.
+
 ## Track your own pulls
 
 The **[Radiance pull tracker](/tools/pull-tracker)** logs what you open, pack by pack, and adds up what your pulls are worth at today's prices. Shared openings are the only way anyone learns how often the unpriced chase printings appear, so every logged pack makes the picture clearer.
+
+## The odds, display by display
+
+Riot's 0.025% is a per-pack chance, and it does not add up the way people expect. The chance of at least one Packed Amphitheater across a number of 24-pack displays:
+
+| Displays opened | Packs | Chance of at least one Ultimate Rare |
+|---|---|---|
+| 1 | 24 | 0.6% |
+| 2 | 48 | 1.19% |
+| 5 | 120 | 2.96% |
+| 10 | 240 | 5.82% |
+| 20 | 480 | 11.31% |
+| 50 | 1,200 | 25.92% |
+
+Even fifty displays, at a US$120 distributor price each, leave roughly a three-in-four chance of never seeing one. Odds like these are why the card's price is set by how few exist, not by how many boxes people open.
+
+## The chase-slot words, explained
+
+Sellers and box-opening videos use these terms loosely. On a Radiance card they mean:
+
+- **Alternate art (020a to 138a):** a second printing of a base card with new art, numbered with a letter after the base number.
+- **Special alternate art (SP1 to SP5):** the K/DA cards, numbered on their own SP run out of five.
+- **Overnumbered (168 to 183):** a card numbered above the set's 167, foil, with new art. The nine Legends and the HEARTSTEEL cards are overnumbered.
+- **Signature (168\* to 183\*):** an overnumbered card with a signature printed in foil across it, marked by an asterisk after the number.
+- **Ultimate Rare (184):** Packed Amphitheater, the single rarest printing in the set.
+
+A listing that says "overnumbered" but shows a number at or below 167 is a different card; check the number in the corner, not the title.
+
+## What the first week's prices say
+
+Radiance released on 23 October, and its chase printings opened high. On release day TCGplayer had the Mordekaiser Signature at US$999.99, the Aphelios HEARTSTEEL Signature at US$993.25 and the Orianna Signature at US$500; the Riven overnumber was at US$472 and the Seraphine overnumber at US$315. An Evelynn overnumber sold for US$400 and then fell below US$300 within days (figures from TheGamer's release-day round-up). Packed Amphitheater had been listed at US$2,999.99 a week before release.
+
+Early prices in Riftbound tend to fall as more boxes are opened: Vendetta's median overnumbered unit cost US$177 four days before release and US$73 two months later, as **[Radiance chase cards](/blog/riftbound-radiance-chase-cards)** sets out. If you are buying a chase card rather than opening for it, the weeks after release are usually cheaper than release week.
 
 ## Should you open Radiance or buy singles?
 
@@ -829,7 +883,7 @@ Two tools on RiftCompare answer the rest with live numbers:
 - The **[box EV calculator](/tools/box-ev)** works out what an average Radiance display is worth from current singles prices.
 - The **[Radiance card list](/sets/radiance)** shows every card's cheapest price across the stores we track, so you can price your pulls, or skip them.
 
-*Sources: Riot's [The Radiance Overview](https://playriftbound.com/en-us/news/announcements/the-radiance-overview/) for the pack layout and the Ultimate Rare's rate; [tcgtalk's 330-pack opening](https://tcgtalk.com/guides/radiance-riftbound-pull-rates-box-opening) for the count quoted above.*`,
+*Sources: Riot's [The Radiance Overview](https://playriftbound.com/en-us/news/announcements/the-radiance-overview/) for the pack layout and the Ultimate Rare's rate; [tcgtalk's 330-pack opening](https://tcgtalk.com/guides/radiance-riftbound-pull-rates-box-opening) for the count quoted above; [TheGamer](https://www.thegamer.com/riftbound-radiance-most-valuable-cards/) for release-day prices.*`,
   },
   // RADIANCE PATCH NOTES, ERRATA AND TOURNAMENT RULES (2026-10-10, owner:
   // "There's been some updates around riftbound recently, do some research and
@@ -4870,7 +4924,7 @@ You will find sites confidently telling you Riftbound "will never rotate" or "ro
 
 Riftbound launched in 2026 and has five released sets with four more announced through 2027. That is a relevant piece of context, because rotation is a problem that only becomes worth solving once a card pool gets large.
 
-A game with five sets has a manageable format. A game with fifteen has a very different one — more cards to balance, a higher barrier for new players, and more pressure to reprint. Every card game that eventually adopted rotation did so after the pool grew, not at launch. **[The 2027 roadmap](/blog/riftbound-2027-set-roadmap)** shows the pool roughly doubling over the next eighteen months, with Legacy alone at around 346 cards.
+A game with five sets has a manageable format. A game with fifteen has a very different one — more cards to balance, a higher barrier for new players, and more pressure to reprint. Every card game that eventually adopted rotation did so after the pool grew, not at launch. **[The 2027 roadmap](/blog/riftbound-2027-set-roadmap)** shows the pool roughly doubling over the next eighteen months, with Legacy alone adding 239 cards.
 
 None of that is evidence rotation is coming. It is the reason the question is worth keeping open rather than answering prematurely in either direction.
 
@@ -10376,7 +10430,7 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
     summary: [
       "**Four dated releases** are now on the calendar: Radiance (23 Oct 2026), Legacy (29 Jan 2027), a boxed deck product in Feb 2027, and The Reckoning (30 Apr 2027).",
       "**Sets 8 and 9** are placeholder slots for Q3 and Q4 2027 — no names, champions or themes announced.",
-      "**Legacy is the one to plan around.** At 346 cards it is far larger than anything so far, it is the first set designed for draft, and it changes what is inside a booster pack.",
+      "**Legacy is the one to plan around.** At 239 cards, 93 of them Showcase, it has the biggest Showcase run so far, it is the first set designed for draft, and it changes what is inside a booster pack.",
       "Set size is the number buyers should watch: a bigger set spreads the same demand across more slots, which usually means cheaper commons and pricier chase cards.",
       "Nothing here is on sale yet. [Set a price alert](/alerts) rather than pre-ordering blind.",
     ],
@@ -10387,7 +10441,7 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
       },
       {
         q: "What is the next Riftbound set after Radiance?",
-        a: "Legacy, Set 6, scheduled for 29 January 2027. It is the largest set announced so far at roughly 346 cards and is the first one built specifically with drafting in mind.",
+        a: "Legacy, Set 6, scheduled for 29 January 2027. Riot gives it 239 cards, 93 of them Showcase, and it is the first one built specifically with drafting in mind.",
       },
       {
         q: "How many Riftbound sets are planned for 2027?",
@@ -10412,7 +10466,7 @@ This post is the buyer's-eye view: what is coming, when, and which of it should 
 | Set | # | Release | Cards | The short version |
 | --- | --- | --- | --- | --- |
 | **Radiance** | 5 | 23 Oct 2026 | 180 | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven; a step up in size from Vendetta |
-| **Legacy** | 6 | 29 Jan 2027 | ~346 | Region-driven themes across six factions; built for draft; new pack composition |
+| **Legacy** | 6 | 29 Jan 2027 | 239 (93 Showcase) | Region-driven themes across six factions; built for draft; new pack composition |
 | *(boxed decks)* | — | Feb 2027 | — | Four new decks built around Legacy champions |
 | **The Reckoning** | 7 | 30 Apr 2027 | ~264 | Centred on League's biggest champions |
 | **Set 8** | 8 | Q3 2027 | — | Placeholder — nothing announced |
@@ -10432,7 +10486,7 @@ If you intend to open Radiance rather than buy singles, the honest comparison is
 
 Legacy is the set to actually plan around, for three separate reasons.
 
-**It is enormous.** Around 346 cards is roughly double Radiance and more than double Vendetta. A bigger set means each individual card is a smaller slice of the print run, which historically pushes commons and uncommons cheaper while concentrating value at the top of the rarity ladder.
+**Its Showcase run is the biggest yet.** Riot gives 239 cards, 93 of them Showcase: a base run of roughly 146, with more alternate-art printings than any earlier set. A bigger set means each individual card is a smaller slice of the print run, which historically pushes commons and uncommons cheaper while concentrating value at the top of the rarity ladder.
 
 **It is built for draft.** Riot has described Legacy as the first set designed specifically with drafting in mind. Draft-first design tends to mean more playable commons and a flatter power curve — good for players, and usually bad for the price of any single common.
 
@@ -10454,7 +10508,7 @@ That is genuinely useful information even without detail, because it tells you r
 
 ## What this actually means if you're buying
 
-**Set size is your best early signal.** Legacy at ~346 cards will dilute individual pull rates more than any set so far. If you are buying commons and uncommons to build decks, Legacy should be the cheapest set per card the game has had. If you are chasing premium prints, the opposite applies.
+**The Showcase share is your best early signal.** Legacy's 93 Showcase printings out of 239 spread the chase slot across more cards than any set so far, so each individual premium print should be rarer. Its base run of roughly 146 is small, which suits deck-builders buying commons and uncommons.
 
 **Dates announced this far out move.** Fifteen months of runway is a plan, not a promise. Treat the 2027 dates as directional and the October 2026 date as firm.
 
@@ -10600,7 +10654,7 @@ None of it is actionable in August 2026. It is actionable in January 2027, and t
 
 ---
 
-Everything else known about Legacy — the 346-card count, the 12 Legends, the regional-identity theme — is in **[Legacy spoilers: Set 6](/blog/riftbound-legacy-spoilers-set-6)**.
+Everything else known about Legacy — the 239-card count, the 12 Legends, the regional-identity theme — is in **[Legacy spoilers: Set 6](/blog/riftbound-legacy-spoilers-set-6)**.
 
 *Source: Riot Games' [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/), published 4 August 2026. The pack composition, draft focus and templating updates are Riot's announcements; the explanations and the price commentary are ours. Card images and diagrams from the original post are not reproduced here — see Riot's article for those.*`,
   },
@@ -10901,7 +10955,7 @@ Unleashed is the one worth a closer look if you're buying rather than just catal
 
 [Radiance](/sets/radiance) — Set 5 — released on **23 October 2026** with 180 cards (66 Showcase) and nine new champion Legends: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven.
 
-Beyond Radiance, Riot has mapped out the rest of 2027 — Legacy (Set 6, 29 Jan 2027, its biggest set yet at roughly 346 cards), The Reckoning (Set 7, 30 Apr 2027), and two further unnamed sets pencilled in for Q3 and Q4 2027. Rather than repeat those details here — and risk them drifting out of sync if Riot's dates move — the full breakdown, with what each set means for buyers, lives in the **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)**.
+Beyond Radiance, Riot has mapped out the rest of 2027 — Legacy (Set 6, 29 Jan 2027, 239 cards with a record 93 Showcase), The Reckoning (Set 7, 30 Apr 2027), and two further unnamed sets pencilled in for Q3 and Q4 2027. Rather than repeat those details here — and risk them drifting out of sync if Riot's dates move — the full breakdown, with what each set means for buyers, lives in the **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)**.
 
 ## Track prices as new sets land
 
@@ -12757,7 +12811,7 @@ This is a statement about the date, not a claim about Riot's marketing plans. Bu
 
 ## 5. It is the last set before the pool jumps
 
-Riot's roadmap has **Legacy** arriving on 29 January 2027 at around 346 — the largest set announced so far, the first designed specifically for draft, and the one that changes pack composition. We covered the full schedule in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap).
+Riot's roadmap has **Legacy** arriving on 29 January 2027 with 239 cards (93 Showcase), the first designed specifically for draft, and the one that changes pack composition. We covered the full schedule in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap).
 
 That makes Radiance the last release into a relatively small card pool, and the last before a set built for a different format arrives. Bigger sets historically push commons and uncommons cheaper while concentrating value at the top of the rarity ladder — which, for a set that is already 37% Showcase, is worth watching.
 
@@ -12932,9 +12986,9 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
   {
     slug: "riftbound-legacy-spoilers-set-6",
     category: "blog",
-    title: "Riftbound Legacy Spoilers: Set 6's 346 Cards",
+    title: "Riftbound Legacy Spoilers: Set 6's 239 Cards",
     excerpt:
-      "Legacy lands 29 January 2027 with 346 cards, 93 Showcase and the first pack-composition change Riftbound has made. Our read on the claims.",
+      "Legacy lands 29 January 2027 with 239 cards, 93 Showcase and the first pack-composition change Riftbound has made. Our read on the claims.",
     author: "RiftCompare",
     date: "2026-09-12",
     readMins: 14,
@@ -12947,8 +13001,8 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
       alt: "Riftbound: Legacy official key art — four champions in stained-glass regional panels around the Legacy logo",
     },
     summary: [
-      "**Legacy releases 29 January 2027** — 346 cards, 93 of them Showcase, three-letter code **LGC**. Pre-Rift runs 22–28 January; the first previews land at Convergence Fest in Las Vegas, 11–13 December 2026.",
-      "**It is not Riftbound's biggest set.** Counted the same way, Origins' card list is 352 against Legacy's 346 — and on base cards it is 298 against roughly 253. Legacy is the biggest set *since* Origins, which is a different sentence.",
+      "**Legacy releases 29 January 2027** — 239 cards, 93 of them Showcase, three-letter code **LGC**. Pre-Rift runs 22–28 January; the first previews land at Convergence Fest in Las Vegas, 11–13 December 2026.",
+      "**It is not Riftbound's biggest set.** Riot's figure is 239 cards including 93 Showcase, a base run of roughly 146, against Origins' 352, Spiritforged's 287 and Unleashed's 280. Some early coverage reported 346; Riot's own announcement says 239. What Legacy does have is the biggest Showcase run so far.",
       "**The pack change is the real story.** One Common slot becomes a Legend-or-Battlefield slot at roughly 50/50, so Legacy packs hold **6 Commons instead of 7** — the first time Riftbound has altered what a booster contains.",
       "**Seven of the eight named Legends already exist in Riftbound** as ordinary units. Vladimir is the only one genuinely new to the game.",
       "**Our estimate — clearly labelled as ours** — is that Legacy launches into a player base meaningfully larger than Vendetta's, on the back of a first Worlds cycle and a draft format. Riot publishes no player numbers, so nobody can tell you a real one.",
@@ -12984,11 +13038,11 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
       },
       {
         q: "How many cards are in Riftbound Legacy?",
-        a: "346, of which 93 are Showcase treatments. Riot writes that figure the same way it wrote Radiance's — the total already includes the Showcase cards — which implies a base run of roughly 253.",
+        a: "239, of which 93 are Showcase treatments, per Riot's own announcement. The total already includes the Showcase cards, which implies a base run of roughly 146. Some early coverage reported 346; that is not Riot's figure.",
       },
       {
         q: "Is Legacy the biggest Riftbound set ever?",
-        a: "No, though several outlets have reported it that way. Compared like-for-like, Origins' whole card list is 352 against Legacy's 346, and Origins' base run is 298 against Legacy's implied 253. Legacy is the biggest set since Origins.",
+        a: "No. Riot gives Legacy 239 cards including 93 Showcase, against whole card lists of 352 for Origins, 287 for Spiritforged and 280 for Unleashed. What Legacy does have is the largest Showcase run Riftbound has printed.",
       },
       {
         q: "Which champions are in Riftbound Legacy?",
@@ -13009,13 +13063,13 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
     ],
     body: `A disclosure before anything else: **the facts below are Riot's, the opinions are ours.** Every date, card count and product detail in this piece comes from Riot's own 2027 products announcement or its Legacy set page. The reads on what those facts mean — how big the set really is, what the pack change does to opening value, how many people will be playing by January — are our analysis, and we have separated them so you can throw ours out and keep theirs.
 
-Riftbound's sixth set, **Legacy**, releases on **29 January 2027**. It is a genuinely significant release: 346 cards, a regional-identity theme, the game's first draft-focused design, and the first change Riftbound has ever made to what a booster pack contains.
+Riftbound's sixth set, **Legacy**, releases on **29 January 2027**. It is a genuinely significant release: 239 cards with a record 93 Showcase printings, a regional-identity theme, the game's first draft-focused design, and the first change Riftbound has ever made to what a booster pack contains.
 
-It is also being widely described as the biggest Riftbound set ever, and that part does not survive a careful look.
+It has also been described as the biggest Riftbound set ever, and that part does not survive a careful look.
 
 ## First, the size claim
 
-Riot's announcement gives Legacy as **346 cards (93 Showcase)**, three-letter code **LGC**. That got picked up across the hobby press as "the game's largest set to date."
+Riot's announcement gives Legacy as **239 cards (93 Showcase)**, three-letter code **LGC**. Some coverage reported 346 and called it "the game's largest set to date"; neither matches Riot's own page.
 
 The problem is the same one we ran into writing about [Radiance](/blog/riftbound-radiance-biggest-release-since-origins): Riot has not counted every set the same way. For Origins, Spirit Forged and Unleashed, the headline number is the **base run**, with Showcase printings sitting on top as extra alt-art versions of cards already in that numbering. For Radiance and Legacy, the headline number is the **whole card list**, Showcase included.
 
@@ -13028,14 +13082,14 @@ Line them up on the same basis:
 | [Unleashed](/sets/unleashed) | 219 | +61 | 280 |
 | [Vendetta](/sets/vendetta) | 166 | not published | — |
 | [Radiance](/sets/radiance) | ~114 | 66 | 180 |
-| **Legacy** | **~253** | **93** | **346** |
+| **Legacy** | **~146** | **93** | **239** |
 | The Reckoning | ~197 | 67 | 264 |
 
 *Legacy's and Radiance's base runs are arithmetic, not Riot figures — the published total minus the published Showcase count. The Proving Grounds starter sets are excluded. Our card database tracks more printings per set than these numbers show, because it also counts promos and every variant printing; these are set-list figures, which is what set announcements are comparing.*
 
-So: **Origins is still the bigger set, on either measure.** 352 against 346 on the whole list, 298 against roughly 253 on base cards. The honest description of Legacy is that it is the biggest set *since* Origins — comfortably, and by more than 50% over Vendetta — and the biggest of the three 2027 sets announced so far.
+So: **Legacy is a mid-sized set with an unusually large Showcase run.** 239 on the whole list sits below Origins (352), Spirit Forged (287) and Unleashed (280), and its base run of roughly 146 is smaller than Vendetta's 166. What stands out is the 93 Showcase printings: almost two in five of its cards.
 
-That is not a criticism. It is a meaningful jump in pool size at a moment when the format has been running on small sets, and it arrives with a 93-card Showcase run that is the largest Riftbound has printed in absolute terms. But "biggest ever" is a headline the numbers do not support, and a reader deciding how much sealed product to buy deserves the real figure.
+That is not a criticism. A small base run keeps the draft format tight, and a 93-card Showcase run is the largest Riftbound has printed in absolute terms, which spreads the chase slot across more cards. But "biggest ever" is a headline the numbers do not support, and a reader deciding how much sealed product to buy deserves the real figure.
 
 ## The Legends, and the thing nobody has noticed about them
 
@@ -13155,7 +13209,7 @@ Where we would push back on our own optimism: none of this is evidence that the 
 
 ## What would make this call wrong
 
-- **The size correction could be the wrong thing to focus on.** If Legacy's 253-ish base cards are dense with format-defining playables, pool size in the abstract will not matter and we will have spent a section on bookkeeping.
+- **The size correction could be the wrong thing to focus on.** If Legacy's 146-ish base cards are dense with format-defining playables, pool size in the abstract will not matter and we will have spent a section on bookkeeping.
 - **The pack change could be worse than it looks.** Six Commons instead of seven means slightly less raw material for draft decks, and if the Legend/Battlefield slot skews toward Battlefields nobody wants, the "reliably playable" argument weakens.
 - **Draft might not land.** Designing for draft and succeeding at it are different things, and a set's limited format can be flat for reasons that are invisible until thousands of games have been played.
 - **Our player-growth read assumes the Regional Championship cycle goes well.** A first championship season that runs badly — logistics, judging, a broken metagame — is a story that spreads faster than a good one.
@@ -14083,7 +14137,7 @@ So, for Radiance:
 | 11 – 13 Dec 2026 | North American Regional Championship, Las Vegas |
 | 29 Jan 2027 | Legacy (set 6) launches |
 
-Radiance is the last set before **[Legacy](/blog/riftbound-legacy-spoilers-set-6)**, a much larger set at a reported 346 cards. The full release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**, and the 2027 schedule is in **[the set roadmap](/blog/riftbound-2027-set-roadmap)**.
+Radiance is the last set before **[Legacy](/blog/riftbound-legacy-spoilers-set-6)**, a 239-card set with 93 Showcase printings. The full release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**, and the 2027 schedule is in **[the set roadmap](/blog/riftbound-2027-set-roadmap)**.
 
 ## Five Radiance cards worth a closer look
 
@@ -14161,7 +14215,7 @@ For a competitive player that is fine: new sets are new puzzles. For the casual 
 
 The best sign that Riot knows this is **Proving Grounds 2nd Edition** on 19 February 2027: a refreshed US$40 on-ramp three weeks after Legacy. Entry products are what a publisher reaches for when it worries about getting new players in.
 
-**What would prove us wrong:** if Legacy's 346 cards bring in new players rather than overwhelm returning ones. Watch whether Proving Grounds 2nd Edition sells out or sits on shelves.
+**What would prove us wrong:** if Legacy's 239 cards and draft focus bring in new players rather than overwhelm returning ones. Watch whether Proving Grounds 2nd Edition sells out or sits on shelves.
 
 ## 2. Ban timing is the weakest system in the game
 
@@ -14241,7 +14295,7 @@ Our prediction: by the end of 2027, Riftbound is the clear **number four** TCG i
 
 - **Radiance launch week (23 October):** whether prices follow Vendetta's curve. We expect them to, and **[the Radiance card list](/blog/riftbound-radiance-card-list)** tracks every card's price from day one.
 - **Stuttgart (6–8 November):** the first Regional Championship and the first look at a Radiance meta.
-- **Legacy previews:** how Riot handles a 346-card set after five sets in a year.
+- **Legacy previews:** how Riot reveals a 239-card, draft-focused set after five sets in a year.
 
 If you disagree with any of these, **[tell us](/feedback)**. Our best articles have come from readers telling us we were wrong. You can also see the cards behind each take on **[this week's movers](/movers)**, or compare prices for any of them across every store we track in **[the market view](/market)**.`,
   },
