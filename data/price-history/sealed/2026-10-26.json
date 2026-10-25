@@ -23,7 +23,7 @@
     "LGC|Booster Box": {
       "CA": 22995,
       "EU": 11900,
-      "UK": 9500,
+      "UK": 9000,
       "US": 15999
     },
     "LGC|Booster Case": {
@@ -74,13 +74,13 @@
       "AU": 44900,
       "CA": 33995,
       "EU": 6173,
-      "UK": 13999,
+      "UK": 13000,
       "US": 6000
     },
     "OGN|Booster Case": {
       "AU": 184917,
       "EU": 80000,
-      "US": 135499
+      "US": 135498
     },
     "OGN|Booster Pack": {
       "AU": 1900,
@@ -139,7 +139,7 @@
       "US": 27296
     },
     "OGN|Nexus Night Pack": {
-      "AU": 6096,
+      "AU": 8000,
       "EU": 3500,
       "SG": 5590,
       "UK": 2999,
@@ -171,7 +171,7 @@
       "US": 27999
     },
     "RAD|Booster Box": {
-      "AU": 19993,
+      "AU": 18758,
       "CA": 17995,
       "EU": 9799,
       "SG": 22000,
@@ -182,7 +182,7 @@
       "CA": 112024,
       "EU": 63999,
       "UK": 63277,
-      "US": 76999
+      "US": 75400
     },
     "RAD|Booster Pack": {
       "AU": 1099,
@@ -195,11 +195,11 @@
       "CA": 5740,
       "EU": 2980,
       "SG": 5215,
-      "UK": 2899,
-      "US": 3999
+      "UK": 2799,
+      "US": 3500
     },
     "RAD|Bundle Case": {
-      "US": 47989
+      "US": 50000
     },
     "RAD|Pre-Rift Event Kit": {
       "CA": 6580,
@@ -218,7 +218,7 @@
       "EU": 490
     },
     "RAD|Showdown Decks": {
-      "AU": 4598,
+      "AU": 4999,
       "CA": 2099,
       "EU": 2195,
       "SG": 4097,
@@ -232,7 +232,10 @@
       "US": 8297
     },
     "RAD|Sleeved Booster": {
-      "US": 1380
+      "US": 1250
+    },
+    "RAD|Sleeved Booster (Art Set)": {
+      "US": 10000
     },
     "SFD|Booster Box": {
       "AU": 28000,
@@ -243,20 +246,19 @@
       "US": 4500
     },
     "SFD|Booster Case": {
-      "AU": 170551,
+      "AU": 160000,
       "CA": 168036,
       "EU": 62000,
       "UK": 77170,
       "US": 49999
     },
     "SFD|Booster Pack": {
-      "CA": 1099,
+      "CA": 999,
       "SG": 1300,
-      "UK": 499,
       "US": 575
     },
     "SFD|Bulk Runes": {
-      "US": 1250
+      "US": 1495
     },
     "SFD|Bulk Runes Case": {
       "US": 10000
@@ -310,12 +312,11 @@
     },
     "SFD|Nexus Night Pack": {
       "AU": 3134,
-      "SG": 2793,
       "UK": 1185,
       "US": 800
     },
     "SFD|Pre-Rift Event Kit": {
-      "AU": 15478,
+      "AU": 8839,
       "CA": 220000,
       "EU": 4925,
       "US": 157109
@@ -379,7 +380,7 @@
     "UNL|Champion Deck": {
       "CA": 1680,
       "UK": 1595,
-      "US": 1399
+      "US": 1329
     },
     "UNL|Champion Deck (English)": {
       "EU": 2500
@@ -425,10 +426,13 @@
     "UNL|Pre-Rift Kit": {
       "EU": 3290,
       "UK": 4037,
-      "US": 4488
+      "US": 4400
     },
     "UNL|Sealed": {
       "EU": 400
+    },
+    "UNL|Showdown Decks": {
+      "US": 3499
     },
     "UNL|Sleeved Booster": {
       "EU": 1299,
@@ -445,7 +449,7 @@
       "CA": 18995,
       "EU": 11999,
       "SG": 19000,
-      "UK": 10000,
+      "UK": 10995,
       "US": 12299
     },
     "VEN|Booster Case": {
@@ -453,7 +457,7 @@
       "CA": 119999,
       "EU": 83500,
       "UK": 65950,
-      "US": 77500
+      "US": 77499
     },
     "VEN|Booster Pack": {
       "AU": 999,
@@ -461,13 +465,13 @@
       "EU": 795,
       "SG": 800,
       "UK": 499,
-      "US": 540
+      "US": 539
     },
     "VEN|Bundle": {
       "AU": 6500,
       "CA": 4999,
       "EU": 2990,
-      "SG": 3726,
+      "SG": 3482,
       "UK": 2150,
       "US": 3995
     },
@@ -494,7 +498,7 @@
       "AU": 6605,
       "CA": 4995,
       "EU": 3499,
-      "US": 3600
+      "US": 3500
     },
     "VEN|Sealed": {
       "EU": 350
@@ -505,7 +509,7 @@
       "EU": 904,
       "SG": 2949,
       "UK": 1499,
-      "US": 1316
+      "US": 1350
     },
     "VEN|Showdown Decks Display": {
       "AU": 5000,
@@ -531,7 +535,7 @@
       "CA": 7099
     },
     "giftoftheriftbundle": {
-      "US": 28177
+      "US": 28166
     },
     "leagueoflegendsbundle24popvinyls": {
       "AU": 8396
@@ -710,7 +714,7 @@
       "CA": 3501
     },
     "riftboundtcgleagueoflegendschampiondeckv": {
-      "US": 2000
+      "US": 1329
     },
     "riftboundtcglunarnewyear2026ireliabundle": {
       "CA": 37807
