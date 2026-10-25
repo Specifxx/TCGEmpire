@@ -531,8 +531,16 @@ longer lands on its entry.
   `isPreorderSetCode()`. Signatures (`*`) are in no official feed: add them to
   `prisma/manual-cards.json` with their own `externalId`.
   [2026-10-17](../DECISIONS.md#L18273)
-- **Radiance is released (2026-10-22):** no set is `comingSoon`; RAD is
-  `recentlyReleased`. Every release check uses `streetDateStartMs()` (midnight
+- **Legacy is coming soon (2026-10-25):** LGC is `comingSoon` with
+  `releasedOn` 2027-01-29 and Riot's 239 cards (93 Showcase) as
+  `announcedCards`. It has no `totalCards`, `newFrom` or `hubReady`, so
+  /sets/legacy stays noindex while it has no cards. In a store title "legacy"
+  names the set only beside "Riftbound"/"League of Legends", or as the bare code
+  LGC. `/legacy-preorders` holds its pre-orders. Release alerts take the
+  pre-order link from the calendar row and run for RAD and LGC.
+  [2026-10-25](../DECISIONS.md#L19536)
+- **Radiance is released (2026-10-22):** RAD is no longer `comingSoon` (Legacy
+  is, since 10-25); RAD is `recentlyReleased`. Every release check uses `streetDateStartMs()` (midnight
   AEDT on the street date), never midnight UTC. `/radiance-preorders` stays live
   in its released state: every Radiance product's in-stock store offers,
   cheapest first, same URL, no redirect ([2026-10-24](../DECISIONS.md#L19340)). All 219 official printings plus 16

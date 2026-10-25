@@ -19532,3 +19532,54 @@ Owner: eBay showed about 149 on the dashboard against about 143 on eBay's own da
 - **The Other earnings column.** It is counted, but eBay's headline may not include it.
 
 A new "Check against each network's dashboard" panel prints the selected range's exact dates and each piece in the network's own currency: eBay's Earnings and Other earnings columns and the transaction report total, and TCGplayer approved, pending and reversed (not counted).
+
+## Legacy goes up as coming soon — 2026-10-25
+
+Owner, two days after Radiance released: "we need to create a coming soon for Legacy, create the Legacy pre-orders webpage as well, and the card gallery and stuff, just in advance; on the homepage … you should have Legacy coming soon as well."
+
+**Legacy is a SETS row now:** `{ code: "LGC", name: "Legacy", slug: "legacy", comingSoon: true, announcedCards: 239, releasedOn: "2027-01-29" }`. Everything else follows from the date rules already in force, with no set named in code. Legacy is the homepage's disabled "Coming soon" tile, "coming soon" under "Upcoming & unreleased" on /sets, the `nextUpcomingSet()` countdown on the homepage and /release-dates, and a pre-order set for `isPreorderSetCode()` until midnight AEDT on 29 January 2027. It gets no eBay quota priority before then. Not set:
+- `totalCards`: no card has been printed, and `setFromTotal()` routes "x/NNN" by it.
+- `newFrom`: nothing is revealed.
+- `hubReady`: there is no sourced hub, so /sets/legacy and its gallery stay noindex while they have zero cards. Both say when the set lands and link the pre-orders. The set page carries the release-alert signup.
+
+**The card count was wrong on the calendar.** The Legacy row said "~346". Riot's own rundown ("Products and Sets into 2027", re-read today) says "Card count: 239 (93 Showcase)". The row is now 239, not approximate, with Riot's eight named Legends; Riot says four more are to come. The 346 figure is still in the published Legacy articles (`lib/articles.ts`, including the spoilers post's title) and in `tests/set-sizes.test.ts`. They were left alone in this pass: correcting articles is its own change, and it bumps their `updated`.
+
+**Stores were already listing Legacy, setless.** The 2026-10-25 public sealed snapshot had about 50 Legacy rows (booster boxes, Vaults, Champion Decks, cases) in CA, UK, EU and US. All of them had `setCode: null`, so each title was its own group on /sealed, shown as if it were stock. The sealed importer now maps them to LGC, which moves them to the pre-order page from the next import. "Legacy" is a common word: MTG's Legacy format, Yu-Gi-Oh's "Legacy of …" sets. So the word names the set only in a title that also says Riftbound or League of Legends (`LEGACY_TITLE`, a whole-title lookahead), or by the bare code LGC. The same rule is in price-import's `SET_FROM_TITLE`. There a set-name hit switches off the foreign-denominator guard, so a bare word would have let an MTG "Legacy's Allure 123/350" reach the number path. Proving Grounds still wins over Legacy ("… Legacy - Proving Grounds Box Set (2nd Edition)" stays OGS). TCGplayer's `setName` takes the bare word, because it is read inside the Riftbound product line only. No foreign-exclusion regex like `FOREIGN_RADIANCE` was needed: "legacy" is not a `RIFTBOUND_HINT` word, so nothing enters the gate on it. `RIFT_ADJACENT_COLLECTION` also gained no "legacy" handle. A store's "legacy" collection is as likely to be MTG's, and set-named handles are ranked first under the three-handle cap. Tryndamere and Ashe joined `CHAMPIONS`, or Legacy's four Champion Decks would have shared one group and one price.
+
+**/legacy-preorders** is modelled on /radiance-preorders without Radiance's own content (no merch draw, no card art). It reads `getPreorderGroups()` filtered to LGC, with a useful empty state, PreOrder JSON-LD and FAQ, and 21600. It switches to in-stock prices on the street date, the way Radiance's did. The product section uses only Riot's product list and the US distributor sheet (PHD Games, 11 Aug 2026): Booster Display US$120, 24 packs of 14; Vault Bundle US$34.99. The Champion Deck display's MSRP is left out because the distributor and ICv2 disagree. It is in the sitemap and in the nav as "Legacy pre-orders" (as Radiance's page was before release), and the bare "preorder" nav keywords moved to it. Its share image is text only: no Legacy card exists to show. The /release-dates answer to "Can I pre-order <set> yet?" no longer opens "Yes — stores are already taking pre-orders", which that page cannot know.
+
+**Release alerts are set-generic now.** The restock email's link came from a hard-coded `/radiance-preorders`. It now comes from the set's calendar row (`preordersHref`, else the set page). `refresh-prices.yml` runs `?set=LGC` after `?set=RAD`. The signup is on /legacy-preorders (`preorders`) and on any coming-soon set page with no cards yet (new source `set`).
+
+**Layout.** SETS has seven rows, so the homepage "By set" grid is 2 columns on phones (the last tile spans the row), 4 + 3 from sm and one row of 7 at xl. /singles lists only sets with a page worth linking (`hasSetHub`), so it keeps its six.
+
+
+## Metal cards, Radiance's organized-play promos, and Legacy's real card count — 2026-10-25
+
+Owner: "capture more Radiance keywords … blog posts on Radiance Nexus Nights … the summoner skirmish, playmats, the promo cards … add the medal prize wall cards … tag them as medal card … eBay prices … and graded … a blog post on all the metal cards". A research pass (Google autocomplete, competitor pages, Riot's own announcements) set the targets, now in `docs/seo-keyword-map.md`.
+
+**"Medal" cards are metal cards.** "riftbound medal" autocompletes to "riftbound metal cards", and every source says metal. TCGplayer's "Organized Play Promotional Cards" set lists 86 metal printings: 49 Prize Wall ("Plated Legend", non-foil, traded for 40 Prize Wall tickets) and 37 Best Of ("Foil Plated Legend", one per Legend per event). Each is now a card of its own (`src/lib/metal-cards.ts`):
+- `externalId: "tcg-<productId>"`, so TCGplayer prices it from its own product and never by collector number, which it shares with the base card.
+- Tags `metal,prize wall` or `metal,best of`.
+- Its own slug, `…-metal-prize-wall` / `…-metal-best-of`, through a new optional `slug` on manual cards. Name, set and number alone cannot tell the three printings apart.
+
+24 were already in the database as plain `-promo` cards from `add-tcg-printings`. They keep their URLs and gain the tags.
+
+**Base cards were exposed to metal listings.** eBay matching tells a promo from its base card by the word "promo", and sellers title metal cards "Metal" or "Prize Wall", so nothing stopped a $3,000 metal listing pricing a $1 base card. Now:
+- Every non-metal card refuses a title that says metal.
+- A metal card searches `<name> metal` and accepts only titles that say metal and don't name the other kind. Graded slabs follow the same identity.
+- TCGplayer's promo base-sibling fallback skips metal cards, so an unlisted metal Ahri shows no TCGplayer price rather than the base Ahri's.
+- Pages label them "Metal Prize Wall" / "Metal Best Of" (`cardCredentials`).
+
+**Radiance's organized-play promos,** from Riot's own images in "The Radiance Overview":
+- Summoner Skirmish 1: Graves 085 P, and Akali 015 P stamped Top 8.
+- Summoner Skirmish 2: Lulu 110 P, and Ahri 038 P stamped Top 8.
+- The Pre-Rift Heimerdinger 132 (TCGplayer 724468).
+- Nexus Night: the Lulu 110a P and runes R01b–R06b. Their art is cropped from Riot's banner images into `public/nexus-night-promos/`, the same pattern as Vendetta's.
+
+The owner's "Arion and Kali" are Akali and Ahri, each with a Champion playmat. The 24-card Nexus Night pool is listed in the post, not added as cards: Riot has not shown how those promos are numbered.
+
+**Every Radiance printing was already in.** A fresh scrape of Riot's gallery (219 printings) matched our 219 rows by collector number exactly. The 16 Signatures are on top, and the live set page shows 235.
+
+**Legacy is 239 cards, not 346.** Riot's products-and-sets page reads "Cards: 239 (93 Showcase)", checked directly on 25 October. 346 was a third-party figure our Legacy, roadmap and Radiance posts had repeated, including the spoilers post's argument that Origins (352) out-sized Legacy (346). Every mention is corrected; the spoilers post now calls Legacy a mid-sized set (a base run of about 146) with the largest Showcase run so far. `tests/set-sizes.test.ts` accepts 239 beside the 346 the posts now quote only to correct. The calendar's "Legacy boxed decks" row is Riot's Proving Grounds 2nd Edition (19 February 2027, US$40), renamed but left undated.
+
+**Not changed:** Riot's page now also says Radiance is "167 (61 Showcase)", where the site carries the earlier "180 (66 Showcase)" as `announcedCards`. That is a separate correction across the Radiance pages.

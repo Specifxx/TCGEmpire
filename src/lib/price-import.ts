@@ -1,4 +1,5 @@
 // Reusable price-import engine. Pulls Riftbound singles from AU Shopify stores'
+import { metalKindOf } from "./metal-cards";
 import { regionalPrinting } from "./regional-printings";
 // public products.json feeds, matches them to cards, and writes RetailerPrice
 // rows + Card.lowestPriceCents. Called by scripts/import-prices.ts (CLI) and the
@@ -58,12 +59,18 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   // one as Riftbound Radiance would put a Pokémon price on a Riftbound card.
   // lib/sealed-import.ts's FOREIGN_RADIANCE guards the sealed half of this.
   [/(?<!astral\s)\bradiance\b|\bRAD\b/i, "RAD"],
+  // Legacy: the word only with a Riftbound marker in the same title, or the bare
+  // code — the same rule as lib/sealed-import.ts's LEGACY_TITLE, and for a
+  // sharper reason here. A set-name hit switches off the foreign-denominator
+  // guard below (foreignTotal), so a bare /legacy/ would let a mixed-game
+  // collection's "Legacy's Allure 123/350" MTG single reach the number path.
+  [/^(?=[\s\S]*\b(?:riftbound|league\s*of\s*legends)\b)[\s\S]*\blegacy\b|\bLGC\b/i, "LGC"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
 
 // Set/condition/qualifier tokens to strip when isolating the card name.
 const STOP =
-  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vendetta|vengeance|origins|radiance|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
+  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vendetta|vengeance|origins|radiance|legacy|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
 
 function numKey(seg: string): string {
   // Riftbound collector numbers come in two shapes, and BOTH have to normalise
@@ -915,7 +922,7 @@ async function fetchWooStoreProducts(store: RetailerInfo): Promise<ShopifyProduc
 }
 
 export async function refreshEbayMarkets(
-  cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean; externalId?: string | null }[]
+  cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean; externalId?: string | null; tags?: string | null }[]
 ): Promise<number> {
   // Applied HERE rather than in the callers' `orderBy` so no caller can forget
   // it: both the scheduled importer and scripts/refresh-ebay.ts go through this
@@ -1039,6 +1046,7 @@ export async function refreshEbayMarkets(
           isSignature: c.collectorNumber.includes("*"),
           isPromo: c.isPromo,
           regional: regionalPrinting(c.externalId),
+          metal: metalKindOf(c.tags),
           marketplace: mkt.marketplace,
           referenceCents: refByCard.get(c.id),
         },
@@ -1236,7 +1244,7 @@ export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promi
   const all = await prisma.card.findMany({
     orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
     select: {
-      id: true, name: true, setCode: true, collectorNumber: true, isPromo: true,
+      id: true, name: true, setCode: true, collectorNumber: true, isPromo: true, tags: true,
       rarity: true, variant: true, externalId: true,
     },
   });
@@ -1289,6 +1297,7 @@ export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promi
           isSignature: c.collectorNumber.includes("*"),
           isPromo: c.isPromo,
           regional: regionalPrinting(c.externalId),
+          metal: metalKindOf(c.tags),
           marketplace: mkt.marketplace,
           referenceCents: refByCard.get(c.id),
         },
@@ -1974,7 +1983,7 @@ export async function importPrices(): Promise<ImportSummary> {
         { lowestPriceCentsUs: { sort: "desc", nulls: "last" } },
       ],
       select: {
-        id: true, name: true, setCode: true, collectorNumber: true, isPromo: true,
+        id: true, name: true, setCode: true, collectorNumber: true, isPromo: true, tags: true,
         // Needed only to compute effective rarity for the filter below.
         rarity: true, variant: true,
         // lib/regional-printings.ts keys on it.

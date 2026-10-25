@@ -75,7 +75,11 @@ export const NAV_GROUPS: NavGroup[] = [
       // query (caught by tests/nav-search.test.ts). Was "Radiance pre-orders" →
       // /radiance-preorders until release (2026-10-22, owner: "Radiance is out
       // now"); the old pre-order keywords still land a searcher on the set.
-      { href: "/sets/radiance", label: "Radiance (new set)", keywords: ["radiance", "new set", "set 5", "radiance booster box", "preorder", "pre-order", "radiance preorder"] },
+      { href: "/sets/radiance", label: "Radiance (new set)", keywords: ["radiance", "new set", "set 5", "radiance booster box", "radiance preorder"] },
+      // The next set's pre-orders (2026-10-25), as "Radiance pre-orders" was
+      // before Radiance shipped. The bare "preorder" keywords moved here: a
+      // pre-order searcher now wants Legacy. Same no-"prices" label rule.
+      { href: "/legacy-preorders", label: "Legacy pre-orders", keywords: ["legacy", "set 6", "legacy booster box", "legacy preorder", "preorder", "pre-order", "upcoming set"] },
       { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"] },
       { href: "/movers", label: "Weekly Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "most searched", "popular cards"] },
       { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"] },

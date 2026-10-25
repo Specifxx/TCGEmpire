@@ -8,12 +8,15 @@
 // only in the floating badges.
 
 import { isSignature, isOvernumbered } from "@/lib/constants";
+import { metalKindOf } from "@/lib/metal-cards";
 
 export interface CardCredentialFields {
   variant?: string | null;
   isPromo?: boolean | null;
   rarity?: string | null;
   collectorNumber?: string | null;
+  /** Card.tags — read only for the metal Prize Wall / Best Of printings. */
+  tags?: string | null;
 }
 
 // Credential tags for a card, most distinctive first. Empty for a plain base card.
@@ -25,8 +28,12 @@ export function cardCredentials(c: CardCredentialFields): string[] {
   // Special print run (mutually exclusive — a Signature is also overnumbered).
   if (c.collectorNumber && isSignature(c.collectorNumber)) out.push("Signature");
   else if (c.collectorNumber && isOvernumbered(c.collectorNumber)) out.push("Overnumbered");
+  // A metal card says what it is: "Metal Prize Wall" / "Metal Best Of" rather
+  // than "Promo" (lib/metal-cards.ts). It shares the base card's name and number.
+  const metal = metalKindOf(c.tags);
+  if (metal) out.push(`Metal ${metal}`);
   // Promo printing (Nexus Night / prerelease / OP) — shares the base number.
-  if (c.isPromo) out.push("Promo");
+  else if (c.isPromo) out.push("Promo");
   return out;
 }
 

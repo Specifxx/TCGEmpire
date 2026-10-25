@@ -108,6 +108,12 @@ export const SET_GUIDES: Readonly<Record<string, readonly GuideRef[]>> = {
     { slug: "riftbound-radiance-spoilers", reason: "Every Radiance card officially revealed so far, with a dated reveal log" },
     { slug: "where-to-buy-riftbound-radiance", reason: "Where to buy Radiance in each of the six markets we cover" },
   ],
+  // Coming soon since 2026-10-25: the three Legacy posts already published.
+  LGC: [
+    { slug: "riftbound-legacy-spoilers-set-6", reason: "What Riot has shown of Legacy so far: its Legends, regions and release dates" },
+    { slug: "riftbound-legacy-pack-changes-and-card-templating", reason: "How Legacy's packs change: a Legend-or-Battlefield slot in place of a Common" },
+    { slug: "riftbound-2027-set-roadmap", reason: "Where Legacy sits in Riot's 2027 release calendar, with every announced date" },
+  ],
 };
 
 function resolveGuides(refs: readonly GuideRef[]): RelatedGuide[] {

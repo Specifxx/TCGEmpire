@@ -269,6 +269,622 @@ const PREMIUM_TRIAL_ARTICLE_BILLING = premiumTrialEnabled()
   : "Premium runs through Stripe and is charged when you subscribe — no free trial, no introductory price, just the price in the table.";
 
 export const ARTICLES: Article[] = [
+  // METAL CARDS (2026-10-25, owner: "the medal prize wall cards … add those to
+  // the website … tag them as medal card … and we should make a blog post on all
+  // the metal cards so far and the metal cards coming"). Players call them metal
+  // cards ("riftbound medal" autocompletes to "riftbound metal cards"). Owns
+  // `riftbound metal cards`, `plated legend`, `prize wall`, `best of` clusters
+  // (docs/seo-keyword-map.md). The 86 cards are TCGplayer's "Organized Play
+  // Promotional Cards" metal printings, each now a card page (lib/metal-cards.ts);
+  // prices in the body are TCGplayer's on 25 October and dated, the embeds live.
+  {
+    slug: "riftbound-metal-cards",
+    category: "blog",
+    title: "Riftbound Metal Cards: Every Prize Wall and Best Of Card",
+    seoTitle: "Riftbound Metal Cards: All 86 Prize Wall & Best Of + Prices",
+    excerpt:
+      "Every Riftbound metal card: 49 Prize Wall Plated Legends and 37 Best Of foil metals, how each is earned, prices up to US$4,400, and what comes next.",
+    author: "RiftCompare",
+    date: "2026-10-25",
+    readMins: 11,
+    tags: ["metal cards", "prize wall", "best of", "organized play", "chase cards", "collecting", "price guide"],
+    hero: {
+      src: "/blog/riftbound-metal-cards.jpg",
+      alt: "Riftbound metal cards fanned out: Kai'Sa, Viktor, Jinx, Teemo, Ahri, Sett and Lux in their metal Prize Wall and Best Of printings",
+    },
+    shop: [
+      { label: "Riftbound metal cards on eBay", query: "Riftbound metal card" },
+      { label: "Prize Wall metal cards on eBay", query: "Riftbound metal prize wall" },
+      { label: "Best Of metal cards on eBay", query: "Riftbound metal best of" },
+    ],
+    embeds: [
+      {
+        title: "Prize Wall Plated Legends",
+        note: "Non-foil metal Legends, traded for Prize Wall tickets at Regional Qualifiers. Photos are TCGplayer's of the real cards; every card links to its live prices.",
+        slugs: [
+          "teemo-swift-scout-ogn-263-298-metal-prize-wall",
+          "ahri-nine-tailed-fox-ogn-255-298-metal-prize-wall",
+          "yasuo-unforgiven-ogn-259-298-metal-prize-wall",
+          "viktor-herald-of-the-arcane-ogn-265-298-metal-prize-wall",
+          "sett-the-boss-ogn-269-298-metal-prize-wall",
+          "volibear-relentless-storm-ogn-249-298-metal-prize-wall",
+          "vi-piltover-enforcer-unl-187-219-promo",
+          "rengar-pridestalker-unl-183-219-promo",
+        ],
+      },
+      {
+        title: "Best Of foil metals",
+        note: "Holographic metal Legends, one per Legend per event, for the best-placed player on that Legend.",
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-255-298-metal-best-of",
+          "jinx-loose-cannon-ogn-251-298-metal-best-of",
+          "kai-sa-daughter-of-the-void-ogn-247-298-metal-best-of",
+          "annie-dark-child-ogs-017-024-metal-best-of",
+          "lux-lady-of-luminosity-ogs-021-024-metal-best-of",
+          "master-yi-wuju-bladesman-ogs-019-024-metal-best-of",
+          "darius-hand-of-noxus-ogn-253-298-metal-best-of",
+          "teemo-swift-scout-ogn-263-298-metal-best-of",
+        ],
+      },
+    ],
+    summary: [
+      "**Riftbound has 86 metal cards on TCGplayer** across five sets: **49 Prize Wall** printings (non-foil \"Plated Legends\") and **37 Best Of** printings (holographic \"Foil Plated Legends\").",
+      "**Prize Wall metals are traded for tickets** at Regional Qualifiers: 40 Prize Wall tickets each, one per person per weekend. **Best Of metals are won**, one per Legend per event, by the best-placed player on that Legend.",
+      "**The dearest on TCGplayer on 25 October:** Teemo, Swift Scout (Prize Wall) at a US$4,400 market price and Ahri, Nine-Tailed Fox (Best Of) at US$4,232.98. Most sit between US$1,000 and US$2,500.",
+      "**Riot changed metal prizing on 15 October:** Best Of prizes at Regional Championships now come only from Unleashed, Vendetta and Radiance, and **Radiance's metal Legends are expected from January 2027**.",
+      "Every metal card below has its own page with TCGplayer, eBay and graded prices, refreshed daily.",
+    ],
+    faq: [
+      { q: "What are Riftbound metal cards?", a: "Metal reprints of champion Legends that Riot gives out at organized-play events, not in packs. There are two kinds: the non-foil Prize Wall printing (a \"Plated Legend\"), traded for Prize Wall tickets, and the holographic Best Of printing (a \"Foil Plated Legend\"), won by the best-placed player on each Legend. Some players call them medal cards." },
+      { q: "How do you get a Riftbound metal card?", a: "At a Regional Qualifier, Prize Wall metals cost 40 Prize Wall tickets each, one per person per weekend (they cost 10 tickets when the Prize Wall launched; Riot raised the price after Houston). Best Of metals go to the highest-placing player on each Legend who reaches at least four Main Event wins or Day 2. Otherwise the only way is to buy one." },
+      { q: "How many Riftbound metal cards are there?", a: "TCGplayer lists 86: 49 Prize Wall and 37 Best Of printings, from Origins, Proving Grounds, Spiritforged, Unleashed and Vendetta. Radiance's metal Legends have not been released; Riot expects them from January 2027." },
+      { q: "What is the most expensive Riftbound metal card?", a: "On TCGplayer on 25 October 2026, Teemo, Swift Scout's Prize Wall metal had the highest market price at US$4,400, followed by Ahri, Nine-Tailed Fox's Best Of at US$4,232.98. Private sales of Best Of metals have been reported far higher, but those are not public listings." },
+      { q: "What is the difference between Prize Wall and Best Of metal cards?", a: "Prize Wall metals are non-foil and are traded for tickets, so anyone at a Regional Qualifier can earn one. Best Of metals are holographic and only one of each Legend is given per event, to the top-placed player on it, which makes them much scarcer." },
+      { q: "Are metal cards tournament legal?", a: "They are reprints of existing Legends with the same rules text. Check the current tournament rules for card-condition and sleeving requirements before playing a metal card; most owners keep them in a display case." },
+    ],
+    browseCta: {
+      href: "/blog/riftbound-radiance-promo-cards",
+      label: "Radiance promo cards and playmats →",
+      blurb: "Every Radiance Nexus Night, Summoner Skirmish and Pre-Rift promo, with the two Champion playmats.",
+    },
+    body: `**Metal cards are the rarest Riftbound cards you can hold.** They are not in any pack. Riot hands them out at its organized-play events, as metal reprints of the game's champion Legends, and the cheapest of them sells for more than most booster boxes. This is every one of them: what each kind is, how it is earned, what each one costs today, and what is coming next.
+
+Every card below has its own page on RiftCompare, with its TCGplayer price, eBay listings and graded copies compared side by side and refreshed every day.
+
+## Prize Wall and Best Of: the two kinds of metal card
+
+| | Prize Wall | Best Of |
+|---|---|---|
+| Riot's name | Plated Legend | Foil Plated Legend |
+| Finish | Non-foil metal | Holographic metal |
+| How you get one | Trade 40 Prize Wall tickets at a Regional Qualifier | Finish highest on that Legend at an event |
+| How many per event | As many as the wall holds, one per person per weekend | One of each Legend |
+| On TCGplayer | 49 printings | 37 printings |
+
+**Prize Wall metals** are earned with tickets. Every match played at a Regional Qualifier earns Prize Wall tickets, and the wall trades a metal Legend for 40 of them, one per person per weekend. They cost 10 tickets when the Prize Wall launched; Riot raised the price after the Houston qualifier.
+
+**Best Of metals** are won. At each event, the highest-placing player on each Legend, with at least four Main Event wins or a place in Day 2, gets that Legend's holographic metal. One per Legend per event makes them far scarcer than the Prize Wall printing of the same card.
+
+## Riftbound metal card prices: Prize Wall
+
+TCGplayer's market price and its cheapest listing for each Prize Wall metal on **25 October 2026**, dearest first. The market price follows recent sales; a dash means TCGplayer had no sale or no listing.
+
+| Card | Set | Market | Cheapest listing |
+|---|---|---|---|
+| [Teemo, Swift Scout](/card/teemo-swift-scout-ogn-263-298-metal-prize-wall) | Origins 263/298 | US$4,400.00 | US$8,000.00 |
+| [Irelia, Blade Dancer](/card/irelia-blade-dancer-sfd-195-221-metal-prize-wall) | Spiritforged 195/221 | US$3,500.00 | — |
+| [Jinx, Loose Cannon](/card/jinx-loose-cannon-ogn-251-298-metal-prize-wall) | Origins 251/298 | US$2,743.74 | US$5,999.99 |
+| [Kai'Sa, Daughter of the Void](/card/kai-sa-daughter-of-the-void-ogn-247-298-metal-prize-wall) | Origins 247/298 | US$2,739.20 | US$10,000.00 |
+| [Yasuo, Unforgiven](/card/yasuo-unforgiven-ogn-259-298-metal-prize-wall) | Origins 259/298 | US$2,732.33 | — |
+| [Annie, Dark Child](/card/annie-dark-child-ogs-017-024-metal-prize-wall) | Proving Grounds 017/024 | US$2,706.16 | US$4,401.31 |
+| [LeBlanc, Deceiver](/card/leblanc-deceiver-unl-199-219-promo) | Unleashed 199/219 | US$2,400.00 | US$1,999.00 |
+| [Master Yi, Wuju Bladesman](/card/master-yi-wuju-bladesman-ogs-019-024-metal-prize-wall) | Proving Grounds 019/024 | US$2,222.91 | US$3,999.99 |
+| [Lux, Lady of Luminosity](/card/lux-lady-of-luminosity-ogs-021-024-metal-prize-wall) | Proving Grounds 021/024 | US$2,200.00 | — |
+| [Draven, Glorious Executioner](/card/draven-glorious-executioner-sfd-185-221-promo) | Spiritforged 185/221 | US$2,200.00 | US$2,799.99 |
+| [Garen, Might of Demacia](/card/garen-might-of-demacia-ogs-023-024-metal-prize-wall) | Proving Grounds 023/024 | US$1,999.99 | — |
+| [Miss Fortune, Bounty Hunter](/card/miss-fortune-bounty-hunter-ogn-267-298-metal-prize-wall) | Origins 267/298 | US$1,999.00 | US$4,000.00 |
+| [Diana, Scorn of the Moon](/card/diana-scorn-of-the-moon-unl-197-219-promo) | Unleashed 197/219 | US$1,899.99 | — |
+| [Viktor, Herald of the Arcane](/card/viktor-herald-of-the-arcane-ogn-265-298-metal-prize-wall) | Origins 265/298 | US$1,750.00 | US$2,700.00 |
+| [Vex, Gloomist](/card/vex-gloomist-unl-193-219-promo) | Unleashed 193/219 | US$1,600.00 | US$2,000.00 |
+| [Sett, The Boss](/card/sett-the-boss-ogn-269-298-metal-prize-wall) | Origins 269/298 | US$1,586.93 | US$2,499.99 |
+| [Leona, Radiant Dawn](/card/leona-radiant-dawn-ogn-261-298-metal-prize-wall) | Origins 261/298 | US$1,499.99 | US$2,450.00 |
+| [Sivir, Battle Mistress](/card/sivir-battle-mistress-sfd-203-221-promo) | Spiritforged 203/221 | US$1,499.98 | US$4,000.00 |
+| [Jax, Grandmaster at Arms](/card/jax-grandmaster-at-arms-sfd-193-221-promo) | Spiritforged 193/221 | US$1,462.49 | US$2,200.00 |
+| [Pyke, Bloodharbor Ripper](/card/pyke-bloodharbor-ripper-unl-185-219-promo) | Unleashed 185/219 | US$1,450.00 | — |
+| [Lillia, Bashful Bloom](/card/lillia-bashful-bloom-unl-189-219-promo) | Unleashed 189/219 | US$1,450.00 | — |
+| [Azir, Emperor of the Sands](/card/azir-emperor-of-the-sands-sfd-197-221-promo) | Spiritforged 197/221 | US$1,399.76 | US$2,899.99 |
+| [Rumble, Mechanized Menace](/card/rumble-mechanized-menace-sfd-181-221-promo) | Spiritforged 181/221 | US$1,387.50 | US$4,500.00 |
+| [Lucian, Purifier](/card/lucian-purifier-sfd-183-221-promo) | Spiritforged 183/221 | US$1,348.75 | US$1,351.49 |
+| [Jhin, Virtuoso](/card/jhin-virtuoso-unl-181-219-promo) | Unleashed 181/219 | US$1,300.00 | US$2,000.00 |
+| [Volibear, Relentless Storm](/card/volibear-relentless-storm-ogn-249-298-metal-prize-wall) | Origins 249/298 | US$1,283.31 | US$2,599.99 |
+| [Rengar, Pridestalker](/card/rengar-pridestalker-unl-183-219-promo) | Unleashed 183/219 | US$1,275.00 | US$2,400.00 |
+| [Renata Glasc, Chem-Baroness](/card/renata-glasc-chem-baroness-sfd-201-221-promo) | Spiritforged 201/221 | US$1,275.00 | — |
+| [Darius, Hand of Noxus](/card/darius-hand-of-noxus-ogn-253-298-metal-prize-wall) | Origins 253/298 | US$1,199.99 | US$2,650.00 |
+| [Rek'Sai, Void Burrower](/card/rek-sai-void-burrower-sfd-187-221-promo) | Spiritforged 187/221 | US$1,049.75 | US$1,750.00 |
+| [Lee Sin, Blind Monk](/card/lee-sin-blind-monk-ogn-257-298-metal-prize-wall) | Origins 257/298 | US$1,024.98 | US$3,500.00 |
+| [Fiora, Grand Duelist](/card/fiora-grand-duelist-sfd-205-221-promo) | Spiritforged 205/221 | US$817.32 | — |
+| [Akali, Rogue Assassin](/card/akali-rogue-assassin-ven-139-166-metal-prize-wall) | Vendetta 139/166 | — | — |
+| [Renekton, Butcher of the Sands](/card/renekton-butcher-of-the-sands-ven-141-166-metal-prize-wall) | Vendetta 141/166 | — | US$2,000.00 |
+| [Zed, Master of Shadows](/card/zed-master-of-shadows-ven-143-166-metal-prize-wall) | Vendetta 143/166 | — | — |
+| [Nasus, Curator of the Sands](/card/nasus-curator-of-the-sands-ven-145-166-metal-prize-wall) | Vendetta 145/166 | — | — |
+| [Shen, Eye of Twilight](/card/shen-eye-of-twilight-ven-147-166-metal-prize-wall) | Vendetta 147/166 | — | — |
+| [Jayce, Defender of Tomorrow](/card/jayce-defender-of-tomorrow-ven-149-166-metal-prize-wall) | Vendetta 149/166 | — | — |
+| [Mel, Soul's Reflection](/card/mel-soul-s-reflection-ven-151-166-metal-prize-wall) | Vendetta 151/166 | — | US$2,500.00 |
+| [Ambessa, Matriarch of War](/card/ambessa-matriarch-of-war-ven-153-166-metal-prize-wall) | Vendetta 153/166 | — | US$2,000.00 |
+| [Kennen, Heart of the Tempest](/card/kennen-heart-of-the-tempest-ven-155-166-metal-prize-wall) | Vendetta 155/166 | — | US$3,475.00 |
+| [Vi, Piltover Enforcer](/card/vi-piltover-enforcer-unl-187-219-promo) | Unleashed 187/219 | — | US$4,000.00 |
+| [Master Yi, Wuju Master](/card/master-yi-wuju-master-unl-191-219-promo) | Unleashed 191/219 | — | — |
+| [Ivern, Green Father](/card/ivern-green-father-unl-195-219-promo) | Unleashed 195/219 | — | US$1,900.00 |
+| [Kha'Zix, Voidreaver](/card/kha-zix-voidreaver-unl-201-219-promo) | Unleashed 201/219 | — | US$2,200.00 |
+| [Poppy, Keeper of the Hammer](/card/poppy-keeper-of-the-hammer-unl-203-219-promo) | Unleashed 203/219 | — | — |
+| [Ornn, Fire Below the Mountain](/card/ornn-fire-below-the-mountain-sfd-189-221-metal-prize-wall) | Spiritforged 189/221 | — | US$2,199.01 |
+| [Ezreal, Prodigal Explorer](/card/ezreal-prodigal-explorer-sfd-199-221-promo) | Spiritforged 199/221 | — | US$3,499.99 |
+| [Ahri, Nine-Tailed Fox](/card/ahri-nine-tailed-fox-ogn-255-298-metal-prize-wall) | Origins 255/298 | — | — |
+
+[[embed:0]]
+
+## Riftbound metal card prices: Best Of
+
+TCGplayer's market price for each Best Of metal on 25 October 2026. Best Of metals rarely have an open listing, so most change hands privately; the market price is the last sales TCGplayer recorded.
+
+| Card | Set | Market |
+|---|---|---|
+| [Ahri, Nine-Tailed Fox](/card/ahri-nine-tailed-fox-ogn-255-298-metal-best-of) | Origins 255/298 | US$4,232.98 |
+| [Jinx, Loose Cannon](/card/jinx-loose-cannon-ogn-251-298-metal-best-of) | Origins 251/298 | US$2,239.97 |
+| [Annie, Dark Child](/card/annie-dark-child-ogs-017-024-metal-best-of) | Proving Grounds 017/024 | US$2,210.34 |
+| [Kai'Sa, Daughter of the Void](/card/kai-sa-daughter-of-the-void-ogn-247-298-metal-best-of) | Origins 247/298 | US$2,146.95 |
+| [Master Yi, Wuju Bladesman](/card/master-yi-wuju-bladesman-ogs-019-024-metal-best-of) | Proving Grounds 019/024 | US$1,581.58 |
+| [Lux, Lady of Luminosity](/card/lux-lady-of-luminosity-ogs-021-024-metal-best-of) | Proving Grounds 021/024 | US$1,575.00 |
+| [Lee Sin, Blind Monk](/card/lee-sin-blind-monk-ogn-257-298-metal-best-of) | Origins 257/298 | US$1,362.50 |
+| [Sett, The Boss](/card/sett-the-boss-ogn-269-298-metal-best-of) | Origins 269/298 | US$1,333.31 |
+| [Irelia, Blade Dancer](/card/irelia-blade-dancer-sfd-195-221-promo) | Spiritforged 195/221 | US$1,300.00 |
+| [Leona, Radiant Dawn](/card/leona-radiant-dawn-ogn-261-298-metal-best-of) | Origins 261/298 | US$1,222.00 |
+| [Renata Glasc, Chem-Baroness](/card/renata-glasc-chem-baroness-sfd-201-221-metal-best-of) | Spiritforged 201/221 | US$1,199.99 |
+| [Draven, Glorious Executioner](/card/draven-glorious-executioner-sfd-185-221-metal-best-of) | Spiritforged 185/221 | US$1,029.84 |
+| [Darius, Hand of Noxus](/card/darius-hand-of-noxus-ogn-253-298-metal-best-of) | Origins 253/298 | US$999.00 |
+| [Volibear, Relentless Storm](/card/volibear-relentless-storm-ogn-249-298-metal-best-of) | Origins 249/298 | US$950.00 |
+| [Fiora, Grand Duelist](/card/fiora-grand-duelist-sfd-205-221-metal-best-of) | Spiritforged 205/221 | US$825.00 |
+| [Garen, Might of Demacia](/card/garen-might-of-demacia-ogs-023-024-metal-best-of) | Proving Grounds 023/024 | — |
+| [Akali, Rogue Assassin](/card/akali-rogue-assassin-ven-139-166-metal-best-of) | Vendetta 139/166 | — |
+| [Renekton, Butcher of the Sands](/card/renekton-butcher-of-the-sands-ven-141-166-metal-best-of) | Vendetta 141/166 | — |
+| [Zed, Master of Shadows](/card/zed-master-of-shadows-ven-143-166-metal-best-of) | Vendetta 143/166 | — |
+| [Nasus, Curator of the Sands](/card/nasus-curator-of-the-sands-ven-145-166-metal-best-of) | Vendetta 145/166 | — |
+| [Shen, Eye of Twilight](/card/shen-eye-of-twilight-ven-147-166-metal-best-of) | Vendetta 147/166 | — |
+| [Jayce, Defender of Tomorrow](/card/jayce-defender-of-tomorrow-ven-149-166-metal-best-of) | Vendetta 149/166 | — |
+| [Mel, Soul's Reflection](/card/mel-soul-s-reflection-ven-151-166-metal-best-of) | Vendetta 151/166 | — |
+| [Ambessa, Matriarch of War](/card/ambessa-matriarch-of-war-ven-153-166-metal-best-of) | Vendetta 153/166 | — |
+| [Kennen, Heart of the Tempest](/card/kennen-heart-of-the-tempest-ven-155-166-metal-best-of) | Vendetta 155/166 | — |
+| [Rumble, Mechanized Menace](/card/rumble-mechanized-menace-sfd-181-221-metal-best-of) | Spiritforged 181/221 | — |
+| [Lucian, Purifier](/card/lucian-purifier-sfd-183-221-metal-best-of) | Spiritforged 183/221 | — |
+| [Rek'Sai, Void Burrower](/card/rek-sai-void-burrower-sfd-187-221-metal-best-of) | Spiritforged 187/221 | — |
+| [Ornn, Fire Below the Mountain](/card/ornn-fire-below-the-mountain-sfd-189-221-promo) | Spiritforged 189/221 | — |
+| [Jax, Grandmaster at Arms](/card/jax-grandmaster-at-arms-sfd-193-221-metal-best-of) | Spiritforged 193/221 | — |
+| [Azir, Emperor of the Sands](/card/azir-emperor-of-the-sands-sfd-197-221-metal-best-of) | Spiritforged 197/221 | — |
+| [Ezreal, Prodigal Explorer](/card/ezreal-prodigal-explorer-sfd-199-221-metal-best-of) | Spiritforged 199/221 | — |
+| [Sivir, Battle Mistress](/card/sivir-battle-mistress-sfd-203-221-metal-best-of) | Spiritforged 203/221 | — |
+| [Yasuo, Unforgiven](/card/yasuo-unforgiven-ogn-259-298-metal-best-of) | Origins 259/298 | — |
+| [Teemo, Swift Scout](/card/teemo-swift-scout-ogn-263-298-metal-best-of) | Origins 263/298 | — |
+| [Viktor, Herald of the Arcane](/card/viktor-herald-of-the-arcane-ogn-265-298-metal-best-of) | Origins 265/298 | — |
+| [Miss Fortune, Bounty Hunter](/card/miss-fortune-bounty-hunter-ogn-267-298-metal-best-of) | Origins 267/298 | — |
+
+[[embed:1]]
+
+## Why the prices look the way they do
+
+**Origins metals cost the most.** Teemo, Jinx, Kai'Sa and Yasuo, the faces of the game's first set, take four of the top five Prize Wall prices.
+
+**The champion matters as much as the card.** Metal cards are bought to keep rather than to play, so the best-loved champions lead the list.
+
+**Best Of is scarcer than Prize Wall, but not always dearer.** One Best Of per Legend per event should make it the pricier printing, and for Ahri it is. For most Legends there are too few Best Of sales to set a reliable price, which is why so many rows above show a gap.
+
+**The asking price is not the price.** Several cheapest listings sit far above the market price (Kai'Sa's Prize Wall metal was listed at US$10,000 against a US$2,739.20 market price). With so few copies for sale, one seller's ask is not a valuation. Each card's page shows every source, so check the sales, not just the listing.
+
+## What changed in October, and what is coming
+
+On **15 October 2026** Riot changed how metal cards are handed out at its Regional Championships:
+
+- **Best Of prizes now come from Unleashed, Vendetta and Radiance only.** Origins, Proving Grounds and Spiritforged Legends are no longer awarded. No new Origins Best Of metals means the ones already out are all there will be, unless Riot reverses it.
+- **Overnumbered Foil Plated Legends go to the top 58 finishers**, who pick in order of placing.
+- **Radiance's metal Legends are not out yet.** Riot expects them from **January 2027** and has not yet said how they will be distributed.
+
+The next metal cards to be handed out are at the **European Regional Championship in Stuttgart (6–8 November)** and the **North American Regional Championship in Las Vegas (11–13 December)**. We add each new metal card as soon as it has a TCGplayer listing.
+
+## Before you buy a metal card
+
+- **Check which printing it is.** Prize Wall is non-foil; Best Of is holographic. Sellers do not always say which, and the price gap can be thousands of dollars.
+- **Ask for photos at an angle**, so the metal finish and any foil show.
+- **Compare the market price with the listing.** A listing several times the market price is a starting point, not a value.
+- **Watch the card instead of buying today.** A free account emails you when a card you watch drops in price or gets a new listing.
+
+The **[Radiance promo cards](/blog/riftbound-radiance-promo-cards)** post covers the season's Nexus Night and Summoner Skirmish promos, and the **[Radiance Signature cards](/blog/riftbound-radiance-signature-cards)** are the set's rarest pack pulls.
+
+*Sources: Riot's [Regional Championships prizing update](https://playriftbound.com/en-us/news/organizedplay/regional-championships-competitive-integrity-prizing/) (15 October 2026); [riftbound.zone](https://riftbound.zone/en/how-to-get-metal-cards-rq-barcelona/) and [UVS Games](https://uvsgames.com/rq-atlanta-prize-wall/) on the Prize Wall; prices from TCGplayer's "Organized Play Promotional Cards" catalogue on 25 October 2026.*`,
+  },
+  // RADIANCE PROMOS (2026-10-25, owner: "blog posts on Radiance Nexus Nights …
+  // the summoner skirmish, playmats, the promo cards … there's two, an Arion and
+  // a Kali one, and playmats for each … a holistic blog post that has those
+  // embedded cards"). The two are Akali (Skirmish 1) and Ahri (Skirmish 2), from
+  // Riot's own images in "The Radiance Overview". Owns `riftbound radiance promo
+  // cards`, `nexus night promos`, `summoner skirmish prizes/promos`, `riftbound
+  // lulu promo`, `riftbound ahri confident` (docs/seo-keyword-map.md). The
+  // promo cards are in manual-cards.json, art from Riot (cropped for 110a and
+  // the runes).
+  {
+    slug: "riftbound-radiance-promo-cards",
+    category: "blog",
+    title: "Radiance Promo Cards: Nexus Night, Summoner Skirmish and Playmats",
+    seoTitle: "Riftbound Radiance Promos: Nexus Night, Skirmish & Playmats",
+    excerpt:
+      "Every Riftbound Radiance promo: the Nexus Night Lulu and runes, Summoner Skirmish Akali and Ahri with their Champion playmats, and Pre-Rift Heimerdinger.",
+    author: "RiftCompare",
+    date: "2026-10-25",
+    readMins: 9,
+    tags: ["radiance", "promo", "nexus night", "summoner skirmish", "playmat", "organized play", "collecting"],
+    hero: {
+      src: "/blog/riftbound-radiance-promo-cards.jpg",
+      alt: "Riftbound Radiance promo cards: the Nexus Night Lulu 110a in front, with Graves, Akali Top 8, Ahri Top 8 and Lulu from Summoner Skirmish, over the Akali Champion playmat",
+    },
+    shop: [
+      { label: "Radiance promos on eBay", query: "Riftbound Radiance promo" },
+      { label: "Radiance Nexus Night Lulu", query: "Riftbound Lulu Whimsical promo 110a" },
+      { label: "Summoner Skirmish playmats", query: "Riftbound Summoner Skirmish playmat" },
+    ],
+    embeds: [
+      {
+        title: "Nexus Night: Lulu 110a and the promo runes",
+        note: "The Nexus Night chase card and the six full-art promo runes. Every card links to its live prices.",
+        slugs: [
+          "lulu-whimsical-rad-110a-167-promo",
+          "fury-rune-rad-r01b-promo",
+          "calm-rune-rad-r02b-promo",
+          "mind-rune-rad-r03b-promo",
+          "body-rune-rad-r04b-promo",
+          "chaos-rune-rad-r05b-promo",
+          "order-rune-rad-r06b-promo",
+        ],
+      },
+      {
+        title: "Summoner Skirmish 1: Graves and Akali",
+        note: "Graves for taking part; Akali, stamped Top 8, for the top cut.",
+        slugs: ["graves-blasting-through-rad-085-167-promo", "akali-brash-rad-015-167-promo"],
+      },
+      {
+        title: "Summoner Skirmish 2: Lulu and Ahri",
+        note: "Lulu for taking part; Ahri, stamped Top 8, for the top cut and the champion.",
+        slugs: ["lulu-whimsical-rad-110-167-promo", "ahri-confident-rad-038-167-promo"],
+      },
+      {
+        title: "The Pre-Rift promo",
+        note: "Given at Pre-Rift events, 16–22 October, while supplies lasted.",
+        slugs: ["heimerdinger-academy-instructor-rad-132-167-promo"],
+      },
+    ],
+    summary: [
+      "**Nexus Night:** weekly promo packs from a 24-card pool, chased for **Lulu, Whimsical 110a/167** (alternate art by Dark Glow) and six full-art **promo runes, R01b to R06b**.",
+      "**Summoner Skirmish 1 (from 9 November):** **Graves, Blasting Through** for taking part, **Akali, Brash** stamped *Top 8* for the top cut, and an **Akali Champion playmat** for the winner.",
+      "**Summoner Skirmish 2 (from 14 December):** **Lulu, Whimsical** for taking part, **Ahri, Confident** stamped *Top 8* for the top cut, and an **Ahri Champion playmat**.",
+      "**Pre-Rift (16–22 October):** **Heimerdinger, Academy Instructor**, while supplies lasted.",
+      "Every promo has its own card page with live prices as listings appear.",
+    ],
+    faq: [
+      { q: "What are the Radiance Summoner Skirmish promos?", a: "Summoner Skirmish 1, from 9 November 2026, gives Graves, Blasting Through (RAD 085/167 P) for taking part and Akali, Brash (RAD 015/167 P) stamped Top 8 for the top cut, with an Akali Champion playmat for the winner. Summoner Skirmish 2, from 14 December, gives Lulu, Whimsical (RAD 110/167 P) for taking part and Ahri, Confident (RAD 038/167 P) stamped Top 8, with an Ahri Champion playmat." },
+      { q: "What is the Radiance Nexus Night chase card?", a: "Lulu, Whimsical 110a/167, an alternate-art promo painted by Dark Glow. It is a different card from the standard-art Lulu promo given at Summoner Skirmish 2." },
+      { q: "What are the Radiance Nexus Night promo runes?", a: "Six full-art runes by Jincheng Guo, numbered RAD R01b to R06b: Fury, Calm, Mind, Body, Chaos and Order. They come in Nexus Night promo packs." },
+      { q: "How do you get Radiance Nexus Night promos?", a: "Play at a local game store's Nexus Night. Each event hands out promo packs from a 24-card pool, while supplies last; the day and format vary by store." },
+      { q: "Are there Summoner Skirmish playmats for Radiance?", a: "Yes, one per Skirmish: an Akali Champion playmat for Summoner Skirmish 1 and an Ahri Champion playmat for Summoner Skirmish 2, both for the event's champion." },
+      { q: "What was the Radiance Pre-Rift promo?", a: "Heimerdinger, Academy Instructor (RAD 132/167), given to players who signed up for their store's Pre-Rift event, 16–22 October 2026, while supplies lasted." },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Every Radiance card, with live prices →",
+      blurb: "The full Radiance card list, promos and Signatures included, compared across every store we track.",
+    },
+    body: `**Radiance's season comes with its own promo cards, and two playmats.** Riot hands them out through organized play rather than packs: a weekly Nexus Night pool, two Summoner Skirmish tournaments, and a Pre-Rift card that has already gone. This is every Radiance promo and how to earn it, from Riot's own announcement, with each card embedded and priced.
+
+## Nexus Night: Lulu 110a and the promo runes
+
+Nexus Night is the weekly casual event at local game stores. In the Radiance season, each Nexus Night hands out promo packs drawn from a **24-card pool**, while supplies last.
+
+The chase card is **Lulu, Whimsical 110a/167**, an alternate-art promo painted by **Dark Glow**: Lulu in a rainbow of poros and Yordle mischief. Alongside her come six full-art **promo runes by Jincheng Guo**, numbered **R01b to R06b**, one for each domain.
+
+[[embed:0]]
+
+The rest of the 24-card pool is promo printings of Radiance commons and uncommons. These are the base cards, each linked to its card page:
+
+| | | | |
+|---|---|---|---|
+| Banner of Conquest (002) | War Scout (008) | Shimmering Swimmer (014) | Firebrand Raider (019) |
+| Iridescent Avian (027) | Life from Stone (029) | Watchful Curator (037) | Hush (041) |
+| High Note (048) | Trinket Peddler (054) | Clanging Sentry (055) | Spirit of the Forge (066) |
+| Hold 'Em (070) | Sneaky Zeebles (076) | Stalwart Goatherd (083) | Portable Portal (087) |
+| Explosimian (094) | Satchel Charge (096) | Reckless Innovator (105) | Bedeviling Stranger (107) |
+| Hunting Dog (119) | Party Crasher (122) | Rousing Display (127) | Battlefield Armorer (130) |
+
+Riot's announcement calls card 083 "Stalwart Shepherd"; the printed card and Riot's card gallery name it **Stalwart Goatherd**.
+
+## Summoner Skirmish 1: Graves, Akali and the Akali playmat
+
+Summoner Skirmish is Riftbound's store-level tournament. The first Radiance Skirmish runs **from 9 November 2026**.
+
+- **For taking part:** **Graves, Blasting Through** (RAD 085/167 P).
+- **For the top cut:** **Akali, Brash** (RAD 015/167 P), stamped **Top 8**.
+- **For the champion:** the **Akali Champion playmat**.
+
+[[embed:1]]
+
+![The Akali Champion playmat from Riftbound Radiance Summoner Skirmish 1](/blog/radiance-summoner-skirmish-akali-playmat.jpg)
+
+## Summoner Skirmish 2: Lulu, Ahri and the Ahri playmat
+
+The second Radiance Skirmish runs **from 14 December 2026**.
+
+- **For taking part:** **Lulu, Whimsical** (RAD 110/167 P), the standard art by Polar Engine Studio. Not the Nexus Night 110a.
+- **For the top cut and the champion:** **Ahri, Confident** (RAD 038/167 P), stamped **Top 8**.
+- **For the champion:** the **Ahri Champion playmat**.
+
+[[embed:2]]
+
+![The Ahri Champion playmat from Riftbound Radiance Summoner Skirmish 2](/blog/radiance-summoner-skirmish-ahri-playmat.jpg)
+
+## The Pre-Rift promo: Heimerdinger
+
+Pre-Rift events ran **16–22 October**, the week before release. Players who signed up at their store got **Heimerdinger, Academy Instructor** (RAD 132/167), while supplies lasted. It is the first Radiance promo with a TCGplayer listing.
+
+[[embed:3]]
+
+## Bigger events: Regional Championships
+
+Radiance's first big events are the **European Regional Championship in Stuttgart (6–8 November)** and the **North American Regional Championship in Las Vegas (11–13 December)**. Every competitor gets a commemorative playmat and a promo, with further promos and playmats for Day 2, the Top 8 and the champion. Riot has not named those cards yet. The Regional Championships are also where **metal cards** are awarded: see **[every Riftbound metal card](/blog/riftbound-metal-cards)**.
+
+## Every Radiance promo at a glance
+
+| Card | Number | How you get it | When |
+|---|---|---|---|
+| [Lulu, Whimsical (alternate art)](/card/lulu-whimsical-rad-110a-167-promo) | RAD 110a/167 P | Nexus Night promo packs | Radiance season, weekly |
+| Promo runes (Fury to Order) | RAD R01b to R06b P | Nexus Night promo packs | Radiance season, weekly |
+| 24 Nexus Night pool cards | Base numbers, promo printing | Nexus Night promo packs | Radiance season, weekly |
+| [Graves, Blasting Through](/card/graves-blasting-through-rad-085-167-promo) | RAD 085/167 P | Summoner Skirmish 1, taking part | From 9 November 2026 |
+| [Akali, Brash (Top 8)](/card/akali-brash-rad-015-167-promo) | RAD 015/167 P | Summoner Skirmish 1, top cut | From 9 November 2026 |
+| Akali Champion playmat | — | Summoner Skirmish 1, champion | From 9 November 2026 |
+| [Lulu, Whimsical](/card/lulu-whimsical-rad-110-167-promo) | RAD 110/167 P | Summoner Skirmish 2, taking part | From 14 December 2026 |
+| [Ahri, Confident (Top 8)](/card/ahri-confident-rad-038-167-promo) | RAD 038/167 P | Summoner Skirmish 2, top cut | From 14 December 2026 |
+| Ahri Champion playmat | — | Summoner Skirmish 2, champion | From 14 December 2026 |
+| [Heimerdinger, Academy Instructor](/card/heimerdinger-academy-instructor-rad-132-167-promo) | RAD 132/167 | Pre-Rift sign-up | 16–22 October 2026 |
+
+## How to tell a promo from the pack card
+
+Every Radiance promo shares its name, and usually its art, with a card you can pull from a pack, so the difference is in the small print:
+
+- **The "P" in the code line.** The bottom-left corner of a promo reads, for example, *RAD • 110a/167 • P • EN*. The pack card has no P.
+- **The PROMO stamp.** Promos carry a small "PROMO" badge at the bottom centre of the frame, above the code line.
+- **The Top 8 stamp.** The Skirmish top-cut Akali and Ahri carry a "TOP 8" mark on the art. A listing that says "Top 8" without a photo of the stamp is worth a question before you buy.
+- **The art.** The Nexus Night Lulu 110a is entirely new art by Dark Glow. The Skirmish Lulu is Polar Engine Studio's standard art, so it looks like the pack card apart from the stamp and the code line.
+
+A seller who lists a promo by name alone may mean the pack card. Each promo above has its own card page, separate from its pack version, so their prices are never mixed.
+
+## Other Radiance exclusives
+
+Not every Radiance extra comes from organized play:
+
+- **The Vault Bundle** comes with foil tokens alongside its six booster packs and runes. They are part of the product, not a promo you earn.
+- **The K/DA Couture Collection** goes on sale through Riot's merch drawing from 27 October 2026, at US$150. It includes Evelynn, Ahri, Akali and Kai'Sa Legend cards and a Packed Amphitheater Battlefield. The **[K/DA Couture Collection post](/blog/riftbound-kda-couture-collection)** covers the drawing.
+- **The Regional Qualifier in Los Angeles** (25–27 September) opened Radiance's preview season with an alternate-art Jayce, Brilliant Inventor promo for its top 128 and a Lux Crystal Rose playmat, with exclusive-art Jayce promos and playmats for the Top 8 and the champion.
+
+## Where Radiance promos fit with earlier seasons
+
+Each Riftbound season has run the same pattern: a Nexus Night pool with one chase card and a promo rune cycle, Skirmish promos for taking part and for the top cut, and a playmat for the champion. Vendetta's Nexus Night chase card was Mel, Newly Awakened, with its own R01b to R06b runes: see **[Vendetta's Nexus Night promos](/blog/riftbound-vendetta-nexus-night-promo-cards)**. Radiance's Lulu 110a takes Mel's place, and the runes are new full-art paintings rather than a recolour of the pack runes.
+
+The pattern matters if you collect. A season's promos are only printed while the season runs, so once Legacy arrives on 29 January 2027, the Radiance promo pool closes.
+
+## Where to play for them
+
+All of the organized-play promos above come through local game stores that run Riftbound events. Nexus Night runs weekly on whichever night each store chooses, and Summoner Skirmish is a single store tournament in each window, so ask your store which nights and dates it is running before the season gets busy.
+
+## Buying a Radiance promo: a checklist
+
+- **Ask for the bottom-left corner.** The P in the code line is the quickest proof that a card is the promo, not the pack card.
+- **Check the stamp on Top 8 cards.** Akali and Ahri are only worth the Top 8 premium with the stamp visible.
+- **Buy the runes as a set.** Six singles from six sellers cost more postage, and a mixed set is harder to resell.
+- **Compare across stores.** Promos turn up at singles stores as well as on eBay and TCGplayer, often at very different prices; each promo's card page lists them side by side.
+- **Wait for the season to end if you are not in a hurry.** Promos are most plentiful while events are still running.
+
+## What Radiance promos are worth
+
+Promos are printed in far smaller numbers than pack cards, and organized-play promos stop being made when the season ends. Historically:
+
+- **The Top 8 stamps hold value best.** Only a handful are given per store, per event.
+- **Participation promos start cheap and climb slowly** once a season is over and no more are printed.
+- **Full-art runes sell as sets.** A complete R01b to R06b set is worth more than six singles.
+
+Each card above has its own page that compares listings as they appear, and a free account emails you when one you are watching is listed or drops in price. The **[Radiance card list](/sets/radiance)** has every pack card beside its promo, and **[Radiance pull rates](/blog/riftbound-radiance-pull-rates)** explains what the packs themselves can hold.
+
+*Source: Riot's [The Radiance Overview](https://playriftbound.com/en-us/news/announcements/the-radiance-overview/); card images are Riot's. Regional Championship details from Riot's [2026 Regional Championship information](https://playriftbound.com/en-us/news/organizedplay/2026-regional-championship-info/).*`,
+  },
+  // RADIANCE PULL RATES (2026-10-25, research cluster C: `riftbound radiance
+  // pull rates`, `riftbound ultimate rare`, `packed amphitheater`, `radiance
+  // worth it`). Official pack layout and the ~0.025% Ultimate Rare rate are
+  // Riot's ("The Radiance Overview"); the 1-in-330 count is tcgtalk's own
+  // opening, cited as theirs. No odds are invented for slots Riot did not price.
+  {
+    slug: "riftbound-radiance-pull-rates",
+    category: "blog",
+    title: "Radiance Pull Rates: What's in a Pack, and the Ultimate Rare",
+    seoTitle: "Riftbound Radiance Pull Rates & Ultimate Rare Odds",
+    excerpt:
+      "What is in a Riftbound Radiance pack, slot by slot, the official odds of the Packed Amphitheater Ultimate Rare, and what a box can and cannot promise.",
+    author: "RiftCompare",
+    date: "2026-10-25",
+    readMins: 7,
+    tags: ["radiance", "pull rates", "ultimate rare", "chase cards", "booster box", "price guide"],
+    embeds: [
+      {
+        title: "The Ultimate Rare: Packed Amphitheater 184/167",
+        note: "Riot's rarest Radiance card, in about 0.025% of packs.",
+        slugs: ["packed-amphitheater-rad-184-167"],
+      },
+      {
+        title: "What the chase slot can hold",
+        note: "Overnumbered Legends and HEARTSTEEL units, and the five K/DA specials.",
+        slugs: [
+          "seraphine-starry-eyed-songstress-rad-174-167",
+          "ekko-boy-who-shattered-time-rad-168-167",
+          "ezreal-dashing-rad-180-167",
+          "ekko-revolutionary-rad-177-167",
+          "ahri-confident-rad-sp1-005",
+          "kai-sa-rebel-rad-sp4-005",
+        ],
+      },
+    ],
+    summary: [
+      "**A Radiance booster pack holds 14 cards:** 7 Commons, 3 Uncommons, 1 foil, 1 Rare or Epic, 1 slot that can be anything from Rare up to the Ultimate Rare, and 1 Token, Rune or alternate-art Rune.",
+      "**The Ultimate Rare, Packed Amphitheater 184/167, is in about 0.025% of packs** by Riot's figure: roughly 1 in 4,000. That is about four times rarer than the Baron Ultimate Rare's 0.1%.",
+      "**No pack, box or case is guaranteed one.** A 24-pack display at 0.025% a pack has about a 0.6% chance; one public opening of 330 packs found one.",
+      "**The chase slot is where the value is:** Showcase alternate arts, the K/DA specials, the overnumbered Legends and HEARTSTEEL cards, and the Ultimate Rare all come from it.",
+    ],
+    faq: [
+      { q: "What are the Riftbound Radiance pull rates?", a: "Riot publishes the pack layout and the Ultimate Rare's rate, not every slot's odds. A Radiance pack has 7 Commons, 3 Uncommons, 1 foil, 1 Rare or Epic, 1 slot that can be Rare, Epic, alternate art, special alternate art, overnumbered or Ultimate Rare, and 1 Token, Rune or alternate-art Rune. The Ultimate Rare appears in about 0.025% of packs." },
+      { q: "What is the Radiance Ultimate Rare?", a: "Packed Amphitheater, a Battlefield numbered 184/167. Riot puts it in about 0.025% of packs, roughly 1 in 4,000, and no pack, box or case is guaranteed one." },
+      { q: "How many packs do you need to open to pull Packed Amphitheater?", a: "On Riot's 0.025% rate, about 4,000 on average, with no guarantee. A 24-pack booster display gives roughly a 0.6% chance. One published opening of 330 packs pulled one, which was luck rather than a rate." },
+      { q: "Is a Radiance booster box worth it?", a: "Only if you want to open product. The expected value of a box depends on the chase slot, and the Ultimate Rare is too rare to count on. If you want specific cards, buying the singles is almost always cheaper; RiftCompare's box EV calculator works out the current value from live singles prices." },
+    ],
+    browseCta: {
+      href: "/tools/box-ev",
+      label: "Is a Radiance box worth opening? →",
+      blurb: "The box EV calculator prices every Radiance pull slot from live singles prices.",
+    },
+    body: `**What is actually in a Riftbound Radiance pack?** Riot publishes the layout of every pack and the odds of its rarest card, and that is enough to answer most of what people search for: what each slot can hold, how rare the Ultimate Rare really is, and what a box can and cannot promise. Riot does not publish the odds of every slot, so where a number is not Riot's, this post says whose it is.
+
+## What's in a Radiance booster pack
+
+Each Radiance booster pack holds **14 cards**:
+
+| Slot | What it holds |
+|---|---|
+| 7 | Commons |
+| 3 | Uncommons |
+| 1 | Foil |
+| 1 | Rare or Epic |
+| 1 | Rare, Epic, alternate art, special alternate art, overnumbered or Ultimate Rare |
+| 1 | Token, Rune or alternate-art Rune |
+
+The second-to-last slot is the one that matters. Every Showcase alternate art, the five **[K/DA special cards](/blog/riftbound-kda-cards)** (SP1 to SP5), the overnumbered Legends and HEARTSTEEL units, and the Ultimate Rare all come from it.
+
+## The Ultimate Rare: Packed Amphitheater
+
+Radiance's **Ultimate Rare is Packed Amphitheater, a Battlefield numbered 184/167**. Riot puts it in **about 0.025% of packs**, roughly **one in 4,000**. That makes it about four times rarer than the Baron Ultimate Rare, at 0.1%.
+
+[[embed:0]]
+
+What that rate means in practice:
+
+- **A pack:** about 1 in 4,000.
+- **A 24-pack booster display:** about a 0.6% chance, or 1 display in 167.
+- **A case:** still not guaranteed. Riot is explicit that no pack, box or case is guaranteed an Ultimate Rare.
+
+One public opening of **330 packs** by tcgtalk found one. That is a lucky result, not a better rate, and it is the best illustration of why nobody should open boxes to chase this card.
+
+## The chase slot
+
+Most of a pack's value is in that one flexible slot. These are the cards it can hold.
+
+[[embed:1]]
+
+- **Showcase alternate arts:** 18 lettered printings (020a to 138a), new art for Legends and champions.
+- **K/DA specials:** SP1 to SP5, Ahri, Akali, Evelynn, Kai'Sa and Seraphine in K/DA art.
+- **Overnumbered:** the nine Legend overnumbers (168 to 176), Ekko, Revolutionary (177) and the six HEARTSTEEL cards (178 to 183).
+- **The Ultimate Rare:** Packed Amphitheater (184).
+
+The **[Radiance Signature cards](/blog/riftbound-radiance-signature-cards)**, the signed versions of the overnumbered cards, are rarer still, and their odds are not published.
+
+## Radiance by the numbers
+
+Riot's card gallery lists **219 Radiance printings**, and RiftCompare tracks 16 Signatures on top of them:
+
+| Group | Numbers | Printings |
+|---|---|---|
+| Base set | 001 to 167 | 167 |
+| Overnumbered Legends | 168 to 176 | 9 |
+| Ekko, Revolutionary | 177 | 1 |
+| HEARTSTEEL overnumbered | 178 to 183 | 6 |
+| Ultimate Rare | 184 | 1 |
+| Alternate arts | 020a to 138a | 18 |
+| K/DA specials | SP1 to SP5 | 5 |
+| Runes and alternate-art runes | R01 to R06, R01a to R06a | 12 |
+| Signatures (not in Riot's gallery) | 168\* to 183\*, 174a\* | 16 |
+
+By rarity, the gallery's 219 printings split into **54 Common, 46 Uncommon, 45 Rare, 28 Epic and 46 Showcase**. The commons and uncommons fill ten of a pack's fourteen slots, which is why a full set of them costs little, and why a display's value sits almost entirely in its 24 chase slots.
+
+## What a Radiance display can and cannot promise
+
+A 24-pack booster display gives you **24 chase-slot cards**: one per pack. Most of them will be Rares and Epics, because Riot does not raise the odds of the special printings just because you bought a whole display. What you can count on:
+
+- **24 foils**, one per pack.
+- **24 Rares or Epics** from the fixed slot, plus whatever the chase slot adds.
+- **240 commons and uncommons**, enough for most of the base set's lower rarities.
+
+What you cannot count on: any particular alternate art, any overnumbered card, any K/DA special, and above all the Ultimate Rare. Riot publishes only the Ultimate Rare's rate. Anyone quoting exact odds for the other chase printings is quoting their own openings, which is a sample, not a rate.
+
+## How Radiance compares with the next set
+
+Radiance's pack is the last of its shape. **Legacy, out 29 January 2027**, replaces one of the seven Common slots with a slot that is roughly a 50/50 Legend or Battlefield, so a Legacy pack has six Commons. Showcase Legends and Battlefields stay in the overnumbered slot. If you are deciding whether to open Radiance or wait, the **[Legacy pre-orders](/legacy-preorders)** page compares what stores are already asking.
+
+## What to do with what you pull
+
+Most of a display is cards you will never play. A sensible order:
+
+- **Sleeve the chase slot straight away.** Overnumbered cards and K/DA specials lose value fast with a scratch or a bent corner, and a card you might grade needs to be kept flat from the moment it leaves the pack.
+- **Check every rare against its live price** before deciding what to keep. Many Radiance Rares and Epics are worth more than the pack that held them; many are worth far less.
+- **Group the bulk by set number.** Commons and uncommons sell best as a complete or near-complete set, and a numbered stack makes the gaps easy to see.
+- **Keep the runes.** Alternate-art runes are in demand from players finishing a deck.
+
+## Track your own pulls
+
+The **[Radiance pull tracker](/tools/pull-tracker)** logs what you open, pack by pack, and adds up what your pulls are worth at today's prices. Shared openings are the only way anyone learns how often the unpriced chase printings appear, so every logged pack makes the picture clearer.
+
+## The odds, display by display
+
+Riot's 0.025% is a per-pack chance, and it does not add up the way people expect. The chance of at least one Packed Amphitheater across a number of 24-pack displays:
+
+| Displays opened | Packs | Chance of at least one Ultimate Rare |
+|---|---|---|
+| 1 | 24 | 0.6% |
+| 2 | 48 | 1.19% |
+| 5 | 120 | 2.96% |
+| 10 | 240 | 5.82% |
+| 20 | 480 | 11.31% |
+| 50 | 1,200 | 25.92% |
+
+Even fifty displays, at a US$120 distributor price each, leave roughly a three-in-four chance of never seeing one. Odds like these are why the card's price is set by how few exist, not by how many boxes people open.
+
+## The chase-slot words, explained
+
+Sellers and box-opening videos use these terms loosely. On a Radiance card they mean:
+
+- **Alternate art (020a to 138a):** a second printing of a base card with new art, numbered with a letter after the base number.
+- **Special alternate art (SP1 to SP5):** the K/DA cards, numbered on their own SP run out of five.
+- **Overnumbered (168 to 183):** a card numbered above the set's 167, foil, with new art. The nine Legends and the HEARTSTEEL cards are overnumbered.
+- **Signature (168\* to 183\*):** an overnumbered card with a signature printed in foil across it, marked by an asterisk after the number.
+- **Ultimate Rare (184):** Packed Amphitheater, the single rarest printing in the set.
+
+A listing that says "overnumbered" but shows a number at or below 167 is a different card; check the number in the corner, not the title.
+
+## What the first week's prices say
+
+Radiance released on 23 October, and its chase printings opened high. On release day TCGplayer had the Mordekaiser Signature at US$999.99, the Aphelios HEARTSTEEL Signature at US$993.25 and the Orianna Signature at US$500; the Riven overnumber was at US$472 and the Seraphine overnumber at US$315. An Evelynn overnumber sold for US$400 and then fell below US$300 within days (figures from TheGamer's release-day round-up). Packed Amphitheater had been listed at US$2,999.99 a week before release.
+
+Early prices in Riftbound tend to fall as more boxes are opened: Vendetta's median overnumbered unit cost US$177 four days before release and US$73 two months later, as **[Radiance chase cards](/blog/riftbound-radiance-chase-cards)** sets out. If you are buying a chase card rather than opening for it, the weeks after release are usually cheaper than release week.
+
+## Should you open Radiance or buy singles?
+
+If you want to open product, open it. If you want specific cards, buy them: a single is a known price, and a pack is a ticket to a slot whose odds Riot mostly does not publish.
+
+Two tools on RiftCompare answer the rest with live numbers:
+
+- The **[box EV calculator](/tools/box-ev)** works out what an average Radiance display is worth from current singles prices.
+- The **[Radiance card list](/sets/radiance)** shows every card's cheapest price across the stores we track, so you can price your pulls, or skip them.
+
+*Sources: Riot's [The Radiance Overview](https://playriftbound.com/en-us/news/announcements/the-radiance-overview/) for the pack layout and the Ultimate Rare's rate; [tcgtalk's 330-pack opening](https://tcgtalk.com/guides/radiance-riftbound-pull-rates-box-opening) for the count quoted above; [TheGamer](https://www.thegamer.com/riftbound-radiance-most-valuable-cards/) for release-day prices.*`,
+  },
   // RADIANCE PATCH NOTES, ERRATA AND TOURNAMENT RULES (2026-10-10, owner:
   // "There's been some updates around riftbound recently, do some research and
   // make a couple insightful blog posts"). Riot published three documents at
@@ -4308,7 +4924,7 @@ You will find sites confidently telling you Riftbound "will never rotate" or "ro
 
 Riftbound launched in 2026 and has five released sets with four more announced through 2027. That is a relevant piece of context, because rotation is a problem that only becomes worth solving once a card pool gets large.
 
-A game with five sets has a manageable format. A game with fifteen has a very different one — more cards to balance, a higher barrier for new players, and more pressure to reprint. Every card game that eventually adopted rotation did so after the pool grew, not at launch. **[The 2027 roadmap](/blog/riftbound-2027-set-roadmap)** shows the pool roughly doubling over the next eighteen months, with Legacy alone at around 346 cards.
+A game with five sets has a manageable format. A game with fifteen has a very different one — more cards to balance, a higher barrier for new players, and more pressure to reprint. Every card game that eventually adopted rotation did so after the pool grew, not at launch. **[The 2027 roadmap](/blog/riftbound-2027-set-roadmap)** shows the pool roughly doubling over the next eighteen months, with Legacy alone adding 239 cards.
 
 None of that is evidence rotation is coming. It is the reason the question is worth keeping open rather than answering prematurely in either direction.
 
@@ -9814,7 +10430,7 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
     summary: [
       "**Four dated releases** are now on the calendar: Radiance (23 Oct 2026), Legacy (29 Jan 2027), a boxed deck product in Feb 2027, and The Reckoning (30 Apr 2027).",
       "**Sets 8 and 9** are placeholder slots for Q3 and Q4 2027 — no names, champions or themes announced.",
-      "**Legacy is the one to plan around.** At 346 cards it is far larger than anything so far, it is the first set designed for draft, and it changes what is inside a booster pack.",
+      "**Legacy is the one to plan around.** At 239 cards, 93 of them Showcase, it has the biggest Showcase run so far, it is the first set designed for draft, and it changes what is inside a booster pack.",
       "Set size is the number buyers should watch: a bigger set spreads the same demand across more slots, which usually means cheaper commons and pricier chase cards.",
       "Nothing here is on sale yet. [Set a price alert](/alerts) rather than pre-ordering blind.",
     ],
@@ -9825,7 +10441,7 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
       },
       {
         q: "What is the next Riftbound set after Radiance?",
-        a: "Legacy, Set 6, scheduled for 29 January 2027. It is the largest set announced so far at roughly 346 cards and is the first one built specifically with drafting in mind.",
+        a: "Legacy, Set 6, scheduled for 29 January 2027. Riot gives it 239 cards, 93 of them Showcase, and it is the first one built specifically with drafting in mind.",
       },
       {
         q: "How many Riftbound sets are planned for 2027?",
@@ -9850,7 +10466,7 @@ This post is the buyer's-eye view: what is coming, when, and which of it should 
 | Set | # | Release | Cards | The short version |
 | --- | --- | --- | --- | --- |
 | **Radiance** | 5 | 23 Oct 2026 | 180 | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven; a step up in size from Vendetta |
-| **Legacy** | 6 | 29 Jan 2027 | ~346 | Region-driven themes across six factions; built for draft; new pack composition |
+| **Legacy** | 6 | 29 Jan 2027 | 239 (93 Showcase) | Region-driven themes across six factions; built for draft; new pack composition |
 | *(boxed decks)* | — | Feb 2027 | — | Four new decks built around Legacy champions |
 | **The Reckoning** | 7 | 30 Apr 2027 | ~264 | Centred on League's biggest champions |
 | **Set 8** | 8 | Q3 2027 | — | Placeholder — nothing announced |
@@ -9870,7 +10486,7 @@ If you intend to open Radiance rather than buy singles, the honest comparison is
 
 Legacy is the set to actually plan around, for three separate reasons.
 
-**It is enormous.** Around 346 cards is roughly double Radiance and more than double Vendetta. A bigger set means each individual card is a smaller slice of the print run, which historically pushes commons and uncommons cheaper while concentrating value at the top of the rarity ladder.
+**Its Showcase run is the biggest yet.** Riot gives 239 cards, 93 of them Showcase: a base run of roughly 146, with more alternate-art printings than any earlier set. A bigger set means each individual card is a smaller slice of the print run, which historically pushes commons and uncommons cheaper while concentrating value at the top of the rarity ladder.
 
 **It is built for draft.** Riot has described Legacy as the first set designed specifically with drafting in mind. Draft-first design tends to mean more playable commons and a flatter power curve — good for players, and usually bad for the price of any single common.
 
@@ -9892,7 +10508,7 @@ That is genuinely useful information even without detail, because it tells you r
 
 ## What this actually means if you're buying
 
-**Set size is your best early signal.** Legacy at ~346 cards will dilute individual pull rates more than any set so far. If you are buying commons and uncommons to build decks, Legacy should be the cheapest set per card the game has had. If you are chasing premium prints, the opposite applies.
+**The Showcase share is your best early signal.** Legacy's 93 Showcase printings out of 239 spread the chase slot across more cards than any set so far, so each individual premium print should be rarer. Its base run of roughly 146 is small, which suits deck-builders buying commons and uncommons.
 
 **Dates announced this far out move.** Fifteen months of runway is a plan, not a promise. Treat the 2027 dates as directional and the October 2026 date as firm.
 
@@ -10038,7 +10654,7 @@ None of it is actionable in August 2026. It is actionable in January 2027, and t
 
 ---
 
-Everything else known about Legacy — the 346-card count, the 12 Legends, the regional-identity theme — is in **[Legacy spoilers: Set 6](/blog/riftbound-legacy-spoilers-set-6)**.
+Everything else known about Legacy — the 239-card count, the 12 Legends, the regional-identity theme — is in **[Legacy spoilers: Set 6](/blog/riftbound-legacy-spoilers-set-6)**.
 
 *Source: Riot Games' [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/), published 4 August 2026. The pack composition, draft focus and templating updates are Riot's announcements; the explanations and the price commentary are ours. Card images and diagrams from the original post are not reproduced here — see Riot's article for those.*`,
   },
@@ -10339,7 +10955,7 @@ Unleashed is the one worth a closer look if you're buying rather than just catal
 
 [Radiance](/sets/radiance) — Set 5 — released on **23 October 2026** with 180 cards (66 Showcase) and nine new champion Legends: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, Mordekaiser, K'Sante and Riven.
 
-Beyond Radiance, Riot has mapped out the rest of 2027 — Legacy (Set 6, 29 Jan 2027, its biggest set yet at roughly 346 cards), The Reckoning (Set 7, 30 Apr 2027), and two further unnamed sets pencilled in for Q3 and Q4 2027. Rather than repeat those details here — and risk them drifting out of sync if Riot's dates move — the full breakdown, with what each set means for buyers, lives in the **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)**.
+Beyond Radiance, Riot has mapped out the rest of 2027 — Legacy (Set 6, 29 Jan 2027, 239 cards with a record 93 Showcase), The Reckoning (Set 7, 30 Apr 2027), and two further unnamed sets pencilled in for Q3 and Q4 2027. Rather than repeat those details here — and risk them drifting out of sync if Riot's dates move — the full breakdown, with what each set means for buyers, lives in the **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)**.
 
 ## Track prices as new sets land
 
@@ -12195,7 +12811,7 @@ This is a statement about the date, not a claim about Riot's marketing plans. Bu
 
 ## 5. It is the last set before the pool jumps
 
-Riot's roadmap has **Legacy** arriving on 29 January 2027 at around 346 — the largest set announced so far, the first designed specifically for draft, and the one that changes pack composition. We covered the full schedule in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap).
+Riot's roadmap has **Legacy** arriving on 29 January 2027 with 239 cards (93 Showcase), the first designed specifically for draft, and the one that changes pack composition. We covered the full schedule in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap).
 
 That makes Radiance the last release into a relatively small card pool, and the last before a set built for a different format arrives. Bigger sets historically push commons and uncommons cheaper while concentrating value at the top of the rarity ladder — which, for a set that is already 37% Showcase, is worth watching.
 
@@ -12370,9 +12986,9 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
   {
     slug: "riftbound-legacy-spoilers-set-6",
     category: "blog",
-    title: "Riftbound Legacy Spoilers: Set 6's 346 Cards",
+    title: "Riftbound Legacy Spoilers: Set 6's 239 Cards",
     excerpt:
-      "Legacy lands 29 January 2027 with 346 cards, 93 Showcase and the first pack-composition change Riftbound has made. Our read on the claims.",
+      "Legacy lands 29 January 2027 with 239 cards, 93 Showcase and the first pack-composition change Riftbound has made. Our read on the claims.",
     author: "RiftCompare",
     date: "2026-09-12",
     readMins: 14,
@@ -12385,8 +13001,8 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
       alt: "Riftbound: Legacy official key art — four champions in stained-glass regional panels around the Legacy logo",
     },
     summary: [
-      "**Legacy releases 29 January 2027** — 346 cards, 93 of them Showcase, three-letter code **LGC**. Pre-Rift runs 22–28 January; the first previews land at Convergence Fest in Las Vegas, 11–13 December 2026.",
-      "**It is not Riftbound's biggest set.** Counted the same way, Origins' card list is 352 against Legacy's 346 — and on base cards it is 298 against roughly 253. Legacy is the biggest set *since* Origins, which is a different sentence.",
+      "**Legacy releases 29 January 2027** — 239 cards, 93 of them Showcase, three-letter code **LGC**. Pre-Rift runs 22–28 January; the first previews land at Convergence Fest in Las Vegas, 11–13 December 2026.",
+      "**It is not Riftbound's biggest set.** Riot's figure is 239 cards including 93 Showcase, a base run of roughly 146, against Origins' 352, Spiritforged's 287 and Unleashed's 280. Some early coverage reported 346; Riot's own announcement says 239. What Legacy does have is the biggest Showcase run so far.",
       "**The pack change is the real story.** One Common slot becomes a Legend-or-Battlefield slot at roughly 50/50, so Legacy packs hold **6 Commons instead of 7** — the first time Riftbound has altered what a booster contains.",
       "**Seven of the eight named Legends already exist in Riftbound** as ordinary units. Vladimir is the only one genuinely new to the game.",
       "**Our estimate — clearly labelled as ours** — is that Legacy launches into a player base meaningfully larger than Vendetta's, on the back of a first Worlds cycle and a draft format. Riot publishes no player numbers, so nobody can tell you a real one.",
@@ -12422,11 +13038,11 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
       },
       {
         q: "How many cards are in Riftbound Legacy?",
-        a: "346, of which 93 are Showcase treatments. Riot writes that figure the same way it wrote Radiance's — the total already includes the Showcase cards — which implies a base run of roughly 253.",
+        a: "239, of which 93 are Showcase treatments, per Riot's own announcement. The total already includes the Showcase cards, which implies a base run of roughly 146. Some early coverage reported 346; that is not Riot's figure.",
       },
       {
         q: "Is Legacy the biggest Riftbound set ever?",
-        a: "No, though several outlets have reported it that way. Compared like-for-like, Origins' whole card list is 352 against Legacy's 346, and Origins' base run is 298 against Legacy's implied 253. Legacy is the biggest set since Origins.",
+        a: "No. Riot gives Legacy 239 cards including 93 Showcase, against whole card lists of 352 for Origins, 287 for Spiritforged and 280 for Unleashed. What Legacy does have is the largest Showcase run Riftbound has printed.",
       },
       {
         q: "Which champions are in Riftbound Legacy?",
@@ -12447,13 +13063,13 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
     ],
     body: `A disclosure before anything else: **the facts below are Riot's, the opinions are ours.** Every date, card count and product detail in this piece comes from Riot's own 2027 products announcement or its Legacy set page. The reads on what those facts mean — how big the set really is, what the pack change does to opening value, how many people will be playing by January — are our analysis, and we have separated them so you can throw ours out and keep theirs.
 
-Riftbound's sixth set, **Legacy**, releases on **29 January 2027**. It is a genuinely significant release: 346 cards, a regional-identity theme, the game's first draft-focused design, and the first change Riftbound has ever made to what a booster pack contains.
+Riftbound's sixth set, **Legacy**, releases on **29 January 2027**. It is a genuinely significant release: 239 cards with a record 93 Showcase printings, a regional-identity theme, the game's first draft-focused design, and the first change Riftbound has ever made to what a booster pack contains.
 
-It is also being widely described as the biggest Riftbound set ever, and that part does not survive a careful look.
+It has also been described as the biggest Riftbound set ever, and that part does not survive a careful look.
 
 ## First, the size claim
 
-Riot's announcement gives Legacy as **346 cards (93 Showcase)**, three-letter code **LGC**. That got picked up across the hobby press as "the game's largest set to date."
+Riot's announcement gives Legacy as **239 cards (93 Showcase)**, three-letter code **LGC**. Some coverage reported 346 and called it "the game's largest set to date"; neither matches Riot's own page.
 
 The problem is the same one we ran into writing about [Radiance](/blog/riftbound-radiance-biggest-release-since-origins): Riot has not counted every set the same way. For Origins, Spirit Forged and Unleashed, the headline number is the **base run**, with Showcase printings sitting on top as extra alt-art versions of cards already in that numbering. For Radiance and Legacy, the headline number is the **whole card list**, Showcase included.
 
@@ -12466,14 +13082,14 @@ Line them up on the same basis:
 | [Unleashed](/sets/unleashed) | 219 | +61 | 280 |
 | [Vendetta](/sets/vendetta) | 166 | not published | — |
 | [Radiance](/sets/radiance) | ~114 | 66 | 180 |
-| **Legacy** | **~253** | **93** | **346** |
+| **Legacy** | **~146** | **93** | **239** |
 | The Reckoning | ~197 | 67 | 264 |
 
 *Legacy's and Radiance's base runs are arithmetic, not Riot figures — the published total minus the published Showcase count. The Proving Grounds starter sets are excluded. Our card database tracks more printings per set than these numbers show, because it also counts promos and every variant printing; these are set-list figures, which is what set announcements are comparing.*
 
-So: **Origins is still the bigger set, on either measure.** 352 against 346 on the whole list, 298 against roughly 253 on base cards. The honest description of Legacy is that it is the biggest set *since* Origins — comfortably, and by more than 50% over Vendetta — and the biggest of the three 2027 sets announced so far.
+So: **Legacy is a mid-sized set with an unusually large Showcase run.** 239 on the whole list sits below Origins (352), Spirit Forged (287) and Unleashed (280), and its base run of roughly 146 is smaller than Vendetta's 166. What stands out is the 93 Showcase printings: almost two in five of its cards.
 
-That is not a criticism. It is a meaningful jump in pool size at a moment when the format has been running on small sets, and it arrives with a 93-card Showcase run that is the largest Riftbound has printed in absolute terms. But "biggest ever" is a headline the numbers do not support, and a reader deciding how much sealed product to buy deserves the real figure.
+That is not a criticism. A small base run keeps the draft format tight, and a 93-card Showcase run is the largest Riftbound has printed in absolute terms, which spreads the chase slot across more cards. But "biggest ever" is a headline the numbers do not support, and a reader deciding how much sealed product to buy deserves the real figure.
 
 ## The Legends, and the thing nobody has noticed about them
 
@@ -12593,7 +13209,7 @@ Where we would push back on our own optimism: none of this is evidence that the 
 
 ## What would make this call wrong
 
-- **The size correction could be the wrong thing to focus on.** If Legacy's 253-ish base cards are dense with format-defining playables, pool size in the abstract will not matter and we will have spent a section on bookkeeping.
+- **The size correction could be the wrong thing to focus on.** If Legacy's 146-ish base cards are dense with format-defining playables, pool size in the abstract will not matter and we will have spent a section on bookkeeping.
 - **The pack change could be worse than it looks.** Six Commons instead of seven means slightly less raw material for draft decks, and if the Legend/Battlefield slot skews toward Battlefields nobody wants, the "reliably playable" argument weakens.
 - **Draft might not land.** Designing for draft and succeeding at it are different things, and a set's limited format can be flat for reasons that are invisible until thousands of games have been played.
 - **Our player-growth read assumes the Regional Championship cycle goes well.** A first championship season that runs badly — logistics, judging, a broken metagame — is a story that spreads faster than a good one.
@@ -13521,7 +14137,7 @@ So, for Radiance:
 | 11 – 13 Dec 2026 | North American Regional Championship, Las Vegas |
 | 29 Jan 2027 | Legacy (set 6) launches |
 
-Radiance is the last set before **[Legacy](/blog/riftbound-legacy-spoilers-set-6)**, a much larger set at a reported 346 cards. The full release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**, and the 2027 schedule is in **[the set roadmap](/blog/riftbound-2027-set-roadmap)**.
+Radiance is the last set before **[Legacy](/blog/riftbound-legacy-spoilers-set-6)**, a 239-card set with 93 Showcase printings. The full release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**, and the 2027 schedule is in **[the set roadmap](/blog/riftbound-2027-set-roadmap)**.
 
 ## Five Radiance cards worth a closer look
 
@@ -13599,7 +14215,7 @@ For a competitive player that is fine: new sets are new puzzles. For the casual 
 
 The best sign that Riot knows this is **Proving Grounds 2nd Edition** on 19 February 2027: a refreshed US$40 on-ramp three weeks after Legacy. Entry products are what a publisher reaches for when it worries about getting new players in.
 
-**What would prove us wrong:** if Legacy's 346 cards bring in new players rather than overwhelm returning ones. Watch whether Proving Grounds 2nd Edition sells out or sits on shelves.
+**What would prove us wrong:** if Legacy's 239 cards and draft focus bring in new players rather than overwhelm returning ones. Watch whether Proving Grounds 2nd Edition sells out or sits on shelves.
 
 ## 2. Ban timing is the weakest system in the game
 
@@ -13679,7 +14295,7 @@ Our prediction: by the end of 2027, Riftbound is the clear **number four** TCG i
 
 - **Radiance launch week (23 October):** whether prices follow Vendetta's curve. We expect them to, and **[the Radiance card list](/blog/riftbound-radiance-card-list)** tracks every card's price from day one.
 - **Stuttgart (6–8 November):** the first Regional Championship and the first look at a Radiance meta.
-- **Legacy previews:** how Riot handles a 346-card set after five sets in a year.
+- **Legacy previews:** how Riot reveals a 239-card, draft-focused set after five sets in a year.
 
 If you disagree with any of these, **[tell us](/feedback)**. Our best articles have come from readers telling us we were wrong. You can also see the cards behind each take on **[this week's movers](/movers)**, or compare prices for any of them across every store we track in **[the market view](/market)**.`,
   },

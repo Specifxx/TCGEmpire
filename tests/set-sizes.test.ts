@@ -23,7 +23,8 @@ const PRINTED_SET_TOTALS: Record<string, number> = {
 };
 
 // Sizes of sets that are ANNOUNCED but not yet printed — Radiance (~180, ships
-// 23 Oct 2026) and Legacy (~346). These are real, citable figures that quite
+// 23 Oct 2026) and Legacy (239 per Riot's announcement; 346 was an early
+// third-party figure the Legacy posts now quote only to correct). These are real, citable figures that quite
 // legitimately appear in prose right next to a shipped set's name ("a step up
 // from Vendetta", "roughly double Radiance"), and the matcher below reads a
 // number's nearest set name as its subject. Without this list an announced size
@@ -38,6 +39,7 @@ const PRINTED_SET_TOTALS: Record<string, number> = {
 // which is exactly the class of mistake this file exists to catch.
 const ANNOUNCED_UNPRINTED: { size: number; name: RegExp }[] = [
   { size: 180, name: /radiance/i },
+  { size: 239, name: /legacy/i },
   { size: 346, name: /legacy/i },
 ];
 

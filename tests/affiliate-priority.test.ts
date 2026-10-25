@@ -99,10 +99,24 @@ test("THE POINT: the priority expires on its own, with no code change", () => {
 
 test("sets released before we started dating them are never prioritised", () => {
   // OGN/OGS/SFD/UNL predate the priority mechanic and carry no date at all.
-  for (const s of SETS.filter((x) => !["VEN", "RAD"].includes(x.code))) {
+  // LGC (Legacy) carries its announced 29 Jan 2027 street date; it is pinned
+  // in its own test below.
+  for (const s of SETS.filter((x) => !["VEN", "RAD", "LGC"].includes(x.code))) {
     assert.equal(s.releasedOn, undefined, `${s.code} unexpectedly has a release date`);
   }
   assert.deepEqual(pricePrioritySetCodes(day("2026-08-03")), ["VEN"]);
+});
+
+test("Legacy gets no priority before its 29 Jan 2027 street date, and gets it after", () => {
+  const LGC = SETS.find((s) => s.code === "LGC")!;
+  assert.equal(LGC.releasedOn, "2027-01-29");
+  assert.ok(LGC.comingSoon);
+  // Today (Radiance's window) and the day before Legacy: nothing for LGC.
+  assert.deepEqual(pricePrioritySetCodes(day("2026-10-25")), ["RAD"]);
+  assert.ok(!pricePrioritySetCodes(plusDays("2027-01-29", -1)).includes("LGC"));
+  // Release day starts at midnight AEDT, so a UTC midnight is already inside it.
+  assert.deepEqual(pricePrioritySetCodes(day("2027-01-29")), ["LGC"]);
+  assert.deepEqual(pricePrioritySetCodes(plusDays("2027-01-29", PRICE_PRIORITY_WINDOW_DAYS + 1)), []);
 });
 
 // ── An ANNOUNCED set must not claim the quota before it ships ────────────────

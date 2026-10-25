@@ -401,6 +401,48 @@
     "variants": [],
     "fingerprint": "e0129bbfa0b52c18"
   },
+  "/blog/radiance-summoner-skirmish-ahri-playmat.jpg": {
+    "src": "/blog/radiance-summoner-skirmish-ahri-playmat.jpg",
+    "width": 1200,
+    "height": 900,
+    "bytes": 93069,
+    "webp": "/blog/radiance-summoner-skirmish-ahri-playmat.webp",
+    "webpBytes": 50622,
+    "avif": "/blog/radiance-summoner-skirmish-ahri-playmat.avif",
+    "avifBytes": 40031,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/radiance-summoner-skirmish-ahri-playmat-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/radiance-summoner-skirmish-ahri-playmat-768w.webp"
+      }
+    ],
+    "fingerprint": "f0b6c1ef0e82bfbd"
+  },
+  "/blog/radiance-summoner-skirmish-akali-playmat.jpg": {
+    "src": "/blog/radiance-summoner-skirmish-akali-playmat.jpg",
+    "width": 1200,
+    "height": 900,
+    "bytes": 69987,
+    "webp": "/blog/radiance-summoner-skirmish-akali-playmat.webp",
+    "webpBytes": 33542,
+    "avif": "/blog/radiance-summoner-skirmish-akali-playmat.avif",
+    "avifBytes": 26016,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/radiance-summoner-skirmish-akali-playmat-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/radiance-summoner-skirmish-akali-playmat-768w.webp"
+      }
+    ],
+    "fingerprint": "3919a2915af4b5f9"
+  },
   "/blog/riftbound-2027-set-roadmap.png": {
     "src": "/blog/riftbound-2027-set-roadmap.png",
     "width": 1200,
@@ -748,6 +790,27 @@
     ],
     "fingerprint": "9ff9bbe81cbe5b70"
   },
+  "/blog/riftbound-metal-cards.jpg": {
+    "src": "/blog/riftbound-metal-cards.jpg",
+    "width": 1200,
+    "height": 630,
+    "bytes": 122511,
+    "webp": "/blog/riftbound-metal-cards.webp",
+    "webpBytes": 100234,
+    "avif": "/blog/riftbound-metal-cards.avif",
+    "avifBytes": 79622,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-metal-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-metal-cards-768w.webp"
+      }
+    ],
+    "fingerprint": "2393953d1a0b6f12"
+  },
   "/blog/riftbound-radiance-leaked-mechanics.png": {
     "src": "/blog/riftbound-radiance-leaked-mechanics.png",
     "width": 1200,
@@ -780,6 +843,18 @@
     "avifBytes": 98605,
     "variants": [],
     "fingerprint": "77ebaad72d4c70f6"
+  },
+  "/blog/riftbound-radiance-promo-cards.jpg": {
+    "src": "/blog/riftbound-radiance-promo-cards.jpg",
+    "width": 1200,
+    "height": 630,
+    "bytes": 108059,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/blog/riftbound-radiance-promo-cards.avif",
+    "avifBytes": 77656,
+    "variants": [],
+    "fingerprint": "318daa2289f4e992"
   },
   "/blog/riftbound-radiance-seraphine-signature.jpg": {
     "src": "/blog/riftbound-radiance-seraphine-signature.jpg",
@@ -994,6 +1069,30 @@
     ],
     "fingerprint": "213eef05a1fda4be"
   },
+  "/creators/bigbarontcg.jpg": {
+    "src": "/creators/bigbarontcg.jpg",
+    "width": 240,
+    "height": 240,
+    "bytes": 16400,
+    "webp": "/creators/bigbarontcg.webp",
+    "webpBytes": 12814,
+    "avif": "/creators/bigbarontcg.avif",
+    "avifBytes": 8321,
+    "variants": [],
+    "fingerprint": "186f86e2f8ebb939"
+  },
+  "/creators/deckdemon.jpg": {
+    "src": "/creators/deckdemon.jpg",
+    "width": 240,
+    "height": 240,
+    "bytes": 6623,
+    "webp": "/creators/deckdemon.webp",
+    "webpBytes": 4150,
+    "avif": "/creators/deckdemon.avif",
+    "avifBytes": 3074,
+    "variants": [],
+    "fingerprint": "e0525547004ef1c7"
+  },
   "/creators/keishun.jpg": {
     "src": "/creators/keishun.jpg",
     "width": 400,
@@ -1006,6 +1105,18 @@
     "variants": [],
     "fingerprint": "f4a1a1ee4afc0e04"
   },
+  "/creators/ramenjuice.jpg": {
+    "src": "/creators/ramenjuice.jpg",
+    "width": 400,
+    "height": 400,
+    "bytes": 15548,
+    "webp": "/creators/ramenjuice.webp",
+    "webpBytes": 8026,
+    "avif": "/creators/ramenjuice.avif",
+    "avifBytes": 7113,
+    "variants": [],
+    "fingerprint": "b4ce6e8e64f2adef"
+  },
   "/creators/riftbound-felipe.jpg": {
     "src": "/creators/riftbound-felipe.jpg",
     "width": 240,
@@ -1017,6 +1128,18 @@
     "avifBytes": 4172,
     "variants": [],
     "fingerprint": "98e9e9334006741a"
+  },
+  "/creators/riftrawktcg.jpg": {
+    "src": "/creators/riftrawktcg.jpg",
+    "width": 240,
+    "height": 240,
+    "bytes": 15052,
+    "webp": "/creators/riftrawktcg.webp",
+    "webpBytes": 11754,
+    "avif": "/creators/riftrawktcg.avif",
+    "avifBytes": 7154,
+    "variants": [],
+    "fingerprint": "8a10205300ab02ac"
   },
   "/creators/riftsandbounds.jpg": {
     "src": "/creators/riftsandbounds.jpg",
@@ -1041,6 +1164,18 @@
     "avifBytes": 14455,
     "variants": [],
     "fingerprint": "ac1c93edbf044d94"
+  },
+  "/creators/secretnumber.jpg": {
+    "src": "/creators/secretnumber.jpg",
+    "width": 240,
+    "height": 240,
+    "bytes": 12942,
+    "webp": "/creators/secretnumber.webp",
+    "webpBytes": 9682,
+    "avif": "/creators/secretnumber.avif",
+    "avifBytes": 6443,
+    "variants": [],
+    "fingerprint": "1e63269d31c05db0"
   },
   "/icon-512.png": {
     "src": "/icon-512.png",
@@ -1114,6 +1249,18 @@
     "avif": null,
     "avifBytes": null
   },
+  "/nexus-night-promos/body-rune-rad-r04b.jpg": {
+    "src": "/nexus-night-promos/body-rune-rad-r04b.jpg",
+    "width": 419,
+    "height": 584,
+    "bytes": 35238,
+    "webp": "/nexus-night-promos/body-rune-rad-r04b.webp",
+    "webpBytes": 19992,
+    "avif": "/nexus-night-promos/body-rune-rad-r04b.avif",
+    "avifBytes": 15583,
+    "variants": [],
+    "fingerprint": "920f141fa5daaf26"
+  },
   "/nexus-night-promos/body-rune-ven-r04b.jpg": {
     "src": "/nexus-night-promos/body-rune-ven-r04b.jpg",
     "width": 400,
@@ -1125,6 +1272,18 @@
     "variants": [],
     "avif": "/nexus-night-promos/body-rune-ven-r04b.avif",
     "avifBytes": 18463
+  },
+  "/nexus-night-promos/calm-rune-rad-r02b.jpg": {
+    "src": "/nexus-night-promos/calm-rune-rad-r02b.jpg",
+    "width": 419,
+    "height": 584,
+    "bytes": 42952,
+    "webp": "/nexus-night-promos/calm-rune-rad-r02b.webp",
+    "webpBytes": 25834,
+    "avif": "/nexus-night-promos/calm-rune-rad-r02b.avif",
+    "avifBytes": 18662,
+    "variants": [],
+    "fingerprint": "b97e787cae9ee53d"
   },
   "/nexus-night-promos/calm-rune-ven-r02b.jpg": {
     "src": "/nexus-night-promos/calm-rune-ven-r02b.jpg",
@@ -1138,6 +1297,18 @@
     "avif": "/nexus-night-promos/calm-rune-ven-r02b.avif",
     "avifBytes": 20486
   },
+  "/nexus-night-promos/chaos-rune-rad-r05b.jpg": {
+    "src": "/nexus-night-promos/chaos-rune-rad-r05b.jpg",
+    "width": 419,
+    "height": 584,
+    "bytes": 38583,
+    "webp": "/nexus-night-promos/chaos-rune-rad-r05b.webp",
+    "webpBytes": 22526,
+    "avif": "/nexus-night-promos/chaos-rune-rad-r05b.avif",
+    "avifBytes": 16977,
+    "variants": [],
+    "fingerprint": "df1fe045499b26b8"
+  },
   "/nexus-night-promos/chaos-rune-ven-r05b.jpg": {
     "src": "/nexus-night-promos/chaos-rune-ven-r05b.jpg",
     "width": 400,
@@ -1150,6 +1321,18 @@
     "avif": "/nexus-night-promos/chaos-rune-ven-r05b.avif",
     "avifBytes": 21602
   },
+  "/nexus-night-promos/fury-rune-rad-r01b.jpg": {
+    "src": "/nexus-night-promos/fury-rune-rad-r01b.jpg",
+    "width": 419,
+    "height": 584,
+    "bytes": 38738,
+    "webp": "/nexus-night-promos/fury-rune-rad-r01b.webp",
+    "webpBytes": 21986,
+    "avif": "/nexus-night-promos/fury-rune-rad-r01b.avif",
+    "avifBytes": 17357,
+    "variants": [],
+    "fingerprint": "aacd4f8ad18a2ea8"
+  },
   "/nexus-night-promos/fury-rune-ven-r01b.jpg": {
     "src": "/nexus-night-promos/fury-rune-ven-r01b.jpg",
     "width": 400,
@@ -1161,6 +1344,18 @@
     "variants": [],
     "avif": "/nexus-night-promos/fury-rune-ven-r01b.avif",
     "avifBytes": 16985
+  },
+  "/nexus-night-promos/lulu-whimsical-rad110a.jpg": {
+    "src": "/nexus-night-promos/lulu-whimsical-rad110a.jpg",
+    "width": 745,
+    "height": 1041,
+    "bytes": 116263,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/nexus-night-promos/lulu-whimsical-rad110a.avif",
+    "avifBytes": 81013,
+    "variants": [],
+    "fingerprint": "5f00ef2065984480"
   },
   "/nexus-night-promos/mel-newly-awakened-ven069b.jpg": {
     "src": "/nexus-night-promos/mel-newly-awakened-ven069b.jpg",
@@ -1183,6 +1378,18 @@
     "avif": "/nexus-night-promos/mel-newly-awakened-ven069b.avif",
     "avifBytes": 23924
   },
+  "/nexus-night-promos/mind-rune-rad-r03b.jpg": {
+    "src": "/nexus-night-promos/mind-rune-rad-r03b.jpg",
+    "width": 419,
+    "height": 584,
+    "bytes": 37281,
+    "webp": "/nexus-night-promos/mind-rune-rad-r03b.webp",
+    "webpBytes": 21894,
+    "avif": "/nexus-night-promos/mind-rune-rad-r03b.avif",
+    "avifBytes": 17071,
+    "variants": [],
+    "fingerprint": "5258c6674f933680"
+  },
   "/nexus-night-promos/mind-rune-ven-r03b.jpg": {
     "src": "/nexus-night-promos/mind-rune-ven-r03b.jpg",
     "width": 400,
@@ -1194,6 +1401,18 @@
     "variants": [],
     "avif": "/nexus-night-promos/mind-rune-ven-r03b.avif",
     "avifBytes": 17350
+  },
+  "/nexus-night-promos/order-rune-rad-r06b.jpg": {
+    "src": "/nexus-night-promos/order-rune-rad-r06b.jpg",
+    "width": 419,
+    "height": 584,
+    "bytes": 33789,
+    "webp": "/nexus-night-promos/order-rune-rad-r06b.webp",
+    "webpBytes": 18840,
+    "avif": "/nexus-night-promos/order-rune-rad-r06b.avif",
+    "avifBytes": 15673,
+    "variants": [],
+    "fingerprint": "1bd6e7ff241602d8"
   },
   "/nexus-night-promos/order-rune-ven-r06b.jpg": {
     "src": "/nexus-night-promos/order-rune-ven-r06b.jpg",

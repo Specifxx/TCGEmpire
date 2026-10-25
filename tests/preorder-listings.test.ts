@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { isPreorderSetCode } from "../src/lib/constants";
-import { classifySealed, isTrackableSealedTitle } from "../src/lib/sealed-import";
+import { classifySealed, detectSet, isTrackableSealedTitle } from "../src/lib/sealed-import";
 import { setCodeFromSetName } from "../src/lib/tcgplayer";
 import { withRadianceUpcoming } from "./helpers/upcoming-set";
 
@@ -153,4 +153,61 @@ test("the release page's pre-order promise now points somewhere real", () => {
   assert.match(page, /href=\{next\.preordersHref\}/, "the pre-order tile must link to the upcoming set's comparison page");
   const calendar = read("src/lib/release-calendar.ts");
   assert.match(calendar, /preordersHref: "\/radiance-preorders"/, "the upcoming set must declare its pre-order page");
+  assert.match(calendar, /preordersHref: "\/legacy-preorders"/, "Legacy, the next set, declares its pre-order page");
+});
+
+// ── Legacy (Set 6, LGC), added 2026-10-25 ───────────────────────────────────
+// Stores were already listing Legacy pre-orders before the set was in SETS, and
+// with no set word for it they were stored setless: one group per title, shown
+// on /sealed as if buyable today. These titles are VERBATIM rows from the
+// 2026-10-25 public sealed snapshot (data/public/sealed-listings.json).
+test("real Legacy pre-order titles pass the gate and map to LGC", () => {
+  for (const title of [
+    "Riftbound: League of Legends - Legacy Booster Box (Pre-Order)",
+    "League of Legends: Riftbound Legacy Booster Box (PREORDER)",
+    "League of Legends Riftbound TCG: Legacy - Booster Box (Pre Order)",
+    "Riftbound League of Legends Legacy Booster Pack (Ships Jan 2027)",
+    "Riftbound Legacy Vault (Pre-Order)",
+    "Riftbound: Legacy Set 6 Booster Box Pre-Order",
+    "Riftbound: Legacy - Booster Display PREORDER",
+    "Riftbound League of Legends Legacy 6x Booster Box Sealed Case (Ships Jan 2027)",
+    "Riftbound Legacy Champion Deck Ashe English (PRESALE)",
+  ]) {
+    assert.ok(isTrackableSealedTitle(title), `gate rejected a real Legacy pre-order: ${title}`);
+    assert.equal(detectSet(title), "LGC", title);
+  }
+  assert.equal(isPreorderSetCode("LGC", new Date("2026-10-25T00:00:00Z")), true, "Legacy ships 29 Jan 2027");
+  assert.equal(isPreorderSetCode("LGC", new Date("2027-01-29T00:00:00Z")), false, "release day, Sydney time");
+});
+
+test("Legacy's four Champion Decks are four products, not one group", () => {
+  assert.equal(classifySealed("Riftbound Legacy Champion Deck Ashe English (PRESALE)"), "Champion Deck (Ashe)");
+  assert.equal(classifySealed("Riftbound: League of Legends TCG - Legacy - Champion Deck - Tryndamere"), "Champion Deck (Tryndamere)");
+  assert.equal(classifySealed("Riftbound: Legacy Set 6 Garen Champion Deck Pre-Order"), "Champion Deck (Garen)");
+  assert.equal(classifySealed("Riftbound: League of Legends TCG: Legacy Champion Deck - Lux"), "Champion Deck (Lux)");
+  assert.equal(classifySealed("Riftbound: League of Legends - Legacy Booster Box (Pre-Order)"), "Booster Box");
+  assert.equal(classifySealed("Riftbound: Legacy - Vault Bundle  PREORDER"), "Bundle");
+});
+
+test("'legacy' alone never names the set: other games' Legacy products stay out", () => {
+  // The word is common: MTG's Legacy format, Yu-Gi-Oh's "Legacy of …" sets.
+  // None carries a Riftbound marker, so none passes the gate or maps to LGC.
+  for (const title of [
+    "Magic: The Gathering Legacy Booster Box",
+    "MTG Legacy Cube Booster Pack",
+    "Yu-Gi-Oh! Legacy of Destruction Booster Box",
+    "Yu-Gi-Oh! Legendary Duelists Legacy Collection Box Set",
+    "Pokemon Legacy Collection Booster Bundle",
+  ]) {
+    assert.ok(!isTrackableSealedTitle(title), `gate admitted another game's product: ${title}`);
+    assert.notEqual(detectSet(title), "LGC", title);
+  }
+  // A Riftbound title that merely mentions Legacy beside another product keeps
+  // that product: Proving Grounds 2nd Edition is filed under Legacy by one store.
+  assert.equal(
+    detectSet("[PREORDER] Riftbound - League of Legends TCG - Legacy - Proving Grounds Box Set (2nd Edition) - 2027-02-19"),
+    "OGS",
+  );
+  // TCGplayer's setName is read inside the Riftbound product line, where the word is the set.
+  assert.equal(setCodeFromSetName("Legacy"), "LGC");
 });
