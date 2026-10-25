@@ -56,6 +56,10 @@ export interface CardTitleInput {
    * error at the call site is the cheap version of that lesson.
    */
   type: string;
+  /** The printing word for the special-printing rungs when the card's kind alone
+   *  says too little: a metal card is "Metal Prize Wall" / "Metal Best Of", not
+   *  "Promo" (lib/metal-cards.ts). Defaults to PRINTING_DISPLAY[kind]. */
+  printingWord?: string;
 }
 
 /**
@@ -124,7 +128,7 @@ export function cardTitle(input: CardTitleInput): string {
     candidates.push(bare(`${short}${legend}${creds}`), bare(`${short}${creds}`));
   } else {
     candidates.push(bare(displayName));
-    const P = PRINTING_DISPLAY[kind];
+    const P = input.printingWord ?? PRINTING_DISPLAY[kind];
     const priceWord = hasPrice ? " Price" : "";
     candidates.push(`${name} ${P}${priceWord} — Riftbound ${identCode}`);
     if (short !== name) candidates.push(`${short} ${P}${priceWord} — Riftbound ${identCode}`);

@@ -1,3 +1,4 @@
+import { metalKindOf } from "@/lib/metal-cards";
 import { publicRead, routeRaw } from "@/lib/public-data/route";
 import { BanNotice } from "@/components/BanNotice";
 import type { Metadata } from "next";
@@ -123,6 +124,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       slug: true, name: true, setName: true, setCode: true, collectorNumber: true,
       variant: true, isPromo: true, rarity: true, type: true, domain: true,
       description: true,
+      // Read only to name a metal card's printing (lib/metal-cards.ts).
+      tags: true,
       [priceField(DEFAULT_COUNTRY)]: true,
       // Live in-stock retailer keys FOR THE BASELINE MARKET — a real number in the
       // snippet is the CTR lever this vertical runs on. Rows are unique per
@@ -135,6 +138,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     slug: string | null; name: string; setName: string; setCode: string; collectorNumber: string;
     variant: string | null; isPromo: boolean; rarity: string; type: string; domain: string;
     description: string | null;
+    tags: string | null;
     retailerPrices: { retailer: string }[];
   }) | null;
   if (!card) return notFoundMetadata("Card");
@@ -204,6 +208,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     // shortened title rungs re-add them space-joined rather than dropping them —
     // see CardTitleInput.credentials for why that is not optional.
     credentials: cardCredentials(card),
+    // "Teemo Metal Prize Wall", not "Teemo Promo": the metal printings' own word.
+    printingWord: metalKindOf(card.tags) ? `Metal ${metalKindOf(card.tags)}` : undefined,
   });
 
   // DESCRIPTION — lead with what the card DOES (the informational half of the

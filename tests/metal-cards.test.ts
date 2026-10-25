@@ -51,3 +51,14 @@ test("manual-cards: every metal card is a promo linked to its own TCGplayer prod
   const ids = rows.map((r) => r.externalId).filter(Boolean);
   assert.equal(new Set(ids).size, ids.length, "externalIds are unique");
 });
+
+test("a metal card's title names its printing, inside 60 characters", async () => {
+  const { cardTitle, titleFits } = await import("../src/lib/card-seo");
+  const base = { name: "Teemo, Swift Scout", setName: "Origins", identCode: "OGN 263/298", hasPrice: true, kind: "promo" as const, type: "Legend" };
+  const pw = cardTitle({ ...base, displayName: "Teemo, Swift Scout (Metal Prize Wall)", credentials: ["Metal Prize Wall"], printingWord: "Metal Prize Wall" });
+  const bo = cardTitle({ ...base, displayName: "Teemo, Swift Scout (Metal Best Of)", credentials: ["Metal Best Of"], printingWord: "Metal Best Of" });
+  assert.match(pw, /Metal Prize Wall/);
+  assert.match(bo, /Metal Best Of/);
+  assert.notEqual(pw, bo);
+  assert.ok(titleFits(pw) && titleFits(bo), `${pw} / ${bo}`);
+});
