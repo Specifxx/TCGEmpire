@@ -2129,3 +2129,24 @@ model ManualEarning {
 
   @@index([source, day])
 }
+
+// Costs entered on /admin/earnings (2026-10-25): one-off (ads) or repeating
+// monthly/yearly (Vercel Pro, a Claude plan) from startDay until endDay. Private
+// (admin only); never in the public export. `seedKey` marks the entries the site
+// pre-fills once; a removed entry keeps its row (removedAt) so it is not re-added.
+model ManualCost {
+  id          String    @id @default(cuid())
+  label       String
+  category    String    @default("Other")
+  amountCents Int
+  currency    String    @default("USD")
+  startDay    String // YYYY-MM-DD
+  recurrence  String    @default("once") // once | monthly | yearly
+  endDay      String? // last day it charges, inclusive; null while running
+  note        String?
+  seedKey     String?   @unique
+  removedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([removedAt])
+}

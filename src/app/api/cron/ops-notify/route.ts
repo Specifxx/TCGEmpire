@@ -5,6 +5,7 @@ import { siteSelfReport } from "@/lib/ops/self-report";
 import { liveRoute } from "@/lib/public-data/live-route";
 import { prisma } from "@/lib/db";
 import { earningsHealth } from "@/lib/earnings/sources";
+import { costsHealth } from "@/lib/earnings/costs";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -36,7 +37,9 @@ async function handleGET(req: Request) {
   // Capped at 20 s (this route has 30): a slow source leaves the earnings line out
   // rather than costing the rest of the report.
   const earnings = await Promise.race([
-    earningsHealth().catch(() => undefined),
+    Promise.all([earningsHealth(), costsHealth()])
+      .then(([e, c]) => [...e, c])
+      .catch(() => undefined),
     new Promise<undefined>((r) => setTimeout(() => r(undefined), 20_000)),
   ]);
   return NextResponse.json({ ...(await siteSelfReport(process.env, { storePlanSubscriptions })), earnings });
