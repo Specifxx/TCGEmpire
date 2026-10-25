@@ -150,3 +150,18 @@ test("API error text shown on the dashboard and in the ops email never carries a
   assert.equal(scrubSecrets("bad header Basic dXNlcjpwYXNz"), "bad header Basic [hidden]");
   assert.equal(scrubSecrets("token ya29.a0AfH6SM-x refresh 1//0gabc"), "token [token] refresh [token]");
 });
+
+test("eBay: the daily report is the v2 id (overridable), and v2-style column names parse", async () => {
+  const { EPN_DAILY_REPORT } = await import("../src/lib/earnings/sources");
+  assert.equal(EPN_DAILY_REPORT, "ebay_partner_perf_by_day_v2");
+  const days = epnDays({
+    Records: [
+      { "Event Date": "2026-10-23", "Checkout Site": "AU", "Total Earnings": "2.50" },
+      { event_date: "2026-10-23", checkout_site: "US", earnings: "1.00", other_earnings: "0.25", currency_code: "USD" },
+    ],
+  });
+  assert.deepEqual(days, [
+    { day: "2026-10-23", currency: "AUD", cents: 250, pendingCents: 0 },
+    { day: "2026-10-23", currency: "USD", cents: 125, pendingCents: 0 },
+  ]);
+});

@@ -209,7 +209,7 @@ export function impactDays(json: unknown): DayAmount[] {
 }
 
 // ── eBay Partner Network: the Performance by Day report ─────────────────────
-// GET …/Reports/ebay_partner_perf_by_day.json — one row per day and checkout
+// GET …/Reports/ebay_partner_perf_by_day_v2.json (EPN_DAILY_REPORT) — one row per day and checkout
 // site, with Earnings (and OtherEarnings) in that site's currency. The JSON is
 // Impact-style ({ Records: [...] }); the parser also accepts a bare array and
 // lower-case keys, so a format change shows as a zero, not a crash.
@@ -237,19 +237,22 @@ function recordsOf(json: unknown): Record<string, unknown>[] {
   return [];
 }
 
+// Column names compared without case, spaces or underscores ("Event Date",
+// "event_date" and "EventDate" are one column), so a renamed v2 column still reads.
+const colKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 const pick = (r: Record<string, unknown>, ...names: string[]) => {
-  for (const n of names) for (const k of Object.keys(r)) if (k.toLowerCase() === n.toLowerCase()) return r[k];
+  for (const n of names) for (const k of Object.keys(r)) if (colKey(k) === colKey(n)) return r[k];
   return undefined;
 };
 
 export function epnDays(json: unknown): DayAmount[] {
   const rows: DayAmount[] = [];
   for (const r of recordsOf(json)) {
-    const day = String(pick(r, "Date", "EventDate") ?? "").slice(0, 10);
+    const day = String(pick(r, "Date", "EventDate", "Day", "ReportDate") ?? "").slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
-    const site = String(pick(r, "CheckoutSite") ?? "US").toUpperCase();
-    const currency = String(pick(r, "Currency") ?? EPN_SITE_CURRENCY[site] ?? "USD").toUpperCase();
-    rows.push({ day, currency, cents: toCents(pick(r, "Earnings")) + toCents(pick(r, "OtherEarnings")) });
+    const site = String(pick(r, "CheckoutSite", "Site", "Program", "Marketplace") ?? "US").toUpperCase();
+    const currency = String(pick(r, "Currency", "CurrencyCode", "EarningsCurrency") ?? EPN_SITE_CURRENCY[site] ?? "USD").toUpperCase();
+    rows.push({ day, currency, cents: toCents(pick(r, "Earnings", "TotalEarnings", "Commission")) + toCents(pick(r, "OtherEarnings")) });
   }
   return mergeDays(rows);
 }

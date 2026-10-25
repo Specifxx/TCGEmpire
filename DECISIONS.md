@@ -19435,3 +19435,10 @@ the picked range (by day; by month for all time), stacked by source. USD or AUD.
 - **Credentials** are server-only Vercel variables (`IMPACT_*`, `EPN_*`,
   `ADSENSE_API_*`, listed in `.env.example`). Until the owner adds them, only
   Stripe and Mediavine show figures.
+- **eBay report id, v2 (2026-10-25).** Once the keys were in, the dashboard
+  showed eBay rejecting `ebay_partner_perf_by_day`, which has been replaced by
+  `ebay_partner_perf_by_day_v2`. That is now the default, overridable with
+  `EPN_DAILY_REPORT` (letters, digits and underscores only) so a further rename
+  needs no code change. The parser now matches columns ignoring case, spaces and
+  underscores, and accepts likely v2 names (`Event Date`, `Total Earnings`,
+  `Currency Code`).
