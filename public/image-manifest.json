@@ -401,6 +401,48 @@
     "variants": [],
     "fingerprint": "e0129bbfa0b52c18"
   },
+  "/blog/radiance-summoner-skirmish-ahri-playmat.jpg": {
+    "src": "/blog/radiance-summoner-skirmish-ahri-playmat.jpg",
+    "width": 1200,
+    "height": 900,
+    "bytes": 93069,
+    "webp": "/blog/radiance-summoner-skirmish-ahri-playmat.webp",
+    "webpBytes": 50622,
+    "avif": "/blog/radiance-summoner-skirmish-ahri-playmat.avif",
+    "avifBytes": 40031,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/radiance-summoner-skirmish-ahri-playmat-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/radiance-summoner-skirmish-ahri-playmat-768w.webp"
+      }
+    ],
+    "fingerprint": "f0b6c1ef0e82bfbd"
+  },
+  "/blog/radiance-summoner-skirmish-akali-playmat.jpg": {
+    "src": "/blog/radiance-summoner-skirmish-akali-playmat.jpg",
+    "width": 1200,
+    "height": 900,
+    "bytes": 69987,
+    "webp": "/blog/radiance-summoner-skirmish-akali-playmat.webp",
+    "webpBytes": 33542,
+    "avif": "/blog/radiance-summoner-skirmish-akali-playmat.avif",
+    "avifBytes": 26016,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/radiance-summoner-skirmish-akali-playmat-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/radiance-summoner-skirmish-akali-playmat-768w.webp"
+      }
+    ],
+    "fingerprint": "3919a2915af4b5f9"
+  },
   "/blog/riftbound-2027-set-roadmap.png": {
     "src": "/blog/riftbound-2027-set-roadmap.png",
     "width": 1200,
@@ -748,6 +790,27 @@
     ],
     "fingerprint": "9ff9bbe81cbe5b70"
   },
+  "/blog/riftbound-metal-cards.jpg": {
+    "src": "/blog/riftbound-metal-cards.jpg",
+    "width": 1200,
+    "height": 630,
+    "bytes": 122511,
+    "webp": "/blog/riftbound-metal-cards.webp",
+    "webpBytes": 100234,
+    "avif": "/blog/riftbound-metal-cards.avif",
+    "avifBytes": 79622,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-metal-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-metal-cards-768w.webp"
+      }
+    ],
+    "fingerprint": "2393953d1a0b6f12"
+  },
   "/blog/riftbound-radiance-leaked-mechanics.png": {
     "src": "/blog/riftbound-radiance-leaked-mechanics.png",
     "width": 1200,
@@ -780,6 +843,18 @@
     "avifBytes": 98605,
     "variants": [],
     "fingerprint": "77ebaad72d4c70f6"
+  },
+  "/blog/riftbound-radiance-promo-cards.jpg": {
+    "src": "/blog/riftbound-radiance-promo-cards.jpg",
+    "width": 1200,
+    "height": 630,
+    "bytes": 108059,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/blog/riftbound-radiance-promo-cards.avif",
+    "avifBytes": 77656,
+    "variants": [],
+    "fingerprint": "318daa2289f4e992"
   },
   "/blog/riftbound-radiance-seraphine-signature.jpg": {
     "src": "/blog/riftbound-radiance-seraphine-signature.jpg",

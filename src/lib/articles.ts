@@ -269,6 +269,568 @@ const PREMIUM_TRIAL_ARTICLE_BILLING = premiumTrialEnabled()
   : "Premium runs through Stripe and is charged when you subscribe — no free trial, no introductory price, just the price in the table.";
 
 export const ARTICLES: Article[] = [
+  // METAL CARDS (2026-10-25, owner: "the medal prize wall cards … add those to
+  // the website … tag them as medal card … and we should make a blog post on all
+  // the metal cards so far and the metal cards coming"). Players call them metal
+  // cards ("riftbound medal" autocompletes to "riftbound metal cards"). Owns
+  // `riftbound metal cards`, `plated legend`, `prize wall`, `best of` clusters
+  // (docs/seo-keyword-map.md). The 86 cards are TCGplayer's "Organized Play
+  // Promotional Cards" metal printings, each now a card page (lib/metal-cards.ts);
+  // prices in the body are TCGplayer's on 25 October and dated, the embeds live.
+  {
+    slug: "riftbound-metal-cards",
+    category: "blog",
+    title: "Riftbound Metal Cards: Every Prize Wall and Best Of Card",
+    seoTitle: "Riftbound Metal Cards: All 86 Prize Wall & Best Of + Prices",
+    excerpt:
+      "Every Riftbound metal card: 49 Prize Wall Plated Legends and 37 Best Of foil metals, how each is earned, prices up to US$4,400, and what comes next.",
+    author: "RiftCompare",
+    date: "2026-10-25",
+    readMins: 11,
+    tags: ["metal cards", "prize wall", "best of", "organized play", "chase cards", "collecting", "price guide"],
+    hero: {
+      src: "/blog/riftbound-metal-cards.jpg",
+      alt: "Riftbound metal cards fanned out: Kai'Sa, Viktor, Jinx, Teemo, Ahri, Sett and Lux in their metal Prize Wall and Best Of printings",
+    },
+    shop: [
+      { label: "Riftbound metal cards on eBay", query: "Riftbound metal card" },
+      { label: "Prize Wall metal cards on eBay", query: "Riftbound metal prize wall" },
+      { label: "Best Of metal cards on eBay", query: "Riftbound metal best of" },
+    ],
+    embeds: [
+      {
+        title: "Prize Wall Plated Legends",
+        note: "Non-foil metal Legends, traded for Prize Wall tickets at Regional Qualifiers. Photos are TCGplayer's of the real cards; every card links to its live prices.",
+        slugs: [
+          "teemo-swift-scout-ogn-263-298-metal-prize-wall",
+          "ahri-nine-tailed-fox-ogn-255-298-metal-prize-wall",
+          "yasuo-unforgiven-ogn-259-298-metal-prize-wall",
+          "viktor-herald-of-the-arcane-ogn-265-298-metal-prize-wall",
+          "sett-the-boss-ogn-269-298-metal-prize-wall",
+          "volibear-relentless-storm-ogn-249-298-metal-prize-wall",
+          "vi-piltover-enforcer-unl-187-219-promo",
+          "rengar-pridestalker-unl-183-219-promo",
+        ],
+      },
+      {
+        title: "Best Of foil metals",
+        note: "Holographic metal Legends, one per Legend per event, for the best-placed player on that Legend.",
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-255-298-metal-best-of",
+          "jinx-loose-cannon-ogn-251-298-metal-best-of",
+          "kai-sa-daughter-of-the-void-ogn-247-298-metal-best-of",
+          "annie-dark-child-ogs-017-024-metal-best-of",
+          "lux-lady-of-luminosity-ogs-021-024-metal-best-of",
+          "master-yi-wuju-bladesman-ogs-019-024-metal-best-of",
+          "darius-hand-of-noxus-ogn-253-298-metal-best-of",
+          "teemo-swift-scout-ogn-263-298-metal-best-of",
+        ],
+      },
+    ],
+    summary: [
+      "**Riftbound has 86 metal cards on TCGplayer** across five sets: **49 Prize Wall** printings (non-foil \"Plated Legends\") and **37 Best Of** printings (holographic \"Foil Plated Legends\").",
+      "**Prize Wall metals are traded for tickets** at Regional Qualifiers: 40 Prize Wall tickets each, one per person per weekend. **Best Of metals are won**, one per Legend per event, by the best-placed player on that Legend.",
+      "**The dearest on TCGplayer on 25 October:** Teemo, Swift Scout (Prize Wall) at a US$4,400 market price and Ahri, Nine-Tailed Fox (Best Of) at US$4,232.98. Most sit between US$1,000 and US$2,500.",
+      "**Riot changed metal prizing on 15 October:** Best Of prizes at Regional Championships now come only from Unleashed, Vendetta and Radiance, and **Radiance's metal Legends are expected from January 2027**.",
+      "Every metal card below has its own page with TCGplayer, eBay and graded prices, refreshed daily.",
+    ],
+    faq: [
+      { q: "What are Riftbound metal cards?", a: "Metal reprints of champion Legends that Riot gives out at organized-play events, not in packs. There are two kinds: the non-foil Prize Wall printing (a \"Plated Legend\"), traded for Prize Wall tickets, and the holographic Best Of printing (a \"Foil Plated Legend\"), won by the best-placed player on each Legend. Some players call them medal cards." },
+      { q: "How do you get a Riftbound metal card?", a: "At a Regional Qualifier, Prize Wall metals cost 40 Prize Wall tickets each, one per person per weekend (they cost 10 tickets when the Prize Wall launched; Riot raised the price after Houston). Best Of metals go to the highest-placing player on each Legend who reaches at least four Main Event wins or Day 2. Otherwise the only way is to buy one." },
+      { q: "How many Riftbound metal cards are there?", a: "TCGplayer lists 86: 49 Prize Wall and 37 Best Of printings, from Origins, Proving Grounds, Spiritforged, Unleashed and Vendetta. Radiance's metal Legends have not been released; Riot expects them from January 2027." },
+      { q: "What is the most expensive Riftbound metal card?", a: "On TCGplayer on 25 October 2026, Teemo, Swift Scout's Prize Wall metal had the highest market price at US$4,400, followed by Ahri, Nine-Tailed Fox's Best Of at US$4,232.98. Private sales of Best Of metals have been reported far higher, but those are not public listings." },
+      { q: "What is the difference between Prize Wall and Best Of metal cards?", a: "Prize Wall metals are non-foil and are traded for tickets, so anyone at a Regional Qualifier can earn one. Best Of metals are holographic and only one of each Legend is given per event, to the top-placed player on it, which makes them much scarcer." },
+      { q: "Are metal cards tournament legal?", a: "They are reprints of existing Legends with the same rules text. Check the current tournament rules for card-condition and sleeving requirements before playing a metal card; most owners keep them in a display case." },
+    ],
+    browseCta: {
+      href: "/blog/riftbound-radiance-promo-cards",
+      label: "Radiance promo cards and playmats →",
+      blurb: "Every Radiance Nexus Night, Summoner Skirmish and Pre-Rift promo, with the two Champion playmats.",
+    },
+    body: `**Metal cards are the rarest Riftbound cards you can hold.** They are not in any pack. Riot hands them out at its organized-play events, as metal reprints of the game's champion Legends, and the cheapest of them sells for more than most booster boxes. This is every one of them: what each kind is, how it is earned, what each one costs today, and what is coming next.
+
+Every card below has its own page on RiftCompare, with its TCGplayer price, eBay listings and graded copies compared side by side and refreshed every day.
+
+## Prize Wall and Best Of: the two kinds of metal card
+
+| | Prize Wall | Best Of |
+|---|---|---|
+| Riot's name | Plated Legend | Foil Plated Legend |
+| Finish | Non-foil metal | Holographic metal |
+| How you get one | Trade 40 Prize Wall tickets at a Regional Qualifier | Finish highest on that Legend at an event |
+| How many per event | As many as the wall holds, one per person per weekend | One of each Legend |
+| On TCGplayer | 49 printings | 37 printings |
+
+**Prize Wall metals** are earned with tickets. Every match played at a Regional Qualifier earns Prize Wall tickets, and the wall trades a metal Legend for 40 of them, one per person per weekend. They cost 10 tickets when the Prize Wall launched; Riot raised the price after the Houston qualifier.
+
+**Best Of metals** are won. At each event, the highest-placing player on each Legend, with at least four Main Event wins or a place in Day 2, gets that Legend's holographic metal. One per Legend per event makes them far scarcer than the Prize Wall printing of the same card.
+
+## Riftbound metal card prices: Prize Wall
+
+TCGplayer's market price and its cheapest listing for each Prize Wall metal on **25 October 2026**, dearest first. The market price follows recent sales; a dash means TCGplayer had no sale or no listing.
+
+| Card | Set | Market | Cheapest listing |
+|---|---|---|---|
+| [Teemo, Swift Scout](/card/teemo-swift-scout-ogn-263-298-metal-prize-wall) | Origins 263/298 | US$4,400.00 | US$8,000.00 |
+| [Irelia, Blade Dancer](/card/irelia-blade-dancer-sfd-195-221-metal-prize-wall) | Spiritforged 195/221 | US$3,500.00 | — |
+| [Jinx, Loose Cannon](/card/jinx-loose-cannon-ogn-251-298-metal-prize-wall) | Origins 251/298 | US$2,743.74 | US$5,999.99 |
+| [Kai'Sa, Daughter of the Void](/card/kai-sa-daughter-of-the-void-ogn-247-298-metal-prize-wall) | Origins 247/298 | US$2,739.20 | US$10,000.00 |
+| [Yasuo, Unforgiven](/card/yasuo-unforgiven-ogn-259-298-metal-prize-wall) | Origins 259/298 | US$2,732.33 | — |
+| [Annie, Dark Child](/card/annie-dark-child-ogs-017-024-metal-prize-wall) | Proving Grounds 017/024 | US$2,706.16 | US$4,401.31 |
+| [LeBlanc, Deceiver](/card/leblanc-deceiver-unl-199-219-promo) | Unleashed 199/219 | US$2,400.00 | US$1,999.00 |
+| [Master Yi, Wuju Bladesman](/card/master-yi-wuju-bladesman-ogs-019-024-metal-prize-wall) | Proving Grounds 019/024 | US$2,222.91 | US$3,999.99 |
+| [Lux, Lady of Luminosity](/card/lux-lady-of-luminosity-ogs-021-024-metal-prize-wall) | Proving Grounds 021/024 | US$2,200.00 | — |
+| [Draven, Glorious Executioner](/card/draven-glorious-executioner-sfd-185-221-promo) | Spiritforged 185/221 | US$2,200.00 | US$2,799.99 |
+| [Garen, Might of Demacia](/card/garen-might-of-demacia-ogs-023-024-metal-prize-wall) | Proving Grounds 023/024 | US$1,999.99 | — |
+| [Miss Fortune, Bounty Hunter](/card/miss-fortune-bounty-hunter-ogn-267-298-metal-prize-wall) | Origins 267/298 | US$1,999.00 | US$4,000.00 |
+| [Diana, Scorn of the Moon](/card/diana-scorn-of-the-moon-unl-197-219-promo) | Unleashed 197/219 | US$1,899.99 | — |
+| [Viktor, Herald of the Arcane](/card/viktor-herald-of-the-arcane-ogn-265-298-metal-prize-wall) | Origins 265/298 | US$1,750.00 | US$2,700.00 |
+| [Vex, Gloomist](/card/vex-gloomist-unl-193-219-promo) | Unleashed 193/219 | US$1,600.00 | US$2,000.00 |
+| [Sett, The Boss](/card/sett-the-boss-ogn-269-298-metal-prize-wall) | Origins 269/298 | US$1,586.93 | US$2,499.99 |
+| [Leona, Radiant Dawn](/card/leona-radiant-dawn-ogn-261-298-metal-prize-wall) | Origins 261/298 | US$1,499.99 | US$2,450.00 |
+| [Sivir, Battle Mistress](/card/sivir-battle-mistress-sfd-203-221-promo) | Spiritforged 203/221 | US$1,499.98 | US$4,000.00 |
+| [Jax, Grandmaster at Arms](/card/jax-grandmaster-at-arms-sfd-193-221-promo) | Spiritforged 193/221 | US$1,462.49 | US$2,200.00 |
+| [Pyke, Bloodharbor Ripper](/card/pyke-bloodharbor-ripper-unl-185-219-promo) | Unleashed 185/219 | US$1,450.00 | — |
+| [Lillia, Bashful Bloom](/card/lillia-bashful-bloom-unl-189-219-promo) | Unleashed 189/219 | US$1,450.00 | — |
+| [Azir, Emperor of the Sands](/card/azir-emperor-of-the-sands-sfd-197-221-promo) | Spiritforged 197/221 | US$1,399.76 | US$2,899.99 |
+| [Rumble, Mechanized Menace](/card/rumble-mechanized-menace-sfd-181-221-promo) | Spiritforged 181/221 | US$1,387.50 | US$4,500.00 |
+| [Lucian, Purifier](/card/lucian-purifier-sfd-183-221-promo) | Spiritforged 183/221 | US$1,348.75 | US$1,351.49 |
+| [Jhin, Virtuoso](/card/jhin-virtuoso-unl-181-219-promo) | Unleashed 181/219 | US$1,300.00 | US$2,000.00 |
+| [Volibear, Relentless Storm](/card/volibear-relentless-storm-ogn-249-298-metal-prize-wall) | Origins 249/298 | US$1,283.31 | US$2,599.99 |
+| [Rengar, Pridestalker](/card/rengar-pridestalker-unl-183-219-promo) | Unleashed 183/219 | US$1,275.00 | US$2,400.00 |
+| [Renata Glasc, Chem-Baroness](/card/renata-glasc-chem-baroness-sfd-201-221-promo) | Spiritforged 201/221 | US$1,275.00 | — |
+| [Darius, Hand of Noxus](/card/darius-hand-of-noxus-ogn-253-298-metal-prize-wall) | Origins 253/298 | US$1,199.99 | US$2,650.00 |
+| [Rek'Sai, Void Burrower](/card/rek-sai-void-burrower-sfd-187-221-promo) | Spiritforged 187/221 | US$1,049.75 | US$1,750.00 |
+| [Lee Sin, Blind Monk](/card/lee-sin-blind-monk-ogn-257-298-metal-prize-wall) | Origins 257/298 | US$1,024.98 | US$3,500.00 |
+| [Fiora, Grand Duelist](/card/fiora-grand-duelist-sfd-205-221-promo) | Spiritforged 205/221 | US$817.32 | — |
+| [Akali, Rogue Assassin](/card/akali-rogue-assassin-ven-139-166-metal-prize-wall) | Vendetta 139/166 | — | — |
+| [Renekton, Butcher of the Sands](/card/renekton-butcher-of-the-sands-ven-141-166-metal-prize-wall) | Vendetta 141/166 | — | US$2,000.00 |
+| [Zed, Master of Shadows](/card/zed-master-of-shadows-ven-143-166-metal-prize-wall) | Vendetta 143/166 | — | — |
+| [Nasus, Curator of the Sands](/card/nasus-curator-of-the-sands-ven-145-166-metal-prize-wall) | Vendetta 145/166 | — | — |
+| [Shen, Eye of Twilight](/card/shen-eye-of-twilight-ven-147-166-metal-prize-wall) | Vendetta 147/166 | — | — |
+| [Jayce, Defender of Tomorrow](/card/jayce-defender-of-tomorrow-ven-149-166-metal-prize-wall) | Vendetta 149/166 | — | — |
+| [Mel, Soul's Reflection](/card/mel-soul-s-reflection-ven-151-166-metal-prize-wall) | Vendetta 151/166 | — | US$2,500.00 |
+| [Ambessa, Matriarch of War](/card/ambessa-matriarch-of-war-ven-153-166-metal-prize-wall) | Vendetta 153/166 | — | US$2,000.00 |
+| [Kennen, Heart of the Tempest](/card/kennen-heart-of-the-tempest-ven-155-166-metal-prize-wall) | Vendetta 155/166 | — | US$3,475.00 |
+| [Vi, Piltover Enforcer](/card/vi-piltover-enforcer-unl-187-219-promo) | Unleashed 187/219 | — | US$4,000.00 |
+| [Master Yi, Wuju Master](/card/master-yi-wuju-master-unl-191-219-promo) | Unleashed 191/219 | — | — |
+| [Ivern, Green Father](/card/ivern-green-father-unl-195-219-promo) | Unleashed 195/219 | — | US$1,900.00 |
+| [Kha'Zix, Voidreaver](/card/kha-zix-voidreaver-unl-201-219-promo) | Unleashed 201/219 | — | US$2,200.00 |
+| [Poppy, Keeper of the Hammer](/card/poppy-keeper-of-the-hammer-unl-203-219-promo) | Unleashed 203/219 | — | — |
+| [Ornn, Fire Below the Mountain](/card/ornn-fire-below-the-mountain-sfd-189-221-metal-prize-wall) | Spiritforged 189/221 | — | US$2,199.01 |
+| [Ezreal, Prodigal Explorer](/card/ezreal-prodigal-explorer-sfd-199-221-promo) | Spiritforged 199/221 | — | US$3,499.99 |
+| [Ahri, Nine-Tailed Fox](/card/ahri-nine-tailed-fox-ogn-255-298-metal-prize-wall) | Origins 255/298 | — | — |
+
+[[embed:0]]
+
+## Riftbound metal card prices: Best Of
+
+TCGplayer's market price for each Best Of metal on 25 October 2026. Best Of metals rarely have an open listing, so most change hands privately; the market price is the last sales TCGplayer recorded.
+
+| Card | Set | Market |
+|---|---|---|
+| [Ahri, Nine-Tailed Fox](/card/ahri-nine-tailed-fox-ogn-255-298-metal-best-of) | Origins 255/298 | US$4,232.98 |
+| [Jinx, Loose Cannon](/card/jinx-loose-cannon-ogn-251-298-metal-best-of) | Origins 251/298 | US$2,239.97 |
+| [Annie, Dark Child](/card/annie-dark-child-ogs-017-024-metal-best-of) | Proving Grounds 017/024 | US$2,210.34 |
+| [Kai'Sa, Daughter of the Void](/card/kai-sa-daughter-of-the-void-ogn-247-298-metal-best-of) | Origins 247/298 | US$2,146.95 |
+| [Master Yi, Wuju Bladesman](/card/master-yi-wuju-bladesman-ogs-019-024-metal-best-of) | Proving Grounds 019/024 | US$1,581.58 |
+| [Lux, Lady of Luminosity](/card/lux-lady-of-luminosity-ogs-021-024-metal-best-of) | Proving Grounds 021/024 | US$1,575.00 |
+| [Lee Sin, Blind Monk](/card/lee-sin-blind-monk-ogn-257-298-metal-best-of) | Origins 257/298 | US$1,362.50 |
+| [Sett, The Boss](/card/sett-the-boss-ogn-269-298-metal-best-of) | Origins 269/298 | US$1,333.31 |
+| [Irelia, Blade Dancer](/card/irelia-blade-dancer-sfd-195-221-promo) | Spiritforged 195/221 | US$1,300.00 |
+| [Leona, Radiant Dawn](/card/leona-radiant-dawn-ogn-261-298-metal-best-of) | Origins 261/298 | US$1,222.00 |
+| [Renata Glasc, Chem-Baroness](/card/renata-glasc-chem-baroness-sfd-201-221-metal-best-of) | Spiritforged 201/221 | US$1,199.99 |
+| [Draven, Glorious Executioner](/card/draven-glorious-executioner-sfd-185-221-metal-best-of) | Spiritforged 185/221 | US$1,029.84 |
+| [Darius, Hand of Noxus](/card/darius-hand-of-noxus-ogn-253-298-metal-best-of) | Origins 253/298 | US$999.00 |
+| [Volibear, Relentless Storm](/card/volibear-relentless-storm-ogn-249-298-metal-best-of) | Origins 249/298 | US$950.00 |
+| [Fiora, Grand Duelist](/card/fiora-grand-duelist-sfd-205-221-metal-best-of) | Spiritforged 205/221 | US$825.00 |
+| [Garen, Might of Demacia](/card/garen-might-of-demacia-ogs-023-024-metal-best-of) | Proving Grounds 023/024 | — |
+| [Akali, Rogue Assassin](/card/akali-rogue-assassin-ven-139-166-metal-best-of) | Vendetta 139/166 | — |
+| [Renekton, Butcher of the Sands](/card/renekton-butcher-of-the-sands-ven-141-166-metal-best-of) | Vendetta 141/166 | — |
+| [Zed, Master of Shadows](/card/zed-master-of-shadows-ven-143-166-metal-best-of) | Vendetta 143/166 | — |
+| [Nasus, Curator of the Sands](/card/nasus-curator-of-the-sands-ven-145-166-metal-best-of) | Vendetta 145/166 | — |
+| [Shen, Eye of Twilight](/card/shen-eye-of-twilight-ven-147-166-metal-best-of) | Vendetta 147/166 | — |
+| [Jayce, Defender of Tomorrow](/card/jayce-defender-of-tomorrow-ven-149-166-metal-best-of) | Vendetta 149/166 | — |
+| [Mel, Soul's Reflection](/card/mel-soul-s-reflection-ven-151-166-metal-best-of) | Vendetta 151/166 | — |
+| [Ambessa, Matriarch of War](/card/ambessa-matriarch-of-war-ven-153-166-metal-best-of) | Vendetta 153/166 | — |
+| [Kennen, Heart of the Tempest](/card/kennen-heart-of-the-tempest-ven-155-166-metal-best-of) | Vendetta 155/166 | — |
+| [Rumble, Mechanized Menace](/card/rumble-mechanized-menace-sfd-181-221-metal-best-of) | Spiritforged 181/221 | — |
+| [Lucian, Purifier](/card/lucian-purifier-sfd-183-221-metal-best-of) | Spiritforged 183/221 | — |
+| [Rek'Sai, Void Burrower](/card/rek-sai-void-burrower-sfd-187-221-metal-best-of) | Spiritforged 187/221 | — |
+| [Ornn, Fire Below the Mountain](/card/ornn-fire-below-the-mountain-sfd-189-221-promo) | Spiritforged 189/221 | — |
+| [Jax, Grandmaster at Arms](/card/jax-grandmaster-at-arms-sfd-193-221-metal-best-of) | Spiritforged 193/221 | — |
+| [Azir, Emperor of the Sands](/card/azir-emperor-of-the-sands-sfd-197-221-metal-best-of) | Spiritforged 197/221 | — |
+| [Ezreal, Prodigal Explorer](/card/ezreal-prodigal-explorer-sfd-199-221-metal-best-of) | Spiritforged 199/221 | — |
+| [Sivir, Battle Mistress](/card/sivir-battle-mistress-sfd-203-221-metal-best-of) | Spiritforged 203/221 | — |
+| [Yasuo, Unforgiven](/card/yasuo-unforgiven-ogn-259-298-metal-best-of) | Origins 259/298 | — |
+| [Teemo, Swift Scout](/card/teemo-swift-scout-ogn-263-298-metal-best-of) | Origins 263/298 | — |
+| [Viktor, Herald of the Arcane](/card/viktor-herald-of-the-arcane-ogn-265-298-metal-best-of) | Origins 265/298 | — |
+| [Miss Fortune, Bounty Hunter](/card/miss-fortune-bounty-hunter-ogn-267-298-metal-best-of) | Origins 267/298 | — |
+
+[[embed:1]]
+
+## Why the prices look the way they do
+
+**Origins metals cost the most.** Teemo, Jinx, Kai'Sa and Yasuo, the faces of the game's first set, take four of the top five Prize Wall prices.
+
+**The champion matters as much as the card.** Metal cards are bought to keep rather than to play, so the best-loved champions lead the list.
+
+**Best Of is scarcer than Prize Wall, but not always dearer.** One Best Of per Legend per event should make it the pricier printing, and for Ahri it is. For most Legends there are too few Best Of sales to set a reliable price, which is why so many rows above show a gap.
+
+**The asking price is not the price.** Several cheapest listings sit far above the market price (Kai'Sa's Prize Wall metal was listed at US$10,000 against a US$2,739.20 market price). With so few copies for sale, one seller's ask is not a valuation. Each card's page shows every source, so check the sales, not just the listing.
+
+## What changed in October, and what is coming
+
+On **15 October 2026** Riot changed how metal cards are handed out at its Regional Championships:
+
+- **Best Of prizes now come from Unleashed, Vendetta and Radiance only.** Origins, Proving Grounds and Spiritforged Legends are no longer awarded. No new Origins Best Of metals means the ones already out are all there will be, unless Riot reverses it.
+- **Overnumbered Foil Plated Legends go to the top 58 finishers**, who pick in order of placing.
+- **Radiance's metal Legends are not out yet.** Riot expects them from **January 2027** and has not yet said how they will be distributed.
+
+The next metal cards to be handed out are at the **European Regional Championship in Stuttgart (6–8 November)** and the **North American Regional Championship in Las Vegas (11–13 December)**. We add each new metal card as soon as it has a TCGplayer listing.
+
+## Before you buy a metal card
+
+- **Check which printing it is.** Prize Wall is non-foil; Best Of is holographic. Sellers do not always say which, and the price gap can be thousands of dollars.
+- **Ask for photos at an angle**, so the metal finish and any foil show.
+- **Compare the market price with the listing.** A listing several times the market price is a starting point, not a value.
+- **Watch the card instead of buying today.** A free account emails you when a card you watch drops in price or gets a new listing.
+
+The **[Radiance promo cards](/blog/riftbound-radiance-promo-cards)** post covers the season's Nexus Night and Summoner Skirmish promos, and the **[Radiance Signature cards](/blog/riftbound-radiance-signature-cards)** are the set's rarest pack pulls.
+
+*Sources: Riot's [Regional Championships prizing update](https://playriftbound.com/en-us/news/organizedplay/regional-championships-competitive-integrity-prizing/) (15 October 2026); [riftbound.zone](https://riftbound.zone/en/how-to-get-metal-cards-rq-barcelona/) and [UVS Games](https://uvsgames.com/rq-atlanta-prize-wall/) on the Prize Wall; prices from TCGplayer's "Organized Play Promotional Cards" catalogue on 25 October 2026.*`,
+  },
+  // RADIANCE PROMOS (2026-10-25, owner: "blog posts on Radiance Nexus Nights …
+  // the summoner skirmish, playmats, the promo cards … there's two, an Arion and
+  // a Kali one, and playmats for each … a holistic blog post that has those
+  // embedded cards"). The two are Akali (Skirmish 1) and Ahri (Skirmish 2), from
+  // Riot's own images in "The Radiance Overview". Owns `riftbound radiance promo
+  // cards`, `nexus night promos`, `summoner skirmish prizes/promos`, `riftbound
+  // lulu promo`, `riftbound ahri confident` (docs/seo-keyword-map.md). The
+  // promo cards are in manual-cards.json, art from Riot (cropped for 110a and
+  // the runes).
+  {
+    slug: "riftbound-radiance-promo-cards",
+    category: "blog",
+    title: "Radiance Promo Cards: Nexus Night, Summoner Skirmish and Playmats",
+    seoTitle: "Riftbound Radiance Promos: Nexus Night, Skirmish & Playmats",
+    excerpt:
+      "Every Riftbound Radiance promo: the Nexus Night Lulu and runes, Summoner Skirmish Akali and Ahri with their Champion playmats, and Pre-Rift Heimerdinger.",
+    author: "RiftCompare",
+    date: "2026-10-25",
+    readMins: 9,
+    tags: ["radiance", "promo", "nexus night", "summoner skirmish", "playmat", "organized play", "collecting"],
+    hero: {
+      src: "/blog/riftbound-radiance-promo-cards.jpg",
+      alt: "Riftbound Radiance promo cards: the Nexus Night Lulu 110a in front, with Graves, Akali Top 8, Ahri Top 8 and Lulu from Summoner Skirmish, over the Akali Champion playmat",
+    },
+    shop: [
+      { label: "Radiance promos on eBay", query: "Riftbound Radiance promo" },
+      { label: "Radiance Nexus Night Lulu", query: "Riftbound Lulu Whimsical promo 110a" },
+      { label: "Summoner Skirmish playmats", query: "Riftbound Summoner Skirmish playmat" },
+    ],
+    embeds: [
+      {
+        title: "Nexus Night: Lulu 110a and the promo runes",
+        note: "The Nexus Night chase card and the six full-art promo runes. Every card links to its live prices.",
+        slugs: [
+          "lulu-whimsical-rad-110a-167-promo",
+          "fury-rune-rad-r01b-promo",
+          "calm-rune-rad-r02b-promo",
+          "mind-rune-rad-r03b-promo",
+          "body-rune-rad-r04b-promo",
+          "chaos-rune-rad-r05b-promo",
+          "order-rune-rad-r06b-promo",
+        ],
+      },
+      {
+        title: "Summoner Skirmish 1: Graves and Akali",
+        note: "Graves for taking part; Akali, stamped Top 8, for the top cut.",
+        slugs: ["graves-blasting-through-rad-085-167-promo", "akali-brash-rad-015-167-promo"],
+      },
+      {
+        title: "Summoner Skirmish 2: Lulu and Ahri",
+        note: "Lulu for taking part; Ahri, stamped Top 8, for the top cut and the champion.",
+        slugs: ["lulu-whimsical-rad-110-167-promo", "ahri-confident-rad-038-167-promo"],
+      },
+      {
+        title: "The Pre-Rift promo",
+        note: "Given at Pre-Rift events, 16–22 October, while supplies lasted.",
+        slugs: ["heimerdinger-academy-instructor-rad-132-167-promo"],
+      },
+    ],
+    summary: [
+      "**Nexus Night:** weekly promo packs from a 24-card pool, chased for **Lulu, Whimsical 110a/167** (alternate art by Dark Glow) and six full-art **promo runes, R01b to R06b**.",
+      "**Summoner Skirmish 1 (from 9 November):** **Graves, Blasting Through** for taking part, **Akali, Brash** stamped *Top 8* for the top cut, and an **Akali Champion playmat** for the winner.",
+      "**Summoner Skirmish 2 (from 14 December):** **Lulu, Whimsical** for taking part, **Ahri, Confident** stamped *Top 8* for the top cut, and an **Ahri Champion playmat**.",
+      "**Pre-Rift (16–22 October):** **Heimerdinger, Academy Instructor**, while supplies lasted.",
+      "Every promo has its own card page with live prices as listings appear.",
+    ],
+    faq: [
+      { q: "What are the Radiance Summoner Skirmish promos?", a: "Summoner Skirmish 1, from 9 November 2026, gives Graves, Blasting Through (RAD 085/167 P) for taking part and Akali, Brash (RAD 015/167 P) stamped Top 8 for the top cut, with an Akali Champion playmat for the winner. Summoner Skirmish 2, from 14 December, gives Lulu, Whimsical (RAD 110/167 P) for taking part and Ahri, Confident (RAD 038/167 P) stamped Top 8, with an Ahri Champion playmat." },
+      { q: "What is the Radiance Nexus Night chase card?", a: "Lulu, Whimsical 110a/167, an alternate-art promo painted by Dark Glow. It is a different card from the standard-art Lulu promo given at Summoner Skirmish 2." },
+      { q: "What are the Radiance Nexus Night promo runes?", a: "Six full-art runes by Jincheng Guo, numbered RAD R01b to R06b: Fury, Calm, Mind, Body, Chaos and Order. They come in Nexus Night promo packs." },
+      { q: "How do you get Radiance Nexus Night promos?", a: "Play at a local game store's Nexus Night. Each event hands out promo packs from a 24-card pool, while supplies last; the day and format vary by store." },
+      { q: "Are there Summoner Skirmish playmats for Radiance?", a: "Yes, one per Skirmish: an Akali Champion playmat for Summoner Skirmish 1 and an Ahri Champion playmat for Summoner Skirmish 2, both for the event's champion." },
+      { q: "What was the Radiance Pre-Rift promo?", a: "Heimerdinger, Academy Instructor (RAD 132/167), given to players who signed up for their store's Pre-Rift event, 16–22 October 2026, while supplies lasted." },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Every Radiance card, with live prices →",
+      blurb: "The full Radiance card list, promos and Signatures included, compared across every store we track.",
+    },
+    body: `**Radiance's season comes with its own promo cards, and two playmats.** Riot hands them out through organized play rather than packs: a weekly Nexus Night pool, two Summoner Skirmish tournaments, and a Pre-Rift card that has already gone. This is every Radiance promo and how to earn it, from Riot's own announcement, with each card embedded and priced.
+
+## Nexus Night: Lulu 110a and the promo runes
+
+Nexus Night is the weekly casual event at local game stores. In the Radiance season, each Nexus Night hands out promo packs drawn from a **24-card pool**, while supplies last.
+
+The chase card is **Lulu, Whimsical 110a/167**, an alternate-art promo painted by **Dark Glow**: Lulu in a rainbow of poros and Yordle mischief. Alongside her come six full-art **promo runes by Jincheng Guo**, numbered **R01b to R06b**, one for each domain.
+
+[[embed:0]]
+
+The rest of the 24-card pool is promo printings of Radiance commons and uncommons. These are the base cards, each linked to its card page:
+
+| | | | |
+|---|---|---|---|
+| Banner of Conquest (002) | War Scout (008) | Shimmering Swimmer (014) | Firebrand Raider (019) |
+| Iridescent Avian (027) | Life from Stone (029) | Watchful Curator (037) | Hush (041) |
+| High Note (048) | Trinket Peddler (054) | Clanging Sentry (055) | Spirit of the Forge (066) |
+| Hold 'Em (070) | Sneaky Zeebles (076) | Stalwart Goatherd (083) | Portable Portal (087) |
+| Explosimian (094) | Satchel Charge (096) | Reckless Innovator (105) | Bedeviling Stranger (107) |
+| Hunting Dog (119) | Party Crasher (122) | Rousing Display (127) | Battlefield Armorer (130) |
+
+Riot's announcement calls card 083 "Stalwart Shepherd"; the printed card and Riot's card gallery name it **Stalwart Goatherd**.
+
+## Summoner Skirmish 1: Graves, Akali and the Akali playmat
+
+Summoner Skirmish is Riftbound's store-level tournament. The first Radiance Skirmish runs **from 9 November 2026**.
+
+- **For taking part:** **Graves, Blasting Through** (RAD 085/167 P).
+- **For the top cut:** **Akali, Brash** (RAD 015/167 P), stamped **Top 8**.
+- **For the champion:** the **Akali Champion playmat**.
+
+[[embed:1]]
+
+![The Akali Champion playmat from Riftbound Radiance Summoner Skirmish 1](/blog/radiance-summoner-skirmish-akali-playmat.jpg)
+
+## Summoner Skirmish 2: Lulu, Ahri and the Ahri playmat
+
+The second Radiance Skirmish runs **from 14 December 2026**.
+
+- **For taking part:** **Lulu, Whimsical** (RAD 110/167 P), the standard art by Polar Engine Studio. Not the Nexus Night 110a.
+- **For the top cut and the champion:** **Ahri, Confident** (RAD 038/167 P), stamped **Top 8**.
+- **For the champion:** the **Ahri Champion playmat**.
+
+[[embed:2]]
+
+![The Ahri Champion playmat from Riftbound Radiance Summoner Skirmish 2](/blog/radiance-summoner-skirmish-ahri-playmat.jpg)
+
+## The Pre-Rift promo: Heimerdinger
+
+Pre-Rift events ran **16–22 October**, the week before release. Players who signed up at their store got **Heimerdinger, Academy Instructor** (RAD 132/167), while supplies lasted. It is the first Radiance promo with a TCGplayer listing.
+
+[[embed:3]]
+
+## Bigger events: Regional Championships
+
+Radiance's first big events are the **European Regional Championship in Stuttgart (6–8 November)** and the **North American Regional Championship in Las Vegas (11–13 December)**. Every competitor gets a commemorative playmat and a promo, with further promos and playmats for Day 2, the Top 8 and the champion. Riot has not named those cards yet. The Regional Championships are also where **metal cards** are awarded: see **[every Riftbound metal card](/blog/riftbound-metal-cards)**.
+
+## Every Radiance promo at a glance
+
+| Card | Number | How you get it | When |
+|---|---|---|---|
+| [Lulu, Whimsical (alternate art)](/card/lulu-whimsical-rad-110a-167-promo) | RAD 110a/167 P | Nexus Night promo packs | Radiance season, weekly |
+| Promo runes (Fury to Order) | RAD R01b to R06b P | Nexus Night promo packs | Radiance season, weekly |
+| 24 Nexus Night pool cards | Base numbers, promo printing | Nexus Night promo packs | Radiance season, weekly |
+| [Graves, Blasting Through](/card/graves-blasting-through-rad-085-167-promo) | RAD 085/167 P | Summoner Skirmish 1, taking part | From 9 November 2026 |
+| [Akali, Brash (Top 8)](/card/akali-brash-rad-015-167-promo) | RAD 015/167 P | Summoner Skirmish 1, top cut | From 9 November 2026 |
+| Akali Champion playmat | — | Summoner Skirmish 1, champion | From 9 November 2026 |
+| [Lulu, Whimsical](/card/lulu-whimsical-rad-110-167-promo) | RAD 110/167 P | Summoner Skirmish 2, taking part | From 14 December 2026 |
+| [Ahri, Confident (Top 8)](/card/ahri-confident-rad-038-167-promo) | RAD 038/167 P | Summoner Skirmish 2, top cut | From 14 December 2026 |
+| Ahri Champion playmat | — | Summoner Skirmish 2, champion | From 14 December 2026 |
+| [Heimerdinger, Academy Instructor](/card/heimerdinger-academy-instructor-rad-132-167-promo) | RAD 132/167 | Pre-Rift sign-up | 16–22 October 2026 |
+
+## How to tell a promo from the pack card
+
+Every Radiance promo shares its name, and usually its art, with a card you can pull from a pack, so the difference is in the small print:
+
+- **The "P" in the code line.** The bottom-left corner of a promo reads, for example, *RAD • 110a/167 • P • EN*. The pack card has no P.
+- **The PROMO stamp.** Promos carry a small "PROMO" badge at the bottom centre of the frame, above the code line.
+- **The Top 8 stamp.** The Skirmish top-cut Akali and Ahri carry a "TOP 8" mark on the art. A listing that says "Top 8" without a photo of the stamp is worth a question before you buy.
+- **The art.** The Nexus Night Lulu 110a is entirely new art by Dark Glow. The Skirmish Lulu is Polar Engine Studio's standard art, so it looks like the pack card apart from the stamp and the code line.
+
+A seller who lists a promo by name alone may mean the pack card. Each promo above has its own card page, separate from its pack version, so their prices are never mixed.
+
+## Other Radiance exclusives
+
+Not every Radiance extra comes from organized play:
+
+- **The Vault Bundle** comes with foil tokens alongside its six booster packs and runes. They are part of the product, not a promo you earn.
+- **The K/DA Couture Collection** goes on sale through Riot's merch drawing from 27 October 2026, at US$150. It includes Evelynn, Ahri, Akali and Kai'Sa Legend cards and a Packed Amphitheater Battlefield. The **[K/DA Couture Collection post](/blog/riftbound-kda-couture-collection)** covers the drawing.
+- **The Regional Qualifier in Los Angeles** (25–27 September) opened Radiance's preview season with an alternate-art Jayce, Brilliant Inventor promo for its top 128 and a Lux Crystal Rose playmat, with exclusive-art Jayce promos and playmats for the Top 8 and the champion.
+
+## Where Radiance promos fit with earlier seasons
+
+Each Riftbound season has run the same pattern: a Nexus Night pool with one chase card and a promo rune cycle, Skirmish promos for taking part and for the top cut, and a playmat for the champion. Vendetta's Nexus Night chase card was Mel, Newly Awakened, with its own R01b to R06b runes: see **[Vendetta's Nexus Night promos](/blog/riftbound-vendetta-nexus-night-promo-cards)**. Radiance's Lulu 110a takes Mel's place, and the runes are new full-art paintings rather than a recolour of the pack runes.
+
+The pattern matters if you collect. A season's promos are only printed while the season runs, so once Legacy arrives on 29 January 2027, the Radiance promo pool closes.
+
+## What Radiance promos are worth
+
+Promos are printed in far smaller numbers than pack cards, and organized-play promos stop being made when the season ends. Historically:
+
+- **The Top 8 stamps hold value best.** Only a handful are given per store, per event.
+- **Participation promos start cheap and climb slowly** once a season is over and no more are printed.
+- **Full-art runes sell as sets.** A complete R01b to R06b set is worth more than six singles.
+
+Each card above has its own page that compares listings as they appear, and a free account emails you when one you are watching is listed or drops in price. The **[Radiance card list](/sets/radiance)** has every pack card beside its promo, and **[Radiance pull rates](/blog/riftbound-radiance-pull-rates)** explains what the packs themselves can hold.
+
+*Source: Riot's [The Radiance Overview](https://playriftbound.com/en-us/news/announcements/the-radiance-overview/); card images are Riot's. Regional Championship details from Riot's [2026 Regional Championship information](https://playriftbound.com/en-us/news/organizedplay/2026-regional-championship-info/).*`,
+  },
+  // RADIANCE PULL RATES (2026-10-25, research cluster C: `riftbound radiance
+  // pull rates`, `riftbound ultimate rare`, `packed amphitheater`, `radiance
+  // worth it`). Official pack layout and the ~0.025% Ultimate Rare rate are
+  // Riot's ("The Radiance Overview"); the 1-in-330 count is tcgtalk's own
+  // opening, cited as theirs. No odds are invented for slots Riot did not price.
+  {
+    slug: "riftbound-radiance-pull-rates",
+    category: "blog",
+    title: "Radiance Pull Rates: What's in a Pack, and the Ultimate Rare",
+    seoTitle: "Riftbound Radiance Pull Rates & Ultimate Rare Odds",
+    excerpt:
+      "What is in a Riftbound Radiance pack, slot by slot, the official odds of the Packed Amphitheater Ultimate Rare, and what a box can and cannot promise.",
+    author: "RiftCompare",
+    date: "2026-10-25",
+    readMins: 7,
+    tags: ["radiance", "pull rates", "ultimate rare", "chase cards", "booster box", "price guide"],
+    embeds: [
+      {
+        title: "The Ultimate Rare: Packed Amphitheater 184/167",
+        note: "Riot's rarest Radiance card, in about 0.025% of packs.",
+        slugs: ["packed-amphitheater-rad-184-167"],
+      },
+      {
+        title: "What the chase slot can hold",
+        note: "Overnumbered Legends and HEARTSTEEL units, and the five K/DA specials.",
+        slugs: [
+          "seraphine-starry-eyed-songstress-rad-174-167",
+          "ekko-boy-who-shattered-time-rad-168-167",
+          "ezreal-dashing-rad-180-167",
+          "ekko-revolutionary-rad-177-167",
+          "ahri-confident-rad-sp1-005",
+          "kai-sa-rebel-rad-sp4-005",
+        ],
+      },
+    ],
+    summary: [
+      "**A Radiance booster pack holds 14 cards:** 7 Commons, 3 Uncommons, 1 foil, 1 Rare or Epic, 1 slot that can be anything from Rare up to the Ultimate Rare, and 1 Token, Rune or alternate-art Rune.",
+      "**The Ultimate Rare, Packed Amphitheater 184/167, is in about 0.025% of packs** by Riot's figure: roughly 1 in 4,000. That is about four times rarer than the Baron Ultimate Rare's 0.1%.",
+      "**No pack, box or case is guaranteed one.** A 24-pack display at 0.025% a pack has about a 0.6% chance; one public opening of 330 packs found one.",
+      "**The chase slot is where the value is:** Showcase alternate arts, the K/DA specials, the overnumbered Legends and HEARTSTEEL cards, and the Ultimate Rare all come from it.",
+    ],
+    faq: [
+      { q: "What are the Riftbound Radiance pull rates?", a: "Riot publishes the pack layout and the Ultimate Rare's rate, not every slot's odds. A Radiance pack has 7 Commons, 3 Uncommons, 1 foil, 1 Rare or Epic, 1 slot that can be Rare, Epic, alternate art, special alternate art, overnumbered or Ultimate Rare, and 1 Token, Rune or alternate-art Rune. The Ultimate Rare appears in about 0.025% of packs." },
+      { q: "What is the Radiance Ultimate Rare?", a: "Packed Amphitheater, a Battlefield numbered 184/167. Riot puts it in about 0.025% of packs, roughly 1 in 4,000, and no pack, box or case is guaranteed one." },
+      { q: "How many packs do you need to open to pull Packed Amphitheater?", a: "On Riot's 0.025% rate, about 4,000 on average, with no guarantee. A 24-pack booster display gives roughly a 0.6% chance. One published opening of 330 packs pulled one, which was luck rather than a rate." },
+      { q: "Is a Radiance booster box worth it?", a: "Only if you want to open product. The expected value of a box depends on the chase slot, and the Ultimate Rare is too rare to count on. If you want specific cards, buying the singles is almost always cheaper; RiftCompare's box EV calculator works out the current value from live singles prices." },
+    ],
+    browseCta: {
+      href: "/tools/box-ev",
+      label: "Is a Radiance box worth opening? →",
+      blurb: "The box EV calculator prices every Radiance pull slot from live singles prices.",
+    },
+    body: `**What is actually in a Riftbound Radiance pack?** Riot publishes the layout of every pack and the odds of its rarest card, and that is enough to answer most of what people search for: what each slot can hold, how rare the Ultimate Rare really is, and what a box can and cannot promise. Riot does not publish the odds of every slot, so where a number is not Riot's, this post says whose it is.
+
+## What's in a Radiance booster pack
+
+Each Radiance booster pack holds **14 cards**:
+
+| Slot | What it holds |
+|---|---|
+| 7 | Commons |
+| 3 | Uncommons |
+| 1 | Foil |
+| 1 | Rare or Epic |
+| 1 | Rare, Epic, alternate art, special alternate art, overnumbered or Ultimate Rare |
+| 1 | Token, Rune or alternate-art Rune |
+
+The second-to-last slot is the one that matters. Every Showcase alternate art, the five **[K/DA special cards](/blog/riftbound-kda-cards)** (SP1 to SP5), the overnumbered Legends and HEARTSTEEL units, and the Ultimate Rare all come from it.
+
+## The Ultimate Rare: Packed Amphitheater
+
+Radiance's **Ultimate Rare is Packed Amphitheater, a Battlefield numbered 184/167**. Riot puts it in **about 0.025% of packs**, roughly **one in 4,000**. That makes it about four times rarer than the Baron Ultimate Rare, at 0.1%.
+
+[[embed:0]]
+
+What that rate means in practice:
+
+- **A pack:** about 1 in 4,000.
+- **A 24-pack booster display:** about a 0.6% chance, or 1 display in 167.
+- **A case:** still not guaranteed. Riot is explicit that no pack, box or case is guaranteed an Ultimate Rare.
+
+One public opening of **330 packs** by tcgtalk found one. That is a lucky result, not a better rate, and it is the best illustration of why nobody should open boxes to chase this card.
+
+## The chase slot
+
+Most of a pack's value is in that one flexible slot. These are the cards it can hold.
+
+[[embed:1]]
+
+- **Showcase alternate arts:** 18 lettered printings (020a to 138a), new art for Legends and champions.
+- **K/DA specials:** SP1 to SP5, Ahri, Akali, Evelynn, Kai'Sa and Seraphine in K/DA art.
+- **Overnumbered:** the nine Legend overnumbers (168 to 176), Ekko, Revolutionary (177) and the six HEARTSTEEL cards (178 to 183).
+- **The Ultimate Rare:** Packed Amphitheater (184).
+
+The **[Radiance Signature cards](/blog/riftbound-radiance-signature-cards)**, the signed versions of the overnumbered cards, are rarer still, and their odds are not published.
+
+## Radiance by the numbers
+
+Riot's card gallery lists **219 Radiance printings**, and RiftCompare tracks 16 Signatures on top of them:
+
+| Group | Numbers | Printings |
+|---|---|---|
+| Base set | 001 to 167 | 167 |
+| Overnumbered Legends | 168 to 176 | 9 |
+| Ekko, Revolutionary | 177 | 1 |
+| HEARTSTEEL overnumbered | 178 to 183 | 6 |
+| Ultimate Rare | 184 | 1 |
+| Alternate arts | 020a to 138a | 18 |
+| K/DA specials | SP1 to SP5 | 5 |
+| Runes and alternate-art runes | R01 to R06, R01a to R06a | 12 |
+| Signatures (not in Riot's gallery) | 168\* to 183\*, 174a\* | 16 |
+
+By rarity, the gallery's 219 printings split into **54 Common, 46 Uncommon, 45 Rare, 28 Epic and 46 Showcase**. The commons and uncommons fill ten of a pack's fourteen slots, which is why a full set of them costs little, and why a display's value sits almost entirely in its 24 chase slots.
+
+## What a Radiance display can and cannot promise
+
+A 24-pack booster display gives you **24 chase-slot cards**: one per pack. Most of them will be Rares and Epics, because Riot does not raise the odds of the special printings just because you bought a whole display. What you can count on:
+
+- **24 foils**, one per pack.
+- **24 Rares or Epics** from the fixed slot, plus whatever the chase slot adds.
+- **240 commons and uncommons**, enough for most of the base set's lower rarities.
+
+What you cannot count on: any particular alternate art, any overnumbered card, any K/DA special, and above all the Ultimate Rare. Riot publishes only the Ultimate Rare's rate. Anyone quoting exact odds for the other chase printings is quoting their own openings, which is a sample, not a rate.
+
+## How Radiance compares with the next set
+
+Radiance's pack is the last of its shape. **Legacy, out 29 January 2027**, replaces one of the seven Common slots with a slot that is roughly a 50/50 Legend or Battlefield, so a Legacy pack has six Commons. Showcase Legends and Battlefields stay in the overnumbered slot. If you are deciding whether to open Radiance or wait, the **[Legacy pre-orders](/legacy-preorders)** page compares what stores are already asking.
+
+## Track your own pulls
+
+The **[Radiance pull tracker](/tools/pull-tracker)** logs what you open, pack by pack, and adds up what your pulls are worth at today's prices. Shared openings are the only way anyone learns how often the unpriced chase printings appear, so every logged pack makes the picture clearer.
+
+## Should you open Radiance or buy singles?
+
+If you want to open product, open it. If you want specific cards, buy them: a single is a known price, and a pack is a ticket to a slot whose odds Riot mostly does not publish.
+
+Two tools on RiftCompare answer the rest with live numbers:
+
+- The **[box EV calculator](/tools/box-ev)** works out what an average Radiance display is worth from current singles prices.
+- The **[Radiance card list](/sets/radiance)** shows every card's cheapest price across the stores we track, so you can price your pulls, or skip them.
+
+*Sources: Riot's [The Radiance Overview](https://playriftbound.com/en-us/news/announcements/the-radiance-overview/) for the pack layout and the Ultimate Rare's rate; [tcgtalk's 330-pack opening](https://tcgtalk.com/guides/radiance-riftbound-pull-rates-box-opening) for the count quoted above.*`,
+  },
   // RADIANCE PATCH NOTES, ERRATA AND TOURNAMENT RULES (2026-10-10, owner:
   // "There's been some updates around riftbound recently, do some research and
   // make a couple insightful blog posts"). Riot published three documents at
