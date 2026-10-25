@@ -75,30 +75,32 @@ dashboard (by day or by month).
 ## Part 5. Enter every Vercel and Anthropic invoice as a cost (Claude in Chrome)
 
 Vercel and claude.ai have no billing API for your own plan, so each invoice is
-entered on the dashboard as a one-off cost on its date. Everything spent on both
-is RiftCompare's. Paste this into Claude in Chrome while logged in to Vercel,
+entered on the dashboard as a one-off cost on its date. The dashboard is the
+source of truth for ALL the owner's sites: every Vercel charge counts (the plan,
+usage, and every domain bought or renewed, for any site), and all Anthropic spend. Paste this into Claude in Chrome while logged in to Vercel,
 claude.ai (and platform.claude.com if you use the API) and riftcompare.com as
 the admin:
 
 ```
-You are helping me (the owner of riftcompare.com) record my historical spend on Vercel and Anthropic as costs on my own admin dashboard. All of it is RiftCompare's. Read each page before clicking. Do NOT change any plan, payment method or billing setting, and do not download anything I didn't ask for. Never type card numbers anywhere.
+You are helping me (the owner of riftcompare.com) record my historical spend on Vercel and Anthropic as costs on my own admin dashboard. The dashboard is the source of truth for ALL my sites, so EVERY Vercel charge counts, including domains for sites other than RiftCompare. Read each page before clicking. Do NOT change any plan, payment method, domain or billing setting (no renewals, transfers or auto-renew changes), and do not download anything I didn't ask for. Never type card numbers anywhere.
 
-STEP 1. Collect Vercel invoices
-1. Go to vercel.com → my team (Specifix's projects) → Settings → Billing → Invoices (or "Invoice history").
-2. For EVERY invoice since the first one, note: invoice date (YYYY-MM-DD), total amount actually charged (including tax), currency.
+STEP 1. Collect every Vercel charge
+1. On vercel.com, open the account/team switcher (top left) and note EVERY scope I have: my personal account and every team (e.g. Specifix's projects). Do steps 2 and 3 for each one.
+2. Settings → Billing → Invoices (or "Invoice history"). For EVERY invoice since the first one, note: invoice date (YYYY-MM-DD), total amount actually charged (including tax), currency, and what it was for (plan, usage, or domain).
+3. Domains: open the Domains tab (and Settings → Billing, or the domain's own page, for its purchase/renewal receipts). For EVERY domain bought or renewed through Vercel, for any site, note: the domain name, the purchase or renewal date, the amount charged and the currency. If a domain charge already appears on one of the invoices from step 2, keep it once only (on the invoice line) and just note which domain it was.
 
 STEP 2. Collect Anthropic invoices
 3. Go to claude.ai → Settings → Billing → Invoices (or "View invoices", which may open Stripe's billing portal). For EVERY invoice, note the date, total charged and currency. Include plan changes, upgrades and any extra usage charges.
 4. If I also have a Claude Console (platform.claude.com) account, go to Settings → Billing → Invoice history and note those invoices too, marked "API".
 
 STEP 3. Show me the list before entering anything
-5. Show me one table: Source (Vercel / Claude plan / Claude API), Date, Amount, Currency, and the total per source. Wait for me to say "go".
+5. Show me one table: Source (Vercel plan/usage / Vercel domain / Claude plan / Claude API), Date, What (e.g. the domain name), Amount, Currency, and the total per source. Point out anything you think might be a duplicate. Wait for me to say "go".
 
 STEP 4. Enter them on the dashboard
 6. Open https://riftcompare.com/admin/earnings and scroll to "Costs".
 7. For each invoice, fill the form and click "Add cost":
-   - What: "Vercel invoice YYYY-MM", "Claude plan invoice YYYY-MM" or "Claude API invoice YYYY-MM"
-   - Type: Hosting for Vercel, AI for Anthropic
+   - What: "Vercel invoice YYYY-MM", "Domain <name> (purchase)" or "Domain <name> (renewal)", "Claude plan invoice YYYY-MM" or "Claude API invoice YYYY-MM"
+   - Type: Hosting for Vercel invoices and domains, AI for Anthropic
    - Amount: the total charged (number only, e.g. 20.00)
    - Currency: the invoice's currency
    - Repeats: One-off
