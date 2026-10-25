@@ -72,8 +72,7 @@ export function CreatorCard({ creator, index = 0 }: { creator: Creator; index?: 
               <a
                 key={l.url}
                 href={l.url}
-                target="_blank"
-                rel="noopener"
+                {...(l.platform === "Email" ? {} : { target: "_blank", rel: "noopener" })}
                 onClick={() => trackEvent("creator_click", { creator: creator.slug, platform: l.platform })}
                 className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-opacity hover:opacity-85"
                 style={{ backgroundColor: st.bg, color: st.fg }}

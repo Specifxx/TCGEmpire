@@ -21,7 +21,7 @@
 // live and public on the next release. Use the creator's own spelling and handle,
 // and only links they gave us.
 
-export type CreatorPlatform = "YouTube" | "Twitch" | "TikTok" | "Instagram" | "X" | "Discord" | "Website";
+export type CreatorPlatform = "YouTube" | "Twitch" | "TikTok" | "Instagram" | "X" | "Discord" | "Website" | "Email";
 
 export interface CreatorLink {
   platform: CreatorPlatform;
@@ -123,13 +123,16 @@ export const CREATORS: Creator[] = [
   },
   {
     slug: "ramenjuice",
-    name: "ramenjuice",
-    blurb: "Just a simple man with a Riftbound addiction: pack openings and Riftbound content from Sydney.",
+    name: "RamenJuice",
+    // His own words, links and email (by email to the owner, 2026-10-25).
+    blurb: "Just a simple man with a Riftbound addiction",
     links: [
       { platform: "Instagram", url: "https://www.instagram.com/ramenjuice_rb/", handle: "@ramenjuice_rb" },
-      { platform: "Website", url: "https://beacons.ai/ramenjuice", handle: "beacons.ai/ramenjuice" },
+      { platform: "YouTube", url: "https://www.youtube.com/@ramenjuicetcg", handle: "@ramenjuicetcg" },
+      { platform: "Email", url: "mailto:mrasiandrewie@gmail.com", handle: "mrasiandrewie@gmail.com" },
     ],
     region: "AU",
+    avatar: "/creators/ramenjuice.jpg",
     since: "2026-10-22",
   },
   // Four more, from their Instagram profiles (owner, 2026-10-23).
@@ -303,6 +306,7 @@ export const PLATFORM_STYLE: Record<CreatorPlatform, { bg: string; fg: string }>
   X: { bg: "#000000", fg: "#ffffff" },
   Discord: { bg: "#5865f2", fg: "#ffffff" },
   Website: { bg: "#334155", fg: "#ffffff" },
+  Email: { bg: "#0f766e", fg: "#ffffff" },
 };
 
 export function initials(name: string): string {

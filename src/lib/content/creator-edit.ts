@@ -12,7 +12,7 @@
 // PURE: validation and merging only, so tests and the client form share it.
 import type { Creator, CreatorLink, CreatorPlatform } from "./creators";
 
-export const EDIT_PLATFORMS: CreatorPlatform[] = ["YouTube", "Twitch", "TikTok", "Instagram", "X", "Discord", "Website"];
+export const EDIT_PLATFORMS: CreatorPlatform[] = ["YouTube", "Twitch", "TikTok", "Instagram", "X", "Discord", "Website", "Email"];
 export const MAX_LINKS = 6;
 export const MAX_BLURB = 140;
 export const MAX_TAGS = 3;
@@ -26,6 +26,7 @@ const HOSTS: Record<CreatorPlatform, string[] | null> = {
   X: ["x.com", "twitter.com"],
   Discord: ["discord.gg", "discord.com"],
   Website: null,
+  Email: null,
 };
 
 /** Share-sheet tracking params a pasted link carries (YouTube `si`, Instagram `igsh`…). */
@@ -35,6 +36,11 @@ const TRACKING = /^(si|igsh|igshid|utm_.*|_t|_r|is_from_webapp|sender_device|fea
 export function cleanLinkUrl(platform: CreatorPlatform, raw: string): string | null {
   let s = raw.trim();
   if (!s || s.length > 300) return null;
+  // Email: a public contact address the creator chose to list, as a mailto: link.
+  if (platform === "Email") {
+    const addr = s.replace(/^mailto:/i, "").split("?")[0]!.trim().toLowerCase();
+    return /^[^\s@/:]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(addr) ? `mailto:${addr}` : null;
+  }
   if (!/^[a-z]+:\/\//i.test(s)) s = `https://${s}`;
   let u: URL;
   try {
@@ -89,7 +95,7 @@ export function validateProfileEdit(input: unknown): EditResult {
     if (!platform) return { ok: false, error: "Pick a platform for each link." };
     const url = cleanLinkUrl(platform, String(l.url));
     if (!url) return { ok: false, error: `That ${platform} link doesn't look right: ${text(l.url, 80)}` };
-    const handle = text(l.handle, 40) || (platform === "Website" ? undefined : handleFromUrl(url));
+    const handle = text(l.handle, 40) || (platform === "Website" ? undefined : platform === "Email" ? url.slice(7) : handleFromUrl(url));
     links.push({ platform, url, ...(handle ? { handle } : {}) });
   }
   if (!links.length) return { ok: false, error: "Add at least one link." };
