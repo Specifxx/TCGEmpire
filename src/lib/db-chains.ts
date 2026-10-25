@@ -98,6 +98,15 @@
  * this project now makes deliberately: no emergency fallback lever, but no more
  * silently-serving-garbage incidents either.
  *
+ * CUT OVER TO RM10 ON 2026-10-25: RM9 reached its 5 GB monthly transfer
+ * allowance eight days into service. RM10 is a RECYCLED project on its third
+ * term (last live 2026-09-14..09-18); probe-databases found it behind RM9 on
+ * every table it counts (User 370 vs 525, CollectionCard 1,823 vs 2,729,
+ * PriceAlert 213 vs 335, RetailerPrice 131,599 vs 196,583, SealedListing 2,727
+ * vs 2,834). migrate-main-db-rm9-to-rm10 replaced it with a row-count-verified
+ * copy of RM9 (every table matching; User 525, RetailerPrice 196,583).
+ * RM9 is the rollback.
+ *
  * CUT OVER TO RM9 ON 2026-10-17: RM8 reached its 5 GB monthly transfer
  * allowance three days into service. RM9 is a RECYCLED project on its third term
  * (last live 2026-09-11..09-14); probe-databases found it behind RM8 on every
@@ -141,16 +150,16 @@
  * EbayAuction table whose FK onto Card had blocked the restore) and replaced it
  * with a row-count-verified copy of RM3 (all 42 tables matching, Card 1434).
  *
- * RM3 through RM8 and RM10 through RM12 and DATABASE_URL_2 are retired and stay out
+ * RM3 through RM9, RM11, RM12 and DATABASE_URL_2 are retired and stay out
  * of this chain — available to the migration tasks by explicit name (see
- * migrate-main-db-rm8-to-rm9 and its predecessors in .github/workflows/maintenance.yml).
+ * migrate-main-db-rm9-to-rm10 and its predecessors in .github/workflows/maintenance.yml).
  * DATABASE_URL is ALSO not in this chain anymore: it is read directly by
  * prisma/schema.prisma's env("DATABASE_URL") for local dev and by the Prisma
  * CLI, never by the running app (src/lib/db.ts constructs PrismaClient with an
  * explicit datasourceUrl override), so its presence or absence here has no
  * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM9"] as const;
+export const OPERATIONAL_VARS = ["RM10"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.

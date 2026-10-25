@@ -64,8 +64,8 @@ jobs:
           restore-keys: ops-state-
       - name: Run the checks
         env:
-          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
-          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           NEON_ORG_ID: ${{ secrets.NEON_ORG_ID || vars.NEON_ORG_ID }}

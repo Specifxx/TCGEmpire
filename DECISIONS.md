@@ -19490,3 +19490,21 @@ as my vercel history allows".
   bought or renewed through Vercel for any site. The entry prompt
   (`docs/earnings-dashboard-setup.md`, Part 5) collects all of it and keeps a
   domain charge once when it also appears on an invoice.
+
+## The operational database moves to RM10 — 2026-10-25
+
+Owner: "perform a full migration to RM10 as we are at limit." RM9 had been live since 2026-10-17, eight days, the longest life since the rotation began (RM8 lasted three, RM6 and RM7 five each). That fits the cadence gate and `PUBLIC_DATA_MODE=files` taking load off Neon, but a free project still runs out within a month. The rotation buys days, not a fix.
+
+**The same name collision as RM9.** RM10 is on its third term (2026-08-26..~08-29 and 2026-09-14..09-18), so `maintenance.yml` already held a 2026-09-14 step with the task name `migrate-main-db-rm9-to-rm10` and the step name "Migrate main (operational) database to RM10". The legacy step was removed and the new one took its name; it is in git history at `7611e0aa`.
+
+**Before touching anything.** `probe-databases` (02:28 UTC) found RM10 reachable and behind the live RM9 on every table it counts: User 370 vs 525, CollectionCard 1,823 vs 2,729, PriceAlert 213 vs 335, Card 1,431 vs 1,667, RetailerPrice 131,599 vs 196,583, SealedListing 2,727 vs 2,834; MarketplaceListing, Order and SellerProfile equal (57, 9, 3). Unlike RM9's own return, nothing was ahead, so `--clean` had nothing unique to destroy.
+
+**The task.** `migrate-main-db-rm9-to-rm10`, generated from the RM8 → RM9 step with the names moved one along: source RM9, target RM10, the same guards. RM8 → RM9 is relabelled LEGACY. Run from the working branch by `workflow_dispatch`, between imports (nothing else was running).
+
+**The runs.**
+- Pass 1 (02:33 UTC): every table matched (User 525, Card 1,667, RetailerPrice 196,583, CollectionCard 2,729, DemandSnapshot 113,515, SealedListing 2,834, Notification 177, ManualCost 39) and `prisma db push` reported the schema already in sync.
+- A final pass ran just before the flip landed on `main`. It ran from the working branch, whose chain already named RM10, so it needed `overwrite_live_db`; production was still on RM9, so nothing live was overwritten.
+
+**The flip.** `OPERATIONAL_VARS = ["RM10"]` in `src/lib/db-chains.ts`; `CURRENT_OP` and the production gate in `scripts/build-db-push.sh`; every workflow's `DATABASE_URL`, `OPERATIONAL_URL`, `DB_SOURCE_NAME` and `RM10` forward; `ci-build.yml`'s service variable; `package.json`'s preview condition; `tests/ops-wiring.test.ts`. A Vercel production build without `RM10` set **fails** (the 2026-10-04 guard), so the previous deployment keeps serving until it is set. Rollback is one commit: RM9 still holds the data.
+
+**Writes in the gap.** Anything written to RM9 between the final pass and the new build going live is not on RM10: a few minutes of signups, alerts and notifications.
