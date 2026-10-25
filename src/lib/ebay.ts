@@ -9,6 +9,7 @@
 // so nothing breaks. eBay listings are free-text and noisier than store feeds, so
 // treat results as a secondary signal (lowest Buy-It-Now, AU marketplace).
 
+import { titleFitsMetal, type MetalKind } from "./metal-cards";
 import { EBAY_CAMPAIGN_ID, ebayAffiliateUrl } from "./affiliate";
 import { titleInRegion, type RegionalPrinting } from "./regional-printings";
 // constants.ts imports nothing at all, so this cannot create a cycle. Using its
@@ -500,6 +501,8 @@ export interface EbayCardIdentity {
   isPromo?: boolean;
   /** Set only for a card that IS a foreign-language printing (lib/regional-printings.ts). */
   regional?: RegionalPrinting;
+  /** Set only for a metal Prize Wall / Best Of card (lib/metal-cards.ts). */
+  metal?: MetalKind | null;
 }
 
 /**
@@ -637,9 +640,17 @@ export function cardIdentityStages(
     },
     // Promo and base share a number too. A promo card matches ONLY promo-marked
     // listings; a base card ONLY non-promo ones.
+    // A metal card is a promo whose sellers say "metal", rarely "promo": it is
+    // matched on that word (and its kind) instead of the promo hint. Every other
+    // card refuses a metal listing, which would otherwise price a $1 base card at
+    // a metal card's thousands (lib/metal-cards.ts).
+    {
+      stage: card.metal ? `metal (${card.metal})` : "not a metal card",
+      pred: (it) => titleFitsMetal(it.title ?? "", card.metal),
+    },
     {
       stage: `promo flag === ${!!card.isPromo}`,
-      pred: (it) => PROMO_HINT.test(it.title ?? "") === !!card.isPromo,
+      pred: (it) => !!card.metal || PROMO_HINT.test(it.title ?? "") === !!card.isPromo,
     },
   ];
 }
@@ -664,12 +675,14 @@ function mapEbayItem(it: any): EbayResult {
 /** The Browse `q` for a card. `withGame` appends "Riftbound" (see the note in
  *  searchEbayLowest about why that word is a fallback boundary, not a constant). */
 function buildQuery(
-  card: { name: string; number: string; isSignature: boolean; isPromo?: boolean; regional?: RegionalPrinting },
+  card: { name: string; number: string; isSignature: boolean; isPromo?: boolean; regional?: RegionalPrinting; metal?: MetalKind | null },
   withGame: boolean,
 ): string {
   // A regional printing is searched the way its sellers title it. One query, so
   // the no-"Riftbound" fallback below never runs for it.
   if (card.regional) return card.regional.query;
+  // Metal cards are titled "<Name> Metal (Prize Wall)", often without a number.
+  if (card.metal) return `${card.name} metal${withGame ? " Riftbound" : ""}`;
   const num = card.isSignature ? "" : ` ${queryNumberToken(card.number)}`;
   return `${card.name}${num}${card.isSignature ? " signature" : ""}${card.isPromo ? " promo" : ""}${withGame ? " Riftbound" : ""}`;
 }
@@ -710,6 +723,7 @@ export async function searchEbayLowest(
     isSignature: boolean;
     isPromo?: boolean;
     regional?: RegionalPrinting;
+    metal?: MetalKind | null;
     marketplace?: string; // "EBAY_AU" (default) | "EBAY_US"
     // The card's known value in this market (cheapest tracked STORE price, cents). When
     // present, listings priced absurdly above it are dropped as mismatches — a promo,

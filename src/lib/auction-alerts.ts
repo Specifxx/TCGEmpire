@@ -1,3 +1,4 @@
+import { metalKindOf } from "./metal-cards";
 import { prisma } from "./db";
 import { COUNTRIES, type Country } from "./country";
 import { isPremium, type EntitlementUser } from "./premium";
@@ -48,7 +49,7 @@ export interface AuctionRow {
   endsAt: Date;
 }
 
-export function identityOf(card: { name: string; setCode: string; collectorNumber: string; isPromo: boolean }): EbayCardIdentity {
+export function identityOf(card: { name: string; setCode: string; collectorNumber: string; isPromo: boolean; tags?: string | null }): EbayCardIdentity {
   const [rawNum, total] = card.collectorNumber.split("/");
   return {
     name: card.name,
@@ -57,6 +58,7 @@ export function identityOf(card: { name: string; setCode: string; collectorNumbe
     total: total ?? "",
     isSignature: card.collectorNumber.includes("*"),
     isPromo: card.isPromo,
+    metal: metalKindOf(card.tags),
   };
 }
 
@@ -119,7 +121,7 @@ export async function runAuctionAlerts(
       email: true,
       market: true,
       userId: true,
-      card: { select: { id: true, slug: true, name: true, setCode: true, collectorNumber: true, isPromo: true } },
+      card: { select: { id: true, slug: true, name: true, setCode: true, collectorNumber: true, isPromo: true, tags: true } },
       user: { select: { email: true, isAdmin: true, premiumUntil: true, premiumTier: true, premiumTierFloor: true, auctionAlertsSnoozedUntil: true } },
     },
   });

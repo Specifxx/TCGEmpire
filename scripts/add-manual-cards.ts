@@ -36,6 +36,12 @@ type ManualCard = {
   description?: string | null;
   imageUrl?: string | null;
   imageThumbUrl?: string | null;
+  /** Comma-separated Card.tags, e.g. "metal,prize wall" (lib/metal-cards.ts). Left alone when absent. */
+  tags?: string | null;
+  /** The URL slug for a NEW card, when name+set+number can't tell it apart (a metal
+   *  Prize Wall and Best Of printing share both with their base card). An existing
+   *  card's slug never moves here (see the update branch). */
+  slug?: string;
 };
 
 const REQUIRED: (keyof ManualCard)[] = ["name", "setCode", "setName", "collectorNumber", "domain", "type", "rarity"];
@@ -228,6 +234,7 @@ async function main() {
       // applies). Without it CardImage frames Rakelstake, the first hand-added
       // Battlefield (RAD 165/167, 2026-09-29), as a portrait card.
       ...(c.type === "Battlefield" ? { orientation: "landscape" } : {}),
+      ...(c.tags !== undefined ? { tags: c.tags } : {}),
     };
 
     const existing = c.externalId
@@ -243,7 +250,7 @@ async function main() {
       if (!DRY) await prisma.card.update({ where: { id: existing.id }, data: { ...data, slug } });
       updated++;
     } else {
-      const slug = await uniqueSlug(cardSlug({ name: c.name, setCode: c.setCode, collectorNumber: c.collectorNumber, isPromo }), externalId);
+      const slug = await uniqueSlug(c.slug ?? cardSlug({ name: c.name, setCode: c.setCode, collectorNumber: c.collectorNumber, isPromo }), externalId);
       console.log(`${DRY ? "(dry) " : ""}CREATE ${c.name} [${c.setCode} ${c.collectorNumber}${isPromo ? " promo" : ""}] -> /card/${slug}`);
       if (!DRY) await prisma.card.create({ data: { ...data, slug, externalId, marketPriceCents: 0, artSeed: Math.floor(Math.random() * 1_000_000) } });
       created++;

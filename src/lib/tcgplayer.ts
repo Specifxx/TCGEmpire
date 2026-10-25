@@ -31,6 +31,7 @@
 // uses). Products are matched to our cards by collector number + set, reusing
 // the importer's exact numKey/setFromTotal logic so a Signature/alt-art print is
 // never collapsed onto its base card.
+import { metalKindOf } from "@/lib/metal-cards";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { TCGPLAYER_AU_RETAILER,
@@ -466,7 +467,7 @@ export function tcgQuote(
 // decides). Exported separately so a dry-run can inspect the match quality.
 export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: TcgProduct[]): Promise<TcgMatchResult> {
   const items = products ?? (await fetchTcgplayerProducts());
-  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, collectorNumber: true, externalId: true, isPromo: true } });
+  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, collectorNumber: true, externalId: true, isPromo: true, tags: true } });
   const byKey = new Map<string, string>();
   const byExternal = new Map<string, string>();
   // Set-less numbers (the "R04a"-style rune printings, "NN1", "WB25"…) keyed by the
@@ -494,6 +495,10 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
     // "tcg-<productId>" link, a PROMO_PRODUCT_OVERRIDES entry, or — lacking
     // either — the base-sibling fallback below, keyed by what's recorded here.
     if (c.isPromo) {
+      // Never for a metal card (lib/metal-cards.ts): its base sibling is the same
+      // card at a thousandth of the price, so a metal card with no listing of its
+      // own shows no TCGplayer price rather than the base card's.
+      if (metalKindOf(c.tags)) continue;
       promoFallbackKeys.push({ cardId: c.id, key: sc ? `${sc}|${numKey(num)}` : `${c.setCode}|${numKey(num)}`, setless: !sc });
       continue;
     }
