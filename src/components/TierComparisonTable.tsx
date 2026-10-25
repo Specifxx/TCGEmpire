@@ -93,6 +93,7 @@ import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../lib/free-limits";
 import { SET_GAP_CHUNK } from "../lib/set-gap";
 import { FREE_HISTORY_DAYS } from "../lib/history-access";
 import { FREE_PLANS_PER_MONTH } from "../lib/basket-meter";
+import { DECK_LINE_CAP, FREE_BULK_LINES } from "../lib/deck";
 
 // Best Basket, Buy this list and Finish this set share one plan output and one
 // monthly allowance below Premium (lib/basket-meter.ts, 2026-10-22).
@@ -149,6 +150,11 @@ export const TIER_COMPARISON: TierRow[] = [
   // unlimited on Premium and FREE_PLANS_PER_MONTH a month below it, counted
   // server-side when a plan is shown (2026-10-22, lib/basket-meter.ts).
   { feature: "Best Basket — store-by-store plan for the cheapest delivered order", account: FREE_PLANS_CELL, plus: FREE_PLANS_CELL, premium: "Unlimited" },
+  // BULK PRICING (2026-10-25, lib/deck.ts FREE_BULK_LINES): /deck prices a list
+  // of up to that many card lines for anyone, no account; a longer one (a
+  // binder, a collection) is Premium's, up to the DECK_LINE_CAP every list
+  // tool shares. Both numbers are the enforced ones, never typed here.
+  { feature: "Bulk price a list — paste a binder or collection, every card priced", account: `${FREE_BULK_LINES} lines`, plus: `${FREE_BULK_LINES} lines`, premium: `${DECK_LINE_CAP} lines` },
   // Sending a deck or the watchlist in, skipping owned copies, is open to every
   // account (lib/basket-request.ts takes no tier); what Premium adds is the
   // plan for it. The binder is a source too, but it prices replacement, so it

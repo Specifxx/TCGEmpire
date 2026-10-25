@@ -99,11 +99,15 @@ const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", mon
 
 // The comparison's headline rows (PremiumTicks names; every other row sits
 // under "Every other feature and limit"): what decides a purchase — free price
-// comparison and the basics against Premium's delivered order, alerts, deals,
-// unlimited tracking with history and no ads. Cells are TIER_COMPARISON's own.
+// comparison and the basics against Premium's delivered order, bulk pricing,
+// alerts, deals, unlimited tracking with history and no ads. Best Basket and
+// bulk pricing lead (2026-10-25: what members buy it for). Cells are
+// TIER_COMPARISON's own.
 const HEADLINE_TICK_ROWS = [
   "Compare prices across every store",
   "Best Basket & Buy this list plans",
+  "Bulk price a list",
+  "Finish this set plans",
   "Target-price alerts",
   "Sealed watches",
   "Deck price watch",

@@ -19610,3 +19610,29 @@ The trial is said once: in each button's own small print (`PremiumCta`), which s
 - gone again after 9 s. The whole callout is the link, so a tap opens /premium.
 
 The phone and desktop copies of the link both mount, so only the copy actually laid out may fire (`getClientRects()`). It is centred under the link so it fits a phone's left-hand link and a desktop's right-hand one. Analytics: `pricing_nudge_view`, `_click`, `_dismiss`.
+
+## Best Basket and bulk pricing lead Premium; bulk pricing past a deck is Premium's — 2026-10-25
+
+Owner: "a lot of people use premium because they want to use like the best basket
+feature … so maybe we should make the best basket feature and like bulk price …
+premium features." Asked which way, the owner chose:
+
+- **Best Basket keeps its free taste.** The 3 store-by-store plans a month of
+  2026-10-22 stand (`FREE_PLANS_PER_MONTH`). What changes is the pitch: it is the
+  first row after free price comparison in /premium's comparison (`TICK_ROWS`),
+  the hero subline names it, and so does the Pricing callout.
+- **Bulk pricing is Premium's past a deck.** /deck (the free, no-account list
+  pricer that absorbed the Bulk Pricer on 2026-09-25) prices up to
+  `FREE_BULK_LINES` (60) card lines for anyone, so a full deck with runes,
+  battlefields and a sideboard stays free and the page keeps its "bulk price
+  checker" search traffic. A longer list (a binder, a collection, a buylist) is
+  priced to its first 60 lines below Premium, and the response carries
+  `bulkLimit` so /deck says "Priced the first 60 of N lines" beside the upgrade
+  (`limit:bulk`, upgrade-intent feature `bulk_pricer`). Premium prices up to
+  `DECK_LINE_CAP` (200), as everyone could before. Lines are counted after
+  section headers are dropped (`priceableLines`). The session is read only for a
+  list past 60 lines, so a deck costs no auth lookup.
+- **Not gated:** search-to-add on /deck (one card at a time is not bulk), Best
+  Basket's own list input (already metered by plans), and the collection import.
+- The comparison has a new row, "Bulk price a list" (60 lines / 60 lines / 200
+  lines, from the constants), second after Best Basket; `TICK_ROWS` may hold 17.

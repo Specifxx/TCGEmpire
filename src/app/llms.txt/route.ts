@@ -1,5 +1,6 @@
 import { NAV_GROUPS } from "@/components/nav-groups";
 import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
+import { DECK_LINE_CAP, FREE_BULK_LINES } from "@/lib/deck";
 import { SITE_URL, PLUS_ON_SALE, tierMonthlyAmount, premiumTrialFee, trialDaysPhrase } from "@/lib/site";
 import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "@/lib/trial-config";
 import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
@@ -34,7 +35,7 @@ const DESC: Record<string, string> = {
   "/tools/demand": "Demand Finder: the Riftbound cards most searched and most viewed on RiftCompare over the last 7 or 30 days, counted once per browser per card per day. The top 10 most searched this week are free (also on /movers); the full lists with Premium.",
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
   "/tools/selling-fees": "Net proceeds calculator for selling on TCGplayer or eBay: stacks commission, processing and shipping.",
-  "/deck": "Deck builder and list pricer — paste a decklist or any card list and price every card at its cheapest listing in your market as you build.",
+  "/deck": `Deck builder and list pricer — paste a decklist or any card list and price every card at its cheapest listing in your market as you build. Free up to ${FREE_BULK_LINES} lines; Premium bulk prices up to ${DECK_LINE_CAP}.`,
   "/trade": "Riftbound Trade Calculator — value both sides of a card trade at the cheapest in-stock store price in your market and currency, with a per-card override or a specific store's price.",
   "/riftle": "Riftle — the daily Riftbound card guessing game.",
   "/games": "Free Riftbound mini-games (Riftle, pack sim, price games and more).",

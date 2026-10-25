@@ -23,6 +23,10 @@ export type TickTier = "free" | "plus" | "premium";
 // `short` is the dense (slider) label, for the rows the slider shows.
 export const TICK_ROWS: { name: string; from: string | null; short?: string }[] = [
   { name: "Compare prices across every store", from: null },
+  // Best Basket and bulk pricing lead (2026-10-25, owner: "a lot of people use
+  // premium because they want to use the best basket feature").
+  { name: "Best Basket & Buy this list plans", from: "Best Basket — store-by-store plan", short: "Best Basket plans" },
+  { name: "Bulk price a list", from: "Bulk price a list" },
   { name: "No ads", from: "Ad-free experience" },
   { name: "Watchlist", from: "Watchlist & new-low alerts" },
   { name: "Portfolio", from: "Portfolio — value, P&L, CSV & replacement cost" },
@@ -30,7 +34,6 @@ export const TICK_ROWS: { name: string; from: string | null; short?: string }[] 
   { name: "Price history", from: "Full price history" },
   { name: "Target-price alerts", from: "Target-price alerts after every price update" },
   { name: "Sealed watches", from: "Sealed watches" },
-  { name: "Best Basket & Buy this list plans", from: "Best Basket — store-by-store plan", short: "Best Basket plans" },
   { name: "Finish this set plans", from: "Finish this set" },
   { name: "Minimum condition", from: "Minimum condition" },
   { name: "Deck price watch", from: "Deck price watch" },

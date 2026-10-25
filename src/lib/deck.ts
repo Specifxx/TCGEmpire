@@ -116,6 +116,21 @@ export function formatDeckLine(qty: number, card: { name: string; setCode: strin
 
 export const DECK_LINE_CAP = 200;
 
+// BULK PRICING IS PREMIUM'S PAST A DECK (2026-10-25, owner: "make the best
+// basket feature and bulk price … premium features"). /deck prices up to
+// FREE_BULK_LINES card lines for anyone, no account (a full deck with runes,
+// battlefields and a sideboard fits, so the free deck pricer and its search
+// traffic stay); a longer list (a binder, a collection, a store buylist) is
+// priced to that line for everyone else and to DECK_LINE_CAP for Premium.
+// Counted after section headers are dropped. DECISIONS.md, "Best Basket and
+// bulk pricing lead Premium".
+export const FREE_BULK_LINES = 60;
+
+/** The lines resolveDeckLines would price: section headers dropped, nothing else. */
+export function priceableLines(input: ParsedLine[]): ParsedLine[] {
+  return input.filter((l) => l.number || (l.name && !isSectionHeader(l.name)));
+}
+
 export interface ResolvableCard {
   id: string;
   nameNormalized: string;
@@ -197,9 +212,7 @@ export async function resolveDeckLines<C extends ResolvableCard>(
   input: ParsedLine[],
   find: CardFinder<C>
 ): Promise<DeckResolution<C>> {
-  const lines = input
-    .slice(0, DECK_LINE_CAP)
-    .filter((l) => l.number || (l.name && !isSectionHeader(l.name)));
+  const lines = priceableLines(input.slice(0, DECK_LINE_CAP));
   const items: ResolvedLine<C>[] = lines.map((line) => ({ line, card: null, fuzzy: false }));
 
   // 1. Set + number.

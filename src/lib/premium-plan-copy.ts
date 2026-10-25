@@ -34,7 +34,7 @@ export const PREMIUM_PROMISE = "Never overpay for Riftbound again";
 // At this length the subline stays the largest element, as it was before.
 export const PREMIUM_HERO_HEADLINE = "Find the lowest delivered price";
 export const PREMIUM_HERO_SUBLINE =
-  "Premium prices your whole Riftbound list across every store we track, emails you the moment a card, box or deck hits your price, and shows every card selling below market. Comparing prices stays free for everyone.";
+  "Premium finds the cheapest delivered order for your whole list with unlimited Best Basket plans, bulk prices a binder in one paste, and emails you the moment a card, box or deck hits your price. Comparing prices stays free for everyone.";
 
 export function planTagline(tier: "plus" | "premium", _market?: string | null): string {
   if (tier === "plus") return "Watches prices for you, with no ads";

@@ -38,7 +38,8 @@ const FIXED = new Set([
 // `limit:` (2026-09-28) is the upgrade prompt shown where a free account hits
 // one of its limits (lib/free-limits.ts): `limit:watchlist` (the 11th watched
 // card), `limit:portfolio` (the 51st portfolio card) and `limit:basket` (Best
-// Basket's result, leading with the list's own store-by-store saving).
+// Basket's result, leading with the list's own store-by-store saving), and
+// `limit:bulk` (2026-10-25: /deck priced only the free lines of a longer list).
 // `tip:` (2026-09-29) is a one-line, dismissable "did you know" shown INLINE
 // on the page where a paid feature lives, to signed-in non-members only —
 // never a popup or overlay (components/DiscoveryTip.tsx; the 2026-09-28 "no
@@ -46,7 +47,7 @@ const FIXED = new Set([
 const SCOPED = /^(nav|gate|nudge|limit|tip):[a-z0-9-]{1,32}$/;
 
 /** The at-the-limit surfaces, for tests and the funnel report. */
-export const LIMIT_SURFACES = ["limit:watchlist", "limit:portfolio", "limit:basket", "limit:search"] as const;
+export const LIMIT_SURFACES = ["limit:watchlist", "limit:portfolio", "limit:basket", "limit:search", "limit:bulk"] as const;
 
 /** The in-context discovery lines (DiscoveryTip), for tests and the funnel report. */
 // (/deck's line is the deck watch form's own gate, gate:deck-watch, and the
