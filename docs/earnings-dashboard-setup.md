@@ -52,6 +52,13 @@ PART 3. AdSense (Google Cloud + OAuth Playground)
     (it only requests the read-only AdSense scope, so no review is needed for
     your own use) so the token keeps working.
 
+PART 3b. Anthropic API usage (optional; only if you use the Claude API, not just a claude.ai plan)
+14b. platform.claude.com → Settings → Organization: if it says the Admin API is unavailable for
+     individual accounts, skip this part (a claude.ai Pro/Max plan has no API either way; add it on
+     the dashboard as a monthly cost instead).
+14c. Settings → Admin keys → Create admin key (name "RiftCompare earnings", read access is enough).
+14d. In Vercel set ANTHROPIC_ADMIN_API_KEY.
+
 PART 4. Redeploy
 15. Vercel → Deployments → the latest Production deployment → ⋯ → Redeploy (so
     the new variables are read).

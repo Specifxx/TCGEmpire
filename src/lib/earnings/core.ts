@@ -281,3 +281,63 @@ export function windows(from: string, to: string, maxDays: number): [string, str
   }
   return out;
 }
+
+// ── Costs (2026-10-25, owner: "add costs … Vercel Pro plan … Anthropic plan …
+// an ability to add costs manually … Reddit ads or Meta ads … one-off") ──────
+// A cost is either automatic (Anthropic API usage, from the Admin API's Cost
+// report) or an entry on the dashboard: once, or repeating monthly/yearly from a
+// start date until an optional end date. Repeating entries are expanded into
+// one charge per period up to today, so ranges and profit work the same way as
+// earnings.
+export type CostRecurrence = "once" | "monthly" | "yearly";
+export const COST_CATEGORIES = ["Hosting", "AI", "Ads", "Software", "Other"] as const;
+
+export interface CostEntry {
+  id: string;
+  label: string;
+  category: string;
+  amountCents: number;
+  currency: string;
+  startDay: string; // YYYY-MM-DD
+  recurrence: CostRecurrence;
+  endDay: string | null; // last day it still charges (inclusive), or null while running
+}
+
+const daysInMonth = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate(); // m 1-12
+
+/** One charge per period from startDay to min(endDay, today), on the start's day of month (clamped). */
+export function expandCost(c: CostEntry, today: string): DayAmount[] {
+  const stop = c.endDay && c.endDay < today ? c.endDay : today;
+  if (c.startDay > stop) return [];
+  if (c.recurrence === "once") return [{ day: c.startDay, currency: c.currency, cents: c.amountCents }];
+  const [y0, m0, d0] = c.startDay.split("-").map(Number);
+  const step = c.recurrence === "yearly" ? 12 : 1;
+  const out: DayAmount[] = [];
+  for (let k = 0; k < 1200; k += step) {
+    const y = y0 + Math.floor((m0 - 1 + k) / 12);
+    const m = ((m0 - 1 + k) % 12) + 1;
+    const day = `${y}-${String(m).padStart(2, "0")}-${String(Math.min(d0, daysInMonth(y, m))).padStart(2, "0")}`;
+    if (day > stop) break;
+    out.push({ day, currency: c.currency, cents: c.amountCents });
+  }
+  return out;
+}
+
+// ── Anthropic: Admin API cost report (API usage only) ───────────────────────
+// GET /v1/organizations/cost_report → data[] of daily buckets
+// { starting_at, ending_at, results: [{ amount: "123.45" (USD cents, decimal string), currency }] }.
+// It covers API (Console) usage only: a claude.ai Pro/Max subscription is not in
+// any API and is entered on the dashboard as a monthly cost instead.
+export function anthropicCostDays(json: unknown): DayAmount[] {
+  const data = ((json ?? {}) as { data?: { starting_at?: string; results?: { amount?: string | number; currency?: string }[] }[] }).data ?? [];
+  const rows: DayAmount[] = [];
+  for (const b of data) {
+    const day = String(b.starting_at ?? "").slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
+    for (const r of b.results ?? []) {
+      const cents = Math.round(Number(r.amount ?? 0));
+      if (Number.isFinite(cents) && cents) rows.push({ day, currency: String(r.currency ?? "USD").toUpperCase(), cents });
+    }
+  }
+  return mergeDays(rows);
+}

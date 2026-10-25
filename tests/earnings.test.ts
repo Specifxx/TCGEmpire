@@ -165,3 +165,43 @@ test("eBay: the daily report is the v2 id (overridable), and v2-style column nam
     { day: "2026-10-23", currency: "USD", cents: 125, pendingCents: 0 },
   ]);
 });
+
+// ── Costs (2026-10-25) ──────────────────────────────────────────────────────
+test("costs: one-off on its day; monthly on the start's day, clamped, up to today or the end date", async () => {
+  const { expandCost } = await import("../src/lib/earnings/core");
+  const base = { id: "x", label: "x", category: "AI", amountCents: 2000, currency: "USD", endDay: null };
+  assert.deepEqual(expandCost({ ...base, startDay: "2026-10-15", recurrence: "once" }, "2026-10-25"), [{ day: "2026-10-15", currency: "USD", cents: 2000 }]);
+  assert.deepEqual(expandCost({ ...base, startDay: "2026-11-01", recurrence: "once" }, "2026-10-25"), [], "nothing in the future");
+  const monthly = expandCost({ ...base, startDay: "2026-01-31", recurrence: "monthly" }, "2026-04-30").map((d) => d.day);
+  assert.deepEqual(monthly, ["2026-01-31", "2026-02-28", "2026-03-31", "2026-04-30"], "the 31st clamps to each month's last day");
+  const stopped = expandCost({ ...base, startDay: "2026-06-05", recurrence: "monthly", endDay: "2026-08-04" }, "2026-10-25").map((d) => d.day);
+  assert.deepEqual(stopped, ["2026-06-05", "2026-07-05"], "no charge after the end date");
+  const yearly = expandCost({ ...base, startDay: "2025-03-01", recurrence: "yearly" }, "2026-10-25").map((d) => d.day);
+  assert.deepEqual(yearly, ["2025-03-01", "2026-03-01"]);
+});
+
+test("costs: Anthropic's cost report (USD cents as decimal strings) by day", async () => {
+  const { anthropicCostDays } = await import("../src/lib/earnings/core");
+  const days = anthropicCostDays({
+    data: [
+      { starting_at: "2026-10-20T00:00:00Z", ending_at: "2026-10-21T00:00:00Z", results: [{ amount: "123.45", currency: "USD" }, { amount: "10", currency: "USD" }] },
+      { starting_at: "2026-10-21T00:00:00Z", results: [] },
+    ],
+    has_more: false,
+  });
+  assert.deepEqual(days, [{ day: "2026-10-20", currency: "USD", cents: 133, pendingCents: 0 }]);
+  assert.deepEqual(anthropicCostDays(null), []);
+});
+
+test("costs: the pre-filled entries are what the owner said, seeded once, and the routes are admin-only", () => {
+  const costs = readFileSync(new URL("../src/lib/earnings/costs.ts", import.meta.url), "utf8");
+  assert.match(costs, /seedKey: "vercel-pro",[\s\S]*?amountCents: 2000,[\s\S]*?startDay: "2026-06-05",[\s\S]*?recurrence: "monthly"/);
+  assert.match(costs, /seedKey: "ads-reddit-meta-2026",[\s\S]*?amountCents: 20000,[\s\S]*?recurrence: "once"/);
+  assert.match(costs, /createMany\(\{ data: SEEDS, skipDuplicates: true \}\)/, "seeded once: a removed seed keeps its row and its seedKey");
+  assert.match(costs, /where: \{ removedAt: null \}/);
+  const route = readFileSync(new URL("../src/app/api/admin/earnings/costs/route.ts", import.meta.url), "utf8");
+  assert.equal((route.match(/if \(!\(await allowed\(body\)\)\) return NextResponse\.json\(\{ error: "Not allowed" \}, \{ status: 403 \}\);/g) ?? []).length, 3, "POST, PATCH and DELETE are all gated");
+  assert.match(route, /data: \{ removedAt: new Date\(\) \}/, "delete keeps the row");
+  const pub = readFileSync(new URL("../src/lib/public-data/models.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(pub, /manualCost|ManualCost/);
+});

@@ -19442,3 +19442,43 @@ the picked range (by day; by month for all time), stacked by source. USD or AUD.
   needs no code change. The parser now matches columns ignoring case, spaces and
   underscores, and accepts likely v2 names (`Event Date`, `Total Earnings`,
   `Currency Code`).
+
+## Costs and profit on the earnings dashboard (2026-10-25)
+
+Owner: "add costs … Vercel Pro plan … Anthropic plan … for as long as the site
+has been alive … an ability to add costs manually … Reddit ads or Meta ads …
+one-off … around $200 on ads in total". Asked for the Claude plan, the owner
+wanted it automatic ("I'm always changing"). Asked for the start date: "as soon
+as my vercel history allows".
+
+- **Costs are a second table on `/admin/earnings`**, covering the same ranges as
+  earnings: today, 7, 30, 90 days and all time. Below it are a **Total costs**
+  row and a **Profit (earnings − costs)** row, and the headline card shows
+  Earnings, Costs and Profit for the selected range.
+- **What can be automatic:**
+  - **Anthropic API usage** comes from the Admin API Cost report
+    (`/v1/organizations/cost_report`, daily, USD cents), via
+    `ANTHROPIC_ADMIN_API_KEY`.
+  - **No API exists** for claude.ai Pro/Max subscription charges. Anthropic's
+    reporting APIs cover Console API usage, or Claude Enterprise through a
+    different key.
+  - **Vercel** has no billing API for a team's own plan; its invoice endpoints
+    are for Marketplace partners only.
+  - So the Claude plan and Vercel Pro are **entries**, and the page says why.
+- **Entries** (new private table `ManualCost`):
+  - **Fields:** a label, a category (Hosting / AI / Ads / Software / Other), an
+    amount and currency, a start date, a repeat (once, monthly or yearly) and an
+    optional end date.
+  - **Monthly entries** charge on the start date's day of the month, clamped to
+    the month's last day.
+  - **A plan change** is recorded as "Stop today" on the old entry plus a new
+    entry. Past months keep the old price.
+  - **"Remove"** sets `removedAt` instead of deleting the row.
+- **Pre-filled once** (keyed by `seedKey`, so a removed seed is never re-added):
+  - Vercel Pro, US$20/month from 2026-06-05. That is the repository's first
+    commit, the furthest back the site's history goes.
+  - Reddit + Meta ads, US$200, as one entry dated 2026-10-15.
+  - The Claude plan's price is not known, so it is not pre-filled; the owner
+    adds it on the page.
+- **Ops:** the Anthropic cost source joins the earnings sources in the
+  ops-monitor report.
