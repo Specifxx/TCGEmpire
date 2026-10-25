@@ -22,7 +22,7 @@ export function CostEntriesForm({
   const [label, setLabel] = useState("");
   const [category, setCategory] = useState<string>("AI");
   const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("AUD");
   const [startDay, setStartDay] = useState(today);
   const [recurrence, setRecurrence] = useState("monthly");
   const [busy, setBusy] = useState(false);

@@ -42,7 +42,7 @@ const COLORS: Record<EarningsSourceKey, string> = {
   adsense: "#fbbc04",
   mediavine: "#34d17e",
 };
-const DISPLAY = ["USD", "AUD"] as const;
+const DISPLAY = ["AUD", "USD"] as const;
 
 export default async function EarningsPage({ searchParams }: { searchParams: { key?: string; range?: string; cur?: string; fresh?: string } }) {
   const token = process.env.ADMIN_TOKEN;
@@ -52,7 +52,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
   const keyQ = keyOk && !me?.isAdmin ? `key=${encodeURIComponent(token!)}&` : "";
 
   const range: RangeKey = isRangeKey(searchParams.range) ? searchParams.range : "30d";
-  const display = (DISPLAY as readonly string[]).includes(String(searchParams.cur)) ? String(searchParams.cur) : "USD";
+  const display = (DISPLAY as readonly string[]).includes(String(searchParams.cur)) ? String(searchParams.cur) : "AUD"; // the owner's currency (2026-10-25)
   const [sources, costs] = await Promise.all([loadEarnings(searchParams.fresh === "1"), loadCosts(searchParams.fresh === "1")]);
   const today = dayIn(Date.now());
   const money = (c: number) => formatMoney(c, display);
