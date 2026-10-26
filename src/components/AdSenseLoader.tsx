@@ -54,9 +54,8 @@ export function AdSenseLoader() {
   // Only omitted when no publisher id is configured at all — a build with an
   // invalid id never gets this far (lib/adsense.ts throws in production).
   if (!ADSENSE_CONFIGURED) return null;
-  // Switched off by the owner on 2026-10-26 (lib/adsense.ts, ADSENSE_SERVING).
-  // The layout still renders this component, so turning AdSense back on is
-  // that one constant.
+  // The owner's on/off switch (lib/adsense.ts, ADSENSE_SERVING): off and back
+  // on 2026-10-26. The layout always renders this component.
   if (!ADSENSE_SERVING) return null;
   return <script async src={ADSENSE_LOADER_SRC} crossOrigin="anonymous" />;
 }

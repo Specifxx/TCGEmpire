@@ -122,15 +122,14 @@ const REVIEW_RAW = (
 export const ADSENSE_REVIEW_MODE = ["true", "1", "on", "yes"].includes(REVIEW_RAW);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AdSense is OFF (owner, 2026-10-26)
+// AdSense serving switch (owner)
 // ─────────────────────────────────────────────────────────────────────────────
-// About A$1.50 a day against roughly A$0.29 of affiliate money per visitor: an
-// ad only had to cost 3% of buy clicks to lose money (DECISIONS.md, "AdSense
-// off, Journey on articles only"). While this is false the loader renders
-// nothing, no unit renders, and the ownership meta tag and ads.txt stay, so
-// the account is still verified if it is ever turned back on. Turning it on
-// is the owner's call.
-export const ADSENSE_SERVING = false;
+// Switched off on 2026-10-26 (about A$1.50 a day against roughly A$0.29 of
+// affiliate money per visitor; DECISIONS.md, "AdSense off, Journey on articles
+// only") and back on the same evening "for now" (DECISIONS.md, "AdSense back
+// on"). While false the loader renders nothing and no unit renders; the
+// ownership meta tag and ads.txt stay either way. Flipping it is the owner's call.
+export const ADSENSE_SERVING = true;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Ad strategy — Auto ads XOR manual units, never both

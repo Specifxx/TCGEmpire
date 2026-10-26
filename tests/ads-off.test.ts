@@ -2,12 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-// AdSense off, Journey on articles only (owner, 2026-10-26; DECISIONS.md).
+// AdSense off, Journey on articles only, then AdSense back on (owner, 2026-10-26; DECISIONS.md).
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
-test("AdSense is switched off at one constant, and the loader honours it", () => {
+test("AdSense is switched at one constant (on since the owner's 2026-10-26 reversal), and the loader honours it", () => {
   const lib = read("src/lib/adsense.ts");
-  assert.match(lib, /export const ADSENSE_SERVING = false;/);
+  assert.match(lib, /export const ADSENSE_SERVING = true;/);
   assert.match(lib, /AD_UNITS_ENABLED =\s*ADSENSE_SERVING &&/);
   assert.match(read("src/components/AdSenseLoader.tsx"), /if \(!ADSENSE_SERVING\) return null;/);
 });
