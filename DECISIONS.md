@@ -19636,3 +19636,28 @@ premium features." Asked which way, the owner chose:
   Basket's own list input (already metered by plans), and the collection import.
 - The comparison has a new row, "Bulk price a list" (60 lines / 60 lines / 200
   lines, from the constants), second after Best Basket; `TICK_ROWS` may hold 17.
+
+## Money in the weekly digest — 2026-10-26
+
+Owner: "be my business manager … looking at the analytics … where we're making
+the most money." The figures that answer it lived only on `/admin/earnings`,
+which nobody opens unprompted, and the Monday digest said nothing about money.
+
+**What.** The Monday digest (`ops-monitor.yml`, `buildDigestEmail`) now has a
+Money section: combined earnings for 7 and 30 days, each source on its own, eBay
+earnings split by site (the tracking tag's prefix, `tagBreakdown`: `rc`, `op`,
+`dex`, …), and 30-day costs and profit, in AUD like the dashboard
+(`lib/earnings/digest.ts`).
+
+**Why it is filled by the site.** Every repository is public, and so are its
+Actions logs. The monitor therefore puts only `EARNINGS_MARKER` in the digest;
+`/api/cron/ops-notify`, which holds the reporting keys, loads the sources (same
+30-minute memo, capped at 20 s, else a "did not answer" line) and replaces the
+marker on the way to the inbox. No amount reaches a log, the route's response or
+the repository. A digest carrying the marker always goes through the route, even
+when the job has a Resend key (`tests/earnings-digest.test.ts`).
+
+**Not changed:** the alert email, the dashboard, and the status-only
+`earnings:sources` check. The section arrives with the release that ships the
+route; until then the old route sends the digest with the marker, an HTML
+comment and one bracketed text line, and nothing else.

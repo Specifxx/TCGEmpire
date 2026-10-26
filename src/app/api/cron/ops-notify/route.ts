@@ -4,8 +4,10 @@ import { ownerEmail } from "@/lib/ops/owner";
 import { siteSelfReport } from "@/lib/ops/self-report";
 import { liveRoute } from "@/lib/public-data/live-route";
 import { prisma } from "@/lib/db";
-import { earningsHealth } from "@/lib/earnings/sources";
-import { costsHealth } from "@/lib/earnings/costs";
+import { earningsHealth, loadEarnings } from "@/lib/earnings/sources";
+import { costsHealth, loadCosts } from "@/lib/earnings/costs";
+import { dayIn } from "@/lib/earnings/core";
+import { EARNINGS_MARKER, EARNINGS_UNAVAILABLE, earningsDigest, fillEarnings } from "@/lib/earnings/digest";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -15,7 +17,10 @@ export const maxDuration = 30;
 //
 //   GET   what the site can see about itself: which required settings are missing
 //         (names only) and whether its mail keys are accepted. No values, ever.
-//   POST  { subject, html, text } → one email to the OWNER.
+//   POST  { subject, html, text } → one email to the OWNER. A weekly digest
+//         carries EARNINGS_MARKER, which is replaced here with the money section
+//         (lib/earnings/digest.ts): the amounts go only to the owner's inbox, never
+//         back to the caller, whose logs are public.
 //
 // The recipient is fixed on the server (lib/ops/owner.ts) and never read from the
 // request, and the route needs CRON_SECRET, so it cannot be used to mail anyone else.
@@ -62,10 +67,21 @@ async function handlePOST(req: Request) {
   const text = typeof body.text === "string" ? body.text : undefined;
   if (!subject || !html) return NextResponse.json({ error: "subject and html are required" }, { status: 400 });
 
+  let mail: { html: string; text?: string } = { html, text };
+  if (html.includes(EARNINGS_MARKER)) {
+    const block = await Promise.race([
+      Promise.all([loadEarnings(false), loadCosts(false)])
+        .then(([sources, costs]) => earningsDigest(sources, costs, dayIn(Date.now()), `${new URL(req.url).origin}/admin/earnings`))
+        .catch(() => EARNINGS_UNAVAILABLE),
+      new Promise<typeof EARNINGS_UNAVAILABLE>((r) => setTimeout(() => r(EARNINGS_UNAVAILABLE), 20_000)),
+    ]);
+    mail = fillEarnings(mail, block);
+  }
+
   const to = ownerEmail();
-  if (await sendEmail(to, subject, html, { text })) return NextResponse.json({ ok: true, via: "resend" });
+  if (await sendEmail(to, subject, mail.html, { text: mail.text })) return NextResponse.json({ ok: true, via: "resend" });
   // Resend failed (or is unset): Brevo, if it is set up, rather than losing the alert.
-  if (isBrevoEnabled() && (await sendEmailBrevo(to, subject, html, { text }))) return NextResponse.json({ ok: true, via: "brevo" });
+  if (isBrevoEnabled() && (await sendEmailBrevo(to, subject, mail.html, { text: mail.text }))) return NextResponse.json({ ok: true, via: "brevo" });
   return NextResponse.json({ ok: false, error: getLastEmailError() ?? "no mail provider accepted it" }, { status: 502 });
 }
 
