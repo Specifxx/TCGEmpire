@@ -121,7 +121,7 @@ export type WatchAllowanceDb = WatchLimitDb & {
  */
 export async function watchAllowance(
   db: WatchAllowanceDb | typeof prisma,
-  opts: { email: string; account: EntitledAccount | null; cardIds: string[] },
+  opts: { email: string; account: EntitledAccount | null; cardIds: string[]; on?: boolean },
 ): Promise<Allowance> {
   const d = db as WatchAllowanceDb;
   const paid = isPremium(opts.account);
@@ -129,7 +129,7 @@ export async function watchAllowance(
   // add is counted against the address AND its canonical inbox, so
   // alice+1@gmail.com is at the limit when alice@gmail.com already watches 10.
   const emails = opts.account ? [opts.email] : [...new Set([opts.email, canonicalWatchEmail(opts.email)])];
-  const res = await checkFreeAllowance(watchHoldings(d, { emails, userId: opts.account?.id ?? null }), "watchlist", opts.cardIds, paid);
+  const res = await checkFreeAllowance(watchHoldings(d, { emails, userId: opts.account?.id ?? null }), "watchlist", opts.cardIds, paid, opts.on);
   if (res.blocked.length === 0 || opts.account) return res;
   // Is the address — or the inbox it aliases — a paying member's? Then it is
   // unlimited through this door too. At most two unique-key reads, and only at
@@ -145,6 +145,6 @@ export async function watchAllowance(
 }
 
 /** May these cards be added to `account`'s portfolio? */
-export function portfolioAllowance(db: PortfolioLimitDb | typeof prisma, account: EntitledAccount, cardIds: string[]): Promise<Allowance> {
-  return checkFreeAllowance(portfolioHoldings(db, account.id), "portfolio", cardIds, isPremium(account));
+export function portfolioAllowance(db: PortfolioLimitDb | typeof prisma, account: EntitledAccount, cardIds: string[], on?: boolean): Promise<Allowance> {
+  return checkFreeAllowance(portfolioHoldings(db, account.id), "portfolio", cardIds, isPremium(account), on);
 }

@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!premiumCheckoutEnabled()) {
-    return NextResponse.json({ error: "Premium checkout isn't configured yet" }, { status: 503 });
+    return NextResponse.json({ error: "Pro checkout isn't configured yet" }, { status: 503 });
   }
 
   // Already paying? Starting a SECOND Stripe subscription is never what anyone

@@ -126,7 +126,7 @@ export function RisingSnapshotPanel({ adminKey, scope }: { adminKey?: string; sc
           <h2 className="text-sm font-bold text-white">Public Hot 40 snapshot</h2>
           <p className="mt-0.5 max-w-xl text-xs leading-relaxed text-slate-400">
             Freezes the <strong className="text-slate-300">{scope}</strong> ranking exactly as it is now and mints a
-            link anyone can open — no account, no Premium. The numbers never change after this; the live screener
+            link anyone can open — no account, no Pro. The numbers never change after this; the live screener
             keeps moving.
           </p>
         </div>

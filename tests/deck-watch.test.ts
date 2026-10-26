@@ -150,7 +150,7 @@ test("with no target, a material drop emails; a sub-5% move is stored but silent
   assert.match(deckWatchCopy(loud.sent[0]!.item).subject, /less$/);
 });
 
-test("snoozed: no email, baseline advances; a lapsed or free owner is skipped untouched; a billed-Plus owner runs as Premium; a failed read aborts the pass unwritten", async () => {
+test("snoozed: no email, baseline advances; a lapsed or free owner is skipped untouched; a billed-Plus owner runs as Pro; a failed read aborts the pass unwritten", async () => {
   const probe = deckHarness([], { listings: LISTINGS });
   const t = await total(probe);
   const snoozed = deckHarness([deckRow("w1", premium, { targetCents: t, snoozedUntil: daysAgo(-10) })], { listings: LISTINGS });
@@ -173,7 +173,7 @@ test("snoozed: no email, baseline advances; a lapsed or free owner is skipped un
   const plusRun = deckHarness([deckRow("w2", plus, { targetCents: t })], { listings: LISTINGS });
   const s3 = await plusRun.run();
   assert.equal(s3.lapsed, 0, "a billed-Plus owner is not skipped");
-  assert.equal(plusRun.sent.length, 1, "the met target is emailed, as for Premium");
+  assert.equal(plusRun.sent.length, 1, "the met target is emailed, as for Pro");
   assert.equal(plusRun.writeFor("w2")!.lastTotalCents, t);
 
   const failing = deckHarness([deckRow("w1", premium, { targetCents: t })], { listings: LISTINGS, listingsFail: true });

@@ -405,7 +405,7 @@ export function CinematicHero({
             All {totalCards.toLocaleString()} cards in the database →
           </Link>
           {/* A small Get Premium in the hero (owner, 2026-10-19), the header's
-              gold button at the same weight; a Premium member sees a plain link. */}
+              gold button at the same weight; a Pro member sees a plain link. */}
           <GetPremiumLink
             surface="nav:hero"
             full

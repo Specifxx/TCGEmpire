@@ -90,7 +90,7 @@ export const HUB_INTROS: Record<string, HubIntro> = {
   "/tools/best-basket": {
     paragraphs: [
       "The cheapest card is rarely the cheapest order. Postage is charged per store, so a shopping list split across five shops to save a few cents on each card routinely costs more delivered than buying the whole list from two. This works out which combination of stores actually costs least; [the Best Basket guide](/guides/best-basket-cheapest-riftbound-deck) prices one whole deck both ways.",
-      "Give it the cards you want and it searches store combinations for the lowest total including postage. Any signed-in account sees its own delivered total; with Premium it also shows the best one-store and two-store orders beside it, so you can see what splitting the order actually saves. Usually the answer is not the split with the cheapest individual cards.",
+      "Give it the cards you want and it searches store combinations for the lowest total including postage. Any signed-in account sees its own delivered total; with Pro it also shows the best one-store and two-store orders beside it, so you can see what splitting the order actually saves. Usually the answer is not the split with the cheapest individual cards.",
       "Postage is each store's own checkout rate, measured for orders of different sizes and values to addresses across your market, never guessed. A store we have not measured yet is marked as an estimate, and the store's checkout is always final; the questions below cover regions, tracked and untracked letters, and free-postage thresholds in full.",
     ],
   },

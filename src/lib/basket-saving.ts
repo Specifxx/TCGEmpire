@@ -27,5 +27,5 @@ export function basketSavingPitch(
   if (opts.freePlansLeft && opts.freePlansLeft > 0) return `${lead} Open it with one of your free plans below.`;
   // A Plus member already pays: this is an upgrade, and PremiumButton quotes
   // the switch price on their own billing interval.
-  return opts.plusMember ? `${lead} Upgrade to Premium to unlock it.` : `${lead} Unlock it for ${opts.priceLabel}.`;
+  return opts.plusMember ? `${lead} Upgrade to Pro to unlock it.` : `${lead} Unlock it for ${opts.priceLabel}.`;
 }

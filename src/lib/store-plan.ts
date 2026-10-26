@@ -43,8 +43,8 @@ export const STORE_PLAN_FEATURES: { title: string; body: string }[] = [
     body: "A \"Verified store\" mark on your RiftCompare store page, with your own short description and a promo line in your words.",
   },
   {
-    title: "Premium included",
-    body: "RiftCompare Premium for the account that subscribes, for as long as the plan runs.",
+    title: "Pro included",
+    body: "RiftCompare Pro for the account that subscribes, for as long as the plan runs.",
   },
 ];
 

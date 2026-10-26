@@ -53,7 +53,7 @@ test("a free (or lapsed) account sets its ONE target; the second is the upgrade-
     assert.equal(r.status, 402);
     assert.equal(r.body.code, "free_alert_limit");
     assert.match(String(r.body.error), /Free accounts get 1 target-price alert/);
-    assert.match(String(r.body.error), /Premium/);
+    assert.match(String(r.body.error), /Pro/);
     assert.equal(full.update(), undefined, "nothing written at the free limit");
 
     // Editing or clearing the one it holds is never blocked.
@@ -81,14 +81,14 @@ test("400 for anything but whole cents in range, or null", async () => {
   }
 });
 
-test(`a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false): no 409 at the old Plus limit (${PLUS_TARGET_ALERT_LIMIT}); the count is of the account's OTHER targets`, async () => {
+test(`a billed-Plus account is treated as Pro (grandfathered, PLUS_ON_SALE=false): no 409 at the old Plus limit (${PLUS_TARGET_ALERT_LIMIT}); the count is of the account's OTHER targets`, async () => {
   // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
   // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so
   // the old 25-target cap no longer refuses a Plus member.
   const s = stub({ others: PLUS_TARGET_ALERT_LIMIT });
   const r = await applyTargetPrice(s.db, plus, "card-1", { market: "US", targetCents: 1000 });
   assert.equal(r.status, 200, "a billed-Plus account past the old Plus cap is not refused");
-  assert.equal(r.body.limit, null, "unlimited, as for Premium");
+  assert.equal(r.body.limit, null, "unlimited, as for Pro");
   assert.equal(r.body.used, PLUS_TARGET_ALERT_LIMIT + 1);
   assert.equal(s.update()!.data.targetCents, 1000);
   const count = s.calls.find((c) => c.op === "count")!.args as { where: Record<string, unknown> };
@@ -101,7 +101,7 @@ test(`a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=f
   assert.equal(e.body.used, PLUS_TARGET_ALERT_LIMIT);
 });
 
-test("Premium has no limit", async () => {
+test("Pro has no limit", async () => {
   const s = stub({ others: 500 });
   const r = await applyTargetPrice(s.db, premium, "card-1", { market: "US", targetCents: 1000 });
   assert.equal(r.status, 200);
@@ -184,7 +184,7 @@ test("honouredTargetIds: the oldest watches' targets win, ties broken by id; non
   ];
   assert.deepEqual([...honouredTargetIds(rows, 2)].sort(), ["a", "b1"]);
   assert.deepEqual([...honouredTargetIds(rows, 3)].sort(), ["a", "b1", "b2"]);
-  assert.equal(honouredTargetIds(rows, Number.POSITIVE_INFINITY).size, 4, "Premium: every target");
+  assert.equal(honouredTargetIds(rows, Number.POSITIVE_INFINITY).size, 4, "Pro: every target");
   assert.equal(honouredTargetIds(rows, 0).size, 0, "not entitled: none");
   // Dates and ISO strings (the watchlist's JSON) sort the same.
   const asDates = rows.map((r) => ({ ...r, createdAt: new Date(r.createdAt) }));

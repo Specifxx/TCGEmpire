@@ -99,7 +99,7 @@ export default async function AboutPage() {
             alerts are free and need no account. A free account adds a watchlist, a collection portfolio and
             the top three picks in Deal Finder and Rising Cards; the paid {TIER_NAMES.plus} and{" "}
             {TIER_NAMES.premium} plans unlock the full versions of those tools, as set out on the{" "}
-            <Link href="/premium" className="text-brand-400 hover:underline">Premium page</Link>.
+            <Link href="/premium" className="text-brand-400 hover:underline">Pro page</Link>.
           </p>
         </section>
 
@@ -160,7 +160,7 @@ export default async function AboutPage() {
 
         {/* WHO THIS IS FOR — the stated position, added 2026-09-14 (see
             DECISIONS.md). The site previously had no written answer to "what is
-            RiftCompare for?" beyond the sentence above, and the Premium pitch had
+            RiftCompare for?" beyond the sentence above, and the Pro pitch had
             drifted into selling an advantage over other buyers. This is the
             paragraph that reframe is anchored to, so the tone has somewhere to
             return to rather than drifting again. */}
@@ -255,9 +255,9 @@ export default async function AboutPage() {
             <Link href="/guides/understanding-the-riftcompare-index-methodology" className="text-brand-400 hover:underline">
               our Index methodology guide
             </Link>
-            ; for what Premium adds, read{" "}
+            ; for what Pro adds, read{" "}
             <Link href="/blog/riftcompare-premium-explained" className="text-brand-400 hover:underline">
-              Premium explained
+              Pro explained
             </Link>
             .
           </p>

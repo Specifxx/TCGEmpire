@@ -46,16 +46,16 @@ export function GetPremiumLink({
   if (loaded && tier === "premium") {
     return (
       <PremiumNavLink surface={surface} className={`${className} font-semibold text-gold hover:bg-ink-800`}>
-        {full ? "Premium" : "Pricing"}
+        {full ? "Pro" : "Pricing"}
       </PremiumNavLink>
     );
   }
   return (
-    <PremiumNavLink surface={surface} className={`premium-cta ${nudge ? "relative" : ""} ${className}`} title="Pricing: Premium, every deal, price watches, ad-free">
+    <PremiumNavLink surface={surface} className={`premium-cta ${nudge ? "relative" : ""} ${className}`} title="Pricing: Pro, every deal, price watches, ad-free">
       {/* One label span carries the gold text and its sheen (.premium-cta-label). */}
       <span className="premium-cta-label">
         <span aria-hidden="true" className={full ? "" : "hidden xl:inline"}>✦ </span>
-        {full ? <span>Get Premium</span> : <span>Pricing</span>}
+        {full ? <span>Get Pro</span> : <span>Pricing</span>}
       </span>
       {nudge && <PricingNudge />}
     </PremiumNavLink>

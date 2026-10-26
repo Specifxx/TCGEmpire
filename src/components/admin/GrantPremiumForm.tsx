@@ -88,7 +88,7 @@ export function GrantPremiumForm({ adminKey }: { adminKey?: string }) {
         setResult(`✗ ${data?.error ?? `failed (${res.status})`}`);
       } else {
         const caveats = [
-          data.stillAdmin ? "still an admin, so still reads as Premium" : null,
+          data.stillAdmin ? "still an admin, so still reads as Pro" : null,
           data.hasStripeCustomer ? "has a Stripe customer — cancel there too if the subscription is live" : null,
         ].filter(Boolean);
         setResult(
@@ -106,7 +106,7 @@ export function GrantPremiumForm({ adminKey }: { adminKey?: string }) {
 
   return (
     <div className="card-surface p-4">
-      <h2 className="text-sm font-extrabold text-white">Premium &amp; billing repair</h2>
+      <h2 className="text-sm font-extrabold text-white">Pro &amp; billing repair</h2>
       <p className="mt-1 text-xs text-slate-500">
         Grants stack onto any current entitlement and can&apos;t be clobbered by a later Stripe renewal
         (extend-only stamping). Every grant is logged. If someone paid but shows lapsed, try the Stripe
@@ -138,7 +138,7 @@ export function GrantPremiumForm({ adminKey }: { adminKey?: string }) {
           disabled={busy || !email || !Number(days)}
           className="btn-primary text-sm"
         >
-          {busy ? "Granting…" : "Grant Premium"}
+          {busy ? "Granting…" : "Grant Pro"}
         </button>
         <button
           type="button"

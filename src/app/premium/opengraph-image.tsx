@@ -6,7 +6,7 @@ import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from
 // read from the same display constants as the page (lib/site.ts, lib/premium.ts),
 // so a price change moves the card too. Plain divs, no font or image fetches,
 // like riftle/opengraph-image.tsx.
-export const alt = "RiftCompare Premium: the lowest delivered price for every Riftbound card you buy";
+export const alt = "RiftCompare Pro: the lowest delivered price for every Riftbound card you buy";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

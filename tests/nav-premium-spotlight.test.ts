@@ -18,10 +18,10 @@ const SRC = "src/components/CinematicNavMenu.tsx";
 // reachable from the menu, as the plain Premium entry of NAV_GROUPS.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the menu no longer opens on a gold Premium spotlight", () => {
+test("the menu no longer opens on a gold Pro spotlight", () => {
   const code = codeOnly(read(SRC));
-  assert.doesNotMatch(code, /<PremiumNavLink/, "no Premium CTA of its own in the menu");
-  assert.doesNotMatch(code, /border-gold|bg-gold/, "no gold Premium banner");
+  assert.doesNotMatch(code, /<PremiumNavLink/, "no Pro CTA of its own in the menu");
+  assert.doesNotMatch(code, /border-gold|bg-gold/, "no gold Pro banner");
   assert.doesNotMatch(code, /usePremiumDialog/);
 });
 
@@ -30,7 +30,7 @@ test("/premium stays reachable from the menu and the rail, as a plain nav entry"
   assert.ok(links.some((l) => l.href === "/premium"), "NAV_GROUPS must still list /premium");
 });
 
-test("CinematicNavMenu is mounted inside the Premium dialog provider", () => {
+test("CinematicNavMenu is mounted inside the Pro dialog provider", () => {
   // usePremiumDialog() only has real context inside PremiumDialogProvider —
   // the tool walls and at-the-limit panels rendered inside the menu's pages
   // rely on it.

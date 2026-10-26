@@ -226,7 +226,7 @@ export function PremiumPricingCards({
       <div className="mx-auto mt-5 max-w-3xl">
         {tickRows && (
           <h2 id="premium-compare" className="mb-2 text-center font-display text-xl font-extrabold text-white sm:text-2xl">
-            Free vs Premium
+            Free vs Pro
           </h2>
         )}
         <PremiumTicks

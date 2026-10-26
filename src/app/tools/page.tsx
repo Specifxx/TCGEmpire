@@ -3,14 +3,14 @@ import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import Link from "next/link";
 import { premiumPlusEnabled } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
-import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+
 import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 
 // The badge on the two "full list" tools (Deal Finder, Rising Cards) — Plus
 // once it's configured; dark (Plus unconfigured), they read exactly as they
 // did before the split. Best Basket's per-store plan and Demand Finder are
 // always Premium.
-const LIST_BADGE = premiumPlusEnabled() ? "Plus" : "Premium";
+const LIST_BADGE = premiumPlusEnabled() ? "Plus" : "Pro";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
 import { HubIntro } from "@/components/HubIntro";
@@ -54,7 +54,7 @@ const FAQS = [
     // "their single best result free", which stopped being true on 09-22: a
     // signed-out visitor sees nothing, a free account the top 3. Emitted as
     // FAQPage JSON-LD too, so a wrong answer here is a wrong rich result.
-    a: `Most of them. The box EV calculator, deck builder and list pricer, trade calculator and sealed prices need no account at all. Deal Finder and Rising Cards show nothing when you're signed out, the top 3 with a free account, and every row with ${LIST_BADGE}, which is also ad-free. Best Basket shows your own list's delivered total with a free account, plus ${FREE_PLANS_PER_MONTH} store-by-store plans a month; Premium plans without a limit. Demand Finder shows everyone the top 10 most searched cards of the week; its full most-searched and most-viewed lists are part of Premium.`,
+    a: `Most of them. The box EV calculator, deck builder and list pricer, trade calculator and sealed prices need no account at all. Deal Finder and Rising Cards show nothing when you're signed out, the top 3 with a free account, and every row with ${LIST_BADGE}, which is also ad-free. Best Basket shows your own list's delivered total with a free account, plus ${FREE_PLANS_PER_MONTH} store-by-store plans a month; Pro plans without a limit. Demand Finder shows everyone the top 10 most searched cards of the week; its full most-searched and most-viewed lists are part of Pro.`,
   },
   {
     q: "What does the Deal Finder do?",
@@ -64,12 +64,12 @@ const FAQS = [
     q: "Do I need an account to use RiftCompare tools?",
     a:
       LIST_BADGE === "Plus"
-        ? `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist of what each set is missing, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Plus adds an unlimited watchlist and portfolio (a whole set fits), every row of both lists, target-price alerts, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (an email when a box is back in stock or at RRP) and an ad-free site; Premium adds a deck price watch (a saved list re-priced delivered after every update, up to ${DECK_WATCH_LIMIT} lists), unlimited Best Basket plans (at the minimum condition you set, and for the rest of a set) and the full Demand Finder.`
-        : `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with weekly new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist of what each set is missing, the top 3 of Deal Finder and Rising Cards, one target-price alert and one sealed watch, and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Premium adds an unlimited watchlist and portfolio (a whole set fits), every row of both lists, target-price alerts on every card, sealed watches on every product (an email when a box is back in stock or at RRP), a deck price watch (a saved list re-priced delivered after every update; up to ${DECK_WATCH_LIMIT} lists), an ad-free site, unlimited Best Basket plans, Buy this list included and the full Demand Finder.`,
+        ? `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds an unlimited watchlist with weekly new-low alerts, an unlimited portfolio with a set checklist of what each set is missing, the top 3 of Deal Finder and Rising Cards, and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Plus adds an unlimited watchlist and portfolio (a whole set fits), every row of both lists, target-price alerts, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (an email when a box is back in stock or at RRP) and an ad-free site; Pro adds a deck price watch (a saved list re-priced delivered after every update, up to ${DECK_WATCH_LIMIT} lists), unlimited Best Basket plans (at the minimum condition you set, and for the rest of a set) and the full Demand Finder.`
+        : `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds an unlimited watchlist with weekly new-low alerts, an unlimited portfolio with a set checklist of what each set is missing, the top 3 of Deal Finder and Rising Cards, one target-price alert and one sealed watch, and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month. Pro adds an unlimited watchlist and portfolio (a whole set fits), every row of both lists, target-price alerts on every card, sealed watches on every product (an email when a box is back in stock or at RRP), a deck price watch (a saved list re-priced delivered after every update; up to ${DECK_WATCH_LIMIT} lists), an ad-free site, unlimited Best Basket plans, Buy this list included and the full Demand Finder.`,
   },
   {
     q: "Which Riftbound tool should I use to buy a whole decklist?",
-    a: `Best Basket. It searches store combinations for the lowest total including postage, and its store-by-store plan shows the best one-store and two-store orders beside it. Any signed-in account sees its own delivered total, can skip the copies it already owns, and gets ${FREE_PLANS_PER_MONTH} store-by-store plans a month; Premium plans without a limit.`,
+    a: `Best Basket. It searches store combinations for the lowest total including postage, and its store-by-store plan shows the best one-store and two-store orders beside it. Any signed-in account sees its own delivered total, can skip the copies it already owns, and gets ${FREE_PLANS_PER_MONTH} store-by-store plans a month; Pro plans without a limit.`,
   },
   {
     q: "Is a Riftbound booster box worth opening?",
@@ -114,13 +114,13 @@ const GROUPS: ToolGroup[] = [
         href: "/tools/best-basket",
         title: "Best Basket",
         desc: "Buying a whole list, or the rest of a set? The cheapest delivered order across your country's stores, postage included, at the condition you'll play — see your total free with an account.",
-        badge: "Premium",
+        badge: "Pro",
       },
       {
         href: "/tools/demand",
         title: "Demand Finder",
         desc: "The cards players are searching for and opening most, over 7 or 30 days. The top 10 most searched this week are free.",
-        badge: "Premium",
+        badge: "Pro",
       },
     ],
   },
@@ -131,7 +131,7 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/portfolio/sets",
         title: "Set checklist",
-        desc: `Tick what's in your binder and see what a set is missing and the cheapest listing for each card, before postage. Free for your first ${FREE_PORTFOLIO_LIMIT} cards; ${LIST_BADGE} removes the limit.`,
+        desc: `Tick what's in your binder and see what a set is missing and the cheapest listing for each card, before postage. Free, with no card limit.`,
       },
     ],
   },
@@ -217,10 +217,9 @@ export default function ToolsHubPage() {
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Tools &amp; calculators</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
         Every RiftCompare tool in one place. Price-check a card, work out whether a box is worth ripping, and build or
-        price decks for less — most need no sign-up at all. A free account adds a watchlist of up to{" "}
-        {FREE_WATCHLIST_LIMIT} cards, a portfolio of up to {FREE_PORTFOLIO_LIMIT} and the top 3 of each deal list;{" "}
+        price decks for less — most need no sign-up at all. A free account adds an unlimited watchlist and portfolio and the top 3 of each deal list;{" "}
         {LIST_BADGE === "Plus" ? <>Plus lifts those limits and shows every deal with no ads, and </> : null}
-        <span className="text-gold">Premium</span> works out the cheapest way to buy a whole want-list.
+        <span className="text-gold">Pro</span> works out the cheapest way to buy a whole want-list.
       </p>
       {/* What the tools share and what none of them does (2026-09-26, "Blog
           and tools, joined up"): lib/content/hub-intros.ts. Under the lede
@@ -244,7 +243,7 @@ export default function ToolsHubPage() {
                     {t.badge && (
                       <span
                         className={`chip text-[10px] font-semibold ${
-                          t.badge === "Premium"
+                          t.badge === "Pro"
                             ? "bg-gold/20 text-gold"
                             : t.badge === "Plus"
                               ? "bg-slate-500/20 text-slate-300"

@@ -39,9 +39,9 @@ const TOOLS: Tool[] = [
   },
   {
     href: "/admin/premium",
-    title: "Premium interest",
+    title: "Pro interest",
     icon: "💎",
-    desc: "Who clicked a Premium CTA or started checkout — interest ahead of conversion.",
+    desc: "Who clicked a Pro CTA or started checkout — interest ahead of conversion.",
   },
   {
     href: "/admin/premium-offer",
@@ -51,9 +51,9 @@ const TOOLS: Tool[] = [
   },
   {
     href: "/admin/premium-winback",
-    title: "Premium win-back email",
+    title: "Pro win-back email",
     icon: "🔗",
-    desc: "Send recently-registered free accounts a single-use link that grants a few days of Premium instantly — no card, no checkout, no manual grant step.",
+    desc: "Send recently-registered free accounts a single-use link that grants a few days of Pro instantly — no card, no checkout, no manual grant step.",
   },
   {
     href: "/admin/earnings",
@@ -101,7 +101,7 @@ const TOOLS: Tool[] = [
     href: "/admin/loyalty",
     title: "Loyal users",
     icon: "🏆",
-    desc: "Most active by days used, biggest collections, longest-tenured Premium members.",
+    desc: "Most active by days used, biggest collections, longest-tenured Pro members.",
   },
   {
     href: "/admin/store-health",

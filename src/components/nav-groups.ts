@@ -122,7 +122,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/watching", label: "My Watchlist", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"] },
       { href: "/alerts", label: "Price Alerts", keywords: ["alerts", "price alerts", "notify me", "notifications", "email me", "price drop"] },
       { href: "/coins", label: "RiftCompare Coins", keywords: ["coins", "collect", "gacha", "pulls", "rewards", "daily check in", "champion coins"] },
-      { href: "/premium", label: "Premium", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"] },
+      { href: "/premium", label: "Pro", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"] },
     ],
   },
   {

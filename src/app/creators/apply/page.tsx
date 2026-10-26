@@ -16,11 +16,11 @@ export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Riftbound Creator Codes: Earn 20% With RiftCompare",
-  description: `Make Riftbound content? Get your own RiftCompare code. Your audience gets ${AFFILIATE_PERCENT_OFF}% off Premium, and you earn ${AFFILIATE_COMMISSION_PERCENT}% of every payment they make.`,
+  description: `Make Riftbound content? Get your own RiftCompare code. Your audience gets ${AFFILIATE_PERCENT_OFF}% off Pro, and you earn ${AFFILIATE_COMMISSION_PERCENT}% of every payment they make.`,
   alternates: pageAlternates("/creators/apply"),
   openGraph: pageOpenGraph({
     title: "Riftbound creator codes on RiftCompare",
-    description: `Your audience gets ${AFFILIATE_PERCENT_OFF}% off Premium. You earn ${AFFILIATE_COMMISSION_PERCENT}% of every payment.`,
+    description: `Your audience gets ${AFFILIATE_PERCENT_OFF}% off Pro. You earn ${AFFILIATE_COMMISSION_PERCENT}% of every payment.`,
     url: "/creators/apply",
   }),
 };
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "What does my audience get?",
-    a: `${AFFILIATE_PERCENT_OFF}% off RiftCompare Premium, on every payment for as long as they stay subscribed. It works on monthly and annual plans.`,
+    a: `${AFFILIATE_PERCENT_OFF}% off RiftCompare Pro, on every payment for as long as they stay subscribed. It works on monthly and annual plans.`,
   },
   {
     q: "What do I earn?",
@@ -36,7 +36,7 @@ const FAQS = [
   },
   {
     q: "How do people use my code?",
-    a: "Share your link, riftcompare.com/r/YOURCODE: it remembers your code for 30 days and applies it at checkout. People can also type the code on the Premium page or on the checkout page.",
+    a: "Share your link, riftcompare.com/r/YOURCODE: it remembers your code for 30 days and applies it at checkout. People can also type the code on the Pro page or on the checkout page.",
   },
   {
     q: "Who can apply?",
@@ -58,7 +58,7 @@ export default function CreatorCodesPage() {
         <p className="text-xs font-bold uppercase tracking-widest text-gold">For Riftbound creators</p>
         <h1 className="mt-2 font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl">Get your own RiftCompare code</h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
-          Your audience gets <strong className="text-white">{AFFILIATE_PERCENT_OFF}% off</strong> Premium. You earn{" "}
+          Your audience gets <strong className="text-white">{AFFILIATE_PERCENT_OFF}% off</strong> Pro. You earn{" "}
           <strong className="text-white">{AFFILIATE_COMMISSION_PERCENT}% of every payment</strong> they make, for as long as they stay subscribed.
         </p>
         <Link href="#apply" className="btn-primary mt-5 inline-flex min-h-11 items-center px-6">
@@ -83,10 +83,10 @@ export default function CreatorCodesPage() {
       <section className="mt-6 rounded-2xl border border-gold/30 bg-gold/[0.06] p-4 text-sm text-slate-300 sm:p-5">
         <h2 className="text-base font-extrabold text-white">What your code is worth to your viewers</h2>
         <p className="mt-1 leading-relaxed">
-          Premium is {premium} a month; with your code it is {discountedAmount(premium)}. They get every deal, price and stock alerts,
+          Pro is {premium} a month; with your code it is {discountedAmount(premium)}. They get every deal, price and stock alerts,
           the store-by-store plan for their whole list, and no ads. See{" "}
           <Link href="/premium" className="text-gold hover:underline">
-            what Premium includes
+            what Pro includes
           </Link>
           .
         </p>

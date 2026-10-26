@@ -290,7 +290,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
 
       {/* Newest-set callout — only on the default (unfiltered) view. "Newest
           set", not "NEW": newestReleasedSet() is the newest set however long
-          ago it shipped. Brand, not gold: gold marks Premium. */}
+          ago it shipped. Brand, not gold: gold marks Pro. */}
       {featuredSet && (
         <div className="card-surface mb-5 flex flex-wrap items-center gap-3 border-l-2 border-brand-500 bg-ink-900 px-5 py-4">
           <span className="chip bg-brand-500/15 font-semibold text-brand-300">Newest set</span>

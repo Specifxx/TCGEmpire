@@ -214,7 +214,7 @@ test("targets: an anonymous or free watch can't set one (403); Plus can, and re-
   assert.equal(plus.rows[0]!.targetEmailedCents, null, "a changed target re-arms");
 });
 
-test("a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false): no target limit; Premium is unlimited", async () => {
+test("a billed-Plus account is treated as Pro (grandfathered, PLUS_ON_SALE=false): no target limit; Pro is unlimited", async () => {
   // Plus is off sale, and since 2026-10-23 a billed "plus" reads as Premium at
   // its Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"),
   // so the old 25-target Plus cap no longer stops a Plus member here.

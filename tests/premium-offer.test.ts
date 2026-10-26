@@ -1,3 +1,4 @@
+import "./helpers/trial-on";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -75,7 +76,7 @@ test("the audience: not paying, not admin, not seed, not opted out; lapsed and n
   const a = priceDropAudience(ROWS, OPTED_OUT);
   const ids = a.audience.map((r) => r.id).sort();
   assert.deepEqual(ids, ["cancelled-trialist", "got-old-offer", "lapsed", "never-paid", "stamped"]);
-  assert.equal(a.paying, 3, "active Plus, active Premium and a floor-raised account are paying");
+  assert.equal(a.paying, 3, "active Plus, active Pro and a floor-raised account are paying");
   assert.equal(a.admins, 1);
   assert.equal(a.seeds, 2);
   assert.equal(a.suppressed, 1);
@@ -185,12 +186,12 @@ const email = buildPremiumOfferEmail({
   oneClickUrl: "https://riftcompare.com/api/announcements/unsubscribe?token=abc",
 });
 
-test("the prices are the site's own constants (2026-10-23: $6.67 billed yearly)", () => {
-  assert.equal(premiumEffectiveMonthly("premium"), "$6.67");
+test("the prices are the site's own constants (2026-10-26: $3.99 billed yearly)", () => {
+  assert.equal(premiumEffectiveMonthly("premium"), "$3.99");
   assert.equal(premiumEffectiveMonthly("plus"), "$2.00");
-  assert.equal(annualSavingPct("premium"), 33);
+  assert.equal(annualSavingPct("premium"), 43, "$47.88 against 12 × $6.99");
   assert.equal(annualSavingPct("plus"), 33);
-  assert.equal(premiumOfferSubject(), "Try RiftCompare Premium free for 30 days");
+  assert.equal(premiumOfferSubject(), "Try RiftCompare Pro free for 30 days");
   assert.equal(email.subject, premiumOfferSubject());
   for (const body of [email.html, email.text]) {
     for (const amount of [PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT]) {
@@ -225,7 +226,7 @@ test("a yearly plan's per-month figure never appears without 'billed yearly'", (
   assert.ok(!email.subject.includes(premiumEffectiveMonthly("premium")), "the subject quotes the monthly price, never a bare per-month-of-a-year figure");
 });
 
-test("the Premium subscribe links through /premium/start with tier, plan, src and the campaign, plus a compare link", () => {
+test("the Pro subscribe links through /premium/start with tier, plan, src and the campaign, plus a compare link", () => {
   const links = priceDropLinks();
   // Plus's links still exist (re-enabling Plus is one line) but the email
   // carries none while Plus is off sale (2026-10-23).
@@ -276,7 +277,7 @@ test("each tier's one-line summary matches the current lineup", () => {
     assert.match(body, /only my cards/);
     assert.match(body, /full Rising Cards list/);
     assert.match(body, /unlimited target-price alerts and sealed watches/);
-    assert.doesNotMatch(body, /Everything in Plus/, "Premium is described on its own while Plus is off sale");
+    assert.doesNotMatch(body, /Everything in Plus/, "Pro is described on its own while Plus is off sale");
     assert.match(body, /Best Basket's store-by-store plan and Buy this list/);
     assert.match(body, /Demand Finder/);
     assert.match(body, /cancel from your account page/i);
@@ -291,7 +292,7 @@ test("honest: no deadline or scarcity, and the trial's terms are stated (2026-10
     assert.match(body, /free for 30 days, then/i, "what it costs after the trial, beside the offer");
     assert.match(body, /email you a day or two before the trial ends/);
   }
-  assert.match(email.html, /Start 30 days free · Premium/);
+  assert.match(email.html, /Start 30 days free · Pro/);
 });
 
 test("the trial promo reaches only accounts checkout would give a trial", async () => {

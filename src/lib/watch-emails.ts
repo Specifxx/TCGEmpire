@@ -39,7 +39,7 @@ function watchFooter(kind: "deck" | "sealed", links: WatchActionLinks, manage: s
   const what = kind === "deck" ? "this list's delivered price" : "this sealed product";
   const cadence = kind === "deck" ? "it is checked after every price update" : `sealed products are checked ${SEALED_CHECK_CADENCE}`;
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;line-height:1.6;color:#6b7585">
-    You're getting this because you asked RiftCompare to watch ${what}${kind === "deck" ? " (Premium)" : " (Plus or Premium)"}; ${cadence}.<br/>
+    You're getting this because you asked RiftCompare to watch ${what}${kind === "deck" ? " (Pro)" : " (Plus or Pro)"}; ${cadence}.<br/>
     <a href="${escapeHtml(links.stop)}" style="color:#9aa4b2;text-decoration:underline">Stop watching</a>
     &nbsp;·&nbsp; <a href="${escapeHtml(links.snooze)}" style="color:#9aa4b2;text-decoration:underline">Snooze 30 days</a>
     &nbsp;·&nbsp; <a href="${escapeHtml(manage)}" style="color:#9aa4b2;text-decoration:underline">Manage your watches</a><br/>
@@ -393,7 +393,7 @@ export function buildGradedWatchEmail(item: GradedWatchItem): BuiltWatchEmail {
     subject,
     heading,
     preheader,
-    html: emailShell(heading, inner, simpleFooter("You're getting this because you asked RiftCompare to watch this grade (Plus or Premium); graded listings are checked once a day.", links, manage, "Stop watching this grade"), preheader),
+    html: emailShell(heading, inner, simpleFooter("You're getting this because you asked RiftCompare to watch this grade (Plus or Pro); graded listings are checked once a day.", links, manage, "Stop watching this grade"), preheader),
     text,
     headers: item.actions ? watchHeaders(item.actions) : {},
   };
@@ -471,7 +471,7 @@ export function buildAuctionAlertEmail(items: AuctionAlertItem[], actions: Watch
     html: emailShell(
       heading,
       inner,
-      simpleFooter("You're getting this because you're on Premium and these cards are on your watchlist; live auctions are checked every few hours.", actions, manage, "Stop auction alerts"),
+      simpleFooter("You're getting this because you're on Pro and these cards are on your watchlist; live auctions are checked every few hours.", actions, manage, "Stop auction alerts"),
       preheader,
     ),
     text,

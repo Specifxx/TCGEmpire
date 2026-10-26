@@ -65,7 +65,7 @@ export function CountrySwitcher({ className = "", anchored = false }: { classNam
         <span className="hidden sm:inline">{current.code}{isEurDisplay && " · €"}</span>
         {/* Chevron hidden below sm. The flag alone already reads as "tap to
             change market", the whole control is one button either way, and this
-            is ~14px of the budget that putting "Premium" back as text needed on
+            is ~14px of the budget that putting "Pro" back as text needed on
             a phone. From sm up it returns alongside the country code. */}
         <svg className={`hidden h-3.5 w-3.5 transition-transform sm:block ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="m6 9 6 6 6-6" />

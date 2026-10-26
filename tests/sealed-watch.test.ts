@@ -201,7 +201,7 @@ test("unknown state decides nothing; a missing product is skipped; pre-order gro
   assert.deepEqual(plain.groupCalls, ["groups:US"], "no pre-order read when every key is present");
 });
 
-test("entitlement and the caps: a lapsed or free owner's oldest watch is evaluated and the rest skipped untouched; a billed-Plus owner is treated as Premium and evaluates all, as Premium does", async () => {
+test("entitlement and the caps: a lapsed or free owner's oldest watch is evaluated and the rest skipped untouched; a billed-Plus owner is treated as Pro and evaluates all, as Pro does", async () => {
   // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
   // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so the
   // old SEALED_WATCH_LIMIT_PLUS cap no longer leaves a Plus member's newest
@@ -219,8 +219,8 @@ test("entitlement and the caps: a lapsed or free owner's oldest watch is evaluat
   const h = sealedHarness(rows, { groups: [group([offer(15000)])] });
   const s = await h.run();
   assert.equal(s.lapsed, 2, "each free account's second watch is kept but not evaluated");
-  assert.equal(s.overLimit, 0, "no Plus cap while a billed-Plus account reads as Premium");
-  assert.equal(s.drops, 2 + 2 * (SEALED_WATCH_LIMIT_PLUS + 2), "the free accounts' one watch each, and every Plus and Premium watch");
+  assert.equal(s.overLimit, 0, "no Plus cap while a billed-Plus account reads as Pro");
+  assert.equal(s.drops, 2 + 2 * (SEALED_WATCH_LIMIT_PLUS + 2), "the free accounts' one watch each, and every Plus and Pro watch");
   assert.ok(h.writes.some((w) => w.id === "gone") && h.writes.some((w) => w.id === "never"), "the oldest free watch is checked");
   assert.ok(!h.writes.some((w) => w.id === "gone2" || w.id === "never2"), "the free accounts' second watches are untouched");
   assert.ok(h.writes.some((w) => w.id === "p10") && h.writes.some((w) => w.id === "p11"), "the billed-Plus account's newest watches are evaluated");

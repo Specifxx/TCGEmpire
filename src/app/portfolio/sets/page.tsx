@@ -9,9 +9,8 @@ import { SETS, isPreorderSetCode } from "@/lib/constants";
 import { getSetChecklist } from "@/lib/set-checklist";
 import { ownedBySet, ownedTakeFor } from "@/lib/set-owned";
 import { preReleaseLine, summarise, summarisePreRelease, type ChecklistCard, type OwnedMap } from "@/lib/set-scope";
-import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
+
 import { NavIcon } from "@/components/NavIcon";
-import { ENTRY_TIER_NAME } from "@/lib/site";
 
 // Personal page, never indexed, and per-request: it reads the signed-in account.
 export const dynamic = "force-dynamic";
@@ -62,7 +61,7 @@ export default async function SetChecklistIndex() {
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-slate-400">
           Tick what&apos;s in your binder and see how far through each set you are, what&apos;s missing, and the cheapest listing for
-          each missing card in {info.place}. Free for your first {FREE_PORTFOLIO_LIMIT} cards; {ENTRY_TIER_NAME} removes the limit so a whole set
+          each missing card in {info.place}. Free, with no card limit, so a whole set
           fits, and nobody loses cards they already have.
         </p>
       </div>

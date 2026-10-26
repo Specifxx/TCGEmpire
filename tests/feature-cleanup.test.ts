@@ -65,7 +65,7 @@ test("nothing still links or lists a retired page", () => {
   assert.ok(!JSON.parse(read("vercel.json")).crons.some((c: { path: string }) => c.path === "/api/cron/discord-daily"));
 });
 
-test("the Stripe webhook no longer settles consulting bookings but keeps Premium", () => {
+test("the Stripe webhook no longer settles consulting bookings but keeps Pro", () => {
   const hook = read("src/app/api/marketplace/stripe/webhook/route.ts");
   assert.doesNotMatch(hook, /consultBookingPaid|@\/lib\/consulting/);
   assert.match(hook, /await premiumStarted\(session\)/);

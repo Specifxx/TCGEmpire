@@ -9,7 +9,8 @@
 // chart on the card page and a one-click download, not exclusive data.
 import type { PricePoint } from "./price-history";
 
-export const FREE_HISTORY_DAYS = 30;
+// 90 days free since 2026-10-26 (was 30): "Pro: Collectr's model at $3.99".
+export const FREE_HISTORY_DAYS = 90;
 const DAY_MS = 86_400_000;
 
 /** The free window: points from the last FREE_HISTORY_DAYS. */

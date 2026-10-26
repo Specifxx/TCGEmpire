@@ -111,7 +111,7 @@ test("parcel/courier names mean tracked; bare names stay unknown", () => {
   // The first EU run's parcel services, named in Dutch and Spanish.
   assert.equal(cls("PostNL – Brievenbuspakje").service, "tracked");
   assert.equal(cls("PostNL – Thuisbezorgd (verzekerd)").service, "tracked");
-  assert.equal(cls("Correos - PAQ Premium").service, "tracked");
+  assert.equal(cls("Correos - PAQ Pro").service, "tracked");
   assert.equal(cls("Correos-Paq Light Internacional").service, "tracked");
   assert.equal(cls("Standard Internazionale").service, "unknown");
   assert.equal(cls("Estándar 0-5kg").service, "unknown");

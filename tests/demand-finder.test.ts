@@ -38,11 +38,11 @@ test("the page is back, gated on the premium minimum, and no longer redirected",
   // Free and Plus hit a Premium wall that sells Premium (the default tier);
   // signed out, a sign-in link attributed to the tool gate.
   assert.match(page, /<PremiumButton surface="gate:demand" \/>/);
-  assert.doesNotMatch(page, /<PremiumButton[^>]*tier="plus"/, "a Premium-only wall must not sell Plus");
+  assert.doesNotMatch(page, /<PremiumButton[^>]*tier="plus"/, "a Pro-only wall must not sell Plus");
   assert.match(page, /\/login\?next=\/tools\/demand&src=tool_gate/);
 });
 
-test("a viewer below Premium never gets more than the /movers strip", () => {
+test("a viewer below Pro never gets more than the /movers strip", () => {
   // The one constant both pages read.
   assert.equal(FREE_DEMAND_ROWS, 10);
   assert.match(read("src/app/movers/page.tsx"), /const MOST_SEARCHED_ROWS = FREE_DEMAND_ROWS;/);
@@ -99,7 +99,7 @@ test("the page and the strip call the self-cached loader directly, never inside 
   assert.match(body, /getDemandWindowOrThrow\(days, \{ previous: true \}\)/, "the throwing reader (with the previous period, for movement), so a failure is never cached");
 });
 
-test("every tier surface sells it as Premium", () => {
+test("every tier surface sells it as Pro", () => {
   const row = TIER_COMPARISON.find((r) => r.feature.startsWith("Demand Finder"));
   assert.ok(row, "a TIER_COMPARISON row");
   assert.equal(row!.premium, true);
@@ -119,7 +119,7 @@ test("every tier surface sells it as Premium", () => {
   ]) {
     assert.match(code(read(file)), /\/tools\/demand|Demand Finder/, `${file} should list Demand Finder`);
   }
-  assert.match(code(read("src/components/MostSearchedStrip.tsx")), /href="\/tools\/demand"[\s\S]{0,200}Full leaderboard — Premium/);
+  assert.match(code(read("src/components/MostSearchedStrip.tsx")), /href="\/tools\/demand"[\s\S]{0,200}Full leaderboard — Pro/);
 });
 
 test("the copy describes attention, never investing, flipping or prediction", () => {
@@ -141,7 +141,7 @@ test("lib/demand.ts computes once at the deepest list and slices for every calle
   // The expensive scan is cached once per (window, day); the ten-row strip
   // must not trigger a second scan.
   const src = read(LIB);
-  assert.match(src, /const SCAN_LIMIT = PREMIUM_DEMAND_ROWS;/, "one scan at the Premium depth");
+  assert.match(src, /const SCAN_LIMIT = PREMIUM_DEMAND_ROWS;/, "one scan at the Pro depth");
   assert.equal(PREMIUM_DEMAND_ROWS, 25);
   assert.match(src, /unstable_cache\(/, "the expensive computation must be cached");
   assert.match(src, /tags: \[CONTENT_TAG\]/, "must revalidate on the same content tag as every other daily screener");

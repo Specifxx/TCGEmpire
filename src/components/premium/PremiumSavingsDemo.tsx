@@ -127,10 +127,10 @@ function DemoResult({ a, fmt }: { a: Answer; fmt: (c: number) => string }) {
       </p>
       {a.unmatched.length > 0 && <p className="text-xs text-slate-400">Couldn&apos;t match: {a.unmatched.join(", ")}</p>}
       <CtaZone location="demo" className="rounded-xl border border-gold/30 bg-gold/[0.06] p-2.5 text-xs text-slate-300">
-        <span className="font-bold text-gold">Premium:</span> the store-by-store order with every link, the best one- and two-store options, and lists up to 200 cards
+        <span className="font-bold text-gold">Pro:</span> the store-by-store order with every link, the best one- and two-store options, and lists up to 200 cards
         {a.skippedLines > 0 ? ` (${a.skippedLines} line${a.skippedLines === 1 ? "" : "s"} past the first ${a.lineCap} weren't priced here)` : ""}.{" "}
         <a href="#top-pricing" className="font-semibold text-brand-400 hover:underline">
-          See Premium plans →
+          See Pro plans →
         </a>
       </CtaZone>
     </div>

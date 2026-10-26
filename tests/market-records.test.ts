@@ -116,7 +116,7 @@ test("the cross-market board carries the shipping caveat", () => {
   assert.match(src, /Informational/i, "must not read as a buy recommendation");
 });
 
-test("the free board teases the Premium screener rather than replacing it", () => {
+test("the free board teases the Pro screener rather than replacing it", () => {
   const src = read(PAGE);
   assert.match(src, /const GAPS_SHOWN = 10/, "the free board must be a fixed top-N");
   assert.match(src, /\/tools\/deal-finder/, "must link to the full screener");

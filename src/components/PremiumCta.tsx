@@ -34,6 +34,10 @@ import { recallPremiumSurface } from "@/lib/premium-surface";
 // text-center + leading-tight because this label wraps to two lines in the
 // narrower of the two pricing cards; without them the second line sits badly.
 const CTA_BTN = "btn-buy w-full py-3.5 text-center text-base leading-tight";
+// The Pro page's Collectr-style gold pill (2026-10-26, owner: "make it look very
+// similar to how Collector does it"). Only ProLanding asks for it.
+const CTA_GOLD =
+  "inline-flex w-full items-center justify-center rounded-full bg-gradient-to-b from-[#f6dc8f] via-[#d9b04f] to-[#a97b2c] px-6 py-4 text-center text-lg font-extrabold leading-tight text-ink-950 shadow-lg shadow-gold/25 transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:opacity-70";
 
 // The Premium subscribe button. Three states: checkout live (Stripe hosted
 // checkout), signed out (straight to /premium/start, which IS the sign-in step
@@ -52,6 +56,7 @@ export function PremiumCta({
   tier = "premium",
   ctaLabel,
   compact = false,
+  gold = false,
 }: {
   checkoutLive: boolean;
   signedIn: boolean;
@@ -75,7 +80,10 @@ export function PremiumCta({
   // on the first screen of a phone. A trial's disclosure, the waitlist state
   // and every error line are unchanged: they are never compacted away.
   compact?: boolean;
+  /** The Pro page's gold pill instead of the green buy button. */
+  gold?: boolean;
 }) {
+  const btn = gold ? CTA_GOLD : CTA_BTN;
   // The plan's price after the trial, as the card quotes it ("$2.99/month").
   const thenPrice = priceLabel || "the paid price";
   const [busy, setBusy] = useState(false);
@@ -119,6 +127,8 @@ export function PremiumCta({
     markSignupSource("premium_cta");
   };
   const startHref = premiumStartHref({ tier, plan, src: "premium-page" });
+  // The Collectr-style Pro page's gold button says "Upgrade to Pro" (2026-10-26).
+  const getLabel = gold ? `Upgrade to ${TIER_NAMES[tier]}` : `Get ${TIER_NAMES[tier]}`;
 
   if (!signedIn) {
     if (trialAvailable && trialDays > 0) {
@@ -129,7 +139,7 @@ export function PremiumCta({
       // Straight to Stripe, no account first (2026-10-20, lib/guest-checkout.ts).
       return (
         <div className="w-full">
-          <button type="button" onClick={() => { onStartClick(); void subscribe(); }} disabled={busy} className={CTA_BTN}>
+          <button type="button" onClick={() => { onStartClick(); void subscribe(); }} disabled={busy} className={btn}>
             {busy ? "Opening checkout…" : <>{trialButtonLabel(trialDays, trialFeeCents)}&nbsp;→</>}
           </button>
           <p className="mt-2 text-[11px] leading-snug text-slate-400">
@@ -144,8 +154,8 @@ export function PremiumCta({
     if (compact) {
       return (
         <div className="w-full">
-          <button type="button" onClick={() => { onStartClick(); void subscribe(); }} disabled={busy} className={CTA_BTN}>
-            {busy ? "Opening checkout…" : <>Get {TIER_NAMES[tier]}&nbsp;→</>}
+          <button type="button" onClick={() => { onStartClick(); void subscribe(); }} disabled={busy} className={btn}>
+            {busy ? "Opening checkout…" : <>{getLabel}&nbsp;→</>}
           </button>
           {error && <p role="alert" className="mt-2 text-xs text-rose-400">{error}</p>}
         </div>
@@ -154,7 +164,7 @@ export function PremiumCta({
     return (
       <div className="w-full">
         <p className="text-sm font-semibold text-white">Ready when you are</p>
-        <Link href={startHref} onClick={onStartClick} className={`${CTA_BTN} mt-3`}>
+        <Link href={startHref} onClick={onStartClick} className={`${btn} mt-3`}>
           Get {TIER_NAMES[tier]}&nbsp;→
         </Link>
         <p className="mt-2 text-[11px] leading-snug text-slate-400">
@@ -174,8 +184,8 @@ export function PremiumCta({
   }
   return (
     <div className="w-full">
-      <button onClick={subscribe} disabled={busy} className={CTA_BTN}>
-        {busy ? "Opening checkout…" : ctaLabel ?? (trialEligible && trialDays > 0 ? `${trialButtonLabel(trialDays, trialFeeCents)} →` : `Get ${TIER_NAMES[tier]} →`)}
+      <button onClick={subscribe} disabled={busy} className={btn}>
+        {busy ? "Opening checkout…" : ctaLabel ?? (trialEligible && trialDays > 0 ? `${trialButtonLabel(trialDays, trialFeeCents)} →` : `${getLabel} →`)}
       </button>
       {trialEligible && trialDays > 0 && (
         // Required disclosure for a card-gated trial (Stripe / card-network rules):

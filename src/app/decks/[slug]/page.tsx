@@ -210,7 +210,7 @@ export default async function DeckPage({ params }: { params: { slug: string } })
       {/* Under the deck and its disclosure (2026-09-30, "The sign-up slider is
           gone"): what a free account adds to THIS list is Best Basket's
           delivered total (api/basket: any signed-in account gets its own total
-          and saving; the store-by-store plan is Premium's, and this names no
+          and saving; the store-by-store plan is Pro's, and this names no
           plan). Signed-out only, a client island: the page stays ISR. */}
       <InlineSignupPrompt
         surface="inline_published_deck"

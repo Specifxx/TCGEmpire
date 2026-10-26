@@ -163,20 +163,20 @@ test("the route is rate-limited per user", () => {
   assert.match(readCode(ROUTE), /rateLimit\(`replacement:\$\{user\.id\}`/);
 });
 
-test("the total is free; the store-by-store plan is Premium", () => {
+test("the total is free; the store-by-store plan is Pro", () => {
   const route = readCode(ROUTE);
   assert.match(route, /const full = isPremium\(user, "premium"\)/);
   assert.match(route, /\.\.\.basketPreview\(plan, /, "everyone gets the aggregate");
-  assert.match(route, /\.\.\.\(full \? \{ plan \} : \{\}\)/, "only Premium gets the plan itself");
+  assert.match(route, /\.\.\.\(full \? \{ plan \} : \{\}\)/, "only Pro gets the plan itself");
   const panel = readCode(PANEL);
   // Premium's panel links on to the plan in Best Basket…
   const premiumBranch = panel.slice(panel.indexOf("{plan ? ("), panel.indexOf(") : (", panel.indexOf("{plan ? (")));
-  assert.match(premiumBranch, /href="\/tools\/best-basket\?source=binder"/, "Premium opens the plan in Best Basket");
+  assert.match(premiumBranch, /href="\/tools\/best-basket\?source=binder"/, "Pro opens the plan in Best Basket");
   // …everyone else gets the Premium button, never a link promising a plan
   // Best Basket won't show them (QA, 2026-09-25: it led Plus members to a wall).
   const otherBranch = panel.slice(panel.indexOf(") : (", panel.indexOf("{plan ? (")));
   assert.match(otherBranch.slice(0, 600), /<PremiumButton surface="gate:replacement-plan"/);
-  assert.doesNotMatch(otherBranch.slice(0, 600), /tier="plus"/, "the replacement plan is a Premium wall: default tier");
+  assert.doesNotMatch(otherBranch.slice(0, 600), /tier="plus"/, "the replacement plan is a Pro wall: default tier");
   assert.doesNotMatch(otherBranch.slice(0, 600), /\/tools\/best-basket/, "no Best Basket link for a viewer without the plan");
 });
 

@@ -34,7 +34,7 @@ export const PREMIUM_PROMISE = "Never overpay for Riftbound again";
 // At this length the subline stays the largest element, as it was before.
 export const PREMIUM_HERO_HEADLINE = "Find the lowest delivered price";
 export const PREMIUM_HERO_SUBLINE =
-  "Premium finds the cheapest delivered order for your whole list with unlimited Best Basket plans, bulk prices a binder in one paste, and emails you the moment a card, box or deck hits your price. Comparing prices stays free for everyone.";
+  "Pro finds the cheapest delivered order for your whole list with unlimited Best Basket plans, bulk prices a binder in one paste, and emails you the moment a card, box or deck hits your price. Comparing prices stays free for everyone.";
 
 export function planTagline(tier: "plus" | "premium", _market?: string | null): string {
   if (tier === "plus") return "Watches prices for you, with no ads";
@@ -67,7 +67,7 @@ export function planBullets(tier: "plus" | "premium", market: string | null | un
 /** The hero subline under /premium's headline, by market. */
 export function premiumHeroLine(market: string | null | undefined, plusLive: boolean): string {
   if (isUsMarket(market)) {
-    return `Comparing prices is free. ${plusLive ? "Plus and Premium" : "Premium"} watch prices for you: your own target price on a card, sealed restocks and at-RRP alerts (${SEALED_RRP_MARKETS}), graded prices, and with Premium a whole deck's price.`;
+    return `Comparing prices is free. ${plusLive ? "Plus and Pro" : "Pro"} watch prices for you: your own target price on a card, sealed restocks and at-RRP alerts (${SEALED_RRP_MARKETS}), graded prices, and with Pro a whole deck's price.`;
   }
-  return `Comparing prices is free. Premium works out the cheapest delivered order for your list, store by store with each store's real postage counted. A free account gets ${FREE_PLANS_PER_MONTH} of those plans a month.`;
+  return `Comparing prices is free. Pro works out the cheapest delivered order for your list, store by store with each store's real postage counted. A free account gets ${FREE_PLANS_PER_MONTH} of those plans a month.`;
 }

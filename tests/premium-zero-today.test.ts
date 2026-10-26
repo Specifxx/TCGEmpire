@@ -121,7 +121,7 @@ test("PremiumButton is trial-aware but still opens the shared dialog", () => {
   assert.match(src, /usePremiumDialog/, "must still open the site-wide dialog — this instruction never touched that");
 });
 
-test("the Premium funnel events carry PREMIUM_COPY_VERSION so before/after can be split in GA4", () => {
+test("the Pro funnel events carry PREMIUM_COPY_VERSION so before/after can be split in GA4", () => {
   for (const file of [
     "src/components/PremiumCta.tsx",
     "src/components/PremiumDialog.tsx",

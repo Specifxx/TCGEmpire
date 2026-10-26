@@ -124,7 +124,7 @@ test("/premium/start is the sign-in step itself, not a redirect to /login", () =
   assert.match(src, /<AuthForm/, "the provider buttons must render ON this page — that is the whole point");
   assert.match(src, /enabledProviders\(\)/, "only configured providers may be offered");
   assert.match(src, /source=\{src === "dialog" \? "premium_dialog" : "premium_cta"\}/,
-    "the signup must be attributed to the Premium surface that produced it, not the generic login page");
+    "the signup must be attributed to the Pro surface that produced it, not the generic login page");
   assert.match(src, /next=\{selfHref\}/, "?next= must return to this same URL so the selection survives the OAuth round trip");
   assert.match(src, /<CheckoutLauncher/, "a signed-in visitor must go straight to checkout");
   assert.match(src, /sanitizeBackPath\(searchParams\.back\)/);
@@ -170,7 +170,7 @@ test("the launcher fires the funnel event BEFORE the fetch, and opens checkout e
 
 // ── The buy buttons ──────────────────────────────────────────────────────────
 
-test("no Premium buy button routes through /login any more", () => {
+test("no Pro buy button routes through /login any more", () => {
   for (const f of ["src/components/PremiumCta.tsx", "src/components/PremiumDialog.tsx"]) {
     assert.ok(!/\/login\?next=\/premium/.test(code(f)), `${f} must send buyers to the start step, not the login wall`);
   }
@@ -245,7 +245,7 @@ test("/premium/welcome waits for the webhook instead of lying about the tier", (
 
 // ── Plumbing ─────────────────────────────────────────────────────────────────
 
-test("the Premium funnel's own signup sources are whitelisted, or the attribution silently nulls", () => {
+test("the Pro funnel's own signup sources are whitelisted, or the attribution silently nulls", () => {
   for (const s of ["premium_cta", "premium_dialog"]) {
     assert.ok(SIGNUP_SOURCES.has(s), `${s} missing from SIGNUP_SOURCES`);
   }

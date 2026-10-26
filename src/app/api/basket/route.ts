@@ -128,7 +128,7 @@ export async function POST(req: Request) {
       {
         error: full
           ? "That's a lot of baskets in an hour — give it a few minutes and try again."
-          : "Without Premium you get 5 basket totals a day, and you've used today's. Try again tomorrow.",
+          : "Without Pro you get 5 basket totals a day, and you've used today's. Try again tomorrow.",
       },
       { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
     );

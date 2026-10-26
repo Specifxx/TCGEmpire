@@ -34,7 +34,7 @@ test("the Bulk Pricer is gone: its list pricing is free on /deck, and /bulk-pric
   assert.match(read("src/app/api/deck/price/route.ts"), /plainNames: true/, "/deck prices plain names without quantities");
 });
 
-test("Best Basket's store-by-store plan is Premium; an account gets its own total", () => {
+test("Best Basket's store-by-store plan is Pro; an account gets its own total", () => {
   // Best Basket is Premium (see the tier note in lib/premium.ts). Since
   // 2026-09-25 a free account gets a click-only preview of its own delivered
   // total, so the page renders the tool for any account and tells it which
@@ -51,7 +51,7 @@ test("the basket API tiers its answer server-side, not in the page", () => {
   const src = read(BASKET_API);
   assert.match(src, /if \(!user\) return NextResponse\.json\(/, "must still reject signed-out callers");
   assert.match(src, /const full = isPremium\(user, "premium"\)/);
-  assert.match(src, /if \(!full\) \{\s*const preview = basketPreview\(optimizeBasket\(/, "non-Premium gets the preview aggregate only");
+  assert.match(src, /if \(!full\) \{\s*const preview = basketPreview\(optimizeBasket\(/, "non-Pro gets the preview aggregate only");
   // The aggregate plus where delivery was priced to — never the plan. For a set
   // (2026-09-29) it adds only setGapFields(false, …): counts, no store, line or link
   // (tests/set-gap.test.ts pins its keys and that no store name can be in it).
@@ -136,7 +136,7 @@ test("hasAccount and isPremium remain distinct checks", () => {
 // (PREMIUM_TRIAL_DAYS), checkout, feedback, or a referral.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("no signup-time Premium constant exists anywhere", () => {
+test("no signup-time Pro constant exists anywhere", () => {
   for (const f of [PREMIUM_LIB, OAUTH_CALLBACK, "src/app/login/page.tsx", "src/components/AuthForm.tsx", "src/app/premium/page.tsx"]) {
     const src = read(f);
     // Comments explaining the removal are fine; a live reference is not.
@@ -144,19 +144,19 @@ test("no signup-time Premium constant exists anywhere", () => {
     assert.doesNotMatch(
       code,
       /SIGNUP_PREMIUM_DAYS|signupPremiumDays/,
-      `${f} still references the removed signup Premium grant — deleting the constant is what makes a stale env var harmless`
+      `${f} still references the removed signup Pro grant — deleting the constant is what makes a stale env var harmless`
     );
   }
 });
 
-test("the OAuth callback creates an account WITHOUT granting Premium", () => {
+test("the OAuth callback creates an account WITHOUT granting Pro", () => {
   const src = read(OAUTH_CALLBACK);
   const ifNewMatch = src.match(/if \(isNew\) \{([\s\S]*?)\n {2}\}/);
   assert.ok(ifNewMatch, "expected an `if (isNew) { ... }` block");
   assert.doesNotMatch(
     ifNewMatch![1],
     /grantPremiumDays/,
-    "a new account must not be granted Premium — the free ACCOUNT tier is the payoff for signing up"
+    "a new account must not be granted Pro — the free ACCOUNT tier is the payoff for signing up"
   );
   // The referral credit is a separate, earned thing and must survive.
   assert.match(ifNewMatch![1], /applyReferral\(user\.id\)/, "referral crediting must still happen on account creation");
@@ -191,7 +191,7 @@ test("grantPremiumDays is a real, generic helper the signup grant can reuse", ()
 // scrolling. Verified down to 320x480.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the Premium dialog and /premium show the SAME tier table, from one source", () => {
+test("the Pro dialog and /premium show the SAME tier table, from one source", () => {
   const shared = read("src/components/TierComparisonTable.tsx");
   const dialog = read("src/components/PremiumDialog.tsx");
   const page = read("src/app/premium/page.tsx");
@@ -281,7 +281,7 @@ test("every dialog-only row override names a row that actually exists", async ()
   assert.ok(shown.length >= 4, `the dialog table is down to ${shown.length} rows — too few to be worth rendering`);
   assert.ok(
     shown.some((r) => r.premium === true && r.account !== true),
-    "the dialog table must keep at least one row where Premium gives something a free account does not"
+    "the dialog table must keep at least one row where Pro gives something a free account does not"
   );
 
   // 2026-09-25: the compact table is exactly what a payment changes. Every
@@ -302,7 +302,7 @@ test("every dialog-only row override names a row that actually exists", async ()
   }
 });
 
-test("the Premium dialog stays closable once the table makes it tall", () => {
+test("the Pro dialog stays closable once the table makes it tall", () => {
   // 2026-09-16: the scroll-safe overlay shape this test guards moved OUT of
   // PremiumDialog.tsx and into ui/Dialog.tsx — the shared shell six other
   // hand-rolled modals migrated onto in the same pass — rather than staying a

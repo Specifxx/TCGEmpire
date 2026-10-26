@@ -420,7 +420,7 @@ export default async function HomePage() {
             which stores we track
           </Link>{" "}
           each have a page of their own. RiftCompare is paid for by affiliate commission (the eBay Partner
-          Network, TCGplayer and Amazon Associates), display ads and Plus and Premium subscriptions, and none of them can buy a store a better place in a comparison — the one
+          Network, TCGplayer and Amazon Associates), display ads and Plus and Pro subscriptions, and none of them can buy a store a better place in a comparison — the one
           labelled exception is the Radiance pre-order table, where open eBay listings are shown first. More on{" "}
           <Link href="/about" className="text-brand-300 underline-offset-2 hover:underline">
             who runs RiftCompare

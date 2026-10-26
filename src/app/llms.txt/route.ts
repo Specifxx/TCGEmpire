@@ -3,7 +3,7 @@ import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { DECK_LINE_CAP, FREE_BULK_LINES } from "@/lib/deck";
 import { SITE_URL, PLUS_ON_SALE, tierMonthlyAmount, premiumTrialFee, trialDaysPhrase } from "@/lib/site";
 import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from "@/lib/trial-config";
-import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+
 import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 import { SET_GAP_CHUNK } from "@/lib/set-gap";
 
@@ -17,43 +17,43 @@ export const revalidate = 86400;
 // checkout reads; absent when the trial is switched off.
 const TRIAL_SENTENCE = premiumTrialEnabled()
   ? PREMIUM_TRIAL_FEE_CENTS > 0
-    ? ` A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} of ${PLUS_ON_SALE ? "either plan" : "Premium"} cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} (card required), then the plan's price starts unless they cancel first.`
-    : ` A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} of ${PLUS_ON_SALE ? "either plan" : "Premium"} are free (card required), then the plan's price starts unless they cancel first.`
+    ? ` A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} of ${PLUS_ON_SALE ? "either plan" : "Pro"} cost ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} (card required), then the plan's price starts unless they cancel first.`
+    : ` A first-time subscriber's first ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} of ${PLUS_ON_SALE ? "either plan" : "Pro"} are free (card required), then the plan's price starts unless they cancel first.`
   : "";
 
 // One-line descriptions for the hub pages (falls back to the nav label otherwise).
 const DESC: Record<string, string> = {
   "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/US/UK/SG/CA/EU).",
   "/price-guide": "Every Riftbound card's cheapest in-stock price in one sortable, filterable table, in six markets; two imports a day.",
-  "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price and an at-RRP flag. Premium can watch a product: an email when it is back in stock, at RRP, at your price, or on a real drop.",
+  "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price and an at-RRP flag. Pro can watch a product: an email when it is back in stock, at RRP, at your price, or on a real drop.",
   "/movers": "The biggest Riftbound price rises and falls, week over week.",
   "/market": "The RiftCompare Index — a weekly, search-weighted market index for Riftbound singles, with key stats.",
   "/stores/tracked": "The stores whose public prices RiftCompare tracks and compares.",
-  "/tools/deal-finder": "Deal Finder, three tabs: Underpriced vs TCGplayer (every card a store or eBay seller sells below TCGplayer's US market price, with a store filter), Cheapest on eBay (cards whose cheapest eBay listing beats every tracked store; free for everyone) and Underpriced vs eBay (cards a store sells below the cheapest eBay listing). The two Underpriced lists show the top 3 with a free account; the full lists, filterable to your watchlist or binder, with Premium.",
+  "/tools/deal-finder": "Deal Finder, three tabs: Underpriced vs TCGplayer (every card a store or eBay seller sells below TCGplayer's US market price, with a store filter), Cheapest on eBay (cards whose cheapest eBay listing beats every tracked store; free for everyone) and Underpriced vs eBay (cards a store sells below the cheapest eBay listing). The two Underpriced lists show the top 3 with a free account; the full lists, filterable to your watchlist or binder, with Pro.",
   "/tools/rising": "Ranks cards by search demand, stores in stock and where the price sits in its own recent range, with the reason for each pick. A screen, not a prediction; not financial advice.",
-  "/tools/best-basket": `Best Basket: the cheapest delivered order for a list of cards across your country's stores, postage and free-shipping thresholds included, beside the best one-store and two-store orders. Your own total and ${FREE_PLANS_PER_MONTH} store-by-store plans a month with a free account; unlimited plans with Premium.`,
-  "/tools/demand": "Demand Finder: the Riftbound cards most searched and most viewed on RiftCompare over the last 7 or 30 days, counted once per browser per card per day. The top 10 most searched this week are free (also on /movers); the full lists with Premium.",
+  "/tools/best-basket": `Best Basket: the cheapest delivered order for a list of cards across your country's stores, postage and free-shipping thresholds included, beside the best one-store and two-store orders. Your own total and ${FREE_PLANS_PER_MONTH} store-by-store plans a month with a free account; unlimited plans with Pro.`,
+  "/tools/demand": "Demand Finder: the Riftbound cards most searched and most viewed on RiftCompare over the last 7 or 30 days, counted once per browser per card per day. The top 10 most searched this week are free (also on /movers); the full lists with Pro.",
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
   "/tools/selling-fees": "Net proceeds calculator for selling on TCGplayer or eBay: stacks commission, processing and shipping.",
-  "/deck": `Deck builder and list pricer — paste a decklist or any card list and price every card at its cheapest listing in your market as you build. Free up to ${FREE_BULK_LINES} lines; Premium bulk prices up to ${DECK_LINE_CAP}.`,
+  "/deck": `Deck builder and list pricer — paste a decklist or any card list and price every card at its cheapest listing in your market as you build. Free up to ${FREE_BULK_LINES} lines; Pro bulk prices up to ${DECK_LINE_CAP}.`,
   "/trade": "Riftbound Trade Calculator — value both sides of a card trade at the cheapest in-stock store price in your market and currency, with a per-card override or a specific store's price.",
   "/riftle": "Riftle — the daily Riftbound card guessing game.",
   "/games": "Free Riftbound mini-games (Riftle, pack sim, price games and more).",
   "/learn": "Learn Riftbound: an interactive new-player guide with real cards.",
   "/guides": "Buying guides and strategy articles for Riftbound.",
   "/blog": "News, metagame snapshots and buying guides for Riftbound.",
-  "/portfolio": `Track a collection's value over time: up to ${FREE_PORTFOLIO_LIMIT} cards with a free account, unlimited with Premium. The set checklist (/portfolio/sets) shows what a set is missing and the cheapest listing for each missing card, before postage.`,
+  "/portfolio": `Track a collection's value over time: free and unlimited with an account. The set checklist (/portfolio/sets) shows what a set is missing and the cheapest listing for each missing card, before postage.`,
   // Premium alone while Plus is off sale (PLUS_ON_SALE, 2026-10-23).
   "/premium": PLUS_ON_SALE
-    ? `Price comparison is free for everyone, with no limit. A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} in its portfolio; cards already tracked past a limit are kept. Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, an unlimited watchlist and portfolio, target-price alerts, and the full Deal Finder and Rising Cards lists. Plus also watches sealed products (up to ${SEALED_WATCH_LIMIT_PLUS}: back in stock after selling out, at RRP, at your price, checked ${SEALED_CHECK_CADENCE}), and with no card limit a whole set fits in the set checklist. Premium (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus Best Basket's store-by-store plan for a deck, a list or the rest of a set (Finish this set, up to ${SET_GAP_CHUNK} cards a plan) at the minimum condition you set (Near Mint only, Lightly Played or better, or anything), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), unlimited target alerts and sealed watches, Buy this list for a deck, watchlist or binder, and the full Demand Finder (what people are searching for and viewing).${TRIAL_SENTENCE}`
-    : `Price comparison is free for everyone, with no limit. A free account watches up to ${FREE_WATCHLIST_LIMIT} cards and keeps up to ${FREE_PORTFOLIO_LIMIT} in its portfolio; cards already tracked past a limit are kept, and it gets one target-price alert on a card and one sealed watch. One paid plan, Premium (${tierMonthlyAmount("premium")}/mo): no ads on any page, an unlimited watchlist and portfolio (a whole set fits in the set checklist), the full Deal Finder and Rising Cards lists, unlimited target-price alerts and sealed watches (back in stock after selling out, at RRP, at your price, checked ${SEALED_CHECK_CADENCE}), Best Basket's store-by-store plan for a deck, a list or the rest of a set (Finish this set, up to ${SET_GAP_CHUNK} cards a plan) at the minimum condition you set (Near Mint only, Lightly Played or better, or anything), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), Buy this list for a deck, watchlist or binder, and the full Demand Finder (what people are searching for and viewing). Plus, the former cheaper plan, is no longer sold; existing Plus members keep it.${TRIAL_SENTENCE}`,
+    ? `Price comparison is free for everyone, with no limit. A free account has an unlimited watchlist and portfolio. Plus (${tierMonthlyAmount("plus")}/mo): no ads on any page, an unlimited watchlist and portfolio, target-price alerts, and the full Deal Finder and Rising Cards lists. Plus also watches sealed products (up to ${SEALED_WATCH_LIMIT_PLUS}: back in stock after selling out, at RRP, at your price, checked ${SEALED_CHECK_CADENCE}), and with no card limit a whole set fits in the set checklist. Pro (${tierMonthlyAmount("premium")}/mo): everything in Plus, plus Best Basket's store-by-store plan for a deck, a list or the rest of a set (Finish this set, up to ${SET_GAP_CHUNK} cards a plan) at the minimum condition you set (Near Mint only, Lightly Played or better, or anything), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), unlimited target alerts and sealed watches, Buy this list for a deck, watchlist or binder, and the full Demand Finder (what people are searching for and viewing).${TRIAL_SENTENCE}`
+    : `Price comparison is free for everyone, with no limit. A free account has an unlimited watchlist and portfolio, and gets one target-price alert on a card and one sealed watch. One paid plan, Pro (${tierMonthlyAmount("premium")}/mo): no ads on any page, an unlimited watchlist and portfolio (a whole set fits in the set checklist), the full Deal Finder and Rising Cards lists, unlimited target-price alerts and sealed watches (back in stock after selling out, at RRP, at your price, checked ${SEALED_CHECK_CADENCE}), Best Basket's store-by-store plan for a deck, a list or the rest of a set (Finish this set, up to ${SET_GAP_CHUNK} cards a plan) at the minimum condition you set (Near Mint only, Lightly Played or better, or anything), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update and emailed at your price), Buy this list for a deck, watchlist or binder, and the full Demand Finder (what people are searching for and viewing). Plus, the former cheaper plan, is no longer sold; existing Plus members keep it.${TRIAL_SENTENCE}`,
   "/sets": "Every Riftbound set with its full card list and live prices.",
   "/champions": "Browse Riftbound cards by League of Legends champion.",
   "/cards": "Card facets — browse by type, rarity and printing (Signature, Overnumbered, Alternate Art, Promo).",
   "/domains": "The Riftbound domains (Fury, Calm, Mind, Body, Chaos, Order, Colorless) and their cards.",
   "/keywords": "Riftbound keywords and game actions, defined, with every card that uses them.",
   "/singles": "Riftbound singles — the cheapest live price for individual cards.",
-  "/alerts": `Watchlists and price alerts — be told when a Riftbound card hits a new low (up to ${FREE_WATCHLIST_LIMIT} cards free, with your own target price on one card and one sealed-product watch; unlimited, with a target on every card, with Premium). Premium also watches every sealed product and a whole deck's delivered price.`,
+  "/alerts": `Watchlists and price alerts — be told when a Riftbound card hits a new low (unlimited and free, with your own target price on one card and one sealed-product watch; a target on every card with Pro). Pro also watches every sealed product and a whole deck's delivered price.`,
   "/tools": "Every RiftCompare tool and calculator in one place.",
 };
 
@@ -86,7 +86,7 @@ export function GET() {
   lines.push(`- Is this trade fair?: ${abs("/trade")} — the Trade Calculator values both sides at the cheapest in-stock store price in your market and currency.`);
   lines.push(`- Sealed product prices (booster boxes, packs, bundles): ${abs("/sealed")}.`);
   lines.push(`- Price a whole decklist: ${abs("/deck")}.`);
-  lines.push(`- What is a set missing from my binder, and what is the cheapest listing to finish it?: ${abs("/portfolio/sets")} — a free set checklist for a signed-in account (up to ${FREE_PORTFOLIO_LIMIT} cards free), with the cheapest in-stock store listing for each missing card before postage.`);
+  lines.push(`- What is a set missing from my binder, and what is the cheapest listing to finish it?: ${abs("/portfolio/sets")} — a free set checklist for a signed-in account (free, no card limit), with the cheapest in-stock store listing for each missing card before postage.`);
   lines.push("");
   lines.push(
     "For AI agents: clean markdown versions of key pages live under `/llm/` — e.g. " +

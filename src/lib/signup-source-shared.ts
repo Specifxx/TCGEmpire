@@ -66,6 +66,7 @@ export const SIGNUP_SOURCES = new Set<string>([
   // as "login" — indistinguishable from someone who typed /login themselves, so
   // the highest-intent signups on the site were the least attributable.
   "premium_cta", // the /premium pricing-card button
+  "pro_free", // the Pro page's Free card, "Create a free account" (2026-10-26)
   "premium_dialog", // the tool blur-wall upsell dialog
   "coins", // /coins' "Sign in" for a signed-out visitor (2026-10-16, RiftCompare Coins)
   "radiance_watch", // "Follow Radiance's chase cards" on Radiance posts and set pages (2026-10-16 growth pass)

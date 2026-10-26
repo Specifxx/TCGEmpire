@@ -158,7 +158,7 @@ export default async function DeckPage({ searchParams }: { searchParams: { list?
           Paste a Riftbound decklist — or any list of card names — and get every card matched with the cheapest
           {" "}{info.adjective} price and a full total. It&apos;s also a bulk price checker: plain names work without
           quantities, anything we can&apos;t match is listed rather than dropped, and you can search and add cards or change
-          quantities as you go. Lists up to {FREE_BULK_LINES} lines are free; Premium prices a whole binder or collection, up
+          quantities as you go. Lists up to {FREE_BULK_LINES} lines are free; Pro prices a whole binder or collection, up
           to {DECK_LINE_CAP} lines at once.
         </p>
       </div>

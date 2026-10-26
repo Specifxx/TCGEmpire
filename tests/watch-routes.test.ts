@@ -89,7 +89,7 @@ function sealedDb(seed: Record<string, unknown>[] = []) {
 
 // ── Deck watches: Premium only, owner only, DECK_WATCH_LIMIT ─────────────────
 
-test("deck watches: create / update / delete need Premium to create or edit (402 for free and lapsed; a billed-Plus account counts as Premium); snooze and stop are any owner's; only the owner's rows", async () => {
+test("deck watches: create / update / delete need Pro to create or edit (402 for free and lapsed; a billed-Plus account counts as Pro); snooze and stop are any owner's; only the owner's rows", async () => {
   const { db, rows, calls } = deckDb();
   for (const who of [free, lapsed]) {
     const res = await createDeckWatch(db, u("x", who), { name: "d", listText: "3 Alpha" }, "US");
@@ -163,7 +163,7 @@ test("deck watches: create / update / delete need Premium to create or edit (402
   assert.equal(plusDeck.rows[0]!.userId, "plus-owner");
   assert.equal((await updateDeckWatch(plusDeck.db, u("plus-owner", plus), "d1", { targetCents: 5000 }, NOW)).status, 200, "…and edits its target");
   assert.equal(plusDeck.rows[0]!.targetCents, 5000);
-  assert.equal((await listDeckWatches(plusDeck.db, u("plus-owner", plus))).body.limit, DECK_WATCH_LIMIT, "the Premium deck cap applies");
+  assert.equal((await listDeckWatches(plusDeck.db, u("plus-owner", plus))).body.limit, DECK_WATCH_LIMIT, "the Pro deck cap applies");
 });
 
 test("deck watches: the eleventh list is refused with 409 and the real count", async () => {
@@ -228,8 +228,8 @@ test("sealed watches: a free or lapsed account creates ONE (402 past it, 2026-10
   assert.equal((list.body.watches as unknown[]).length, 2);
   // A billed-Plus account reads as Premium while Plus is off sale (DECISIONS.md,
   // "Plus members get Premium", 2026-10-23): no Plus cap to quote.
-  assert.equal(list.body.limit, null, "billed Plus: no limit to quote, as for Premium");
-  assert.equal((await listSealedWatches(db, u("p", premium))).body.limit, null, "Premium: no limit to quote");
+  assert.equal(list.body.limit, null, "billed Plus: no limit to quote, as for Pro");
+  assert.equal((await listSealedWatches(db, u("p", premium))).body.limit, null, "Pro: no limit to quote");
 
   assert.equal((await deleteSealedWatch(db, u("q", premium), "s1")).status, 404);
   assert.equal((await deleteSealedWatch(db, u("q", free), "s1")).status, 404);
@@ -239,7 +239,7 @@ test("sealed watches: a free or lapsed account creates ONE (402 past it, 2026-10
   assert.equal(rows.length, 1);
 });
 
-test("sealed watches: a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false) and is not stopped at SEALED_WATCH_LIMIT_PLUS; Premium is not either", async () => {
+test("sealed watches: a billed-Plus account is treated as Pro (grandfathered, PLUS_ON_SALE=false) and is not stopped at SEALED_WATCH_LIMIT_PLUS; Pro is not either", async () => {
   // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
   // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so
   // the old Plus cap no longer returns 409.

@@ -76,7 +76,7 @@ export function PremiumPlanTable(p: PremiumPlanTableProps) {
 
       <section aria-labelledby="premium-compare" className="mx-auto mt-10 max-w-3xl">
         <h2 id="premium-compare" className="mb-3 text-center font-display text-xl font-extrabold text-white sm:text-2xl">
-          Free vs Premium
+          Free vs Pro
         </h2>
         <PremiumTicks showPlus={false} prices={{ plus: "", premium: `${p.annualLive ? perMonth : monthly}/mo` }} selected="premium" only={p.tickRows} />
         <details className="mt-2">

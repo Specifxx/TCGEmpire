@@ -339,7 +339,7 @@ test("Cheapest on eBay (in Deal Finder since 2026-09-30): free, measured, disclo
   assert.doesNotMatch(block, /usePremium|useMe|premium|ADSENSE_REVIEW_MODE|>\s*Ad\s*</);
   // No savings total, no badge, no path to the locked tool, no gold.
   assert.doesNotMatch(block, /PctBadge|Save |total|LockedTeaser|PremiumButton/);
-  assert.doesNotMatch(block, /gold/, "gold is reserved for Premium");
+  assert.doesNotMatch(block, /gold/, "gold is reserved for Pro");
   assert.match(block, /border-\[#0064d2\]/, "eBay blue");
   assert.match(block, /grid grid-cols-1 /, "a base column template (tests/grid-base-columns.test.ts)");
 

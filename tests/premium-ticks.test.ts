@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
 import { TICK_ROWS, cellValue, type TickTier } from "../src/components/PremiumTicks";
-import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../src/lib/free-limits";
 import { FREE_SEALED_WATCH_LIMIT, FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../src/lib/alert-limits";
 import { FREE_HISTORY_DAYS } from "../src/lib/history-access";
 import { FREE_PLANS_PER_MONTH } from "../src/lib/basket-meter";
@@ -50,8 +49,8 @@ test("the cells the owner sees", () => {
     "Best Basket & Buy this list plans": `${plans}/${plans}/Unlimited`,
     "Bulk price a list": `${FREE_BULK_LINES} lines/${FREE_BULK_LINES} lines/${DECK_LINE_CAP} lines`,
     "No ads": "—/✓/✓",
-    Watchlist: `${FREE_WATCHLIST_LIMIT} cards/Unlimited/Unlimited`,
-    Portfolio: `${FREE_PORTFOLIO_LIMIT} cards/Unlimited/Unlimited`,
+    Watchlist: "Unlimited/Unlimited/Unlimited",
+    Portfolio: "Unlimited/Unlimited/Unlimited",
     "Deal Finder & Rising Cards": "Top 3/Full/Full",
     "Price history": `${FREE_HISTORY_DAYS} days/Full + CSV/Full + CSV`,
     "Target-price alerts": `${FREE_TARGET_ALERT_LIMIT} card, daily/${PLUS_TARGET_ALERT_LIMIT} cards/Unlimited`,

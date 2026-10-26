@@ -46,7 +46,7 @@ export function MoversToolsCta() {
         {/* Not mid-trial: the upgrade route handles paid subscriptions only. */}
         {isPlus && !trialing && (
           <p className="mt-2 text-xs text-slate-500">
-            Buying a whole deck? Plus gets {FREE_PLANS_PER_MONTH} store-by-store plans a month; Premium plans without a limit —{" "}
+            Buying a whole deck? Plus gets {FREE_PLANS_PER_MONTH} store-by-store plans a month; Pro plans without a limit —{" "}
             <Link href="/premium#top-pricing" className="font-semibold text-gold hover:underline">
               upgrade for {planSwitchPriceLabel("premium", interval, premiumAnnual)}
             </Link>

@@ -89,7 +89,7 @@
 // must stay strings rather than being rounded to a tick.
 
 import { DECK_WATCH_LIMIT, FREE_SEALED_WATCH_LIMIT, FREE_TARGET_ALERT_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_MARKETS, SEALED_WATCH_LIMIT_PLUS } from "../lib/alert-limits";
-import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "../lib/free-limits";
+
 import { SET_GAP_CHUNK } from "../lib/set-gap";
 import { FREE_HISTORY_DAYS } from "../lib/history-access";
 import { FREE_PLANS_PER_MONTH } from "../lib/basket-meter";
@@ -124,16 +124,16 @@ export const TIER_COMPARISON: TierRow[] = [
   // every week"). The numbers are the enforced ones (lib/free-limits.ts, read
   // by the create routes), never typed here. Cards already tracked are kept
   // past the limit; only a NEW card needs a paid tier.
-  { feature: "Watchlist & new-low alerts", account: `${FREE_WATCHLIST_LIMIT} cards`, plus: "Unlimited", premium: "Unlimited" },
+  { feature: "Watchlist & new-low alerts", account: "Unlimited", plus: "Unlimited", premium: "Unlimited" },
   // The delivered replacement-cost TOTAL is free; the store-by-store plan
   // behind it is Premium's (the Best Basket row).
-  { feature: "Portfolio — value, P&L, CSV & replacement cost", account: `${FREE_PORTFOLIO_LIMIT} cards`, plus: "Unlimited", premium: "Unlimited" },
+  { feature: "Portfolio — value, P&L, CSV & replacement cost", account: "Unlimited", plus: "Unlimited", premium: "Unlimited" },
   // THE SET TRACKER (2026-09-29, lib/set-scope.ts, /portfolio/sets): what a
   // binder is missing from a set, and the cheapest listing for each missing card.
   // The tick, the missing list and the cost to finish are free; the only meter is
   // the portfolio's card count (FREE_PORTFOLIO_LIMIT), so it is Plus's "no limit"
   // that lets a whole set fit. The number is the enforced one, never typed here.
-  { feature: "Set tracker — what your binder is missing and the cheapest listing to finish", account: `Up to ${FREE_PORTFOLIO_LIMIT} cards`, plus: "Whole sets, no limit", premium: "Whole sets, no limit" },
+  { feature: "Set tracker — what your binder is missing and the cheapest listing to finish", account: "Whole sets, no limit", plus: "Whole sets, no limit", premium: "Whole sets, no limit" },
   // "Top 3" since 2026-09-23: a signed-in free account sees the top three rows
   // of each (queried at that size — see FREE_PREVIEW_ROWS in both pages). They
   // were a flat "no" from 2026-09-22, and "Top pick" before that.
@@ -312,7 +312,7 @@ export function TierComparisonTable({
               </th>
             )}
             <th scope="col" className={`${tierHead} ${premiumWash} text-center font-bold text-gold`}>
-              Premium
+              Pro
             </th>
           </tr>
         </thead>

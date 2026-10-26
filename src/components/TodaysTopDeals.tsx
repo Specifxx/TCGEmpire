@@ -397,7 +397,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
                 {shown.map((deal, i) => (
                   <DealRow key={i} deal={deal} currency={currency} country={country} />
                 ))}
-                {locked > 0 && <LockedTeaser count={locked} surface={def.surface ?? "gate:home"} tierName={premiumPlus ? "Plus" : "Premium"} />}
+                {locked > 0 && <LockedTeaser count={locked} surface={def.surface ?? "gate:home"} tierName={premiumPlus ? "Plus" : "Pro"} />}
               </ul>
 
               <Link

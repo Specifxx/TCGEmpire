@@ -12,7 +12,7 @@ import { SITE_NAME } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Claim your free Premium days",
+  title: "Claim your free Pro days",
   robots: { index: false, follow: false },
 };
 
@@ -33,7 +33,7 @@ export default async function PremiumWinbackClaimPage({
           <>
             <h1 className="text-xl font-extrabold text-white">Link not recognised</h1>
             <p className="mt-2 text-sm text-slate-400">
-              This claim link is invalid. If you have an email from us about free Premium days, use the link in that
+              This claim link is invalid. If you have an email from us about free Pro days, use the link in that
               email directly rather than a copy of it.
             </p>
           </>
@@ -43,7 +43,7 @@ export default async function PremiumWinbackClaimPage({
             <h1 className="text-xl font-extrabold text-white">This link has already been used</h1>
             <p className="mt-2 text-sm text-slate-400">
               Each claim link works once. If that wasn&apos;t you, or your free days already ended, see{" "}
-              <Link href="/premium" className="text-brand-400 hover:underline">Premium plans</Link>.
+              <Link href="/premium" className="text-brand-400 hover:underline">Pro plans</Link>.
             </p>
           </>
         )}
@@ -51,14 +51,14 @@ export default async function PremiumWinbackClaimPage({
           <>
             <h1 className="text-xl font-extrabold text-white">This link has expired</h1>
             <p className="mt-2 text-sm text-slate-400">
-              This offer link is no longer active. You can still see everything Premium unlocks on the{" "}
-              <Link href="/premium" className="text-brand-400 hover:underline">Premium page</Link>.
+              This offer link is no longer active. You can still see everything Pro unlocks on the{" "}
+              <Link href="/premium" className="text-brand-400 hover:underline">Pro page</Link>.
             </p>
           </>
         )}
         {status === "valid" && (
           <>
-            <h1 className="text-xl font-extrabold text-white">{days} days of {SITE_NAME} Premium, free</h1>
+            <h1 className="text-xl font-extrabold text-white">{days} days of {SITE_NAME} Pro, free</h1>
             <p className="mt-2 text-sm text-slate-400">
               No card required, and there&apos;s nothing to cancel — it just switches on for {days} days and then
               ends on its own. This link works once.

@@ -97,7 +97,7 @@ export function PremiumTicks({
   const cols: { key: TickTier; name: string; price: string }[] = [
     { key: "free", name: "Free", price: "No card" },
     ...(showPlus ? [{ key: "plus" as const, name: "Plus", price: prices.plus }] : []),
-    { key: "premium", name: "Premium", price: prices.premium },
+    { key: "premium", name: "Pro", price: prices.premium },
   ];
   const lit = (k: TickTier) =>
     k === selected ? (k === "premium" ? "bg-gold/[0.09]" : "bg-brand-500/[0.07]") : "";

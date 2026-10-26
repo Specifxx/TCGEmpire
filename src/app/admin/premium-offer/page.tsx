@@ -59,7 +59,7 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
       <h1 className="text-2xl font-bold text-white">Trial promo email: subscribe now, {trialDaysPhrase(PREMIUM_TRIAL_DAYS)} free</h1>
       <p className="mt-1 max-w-3xl text-sm text-slate-400">
         One email to every account that could still start a trial. Subject:{" "}
-        <em>&ldquo;{premiumOfferSubject()}&rdquo;</em>. It offers {PLUS_ON_SALE ? "Premium and Plus" : "Premium (Plus is off sale)"} free for{" "}
+        <em>&ldquo;{premiumOfferSubject()}&rdquo;</em>. It offers {PLUS_ON_SALE ? "Pro and Plus" : "Pro (Plus is off sale)"} free for{" "}
         {trialDaysPhrase(PREMIUM_TRIAL_DAYS)}, then {PREMIUM_PRICE_AMOUNT}/month{PLUS_ON_SALE ? ` or ${PLUS_PRICE_AMOUNT}/month` : ""} (yearly
         button too), says a card is required and that we email before the trial ends. Every button opens checkout for
         that exact plan. Never emailed, whatever is ticked: paying accounts, anyone who already had a trial or has paid

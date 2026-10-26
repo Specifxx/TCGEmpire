@@ -88,7 +88,7 @@ test("a use handed back (nothing planned) is available again", async () => {
   assert.equal((await freePlansState(s, "u1", OCT)).used, 0, "never below zero");
 });
 
-test("who is metered: Premium unlimited, free and Plus metered, signed out none", () => {
+test("who is metered: Pro unlimited, free and Plus metered, signed out none", () => {
   assert.equal(planAccess(true, "premium"), "unlimited");
   assert.equal(planAccess(true, "plus"), "metered");
   assert.equal(planAccess(true, null), "metered");
@@ -125,7 +125,7 @@ test("the database store takes a use with a conditional increment, never a read-
   assert.deepEqual(update.data, { count: { increment: 1 } });
 });
 
-test("the route meters reveals server-side, below Premium only", () => {
+test("the route meters reveals server-side, below Pro only", () => {
   const route = readFileSync(new URL("../src/app/api/basket/route.ts", import.meta.url), "utf8");
   // Premium is never metered: the reveal branch is for !full only.
   assert.match(route, /const reveal = !full && request\.reveal;/);

@@ -22,7 +22,7 @@ process.env.STRIPE_PREMIUM_LEGACY_PRICE_IDS = "price_premium_old_month,price_pre
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
-test("old and new Plus prices both resolve to Plus; old and new Premium prices to Premium", async () => {
+test("old and new Plus prices both resolve to Plus; old and new Pro prices to Pro", async () => {
   const m = await import("../src/lib/premium");
   assert.equal(m.tierFromPriceId("price_plus_new_month"), "plus");
   assert.equal(m.tierFromPriceId("price_plus_new_year"), "plus");
@@ -75,7 +75,7 @@ test("the admin metrics count subscribers still on a retired price", async () =>
   assert.equal(m.legacyPriceActive, 2);
 });
 
-test("the tier-writing audit refuses to write tiers when it can't tell Plus from Premium", () => {
+test("the tier-writing audit refuses to write tiers when it can't tell Plus from Pro", () => {
   const audit = read("scripts/audit-premium-vs-stripe.ts");
   assert.match(audit, /if \(liveTier !== storedTier && plusPriceIdsConfigured\(\)\) \{/);
   // And the maintenance steps that resolve tiers are handed the price ids.

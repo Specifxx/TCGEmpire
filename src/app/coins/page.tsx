@@ -14,7 +14,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "RiftCompare Coins: Collect All Twelve Champions",
   description:
-    "Premium members earn free pulls by checking in, building a watchlist, sharing prices and inviting friends, then collect twelve champion coins.",
+    "Pro members earn free pulls by checking in, building a watchlist, sharing prices and inviting friends, then collect twelve champion coins.",
   alternates: pageAlternates("/coins"),
   // A member's own page. Not disallowed in robots.txt, so the noindex is read.
   robots: { index: false, follow: true },
@@ -36,7 +36,7 @@ export default function CoinsPage() {
         <div aria-hidden="true" className="sp-aurora pointer-events-none absolute -inset-1/4 bg-[radial-gradient(circle_at_30%_30%,rgba(255,204,77,0.22),transparent_45%),radial-gradient(circle_at_75%_60%,rgba(200,107,255,0.2),transparent_45%)]" />
         <div aria-hidden="true" className="sp-stars pointer-events-none absolute inset-0 opacity-70" />
         <div className="relative">
-          <p className="text-[11px] font-black uppercase tracking-[0.35em] text-[#ffcc4d]">A Premium collection</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.35em] text-[#ffcc4d]">A Pro collection</p>
           <h1 className="sp-shine mt-2 font-display text-4xl font-black leading-tight sm:text-6xl">RiftCompare Coins</h1>
           <p className="mx-auto mt-3 max-w-xl text-sm text-slate-300 sm:text-base">
             Twelve champions, four rarities. Earn pulls by using the site, pull a coin, and see who answers. Collect the set.

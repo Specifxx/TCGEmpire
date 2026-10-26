@@ -414,7 +414,7 @@ export function CinematicNavMenu() {
             {/* The gold Premium spotlight that sat here (2026-09-10 → 09-28) is
                 gone: the owner moved every upgrade prompt to where a free
                 account hits a limit, "not in popups and headers". /premium
-                stays in this menu as the Premium entry of NAV_GROUPS. */}
+                stays in this menu as the Pro entry of NAV_GROUPS. */}
 
             {/* Every category, always — no curated "Popular" subset and no
                 "Show all features" gate in front of it any more (2026-09-16).

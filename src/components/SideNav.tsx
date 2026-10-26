@@ -240,10 +240,10 @@ export function SideNav() {
           dropdown over the top of it. */}
       {/* TOUCH TARGETS (2026-09-23). Measured on a 1024x768 touch tablet, 28 of
           the rail's 29 targets were under 44px (links 32, group toggles 29,
-          this input 38, Get Premium 38): globals.css's coarse 48px floor does
+          this input 38, Get Pro 38): globals.css's coarse 48px floor does
           not reach these classes. Every `[@media(pointer:coarse)]:py-*` below
           is touch-only, so the desktop density is unchanged. py-3.5, not py-3,
-          on the input and Get Premium: py-3 measures only 46 there (20 line +
+          on the input and Get Pro: py-3 measures only 46 there (20 line +
           24 padding + 2 border).
           `[&::-webkit-search-cancel-button]:appearance-none` on THIS input
           only: it is type="search", so WebKit and Chromium drew their native ×
@@ -397,7 +397,7 @@ export function SideNav() {
 
       {/* ── Pinned Premium ───────────────────────────────────────────────
           Outside the scroller, so it stays reachable without scrolling past
-          the ~60-link index above it. Gold is this site's Premium identity
+          the ~60-link index above it. Gold is this site's Pro identity
           colour and is used for nothing else in the rail.
           
           PREMIUM ONLY — no session row. An earlier revision had "Sign in"
@@ -408,7 +408,7 @@ export function SideNav() {
           asked to remove elsewhere in the rail.
 
           The WHOLE block is conditional, not just the link (2026-09-23): the
-          bordered, padded wrapper used to render unconditionally, so Premium
+          bordered, padded wrapper used to render unconditionally, so Pro
           members got an empty 21px strip at the rail's foot. */}
       {!premium && (
         <div className="shrink-0 border-t border-ink-800 px-3 py-2.5">

@@ -55,7 +55,7 @@ test("teaser takes only real below-market deals, three at most", () => {
   assert.deepEqual(teaserDeals(null), []);
 });
 
-test("pays-for-itself shows only when the average gap beats a month of Premium", () => {
+test("pays-for-itself shows only when the average gap beats a month of Pro", () => {
   // US: average of 1500 and 500 = 1000 > 999.
   const yes = paysForItself([deal({ deltaCents: 1500 }), deal({ deltaCents: 500 })], "USD", 999);
   assert.deepEqual(yes, { avgSavingCents: 1000, monthlyInMarketCents: 999, dealCount: 2 });
@@ -152,14 +152,14 @@ test("one plan table at the top, nothing said twice: no proof strip, teaser, dem
   const t = readFileSync(new URL("../src/components/premium/PremiumPlanTable.tsx", import.meta.url), "utf8");
   assert.match(t, /name="Annual"[\s\S]*?plan="annual"[\s\S]*?name="Monthly"[\s\S]*?plan="monthly"/);
   assert.equal((t.match(/<PremiumCta\b/g) ?? []).length, 2, "one button per plan");
-  assert.match(t, /Free vs Premium/);
+  assert.match(t, /Free vs Pro/);
   assert.match(t, /plan-glow/, "the annual card's animated border");
   assert.doesNotMatch(t, /\$\d/, "no price typed in: every number from lib/site.ts");
 });
 
-test("the header's link reads Pricing (2026-10-24); the homepage hero keeps Get Premium", () => {
+test("the header's link reads Pricing (2026-10-24); the homepage hero keeps Get Pro", () => {
   const link = readFileSync(new URL("../src/components/GetPremiumLink.tsx", import.meta.url), "utf8");
-  assert.match(link, /\{full \? <span>Get Premium<\/span> : <span>Pricing<\/span>\}/);
-  assert.match(link, /\{full \? "Premium" : "Pricing"\}/);
-  assert.doesNotMatch(link, /<span className="hidden xl:inline">Get Premium<\/span>/);
+  assert.match(link, /\{full \? <span>Get Pro<\/span> : <span>Pricing<\/span>\}/);
+  assert.match(link, /\{full \? "Pro" : "Pricing"\}/);
+  assert.doesNotMatch(link, /<span className="hidden xl:inline">Get Pro<\/span>/);
 });

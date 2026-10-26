@@ -98,10 +98,10 @@ test("the browser can only claim the tasks it alone can see; watching and referr
   assert.match(read("src/lib/referral.ts"), /await rewardReferral\(referrer\.id, newUserId\);/);
   assert.match(read("src/components/ShareButton.tsx"), /earnCoin\("share"\)/);
   assert.match(read("src/components/OutboundLink.tsx"), /earnCoin\("visit"\)/);
-  assert.match(read("src/lib/coins-client.ts"), /if \(me\.tier !== "premium"\) return;/, "nobody but a Premium member sends a claim");
+  assert.match(read("src/lib/coins-client.ts"), /if \(me\.tier !== "premium"\) return;/, "nobody but a Pro member sends a claim");
 });
 
-test("every reward is idempotent and every write is gated on Premium", () => {
+test("every reward is idempotent and every write is gated on Pro", () => {
   const schema = read("prisma/schema.prisma");
   assert.match(schema, /model CoinTask \{[\s\S]*?@@unique\(\[userId, task, key\]\)/);
   const server = read("src/lib/coins-server.ts");
@@ -111,7 +111,7 @@ test("every reward is idempotent and every write is gated on Premium", () => {
   assert.match(server, /randomInt\(/, "the roll uses crypto randomness, on the server");
   for (const f of ["src/app/api/coins/claim/route.ts", "src/app/api/coins/pull/route.ts"]) {
     const src = read(f);
-    assert.match(src, /if \(!coinsEnabledFor\(user\)\) return NextResponse\.json\(\{ error: "Coins are a Premium perk" \}, \{ status: 403 \}\);/, f);
+    assert.match(src, /if \(!coinsEnabledFor\(user\)\) return NextResponse\.json\(\{ error: "Coins are a Pro perk" \}, \{ status: 403 \}\);/, f);
     assert.match(src, /rateLimit\(`coins:/, f);
   }
 });
@@ -125,7 +125,7 @@ test("coins are private and never for sale", () => {
   assert.match(read("src/components/coins/CoinCollection.tsx"), /can&apos;t be bought or sold and have no cash value/);
 });
 
-test("/coins is a static shell cached a day, kept out of the index, in the nav and the Premium table", () => {
+test("/coins is a static shell cached a day, kept out of the index, in the nav and the Pro table", () => {
   const page = read("src/app/coins/page.tsx");
   assert.match(page, /export const revalidate = 86400;/);
   assert.match(page, /robots: \{ index: false, follow: true \}/);

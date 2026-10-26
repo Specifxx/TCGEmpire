@@ -555,7 +555,7 @@ export function BestBasket({
         </div>
 
         {/* Minimum condition (Premium, 2026-09-29): the cheapest copy in the
-            condition you'll play. Below Premium it is one plain line, no
+            condition you'll play. Below Pro it is one plain line, no
             button: the total says how many played copies it includes. */}
         {full ? (
           <div className="mt-4 rounded-lg border border-ink-800 p-2.5" data-min-condition>
@@ -590,7 +590,7 @@ export function BestBasket({
           </div>
         ) : (
           <p className="mt-4 text-[11px] leading-snug text-slate-500" data-min-condition-free>
-            Your total counts each store&apos;s cheapest copy in any condition, and says how many played copies that includes. Premium can
+            Your total counts each store&apos;s cheapest copy in any condition, and says how many played copies that includes. Pro can
             limit it to NM only or LP or better.
           </p>
         )}
@@ -601,8 +601,8 @@ export function BestBasket({
           </button>
           {!full && (
             <span className="text-xs text-slate-500">
-              Without Premium: your delivered total 5 times a day, and {FREE_PLANS_PER_MONTH} store-by-store plans a month
-              {freePlans ? ` (${Math.max(0, freePlans.limit - freePlans.used)} left this month)` : ""}. Premium is unlimited.
+              Without Pro: your delivered total 5 times a day, and {FREE_PLANS_PER_MONTH} store-by-store plans a month
+              {freePlans ? ` (${Math.max(0, freePlans.limit - freePlans.used)} left this month)` : ""}. Pro is unlimited.
             </span>
           )}
         </div>
@@ -627,8 +627,8 @@ export function BestBasket({
         />
       )}
       {result && !isFull(result) && tab === "deck" && (
-        <DiscoveryTip id="basket-watch" surface="tip:basket" tier="premium" cta="See Premium">
-          Premium can watch this deck&apos;s price for you: it re-prices the list after every price update and emails you when the
+        <DiscoveryTip id="basket-watch" surface="tip:basket" tier="premium" cta="See Pro">
+          Pro can watch this deck&apos;s price for you: it re-prices the list after every price update and emails you when the
           delivered total reaches your price.
         </DiscoveryTip>
       )}
@@ -636,7 +636,7 @@ export function BestBasket({
       {result && isFull(result) && !full && freePlans && (
         <p data-free-plan-used className="rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2 text-xs text-slate-300">
           Free plan {Math.min(freePlans.used, freePlans.limit)} of {freePlans.limit} this month · resets {resetLabel(new Date(freePlans.resetsAt))} (UTC).
-          Premium plans without a limit.
+          Pro plans without a limit.
         </p>
       )}
       {result && isFull(result) && (
@@ -847,7 +847,7 @@ function SetGapNotes({
       {gap.notStockedCount > 0 && (
         <p className="mt-1.5 text-xs text-slate-400" data-set-not-stocked>
           {gap.notStockedCount} {plural(gap.notStockedCount, "card isn't", "cards aren't")} stocked at a tracked store in {place}, so{" "}
-          {plural(gap.notStockedCount, "it isn't", "they aren't")} in the total.{full ? "" : " Premium lists them."}
+          {plural(gap.notStockedCount, "it isn't", "they aren't")} in the total.{full ? "" : " Pro lists them."}
         </p>
       )}
     </div>
@@ -996,11 +996,11 @@ function PreviewCard({
           <>Your list: {fmt(r.totalCents)} delivered from {stores}.</>
         ) : r.savedCents > 0 ? (
           <>
-            Your list: {fmt(r.totalCents)} delivered from {stores}. Premium shows which store to buy each card from.
+            Your list: {fmt(r.totalCents)} delivered from {stores}. Pro shows which store to buy each card from.
           </>
         ) : r.naiveTotalCents < r.totalCents ? (
           <>
-            Your list: {fmt(r.totalCents)} delivered from {stores}. <RiskyNaive naiveCents={r.naiveTotalCents} fmt={fmt} /> Premium
+            Your list: {fmt(r.totalCents)} delivered from {stores}. <RiskyNaive naiveCents={r.naiveTotalCents} fmt={fmt} /> Pro
             shows which store to buy each card from.
           </>
         ) : (
@@ -1021,7 +1021,7 @@ function PreviewCard({
           upgrade prompt beside it. */}
       {r.playedCopies > 0 && (
         <p data-played-copies className="mt-0.5 text-xs text-amber-300/80">
-          {playedCopiesNote(r.playedCopies)}. Premium can leave them out and price only NM or LP copies.
+          {playedCopiesNote(r.playedCopies)}. Pro can leave them out and price only NM or LP copies.
         </p>
       )}
       <Coverage r={r} />
@@ -1043,7 +1043,7 @@ function PreviewCard({
         <div className="mt-4 rounded-lg border border-gold/30 bg-gold/[0.06] p-3" data-free-plan-spent>
           <p className="text-sm text-slate-200">
             You&apos;ve used {Math.min(freePlans.used, freePlans.limit)} of {freePlans.limit} free store-by-store plans this month. They reset on{" "}
-            {resetLabel(new Date(freePlans.resetsAt))} (UTC). Premium plans as many lists as you like.
+            {resetLabel(new Date(freePlans.resetsAt))} (UTC). Pro plans as many lists as you like.
           </p>
           <div className="mt-2">
             <PremiumButton surface="limit:basket" />

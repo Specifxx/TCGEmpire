@@ -71,7 +71,7 @@ test("every PremiumButton and PremiumNavLink in the app names its surface", () =
       if (!/\bsurface=/.test(m[2])) unnamed.push(`${f.replace(process.cwd() + "/", "")}: <${m[1]}${m[2].slice(0, 40)}…>`);
     }
   }
-  assert.deepEqual(unnamed, [], "a Premium CTA without a surface records the catch-all and cannot be measured");
+  assert.deepEqual(unnamed, [], "a Pro CTA without a surface records the catch-all and cannot be measured");
 });
 
 test("the dialog and the landing beacon record their own sources", () => {

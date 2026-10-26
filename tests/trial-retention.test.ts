@@ -99,17 +99,17 @@ test("checkout and welcome: the trial stated as dated terms, not an undated 'can
 
 test("the trialist welcome email: the terms, the reminder, the manage link — never the free pitch", () => {
   const endsAt = new Date("2026-09-28T12:00:00Z");
-  const e = buildTrialWelcomeEmail({ displayName: "Sam Lee", planName: "Premium", endsAt, chargeLine: "US$4.99/mo (half price), then US$9.99/mo", cancelling: false });
+  const e = buildTrialWelcomeEmail({ displayName: "Sam Lee", planName: "Pro", endsAt, chargeLine: "US$4.99/mo (half price), then US$9.99/mo", cancelling: false });
   assert.match(e.html, /September 28, 2026/);
   assert.match(e.html, /US\$4\.99\/mo \(half price\), then US\$9\.99\/mo unless you cancel/);
   assert.match(e.html, /a day or two before/);
   assert.match(e.html, /\/premium\?utm_source=email/);
-  assert.doesNotMatch(e.html, /See Premium|three biggest deals/);
+  assert.doesNotMatch(e.html, /See Pro|three biggest deals/);
   const c = buildTrialWelcomeEmail({ displayName: "Sam", planName: "Plus", endsAt, chargeLine: "US$2.49/mo", cancelling: true });
   assert.match(c.html, /nothing more will be charged/);
   assert.doesNotMatch(c.html, /free trial/i);
   assert.doesNotMatch(c.html, /unless you cancel/);
-  assert.doesNotMatch(c.html, /best-basket/, "Best Basket is Premium-only");
+  assert.doesNotMatch(c.html, /best-basket/, "Best Basket is Pro-only");
   assert.match(code("src/lib/welcome-email.ts"), /const trial = u\.trialStartedAt \? await liveTrial\(u\.stripeCustomerId\) : null;/);
 });
 

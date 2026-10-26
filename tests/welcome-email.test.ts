@@ -10,16 +10,16 @@ import { buildWelcomeEmail } from "../src/lib/email";
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ");
 
-test("the email leads with the free account, then states Premium's trial the standard way", () => {
+test("the email leads with the free account, then states Pro's trial the standard way", () => {
   // A genuinely free trial (fee 0, PREMIUM_TRIAL_FEE_CENTS=0): the original wording.
   const e = buildWelcomeEmail({ displayName: "Sam Lee", trialDays: 14, fromLine: "$9.99/month", trialFeeCents: 0 });
   const t = text(e.html);
   assert.match(t, /Hi Sam,/, "first name only");
   const order = ["Watch a card", "See today's top 3 deals", "Track your collection", "Want every deal"].map((s) => t.indexOf(s));
   assert.ok(order.every((i) => i > 0), "all four blocks present");
-  assert.deepEqual([...order].sort((a, b) => a - b), order, "the free account comes first; Premium is the last block, not the headline");
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "the free account comes first; Pro is the last block, not the headline");
   assert.match(t, /Try it free for 14 days — \$0 today, then \$9\.99\/month\./);
-  assert.match(e.html, /\/premium\?src=welcome"/, "the Premium link is attributed (PremiumRecoveryBeacon → welcome-email)");
+  assert.match(e.html, /\/premium\?src=welcome"/, "the Pro link is attributed (PremiumRecoveryBeacon → welcome-email)");
   assert.match(t, /We won't send it again\./, "the footer states it is one-time");
 });
 
@@ -34,7 +34,7 @@ test("no trial is promised to an account that cannot have one", () => {
   const e = buildWelcomeEmail({ displayName: "Sam", trialDays: 0, fromLine: "$9.99/month", trialFeeCents: 100 });
   const t = text(e.html);
   assert.doesNotMatch(t, /free for|\$0 today/);
-  assert.match(t, /Premium is \$9\.99\/month\./);
+  assert.match(t, /Pro is \$9\.99\/month\./);
 });
 
 test("the display name cannot inject markup", () => {

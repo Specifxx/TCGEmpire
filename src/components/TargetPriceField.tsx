@@ -195,7 +195,7 @@ export function TargetPriceField({
             All {finiteLimit} target prices are in use — clear one, or{" "}
             <span onClickCapture={onUpgradeClick}>
               <PremiumButton surface="gate:target-limit" className="font-semibold text-gold underline-offset-2 hover:underline">
-                go unlimited with Premium
+                go unlimited with Pro
               </PremiumButton>
             </span>
             .

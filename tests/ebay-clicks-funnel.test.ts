@@ -394,7 +394,7 @@ test("gallery eBay row: one search per card, Riftbound in each query, disclosure
 
 // ── 7–8. Shop strip, sealed ─────────────────────────────────────────────────
 
-test("the article shop strip's eBay chip is eBay blue — gold is Premium's", () => {
+test("the article shop strip's eBay chip is eBay blue — gold is Pro's", () => {
   const src = code("src/components/ArticleShopStrip.tsx");
   assert.doesNotMatch(src, /gold/);
   assert.match(src, /chip bg-\[#0064d2\]\/20 [^"]*text-sky-300">eBay</);

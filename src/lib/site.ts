@@ -45,13 +45,19 @@ export const SITE_URL = "https://riftcompare.com";
 // NEW Prices are STRIPE_PREMIUM_PRICE_ID / _ANNUAL_PRICE_ID; subscribers on the
 // $4.99/$39.99 Prices stay on them (Stripe never re-prices a subscription by
 // itself) and are listed in STRIPE_PREMIUM_LEGACY_PRICE_IDS.
-export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$9.99";
+// $6.99 a month or $47.88 a year ($3.99/mo) from 2026-10-26, and the plan is
+// called Pro (owner: "$6.99 a month … if you go yearly plan, then it's around
+// $3.99 a month"). Collectr PRO is $7.99 a month or $59.99 a year ($4.99/mo).
+// $47.88 is exactly 12 × $3.99, so "$3.99/mo billed yearly" is literally true.
+// DECISIONS.md, "Pro: Collectr's model, $6.99 or $3.99/mo yearly". Current
+// subscribers keep what they pay (none pays more than $6.99 a month).
+export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$6.99";
 export const PREMIUM_PRICE_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_PRICE_PERIOD || "month";
 export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || `${PREMIUM_PRICE_AMOUNT}/mo`;
 
 // Annual plan (display only; the actual charge comes from the Stripe annual price,
 // enabled via STRIPE_PREMIUM_ANNUAL_PRICE_ID — see lib/premium.ts).
-export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$79.99";
+export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$47.88";
 export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERIOD || "year";
 
 // ── Plus: the second, cheaper paid tier (2026-09-11) ────────────────────────
@@ -78,7 +84,7 @@ export const PLUS_ON_SALE = false;
 // Plus is on sale, "Premium" (which includes all of it) while it is not. For
 // upsell copy only — a sentence addressed to a CURRENT Plus member still says
 // "Plus".
-export const ENTRY_TIER_NAME: "Plus" | "Premium" = PLUS_ON_SALE ? "Plus" : "Premium";
+export const ENTRY_TIER_NAME: "Plus" | "Pro" = PLUS_ON_SALE ? "Plus" : "Pro";
 export const PLUS_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PLUS_PRICE_AMOUNT || "$2.99";
 export const PLUS_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PLUS_ANNUAL_AMOUNT || "$23.99";
 
@@ -92,7 +98,7 @@ export const PLUS_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PLUS_ANNUAL_AMOUNT || 
 // price banner says instead.
 
 export type PremiumTierKey = "plus" | "premium";
-export const TIER_NAMES: Record<PremiumTierKey, string> = { plus: "Plus", premium: "Premium" };
+export const TIER_NAMES: Record<PremiumTierKey, string> = { plus: "Plus", premium: "Pro" };
 
 function monthlyAmountFor(tier: PremiumTierKey): string {
   return tier === "plus" ? PLUS_PRICE_AMOUNT : PREMIUM_PRICE_AMOUNT;
@@ -325,14 +331,14 @@ export function premiumPriceIncreaseAnnounced(): boolean {
 // invented future figure (tests/premium-price-increase.test.ts).
 export function premiumLockInLine(): string {
   return premiumPriceIncreaseAnnounced()
-    ? `We're raising Premium's price soon, to ${PREMIUM_NEXT_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}. Subscribe now and keep ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} for as long as you stay subscribed — no action needed when the price changes.`
+    ? `We're raising Pro's price soon, to ${PREMIUM_NEXT_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}. Subscribe now and keep ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} for as long as you stay subscribed — no action needed when the price changes.`
     : `No contract: cancel anytime from your account page, in a couple of clicks.`;
 }
 
 export function premiumLockInHeadline(): string {
   return premiumPriceIncreaseAnnounced()
     ? `Price increasing soon — lock in ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} now`
-    : `Premium is ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
+    : `Pro is ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
 }
 
 // The compact tail for a small inline caption ("$4.99/month · …"), used by the
@@ -437,4 +443,4 @@ export function premiumLockInTail(): string {
 // "one-plan-2026-10-23": Premium only at $9.99/$79.99, 30-day free trial, Plus off sale
 // "rebrand-2026-10-23": "Never overpay for Riftbound again", live proof, outcome cards, one free alert
 // "one-table-2026-10-25": /premium is one plan table (Monthly, Annual) and the Free vs Premium comparison
-export const PREMIUM_COPY_VERSION = "one-table-2026-10-25";
+export const PREMIUM_COPY_VERSION = "pro-2026-10-26";

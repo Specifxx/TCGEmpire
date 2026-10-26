@@ -31,7 +31,7 @@ export function SearchLimitPanel({ tier, next, compact = false }: { tier: Search
           </PremiumButton>
         ) : (
           <PremiumButton tier="premium" surface="limit:search" className="btn-primary min-h-11 px-4">
-            Get Premium
+            Get Pro
           </PremiumButton>
         )}
       </div>

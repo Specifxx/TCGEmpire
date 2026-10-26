@@ -372,7 +372,7 @@ test("ownership comes from the tracker's reader, not loadOwnedQty's 400-row read
 
 // ── The answer, by tier ──────────────────────────────────────────────────────
 
-test("a non-Premium answer carries counts only: no store name, line, url or card name", () => {
+test("a non-Pro answer carries counts only: no store name, line, url or card name", () => {
   const cards = [priced(100, { name: "Jinx, Loose Cannon" }), ebayOnly({ name: "Vayne, Hunter" })];
   const p = planSetGap("OGN", cards, {}, { scope: "base" });
   const answer = { summary: p.summary, setName: "Origins", notStocked: p.notStocked.map((c) => ({ name: c.name, setCode: c.setCode, collectorNumber: c.collectorNumber })) };
@@ -386,7 +386,7 @@ test("a non-Premium answer carries counts only: no store name, line, url or card
   assert.doesNotMatch(json, /https?:|url|Vayne|Jinx/i, "no link and no card names");
   const full = setGapFields(true, answer) as Record<string, unknown>;
   assert.deepEqual(Object.keys(full).sort(), ["notStocked", "setGap", "setName"]);
-  assert.match(JSON.stringify(full.notStocked), /Vayne/, "Premium names the cards no store has");
+  assert.match(JSON.stringify(full.notStocked), /Vayne/, "Pro names the cards no store has");
   assert.ok(NOT_STOCKED_LIST_CAP >= 1);
 });
 
@@ -428,7 +428,7 @@ test("the stale 'no notion of missing cards' comment is gone", () => {
 
 // ── The table, the button and the copy ───────────────────────────────────────
 
-test("the tier table row: the shared monthly plans below Premium, unlimited for Premium, the 200 from the constant", () => {
+test("the tier table row: the shared monthly plans below Pro, unlimited for Pro, the 200 from the constant", () => {
   // 2026-10-22 (lib/basket-meter.ts): Finish this set shares Best Basket's
   // FREE_PLANS_PER_MONTH below Premium; the chunk moved into the feature name.
   const row = TIER_COMPARISON.find((r) => r.feature.startsWith("Finish this set"));

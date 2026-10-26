@@ -148,14 +148,14 @@ export default async function AlertActionPage({ searchParams }: { searchParams: 
         <Shell title="All your Plus targets are in use">
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
             Plus covers target prices on {PLUS_TARGET_ALERT_LIMIT} cards. Clear one on your watchlist to set this one, or move to
-            Premium for unlimited targets.
+            Pro for unlimited targets.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link href="/watching" className="btn-primary">
               My watchlist
             </Link>
             <Link href="/premium?src=alert-action" className="btn-ghost">
-              See Premium
+              See Pro
             </Link>
           </div>
         </Shell>

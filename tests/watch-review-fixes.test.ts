@@ -48,7 +48,7 @@ test("RunBudget: an address already opened costs no new slot, but is capped per 
   assert.equal(WATCH_EMAILS_PER_ADDRESS, 3);
 });
 
-test("sealed: 40 boxes restocking for ONE Premium member send WATCH_EMAILS_PER_ADDRESS emails; the rest keep their baseline and re-detect", async () => {
+test("sealed: 40 boxes restocking for ONE Pro member send WATCH_EMAILS_PER_ADDRESS emails; the rest keep their baseline and re-detect", async () => {
   const rows = Array.from({ length: 40 }, (_, i) =>
     sealedRow(`s${i}`, owner, { userId: "one", email: "one@example.com", groupKey: `K${i}`, lastPriceCents: 15000, lastInStock: false, soldOutAt: hoursAgo(30), createdAt: new Date(NOW.getTime() - 90 * 86_400_000) }),
   );
@@ -67,7 +67,7 @@ test("sealed: 40 boxes restocking for ONE Premium member send WATCH_EMAILS_PER_A
   for (const r of held) assert.equal(h.writeFor(r.id)?.soldOutAt, undefined, "the restock clock is not cleared for a held watch");
 });
 
-test("deck: ten lists for ONE Premium member all dropping send WATCH_EMAILS_PER_ADDRESS emails, the rest held", async () => {
+test("deck: ten lists for ONE Pro member all dropping send WATCH_EMAILS_PER_ADDRESS emails, the rest held", async () => {
   const rows = Array.from({ length: 10 }, (_, i) => deckRow(`d${i}`, owner, { userId: "one", user: owner, lastTotalCents: 9999999 }));
   const h = deckHarness(rows, { listings: LISTINGS });
   const s = await h.run();
@@ -162,7 +162,7 @@ test("TCGplayer's sealed row is a market-price reference: it never makes a produ
 
 // ── F5: Premium's "unlimited" has a sanity ceiling ───────────────────────────
 
-test("Premium sealed watches stop at SEALED_WATCH_HARD_CAP: create refuses, the run leaves the rest unevaluated", async () => {
+test("Pro sealed watches stop at SEALED_WATCH_HARD_CAP: create refuses, the run leaves the rest unevaluated", async () => {
   assert.equal(SEALED_WATCH_HARD_CAP, 200);
   assert.equal(sealedWatchLimit("premium"), Number.POSITIVE_INFINITY, "the marketing ladder still says unlimited");
   assert.equal(sealedWatchCeiling("premium"), SEALED_WATCH_HARD_CAP);

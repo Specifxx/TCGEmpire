@@ -175,12 +175,12 @@ export default function TermsPage() {
               were off; from 2026-09-30 the trial is back as the $1 first month
               (PREMIUM_TRIAL_DAYS 30, PREMIUM_TRIAL_FEE_CENTS 100) and the intro
               is still off (NEXT_PUBLIC_PREMIUM_INTRO_OFFER unset). */}
-          <h2 className="text-lg font-bold text-white">8. Plus and Premium subscriptions</h2>
+          <h2 className="text-lg font-bold text-white">8. Plus and Pro subscriptions</h2>
           <p>
             {SITE_NAME} offers two paid plans, {TIER_NAMES.plus} and {TIER_NAMES.premium}, each billed monthly or
             yearly on a recurring basis through our payment provider, Stripe, at the price shown before you
             confirm. The features each plan includes are listed on the{" "}
-            <Link href="/premium" className="text-brand-400 hover:underline">Premium page</Link>.
+            <Link href="/premium" className="text-brand-400 hover:underline">Pro page</Link>.
           </p>
           {/* The $1 first month (2026-09-30): a PAID trial, so this says what is
               charged today, when the plan price starts and how to stop it, and

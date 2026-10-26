@@ -164,7 +164,7 @@ test("actions: paid rows get target links, free rows the Plus link — and every
   assert.match(noTarget, /Target 10% under this price \(A\$16\.56\)/, "no target yet: 10% under the price");
   const free = dropRow(VARIANTS.drop!);
   // Plus is off sale since 2026-10-23: the free row's upsell names Premium.
-  assert.match(free, /Set a target price with Premium/);
+  assert.match(free, /Set a target price with Pro/);
   assert.doesNotMatch(free, /Set target at|Lower target|Target 10%/);
   for (const m of free.matchAll(/href="([^"]*alerts\/action\?t=[^"]*)"/g)) {
     assert.ok(m[1]!.startsWith(`${SITE_URL}/alerts/action?t=`), "actions land on the confirmation page, never act on GET");

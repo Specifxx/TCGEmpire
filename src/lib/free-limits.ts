@@ -32,6 +32,15 @@ import { ENTRY_TIER_NAME } from "./site";
 export const FREE_WATCHLIST_LIMIT = 10;
 export const FREE_PORTFOLIO_LIMIT = 50;
 
+// OFF SINCE 2026-10-26 (owner, decision card: "Full copy: Pro, $3.99, free
+// tracker"). Collectr's model: the watchlist and collection tracker are free
+// and unlimited, and the paid plan sells what sits on top of them
+// (DECISIONS.md, "Pro: Collectr's model at $3.99"). While this is false no
+// add is refused, no counter shows and no copy may quote the two numbers
+// above; the machinery stays (tests pass `on` explicitly), so turning the
+// limits back on is this one line.
+export const FREE_LIMITS_ON = false;
+
 export type FreeLimitKind = "watchlist" | "portfolio";
 
 export const FREE_LIMITS: Record<FreeLimitKind, number> = {
@@ -92,8 +101,8 @@ export function parseFreeLimit(body: unknown): FreeLimitBody | null {
  * limit shows the panel at once instead of flipping a heart and rolling it
  * back. The server re-checks; this only saves the round trip.
  */
-export function wouldHitFreeLimit(kind: FreeLimitKind, opts: { paid: boolean; held: ReadonlySet<string>; cardId: string }): boolean {
-  if (opts.paid) return false;
+export function wouldHitFreeLimit(kind: FreeLimitKind, opts: { paid: boolean; held: ReadonlySet<string>; cardId: string; on?: boolean }): boolean {
+  if (opts.paid || !(opts.on ?? FREE_LIMITS_ON)) return false;
   if (opts.held.has(opts.cardId)) return false;
   return opts.held.size >= FREE_LIMITS[kind];
 }
@@ -127,8 +136,8 @@ export function canonicalWatchEmail(email: string): string {
 // 40 of 50), never before — no nagging while the limit is far away.
 const COUNTER_FROM: Record<FreeLimitKind, number> = { watchlist: 7, portfolio: 40 };
 
-export function showFreeLimitCounter(kind: FreeLimitKind, count: number, paid: boolean): boolean {
-  return !paid && count >= COUNTER_FROM[kind];
+export function showFreeLimitCounter(kind: FreeLimitKind, count: number, paid: boolean, on: boolean = FREE_LIMITS_ON): boolean {
+  return on && !paid && count >= COUNTER_FROM[kind];
 }
 
 export function freeLimitCounterText(kind: FreeLimitKind, count: number): string {
@@ -188,10 +197,11 @@ export async function checkFreeAllowance(
   kind: FreeLimitKind,
   cardIds: string[],
   paid: boolean,
+  on: boolean = FREE_LIMITS_ON,
 ): Promise<Allowance> {
   const limit = FREE_LIMITS[kind];
   const ids = [...new Set(cardIds)];
-  if (paid || ids.length === 0) return { allowed: ids, blocked: [], count: null, limit };
+  if (paid || !on || ids.length === 0) return { allowed: ids, blocked: [], count: null, limit };
   const held = await counter.held(ids);
   const fresh = ids.filter((id) => !held.has(id));
   if (fresh.length === 0) return { allowed: ids, blocked: [], count: null, limit };

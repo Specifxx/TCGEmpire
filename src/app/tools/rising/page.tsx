@@ -28,7 +28,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Rising Cards — Riftbound Cards With Rising Demand | RiftCompare" },
   description:
-    "Riftbound cards ranked by demand and price-timing signals: search interest that is high or rising on cards whose price hasn't moved up yet, with the reason for every pick. Free accounts see the top three; Premium shows every pick, ad-free. Not financial advice.",
+    "Riftbound cards ranked by demand and price-timing signals: search interest that is high or rising on cards whose price hasn't moved up yet, with the reason for every pick. Free accounts see the top three; Pro shows every pick, ad-free. Not financial advice.",
   keywords: ["riftbound rising cards", "riftbound card demand", "riftbound cards going up", "riftbound trending cards"],
   alternates: pageAlternates("/tools/rising"),
   openGraph: { title: "Rising Cards — Riftbound cards with rising demand", url: `${SITE_URL}/tools/rising` },

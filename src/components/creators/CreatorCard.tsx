@@ -94,7 +94,7 @@ export function CreatorCard({ creator, index = 0 }: { creator: Creator; index?: 
           >
             <span className="text-slate-300">
               <span className="font-mono font-extrabold tracking-wider text-gold">{creator.code.code}</span>
-              <span className="ml-2 text-xs">{creator.code.percentOff}% off Premium</span>
+              <span className="ml-2 text-xs">{creator.code.percentOff}% off Pro</span>
             </span>
             <span aria-hidden className="text-gold">→</span>
           </a>

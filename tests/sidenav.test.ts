@@ -284,7 +284,7 @@ test("the header's desktop row is the curated shortlist the owner named, and not
   for (const [what, pattern] of [
     ["Sealed", /<Link href="\/sealed"[^>]*lg:block/],
     ["Blog", /<Link href="\/blog"[^>]*lg:block/],
-    ["Premium", /<GetPremiumLink[\s\S]*?\blg:inline-flex\b/],
+    ["Pro", /<GetPremiumLink[\s\S]*?\blg:inline-flex\b/],
     ["Discord", /aria-label="Join our Discord"[\s\S]{0,300}?\blg:grid\b/],
     ["the watchlist", /<HeaderWatchButton className="hidden sm:inline-flex" \/>/],
     ["the theme toggle", /<ThemeToggle className="hidden lg:grid" \/>/],

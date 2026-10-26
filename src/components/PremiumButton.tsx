@@ -70,11 +70,11 @@ export function PremiumButton({
       {children ?? (
         upgradeLater ? (
           <>
-            Premium<span className="font-semibold opacity-80"> · after your trial</span>
+            Pro<span className="font-semibold opacity-80"> · after your trial</span>
           </>
         ) : isPlusUpgrade ? (
           <>
-            Upgrade to Premium
+            Upgrade to Pro
             {PREMIUM_PRICE_LABEL ? (
               <span className="font-semibold opacity-80"> · {planSwitchPriceLabel("premium", interval, premiumAnnual)}</span>
             ) : null}

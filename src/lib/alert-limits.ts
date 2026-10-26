@@ -85,5 +85,5 @@ export function sealedWatchCeiling(tier: "plus" | "premium" | null | undefined):
 // THE AT-LIMIT LINE a free account sees where its one alert is spent (the
 // field, the sealed button, the routes' 402). One wording, so the prompt and
 // the refusal match.
-export const FREE_ALERT_IN_USE = "Your free alert is in use — Premium watches every card.";
-export const FREE_SEALED_WATCH_IN_USE = "Your free sealed watch is in use — Premium watches every product.";
+export const FREE_ALERT_IN_USE = "Your free alert is in use — Pro watches every card.";
+export const FREE_SEALED_WATCH_IN_USE = "Your free sealed watch is in use — Pro watches every product.";

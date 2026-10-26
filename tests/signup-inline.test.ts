@@ -80,7 +80,7 @@ test("the layout mounts no signed-out sign-up nudge, and the file is gone", () =
   }
 });
 
-test("no corner Premium card: the header's Pricing link carries the callout (2026-10-25)", () => {
+test("no corner Pro card: the header's Pricing link carries the callout (2026-10-25)", () => {
   const layout = code("src/app/layout.tsx");
   assert.doesNotMatch(layout, /<PremiumSlideIn/, "the Akali slider is gone (owner: \"it's not working\")");
   assert.ok(!exists("src/components/PremiumSlideIn.tsx"));
@@ -88,7 +88,7 @@ test("no corner Premium card: the header's Pricing link carries the callout (202
   assert.ok(!exists("src/components/SignupSlideIn.tsx"));
   assert.match(layout, /<AnnualSwitchNudge \/>/, "the annual offer stays");
   const nudge = code("src/components/PricingNudge.tsx");
-  assert.match(nudge, /if \(!loaded \|\| tier === "premium" \|\| !premiumCheckout\) return;/, "anyone not on Premium, checkout on");
+  assert.match(nudge, /if \(!loaded \|\| tier === "premium" \|\| !premiumCheckout\) return;/, "anyone not on Pro, checkout on");
   assert.equal(PREMIUM_SLIDER_DELAY_MS, 3_000);
   assert.match(nudge, /delayMs: PREMIUM_SLIDER_DELAY_MS/);
   assert.equal(NUDGE_DELAY_MS, 12_000, "the annual offer keeps its own delay");
@@ -101,7 +101,7 @@ test("the remaining corner nudge keeps its corner and z-tier", () => {
   assert.match(code("src/components/AnnualSwitchNudge.tsx"), CORNER);
 });
 
-test("the nudge gate's old sign-up and Premium page-count rules are gone", () => {
+test("the nudge gate's old sign-up and Pro page-count rules are gone", () => {
   for (const name of ["signupPromoEligible", "signupEngagedNeededMs", "isLandingPage", "SIGNUP_ENGAGED_MS", "signupCardEligible", "premiumSlideInEligible", "PREMIUM_MIN_VIEWS"]) {
     assert.ok(!(name in gate), `${name} is gone from lib/nudge-gate.ts`);
   }
@@ -124,11 +124,11 @@ test("InlineSignupPrompt: no timer, no modal, not fixed or sticky, no dismiss", 
   assert.doesNotMatch(src, /Dismiss|Maybe later|localStorage|sessionStorage/, "nothing to dismiss, nothing remembered");
 });
 
-test("InlineSignupPrompt: the free account only: no price, no gold, no Premium, no pressure", () => {
+test("InlineSignupPrompt: the free account only: no price, no gold, no Pro, no pressure", () => {
   const src = code(PROMPT);
   assert.doesNotMatch(src, /PREMIUM_PRICE|premiumZeroToday|premiumFromLine|premiumLockIn|\$\d/, "no price");
   assert.doesNotMatch(src, /\bgold\b/, "gold is the paid tiers' colour");
-  assert.doesNotMatch(src, /PremiumButton|firePremiumClickBeacon|\/premium/, "no Premium ask");
+  assert.doesNotMatch(src, /PremiumButton|firePremiumClickBeacon|\/premium/, "no Pro ask");
   assert.doesNotMatch(src, /only \d+ (left|spots|seats)|expires? in|countdown|hurry|today only/i, "no scarcity or countdown");
   assert.doesNotMatch(src, /grantPremiumDays|grantPremiumMonths|signupPremiumDays/, "a link, never a grant");
   assert.match(src, /Create a free account/);
@@ -173,22 +173,22 @@ test("never on sign-in, pricing, checkout, admin, embed or legal pages", () => {
   }
 });
 
-test("each placement's copy states only what a free account gets, with the enforced numbers", () => {
+test("each placement's copy states only what a free account gets, and no limit while the limits are off", () => {
   for (const file of Object.keys(PLACEMENTS)) {
     const block = promptBlocks(file)[0];
-    // The limits come from lib/free-limits.ts, never typed.
-    assert.doesNotMatch(block, /\b(10|50)\b/, `${file}: use FREE_WATCHLIST_LIMIT / FREE_PORTFOLIO_LIMIT, not a typed number`);
+    // The watchlist and portfolio are free and unlimited since 2026-10-26: no number.
+    assert.doesNotMatch(block, /\b(10|50)\b|FREE_(WATCHLIST|PORTFOLIO)_LIMIT/, `${file}: no free limit while FREE_LIMITS_ON is false`);
     // No paid tier, price or paid feature promised to a free account.
-    assert.doesNotMatch(block, /Premium|Plus\b|\$(?!\{)|unlimited|store-by-store|target|deck (price )?watch|ad-free|no ads/i, `${file}: free account only`);
+    assert.doesNotMatch(block, /\bPro\b|Plus\b|\$(?!\{)|unlimited|store-by-store|target|deck (price )?watch|ad-free|no ads/i, `${file}: free account only`);
     assert.match(block, /free account/i, `${file}: says it is the free account`);
   }
-  // A watchlist claim uses the enforced limit, and "drops in price" is what the
-  // free alert run sends (lib/price-alerts.ts NEW LOW).
+  // A watchlist claim says what a free account gets, and "drops in price" is
+  // what the free alert run sends (lib/price-alerts.ts NEW LOW).
   for (const file of ["src/app/browse/page.tsx", "src/app/movers/page.tsx", "src/app/champions/[slug]/page.tsx", "src/components/DeckBuilder.tsx"]) {
-    assert.match(promptBlocks(file)[0], /\$\{FREE_WATCHLIST_LIMIT\}/, file);
+    assert.match(promptBlocks(file)[0], /as many cards as you like|any of its cards/, file);
   }
   for (const file of ["src/app/browse/page.tsx", "src/app/champions/[slug]/page.tsx"]) {
-    assert.match(promptBlocks(file)[0], /\$\{FREE_PORTFOLIO_LIMIT\}/, file);
+    assert.match(promptBlocks(file)[0], /for every card you own/, file);
   }
   // Best Basket: a free account sees its own delivered total (api/basket), and
   // the prompts say "delivered total", never the plan.

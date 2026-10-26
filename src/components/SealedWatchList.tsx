@@ -41,7 +41,7 @@ export function SealedWatchList({ names, limit, lapsed = false }: { names: Recor
         {lapsed
           ? ` A free account watches ${FREE_SEALED_WATCH_LIMIT} product; ${ENTRY_TIER_NAME} watches every one.`
           : limit != null
-            ? ` Plus watches up to ${SEALED_WATCH_LIMIT_PLUS}; Premium has no limit.`
+            ? ` Plus watches up to ${SEALED_WATCH_LIMIT_PLUS}; Pro has no limit.`
             : ""}
       </p>
     );

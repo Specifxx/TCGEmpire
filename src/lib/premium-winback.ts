@@ -63,7 +63,7 @@ export interface PremiumWinbackResult {
   via: PremiumWinbackProvider;
   registeredAfter?: string;
   users?: number; // registered accounts (excl. seed personas)
-  paid?: number; // excluded: currently Plus/Premium (incl. an active trial) or admin
+  paid?: number; // excluded: currently Plus/Pro (incl. an active trial) or admin
   tooOld?: number; // excluded: registered before the cutoff
   suppressed?: number; // excluded: opted out of announcements
   audienceSize?: number; // in scope after dedupe + exclusions

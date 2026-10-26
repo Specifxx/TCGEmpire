@@ -46,7 +46,7 @@ export function PremiumWinbackClaimButton({ days }: { days: number }) {
     return (
       <div className="mt-4">
         <div className="text-3xl" aria-hidden>🎉</div>
-        <h2 className="mt-2 text-lg font-extrabold text-white">You&apos;re on Premium for {days} days</h2>
+        <h2 className="mt-2 text-lg font-extrabold text-white">You&apos;re on Pro for {days} days</h2>
         <p className="mt-1 text-sm text-slate-400">No card needed, nothing to cancel — it just ends on its own.</p>
         <Link href="/premium" className="btn-primary mt-4 inline-flex">See what&apos;s unlocked →</Link>
       </div>

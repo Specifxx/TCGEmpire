@@ -224,7 +224,7 @@ test("an ADMIN_EMAILS account is entitled in the cron exactly as in the session"
   for (const scope of ["all", "paid"] as const) {
     const h = harness(rows);
     const s = await h.run(scope);
-    assert.equal(s.targets, n, `${scope}: every target honoured — an admin reads as Premium, unlimited`);
+    assert.equal(s.targets, n, `${scope}: every target honoured — an admin reads as Pro, unlimited`);
     assert.equal(h.sent.length, 1, `${scope}: one digest for the address`);
   }
   const paid = harness(rows);
@@ -253,7 +253,7 @@ test("PAID_SEND_CAP defers the overflow of new digests, baselines held", async (
   assert.equal(h.writes.length, PAID_SEND_CAP);
 });
 
-test("a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false): every target honoured; Premium has no limit", async () => {
+test("a billed-Plus account is treated as Pro (grandfathered, PLUS_ON_SALE=false): every target honoured; Pro has no limit", async () => {
   // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
   // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so
   // the old 25-target Plus cap no longer drops a Plus member's newest targets.
@@ -264,7 +264,7 @@ test("a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=f
     );
   const p = harness(many(plus));
   const sp = await p.run();
-  assert.equal(sp.targets, PLUS_TARGET_ALERT_LIMIT + 2, "no Plus cap while Plus reads as Premium");
+  assert.equal(sp.targets, PLUS_TARGET_ALERT_LIMIT + 2, "no Plus cap while Plus reads as Pro");
   assert.equal(p.sent.length, 1, "one digest per address");
   const hitIds = new Set(p.items().map((i) => i.cardId));
   assert.ok(hitIds.has("card-t0") && hitIds.has("card-t1"), "the two newest watches are honoured too");

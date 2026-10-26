@@ -28,8 +28,8 @@ import { pageAlternates } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Continue to checkout — RiftCompare Premium",
-  description: "Sign in to continue to secure checkout for RiftCompare Premium.",
+  title: "Continue to checkout — RiftCompare Pro",
+  description: "Sign in to continue to secure checkout for RiftCompare Pro.",
   // A transient funnel step, not a landing page: it has nothing to rank and its
   // ?tier=/?plan=/?back= combinations would be a small crawl trap. follow:true
   // so the links out of it (/premium, the page they came from) still carry.

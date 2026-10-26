@@ -31,7 +31,8 @@ const MAX_NAME = 60;
 const MAX_EMAIL = 200;
 const MAX_PAGE = 200;
 
-const SOURCES = new Set(["page", "widget", "riftle"]);
+// "rating": the rate prompt (components/RateUsPrompt.tsx, 2026-10-26), stars only.
+const SOURCES = new Set(["page", "widget", "riftle", "rating"]);
 
 // Deliberately loose: this gates "should we bother storing a reply address",
 // not "is this person real". An over-strict pattern silently drops valid
@@ -139,7 +140,8 @@ export async function POST(req: Request) {
     // attach a grant to — and the response says so rather than implying one.
     let granted = false;
     let premiumUntil: Date | null = null;
-    if (user && prior === 0 && feedbackPremiumActive()) {
+    // A one-tap star rating is not the written feedback the reward is for.
+    if (user && prior === 0 && source !== "rating" && feedbackPremiumActive()) {
       premiumUntil = await grantPremiumDays(user.id, FEEDBACK_PREMIUM_DAYS);
       granted = !!premiumUntil;
     }

@@ -58,7 +58,7 @@ export const TOOL_GUIDES = {
     guides: [
       { slug: "best-basket-cheapest-riftbound-deck", reason: "How Best Basket splits a list across stores so postage is paid as few times as possible" },
       { slug: "riftbound-booster-box-ev-worth-ripping-or-buying-singles", reason: "How a booster box's expected value is worked out, and when to stop opening" },
-      { slug: "riftcompare-premium-explained", reason: "What Premium adds to the free tools, and what it costs" },
+      { slug: "riftcompare-premium-explained", reason: "What Pro adds to the free tools, and what it costs" },
     ],
   },
   "/tools/box-ev": {

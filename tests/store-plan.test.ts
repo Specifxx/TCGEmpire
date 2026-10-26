@@ -115,7 +115,7 @@ test("a paid plan unlinked for more than two days is overdue; unpaid or linked o
   assert.equal(unlinkedTooLong({ createdAt: new Date(NOW.getTime() - 3 * DAY), activeUntil: paid, partnerId: "p" }, NOW), false);
 });
 
-test("a Stores subscription is recognised by its live price or its checkout stamp, never a Premium one", () => {
+test("a Stores subscription is recognised by its live price or its checkout stamp, never a Pro one", () => {
   assert.equal(isStorePlanSubscription({}, "price_store", "price_store"), true);
   assert.equal(isStorePlanSubscription({ metadata: { kind: "store" } }, "price_store", "price_other"), true);
   assert.equal(isStorePlanSubscription({ metadata: { kind: "premium" } }, "price_store", "price_premium"), false);
@@ -135,7 +135,7 @@ test("the admin picker preselects the tracked store whose website the buyer name
 
 test("the sales page lists what the plan includes", () => {
   const titles = STORE_PLAN_FEATURES.map((f) => f.title).join(" | ");
-  for (const t of [/repricing report/i, /searching for/i, /Verified store/i, /Premium/]) assert.match(titles, t);
+  for (const t of [/repricing report/i, /searching for/i, /Verified store/i, /Pro/]) assert.match(titles, t);
 });
 
 // ── Checkout ─────────────────────────────────────────────────────────────────
@@ -162,7 +162,7 @@ test("checkout: signed in, rate-limited, price-guarded, monthly subscription wit
 
 // ── Webhook ──────────────────────────────────────────────────────────────────
 
-test("webhook: a Stores checkout records the plan, grants Premium through the shared stamp, and tells the owner once", () => {
+test("webhook: a Stores checkout records the plan, grants Pro through the shared stamp, and tells the owner once", () => {
   const src = code("src/app/api/marketplace/stripe/webhook/route.ts");
   assert.match(src, /if \(session\.metadata\?\.kind === "store"\) await storePlanStarted\(session\);/);
   const fn = src.slice(src.indexOf("async function storePlanStarted"), src.indexOf("async function storePlanRenewed"));
@@ -170,13 +170,13 @@ test("webhook: a Stores checkout records the plan, grants Premium through the sh
   assert.match(fn, /entitledUntilFromSubscription\(sub\)/);
   assert.match(fn, /recordStorePlanStart\(\{ userId, stripeSubscriptionId: subId/);
   assert.match(fn, /updateMany\(\{ where: \{ id: userId, stripeCustomerId: null \}, data: \{ stripeCustomerId: customerId \} \}\)/, "links the customer only if unlinked");
-  assert.match(fn, /await stampFromSubscription\(sub, `checkout \$\{session\.id\}`, customerId\);/, "Premium through the one stamping path");
+  assert.match(fn, /await stampFromSubscription\(sub, `checkout \$\{session\.id\}`, customerId\);/, "Pro through the one stamping path");
   assert.match(fn, /if \(created\) \{[\s\S]*?notifyOwnerBounded\(\{\s*kind: "store-plan",\s*headline: `\$\{storeName\} bought the Stores plan`/);
   // The Premium branches are untouched.
   assert.match(src, /if \(session\.metadata\?\.kind === "premium"\) \{\s*await premiumStarted\(session\);\s*await creatorReferral\(session, event\.id\);\s*\}/);
 });
 
-test("webhook: renewals extend the plan (extend-only), keyed on the Stores price, never fatal to Premium", () => {
+test("webhook: renewals extend the plan (extend-only), keyed on the Stores price, never fatal to Pro", () => {
   const src = code("src/app/api/marketplace/stripe/webhook/route.ts");
   const stamp = src.slice(src.indexOf("async function stampFromSubscription("), src.indexOf("async function stampPremium("));
   const untilGuard = stamp.indexOf("if (!until) return;");

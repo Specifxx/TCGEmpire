@@ -84,7 +84,7 @@ export async function applyTargetPrice(
     return {
       status: 409,
       body: {
-        error: `Plus covers target prices on ${limit} cards, and all ${limit} are in use. Clear one to set this, or move to Premium for unlimited targets.`,
+        error: `Plus covers target prices on ${limit} cards, and all ${limit} are in use. Clear one to set this, or move to Pro for unlimited targets.`,
         used: others,
         limit,
       },
