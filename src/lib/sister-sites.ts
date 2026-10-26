@@ -36,14 +36,14 @@ export const SISTER_SITES: SisterSite[] = [
   {
     key: "op",
     name: "OP Compare",
-    url: "https://www.opcompare.app",
+    url: "https://opcompare.app",
     game: "One Piece",
     anchor: "One Piece card prices",
     what: "One Piece Card Game singles and sealed prices across stores in the US, AU, UK, CA, SG and the EU",
     links: [
-      { label: "Where to buy One Piece cards", href: "https://www.opcompare.app/guides/where-to-buy-one-piece-cards" },
-      { label: "EB05 pre-order prices", href: "https://www.opcompare.app/eb05-preorders" },
-      { label: "Cheapest alt arts by colour", href: "https://www.opcompare.app/blog/cheapest-one-piece-alt-arts-by-colour" },
+      { label: "Where to buy One Piece cards", href: "https://opcompare.app/guides/where-to-buy-one-piece-cards" },
+      { label: "EB05 pre-order prices", href: "https://opcompare.app/eb05-preorders" },
+      { label: "Cheapest alt arts by colour", href: "https://opcompare.app/blog/cheapest-one-piece-alt-arts-by-colour" },
     ],
   },
   {

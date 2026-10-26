@@ -19893,6 +19893,6 @@ Recommendation 4: one family people recognise, without moving any domain. The
 footer's "Compare other TCGs" now names Gundam Compare and Lorcana Compare too
 and says RiftCompare is part of the Compare Empire family. Both new entries are
 `footerOnly`, so the articles' block keeps the three games Riftbound players come
-from (the AdSense plan's link-network caution still holds). OP Compare's links use
-`www.opcompare.app`, its one host since 2026-10-25. YGO Compare joins once it is
-public.
+from (the AdSense plan's link-network caution still holds). OP Compare's links stay
+on the apex, `opcompare.app`: its www switch was reverted today after a redirect
+loop. YGO Compare joins once it is public.
