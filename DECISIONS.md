@@ -19795,7 +19795,13 @@ lifts the 2026-10-26 Premium freeze).**
   `STRIPE_PREMIUM_PRICE_ID` / `_ANNUAL_PRICE_ID` and adds the $9.99/$79.99 ids
   to `STRIPE_PREMIUM_LEGACY_PRICE_IDS`. Nobody is moved UP: subscribers on
   $4.99, $3.99, $2.99 or $39.99 keep their price; the one on $9.99 moves down
-  to $6.99 at renewal. The 30-day card-gated trial is unchanged.
+  to $6.99 at renewal.
+- **No trial (owner, same evening: "if Collector doesn't do a trial, then we
+  don't do a trial").** `PREMIUM_TRIAL_DAYS` defaults to 0 (`lib/trial-config.ts`),
+  so checkout charges the plan at once and every trial line and the trial-offer
+  email switch themselves off; a value set in the environment still turns it
+  back on. The discount is the Annual switch instead: "$3.99/mo" with $6.99
+  struck through and a "Save 43%" chip, and the gold button says "Upgrade to Pro".
 - **Free tracker:** `FREE_LIMITS_ON = false` (`lib/free-limits.ts`): no add
   is refused, no "N of 10" counter shows, and no copy quotes 10 or 50; the
   machinery stays and its tests pass `on` explicitly, so a limit can return

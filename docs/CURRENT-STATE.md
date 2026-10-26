@@ -101,7 +101,7 @@ longer lands on its entry.
   unchanged. It did not shorten builds; the store-page index below did. [2026-10-26](../DECISIONS.md#L19723)
 - **Listings are indexed by store as well as by card (2026-10-26):** in files mode
   a `where: { retailer }` query reads the `retailer` index, not every listing;
-  the 226 store pages were most of the build's prerender. [2026-10-26](../DECISIONS.md#L19872)
+  the 226 store pages were most of the build's prerender. [2026-10-26](../DECISIONS.md#L19878)
 - **The site watches itself (2026-10-14):** `ops-monitor.yml` (GitHub Actions, every
   3 h, Sunday digest) checks Neon transfer limits, eBay, price imports, scheduled
   jobs, the live site, Stripe, email and the inbox, stores the result for
@@ -183,7 +183,7 @@ longer lands on its entry.
   its affiliate app's commission parameter (added by `affiliateUrl`, so the row is a
   "Paid link"). The offer is `/stores/partners`. A label, never a position: rows stay
   sorted by item price, the price shown is before the code, and nothing that ranks
-  reads the list. [2026-10-26](../DECISIONS.md#L19904)
+  reads the list. [2026-10-26](../DECISIONS.md#L19910)
 - **Creator codes (2026-10-16, owner):** a creator applies at `/creators/apply`,
   the owner approves in `/admin/affiliates` (an `Affiliate` plus a Stripe
   promotion code on the shared 20%-off, forever coupon). Subscribers get 20% off
@@ -198,7 +198,8 @@ longer lands on its entry.
   supersedes the price in the next bullet and the free limits below):** the
   paid plan is called Pro in every user-facing string (identifiers, `/premium`
   and tier keys unchanged), $6.99/mo or $47.88/yr (12 × $3.99); nobody is
-  moved up in Stripe. `FREE_LIMITS_ON = false`: free watchlist and portfolio
+  moved up in Stripe. No trial: `PREMIUM_TRIAL_DAYS` defaults to 0 (the 30-day
+  trial below is superseded). `FREE_LIMITS_ON = false`: free watchlist and portfolio
   are unlimited and no copy quotes a limit; free price history is 90 days.
   `/premium` copies Collectr's page for non-members. A rate-the-site dialog
   asks after 3 pages and 45 s, always with "Not now"; the Pro page shows the
@@ -581,7 +582,7 @@ longer lands on its entry.
   every unit. Mediavine's script loads only on `/blog/[slug]` and
   `/guides/[slug]`, never for an ad-free member, and links off an article do a
   full page load so it never reaches card, set, sealed or price pages.
-  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20017)
+  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20023)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
   so a paid click is worth its page views plus any sign-up. The test (small
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket
@@ -956,7 +957,7 @@ longer lands on its entry.
   `tcgplayer_market`) still sit below the comparison, never in it.
   [2026-09-18](../DECISIONS.md#L8181), [2026-09-19](../DECISIONS.md#L8747),
   [2026-09-23](../DECISIONS.md#L10975), [2026-10-02](../DECISIONS.md#L16522),
-  [2026-10-26](../DECISIONS.md#L19964)
+  [2026-10-26](../DECISIONS.md#L19970)
 - **Deal Finder has three views, as tabs under its intro:** "Underpriced vs
   TCGplayer" (the default; the store picker, no Buy-from presets), "Cheapest on
   eBay" (`?view=ebay`, free) and "Underpriced vs eBay" (`?view=vs-ebay`, gated

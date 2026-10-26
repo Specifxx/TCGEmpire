@@ -127,6 +127,8 @@ export function PremiumCta({
     markSignupSource("premium_cta");
   };
   const startHref = premiumStartHref({ tier, plan, src: "premium-page" });
+  // The Collectr-style Pro page's gold button says "Upgrade to Pro" (2026-10-26).
+  const getLabel = gold ? `Upgrade to ${TIER_NAMES[tier]}` : `Get ${TIER_NAMES[tier]}`;
 
   if (!signedIn) {
     if (trialAvailable && trialDays > 0) {
@@ -153,7 +155,7 @@ export function PremiumCta({
       return (
         <div className="w-full">
           <button type="button" onClick={() => { onStartClick(); void subscribe(); }} disabled={busy} className={btn}>
-            {busy ? "Opening checkout…" : <>Get {TIER_NAMES[tier]}&nbsp;→</>}
+            {busy ? "Opening checkout…" : <>{getLabel}&nbsp;→</>}
           </button>
           {error && <p role="alert" className="mt-2 text-xs text-rose-400">{error}</p>}
         </div>
@@ -183,7 +185,7 @@ export function PremiumCta({
   return (
     <div className="w-full">
       <button onClick={subscribe} disabled={busy} className={btn}>
-        {busy ? "Opening checkout…" : ctaLabel ?? (trialEligible && trialDays > 0 ? `${trialButtonLabel(trialDays, trialFeeCents)} →` : `Get ${TIER_NAMES[tier]} →`)}
+        {busy ? "Opening checkout…" : ctaLabel ?? (trialEligible && trialDays > 0 ? `${trialButtonLabel(trialDays, trialFeeCents)} →` : `${getLabel} →`)}
       </button>
       {trialEligible && trialDays > 0 && (
         // Required disclosure for a card-gated trial (Stripe / card-network rules):

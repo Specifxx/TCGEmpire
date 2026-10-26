@@ -56,12 +56,12 @@ test("the intro offer is OFF by default: only NEXT_PUBLIC_PREMIUM_INTRO_OFFER=1 
   assert.match(route.slice(Math.max(0, callAt - 200), callAt), /if \(introOfferEnabled\(\) && plan === "monthly"/, "…and it sits inside the intro switch");
 });
 
-test("the trial is ON by default as a free 30-day trial, env can still change or kill it (2026-10-23)", () => {
-  assert.equal(PREMIUM_TRIAL_DAYS, 30);
+test("the trial is OFF by default (2026-10-26, Pro bought straight like Collectr), env can still turn it on", () => {
+  assert.equal(PREMIUM_TRIAL_DAYS, 0);
   assert.equal(PREMIUM_TRIAL_FEE_CENTS, 0);
-  assert.equal(premiumTrialEnabled(), true);
+  assert.equal(premiumTrialEnabled(), false);
   const cfg = read("src/lib/trial-config.ts");
-  assert.match(cfg, /parseTrialEnv\(process\.env\.PREMIUM_TRIAL_DAYS, 30\)/, "the default is 30 (one month free, 2026-10-23), the env can still set a length (0 = the kill switch)");
+  assert.match(cfg, /parseTrialEnv\(process\.env\.PREMIUM_TRIAL_DAYS, 0\)/, "the default is 0 (no trial, 2026-10-26), the env can still set a length");
   assert.match(cfg, /parseTrialFeeCents\(process\.env\.PREMIUM_TRIAL_FEE_CENTS\)/);
   assert.match(read("src/lib/premium.ts"), /export \{ PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS,/, "premium.ts is where every server caller imports them from");
   // Checkout adds trial_period_days only for a trial-eligible account, which

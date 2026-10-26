@@ -52,6 +52,7 @@ export function ProPricePicker({ prices, cta, size = "hero" }: { prices: ProPric
             <span className={`absolute top-1 h-5 w-5 rounded-full bg-ink-950 transition-all ${annual ? "left-6" : "left-1 bg-white"}`} />
           </button>
           <span className={annual ? "text-white" : "text-slate-400"}>Annual</span>
+          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-emerald-300">Save {prices.save}%</span>
         </div>
       )}
       <div className="mt-5 max-w-md">
