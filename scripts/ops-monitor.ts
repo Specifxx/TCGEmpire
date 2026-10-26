@@ -35,6 +35,7 @@ import { runChecks } from "../src/lib/ops/checks";
 import { realDeps } from "../src/lib/ops/real-deps";
 import { SITE } from "../src/lib/ops/deps";
 import { buildAlertEmail, buildDigestEmail, type BuiltOpsEmail } from "../src/lib/ops/mail";
+import { EARNINGS_MARKER } from "../src/lib/earnings/digest";
 import { ownerEmail } from "../src/lib/ops/owner";
 import { decide, digestDue, markDelivered, parseState, planIsEmpty, planIsUrgent, type OpsState } from "../src/lib/ops/state";
 import { countBy, emptyInbox, type OpsReport } from "../src/lib/ops/types";
@@ -50,7 +51,8 @@ async function deliver(mail: BuiltOpsEmail): Promise<Delivery> {
     console.log(`\n[dry run] would email ${ownerEmail()}: ${mail.subject}\n${mail.text}\n`);
     return "sent";
   }
-  if (process.env.RESEND_API_KEY) {
+  // A digest with a money section must go through the site, which alone holds the reporting keys to fill it.
+  if (process.env.RESEND_API_KEY && !mail.html.includes(EARNINGS_MARKER)) {
     if (await sendEmail(ownerEmail(), mail.subject, mail.html, { text: mail.text })) return "sent";
     console.warn("Direct send failed; trying the site's route.");
   }

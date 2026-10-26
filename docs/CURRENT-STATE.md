@@ -152,6 +152,9 @@ longer lands on its entry.
   all time, each and combined, at the site's reference FX rates. Each source is
   guarded alone and shows "Not connected" until its server-only keys are set; the
   ops monitor flags a connected source that fails. [2026-10-24](../DECISIONS.md#L19394)
+  The Monday digest carries the money too (7/30 days by source, eBay by site,
+  costs and profit), filled in by the site so no amount reaches a public log.
+  [2026-10-26](../DECISIONS.md#L19640)
   Costs sit under it with a profit row: Anthropic API usage automatic (Admin
   API cost report); Vercel Pro, any Claude plan and ads are entries (once /
   monthly / yearly, stop-and-replace on a plan change; no billing API exists for
