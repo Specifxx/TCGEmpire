@@ -25,7 +25,6 @@ import { FooterNav } from "@/components/FooterNav";
 import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
-import { MediavineLoader } from "@/components/MediavineLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
@@ -34,7 +33,7 @@ import { RadianceSeasonBanner } from "@/components/RadianceSeasonBanner";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
-import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
+import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED, ADSENSE_SERVING } from "@/lib/adsense";
 import NextTopLoader from "nextjs-toploader";
 
 // Not needed for the initial paint or SEO: the alert modal only opens in
@@ -326,13 +325,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* The AdSense loader: ownership verification + Auto ads + the EEA/UK/CH
             consent message, on every page, ungated. See the component header. */}
         <AdSenseLoader />
-        {/* Journey by Mediavine: site verification + its ads, on every page,
-            ungated. See the component header. */}
-        <MediavineLoader />
+        {/* Journey by Mediavine is NOT here: since 2026-10-26 it loads only on
+            blog and guide articles (components/MediavineLoader.tsx). */}
         {/* Ad/consent origins — shaving a round-trip off the loader and the
-            consent message, which is what the 0-impression message needed. */}
-        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="" />
-        <link rel="preconnect" href="https://fundingchoicesmessages.google.com" crossOrigin="" />
+            consent message. Only while AdSense serves. */}
+        {ADSENSE_SERVING && <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="" />}
+        {ADSENSE_SERVING && <link rel="preconnect" href="https://fundingchoicesmessages.google.com" crossOrigin="" />}
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />

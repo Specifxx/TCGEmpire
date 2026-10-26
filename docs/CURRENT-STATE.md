@@ -98,7 +98,7 @@ longer lands on its entry.
 - **The deploy bundles a gzipped pack of the snapshot, not data/public/ (2026-10-26):**
   `npm run build` writes `.public-data-pack/` (`scripts/pack-public-data.ts`) and
   `next.config.js` traces it instead of the 1,700 files that had stretched builds
-  from ~3 to ~6 minutes. The committed format is unchanged. [2026-10-26](../DECISIONS.md#L19692)
+  from ~3 to ~6 minutes. The committed format is unchanged. [2026-10-26](../DECISIONS.md#L19723)
 - **The site watches itself (2026-10-14):** `ops-monitor.yml` (GitHub Actions, every
   3 h, Sunday digest) checks Neon transfer limits, eBay, price imports, scheduled
   jobs, the live site, Stripe, email and the inbox, stores the result for
@@ -555,6 +555,11 @@ longer lands on its entry.
   cheapest first, same URL, no redirect ([2026-10-24](../DECISIONS.md#L19340)). All 219 official printings plus 16
   Signatures are in the catalogue; all nine Legends are named everywhere
   (`RADIANCE_LEGENDS_CONFIRMED`). [2026-10-22](../DECISIONS.md#L18959)
+- **AdSense off; Journey on articles only (owner, 2026-10-26):**
+  `ADSENSE_SERVING = false` (`lib/adsense.ts`) blanks the loader and every unit;
+  Mediavine's script loads only on `/blog/[slug]` and `/guides/[slug]`, never
+  for an ad-free member, and links off an article do a full page load so it
+  never reaches card, set, sealed or price pages. Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
   so a paid click is worth its page views plus any sign-up. The test (small
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket

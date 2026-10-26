@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { getArticle, getArticles } from "@/lib/articles";
 import { getBlogPost } from "@/lib/posts";
 import { ArticleView } from "@/components/ArticleView";
+import { MediavineLoader } from "@/components/MediavineLoader";
 import { SITE_URL } from "@/lib/site";
 import { clampText } from "@/lib/format";
 import { hreflangForCountryGuide, pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -98,6 +99,11 @@ export default async function BlogArticlePage({ params }: { params: { slug: stri
   // File-based editorial posts render as plain articles. Anything else (including
   // the retired auto-generated market-report slugs) is not found.
   const file = getArticle(params.slug);
-  if (file && file.category === "blog") return <ArticleView article={file} />;
+  if (file && file.category === "blog") return (
+    <>
+      <MediavineLoader />
+      <ArticleView article={file} />
+    </>
+  );
   notFound();
 }
