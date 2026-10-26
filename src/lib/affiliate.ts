@@ -4,6 +4,7 @@
 
 import { SITE_URL } from "./site";
 import { normalizeCardmarketUrl } from "@/lib/cardmarket-url";
+import { partnerRefUrl } from "@/lib/store-partner-deals";
 
 // eBay Partner Network campaign id. Passed to the Browse API so listing URLs come
 // back already affiliate-tagged (itemAffiliateWebUrl). See lib/ebay.ts.
@@ -322,18 +323,13 @@ export function ebaySearchUrl(country: string, query: string, source?: string): 
 // eBay, Amazon and TCGplayer pay us DIRECTLY (best rate — no middleman cut) and are
 // handled above. The 60+ Shopify shops we compare earn nothing UNLESS we sign each
 // store's own affiliate/referral program (Shopify Collabs / Refersion / UpPromote,
-// a ref= param, etc.) and register the URL rewrite here. Add stores as you get them
-// approved — use the outbound-click leaderboard (/admin/clicks) to prioritise which
-// to sign first. Example:
-//   "cherrycollectables.com.au": (u) => { u.searchParams.set("ref", "riftcompare"); return u.toString(); },
-const DIRECT_PROGRAMS: Record<string, (u: URL) => string> = {
-  // add approved programs here, keyed by bare hostname (no www)
-};
-
+// a ref= param, etc.). Since 2026-10-26 those programs live in ONE list,
+// STORE_PARTNER_DEALS (lib/store-partner-deals.ts), beside the store's exclusive
+// discount code: add the store there with its `ref` and this rewrites its links.
+// Use the outbound-click leaderboard (maintenance task audit-clicks) to prioritise
+// which to sign first.
 function directProgramUrl(u: URL): string | null {
-  const host = u.hostname.replace(/^www\./i, "").toLowerCase();
-  const fn = DIRECT_PROGRAMS[host];
-  return fn ? fn(u) : null;
+  return partnerRefUrl(u);
 }
 
 // STORE LINKS SAY WHERE THE VISITOR CAME FROM (2026-10-22, owner: "yes please add
@@ -406,7 +402,7 @@ export function affiliateUrl(
     // writes the resolving form, and this makes every row already in the database
     // right on deploy instead of after the next price refresh.
     if (/(?:^|\.)cardmarket\.com$/i.test(u.hostname)) return normalizeCardmarketUrl(url);
-    // A signed per-store direct program (none yet) rewrites the URL here.
+    // A signed per-store direct program (STORE_PARTNER_DEALS) rewrites the URL here.
     const direct = directProgramUrl(u);
     if (direct) return direct;
     return withStoreUtm(u, page);
@@ -426,10 +422,10 @@ export function outboundRel(_href: string): string {
 
 // Is this outbound URL ACTUALLY monetised — i.e. did affiliateUrl() do something to
 // it, or would it fall through untouched? Mirrors the three live branches in
-// affiliateUrl() above (eBay / Amazon / TCGplayer) plus DIRECT_PROGRAMS, which is
+// affiliateUrl() above (eBay / Amazon / TCGplayer) plus the store partner programs, which are
 // checked structurally so a store added there is automatically covered without a
 // second hand-maintained list. Used to gate a per-link "Paid link" disclosure: with
-// DIRECT_PROGRAMS empty today, the ~60 Shopify store links earn nothing, and
+// only signed partners paying, most Shopify store links earn nothing, and
 // labelling every row "Paid link" regardless would over-disclose on the majority of
 // rows — the FTC concern this exists to address is UNDER-disclosure, not padding
 // every link with a label that isn't true for it.

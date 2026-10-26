@@ -177,6 +177,13 @@ longer lands on its entry.
   comparison** — never read the plan from a comparison or ranking. Checkout refuses a
   Stripe Price dearer than the page. Pilot partners keep free reports.
   [2026-10-23](../DECISIONS.md#L19079)
+- **Store partner codes (2026-10-26, owner):** one list,
+  `src/lib/store-partner-deals.ts`: a store's exclusive discount code (a chip beside
+  its rows and on its store page, hidden 30 days after its last checkout test) and
+  its affiliate app's commission parameter (added by `affiliateUrl`, so the row is a
+  "Paid link"). The offer is `/stores/partners`. A label, never a position: rows stay
+  sorted by item price, the price shown is before the code, and nothing that ranks
+  reads the list. [2026-10-26](../DECISIONS.md#L19840)
 - **Creator codes (2026-10-16, owner):** a creator applies at `/creators/apply`,
   the owner approves in `/admin/affiliates` (an `Affiliate` plus a Stripe
   promotion code on the shared 20%-off, forever coupon). Subscribers get 20% off

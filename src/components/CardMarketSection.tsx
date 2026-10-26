@@ -11,6 +11,7 @@ import { formatMoney, timeAgo } from "@/lib/format";
 import { computeMarket, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { ReportPriceButton } from "./ReportPriceButton";
+import { StoreCodeChip } from "./StoreCodeChip";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
 import { normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
 import { tcgReferenceRows } from "@/lib/tcg-reference";
@@ -561,6 +562,7 @@ export function CardPriceComparison({
                         specific listing actually was. */}
                     {mounted && <span>updated {timeAgo(p.lastSeen)}</span>}
                     {isPaidLink(p.buyHref) && <PaidLinkTag />}
+                    <StoreCodeChip href={p.buyHref} />
                   </div>
                 </div>
                 <div className="shrink-0 text-right">

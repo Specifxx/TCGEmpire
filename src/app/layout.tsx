@@ -561,7 +561,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               followed links, now with descriptive anchors (the game's price
               query) instead of the brand alone, under a labelled heading. */}
           <nav aria-label="Compare other TCGs" className="mb-2">
-            <p className="mb-1 font-semibold text-slate-300">Compare other TCGs</p>
+            <p className="mb-1 font-semibold text-slate-300">
+              Compare other TCGs{" "}
+              <span className="font-normal text-slate-500">· RiftCompare is part of the Compare Empire family of price comparison sites</span>
+            </p>
             <ul className="flex flex-wrap gap-x-4 gap-y-1">
               {SISTER_SITES.map((s) => (
                 <li key={s.key}>

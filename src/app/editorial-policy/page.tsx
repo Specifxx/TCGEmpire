@@ -297,7 +297,11 @@ export default function EditorialPolicyPage() {
             <Link href="/stores" className="text-brand-400 hover:underline">Stores plan</Link>, which a retailer buys
             for a private report on its own prices and a &ldquo;Verified store&rdquo; mark on its own store page. A
             store on the Stores plan is compared exactly like every other store: nothing it pays for changes its
-            place in any comparison. Outbound links that earn us a commission are
+            place in any comparison. Some stores are{" "}
+            <Link href="/stores/partners" className="text-brand-400 hover:underline">store partners</Link>: they give our
+            visitors an exclusive discount code, shown as a label beside their price, and may pay us a commission on
+            the orders we send. The price we show is before the code, and a partner ranks exactly where its price puts
+            it. Outbound links that earn us a commission are
             marked <code className="rounded bg-ink-800 px-1 text-xs">rel=&quot;sponsored&quot;</code> and
             disclosed in plain language next to the link.
           </p>
