@@ -67,6 +67,8 @@ export function earningsDigest(sources: readonly SourceResult[], costs: readonly
     html += `<tr><td style="padding:2px 32px"><table role="presentation" cellpadding="0" cellspacing="0" width="100%">`;
     for (const g of sites) {
       html += `<tr><td style="${cell}">${esc(g.label)}</td><td style="${num}">${g.sales} sale${g.sales === 1 ? "" : "s"}</td><td style="${num}">${esc(money(g.cents))}</td></tr>`;
+      // Untagged sales: the biggest few, by what the report says about them (untaggedHint).
+      if (!g.key) for (const t of g.tags.slice(0, 3)) html += `<tr><td style="${cell};padding-left:20px;font-size:12px">${esc(t.tag)}</td><td style="${num};font-size:12px">${t.sales}</td><td style="${num};font-size:12px">${esc(money(t.cents))}</td></tr>`;
     }
     html += `</table></td></tr>`;
   }
@@ -77,7 +79,10 @@ export function earningsDigest(sources: readonly SourceResult[], costs: readonly
     "MONEY",
     `  Last 30 days: ${money(total30)} earned (7 days: ${money(total7)}). Costs ${money(cost30)}, profit ${money(total30 - cost30)}.`,
     ...rows.map((r) => `  ${r.label}: ${money(r.d7)} (7d), ${money(r.d30)} (30d)${r.note ? `, ${r.note}` : ""}`),
-    ...(sites.length ? ["  eBay by site, 30 days:", ...sites.map((g) => `    ${g.label}: ${money(g.cents)} from ${g.sales} sale${g.sales === 1 ? "" : "s"}`)] : []),
+    ...(sites.length ? ["  eBay by site, 30 days:", ...sites.flatMap((g) => [
+            `    ${g.label}: ${money(g.cents)} from ${g.sales} sale${g.sales === 1 ? "" : "s"}`,
+            ...(g.key ? [] : g.tags.slice(0, 3).map((t) => `      ${t.tag}: ${money(t.cents)} from ${t.sales}`)),
+          ])] : []),
     ...(off.length ? [`  Not connected: ${off.join(", ")}.`] : []),
     `  Earnings: ${adminUrl}`,
   ].join("\n");

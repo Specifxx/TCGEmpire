@@ -19657,6 +19657,14 @@ marker on the way to the inbox. No amount reaches a log, the route's response or
 the repository. A digest carrying the marker always goes through the route, even
 when the job has a Resend key (`tests/earnings-digest.test.ts`).
 
+**Untagged eBay sales, explained.** The first 30-day read (A$836 from eBay)
+had 32% of it, 65 sales, with no customid, though every site tags its links.
+Each untagged sale is now listed under "No tag" by what the Transaction Detail
+report says about it (`untaggedHint`: category, eBay site, link tool, traffic
+type, whichever columns exist), on the dashboard and in the digest's top three,
+and the source's detail line names the report's columns. Which site lost its
+tags is then a read, not a guess.
+
 **Not changed:** the alert email, the dashboard, and the status-only
 `earnings:sources` check. The section arrives with the release that ships the
 route; until then the old route sends the digest with the marker, an HTML

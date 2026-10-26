@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import type { SourceResult } from "../src/lib/earnings/core";
+import { epnTransactions, tagBreakdown, tagDays, untaggedHint, type SourceResult } from "../src/lib/earnings/core";
 import { EARNINGS_MARKER, EARNINGS_MARKER_TEXT, EARNINGS_UNAVAILABLE, earningsDigest, fillEarnings } from "../src/lib/earnings/digest";
 import { buildDigestEmail } from "../src/lib/ops/mail";
 import { emptyInbox } from "../src/lib/ops/types";
@@ -21,6 +21,7 @@ test("the money section totals each source for 7 and 30 days and splits eBay by 
     src("ebay", "ok", [{ day: "2026-10-24", currency: "AUD", cents: 2000 }], [
       { day: "2026-10-24", tag: "rc-au-card", currency: "AUD", cents: 1500, pendingCents: 0, sales: 2 },
       { day: "2026-10-24", tag: "op-us-card", currency: "AUD", cents: 500, pendingCents: 0, sales: 1 },
+      { day: "2026-10-24", tag: "", hint: "Toys & Hobbies · EBAY_AU", currency: "AUD", cents: 300, pendingCents: 0, sales: 1 },
     ]),
     src("adsense", "not-configured", []),
   ];
@@ -30,6 +31,7 @@ test("the money section totals each source for 7 and 30 days and splits eBay by 
   assert.match(d.text, /RiftCompare \(Riftbound\): A\$15\.00 from 2 sales/);
   assert.match(d.text, /One Piece: A\$5\.00 from 1 sale\b/);
   assert.match(d.text, /Not connected: Google AdSense/);
+  assert.match(d.text, /No tag: A\$3\.00 from 1 sale\n\s+\(none\) Toys & Hobbies · EBAY_AU: A\$3\.00 from 1/);
   assert.ok(!d.html.includes("<script"));
 });
 
@@ -49,4 +51,16 @@ test("the route fills the money section itself and never returns it", () => {
   // The monitor sends a money digest through the site, not straight to Resend.
   const monitor = readFileSync(new URL("../scripts/ops-monitor.ts", import.meta.url), "utf8");
   assert.match(monitor, /!mail\.html\.includes\(EARNINGS_MARKER\)/);
+});
+
+test("an untagged eBay sale is described by its category, site, tool and traffic", () => {
+  const [sale] = epnTransactions({ Records: [{ EventDate: "2026-10-24", EpnTransactionId: "1", Earnings: "1.50", CustomId: "", "Meta Category Name": "Cameras & Photo", CheckoutSite: "EBAY_US", ToolId: "10049", TrafficType: "Mobile" }] });
+  assert.equal(sale.tag, "");
+  assert.equal(sale.hint, "Cameras & Photo · EBAY_US · 10049 · Mobile");
+  const [tagged] = epnTransactions({ Records: [{ EventDate: "2026-10-24", Earnings: "1", CustomId: "rc-au-card", MetaCategoryName: "Toys" }] });
+  assert.equal(tagged.hint, "");
+  assert.equal(untaggedHint({}), "no detail in the report");
+  const groups = tagBreakdown(tagDays([sale, tagged]), "30d", "2026-10-26", "AUD");
+  const none = groups.find((g) => g.key === "");
+  assert.equal(none?.tags[0].tag, "(none) Cameras & Photo · EBAY_US · 10049 · Mobile");
 });
