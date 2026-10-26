@@ -25,6 +25,8 @@ import { CtaZone, PremiumPageView } from "@/components/premium/PremiumPageClient
 import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { PremiumPricingCards } from "@/components/PremiumPricingCards";
 import { PremiumPlanTable } from "@/components/premium/PremiumPlanTable";
+import { ProLanding } from "@/components/premium/ProLanding";
+import { getSiteRating } from "@/lib/site-rating";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { SubscriptionActions } from "@/components/SubscriptionActions";
 import { PremiumTicks } from "@/components/PremiumTicks";
@@ -46,6 +48,7 @@ import {
   premiumLockInHeadline,
   premiumTrialFee,
   premiumEffectiveMonthly,
+  annualSavingPct,
   introOfferEnabled,
   introAmountOffCents,
 } from "@/lib/site";
@@ -173,9 +176,20 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   // (lib/creator-affiliate.ts). One indexed read, only when the cookie is set.
   const savedCode = !already ? normaliseAffiliateCode(cookies().get(AFFILIATE_COOKIE)?.value) : null;
   const creator = savedCode ? await findActiveAffiliate(savedCode).catch(() => null) : null;
+  // The Collectr-style page, for anyone who has not bought while Pro is the one plan.
+  const landing = !already && !plusLive;
+  const rating = landing ? await getSiteRating() : null;
+  const landingPrices = {
+    monthly: tierMonthlyAmount("premium"),
+    annual: PREMIUM_ANNUAL_AMOUNT,
+    perMonth: premiumEffectiveMonthly("premium"),
+    save: annualSavingPct("premium"),
+    annualLive,
+  };
+  const landingCta = { checkoutLive, signedIn: !!user, trialEligible, trialAvailable, trialDays: PREMIUM_TRIAL_DAYS, trialFeeCents: PREMIUM_TRIAL_FEE_CENTS };
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className={`mx-auto ${landing ? "max-w-6xl" : "max-w-4xl"}`}>
       <PremiumRecoveryBeacon />
       <Breadcrumbs trail={[{ name: "Pro", href: "/premium" }]} />
       <script
@@ -255,6 +269,31 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
           google-anno-skip keeps Google's ad-intent chips out of the sales copy
           (ad-free-boot.ts, AD_INTENTS_SKIP_CLASS). */}
       <div className="google-anno-skip">
+      {/* THE COLLECTR-STYLE PRO PAGE (2026-10-26, owner): a visitor who has not
+          bought sees ProLanding (hero with the price switch and one gold
+          button, the features, Free beside Pro), then the creator code. A
+          member, or a site selling Plus again, keeps the page below. */}
+      {landing ? (
+        <>
+          <PremiumPageView signedIn={!!user} />
+          <CtaZone location="pricing">
+            <ProLanding prices={landingPrices} cta={landingCta} rating={rating} />
+          </CtaZone>
+          <p className="mx-auto mt-6 max-w-2xl text-center text-xs font-semibold text-slate-400" data-premium-terms>
+            Cancel anytime in two clicks · Secure payment by Stripe · Prices in US dollars
+          </p>
+          <details className="mx-auto mt-3 max-w-md" open={!!creator || !!searchParams?.code}>
+            <summary className="mx-auto w-fit cursor-pointer text-xs font-semibold text-slate-400 hover:text-slate-200">Have a creator code?</summary>
+            <div className="mt-2">
+              <CreatorCodeBox
+                initial={creator ? { code: creator.code, name: creator.name, percentOff: creator.percentOff } : null}
+                fromUrl={normaliseAffiliateCode(searchParams?.code)}
+              />
+            </div>
+          </details>
+        </>
+      ) : (
+      <>
       <div id="premium-hero" className="text-center">
         {!already && (
           <span className="chip mb-2 inline-flex bg-gold/15 text-[11px] font-extrabold uppercase tracking-widest text-gold">
@@ -320,6 +359,9 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
             </details>
           </section>
         </>
+      )}
+
+      </>
       )}
 
       {/* THE LOCK-IN BANNER: announced-only, below the cards, never to a

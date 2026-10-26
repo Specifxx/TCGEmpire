@@ -19769,31 +19769,33 @@ series) still goes into all 316 bundles; it is a fifteenth of what the snapshot
 was, and can be packed the same way if builds creep again. The two Prisma
 clients are ~33 MB of each bundle and are not ours to shrink.
 
-## Pro: Collectr's model at $3.99 — 2026-10-26
+## Pro: Collectr's model, $6.99 or $3.99 a month yearly — 2026-10-26
 
 The owner asked to copy Collectr's subscription strategy and price below it.
-Collectr PRO lists at US$7.99 a month, sells at $4.99 "for a limited time", or
-$59.99 a year. Its free tier keeps what collectors come for (tracking a
-collection, prices, scanning) and PRO sells what sits on top (advanced
-filters, export, 5+ years of history, a badge and profile, partner perks). We
-were the opposite: $9.99/$79.99, with the watchlist and portfolio capped for
-free accounts, and about 15 trials in eight weeks turned into no paying member.
-The price was not the only problem; the habit-forming part was behind the wall,
-so few people formed the habit.
+Collectr PRO is US$7.99 a month, or $59.99 a year, which its page shows as
+"$4.99/mo" with an Annual switch (an earlier reading of that page took the
+$4.99 for a monthly sale price; the owner corrected it the same day). Its free
+tier keeps what collectors come for (tracking a collection, prices, scanning)
+and PRO sells what sits on top (advanced filters, export, 5+ years of history,
+a badge and profile, partner perks). We were the opposite: $9.99/$79.99, with
+the watchlist and portfolio capped for free accounts, and about 15 trials in
+eight weeks turned into no paying member. The price was not the only problem;
+the habit-forming part was behind the wall, so few people formed the habit.
 
-**What (owner, decision card "Full copy: Pro, $3.99, free tracker"; this lifts
-the 2026-10-26 Premium freeze).**
+**What (owner, decision card "Full copy: Pro, $3.99, free tracker", then the
+same day's correction: "$6.99 a month, and around $3.99 a month yearly"; this
+lifts the 2026-10-26 Premium freeze).**
 - **Name:** the paid plan is **Pro** in every user-facing string (site, emails,
   articles, llms.txt). Code identifiers, routes (`/premium`), database columns,
   tier keys (`"premium"`) and the Pokémon section are unchanged.
-- **Price:** **$3.99 a month or $39.99 a year** (`lib/site.ts`): 20% under
-  Collectr's sale price and 33% under its annual. Stripe Prices are immutable,
-  so the owner creates two new Prices, repoints `STRIPE_PREMIUM_PRICE_ID` /
-  `_ANNUAL_PRICE_ID`, adds the $9.99/$79.99 ids to
-  `STRIPE_PREMIUM_LEGACY_PRICE_IDS`, and moves every current subscriber DOWN
-  onto the new Prices at their next renewal. The 30-day card-gated trial is
-  unchanged. The annual saving is 16%, smaller than before, which is fine:
-  Collectr's annual saves nothing against its sale price.
+- **Price:** **$6.99 a month or $47.88 a year** (`lib/site.ts`), 13% and 20%
+  under Collectr's $7.99 and $59.99. $47.88 is exactly 12 × $3.99, so the
+  page's "$3.99/mo, billed yearly" is literally true (save 43%). Stripe Prices
+  are immutable: the owner creates two new Prices, repoints
+  `STRIPE_PREMIUM_PRICE_ID` / `_ANNUAL_PRICE_ID` and adds the $9.99/$79.99 ids
+  to `STRIPE_PREMIUM_LEGACY_PRICE_IDS`. Nobody is moved UP: subscribers on
+  $4.99, $3.99, $2.99 or $39.99 keep their price; the one on $9.99 moves down
+  to $6.99 at renewal. The 30-day card-gated trial is unchanged.
 - **Free tracker:** `FREE_LIMITS_ON = false` (`lib/free-limits.ts`): no add
   is refused, no "N of 10" counter shows, and no copy quotes 10 or 50; the
   machinery stays and its tests pass `on` explicitly, so a limit can return
@@ -19802,6 +19804,25 @@ the 2026-10-26 Premium freeze).**
   sealed and deck watches, Best Basket without the monthly limit, the full
   Deal Finder, Rising and Demand lists, and no ads. Nothing a free account had
   is taken away.
+- **The page copies Collectr's** for anyone not yet a member
+  (`components/premium/ProLanding.tsx`): a PRO chip, a short headline, four
+  ticks, the price with a Monthly/Annual switch (Annual first, the monthly
+  price struck through), one gold "Upgrade to Pro" button, "Cancel anytime ·
+  See all features" linking down, a features grid, then Free vs Pro pricing
+  at the bottom. Members and Plus members still see the old page. The example
+  portfolio beside the hero is labelled "Example".
+- **Ratings.** A "How would you rate RiftCompare?" dialog
+  (`components/RateUsPrompt.tsx`, timing in `lib/rate-prompt.ts`): five big
+  stars, one tap saves (`/api/feedback`, source `rating`, never a reward);
+  three stars or fewer then asks what to fix. The owner asked for it to be hard
+  to close, so the backdrop and Escape don't, but a small "Not now" always
+  does: a dialog nobody can leave is a trap, and Google demotes pages that
+  open with one. So it asks only after three pages AND 45 seconds, never on
+  sign-in, checkout, admin or embed pages, snoozes 14 days, and stops after
+  three asks or a rating. The Pro page shows "4.7 rating · N ratings" from
+  real ratings only (`lib/site-rating.ts`), once there are at least 10, and
+  never in JSON-LD (self-collected ratings in review markup break Google's
+  rules and invent nothing anyway).
 
 **Not done yet.** A Pro badge on the member's profile and partner perks
 (store discount codes, which the strategy thread is building as partner
@@ -19809,4 +19830,5 @@ codes) are the cosmetic and perk half of Collectr's PRO, and come next.
 
 **Measure.** Accounts created, accounts with a watched or tracked card, trials
 and paid conversions for the four weeks before and after, compared by
-`PREMIUM_COPY_VERSION` `pro-2026-10-26`.
+`PREMIUM_COPY_VERSION` `pro-2026-10-26`; ratings arrive in `/admin/messages`
+with the rest of the feedback.

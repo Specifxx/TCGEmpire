@@ -184,12 +184,15 @@ longer lands on its entry.
   after entitlement and never fatal. The intro coupon, when on, keeps the one
   discount slot. Paid out by hand ("Mark paid"). All four tables private.
   [2026-10-16](../DECISIONS.md#L17655)
-- **Pro at $3.99, free tracker (owner, 2026-10-26, supersedes the price in
-  the next bullet and the free limits below):** the paid plan is called Pro
-  in every user-facing string (identifiers, `/premium` and tier keys
-  unchanged), $3.99/mo or $39.99/yr, with existing subscribers moved down in
-  Stripe. `FREE_LIMITS_ON = false`: free watchlist and portfolio are
-  unlimited and no copy quotes a limit; free price history is 90 days.
+- **Pro at $6.99, or $3.99/mo yearly, free tracker (owner, 2026-10-26,
+  supersedes the price in the next bullet and the free limits below):** the
+  paid plan is called Pro in every user-facing string (identifiers, `/premium`
+  and tier keys unchanged), $6.99/mo or $47.88/yr (12 × $3.99); nobody is
+  moved up in Stripe. `FREE_LIMITS_ON = false`: free watchlist and portfolio
+  are unlimited and no copy quotes a limit; free price history is 90 days.
+  `/premium` copies Collectr's page for non-members. A rate-the-site dialog
+  asks after 3 pages and 45 s, always with "Not now"; the Pro page shows the
+  average only from 10+ real ratings, never in JSON-LD.
   [2026-10-26](../DECISIONS.md#L19772)
 - **One paid plan again (2026-10-23, supersedes the trial and tier bullets
   below):** Premium $9.99/mo or $79.99/yr with a free 30-day card-gated trial;

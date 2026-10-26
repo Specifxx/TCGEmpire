@@ -59,6 +59,11 @@ const AnnualSwitchNudge = dynamic(() => import("@/components/AnnualSwitchNudge")
 const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then((m) => m.FeedbackWidget), {
   ssr: false,
 });
+// "Rate RiftCompare" (2026-10-26): client-only, opens after a few pages
+// (lib/rate-prompt.ts), so it has nothing to render on the server.
+const RateUsPrompt = dynamic(() => import("@/components/RateUsPrompt").then((m) => m.RateUsPrompt), {
+  ssr: false,
+});
 // Real footer ad content — kept SSR'd (ssr: true, the default) for the same
 // reason the rest of the site's ad units are: an AdSense reviewer or crawler
 // fetching raw HTML must still see it. Only the JS is split out of the
@@ -417,6 +422,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     component header for why a second uninvited dialog would be
                     self-defeating here. It hides itself over the ad zone below. */}
                 <FeedbackWidget />
+                {/* Asks for a star rating once a visitor has used a few pages. */}
+                <RateUsPrompt />
                 {/* SideNav's mobile complement USED TO BE <BottomTabBar /> here.
                     Removed outright: three successive attempts to keep a fixed
                     bottom bar pinned on a phone all failed (see

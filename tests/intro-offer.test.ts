@@ -33,9 +33,9 @@ test("half price is the price's cents halved, rounded so the charge rounds down"
   assert.equal(introAmountOffCents(499), 250);
   assert.equal(499 - introAmountOffCents(499), 249, "Plus $4.99 → $2.49");
   // …and on today's (2026-09-26) prices, should the env ever re-arm the offer.
-  assert.equal(tierIntroMonthlyAmount("premium"), "$1.99", "$3.99 from 2026-10-26");
+  assert.equal(tierIntroMonthlyAmount("premium"), "$3.49", "$6.99 from 2026-10-26");
   assert.equal(tierIntroMonthlyAmount("plus"), "$1.49");
-  assert.equal(introPriceLine("premium"), "$1.99/mo for your first 3 months, then $3.99/mo");
+  assert.equal(introPriceLine("premium"), "$3.49/mo for your first 3 months, then $6.99/mo");
   assert.equal(INTRO_MONTHS, 3);
 });
 

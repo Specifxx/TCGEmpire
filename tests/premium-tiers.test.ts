@@ -348,11 +348,11 @@ test("a plan switch quotes the price the route will charge, in the subscriber's 
   // (priceIdFor(target, interval)), so an annual member moving tiers is billed
   // the target tier's YEARLY price.
   // (2026-09-26 prices.)
-  assert.equal(planSwitchPriceLabel("premium", "year"), "$39.99/yr");
+  assert.equal(planSwitchPriceLabel("premium", "year"), "$47.88/yr");
   assert.equal(planSwitchPriceLabel("plus", "year"), "$23.99/yr");
-  assert.equal(planSwitchPriceLabel("premium", "month"), "$3.99/month");
-  assert.equal(planSwitchPriceLabel("premium", null), "$3.99/month", "unknown interval: the monthly price, the checkout default");
-  assert.equal(planSwitchPriceLabel("premium", "year", false), "$3.99/month", "no annual price for the target: priceIdFor falls back to monthly, and so does the quote");
+  assert.equal(planSwitchPriceLabel("premium", "month"), "$6.99/month");
+  assert.equal(planSwitchPriceLabel("premium", null), "$6.99/month", "unknown interval: the monthly price, the checkout default");
+  assert.equal(planSwitchPriceLabel("premium", "year", false), "$6.99/month", "no annual price for the target: priceIdFor falls back to monthly, and so does the quote");
   for (const f of ["src/components/SubscriptionActions.tsx", "src/components/PremiumDialog.tsx", "src/components/PremiumButton.tsx", "src/app/dashboard/page.tsx"]) {
     assert.match(read(f), /planSwitchPriceLabel\("premium", /, `${f} must quote the upgrade through planSwitchPriceLabel`);
   }
@@ -450,12 +450,12 @@ test("Plus's display prices and helpers are real and match the decided figures",
 });
 
 test("Pro's display prices and helpers match the 2026-10-26 figures", () => {
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$3.99", "Pro at $3.99 from 2026-10-26");
-  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$39.99");
-  // $39.99 vs 12×$3.99=$47.88.
-  assert.equal(annualSavingPct("premium"), 16);
-  assert.equal(premiumEffectiveMonthly("premium"), "$3.33");
-  assert.equal(premiumFromLine("premium"), "from $3.33/mo billed yearly, or $3.99/month month-to-month");
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$6.99", "Pro at $6.99 from 2026-10-26");
+  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$47.88");
+  // $47.88 = 12 × $3.99, vs 12 × $6.99 = $83.88.
+  assert.equal(annualSavingPct("premium"), 43);
+  assert.equal(premiumEffectiveMonthly("premium"), "$3.99");
+  assert.equal(premiumFromLine("premium"), "from $3.99/mo billed yearly, or $6.99/month month-to-month");
   // The two tiers must never cost the same: Plus is the cheaper one.
   assert.ok(premiumMoneyNum(PLUS_PRICE_AMOUNT) < premiumMoneyNum(PREMIUM_PRICE_AMOUNT));
   assert.ok(premiumMoneyNum(PLUS_ANNUAL_AMOUNT) < premiumMoneyNum(PREMIUM_ANNUAL_AMOUNT));

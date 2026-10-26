@@ -47,9 +47,9 @@ test("today's decided price is what the site actually announces, with no increas
   // no announced future increase) so a careless edit changes it loudly rather
   // than silently. The cut is exactly the edit that would have announced a
   // FAKE increase had PREMIUM_NEXT_PRICE_AMOUNT stayed a hand-typed "$9.99".
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$3.99", "Pro at $3.99 from 2026-10-26");
-  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$39.99");
-  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$3.99");
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$6.99", "Pro at $6.99 from 2026-10-26");
+  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$47.88", "12 × $3.99");
+  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$6.99");
   assert.equal(premiumPriceIncreaseAnnounced(), false);
 });
 
@@ -119,7 +119,7 @@ test("with no announcement live, the helpers say only what is true: cancel anyti
   // protection from a rise nobody had decided. The steady state now says the
   // one thing that is unconditionally true.
   assert.equal(premiumLockInLine(), "No contract: cancel anytime from your account page, in a couple of clicks.");
-  assert.equal(premiumLockInHeadline(), "Pro is $3.99/month — cancel anytime");
+  assert.equal(premiumLockInHeadline(), "Pro is $6.99/month — cancel anytime");
   for (const copy of [premiumLockInLine(), premiumLockInHeadline()]) {
     assert.doesNotMatch(copy, /lock|goes up|rises|rise|increas/i, `steady state must not imply a coming increase: "${copy}"`);
   }
@@ -300,7 +300,7 @@ test("the Pro-explained article states the price the site actually charges, not 
   // intro. ($4.99 and $39.99 are legitimately still in the article — they are
   // today's Premium prices, which were Plus's before the cut.)
   // $9.99/$79.99 are today's prices again (2026-10-23); the cut's $39.99 annual is retired.
-  // Pro at $3.99/$39.99 from 2026-10-26: $9.99 and $79.99 are retired again.
+  // Pro at $6.99/$47.88 from 2026-10-26: $9.99 and $79.99 are retired again.
   assert.ok(!haystack.includes("$9.99"), "article must not still quote the retired $9.99 price anywhere");
   assert.ok(!haystack.includes("$79.99"), "article must not still quote the retired $79.99 annual price anywhere");
   assert.ok(!/half price for their first|3-day free trial/i.test(haystack), "no trial or intro while both are off");
