@@ -19768,3 +19768,35 @@ layouts and requires every table, and per-card listings, to come back identical.
 series) still goes into all 316 bundles; it is a fifteenth of what the snapshot
 was, and can be packed the same way if builds creep again. The two Prisma
 clients are ~33 MB of each bundle and are not ours to shrink.
+
+## Store pages were most of the prerender — 2026-10-26
+
+Correction to "Deploys slowed as the bundled snapshot grew", above. Its
+diagnosis was wrong. The pack shipped (b24b897) and the next production build
+still took 5.6 minutes. Its Vercel log, which the owner pasted, shows where the
+time goes: clone and guards 45 s, compile 61 s, lint and types 46 s,
+**prerendering 2 min 43 s**, then traces, packaging and upload in about 20 s.
+Packaging was never the cost, and the pack only makes functions smaller.
+
+**What the prerender spends.** A timed local files-mode build, with the finish
+time of every prerendered HTML file, put 70 of its ~120 seconds on the 226
+`/stores/<slug>` pages. Each runs three queries pinned to one store
+(`retailerPrice.count`, `.aggregate` and `.findMany` with `where: { retailer }`),
+in `generateMetadata` and again in the page. The file engine indexed listings
+only by `cardId`, so every one of those queries scanned all ~197,000 listings.
+That cost grows with both the store count and the listing count, which is the
+creep the commit statuses showed from 15 October: files mode moved those
+queries off Neon's indexes and onto a scan.
+
+**The change.** `RetailerPrice.retailer` joins `cardId` in the engine's indexed
+fields (`src/lib/public-data/models.ts`). The index is built once per worker from
+the same rows in the same order, so every answer is unchanged
+(`tests/public-data-pack.test.ts` compares it with a scan on the real
+snapshot). Locally the prerender went from 118 to 79 seconds, and the store
+pages from 70 to 28.
+
+**Still there.** On Vercel `rc-rise-inputs` (the Rising board's inputs, read from
+Neon) is computed again in each build worker, up to 11 s per market each time;
+`unstable_cache` does not share entries between prerender workers. That is the
+next lever if builds need to get shorter. The pack stays: smaller functions
+cost nothing and start faster.

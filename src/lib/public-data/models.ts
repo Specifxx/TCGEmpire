@@ -77,9 +77,14 @@ type DmmfModel = {
 
 // Listings are stored one file per card (lib/public-data/store.ts), so a
 // cardId lookup reads one small file instead of every listing on the site.
+// RetailerPrice.retailer: each /stores/<slug> page (~226 prerendered at build)
+// runs three queries pinned to one store, and without the index each one
+// scanned all ~197,000 listings: 70 of the build's ~120 seconds of
+// prerendering (DECISIONS.md, "Store pages were most of the prerender").
+// cardId is listed first, so a query naming both still reads one card's file.
 const INDEXED: Partial<Record<ModelName, string[]>> = {
   Card: ["id", "slug"],
-  RetailerPrice: ["cardId"],
+  RetailerPrice: ["cardId", "retailer"],
   EbayAdListing: ["cardId"],
   EbayGradedListing: ["cardId"],
 };

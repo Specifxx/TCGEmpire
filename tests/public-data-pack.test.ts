@@ -78,3 +78,20 @@ test("next.config.js bundles the pack instead of data/public/ when it exists, an
   assert.match(build, /tsx scripts\/pack-public-data\.ts && next build"?$/);
   assert.match(readFileSync(".gitignore", "utf8"), /^\/\.public-data-pack\/$/m, "the pack is never committed");
 });
+
+test("a store-pinned listing query reads the retailer index and answers exactly what a full scan does", { skip: !existsSync(join(committed, "meta.json")) }, async () => {
+  const { runPublicQuery } = await import("../src/lib/public-data/engine");
+  resetPublicDataSource();
+  const src = publicDataSource(committed);
+  const all = src.all("RetailerPrice") as { retailer: string; inStock: boolean; priceCents: number }[];
+  const stores = [...new Set(all.map((r) => r.retailer))].slice(0, 5);
+  assert.ok(stores.length > 0);
+  for (const key of stores) {
+    const scan = all.filter((r) => r.retailer === key && r.inStock);
+    const count = runPublicQuery(src, "RetailerPrice", "count", { where: { retailer: key, inStock: true } });
+    assert.equal(count, scan.length, key);
+    const rows = runPublicQuery(src, "RetailerPrice", "findMany", { where: { retailer: key, inStock: true }, orderBy: { priceCents: "asc" }, take: 24, select: { priceCents: true } }) as { priceCents: number }[];
+    assert.deepEqual(rows.map((r) => r.priceCents), scan.map((r) => r.priceCents).sort((a, b) => a - b).slice(0, 24), key);
+  }
+  resetPublicDataSource();
+});
