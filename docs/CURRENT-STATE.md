@@ -908,6 +908,12 @@ longer lands on its entry.
   (`lib/riftboundstocks.ts`); no link when there is no match. Copy describes
   the other page and makes no appreciation claim. [2026-09-28](../DECISIONS.md#L15160)
 
+- **Social posts are made from the committed price data and posted by the
+  owner (2026-10-26):** `social/` films a vertical video, an Instagram carousel
+  and captions per pack; `social-packs.yml` publishes Mon/Wed/Fri packs to the
+  `social-packs` branch. Same price basis and wording rules as the site; Claude
+  never posts. [2026-10-26](../DECISIONS.md#L19772)
+
 ## Prices & data
 
 - **Only English prints are priced.** `FOREIGN_LANG` (`lib/scrape-http.ts`) is
