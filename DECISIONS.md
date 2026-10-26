@@ -19669,3 +19669,23 @@ tags is then a read, not a guess.
 `earnings:sources` check. The section arrives with the release that ships the
 route; until then the old route sends the digest with the marker, an HTML
 comment and one bracketed text line, and nothing else.
+
+## TCGplayer earnings by site and placement — 2026-10-26
+
+The first 30-day read had TCGplayer at A$749, 45% of all earnings, with no way to
+say which site or placement earned it, while eBay had a tag breakdown. Every site
+already puts `<site>-<market>-<placement>` in Impact's `sharedid`, and Impact
+returns it on each action as `SharedId` (`SubId1` as fallback).
+
+**What.** `impactActions` keeps the tag, `impactTagDays` builds the same `TagDay`
+rows eBay uses (reversed actions left out; anything not APPROVED counts as
+pending), and `/admin/earnings` and the Monday digest show "TCGplayer by tag" /
+"by site" next to eBay's, through the same `tagBreakdown`. `TAG_NAMES` gains the
+prefixes the sister sites actually use (`oc`, `gundam`, `lorcana`, `cc`).
+
+**Also learned.** eBay's untagged sales (32% of 30 days) were all phone or tablet
+traffic in card categories, a third through link tool 10049, which none of our
+sites sets; every stored link carries a customid. So it is eBay's app handoff
+dropping the tag, not a site bug, and the money is still paid. Count it as
+card-site money, mostly RiftCompare's.
+

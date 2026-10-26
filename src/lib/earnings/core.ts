@@ -207,6 +207,8 @@ export interface ImpactAction {
   state: string;
   currency: string;
   cents: number;
+  /** The click's sharedid (every site's TCGplayer links carry `<site>-<market>-<placement>`), "" when none. */
+  tag?: string;
 }
 
 export function impactActions(json: unknown): ImpactAction[] {
@@ -221,6 +223,7 @@ export function impactActions(json: unknown): ImpactAction[] {
       state: String(a.State ?? "").toUpperCase(),
       currency: String(a.Currency ?? "USD").toUpperCase(),
       cents: toCents(a.Payout),
+      tag: String(pick(a, "SharedId", "SubId1") ?? "").trim(),
     });
   }
   return out;
@@ -239,6 +242,15 @@ export function impactActionDays(actions: readonly ImpactAction[], states: reado
     actions
       .filter((a) => states.includes(a.state) || (states.includes("PENDING") && !["APPROVED", "PENDING", "REVERSED"].includes(a.state)))
       .map((a) => ({ day: a.day, currency: a.currency, cents: a.cents, pendingCents: a.state === "APPROVED" ? 0 : a.cents })),
+  );
+}
+
+/** TCGplayer by tag (2026-10-26): the same breakdown as eBay's, from each action's sharedid. Reversed actions pay nothing. */
+export function impactTagDays(actions: readonly ImpactAction[]): TagDay[] {
+  return tagDays(
+    actions
+      .filter((a) => a.state !== "REVERSED")
+      .map((a) => ({ day: a.day, tag: a.tag ?? "", pending: a.state !== "APPROVED", currency: a.currency, cents: a.cents })),
   );
 }
 
@@ -425,7 +437,7 @@ export interface TagDay {
   sales: number;
 }
 
-export function tagDays(txns: readonly EpnTxn[]): TagDay[] {
+export function tagDays(txns: readonly Pick<EpnTxn, "day" | "tag" | "hint" | "pending" | "currency" | "cents">[]): TagDay[] {
   const m = new Map<string, TagDay>();
   for (const t of txns) {
     const k = `${t.day}|${t.tag}|${t.hint ?? ""}|${t.currency}`;
@@ -450,6 +462,10 @@ export const TAG_NAMES: Record<string, string> = {
   pkmn: "Pokémon on RiftCompare",
   dex: "DexCompare (Pokémon)",
   op: "One Piece",
+  oc: "OP Compare (One Piece)",
+  gundam: "Gundam Compare",
+  lorcana: "Lorcana Compare",
+  cc: "CamCompare",
 };
 
 export function tagGroup(tag: string): { key: string; label: string } {

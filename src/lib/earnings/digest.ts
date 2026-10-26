@@ -45,8 +45,12 @@ export function earningsDigest(sources: readonly SourceResult[], costs: readonly
   rows.sort((a, b) => b.d30 - a.d30);
   const off = sources.filter((s) => s.status === "not-configured" && !s.days.length).map((s) => SOURCE_LABELS[s.key]);
 
-  const ebay = sources.find((s) => s.key === "ebay");
-  const sites = ebay?.tags ? tagBreakdown(ebay.tags, "30d", today, DISPLAY).filter((g) => g.cents || g.sales) : [];
+  // eBay and TCGplayer by site: each network's tracking tag (customid / sharedid), grouped by prefix.
+  const bySite = (["ebay", "tcgplayer"] as const).flatMap((key) => {
+    const s = sources.find((x) => x.key === key);
+    const groups = s?.tags ? tagBreakdown(s.tags, "30d", today, DISPLAY).filter((g) => g.cents || g.sales) : [];
+    return groups.length ? [{ name: key === "ebay" ? "eBay" : "TCGplayer", groups }] : [];
+  });
 
   const total7 = sum("7d");
   const total30 = sum("30d");
@@ -62,8 +66,8 @@ export function earningsDigest(sources: readonly SourceResult[], costs: readonly
     html += `<tr><td style="${cell}">${esc(r.label)}${r.note ? ` <span style="color:#eab308">(${esc(r.note)})</span>` : ""}</td><td style="${num}">${esc(money(r.d7))}</td><td style="${num}">${esc(money(r.d30))}</td></tr>`;
   }
   html += `</table></td></tr>`;
-  if (sites.length) {
-    html += `<tr><td style="padding:10px 32px 2px;font-size:13px;color:#e6ebf2"><strong>eBay by site, 30 days</strong></td></tr>`;
+  for (const { name, groups: sites } of bySite) {
+    html += `<tr><td style="padding:10px 32px 2px;font-size:13px;color:#e6ebf2"><strong>${name} by site, 30 days</strong></td></tr>`;
     html += `<tr><td style="padding:2px 32px"><table role="presentation" cellpadding="0" cellspacing="0" width="100%">`;
     for (const g of sites) {
       html += `<tr><td style="${cell}">${esc(g.label)}</td><td style="${num}">${g.sales} sale${g.sales === 1 ? "" : "s"}</td><td style="${num}">${esc(money(g.cents))}</td></tr>`;
@@ -79,10 +83,13 @@ export function earningsDigest(sources: readonly SourceResult[], costs: readonly
     "MONEY",
     `  Last 30 days: ${money(total30)} earned (7 days: ${money(total7)}). Costs ${money(cost30)}, profit ${money(total30 - cost30)}.`,
     ...rows.map((r) => `  ${r.label}: ${money(r.d7)} (7d), ${money(r.d30)} (30d)${r.note ? `, ${r.note}` : ""}`),
-    ...(sites.length ? ["  eBay by site, 30 days:", ...sites.flatMap((g) => [
-            `    ${g.label}: ${money(g.cents)} from ${g.sales} sale${g.sales === 1 ? "" : "s"}`,
-            ...(g.key ? [] : g.tags.slice(0, 3).map((t) => `      ${t.tag}: ${money(t.cents)} from ${t.sales}`)),
-          ])] : []),
+    ...bySite.flatMap(({ name, groups }) => [
+      `  ${name} by site, 30 days:`,
+      ...groups.flatMap((g) => [
+        `    ${g.label}: ${money(g.cents)} from ${g.sales} sale${g.sales === 1 ? "" : "s"}`,
+        ...(g.key ? [] : g.tags.slice(0, 3).map((t) => `      ${t.tag}: ${money(t.cents)} from ${t.sales}`)),
+      ]),
+    ]),
     ...(off.length ? [`  Not connected: ${off.join(", ")}.`] : []),
     `  Earnings: ${adminUrl}`,
   ].join("\n");
