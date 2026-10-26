@@ -19949,3 +19949,19 @@ use it, whether or not it links back, and never for money. No stores (they are
 ranked by price under `/stores`) and no other price-comparison site (sending a price
 shopper away from the comparison is the one thing the page must not do). Static,
 no database read, `revalidate = 86400`.
+
+## AdSense back on — 2026-10-26
+
+The owner asked, the same evening, to turn AdSense back on "for now".
+
+**What.** `ADSENSE_SERVING = true` in `lib/adsense.ts`, the one constant the
+"AdSense off, Journey on articles only" entry left as the switch: the loader,
+the pagead2 and Funding Choices preconnects and (under `AD_STRATEGY=manual`)
+the units come back, so Auto ads and the EEA consent message return on every
+page. Nothing else from that entry changes: Journey still loads only on
+`/blog/[slug]` and `/guides/[slug]`, so those article pages carry both, as
+every page did from 2026-10-24 to 2026-10-26. Paid members stay ad-free.
+
+**Review.** Still 2026-11-23, now with AdSense in the comparison: affiliate
+earnings per visit against AdSense's A$1.50 a day. "For now" means the owner
+expects to revisit; turning it off again is the same constant.
