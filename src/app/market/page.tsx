@@ -225,6 +225,12 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             </Link>{" "}
             <span className="text-slate-500">every card&apos;s highest and lowest recorded price, and the day it was set.</span>
           </p>
+          <p className="mt-1 text-sm">
+            <Link href="/market/report" className="font-semibold text-brand-400 hover:underline">
+              This month&apos;s market report →
+            </Link>{" "}
+            <span className="text-slate-500">every market side by side, free to quote.</span>
+          </p>
         </div>
       </section>
 

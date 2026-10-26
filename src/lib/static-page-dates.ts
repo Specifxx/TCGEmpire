@@ -39,6 +39,7 @@ const STATIC_PAGE_DATES: Record<string, string> = {
   "/stores/tracked": "2026-09-26",
   "/alerts": "2026-09-26",
   "/stores/suggest": "2026-07-26",
+  "/stores/partners": "2026-10-26",
   "/keywords": "2026-07-29",
   // Fallbacks only — /guides and /blog normally derive their lastmod from the
   // newest article in each category (see sitemap-data.ts's editorial section).

@@ -19836,3 +19836,63 @@ Neon) is computed again in each build worker, up to 11 s per market each time;
 `unstable_cache` does not share entries between prerender workers. That is the
 next lever if builds need to get shorter. The pack stays: smaller functions
 cost nothing and start faster.
+
+## Store partner codes: the store links start earning — 2026-10-26
+
+Owner, after the strategy review (claude.ai artifact "The Empire's Next Move"):
+"execute on all the recommended items". The review's first finding: the
+independent-store rows are what makes RiftCompare different, and none of them
+earned anything: every affiliate dollar came from eBay, TCGplayer and Amazon, and
+the 60+ Shopify stores earned nothing, because `DIRECT_PROGRAMS` was empty.
+
+**What.** `src/lib/store-partner-deals.ts` is one list of store partners. Each
+gives an exclusive discount code (shown by `StoreCodeChip` beside that store's
+rows on card pages, the QuickView, the sealed quick view and its `/stores/<slug>`
+page; tap copies it), a commission parameter for its affiliate app (Shopify
+Collabs, UpPromote, GoAffPro, Refersion), or both. `affiliateUrl` adds the
+parameter through `directProgramUrl`, which now reads that list, so `isPaidLink`
+marks those rows "Paid link" with no second list. `/stores/partners` is the
+offer, linked from `/stores` and the editorial policy; joining is an email (no
+new form). The list is empty until a store signs.
+
+**Why codes, not only links.** A code the store issued to us is the one coupon
+that always works, and the store's own discount report counts our orders even
+where a tracking parameter is lost (phones, app handoffs: the same way eBay drops
+our customid). For a small shop, a commission only on sales we send is an easier
+yes than the $79.99 Stores plan, which stays the step up.
+
+- **A label, never a position.** Rows stay sorted by item price; the shown price
+  is before the code (a code can have exclusions and minimums we cannot see).
+  Only the chip, the link rewrite, the offer page and the ops check read the list
+  (`tests/store-partner-deals.test.ts` walks `src`).
+- **No dead codes.** A code shows only while `checked` is within
+  `CODE_RECHECK_DAYS` (30) and before `until`; past that it hides itself. The ops
+  monitor warns a week ahead (`stores:codes`). The chip decides after mount, so
+  hours-cached pages never serve a lapsed code.
+- **Who to approach first.** `audit-clicks` returned nothing: `ClickEvent` has not
+  been written since `/api/click` became a no-op, and buy clicks live only in GA4.
+  The outreach list therefore ranks stores by how many cards they are the cheapest
+  in-stock offer for in their market (today's public snapshot), the rows that get
+  the "Cheapest" chip and most of the clicks. `docs/store-partners.md` has the
+  list, the email and the steps to add a partner.
+
+## Becoming the cited price outside the US: the monthly market report — 2026-10-26
+
+Same review, recommendation 3: TCGplayer's market price is a US number, and an
+Australian or British buyer has none. RiftCompare already had most of the parts
+(the Index "free to cite", `/api/v1` with its OpenAPI file, `/embed` widgets, the
+store badge). What was missing was one page a journalist, creator or store can
+quote: `/market/report`, every market's index side by side in its own currency
+(30 and 90-day change, median card, breadth) with each market's biggest weekly
+movers. It reads only `getMarketIndex`, cached for days, at `revalidate = 86400`,
+and is linked from `/market` and the sitemap.
+
+## One family of sites in the footer — 2026-10-26
+
+Recommendation 4: one family people recognise, without moving any domain. The
+footer's "Compare other TCGs" now names Gundam Compare and Lorcana Compare too
+and says RiftCompare is part of the Compare Empire family. Both new entries are
+`footerOnly`, so the articles' block keeps the three games Riftbound players come
+from (the AdSense plan's link-network caution still holds). OP Compare's links use
+`www.opcompare.app`, its one host since 2026-10-25. YGO Compare joins once it is
+public.

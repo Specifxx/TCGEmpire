@@ -10,6 +10,7 @@ import { STORE_PAGES, storeBySlug, storePageName, STORE_THIN_THRESHOLD } from "@
 import { formatMeasuredDate, shippingSummary, type StoreShippingSummary } from "@/lib/shipping";
 import { storeBadgeHtml } from "@/lib/store-badge";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { StoreCodeChip } from "@/components/StoreCodeChip";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 import { COUNTRY_GUIDE_SLUGS, pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -172,6 +173,11 @@ export default async function StorePage({ params }: { params: { slug: string } }
             {verified.promo && <p className="mt-1.5 text-sm font-semibold text-gold">{verified.promo}</p>}
           </div>
         )}
+        {/* A store partner's exclusive code (lib/store-partner-deals.ts); renders
+            nothing without a live, recently checked one. */}
+        <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500 empty:hidden">
+          <StoreCodeChip href={store.base} />
+        </p>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           {count > 0 ? (
             <>

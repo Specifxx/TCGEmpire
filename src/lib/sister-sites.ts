@@ -15,7 +15,7 @@
 // look-alike sites cross-linked sitewide read as a link network.
 
 export interface SisterSite {
-  key: "op" | "dex" | "mtg";
+  key: "op" | "dex" | "mtg" | "gundam" | "lorcana";
   name: string;
   url: string;
   /** The game, as a reader would say it: "One Piece", "Pokémon", "Magic". */
@@ -27,20 +27,23 @@ export interface SisterSite {
   what: string;
   /** The pages a Riftbound reader would want from it, deepest-useful first. */
   links: { label: string; href: string }[];
+  /** Footer only: left out of the articles' block, which serves the three
+   *  games Riftbound players most often come from (2026-10-26). */
+  footerOnly?: boolean;
 }
 
 export const SISTER_SITES: SisterSite[] = [
   {
     key: "op",
     name: "OP Compare",
-    url: "https://opcompare.app",
+    url: "https://www.opcompare.app",
     game: "One Piece",
     anchor: "One Piece card prices",
     what: "One Piece Card Game singles and sealed prices across stores in the US, AU, UK, CA, SG and the EU",
     links: [
-      { label: "Where to buy One Piece cards", href: "https://opcompare.app/guides/where-to-buy-one-piece-cards" },
-      { label: "EB05 pre-order prices", href: "https://opcompare.app/eb05-preorders" },
-      { label: "Cheapest alt arts by colour", href: "https://opcompare.app/blog/cheapest-one-piece-alt-arts-by-colour" },
+      { label: "Where to buy One Piece cards", href: "https://www.opcompare.app/guides/where-to-buy-one-piece-cards" },
+      { label: "EB05 pre-order prices", href: "https://www.opcompare.app/eb05-preorders" },
+      { label: "Cheapest alt arts by colour", href: "https://www.opcompare.app/blog/cheapest-one-piece-alt-arts-by-colour" },
     ],
   },
   {
@@ -69,7 +72,38 @@ export const SISTER_SITES: SisterSite[] = [
       { label: "Magic release dates", href: "https://mtgcompare.app/release-dates" },
     ],
   },
+  // The whole family in the footer (2026-10-26, DECISIONS.md "One family of
+  // sites"): Gundam and Lorcana run the same comparison. Nav paths checked live
+  // that day.
+  {
+    key: "gundam",
+    name: "Gundam Compare",
+    url: "https://gundamcompare.com",
+    game: "Gundam",
+    anchor: "Gundam Card Game prices",
+    what: "Gundam Card Game singles and sealed prices across stores",
+    links: [
+      { label: "Gundam sealed prices", href: "https://gundamcompare.com/sealed" },
+      { label: "Gundam pre-orders", href: "https://gundamcompare.com/preorders" },
+    ],
+    footerOnly: true,
+  },
+  {
+    key: "lorcana",
+    name: "Lorcana Compare",
+    url: "https://lorcanacompare.com",
+    game: "Lorcana",
+    anchor: "Disney Lorcana card prices",
+    what: "Disney Lorcana singles and sealed prices across stores",
+    links: [
+      { label: "Lorcana sealed prices", href: "https://lorcanacompare.com/sealed" },
+      { label: "Lorcana pre-orders", href: "https://lorcanacompare.com/preorders" },
+    ],
+    footerOnly: true,
+  },
 ];
+
+const ARTICLE_SITES = SISTER_SITES.filter((s) => !s.footerOnly);
 
 // The cross-game guides, written for players of another game: each gets its
 // own game's site only.
@@ -86,8 +120,8 @@ const BUYING_TAGS = new Set(["where to buy", "price comparison"]);
 /** The sister sites an article links at its end; empty for most articles. */
 export function sisterSitesFor(article: { slug: string; tags: readonly string[] }): SisterSite[] {
   const only = GAME_GUIDES[article.slug];
-  if (only) return SISTER_SITES.filter((s) => s.key === only);
+  if (only) return ARTICLE_SITES.filter((s) => s.key === only);
   const buying =
     article.slug.startsWith("where-to-buy-") || article.slug.startsWith("buy-riftbound-cards-") || article.tags.some((t) => BUYING_TAGS.has(t));
-  return buying ? SISTER_SITES : [];
+  return buying ? ARTICLE_SITES : [];
 }

@@ -19,6 +19,7 @@ import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, isPaidLink, riftboundEbayQuery } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
+import { StoreCodeChip } from "./StoreCodeChip";
 import { FeaturedListingBox } from "./FeaturedListingBox";
 import { featuredListingFor } from "@/lib/featured-listings";
 import { ReportPriceButton } from "./ReportPriceButton";
@@ -635,6 +636,7 @@ function QuickViewModal({
                           })()}
                           {p.lastSeen && <span>updated {timeAgo(p.lastSeen)}</span>}
                           {isPaidLink(p.buyHref) && <PaidLinkTag />}
+                          <StoreCodeChip href={p.buyHref} className="text-[10px]" />
                         </div>
                       </div>
                       <div className="text-right">

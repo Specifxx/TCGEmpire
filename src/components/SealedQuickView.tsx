@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useRef, useState } from "react"
 import { trackEvent } from "@/lib/analytics";
 import type { SealedGroup } from "@/lib/sealed-import";
 import { OutboundLink } from "./OutboundLink";
+import { StoreCodeChip } from "./StoreCodeChip";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
@@ -171,6 +172,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                         <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
                           <span className={isOpen ? "text-up" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>
                           <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
+                          {isOpen && <StoreCodeChip href={l.url} className="text-[10px]" />}
                         </div>
                       </div>
                       {isBest && <span className="chip shrink-0 bg-gold/20 text-gold">Best price</span>}
