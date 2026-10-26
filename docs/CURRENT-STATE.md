@@ -551,6 +551,11 @@ longer lands on its entry.
   cheapest first, same URL, no redirect ([2026-10-24](../DECISIONS.md#L19340)). All 219 official printings plus 16
   Signatures are in the catalogue; all nine Legends are named everywhere
   (`RADIANCE_LEGENDS_CONFIRMED`). [2026-10-22](../DECISIONS.md#L18959)
+- **AdSense off; Journey on articles only (owner, 2026-10-26):**
+  `ADSENSE_SERVING = false` (`lib/adsense.ts`) blanks the loader and every unit;
+  Mediavine's script loads only on `/blog/[slug]` and `/guides/[slug]`, never
+  for an ad-free member, and links off an article do a full page load so it
+  never reaches card, set, sealed or price pages. Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
   so a paid click is worth its page views plus any sign-up. The test (small
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket

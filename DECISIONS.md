@@ -19689,3 +19689,33 @@ sites sets; every stored link carries a customid. So it is eBay's app handoff
 dropping the tag, not a site bug, and the money is still paid. Count it as
 card-site money, mostly RiftCompare's.
 
+
+## AdSense off, Journey on articles only — 2026-10-26
+
+The owner asked whether AdSense is worth what it may cost in bounces and lost
+buy clicks. AdSense earns about A$1.50 a day (the owner's figure); affiliates
+earned about A$1,585 in the same 30 days from about 5,500 Google visits, so
+roughly A$0.29 a visitor against A$0.008. At A$45 a month, ads only had to cost
+3% of affiliate clicks to lose money, and on a price page an ad competes with
+the buy button for the same tap. Since 2026-10-24 the site also loaded both
+AdSense Auto ads and the Journey by Mediavine script on every page.
+
+**What (owner, decision card).**
+- `ADSENSE_SERVING = false` in `lib/adsense.ts`: `AdSenseLoader` renders
+  nothing, `AD_UNITS_ENABLED` is false, the pagead2 and Funding Choices
+  preconnects go. The ownership meta tag and `ads.txt` stay, and the layout
+  still renders the loader component, so turning it back on is that constant
+  (the owner's call). With the loader gone, Google's EEA consent message no
+  longer shows; Consent Mode defaults keep GA4 denied there, which is the
+  compliant side.
+- Journey loads only on `/blog/[slug]` and `/guides/[slug]`
+  (`MediavineLoader`, now a client component the two pages render), never for
+  a paid member (`data-adfree`), and once loaded it turns any link off the
+  article into a full page load, because the script cannot be unloaded and a
+  client-side hop would carry its ads onto card and price pages. A browser
+  Back into a non-article page is the one way it still follows; accepted.
+
+**Review on 2026-11-23.** Compare affiliate earnings per guide visit for the
+four weeks before and after (the earnings tags plus Search Console clicks) with
+Journey's earnings (typed into `/admin/earnings`). If the guides earn less per
+visit, Journey goes too.
