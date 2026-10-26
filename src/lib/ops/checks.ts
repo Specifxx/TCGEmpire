@@ -402,6 +402,8 @@ const JOBS: { file: string; title: string; staleH: number }[] = [
   { file: "production-deploy.yml", title: "Daily release job", staleH: 40 },
   // Weekly (2026-10-15): a week and a day before it reads as late.
   { file: "promo-art.yml", title: "Promo art job (weekly)", staleH: 200 },
+  // Three times a week (2026-10-26): the longest gap is three days.
+  { file: "social-packs.yml", title: "Social packs job", staleH: 80 },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {
