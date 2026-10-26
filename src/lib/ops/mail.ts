@@ -8,6 +8,7 @@ import { emailShell, escapeHtml } from "../email";
 import { AREA_LABEL, AREA_ORDER, SEVERITY_RANK, countBy, type CheckResult, type InboxCounts, type OpsReport, type Severity } from "./types";
 import type { AlertPlan } from "./state";
 import { SITE } from "./deps";
+import { EARNINGS_MARKER, EARNINGS_MARKER_TEXT } from "../earnings/digest";
 
 export interface BuiltOpsEmail {
   subject: string;
@@ -130,6 +131,8 @@ export function buildDigestEmail(report: OpsReport): BuiltOpsEmail {
       inner += `<tr><td style="padding:3px 32px;font-size:13px;line-height:1.5;color:#b8c0cc">${dot(r.severity)}<strong style="color:#e6ebf2">${escapeHtml(r.title)}</strong> — ${escapeHtml(r.summary)}</td></tr>`;
     }
   }
+  // The money section: the site fills it in on the way out (lib/earnings/digest.ts), so no amount passes through here.
+  inner += EARNINGS_MARKER;
   inner += `<tr><td style="padding:14px 32px 4px;font-size:13px;color:#b8c0cc"><strong style="color:#e6ebf2">Inbox:</strong> ${escapeHtml(inboxLine(report.inbox))} <a href="${INBOX_URL}" style="color:#f29733">Open</a></td></tr>`;
   inner += `<tr><td style="padding:12px 32px 22px"><a href="${HEALTH_URL}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open the health dashboard →</a></td></tr>`;
 
@@ -141,6 +144,8 @@ export function buildDigestEmail(report: OpsReport): BuiltOpsEmail {
       const rows = report.results.filter((r) => r.area === a);
       return rows.length ? [AREA_LABEL[a].toUpperCase(), ...rows.map((r) => `  [${WORD[r.severity]}] ${r.title}: ${r.summary}`), ""] : [];
     }),
+    EARNINGS_MARKER_TEXT,
+    "",
     `Inbox: ${inboxLine(report.inbox)}`,
     `Dashboard: ${HEALTH_URL}`,
   ].join("\n");

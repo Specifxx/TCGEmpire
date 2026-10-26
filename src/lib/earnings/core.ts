@@ -207,6 +207,8 @@ export interface ImpactAction {
   state: string;
   currency: string;
   cents: number;
+  /** The click's sharedid (every site's TCGplayer links carry `<site>-<market>-<placement>`), "" when none. */
+  tag?: string;
 }
 
 export function impactActions(json: unknown): ImpactAction[] {
@@ -221,6 +223,7 @@ export function impactActions(json: unknown): ImpactAction[] {
       state: String(a.State ?? "").toUpperCase(),
       currency: String(a.Currency ?? "USD").toUpperCase(),
       cents: toCents(a.Payout),
+      tag: String(pick(a, "SharedId", "SubId1") ?? "").trim(),
     });
   }
   return out;
@@ -239,6 +242,15 @@ export function impactActionDays(actions: readonly ImpactAction[], states: reado
     actions
       .filter((a) => states.includes(a.state) || (states.includes("PENDING") && !["APPROVED", "PENDING", "REVERSED"].includes(a.state)))
       .map((a) => ({ day: a.day, currency: a.currency, cents: a.cents, pendingCents: a.state === "APPROVED" ? 0 : a.cents })),
+  );
+}
+
+/** TCGplayer by tag (2026-10-26): the same breakdown as eBay's, from each action's sharedid. Reversed actions pay nothing. */
+export function impactTagDays(actions: readonly ImpactAction[]): TagDay[] {
+  return tagDays(
+    actions
+      .filter((a) => a.state !== "REVERSED")
+      .map((a) => ({ day: a.day, tag: a.tag ?? "", pending: a.state !== "APPROVED", currency: a.currency, cents: a.cents })),
   );
 }
 
@@ -344,6 +356,9 @@ export interface EpnTxn {
   id: string | null;
   day: string;
   tag: string; // the click's customid, "" when none
+  /** For an untagged sale, what the report says about it (category, eBay site, link tool, traffic), so the
+   *  dashboard can tell which site's links lost their customid. "" when tagged. */
+  hint?: string;
   pending: boolean;
   currency: string;
   cents: number;
@@ -356,10 +371,12 @@ export function epnTransactions(json: unknown, accountCurrency = "AUD"): EpnTxn[
     const day = reportDay(pick(r, "EventDate", "Date", "TransactionDate"));
     if (!day) continue;
     const id = String(pick(r, "EpnTransactionId", "EbayCheckoutTransactionId", "TransactionId") ?? "").trim() || null;
+    const tag = String(pick(r, "CustomId", "CustomID", "SubId") ?? "").trim();
     out.push({
       id,
       day,
-      tag: String(pick(r, "CustomId", "CustomID", "SubId") ?? "").trim(),
+      tag,
+      hint: tag ? "" : untaggedHint(r),
       pending: /pending/i.test(String(pick(r, "Status") ?? "")),
       currency: String(pick(r, "Currency", "CurrencyCode", "EarningsCurrency") ?? accountCurrency).toUpperCase(),
       cents: toCents(pick(r, "Earnings", "TotalEarnings", "Commission")),
@@ -367,6 +384,23 @@ export function epnTransactions(json: unknown, accountCurrency = "AUD"): EpnTxn[
     });
   }
   return out;
+}
+
+// UNTAGGED SALES, EXPLAINED (2026-10-26). A third of eBay's 30-day earnings came
+// with no customid, so no site could claim them. Every site tags its own links,
+// so the report's other columns are the only way to tell where they came from:
+// the item's category (cards vs cameras vs phones), the eBay site, the link tool
+// and the traffic type. Whatever of those the report carries, in that order.
+// Names compared like every other column; a value is cut to 40 characters.
+const HINT_COLUMNS: string[][] = [
+  ["MetaCategoryName", "MetaCategory", "CategoryName", "LeafCategoryName", "ItemCategory"],
+  ["CheckoutSite", "CheckoutSiteName", "ItemSite", "ItemSiteName", "EbaySite", "SiteName"],
+  ["ToolId", "ToolID", "ToolName"],
+  ["TrafficType", "Device", "DeviceType", "Platform"],
+];
+export function untaggedHint(r: Record<string, unknown>): string {
+  const parts = HINT_COLUMNS.map((names) => String(pick(r, ...names) ?? "").trim().slice(0, 40)).filter(Boolean);
+  return parts.join(" · ") || "no detail in the report";
 }
 
 /** The latest record of each sale (a record without an id stands alone). */
@@ -395,17 +429,19 @@ export function txnDays(txns: readonly EpnTxn[]): DayAmount[] {
 export interface TagDay {
   day: string;
   tag: string;
+  /** Untagged sales only: see untaggedHint. */
+  hint?: string;
   currency: string;
   cents: number;
   pendingCents: number;
   sales: number;
 }
 
-export function tagDays(txns: readonly EpnTxn[]): TagDay[] {
+export function tagDays(txns: readonly Pick<EpnTxn, "day" | "tag" | "hint" | "pending" | "currency" | "cents">[]): TagDay[] {
   const m = new Map<string, TagDay>();
   for (const t of txns) {
-    const k = `${t.day}|${t.tag}|${t.currency}`;
-    const row = m.get(k) ?? { day: t.day, tag: t.tag, currency: t.currency, cents: 0, pendingCents: 0, sales: 0 };
+    const k = `${t.day}|${t.tag}|${t.hint ?? ""}|${t.currency}`;
+    const row = m.get(k) ?? { day: t.day, tag: t.tag, ...(t.hint ? { hint: t.hint } : {}), currency: t.currency, cents: 0, pendingCents: 0, sales: 0 };
     row.cents += t.cents;
     if (t.pending) row.pendingCents += t.cents;
     row.sales += 1;
@@ -426,6 +462,10 @@ export const TAG_NAMES: Record<string, string> = {
   pkmn: "Pokémon on RiftCompare",
   dex: "DexCompare (Pokémon)",
   op: "One Piece",
+  oc: "OP Compare (One Piece)",
+  gundam: "Gundam Compare",
+  lorcana: "Lorcana Compare",
+  cc: "CamCompare",
 };
 
 export function tagGroup(tag: string): { key: string; label: string } {
@@ -462,11 +502,13 @@ export function tagBreakdown(rows: readonly TagDay[], range: RangeKey, today: st
     grp.native[r.currency] = (grp.native[r.currency] ?? 0) + r.cents;
     groups.set(g.key, grp);
     const tm = tagMaps.get(g.key) ?? new Map();
-    const t = tm.get(r.tag) ?? { tag: r.tag, cents: 0, pendingCents: 0, sales: 0 };
+    // An untagged sale is listed by what the report says about it (untaggedHint).
+    const line = r.tag || (r.hint ? `(none) ${r.hint}` : "(none)");
+    const t = tm.get(line) ?? { tag: line, cents: 0, pendingCents: 0, sales: 0 };
     t.cents += cents;
     t.pendingCents += pend;
     t.sales += r.sales;
-    tm.set(r.tag, t);
+    tm.set(line, t);
     tagMaps.set(g.key, tm);
   }
   return [...groups.values()]

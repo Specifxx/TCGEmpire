@@ -98,7 +98,7 @@ longer lands on its entry.
 - **The deploy bundles a gzipped pack of the snapshot, not data/public/ (2026-10-26):**
   `npm run build` writes `.public-data-pack/` (`scripts/pack-public-data.ts`) and
   `next.config.js` traces it instead of the 1,700 files that had stretched builds
-  from ~3 to ~6 minutes. The committed format is unchanged. [2026-10-26](../DECISIONS.md#L19640)
+  from ~3 to ~6 minutes. The committed format is unchanged. [2026-10-26](../DECISIONS.md#L19692)
 - **The site watches itself (2026-10-14):** `ops-monitor.yml` (GitHub Actions, every
   3 h, Sunday digest) checks Neon transfer limits, eBay, price imports, scheduled
   jobs, the live site, Stripe, email and the inbox, stores the result for
@@ -156,6 +156,9 @@ longer lands on its entry.
   all time, each and combined, at the site's reference FX rates. Each source is
   guarded alone and shows "Not connected" until its server-only keys are set; the
   ops monitor flags a connected source that fails. [2026-10-24](../DECISIONS.md#L19394)
+  The Monday digest carries the money too (7/30 days by source, eBay by site,
+  costs and profit), filled in by the site so no amount reaches a public log.
+  [2026-10-26](../DECISIONS.md#L19640)
   Costs sit under it with a profit row: Anthropic API usage automatic (Admin
   API cost report); Vercel Pro, any Claude plan and ads are entries (once /
   monthly / yearly, stop-and-replace on a plan change; no billing API exists for

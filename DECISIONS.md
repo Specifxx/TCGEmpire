@@ -19637,6 +19637,58 @@ premium features." Asked which way, the owner chose:
 - The comparison has a new row, "Bulk price a list" (60 lines / 60 lines / 200
   lines, from the constants), second after Best Basket; `TICK_ROWS` may hold 17.
 
+## Money in the weekly digest — 2026-10-26
+
+Owner: "be my business manager … looking at the analytics … where we're making
+the most money." The figures that answer it lived only on `/admin/earnings`,
+which nobody opens unprompted, and the Monday digest said nothing about money.
+
+**What.** The Monday digest (`ops-monitor.yml`, `buildDigestEmail`) now has a
+Money section: combined earnings for 7 and 30 days, each source on its own, eBay
+earnings split by site (the tracking tag's prefix, `tagBreakdown`: `rc`, `op`,
+`dex`, …), and 30-day costs and profit, in AUD like the dashboard
+(`lib/earnings/digest.ts`).
+
+**Why it is filled by the site.** Every repository is public, and so are its
+Actions logs. The monitor therefore puts only `EARNINGS_MARKER` in the digest;
+`/api/cron/ops-notify`, which holds the reporting keys, loads the sources (same
+30-minute memo, capped at 20 s, else a "did not answer" line) and replaces the
+marker on the way to the inbox. No amount reaches a log, the route's response or
+the repository. A digest carrying the marker always goes through the route, even
+when the job has a Resend key (`tests/earnings-digest.test.ts`).
+
+**Untagged eBay sales, explained.** The first 30-day read (A$836 from eBay)
+had 32% of it, 65 sales, with no customid, though every site tags its links.
+Each untagged sale is now listed under "No tag" by what the Transaction Detail
+report says about it (`untaggedHint`: category, eBay site, link tool, traffic
+type, whichever columns exist), on the dashboard and in the digest's top three,
+and the source's detail line names the report's columns. Which site lost its
+tags is then a read, not a guess.
+
+**Not changed:** the alert email, the dashboard, and the status-only
+`earnings:sources` check. The section arrives with the release that ships the
+route; until then the old route sends the digest with the marker, an HTML
+comment and one bracketed text line, and nothing else.
+
+## TCGplayer earnings by site and placement — 2026-10-26
+
+The first 30-day read had TCGplayer at A$749, 45% of all earnings, with no way to
+say which site or placement earned it, while eBay had a tag breakdown. Every site
+already puts `<site>-<market>-<placement>` in Impact's `sharedid`, and Impact
+returns it on each action as `SharedId` (`SubId1` as fallback).
+
+**What.** `impactActions` keeps the tag, `impactTagDays` builds the same `TagDay`
+rows eBay uses (reversed actions left out; anything not APPROVED counts as
+pending), and `/admin/earnings` and the Monday digest show "TCGplayer by tag" /
+"by site" next to eBay's, through the same `tagBreakdown`. `TAG_NAMES` gains the
+prefixes the sister sites actually use (`oc`, `gundam`, `lorcana`, `cc`).
+
+**Also learned.** eBay's untagged sales (32% of 30 days) were all phone or tablet
+traffic in card categories, a third through link tool 10049, which none of our
+sites sets; every stored link carries a customid. So it is eBay's app handoff
+dropping the tag, not a site bug, and the money is still paid. Count it as
+card-site money, mostly RiftCompare's.
+
 ## Deploys slowed as the bundled snapshot grew — 2026-10-26
 
 Owner: production deploys had gone from about 2 to 6 minutes "around the

@@ -5,6 +5,7 @@ import {
   dayIn,
   epnDailyParts,
   impactActionDays,
+  impactTagDays,
   impactActions,
   reportRecords,
   uniqueActions,
@@ -117,6 +118,7 @@ const fetchImpact: Fetcher = async () => {
   return {
     status: "ok",
     days: impactActionDays(actions),
+    tags: impactTagDays(actions),
     checks: [
       { label: `Approved (${count("APPROVED")} actions)`, counted: true, days: impactActionDays(actions, ["APPROVED"]) },
       { label: `Pending (${actions.length - count("APPROVED") - count("REVERSED")} actions)`, counted: true, days: impactActionDays(actions, ["PENDING"]) },
@@ -208,7 +210,7 @@ const fetchEpn: Fetcher = async () => {
   // Both totals side by side, so a mismatch with eBay's own dashboard is visible.
   const parts = [`Amounts in ${EPN_CURRENCY}, your EPN account currency (set EPN_CURRENCY if yours differs).`];
   if (d?.days.length) parts.push(`Daily report all-time ${EPN_CURRENCY} ${money2(sumCents(d.days))}.`);
-  if (t) parts.push(`Transaction report ${EPN_CURRENCY} ${money2(sumCents(tdrDays))} from ${t.sales.length} sales (${t.records} records).`);
+  if (t) parts.push(`Transaction report ${EPN_CURRENCY} ${money2(sumCents(tdrDays))} from ${t.sales.length} sales (${t.records} records). Its columns: ${t.columns.join(", ").slice(0, 300)}.`);
   else if (tdr.status === "rejected") parts.push(`Transaction report unavailable (${tdr.reason instanceof Error ? scrubSecrets(tdr.reason.message).slice(0, 80) : "failed"}), so no tag breakdown.`);
   parts.push("New sales take up to 48 hours to appear.");
   if (d?.duplicates) parts.push(`${d.duplicates} repeated daily rows ignored.`);

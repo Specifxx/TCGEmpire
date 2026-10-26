@@ -45,6 +45,11 @@ const COLORS: Record<EarningsSourceKey, string> = {
   mediavine: "#34d17e",
 };
 const DISPLAY = ["AUD", "USD"] as const;
+const TAG_TITLE: Partial<Record<EarningsSourceKey, string>> = { ebay: "eBay", tcgplayer: "TCGplayer" };
+const TAG_NOTE: Partial<Record<EarningsSourceKey, string>> = {
+  ebay: "From eBay's transaction report, one row per sale.",
+  tcgplayer: "From Impact's actions, by the click's sharedid; reversed actions left out.",
+};
 
 export default async function EarningsPage({ searchParams }: { searchParams: { key?: string; range?: string; cur?: string; fresh?: string } }) {
   const token = process.env.ADMIN_TOKEN;
@@ -81,9 +86,13 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
     .catch(() => []);
   const oldest = Math.min(...sources.map((s) => s.fetchedAt));
   // eBay by tracking tag (2026-10-25, owner): one EPN account, every site's links.
-  const ebay = sources.find((s) => s.key === "ebay");
-  const ebayTags = ebay?.tags ? tagBreakdown(ebay.tags, range, today, display) : [];
-  const ebayTagTotal = ebayTags.reduce((n, g) => n + g.cents, 0);
+  // TCGplayer by tag (2026-10-26): Impact's sharedid, broken down the same way.
+  const tagged = sources
+    .filter((s) => s.tags && (s.key === "ebay" || s.key === "tcgplayer"))
+    .map((s) => {
+      const groups = tagBreakdown(s.tags!, range, today, display);
+      return { s, groups, total: groups.reduce((n, g) => n + g.cents, 0) };
+    });
   // Checking a total against the network's own dashboard (2026-10-25): the exact
   // days this range covers, and each source's pieces in the network's currency.
   const spanFrom = rangeStart(range, today) ?? EARNINGS_SINCE;
@@ -209,16 +218,18 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
           </tbody>
         </table>
       </div>
-      {/* eBay by tracking tag: site prefix, then each full tag */}
-      {ebay?.tags && (
-        <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-ebay-tags>
+      {/* eBay and TCGplayer by tracking tag: site prefix, then each full tag */}
+      {tagged.map(({ s, groups, total }) => (
+        <section key={s.key} className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-ebay-tags={s.key === "ebay" ? "" : undefined} data-source-tags={s.key}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-sm font-extrabold text-white">eBay by tag · {RANGES.find((r) => r.key === range)!.label}</h2>
-            <span className="text-xs text-slate-400">From eBay&apos;s transaction report, one row per sale. Open a site to see each tag.</span>
+            <h2 className="text-sm font-extrabold text-white">
+              {TAG_TITLE[s.key]} by tag · {RANGES.find((r) => r.key === range)!.label}
+            </h2>
+            <span className="text-xs text-slate-400">{TAG_NOTE[s.key]} Open a site to see each tag.</span>
           </div>
-          {ebayTags.length ? (
+          {groups.length ? (
             <div className="mt-3 divide-y divide-ink-800 rounded-xl border border-ink-700 text-sm">
-              {ebayTags.map((g) => (
+              {groups.map((g) => (
                 <details key={g.key || "none"} className="group">
                   <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 hover:bg-ink-800/40 [&::-webkit-details-marker]:hidden">
                     <span aria-hidden className="text-slate-500 transition-transform group-open:rotate-90">›</span>
@@ -229,7 +240,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
                     <span className="text-xs text-slate-400">
                       {g.sales} {g.sales === 1 ? "sale" : "sales"}
                     </span>
-                    <span className="w-12 text-right text-xs text-slate-400">{ebayTagTotal ? Math.round((g.cents / ebayTagTotal) * 100) : 0}%</span>
+                    <span className="w-12 text-right text-xs text-slate-400">{total ? Math.round((g.cents / total) * 100) : 0}%</span>
                     <span className="num w-28 text-right font-bold text-white">{money(g.cents)}</span>
                   </summary>
                   <ul className="border-t border-ink-800 bg-ink-900/60 px-3 py-2">
@@ -248,10 +259,10 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
               ))}
             </div>
           ) : (
-            <p className="mt-2 text-sm text-slate-500">No eBay sales in this range.</p>
+            <p className="mt-2 text-sm text-slate-500">No {TAG_TITLE[s.key]} sales in this range.</p>
           )}
         </section>
-      )}
+      ))}
       {/* Each network's pieces, to match against its own dashboard */}
       {checked.length > 0 && (
         <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-earnings-checks>
