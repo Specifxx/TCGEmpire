@@ -19935,3 +19935,17 @@ first break it applies to every card, so commons lose a week of 7-day movers too
 the model has no per-card break and adding one for a week was not worth it.
 `tests/tcgplayer-listing-basis.test.ts` pins the Kayn shape, the three foil
 rarities, commons and the promo rule.
+
+## Community resources page for backlink outreach — 2026-10-26
+
+`/resources` lists the other Riftbound fan sites (Riftbound.org, Piltover Archive,
+Riftbound.gg, riftDecks, Mobalytics, RiftMana, Rift.Tools, the subreddit, the wiki)
+with one line each. Riftbound.org added us to its tools list in October on request
+and we had nowhere to return the mention, and fan sites link a page that links them,
+so the page is what the backlink emails of 2026-10-26 point at, beside `/embed`.
+
+It is an editorial list, not a link exchange: a site is listed because readers can
+use it, whether or not it links back, and never for money. No stores (they are
+ranked by price under `/stores`) and no other price-comparison site (sending a price
+shopper away from the comparison is the one thing the page must not do). Static,
+no database read, `revalidate = 86400`.

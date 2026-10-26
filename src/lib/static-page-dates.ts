@@ -26,6 +26,7 @@ const STATIC_PAGE_DATES: Record<string, string> = {
   "/creators": "2026-09-05",
   "/creators/apply": "2026-10-16",
   "/embed": "2026-09-21",
+  "/resources": "2026-10-26",
   "/contact": "2026-09-26",
   "/support": "2026-09-26",
   "/privacy": "2026-10-15",

@@ -226,6 +226,9 @@ async function core(): Promise<SitemapEntry[]> {
     // are noindex and stay out of the sitemap — submitting a noindex URL is the
     // "Submitted URL marked 'noindex'" error described a few lines above.
     { url: `${SITE_URL}/embed`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/embed") },
+    // The community resources page: the other Riftbound fan sites, listed for
+    // readers and as the page outreach points other fan sites to.
+    { url: `${SITE_URL}/resources`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/resources") },
     // Trust pages. /editorial-policy and /authors carry the "who writes this and
     // how are the prices collected" disclosures a reviewer looks for, so they are
     // submitted rather than left to be discovered from the footer.
