@@ -19896,3 +19896,42 @@ and says RiftCompare is part of the Compare Empire family. Both new entries are
 from (the AdSense plan's link-network caution still holds). OP Compare's links stay
 on the apex, `opcompare.app`: its www switch was reverted today after a redirect
 loop. YGO Compare joins once it is public.
+
+## Rare, Epic and Showcase cards quoted TCGplayer's market price, not a listing — 2026-10-26
+
+A wrong-price report on Kayn, Unleashed (Heartsteel Signature), RAD 182*/167, in
+Canada: we showed TCGplayer at CA$157.55, the reporter saw CA$875. The 157.55 was
+TCGplayer's market price ($115, converted) before that day's import moved it to
+$332.50; the cheapest English Near-Mint copy on TCGplayer was $500.
+
+It was not one card. Since 2026-09-23 the buyable `tcgplayer` row (and the UK, SG,
+CA and EU rows converted from it) quotes the cheapest English NM listing of the
+matching printing, and takes the printing from the product's `foilOnly`. A probe
+of the live catalogue (`probe-tcgplayer-printing`, maintenance) found TCGplayer
+marks no Riftbound product `foilOnly` (0 of 1,840), while Riftbound prints every
+Rare, Epic and Showcase foil: their previews were 890, 519 and 985 Foil listings
+against 30, 24 and 0 Normal. So the filter wanted a Normal copy of every foil card,
+found none, and fell back to market price: 885 cards in the 2026-10-26 snapshot,
+every card a buyer would pay real money for. The 2026-09-23 entry's Scuttle Crab
+"non-foil product listing only foils" was this same shape: Scuttle Crab #053/219
+is a Rare.
+
+`wantedPrinting()` now takes the printing from TCGplayer's rarity
+(`customAttributes.rarityDbName`): Rare, Epic and Showcase want Foil; Common and
+Uncommon want Normal (a common's foil copies are a different finish and still
+never quote it). A Promo or unknown rarity follows its preview only when every
+English listing agrees on one printing, and stays Normal when they mix, as before.
+The few Normal listings under a foil rarity are sellers' mislabels and are never
+quoted. Nothing else changes: the row's `isFoil`, the market reference row, the
+four market-price consumers, and the fallback to market when no qualifying listing
+exists.
+
+**What it moves.** Most rare-and-up US lows step down (a listing is usually under
+market) and the scarce ones step up, as Kayn does. PriceHistory records each
+card's low, so a second methodology break opens on 2026-10-27 (settled the 28th,
+closed 4 November): the first import on the new code is the 07:00 UTC run, and the
+26th's 19:00 UTC run also writes Sydney day the 27th on the old basis. Like the
+first break it applies to every card, so commons lose a week of 7-day movers too;
+the model has no per-card break and adding one for a week was not worth it.
+`tests/tcgplayer-listing-basis.test.ts` pins the Kayn shape, the three foil
+rarities, commons and the promo rule.

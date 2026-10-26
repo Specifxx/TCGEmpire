@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { cheapestEnglishNm, TCG_US, TCG_US_MARKET, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU, type TcgProduct, type TcgListing } from "../src/lib/tcgplayer";
+import { cheapestEnglishNm, wantedPrinting, TCG_US, TCG_US_MARKET, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU, type TcgProduct, type TcgListing } from "../src/lib/tcgplayer";
 import { isFallbackRetailer, TCGPLAYER_MARKET_RETAILER, ALL_FALLBACK_RETAILERS } from "../src/lib/constants";
 import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "../src/lib/tcg-market-rows";
 import { tcgReferenceRows } from "../src/lib/tcg-reference";
@@ -33,10 +33,10 @@ test("the buyable row takes the cheapest English Near-Mint listing", () => {
   assert.equal(pick?.price, 3.2);
 });
 
-test("a listing of the OTHER printing is never quoted — the live Scuttle Crab case", () => {
-  // 2026-09-23: Scuttle Crab's non-foil product returned three listings, all
-  // Foil. An unfiltered minimum would have priced the regular card as a foil.
-  assert.equal(cheapestEnglishNm(P([L({ price: 3.99, printing: "Foil" }), L({ price: 4.12, printing: "Foil" })])), null);
+test("a listing of the OTHER printing is never quoted", () => {
+  // A common's product can list foil copies too: they are not its price.
+  assert.equal(cheapestEnglishNm(P([L({ price: 3.99, printing: "Foil" }), L({ price: 4.12, printing: "Foil" })], { customAttributes: { rarityDbName: "Common" } })), null);
+  assert.equal(cheapestEnglishNm(P([L({ price: 0.5, printing: "Foil" }), L({ price: 0.97, printing: "Normal" })], { customAttributes: { rarityDbName: "Common" } }))?.price, 0.97);
   // …and the reverse for a foil-only product.
   const foil = cheapestEnglishNm(P([L({ price: 0.5, printing: "Normal" }), L({ price: 2.5, printing: "Foil" })], { foilOnly: true }));
   assert.equal(foil?.price, 2.5);
@@ -147,4 +147,30 @@ test("the published methodology discloses the break", () => {
   const block = src.slice(i, src.indexOf("\n  },\n", i));
   assert.match(block, /When the way a price is sourced changes/);
   assert.match(block, /23 September 2026/);
+});
+
+// Report 2026-10-26: Kayn, Unleashed (Heartsteel Signature), RAD 182*/167. TCGplayer
+// marks no Riftbound product foilOnly, so every Rare, Epic and Showcase looked for
+// a "Normal" listing, found none and quoted market ($332.50) while the cheapest
+// English NM copy was $500. Listings below are the live preview that day.
+test("a foil rarity quotes its foil listings although the product is not foilOnly — the Kayn signature report", () => {
+  const kayn = P(
+    [L({ price: 500, printing: "Foil" }), L({ price: 549.99, printing: "Foil" }), L({ price: 699.99, printing: "Foil" })],
+    { marketPrice: 332.5, customAttributes: { number: "182*/167", rarityDbName: "Showcase" } },
+  );
+  assert.equal(wantedPrinting(kayn), "foil");
+  assert.equal(cheapestEnglishNm(kayn)?.price, 500);
+  for (const rarityDbName of ["Rare", "Epic", "Showcase"]) {
+    // Scuttle Crab #053/219 is a Rare; a "Normal" listing under it is a seller's mislabel.
+    const p = P([L({ price: 1, printing: "Normal" }), L({ price: 3.7, printing: "Foil" })], { customAttributes: { rarityDbName } });
+    assert.equal(cheapestEnglishNm(p)?.price, 3.7, rarityDbName);
+  }
+});
+
+test("a promo or unknown rarity follows its preview only when every listing agrees", () => {
+  const allFoil = P([L({ price: 5.7, printing: "Foil" }), L({ price: 6.52, printing: "Foil" })], { customAttributes: { rarityDbName: "Promo" } });
+  assert.equal(cheapestEnglishNm(allFoil)?.price, 5.7);
+  const mixed = P([L({ price: 1, printing: "Foil" }), L({ price: 1.75, printing: "Normal" })], { customAttributes: { rarityDbName: "Promo" } });
+  assert.equal(cheapestEnglishNm(mixed)?.price, 1.75);
+  assert.equal(wantedPrinting(P([L({ printing: "Normal" })])), "normal");
 });
