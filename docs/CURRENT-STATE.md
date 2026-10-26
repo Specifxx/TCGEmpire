@@ -95,6 +95,10 @@ longer lands on its entry.
   decides whether public reads hit Neon; cron routes, alert baselines and the
   auction board always ask Neon first. Private data never goes to files.
   Demand counters are published only as ranks. [2026-10-09](../DECISIONS.md#L16803)
+- **The deploy bundles a gzipped pack of the snapshot, not data/public/ (2026-10-26):**
+  `npm run build` writes `.public-data-pack/` (`scripts/pack-public-data.ts`) and
+  `next.config.js` traces it instead of the 1,700 files that had stretched builds
+  from ~3 to ~6 minutes. The committed format is unchanged. [2026-10-26](../DECISIONS.md#L19640)
 - **The site watches itself (2026-10-14):** `ops-monitor.yml` (GitHub Actions, every
   3 h, Sunday digest) checks Neon transfer limits, eBay, price imports, scheduled
   jobs, the live site, Stripe, email and the inbox, stores the result for

@@ -27,15 +27,67 @@
 //     order-preserving dense ranks (0 stays 0), which keeps every "popular"
 //     sort and `> 0` filter exact without publishing traffic numbers.
 //     Card.lastViewedAt and Card.ebayCheckedAt are left out (null).
+//
+// PACKED FOR THE DEPLOY (2026-10-26). What the functions carry is not
+// data/public/ itself but a gzipped copy that scripts/pack-public-data.ts
+// writes to .public-data-pack/ (git-ignored) right before `next build`:
+//   meta.json, pack.json                 meta as is, and the pack's own marker
+//   <file>.json.gz                       each top-level file above, gzipped
+//   listings/<00-63>.json.gz             every card's listings, { cardId: rows }, by
+//                                        listingShard(cardId)
+// 76 MB in 1,710 files was copied into ~280 function bundles on every deploy,
+// and Vercel builds went from ~3 to ~6 minutes as it grew; the pack is ~7.5 MB
+// in 72 files. The rows are byte-for-byte the committed ones. DECISIONS.md,
+// "Deploys slowed as the bundled snapshot grew".
 import { createHash } from "node:crypto";
+import fs from "node:fs";
 import path from "node:path";
 import type { ModelName } from "./models";
 
 export const PUBLIC_DATA_FORMAT = 1;
 
-/** data/public/, or PUBLIC_DATA_DIR (tests and the exporter point it elsewhere). Read per call. */
-export function publicDataDir(): string {
+/** The committed snapshot: what the exporter writes and the packer reads. */
+export function snapshotDir(): string {
   return process.env.PUBLIC_DATA_DIR || path.join(process.cwd(), "data", "public");
+}
+
+/** Where scripts/pack-public-data.ts writes the deploy copy. */
+export function packDir(): string {
+  return path.join(process.cwd(), ".public-data-pack");
+}
+
+export const PACK_MARKER = "pack.json";
+export const LISTING_SHARDS = 64;
+
+/** The pack's shard for a card's listings: stable across runs and machines. */
+export function listingShard(cardId: string): string {
+  const n = parseInt(createHash("sha1").update(cardId).digest("hex").slice(0, 8), 16) % LISTING_SHARDS;
+  return String(n).padStart(2, "0");
+}
+
+function generatedAt(dir: string): string | null {
+  try {
+    return (JSON.parse(fs.readFileSync(path.join(dir, FILES.meta), "utf8")) as PublicDataMeta).generatedAt ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The directory the reader loads. PUBLIC_DATA_DIR wins (tests and the exporter
+ * point it elsewhere). Otherwise the pack, when it exists and is not stale: on
+ * Vercel only the pack is bundled, so data/public/ is absent there; locally a
+ * pack left over from an older snapshot is ignored. Read per call.
+ */
+export function publicDataDir(): string {
+  if (process.env.PUBLIC_DATA_DIR) return process.env.PUBLIC_DATA_DIR;
+  const pack = packDir();
+  const snapshot = snapshotDir();
+  if (fs.existsSync(path.join(pack, PACK_MARKER))) {
+    const committed = generatedAt(snapshot);
+    if (committed === null || committed === generatedAt(pack)) return pack;
+  }
+  return snapshot;
 }
 
 export const FILES = {
