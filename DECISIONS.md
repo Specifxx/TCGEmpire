@@ -19690,6 +19690,85 @@ dropping the tag, not a site bug, and the money is still paid. Count it as
 card-site money, mostly RiftCompare's.
 
 
+## AdSense off, Journey on articles only — 2026-10-26
+
+The owner asked whether AdSense is worth what it may cost in bounces and lost
+buy clicks. AdSense earns about A$1.50 a day (the owner's figure); affiliates
+earned about A$1,585 in the same 30 days from about 5,500 Google visits, so
+roughly A$0.29 a visitor against A$0.008. At A$45 a month, ads only had to cost
+3% of affiliate clicks to lose money, and on a price page an ad competes with
+the buy button for the same tap. Since 2026-10-24 the site also loaded both
+AdSense Auto ads and the Journey by Mediavine script on every page.
+
+**What (owner, decision card).**
+- `ADSENSE_SERVING = false` in `lib/adsense.ts`: `AdSenseLoader` renders
+  nothing, `AD_UNITS_ENABLED` is false, the pagead2 and Funding Choices
+  preconnects go. The ownership meta tag and `ads.txt` stay, and the layout
+  still renders the loader component, so turning it back on is that constant
+  (the owner's call). With the loader gone, Google's EEA consent message no
+  longer shows; Consent Mode defaults keep GA4 denied there, which is the
+  compliant side.
+- Journey loads only on `/blog/[slug]` and `/guides/[slug]`
+  (`MediavineLoader`, now a client component the two pages render), never for
+  a paid member (`data-adfree`), and once loaded it turns any link off the
+  article into a full page load, because the script cannot be unloaded and a
+  client-side hop would carry its ads onto card and price pages. A browser
+  Back into a non-article page is the one way it still follows; accepted.
+
+**Review on 2026-11-23.** Compare affiliate earnings per guide visit for the
+four weeks before and after (the earnings tags plus Search Console clicks) with
+Journey's earnings (typed into `/admin/earnings`). If the guides earn less per
+visit, Journey goes too.
+
+## Deploys slowed as the bundled snapshot grew — 2026-10-26
+
+Owner: production deploys had gone from about 2 to 6 minutes "around the
+Mediavine script change", and an earlier look found no cause.
+
+**What the build times say.** Vercel posts a commit status when a build starts
+and when it ends, so GitHub holds every production build's length. Over the 80
+deploys from 12 to 25 October: about 3 minutes until 15 October (2.6 to 4.0),
+then a steady creep (4 to 5 by the 17th, about 6 from the 21st). There is no step
+at the Mediavine commit (8fbff09, 24 October: a `<script>` tag in the layout);
+that timing was a coincidence. CI's own `next build` (ci-build.yml, seeded
+Postgres, db mode) stayed at 2.5 to 3 minutes over the same weeks, so the code
+did not get slower to compile or prerender.
+
+**The cause.** The creep starts with `PUBLIC_DATA_MODE=files` going live on 15
+October ("The daily release follows the public data snapshot"). In that mode
+`outputFileTracingIncludes` copies all of data/public/ into every function, and a
+files-mode build traces it into 282 of the 316 function bundles: then 56 MB, now
+76 MB in 1,710 files, growing with every import (the 16 October snapshot alone
+added 14 MB of listings). Every deploy copied, compressed and uploaded that
+once per function group, and it grew a little every day, which matches the slow
+creep rather than a step. The card page's function was 2,000 files and ~125 MB,
+over 60% of it the snapshot.
+
+**The change.** The functions carry a packed copy instead:
+- `scripts/pack-public-data.ts` (`src/lib/public-data/pack.ts`) runs in `npm run
+  build` right before `next build` and writes `.public-data-pack/` (git-ignored):
+  each table gzipped, and every card's listings in 64 gzipped shards keyed by a
+  hash of the card id (`listingShard`). 76.3 MB in 1,710 files becomes 7.3 MB in
+  72, in about 2 seconds.
+- `next.config.js` bundles the pack when it exists and excludes data/public/
+  (`outputFileTracingExcludes`); a build that skipped the packer bundles
+  data/public/ exactly as before. `db` mode bundles neither, as before.
+- `store.ts` reads both layouts. A card page loads its card's shard (~1 MB of
+  JSON) instead of one card file; whole-table scans load all 64 in the committed
+  order. `publicDataDir()` takes the pack only when it has its marker and the
+  same `generatedAt` as data/public/ (or data/public/ is absent, as on Vercel),
+  so a pack left over locally from an older snapshot is never read.
+- What is committed does not change: data/public/ stays one row per line, so
+  git still stores daily deltas. The exporter writes `snapshotDir()`, never the pack.
+
+`tests/public-data-pack.test.ts` reads the committed snapshot through both
+layouts and requires every table, and per-card listings, to come back identical.
+
+**Not changed, noted.** data/price-history/ (5.3 MB, 147 files, a file a day per
+series) still goes into all 316 bundles; it is a fifteenth of what the snapshot
+was, and can be packed the same way if builds creep again. The two Prisma
+clients are ~33 MB of each bundle and are not ours to shrink.
+
 ## Social packs: TikTok, Shorts and Instagram from the price data — 2026-10-26
 
 The owner has Instagram (managed), and TikTok and YouTube accounts signed in but
