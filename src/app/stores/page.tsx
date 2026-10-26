@@ -88,6 +88,14 @@ export default async function StoresPage() {
         never a position.
       </p>
 
+      {/* The free alternative, for a shop that won't take on a monthly fee
+          (DECISIONS.md, "Store partner codes", 2026-10-26). */}
+      <p className="card-surface mt-4 p-4 text-sm leading-relaxed text-slate-300">
+        <strong className="text-white">No monthly fee?</strong> Become a{" "}
+        <Link href="/stores/partners" className="text-brand-400 hover:underline">store partner</Link> instead: give our
+        shoppers an exclusive code and pay a commission only on the orders it brings you.
+      </p>
+
       <h2 className="mt-8 text-lg font-extrabold text-white">What&apos;s included</h2>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {STORE_PLAN_FEATURES.map((f) => (

@@ -9,6 +9,7 @@
 //
 // The action text is written to be pasted to Claude: the owner's way of fixing things
 // is to say what is wrong in a sentence, not to read a runbook.
+import { STORE_PARTNER_DEALS, codesNeedingRecheck } from "../store-partner-deals";
 import type { CheckResult, Severity, OpsArea } from "./types";
 import type { OpsDeps } from "./deps";
 import { SITE } from "./deps";
@@ -402,6 +403,8 @@ const JOBS: { file: string; title: string; staleH: number }[] = [
   { file: "production-deploy.yml", title: "Daily release job", staleH: 40 },
   // Weekly (2026-10-15): a week and a day before it reads as late.
   { file: "promo-art.yml", title: "Promo art job (weekly)", staleH: 200 },
+  // Three times a week (2026-10-26): the longest gap is three days.
+  { file: "social-packs.yml", title: "Social packs job", staleH: 80 },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {
@@ -718,6 +721,33 @@ export async function storePlansUnlinked(d: OpsDeps): Promise<CheckResult> {
   }
 }
 
+// Store partner codes hide themselves CODE_RECHECK_DAYS after their last check
+// at the store's checkout (lib/store-partner-deals.ts). Warn a week ahead, so a
+// partner's code is re-tested before it silently drops off its rows.
+export function storeCodesRecheck(d: OpsDeps): CheckResult {
+  const id = "stores:codes";
+  const title = "Store partner codes";
+  const due = codesNeedingRecheck(d.now, 7);
+  const live = STORE_PARTNER_DEALS.filter((x) => x.code).length;
+  if (!due.length) {
+    return result(d, {
+      id,
+      area: "money",
+      title,
+      severity: "ok",
+      summary: live ? `${live} partner code${live === 1 ? "" : "s"}; none due for a re-check this week.` : "No store partner codes yet.",
+    });
+  }
+  return result(d, {
+    id,
+    area: "money",
+    title,
+    severity: "warn",
+    summary: `${due.length} partner code${due.length === 1 ? "" : "s"} stop showing soon unless re-checked: ${due.map((x) => `${x.name} (${x.hidesOn})`).join(", ")}.`,
+    action: "Test each code at the store's checkout, then set its `checked` date in src/lib/store-partner-deals.ts. Or tell Claude: \"re-check the store partner codes\".",
+  });
+}
+
 // ── Email and configuration, as the website itself sees them ────────────────
 // The mail keys live in Vercel, not in GitHub, so this asks the site (GET
 // /api/cron/ops-notify) what IT can see. The reply names variables, never values.
@@ -879,6 +909,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
 
   await add("stripe", "money", "Stripe", () => stripeChecks(d));
   await add("stores:unlinked", "money", "Stores plan: stores waiting for their report", () => storePlansUnlinked(d));
+  await add("stores:codes", "money", "Store partner codes", async () => storeCodesRecheck(d));
   await add("site:self", "email", "Email and site settings", () => siteSelfChecks(d));
   await add("inbox:waiting", "inbox", "Inbox", () => inboxWaiting(d));
   return out;

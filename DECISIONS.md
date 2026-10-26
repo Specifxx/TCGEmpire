@@ -19832,3 +19832,200 @@ codes) are the cosmetic and perk half of Collectr's PRO, and come next.
 and paid conversions for the four weeks before and after, compared by
 `PREMIUM_COPY_VERSION` `pro-2026-10-26`; ratings arrive in `/admin/messages`
 with the rest of the feedback.
+
+## Social packs: TikTok, Shorts and Instagram from the price data — 2026-10-26
+
+The owner has Instagram (managed), and TikTok and YouTube accounts signed in but
+unused, with no ad budget. Short data videos are the one kind of social content
+the site can make every week without a human creating anything: the numbers are
+already committed.
+
+**What.** `social/` builds a "pack" from `data/public` and `data/price-history`:
+one 1080×1920 video (the same file goes to TikTok, Reels and Shorts, never a
+re-upload carrying another platform's watermark), a 1080×1350 Instagram
+carousel, captions per platform, `CHECK.md` (every number beside its card
+page) and a paste-ready Claude in Chrome prompt that fills each upload form and
+stops before Post. Three packs: `movers` (the site's `/movers` basis and guards),
+`top <SET>` (a set's ten dearest cards; a card whose cheapest listing halved
+overnight is held back, the Riven 173* lesson) and `boxes <SET>` (cheapest
+booster box at an independent store per market, own currency, no eBay or
+TCGplayer row). Videos are filmed frame-exact from HTML (`render-reel.mjs`, the
+Instagram reel renderer from the Radiance posts, generalised) with an original
+synthesised track, so no platform mutes them.
+
+**Automated, not posted.** `.github/workflows/social-packs.yml` films one pack
+on Monday, Wednesday and Friday mornings (Sydney) and force-pushes the last
+14 days to the `social-packs` branch (one commit, so video never piles up in
+history; its commit subject carries no `[preview]`, so
+`scripts/vercel-ignore-build.sh` skips it). Posting stays with the owner: the
+accounts are his, and a post is outward-facing. The ops monitor watches the
+job (`JOBS`, 80 hours).
+
+**Links.** TikTok and Shorts captions can't carry a clickable link, so each
+profile's link is tagged (`utm_source=tiktok|youtube|instagram`) and lands in
+the existing `social` entry-source bucket.
+
+**Rules kept.** Dated "cheapest listing, before postage" wording, no "worth" or
+predictions, the fan-made line on every post, no Riot or Riftbound logo files
+(their fan policy), card art uncropped. `social/README.md` holds the plan.
+
+## Store pages were most of the prerender — 2026-10-26
+
+Correction to "Deploys slowed as the bundled snapshot grew", above. Its
+diagnosis was wrong. The pack shipped (b24b897) and the next production build
+still took 5.6 minutes. Its Vercel log, which the owner pasted, shows where the
+time goes: clone and guards 45 s, compile 61 s, lint and types 46 s,
+**prerendering 2 min 43 s**, then traces, packaging and upload in about 20 s.
+Packaging was never the cost, and the pack only makes functions smaller.
+
+**What the prerender spends.** A timed local files-mode build, with the finish
+time of every prerendered HTML file, put 70 of its ~120 seconds on the 226
+`/stores/<slug>` pages. Each runs three queries pinned to one store
+(`retailerPrice.count`, `.aggregate` and `.findMany` with `where: { retailer }`),
+in `generateMetadata` and again in the page. The file engine indexed listings
+only by `cardId`, so every one of those queries scanned all ~197,000 listings.
+That cost grows with both the store count and the listing count, which is the
+creep the commit statuses showed from 15 October: files mode moved those
+queries off Neon's indexes and onto a scan.
+
+**The change.** `RetailerPrice.retailer` joins `cardId` in the engine's indexed
+fields (`src/lib/public-data/models.ts`). The index is built once per worker from
+the same rows in the same order, so every answer is unchanged
+(`tests/public-data-pack.test.ts` compares it with a scan on the real
+snapshot). Locally the prerender went from 118 to 79 seconds, and the store
+pages from 70 to 28.
+
+**Still there.** On Vercel `rc-rise-inputs` (the Rising board's inputs, read from
+Neon) is computed again in each build worker, up to 11 s per market each time;
+`unstable_cache` does not share entries between prerender workers. That is the
+next lever if builds need to get shorter. The pack stays: smaller functions
+cost nothing and start faster.
+
+## Store partner codes: the store links start earning — 2026-10-26
+
+Owner, after the strategy review (claude.ai artifact "The Empire's Next Move"):
+"execute on all the recommended items". The review's first finding: the
+independent-store rows are what makes RiftCompare different, and none of them
+earned anything: every affiliate dollar came from eBay, TCGplayer and Amazon, and
+the 60+ Shopify stores earned nothing, because `DIRECT_PROGRAMS` was empty.
+
+**What.** `src/lib/store-partner-deals.ts` is one list of store partners. Each
+gives an exclusive discount code (shown by `StoreCodeChip` beside that store's
+rows on card pages, the QuickView, the sealed quick view and its `/stores/<slug>`
+page; tap copies it), a commission parameter for its affiliate app (Shopify
+Collabs, UpPromote, GoAffPro, Refersion), or both. `affiliateUrl` adds the
+parameter through `directProgramUrl`, which now reads that list, so `isPaidLink`
+marks those rows "Paid link" with no second list. `/stores/partners` is the
+offer, linked from `/stores` and the editorial policy; joining is an email (no
+new form). The list is empty until a store signs.
+
+**Why codes, not only links.** A code the store issued to us is the one coupon
+that always works, and the store's own discount report counts our orders even
+where a tracking parameter is lost (phones, app handoffs: the same way eBay drops
+our customid). For a small shop, a commission only on sales we send is an easier
+yes than the $79.99 Stores plan, which stays the step up.
+
+- **A label, never a position.** Rows stay sorted by item price; the shown price
+  is before the code (a code can have exclusions and minimums we cannot see).
+  Only the chip, the link rewrite, the offer page and the ops check read the list
+  (`tests/store-partner-deals.test.ts` walks `src`).
+- **No dead codes.** A code shows only while `checked` is within
+  `CODE_RECHECK_DAYS` (30) and before `until`; past that it hides itself. The ops
+  monitor warns a week ahead (`stores:codes`). The chip decides after mount, so
+  hours-cached pages never serve a lapsed code.
+- **Who to approach first.** `audit-clicks` returned nothing: `ClickEvent` has not
+  been written since `/api/click` became a no-op, and buy clicks live only in GA4.
+  The outreach list therefore ranks stores by how many cards they are the cheapest
+  in-stock offer for in their market (today's public snapshot), the rows that get
+  the "Cheapest" chip and most of the clicks. `docs/store-partners.md` has the
+  list, the email and the steps to add a partner.
+
+## Becoming the cited price outside the US: the monthly market report — 2026-10-26
+
+Same review, recommendation 3: TCGplayer's market price is a US number, and an
+Australian or British buyer has none. RiftCompare already had most of the parts
+(the Index "free to cite", `/api/v1` with its OpenAPI file, `/embed` widgets, the
+store badge). What was missing was one page a journalist, creator or store can
+quote: `/market/report`, every market's index side by side in its own currency
+(30 and 90-day change, median card, breadth) with each market's biggest weekly
+movers. It reads only `getMarketIndex`, cached for days, at `revalidate = 86400`,
+and is linked from `/market` and the sitemap.
+
+## One family of sites in the footer — 2026-10-26
+
+Recommendation 4: one family people recognise, without moving any domain. The
+footer's "Compare other TCGs" now names Gundam Compare and Lorcana Compare too
+and says RiftCompare is part of the Compare Empire family. Both new entries are
+`footerOnly`, so the articles' block keeps the three games Riftbound players come
+from (the AdSense plan's link-network caution still holds). OP Compare's links stay
+on the apex, `opcompare.app`: its www switch was reverted today after a redirect
+loop. YGO Compare joins once it is public.
+
+## Rare, Epic and Showcase cards quoted TCGplayer's market price, not a listing — 2026-10-26
+
+A wrong-price report on Kayn, Unleashed (Heartsteel Signature), RAD 182*/167, in
+Canada: we showed TCGplayer at CA$157.55, the reporter saw CA$875. The 157.55 was
+TCGplayer's market price ($115, converted) before that day's import moved it to
+$332.50; the cheapest English Near-Mint copy on TCGplayer was $500.
+
+It was not one card. Since 2026-09-23 the buyable `tcgplayer` row (and the UK, SG,
+CA and EU rows converted from it) quotes the cheapest English NM listing of the
+matching printing, and takes the printing from the product's `foilOnly`. A probe
+of the live catalogue (`probe-tcgplayer-printing`, maintenance) found TCGplayer
+marks no Riftbound product `foilOnly` (0 of 1,840), while Riftbound prints every
+Rare, Epic and Showcase foil: their previews were 890, 519 and 985 Foil listings
+against 30, 24 and 0 Normal. So the filter wanted a Normal copy of every foil card,
+found none, and fell back to market price: 885 cards in the 2026-10-26 snapshot,
+every card a buyer would pay real money for. The 2026-09-23 entry's Scuttle Crab
+"non-foil product listing only foils" was this same shape: Scuttle Crab #053/219
+is a Rare.
+
+`wantedPrinting()` now takes the printing from TCGplayer's rarity
+(`customAttributes.rarityDbName`): Rare, Epic and Showcase want Foil; Common and
+Uncommon want Normal (a common's foil copies are a different finish and still
+never quote it). A Promo or unknown rarity follows its preview only when every
+English listing agrees on one printing, and stays Normal when they mix, as before.
+The few Normal listings under a foil rarity are sellers' mislabels and are never
+quoted. Nothing else changes: the row's `isFoil`, the market reference row, the
+four market-price consumers, and the fallback to market when no qualifying listing
+exists.
+
+**What it moves.** Most rare-and-up US lows step down (a listing is usually under
+market) and the scarce ones step up, as Kayn does. PriceHistory records each
+card's low, so a second methodology break opens on 2026-10-27 (settled the 28th,
+closed 4 November): the first import on the new code is the 07:00 UTC run, and the
+26th's 19:00 UTC run also writes Sydney day the 27th on the old basis. Like the
+first break it applies to every card, so commons lose a week of 7-day movers too;
+the model has no per-card break and adding one for a week was not worth it.
+`tests/tcgplayer-listing-basis.test.ts` pins the Kayn shape, the three foil
+rarities, commons and the promo rule.
+
+## Community resources page for backlink outreach — 2026-10-26
+
+`/resources` lists the other Riftbound fan sites (Riftbound.org, Piltover Archive,
+Riftbound.gg, riftDecks, Mobalytics, RiftMana, Rift.Tools, the subreddit, the wiki)
+with one line each. Riftbound.org added us to its tools list in October on request
+and we had nowhere to return the mention, and fan sites link a page that links them,
+so the page is what the backlink emails of 2026-10-26 point at, beside `/embed`.
+
+It is an editorial list, not a link exchange: a site is listed because readers can
+use it, whether or not it links back, and never for money. No stores (they are
+ranked by price under `/stores`) and no other price-comparison site (sending a price
+shopper away from the comparison is the one thing the page must not do). Static,
+no database read, `revalidate = 86400`.
+
+## AdSense back on — 2026-10-26
+
+The owner asked, the same evening, to turn AdSense back on "for now".
+
+**What.** `ADSENSE_SERVING = true` in `lib/adsense.ts`, the one constant the
+"AdSense off, Journey on articles only" entry left as the switch: the loader,
+the pagead2 and Funding Choices preconnects and (under `AD_STRATEGY=manual`)
+the units come back, so Auto ads and the EEA consent message return on every
+page. Nothing else from that entry changes: Journey still loads only on
+`/blog/[slug]` and `/guides/[slug]`, so those article pages carry both, as
+every page did from 2026-10-24 to 2026-10-26. Paid members stay ad-free.
+
+**Review.** Still 2026-11-23, now with AdSense in the comparison: affiliate
+earnings per visit against AdSense's A$1.50 a day. "For now" means the owner
+expects to revisit; turning it off again is the same constant.

@@ -47,6 +47,18 @@ export const METHODOLOGY_BREAKS: readonly MethodologyBreak[] = [
     settled: Date.UTC(2026, 8, 24),
     why: "US TCGplayer row: market price -> cheapest English NM listing",
   },
+  // 2026-10-27: the same switch, finally reaching every Rare, Epic and Showcase
+  // card. Their listings are all Foil and the printing filter wanted Normal, so
+  // until this date those rows still quoted market (lib/tcgplayer.ts,
+  // wantedPrinting). The first import on the new code is 07:00 UTC on the 27th;
+  // the 19:00 UTC run of the 26th also writes Sydney day the 27th, on the old
+  // basis, so the 27th is unsure and the 28th is settled.
+  {
+    from: Date.UTC(2026, 9, 27),
+    to: Date.UTC(2026, 10, 4),
+    settled: Date.UTC(2026, 9, 28),
+    why: "US TCGplayer row on Rare/Epic/Showcase cards: market price -> cheapest English NM foil listing",
+  },
 ];
 
 // Drops every point a comparison must not reach back to across a break. For

@@ -97,8 +97,11 @@ longer lands on its entry.
   Demand counters are published only as ranks. [2026-10-09](../DECISIONS.md#L16803)
 - **The deploy bundles a gzipped pack of the snapshot, not data/public/ (2026-10-26):**
   `npm run build` writes `.public-data-pack/` (`scripts/pack-public-data.ts`) and
-  `next.config.js` traces it instead of the 1,700 files that had stretched builds
-  from ~3 to ~6 minutes. The committed format is unchanged. [2026-10-26](../DECISIONS.md#L19723)
+  `next.config.js` traces it instead of 1,700 files. The committed format is
+  unchanged. It did not shorten builds; the store-page index below did. [2026-10-26](../DECISIONS.md#L19723)
+- **Listings are indexed by store as well as by card (2026-10-26):** in files mode
+  a `where: { retailer }` query reads the `retailer` index, not every listing;
+  the 226 store pages were most of the build's prerender. [2026-10-26](../DECISIONS.md#L19872)
 - **The site watches itself (2026-10-14):** `ops-monitor.yml` (GitHub Actions, every
   3 h, Sunday digest) checks Neon transfer limits, eBay, price imports, scheduled
   jobs, the live site, Stripe, email and the inbox, stores the result for
@@ -174,6 +177,13 @@ longer lands on its entry.
   comparison** — never read the plan from a comparison or ranking. Checkout refuses a
   Stripe Price dearer than the page. Pilot partners keep free reports.
   [2026-10-23](../DECISIONS.md#L19079)
+- **Store partner codes (2026-10-26, owner):** one list,
+  `src/lib/store-partner-deals.ts`: a store's exclusive discount code (a chip beside
+  its rows and on its store page, hidden 30 days after its last checkout test) and
+  its affiliate app's commission parameter (added by `affiliateUrl`, so the row is a
+  "Paid link"). The offer is `/stores/partners`. A label, never a position: rows stay
+  sorted by item price, the price shown is before the code, and nothing that ranks
+  reads the list. [2026-10-26](../DECISIONS.md#L19904)
 - **Creator codes (2026-10-16, owner):** a creator applies at `/creators/apply`,
   the owner approves in `/admin/affiliates` (an `Affiliate` plus a Stripe
   promotion code on the shared 20%-off, forever coupon). Subscribers get 20% off
@@ -565,11 +575,13 @@ longer lands on its entry.
   cheapest first, same URL, no redirect ([2026-10-24](../DECISIONS.md#L19340)). All 219 official printings plus 16
   Signatures are in the catalogue; all nine Legends are named everywhere
   (`RADIANCE_LEGENDS_CONFIRMED`). [2026-10-22](../DECISIONS.md#L18959)
-- **AdSense off; Journey on articles only (owner, 2026-10-26):**
-  `ADSENSE_SERVING = false` (`lib/adsense.ts`) blanks the loader and every unit;
-  Mediavine's script loads only on `/blog/[slug]` and `/guides/[slug]`, never
-  for an ad-free member, and links off an article do a full page load so it
-  never reaches card, set, sealed or price pages. Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693)
+- **AdSense on; Journey on articles only (owner, 2026-10-26):**
+  AdSense was switched off, then back on "for now" the same day:
+  `ADSENSE_SERVING` (`lib/adsense.ts`) is the one switch for the loader and
+  every unit. Mediavine's script loads only on `/blog/[slug]` and
+  `/guides/[slug]`, never for an ad-free member, and links off an article do a
+  full page load so it never reaches card, set, sealed or price pages.
+  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20017)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
   so a paid click is worth its page views plus any sign-up. The test (small
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket
@@ -918,6 +930,12 @@ longer lands on its entry.
   (`lib/riftboundstocks.ts`); no link when there is no match. Copy describes
   the other page and makes no appreciation claim. [2026-09-28](../DECISIONS.md#L15160)
 
+- **Social posts are made from the committed price data and posted by the
+  owner (2026-10-26):** `social/` films a vertical video, an Instagram carousel
+  and captions per pack; `social-packs.yml` publishes Mon/Wed/Fri packs to the
+  `social-packs` branch. Same price basis and wording rules as the site; Claude
+  never posts. [2026-10-26](../DECISIONS.md#L19772)
+
 ## Prices & data
 
 - **Only English prints are priced.** `FOREIGN_LANG` (`lib/scrape-http.ts`) is
@@ -931,11 +949,14 @@ longer lands on its entry.
   Add a card there, never loosen `FOREIGN_LANG`. [2026-10-15](../DECISIONS.md#L17148)
 - **TCGplayer is a buyable comparison row in every market but Australia**
   (US `tcgplayer`; UK/SG/CA/EU the same price converted): the cheapest English
-  NM listing, else TCGplayer's market (last-sold) price, in stock either way.
+  NM listing of the card's printing (Foil for Rare, Epic and Showcase, from
+  TCGplayer's rarity, since `foilOnly` is never set), else TCGplayer's market
+  (last-sold) price, in stock either way.
   In Australia it stays a reference, never a row. Other references (Cardmarket;
   `tcgplayer_market`) still sit below the comparison, never in it.
   [2026-09-18](../DECISIONS.md#L8181), [2026-09-19](../DECISIONS.md#L8747),
-  [2026-09-23](../DECISIONS.md#L10975), [2026-10-02](../DECISIONS.md#L16522)
+  [2026-09-23](../DECISIONS.md#L10975), [2026-10-02](../DECISIONS.md#L16522),
+  [2026-10-26](../DECISIONS.md#L19964)
 - **Deal Finder has three views, as tabs under its intro:** "Underpriced vs
   TCGplayer" (the default; the store picker, no Buy-from presets), "Cheapest on
   eBay" (`?view=ebay`, free) and "Underpriced vs eBay" (`?view=vs-ebay`, gated

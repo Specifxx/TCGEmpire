@@ -1,0 +1,106 @@
+name: Social packs
+
+# Three times a week, film a ready-to-post social pack (video for TikTok, Reels
+# and Shorts, Instagram carousel, captions, a Claude in Chrome posting prompt)
+# from the morning's committed price data, and publish it to the `social-packs`
+# branch: one force-pushed commit holding the last 14 days of packs. Posting
+# stays with the owner. social/README.md has the plan; DECISIONS.md, "Social
+# packs", 2026-10-26. Runs at 21:00 UTC, after the 19:00 UTC import, which is
+# 8 am the next morning in Sydney: Monday movers, Wednesday a set's top 10,
+# Friday booster boxes by country.
+
+on:
+  schedule:
+    - cron: "0 21 * * 0" # movers
+    - cron: "0 21 * * 2" # top 10 of a set, rotating weekly
+    - cron: "0 21 * * 4" # booster boxes by country
+  workflow_dispatch:
+    inputs:
+      pack:
+        description: "movers, top or boxes"
+        default: movers
+      set:
+        description: "Set code for top/boxes (OGN SFD UNL VEN RAD LGC); blank = the default"
+        default: ""
+
+concurrency:
+  group: social-packs
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # No apt: the runner's own Google Chrome drives the pages (playwright-core,
+      # no browser download), ffmpeg comes as a static npm binary. The first run
+      # spent 30 minutes in `playwright install --with-deps` and apt, then timed out.
+      - name: Tools (playwright-core, ffmpeg, numpy; not project dependencies)
+        run: |
+          npm i --prefix "$RUNNER_TEMP/pw" --no-save --no-package-lock playwright-core@1.48.2 ffmpeg-static@5.2.0
+          pip install -q numpy
+          mkdir -p "$RUNNER_TEMP/bin" && ln -s "$RUNNER_TEMP/pw/node_modules/ffmpeg-static/ffmpeg" "$RUNNER_TEMP/bin/ffmpeg"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          echo "CHROMIUM_PATH=$(command -v google-chrome || command -v chromium)" >> "$GITHUB_ENV"
+      - name: Pick the pack
+        id: pick
+        env:
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+          IN_PACK: ${{ inputs.pack }}
+          IN_SET: ${{ inputs.set }}
+          NEWEST_SET: ${{ vars.SOCIAL_NEWEST_SET || 'RAD' }}
+        run: |
+          rotation=(RAD SFD OGN UNL VEN)
+          case "$EVENT_SCHEDULE" in
+            "0 21 * * 0") pack=movers ;;
+            "0 21 * * 2") pack=top ;;
+            "0 21 * * 4") pack=boxes ;;
+            *) pack="$IN_PACK" ;;
+          esac
+          set="$IN_SET"
+          if [ -z "$set" ] && [ "$pack" = top ]; then set=${rotation[$((10#$(date -u +%V) % 5))]}; fi
+          if [ -z "$set" ] && [ "$pack" = boxes ]; then set="$NEWEST_SET"; fi
+          case "$pack" in movers|top|boxes) ;; *) echo "unknown pack $pack"; exit 1 ;; esac
+          echo "args=$pack $set" >> "$GITHUB_OUTPUT"
+      - name: Build the pack
+        id: build
+        env:
+          NODE_PATH: ${{ runner.temp }}/pw/node_modules
+        run: |
+          dir=$(bash social/build.sh ${{ steps.pick.outputs.args }} --remote-art | tail -1)
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+          echo "### $(basename "$dir")" >> "$GITHUB_STEP_SUMMARY"
+          cat "$dir/CHECK.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish to the social-packs branch (last 14 days)
+        env:
+          DIR: ${{ steps.build.outputs.dir }}
+        run: |
+          name=$(basename "$DIR")
+          pub="$RUNNER_TEMP/pub"
+          mkdir -p "$pub"
+          if git fetch -q --depth 1 origin social-packs; then git archive FETCH_HEAD | tar -x -C "$pub"; fi
+          cutoff=$(date -u -d '14 days ago' +%Y-%m-%d)
+          for d in "$pub"/20*/; do [ -d "$d" ] && [ "$(basename "$d" | cut -c1-10)" \< "$cutoff" ] && rm -r "$d"; done
+          rm -rf "${pub:?}/$name" && mkdir -p "$pub/$name"
+          cp "$DIR"/{video.mp4,cover.jpg,CHECK.md,POST-with-claude-in-chrome.md,tiktok.txt,instagram.txt,youtube.txt} "$pub/$name/"
+          cp "$DIR"/s*.png "$pub/$name/"
+          printf '# Social packs\n\nMade by `.github/workflows/social-packs.yml` from `social/` on main. One commit, force-pushed; the last 14 days.\nOpen a pack, read CHECK.md, then post with POST-with-claude-in-chrome.md.\n' > "$pub/README.md"
+          cd "$pub"
+          git init -q -b social-packs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "social: $name"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" social-packs

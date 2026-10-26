@@ -314,6 +314,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // widgets themselves have been live for months with no public page
       // describing them.
       { href: "/embed", label: "Widgets for your site", keywords: ["embed", "embed widget", "widget", "iframe", "badge", "price badge", "countdown widget", "add to my site", "api"] },
+      { href: "/resources", label: "Community sites & tools", keywords: ["resources", "community", "fan sites", "deck builder", "tier list", "riftbound sites", "links"] },
       // The header's own Discord icon is desktop-only (Navbar.tsx, lg:grid) —
       // below that breakpoint (everything under 1024px: every phone AND the
       // whole 640-1023px tablet range) it was reachable from NOWHERE, despite

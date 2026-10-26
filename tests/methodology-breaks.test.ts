@@ -49,7 +49,8 @@ test("METHODOLOGY_BREAKS is one list: defined in methodology-breaks.ts, re-expor
 test("currentBasisStart is the settled day of the latest break that has opened", () => {
   assert.equal(currentBasisStart(d(9, 20)), null, "before any break, there is no basis start");
   assert.equal(currentBasisStart(d(9, 23)), d(9, 24), "from the day a break opens, its settled day");
-  assert.equal(currentBasisStart(d(12, 1)), d(9, 24), "and it never ages out — dropBreakWindow always restarts there");
+  assert.equal(currentBasisStart(d(10, 26)), d(9, 24), "and it never ages out — dropBreakWindow always restarts there");
+  assert.equal(currentBasisStart(d(12, 1)), d(10, 28), "until a later break opens (2026-10-27, the foil-rarity listings)");
   const breaks = [
     { from: 10 * DAY, to: 20 * DAY, settled: 11 * DAY },
     { from: 50 * DAY, to: 60 * DAY },

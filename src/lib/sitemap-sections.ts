@@ -128,6 +128,7 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/auctions`, changeFrequency: "hourly", priority: 0.8, lastModified: auctionDay },
     { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/market/records`, changeFrequency: "daily", priority: 0.7, lastModified: day },
+    { url: `${SITE_URL}/market/report`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/sets`, changeFrequency: "weekly", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/deck`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/deck") },
@@ -167,6 +168,7 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/alerts`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/alerts") },
     { url: `${SITE_URL}/stores/tracked`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/stores/tracked") },
     { url: `${SITE_URL}/stores/suggest`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/stores/suggest") },
+    { url: `${SITE_URL}/stores/partners`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/stores/partners") },
     { url: `${SITE_URL}/premium`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/premium") },
     { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/keywords`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/keywords") },
@@ -224,6 +226,9 @@ async function core(): Promise<SitemapEntry[]> {
     // are noindex and stay out of the sitemap — submitting a noindex URL is the
     // "Submitted URL marked 'noindex'" error described a few lines above.
     { url: `${SITE_URL}/embed`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/embed") },
+    // The community resources page: the other Riftbound fan sites, listed for
+    // readers and as the page outreach points other fan sites to.
+    { url: `${SITE_URL}/resources`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/resources") },
     // Trust pages. /editorial-policy and /authors carry the "who writes this and
     // how are the prices collected" disclosures a reviewer looks for, so they are
     // submitted rather than left to be discovered from the footer.

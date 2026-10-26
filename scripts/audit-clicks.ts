@@ -1,7 +1,7 @@
 // Read-only outbound-click leaderboard — real, self-recorded click counts per
 // retailer (independent of any partner dashboard), used to prioritise which
 // Shopify stores to approach first for a direct affiliate/referral deal. See
-// lib/affiliate.ts's DIRECT_PROGRAMS note: eBay/Amazon/TCGplayer pay us directly
+// lib/store-partner-deals.ts: eBay/Amazon/TCGplayer pay us directly
 // already; every other (Shopify) store currently earns nothing until its own
 // program is signed and registered there.
 import { dbHistory } from "../src/lib/db-history";

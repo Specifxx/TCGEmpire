@@ -111,8 +111,9 @@ export type TcgListing = {
   languageId: number; // 1 = English
   quantity: number;
   condition?: string;
-  // "Normal" | "Foil". One PRODUCT's preview mixes printings: live on 2026-09-23,
-  // Scuttle Crab's non-foil product returned three listings, all of them Foil.
+  // "Normal" | "Foil". One PRODUCT's preview can mix printings. (Scuttle Crab,
+  // cited for this on 2026-09-23 as a non-foil product listing only foils, is a
+  // Rare: foil is its only printing. See wantedPrinting.)
   printing?: string;
   // The listing's own shipping in USD, as TCGplayer quotes it for a US buyer.
   shippingPrice?: number;
@@ -129,7 +130,8 @@ export type TcgProduct = {
   lowestPrice: number | null;
   foilOnly: boolean;
   sealed: boolean;
-  customAttributes?: { number?: string };
+  // rarityDbName: TCGplayer's rarity ("Common" … "Showcase", "Promo", "None").
+  customAttributes?: { number?: string; rarityDbName?: string };
   listings?: TcgListing[];
 };
 
@@ -151,8 +153,8 @@ export function englishNmLowest(p: TcgProduct): number | null {
 //
 // Printing matters because one TCGplayer product can list both printings, and
 // its preview is sorted by price across them — so an unfiltered minimum can
-// price a regular card at a foil copy (or the reverse). The row's own foil flag
-// comes from the product (`foilOnly`), so the listing has to agree with it.
+// price a regular card at a foil copy (or the reverse). The listing has to be
+// the printing the product IS: see wantedPrinting below.
 // A listing with no `printing` field is accepted rather than dropped, so an API
 // change that omits it degrades to the old behaviour instead of blanking rows.
 /**
@@ -171,8 +173,35 @@ export function cheapestEnglishSealed(p: TcgProduct): TcgListing | null {
   return ls.reduce((a, b) => (b.price < a.price ? b : a));
 }
 
+// Riftbound prints every Rare, Epic and Showcase foil, and TCGplayer marks NO
+// Riftbound product `foilOnly` (probed live 2026-10-26: 0 of 1,840). Taking the
+// printing from `foilOnly` alone therefore wanted a "Normal" listing of every
+// foil card, found none, and quoted market price for all ~880 of them from
+// 2026-09-23 to 2026-10-26 — the Kayn, Unleashed signature report (market
+// $332.50, cheapest English NM listing $500). Their previews were 97% Foil; the
+// few "Normal" listings are sellers' mislabels and are not quoted.
+const FOIL_RARITIES = new Set(["rare", "epic", "showcase"]);
+const NORMAL_RARITIES = new Set(["common", "uncommon"]);
+
+/**
+ * Which printing a product's listings must be to be quoted. Commons and
+ * uncommons are normal (their foils are a separate finish). A product of any
+ * other rarity (Promo, unknown) is quoted only when every English listing in
+ * its preview agrees on one printing; mixed, it stays "normal", as before.
+ */
+export function wantedPrinting(p: TcgProduct): "foil" | "normal" {
+  if (p.foilOnly) return "foil";
+  const rarity = (p.customAttributes?.rarityDbName ?? "").toLowerCase();
+  if (FOIL_RARITIES.has(rarity)) return "foil";
+  if (NORMAL_RARITIES.has(rarity)) return "normal";
+  const printings = new Set(
+    (p.listings ?? []).filter((l) => l.languageId === 1 && l.printing != null).map((l) => l.printing!.toLowerCase()),
+  );
+  return printings.size === 1 && printings.has("foil") ? "foil" : "normal";
+}
+
 export function cheapestEnglishNm(p: TcgProduct): TcgListing | null {
-  const want = p.foilOnly ? "foil" : "normal";
+  const want = wantedPrinting(p);
   const ls = (p.listings ?? []).filter(
     (l) =>
       l.languageId === 1 &&
