@@ -1,4 +1,4 @@
-import { ADSENSE_CONFIGURED, ADSENSE_LOADER_SRC } from "@/lib/adsense";
+import { ADSENSE_CONFIGURED, ADSENSE_LOADER_SRC, ADSENSE_SERVING } from "@/lib/adsense";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The AdSense loader — rendered in <head> on EVERY page, unconditionally.
@@ -54,5 +54,9 @@ export function AdSenseLoader() {
   // Only omitted when no publisher id is configured at all — a build with an
   // invalid id never gets this far (lib/adsense.ts throws in production).
   if (!ADSENSE_CONFIGURED) return null;
+  // Switched off by the owner on 2026-10-26 (lib/adsense.ts, ADSENSE_SERVING).
+  // The layout still renders this component, so turning AdSense back on is
+  // that one constant.
+  if (!ADSENSE_SERVING) return null;
   return <script async src={ADSENSE_LOADER_SRC} crossOrigin="anonymous" />;
 }

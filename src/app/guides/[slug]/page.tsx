@@ -3,6 +3,7 @@ import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { notFound } from "next/navigation";
 import { getArticle, getArticles } from "@/lib/articles";
 import { ArticleView } from "@/components/ArticleView";
+import { MediavineLoader } from "@/components/MediavineLoader";
 import { SITE_URL } from "@/lib/site";
 import { clampText } from "@/lib/format";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -72,5 +73,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default function GuideArticlePage({ params }: { params: { slug: string } }) {
   const a = getArticle(params.slug);
   if (!a || a.category !== "guide") notFound();
-  return <ArticleView article={a} />;
+  return (
+    <>
+      <MediavineLoader />
+      <ArticleView article={a} />
+    </>
+  );
 }

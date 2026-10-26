@@ -122,6 +122,17 @@ const REVIEW_RAW = (
 export const ADSENSE_REVIEW_MODE = ["true", "1", "on", "yes"].includes(REVIEW_RAW);
 
 // ─────────────────────────────────────────────────────────────────────────────
+// AdSense is OFF (owner, 2026-10-26)
+// ─────────────────────────────────────────────────────────────────────────────
+// About A$1.50 a day against roughly A$0.29 of affiliate money per visitor: an
+// ad only had to cost 3% of buy clicks to lose money (DECISIONS.md, "AdSense
+// off, Journey on articles only"). While this is false the loader renders
+// nothing, no unit renders, and the ownership meta tag and ads.txt stay, so
+// the account is still verified if it is ever turned back on. Turning it on
+// is the owner's call.
+export const ADSENSE_SERVING = false;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Ad strategy — Auto ads XOR manual units, never both
 // ─────────────────────────────────────────────────────────────────────────────
 // Auto ads let Google place units itself; manual units are the <ins> blocks this
@@ -153,7 +164,7 @@ export const AD_STRATEGY: AdStrategy = STRATEGY_RAW === "manual" ? "manual" : "a
  * places its own), and FALSE without a configured client id.
  */
 export const AD_UNITS_ENABLED =
-  ADSENSE_CONFIGURED && !ADSENSE_REVIEW_MODE && AD_STRATEGY === "manual";
+  ADSENSE_SERVING && ADSENSE_CONFIGURED && !ADSENSE_REVIEW_MODE && AD_STRATEGY === "manual";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Ad-serving domains — the allow-list every CSP/connectivity check must include
