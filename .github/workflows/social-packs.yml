@@ -33,7 +33,7 @@ permissions:
 jobs:
   pack:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,12 +41,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Tools (Chromium, ffmpeg, numpy; not project dependencies)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # No apt: the runner's own Google Chrome drives the pages (playwright-core,
+      # no browser download), ffmpeg comes as a static npm binary. The first run
+      # spent 30 minutes in `playwright install --with-deps` and apt, then timed out.
+      - name: Tools (playwright-core, ffmpeg, numpy; not project dependencies)
         run: |
-          npm i --prefix "$RUNNER_TEMP/pw" --no-save --no-package-lock playwright@1.48.2
-          npx --prefix "$RUNNER_TEMP/pw" playwright install --with-deps chromium
-          sudo apt-get install -y -qq ffmpeg
+          npm i --prefix "$RUNNER_TEMP/pw" --no-save --no-package-lock playwright-core@1.48.2 ffmpeg-static@5.2.0
           pip install -q numpy
+          mkdir -p "$RUNNER_TEMP/bin" && ln -s "$RUNNER_TEMP/pw/node_modules/ffmpeg-static/ffmpeg" "$RUNNER_TEMP/bin/ffmpeg"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          echo "CHROMIUM_PATH=$(command -v google-chrome || command -v chromium)" >> "$GITHUB_ENV"
       - name: Pick the pack
         id: pick
         env:
