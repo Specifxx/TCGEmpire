@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { epnTransactions, tagBreakdown, tagDays, untaggedHint, type SourceResult } from "../src/lib/earnings/core";
+import { epnTransactions, impactActions, impactTagDays, tagBreakdown, tagDays, untaggedHint, type SourceResult } from "../src/lib/earnings/core";
 import { EARNINGS_MARKER, EARNINGS_MARKER_TEXT, EARNINGS_UNAVAILABLE, earningsDigest, fillEarnings } from "../src/lib/earnings/digest";
 import { buildDigestEmail } from "../src/lib/ops/mail";
 import { emptyInbox } from "../src/lib/ops/types";
@@ -63,4 +63,19 @@ test("an untagged eBay sale is described by its category, site, tool and traffic
   const groups = tagBreakdown(tagDays([sale, tagged]), "30d", "2026-10-26", "AUD");
   const none = groups.find((g) => g.key === "");
   assert.equal(none?.tags[0].tag, "(none) Cameras & Photo · EBAY_US · 10049 · Mobile");
+});
+
+test("TCGplayer earnings split by the click's sharedid, reversed actions left out", () => {
+  const actions = impactActions({
+    Actions: [
+      { Id: "1", EventDate: "2026-10-24T03:00:00Z", State: "PENDING", Currency: "USD", Payout: "2.00", SharedId: "rc-us-card-product" },
+      { Id: "2", EventDate: "2026-10-24T03:00:00Z", State: "APPROVED", Currency: "USD", Payout: "1.00", SharedId: "oc-us-board" },
+      { Id: "3", EventDate: "2026-10-24T03:00:00Z", State: "REVERSED", Currency: "USD", Payout: "5.00", SharedId: "rc-us-card-product" },
+    ],
+  });
+  const groups = tagBreakdown(impactTagDays(actions), "30d", "2026-10-26", "USD");
+  assert.deepEqual(groups.map((g) => [g.key, g.cents, g.sales]), [["rc", 200, 1], ["oc", 100, 1]]);
+  assert.equal(groups[0].pendingCents, 200);
+  const d = earningsDigest([src("tcgplayer", "ok", [], impactTagDays(actions))], [], "2026-10-26", "https://x/admin/earnings");
+  assert.match(d.text, /TCGplayer by site, 30 days:\n\s+RiftCompare \(Riftbound\):/);
 });

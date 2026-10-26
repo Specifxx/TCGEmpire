@@ -5,6 +5,7 @@ import {
   dayIn,
   epnDailyParts,
   impactActionDays,
+  impactTagDays,
   impactActions,
   reportRecords,
   uniqueActions,
@@ -117,6 +118,7 @@ const fetchImpact: Fetcher = async () => {
   return {
     status: "ok",
     days: impactActionDays(actions),
+    tags: impactTagDays(actions),
     checks: [
       { label: `Approved (${count("APPROVED")} actions)`, counted: true, days: impactActionDays(actions, ["APPROVED"]) },
       { label: `Pending (${actions.length - count("APPROVED") - count("REVERSED")} actions)`, counted: true, days: impactActionDays(actions, ["PENDING"]) },
