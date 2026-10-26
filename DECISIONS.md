@@ -19769,6 +19769,42 @@ series) still goes into all 316 bundles; it is a fifteenth of what the snapshot
 was, and can be packed the same way if builds creep again. The two Prisma
 clients are ~33 MB of each bundle and are not ours to shrink.
 
+## Social packs: TikTok, Shorts and Instagram from the price data — 2026-10-26
+
+The owner has Instagram (managed), and TikTok and YouTube accounts signed in but
+unused, with no ad budget. Short data videos are the one kind of social content
+the site can make every week without a human creating anything: the numbers are
+already committed.
+
+**What.** `social/` builds a "pack" from `data/public` and `data/price-history`:
+one 1080×1920 video (the same file goes to TikTok, Reels and Shorts, never a
+re-upload carrying another platform's watermark), a 1080×1350 Instagram
+carousel, captions per platform, `CHECK.md` (every number beside its card
+page) and a paste-ready Claude in Chrome prompt that fills each upload form and
+stops before Post. Three packs: `movers` (the site's `/movers` basis and guards),
+`top <SET>` (a set's ten dearest cards; a card whose cheapest listing halved
+overnight is held back, the Riven 173* lesson) and `boxes <SET>` (cheapest
+booster box at an independent store per market, own currency, no eBay or
+TCGplayer row). Videos are filmed frame-exact from HTML (`render-reel.mjs`, the
+Instagram reel renderer from the Radiance posts, generalised) with an original
+synthesised track, so no platform mutes them.
+
+**Automated, not posted.** `.github/workflows/social-packs.yml` films one pack
+on Monday, Wednesday and Friday mornings (Sydney) and force-pushes the last
+14 days to the `social-packs` branch (one commit, so video never piles up in
+history; its commit subject carries no `[preview]`, so
+`scripts/vercel-ignore-build.sh` skips it). Posting stays with the owner: the
+accounts are his, and a post is outward-facing. The ops monitor watches the
+job (`JOBS`, 80 hours).
+
+**Links.** TikTok and Shorts captions can't carry a clickable link, so each
+profile's link is tagged (`utm_source=tiktok|youtube|instagram`) and lands in
+the existing `social` entry-source bucket.
+
+**Rules kept.** Dated "cheapest listing, before postage" wording, no "worth" or
+predictions, the fan-made line on every post, no Riot or Riftbound logo files
+(their fan policy), card art uncropped. `social/README.md` holds the plan.
+
 ## Store pages were most of the prerender — 2026-10-26
 
 Correction to "Deploys slowed as the bundled snapshot grew", above. Its

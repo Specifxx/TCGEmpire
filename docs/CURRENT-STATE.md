@@ -101,7 +101,7 @@ longer lands on its entry.
   unchanged. It did not shorten builds; the store-page index below did. [2026-10-26](../DECISIONS.md#L19723)
 - **Listings are indexed by store as well as by card (2026-10-26):** in files mode
   a `where: { retailer }` query reads the `retailer` index, not every listing;
-  the 226 store pages were most of the build's prerender. [2026-10-26](../DECISIONS.md#L19772)
+  the 226 store pages were most of the build's prerender. [2026-10-26](../DECISIONS.md#L19808)
 - **The site watches itself (2026-10-14):** `ops-monitor.yml` (GitHub Actions, every
   3 h, Sunday digest) checks Neon transfer limits, eBay, price imports, scheduled
   jobs, the live site, Stripe, email and the inbox, stores the result for
@@ -910,6 +910,12 @@ longer lands on its entry.
   the same page on RiftboundStocks.com through the map it publishes
   (`lib/riftboundstocks.ts`); no link when there is no match. Copy describes
   the other page and makes no appreciation claim. [2026-09-28](../DECISIONS.md#L15160)
+
+- **Social posts are made from the committed price data and posted by the
+  owner (2026-10-26):** `social/` films a vertical video, an Instagram carousel
+  and captions per pack; `social-packs.yml` publishes Mon/Wed/Fri packs to the
+  `social-packs` branch. Same price basis and wording rules as the site; Claude
+  never posts. [2026-10-26](../DECISIONS.md#L19772)
 
 ## Prices & data
 
