@@ -25,7 +25,7 @@ process.env.PUBLIC_DATA_MODE = "db";
 
 import { prisma, OPERATIONAL_URL_SOURCE } from "../src/lib/db";
 import { buildPublicFiles, type Tables } from "../src/lib/public-data/export";
-import { FILES, publicDataDir } from "../src/lib/public-data/format";
+import { FILES, snapshotDir } from "../src/lib/public-data/format";
 import { modelInfo, PUBLIC_MODELS, type ModelName } from "../src/lib/public-data/models";
 import { publicDataSource, resetPublicDataSource } from "../src/lib/public-data/store";
 import { runPublicQuery } from "../src/lib/public-data/engine";
@@ -115,7 +115,7 @@ function verify(dir: string, tables: Tables): string[] {
 }
 
 async function main() {
-  const dir = publicDataDir();
+  const dir = snapshotDir();
   console.log(`Exporting public data from ${OPERATIONAL_URL_SOURCE} into ${path.relative(process.cwd(), dir) || dir}`);
   if (OPERATIONAL_URL_SOURCE === "NONE") throw new Error("No operational database is set; refusing to export an empty snapshot.");
 

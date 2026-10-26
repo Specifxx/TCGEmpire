@@ -5,6 +5,8 @@
 
 # next.js
 /.next/
+# the deploy copy of data/public/ (scripts/pack-public-data.ts)
+/.public-data-pack/
 /out/
 
 # production

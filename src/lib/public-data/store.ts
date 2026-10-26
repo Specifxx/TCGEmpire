@@ -7,8 +7,13 @@
 // the small sealed/eBay files load on first use; listings load one card file at
 // a time, and the whole listings directory only when a query cannot be narrowed
 // to a set of cards (store statistics, whole-market minimums).
+//
+// It reads either layout (format.ts): the committed data/public/, or the
+// gzipped pack the deploy bundles, where a card's listings come with the rest
+// of its shard (64 shards, ~1 MB of JSON each).
 import fs from "node:fs";
 import path from "node:path";
+import { gunzipSync } from "node:zlib";
 import { modelInfo, type ModelName } from "./models";
 import type { Row, RowSource } from "./engine";
 import {
@@ -18,6 +23,9 @@ import {
   PUBLIC_DATA_FORMAT,
   DERIVED_ID,
   listingFile,
+  listingShard,
+  LISTING_SHARDS,
+  PACK_MARKER,
   stableId,
   type PublicDataMeta,
 } from "./format";
@@ -33,7 +41,8 @@ export class PublicDataUnavailable extends Error {
 
 function readJson<T>(file: string): T {
   try {
-    return JSON.parse(fs.readFileSync(file, "utf8")) as T;
+    const raw = fs.readFileSync(file);
+    return JSON.parse((file.endsWith(".gz") ? gunzipSync(raw) : raw).toString("utf8")) as T;
   } catch (err) {
     throw new PublicDataUnavailable(`${path.relative(process.cwd(), file)}: ${(err as Error).message}`);
   }
@@ -63,20 +72,42 @@ class FileSource implements RowSource {
   private readonly indexes = new Map<string, Map<unknown, Row[]>>();
   private readonly listingsByCard = new Map<string, Row[]>();
   private allListingsLoaded = false;
+  private readonly packed: boolean;
+  private readonly shardsLoaded = new Set<string>();
 
   constructor(dir: string) {
     this.dir = dir;
+    this.packed = fs.existsSync(path.join(dir, PACK_MARKER));
     this.meta = readJson<PublicDataMeta>(path.join(dir, FILES.meta));
     if (this.meta.format !== PUBLIC_DATA_FORMAT) {
       throw new PublicDataUnavailable(`format ${this.meta.format}, this build reads ${PUBLIC_DATA_FORMAT}`);
     }
   }
 
+  /** A top-level file of the snapshot, by its data/public/ name. */
+  private file(name: string): string {
+    return path.join(this.dir, this.packed ? `${name}.gz` : name);
+  }
+
+  /** Packed layout: load one listings shard into listingsByCard. */
+  private loadShard(shard: string): void {
+    if (this.shardsLoaded.has(shard)) return;
+    const file = path.join(this.dir, FILES.listingsDir, `${shard}.json.gz`);
+    const byCard = fs.existsSync(file) ? readJson<Record<string, Record<string, unknown>[]>>(file) : {};
+    for (const [cardId, list] of Object.entries(byCard)) {
+      if (!this.listingsByCard.has(cardId)) this.listingsByCard.set(cardId, list.map((r) => revive("RetailerPrice", r, { cardId }, this.meta)));
+    }
+    this.shardsLoaded.add(shard);
+  }
+
   private listingsFor(cardId: string): Row[] {
     const hit = this.listingsByCard.get(cardId);
     if (hit) return hit;
     let rows: Row[] = [];
-    if (!this.allListingsLoaded && typeof cardId === "string" && /^[A-Za-z0-9_-]+$/.test(cardId)) {
+    if (this.packed && !this.allListingsLoaded && typeof cardId === "string") {
+      this.loadShard(listingShard(cardId));
+      rows = this.listingsByCard.get(cardId) ?? [];
+    } else if (!this.allListingsLoaded && typeof cardId === "string" && /^[A-Za-z0-9_-]+$/.test(cardId)) {
       const file = path.join(this.dir, FILES.listingsDir, listingFile(cardId));
       if (fs.existsSync(file)) {
         rows = readJson<Record<string, unknown>[]>(file).map((r) => revive("RetailerPrice", r, { cardId }, this.meta));
@@ -91,7 +122,14 @@ class FileSource implements RowSource {
     if (hit) return hit;
     let rows: Row[];
     if (model === "Card") {
-      rows = readJson<Record<string, unknown>[]>(path.join(this.dir, FILES.cards)).map((r) => revive("Card", r, {}, this.meta));
+      rows = readJson<Record<string, unknown>[]>(this.file(FILES.cards)).map((r) => revive("Card", r, {}, this.meta));
+    } else if (model === "RetailerPrice" && this.packed) {
+      for (let i = 0; i < LISTING_SHARDS; i++) this.loadShard(String(i).padStart(2, "0"));
+      // The committed layout's order: card files by name, rows as stored.
+      const ids = [...this.listingsByCard.keys()].sort((a, b) => (`${a}.json` < `${b}.json` ? -1 : `${a}.json` > `${b}.json` ? 1 : 0));
+      rows = [];
+      for (const id of ids) rows.push(...this.listingsByCard.get(id)!);
+      this.allListingsLoaded = true;
     } else if (model === "RetailerPrice") {
       const dir = path.join(this.dir, FILES.listingsDir);
       const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".json")).sort() : [];
@@ -105,7 +143,7 @@ class FileSource implements RowSource {
       }
       this.allListingsLoaded = true;
     } else {
-      const file = path.join(this.dir, FILES[model]);
+      const file = this.file(FILES[model]);
       rows = fs.existsSync(file) ? readJson<Record<string, unknown>[]>(file).map((r) => revive(model, r, {}, this.meta)) : [];
     }
     this.tables.set(model, rows);

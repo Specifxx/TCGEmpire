@@ -103,6 +103,15 @@ const securityHeaders = [
 ];
 
 const PUBLIC_DATA_BUNDLED = ["files", "fallback"].includes((process.env.PUBLIC_DATA_MODE || "").trim().toLowerCase());
+// The gzipped copy of data/public/ that `npm run build` writes just before
+// `next build` (scripts/pack-public-data.ts, layout in
+// src/lib/public-data/format.ts). Bundled instead of data/public/ whenever it
+// exists: 72 files and ~7.5 MB per function instead of 1,710 files and 76 MB,
+// which is what had stretched production builds from ~3 to ~6 minutes
+// (DECISIONS.md, "Deploys slowed as the bundled snapshot grew"). A build that
+// skipped the packer bundles data/public/ as before.
+const PUBLIC_DATA_PACKED = require("node:fs").existsSync(require("node:path").join(__dirname, ".public-data-pack", "pack.json"));
+const PUBLIC_DATA_FILES = !PUBLIC_DATA_BUNDLED ? [] : PUBLIC_DATA_PACKED ? ["./.public-data-pack/**/*"] : ["./data/public/**/*.json"];
 
 const CARD_CDN_CACHE = "public, s-maxage=86400, stale-while-revalidate=86400";
 
@@ -133,11 +142,15 @@ const nextConfig = {
     // shared libraries (card pages, sitemaps, /api, OG images) and a route that
     // never reads history only carries a few MB of JSON it does not open.
     outputFileTracingIncludes: {
-      // data/public/ (~55 MB) only when the build will read it: PUBLIC_DATA_MODE
-      // "files" or "fallback" (src/lib/public-data/mode.ts). In "db" mode no
-      // function needs it, so it stays out of all ~290 function bundles.
-      "/**": ["./data/price-history/**/*.json", ...(PUBLIC_DATA_BUNDLED ? ["./data/public/**/*.json"] : [])],
+      // The public data snapshot only when the build will read it:
+      // PUBLIC_DATA_MODE "files" or "fallback" (src/lib/public-data/mode.ts),
+      // packed when the packer ran (PUBLIC_DATA_FILES above). In "db" mode no
+      // function needs it, so it stays out of all ~300 function bundles.
+      "/**": ["./data/price-history/**/*.json", ...PUBLIC_DATA_FILES],
     },
+    // With the pack bundled, data/public/ never is, even if the tracer follows
+    // the reader's path.join(process.cwd(), "data", "public") on its own.
+    outputFileTracingExcludes: PUBLIC_DATA_PACKED ? { "/**": ["./data/public/**"] } : {},
   },
   images: {
     // Lets next/image re-encode (AVIF/WebP) and downsize these hotlinked CDNs

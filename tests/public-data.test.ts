@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { buildPublicFiles, type Tables } from "../src/lib/public-data/export";
@@ -380,6 +380,9 @@ test("the snapshot is bundled only when PUBLIC_DATA_MODE will read it", () => {
   };
   assert.deepEqual(load(undefined), ["./data/price-history/**/*.json"]);
   assert.deepEqual(load("db"), ["./data/price-history/**/*.json"]);
-  assert.ok(load("files").includes("./data/public/**/*.json"));
-  assert.ok(load("fallback").includes("./data/public/**/*.json"));
+  // The packed copy when the build wrote one (tests/public-data-pack.test.ts),
+  // data/public/ itself otherwise.
+  const bundled = existsSync(join(process.cwd(), ".public-data-pack", "pack.json")) ? "./.public-data-pack/**/*" : "./data/public/**/*.json";
+  assert.ok(load("files").includes(bundled));
+  assert.ok(load("fallback").includes(bundled));
 });
