@@ -59,7 +59,7 @@ export async function GET(req: Request) {
   // locked on a page whose other panels are open (PORTFOLIO_FREE is the one
   // flag that re-gates all of them together).
   if (!isPremium(user) && !PORTFOLIO_FREE) {
-    return NextResponse.json({ error: "Premium required" }, { status: 403 });
+    return NextResponse.json({ error: "Pro required" }, { status: 403 });
   }
   const rl = rateLimit(`replacement:${user.id}`, 12, 3_600_000);
   if (!rl.ok) return tooManyRequests(rl.retryAfter);

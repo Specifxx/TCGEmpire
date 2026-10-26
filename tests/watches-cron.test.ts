@@ -39,13 +39,13 @@ test("the paid alert step runs AFTER the sealed import, and the paid route runs 
   // The deck run reads only entitled owners' rows and prices each with one bounded listing read.
   const deck = read("src/lib/deck-watch.ts");
   assert.match(deck, /premiumUntil: \{ gt: now \}/, "the read is trimmed to paid owners");
-  assert.match(deck, /isPremium\(user, "premium"\)/, "…and the Premium minimum is the real check");
+  assert.match(deck, /isPremium\(user, "premium"\)/, "…and the Pro minimum is the real check");
   assert.match(deck, /loadStoreListings\(\[\.\.\.wanted\.keys\(\)\], opts\.market, Object\.keys\(stores\), db, opts\.minCondition \?\? "any"\)/, "Best Basket's own listing read, at the watch's own minimum condition");
   assert.match(deck, /optimizeBasket\(cards, stores\)/, "…and its optimiser");
   assert.match(deck, /basketStoresFor\(opts\.market, postageOptionsFrom\(/, "…with the measured postage for the saved delivery");
   const sealed = read("src/lib/sealed-watch.ts");
   assert.match(sealed, /isPremium\(user\)/, "any paid tier");
-  assert.match(sealed, /sealedWatchCeiling\(premiumTierOf\(user\)\)/, "the Plus cap (and Premium's sanity ceiling) is honoured in the run too");
+  assert.match(sealed, /sealedWatchCeiling\(premiumTierOf\(user\)\)/, "the Plus cap (and Pro's sanity ceiling) is honoured in the run too");
 });
 
 test("the tier table carries both watches before Ad-free, from the constants; the copy version is bumped", () => {
@@ -70,7 +70,7 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   // then "one-plan-2026-10-23" when Plus went off sale and Premium went back to $9.99
   // then "rebrand-2026-10-23": the "Never overpay" promise, live proof and outcome cards
   // then "one-table-2026-10-25": /premium is the plan table and the comparison, nothing else
-  assert.equal(PREMIUM_COPY_VERSION, "one-table-2026-10-25");
+  assert.equal(PREMIUM_COPY_VERSION, "pro-2026-10-26");
   // Every surface that quotes a watch number reads the constant.
   for (const f of ["src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);
@@ -123,7 +123,7 @@ test("the discovery lines are inline — no Dialog, no overlay, no portal — an
   assert.match(code("src/components/SealedQuickView.tsx"), /<SealedWatchButton /);
   assert.match(code("src/components/BestBasket.tsx"), /surface="tip:basket" tier="premium"/);
   assert.match(code("src/app/watching/page.tsx"), /surface="tip:watching"/);
-  assert.match(code("src/components/PriceWatchButton.tsx"), /Plus adds your own target price and sealed-product watches; Premium watches a whole deck/);
+  assert.match(code("src/components/PriceWatchButton.tsx"), /Plus adds your own target price and sealed-product watches; Pro watches a whole deck/);
   // The /watching explainer teaches all three kinds, inline.
   const watching = code("src/app/watching/page.tsx");
   assert.match(watching, /data-watch-explainer/);

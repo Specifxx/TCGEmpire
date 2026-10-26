@@ -17,7 +17,7 @@ import {
 import { premiumStartHref } from "./premium-start";
 import { PREMIUM_TRIAL_DAYS } from "./trial-config";
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
-import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "./free-limits";
+
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
 import { issueNoun } from "./price-report";
@@ -828,7 +828,6 @@ export function emailShell(heading: string, inner: string, footer: string, prehe
     </table></td></tr></table></body></html>`;
 }
 
-
 // ─── Weekly newsletter digest ────────────────────────────────────────────────
 
 // Newsletter footer: the audience opted in via the footer signup, so the copy
@@ -1095,7 +1094,7 @@ export function buildTrialEndingEmail(opts: {
   /** What the customer paid to start the trial (cents); 0 = a free trial. */
   paidCents?: number;
 }): { subject: string; heading: string; html: string } {
-  const planName = opts.planName ?? "Premium";
+  const planName = opts.planName ?? "Pro";
   const dateLabel = opts.chargeDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const charge = opts.thenLabel ? `${opts.amountLabel} (then ${opts.thenLabel})` : opts.amountLabel;
   const paid = (opts.paidCents ?? 0) > 0 ? ` You paid ${premiumTrialFee(opts.paidCents!)} to start it.` : "";
@@ -1117,7 +1116,7 @@ export async function sendTrialEndingEmail(
   to: string,
   chargeDate: Date,
   amountLabel: string,
-  planName = "Premium",
+  planName = "Pro",
   thenLabel?: string,
   paidCents = 0,
 ): Promise<boolean> {
@@ -1136,7 +1135,7 @@ export function buildTrialEndingNoChargeEmail(opts: {
   planName?: string;
   keepLine?: string | null;
 }): { subject: string; heading: string; html: string } {
-  const planName = opts.planName ?? "Premium";
+  const planName = opts.planName ?? "Pro";
   const keepLine = opts.keepLine ?? null;
   const dateLabel = opts.endsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const inner = `
@@ -1159,7 +1158,7 @@ export function buildTrialEndingNoChargeEmail(opts: {
 export async function sendTrialEndingNoChargeEmail(
   to: string,
   endsAt: Date,
-  planName = "Premium",
+  planName = "Pro",
   keepLine: string | null = null,
 ): Promise<boolean> {
   const { subject, html } = buildTrialEndingNoChargeEmail({ endsAt, planName, keepLine });
@@ -1187,9 +1186,9 @@ const CHECKOUT_RECOVERY_TOOLS = [
   "An email naming the store when a card you watch hits your target price",
   "No limit on your watchlist or portfolio, so a whole set fits in the set checklist",
   "Sealed watches: an email when a box is back in stock or at RRP",
-  "Premium: a deck price watch — a saved list re-priced delivered after every price update, emailed at your price",
-  "Premium: Best Basket, the cheapest delivered order for your whole deck, watchlist, binder or the rest of a set, at the condition you'll play",
-  "Premium: Demand Finder, the cards players are searching for and opening most",
+  "Pro: a deck price watch — a saved list re-priced delivered after every price update, emailed at your price",
+  "Pro: Best Basket, the cheapest delivered order for your whole deck, watchlist, binder or the rest of a set, at the condition you'll play",
+  "Pro: Demand Finder, the cards players are searching for and opening most",
 ];
 
 function checkoutRecoveryFooter(name: string): string {
@@ -1227,11 +1226,11 @@ export function buildCheckoutRecoveryEmail(
       ? PLUS_ON_SALE
         ? "Prefer something lighter? Plus is the cheaper plan, on the same page."
         : ""
-      : "Buying a whole deck? Premium adds Best Basket's store-by-store plan and Demand Finder, on the same page.";
+      : "Buying a whole deck? Pro adds Best Basket's store-by-store plan and Demand Finder, on the same page.";
   const bothPitch =
     PLUS_ON_SALE || tier === "plus"
-      ? "Plus and Premium are both ad-free and show every deal; Premium also works out the cheapest way to buy a whole want-list or decklist, postage included."
-      : "Premium is ad-free, shows every deal, and works out the cheapest way to buy a whole want-list or decklist, postage included.";
+      ? "Plus and Pro are both ad-free and show every deal; Pro also works out the cheapest way to buy a whole want-list or decklist, postage included."
+      : "Pro is ad-free, shows every deal, and works out the cheapest way to buy a whole want-list or decklist, postage included.";
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You started signing up for RiftCompare ${name} but didn't finish checkout. ${trialLine} ${bothPitch} ${otherPlan}
@@ -1298,7 +1297,7 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
       ? opts.trialFeeCents > 0
         ? `Start with ${trialDaysPhrase(opts.trialDays)} for ${premiumTrialFee(opts.trialFeeCents)}, then ${opts.fromLine}. Cancel before day ${opts.trialDays} and you pay nothing more.`
         : `Try it free for ${opts.trialDays} days — ${premiumTrialFee(0)} today, then ${opts.fromLine}. Cancel before the trial ends and you pay nothing.`
-      : `Premium is ${opts.fromLine}.`;
+      : `Pro is ${opts.fromLine}.`;
   const step = (n: number, title: string, body: string) =>
     `<tr><td style="padding:6px 32px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <strong style="color:#e6ebf2">${n}. ${title}</strong><br/>${body}
@@ -1307,14 +1306,14 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
     <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       Hi ${name}, your free account is ready. Four things it does that a visitor can't:
     </td></tr>
-    ${step(1, "Watch a card", `Press <em>Watch price</em> on any card and we'll email you when its price drops — up to ${FREE_WATCHLIST_LIMIT} cards on a free account. ${link("/browse", "Find a card&nbsp;→")}`)}
+    ${step(1, "Watch a card", `Press <em>Watch price</em> on any card and we'll email you when its price drops — as many cards as you like, free. ${link("/browse", "Find a card&nbsp;→")}`)}
     ${step(2, "See today's top 3 deals", `Your account shows the three biggest deals in Deal Finder and the three top-ranked Rising Cards, updated daily. ${link("/tools/deal-finder", "Deal&nbsp;Finder&nbsp;→")} · ${link("/tools/rising", "Rising&nbsp;Cards&nbsp;→")}`)}
-    ${step(3, "Track your collection", `Add up to ${FREE_PORTFOLIO_LIMIT} cards you own and see what they're worth today. ${link("/portfolio", "Your&nbsp;portfolio&nbsp;→")}`)}
-    ${step(4, "See what a set is missing", `Tick what's in your binder and the set checklist shows what's missing and the cheapest listing for each card, before postage. Free for your first ${FREE_PORTFOLIO_LIMIT} cards. ${link("/portfolio/sets", "Set&nbsp;checklist&nbsp;→")}`)}
+    ${step(3, "Track your collection", `Add the cards you own and see what they're worth today. ${link("/portfolio", "Your&nbsp;portfolio&nbsp;→")}`)}
+    ${step(4, "See what a set is missing", `Tick what's in your binder and the set checklist shows what's missing and the cheapest listing for each card, before postage. Free, with no card limit. ${link("/portfolio/sets", "Set&nbsp;checklist&nbsp;→")}`)}
     <tr><td style="padding:14px 32px 22px">
       <div style="border:1px solid #6b5a1f;border-radius:12px;padding:14px 16px;background:#1a1810">
         <div style="font-size:13px;line-height:1.55;color:#d8cfa8">
-          <strong style="color:#f3c969">Want every deal, not just the top three?</strong> ${PLUS_ON_SALE ? "Plus and Premium both come with" : "Premium comes with"}:
+          <strong style="color:#f3c969">Want every deal, not just the top three?</strong> ${PLUS_ON_SALE ? "Plus and Pro both come with" : "Pro comes with"}:
           <ul style="margin:6px 0;padding-left:18px">
             <li>No ads on any page</li>
             <li>No limit on your watchlist or portfolio, so a whole set fits in the set checklist</li>
@@ -1322,12 +1321,12 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
             <li>An email naming the store when a card you watch hits your target price</li>
             <li>Sealed watches: an email when a box is back in stock or at RRP (the price Riot sets), checked ${SEALED_CHECK_CADENCE}</li>
           </ul>
-          ${PLUS_ON_SALE ? "Premium plans" : "It also plans"} the order: Best Basket's store-by-store plan for your deck, watchlist or the rest of a set,
+          ${PLUS_ON_SALE ? "Pro plans" : "It also plans"} the order: Best Basket's store-by-store plan for your deck, watchlist or the rest of a set,
           skipping the cards you already own, at the minimum condition you set. It also adds a deck price watch,
           which re-prices a saved list after every price update and emails you when its delivered total reaches your
           price, and Demand Finder, the full list of what people are searching for. ${trialLine}
         </div>
-        <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Premium</a>
+        <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Pro</a>
       </div>
     </td></tr>`;
   const heading = "Welcome to RiftCompare";
@@ -1484,7 +1483,7 @@ export interface PremiumOfferEmailOpts {
 // must see before they start it. lib/premium-offer.ts refuses to send it while
 // the trial is off or costs money.
 export function premiumOfferSubject(): string {
-  return `Try ${SITE_NAME} Premium free for ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)}`;
+  return `Try ${SITE_NAME} Pro free for ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)}`;
 }
 
 // One tier's price line: "$4.99/month, or $3.33/mo billed yearly ($39.99 a year)".
@@ -1538,7 +1537,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${greeting}</td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You can now try ${SITE_NAME} ${PLUS_ON_SALE ? "Plus or Premium" : "Premium"} <strong style="color:#fff">free for ${days}</strong>. Watch the cards
+      You can now try ${SITE_NAME} ${PLUS_ON_SALE ? "Plus or Pro" : "Pro"} <strong style="color:#fff">free for ${days}</strong>. Watch the cards
       you want and we email you the store when one hits your price, see every deal instead of the top three, and
       price a whole deck at the cheapest stores. Price comparison, your watchlist and your portfolio stay free either way.
     </td></tr>
@@ -1547,14 +1546,14 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
     <tr><td style="padding:8px 32px 4px;font-size:13px;line-height:1.6;color:#9aa4b2">
       A card is required to start. Nothing is charged for ${days}; we email you a day or two before the trial ends,
       and you can cancel from your account page in a couple of clicks before then. One trial per account.
-      <a href="${links.compare}" style="color:#f29733;text-decoration:underline">${PLUS_ON_SALE ? "Compare the plans side by side" : "See everything Premium includes"}</a>.
+      <a href="${links.compare}" style="color:#f29733;text-decoration:underline">${PLUS_ON_SALE ? "Compare the plans side by side" : "See everything Pro includes"}</a>.
     </td></tr>
     <tr><td style="padding:0 32px 16px"></td></tr>`;
 
   const text = [
     greetingText,
     "",
-    `You can now try ${SITE_NAME} ${PLUS_ON_SALE ? "Plus or Premium" : "Premium"} free for ${days}. Price comparison, your watchlist and your portfolio stay free either way.`,
+    `You can now try ${SITE_NAME} ${PLUS_ON_SALE ? "Plus or Pro" : "Pro"} free for ${days}. Price comparison, your watchlist and your portfolio stay free either way.`,
     "",
     `PREMIUM: free for ${days}, then ${premiumLine}`,
     PRICE_DROP_PREMIUM_INCLUDES,
@@ -1571,7 +1570,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
       : []),
     "",
     `A card is required to start. Nothing is charged for ${days}; we email you a day or two before the trial ends, and you can cancel from your account page before then. One trial per account.`,
-    `${PLUS_ON_SALE ? "Compare the plans" : "See everything Premium includes"}: ${links.compare}`,
+    `${PLUS_ON_SALE ? "Compare the plans" : "See everything Pro includes"}: ${links.compare}`,
     "",
     "—",
     `You're getting this because you have a ${SITE_NAME} account. This is a one-off product announcement, not a subscription.`,
@@ -1584,8 +1583,8 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
   };
   const preheader = PLUS_ON_SALE
-    ? `${days} free, then Premium ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD} or Plus ${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`
-    : `${days} free, then Premium ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
+    ? `${days} free, then Pro ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD} or Plus ${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`
+    : `${days} free, then Pro ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
   return { subject, heading, preheader, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl), preheader), text, headers };
 }
 
@@ -1607,19 +1606,19 @@ export interface PremiumWinbackEmailOpts {
 }
 
 export function premiumWinbackSubject(days: number): string {
-  return `${days} days of RiftCompare Premium, free — no card needed`;
+  return `${days} days of RiftCompare Pro, free — no card needed`;
 }
 
 export function buildPremiumWinbackEmail(opts: PremiumWinbackEmailOpts): { subject: string; heading: string; html: string } {
   const name = opts.displayName.includes("@") ? "" : escapeHtml(opts.displayName.trim().split(/\s+/)[0] ?? "");
   const greeting = name ? `Hi ${name},` : "Hi there,";
-  const heading = `${opts.days} days of Premium, on us`;
+  const heading = `${opts.days} days of Pro, on us`;
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
       ${greeting}
     </td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You joined RiftCompare recently, so here's a proper look at what Premium adds on top of the free tools you're
+      You joined RiftCompare recently, so here's a proper look at what Pro adds on top of the free tools you're
       already using: no ads on any page, the full Deal Finder and Rising Cards lists, target-price alerts that name
       the store, Best Basket's cheapest delivered order for a whole deck, watchlist or binder, and Demand Finder's
       most searched and most viewed cards.

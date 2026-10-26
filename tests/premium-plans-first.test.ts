@@ -46,7 +46,7 @@ test("the table shows each plan's real limits, built for a phone", () => {
   const body = code(ticks);
   assert.match(body, /table-fixed/);
   assert.match(body, /w-\[72px\] sm:w-\[120px\]/, "72px tier columns on a phone");
-  assert.match(body, /c\.key === "premium" \? "w-\[72px\]" : "w-\[56px\]"/, "the dense (slider) columns: 56px, Premium 72px");
+  assert.match(body, /c\.key === "premium" \? "w-\[72px\]" : "w-\[56px\]"/, "the dense (slider) columns: 56px, Pro 72px");
   assert.match(body, /<Mark v=\{cellValue\(r\.from, c\.key\)\}/, "every cell is the source row's value");
   assert.doesNotMatch(body, /overflow-x-auto|min-w-\[/, "no sideways scroll and no width floor");
   assert.doesNotMatch(body, /◐|shortCaption|detail:/, "no half marks, captions or descriptions");

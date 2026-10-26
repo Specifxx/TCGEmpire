@@ -380,7 +380,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                     a paying member who typed a different address. */}
                 {!user && (
                   <p className="mt-3 text-xs text-slate-400">
-                    Already a Plus or Premium member?{" "}
+                    Already a Plus or Pro member?{" "}
                     <Link href={`/login?next=${encodeURIComponent(pathname ?? "/watching")}`} rel="nofollow" onClick={() => markSignupSource("alert_modal")} className="font-semibold text-brand-400 hover:underline">
                       Sign in
                     </Link>{" "}

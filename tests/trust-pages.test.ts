@@ -121,7 +121,7 @@ test("/editorial-policy names every revenue source", () => {
     "Impact",
     "Amazon Associates",
     "as an Amazon Associate we earn from qualifying purchases",
-    "Plus and Premium subscriptions",
+    "Plus and Pro subscriptions",
   ]) {
     assert.ok(policy.includes(s), `/editorial-policy must say "${s}"`);
   }

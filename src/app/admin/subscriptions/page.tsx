@@ -61,11 +61,11 @@ export default async function SubscriptionMetricsPage({ searchParams }: { search
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="text-2xl font-bold text-white">Subscription metrics</h1>
         <Link href={`/admin/premium${keySuffix}`} className="text-xs text-brand-400 hover:underline">
-          Premium interest (clicks) →
+          Pro interest (clicks) →
         </Link>
       </div>
       <p className="mt-1 max-w-2xl text-sm text-slate-400">
-        MRR, retention and churn for RiftCompare Premium, straight from Stripe. This is the revenue read; the{" "}
+        MRR, retention and churn for RiftCompare Pro, straight from Stripe. This is the revenue read; the{" "}
         <Link href={`/admin/premium${keySuffix}`} className="text-brand-400 hover:underline">interest page</Link>{" "}
         is the top-of-funnel read.
       </p>
@@ -75,7 +75,7 @@ export default async function SubscriptionMetricsPage({ searchParams }: { search
       ) : error ? (
         <Note>Couldn&apos;t load subscriptions from Stripe right now.</Note>
       ) : !metrics || metrics.total === 0 ? (
-        <Note>No subscriptions yet — this fills in as Premium sign-ups land.</Note>
+        <Note>No subscriptions yet — this fills in as Pro sign-ups land.</Note>
       ) : (
         <>
           {/* Headline money */}
@@ -113,10 +113,10 @@ export default async function SubscriptionMetricsPage({ searchParams }: { search
                 <>
                   <div className="mt-4 flex items-end gap-4 border-t border-ink-800 pt-4">
                     <MixBar label="Plus" n={metrics.plusActive} total={metrics.active} />
-                    <MixBar label="Premium" n={metrics.premiumActive} total={metrics.active} gold />
+                    <MixBar label="Pro" n={metrics.premiumActive} total={metrics.active} gold />
                   </div>
                   <p className="mt-3 text-xs text-slate-500">
-                    Premium is {metrics.active > 0 ? Math.round((metrics.premiumActive / metrics.active) * 100) : 0}% of active subs.
+                    Pro is {metrics.active > 0 ? Math.round((metrics.premiumActive / metrics.active) * 100) : 0}% of active subs.
                   </p>
                 </>
               )}

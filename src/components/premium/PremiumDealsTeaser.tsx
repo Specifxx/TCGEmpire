@@ -95,7 +95,7 @@ export function PremiumDealsTeaser({
           </div>
           <CtaZone location="deals-teaser" className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-4 text-center">
             <a href="#top-pricing" className="btn-buy px-5 py-2.5 text-sm">
-              See all {total.toLocaleString()} deals with Premium&nbsp;→
+              See all {total.toLocaleString()} deals with Pro&nbsp;→
             </a>
             <span className="text-[11px] font-semibold text-slate-300">{locked.toLocaleString()} more below market, filtered to the cards you watch</span>
           </CtaZone>

@@ -1,5 +1,4 @@
-import { PLUS_ON_SALE, ENTRY_TIER_NAME, type PremiumTierKey } from "./site";
-import { FREE_PORTFOLIO_LIMIT } from "./free-limits";
+import { PLUS_ON_SALE, type PremiumTierKey } from "./site";
 
 // The member dashboard's tool list (app/dashboard/page.tsx). A lib module, not
 // a const in the page, so tests/premium-tiers.test.ts can run it — a Next.js
@@ -38,7 +37,7 @@ export const DASHBOARD_TOOLS: DashTool[] = [
   },
   {
     title: "Best Basket",
-    desc: "The cheapest delivered order for a whole list, or the rest of a set, across your country's stores, skipping cards you own, at the minimum condition you set — and, on Premium, a watch that re-prices the list after every update.",
+    desc: "The cheapest delivered order for a whole list, or the rest of a set, across your country's stores, skipping cards you own, at the minimum condition you set — and, on Pro, a watch that re-prices the list after every update.",
     href: "/tools/best-basket",
     tier: "premium",
     freeTaste: "See your total free",
@@ -53,8 +52,8 @@ export const DASHBOARD_TOOLS: DashTool[] = [
   {
     title: "Watchlist & target alerts",
     desc: PLUS_ON_SALE
-      ? "A free email when a card you watch hits a new low. Plus adds your own target price and sealed-product watches (back in stock, at RRP); Premium watches a whole deck's delivered price."
-      : "A free email when a card you watch hits a new low, plus your own target price on one card and one sealed-product watch (back in stock, at RRP). Premium sets a target on every card, watches every sealed product and a whole deck's delivered price.",
+      ? "A free email when a card you watch hits a new low. Plus adds your own target price and sealed-product watches (back in stock, at RRP); Pro watches a whole deck's delivered price."
+      : "A free email when a card you watch hits a new low, plus your own target price on one card and one sealed-product watch (back in stock, at RRP). Pro sets a target on every card, watches every sealed product and a whole deck's delivered price.",
     href: "/watching",
     tier: "free",
   },
@@ -68,7 +67,7 @@ export const DASHBOARD_TOOLS: DashTool[] = [
   // opens for every account; the tier gates are Plus's no-limit and Premium's plan.
   {
     title: "Set checklist",
-    desc: `What your binder is missing from a set, and the cheapest listing for each card. Free for your first ${FREE_PORTFOLIO_LIMIT} cards; ${ENTRY_TIER_NAME} removes the limit.`,
+    desc: `What your binder is missing from a set, and the cheapest listing for each card. Free, with no card limit.`,
     href: "/portfolio/sets",
     tier: "free",
   },

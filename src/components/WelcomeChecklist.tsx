@@ -9,7 +9,7 @@ import { COUNTRY_LIST, type Country } from "@/lib/country";
 import { trackEvent } from "@/lib/analytics";
 import { PremiumButton } from "./PremiumButton";
 import Link from "next/link";
-import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+
 import { isSignupSession } from "@/lib/signup-session";
 import { trialOfferLead, PLUS_ON_SALE } from "@/lib/site";
 
@@ -94,7 +94,7 @@ export function WelcomeChecklist() {
       <p className="text-sm font-semibold text-white">See what a set is missing</p>
       <p className="text-xs text-slate-500">
         Tick what&apos;s in your binder and the set checklist shows what&apos;s missing and the cheapest listing for each card,
-        before postage. Free for your first {FREE_PORTFOLIO_LIMIT} cards.
+        before postage. Free, for every card you own.
       </p>
       <div className="mt-2">
         <Link href="/portfolio/sets" className="btn-ghost text-sm">Open the set checklist →</Link>
@@ -105,19 +105,19 @@ export function WelcomeChecklist() {
   const premiumStep = (
     <div className="min-w-0 flex-1">
       <p className="text-sm font-semibold text-white">
-        {trialOffer ? `${PLUS_ON_SALE ? "Plus or Premium" : "Premium"}: ${trialOfferLead(trialDays, trialFeeCents).replace(/^First/, "first")}` : "See what Premium adds"}
+        {trialOffer ? `${PLUS_ON_SALE ? "Plus or Pro" : "Pro"}: ${trialOfferLead(trialDays, trialFeeCents).replace(/^First/, "first")}` : "See what Pro adds"}
       </p>
       <p className="text-xs text-slate-500">
         {/* Premium alone while Plus is off sale (PLUS_ON_SALE, 2026-10-23). */}
         {PLUS_ON_SALE ? (
           <>
-            Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium)
-            a whole deck&apos;s delivered price. Plus also removes the card limits, so a whole set fits; Premium plans the order, store
+            Plus and Pro watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Pro)
+            a whole deck&apos;s delivered price. Plus also removes the card limits, so a whole set fits; Pro plans the order, store
             by store, at the condition you&apos;ll play.
           </>
         ) : (
           <>
-            Your free account sets its own target price on one card and watches one sealed product. Premium watches prices for
+            Your free account sets its own target price on one card and watches one sealed product. Pro watches prices for
             you everywhere: a target on every card, every sealed product back in stock or at RRP, and a whole deck&apos;s
             delivered price. It also removes the card limits, so a whole set fits, and plans the order, store by store,
             at the condition you&apos;ll play.
@@ -198,10 +198,10 @@ export function WelcomeChecklist() {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-white">Watch a card</p>
             <p className="text-xs text-slate-500">
-              Free: up to {FREE_WATCHLIST_LIMIT} cards, an email when one hits a new low.{" "}
+              Free, for as many cards as you like, with an email when one hits a new low.{" "}
               {PLUS_ON_SALE
-                ? "Plus also watches sealed products (back in stock, at RRP); Premium watches a whole deck's delivered price."
-                : "Premium also watches sealed products (back in stock, at RRP) and a whole deck's delivered price."}
+                ? "Plus also watches sealed products (back in stock, at RRP); Pro watches a whole deck's delivered price."
+                : "Pro also watches sealed products (back in stock, at RRP) and a whole deck's delivered price."}
             </p>
             {!watchDone && (
               <div className="mt-2 max-w-sm">

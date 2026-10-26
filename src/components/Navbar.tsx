@@ -114,7 +114,7 @@ export function Navbar() {
               follows is the 2026-09-28 history it reverses.
               PRICING, NOT A GOLD PREMIUM CTA (2026-09-28, owner: "Put the upgrade
               prompt where people hit a limit … not in popups and headers").
-              This slot carried a gold, shimmering "✦ Premium" from the
+              This slot carried a gold, shimmering "✦ Pro" from the
               2026-09-10 brief until then; it is now a plain link to /premium,
               the same weight as Database beside it, so the plans stay one tap
               away without the header selling them. The upgrade itself is
@@ -123,7 +123,7 @@ export function Navbar() {
               From 400px only: "Pricing" is wider than the old bare "✦" glyph
               the 360-399px band could fit beside Log in, Sign up and the
               menu (tests/mobile-header-fit.test.ts), and below 400px the
-              menu's own Premium entry (nav-groups.ts) reaches the same page.
+              menu's own Pro entry (nav-groups.ts) reaches the same page.
               `whitespace-nowrap` + `shrink-0` stay load-bearing: a shrinkable
               label here once wrapped onto two lines and once had the theme
               toggle drawn through it. */}
@@ -191,7 +191,7 @@ export function Navbar() {
               • below lg — logo, Database, Explore, Marketplace, country.
               • from lg  — everything else at once: the navigation links (Sealed,
                 Decks, Blog), Database moving into this row, the
-                Premium upsell (96px, opens a dialog) and the Discord icon (36px,
+                Pro upsell (96px, opens a dialog) and the Discord icon (36px,
                 external).
             Everything hidden at a given width is in the Menu overlay (opened by
             HeaderMenuButton below lg) via nav-groups.ts, and Discord is in the
@@ -230,7 +230,7 @@ export function Navbar() {
               exactly the duplication this header keeps being pruned of, and at
               640-1023px the row could no longer afford both: with the watchlist
               split out of the menu button, its intrinsic width was ~641px inside
-              592, which `min-w-0` turned from a scrolling page into the Premium
+              592, which `min-w-0` turned from a scrolling page into the Pro
               label being overdrawn by the theme toggle. */}
           {/* Was `hidden lg:inline-flex` — i.e. lg-and-up only, which is
               precisely where the rail's own Search row now opens the same
@@ -306,7 +306,7 @@ export function Navbar() {
 
           {/* Best Basket USED TO sit here (a header link, added when the tool was
               free with any account — see its own git history for why). Removed
-              when Best Basket moved back to the Premium tier: a header-level slot
+              when Best Basket moved back to the Pro tier: a header-level slot
               is for something every visitor can act on immediately, not a tool
               most visitors would just bounce off a paywall for. It's still
               reachable from the ⌘K launcher, the mega-menu, /tools and its own
@@ -325,7 +325,7 @@ export function Navbar() {
               from the header rather than buried. */}
 
           {/* Auctions — the live eBay auction board. At xl, not lg, for the same
-              reason Premium and Discord below are: the lg row is already at the
+              reason Pro and Discord below are: the lg row is already at the
               width that overflowed on tablets once (the 640-790px fix, see
               scripts/mobile-check.ts) and a sixth lg item walks back toward it.
               Below xl it is one keystroke away in the ⌘K launcher, in the phone
@@ -334,7 +334,7 @@ export function Navbar() {
 
           {/* The P2P marketplace was removed entirely (2026-08) — the site is
               back to pure price comparison — so there is no Marketplace chip
-              here, and Premium (below) is the header's only always-visible,
+              here, and Pro (below) is the header's only always-visible,
               non-deferred nav item besides the logo and Database. That keeps
               the above-the-fold interactive-target budget (scripts/homepage-
               audit.mjs) comfortably in range. */}
@@ -359,14 +359,14 @@ export function Navbar() {
               signed-out visitor on the homepage sees the same "Sign in" the
               rest of the site shows, from the very first paint. */}
           {/* Join our Discord — opens the permanent invite in a new tab.
-              AT xl, NOT lg — same for the Premium button above. Once every nav
+              AT xl, NOT lg — same for the Pro button above. Once every nav
               link turns on at lg, the row's intrinsic minimum was ~1056px, so
               between 1024 and ~1056 the signed-out CTA was silently CLIPPED by
               the container (no page scroll, so the overflow sweep never caught
               it — it just cut "Log in / Sign up" down to "Log"). These two are
-              the row's only non-navigational items — Premium opens a dialog,
+              the row's only non-navigational items — Pro opens a dialog,
               Discord leaves the site — so deferring them to xl is the cheapest
-              ~132px, and both remain reachable meanwhile: Premium from the
+              ~132px, and both remain reachable meanwhile: Pro from the
               UserMenu and /premium, Discord from the footer. */}
           <a
             href={DISCORD_URL}
@@ -422,11 +422,11 @@ export function Navbar() {
           {/* WATCHLIST FROM sm UP, not below it. Bringing Database back (the
               explicit priority: "that's the most important one") put seven
               controls in this row, and at 320-414px they measurably overlapped —
-              Premium and Database drawn through the market switcher. Removing
+              Pro and Database drawn through the market switcher. Removing
               the notification bell paid for part of it but only from sm up,
               where that bell already lived.
               The watchlist is the cheapest of the remaining 48px: below sm it
-              is one tap away in the menu overlay, whereas Database and Premium
+              is one tap away in the menu overlay, whereas Database and Pro
               were both named as must-haves and the market switcher, account and
               menu are each the only route to something. It stays a SEPARATE
               control from the menu at every width it appears, which is what

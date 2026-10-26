@@ -446,7 +446,7 @@ const DECK_WATCH_SELECT = {
 } as const;
 
 function notPremium(): WatchRouteResult {
-  return { status: 402, body: { error: "Deck price watches are part of Premium.", code: "tier_required", tier: "premium" } };
+  return { status: 402, body: { error: "Deck price watches are part of Pro.", code: "tier_required", tier: "premium" } };
 }
 
 const asInt = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.round(v) : typeof v === "string" && /^\d+$/.test(v) ? Number(v) : null);
@@ -474,7 +474,7 @@ export async function createDeckWatch(db: DeckWatchRouteDb, user: RouteUser, raw
   const minCondition = toStoredMinCondition(floor);
   const count = await db.deckWatch.count({ where: { userId: user.id } });
   if (count >= DECK_WATCH_LIMIT) {
-    return { status: 409, body: { error: `Premium watches up to ${DECK_WATCH_LIMIT} lists. Stop one on your watchlist to add this.`, code: "limit", limit: DECK_WATCH_LIMIT, count } };
+    return { status: 409, body: { error: `Pro watches up to ${DECK_WATCH_LIMIT} lists. Stop one on your watchlist to add this.`, code: "limit", limit: DECK_WATCH_LIMIT, count } };
   }
   const watch = await db.deckWatch.create({
     data: { userId: user.id, market, name, listText, region, trackedOnly, targetCents, minCondition },

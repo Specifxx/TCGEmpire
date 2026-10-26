@@ -562,7 +562,7 @@ export async function createSealedWatch(db: SealedWatchRouteDb, user: RouteUser,
     }
     return {
       status: 409,
-      body: { error: `Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} sealed products. Stop one, or move to Premium for unlimited.`, code: "limit", limit: SEALED_WATCH_LIMIT_PLUS, count },
+      body: { error: `Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} sealed products. Stop one, or move to Pro for unlimited.`, code: "limit", limit: SEALED_WATCH_LIMIT_PLUS, count },
     };
   }
   const watch = await db.sealedWatch.create({ data: { userId: user.id, email: user.email, market, groupKey, targetCents }, select: SEALED_WATCH_SELECT });

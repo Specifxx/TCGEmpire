@@ -256,7 +256,7 @@ export default async function CreatorsPage() {
       <section className="mt-10 rounded-3xl border border-gold/30 bg-gold/[0.06] p-6 sm:p-8">
         <h2 className="text-2xl font-extrabold text-white">Earn with your own code</h2>
         <p className="mt-1 text-sm leading-relaxed text-slate-300">
-          Get a RiftCompare creator code: your audience gets 20% off Premium, and you earn 20% of every payment they make.
+          Get a RiftCompare creator code: your audience gets 20% off Pro, and you earn 20% of every payment they make.
         </p>
         <Link href="/creators/apply" className="btn-primary mt-4 inline-flex min-h-11 items-center px-5">
           Apply for a creator code →

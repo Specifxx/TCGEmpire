@@ -68,7 +68,7 @@ function premiumEmailCopy(): string {
   const src = code("src/lib/email.ts");
   const from = src.indexOf("CHECKOUT_RECOVERY_TOOLS = [");
   const to = src.indexOf("export async function sendPremiumOfferEmail");
-  assert.ok(from >= 0 && to > from, "the Premium email region moved — re-derive these bounds");
+  assert.ok(from >= 0 && to > from, "the Pro email region moved — re-derive these bounds");
   return src.slice(from, to);
 }
 
@@ -80,10 +80,10 @@ const RETIRED = [
   { re: /before (they|it) bounce|before anyone else|ahead of the market/i, why: "pre-emption framing — buying to get in front of other buyers" },
 ];
 
-test("no Premium pitch surface sells an advantage over other buyers", () => {
+test("no Pro pitch surface sells an advantage over other buyers", () => {
   for (const [label, src] of [
     ...PITCH_SURFACES.map((f) => [f, code(f)] as const),
-    ["src/lib/email.ts (Premium region)", premiumEmailCopy()] as const,
+    ["src/lib/email.ts (Pro region)", premiumEmailCopy()] as const,
   ]) {
     for (const { re, why } of RETIRED) {
       assert.ok(!re.test(src), `${label} carries retired positioning (${re}): ${why}`);
@@ -108,7 +108,7 @@ test("the tagline is present on the surface that carries it, and /premium leads 
   assert.match(code("src/lib/premium-plan-copy.ts"), /PREMIUM_PROMISE = "Never overpay for Riftbound again"/);
   assert.match(code("src/lib/premium-plan-copy.ts"), /return PLUS_ON_SALE \? "Everything in Plus, plus the cheapest delivered order" : PREMIUM_PROMISE;/, "the plan card's tagline is the promise");
   assert.doesNotMatch(code("src/lib/premium-plan-copy.ts"), /PREMIUM_HERO_HEADLINE = "[^"]*(edge|beat|outsmart)/i, "a saving, not an advantage over other buyers");
-  assert.match(code("src/app/premium/page.tsx"), /const META_TITLE = `RiftCompare Premium: /, "/premium's title states the plan");
+  assert.match(code("src/app/premium/page.tsx"), /const META_TITLE = `RiftCompare Pro: /, "/premium's title states the plan");
   for (const file of [
     "src/components/PremiumDialog.tsx",
     // SignupPromoPopup (removed 2026-09-30) was deliberately NOT here from 2026-09-16: it sold the
@@ -173,7 +173,7 @@ test("the reframe did not smuggle in scarcity or invented numbers", () => {
   // one touched — a rewrite is exactly when they get lost.
   for (const [label, src] of [
     ...PITCH_SURFACES.map((f) => [f, code(f)] as const),
-    ["src/lib/email.ts (Premium region)", premiumEmailCopy()] as const,
+    ["src/lib/email.ts (Pro region)", premiumEmailCopy()] as const,
   ]) {
     assert.ok(!/only \d+ (left|spots|seats)/i.test(src), `${label} must not invent scarcity`);
     assert.ok(!/expires? in/i.test(src), `${label} must not invent a countdown`);

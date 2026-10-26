@@ -19,7 +19,6 @@ import { HubIntro } from "@/components/HubIntro";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
-import { FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
 
 // ISR: the price history gains one snapshot a day, and it reaches the site with
 // each daily release (the files in data/price-history, lib/price-history-store.ts),
@@ -256,7 +255,7 @@ export default async function MoversPage() {
       <InlineSignupPrompt
         surface="inline_movers"
         title="Get an email when a card you want gets cheaper"
-        body={`With a free account you can watch up to ${FREE_WATCHLIST_LIMIT} cards, and we email you when one of them drops in price. Your watchlist lives in one place, on any device.`}
+        body={`With a free account you can watch as many cards as you like, and we email you when one of them drops in price. Your watchlist lives in one place, on any device.`}
       />
 
       {/* The guides behind the lists, after the page's data (2026-09-26, "Blog

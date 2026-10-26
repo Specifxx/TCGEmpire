@@ -297,7 +297,7 @@ function PlanThePurchase({
       </Link>
       <p className="mt-2 text-xs text-slate-400">
         Best Basket prices the {count} missing {setName} {count === 1 ? "card that has" : "cards that have"} a store listing, delivered, with each store&apos;s measured postage.
-        Any account sees its total; Premium shows which store to buy each card from.
+        Any account sees its total; Pro shows which store to buy each card from.
         {(count ?? 0) > SET_GAP_CHUNK ? ` A plan holds up to ${SET_GAP_CHUNK} cards, so it starts with the ${SET_GAP_CHUNK} cheapest and offers the next ${SET_GAP_CHUNK}.` : ""}
       </p>
     </section>
@@ -365,7 +365,7 @@ function Notes({ setSlug, setName, freeLimit }: { setSlug: string; setName: stri
     <div className="text-xs leading-relaxed text-slate-500">
       <p>
         Any finish and any condition counts as owned, one copy is enough, and promos are not part of the list. A free account
-        tracks up to {freeLimit} cards; if you already hold more you keep all of them, and a paid plan has no limit.
+        tracks every card, with no limit.
       </p>
       <p className="mt-1">
         Ticked a card by mistake? Change its quantity in <Link href="/portfolio#collection" className="text-brand-400 hover:underline">My binder</Link>.

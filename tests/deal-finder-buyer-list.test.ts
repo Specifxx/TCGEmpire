@@ -589,8 +589,8 @@ test("members' nudges link to their own cards; free accounts keep the Plus upsel
   const n = { watched: { deals: 4, dealsFree: 1, rising: 0, risingFree: 0 }, owned: { deals: 0, dealsFree: 0, rising: 0, risingFree: 0 }, example: null };
   const free = nudge.nudgeCopy(n, "watched")!;
   // Plus is off sale since 2026-10-23: the free upsell names Premium.
-  assert.match(free.line, /Premium shows every one with no ads, and can email you when one hits your price\.$/);
+  assert.match(free.line, /Pro shows every one with no ads, and can email you when one hits your price\.$/);
   assert.equal(free.kind, "deal");
   const member = nudge.nudgeCopy(n, "watched", "member")!;
-  assert.doesNotMatch(member.line, /Plus|Premium|free top 3/, "a member is never pitched");
+  assert.doesNotMatch(member.line, /Plus|Pro|free top 3/, "a member is never pitched");
 });

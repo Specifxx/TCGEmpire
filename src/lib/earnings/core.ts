@@ -17,7 +17,7 @@ import { convertCents } from "../fx";
 export type EarningsSourceKey = "stripe" | "tcgplayer" | "ebay" | "adsense" | "mediavine";
 
 export const SOURCE_LABELS: Record<EarningsSourceKey, string> = {
-  stripe: "Stripe (Premium + Stores)",
+  stripe: "Stripe (Pro + Stores)",
   tcgplayer: "TCGplayer (Impact)",
   ebay: "eBay Partner Network",
   adsense: "Google AdSense",

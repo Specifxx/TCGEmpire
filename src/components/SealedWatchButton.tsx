@@ -98,7 +98,7 @@ export function SealedWatchButton({
         else if (!out.ok) {
           setNote(
             out.status === 409
-              ? `Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} sealed products. Stop one on your watchlist, or move to Premium for unlimited.`
+              ? `Plus watches up to ${SEALED_WATCH_LIMIT_PLUS} sealed products. Stop one on your watchlist, or move to Pro for unlimited.`
               : (out.body?.error as string | undefined) ?? "Couldn't save that — try again.",
           );
         }

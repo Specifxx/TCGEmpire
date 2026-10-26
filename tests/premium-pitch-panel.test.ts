@@ -18,7 +18,7 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // ─────────────────────────────────────────────────────────────────────────────
 
 
-test("the header sells Premium with the shiny GetPremiumLink; rail and menu stay plain (2026-10-15)", () => {
+test("the header sells Pro with the shiny GetPremiumLink; rail and menu stay plain (2026-10-15)", () => {
   // Parts 1 and 2 of the 2026-09-10 brief are reversed: the owner moved every
   // upgrade prompt to where a free account hits a limit, "not in popups and
   // headers" (DECISIONS.md, "Free limits: charge for what people use every
@@ -47,14 +47,14 @@ test("the header sells Premium with the shiny GetPremiumLink; rail and menu stay
   assert.doesNotMatch(rail.slice(rail.indexOf("<PremiumNavLink")), /text-gold|border-gold/, "…without gold");
   const menu = read("src/components/UserMenu.tsx");
   const menuCode = menu.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
-  assert.doesNotMatch(menuCode, /Get Premium/);
+  assert.doesNotMatch(menuCode, /Get Pro/);
   const menuLink = menuCode.slice(menuCode.indexOf("<PremiumNavLink"), menuCode.indexOf("</PremiumNavLink>"));
   assert.doesNotMatch(menuLink, /text-gold/, "the account menu's Pricing row is not gold");
   assert.doesNotMatch(read("tailwind.config.ts"), /premium-shimmer/);
   assert.doesNotMatch(read("src/app/globals.css"), /^\.premium-shimmer/m, "the old phone-only shimmer stays gone; .premium-cta replaced it");
 });
 
-test("one tagline, on every surface that carries the Premium headline", () => {
+test("one tagline, on every surface that carries the Pro headline", () => {
   // /premium's hero is "Know what you're missing. Buy it for less." since the
   // personas pass (2026-09-29); the tagline stays on the dialog and in the page title.
   // Since 2026-10-23 the hero is the one promise, "Never overpay for Riftbound
@@ -111,8 +111,8 @@ test("/premium's CTA is one big green button, with the price in the line beneath
   assert.match(src, /const thenPrice = priceLabel \|\|/, "the price must appear in the small print under the button");
 
   // The dialog and the gated-tool wall keep gold — the split is one page deep.
-  assert.match(read("src/components/PremiumDialog.tsx"), /bg-gold/, "the dialog keeps the gold Premium button");
-  assert.match(read("src/components/PremiumButton.tsx"), /bg-gold/, "the tool-wall button keeps the gold Premium button");
+  assert.match(read("src/components/PremiumDialog.tsx"), /bg-gold/, "the dialog keeps the gold Pro button");
+  assert.match(read("src/components/PremiumButton.tsx"), /bg-gold/, "the tool-wall button keeps the gold Pro button");
 });
 
 test("TrialPriceBlock kept its compact size and its honesty contract — still used by the dialog's trial flow", () => {

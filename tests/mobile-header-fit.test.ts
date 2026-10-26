@@ -123,7 +123,7 @@ test("the wordmark, not a nav control, is what pays for the tablet band", () => 
   assert.doesNotMatch(code, /tracking-tight text-white sm:block/, "the wordmark must not turn back on at sm");
 });
 
-test("the phone slot is the shiny Premium button again (2026-10-15; plain Pricing 09-28 to 10-15)", () => {
+test("the phone slot is the shiny Pro button again (2026-10-15; plain Pricing 09-28 to 10-15)", () => {
   // 2026-09-10: Premium was deliberately put beside Database on phones, gold
   // and shimmering. 2026-09-28: the owner moved upgrade prompts to where a
   // free account hits a limit, "not in popups and headers", so the slot is a
@@ -151,7 +151,7 @@ test("the phone slot is the shiny Premium button again (2026-10-15; plain Pricin
   assert.match(row, /<GetPremiumLink[\s\S]*?compact/, "the short label in the phone slot");
 });
 
-test("Pricing (was Premium) cannot wrap AND cannot shrink — two screenshots' worth of bugs", () => {
+test("Pricing (was Pro) cannot wrap AND cannot shrink — two screenshots' worth of bugs", () => {
   // Neither flag is cosmetic, and neither failure was visible to a measurement:
   //   • shrinkable + wrapping  → "✦" on one line and "Premium" on the next.
   //     scrollWidth === clientWidth when text WRAPS, so the overflow audit

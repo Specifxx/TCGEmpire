@@ -132,7 +132,7 @@ export default async function DashboardPage() {
         <h2 className="text-lg font-extrabold text-white">{isFree ? "Your tools" : <>Your {tierName} tools</>}</h2>
         {canUpgrade && (
           <PremiumNavLink surface="nav:dashboard" href="/premium#top-pricing" className="text-sm font-semibold text-gold hover:underline">
-            {isFree ? "See plans" : `Upgrade to Premium — ${planSwitchPriceLabel("premium", billing.interval, premiumAnnualEnabled())}`} →
+            {isFree ? "See plans" : `Upgrade to Pro — ${planSwitchPriceLabel("premium", billing.interval, premiumAnnualEnabled())}`} →
           </PremiumNavLink>
         )}
       </div>
@@ -183,7 +183,7 @@ export default async function DashboardPage() {
       </div>
       {isPlus && billing.trialing && (
         <p className="mt-2 text-xs text-slate-500">
-          Plan changes open once your trial has converted — Premium&apos;s store-by-store plan is one click from{" "}
+          Plan changes open once your trial has converted — Pro&apos;s store-by-store plan is one click from{" "}
           <Link href="/premium" className="text-slate-400 hover:underline">your membership page</Link> then.
         </p>
       )}

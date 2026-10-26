@@ -19,12 +19,12 @@ const NOW = new Date("2026-10-09T12:00:00Z");
 
 // ── Full price history ──────────────────────────────────────────────────────
 
-test("free sees the last 30 days and is told where the older part starts", () => {
+test("free sees the last 90 days and is told where the older part starts", () => {
   const now = NOW.getTime();
-  const pts = [90, 45, 31, 29, 10, 1].map((d) => ({ t: now - d * DAY, v: 100 + d }));
-  assert.equal(FREE_HISTORY_DAYS, 30);
-  assert.deepEqual(recentWindow(pts, now).map((p) => p.v), [129, 110, 101]);
-  assert.equal(olderFrom(pts, now), now - 90 * DAY);
+  const pts = [200, 95, 91, 89, 10, 1].map((d) => ({ t: now - d * DAY, v: 100 + d }));
+  assert.equal(FREE_HISTORY_DAYS, 90, "90 days free since 2026-10-26 (was 30)");
+  assert.deepEqual(recentWindow(pts, now).map((p) => p.v), [189, 110, 101]);
+  assert.equal(olderFrom(pts, now), now - 200 * DAY);
   assert.equal(olderFrom(recentWindow(pts, now), now), null, "nothing hidden, nothing to unlock");
   assert.equal(olderFrom([], now), null);
 });
@@ -151,7 +151,7 @@ function auctionDb(opts: { premiumTier?: string; paused?: string[]; sent?: { ema
   return { db: db as never, created };
 }
 
-test("a Premium member gets one email with their market's matching auctions, soonest first, and each is sent once", async () => {
+test("a Pro member gets one email with their market's matching auctions, soonest first, and each is sent once", async () => {
   const { db, created } = auctionDb();
   const sends: { to: string; items: { itemId: string }[] }[] = [];
   const s = await runAuctionAlerts({ db, now: NOW, dailyBudget: 100, send: async (to, items) => (sends.push({ to, items: items as never }), true) });
@@ -165,7 +165,7 @@ test("a Premium member gets one email with their market's matching auctions, soo
   assert.equal(s2.emails, 0);
 });
 
-test("a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false), and a paused address is skipped", async () => {
+test("a billed-Plus account is treated as Pro (grandfathered, PLUS_ON_SALE=false), and a paused address is skipped", async () => {
   // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
   // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so a
   // Plus member gets the same auction email a Premium member does.

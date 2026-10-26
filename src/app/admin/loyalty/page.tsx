@@ -120,7 +120,7 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
   };
   collectors.forEach((c) => tag(c.userId, c.displayName, c.email, "Collector"));
   mostActive.forEach((a) => tag(a.userId, a.displayName, a.email, "Active"));
-  premiumMembers.forEach((p) => tag(p.userId, p.displayName, p.email, "Premium"));
+  premiumMembers.forEach((p) => tag(p.userId, p.displayName, p.email, "Pro"));
   const multiSignal = [...categoriesByUser.values()].filter((u) => u.tags.length >= 2).sort((a, b) => b.tags.length - a.tags.length);
 
   const fmtDate = (d: Date) => new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
@@ -261,11 +261,11 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
 
           <section className="mt-8">
             <div className="mb-2 flex items-baseline justify-between">
-              <h2 className="text-lg font-semibold text-white">Longest-tenured active Premium members</h2>
+              <h2 className="text-lg font-semibold text-white">Longest-tenured active Pro members</h2>
               <span className="text-xs text-slate-500">oldest account still paying · top {TOP_N}</span>
             </div>
             {premiumMembers.length === 0 ? (
-              <Empty>No active Premium members right now.</Empty>
+              <Empty>No active Pro members right now.</Empty>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">
                 <table className="w-full text-sm">
@@ -274,7 +274,7 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
                       <th className="px-3 py-2 font-medium">#</th>
                       <th className="px-3 py-2 font-medium">User</th>
                       <th className="px-3 py-2 text-right font-medium">Account age</th>
-                      <th className="px-3 py-2 text-right font-medium">Premium until</th>
+                      <th className="px-3 py-2 text-right font-medium">Pro until</th>
                     </tr>
                   </thead>
                   <tbody>

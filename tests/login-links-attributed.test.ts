@@ -141,7 +141,7 @@ test("/login has a context line for the games and the gated tools", () => {
   for (const p of ["/tools/value-finder", "/tools/rising-sealed", "/bulk-pricer"]) {
     assert.doesNotMatch(login, new RegExp(`"${p.replace(/\//g, "\\/")}":`), p);
   }
-  assert.doesNotMatch(login, /Rising Sealed is a Premium tool/);
+  assert.doesNotMatch(login, /Rising Sealed is a Pro tool/);
 });
 
 test("funnel-report prints activation by source from bounded reads", () => {

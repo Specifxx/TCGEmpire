@@ -16,7 +16,7 @@ const schema = z.object({ task: z.enum(CLIENT_CLAIMABLE as unknown as [TaskId, .
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
-  if (!coinsEnabledFor(user)) return NextResponse.json({ error: "Coins are a Premium perk" }, { status: 403 });
+  if (!coinsEnabledFor(user)) return NextResponse.json({ error: "Coins are a Pro perk" }, { status: 403 });
 
   const rl = rateLimit(`coins:claim:${user.id}`, 20, 60_000);
   if (!rl.ok) return tooManyRequests(rl.retryAfter);

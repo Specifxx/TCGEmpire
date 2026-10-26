@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import {
   FREE_LIMIT_STATUS,
+  FREE_LIMITS_ON,
   FREE_PORTFOLIO_LIMIT,
   FREE_WATCHLIST_LIMIT,
   FREE_LIMIT_POPOVER,
@@ -83,11 +84,11 @@ test("the limits are 10 watched cards and 50 portfolio cards, and the refusal is
 
 test("under the limit a new card is allowed; at the limit it is refused", async () => {
   const under = memCounter(ids(9));
-  const u = await checkFreeAllowance(under.counter, "watchlist", ["new"], false);
+  const u = await checkFreeAllowance(under.counter, "watchlist", ["new"], false, true);
   assert.deepEqual(u, { allowed: ["new"], blocked: [], count: 9, limit: 10 });
 
   const at = memCounter(ids(10));
-  const a = await checkFreeAllowance(at.counter, "watchlist", ["new"], false);
+  const a = await checkFreeAllowance(at.counter, "watchlist", ["new"], false, true);
   assert.deepEqual(a.allowed, []);
   assert.deepEqual(a.blocked, ["new"]);
   assert.equal(a.count, 10);
@@ -97,20 +98,29 @@ test("grandfathered: an account over the limit keeps everything, may re-add a ca
   const over = memCounter(ids(64));
   // Re-adding (more copies, another market/condition) a card already held:
   // allowed, and not even counted — the count query never runs.
-  const again = await checkFreeAllowance(over.counter, "portfolio", ["c3"], false);
+  const again = await checkFreeAllowance(over.counter, "portfolio", ["c3"], false, true);
   assert.deepEqual(again.allowed, ["c3"]);
   assert.deepEqual(again.blocked, []);
   assert.deepEqual(over.calls, ["held"], "a held card costs one scoped read, no count");
   // A new card: refused, with the real count (64), not the limit.
-  const fresh = await checkFreeAllowance(over.counter, "portfolio", ["new"], false);
+  const fresh = await checkFreeAllowance(over.counter, "portfolio", ["new"], false, true);
   assert.deepEqual(fresh.blocked, ["new"]);
   assert.equal(fresh.count, 64);
   assert.equal(freeLimitBody("portfolio", fresh.count!).count, 64);
 });
 
+test("while the limits are off (the default since 2026-10-26) nothing is refused or counted", async () => {
+  const m = memCounter(ids(500));
+  const r = await checkFreeAllowance(m.counter, "portfolio", ["new"], false);
+  assert.deepEqual(r.allowed, ["new"]);
+  assert.deepEqual(m.calls, [], "no query at all");
+  assert.equal(wouldHitFreeLimit("watchlist", { paid: false, held: new Set(ids(500)), cardId: "new" }), false);
+  assert.equal(showFreeLimitCounter("watchlist", 9, false), false, "no 'N of 10' counter");
+});
+
 test("any paid tier is unlimited, and is never counted", async () => {
   const m = memCounter(ids(500));
-  const r = await checkFreeAllowance(m.counter, "watchlist", ["new", "new2"], true);
+  const r = await checkFreeAllowance(m.counter, "watchlist", ["new", "new2"], true, true);
   assert.deepEqual(r.allowed, ["new", "new2"]);
   assert.deepEqual(r.blocked, []);
   assert.deepEqual(m.calls, [], "no query at all for a paying account");
@@ -119,23 +129,23 @@ test("any paid tier is unlimited, and is never counted", async () => {
 test("an import fills the remaining allowance in paste order and reports the rest", async () => {
   const m = memCounter(ids(47));
   const pasted = ["n1", "c5", "n2", "n3", "n4", "n5", "n1"];
-  const r = await checkFreeAllowance(m.counter, "portfolio", pasted, false);
+  const r = await checkFreeAllowance(m.counter, "portfolio", pasted, false, true);
   assert.deepEqual(r.allowed, ["n1", "c5", "n2", "n3"], "the held card always, then 3 new cards (47 → 50), de-duplicated");
   assert.deepEqual(r.blocked, ["n4", "n5"]);
 });
 
 test("the client pre-check and the quiet counter", () => {
   const held = new Set(ids(10));
-  assert.equal(wouldHitFreeLimit("watchlist", { paid: false, held, cardId: "new" }), true);
-  assert.equal(wouldHitFreeLimit("watchlist", { paid: false, held, cardId: "c1" }), false, "a card already watched");
-  assert.equal(wouldHitFreeLimit("watchlist", { paid: true, held, cardId: "new" }), false);
-  assert.equal(wouldHitFreeLimit("watchlist", { paid: false, held: new Set(ids(9)), cardId: "new" }), false);
+  assert.equal(wouldHitFreeLimit("watchlist", { paid: false, held, cardId: "new", on: true }), true);
+  assert.equal(wouldHitFreeLimit("watchlist", { paid: false, held, cardId: "c1", on: true }), false, "a card already watched");
+  assert.equal(wouldHitFreeLimit("watchlist", { paid: true, held, cardId: "new", on: true }), false);
+  assert.equal(wouldHitFreeLimit("watchlist", { paid: false, held: new Set(ids(9)), cardId: "new", on: true }), false);
   // No nagging before 7 of 10 (40 of 50); never for a paid account.
-  assert.equal(showFreeLimitCounter("watchlist", 6, false), false);
-  assert.equal(showFreeLimitCounter("watchlist", 7, false), true);
-  assert.equal(showFreeLimitCounter("watchlist", 12, true), false);
-  assert.equal(showFreeLimitCounter("portfolio", 39, false), false);
-  assert.equal(showFreeLimitCounter("portfolio", 40, false), true);
+  assert.equal(showFreeLimitCounter("watchlist", 6, false, true), false);
+  assert.equal(showFreeLimitCounter("watchlist", 7, false, true), true);
+  assert.equal(showFreeLimitCounter("watchlist", 12, true, true), false);
+  assert.equal(showFreeLimitCounter("portfolio", 39, false, true), false);
+  assert.equal(showFreeLimitCounter("portfolio", 40, false, true), true);
   assert.equal(freeLimitCounterText("watchlist", 8), "8 of 10 free");
   assert.equal(freeLimitCounterText("watchlist", 14), "14 cards · free accounts add up to 10");
 });
@@ -194,40 +204,40 @@ test("portfolio counting is scoped to the account and counts distinct cards, not
   assert.equal(await h.count(), 50);
   assert.match((s.calls[1].args as { sql: string }).sql, /COUNT\(DISTINCT "cardId"\)::int AS n FROM "CollectionCard" WHERE "userId" = \?/);
 
-  const at = await portfolioAllowance(stubDb({ distinct: 50 }).db as never, free, ["new"]);
+  const at = await portfolioAllowance(stubDb({ distinct: 50 }).db as never, free, ["new"], true);
   assert.deepEqual(at.blocked, ["new"], "the 51st card");
-  const grand = await portfolioAllowance(stubDb({ rows: [{ cardId: "have" }], distinct: 80 }).db as never, free, ["have"]);
+  const grand = await portfolioAllowance(stubDb({ rows: [{ cardId: "have" }], distinct: 80 }).db as never, free, ["have"], true);
   assert.deepEqual(grand.allowed, ["have"], "more copies of a card already held");
   const paid = stubDb({ distinct: 500 });
-  assert.deepEqual((await portfolioAllowance(paid.db as never, plus, ["new"])).allowed, ["new"]);
+  assert.deepEqual((await portfolioAllowance(paid.db as never, plus, ["new"], true)).allowed, ["new"]);
   assert.equal(paid.calls.length, 0);
-  assert.deepEqual((await portfolioAllowance(stubDb({ distinct: 1 }).db as never, admin, ["new"])).allowed, ["new"], "admins count as paid");
+  assert.deepEqual((await portfolioAllowance(stubDb({ distinct: 1 }).db as never, admin, ["new"], true)).allowed, ["new"], "admins count as paid");
 });
 
 test("a lapsed subscriber over the limit is grandfathered like anyone else", async () => {
-  const keep = await watchAllowance(stubDb({ rows: [{ cardId: "have" }], distinct: 40 }).db as never, { email: "a@x.com", account: lapsed, cardIds: ["have"] });
+  const keep = await watchAllowance(stubDb({ rows: [{ cardId: "have" }], distinct: 40 }).db as never, { email: "a@x.com", account: lapsed, cardIds: ["have"], on: true });
   assert.deepEqual(keep.allowed, ["have"]);
-  const add = await watchAllowance(stubDb({ distinct: 40 }).db as never, { email: "a@x.com", account: lapsed, cardIds: ["new"] });
+  const add = await watchAllowance(stubDb({ distinct: 40 }).db as never, { email: "a@x.com", account: lapsed, cardIds: ["new"], on: true });
   assert.deepEqual(add.blocked, ["new"]);
   assert.equal(add.count, 40);
 });
 
 test("anonymous email-only watches are capped per address too — no way around the limit", async () => {
   const s = stubDb({ distinct: FREE_WATCHLIST_LIMIT, owner: null });
-  const r = await watchAllowance(s.db as never, { email: "anon@x.com", account: null, cardIds: ["new"] });
+  const r = await watchAllowance(s.db as never, { email: "anon@x.com", account: null, cardIds: ["new"], on: true });
   assert.deepEqual(r.blocked, ["new"]);
   assert.ok(s.calls.some((c) => c.op === "user"), "at the limit, the address is checked for a paying account");
   // Under the limit the owner lookup never runs.
   const under = stubDb({ distinct: 3 });
-  await watchAllowance(under.db as never, { email: "anon@x.com", account: null, cardIds: ["new"] });
+  await watchAllowance(under.db as never, { email: "anon@x.com", account: null, cardIds: ["new"], on: true });
   assert.ok(!under.calls.some((c) => c.op === "user"));
   // An address that belongs to a paying account is unlimited through either door.
   const member = stubDb({ distinct: 30, owner: { isAdmin: false, premiumUntil: PAID_UNTIL, premiumTier: "plus", premiumTierFloor: null } });
-  const m = await watchAllowance(member.db as never, { email: "paid@x.com", account: null, cardIds: ["new"] });
+  const m = await watchAllowance(member.db as never, { email: "paid@x.com", account: null, cardIds: ["new"], on: true });
   assert.deepEqual(m.allowed, ["new"]);
   // A signed-in free account is not re-checked by address.
   const acct = stubDb({ distinct: 10, owner: { isAdmin: true, premiumUntil: null } });
-  const a = await watchAllowance(acct.db as never, { email: "a@x.com", account: free, cardIds: ["new"] });
+  const a = await watchAllowance(acct.db as never, { email: "a@x.com", account: free, cardIds: ["new"], on: true });
   assert.deepEqual(a.blocked, ["new"]);
   assert.ok(!acct.calls.some((c) => c.op === "user"));
 });
@@ -241,7 +251,7 @@ test("a +tag or dotted-Gmail alias of an address that watches ten is at the limi
 
   // alice@gmail.com already watches 10 distinct cards; alice+1 tries an 11th.
   const s = stubDb({ distinct: FREE_WATCHLIST_LIMIT, owner: null });
-  const r = await watchAllowance(s.db as never, { email: "alice+1@gmail.com", account: null, cardIds: ["new"] });
+  const r = await watchAllowance(s.db as never, { email: "alice+1@gmail.com", account: null, cardIds: ["new"], on: true });
   assert.deepEqual(r.blocked, ["new"]);
   assert.equal(r.count, FREE_WATCHLIST_LIMIT);
   const held = s.calls.find((c) => c.op === "findMany")!.args as { where: unknown };
@@ -254,19 +264,19 @@ test("a +tag or dotted-Gmail alias of an address that watches ten is at the limi
   assert.deepEqual(lookups, ["alice+1@gmail.com", "alice@gmail.com"]);
 
   // A card the inbox already watches is grandfathered through the alias.
-  const again = await watchAllowance(stubDb({ rows: [{ cardId: "have" }], distinct: 14 }).db as never, { email: "alice+1@gmail.com", account: null, cardIds: ["have"] });
+  const again = await watchAllowance(stubDb({ rows: [{ cardId: "have" }], distinct: 14 }).db as never, { email: "alice+1@gmail.com", account: null, cardIds: ["have"], on: true });
   assert.deepEqual(again.allowed, ["have"]);
 
   // A paying member whose account is the base address: the alias is unlimited.
   const paid = await watchAllowance(
     stubDb({ distinct: 30, owner: { isAdmin: false, premiumUntil: PAID_UNTIL, premiumTier: "plus", premiumTierFloor: null } }).db as never,
-    { email: "alice+1@gmail.com", account: null, cardIds: ["new"] },
+    { email: "alice+1@gmail.com", account: null, cardIds: ["new"], on: true },
   );
   assert.deepEqual(paid.allowed, ["new"]);
 
   // A signed-in account is still counted by its own address only.
   const acct = stubDb({ distinct: 3 });
-  await watchAllowance(acct.db as never, { email: "alice+1@gmail.com", account: free, cardIds: ["new"] });
+  await watchAllowance(acct.db as never, { email: "alice+1@gmail.com", account: free, cardIds: ["new"], on: true });
   const acctRaw = acct.calls.find((c) => c.op === "raw")!.args as { values: unknown[] };
   assert.deepEqual(acctRaw.values, ["alice+1@gmail.com", "u1"]);
 });
@@ -378,15 +388,14 @@ test("the email-only limit phase promises nothing a free member can't have", () 
   const modal = code("src/components/PriceAlertModal.tsx");
   const limitPhase = modal.slice(modal.indexOf('phase === "limit"'), modal.indexOf('phase === "error"'));
   assert.doesNotMatch(limitPhase, /as many cards|unlimited/i, "signing in doesn't lift a free account's limit");
-  assert.match(limitPhase, /Already a Plus or Premium member\?/);
+  assert.match(limitPhase, /Already a Plus or Pro member\?/);
 });
 
-test("the /tools FAQ quotes the free limits from the constants and says paid lifts them", () => {
+test("the /tools FAQ says a free account's watchlist and portfolio are unlimited (2026-10-26)", () => {
   const tools = code("src/app/tools/page.tsx");
-  assert.match(tools, /from "@\/lib\/free-limits"/);
-  assert.equal((tools.match(/a watchlist of up to \$\{FREE_WATCHLIST_LIMIT\} cards with weekly new-low alerts, a portfolio of up to \$\{FREE_PORTFOLIO_LIMIT\} cards/g) ?? []).length, 2);
+  assert.equal((tools.match(/adds an unlimited watchlist with weekly new-low alerts, an unlimited portfolio/g) ?? []).length, 2);
   assert.match(tools, /Plus adds an unlimited watchlist and portfolio/);
-  assert.match(tools, /Premium adds an unlimited watchlist and portfolio/);
+  assert.match(tools, /Pro adds an unlimited watchlist and portfolio/);
   assert.doesNotMatch(tools, /\b10 cards\b|\b50 cards\b/, "no hand-typed numbers");
 });
 
@@ -402,7 +411,7 @@ test("the basket saving line: real money at or above $1, no saving claim below i
   );
   assert.match(basketSavingPitch(100, fmt, { plusMember: false, priceLabel: "x" })!, /\$1\.00/);
   const upgrade = basketSavingPitch(1420, fmt, { plusMember: true, priceLabel: PREMIUM_PRICE_LABEL })!;
-  assert.match(upgrade, /saves you \$14\.20[\s\S]*Upgrade to Premium to unlock it\./, "Plus members see the same, as an upgrade");
+  assert.match(upgrade, /saves you \$14\.20[\s\S]*Upgrade to Pro to unlock it\./, "Plus members see the same, as an upgrade");
   for (const small of [99, 40, 0, -250, NaN]) {
     assert.equal(basketSavingPitch(small, fmt, { plusMember: false, priceLabel: "x" }), null, `${small}: no saving claim`);
   }
@@ -419,7 +428,7 @@ test("the basket saving line: real money at or above $1, no saving claim below i
 
 // ── No popup or header upsells ─────────────────────────────────────────────
 
-test("no corner Premium slider and no signed-out popup; the header callout and the at-limit prompts remain", () => {
+test("no corner Pro slider and no signed-out popup; the header callout and the at-limit prompts remain", () => {
   // Removed with the free limits on 2026-09-28 ("not in popups and headers");
   // restored 2026-09-29 at the owner's request ("make the sign up and premium
   // slider instant. I want to bring the instant feature back"). Only the
@@ -462,14 +471,15 @@ test("the rail and account menu link to /premium plainly; the header sells it (2
 
 // ── Copy ───────────────────────────────────────────────────────────────────
 
-test("every tier surface quotes the limits from the constants, and price comparison stays free", () => {
+test("no surface quotes a free limit while they are off, and price comparison stays free (2026-10-26)", () => {
+  assert.equal(FREE_LIMITS_ON, false, "Pro: Collectr's model at $3.99 — the tracker is free");
   const row = (f: string) => TIER_COMPARISON.find((r) => r.feature === f)!;
   assert.deepEqual(
     { ...row("Watchlist & new-low alerts") },
-    { feature: "Watchlist & new-low alerts", account: `${FREE_WATCHLIST_LIMIT} cards`, plus: "Unlimited", premium: "Unlimited" },
+    { feature: "Watchlist & new-low alerts", account: "Unlimited", plus: "Unlimited", premium: "Unlimited" },
   );
   const port = row("Portfolio — value, P&L, CSV & replacement cost");
-  assert.equal(port.account, `${FREE_PORTFOLIO_LIMIT} cards`);
+  assert.equal(port.account, "Unlimited");
   assert.equal(port.plus, "Unlimited");
   assert.equal(port.premium, "Unlimited");
   const compare = row("Compare prices across every store + eBay");
@@ -483,7 +493,7 @@ test("every tier surface quotes the limits from the constants, and price compari
     "src/lib/email.ts",
     "src/app/alerts/page.tsx",
   ]) {
-    assert.match(read(f), /FREE_WATCHLIST_LIMIT/, `${f} quotes the watchlist limit from the constant`);
+    assert.doesNotMatch(code(f), /\$\{FREE_(WATCHLIST|PORTFOLIO)_LIMIT\}|\{FREE_(WATCHLIST|PORTFOLIO)_LIMIT\}/, `${f} quotes a free limit that is off`);
     // "Side deck … 10 cards" is a tournament rule (lib/articles.ts' side-deck
     // guide), not a tier limit.
     const text = code(f).replace(/side deck[^\n]*/gi, "");
@@ -503,5 +513,6 @@ test("every tier surface quotes the limits from the constants, and price compari
   // then "one-plan-2026-10-23" when Plus went off sale and Premium went back to $9.99
   // then "rebrand-2026-10-23": the "Never overpay" promise, live proof and outcome cards
   // then "one-table-2026-10-25": /premium is the plan table and the comparison, nothing else
-  assert.equal(PREMIUM_COPY_VERSION, "one-table-2026-10-25");
+  // then "pro-2026-10-26": Premium is Pro at $3.99, and the watchlist and portfolio are free and unlimited
+  assert.equal(PREMIUM_COPY_VERSION, "pro-2026-10-26");
 });

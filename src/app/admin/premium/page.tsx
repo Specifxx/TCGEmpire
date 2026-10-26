@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // Admin-only — self-noindex (robots.ts doesn't block /admin) + gated below.
 export const metadata: Metadata = {
-  title: "Premium interest",
+  title: "Pro interest",
   robots: { index: false, follow: false },
 };
 
@@ -100,11 +100,11 @@ export default async function PremiumInterestAdminPage({ searchParams }: { searc
       <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
         <Link href={`/admin${keySuffix}`} className="hover:text-slate-300">Admin</Link>
         <span>/</span>
-        <span className="text-slate-300">Premium interest</span>
+        <span className="text-slate-300">Pro interest</span>
       </nav>
-      <h1 className="text-2xl font-bold text-white">Premium interest</h1>
+      <h1 className="text-2xl font-bold text-white">Pro interest</h1>
       <p className="mt-1 max-w-2xl text-sm text-slate-400">
-        Who clicked a Premium CTA (opened the upsell dialog or started checkout) — an interest signal ahead of, and
+        Who clicked a Pro CTA (opened the upsell dialog or started checkout) — an interest signal ahead of, and
         independent of, actually subscribing.
       </p>
 
@@ -113,7 +113,7 @@ export default async function PremiumInterestAdminPage({ searchParams }: { searc
         <Stat label="Clicks · 30d" value={num(totals.e30)} sub={`${num(totals.e7)} in 7d`} />
         <Stat label="Started checkout" value={num(totals.checkout)} />
         <Stat label="Recovery emails · 30d" value={num(totals.recovery30)} sub="abandoned checkout" />
-        <Stat label="Interested → Premium" value={num(converted)} sub="of recent signed-in" />
+        <Stat label="Interested → Pro" value={num(converted)} sub="of recent signed-in" />
       </div>
 
       {error ? (
@@ -161,7 +161,7 @@ export default async function PremiumInterestAdminPage({ searchParams }: { searc
                       <td className="whitespace-nowrap px-3 py-2 text-slate-300">{fmt(u.last)}</td>
                       <td className="whitespace-nowrap px-3 py-2">
                         {u.premiumUntil && u.premiumUntil > now ? (
-                          <span className="chip bg-brand-500/15 text-brand-300">✓ Premium</span>
+                          <span className="chip bg-brand-500/15 text-brand-300">✓ Pro</span>
                         ) : (
                           <span className="chip bg-ink-800 text-slate-500">not yet</span>
                         )}

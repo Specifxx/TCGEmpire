@@ -59,7 +59,7 @@ export function DeckWatchForm({
       <div className={`card-surface p-4 ${className}`} data-deck-watch-gate>
         <p className="text-sm font-semibold text-white">Watch this deck&apos;s price</p>
         <p className="mt-1 text-xs leading-relaxed text-slate-400">
-          Premium re-prices a saved list after every price update — cards and postage, across every store — and emails you when the
+          Pro re-prices a saved list after every price update — cards and postage, across every store — and emails you when the
           delivered total reaches your price or drops for real. Up to {DECK_WATCH_LIMIT} lists.
         </p>
         <div className="mt-2">

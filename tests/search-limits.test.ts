@@ -30,7 +30,7 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const DAY = "2026-10-09";
 const fresh = (u = ""): QuotaState => ({ d: DAY, n: 0, q: "", u });
 
-test("the ladder: 25 signed out, 100 free, 500 Plus, Premium unlimited (loosened 2026-10-15)", () => {
+test("the ladder: 25 signed out, 100 free, 500 Plus, Pro unlimited (loosened 2026-10-15)", () => {
   assert.deepEqual(SEARCH_LIMITS, { anon: 25, free: 100, plus: 500 });
   assert.equal(searchLimitFor("anon"), 25);
   assert.equal(searchLimitFor("free"), 100);
@@ -94,9 +94,9 @@ test("the cookie is signed: a tampered count is ignored", () => {
 test("the limit copy names the next tier", () => {
   assert.match(limitCopy("anon").next, /Sign up free for 100 a day/);
   // Plus is off sale since 2026-10-23 (PLUS_ON_SALE): the next tier is Premium.
-  assert.match(limitCopy("anon").next, /or get Premium for unlimited searches/);
-  assert.match(limitCopy("free").next, /^Premium searches without a limit\.$/);
-  assert.match(limitCopy("plus").next, /Premium searches without a limit/);
+  assert.match(limitCopy("anon").next, /or get Pro for unlimited searches/);
+  assert.match(limitCopy("free").next, /^Pro searches without a limit\.$/);
+  assert.match(limitCopy("plus").next, /Pro searches without a limit/);
 });
 
 test("the search API meters everything except the store tools, and never caches a metered answer", () => {

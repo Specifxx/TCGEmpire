@@ -41,7 +41,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Demand Finder — Most Searched & Viewed Riftbound Cards | RiftCompare" },
   description:
-    "The Riftbound cards players are searching for and opening on RiftCompare, over the last 7 or 30 days. The top 10 most searched this week are free; Premium shows the top 25 by searches and by card views.",
+    "The Riftbound cards players are searching for and opening on RiftCompare, over the last 7 or 30 days. The top 10 most searched this week are free; Pro shows the top 25 by searches and by card views.",
   keywords: ["riftbound most searched cards", "riftbound popular cards", "riftbound most viewed cards", "riftbound card demand"],
   alternates: pageAlternates("/tools/demand"),
   openGraph: { title: "Demand Finder — most searched & viewed Riftbound cards", url: `${SITE_URL}/tools/demand` },
@@ -53,8 +53,8 @@ const DEMAND_FAQS = [
     a: "A leaderboard of the Riftbound cards RiftCompare visitors are searching for and opening, counted from real traffic. Searches count a card picked from the search box; views count a card page opened. It is raw attention, not a score.",
   },
   {
-    q: "What is free, and what needs Premium?",
-    a: `Everyone sees the top ${FREE_DEMAND_ROWS} most searched cards of the last 7 days, here and on the price movers page. Premium shows the top ${PREMIUM_DEMAND_ROWS} by searches and the top ${PREMIUM_DEMAND_ROWS} by card views, over the last 7 or 30 days, with both counts for every card.`,
+    q: "What is free, and what needs Pro?",
+    a: `Everyone sees the top ${FREE_DEMAND_ROWS} most searched cards of the last 7 days, here and on the price movers page. Pro shows the top ${PREMIUM_DEMAND_ROWS} by searches and the top ${PREMIUM_DEMAND_ROWS} by card views, over the last 7 or 30 days, with both counts for every card.`,
   },
   {
     q: "How are searches and views counted?",
@@ -183,7 +183,7 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
         </div>
         {/* What is counted, how, and over which window (2026-09-26, "Blog and
             tools, joined up"): lib/content/hub-intros.ts, in place of a
-            one-paragraph lede. Above the Premium split, for every visitor. */}
+            one-paragraph lede. Above the Pro split, for every visitor. */}
         <HubIntro path="/tools/demand" />
         {access === "full" && (
           <div className="mt-3 flex gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1 sm:inline-flex">
@@ -205,7 +205,7 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
 
       {/* ORDER MATTERS: a failed read and a window the snapshots don't reach
           are said plainly before anything else, for every viewer. Below
-          Premium the table holds exactly the /movers strip's rows (top
+          Pro the table holds exactly the /movers strip's rows (top
           FREE_DEMAND_ROWS most searched over 7 days, searches only). */}
       {result.failed ? (
         <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
@@ -274,12 +274,12 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
           <p className="text-sm text-slate-300">
             {tier === "plus" ? (
               <>
-                <strong className="text-white">Demand Finder is part of Premium.</strong> Your Plus plan includes the free top{" "}
-                {FREE_DEMAND_ROWS}; Premium adds the top {PREMIUM_DEMAND_ROWS} by searches and by card views, over 7 or 30 days.
+                <strong className="text-white">Demand Finder is part of Pro.</strong> Your Plus plan includes the free top{" "}
+                {FREE_DEMAND_ROWS}; Pro adds the top {PREMIUM_DEMAND_ROWS} by searches and by card views, over 7 or 30 days.
               </>
             ) : (
               <>
-                <strong className="text-white">The top {FREE_DEMAND_ROWS} most searched this week are free.</strong> Premium shows
+                <strong className="text-white">The top {FREE_DEMAND_ROWS} most searched this week are free.</strong> Pro shows
                 the top {PREMIUM_DEMAND_ROWS} by searches and by card views, over 7 or 30 days.
               </>
             )}

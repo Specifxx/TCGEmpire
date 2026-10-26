@@ -45,7 +45,7 @@ async function liveTrial(stripeCustomerId: string | null) {
     const interval = price?.recurring?.interval;
     const coupon = sub.discount?.coupon;
     return {
-      planName: tierFromPriceId(price?.id) === "plus" ? "Plus" : "Premium",
+      planName: tierFromPriceId(price?.id) === "plus" ? "Plus" : "Pro",
       endsAt: new Date(sub.trial_end * 1000),
       cancelling: subscriptionIsCancelling(sub),
       // What THIS trial cost to start, from the subscription's own metadata.

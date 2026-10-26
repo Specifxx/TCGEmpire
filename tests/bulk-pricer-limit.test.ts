@@ -20,7 +20,7 @@ test("section headers are not counted as lines", () => {
   assert.equal(lines.length, 2);
 });
 
-test("the route caps a list past the free size unless the session is Premium", () => {
+test("the route caps a list past the free size unless the session is Pro", () => {
   const route = read("src/app/api/deck/price/route.ts");
   assert.match(route, /parsed\.length > FREE_BULK_LINES \? isPremium\(await getCurrentUser\(\), "premium"\) : true/, "a deck never reads the session");
   assert.match(route, /parsed\.slice\(0, FREE_BULK_LINES\)/);

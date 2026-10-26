@@ -158,7 +158,7 @@ test("the email states the no-card, one-link, one-use terms honestly and carries
   assert.match(html, new RegExp(`live for the next\\s+${WINBACK_CLAIM_EXPIRES_DAYS} days`));
   assert.match(html, /Hi Bill,/, "greets by first name");
   assert.match(html, /premium\/claim\?token=abc123/, "the CTA must be the real claim link, not a generic /premium URL");
-  assert.equal(premiumWinbackSubject(3), "3 days of RiftCompare Premium, free — no card needed");
+  assert.equal(premiumWinbackSubject(3), "3 days of RiftCompare Pro, free — no card needed");
 });
 
 test("no fake scarcity: no countdown or 'spots left' claim on top of the real, stated claim window", () => {

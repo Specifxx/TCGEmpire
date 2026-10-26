@@ -198,7 +198,7 @@ async function sendReconcileAlert(extended: ReconcileExtension[], unmatched: Rec
   const rows: string[] = [];
   if (unmatched.length) {
     rows.push(
-      `<tr><td style="padding:8px 32px 4px;font-size:14px;color:#fff"><strong>${unmatched.length} paying subscription${unmatched.length === 1 ? "" : "s"} with no matching account</strong> — these people are being charged and have no Premium. Needs a human.</td></tr>`,
+      `<tr><td style="padding:8px 32px 4px;font-size:14px;color:#fff"><strong>${unmatched.length} paying subscription${unmatched.length === 1 ? "" : "s"} with no matching account</strong> — these people are being charged and have no Pro. Needs a human.</td></tr>`,
       ...unmatched.map(
         (u) =>
           `<tr><td style="padding:2px 32px;font-size:13px;color:#b8c0cc">${escapeHtml(u.customerEmail ?? "no email on customer")} · ${escapeHtml(u.subscription)} · paid through ${u.until.slice(0, 10)}</td></tr>`
@@ -219,14 +219,14 @@ async function sendReconcileAlert(extended: ReconcileExtension[], unmatched: Rec
   );
   const subject = unmatched.length
     ? `[RiftCompare] ${unmatched.length} paying subscription${unmatched.length === 1 ? "" : "s"} with no account`
-    : `[RiftCompare] Premium reconcile healed ${extended.length} account${extended.length === 1 ? "" : "s"}`;
+    : `[RiftCompare] Pro reconcile healed ${extended.length} account${extended.length === 1 ? "" : "s"}`;
   await sendEmail(
     SUPPORT_EMAIL,
     subject,
     emailShell(
-      "Premium billing reconcile",
+      "Pro billing reconcile",
       rows.join(""),
-      `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">Daily Stripe ↔ Premium reconciliation</td></tr>`
+      `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">Daily Stripe ↔ Pro reconciliation</td></tr>`
     )
   );
 }

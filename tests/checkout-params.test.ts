@@ -92,11 +92,11 @@ test("a fee of 0 is a genuinely free trial: a trial and no one-time line, and th
   assert.equal(p.metadata?.trialFeeCents, "0");
 });
 
-test("Plus vs Premium: the product name and the tier stamp follow the tier; the days follow the trial", () => {
+test("Plus vs Pro: the product name and the tier stamp follow the tier; the days follow the trial", () => {
   const plus = buildCheckoutSessionParams(base);
   const premium = buildCheckoutSessionParams({ ...base, tier: "premium", priceId: "price_premium_test", trial: { days: 14, feeCents: 100 } });
   assert.equal(plus.line_items?.[1]?.price_data?.product_data?.name, "RiftCompare Plus — first 30 days");
-  assert.equal(premium.line_items?.[1]?.price_data?.product_data?.name, "RiftCompare Premium — first 14 days");
+  assert.equal(premium.line_items?.[1]?.price_data?.product_data?.name, "RiftCompare Pro — first 14 days");
   assert.equal(premium.line_items?.[0]?.price, "price_premium_test");
   assert.equal(plus.metadata?.tier, "plus");
   assert.equal(premium.metadata?.tier, "premium");

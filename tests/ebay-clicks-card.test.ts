@@ -89,7 +89,7 @@ test("the fallback keeps its gate and key, and reads as an eBay search", () => {
   assert.match(code, /surface="ebay_fallback"/);
   assert.match(code, /className="btn-ebay shrink-0 text-sm"/);
   assert.match(code, /border-\[#0064d2\]\/40 bg-\[#0064d2\]\/\[0\.06\]/);
-  assert.doesNotMatch(code, /amber|gold|btn-primary/, "eBay blue, never the warning tint or Premium's gold");
+  assert.doesNotMatch(code, /amber|gold|btn-primary/, "eBay blue, never the warning tint or Pro's gold");
   // Its own disclosure, right under it — it is no longer beside the panel's.
   assert.match(code, /<AffiliateDisclosure partner="ebay" tight \/>/);
   // A search, not a claim: no price, stock or guarantee.

@@ -406,7 +406,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {/* The corner Premium slider (PremiumSlideIn) went on 2026-10-25
                     (owner: "get rid of the slider … it's not working"); the
                     header's Pricing link carries a short callout instead
-                    (PricingNudge). Monthly-Premium → annual retention nudge: */}
+                    (PricingNudge). Monthly-Pro → annual retention nudge: */}
                 <AnnualSwitchNudge />
 
                 {/* Converts the OAuth callback's one-time ?welcome= param into

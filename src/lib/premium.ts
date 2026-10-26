@@ -224,7 +224,7 @@ export async function ensureIntroCoupon(tier: PremiumTier, priceId: string, mont
     try {
       await stripe().coupons.create({
         id,
-        name: `${tier === "plus" ? "Plus" : "Premium"}: half price, ${months === INTRO_MONTHS ? `first ${months} months` : `${months} more month${months === 1 ? "" : "s"}`}`,
+        name: `${tier === "plus" ? "Plus" : "Pro"}: half price, ${months === INTRO_MONTHS ? `first ${months} months` : `${months} more month${months === 1 ? "" : "s"}`}`,
         amount_off: amountOff,
         currency: price.currency,
         duration: "repeating",
@@ -415,7 +415,7 @@ export async function runPremiumTrialReminders(): Promise<number> {
       const sub = subs.data[0];
       if (sub?.trial_end) {
         const price = sub.items.data[0]?.price;
-        const planName = tierFromPriceId(price?.id) === "plus" ? "Plus" : "Premium";
+        const planName = tierFromPriceId(price?.id) === "plus" ? "Plus" : "Pro";
         const endsAt = new Date(sub.trial_end * 1000);
         const interval = price?.recurring?.interval === "year" ? "year" : price?.recurring?.interval === "month" ? "month" : null;
         const coupon = sub.discount?.coupon;

@@ -135,7 +135,7 @@ export function SubscriptionActions({
               disabled={busy !== null}
               className="btn-primary w-full py-2 text-xs"
             >
-              {busy === "upgrade" ? "Upgrading…" : `Upgrade to Premium — ${planSwitchPriceLabel("premium", interval, targetAnnualAvailable)}`}
+              {busy === "upgrade" ? "Upgrading…" : `Upgrade to Pro — ${planSwitchPriceLabel("premium", interval, targetAnnualAvailable)}`}
             </button>
             <p className="mt-1 text-[11px] text-slate-500">
               Billed the difference for the rest of this period; Best Basket&apos;s store-by-store plan, Buy this list

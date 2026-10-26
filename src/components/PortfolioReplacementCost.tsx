@@ -31,7 +31,7 @@ import { useCountry } from "./CountryProvider";
 // (see the route's header, and the egress rules at the top of lib/db.ts).
 
 interface Result extends BasketPreview {
-  plan?: BasketPlan; // Premium only
+  plan?: BasketPlan; // Pro only
   valuedCents: number;
   pricedHoldings: number;
   skippedHoldings: number;
@@ -197,9 +197,9 @@ export function PortfolioReplacementCost({ currency, geoRegion = null }: { curre
                 </Link>
               ) : (
                 <>
-                  <span className="text-slate-400">Which store to buy each card from is part of Premium. </span>
+                  <span className="text-slate-400">Which store to buy each card from is part of Pro. </span>
                   <PremiumButton surface="gate:replacement-plan" className="font-semibold text-gold underline-offset-2 hover:underline">
-                    See the store-by-store plan with Premium →
+                    See the store-by-store plan with Pro →
                   </PremiumButton>
                 </>
               )}

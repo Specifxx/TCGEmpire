@@ -219,7 +219,7 @@ export default async function AccountsAdminPage({
         <Stat label="Total users" value={num(totals.all)} />
         <Stat label="Email-verified" value={num(totals.verified)} />
         <Stat label="Plus (active)" value={num(totals.plus)} />
-        <Stat label="Premium (active)" value={num(totals.premium)} />
+        <Stat label="Pro (active)" value={num(totals.premium)} />
         <Stat label="Active · 7d" value={num(totals.active7)} sub="used the site within a week" />
         <Stat
           label="Watching, no account"
@@ -296,7 +296,7 @@ export default async function AccountsAdminPage({
           [null, "All"],
           ["paid", "Any paid"],
           ["plus", "● Plus"],
-          ["premium", "◆ Premium"],
+          ["premium", "◆ Pro"],
           ["verified", "✓ Verified"],
           ["active", "Signed in · 7d"],
         ] as const).map(([f, label]) => {
@@ -433,9 +433,9 @@ export default async function AccountsAdminPage({
                           <>
                             <span
                               className={`chip ${isPlus ? "bg-slate-500/20 text-slate-200" : "bg-gold/20 text-gold"}`}
-                              title={`${isPlus ? "Plus" : "Premium"} until ${fmt(u.premiumUntil)}`}
+                              title={`${isPlus ? "Plus" : "Pro"} until ${fmt(u.premiumUntil)}`}
                             >
-                              {isPlus ? "Plus" : "Premium"} · {fmt(u.premiumUntil)}
+                              {isPlus ? "Plus" : "Pro"} · {fmt(u.premiumUntil)}
                             </span>
                             {u.premiumTierFloor && (
                               <span

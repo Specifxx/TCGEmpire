@@ -120,11 +120,11 @@ test("the tools index lists only the kept tools, with the badges their gates ear
   };
   assert.equal(badgeFor("/tools/deal-finder"), "LIST_BADGE");
   assert.equal(badgeFor("/tools/rising"), "LIST_BADGE");
-  assert.equal(badgeFor("/tools/best-basket"), '"Premium"');
-  assert.equal(badgeFor("/tools/demand"), '"Premium"', "Demand Finder is Premium-only, never the list badge");
+  assert.equal(badgeFor("/tools/best-basket"), '"Pro"');
+  assert.equal(badgeFor("/tools/demand"), '"Pro"', "Demand Finder is Pro-only, never the list badge");
   // The set checklist (2026-09-29) is free within the portfolio limit, so it has no badge.
   assert.equal(badgeFor("/portfolio/sets"), undefined, "the set checklist is free, so it carries no tier badge");
-  assert.match(src, /const LIST_BADGE = premiumPlusEnabled\(\) \? "Plus" : "Premium";/);
+  assert.match(src, /const LIST_BADGE = premiumPlusEnabled\(\) \? "Plus" : "Pro";/);
 
   // The FAQ (also the FAQPage JSON-LD) states the real access at every level —
   // it promised "their single best result free" for a day after that stopped
@@ -134,9 +134,9 @@ test("the tools index lists only the kept tools, with the badges their gates ear
   assert.match(faq, /show nothing when you're signed out, the top 3 with a free account, and every row with \$\{LIST_BADGE\}, which is also ad-free/);
   // 2026-10-22: a free account (and Plus) gets FREE_PLANS_PER_MONTH plans a month,
   // read from lib/basket-meter.ts, never typed; Premium plans without a limit.
-  assert.match(faq, /Best Basket shows your own list's delivered total with a free account, plus \$\{FREE_PLANS_PER_MONTH\} store-by-store plans a month; Premium plans without a limit/);
-  assert.doesNotMatch(faq, /the store-by-store plan is part of Premium/, "the plan is no longer Premium-only");
-  assert.match(faq, /Demand Finder shows everyone the top 10 most searched cards of the week; its full most-searched and most-viewed lists are part of Premium/);
+  assert.match(faq, /Best Basket shows your own list's delivered total with a free account, plus \$\{FREE_PLANS_PER_MONTH\} store-by-store plans a month; Pro plans without a limit/);
+  assert.doesNotMatch(faq, /the store-by-store plan is part of Pro/, "the plan is no longer Pro-only");
+  assert.match(faq, /Demand Finder shows everyone the top 10 most searched cards of the week; its full most-searched and most-viewed lists are part of Pro/);
 });
 
 test("hub intros: no retired tool keeps an intro, and none carries banned or stale claims", () => {
@@ -148,5 +148,5 @@ test("hub intros: no retired tool keeps an intro, and none carries banned or sta
   }
   // Best Basket's intro is shown signed out too: the one- and two-store orders
   // are Premium's, and it says so.
-  assert.match(HUB_INTROS["/tools/best-basket"].paragraphs.join(" "), /with Premium it also shows the best one-store and two-store orders/);
+  assert.match(HUB_INTROS["/tools/best-basket"].paragraphs.join(" "), /with Pro it also shows the best one-store and two-store orders/);
 });

@@ -131,7 +131,7 @@ test("/premium has no FAQ since 2026-10-25, so it claims no FAQPage either", () 
 // Abandoned-checkout recovery email.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("runCheckoutRecovery targets abandoned checkouts only, excludes current Premium, and is idempotent per account", () => {
+test("runCheckoutRecovery targets abandoned checkouts only, excludes current Pro, and is idempotent per account", () => {
   const src = read("src/lib/premium.ts");
   const fnAt = src.indexOf("export async function runCheckoutRecovery");
   assert.ok(fnAt >= 0, "expected runCheckoutRecovery to exist");
@@ -140,7 +140,7 @@ test("runCheckoutRecovery targets abandoned checkouts only, excludes current Pre
   const body = src.slice(fnAt, src.indexOf("\nexport ", fnAt + 10));
   assert.match(body, /source: "checkout"/, "must select on the real checkout-click signal");
   assert.match(body, /checkoutRecoverySentAt: null/, "must exclude accounts already emailed");
-  assert.match(body, /OR: \[\{ premiumUntil: null \}, \{ premiumUntil: \{ lt: new Date\(\) \} \}\]/, "must exclude anyone currently Premium");
+  assert.match(body, /OR: \[\{ premiumUntil: null \}, \{ premiumUntil: \{ lt: new Date\(\) \} \}\]/, "must exclude anyone currently Pro");
   assert.match(body, /isAdmin: false/, "must exclude admin accounts");
   // Same idempotency shape as runPremiumTrialReminders: the stamp is written
   // unconditionally, outside the try, with .catch — a lost email must never
@@ -194,13 +194,13 @@ test("the recovery email names the plan that was abandoned, at that plan's price
   const lib = read("src/lib/premium.ts");
   const fn = lib.slice(lib.indexOf("export async function runCheckoutRecovery"), lib.indexOf("export const PREMIUM_ANNUAL_PRICE_ID"));
   assert.match(fn, /by: \["userId", "tier"\]/, "grouped by tier in the database — never a client-side distinct");
-  assert.doesNotMatch(fn, /introFromLine\("premium"/, "the price line follows the tier, not a hard-coded Premium");
+  assert.doesNotMatch(fn, /introFromLine\("premium"/, "the price line follows the tier, not a hard-coded Pro");
   assert.match(fn, /introFromLine\(tier, /);
   assert.match(fn, /sendCheckoutRecoveryEmail\(u\.email, trialDays, fromLine, tier, PREMIUM_TRIAL_FEE_CENTS\)/);
   assert.match(fn, /Your \$\{TIER_NAMES\[tier\]\} checkout is right where you left it\./);
   const email = read("src/lib/email.ts");
   const send = email.slice(email.indexOf("export function buildCheckoutRecoveryEmail"), email.indexOf("// ─── Welcome email"));
-  for (const hard of [/signing up for RiftCompare Premium/, /Finish setting up Premium/, /"Still want Premium\?"/, /"Your RiftCompare Premium free trial/]) {
+  for (const hard of [/signing up for RiftCompare Pro/, /Finish setting up Pro/, /"Still want Pro\?"/, /"Your RiftCompare Pro free trial/]) {
     assert.doesNotMatch(send, hard, "the plan name comes from the tier");
   }
   // 2026-09-30: the subject states the fee ("first 30 days … for $1"); "free trial"

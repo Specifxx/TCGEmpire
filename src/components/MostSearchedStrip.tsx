@@ -47,7 +47,7 @@ export function MostSearchedStrip({ rows, coveredDays }: { rows: MostSearchedRow
           </p>
         </div>
         <Link href="/tools/demand" prefetch={false} className="shrink-0 text-xs font-semibold text-brand-400 hover:underline">
-          Full leaderboard — Premium →
+          Full leaderboard — Pro →
         </Link>
       </div>
       {/* Above the first eBay button, for every visitor (2026-09-27, "Popular

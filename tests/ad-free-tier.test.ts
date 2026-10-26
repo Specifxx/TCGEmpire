@@ -74,7 +74,7 @@ test("both paid tiers sell ad-free, and Plus LEADS with it", () => {
   assert.equal(cellValue(noAds.from, "plus"), true);
   assert.equal(cellValue(noAds.from, "premium"), true);
   assert.equal(cellValue(noAds.from, "free"), false);
-  assert.ok(!/Premium adds an ad-free site/.test(code("src/app/premium/page.tsx")), "/premium must not sell ad-free as Premium-only");
+  assert.ok(!/Pro adds an ad-free site/.test(code("src/app/premium/page.tsx")), "/premium must not sell ad-free as Pro-only");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ test("both paid tiers sell ad-free, and Plus LEADS with it", () => {
 // page, the articles and the email templates, with comments stripped (the
 // history of the 09-14 move is recorded in comments on purpose).
 // ─────────────────────────────────────────────────────────────────────────────
-const PREMIUM_ONLY_AD_FREE = /Premium adds (no ads|an ad-free|ad-free)|ad-free for Premium/i;
+const PREMIUM_ONLY_AD_FREE = /Pro adds (no ads|an ad-free|ad-free)|ad-free for Pro/i;
 
 function tsxFiles(dir: string): string[] {
   const out: string[] = [];
@@ -96,13 +96,13 @@ function tsxFiles(dir: string): string[] {
   return out;
 }
 
-test("nothing sells ad-free as a Premium-only benefit", () => {
+test("nothing sells ad-free as a Pro-only benefit", () => {
   const files = [...tsxFiles("src"), "src/lib/articles.ts", "src/lib/email.ts"];
   assert.ok(files.length > 100, `fixture check: expected the whole src tree, found ${files.length} files`);
   const offenders = files.filter((f) => PREMIUM_ONLY_AD_FREE.test(code(f)));
-  assert.deepEqual(offenders, [], `these files say ad-free is Premium-only: ${offenders.join(", ")}`);
+  assert.deepEqual(offenders, [], `these files say ad-free is Pro-only: ${offenders.join(", ")}`);
   // The regex must actually catch the shapes it was written for.
-  for (const bad of ["Premium adds no ads", "Premium adds an ad-free site", "Premium adds ad-free browsing", "ad-free for Premium members"]) {
+  for (const bad of ["Pro adds no ads", "Pro adds an ad-free site", "Pro adds ad-free browsing", "ad-free for Pro members"]) {
     assert.match(bad, PREMIUM_ONLY_AD_FREE, bad);
   }
 });

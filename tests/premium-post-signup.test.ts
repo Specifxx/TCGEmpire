@@ -10,7 +10,7 @@ import { tally, nudgeCopy, hasNudge, FREE_PREVIEW_ROWS, type PremiumNudge } from
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const code = (p: string) => read(p).replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
 
-test("welcome checklist: the Premium step is optional, earned, and never shown to a member", () => {
+test("welcome checklist: the Pro step is optional, earned, and never shown to a member", () => {
   const src = code("src/components/WelcomeChecklist.tsx");
   // Free accounts only, checkout live, and only after the account has watched
   // a card — so it never greets someone the moment they arrive.
@@ -26,7 +26,7 @@ test("welcome checklist: the Premium step is optional, earned, and never shown t
   assert.match(src, /const trialOffer = trialEligible && trialDays > 0;/);
   // 2026-09-30: the offer is the $1 first month, stated from the shared helper
   // and the configured fee (never "free" while the fee is above zero).
-  assert.match(src, /trialOffer \? `\$\{PLUS_ON_SALE \? "Plus or Premium" : "Premium"\}: \$\{trialOfferLead\(trialDays, trialFeeCents\)\.replace\(\/\^First\/, "first"\)\}` : "See what Premium adds"/);
+  assert.match(src, /trialOffer \? `\$\{PLUS_ON_SALE \? "Plus or Pro" : "Pro"\}: \$\{trialOfferLead\(trialDays, trialFeeCents\)\.replace\(\/\^First\/, "first"\)\}` : "See what Pro adds"/);
   assert.match(src, /trialFeeCents > 0 \? ` Cancel before day \$\{trialDays\} and you pay nothing more\.` : " Cancel before the trial ends and you pay nothing\."/);
   assert.match(src, /<PremiumButton surface="checklist" \/>/, "attributed to the checklist");
   assert.doesNotMatch(src, /from "\.\/ui\/Dialog"/, "still inline, never a modal");
@@ -81,7 +81,7 @@ test("the copy is specific or absent — never a generic fallback", () => {
 test("the nudge never reveals a price or a gap — only counts and one name", () => {
   const src = code("src/lib/premium-nudge.ts");
   const copyFn = src.slice(src.indexOf("export function nudgeCopy"));
-  assert.doesNotMatch(copyFn, /\w*Cents\b|\b(net|margin|gap|formatMoney)\b/, "Premium sells the numbers; the nudge only says they exist");
+  assert.doesNotMatch(copyFn, /\w*Cents\b|\b(net|margin|gap|formatMoney)\b/, "Pro sells the numbers; the nudge only says they exist");
 });
 
 test("the nudge's reads are user-scoped and capped, and call the self-caching loaders directly", () => {

@@ -48,7 +48,7 @@ test("a new account returned to its page gets one quiet 'account ready' toast po
   assert.match(w, /action=\{\s*toastAction \?/);
 });
 
-test("the header's Premium callout stays away for the whole sign-up session", () => {
+test("the header's Pro callout stays away for the whole sign-up session", () => {
   const slide = code("src/components/PricingNudge.tsx");
   const guard = slide.indexOf("if (isSignupSession()) return;");
   assert.ok(guard > 0, "guarded");

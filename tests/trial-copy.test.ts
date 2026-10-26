@@ -67,8 +67,8 @@ test("the reminder says 'your trial ends', quotes the plan price it will charge,
     assert.doesNotMatch(e.subject + " " + e.html, bad, `a $1 trial reminder must not say ${bad}`);
   }
   // Annual and Premium quote their own price.
-  const annual = text(buildTrialEndingEmail({ chargeDate: ENDS, amountLabel: "$39.99/year", planName: "Premium", paidCents: 100 }).html);
-  assert.match(annual, /Premium trial ends on/);
+  const annual = text(buildTrialEndingEmail({ chargeDate: ENDS, amountLabel: "$39.99/year", planName: "Pro", paidCents: 100 }).html);
+  assert.match(annual, /Pro trial ends on/);
   assert.match(annual, /charged \$39\.99\/year/);
 });
 
@@ -79,7 +79,7 @@ test("a free trial that already exists (paid nothing) is not told it paid $1", (
 });
 
 test("a trial already set to end says nothing MORE will be charged, and offers Keep", () => {
-  const e = buildTrialEndingNoChargeEmail({ endsAt: ENDS, planName: "Premium", keepLine: "US$4.99/mo" });
+  const e = buildTrialEndingNoChargeEmail({ endsAt: ENDS, planName: "Pro", keepLine: "US$4.99/mo" });
   const t = text(e.html);
   assert.match(t, /nothing more will be charged/);
   assert.match(t, /If you'd like to keep it, it's US\$4\.99\/mo/);
@@ -154,7 +154,7 @@ test("every remaining 'free trial' / '$0 today' / 'nothing charged' line is the 
       // The feedback / referral grants ("nothing charged" on a free week of Premium, no card) are not the trial.
       if (/Neither of these requires ever entering a payment method/.test(line)) return;
       const around = lines.slice(Math.max(0, i - 12), i + 1).join("\n");
-      if (!FEE_GUARD.test(around) && !/^\s*(?:\/\/|\*)/.test(line) && !/"No — (?:Plus and Premium are|Premium is) billed from the day/.test(line) && !/no free trial/i.test(line)) {
+      if (!FEE_GUARD.test(around) && !/^\s*(?:\/\/|\*)/.test(line) && !/"No — (?:Plus and Pro are|Pro is) billed from the day/.test(line) && !/no free trial/i.test(line)) {
         found.push(`${rel}:${i + 1}: ${line.trim().slice(0, 100)}`);
       }
       if (!allowed.has(rel)) found.push(`${rel}: not on the allow-list: ${line.trim().slice(0, 100)}`);
@@ -180,7 +180,7 @@ test("/premium stays short: the trial said once, in the buy button, which says '
 
 test("terms section 8 states the $1 trial factually and invents no refund policy", () => {
   const terms = stripComments(readFileSync(join(SRC, "app/terms/page.tsx"), "utf8"));
-  const s8 = terms.slice(terms.indexOf("8. Plus and Premium subscriptions"), terms.indexOf("9. Disclaimer"));
+  const s8 = terms.slice(terms.indexOf("8. Plus and Pro subscriptions"), terms.indexOf("9. Disclaimer"));
   assert.match(s8, /is charged when you start/, "the fee is charged up front");
   assert.match(s8, /Unless you cancel before day \{PREMIUM_TRIAL_DAYS\}, the plan&apos;s price for the period you chose/, "the plan price starts on day 30 unless cancelled");
   assert.match(s8, /We email you a day or two before day/, "the reminder");

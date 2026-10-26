@@ -229,7 +229,7 @@ test("the public page reads both payload shapes, and sells the plan that unlocks
   assert.doesNotMatch(src, />7d<|>30d</);
   assert.match(src, /const rankedFrom = rankedFromCount\(data\);/);
   assert.doesNotMatch(src, /\{data\.qualifying\.toLocaleString\(\)\} most-searched/, "the footer counts the ranked set");
-  assert.doesNotMatch(src, /part of Premium/);
+  assert.doesNotMatch(src, /part of Pro/);
   // ENTRY_TIER_NAME: Plus while it is sold, Premium since Plus went off sale (2026-10-23).
   assert.match(src, /part of[\s\S]{0,12}\{ENTRY_TIER_NAME\}, which also removes ads from every page/, "a surface that describes the paid plan says it is ad-free");
 });
@@ -258,7 +258,7 @@ test("the public snapshot page is noindex and never recomputes", () => {
   assert.match(src, /snap\.data as unknown as RisingSnapshotData/);
   assert.ok(!/getCachedRisingCards/.test(src), "the public page must render the frozen payload, never re-run the screener");
   // No paywall of any kind — that is the feature.
-  assert.ok(!/isPremium|PremiumButton/.test(src), "the shared link must work with no account and no Premium");
+  assert.ok(!/isPremium|PremiumButton/.test(src), "the shared link must work with no account and no Pro");
 });
 
 test("minting reuses the shared cached analysis rather than starting its own scan", () => {

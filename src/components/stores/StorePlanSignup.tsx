@@ -54,7 +54,7 @@ export function StorePlanSignup({ amount }: { amount: string }) {
   if (signedIn === false) {
     return (
       <div className="text-center">
-        <p className="text-sm text-slate-300">Sign in (or create a free account) to subscribe. The plan, and the Premium that comes with it, belong to that account.</p>
+        <p className="text-sm text-slate-300">Sign in (or create a free account) to subscribe. The plan, and the Pro that comes with it, belong to that account.</p>
         <Link href="/login?next=/stores&src=stores_plan" className="btn-primary mt-3 inline-block">
           Sign in to subscribe →
         </Link>

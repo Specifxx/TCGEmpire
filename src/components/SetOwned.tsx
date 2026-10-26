@@ -236,8 +236,7 @@ export function SetOwnedStatus({ setName, trackerHref, freeLimit }: { setName: s
     <div data-set-owned-status className="mb-4 rounded-xl border border-ink-700 bg-ink-900/60 px-4 py-3 text-sm text-slate-300">
       {ctx.signedIn === false ? (
         <p>
-          Tick the cards in your binder to see what {setName} is missing and the cheapest listing for each. Free for your first{" "}
-          {freeLimit} cards.{" "}
+          Tick the cards in your binder to see what {setName} is missing and the cheapest listing for each. Free, with no card limit.{" "}
           <Link
             href={`/login?next=${encodeURIComponent(trackerHref)}&src=set_tracker`}
             rel="nofollow"

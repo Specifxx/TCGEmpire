@@ -33,7 +33,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Best Basket — Cheapest Way to Buy a Riftbound Deck | RiftCompare";
 const DESCRIPTION =
-  "Paste a Riftbound decklist, or send your watchlist or binder or the cards you're missing from a set, and get the cheapest delivered way to buy it across stores — each store's measured postage included. Premium shows the store-by-store plan beside the best one-store and two-store orders, at the minimum condition you set.";
+  "Paste a Riftbound decklist, or send your watchlist or binder or the cards you're missing from a set, and get the cheapest delivered way to buy it across stores — each store's measured postage included. Pro shows the store-by-store plan beside the best one-store and two-store orders, at the minimum condition you set.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -48,11 +48,11 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "Is Best Basket free?",
-    a: `Mostly. Any signed-in account can see its own delivered total — what the list costs delivered, from how many stores, and how much less that is than buying each card's cheapest copy separately — up to 5 times a day, and ${FREE_PLANS_PER_MONTH} full store-by-store plans a month (the best one-store and two-store orders beside it and a link for every card), shared with Buy this list and Finish this set. A plan counts only when you open it, and the allowance resets on the 1st of each month (UTC). RiftCompare Premium plans without a limit.`,
+    a: `Mostly. Any signed-in account can see its own delivered total — what the list costs delivered, from how many stores, and how much less that is than buying each card's cheapest copy separately — up to 5 times a day, and ${FREE_PLANS_PER_MONTH} full store-by-store plans a month (the best one-store and two-store orders beside it and a link for every card), shared with Buy this list and Finish this set. A plan counts only when you open it, and the allowance resets on the 1st of each month (UTC). RiftCompare Pro plans without a limit.`,
   },
   {
     q: "Does it account for shipping?",
-    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket searches store combinations for the lowest total including each store's postage, and with Premium it also shows the best one-store and two-store orders beside it. The postage is each store's own checkout rate, measured for orders of different sizes and values to addresses across your market (in the US: New York, Chicago, Dallas and San Francisco): the store's rate name, whether its name says it's tracked, where a cheap untracked letter stops being offered, and the order value where postage goes free, if it ever does. It starts from your region and prices it at the address we measured there, or at the dearer of the two either side of it; leave it unset and it uses each store's highest. An order bigger than any we measured is marked 'from', a store we haven't measured yet is marked as an estimate, and the store's own checkout is always final.",
+    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket searches store combinations for the lowest total including each store's postage, and with Pro it also shows the best one-store and two-store orders beside it. The postage is each store's own checkout rate, measured for orders of different sizes and values to addresses across your market (in the US: New York, Chicago, Dallas and San Francisco): the store's rate name, whether its name says it's tracked, where a cheap untracked letter stops being offered, and the order value where postage goes free, if it ever does. It starts from your region and prices it at the address we measured there, or at the dearer of the two either side of it; leave it unset and it uses each store's highest. An order bigger than any we measured is marked 'from', a store we haven't measured yet is marked as an estimate, and the store's own checkout is always final.",
   },
   {
     q: "What can I paste in?",
@@ -64,15 +64,15 @@ const FAQS = [
   },
   {
     q: "What does minimum condition do?",
-    a: "Premium lets you set the lowest condition you'll accept: Near Mint only, Lightly Played or better, or anything. Best Basket, Buy this list and the deck price watch then only use listings at or above it, so the cheapest plan can't quietly include a heavily played copy. Each line still shows its condition. If nothing at that grade is in stock, the card is shown as not covered rather than filled with a played copy. Without Premium your total counts each store's cheapest copy in any condition and tells you how many played copies that includes. A new session starts on Lightly Played or better, and your last choice is remembered.",
+    a: "Pro lets you set the lowest condition you'll accept: Near Mint only, Lightly Played or better, or anything. Best Basket, Buy this list and the deck price watch then only use listings at or above it, so the cheapest plan can't quietly include a heavily played copy. Each line still shows its condition. If nothing at that grade is in stock, the card is shown as not covered rather than filled with a played copy. Without Pro your total counts each store's cheapest copy in any condition and tells you how many played copies that includes. A new session starts on Lightly Played or better, and your last choice is remembered.",
   },
   {
     q: "Can Best Basket plan the rest of a set?",
-    a: `Yes. Choose "Finish a set" (or press "Plan the purchase" on your set checklist), pick the set and whether to count the base set or every printing we track, and it prices the cards you are missing, one copy each, with everything you own left out. You can limit it to one rarity and leave out cards dearer than a price you set. Any signed-in account sees the total, postage and store count for its own list, and can open the store-by-store plan as one of its ${FREE_PLANS_PER_MONTH} free plans a month; Premium shows it every time, at the minimum condition you set. One plan holds up to ${SET_GAP_CHUNK} cards: if you are missing more, it plans the ${SET_GAP_CHUNK} cheapest first, says how many more are not included, and offers the next ${SET_GAP_CHUNK}. Cards no tracked store has in stock are listed apart and are not in the total. It prices non-foil listings only, and a set that has not been released has nothing to plan yet.`,
+    a: `Yes. Choose "Finish a set" (or press "Plan the purchase" on your set checklist), pick the set and whether to count the base set or every printing we track, and it prices the cards you are missing, one copy each, with everything you own left out. You can limit it to one rarity and leave out cards dearer than a price you set. Any signed-in account sees the total, postage and store count for its own list, and can open the store-by-store plan as one of its ${FREE_PLANS_PER_MONTH} free plans a month; Pro shows it every time, at the minimum condition you set. One plan holds up to ${SET_GAP_CHUNK} cards: if you are missing more, it plans the ${SET_GAP_CHUNK} cheapest first, says how many more are not included, and offers the next ${SET_GAP_CHUNK}. Cards no tracked store has in stock are listed apart and are not in the total. It prices non-foil listings only, and a set that has not been released has nothing to plan yet.`,
   },
   {
-    q: "Do I need Premium just to price a list, not buy it?",
-    a: `No — the free deck and list pricer at /deck needs no account at all if you only want per-card prices. A free account gets ${FREE_PLANS_PER_MONTH} store-by-store plans a month; Premium is only needed for more.`,
+    q: "Do I need Pro just to price a list, not buy it?",
+    a: `No — the free deck and list pricer at /deck needs no account at all if you only want per-card prices. A free account gets ${FREE_PLANS_PER_MONTH} store-by-store plans a month; Pro is only needed for more.`,
   },
 ];
 
@@ -217,7 +217,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           stores once each store&apos;s real postage is counted — measured from its own checkout, not guessed. Buying each card from
           its cheapest store usually spreads your order over a dozen stores and buries you in postage; this searches for a better
           split. It shows that split store by store, beside the best one-store and two-store orders: {FREE_PLANS_PER_MONTH} plans a month
-          with a free account, as many as you like with Premium.
+          with a free account, as many as you like with Pro.
         </p>
       </div>
 
@@ -244,7 +244,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           <h2 className="text-lg font-extrabold text-white">Sign in to price your list, delivered</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
             A free account shows what your list costs delivered, from how many stores, and how much less that is than buying each
-            card&apos;s cheapest copy, plus {FREE_PLANS_PER_MONTH} store-by-store plans a month. Premium plans without a limit.
+            card&apos;s cheapest copy, plus {FREE_PLANS_PER_MONTH} store-by-store plans a month. Pro plans without a limit.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             <Link

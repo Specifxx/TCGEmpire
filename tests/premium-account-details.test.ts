@@ -105,10 +105,10 @@ test("the account page's date format matches the admin page's for the same field
   assert.match(admin, /toLocaleDateString\("en-AU",\s*\{\s*day:\s*"numeric",\s*month:\s*"short",\s*year:\s*"numeric"\s*\}\)/, "admin/premium/page.tsx must use the same format this test pins");
 });
 
-test("the subscription card only ever queries Stripe for someone who is actually Premium right now", () => {
+test("the subscription card only ever queries Stripe for someone who is actually Pro right now", () => {
   const src = read(PAGE);
   const callAt = src.indexOf("getPremiumSubscriptionDetails(");
   assert.ok(callAt > 0);
   const before = src.slice(Math.max(0, callAt - 200), callAt);
-  assert.match(before, /already\s*&&/, "must not fire the Stripe read for a non-Premium visitor");
+  assert.match(before, /already\s*&&/, "must not fire the Stripe read for a non-Pro visitor");
 });

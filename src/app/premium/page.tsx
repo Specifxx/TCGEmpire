@@ -71,10 +71,10 @@ const PRICE_LINE = premiumAnnualEnabled()
   ? `${usd(PREMIUM_PRICE_AMOUNT)}/month or ${usd(PREMIUM_ANNUAL_AMOUNT)}/year (${usd(premiumEffectiveMonthly())}/mo)`
   : `${usd(PREMIUM_PRICE_AMOUNT)}/month`;
 const TRIAL_LINE = premiumTrialEnabled() && PREMIUM_TRIAL_FEE_CENTS === 0 ? `${PREMIUM_TRIAL_DAYS} days free, ` : "";
-const META_TITLE = `RiftCompare Premium: ${TRIAL_LINE ? `${PREMIUM_TRIAL_DAYS} days free, then ` : ""}${usd(PREMIUM_PRICE_AMOUNT)}/mo`;
+const META_TITLE = `RiftCompare Pro: ${TRIAL_LINE ? `${PREMIUM_TRIAL_DAYS} days free, then ` : ""}${usd(PREMIUM_PRICE_AMOUNT)}/mo`;
 // Premium-only while Plus is off sale (PLUS_ON_SALE, 2026-10-23).
 const META_DESCRIPTION = PLUS_ON_SALE
-  ? "Compare Riftbound card prices across every store, free, and track what your binder is missing. Plus and Premium watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Premium) a whole deck's delivered total re-priced after every update, the store-by-store plan for a deck or the rest of a set, at the condition you'll play. No ads on either."
+  ? "Compare Riftbound card prices across every store, free, and track what your binder is missing. Plus and Pro watch prices for you: your own target price on cards, sealed products back in stock or at RRP, and (Pro) a whole deck's delivered total re-priced after every update, the store-by-store plan for a deck or the rest of a set, at the condition you'll play. No ads on either."
   : `The lowest delivered price for your whole Riftbound list, alerts when a card, sealed box or deck hits your price, every card below market, and no ads. ${PRICE_LINE}; ${TRIAL_LINE}cancel anytime. Comparing prices stays free.`;
 
 export const metadata: Metadata = {
@@ -88,7 +88,7 @@ export const metadata: Metadata = {
 // really gets (TIER_COMPARISON's rows), so a rich result can't credit Plus
 // with Premium's list tools or leave its ad-free benefit out.
 const PLUS_OFFER_DESCRIPTION = `Plus: no ads on any page, an unlimited watchlist and portfolio (so a whole set fits in the set tracker), target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (back in stock, at RRP in ${SEALED_RRP_MARKETS}, or at your price, checked ${SEALED_CHECK_CADENCE}), the full Deal Finder and Rising Cards lists, and ${FREE_PLANS_PER_MONTH} store-by-store Best Basket plans a month.`;
-const PREMIUM_OFFER_DESCRIPTION = `Premium: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, unlimited store-by-store plans for the cheapest delivered order (Best Basket, Buy this list and Finish this set, at the minimum condition you set; a free account or Plus gets ${FREE_PLANS_PER_MONTH} a month), and Demand Finder's most searched and most viewed cards.`;
+const PREMIUM_OFFER_DESCRIPTION = `Pro: everything in Plus, plus a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), unlimited target-price alerts and sealed watches, unlimited store-by-store plans for the cheapest delivered order (Best Basket, Buy this list and Finish this set, at the minimum condition you set; a free account or Plus gets ${FREE_PLANS_PER_MONTH} a month), and Demand Finder's most searched and most viewed cards.`;
 const PREMIUM_STANDALONE_DESCRIPTION =
   "No ads on any page, an unlimited watchlist and portfolio, target-price alerts, sealed watches, a deck price watch, the full Deal Finder and Rising Cards lists, Best Basket's store-by-store plan, Buy this list and Demand Finder.";
 
@@ -177,7 +177,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   return (
     <div className="mx-auto max-w-4xl">
       <PremiumRecoveryBeacon />
-      <Breadcrumbs trail={[{ name: "Premium", href: "/premium" }]} />
+      <Breadcrumbs trail={[{ name: "Pro", href: "/premium" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -185,7 +185,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
             {
               "@context": "https://schema.org",
               "@type": "Product",
-              name: plusLive ? "RiftCompare Plus and Premium" : "RiftCompare Premium",
+              name: plusLive ? "RiftCompare Plus and Pro" : "RiftCompare Pro",
               description: plusLive ? `${PLUS_OFFER_DESCRIPTION} ${PREMIUM_OFFER_DESCRIPTION}` : PREMIUM_STANDALONE_DESCRIPTION,
               brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
               // One Offer per live tier, each describing only what THAT tier
@@ -206,7 +206,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
                     },
                     {
                       "@type": "Offer",
-                      name: "RiftCompare Premium",
+                      name: "RiftCompare Pro",
                       description: PREMIUM_OFFER_DESCRIPTION,
                       price: priceNumeric,
                       priceCurrency: "USD",
@@ -216,7 +216,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
                   ]
                 : {
                     "@type": "Offer",
-                    name: "RiftCompare Premium",
+                    name: "RiftCompare Pro",
                     description: PREMIUM_STANDALONE_DESCRIPTION,
                     price: priceNumeric,
                     priceCurrency: "USD",
@@ -258,7 +258,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
       <div id="premium-hero" className="text-center">
         {!already && (
           <span className="chip mb-2 inline-flex bg-gold/15 text-[11px] font-extrabold uppercase tracking-widest text-gold">
-            ✦ RiftCompare Premium
+            ✦ RiftCompare Pro
           </span>
         )}
         <h1 className="mx-auto max-w-3xl font-display text-3xl font-extrabold leading-tight text-white sm:text-5xl">
@@ -273,7 +273,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <>
           <PremiumPageView signedIn={!!user} />
           {/* /dashboard and MoversToolsCta link to #top-pricing. */}
-          <section id="top-pricing" aria-label="Premium plans" className="scroll-mt-header mt-8">
+          <section id="top-pricing" aria-label="Pro plans" className="scroll-mt-header mt-8">
             <CtaZone location="pricing">
               {plusLive ? (
                 <PremiumPricingCards
@@ -350,12 +350,12 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <div className="mx-auto mt-6 max-w-md rounded-xl border border-ink-700 bg-ink-900 px-5 py-4 text-center">
           <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Your subscription</div>
           {user.isAdmin ? (
-            <p className="mt-2 text-sm text-slate-300">Admin access — every Premium feature, no subscription required.</p>
+            <p className="mt-2 text-sm text-slate-300">Admin access — every Pro feature, no subscription required.</p>
           ) : subDetails ? (
             <div className="mt-2 space-y-1 text-sm text-slate-300">
               {/* The tier NAMED here is the effective one (currentTier), which a
                   hand-set floor can raise above what the subscription's price
-                  says — a grandfathered $4.99 account really is on Premium, and
+                  says — a grandfathered $4.99 account really is on Pro, and
                   its own membership card is the last place that should argue. */}
               <p className="font-semibold text-white">
                 {TIER_NAMES[currentTier ?? subDetails.tier]} ·{" "}
@@ -396,7 +396,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
               {/* A grandfathered Plus member: Premium access, Plus price. */}
               {subDetails.tier === "plus" && currentTier === "premium" && (
                 <p className="text-xs text-slate-400" data-plus-grandfathered>
-                  You keep your original Plus price, with everything in Premium included.
+                  You keep your original Plus price, with everything in Pro included.
                 </p>
               )}
               <SubscriptionActions
@@ -444,7 +444,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
 
       {/* A Plus member sees what Premium adds, as the same ticks. */}
       {already && currentTier === "plus" && (
-        <section className="mx-auto mt-8 max-w-3xl" aria-label="What Premium adds">
+        <section className="mx-auto mt-8 max-w-3xl" aria-label="What Pro adds">
           <PremiumTicks showPlus prices={{ plus: `${tierMonthlyAmount("plus")}/mo`, premium: `${PREMIUM_PRICE_AMOUNT}/mo` }} you="plus" selected="premium" />
         </section>
       )}

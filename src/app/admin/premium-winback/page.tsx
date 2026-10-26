@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 // Admin-only — self-noindex (robots.ts doesn't block /admin) + gated below.
 export const metadata: Metadata = {
-  title: "Premium win-back email",
+  title: "Pro win-back email",
   robots: { index: false, follow: false },
 };
 
@@ -50,13 +50,13 @@ export default async function PremiumWinbackAdminPage({ searchParams }: { search
       <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
         <Link href={`/admin${keySuffix}`} className="hover:text-slate-300">Admin</Link>
         <span>/</span>
-        <span className="text-slate-300">Premium win-back email</span>
+        <span className="text-slate-300">Pro win-back email</span>
       </nav>
-      <h1 className="text-2xl font-bold text-white">Premium win-back email</h1>
+      <h1 className="text-2xl font-bold text-white">Pro win-back email</h1>
       <p className="mt-1 max-w-3xl text-sm text-slate-400">
         One-off email to recently-registered free accounts: a single-use link that grants {WINBACK_TRIAL_DAYS} days of
-        Premium immediately, no card and no checkout. The grant is automatic the moment the recipient clicks — there
-        is nothing to do after sending. Accounts already on Plus/Premium (including mid Stripe trial), admins, seed
+        Pro immediately, no card and no checkout. The grant is automatic the moment the recipient clicks — there
+        is nothing to do after sending. Accounts already on Plus/Pro (including mid Stripe trial), admins, seed
         accounts and anyone who opted out of announcements are never emailed, whatever is ticked.
       </p>
 

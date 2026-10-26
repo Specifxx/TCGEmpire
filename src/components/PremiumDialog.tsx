@@ -204,7 +204,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
                     aria-pressed={sellTier === "premium"}
                     className={`flex-1 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${sellTier === "premium" ? "bg-ink-800 text-white" : "text-slate-400 hover:text-white"}`}
                   >
-                    Premium
+                    Pro
                   </button>
                 </div>
               )}
@@ -258,7 +258,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
                     </p>
                   )}
                   {/* One tap from the smaller monthly number to the one that
-                      actually sells Premium — the effective annual rate. Only
+                      actually sells Pro — the effective annual rate. Only
                       rendered when there's an annual plan to switch to. */}
                   {annualForSellTier && premiumEffectiveMonthly(sellTier) && (
                     <button
@@ -305,7 +305,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
           <h2 id="premium-dialog-title" className="text-lg font-extrabold text-white">{PREMIUM_PROMISE}</h2>
           <p className="mt-1 text-sm text-slate-400">
             {premiumPlus
-              ? "Plus and Premium are ad-free. Plus tracks whole sets with no card limit and emails you when a card or a box you watch hits your price; Premium plans the order, store by store, at the condition you'll play. Price comparison and the set checklist stay free."
+              ? "Plus and Pro are ad-free. Plus tracks whole sets with no card limit and emails you when a card or a box you watch hits your price; Pro plans the order, store by store, at the condition you'll play. Price comparison and the set checklist stay free."
               : "An email the moment a card or box hits your price, every deal below market, and the cheapest delivered order for any list. No ads. Comparing prices stays free."}
           </p>
 
@@ -316,8 +316,8 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
               had just gone DOWN and existing subscribers were being moved onto
               the new Prices, so it promised protection from a rise nobody had
               decided. Still only for someone who could act on it (not already
-              Premium) and only while PREMIUM is the plan selected: a Plus gate
-              opens this dialog on Plus, and Premium's lock-in over a Plus
+              Pro) and only while PREMIUM is the plan selected: a Plus gate
+              opens this dialog on Plus, and Pro's lock-in over a Plus
               checkout quoted the wrong price (QA, 2026-09-25). */}
           {!premium && sellTier === "premium" && premiumPriceIncreaseAnnounced() && (
             <div className="mt-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-center text-xs font-semibold text-gold">
@@ -359,7 +359,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
               <div className="text-center">
                 <p className="text-sm font-semibold text-gold">✓ You&apos;re on Plus</p>
                 <p className="mt-1 text-xs text-slate-400">
-                  Premium plans the order: Best Basket&apos;s store-by-store plan for a deck, a list or the rest of a set, at
+                  Pro plans the order: Best Basket&apos;s store-by-store plan for a deck, a list or the rest of a set, at
                   the minimum condition you set, a deck price watch that re-prices a saved list after every price update,
                   unlimited target alerts and sealed watches, and Demand Finder.
                 </p>
@@ -373,14 +373,14 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
                   </p>
                 ) : (
                   <button onClick={upgradeTier} disabled={busy} className={`${GOLD_BTN} mt-3`}>
-                    {busy ? "Upgrading…" : `Upgrade to Premium — ${planSwitchPriceLabel("premium", interval, premiumAnnual)} →`}
+                    {busy ? "Upgrading…" : `Upgrade to Pro — ${planSwitchPriceLabel("premium", interval, premiumAnnual)} →`}
                   </button>
                 )}
                 {error && <p role="alert" className="mt-2 text-center text-xs text-rose-400">{error}</p>}
               </div>
             ) : premium ? (
               <div className="text-center">
-                <p className="text-sm font-semibold text-gold">✓ You&apos;re Premium</p>
+                <p className="text-sm font-semibold text-gold">✓ You&apos;re Pro</p>
                 <Link href="/tools" onClick={onClose} className="btn-ghost mt-2 text-sm">Go to your tools →</Link>
               </div>
             ) : !premiumCheckout ? (
@@ -389,7 +389,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
               // would promise a checkout that cannot open. The honest waitlist
               // CTA is the right answer for signed-out and signed-in alike.
               <div className="text-center">
-                <p className="text-sm text-slate-300">Premium is launching very soon.</p>
+                <p className="text-sm text-slate-300">Pro is launching very soon.</p>
                 <Link href="/contact" onClick={onClose} className="btn-ghost mt-2 text-sm">Join the waitlist</Link>
               </div>
             ) : !user ? (

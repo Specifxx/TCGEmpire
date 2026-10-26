@@ -406,7 +406,7 @@ test("every plan line carries the listing's condition and a link", () => {
   assert.ok(line.url.startsWith("https://a.example/"));
 });
 
-test("the non-Premium preview is the aggregate only — no store names, lines or URLs", () => {
+test("the non-Pro preview is the aggregate only — no store names, lines or URLs", () => {
   const stores: BasketStores = { a: store("Secret Store", 500), b: store("Other Store", 500) };
   const plan = optimizeBasket([card("1", 2, [L("a", 100), L("b", 120)]), card("2", 1, [L("b", 100)]), card("3", 1, [])], stores);
   const preview = basketPreview(plan, [{ raw: "1 Not A Card", qty: 1 }]);
@@ -567,7 +567,7 @@ test("CardSearch supports keyboard arrow/enter selection", () => {
 const ROUTE = "src/app/api/basket/route.ts";
 const READS = "src/lib/basket-server.ts";
 
-test("the basket route withholds the plan from non-Premium callers", () => {
+test("the basket route withholds the plan from non-Pro callers", () => {
   const code = readCode(ROUTE);
   assert.match(code, /const full = isPremium\(user, "premium"\)/);
   const at = code.indexOf("if (!full) {\n      const preview");
@@ -589,7 +589,7 @@ test("a failed read answers 503, never a $0.00 plan", () => {
   assert.doesNotMatch(readCode(READS), /\.catch\(/, "the shared reads must throw, not swallow");
 });
 
-test("rate limits: 5 a day free, 30 an hour Premium, keyed by user", () => {
+test("rate limits: 5 a day free, 30 an hour Pro, keyed by user", () => {
   const code = readCode(ROUTE);
   assert.match(code, /const HOUR = 3_600_000/);
   assert.match(code, /const DAY = 86_400_000/);
@@ -711,7 +711,7 @@ test("picked cards: clamped 1-99 on the server and resolved by exact id, never b
   assert.match(read("src/components/BestBasket.tsx"), /lines: picked\.map\(\(p\) => \(\{ cardId: p\.card\.id, qty: p\.qty \}\)\)/);
 });
 
-test("the page: auto-run only for Premium, a sign-in prompt signed out, honest copy", () => {
+test("the page: auto-run only for Pro, a sign-in prompt signed out, honest copy", () => {
   const page = read("src/app/tools/best-basket/page.tsx");
   assert.match(page, /autoRun=\{premium && handedIn\}/);
   assert.match(page, /Sign in free/);
@@ -728,15 +728,15 @@ test("the UI: tracked store links, the free preview's own-numbers copy, and its 
   // The saving leads, in money, from this list's own savedCents (2026-09-28,
   // lib/basket-saving.ts; the threshold is pinned in tests/free-limits.test.ts).
   assert.match(ui, /basketSavingPitch\(r\.savedCents, fmt,/);
-  assert.match(ui, /Your list: \{fmt\(r\.totalCents\)\} delivered from \{stores\}\. Premium shows which store to buy each card from\./);
+  assert.match(ui, /Your list: \{fmt\(r\.totalCents\)\} delivered from \{stores\}\. Pro shows which store to buy each card from\./);
   assert.match(ui, /Buying each card&apos;s cheapest copy is already the cheapest way for\s+this list\./);
   assert.match(ui, /<PremiumButton surface="limit:basket" \/>/);
   // THE MONTH'S FREE PLANS (2026-10-22, lib/basket-meter.ts): the number is the
   // metered constant, never typed; the preview offers the plan while some are
   // left (spending one is a second run with reveal), and the upgrade once spent.
   assert.match(ui, /import \{ FREE_PLANS_PER_MONTH, resetLabel, type FreePlans \} from "@\/lib\/basket-meter";/);
-  assert.match(ui, /Without Premium: your delivered total 5 times a day, and \{FREE_PLANS_PER_MONTH\} store-by-store plans a month/);
-  assert.match(ui, /Premium is unlimited\./);
+  assert.match(ui, /Without Pro: your delivered total 5 times a day, and \{FREE_PLANS_PER_MONTH\} store-by-store plans a month/);
+  assert.match(ui, /Pro is unlimited\./);
   assert.doesNotMatch(ui, /\b3 store-by-store plans\b/, "the allowance is read from the constant");
   assert.match(ui, /onReveal=\{\(\) => void run\(\{ reveal: true \}\)\}/, "the preview's plan button re-runs the same inputs as a reveal");
   assert.match(ui, /\{freePlans && left > 0 && onReveal \? \(/);

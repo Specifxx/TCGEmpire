@@ -88,7 +88,7 @@ export function DeckWatchList({ lapsed = false }: { lapsed?: boolean }) {
     <div>
       {lapsed && (
         <p className="mb-2 text-xs leading-relaxed text-amber-300" data-lapsed-note>
-          Your plan has ended, so these lists are not being priced or emailed. They resume if you rejoin Premium; stop any you no longer want.
+          Your plan has ended, so these lists are not being priced or emailed. They resume if you rejoin Pro; stop any you no longer want.
         </p>
       )}
       {error && (

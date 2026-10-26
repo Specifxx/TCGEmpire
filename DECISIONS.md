@@ -19768,3 +19768,45 @@ layouts and requires every table, and per-card listings, to come back identical.
 series) still goes into all 316 bundles; it is a fifteenth of what the snapshot
 was, and can be packed the same way if builds creep again. The two Prisma
 clients are ~33 MB of each bundle and are not ours to shrink.
+
+## Pro: Collectr's model at $3.99 — 2026-10-26
+
+The owner asked to copy Collectr's subscription strategy and price below it.
+Collectr PRO lists at US$7.99 a month, sells at $4.99 "for a limited time", or
+$59.99 a year. Its free tier keeps what collectors come for (tracking a
+collection, prices, scanning) and PRO sells what sits on top (advanced
+filters, export, 5+ years of history, a badge and profile, partner perks). We
+were the opposite: $9.99/$79.99, with the watchlist and portfolio capped for
+free accounts, and about 15 trials in eight weeks turned into no paying member.
+The price was not the only problem; the habit-forming part was behind the wall,
+so few people formed the habit.
+
+**What (owner, decision card "Full copy: Pro, $3.99, free tracker"; this lifts
+the 2026-10-26 Premium freeze).**
+- **Name:** the paid plan is **Pro** in every user-facing string (site, emails,
+  articles, llms.txt). Code identifiers, routes (`/premium`), database columns,
+  tier keys (`"premium"`) and the Pokémon section are unchanged.
+- **Price:** **$3.99 a month or $39.99 a year** (`lib/site.ts`): 20% under
+  Collectr's sale price and 33% under its annual. Stripe Prices are immutable,
+  so the owner creates two new Prices, repoints `STRIPE_PREMIUM_PRICE_ID` /
+  `_ANNUAL_PRICE_ID`, adds the $9.99/$79.99 ids to
+  `STRIPE_PREMIUM_LEGACY_PRICE_IDS`, and moves every current subscriber DOWN
+  onto the new Prices at their next renewal. The 30-day card-gated trial is
+  unchanged. The annual saving is 16%, smaller than before, which is fine:
+  Collectr's annual saves nothing against its sale price.
+- **Free tracker:** `FREE_LIMITS_ON = false` (`lib/free-limits.ts`): no add
+  is refused, no "N of 10" counter shows, and no copy quotes 10 or 50; the
+  machinery stays and its tests pass `on` explicitly, so a limit can return
+  as one line. Free price history goes from 30 to 90 days.
+- **Pro keeps** full history and its CSV, target-price alerts on every card,
+  sealed and deck watches, Best Basket without the monthly limit, the full
+  Deal Finder, Rising and Demand lists, and no ads. Nothing a free account had
+  is taken away.
+
+**Not done yet.** A Pro badge on the member's profile and partner perks
+(store discount codes, which the strategy thread is building as partner
+codes) are the cosmetic and perk half of Collectr's PRO, and come next.
+
+**Measure.** Accounts created, accounts with a watched or tracked card, trials
+and paid conversions for the four weeks before and after, compared by
+`PREMIUM_COPY_VERSION` `pro-2026-10-26`.

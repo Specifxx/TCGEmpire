@@ -18,7 +18,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "RiftCompare for Stores — The Stores Plan for Riftbound Retailers",
   description:
-    "Sell Riftbound? The Stores plan gives you a live repricing report against every competitor we track, what buyers are searching for in your market, a Verified store mark on your store page, and Premium. Paying never changes your place in any comparison.",
+    "Sell Riftbound? The Stores plan gives you a live repricing report against every competitor we track, what buyers are searching for in your market, a Verified store mark on your store page, and Pro. Paying never changes your place in any comparison.",
   alternates: pageAlternates("/stores"),
 };
 

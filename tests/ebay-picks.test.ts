@@ -73,9 +73,9 @@ test("an empty market yields no tiles, so the CTA fallback takes over", () => {
 
 // ── Affiliate + ad contract ──────────────────────────────────────────────────
 
-test("the unit is Premium-gated and always carries a disclosure", () => {
+test("the unit is Pro-gated and always carries a disclosure", () => {
   const src = read("src/components/EbayPicksLive.tsx");
-  assert.match(src, /if \(adFree\) return null/, "Premium is ad-free sitewide");
+  assert.match(src, /if \(adFree\) return null/, "Pro is ad-free sitewide");
   assert.match(src, /<AffiliateDisclosure partner="ebay"/, "EPN requires a disclosure under the links");
   assert.match(src, /<EbayBuyCta/, "the eBay buy-path must survive an empty market");
 });

@@ -178,7 +178,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             {/* Free included (2026-09-16): every signed-in user has a
                 dashboard now, not just paying tiers — see app/dashboard/page.tsx. */}
             <MenuLink href="/dashboard" onClick={() => setOpen(false)}>
-              ◆ {premium ? (tier === "plus" ? "Plus" : "Premium") : "Your"} dashboard
+              ◆ {premium ? (tier === "plus" ? "Plus" : "Pro") : "Your"} dashboard
             </MenuLink>
             {/* A plain "Pricing" row, not a gold "✦ Get Premium" CTA
                 (2026-09-28: upgrade prompts live where a free account hits a

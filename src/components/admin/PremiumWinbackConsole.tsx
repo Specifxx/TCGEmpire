@@ -46,7 +46,7 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: "pending", label: "Not yet emailed" },
   { id: "sent", label: "Emailed, unclaimed" },
   { id: "claimed", label: "Claimed" },
-  { id: "paid", label: "Plus/Premium now" },
+  { id: "paid", label: "Plus/Pro now" },
   { id: "optedOut", label: "Opted out" },
   { id: "all", label: "Everyone" },
 ];
@@ -143,7 +143,7 @@ export function PremiumWinbackConsole({
 
   async function send() {
     const who = ids ? `the ${ids.length} selected account${ids.length === 1 ? "" : "s"}` : `all ${counts.pending} accounts registered since ${registeredAfter}`;
-    if (!window.confirm(`Send the ${trialDays}-day free-Premium claim link (via ${via}) to ${who}? Each link works once and grants immediately — there is no manual step after this.`)) return;
+    if (!window.confirm(`Send the ${trialDays}-day free-Pro claim link (via ${via}) to ${who}? Each link works once and grants immediately — there is no manual step after this.`)) return;
     setBusy("send");
     setNotice(null);
     try {
@@ -214,7 +214,7 @@ export function PremiumWinbackConsole({
                 <span className="font-bold text-white">{result.dryRun ? "Preview" : "Sent"}</span> · reachable{" "}
                 <span className="num font-bold text-slate-100">{result.audienceSize ?? 0}</span> · pending{" "}
                 <span className="num font-bold text-slate-100">{result.pending ?? 0}</span> · already emailed {result.alreadySent ?? 0} ·
-                skipped as Plus/Premium/admin {result.paid ?? 0} · too old {result.tooOld ?? 0} · opted out {result.suppressed ?? 0}
+                skipped as Plus/Pro/admin {result.paid ?? 0} · too old {result.tooOld ?? 0} · opted out {result.suppressed ?? 0}
                 {!result.dryRun && (
                   <>
                     {" "}· <span className="font-bold text-brand-400">sent {result.sent ?? 0}</span> · failed {result.failed ?? 0} ·
@@ -318,7 +318,7 @@ export function PremiumWinbackConsole({
                 </td>
                 <td className="whitespace-nowrap px-3 py-2">
                   {r.status === "paid" ? (
-                    <span className="chip bg-brand-500/15 text-brand-300">Plus/Premium until {fmt(r.premiumUntil)}</span>
+                    <span className="chip bg-brand-500/15 text-brand-300">Plus/Pro until {fmt(r.premiumUntil)}</span>
                   ) : r.status === "optedOut" ? (
                     <span className="chip bg-rose-500/15 text-rose-300">opted out</span>
                   ) : r.status === "claimed" ? (

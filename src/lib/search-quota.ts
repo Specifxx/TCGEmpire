@@ -117,15 +117,15 @@ export function limitCopy(tier: SearchTier): { headline: string; next: string } 
       // Plus is off sale since 2026-10-23 (PLUS_ON_SALE): the paid step is Premium.
       next: PLUS_ON_SALE
         ? `Sign up free for ${SEARCH_LIMITS.free} a day, or get Plus for ${SEARCH_LIMITS.plus}.`
-        : `Sign up free for ${SEARCH_LIMITS.free} a day, or get Premium for unlimited searches.`,
+        : `Sign up free for ${SEARCH_LIMITS.free} a day, or get Pro for unlimited searches.`,
     };
   if (tier === "free")
     return {
       headline: `You've used today's ${SEARCH_LIMITS.free} searches.`,
-      next: PLUS_ON_SALE ? `Plus gives you ${SEARCH_LIMITS.plus} a day, and Premium is unlimited.` : "Premium searches without a limit.",
+      next: PLUS_ON_SALE ? `Plus gives you ${SEARCH_LIMITS.plus} a day, and Pro is unlimited.` : "Pro searches without a limit.",
     };
   return {
     headline: `You've used today's ${SEARCH_LIMITS.plus} searches.`,
-    next: "Premium searches without a limit.",
+    next: "Pro searches without a limit.",
   };
 }

@@ -253,7 +253,7 @@ test("the header row has the slack to actually RENDER the wider signed-out CTA",
   // watch list, the light and dark mode, the country and the accounts."
   // Premium is GetPremiumLink since 2026-10-15 (lg:inline-flex, its own class).
   assert.equal((src.match(/lg:block lg:px-2\.5/g) ?? []).length, 2, "Sealed and Blog, and nothing more");
-  assert.equal((src.match(/<GetPremiumLink\b/g) ?? []).length, 2, "…plus the Premium button (phone slot and lg row)");
+  assert.equal((src.match(/<GetPremiumLink\b/g) ?? []).length, 2, "…plus the Pro button (phone slot and lg row)");
   assert.match(src, /aria-label="Join our Discord"[\s\S]{0,300}?\blg:grid\b/, "Discord comes back at lg with the reclaimed slack");
   assert.match(src, /<HeaderWatchButton className="hidden sm:inline-flex" \/>/, "the watchlist is a desktop control again");
 

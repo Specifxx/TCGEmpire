@@ -79,7 +79,7 @@ test("the 51st distinct card on a free account is a 402 body; the 50th and any h
       collectionCard: { findMany: async () => held.map((cardId) => ({ cardId })) },
       $queryRaw: async () => [{ n: distinct }],
     }) as never;
-  const at50 = await portfolioAllowance(db(50), free, ["new"]);
+  const at50 = await portfolioAllowance(db(50), free, ["new"], true);
   assert.deepEqual(at50.blocked, ["new"], "a new card at 50 is refused");
   const body = freeLimitBody("portfolio", at50.count ?? at50.limit);
   assert.equal(FREE_LIMIT_STATUS, 402);
@@ -87,9 +87,9 @@ test("the 51st distinct card on a free account is a 402 body; the 50th and any h
   assert.equal(body.kind, "portfolio");
   assert.equal(body.limit, FREE_PORTFOLIO_LIMIT);
   assert.deepEqual(parseFreeLimit(JSON.parse(JSON.stringify(body))), body, "the overlay can read it back");
-  assert.deepEqual((await portfolioAllowance(db(49), free, ["new"])).blocked, [], "the 50th is allowed");
-  assert.deepEqual((await portfolioAllowance(db(80, ["old"]), free, ["old"])).blocked, [], "grandfathered: a held card over the limit keeps working");
-  assert.deepEqual((await portfolioAllowance(db(500), plus, ["new"])).blocked, [], "Plus has no limit, so a whole set fits");
+  assert.deepEqual((await portfolioAllowance(db(49), free, ["new"], true)).blocked, [], "the 50th is allowed");
+  assert.deepEqual((await portfolioAllowance(db(80, ["old"]), free, ["old"], true)).blocked, [], "grandfathered: a held card over the limit keeps working");
+  assert.deepEqual((await portfolioAllowance(db(500), plus, ["new"], true)).blocked, [], "Plus has no limit, so a whole set fits");
 });
 
 test("the set-page limit panel says nobody loses what they have, and carries no value wording", () => {
@@ -165,16 +165,16 @@ test("the tracker pages are noindex, per-request, read no searchParams and never
   }
 });
 
-test("/portfolio links to the checklist, and the tier table row is the enforced number", () => {
+test("/portfolio links to the checklist, and the tier table row says free has no limit (2026-10-26)", () => {
   assert.match(code("src/app/portfolio/page.tsx"), /href="\/portfolio\/sets"/);
   const row = TIER_COMPARISON.find((r) => r.feature.startsWith("Set tracker"))!;
   assert.ok(row);
-  assert.deepEqual([row.account, row.plus, row.premium], [`Up to ${FREE_PORTFOLIO_LIMIT} cards`, "Whole sets, no limit", "Whole sets, no limit"]);
+  assert.deepEqual([row.account, row.plus, row.premium], ["Whole sets, no limit", "Whole sets, no limit", "Whole sets, no limit"]);
   // /premium (2026-10-22, real limits): the Portfolio row shows the enforced free
   // limit and "Unlimited" on a paid tier. (Its FAQ went on 2026-10-25.)
   const portfolio = TICK_ROWS.find((r) => r.name === "Portfolio")!;
   assert.ok(portfolio, "the Portfolio row");
-  assert.deepEqual((["free", "plus", "premium"] as const).map((t) => cellValue(portfolio.from, t)), [`${FREE_PORTFOLIO_LIMIT} cards`, "Unlimited", "Unlimited"]);
+  assert.deepEqual((["free", "plus", "premium"] as const).map((t) => cellValue(portfolio.from, t)), ["Unlimited", "Unlimited", "Unlimited"]);
 });
 
 test("the price guide row and the tile carry the tick, and only when the set is open", () => {

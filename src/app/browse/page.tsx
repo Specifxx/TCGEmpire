@@ -33,7 +33,7 @@ import { soldOutEverywhere } from "@/lib/sealed-offers";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
-import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+
 import { quotaContext, refusedNow } from "@/lib/search-quota-server";
 import { SearchLimitPanel } from "@/components/SearchLimitPanel";
 import { SearchQuotaTick } from "@/components/SearchQuotaTick";
@@ -513,7 +513,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
                       surface="inline_browse"
                       className="col-span-full"
                       title="Keep track of the cards you're after"
-                      body={`A free account keeps a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards and emails you when one drops in price, and tracks what your collection is worth, with profit and loss, for up to ${FREE_PORTFOLIO_LIMIT} cards.`}
+                      body={`A free account keeps a watchlist of as many cards as you like and emails you when one drops in price, and tracks what your collection is worth, with profit and loss, for every card you own.`}
                     />
                   )}
                 </Fragment>

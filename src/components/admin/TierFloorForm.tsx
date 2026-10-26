@@ -62,7 +62,7 @@ export function TierFloorForm({ adminKey }: { adminKey?: string }) {
       />
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => apply("premium")} disabled={busy || !emails.trim()} className="btn-primary text-sm">
-          {busy ? "Applying…" : "Pin to Premium"}
+          {busy ? "Applying…" : "Pin to Pro"}
         </button>
         <button type="button" onClick={() => apply("plus")} disabled={busy || !emails.trim()} className="btn-ghost text-sm">
           Pin to Plus

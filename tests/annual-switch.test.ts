@@ -18,7 +18,7 @@ const NUDGE = "src/components/AnnualSwitchNudge.tsx";
 
 test("the switch endpoint charges once, upfront, and never double-bills an annual sub", () => {
   const code = codeOnly(read(SWITCH));
-  assert.match(code, /premiumAnnualEnabled\(\)/, "must refuse when Premium annual billing isn't configured");
+  assert.match(code, /premiumAnnualEnabled\(\)/, "must refuse when Pro annual billing isn't configured");
   assert.match(code, /plusAnnualEnabled\(\)/, "must also know about Plus's own annual billing");
   assert.match(code, /priceIdFor\(tier,\s*"annual"\)/, "must switch onto the target tier's annual price");
   assert.match(code, /getCurrentUser\(\)/, "must be authenticated");
@@ -38,9 +38,9 @@ test("the subscription read treats only PAID subs as switch candidates (trials e
   assert.doesNotMatch(code, /status:\s*"trialing"/, "a trialing user hasn't paid — must not be pushed to switch");
 });
 
-test("the nudge only ever targets a monthly, tenured, Premium subscriber", () => {
+test("the nudge only ever targets a monthly, tenured, Pro subscriber", () => {
   const code = codeOnly(read(NUDGE));
-  assert.match(code, /premium/, "gated on Premium (mirror image of the non-Premium slide-in)");
+  assert.match(code, /premium/, "gated on Pro (mirror image of the non-Pro slide-in)");
   assert.match(code, /interval !== "month"/, "must bail for anyone not on the monthly plan");
   assert.match(code, /MIN_MONTHS/, "must require some tenure before pitching a year up front");
   assert.match(code, /annualAvailable/, "must require annual to actually be purchasable");

@@ -20,7 +20,6 @@ import { HoldingsGrid } from "@/components/HoldingsGrid";
 import { PortfolioReplacementCost } from "@/components/PortfolioReplacementCost";
 import { PortfolioQuickAdd } from "@/components/PortfolioQuickAdd";
 import { NavIcon } from "@/components/NavIcon";
-import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -163,7 +162,7 @@ export default async function PortfolioPage() {
           <p className="mt-1 text-sm text-slate-400">
             Your cards, and what they&apos;d cost at today&apos;s lowest {info.adjective} prices, adjusted for condition.
             {!premium && (
-              <> A free account tracks up to {FREE_PORTFOLIO_LIMIT} cards; if you already have more, you keep them all.</>
+              <> A free account tracks every card you own, with no limit.</>
             )}{" "}
             Want to know what a set is missing?{" "}
             <Link href="/portfolio/sets" className="font-semibold text-brand-300 underline-offset-2 hover:underline">Open the set checklist</Link>.
@@ -269,7 +268,7 @@ export default async function PortfolioPage() {
           {pro && <PortfolioReplacementCost currency={info.currency} geoRegion={geoRegion} />}
 
           {/* Cost basis vs. today, and how that tracks the market. Free via
-              PORTFOLIO_FREE; the blurred Premium gate that sat in the else-branch
+              PORTFOLIO_FREE; the blurred Pro gate that sat in the else-branch
               could never render and is gone (see the chart note above). */}
           {pro && (
             <section className="card-surface p-5">

@@ -28,7 +28,7 @@ const readCode = (p: string) =>
 // ─────────────────────────────────────────────────────────────────────────────
 
 const NUDGES = [
-  "src/components/PricingNudge.tsx", // not on Premium: the header's "Try our Premium features" callout (replaced PremiumSlideIn, 2026-10-25)
+  "src/components/PricingNudge.tsx", // not on Pro: the header's "Try our Pro features" callout (replaced PremiumSlideIn, 2026-10-25)
   "src/components/AnnualSwitchNudge.tsx", // monthly subscriber: switch to annual
 ];
 const RUNTIME = "src/lib/nudge-runtime.ts";

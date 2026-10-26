@@ -652,7 +652,7 @@ export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
           area: "money",
           title: hookTitle,
           severity: "crit",
-          summary: "No enabled Stripe webhook points at the site, so a paid subscription would never unlock Premium.",
+          summary: "No enabled Stripe webhook points at the site, so a paid subscription would never unlock Pro.",
           action: "In Stripe → Developers → Webhooks, re-enable the riftcompare.com endpoint, or tell Claude: \"the Stripe webhook is missing\".",
         }),
       );
@@ -672,7 +672,7 @@ export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
           title: hookTitle,
           severity: sev,
           summary: failed ? `${failed} Stripe event${failed === 1 ? "" : "s"} failed to reach the site in the last day.` : "Webhook enabled; every event in the last day was delivered.",
-          action: sev === "ok" ? undefined : "Payments may not be unlocking Premium. Tell Claude: \"Stripe webhooks are failing\".",
+          action: sev === "ok" ? undefined : "Payments may not be unlocking Pro. Tell Claude: \"Stripe webhooks are failing\".",
         }),
       );
     }

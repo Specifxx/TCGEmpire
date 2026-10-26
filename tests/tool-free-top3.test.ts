@@ -35,7 +35,7 @@ test("both tools preview exactly three rows", () => {
   }
 });
 
-test("access is derived once: Premium full, signed-in free top3, signed out none", () => {
+test("access is derived once: Pro full, signed-in free top3, signed out none", () => {
   assert.match(read(DEAL_FINDER), /const access: ToolAccess = premium \? "full" : user \? "top3" : "none";/);
   assert.match(
     read(RISING),
@@ -118,7 +118,7 @@ test("every tier table says Top 3 for the free account", () => {
     assert.equal(row?.account, "Top 3", `TierComparisonTable: ${feature}`);
   }
   const article = getArticles().find((a) => a.slug === "riftcompare-premium-explained");
-  assert.ok(article, "expected the Premium explainer article");
+  assert.ok(article, "expected the Pro explainer article");
   const rows = article!.body.split("\n").filter((l) => l.trim().startsWith("| "));
   // No "No account" column (2026-09-22). No Plus column while Plus is off sale
   // (2026-10-23, PLUS_ON_SALE): every row is Feature + Free account + Premium.
@@ -141,7 +141,7 @@ test("every tier table says Top 3 for the free account", () => {
   // 2026-09-25; no table may still carry its row.
   assert.ok(!rows.some((r) => r.startsWith("| Rising Sealed |")), "the Rising Sealed row must be gone");
   assert.ok(!TIER_COMPARISON.some((r) => r.feature.startsWith("Rising Sealed")), "…from TIER_COMPARISON too");
-  assert.deepEqual(cellsFor("Ad-free experience"), ["—", "✓"], "ad-free is on Premium (and on every paid tier, 2026-09-25)");
+  assert.deepEqual(cellsFor("Ad-free experience"), ["—", "✓"], "ad-free is on Pro (and on every paid tier, 2026-09-25)");
 });
 
 // Promises that were true at some point and are not now: "Premium only" (09-22
@@ -150,7 +150,7 @@ test("every tier table says Top 3 for the free account", () => {
 // "single best result" (the tools-index FAQ and its FAQPage JSON-LD, until 2026-09-25).
 // "single best row" / "single-best-pick" (three SEO-pack articles and the
 // price-comparison-sites FAQ, all emitted as FAQPage JSON-LD, until 2026-09-25).
-const STALE = /Premium only|#1 pick|top result only|Free shows only the top pick|only the top pick|single best result|single best row|single-best-pick/i;
+const STALE = /Pro only|#1 pick|top result only|Free shows only the top pick|only the top pick|single best result|single best row|single-best-pick/i;
 
 test("nothing still describes the old access for these two tools", () => {
   // /premium (2026-10-22, real limits): one row for both tools, Free's cell is

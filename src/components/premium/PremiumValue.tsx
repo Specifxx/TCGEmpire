@@ -3,7 +3,7 @@ import { formatMoney } from "@/lib/format";
 import type { Deal } from "@/lib/top-deals";
 import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { FREE_HISTORY_DAYS } from "@/lib/history-access";
-import { FREE_PORTFOLIO_LIMIT, FREE_WATCHLIST_LIMIT } from "@/lib/free-limits";
+
 import { SEALED_RRP_MARKETS } from "@/lib/alert-limits";
 
 // /premium's value section (2026-10-23, owner: "make premium more appealing …
@@ -85,13 +85,13 @@ export function PremiumBenefits({ proof, us }: { proof: PremiumProof; us: boolea
     icon: "📈",
     title: "Track everything you own",
     body: "An unlimited watchlist and collection, every day of price history with CSV export, graded prices, and a set checklist that fits whole sets. No ads anywhere.",
-    free: `Free: ${FREE_WATCHLIST_LIMIT} watched, ${FREE_PORTFOLIO_LIMIT} collected, ${FREE_HISTORY_DAYS} days of history`,
+    free: `Free: unlimited watchlist and portfolio, ${FREE_HISTORY_DAYS} days of history`,
   };
   const order = us ? [alerts, deals, collection, basket] : [basket, alerts, deals, collection];
   return (
     <section aria-labelledby="premium-benefits" className="mx-auto mt-10 max-w-4xl">
       <h2 id="premium-benefits" className="text-center font-display text-xl font-extrabold text-white sm:text-2xl">
-        What Premium does for you
+        What Pro does for you
       </h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {order.map((b) => (

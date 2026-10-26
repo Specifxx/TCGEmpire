@@ -280,7 +280,7 @@ export function CoinCollection() {
                 </div>
                 <div className="shrink-0 text-right text-xs">
                   {!eligible ? (
-                    <span className="text-slate-500">Premium</span>
+                    <span className="text-slate-500">Pro</span>
                   ) : complete ? (
                     <span className="font-bold text-brand-400">Done ✓</span>
                   ) : t.id === "daily" ? (
@@ -366,13 +366,13 @@ function Stat({ label, value, accent = false }: { label: string; value: number |
 function Locked({ signedIn }: { signedIn: boolean }) {
   return (
     <div className="py-4 text-center">
-      <p className="text-lg font-extrabold text-white">Coins are a Premium perk</p>
+      <p className="text-lg font-extrabold text-white">Coins are a Pro perk</p>
       <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-300">
-        Premium members earn free pulls by checking in, building a watchlist, sharing prices, visiting stores and inviting friends, then collect all twelve champion coins.
+        Pro members earn free pulls by checking in, building a watchlist, sharing prices, visiting stores and inviting friends, then collect all twelve champion coins.
       </p>
       <div className="mt-4 flex flex-wrap justify-center gap-2.5">
         <Link href="/premium" className="rounded-full bg-gradient-to-b from-[#ffe08a] to-[#e0a321] px-6 py-2.5 text-sm font-black text-[#2a1a00]">
-          Get Premium
+          Get Pro
         </Link>
         {!signedIn && (
           <Link href="/login?next=/coins&src=coins" className="rounded-full border border-white/15 px-6 py-2.5 text-sm font-bold text-white hover:bg-white/5">
