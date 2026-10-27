@@ -16,6 +16,7 @@ import { ldJson } from "@/lib/jsonld";
 import { cardHref } from "@/lib/card-url";
 import { championForCardName } from "@/lib/champions";
 import { deckTotals, massEntry, type MarketTotals } from "@/lib/published-decks";
+import { RIFTBOUND_TCG_LINE, tcgplayerMassEntryUrl } from "@/lib/tcgplayer-cart";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 
@@ -200,6 +201,7 @@ export default async function DeckPage({ params }: { params: { slug: string } })
         lines={viewLines}
         publishedTotals={(deck.publishedTotals as MarketTotals) ?? {}}
         massEntry={massEntry(viewLines.map((l) => ({ qty: l.qty, name: l.card.name })))}
+        tcgplayerCartHref={affiliateUrl(tcgplayerMassEntryUrl(RIFTBOUND_TCG_LINE, viewLines.map((l) => ({ qty: l.qty, name: l.card.name }))), "tcgplayer_cart", `/decks/${deck.slug}`)}
         basketHref={`/tools/best-basket?list=${encodeURIComponent(base64(listText))}`}
         builderHref={`/deck?list=${encodeURIComponent(base64(listText))}`}
       />

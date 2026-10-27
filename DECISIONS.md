@@ -20351,3 +20351,11 @@ off by itself).
 **Measure.** EPN `customid` and TCGplayer `sharedid` containing `discord`, and
 `utm_source=discord` visits. If it is not near 30 clicks a day a month after
 promotion starts, remove it again.
+
+**The same cart on the site.** A published deck (`/decks/[slug]`) and the deck
+builder (`/deck`) now show "Buy all on TCGplayer" beside "Buy this deck for
+less": one Mass Entry link for the whole list (`src/lib/tcgplayer-cart.ts`,
+affiliate-wrapped, surface `deck_cart`). It used to be "Copy list", which
+earned nothing. Tournament deck pages were the review's idea #2. They are not
+built, because meta lists still need a licensed source (CURRENT-STATE,
+"Meta decks").

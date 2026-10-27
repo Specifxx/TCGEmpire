@@ -6,6 +6,7 @@
 // command-registration script import it freely.
 import { COUNTRIES, type Country } from "../country";
 import { TCGPLAYER_IMPACT_LINK, affiliateSubId, ebaySearchUrl } from "../affiliate";
+import { RIFTBOUND_TCG_LINE, tcgplayerMassEntryUrl } from "../tcgplayer-cart";
 
 export type GameKey = "riftbound" | "onepiece" | "pokemon" | "mtg" | "gundam" | "lorcana" | "yugioh";
 
@@ -35,7 +36,7 @@ export interface BotGame {
 const ALL: Country[] = ["US", "UK", "AU", "CA", "EU", "SG"];
 
 export const BOT_GAMES: BotGame[] = [
-  { key: "riftbound", label: "Riftbound", siteName: "RiftCompare", site: "https://riftcompare.com", search: "riftbound", ebayWord: "Riftbound", tcgSlug: "riftbound-league-of-legends-trading-card-game", tcgLine: "Riftbound: League of Legends Trading Card Game", markets: ALL },
+  { key: "riftbound", label: "Riftbound", siteName: "RiftCompare", site: "https://riftcompare.com", search: "riftbound", ebayWord: "Riftbound", tcgSlug: "riftbound-league-of-legends-trading-card-game", tcgLine: RIFTBOUND_TCG_LINE, markets: ALL },
   { key: "onepiece", label: "One Piece", siteName: "OP Compare", site: "https://opcompare.app", search: "opcompare", ebayWord: "One Piece TCG", tcgSlug: "one-piece-card-game", tcgLine: "One Piece Card Game", markets: ALL },
   { key: "pokemon", label: "Pokémon (sealed)", siteName: "DexCompare", site: "https://www.dexcompare.app", search: "none", ebayWord: "Pokemon TCG", tcgSlug: "pokemon", tcgLine: "Pokemon", markets: ALL },
   { key: "mtg", label: "Magic (sealed)", siteName: "MTG Compare", site: "https://mtgcompare.app", search: "none", ebayWord: "MTG", tcgSlug: "magic", tcgLine: "Magic", markets: ALL },
@@ -104,13 +105,7 @@ export function parseDeckList(text: string): DeckLine[] {
   return [...out.values()];
 }
 
-/**
- * TCGplayer Mass Entry with the whole list in the URL, so one tap fills the cart.
- * TCGplayer credits the whole cart to the first click, which is why the deck
- * command exists. Lines are capped so the link stays well inside URL limits.
- */
+/** The whole list as one TCGplayer cart (lib/tcgplayer-cart.ts), through Impact. */
 export function tcgplayerCartLink(g: BotGame, lines: DeckLine[]): string {
-  const c = lines.slice(0, 75).map((l) => `${l.qty} ${l.name}`).join("||");
-  const url = `https://www.tcgplayer.com/massentry?productline=${encodeURIComponent(g.tcgLine)}&c=${encodeURIComponent(c)}`;
-  return impact(url, botSubId(g, "deck"));
+  return impact(tcgplayerMassEntryUrl(g.tcgLine, lines), botSubId(g, "deck"));
 }

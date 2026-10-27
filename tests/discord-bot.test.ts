@@ -163,3 +163,17 @@ test("the ops check passes only when an unsigned request is refused with 401", a
   assert.equal((await discordBot(mk(200))).severity, "warn");
   assert.equal((await discordBot(mk(401, false))).severity, "unknown");
 });
+
+test("deck pages and the deck builder offer the whole list as one TCGplayer cart", async () => {
+  const { tcgplayerMassEntryUrl } = await import("../src/lib/tcgplayer-cart");
+  const u = new URL(tcgplayerMassEntryUrl("Lorcana TCG", [{ qty: 4, name: " Elsa " }, { qty: 0, name: "Gone" }, { qty: 2, name: "Stitch" }]));
+  assert.equal(u.searchParams.get("productline"), "Lorcana TCG");
+  assert.equal(u.searchParams.get("c"), "4 Elsa||2 Stitch");
+  const { readFileSync } = await import("node:fs");
+  for (const f of ["src/components/decks/PublishedDeckView.tsx", "src/components/DeckBuilder.tsx"]) {
+    const src = readFileSync(f, "utf8");
+    assert.match(src, /surface="deck_cart"/, f);
+    assert.match(src, /Buy all on TCGplayer/, f);
+  }
+  assert.match(readFileSync("src/app/decks/[slug]/page.tsx", "utf8"), /tcgplayerCartHref=\{affiliateUrl\(tcgplayerMassEntryUrl\(/);
+});
