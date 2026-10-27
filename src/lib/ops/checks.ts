@@ -692,8 +692,25 @@ export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
     const since = Math.floor((d.now.getTime() - 24 * 3_600_000) / 1000);
     const ev = await d.fetch(`https://api.stripe.com/v1/events?delivery_success=false&limit=20&created[gte]=${since}`, { headers: auth });
     const failed = ev.ok ? (((await ev.json()) as { data?: unknown[] }).data ?? []).length : null;
+    const dead = failed != null && failed >= 3 ? await deadOtherEndpoints(d, j.data ?? []) : [];
     if (failed == null) {
       out.push(result(d, { id: "stripe:webhook", area: "money", title: hookTitle, severity: "ok", summary: "A webhook is enabled (delivery history unavailable)." }));
+    } else if (dead.length) {
+      // `delivery_success=false` counts an event that missed ANY endpoint on the
+      // account, and this account has also carried endpoints for sister sites
+      // that later dropped payments (2026-10-27: gundamcompare.com and
+      // lorcanacompare.com, both 404s). When every other endpoint is dead, the
+      // failures are theirs, not Pro's: say so, and name what to switch off.
+      out.push(
+        result(d, {
+          id: "stripe:webhook",
+          area: "money",
+          title: hookTitle,
+          severity: "warn",
+          summary: `${failed} Stripe events failed to reach endpoints that no longer exist (${dead.join(", ")}). RiftCompare's own webhook answers normally, so Pro is not affected.`,
+          action: `In Stripe → Developers → Webhooks, disable ${dead.length === 1 ? "that endpoint" : "those endpoints"}. Or tell Claude: "Stripe webhooks are failing".`,
+        }),
+      );
     } else {
       const sev: Severity = failed >= 10 ? "crit" : failed >= 3 ? "warn" : "ok";
       out.push(
@@ -711,6 +728,24 @@ export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
     out.push(unknown(d, "stripe:webhook", "money", hookTitle, `Could not read it (${msg(e)}).`));
   }
   return out;
+}
+
+const PREMIUM_HOOK = /^https:\/\/(www\.)?riftcompare\.com\/api\/marketplace\/stripe\/webhook$/;
+
+/** The enabled endpoints other than Premium's, when EVERY one of them is gone (a
+ * 404 or 410 to an unsigned POST) and Premium's own answers like a live route
+ * (400, missing signature). Empty otherwise, including when one can't be probed. */
+async function deadOtherEndpoints(d: OpsDeps, eps: { status?: string; url?: string }[]): Promise<string[]> {
+  const enabled = eps.filter((e) => e.status === "enabled" && e.url);
+  const own = enabled.filter((e) => PREMIUM_HOOK.test(e.url!));
+  const others = enabled.filter((e) => !PREMIUM_HOOK.test(e.url!));
+  if (!own.length || !others.length) return [];
+  const post = (url: string) =>
+    d.fetch(url, { method: "POST", body: "{}", headers: { "content-type": "application/json" }, redirect: "manual" }).then((r) => r.status, () => 0);
+  if ((await post(own[0]!.url!)) !== 400) return [];
+  const codes = await Promise.all(others.map((e) => post(e.url!)));
+  if (!codes.every((c) => c === 404 || c === 410)) return [];
+  return others.map((e) => e.url!.replace(/^https:\/\//, ""));
 }
 
 // A store that paid for the Stores plan gets nothing until the owner links it

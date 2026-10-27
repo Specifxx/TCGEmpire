@@ -1231,7 +1231,7 @@ longer lands on its entry.
   TCGplayer cart) and `/pricebot` for all seven games, HTTP interactions only,
   no database; every reply opens with `#ad`; the owner switches it on, and it is
   removed again if it is not near 30 clicks a day a month after promotion.
-  [2026-10-27](../DECISIONS.md#L20304)
+  [2026-10-27](../DECISIONS.md#L20326)
 - **No AI calls, no Speed Insights (2026-10-16):** Trade Roast (and its
   Gremlin box) and the unrendered AI card insight are gone with the Anthropic
   SDK; the site makes no model call. Speed Insights is removed (billed, unread).

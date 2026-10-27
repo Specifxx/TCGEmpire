@@ -20301,6 +20301,28 @@ monitor.
 **Not here.** TCGplayer clicks are not stored per day (only eBay's are), so
 the TCGplayer bar is earnings, not clicks.
 
+## Stripe webhook failures were dead sister-site endpoints, not Pro (2026-10-27)
+
+The admin's "Stripe webhook" check said 3 events failed to reach the site in a day. A log-safe
+diagnose run (`scripts/stripe-webhook-diagnose.ts`, workflow *Stripe webhook diagnose*) showed
+RiftCompare's Stripe account carries four endpoints: Premium's own
+(`riftcompare.com/api/marketplace/stripe/webhook`, healthy), the retired Connect one
+(`/api/marketplace/stripe/connect-webhook`, `account.updated` only, a 404 since the Marketplace
+went in 2026-08), and two created 2026-10-25 for `gundamcompare.com/api/stripe/webhook` and
+`lorcanacompare.com/api/stripe/webhook`, both 404s since those sites dropped accounts the same day.
+Every undelivered event (customer.subscription.created/updated/deleted) was pending only to the two
+sister endpoints; every paying subscription's account already had its Pro, and the reconcile healed
+nothing (14 checked, 0 extended, 0 unmatched).
+
+- `delivery_success=false` counts an event that missed ANY endpoint on the account. The check now
+  probes the other enabled endpoints with an unsigned POST: when every one is a 404/410 and
+  Premium's own answers 400, it says Pro is not affected and names the endpoints to disable.
+- The fix is in Stripe, the owner's call: disable the three dead endpoints, and subscribe Premium's
+  endpoint to `customer.subscription.created`, `customer.subscription.updated` and
+  `invoice.payment_succeeded`, which the route handles but the endpoint never received (renewals
+  have relied on `invoice.paid` plus the daily reconcile).
+- The diagnose script prints no email, name, customer id or amount: the repository is public.
+
 ## Discord price bot, back with an owner to switch it on — 2026-10-27
 
 **Owner:** after the affiliate-channels review recommended a Discord price bot
