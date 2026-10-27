@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { grantPremiumDays, feedbackPremiumActive, FEEDBACK_PREMIUM_DAYS } from "@/lib/premium";
-import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 
 export const dynamic = "force-dynamic";
 
@@ -123,19 +122,11 @@ export async function POST(req: Request) {
       },
     });
 
-    // Tell the owner now (lib/ops/notify-owner.ts): bounded, capped, and never able to fail the submission.
-    await notifyOwnerBounded({
-      kind: "feedback",
-      headline: `${rating != null ? `${rating}/5 · ` : ""}${message}`,
-      from: user?.email ?? cleanEmail(body?.email) ?? (user ? "a signed-in account" : "anonymous"),
-      fields: [
-        ["Rating", rating != null ? `${rating}/5` : null],
-        ["Page", cleanStr(body?.page, MAX_PAGE)],
-        ["Source", source],
-        ["Signed in", user ? "yes" : "no"],
-      ],
-      body: message,
-    });
+    // NO EMAIL per feedback or rating (owner, 2026-10-27: "stop sending me
+    // emails for every single feedback … I can check in the admin dashboard").
+    // It waits in /admin/messages, which shows the average and the totals, and
+    // the list only when opened. Feedback is also left out of the monitor's
+    // "inbox waiting" alert (lib/ops/inbox-counts.ts).
 
     // Reward only a signed-in account's FIRST submission, only while the promo
     // is on. Anonymous submissions can't be rewarded — there is nothing to

@@ -416,11 +416,13 @@ test("a recovery-only email says things are back to normal", () => {
 });
 
 test("the weekly digest says all healthy, or lists what is flagged, and always shows the inbox", () => {
-  const rep = (results: CheckResult[]): OpsReport => ({ version: 1, generatedAt: NOW.toISOString(), results, inbox: { ...emptyInbox(), feedback: 2, total: 2 } });
+  const rep = (results: CheckResult[]): OpsReport => ({ version: 1, generatedAt: NOW.toISOString(), results, inbox: { ...emptyInbox(), contact: 2, feedback: 9, total: 2 } });
   const good = buildDigestEmail(rep([r("a", "ok"), r("b", "ok")]));
   assert.match(good.subject, /all healthy/);
   assert.match(good.html, /monitor has stopped/);
-  assert.match(good.text, /Inbox: 2 feedback/);
+  assert.match(good.text, /Inbox: 2 contact messages/);
+  // Feedback and ratings never count as waiting (owner, 2026-10-27): no email about them.
+  assert.doesNotMatch(good.text, /feedback/);
   const bad = buildDigestEmail(rep([r("a", "crit"), r("b", "warn"), r("c", "ok")]));
   assert.match(bad.subject, /1 problem need attention/);
 });

@@ -20074,3 +20074,20 @@ included, the way Collectr shows its rating.
 **Cost.** The homepage reads one memoised aggregate per six-hour render
 (`getSiteRating`, globalThis memo, no `unstable_cache`). The reviews query is
 the one the homepage already makes.
+
+## No email per feedback or rating; the admin inbox summarises them — 2026-10-27
+
+The owner: "stop sending me emails for every single feedback … and every single
+rating … I can check in the admin dashboard. It just averages out all the
+feedback … you can drill down if you choose to click into it."
+
+**What.** `/api/feedback` no longer calls `notifyOwnerBounded` (the one
+exception to "every public form notifies the owner"; contact, support, price
+reports and store suggestions still do, since those need a reply or a fix).
+Feedback is also out of `getInboxCounts`'s `total` and `oldestAt`, so the ops
+monitor never raises "inbox waiting" over ratings, and the digest's inbox line
+leaves it out. `/admin/messages` opens on a summary: the average rating, the
+star split and the count of written items. The full list sits behind
+"Show every item", unchanged, with its approve/hide actions. The same rule is
+applied on OP Compare (the hourly outbox skips feedback) and Compare Empire AU
+(no `notifyOwner` per feedback).
