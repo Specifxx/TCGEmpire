@@ -573,7 +573,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="font-normal text-slate-500">· RiftCompare is part of the Compare Empire family of price comparison sites</span>
             </p>
             <ul className="flex flex-wrap gap-x-4 gap-y-1">
-              {SISTER_SITES.map((s) => (
+              {SISTER_SITES.filter((s) => !s.notTcg).map((s) => (
                 <li key={s.key}>
                   <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
                     {s.anchor}
@@ -582,6 +582,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </li>
               ))}
             </ul>
+            <p className="mt-1">
+              <span className="text-slate-500">Also from Compare Empire:</span>{" "}
+              {SISTER_SITES.filter((s) => s.notTcg).map((s, i) => (
+                <span key={s.key}>
+                  {i ? " · " : ""}
+                  <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
+                    {s.anchor}
+                  </a>{" "}
+                  <span className="text-slate-500">on {s.name}</span>
+                </span>
+              ))}
+            </p>
           </nav>
           {/* Cross-promotion: our other Riftbound side project. Cheeky on purpose —
               per owner request 2026-08-13. */}
