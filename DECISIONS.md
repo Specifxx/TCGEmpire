@@ -20276,3 +20276,27 @@ the contact form and took no rating at all.
 **Cost.** The corner card is no longer one tap: a star, then Send. That is
 the price of one form everywhere, and the card still only reaches returning
 visitors.
+
+## A growth page in the admin, from data we already collect — 2026-10-27
+
+**Why.** The owner judged growth from one day against the next (241 eBay
+clicks yesterday, 216 today), which is mostly noise, and there was no page
+that showed a trend. Everything needed was already stored; it just was not
+drawn.
+
+**What.** `/admin/growth` (`src/lib/admin-growth.ts`), admin-gated like
+`/admin/earnings`: 28 daily bars each for Google clicks (RiftCompare and OP
+Compare), card views and searches (day-on-day `DemandSnapshot` differences),
+eBay link clicks (`ClickEvent`, Sydney days) and earnings in AUD, total and by
+source. Every card compares the last seven full days with the seven before.
+Search Console reports two days late, so its weeks end at its newest reported
+day (`weekCompare`, `tests/admin-growth.test.ts`).
+
+**Search Console never on Vercel.** Its key stays a GitHub secret. The three-
+hourly ops monitor runs `scripts/growth-snapshot.ts`, which stores 90 days of
+daily clicks in the `OpsSnapshot` row `growth:gsc`; the page reads only that
+row. The script prints no numbers (public Actions logs) and never fails the
+monitor.
+
+**Not here.** TCGplayer clicks are not stored per day (only eBay's are), so
+the TCGplayer bar is earnings, not clicks.

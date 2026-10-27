@@ -2463,6 +2463,9 @@ This page follows Riot's announcements. We'll add the K/DA printings' prices as 
     slug: "riftbound-heartsteel-overnumbered-cards",
     category: "blog",
     title: "Riftbound HEARTSTEEL Overnumbered: All 6 Cards",
+    // 27 Oct: 11,500 impressions in 28 days at 1.3% CTR, most on "riftbound heartsteel" /
+    // "heartsteel cards" searches, which a title without "Cards" or "Prices" answers poorly.
+    seoTitle: "Riftbound HEARTSTEEL Overnumbered Cards: All 6 + Prices",
     excerpt:
       "All six HEARTSTEEL overnumbered Radiance cards, RAD 178–183/167: what each does, which five are reprints, and K'Sante's first Champion Unit.",
     author: "RiftCompare",

@@ -79,6 +79,13 @@ jobs:
           OPS_DIGEST: ${{ (github.event.schedule == '0 21 * * 0' || inputs.digest) && '1' || '' }}
           DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
         run: npx tsx scripts/ops-monitor.ts
+      - name: Store Search Console clicks for /admin/growth
+        if: ${{ always() && !inputs.dry_run }}
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+        run: npx tsx scripts/growth-snapshot.ts
       - name: Save the monitor's memory
         if: ${{ always() && !inputs.dry_run }}
         uses: actions/cache/save@v4
