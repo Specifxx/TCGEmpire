@@ -1,0 +1,43 @@
+name: Stripe webhook diagnose
+
+# Read-only look at why Stripe events are not reaching the site
+# (scripts/stripe-webhook-diagnose.ts). The log is public: the script prints no
+# email, name, customer id or amount. `heal` runs the daily cron's extend-only
+# reconcile and prints counts.
+
+on:
+  workflow_dispatch:
+    inputs:
+      heal:
+        description: "Also run the extend-only Stripe reconcile"
+        type: boolean
+        default: false
+  push:
+    branches: ["claude/project-thread-atrpgn"]
+    paths: ["scripts/stripe-webhook-diagnose.ts", ".github/workflows/stripe-webhook-diagnose.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Diagnose
+        env:
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_PLUS_PRICE_ID: ${{ secrets.STRIPE_PLUS_PRICE_ID }}
+          STRIPE_PLUS_ANNUAL_PRICE_ID: ${{ secrets.STRIPE_PLUS_ANNUAL_PRICE_ID }}
+          STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
+          STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
+          HEAL: ${{ (github.event_name == 'push' || inputs.heal) && '1' || '' }}
+        run: npx tsx scripts/stripe-webhook-diagnose.ts
