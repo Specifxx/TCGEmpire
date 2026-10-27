@@ -12,9 +12,6 @@ on:
         description: "Also run the extend-only Stripe reconcile"
         type: boolean
         default: false
-  push:
-    branches: ["claude/project-thread-atrpgn"]
-    paths: ["scripts/stripe-webhook-diagnose.ts", ".github/workflows/stripe-webhook-diagnose.yml"]
 
 permissions:
   contents: read
@@ -39,5 +36,5 @@ jobs:
           STRIPE_PLUS_ANNUAL_PRICE_ID: ${{ secrets.STRIPE_PLUS_ANNUAL_PRICE_ID }}
           STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
           STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
-          HEAL: ${{ (github.event_name == 'push' || inputs.heal) && '1' || '' }}
+          HEAL: ${{ inputs.heal && '1' || '' }}
         run: npx tsx scripts/stripe-webhook-diagnose.ts
