@@ -261,6 +261,22 @@ export function ebayDomain(country: string): string {
   return EBAY_DOMAIN[country] ?? EBAY_DOMAIN.US;
 }
 
+// An eBay link with our EPN tracking taken off (2026-10-27). EPN counts email as
+// "messaging", a special business model it approves in advance, and we have no
+// such approval, so the eBay links in our emails (graded-watch lows, auction
+// digests) go out plain. Remove this call from the emails once EPN approves.
+const EPN_PARAMS = ["mkevt", "mkcid", "mkrid", "campid", "customid", "toolid", "siteid", "mkgroupid", "_trkparms"];
+export function plainEbayUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    if (!/(?:^|\.)ebay\./i.test(u.hostname)) return url;
+    for (const k of EPN_PARAMS) u.searchParams.delete(k);
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 // Human-readable label for "which eBay am I searching" copy. Deliberately NOT
 // derived from EBAY_DOMAIN: SG's logical domain is still ebay.com.sg (above),
 // but the link a Singapore visitor actually lands on is ebay.com (see the SG
