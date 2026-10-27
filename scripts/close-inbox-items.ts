@@ -1,5 +1,5 @@
 /**
- * Closes the inbox items worked on 2026-10-15, and ONLY those — every row is
+ * Closes the inbox items worked on 2026-10-27, and ONLY those — every row is
  * named by id (a contact message, which has no id in the audit, by its exact
  * date and subject), with the status it actually earned.
  *
@@ -36,25 +36,18 @@ const APPLY = process.argv.includes("--apply");
 type Close = { id: string; from: string; to: string; what: string; why: string };
 
 // ── Store suggestions ────────────────────────────────────────────────────────
-const SUGGESTIONS: Close[] = [
-  {
-    id: "cmv991llp00002du2u3tcjkmr",
-    from: "pending",
-    to: "added",
-    what: "SephiGames (EU, sephigames.com)",
-    why: "added as a sealed-only feed store (lib/sealed-stores.ts FEED_STORES): its /feed/riftbound.json is read whole each run, English sealed only, EUR in the EU market. Its Radiance Booster Box (EUR 129.99), Vault (EUR 34.99) and Spiritforged box (EUR 159.99) are in from the next import",
-  },
-  {
-    id: "cmv88xue90000ygkwtp89kcy9",
-    from: "pending",
-    to: "rejected",
-    what: "Rift Emporium (US, riftempoium.com — the site is riftemporium.com)",
-    why: "a single-page app whose listings load in the browser from the marketplace's own Supabase database. No product feed, and no product page carries a price in its HTML, so there is nothing public to read; querying their backend with the key embedded in their app is not a public feed. Reconsider if they publish a feed, as SephiGames did",
-  },
-];
+const SUGGESTIONS: Close[] = [];
 
 // ── Wrong-price / wrong-card reports ─────────────────────────────────────────
-const REPORTS: Close[] = [];
+const REPORTS: Close[] = [
+  {
+    id: "cmvp949350000322wbt970mgx",
+    from: "NEW",
+    to: "FIXED",
+    what: "Kayn, Unleashed (Heartsteel Signature) RAD 182*/167, TCGplayer CA: we said CA$157.55, they said CA$875",
+    why: "every Rare, Epic and Showcase TCGplayer row quoted market price, because TCGplayer marks no Riftbound product foilOnly and the printing filter wanted a Normal listing (DECISIONS.md, 2026-10-26; #171). Verified in the 2026-10-27 snapshot: Kayn's US row is the cheapest English NM listing, $490.00 (CA$671.30), not market ($388.66)",
+  },
+];
 
 const FEEDBACK: Close[] = [];
 
@@ -62,14 +55,7 @@ const FEEDBACK: Close[] = [];
 // Named by the exact UTC day and subject the audit prints; the script refuses
 // to act unless exactly one row matches both.
 type ArchiveContact = { day: string; subject: string; what: string; why: string };
-const CONTACT: ArchiveContact[] = [
-  {
-    day: "2026-10-09",
-    subject: "Pricing of different versions of boosters/boxes",
-    what: "\"Booster boxes in Canada show $150 because of French versions\"",
-    why: "fixed 2026-10-12 (DECISIONS.md, \"Inbox, 2026-10-12: French prints out of the English prices\"): French and other non-English prints are excluded from every English price. Re-checked 2026-10-15: no non-English box remains in the Canadian booster box groups",
-  },
-];
+const CONTACT: ArchiveContact[] = [];
 
 async function close(
   label: string,
