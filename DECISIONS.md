@@ -20035,3 +20035,13 @@ every page did from 2026-10-24 to 2026-10-26. Paid members stay ad-free.
 **Review.** Still 2026-11-23, now with AdSense in the comparison: affiliate
 earnings per visit against AdSense's A$1.50 a day. "For now" means the owner
 expects to revisit; turning it off again is the same constant.
+
+## AdSense off again — 2026-10-27
+
+A day after asking for AdSense back "for now", the owner turned it off again:
+the ads were too annoying on the site. `ADSENSE_SERVING = false` once more
+(the loader, preconnects and units go; the ownership meta tag and `ads.txt`
+stay). The plan is the one from "AdSense off, Journey on articles only": once
+Mediavine approves the site, its ads run on blog and guide articles only,
+never on card, set, sealed or price pages. Deployed immediately at the owner's
+request.
