@@ -48,6 +48,8 @@ export function PublishedDeckView(props: {
   lines: DeckViewLine[];
   publishedTotals: MarketTotals;
   massEntry: string;
+  /** The whole deck as one TCGplayer cart, already affiliate-wrapped (lib/tcgplayer-cart.ts). */
+  tcgplayerCartHref: string;
   basketHref: string;
   builderHref: string;
 }) {
@@ -122,6 +124,16 @@ export function PublishedDeckView(props: {
           <Link href={props.basketHref} className="btn-primary" title="The cheapest delivered order across stores, postage included">
             Buy this deck for less →
           </Link>
+          <OutboundLink
+            href={props.tcgplayerCartHref}
+            retailer="tcgplayer"
+            country={country}
+            pageType="deck"
+            surface="deck_cart"
+            className="btn-ghost"
+          >
+            Buy all on TCGplayer
+          </OutboundLink>
           <button type="button" onClick={copy} className="btn-ghost">
             {copied ? "✓ Copied" : "Copy list (TCGplayer Mass Entry)"}
           </button>

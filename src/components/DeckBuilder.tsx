@@ -18,6 +18,9 @@ import { DeckWatchForm } from "./DeckWatchForm";
 import { InlineSignupPrompt } from "./InlineSignupPrompt";
 
 import { PremiumButton } from "./PremiumButton";
+import { OutboundLink } from "./OutboundLink";
+import { affiliateUrl } from "@/lib/affiliate";
+import { RIFTBOUND_TCG_LINE, tcgplayerMassEntryUrl } from "@/lib/tcgplayer-cart";
 
 // The deck builder and list pricer — the free, no-account tool behind /deck.
 //
@@ -457,6 +460,20 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
               >
                 Buy this deck for less →
               </Link>
+            )}
+            {/* The whole list as one TCGplayer cart (2026-10-27): TCGplayer credits
+                the entire cart to the click. */}
+            {lines.length > 0 && (
+              <OutboundLink
+                href={affiliateUrl(tcgplayerMassEntryUrl(RIFTBOUND_TCG_LINE, lines.map((l) => ({ qty: l.qty, name: l.card.name }))), "tcgplayer_cart", "/deck")}
+                retailer="tcgplayer"
+                country={country}
+                pageType="deck"
+                surface="deck_cart"
+                className="btn-ghost text-sm"
+              >
+                Buy all on TCGplayer
+              </OutboundLink>
             )}
           </div>
         )}

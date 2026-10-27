@@ -1,0 +1,29 @@
+name: Discord bot commands
+
+# Registers the Discord price bot's slash commands (lib/discord/bot.ts,
+# DECISIONS.md "Discord price bot", 2026-10-27). Run it once after setting up the
+# bot and again whenever the commands change. A green no-op until both secrets
+# exist. Prints only the command names.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Register slash commands
+        env:
+          DISCORD_APPLICATION_ID: ${{ vars.DISCORD_APPLICATION_ID || secrets.DISCORD_APPLICATION_ID }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        run: npx tsx scripts/discord-register.ts
