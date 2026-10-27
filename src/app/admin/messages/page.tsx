@@ -99,11 +99,28 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
   let feedbackUsers = new Map<string, { displayName: string; email: string }>();
   let feedbackTotal = 0;
   let feedbackError = false;
+  // The summary the owner reads first (2026-10-27: "it just averages out all the
+  // feedback … you can drill down if you choose to click into it"). Real stars
+  // only: a "rating-review" row repeats a rating already counted.
+  let ratingAvg: number | null = null;
+  let ratingCount = 0;
+  let ratingSplit = new Map<number, number>();
+  let writtenCount = 0;
   try {
-    [feedback, feedbackTotal] = await Promise.all([
+    const ratedWhere = { rating: { not: null }, NOT: { source: "rating-review" } };
+    const [rows, total, agg, split, written] = await Promise.all([
       prisma.feedback.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
       prisma.feedback.count(),
+      prisma.feedback.aggregate({ where: ratedWhere, _avg: { rating: true }, _count: { rating: true } }),
+      prisma.feedback.groupBy({ by: ["rating"], where: ratedWhere, _count: { _all: true } }),
+      prisma.feedback.count({ where: { message: { not: "" } } }),
     ]);
+    feedback = rows;
+    feedbackTotal = total;
+    ratingAvg = agg._avg.rating;
+    ratingCount = agg._count.rating;
+    ratingSplit = new Map(split.map((g) => [g.rating ?? 0, g._count._all]));
+    writtenCount = written;
     // userId is nullable (signed-out visitors can submit), so the lookup filters
     // the nulls out rather than querying for them.
     const ids = [...new Set(feedback.map((r) => r.userId).filter((v): v is string => !!v))];
@@ -298,6 +315,42 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
             No feedback yet.
           </div>
         ) : (
+          <>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3" data-feedback-summary>
+            <div className="rounded-xl border border-ink-700 bg-ink-850 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Average rating</div>
+              <div className="mt-1 text-3xl font-extrabold text-white">
+                {ratingAvg != null ? ratingAvg.toFixed(2) : "–"} <span className="text-lg text-gold">★</span>
+              </div>
+              <div className="text-xs text-slate-500">{ratingCount.toLocaleString()} rating{ratingCount === 1 ? "" : "s"} · shown on the site from 100</div>
+            </div>
+            <div className="rounded-xl border border-ink-700 bg-ink-850 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Stars</div>
+              <div className="mt-1 space-y-0.5">
+                {[5, 4, 3, 2, 1].map((n) => {
+                  const c = ratingSplit.get(n) ?? 0;
+                  return (
+                    <div key={n} className="flex items-center gap-2 text-xs text-slate-400">
+                      <span className="w-6">{n}★</span>
+                      <span className="h-1.5 flex-1 rounded bg-ink-800">
+                        <span className="block h-1.5 rounded bg-gold" style={{ width: `${ratingCount ? (c / ratingCount) * 100 : 0}%` }} />
+                      </span>
+                      <span className="w-8 text-right">{c}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="rounded-xl border border-ink-700 bg-ink-850 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Written</div>
+              <div className="mt-1 text-3xl font-extrabold text-white">{writtenCount.toLocaleString()}</div>
+              <div className="text-xs text-slate-500">{pendingFeedback} new · {publishedFeedback} published on the site</div>
+            </div>
+          </div>
+          <details className="mt-3 rounded-xl border border-ink-700 bg-ink-900/40 p-3">
+            <summary className="cursor-pointer text-sm font-semibold text-brand-300">
+              Show every item ({feedback.length.toLocaleString()}{feedbackTotal > feedback.length ? ` of ${feedbackTotal.toLocaleString()}` : ""})
+            </summary>
           <div className="mt-3 space-y-3">
             {feedback.map((r) => {
               const u = r.userId ? feedbackUsers.get(r.userId) : undefined;
@@ -328,6 +381,8 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
               );
             })}
           </div>
+          </details>
+          </>
         )}
       </section>
 

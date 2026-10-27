@@ -28,19 +28,26 @@ export async function getInboxCounts(): Promise<InboxCounts> {
     prisma.supportTicket.aggregate({ where: { status: "OPEN" }, _count: { _all: true }, _min: { createdAt: true } }),
   ]);
 
-  const oldest = [contact, feedback, sugg, reports, support]
+  // Feedback and ratings are counted but never "waiting" (owner, 2026-10-27:
+  // no email for them, the admin page shows their average instead), so they
+  // add nothing to `total` or `oldestAt`, which drive the monitor's alert.
+  const oldest = [contact, sugg, reports, support]
     .map((a) => a._min.createdAt)
     .filter((d): d is Date => !!d)
     .sort((a, b) => a.getTime() - b.getTime())[0];
 
-  const counts = {
+  const waiting = {
     contact: contact._count._all,
-    feedback: feedback._count._all,
     storeSuggestions: sugg._count._all,
     priceReports: reports._count._all,
     support: support._count._all,
   };
-  return { ...counts, total: Object.values(counts).reduce((a, b) => a + b, 0), oldestAt: oldest ? oldest.toISOString() : null };
+  return {
+    ...waiting,
+    feedback: feedback._count._all,
+    total: Object.values(waiting).reduce((a, b) => a + b, 0),
+    oldestAt: oldest ? oldest.toISOString() : null,
+  };
 }
 
 /** The owner has opened the Inbox: everything in it up to now counts as seen. */

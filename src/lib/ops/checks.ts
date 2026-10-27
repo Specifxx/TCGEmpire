@@ -850,7 +850,6 @@ export async function inboxWaiting(d: OpsDeps): Promise<CheckResult> {
     if (!i.total) return result(d, { id, area: "inbox", title, severity: "ok", summary: "Nothing waiting." });
     const bits = [
       i.contact && `${i.contact} contact`,
-      i.feedback && `${i.feedback} feedback`,
       i.priceReports && `${i.priceReports} wrong-price`,
       i.storeSuggestions && `${i.storeSuggestions} store suggestion${i.storeSuggestions === 1 ? "" : "s"}`,
       i.support && `${i.support} support`,

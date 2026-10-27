@@ -24,7 +24,6 @@ test("the owner address is the one asked for, overridable, and validated", () =>
 test("every public form tells the owner as soon as something is saved", () => {
   const forms: [string, RegExp][] = [
     ["src/app/api/contact/route.ts", /kind: "contact"/],
-    ["src/app/api/feedback/route.ts", /kind: "feedback"/],
     ["src/app/api/price-report/route.ts", /kind: "price-report"/],
     ["src/app/api/stores/suggest/route.ts", /kind: "store-suggestion"/],
     ["src/app/api/support/route.ts", /kind: "support"/],
@@ -38,6 +37,16 @@ test("every public form tells the owner as soon as something is saved", () => {
     const notify = src.indexOf("notifyOwnerBounded({");
     assert.ok(create >= 0 && notify > create, `${file}: notify after create`);
   }
+});
+
+test("feedback and ratings send no email; they wait in the admin inbox's summary (owner, 2026-10-27)", () => {
+  assert.doesNotMatch(code("src/app/api/feedback/route.ts"), /notifyOwnerBounded/);
+  const counts = code("src/lib/ops/inbox-counts.ts");
+  assert.match(counts, /const oldest = \[contact, sugg, reports, support\]/, "feedback never ages the inbox into an alert");
+  assert.doesNotMatch(counts.slice(counts.indexOf("const waiting")), /^\s*feedback: feedback\._count\._all,\n\s*storeSuggestions/m);
+  const page = code("src/app/admin/messages/page.tsx");
+  assert.match(page, /data-feedback-summary/);
+  assert.match(page, /<details[\s\S]*?Show every item/, "the list opens only on a click");
 });
 
 test("a notification cannot fail or delay a submission", () => {

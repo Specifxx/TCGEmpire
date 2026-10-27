@@ -97,7 +97,6 @@ function inboxLine(i: InboxCounts): string {
   if (!i.total) return "Nothing waiting.";
   return [
     i.contact && plural(i.contact, "contact message"),
-    i.feedback && `${i.feedback} feedback`,
     i.priceReports && plural(i.priceReports, "wrong-price report"),
     i.storeSuggestions && plural(i.storeSuggestions, "store suggestion"),
     i.support && plural(i.support, "support ticket"),
