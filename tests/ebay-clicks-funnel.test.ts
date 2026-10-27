@@ -418,32 +418,32 @@ test("sealed: the quick view names the game, and /sealed's set search follows th
 // ── 9. Policy copy ──────────────────────────────────────────────────────────
 
 test("policy copy: the promise is the ORDER of a ranked comparison, and the eBay promotion is disclosed", () => {
-  // AMENDED 2026-10-15: the Radiance pre-order table pins open eBay listings
-  // first, so every public page that promised payment never changes an order now
-  // names that ONE labelled exception instead. Pinned here: the exception is
-  // named everywhere a promise is made, it is the only one, prices are never
-  // affected, and no absolute that is no longer true survives in visible copy.
+  // AMENDED 2026-10-15 (the pre-order table) and 2026-10-27 (owner: eBay and
+  // TCGplayer first in every price list, DECISIONS.md "eBay and TCGplayer lead
+  // every price list"). Every page that makes a promise about order names the
+  // pin, prices are never affected, and no absolute that is no longer true
+  // survives in visible copy.
   const policy = code("src/app/editorial-policy/page.tsx");
-  assert.match(policy, /None of it affects the prices we show, and with one labelled exception it does not affect\s+the order of any ranked comparison\./);
-  assert.match(policy, /Ranking is by item price, with known postage breaking\s+ties;/);
-  assert.match(policy, /on our Radiance pre-order price table, open eBay listings are shown\s+first within each product, tagged &ldquo;Shown first&rdquo;\./);
-  assert.match(policy, /Never by what we earn —\s+except the one labelled exception on the Radiance pre-order table/);
-  assert.match(policy, /no retailer can pay to appear, to\s+rank higher, or to have a competitor removed\. The one place an order follows commission\s+is the Radiance pre-order table/);
-  assert.match(policy, /Outside the ranked lists we also promote eBay, our\s+main affiliate partner/);
-  assert.match(policy, /an eBay row&apos;s button uses eBay&apos;s own colour/);
+  assert.match(policy, /None of it affects the prices we show\. It affects the order of a comparison in one labelled\s+way/);
+  assert.match(policy, /shows eBay and TCGplayer, our affiliate partners, first, tagged &ldquo;Shown first&rdquo;/);
+  assert.match(policy, /Every store below them is ranked by item price, with known postage\s+breaking ties;/);
+  assert.match(policy, /the headline price is always the\s+cheapest offer from anyone/);
+  assert.match(policy, /eBay buttons use eBay&apos;s own colour/);
   assert.doesNotMatch(policy, /price and postage alone/);
   assert.doesNotMatch(policy, /None of it affects the prices we show or the order of any ranked comparison\./, "no longer true");
+  assert.doesNotMatch(policy, /its position and price are unchanged/, "no longer true");
 
   const about = code("src/app/about/page.tsx");
   assert.match(about, /With one labelled exception, none of that money buys a position\./);
-  assert.match(about, /except on our Radiance\s+pre-order table, where open eBay listings/);
+  assert.match(about, /eBay and TCGplayer,\s+our affiliate partners, are shown first in every price comparison/);
   assert.doesNotMatch(about, /full stop/, "an absolute that is no longer absolute");
 
-  assert.match(code("src/app/privacy/page.tsx"), /with one exception we label where it happens: on our Radiance\s+pre-order table, open eBay listings are shown first within each product/);
+  assert.match(code("src/app/privacy/page.tsx"), /eBay and TCGplayer are shown first\s+in each price comparison/);
   assert.doesNotMatch(code("src/app/privacy/page.tsx"), /This\s+never affects the prices we show or the order in which a price comparison is ranked\./, "no longer true");
-  assert.match(code("src/app/terms/page.tsx"), /none affects the order in which results are ranked, with one exception labelled where\s+it happens: on the Radiance pre-order table, open eBay listings/);
+  assert.match(code("src/app/terms/page.tsx"), /eBay and TCGplayer, our affiliate partners, are shown first in each price\s+comparison/);
   assert.doesNotMatch(code("src/app/terms/page.tsx"), /None of these affects the prices we show\s+or the order in which results are ranked\./);
-  assert.match(code("src/app/methodology/page.tsx"), /The one comparison ordered differently is the\s+Radiance pre-order table/);
+  assert.match(code("src/app/methodology/page.tsx"), /A card&rsquo;s comparison starts with eBay and TCGplayer/);
+  assert.doesNotMatch(code("src/app/methodology/page.tsx"), /nothing is moved up or down for money/, "no longer true");
 });
 
 
