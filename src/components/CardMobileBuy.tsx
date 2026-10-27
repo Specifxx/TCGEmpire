@@ -6,6 +6,8 @@ import { OutboundLink } from "./OutboundLink";
 import { PriceWatchButton } from "./PriceWatchButton";
 import { buyButtonClass } from "./CardMarketSection";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
+import { paidAlternative, paidAlternativeName } from "@/lib/paid-alternative";
+import { PaidLinkTag } from "./AffiliateDisclosure";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The card page's phone buy path (2026-09-26). At 390px the price comparison
@@ -26,7 +28,7 @@ const TOP_BUY_ATTR = "data-mobile-price";
 function useCheapest(rows: MarketRow[]) {
   const { country, fmt } = useCountry();
   const m = useMemo(() => computeMarket(rows, country), [rows, country]);
-  return { country, fmt, best: m.prices[0] ?? null };
+  return { country, fmt, best: m.prices[0] ?? null, prices: m.prices };
 }
 
 function shortStore(name: string): string {
@@ -34,34 +36,62 @@ function shortStore(name: string): string {
 }
 
 export function CardTopBuy({ rows, displayName }: { rows: MarketRow[]; displayName: string }) {
-  const { country, fmt, best } = useCheapest(rows);
+  const { country, fmt, best, prices } = useCheapest(rows);
+  const alt = useMemo(() => paidAlternative(prices), [prices]);
   if (!best) return null;
   return (
-    <div {...{ [TOP_BUY_ATTR]: "" }} className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-brand-500/30 bg-brand-500/[0.06] p-3 lg:hidden">
-      <div className="min-w-0">
-        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Cheapest</div>
-        <div className="num text-lg font-bold text-accent">{fmt(best.priceCents)}</div>
-        <div className="truncate text-xs text-slate-400">
-          at {best.retailerName}
-          {best.ship == null ? " · + postage" : best.ship === 0 ? " · free postage" : ` · + ${fmt(best.ship)} postage`}
+    <div {...{ [TOP_BUY_ATTR]: "" }} className="mt-3 rounded-lg border border-brand-500/30 bg-brand-500/[0.06] p-3 lg:hidden">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Cheapest</div>
+          <div className="num text-lg font-bold text-accent">{fmt(best.priceCents)}</div>
+          <div className="truncate text-xs text-slate-400">
+            at {best.retailerName}
+            {best.ship == null ? " · + postage" : best.ship === 0 ? " · free postage" : ` · + ${fmt(best.ship)} postage`}
+          </div>
         </div>
+        <OutboundLink
+          href={best.buyHref}
+          retailer={best.retailer}
+          country={country}
+          cardName={displayName}
+          price={best.priceCents / 100}
+          positionInList={1}
+          pageType="card_detail"
+          inStock
+          variant={best.isFoil ? "foil" : "nonfoil"}
+          condition={best.condition}
+          surface="card_top_buy"
+          className={`${buyButtonClass(best.retailer)} shrink-0 justify-center`}
+        >
+          Buy →
+        </OutboundLink>
       </div>
-      <OutboundLink
-        href={best.buyHref}
-        retailer={best.retailer}
-        country={country}
-        cardName={displayName}
-        price={best.priceCents / 100}
-        positionInList={1}
-        pageType="card_detail"
-        inStock
-        variant={best.isFoil ? "foil" : "nonfoil"}
-        condition={best.condition}
-        surface="card_top_buy"
-        className={`${buyButtonClass(best.retailer)} shrink-0 justify-center`}
-      >
-        Buy →
-      </OutboundLink>
+      {/* The cheapest paid marketplace within 20% when the cheapest row is a
+          store that pays nothing (lib/paid-alternative.ts): a real row of the
+          comparison below, its real price and how much more it is. */}
+      {alt && (
+        <div className="mt-2 flex items-center gap-2 border-t border-ink-700/60 pt-1 text-xs text-slate-400">
+          <OutboundLink
+            href={alt.row.buyHref}
+            retailer={alt.row.retailer}
+            country={country}
+            cardName={displayName}
+            price={alt.row.priceCents / 100}
+            positionInList={prices.indexOf(alt.row) + 1}
+            pageType="card_detail"
+            inStock
+            variant={alt.row.isFoil ? "foil" : "nonfoil"}
+            condition={alt.row.condition}
+            surface="card_top_alt"
+            className="block min-w-0 flex-1 truncate py-2 font-semibold text-brand-300 hover:underline"
+          >
+            or <span className="num">{fmt(alt.row.priceCents)}</span> on {paidAlternativeName(alt.row.retailer, alt.row.retailerName)}
+            {alt.pctMore > 0 ? ` (+${alt.pctMore}%)` : ""} →
+          </OutboundLink>
+          <PaidLinkTag className="shrink-0" />
+        </div>
+      )}
     </div>
   );
 }
