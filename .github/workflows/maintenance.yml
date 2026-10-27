@@ -77,6 +77,7 @@ on:
           - ensure-intro-coupons  # WRITES to Stripe (idempotent): creates the "first 3 months half price" coupon for each monthly price if missing, and prints what it will charge.
           - payment-failures-report # read-only: every Stripe charge in the last 30 days with WHO refused it (Radar block vs bank decline), Radar reason/rule/risk, CVC/postcode checks, card brand/funding/country, 3DS. Customers anonymised as #1, #2.
           - trial-cancel-report  # read-only: Premium trials cancelled mid-trial (cancel_at_period_end), hours to cancel, Stripe feedback, activity before cancelling. Anonymised.
+          - dns-hosts        # read-only: DNS answers (Google and Cloudflare resolvers) and the first HTTP response for every sister site's apex and www host. No secrets.
           - gsc-cannibal     # read-only SEARCH CONSOLE CANNIBALISATION REPORT for EVERY property GSC_SA_KEY can read (Rift Compare and the sister sites): queries where two or more of a site's own pages show, and the page pairs that share the most, so the weaker page is merged, redirected or retitled. Search terms only.
           - gsc-queries      # read-only SEARCH CONSOLE QUERY REPORT: top queries, striking-distance queries (position 4-20), rising queries and top pages for the last 28 days, so new articles target searches the site already nearly wins.
           - impact-report    # read-only DAILY IMPACT REPORT: per UTC day for the last 35 days, Search Console clicks/impressions, card views and searches (DemandSnapshot), new accounts by source and PremiumClick by surface, plus window averages around a change date (2026-10-09, the search allowance). Answers "did this change cost visitors or sign-ups?" days after it ships, where funnel-report's weeks are too coarse. Aggregate only, writes nothing.
@@ -5725,6 +5726,22 @@ jobs:
           STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
           STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
         run: npx tsx scripts/funnel-report.ts
+
+      - name: DNS and first response for every sister host (read-only)
+        if: inputs.task == 'dns-hosts'
+        run: |
+          sudo apt-get install -y -qq dnsutils >/dev/null 2>&1 || true
+          for d in riftcompare.com opcompare.app dexcompare.app mtgcompare.app gundamcompare.com lorcanacompare.com ygocompare.com camcompare.app compareempire.com; do
+            for h in "$d" "www.$d"; do
+              echo "=== $h"
+              for ns in 8.8.8.8 1.1.1.1; do
+                echo "  @$ns A: $(dig +short A "$h" @"$ns" | tr '\n' ' ')  CNAME: $(dig +short CNAME "$h" @"$ns" | tr '\n' ' ')"
+              done
+              echo "  http: $(curl -s -o /dev/null -m 15 -w '%{http_code} -> %{redirect_url}' "https://$h/" || echo failed)"
+            done
+          done
+          echo "=== NS records"
+          for d in dexcompare.app compareempire.com camcompare.app; do echo "  $d: $(dig +short NS "$d" @8.8.8.8 | tr '\n' ' ')"; done
 
       - name: Search Console cannibalisation report, every property (read-only)
         if: inputs.task == 'gsc-cannibal'
