@@ -5740,6 +5740,13 @@ jobs:
               echo "  http: $(curl -s -o /dev/null -m 15 -w '%{http_code} -> %{redirect_url}' "https://$h/" || echo failed)"
             done
           done
+          echo "=== canonical tags and sitemap host on the apex"
+          for u in https://dexcompare.app/au https://dexcompare.app/us https://compareempire.com/ https://compareempire.com/phones; do
+            echo "  $u: $(curl -sL -m 20 "$u" | grep -o '<link rel="canonical" href="[^"]*"' | head -1)"
+          done
+          for u in https://dexcompare.app/sitemap.xml https://dexcompare.app/robots.txt https://compareempire.com/sitemap.xml https://compareempire.com/robots.txt; do
+            echo "  $u: $(curl -sL -m 20 -o /tmp/b -w '%{http_code}' "$u") $(grep -o 'https\?://[^<[:space:]]*' /tmp/b | head -3 | tr '\n' ' ')"
+          done
           echo "=== NS records"
           for d in dexcompare.app compareempire.com camcompare.app; do echo "  $d: $(dig +short NS "$d" @8.8.8.8 | tr '\n' ' ')"; done
 
