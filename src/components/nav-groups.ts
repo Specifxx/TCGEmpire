@@ -83,6 +83,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"] },
       { href: "/movers", label: "Weekly Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "most searched", "popular cards"] },
       { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"] },
+      { href: "/graded", label: "Graded card prices", keywords: ["graded", "psa", "psa 10", "psa 9", "bgs", "cgc", "slab", "graded price"] },
       { href: "/stores/tracked", label: "Stores we track", keywords: ["stores", "shops", "retailers", "which stores"] },
       // The Pokémon section (2026-10-01), only while its switch is on
       // (lib/pokemon/flag.ts). Last in Prices, which renders open on a first

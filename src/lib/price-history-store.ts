@@ -304,6 +304,12 @@ export function gradedHistoryRows(cardId: string): GradedHistoryRow[] {
   return out;
 }
 
+/** The newest graded day file (the /graded guide), or null when there is none. */
+export function latestGradedDay(): GradedDayFile | null {
+  const days = historyDays(GRADED_HISTORY_SUBDIR);
+  return days.length ? readDay<GradedDayFile>(GRADED_HISTORY_SUBDIR, days[days.length - 1]) : null;
+}
+
 /** Sealed points, oldest first. Small (tens of groups), so read on demand. */
 export function sealedHistoryRows(opts: { since?: Date } = {}): SealedHistoryRow[] {
   const since = opts.since?.getTime() ?? Number.NEGATIVE_INFINITY;
