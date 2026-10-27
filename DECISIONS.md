@@ -20322,3 +20322,26 @@ nothing (14 checked, 0 extended, 0 unmatched).
   `invoice.payment_succeeded`, which the route handles but the endpoint never received (renewals
   have relied on `invoice.paid` plus the daily reconcile).
 - The diagnose script prints no email, name, customer id or amount: the repository is public.
+
+## The cheaper marketplace leads the pinned pair — 2026-10-27
+
+The pin above put eBay on top and TCGplayer second on every card, whatever
+their prices. In the US TCGplayer is the cheapest row on about half the cards
+(873 of 1,660 when the phone line shipped), so the pin was showing a dearer
+eBay listing above the cheaper TCGplayer one, and pushing the partner that
+pays about 2.5 times more per click (30 days to 2026-10-26: TCGplayer about
+A$0.31 a click, eBay about A$0.12) down a row, the week the owner flagged
+TCGplayer clicks down 49% week on week.
+
+**What.** `pinMarketplaces` also returns `tcgFirst` (`tcgplayerLeads`): the
+cheaper of the two rows goes on top, TCGplayer on a tie, and a live TCGplayer
+row goes above eBay's search row when the market has no eBay listing. Both are
+the same market's rows, so the prices compare directly. Outside the US, where
+TCGplayer is a converted US reference rather than a row, eBay still leads. The
+card page and the QuickView read it; nothing else changes (tags, price rank,
+"Cheapest" chip, headline, sticky bar, JSON-LD).
+
+**Measure.** `buy_click` surface `table_pinned` by retailer, and TCGplayer
+clicks on the network dashboard, a week from release against the week before.
+OP Compare, Gundam, Lorcana and YGO Compare made the same change the same day.
+
