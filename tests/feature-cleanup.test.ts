@@ -18,7 +18,9 @@ const GONE = [
   "src/app/games/card-smash/page.tsx",
   "src/app/games/sealed-bid/page.tsx",
   "src/app/api/games/sealed-bid/route.ts",
-  "src/app/api/discord/interactions/route.ts",
+  // The Discord bot's endpoint came back on 2026-10-27 (owner; DECISIONS.md,
+  // "Discord price bot, back with an owner to switch it on"). The daily post and
+  // the old registration script stay gone.
   "src/app/api/cron/discord-daily/route.ts",
   "scripts/register-discord-commands.ts",
   "src/app/api/listings/route.ts",

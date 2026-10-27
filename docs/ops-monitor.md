@@ -27,7 +27,7 @@ Emails go to `bill.jyang101@gmail.com` (set `OWNER_ALERT_EMAIL` in Vercel and Gi
 | Earnings | Every source the earnings dashboard (`/admin/earnings`) is connected to still answers: Stripe, TCGplayer (Impact), eBay Partner Network, AdSense. Amber when a connected one fails; one not set up yet is only noted. |
 | Payments | Stripe key accepted · Stripe webhook enabled and delivering · a paid **Stores plan** waiting more than two days to be linked to its tracked store (amber: "A store paid for the Stores plan and has no report yet" — link it at `/admin/store-partners`) · a **store partner code** that stops showing within a week unless someone re-tests it at the store's checkout (amber; set its `checked` date in `src/lib/store-partner-deals.ts`) |
 | Email | Resend key accepted · Brevo key accepted |
-| Site & deploys | Five key pages load with prices · latest production build · price import, auction sweep, sealed refresh, store health and daily release jobs (failed or overdue) · required settings present on the site (including `STRIPE_STORE_PRICE_ID` once any Stores plan exists) |
+| Site & deploys | Five key pages load with prices · latest production build · the Discord price bot's endpoint (once set up: it must refuse an unsigned request with 401) · price import, auction sweep, sealed refresh, store health and daily release jobs (failed or overdue) · required settings present on the site (including `STRIPE_STORE_PRICE_ID` once any Stores plan exists) |
 | Inbox | Anything waiting more than two days |
 
 A check that cannot run (a key is not set, an API is unreachable) shows grey and

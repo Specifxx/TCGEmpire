@@ -148,8 +148,11 @@ export function OutboundLink({
    *    (/rising/[token], 2026-09-28);
    *  - `sealed_pinned` / `sealed_row` / `ebay_pinned`: the sealed QuickView's
    *    pinned eBay/TCGplayer rows, its other rows and its pinned eBay search
-   *    row (2026-10-27). */
+   *    row (2026-10-27);
+   *  - `deck_cart`: a published deck's "Buy all on TCGplayer" (one Mass Entry
+   *    cart for the whole list, 2026-10-27). */
   surface?:
+    | "deck_cart"
     | "table"
     | "modal"
     | "ebay_strip"
