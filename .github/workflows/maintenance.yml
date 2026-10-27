@@ -5731,7 +5731,9 @@ jobs:
         env:
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
           DAYS: "90"
-        run: npx tsx scripts/gsc-cannibal.ts
+        run: |
+          npx tsx scripts/gsc-cannibal.ts
+          npx tsx scripts/gsc-sister-coverage.ts
 
       - name: Search Console query report (read-only)
         if: inputs.task == 'gsc-queries'
