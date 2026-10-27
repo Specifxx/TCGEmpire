@@ -46,14 +46,18 @@ async function token(): Promise<string> {
 const locs = (xml: string) => [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map((m) => m[1].replace(/&amp;/g, "&"));
 
 async function sitemapUrls(origin: string): Promise<{ urls: string[]; final: string }> {
-  const r = await fetch(`${origin}/sitemap.xml`, { redirect: "follow", headers: { "User-Agent": "CompareEmpire-coverage" } });
+  const r = await fetch(`${origin}/sitemap.xml`, { redirect: "follow", headers: { "User-Agent": "CompareEmpire-coverage" }, signal: AbortSignal.timeout(30_000) });
   if (!r.ok) throw new Error(`sitemap ${r.status}`);
   const xml = await r.text();
   const final = new URL(r.url).origin;
   if (!/<sitemapindex/i.test(xml)) return { urls: locs(xml), final };
   const urls: string[] = [];
   for (const sm of locs(xml)) {
-    const x = await fetch(sm, { headers: { "User-Agent": "CompareEmpire-coverage" } });
+    const x = await fetch(sm, { headers: { "User-Agent": "CompareEmpire-coverage" }, signal: AbortSignal.timeout(30_000) }).catch(() => null);
+    if (!x) {
+      console.log(`  (${sm}: no answer in 30 s, skipped)`);
+      continue;
+    }
     if (x.ok) urls.push(...locs(await x.text()));
   }
   return { urls, final };
@@ -64,7 +68,9 @@ async function inspect(tok: string, property: string, url: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
     body: JSON.stringify({ inspectionUrl: url, siteUrl: property }),
-  });
+    signal: AbortSignal.timeout(30_000),
+  }).catch(() => null);
+  if (!r) return { state: "no answer in 30 s", crawled: "" };
   if (!r.ok) return { state: `HTTP ${r.status}`, crawled: "" };
   const j = (await r.json()) as { inspectionResult?: { indexStatusResult?: { coverageState?: string; lastCrawlTime?: string } } };
   const s = j.inspectionResult?.indexStatusResult;
@@ -83,6 +89,7 @@ async function main() {
       console.log(`\n=== ${origin}: sitemap not readable (${(e as Error).message})`);
       continue;
     }
+    console.log(`${final}: ${urls.length} sitemap URLs read`);
     const step = Math.max(1, Math.floor(urls.length / SAMPLE));
     const pick = [...new Set([`${final}/`, ...urls.filter((_, i) => i % step === 0).slice(0, SAMPLE)])];
     const tally = new Map<string, string[]>();
