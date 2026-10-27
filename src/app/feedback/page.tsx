@@ -13,13 +13,13 @@ export const metadata: Metadata = {
   // the link graph is intact — never a robots.txt Disallow, which would stop
   // Google reading this tag at all. AdSense remediation § Phase 7.
   robots: { index: false, follow: true },
-  title: "Feedback — Shape RiftCompare (and get Pro)",
+  title: "Rate & review RiftCompare",
   description:
-    "Tell us what would make RiftCompare better. Your first feedback earns free RiftCompare Pro — help us build the best Riftbound price tool.",
+    "Rate RiftCompare and tell us what would make it better — help us build the best Riftbound price tool.",
   alternates: pageAlternates("/feedback"),
   openGraph: {
     title: "Feedback — Shape RiftCompare",
-    description: "Tell us what would make RiftCompare better — your first feedback earns free Pro.",
+    description: "Rate RiftCompare and tell us what would make it better.",
     url: `${SITE_URL}/feedback`,
   },
 };

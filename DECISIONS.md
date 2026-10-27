@@ -20524,3 +20524,9 @@ before this send. Logs carry counts only, never an address.
 **Not sent on other sites.** OP Compare has accounts but no mailer
 configured (its outbox skips: no `RESEND_API_KEY` / `EMAIL_FROM`) and a
 privacy page that promises no announcements; the other sites have no accounts.
+
+The same day the owner turned the /feedback reward off ("Let's just turn the
+reward off"): `FEEDBACK_PREMIUM_DAYS` is a hard 0 in `lib/premium.ts`, not an
+env default, so a leftover Vercel variable cannot bring it back. Every
+reward line on /feedback was already gated on it; the page's metadata and
+the two articles that promised "a week of Pro for feedback" no longer do.
