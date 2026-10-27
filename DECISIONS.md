@@ -20300,3 +20300,34 @@ monitor.
 
 **Not here.** TCGplayer clicks are not stored per day (only eBay's are), so
 the TCGplayer bar is earnings, not clicks.
+
+## One page per set in Google — 2026-10-27
+
+**Why.** The owner: "we've been at position 8 for a couple of months … rethink
+our strategy." A new SPLIT QUERIES section in `scripts/gsc-queries.ts` (query ×
+page, 28 days to 24 Oct) showed Google choosing between our own pages for the
+site's biggest searches. "riftbound radiance card list" (6,134 impressions)
+went 2,866 to `/sets/radiance` (position 8.0) and 2,416 to
+`/sets/radiance/gallery` (6.8), and every variant ("radiance card list",
+"all radiance cards", "radiance riftbound card list"…) split the same way:
+about 9,000 impressions a month, with neither page past position 7. The
+keyword map gave the set page "card list" and the gallery "card gallery";
+Google did not keep to it.
+
+**What.** `/sets/<slug>/gallery` canonicalises to `/sets/<slug>` (og:url too)
+and leaves the sitemap; the page itself is unchanged and still linked from the
+nav and the set page. The set page keeps the hub role: it holds the prices,
+the most internal links and the "price guide" queries. Applied to every set,
+not only Radiance, so `/gallery` alone answers the set-agnostic
+"riftbound card gallery" (split today with the Proving Grounds gallery).
+`tests/set-gallery-canonical.test.ts`.
+
+**The wider rule.** Splitting one topic across sibling pages divides what
+little authority the site has. Before adding a page for a nuance of an
+existing intent, read SPLIT QUERIES; where two of our pages share a query,
+fold one into the other.
+
+**Check.** Re-run `gsc-queries` around 17 November: the card-list queries
+should land on one URL, and its position should move. If the set page ranks
+worse than the gallery did (6.8), reverse it by pointing the canonical the
+other way.

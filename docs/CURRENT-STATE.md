@@ -936,6 +936,10 @@ longer lands on its entry.
   "spoiler", "revealed" or "card list". A comingSoon + hubReady set's gallery
   is in the nav (derived from `SETS`), on `/gallery` as "Upcoming" (kept out
   of the hub's all-sets count), and is the homepage set tile's link. [2026-09-30](../DECISIONS.md#L15834)
+- **One page per set in Google:** `/sets/<slug>/gallery` canonicalises to
+  `/sets/<slug>` and is out of the sitemap; the gallery stays for visitors.
+  Before splitting an intent across two pages, check `gsc-queries`' SPLIT
+  QUERIES section. [2026-10-27](../DECISIONS.md#L20304)
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)
