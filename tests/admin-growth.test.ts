@@ -18,3 +18,21 @@ test("weekCompare gives no comparison for a week with a gap", () => {
   const vals = [...Array(7).fill(1), 2, 2, null, 2, 2, 2, 2, 5];
   assert.deepEqual(weekCompare(days(vals)), { last7: null, prev7: 7 });
 });
+
+test("findSplitQueries keeps queries our own pages share, folding #fragments into their page", async () => {
+  const { findSplitQueries } = await import("../src/lib/ops/gsc-daily");
+  const row = (q: string, u: string, impressions: number, position = 8, clicks = 0) => ({ keys: [q, u], impressions, position, clicks });
+  const out = findSplitQueries([
+    row("card list", "https://riftcompare.com/sets/radiance", 300, 8),
+    row("card list", "https://riftcompare.com/sets/radiance/gallery", 200, 7),
+    row("card list", "https://riftcompare.com/blog/x", 10),
+    row("leaks", "https://riftcompare.com/blog/leaks", 120),
+    row("leaks", "https://riftcompare.com/blog/leaks#deploy", 80),
+    row("small", "https://riftcompare.com/a", 40),
+    row("small", "https://riftcompare.com/b", 40),
+  ]);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].query, "card list");
+  assert.equal(out[0].impr, 510);
+  assert.deepEqual(out[0].pages.map((p) => p.page), ["/sets/radiance", "/sets/radiance/gallery"]);
+});

@@ -12,6 +12,9 @@ explicit link up/down to the primary).
 
 ## Card & champion intent
 
+
+> **2026-10-27:** six posts were folded into one page each and set galleries canonicalise to their set page (DECISIONS.md, "Competing pages folded" and "One page per set in Google"). Rows naming those posts as owners now mean the page they redirect to. Google did not keep to one-intent-per-page splits; prefer one strong page per topic.
+
 | Query pattern | Primary URL | Secondary (different angle) |
 |---|---|---|
 | `<card name> riftbound` | `/card/<slug>` | — |

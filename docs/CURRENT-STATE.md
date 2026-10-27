@@ -938,8 +938,9 @@ longer lands on its entry.
   of the hub's all-sets count), and is the homepage set tile's link. [2026-09-30](../DECISIONS.md#L15834)
 - **One page per set in Google:** `/sets/<slug>/gallery` canonicalises to
   `/sets/<slug>` and is out of the sitemap; the gallery stays for visitors.
-  Before splitting an intent across two pages, check `gsc-queries`' SPLIT
-  QUERIES section. [2026-10-27](../DECISIONS.md#L20325)
+  Six competing posts were folded into one page each the same day. Before
+  splitting an intent across two pages, check "Pages competing in Google" on
+  `/admin/growth` (or `gsc-queries`' SPLIT QUERIES); a pair there gets folded. [2026-10-27](../DECISIONS.md#L20325)
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)

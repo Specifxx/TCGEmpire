@@ -33,7 +33,7 @@ import { ARTICLES } from "../src/lib/articles";
 // underneath them). Set it once, at the end, from a single count.
 //
 // The right long-term value of BUDGET is 0.
-const BUDGET = 1;
+const BUDGET = 0;
 const MAX = 155;
 
 test("no new over-length article descriptions", () => {
@@ -67,7 +67,7 @@ test("no new over-length article descriptions", () => {
 // characters is a bad trade and destroys the attribution for it.
 const TITLE_SUFFIX = " — RiftCompare".length;
 const TITLE_RENDERED_MAX = 60;
-const TITLE_BUDGET = 1;
+const TITLE_BUDGET = 0;
 
 test("no new article titles that get cut in the search result", () => {
   const over = ARTICLES.filter((a) => (a.seoTitle ? a.seoTitle.length : a.title.length + TITLE_SUFFIX) > TITLE_RENDERED_MAX);

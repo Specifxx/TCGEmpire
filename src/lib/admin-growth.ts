@@ -1,5 +1,6 @@
 import { prisma } from "./db";
 import { readClickCounts, type ClickGroup } from "./click-counter";
+import type { SplitQuery } from "./ops/gsc-daily";
 import { loadEarnings } from "./earnings/sources";
 import { addDays, dayIn, toDisplay, SOURCE_LABELS, type EarningsSourceKey } from "./earnings/core";
 
@@ -46,7 +47,7 @@ function series(key: string, label: string, unit: Series["unit"], note: string, 
   return { key, label, unit, note, points, ...weekCompare(points) };
 }
 
-export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource: Series[]; gscUpdatedAt: string | null; errors: string[] }> {
+export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource: Series[]; gscUpdatedAt: string | null; splits: { site: string; queries: SplitQuery[] }[]; errors: string[] }> {
   const today = dayIn(Date.now());
   const days = daysEnding(today, GROWTH_DAYS);
   const since = new Date(Date.now() - (GROWTH_DAYS + 2) * 86400_000);
@@ -55,14 +56,16 @@ export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource
 
   // Google (Search Console's own day; the last two days are not final).
   let gscUpdatedAt: string | null = null;
+  const splits: { site: string; queries: SplitQuery[] }[] = [];
   try {
     const row = await prisma.opsSnapshot.findUnique({ where: { key: "growth:gsc" } });
-    const j = row?.json as { updatedAt?: string; sites?: Record<string, { status: string; days: { d: string; clicks: number }[] }> } | undefined;
+    const j = row?.json as { updatedAt?: string; sites?: Record<string, { status: string; days: { d: string; clicks: number }[]; splits?: SplitQuery[] }> } | undefined;
     gscUpdatedAt = j?.updatedAt ?? null;
     for (const [prop, site] of Object.entries(j?.sites ?? {})) {
       if (site.status !== "ok") continue;
       const m = new Map(site.days.map((x) => [x.d, x.clicks]));
       const name = prop.replace(/^https?:\/\//, "").replace(/^sc-domain:/, "").replace(/\/$/, "");
+      if (site.splits?.length) splits.push({ site: name, queries: site.splits });
       out.push(series(`gsc:${name}`, `Google clicks · ${name}`, "count", "Search Console; the newest 2 days are still filling in.", days, (d) => m.get(d) ?? (d >= addDays(today, -2) ? null : 0)));
     }
     if (!row) errors.push("Google clicks: no snapshot yet (it is stored every 3 hours by the ops monitor).");
@@ -129,5 +132,5 @@ export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource
     errors.push("Earnings: could not load the sources.");
   }
 
-  return { series: out, earningsBySource, gscUpdatedAt, errors };
+  return { series: out, earningsBySource, gscUpdatedAt, splits, errors };
 }

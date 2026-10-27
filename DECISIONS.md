@@ -20370,3 +20370,31 @@ rows. GA4's `buy_click` event is unchanged.
 **Limits.** Anyone can post to the route, so the counts are a trend line,
 never a payout figure. Counting starts on 27 October; earlier bars are empty.
 `tests/click-counter.test.ts`.
+
+## Competing pages folded — 2026-10-27
+
+**Why.** The owner, on "One page per set in Google": "a lot of our pages, if
+they compete with each other, that's not good. We need to merge them … across
+the website." The SPLIT QUERIES report (28 days to 24 Oct) named the pairs.
+
+**Folded** (article removed, 301 to the page that keeps the intent, internal
+links repointed, older redirects that ended on them repointed too):
+
+| Folded | Into | Split it caused |
+|---|---|---|
+| `/blog/riftbound-heartsteel-cards` | `/blog/riftbound-heartsteel-overnumbered-cards` | "heartsteel riftbound", "heartsteel kayn riftbound" |
+| `/blog/riftbound-radiance-leaked-mechanics` | `/blog/riftbound-radiance-spoilers` | "radiance leaks"; the leaks are now printed cards |
+| `/blog/riftbound-radiance-preview-week-one` | `/blog/riftbound-radiance-spoilers` | "riftbound radiance signature(s)", "all cards" |
+| `/blog/riftbound-radiance-card-list` | `/sets/radiance` | "riftbound radiance chase cards", the card-list family |
+| `/blog/riftbound-radiance-biggest-release-since-origins` | `/sets/radiance` | "riftbound radiance release date" (the set page ranked 3.3) |
+| `/blog/every-riftbound-vendetta-card-revealed` | `/sets/vendetta` | "riftbound vendetta card list" |
+
+Left alone: `/` with `/browse` ("riftbound card prices"), both core pages
+with their own jobs; `/guides/every-ahri-card-in-riftbound`, already a 301;
+card pages sharing a card's name, which are different printings.
+
+**Kept honest from now on.** The ops monitor's growth snapshot stores the top
+25 split queries per site, and `/admin/growth` lists them under "Pages
+competing in Google", so a new pair shows up without anyone running a report
+(`findSplitQueries` in `src/lib/ops/gsc-daily.ts`, `tests/admin-growth.test.ts`).
+Ratchets lowered with the folds: no article excerpt or title is over length.

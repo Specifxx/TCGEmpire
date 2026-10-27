@@ -79,7 +79,6 @@ test("the Reddit-shared posts carry the eBay strip mid-article, not at the foot"
     "riftbound-seraphine-radiance-spoiler",
     "riftbound-neeko-blending-in-spoiler",
     "riftbound-radiance-spoilers",
-    "riftbound-radiance-leaked-mechanics",
   ]) {
     const a = getArticle(slug);
     assert.ok(a, slug);

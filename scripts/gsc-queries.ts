@@ -18,6 +18,7 @@
  * Usage: GSC_SA_KEY=... DAYS=28 npx tsx scripts/gsc-queries.ts
  */
 import { createSign } from "node:crypto";
+import { findSplitQueries } from "../src/lib/ops/gsc-daily";
 
 const DAYS = Math.max(7, Math.min(90, Number(process.env.DAYS ?? 28)));
 const DAY = 86_400_000;
@@ -110,33 +111,11 @@ async function main() {
   for (const r of [...pages].sort((a, b) => b.clicks - a.clicks).slice(0, 50)) console.log(line({ ...r, keys: [path(r.keys[0])] }, 70));
 
   // Split queries: query x page, fragments (#heading) folded into their page.
-  const qp = await query(tok, ymd(start), ymd(end), ["query", "page"], 25000);
-  const byQuery = new Map<string, Map<string, { impr: number; clicks: number; posW: number }>>();
-  for (const r of qp) {
-    const [q, u] = r.keys;
-    const pg = path(u.split("#")[0]);
-    const m = byQuery.get(q) ?? new Map();
-    const e = m.get(pg) ?? { impr: 0, clicks: 0, posW: 0 };
-    e.impr += r.impressions;
-    e.clicks += r.clicks;
-    e.posW += r.position * r.impressions;
-    m.set(pg, e);
-    byQuery.set(q, m);
-  }
-  const split = [...byQuery.entries()]
-    .map(([q, m]) => {
-      const total = [...m.values()].reduce((a, e) => a + e.impr, 0);
-      const shares = [...m.entries()].map(([pg, e]) => ({ pg, ...e })).filter((e) => e.impr >= 0.15 * total).sort((a, b) => b.impr - a.impr);
-      return { q, total, shares };
-    })
-    .filter((x) => x.total >= 100 && x.shares.length >= 2)
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 60);
+  const split = findSplitQueries(await query(tok, ymd(start), ymd(end), ["query", "page"], 25000));
   console.log("\nSPLIT QUERIES (100+ impressions, two or more of our pages with 15%+ of them each)");
   for (const x of split) {
-    console.log(`${x.q.slice(0, 60)}  (${x.total} impr.)`);
-    for (const e of x.shares)
-      console.log(`    ${e.pg.slice(0, 66).padEnd(66)} ${String(e.clicks).padStart(5)} ${String(e.impr).padStart(7)}  pos ${(e.posW / e.impr).toFixed(1)}`);
+    console.log(`${x.query.slice(0, 60)}  (${x.impr} impr.)`);
+    for (const e of x.pages) console.log(`    ${e.page.slice(0, 66).padEnd(66)} ${String(e.clicks).padStart(5)} ${String(e.impr).padStart(7)}  pos ${e.pos.toFixed(1)}`);
   }
 
   console.log("\nBLOG AND GUIDE PAGES");
