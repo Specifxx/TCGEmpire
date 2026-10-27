@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { COUNTRIES, normalizeCountry } from "../src/lib/country";
 
@@ -26,10 +26,13 @@ test("/embed states the card widget's real default market", () => {
   assert.match(src, new RegExp(`Defaults to ${COUNTRIES[normalizeCountry(null)].place}\\.`, "i"));
 });
 
-test("the Discord price bot is retired: no endpoint, no install section", () => {
-  // DECISIONS.md, "Ten features nobody used" (2026-10-16): it was never
-  // registered, so its install button never rendered.
-  assert.ok(!existsSync(join(process.cwd(), "src/app/api/discord/interactions/route.ts")));
+test("the Discord price bot: back as a signed endpoint, still no install section on /embed", () => {
+  // Retired 2026-10-16 ("Ten features nobody used": it was never registered),
+  // rebuilt 2026-10-27 at the owner's request with the owner switching it on
+  // (DECISIONS.md, "Discord price bot, back with an owner to switch it on").
+  const route = read("src/app/api/discord/interactions/route.ts");
+  assert.match(route, /verifyDiscordSignature\(/);
+  assert.doesNotMatch(route, /@\/lib\/db/);
   assert.doesNotMatch(read("src/app/embed/page.tsx"), /DISCORD_APP_ID|discord\.com\/oauth2/);
 });
 

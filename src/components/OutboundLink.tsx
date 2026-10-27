@@ -145,8 +145,11 @@ export function OutboundLink({
    *  - `price_table_ebay`: the eBay button on each row of the homepage's
    *    "Riftbound card prices today" table (PriceRowEbay, 2026-09-26);
    *  - `hot40_ebay`: the "Cheapest on eBay" link on a Hot 40 snapshot row
-   *    (/rising/[token], 2026-09-28). */
+   *    (/rising/[token], 2026-09-28);
+   *  - `deck_cart`: a published deck's "Buy all on TCGplayer" (one Mass Entry
+   *    cart for the whole list, 2026-10-27). */
   surface?:
+    | "deck_cart"
     | "table"
     | "modal"
     | "ebay_strip"
