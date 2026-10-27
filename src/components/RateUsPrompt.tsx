@@ -43,6 +43,8 @@ export function RateUsPrompt() {
   const [stars, setStars] = useState(0);
   const [note, setNote] = useState("");
   const [sent, setSent] = useState(false);
+  const [name, setName] = useState("");
+  const [consent, setConsent] = useState(false); // never pre-ticked: consent is opt-in
 
   useEffect(() => {
     const now = Date.now();
@@ -78,6 +80,22 @@ export function RateUsPrompt() {
 
   const sendNote = () => {
     if (note.trim().length >= 10) void post({ message: note.trim() });
+    setSent(true);
+    setTimeout(() => setOpen(false), 1200);
+  };
+
+  // A 4- or 5-star rater may add a few words for the site to show (2026-10-27:
+  // reviews on the homepage and the Pro page once 100 people have rated). Its
+  // own source, "rating-review", so its stars are not counted twice; shown
+  // only if they tick consent AND an admin approves it (lib/reviews.ts).
+  const sendReview = () => {
+    if (note.trim().length >= 10) {
+      void fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: stars, message: note.trim(), source: "rating-review", page: path, consentPublic: consent, displayName: consent ? name.trim() : "" }),
+      }).catch(() => null);
+    }
     setSent(true);
     setTimeout(() => setOpen(false), 1200);
   };
@@ -146,10 +164,40 @@ export function RateUsPrompt() {
               {"★".repeat(stars)}
             </div>
             <h2 className="mt-2 font-display text-xl font-extrabold text-white">Thank you!</h2>
-            <p className="mt-1 text-sm text-slate-400">Your rating is saved.</p>
-            <button type="button" onClick={() => setOpen(false)} className="btn-primary mt-4">
-              Back to the site
-            </button>
+            <p className="mt-1 text-sm text-slate-400">Your rating is saved. Want to tell other players why?</p>
+            {sent ? (
+              <p className="mt-4 text-sm font-semibold text-up">Thank you, that really helps.</p>
+            ) : (
+              <>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  rows={3}
+                  maxLength={1000}
+                  className="mt-4 w-full rounded-lg border border-ink-700 bg-ink-900 p-2 text-sm text-white"
+                  placeholder="What do you use RiftCompare for? (optional)"
+                />
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  maxLength={60}
+                  className="mt-2 w-full rounded-lg border border-ink-700 bg-ink-900 p-2 text-sm text-white"
+                  placeholder="Name to show (optional)"
+                />
+                <label className="mt-2 flex items-start gap-2 text-left text-xs text-slate-400">
+                  <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5" />
+                  RiftCompare may show this on the site.
+                </label>
+                <div className="mt-3 flex items-center justify-center gap-3">
+                  <button type="button" onClick={sendReview} className="btn-primary">
+                    {note.trim().length >= 10 ? "Send" : "Done"}
+                  </button>
+                  <button type="button" onClick={() => setOpen(false)} className="text-xs text-slate-500 hover:underline">
+                    Back to the site
+                  </button>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

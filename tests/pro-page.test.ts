@@ -55,17 +55,27 @@ test("the prompt is mounted site-wide, closes only through its own buttons, and 
   assert.match(c, />\s*Not now\s*</, "but Not now is always there");
   assert.match(c, /source: "rating"/);
   const route = read("src/app/api/feedback/route.ts");
-  assert.match(route, /"rating"\]\)/, "the API accepts the source");
-  assert.match(route, /source !== "rating" && feedbackPremiumActive\(\)/, "a star tap earns no free Pro");
+  assert.match(route, /"rating", "rating-review"\]\)/, "the API accepts both sources");
+  assert.match(route, /!source\.startsWith\("rating"\) && feedbackPremiumActive\(\)/, "a star tap or its review earns no free Pro");
 });
 
 test("the rating shown is real and only shown once there are enough", () => {
-  assert.equal(ratingToShow(4.8, MIN_RATINGS_TO_SHOW - 1), null);
-  assert.equal(ratingToShow(null, 50), null);
-  assert.deepEqual(ratingToShow(4.66, 12), { average: 4.7, count: 12 });
+  // 100 since 2026-10-27 (owner: "once we have like 100 people provide us feedback").
+  assert.equal(MIN_RATINGS_TO_SHOW, 100);
+  assert.equal(ratingToShow(4.8, 99), null);
+  assert.equal(ratingToShow(null, 500), null);
+  assert.deepEqual(ratingToShow(4.66, 120), { average: 4.7, count: 120 });
   assert.equal(ratingLine({ average: 4.7, count: 1234 }), "4.7 rating · 1,234 ratings");
   const landing = read("src/components/premium/ProLanding.tsx");
-  assert.match(landing, /\{rating && \(/, "no rating line without a rating");
+  assert.match(landing, /<SiteRatingBadge rating=\{rating\}/);
+  assert.match(landing, /\{rating && \(\s*<div className="pt-16">\s*<ReviewsSection \/>/, "reviews only once the rating is shown");
+  const badge = read("src/components/SiteRatingBadge.tsx");
+  assert.match(badge, /if \(!rating\) return null;/, "no rating line without a rating");
+  assert.doesNotMatch(badge, /itemprop|aggregateRating|application\/ld\+json/i, "plain HTML, never review markup");
+  assert.match(read("src/components/home/CinematicHero.tsx"), /<SiteRatingBadge rating=\{rating\}/, "the homepage hero shows it too");
+  assert.match(read("src/lib/site-rating.ts"), /NOT: \{ source: "rating-review" \}/, "a review's stars are not counted twice");
+  const prompt = read("src/components/RateUsPrompt.tsx");
+  assert.match(prompt, /useState\(false\); \/\/ never pre-ticked/, "consent to show a review is opt-in");
   assert.doesNotMatch(landing, /\b(100,000|4\.8)\b/, "no borrowed or invented rating");
   assert.doesNotMatch(read("src/app/premium/page.tsx"), /aggregateRating/, "never in JSON-LD");
 });

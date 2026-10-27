@@ -20045,3 +20045,32 @@ stay). The plan is the one from "AdSense off, Journey on articles only": once
 Mediavine approves the site, its ads run on blog and guide articles only,
 never on card, set, sealed or price pages. Deployed immediately at the owner's
 request.
+
+## Site rating at 100 ratings, in the homepage hero and on Pro — 2026-10-27
+
+The owner: "once we have like 100 people provide us feedback, like we can put
+the feedback on the website in … the best positions possible", the Pro page
+included, the way Collectr shows its rating.
+
+**What.**
+- `MIN_RATINGS_TO_SHOW` is 100 (was 10, `lib/site-rating.ts`). Below it nothing
+  shows anywhere.
+- One component, `SiteRatingBadge` ("★★★★★ 4.7 rating · 123 ratings from
+  players"), sits under the homepage hero's promise and under the Pro page's
+  Upgrade button. It is plain HTML, never review markup or JSON-LD (a site's own
+  rating is self-serving under Google's review-snippet rules).
+- Once the rating shows, the Pro page also shows `ReviewsSection` between the
+  features and the pricing, as Collectr does. It is the same real, consented,
+  admin-approved reviews as the homepage (`lib/reviews.ts`), with nothing seeded.
+- Reviews need words, and the rate prompt only collected stars. So a 4- or
+  5-star rater is now offered a short optional box: what they use the site for,
+  a name to show, and an opt-in (never pre-ticked) "RiftCompare may show this"
+  box.
+  - It posts as source `rating-review`, which earns no free Pro and is left out
+    of the average, because its stars repeat the rating already counted.
+  - It is published only after an admin approves it in `/admin/messages`.
+  - Low ratings still get "what should we fix", which is never shown publicly.
+
+**Cost.** The homepage reads one memoised aggregate per six-hour render
+(`getSiteRating`, globalThis memo, no `unstable_cache`). The reviews query is
+the one the homepage already makes.

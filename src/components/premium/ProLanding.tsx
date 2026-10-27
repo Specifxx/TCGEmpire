@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ProPricePicker, type ProCtaProps, type ProPriceFigures } from "./ProPricePicker";
-import { ratingLine, type SiteRating } from "@/lib/site-rating";
+import { type SiteRating } from "@/lib/site-rating";
+import { SiteRatingBadge } from "@/components/SiteRatingBadge";
+import { ReviewsSection } from "@/components/ReviewsSection";
 import { FREE_HISTORY_DAYS } from "@/lib/history-access";
 import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { DECK_LINE_CAP, FREE_BULK_LINES } from "@/lib/deck";
@@ -65,16 +67,6 @@ const PRO_ROWS = [
   `Bulk price ${DECK_LINE_CAP} lines`,
   "No ads",
 ];
-
-function Stars({ average }: { average: number }) {
-  const full = Math.round(average);
-  return (
-    <span aria-hidden className="tracking-tight text-gold">
-      {"★".repeat(full)}
-      <span className="text-ink-600">{"★".repeat(5 - full)}</span>
-    </span>
-  );
-}
 
 /** An example of what Pro shows: labelled, illustrative, no claim about anyone's binder. */
 function ExamplePanel() {
@@ -150,12 +142,7 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
               See all features
             </a>
           </p>
-          {rating && (
-            <p className="mt-3 flex max-w-md items-center justify-center gap-2 text-sm text-slate-300" data-site-rating>
-              <Stars average={rating.average} />
-              <span>{ratingLine(rating)}</span>
-            </p>
-          )}
+          <SiteRatingBadge rating={rating} className="mt-3 max-w-md" />
         </div>
         <ExamplePanel />
       </section>
@@ -176,6 +163,15 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
           ))}
         </div>
       </section>
+
+      {/* Real, consented, approved reviews, once the rating itself is shown
+          (100+ ratings): Collectr puts its reviews between the features and
+          the price. ReviewsSection renders nothing below its own minimum. */}
+      {rating && (
+        <div className="pt-16">
+          <ReviewsSection />
+        </div>
+      )}
 
       <section id="pricing" className="scroll-mt-header pt-16 text-center" aria-labelledby="pro-pricing">
         <div className="text-xs font-extrabold uppercase tracking-widest text-gold">Pricing</div>

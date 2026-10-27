@@ -32,7 +32,9 @@ const MAX_EMAIL = 200;
 const MAX_PAGE = 200;
 
 // "rating": the rate prompt (components/RateUsPrompt.tsx, 2026-10-26), stars only.
-const SOURCES = new Set(["page", "widget", "riftle", "rating"]);
+// "rating-review": the few words a 4- or 5-star rater may add after rating
+// (2026-10-27); its stars repeat the rating row, so lib/site-rating.ts skips it.
+const SOURCES = new Set(["page", "widget", "riftle", "rating", "rating-review"]);
 
 // Deliberately loose: this gates "should we bother storing a reply address",
 // not "is this person real". An over-strict pattern silently drops valid
@@ -141,7 +143,7 @@ export async function POST(req: Request) {
     let granted = false;
     let premiumUntil: Date | null = null;
     // A one-tap star rating is not the written feedback the reward is for.
-    if (user && prior === 0 && source !== "rating" && feedbackPremiumActive()) {
+    if (user && prior === 0 && !source.startsWith("rating") && feedbackPremiumActive()) {
       premiumUntil = await grantPremiumDays(user.id, FEEDBACK_PREMIUM_DAYS);
       granted = !!premiumUntil;
     }
