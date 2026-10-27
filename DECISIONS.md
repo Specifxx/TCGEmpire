@@ -20298,8 +20298,8 @@ daily clicks in the `OpsSnapshot` row `growth:gsc`; the page reads only that
 row. The script prints no numbers (public Actions logs) and never fails the
 monitor.
 
-**Not here.** TCGplayer clicks are not stored per day (only eBay's are), so
-the TCGplayer bar is earnings, not clicks.
+**Clicks.** See "Click counts by day" below: `ClickEvent` had not been
+written since its beacon was switched off, so clicks come from day counters.
 
 ## Stripe webhook failures were dead sister-site endpoints, not Pro (2026-10-27)
 
@@ -20352,3 +20352,21 @@ fold one into the other.
 should land on one URL, and its position should move. If the set page ranks
 worse than the gallery did (6.8), reverse it by pointing the canonical the
 other way.
+
+## Click counts by day — 2026-10-27
+
+**Why.** The owner wants to see people clicking the eBay and TCGplayer links,
+day by day, next to what they earn. The only click store, `ClickEvent`, had
+been switched off for Neon transfer (`/api/click` answered 204 and wrote
+nothing), so `/admin/growth` showed zero.
+
+**What.** `OutboundLink` sends a beacon to `/api/click?r=<retailer>`, which
+increments one `Counter` row per Sydney day and network
+(`click:<day>:ebay|tcgplayer|store`, `src/lib/click-counter.ts`). One small
+upsert per click, no read on the request path; at a few hundred clicks a day
+that is well under a megabyte of transfer. `/admin/growth` reads at most 500
+rows. GA4's `buy_click` event is unchanged.
+
+**Limits.** Anyone can post to the route, so the counts are a trend line,
+never a payout figure. Counting starts on 27 October; earlier bars are empty.
+`tests/click-counter.test.ts`.

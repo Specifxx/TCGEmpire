@@ -202,6 +202,10 @@ export function OutboundLink({
       entry: readEntrySource(),
       transport_type: "beacon",
     });
+    // Our own daily click count per network for /admin/growth (lib/click-counter.ts).
+    try {
+      navigator.sendBeacon?.(`/api/click?r=${encodeURIComponent(retailer)}`);
+    } catch {}
     // Paid Google Ads conversion tracking (lib/google-ads.ts) — a no-op unless a
     // conversion action is configured in env, and gated by the same Consent Mode
     // v2 state GA4 already runs under (see GoogleAnalytics.tsx). Reports the same

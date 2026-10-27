@@ -1,5 +1,5 @@
 import { prisma } from "./db";
-import { dbHistory } from "./db-history";
+import { readClickCounts, type ClickGroup } from "./click-counter";
 import { loadEarnings } from "./earnings/sources";
 import { addDays, dayIn, toDisplay, SOURCE_LABELS, type EarningsSourceKey } from "./earnings/core";
 
@@ -96,17 +96,17 @@ export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource
     errors.push("Card views: could not read DemandSnapshot.");
   }
 
-  // Outbound eBay clicks, per Sydney day.
+  // Outbound clicks per Sydney day and network, counted by /api/click since 27 Oct 2026.
   try {
-    const rows = await dbHistory.$queryRaw<{ d: string; n: bigint }[]>`
-      SELECT to_char(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Australia/Sydney', 'YYYY-MM-DD') AS d, count(*) AS n
-      FROM "ClickEvent"
-      WHERE "createdAt" >= ${since} AND retailer LIKE 'ebay%'
-      GROUP BY 1`;
-    const m = new Map(rows.map((r) => [r.d, Number(r.n)]));
-    out.push(series("ebay-clicks", "eBay link clicks (this site)", "count", "Clicks on RiftCompare's own eBay links.", days, (d) => m.get(d) ?? 0));
+    const counts = await readClickCounts(days[0]);
+    const first = [...counts.keys()].sort()[0] ?? today;
+    const get = (g: ClickGroup) => (d: string) => (d < first ? null : counts.get(d)?.[g] ?? 0);
+    const note = "Counted by RiftCompare since 27 Oct 2026; the network's own dashboard can differ a little.";
+    out.push(series("clicks-ebay", "eBay link clicks", "count", note, days, get("ebay")));
+    out.push(series("clicks-tcgplayer", "TCGplayer link clicks", "count", note, days, get("tcgplayer")));
+    out.push(series("clicks-store", "Store link clicks", "count", note, days, get("store")));
   } catch {
-    errors.push("eBay clicks: could not read ClickEvent.");
+    errors.push("Clicks: could not read the click counters.");
   }
 
   // Earnings per day, every source, in AUD.
