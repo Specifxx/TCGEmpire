@@ -209,6 +209,12 @@ export function HomeSections({
         storeWord={storeWord}
       />
 
+      {/* Real, consented, approved reviews — renders NOTHING when there are
+          none (see ReviewsSection); no placeholder or seeded example. Moved up
+          from the bottom of the page on 2026-10-27 (owner: "feedback and trust
+          is very important … display it and be transparent"). */}
+      <ReviewsSection />
+
       {/* eBay Picks — the newest set's chase cards with their cheapest live
           listing, rather than a generic banner. Held the top slot from
           2026-09-17 (where it replaced the removed Market Pulse) until
@@ -359,12 +365,6 @@ export function HomeSections({
           that the owner placed above this whole component, directly under the
           price table — see its header and "Blog and tools, joined up" in
           DECISIONS.md. */}
-
-      {/* Real, consented, approved reviews — renders NOTHING until there are at
-          least a few genuine ones (see ReviewsSection). No placeholder state on
-          purpose: an empty "reviews" block, or a seeded example, would be worse
-          than no block at all. */}
-      <ReviewsSection />
 
       {/* The homepage's one account-shaped slot: AccountStrip pitches the free
           tier and hides itself for members; WelcomeBack is its signed-in
