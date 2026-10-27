@@ -850,7 +850,7 @@ function newsletterFooter(unsubUrl: string): string {
 function announcementFooter(unsubUrl: string): string {
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
     You're getting this because you have a ${SITE_NAME} account. This is a one-off product announcement, not a subscription.<br/>
-    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Don't email me announcements</a> · RiftCompare · Riftbound card price comparison.
+    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Don't email me announcements</a> · Sent by RiftCompare (riftcompare.com), Riftbound card price comparison · <a href="${SITE_URL}/contact" style="color:#9aa4b2;text-decoration:underline">Contact us</a>.
   </td></tr>`;
 }
 
@@ -1449,7 +1449,7 @@ export function escapeHtml(s: string): string {
 // checkout surface (lib/premium-surface.ts) that /admin/premium and
 // scripts/funnel-report.ts group by; the utm_* trio is for GA4.
 export const PRICE_DROP_SRC = "price-drop-email" as const;
-export const PRICE_DROP_CAMPAIGN = "trial-14-2026-10";
+export const PRICE_DROP_CAMPAIGN = "feedback-pro-2026-10";
 const PRICE_DROP_UTM = `utm_source=email&utm_medium=email&utm_campaign=${PRICE_DROP_CAMPAIGN}`;
 
 /** The four subscribe links, each opening checkout for exactly that tier and plan. */
@@ -1475,19 +1475,30 @@ export interface PremiumOfferEmailOpts {
   via?: "brevo" | "resend";
 }
 
-// 2026-10-12: the campaign became the free-trial promotion (owner: "the price
-// drop email should be a premium promotion email like subscribe now and get 14
-// days free"). The function names stay (the admin console, its API route and
-// the audience code all read them); what it says is the trial. Same honesty
-// rules as above, plus: it says a card is required and what the plan costs
-// after the trial, because a free trial that converts is a charge the reader
-// must see before they start it. lib/premium-offer.ts refuses to send it while
-// the trial is off or costs money.
+// 2026-10-27: the campaign is the FEEDBACK + PRO email to registered accounts
+// (owner: "send an email to those accounts as well to ask them for feedback,
+// like, are you enjoying the site … consider joining the pro plan"). The
+// function names stay (the admin console, its API route and the audience code
+// all read them). It leads with a one-tap star rating — each star opens
+// /feedback with that rating picked — and then states Pro at its own prices.
+// It never mentions the /feedback page's Pro-for-feedback reward: a review
+// asked for with a reward is an incentivised review, which consumer law (FTC
+// 2024 rule, ACCC) does not allow us to solicit and then show unlabelled. There is no trial (PREMIUM_TRIAL_DAYS 0 since 2026-10-26), so
+// the email promises none. No eBay or other affiliate link: every link is our
+// own page (eBay Partner Network does not allow its links in email without
+// approval).
+export const FEEDBACK_EMAIL_SRC = "feedback-email" as const;
+
 export function premiumOfferSubject(): string {
-  return `Try ${SITE_NAME} Pro free for ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)}`;
+  return `How's ${SITE_NAME} working for you?`;
 }
 
-// One tier's price line: "$4.99/month, or $3.33/mo billed yearly ($39.99 a year)".
+/** One star link per rating, 1–5, each opening /feedback with that rating picked. */
+export function feedbackStarLinks(): string[] {
+  return [1, 2, 3, 4, 5].map((n) => `${SITE_URL}/feedback?rating=${n}&src=${FEEDBACK_EMAIL_SRC}&${PRICE_DROP_UTM}`);
+}
+
+// One tier's price line: "$6.99/month, or $3.99/mo billed yearly ($47.88 a year)".
 function priceDropTierLine(tier: PremiumTierKey): string {
   const monthly = `${tierMonthlyAmount(tier)}/${PREMIUM_PRICE_PERIOD}`;
   const effective = premiumEffectiveMonthly(tier);
@@ -1510,72 +1521,74 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
   const greeting = first ? `Hi ${escapeHtml(first)},` : "Hi there,";
   const greetingText = first ? `Hi ${first},` : "Hi there,";
   const links = priceDropLinks();
-  const days = trialDaysPhrase(PREMIUM_TRIAL_DAYS);
+  const stars = feedbackStarLinks();
   const subject = premiumOfferSubject();
-  const heading = `Subscribe now and get ${days} free`;
+  const heading = subject;
   const premiumLine = priceDropTierLine("premium");
-  const plusLine = priceDropTierLine("plus");
-  const hasAnnual = (t: PremiumTierKey) => !!premiumEffectiveMonthly(t);
+  const hasAnnual = !!premiumEffectiveMonthly("premium");
 
   const btn = (url: string, label: string, primary: boolean) =>
     primary
       ? `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;background:#ef7d00;color:#1e3043;font-weight:700;font-size:13px;text-decoration:none;padding:10px 16px;border-radius:10px">${label}</a>`
       : `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;border:1px solid #ef7d00;color:#f29733;font-weight:700;font-size:13px;text-decoration:none;padding:9px 15px;border-radius:10px">${label}</a>`;
-
-  const tierBlock = (tier: PremiumTierKey, line: string, includes: string, annualUrl: string, monthlyUrl: string) => `
-    <tr><td style="padding:8px 32px 8px">
-      <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px">
-        <div style="font-size:16px;font-weight:800;color:#fff">${TIER_NAMES[tier]}</div>
-        <div style="margin-top:4px;font-size:14px;line-height:1.6;color:#e6ebf2">Free for ${days}, then ${line}</div>
-        <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#b8c0cc">${escapeHtml(includes)}</div>
-        <div style="margin-top:10px">
-          ${btn(monthlyUrl, `Start ${days} free · ${TIER_NAMES[tier]}`, true)}
-          ${hasAnnual(tier) ? btn(annualUrl, `${days} free, then yearly (${tierAnnualAmount(tier)})`, false) : ""}
-        </div>
-      </div>
-    </td></tr>`;
+  const starRow = stars
+    .map(
+      (url, i) =>
+        `<a href="${url}" title="${i + 1} star${i ? "s" : ""}" style="display:inline-block;margin:0 4px 0 0;padding:6px 9px;border:1px solid #233047;border-radius:8px;color:#f5b301;font-size:20px;line-height:1;text-decoration:none">${"★".repeat(i + 1)}</a>`,
+    )
+    .join("");
 
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${greeting}</td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You can now try ${SITE_NAME} ${PLUS_ON_SALE ? "Plus or Pro" : "Pro"} <strong style="color:#fff">free for ${days}</strong>. Watch the cards
-      you want and we email you the store when one hits your price, see every deal instead of the top three, and
-      price a whole deck at the cheapest stores. Price comparison, your watchlist and your portfolio stay free either way.
+      You made a ${SITE_NAME} account, so you're one of the people we build it for. We'd love to know how it's going:
+      is it helping you find cheaper Riftbound cards, and what's missing or annoying?
     </td></tr>
-    ${tierBlock("premium", premiumLine, PRICE_DROP_PREMIUM_INCLUDES, links.premiumAnnual, links.premiumMonthly)}
-    ${PLUS_ON_SALE ? tierBlock("plus", plusLine, PRICE_DROP_PLUS_INCLUDES, links.plusAnnual, links.plusMonthly) : ""}
-    <tr><td style="padding:8px 32px 4px;font-size:13px;line-height:1.6;color:#9aa4b2">
-      A card is required to start. Nothing is charged for ${days}; we email you a day or two before the trial ends,
-      and you can cancel from your account page in a couple of clicks before then. One trial per account.
-      <a href="${links.compare}" style="color:#f29733;text-decoration:underline">${PLUS_ON_SALE ? "Compare the plans side by side" : "See everything Pro includes"}</a>.
+    <tr><td style="padding:10px 32px 4px">
+      <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px">How would you rate ${SITE_NAME}?</div>
+      ${starRow}
     </td></tr>
-    <tr><td style="padding:0 32px 16px"></td></tr>`;
+    <tr><td style="padding:6px 32px 8px;font-size:13px;line-height:1.6;color:#9aa4b2">
+      Tap a star, then add a line about what to fix or build next if you like. We read every one.
+    </td></tr>
+    <tr><td style="padding:8px 32px 8px">
+      <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px">
+        <div style="font-size:16px;font-weight:800;color:#fff">Want more from it? Try ${TIER_NAMES.premium}</div>
+        <div style="margin-top:4px;font-size:14px;line-height:1.6;color:#e6ebf2">${premiumLine}</div>
+        <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#b8c0cc">${escapeHtml(PRICE_DROP_PREMIUM_INCLUDES)}</div>
+        <div style="margin-top:10px">
+          ${btn(links.premiumMonthly, `Get ${TIER_NAMES.premium} monthly`, true)}
+          ${hasAnnual ? btn(links.premiumAnnual, `Get ${TIER_NAMES.premium} yearly (${tierAnnualAmount("premium")})`, false) : ""}
+        </div>
+      </div>
+    </td></tr>
+    <tr><td style="padding:8px 32px 16px;font-size:13px;line-height:1.6;color:#9aa4b2">
+      Cancel from your account page any time. Price comparison, your watchlist and your portfolio stay free either way.
+      <a href="${links.compare}" style="color:#f29733;text-decoration:underline">See everything ${TIER_NAMES.premium} includes</a>.
+    </td></tr>`;
 
   const text = [
     greetingText,
     "",
-    `You can now try ${SITE_NAME} ${PLUS_ON_SALE ? "Plus or Pro" : "Pro"} free for ${days}. Price comparison, your watchlist and your portfolio stay free either way.`,
+    `You made a ${SITE_NAME} account, so you're one of the people we build it for. We'd love to know how it's going: is it helping you find cheaper Riftbound cards, and what's missing or annoying?`,
     "",
-    `PREMIUM: free for ${days}, then ${premiumLine}`,
+    `How would you rate ${SITE_NAME}? Pick a star:`,
+    ...stars.map((url, i) => `${i + 1} star${i ? "s" : ""}: ${url}`),
+    "",
+    "Add a line about what to fix or build next if you like. We read every one.",
+    "",
+    `WANT MORE FROM IT? TRY ${TIER_NAMES.premium.toUpperCase()}: ${premiumLine}`,
     PRICE_DROP_PREMIUM_INCLUDES,
-    `Start ${days} free (monthly): ${links.premiumMonthly}`,
-    ...(hasAnnual("premium") ? [`Start ${days} free (yearly, ${tierAnnualAmount("premium")}): ${links.premiumAnnual}`] : []),
-    ...(PLUS_ON_SALE
-      ? [
-          "",
-          `PLUS: free for ${days}, then ${plusLine}`,
-          PRICE_DROP_PLUS_INCLUDES,
-          `Start ${days} free (monthly): ${links.plusMonthly}`,
-          ...(hasAnnual("plus") ? [`Start ${days} free (yearly, ${tierAnnualAmount("plus")}): ${links.plusAnnual}`] : []),
-        ]
-      : []),
+    `Get ${TIER_NAMES.premium} monthly: ${links.premiumMonthly}`,
+    ...(hasAnnual ? [`Get ${TIER_NAMES.premium} yearly (${tierAnnualAmount("premium")}): ${links.premiumAnnual}`] : []),
     "",
-    `A card is required to start. Nothing is charged for ${days}; we email you a day or two before the trial ends, and you can cancel from your account page before then. One trial per account.`,
-    `${PLUS_ON_SALE ? "Compare the plans" : "See everything Pro includes"}: ${links.compare}`,
+    "Cancel from your account page any time. Price comparison, your watchlist and your portfolio stay free either way.",
+    `See everything ${TIER_NAMES.premium} includes: ${links.compare}`,
     "",
     "—",
     `You're getting this because you have a ${SITE_NAME} account. This is a one-off product announcement, not a subscription.`,
     `Don't email me announcements: ${opts.unsubUrl}`,
+    `Sent by ${SITE_NAME}, ${SITE_URL}. Questions: ${SITE_URL}/contact`,
   ].join("\n");
 
   const oneClick = opts.oneClickUrl ?? opts.unsubUrl;
@@ -1583,9 +1596,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
     "List-Unsubscribe": `<${oneClick}>`,
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
   };
-  const preheader = PLUS_ON_SALE
-    ? `${days} free, then Pro ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD} or Plus ${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`
-    : `${days} free, then Pro ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
+  const preheader = `Rate us in one tap, and a look at ${TIER_NAMES.premium}: ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}, cancel any time`;
   return { subject, heading, preheader, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl), preheader), text, headers };
 }
 

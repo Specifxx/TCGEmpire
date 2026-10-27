@@ -20538,3 +20538,44 @@ feed and posts its top five cards to the channel in `TELEGRAM_CHANNEL_ID` with
 `TELEGRAM_BOT_TOKEN`; a green no-op until both exist, a refused post fails
 the run. Links are our card pages (utm_source=telegram), so a post carries no
 affiliate link and needs no `#ad`. Watched in `JOBS` (ops monitor).
+
+## Feedback and Pro email to registered accounts — 2026-10-27
+
+The owner asked to email the ~550 registered accounts "to ask them for
+feedback, like, are you enjoying the site … consider going to like joining
+the pro plan". The 14-day-trial promotion that `/admin/premium-offer` sent
+since 2026-10-12 was no longer true (the trial was removed on 2026-10-26), so
+the same machinery was repurposed a third time rather than built again.
+
+**What.** Campaign `feedback-pro-2026-10` (`PREMIUM_OFFER_CAMPAIGN`,
+`PRICE_DROP_CAMPAIGN`), stamp `User.priceDropEmailSentAt` from
+`PREMIUM_OFFER_SINCE` 2026-10-27, so everyone the trial email reached gets this
+one once. Subject "How's RiftCompare working for you?". It leads with five
+star links, each opening `/feedback?rating=N` with that rating picked
+(`/feedback` now reads `?rating=`). It does NOT mention the page's
+Pro-for-feedback reward: a review solicited with a reward is an incentivised
+review, and the FTC's 2024 rule and the ACCC do not allow soliciting one and
+showing it unlabelled (reviews show publicly by default). Then Pro at the `lib/site.ts` prices with a
+monthly and a yearly checkout button. Audience: every account not currently
+paying (`isPremium`), not an admin, not a seed persona, not opted out of
+announcements. The trial-only exclusions (had a trial, paid before, the
+refusal to send while the trial is not free) are gone with the trial.
+
+**Rules it keeps.** Every link is riftcompare.com: no eBay or TCGplayer link
+(eBay Partner Network does not allow its links in email without approval;
+`tests/premium-offer.test.ts` pins it). Brevo, batches of 90 (a hand-typed
+limit up to 300), one-click `List-Unsubscribe` into `AnnouncementOptOut`.
+The footer names the sender and links `/contact` (Australia's Spam Act wants
+an identified sender with contact details beside the opt-out). Consent is the
+privacy page's "occasional announcements to registered accounts", in force
+before this send. Logs carry counts only, never an address.
+
+**Not sent on other sites.** OP Compare has accounts but no mailer
+configured (its outbox skips: no `RESEND_API_KEY` / `EMAIL_FROM`) and a
+privacy page that promises no announcements; the other sites have no accounts.
+
+The same day the owner turned the /feedback reward off ("Let's just turn the
+reward off"): `FEEDBACK_PREMIUM_DAYS` is a hard 0 in `lib/premium.ts`, not an
+env default, so a leftover Vercel variable cannot bring it back. Every
+reward line on /feedback was already gated on it; the page's metadata and
+the two articles that promised "a week of Pro for feedback" no longer do.

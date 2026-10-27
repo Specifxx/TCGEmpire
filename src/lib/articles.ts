@@ -11632,7 +11632,6 @@ We built the price tracking, the price history, and the alerts specifically beca
       `**Pro watches prices for you.** No ads, an unlimited watchlist and portfolio, every deal in Deal Finder and Rising Cards, and target-price alerts and sealed watches with no limit: an email when a card reaches your price, or when a box is back in stock, at RRP, or at your price (checked ${SEALED_CHECK_CADENCE}). With no card limit, a whole set fits in the set checklist.`,
       `**Pro also plans the order.** Best Basket's store-by-store plan for a deck, a list or the rest of a set (which stores, with each store's postage counted), at the minimum condition you set, and a deck price watch: save up to ${DECK_WATCH_LIMIT} lists and we re-price each one delivered after every price update and email you when the total reaches your price. Also Buy this list, and Demand Finder.`,
       `**A free account is genuinely useful**: an unlimited watchlist with new-low emails, an unlimited portfolio with a set checklist showing what each set is missing and the cheapest listing to finish it, the top 3 of each deal list and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month.`,
-      "**You can also get a week of Pro for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
     browseCta: {
       href: "/premium",
@@ -11817,14 +11816,13 @@ Nothing here hides behind a menu. The heart on a card is the watch; a target is 
 
 The Value Finder, Rising Sealed, the Bulk Pricer and the Condition Impact Calculator used to be listed here. They've left the paid tiers, and their old links now go to the free pages that carry what was useful in them: paste-a-list pricing is part of the free [deck builder](/deck), sealed products keep their live prices on [sealed](/sealed), and the [condition guide](/guides/riftbound-card-condition-guide) explains what each grade does to a price. Each was either unreliable with the price history we have, free elsewhere on the site already, or the same answer for every card. Fewer tools, each one worth paying for. Demand Finder left the same morning and came back that day as a Pro tool, with its counter hardened against inflated counts.
 
-## Two free ways to get Pro without paying
+## A free way to get Pro without paying
 
 You don't have to subscribe to try it:
 
 - **[Invite a friend](/profile)** — share your referral link, and every friend who creates a free account earns you **3 days of Pro**, free.
-- **[Submit feedback once](/feedback)** — a bug report, a feature request, anything genuinely useful — and it unlocks a full **week of Pro, free**, no card required either.
 
-Neither of these requires ever entering a payment method. If Pro turns out to not be for you, both simply expire with nothing charged.
+It never asks for a payment method. If Pro turns out to not be for you, the days simply expire with nothing charged.
 
 ## Who should actually pay for it
 

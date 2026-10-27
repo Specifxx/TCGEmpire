@@ -228,9 +228,10 @@ longer lands on its entry.
 - **Free 14-day trial (2026-10-12; replaces the $1 first month below):**
   `PREMIUM_TRIAL_DAYS` 14 and `PREMIUM_TRIAL_FEE_CENTS` 0 by default, card
   required, prices unchanged. Leave price, trial and pitch alone until two
-  14-day cohorts have matured (late November). `/admin/premium-offer` sends the
-  "Subscribe now and get 14 days free" email to accounts that can still get a
-  trial, and refuses while the trial is not free. `/premium/welcome` leads with
+  14-day cohorts have matured (late November). Since 2026-10-27 `/admin/premium-offer` sends
+  the feedback + Pro email instead (one-tap star rating, then Pro at its own
+  prices, no trial, no affiliate links) to every non-paying account.
+  [2026-10-27](../DECISIONS.md#feedback-and-pro-email-to-registered-accounts--2026-10-27) `/premium/welcome` leads with
   watching a card until the account has one. [2026-10-12](../DECISIONS.md#L16934)
 - **Superseded 2026-10-12, kept for its mechanics: the $1 first month, no intro (2026-09-30, owner: "Can we do $1 free trial for both
   pro and premium please? And the trial is for the first month?"):** a PAID trial on
