@@ -1222,11 +1222,16 @@ longer lands on its entry.
   "Embed this live price" (`/embed` still offers the widgets); the per-card
   eBay auction pass. [2026-09-17](../DECISIONS.md#L7959),
   [2026-09-21](../DECISIONS.md#L9560), [2026-09-16](../DECISIONS.md#L6683)
-- **Ten features deleted (2026-10-16):** the Discord price bot and daily
-  Discord post, marketplace leftovers, the Shopify cart API, the MCP server,
+- **Ten features deleted (2026-10-16):** the Discord price bot (back
+  2026-10-27, below) and daily Discord post, marketplace leftovers, the Shopify cart API, the MCP server,
   store consulting, Sealed Bid, Card Smash, Zoomed In, Price Check and
   `/community`. Their tables stay (no drops); every page 301s
   (`tests/feature-cleanup.test.ts`). The Pokémon section stays (owner).
+- **Discord price bot back (owner, 2026-10-27):** `/price`, `/deck` (one-tap
+  TCGplayer cart) and `/pricebot` for all seven games, HTTP interactions only,
+  no database; every reply opens with `#ad`; the owner switches it on, and it is
+  removed again if it is not near 30 clicks a day a month after promotion.
+  [2026-10-27](../DECISIONS.md#L20304)
 - **No AI calls, no Speed Insights (2026-10-16):** Trade Roast (and its
   Gremlin box) and the unrendered AI card insight are gone with the Anthropic
   SDK; the site makes no model call. Speed Insights is removed (billed, unread).

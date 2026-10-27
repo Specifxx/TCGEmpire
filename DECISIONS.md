@@ -20300,3 +20300,54 @@ monitor.
 
 **Not here.** TCGplayer clicks are not stored per day (only eBay's are), so
 the TCGplayer bar is earnings, not clicks.
+
+## Discord price bot, back with an owner to switch it on — 2026-10-27
+
+**Owner:** after the affiliate-channels review recommended a Discord price bot
+as the best new way to earn eBay and TCGplayer clicks, "let's implement all of
+this", with the owner doing the Discord setup through the Chrome extension.
+
+**This reverses one row of "Ten features nobody used" (2026-10-16).** That bot
+was deleted because nobody ever registered it, so it never answered anyone.
+The missing step was setup, not demand, and the owner now takes it. The daily
+Discord post and the old registration script stay deleted.
+
+**What.** One bot for the whole family, slash commands over HTTP only
+(`/api/discord/interactions`, `src/lib/discord/`): no gateway process, no
+database, no stored state.
+- `/price game card [market]`: the top three matches with their price, a link
+  to the site's comparison and eBay + TCGplayer buttons. Riftbound reads
+  `getBulkCardSummary` (cached two days, never wrapped); One Piece and the
+  Gundam, Lorcana and YGO engine call their site's public `/api/search`
+  (One Piece with the market as its `country` cookie). The sealed-only sites
+  (DexCompare, MTG Compare) answer with search links. Every lookup races a
+  2.2 s deadline because Discord gives three seconds; a slow one becomes the
+  search-links answer, never an error.
+- `/deck game [market]`: opens a box for a pasted list and answers with one
+  TCGplayer Mass Entry link that fills the cart. TCGplayer credits the whole
+  cart to the first click and pays about 2.6 times what eBay does per click
+  (A$0.31 against A$0.12 over the 30 days to 2026-10-26).
+- `/pricebot`: what it is, and that the links are paid.
+- Installable to a server and to a person's own account (integration types 0
+  and 1), so a member can use it where they cannot add bots.
+
+**EPN rules it follows.** Every public reply opens with `#ad` (EPN wants the
+label at the start of a social post). eBay and TCGplayer links are direct
+affiliate links tagged `discord-<game>-<command>`, never a redirect through our
+domain to eBay. Our own links carry `utm_source=discord`. Direct messages
+pushed by the bot would be "messaging", which EPN approves in advance, so the
+bot only ever answers commands.
+
+**Setup** (owner, once): create the app in the Discord Developer Portal, put
+`DISCORD_PUBLIC_KEY` in Vercel (Production), `DISCORD_APPLICATION_ID` and
+`DISCORD_BOT_TOKEN` in GitHub, release, set the Interactions Endpoint URL,
+then run *Discord bot commands* (`discord-commands.yml`).
+
+**Watched.** The ops monitor's `discord:bot` check: unknown until the key is
+set; then the endpoint must refuse an unsigned POST with 401, the answer
+Discord's own check expects, or it warns (Discord switches a failing endpoint
+off by itself).
+
+**Measure.** EPN `customid` and TCGplayer `sharedid` containing `discord`, and
+`utm_source=discord` visits. If it is not near 30 clicks a day a month after
+promotion starts, remove it again.

@@ -562,6 +562,34 @@ export async function siteProbe(d: OpsDeps): Promise<CheckResult> {
 // A listed Pokémon touchpoint (tests/pokemon-isolation.test.ts, docs/pokemon/README.md's removal table).
 const POKEMON_PATH = "/pokemon";
 
+// The Discord price bot (DECISIONS.md, "Discord price bot", 2026-10-27). Discord
+// switches an Interactions Endpoint off by itself after it fails, and nobody would
+// notice, so: is the endpoint deployed, does it have its key, and does it refuse an
+// unsigned request with 401 (the answer Discord's own check expects)?
+export async function discordBot(d: OpsDeps): Promise<CheckResult> {
+  const id = "discord:bot";
+  const title = "Discord price bot";
+  const url = `${SITE}/api/discord/interactions`;
+  try {
+    const s = await retry(d, () => d.fetch(url), 2, 10_000);
+    if (s.status === 404) return unknown(d, id, "site", title, "Not deployed yet (it arrives with the next release).");
+    const st = (await s.json()) as { configured?: boolean };
+    if (!st.configured) return unknown(d, id, "site", title, "Not set up: DISCORD_PUBLIC_KEY is not on the site.");
+    const p = await retry(d, () => d.fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }), 2, 10_000);
+    if (p.status === 401) return result(d, { id, area: "site", title, severity: "ok", summary: "The endpoint answers and checks Discord's signature." });
+    return result(d, {
+      id,
+      area: "site",
+      title,
+      severity: "warn",
+      summary: `The endpoint answered an unsigned request with ${p.status} instead of 401, so Discord may switch it off.`,
+      action: "Tell Claude: \"the Discord bot endpoint is failing\". Check DISCORD_PUBLIC_KEY in Vercel matches the Developer Portal.",
+    });
+  } catch (e) {
+    return unknown(d, id, "site", title, `Could not reach the endpoint (${msg(e)}).`);
+  }
+}
+
 export async function dexcompareIndex(d: OpsDeps): Promise<CheckResult> {
   const id = "partner:dexcompare";
   const title = "DexCompare store prices (Pokémon)";
@@ -904,6 +932,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("jobs", "site", "Scheduled jobs", () => scheduledJobs(d));
   await add("deploy:production", "site", "Latest production build", () => deployState(d));
   await add("site:live", "site", "Live site", () => siteProbe(d));
+  await add("discord:bot", "site", "Discord price bot", () => discordBot(d));
   await add("partner:dexcompare", "data", "DexCompare store prices (Pokémon)", () => dexcompareIndex(d));
 
   await add("stripe", "money", "Stripe", () => stripeChecks(d));
