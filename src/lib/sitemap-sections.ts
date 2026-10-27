@@ -126,6 +126,7 @@ async function core(): Promise<SitemapEntry[]> {
     // a clock, so this is one of the few pages on the site where "hourly" is a
     // description rather than a wish.
     { url: `${SITE_URL}/auctions`, changeFrequency: "hourly", priority: 0.8, lastModified: auctionDay },
+    { url: `${SITE_URL}/graded`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/market/records`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/market/report`, changeFrequency: "weekly", priority: 0.7, lastModified: day },

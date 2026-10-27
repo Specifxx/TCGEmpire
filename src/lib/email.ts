@@ -19,6 +19,7 @@ import { PREMIUM_TRIAL_DAYS } from "./trial-config";
 import { DECK_WATCH_LIMIT, PLUS_TARGET_ALERT_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "./alert-limits";
 
 import { formatMoney } from "./format";
+import { plainEbayUrl } from "./affiliate";
 import { currencyOf, type Country } from "./country";
 import { issueNoun } from "./price-report";
 import { RADIANCE_RELEASE_DATE } from "./sets/radiance";
@@ -522,7 +523,7 @@ function storeBlock(store: AlertStore, currency: string): string {
   return `
       <div style="margin-top:6px;padding:8px 10px;background:#0f1622;border:1px solid #233047;border-radius:10px">
         <div style="display:inline-block;vertical-align:middle;max-width:100%;margin:2px 8px 2px 0;font-size:13px;line-height:1.5;color:#b8c0cc"><strong style="color:#fff">${escapeHtml(store.name)}</strong> · ${escapeHtml(storePriceText(store, currency))}</div>
-        <a href="${escapeHtml(store.url)}" style="display:inline-block;vertical-align:middle;margin:2px 0;background:#ef7d00;color:#1e3043;font-size:13px;font-weight:700;text-decoration:none;padding:6px 14px;border-radius:8px">Buy</a>
+        <a href="${escapeHtml(plainEbayUrl(store.url))}" style="display:inline-block;vertical-align:middle;margin:2px 0;background:#ef7d00;color:#1e3043;font-size:13px;font-weight:700;text-decoration:none;padding:6px 14px;border-radius:8px">Buy</a>
       </div>`;
 }
 
@@ -558,7 +559,7 @@ export function alertRowText(item: PriceDropItem, campaign: string = alertCampai
     `  ${alertHeadline(item).text}`,
     `  ${watchingSinceText(item)}`,
   ];
-  for (const s of item.stores.slice(0, 3)) lines.push(`  - ${s.name}: ${storePriceText(s, item.currency)}`, `    Buy: ${s.url}`);
+  for (const s of item.stores.slice(0, 3)) lines.push(`  - ${s.name}: ${storePriceText(s, item.currency)}`, `    Buy: ${plainEbayUrl(s.url)}`);
   lines.push(`  Checked ${checkedLabel(item.checkedAt, item.market)}. Prices move, so confirm at the store.`);
   lines.push(`  Compare every store: ${marketCardLink(item, campaign)}`);
   for (const a of actionItems(item)) lines.push(`  ${a.label}: ${a.url}`);

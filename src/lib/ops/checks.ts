@@ -405,6 +405,8 @@ const JOBS: { file: string; title: string; staleH: number }[] = [
   { file: "promo-art.yml", title: "Promo art job (weekly)", staleH: 200 },
   // Three times a week (2026-10-26): the longest gap is three days.
   { file: "social-packs.yml", title: "Social packs job", staleH: 80 },
+  // Daily (2026-10-27); a green no-op until the channel's secrets exist.
+  { file: "telegram-deals.yml", title: "Telegram deals job", staleH: 36 },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {

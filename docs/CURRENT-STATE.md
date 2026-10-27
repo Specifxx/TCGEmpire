@@ -689,6 +689,11 @@ longer lands on its entry.
   ranking. Policy pages name it as the one labelled exception; this replaces
   the "never inside the ranking" rule below. [2026-10-27](../DECISIONS.md#L20143),
   [2026-10-27](../DECISIONS.md#L20462)
+- **Affiliate links off-site (2026-10-27):** eBay links in our emails go out
+  without EPN tracking (`plainEbayUrl`) until EPN approves messaging; the eBay
+  deals RSS feed and the Telegram channel link our card pages, never eBay.
+  `/graded` (graded price guide) and the deck pricer's lot checker carry tagged
+  eBay links on the site. [2026-10-27](../DECISIONS.md#L20493)
 - **eBay beside every comparison, never inside the ranking** (owner, 09-26:
   push eBay clicks even where stores are cheaper) — **with ONE exception since
   10-15 (owner):** the pre-order table (`PreorderPriceTable`, on

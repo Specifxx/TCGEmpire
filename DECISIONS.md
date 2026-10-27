@@ -20490,6 +20490,55 @@ stays on the real cheapest. Surfaces `sealed_pinned`, `sealed_row`,
 `ebay_pinned`.
 
 
+## Affiliate channels beyond the compare pages: feed, graded guide, lot checker, Telegram, plain email links — 2026-10-27
+
+The owner asked for the rest of the affiliate research list built (everything
+but the email digest, which needs eBay's approval first). What each is, and the
+one rule they share: **a link that leaves our site for somewhere we can't put a
+paid-link line beside it carries no eBay tracking.**
+
+**eBay links in emails go out plain.** EPN treats email as "messaging", a
+business model it approves in advance, and we have no approval. The
+graded-watch email, the auction digest and the price-drop email's store
+buttons (when a store row is eBay) were sending tagged eBay links.
+`plainEbayUrl` (`lib/affiliate.ts`) strips `campid`, `mkevt`, `mkcid`, `mkrid`,
+`customid`, `toolid`, `siteid` and friends; the emails call it on every eBay
+URL. If EPN approves messaging, remove those calls. The bot and the site are
+unchanged (a website and a disclosed social post are allowed).
+
+**eBay deals feed.** `/feeds/ebay-deals.xml?market=AU|UK|…` is the Deal
+Finder's free "Cheapest on eBay" tab as RSS (top 25,
+`lib/ebay-deals-feed.ts`), linked from that tab and declared as its page's
+`application/rss+xml` alternate. Items link our card pages, not eBay (the
+reason above), with a guid that changes with the price so a reader shows a
+new deal. A plain route function: its CDN header holds each market six hours;
+a miss is one narrow card select over the day-cached ranking.
+
+**Graded price guide, `/graded`.** Every card with a live graded slab: the
+cheapest PSA 10, PSA 9, BGS 10, BGS 9.5 and CGC 10 listing (from the newest
+`data/price-history/graded/` day file, US dollars across the markets searched),
+the cheapest raw US copy and PSA 10 ÷ raw, each row with an eBay search for
+its best grade (`surface` `ebay_graded`, source `graded-guide`). Asking prices,
+said so. ISR six hours; in the sitemap and the nav. One Piece gets its own on
+OP Compare.
+
+**Lot checker.** Under the deck pricer's total (`components/LotCheck.tsx`,
+`lib/lot-check.ts`): type a lot's asking price and see it against the singles
+total of the cards pasted. Within 5% either way reads "about the same"
+(singles exclude postage), plus a tagged eBay search for Riftbound lots.
+
+**Card supplies.** Not a new article: three guides already own the topic
+(storing and protecting, card size and sleeves, gradient sleeves), and a
+fourth would split their queries. The storing guide gained the "Shop this
+guide" strip (top loaders, binders, storage boxes); the grading guide links
+`/graded`.
+
+**Telegram channel.** `telegram-deals.yml` (22:30 UTC daily) reads the live
+feed and posts its top five cards to the channel in `TELEGRAM_CHANNEL_ID` with
+`TELEGRAM_BOT_TOKEN`; a green no-op until both exist, a refused post fails
+the run. Links are our card pages (utm_source=telegram), so a post carries no
+affiliate link and needs no `#ad`. Watched in `JOBS` (ops monitor).
+
 ## Feedback and Pro email to registered accounts — 2026-10-27
 
 The owner asked to email the ~550 registered accounts "to ask them for

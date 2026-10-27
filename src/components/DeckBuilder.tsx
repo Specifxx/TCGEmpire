@@ -19,6 +19,7 @@ import { InlineSignupPrompt } from "./InlineSignupPrompt";
 
 import { PremiumButton } from "./PremiumButton";
 import { OutboundLink } from "./OutboundLink";
+import { LotCheck } from "./LotCheck";
 import { affiliateUrl } from "@/lib/affiliate";
 import { RIFTBOUND_TCG_LINE, tcgplayerMassEntryUrl } from "@/lib/tcgplayer-cart";
 
@@ -477,6 +478,10 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
             )}
           </div>
         )}
+
+        {/* The lot checker (2026-10-27, lib/lot-check.ts): is a lot's asking price
+            better than these cards as singles? */}
+        {totals.totalCents > 0 && <LotCheck country={country} singlesCents={totals.totalCents} pricedQty={totals.pricedQty} totalQty={totals.totalQty} />}
 
         {/* Watch this deck's delivered price (Premium, 2026-09-29): the paid
             run re-prices the list after every import, lib/deck-watch.ts. The

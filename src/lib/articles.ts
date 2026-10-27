@@ -269,14 +269,6 @@ const PREMIUM_TRIAL_ARTICLE_BILLING = premiumTrialEnabled()
   : "Pro runs through Stripe and is charged when you subscribe — no free trial, no introductory price, just the price in the table.";
 
 export const ARTICLES: Article[] = [
-  // METAL CARDS (2026-10-25, owner: "the medal prize wall cards … add those to
-  // the website … tag them as medal card … and we should make a blog post on all
-  // the metal cards so far and the metal cards coming"). Players call them metal
-  // cards ("riftbound medal" autocompletes to "riftbound metal cards"). Owns
-  // `riftbound metal cards`, `plated legend`, `prize wall`, `best of` clusters
-  // (docs/seo-keyword-map.md). The 86 cards are TCGplayer's "Organized Play
-  // Promotional Cards" metal printings, each now a card page (lib/metal-cards.ts);
-  // prices in the body are TCGplayer's on 25 October and dated, the embeds live.
   {
     slug: "riftbound-metal-cards",
     category: "blog",
@@ -4810,6 +4802,14 @@ Either way, the smart move is the same: compare prices before you spend. That's 
     date: "2026-06-12",
     readMins: 5,
     tags: ["collecting", "guide", "condition", "storage"],
+    // eBay searches for the supplies this guide recommends (2026-10-27,
+    // "Affiliate channels beyond the compare pages"): the supplies guide the
+    // report proposed is this one, so it gets the strip rather than a new post.
+    shop: [
+      { label: "Penny sleeves and top loaders", query: "top loaders penny sleeves standard card" },
+      { label: "Side-loading card binders", query: "side loading card binder 9 pocket zip" },
+      { label: "Card storage boxes", query: "trading card storage box 800 count" },
+    ],
     faq: [
       {
         q: "What's the difference between penny sleeves and deck sleeves?",
@@ -5424,7 +5424,7 @@ You can check the first three yourself before submitting: hold the card up to a 
 
 ## Is it worth it for Riftbound specifically?
 
-Grading only makes financial sense once a card's raw value clears the submission fee by a comfortable margin — so it's a question of which Riftbound printings are worth enough to clear that bar. That's [the same chase tier as the rest of the value conversation](/guides/most-valuable-riftbound-cards): Signature printings, Showcase alt-arts and Overnumbered prints, not ordinary Commons or Uncommons. Riftbound is still a young game without a long graded-sales history the way an established TCG has, so treat any specific resale-premium claim for a graded Riftbound card skeptically — the graded aftermarket for this game is still forming.
+Grading only makes financial sense once a card's raw value clears the submission fee by a comfortable margin — so it's a question of which Riftbound printings are worth enough to clear that bar. That's [the same chase tier as the rest of the value conversation](/guides/most-valuable-riftbound-cards): Signature printings, Showcase alt-arts and Overnumbered prints, not ordinary Commons or Uncommons. Riftbound is still a young game without a long graded-sales history the way an established TCG has, so treat any specific resale-premium claim for a graded Riftbound card skeptically — the graded aftermarket for this game is still forming. To see where it stands today, [our graded price guide](/graded) lists the cheapest live PSA 10, PSA 9, BGS and CGC listing for every card that has one, beside the cheapest raw copy.
 
 ## Before you submit
 

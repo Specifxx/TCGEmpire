@@ -1,0 +1,37 @@
+name: Telegram deals
+
+# Posts the day's top "Cheapest on eBay" cards to the RiftCompare Telegram
+# channel (scripts/telegram-deals.ts, DECISIONS.md "Telegram deals channel",
+# 2026-10-27). Once a day at 22:30 UTC, morning in Sydney and evening in the US,
+# after the morning import. A green no-op until TELEGRAM_BOT_TOKEN and
+# TELEGRAM_CHANNEL_ID exist. Reads only the public deals feed; no database.
+
+on:
+  schedule:
+    - cron: "30 22 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: telegram-deals
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Post today's deals
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ vars.TELEGRAM_CHANNEL_ID || secrets.TELEGRAM_CHANNEL_ID }}
+          TELEGRAM_MARKET: ${{ vars.TELEGRAM_MARKET || 'US' }}
+        run: npx tsx scripts/telegram-deals.ts
