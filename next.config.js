@@ -265,6 +265,13 @@ const nextConfig = {
         destination: "/guides/riftbound-rules-explained",
         permanent: true,
       },
+      // Competing pages folded into one (2026-10-27, "Competing pages folded" in DECISIONS.md).
+      { source: "/blog/riftbound-heartsteel-cards", destination: "/blog/riftbound-heartsteel-overnumbered-cards", permanent: true },
+      { source: "/blog/riftbound-radiance-preview-week-one", destination: "/blog/riftbound-radiance-spoilers", permanent: true },
+      { source: "/blog/riftbound-radiance-leaked-mechanics", destination: "/blog/riftbound-radiance-spoilers", permanent: true },
+      { source: "/blog/every-riftbound-vendetta-card-revealed", destination: "/sets/vendetta", permanent: true },
+      { source: "/blog/riftbound-radiance-biggest-release-since-origins", destination: "/sets/radiance", permanent: true },
+      { source: "/blog/riftbound-radiance-card-list", destination: "/sets/radiance", permanent: true },
       {
         source: "/guides/every-ahri-card-in-riftbound",
         destination: "/blog/every-ahri-card-in-riftbound",
@@ -353,11 +360,11 @@ const nextConfig = {
       //
       // Three "all 166 Vendetta cards" posts → the one with the actual live,
       // filterable card gallery embedded (not just prose about the card count).
-      { source: "/guides/riftbound-vendetta-card-list", destination: "/blog/every-riftbound-vendetta-card-revealed", permanent: true },
-      { source: "/blog/riftbound-vendetta-spoiler-season-complete-166-cards", destination: "/blog/every-riftbound-vendetta-card-revealed", permanent: true },
+      { source: "/guides/riftbound-vendetta-card-list", destination: "/sets/vendetta", permanent: true },
+      { source: "/blog/riftbound-vendetta-spoiler-season-complete-166-cards", destination: "/sets/vendetta", permanent: true },
       // A third "how RiftCompare prices Vendetta cards" post that duplicated the
       // same live gallery embed as the page above, with generic prose around it.
-      { source: "/blog/riftbound-vendetta-card-prices-where-to-buy-cheapest", destination: "/blog/every-riftbound-vendetta-card-revealed", permanent: true },
+      { source: "/blog/riftbound-vendetta-card-prices-where-to-buy-cheapest", destination: "/sets/vendetta", permanent: true },
       // Three "get ready for Vendetta" posts (a pre-release announcement, a
       // launch-week checklist, a release-date countdown) that restated the same
       // four-item checklist — wishlist, compare sealed, price your deck, don't

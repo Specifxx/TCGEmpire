@@ -192,7 +192,7 @@ export function carriesRadiancePreorderCta(article: { category: string; tags: re
 // explainers, chosen without per-URL figures — swap them when the export shows
 // which Radiance posts actually rank second and third.
 export const RADIANCE_CALLOUT_SLUGS = [
-  "riftbound-radiance-leaked-mechanics",
+  "riftbound-radiance-spoilers",
   "riftbound-radiance-what-we-know",
   "riftbound-seraphine-radiance-spoiler",
 ] as const;

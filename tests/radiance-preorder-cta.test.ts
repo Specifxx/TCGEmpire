@@ -20,7 +20,6 @@ const bySlug = (slug: string) => {
 test("every Radiance news post carries the CTA — the original three and the Reddit-shared spoilers", () => {
   for (const slug of [
     // The 2026-09-24 three (Search Console's top Radiance pages).
-    "riftbound-radiance-leaked-mechanics",
     "riftbound-radiance-spoilers",
     "riftbound-radiance-what-we-know",
     // The spoiler posts the hand-picked list missed — the ones shared on Reddit.

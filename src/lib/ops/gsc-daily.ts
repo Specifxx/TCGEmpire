@@ -52,3 +52,63 @@ export async function fetchGscDaily(raw: string, property: string, start: string
   const j = (await r.json()) as { rows?: { keys: string[]; clicks: number; impressions: number; position: number }[] };
   return (j.rows ?? []).map((row) => ({ d: row.keys[0], clicks: row.clicks, impr: row.impressions, pos: row.position })).sort((a, b) => a.d.localeCompare(b.d));
 }
+
+// ── Pages competing for one search (2026-10-27, "Competing pages folded" in DECISIONS.md) ──
+// A query where two or more of our pages each take a real share of the
+// impressions: Google is choosing between our own pages instead of ranking one
+// strongly. Shown on /admin/growth and printed by scripts/gsc-queries.ts.
+
+export interface SplitPage {
+  page: string; // site-relative path, #fragment folded into its page
+  clicks: number;
+  impr: number;
+  pos: number;
+}
+export interface SplitQuery {
+  query: string;
+  impr: number;
+  pages: SplitPage[];
+}
+
+/** Rows of a ["query", "page"] report → the queries split across our pages, biggest first. */
+export function findSplitQueries(
+  rows: readonly { keys: string[]; clicks: number; impressions: number; position: number }[],
+  opts: { minImpr?: number; minShare?: number; limit?: number } = {},
+): SplitQuery[] {
+  const { minImpr = 100, minShare = 0.15, limit = 60 } = opts;
+  const byQuery = new Map<string, Map<string, { impr: number; clicks: number; posW: number }>>();
+  for (const r of rows) {
+    const [q, u] = r.keys;
+    const page = u.split("#")[0].replace(/^https?:\/\/[^/]+/, "") || "/";
+    const m = byQuery.get(q) ?? new Map<string, { impr: number; clicks: number; posW: number }>();
+    const e = m.get(page) ?? { impr: 0, clicks: 0, posW: 0 };
+    e.impr += r.impressions;
+    e.clicks += r.clicks;
+    e.posW += r.position * r.impressions;
+    m.set(page, e);
+    byQuery.set(q, m);
+  }
+  const out: SplitQuery[] = [];
+  for (const [query, m] of byQuery) {
+    const impr = [...m.values()].reduce((a, e) => a + e.impr, 0);
+    if (impr < minImpr) continue;
+    const pages = [...m.entries()]
+      .filter(([, e]) => e.impr >= minShare * impr)
+      .map(([page, e]) => ({ page, clicks: e.clicks, impr: e.impr, pos: Math.round((e.posW / e.impr) * 10) / 10 }))
+      .sort((a, b) => b.impr - a.impr);
+    if (pages.length >= 2) out.push({ query, impr, pages });
+  }
+  return out.sort((a, b) => b.impr - a.impr).slice(0, limit);
+}
+
+/** The ["query", "page"] report for one property. Throws on any failure. */
+export async function fetchGscQueryPages(raw: string, property: string, start: string, end: string) {
+  const tok = await token(raw);
+  const r = await fetch(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(property)}/searchAnalytics/query`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ startDate: start, endDate: end, dimensions: ["query", "page"], rowLimit: 25000 }),
+  });
+  if (!r.ok) throw new Error(`searchAnalytics ${r.status}`);
+  return ((await r.json()) as { rows?: { keys: string[]; clicks: number; impressions: number; position: number }[] }).rows ?? [];
+}

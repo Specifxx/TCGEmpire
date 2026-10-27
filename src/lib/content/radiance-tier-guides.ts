@@ -189,7 +189,7 @@ Every figure here comes from our public data export of 23 October 2026 (02:07 UT
 ## Buying Radiance Epics
 
 - **Compare before you pay.** With 33 to 43 stores carrying each Epic, the spread between the cheapest and the dearest store is wide; each card page lists them cheapest first.
-- **Buy what you'll play now and wait on the rest.** Vendetta's cards between $1 and $20 lost a median 57% between launch week and mid-October ([the numbers](/blog/riftbound-radiance-card-list)). That is history, not a forecast for Radiance.
+- **Buy what you'll play now and wait on the rest.** Vendetta's cards between $1 and $20 lost a median 57% between launch week and mid-October ([the numbers](/sets/radiance)). That is history, not a forecast for Radiance.
 - **Let the price come to you.** A [price alert](/alerts) emails you when a card falls to your number.
 - **Whole decklist?** [Best Basket](/tools/best-basket) splits it across stores so you pay postage as few times as possible.`,
   },
@@ -527,6 +527,6 @@ All prices come from our public data export of 23 October 2026 (02:07 UTC), the 
 - **Each Legend's champion page gathers that champion's cards from every set:** [Ekko](/champions/ekko), [Seraphine](/champions/seraphine), [K'Sante](/champions/ksante) and the rest are linked from [the champions index](/champions).
 - **Radiance's new keywords** shape several of these Legends' decks: [Deploy](/guides/riftbound-deploy-explained), [Disarm](/guides/riftbound-disarm-explained) and [Show Off](/guides/riftbound-showoff-explained).
 - **Price the whole deck** in the [deck pricer](/deck) or let [Best Basket](/tools/best-basket) split it across stores so you pay postage as few times as possible.
-- **Waiting for a Showcase to come down?** A [price alert](/alerts) emails you when it reaches your number. We don't forecast prices; [the Vendetta numbers](/blog/riftbound-radiance-card-list) show what the last set's cards did after launch.`,
+- **Waiting for a Showcase to come down?** A [price alert](/alerts) emails you when it reaches your number. We don't forecast prices; [the Vendetta numbers](/sets/radiance) show what the last set's cards did after launch.`,
   },
 ];

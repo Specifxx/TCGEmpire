@@ -9,13 +9,16 @@
  *   - "striking distance": position 4–20 with real impressions, where one good page can move
  *     a query onto page one or into the top three;
  *   - rising queries: last 7 days against the 21 before, per day;
- *   - the top pages, and the blog/guide pages on their own.
+ *   - the top pages, and the blog/guide pages on their own;
+ *   - split queries: a query where two or more of our pages each take a real share of the
+ *     impressions, so Google is choosing between our own pages instead of ranking one strongly.
  *
  * Search queries are aggregate and anonymised by Google (rare queries are withheld). Writes nothing.
  *
  * Usage: GSC_SA_KEY=... DAYS=28 npx tsx scripts/gsc-queries.ts
  */
 import { createSign } from "node:crypto";
+import { findSplitQueries } from "../src/lib/ops/gsc-daily";
 
 const DAYS = Math.max(7, Math.min(90, Number(process.env.DAYS ?? 28)));
 const DAY = 86_400_000;
@@ -106,6 +109,14 @@ async function main() {
   console.log("\nTOP PAGES BY CLICKS");
   console.log(head(70));
   for (const r of [...pages].sort((a, b) => b.clicks - a.clicks).slice(0, 50)) console.log(line({ ...r, keys: [path(r.keys[0])] }, 70));
+
+  // Split queries: query x page, fragments (#heading) folded into their page.
+  const split = findSplitQueries(await query(tok, ymd(start), ymd(end), ["query", "page"], 25000));
+  console.log("\nSPLIT QUERIES (100+ impressions, two or more of our pages with 15%+ of them each)");
+  for (const x of split) {
+    console.log(`${x.query.slice(0, 60)}  (${x.impr} impr.)`);
+    for (const e of x.pages) console.log(`    ${e.page.slice(0, 66).padEnd(66)} ${String(e.clicks).padStart(5)} ${String(e.impr).padStart(7)}  pos ${e.pos.toFixed(1)}`);
+  }
 
   console.log("\nBLOG AND GUIDE PAGES");
   console.log(head(70));

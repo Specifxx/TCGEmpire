@@ -75,14 +75,11 @@ import { getRiftboundStocksLinks, rbsSetUrl } from "@/lib/riftboundstocks";
 //     missing link would be.
 const PRE_RELEASE_LINKS: Record<string, { href: string; label: string }[]> = {
   radiance: [
-    { href: "/blog/riftbound-radiance-card-list", label: "Card list: every Radiance card" },
     { href: "/blog/riftbound-radiance-spoilers", label: "Spoilers: every card revealed so far" },
     { href: "/blog/riftbound-radiance-what-we-know", label: "Release date & what's confirmed" },
     { href: "/radiance-preorders", label: "Pre-order prices, every store" },
     { href: "/blog/where-to-buy-riftbound-radiance", label: "Where to buy, by country" },
     { href: "/release-dates", label: "Countdown & release calendar" },
-    { href: "/blog/riftbound-radiance-biggest-release-since-origins", label: "Why this release matters" },
-    { href: "/blog/riftbound-radiance-leaked-mechanics", label: "Leaked mechanics, hedged" },
     { href: "/guides/riftbound-pre-rift-rules-explained", label: "Pre-Rift event rules" },
   ],
   // Coming soon since 2026-10-25; every link is a page that exists today.

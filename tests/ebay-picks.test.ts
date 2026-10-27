@@ -112,7 +112,6 @@ test("the unit is on all five requested pages", () => {
 
   // The three articles opt in through data, not a slug check in the view.
   const wanted = [
-    "every-riftbound-vendetta-card-revealed",
     "riftbound-vendetta-chase-cards-so-far",
     "riftbound-empower-explained",
   ];
@@ -133,10 +132,7 @@ test("it stays opt-in — not silently applied to every article", () => {
   // a new article silently gaining the unit, and an existing one silently losing
   // it. Add a slug here only alongside a reason it belongs.
   const ALLOWED = new Set([
-    // Vendetta spoiler/chase content — readers are shopping by sight.
-    "every-riftbound-vendetta-card-revealed",
-    // Its Radiance twin (2026-10-15): the card list readers use to pick printings in launch week.
-    "riftbound-radiance-card-list",
+    // Vendetta chase content — readers are shopping by sight.
     "riftbound-vendetta-chase-cards-so-far",
     "riftbound-empower-explained",
     // Same reason: a chase-card listicle whose readers arrive to buy a printing,
