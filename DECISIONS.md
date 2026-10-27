@@ -20074,3 +20074,34 @@ included, the way Collectr shows its rating.
 **Cost.** The homepage reads one memoised aggregate per six-hour render
 (`getSiteRating`, globalThis memo, no `unstable_cache`). The reviews query is
 the one the homepage already makes.
+
+## The phone Cheapest block names the paid marketplace — 2026-10-27
+
+The owner asked for more eBay and TCGplayer clicks (about 240 and 80 a day),
+looking at phone positioning and clutter: the links should be visible, quiet,
+and clicked because they are worth it.
+
+**What the data showed** (`data/public/listings`, in stock, derived rows out):
+in the US TCGplayer's cheapest listing is the cheapest row on 873 of 1,660
+cards; on the 639 a store wins, TCGplayer is within 10% on 282 and within 25%
+on 406. Outside the US eBay wins 4–9% of cards and is within 25% on another
+3–6%. Store links earn nothing (`DIRECT_PROGRAMS` is empty until a partner
+code signs). Below lg, `CardTopBuy` shows exactly one listing under the name,
+so a buyer who would rather check out on TCGplayer or eBay had to scroll the
+whole comparison for it.
+
+**What.** When the cheapest in-stock row is not a paid link, `CardTopBuy` adds
+one muted line under its Buy button: "or US$17.49 on eBay (+6%) →", with the
+Paid link tag, for the cheapest paid row within 20% of the cheapest
+(`lib/paid-alternative.ts`, `tests/paid-alternative.test.ts`). It is a real row
+of the comparison at its real item price and states how much more it is; it
+never says cheaper, never reorders the comparison, and the green Buy stays on
+the cheapest store. Its clicks are `buy_click` with `surface: "card_top_alt"`,
+so the effect reads straight off Vercel Analytics / GA4 next to
+`card_top_buy` and `sticky_buy_bar`.
+
+**Supersedes** one line of "Pushing eBay clicks" (2026-09-26), which declined
+an eBay link in the details card as "affiliate before our own analysis
+(AdSense Phase 8)". AdSense is off and its approval no longer depends on it,
+`CardTopBuy` has carried an outbound Buy link there since that same day, and
+this line is a ranked row's own price, not an ad.
