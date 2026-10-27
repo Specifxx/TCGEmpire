@@ -201,8 +201,10 @@ longer lands on its entry.
   moved up in Stripe. No trial: `PREMIUM_TRIAL_DAYS` defaults to 0 (the 30-day
   trial below is superseded). `FREE_LIMITS_ON = false`: free watchlist and portfolio
   are unlimited and no copy quotes a limit; free price history is 90 days.
-  `/premium` copies Collectr's page for non-members. A rate-the-site dialog
-  asks after 3 pages and 45 s, always with "Not now"; the homepage hero and the
+  `/premium` copies Collectr's page for non-members. A rate-the-site corner card
+  (not a modal) asks only returning visitors, at most twice, and is the one
+  uninvited opinion ask; the feedback panel opens from the footer link, with
+  no floating button ([2026-10-27](../DECISIONS.md#L20126)); the homepage hero and the
   Pro page show the average (and Pro the approved reviews) only from 100+ real
   ratings, never in JSON-LD.
   [2026-10-26](../DECISIONS.md#L19772)

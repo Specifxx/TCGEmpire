@@ -39,10 +39,12 @@ test("the footer's always-visible row links every page the brief names, in order
     ["/editorial-policy", "Editorial policy"],
     ["/methodology", "Methodology"],
     ["/authors", "Who writes this"],
-    ["/contact", "Contact &amp; feedback"],
+    ["/contact", "Contact"],
     ["/privacy", "Privacy policy"],
     ["/terms", "Terms of service"],
   ]);
+  // The feedback panel's only way in since it lost its floating button (2026-10-27).
+  assert.match(row, /<FeedbackLink className="tap-link text-slate-300 hover:text-brand-400" \/>/);
   // Still no "·" separators between them (2026-09-23): they wrapped apart
   // from their links and were read aloud as "middle dot".
   assert.doesNotMatch(row.slice(0, row.indexOf("DISCORD_URL")), /·/, "no middle-dot separators in the link row");

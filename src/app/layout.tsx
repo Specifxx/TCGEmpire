@@ -29,6 +29,7 @@ import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
 import { SignupWelcome } from "@/components/SignupWelcome";
+import { FeedbackLink } from "@/components/FeedbackLink";
 import { RadianceSeasonBanner } from "@/components/RadianceSeasonBanner";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
@@ -53,9 +54,8 @@ const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").the
 const AnnualSwitchNudge = dynamic(() => import("@/components/AnnualSwitchNudge").then((m) => m.AnnualSwitchNudge), {
   ssr: false,
 });
-// The always-available feedback launcher. ssr:false because it renders nothing
-// until a visitor clicks it, so there is no content for a crawler to miss and no
-// reason to pay for it in the server HTML.
+// The feedback panel. No floating button since 2026-10-27: it opens from the
+// footer's FeedbackLink. ssr:false because it renders nothing until then.
 const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then((m) => m.FeedbackWidget), {
   ssr: false,
 });
@@ -418,11 +418,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     the sign_up analytics event, then strips it from the URL.
                     Renders nothing. */}
                 <SignupWelcome />
-                {/* Feedback launcher. Deliberately never auto-opens — see the
-                    component header for why a second uninvited dialog would be
-                    self-defeating here. It hides itself over the ad zone below. */}
+                {/* Feedback panel: opened only by the footer's "Rate or send
+                    feedback" link. Never auto-opens, no floating button. */}
                 <FeedbackWidget />
-                {/* Asks for a star rating once a visitor has used a few pages. */}
+                {/* The one uninvited opinion ask: a corner rating card, only
+                    after real engagement, at most twice (lib/rate-prompt.ts). */}
                 <RateUsPrompt />
                 {/* SideNav's mobile complement USED TO BE <BottomTabBar /> here.
                     Removed outright: three successive attempts to keep a fixed
@@ -505,7 +505,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>
             <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
-            <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
+            <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact</Link>
+            <FeedbackLink className="tap-link text-slate-300 hover:text-brand-400" />
             <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
             <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms of service</Link>
             {/* Discord was header-only (see Navbar.tsx) plus the Organization

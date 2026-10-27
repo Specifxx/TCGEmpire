@@ -454,13 +454,13 @@ test("the watchlist is its own header control, opening a drawer and carrying the
   assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="hidden sm:inline-flex" \/>/);
 });
 
-test("every fixed bottom-corner surface (the two nudges, the feedback FAB, ui/Toast) clears the banner via .above-bottombar", () => {
+test("every fixed bottom-corner surface (the nudges, the rating card, ui/Toast) clears the banner via .above-bottombar", () => {
   // The signed-out SignupPromoPopup was one of these until its removal on
   // 2026-09-30 ("The sign-up slider is gone"); PremiumSlideIn followed it on
   // 2026-10-25 (the header's PricingNudge replaced it, anchored to the link).
   for (const rel of [
     "src/components/AnnualSwitchNudge.tsx",
-    "src/components/FeedbackWidget.tsx",
+    "src/components/RateUsPrompt.tsx", // the feedback FAB it replaces went on 2026-10-27
     "src/components/ui/Toast.tsx",
   ]) {
     const src = readCode(rel);

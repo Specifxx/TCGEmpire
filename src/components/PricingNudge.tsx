@@ -8,6 +8,7 @@ import { PREMIUM_SLIDER_DELAY_MS, PREMIUM_SLIDER_SNOOZE_MS } from "@/lib/nudge-t
 import { premiumSliderEligible } from "@/lib/nudge-gate";
 import { armNudge } from "@/lib/nudge-runtime";
 import { isSignupSession } from "@/lib/signup-session";
+import { RATE_SESSION_KEY } from "@/lib/rate-prompt";
 
 // THE PRICING CALLOUT (2026-10-25, owner: "the premium slide is not working …
 // get rid of the slider … create a little cool animation with an arrow pointing
@@ -55,6 +56,8 @@ export function PricingNudge() {
     if (!loaded || tier === "premium" || !premiumCheckout) return;
     if (!premiumSliderEligible({ pathname })) return;
     if (read("session", SESSION_KEY)) return;
+    // One uninvited prompt per visit: the rating card already asked this one.
+    if (read("session", RATE_SESSION_KEY)) return;
     // Someone who has just signed up is shown around, not sold to.
     if (isSignupSession()) return;
     const snoozed = Number(read("local", SNOOZE_KEY) ?? 0);
@@ -68,7 +71,7 @@ export function PricingNudge() {
         // Two header instances (phone and desktop) mount together. Only the one
         // actually laid out may fire; it claims the session for both.
         if (!anchor.current || anchor.current.getClientRects().length === 0) return;
-        if (read("session", SESSION_KEY)) return;
+        if (read("session", SESSION_KEY) || read("session", RATE_SESSION_KEY)) return;
         write("session", SESSION_KEY, "1");
         setShow(true);
         trackEvent("pricing_nudge_view");

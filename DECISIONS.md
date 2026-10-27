@@ -20122,3 +20122,42 @@ an eBay link in the details card as "affiliate before our own analysis
 (AdSense Phase 8)". AdSense is off and its approval no longer depends on it,
 `CardTopBuy` has carried an outbound Buy link there since that same day, and
 this line is a ranked row's own price, not an ad.
+
+## One rating ask, earned by engagement — 2026-10-27
+
+A visitor wrote that there were "too many pop-ups asking for my opinion", and
+the owner, trying it himself, agreed: "it takes a while to get into the site …
+I just don't want to be bombarded with it every time I open the site", and
+"asking new users to rate it, it's kind of weird".
+
+**What was asking.** Two opinion surfaces at once on every page: the 💬
+Feedback pill fixed in the bottom-right corner (FeedbackWidget, its own star
+rating), and the "Rate RiftCompare" modal (RateUsPrompt) after 3 pages and 45
+seconds, which the backdrop and Escape could not close, came back every 14
+days, up to 3 times. On top of them the Pricing callout (PricingNudge) slides
+in 3 s into every browser session.
+
+**What.**
+- The feedback pill is gone. FeedbackWidget's panel opens only from the
+  footer's "Rate or send feedback" link (`FeedbackLink`, the
+  `rc:feedback-open` event, `lib/feedback-open.ts`); the footer's "Contact &
+  feedback" link is "Contact" now. Ratings, reviews and consent are unchanged.
+- RateUsPrompt is the one uninvited opinion ask, and never reaches a new
+  visitor (`lib/rate-prompt.ts`): a RETURN visit (30 minutes since the last
+  page view), a day since the first, and 5 pages in all; never on the first
+  page of a visit, never on `/premium`, sign-in, checkout, `/contact`,
+  `/feedback`, admin, embeds or the arcade. It waits 8 s for a quiet moment
+  (`armNudge`). At most twice ever, 30 days apart; a rating or "Don't ask
+  again" ends it for good.
+- It is a small corner card, not a modal: the page stays usable, and ✕,
+  Escape and "Not now" all close it. Supersedes the 2026-10-26 "hard to
+  close" choice in "Pro: Collectr's model": that was the annoying part.
+- One uninvited prompt per visit: the rating card does not open in a session
+  where the Pricing callout showed, and the callout yields to a session the
+  card already claimed (`RATE_SESSION_KEY`).
+
+**Why not a store-click trigger.** A first-visit store click was considered as
+the "earned" signal and dropped: the owner's rule is no rating ask to new
+visitors at all. The ratings shown on the homepage and the Pro page (100+
+real ratings) still come from this card and the footer panel, so collection
+keeps working, just slower and from people who know the site.
