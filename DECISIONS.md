@@ -20489,3 +20489,37 @@ or eBay's search as the first row when no eBay listing is open. "Best price"
 stays on the real cheapest. Surfaces `sealed_pinned`, `sealed_row`,
 `ebay_pinned`.
 
+
+## Feedback and Pro email to registered accounts — 2026-10-27
+
+The owner asked to email the ~550 registered accounts "to ask them for
+feedback, like, are you enjoying the site … consider going to like joining
+the pro plan". The 14-day-trial promotion that `/admin/premium-offer` sent
+since 2026-10-12 was no longer true (the trial was removed on 2026-10-26), so
+the same machinery was repurposed a third time rather than built again.
+
+**What.** Campaign `feedback-pro-2026-10` (`PREMIUM_OFFER_CAMPAIGN`,
+`PRICE_DROP_CAMPAIGN`), stamp `User.priceDropEmailSentAt` from
+`PREMIUM_OFFER_SINCE` 2026-10-27, so everyone the trial email reached gets this
+one once. Subject "How's RiftCompare working for you?". It leads with five
+star links, each opening `/feedback?rating=N` with that rating picked
+(`/feedback` now reads `?rating=`), source `page`: the one form whose first
+signed-in submission earns the feedback reward, which the email mentions only
+while `feedbackPremiumActive()`. Then Pro at the `lib/site.ts` prices with a
+monthly and a yearly checkout button. Audience: every account not currently
+paying (`isPremium`), not an admin, not a seed persona, not opted out of
+announcements. The trial-only exclusions (had a trial, paid before, the
+refusal to send while the trial is not free) are gone with the trial.
+
+**Rules it keeps.** Every link is riftcompare.com: no eBay or TCGplayer link
+(eBay Partner Network does not allow its links in email without approval;
+`tests/premium-offer.test.ts` pins it). Brevo, batches of 90 (a hand-typed
+limit up to 300), one-click `List-Unsubscribe` into `AnnouncementOptOut`.
+The footer names the sender and links `/contact` (Australia's Spam Act wants
+an identified sender with contact details beside the opt-out). Consent is the
+privacy page's "occasional announcements to registered accounts", in force
+before this send. Logs carry counts only, never an address.
+
+**Not sent on other sites.** OP Compare has accounts but no mailer
+configured (its outbox skips: no `RESEND_API_KEY` / `EMAIL_FROM`) and a
+privacy page that promises no announcements; the other sites have no accounts.

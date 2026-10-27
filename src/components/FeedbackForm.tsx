@@ -10,7 +10,7 @@ import { RatingReviewForm } from "./RatingReviewForm";
 // rating surface (RatingReviewForm, DECISIONS.md "One feedback form, shown by
 // default"), plus the page's own sign-in reward note. It never gates on
 // sign-in: the reward is an incentive shown beside a working form.
-export function FeedbackForm({ days }: { days: number }) {
+export function FeedbackForm({ days, initialRating = 0 }: { days: number; initialRating?: number }) {
   const { user, premium, tier } = useMe();
   const rewardName = TIER_NAMES[tier ?? "premium"];
   const dayLabel = `${days} day${days === 1 ? "" : "s"}`;
@@ -21,6 +21,7 @@ export function FeedbackForm({ days }: { days: number }) {
       <RatingReviewForm
         source="page"
         page="/feedback"
+        initialRating={initialRating}
         onDone={(r) => setGranted(r.granted)}
         footer={
           <>

@@ -45,9 +45,9 @@ const TOOLS: Tool[] = [
   },
   {
     href: "/admin/premium-offer",
-    title: "Trial promo email",
+    title: "Feedback and Pro email",
     icon: "🎁",
-    desc: "Subscribe now, 14 days free: email every account that can still start a trial — see the reach, send yourself a test, then send in daily batches.",
+    desc: "Ask every non-paying account for a one-tap rating and invite them to Pro: see the reach, send yourself a test, then send in daily batches.",
   },
   {
     href: "/admin/premium-winback",
