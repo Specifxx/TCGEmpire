@@ -541,6 +541,11 @@ html {
     visibility: hidden;
     pointer-events: none;
   }
+  /* The "Rate RiftCompare" corner card (RateUsPrompt) yields the same way. */
+  body[data-rc-dialog] [data-rate-prompt] {
+    visibility: hidden;
+    pointer-events: none;
+  }
 
   @media (pointer: coarse) {
     .tap-link,

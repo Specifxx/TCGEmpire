@@ -5,8 +5,19 @@ import { usePathname } from "next/navigation";
 import { track } from "@vercel/analytics";
 import { ShareRow } from "./ShareRow";
 import { Dialog } from "./ui/Dialog";
+import { FEEDBACK_OPEN_EVENT } from "@/lib/feedback-open";
 
 // Site-wide feedback / review widget.
+//
+// NO FLOATING BUTTON (2026-10-27, DECISIONS.md "One rating ask, earned by
+// engagement"). A visitor said there were "too many pop-ups asking for my
+// opinion": a 💬 Feedback pill on every page plus the rating prompt was two
+// opinion asks at once. The panel now opens only when asked for, from the
+// footer's "Rate or send feedback" link (FeedbackLink, which dispatches
+// FEEDBACK_OPEN_EVENT) or anything else that dispatches it. The one
+// uninvited rating ask is RateUsPrompt (lib/rate-prompt.ts).
+//
+// The history below is why it never auto-opens either:
 //
 // WHY A PERSISTENT LAUNCHER AND NOT A SECOND POPUP. When this was written the
 // site already auto-opened one sign-up dialog (SignupPromoPopup, removed
@@ -34,7 +45,6 @@ import { Dialog } from "./ui/Dialog";
 // promote it is tone-deaf, and asking a delighted user "what went wrong" wastes
 // the moment.
 
-const LAUNCHER_HIDDEN_PATHS = ["/login", "/verify", "/admin"];
 
 type Phase = "rating" | "detail" | "sending" | "done";
 
@@ -49,52 +59,9 @@ export function FeedbackWidget() {
   const [consentPublic, setConsentPublic] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [overAdZone, setOverAdZone] = useState(false);
-  const [overHero, setOverHero] = useState(false);
 
 
   const positive = rating != null && rating >= 4;
-
-  // ── Never float over an ad ────────────────────────────────────────────────
-  // FooterAds renders a real AdSense-adjacent affiliate unit directly above the
-  // footer (layout.tsx), and Google's program policies prohibit ads being
-  // obscured by floating page furniture. This repo has an active AdSense
-  // remediation history (docs/adsense-remediation.md), so the launcher yields:
-  // while the ad zone is anywhere in the viewport, it hides entirely. Costs one
-  // observer and removes the whole class of violation.
-  // A route with no zone (FooterAds renders none on the policy and trust pages)
-  // must clear the flag: arriving from a footer link while the banners were on
-  // screen would otherwise leave the launcher hidden for the whole page.
-  useEffect(() => {
-    const zone = document.getElementById("rc-ad-zone");
-    if (!zone || typeof IntersectionObserver === "undefined") {
-      setOverAdZone(false);
-      return;
-    }
-    const io = new IntersectionObserver((entries) => setOverAdZone(entries[0]?.isIntersecting ?? false));
-    io.observe(zone);
-    return () => io.disconnect();
-  }, [pathname]);
-
-  // ── Never compete with the hero's search + autocomplete ──────────────────
-  // The homepage-redesign brief flags this exact launcher (fixed bottom-4
-  // right-4) as a real risk of sitting near — and on a short mobile viewport,
-  // occasionally under — the hero search's autocomplete dropdown, right at
-  // the one moment the whole redesigned page is built around. Rather than
-  // hand-roll a scrollY threshold, this reuses the SAME pattern the ad-zone
-  // check right above it already established: look for a marker element by
-  // id and hide for as long as it's in view. CinematicHero's outermost
-  // section carries id="rc-hero" for exactly this. On every OTHER route
-  // (149 of them), that id doesn't exist, `zone` is null, and this becomes a
-  // pure no-op — so the launcher's behavior everywhere except the homepage
-  // is completely unchanged by this effect.
-  useEffect(() => {
-    const zone = document.getElementById("rc-hero");
-    if (!zone || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver((entries) => setOverHero(entries[0]?.isIntersecting ?? false));
-    io.observe(zone);
-    return () => io.disconnect();
-  }, [pathname]);
 
   // Escape, the focus trap, scroll lock and the shared rcDialog flag (read by
   // the corner nudges before they slide in, so nothing can stack on this
@@ -105,12 +72,18 @@ export function FeedbackWidget() {
   // needs to do that by hand.
   const close = useCallback(() => setOpen(false), []);
 
-  function openWidget() {
-    setOpen(true);
-    setPhase("rating");
-    setError(null);
-    track("feedback_open", { path: pathname ?? "/" });
-  }
+  const pathRef = useRef(pathname);
+  pathRef.current = pathname;
+  useEffect(() => {
+    const onOpen = () => {
+      setOpen(true);
+      setPhase("rating");
+      setError(null);
+      track("feedback_open", { path: pathRef.current ?? "/" });
+    };
+    window.addEventListener(FEEDBACK_OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(FEEDBACK_OPEN_EVENT, onOpen);
+  }, []);
 
   function pickRating(n: number) {
     setRating(n);
@@ -150,45 +123,8 @@ export function FeedbackWidget() {
     }
   }
 
-  if (LAUNCHER_HIDDEN_PATHS.some((p) => pathname?.startsWith(p))) return null;
-
   return (
     <>
-      {/* Launcher. z-40 keeps it under every dialog and corner nudge
-          (PremiumSlideIn is z-70, QuickView z-60) and under the sticky nav, so it can never trap or
-          cover a more important surface.
-
-          Sized down to a 44x44 icon-only circle below `sm` (was a wider
-          "💬 Feedback" pill at every breakpoint, measuring ~38px tall on a
-          real mobile viewport — under this site's own 44px tap-target floor,
-          and a bigger footprint than it needed on the viewport most likely
-          to have it fighting for space against other page furniture). The
-          text label returns from `sm:` up, where there's room to spare and
-          no touch-target minimum to hit; `aria-label` keeps the accessible
-          name identical in both states so this is a visual-only change.
-          `!overHero` (see the effect above) additionally hides the whole
-          launcher on the homepage for as long as the hero is in view.
-
-          `sm:min-h-11` (2026-09-23), NOT a bare `min-h-11`: the ≥sm pill
-          measured 38px tall. Under pointer:coarse globals.css lifts `.min-h-11`
-          to 48px, which beats h-11 and turned the 44x44 phone circle into a
-          44x48 egg (measured). The `sm:` variant never applies below 640px, so
-          the phone circle is left alone; from sm up the pill is 44px with a
-          mouse and 48px on touch, because Tailwind generates that
-          utilities-layer coarse rule for the variant too (measured 117x44 at
-          1440, 117x48 on an 844x390 phone). */}
-      {!open && !overAdZone && !overHero && (
-        <button
-          type="button"
-          onClick={openWidget}
-          aria-label="Send feedback"
-          className="above-bottombar fixed right-4 z-40 flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-ink-700 bg-ink-900/95 text-xs font-semibold text-slate-200 shadow-lg backdrop-blur transition-colors hover:border-brand-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5 sm:min-h-11"
-        >
-          <span aria-hidden>💬</span>
-          <span className="hidden sm:inline">Feedback</span>
-        </button>
-      )}
-
       <Dialog open={open} onClose={close} placement="sheet" size="md" z="sheet" labelledBy="rc-feedback-title" className="p-5">
             {/* .tap-icon (2026-09-23): 48px on touch, up from 29x32. Every
                 step's title below carries pr-12 so none runs under it. */}

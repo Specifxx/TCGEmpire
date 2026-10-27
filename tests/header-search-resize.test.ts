@@ -52,11 +52,10 @@ test("the desktop card search is wide, not the old max-w-sm", () => {
 });
 
 test("the hero CinematicHero still carries the #rc-hero marker", () => {
-  // No longer used by HeaderSearchSlot, but FeedbackWidget watches the same id
-  // for its own "don't compete with the hero search" check.
+  // No longer read by HeaderSearchSlot, nor by FeedbackWidget since its
+  // floating button went (2026-10-27); kept as a stable hook for the hero.
   const code = codeOnly(read("src/components/home/CinematicHero.tsx"));
   assert.match(code, /id="rc-hero"/);
-  assert.match(codeOnly(read("src/components/FeedbackWidget.tsx")), /rc-hero/, "the marker's remaining consumer");
 });
 
 test("SearchBar never calls useSearchParams() — the real input must be in the server HTML", () => {
