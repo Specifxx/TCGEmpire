@@ -3,7 +3,9 @@ import { prisma } from "./db";
 // Public read of APPROVED reviews.
 //
 // TWO CONDITIONS, BOTH REQUIRED, and they are not the same condition:
-//   • consentPublic — the person ticked "you can show this publicly";
+//   • consentPublic — the person left "Show my review on RiftCompare" ticked
+//     (ticked by default since 2026-10-27, owner: opt-out, RatingReviewForm;
+//     rows sent before then keep the opt-in answer they gave);
 //   • status APPROVED — a human actually read it and published it.
 // Consent without moderation would put whatever a stranger typed on the
 // homepage; moderation without consent would publish words from someone who

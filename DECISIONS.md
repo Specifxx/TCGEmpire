@@ -20236,3 +20236,43 @@ the "earned" signal and dropped: the owner's rule is no rating ask to new
 visitors at all. The ratings shown on the homepage and the Pro page (from the
 first rating, entry above) still come from this card and the footer panel, so collection
 keeps working, just slower and from people who know the site.
+
+## One feedback form, shown by default — 2026-10-27
+
+The owner, the same night as "One rating ask, earned by engagement": "all
+feedback options [must be] the same … when I click the contact and feedback,
+it's not the same as giving it the rating"; feedback must be "quite
+accessible … a clear button … on every page … give you a rating and you can
+write a review"; and "we shouldn't ask them for consent … assume that we can
+use it on our website and they can opt out".
+
+**Before.** Four different rating UIs: the corner card (one-tap stars, then a
+separate review step with its own consent box), the footer panel (stars,
+sentiment-routed follow-up, a different consent box), /feedback (stars marked
+"optional", its own form), and "Contact & feedback" in the footer, which was
+the contact form and took no rating at all.
+
+**What.**
+- `RatingReviewForm` is the only rating form: five stars, a review box whose
+  question follows the stars, an optional reply email for signed-out
+  visitors, "Show my review on RiftCompare" with a display name, and Send.
+  The corner card (compact: stars first), the footer panel, the new strip and
+  /feedback all render it. A rating from any of them ends the corner card and
+  the strip in that browser (`markRated`).
+- Contact is only contact: the footer and page say "Contact", and /contact
+  points to "Rate & review" for ratings. The launcher's /feedback entry is
+  "Rate & review".
+- `RateUsStrip`: a quiet "How's RiftCompare working for you? ★★★★★ Rate &
+  review" row at the end of every page's content (layout, inside `<main>`),
+  not a pop-up; a star opens the panel with those stars picked. Client-only,
+  hidden once the browser has rated and on the pages the card skips.
+- **Opt-out display.** "Show my review on RiftCompare" starts ticked, says
+  "Untick to keep it private", and the privacy policy says so. Unchanged: an
+  admin approves every review before it shows, the server refuses to approve
+  a row whose box was unticked, and rows sent before today keep the opt-in
+  answer they gave, so nothing is published retroactively. The email is
+  never shown.
+
+**Cost.** The corner card is no longer one tap: a star, then Send. That is
+the price of one form everywhere, and the card still only reaches returning
+visitors.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FeedbackLink } from "./FeedbackLink";
 import { getApprovedReviews, MIN_REVIEWS_TO_DISPLAY } from "@/lib/reviews";
 
 // Real, consented, admin-approved reviews from real visitors — or nothing at
@@ -23,12 +24,10 @@ export async function ReviewsSection() {
         <div>
           <h2 id="rc-reviews-heading" className="text-xl font-extrabold text-white">What people say</h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Real feedback from people using RiftCompare, shared with their permission.
+            Real reviews from people using RiftCompare, read by a person before they appear.
           </p>
         </div>
-        <Link href="/feedback" className="btn-ghost hidden text-xs sm:inline-flex">
-          Add yours →
-        </Link>
+        <FeedbackLink className="btn-ghost text-xs">Rate &amp; review →</FeedbackLink>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

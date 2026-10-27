@@ -3,10 +3,11 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CONTACT_EMAIL, TIER_NAMES } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { ContactForm } from "@/components/ContactForm";
+import { FeedbackLink } from "@/components/FeedbackLink";
 
 export const metadata = {
-  title: "Contact & Feedback",
-  description: "Get in touch with RiftCompare — report a price issue, suggest a store to add, or send feedback.",
+  title: "Contact",
+  description: "Get in touch with RiftCompare: report a price issue, suggest a store to add, or ask a question.",
   alternates: pageAlternates("/contact"),
 };
 
@@ -18,7 +19,7 @@ export default function ContactPage() {
           {/* Visible trail + BreadcrumbList JSON-LD. Every indexable page needs
               both — the crawl check asserts it. */}
           <Breadcrumbs trail={[{ name: "Contact", href: "/contact" }]} />
-          <h1 className="text-2xl font-extrabold text-white">Contact &amp; Feedback</h1>
+          <h1 className="text-2xl font-extrabold text-white">Contact</h1>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-300">
             Spotted a wrong price, a missing store, or have an idea to make RiftCompare better?
             We&apos;d genuinely love to hear from you.
@@ -50,7 +51,14 @@ export default function ContactPage() {
             </a>
           </p>
 
+          {/* Rating the site is one form everywhere (RatingReviewForm), not
+              this one: a message here wants a reply, a review does not. */}
           <p className="mt-5 border-t border-ink-800 pt-4 text-sm text-slate-400">
+            Want to rate RiftCompare or leave a review?{" "}
+            <FeedbackLink className="font-semibold text-brand-300 hover:underline">Rate &amp; review →</FeedbackLink>
+          </p>
+
+          <p className="mt-3 text-sm text-slate-400">
             Run a shop, or know one we&apos;re missing?{" "}
             <Link href="/stores/suggest" className="font-semibold text-brand-300 hover:underline">
               Suggest a store →

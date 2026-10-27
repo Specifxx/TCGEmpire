@@ -8,7 +8,7 @@
 //
 // It is the ONLY prompt on the site that asks for an opinion unasked. The
 // feedback form has no floating button any more: it opens from the footer's
-// "Rate or send feedback" link (FeedbackLink) and the /contact page.
+// "Rate & review" link (FeedbackLink) and the /contact page.
 //
 // WHEN. Never a new visitor (owner, 2026-10-27: "asking new users to rate it,
 // it's kind of weird"; "I just don't want to be bombarded with it every time I
@@ -33,6 +33,11 @@ export const RATE_STORAGE_KEY = "rc_rate";
 export const RATE_SESSION_KEY = "rc_rate_seen";
 
 const NEVER = [/^\/login/, /^\/verify/, /^\/admin/, /^\/embed/, /^\/premium/, /^\/checkout/, /^\/games/, /^\/riftle/, /^\/unsubscribe/, /^\/contact/, /^\/feedback/];
+
+/** May a rating surface (the corner card, the "Rate us" strip) appear on this path? */
+export function rateAllowedOn(path: string): boolean {
+  return !NEVER.some((r) => r.test(path));
+}
 
 export interface RateState {
   /** First page view this browser made, epoch ms. */
@@ -95,7 +100,7 @@ export interface RateVisit {
 /** Should the prompt open on this page view (after it was counted)? */
 export function shouldAskRating(s: RateState, now: number, path: string, visit: RateVisit): boolean {
   if (s.rated || s.optedOut || s.asks >= RATE_MAX_ASKS) return false;
-  if (NEVER.some((r) => r.test(path))) return false;
+  if (!rateAllowedOn(path)) return false;
   if (visit.pages < 2 || visit.otherPromptShown) return false;
   if (s.pages < RATE_AFTER_PAGES) return false;
   if (now - s.firstSeen < RATE_AFTER_MS) return false;
@@ -104,7 +109,30 @@ export function shouldAskRating(s: RateState, now: number, path: string, visit: 
   return true;
 }
 
-/** The follow-up a rating gets: a low one asks what to fix. */
-export function ratingFollowUp(stars: number): "fix" | "thanks" {
-  return stars <= 3 ? "fix" : "thanks";
+/**
+ * Remember that this browser has rated (any entry point: the corner card, the
+ * footer panel, the "Rate us" strip, /feedback). Ends the corner card and hides
+ * the strip for good.
+ */
+export function markRated(now = Date.now()): void {
+  try {
+    const s = parseRateState(localStorage.getItem(RATE_STORAGE_KEY), now);
+    localStorage.setItem(RATE_STORAGE_KEY, JSON.stringify({ ...s, rated: true }));
+  } catch {
+    // Private mode: nothing to remember.
+  }
+  try {
+    window.dispatchEvent(new Event("rc:rated")); // RateUsStrip hides at once
+  } catch {
+    /* not in a browser */
+  }
+}
+
+/** Has this browser rated? (false when storage is blocked) */
+export function hasRated(now = Date.now()): boolean {
+  try {
+    return parseRateState(localStorage.getItem(RATE_STORAGE_KEY), now).rated;
+  } catch {
+    return false;
+  }
 }

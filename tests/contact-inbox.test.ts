@@ -34,7 +34,7 @@ test("the /contact page renders a form that posts to /api/contact, which writes 
 });
 
 test("feedback honeypots are display:none, never a rendered opacity-0 field autofill can fill", () => {
-  for (const f of ["src/components/FeedbackForm.tsx", "src/components/FeedbackWidget.tsx", "src/components/ContactForm.tsx"]) {
+  for (const f of ["src/components/RatingReviewForm.tsx", "src/components/ContactForm.tsx"]) {
     const s = readFileSync(f, "utf8");
     assert.doesNotMatch(s, /pointer-events-none absolute h-0 w-0 opacity-0/, f);
     assert.match(s, /name="website"[\s\S]{0,400}className="hidden"/, f);
