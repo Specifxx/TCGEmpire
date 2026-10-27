@@ -708,6 +708,11 @@ longer lands on its entry.
   visitor's own eBay otherwise; stacked rows below 768px so it is never cut
   off. [2026-09-26](../DECISIONS.md#L13751),
   [2026-09-26](../DECISIONS.md#L14190), [2026-09-30](../DECISIONS.md#L16000)
+- **The phone Cheapest block names the paid marketplace:** when a store that
+  pays nothing is cheapest, `CardTopBuy` adds "or US$X on TCGplayer/eBay (+N%)",
+  the cheapest paid row within 20%, with the Paid link tag; the Buy button and
+  the comparison's order are unchanged (`lib/paid-alternative.ts`, surface
+  `card_top_alt`). [2026-10-27](../DECISIONS.md#L20049)
 
 ## Navigation & chrome
 
