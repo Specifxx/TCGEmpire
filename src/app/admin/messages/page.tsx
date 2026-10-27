@@ -322,7 +322,7 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
               <div className="mt-1 text-3xl font-extrabold text-white">
                 {ratingAvg != null ? ratingAvg.toFixed(2) : "–"} <span className="text-lg text-gold">★</span>
               </div>
-              <div className="text-xs text-slate-500">{ratingCount.toLocaleString()} rating{ratingCount === 1 ? "" : "s"} · shown on the site from 100</div>
+              <div className="text-xs text-slate-500">{ratingCount.toLocaleString()} rating{ratingCount === 1 ? "" : "s"} · shown on the homepage and Pro page</div>
             </div>
             <div className="rounded-xl border border-ink-700 bg-ink-850 p-4">
               <div className="text-xs uppercase tracking-wide text-slate-500">Stars</div>
