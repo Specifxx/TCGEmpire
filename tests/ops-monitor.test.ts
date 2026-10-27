@@ -377,6 +377,34 @@ test("stripe: a rejected key is critical, and a missing webhook is critical", as
   assert.equal(noHook[1]!.severity, "crit");
 });
 
+test("stripe: failures that belong to a dead sister-site endpoint say Pro is fine and name it", async () => {
+  const hooks = {
+    data: [
+      { status: "enabled", url: "https://riftcompare.com/api/marketplace/stripe/webhook" },
+      { status: "enabled", url: "https://gundamcompare.com/api/stripe/webhook" },
+    ],
+  };
+  const run = (gundam: number) =>
+    stripeChecks(
+      deps({
+        env: { STRIPE_SECRET_KEY: "sk" },
+        fetch: fakeFetch({
+          "https://api.stripe.com/v1/balance": json({ available: [] }),
+          "https://api.stripe.com/v1/webhook_endpoints": json(hooks),
+          "https://api.stripe.com/v1/events": json({ data: [{}, {}, {}, {}] }),
+          "https://riftcompare.com/api/marketplace/stripe/webhook": json({ error: "Missing signature" }, 400),
+          "https://gundamcompare.com/api/stripe/webhook": json({}, gundam),
+        }).f,
+      }),
+    );
+  const dead = (await run(404))[1]!;
+  assert.equal(dead.severity, "warn");
+  assert.match(dead.summary, /gundamcompare\.com\/api\/stripe\/webhook/);
+  assert.match(dead.summary, /Pro is not affected/);
+  const alive = (await run(400))[1]!;
+  assert.match(alive.summary, /failed to reach the site/, "a live sister endpoint could be ours to fix: keep the old warning");
+});
+
 test("inbox: nothing waiting is fine; an old unread item escalates", async () => {
   const inbox = (oldestHoursAgo: number | null, n = 2) => ({ ...emptyInbox(), feedback: n, total: n, oldestAt: oldestHoursAgo == null ? null : new Date(NOW.getTime() - oldestHoursAgo * 3_600_000).toISOString() });
   const mk = (i: ReturnType<typeof inbox>) => deps({ db: { inbox: async () => i } as unknown as OpsDeps["db"] });
