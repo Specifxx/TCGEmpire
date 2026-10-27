@@ -204,7 +204,7 @@ longer lands on its entry.
   `/premium` copies Collectr's page for non-members. A rate-the-site corner card
   (not a modal) asks only returning visitors, at most twice, and is the one
   uninvited opinion ask; the feedback panel opens from the footer link, with
-  no floating button ([2026-10-27](../DECISIONS.md#L20176)); the homepage hero and the
+  no floating button ([2026-10-27](../DECISIONS.md#L20201)); the homepage hero and the
   Pro page show the real average with its count from the first rating
   (2026-10-27), approved and consented reviews on both, never in JSON-LD.
   [2026-10-26](../DECISIONS.md#L19772)
@@ -776,8 +776,9 @@ longer lands on its entry.
   Pairs) were replaced by Seraphine's Piano, a Radiance rhythm game timed on
   the Web Audio clock and drawn on one rAF canvas. Retired game routes 301 to
   it. [2026-10-16](../DECISIONS.md#L17753)
-- **Sister sites:** the footer links OP Compare, DexCompare and MTG Compare
-  (`SISTER_SITES`, `lib/sister-sites.ts`), and the cross-game guides and the
+- **Sister sites:** the footer links the whole Compare Empire family (the other
+  six card-game sites, then CamCompare and Compare Empire on their own line;
+  [2026-10-27](../DECISIONS.md#L20126)) (`SISTER_SITES`, `lib/sister-sites.ts`), and the cross-game guides and the
   where-to-buy / price-comparison articles end with a sister-site block
   (`sisterSitesFor`; at most a third of articles). Plain followed links
   (`rel="noopener"`); a deep link is added only once it is live there. The
