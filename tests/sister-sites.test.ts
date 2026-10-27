@@ -14,10 +14,10 @@ import { SISTER_SITES, sisterSitesFor } from "../src/lib/sister-sites";
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const published = ARTICLES.filter((a) => !a.draft);
 
-test("the five sister sites, each linking only its own https host", () => {
+test("the eight sister sites, each linking only its own https host", () => {
   assert.deepEqual(
     SISTER_SITES.map((s) => s.url),
-    ["https://opcompare.app", "https://www.dexcompare.app", "https://mtgcompare.app", "https://gundamcompare.com", "https://lorcanacompare.com"],
+    ["https://opcompare.app", "https://www.dexcompare.app", "https://mtgcompare.app", "https://gundamcompare.com", "https://lorcanacompare.com", "https://ygocompare.com", "https://www.camcompare.app", "https://www.compareempire.com"],
   );
   for (const s of SISTER_SITES) {
     assert.ok(s.links.length > 0, s.name);
@@ -48,9 +48,10 @@ test("the cross-game guides link their own game's site; buying reading links all
 test("footer and article block: plain followed links, rendered from the one list", () => {
   const layout = read("src/app/layout.tsx");
   const footer = layout.slice(layout.indexOf("<footer"), layout.indexOf("</footer>"));
-  assert.match(footer, /SISTER_SITES\.map/);
+  assert.match(footer, /SISTER_SITES\.filter\(\(s\) => !s\.notTcg\)\.map/);
+  assert.match(footer, /SISTER_SITES\.filter\(\(s\) => s\.notTcg\)\.map/);
   const block = read("src/components/SisterSites.tsx");
-  for (const src of [footer.slice(footer.indexOf("SISTER_SITES.map")), block]) {
+  for (const src of [footer.slice(footer.indexOf("SISTER_SITES.filter")), block]) {
     const anchors = [...src.matchAll(/<a\b[^>]*>/g)].map((m) => m[0]);
     assert.ok(anchors.length > 0);
     for (const a of anchors.filter((x) => /s\.url|l\.href/.test(x))) {

@@ -15,7 +15,7 @@
 // look-alike sites cross-linked sitewide read as a link network.
 
 export interface SisterSite {
-  key: "op" | "dex" | "mtg" | "gundam" | "lorcana";
+  key: "op" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cam" | "empire";
   name: string;
   url: string;
   /** The game, as a reader would say it: "One Piece", "Pokémon", "Magic". */
@@ -30,6 +30,8 @@ export interface SisterSite {
   /** Footer only: left out of the articles' block, which serves the three
    *  games Riftbound players most often come from (2026-10-26). */
   footerOnly?: boolean;
+  /** Not a card game: listed after the TCGs, under "Also from Compare Empire". */
+  notTcg?: boolean;
 }
 
 export const SISTER_SITES: SisterSite[] = [
@@ -64,12 +66,14 @@ export const SISTER_SITES: SisterSite[] = [
     name: "MTG Compare",
     url: "https://mtgcompare.app",
     game: "Magic",
-    anchor: "Magic: The Gathering card prices",
-    what: "Magic: The Gathering singles and sealed prices across stores, with a deck pricer",
+    // Sealed only since 2026-10-21 (mtgcompare DECISIONS.md): the anchor and
+    // links say so, and the old singles paths it 308s are no longer linked.
+    anchor: "Magic: The Gathering sealed prices",
+    what: "Magic: The Gathering booster box, bundle and Commander deck prices across stores in seven markets",
     links: [
-      { label: "Where to buy Magic cards", href: "https://mtgcompare.app/guides/where-to-buy-magic-cards" },
-      { label: "Price a decklist", href: "https://mtgcompare.app/deck" },
-      { label: "Magic release dates", href: "https://mtgcompare.app/release-dates" },
+      { label: "Magic sealed prices", href: "https://mtgcompare.app/us/sealed" },
+      { label: "Where to buy Magic cards", href: "https://mtgcompare.app/blog/where-to-buy-magic-cards" },
+      { label: "Magic release dates", href: "https://mtgcompare.app/us/releases" },
     ],
   },
   // The whole family in the footer (2026-10-26, DECISIONS.md "One family of
@@ -100,6 +104,50 @@ export const SISTER_SITES: SisterSite[] = [
       { label: "Lorcana pre-orders", href: "https://lorcanacompare.com/preorders" },
     ],
     footerOnly: true,
+  },
+  // The rest of the family (2026-10-27, DECISIONS.md "Every site links the
+  // whole family"): YGO Compare runs the Gundam/Lorcana engine; CamCompare and
+  // Compare Empire are not card games, so they sit after the TCGs.
+  {
+    key: "ygo",
+    name: "YGO Compare",
+    url: "https://ygocompare.com",
+    game: "Yu-Gi-Oh!",
+    anchor: "Yu-Gi-Oh! card prices",
+    what: "Yu-Gi-Oh! TCG singles and sealed prices across stores",
+    links: [
+      { label: "Yu-Gi-Oh! sealed prices", href: "https://ygocompare.com/sealed" },
+      { label: "Yu-Gi-Oh! pre-orders", href: "https://ygocompare.com/preorders" },
+    ],
+    footerOnly: true,
+  },
+  {
+    key: "cam",
+    name: "CamCompare",
+    url: "https://www.camcompare.app",
+    game: "Cameras",
+    anchor: "Camera and lens prices",
+    what: "camera and lens specs side by side, with new and used prices in five markets",
+    links: [
+      { label: "All cameras", href: "https://www.camcompare.app/cameras" },
+      { label: "All lenses", href: "https://www.camcompare.app/lenses" },
+    ],
+    footerOnly: true,
+    notTcg: true,
+  },
+  {
+    key: "empire",
+    name: "Compare Empire",
+    url: "https://www.compareempire.com",
+    game: "Tech",
+    anchor: "Australian tech prices",
+    what: "phone, TV and laptop prices across Australian stores",
+    links: [
+      { label: "Phone prices", href: "https://www.compareempire.com/phones" },
+      { label: "Today's deals", href: "https://www.compareempire.com/deals" },
+    ],
+    footerOnly: true,
+    notTcg: true,
   },
 ];
 

@@ -20122,3 +20122,28 @@ an eBay link in the details card as "affiliate before our own analysis
 (AdSense Phase 8)". AdSense is off and its approval no longer depends on it,
 `CardTopBuy` has carried an outbound Buy link there since that same day, and
 this line is a ranked row's own price, not an ad.
+
+## Every site links the whole family — 2026-10-27
+
+The owner, once YGO Compare existed: "our website should all have all of our
+compare websites now in the suite of websites … just try to backlink all of
+it." Every site's footer now links the other eight: RiftCompare, OP Compare,
+DexCompare, MTG Compare, Gundam Compare, Lorcana Compare, YGO Compare
+(ygocompare.com), CamCompare (www.camcompare.app) and Compare Empire
+(www.compareempire.com, Australian tech prices), each on the host it already
+uses (no apex or www change). Plain followed links, never sponsored: they are
+our own sites. The link text says what each compares ("Yu-Gi-Oh! card prices",
+"Camera and lens prices"), with the site's name after it, rather than the
+brand alone. MTG Compare is sealed-only since 2026-10-21, so its anchor now
+says "Magic: The Gathering sealed prices" everywhere.
+
+Footer only. In-page blocks ("Compare other TCGs" on card and product pages,
+the article blocks) keep to card games, and the two sites that are not card
+games are labelled as the wider family, so nine look-alike sites linked from
+every page body never read as a link network.
+
+`lib/sister-sites.ts` gains YGO, CamCompare and Compare Empire as
+`footerOnly`; the two non-TCGs carry `notTcg` and sit on their own "Also from
+Compare Empire" line under "Compare other TCGs". The MTG deep links moved to
+the sealed site's live paths (`/us/sealed`, `/us/releases`, the blog's
+where-to-buy post) instead of old singles paths it now 308s.
