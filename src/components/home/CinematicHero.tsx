@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { SiteRatingBadge } from "@/components/SiteRatingBadge";
+import type { SiteRating } from "@/lib/site-rating";
 import { CreatorsCornerBadge } from "./CreatorsCornerBadge";
 import { RadianceSeasonBanner } from "@/components/RadianceSeasonBanner";
 import Link from "next/link";
@@ -71,6 +73,7 @@ export function CinematicHero({
   freshness,
   freshnessAt,
   region,
+  rating,
 }: {
   totalCards: number;
   // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
@@ -87,6 +90,8 @@ export function CinematicHero({
   // omitted on the real homepage, which keeps its existing US-first copy and
   // switcher-following stat exactly as before.
   region?: HeroRegion;
+  // The site's star rating, or null until 100 real ratings exist (SiteRatingBadge).
+  rating?: SiteRating | null;
 }) {
   const heroAdjective = region?.adjective ?? "US";
   const otherMarkets = otherMarketsList(region?.code ?? "US");
@@ -278,6 +283,8 @@ export function CinematicHero({
           <span className="mt-1 block text-sm leading-snug sm:mt-0 sm:inline sm:text-base">Price check any card and find the cheapest place to buy — live Riftbound prices from
           every {heroAdjective} retailer we track, plus five more markets in their own currency: {otherMarkets}, updated daily.</span>
         </p>
+        {/* The site's star rating, right under the promise (owner, 2026-10-27). */}
+        <SiteRatingBadge rating={rating} className="mt-3" />
 
         {/* The primary action: search, not a row of buttons. Wired to the exact
             same search as the nav box (same component, `variant="hero"`).

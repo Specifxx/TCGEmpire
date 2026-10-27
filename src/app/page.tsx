@@ -13,6 +13,7 @@ import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EbayPicks } from "@/components/EbayPicks";
 import { homeMetadata } from "@/lib/home-metadata";
 import { webPage, faqPage, webApplication } from "@/lib/jsonld";
+import { getSiteRating } from "@/lib/site-rating";
 
 // RESTORED (2026-08-17), overriding a same-day "one job" redesign that had
 // briefly replaced this body with ProofStrip + DealsRow: direct owner
@@ -306,6 +307,8 @@ export default async function HomePage() {
     // The featured set's chase printings, dearest first (16 rows).
     chaseSet ? getSetChaseTiles(chaseSet.code, 16, country) : Promise.resolve([]),
   ]);
+  // One memoised aggregate; null (hidden) until 100 real ratings exist.
+  const rating = await getSiteRating();
   const storeCount = statsByCountry[country].stores;
   const storeWord = storeCount === 1 ? "store" : "stores";
   // Per-market Top Deals/movers, so HomeSections' sections can localise
@@ -324,6 +327,7 @@ export default async function HomePage() {
         trendingCards={popularCards.slice(0, 6)}
         freshness={freshness}
         freshnessAt={freshnessAt}
+        rating={rating}
       />
 
       {/* eBay Picks (the newest set's chase cards, cheapest live listing
