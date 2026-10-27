@@ -346,18 +346,20 @@ export default function MethodologyPage() {
         <section id="ordering" className="scroll-mt-header space-y-3">
           <h2 className="text-lg font-bold text-white">How a comparison is ordered</h2>
           <p>
-            A card&rsquo;s store comparison lists the in-stock copies in your market cheapest first by item
-            price, with the delivered total shown where the store publishes its postage. A store&rsquo;s known
-            postage — when we know it — breaks ties between otherwise-equal prices, but it never demotes a
-            store below a competitor just because that competitor&rsquo;s postage happens to be known upfront
-            and theirs isn&rsquo;t. An eBay row sits at its own price position like any other row, its button
-            in eBay&rsquo;s own colour with a &ldquo;Paid link&rdquo; tag; nothing is moved up or down for money.
-            Reference prices are never in the list at all. The one comparison ordered differently is the
-            Radiance pre-order table: there, open eBay listings are shown first within each product, tagged
-            &ldquo;Shown first&rdquo;, then the stores taking pre-orders, cheapest first, then unconfirmed and
-            sold-out ones. See our{" "}
+            A card&rsquo;s comparison starts with eBay and TCGplayer, our two affiliate partners: the cheapest
+            listing of each in your market, tagged &ldquo;Shown first&rdquo; and marked as paid links, whatever
+            their price (an eBay search, or TCGplayer&rsquo;s US market price as a labelled reference, where we
+            have no listing). The number beside each row is its rank by item price, the &ldquo;Cheapest&rdquo;
+            badge stays on the cheapest copy wherever it sits, and a pinned row that costs more says by how
+            much. Every store below them is listed cheapest first by item price, with the delivered total shown
+            where the store publishes its postage. A store&rsquo;s known postage breaks ties between
+            otherwise-equal prices, but it never demotes a store below a competitor just because that
+            competitor&rsquo;s postage happens to be known upfront and theirs isn&rsquo;t. The headline
+            &ldquo;Cheapest&rdquo; price at the top of the page is always the cheapest copy from anyone. The
+            Radiance pre-order table works the same way: open eBay listings first within each product, then
+            the stores. See our{" "}
             <Link href="/editorial-policy" className="text-brand-400 hover:underline">editorial &amp; pricing policy</Link>{" "}
-            for how we make money, why it never affects a card&rsquo;s comparison, and that one exception.
+            for how we make money and how it shapes this order.
           </p>
         </section>
 

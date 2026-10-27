@@ -244,10 +244,9 @@ export default function PrivacyPage() {
           <p>
             Some outbound links to retailers (such as eBay, Amazon and TCGplayer) are affiliate
             links. If you buy through them we may earn a commission at no extra cost to you. This
-            never affects the prices we show, and it does not affect the order in which a price
-            comparison is ranked, with one exception we label where it happens: on our Radiance
-            pre-order table, open eBay listings are shown first within each product, tagged
-            &ldquo;Shown first&rdquo;.
+            never affects the prices we show, and it does not affect the order in which stores are
+            ranked, with one exception we label where it happens: eBay and TCGplayer are shown first
+            in each price comparison, tagged &ldquo;Shown first&rdquo;.
           </p>
           <p>
             We are a member of the eBay Partner Network, TCGplayer&rsquo;s affiliate programme (run

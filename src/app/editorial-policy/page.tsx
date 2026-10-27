@@ -148,8 +148,8 @@ export default function EditorialPolicyPage() {
             product listings and from the marketplaces&rsquo; APIs; every source is listed on our{" "}
             <Link href="/methodology#sources" className="text-brand-400 hover:underline">methodology page</Link>.
             We do not accept price submissions from retailers, and no retailer can pay to appear, to
-            rank higher, or to have a competitor removed. The one place an order follows commission
-            is the Radiance pre-order table, where open eBay listings are shown first and tagged so —
+            rank higher, or to have a competitor removed. The one thing in an order that follows
+            commission is that eBay and TCGplayer, our affiliate partners, are shown first and tagged so —
             see <a href="#money" className="text-brand-400 hover:underline">how we make money</a>.
           </p>
           <p>
@@ -244,7 +244,7 @@ export default function EditorialPolicyPage() {
               store publishes its postage. A store&rsquo;s known postage breaks ties between
               otherwise-equal prices, but a store is never pushed down just because a competitor&rsquo;s
               postage happens to be known and its own is only quoted at checkout. Never by what we earn —
-              except the one labelled exception on the Radiance pre-order table, described below.
+              except that eBay and TCGplayer are shown first, labelled, as described below.
             </li>
             <li>A consistency audit runs over the card database on demand, checking for duplicate records, broken identifiers, impossible prices and stale listings.</li>
             <li>
@@ -319,17 +319,16 @@ export default function EditorialPolicyPage() {
               instead of claiming "the order of any ranked comparison" is
               untouched. Every other ranked comparison still is. */}
           <p>
-            None of it affects the prices we show, and with one labelled exception it does not affect
-            the order of any ranked comparison. Ranking is by item price, with known postage breaking
-            ties; a store we earn nothing from outranks one we do whenever it is cheaper, which is most
-            of the time. The exception: on our Radiance pre-order price table, open eBay listings are shown
-            first within each product, tagged &ldquo;Shown first&rdquo;. They are marked as paid links, the figure beside each still shows
-            how it compares with the cheapest open offer, and the product&apos;s headline price is
-            still the cheapest open offer from anyone. Outside the ranked lists we also promote eBay, our
-            main affiliate partner — an &ldquo;Also on eBay&rdquo; box or a &ldquo;Search eBay&rdquo;
-            link beside a comparison. Those are labelled as paid links and sit apart from the ranking.
-            Elsewhere inside a comparison, an eBay row&apos;s button uses eBay&apos;s own colour and
-            carries a &ldquo;Paid link&rdquo; tag; its position and price are unchanged. See our{" "}
+            None of it affects the prices we show. It affects the order of a comparison in one labelled
+            way: since 27 October 2026 every card comparison, and each product on our Radiance pre-order
+            table, shows eBay and TCGplayer, our affiliate partners, first, tagged &ldquo;Shown first&rdquo;
+            and marked as paid links, whatever their price. They are often not the cheapest: the number
+            beside each row is its rank by price, a pinned row that costs more says by how much, the
+            &ldquo;Cheapest&rdquo; badge stays on the cheapest copy, and the headline price is always the
+            cheapest offer from anyone. Every store below them is ranked by item price, with known postage
+            breaking ties; a store we earn nothing from outranks one we do whenever it is cheaper. Outside
+            the comparisons we also promote eBay with labelled &ldquo;Search eBay&rdquo; links and boxes.
+            eBay buttons use eBay&apos;s own colour and carry a &ldquo;Paid link&rdquo; tag. See our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">privacy policy</Link>{" "}
             for what advertising and analytics cookies are set and how to opt out.
           </p>

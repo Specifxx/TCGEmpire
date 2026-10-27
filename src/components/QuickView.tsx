@@ -28,12 +28,12 @@ import { EbayTabs, type EbayTab } from "./EbayTabs";
 import { EbayGradedLive, type GradedRow } from "./EbayGradedLive";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { timeAgo } from "@/lib/format";
-import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
+import { buyButtonClass, buyButtonLabel, ShownFirstTag } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
 import type { PricePoint } from "@/lib/price-history";
 import { lastKnownLabel, lastKnownPrice, lastKnownTitle, type LastKnownPrice } from "@/lib/last-known-price";
-import { hasAnyMarketPrice } from "@/lib/market-rows";
+import { hasAnyMarketPrice, pinMarketplaces } from "@/lib/market-rows";
 import { Dialog } from "./ui/Dialog";
 import { Spinner } from "./ui/Skeleton";
 import { pushRecentCard } from "@/lib/recently-viewed";
@@ -604,7 +604,15 @@ function QuickViewModal({
                 </div>
               ) : (
                 <ul className="divide-y divide-ink-800">
-                  {inStock.slice(0, 6).map((p, i) => (
+                  {/* eBay and TCGplayer first (pinMarketplaces, owner 2026-10-27); `i`
+                      stays the PRICE rank, so "Cheapest" stays on the cheapest. */}
+                  {(() => {
+                    const pin = pinMarketplaces(inStock);
+                    const lead = [pin.ebay, pin.tcgplayer].filter((p): p is (typeof inStock)[number] => p != null);
+                    return [...lead.map((p) => ({ p, pinned: true })), ...pin.rest.map((p) => ({ p, pinned: false }))].slice(0, 6);
+                  })().map(({ p, pinned }) => {
+                    const i = inStock.indexOf(p);
+                    return (
                     <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 md:flex-nowrap">
                       {/* Wraps below md, with the buy button on its own
                           full-width line (2026-09-23): an inline button squeezed
@@ -623,6 +631,7 @@ function QuickViewModal({
                               Cheapest
                             </span>
                           )}
+                          {pinned && <ShownFirstTag />}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500">
                           {p.isFoil && <span className="font-semibold text-gold">✦ Foil</span>}
@@ -675,7 +684,8 @@ function QuickViewModal({
                         {buyButtonLabel(p.retailer)}
                       </OutboundLink>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               )}
               {prices && inStock.length > 6 && (

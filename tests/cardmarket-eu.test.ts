@@ -549,7 +549,15 @@ test("the Cardmarket reference block is not the last thing on either surface", (
   // a whole continent — so for a UK or EU visitor a USD market price through an
   // FX rate is the LESS relevant of the two reference blocks. Cardmarket goes
   // first, on the card page and in the popup alike.
-  for (const f of ["src/components/CardMarketSection.tsx", "src/components/QuickView.tsx"]) {
+  // The card page's TCGplayer reference moved INTO the comparison's pinned
+  // rows on 2026-10-27 ("eBay and TCGplayer lead every price list"), so there
+  // Cardmarket is the first block after the panel; the popup keeps both blocks.
+  {
+    const src = read("src/components/CardMarketSection.tsx");
+    const cm = src.indexOf("<CardmarketPrice");
+    assert.ok(cm > 0 && cm < src.indexOf("<EbayAd ") && cm < src.indexOf("<TcgplayerAd "), "Cardmarket before the banners");
+  }
+  for (const f of ["src/components/QuickView.tsx"]) {
     const src = read(f);
     const cm = src.indexOf("<CardmarketPrice");
     const tcg = src.indexOf("<TcgMarketPrice");

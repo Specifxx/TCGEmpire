@@ -77,7 +77,7 @@ import { cardHeadlineLastKnown, lastKnownDayLabel } from "@/lib/last-known-price
 // The comparison's ordering in one line, beside the link to /methodology#ordering
 // that explains it: item price first, postage only where the store states it
 // (lib/market-rows.ts computeMarket).
-const HOW_WE_COMPARE = "Cheapest first by item price, with the delivered total shown where the store publishes its postage.";
+const HOW_WE_COMPARE = "eBay and TCGplayer first (paid links), then stores cheapest first by item price, with the delivered total where the store publishes its postage.";
 
 // ONE COPY PER CARD, KEPT BY VERCEL'S CDN (2026-10-17, DECISIONS.md "Card pages
 // leave ISR for the CDN"). No cookie/header reads anywhere in this route's tree

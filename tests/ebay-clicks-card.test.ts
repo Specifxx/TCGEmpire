@@ -51,7 +51,7 @@ test("the colour is the only thing that changed: both tables still rank by price
   // The row order is computeMarket's, untouched — no eBay-first sort anywhere.
   assert.match(section, /const m = useMemo\(\(\) => computeMarket\(rows, country\), \[rows, country\]\);/);
   const qv = read(QUICKVIEW);
-  assert.match(qv, /import \{ buyButtonClass, buyButtonLabel \} from "\.\/CardMarketSection";/);
+  assert.match(qv, /import \{ buyButtonClass, buyButtonLabel, ShownFirstTag \} from "\.\/CardMarketSection";/);
   assert.match(qv, /\.sort\(\(a, b\) => a\.priceCents - b\.priceCents \|\| a\.delivered - b\.delivered\);/);
   for (const src of [codeOnly(section), codeOnly(qv)]) {
     assert.doesNotMatch(src, /startsWith\("ebay"\)\s*\?\s*-1|sort\([^)]*ebay/i, "no comparison may put eBay first");
@@ -60,40 +60,32 @@ test("the colour is the only thing that changed: both tables still rank by price
 
 // ── 2. The card page's no-eBay-row fallback ─────────────────────────────────
 
-test("the fallback sits directly under the comparison panel, above both reference blocks", () => {
+// Since 2026-10-27 (owner: "the top rows should be eBay and TCGplayer, even if
+// they are not the cheapest") the eBay search and TCGplayer's reference lead
+// the comparison panel instead of following it. DECISIONS.md, "eBay and
+// TCGplayer lead every price list".
+test("eBay then TCGplayer lead the panel: a listing when there is one, else the search and the reference", () => {
   const src = read(SECTION);
-  const panelEnd = src.indexOf('<AffiliateDisclosure partner="both" tight />');
-  const fallback = src.indexOf('retailer="ebay_no_listing"');
-  const cm = src.indexOf("<CardmarketPrice");
-  const tcg = src.indexOf("<TcgMarketPrice");
-  assert.ok(panelEnd > 0 && fallback > panelEnd, "after the comparison panel and its disclosure");
-  assert.ok(cm > fallback, "before <CardmarketPrice");
-  assert.ok(tcg > fallback, "before <TcgMarketPrice");
-  // Outside the ranked list: the rows' </ul> closes before it starts.
-  const rows = src.lastIndexOf("{prices.map(", fallback);
-  assert.ok(rows > 0 && src.slice(rows, fallback).includes("</ul>"), "the fallback is not a row in the ranked list");
+  const lead = src.indexOf("{(pin.ebay || ebay || pin.tcgplayer || tcg) && (");
+  const ranked = src.indexOf("{rest.map((p) => renderRow(p, false))}");
+  assert.ok(lead > 0 && ranked > lead, "the pinned rows render before the ranked rest");
+  const block = codeOnly(src.slice(lead, ranked));
+  assert.ok(block.indexOf("renderRow(pin.ebay, true)") < block.indexOf("renderRow(pin.tcgplayer, true)"), "eBay first");
+  assert.match(block, /retailer="ebay_no_listing"/);
+  assert.match(block, /surface="ebay_fallback"/);
+  assert.match(block, /TCGplayer may not ship to your country/);
+  assert.doesNotMatch(block, /cheaper|guarantee|buyer protection/i);
+  // Nothing else moved: the gate, and Cardmarket stays a reference outside the list.
+  assert.match(src, /const ebay = m\.hasEbay \? null : ebaySearch\[country\] \?\? null;/);
+  assert.ok(src.indexOf("<CardmarketPrice") > ranked);
 });
 
-test("the fallback keeps its gate and key, and reads as an eBay search", () => {
-  const src = read(SECTION);
-  // tests/ebay-value-floor.test.ts pins these two as well.
-  assert.match(src, /const ebay = m\.hasEbay \? null : ebaySearch\[country\] \?\? null;/);
-  assert.match(src, /retailer="ebay_no_listing"/);
-  const at = src.indexOf("{ebay && (");
-  assert.ok(at > 0);
-  const block = src.slice(at, src.indexOf("{cardmarket && (", at));
-  const code = codeOnly(block);
-  assert.match(code, /Search \{ebay\.label\} for \{displayName\}/);
-  assert.match(code, /We have no \$\{ebay\.label\} price on file for this card right now — eBay sellers may still list it\./);
-  assert.match(code, /This set hasn't released yet — eBay sellers set their own dispatch dates, so check each listing\./);
-  assert.match(code, /surface="ebay_fallback"/);
-  assert.match(code, /className="btn-ebay shrink-0 text-sm"/);
-  assert.match(code, /border-\[#0064d2\]\/40 bg-\[#0064d2\]\/\[0\.06\]/);
-  assert.doesNotMatch(code, /amber|gold|btn-primary/, "eBay blue, never the warning tint or Pro's gold");
-  // Its own disclosure, right under it — it is no longer beside the panel's.
-  assert.match(code, /<AffiliateDisclosure partner="ebay" tight \/>/);
-  // A search, not a claim: no price, stock or guarantee.
-  assert.doesNotMatch(code, /cheaper|in stock|guarantee|buyer protection/i);
+test("a pinned row keeps its price rank, says it was moved, and says how much dearer it is", () => {
+  const src = codeOnly(read(SECTION));
+  assert.match(src, /const i = prices\.indexOf\(p\);/);
+  assert.match(src, /\{pinned && <ShownFirstTag \/>\}/);
+  assert.match(src, /% vs cheapest/);
+  assert.match(src, /surface=\{pinned \? "table_pinned" : "table"\}/);
 });
 
 // ── 3. Banner order ─────────────────────────────────────────────────────────
