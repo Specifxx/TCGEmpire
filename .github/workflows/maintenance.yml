@@ -5747,6 +5747,16 @@ jobs:
           for u in https://dexcompare.app/sitemap.xml https://dexcompare.app/robots.txt https://compareempire.com/sitemap.xml https://compareempire.com/robots.txt; do
             echo "  $u: $(curl -sL -m 20 -o /tmp/b -w '%{http_code}' "$u") $(grep -o 'https\?://[^<[:space:]]*' /tmp/b | head -3 | tr '\n' ' ')"
           done
+          echo "=== pages Search Console flagged (2026-10-27)"
+          UA="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+          for u in https://opcompare.app/price-guide https://mtgcompare.app/news-sitemap.xml https://riftcompare.com/sitemaps/pokemon.xml https://compareempire.com/; do
+            code=$(curl -s -m 30 -A "$UA" -o /tmp/p -w '%{http_code} %{size_download}B %{time_total}s ->%{redirect_url}' "$u")
+            echo "--- $u: $code"
+            grep -o '<title>[^<]*</title>' /tmp/p | head -1
+            grep -o '<meta name="robots"[^>]*>' /tmp/p | head -1
+            grep -c '<tr' /tmp/p | sed 's/^/  table rows: /'
+            head -c 700 /tmp/p | tr '\n' ' '; echo
+          done
           echo "=== NS records"
           for d in dexcompare.app compareempire.com camcompare.app; do echo "  $d: $(dig +short NS "$d" @8.8.8.8 | tr '\n' ' ')"; done
 
