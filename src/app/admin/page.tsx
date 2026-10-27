@@ -56,6 +56,12 @@ const TOOLS: Tool[] = [
     desc: "Send recently-registered free accounts a single-use link that grants a few days of Pro instantly — no card, no checkout, no manual grant step.",
   },
   {
+    href: "/admin/growth",
+    title: "Growth",
+    icon: "📈",
+    desc: "Google clicks, card views, eBay link clicks and earnings: 28 days a bar each, and this week against last week.",
+  },
+  {
     href: "/admin/earnings",
     title: "Earnings",
     icon: "💰",
