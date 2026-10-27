@@ -27,7 +27,9 @@ export interface PublicReview {
 // Below this, the section stays hidden entirely. Two testimonials read as
 // "nobody uses this"; the honest move on a young site is to show nothing until
 // there is something real to show.
-export const MIN_REVIEWS_TO_DISPLAY = 3;
+// 1 since 2026-10-27 (owner: show the feedback now; trust and transparency).
+// Still only consented AND approved reviews, so one real review is enough.
+export const MIN_REVIEWS_TO_DISPLAY = 1;
 
 const TTL_MS = 10 * 60_000;
 type Memo = { at: number; rows: PublicReview[] };

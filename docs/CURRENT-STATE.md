@@ -203,8 +203,8 @@ longer lands on its entry.
   are unlimited and no copy quotes a limit; free price history is 90 days.
   `/premium` copies Collectr's page for non-members. A rate-the-site dialog
   asks after 3 pages and 45 s, always with "Not now"; the homepage hero and the
-  Pro page show the average (and Pro the approved reviews) only from 100+ real
-  ratings, never in JSON-LD.
+  Pro page show the real average with its count from the first rating
+  (2026-10-27), approved and consented reviews on both, never in JSON-LD.
   [2026-10-26](../DECISIONS.md#L19772)
 - **One paid plan again (2026-10-23, supersedes the trial and tier bullets
   below):** Premium $9.99/mo or $79.99/yr with a free 30-day card-gated trial;
@@ -682,7 +682,7 @@ longer lands on its entry.
   the number column, "+N% vs cheapest", and "Cheapest" on the real cheapest.
   The headline, `CardTopBuy`, the sticky bar and JSON-LD still read the price
   ranking. Policy pages name it as the one labelled exception; this replaces
-  the "never inside the ranking" rule below. [2026-10-27](../DECISIONS.md#L20126)
+  the "never inside the ranking" rule below. [2026-10-27](../DECISIONS.md#L20143)
 - **eBay beside every comparison, never inside the ranking** (owner, 09-26:
   push eBay clicks even where stores are cheaper) — **with ONE exception since
   10-15 (owner):** the pre-order table (`PreorderPriceTable`, on
