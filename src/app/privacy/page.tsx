@@ -83,7 +83,9 @@ export default function PrivacyPage() {
             <li>
               <strong className="text-white">Things you send us</strong> — contact and feedback messages,
               support tickets, wrong-price reports and store suggestions: what you wrote, and your name
-              and email address where you give them.
+              and email address where you give them. A star rating and review is shown on the Site with
+              the name you chose, once we have read it, unless you untick &ldquo;Show my review on
+              RiftCompare&rdquo;; your email address is never shown.
             </li>
             <li>
               <strong className="text-white">Store consulting bookings</strong> — for a store that booked a

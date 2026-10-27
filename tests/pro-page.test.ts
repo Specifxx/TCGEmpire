@@ -10,7 +10,6 @@ import {
   countPageView,
   freshRateState,
   parseRateState,
-  ratingFollowUp,
   shouldAskRating,
 } from "../src/lib/rate-prompt";
 import { MIN_RATINGS_TO_SHOW, ratingLine, ratingToShow } from "../src/lib/site-rating";
@@ -62,8 +61,6 @@ test("a rating or Don't ask again ends it for good; closing waits; it gives up a
   assert.equal(shouldAskRating({ ...engaged, asks: RATE_MAX_ASKS }, now, "/", V), false);
   assert.deepEqual(parseRateState("not json", T0), freshRateState(T0));
   assert.equal(parseRateState(JSON.stringify({ firstSeen: T0, pages: 4, rated: false }), T0 + 5).visits, 1, "an old stored state still reads");
-  assert.equal(ratingFollowUp(3), "fix");
-  assert.equal(ratingFollowUp(4), "thanks");
 });
 
 test("the prompt is a closable corner card, not a modal, and still posts a rating", () => {
@@ -76,7 +73,7 @@ test("the prompt is a closable corner card, not a modal, and still posts a ratin
   assert.match(c, />\s*Not now\s*</);
   assert.match(c, /Don&apos;t ask again/);
   assert.match(c, /armNudge\(/, "waits for a quiet moment");
-  assert.match(c, /source: "rating"/);
+  assert.match(c, /<RatingReviewForm[\s\S]{0,80}source="rating"/, "the same form as every rating surface");
   assert.match(read("src/components/PricingNudge.tsx"), /RATE_SESSION_KEY/, "the Pricing callout yields to it");
   const route = read("src/app/api/feedback/route.ts");
   assert.match(route, /"rating", "rating-review"\]\)/, "the API accepts both sources");
@@ -87,7 +84,10 @@ test("the feedback panel has no floating button: it opens from the footer link",
   const w = read("src/components/FeedbackWidget.tsx");
   assert.doesNotMatch(w, /fixed right-4/, "no floating launcher");
   assert.match(w, /FEEDBACK_OPEN_EVENT/);
-  assert.match(read("src/components/FeedbackLink.tsx"), /FEEDBACK_OPEN_EVENT/);
+  assert.match(read("src/components/FeedbackLink.tsx"), /openFeedback\(\)/);
+  assert.match(w, /<RatingReviewForm/, "the panel is the shared form");
+  assert.match(read("src/app/layout.tsx"), /<RateUsStrip \/>/, "a Rate us row on every page");
+  assert.match(read("src/components/RateUsStrip.tsx"), /openFeedback\(n\)/);
 });
 
 test("the rating shown is real and only shown once there are enough", () => {
@@ -105,8 +105,10 @@ test("the rating shown is real and only shown once there are enough", () => {
   assert.doesNotMatch(badge, /itemprop|aggregateRating|application\/ld\+json/i, "plain HTML, never review markup");
   assert.match(read("src/components/home/CinematicHero.tsx"), /<SiteRatingBadge rating=\{rating\}/, "the homepage hero shows it too");
   assert.match(read("src/lib/site-rating.ts"), /NOT: \{ source: "rating-review" \}/, "a review's stars are not counted twice");
-  const prompt = read("src/components/RateUsPrompt.tsx");
-  assert.match(prompt, /useState\(false\); \/\/ never pre-ticked/, "consent to show a review is opt-in");
+  const form = read("src/components/RatingReviewForm.tsx");
+  assert.match(form, /useState\(true\); \/\/ opt-out/, "a review is shown unless its writer unticks it (owner, 2026-10-27)");
+  assert.match(form, /Show my review on RiftCompare/);
+  assert.match(form, /consentPublic: showPublicly/);
   assert.doesNotMatch(landing, /\b(100,000|4\.8)\b/, "no borrowed or invented rating");
   assert.doesNotMatch(read("src/app/premium/page.tsx"), /aggregateRating/, "never in JSON-LD");
 });

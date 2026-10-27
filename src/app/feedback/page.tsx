@@ -42,7 +42,7 @@ export default async function FeedbackPage() {
             ✦ {dayLabel} {rewardName} — on us
           </span>
         )}
-        <h1 className="mt-3 text-2xl font-extrabold text-white sm:text-3xl">Help shape RiftCompare</h1>
+        <h1 className="mt-3 text-2xl font-extrabold text-white sm:text-3xl">Rate &amp; review RiftCompare</h1>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-400">
           We&apos;re building the best way to buy Riftbound singles, and your input genuinely steers what we build next.
           {days > 0 && <> As a thank-you, your first feedback unlocks <strong className="text-gold">{dayLabel} of {rewardName}</strong> — free.</>}

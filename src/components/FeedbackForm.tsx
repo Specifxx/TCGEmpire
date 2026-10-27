@@ -4,239 +4,44 @@ import { useState } from "react";
 import Link from "next/link";
 import { useMe } from "@/lib/use-me";
 import { TIER_NAMES } from "@/lib/site";
-import { ShareRow } from "./ShareRow";
+import { RatingReviewForm } from "./RatingReviewForm";
 
-// `field` marks the client-side validation error, the only one about what the
-// visitor typed. Server and network errors leave it unset, so the textarea is
-// flagged aria-invalid only when its contents are the problem.
-type State = { kind: "idle" | "loading" | "done" | "error"; msg?: string; granted?: boolean; field?: "message" };
-
-// The /feedback page's form.
-//
-// THIS NO LONGER GATES ON SIGN-IN. It used to return a "Sign in →" wall for any
-// signed-out visitor, which meant the page invited feedback and then refused to
-// take it from anyone who had not already converted — the single biggest reason
-// the Feedback table stayed near-empty. The Premium reward still exists and is
-// still account-only (there is nothing to attach a grant to without an account),
-// but it is now an INCENTIVE shown alongside a working form, not a gate in front
-// of one.
+// The /feedback page's form: the same rating-and-review form as every other
+// rating surface (RatingReviewForm, DECISIONS.md "One feedback form, shown by
+// default"), plus the page's own sign-in reward note. It never gates on
+// sign-in: the reward is an incentive shown beside a working form.
 export function FeedbackForm({ days }: { days: number }) {
   const { user, premium, tier } = useMe();
-  // The reward extends an existing plan at its own tier — see /feedback's hero.
   const rewardName = TIER_NAMES[tier ?? "premium"];
   const dayLabel = `${days} day${days === 1 ? "" : "s"}`;
-  const [rating, setRating] = useState(0);
-  const [message, setMessage] = useState("");
-  const [email, setEmail] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [consentPublic, setConsentPublic] = useState(false);
-  const [honeypot, setHoneypot] = useState("");
-  const [state, setState] = useState<State>({ kind: "idle" });
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (state.kind === "loading") return;
-    // A rating on its own is real signal and the API accepts it; only an
-    // entirely empty submission is rejected.
-    if (!rating && message.trim().length < 10) {
-      setState({ kind: "error", msg: "Add a star rating, or write a little more (at least 10 characters).", field: "message" });
-      return;
-    }
-    setState({ kind: "loading" });
-    try {
-      const res = await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message,
-          rating: rating || undefined,
-          email: !user && email.trim() ? email.trim() : undefined,
-          displayName: displayName.trim() || undefined,
-          consentPublic,
-          source: "page",
-          page: "/feedback",
-          website: honeypot,
-        }),
-      });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setState({ kind: "error", msg: d?.error ?? "Something went wrong — please try again." });
-        return;
-      }
-      setState({ kind: "done", granted: !!d.granted });
-    } catch {
-      setState({ kind: "error", msg: "Network error — please try again." });
-    }
-  }
-
-  // NO loading placeholder (2026-09-23). The form used to wait for /api/me
-  // behind a 160px pulse box, then swap in a 564-580px form: CLS 0.200 at 768
-  // and 0.190 at 390. Only the email field and the reward footnotes depend on
-  // `user`, and SSR and hydration both start signed out, so signed-out visitors
-  // (the majority) see no shift at all. A signed-in visitor sees the email field
-  // and the "No account needed" line drop out once /api/me lands.
-
-  if (state.kind === "done") {
-    return (
-      <div className="rounded-2xl border border-brand-500/40 bg-brand-500/10 p-8 text-center shadow-[0_0_30px_rgba(52,209,126,0.12)]">
-        <div className="text-3xl">🎉</div>
-        <h2 className="mt-3 text-lg font-bold text-brand-200">Thank you — this genuinely helps.</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
-          {state.granted
-            ? `Your ${dayLabel} of ${rewardName} is now active.${tier === "plus" ? "" : " Enjoy Best Basket's store-by-store plan!"}`
-            : premium
-            ? `You're already ${rewardName} — but your feedback still means a lot.`
-            : user
-            ? `Your feedback is in. (The ${rewardName} reward is one per account.)`
-            : "Your feedback is in — we read every one."}
-        </p>
-
-        {/* The share ask goes to people who just rated us well. Never shown to
-            someone who rated us poorly: asking an unhappy visitor to go promote
-            the site is tone-deaf, and their feedback is worth more than a share. */}
-        {rating >= 4 && (
-          <div className="mt-5 border-t border-brand-500/20 pt-4">
-            <p className="text-xs text-slate-400">Know someone else who buys Riftbound?</p>
-            <div className="mt-2 flex justify-center">
-              <ShareRow source="feedback_page" size="sm" />
-            </div>
-          </div>
-        )}
-
-        <div className="mt-5 flex flex-wrap justify-center gap-3">
-          {user ? (
-            <Link href="/dashboard" className="btn-primary text-sm">Go to your dashboard →</Link>
-          ) : (
-            <Link href="/browse" className="btn-primary text-sm">Browse the card database →</Link>
-          )}
-          <Link href="/" className="btn-ghost text-sm">Back to site</Link>
-        </div>
-      </div>
-    );
-  }
+  const [granted, setGranted] = useState<boolean | null>(null);
 
   return (
-    <form onSubmit={submit} className="card-surface space-y-4 p-6">
-      <div>
-        <span className="mb-1 block text-sm font-semibold text-slate-200">How are we doing?</span>
-        {/* A group of toggle buttons (aria-pressed), not a radiogroup: there is
-            no arrow-key or roving-tabindex handling, so role=radio would promise
-            a keyboard model these buttons do not have. The 44px stars
-            (2026-09-23) need flex-wrap: without it, at 320 the five of them
-            plus "optional" ran to x=338, past the viewport. */}
-        <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Rating">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => setRating(n)}
-              aria-label={`${n} star${n === 1 ? "" : "s"}`}
-              aria-pressed={rating === n}
-              className={`grid min-h-11 min-w-11 place-items-center text-3xl transition ${n <= rating ? "text-gold" : "text-slate-600 hover:text-slate-400"}`}
-            >
-              ★
-            </button>
-          ))}
-          <span className="ml-2 self-center text-xs text-slate-500">optional</span>
-        </div>
-      </div>
-
-      <label className="block">
-        <span className="mb-1 block text-sm font-semibold text-slate-200">Your feedback</span>
-        {/* text-base below sm (2026-09-23): iOS zooms the page on focus into any
-            field under 16px. Same on the email and display-name fields. */}
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={6}
-          maxLength={4000}
-          placeholder="What do you love? What's missing or frustrating? What would make RiftCompare a must-use for you?"
-          aria-invalid={state.kind === "error" && state.field === "message" ? true : undefined}
-          aria-describedby={state.kind === "error" && state.field === "message" ? "feedback-error" : undefined}
-          className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-white sm:text-sm placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
-        />
-      </label>
-
-      {/* Honeypot — display:none (autofill skips it, unlike the old opacity-0 field), untabbable. Bots fill it; people
-          never see it. See /api/feedback, which silently accepts and drops
-          anything that arrives with this set. */}
-      <input
-        type="text"
-        name="website"
-        tabIndex={-1}
-        autoComplete="off"
-        aria-hidden="true"
-        value={honeypot}
-        onChange={(e) => setHoneypot(e.target.value)}
-        className="hidden"
+    <div className="card-surface p-6">
+      <RatingReviewForm
+        source="page"
+        page="/feedback"
+        onDone={(r) => setGranted(r.granted)}
+        footer={
+          <>
+            {days > 0 && !user && (
+              <p className="text-center text-xs text-slate-500">
+                No account needed. If you{" "}
+                <Link href="/login?next=/feedback&src=feedback" className="text-brand-400 hover:underline">
+                  sign in first
+                </Link>
+                , your first feedback also unlocks <strong className="text-gold">{dayLabel} of Pro</strong>.
+              </p>
+            )}
+            {days > 0 && user && !premium && (
+              <p className="text-center text-xs text-slate-500">
+                Your first feedback unlocks <strong className="text-gold">{dayLabel} of Pro</strong>, one per account.
+              </p>
+            )}
+          </>
+        }
       />
-
-      {!user && (
-        <label className="block">
-          <span className="mb-1 block text-sm font-semibold text-slate-200">
-            Email <span className="font-normal text-slate-500">— optional, only if you want a reply</span>
-          </span>
-          <input
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-white sm:text-sm placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
-          />
-        </label>
-      )}
-
-      <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3">
-        <label className="flex cursor-pointer items-start gap-2 text-xs text-slate-300">
-          <input
-            type="checkbox"
-            checked={consentPublic}
-            onChange={(e) => setConsentPublic(e.target.checked)}
-            className="mt-0.5"
-          />
-          <span>
-            You can show this on the site as a review.
-            <span className="mt-0.5 block text-slate-500">
-              Nothing is published without this ticked, and a person reviews it first either way.
-            </span>
-          </span>
-        </label>
-        {consentPublic && (
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Name to show (optional)"
-            maxLength={60}
-            className="mt-2 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-base text-white sm:text-xs placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
-            aria-label="Display name for the public review, optional"
-          />
-        )}
-      </div>
-
-      {state.kind === "error" && (
-        <p id="feedback-error" role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{state.msg}</p>
-      )}
-
-      <button type="submit" disabled={state.kind === "loading"} className="btn-primary w-full justify-center">
-        {state.kind === "loading" ? "Sending…" : "Send feedback →"}
-      </button>
-
-      {/* The reward is an incentive to sign in, NEVER a gate — the form above
-          works either way. */}
-      {days > 0 && !user && (
-        <p className="text-center text-xs text-slate-500">
-          No account needed. If you{" "}
-          <Link href="/login?next=/feedback&src=feedback" className="text-brand-400 hover:underline">sign in first</Link>, your first
-          feedback also unlocks <strong className="text-gold">{dayLabel} of Pro</strong>.
-        </p>
-      )}
-      {days > 0 && user && !premium && (
-        <p className="text-center text-xs text-slate-500">
-          Your first feedback unlocks <strong className="text-gold">{dayLabel} of Pro</strong> — one per account.
-        </p>
-      )}
-    </form>
+      {granted && <p className="mt-3 text-center text-sm font-semibold text-gold">Your {dayLabel} of {rewardName} is now active.</p>}
+    </div>
   );
 }

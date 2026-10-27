@@ -61,6 +61,10 @@ const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then(
 });
 // "Rate RiftCompare" (2026-10-26): client-only, opens after a few pages
 // (lib/rate-prompt.ts), so it has nothing to render on the server.
+// The "Rate us" row at the end of every page (client-decided: hidden for raters).
+const RateUsStrip = dynamic(() => import("@/components/RateUsStrip").then((m) => m.RateUsStrip), {
+  ssr: false,
+});
 const RateUsPrompt = dynamic(() => import("@/components/RateUsPrompt").then((m) => m.RateUsPrompt), {
   ssr: false,
 });
@@ -405,6 +409,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         decided and dismissible; renders nothing on the server. */}
                     <RadianceSeasonBanner />
                     {children}
+                    {/* "Rate us" at the end of every page's content: in the
+                        page, never a pop-up; gone once this browser rated. */}
+                    <RateUsStrip />
                   </main>
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
@@ -418,8 +425,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     the sign_up analytics event, then strips it from the URL.
                     Renders nothing. */}
                 <SignupWelcome />
-                {/* Feedback panel: opened only by the footer's "Rate or send
-                    feedback" link. Never auto-opens, no floating button. */}
+                {/* Feedback panel: opened only by the footer's "Rate & review" link. Never auto-opens, no floating button. */}
                 <FeedbackWidget />
                 {/* The one uninvited opinion ask: a corner rating card, only
                     after real engagement, at most twice (lib/rate-prompt.ts). */}
