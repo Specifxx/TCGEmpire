@@ -16,6 +16,9 @@ import { CheckedAgo } from "./CheckedAgo";
 import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/sealed-offers";
 import { isPreorderSetCode } from "@/lib/constants";
 import { SealedWatchButton } from "./SealedWatchButton";
+import { ShownFirstTag } from "./CardMarketSection";
+import { PaidLinkTag } from "./AffiliateDisclosure";
+import { pinMarketplaces } from "@/lib/market-rows";
 
 // Quick-view popup for sealed products — the sealed twin of QuickView.tsx (cards).
 // Clicking a SealedTile opens this instead of expanding the whole /sealed page, so
@@ -85,6 +88,13 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
   // Booster Box" also matched Pokémon's Astral Radiance on eBay.
   const ebayQuery = riftboundEbayQuery(group.name);
   const ebayHref = ebaySearchUrl(country, ebayQuery, "sealed-quickview");
+  // eBay and TCGplayer first, the cheaper on top, as on every card list (owner,
+  // 2026-10-27; pinMarketplaces). Open rows only: a sold-out marketplace row is
+  // not worth the top slot. With no open eBay row, eBay's search leads instead
+  // of sitting under the list. Display only: "Best price" stays on `best`.
+  const pin = pinMarketplaces(listings.filter((l) => offerStock(l) === "open"));
+  const lead = (pin.tcgFirst ? [pin.tcgplayer, pin.ebay] : [pin.ebay, pin.tcgplayer]).filter((l): l is (typeof listings)[number] => l != null);
+  const shown = [...lead, ...listings.filter((l) => !lead.includes(l))];
 
   return (
     <div className="max-h-[88vh] overflow-hidden rounded-lg border border-ink-700 bg-ink-900 shadow-2xl">
@@ -161,14 +171,35 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
               </div>
             ) : (
               <ul className="divide-y divide-ink-800">
-                {listings.map((l, i) => {
+                {!pin.ebay && (
+                  <li className="flex items-center gap-3 py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <span className="truncate text-sm font-semibold text-white">eBay</span>
+                        <ShownFirstTag />
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500">
+                        <span>Search current listings</span>
+                        <PaidLinkTag />
+                      </div>
+                    </div>
+                    <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_pinned" className="btn-ebay px-3 py-1.5 text-xs">
+                      Search →
+                    </OutboundLink>
+                  </li>
+                )}
+                {shown.map((l, i) => {
                   const state = offerStock(l);
                   const isOpen = state === "open";
                   const isBest = l === best;
+                  const pinned = lead.includes(l);
                   return (
                     <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"}`}>
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-semibold text-white">{l.retailerName}</div>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className="truncate text-sm font-semibold text-white">{l.retailerName}</span>
+                          {pinned && <ShownFirstTag />}
+                        </div>
                         <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
                           <span className={isOpen ? "text-up" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>
                           <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
@@ -184,6 +215,8 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                         retailer={l.retailer}
                         country={country}
                         kind="sealed"
+                        pageType="sealed"
+                        surface={pinned ? "sealed_pinned" : "sealed_row"}
                         className={
                           isOpen
                             ? `px-3 py-1.5 text-xs ${isBest ? "btn-accent" : "btn-buy"}`

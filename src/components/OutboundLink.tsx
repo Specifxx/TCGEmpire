@@ -145,7 +145,10 @@ export function OutboundLink({
    *  - `price_table_ebay`: the eBay button on each row of the homepage's
    *    "Riftbound card prices today" table (PriceRowEbay, 2026-09-26);
    *  - `hot40_ebay`: the "Cheapest on eBay" link on a Hot 40 snapshot row
-   *    (/rising/[token], 2026-09-28). */
+   *    (/rising/[token], 2026-09-28);
+   *  - `sealed_pinned` / `sealed_row` / `ebay_pinned`: the sealed QuickView's
+   *    pinned eBay/TCGplayer rows, its other rows and its pinned eBay search
+   *    row (2026-10-27). */
   surface?:
     | "table"
     | "modal"
@@ -172,7 +175,10 @@ export function OutboundLink({
     | "price_guide_ebay"
     | "price_guide_tcgplayer"
     | "hot40_ebay"
-    | "featured_listing";
+    | "featured_listing"
+    | "sealed_pinned"
+    | "sealed_row"
+    | "ebay_pinned";
 }) {
   // Record that a buy link exists on this page (lib/buy-intent.ts). Built so
   // the signup popup (removed 2026-09-30) could stay off the buy path; kept as

@@ -24,3 +24,13 @@ test("pinMarketplaces keeps the rest in price order and reports the lead", () =>
   assert.deepEqual(pin.rest.map((p) => p.retailer), ["store-a", "store-b"]);
   assert.equal(pinMarketplaces([row("ebay", 300), row("tcgplayer", 350)]).tcgFirst, false);
 });
+
+test("the sealed QuickView pins eBay and TCGplayer the same way, open rows only, eBay's search when there is no eBay row", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync(new URL("../src/components/SealedQuickView.tsx", import.meta.url), "utf8");
+  assert.match(src, /pinMarketplaces\(listings\.filter\(\(l\) => offerStock\(l\) === "open"\)\)/);
+  assert.match(src, /pin\.tcgFirst \? \[pin\.tcgplayer, pin\.ebay\] : \[pin\.ebay, pin\.tcgplayer\]/);
+  assert.match(src, /\{!pin\.ebay && \(/);
+  assert.match(src, /\{pinned && <ShownFirstTag \/>\}/);
+  assert.match(src, /const isBest = l === best;/, "Best price stays on the real cheapest");
+});

@@ -20345,3 +20345,11 @@ card page and the QuickView read it; nothing else changes (tags, price rank,
 clicks on the network dashboard, a week from release against the week before.
 OP Compare, Gundam, Lorcana and YGO Compare made the same change the same day.
 
+The sealed QuickView (`/sealed`, the only sealed price list; booster boxes are
+the highest-value orders we send) had no pin at all: eBay was a small search
+link under the list. It now pins the same way, from the OPEN rows only, the
+cheaper on top: the cheapest open eBay and TCGplayer rows tagged "Shown first",
+or eBay's search as the first row when no eBay listing is open. "Best price"
+stays on the real cheapest. Surfaces `sealed_pinned`, `sealed_row`,
+`ebay_pinned`.
+
