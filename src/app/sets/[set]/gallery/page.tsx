@@ -216,11 +216,15 @@ export async function generateMetadata({ params }: { params: { set: string } }):
       `Riftbound ${set.name} all cards`,
       `${set.name} card images`,
     ],
-    alternates: pageAlternates(`/sets/${set.slug}/gallery`, {
-      languages: { "x-default": `${SITE_URL}/sets/${set.slug}/gallery` },
+    // Canonical to the set page (2026-10-27, "One page per set in Google" in
+    // DECISIONS.md): Search Console showed Google splitting "<set> card list"
+    // between this page and /sets/<slug>, both stuck around position 8. The
+    // gallery stays for visitors; the set page collects the ranking.
+    alternates: pageAlternates(`/sets/${set.slug}`, {
+      languages: { "x-default": `${SITE_URL}/sets/${set.slug}` },
     }),
     ...(thin ? { robots: { index: false, follow: true } } : {}),
-    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: `/sets/${set.slug}/gallery` }),
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: `/sets/${set.slug}` }),
   };
 }
 

@@ -1,5 +1,6 @@
 import { prisma } from "./db";
-import { dbHistory } from "./db-history";
+import { readClickCounts, type ClickGroup } from "./click-counter";
+import type { SplitQuery } from "./ops/gsc-daily";
 import { loadEarnings } from "./earnings/sources";
 import { addDays, dayIn, toDisplay, SOURCE_LABELS, type EarningsSourceKey } from "./earnings/core";
 
@@ -46,7 +47,7 @@ function series(key: string, label: string, unit: Series["unit"], note: string, 
   return { key, label, unit, note, points, ...weekCompare(points) };
 }
 
-export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource: Series[]; gscUpdatedAt: string | null; errors: string[] }> {
+export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource: Series[]; gscUpdatedAt: string | null; splits: { site: string; queries: SplitQuery[] }[]; errors: string[] }> {
   const today = dayIn(Date.now());
   const days = daysEnding(today, GROWTH_DAYS);
   const since = new Date(Date.now() - (GROWTH_DAYS + 2) * 86400_000);
@@ -55,14 +56,16 @@ export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource
 
   // Google (Search Console's own day; the last two days are not final).
   let gscUpdatedAt: string | null = null;
+  const splits: { site: string; queries: SplitQuery[] }[] = [];
   try {
     const row = await prisma.opsSnapshot.findUnique({ where: { key: "growth:gsc" } });
-    const j = row?.json as { updatedAt?: string; sites?: Record<string, { status: string; days: { d: string; clicks: number }[] }> } | undefined;
+    const j = row?.json as { updatedAt?: string; sites?: Record<string, { status: string; days: { d: string; clicks: number }[]; splits?: SplitQuery[] }> } | undefined;
     gscUpdatedAt = j?.updatedAt ?? null;
     for (const [prop, site] of Object.entries(j?.sites ?? {})) {
       if (site.status !== "ok") continue;
       const m = new Map(site.days.map((x) => [x.d, x.clicks]));
       const name = prop.replace(/^https?:\/\//, "").replace(/^sc-domain:/, "").replace(/\/$/, "");
+      if (site.splits?.length) splits.push({ site: name, queries: site.splits });
       out.push(series(`gsc:${name}`, `Google clicks · ${name}`, "count", "Search Console; the newest 2 days are still filling in.", days, (d) => m.get(d) ?? (d >= addDays(today, -2) ? null : 0)));
     }
     if (!row) errors.push("Google clicks: no snapshot yet (it is stored every 3 hours by the ops monitor).");
@@ -96,17 +99,17 @@ export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource
     errors.push("Card views: could not read DemandSnapshot.");
   }
 
-  // Outbound eBay clicks, per Sydney day.
+  // Outbound clicks per Sydney day and network, counted by /api/click since 27 Oct 2026.
   try {
-    const rows = await dbHistory.$queryRaw<{ d: string; n: bigint }[]>`
-      SELECT to_char(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Australia/Sydney', 'YYYY-MM-DD') AS d, count(*) AS n
-      FROM "ClickEvent"
-      WHERE "createdAt" >= ${since} AND retailer LIKE 'ebay%'
-      GROUP BY 1`;
-    const m = new Map(rows.map((r) => [r.d, Number(r.n)]));
-    out.push(series("ebay-clicks", "eBay link clicks (this site)", "count", "Clicks on RiftCompare's own eBay links.", days, (d) => m.get(d) ?? 0));
+    const counts = await readClickCounts(days[0]);
+    const first = [...counts.keys()].sort()[0] ?? today;
+    const get = (g: ClickGroup) => (d: string) => (d < first ? null : counts.get(d)?.[g] ?? 0);
+    const note = "Counted by RiftCompare since 27 Oct 2026; the network's own dashboard can differ a little.";
+    out.push(series("clicks-ebay", "eBay link clicks", "count", note, days, get("ebay")));
+    out.push(series("clicks-tcgplayer", "TCGplayer link clicks", "count", note, days, get("tcgplayer")));
+    out.push(series("clicks-store", "Store link clicks", "count", note, days, get("store")));
   } catch {
-    errors.push("eBay clicks: could not read ClickEvent.");
+    errors.push("Clicks: could not read the click counters.");
   }
 
   // Earnings per day, every source, in AUD.
@@ -129,5 +132,5 @@ export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource
     errors.push("Earnings: could not load the sources.");
   }
 
-  return { series: out, earningsBySource, gscUpdatedAt, errors };
+  return { series: out, earningsBySource, gscUpdatedAt, splits, errors };
 }

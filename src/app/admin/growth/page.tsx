@@ -75,7 +75,7 @@ export default async function GrowthPage({ searchParams }: { searchParams: { key
   const me = await getCurrentUser();
   if (!(keyOk || me?.isAdmin)) notFound();
 
-  const { series, earningsBySource, gscUpdatedAt, errors } = await loadGrowth();
+  const { series, earningsBySource, gscUpdatedAt, splits, errors } = await loadGrowth();
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <Link href="/admin" className="text-sm text-brand-400 hover:underline">← Admin</Link>
@@ -106,6 +106,35 @@ export default async function GrowthPage({ searchParams }: { searchParams: { key
           </div>
         </>
       )}
+      {splits.map(({ site, queries }) => (
+        <section key={site} className="mt-10">
+          <h2 className="text-lg font-bold text-white">Pages competing in Google · {site}</h2>
+          <p className="mt-1 max-w-2xl text-sm text-slate-400">
+            Searches where two or more of our pages each get a real share, so Google splits between them instead of
+            ranking one strongly (last 28 settled days). Each one is a candidate to fold into a single page.
+          </p>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full min-w-[560px] text-left text-sm">
+              <thead className="text-xs uppercase text-slate-500">
+                <tr><th className="py-1 pr-3">Search</th><th className="py-1 pr-3">Our page</th><th className="py-1 pr-3 text-right">Impr.</th><th className="py-1 pr-3 text-right">Clicks</th><th className="py-1 text-right">Pos.</th></tr>
+              </thead>
+              <tbody>
+                {queries.map((q) =>
+                  q.pages.map((p, i) => (
+                    <tr key={`${q.query}|${p.page}`} className={i === 0 ? "border-t border-ink-800" : ""}>
+                      <td className="py-1 pr-3 text-slate-200">{i === 0 ? `${q.query} (${q.impr.toLocaleString("en-AU")})` : ""}</td>
+                      <td className="py-1 pr-3 text-slate-400">{p.page}</td>
+                      <td className="py-1 pr-3 text-right text-slate-300">{p.impr.toLocaleString("en-AU")}</td>
+                      <td className="py-1 pr-3 text-right text-slate-300">{p.clicks}</td>
+                      <td className="py-1 text-right text-slate-300">{p.pos.toFixed(1)}</td>
+                    </tr>
+                  )),
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ))}
       <p className="mt-8 text-xs text-slate-500">
         Google clicks updated {gscUpdatedAt ? new Date(gscUpdatedAt).toLocaleString("en-AU", { timeZone: "Australia/Sydney" }) : "never"}.
         Earnings detail and tags: <Link href="/admin/earnings" className="text-brand-400 hover:underline">/admin/earnings</Link>.

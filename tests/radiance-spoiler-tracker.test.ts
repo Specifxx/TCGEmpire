@@ -47,7 +47,6 @@ test("the gallery is the whole set, self-populating, and positioned in the body"
 test("the tracker separates official reveals from leaks and links both ways", () => {
   const a = tracker();
   for (const href of [
-    "/blog/riftbound-radiance-leaked-mechanics", // leaks stay on the leak post
     "/blog/riftbound-radiance-what-we-know", // the set's confirmed facts
     "/blog/riftbound-neeko-blending-in-spoiler", // the one card photographed so far
     "/sets/radiance", // the card list's owner
@@ -64,7 +63,6 @@ test("the surfaces a Radiance visitor lands on link to the tracker", () => {
   const link = `/blog/${SLUG}`;
   const bySlug = new Map(ARTICLES.map((a) => [a.slug, a]));
   assert.ok(bySlug.get("riftbound-radiance-what-we-know")!.body.includes(link), "what-we-know post must link the tracker");
-  assert.ok(bySlug.get("riftbound-radiance-leaked-mechanics")!.body.includes(link), "leak post must link the tracker");
   const hub = read("src/app/sets/[set]/page.tsx");
   const links = hub.slice(hub.indexOf("PRE_RELEASE_LINKS"), hub.indexOf("};", hub.indexOf("PRE_RELEASE_LINKS")));
   assert.ok(links.includes(link), "/sets/radiance pre-release links must include the tracker");

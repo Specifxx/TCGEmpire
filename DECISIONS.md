@@ -20298,8 +20298,8 @@ daily clicks in the `OpsSnapshot` row `growth:gsc`; the page reads only that
 row. The script prints no numbers (public Actions logs) and never fails the
 monitor.
 
-**Not here.** TCGplayer clicks are not stored per day (only eBay's are), so
-the TCGplayer bar is earnings, not clicks.
+**Clicks.** See "Click counts by day" below: `ClickEvent` had not been
+written since its beacon was switched off, so clicks come from day counters.
 
 ## Stripe webhook failures were dead sister-site endpoints, not Pro (2026-10-27)
 
@@ -20381,6 +20381,83 @@ affiliate-wrapped, surface `deck_cart`). It used to be "Copy list", which
 earned nothing. Tournament deck pages were the review's idea #2. They are not
 built, because meta lists still need a licensed source (CURRENT-STATE,
 "Meta decks").
+## One page per set in Google — 2026-10-27
+
+**Why.** The owner: "we've been at position 8 for a couple of months … rethink
+our strategy." A new SPLIT QUERIES section in `scripts/gsc-queries.ts` (query ×
+page, 28 days to 24 Oct) showed Google choosing between our own pages for the
+site's biggest searches. "riftbound radiance card list" (6,134 impressions)
+went 2,866 to `/sets/radiance` (position 8.0) and 2,416 to
+`/sets/radiance/gallery` (6.8), and every variant ("radiance card list",
+"all radiance cards", "radiance riftbound card list"…) split the same way:
+about 9,000 impressions a month, with neither page past position 7. The
+keyword map gave the set page "card list" and the gallery "card gallery";
+Google did not keep to it.
+
+**What.** `/sets/<slug>/gallery` canonicalises to `/sets/<slug>` (og:url too)
+and leaves the sitemap; the page itself is unchanged and still linked from the
+nav and the set page. The set page keeps the hub role: it holds the prices,
+the most internal links and the "price guide" queries. Applied to every set,
+not only Radiance, so `/gallery` alone answers the set-agnostic
+"riftbound card gallery" (split today with the Proving Grounds gallery).
+`tests/set-gallery-canonical.test.ts`.
+
+**The wider rule.** Splitting one topic across sibling pages divides what
+little authority the site has. Before adding a page for a nuance of an
+existing intent, read SPLIT QUERIES; where two of our pages share a query,
+fold one into the other.
+
+**Check.** Re-run `gsc-queries` around 17 November: the card-list queries
+should land on one URL, and its position should move. If the set page ranks
+worse than the gallery did (6.8), reverse it by pointing the canonical the
+other way.
+
+## Click counts by day — 2026-10-27
+
+**Why.** The owner wants to see people clicking the eBay and TCGplayer links,
+day by day, next to what they earn. The only click store, `ClickEvent`, had
+been switched off for Neon transfer (`/api/click` answered 204 and wrote
+nothing), so `/admin/growth` showed zero.
+
+**What.** `OutboundLink` sends a beacon to `/api/click?r=<retailer>`, which
+increments one `Counter` row per Sydney day and network
+(`click:<day>:ebay|tcgplayer|store`, `src/lib/click-counter.ts`). One small
+upsert per click, no read on the request path; at a few hundred clicks a day
+that is well under a megabyte of transfer. `/admin/growth` reads at most 500
+rows. GA4's `buy_click` event is unchanged.
+
+**Limits.** Anyone can post to the route, so the counts are a trend line,
+never a payout figure. Counting starts on 27 October; earlier bars are empty.
+`tests/click-counter.test.ts`.
+
+## Competing pages folded — 2026-10-27
+
+**Why.** The owner, on "One page per set in Google": "a lot of our pages, if
+they compete with each other, that's not good. We need to merge them … across
+the website." The SPLIT QUERIES report (28 days to 24 Oct) named the pairs.
+
+**Folded** (article removed, 301 to the page that keeps the intent, internal
+links repointed, older redirects that ended on them repointed too):
+
+| Folded | Into | Split it caused |
+|---|---|---|
+| `/blog/riftbound-heartsteel-cards` | `/blog/riftbound-heartsteel-overnumbered-cards` | "heartsteel riftbound", "heartsteel kayn riftbound" |
+| `/blog/riftbound-radiance-leaked-mechanics` | `/blog/riftbound-radiance-spoilers` | "radiance leaks"; the leaks are now printed cards |
+| `/blog/riftbound-radiance-preview-week-one` | `/blog/riftbound-radiance-spoilers` | "riftbound radiance signature(s)", "all cards" |
+| `/blog/riftbound-radiance-card-list` | `/sets/radiance` | "riftbound radiance chase cards", the card-list family |
+| `/blog/riftbound-radiance-biggest-release-since-origins` | `/sets/radiance` | "riftbound radiance release date" (the set page ranked 3.3) |
+| `/blog/every-riftbound-vendetta-card-revealed` | `/sets/vendetta` | "riftbound vendetta card list" |
+
+Left alone: `/` with `/browse` ("riftbound card prices"), both core pages
+with their own jobs; `/guides/every-ahri-card-in-riftbound`, already a 301;
+card pages sharing a card's name, which are different printings.
+
+**Kept honest from now on.** The ops monitor's growth snapshot stores the top
+25 split queries per site, and `/admin/growth` lists them under "Pages
+competing in Google", so a new pair shows up without anyone running a report
+(`findSplitQueries` in `src/lib/ops/gsc-daily.ts`, `tests/admin-growth.test.ts`).
+Ratchets lowered with the folds: no article excerpt or title is over length.
+
 
 ## The cheaper marketplace leads the pinned pair — 2026-10-27
 

@@ -8,11 +8,10 @@ import { reportOutboundConversion } from "@/lib/google-ads";
 import { readEntrySource } from "@/lib/entry-source";
 import { earnCoin } from "@/lib/coins-client";
 
-// An outbound "buy" link. Used to also fire a click beacon (to /api/click) for
-// eBay retailer keys so click counts could be verified in our own DB — that
-// beacon has been turned off (it wrote a row per click to the already
-// egress-strained history DB; see /api/click/route.ts, which is now a no-op
-// kept only so any stale cached page still calling it doesn't 404/error). The
+// An outbound "buy" link. It fires a click beacon to /api/click, which adds one
+// to a per-day, per-network Counter row (2026-10-27, "Click counts by day" in
+// DECISIONS.md; the old beacon wrote a row per eBay click to the history
+// database and was switched off for egress). The
 // link itself stays a normal direct <a> — keeping eBay's affiliate attribution
 // clean and adding zero redirect latency.
 //
@@ -211,6 +210,10 @@ export function OutboundLink({
       entry: readEntrySource(),
       transport_type: "beacon",
     });
+    // Our own daily click count per network for /admin/growth (lib/click-counter.ts).
+    try {
+      navigator.sendBeacon?.(`/api/click?r=${encodeURIComponent(retailer)}`);
+    } catch {}
     // Paid Google Ads conversion tracking (lib/google-ads.ts) — a no-op unless a
     // conversion action is configured in env, and gated by the same Consent Mode
     // v2 state GA4 already runs under (see GoogleAnalytics.tsx). Reports the same

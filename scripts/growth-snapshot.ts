@@ -1,8 +1,8 @@
 // Stores Search Console clicks per day for each site in OpsSnapshot "growth:gsc",
-// read by /admin/growth (2026-10-27). Runs after the ops monitor every three hours.
+// and the queries our own pages compete for, read by /admin/growth (2026-10-27). Runs after the ops monitor every three hours.
 // PUBLIC LOGS: this prints only which properties answered, never a number.
 import { prisma } from "../src/lib/db";
-import { fetchGscDaily, type GscDay } from "../src/lib/ops/gsc-daily";
+import { fetchGscDaily, fetchGscQueryPages, findSplitQueries, type GscDay, type SplitQuery } from "../src/lib/ops/gsc-daily";
 
 const DAYS = 90;
 const PROPERTIES = (process.env.GSC_PROPERTIES || "https://riftcompare.com/,https://opcompare.app/")
@@ -19,10 +19,17 @@ async function main() {
   const end = new Date();
   const start = new Date(end.getTime() - DAYS * 86400_000);
   const ymd = (d: Date) => d.toISOString().slice(0, 10);
-  const sites: Record<string, { status: "ok" | "error"; detail?: string; days: GscDay[] }> = {};
+  // Competing pages over the last 28 settled days (Search Console's newest two are provisional).
+  const splitEnd = new Date(end.getTime() - 3 * 86400_000);
+  const splitStart = new Date(splitEnd.getTime() - 27 * 86400_000);
+  const sites: Record<string, { status: "ok" | "error"; detail?: string; days: GscDay[]; splits?: SplitQuery[] }> = {};
   for (const p of PROPERTIES) {
     try {
-      sites[p] = { status: "ok", days: await fetchGscDaily(raw, p, ymd(start), ymd(end)) };
+      const days = await fetchGscDaily(raw, p, ymd(start), ymd(end));
+      const splits = await fetchGscQueryPages(raw, p, ymd(splitStart), ymd(splitEnd))
+        .then((rows) => findSplitQueries(rows, { limit: 25 }))
+        .catch(() => undefined);
+      sites[p] = { status: "ok", days, splits };
       console.log(`${p}: ok`);
     } catch (e) {
       sites[p] = { status: "error", detail: (e as Error).message.slice(0, 120), days: [] };

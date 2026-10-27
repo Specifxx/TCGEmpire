@@ -687,7 +687,7 @@ longer lands on its entry.
   The headline, `CardTopBuy`, the sticky bar and JSON-LD still read the price
   ranking. Policy pages name it as the one labelled exception; this replaces
   the "never inside the ranking" rule below. [2026-10-27](../DECISIONS.md#L20143),
-  [2026-10-27](../DECISIONS.md#L20385)
+  [2026-10-27](../DECISIONS.md#L20462)
 - **eBay beside every comparison, never inside the ranking** (owner, 09-26:
   push eBay clicks even where stores are cheaper) — **with ONE exception since
   10-15 (owner):** the pre-order table (`PreorderPriceTable`, on
@@ -938,6 +938,11 @@ longer lands on its entry.
   "spoiler", "revealed" or "card list". A comingSoon + hubReady set's gallery
   is in the nav (derived from `SETS`), on `/gallery` as "Upcoming" (kept out
   of the hub's all-sets count), and is the homepage set tile's link. [2026-09-30](../DECISIONS.md#L15834)
+- **One page per set in Google:** `/sets/<slug>/gallery` canonicalises to
+  `/sets/<slug>` and is out of the sitemap; the gallery stays for visitors.
+  Six competing posts were folded into one page each the same day. Before
+  splitting an intent across two pages, check "Pages competing in Google" on
+  `/admin/growth` (or `gsc-queries`' SPLIT QUERIES); a pair there gets folded. [2026-10-27](../DECISIONS.md#L20384)
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)
@@ -1233,7 +1238,7 @@ longer lands on its entry.
   TCGplayer cart) and `/pricebot` for all seven games, HTTP interactions only,
   no database; every reply opens with `#ad`; the owner switches it on, and it is
   removed again if it is not near 30 clicks a day a month after promotion.
-  [2026-10-27](../DECISIONS.md#L20385)
+  [2026-10-27](../DECISIONS.md#L20462)
 - **No AI calls, no Speed Insights (2026-10-16):** Trade Roast (and its
   Gremlin box) and the unrendered AI card insight are gone with the Anthropic
   SDK; the site makes no model call. Speed Insights is removed (billed, unread).

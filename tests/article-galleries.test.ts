@@ -43,7 +43,6 @@ test("leak roundup and guides: RAD-scoped, bracketed-marker galleries, all posit
   const cases: [string, string[]][] = [
     // "[Show Off": the cards print the name as two words (2026-09-29), not the
     // leak's "Showoff"; the old marker would never match a real card.
-    ["riftbound-radiance-leaked-mechanics", ["[Deploy", "[Show Off", "[Disarm"]],
     ["riftbound-deploy-explained", ["[Deploy"]],
     ["riftbound-showoff-explained", ["[Show Off"]],
     ["riftbound-disarm-explained", ["[Disarm"]],
@@ -60,12 +59,6 @@ test("leak roundup and guides: RAD-scoped, bracketed-marker galleries, all posit
     }
     assert.deepEqual(markers(a.body), want.map((_, i) => i), `${slug}: every gallery placed in the body`);
   }
-  // Each roundup gallery sits under its own mechanic's section.
-  const body = bySlug("riftbound-radiance-leaked-mechanics").body;
-  const at = (s: string) => body.indexOf(s);
-  assert.ok(at("## Deploy:") < at("[[embed:0]]") && at("[[embed:0]]") < at("## Showoff:"));
-  assert.ok(at("## Showoff:") < at("[[embed:1]]") && at("[[embed:1]]") < at("## Disarm:"));
-  assert.ok(at("## Disarm:") < at("[[embed:2]]") && at("[[embed:2]]") < at("## Deploy, Showoff and Disarm at a glance"));
 });
 
 test("Empower and Flow guides use positioned 24-deep galleries, not the legacy embed", () => {
