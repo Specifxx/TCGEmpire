@@ -20503,9 +20503,10 @@ the same machinery was repurposed a third time rather than built again.
 `PREMIUM_OFFER_SINCE` 2026-10-27, so everyone the trial email reached gets this
 one once. Subject "How's RiftCompare working for you?". It leads with five
 star links, each opening `/feedback?rating=N` with that rating picked
-(`/feedback` now reads `?rating=`), source `page`: the one form whose first
-signed-in submission earns the feedback reward, which the email mentions only
-while `feedbackPremiumActive()`. Then Pro at the `lib/site.ts` prices with a
+(`/feedback` now reads `?rating=`). It does NOT mention the page's
+Pro-for-feedback reward: a review solicited with a reward is an incentivised
+review, and the FTC's 2024 rule and the ACCC do not allow soliciting one and
+showing it unlabelled (reviews show publicly by default). Then Pro at the `lib/site.ts` prices with a
 monthly and a yearly checkout button. Audience: every account not currently
 paying (`isPremium`), not an admin, not a seed persona, not opted out of
 announcements. The trial-only exclusions (had a trial, paid before, the

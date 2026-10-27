@@ -1472,8 +1472,6 @@ export interface PremiumOfferEmailOpts {
   unsubUrl: string;
   oneClickUrl?: string;
   via?: "brevo" | "resend";
-  /** Days of Pro the /feedback page grants for a first signed-in feedback; 0 or absent = say nothing. */
-  feedbackRewardDays?: number;
 }
 
 // 2026-10-27: the campaign is the FEEDBACK + PRO email to registered accounts
@@ -1481,9 +1479,10 @@ export interface PremiumOfferEmailOpts {
 // like, are you enjoying the site … consider joining the pro plan"). The
 // function names stay (the admin console, its API route and the audience code
 // all read them). It leads with a one-tap star rating — each star opens
-// /feedback with that rating picked, source "page", the one form whose first
-// signed-in submission earns the feedback reward — and then states Pro at its
-// own prices. There is no trial (PREMIUM_TRIAL_DAYS 0 since 2026-10-26), so
+// /feedback with that rating picked — and then states Pro at its own prices.
+// It never mentions the /feedback page's Pro-for-feedback reward: a review
+// asked for with a reward is an incentivised review, which consumer law (FTC
+// 2024 rule, ACCC) does not allow us to solicit and then show unlabelled. There is no trial (PREMIUM_TRIAL_DAYS 0 since 2026-10-26), so
 // the email promises none. No eBay or other affiliate link: every link is our
 // own page (eBay Partner Network does not allow its links in email without
 // approval).
@@ -1526,12 +1525,6 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
   const heading = subject;
   const premiumLine = priceDropTierLine("premium");
   const hasAnnual = !!premiumEffectiveMonthly("premium");
-  // The /feedback reward, stated only while it is on (feedbackPremiumActive(),
-  // passed in by lib/premium-offer.ts: lib/premium imports this module).
-  const reward = opts.feedbackRewardDays && opts.feedbackRewardDays > 0 ? opts.feedbackRewardDays : 0;
-  const rewardLine = reward
-    ? `If it's your first feedback and you're signed in, we'll add ${reward} days of ${TIER_NAMES.premium} to your account as a thank-you.`
-    : "";
 
   const btn = (url: string, label: string, primary: boolean) =>
     primary
@@ -1555,7 +1548,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
       ${starRow}
     </td></tr>
     <tr><td style="padding:6px 32px 8px;font-size:13px;line-height:1.6;color:#9aa4b2">
-      Tap a star, then add a line about what to fix or build next if you like. We read every one.${rewardLine ? ` ${escapeHtml(rewardLine)}` : ""}
+      Tap a star, then add a line about what to fix or build next if you like. We read every one.
     </td></tr>
     <tr><td style="padding:8px 32px 8px">
       <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px">
@@ -1581,7 +1574,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
     `How would you rate ${SITE_NAME}? Pick a star:`,
     ...stars.map((url, i) => `${i + 1} star${i ? "s" : ""}: ${url}`),
     "",
-    `Add a line about what to fix or build next if you like. We read every one.${rewardLine ? ` ${rewardLine}` : ""}`,
+    "Add a line about what to fix or build next if you like. We read every one.",
     "",
     `WANT MORE FROM IT? TRY ${TIER_NAMES.premium.toUpperCase()}: ${premiumLine}`,
     PRICE_DROP_PREMIUM_INCLUDES,

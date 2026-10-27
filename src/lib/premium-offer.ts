@@ -37,7 +37,7 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "./db";
 import { PRICE_DROP_SRC, getLastEmailError, isBrevoEnabled, isEmailEnabled, sendPremiumOfferEmail, type PremiumOfferEmailOpts } from "./email";
-import { FEEDBACK_PREMIUM_DAYS, NOT_SEED_WHERE, feedbackPremiumActive, isPremium, isSeedEmail } from "./premium";
+import { NOT_SEED_WHERE, isPremium, isSeedEmail } from "./premium";
 import { SITE_URL } from "./site";
 
 // 2026-10-27: the campaign is the FEEDBACK + PRO email (owner: "ask them for
@@ -221,11 +221,6 @@ export const prismaPriceDropDeps: PriceDropDeps = {
   sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
 };
 
-// The /feedback reward the email may mention: only while it is on.
-function feedbackRewardDays(): number {
-  return feedbackPremiumActive() ? FEEDBACK_PREMIUM_DAYS : 0;
-}
-
 export function announcementUnsubUrls(token: string): { unsubUrl: string; oneClickUrl: string } {
   const t = encodeURIComponent(token);
   return {
@@ -300,7 +295,7 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts, deps: PriceDr
     }
 
     const ok = await deps
-      .send(r.email, { displayName: r.displayName, ...announcementUnsubUrls(token), via, feedbackRewardDays: feedbackRewardDays() })
+      .send(r.email, { displayName: r.displayName, ...announcementUnsubUrls(token), via })
       .catch(() => false);
 
     if (ok) {
@@ -402,6 +397,6 @@ export async function sendPremiumOfferTest(
 ): Promise<{ ok: boolean; error?: string }> {
   const configured = via === "brevo" ? isBrevoEnabled() : isEmailEnabled();
   if (!configured) return { ok: false, error: `${via === "brevo" ? "BREVO_API_KEY" : "RESEND_API_KEY"} is not set` };
-  const ok = await send(to, { displayName: "Test Recipient", ...announcementUnsubUrls("test"), via, feedbackRewardDays: feedbackRewardDays() }).catch(() => false);
+  const ok = await send(to, { displayName: "Test Recipient", ...announcementUnsubUrls("test"), via }).catch(() => false);
   return ok ? { ok: true } : { ok: false, error: getLastEmailError() ?? "the mail provider rejected the test email" };
 }

@@ -303,21 +303,18 @@ test("it asks for a rating first: five star links to /feedback with that rating 
     assert.ok(email.html.includes(url) && email.text.includes(url), `star ${i + 1} is in both parts`);
   });
   assert.ok(email.html.indexOf(stars[0]) < email.html.indexOf(priceDropLinks().premiumMonthly), "the rating comes before the Pro offer");
-  // The page reads ?rating= into the one form that earns the feedback reward.
+  // The page reads ?rating= into its form.
   assert.match(read("src/app/feedback/page.tsx"), /r >= 1 && r <= 5/);
   assert.match(read("src/components/FeedbackForm.tsx"), /source="page"[\s\S]*initialRating=\{initialRating\}/);
 });
 
-test("the feedback reward is mentioned only while it is on", () => {
-  const off = buildPremiumOfferEmail({ displayName: "Bill", unsubUrl: "u" });
-  assert.doesNotMatch(off.html + off.text, /thank-you/);
-  const on = buildPremiumOfferEmail({ displayName: "Bill", unsubUrl: "u", feedbackRewardDays: 7 });
-  assert.match(on.text, /first feedback and you're signed in, we'll add 7 days of Pro/);
-  assert.match(read("src/lib/premium-offer.ts"), /feedbackPremiumActive\(\) \? FEEDBACK_PREMIUM_DAYS : 0/);
+test("no reward is offered for a rating (an incentivised review must not be solicited unlabelled)", () => {
+  for (const body of [email.html, email.text]) assert.doesNotMatch(body, /thank-you|days of Pro|in return|reward/i);
+  assert.doesNotMatch(read("src/lib/premium-offer.ts"), /FEEDBACK_PREMIUM_DAYS|feedbackPremiumActive/);
 });
 
 test("no affiliate link: every link in the email is riftcompare.com", () => {
-  const full = buildPremiumOfferEmail({ displayName: "Bill", unsubUrl: "https://riftcompare.com/announcements/unsubscribe?token=abc", feedbackRewardDays: 7 });
+  const full = buildPremiumOfferEmail({ displayName: "Bill", unsubUrl: "https://riftcompare.com/announcements/unsubscribe?token=abc" });
   for (const body of [full.html, full.text]) {
     const urls = body.match(/https?:\/\/[^\s"<>)]+/g) ?? [];
     assert.ok(urls.length > 5);
