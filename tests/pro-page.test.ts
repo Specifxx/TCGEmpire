@@ -91,15 +91,15 @@ test("the feedback panel has no floating button: it opens from the footer link",
 });
 
 test("the rating shown is real and only shown once there are enough", () => {
-  // 100 since 2026-10-27 (owner: "once we have like 100 people provide us feedback").
-  assert.equal(MIN_RATINGS_TO_SHOW, 100);
-  assert.equal(ratingToShow(4.8, 99), null);
+  // 1 since 2026-10-27 (owner: "we've collected enough feedback … show the feedback on the site now").
+  assert.equal(MIN_RATINGS_TO_SHOW, 1);
+  assert.equal(ratingToShow(4.8, 0), null);
   assert.equal(ratingToShow(null, 500), null);
   assert.deepEqual(ratingToShow(4.66, 120), { average: 4.7, count: 120 });
   assert.equal(ratingLine({ average: 4.7, count: 1234 }), "4.7 rating · 1,234 ratings");
   const landing = read("src/components/premium/ProLanding.tsx");
   assert.match(landing, /<SiteRatingBadge rating=\{rating\}/);
-  assert.match(landing, /\{rating && \(\s*<div className="pt-16">\s*<ReviewsSection \/>/, "reviews only once the rating is shown");
+  assert.match(landing, /<div className="pt-16 empty:hidden">\s*<ReviewsSection \/>/, "approved reviews on the Pro page");
   const badge = read("src/components/SiteRatingBadge.tsx");
   assert.match(badge, /if \(!rating\) return null;/, "no rating line without a rating");
   assert.doesNotMatch(badge, /itemprop|aggregateRating|application\/ld\+json/i, "plain HTML, never review markup");

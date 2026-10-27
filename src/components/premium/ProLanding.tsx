@@ -164,14 +164,12 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
         </div>
       </section>
 
-      {/* Real, consented, approved reviews, once the rating itself is shown
-          (100+ ratings): Collectr puts its reviews between the features and
-          the price. ReviewsSection renders nothing below its own minimum. */}
-      {rating && (
-        <div className="pt-16">
-          <ReviewsSection />
-        </div>
-      )}
+      {/* Real, consented, approved reviews: Collectr puts its reviews between
+          the features and the price. ReviewsSection renders nothing when there
+          are none (it adds its own spacing only when it renders). */}
+      <div className="pt-16 empty:hidden">
+        <ReviewsSection />
+      </div>
 
       <section id="pricing" className="scroll-mt-header pt-16 text-center" aria-labelledby="pro-pricing">
         <div className="text-xs font-extrabold uppercase tracking-widest text-gold">Pricing</div>

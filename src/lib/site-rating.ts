@@ -17,7 +17,9 @@ import { prisma } from "./db";
 // (the reviews.ts convention, not unstable_cache: see the egress rules in
 // lib/db.ts). Any error is "no rating", never a broken page.
 
-export const MIN_RATINGS_TO_SHOW = 100;
+// 1 since 2026-10-27, later the same day (owner: "we've collected enough feedback … let's
+// show the feedback on the site now"). The count always shows beside the average.
+export const MIN_RATINGS_TO_SHOW = 1;
 const TTL_MS = 6 * 60 * 60_000;
 
 export interface SiteRating {

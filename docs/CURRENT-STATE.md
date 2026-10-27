@@ -204,9 +204,9 @@ longer lands on its entry.
   `/premium` copies Collectr's page for non-members. A rate-the-site corner card
   (not a modal) asks only returning visitors, at most twice, and is the one
   uninvited opinion ask; the feedback panel opens from the footer link, with
-  no floating button ([2026-10-27](../DECISIONS.md#L20126)); the homepage hero and the
-  Pro page show the average (and Pro the approved reviews) only from 100+ real
-  ratings, never in JSON-LD.
+  no floating button ([2026-10-27](../DECISIONS.md#L20143)); the homepage hero and the
+  Pro page show the real average with its count from the first rating
+  (2026-10-27), approved and consented reviews on both, never in JSON-LD.
   [2026-10-26](../DECISIONS.md#L19772)
 - **One paid plan again (2026-10-23, supersedes the trial and tier bullets
   below):** Premium $9.99/mo or $79.99/yr with a free 30-day card-gated trial;

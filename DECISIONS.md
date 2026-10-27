@@ -20123,6 +20123,23 @@ an eBay link in the details card as "affiliate before our own analysis
 `CardTopBuy` has carried an outbound Buy link there since that same day, and
 this line is a ranked row's own price, not an ad.
 
+## Ratings and reviews shown now, not at 100 — 2026-10-27
+
+The owner, the same evening: "we've collected enough feedback … let's show the
+feedback on the site now … feedback and trust is very important … be
+transparent as much as possible", the Pro page included.
+
+**What.** `MIN_RATINGS_TO_SHOW` is 1 and `MIN_REVIEWS_TO_DISPLAY` is 1. The
+average still always shows with its count ("4.6 rating · 23 ratings"), so a small
+number is stated, not hidden. The Pro page shows the approved reviews whenever
+there are any, not only when the rating shows. The homepage's reviews moved up
+from the bottom of the page to just under the popular cards.
+
+**Unchanged.** A review is shown only if its writer ticked consent AND an admin
+approved it in `/admin/messages`. There is still no review markup or JSON-LD:
+Google treats a site's own reviews of itself as self-serving. Star snippets in
+search would need a third-party platform such as a Trustpilot profile.
+
 ## One rating ask, earned by engagement — 2026-10-27
 
 A visitor wrote that there were "too many pop-ups asking for my opinion", and
@@ -20158,6 +20175,6 @@ in 3 s into every browser session.
 
 **Why not a store-click trigger.** A first-visit store click was considered as
 the "earned" signal and dropped: the owner's rule is no rating ask to new
-visitors at all. The ratings shown on the homepage and the Pro page (100+
-real ratings) still come from this card and the footer panel, so collection
+visitors at all. The ratings shown on the homepage and the Pro page (from the
+first rating, entry above) still come from this card and the footer panel, so collection
 keeps working, just slower and from people who know the site.
