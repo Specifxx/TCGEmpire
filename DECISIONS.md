@@ -20457,3 +20457,35 @@ card pages sharing a card's name, which are different printings.
 competing in Google", so a new pair shows up without anyone running a report
 (`findSplitQueries` in `src/lib/ops/gsc-daily.ts`, `tests/admin-growth.test.ts`).
 Ratchets lowered with the folds: no article excerpt or title is over length.
+
+
+## The cheaper marketplace leads the pinned pair — 2026-10-27
+
+The pin above put eBay on top and TCGplayer second on every card, whatever
+their prices. In the US TCGplayer is the cheapest row on about half the cards
+(873 of 1,660 when the phone line shipped), so the pin was showing a dearer
+eBay listing above the cheaper TCGplayer one, and pushing the partner that
+pays about 2.5 times more per click (30 days to 2026-10-26: TCGplayer about
+A$0.31 a click, eBay about A$0.12) down a row, the week the owner flagged
+TCGplayer clicks down 49% week on week.
+
+**What.** `pinMarketplaces` also returns `tcgFirst` (`tcgplayerLeads`): the
+cheaper of the two rows goes on top, TCGplayer on a tie, and a live TCGplayer
+row goes above eBay's search row when the market has no eBay listing. Both are
+the same market's rows, so the prices compare directly. Outside the US, where
+TCGplayer is a converted US reference rather than a row, eBay still leads. The
+card page and the QuickView read it; nothing else changes (tags, price rank,
+"Cheapest" chip, headline, sticky bar, JSON-LD).
+
+**Measure.** `buy_click` surface `table_pinned` by retailer, and TCGplayer
+clicks on the network dashboard, a week from release against the week before.
+OP Compare, Gundam, Lorcana and YGO Compare made the same change the same day.
+
+The sealed QuickView (`/sealed`, the only sealed price list; booster boxes are
+the highest-value orders we send) had no pin at all: eBay was a small search
+link under the list. It now pins the same way, from the OPEN rows only, the
+cheaper on top: the cheapest open eBay and TCGplayer rows tagged "Shown first",
+or eBay's search as the first row when no eBay listing is open. "Best price"
+stays on the real cheapest. Surfaces `sealed_pinned`, `sealed_row`,
+`ebay_pinned`.
+

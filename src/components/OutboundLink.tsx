@@ -145,6 +145,9 @@ export function OutboundLink({
    *    "Riftbound card prices today" table (PriceRowEbay, 2026-09-26);
    *  - `hot40_ebay`: the "Cheapest on eBay" link on a Hot 40 snapshot row
    *    (/rising/[token], 2026-09-28);
+   *  - `sealed_pinned` / `sealed_row` / `ebay_pinned`: the sealed QuickView's
+   *    pinned eBay/TCGplayer rows, its other rows and its pinned eBay search
+   *    row (2026-10-27);
    *  - `deck_cart`: a published deck's "Buy all on TCGplayer" (one Mass Entry
    *    cart for the whole list, 2026-10-27). */
   surface?:
@@ -174,7 +177,10 @@ export function OutboundLink({
     | "price_guide_ebay"
     | "price_guide_tcgplayer"
     | "hot40_ebay"
-    | "featured_listing";
+    | "featured_listing"
+    | "sealed_pinned"
+    | "sealed_row"
+    | "ebay_pinned";
 }) {
   // Record that a buy link exists on this page (lib/buy-intent.ts). Built so
   // the signup popup (removed 2026-09-30) could stay off the buy path; kept as

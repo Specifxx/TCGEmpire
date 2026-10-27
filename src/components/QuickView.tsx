@@ -604,11 +604,11 @@ function QuickViewModal({
                 </div>
               ) : (
                 <ul className="divide-y divide-ink-800">
-                  {/* eBay and TCGplayer first (pinMarketplaces, owner 2026-10-27); `i`
+                  {/* eBay and TCGplayer first, the cheaper on top (pinMarketplaces, owner 2026-10-27); `i`
                       stays the PRICE rank, so "Cheapest" stays on the cheapest. */}
                   {(() => {
                     const pin = pinMarketplaces(inStock);
-                    const lead = [pin.ebay, pin.tcgplayer].filter((p): p is (typeof inStock)[number] => p != null);
+                    const lead = (pin.tcgFirst ? [pin.tcgplayer, pin.ebay] : [pin.ebay, pin.tcgplayer]).filter((p): p is (typeof inStock)[number] => p != null);
                     return [...lead.map((p) => ({ p, pinned: true })), ...pin.rest.map((p) => ({ p, pinned: false }))].slice(0, 6);
                   })().map(({ p, pinned }) => {
                     const i = inStock.indexOf(p);

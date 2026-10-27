@@ -600,12 +600,13 @@ export function CardPriceComparison({
           )}
         </div>
 
-        {/* eBay first, then TCGplayer (owner, 2026-10-27): the cheapest
-            listing of each when this market has one, else eBay's search and,
+        {/* eBay and TCGplayer first (owner, 2026-10-27), the cheaper of the two
+            on top (tcgFirst): the cheapest listing of each when this market has one, else eBay's search and,
             outside the US, TCGplayer's US market price as a labelled reference.
             Stores follow below, ranked by price. */}
         {(pin.ebay || ebay || pin.tcgplayer || tcg) && (
           <ul className="divide-y divide-ink-800 border-b border-ink-800">
+            {pin.tcgFirst && pin.tcgplayer && renderRow(pin.tcgplayer, true)}
             {pin.ebay
               ? renderRow(pin.ebay, true)
               : ebay && (
@@ -637,7 +638,9 @@ export function CardPriceComparison({
                     </OutboundLink>
                   </li>
                 )}
-            {pin.tcgplayer
+            {pin.tcgFirst
+              ? null
+              : pin.tcgplayer
               ? renderRow(pin.tcgplayer, true)
               : tcg && (
                   <li className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap sm:p-4">

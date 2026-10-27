@@ -64,13 +64,17 @@ test("the colour is the only thing that changed: both tables still rank by price
 // they are not the cheapest") the eBay search and TCGplayer's reference lead
 // the comparison panel instead of following it. DECISIONS.md, "eBay and
 // TCGplayer lead every price list".
-test("eBay then TCGplayer lead the panel: a listing when there is one, else the search and the reference", () => {
+test("eBay and TCGplayer lead the panel, the cheaper on top: a listing when there is one, else the search and the reference", () => {
   const src = read(SECTION);
   const lead = src.indexOf("{(pin.ebay || ebay || pin.tcgplayer || tcg) && (");
   const ranked = src.indexOf("{rest.map((p) => renderRow(p, false))}");
   assert.ok(lead > 0 && ranked > lead, "the pinned rows render before the ranked rest");
   const block = codeOnly(src.slice(lead, ranked));
-  assert.ok(block.indexOf("renderRow(pin.ebay, true)") < block.indexOf("renderRow(pin.tcgplayer, true)"), "eBay first");
+  const tcgLead = block.indexOf("{pin.tcgFirst && pin.tcgplayer && renderRow(pin.tcgplayer, true)}");
+  const ebayRow = block.indexOf("renderRow(pin.ebay, true)");
+  assert.ok(tcgLead >= 0 && tcgLead < ebayRow, "TCGplayer on top when it is the cheaper (tcgFirst)");
+  assert.ok(ebayRow < block.lastIndexOf("renderRow(pin.tcgplayer, true)"), "otherwise eBay first");
+  assert.match(block, /\{pin\.tcgFirst\s*\?\s*null\s*:\s*pin\.tcgplayer/, "never drawn twice");
   assert.match(block, /retailer="ebay_no_listing"/);
   assert.match(block, /surface="ebay_fallback"/);
   assert.match(block, /TCGplayer may not ship to your country/);
