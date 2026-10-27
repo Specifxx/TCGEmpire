@@ -20122,3 +20122,36 @@ an eBay link in the details card as "affiliate before our own analysis
 (AdSense Phase 8)". AdSense is off and its approval no longer depends on it,
 `CardTopBuy` has carried an outbound Buy link there since that same day, and
 this line is a ranked row's own price, not an ad.
+
+## eBay and TCGplayer lead every price list — 2026-10-27
+
+Owner, the same day as the phone line above: "we should still put eBay and
+TCG prices at the top, even if they are not the cheapest … I click a card and
+I only see an eBay price when I open the full list … the top rows should be
+eBay and TCGplayer." The popup showed six rows by price and eBay was often the
+seventh; on the card page an eBay row sat at its price rank, often far down.
+
+**What.** `pinMarketplaces` (`lib/market-rows.ts`) takes the price-sorted rows
+and returns the cheapest eBay row, the cheapest TCGplayer row and the rest. The
+card page's comparison and the QuickView popup draw eBay first, then
+TCGplayer, then every store by price. Where the market has no eBay row, eBay's
+search takes the first slot (it moved there from under the panel); outside
+the US, TCGplayer's US market price takes the second as a labelled reference
+("US market price", "may not ship to your country") and the separate
+`TcgMarketPrice` block under the card-page panel is gone (the popup keeps
+its own). Pinned rows wear "Shown first" (`ShownFirstTag`) beside "Paid link",
+the number column is each row's PRICE rank, a dearer pinned row says
+"+N% vs cheapest", and "Cheapest" stays on the real cheapest. Their clicks
+report as surface `table_pinned`.
+
+**Unchanged:** `computeMarket`, the headline Cheapest tile, `CardTopBuy`, the
+sticky bar, Product JSON-LD and every "from" price still read the price
+ranking, so nothing calls a pinned row the cheapest. Cardmarket stays a
+reference block under the panel.
+
+**Supersedes** "Pushing eBay clicks" (2026-09-26) on its central rule, "eBay
+beside every comparison, never inside the ranking", which the owner overrides.
+The public promise changed with it, the same day, on `/editorial-policy`,
+`/about`, `/privacy`, `/terms`, `/methodology`, the homepage and the card page's
+"how we compare" line: the pin is the one labelled exception, stores are still
+ranked by price, and no store can pay for a place.

@@ -674,6 +674,15 @@ longer lands on its entry.
   By-surface numbers compare only from 2026-09-26 on (the eBay-only surfaces
   from 09-27). [2026-09-26](../DECISIONS.md#L13640),
   [2026-09-26](../DECISIONS.md#L13751)
+- **eBay and TCGplayer lead every price list** (owner, 2026-10-27): the card
+  page's comparison and the QuickView draw the cheapest eBay row, then the
+  cheapest TCGplayer row, then the stores by price (`pinMarketplaces`); with no
+  eBay row, eBay's search leads; outside the US TCGplayer's US market price is a
+  labelled reference row. "Shown first" + "Paid link" tags, the price rank in
+  the number column, "+N% vs cheapest", and "Cheapest" on the real cheapest.
+  The headline, `CardTopBuy`, the sticky bar and JSON-LD still read the price
+  ranking. Policy pages name it as the one labelled exception; this replaces
+  the "never inside the ranking" rule below. [2026-10-27](../DECISIONS.md#L20126)
 - **eBay beside every comparison, never inside the ranking** (owner, 09-26:
   push eBay clicks even where stores are cheaper) — **with ONE exception since
   10-15 (owner):** the pre-order table (`PreorderPriceTable`, on

@@ -117,6 +117,20 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
   };
 }
 
+/**
+ * eBay and TCGplayer first (owner, 2026-10-27: "the top rows should be eBay
+ * and TCGplayer, even if they are not the cheapest"). Takes `prices` cheapest
+ * first (computeMarket) and returns the cheapest eBay row and the cheapest
+ * TCGplayer row, plus every other row in its price order. Display only: the
+ * ranking itself, `lowest`, the headline, CardTopBuy, the sticky bar and the
+ * JSON-LD all keep reading `prices`, so the cheapest is still the cheapest.
+ */
+export function pinMarketplaces<T extends { retailer: string }>(prices: T[]): { ebay: T | null; tcgplayer: T | null; rest: T[] } {
+  const ebay = prices.find((p) => p.retailer.startsWith("ebay")) ?? null;
+  const tcgplayer = prices.find((p) => p.retailer.startsWith("tcgplayer")) ?? null;
+  return { ebay, tcgplayer, rest: prices.filter((p) => p !== ebay && p !== tcgplayer) };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // "Is it stocked anywhere else?" — the one rule three surfaces must agree on.
 // ─────────────────────────────────────────────────────────────────────────────

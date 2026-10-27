@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCountry } from "./CountryProvider";
 import { OutboundLink } from "./OutboundLink";
-import { TcgMarketPrice } from "./TcgMarketPrice";
 import { CardmarketPrice } from "./CardmarketPrice";
 import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
 import { formatMoney, timeAgo } from "@/lib/format";
-import { computeMarket, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
+import { computeMarket, pinMarketplaces, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
+import { convertUsdCents } from "@/lib/fx";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { StoreCodeChip } from "./StoreCodeChip";
@@ -48,6 +48,19 @@ export type EbaySearchMap = Record<string, { url: string; label: string } | null
 export function buyButtonClass(retailer: string): string {
   return retailer.startsWith("ebay") ? "btn-ebay" : "btn-buy";
 }
+/** The tag on a row pinned to the top of a comparison (pinMarketplaces). */
+export function ShownFirstTag() {
+  return (
+    <span
+      data-shown-first
+      title="eBay and TCGplayer are shown first, whatever their price. Every other row is sorted by price."
+      className="chip shrink-0 bg-sky-500/10 text-[10px] font-semibold text-sky-300"
+    >
+      Shown first
+    </span>
+  );
+}
+
 export function buyButtonLabel(retailer: string): string {
   if (retailer.startsWith("ebay")) return "Buy on eBay →";
   if (retailer.startsWith("tcgplayer")) return "Buy on TCGplayer →";
@@ -364,6 +377,8 @@ export function CardPriceComparison({
     return [...byRetailer.values()];
   }, [prices, outOfStock]);
   const ebay = m.hasEbay ? null : ebaySearch[country] ?? null;
+  const pin = useMemo(() => pinMarketplaces(prices), [prices]);
+  const rest = pin.rest;
   // "LP · 22% under the cheapest NM here" on each played in-stock row that has
   // an NM copy of the same finish in this market (lib/played-discount.ts). What
   // was worth keeping from the retired Condition Impact Calculator, from this
@@ -420,76 +435,13 @@ export function CardPriceComparison({
     if (!row) return null;
     return { priceCents: row.priceCents, href: row.buyHref, isEu: country === "EU" };
   }, [rows, country]);
-  // Wall-clock-relative text ("updated 47m ago") is frozen in the ISR-cached HTML
-  // and almost never matches the string recomputed at hydration — render it
-  // client-only so it can't throw a hydration mismatch on every page view.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  return (
-    <>
-      <div id="price-comparison" className="card-surface mt-4 scroll-mt-header overflow-hidden sm:mt-6">
-        {/* flex-wrap + a nowrap stamp (2026-09-23): the stamp used to squeeze
-            beside the H2 as three lines 76px wide at 320 and forced the H2
-            onto two lines at 390. Now the stamp drops to its own single line
-            when both don't fit. */}
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-ink-700 p-3 sm:p-4">
-          {/* Named by market, unlike before: this list follows the VISITOR's
-              own market (useCountry()) rather than the page's fixed baseline
-              — deliberately, since showing a shopper their own real, buyable
-              local stores is the entire point of the table (see the file
-              header). That is a different thing from CardPriceMetrics'
-              headline tile above, which is pinned to one fixed market because
-              it stands in for the page's own metadata claim — but naming
-              this list's market too means the two can never read as silently
-              contradicting each other just because neither says which
-              market it's showing. */}
-          <h2 className="font-bold text-white">
-            Price comparison <span className="text-slate-500">({prices.length})</span>{" "}
-            <span className="text-sm font-normal text-slate-500">· {COUNTRIES[country].place}</span>
-          </h2>
-          {/* Oldest row in the table, not the cheapest row's timestamp — a single
-              "updated Xh ago" over the whole panel used the freshest row's stamp to
-              describe every row, including ones seen far longer ago. Each row now
-              also carries its own timestamp below (see the per-row meta line), so
-              this header line is the panel's worst case, not its best. */}
-          {mounted && prices.length > 0 && (
-            <span className="whitespace-nowrap text-xs text-slate-500">
-              oldest listing {timeAgo(prices.reduce((old, p) => (p.lastSeen < old ? p.lastSeen : old), prices[0].lastSeen))}
-            </span>
-          )}
-        </div>
-
-        {prices.length === 0 && outOfStock.length === 0 && emptyState ? (
-          <div className="p-3 sm:p-4">{emptyState}</div>
-        ) : prices.length === 0 && outOfStock.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-400">
-            <p className="font-semibold text-white">No prices found yet</p>
-            <p className="mt-1">
-              We haven&apos;t matched this card to a store listing in this market. Check back soon —
-              our price feeds refresh regularly.
-            </p>
-          </div>
-        ) : prices.length === 0 ? (
-          <div className="p-6 text-center text-sm text-slate-400">
-            <p className="font-semibold text-white">Currently sold out everywhere</p>
-            {/* Distinct retailers, matching the disclosure's own count (see the
-                note in OutOfStockDisclosure). And "expand … below" rather than
-                the old "see them below": the list underneath is a
-                closed-by-default disclosure, so there is nothing to see until
-                the reader opens it — the copy has to name the action. */}
-            <p className="mt-1">
-              {(() => {
-                const n = new Set(outOfStock.map((p) => p.retailer)).size;
-                return `${n} ${n === 1 ? "store has" : "stores have"}`;
-              })()}{" "}
-              listed this card but it&apos;s out of stock right now — expand the list below to see
-              their last known prices.
-            </p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-ink-800">
-            {prices.map((p, i) => (
+  // eBay and TCGplayer lead the list (owner, 2026-10-27; see pinMarketplaces in
+  // lib/market-rows.ts). Every row keeps its PRICE rank in the number column,
+  // the "Cheapest" chip stays on the real cheapest, and a pinned row that costs
+  // more says by how much.
+  const renderRow = (p: ComputedRow, pinned: boolean) => {
+    const i = prices.indexOf(p);
+    return (
               <li
                 key={p.id}
                 className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4"
@@ -506,6 +458,7 @@ export function CardPriceComparison({
                         Cheapest
                       </span>
                     )}
+                    {pinned && <ShownFirstTag />}
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                     {/* Foil is a per-row BADGE, never a filter: a foil listing
@@ -569,6 +522,11 @@ export function CardPriceComparison({
                   <div className={`num text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
                     {fmt(p.priceCents)}
                   </div>
+                  {pinned && i > 0 && prices[0].priceCents > 0 && (
+                    <div className="num text-[11px] text-slate-500">
+                      +{Math.round(((p.priceCents - prices[0].priceCents) / prices[0].priceCents) * 100)}% vs cheapest
+                    </div>
+                  )}
                   {secondaryFmt(p.priceCents) && (
                     <div className="num text-[11px] text-slate-500">≈ {secondaryFmt(p.priceCents)}</div>
                   )}
@@ -594,13 +552,164 @@ export function CardPriceComparison({
                   inStock
                   variant={p.isFoil ? "foil" : "nonfoil"}
                   condition={p.condition}
-                  surface="table"
+                  surface={pinned ? "table_pinned" : "table"}
                   className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]`}
                 >
                   {buyButtonLabel(p.retailer)}
                 </OutboundLink>
               </li>
-            ))}
+    );
+  };
+  // Wall-clock-relative text ("updated 47m ago") is frozen in the ISR-cached HTML
+  // and almost never matches the string recomputed at hydration — render it
+  // client-only so it can't throw a hydration mismatch on every page view.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  return (
+    <>
+      <div id="price-comparison" className="card-surface mt-4 scroll-mt-header overflow-hidden sm:mt-6">
+        {/* flex-wrap + a nowrap stamp (2026-09-23): the stamp used to squeeze
+            beside the H2 as three lines 76px wide at 320 and forced the H2
+            onto two lines at 390. Now the stamp drops to its own single line
+            when both don't fit. */}
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-ink-700 p-3 sm:p-4">
+          {/* Named by market, unlike before: this list follows the VISITOR's
+              own market (useCountry()) rather than the page's fixed baseline
+              — deliberately, since showing a shopper their own real, buyable
+              local stores is the entire point of the table (see the file
+              header). That is a different thing from CardPriceMetrics'
+              headline tile above, which is pinned to one fixed market because
+              it stands in for the page's own metadata claim — but naming
+              this list's market too means the two can never read as silently
+              contradicting each other just because neither says which
+              market it's showing. */}
+          <h2 className="font-bold text-white">
+            Price comparison <span className="text-slate-500">({prices.length})</span>{" "}
+            <span className="text-sm font-normal text-slate-500">· {COUNTRIES[country].place}</span>
+          </h2>
+          {/* Oldest row in the table, not the cheapest row's timestamp — a single
+              "updated Xh ago" over the whole panel used the freshest row's stamp to
+              describe every row, including ones seen far longer ago. Each row now
+              also carries its own timestamp below (see the per-row meta line), so
+              this header line is the panel's worst case, not its best. */}
+          {mounted && prices.length > 0 && (
+            <span className="whitespace-nowrap text-xs text-slate-500">
+              oldest listing {timeAgo(prices.reduce((old, p) => (p.lastSeen < old ? p.lastSeen : old), prices[0].lastSeen))}
+            </span>
+          )}
+        </div>
+
+        {/* eBay first, then TCGplayer (owner, 2026-10-27): the cheapest
+            listing of each when this market has one, else eBay's search and,
+            outside the US, TCGplayer's US market price as a labelled reference.
+            Stores follow below, ranked by price. */}
+        {(pin.ebay || ebay || pin.tcgplayer || tcg) && (
+          <ul className="divide-y divide-ink-800 border-b border-ink-800">
+            {pin.ebay
+              ? renderRow(pin.ebay, true)
+              : ebay && (
+                  <li className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap sm:p-4">
+                    <div className="w-5 shrink-0 sm:w-6" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="min-w-0 truncate font-semibold text-white">{ebay.label}</span>
+                        <ShownFirstTag />
+                      </div>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {preRelease
+                          ? "Not released yet: eBay sellers set their own dispatch dates, so check each listing."
+                          : "No eBay price on file for this card. Search eBay's current listings."}{" "}
+                        <PaidLinkTag />
+                      </p>
+                    </div>
+                    <OutboundLink
+                      href={ebay.url}
+                      retailer="ebay_no_listing"
+                      country={country}
+                      cardId={cardId}
+                      cardName={displayName}
+                      pageType="card_detail"
+                      surface="ebay_fallback"
+                      className="btn-ebay order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
+                    >
+                      Search {ebay.label} →
+                    </OutboundLink>
+                  </li>
+                )}
+            {pin.tcgplayer
+              ? renderRow(pin.tcgplayer, true)
+              : tcg && (
+                  <li className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap sm:p-4">
+                    <div className="w-5 shrink-0 sm:w-6" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="min-w-0 truncate font-semibold text-white">TCGplayer</span>
+                        <span className="chip shrink-0 bg-ink-800 text-[10px] text-slate-400">US market price</span>
+                        <ShownFirstTag />
+                      </div>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        A reference, converted at an approximate rate. TCGplayer may not ship to your country.{" "}
+                        {isPaidLink(tcg.href) && <PaidLinkTag />}
+                      </p>
+                    </div>
+                    {(tcg.usdCents ?? tcg.usdCentsFoil) != null && (
+                      <div className="shrink-0 text-right">
+                        <div className="num text-lg font-bold text-white">
+                          ≈ {formatMoney(convertUsdCents((tcg.usdCents ?? tcg.usdCentsFoil)!, COUNTRIES[country].currency), COUNTRIES[country].currency)}
+                        </div>
+                        <div className="num text-[11px] text-slate-500">{formatMoney((tcg.usdCents ?? tcg.usdCentsFoil)!, "USD")}</div>
+                      </div>
+                    )}
+                    {tcg.href && (
+                      <OutboundLink
+                        href={tcg.href}
+                        retailer="tcgplayer"
+                        country={country}
+                        cardId={cardId}
+                        cardName={displayName}
+                        pageType="card_detail"
+                        surface="table_pinned"
+                        className="btn-buy order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
+                      >
+                        Check on TCGplayer →
+                      </OutboundLink>
+                    )}
+                  </li>
+                )}
+          </ul>
+        )}
+
+        {prices.length === 0 && outOfStock.length === 0 && emptyState ? (
+          <div className="p-3 sm:p-4">{emptyState}</div>
+        ) : prices.length === 0 && outOfStock.length === 0 ? (
+          <div className="p-8 text-center text-sm text-slate-400">
+            <p className="font-semibold text-white">No prices found yet</p>
+            <p className="mt-1">
+              We haven&apos;t matched this card to a store listing in this market. Check back soon —
+              our price feeds refresh regularly.
+            </p>
+          </div>
+        ) : prices.length === 0 ? (
+          <div className="p-6 text-center text-sm text-slate-400">
+            <p className="font-semibold text-white">Currently sold out everywhere</p>
+            {/* Distinct retailers, matching the disclosure's own count (see the
+                note in OutOfStockDisclosure). And "expand … below" rather than
+                the old "see them below": the list underneath is a
+                closed-by-default disclosure, so there is nothing to see until
+                the reader opens it — the copy has to name the action. */}
+            <p className="mt-1">
+              {(() => {
+                const n = new Set(outOfStock.map((p) => p.retailer)).size;
+                return `${n} ${n === 1 ? "store has" : "stores have"}`;
+              })()}{" "}
+              listed this card but it&apos;s out of stock right now — expand the list below to see
+              their last known prices.
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-ink-800">
+            {rest.map((p) => renderRow(p, false))}
           </ul>
         )}
 
@@ -644,53 +753,6 @@ export function CardPriceComparison({
         </div>
       </div>
 
-      {/* eBay fallback — shown whenever this market has no live eBay row for the
-          card, so a thin market is never a dead end.
-
-          DIRECTLY UNDER THE COMPARISON (2026-09-26, "Pushing eBay clicks" in
-          DECISIONS.md), above the Cardmarket/TCGplayer reference blocks: it
-          sat below both, the last block before the banners, although for a
-          card with no eBay row it is the nearest way onto eBay from the table.
-          It stays OUTSIDE the ranked panel above — a search, never a row, so
-          it cannot outrank a store — and says what it is: a search, with no
-          price or stock claimed. eBay blue rather than the old amber tint, to
-          match the eBay buttons in the table, and its own disclosure. */}
-      {ebay && (
-        <div className="mt-4">
-          <div className="card-surface flex flex-wrap items-center justify-between gap-3 border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-4">
-            <div className="min-w-0 flex-1 basis-56">
-              <div className="text-sm font-semibold text-white">
-                Search {ebay.label} for {displayName}
-              </div>
-              <p className="mt-1 text-xs text-slate-400">
-                {preRelease
-                  ? "This set hasn't released yet — eBay sellers set their own dispatch dates, so check each listing."
-                  : `We have no ${ebay.label} price on file for this card right now — eBay sellers may still list it.`}
-              </p>
-            </div>
-            {/* Tracked, not a bare anchor. This panel used to be a plain <a>, so
-                its clicks reached neither the database nor Vercel Analytics — and
-                it is now the ONLY eBay path for every Common/Uncommon base print,
-                since those no longer get an eBay listing search at all (see
-                eBayWorthSearching). Whether that trade was right is exactly what
-                this link's click rate answers, so it has to be measurable. */}
-            <OutboundLink
-              href={ebay.url}
-              retailer="ebay_no_listing"
-              country={country}
-              cardId={cardId}
-              cardName={displayName}
-              pageType="card_detail"
-              surface="ebay_fallback"
-              className="btn-ebay shrink-0 text-sm"
-            >
-              Search {ebay.label} →
-            </OutboundLink>
-          </div>
-          <AffiliateDisclosure partner="ebay" tight />
-        </div>
-      )}
-
       {/* Cardmarket reference price (UK/EU only) — see the `cardmarket` memo above.
           Not an affiliate link, so no AffiliateDisclosure prop to suppress here.
 
@@ -721,7 +783,6 @@ export function CardPriceComparison({
       {/* TCGplayer market price (reference, currency-converted) — rendered below the
           buyable table so it still appears on cards with no local listings.
           disclosure=false: covered by the canonical disclosure above. */}
-      {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} disclosure={false} />}
 
       {/* Contextual eBay banner — searches for THIS card (new, used & graded).
           FIRST of the two banners (2026-09-26, "Pushing eBay clicks" in

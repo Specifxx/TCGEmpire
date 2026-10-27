@@ -166,6 +166,7 @@ export function OutboundLink({
     | "search_box"
     | "card_top_buy"
     | "card_top_alt"
+    | "table_pinned"
     | "sticky_buy_bar"
     | "price_table_ebay"
     | "price_guide_ebay"

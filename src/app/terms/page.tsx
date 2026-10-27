@@ -99,9 +99,9 @@ export default function TermsPage() {
             Amazon Associates), {TIER_NAMES.plus} and {TIER_NAMES.premium} subscriptions. Some outbound links are
             affiliate links through which we may earn a commission at no extra cost to you; these
             are marked and disclosed next to the link. None of these affects the prices we show,
-            and none affects the order in which results are ranked, with one exception labelled where
-            it happens: on the Radiance pre-order table, open eBay listings (eBay is an affiliate
-            partner) are shown first within each product. See our{" "}
+            and none affects the order in which stores are ranked. One exception is labelled where it
+            happens: eBay and TCGplayer, our affiliate partners, are shown first in each price
+            comparison, tagged &ldquo;Shown first&rdquo;, whatever their price. See our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">Privacy Policy</Link> for how
             advertising and cookies are handled.
           </p>
