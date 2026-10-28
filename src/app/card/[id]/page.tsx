@@ -1741,6 +1741,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       {/* The "Embed this live price" widget button was here — removed with the rest
           of the widget feature. /embed/card/[id] still serves so existing third-party
           embeds don't break; we simply no longer offer new ones. */}
+
+      {/* Partner link promised to Rift Atlas (2026-10-28, owner): one quiet,
+          static line at the foot of the page, the same on every card, so it
+          never competes with the price comparison. */}
+      <p className="mt-10 text-xs text-slate-500">
+        Want to try this card in a deck first?{" "}
+        <a href="https://play.riftatlas.com" target="_blank" rel="noopener" className="text-brand-400 hover:underline">
+          Play online on Rift Atlas
+        </a>
+      </p>
     </div>
   );
 }
