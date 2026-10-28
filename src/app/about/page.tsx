@@ -261,6 +261,22 @@ export default async function AboutPage() {
             </Link>
             .
           </p>
+          {/* Partner links promised to YesTCG (2026-10-28, owner); the full list
+              of fan sites lives on /resources. */}
+          <p>
+            Want to buy in person?{" "}
+            <a
+              href="https://yestcg.com/stores/riftbound"
+              target="_blank"
+              rel="noopener"
+              className="text-brand-400 hover:underline"
+            >
+              Find Riftbound card shops near you
+            </a>{" "}
+            on YesTCG: local game stores near you that carry Riftbound, with in-stock prices. The other fan sites
+            we use are on our{" "}
+            <Link href="/resources" className="text-brand-400 hover:underline">community resources</Link> page.
+          </p>
         </section>
 
         <section className="space-y-2">

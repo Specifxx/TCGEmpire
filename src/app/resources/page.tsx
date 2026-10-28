@@ -31,8 +31,20 @@ export const metadata: Metadata = {
 // price-comparison site, because sending price shoppers away from the
 // comparison is the one thing this page must not do; one sentence each, from
 // what the site itself offers. Static, no database read.
+//
+// Partner entries (2026-10-28, owner): YesTCG and Rift Atlas linked to us and
+// were promised a link back here. YesTCG is a local-store FINDER (which game
+// stores near you carry Riftbound), not a store and not an online price
+// comparison, so it sits in its own group. A partner entry may carry an
+// `anchor`: the link text we agreed with that site, shown in place of the
+// plain name, which follows in muted text.
+//
+// TODO(pending reciprocal links, 2026-10-28): MTGStocks and Riftmana were
+// offered a reciprocal link and have not replied. Don't add MTGStocks until
+// they do. (RiftMana's guides entry below predates the offer, from the page's
+// launch, and stays as an ordinary listing.)
 
-type Resource = { name: string; url: string; what: string };
+type Resource = { name: string; url: string; what: string; anchor?: string };
 
 const GROUPS: { title: string; items: Resource[] }[] = [
   {
@@ -46,7 +58,7 @@ const GROUPS: { title: string; items: Resource[] }[] = [
     ],
   },
   {
-    title: "Card databases and deck builders",
+    title: "Card databases, deck builders and play online",
     items: [
       {
         name: "Riftbound.org",
@@ -62,6 +74,12 @@ const GROUPS: { title: string; items: Resource[] }[] = [
         name: "Riftbound.gg",
         url: "https://riftbound.gg/",
         what: "News, tier lists, a keyword glossary and a deck builder with a collection tracker.",
+      },
+      {
+        name: "Rift Atlas",
+        anchor: "Play online on Rift Atlas",
+        url: "https://play.riftatlas.com",
+        what: "Play and test Riftbound decks online.",
       },
     ],
   },
@@ -82,6 +100,17 @@ const GROUPS: { title: string; items: Resource[] }[] = [
         name: "RiftMana",
         url: "https://riftmana.com/",
         what: "Guides for new and returning players, including how to play Riftbound online.",
+      },
+    ],
+  },
+  {
+    title: "Shop finders",
+    items: [
+      {
+        name: "YesTCG",
+        anchor: "Find Riftbound card shops near you",
+        url: "https://yestcg.com/stores/riftbound",
+        what: "Local game stores near you that carry Riftbound, with in-stock prices.",
       },
     ],
   },
@@ -138,8 +167,9 @@ export default function ResourcesPage() {
             {g.items.map((r) => (
               <li key={r.url} className="text-sm leading-relaxed text-slate-400">
                 <a href={r.url} target="_blank" rel="noopener" className="font-semibold text-brand-400 hover:underline">
-                  {r.name}
+                  {r.anchor ?? r.name}
                 </a>
+                {r.anchor && !r.anchor.includes(r.name) && <span className="text-slate-500"> ({r.name})</span>}
                 {" "}
                 <span>{r.what}</span>
               </li>
