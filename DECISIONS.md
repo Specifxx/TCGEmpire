@@ -20672,6 +20672,62 @@ so no request window or time-zone shift can produce a true figure.
   combined per-day line. Today is left out of the trend while it fills in.
   Server-drawn SVG (`components/admin/EarningsLineChart.tsx`), no chart library.
 
+## Rating drive: a pop-up until 100 — 2026-10-28
+
+The owner, the same day as "Ratings: one tap counts": "we do need to get more
+reviews … have that pop up happen [as] originally was implemented … with the
+next 100 visitors until we get like over 100 reviews. And then we can like turn
+it off … it's more active for the first 100." A temporary exception to "One
+rating ask, earned by engagement" and the corner-card timing.
+
+**What.** While the site has fewer than 100 ratings (`RATING_DRIVE_TARGET`,
+counted like the shown average: `getSiteRating`), `RateUsPrompt` is a centred
+pop-up (`Dialog`) for every visitor who has not rated, new or returning, once
+per visit until they rate. No "Don't ask again", and a click on the dimmed page
+does not close it (`dismissOnBackdrop={false}`, a new `Dialog` option). It
+shows "N players have rated so far" out of 100. `/api/rating-drive` answers
+`{ active, count }`, read once per visit (sessionStorage), with a six-hour CDN
+header over `getSiteRating`'s six-hour memo; any error is "off". At 100 it
+switches itself off (within about 12 hours) and the corner card's rules apply
+again, with no deploy.
+
+**Kept from the original on purpose.** A visible ✕, "Maybe later" and Escape
+always close it, and it never covers a visit's landing page before 30 seconds
+(`RATING_DRIVE_LANDING_MS`; 6 s from the second page). A pop-up with no way
+out, or one covering the page a searcher just landed on, is what Google's
+intrusive-interstitial rule demotes on mobile, and search is ~180 clicks a day
+of the core business. Never someone who rated, never on sign-in, checkout,
+/premium, /feedback, admin, embeds or the arcade. No reward for rating.
+
+## Earnings dashboard: a forecast by quarter — 2026-10-28
+
+The owner liked the growth and trend lines and asked for "projected forecasts
+… by the end of this year, quarter 1 next year, quarter 2, quarter 3,
+quarter 4 … so it's easy to visualize where we're heading".
+
+**What.** A "Forecast" panel on `/admin/earnings` under the growth line: this
+quarter and the four after it as columns (earned so far solid, the projected
+rest faded, the likely range as a whisker), then a table with each quarter and
+this year and next as wholes: projected, likely range, and "if growth stops".
+
+**How it projects** (`forecastQuarters` in `lib/earnings/core.ts`):
+- A least-squares straight line through combined earnings per day over the last
+  90 complete days (from the first earning day if that is later; null under 30
+  days), carried forward a day at a time, never below 0, added per period.
+- The last two days are projected, not counted as earned, because eBay adds a
+  day's sales up to 48 hours late (the same lag as eBay's Today, above).
+- Likely range: the line's slope ± 1.28 standard errors, an ~80% band on the
+  growth rate, which is what dominates a projection a year out. Day-to-day
+  noise is left out; it averages away over a quarter.
+- "If growth stops": the last 30 complete days' average held flat.
+- Combined earnings before costs, in the display currency at the reference FX
+  rates. Labelled a projection everywhere; never added to any other figure,
+  the digest or an email.
+
+**Not done.** No seasonality (under a year of history), no per-source or
+profit forecast: a straight line on a young business is a guide, and more
+model would only look more certain than it is.
+
 ## Store audit: 43 stores added from a fresh registry sweep and the sister sites — 2026-10-28
 
 **Owner:** "for all of these websites, and for Rift Compare as well, we gotta look at all the store health and make sure that all the latest and greatest stores they're all on our website."

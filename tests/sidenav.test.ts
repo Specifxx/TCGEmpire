@@ -255,7 +255,7 @@ test("the rail owns the brand, the search and the whole index; the header owns t
   assert.doesNotMatch(rail, /<SearchBar/, "…and never mounts the card search");
   assert.match(nav, /<HeaderSearchSlot>/, "the header carries the desktop card search");
   assert.match(nav, /<HeaderSearchSlot mobile>/, "…and the phone search row");
-  assert.match(codeOnly(read("src/components/SearchBar.tsx")), /"Search for cards"/, "…labelled for cards");
+  assert.match(codeOnly(read("src/components/SearchBar.tsx")), /"Search cards or sealed products"/, "…labelled for cards and sealed (owner, 2026-10-28)");
 
   // Header-only. The rail must never grow a second session control.
   assert.match(nav, /<NavUser/, "the header carries the account control");

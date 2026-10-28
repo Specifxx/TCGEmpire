@@ -9,6 +9,8 @@ import {
   epnDays,
   impactDays,
   inRange,
+  dailyTotals,
+  forecastQuarters,
   latestDayFigure,
   latestReportDay,
   linearTrend,
@@ -346,4 +348,43 @@ test("growth line: running total and a least-squares trend", () => {
   assert.deepEqual(linearTrend([10, 20, 30, 40]), { start: 10, end: 40, slope: 10 });
   assert.equal(linearTrend([1, 2]), null);
   assert.equal(linearTrend([5, 5, 5])?.slope, 0);
+});
+
+// Forecast (2026-10-28): a straight line through the last 90 complete days, per quarter.
+test("forecast: a perfect line projects itself, actual days count as earned, range collapses", () => {
+  const daily: { label: string; cents: number }[] = [];
+  const line = (day: string) => 1000 + 10 * Math.round((Date.parse(day) - Date.parse("2026-07-01")) / 86_400_000);
+  for (let d = "2026-07-01"; d <= "2026-10-27"; d = addDays(d, 1)) daily.push({ label: d, cents: line(d) });
+  const f = forecastQuarters(daily, "2026-10-28")!;
+  assert.equal(f.from, "2026-10-26", "the last two days (eBay's lag) are projected, not counted as earned");
+  assert.deepEqual(f.periods.map((p) => p.label), ["Q4 2026", "Q1 2027", "Q2 2027", "Q3 2027", "Q4 2027"]);
+  const sum = (from: string, to: string) => {
+    let n = 0;
+    for (let d = from; d <= to; d = addDays(d, 1)) n += line(d);
+    return n;
+  };
+  const q4 = f.periods[0];
+  assert.equal(q4.actualCents, sum("2026-10-01", "2026-10-25"));
+  assert.equal(q4.cents, sum("2026-10-01", "2026-12-31"));
+  assert.equal(f.periods[1].cents, sum("2027-01-01", "2027-03-31"));
+  assert.equal(f.periods[1].lowCents, f.periods[1].cents);
+  assert.equal(f.periods[1].highCents, f.periods[1].cents);
+  assert.equal(f.years[0].label, "2026");
+  assert.equal(f.years[0].cents, sum("2026-07-01", "2026-12-31"));
+  assert.equal(f.years[1].cents, sum("2027-01-01", "2027-12-31"));
+  assert.equal(f.per30Change, 300);
+});
+
+test("forecast: noisy data gives a range around the line; a falling line never goes below 0; too little data is null", () => {
+  const noisy: { label: string; cents: number }[] = [];
+  let i = 0;
+  for (let d = "2026-07-01"; d <= "2026-10-27"; d = addDays(d, 1), i++) noisy.push({ label: d, cents: 2000 + 5 * i + (i % 2 ? 400 : -400) });
+  const f = forecastQuarters(noisy, "2026-10-28")!;
+  for (const p of f.periods.slice(1)) assert.ok(p.lowCents < p.cents && p.cents < p.highCents, p.label);
+  const falling = noisy.map((d, k) => ({ label: d.label, cents: Math.max(1, 5000 - 60 * k) }));
+  const g = forecastQuarters(falling, "2026-10-28")!;
+  assert.ok(g.periods.every((p) => p.lowCents >= 0 && p.cents >= 0));
+  assert.equal(g.periods[4].cents, 0);
+  assert.equal(forecastQuarters(noisy.slice(-20), "2026-10-28"), null);
+  assert.deepEqual(dailyTotals([{ days: [{ day: "2026-10-01", currency: "AUD", cents: 5 }, { day: "2026-10-29", currency: "AUD", cents: 9 }] }], "2026-10-28", "AUD"), [{ label: "2026-10-01", cents: 5 }]);
 });

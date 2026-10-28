@@ -193,6 +193,113 @@ export function linearTrend(values: readonly number[]): { start: number; end: nu
   return { start: my - slope * mx, end: my + slope * (n - 1 - mx), slope };
 }
 
+// FORECAST (2026-10-28, owner: "projected forecasts … by the end of this year,
+// quarter 1 next year, quarter 2, quarter 3, quarter 4 … easy to visualize
+// where we're heading"). A straight line fitted to the last 90 complete days of
+// combined earnings, carried forward one day at a time (never below 0) and added
+// up per quarter. The range is that line with its slope moved by ±1.28 standard
+// errors (an ~80% band on the growth rate), the part of a long projection that
+// is genuinely uncertain. The last FORECAST_LAG_DAYS are left out of the fit and
+// projected instead, because eBay adds a day's sales up to 48 hours late. A
+// projection, never a figure anywhere else on the dashboard.
+export const FORECAST_FIT_DAYS = 90;
+export const FORECAST_LAG_DAYS = 2;
+const Z80 = 1.28;
+
+export interface ForecastPeriod {
+  label: string;
+  from: string;
+  to: string;
+  /** Already earned (days before the projection starts). */
+  actualCents: number;
+  /** actual + projected, on the fitted line; low/high on the slope's ±1.28 SE. */
+  cents: number;
+  lowCents: number;
+  highCents: number;
+  /** The same period at the last 30 complete days' average, with no growth. */
+  flatCents: number;
+}
+
+export interface Forecast {
+  /** First projected day; days before it are actual. */
+  from: string;
+  fitFrom: string;
+  fitTo: string;
+  /** Fitted earnings per day at fitTo, and its change per 30 days (display cents). */
+  perDayNow: number;
+  per30Change: number;
+  /** This quarter and the four after it. */
+  periods: ForecastPeriod[];
+  /** This calendar year and next, whole. */
+  years: ForecastPeriod[];
+}
+
+const quarterOf = (day: string) => ({ y: Number(day.slice(0, 4)), q: Math.floor((Number(day.slice(5, 7)) - 1) / 3) + 1 });
+const quarterBounds = (y: number, q: number) => {
+  const from = `${y}-${String((q - 1) * 3 + 1).padStart(2, "0")}-01`;
+  const next = q === 4 ? `${y + 1}-01-01` : `${y}-${String(q * 3 + 1).padStart(2, "0")}-01`;
+  return { from, to: addDays(next, -1) };
+};
+
+/** Combined earnings per day, every day any source earned, in the display currency. */
+export function dailyTotals(sources: readonly Pick<SourceResult, "days">[], today: string, display: string): { label: string; cents: number }[] {
+  const m = new Map<string, number>();
+  for (const s of sources) for (const d of s.days) if (d.day <= today) m.set(d.day, (m.get(d.day) ?? 0) + toDisplay(d.cents, d.currency, display));
+  return [...m.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([label, cents]) => ({ label, cents }));
+}
+
+/** The quarter `today` is in and the four after it, projected. `daily` is combined
+ *  earnings per day in the display currency (seriesFor's daily buckets). Null with
+ *  under 30 days of earnings to fit. */
+export function forecastQuarters(daily: readonly { label: string; cents: number }[], today: string): Forecast | null {
+  const byDay = new Map(daily.map((d) => [d.label, d.cents]));
+  const start = addDays(today, -FORECAST_LAG_DAYS); // first projected day
+  const fitTo = addDays(start, -1);
+  const fitFrom = addDays(fitTo, -(FORECAST_FIT_DAYS - 1));
+  const ys: number[] = [];
+  for (let d = fitFrom; d <= fitTo; d = addDays(d, 1)) ys.push(byDay.get(d) ?? 0);
+  // Before the first earning day there was no business to measure: fit from it.
+  const first = ys.findIndex((v) => v > 0);
+  if (first < 0 || ys.length - first < 30) return null;
+  const fit = ys.slice(first);
+  const n = fit.length;
+  const t = linearTrend(fit)!;
+  const mx = (n - 1) / 2;
+  const sxx = fit.reduce((a, _, x) => a + (x - mx) ** 2, 0);
+  const sse = fit.reduce((a, y, x) => a + (y - (t.start + t.slope * x)) ** 2, 0);
+  const se = Math.sqrt(sse / (n - 2) / sxx);
+  const flat = fit.slice(-30).reduce((a, b) => a + b, 0) / 30;
+  // Value on day k after fitTo (k ≥ 1), for a slope through the fit's centre.
+  const at = (k: number, slope: number) => Math.max(0, t.start + t.slope * mx + slope * (n - 1 - mx + k));
+
+  const period = (label: string, from: string, to: string): ForecastPeriod => {
+    const p: ForecastPeriod = { label, from, to, actualCents: 0, cents: 0, lowCents: 0, highCents: 0, flatCents: 0 };
+    for (let d = from; d <= to; d = addDays(d, 1)) {
+      if (d < start) {
+        p.actualCents += byDay.get(d) ?? 0;
+        continue;
+      }
+      const k = Math.round((Date.parse(d) - Date.parse(fitTo)) / 86_400_000);
+      p.cents += at(k, t.slope);
+      p.lowCents += at(k, t.slope - Z80 * se);
+      p.highCents += at(k, t.slope + Z80 * se);
+      p.flatCents += flat;
+    }
+    for (const key of ["cents", "lowCents", "highCents", "flatCents"] as const) p[key] = Math.round(p[key] + p.actualCents);
+    return p;
+  };
+  const { y, q } = quarterOf(today);
+  const periods: ForecastPeriod[] = [];
+  for (let i = 0; i < 5; i++) {
+    const qq = ((q - 1 + i) % 4) + 1;
+    const yy = y + Math.floor((q - 1 + i) / 4);
+    const { from, to } = quarterBounds(yy, qq);
+    periods.push(period(`Q${qq} ${yy}`, from, to));
+  }
+  const years = [y, y + 1].map((yy) => period(String(yy), `${yy}-01-01`, `${yy}-12-31`));
+  return { from: start, fitFrom: addDays(fitFrom, first), fitTo, perDayNow: Math.round(at(0, t.slope)), per30Change: Math.round(t.slope * 30), periods, years };
+}
+
 /** Merge rows into one per (day, currency). */
 export function mergeDays(rows: readonly DayAmount[]): DayAmount[] {
   const m = new Map<string, DayAmount>();

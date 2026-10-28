@@ -7,7 +7,9 @@ import { formatMoney } from "@/lib/format";
 import {
   RANGES,
   SOURCE_LABELS,
+  dailyTotals,
   dayIn,
+  forecastQuarters,
   isRangeKey,
   latestDayFigure,
   linearTrend,
@@ -25,6 +27,7 @@ import { loadCosts } from "@/lib/earnings/costs";
 import { ManualEarningsForm } from "@/components/admin/ManualEarningsForm";
 import { CostEntriesForm } from "@/components/admin/CostEntriesForm";
 import { EarningsLineChart } from "@/components/admin/EarningsLineChart";
+import { EarningsForecast } from "@/components/admin/EarningsForecast";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +90,8 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
   // Today is still filling in (eBay reports a day or two late), so the trend stops at yesterday.
   const trendSeries = range !== "all" && lineSeries.at(-1)?.label === today ? lineSeries.slice(0, -1) : lineSeries;
   const trend = linearTrend(trendSeries.map((b) => b.cents));
+  // Forecast (2026-10-28): every range sees the same projection, fitted on all days.
+  const forecast = forecastQuarters(dailyTotals(live, today, display), today);
   const lagged = sources.map((s) => ({ s, latest: latestDayFigure(s, today, display) })).filter((x) => x.latest);
   const sel = combined(range);
   // Costs and profit (2026-10-25): every cost line converted like the earnings.
@@ -229,6 +234,18 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
           </>
         ) : (
           <p className="mt-2 text-sm text-slate-500">Pick 7 days or longer to see the line.</p>
+        )}
+      </section>
+
+      {/* Where we're heading: this quarter and the next four, projected */}
+      <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-earnings-forecast>
+        <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Forecast · projected earnings by quarter</div>
+        {forecast ? (
+          <div className="mt-2">
+            <EarningsForecast forecast={forecast} money={money} shortDay={shortDay} />
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-slate-500">Needs at least 30 days of earnings to project.</p>
         )}
       </section>
 
