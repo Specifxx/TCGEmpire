@@ -20727,3 +20727,26 @@ this year and next as wholes: projected, likely range, and "if growth stops".
 **Not done.** No seasonality (under a year of history), no per-source or
 profit forecast: a straight line on a young business is a guide, and more
 model would only look more certain than it is.
+
+## Store audit: 43 stores added from a fresh registry sweep and the sister sites — 2026-10-28
+
+**Owner:** "for all of these websites, and for Rift Compare as well, we gotta look at all the store health and make sure that all the latest and greatest stores they're all on our website."
+
+**Health.** The 2026-10-27 public export had every one of the 224 registered stores priced and seen within the day (only eBay SG older). One store has nothing to buy: Monster Card Corner (UK) lists 438 singles, none in stock, and the sweep read 0 in stock too; it stays (its rows are honest "sold out"), to be looked at if it is still empty at the next audit. The store-health monitor's 173 `frozen-prices` alerts are its median-price streak firing on quiet stores, not broken scrapers: a two-day diff of the listings found price or stock changes at all but 30 stores, all small. Nothing removed.
+
+**New stores.** `scripts/sweep-registry.ts` over the UVS registry again (8,340 stores worldwide; 2,964 untracked shop domains in our markets) plus, through its new `--extra` option, every store the sister sites (OP, Dex, MTG, Gundam, Lorcana, YGO Compare) track and this site does not (341). Same bar as 2026-10-16. 69 cleared it; added are those with 40+ in-stock singles (20+ in the thinner UK, EU and SG), less:
+- addresses of a store we already read: Plenty of Games' own domain, Abyss's .ca, Derpy Cards' .com, The TCG Group's tcggroup.co.uk; and Cardbot's .co.nz shop charging AUD;
+- Hobby Collectors Australia (sealed-only since 2026-10-16), and the three the 2026-10-16 entry turned down (Prestige Games, Twin Moons, Columbus Card Shop: no shipping or no orders);
+- three that quoted no postage to any address the postage probe tried, i.e. pickup only: Face to Face Games Rotterdam, Hideyoshi (SG) and Stupid Geeks (US).
+
+| Market | Added |
+|---|---|
+| AU (11) | Good Games Morley, Wonderland Games, Steel City Games, Team Card Titan, Irresistible Force TCG, Mayhem, Crystal Collectables, The Combat Company, Good Games Greensborough, HBT, Groovy Collectables |
+| CA (22) | Desert City Games, ParadoxTCG, HFX Games, SeaToSky, Fafnir's Hoard, BeardyCards, Exor Games, Dragon Cards & Games, Realm Hoppers, Trinity Hobby, Deck Out Gaming, Collect-Edition, Board Game Bliss, Card Caster, TKO Toy Co, Gamer's Lair, Poke Gems MTL, Let's Play!, Infinity Cards, Champion City Games, Cardboard Hero, L'univers de la carte |
+| EU (5) | Lake Cards, Ohana Giochi, Tradingcardsxxx, Magician's Circle, Retro Empire Gaming |
+| UK (1) | JGC Collectables |
+| US (4) | Level Up Games MD, Triad, Poke-Collect, Hasty Goblin Games |
+
+The registry goes from 224 to 267 stores. Postage was measured for every one (`probe-shipping-rates.ts --store=…`). Groovy Collectables quotes A$7.34 to some capitals and A$9.79 to others: the first AU store priced by state, so the AU postage picker now asks for the state (`marketHasZonePricing`, data-driven; `tests/shipping.test.ts` updated).
+
+**The job limit goes from 120 to 150 minutes.** The 2026-10-27 evening run took 90 (prices 68, sealed 22) for 224 stores read one after another; 43 more add about a fifth. As on 2026-10-16, the limit is a ceiling, not a cost.
