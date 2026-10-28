@@ -31,6 +31,7 @@ import { getSealedGroups } from "@/lib/sealed-import";
 import { loadSealedForSearch, matchSealedGroups } from "@/lib/sealed-search";
 import { soldOutEverywhere } from "@/lib/sealed-offers";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { FamilySearch } from "@/components/FamilySearch";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 
@@ -527,6 +528,10 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
             the grid and before the ad — our writing ahead of the commercial
             slot. Not on a ?q search, whose view is noindexed and whose reader
             came for one card. */}
+        {/* The same search on the other card-game sites (2026-10-28): a
+            Pokémon or One Piece name typed here finds its own site. */}
+        {q && <FamilySearch q={q} className="mt-6" />}
+
         {!q && <RelatedGuides guides={guidesForTool("/browse")} />}
 
         {/* Moved below the results (was above, ahead of EbayPicks) — a visitor

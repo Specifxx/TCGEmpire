@@ -32,11 +32,16 @@ export interface SisterSite {
   footerOnly?: boolean;
   /** Not a card game: listed after the TCGs, under "Also from Compare Empire". */
   notTcg?: boolean;
+  /** The site's own search results for a query, `{q}` replaced by it (its
+   *  WebSite SearchAction target). Card games only: the "Search another game"
+   *  line under /browse results (components/FamilySearch.tsx). */
+  search?: string;
 }
 
 export const SISTER_SITES: SisterSite[] = [
   {
     key: "op",
+    search: "https://opcompare.app/browse?q={q}",
     name: "OP Compare",
     url: "https://opcompare.app",
     game: "One Piece",
@@ -50,6 +55,7 @@ export const SISTER_SITES: SisterSite[] = [
   },
   {
     key: "dex",
+    search: "https://www.dexcompare.app/us/sealed?q={q}",
     name: "DexCompare",
     url: "https://www.dexcompare.app",
     game: "Pokémon",
@@ -63,6 +69,7 @@ export const SISTER_SITES: SisterSite[] = [
   },
   {
     key: "mtg",
+    search: "https://mtgcompare.app/us/sealed?q={q}",
     name: "MTG Compare",
     url: "https://mtgcompare.app",
     game: "Magic",
@@ -81,6 +88,7 @@ export const SISTER_SITES: SisterSite[] = [
   // that day.
   {
     key: "gundam",
+    search: "https://gundamcompare.com/cards?q={q}",
     name: "Gundam Compare",
     url: "https://gundamcompare.com",
     game: "Gundam",
@@ -94,6 +102,7 @@ export const SISTER_SITES: SisterSite[] = [
   },
   {
     key: "lorcana",
+    search: "https://lorcanacompare.com/cards?q={q}",
     name: "Lorcana Compare",
     url: "https://lorcanacompare.com",
     game: "Lorcana",
@@ -110,6 +119,7 @@ export const SISTER_SITES: SisterSite[] = [
   // Compare Empire are not card games, so they sit after the TCGs.
   {
     key: "ygo",
+    search: "https://ygocompare.com/cards?q={q}",
     name: "YGO Compare",
     url: "https://ygocompare.com",
     game: "Yu-Gi-Oh!",
@@ -172,4 +182,17 @@ export function sisterSitesFor(article: { slug: string; tags: readonly string[] 
   const buying =
     article.slug.startsWith("where-to-buy-") || article.slug.startsWith("buy-riftbound-cards-") || article.tags.some((t) => BUYING_TAGS.has(t));
   return buying ? ARTICLE_SITES : [];
+}
+
+/** Each card-game sister site's search for `q`, for the "Search another game"
+ *  line. A plain search link per site: nothing is fetched from them. */
+export function familySearchLinks(q: string): { key: SisterSite["key"]; name: string; game: string; href: string }[] {
+  const term = q.trim().slice(0, 80);
+  if (!term) return [];
+  return SISTER_SITES.filter((s) => s.search && !s.notTcg).map((s) => ({
+    key: s.key,
+    name: s.name,
+    game: s.game,
+    href: s.search!.replace("{q}", encodeURIComponent(term)),
+  }));
 }

@@ -576,7 +576,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               query) instead of the brand alone, under a labelled heading. */}
           <nav aria-label="Compare other TCGs" className="mb-2">
             <p className="mb-1 font-semibold text-slate-300">
-              Compare other TCGs{" "}
+              <Link href="/tcg-price-comparison" className="tap-link hover:text-brand-400">Compare other TCGs</Link>{" "}
               <span className="font-normal text-slate-500">· RiftCompare is part of the Compare Empire family of price comparison sites</span>
             </p>
             <ul className="flex flex-wrap gap-x-4 gap-y-1">
