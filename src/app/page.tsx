@@ -11,6 +11,9 @@ import { HomeSections } from "@/components/home/HomeSections";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EbayPicks } from "@/components/EbayPicks";
+import { HomeSealedShelf, type SealedShelf } from "@/components/home/HomeSealedShelf";
+import { getSealedGroups, type SealedGroup } from "@/lib/sealed-import";
+import { COUNTRIES } from "@/lib/country";
 import { homeMetadata } from "@/lib/home-metadata";
 import { webPage, faqPage, webApplication } from "@/lib/jsonld";
 import { getSiteRating } from "@/lib/site-rating";
@@ -272,6 +275,7 @@ export default async function HomePage() {
     recentlyUpdated,
     moversArr,
     chaseCards,
+    sealedArr,
   ] = await Promise.all([
     // Per-market stat tiles + the "Prices updated Xh ago" freshness signal —
     // shared with the 4 region home pages (see lib/home-stats.ts) so they read
@@ -306,6 +310,10 @@ export default async function HomePage() {
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
     // The featured set's chase printings, dearest first (16 rows).
     chaseSet ? getSetChaseTiles(chaseSet.code, 16, country) : Promise.resolve([]),
+    // The sealed shelf, per market like Top Deals. getSealedGroups caches
+    // itself (data cache + memo, CONTENT_TAG-busted), and Top Deals already
+    // reads the same six entries, so this adds no database read.
+    Promise.all(COUNTRY_CODES.map((c) => getSealedGroups(c).catch(() => []))),
   ]);
   // One memoised aggregate; null (hidden) until 100 real ratings exist.
   const rating = await getSiteRating();
@@ -316,6 +324,9 @@ export default async function HomePage() {
   // doc comment) — not just the AU baseline this page's ISR render bakes in.
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
+  const sealedShelves = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, sealedShelf(sealedArr[i], COUNTRIES[c].currency)])) as Record<Country, SealedShelf>;
+  // A market with no sealed rows of its own shows the US shelf in USD, as /sealed does.
+  for (const c of COUNTRY_CODES) if (sealedShelves[c].groups.length === 0) sealedShelves[c] = sealedShelves.US;
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
 
   return (
@@ -350,6 +361,10 @@ export default async function HomePage() {
           <TodaysTopDeals dealsByCountry={topDealsByCountry} />
         </div>
       )}
+
+      {/* Booster boxes and sealed, right under the deals (owner, 2026-10-28:
+          sealed is as big a market as singles, so it gets the front page). */}
+      <HomeSealedShelf shelves={sealedShelves} />
 
       {/* REMOVED 2026-09-30: "Riftbound card prices today", the price table
           (PriceTodayTable, lib/price-table.ts), on the owner's instruction ("get
@@ -529,4 +544,17 @@ export default async function HomePage() {
       />
     </div>
   );
+}
+
+// The homepage sealed shelf for one market: in-stock headline products in
+// getSealedGroups' own order (boxes first, then cheapest), never cases or bulk
+// runes (a case at the top of the front page reads as a price error).
+const SHELF_SKIP = /case|bulk runes|^sealed$/i;
+function sealedShelf(groups: SealedGroup[], currency: string): SealedShelf {
+  const open = groups.filter((g) => g.lowestPriceCents != null);
+  return {
+    groups: open.filter((g) => !SHELF_SKIP.test(g.productType)).slice(0, 8),
+    currency,
+    types: Array.from(new Set(open.map((g) => g.productType))),
+  };
 }
