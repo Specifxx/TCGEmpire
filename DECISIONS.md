@@ -20672,6 +20672,33 @@ so no request window or time-zone shift can produce a true figure.
   combined per-day line. Today is left out of the trend while it fills in.
   Server-drawn SVG (`components/admin/EarningsLineChart.tsx`), no chart library.
 
+## Rating drive: a pop-up until 100 — 2026-10-28
+
+The owner, the same day as "Ratings: one tap counts": "we do need to get more
+reviews … have that pop up happen [as] originally was implemented … with the
+next 100 visitors until we get like over 100 reviews. And then we can like turn
+it off … it's more active for the first 100." A temporary exception to "One
+rating ask, earned by engagement" and the corner-card timing.
+
+**What.** While the site has fewer than 100 ratings (`RATING_DRIVE_TARGET`,
+counted like the shown average: `getSiteRating`), `RateUsPrompt` is a centred
+pop-up (`Dialog`) for every visitor who has not rated, new or returning, once
+per visit until they rate. No "Don't ask again", and a click on the dimmed page
+does not close it (`dismissOnBackdrop={false}`, a new `Dialog` option). It
+shows "N players have rated so far" out of 100. `/api/rating-drive` answers
+`{ active, count }`, read once per visit (sessionStorage), with a six-hour CDN
+header over `getSiteRating`'s six-hour memo; any error is "off". At 100 it
+switches itself off (within about 12 hours) and the corner card's rules apply
+again, with no deploy.
+
+**Kept from the original on purpose.** A visible ✕, "Maybe later" and Escape
+always close it, and it never covers a visit's landing page before 30 seconds
+(`RATING_DRIVE_LANDING_MS`; 6 s from the second page). A pop-up with no way
+out, or one covering the page a searcher just landed on, is what Google's
+intrusive-interstitial rule demotes on mobile, and search is ~180 clicks a day
+of the core business. Never someone who rated, never on sign-in, checkout,
+/premium, /feedback, admin, embeds or the arcade. No reward for rating.
+
 ## Earnings dashboard: a forecast by quarter — 2026-10-28
 
 The owner liked the growth and trend lines and asked for "projected forecasts
