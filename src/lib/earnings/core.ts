@@ -223,7 +223,10 @@ export function impactActions(json: unknown): ImpactAction[] {
       state: String(a.State ?? "").toUpperCase(),
       currency: String(a.Currency ?? "USD").toUpperCase(),
       cents: toCents(a.Payout),
-      tag: String(pick(a, "SharedId", "SubId1") ?? "").trim(),
+      // First NON-EMPTY of the two: the API returns both keys on every action,
+      // and the engine sites (Gundam, Lorcana, YGO) tagged only subId1 before
+      // 2026-10-28, so SharedId alone read as "No tag" for their sales.
+      tag: [pick(a, "SharedId"), pick(a, "SubId1")].map((v) => String(v ?? "").trim()).find(Boolean) ?? "",
     });
   }
   return out;
@@ -465,6 +468,7 @@ export const TAG_NAMES: Record<string, string> = {
   oc: "OP Compare (One Piece)",
   gundam: "Gundam Compare",
   lorcana: "Lorcana Compare",
+  ygo: "YGO Compare (Yu-Gi-Oh!)",
   cc: "CamCompare",
 };
 
