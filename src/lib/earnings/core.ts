@@ -46,6 +46,10 @@ export interface SourceResult {
    *  matched line by line against the network's dashboard (e.g. Earnings vs Other
    *  earnings, approved vs pending). Informational: `days` is what is counted. */
   checks?: { label: string; counted: boolean; days: DayAmount[] }[];
+  /** The newest day the source's report covers, in its own time zone, even a day
+   *  it earned nothing. Set only for eBay, whose report lags Sydney's today; it
+   *  marks the source as lagging (see latestDayFigure). */
+  reportedThrough?: string;
   /** When this source's data was fetched (ms). */
   fetchedAt: number;
 }
@@ -116,6 +120,22 @@ export function totalFor(days: readonly DayAmount[], range: RangeKey, today: str
   return out;
 }
 
+// EBAY'S "TODAY" WAS ALWAYS 0 (2026-10-28, owner). Today is Sydney's day, but
+// EPN reports whole days in its own (US) time zone, ~17 hours behind, and adds a
+// day's sales up to 48 hours late: Sydney's date had not started in eBay's report
+// for most of the day, and once it had, nothing was in it yet. Same-day data does
+// not exist, so a lagging source (one that sets reportedThrough) shows, under
+// Today, its newest day with earnings, labelled with that date, instead of a
+// false 0. Totals and Combined still count only what is dated today.
+/** For a lagging source with nothing dated today: its newest earning day before today and that day's total. */
+export function latestDayFigure(s: Pick<SourceResult, "days" | "reportedThrough">, today: string, display: string): { day: string; total: RangeTotal } | null {
+  if (s.reportedThrough === undefined || s.days.some((d) => d.day === today)) return null;
+  let day = "";
+  for (const d of s.days) if (d.day < today && d.day > day && (d.cents || d.pendingCents)) day = d.day;
+  if (!day) return null;
+  return { day, total: totalFor(s.days.filter((d) => d.day === day), "1d", day, display) };
+}
+
 /** Combined earnings per day (or per month for all time), in the display currency, oldest first. */
 export function seriesFor(
   sources: readonly SourceResult[],
@@ -139,6 +159,38 @@ export function seriesFor(
     }
   }
   return [...buckets.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([label, v]) => ({ label, ...v }));
+}
+
+// THE GROWTH LINE (2026-10-28, owner: the stacked columns stay, "a line graph
+// would also be good … it shows the linear relationship of the growth"). Same
+// buckets as the columns, drawn per day or as a running total, with a straight
+// least-squares trend through the combined line.
+type Bucket = ReturnType<typeof seriesFor>[number];
+/** Each bucket's amounts added to every bucket before it. */
+export function runningTotal(series: readonly Bucket[]): Bucket[] {
+  const bySource: Partial<Record<EarningsSourceKey, number>> = {};
+  let cents = 0;
+  return series.map((b) => {
+    cents += b.cents;
+    for (const [k, v] of Object.entries(b.bySource) as [EarningsSourceKey, number][]) bySource[k] = (bySource[k] ?? 0) + v;
+    return { label: b.label, cents, bySource: { ...bySource } };
+  });
+}
+
+/** The least-squares straight line through `values` (x = 0, 1, 2…): its first and last y. Null under three points. */
+export function linearTrend(values: readonly number[]): { start: number; end: number; slope: number } | null {
+  const n = values.length;
+  if (n < 3) return null;
+  const mx = (n - 1) / 2;
+  const my = values.reduce((a, b) => a + b, 0) / n;
+  let num = 0;
+  let den = 0;
+  values.forEach((y, x) => {
+    num += (x - mx) * (y - my);
+    den += (x - mx) ** 2;
+  });
+  const slope = den ? num / den : 0;
+  return { start: my - slope * mx, end: my + slope * (n - 1 - mx), slope };
 }
 
 /** Merge rows into one per (day, currency). */
@@ -333,6 +385,16 @@ export function epnDailyParts(records: readonly Record<string, unknown>[], accou
     other.push({ day, currency, cents: toCents(pick(r, "OtherEarnings")) });
   }
   return { earnings: mergeDays(earnings), other: mergeDays(other) };
+}
+
+/** The newest date any report row carries (zero-earning rows too), or "" when none. */
+export function latestReportDay(records: readonly Record<string, unknown>[], ...columns: string[]): string {
+  let max = "";
+  for (const r of records) {
+    const day = reportDay(pick(r, ...columns));
+    if (day && day > max) max = day;
+  }
+  return max;
 }
 
 /** Exact-duplicate report rows (same values in every column) counted once: a row

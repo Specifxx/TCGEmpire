@@ -9,7 +9,10 @@ import {
   SOURCE_LABELS,
   dayIn,
   isRangeKey,
+  latestDayFigure,
+  linearTrend,
   rangeStart,
+  runningTotal,
   seriesFor,
   tagBreakdown,
   totalFor,
@@ -21,6 +24,7 @@ import { EARNINGS_SINCE, loadEarnings } from "@/lib/earnings/sources";
 import { loadCosts } from "@/lib/earnings/costs";
 import { ManualEarningsForm } from "@/components/admin/ManualEarningsForm";
 import { CostEntriesForm } from "@/components/admin/CostEntriesForm";
+import { EarningsLineChart } from "@/components/admin/EarningsLineChart";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +55,7 @@ const TAG_NOTE: Partial<Record<EarningsSourceKey, string>> = {
   tcgplayer: "From Impact's actions, by the click's sharedid; reversed actions left out.",
 };
 
-export default async function EarningsPage({ searchParams }: { searchParams: { key?: string; range?: string; cur?: string; fresh?: string } }) {
+export default async function EarningsPage({ searchParams }: { searchParams: { key?: string; range?: string; cur?: string; fresh?: string; line?: string } }) {
   const token = process.env.ADMIN_TOKEN;
   const keyOk = !!token && searchParams.key === token;
   const me = await getCurrentUser();
@@ -63,8 +67,10 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
   const [sources, costs] = await Promise.all([loadEarnings(searchParams.fresh === "1"), loadCosts(searchParams.fresh === "1")]);
   const today = dayIn(Date.now());
   const money = (c: number) => formatMoney(c, display);
-  const href = (p: { range?: RangeKey; cur?: string; fresh?: boolean }) =>
-    `/admin/earnings?${keyQ}range=${p.range ?? range}&cur=${p.cur ?? display}${p.fresh ? "&fresh=1" : ""}`;
+  // The growth line (2026-10-28): per day, or as a running total.
+  const lineMode: "day" | "total" = searchParams.line === "total" ? "total" : "day";
+  const href = (p: { range?: RangeKey; cur?: string; fresh?: boolean; line?: "day" | "total" }) =>
+    `/admin/earnings?${keyQ}range=${p.range ?? range}&cur=${p.cur ?? display}${(p.line ?? lineMode) === "total" ? "&line=total" : ""}${p.fresh ? "&fresh=1" : ""}`;
 
   const live = sources.filter((s) => s.status !== "not-configured" || s.days.length);
   const combined = (r: RangeKey) =>
@@ -77,6 +83,11 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
     );
   const series = seriesFor(live, range, today, display);
   const peak = Math.max(1, ...series.map((b) => Math.max(0, b.cents)));
+  const lineSeries = lineMode === "total" ? runningTotal(series) : series;
+  // Today is still filling in (eBay reports a day or two late), so the trend stops at yesterday.
+  const trendSeries = range !== "all" && lineSeries.at(-1)?.label === today ? lineSeries.slice(0, -1) : lineSeries;
+  const trend = linearTrend(trendSeries.map((b) => b.cents));
+  const lagged = sources.map((s) => ({ s, latest: latestDayFigure(s, today, display) })).filter((x) => x.latest);
   const sel = combined(range);
   // Costs and profit (2026-10-25): every cost line converted like the earnings.
   const costTotal = (r: RangeKey) => costs.reduce((n, c) => n + totalFor(c.days, r, today, display).cents, 0);
@@ -190,6 +201,37 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
         </div>
       </div>
 
+      {/* The growth line: the same buckets as the columns */}
+      <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-earnings-line>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+            Growth · {lineMode === "total" ? "running total" : range === "all" ? "per month" : "per day"}
+          </div>
+          <div className="flex gap-1 text-xs">
+            {(["day", "total"] as const).map((m) => (
+              <Link key={m} href={href({ line: m })} className={`rounded-lg px-2.5 py-1 font-bold ${m === lineMode ? "bg-ink-800 text-white" : "text-slate-400 hover:text-white"}`}>
+                {m === "day" ? (range === "all" ? "Per month" : "Per day") : "Running total"}
+              </Link>
+            ))}
+          </div>
+        </div>
+        {series.length > 1 ? (
+          <>
+            <div className="mt-2">
+              <EarningsLineChart series={lineSeries} trendFrom={lineMode === "day" ? trendSeries : []} colors={COLORS} money={money} />
+            </div>
+            {trend && lineMode === "day" && (
+              <p className="mt-1 text-xs text-slate-400">
+                Trend: {money(Math.round(Math.max(0, trend.start)))} → {money(Math.round(Math.max(0, trend.end)))} a {range === "all" ? "month" : "day"} across this range
+                {range !== "all" ? " (today left out while it fills in)" : ""}.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="mt-2 text-sm text-slate-500">Pick 7 days or longer to see the line.</p>
+        )}
+      </section>
+
       {/* Every source × every range, and the combined row */}
       <div className="card-surface mt-4 overflow-x-auto rounded-2xl border border-ink-700">
         <table className="w-full min-w-[640px] text-sm">
@@ -218,6 +260,11 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
           </tbody>
         </table>
       </div>
+      {lagged.length > 0 && (
+        <p className="mt-2 text-xs text-slate-500" data-earnings-lag>
+          {lagged.map(({ s }) => SOURCE_LABELS[s.key]).join(", ")}: no same-day figures. eBay reports whole days in US time and adds sales up to 48 hours late, so its Today shows its latest day with earnings, dated. Combined Today counts only what is dated today.
+        </p>
+      )}
       {/* eBay and TCGplayer by tracking tag: site prefix, then each full tag */}
       {tagged.map(({ s, groups, total }) => (
         <section key={s.key} className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-ebay-tags={s.key === "ebay" ? "" : undefined} data-source-tags={s.key}>
@@ -422,6 +469,15 @@ function SourceRow({
       {RANGES.map((r) => {
         if (off) return <td key={r.key} className="px-3 py-2.5 text-right text-slate-600">—</td>;
         const t = totalFor(s.days, r.key, today, display);
+        // A lagging source (eBay) has no same-day data: show its latest reported day, dated, never a false 0.
+        const latest = r.key === "1d" ? latestDayFigure(s, today, display) : null;
+        if (latest)
+          return (
+            <td key={r.key} className="num px-3 py-2.5 text-right text-slate-400" data-latest-day={latest.day} title="eBay has nothing dated today yet; this is its latest day with earnings.">
+              {money(latest.total.cents)}
+              <div className="text-[10px] text-slate-500">{shortDay(latest.day)} · latest</div>
+            </td>
+          );
         const natives = Object.entries(t.native).filter(([c]) => c !== display);
         return (
           <td key={r.key} className={`num px-3 py-2.5 text-right ${r.key === range ? "text-white" : "text-slate-300"}`}>
@@ -433,4 +489,9 @@ function SourceRow({
       })}
     </tr>
   );
+}
+
+/** "2026-10-27" → "27 Oct". */
+function shortDay(day: string): string {
+  return new Date(`${day}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "short", timeZone: "UTC" });
 }
