@@ -9,6 +9,10 @@ import {
   epnDays,
   impactDays,
   inRange,
+  latestDayFigure,
+  latestReportDay,
+  linearTrend,
+  runningTotal,
   mergeDays,
   rangeStart,
   seriesFor,
@@ -308,4 +312,38 @@ test("eBay daily report: a repeated row counts once; Earnings and Other earnings
   const parts = epnDailyParts(recs, "AUD");
   assert.deepEqual(parts.earnings, [{ day: "2026-10-20", currency: "AUD", cents: 600, pendingCents: 0 }]);
   assert.deepEqual(parts.other, [{ day: "2026-10-20", currency: "AUD", cents: 100, pendingCents: 0 }]);
+});
+
+// eBay's Today was always 0 (2026-10-28): EPN has no same-day data in Sydney's day.
+test("a lagging source with nothing today shows its latest earning day; others never do", () => {
+  const days = [
+    { day: "2026-10-25", currency: "AUD", cents: 1200, pendingCents: 1200 },
+    { day: "2026-10-26", currency: "AUD", cents: 2850, pendingCents: 2850 },
+  ];
+  const today = "2026-10-28";
+  const ebay = latestDayFigure({ days, reportedThrough: "2026-10-27" }, today, "AUD");
+  assert.equal(ebay?.day, "2026-10-26");
+  assert.equal(ebay?.total.cents, 2850);
+  assert.equal(latestDayFigure({ days }, today, "AUD"), null, "a source that does not lag keeps its real 0");
+  assert.equal(latestDayFigure({ days: [...days, { day: today, currency: "AUD", cents: 5 }], reportedThrough: today }, today, "AUD"), null, "real same-day data wins");
+  assert.equal(latestDayFigure({ days: [], reportedThrough: "" }, today, "AUD"), null);
+  assert.equal(totalFor(days, "1d", today, "AUD").cents, 0, "Today's total itself stays dated, never borrowed");
+});
+
+test("latestReportDay reads every row's date, zero-earning rows too", () => {
+  assert.equal(latestReportDay([{ Date: "10/26/2026", Earnings: "1.00" }, { Date: "10/27/2026", Earnings: "0" }, { Date: "" }], "Date"), "2026-10-27");
+  assert.equal(latestReportDay([], "Date"), "");
+});
+
+test("growth line: running total and a least-squares trend", () => {
+  const run = runningTotal([
+    { label: "a", cents: 100, bySource: { ebay: 100 } },
+    { label: "b", cents: 50, bySource: { tcgplayer: 50 } },
+    { label: "c", cents: 30, bySource: { ebay: 30 } },
+  ]);
+  assert.deepEqual(run.map((b) => b.cents), [100, 150, 180]);
+  assert.deepEqual(run[2].bySource, { ebay: 130, tcgplayer: 50 });
+  assert.deepEqual(linearTrend([10, 20, 30, 40]), { start: 10, end: 40, slope: 10 });
+  assert.equal(linearTrend([1, 2]), null);
+  assert.equal(linearTrend([5, 5, 5])?.slope, 0);
 });

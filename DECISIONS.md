@@ -20643,3 +20643,31 @@ time". Supersedes the timing in "One rating ask, earned by engagement"
 
 **Not done.** No reward for a rating (off since 2026-10-27; incentivised
 reviews), no email to the owner per rating, no modal.
+
+## Earnings dashboard: a growth line, and eBay's Today stops reading 0 — 2026-10-28
+
+The owner, on `/admin/earnings`: keep the stacked columns, but add a line
+graph "cause it shows the linear relationship of the growth"; and "the today
+figure for eBay Partner Network … always shows zero, no matter what day it is".
+
+**Why eBay's Today was always 0.** Not a bug in the request or the parser:
+the dashboard's Today is Sydney's calendar day, and EPN reports whole days in
+its own US time zone, about 17 hours behind, adding a day's sales up to 48
+hours late. For most of a Sydney day that date has not begun in eBay's report,
+and once it has, nothing has landed in it. Same-day eBay data does not exist,
+so no request window or time-zone shift can produce a true figure.
+
+**What.**
+- A source can say it lags (`SourceResult.reportedThrough`, set only by the
+  EPN fetcher: the newest date any of its report rows carries). For a lagging
+  source with nothing dated today, the Today cell shows its newest day with
+  earnings, muted and dated ("27 Oct · latest"), with a footnote saying why
+  (`latestDayFigure` in `lib/earnings/core.ts`). Stripe, Impact and the rest
+  keep a real 0.
+- Totals never borrow: Combined Today, the headline, the digest and every
+  range still count only what is dated in them.
+- Under the columns, a "Growth" line chart over the same buckets: one line per
+  source and the combined line, per day (per month for all time) or as a
+  running total (`?line=total`), with a dashed least-squares trend through the
+  combined per-day line. Today is left out of the trend while it fills in.
+  Server-drawn SVG (`components/admin/EarningsLineChart.tsx`), no chart library.
