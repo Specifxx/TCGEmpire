@@ -1,0 +1,946 @@
+{
+  "market": "UK",
+  "generatedAt": "2026-10-28T13:33:08.298Z",
+  "addresses": [
+    {
+      "id": "lon",
+      "label": "London",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "zip": "SW1A 1AA",
+      "city": "London"
+    },
+    {
+      "id": "man",
+      "label": "Manchester",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "zip": "M1 1AE",
+      "city": "Manchester"
+    },
+    {
+      "id": "edi",
+      "label": "Edinburgh",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "zip": "EH1 1YZ",
+      "city": "Edinburgh"
+    },
+    {
+      "id": "bfs",
+      "label": "Belfast",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "zip": "BT1 1AA",
+      "city": "Belfast"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "kind": "count",
+      "count": 1
+    },
+    {
+      "id": "S10",
+      "kind": "count",
+      "count": 10
+    },
+    {
+      "id": "V20",
+      "kind": "value",
+      "targetCents": 2000
+    },
+    {
+      "id": "V50",
+      "kind": "value",
+      "targetCents": 5000
+    },
+    {
+      "id": "V100",
+      "kind": "value",
+      "targetCents": 10000
+    },
+    {
+      "id": "V150",
+      "kind": "value",
+      "targetCents": 15000
+    }
+  ],
+  "stores": [
+    {
+      "key": "jgccollectables",
+      "name": "JGC Collectables",
+      "market": "UK",
+      "currency": "GBP",
+      "measuredAt": "2026-10-28T13:32:32.295Z",
+      "base": "https://jgc-collectables.co.uk",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "configured": {
+        "shippingFlatCents": 150,
+        "freeOverCents": 3000,
+        "shippingNote": "est. £1.50 · free over £30"
+      },
+      "collections": [
+        "riftbound"
+      ],
+      "candidates": 199,
+      "requests": 33,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "lon",
+          "label": "London",
+          "country": "United Kingdom",
+          "countryCode": "GB",
+          "zip": "SW1A 1AA",
+          "city": "London"
+        },
+        {
+          "id": "man",
+          "label": "Manchester",
+          "country": "United Kingdom",
+          "countryCode": "GB",
+          "zip": "M1 1AE",
+          "city": "Manchester"
+        },
+        {
+          "id": "edi",
+          "label": "Edinburgh",
+          "country": "United Kingdom",
+          "countryCode": "GB",
+          "zip": "EH1 1YZ",
+          "city": "Edinburgh"
+        },
+        {
+          "id": "bfs",
+          "label": "Belfast",
+          "country": "United Kingdom",
+          "countryCode": "GB",
+          "zip": "BT1 1AA",
+          "city": "Belfast"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 5,
+          "items": 1,
+          "cartCurrency": "GBP",
+          "byAddress": {
+            "lon": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Shipping (Royal Mail 2nd Class)",
+                  "cents": 199,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "man": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Shipping (Royal Mail 2nd Class)",
+                  "cents": 199,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "edi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Shipping (Royal Mail 2nd Class)",
+                  "cents": 199,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "bfs": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Shipping (Royal Mail 2nd Class)",
+                  "cents": 199,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56190214832501,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 001/298 Blazing Scorcher"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 50,
+          "items": 10,
+          "cartCurrency": "GBP",
+          "byAddress": {
+            "lon": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Shipping (Royal Mail 2nd Class)",
+                  "cents": 199,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "man": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Shipping (Royal Mail 2nd Class)",
+                  "cents": 199,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "edi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Shipping (Royal Mail 2nd Class)",
+                  "cents": 199,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "bfs": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Shipping (Royal Mail 2nd Class)",
+                  "cents": 199,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56190217650549,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 013/298 Pouty Poro"
+            },
+            {
+              "id": 56190217519477,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 011/298 Magma Wurm"
+            },
+            {
+              "id": 56190217388405,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 010/298 Legion Rearguard"
+            },
+            {
+              "id": 56190215913845,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 009/298 Hextech Ray"
+            },
+            {
+              "id": 56190215324021,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 008/298 Get Excited!"
+            },
+            {
+              "id": 56190215160181,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 006/298 Flame Chompers"
+            },
+            {
+              "id": 56190215094645,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 005/298 Disintegrate"
+            },
+            {
+              "id": 56190214963573,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 003/298 Chemtech Enforcer"
+            },
+            {
+              "id": 56190214898037,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 002/298 Brazen Buccaneer"
+            },
+            {
+              "id": 56190214832501,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Origins 001/298 Blazing Scorcher"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2004,
+          "items": 15,
+          "cartCurrency": "GBP",
+          "byAddress": {
+            "lon": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "man": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "edi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "bfs": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56723428409717,
+              "quantity": 1,
+              "priceCents": 325,
+              "title": "Riftbound Spiritforged 052/221 Heart of Dark Ice"
+            },
+            {
+              "id": 56723516195189,
+              "quantity": 1,
+              "priceCents": 295,
+              "title": "Riftbound Spiritforged 189/221 Ornn Fire Below the Mountain"
+            },
+            {
+              "id": 56190218404213,
+              "quantity": 1,
+              "priceCents": 295,
+              "title": "Riftbound Origins 022/298 Thermo Beam Foil"
+            },
+            {
+              "id": 56190249763189,
+              "quantity": 1,
+              "priceCents": 209,
+              "title": "Riftbound Origins 290/298 The Arena&#39;s Greatest Foil"
+            },
+            {
+              "id": 56723489096053,
+              "quantity": 1,
+              "priceCents": 175,
+              "title": "Riftbound Spiritforged 142/221 Jae Medarda"
+            },
+            {
+              "id": 56723515408757,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Riftbound Spiritforged 185/221 Draven Glorious Executioner"
+            },
+            {
+              "id": 56723470844277,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Riftbound Spiritforged 114/221 Marching Orders"
+            },
+            {
+              "id": 56723469599093,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Riftbound Spiritforged 112/221 Kato the Arm"
+            },
+            {
+              "id": 56723450397045,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Riftbound Spiritforged 082/221 Ezreal Dashing"
+            },
+            {
+              "id": 56723504169333,
+              "quantity": 1,
+              "priceCents": 75,
+              "title": "Riftbound Spiritforged 169/221 Altar of Memories"
+            },
+            {
+              "id": 56723414516085,
+              "quantity": 1,
+              "priceCents": 75,
+              "title": "Riftbound Spiritforged 019/221 Assembly Rig"
+            },
+            {
+              "id": 56723555811701,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Spiritforged R06/221 Order Rune"
+            },
+            {
+              "id": 56723554959733,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Spiritforged R05/221 Chaos Rune"
+            },
+            {
+              "id": 56723554402677,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Spiritforged R04/221 Body Rune"
+            },
+            {
+              "id": 56190220239221,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Riftbound Origins 033/298 Shakedown"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 2448,
+          "items": 40,
+          "cartCurrency": "GBP",
+          "byAddress": {
+            "lon": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "man": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "edi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "bfs": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "tracked 48",
+                  "cents": 329,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56723428409717,
+              "quantity": 1,
+              "priceCents": 325,
+              "title": "Riftbound Spiritforged 052/221 Heart of Dark Ice"
+            },
+            {
+              "id": 56723516195189,
+              "quantity": 1,
+              "priceCents": 295,
+              "title": "Riftbound Spiritforged 189/221 Ornn Fire Below the Mountain"
+            },
+            {
+              "id": 56190218404213,
+              "quantity": 1,
+              "priceCents": 295,
+              "title": "Riftbound Origins 022/298 Thermo Beam Foil"
+            },
+            {
+              "id": 56190249763189,
+              "quantity": 1,
+              "priceCents": 209,
+              "title": "Riftbound Origins 290/298 The Arena&#39;s Greatest Foil"
+            },
+            {
+              "id": 56723489096053,
+              "quantity": 1,
+              "priceCents": 175,
+              "title": "Riftbound Spiritforged 142/221 Jae Medarda"
+            },
+            {
+              "id": 56723515408757,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Riftbound Spiritforged 185/221 Draven Glorious Executioner"
+            },
+            {
+              "id": 56723470844277,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Riftbound Spiritforged 114/221 Marching Orders"
+            },
+            {
+              "id": 56723469599093,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Riftbound Spiritforged 112/221 Kato the Arm"
+            },
+            {
+              "id": 56723450397045,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Riftbound Spiritforged 082/221 Ezreal Dashing"
+            },
+            {
+              "id": 56723504169333,
+              "quantity": 1,
+              "priceCents": 75,
+              "title": "Riftbound Spiritforged 169/221 Altar of Memories"
+            },
+            {
+              "id": 56723414516085,
+              "quantity": 1,
+              "priceCents": 75,
+              "title": "Riftbound Spiritforged 019/221 Assembly Rig"
+            },
+            {
+              "id": 56723555811701,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Spiritforged R06/221 Order Rune"
+            },
+            {
+              "id": 56723554959733,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Spiritforged R05/221 Chaos Rune"
+            },
+            {
+              "id": 56723554402677,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Spiritforged R04/221 Body Rune"
+            },
+            {
+              "id": 56723551715701,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Spiritforged R03/221 Mind Rune"
+            },
+            {
+              "id": 56723550994805,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Spiritforged R02/221 Calm Rune"
+            },
+            {
+              "id": 56723550765429,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Spiritforged R01/221 Fury Rune"
+            },
+            {
+              "id": 56723514982773,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Spiritforged 183/221 Lucian Purifier"
+            },
+            {
+              "id": 56190233280885,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Riftbound Origins 148/298 Anivia Primal"
+            },
+            {
+              "id": 56723523043701,
+              "quantity": 1,
+              "priceCents": 35,
+              "title": "Riftbound Spiritforged 205/221 Fiora Grand Duelist"
+            },
+            {
+              "id": 56190246420853,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Riftbound Origins 263/298 Teemo, Swift Scout"
+            },
+            {
+              "id": 56190226366837,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Riftbound Origins 072/298 Solari Shrine"
+            },
+            {
+              "id": 56190220239221,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Riftbound Origins 033/298 Shakedown"
+            },
+            {
+              "id": 56723408519541,
+              "quantity": 1,
+              "priceCents": 14,
+              "title": "Riftbound Spiritforged 011/221 Angle Shot Foil"
+            },
+            {
+              "id": 56190244225397,
+              "quantity": 1,
+              "priceCents": 10,
+              "title": "Riftbound Origins 230/298 Albus Ferros"
+            },
+            {
+              "id": 56190233510261,
+              "quantity": 1,
+              "priceCents": 10,
+              "title": "Riftbound Origins 152/298 Mistfall"
+            },
+            {
+              "id": 56190232854901,
+              "quantity": 1,
+              "priceCents": 10,
+              "title": "Riftbound Origins 143/298 Pirate&#39;s Haven"
+            },
+            {
+              "id": 56723556893045,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged T03/221 Gold"
+            },
+            {
+              "id": 56723556630901,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged T01/221 Mech"
+            },
+            {
+              "id": 56723536970101,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 221/221 Veiled Temple"
+            },
+            {
+              "id": 56723536576885,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 220/221 Treasure Hoard"
+            },
+            {
+              "id": 56723536281973,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 219/221 The Papertree"
+            },
+            {
+              "id": 56723533594997,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 216/221 Rockfall Path"
+            },
+            {
+              "id": 56723532022133,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 214/221 Power Nexus"
+            },
+            {
+              "id": 56723531497845,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 213/221 Ornn&#39;s Forge"
+            },
+            {
+              "id": 56723529597301,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 212/221 Minefield"
+            },
+            {
+              "id": 56723527336309,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 211/221 Marai Spire"
+            },
+            {
+              "id": 56723526943093,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 210/221 Hall of Legends"
+            },
+            {
+              "id": 56723526287733,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 209/221 Forgotten Monument"
+            },
+            {
+              "id": 56723525337461,
+              "quantity": 1,
+              "priceCents": 5,
+              "title": "Riftbound Spiritforged 208/221 Forge of the Fluft"
+            }
+          ],
+          "short": true
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 0,
+          "items": 0,
+          "cartCurrency": "",
+          "byAddress": {},
+          "sameCartAs": "V50"
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 0,
+          "items": 0,
+          "cartCurrency": "",
+          "byAddress": {},
+          "sameCartAs": "V50"
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "GBP",
+        "byAddress": {
+          "lon": {
+            "oneCardCents": 199,
+            "oneCardName": "Standard Shipping (Royal Mail 2nd Class)",
+            "oneCardTrackedCents": 329,
+            "freeAtCents": null,
+            "paidAtCents": 2448,
+            "untrackedGoneAt": {
+              "scenario": "V20",
+              "subtotalCents": 2004,
+              "items": 15
+            }
+          },
+          "man": {
+            "oneCardCents": 199,
+            "oneCardName": "Standard Shipping (Royal Mail 2nd Class)",
+            "oneCardTrackedCents": 329,
+            "freeAtCents": null,
+            "paidAtCents": 2448,
+            "untrackedGoneAt": {
+              "scenario": "V20",
+              "subtotalCents": 2004,
+              "items": 15
+            }
+          },
+          "edi": {
+            "oneCardCents": 199,
+            "oneCardName": "Standard Shipping (Royal Mail 2nd Class)",
+            "oneCardTrackedCents": 329,
+            "freeAtCents": null,
+            "paidAtCents": 2448,
+            "untrackedGoneAt": {
+              "scenario": "V20",
+              "subtotalCents": 2004,
+              "items": 15
+            }
+          },
+          "bfs": {
+            "oneCardCents": 199,
+            "oneCardName": "Standard Shipping (Royal Mail 2nd Class)",
+            "oneCardTrackedCents": 329,
+            "freeAtCents": null,
+            "paidAtCents": 2448,
+            "untrackedGoneAt": {
+              "scenario": "V20",
+              "subtotalCents": 2004,
+              "items": 15
+            }
+          }
+        },
+        "zonePriced": false,
+        "oneCardMinCents": 199,
+        "oneCardMaxCents": 199
+      }
+    }
+  ]
+}

@@ -1,0 +1,470 @@
+{
+  "market": "SG",
+  "generatedAt": "2026-10-28T13:33:04.769Z",
+  "addresses": [
+    {
+      "id": "sg",
+      "label": "Singapore",
+      "country": "Singapore",
+      "countryCode": "SG",
+      "zip": "018989",
+      "city": "Singapore"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "kind": "count",
+      "count": 1
+    },
+    {
+      "id": "S10",
+      "kind": "count",
+      "count": 10
+    },
+    {
+      "id": "V20",
+      "kind": "value",
+      "targetCents": 2000
+    },
+    {
+      "id": "V50",
+      "kind": "value",
+      "targetCents": 5000
+    },
+    {
+      "id": "V100",
+      "kind": "value",
+      "targetCents": 10000
+    },
+    {
+      "id": "V150",
+      "kind": "value",
+      "targetCents": 15000
+    }
+  ],
+  "stores": [
+    {
+      "key": "hideyoshi",
+      "name": "Hideyoshi",
+      "market": "SG",
+      "currency": "SGD",
+      "measuredAt": "2026-10-28T13:32:38.125Z",
+      "base": "https://hideyoshitcg.com",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "configured": {
+        "shippingFlatCents": 250,
+        "freeOverCents": 6000,
+        "shippingNote": "est. S$2.50 · free over S$60"
+      },
+      "collections": [
+        "riftbound"
+      ],
+      "candidates": 26,
+      "requests": 24,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "sg",
+          "label": "Singapore",
+          "country": "Singapore",
+          "countryCode": "SG",
+          "zip": "018989",
+          "city": "Singapore"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 40,
+          "items": 1,
+          "cartCurrency": "SGD",
+          "byAddress": {
+            "sg": {
+              "status": "empty",
+              "rates": []
+            }
+          },
+          "lines": [
+            {
+              "id": 71430273171709,
+              "quantity": 1,
+              "priceCents": 40,
+              "title": "Flurry of Blades [OGN-133/298]"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 660,
+          "items": 10,
+          "cartCurrency": "SGD",
+          "byAddress": {
+            "sg": {
+              "status": "empty",
+              "rates": []
+            }
+          },
+          "lines": [
+            {
+              "id": 71430346244349,
+              "quantity": 1,
+              "priceCents": 80,
+              "title": "Soaring Scout [OGN-216/298]"
+            },
+            {
+              "id": 71430284345597,
+              "quantity": 1,
+              "priceCents": 80,
+              "title": "Pakaa Cub [OGN-135/298]"
+            },
+            {
+              "id": 71430263537917,
+              "quantity": 1,
+              "priceCents": 80,
+              "title": "Mobilize [OGN-134/298]"
+            },
+            {
+              "id": 71430114607357,
+              "quantity": 1,
+              "priceCents": 80,
+              "title": "Sneaky Deckhand [OGN-176/298]"
+            },
+            {
+              "id": 71430083805437,
+              "quantity": 1,
+              "priceCents": 80,
+              "title": "Garbage Grabber [OGN-099/298]"
+            },
+            {
+              "id": 71430333268221,
+              "quantity": 1,
+              "priceCents": 70,
+              "title": "Block [OGN-057/298]"
+            },
+            {
+              "id": 71430202425597,
+              "quantity": 1,
+              "priceCents": 60,
+              "title": "Gust [OGN-169/298]"
+            },
+            {
+              "id": 71429938446589,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "En Garde [OGN-046/298]"
+            },
+            {
+              "id": 71430340739325,
+              "quantity": 1,
+              "priceCents": 40,
+              "title": "Meditation [OGN-048/298]"
+            },
+            {
+              "id": 71430273171709,
+              "quantity": 1,
+              "priceCents": 40,
+              "title": "Flurry of Blades [OGN-133/298]"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2200,
+          "items": 1,
+          "cartCurrency": "SGD",
+          "byAddress": {
+            "sg": {
+              "status": "empty",
+              "rates": []
+            }
+          },
+          "lines": [
+            {
+              "id": 71429971378429,
+              "quantity": 1,
+              "priceCents": 2200,
+              "title": "Ahri, Inquisitive [OGN-119a/298]"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5000,
+          "items": 3,
+          "cartCurrency": "SGD",
+          "byAddress": {
+            "sg": {
+              "status": "empty",
+              "rates": []
+            }
+          },
+          "lines": [
+            {
+              "id": 71429799837949,
+              "quantity": 1,
+              "priceCents": 3500,
+              "title": "Thousand-Tailed Watcher [OGN-116/298]"
+            },
+            {
+              "id": 71429994086653,
+              "quantity": 1,
+              "priceCents": 1100,
+              "title": "Sett, Brawler [OGN-164/298]"
+            },
+            {
+              "id": 71430017319165,
+              "quantity": 1,
+              "priceCents": 400,
+              "title": "Volibear, Furious [OGN-041a/298]"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10080,
+          "items": 5,
+          "cartCurrency": "SGD",
+          "byAddress": {
+            "sg": {
+              "status": "empty",
+              "rates": []
+            }
+          },
+          "lines": [
+            {
+              "id": 71429799837949,
+              "quantity": 1,
+              "priceCents": 3500,
+              "title": "Thousand-Tailed Watcher [OGN-116/298]"
+            },
+            {
+              "id": 71429895127293,
+              "quantity": 1,
+              "priceCents": 2500,
+              "title": "Seal of Unity [OGN-245/298]"
+            },
+            {
+              "id": 71429971378429,
+              "quantity": 1,
+              "priceCents": 2200,
+              "title": "Ahri, Inquisitive [OGN-119a/298]"
+            },
+            {
+              "id": 71429994086653,
+              "quantity": 1,
+              "priceCents": 1100,
+              "title": "Sett, Brawler [OGN-164/298]"
+            },
+            {
+              "id": 71430008242429,
+              "quantity": 1,
+              "priceCents": 780,
+              "title": "Showstopper [OGN-270/298]"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 13480,
+          "items": 26,
+          "cartCurrency": "SGD",
+          "byAddress": {
+            "sg": {
+              "status": "empty",
+              "rates": []
+            }
+          },
+          "lines": [
+            {
+              "id": 71429799837949,
+              "quantity": 1,
+              "priceCents": 3500,
+              "title": "Thousand-Tailed Watcher [OGN-116/298]"
+            },
+            {
+              "id": 71429895127293,
+              "quantity": 1,
+              "priceCents": 2500,
+              "title": "Seal of Unity [OGN-245/298]"
+            },
+            {
+              "id": 71429971378429,
+              "quantity": 1,
+              "priceCents": 2200,
+              "title": "Ahri, Inquisitive [OGN-119a/298]"
+            },
+            {
+              "id": 71429994086653,
+              "quantity": 1,
+              "priceCents": 1100,
+              "title": "Sett, Brawler [OGN-164/298]"
+            },
+            {
+              "id": 71430003884285,
+              "quantity": 1,
+              "priceCents": 960,
+              "title": "Kadregrin the Infernal [OGN-038/298]"
+            },
+            {
+              "id": 71430008242429,
+              "quantity": 1,
+              "priceCents": 780,
+              "title": "Showstopper [OGN-270/298]"
+            },
+            {
+              "id": 71430017319165,
+              "quantity": 1,
+              "priceCents": 400,
+              "title": "Volibear, Furious [OGN-041a/298]"
+            },
+            {
+              "id": 71429978947837,
+              "quantity": 1,
+              "priceCents": 350,
+              "title": "Last Breath [OGN-260/298]"
+            },
+            {
+              "id": 71430177849597,
+              "quantity": 1,
+              "priceCents": 200,
+              "title": "Ride the Wind [OGN-173/298]"
+            },
+            {
+              "id": 71430095470845,
+              "quantity": 1,
+              "priceCents": 180,
+              "title": "Traveling Merchant [OGN-185/298]"
+            },
+            {
+              "id": 71430142263549,
+              "quantity": 1,
+              "priceCents": 150,
+              "title": "Treasure Trove [OGN-186/298]"
+            },
+            {
+              "id": 71430328746237,
+              "quantity": 1,
+              "priceCents": 100,
+              "title": "Adaptatron [OGN-056/298]"
+            },
+            {
+              "id": 71430325633277,
+              "quantity": 1,
+              "priceCents": 100,
+              "title": "Wind Wall [OGN-064/298]"
+            },
+            {
+              "id": 71430278217981,
+              "quantity": 1,
+              "priceCents": 100,
+              "title": "First Mate [OGN-132/298]"
+            },
+            {
+              "id": 71430251774205,
+              "quantity": 1,
+              "priceCents": 100,
+              "title": "Pit Rookie [OGN-136/298]"
+            },
+            {
+              "id": 71430194430205,
+              "quantity": 1,
+              "priceCents": 100,
+              "title": "Rebuke [OGN-172/298]"
+            },
+            {
+              "id": 71430346244349,
+              "quantity": 1,
+              "priceCents": 80,
+              "title": "Soaring Scout [OGN-216/298]"
+            },
+            {
+              "id": 71430284345597,
+              "quantity": 1,
+              "priceCents": 80,
+              "title": "Pakaa Cub [OGN-135/298]"
+            },
+            {
+              "id": 71430263537917,
+              "quantity": 1,
+              "priceCents": 80,
+              "title": "Mobilize [OGN-134/298]"
+            },
+            {
+              "id": 71430114607357,
+              "quantity": 1,
+              "priceCents": 80,
+              "title": "Sneaky Deckhand [OGN-176/298]"
+            },
+            {
+              "id": 71430083805437,
+              "quantity": 1,
+              "priceCents": 80,
+              "title": "Garbage Grabber [OGN-099/298]"
+            },
+            {
+              "id": 71430333268221,
+              "quantity": 1,
+              "priceCents": 70,
+              "title": "Block [OGN-057/298]"
+            },
+            {
+              "id": 71430202425597,
+              "quantity": 1,
+              "priceCents": 60,
+              "title": "Gust [OGN-169/298]"
+            },
+            {
+              "id": 71429938446589,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "En Garde [OGN-046/298]"
+            },
+            {
+              "id": 71430340739325,
+              "quantity": 1,
+              "priceCents": 40,
+              "title": "Meditation [OGN-048/298]"
+            },
+            {
+              "id": 71430273171709,
+              "quantity": 1,
+              "priceCents": 40,
+              "title": "Flurry of Blades [OGN-133/298]"
+            }
+          ],
+          "short": true
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "SGD",
+        "byAddress": {
+          "sg": {
+            "oneCardCents": null,
+            "oneCardName": null,
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": null,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": false,
+        "oneCardMinCents": null,
+        "oneCardMaxCents": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,4781 @@
+{
+  "market": "US",
+  "generatedAt": "2026-10-28T13:40:13.285Z",
+  "addresses": [
+    {
+      "id": "ny",
+      "label": "New York",
+      "country": "United States",
+      "countryCode": "US",
+      "province": "NY",
+      "zip": "10001",
+      "city": "New York"
+    },
+    {
+      "id": "sf",
+      "label": "San Francisco",
+      "country": "United States",
+      "countryCode": "US",
+      "province": "CA",
+      "zip": "94103",
+      "city": "San Francisco"
+    },
+    {
+      "id": "dal",
+      "label": "Dallas",
+      "country": "United States",
+      "countryCode": "US",
+      "province": "TX",
+      "zip": "75201",
+      "city": "Dallas"
+    },
+    {
+      "id": "chi",
+      "label": "Chicago",
+      "country": "United States",
+      "countryCode": "US",
+      "province": "IL",
+      "zip": "60601",
+      "city": "Chicago"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "kind": "count",
+      "count": 1
+    },
+    {
+      "id": "S10",
+      "kind": "count",
+      "count": 10
+    },
+    {
+      "id": "V20",
+      "kind": "value",
+      "targetCents": 2000
+    },
+    {
+      "id": "V50",
+      "kind": "value",
+      "targetCents": 5000
+    },
+    {
+      "id": "V100",
+      "kind": "value",
+      "targetCents": 10000
+    },
+    {
+      "id": "V150",
+      "kind": "value",
+      "targetCents": 15000
+    }
+  ],
+  "stores": [
+    {
+      "key": "levelupgamesmd",
+      "name": "Level Up Games MD",
+      "market": "US",
+      "currency": "USD",
+      "measuredAt": "2026-10-28T13:32:32.016Z",
+      "base": "https://levelupgamesmd.com",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "configured": {
+        "shippingFlatCents": 250,
+        "freeOverCents": 5000,
+        "shippingNote": "est. US$2.50 · free over US$50"
+      },
+      "collections": [
+        "riftbound"
+      ],
+      "candidates": 252,
+      "requests": 40,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "ny",
+          "label": "New York",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "NY",
+          "zip": "10001",
+          "city": "New York"
+        },
+        {
+          "id": "sf",
+          "label": "San Francisco",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "CA",
+          "zip": "94103",
+          "city": "San Francisco"
+        },
+        {
+          "id": "dal",
+          "label": "Dallas",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "TX",
+          "zip": "75201",
+          "city": "Dallas"
+        },
+        {
+          "id": "chi",
+          "label": "Chicago",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "IL",
+          "zip": "60601",
+          "city": "Chicago"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 99,
+          "items": 1,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47431004946649,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Noxian Guillotine 254/298 RFTB1 - Near Mint Foil"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 990,
+          "items": 10,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47431021166809,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Grand Strategem 233/298 RFTB1 - Near Mint Foil"
+            },
+            {
+              "id": 47431018250457,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Dr. Mundo - Expert 109/298 RFTB1 - Near Mint Foil"
+            },
+            {
+              "id": 47431017562329,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Darius - Hand of Noxus 253/298 RFTB1 - Near Mint Foil"
+            },
+            {
+              "id": 47431017332953,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Convergent Mutation 108/298 RFTB1 - Near Mint Foil"
+            },
+            {
+              "id": 47431017070809,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Commander Ledros 231/298 RFTB1 - Near Mint Foil"
+            },
+            {
+              "id": 47431016775897,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Carnivorous Snapvine 149/298 RFTB1 - Near Mint Foil"
+            },
+            {
+              "id": 47431016415449,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Caitlyn - Patrolling 068/298 RFTB1 - Near Mint Foil"
+            },
+            {
+              "id": 47431015334105,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Blind Fury 025/298 RFTB1 - Near Mint Foil"
+            },
+            {
+              "id": 47431013204185,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Albus Ferros 230/298 RFTB1 - Near Mint Foil"
+            },
+            {
+              "id": 47431004946649,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Noxian Guillotine 254/298 RFTB1 - Near Mint Foil"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2098,
+          "items": 2,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47777071628505,
+              "quantity": 1,
+              "priceCents": 1999,
+              "title": "Defiant Dance 196/221 RFTB2 - Near Mint Foil"
+            },
+            {
+              "id": 47431004946649,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Noxian Guillotine 254/298 RFTB1 - Near Mint Foil"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5199,
+          "items": 1,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47777085292761,
+              "quantity": 1,
+              "priceCents": 5199,
+              "title": "Seal of Insight (Overnumbered) 229/221 RFTB2 - Near Mint Foil"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10299,
+          "items": 1,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 48728147493081,
+              "quantity": 1,
+              "priceCents": 10299,
+              "title": "Rengar - Pridestalker (Overnumbered) 227/219 RFTB3 - Near Mint Foil"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 15999,
+          "items": 1,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47431041155289,
+              "quantity": 1,
+              "priceCents": 15999,
+              "title": "Teemo - Swift Scout (Showcase) 307/298 RFTB1 - Near Mint Foil"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "USD",
+        "byAddress": {
+          "ny": {
+            "oneCardCents": 499,
+            "oneCardName": "Economy",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15999,
+            "untrackedGoneAt": null
+          },
+          "sf": {
+            "oneCardCents": 499,
+            "oneCardName": "Economy",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15999,
+            "untrackedGoneAt": null
+          },
+          "dal": {
+            "oneCardCents": 499,
+            "oneCardName": "Economy",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15999,
+            "untrackedGoneAt": null
+          },
+          "chi": {
+            "oneCardCents": 499,
+            "oneCardName": "Economy",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15999,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": false,
+        "oneCardMinCents": 499,
+        "oneCardMaxCents": 499
+      }
+    },
+    {
+      "key": "triadgroup",
+      "name": "Triad Cards and Gaming",
+      "market": "US",
+      "currency": "USD",
+      "measuredAt": "2026-10-28T13:32:31.716Z",
+      "base": "https://triadgroup.shop",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "configured": {
+        "shippingFlatCents": 250,
+        "freeOverCents": 5000,
+        "shippingNote": "est. US$2.50 · free over US$50"
+      },
+      "collections": [
+        "riftbound"
+      ],
+      "candidates": 202,
+      "requests": 40,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "ny",
+          "label": "New York",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "NY",
+          "zip": "10001",
+          "city": "New York"
+        },
+        {
+          "id": "sf",
+          "label": "San Francisco",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "CA",
+          "zip": "94103",
+          "city": "San Francisco"
+        },
+        {
+          "id": "dal",
+          "label": "Dallas",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "TX",
+          "zip": "75201",
+          "city": "Dallas"
+        },
+        {
+          "id": "chi",
+          "label": "Chicago",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "IL",
+          "zip": "60601",
+          "city": "Chicago"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 99,
+          "items": 1,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1610,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5772,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 46521607782599,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Revna the Lorekeeper (005/219) (UNL) - Near Mint - Foil"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 1140,
+          "items": 10,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1610,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5772,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 46617111232711,
+              "quantity": 1,
+              "priceCents": 149,
+              "title": "Startipped Peak (288/298) (OGN) - Near Mint - Foil"
+            },
+            {
+              "id": 46521689604295,
+              "quantity": 1,
+              "priceCents": 149,
+              "title": "Frisky Hunter (033/219) (UNL) - Near Mint - Foil"
+            },
+            {
+              "id": 46521616924871,
+              "quantity": 1,
+              "priceCents": 149,
+              "title": "Sharkling (006/219) (UNL) - Near Mint - Foil"
+            },
+            {
+              "id": 47017991110855,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Maddened Marauder (191/298) (OGN) - Heavily Played - Foil"
+            },
+            {
+              "id": 46521691209927,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Mageseeker Investigator (163/219) (UNL) - Near Mint - Foil"
+            },
+            {
+              "id": 46521687507143,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Enthusiastic Promoter (043/219) (UNL) - Near Mint - Foil"
+            },
+            {
+              "id": 46521662046407,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Wuju Apprentice (040/219) (UNL) - Near Mint - Foil"
+            },
+            {
+              "id": 46521650282695,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Vicious Snapjaws (129/219) (UNL) - Near Mint - Foil"
+            },
+            {
+              "id": 46521612435655,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Shadow Watcher (037/219) (UNL) - Near Mint - Foil"
+            },
+            {
+              "id": 46521607782599,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Revna the Lorekeeper (005/219) (UNL) - Near Mint - Foil"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2099,
+          "items": 1,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1610,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5772,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard Envelope",
+                  "cents": 199,
+                  "currency": "USD",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 46953650487495,
+              "quantity": 1,
+              "priceCents": 2099,
+              "title": "Leona - Radiant Dawn (261/298) (OPP) - Near Mint - Foil"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5298,
+          "items": 2,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 1098,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 2298,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 3012,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 10356,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 1098,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 2298,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 3220,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 11544,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 1098,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 2298,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 3012,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 10356,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 1098,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 2298,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 3012,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 10356,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47018147479751,
+              "quantity": 1,
+              "priceCents": 3799,
+              "title": "Ambessa, Respected and Feared (Overnumbered) (187/166) (VEN) - Near Mint - Foil"
+            },
+            {
+              "id": 47045599920327,
+              "quantity": 1,
+              "priceCents": 1499,
+              "title": "Riftbound Prerelease Deck - Shen - Eye of Twilight"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10098,
+          "items": 2,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 1398,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 2298,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 3012,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 10356,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 1398,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 2298,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 3220,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 11544,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 1398,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 2298,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 3012,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 10356,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 1398,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 2298,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 3012,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 10356,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 46920880914631,
+              "quantity": 1,
+              "priceCents": 8599,
+              "title": "Kai&#39;Sa, Survivor (SP1/006) (VEN) - Near Mint - Foil"
+            },
+            {
+              "id": 47045599920327,
+              "quantity": 1,
+              "priceCents": 1499,
+              "title": "Riftbound Prerelease Deck - Shen - Eye of Twilight"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 15049,
+          "items": 1,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1610,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5772,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Tracked Parcel",
+                  "cents": 499,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Insured + Signature Required",
+                  "cents": 999,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1506,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5178,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47018090823879,
+              "quantity": 1,
+              "priceCents": 15049,
+              "title": "Mystic Poro (Overnumbered) (224/219) (UNL) - Near Mint - Foil"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "USD",
+        "byAddress": {
+          "ny": {
+            "oneCardCents": 199,
+            "oneCardName": "Standard Envelope",
+            "oneCardTrackedCents": 499,
+            "freeAtCents": null,
+            "paidAtCents": 15049,
+            "untrackedGoneAt": {
+              "scenario": "V50",
+              "subtotalCents": 5298,
+              "items": 2
+            }
+          },
+          "sf": {
+            "oneCardCents": 199,
+            "oneCardName": "Standard Envelope",
+            "oneCardTrackedCents": 499,
+            "freeAtCents": null,
+            "paidAtCents": 15049,
+            "untrackedGoneAt": {
+              "scenario": "V50",
+              "subtotalCents": 5298,
+              "items": 2
+            }
+          },
+          "dal": {
+            "oneCardCents": 199,
+            "oneCardName": "Standard Envelope",
+            "oneCardTrackedCents": 499,
+            "freeAtCents": null,
+            "paidAtCents": 15049,
+            "untrackedGoneAt": {
+              "scenario": "V50",
+              "subtotalCents": 5298,
+              "items": 2
+            }
+          },
+          "chi": {
+            "oneCardCents": 199,
+            "oneCardName": "Standard Envelope",
+            "oneCardTrackedCents": 499,
+            "freeAtCents": null,
+            "paidAtCents": 15049,
+            "untrackedGoneAt": {
+              "scenario": "V50",
+              "subtotalCents": 5298,
+              "items": 2
+            }
+          }
+        },
+        "zonePriced": false,
+        "oneCardMinCents": 199,
+        "oneCardMaxCents": 199
+      }
+    },
+    {
+      "key": "pokecollect",
+      "name": "Poke-Collect",
+      "market": "US",
+      "currency": "USD",
+      "measuredAt": "2026-10-28T13:32:31.769Z",
+      "base": "https://poke-collect.com",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "configured": {
+        "shippingFlatCents": 250,
+        "freeOverCents": 5000,
+        "shippingNote": "est. US$2.50 · free over US$50"
+      },
+      "collections": [
+        "riftbound-singles"
+      ],
+      "candidates": 72,
+      "requests": 40,
+      "rateLimited": 7,
+      "addresses": [
+        {
+          "id": "ny",
+          "label": "New York",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "NY",
+          "zip": "10001",
+          "city": "New York"
+        },
+        {
+          "id": "sf",
+          "label": "San Francisco",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "CA",
+          "zip": "94103",
+          "city": "San Francisco"
+        },
+        {
+          "id": "dal",
+          "label": "Dallas",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "TX",
+          "zip": "75201",
+          "city": "Dallas"
+        },
+        {
+          "id": "chi",
+          "label": "Chicago",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "IL",
+          "zip": "60601",
+          "city": "Chicago"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 25,
+          "items": 1,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 774,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 795,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1326,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1438,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3760,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 5066,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 856,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 975,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 3 Day Select®",
+                  "cents": 1424,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1459,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1685,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 4565,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5299,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 6248,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 8299,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 715,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 795,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1438,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3760,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 5066,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "UPS® Ground",
+                  "cents": 734,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Ground Advantage",
+                  "cents": 784,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1153,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3422,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4088,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 4449,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7088,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 45444240900279,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Machine Evangel (239/298) - Origins Foil - Near Mint"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 450,
+          "items": 10,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 774,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 795,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1326,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1438,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3760,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 5066,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 856,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 975,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 3 Day Select®",
+                  "cents": 1424,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1459,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1685,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 4565,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5299,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 6248,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 8299,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 715,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 795,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1438,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3760,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 5066,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "UPS® Ground",
+                  "cents": 734,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Ground Advantage",
+                  "cents": 784,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1153,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3422,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4088,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 4449,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7088,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47085658308791,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Forgefire Cape (190/221) - Spiritforged Foil - Near Mint"
+            },
+            {
+              "id": 47085609648311,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Shurelya&#39;s Requiem (192/221) - Spiritforged Foil - Near Mint"
+            },
+            {
+              "id": 47070247682231,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Danger Zone (182/221) - Spiritforged Foil - Near Mint"
+            },
+            {
+              "id": 45444222943415,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Qiyana - Victorious (155/298) - Origins Foil - Near Mint"
+            },
+            {
+              "id": 45444200038583,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Grand Strategem (233/298) - Origins Foil - Near Mint"
+            },
+            {
+              "id": 45444196204727,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Draven - Showboat (028/298) - Origins Foil - Near Mint"
+            },
+            {
+              "id": 45444046782647,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Warwick - Hunter (159/298) - Origins Foil - Near Mint"
+            },
+            {
+              "id": 45444035379383,
+              "quantity": 1,
+              "priceCents": 50,
+              "title": "Shen - Kinkou (241/298) - Origins Foil - Near Mint"
+            },
+            {
+              "id": 47070263443639,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Vex - Cheerless (146/221) - Spiritforged Foil - Near Mint"
+            },
+            {
+              "id": 45444240900279,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Machine Evangel (239/298) - Origins Foil - Near Mint"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2000,
+          "items": 2,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 774,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 795,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1326,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1438,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3760,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 5066,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 856,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 975,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 3 Day Select®",
+                  "cents": 1424,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1459,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1685,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 4565,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5299,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 6248,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 8299,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 715,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 795,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1438,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3760,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 5066,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "UPS® Ground",
+                  "cents": 734,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Ground Advantage",
+                  "cents": 784,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1153,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3422,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4088,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 4449,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7088,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 45444170612919,
+              "quantity": 1,
+              "priceCents": 1750,
+              "title": "Zhonya&#39;s Hourglass (077/298) - Origins Foil - Near Mint"
+            },
+            {
+              "id": 45443914006711,
+              "quantity": 1,
+              "priceCents": 250,
+              "title": "Bullet Time (268/298) - Origins Foil - Near Mint"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5000,
+          "items": 3,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 774,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 795,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1326,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1438,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3760,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 5066,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 856,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 975,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 3 Day Select®",
+                  "cents": 1424,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1459,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1685,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 4565,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5299,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 6248,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 8299,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 715,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 795,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1438,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3760,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 5066,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "UPS® Ground",
+                  "cents": 734,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Ground Advantage",
+                  "cents": 784,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1153,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3422,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4088,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 4449,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7088,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 45444013686967,
+              "quantity": 1,
+              "priceCents": 2950,
+              "title": "Dazzling Aurora (160/298) - Origins Foil - Near Mint"
+            },
+            {
+              "id": 45444170612919,
+              "quantity": 1,
+              "priceCents": 1750,
+              "title": "Zhonya&#39;s Hourglass (077/298) - Origins Foil - Near Mint"
+            },
+            {
+              "id": 47086175518903,
+              "quantity": 1,
+              "priceCents": 300,
+              "title": "Body Rune (Alternate Art) (R04a) - Spiritforged Foil - Near Mint"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10075,
+          "items": 3,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 774,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 795,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1326,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1438,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3760,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 5066,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 856,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 975,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 3 Day Select®",
+                  "cents": 1424,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS 2nd Day Air®",
+                  "cents": 1459,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1685,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 4565,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 5299,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 6248,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 8299,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Ground Advantage",
+                  "cents": 715,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS® Ground",
+                  "cents": 795,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1438,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3760,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 5066,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7494,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "UPS® Ground",
+                  "cents": 734,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Ground Advantage",
+                  "cents": 784,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "Priority Mail",
+                  "cents": 1153,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air Saver®",
+                  "cents": 3422,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "UPS Next Day Air®",
+                  "cents": 4088,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                },
+                {
+                  "name": "Priority Mail Express",
+                  "cents": 4449,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "usps"
+                },
+                {
+                  "name": "UPS Next Day Air® Early",
+                  "cents": 7088,
+                  "currency": "USD",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "ups_shipping"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47085666173111,
+              "quantity": 1,
+              "priceCents": 5900,
+              "title": "Seal of Unity (Overnumbered) (238/221) - Spiritforged Foil - Near Mint"
+            },
+            {
+              "id": 45444013686967,
+              "quantity": 1,
+              "priceCents": 2950,
+              "title": "Dazzling Aurora (160/298) - Origins Foil - Near Mint"
+            },
+            {
+              "id": 45443818684599,
+              "quantity": 1,
+              "priceCents": 1225,
+              "title": "Invert Timeline (201/298) - Origins Foil - Near Mint"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "subtotalCents": 0,
+          "items": 0,
+          "cartCurrency": "",
+          "byAddress": {},
+          "error": "gave up after 5 attempts (HTTP 429)"
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "USD",
+        "byAddress": {
+          "ny": {
+            "oneCardCents": 774,
+            "oneCardName": "Ground Advantage",
+            "oneCardTrackedCents": 774,
+            "freeAtCents": null,
+            "paidAtCents": 10075,
+            "untrackedGoneAt": null
+          },
+          "sf": {
+            "oneCardCents": 856,
+            "oneCardName": "Ground Advantage",
+            "oneCardTrackedCents": 856,
+            "freeAtCents": null,
+            "paidAtCents": 10075,
+            "untrackedGoneAt": null
+          },
+          "dal": {
+            "oneCardCents": 715,
+            "oneCardName": "Ground Advantage",
+            "oneCardTrackedCents": 715,
+            "freeAtCents": null,
+            "paidAtCents": 10075,
+            "untrackedGoneAt": null
+          },
+          "chi": {
+            "oneCardCents": 734,
+            "oneCardName": "UPS® Ground",
+            "oneCardTrackedCents": 734,
+            "freeAtCents": null,
+            "paidAtCents": 10075,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": true,
+        "oneCardMinCents": 715,
+        "oneCardMaxCents": 856
+      }
+    },
+    {
+      "key": "hastygoblingames",
+      "name": "Hasty Goblin Games",
+      "market": "US",
+      "currency": "USD",
+      "measuredAt": "2026-10-28T13:32:32.061Z",
+      "base": "https://hastygoblingames.com",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "configured": {
+        "shippingFlatCents": 250,
+        "freeOverCents": 5000,
+        "shippingNote": "est. US$2.50 · free over US$50"
+      },
+      "collections": [
+        "riftbound",
+        "riftbound-origins",
+        "riftbound-spiritforged",
+        "riftbound-1"
+      ],
+      "candidates": 210,
+      "requests": 45,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "ny",
+          "label": "New York",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "NY",
+          "zip": "10001",
+          "city": "New York"
+        },
+        {
+          "id": "sf",
+          "label": "San Francisco",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "CA",
+          "zip": "94103",
+          "city": "San Francisco"
+        },
+        {
+          "id": "dal",
+          "label": "Dallas",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "TX",
+          "zip": "75201",
+          "city": "Dallas"
+        },
+        {
+          "id": "chi",
+          "label": "Chicago",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "IL",
+          "zip": "60601",
+          "city": "Chicago"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 17,
+          "items": 1,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 50906881556786,
+              "quantity": 1,
+              "priceCents": 17,
+              "title": "Hextech Anomaly - Spiritforged (SPF)"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 239,
+          "items": 10,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 50646444671282,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Lee Sin - Ascetic - Origins (OGN)"
+            },
+            {
+              "id": 50603545887026,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Dr. Mundo - Expert - Origins (OGN)"
+            },
+            {
+              "id": 50603543593266,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Qiyana - Victorious - Origins (OGN)"
+            },
+            {
+              "id": 50603542610226,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Vi - Destructive - Origins (OGN)"
+            },
+            {
+              "id": 50603542217010,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Draven - Showboat - Origins (OGN)"
+            },
+            {
+              "id": 50603538710834,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Kayn - Unleashed - Origins (OGN)"
+            },
+            {
+              "id": 50603537039666,
+              "quantity": 1,
+              "priceCents": 25,
+              "title": "Ahri - Alluring - Origins (OGN)"
+            },
+            {
+              "id": 50603545002290,
+              "quantity": 1,
+              "priceCents": 24,
+              "title": "Volibear - Imposing - Origins (OGN)"
+            },
+            {
+              "id": 50906914750770,
+              "quantity": 1,
+              "priceCents": 23,
+              "title": "Card Sharp - Spiritforged (SPF)"
+            },
+            {
+              "id": 50906881556786,
+              "quantity": 1,
+              "priceCents": 17,
+              "title": "Hextech Anomaly - Spiritforged (SPF)"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2100,
+          "items": 2,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 68010194370866,
+              "quantity": 1,
+              "priceCents": 1500,
+              "title": "Lux, Crownguard - SP6/006 - Vendetta (VEN)"
+            },
+            {
+              "id": 51514114605362,
+              "quantity": 1,
+              "priceCents": 600,
+              "title": "Akali, Deadly Weapon (Alternate Art) - Vendetta (VEN)"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5100,
+          "items": 2,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 51529320792370,
+              "quantity": 1,
+              "priceCents": 4000,
+              "title": "Sivir - Battle Mistress (Overnumbered) - Spiritforged (SFD)"
+            },
+            {
+              "id": 67998323573042,
+              "quantity": 1,
+              "priceCents": 1100,
+              "title": "Riven, Broken Blade (Alternate Art) - 043a/167 - Radiance (RAD)"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10200,
+          "items": 3,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 51516862366002,
+              "quantity": 1,
+              "priceCents": 7300,
+              "title": "Riven, Shattered (Overnumbered) - Vendetta (VEN)"
+            },
+            {
+              "id": 68010194370866,
+              "quantity": 1,
+              "priceCents": 1500,
+              "title": "Lux, Crownguard - SP6/006 - Vendetta (VEN)"
+            },
+            {
+              "id": 51529339666738,
+              "quantity": 1,
+              "priceCents": 1400,
+              "title": "Vex - Apathetic - Unleashed (UNL)"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 15100,
+          "items": 2,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "sf": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "dal": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "chi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Economy",
+                  "cents": 1000,
+                  "currency": "USD",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 51536493084978,
+              "quantity": 1,
+              "priceCents": 11100,
+              "title": "Lillia - Protector of Dreams (Champion)"
+            },
+            {
+              "id": 51529320792370,
+              "quantity": 1,
+              "priceCents": 4000,
+              "title": "Sivir - Battle Mistress (Overnumbered) - Spiritforged (SFD)"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "USD",
+        "byAddress": {
+          "ny": {
+            "oneCardCents": 1000,
+            "oneCardName": "Economy",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15100,
+            "untrackedGoneAt": null
+          },
+          "sf": {
+            "oneCardCents": 1000,
+            "oneCardName": "Economy",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15100,
+            "untrackedGoneAt": null
+          },
+          "dal": {
+            "oneCardCents": 1000,
+            "oneCardName": "Economy",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15100,
+            "untrackedGoneAt": null
+          },
+          "chi": {
+            "oneCardCents": 1000,
+            "oneCardName": "Economy",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15100,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": false,
+        "oneCardMinCents": 1000,
+        "oneCardMaxCents": 1000
+      }
+    },
+    {
+      "key": "stupidgeeks",
+      "name": "Stupid Geeks",
+      "market": "US",
+      "currency": "USD",
+      "measuredAt": "2026-10-28T13:32:31.845Z",
+      "base": "https://stupidgeeksinc.com",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "configured": {
+        "shippingFlatCents": 250,
+        "freeOverCents": 5000,
+        "shippingNote": "est. US$2.50 · free over US$50"
+      },
+      "collections": [
+        "riftbound-singles-instock"
+      ],
+      "candidates": 44,
+      "requests": 50,
+      "rateLimited": 22,
+      "addresses": [
+        {
+          "id": "ny",
+          "label": "New York",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "NY",
+          "zip": "10001",
+          "city": "New York"
+        },
+        {
+          "id": "sf",
+          "label": "San Francisco",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "CA",
+          "zip": "94103",
+          "city": "San Francisco"
+        },
+        {
+          "id": "dal",
+          "label": "Dallas",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "TX",
+          "zip": "75201",
+          "city": "Dallas"
+        },
+        {
+          "id": "chi",
+          "label": "Chicago",
+          "country": "United States",
+          "countryCode": "US",
+          "province": "IL",
+          "zip": "60601",
+          "city": "Chicago"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 99,
+          "items": 1,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "empty",
+              "rates": []
+            },
+            "sf": {
+              "status": "empty",
+              "rates": []
+            },
+            "dal": {
+              "status": "empty",
+              "rates": []
+            },
+            "chi": {
+              "status": "empty",
+              "rates": []
+            }
+          },
+          "lines": [
+            {
+              "id": 49354874355895,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Discipline (OGN - 058/298) [Origins] - Near Mint / Chinese Simplified / Normal"
+            }
+          ],
+          "notes": [
+            "sf quoted on a fresh cart after an earlier address returned no rates",
+            "dal quoted on a fresh cart after an earlier address returned no rates",
+            "chi quoted on a fresh cart after an earlier address returned no rates"
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 1890,
+          "items": 10,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "empty",
+              "rates": []
+            },
+            "sf": {
+              "status": "empty",
+              "rates": []
+            },
+            "dal": {
+              "status": "empty",
+              "rates": []
+            },
+            "chi": {
+              "status": "empty",
+              "rates": []
+            }
+          },
+          "lines": [
+            {
+              "id": 49331749486775,
+              "quantity": 1,
+              "priceCents": 249,
+              "title": "Harnessed Dragon (OGN - 234/298) [Origins] - Near Mint / English / Foil"
+            },
+            {
+              "id": 49331749388471,
+              "quantity": 1,
+              "priceCents": 249,
+              "title": "Sona, Harmonious (OGN - 073/298) [Origins] - Near Mint / English / Foil"
+            },
+            {
+              "id": 49354874814647,
+              "quantity": 1,
+              "priceCents": 199,
+              "title": "Divine Judgment (OGN - 244/298) [Origins] - Near Mint / Chinese Simplified / Foil"
+            },
+            {
+              "id": 49354874486967,
+              "quantity": 1,
+              "priceCents": 199,
+              "title": "Defy (OGN - 045/298) [Origins] - Near Mint / Chinese Simplified / Normal"
+            },
+            {
+              "id": 49331749552311,
+              "quantity": 1,
+              "priceCents": 199,
+              "title": "Karthus, Eternal (OGN - 236/298) [Origins] - Near Mint / English / Foil"
+            },
+            {
+              "id": 49331749519543,
+              "quantity": 1,
+              "priceCents": 199,
+              "title": "Leona, Zealot (OGN - 079/298) [Origins] - Near Mint / English / Foil"
+            },
+            {
+              "id": 49331749355703,
+              "quantity": 1,
+              "priceCents": 199,
+              "title": "Rhasa the Sunderer (OGN - 195/298) [Origins] - Near Mint / English / Foil"
+            },
+            {
+              "id": 49372682158263,
+              "quantity": 1,
+              "priceCents": 149,
+              "title": "Darius, Trifarian (OGN - 027/298) [Origins] - Near Mint / English / Foil"
+            },
+            {
+              "id": 49331804176567,
+              "quantity": 1,
+              "priceCents": 149,
+              "title": "Bottled Constellation (VEN - 067/166) [Vendetta] - Near Mint / English / Foil"
+            },
+            {
+              "id": 49354874355895,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Discipline (OGN - 058/298) [Origins] - Near Mint / Chinese Simplified / Normal"
+            }
+          ],
+          "notes": [
+            "sf quoted on a fresh cart after an earlier address returned no rates",
+            "dal quoted on a fresh cart after an earlier address returned no rates",
+            "chi quoted on a fresh cart after an earlier address returned no rates"
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2048,
+          "items": 2,
+          "cartCurrency": "USD",
+          "byAddress": {
+            "ny": {
+              "status": "empty",
+              "rates": []
+            },
+            "sf": {
+              "status": "empty",
+              "rates": []
+            },
+            "dal": {
+              "status": "empty",
+              "rates": []
+            },
+            "chi": {
+              "status": "error",
+              "rates": [],
+              "error": "gave up after 5 attempts (HTTP 429)"
+            }
+          },
+          "lines": [
+            {
+              "id": 49398255255735,
+              "quantity": 1,
+              "priceCents": 1899,
+              "title": "Lux, Crownguard (VEN - SP6/006) [Vendetta] - Near Mint / English / Foil"
+            },
+            {
+              "id": 49331804176567,
+              "quantity": 1,
+              "priceCents": 149,
+              "title": "Bottled Constellation (VEN - 067/166) [Vendetta] - Near Mint / English / Foil"
+            }
+          ],
+          "notes": [
+            "sf quoted on a fresh cart after an earlier address returned no rates",
+            "dal quoted on a fresh cart after an earlier address returned no rates",
+            "chi quoted on a fresh cart after an earlier address returned no rates"
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "subtotalCents": 0,
+          "items": 0,
+          "cartCurrency": "",
+          "byAddress": {},
+          "error": "gave up after 5 attempts (HTTP 429)"
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "subtotalCents": 0,
+          "items": 0,
+          "cartCurrency": "",
+          "byAddress": {},
+          "error": "gave up after 5 attempts (HTTP 429)"
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "subtotalCents": 0,
+          "items": 0,
+          "cartCurrency": "",
+          "byAddress": {},
+          "error": "gave up after 5 attempts (HTTP 429)"
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "USD",
+        "byAddress": {
+          "ny": {
+            "oneCardCents": null,
+            "oneCardName": null,
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": null,
+            "untrackedGoneAt": null
+          },
+          "sf": {
+            "oneCardCents": null,
+            "oneCardName": null,
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": null,
+            "untrackedGoneAt": null
+          },
+          "dal": {
+            "oneCardCents": null,
+            "oneCardName": null,
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": null,
+            "untrackedGoneAt": null
+          },
+          "chi": {
+            "oneCardCents": null,
+            "oneCardName": null,
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": null,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": false,
+        "oneCardMinCents": null,
+        "oneCardMaxCents": null
+      }
+    }
+  ]
+}
