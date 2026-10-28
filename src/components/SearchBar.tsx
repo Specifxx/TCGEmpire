@@ -693,7 +693,7 @@ export function SearchBar({
             clearFocusIntentTimer();
           }}
           onKeyDown={onKeyDown}
-          placeholder={isHero ? "Search any Riftbound card…" : "Search for cards"}
+          placeholder={isHero ? "Search any Riftbound card or sealed product…" : "Search cards or sealed products"}
           className={isHero ? "input border-ink-600 bg-ink-900 py-3.5 pl-11 pr-14 text-base shadow-glow sm:pr-11 sm:text-lg" : "input pl-9 pr-12 sm:pr-10"}
           aria-label="Search cards"
           autoComplete="off"
