@@ -57,7 +57,7 @@ export function FeedbackWidget() {
         How would you rate RiftCompare?
       </h2>
       <p className="mb-3 mt-1 text-center text-sm text-slate-400">No account needed. We read every one.</p>
-      <RatingReviewForm key={openCount} source="widget" page={pathname ?? "/"} initialRating={initialRating} />
+      <RatingReviewForm key={openCount} source="widget" page={pathname ?? "/"} initialRating={initialRating} presetIsTap />
     </Dialog>
   );
 }

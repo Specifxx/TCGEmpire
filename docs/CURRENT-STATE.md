@@ -202,8 +202,9 @@ longer lands on its entry.
   trial below is superseded). `FREE_LIMITS_ON = false`: free watchlist and portfolio
   are unlimited and no copy quotes a limit; free price history is 90 days.
   `/premium` copies Collectr's page for non-members. A rate-the-site corner card
-  (not a modal) asks only returning visitors, at most twice, and is the one
-  uninvited opinion ask; one rating-and-review form everywhere (corner card,
+  (not a modal) asks after 4 pages and 3 minutes, or on return from a store
+  tab, at most three times 14 days apart, and is the one uninvited opinion ask;
+  a tapped star counts even when the form is closed unsent ([2026-10-28](../DECISIONS.md#L20608)); one rating-and-review form everywhere (corner card,
   footer panel, a "Rate us" row at the end of every page, /feedback), reviews
   shown unless unticked, still admin-approved ([2026-10-27](../DECISIONS.md#L20240)); no floating button ([2026-10-27](../DECISIONS.md#L20201)); the homepage hero and the
   Pro page show the real average with its count from the first rating

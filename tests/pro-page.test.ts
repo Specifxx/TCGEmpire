@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   RATE_AFTER_MS,
   RATE_AFTER_PAGES,
+  RATE_INTENT_PAGES,
   RATE_MAX_ASKS,
   RATE_SNOOZE_MS,
   RATE_VISIT_GAP_MS,
@@ -30,16 +31,28 @@ test("Pro is $6.99 a month or $47.88 a year, which is exactly $3.99 a month", ()
 const V = { pages: 2, otherPromptShown: false };
 const engaged = { ...freshRateState(T0), pages: RATE_AFTER_PAGES, visits: 2 };
 
-test("the rate prompt never asks a new visitor: a return visit, a day and several pages first", () => {
+test("the rate prompt never asks on arrival: a few minutes and pages first (relaxed 2026-10-28)", () => {
   const now = T0 + RATE_AFTER_MS;
-  assert.equal(shouldAskRating(engaged, now, "/card/x", V), true);
+  const first = { ...engaged, visits: 1 };
+  assert.equal(shouldAskRating(first, now, "/card/x", V), true, "a first visit may be asked after real use");
   assert.equal(shouldAskRating({ ...engaged, pages: RATE_AFTER_PAGES - 1 }, now, "/card/x", V), false, "too few pages");
   assert.equal(shouldAskRating(engaged, now - 1, "/card/x", V), false, "too soon");
-  assert.equal(shouldAskRating({ ...engaged, visits: 1, pages: 50 }, now, "/card/x", V), false, "a first visit is never asked, however long");
   assert.equal(shouldAskRating(engaged, now, "/card/x", { pages: 1, otherPromptShown: false }), false, "never on a visit's first page");
   assert.equal(shouldAskRating(engaged, now, "/card/x", { pages: 3, otherPromptShown: true }), false, "one uninvited prompt per visit");
   for (const p of ["/login", "/admin/x", "/premium", "/premium/start", "/embed/card", "/games/x", "/contact"]) assert.equal(shouldAskRating(engaged, now, p, V), false, p);
-  assert.ok(RATE_AFTER_PAGES >= 5 && RATE_AFTER_MS >= 86_400_000, "not a quick ask");
+  assert.ok(RATE_AFTER_PAGES >= 4 && RATE_AFTER_MS >= 3 * 60_000, "never on arrival");
+});
+
+test("coming back from a store tab may bring the card early, but not on a first page view", () => {
+  const s = { ...freshRateState(T0), pages: RATE_INTENT_PAGES };
+  const I = { pages: 1, otherPromptShown: false, intent: true };
+  assert.equal(shouldAskRating(s, T0 + 10_000, "/card/x", I), true);
+  assert.equal(shouldAskRating({ ...s, pages: 1 }, T0 + 10_000, "/card/x", I), false, "one page is arrival");
+  assert.equal(shouldAskRating(s, T0 + 10_000, "/card/x", { ...I, otherPromptShown: true }), false);
+  assert.equal(shouldAskRating({ ...s, rated: true }, T0 + 10_000, "/card/x", I), false);
+  const c = read("src/components/RateUsPrompt.tsx");
+  assert.match(c, /BUY_CLICK_EVENT/);
+  assert.match(c, /visibilitychange/);
 });
 
 test("a page view after a long gap is a new visit", () => {
@@ -50,14 +63,14 @@ test("a page view after a long gap is a new visit", () => {
   assert.equal(b.pages, 2);
 });
 
-test("a rating or Don't ask again ends it for good; closing waits; it gives up after two asks", () => {
+test("a rating or Don't ask again ends it for good; closing waits; it gives up after three asks", () => {
   const now = T0 + RATE_AFTER_MS;
   assert.equal(shouldAskRating({ ...engaged, rated: true }, now, "/", V), false);
   assert.equal(shouldAskRating({ ...engaged, optedOut: true }, now, "/", V), false);
   assert.equal(shouldAskRating({ ...engaged, snoozedAt: now }, now + RATE_SNOOZE_MS - 1, "/", V), false);
   assert.equal(shouldAskRating({ ...engaged, snoozedAt: now }, now + RATE_SNOOZE_MS, "/", V), true);
-  assert.ok(RATE_SNOOZE_MS >= 30 * 86_400_000);
-  assert.equal(RATE_MAX_ASKS, 2);
+  assert.ok(RATE_SNOOZE_MS >= 14 * 86_400_000, "not all the time");
+  assert.equal(RATE_MAX_ASKS, 3);
   assert.equal(shouldAskRating({ ...engaged, asks: RATE_MAX_ASKS }, now, "/", V), false);
   assert.deepEqual(parseRateState("not json", T0), freshRateState(T0));
   assert.equal(parseRateState(JSON.stringify({ firstSeen: T0, pages: 4, rated: false }), T0 + 5).visits, 1, "an old stored state still reads");
@@ -78,6 +91,18 @@ test("the prompt is a closable corner card, not a modal, and still posts a ratin
   const route = read("src/app/api/feedback/route.ts");
   assert.match(route, /"rating", "rating-review"\]\)/, "the API accepts both sources");
   assert.match(route, /!source\.startsWith\("rating"\) && feedbackPremiumActive\(\)/, "a star tap or its review earns no free Pro");
+});
+
+test("a tapped star counts even when the form is closed unsent, and never twice", () => {
+  const f = read("src/components/RatingReviewForm.tsx");
+  assert.match(f, /sendBeacon/, "saved as the form goes away");
+  assert.match(f, /message: "", source: cur\.source/, "stars only: a half-typed review is never sent");
+  assert.match(f, /reviewOnly && rating \? "rating-review" : source/, "a later review repeats the stars and is left out of the average");
+  assert.match(f, /useState\(initialRating > 0 && presetIsTap\)/, "a link-preset rating needs a gesture here first");
+  assert.match(f, /"pointerdown", arm/);
+  assert.match(read("src/components/FeedbackWidget.tsx"), /presetIsTap/, "the strip's stars are the visitor's tap");
+  assert.doesNotMatch(read("src/components/FeedbackForm.tsx"), /presetIsTap/, "the email's ?rating= link is not a tap");
+  assert.match(read("src/lib/site-rating.ts"), /NOT: \{ source: "rating-review" \}/);
 });
 
 test("the feedback panel has no floating button: it opens from the footer link", () => {

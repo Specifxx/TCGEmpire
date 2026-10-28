@@ -20604,3 +20604,42 @@ What shipped instead, at no cost:
   and is linked from RiftCompare's "Compare other TCGs" footer heading. One page
   on the strongest domain, never a copy per site, so the family never competes
   with itself for the generic query.
+
+## Ratings: one tap counts, and the card asks at the moment it has earned — 2026-10-28
+
+The owner: "we actually do need to collect some feedback on the website. 9
+ratings is not enough", and "pop ups are fine if they don't occur all the
+time". Supersedes the timing in "One rating ask, earned by engagement"
+(2026-10-27); the corner card, the one form and the opt-out display stay.
+
+**Where ratings were lost.**
+- Since "One feedback form, shown by default" a star counted only when Send
+  was pressed, under the review box, email, consent box and name. The old
+  corner card had saved the tap itself. Anyone who tapped five stars and
+  closed the card, the panel or the tab gave us nothing.
+- The card asked only on a second visit, a day after the first, after five
+  pages, twice ever: most visitors never qualified.
+- The feedback email's star links land on /feedback with the stars preset,
+  and the only Send is at the bottom of the form, below the fold on a phone.
+
+**What.**
+- `RatingReviewForm` saves stars the visitor tapped when the form goes away
+  unsent (closed, a page change, the tab hidden or closed), by `sendBeacon`,
+  stars only and private (a half-typed review is never sent). A review sent
+  after that goes as `rating-review`, which repeats the stars and is already
+  left out of the average, so nothing counts twice.
+- Stars preset by a link (`/feedback?rating=N` from the email) are not a tap
+  on this page: they arm only after a real pointer or key press here, so a mail
+  scanner opening all five links stores nothing. A "Save my N-star rating"
+  button sits right under the stars on that page. The strip's stars opening
+  the panel are the visitor's own tap (`presetIsTap`).
+- `lib/rate-prompt.ts`: the card may ask after 4 pages and 3 minutes since the
+  first page view (no second visit, no day), or 1.5 s after the visitor comes
+  back to the tab from a store they clicked out to (`BUY_CLICK_EVENT`), once
+  they have seen 2 pages: the moment they have just used the site for what it
+  is for. Still never on a visit's first page otherwise, never with the Pricing
+  callout in the same visit, never on the excluded paths. Up to 3 asks, 14 days
+  apart; a rating or "Don't ask again" ends it.
+
+**Not done.** No reward for a rating (off since 2026-10-27; incentivised
+reviews), no email to the owner per rating, no modal.
