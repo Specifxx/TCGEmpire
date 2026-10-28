@@ -169,6 +169,9 @@ longer lands on its entry.
   only the US$200 of ads is pre-filled. [2026-10-25](../DECISIONS.md#L19446)
   A growth line sits under the columns; eBay's Today shows its latest reported
   day, dated, because EPN has no same-day data. [2026-10-28](../DECISIONS.md#L20647)
+  A forecast panel projects this quarter and the next four (and this year and
+  next) from a straight line through the last 90 days, with an ~80% range.
+  [2026-10-28](../DECISIONS.md#L20702)
 - **The Stores plan (2026-10-23, owner):** US$79.99/month (`STRIPE_STORE_PRICE_ID`,
   displayed amount `NEXT_PUBLIC_STORE_PLAN_AMOUNT`) for a retailer: the repricing
   report with "what buyers are searching for", a Verified mark with the store's own
@@ -205,7 +208,7 @@ longer lands on its entry.
   are unlimited and no copy quotes a limit; free price history is 90 days.
   `/premium` copies Collectr's page for non-members. Until the site has 100 ratings, a closable rating pop-up asks
   every visitor who has not rated once per visit, then switches itself off
-  ([2026-10-28](../DECISIONS.md#L20675)). After that, a rate-the-site corner card
+  ([2026-10-28](../DECISIONS.md#L20702)). After that, a rate-the-site corner card
   (not a modal) asks after 4 pages and 3 minutes, or on return from a store
   tab, at most three times 14 days apart, and is the one uninvited opinion ask;
   a tapped star counts even when the form is closed unsent ([2026-10-28](../DECISIONS.md#L20608)); one rating-and-review form everywhere (corner card,

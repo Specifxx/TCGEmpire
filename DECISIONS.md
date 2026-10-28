@@ -20698,3 +20698,32 @@ out, or one covering the page a searcher just landed on, is what Google's
 intrusive-interstitial rule demotes on mobile, and search is ~180 clicks a day
 of the core business. Never someone who rated, never on sign-in, checkout,
 /premium, /feedback, admin, embeds or the arcade. No reward for rating.
+
+## Earnings dashboard: a forecast by quarter — 2026-10-28
+
+The owner liked the growth and trend lines and asked for "projected forecasts
+… by the end of this year, quarter 1 next year, quarter 2, quarter 3,
+quarter 4 … so it's easy to visualize where we're heading".
+
+**What.** A "Forecast" panel on `/admin/earnings` under the growth line: this
+quarter and the four after it as columns (earned so far solid, the projected
+rest faded, the likely range as a whisker), then a table with each quarter and
+this year and next as wholes: projected, likely range, and "if growth stops".
+
+**How it projects** (`forecastQuarters` in `lib/earnings/core.ts`):
+- A least-squares straight line through combined earnings per day over the last
+  90 complete days (from the first earning day if that is later; null under 30
+  days), carried forward a day at a time, never below 0, added per period.
+- The last two days are projected, not counted as earned, because eBay adds a
+  day's sales up to 48 hours late (the same lag as eBay's Today, above).
+- Likely range: the line's slope ± 1.28 standard errors, an ~80% band on the
+  growth rate, which is what dominates a projection a year out. Day-to-day
+  noise is left out; it averages away over a quarter.
+- "If growth stops": the last 30 complete days' average held flat.
+- Combined earnings before costs, in the display currency at the reference FX
+  rates. Labelled a projection everywhere; never added to any other figure,
+  the digest or an email.
+
+**Not done.** No seasonality (under a year of history), no per-source or
+profit forecast: a straight line on a young business is a guide, and more
+model would only look more certain than it is.
