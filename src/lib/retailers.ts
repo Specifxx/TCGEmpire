@@ -2949,7 +2949,7 @@ export const RETAILERS: Record<string, RetailerInfo> = {
 
 
   // ---- Store audit 2026-10-28 (scripts/sweep-registry.ts over the UVS registry
-  // plus every store the sister sites track; DECISIONS.md "Store audit: 46 stores
+  // plus every store the sister sites track; DECISIONS.md "Store audit: 43 stores
   // added") — in-stock Riftbound singles counted live, currency proven ----
   goodgamesmorley: {
     key: "goodgamesmorley",
@@ -3300,16 +3300,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. €4.95 · free over €60",
     country: "EU",
   }, // sweep 2026-10-28: 311 in-stock singles, cur=EUR
-  facetofacenl: {
-    key: "facetofacenl",
-    name: "Face to Face Games Rotterdam",
-    base: "https://facetofacegames.nl",
-    collections: ["riftbound", "unleashed-riftbound"],
-    shippingFlatCents: 495,
-    freeOverCents: 6000,
-    shippingNote: "est. €4.95 · free over €60",
-    country: "EU",
-  }, // sweep 2026-10-28: 281 in-stock singles, cur=EUR
   magicianscircle: {
     key: "magicianscircle",
     name: "Magician's Circle",
@@ -3330,16 +3320,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. €4.95 · free over €60",
     country: "EU",
   }, // sweep 2026-10-28: 125 in-stock singles, cur=EUR
-  hideyoshi: {
-    key: "hideyoshi",
-    name: "Hideyoshi",
-    base: "https://hideyoshitcg.com",
-    collections: ["riftbound"],
-    shippingFlatCents: 250,
-    freeOverCents: 6000,
-    shippingNote: "est. S$2.50 · free over S$60",
-    country: "SG",
-  }, // sweep 2026-10-28: 27 in-stock singles, cur=SGD
   jgccollectables: {
     key: "jgccollectables",
     name: "JGC Collectables",
@@ -3390,16 +3370,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$2.50 · free over US$50",
     country: "US",
   }, // sweep 2026-10-28: 64 in-stock singles, cur=USD
-  stupidgeeks: {
-    key: "stupidgeeks",
-    name: "Stupid Geeks",
-    base: "https://stupidgeeksinc.com",
-    collections: ["riftbound-singles-instock"],
-    shippingFlatCents: 250,
-    freeOverCents: 5000,
-    shippingNote: "est. US$2.50 · free over US$50",
-    country: "US",
-  }, // sweep 2026-10-28: 43 in-stock singles, cur=USD
 
 };
 
